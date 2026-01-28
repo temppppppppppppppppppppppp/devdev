@@ -1,0 +1,25 @@
+--- Arc 1 ---
+Tactical Doc Length: 7618
+Found markers: ['[제 1화 전술 설계]', '[제 2화 전술 설계]', '[제 3화 전술 설계]', '[제 4화 전술 설계]']
+Expected range: 1 to 4
+
+--- Arc 2 ---
+Tactical Doc Length: 4302
+Found markers: ['[제 5화 전술 설계]', '[제 6화 전술 설계]', '[제 7화 전술 설계]', '[제 8화 전술 설계]']
+Expected range: 5 to 8
+
+--- Arc 3 ---
+Tactical Doc Length: 5027
+Found markers: ['[제 9화 전술 설계]', '[제 10화 전술 설계]', '[제 11화 전술 설계]', '[제 12화 전술 설계]']
+Expected range: 9 to 12
+
+--- Arc 4 ---
+Tactical Doc Length: 5330
+Found markers: ['[제 13화 전술 설계]', '[제 14화 전술 설계]', '[제 15화 전술 설계]', '[제 16화 전술 설계]']
+Expected range: 13 to 16
+
+--- Arc 5 ---
+Tactical Doc Length: 5426
+Found markers: ['[제 17화 전술 설계]', '[제 18화 전술 설계]', '[제 19화 전술 설계]', '[제 20화 전술 설계]']
+Expected range: 17 to 20
+

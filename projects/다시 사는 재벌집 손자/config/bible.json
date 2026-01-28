@@ -1,0 +1,23 @@
+{
+  "project_info": {
+    "genre": "WUXIA",
+    "title": "다시 사는 재벌집 손자"
+  },
+  "protagonist": {
+    "name": "Unknown"
+  },
+  "scenario_history": [
+    {
+      "selected_at": "2026-01-08 22:29:41",
+      "title": "고금제일의 조상님 (The Greatest Ancestor of All Time)",
+      "source": "고금제일의 조상님.txt",
+      "status": "Active"
+    }
+  ],
+  "active_scenario": {
+    "selected_at": "2026-01-08 22:29:41",
+    "title": "고금제일의 조상님 (The Greatest Ancestor of All Time)",
+    "source": "고금제일의 조상님.txt",
+    "status": "Active"
+  }
+}

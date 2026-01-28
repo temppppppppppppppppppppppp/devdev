@@ -1,0 +1,13 @@
+{
+  "models": {
+    "architect": "gemini-3-pro-preview",
+    "analyst": "gemini-3-pro-preview",
+    "writer": "gemini-3-pro-preview",
+    "reviewer": "gemini-2.0-flash",
+    "evaluator": "gemini-3-pro-preview"
+  },
+  "costs": {
+    "max_retries": 3,
+    "temperature": 0.8
+  }
+}

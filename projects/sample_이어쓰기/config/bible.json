@@ -1,0 +1,32 @@
+{
+  "project_info": {
+    "title": "sample_이어쓰기",
+    "genre": "WUXIA",
+    "logline": "한 줄 요약 입력"
+  },
+  "protagonist": {
+    "name": "주인공_이름(필수)",
+    "age": "나이",
+    "identity": "신분/직업",
+    "goal": "최종 목표",
+    "traits": [
+      "성격1",
+      "성격2"
+    ],
+    "tone": "말투 특징 (예: 하오체 사용)"
+  },
+  "world_state": {
+    "current_location": "시작 장소",
+    "major_factions": [
+      "세력1",
+      "세력2"
+    ],
+    "antagonists": [
+      "적대세력/빌런"
+    ]
+  },
+  "static_rules": [
+    "상태창, 레벨업 메시지 금지",
+    "한자 병기 금지"
+  ]
+}
