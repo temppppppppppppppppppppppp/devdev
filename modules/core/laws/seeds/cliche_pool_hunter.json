@@ -1,0 +1,302 @@
+[
+  {
+    "id": "HUNTER_001",
+    "type": "헌터 클리셰",
+    "description": "E급으로 각성했지만 숨겨진 S급 잠재력 보유",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_002",
+    "type": "헌터 클리셰",
+    "description": "죽음의 문턱에서 재각성하여 능력 폭발적 성장",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_003",
+    "type": "헌터 클리셰",
+    "description": "던전 최심부 히든 보스 처치 후 전설 아이템 획득",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_004",
+    "type": "헌터 클리셰",
+    "description": "주인공만 볼 수 있는 특수 시스템 창 등장",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_005",
+    "type": "헌터 클리셰",
+    "description": "과거로 회귀하여 미래 지식으로 먼치킨 성장",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_006",
+    "type": "헌터 클리셰",
+    "description": "시스템 버그로 무한 성장 가능한 치트 스킬 획득",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_007",
+    "type": "헌터 클리셰",
+    "description": "희귀 직업(Job) 각성으로 유일무이한 능력자 등극",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_008",
+    "type": "헌터 클리셰",
+    "description": "평범한 스킬을 창의적으로 응용하여 강적 격파",
+    "impact": "Medium"
+  },
+  {
+    "id": "HUNTER_009",
+    "type": "헌터 클리셰",
+    "description": "몬스터를 부릴 수 있는 희귀 소환/지배 능력 각성",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_010",
+    "type": "헌터 클리셰",
+    "description": "던전 내 고대 유적에서 신화급 무기 발견",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_011",
+    "type": "헌터 클리셰",
+    "description": "다른 차원의 존재와 계약하여 금지된 힘 획득",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_012",
+    "type": "헌터 클리셰",
+    "description": "평범한 회복 능력이 실제로는 생명력 조작 사기 스킬",
+    "impact": "Medium"
+  },
+  {
+    "id": "HUNTER_013",
+    "type": "각성/성장 이벤트",
+    "description": "게이트 브레이크 위기를 홀로 막아내며 영웅 등극",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_014",
+    "type": "각성/성장 이벤트",
+    "description": "국가급 헌터가 주인공의 재능을 간파하고 직접 지도",
+    "impact": "Medium"
+  },
+  {
+    "id": "HUNTER_015",
+    "type": "각성/성장 이벤트",
+    "description": "던전 보스의 진짜 약점 발견하여 솔로 클리어 달성",
+    "impact": "Medium"
+  },
+  {
+    "id": "HUNTER_016",
+    "type": "각성/성장 이벤트",
+    "description": "주인공만 접근 가능한 숨겨진 던전 입구 발견",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_017",
+    "type": "각성/성장 이벤트",
+    "description": "각성자 경매에서 쓰레기 취급받던 능력이 실제로는 먼치킨급",
+    "impact": "Medium"
+  },
+  {
+    "id": "HUNTER_018",
+    "type": "각성/성장 이벤트",
+    "description": "레벨업 시마다 희귀 보상 획득하는 행운 스탯 보유",
+    "impact": "Medium"
+  },
+  {
+    "id": "HUNTER_019",
+    "type": "각성/성장 이벤트",
+    "description": "던전에서 나온 특수 물약으로 스탯 한계 돌파",
+    "impact": "Medium"
+  },
+  {
+    "id": "HUNTER_020",
+    "type": "각성/성장 이벤트",
+    "description": "파티원들이 죽은 위기에서 각성 폭발로 전원 구출",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_021",
+    "type": "착각/반전 클리셰",
+    "description": "E급인 줄 알았는데 실제로는 S급 능력 숨김",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_022",
+    "type": "착각/반전 클리셰",
+    "description": "평범한 헌터인 척 숨기며 길드 내부 스파이 활동",
+    "impact": "Medium"
+  },
+  {
+    "id": "HUNTER_023",
+    "type": "착각/반전 클리셰",
+    "description": "S급 헌터들도 클리어 못한 던전을 혼자 돌파",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_024",
+    "type": "착각/반전 클리셰",
+    "description": "주인공의 낮은 랭크에 속아 덤볐다가 순식간에 제압당함",
+    "impact": "Medium"
+  },
+  {
+    "id": "HUNTER_025",
+    "type": "착각/반전 클리셰",
+    "description": "죽은 줄 알았던 주인공이 최강자가 되어 복귀",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_026",
+    "type": "착각/반전 클리셰",
+    "description": "쓰레기 스킬로 무시당했는데 실제로는 궁합 좋은 조합",
+    "impact": "Medium"
+  },
+  {
+    "id": "HUNTER_027",
+    "type": "착각/반전 클리셰",
+    "description": "초보 헌터인 줄 알았는데 전생 최강자의 기억 보유",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_028",
+    "type": "착각/반전 클리셰",
+    "description": "길드 막내가 실제로는 국가급 헌터의 제자",
+    "impact": "Medium"
+  },
+  {
+    "id": "HUNTER_029",
+    "type": "복수/배신 클리셰",
+    "description": "파티원 배신하고 보물 독차지하려던 악당 응징",
+    "impact": "Medium"
+  },
+  {
+    "id": "HUNTER_030",
+    "type": "복수/배신 클리셰",
+    "description": "전생에서 배신한 길드원들에게 복수",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_031",
+    "type": "복수/배신 클리셰",
+    "description": "주인공을 던전에 버리고 도망친 파티 전원 응징",
+    "impact": "Medium"
+  },
+  {
+    "id": "HUNTER_032",
+    "type": "복수/배신 클리셰",
+    "description": "가족을 죽인 길드장에게 정체 숨기고 복수 준비",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_033",
+    "type": "정치/길드전",
+    "description": "약소 길드를 이끌고 대형 길드 격파",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_034",
+    "type": "정치/길드전",
+    "description": "길드 전쟁에서 전략적 승리로 세력 판도 변화",
+    "impact": "Medium"
+  },
+  {
+    "id": "HUNTER_035",
+    "type": "정치/길드전",
+    "description": "협회 내부 부패 세력 폭로하여 개혁 주도",
+    "impact": "Medium"
+  },
+  {
+    "id": "HUNTER_036",
+    "type": "정치/길드전",
+    "description": "국가급 헌터들의 비밀 회의에 초대받아 권력 핵심 진입",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_037",
+    "type": "정치/길드전",
+    "description": "길드장의 딸/아들이 주인공의 실력에 반함",
+    "impact": "Low"
+  },
+  {
+    "id": "HUNTER_038",
+    "type": "재난/위기 극복",
+    "description": "도시를 덮칠 게이트 브레이크를 혼자 막아냄",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_039",
+    "type": "재난/위기 극복",
+    "description": "던전 내 타임어택 탈출 미션 극적 성공",
+    "impact": "Medium"
+  },
+  {
+    "id": "HUNTER_040",
+    "type": "재난/위기 극복",
+    "description": "최악의 A급 던전에서 파티원 전원 생환",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_041",
+    "type": "재난/위기 극복",
+    "description": "국가급 재난 몬스터 출현 시 선봉에서 활약",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_042",
+    "type": "재난/위기 극복",
+    "description": "보스 몬스터의 광폭화 패턴을 간파하여 솔로 격파",
+    "impact": "Medium"
+  },
+  {
+    "id": "HUNTER_043",
+    "type": "경제/부의 축적",
+    "description": "던전에서 나온 희귀 자원으로 거대 기업 설립",
+    "impact": "Medium"
+  },
+  {
+    "id": "HUNTER_044",
+    "type": "경제/부의 축적",
+    "description": "전설 아이템 경매에서 천문학적 가격에 낙찰",
+    "impact": "Medium"
+  },
+  {
+    "id": "HUNTER_045",
+    "type": "경제/부의 축적",
+    "description": "던전 독점 계약으로 막대한 수익 창출",
+    "impact": "Medium"
+  },
+  {
+    "id": "HUNTER_046",
+    "type": "경제/부의 축적",
+    "description": "헌터 전용 아이템 제작 사업으로 재벌 등극",
+    "impact": "Low"
+  },
+  {
+    "id": "HUNTER_047",
+    "type": "사이다 장면",
+    "description": "오만한 고랭크 헌터를 실력으로 굴복시킴",
+    "impact": "High"
+  },
+  {
+    "id": "HUNTER_048",
+    "type": "사이다 장면",
+    "description": "주인공을 무시하던 협회 직원들 앞에서 S급 인증",
+    "impact": "Medium"
+  },
+  {
+    "id": "HUNTER_049",
+    "type": "사이다 장면",
+    "description": "길드 내 갑질하던 선배를 던전에서 구해주고 훈계",
+    "impact": "Medium"
+  },
+  {
+    "id": "HUNTER_050",
+    "type": "사이다 장면",
+    "description": "불법 헌터 브로커들을 협회에 신고하여 일망타진",
+    "impact": "Low"
+  }
+]

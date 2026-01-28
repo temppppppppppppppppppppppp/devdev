@@ -1,0 +1,13 @@
+{
+  "rule_name": "GLOBAL_SYSTEM_GUARD",
+  "technical_constraints": {
+    "language": "Hanja-Free (No Chinese characters in parentheses)",
+    "paragraph_spacing": "Double spacing between sentences"
+  },
+  "forbidden_global": [
+    "무의미한 이모티콘",
+    "작가 후기 본문 포함",
+    "**",
+    "html 요소"
+  ]
+}

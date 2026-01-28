@@ -1,0 +1,156 @@
+{
+  "MasterBible": {
+    "ProjectData": {
+      "MetaInfo": {
+        "title": "팽가 망나니, 가문재건",
+        "grand_objective": "비참하게 죽은 부친에게 천하제일 가주의 명예를 선물하고 멸문지화를 막는다", 
+        "genre_archetype": "무협 + 가문재건 + 부성애 + 압도적 무력",
+        "logline": "가문의 수치였던 망나니 장남 팽무진이 멸문 전으로 회귀하여, 압도적인 도법(刀法)과 미래 지식으로 가문을 재건하고 아버지의 인정을 받아 천하제일 가문을 일구는 이야기."
+      },
+      "CoreIdentity": {
+        "edge": "'무게의 극의' – 전생에 노예로 구르며 깨우친, 기교를 짓뭉개버리는 압도적 질량의 도법. 적의 무기와 초식을 한꺼번에 박살 내는 파괴력.",
+        "desire": "아버지 팽철산에게 '천하제일 가문의 가주'라는 명예를 선물하고, 가문의 영광을 되찾는 것.",
+        "crisis": "회귀 직후의 '쓰레기 평판'과 술/도박으로 망가진 신체. 가문 내부 배신자 팽조악 일파의 감시."
+      }
+    },
+    "MartialHUD": {
+      "Protagonist": {
+        "actual_truth": {
+          "alias": "하북광도(河北狂刀)",
+          "rank": "팽가 장남 (폐위 위기)",
+          "realm": "삼류(三流) - 정신적 경지는 화경(化境) 이상",
+          "internal_energy": "삼 년(三年) - 혼원무거심법으로 급속 회복 중",
+          "mental_method": "혼원무거심법(混元無去心法)",
+          "reputation": "가문의 수치, 쓰레기 망나니",
+          "public_image": "초점 없는 눈동자와 술 냄새 풍기는 한량",
+          "equipment": "무딘 연습용 도(刀)",
+          "wealth": "도박 빚으로 인한 자금 고갈 상태",
+          "token": "팽가 가주 직계의 신물 (전당포에 저당 잡힘)",
+          "misunderstanding": 0,
+          "obsession": 100,
+          "current_objective": "후계자 시험 통과 및 팽조악의 비리 증거 확보",
+          "qi_nature": "패도적 중압(覇道重壓) - 모든 것을 짓누르는 진기",
+          "causal_injuries": "만성 숙취 및 간 손상, 방탕한 생활로 인한 근력 저하",
+          "martial_arts": ["팽가 기초 도법", "무거도(無去刀) - 무게의 극의"],
+          "inventory": ["남궁세가의 파혼 서신", "작은아버지의 이면 장부"]
+        },
+        "public_reputation": {
+          "identity": "팽가의 망나니",
+          "realm": "삼류 이하",
+          "perceived_power": "민간인보다 조금 나은 수준"
+        }
+      }
+    },
+    "WorldState": {
+      "CurrentEra": "정사대전 발발 5년 전",
+      "CurrentLocation": "하북 팽가 본산",
+      "KarmaMatrix": {
+        "하북팽가": { "relation_score": -40, "status": "멸시/경계" },
+        "남궁세가": { "relation_score": -90, "status": "파혼/적대" },
+        "무림맹": { "relation_score": 10, "status": "무관심" }
+      }
+    },
+    "AssetLibrary": {
+      "KeyNPCs": [
+        {
+          "name": "팽철산",
+          "role": "부친, 현 가주",
+          "desc": "무뚝뚝한 가주. 아들을 불신하면서도 마음 한구석에 기대를 버리지 못함. 아들의 변화에 경악하며 점차 '아들 바보'로 진화 예정.",
+          "NPC_Martial_HUD": {
+            "realm": "절정(絶頂)",
+            "main_technique": "팽가 정통 도법",
+            "achievement_rate": "75%",
+            "energy_level": "사십 년(40년)",
+            "current_status": "심각한 내상 은폐 및 심리적 압박",
+            "combat_style": "패(覇)"
+          }
+        },
+        {
+          "name": "팽조악",
+          "role": "숙부, 내부의 배신자",
+          "desc": "가문의 부를 빼돌리는 내부의 적. 주인공의 정체를 끊임없이 의심하며 숙청 1순위로 지목됨.",
+          "NPC_Martial_HUD": {
+            "realm": "일류(一流)",
+            "main_technique": "비수신권",
+            "achievement_rate": "90%",
+            "energy_level": "삼십 년(30년)",
+            "current_status": "야욕 및 경계심 최고조",
+            "combat_style": "쾌(快)"
+          }
+        },
+        {
+          "name": "천무진",
+          "role": "무림맹주",
+          "desc": "무진의 도법에서 '무림의 구원자'를 발견하고 그를 가르치고 싶어 안달 난 강호의 거물.",
+          "NPC_Martial_HUD": {
+            "realm": "화경(化境)",
+            "main_technique": "천무신공",
+            "achievement_rate": "100%",
+            "energy_level": "일백 년(100년)",
+            "current_status": "무학의 한계 봉착 및 후계자 탐색",
+            "combat_style": "정(正)"
+          }
+        },
+        {
+          "name": "남궁설",
+          "role": "전 약혼녀",
+          "desc": "오만하고 냉정한 성격. 전생에서 무진을 멸시했으나, 그의 비상을 보며 뒤늦은 후회와 집착을 시작함.",
+          "NPC_Martial_HUD": {
+            "realm": "일류(一流) 극성",
+            "main_technique": "창궁무애검법",
+            "achievement_rate": "95%",
+            "energy_level": "이십 년(20년)",
+            "current_status": "오만함 및 주인공에 대한 호기심",
+            "combat_style": "유(柔)"
+          }
+        },
+        {
+          "name": "곽창",
+          "role": "충복",
+          "desc": "가문의 늙은 호위무사. 몰락 속에서도 끝까지 팽철산과 무진의 곁을 지킨 충신.",
+          "NPC_Martial_HUD": {
+            "realm": "일류(一流)",
+            "main_technique": "충성검",
+            "achievement_rate": "80%",
+            "energy_level": "이십오 년(25년)",
+            "current_status": "노환으로 인한 기력 쇠퇴",
+            "combat_style": "강(强)"
+          }
+        }
+      ],
+      "KeyItems": [
+        { "item": "가주의 대도(大刀)", "desc": "일백 근 무게의 쇳덩이 칼. 오직 가주만이 들 수 있으며 후반부 무진의 주무기." },
+        { "item": "피 묻은 장부", "desc": "작은아버지 팽조악의 비리와 마교 결탁 증거가 기록된 문서." }
+      ]
+    },
+    "Seeds": [
+      {
+        "id": "S-001",
+        "category": "가문비기",
+        "description": "팽가 지하 동굴에 숨겨진 시조의 '진정한 도법' 비급 발견",
+        "status": "active",
+        "planted_ep": 0,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-002",
+        "category": "첩자명단",
+        "description": "가문 내 암약하는 마교 첩자 3명의 정체 확인",
+        "status": "active",
+        "planted_ep": 0,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-003",
+        "category": "부성애",
+        "description": "아버지 팽철산이 무진의 신체 회복을 위해 몰래 구해둔 만년삼의 존재",
+        "status": "active",
+        "planted_ep": 0,
+        "echo_count": 0,
+        "harvested_ep": null
+      }
+    ]
+  }
+}

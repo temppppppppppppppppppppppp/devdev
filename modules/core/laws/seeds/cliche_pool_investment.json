@@ -1,0 +1,302 @@
+[
+  {
+    "id": "INVEST_001",
+    "type": "투자 클리셰",
+    "description": "파산 위기에서 마지막 종잣돈으로 대박주 매수 성공",
+    "impact": "High"
+  },
+  {
+    "id": "INVEST_002",
+    "type": "투자 클리셰",
+    "description": "미래 지식(회귀/예지)으로 주가 폭등주 선점",
+    "impact": "High"
+  },
+  {
+    "id": "INVEST_003",
+    "type": "투자 클리셰",
+    "description": "부도 직전 기업을 헐값 인수해 턴어라운드 성공",
+    "impact": "High"
+  },
+  {
+    "id": "INVEST_004",
+    "type": "투자 클리셰",
+    "description": "재벌 2세가 무시하던 주인공이 경영권 탈취",
+    "impact": "High"
+  },
+  {
+    "id": "INVEST_005",
+    "type": "투자 클리셰",
+    "description": "내부자 정보를 합법적 경계선에서 활용하는 전략",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_006",
+    "type": "투자 클리셰",
+    "description": "공매도 세력과의 치열한 주가 방어전 승리",
+    "impact": "High"
+  },
+  {
+    "id": "INVEST_007",
+    "type": "투자 클리셰",
+    "description": "적대적 M&A로 거대 기업 삼키기 성공",
+    "impact": "High"
+  },
+  {
+    "id": "INVEST_008",
+    "type": "투자 클리셰",
+    "description": "숨겨진 우량 자산(부동산/특허) 발굴해 대박",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_009",
+    "type": "투자 클리셰",
+    "description": "주주총회에서 위임장 대결로 극적인 역전승",
+    "impact": "High"
+  },
+  {
+    "id": "INVEST_010",
+    "type": "투자 클리셰",
+    "description": "언론 플레이로 적대 기업 주가 폭락 유도",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_011",
+    "type": "투자 클리셰",
+    "description": "비자금 폭로로 경쟁자 감옥 보내고 자산 탈취",
+    "impact": "High"
+  },
+  {
+    "id": "INVEST_012",
+    "type": "투자 클리셰",
+    "description": "천재적 시장 분석력으로 금융위기 예측하여 공매도 대박",
+    "impact": "High"
+  },
+  {
+    "id": "INVEST_013",
+    "type": "투자 클리셰",
+    "description": "무명 스타트업에 투자해 유니콘 기업 육성 성공",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_014",
+    "type": "투자 클리셰",
+    "description": "부동산 재개발 정보 선점하여 수천억 차익",
+    "impact": "High"
+  },
+  {
+    "id": "INVEST_015",
+    "type": "투자 클리셰",
+    "description": "금융 파생상품으로 레버리지 극대화하여 폭리",
+    "impact": "High"
+  },
+  {
+    "id": "INVEST_016",
+    "type": "기연/행운 이벤트",
+    "description": "우연히 만난 노인이 실제로는 전설의 투자자",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_017",
+    "type": "기연/행운 이벤트",
+    "description": "파산한 재벌의 숨겨진 금고 발견하여 종잣돈 확보",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_018",
+    "type": "기연/행운 이벤트",
+    "description": "우연한 인맥으로 정치인/재벌과 연결",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_019",
+    "type": "기연/행운 이벤트",
+    "description": "폐업 직전 골동품 가게에서 천문학적 가치의 보물 발견",
+    "impact": "Low"
+  },
+  {
+    "id": "INVEST_020",
+    "type": "기연/행운 이벤트",
+    "description": "로또 당첨/상속으로 갑작스런 종잣돈 마련",
+    "impact": "Low"
+  },
+  {
+    "id": "INVEST_021",
+    "type": "착각/반전 클리셰",
+    "description": "빈털터리인 줄 알았는데 사실은 재벌 후계자",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_022",
+    "type": "착각/반전 클리셰",
+    "description": "무능한 백수로 오해받지만 실제로는 천재 투자자",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_023",
+    "type": "착각/반전 클리셰",
+    "description": "쓰레기 주식으로 여겨졌는데 숨겨진 핵심 기술 보유",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_024",
+    "type": "착각/반전 클리셰",
+    "description": "경쟁자가 승리한 줄 착각했지만 실제로는 함정",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_025",
+    "type": "착각/반전 클리셰",
+    "description": "조용히 지분 모아 경영권 탈취 준비 완료",
+    "impact": "High"
+  },
+  {
+    "id": "INVEST_026",
+    "type": "복수/배신 클리셰",
+    "description": "주인공을 배신한 동업자에게 회사 빼앗아 복수",
+    "impact": "High"
+  },
+  {
+    "id": "INVEST_027",
+    "type": "복수/배신 클리셰",
+    "description": "가족 망하게 한 재벌가를 파산시키는 긴 복수극",
+    "impact": "High"
+  },
+  {
+    "id": "INVEST_028",
+    "type": "복수/배신 클리셰",
+    "description": "사기 당한 투자금을 되찾기 위한 치밀한 역공",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_029",
+    "type": "복수/배신 클리셰",
+    "description": "회사 날린 임원진을 법정에서 파멸시킴",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_030",
+    "type": "복수/배신 클리셰",
+    "description": "전생에서 주인공을 죽인 경쟁자에게 복수",
+    "impact": "High"
+  },
+  {
+    "id": "INVEST_031",
+    "type": "권력/정치 투쟁",
+    "description": "정치인과 밀약하여 규제 회피 성공",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_032",
+    "type": "권력/정치 투쟁",
+    "description": "재벌가 내부 권력 다툼에서 승리하여 총수 등극",
+    "impact": "High"
+  },
+  {
+    "id": "INVEST_033",
+    "type": "권력/정치 투쟁",
+    "description": "언론사 인수하여 여론 장악 성공",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_034",
+    "type": "권력/정치 투쟁",
+    "description": "해외 펀드 유치로 경영권 방어 성공",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_035",
+    "type": "권력/정치 투쟁",
+    "description": "검찰 수사 위기를 법률 전문가로 돌파",
+    "impact": "High"
+  },
+  {
+    "id": "INVEST_036",
+    "type": "경영/사업 전략",
+    "description": "경쟁사 핵심 인재 스카우트로 기술 탈취",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_037",
+    "type": "경영/사업 전략",
+    "description": "특허 소송으로 경쟁사에게 거액 배상금 받음",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_038",
+    "type": "경영/사업 전략",
+    "description": "IPO 대박으로 일약 억만장자 등극",
+    "impact": "High"
+  },
+  {
+    "id": "INVEST_039",
+    "type": "경영/사업 전략",
+    "description": "글로벌 기업과 합작 법인 설립하여 기술 획득",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_040",
+    "type": "경영/사업 전략",
+    "description": "친환경/ESG 투자로 정부 지원금 대박",
+    "impact": "Low"
+  },
+  {
+    "id": "INVEST_041",
+    "type": "위기 극복",
+    "description": "유동성 위기 직전 긴급 자금 조달 성공",
+    "impact": "High"
+  },
+  {
+    "id": "INVEST_042",
+    "type": "위기 극복",
+    "description": "신용등급 강등 위기를 회사채 조기 상환으로 돌파",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_043",
+    "type": "위기 극복",
+    "description": "주가 폭락 위기에서 자사주 매입으로 방어",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_044",
+    "type": "위기 극복",
+    "description": "노조 파업을 협상력으로 해결하여 생산 정상화",
+    "impact": "Low"
+  },
+  {
+    "id": "INVEST_045",
+    "type": "위기 극복",
+    "description": "환율 급등으로 외화 부채 위기를 헤지로 방어",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_046",
+    "type": "사이다 장면",
+    "description": "주인공을 무시하던 재벌 2세가 파산하여 굴복",
+    "impact": "High"
+  },
+  {
+    "id": "INVEST_047",
+    "type": "사이다 장면",
+    "description": "오만한 펀드매니저의 예측이 틀렸음을 증명",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_048",
+    "type": "사이다 장면",
+    "description": "주인공을 사기꾼 취급하던 언론이 사과",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_049",
+    "type": "사이다 장면",
+    "description": "갑질하던 대기업 임원을 공개 석상에서 망신",
+    "impact": "Medium"
+  },
+  {
+    "id": "INVEST_050",
+    "type": "사이다 장면",
+    "description": "불법 거래 저지르던 경쟁자가 검찰에 구속됨",
+    "impact": "High"
+  }
+]
