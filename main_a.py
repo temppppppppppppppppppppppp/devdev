@@ -531,11 +531,12 @@ class SovereignApp:
                 # 이 함수는 self.current_project.db의 'bible', 'volumes', 'arcs' 키를 체크해야 함
                 status = self.sys.check_v20_readiness() 
                 
-                # 3. 메뉴 구성 (V25 공정 명칭 표준화)
+                # 3. 메뉴 구성 (V41 유동 아크 + 스킵 옵션)
+                vol_status = '✅' if status.get('Stage 1 (Volumes)', False) else '⏭️ 스킵가능'
                 menu = {
                     "0": f"Phase 0: Bible Recovery & DNA Sync [{'✅' if status.get('Stage 0 (Bible)', False) else '❌'}]",
-                    "1": f"Stage 1: Volume Strategy (10 Vol) [{'✅' if status.get('Stage 1 (Volumes)', False) else '❌'}]",
-                    "2": f"Stage 2: Arc Tactical Design (50 Arc) [{'✅' if status.get('Stage 2 (Arcs)', False) else '❌'}]",
+                    "1": f"Stage 1: Volume Strategy (선택) [{vol_status}]",
+                    "2": f"Stage 2: Arc Tactical Design (유동) [{'✅' if status.get('Stage 2 (Arcs)', False) else '❌'}]",
                     "3": "📐 Stage 3: Episode Blueprinting (Batch Design)", # 분리됨
                     "4": "🚀 Stage 4: Sovereign Production (Writing)",     # 분리됨
                     "5": "Exit",
@@ -551,10 +552,13 @@ class SovereignApp:
                     self._phase_0_recovery()
                 elif choice == "1": 
                     self._stage_1_volumes()
-                elif choice == "2": 
+                elif choice == "2":
                     if not status.get('Stage 1 (Volumes)', False):
-                        self.ui.log("⚠️ Stage 1 전략 설계가 선행되어야 합니다.")
-                        continue
+                        self.ui.log("⚠️ Stage 1 (Volume Strategy)이 완료되지 않았습니다.")
+                        self.ui.log("💡 Volume 전략 없이도 Arc 설계를 진행할 수 있습니다.")
+                        skip_confirm = input("   Stage 1을 건너뛰고 진행하시겠습니까? (y/N): ").strip().lower()
+                        if skip_confirm != 'y':
+                            continue
                     self._stage_2_arcs()
                 elif choice == "3": 
                     # 📐 [Stage 3] 설계도만 일괄 생성 (Architect 전용)
@@ -668,33 +672,45 @@ class SovereignApp:
         input("\n[Enter] 메뉴로 돌아가기")
 
     def _stage_1_volumes(self):
-        """[Stage 1] 50개 아크 기반 10권 고해상도 전략 설계 (V25 Batch Logic)"""
-        self.ui.log("📜 [Stage 1] 10권 고해상도 순차 설계 가동 (V25 JSON 규격)...")
-        
+        """[Stage 1] 아크 기반 권별 고해상도 전략 설계 (V41 스킵 옵션 추가)"""
+        self.ui.log("📜 [Stage 1] 권별 고해상도 순차 설계 (V41 유동 아크)")
+
+        # [V41 Patch] 스킵 옵션 제공
+        self.ui.log("💡 Stage 1은 선택 사항입니다. 스킵해도 Stage 2 진행이 가능합니다.")
+        skip_choice = input("   [1] 진행  [2] 스킵 (기본: 1): ").strip()
+        if skip_choice == '2':
+            self.ui.log("⏭️ Stage 1을 건너뜁니다. Stage 2에서 기본값으로 진행됩니다.")
+            input("\n[Enter] 메뉴로 돌아가기")
+            return
+
         # [V38 패치] 안전한 커밋으로 변경
         self._safe_commit()
 
         # [V38 패치] 안전한 데이터 추출
         bible_root = self.current_project.master_bible.get('MasterBible', self.current_project.master_bible) if self.current_project.master_bible else {}
         arcs_source = bible_root.get('plot_roadmap', [])
-        
+
         if not arcs_source:
             self.ui.log("❌ 에러: 성경 내 로드맵 데이터가 없습니다. Phase 0을 다시 실행하세요.")
             return
-            
-        self.ui.log(f"📊 총 {len(arcs_source)}개의 서사 블록을 발견했습니다. 분권 설계를 시작합니다.")
+
+        # [V41 Patch] 아크 총량 유동화 - plot_roadmap 길이에 따라 권 수 자동 계산
+        total_arcs = len(arcs_source)
+        total_volumes = (total_arcs + VolumeSettings.ARCS_PER_VOLUME - 1) // VolumeSettings.ARCS_PER_VOLUME  # 올림 처리
+        self.ui.log(f"📊 총 {total_arcs}개 아크 발견 → {total_volumes}권 분권 설계를 시작합니다.")
 
         final_volumes = []
         context_accumulator = "" # 이전 권의 요약본을 누적하여 서사적 일관성 유지
         project_data = bible_root.get('ProjectData', {})
         meta_info = json.dumps(project_data.get('MetaInfo', {}) if isinstance(project_data, dict) else {}, ensure_ascii=False)
 
-        # 2. 10권 순차 설계 루프 (5개 아크 단위 슬라이싱)
-        for vol_idx in range(1, 11):
-            start_idx = (vol_idx - 1) * 5
-            end_idx = vol_idx * 5
+        # [V41 Patch] 유동적 권 수 순차 설계 루프
+        arcs_per_vol = VolumeSettings.ARCS_PER_VOLUME
+        for vol_idx in range(1, total_volumes + 1):
+            start_idx = (vol_idx - 1) * arcs_per_vol
+            end_idx = vol_idx * arcs_per_vol
             vol_arcs_chunk = arcs_source[start_idx:end_idx]
-            
+
             if not vol_arcs_chunk:
                 self.ui.log(f"⚠️ [Warning] {vol_idx}권에 해당하는 데이터가 부족합니다. 스킵합니다.")
                 continue
@@ -766,13 +782,13 @@ class SovereignApp:
                 self.ui.log(f"❌ [Critical] 제 {vol_idx}권 품질 미달로 공정 중단.")
                 return
 
-        # 3. 10권 전체 데이터 DB 박제 및 메모리 동기화
+        # 3. 전체 데이터 DB 박제 및 메모리 동기화
         self.current_project.save_v20_anchor("volumes", final_volumes)
-        self.current_project.volumes = final_volumes 
+        self.current_project.volumes = final_volumes
         # [추가] 시각적 확인을 위해 표 출력 기능 유지
         if hasattr(self, '_show_volume_table'):
             self._show_volume_table(final_volumes)
-        self.ui.log("✨ [Complete] 10권 대서사시 로드맵이 DB에 최종 안착되었습니다.")
+        self.ui.log(f"✨ [Complete] {len(final_volumes)}권 대서사시 로드맵이 DB에 최종 안착되었습니다.")
         
         input("\n[Enter] 메뉴로 이동")
 
@@ -826,7 +842,10 @@ class SovereignApp:
             self.current_project.volumes = self.current_project.db.load_anchor('volumes')
 
         bible_data = self.current_project.master_bible
-        volumes_strategy = self.current_project.volumes
+        # [V41 Patch] Stage 1 스킵 시 빈 volumes 안전 처리
+        volumes_strategy = self.current_project.volumes or []
+        if not volumes_strategy:
+            self.ui.log("⚠️ [Notice] Volume 전략이 없습니다. 기본값으로 Arc 설계를 진행합니다.")
         bible_root = bible_data.get('MasterBible', bible_data)
         arcs_source = bible_root.get('plot_roadmap', [])
         
@@ -1008,7 +1027,12 @@ class SovereignApp:
             for idx, enriched_block in enumerate(enriched_batch):
                 global_arc_no = batch_start + idx + 1
                 vol_no = ((global_arc_no - 1) // VolumeSettings.ARCS_PER_VOLUME) + 1
-                current_vol_strategy = next((v for v in volumes_strategy if v['vol_no'] == vol_no), volumes_strategy[0])
+                # [V41 Patch] Stage 1 스킵 시 빈 volumes 폴백 처리
+                default_vol_strategy = {"vol_no": vol_no, "strategy_doc": ""}
+                current_vol_strategy = next(
+                    (v for v in volumes_strategy if v.get('vol_no') == vol_no),
+                    volumes_strategy[0] if volumes_strategy else default_vol_strategy
+                )
                 
                 ### [0124 핵심 1] Analyst: 결핍 리포트 생성 (예외 처리 추가)
                 try:
