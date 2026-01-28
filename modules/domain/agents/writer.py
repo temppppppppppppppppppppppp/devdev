@@ -136,12 +136,30 @@ class Writer(BaseAgent):
         - **부 패턴**: {self._escape_braces(str(pattern_secondary))}
         - **조합 논리**: {self._escape_braces(str(pattern_logic))}
 
-        ### ⚠️ 출력 형식 (Strict JSON)
-        - 제목과 본문으로 구성된 JSON을 출력하라.
+        ### ⚠️ 출력 형식 (Strict JSON) [V41 State Updates Protocol]
+        - 제목, 본문, 상태 변화로 구성된 JSON을 출력하라.
         {{
             "title": "에피소드 제목 (한글만)",
-            "content": "5,000자 이상의 소설 본문 (줄바꿈은 \\n)"
+            "content": "5,000자 이상의 소설 본문 (줄바꿈은 \\n)",
+            "state_updates": {{
+                "internal_energy": "+50" 또는 "현상 유지",
+                "realm": "경지명" 또는 "현상 유지",
+                "causal_injuries": "부상 상태 (예: 경상, 중상, 정상)",
+                "wealth": "+/-금액" 또는 "현상 유지",
+                "misunderstanding": "+10" 또는 "현상 유지",
+                "obsession": "+5" 또는 "현상 유지",
+                "equipment": "새로 획득한 아이템" 또는 "현상 유지",
+                "martial_arts": "새로 습득한 무공" 또는 "현상 유지"
+            }}
         }}
+
+        ### 📌 state_updates 작성 지침
+        1. 이번 화에서 실제로 발생한 변화만 기록하라
+        2. 변화가 없는 항목은 "현상 유지"로 표기하라
+        3. 수치 변화는 반드시 +/- 기호와 함께 표기하라 (예: "+100", "-50냥")
+        4. 부상 상태는 구체적으로 기술하라 (예: "중상 (좌측 팔뚝 관통상)")
+        5. 경지 변화는 신중하게 판단하라 - 원고에 명시적 돌파 장면이 있을 때만 변경
+        6. 당신의 state_updates는 '제안'일 뿐이다. Director가 최종 승인/거부 권한을 갖는다.
         """
 
         # 3. [API 호출] 캐시 유무에 따른 분기 처리

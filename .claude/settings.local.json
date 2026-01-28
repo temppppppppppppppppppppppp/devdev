@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python main_a.py:*)",
+      "Bash(python -m py_compile:*)",
+      "Bash(python:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nV41: Stage 1 스킵 옵션 및 유동 아크 지원\n\n- Stage 1 \\(Volume Strategy\\) 스킵 가능하도록 변경\n- Stage 2에서 volumes 없이도 에러 없이 진행 가능 \\(폴백 처리\\)\n- 아크 총량 50개 고정 → plot_roadmap 길이 기반 유동화\n- 권 수 자동 계산 \\(아크 수 / ARCS_PER_VOLUME 올림\\)\n- 메뉴 표시 개선: Stage 1 \"선택\", Stage 2 \"유동\"\n- CLAUDE.md: settings.json 전체 구조 반영 및 경로 수정\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(sqlite3:*)"
+    ]
+  }
+}

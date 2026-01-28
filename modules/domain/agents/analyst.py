@@ -159,6 +159,11 @@ PLAN_ARC_PROMPT_V25 = """
 - [원자 패턴]: 도입({intro_library}) / 전개({dev_library}) / 전환({trans_library}) / 결말({ending_library})
 - [가용 자산]: {assets}
 
+### 🔒 PROTAGONIST IDENTITY LOCK (V42 Immutable)
+- 주인공 고유 이름: {protagonist_name}
+- 이 이름은 작품 전체에서 절대 변경되지 않는 불변값이다.
+- 위 인물 외를 주인공으로 서술하거나, 주인공 이름을 유사 명칭으로 대체하면 서사 무결성 파괴로 간주한다.
+
 ### 📐 2. 서사 맥락 및 연결 (Narrative Window)
 - [🧭 대전략 나침반]: {strategic_compass}
 - [🕒 실전 연표]: {prev_arc_context}
@@ -364,9 +369,24 @@ class Analyst(BaseAgent):
         else:
             intro_lib_full = dev_lib_full = ending_lib_full = trans_lib_full = archetype_lib_full = "데이터 파일 없음"
 
+        # 3-1. [V42] Bible에서 주인공 이름 추출 (PROTAGONIST IDENTITY LOCK)
+        protagonist_name = "주인공"  # 기본값
+        try:
+            bible_data = self.context.db.load_anchor('bible')
+            if bible_data:
+                mb = bible_data.get('MasterBible', bible_data)
+                hud = mb.get('MartialHUD', {})
+                protag = hud.get('Protagonist', {})
+                actual = protag.get('actual_truth', {})
+                if actual.get('name'):
+                    protagonist_name = actual.get('name')
+        except Exception as e:
+            print(f"      ⚠️ [Analyst] 주인공 이름 추출 실패, 기본값 사용: {e}")
+
         # 4. 공통 데이터셋 조립 (데이터 이스케이프 적용)
         safe_data = {
             "genre_prompt": self.context.guard.get_v20_purism_prompt(),
+            "protagonist_name": protagonist_name,  # V42 LOCK
             "strategic_compass": self._escape_braces(vol_strategy),
             "prev_arc_context": self._escape_braces(prev_arc_context) or "시작점",
             "prev_block": self._escape_braces(json.dumps(prev_block, ensure_ascii=False)) if prev_block else "시작점",

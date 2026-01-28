@@ -211,11 +211,23 @@ class Director(BaseAgent):
         return self._extract_json_robust(response)
     
 
-    def audit_strategic_plan(self, arc_plan, prev_arc_context, curr_block=None):
+    def audit_strategic_plan(self, arc_plan, prev_arc_context, curr_block=None, protagonist_name=None):
         """[Stage 2] Analyst의 아크 설계안에 대한 전략적 무결성 검수 (루프/미래 오염 방지)"""
-        # 🔒 [Hard Guard] 미래 무구 조기 노출 차단
         arc_no = arc_plan.get("arc_no")
         arc_dump = json.dumps(arc_plan, ensure_ascii=False)
+
+        # 🔒 [V42 Hard Guard] 주인공 이름 일관성 검증
+        if protagonist_name and len(protagonist_name) >= 2:
+            if protagonist_name not in arc_dump:
+                return {
+                    "decision": "REJECT",
+                    "score": 0,
+                    "loop_detected": False,
+                    "reason": f"주인공 이름 '{protagonist_name}' 누락 감지 - 서사 무결성 파괴",
+                    "re_slice_instruction": f"모든 주인공 서술에서 '{protagonist_name}'을 명시적으로 사용하라. 유사 명칭이나 다른 인물 이름으로 대체 금지."
+                }
+
+        # 🔒 [Hard Guard] 미래 무구 조기 노출 차단
         if isinstance(arc_no, int) and arc_no < 15 and "혼철대도" in arc_dump:
             return {
                 "decision": "REJECT",
@@ -247,7 +259,7 @@ class Director(BaseAgent):
 
     def audit_timeline_logic(self, ep_num, current_manuscript, prev_summary):
         """[V38.1] 시공간 및 동선 모순 정밀 감사 (Timeline Auditor)"""
-        
+
         prompt = f"""
         [Role] 시공간 정합성 감사관 (Continuity Supervisor)
         [Task] 직전 화의 요약본과 현재 원고를 대조하여 '동선'과 '시간'의 모순을 적발하라.
@@ -271,3 +283,193 @@ class Director(BaseAgent):
         """
         response = self.ask(prompt, temperature=0.1)
         return self._extract_json_robust(response)
+
+
+    # =================================================================
+    # [V41] Director Sovereignty - 캐릭터 논리성 검증 & 상태 승인
+    # =================================================================
+
+    def assess_character_logic(self, ep_num, manuscript, npc_profiles, character_traits):
+        """
+        [V41 Red Team] 캐릭터 논리성 적대적 검증
+
+        Args:
+            ep_num: 에피소드 번호
+            manuscript: 검수 대상 원고
+            npc_profiles: 등장 NPC 프로필 (Master Bible에서 추출)
+            character_traits: 캐릭터 특성 DB (성격, 지능, 무공 수준 등)
+
+        Returns:
+            dict: {decision, score, violations, severity, feedback}
+        """
+        safe_manuscript = self._escape_braces(manuscript[:6000])  # 토큰 절약
+        safe_npc = self._escape_braces(json.dumps(npc_profiles, ensure_ascii=False))
+        safe_traits = self._escape_braces(json.dumps(character_traits, ensure_ascii=False))
+
+        prompt = f"""
+[Role] 레드팀 캐릭터 논리성 감사관 (Character Logic Auditor)
+[Task] 원고 내 등장인물의 행동이 설정된 특성과 일치하는지 적대적으로 검증하라.
+
+### 📋 검수 대상 데이터
+- 현재 회차: 제 {ep_num}화
+- 📝 원고 내용: {safe_manuscript}
+- 👤 등장 NPC 프로필: {safe_npc}
+- 🎭 캐릭터 특성 DB: {safe_traits}
+
+### 🎯 적대적 검증 항목 (Red Team Criteria)
+1. **지능적 캐릭터의 어리석은 결정**:
+   - '교활한', '노회한', '간사한' 특성의 인물이 비합리적/어리석은 결정을 내리는가?
+   - 예: 교활한 악당이 주인공을 함정에 빠뜨릴 수 있는 상황에서 정면대결을 선택
+
+2. **강자의 급격한 약화**:
+   - 설정상 강자가 설명 없이 쉽게 제압당하는가?
+   - 예: 일류 고수가 삼류의 기습에 무력하게 당함
+
+3. **성격 일관성 위반**:
+   - 냉혹한 인물이 갑자기 자비를 베풀거나, 소심한 인물이 돌연 대담해지는가?
+   - 성격 변화가 있다면 충분한 서사적 근거가 있는가?
+
+4. **동기 불명 행동**:
+   - 인물의 행동에 명확한 동기가 보이지 않는가?
+   - 특히 주인공에게 유리한 방향으로 '우연히' 행동하는 조연
+
+### [🚨 판정 기준]
+- NPC 프로필이나 특성 DB가 비어있으면 자동 PASS (검증 불가)
+- 경미한 위반(MINOR)은 경고만 하고 PASS
+- 중대한 위반(MAJOR) 2개 이상 또는 치명적 위반(CRITICAL) 1개 이상 시 REJECT
+
+[Output Format] JSON Only
+{{
+    "decision": "PASS" 또는 "REJECT",
+    "score": 0~100,
+    "violations": [
+        {{
+            "character": "캐릭터명",
+            "trait": "설정된 특성",
+            "action": "문제 행동",
+            "reason": "위반 사유"
+        }}
+    ],
+    "severity": "NONE" 또는 "MINOR" 또는 "MAJOR" 또는 "CRITICAL",
+    "feedback": "수정 지침 (REJECT 시 필수, PASS 시 권고사항)"
+}}
+"""
+        # NPC 정보가 비어있으면 자동 PASS
+        if not npc_profiles and not character_traits:
+            return {
+                "decision": "PASS",
+                "score": 100,
+                "violations": [],
+                "severity": "NONE",
+                "feedback": "NPC 프로필 없음 - 캐릭터 논리 검증 생략"
+            }
+
+        response = self.ask(prompt, temperature=0.1)
+        return self._extract_json_robust(response)
+
+
+    def on_approve_workflow(self, ep_num, state_updates, current_hud, martial_manager=None):
+        """
+        [V41 Director Sovereignty] 상태 업데이트 검증 및 적용
+
+        Writer가 제안한 state_updates를 검증하고, 승인된 항목만 반환합니다.
+
+        Args:
+            ep_num: 에피소드 번호
+            state_updates: Writer가 제안한 상태 변화 dict
+            current_hud: 현재 HUD 상태 dict
+            martial_manager: MartialManager 인스턴스 (선택적)
+
+        Returns:
+            dict: {
+                "approved": True/False,
+                "applied_updates": {...},  # 실제 적용할 업데이트
+                "rejected_updates": {...}, # 거부된 업데이트 (이유 포함)
+                "warnings": [...]          # 경고 메시지
+            }
+        """
+        if not state_updates or not isinstance(state_updates, dict):
+            return {
+                "approved": True,
+                "applied_updates": {},
+                "rejected_updates": {},
+                "warnings": ["Writer가 state_updates를 제출하지 않음 - 상태 변경 없음"]
+            }
+
+        applied = {}
+        rejected = {}
+        warnings = []
+
+        # 검증 규칙 정의
+        LIMITS = {
+            "internal_energy": {"max_increase": 200, "max_decrease": -500},
+            "misunderstanding": {"max_change": 30},
+            "obsession": {"max_change": 30},
+            "wealth": {"max_change": 10000}
+        }
+
+        for key, value in state_updates.items():
+            # "현상 유지" 처리
+            if value in ["현상 유지", "유지", "변화 없음", None, ""]:
+                continue
+
+            # 수치 변화 파싱 시도
+            if isinstance(value, str) and (value.startswith("+") or value.startswith("-")):
+                try:
+                    # "+100" → 100, "-50냥" → -50
+                    numeric_str = ''.join(c for c in value if c.isdigit() or c == '-' or c == '+')
+                    if numeric_str:
+                        change = int(numeric_str)
+
+                        # 범위 검증
+                        if key in LIMITS:
+                            limits = LIMITS[key]
+                            if "max_increase" in limits and change > limits["max_increase"]:
+                                rejected[key] = {
+                                    "proposed": value,
+                                    "reason": f"증가량 초과 (최대 +{limits['max_increase']})"
+                                }
+                                warnings.append(f"[REJECT] {key}: {value} → 비합리적 증가량")
+                                continue
+                            if "max_decrease" in limits and change < limits["max_decrease"]:
+                                rejected[key] = {
+                                    "proposed": value,
+                                    "reason": f"감소량 초과 (최대 {limits['max_decrease']})"
+                                }
+                                warnings.append(f"[REJECT] {key}: {value} → 비합리적 감소량")
+                                continue
+                            if "max_change" in limits and abs(change) > limits["max_change"]:
+                                rejected[key] = {
+                                    "proposed": value,
+                                    "reason": f"변화량 초과 (최대 ±{limits['max_change']})"
+                                }
+                                warnings.append(f"[REJECT] {key}: {value} → 변화량 초과")
+                                continue
+                except ValueError:
+                    pass  # 숫자가 아닌 경우 그대로 진행
+
+            # 경지(realm) 변화 검증 - 한 단계 이상 점프 시 경고
+            if key == "realm" and current_hud:
+                current_realm = current_hud.get("realm", "")
+                if value != current_realm:
+                    # 경지 변화는 허용하되 경고 기록
+                    warnings.append(f"[INFO] 경지 변화 감지: {current_realm} → {value}")
+
+            # 부상(causal_injuries) 검증 - 회복 시 경고
+            if key == "causal_injuries" and current_hud:
+                current_injury = current_hud.get("causal_injuries", "")
+                if current_injury and "중상" in str(current_injury) and "정상" in str(value):
+                    warnings.append(f"[WARN] 부상 급회복: {current_injury} → {value} (서사적 근거 필요)")
+
+            # 승인된 업데이트 추가
+            applied[key] = value
+
+        # 최종 결과 구성
+        is_approved = len(rejected) == 0 or len(applied) > 0
+
+        return {
+            "approved": is_approved,
+            "applied_updates": applied,
+            "rejected_updates": rejected,
+            "warnings": warnings
+        }
