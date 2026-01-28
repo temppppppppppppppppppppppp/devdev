@@ -148,7 +148,7 @@ When API hits MAX_TOKENS, automatically continues from last 50 chars as anchor p
 ## Caching System (V31 Quad-Cache)
 
 Four dedicated caches stored in `sys_caches` anchor (24-hour TTL per `constants.py:RetryLimits.CACHE_TTL_SECONDS`):
-- `writer_cache` - Writing manifesto + style seeds from `config/cash/style_seeds_final.txt`
+- `writer_cache` - Writing manifesto + style seeds from `projects/{name}/config/cash/style_seeds_final.txt`
 - `architect_cache` - Structural rules
 - `analyst_cache` - Strategy libraries
 - `weaver_cache` - Foreshadowing rules
@@ -234,6 +234,12 @@ If ChromaDB fails with lock error:
 - Truncated blueprints → Verify MAX_TOKENS continuation in `BaseAgent.ask()`
 - HUD state mismatch → Check `MartialManager.snapshot()` and DB storage
 
+**HUD Update Verification:**
+See `TEST_GUIDE.md` for detailed HUD update testing procedures. Key success indicators:
+- `✅ [HUD] actual_truth 데이터 정상 추출` log message
+- `🔥 [HUD Update]` messages showing state changes
+- No `🚨 [WARNING]` messages about nested structures
+
 ## Database Schema
 
 **anchors table** (key-value store):
@@ -277,11 +283,17 @@ All tables commit through `ProjectContext.db` which wraps `DBManager`. Always us
 Defined in `config/settings.json`:
 ```json
 {
-  "architect": "gemini-3-pro-preview",
-  "analyst": "gemini-3-pro-preview",
-  "writer": "gemini-3-pro-preview",
-  "reviewer": "gemini-2.0-flash",
-  "evaluator": "gemini-3-pro-preview"
+  "models": {
+    "architect": "gemini-3-pro-preview",
+    "analyst": "gemini-3-pro-preview",
+    "writer": "gemini-3-pro-preview",
+    "reviewer": "gemini-2.0-flash",
+    "evaluator": "gemini-3-pro-preview"
+  },
+  "costs": {
+    "max_retries": 3,
+    "temperature": 0.8
+  }
 }
 ```
 
