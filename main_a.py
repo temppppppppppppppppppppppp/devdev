@@ -848,6 +848,18 @@ class SovereignApp:
             self.ui.log("⚠️ [Notice] Volume 전략이 없습니다. 기본값으로 Arc 설계를 진행합니다.")
         bible_root = bible_data.get('MasterBible', bible_data)
         arcs_source = bible_root.get('plot_roadmap', [])
+
+        # [V42] 주인공 이름 추출 (PROTAGONIST IDENTITY LOCK)
+        protagonist_name = None
+        try:
+            hud = bible_root.get('MartialHUD', {})
+            protag = hud.get('Protagonist', {})
+            actual = protag.get('actual_truth', {})
+            protagonist_name = actual.get('name')
+            if protagonist_name:
+                self.ui.log(f"🔒 [V42] 주인공 이름 락: {protagonist_name}")
+        except Exception as e:
+            self.ui.log(f"⚠️ [V42] 주인공 이름 추출 실패: {e}")
         
         ### [V38 패치] 안전한 북극성 추출
         project_data = bible_root.get('ProjectData', {})
@@ -1153,7 +1165,8 @@ class SovereignApp:
                     audit = self.agents['director'].audit_strategic_plan(
                         refined_arc,
                         last_refined_context,
-                        curr_block=enriched_block
+                        curr_block=enriched_block,
+                        protagonist_name=protagonist_name  # V42 LOCK
                     )
                     
                     if audit.get('decision') == 'PASS' and len(refined_arc.get('tactical_doc', '')) >= 2000:
@@ -1501,6 +1514,136 @@ class SovereignApp:
             return True
         hits = sum(1 for k in keywords if k in text)
         return hits >= min_hits
+
+    # =================================================================
+    # [V41] Director Sovereignty 헬퍼 메서드
+    # =================================================================
+
+    def _extract_npc_profiles(self, arc_data: dict) -> dict:
+        """[V41] 아크 데이터에서 등장 NPC 프로필 추출"""
+        npcs = {}
+        if not self.current_project:
+            return npcs
+
+        bible = self.current_project.master_bible.get('MasterBible', {})
+        npc_lib = bible.get('AssetLibrary', {}).get('Key_NPCs', [])
+
+        # 아크에서 언급된 NPC만 필터링
+        arc_text = json.dumps(arc_data, ensure_ascii=False) if arc_data else ""
+        for npc in npc_lib:
+            npc_name = npc.get('name', '') or npc.get('Name', '')
+            if npc_name and npc_name in arc_text:
+                npcs[npc_name] = npc
+
+        return npcs
+
+    def _get_character_traits(self) -> dict:
+        """[V41] 캐릭터 특성 DB 로드 (성격, 지능, 무공수준)"""
+        traits = {}
+        if not self.current_project:
+            return traits
+
+        bible = self.current_project.master_bible.get('MasterBible', {})
+
+        for npc in bible.get('AssetLibrary', {}).get('Key_NPCs', []):
+            npc_name = npc.get('name', '') or npc.get('Name', '')
+            if npc_name:
+                traits[npc_name] = {
+                    'personality': npc.get('personality', npc.get('Personality', '')),
+                    'intelligence': npc.get('intelligence', 'normal'),
+                    'martial_level': npc.get('NPC_Martial_HUD', {}).get('realm', '알 수 없음'),
+                    'faction': npc.get('faction', npc.get('Faction', '')),
+                    'role': npc.get('role', npc.get('Role', ''))
+                }
+
+        return traits
+
+    def _load_character_archetypes(self, genre: str = 'wuxia') -> dict:
+        """[V41] 장르별 캐릭터 아키타입 JSON 로드"""
+        archetypes = {}
+        try:
+            archetype_path = Path("modules/core/laws/archetypes") / f"{genre}.json"
+            if archetype_path.exists():
+                archetypes = json.loads(archetype_path.read_text(encoding='utf-8'))
+        except Exception as e:
+            print(f"      ⚠️ [Archetype] 아키타입 로드 실패: {e}")
+        return archetypes
+
+    def _get_archetype_reference_for_npcs(self, npc_profiles: dict, genre: str = 'wuxia') -> str:
+        """[V41] NPC 프로필에 맞는 아키타입 참고 자료 생성"""
+        if not npc_profiles:
+            return ""
+
+        archetypes = self._load_character_archetypes(genre)
+        if not archetypes:
+            return ""
+
+        reference_lines = ["[📚 캐릭터 아키타입 참고 자료]",
+                          "등장 NPC들의 유형입니다. 참고하되 변주는 자유롭게 하십시오.", ""]
+
+        for npc_name, npc_data in npc_profiles.items():
+            npc_role = npc_data.get('role', '') or npc_data.get('Role', '')
+            npc_archetype = npc_data.get('archetype', '')  # NPC에 지정된 아키타입
+
+            # NPC 역할에서 아키타입 카테고리 추론
+            role_lower = npc_role.lower() if npc_role else ''
+            archetype_info = None
+
+            # 역할 기반 매칭
+            if '히로인' in role_lower or 'heroine' in role_lower or '여주' in role_lower:
+                category = 'supporter'
+                subcategory = 'heroine'
+            elif '스승' in role_lower or 'mentor' in role_lower or '사부' in role_lower:
+                category = 'mentor'
+                subcategory = 'master'
+            elif '적' in role_lower or '악당' in role_lower or 'antagonist' in role_lower:
+                category = 'antagonist'
+                subcategory = 'rival'
+            elif '제자' in role_lower or '수혜' in role_lower:
+                category = 'beneficiary'
+                subcategory = 'disciple'
+            elif '장로' in role_lower or '검증' in role_lower:
+                category = 'validator'
+                subcategory = 'authority'
+            else:
+                category = None
+                subcategory = None
+
+            # 아키타입 정보 추출
+            if category and subcategory:
+                cat_data = archetypes.get(category, {})
+                subcat_data = cat_data.get(subcategory, {})
+
+                # 첫 번째 아키타입 사용 (또는 지정된 아키타입)
+                if npc_archetype and npc_archetype in subcat_data:
+                    archetype_info = subcat_data[npc_archetype]
+                    archetype_name = npc_archetype
+                elif subcat_data:
+                    # 내부 필드 제외하고 첫 번째 아키타입 선택
+                    for key, val in subcat_data.items():
+                        if not key.startswith('_') and isinstance(val, dict):
+                            archetype_info = val
+                            archetype_name = key
+                            break
+
+            if archetype_info:
+                traits = archetype_info.get('core_traits', [])
+                speech = archetype_info.get('speech', '')
+                forbidden = archetype_info.get('forbidden', [])
+
+                reference_lines.append(f"- **{npc_name}**: '{archetype_name}' 유형")
+                if traits:
+                    reference_lines.append(f"  - 핵심 특성: {', '.join(traits[:4])}")
+                if speech:
+                    reference_lines.append(f"  - 말투: {speech[:50]}...")
+                if forbidden:
+                    reference_lines.append(f"  - 금기: {', '.join(forbidden[:3])}")
+                reference_lines.append("")
+
+        if len(reference_lines) <= 3:
+            return ""  # 매칭된 NPC가 없으면 빈 문자열
+
+        return "\n".join(reference_lines)
 
     def _audit_event(self, event_type, message, data=None):
         event = {
@@ -2480,7 +2623,14 @@ class SovereignApp:
                     # 유동적 서사 아이템 수혈
                     sampled_cliches = [c.get('description', '') for c in random.sample(cliche_data, 3)]
                     sampled_locations = [l.get('name', '') + ": " + l.get('note', '') for l in random.sample(location_data, 2)]
+
+                    # [V41] 캐릭터 아키타입 참고 자료 생성
+                    npc_profiles_for_arc = self._extract_npc_profiles(arc_data)
+                    archetype_reference = self._get_archetype_reference_for_npcs(npc_profiles_for_arc, genre_type)
+
                     tactical_refs = f"[💡 연출 지침]\n{sampled_cliches}\n\n[🏮 지리]\n{sampled_locations}\n\n[👥 NPC HUD]: {json.dumps(npc_hud, ensure_ascii=False)}"
+                    if archetype_reference:
+                        tactical_refs += f"\n\n{archetype_reference}"
 
                     # 🎬 실시간 대시보드 기동
                     cockpit = self.ui.make_cockpit_layout(next_ep, hud_report, "🔗 V30 Sovereign Writing...")
@@ -2488,6 +2638,8 @@ class SovereignApp:
                         final_pure_content, final_ep_title, current_feedback = "", "", ""
                             
                         for audit_attempt in range(RetryLimits.WRITER_MAX_ATTEMPTS):
+                            writer_state_updates = {}  # [V41] 초기화 (정의되지 않은 참조 방지)
+
                             # 🔒 [V40 Fix] Stage 4에서는 모델 변경 없이 gemini-3-pro-preview 고정 사용
                             from modules.core.constants import AIModels
                             current_writer_model = AIModels.STAGE4_FIXED_WRITER_MODEL
@@ -2546,11 +2698,14 @@ class SovereignApp:
                                 continue
 
                             writer_data = writer_res if isinstance(writer_res, dict) else self.agents['writer']._extract_json_robust(writer_res)
-                            
+
                             if writer_data and isinstance(writer_data, dict):
                                 # [V40] 장르 독립적 HUD 태그 제거
                                 temp_content = re.sub(r"\[V20 (MARTIAL|HUNTER|FINANCE) HUD.*?\]", "", writer_data.get('content', ""), flags=re.DOTALL | re.IGNORECASE)
                                 temp_title = writer_data.get('title', f"제 {next_ep} 화")
+
+                                # [V41] Writer가 제안한 state_updates 추출
+                                writer_state_updates = writer_data.get('state_updates', {})
 
                                 # 🧩 [Pattern Check] 원고에 패턴 반영 여부 확인
                                 # [V40.3 User Fix] gemini-2.5-pro부터는 패턴 부족으로 반려하지 않음
@@ -2610,7 +2765,79 @@ class SovereignApp:
                                     }
 
                                 if audit_res.get('decision') == "PASS":
-                                    self.ui.log(f"✅ [Director 승인] 점수: {audit_res.get('score')} - 무결성 확인."); final_pure_content = temp_content; final_ep_title = temp_title; break
+                                    self.ui.log(f"✅ [Director 품질 승인] 점수: {audit_res.get('score')}")
+
+                                    # [V41] 캐릭터 논리성 검수 (Red Team)
+                                    npc_profiles = self._extract_npc_profiles(arc_data)
+                                    character_traits = self._get_character_traits()
+
+                                    logic_passed = True
+                                    if npc_profiles or character_traits:
+                                        try:
+                                            logic_res = self.agents['director'].assess_character_logic(
+                                                ep_num=next_ep,
+                                                manuscript=temp_content,
+                                                npc_profiles=npc_profiles,
+                                                character_traits=character_traits
+                                            )
+                                            if logic_res.get('decision') == "REJECT":
+                                                logic_passed = False
+                                                severity = logic_res.get('severity', 'UNKNOWN')
+                                                self.ui.log(f"🚨 [캐릭터 논리 검수] 거부 - 심각도: {severity}")
+                                                self._audit_event("character_logic_reject", "character logic violation", {
+                                                    "ep_num": next_ep,
+                                                    "violations": logic_res.get('violations', []),
+                                                    "severity": severity
+                                                })
+                                                current_feedback = f"\n[🚨 CHARACTER LOGIC REJECTED]: {logic_res.get('feedback', '캐릭터 행동이 설정과 불일치')}"
+                                            else:
+                                                self.ui.log(f"✅ [캐릭터 논리 검수] 통과 - 점수: {logic_res.get('score', 'N/A')}")
+                                        except Exception as logic_err:
+                                            self.ui.log(f"⚠️ [캐릭터 논리 검수] 오류 발생, 생략: {logic_err}")
+                                            logic_passed = True  # 오류 시 통과 처리
+
+                                    if not logic_passed:
+                                        continue  # 캐릭터 논리 검수 실패 시 재시도
+
+                                    # [V41] state_updates 승인 (Director Sovereignty)
+                                    approved_state_updates = {}
+                                    if writer_state_updates:
+                                        try:
+                                            approval_res = self.agents['director'].on_approve_workflow(
+                                                ep_num=next_ep,
+                                                state_updates=writer_state_updates,
+                                                current_hud=self.current_project.latest_state,
+                                                martial_manager=self.sys.hud
+                                            )
+                                            approved_state_updates = approval_res.get('applied_updates', {})
+                                            rejected_updates = approval_res.get('rejected_updates', {})
+                                            warnings = approval_res.get('warnings', [])
+
+                                            # 로그 출력
+                                            if approved_state_updates:
+                                                self.ui.log(f"✅ [State Updates 승인] {len(approved_state_updates)}개 항목")
+                                            if rejected_updates:
+                                                self.ui.log(f"⚠️ [State Updates 거부] {len(rejected_updates)}개 항목: {list(rejected_updates.keys())}")
+                                            for w in warnings[:3]:  # 최대 3개 경고만 출력
+                                                self.ui.log(f"   ↳ {w}")
+
+                                            self._audit_event("state_updates_approval", "Writer state_updates processed", {
+                                                "ep_num": next_ep,
+                                                "approved": list(approved_state_updates.keys()),
+                                                "rejected": list(rejected_updates.keys()),
+                                                "warnings_count": len(warnings)
+                                            })
+                                        except Exception as approval_err:
+                                            self.ui.log(f"⚠️ [State Updates 승인] 오류 발생: {approval_err}")
+                                            approved_state_updates = writer_state_updates  # 오류 시 원본 사용
+
+                                    # [V41] 승인된 state_updates를 임시 저장 (Stage 5에서 사용)
+                                    self._v41_approved_state_updates = approved_state_updates
+
+                                    final_pure_content = temp_content
+                                    final_ep_title = temp_title
+                                    self.ui.log(f"✅ [Director 최종 승인] 제 {next_ep}화 무결성 확인 완료.")
+                                    break
                                 else:
                                     reason = audit_res.get('reason', '품질 미달')
                                     feedback = audit_res.get('feedback', '상세 묘사 부족')
@@ -2640,6 +2867,25 @@ class SovereignApp:
                                                 "score": score,
                                                 "attempt": audit_attempt
                                             })
+
+                                            # [V41] 재시도 완화 경로에서도 state_updates 승인 처리
+                                            approved_state_updates = {}
+                                            if writer_state_updates:
+                                                try:
+                                                    approval_res = self.agents['director'].on_approve_workflow(
+                                                        ep_num=next_ep,
+                                                        state_updates=writer_state_updates,
+                                                        current_hud=self.current_project.latest_state,
+                                                        martial_manager=self.sys.hud
+                                                    )
+                                                    approved_state_updates = approval_res.get('applied_updates', {})
+                                                    if approved_state_updates:
+                                                        self.ui.log(f"✅ [State Updates 승인] {len(approved_state_updates)}개 항목 (완화 경로)")
+                                                except Exception as approval_err:
+                                                    self.ui.log(f"⚠️ [State Updates] 승인 오류: {approval_err}")
+                                                    approved_state_updates = writer_state_updates
+                                            self._v41_approved_state_updates = approved_state_updates
+
                                             final_pure_content = temp_content
                                             final_ep_title = temp_title
                                             self.ui.log(f"✅ [ACCEPTED] 제 {next_ep}화 원고 수용 (품질 경고 포함).")
@@ -2690,34 +2936,46 @@ class SovereignApp:
                                 audit = {}
 
                             # 3. 데이터 정산 및 HUD 연동용 딕셔너리 생성
-                            actual_truth_data = {} 
+                            actual_truth_data = {}
                             # 이전 상태 데이터 확보 (데이터 유실 시 복원용)
                             prev_actual = self.current_project.latest_state.get('actual_truth', {})
-                            
-                            # 4. 🛡️ state_updates 추출 (리스트/딕셔너리 어떤 형식이 와도 대응)
+
+                            # [V41] Director가 승인한 state_updates 우선 적용
+                            v41_approved = getattr(self, '_v41_approved_state_updates', {})
+                            if v41_approved:
+                                self.ui.log(f"🎯 [V41 Director Sovereignty] 승인된 state_updates 적용 ({len(v41_approved)}개 항목)")
+                                actual_truth_data.update(v41_approved)
+
+                            # 4. 🛡️ Manager state_updates 추출 (보조 데이터 - Director 승인분과 병합)
                             raw_updates = audit.get('state_updates', {})
 
                             # [V40.1 Critical Fix] Manager JSON 스키마 준수
+                            manager_updates = {}
                             if isinstance(raw_updates, dict):
                                 # 1순위: actual_truth 키 사용 (정상 경로 - Manager 프롬프트 스키마)
                                 if 'actual_truth' in raw_updates:
-                                    actual_truth_data = raw_updates['actual_truth']
-                                    self.ui.log(f"✅ [HUD] actual_truth 데이터 정상 추출 (키 개수: {len(actual_truth_data)})")
+                                    manager_updates = raw_updates['actual_truth']
+                                    self.ui.log(f"✅ [HUD] Manager actual_truth 데이터 추출 (키 개수: {len(manager_updates)})")
                                 # 2순위: 전체 딕셔너리 사용 (레거시 대응)
                                 else:
-                                    actual_truth_data = raw_updates
-                                    self.ui.log(f"⚠️ [HUD] actual_truth 키 없음. raw_updates 전체 사용 (키 개수: {len(actual_truth_data)})")
+                                    manager_updates = raw_updates
+                                    self.ui.log(f"⚠️ [HUD] actual_truth 키 없음. raw_updates 전체 사용 (키 개수: {len(manager_updates)})")
                             elif isinstance(raw_updates, list):
                                 # 리스트 형식 대응 (예외 케이스)
                                 for item in raw_updates:
                                     if isinstance(item, dict):
                                         t = item.get("target") or item.get('"target"')
                                         v = item.get("value") or item.get('"value"')
-                                        if t: actual_truth_data[str(t).strip("'\" ")] = v
-                                self.ui.log(f"⚠️ [HUD] 리스트 형식 state_updates 감지 (항목 수: {len(actual_truth_data)})")
+                                        if t: manager_updates[str(t).strip("'\" ")] = v
+                                self.ui.log(f"⚠️ [HUD] 리스트 형식 state_updates 감지 (항목 수: {len(manager_updates)})")
                             else:
                                 self.ui.log(f"🚨 [HUD] state_updates 형식 오류: {type(raw_updates)}")
-                                actual_truth_data = {}
+                                manager_updates = {}
+
+                            # [V41] Director 승인분이 없는 키만 Manager 데이터로 보충
+                            for k, v in manager_updates.items():
+                                if k not in actual_truth_data:
+                                    actual_truth_data[k] = v
 
                             # [디버깅] actual_truth_data 구조 확인
                             if actual_truth_data:

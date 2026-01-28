@@ -34,10 +34,14 @@ streamlit run studio_dashboard.py
 
 Located in `tools/` directory:
 - `RESET.py` - Selective project reset (clears DB/ChromaDB for chosen project)
-- `make_md.py` - Convert manuscripts to markdown
 - `concat_txt.py` - Concatenate episode text files
 - `db_porter.py` - Database migration utilities
 - `normalize_arcs_db.py` - Arc data normalization
+- `fix_future_items.py` - Fix future items in manuscripts
+- `make_BP.py` - Blueprint generation utility
+
+Located in root:
+- `make_md.py` - Convert manuscripts to markdown
 
 ## Production Pipeline (5 Stages)
 
