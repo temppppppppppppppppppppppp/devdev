@@ -2,8 +2,33 @@ import json
 from pathlib import Path
 from dataclasses import dataclass
 from dotenv import load_dotenv
-from .db_manager import DBManager 
+from .db_manager import DBManager, DBError
 import re
+from typing import Any, Optional
+
+
+def safe_nested_get(data: Any, *keys, default=None) -> Any:
+    """
+    [V44] 중첩된 딕셔너리에서 안전하게 값을 추출
+
+    Args:
+        data: 대상 딕셔너리
+        *keys: 순차적으로 접근할 키들
+        default: 키가 없거나 타입 오류 시 반환할 기본값
+
+    Example:
+        safe_nested_get(data, 'MasterBible', 'CommercialCode', 'SuccessDevice', default='기본값')
+    """
+    current = data
+    for key in keys:
+        if current is None:
+            return default
+        if not isinstance(current, dict):
+            return default
+        current = current.get(key)
+    return current if current is not None else default
+
+
 @dataclass
 class ProjectPaths:
     root: Path
@@ -80,17 +105,48 @@ class ProjectContext:
             d_path.write_text("# 절대 지시 사항을 입력하세요.\n", encoding="utf-8")
 
     def _load_from_db(self):
-        """기동 시 DB의 앵커 데이터를 메모리로 수혈"""
-        anchors = self.db.load_all_anchors() #
-        self.master_bible = anchors.get("bible", {})
-        self.volumes = anchors.get("volumes", [])
-        self.arcs = anchors.get("arcs", [])
-        self.karma_status = self.db.get_all_karma()
-        
-        bible_content = self.master_bible.get('MasterBible', self.master_bible)
-        commercial = bible_content.get('CommercialCode', {})
-        if commercial:
-            self.selected_tone["writer"] = commercial.get('SuccessDevice', self.selected_tone["writer"])
+        """[V44] 기동 시 DB의 앵커 데이터를 메모리로 수혈 (타입 검증 강화)"""
+        # [V44] anchors 로드 및 타입 검증
+        try:
+            anchors = self.db.load_all_anchors()
+        except (DBError, Exception) as e:
+            print(f"      🚨 [ProjectContext] DB 앵커 로드 실패: {e}")
+            print(f"         → 빈 상태로 초기화합니다")
+            anchors = {}
+
+        # [V44] anchors 타입 검증
+        if not isinstance(anchors, dict):
+            print(f"      ⚠️ [ProjectContext] anchors가 dict가 아님: {type(anchors)}")
+            anchors = {}
+
+        # [V44] 각 앵커 데이터 안전 추출
+        self.master_bible = anchors.get("bible") if isinstance(anchors.get("bible"), dict) else {}
+        self.volumes = anchors.get("volumes") if isinstance(anchors.get("volumes"), list) else []
+        self.arcs = anchors.get("arcs") if isinstance(anchors.get("arcs"), list) else []
+
+        # [V44] karma 로드 (별도 예외 처리)
+        try:
+            self.karma_status = self.db.get_all_karma()
+            if not isinstance(self.karma_status, dict):
+                self.karma_status = {}
+        except Exception as e:
+            print(f"      ⚠️ [ProjectContext] karma 로드 실패: {e}")
+            self.karma_status = {}
+
+        # [V44] safe_nested_get으로 중첩 접근
+        success_device = safe_nested_get(
+            self.master_bible,
+            'MasterBible', 'CommercialCode', 'SuccessDevice',
+            default=self.selected_tone.get("writer", "DB Mode")
+        )
+        # 추가 fallback: MasterBible 래퍼 없이 직접 접근하는 경우
+        if success_device == self.selected_tone.get("writer", "DB Mode"):
+            success_device = safe_nested_get(
+                self.master_bible,
+                'CommercialCode', 'SuccessDevice',
+                default=self.selected_tone.get("writer", "DB Mode")
+            )
+        self.selected_tone["writer"] = success_device
 
     # --- [Core: 데이터 박제 및 스마트 동기화] ---
     # modules/core/project_manager.py 내부
@@ -119,11 +175,16 @@ class ProjectContext:
             for cat, items in assets.items():
                 if isinstance(items, list): # KeyNPCs, KeyItems 등
                     for item in items:
-                        name = item.get('Item') or item.get('name')
-                        desc = item.get('Description') or item.get('desc')
-                        if name and desc:
-                            if isinstance(desc, (list, dict)): desc = json.dumps(desc, ensure_ascii=False)
-                            lore_batch.append((cat, name, desc))
+                        # [V44] item이 dict인 경우에만 .get() 사용
+                        if isinstance(item, dict):
+                            name = item.get('Item') or item.get('name')
+                            desc = item.get('Description') or item.get('desc')
+                            if name and desc:
+                                if isinstance(desc, (list, dict)): desc = json.dumps(desc, ensure_ascii=False)
+                                lore_batch.append((cat, name, desc))
+                        elif isinstance(item, str) and item.strip():
+                            # 문자열 아이템인 경우 이름과 설명을 동일하게 처리
+                            lore_batch.append((cat, item, item))
                             
                 elif isinstance(items, dict): # SpeechStyle 등
                     for name, desc in items.items():
@@ -354,45 +415,76 @@ class ProjectContext:
             if lore_data and isinstance(lore_data, dict) and "Key_NPCs" in lore_data:
                 bible_root = self.master_bible.get('MasterBible', self.master_bible)
                 bible_npcs = bible_root.get('AssetLibrary', {}).get('KeyNPCs', [])
-                
+
                 for new_npc in lore_data["Key_NPCs"]:
+                    # [V45 Fix] new_npc 타입 검증
+                    if not isinstance(new_npc, dict):
+                        continue
                     npc_name = new_npc.get('name') or new_npc.get('Name')
                     for target in bible_npcs:
                         if target.get('name') == npc_name:
                             if 'NPC_Martial_HUD' in new_npc:
                                 new_hud = new_npc['NPC_Martial_HUD']
+                                # [V45 Fix] new_hud가 dict가 아니면 건너뜀 (AttributeError 방지)
+                                if not isinstance(new_hud, dict):
+                                    continue
                                 old_hud = target.get('NPC_Martial_HUD', {})
-                                
+                                # [V45 Fix] old_hud도 dict 보장
+                                if not isinstance(old_hud, dict):
+                                    old_hud = {}
+
                                 # 변화량 추적 및 출력
                                 changes = []
                                 for key in ['achievement_rate', 'current_status', 'realm']:
                                     if new_hud.get(key) and new_hud.get(key) != old_hud.get(key):
                                         changes.append(f"{key}: {old_hud.get(key, 'N/A')} -> {new_hud[key]}")
-                                
+
+                                # [V45] NPC equipment 변화 추적
+                                old_equip = old_hud.get('equipment', [])
+                                new_equip = new_hud.get('equipment', [])
+                                if new_equip and new_equip != old_equip:
+                                    # 리스트 비교를 위한 정규화
+                                    old_set = set(old_equip) if isinstance(old_equip, list) else set()
+                                    new_set = set(new_equip) if isinstance(new_equip, list) else set()
+                                    added = new_set - old_set
+                                    removed = old_set - new_set
+                                    if added:
+                                        changes.append(f"equipment 획득: {list(added)}")
+                                    if removed:
+                                        changes.append(f"equipment 상실: {list(removed)}")
+
                                 if changes:
                                     print(f"      🕸️ [NPC Trace] {npc_name} 변화 감지: {', '.join(changes)}")
-                                
+
                                 # 데이터 병합 (성경 메모리 동기화)
                                 target.setdefault('NPC_Martial_HUD', {}).update(new_hud)
                             break
 
-            # --- [Part 3: SQLite 핵심 트랜잭션] ---
-            # 원고, HUD, 로그, 카르마, 로어 등 DB 박제
+            # --- [Part 3: 원자적 저장 - Bible 먼저, DB 나중] ---
+            # [V44 Fix] Bible을 먼저 저장하여 crash 시 데이터 복구 가능하게 함
+            # 순서: Bible 저장 → DB commit → Vector sync
+            # 이유: DB commit 실패 시 Bible은 최신 상태 유지, 다음 실행에서 복구 가능
+
+            # 3-1. Bible 선행 저장 (NPC HUD 변화 포함)
+            try:
+                self.save_v20_anchor('bible', self.master_bible)
+                self.sync_and_cleanup_seeds()
+            except Exception as bible_err:
+                print(f"      🚨 [Critical] Bible 선행 저장 실패: {bible_err}")
+                raise Exception(f"Bible 저장 실패로 에피소드 커밋 중단: {bible_err}")
+
+            # 3-2. SQLite 핵심 트랜잭션 (원고, HUD, 로그, 카르마, 로어)
             db_success = self.db.commit_episode_factory(
-                ep_num, manuscript_data, martial_data, state_data, 
+                ep_num, manuscript_data, martial_data, state_data,
                 causal_links, karma_data, lore_data, recovered_seeds
             )
-            
+
             if not db_success:
                 raise Exception("SQLite Episode Factory 저장 실패")
 
-            # --- [Part 4: 보조 데이터 및 벡터 동기화] ---
+            # --- [Part 4: 벡터 동기화 (ChromaDB)] ---
             try:
-                # 1. 성경(파일) 및 복선 정화 결과 저장
-                self.save_v20_anchor('bible', self.master_bible)
-                self.sync_and_cleanup_seeds()
-
-                # 2. 벡터 기억 주입 (ChromaDB)
+                # 벡터 기억 주입
                 summary = state_data.get('context_audit', {}).get('summary', "요약 없음")
                 content_text = manuscript_data['content'] if isinstance(manuscript_data, dict) else str(manuscript_data)
                 
@@ -407,8 +499,15 @@ class ProjectContext:
                 return True
 
             except Exception as sub_e:
-                print(f"      🚨 [Partial Failure] 부가 데이터 저장 중 오류: {sub_e}")
-                return True # DB는 성공했으므로 일단 진행
+                # [V44 Fix] 부분 실패 시 경고 강화 및 sync 상태 업데이트
+                print(f"      🚨 [Partial Failure] 벡터 동기화 중 오류: {sub_e}")
+                print(f"      ⚠️ [WARNING] 에피소드 {ep_num}: DB/Bible 저장됨, Vector 동기화 불완전")
+                # sync_status를 2로 설정하여 "부분 성공" 상태 표시
+                try:
+                    self.db.update_sync_status(ep_num, 2)  # 2 = partial sync
+                except Exception:
+                    pass
+                return True  # DB는 성공했으므로 진행 (단, 경고 로깅됨)
 
         except Exception as e:
             print(f"      🛑 [Critical Error] 제 {ep_num}화 원자적 저장 실패: {e}")
@@ -569,7 +668,11 @@ class ProjectContext:
             if self.db.get_sync_status(ep_num) == 1: continue
 
             content = f_path.read_text(encoding='utf-8')
-            title = content.split('\n')[0].strip()[:50] # 첫 줄 제목
+            # [V44] 빈 content 안전 처리
+            if not content or not content.strip():
+                print(f"   ⚠️ 제 {ep_num}화 파일이 비어있음. 건너뜀.")
+                continue
+            title = content.split('\n')[0].strip()[:50] if content else f"제{ep_num}화"
 
             # 1. SQLite 원고 테이블에 직접 저장
             self.save_manuscript_to_db(ep_num, title, content)

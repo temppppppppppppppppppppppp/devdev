@@ -7,7 +7,7 @@ if sys.platform == 'win32':
         import io
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
-    except:
+    except (AttributeError, OSError):
         pass
 
 import time
@@ -306,8 +306,9 @@ class SovereignApp:
             else:
                 self.ui.log("   ⚡ [Weaver] 신규 복선 캐시 생성 중...")
                 try:
+                    # [V44 Fix] config["manager"] → config["weaver"] 수정
                     w_cache = self.sys.api_client.caches.create(
-                        model=fix_model_id(config["manager"]),
+                        model=fix_model_id(config.get("weaver", config.get("manager", "gemini-2.0-flash"))),
                         config=types.CreateCachedContentConfig(
                             display_name="WEAVER_V31", system_instruction="복선 설계자",
                             contents=[weaver_context], ttl="86400s"
@@ -353,7 +354,8 @@ class SovereignApp:
         try:
             self.sys.api_client.caches.get(name=cache_name)
             return True
-        except: return False
+        except Exception:  # API 예외 종류가 다양하므로 Exception 유지
+            return False
 
     def _check_vector_db_lock(self, project_name: str) -> bool:
         """
@@ -451,8 +453,9 @@ class SovereignApp:
                 self.ui.log(f"✅ 로드맵 선택 완료: {selected_file.name}")
                 return selected_file.name # 파일명 문자열만 반환 (Phase 0 규격 준수)
             else:
-                return files[0].name
-                
+                # [V44] 빈 리스트 안전 체크
+                return files[0].name if files else None
+
         except Exception as e:
             self.ui.log(f"⚠️ 선택 중 오류 발생: {e}")
             return files[0].name if files else None
@@ -483,7 +486,8 @@ class SovereignApp:
                 'writer': Writer(self.current_project, self.sys.api_client, model_tier=models.get("writer", default_model)),
                 'director': Director(self.current_project, self.sys.api_client, model_tier=models.get("director", default_model)),
                 'manager': Manager(self.current_project, self.sys.api_client, model_tier=models.get("manager", default_model)),
-                'weaver': Weaver(self.current_project, self.sys.api_client, model_tier=models.get("manager", default_model)),
+                # [V45 Fix] weaver는 manager가 아닌 weaver 모델 사용 (fallback: manager)
+                'weaver': Weaver(self.current_project, self.sys.api_client, model_tier=models.get("weaver", models.get("manager", default_model))),
             }
             
             # 초기화 검증
@@ -491,7 +495,31 @@ class SovereignApp:
                 if not hasattr(agent, 'ask'):
                     self.ui.log(f"🚨 [Critical] {name} 에이전트 초기화 실패")
                     return False
-            
+
+            # [V43] Director에 장르 및 V0128 설정 주입
+            if self.selected_genre:
+                genre_type = self.selected_genre.get('type', 'wuxia')
+                self.agents['director'].set_genre(genre_type)
+                self.ui.log(f"   🎭 Director 장르 설정: {genre_type}")
+
+            # V0128 검증 시스템 활성화 여부 확인
+            # [V44 Fix] settings 변수 안전하게 로드
+            try:
+                settings_path = self.current_project.paths.config / "settings.json"
+                if settings_path.exists():
+                    import json
+                    with open(settings_path, 'r', encoding='utf-8') as f:
+                        settings = json.load(f)
+                else:
+                    settings = {}
+            except Exception:
+                settings = {}
+
+            validation_config = settings.get('validation', {})
+            if validation_config.get('use_v0128', False):
+                self.agents['director'].set_v0128_enabled(True)
+                self.ui.log("   ✅ V0128 검증 시스템 활성화")
+
             self.ui.log("✅ [System] 모든 에이전트 안전하게 초기화 완료")
             return True
             
@@ -601,7 +629,7 @@ class SovereignApp:
             # 안전한 종료 시도
             try:
                 self._shutdown_app()
-            except:
+            except Exception:  # 종료 시 모든 예외 무시
                 pass
             
             sys.exit(1)
@@ -625,13 +653,21 @@ class SovereignApp:
             self.current_project.db.save_anchor('genre_info', self.selected_genre)
         
         # 2. DB 연결 종료 (이 시점에 close를 수행)
-        if self.current_project and hasattr(self.current_project, 'db'):
-            try:
-                self.current_project.db.conn.commit()
-                self.current_project.db.conn.close()
-                self.ui.log("✅ [System] 모든 DB 연결을 안전하게 해제하고 데이터를 보존했습니다.")
-            except Exception as e:
-                print(f"⚠️ 종료 중 DB 오류 발생: {e}")
+        # [V44] try-finally로 안전한 연결 종료 보장
+        if self.current_project and hasattr(self.current_project, 'db') and self.current_project.db:
+            db_conn = self.current_project.db.conn
+            if db_conn:
+                try:
+                    db_conn.commit()
+                    self.ui.log("[System] DB 커밋 완료")
+                except Exception as e:
+                    print(f"종료 중 DB 커밋 오류: {e}")
+                finally:
+                    try:
+                        db_conn.close()
+                        self.ui.log("[System] DB 연결 안전하게 해제됨")
+                    except Exception as close_err:
+                        print(f"DB close 오류: {close_err}")
             
     def _phase_0_recovery(self):
         print("\n⚙️ Phase 0: S-Grade 데이터 주권 동기화 가동...")
@@ -660,8 +696,19 @@ class SovereignApp:
             if existing_drafts:
                 print(f"📂 [Detect] 기존 원고 {len(existing_drafts)}건 발견. 역사 이식을 시작합니다...")
                 # AI 안 거치고 직접 원고를 DB와 벡터 DB에 박제하는 함수 호출
-                self.current_project.sync_existing_manuscripts(self.memory)
-                print("✅ [History] 기존 원고의 역사가 모두 시스템에 안착되었습니다.")
+                try:
+                    sync_result = self.current_project.sync_existing_manuscripts(self.memory)
+                    if sync_result:
+                        print("✅ [History] 기존 원고의 역사가 모두 시스템에 안착되었습니다.")
+                    else:
+                        print("⚠️ [Warning] 일부 원고 동기화 실패. 로그를 확인하세요.")
+                except Exception as sync_err:
+                    print(f"🚨 [Error] 원고 동기화 중 오류 발생: {sync_err}")
+                    self._audit_event("sync_error", "sync_existing_manuscripts failed", {
+                        "error": str(sync_err),
+                        "draft_count": len(existing_drafts)
+                    })
+                    print("⚠️ [Fallback] 원고 동기화를 건너뛰고 계속 진행합니다.")
             else:
                 print("🆕 [New Project] 기존 원고가 없습니다. 신규 프로젝트로 기동합니다.")
 
@@ -686,12 +733,34 @@ class SovereignApp:
         # [V38 패치] 안전한 커밋으로 변경
         self._safe_commit()
 
-        # [V38 패치] 안전한 데이터 추출
-        bible_root = self.current_project.master_bible.get('MasterBible', self.current_project.master_bible) if self.current_project.master_bible else {}
-        arcs_source = bible_root.get('plot_roadmap', [])
+        # [V38 패치] 안전한 데이터 추출 [V44 강화: None 체크]
+        if not self.current_project or not hasattr(self.current_project, 'master_bible'):
+            self.ui.log("❌ 프로젝트가 로드되지 않았습니다.")
+            input("\n[Enter] 메뉴로 돌아가기")
+            return
+        master_bible = self.current_project.master_bible or {}
+        bible_root = master_bible.get('MasterBible', master_bible) if isinstance(master_bible, dict) else {}
+        arcs_source = bible_root.get('plot_roadmap', []) if isinstance(bible_root, dict) else []
+
+        # [V43 패치] plot_roadmap 복구 메커니즘
+        if not arcs_source:
+            self.ui.log("⚠️ [Recovery] 메모리 내 로드맵이 없습니다. DB에서 재로드를 시도합니다...")
+            try:
+                # DB 앵커에서 직접 로드 시도
+                self.current_project._load_from_db()
+                master_bible = self.current_project.master_bible or {}
+                bible_root = master_bible.get('MasterBible', master_bible) if isinstance(master_bible, dict) else {}
+                arcs_source = bible_root.get('plot_roadmap', []) if isinstance(bible_root, dict) else []
+
+                if arcs_source:
+                    self.ui.log(f"✅ [Recovery] DB에서 {len(arcs_source)}개 아크 복구 성공!")
+            except Exception as reload_err:
+                self.ui.log(f"🚨 [Recovery Failed] DB 재로드 실패: {reload_err}")
+                self._audit_event("recovery_failed", "plot_roadmap reload failed", {"error": str(reload_err)})
 
         if not arcs_source:
             self.ui.log("❌ 에러: 성경 내 로드맵 데이터가 없습니다. Phase 0을 다시 실행하세요.")
+            input("\n[Enter] 메뉴로 돌아가기")
             return
 
         # [V41 Patch] 아크 총량 유동화 - plot_roadmap 길이에 따라 권 수 자동 계산
@@ -701,8 +770,10 @@ class SovereignApp:
 
         final_volumes = []
         context_accumulator = "" # 이전 권의 요약본을 누적하여 서사적 일관성 유지
-        project_data = bible_root.get('ProjectData', {})
-        meta_info = json.dumps(project_data.get('MetaInfo', {}) if isinstance(project_data, dict) else {}, ensure_ascii=False)
+        # [V44] 안전한 중첩 dict 접근
+        project_data = bible_root.get('ProjectData', {}) if isinstance(bible_root, dict) else {}
+        project_data = project_data if isinstance(project_data, dict) else {}
+        meta_info = json.dumps(project_data.get('MetaInfo', {}), ensure_ascii=False)
 
         # [V41 Patch] 유동적 권 수 순차 설계 루프
         arcs_per_vol = VolumeSettings.ARCS_PER_VOLUME
@@ -824,8 +895,21 @@ class SovereignApp:
 
     def _stage_2_arcs(self):
         """[V35.5 S-Grade] 50개 아크 가변 페이싱 설계 (비동기 래퍼 적용)"""
-        # 기존 동기 함수 이름(_stage_2_arcs)을 유지하되, 내부에서 비동기 함수를 실행
-        asyncio.run(self._stage_2_arcs_async_logic())
+        # [V44] 안전한 이벤트 루프 실행 (기존 루프 충돌 방지)
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+
+        if loop and loop.is_running():
+            # 이미 이벤트 루프가 실행 중인 경우 (Jupyter, Streamlit 등)
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(asyncio.run, self._stage_2_arcs_async_logic())
+                future.result()
+        else:
+            # 일반적인 경우
+            asyncio.run(self._stage_2_arcs_async_logic())
 
     async def _stage_2_arcs_async_logic(self):
         """
@@ -986,14 +1070,20 @@ class SovereignApp:
                     except Exception as retry_err:
                         self.ui.log(f"🚨 [Recovery] idx={failed_idx} 복구 실패: {retry_err}")
 
-                # [V40.1 Fix] 원래 위치에 삽입하여 순서 보장
-                for original_idx in sorted(recovery_map.keys()):
-                    insert_pos = original_idx - batch_start
-                    # 이미 sanitized_batch에 있는 항목 수를 고려하여 삽입 위치 조정
-                    if insert_pos <= len(enriched_batch):
-                        enriched_batch.insert(insert_pos, recovery_map[original_idx])
-                    else:
-                        enriched_batch.append(recovery_map[original_idx])
+                # [V43 Fix] 원래 위치에 삽입하여 순서 보장 (재구축 방식)
+                if recovery_map:
+                    # 원본 배치 데이터 백업 후 재구축
+                    original_batch_data = {(batch_start + i): item for i, item in enumerate(enriched_batch) if item}
+                    original_batch_data.update(recovery_map)  # 복구된 데이터 병합
+
+                    # 인덱스 순서대로 재구축
+                    enriched_batch = []
+                    for idx in range(batch_start, batch_end):
+                        if idx in original_batch_data:
+                            enriched_batch.append(original_batch_data[idx])
+                        else:
+                            self.ui.log(f"⚠️ [Recovery] idx={idx} 데이터 누락 - 해당 Arc 스킵")
+                            self._audit_event("data_missing", "arc data not recovered", {"arc_idx": idx})
 
             if not enriched_batch:
                 self.ui.log("❌ [Critical] 농축 결과가 비어 있습니다. 공정을 중단합니다.")
@@ -1243,8 +1333,23 @@ class SovereignApp:
                         self.ui.log(f"      🎬 [Reject] {audit.get('reason')}")
 
                 if not passed:
-                    self.ui.log(f"❌ [Critical] Arc {global_arc_no} 최종 설계 실패. 공정을 중단합니다.")
-                    return
+                    self.ui.log(f"🚨 [Critical] Arc {global_arc_no} 최종 설계 실패.")
+                    self._audit_event("arc_design_failed", "max retries exhausted", {
+                        "arc_no": global_arc_no,
+                        "batch_start": batch_start,
+                        "batch_end": batch_end
+                    })
+                    # [V43 패치] 진행 상황 보존 및 사용자 선택 제공
+                    if all_refined_arcs:
+                        self.ui.log(f"💾 [Auto-Save] 현재까지 {len(all_refined_arcs)}개 Arc 저장 완료.")
+                    user_choice = input("   [1] 건너뛰고 계속  [2] 중단 (기본: 2): ").strip()
+                    if user_choice != '1':
+                        self.ui.log("⏹️ 사용자 요청으로 공정을 중단합니다.")
+                        return
+                    # 건너뛰기 선택 시 다음 Arc를 위한 context 업데이트
+                    self.ui.log(f"⏭️ Arc {global_arc_no}을 건너뛰고 계속합니다.")
+                    current_ep_start += 5  # 기본 회차 증가
+                    continue
 
             self.ui.log(f"✅ 배치({batch_start+1}~{batch_end}) 욕망 엔진 이식 및 용접 완료.")
 
@@ -1516,6 +1621,72 @@ class SovereignApp:
         return hits >= min_hits
 
     # =================================================================
+    # [V45] Validation Context 구성 헬퍼
+    # =================================================================
+
+    def _build_validation_context(self, ep_num: int, blueprint: dict = None, mode: str = 'MANUSCRIPT') -> dict:
+        """
+        [V45] BlockingValidator용 validation_context 구성
+
+        Args:
+            ep_num: 에피소드 번호
+            blueprint: 설계도 (선택)
+            mode: 'MANUSCRIPT' 또는 'BLUEPRINT'
+
+        Returns:
+            dict: {
+                'encyclopedia': {'items': [...], 'npcs': [...], 'locations': [...]},
+                'martial_hud': {...},
+                'blueprint': {...},
+                'mode': 'MANUSCRIPT' | 'BLUEPRINT',
+                'history': [...],
+                'npc_profiles': {...}
+            }
+        """
+        context = {
+            'mode': mode,
+            'encyclopedia': {},
+            'martial_hud': {},
+            'blueprint': blueprint or {},
+            'history': [],
+            'npc_profiles': {}
+        }
+
+        try:
+            # 1. Encyclopedia 구성 (LoreManager 사용)
+            if hasattr(self.sys, 'lore') and self.sys.lore:
+                context['encyclopedia'] = self.sys.lore.build_validation_encyclopedia()
+
+            # 2. Martial HUD 구성
+            if hasattr(self.sys, 'hud') and self.sys.hud:
+                hud_data = self.sys.hud.pro_root
+                context['martial_hud'] = {
+                    'actual_truth': self.sys.hud.pro_data
+                }
+
+            # 3. 최근 히스토리 추출 (인과 요약 체인 사용)
+            if self.current_project:
+                causal_summary = self.current_project.get_causal_history_summary()
+                if causal_summary:
+                    context['history'] = [{'summary': causal_summary}]
+
+            # 4. NPC 프로필 추출
+            if self.current_project:
+                bible = self.current_project.master_bible.get('MasterBible', {})
+                # [V45 Fix] KeyNPCs와 Key_NPCs 두 가지 키 모두 지원
+                asset_lib = bible.get('AssetLibrary', {})
+                npc_lib = asset_lib.get('KeyNPCs', []) or asset_lib.get('Key_NPCs', [])
+                for npc in npc_lib:
+                    npc_name = npc.get('name', '') or npc.get('Name', '')
+                    if npc_name:
+                        context['npc_profiles'][npc_name] = npc
+
+        except Exception as e:
+            self.ui.log(f"⚠️ [Validation Context] 구성 중 오류 (비치명적): {e}")
+
+        return context
+
+    # =================================================================
     # [V41] Director Sovereignty 헬퍼 메서드
     # =================================================================
 
@@ -1727,6 +1898,62 @@ class SovereignApp:
             return None, None
 
         return arc_idx, arc_data
+
+    def _validate_arc_data_fields(self, arc_data: Dict, arc_idx: int) -> Optional[Dict]:
+        """
+        [V43] arc_data 필수 필드 검증 및 자동 복구
+
+        Args:
+            arc_data: 검증할 아크 데이터
+            arc_idx: 아크 인덱스 (로깅용)
+
+        Returns:
+            Optional[Dict]: 검증/복구된 데이터, 복구 불가 시 None
+        """
+        if not isinstance(arc_data, dict):
+            self.ui.log(f"🚨 [V43] arc_data가 딕셔너리가 아닙니다: {type(arc_data)}")
+            return None
+
+        # 필수 필드 기본값 정의
+        required_defaults = {
+            'tactical_doc': '',
+            'beat_sequence': [],
+            'joint_docs': {},
+            'status_shadow': {},
+            'arc_drive': {},
+            'hybrid_composition': {'primary': 'standard', 'secondary': [], 'mixing_logic': '기본'},
+            # [V44 Fix] ep_count와 ep_end 계산 시 실제 arc 데이터 우선 사용
+            'ep_count': arc_data.get('ep_count', VolumeSettings.EPISODES_PER_ARC),
+            'ep_end': arc_data.get('ep_start', 1) + arc_data.get('ep_count', VolumeSettings.EPISODES_PER_ARC) - 1
+        }
+
+        repaired = False
+        for field, default_val in required_defaults.items():
+            current_val = arc_data.get(field)
+
+            # None이거나 타입이 맞지 않는 경우 기본값으로 복구
+            if current_val is None:
+                arc_data[field] = default_val
+                self.ui.log(f"   ⚠️ [V43] Arc {arc_idx}: {field} 누락 → 기본값 주입")
+                self._audit_event("field_repair", f"{field} missing", {"arc_idx": arc_idx})
+                repaired = True
+            elif isinstance(default_val, dict) and not isinstance(current_val, dict):
+                arc_data[field] = default_val
+                self.ui.log(f"   ⚠️ [V43] Arc {arc_idx}: {field} 타입 오류 → dict로 복구")
+                repaired = True
+            elif isinstance(default_val, list) and not isinstance(current_val, list):
+                arc_data[field] = default_val
+                self.ui.log(f"   ⚠️ [V43] Arc {arc_idx}: {field} 타입 오류 → list로 복구")
+                repaired = True
+            elif isinstance(default_val, str) and not isinstance(current_val, str):
+                arc_data[field] = str(current_val) if current_val else default_val
+                self.ui.log(f"   ⚠️ [V43] Arc {arc_idx}: {field} 타입 오류 → str로 변환")
+                repaired = True
+
+        if repaired:
+            self.ui.log(f"   🔧 [V43] Arc {arc_idx} 데이터 복구 완료")
+
+        return arc_data
 
     def _get_prev_manuscript_ending(self, ep_num: int, sentence_count: int = 3) -> str:
         """
@@ -1943,6 +2170,12 @@ class SovereignApp:
                     "ep_start": ep_start_val
                 })
                 break
+
+            # [V43 패치] arc_data 필수 필드 검증 및 자동 복구
+            arc_data_validated = self._validate_arc_data_fields(arc_data, arc_idx)
+            if arc_data_validated:
+                arc_data = arc_data_validated  # 검증/복구된 데이터로 교체
+
             arc_pos = working_ep - ep_start_val + 1
             total_ep_in_arc = arc_data.get('ep_count', VolumeSettings.EPISODES_PER_ARC)
 
@@ -2174,6 +2407,12 @@ class SovereignApp:
                     if not stopline_violation:
                         # [안전성 패치] Director 호출 예외 처리
                         try:
+                            # [V45] validation_context 구성 (V0128 검증용)
+                            validation_context = self._build_validation_context(
+                                ep_num=working_ep,
+                                blueprint=blueprint_candidate,
+                                mode='BLUEPRINT'
+                            )
                             blueprint_audit = self.agents['director'].audit_manuscript(
                                 ep_num=working_ep,
                                 manuscript=raw_content,
@@ -2183,7 +2422,8 @@ class SovereignApp:
                                 arc_pos=arc_pos,
                                 total_eps=total_ep_in_arc,
                                 target_len=threshold,
-                                retry_count=reject_count  # [V40.3 추가] 재시도 횟수 전달
+                                retry_count=reject_count,  # [V40.3 추가] 재시도 횟수 전달
+                                validation_context=validation_context  # [V45] V0128 검증용
                             )
                         except Exception as director_err:
                             self.ui.log(f"🚨 [Director Error] 제 {working_ep}화 검수 중 에러: {director_err}")
@@ -2422,8 +2662,8 @@ class SovereignApp:
                 # [V38 패치] 안전한 커밋
                 self._safe_commit()
                 
-                # 메모리 동기화 및 다음 화 전진
-                self.current_project.blueprints = self.current_project.db.load_anchor('blueprints') 
+                # [V45 Fix] blueprints는 anchors 테이블이 아니므로 불필요한 로드 제거
+                # 개별 blueprint는 self.current_project.get_blueprint(ep_num)으로 접근
                 self.ui.log(f"💾 [System] 제 {working_ep}화 설계도 최종 박제 완료.")
                 working_ep += 1 
             else:
@@ -2494,8 +2734,9 @@ class SovereignApp:
                 max_val=2
             )
 
+            # [V45 Fix] style_choice는 int이므로 정수로 비교
             selected_style = {
-                "tag": "NAVER" if style_choice == "2" else "KAKAO",
+                "tag": "NAVER" if style_choice == 2 else "KAKAO",
                 "guide": (
                     "네이버 시리즈: 유려한 문장, 심리 묘사 강조. "
                     "3~4문장 단위로 줄바꿈을 수행하여 여백을 극대화하라." 
@@ -2589,10 +2830,24 @@ class SovereignApp:
                     total_ep_in_arc = arc_data.get('ep_count', 5)
                     arc_tactical = arc_data.get('tactical_doc', '설계도 내용 없음')
 
-                    # 직전 화 원고 및 엔딩 추출
+                    # 직전 화 원고 및 엔딩 추출 [V43 안전 패치]
                     prev_ms_data = self.current_project.db.get_manuscript(next_ep - 1)
-                    prev_text = prev_ms_data['content'] if prev_ms_data else "이전 회차가 없습니다."
-                    prev_ms_ending = " ".join(re.split(r'(?<=[.!?])\s+', prev_text.strip())[-3:])
+                    prev_text = "이전 회차가 없습니다."
+                    if prev_ms_data and isinstance(prev_ms_data, dict):
+                        content = prev_ms_data.get('content')
+                        if content and isinstance(content, str):
+                            prev_text = content
+                        else:
+                            self.ui.log(f"⚠️ [V43] 이전 회차 content가 유효하지 않음: {type(content)}")
+                            self._audit_event("data_warning", "prev manuscript content invalid", {
+                                "ep_num": next_ep - 1,
+                                "content_type": str(type(content))
+                            })
+                    try:
+                        prev_ms_ending = " ".join(re.split(r'(?<=[.!?])\s+', prev_text.strip())[-3:])
+                    except Exception as split_err:
+                        self.ui.log(f"⚠️ [V43] prev_ms_ending 추출 실패: {split_err}")
+                        prev_ms_ending = prev_text[-500:] if len(prev_text) > 500 else prev_text
                     
                     # [V38 패치] 안전한 HUD 및 자산 추출
                     causal_summary = self.current_project.get_causal_history_summary()
@@ -2610,19 +2865,40 @@ class SovereignApp:
                                 enemy_data = next((n for n in key_npcs 
                                                  if isinstance(n, dict) and n.get('name') == main_antagonist), {})
                     
-                    # [V40] 장르별 NPC HUD 키 분기
+                    # [V43] 장르별 NPC HUD 키 분기 (fallback 강화)
                     genre_type = self.selected_genre.get('type', 'wuxia') if self.selected_genre else 'wuxia'
-                    npc_hud_key = {
-                        'wuxia': 'NPC_Martial_HUD',
-                        'hunter': 'NPC_Hunter_HUD',
-                        'investment': 'NPC_Finance_HUD'
-                    }.get(genre_type, 'NPC_Martial_HUD')
-                    
-                    npc_hud = enemy_data.get(npc_hud_key, {}) if isinstance(enemy_data, dict) else {}
+                    npc_hud_keys = {
+                        'wuxia': ['NPC_Martial_HUD', 'martial_hud', 'combat_stats'],
+                        'hunter': ['NPC_Hunter_HUD', 'hunter_hud', 'awakening_stats'],
+                        'investment': ['NPC_Finance_HUD', 'finance_hud', 'business_stats']
+                    }
+                    possible_keys = npc_hud_keys.get(genre_type, npc_hud_keys['wuxia'])
+
+                    npc_hud = {}
+                    if isinstance(enemy_data, dict):
+                        # 가능한 키들을 순회하며 첫 번째로 발견되는 데이터 사용
+                        for key in possible_keys:
+                            if key in enemy_data and isinstance(enemy_data[key], dict):
+                                npc_hud = enemy_data[key]
+                                break
+                        # 모든 키가 없으면 enemy_data 자체에서 전투 관련 필드 추출
+                        if not npc_hud and enemy_data:
+                            npc_hud = {k: v for k, v in enemy_data.items()
+                                      if k in ['rank', 'realm', 'level', 'skills', 'combat_style', 'strength']}
 
                     # 유동적 서사 아이템 수혈
-                    sampled_cliches = [c.get('description', '') for c in random.sample(cliche_data, 3)]
-                    sampled_locations = [l.get('name', '') + ": " + l.get('note', '') for l in random.sample(location_data, 2)]
+                    # [V44 Fix] 리스트가 비어있거나 샘플 수보다 작을 때 처리
+                    sampled_cliches = []
+                    if cliche_data and len(cliche_data) >= 3:
+                        sampled_cliches = [c.get('description', '') for c in random.sample(cliche_data, 3)]
+                    elif cliche_data:
+                        sampled_cliches = [c.get('description', '') for c in cliche_data]
+
+                    sampled_locations = []
+                    if location_data and len(location_data) >= 2:
+                        sampled_locations = [l.get('name', '') + ": " + l.get('note', '') for l in random.sample(location_data, 2)]
+                    elif location_data:
+                        sampled_locations = [l.get('name', '') + ": " + l.get('note', '') for l in location_data]
 
                     # [V41] 캐릭터 아키타입 참고 자료 생성
                     npc_profiles_for_arc = self._extract_npc_profiles(arc_data)
@@ -2710,9 +2986,11 @@ class SovereignApp:
                                 # 🧩 [Pattern Check] 원고에 패턴 반영 여부 확인
                                 # [V40.3 User Fix] gemini-2.5-pro부터는 패턴 부족으로 반려하지 않음
                                 # [V40.3 User Fix] 4개 이상 장면이면 패턴 부족 무시
+                                # [V45 Note] Stage 4는 STAGE4_FIXED_WRITER_MODEL 고정이므로 TIER_1 체크는 항상 False
+                                # 의도적으로 Stage 4에서는 패턴 체크를 비활성화 (품질보다 일관성 우선)
                                 blueprint_for_ep = self.current_project.get_blueprint(next_ep) or {}
                                 scene_count = len(blueprint_for_ep.get('scene_breakdown', {}))
-                                should_check_pattern = (audit_attempt == 0 and current_writer_model == AIModels.TIER_1_WRITER) and scene_count < 4
+                                should_check_pattern = False  # [V45] Stage 4에서는 패턴 체크 비활성화
 
                                 if should_check_pattern:
                                     if not self._pattern_presence_check(temp_content, arc_data.get('hybrid_composition', {})):
@@ -2743,12 +3021,19 @@ class SovereignApp:
                                 # 🎬 Director 최종 원고 정밀 검수 (예외 처리 추가)
                                 self.ui.layout["main"].update(Panel(f"🎬 Stage 4.5: 편집장 원고 정밀 검수 중...", title="Director"))
                                 try:
+                                    # [V45] validation_context 구성 (V0128 검증용)
+                                    validation_context = self._build_validation_context(
+                                        ep_num=next_ep,
+                                        blueprint=self.current_project.get_blueprint(next_ep),
+                                        mode='MANUSCRIPT'
+                                    )
                                     audit_res = self.agents['director'].audit_manuscript(
                                         ep_num=next_ep, manuscript=temp_content, arc_doc=arc_tactical,
                                         history_summary=causal_summary, prev_full_text=prev_text,
                                         arc_pos=arc_pos, total_eps=total_ep_in_arc,
                                         target_len=5000,
-                                        retry_count=audit_attempt  # [V40.3 추가] 재시도 횟수 전달
+                                        retry_count=audit_attempt,  # [V40.3 추가] 재시도 횟수 전달
+                                        validation_context=validation_context  # [V45] V0128 검증용
                                     )
                                 except Exception as director_err:
                                     self.ui.log(f"🚨 [Director Error] 제 {next_ep}화 원고 검수 중 에러: {director_err}")
@@ -2926,13 +3211,24 @@ class SovereignApp:
                                 })
                                 raise Exception(f"Manager 호출 실패: {manager_call_err}")
 
-                            # 2. 🛡️ [S-Grade] 강제 파싱 및 빈 응답 방어
+                            # 2. 🛡️ [V43 강화] 강제 파싱 및 빈 응답 방어
                             if raw_res is None:
-                                raise Exception("Manager가 빈 응답(None)을 반환했습니다.")
-
-                            audit = self.agents['manager']._extract_json_robust(raw_res) if isinstance(raw_res, str) else raw_res
-                            if audit is None: 
-                                self.ui.log("⚠️ [Warning] 정산 데이터 파싱 실패. 빈 객체로 대체합니다.")
+                                self.ui.log("⚠️ [Manager] 빈 응답(None) 반환. 기본 정산으로 진행합니다.")
+                                self._audit_event("manager_warning", "empty response from Manager", {"ep_num": next_ep})
+                                audit = {}
+                            elif isinstance(raw_res, str):
+                                audit = self.agents['manager']._extract_json_robust(raw_res)
+                                if audit is None:
+                                    self.ui.log("⚠️ [Warning] 정산 데이터 파싱 실패. 빈 객체로 대체합니다.")
+                                    audit = {}
+                            elif isinstance(raw_res, dict):
+                                audit = raw_res
+                            else:
+                                self.ui.log(f"⚠️ [Manager] 예상치 못한 응답 타입: {type(raw_res)}")
+                                self._audit_event("manager_warning", "unexpected response type", {
+                                    "ep_num": next_ep,
+                                    "type": str(type(raw_res))
+                                })
                                 audit = {}
 
                             # 3. 데이터 정산 및 HUD 연동용 딕셔너리 생성
@@ -2984,7 +3280,15 @@ class SovereignApp:
                                     self.ui.log(f"🚨 [WARNING] actual_truth가 중첩되어 있음! HUD 업데이트 실패 예상")
 
                             # 5. 🛡️ [무결성 가드] 필수 서사 지표 유실 방지 (None이면 이전 화 값 계승)
-                            # [V40 + 안전성 패치] 장르별 critical_keys 동적 로드
+                            # [V43 패치] 장르별 critical_keys 동적 로드 (fallback 강화)
+                            genre_type = self.selected_genre.get('type', 'wuxia') if self.selected_genre else 'wuxia'
+                            genre_fallback_keys = {
+                                'wuxia': ['alias', 'rank', 'realm', 'internal_energy', 'mental_method', 'reputation'],
+                                'hunter': ['awakening_rank', 'mana', 'skills', 'guild', 'level', 'reputation'],
+                                'investment': ['capital', 'total_assets', 'reputation', 'connections', 'market_insight']
+                            }
+                            default_keys = genre_fallback_keys.get(genre_type, genre_fallback_keys['wuxia'])
+
                             if hasattr(self.sys, 'hud') and self.sys.hud:
                                 try:
                                     critical_keys = self.sys.hud.get_critical_keys()
@@ -2993,13 +3297,16 @@ class SovereignApp:
                                             actual_truth_data[key] = prev_actual.get(key, "기록 없음")
                                 except Exception as hud_key_err:
                                     self.ui.log(f"⚠️ [HUD] critical_keys 추출 실패: {hud_key_err}")
-                                    # 기본 키 사용
-                                    critical_keys = ['alias', 'rank', 'realm', 'internal_energy']
-                                    for key in critical_keys:
+                                    # [V43] 장르별 기본 키 사용
+                                    self.ui.log(f"   → 장르({genre_type})별 기본 키로 대체: {default_keys}")
+                                    for key in default_keys:
                                         if key not in actual_truth_data:
                                             actual_truth_data[key] = prev_actual.get(key, "기록 없음")
                             else:
-                                self.ui.log("⚠️ [HUD] HUD 시스템이 초기화되지 않았습니다. 기본 키만 사용합니다.")
+                                self.ui.log("⚠️ [HUD] HUD 시스템이 초기화되지 않았습니다. 장르별 기본 키만 사용합니다.")
+                                for key in default_keys:
+                                    if key not in actual_truth_data:
+                                        actual_truth_data[key] = prev_actual.get(key, "기록 없음")
 
                             # 6. 물리 상태 업데이트 실행 (HUD 실시간 반영)
                             if actual_truth_data and hasattr(self.sys, 'hud') and self.sys.hud:
@@ -3014,6 +3321,25 @@ class SovereignApp:
                                         "ep_num": next_ep,
                                         "error": str(hud_update_err)
                                     })
+
+                            # [V45] 새 아이템 자동 동기화 (Writer 창작 아이템 → Encyclopedia 등록)
+                            if hasattr(self.sys, 'lore') and self.sys.lore:
+                                try:
+                                    old_equipment = prev_actual.get('equipment', [])
+                                    new_equipment = actual_truth_data.get('equipment', [])
+                                    sync_result = self.sys.lore.sync_equipment_to_encyclopedia(
+                                        old_equipment=old_equipment,
+                                        new_equipment=new_equipment,
+                                        ep_num=next_ep
+                                    )
+                                    if sync_result.get('added'):
+                                        self.ui.log(f"📦 [Item Sync] {len(sync_result['added'])}개 신규 아이템 등록 완료")
+                                        self._audit_event("item_sync", "new items registered", {
+                                            "ep_num": next_ep,
+                                            "added_items": sync_result['added']
+                                        })
+                                except Exception as sync_err:
+                                    self.ui.log(f"⚠️ [Item Sync] 동기화 실패 (비치명적): {sync_err}")
 
                             # [V38 패치] 원자적 커밋 전 안전 체크
                             try:
@@ -3120,9 +3446,10 @@ class SovereignApp:
                                 raise Exception("DB 트랜잭션 커밋 실패 (False 반환)")
 
                         except Exception as e:
-                            # [V38 패치] 안전한 롤백
+                            # [V38 패치] 안전한 커밋 (트랜잭션 정리)
                             self.ui.log(f"🛑 [Surgical Error] 정산 엔진 충돌: {str(e)}")
-                            self._safe_commit()  # 롤백 포함
+                            # [V45 Fix] _safe_commit은 커밋 수행. 오류 시 내부에서 자동 롤백
+                            self._safe_commit()
                             
                             failure_streak += 1
                             
@@ -3385,7 +3712,7 @@ class SovereignApp:
                     # 파일명 앞 4자리가 숫자이고, target_ep 이상이면 삭제
                     if f.name[:4].isdigit() and int(f.name[:4]) >= target_ep:
                         f.unlink()
-                except:
+                except (OSError, ValueError, IndexError):
                     pass
             self.ui.log("   📂 원고 파일 삭제 완료")
 

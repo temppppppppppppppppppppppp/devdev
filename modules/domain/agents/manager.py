@@ -20,6 +20,17 @@ UPDATE_STATE_PROMPT_V25 = """
 3. 원고에서 '영약', '수련', '새로운 초식'이 등장했는데 HUD 수치를 갱신하지 않는 것은 치명적인 직무유기다.
 4. 이전 상태(current_state_json)와 비교하여 1이라도 변화가 있다면 반드시 actual_truth의 수치를 수정하라.
 5. 특히 'internal_energy'와 'martial_arts' 리스트는 매 화 가장 정밀하게 감시되어야 한다.
+
+[🚨 V45 장비(equipment) 정산 강령 - 주인공 & NPC 공통]
+1. **equipment는 현재 소지 목록 전체를 배열로 출력하라** (증분이 아님)
+2. 장비를 획득했으면: 기존 목록 + 새 장비 = 전체 목록 출력
+3. 장비를 잃어버리거나 버렸으면: 해당 장비를 제외한 나머지 목록 출력
+4. 장비를 교체했으면 (예: 철갑의 → 평복): 새 장비만 목록에 포함
+5. 장비에 변화가 없으면: 기존 목록 그대로 출력 (생략 금지!)
+6. 모든 장비를 잃어버렸으면: 빈 배열 [] 출력
+예시:
+- 이전: ["청강검", "철갑의"] → 철갑의를 벗고 평복 획득 → 출력: ["청강검", "평복"]
+- 이전: ["단검"] → 검을 잃어버림 → 출력: []
 6. 카르마 정산: 이번 화에서 주인공을 목격한 조연들의 '착각(오해)'이나 '집착' 정도를 0~100 사이의 수치로 정산하라. 
   - 변화가 없다면 이전 수치를 유지하되, 주인공의 무위가 드러났다면 반드시 'value' 수치를 상향하라. 
   - 형식: {"target": "이름", "value": 0~100, "obsession": 0~100}
@@ -30,6 +41,8 @@ UPDATE_STATE_PROMPT_V25 = """
 2. 만약 그렇다면 'new_lore' -> 'Key_NPCs' 리스트 내부에 해당 NPC의 이름과 'NPC_Martial_HUD' 객체를 포함하라.
 3. 특히 'achievement_rate'는 조연의 깨달음 정도에 따라 1% 단위로 정밀하게 조정하라.
 4. 조연이 입은 부상은 'current_status'에 기록하여 다음 화 전투에 반영되게 하라.
+5. [V45] NPC가 새로운 무기/장비를 획득하거나 잃어버렸다면 'equipment' 필드에 현재 소지 장비 목록을 기록하라.
+6. [V45] NPC 간에 아이템이 이전되었다면 (예: 주인공이 NPC에게 검을 줌) 반드시 양쪽의 equipment를 갱신하라.
 
 
 ### 🎯 V25 정산 핵심 지침
@@ -48,10 +61,11 @@ UPDATE_STATE_PROMPT_V25 = """
   "state_updates": {{
     "location": "현재 위치",
     "actual_truth": {{
-      "alias": "별호", "rank": "직위", "realm": "경지", 
+      "alias": "별호", "rank": "직위", "realm": "경지",
       "internal_energy": "숫자만 기입 (예: 60.0). '갑자' 단위는 60을 곱해서 환산하라.", "mental_method": "심법",
       "reputation": "명성", "public_image": "이미지",
-      "equipment": "장비", "wealth": "자금", "token": "신물",
+      "equipment": ["현재 소지 장비 전체 목록을 배열로 기입"],
+      "wealth": "자금", "token": "신물",
       "misunderstanding": "0~100 사이의 정수만 기입", "obsession": "누적된 현재 총 수치",
       "current_objective": "목표", "qi_nature": "진기성질", "causal_injuries": "내상상태",
       "inventory": [], "martial_arts": []
@@ -74,7 +88,8 @@ UPDATE_STATE_PROMPT_V25 = """
           "achievement_rate": "성취도%",
           "energy_level": "내공수준",
           "current_status": "현재상태(부상 등)",
-          "combat_style": "무도십이류 성질(쾌/강/유 등)"
+          "combat_style": "무도십이류 성질(쾌/강/유 등)",
+          "equipment": ["현재 소지 무기/장비 목록"]
         }}
       }}
     ], 
