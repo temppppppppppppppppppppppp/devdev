@@ -1,0 +1,2 @@
+{"ep_num": 1, "manuscript_hash": "20a021b4dfc9b313", "ai_score": 75, "human_score": 80, "score_difference": 5, "human_feedback": "AI보다 감정선이 더 자연스럽다고 느꼈습니다.", "human_decision": "APPROVE", "timestamp": "2026-01-28T22:48:04.905108"}
+{"ep_num": 2, "manuscript_hash": "20a021b4dfc9b313", "ai_score": 85, "human_score": 78, "score_difference": -7, "human_feedback": "AI가 상업성을 과대평가한 것 같습니다.", "human_decision": "APPROVE", "timestamp": "2026-01-28T22:48:04.906191"}

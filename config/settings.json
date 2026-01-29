@@ -9,5 +9,13 @@
   "costs": {
     "max_retries": 3,
     "temperature": 0.8
+  },
+  "validation": {
+    "use_v0128": true,
+    "scoring_model": "gemini-2.5-pro",
+    "advisory_model": "gemini-2.5-flash",
+    "scoring_threshold": 70,
+    "use_self_consistency": true,
+    "consistency_votes": 3
   }
 }

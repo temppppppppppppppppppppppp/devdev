@@ -7,16 +7,18 @@ from google import genai
 from google.genai import types
 
 class BaseAgent:
-    def __init__(self, context, client, model_tier="gemini-2.0-flash"): 
+    def __init__(self, context, client, model_tier="gemini-2.0-flash", enable_cascade=False):
         self.context = context
-        self.client = client  
-        self.primary_model = model_tier 
-        self.backup_model = "gemini-2.0-flash" 
+        self.client = client
+        self.primary_model = model_tier
+        self.backup_model = "gemini-2.0-flash"
         self.cache_name = None
+        self.enable_cascade = enable_cascade
+        self.cascade = None  # ModelCascade instance (lazy init)
 
     # 📂 modules/domain/agents/base_agent.py
 
-    def ask(self, prompt, temperature=0.5):
+    def ask(self, prompt, temperature=0.5, response_schema=None):
         directives = self._escape_braces(getattr(self.context, 'author_directives', ""))
         base_prompt = (
             f"### [AUTHOR'S ABSOLUTE DIRECTIVES]\n{directives}\n\n"
@@ -27,23 +29,33 @@ class BaseAgent:
         full_response = ""
         current_prompt = base_prompt
 
-        config = types.GenerateContentConfig(
-            temperature=temperature,
-            max_output_tokens=8192,
-            top_p=0.95,
-            response_mime_type="application/json"
-        )
+        config_params = {
+            "temperature": temperature,
+            "max_output_tokens": 8192,
+            "top_p": 0.95,
+            "response_mime_type": "application/json"
+        }
+
+        # [V0128] JSON Schema enforcement if provided
+        if response_schema:
+            config_params["response_schema"] = response_schema
+
+        config = types.GenerateContentConfig(**config_params)
 
         try:
-            for attempt in range(5):
+            # 🔒 Circuit Breaker: 최대 5회 시도 (API 비용 폭증 방지)
+            MAX_CONTINUATIONS = 5
+            WARN_THRESHOLD = 3
+
+            for attempt in range(MAX_CONTINUATIONS):
                 response = self.client.models.generate_content(
                     model=self.primary_model,
                     contents=current_prompt,
                     config=config
                 )
-                
+
                 chunk = response.text if response.text else ""
-                
+
                 # 💡 [Sovereign Logic] 지능형 중첩 제거 병합 (Overlap-Aware Merge)
                 if full_response:
                     # 앞 응답의 끝부분과 뒤 응답의 시작부분이 겹치는지 최대 100자 대조
@@ -53,7 +65,7 @@ class BaseAgent:
                         if full_response.endswith(chunk[:i]):
                             overlap_found = i
                             break
-                    
+
                     # 중복된 부분은 제외하고 순수 데이터만 정밀하게 접합
                     full_response += chunk[overlap_found:]
                 else:
@@ -63,16 +75,27 @@ class BaseAgent:
                 if full_response.endswith("\\"):
                     print("      ⚠️ [JSON Repair] 후행 이스케이프 감지. 강제 제거")
                     full_response = full_response[:-1]
-                
+
                 if not response.candidates: break
                 candidate = response.candidates[0]
-                
+
                 # 토큰 제한(MAX_TOKENS) 발생 시 '비트 3' 유실 방지를 위한 이어쓰기 시퀀스
                 if hasattr(candidate, 'finish_reason') and candidate.finish_reason in ["MAX_TOKENS", "LENGTH"]:
+                    # 🔒 Circuit Breaker 경고
+                    if attempt >= WARN_THRESHOLD:
+                        print(f"      ⚠️ [Circuit Breaker] 과도한 continuation 감지 ({attempt+1}/{MAX_CONTINUATIONS}회)")
+                        print(f"      ⚠️ [Cost Warning] API 비용 증가 중 - 누적 응답 길이: {len(full_response)} chars")
+
+                    # 🔒 Circuit Breaker 트립 (최대 시도 횟수 도달)
+                    if attempt >= MAX_CONTINUATIONS - 1:
+                        print(f"      🚨 [Circuit Breaker TRIP] 최대 continuation 횟수 도달 ({MAX_CONTINUATIONS}회)")
+                        print(f"      🚨 [WARNING] 응답 불완전 가능 - 수동 검토 필요")
+                        break
+
                     # 마지막 50자를 앵커로 사용하여 다음 응답의 시작점을 강제 고정
                     overlap_anchor = full_response[-50:].strip()
-                    print(f"      🔄 [System] 데이터 절단 감지. '{overlap_anchor[:20]}...' 지점부터 인과율 용접 시도 ({attempt+1}/5)")
-                    
+                    print(f"      🔄 [System] 데이터 절단 감지. '{overlap_anchor[:20]}...' 지점부터 인과율 용접 시도 ({attempt+1}/{MAX_CONTINUATIONS})")
+
                     current_prompt = (
                         f"--- [SYSTEM: CONTINUATION MISSION] ---\n"
                         f"Your previous response was cut off exactly at: '...{overlap_anchor}'\n"

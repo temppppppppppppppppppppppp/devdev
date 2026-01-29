@@ -1,5 +1,6 @@
 import json
 from .base_agent import BaseAgent
+from modules.validation.validation_orchestrator import ValidationOrchestrator
 
 
 
@@ -33,7 +34,30 @@ STRATEGIC_AUDIT_PROMPT_V30 = """
    - 각 장면의 물리적 분량보다 '사건의 전진'이 있는지를 우선하라.
    - 6개의 장면 중 2개 이상이 '단순 묘사'가 아닌, 인물의 심경 변화나 물리적 타격 등 '인과적 전진'이 느껴지는 핵심 키워드를 포함해야 한다.
    - 문장이 길더라도 알맹이가 없는 '중언부언'은 REJECT하되, 문장이 짧더라도 다음 장면으로 넘어가는 '징검다리' 역할이 확실하다면 PASS하라.
-   
+
+### [Chain-of-Thought Strategic Audit]
+다음 단계로 검수하십시오:
+
+Step 1: 미래 오염 검사
+- 현재 블록의 보상/해결에 존재하지 않는 무구/비기가 전술서에 등장하는가?
+- 특히 '혼철대도'는 Block 15 이전에 절대 등장하면 안 됨
+→ 위반 시 REJECT, 아니면 다음 단계
+
+Step 2: 서사 분절성 검사
+- 각 회차가 고유한 사건을 담고 있는가?
+- 직전 아크의 단순 반복이 아닌가?
+→ 루프 감지 시 REJECT, 아니면 다음 단계
+
+Step 3: 페이싱 적합성 검사
+- 설정된 화수({ep_count}화)에 사건의 양이 적절한가?
+- 너무 압축되거나 늘어지지 않는가?
+→ 부적합 시 REJECT, 적합 시 다음 단계
+
+Step 4: 인과율 밀도 검사
+- 6개 장면 중 2개 이상이 '인과적 전진'을 포함하는가?
+- 단순 묘사로만 채워지지 않았는가?
+→ 밀도 미달 시 REJECT, 충족 시 PASS
+
 [Output Format] JSON Only
 {{
     "decision": "PASS" 또는 "REJECT",
@@ -103,10 +127,41 @@ DIRECTOR_AUDIT_PROMPT_V30 = """
 
 ### 📋 검수 데이터
 - 현재 회차: 제 {ep_num}화 (아크 내 {arc_pos}번째)
-- 📜 아크 전술 설계도: {arc_doc} 
+- 📜 아크 전술 설계도: {arc_doc}
 - 🕒 최근 서사 요약: {history_summary}
 - 📄 직전 회차 실제 본문: {prev_full_text} 👈 (중복 방지를 위해 반드시 참조!)
 - 📝 검수 대상 ({audit_mode}): {manuscript}
+
+### [Chain-of-Thought Evaluation]
+다음 순서로 단계적으로 검수하십시오:
+
+Step 1: 설정 일관성 체크
+- HUD 능력치를 초과하는 무공이 등장하는가?
+- 사망한 인물, 파괴된 장소가 정상적으로 등장하는가?
+- 핵심 인물 이름이 설계도와 일치하는가?
+→ 위반 시 REJECT, 아니면 다음 단계로
+
+Step 2: 장면 구성 평가
+- 설계된 장면(Scene 1~6)이 충실히 반영되었는가?
+- 각 장면의 밀도가 균등한가? (앞만 상세하고 뒤는 요약 아닌가?)
+- 장면 수가 기준을 충족하는가?
+→ 미달 시 REJECT, 충족 시 다음 단계로
+
+Step 3: 서사 흐름 검수
+- 사건이 다음 화로 넘어가는 추진력이 있는가?
+- 같은 상황이 3장면 이상 반복되지 않는가?
+- 직전 회차와 내용이 중복되지 않는가?
+→ 문제 있으면 REJECT, 없으면 다음 단계로
+
+Step 4: 분량 및 품질 종합 평가
+- 분량이 기준을 충족하는가? (MANUSCRIPT: 4000자+)
+- 문체가 유려하고 독자 경험이 좋은가?
+- 점수 산정 (0-100)
+
+Step 5: 최종 판정
+- 위 4단계를 종합하여 PASS/REJECT 결정
+- 에러 카테고리 분류 (QUALITY_ISSUE vs LOGIC_ERROR)
+
 [Output Format] JSON Only
 {{
     "decision": "PASS" 또는 "REJECT",
@@ -120,6 +175,10 @@ DIRECTOR_AUDIT_PROMPT_V30 = """
 """
 
 class Director(BaseAgent):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.v0128_orchestrator = None  # Lazy initialization
+
     def audit_manuscript(self, ep_num, manuscript, arc_doc, history_summary, prev_full_text, arc_pos, total_eps=None, target_len=4500, retry_count=0):
         # 1. 검수 모드 자동 결정
         audit_mode = "BLUEPRINT" if target_len <= 4000 else "MANUSCRIPT"
@@ -283,6 +342,95 @@ class Director(BaseAgent):
         """
         response = self.ask(prompt, temperature=0.1)
         return self._extract_json_robust(response)
+
+
+    # =================================================================
+    # [V0128] 3-Tier Validation System
+    # =================================================================
+
+    def audit_manuscript_v0128(self, ep_num, manuscript, validation_context, config=None, genre='wuxia'):
+        """
+        [V0128] 3-Tier 검증 시스템을 사용한 원고 검수
+
+        Args:
+            ep_num: 에피소드 번호
+            manuscript: 검수 대상 원고
+            validation_context: {
+                'encyclopedia': {...},
+                'martial_hud': {...},
+                'blueprint': {...},
+                'mode': 'BLUEPRINT' | 'MANUSCRIPT',
+                'history': [...],
+                'npc_profiles': {...}
+            }
+            config: 검증 설정 dict (선택적)
+            genre: 장르 ('wuxia', 'hunter', 'investment')
+
+        Returns:
+            dict: {
+                "final_decision": "PASS" | "CONDITIONAL_PASS" | "REJECT",
+                "total_score": float,
+                "blocking_result": {...},
+                "scoring_result": {...},
+                "advisory_result": {...},
+                "feedback": str,
+                "detailed_feedback": str,
+                "self_consistency_used": bool
+            }
+        """
+        # Lazy initialization of ValidationOrchestrator
+        if self.v0128_orchestrator is None:
+            default_config = {
+                'scoring_model': self.primary_model,
+                'advisory_model': 'gemini-2.0-flash',
+                'scoring_threshold': 70,
+                'use_self_consistency': True,
+                'consistency_votes': 3
+            }
+            if config:
+                default_config.update(config)
+
+            self.v0128_orchestrator = ValidationOrchestrator(
+                config=default_config,
+                client=self.client,
+                genre=genre
+            )
+
+        # Run 3-tier validation
+        try:
+            result = self.v0128_orchestrator.validate(
+                ep_num=ep_num,
+                manuscript=manuscript,
+                validation_context=validation_context
+            )
+
+            # Convert V0128 decision format to legacy format for compatibility
+            legacy_result = {
+                "decision": result['final_decision'],
+                "score": result['total_score'],
+                "reason": result['feedback'],
+                "feedback": result['detailed_feedback'],
+                "v0128_full_result": result  # Keep full result for detailed analysis
+            }
+
+            # Map V0128 decisions to legacy PASS/REJECT
+            if result['final_decision'] in ['PASS', 'CONDITIONAL_PASS']:
+                legacy_result['decision'] = 'PASS'
+            else:
+                legacy_result['decision'] = 'REJECT'
+
+            return legacy_result
+
+        except Exception as e:
+            print(f"      🚨 [V0128 Error] 검증 중 예외 발생: {e}")
+            # Fallback to safe pass
+            return {
+                "decision": "PASS",
+                "score": 50,
+                "reason": f"V0128 검증 시스템 오류: {str(e)}",
+                "feedback": "검증 시스템 오류로 인한 기본 통과",
+                "error": str(e)
+            }
 
 
     # =================================================================
