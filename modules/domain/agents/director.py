@@ -24,7 +24,7 @@ STRATEGIC_AUDIT_PROMPT_V30 = """
 3. **가변 페이싱 적합성**: 설정된 화수에 담기에 사건의 양이 적절한가?
 4. **미래 오염 차단 (Future Contamination Guard)**:
    - 현재 블록의 보상/해결/상태에 존재하지 않는 고유 명사(무구, 비기, 인맥, 조직)가 전술서에 등장하면 REJECT.
-   - 특히 '혼철대도'는 Block 15 보상 이전에는 절대 등장하면 안 된다.
+   - 주인공이 아직 획득하지 않은 아이템이나 배우지 않은 무공은 절대 등장해선 안 된다.
 
 ### [🚨 유연한 판정 지침 (Pragmatism)]
 1. **관대한 승인**: 전술 설계도의 핵심 맥락이 80% 이상 반영되었고 치명적인 설정 오류(예: 죽은 자의 부활, 성별 바뀜 등)가 없다면, 세부 묘사의 미비함은 '수정 지시'만 남기고 [PASS] 판정하라.
@@ -40,7 +40,7 @@ STRATEGIC_AUDIT_PROMPT_V30 = """
 
 Step 1: 미래 오염 검사
 - 현재 블록의 보상/해결에 존재하지 않는 무구/비기가 전술서에 등장하는가?
-- 특히 '혼철대도'는 Block 15 이전에 절대 등장하면 안 됨
+- 아직 획득하지 않은 아이템이나 미습득 무공이 등장하면 REJECT
 → 위반 시 REJECT, 아니면 다음 단계
 
 Step 2: 서사 분절성 검사
@@ -87,8 +87,13 @@ DIRECTOR_AUDIT_PROMPT_V30 = """
 ### 🎯 모드별 검수 강령 (V40.3 실용주의 판정)
 1. **[BLUEPRINT/MANUSCRIPT 모드 공통]**:
    - **창작권 존중 (Creative Freedom)**: 작가(Writer)가 서사의 줄기를 해치지 않는 선에서 추가하는 대사, 배경 묘사, 조연의 리액션은 무조건 승인하라.
+   - **[V45 원고 우선 원칙 (Manuscript Supremacy)]**:
+     (A) 직전 원고(prev_full_text)에서 실제로 일어난 사건이 **진실**이다.
+     (B) HUD는 참고 자료일 뿐, 원고와 HUD가 충돌하면 **원고가 우선**한다.
+     (C) 직전 원고에서 장비를 획득했다면, HUD에 없더라도 사용 가능하다.
+     (D) 직전 원고에서 부상을 입었다면, HUD 상태와 무관하게 부상 상태로 간주한다.
    - **설정 절대 가드 (Hard Constraints)**: 오직 아래 세 가지만 무조건 REJECT하라.
-     (A) 주인공의 경지(HUD)를 무시한 초월적 무공명 창조 (예: 삼류인데 이기어검 구사).
+     (A) 주인공의 경지가 직전 원고 기준으로 불가능한 초월적 무공 사용 (예: 아직 배우지 않은 무공 구사).
      (B) 전술 설계도에 명시된 핵심 인물 이름 변경 또는 누락.
      (C) 죽은 자가 살아나거나 장소가 순간이동하는 등 '물리적 인과' 붕괴.
    - **[페이싱 및 흐름 관리]**:
@@ -135,10 +140,11 @@ DIRECTOR_AUDIT_PROMPT_V30 = """
 ### [Chain-of-Thought Evaluation]
 다음 순서로 단계적으로 검수하십시오:
 
-Step 1: 설정 일관성 체크
-- HUD 능력치를 초과하는 무공이 등장하는가?
+Step 1: 설정 일관성 체크 (V45 원고 우선 원칙 적용)
+- 직전 원고 기준으로 불가능한 무공이 등장하는가? (HUD보다 원고 우선)
 - 사망한 인물, 파괴된 장소가 정상적으로 등장하는가?
 - 핵심 인물 이름이 설계도와 일치하는가?
+- 직전 원고에서 획득한 장비를 사용하는 것은 허용 (HUD 미반영이라도 OK)
 → 위반 시 REJECT, 아니면 다음 단계로
 
 Step 2: 장면 구성 평가
@@ -178,9 +184,36 @@ class Director(BaseAgent):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.v0128_orchestrator = None  # Lazy initialization
+        self.genre = 'wuxia'  # 기본값, set_genre()로 변경 가능
+        self.use_v0128 = False  # V0128 검증 시스템 사용 여부
 
-    def audit_manuscript(self, ep_num, manuscript, arc_doc, history_summary, prev_full_text, arc_pos, total_eps=None, target_len=4500, retry_count=0):
-        # 1. 검수 모드 자동 결정
+    def set_genre(self, genre: str):
+        """장르 설정 (main_a.py에서 boot 시 호출)"""
+        self.genre = genre
+        # 기존 orchestrator 리셋 (장르 변경 시 재초기화 필요)
+        self.v0128_orchestrator = None
+
+    def set_v0128_enabled(self, enabled: bool):
+        """V0128 검증 시스템 활성화/비활성화"""
+        self.use_v0128 = enabled
+
+    def audit_manuscript(self, ep_num, manuscript, arc_doc, history_summary, prev_full_text, arc_pos, total_eps=None, target_len=4500, retry_count=0, validation_context=None):
+        """
+        원고 검수 (V0128 통합)
+
+        V0128 활성화 시 3-Tier 검증 시스템 사용
+        비활성화 시 기존 LLM 기반 검증 사용
+        """
+        # [V43] V0128 검증 시스템 조건부 사용
+        if self.use_v0128 and validation_context:
+            return self._audit_with_v0128(
+                ep_num=ep_num,
+                manuscript=manuscript,
+                validation_context=validation_context,
+                target_len=target_len
+            )
+
+        # 1. 검수 모드 자동 결정 (기존 로직)
         audit_mode = "BLUEPRINT" if target_len <= 4000 else "MANUSCRIPT"
 
         # 2. 데이터 안전 처리
@@ -286,15 +319,10 @@ class Director(BaseAgent):
                     "re_slice_instruction": f"모든 주인공 서술에서 '{protagonist_name}'을 명시적으로 사용하라. 유사 명칭이나 다른 인물 이름으로 대체 금지."
                 }
 
-        # 🔒 [Hard Guard] 미래 무구 조기 노출 차단
-        if isinstance(arc_no, int) and arc_no < 15 and "혼철대도" in arc_dump:
-            return {
-                "decision": "REJECT",
-                "score": 0,
-                "loop_detected": False,
-                "reason": "미래 무구(혼철대도) 조기 등장 감지",
-                "re_slice_instruction": "혼철대도/관련 묘사를 전부 제거하고, 현재 시점의 무구로 재설계하라."
-            }
+        # 🔒 [Hard Guard] 미래 무구 조기 노출 차단 (V43: Bible 기반 동적 검증)
+        # 특정 아이템 하드코딩 제거 - Bible의 'future_items' 또는 블록별 보상 데이터로 검증
+        # 이 검증은 BlockingValidator의 unowned_item_usage 체크로 대체됨
+        pass
         
         # 데이터 안전화 처리
         safe_tactical = self._escape_braces(arc_plan.get('tactical_doc', ''))
@@ -347,6 +375,24 @@ class Director(BaseAgent):
     # =================================================================
     # [V0128] 3-Tier Validation System
     # =================================================================
+
+    def _audit_with_v0128(self, ep_num, manuscript, validation_context, target_len=4500):
+        """
+        [V43 내부 헬퍼] V0128 검증 시스템 사용 (장르 자동 전달)
+
+        audit_manuscript에서 use_v0128=True일 때 호출됨
+        """
+        # mode 자동 결정
+        mode = "BLUEPRINT" if target_len <= 4000 else "MANUSCRIPT"
+        validation_context['mode'] = mode
+
+        # 내부 장르 설정 사용
+        return self.audit_manuscript_v0128(
+            ep_num=ep_num,
+            manuscript=manuscript,
+            validation_context=validation_context,
+            genre=self.genre  # Director에 저장된 장르 사용
+        )
 
     def audit_manuscript_v0128(self, ep_num, manuscript, validation_context, config=None, genre='wuxia'):
         """
@@ -564,10 +610,11 @@ class Director(BaseAgent):
             # 수치 변화 파싱 시도
             if isinstance(value, str) and (value.startswith("+") or value.startswith("-")):
                 try:
-                    # "+100" → 100, "-50냥" → -50
-                    numeric_str = ''.join(c for c in value if c.isdigit() or c == '-' or c == '+')
-                    if numeric_str:
-                        change = int(numeric_str)
+                    # [V44 Fix] 정규식으로 안전한 숫자 추출 ("+100" → 100, "-50냥" → -50)
+                    import re
+                    numeric_match = re.match(r'^([+-]?\d+)', value)
+                    if numeric_match:
+                        change = int(numeric_match.group(1))
 
                         # 범위 검증
                         if key in LIMITS:

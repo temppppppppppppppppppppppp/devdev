@@ -31,10 +31,23 @@ class Writer(BaseAgent):
         bible_root = master_bible.get('MasterBible', master_bible)
         core_identity = bible_root.get('ProjectData', {}).get('CoreIdentity', {})
         assets = bible_root.get('AssetLibrary', {})
-        
+
+        # [V45] NPC 장비 현황 추출 (Writer가 NPC 소지품을 명확히 인지하도록)
+        npc_equipment_summary = []
+        key_npcs = assets.get('KeyNPCs', []) or assets.get('Key_NPCs', [])
+        for npc in key_npcs:
+            if isinstance(npc, dict):
+                npc_name = npc.get('name') or npc.get('Name', '알 수 없음')
+                npc_hud = npc.get('NPC_Martial_HUD', {})
+                if isinstance(npc_hud, dict):
+                    equip = npc_hud.get('equipment', [])
+                    if equip:
+                        npc_equipment_summary.append(f"- {npc_name}: {equip}")
+
         # 3. [데이터 보호/에스케이프]
         safe_desire = self._escape_braces(core_identity.get('desire', '전설적 무인으로의 복귀'))
-        safe_assets = self._escape_braces(json.dumps(assets, ensure_ascii=False))    
+        safe_assets = self._escape_braces(json.dumps(assets, ensure_ascii=False))
+        safe_npc_equipment = self._escape_braces("\n".join(npc_equipment_summary)) if npc_equipment_summary else "NPC 장비 정보 없음"    
         # (A) 피드백 섹션
         feedback_section = f"\n[🚨 REJECTION FEEDBACK]: {feedback}" if feedback else ""
         
@@ -110,6 +123,10 @@ class Writer(BaseAgent):
         ### 📚 세계관 성경 (Master Bible) 👈 (추가된 데이터 앵커)
         - **주인공의 근본 동력**: {safe_desire}
         - **가용 자산(NPC/ITEM)**: {safe_assets}
+
+        ### 🗡️ [V45] NPC 현재 장비 현황
+        {safe_npc_equipment}
+        ⚠️ NPC가 소지한 무기/장비는 반드시 일관되게 묘사하라. 갑자기 없던 무기가 생기거나 사라지면 안 된다.
 
         ### 📋 1. 씬 설계도 (Blueprint)
         {self._escape_braces(breakdown_doc)}
@@ -233,10 +250,10 @@ class Writer(BaseAgent):
             if isinstance(data, dict):
                 for key in banned_keys:
                     if key in data:
-                        del data[key] # 구조적 삭제
+                        del data[key]  # 구조적 삭제
                 return json.dumps(data, ensure_ascii=False, indent=4)
-        except:
-            pass # JSON 파싱 실패 시 텍스트 모드로 전환
+        except (json.JSONDecodeError, ValueError):
+            pass  # JSON 파싱 실패 시 텍스트 모드로 전환
 
         # 2. 텍스트 라인 필터링 (비상 대책)
         # "Beat 3": ... 형태의 라인을 강제로 날림
