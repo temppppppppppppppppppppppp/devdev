@@ -1,0 +1,12 @@
+{
+  "tag": "stage4_complete",
+  "timestamp": "2026-01-29 18:20:46",
+  "total_events": 25,
+  "counts": {
+    "db_commit": 9,
+    "reference_loaded": 2,
+    "pattern_missing": 3,
+    "pattern_warning": 10,
+    "cache_created": 1
+  }
+}

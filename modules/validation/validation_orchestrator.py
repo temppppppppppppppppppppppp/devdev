@@ -1,9 +1,11 @@
 """
 [V0128] ValidationOrchestrator
-3-Tier 검증 통합 실행 + Self-Consistency + CatharsisTimer + ActionSceneEvaluator
+[V46] 4-Tier 검증 통합 실행 (BLOCKING → CONSISTENCY → SCORING → ADVISORY)
++ Self-Consistency + CatharsisTimer + ActionSceneEvaluator
 """
 from typing import Dict, List, Any, Optional
 from .blocking_validator import BlockingValidator
+from .consistency_validator import ConsistencyValidator
 from .scoring_validator import ScoringValidator
 from .advisory_validator import AdvisoryValidator
 from .catharsis_timer import CatharsisTimer
@@ -16,9 +18,10 @@ _CONSTITUTION_CACHE: Dict[str, str] = {}
 
 class ValidationOrchestrator:
     """
-    글도비 V0128 통합 검증 오케스트레이터
+    글도비 V46 통합 검증 오케스트레이터
 
-    3-Tier 검증을 순차적으로 실행하고 최종 결과를 반환합니다.
+    4-Tier 검증을 순차적으로 실행하고 최종 결과를 반환합니다.
+    TIER 1: BLOCKING → TIER 1.5: CONSISTENCY → TIER 2: SCORING → TIER 3: ADVISORY
     Self-Consistency (다수결 투표) 적용 가능.
     """
 
@@ -32,6 +35,9 @@ class ValidationOrchestrator:
 
         # TIER 1: BLOCKING
         self.blocking = BlockingValidator()
+
+        # [V46] TIER 1.5: CONSISTENCY (새로 추가)
+        self.consistency = ConsistencyValidator(genre=genre)
 
         # TIER 2: SCORING
         scoring_model = config.get('scoring_model', 'gemini-2.5-pro')
@@ -108,6 +114,38 @@ class ValidationOrchestrator:
         print(f"      ✅ BLOCKING 통과 (0/{blocking_result.get('failure_count', 0)} 실패)")
 
         # ═══════════════════════════════════════════════════════════════
+        # [V46] TIER 1.5: CONSISTENCY (일관성 검증)
+        # ═══════════════════════════════════════════════════════════════
+        print(f"      [V46] TIER 1.5: CONSISTENCY 검증 중...")
+        consistency_result = self.consistency.validate(manuscript, validation_context)
+        results['consistency_result'] = consistency_result
+
+        # 정당화 불가 위반이 있으면 즉시 REJECT
+        unjustifiable = consistency_result.get('unjustifiable_violations', [])
+        if unjustifiable:
+            print(f"      ❌ CONSISTENCY 실패: {len(unjustifiable)}개 정당화 불가 위반")
+            return {
+                "final_decision": "REJECT",
+                "reason": "CONSISTENCY 검증 실패 - 정당화 불가 모순",
+                "violations": unjustifiable,
+                "consistency_result": consistency_result,
+                "blocking_result": blocking_result,
+                "total_score": 0,
+                "feedback": consistency_result.get('feedback', ''),
+                "detailed_feedback": consistency_result.get('feedback', ''),
+                "self_consistency_used": False
+            }
+
+        # 정당화 가능 위반은 점수 감점으로 처리
+        consistency_penalty = consistency_result.get('score_penalty', 0)
+        justifiable_count = len(consistency_result.get('justifiable_violations', []))
+
+        if justifiable_count > 0:
+            print(f"      ⚠️ CONSISTENCY 경고: {justifiable_count}개 (감점: {consistency_penalty}점)")
+        else:
+            print(f"      ✅ CONSISTENCY 통과")
+
+        # ═══════════════════════════════════════════════════════════════
         # TIER 2: SCORING (점수 기반)
         # ═══════════════════════════════════════════════════════════════
         print(f"      [V0128] TIER 2: SCORING 평가 중...")
@@ -181,12 +219,23 @@ class ValidationOrchestrator:
             elif action_score >= 8:
                 action_adjustment = 2  # 액션 씬 품질 우수
 
+        # [V46] CONSISTENCY 감점 적용
+        consistency_adjustment = consistency_penalty  # 이미 음수
+
         # 조정된 총점
-        adjusted_total = total_score + catharsis_adjustment + action_adjustment
+        adjusted_total = total_score + catharsis_adjustment + action_adjustment + consistency_adjustment
         adjusted_total = max(0, min(100, adjusted_total))  # 0~100 범위 제한
 
-        if catharsis_adjustment != 0 or action_adjustment != 0:
-            print(f"      📊 점수 조정: {total_score} → {adjusted_total} (카타르시스: {catharsis_adjustment:+d}, 액션: {action_adjustment:+d})")
+        adjustments_made = (catharsis_adjustment != 0 or action_adjustment != 0 or consistency_adjustment != 0)
+        if adjustments_made:
+            adjustment_parts = []
+            if consistency_adjustment != 0:
+                adjustment_parts.append(f"일관성: {consistency_adjustment:+d}")
+            if catharsis_adjustment != 0:
+                adjustment_parts.append(f"카타르시스: {catharsis_adjustment:+d}")
+            if action_adjustment != 0:
+                adjustment_parts.append(f"액션: {action_adjustment:+d}")
+            print(f"      📊 점수 조정: {total_score} → {adjusted_total} ({', '.join(adjustment_parts)})")
             total_score = adjusted_total
 
         # ═══════════════════════════════════════════════════════════════

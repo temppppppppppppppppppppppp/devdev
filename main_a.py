@@ -15,10 +15,12 @@ import json
 from pathlib import Path
 from typing import Optional, Dict, List, Any, Tuple
 from dotenv import load_dotenv
+load_dotenv(override=True)  # Slack 알림용 환경변수 먼저 로드
 from rich.live import Live
 from rich.panel import Panel
 from google import genai
 import re 
+from modules.core.slack_bot import notifier # [V40] Slack 알림 추가 
 from modules.core.system import StudioSystem
 from modules.core.studio_visualizer import StudioVisualizer
 from modules.core.memory_engine import LongTermMemory
@@ -1353,6 +1355,13 @@ class SovereignApp:
                     continue
 
             self.ui.log(f"✅ 배치({batch_start+1}~{batch_end}) 욕망 엔진 이식 및 용접 완료.")
+            
+            # [V40] Slack 알림 전송 (Arc 설계 완료)
+            notifier.send_notification(
+                title=f"✅ [Arc] 제 {batch_start+1}~{batch_end}번 아크 설계 완료",
+                message=f"프로젝트: {self.current_project.name}\n설계된 아크 수: {len(batch_results)}개",
+                key_metrics={"완료 구간": f"{batch_start+1} ~ {batch_end} Arc", "생성 수": len(batch_results)}
+            )
 
         self.ui.log("✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.")
         self._write_audit_summary("stage2_complete")
@@ -2673,6 +2682,15 @@ class SovereignApp:
                 break
 
         self._write_audit_summary("stage3_complete")
+        
+        # [V40] Slack 알림 전송 (Blueprint 설계 완료 - 전체 루프 종료 후)
+        if working_ep > production_head:
+            completed_count = working_ep - production_head
+            notifier.send_notification(
+                title=f"✅ [Blueprint] 제 {production_head}~{working_ep-1}화 설계도 생성 완료",
+                message=f"프로젝트: {self.current_project.name}\n생성된 화수: {completed_count}화",
+                key_metrics={"완료 구간": f"{production_head} ~ {working_ep-1}화", "총 생성": f"{completed_count}개"}
+            )
 
 
     def _stage_4_sovereign_writing(self, limit_mode: bool = False) -> None:
@@ -2714,8 +2732,8 @@ class SovereignApp:
         # 3. 환경 변수 초기화
         output_dir = self.current_project.paths.drafts
         output_dir.mkdir(exist_ok=True)
-        # [V45 Fix] ep_end 키 접근 방어
-        total_planned_ep = self.current_project.arcs[-1].get('ep_end', 50)
+        # [V46 Fix] Blueprint 기준으로 최대 화수 결정 (Arc 기준 → Blueprint 기준)
+        total_planned_ep = self.current_project.db.get_latest_blueprint_number()
         target_ep = None
 
         try:
