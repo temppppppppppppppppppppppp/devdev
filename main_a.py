@@ -3105,6 +3105,53 @@ class SovereignApp:
                                     if not logic_passed:
                                         continue  # 캐릭터 논리 검수 실패 시 재시도
 
+                                    # [Phase 5.2.3] Self-Refine 조건 확인 및 실행
+                                    v0128_result = audit_res.get('v0128_full_result', {})
+                                    if v0128_result.get('refine_recommended', False):
+                                        refine_reason = v0128_result.get('refine_reason', '')
+                                        self.ui.log(f"✨ [Self-Refine] 품질 정제 시작 ({refine_reason})")
+                                        try:
+                                            # Self-Refine은 JSON을 기대하므로 writer_data를 JSON으로 변환
+                                            manuscript_json = json.dumps({
+                                                'title': temp_title,
+                                                'content': temp_content,
+                                                'state_updates': writer_state_updates
+                                            }, ensure_ascii=False)
+
+                                            # Self-Refine은 JSON 문자열을 반환하므로 파싱 필요
+                                            refined_json = self.agents['writer']._self_refine(
+                                                manuscript=manuscript_json,
+                                                target_areas=['emotion', 'prose', 'cliffhanger', 'sensory']
+                                            )
+
+                                            # JSON 파싱하여 content 추출
+                                            refined_data = self.agents['writer']._extract_json_robust(refined_json) if isinstance(refined_json, str) else refined_json
+
+                                            if refined_data and isinstance(refined_data, dict):
+                                                refined_content = refined_data.get('content', '')
+
+                                                # 품질 체크: 길이가 원본의 80% 이상인지
+                                                if refined_content and len(refined_content) > len(temp_content) * 0.8:
+                                                    temp_content = refined_content
+                                                    # title도 업데이트 (있으면)
+                                                    if refined_data.get('title'):
+                                                        temp_title = refined_data['title']
+
+                                                    self.ui.log(f"✅ [Self-Refine] 품질 정제 완료 (길이: {len(refined_content)}자)")
+                                                    self._audit_event("self_refine_success", "manuscript refined", {
+                                                        "ep_num": next_ep,
+                                                        "reason": refine_reason,
+                                                        "length_change": len(refined_content) - len(temp_content)
+                                                    })
+                                                else:
+                                                    self.ui.log(f"⚠️ [Self-Refine] 결과 품질 미달 (길이: {len(refined_content)}자), 원본 유지")
+                                            else:
+                                                self.ui.log(f"⚠️ [Self-Refine] JSON 파싱 실패, 원본 유지")
+                                        except Exception as refine_err:
+                                            self.ui.log(f"⚠️ [Self-Refine] 오류 발생, 원본 유지: {refine_err}")
+                                            import traceback
+                                            traceback.print_exc()
+
                                     # [V41] state_updates 승인 (Director Sovereignty)
                                     approved_state_updates = {}
                                     if writer_state_updates:

@@ -16,6 +16,7 @@
     "advisory_model": "gemini-2.5-flash",
     "scoring_threshold": 70,
     "use_self_consistency": true,
-    "consistency_votes": 3
+    "consistency_votes": 3,
+    "use_retrospective": true
   }
 }

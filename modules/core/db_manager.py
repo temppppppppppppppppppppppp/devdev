@@ -151,6 +151,20 @@ class DBManager:
             )
         ''')
 
+        # [Phase 5.2.2] 7. Reflexion Memory (과거 실패 패턴 학습)
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS reflexion_memory (
+                pattern_type TEXT PRIMARY KEY,
+                description TEXT,
+                frequency INTEGER DEFAULT 1,
+                solution TEXT,
+                first_seen TIMESTAMP,
+                last_seen TIMESTAMP,
+                first_ep INTEGER,
+                last_ep INTEGER
+            )
+        ''')
+
         # ------------------------------------------------------------------
         # 🚨 [Patch 1.1] Martial Tracker 자동 스키마 마이그레이션 로직
         # ------------------------------------------------------------------

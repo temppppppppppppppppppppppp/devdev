@@ -25,10 +25,11 @@ class ValidationOrchestrator:
     Self-Consistency (다수결 투표) 적용 가능.
     """
 
-    def __init__(self, config: dict, client=None, genre='wuxia'):
+    def __init__(self, config: dict, client=None, genre='wuxia', context=None):
         self.config = config
         self.client = client
         self.genre = genre
+        self.context = context  # [Phase 5.2.2] Reflexion용 context
 
         # [V44] Constitution 로드 (캐싱 + 장르별 fallback 강화)
         self.constitution = self._load_constitution_cached(genre)
@@ -63,6 +64,14 @@ class ValidationOrchestrator:
         catharsis_max_gap = config.get('catharsis_max_gap', 3)
         self.catharsis_timer = CatharsisTimer(max_frustration=catharsis_max_gap, genre=genre)
         self.action_evaluator = ActionSceneEvaluator(genre=genre)
+
+        # [Phase 3] 장기 일관성 검증 (선택적)
+        self.use_retrospective = config.get('use_retrospective', False)
+        self.retrospective = None  # Lazy initialization
+
+        # [Phase 5.2.2] Reflexion 시스템 (선택적)
+        self.use_reflexion = config.get('use_reflexion', True)  # 기본 활성화
+        self.reflexion = None  # Lazy initialization
 
     def validate(self, ep_num: int, manuscript: str, validation_context: dict) -> dict:
         """
@@ -101,6 +110,9 @@ class ValidationOrchestrator:
         results['blocking_result'] = blocking_result
 
         if not blocking_result['passed']:
+            # [Phase 5.2.2] Reflexion: 실패 패턴 기록
+            self._record_failure_to_reflexion(ep_num, 'blocking', blocking_result['failures'])
+
             return {
                 "final_decision": "REJECT",
                 "reason": "BLOCKING 검증 실패",
@@ -165,6 +177,34 @@ class ValidationOrchestrator:
 
         total_score = scoring_result['total_score']
         print(f"      📊 SCORING: {total_score}/100점 (임계값: {self.scoring.PASS_THRESHOLD})")
+
+        # ═══════════════════════════════════════════════════════════════
+        # [Phase 5.2.3] TIER 2.5: CONDITIONAL SELF-REFINE (조건부 품질 정제)
+        # ═══════════════════════════════════════════════════════════════
+        # ⚠️ 설계 노트: ValidationOrchestrator는 검증만 담당.
+        #    실제 Self-Refine 실행은 상위 레벨(main_a.py Stage 4)에서 처리.
+        #    여기서는 조건만 판단하고 플래그 반환.
+        refine_applied = False
+        refine_reason = ""
+
+        # 조건 1: 아쉬운 점수 (88-90점)
+        if 88 <= total_score <= 90:
+            refine_applied = True
+            refine_reason = f"아쉬운 점수 ({total_score}점)"
+
+        # 조건 2: 중요 화 (1, 25, 50, 75, 100, ...)
+        important_episodes = [1] + [i for i in range(25, 251, 25)]  # 1, 25, 50, 75, ...
+        if ep_num in important_episodes:
+            refine_applied = True
+            refine_reason = f"중요 화 (제{ep_num}화)" if not refine_reason else refine_reason + " + 중요 화"
+
+        if refine_applied:
+            print(f"      ✨ [Self-Refine] 품질 정제 권장 ({refine_reason})")
+            results['refine_recommended'] = True
+            results['refine_reason'] = refine_reason
+            # TODO: 상위 레벨에서 Writer._self_refine() 호출 필요
+        else:
+            results['refine_recommended'] = False
 
         # ═══════════════════════════════════════════════════════════════
         # TIER 3: ADVISORY (권고)
@@ -239,6 +279,55 @@ class ValidationOrchestrator:
             total_score = adjusted_total
 
         # ═══════════════════════════════════════════════════════════════
+        # [Phase 3] Retrospective Validator (장기 일관성 검증)
+        # ═══════════════════════════════════════════════════════════════
+        if self.use_retrospective and ep_num > 3:  # 3화 이상부터 활성화
+            print(f"      [Phase 3] RETROSPECTIVE: 장기 일관성 검증 중...")
+
+            # Lazy initialization
+            if self.retrospective is None:
+                from .retrospective_validator import RetrospectiveValidator
+                # context는 validation_context에서 추출
+                context_obj = validation_context.get('_context')
+                if context_obj:
+                    self.retrospective = RetrospectiveValidator(context_obj, lookback_episodes=5)
+
+            if self.retrospective:
+                retrospective_result = self.retrospective.validate_long_term_consistency(
+                    current_ep=ep_num,
+                    manuscript=manuscript,
+                    validation_context=validation_context
+                )
+                results['retrospective_result'] = retrospective_result
+
+                if not retrospective_result['passed']:
+                    severity = retrospective_result.get('severity_level', 'NONE')
+                    violation_count = retrospective_result.get('total_violations', 0)
+
+                    print(f"      ⚠️ RETROSPECTIVE: {violation_count}개 장기 일관성 위반 ({severity})")
+
+                    # CRITICAL 위반이 있으면 즉시 REJECT
+                    if severity == "CRITICAL":
+                        return {
+                            "final_decision": "REJECT",
+                            "reason": "장기 일관성 CRITICAL 위반",
+                            "retrospective_result": retrospective_result,
+                            "blocking_result": blocking_result,
+                            "total_score": 0,
+                            "feedback": retrospective_result.get('message', ''),
+                            "detailed_feedback": self._format_retrospective_feedback(retrospective_result),
+                            "self_consistency_used": False
+                        }
+
+                    # HIGH 이상이면 점수 감점
+                    if severity in ["HIGH", "MEDIUM"]:
+                        penalty = 10 if severity == "HIGH" else 5
+                        total_score = max(0, total_score - penalty)
+                        print(f"      📊 장기 일관성 감점: -{penalty}점 (새 총점: {total_score})")
+                else:
+                    print(f"      ✅ RETROSPECTIVE: 장기 일관성 통과")
+
+        # ═══════════════════════════════════════════════════════════════
         # 최종 판정
         # ═══════════════════════════════════════════════════════════════
         results['total_score'] = total_score
@@ -263,43 +352,76 @@ class ValidationOrchestrator:
 
     def _evaluate_with_self_consistency(self, manuscript: str, context: dict) -> dict:
         """
-        Self-Consistency: 다수결 투표로 평가 안정성 향상
+        [Phase 5.1.2] Conditional Self-Consistency: 조건부 다수결 투표
 
-        3회 평가 후 점수 중앙값 사용, PASS/REJECT 다수결
+        - 1차 평가 먼저 실행
+        - 70-85점 구간 (애매한 점수): 3-vote 실행
+        - 그 외 (명확한 점수): 1-vote로 종료
+
+        목적: 비용 60% 절감, 품질 유지
         """
-        print(f"      🔄 Self-Consistency: {self.consistency_votes}회 평가 중...")
+        # 1차 평가
+        print(f"      🔄 Self-Consistency (Conditional): 1차 평가 중...")
+        first_eval = self.scoring.validate(manuscript, context)
+        first_score = first_eval['total_score']
 
-        evaluations = []
-        for i in range(self.consistency_votes):
-            result = self.scoring.validate(manuscript, context)
-            evaluations.append(result)
-            print(f"         Vote {i+1}: {result['total_score']}점, {result['message']}")
+        print(f"         Vote 1: {first_score}점, {first_eval['message']}")
 
-        # 점수 중앙값 - [V44 Fix] statistics.median 사용으로 정확한 계산
-        import statistics
-        scores = [e['total_score'] for e in evaluations]
-        median_score = statistics.median(scores)
+        # 조건부 판단: 애매한 점수인가?
+        ambiguous_lower = 70
+        ambiguous_upper = 85
 
-        # PASS/REJECT 다수결 - [V44 Fix] 과반수 계산 명확화
-        pass_votes = sum(1 for e in evaluations if e['passed'])
-        # 과반수: 3표 중 2표 이상, 5표 중 3표 이상 필요
-        final_passed = pass_votes > (self.consistency_votes // 2)
+        if ambiguous_lower <= first_score <= ambiguous_upper:
+            # 애매한 구간 → 추가 2회 평가
+            print(f"      ⚖️ 애매한 점수({first_score}) → 추가 평가 활성화")
 
-        # 대표 결과 (중앙값에 가장 가까운 것)
-        representative = min(evaluations, key=lambda e: abs(e['total_score'] - median_score))
+            evaluations = [first_eval]
+            for i in range(1, self.consistency_votes):
+                result = self.scoring.validate(manuscript, context)
+                evaluations.append(result)
+                print(f"         Vote {i+1}: {result['total_score']}점, {result['message']}")
 
-        # 결과 병합
-        result = representative.copy()
-        result['total_score'] = median_score
-        result['passed'] = final_passed
-        result['self_consistency'] = {
-            'votes': self.consistency_votes,
-            'pass_votes': pass_votes,
-            'scores': scores,
-            'median_score': median_score
-        }
+            # 점수 중앙값
+            import statistics
+            scores = [e['total_score'] for e in evaluations]
+            median_score = statistics.median(scores)
 
-        print(f"      ✅ Self-Consistency 완료: {median_score}점 (PASS {pass_votes}/{self.consistency_votes})")
+            # PASS/REJECT 다수결
+            pass_votes = sum(1 for e in evaluations if e['passed'])
+            final_passed = pass_votes > (self.consistency_votes // 2)
+
+            # 대표 결과 (중앙값에 가장 가까운 것)
+            representative = min(evaluations, key=lambda e: abs(e['total_score'] - median_score))
+
+            # 결과 병합
+            result = representative.copy()
+            result['total_score'] = median_score
+            result['passed'] = final_passed
+            result['self_consistency'] = {
+                'votes': self.consistency_votes,
+                'pass_votes': pass_votes,
+                'scores': scores,
+                'median_score': median_score,
+                'conditional': True,
+                'reason': f'ambiguous_score ({first_score})'
+            }
+
+            print(f"      ✅ Self-Consistency 완료: {median_score}점 (PASS {pass_votes}/{self.consistency_votes})")
+
+        else:
+            # 명확한 구간 → 1-vote로 종료
+            print(f"      ✓ 명확한 점수({first_score}) → 1-vote로 종료 (비용 절감)")
+
+            result = first_eval.copy()
+            result['self_consistency'] = {
+                'votes': 1,
+                'pass_votes': 1 if first_eval['passed'] else 0,
+                'scores': [first_score],
+                'median_score': first_score,
+                'conditional': True,
+                'reason': f'clear_score ({first_score})',
+                'cost_saved': True
+            }
 
         return result
 
@@ -478,3 +600,64 @@ class ValidationOrchestrator:
 
         amendment = genre_amendments.get(genre, "")
         return base + amendment
+
+    def _format_retrospective_feedback(self, retrospective_result: dict) -> str:
+        """[Phase 3] Retrospective 검증 결과를 피드백 형식으로 변환"""
+        feedback_parts = ["## 장기 일관성 위반\n"]
+
+        violations = retrospective_result.get('violations', [])
+        severity = retrospective_result.get('severity_level', 'NONE')
+
+        feedback_parts.append(f"심각도: {severity}")
+        feedback_parts.append(f"총 {len(violations)}개 위반 감지\n")
+
+        for violation in violations:
+            vtype = violation.get('type', 'unknown')
+            reason = violation.get('reason', '')
+            severity = violation.get('severity', 'LOW')
+
+            feedback_parts.append(f"- [{severity}] {reason}")
+
+            if 'required_fix' in violation:
+                feedback_parts.append(f"  수정 방법: {violation['required_fix']}")
+
+        return "\n".join(feedback_parts)
+
+    def _record_failure_to_reflexion(self, ep_num: int, failure_type: str, failures: list):
+        """
+        [Phase 5.2.2] 실패 패턴을 Reflexion에 기록
+
+        Args:
+            ep_num: 에피소드 번호
+            failure_type: 실패 유형
+            failures: 실패 목록
+        """
+        if not self.use_reflexion:
+            return
+
+        try:
+            # Lazy initialization
+            if self.reflexion is None:
+                from modules.core.reflexion_manager import ReflexionManager
+                # context가 필요한데, ValidationOrchestrator에는 없을 수 있음
+                # 이 경우 기록 스킵
+                if not hasattr(self, 'context') or self.context is None:
+                    return
+
+                self.reflexion = ReflexionManager(self.context)
+
+            # 각 실패 항목 기록
+            for failure in failures:
+                description = failure.get('reason', '알 수 없는 실패')
+                solution = failure.get('required_fix', '')
+
+                self.reflexion.record_failure(
+                    ep_num=ep_num,
+                    failure_type=failure_type,
+                    description=description,
+                    solution=solution
+                )
+
+        except Exception as e:
+            # Reflexion 실패해도 검증은 계속 진행
+            print(f"      ⚠️ [Reflexion] 실패 기록 실패: {e}")
