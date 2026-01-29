@@ -104,7 +104,11 @@ class EmotionArcTracker:
             return (False, "")
 
         recent = self.history[-last_n_episodes:]
-        states = [self.EMOTION_STATES[ep[1]] for ep in recent]
+        states = [self.EMOTION_STATES[ep[1]] for ep in recent if ep[1] in self.EMOTION_STATES]
+
+        # [V44] 빈 리스트 체크 (ZeroDivisionError 방지)
+        if not states:
+            return (False, "")
 
         # 분산 계산 (감정 변화 정도)
         avg = sum(states) / len(states)

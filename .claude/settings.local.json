@@ -7,7 +7,14 @@
       "Bash(git add:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nV41: Stage 1 스킵 옵션 및 유동 아크 지원\n\n- Stage 1 \\(Volume Strategy\\) 스킵 가능하도록 변경\n- Stage 2에서 volumes 없이도 에러 없이 진행 가능 \\(폴백 처리\\)\n- 아크 총량 50개 고정 → plot_roadmap 길이 기반 유동화\n- 권 수 자동 계산 \\(아크 수 / ARCS_PER_VOLUME 올림\\)\n- 메뉴 표시 개선: Stage 1 \"선택\", Stage 2 \"유동\"\n- CLAUDE.md: settings.json 전체 구조 반영 및 경로 수정\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(sqlite3:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(dir:*)",
+      "Bash(find:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nV45: 코드 안정화 및 NPC 장비 추적 시스템 추가\n\n## 버그 수정 \\(13개\\)\n- db_manager.py: JSON 파싱 예외 처리 추가 \\(5곳\\)\n- project_manager.py: NPC HUD 타입 검증 강화\n- memory_engine.py: 중복 import 제거\n- main_a.py: 스타일 선택 타입 불일치 수정 \\(int vs str\\)\n- main_a.py: blueprints 잘못된 load_anchor 호출 제거\n- main_a.py: Weaver 모델 설정 오류 수정 \\(manager → weaver\\)\n- main_a.py: NPC 키 불일치 수정 \\(KeyNPCs + Key_NPCs 둘 다 지원\\)\n- main_a.py: Stage 4 패턴 체크 비활성화 명시\n- main_a.py: _safe_commit 주석 수정\n\n## 신규 기능\n- NPC equipment 추적 시스템 \\(V45\\)\n  - Manager: NPC 장비 정산 강령 추가\n  - project_manager: NPC equipment 변화 로깅\n  - Writer: NPC 장비 현황 프롬프트 주입\n\n- Director 원고 우선 원칙 \\(Manuscript Supremacy\\)\n  - HUD보다 직전 원고의 사실을 우선시\n  - 원고에서 획득한 장비는 HUD 미반영이라도 허용\n\n- 주인공 equipment 배열 형식으로 변경\n  - 장비 변경 시 전체 목록 출력 지침 추가\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git config:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nV45: 코드 안정화 및 NPC 장비 추적 시스템 추가\n\n## 버그 수정 \\(13개\\)\n- db_manager.py: JSON 파싱 예외 처리 추가 \\(5곳\\)\n- project_manager.py: NPC HUD 타입 검증 강화\n- memory_engine.py: 중복 import 제거\n- main_a.py: 스타일 선택 타입 불일치 수정 \\(int vs str\\)\n- main_a.py: blueprints 잘못된 load_anchor 호출 제거\n- main_a.py: Weaver 모델 설정 오류 수정 \\(manager → weaver\\)\n- main_a.py: NPC 키 불일치 수정 \\(KeyNPCs + Key_NPCs 둘 다 지원\\)\n- main_a.py: Stage 4 패턴 체크 비활성화 명시\n- main_a.py: _safe_commit 주석 수정\n\n## 신규 기능\n- NPC equipment 추적 시스템 \\(V45\\)\n- Director 원고 우선 원칙 \\(Manuscript Supremacy\\)\n- 주인공 equipment 배열 형식으로 변경\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)"
     ]
   }
 }

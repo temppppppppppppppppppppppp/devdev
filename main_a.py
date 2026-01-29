@@ -1124,7 +1124,8 @@ class SovereignApp:
                     self.ui.log(f"   🧶 Arc {batch_start+i+1}-{batch_start+i+2} 인과율 용접 완료.")
 
             # C. [순차 설계 단계] 농축된 데이터를 전술서로 풀이하고 욕망을 박제
-            current_ep_start = 1 if not all_refined_arcs else all_refined_arcs[-1]['ep_end'] + 1
+            # [V45 Fix] ep_end 키 접근 방어
+            current_ep_start = 1 if not all_refined_arcs else all_refined_arcs[-1].get('ep_end', 0) + 1
             
             for idx, enriched_block in enumerate(enriched_batch):
                 global_arc_no = batch_start + idx + 1
@@ -2128,7 +2129,8 @@ class SovereignApp:
             return
 
         # 1. 목표 범위 설정
-        total_planned_ep = self.current_project.arcs[-1]['ep_end']
+        # [V45 Fix] ep_end 키 접근 방어
+        total_planned_ep = self.current_project.arcs[-1].get('ep_end', 50)
         production_head = self.current_project.get_latest_episode_number()
 
         # [V40.1 Smart Skip] 기존 원고가 있다면 자동으로 다음 화부터 시작
@@ -2712,7 +2714,8 @@ class SovereignApp:
         # 3. 환경 변수 초기화
         output_dir = self.current_project.paths.drafts
         output_dir.mkdir(exist_ok=True)
-        total_planned_ep = self.current_project.arcs[-1]['ep_end']
+        # [V45 Fix] ep_end 키 접근 방어
+        total_planned_ep = self.current_project.arcs[-1].get('ep_end', 50)
         target_ep = None
 
         try:
@@ -2739,8 +2742,8 @@ class SovereignApp:
                 "tag": "NAVER" if style_choice == 2 else "KAKAO",
                 "guide": (
                     "네이버 시리즈: 유려한 문장, 심리 묘사 강조. "
-                    "3~4문장 단위로 줄바꿈을 수행하여 여백을 극대화하라." 
-                ) if style_choice == "2" else (
+                    "3~4문장 단위로 줄바꿈을 수행하여 여백을 극대화하라."
+                ) if style_choice == 2 else (
                     "카카오페이지: 매 화 사이다 전개 및 절벽걸기. "
                     "설명을 생략하는 것이 아니라, 장면의 해상도를 4K 수준으로 높여라. 인물이 숨을 들이키는 찰나의 폐부 감각, 옷자락이 스치는 소리까지 문장에 녹여내라."
                 )

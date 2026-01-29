@@ -46,7 +46,7 @@ class BaseGuard(ABC):
                 val = float(digit_match.group(1)) * unit_multiplier
                 if '반' in clean_text: val += (30.0 if "갑자" in clean_text else 0.5)
                 return val
-            except: pass
+            except (ValueError, TypeError): pass
 
         # 4. 한글 수사 정밀 파싱
         num_map = {'일': 1, '이': 2, '삼': 3, '사': 4, '오': 5, '육': 6, '칠': 7, '팔': 8, '구': 9}

@@ -85,16 +85,24 @@ class ProjectContext:
         cash_dir.mkdir(parents=True, exist_ok=True)
 
         seed_file = cash_dir / "style_seeds_final.txt"
+        self._style_seed_available = True  # [V45] 스타일 시드 가용성 플래그
         if not seed_file.exists():
-            default_seed = (
-                "[참고내용 없음]"
-                            )
-            try:
-                with open(seed_file, "w", encoding="utf-8") as f:
-                    f.write(default_seed)
-                print(f"      ✨ [System] 스타일 시드 파일이 생성되었습니다: {seed_file.name}")
-            except Exception as e:
-                print(f"      ⚠️ [System] 스타일 시드 생성 실패: {e}")
+            default_seed = "[참고내용 없음]"
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    with open(seed_file, "w", encoding="utf-8") as f:
+                        f.write(default_seed)
+                    print(f"      ✨ [System] 스타일 시드 파일이 생성되었습니다: {seed_file.name}")
+                    break
+                except (IOError, OSError, PermissionError) as e:
+                    if attempt < max_retries - 1:
+                        print(f"      ⚠️ [System] 스타일 시드 생성 재시도 ({attempt+1}/{max_retries}): {e}")
+                        import time
+                        time.sleep(0.5)
+                    else:
+                        print(f"      🚨 [System] 스타일 시드 생성 최종 실패: {e}")
+                        self._style_seed_available = False  # [V45] 실패 플래그 설정
 
 
     def _load_directives(self):

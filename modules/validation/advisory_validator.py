@@ -59,21 +59,48 @@ class AdvisoryValidator:
             "message": f"{len(suggestions)}개 개선 제안"
         }
 
+    # [V44] 클리셰 확정을 위한 컨텍스트 키워드 (주변에 있어야 클리셰로 판정)
+    CLICHE_CONTEXT_KEYWORDS = {
+        "회귀물": ["과거", "전생", "다시", "두번째", "회귀", "돌아", "예전"],
+        "천재물": ["천재", "재능", "각성", "능력", "숨겨", "진정한"],
+        "복수물": ["복수", "원수", "피", "죽", "갚", "대가"],
+        "가문물": ["가문", "가", "집안", "버림", "쫓겨", "상속"],
+        "전개": ["각성", "위기", "혈통", "비밀", "정체"]
+    }
+
     def _detect_cliches(self, manuscript: str) -> List[dict]:
-        """클리셰 감지"""
+        """[V44] 클리셰 감지 - 컨텍스트 기반 오탐 방지"""
         detected = []
 
         for category, patterns in self.COMMON_CLICHES.items():
+            context_keywords = self.CLICHE_CONTEXT_KEYWORDS.get(category, [])
+
             for pattern in patterns:
-                if pattern in manuscript:
+                location = manuscript.find(pattern)
+                if location == -1:
+                    continue
+
+                # [V44] 컨텍스트 윈도우 (패턴 전후 100자)에서 확인 키워드 검색
+                context_start = max(0, location - 100)
+                context_end = min(len(manuscript), location + len(pattern) + 100)
+                context = manuscript[context_start:context_end].lower()
+
+                # 컨텍스트 키워드가 있어야만 클리셰로 판정
+                has_context = any(kw in context for kw in context_keywords)
+
+                if has_context:
                     detected.append({
                         "type": "cliche_detection",
                         "category": category,
                         "pattern": pattern,
                         "suggestion": f"'{pattern}' 클리셰 감지. 더 신선한 전개 권장.",
-                        "location": manuscript.find(pattern),
-                        "severity": "low"
+                        "location": location,
+                        "severity": "low",
+                        "context_matched": True
                     })
+                # 컨텍스트 없으면 낮은 확신도로 기록 (선택적)
+                # else:
+                #     detected.append({...severity: "very_low"...})
 
         return detected
 

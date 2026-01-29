@@ -51,6 +51,9 @@ class DataCollector:
         # Thread-safe file operations
         self._lock = threading.Lock()
 
+        # [V44] 시퀀스 카운터 (UUID 충돌 방지 추가 보호)
+        self._sequence_counter = 0
+
         # 디렉토리 생성
         os.makedirs(self.project_dir, exist_ok=True)
         os.makedirs(os.path.join(self.project_dir, "approved"), exist_ok=True)
@@ -110,18 +113,20 @@ class DataCollector:
         🔒 Race Condition 완전 해결: 항상 고유 파일명 사용
         """
         with self._lock:  # 🔒 Critical section
-            # 🔒 Race Condition 방지: 항상 밀리초 + UUID로 고유 파일명 생성
+            # 🔒 Race Condition 방지: 밀리초 + 시퀀스 + UUID로 고유 파일명 생성
             import uuid
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')[:-3]  # ms
-            unique_id = uuid.uuid4().hex[:8]
+            self._sequence_counter += 1
+            unique_id = f"{self._sequence_counter:04d}_{uuid.uuid4().hex[:8]}"
 
             # 항상 버전 관리된 파일명 사용 (TOCTOU 취약점 완전 제거)
             versioned_filename = f"ep_{ep_num:03d}_approved_{timestamp}_{unique_id}.json"
             filepath = os.path.join(self.project_dir, "approved", versioned_filename)
 
             # Atomic write (임시 파일 → rename)
+            # [V44] temp_filepath를 try 밖에서 정의하여 finally에서 안전하게 접근
+            temp_filepath = filepath + ".tmp"
             try:
-                temp_filepath = filepath + ".tmp"
                 with open(temp_filepath, 'w', encoding='utf-8') as f:
                     json.dump(data, f, indent=2, ensure_ascii=False)
 
@@ -130,14 +135,14 @@ class DataCollector:
                     os.remove(filepath)
                 os.rename(temp_filepath, filepath)
 
-            except IOError as e:
+            except (IOError, OSError) as e:
                 print(f"[ERROR] 파일 저장 실패 ({filepath}): {e}")
                 # 임시 파일 정리
                 if os.path.exists(temp_filepath):
                     try:
                         os.remove(temp_filepath)
-                    except:
-                        pass
+                    except OSError as cleanup_err:
+                        print(f"[DEBUG] 임시 파일 정리 실패: {cleanup_err}")
                 raise
 
     def _save_rejected(self, ep_num: int, data: dict):
@@ -147,18 +152,20 @@ class DataCollector:
         🔒 Race Condition 완전 해결: 항상 고유 파일명 사용
         """
         with self._lock:  # 🔒 Critical section
-            # 🔒 Race Condition 방지: 항상 밀리초 + UUID로 고유 파일명 생성
+            # 🔒 Race Condition 방지: 밀리초 + 시퀀스 + UUID로 고유 파일명 생성
             import uuid
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')[:-3]  # ms
-            unique_id = uuid.uuid4().hex[:8]
+            self._sequence_counter += 1
+            unique_id = f"{self._sequence_counter:04d}_{uuid.uuid4().hex[:8]}"
 
             # 항상 버전 관리된 파일명 사용 (TOCTOU 취약점 완전 제거)
             versioned_filename = f"ep_{ep_num:03d}_rejected_{timestamp}_{unique_id}.json"
             filepath = os.path.join(self.project_dir, "rejected", versioned_filename)
 
             # Atomic write (임시 파일 → rename)
+            # [V44] temp_filepath를 try 밖에서 정의하여 finally에서 안전하게 접근
+            temp_filepath = filepath + ".tmp"
             try:
-                temp_filepath = filepath + ".tmp"
                 with open(temp_filepath, 'w', encoding='utf-8') as f:
                     json.dump(data, f, indent=2, ensure_ascii=False)
 
@@ -167,14 +174,14 @@ class DataCollector:
                     os.remove(filepath)
                 os.rename(temp_filepath, filepath)
 
-            except IOError as e:
+            except (IOError, OSError) as e:
                 print(f"[ERROR] 파일 저장 실패 ({filepath}): {e}")
                 # 임시 파일 정리
                 if os.path.exists(temp_filepath):
                     try:
                         os.remove(temp_filepath)
-                    except:
-                        pass
+                    except OSError as cleanup_err:
+                        print(f"[DEBUG] 임시 파일 정리 실패: {cleanup_err}")
                 raise
 
     def create_training_pair(

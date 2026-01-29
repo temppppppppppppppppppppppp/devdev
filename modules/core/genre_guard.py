@@ -44,7 +44,7 @@ class GenreGuard:
                 val = float(digit_match.group(1)) * unit_multiplier
                 if '반' in clean_text: val += (30.0 if "갑자" in clean_text else 0.5)
                 return val
-            except: pass
+            except (ValueError, TypeError): pass
 
         # 4. 🧠 한글 수사 정밀 파싱 (십진법 대응)
         # 0124 매니페스토: "이십"은 12가 아니라 20이다.

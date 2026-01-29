@@ -110,13 +110,21 @@ class LongTermMemory:
             self.cursor = None
 
         # 2. ChromaDB 초기화 (벡터 검색용)
+        # [V45] 임시 변수로 초기화하여 실패 시 정리 용이하게
+        temp_client = None
+        temp_collection = None
+        embedding_func = None
         try:
             vector_db_path = self.db_path.parent / "vector_db"
-            self.client = chromadb.PersistentClient(path=str(vector_db_path))
-            self.collection = self.client.get_or_create_collection(
+            temp_client = chromadb.PersistentClient(path=str(vector_db_path))
+            embedding_func = GoogleEmbeddingFunction(api_key)
+            temp_collection = temp_client.get_or_create_collection(
                 name="v20_sovereign_memory",
-                embedding_function=GoogleEmbeddingFunction(api_key)
+                embedding_function=embedding_func
             )
+            # 성공 시에만 인스턴스 변수에 할당
+            self.client = temp_client
+            self.collection = temp_collection
             self.has_valid_memory = True
             self.ui_log("[Memory] ChromaDB 초기화 성공")
         except Exception as e:

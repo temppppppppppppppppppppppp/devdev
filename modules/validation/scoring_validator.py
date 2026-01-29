@@ -17,12 +17,28 @@ class ScoringValidator:
     """
 
     # 총점: 100점
-    PASS_THRESHOLD = 70  # 70점 이상 PASS
+    DEFAULT_PASS_THRESHOLD = 70  # 기본값: 70점 이상 PASS
 
-    def __init__(self, client=None, model="gemini-2.5-pro", constitution=""):
+    # 장르별 권장 임계값
+    GENRE_THRESHOLDS = {
+        'wuxia': 70,      # 무협: 기본값
+        'hunter': 68,     # 헌터: 액션 위주로 약간 낮게
+        'investment': 72  # 투자: 논리성 중요로 약간 높게
+    }
+
+    def __init__(self, client=None, model="gemini-2.5-pro", constitution="",
+                 pass_threshold: int = None, genre: str = None):
         self.client = client
         self.model = model
         self.constitution = constitution
+
+        # [V44] 설정 가능한 PASS_THRESHOLD
+        if pass_threshold is not None:
+            self.pass_threshold = pass_threshold
+        elif genre and genre in self.GENRE_THRESHOLDS:
+            self.pass_threshold = self.GENRE_THRESHOLDS[genre]
+        else:
+            self.pass_threshold = self.DEFAULT_PASS_THRESHOLD
 
     def _sanitize_manuscript(self, text: str) -> str:
         """
@@ -71,7 +87,7 @@ class ScoringValidator:
 
         total_score = sum(score['score'] for score in all_scores.values())
         max_score = 100
-        passed = total_score >= self.PASS_THRESHOLD
+        passed = total_score >= self.pass_threshold
 
         return {
             "tier": "SCORING",
@@ -79,9 +95,9 @@ class ScoringValidator:
             "total_score": total_score,
             "max_score": max_score,
             "percentage": (total_score / max_score) * 100,
-            "threshold": self.PASS_THRESHOLD,
+            "threshold": self.pass_threshold,
             "breakdown": all_scores,
-            "message": f"{'PASS' if passed else 'FAIL'} - {total_score}/{max_score}점"
+            "message": f"{'PASS' if passed else 'FAIL'} - {total_score}/{max_score}점 (기준: {self.pass_threshold}점)"
         }
 
     def _calculate_python_scores(self, manuscript: str, context: dict) -> dict:
@@ -196,7 +212,8 @@ Step 5: Article 6 (패턴 다양성) 분석
         emotion_score = min(20, 10 + int(emotion_markers / 5))
 
         # 대화 품질 (따옴표 빈도로 추정)
-        dialogue_count = manuscript.count('"') + manuscript.count('"') + manuscript.count('"')
+        # [V44] 서로 다른 유형의 따옴표 카운트 (직선형 + 곡선형)
+        dialogue_count = manuscript.count('"') + manuscript.count('\u201C') + manuscript.count('\u201D')
         dialogue_score = min(15, 5 + int(dialogue_count / 10))
 
         # 상업성 (길이와 구조로 추정)
@@ -273,13 +290,24 @@ Step 5: Article 6 (패턴 다양성) 분석
         """어휘 다양성 평가 (TTR 계산)"""
         words = self._tokenize(manuscript)
         if len(words) < 10:
-            return {'score': 3, 'max': 5, 'reason': '단어 수 부족'}
+            return {'score': 3, 'max': 5, 'reason': '단어 수 부족 (10단어 미만)'}
 
-        # TTR 개선: 샘플링 기반 (긴 텍스트 불이익 해소)
+        # [V44] TTR 개선: 길이별 차등 적용
+        # - 10-50 단어: 기본 점수 보정 (짧은 텍스트 불이익 해소)
+        # - 51-200 단어: 직접 계산
+        # - 201+ 단어: 샘플링 기반 평균
+        short_text_bonus = 0
+        if len(words) <= 50:
+            # 매우 짧은 텍스트: TTR이 높게 나오기 쉬우므로 보정
+            short_text_bonus = -0.05  # 5% 하향 보정
+        elif len(words) <= 200:
+            short_text_bonus = 0  # 보정 없음
+
         if len(words) <= 200:
-            # 짧은 텍스트: 기존 방식
+            # 짧은 텍스트: 직접 계산
             unique_words = set(words)
-            ttr = len(unique_words) / len(words)
+            ttr = len(unique_words) / len(words) + short_text_bonus
+            ttr = max(0, ttr)  # 음수 방지
         else:
             # 긴 텍스트: 200단어 윈도우로 샘플링 후 평균
             sample_size = 200
@@ -304,6 +332,9 @@ Step 5: Article 6 (패턴 다양성) 분석
                 ttr = len(unique_words) / len(words)
             else:
                 ttr = statistics.mean(ttr_samples)
+
+        # [V44] TTR 범위 정규화 (이론적 범위: 0~1)
+        ttr = max(0.0, min(1.0, ttr))
 
         # 점수 매기기
         if ttr >= 0.40:
