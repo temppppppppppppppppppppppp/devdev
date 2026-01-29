@@ -17,11 +17,14 @@ class BatchValidator:
     여러 원고를 동시에 검증하여 처리 시간 단축
     """
 
-    def __init__(self, orchestrator, max_concurrent: int = 3):
+    def __init__(self, orchestrator, max_concurrent: int = 10):
         """
         Args:
             orchestrator: ValidationOrchestrator instance
-            max_concurrent: 동시 처리 최대 개수 (API rate limit 고려)
+            max_concurrent: 동시 처리 최대 개수 (기본값 10)
+                           - Gemini API: 1000+ RPM 지원
+                           - 보수적 설정으로 안정성 확보
+                           - 필요시 15-20까지 증가 가능
         """
         self.orchestrator = orchestrator
         self.max_concurrent = max_concurrent

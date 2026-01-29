@@ -1,11 +1,17 @@
 """
 [V0128] ValidationOrchestrator
-3-Tier 검증 통합 실행 + Self-Consistency
+3-Tier 검증 통합 실행 + Self-Consistency + CatharsisTimer + ActionSceneEvaluator
 """
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from .blocking_validator import BlockingValidator
 from .scoring_validator import ScoringValidator
 from .advisory_validator import AdvisoryValidator
+from .catharsis_timer import CatharsisTimer
+from .action_scene_evaluator import ActionSceneEvaluator
+
+
+# [V44] Constitution 캐시 (모듈 레벨에서 관리)
+_CONSTITUTION_CACHE: Dict[str, str] = {}
 
 
 class ValidationOrchestrator:
@@ -21,25 +27,8 @@ class ValidationOrchestrator:
         self.client = client
         self.genre = genre
 
-        # Constitution 로드 (에러 처리 강화)
-        try:
-            from modules.core.quality_constitution import get_constitution_for_genre
-            self.constitution = get_constitution_for_genre(genre)
-        except Exception as e:
-            print(f"[ERROR] Constitution 로드 실패 ({genre}): {e}")
-            print(f"[WARNING] 기본 Constitution 사용 - 검증 품질 저하 가능")
-            # 기본 Constitution (최소한의 규칙)
-            self.constitution = """
-# 글도비 품질 헌법 (Fallback)
-
-## Article 1: 최소 분량
-- 원고는 최소 4000자 이상이어야 합니다.
-
-## Article 2: 설정 일관성
-- 등장인물의 행동은 설정과 일치해야 합니다.
-
-## Article 3-8: (Constitution 파일 로드 실패 - 간소화 규칙 사용)
-"""
+        # [V44] Constitution 로드 (캐싱 + 장르별 fallback 강화)
+        self.constitution = self._load_constitution_cached(genre)
 
         # TIER 1: BLOCKING
         self.blocking = BlockingValidator()
@@ -63,6 +52,11 @@ class ValidationOrchestrator:
         # Self-Consistency 설정
         self.use_self_consistency = config.get('use_self_consistency', True)
         self.consistency_votes = config.get('consistency_votes', 3)
+
+        # [V43] 추가 품질 평가 모듈
+        catharsis_max_gap = config.get('catharsis_max_gap', 3)
+        self.catharsis_timer = CatharsisTimer(max_frustration=catharsis_max_gap, genre=genre)
+        self.action_evaluator = ActionSceneEvaluator(genre=genre)
 
     def validate(self, ep_num: int, manuscript: str, validation_context: dict) -> dict:
         """
@@ -144,6 +138,58 @@ class ValidationOrchestrator:
         print(f"      💡 ADVISORY: {len(advisory_result.get('suggestions', []))}개 제안")
 
         # ═══════════════════════════════════════════════════════════════
+        # [V43] 추가 품질 평가: CatharsisTimer + ActionSceneEvaluator
+        # ═══════════════════════════════════════════════════════════════
+
+        # CatharsisTimer - 카타르시스 타이밍 체크
+        catharsis_history = validation_context.get('catharsis_history', [])
+        catharsis_result = self.catharsis_timer.check_catharsis_timing(
+            ep_num, manuscript, catharsis_history
+        )
+        results['catharsis_result'] = catharsis_result
+
+        if catharsis_result.get('status') == 'warning':
+            print(f"      ⚠️ CATHARSIS: {catharsis_result.get('message')}")
+        elif catharsis_result.get('status') == 'critical':
+            print(f"      🚨 CATHARSIS: {catharsis_result.get('message')}")
+        else:
+            print(f"      ✅ CATHARSIS: 적절한 타이밍")
+
+        # ActionSceneEvaluator - 전투/액션 씬 평가
+        action_context = {
+            'technique_effects': validation_context.get('technique_effects', {}),
+            'martial_hud': validation_context.get('martial_hud', {})
+        }
+        action_result = self.action_evaluator.evaluate(manuscript, action_context)
+        results['action_result'] = action_result
+
+        if action_result.get('action_scene_count', 0) > 0:
+            print(f"      ⚔️ ACTION: {action_result['total_score']}/10점 ({action_result['action_scene_count']}개 씬)")
+
+        # 추가 평가 결과를 총점에 반영 (보너스/감점)
+        catharsis_adjustment = 0
+        if catharsis_result.get('status') == 'critical':
+            catharsis_adjustment = -5  # 심각한 카타르시스 부족 시 감점
+        elif catharsis_result.get('status') == 'warning':
+            catharsis_adjustment = -2
+
+        action_adjustment = 0
+        if action_result.get('action_scene_count', 0) > 0:
+            action_score = action_result.get('total_score', 10)
+            if action_score < 5:
+                action_adjustment = -3  # 액션 씬 품질 낮음
+            elif action_score >= 8:
+                action_adjustment = 2  # 액션 씬 품질 우수
+
+        # 조정된 총점
+        adjusted_total = total_score + catharsis_adjustment + action_adjustment
+        adjusted_total = max(0, min(100, adjusted_total))  # 0~100 범위 제한
+
+        if catharsis_adjustment != 0 or action_adjustment != 0:
+            print(f"      📊 점수 조정: {total_score} → {adjusted_total} (카타르시스: {catharsis_adjustment:+d}, 액션: {action_adjustment:+d})")
+            total_score = adjusted_total
+
+        # ═══════════════════════════════════════════════════════════════
         # 최종 판정
         # ═══════════════════════════════════════════════════════════════
         results['total_score'] = total_score
@@ -180,13 +226,15 @@ class ValidationOrchestrator:
             evaluations.append(result)
             print(f"         Vote {i+1}: {result['total_score']}점, {result['message']}")
 
-        # 점수 중앙값
+        # 점수 중앙값 - [V44 Fix] statistics.median 사용으로 정확한 계산
+        import statistics
         scores = [e['total_score'] for e in evaluations]
-        median_score = sorted(scores)[len(scores) // 2]
+        median_score = statistics.median(scores)
 
-        # PASS/REJECT 다수결
+        # PASS/REJECT 다수결 - [V44 Fix] 과반수 계산 명확화
         pass_votes = sum(1 for e in evaluations if e['passed'])
-        final_passed = pass_votes >= (self.consistency_votes / 2)
+        # 과반수: 3표 중 2표 이상, 5표 중 3표 이상 필요
+        final_passed = pass_votes > (self.consistency_votes // 2)
 
         # 대표 결과 (중앙값에 가장 가까운 것)
         representative = min(evaluations, key=lambda e: abs(e['total_score'] - median_score))
@@ -300,3 +348,84 @@ class ValidationOrchestrator:
                     weaknesses.append(f"{category}: {reason}")
 
         return weaknesses
+
+    def _load_constitution_cached(self, genre: str) -> str:
+        """
+        [V44] Constitution 로드 (캐싱 + 장르별 fallback 강화)
+
+        Args:
+            genre: 장르 (wuxia, hunter, investment)
+
+        Returns:
+            str: Constitution 텍스트
+        """
+        global _CONSTITUTION_CACHE
+
+        # 캐시 확인
+        if genre in _CONSTITUTION_CACHE:
+            return _CONSTITUTION_CACHE[genre]
+
+        # Constitution 로드 시도
+        try:
+            from modules.core.quality_constitution import get_constitution_for_genre
+            constitution = get_constitution_for_genre(genre)
+            _CONSTITUTION_CACHE[genre] = constitution
+            return constitution
+        except Exception as e:
+            print(f"[ERROR] Constitution 로드 실패 ({genre}): {e}")
+            print(f"[WARNING] 기본 Constitution 사용 - 검증 품질 저하 가능")
+
+            # [V44] 장르별 fallback Constitution
+            fallback = self._get_fallback_constitution(genre)
+            _CONSTITUTION_CACHE[genre] = fallback
+            return fallback
+
+    def _get_fallback_constitution(self, genre: str) -> str:
+        """[V44] 장르별 Fallback Constitution 생성"""
+        base = """
+# 글도비 품질 헌법 (Fallback Mode)
+
+## TIER 1: BLOCKING
+### Article 1: 설정 일관성
+1.1 사망한 NPC는 등장할 수 없다.
+1.2 소유하지 않은 아이템은 사용할 수 없다.
+1.3 파괴된 장소는 방문할 수 없다.
+1.4 능력치 초과 기술 사용 불가.
+1.5 최소 분량: MANUSCRIPT 4000자, BLUEPRINT 500자.
+
+## TIER 2: SCORING (70점 이상 통과)
+### Article 2: 캐릭터 일관성 [15점]
+### Article 3: 문장 품질 [20점]
+### Article 4: 감정선 [20점]
+### Article 5: 대화 품질 [15점]
+### Article 6: 상업성 [20점]
+### Article 7: 패턴 다양성 [10점]
+
+## TIER 3: ADVISORY
+### Article 8: 클리셰 감지, 표현 개선, 복선 기회
+"""
+
+        # 장르별 Amendment 추가
+        genre_amendments = {
+            'wuxia': """
+### Wuxia-Specific (Fallback)
+- 무공 위계 준수 (후천 → 선천 → 절정 → 화경)
+- 강호 예법 존중
+- 내공 운용 묘사 권장
+""",
+            'hunter': """
+### Hunter-Specific (Fallback)
+- 게이트 등급 준수 (E-D-C-B-A-S)
+- 미획득 스킬 사용 불가
+- 각성 전 능력 사용 불가
+""",
+            'investment': """
+### Investment-Specific (Fallback)
+- 투자 수익률 현실성 (연 100% 이상은 근거 필요)
+- 자금 출처 명확
+- 정보 획득 경로 명시
+"""
+        }
+
+        amendment = genre_amendments.get(genre, "")
+        return base + amendment

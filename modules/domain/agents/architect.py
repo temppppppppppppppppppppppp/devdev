@@ -27,9 +27,10 @@ class Architect(BaseAgent):
         ep_material = focus_info.get("MUST_FOCUS", str(arc_tactical_doc)) # 이번 화 요리 재료
         full_map = focus_info.get("FULL_MAP", "N/A")                    # 참고용 전체 지도
         stop_line = focus_info.get("STOP_LINE", "N/A")                  # 정지선
-        # ----------------------------------        
+        # ----------------------------------
         # 1. 위버의 욕망 데이터(Arc Drive) 인출
-        arc_drive = arc_tactical_doc.get('arc_drive', {})
+        # [V45 Fix] arc_tactical_doc이 dict가 아닐 경우 focus_info 사용
+        arc_drive = focus_info.get('arc_drive', {})
         objective = arc_drive.get('short_term_objective', "전술적 흐름 유지")
         current_lack = arc_drive.get('current_lack', "결핍 정보 없음")
         pacing = arc_drive.get('pacing_strategy', {})
@@ -39,9 +40,10 @@ class Architect(BaseAgent):
         pattern_logic = pattern_profile.get('mixing_logic', '')
         
         # 1. [Phase 4] 물리적 제약 조건 및 상태 그림자 인출
-        joint_docs = arc_tactical_doc.get('joint_docs', {})
-        status_shadow = arc_tactical_doc.get('status_shadow', {})
-        is_surgery = arc_tactical_doc.get('v35_surgery', False)
+        # [V45 Fix] focus_info 사용 (arc_tactical_doc이 dict 아닐 수 있음)
+        joint_docs = focus_info.get('joint_docs', {})
+        status_shadow = focus_info.get('status_shadow', {})
+        is_surgery = focus_info.get('v35_surgery', False)
         
 
         # 3. [0124 핵심] 목적 중심 설계 지침 강화
@@ -124,9 +126,10 @@ class Architect(BaseAgent):
 """
 
         # 4. 설계 재료 확보 및 비트 매핑
-        tactical_blueprint = arc_tactical_doc.get('tactical_doc') or arc_tactical_doc.get('strategy_doc', "내용 없음")
-        total_arc_eps = int(arc_tactical_doc.get('ep_count', 5))
-        beats = arc_tactical_doc.get('beat_sequence', [])
+        # [V45 Fix] focus_info 사용 (arc_tactical_doc이 dict 아닐 수 있음)
+        tactical_blueprint = focus_info.get('tactical_doc') or focus_info.get('strategy_doc', "내용 없음")
+        total_arc_eps = int(focus_info.get('ep_count', 5))
+        beats = focus_info.get('beat_sequence', [])
         current_beat = str(beats[arc_pos-1]) if 0 < arc_pos <= len(beats) else "전술 설계도의 흐름에 집중하라."
         target_ep_focus = focus_info.get("target_episode_focus", f"[제 {ep_num}화 전술 설계]")
         beat_list = focus_info.get("beat_sequence", [])

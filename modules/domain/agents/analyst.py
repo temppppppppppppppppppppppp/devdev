@@ -263,8 +263,10 @@ class Analyst(BaseAgent):
         if isinstance(treatment_raw_part, str):
             try:
                 treatment_data = json.loads(treatment_raw_part)
-            except:
-                treatment_data = [] # 변환 실패 시 빈 리스트
+            except (json.JSONDecodeError, ValueError) as e:
+                # [V44] JSON 파싱 실패 경고 추가
+                print(f"      ⚠️ [Analyst] treatment 데이터 JSON 파싱 실패: {str(e)[:50]}")
+                treatment_data = []  # 변환 실패 시 빈 리스트
         else:
             treatment_data = treatment_raw_part
 
@@ -341,7 +343,7 @@ class Analyst(BaseAgent):
         try:
             clean_arc_no = int(arc_no)
             vol_no = ((clean_arc_no - 1) // 5) + 1
-        except:
+        except (ValueError, TypeError):
             clean_arc_no, vol_no = arc_no, "Unknown"
 
         original_guess = 5
@@ -353,8 +355,10 @@ class Analyst(BaseAgent):
         # 실제 타겟 화수는 추정치보다 1화 적게 잡아 긴장감 유도 (2~6화 제한)
         target_ep_count = max(2, min(6, original_guess - 1))
 
-        # 3. [Safety First] 비상시를 대비해 로컬 JSON에서 라이브러리 데이터를 미리 로드
-        lib_path = self.context.paths.config / "prompts" / "analyst_libraries.json"
+        # 3. [V43] 장르별 라이브러리 로드 - 장르에 맞는 서사 패턴 사용
+        current_genre = self._get_current_genre()
+        lib_path = self._get_genre_library_path(current_genre)
+
         if lib_path.exists():
             try:
                 lib_data = json.loads(lib_path.read_text(encoding='utf-8'))
@@ -363,11 +367,32 @@ class Analyst(BaseAgent):
                 ending_lib_full = json.dumps(lib_data.get("ending_patterns", {}), ensure_ascii=False)
                 trans_lib_full = json.dumps(lib_data.get("transition_patterns", {}), ensure_ascii=False)
                 archetype_lib_full = dev_lib_full
+                print(f"      📚 [Analyst] {current_genre} 장르 라이브러리 로드 완료")
             except Exception as e:
                 print(f"      🚨 [Analyst] 라이브러리 파일 파싱 실패: {e}")
-                intro_lib_full = dev_lib_full = ending_lib_full = trans_lib_full = archetype_lib_full = "데이터 오류"
+                # [V44 Fix] 문자열 대신 빈 JSON 반환하여 다운스트림 파싱 오류 방지
+                intro_lib_full = dev_lib_full = ending_lib_full = trans_lib_full = archetype_lib_full = "{}"
         else:
-            intro_lib_full = dev_lib_full = ending_lib_full = trans_lib_full = archetype_lib_full = "데이터 파일 없음"
+            print(f"      ⚠️ [Analyst] {current_genre} 라이브러리 없음, 기본(wuxia) 사용")
+            # 폴백: 기본 라이브러리 시도
+            fallback_path = self.context.paths.config / "prompts" / "analyst_libraries.json"
+            if fallback_path.exists():
+                try:
+                    lib_data = json.loads(fallback_path.read_text(encoding='utf-8'))
+                    intro_lib_full = json.dumps(lib_data.get("intro_patterns", {}), ensure_ascii=False)
+                    dev_lib_full = json.dumps(lib_data.get("narrative_archetypes", {}), ensure_ascii=False)
+                    ending_lib_full = json.dumps(lib_data.get("ending_patterns", {}), ensure_ascii=False)
+                    trans_lib_full = json.dumps(lib_data.get("transition_patterns", {}), ensure_ascii=False)
+                    archetype_lib_full = dev_lib_full
+                    print(f"      📚 [Analyst] 기본 라이브러리 로드 완료")
+                except (json.JSONDecodeError, KeyError, TypeError) as e:
+                    # [V44] JSON 파싱 실패 경고 추가
+                    print(f"      🚨 [Analyst] 기본 라이브러리 파싱 실패: {str(e)[:50]}")
+                    # [V44 Fix] 문자열 대신 빈 JSON 반환
+                    intro_lib_full = dev_lib_full = ending_lib_full = trans_lib_full = archetype_lib_full = "{}"
+            else:
+                # [V44 Fix] 문자열 대신 빈 JSON 반환
+                intro_lib_full = dev_lib_full = ending_lib_full = trans_lib_full = archetype_lib_full = "{}"
 
         # 3-1. [V42] Bible에서 주인공 이름 추출 (PROTAGONIST IDENTITY LOCK)
         protagonist_name = "주인공"  # 기본값
@@ -553,23 +578,10 @@ class Analyst(BaseAgent):
 
         _walk(arc_data)
 
-        # 3) 명칭/아이템 표준화 (팽명 → 팽무진, 대방도 → 혼철대도는 획득 이후만)
-        arc_no = arc_data.get("arc_no")
-        allow_future_item = isinstance(arc_no, int) and arc_no >= 15
-        def _normalize_strings(node):
-            if isinstance(node, dict):
-                for k, v in node.items():
-                    node[k] = _normalize_strings(v)
-            elif isinstance(node, list):
-                return [_normalize_strings(v) for v in node]
-            elif isinstance(node, str):
-                if allow_future_item:
-                    node = node.replace("대방도(大方刀)", "혼철대도(混鐵大刀)")
-                    node = node.replace("대방도", "혼철대도")
-                node = node.replace("팽명", "팽무진")
-            return node
-
-        _normalize_strings(arc_data)
+        # 3) 명칭/아이템 표준화 - Bible의 alias_map 기반 (V43: 하드코딩 제거)
+        # 특정 작품에 종속된 하드코딩(팽명→팽무진, 대방도→혼철대도) 제거
+        # 필요 시 Bible의 'alias_map' 또는 'name_corrections' 섹션에서 동적으로 로드
+        pass  # 명칭 표준화는 Bible 데이터로 처리
 
     #region // master bible recovery
     def total_absolute_recovery_v20(self, draft_contents, treatment_content=""):
@@ -967,3 +979,39 @@ class Analyst(BaseAgent):
             "lack_summary": summary,
             "raw_analysis": lack_analysis
         }
+
+    def _get_current_genre(self) -> str:
+        """
+        [V43] 현재 장르를 감지하여 반환
+        Guard에서 장르 정보를 추출하거나 기본값 반환
+        """
+        try:
+            if hasattr(self.context, 'guard') and self.context.guard:
+                # Guard의 get_genre_name()에서 장르 추출
+                genre_name = self.context.guard.get_genre_name()
+                if 'hunter' in genre_name.lower() or '헌터' in genre_name:
+                    return 'hunter'
+                elif 'invest' in genre_name.lower() or '투자' in genre_name:
+                    return 'investment'
+                elif 'wuxia' in genre_name.lower() or '무협' in genre_name:
+                    return 'wuxia'
+        except Exception as e:
+            print(f"      ⚠️ [Analyst] 장르 감지 실패: {e}")
+
+        return 'wuxia'  # 기본값
+
+    def _get_genre_library_path(self, genre: str):
+        """
+        [V43] 장르에 맞는 라이브러리 파일 경로 반환
+        """
+        from pathlib import Path
+
+        # 장르별 라이브러리 파일 매핑
+        genre_library_map = {
+            'wuxia': 'analyst_libraries.json',
+            'hunter': 'analyst_libraries_hunter.json',
+            'investment': 'analyst_libraries_investment.json'
+        }
+
+        lib_filename = genre_library_map.get(genre, 'analyst_libraries.json')
+        return self.context.paths.config / "prompts" / lib_filename

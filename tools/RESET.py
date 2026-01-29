@@ -106,36 +106,46 @@ def perform_selective_rewind(target_ep, db_path, chroma_root, drafts_path):
             for f in drafts_path.glob("*.txt"):
                 try:
                     if int(f.name[:4]) >= target_ep: f.unlink()
-                except: pass
+                except (ValueError, IndexError, OSError):
+                    # [V44] 파일명 파싱 실패 또는 삭제 실패 - 건너뜀
+                    pass
             print("   📂 원고 파일 삭제 완료.")
 
         # 5. 🌌 벡터 DB 기억 소거
         vdb_path = chroma_root / "vector_db"
         if vdb_path.exists():
-            client = chromadb.PersistentClient(path=str(vdb_path))
             try:
+                client = chromadb.PersistentClient(path=str(vdb_path))
                 collection = client.get_collection("v20_sovereign_memory")
                 collection.delete(where={"episode": {"$gte": target_ep}})
                 print("   🌌 벡터 메모리 소거 완료.")
-            except: pass
+            except Exception as vdb_err:
+                # [V44] ChromaDB 오류 명시적 로깅
+                print(f"   ⚠️ 벡터 DB 소거 건너뜀: {vdb_err}")
 
         print(f"\n✅ [Success] {target_ep}화 시점으로 되감기 성공!")
         print("👉 DB 툴(DBeaver 등)에서 'Refresh(새로고침)'를 눌러 확인하세요.")
 
     except Exception as e:
         print(f"❌ 리셋 실패: {e}")
-    finally: conn.close()
+    finally:
+        # [V44] conn이 정의되어 있을 때만 close
+        if 'conn' in locals() and conn:
+            conn.close()
 
 def perform_nuclear_reset(db_path, chroma_root, drafts_path):
     """[핵폭탄] 전체 삭제"""
     if db_path.exists():
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-        for t in [r[0] for r in cursor.fetchall()]:
-            if t != "sqlite_sequence": cursor.execute(f"DROP TABLE IF EXISTS {t}")
-        conn.commit()
-        conn.close()
+        # [V44] Context manager로 연결 안전 관리
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            tables = [r[0] for r in cursor.fetchall()]
+            for t in tables:
+                # [V44] 테이블명 검증 (SQL injection 방지)
+                if t != "sqlite_sequence" and t.isidentifier():
+                    cursor.execute(f"DROP TABLE IF EXISTS [{t}]")  # 대괄호로 이름 이스케이프
+            conn.commit()
     if chroma_root.exists(): shutil.rmtree(chroma_root)
     if drafts_path.exists():
         for f in drafts_path.glob("*.txt"): f.unlink()

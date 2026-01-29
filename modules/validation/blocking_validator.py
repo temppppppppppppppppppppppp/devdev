@@ -147,7 +147,7 @@ class BlockingValidator:
 
             # 원고에 등장하는데 소유하지 않음
             if item_name in manuscript and item_name not in owned_items:
-                # "혼철대도를 보았다"는 OK, "혼철대도를 휘둘렀다"는 NG
+                # "[아이템]을 보았다"는 OK, "[아이템]을 휘둘렀다"는 NG
                 usage_patterns = [
                     f"{item_name}을 휘둘",
                     f"{item_name}를 휘둘",
@@ -183,13 +183,37 @@ class BlockingValidator:
                     if pattern in manuscript:
                         # 부정문 체크 (오탐 방지)
                         location = manuscript.find(pattern)
-                        context_start = max(0, location - 50)
-                        context_end = min(len(manuscript), location + len(pattern) + 50)
-                        context = manuscript[context_start:context_end]
 
-                        # 부정문이면 pass
+                        # [V44 Fix] 문장 경계 찾기 (find() -1 반환 안전 처리)
+                        def find_sentence_start(text, pos):
+                            """위치 이전의 가장 가까운 문장 끝 찾기"""
+                            candidates = []
+                            for delim in '.!?':
+                                idx = text.rfind(delim, 0, pos)
+                                if idx != -1:
+                                    candidates.append(idx + 1)
+                            return max(candidates) if candidates else 0
+
+                        def find_sentence_end(text, pos):
+                            """위치 이후의 가장 가까운 문장 끝 찾기"""
+                            candidates = []
+                            for delim in '.!?':
+                                idx = text.find(delim, pos)
+                                if idx != -1:
+                                    candidates.append(idx)
+                            return min(candidates) if candidates else len(text)
+
+                        sentence_start = find_sentence_start(manuscript, location)
+                        sentence_end = find_sentence_end(manuscript, location + len(pattern))
+
+                        context = manuscript[sentence_start:sentence_end + 1]
+
+                        # 부정문이면 pass - 같은 문장 내에 부정 표현이 있어야 함
                         is_negation = any(neg in context for neg in negation_patterns)
-                        if is_negation:
+                        # [V44 Fix] 추가 부정 키워드 체크 (문장 내 직접 부정)
+                        negation_keywords = ["않았", "못했", "없었", "아니었", "안 했", "못 했", "아직"]
+                        has_direct_negation = any(nk in context for nk in negation_keywords)
+                        if is_negation or has_direct_negation:
                             continue
 
                         return {

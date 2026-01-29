@@ -1,0 +1,21 @@
+# 글도비 V44 Dependencies
+# Core Dependencies
+google-generativeai>=0.8.0
+google-genai>=1.0.0
+chromadb>=0.4.0
+python-dotenv>=1.0.0
+rich>=13.0.0
+numpy>=1.24.0
+
+# Dashboard UI (Optional)
+streamlit>=1.28.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-xdist>=3.5.0
+
+# Development (Optional)
+flake8>=6.0.0
+black>=23.0.0
+isort>=5.12.0

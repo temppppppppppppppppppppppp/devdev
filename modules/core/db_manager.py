@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import time
 import traceback
+import threading
 from .constants import MARTIAL_METRICS # 👈 상수 임포트
 from contextlib import contextmanager
 
@@ -45,11 +46,14 @@ class DBManager:
         self.db_path = db_path
         self.conn = None
         self.cursor = None
+        # [V45] 멀티스레드 안전성을 위한 Lock
+        self._lock = threading.RLock()
         self._boot_db()
 
     def _boot_db(self):
         """DB 연결 및 10대 핵심 테이블 초기화"""
-        self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
+        # [V45] check_same_thread=False 사용 시 RLock으로 보호
+        self.conn = sqlite3.connect(self.db_path, check_same_thread=False, timeout=30.0)
         self.conn.row_factory = sqlite3.Row
         self.cursor = self.conn.cursor()
 
@@ -102,16 +106,21 @@ class DBManager:
             )
         ''')
         # (기존 테이블 마이그레이션용: 컬럼 없으면 추가)
-        # [V44] 컬럼 존재 여부 명시적 확인 (silent exception 제거)
+        # [V45] ALTER TABLE 오류 처리 강화 - commit/rollback 추가
         try:
             self.cursor.execute("PRAGMA table_info(state_logs)")
             existing_cols = {row['name'] for row in self.cursor.fetchall()}
             if 'summary' not in existing_cols:
                 self.cursor.execute("ALTER TABLE state_logs ADD COLUMN summary TEXT")
+                self.conn.commit()  # [V45] 마이그레이션 성공 시 즉시 커밋
         except sqlite3.OperationalError as e:
             # 테이블 자체가 없는 경우 (CREATE TABLE IF NOT EXISTS에서 처리됨)
             if "no such table" not in str(e).lower():
                 print(f"[WARNING] state_logs 마이그레이션 실패: {e}")
+                try:
+                    self.conn.rollback()  # [V45] 실패 시 롤백
+                except Exception:
+                    pass
 
         # 4. 인과 그래프 (Causal Graph)
         self.cursor.execute('''

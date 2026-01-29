@@ -149,7 +149,8 @@ class ABTestingFramework:
         scores = []
 
         for r in results:
-            if r['success']:
+            # [V44] None/키 안전성 체크
+            if r.get('success', False) and r.get('result'):
                 decision = r['result'].get('decision', 'UNKNOWN')
                 if decision == 'PASS':
                     pass_count += 1

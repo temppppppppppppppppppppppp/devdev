@@ -23,7 +23,7 @@ QUALITY_CONSTITUTION = """
     - 검증: Encyclopedia의 status='dead' 체크
 
 1.2 소유하지 않은 아이템은 사용할 수 없다.
-    - 위반 예: "혼철대도를 꺼내 휘둘렀다" (획득 전)
+    - 위반 예: "[미획득 무기]를 꺼내 휘둘렀다" (획득 전)
     - 검증: AssetLibrary의 items 리스트 비교
 
 1.3 파괴된 장소는 정상적으로 방문할 수 없다.

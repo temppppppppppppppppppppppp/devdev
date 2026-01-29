@@ -81,15 +81,15 @@ class ReferenceAnchor:
     "anchors": [
         {{
             "type": "combat",
-            "summary": "주인공이 팽조악을 일격에 제압하고 목숨을 살려줌"
+            "summary": "주인공이 적대 인물을 제압하고 승리함"
         }},
         {{
             "type": "item",
-            "summary": "혼철대도를 팽조악에게서 전리품으로 획득"
+            "summary": "중요 아이템을 획득함"
         }},
         {{
             "type": "relationship",
-            "summary": "남궁설과 서로의 능력을 인정하며 동맹 체결"
+            "summary": "주요 인물과 동맹/적대 관계 형성"
         }}
     ]
 }}
