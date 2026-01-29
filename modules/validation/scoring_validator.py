@@ -11,6 +11,7 @@ from collections import Counter
 class ScoringValidator:
     """
     TIER 2: 점수 기반 품질 평가
+    [V46] GenreGuard 기반 동적 컨텍스트 삽입
 
     각 항목별 점수 합산 → 임계값 이상이면 PASS
     개별 항목 실패해도 다른 항목으로 보완 가능
@@ -31,6 +32,10 @@ class ScoringValidator:
         self.client = client
         self.model = model
         self.constitution = constitution
+        self.genre = genre  # [V46] 장르 저장
+
+        # [V46] GenreGuard 동적 로드
+        self.guard = self._load_guard_for_genre(genre)
 
         # [V44] 설정 가능한 PASS_THRESHOLD
         if pass_threshold is not None:
@@ -39,6 +44,23 @@ class ScoringValidator:
             self.pass_threshold = self.GENRE_THRESHOLDS[genre]
         else:
             self.pass_threshold = self.DEFAULT_PASS_THRESHOLD
+
+    def _load_guard_for_genre(self, genre: str):
+        """[V46] 장르에 맞는 Guard 동적 로드"""
+        if not genre:
+            return None
+        try:
+            if genre == 'wuxia':
+                from modules.core.genre_guards.wuxia_guard import WuxiaGuard
+                return WuxiaGuard()
+            elif genre == 'hunter':
+                from modules.core.genre_guards.hunter_guard import HunterGuard
+                return HunterGuard()
+            else:
+                return None
+        except Exception as e:
+            print(f"[WARNING] Guard 로드 실패 ({genre}): {e}")
+            return None
 
     def _sanitize_manuscript(self, text: str) -> str:
         """
@@ -123,6 +145,9 @@ class ScoringValidator:
         # 🔒 Prompt Injection 방지 - 원고 텍스트 sanitization
         safe_manuscript = self._sanitize_manuscript(manuscript)
 
+        # [V46] GenreGuard 기반 동적 컨텍스트 생성
+        dynamic_context = self._generate_dynamic_context(context)
+
         # LLM 호출 with Chain-of-Thought
         prompt = f"""
 {self.constitution}
@@ -133,12 +158,15 @@ class ScoringValidator:
 {safe_manuscript}
 ===== 원고 끝 =====
 
+{dynamic_context}
+
 [Chain-of-Thought Evaluation Process]
 각 Article을 단계별로 평가하십시오:
 
 Step 1: Article 2 (캐릭터 일관성) 분석
 - 등장인물의 행동이 설정과 일치하는가?
 - 성격 변화에 합리적 근거가 있는가?
+- [V46] 위 "주인공 현재 상태"에서 불가능한 행동이 정당화 없이 등장하는가?
 → 점수와 이유 도출
 
 Step 2: Article 3 (감정선) 분석
@@ -249,6 +277,69 @@ Step 5: Article 6 (패턴 다양성) 분석
                 'reason': '⚠️ LLM 없음 - Fallback 추정치'
             }
         }
+
+    # ========================================================================
+    # [V46] 동적 컨텍스트 생성
+    # ========================================================================
+
+    def _generate_dynamic_context(self, context: dict) -> str:
+        """
+        [V46] GenreGuard 기반 동적 컨텍스트 생성
+
+        LLM 프롬프트에 삽입할 주인공 상태 및 검증 규칙
+        """
+        import json
+
+        parts = []
+
+        # 1. 주인공 현재 상태 (HUD actual_truth)
+        martial_hud = context.get('martial_hud', {})
+        actual_truth = {}
+        if isinstance(martial_hud, dict):
+            actual_truth = martial_hud.get('actual_truth', martial_hud)
+
+        if actual_truth:
+            parts.append("===== [V46] 주인공 현재 상태 =====")
+            # 핵심 필드만 추출
+            key_fields = ['realm', 'rank', 'causal_injuries', 'internal_energy',
+                          'mana', 'status', 'equipment', 'body_condition']
+            filtered_state = {k: v for k, v in actual_truth.items()
+                              if k in key_fields and v}
+            if filtered_state:
+                try:
+                    parts.append(json.dumps(filtered_state, ensure_ascii=False, indent=2))
+                except:
+                    parts.append(str(filtered_state))
+
+        # 2. Guard 기반 불가능 행동 목록
+        if self.guard and actual_truth:
+            impossible_actions = self.guard.get_impossible_actions(actual_truth)
+            if impossible_actions:
+                parts.append("\n===== 현재 상태로 불가능한 행동 =====")
+                for action in impossible_actions[:5]:  # 최대 5개
+                    reason = action.get('reason', '')
+                    parts.append(f"- {reason}")
+
+        # 3. 정당화 인정 패턴
+        if self.guard:
+            justifications = self.guard.get_justification_patterns()
+            if justifications:
+                parts.append("\n===== 정당화 시 인정되는 표현 =====")
+                # 정규식을 사람이 읽기 쉽게 변환
+                readable_patterns = []
+                for p in justifications[:5]:
+                    readable = p.replace(r'.*', '...').replace(r'\s+', ' ')
+                    readable_patterns.append(f'"{readable}"')
+                parts.append(', '.join(readable_patterns))
+
+        # 4. 검증 지침
+        if parts:
+            parts.append("\n===== 검증 지침 =====")
+            parts.append("위 '불가능한 행동'이 원고에 등장하되 '정당화 표현'이 없다면,")
+            parts.append("Article 2 (캐릭터 일관성) 점수를 -3~-5점 감점하십시오.")
+            parts.append("단, 정당화 표현이 함께 등장하면 감점하지 마십시오.")
+
+        return "\n".join(parts) if parts else ""
 
     # ========================================================================
     # Python 기반 평가 메서드

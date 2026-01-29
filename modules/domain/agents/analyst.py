@@ -373,9 +373,11 @@ class Analyst(BaseAgent):
                 # [V44 Fix] 문자열 대신 빈 JSON 반환하여 다운스트림 파싱 오류 방지
                 intro_lib_full = dev_lib_full = ending_lib_full = trans_lib_full = archetype_lib_full = "{}"
         else:
-            print(f"      ⚠️ [Analyst] {current_genre} 라이브러리 없음, 기본(wuxia) 사용")
-            # 폴백: 기본 라이브러리 시도
-            fallback_path = self.context.paths.config / "prompts" / "analyst_libraries.json"
+            print(f"      ⚠️ [Analyst] {current_genre} 라이브러리 없음, 기본 사용")
+            # 폴백: 기본 라이브러리 시도 [V45 Fix] 루트 config 경로 사용
+            from pathlib import Path
+            root_config = Path(__file__).parent.parent.parent.parent / "config"
+            fallback_path = root_config / "prompts" / "analyst_libraries.json"
             if fallback_path.exists():
                 try:
                     lib_data = json.loads(fallback_path.read_text(encoding='utf-8'))
@@ -1003,6 +1005,7 @@ class Analyst(BaseAgent):
     def _get_genre_library_path(self, genre: str):
         """
         [V43] 장르에 맞는 라이브러리 파일 경로 반환
+        [V45 Fix] 프로젝트 config가 아닌 루트 config 경로 사용
         """
         from pathlib import Path
 
@@ -1014,4 +1017,7 @@ class Analyst(BaseAgent):
         }
 
         lib_filename = genre_library_map.get(genre, 'analyst_libraries.json')
-        return self.context.paths.config / "prompts" / lib_filename
+
+        # [V45 Fix] 루트 config 경로 사용 (modules/domain/agents/analyst.py -> 3단계 상위)
+        root_config = Path(__file__).parent.parent.parent.parent / "config"
+        return root_config / "prompts" / lib_filename

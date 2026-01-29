@@ -199,11 +199,44 @@ class Director(BaseAgent):
 
     def audit_manuscript(self, ep_num, manuscript, arc_doc, history_summary, prev_full_text, arc_pos, total_eps=None, target_len=4500, retry_count=0, validation_context=None):
         """
-        원고 검수 (V0128 통합)
+        원고 검수 (V0128 통합 + V46 캐릭터 논리 검증)
 
         V0128 활성화 시 3-Tier 검증 시스템 사용
         비활성화 시 기존 LLM 기반 검증 사용
         """
+        # [V46] 캐릭터 논리성 검증 (assess_character_logic 활성화)
+        if validation_context:
+            npc_profiles = validation_context.get('npc_profiles', {})
+            character_traits = validation_context.get('character_traits', {})
+
+            # NPC 정보가 있을 때만 캐릭터 논리 검증 수행
+            if npc_profiles or character_traits:
+                char_logic_result = self.assess_character_logic(
+                    ep_num=ep_num,
+                    manuscript=manuscript,
+                    npc_profiles=npc_profiles,
+                    character_traits=character_traits
+                )
+
+                # CRITICAL 또는 2개 이상의 MAJOR 위반 시 즉시 REJECT
+                if char_logic_result.get('decision') == 'REJECT':
+                    severity = char_logic_result.get('severity', 'NONE')
+                    if severity in ['CRITICAL', 'MAJOR']:
+                        print(f"      🚨 [V46] 캐릭터 논리 위반 감지 ({severity})")
+                        return {
+                            "decision": "REJECT",
+                            "score": char_logic_result.get('score', 30),
+                            "error_category": "LOGIC_ERROR",
+                            "diagnostic_report": f"캐릭터 논리 위반: {char_logic_result.get('violations', [])}",
+                            "current_beat_achieved": False,
+                            "reason": char_logic_result.get('feedback', '캐릭터 행동이 설정과 불일치'),
+                            "feedback": char_logic_result.get('feedback', ''),
+                            "v46_character_logic": char_logic_result
+                        }
+                    else:
+                        # MINOR 위반은 경고만 하고 계속 진행
+                        print(f"      ⚠️ [V46] 경미한 캐릭터 논리 이슈 ({severity}) - 계속 진행")
+
         # [V43] V0128 검증 시스템 조건부 사용
         if self.use_v0128 and validation_context:
             return self._audit_with_v0128(

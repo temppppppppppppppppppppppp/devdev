@@ -677,6 +677,12 @@ class DBManager:
         row = cur.fetchone()
         return (row['max_ep'] or 0) + 1
 
+    def get_latest_blueprint_number(self) -> int:
+        """Blueprint 테이블의 최대 ep_num 반환 (없으면 0)"""
+        cur = self.cursor.execute("SELECT MAX(ep_num) as max_ep FROM blueprints")
+        row = cur.fetchone()
+        return row['max_ep'] or 0
+
     def get_context_manuscripts(self, current_ep, limit=3):
         cur = self.cursor.execute("SELECT ep_num, title, content FROM manuscripts WHERE ep_num < ? ORDER BY ep_num DESC LIMIT ?", (current_ep, limit))
         return [dict(row) for row in cur.fetchall()]
