@@ -370,3 +370,70 @@ class MartialManager:
 - 서사 지표: 착각({self.misunderstanding}) | 집착({self.obsession})
 - 목표: {objective}
 """
+
+    def get_hud_trend(self, ep_num: int, window: int = 5) -> str:
+        """
+        [Lightweight Alternative] 최근 N화의 HUD 변화 추세 반환
+
+        Args:
+            ep_num: 현재 화 번호
+            window: 추적할 화 수 (기본 5화)
+
+        Returns:
+            str: "무력: 50→65 (△15), 내공: 30→28 (▽2)"
+        """
+        trends = []
+
+        # 주요 메트릭 정의 (숫자로 추적 가능한 것들)
+        metrics = ['realm', 'internal_energy', 'reputation', 'wealth']
+        metric_labels = {
+            'realm': '경지',
+            'internal_energy': '내공',
+            'reputation': '명성',
+            'wealth': '자금'
+        }
+
+        for metric in metrics:
+            values = []
+            valid_eps = []  # 유효한 화 번호 추적
+
+            # 최근 N화 데이터 수집
+            for i in range(max(1, ep_num - window), ep_num):
+                try:
+                    ms_data = self.context.db.get_manuscript(i)
+                    if ms_data and isinstance(ms_data, dict):
+                        hud_snapshot = ms_data.get('hud_snapshot')
+                        if hud_snapshot and isinstance(hud_snapshot, dict):
+                            actual_truth = hud_snapshot.get('actual_truth', {})
+                            if isinstance(actual_truth, dict) and metric in actual_truth:
+                                val = actual_truth[metric]
+                                # 숫자로 변환 가능한 경우만 추가
+                                try:
+                                    if isinstance(val, (int, float)):
+                                        values.append(float(val))
+                                        valid_eps.append(i)
+                                    elif isinstance(val, str):
+                                        # 문자열에서 숫자 추출 시도
+                                        import re
+                                        nums = re.findall(r'\d+(?:\.\d+)?', val)
+                                        if nums:
+                                            values.append(float(nums[0]))
+                                            valid_eps.append(i)
+                                except:
+                                    pass
+                except Exception:
+                    continue
+
+            # 추세 계산
+            if len(values) >= 2:
+                start, end = values[0], values[-1]
+                change = end - start
+
+                if abs(change) >= 1:  # 변화가 1 이상일 때만 표시
+                    label = metric_labels.get(metric, metric)
+                    if change > 0:
+                        trends.append(f"{label}: {int(start)}→{int(end)} (△{int(change)})")
+                    else:
+                        trends.append(f"{label}: {int(start)}→{int(end)} (▽{int(abs(change))})")
+
+        return ", ".join(trends) if trends else "안정적 (변화 없음)"

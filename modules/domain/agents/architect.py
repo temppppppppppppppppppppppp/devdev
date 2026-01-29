@@ -14,6 +14,26 @@ class Architect(BaseAgent):
         super().__init__(context, client, model_tier)
         self.cache_name = None # main_a.py에서 주입됨
 
+    def _get_hud_trend_safe(self, ep_num: int) -> str:
+        """
+        [Lightweight Alternative] HUD 추세 안전 호출
+
+        Args:
+            ep_num: 에피소드 번호
+
+        Returns:
+            str: HUD 추세 또는 에러 메시지
+        """
+        try:
+            if hasattr(self.context, 'sys') and hasattr(self.context.sys, 'hud'):
+                return self.context.sys.hud.get_hud_trend(ep_num, window=5)
+            elif hasattr(self, 'martial'):  # fallback
+                return self.martial.get_hud_trend(ep_num, window=5)
+            else:
+                return "HUD 추세 정보 없음"
+        except Exception:
+            return "안정적"
+
     def design_v20_breakdown(self, ep_num, arc_pos, arc_tactical_doc, martial_hud, encyclopedia, 
                               narrative_context="", tactical_references="", style_guide="", 
                               prev_ms_ending="", surgery_intel="", enrichment_level=0):
@@ -155,7 +175,97 @@ class Architect(BaseAgent):
 3. 조합 논리(Mixing Logic): {pattern_logic}
 4. 최소 2개 장면에서 패턴의 핵심 행위가 드러나야 한다.
 """
+
+        # [Phase 5.2.2] Reflexion: 과거 실패 패턴 주입
+        reflexion_prompt = ""
+        try:
+            # 20화 이후부터 활성화, context 존재 확인
+            if ep_num >= 20 and hasattr(self, 'context') and self.context:
+                from modules.core.reflexion_manager import ReflexionManager
+                reflexion = ReflexionManager(self.context)
+                reflexion_prompt = reflexion.get_prompt_injection(min_frequency=2)
+        except Exception as e:
+            print(f"      ⚠️ [Architect] Reflexion 로드 실패: {e}")
+        # [Phase 5.1.1] CoT 구조화 프롬프트
+        cot_structure = f"""
+{reflexion_prompt}
+
+[🧠 PHASE 5: CHAIN-OF-THOUGHT BLUEPRINT DESIGN]
+당신은 5단계 사고 과정을 거쳐 Blueprint를 설계합니다.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[STEP 1] 이전 화 상황 분석
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- 제{ep_num-1}화 엔딩: {prev_ms_ending[-200:] if prev_ms_ending else '첫 화'}
+- 현재 주인공 상태 요약:
+  * 경지: {martial_hud.get('actual_truth', {}).get('realm', '불명')}
+  * 내공: {martial_hud.get('actual_truth', {}).get('internal_energy', '불명')}
+  * 상태: {martial_hud.get('actual_truth', {}).get('status_tags', [])}
+  * [Lightweight] 최근 추세: {self._get_hud_trend_safe(ep_num)}
+- 미해결 갈등: {current_lack}
+- 전술적 위치: 아크 진행도 {arc_pos}/{total_arc_eps}
+
+[분석 결과] 이번 화는 어떤 상황에서 시작하는가?
+→ (주인공의 현재 처지를 한 문장으로 요약)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[STEP 2] 갈등 설계
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- 이번 화 목적: {objective}
+- 핵심 비트: {current_beat_summary[:200]}
+- 감정 목표: {emotion_directive[:100] if emotion_directive else '자유 설정'}
+
+[갈등 설계]
+1. 이번 화 핵심 갈등: (무엇과 무엇이 충돌하는가?)
+2. 갈등 강도: (긴장도 {pacing.get('tension_limit', 80)} 이하 유지)
+3. 해결 방식: (완전 해결 / 부분 해결 / 악화)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[STEP 3] 장면 배치 전략
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[6개 장면 구조 계획]
+- Scene 1-2: (도입부, Buffer 가능)
+- Scene 3-4: (갈등 핵심, Core 필수)
+- Scene 5-6: (전개 및 절벽걸기)
+
+[Core/Buffer 비율]
+- Core 장면 수: 최소 2개 ({pacing.get('core_ratio', '30%')} 비중)
+- Buffer 장면: 분위기/맥락 제공
+
+[정지선 확인]
+- 이번 화 마지막 장면은 '{stop_line}'이 시작되기 직전에서 멈춤
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[STEP 4] 정합성 사전 체크
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[HUD 범위 확인]
+- 주인공이 할 수 있는 행동: (경지/내공/장비 기준)
+- 주인공이 할 수 없는 행동: (제약 명시)
+
+[NPC 관계 확인]
+- 등장 예정 NPC: (이름, 관계 상태)
+- 관계 전환 가능 여부: (경외→무시 같은 역행 금지)
+
+[미래 누수 방지]
+- '{stop_line}' 이후 내용을 미리 쓰지 않았는가?
+- 다른 화의 비트를 가져오지 않았는가?
+
+[물리적 제약]
+- 최종 위치: {joint_docs.get('final_location', '이전 상태 계승') if joint_docs else '확인 필요'}
+- 소지품: {joint_docs.get('physical_inventory', '변동 없음') if joint_docs else '확인 필요'}
+- 예상 부상: {status_shadow.get('expected_injuries', '무상') if status_shadow else '확인 필요'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[STEP 5] 최종 Blueprint 작성
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+위 4단계 분석을 바탕으로 최종 Blueprint JSON 작성
+- 6개 장면을 각각 300-500자로 상세 설계
+- integrated_scenario는 3000자+ 고해상도 시나리오
+"""
+
         dynamic_prompt = f"""
+        {cot_structure}
+
         [🚨 FINAL CHECKPOINT: 당신의 목숨줄이다]
         1. 당신은 창작자가 아니라 '설계 구현자'다. 상위 설계도(Tactical Doc)에 명시된 인물 이름(예: 팽조명)을 단 한 글자라도 바꾸면 즉시 파기된다.
         2. 모든 비트(Beat 1~3)를 반드시 Scene 1~6 사이에 골고루 배분하라. 특히 핵심 장면 누락은 절대 용납하지 않는다.
