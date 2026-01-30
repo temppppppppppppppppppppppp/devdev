@@ -69,10 +69,20 @@ class Weaver(BaseAgent):
             # 데이터 검증 및 반환
             if drive_data and isinstance(drive_data, dict):
                 drive_data['status'] = "LOCKED"
+                # [V47] 필수 필드 검증
+                if not drive_data.get('short_term_objective'):
+                    print("⚠️ [Weaver] short_term_objective 누락 - 보완 필요")
+                    drive_data['short_term_objective'] = "서사적 긴장감 고조"
                 return drive_data
             else:
                 print("⚠️ [Weaver] 유효한 욕망 데이터를 생성하지 못했습니다. 기본값 사용.")
-                return {"short_term_objective": "전술적 흐름 유지", "status": "LOCKED"}
+                # [V47 Fix] 더 구체적인 기본값 + 명확한 상태 표시
+                return {
+                    "short_term_objective": "서사적 긴장감 고조 및 갈등 심화",
+                    "mid_term_objective": "캐릭터 성장과 관계 발전",
+                    "status": "FALLBACK_LOCKED",
+                    "fallback_reason": "drive_generation_failed"
+                }
 
         except Exception as e:
             print(f"      🚨 [Weaver Critical] 욕망 생성 실패: {e}. Fallback 시도.")
@@ -104,13 +114,28 @@ Selection Logic Fallback:
 
             if drive_data and isinstance(drive_data, dict):
                 drive_data['status'] = "LOCKED"
+                # [V47] 필수 필드 검증
+                if not drive_data.get('short_term_objective'):
+                    drive_data['short_term_objective'] = "서사적 긴장감 고조"
                 return drive_data
             else:
-                return {"short_term_objective": "전술적 흐름 유지", "status": "LOCKED"}
+                # [V47 Fix] 더 구체적인 기본값
+                return {
+                    "short_term_objective": "서사적 긴장감 고조 및 갈등 심화",
+                    "mid_term_objective": "캐릭터 성장과 관계 발전",
+                    "status": "FALLBACK_LOCKED",
+                    "fallback_reason": "parsing_failed"
+                }
 
         except Exception as e:
             print(f"      ❌ [Weaver] Fallback 구성 실패: {e}")
-            return {"short_term_objective": "전술적 흐름 유지", "status": "ERROR_LOCKED"}
+            # [V47 Fix] 에러 상태 명확히 표시
+            return {
+                "short_term_objective": "서사적 긴장감 고조 및 갈등 심화",
+                "mid_term_objective": "캐릭터 성장과 관계 발전",
+                "status": "ERROR_LOCKED",
+                "fallback_reason": f"exception: {str(e)[:50]}"
+            }
 
     # [Deprecated] 기존 Seed 로직은 하위 호환성을 위해 유지하거나 제거 가능
     def assign_seeds_to_arcs(self, arcs_data, seeds_library):

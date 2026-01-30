@@ -218,24 +218,30 @@ class Director(BaseAgent):
                     character_traits=character_traits
                 )
 
-                # CRITICAL 또는 2개 이상의 MAJOR 위반 시 즉시 REJECT
+                # [FIX] CRITICAL 1개 또는 MAJOR 2개 이상일 때만 REJECT (주석과 코드 일치)
                 if char_logic_result.get('decision') == 'REJECT':
                     severity = char_logic_result.get('severity', 'NONE')
-                    if severity in ['CRITICAL', 'MAJOR']:
-                        print(f"      🚨 [V46] 캐릭터 논리 위반 감지 ({severity})")
+                    violations = char_logic_result.get('violations', [])
+                    major_count = sum(1 for v in violations if isinstance(v, dict) and v.get('severity') == 'MAJOR')
+
+                    # CRITICAL은 1개라도 REJECT, MAJOR는 2개 이상일 때만 REJECT
+                    should_reject = (severity == 'CRITICAL') or (severity == 'MAJOR' and major_count >= 2)
+
+                    if should_reject:
+                        print(f"      🚨 [V46] 캐릭터 논리 위반 감지 ({severity}, MAJOR {major_count}개)")
                         return {
                             "decision": "REJECT",
                             "score": char_logic_result.get('score', 30),
                             "error_category": "LOGIC_ERROR",
-                            "diagnostic_report": f"캐릭터 논리 위반: {char_logic_result.get('violations', [])}",
+                            "diagnostic_report": f"캐릭터 논리 위반: {violations}",
                             "current_beat_achieved": False,
                             "reason": char_logic_result.get('feedback', '캐릭터 행동이 설정과 불일치'),
                             "feedback": char_logic_result.get('feedback', ''),
                             "v46_character_logic": char_logic_result
                         }
                     else:
-                        # MINOR 위반은 경고만 하고 계속 진행
-                        print(f"      ⚠️ [V46] 경미한 캐릭터 논리 이슈 ({severity}) - 계속 진행")
+                        # MAJOR 1개 또는 MINOR는 경고만 하고 계속 진행
+                        print(f"      ⚠️ [V46] 캐릭터 논리 이슈 ({severity}, MAJOR {major_count}개) - 계속 진행")
 
         # [V43] V0128 검증 시스템 조건부 사용
         if self.use_v0128 and validation_context:
@@ -492,8 +498,9 @@ class Director(BaseAgent):
                 "v0128_full_result": result  # Keep full result for detailed analysis
             }
 
-            # Map V0128 decisions to legacy PASS/REJECT
-            if result['final_decision'] in ['PASS', 'CONDITIONAL_PASS']:
+            # [FIX] Map V0128 decisions to legacy PASS/REJECT (KeyError 방지)
+            final_decision = result.get('final_decision', 'REJECT') if isinstance(result, dict) else 'REJECT'
+            if final_decision in ['PASS', 'CONDITIONAL_PASS']:
                 legacy_result['decision'] = 'PASS'
             else:
                 legacy_result['decision'] = 'REJECT'
@@ -502,12 +509,12 @@ class Director(BaseAgent):
 
         except Exception as e:
             print(f"      🚨 [V0128 Error] 검증 중 예외 발생: {e}")
-            # Fallback to safe pass
+            # [FIX] 안전 실패 - REJECT 반환 (검증 우회 방지)
             return {
-                "decision": "PASS",
-                "score": 50,
+                "decision": "REJECT",
+                "score": 0,
                 "reason": f"V0128 검증 시스템 오류: {str(e)}",
-                "feedback": "검증 시스템 오류로 인한 기본 통과",
+                "feedback": "검증 시스템 오류 - 수동 검토 필요",
                 "error": str(e)
             }
 

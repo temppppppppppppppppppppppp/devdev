@@ -370,8 +370,9 @@ class Analyst(BaseAgent):
                 print(f"      📚 [Analyst] {current_genre} 장르 라이브러리 로드 완료")
             except Exception as e:
                 print(f"      🚨 [Analyst] 라이브러리 파일 파싱 실패: {e}")
-                # [V44 Fix] 문자열 대신 빈 JSON 반환하여 다운스트림 파싱 오류 방지
-                intro_lib_full = dev_lib_full = ending_lib_full = trans_lib_full = archetype_lib_full = "{}"
+                # [V47 Fix] 빈 dict를 JSON 직렬화 - 이중 이스케이프 방지
+                empty_json = json.dumps({}, ensure_ascii=False)
+                intro_lib_full = dev_lib_full = ending_lib_full = trans_lib_full = archetype_lib_full = empty_json
         else:
             print(f"      ⚠️ [Analyst] {current_genre} 라이브러리 없음, 기본 사용")
             # 폴백: 기본 라이브러리 시도 [V45 Fix] 루트 config 경로 사용
@@ -390,11 +391,13 @@ class Analyst(BaseAgent):
                 except (json.JSONDecodeError, KeyError, TypeError) as e:
                     # [V44] JSON 파싱 실패 경고 추가
                     print(f"      🚨 [Analyst] 기본 라이브러리 파싱 실패: {str(e)[:50]}")
-                    # [V44 Fix] 문자열 대신 빈 JSON 반환
-                    intro_lib_full = dev_lib_full = ending_lib_full = trans_lib_full = archetype_lib_full = "{}"
+                    # [V47 Fix] 빈 dict를 JSON 직렬화 - 이중 이스케이프 방지
+                    empty_json = json.dumps({}, ensure_ascii=False)
+                    intro_lib_full = dev_lib_full = ending_lib_full = trans_lib_full = archetype_lib_full = empty_json
             else:
-                # [V44 Fix] 문자열 대신 빈 JSON 반환
-                intro_lib_full = dev_lib_full = ending_lib_full = trans_lib_full = archetype_lib_full = "{}"
+                # [V47 Fix] 빈 dict를 JSON 직렬화 - 이중 이스케이프 방지
+                empty_json = json.dumps({}, ensure_ascii=False)
+                intro_lib_full = dev_lib_full = ending_lib_full = trans_lib_full = archetype_lib_full = empty_json
 
         # 3-1. [V42] Bible에서 주인공 이름 추출 (PROTAGONIST IDENTITY LOCK)
         protagonist_name = "주인공"  # 기본값

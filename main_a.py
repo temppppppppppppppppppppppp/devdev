@@ -29,7 +29,9 @@ from modules.domain.agents.architect import Architect
 from modules.domain.agents.writer import Writer
 from modules.domain.agents.director import Director
 from modules.domain.agents.manager import Manager
-from modules.domain.agents.weaver import Weaver 
+from modules.domain.agents.weaver import Weaver
+from modules.domain.agents.continuity_inspector import ContinuityInspector  # [V48] 연속성 검증 에이전트
+from modules.core.narrative_diversity import NarrativeDiversityEngine  # [V48] 서사 다양성 엔진
 import random
 from google.genai import types
 import asyncio
@@ -55,6 +57,7 @@ class SovereignApp:
         self.current_project = None
         self.runtime_audit = []
         self.selected_genre = None  # [V40] 선택된 장르 정보
+        self.diversity_engine = None  # [V48] 서사 다양성 엔진
     
     def _safe_commit(self) -> bool:
         """
@@ -125,6 +128,60 @@ class SovereignApp:
                     self.ui.log(f"{Emojis.WARNING} [Shutdown] 메모리 정리 중 오류: {mem_err}")
         except Exception as e:
             self.ui.log(f"{Emojis.ERROR} [Shutdown] 긴급 종료 중 예외: {e}")
+
+    def _init_diversity_engine(self, window_size: int = 10) -> bool:
+        """
+        [V48] 서사 다양성 엔진 초기화
+
+        Pattern Tracking + Diversity Sampling + Contrastive CoT 통합 시스템을
+        현재 프로젝트에 맞게 초기화합니다.
+
+        Args:
+            window_size: 패턴 분석 윈도우 크기 (기본 10화)
+
+        Returns:
+            bool: 초기화 성공 여부
+        """
+        if not self.current_project:
+            self.ui.log(f"{Emojis.WARNING} [DiversityEngine] 프로젝트가 로드되지 않아 초기화 생략")
+            return False
+
+        try:
+            genre_type = 'wuxia'
+            if self.selected_genre:
+                genre_type = self.selected_genre.get('type', 'wuxia')
+
+            self.diversity_engine = NarrativeDiversityEngine(
+                context=self.current_project,
+                genre=genre_type,
+                window_size=window_size
+            )
+
+            # 최근 에피소드 분석
+            report = self.diversity_engine.analyze_recent_episodes(window_size)
+
+            if report and report.get('status') == 'analyzed':
+                high_count = report.get('high_severity_count', 0)
+                if high_count > 0:
+                    self.ui.log(f"📊 [V48 DiversityEngine] 패턴 분석 완료 - HIGH 경고 {high_count}개 감지")
+                else:
+                    self.ui.log(f"📊 [V48 DiversityEngine] 패턴 분석 완료 - 반복 수준 양호")
+
+                self._audit_event("diversity_engine_init", "NarrativeDiversityEngine initialized", {
+                    "genre": genre_type,
+                    "window_size": window_size,
+                    "high_severity_count": high_count
+                })
+            else:
+                self.ui.log(f"📊 [V48 DiversityEngine] 초기화 완료 (분석 데이터 부족)")
+
+            return True
+
+        except Exception as e:
+            self.ui.log(f"{Emojis.WARNING} [DiversityEngine] 초기화 실패: {e}")
+            self._audit_event("diversity_engine_error", "init failed", {"error": str(e)})
+            self.diversity_engine = None
+            return False
 
     def boot(self):
         self.ui.title("V40 SOVEREIGN COCKPIT", "Multi-Genre Production Factory")
@@ -490,6 +547,8 @@ class SovereignApp:
                 'manager': Manager(self.current_project, self.sys.api_client, model_tier=models.get("manager", default_model)),
                 # [V45 Fix] weaver는 manager가 아닌 weaver 모델 사용 (fallback: manager)
                 'weaver': Weaver(self.current_project, self.sys.api_client, model_tier=models.get("weaver", models.get("manager", default_model))),
+                # [V48.1] ContinuityInspector - Director 산하 연속성 검증 에이전트 (2.5-pro 모델, 전체 BP 분석)
+                'continuity_inspector': ContinuityInspector(self.current_project, self.sys.api_client, model_tier="gemini-2.5-pro"),
             }
             
             # 초기화 검증
@@ -1256,6 +1315,45 @@ class SovereignApp:
                         current_feedback = "농축 데이터 누락. 블록 정보를 포함하여 재설계하라."
                         continue
 
+                    # ═══════════════════════════════════════════════════════════════
+                    # [V49 NEW] Arc 수준 연속성 검증 - Director 검증 전에 실행
+                    # ═══════════════════════════════════════════════════════════════
+                    if 'continuity_inspector' in self.agents:
+                        self.ui.log(f"      🔍 [V49] Arc {global_arc_no} 연속성 검증 중...")
+                        
+                        # enriched_block의 joint_docs, status_shadow를 refined_arc에 미리 주입
+                        refined_arc['joint_docs'] = enriched_block.get('joint_docs', {})
+                        refined_arc['status_shadow'] = enriched_block.get('status_shadow', {})
+                        
+                        continuity_result = self.agents['continuity_inspector'].inspect_arc(
+                            current_arc=refined_arc,
+                            prev_arcs=all_refined_arcs
+                        )
+                        
+                        if continuity_result.get('decision') == 'REJECT':
+                            severity = continuity_result.get('severity', 'UNKNOWN')
+                            fix_instructions = continuity_result.get('fix_instructions', '')
+                            violations = continuity_result.get('violations', [])
+                            
+                            self.ui.log(f"      🚨 [V49 REJECT] Arc 연속성 위반 감지 (심각도: {severity})")
+                            for v in violations[:3]:  # 최대 3개만 로그
+                                self.ui.log(f"         - {v.get('type', 'unknown')}: {v.get('description', '')[:100]}")
+                            
+                            self._audit_event("arc_continuity_reject", "continuity violation detected", {
+                                "arc_no": global_arc_no,
+                                "severity": severity,
+                                "violations_count": len(violations)
+                            })
+                            
+                            current_feedback = f"[V49 연속성 위반] {fix_instructions}"
+                            continue
+                        else:
+                            warnings = continuity_result.get('warnings', [])
+                            if warnings:
+                                self.ui.log(f"      ⚠️ [V49] Arc 연속성 경고 {len(warnings)}개 (PASS)")
+                            else:
+                                self.ui.log(f"      ✅ [V49] Arc 연속성 검증 통과")
+
                     audit = self.agents['director'].audit_strategic_plan(
                         refined_arc,
                         last_refined_context,
@@ -1576,9 +1674,13 @@ class SovereignApp:
             refined_arc["arc_no"] = expected_arc_no
 
         # 2) ep_start/ep_end 보정
+        # [FIX] 안전한 정수 변환 (dict/list/None 등 타입 오류 방지)
         ep_count = refined_arc.get("ep_count") or refined_arc.get("ep_end")
         if not isinstance(ep_count, int):
-            ep_count = refined_arc.get("ep_count", 5)
+            try:
+                ep_count = int(ep_count) if ep_count and not isinstance(ep_count, (dict, list)) else 5
+            except (ValueError, TypeError):
+                ep_count = 5
         if refined_arc.get("ep_start") != expected_ep_start:
             self.ui.log(
                 f"⚠️ [Mapping] ep_start 불일치: {refined_arc.get('ep_start')} -> {expected_ep_start} (보정)"
@@ -1639,7 +1741,7 @@ class SovereignApp:
     # [V45] Validation Context 구성 헬퍼
     # =================================================================
 
-    def _build_validation_context(self, ep_num: int, blueprint: dict = None, mode: str = 'MANUSCRIPT') -> dict:
+    def _build_validation_context(self, ep_num: int, blueprint: dict = None, mode: str = 'MANUSCRIPT', blueprint_text: str = '') -> dict:
         """
         [V45] BlockingValidator용 validation_context 구성
 
@@ -1647,12 +1749,14 @@ class SovereignApp:
             ep_num: 에피소드 번호
             blueprint: 설계도 (선택)
             mode: 'MANUSCRIPT' 또는 'BLUEPRINT'
+            blueprint_text: [V49] Blueprint 원본 텍스트 (씬 범위 체크용)
 
         Returns:
             dict: {
                 'encyclopedia': {'items': [...], 'npcs': [...], 'locations': [...]},
                 'martial_hud': {...},
                 'blueprint': {...},
+                'blueprint_text': str,  # [V49] 원본 텍스트
                 'mode': 'MANUSCRIPT' | 'BLUEPRINT',
                 'history': [...],
                 'npc_profiles': {...}
@@ -1663,6 +1767,7 @@ class SovereignApp:
             'encyclopedia': {},
             'martial_hud': {},
             'blueprint': blueprint or {},
+            'blueprint_text': blueprint_text,  # [V49] 씬 범위 초과 체크용
             'history': [],
             'npc_profiles': {}
         }
@@ -2168,6 +2273,9 @@ class SovereignApp:
             self.ui.log(f"{Emojis.ERROR} 레퍼런스 데이터가 비어있어 공정을 중단합니다.")
             return
 
+        # [V48] 서사 다양성 엔진 초기화
+        self._init_diversity_engine(window_size=10)
+
         working_ep = production_head
 
         # 메인 에피소드 루프
@@ -2344,22 +2452,48 @@ class SovereignApp:
                     "hybrid_composition": arc_data.get('hybrid_composition', {})
                 }
                 # ---------------------------------------------
+                # [V48] 서사 다양성 엔진 프롬프트 주입
+                diversity_injection = ""
+                if self.diversity_engine and reject_count == 0:
+                    diversity_injection = self.diversity_engine.get_architect_injection()
+
                 # [안전성 패치] Architect 호출 및 예외 처리
                 try:
-                    blueprint_candidate = self.agents['architect'].design_v20_breakdown(
-                    ep_num=working_ep,
-                    arc_pos=arc_pos,
-                    arc_tactical_doc=focus_package,
-                    martial_hud=self.sys.hud.get_structured_hud(),
-                    encyclopedia=self.sys.lore.db.get_lore_list_by_category(None),
-                    # 강화된 지시어를 맥락 최하단에 배치하여 최우선 반영 유도
-                    narrative_context=str(self.current_project.get_causal_history_summary()) + f"\n{enrichment_directive}\n\n[🚨 Retry Feedback]: {retry_feedback}",
-                    tactical_references=tactical_references,
-                    style_guide=self.current_project.selected_tone.get('guide', '표준 웹소설 연출'),
-                    prev_ms_ending=prev_ms_ending,
-                    surgery_intel = self.current_project.get_surgery_intelligence(limit=3),
-                    enrichment_level=enrichment_level
-                    )
+                    # [V48] Diversity Sampling: 첫 시도에서만 3개 후보 생성
+                    use_diversity_sampling = (self.diversity_engine and reject_count == 0 and enrichment_level == 0)
+
+                    def architect_generator():
+                        """블루프린트 단일 생성 함수"""
+                        return self.agents['architect'].design_v20_breakdown(
+                            ep_num=working_ep,
+                            arc_pos=arc_pos,
+                            arc_tactical_doc=focus_package,
+                            martial_hud=self.sys.hud.get_structured_hud(),
+                            encyclopedia=self.sys.lore.db.get_lore_list_by_category(None),
+                            narrative_context=str(self.current_project.get_causal_history_summary()) + f"\n{enrichment_directive}\n{diversity_injection}\n\n[🚨 Retry Feedback]: {retry_feedback}",
+                            tactical_references=tactical_references,
+                            style_guide=self.current_project.selected_tone.get('guide', '표준 웹소설 연출'),
+                            prev_ms_ending=prev_ms_ending,
+                            surgery_intel=self.current_project.get_surgery_intelligence(limit=3),
+                            enrichment_level=enrichment_level
+                        )
+
+                    if use_diversity_sampling:
+                        self.ui.log(f"🎲 [V48 Diversity] 블루프린트 3개 후보 생성 중...")
+                        blueprint_candidate, diversity_meta = self.diversity_engine.generate_diverse_blueprint(
+                            generator_fn=architect_generator,
+                            n_samples=3
+                        )
+                        if diversity_meta.get('selected_score'):
+                            self.ui.log(f"   ✨ 선택된 블루프린트 다양성 점수: {diversity_meta['selected_score'].get('total', 0):.1f}")
+                        self._audit_event("diversity_sampling", "blueprint diversity sampling", {
+                            "ep_num": working_ep,
+                            "n_samples": diversity_meta.get('n_samples', 0),
+                            "selected_score": diversity_meta.get('selected_score', {}).get('total', 0)
+                        })
+                    else:
+                        blueprint_candidate = architect_generator()
+
                 except Exception as architect_err:
                     self.ui.log(f"🚨 [Architect Error] 제 {working_ep}화 설계 중 에러: {architect_err}")
                     self._audit_event("architect_error", "design_v20_breakdown failed", {
@@ -2421,7 +2555,64 @@ class SovereignApp:
                             stopline_violation = True
                     
                     if not stopline_violation:
+                        # ═══════════════════════════════════════════════════════════════
+                        # [V48.1] ContinuityInspector: Director 호출 전 연속성 검증 (전체 BP)
+                        # ═══════════════════════════════════════════════════════════════
+                        continuity_passed = True
+                        try:
+                            # [V48.1] 전체 블루프린트 조회 (1화부터 현재 직전까지)
+                            prev_blueprints = self.agents['continuity_inspector'].get_prev_blueprints(
+                                current_ep=working_ep, window=None  # None = 전체 조회
+                            )
+                            
+                            if prev_blueprints:
+                                self.ui.log(f"   🔗 [V48.1] 연속성 검증 중... (제1화~제{working_ep-1}화, 총 {len(prev_blueprints)}화 전체 분석)")
+                                
+                                continuity_result = self.agents['continuity_inspector'].inspect(
+                                    current_ep=working_ep,
+                                    current_blueprint=blueprint_candidate,
+                                    prev_blueprints=prev_blueprints
+                                )
+                                
+                                if continuity_result.get('decision') == 'REJECT':
+                                    severity = continuity_result.get('severity', 'UNKNOWN')
+                                    violations = continuity_result.get('violations', [])
+                                    fix_instructions = continuity_result.get('fix_instructions', '')
+                                    
+                                    self.ui.log(f"   🚨 [V48 CONTINUITY REJECT] 연속성 위반 감지 ({severity})")
+                                    for v in violations[:3]:
+                                        self.ui.log(f"      - {v.get('type', '')}: {v.get('description', '')[:80]}...")
+                                    
+                                    self._audit_event("continuity_reject", "blueprint continuity violation", {
+                                        "ep_num": working_ep,
+                                        "severity": severity,
+                                        "violations": len(violations)
+                                    })
+                                    
+                                    retry_feedback = f"[연속성 위반] {fix_instructions}"
+                                    reject_count += 1
+                                    continuity_passed = False
+                                else:
+                                    # PASS 또는 경고만 있는 경우
+                                    warnings = continuity_result.get('warnings', [])
+                                    if warnings:
+                                        self.ui.log(f"   ⚠️ [V48] 연속성 경고 {len(warnings)}건 (계속 진행)")
+                                    else:
+                                        self.ui.log(f"   ✅ [V48] 연속성 검증 통과")
+                        except Exception as continuity_err:
+                            self.ui.log(f"   ⚠️ [V48] ContinuityInspector 오류: {continuity_err}")
+                            self._audit_event("continuity_error", "continuity inspection failed", {
+                                "ep_num": working_ep,
+                                "error": str(continuity_err)
+                            })
+                            # 연속성 검증 실패해도 Director로 계속 진행
+                        
+                        if not continuity_passed:
+                            continue  # 연속성 위반 시 재시도
+                        
+                        # ═══════════════════════════════════════════════════════════════
                         # [안전성 패치] Director 호출 예외 처리
+                        # ═══════════════════════════════════════════════════════════════
                         try:
                             # [V45] validation_context 구성 (V0128 검증용)
                             validation_context = self._build_validation_context(
@@ -2730,6 +2921,10 @@ class SovereignApp:
         # 2. 🔥 V30 유전자 점화 (문체 복제 엔진 가동)
         self._ignite_quad_cache_system()
 
+        # [V48] 서사 다양성 엔진 초기화 (Stage 3에서 안 했으면 여기서)
+        if not self.diversity_engine:
+            self._init_diversity_engine(window_size=10)
+
         # 2-1. 🔒 [V40 Fix] Stage 4 Writer 모델을 gemini-3-pro-preview로 고정
         from modules.core.constants import AIModels
         self.agents['writer'].primary_model = AIModels.STAGE4_FIXED_WRITER_MODEL
@@ -2967,7 +3162,7 @@ class SovereignApp:
                             
                             # [V40] 장르별 Purism Prompt 분기
                             genre_type = self.selected_genre.get('type', 'wuxia') if self.selected_genre else 'wuxia'
-                            
+
                             if genre_type == 'wuxia' and hasattr(self.sys, 'guard'):
                                 purism = self.sys.guard.get_v20_purism_prompt()
                             elif genre_type == 'hunter':
@@ -2976,23 +3171,58 @@ class SovereignApp:
                                 purism = "[투자 장르 가이드] 금융 상식과 시장 논리를 준수하라. 자본 증식은 개연성 있게 서술하라."
                             else:
                                 purism = ""
-                            
+
+                            # [V48] 서사 다양성 엔진 주입 (Pattern Tracking + Contrastive CoT)
+                            diversity_writer_injection = ""
+                            use_writer_diversity_sampling = False
+                            if self.diversity_engine and audit_attempt == 0:
+                                diversity_writer_injection = self.diversity_engine.get_writer_injection()
+                                should_sample, sample_reason = self.diversity_engine.should_use_diversity_sampling_for_writer()
+                                if should_sample:
+                                    use_writer_diversity_sampling = True
+                                    self.ui.log(f"🎲 [V48 Diversity] Writer Sampling 활성화: {sample_reason}")
+
+                            # 피드백에 다양성 지침 추가
+                            enhanced_feedback = current_feedback
+                            if diversity_writer_injection:
+                                enhanced_feedback = f"{current_feedback}\n\n{diversity_writer_injection}"
+
                             # 💡 Writer 집필 호출 (예외 처리 추가)
                             try:
-                                writer_res = self.agents['writer'].write_v20_manuscript(
-                                    ep_num=next_ep, breakdown_doc=enriched_breakdown,
-                                    master_bible=self.current_project.master_bible,
-                                    hud_report=hud_report, purism_prompt=purism,
-                                    style_mode=selected_style["guide"], intro_dna=getattr(self.current_project, 'intro_dna', 'CYNICAL'),
-                                    feedback=current_feedback, prev_full_manuscript=prev_text,
-                                    arc_doc={
-                                            "MUST_FOCUS_ON": focus_tag,
-                                            "FULL_ARC_MAP": arc_tactical, # 전체 흐름은 맥락으로만 제공
-                                            "PATTERN_PROFILE": arc_data.get('hybrid_composition', {}),
-                                            "PATTERN_MIXING_LOGIC": arc_data.get('hybrid_composition', {}).get('mixing_logic', '')
-                                        },
-                                    tactical_references=tactical_refs
-                                )
+                                def writer_generator():
+                                    """원고 단일 생성 함수"""
+                                    return self.agents['writer'].write_v20_manuscript(
+                                        ep_num=next_ep, breakdown_doc=enriched_breakdown,
+                                        master_bible=self.current_project.master_bible,
+                                        hud_report=hud_report, purism_prompt=purism,
+                                        style_mode=selected_style["guide"], intro_dna=getattr(self.current_project, 'intro_dna', 'CYNICAL'),
+                                        feedback=enhanced_feedback, prev_full_manuscript=prev_text,
+                                        arc_doc={
+                                                "MUST_FOCUS_ON": focus_tag,
+                                                "FULL_ARC_MAP": arc_tactical,
+                                                "PATTERN_PROFILE": arc_data.get('hybrid_composition', {}),
+                                                "PATTERN_MIXING_LOGIC": arc_data.get('hybrid_composition', {}).get('mixing_logic', '')
+                                            },
+                                        tactical_references=tactical_refs
+                                    )
+
+                                if use_writer_diversity_sampling:
+                                    self.ui.log(f"   🎲 원고 3개 후보 생성 중... (패턴 반복 감지)")
+                                    writer_res, diversity_meta = self.diversity_engine.generate_diverse_manuscript(
+                                        generator_fn=writer_generator,
+                                        n_samples=3,
+                                        force=True
+                                    )
+                                    if diversity_meta.get('selected_score'):
+                                        self.ui.log(f"   ✨ 선택된 원고 다양성 점수: {diversity_meta['selected_score'].get('total', 0):.1f}")
+                                    self._audit_event("writer_diversity_sampling", "manuscript diversity sampling", {
+                                        "ep_num": next_ep,
+                                        "n_samples": diversity_meta.get('n_samples', 0),
+                                        "selected_score": diversity_meta.get('selected_score', {}).get('total', 0)
+                                    })
+                                else:
+                                    writer_res = writer_generator()
+
                             except Exception as writer_err:
                                 self.ui.log(f"🚨 [Writer Error] 제 {next_ep}화 집필 중 에러: {writer_err}")
                                 self._audit_event("writer_error", "write_v20_manuscript failed", {
@@ -3047,14 +3277,86 @@ class SovereignApp:
                                             "scene_count": scene_count
                                         })
 
+                                # ═══════════════════════════════════════════════════════════════
+                                # [V49.1] ContinuityInspector: 원고 연속성 검증
+                                # ═══════════════════════════════════════════════════════════════
+                                continuity_passed = True
+                                if 'continuity_inspector' in self.agents:
+                                    try:
+                                        self.ui.layout["main"].update(Panel(f"🔍 Stage 4.4: 연속성 검증 중...", title="ContinuityInspector"))
+                                        
+                                        # 이전 원고 조회 (최근 5화)
+                                        prev_manuscripts = self.agents['continuity_inspector'].get_prev_manuscripts(
+                                            current_ep=next_ep, window=5
+                                        )
+                                        
+                                        # Blueprint 조회
+                                        current_blueprint = self.current_project.get_blueprint(next_ep) or {}
+                                        
+                                        # 원고 연속성 검증
+                                        manuscript_continuity = self.agents['continuity_inspector'].inspect_manuscript(
+                                            current_ep=next_ep,
+                                            manuscript=temp_content,
+                                            blueprint=current_blueprint,
+                                            prev_manuscripts=prev_manuscripts
+                                        )
+                                        
+                                        if manuscript_continuity.get('decision') == 'REJECT':
+                                            continuity_passed = False
+                                            severity = manuscript_continuity.get('severity', 'UNKNOWN')
+                                            fix_instructions = manuscript_continuity.get('fix_instructions', '')
+                                            violations = manuscript_continuity.get('violations', [])
+                                            
+                                            self.ui.log(f"🚨 [ContinuityInspector] 연속성 위반 감지 (심각도: {severity})")
+                                            for v in violations[:3]:  # 최대 3개만 표시
+                                                self.ui.log(f"   ⚠️ {v.get('type', 'unknown')}: {v.get('description', '')[:100]}")
+                                            
+                                            # 피드백 반영
+                                            audit_feedback = f"[V49.1 연속성 위반]\n{fix_instructions}"
+                                            
+                                            self._audit_event("continuity_reject", "manuscript continuity failed", {
+                                                "ep_num": next_ep,
+                                                "severity": severity,
+                                                "violations": [v.get('type') for v in violations]
+                                            })
+                                        else:
+                                            warnings = manuscript_continuity.get('warnings', [])
+                                            if warnings:
+                                                self.ui.log(f"⚠️ [ContinuityInspector] 경고 {len(warnings)}건 (PASS 처리)")
+                                            else:
+                                                self.ui.log(f"✅ [ContinuityInspector] 연속성 검증 통과")
+                                            
+                                    except Exception as ci_err:
+                                        self.ui.log(f"⚠️ [ContinuityInspector] 원고 검증 중 오류 (비치명적): {ci_err}")
+                                        # 오류 시 통과 처리 (프로세스 중단 방지)
+                                        continuity_passed = True
+                                
+                                # 연속성 위반 시 Writer 재생성 (재시도 횟수 고려)
+                                if not continuity_passed:
+                                    if audit_attempt < 2:  # 2회까지만 연속성 이유로 재시도
+                                        self.ui.log(f"🔄 [V49.1] 연속성 위반으로 원고 재생성 ({audit_attempt + 1}회차)")
+                                        continue  # while 루프 다시
+                                    else:
+                                        self.ui.log(f"⚠️ [V49.1] 연속성 경고 있지만 재시도 횟수 초과로 진행")
+
                                 # 🎬 Director 최종 원고 정밀 검수 (예외 처리 추가)
                                 self.ui.layout["main"].update(Panel(f"🎬 Stage 4.5: 편집장 원고 정밀 검수 중...", title="Director"))
                                 try:
+                                    # [V49] Blueprint 텍스트 파일 읽기 (씬 범위 초과 체크용)
+                                    blueprint_text = ''
+                                    try:
+                                        bp_file = self.current_project.paths.root / 'plans' / 'blueprints' / f'blueprint_{next_ep:04d}.txt'
+                                        if bp_file.exists():
+                                            blueprint_text = bp_file.read_text(encoding='utf-8')
+                                    except Exception as bp_err:
+                                        self.ui.log(f"⚠️ [V49] Blueprint 텍스트 로드 실패 (비치명적): {bp_err}")
+                                    
                                     # [V45] validation_context 구성 (V0128 검증용)
                                     validation_context = self._build_validation_context(
                                         ep_num=next_ep,
                                         blueprint=self.current_project.get_blueprint(next_ep),
-                                        mode='MANUSCRIPT'
+                                        mode='MANUSCRIPT',
+                                        blueprint_text=blueprint_text  # [V49] 씬 범위 체크용
                                     )
                                     audit_res = self.agents['director'].audit_manuscript(
                                         ep_num=next_ep, manuscript=temp_content, arc_doc=arc_tactical,
@@ -3311,6 +3613,16 @@ class SovereignApp:
                             actual_truth_data = {}
                             # 이전 상태 데이터 확보 (데이터 유실 시 복원용)
                             prev_actual = self.current_project.latest_state.get('actual_truth', {})
+                            
+                            # [V49 FIX] prev_actual이 비어있으면 Bible의 현재 HUD 상태를 fallback으로 사용
+                            if not prev_actual and hasattr(self.sys, 'hud') and self.sys.hud:
+                                try:
+                                    bible_hud = self.sys.hud.pro_data
+                                    if bible_hud and isinstance(bible_hud, dict):
+                                        prev_actual = bible_hud.copy()
+                                        self.ui.log(f"🔄 [V49] prev_actual 비어있음 → Bible HUD fallback 사용 (키 개수: {len(prev_actual)})")
+                                except Exception as e:
+                                    self.ui.log(f"⚠️ [V49] Bible HUD fallback 실패: {e}")
 
                             # [V41] Director가 승인한 state_updates 우선 적용
                             v41_approved = getattr(self, '_v41_approved_state_updates', {})
@@ -3756,12 +4068,20 @@ class SovereignApp:
                                 self.current_project.master_bible = bible_data
 
             # 2. ✂️ SQL DB 데이터 삭제
+            # [FIX] SQL Injection 방지: 화이트리스트로 테이블명 검증
+            ALLOWED_EP_TABLES = frozenset([
+                'manuscripts', 'blueprints', 'state_logs', 'martial_tracker',
+                'sync_status', 'causal_graph'
+            ])
             ep_tables = [
                 'manuscripts', 'blueprints', 'state_logs', 'martial_tracker',
                 'sync_status', 'causal_graph'
             ]
 
             for t in ep_tables:
+                if t not in ALLOWED_EP_TABLES:
+                    self.ui.log(f"🚨 [Security] 허용되지 않은 테이블: {t}")
+                    continue
                 self.current_project.db.cursor.execute(f"DELETE FROM {t} WHERE ep_num >= ?", (target_ep,))
                 self.ui.log(f"   ✂️  '{t}' 테이블: {target_ep}화 이후 삭제 완료")
 
@@ -3823,12 +4143,20 @@ class SovereignApp:
 
         try:
             # 1. 생산 데이터 테이블만 정밀 타격 (설계도 앵커는 건드리지 않음)
+            # [FIX] SQL Injection 방지: 화이트리스트로 테이블명 검증
+            ALLOWED_TABLES = frozenset([
+                'manuscripts', 'blueprints', 'state_logs', 'martial_tracker',
+                'causal_graph', 'sync_status', 'karma_status'
+            ])
             production_tables = [
-                'manuscripts', 'blueprints', 'state_logs', 'martial_tracker', 
+                'manuscripts', 'blueprints', 'state_logs', 'martial_tracker',
                 'causal_graph', 'sync_status', 'karma_status'
             ]
-            
+
             for t in production_tables:
+                if t not in ALLOWED_TABLES:
+                    self.ui.log(f"🚨 [Security] 허용되지 않은 테이블: {t}")
+                    continue
                 self.current_project.db.cursor.execute(f"DELETE FROM {t}")
             
             # 2. 복선 상태 복구

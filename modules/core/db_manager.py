@@ -470,6 +470,25 @@ class DBManager:
             print(f"🚨 [DB] State log JSON 파싱 실패: {e}")
             return {}
 
+    def load_state_log(self, ep_num: int) -> dict:
+        """[FIX] 특정 에피소드의 state_log 조회"""
+        try:
+            cur = self.cursor.execute(
+                "SELECT data, summary FROM state_logs WHERE ep_num = ?", (ep_num,)
+            )
+            row = cur.fetchone()
+            if not row:
+                return None
+            result = {'summary': row['summary'] if row['summary'] else ''}
+            try:
+                result['data'] = json.loads(row['data']) if row['data'] else {}
+            except json.JSONDecodeError:
+                result['data'] = {}
+            return result
+        except Exception as e:
+            print(f"🚨 [DB] State log 조회 실패 (ep {ep_num}): {e}")
+            return None
+
     def get_causal_summary_chain(self, limit=5):
         """[NEW] 과거 요약 체인 인출"""
         cur = self.cursor.execute("SELECT ep_num, summary FROM state_logs WHERE summary IS NOT NULL ORDER BY ep_num DESC LIMIT ?", (limit,))
@@ -509,24 +528,24 @@ class DBManager:
         - AI 데이터 파싱 유연성 극대화
         - 하위 엔터티(카르마, 로어, 복선)의 정규화 및 박제
         """
-        
-        # 1. 최상위 데이터 파싱 및 정규화 (딕셔너리 보장)
-        if isinstance(manuscript_data, str):
-            try:
-                manuscript_data = json.loads(manuscript_data)
-            except (json.JSONDecodeError, ValueError):
-                manuscript_data = {'title': f"제 {ep_num} 화", 'content': manuscript_data}
-
-        if isinstance(state_data, str):
-            try:
-                state_data = json.loads(state_data)
-            except (json.JSONDecodeError, ValueError):
-                state_data = {'context_audit': {'summary': '데이터 파싱 오류'}}
-
-        # 트랜잭션 중첩 상태 확인 (상위 루프에서 이미 열려있는지 체크)
-        nested_transaction = self.conn.in_transaction
-        
+        # [FIX] RLock으로 멀티스레드 동시 접근 보호
+        self._lock.acquire()
         try:
+            # 1. 최상위 데이터 파싱 및 정규화 (딕셔너리 보장)
+            if isinstance(manuscript_data, str):
+                try:
+                    manuscript_data = json.loads(manuscript_data)
+                except (json.JSONDecodeError, ValueError):
+                    manuscript_data = {'title': f"제 {ep_num} 화", 'content': manuscript_data}
+
+            if isinstance(state_data, str):
+                try:
+                    state_data = json.loads(state_data)
+                except (json.JSONDecodeError, ValueError):
+                    state_data = {'context_audit': {'summary': '데이터 파싱 오류'}}
+
+            # 트랜잭션 중첩 상태 확인 (상위 루프에서 이미 열려있는지 체크)
+            nested_transaction = self.conn.in_transaction
             # 2. 트랜잭션 시작 (최상위 트랜잭션일 때만 실행)
             if not nested_transaction:
                 self.begin()
@@ -649,7 +668,10 @@ class DBManager:
             else:
                 print(f"      ⚠️ [{DBErrorSeverity.HIGH}] 내부 저장 실패 (상위 롤백 유도): {e}")
                 raise DBError(f"에피소드 {ep_num} 저장 기타 오류", original_error=e) from e
-            
+        finally:
+            # [FIX] RLock 해제 보장
+            self._lock.release()
+
 
     @contextmanager
     def transaction(self):
