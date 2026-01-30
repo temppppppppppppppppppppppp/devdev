@@ -312,25 +312,33 @@ Step 5: Article 6 (패턴 다양성) 분석
                     parts.append(str(filtered_state))
 
         # 2. Guard 기반 불가능 행동 목록
-        if self.guard and actual_truth:
-            impossible_actions = self.guard.get_impossible_actions(actual_truth)
-            if impossible_actions:
-                parts.append("\n===== 현재 상태로 불가능한 행동 =====")
-                for action in impossible_actions[:5]:  # 최대 5개
-                    reason = action.get('reason', '')
-                    parts.append(f"- {reason}")
+        # [FIX] AttributeError 방지 - 메서드 존재 여부 확인
+        if self.guard and actual_truth and hasattr(self.guard, 'get_impossible_actions'):
+            try:
+                impossible_actions = self.guard.get_impossible_actions(actual_truth)
+                if impossible_actions:
+                    parts.append("\n===== 현재 상태로 불가능한 행동 =====")
+                    for action in impossible_actions[:5]:  # 최대 5개
+                        reason = action.get('reason', '') if isinstance(action, dict) else str(action)
+                        parts.append(f"- {reason}")
+            except (AttributeError, Exception) as e:
+                pass  # Guard 메서드 오류 시 조용히 무시
 
         # 3. 정당화 인정 패턴
-        if self.guard:
-            justifications = self.guard.get_justification_patterns()
-            if justifications:
-                parts.append("\n===== 정당화 시 인정되는 표현 =====")
-                # 정규식을 사람이 읽기 쉽게 변환
-                readable_patterns = []
-                for p in justifications[:5]:
-                    readable = p.replace(r'.*', '...').replace(r'\s+', ' ')
-                    readable_patterns.append(f'"{readable}"')
-                parts.append(', '.join(readable_patterns))
+        # [FIX] AttributeError 방지 - 메서드 존재 여부 확인
+        if self.guard and hasattr(self.guard, 'get_justification_patterns'):
+            try:
+                justifications = self.guard.get_justification_patterns()
+                if justifications:
+                    parts.append("\n===== 정당화 시 인정되는 표현 =====")
+                    # 정규식을 사람이 읽기 쉽게 변환
+                    readable_patterns = []
+                    for p in justifications[:5]:
+                        readable = p.replace(r'.*', '...').replace(r'\s+', ' ')
+                        readable_patterns.append(f'"{readable}"')
+                    parts.append(', '.join(readable_patterns))
+            except (AttributeError, Exception) as e:
+                pass  # Guard 메서드 오류 시 조용히 무시
 
         # 4. 검증 지침
         if parts:

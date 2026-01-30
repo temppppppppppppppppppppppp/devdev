@@ -207,11 +207,20 @@ class ProjectContext:
                 self.db.update_lore_items_batch(lore_batch)
             
             # [C] Martial Tracker(HUD) 강제 동기화
+            # [V49 FIX] ep_num=0 하드코딩 제거 - 실제 에피소드 저장은 commit_full_episode_data에서 수행
+            # bible 저장 시에는 HUD 동기화를 하지 않음 (잘못된 ep_num으로 덮어쓰기 방지)
             protagonist = bible_root.get('MartialHUD', {}).get('Protagonist', {})
             actual_data = protagonist.get('actual_truth', {})
             if actual_data:
-                self.record_martial_stats(0, actual_data)
-                print(f"      🛡️ [Sync] 성경 저장과 동시에 HUD 테이블 동기화 완료.")
+                # 현재 최신 에피소드 번호 조회
+                latest_ep = self.db.get_latest_episode_number()
+                if latest_ep > 0:
+                    self.record_martial_stats(latest_ep, actual_data)
+                    print(f"      🛡️ [Sync] 성경 저장과 동시에 HUD 테이블 동기화 완료 (ep {latest_ep}).")
+                else:
+                    # 에피소드가 없으면 ep_num=0으로 초기 상태 저장
+                    self.record_martial_stats(0, actual_data)
+                    print(f"      🛡️ [Sync] 초기 HUD 상태 저장 (ep 0).")
 
         elif stage == "volumes": self.volumes = data
         elif stage == "arcs":

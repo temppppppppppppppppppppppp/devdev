@@ -5,14 +5,16 @@ from .base_agent import BaseAgent
 
 class Architect(BaseAgent):
     """
-    [V37 Sovereign Architect - 0124 Manifesto]
+    [V48 Sovereign Architect - 0130 Manifesto]
     - 욕망 기반 장면 정렬: 위버의 'short_term_objective'를 설계도의 중심축으로 설정
     - Core/Buffer 밸런싱: 아크별 긴장도 예산에 따라 장면 밀도 강제 조절
     - 무결성 가드: 위버의 목적과 무관한 '지랄(불필요한 서사)' 차단
+    - [V48 NEW] 이전 블루프린트 컨텍스트 주입: 연속성 사전 확보
     """
     def __init__(self, context, client, model_tier="gemini-3-flash-preview"):
         super().__init__(context, client, model_tier)
         self.cache_name = None # main_a.py에서 주입됨
+        self.prev_blueprints_context = ""  # [V48] 이전 블루프린트 요약
 
     def _get_hud_trend_safe(self, ep_num: int) -> str:
         """
@@ -33,6 +35,94 @@ class Architect(BaseAgent):
                 return "HUD 추세 정보 없음"
         except Exception:
             return "안정적"
+
+    def load_prev_blueprints_context(self, ep_num: int, window: int = 5) -> str:
+        """
+        [V48] 이전 블루프린트 요약 로드 및 캐싱
+        
+        Args:
+            ep_num: 현재 에피소드 번호
+            window: 조회할 이전 에피소드 수
+        
+        Returns:
+            str: 이전 블루프린트 요약 (프롬프트용)
+        """
+        if ep_num <= 1:
+            return ""
+        
+        try:
+            prev_summaries = []
+            acquired_items = []
+            granted_items = []
+            
+            for prev_ep in range(max(1, ep_num - window), ep_num):
+                bp = self.context.get_blueprint(prev_ep)
+                if bp and isinstance(bp, dict):
+                    scenario = bp.get('integrated_scenario', '')
+                    
+                    # 핵심 정보 추출
+                    items = self._extract_acquisitions(scenario)
+                    grants = self._extract_grants(scenario)
+                    
+                    if items:
+                        acquired_items.extend([(prev_ep, item) for item in items])
+                    if grants:
+                        granted_items.extend([(prev_ep, grant) for grant in grants])
+                    
+                    # 엔딩 요약 (마지막 500자)
+                    ending = scenario[-500:] if len(scenario) > 500 else scenario
+                    prev_summaries.append(f"[제{prev_ep}화 엔딩] {ending[:300]}...")
+            
+            # 연속성 컨텍스트 구성
+            context_parts = []
+            
+            if acquired_items:
+                items_str = ", ".join([f"'{item}'(제{ep}화)" for ep, item in acquired_items[-5:]])
+                context_parts.append(f"[이미 획득한 아이템] {items_str}")
+            
+            if granted_items:
+                grants_str = ", ".join([f"'{grant}'(제{ep}화)" for ep, grant in granted_items[-3:]])
+                context_parts.append(f"[이미 수여받은 것] {grants_str}")
+            
+            if prev_summaries:
+                context_parts.append(f"[최근 에피소드 엔딩]\n" + "\n".join(prev_summaries[-2:]))
+            
+            self.prev_blueprints_context = "\n".join(context_parts)
+            return self.prev_blueprints_context
+            
+        except Exception as e:
+            print(f"      ⚠️ [Architect] 이전 블루프린트 로드 실패: {e}")
+            return ""
+    
+    def _extract_acquisitions(self, scenario: str) -> list:
+        """시나리오에서 획득 아이템 추출"""
+        patterns = [
+            r"(.+?)(?:을|를)\s*(?:집어\s*들|뽑아\s*들|획득|챙기|주워\s*들)",
+            r"(.+?)(?:을|를)\s*(?:손에\s*넣|가져가|챙겨\s*들)",
+        ]
+        items = []
+        for pattern in patterns:
+            matches = re.findall(pattern, scenario)
+            for item in matches:
+                item = item.strip()
+                if item and 2 <= len(item) <= 20:
+                    items.append(item)
+        return list(set(items))[:5]  # 중복 제거, 최대 5개
+    
+    def _extract_grants(self, scenario: str) -> list:
+        """시나리오에서 수여물 추출"""
+        patterns = [
+            r"(.+?)(?:을|를)\s*(?:하사|수여|내리|던져\s*주)",
+            r"(?:형법\s*집행권|사자패|옥패|금패)",
+        ]
+        grants = []
+        for pattern in patterns:
+            matches = re.findall(pattern, scenario)
+            for grant in matches:
+                grant = grant.strip() if isinstance(grant, str) else str(grant)
+                if grant and 2 <= len(grant) <= 20:
+                    grants.append(grant)
+        return list(set(grants))[:3]
 
     def design_v20_breakdown(self, ep_num, arc_pos, arc_tactical_doc, martial_hud, encyclopedia, 
                               narrative_context="", tactical_references="", style_guide="", 
@@ -186,9 +276,32 @@ class Architect(BaseAgent):
                 reflexion_prompt = reflexion.get_prompt_injection(min_frequency=2)
         except Exception as e:
             print(f"      ⚠️ [Architect] Reflexion 로드 실패: {e}")
+
+        # [V48] 이전 블루프린트 연속성 컨텍스트 로드
+        continuity_context = ""
+        try:
+            if ep_num > 1:
+                continuity_context = self.load_prev_blueprints_context(ep_num, window=5)
+        except Exception as e:
+            print(f"      ⚠️ [Architect] 연속성 컨텍스트 로드 실패: {e}")
+        
+        # [V48] 연속성 경고 섹션
+        continuity_warning = ""
+        if continuity_context:
+            continuity_warning = f"""
+[🚨 V48 CONTINUITY GUARD: 연속성 필수 준수 사항]
+아래는 이전 에피소드에서 이미 발생한 사건입니다. 절대 중복하지 마십시오.
+
+{continuity_context}
+
+⚠️ 위에 나열된 아이템을 다시 획득하는 장면을 작성하지 마십시오.
+⚠️ 위에 나열된 수여물을 수여 전 에피소드에서 소지하고 있는 것으로 쓰지 마십시오.
+⚠️ 이미 획득한 것은 '소지 중'인 상태로, 이미 수여받은 것은 '보유 중'인 상태로 시작하십시오.
+"""
         # [Phase 5.1.1] CoT 구조화 프롬프트
         cot_structure = f"""
 {reflexion_prompt}
+{continuity_warning}
 
 [🧠 PHASE 5: CHAIN-OF-THOUGHT BLUEPRINT DESIGN]
 당신은 5단계 사고 과정을 거쳐 Blueprint를 설계합니다.
@@ -342,12 +455,16 @@ class Architect(BaseAgent):
                         response_mime_type="application/json"
                     )
                 )
-                return self._extract_json_robust(response.text)
+                result = self._extract_json_robust(response.text)
+                # [V47] 블루프린트 구조 검증
+                return self._validate_blueprint_structure(result, ep_num)
             else:
-                return self._fallback_full_request(dynamic_prompt)
+                result = self._fallback_full_request(dynamic_prompt)
+                return self._validate_blueprint_structure(result, ep_num)
         except Exception as e:
             print(f"      🚨 [Architect Error] 설계 공정 중단: {e}")
-            return self._fallback_full_request(dynamic_prompt)
+            result = self._fallback_full_request(dynamic_prompt)
+            return self._validate_blueprint_structure(result, ep_num)
 
     def _fallback_full_request(self, dynamic_prompt):
         """[V31.5 Fallback] 캐시 실패 시 로컬 규칙 파일을 직접 읽어 전체 프롬프트 재구성"""
@@ -368,3 +485,38 @@ class Architect(BaseAgent):
             print(f"      ❌ [Architect] Fallback 구성 중 치명적 오류: {e}")
             # 최후의 수단으로 지시서만이라도 전송
             return self._extract_json_robust(self.ask(dynamic_prompt, temperature=0.4))
+
+    def _validate_blueprint_structure(self, blueprint: dict, ep_num: int) -> dict:
+        """
+        [V47] 블루프린트 구조 검증 및 보완
+        - scene_breakdown에 최소 4개 scene 필요
+        - 필수 필드 존재 여부 확인
+        """
+        if not blueprint or not isinstance(blueprint, dict):
+            print(f"      ⚠️ [Architect] 블루프린트 구조 오류 - 빈 응답")
+            return {"ep_num": ep_num, "validation_failed": True, "scene_breakdown": {}}
+
+        # 필수 필드 검증
+        required_fields = ['scene_breakdown', 'integrated_scenario']
+        missing_fields = [f for f in required_fields if f not in blueprint]
+        if missing_fields:
+            print(f"      ⚠️ [Architect] 필수 필드 누락: {missing_fields}")
+            blueprint['validation_warning'] = f"missing_fields: {missing_fields}"
+
+        # scene_breakdown 검증
+        scene_breakdown = blueprint.get('scene_breakdown', {})
+        if isinstance(scene_breakdown, dict):
+            scene_count = len([k for k in scene_breakdown.keys() if k.startswith('scene')])
+            if scene_count < 4:
+                print(f"      ⚠️ [Architect] Scene 부족 ({scene_count}/6) - 품질 저하 가능")
+                blueprint['validation_warning'] = f"insufficient_scenes: {scene_count}"
+        elif isinstance(scene_breakdown, str):
+            # scene_breakdown이 문자열로 왔을 때 복구 시도
+            print(f"      ⚠️ [Architect] scene_breakdown이 문자열 - dict 변환 시도")
+            blueprint['scene_breakdown'] = {"scene_1": scene_breakdown}
+            blueprint['validation_warning'] = "scene_breakdown_was_string"
+
+        # ep_num 강제 설정
+        blueprint['ep_num'] = ep_num
+
+        return blueprint

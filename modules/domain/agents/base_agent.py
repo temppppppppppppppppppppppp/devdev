@@ -116,11 +116,13 @@ class BaseAgent:
 
                     # 마지막 50자를 앵커로 사용하여 다음 응답의 시작점을 강제 고정
                     overlap_anchor = full_response[-50:].strip()
+                    # [FIX] 중괄호 이스케이프 적용 (f-string 오류 방지)
+                    safe_anchor = self._escape_braces(overlap_anchor)
                     print(f"      🔄 [System] 데이터 절단 감지. '{overlap_anchor[:20]}...' 지점부터 인과율 용접 시도 ({attempt+1}/{MAX_CONTINUATIONS})")
 
                     current_prompt = (
                         f"--- [SYSTEM: CONTINUATION MISSION] ---\n"
-                        f"Your previous response was cut off exactly at: '...{overlap_anchor}'\n"
+                        f"Your previous response was cut off exactly at: '...{safe_anchor}'\n"
                         f"CONTINUE the JSON structure IMMEDIATELY from the next character.\n"
                         f"Do not summarize. Do not skip any bits (especially 'Beat 3')."
                     )
@@ -142,10 +144,19 @@ class BaseAgent:
                 print(f"      📝 [Recovery] 부분 응답 {len(full_response)}자 보존")
 
             try:
+                # [FIX] 백업 모델용 별도 config (response_schema 제거 - 호환성 문제 방지)
+                backup_config_params = {
+                    "temperature": temperature,
+                    "max_output_tokens": 8192,
+                    "top_p": 0.95,
+                    "response_mime_type": "application/json"
+                }
+                backup_config = types.GenerateContentConfig(**backup_config_params)
+
                 res = self.client.models.generate_content(
                     model=self.backup_model,
                     contents=base_prompt,
-                    config=config
+                    config=backup_config
                 )
                 backup_text = res.text if res.text else ""
 
@@ -355,11 +366,26 @@ class BaseAgent:
                     doc_match = re.search(r'"tactical_doc"\s*:\s*"(.*?)"', text, re.DOTALL)
                     if doc_match:
                         return {"tactical_doc": doc_match.group(1), "repaired": True}
-                    
+
                     # [V35 Fix] Writer Agent를 위한 content 필드 강제 추출
                     content_match = re.search(r'"content"\s*:\s*"(.*?)"', text, re.DOTALL)
                     if content_match:
                         return {"content": content_match.group(1), "repaired": True}
+
+                    # [V47 Fix] Architect Agent를 위한 scene_breakdown 강제 추출
+                    scene_match = re.search(r'"scene_breakdown"\s*:\s*(\{[^}]+\})', text, re.DOTALL)
+                    if scene_match:
+                        try:
+                            scene_data = json.loads(scene_match.group(1))
+                            return {"scene_breakdown": scene_data, "repaired": True}
+                        except:
+                            return {"scene_breakdown": {"scene_1": scene_match.group(1)}, "repaired": True}
+
+                    # [V47 Fix] integrated_scenario 강제 추출
+                    scenario_match = re.search(r'"integrated_scenario"\s*:\s*"(.*?)"', text, re.DOTALL)
+                    if scenario_match:
+                        return {"integrated_scenario": scenario_match.group(1), "repaired": True}
+
                     return {"parsing_error": True, "content": text, "status": "RAW_TEXT_ONLY"}
 
             # 4. 재귀적 데이터 평탄화 엔진 (성경 무결성 보존)

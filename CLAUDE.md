@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Wuxia Studio V40** (Sovereign App) - AI-powered multi-genre novel writing system using Google Gemini API to orchestrate specialized agents for serialized fiction production.
+**Wuxia Studio V49** (Sovereign App) - AI-powered multi-genre novel writing system using Google Gemini API to orchestrate specialized agents for serialized fiction production.
 
 **Supported Genres:**
 - Wuxia (무협) - Martial arts fiction
@@ -33,7 +33,6 @@ streamlit run studio_dashboard.py
 ## Utility Tools
 
 Located in `tools/` directory:
-- `RESET.py` - Selective project reset (clears DB/ChromaDB for chosen project)
 - `concat_txt.py` - Concatenate episode text files
 - `db_porter.py` - Database migration utilities
 - `normalize_arcs_db.py` - Arc data normalization
@@ -41,6 +40,7 @@ Located in `tools/` directory:
 - `make_BP.py` - Blueprint generation utility
 
 Located in root:
+- `RESET.py` - Selective project reset (clears DB/ChromaDB for chosen project)
 - `make_md.py` - Convert manuscripts to markdown
 
 ## Production Pipeline (5 Stages)
@@ -48,10 +48,16 @@ Located in root:
 ```
 Phase 0: Bible Recovery & DNA Sync → Load lore + treatment, sync to SQLite
 Stage 1: Volume Strategy          → Plan 10 volumes (can be skipped if volumes exist)
-Stage 2: Arc Tactical Design      → Design 50 arcs (5 per volume)
-Stage 3: Episode Blueprinting     → Scene-by-scene plans
-Stage 4: Sovereign Production     → Final manuscript writing
+Stage 2: Arc Tactical Design      → Design 50 arcs (5 per volume) + [V49] Arc 연속성 검증
+Stage 3: Episode Blueprinting     → Scene-by-scene plans + Episode 연속성 검증
+Stage 4: Sovereign Production     → Final manuscript writing + [V49.1] 원고 연속성 검증
 ```
+
+**Stage 2 Continuity Check (V49 NEW):**
+Arc 설계 후 Director 검증 전에 `ContinuityInspector.inspect_arc()` 호출. Arc 간 아이템/수여물 타임라인 + 단일 Arc 내 모순을 검증하여 REJECT 시 재설계 요청.
+
+**Stage 4 Manuscript Continuity Check (V49.1 NEW):**
+Writer 원고 생성 후 Director 검증 전에 `ContinuityInspector.inspect_manuscript()` 호출. 이전 원고들과의 연속성 + Blueprint 일치성을 검증하여 REJECT 시 재생성 요청. 최대 2회 재시도 후 경고와 함께 진행.
 
 **Stage 1 Skip Option (V41):**
 If volumes already exist in DB, Stage 1 offers skip option. Useful for continuing existing projects or when volumes are manually edited.
@@ -71,17 +77,28 @@ SovereignApp (main_a.py) - Main orchestrator with UTF-8 encoding, audit logging
 │   │   └── Genre-specific guards (modules/core/genre_guards/)
 │   ├── KarmaService (modules/core/karma_service.py) - Causality tracking
 │   ├── TechniqueWeaver (modules/core/technique_weaver.py) - Skill system
-│   └── ConfigManager (modules/core/config_manager.py) - Settings loader
+│   ├── ConfigManager (modules/core/config_manager.py) - Settings loader
+│   ├── NarrativeDiversityEngine (modules/core/narrative_diversity.py) - [V48] 서사 다양성 통합
+│   ├── PatternTracker (modules/core/pattern_tracker.py) - [V48] 패턴 반복 감지
+│   ├── DiversitySampler (modules/core/diversity_sampler.py) - [V48] 앙상블 다양성 선택
+│   ├── RelationshipTracker (modules/core/relationship_tracker.py) - NPC 관계 상태 전환
+│   └── InformationDiffusion (modules/core/information_diffusion.py) - 정보 전파 시뮬레이션
 ├── LongTermMemory (modules/core/memory_engine.py) - ChromaDB vector search
 ├── StudioVisualizer (modules/core/studio_visualizer.py) - Console UI with Rich
 └── Agent Orchestra (modules/domain/agents/)
     ├── BaseAgent - API client + JSON healing
     ├── Analyst - Strategic planning (volumes)
-    ├── Architect - Blueprint creation (episodes)
+    ├── Architect - Blueprint creation (episodes) [V48: 이전 BP 컨텍스트 주입]
     ├── Writer - Manuscript generation
     ├── Director - Quality validation
+    ├── ContinuityInspector - Arc/Episode timeline validation [V49 UPDATE]
+    │   ├── inspect_arc() - Stage 2 Arc 연속성 + 단일 Arc 내 모순 검증 [V49 NEW]
+    │   └── inspect() - Stage 3 에피소드 연속성 검증
     ├── Weaver - Foreshadowing management
-    └── Manager - Production coordination
+    ├── Manager - Production coordination
+    ├── Evaluator - Context evaluation (narrative flow)
+    ├── Editor - Style polishing (persona-based)
+    └── Cleaner - Readability optimization (hanja removal)
 ```
 
 **Service Injection Pattern:**
@@ -126,8 +143,18 @@ Genre-specific behavior injected via:
 | `modules/core/project_manager.py` | `ProjectContext` - all data I/O |
 | `modules/core/db_manager.py` | `DBManager` - SQLite operations |
 | `modules/core/constants.py` | Global constants, `GenreTypes`, AI parameters |
+| `modules/core/narrative_diversity.py` | [V48] `NarrativeDiversityEngine` - 서사 다양성 통합 |
+| `modules/core/pattern_tracker.py` | [V48] `PatternTracker` - 패턴 반복 감지 |
+| `modules/core/diversity_sampler.py` | [V48] `DiversitySampler` - 앙상블 다양성 선택 |
+| `modules/core/relationship_tracker.py` | `RelationshipTracker` - NPC 관계 상태 전환 |
+| `modules/core/information_diffusion.py` | `InformationDiffusion` - 정보 전파 시뮬레이션 |
+| `modules/core/justification_patterns.py` | 정당화 패턴 Few-Shot 라이브러리 |
 | `modules/domain/agents/base_agent.py` | `BaseAgent` - API calling, JSON healing |
 | `modules/domain/agents/writer.py` | `Writer.write_v20_manuscript()` |
+| `modules/domain/agents/continuity_inspector.py` | [V49] Arc + Episode 연속성 검증 (inspect_arc, inspect) |
+| `modules/domain/agents/evaluator.py` | `Evaluator` - 맥락 평가 (narrative flow) |
+| `modules/domain/agents/editor.py` | `Editor` - 문체 교정 (persona-based) |
+| `modules/domain/agents/cleaner.py` | `Cleaner` - 가독성 최적화 (hanja removal) |
 | `config/settings.json` | Base model tier assignments |
 | `config/prompts/` | Agent instruction manifesto files |
 | `docs/글도비_V0128_MANIFESTO.md` | V0128 design spec (3-tier validation) |
@@ -215,11 +242,97 @@ Edit the JSON manifesto files, not Python code. Cache invalidation:
 - Delete specific cache from `sys_caches` anchor in DB, OR
 - Use `RESET.py` for full project reset
 
-## Validation System (V0128 Update)
+## Validation System (V49 Update)
 
-**3-Tier Validation Architecture:**
+**7-Tier Validation Architecture:**
 
-The V0128 validation system implements Constitutional AI and Self-Consistency to reduce errors from 30% → 5%.
+The V49 validation system extends ContinuityInspector to **Arc level (Stage 2)**, catching timeline errors before they propagate to blueprints. This reduces arc-level contradictions from 15% → 2%.
+
+### TIER -1: ARC CONTINUITY Inspector (`modules/domain/agents/continuity_inspector.py`) [V49 NEW]
+LLM-based **Arc 수준 전체 타임라인 검증** (Stage 2에서 실행):
+- **Model**: `gemini-2.5-pro` (대용량 컨텍스트, 고정밀 추론)
+- **범위**: Arc 1부터 현재 직전까지 **전체 Arc 분석** + **단일 Arc 내 모순 탐지**
+- **메서드**: `inspect_arc(current_arc, prev_arcs)`
+
+**검증 항목:**
+- **Cross-Arc Item Timeline** - 이전 Arc들에서 획득한 아이템 추적, 중복 획득 감지
+- **Cross-Arc Grant Timeline** - 수여물/복권의 정확한 수여 시점 추적, 위상 변화 일관성
+- **Cross-Arc State Timeline** - 부상/내공 상태의 연속적 누적 검증
+- **Intra-Arc Consistency** [V49 핵심] - 단일 Arc 내 화 사이의 모순 탐지
+- **Setting Consistency** - 무기/아이템 물리적 특성의 일관성 검증
+
+**Execution Point:** Stage 2에서 Analyst 설계 → **ContinuityInspector.inspect_arc()** → Director 검증
+
+**Two-Phase Validation:**
+1. **Python Precheck** (무료) - 정규식 기반 빠른 필터링, 명백한 위반 즉시 REJECT
+2. **LLM Deep Check** (~$0.02-0.05) - 전체 Arc 타임라인 분석으로 미묘한 모순 탐지
+
+**Severity Levels:**
+- CRITICAL: 명백한 타임라인 오류 (중복 획득, 수여 전 소지) → 즉시 REJECT
+- MAJOR: 심각한 연속성 오류 (상태 급변, 설정 충돌) → REJECT
+- MINOR: 경미한 불일치 (반응 속도, 정보 전파) → WARNING으로 PASS
+
+**Use Case (Arc Level):** 
+- ARC1 제2화에서 대도 획득 → ARC2 제5화에서 다시 대도 획득하러 가는 모순 방지
+- ARC1 제4화에서 복권 선포 → ARC2 제5화에서 여전히 무시당하는 모순 방지
+- 단일 Arc 내에서 무기 두께/특성이 화마다 다르게 묘사되는 모순 방지
+
+### TIER 0: EPISODE CONTINUITY Inspector (`modules/domain/agents/continuity_inspector.py`) [V48.1]
+LLM-based **전체 에피소드 타임라인 검증** (Director 산하 에이전트):
+- **Model**: `gemini-2.5-pro` (대용량 컨텍스트, 고정밀 추론)
+- **범위**: 제1화부터 현재 직전까지 **전체 블루프린트** 분석
+- **메서드**: `inspect(current_ep, current_blueprint, prev_blueprints)`
+
+**검증 항목:**
+- **Item acquisition timeline** - 전체 에피소드에서 획득한 아이템 추적, 중복 획득 감지
+- **Grant/Award timeline** - 수여물(철혈사자패 등)의 정확한 수여 시점 추적
+- **State continuity** - 캐릭터 상태(부상, 경지) 누적 변화 추적
+- **Reaction plausibility** - 관계 변화의 일관성 검증
+
+**Execution Point:** Stage 3에서 Architect 생성 → **ContinuityInspector.inspect()** → Director 검증
+
+**Use Case (Episode Level):** 
+- EP2에서 대도 획득 → EP5에서 다시 대도 획득하러 가는 모순 방지
+- EP4에서 철혈사자패 수여 → EP2-3에서 이미 소지한 것처럼 묘사하는 모순 방지
+- EP10에서 경지 상승 → 이전 에피소드들과의 일관성 검증
+
+### TIER 0.1: MANUSCRIPT CONTINUITY Inspector (`modules/domain/agents/continuity_inspector.py`) [V49.1 NEW]
+LLM-based **원고 수준 연속성 검증** (Stage 4에서 실행):
+- **Model**: `gemini-2.5-pro` (대용량 컨텍스트)
+- **범위**: 이전 원고들(최근 5화) + 현재 Blueprint와의 일치성
+- **메서드**: `inspect_manuscript(current_ep, manuscript, blueprint, prev_manuscripts)`
+
+**검증 항목:**
+- **이전 원고 연속성:**
+  - 아이템 소지/사용 일관성 (획득 안 한 아이템 사용 방지)
+  - 상태 연속성 (부상/회복/경지 변화의 자연스러운 연결)
+  - 관계 연속성 (적대/우호 관계 역행 방지)
+- **Blueprint 일치성:**
+  - 핵심 씬(Core Scene) 반영 여부
+  - Cliffhanger 엔딩 준수 여부
+  - 설계된 공간/시간 일치 여부
+
+**Two-Phase Validation:**
+1. **Python Precheck** (무료) - 정규식 기반 빠른 필터링, 명백한 위반 즉시 REJECT
+2. **LLM Deep Check** (~$0.02) - 미묘한 연속성 모순 탐지
+
+**Execution Point:** Stage 4에서 Writer 생성 → **ContinuityInspector.inspect_manuscript()** → Director 검증
+
+**Use Case (Manuscript Level):**
+- 직전 화에서 대도를 소지하고 끝났는데 다음 화 시작에 대도가 없는 모순 방지
+- Blueprint에서 6개 씬을 설계했는데 원고가 2개 씬만 반영한 경우 REJECT
+- 직전 화 끝에서 중상인데 다음 화 시작에 멀쩡하게 활동하는 모순 방지
+
+### TIER 0.5: CONTINUITY Validator (`modules/validation/continuity_validator.py`) [V47]
+Python-based **episode-to-episode continuity checks** with **zero LLM cost**:
+- **Duplicate item acquisition** - 이미 소유한 아이템을 다시 획득하러 가는 패턴 감지
+- **Weapon state reset** - 직전 에피소드 끝에서 들고 있던 무기가 사라지는 문제
+- **Injury continuity** - 부상 상태에서 무리한 행동 (경고)
+- **Location continuity** - 순간이동 방지 (경고)
+
+**Instant REJECT** on duplicate acquisition or weapon reset. Warnings for injury/location.
+
+**Note:** V49에서 ContinuityInspector가 Stage 2(Arc), Stage 3(Episode) 양쪽에서 정밀한 검증을 수행하므로, 이 Validator는 빠른 Python 보조 역할로 전환됨.
 
 ### TIER 1: BLOCKING Validator (`modules/validation/blocking_validator.py`)
 Python-based checks with **zero LLM cost**:
@@ -228,6 +341,10 @@ Python-based checks with **zero LLM cost**:
 - Destroyed location visit check
 - Minimum length check (4000 chars for MANUSCRIPT, 500 for BLUEPRINT)
 - Required scenes check (MANUSCRIPT mode only)
+- **[V49 NEW] Scope overflow check** - Writer가 Blueprint 범위를 초과하여 과잉 생성 방지
+  - Blueprint의 씬 개수 추출 (`## scene_N` 패턴 카운트)
+  - 원고 길이가 (씬 개수 × 1500자)의 1.3배 초과 시 REJECT
+  - 예: 6개 씬 Blueprint인데 11700자 초과 시 "Blueprint 범위 초과" REJECT
 
 **Instant REJECT** on any failure. No retry allowed until fixed.
 
@@ -260,8 +377,28 @@ Non-blocking suggestions that **always PASS**:
 
 **Cost:** $0.005 per manuscript (flash model)
 
+### Additional Validators
+
+**CatharsisTimer** (`modules/validation/catharsis_timer.py`):
+- Manages catharsis (사이다) timing across episodes
+- Max consecutive frustration: 3 episodes (default)
+- Genre-specific catharsis indicators and weights
+- Verdict: "ok" | "warning" | "critical"
+
+**ActionSceneEvaluator** (`modules/validation/action_scene_evaluator.py`):
+- Evaluates fight/action scenes (genre-specific)
+- Metrics: Choreography (40%), Power Consistency (30%), Stakes Escalation (30%)
+- Score: 0-10 points
+
+**RetrospectiveValidator** (`modules/validation/retrospective_validator.py`):
+- Long-term consistency checks (past N episodes)
+- Detects: power regression, relationship regression, unexplained item loss, resolved conflict recurrence
+- Lookback window: 5 episodes (default)
+
 ### ValidationOrchestrator (`modules/validation/validation_orchestrator.py`)
-Integrates all 3 tiers with configurable Self-Consistency:
+Integrates all 5 tiers with configurable Self-Consistency:
+
+**Validation Order:** CONTINUITY → BLOCKING → CONSISTENCY → SCORING → ADVISORY
 
 ```python
 config = {
@@ -439,6 +576,56 @@ CoT is integrated into 3 key evaluation points:
 **Cost:** $0 (prompt-only, minimal token increase)
 
 See `COT_UPGRADE_COMPLETE.md` for details.
+
+### V48 Premium: Narrative Diversity Engine
+
+Addresses "narrative inertia" - tendency for LLMs to repeat plot patterns across episodes.
+
+**Core Components:**
+
+1. **PatternTracker** (`modules/core/pattern_tracker.py`)
+   - Detects recurring patterns across episodes
+   - Tracks: clichés, sentence starters, plot sequences, scene types, reaction patterns
+   - `should_activate_diversity_sampling()` returns True when patterns exceed threshold
+   - `generate_writer_injection()` creates warning prompts for Writer
+
+2. **DiversitySampler** (`modules/core/diversity_sampler.py`)
+   - Ensemble technique: generates N candidates, selects most diverse
+   - `sample_and_select()` for manuscripts
+   - `sample_blueprints()` for blueprints
+   - Diversity score = TTR + sentence variety + freshness + structural diversity
+
+3. **NarrativeDiversityEngine** (`modules/core/narrative_diversity.py`)
+   - Integrates PatternTracker + DiversitySampler + Contrastive CoT
+   - `analyze_recent_episodes()` analyzes last N episodes
+   - `generate_diverse_blueprint()` for Stage 3
+   - `generate_diverse_manuscript()` for Stage 4 (conditional on pattern flags)
+   - `get_writer_injection()` / `get_architect_injection()` for prompt injection
+
+4. **Contrastive CoT**
+   - Negative example-based prompting
+   - Genre-specific anti-patterns (wuxia/hunter/investment)
+   - "Instead of X, try Y" style guidance
+
+**Activation Points:**
+- Stage 3 (Architect): Always active - samples 3 blueprints, picks most diverse
+- Stage 4 (Writer): Conditional - activates when PatternTracker detects repetition
+
+**RelationshipTracker** (`modules/core/relationship_tracker.py`):
+- Finite state machine for NPC-protagonist relationships
+- States: 적대, 무시, 의심, 중립, 경외, 충성, 굴복, 배신, 사망, 추방, 희생
+- `validate_transition()` checks if state changes are valid
+- `infer_state_from_manuscript()` extracts relationship from text
+
+**InformationDiffusion** (`modules/core/information_diffusion.py`):
+- Simulates rumor/information spread across NPCs
+- `should_npc_know(npc, event)` checks if NPC should know about an event
+- Propagation speed: same location (instant), same faction (1 ep), adjacent region (2 ep), far region (5 ep)
+
+**JustificationPatterns** (`modules/core/justification_patterns.py`):
+- Few-shot learning library for unlikely actions
+- Pattern types: `weak_body_strong_action`, `low_status_high_authority`, `sudden_power_increase`
+- `get_justification_guide()` generates genre-specific guidance
 
 ## Debugging and Logging
 

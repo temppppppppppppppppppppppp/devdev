@@ -229,15 +229,19 @@ class ConsistencyValidator:
         # 피드백 생성
         feedback = self._generate_feedback(violations, justifiable, unjustifiable)
 
+        # [FIX] passed와 message 일치시키기
+        # unjustifiable이 있으면 REJECT, 없으면 PASS (justifiable 개수는 경고만)
+        is_passed = len(unjustifiable) == 0
+
         return {
             "tier": "CONSISTENCY",
-            "passed": not has_unjustifiable and len(justifiable) <= 3,  # 3개 이하만 허용
+            "passed": is_passed,
             "violations": violations,
             "justifiable_violations": justifiable,
             "unjustifiable_violations": unjustifiable,
             "score_penalty": score_penalty,
             "feedback": feedback,
-            "message": "REJECT - 일관성 위반" if has_unjustifiable else
+            "message": "REJECT - 정당화 불가능한 일관성 위반" if not is_passed else
                        f"PASS (경고 {len(justifiable)}건)" if justifiable else "PASS"
         }
 

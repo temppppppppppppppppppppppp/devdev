@@ -286,8 +286,13 @@ def validate_manuscripts_in_batch(
                     print("[INFO] (Nested event loop execution을 방지하기 위한 안전 조치)")
                     results = validator.validate_batch_sync(manuscripts)
                 except RuntimeError:
-                    # Loop 없음 - asyncio.run() 사용 안전
-                    results = asyncio.run(validator.validate_batch_async(manuscripts))
+                    # Loop 없음 - asyncio.run() 사용 시도
+                    try:
+                        results = asyncio.run(validator.validate_batch_async(manuscripts))
+                    except RuntimeError as run_err:
+                        # [FIX] asyncio.run() 실패 시 (다른 스레드에서 loop 충돌)
+                        print(f"[WARNING] asyncio.run() 실패: {run_err} - ThreadPool 모드로 재시도")
+                        results = validator.validate_batch_sync(manuscripts)
             except Exception as e:
                 # 예기치 못한 오류 시 동기 모드로 fallback
                 print(f"[ERROR] Async 실행 실패: {e}")

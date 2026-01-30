@@ -704,7 +704,8 @@ class Writer(BaseAgent):
             dict: {"연홍": 8, "화산장로": 2, ...}
         """
         try:
-            master_bible = self.context.get_anchor('bible')
+            # [FIX] context.get_anchor() 대신 master_bible 직접 접근
+            master_bible = getattr(self.context, 'master_bible', None)
             if not master_bible:
                 return {}
 
@@ -722,10 +723,13 @@ class Writer(BaseAgent):
 
             for i in range(max(1, ep_num - window), ep_num):
                 try:
-                    past_ms = self.context.get_manuscript(i)
+                    # [FIX] context.get_manuscript() → context.db.get_manuscript()
+                    past_ms = self.context.db.get_manuscript(i)
                     if past_ms:
+                        # [FIX] dict에서 content 추출 후 검색
+                        content = past_ms.get('content', '') if isinstance(past_ms, dict) else str(past_ms)
                         for name in npc_names:
-                            if name in past_ms:
+                            if name in content:
                                 frequency[name] += 1
                 except:
                     continue
@@ -792,10 +796,13 @@ class Writer(BaseAgent):
         # 최근 화들 검색
         for i in range(max(1, ep_num - window), ep_num):
             try:
-                past_ms = self.context.get_manuscript(i)
+                # [FIX] context.get_manuscript() → context.db.get_manuscript()
+                past_ms = self.context.db.get_manuscript(i)
                 if past_ms:
+                    # [FIX] dict에서 content 추출 후 count
+                    content = past_ms.get('content', '') if isinstance(past_ms, dict) else str(past_ms)
                     for keyword in cliche_keywords:
-                        counts[keyword] += past_ms.count(keyword)
+                        counts[keyword] += content.count(keyword)
             except:
                 continue
 

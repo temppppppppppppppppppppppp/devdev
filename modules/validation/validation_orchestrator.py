@@ -1,9 +1,14 @@
 """
 [V0128] ValidationOrchestrator
-[V46] 4-Tier 검증 통합 실행 (BLOCKING → CONSISTENCY → SCORING → ADVISORY)
+[V47] 5-Tier 검증 통합 실행 (CONTINUITY → BLOCKING → CONSISTENCY → SCORING → ADVISORY)
 + Self-Consistency + CatharsisTimer + ActionSceneEvaluator
+
+[V47 업데이트]
+- TIER 0.5: ContinuityValidator 추가 (에피소드 간 연속성 검증)
+- 아이템 중복 획득, 무기 상태 리셋, 부상 연속성 검증
 """
 from typing import Dict, List, Any, Optional
+from .continuity_validator import ContinuityValidator
 from .blocking_validator import BlockingValidator
 from .consistency_validator import ConsistencyValidator
 from .scoring_validator import ScoringValidator
@@ -18,10 +23,10 @@ _CONSTITUTION_CACHE: Dict[str, str] = {}
 
 class ValidationOrchestrator:
     """
-    글도비 V46 통합 검증 오케스트레이터
+    글도비 V47 통합 검증 오케스트레이터
 
-    4-Tier 검증을 순차적으로 실행하고 최종 결과를 반환합니다.
-    TIER 1: BLOCKING → TIER 1.5: CONSISTENCY → TIER 2: SCORING → TIER 3: ADVISORY
+    5-Tier 검증을 순차적으로 실행하고 최종 결과를 반환합니다.
+    TIER 0.5: CONTINUITY → TIER 1: BLOCKING → TIER 1.5: CONSISTENCY → TIER 2: SCORING → TIER 3: ADVISORY
     Self-Consistency (다수결 투표) 적용 가능.
     """
 
@@ -33,6 +38,9 @@ class ValidationOrchestrator:
 
         # [V44] Constitution 로드 (캐싱 + 장르별 fallback 강화)
         self.constitution = self._load_constitution_cached(genre)
+
+        # [V47] TIER 0.5: CONTINUITY (에피소드 간 연속성)
+        self.continuity = ContinuityValidator(context=context)
 
         # TIER 1: BLOCKING
         self.blocking = BlockingValidator()
@@ -103,6 +111,35 @@ class ValidationOrchestrator:
         results = {}
 
         # ═══════════════════════════════════════════════════════════════
+        # [V47] TIER 0.5: CONTINUITY (에피소드 간 연속성)
+        # ═══════════════════════════════════════════════════════════════
+        print(f"      [V47] TIER 0.5: CONTINUITY 검증 중...")
+        continuity_result = self.continuity.validate(ep_num, manuscript, validation_context)
+        results['continuity_result'] = continuity_result
+
+        if not continuity_result['passed']:
+            # 연속성 위반 시 즉시 REJECT
+            print(f"      ❌ CONTINUITY 실패: {len(continuity_result['violations'])}개 위반")
+            self._record_failure_to_reflexion(ep_num, 'continuity', continuity_result['violations'])
+
+            return {
+                "final_decision": "REJECT",
+                "reason": "CONTINUITY 검증 실패 - 에피소드 간 연속성 위반",
+                "violations": continuity_result['violations'],
+                "continuity_result": continuity_result,
+                "total_score": 0,
+                "feedback": self._generate_continuity_feedback(continuity_result),
+                "self_consistency_used": False
+            }
+
+        # 경고만 있는 경우 로그
+        warning_count = continuity_result.get('warning_count', 0)
+        if warning_count > 0:
+            print(f"      ⚠️ CONTINUITY 경고: {warning_count}개 (계속 진행)")
+        else:
+            print(f"      ✅ CONTINUITY 통과")
+
+        # ═══════════════════════════════════════════════════════════════
         # TIER 1: BLOCKING (필수 통과)
         # ═══════════════════════════════════════════════════════════════
         print(f"      [V0128] TIER 1: BLOCKING 검증 중...")
@@ -118,6 +155,7 @@ class ValidationOrchestrator:
                 "reason": "BLOCKING 검증 실패",
                 "failures": blocking_result['failures'],
                 "blocking_result": blocking_result,
+                "continuity_result": continuity_result,
                 "total_score": 0,
                 "feedback": self._generate_blocking_feedback(blocking_result),
                 "self_consistency_used": False
@@ -424,6 +462,33 @@ class ValidationOrchestrator:
             }
 
         return result
+
+    def _generate_continuity_feedback(self, continuity_result: dict) -> str:
+        """[V47] CONTINUITY 실패 시 피드백 생성"""
+        violations = continuity_result.get('violations', [])
+        warnings = continuity_result.get('warnings', [])
+
+        feedback_parts = ["## CONTINUITY 검증 실패 (에피소드 간 연속성 위반)\n"]
+
+        for violation in violations:
+            vtype = violation.get('type', 'unknown')
+            reason = violation.get('reason', '')
+            severity = violation.get('severity', 'CRITICAL')
+            fix = violation.get('fix_suggestion', '')
+
+            feedback_parts.append(f"- [{severity}] {reason}")
+            if fix:
+                feedback_parts.append(f"  → 수정 방법: {fix}")
+
+        if warnings:
+            feedback_parts.append("\n### 추가 경고:")
+            for warning in warnings[:3]:
+                feedback_parts.append(f"- {warning.get('reason', '')}")
+
+        feedback_parts.append("\n위 문제를 수정 후 재제출하십시오.")
+        feedback_parts.append("직전 에피소드의 상태를 확인하고 연속성을 유지해주세요.")
+
+        return "\n".join(feedback_parts)
 
     def _generate_blocking_feedback(self, blocking_result: dict) -> str:
         """BLOCKING 실패 시 피드백 생성"""

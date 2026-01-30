@@ -83,6 +83,12 @@ class BlockingValidator:
             if not scene_check['passed']:
                 failures.append(scene_check)
 
+        # [V49] 6. 씬 범위 초과 체크 (MANUSCRIPT 모드만) - Writer가 Blueprint 범위를 넘어서 과잉 생성 방지
+        if validation_context.get('mode') == 'MANUSCRIPT':
+            scope_check = self._check_scope_overflow(manuscript, validation_context)
+            if not scope_check['passed']:
+                failures.append(scope_check)
+
         # [Phase 2.1] 6. 관계 일관성 체크 (관계 역행 방지)
         relationship_check = self._check_relationship_consistency(manuscript, validation_context)
         if not relationship_check['passed']:
@@ -359,6 +365,78 @@ class BlockingValidator:
             }
 
         return {"check": "required_scenes", "passed": True}
+
+    def _check_scope_overflow(self, manuscript: str, context: dict) -> dict:
+        """
+        [V49] 씬 범위 초과 체크 - Writer가 Blueprint 범위를 넘어서 과잉 생성하는 것을 방지
+        
+        Blueprint에 6개 씬이 있는데 원고가 12개 씬 분량(9000자 초과)이면 REJECT
+        - 씬당 평균 700-1200자 가정
+        - 씬 개수 * 1500자를 초과하면 범위 초과로 판단
+        """
+        blueprint = context.get('blueprint', {})
+        blueprint_text = context.get('blueprint_text', '')  # 원본 텍스트
+        
+        # 1. 씬 개수 추출 (두 가지 방법 시도)
+        scene_count = 0
+        
+        # 방법 1: scene_breakdown dict에서 추출
+        scene_breakdown = blueprint.get('scene_breakdown', {})
+        if scene_breakdown and isinstance(scene_breakdown, dict):
+            scene_count = len(scene_breakdown)
+        
+        # 방법 2: blueprint_text에서 "## scene_" 패턴 카운트
+        if scene_count == 0 and blueprint_text:
+            scene_pattern = r'##\s*scene_\d+'
+            matches = re.findall(scene_pattern, blueprint_text, re.IGNORECASE)
+            scene_count = len(matches)
+        
+        # 방법 3: blueprint dict 자체에서 scenes 키 확인
+        if scene_count == 0:
+            scenes = blueprint.get('scenes', [])
+            if isinstance(scenes, list):
+                scene_count = len(scenes)
+        
+        # 씬 개수를 못 찾으면 체크 불가 → 통과
+        if scene_count == 0:
+            return {"check": "scope_overflow", "passed": True, "reason": "씬 개수 추출 불가 - 체크 스킵"}
+        
+        # 2. 원고 길이 vs 예상 범위 비교
+        manuscript_length = len(manuscript)
+        
+        # 씬당 최대 허용 글자 수 (충분히 여유있게 설정)
+        max_chars_per_scene = 1500  # 6개 씬 = 9000자 상한
+        max_allowed_length = scene_count * max_chars_per_scene
+        
+        # 3. 범위 초과 판정
+        if manuscript_length > max_allowed_length:
+            overflow_ratio = manuscript_length / max_allowed_length
+            
+            # 1.3배 초과 시 REJECT (예: 6개 씬에 11700자 이상)
+            if overflow_ratio > 1.3:
+                return {
+                    "check": "scope_overflow",
+                    "passed": False,
+                    "reason": f"Blueprint 범위 초과: {manuscript_length}자 (씬 {scene_count}개 기준 최대 {max_allowed_length}자, {overflow_ratio:.1f}배 초과)",
+                    "severity": "HIGH",
+                    "details": {
+                        "manuscript_length": manuscript_length,
+                        "scene_count": scene_count,
+                        "max_allowed": max_allowed_length,
+                        "overflow_ratio": round(overflow_ratio, 2)
+                    },
+                    "suggestion": "Writer가 Arc 전체를 한 화에 압축 생성한 것으로 보입니다. Blueprint의 씬 분해(Scene Breakdown)만 따라 작성하세요."
+                }
+            
+            # 1.0~1.3배는 경고만 (통과)
+            return {
+                "check": "scope_overflow", 
+                "passed": True,
+                "warning": f"분량 약간 초과: {manuscript_length}자 (권장 {max_allowed_length}자 이하)",
+                "overflow_ratio": round(overflow_ratio, 2)
+            }
+        
+        return {"check": "scope_overflow", "passed": True}
 
     def _extract_keywords(self, text: str, max_keywords: int = 3) -> List[str]:
         """텍스트에서 핵심 키워드 추출 (간단한 휴리스틱)"""
