@@ -995,6 +995,7 @@ class SovereignApp:
         # 2. 배치(Batch) 처리 루프 시작
         for batch_start in range(done_count, target_limit, 5):
             batch_end = min(batch_start + 5, target_limit)
+            batch_start_count = len(all_refined_arcs)  # 배치 시작 시 Arc 개수 추적
             self.ui.log(f"📦 [Batch] {batch_start + 1}~{batch_end}번 구간 욕망 수혈 공정 가동...")
 
             # [수혈 맥락 준비]
@@ -1355,13 +1356,17 @@ class SovereignApp:
                     continue
 
             self.ui.log(f"✅ 배치({batch_start+1}~{batch_end}) 욕망 엔진 이식 및 용접 완료.")
-            
-            # [V40] Slack 알림 전송 (Arc 설계 완료)
-            notifier.send_notification(
-                title=f"✅ [Arc] 제 {batch_start+1}~{batch_end}번 아크 설계 완료",
-                message=f"프로젝트: {self.current_project.name}\n설계된 아크 수: {len(batch_results)}개",
-                key_metrics={"완료 구간": f"{batch_start+1} ~ {batch_end} Arc", "생성 수": len(batch_results)}
-            )
+
+            # [V40] Slack 알림 전송 (Arc 설계 완료) - 실패해도 계속 진행
+            try:
+                batch_results_count = len(all_refined_arcs) - batch_start_count  # 실제 생성된 Arc 개수
+                notifier.send_notification(
+                    title=f"✅ [Arc] 제 {batch_start+1}~{batch_end}번 아크 설계 완료",
+                    message=f"프로젝트: {self.current_project.name}\n설계된 아크 수: {batch_results_count}개",
+                    key_metrics={"완료 구간": f"{batch_start+1} ~ {batch_end} Arc", "생성 수": batch_results_count}
+                )
+            except Exception as slack_err:
+                self.ui.log(f"⚠️ [Slack] 알림 전송 실패 (무시하고 계속): {slack_err}")
 
         self.ui.log("✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.")
         self._write_audit_summary("stage2_complete")
@@ -2345,7 +2350,7 @@ class SovereignApp:
                     ep_num=working_ep,
                     arc_pos=arc_pos,
                     arc_tactical_doc=focus_package,
-                    martial_hud=self.sys.hud.get_v20_hud_report(),
+                    martial_hud=self.sys.hud.get_structured_hud(),
                     encyclopedia=self.sys.lore.db.get_lore_list_by_category(None),
                     # 강화된 지시어를 맥락 최하단에 배치하여 최우선 반영 유도
                     narrative_context=str(self.current_project.get_causal_history_summary()) + f"\n{enrichment_directive}\n\n[🚨 Retry Feedback]: {retry_feedback}",
@@ -2683,14 +2688,17 @@ class SovereignApp:
 
         self._write_audit_summary("stage3_complete")
         
-        # [V40] Slack 알림 전송 (Blueprint 설계 완료 - 전체 루프 종료 후)
+        # [V40] Slack 알림 전송 (Blueprint 설계 완료 - 전체 루프 종료 후) - 실패해도 계속 진행
         if working_ep > production_head:
             completed_count = working_ep - production_head
-            notifier.send_notification(
-                title=f"✅ [Blueprint] 제 {production_head}~{working_ep-1}화 설계도 생성 완료",
-                message=f"프로젝트: {self.current_project.name}\n생성된 화수: {completed_count}화",
-                key_metrics={"완료 구간": f"{production_head} ~ {working_ep-1}화", "총 생성": f"{completed_count}개"}
-            )
+            try:
+                notifier.send_notification(
+                    title=f"✅ [Blueprint] 제 {production_head}~{working_ep-1}화 설계도 생성 완료",
+                    message=f"프로젝트: {self.current_project.name}\n생성된 화수: {completed_count}화",
+                    key_metrics={"완료 구간": f"{production_head} ~ {working_ep-1}화", "총 생성": f"{completed_count}개"}
+                )
+            except Exception as slack_err:
+                self.ui.log(f"⚠️ [Slack] 알림 전송 실패 (무시하고 계속): {slack_err}")
 
 
     def _stage_4_sovereign_writing(self, limit_mode: bool = False) -> None:
