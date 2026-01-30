@@ -335,6 +335,48 @@ class MartialManager:
         """[V40] 무협 장르 필수 추적 키"""
         return ['realm', 'internal_energy', 'mental_method', 'wealth', 'current_objective', 'causal_injuries', 'reputation']
     
+    def get_structured_hud(self):
+        """
+        [V45 Fix] 구조화된 HUD 데이터를 딕셔너리로 반환 (Architect/Writer용)
+
+        Returns:
+            dict: HUD 데이터 딕셔너리
+        """
+        rep = self.pro_root.get('public_reputation', {})
+
+        # None 값 방어: 각 속성이 None이면 기본값으로 대체
+        def safe_value(value, default):
+            return value if value is not None else default
+
+        techniques_list = self.techniques if self.techniques else ['기초 무공']
+
+        return {
+            "actual_truth": {
+                "name": safe_value(self.name, "주인공"),
+                "alias": safe_value(self.alias, "무명인"),
+                "rank": safe_value(self.rank, "평민"),
+                "realm": safe_value(self.realm, "초출"),
+                "mental_method": safe_value(self.mental_method, "수련 중인 심법 없음"),
+                "internal_energy": self.get_internal_energy_description(),
+                "causal_injuries": safe_value(self.causal_injuries, "특이사항 없음"),
+                "status_tags": [self.causal_injuries] if self.causal_injuries else [],
+                "wealth": safe_value(self.wealth, "자금 정보 없음"),
+                "objective": safe_value(self.objective, "목표 미설정"),
+                "techniques": techniques_list,
+                "equipment": safe_value(self.equipment, []),
+                "token": safe_value(self.token, [])
+            },
+            "public_reputation": {
+                "identity": rep.get('identity', '기록 없음'),
+                "realm": rep.get('realm', '알 수 없음'),
+                "perceived_power": rep.get('perceived_power', '평범함')
+            },
+            "metrics": {
+                "misunderstanding": safe_value(self.misunderstanding, 0),
+                "obsession": safe_value(self.obsession, 0)
+            }
+        }
+
     def get_v20_hud_report(self):
         """[V25 High-Res] 정규화된 데이터 기반의 무결성 리포트 출력 (None 값 방어 처리 추가)"""
         rep = self.pro_root.get('public_reputation', {})

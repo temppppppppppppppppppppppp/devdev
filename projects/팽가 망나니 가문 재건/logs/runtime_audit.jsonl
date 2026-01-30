@@ -1,25 +1,31 @@
-{"timestamp": "2026-01-29 17:39:12", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-01-29 17:41:34", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-01-29 17:43:55", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-01-29 17:48:35", "type": "reference_loaded", "message": "genre references loaded for wuxia", "data": {"cliche_count": 60, "location_count": 400}}
-{"timestamp": "2026-01-29 17:49:00", "type": "pattern_missing", "message": "blueprint pattern missing", "data": {"ep_num": 1, "arc_no": 1}}
-{"timestamp": "2026-01-29 17:49:44", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 1, "arc_no": 1, "reject_count": 1, "model": "gemini-2.5-pro", "scene_count": 6}}
-{"timestamp": "2026-01-29 17:50:04", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-01-29 17:50:31", "type": "pattern_missing", "message": "blueprint pattern missing", "data": {"ep_num": 2, "arc_no": 1}}
-{"timestamp": "2026-01-29 17:51:40", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-01-29 17:52:30", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-01-29 17:54:23", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 4, "arc_no": 1, "reject_count": 1, "model": "gemini-2.5-pro", "scene_count": 6}}
-{"timestamp": "2026-01-29 17:54:41", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-01-29 17:56:17", "type": "pattern_missing", "message": "blueprint pattern missing", "data": {"ep_num": 5, "arc_no": 2}}
-{"timestamp": "2026-01-29 17:58:16", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 5, "arc_no": 2, "reject_count": 2, "model": "gemini-2.5-pro", "scene_count": 6}}
-{"timestamp": "2026-01-29 17:58:33", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-01-29 18:01:41", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-01-29 18:01:41", "type": "cache_created", "message": "캐시 생성 완료", "data": {"writer": false, "architect": false, "analyst": false, "weaver": false}}
-{"timestamp": "2026-01-29 18:02:09", "type": "reference_loaded", "message": "genre references loaded for wuxia", "data": {"cliche_count": 60, "location_count": 400}}
-{"timestamp": "2026-01-29 18:04:18", "type": "pattern_warning", "message": "manuscript pattern weak but accepted", "data": {"ep_num": 1, "arc_no": 1, "attempt": 1, "model": "gemini-3-pro-preview", "scene_count": 6}}
-{"timestamp": "2026-01-29 18:09:22", "type": "pattern_warning", "message": "manuscript pattern weak but accepted", "data": {"ep_num": 3, "arc_no": 1, "attempt": 0, "model": "gemini-3-pro-preview", "scene_count": 6}}
-{"timestamp": "2026-01-29 18:12:50", "type": "pattern_warning", "message": "manuscript pattern weak but accepted", "data": {"ep_num": 4, "arc_no": 1, "attempt": 0, "model": "gemini-3-pro-preview", "scene_count": 6}}
-{"timestamp": "2026-01-29 18:14:07", "type": "pattern_warning", "message": "manuscript pattern weak but accepted", "data": {"ep_num": 4, "arc_no": 1, "attempt": 1, "model": "gemini-3-pro-preview", "scene_count": 6}}
-{"timestamp": "2026-01-29 18:16:16", "type": "pattern_warning", "message": "manuscript pattern weak but accepted", "data": {"ep_num": 5, "arc_no": 2, "attempt": 0, "model": "gemini-3-pro-preview", "scene_count": 6}}
-{"timestamp": "2026-01-29 18:17:38", "type": "pattern_warning", "message": "manuscript pattern weak but accepted", "data": {"ep_num": 5, "arc_no": 2, "attempt": 1, "model": "gemini-3-pro-preview", "scene_count": 6}}
-{"timestamp": "2026-01-29 18:19:26", "type": "pattern_warning", "message": "manuscript pattern weak but accepted", "data": {"ep_num": 5, "arc_no": 2, "attempt": 2, "model": "gemini-3-pro-preview", "scene_count": 6}}
+{"timestamp": "2026-01-30 09:44:50", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-01-30 09:47:25", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-01-30 09:47:36", "type": "reference_loaded", "message": "genre references loaded for wuxia", "data": {"cliche_count": 60, "location_count": 400}}
+{"timestamp": "2026-01-30 09:49:25", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 1, "arc_no": 1, "reject_count": 1, "model": "gemini-2.5-pro", "scene_count": 6}}
+{"timestamp": "2026-01-30 09:49:48", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-01-30 09:50:22", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 2, "arc_no": 1, "reject_count": 0, "model": "gemini-2.5-flash", "scene_count": 6}}
+{"timestamp": "2026-01-30 09:50:51", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-01-30 09:51:19", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 3, "arc_no": 1, "reject_count": 0, "model": "gemini-2.5-flash", "scene_count": 6}}
+{"timestamp": "2026-01-30 09:52:46", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 3, "arc_no": 1, "reject_count": 1, "model": "gemini-2.5-pro", "scene_count": 6}}
+{"timestamp": "2026-01-30 09:53:50", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 3, "arc_no": 1, "reject_count": 2, "model": "gemini-3-pro-preview", "scene_count": 6}}
+{"timestamp": "2026-01-30 09:54:24", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-01-30 09:55:07", "type": "pattern_missing", "message": "blueprint pattern missing", "data": {"ep_num": 4, "arc_no": 1}}
+{"timestamp": "2026-01-30 09:57:20", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 4, "arc_no": 1, "reject_count": 2, "model": "gemini-2.5-pro", "scene_count": 6}}
+{"timestamp": "2026-01-30 09:57:43", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-01-30 09:58:05", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 5, "arc_no": 2, "reject_count": 0, "model": "gemini-2.5-flash", "scene_count": 6}}
+{"timestamp": "2026-01-30 09:59:48", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 5, "arc_no": 2, "reject_count": 1, "model": "gemini-2.5-pro", "scene_count": 6}}
+{"timestamp": "2026-01-30 10:00:57", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 5, "arc_no": 2, "reject_count": 2, "model": "gemini-3-pro-preview", "scene_count": 6}}
+{"timestamp": "2026-01-30 10:01:24", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-01-30 10:02:35", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-01-30 10:04:03", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 7, "arc_no": 2, "reject_count": 1, "model": "gemini-2.5-pro", "scene_count": 6}}
+{"timestamp": "2026-01-30 10:04:28", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-01-30 10:05:02", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 8, "arc_no": 2, "reject_count": 0, "model": "gemini-2.5-flash", "scene_count": 6}}
+{"timestamp": "2026-01-30 10:05:22", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-01-30 10:07:56", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-01-30 10:07:56", "type": "cache_created", "message": "캐시 생성 완료", "data": {"writer": false, "architect": false, "analyst": false, "weaver": false}}
+{"timestamp": "2026-01-30 10:08:18", "type": "reference_loaded", "message": "genre references loaded for wuxia", "data": {"cliche_count": 60, "location_count": 400}}
+{"timestamp": "2026-01-30 10:11:29", "type": "pattern_warning", "message": "manuscript pattern weak but accepted", "data": {"ep_num": 2, "arc_no": 1, "attempt": 0, "model": "gemini-3-pro-preview", "scene_count": 6}}
+{"timestamp": "2026-01-30 10:12:50", "type": "pattern_warning", "message": "manuscript pattern weak but accepted", "data": {"ep_num": 2, "arc_no": 1, "attempt": 1, "model": "gemini-3-pro-preview", "scene_count": 6}}
+{"timestamp": "2026-01-30 10:15:16", "type": "pattern_warning", "message": "manuscript pattern weak but accepted", "data": {"ep_num": 3, "arc_no": 1, "attempt": 0, "model": "gemini-3-pro-preview", "scene_count": 6}}
+{"timestamp": "2026-01-30 10:21:41", "type": "pattern_warning", "message": "manuscript pattern weak but accepted", "data": {"ep_num": 5, "arc_no": 2, "attempt": 0, "model": "gemini-3-pro-preview", "scene_count": 6}}
+{"timestamp": "2026-01-30 10:22:59", "type": "pattern_warning", "message": "manuscript pattern weak but accepted", "data": {"ep_num": 5, "arc_no": 2, "attempt": 1, "model": "gemini-3-pro-preview", "scene_count": 6}}
