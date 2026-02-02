@@ -2,132 +2,186 @@
   "MasterBible": {
     "ProjectData": {
       "MetaInfo": {
-        "title": "팽가 망나니, 가문재건",
-        "grand_objective": "비참하게 죽은 부친에게 천하제일 가주의 명예를 선물하고 멸문지화를 막는다", 
-        "genre_archetype": "무협 + 가문재건 + 부성애 + 압도적 무력",
-        "logline": "가문의 수치였던 망나니 장남 팽무진이 멸문 전으로 회귀하여, 압도적인 도법(刀法)과 미래 지식으로 가문을 재건하고 아버지의 인정을 받아 천하제일 가문을 일구는 이야기."
+        "title": "[프로젝트 제목]",
+        "grand_objective": "[주인공의 궁극적 목표 - 한 줄]",
+        "genre_archetype": "[장르 + 서브장르] (예: 무협 + 가문재건, 헌터 + 성장물, 투자 + 회귀물)",
+        "logline": "[한 문단 요약 - 누가, 무엇을, 왜, 어떻게]"
       },
       "CoreIdentity": {
-        "edge": "'무게의 극의' – 전생에 노예로 구르며 깨우친, 기교를 짓뭉개버리는 압도적 질량의 도법. 적의 무기와 초식을 한꺼번에 박살 내는 파괴력.",
-        "desire": "아버지 팽철산에게 '천하제일 가문의 가주'라는 명예를 선물하고, 가문의 영광을 되찾는 것.",
-        "crisis": "회귀 직후의 '쓰레기 평판'과 술/도박으로 망가진 신체. 가문 내부 배신자 팽조악 일파의 감시."
+        "protagonist": "[주인공 이름]",
+        "protagonist_faction": "[주인공 소속 세력]",
+        "edge": "[주인공만의 차별화 포인트 - 독보적 능력/특성]",
+        "desire": "[주인공의 핵심 욕망 - 왜 행동하는가]",
+        "crisis": "[초기 위기 상황 - 무엇이 방해하는가]"
+      },
+      "CommercialCode": {
+        "cider_point": "[통쾌함의 원천 - 독자가 쾌감을 느끼는 순간]",
+        "success_device": "[성공 장치 - 기대되는 명장면/클리셰]",
+        "attitude": "[주인공 태도 유형] (예: 능동적 설계자, 수동적 반응자, 위악자)"
       }
     },
+
+    "_GENRE_HUD_GUIDE": "=== 아래 3개 HUD 중 장르에 맞는 것 하나만 사용하세요. 나머지 2개는 삭제하세요. ===",
+
     "MartialHUD": {
+      "_usage": "무협(Wuxia) 장르 전용 - 다른 장르 사용시 이 블록 전체 삭제",
       "Protagonist": {
         "actual_truth": {
-          "alias": "하북광도(河北狂刀)",
-          "rank": "팽가 장남 (폐위 위기)",
-          "realm": "삼류(三流) - 정신적 경지는 화경(化境) 이상",
-          "internal_energy": "삼 년(三年) - 혼원무거심법으로 급속 회복 중",
-          "mental_method": "혼원무거심법(混元無去心法)",
-          "reputation": "가문의 수치, 쓰레기 망나니",
-          "public_image": "초점 없는 눈동자와 술 냄새 풍기는 한량",
-          "equipment": "무딘 연습용 도(刀)",
-          "wealth": "도박 빚으로 인한 자금 고갈 상태",
-          "token": "팽가 가주 직계의 신물 (전당포에 저당 잡힘)",
+          "name": "[주인공 이름]",
+          "alias": "[별호/이명] (예: 하북광도)",
+          "rank": "[사회적 지위] (예: 팽가 장남)",
+          "realm": "[무공 경지] (삼류/이류/일류/절정/화경/현경/신경)",
+          "internal_energy": "[내공 수준] (예: 삼 년, 이십 년)",
+          "mental_method": "[수련 심법 이름]",
+          "reputation": "[세간의 평판]",
+          "public_image": "[외면적 이미지]",
+          "equipment": "[현재 주무기]",
+          "wealth": "[재정 상태]",
+          "token": "[신분 증표/소지품]",
           "misunderstanding": 0,
           "obsession": 100,
-          "current_objective": "후계자 시험 통과 및 팽조악의 비리 증거 확보",
-          "qi_nature": "패도적 중압(覇道重壓) - 모든 것을 짓누르는 진기",
-          "causal_injuries": "만성 숙취 및 간 손상, 방탕한 생활로 인한 근력 저하",
-          "martial_arts": ["팽가 기초 도법", "무거도(無去刀) - 무게의 극의"],
-          "inventory": ["남궁세가의 파혼 서신", "작은아버지의 이면 장부"]
+          "current_objective": "[현재 단기 목표]",
+          "qi_nature": "[진기 특성] (예: 패도적, 유연, 독공)",
+          "causal_injuries": "[시작 시점 부상/컨디션]",
+          "martial_arts": [
+            "[보유 무공 1]",
+            "[보유 무공 2]"
+          ],
+          "inventory": [
+            "[소지품 1]",
+            "[소지품 2]"
+          ]
         },
         "public_reputation": {
-          "identity": "팽가의 망나니",
-          "realm": "삼류 이하",
-          "perceived_power": "민간인보다 조금 나은 수준"
+          "identity": "[세간에 알려진 정체]",
+          "realm": "[세간이 인식하는 경지]",
+          "perceived_power": "[세간이 인식하는 전투력]"
         }
       }
     },
-    "WorldState": {
-      "CurrentEra": "정사대전 발발 5년 전",
-      "CurrentLocation": "하북 팽가 본산",
-      "KarmaMatrix": {
-        "하북팽가": { "relation_score": -40, "status": "멸시/경계" },
-        "남궁세가": { "relation_score": -90, "status": "파혼/적대" },
-        "무림맹": { "relation_score": 10, "status": "무관심" }
+
+    "HunterHUD": {
+      "_usage": "헌터(Hunter) 장르 전용 - 다른 장르 사용시 이 블록 전체 삭제",
+      "Protagonist": {
+        "actual_truth": {
+          "name": "[주인공 이름]",
+          "alias": "[별명/칭호]",
+          "rank": "[소속 길드/직위]",
+          "awakening_grade": "[각성 등급] (F/E/D/C/B/A/S)",
+          "mana": "[마나 수치] (예: 1500)",
+          "skills": [
+            "[스킬 1]",
+            "[스킬 2]"
+          ],
+          "equipment": "[현재 장비]",
+          "wealth": "[재정 상태]",
+          "current_objective": "[현재 단기 목표]",
+          "causal_injuries": "[시작 시점 부상/컨디션]",
+          "inventory": [
+            "[소지품 1]",
+            "[소지품 2]"
+          ]
+        },
+        "public_reputation": {
+          "identity": "[세간에 알려진 정체]",
+          "grade": "[공식 등록 등급]",
+          "perceived_power": "[세간이 인식하는 전투력]"
+        }
       }
     },
+
+    "FinanceHUD": {
+      "_usage": "투자(Investment) 장르 전용 - 다른 장르 사용시 이 블록 전체 삭제",
+      "Protagonist": {
+        "actual_truth": {
+          "name": "[주인공 이름]",
+          "alias": "[별명/업계 칭호]",
+          "rank": "[사회적 지위/직책]",
+          "total_assets": "[총 자산] (예: 5억 원)",
+          "main_portfolio": "[주력 투자 영역] (예: IT 주식, 부동산)",
+          "network_level": "[인맥 수준] (예: 재벌 2세 접점)",
+          "wealth": "[유동 자금 상태]",
+          "current_objective": "[현재 단기 목표]",
+          "causal_injuries": "[시작 시점 상황/제약]",
+          "inventory": [
+            "[보유 정보/자산 1]",
+            "[보유 정보/자산 2]"
+          ]
+        },
+        "public_reputation": {
+          "identity": "[세간에 알려진 정체]",
+          "wealth_level": "[공개된 재산 수준]",
+          "perceived_influence": "[세간이 인식하는 영향력]"
+        }
+      }
+    },
+
+    "WorldState": {
+      "CurrentEra": "[시간 배경] (예: 정사대전 발발 5년 전, 2024년 3월)",
+      "CurrentLocation": "[시작 위치]",
+      "KarmaMatrix": {
+        "[세력1 이름]": {
+          "relation_score": 0,
+          "status": "[관계 상태] (적대/경계/중립/우호/동맹)"
+        },
+        "[세력2 이름]": {
+          "relation_score": 0,
+          "status": "[관계 상태]"
+        }
+      }
+    },
+
     "AssetLibrary": {
       "KeyNPCs": [
         {
-          "name": "팽철산",
-          "role": "부친, 현 가주",
-          "desc": "무뚝뚝한 가주. 아들을 불신하면서도 마음 한구석에 기대를 버리지 못함. 아들의 변화에 경악하며 점차 '아들 바보'로 진화 예정.",
+          "name": "[NPC 이름]",
+          "role": "[역할] (예: 부친, 라이벌, 멘토)",
+          "desc": "[인물 설명 - 성격, 동기, 주인공과의 관계]",
           "NPC_Martial_HUD": {
-            "realm": "절정(絶頂)",
-            "main_technique": "팽가 정통 도법",
-            "achievement_rate": "75%",
-            "energy_level": "사십 년(40년)",
-            "current_status": "심각한 내상 은폐 및 심리적 압박",
-            "combat_style": "패(覇)"
+            "realm": "[경지/등급]",
+            "main_technique": "[주력 기술]",
+            "achievement_rate": "[숙련도] (예: 75%)",
+            "energy_level": "[내공/마나 수준]",
+            "current_status": "[현재 상태]",
+            "combat_style": "[전투 스타일]"
           }
         },
         {
-          "name": "팽조악",
-          "role": "숙부, 내부의 배신자",
-          "desc": "가문의 부를 빼돌리는 내부의 적. 주인공의 정체를 끊임없이 의심하며 숙청 1순위로 지목됨.",
+          "name": "[NPC 2 이름]",
+          "role": "[역할]",
+          "desc": "[인물 설명]",
           "NPC_Martial_HUD": {
-            "realm": "일류(一流)",
-            "main_technique": "비수신권",
-            "achievement_rate": "90%",
-            "energy_level": "삼십 년(30년)",
-            "current_status": "야욕 및 경계심 최고조",
-            "combat_style": "쾌(快)"
-          }
-        },
-        {
-          "name": "천무진",
-          "role": "무림맹주",
-          "desc": "무진의 도법에서 '무림의 구원자'를 발견하고 그를 가르치고 싶어 안달 난 강호의 거물.",
-          "NPC_Martial_HUD": {
-            "realm": "화경(化境)",
-            "main_technique": "천무신공",
-            "achievement_rate": "100%",
-            "energy_level": "일백 년(100년)",
-            "current_status": "무학의 한계 봉착 및 후계자 탐색",
-            "combat_style": "정(正)"
-          }
-        },
-        {
-          "name": "남궁설",
-          "role": "전 약혼녀",
-          "desc": "오만하고 냉정한 성격. 전생에서 무진을 멸시했으나, 그의 비상을 보며 뒤늦은 후회와 집착을 시작함.",
-          "NPC_Martial_HUD": {
-            "realm": "일류(一流) 극성",
-            "main_technique": "창궁무애검법",
-            "achievement_rate": "95%",
-            "energy_level": "이십 년(20년)",
-            "current_status": "오만함 및 주인공에 대한 호기심",
-            "combat_style": "유(柔)"
-          }
-        },
-        {
-          "name": "곽창",
-          "role": "충복",
-          "desc": "가문의 늙은 호위무사. 몰락 속에서도 끝까지 팽철산과 무진의 곁을 지킨 충신.",
-          "NPC_Martial_HUD": {
-            "realm": "일류(一流)",
-            "main_technique": "충성검",
-            "achievement_rate": "80%",
-            "energy_level": "이십오 년(25년)",
-            "current_status": "노환으로 인한 기력 쇠퇴",
-            "combat_style": "강(强)"
+            "realm": "[경지/등급]",
+            "main_technique": "[주력 기술]",
+            "achievement_rate": "[숙련도]",
+            "energy_level": "[내공/마나 수준]",
+            "current_status": "[현재 상태]",
+            "combat_style": "[전투 스타일]"
           }
         }
       ],
       "KeyItems": [
-        { "item": "가주의 대도(大刀)", "desc": "일백 근 무게의 쇳덩이 칼. 오직 가주만이 들 수 있으며 후반부 무진의 주무기." },
-        { "item": "피 묻은 장부", "desc": "작은아버지 팽조악의 비리와 마교 결탁 증거가 기록된 문서." }
-      ]
+        {
+          "item": "[아이템 이름]",
+          "desc": "[아이템 설명 - 효과, 의미]"
+        },
+        {
+          "item": "[아이템 2 이름]",
+          "desc": "[아이템 설명]"
+        }
+      ],
+      "Persona": "[선택] 화자/작품 페르소나 설명",
+      "SpeechStyle": {
+        "tone": "[어조] (예: 냉소적, 유머러스, 진지한)",
+        "vocabulary": "[어휘 특성] (예: 고어체, 현대어, 전문용어)"
+      }
     },
+
     "Seeds": [
       {
         "id": "S-001",
-        "category": "가문비기",
-        "description": "팽가 지하 동굴에 숨겨진 시조의 '진정한 도법' 비급 발견",
+        "category": "[복선 유형] (예: 비기, 인물, 사건, 아이템)",
+        "description": "[복선 내용 - 무엇이 심어지는가]",
         "status": "active",
         "planted_ep": 0,
         "echo_count": 0,
@@ -135,17 +189,8 @@
       },
       {
         "id": "S-002",
-        "category": "첩자명단",
-        "description": "가문 내 암약하는 마교 첩자 3명의 정체 확인",
-        "status": "active",
-        "planted_ep": 0,
-        "echo_count": 0,
-        "harvested_ep": null
-      },
-      {
-        "id": "S-003",
-        "category": "부성애",
-        "description": "아버지 팽철산이 무진의 신체 회복을 위해 몰래 구해둔 만년삼의 존재",
+        "category": "[복선 유형]",
+        "description": "[복선 내용]",
         "status": "active",
         "planted_ep": 0,
         "echo_count": 0,

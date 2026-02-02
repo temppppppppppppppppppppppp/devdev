@@ -19,7 +19,9 @@
       "Bash(findstr:*)",
       "Bash(pip install:*)",
       "WebSearch",
-      "Bash(del \"C:\\\\Users\\\\PC\\\\Desktop\\\\글도비\\\\modules\\\\core\\\\foreshadowing_tracker.py\")"
+      "Bash(del \"C:\\\\Users\\\\PC\\\\Desktop\\\\글도비\\\\modules\\\\core\\\\foreshadowing_tracker.py\")",
+      "Bash(timeout:*)",
+      "Bash(powershell -Command:*)"
     ]
   }
 }

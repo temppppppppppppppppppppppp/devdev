@@ -80,15 +80,15 @@ class AIModels:
     DEFAULT_WRITER = "gemini-3-pro-preview"
     DEFAULT_ARCHITECT = "gemini-3-pro-preview"     # [V60.24] Gemini 3로 변경
     DEFAULT_ANALYST = "gemini-3-pro-preview"
-    DEFAULT_REVIEWER = "gemini-3-pro-preview"      # [V60.24] Gemini 3로 변경
+    DEFAULT_REVIEWER = "gemini-2.5-pro"      # [V60.44] 할당량 분산을 위해 2.5 Pro 사용
 
     # [V40 Fix] Stage 4 전용 고정 모델
     STAGE4_FIXED_WRITER_MODEL = "gemini-3-pro-preview"  # Stage 4에서 재시도 시에도 변경 없이 고정
 
-    # [V60.24] Stage 2 전용 모델 상수
-    STAGE2_MAIN_MODEL = "gemini-3-pro-preview"     # Stage 2 주요 생성 모델
-    STAGE2_EXTRACTION_MODEL = "gemini-3-pro-preview"  # Stage 2 추출 모델
-    STAGE2_VALIDATION_MODEL = "gemini-3-pro-preview"  # Stage 2 검증 모델
+    # [V60.44] Stage 2 전용 모델 상수 - 할당량 분산
+    STAGE2_MAIN_MODEL = "gemini-3-pro-preview"     # Stage 2 주요 생성 모델 (3 Pro 유지)
+    STAGE2_EXTRACTION_MODEL = "gemini-2.5-pro"     # [V60.44] Stage 2 추출 모델 (2.5 Pro)
+    STAGE2_VALIDATION_MODEL = "gemini-2.5-pro"     # [V60.44] Stage 2 검증 모델 (2.5 Pro)
 
 
 class BatchSizes:

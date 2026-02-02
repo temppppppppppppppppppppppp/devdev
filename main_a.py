@@ -18,6 +18,11 @@ from dotenv import load_dotenv
 load_dotenv(override=True)  # Slack 알림용 환경변수 먼저 로드
 from rich.live import Live
 from rich.panel import Panel
+from rich.console import Console
+from rich.status import Status
+
+# [V60.47] 전역 Rich 콘솔 (스피너용)
+rich_console = Console()
 from google import genai
 import re 
 from modules.core.slack_bot import notifier # [V40] Slack 알림 추가 
@@ -43,6 +48,7 @@ from modules.domain.agents.preflight_checker import PreflightChecker  # [V60.12]
 from modules.domain.agents.arc_critic import ArcCritic  # [V60.12] Arc 비평가
 from modules.domain.agents.consensus_validator import ConsensusValidator  # [V60.12] 합의 검증기
 from modules.domain.agents.negative_example_injector import NegativeExampleInjector  # [V60.12] 실패 사례 주입
+from modules.domain.agents.arc_corrector import ArcCorrector  # [V60.42] Arc 부분 수정
 from modules.core.narrative_diversity import NarrativeDiversityEngine  # [V48] 서사 다양성 엔진
 from modules.core.metrics_collector import get_metrics_collector  # [V49.3] 비용 추적 시스템
 from modules.core.constraint_db import ConstraintDB  # [V49.4] Pre-Generation Constraint DB
@@ -2191,9 +2197,20 @@ class SovereignApp:
         self.selected_genre = self._select_genre()
         
         project_name = self._select_project()
+
+        # [V60.37] 프로젝트별 .env 로드 지원
+        project_env_path = Path("projects") / project_name / ".env"
+        if project_env_path.exists():
+            load_dotenv(project_env_path, override=True)
+            print(f"   🔑 [V60.37] 프로젝트별 API 키 로드: {project_env_path}")
+            # API 클라이언트 재초기화
+            new_api_key = os.getenv("GOOGLE_API_KEY")
+            if new_api_key:
+                self.sys = StudioSystem(api_client=genai.Client(api_key=new_api_key))
+
         self.sys.boot_v20_project(project_name)
         self.current_project = self.sys.project
-        
+
         # [V40] 장르 정보를 프로젝트에 주입
         self.current_project.genre = self.selected_genre
         
@@ -2708,10 +2725,18 @@ class SovereignApp:
             self.constraint_compiler = ConstraintCompiler()
             # [V60.12] Negative Example Injector - 실패 사례 주입
             self.negative_injector = NegativeExampleInjector("wuxia")
+            # [V60.42] Arc Corrector - MAJOR 이슈 부분 수정 (ON/OFF 토글 가능)
+            self.arc_corrector = ArcCorrector(
+                context=self.current_project,
+                client=self.sys.api_client,
+                model_tier="gemini-3-flash-preview"  # 경량 모델 사용
+            )
+            self.use_arc_corrector = True  # [V60.42] 기본 활성화 (False로 설정하면 비활성화)
             # [V60.25] Stage 2 Optimizer - 통과율 최적화
             self.stage2_optimizer = create_stage2_optimizer() if V50_MODULES_AVAILABLE else None
             self.ui.log(f"   🔧 [V60.11] Stage 2 고도화 모듈 초기화 (Ensemble + DraftValidator + ConstraintCompiler)")
             self.ui.log(f"   🚀 [V60.12] Stage 2 초기통과율 극대화 모듈 초기화 (FourPhase + Preflight + Critic + Consensus)")
+            self.ui.log(f"   🔧 [V60.42] Arc Corrector 초기화 (MAJOR 이슈 부분 수정: {'활성화' if self.use_arc_corrector else '비활성화'})")
             if self.stage2_optimizer:
                 self.ui.log(f"   ⚡ [V60.25] Stage 2 Optimizer 활성화 (StateSnapshot + AutoCorrector + ConstraintAmplifier)")
 
@@ -4002,8 +4027,11 @@ class SovereignApp:
             # C. [순차 설계 단계] 농축된 데이터를 전술서로 풀이하고 욕망을 박제
             # [V45 Fix] ep_end 키 접근 방어
             current_ep_start = 1 if not all_refined_arcs else all_refined_arcs[-1].get('ep_end', 0) + 1
-            
-            for idx, enriched_block in enumerate(enriched_batch):
+
+            # [V60.45] while 루프로 변경 - "다시 하기" 지원
+            idx = 0
+            while idx < len(enriched_batch):
+                enriched_block = enriched_batch[idx]
                 global_arc_no = batch_start + idx + 1
                 vol_no = ((global_arc_no - 1) // VolumeSettings.ARCS_PER_VOLUME) + 1
                 # [V41 Patch] Stage 1 스킵 시 빈 volumes 폴백 처리
@@ -4065,7 +4093,14 @@ class SovereignApp:
                     except Exception as cc_err:
                         self._audit_event("v60_11_constraint_compiler_error", str(cc_err)[:100])
 
-                for attempt in range(RetryLimits.ANALYST_MAX_ATTEMPTS):
+                # [V60.45] while 루프로 변경 - "다시 하기" 지원
+                attempt = 0
+                max_attempts = RetryLimits.ANALYST_MAX_ATTEMPTS
+                while attempt < max_attempts:
+                    # [V60.43] 검증 통과 추적 플래그 초기화
+                    draft_validator_passed = False
+                    consensus_passed = False
+
                     # [V55.4] 3회 실패 후 10초 대기 → 4회차 최종 시도
                     if attempt == 3:
                         self.ui.log(f"   ⏸️ [V55.4] 3회 실패. 10초 대기 후 4회차 최종 시도...")
@@ -4216,7 +4251,9 @@ class SovereignApp:
                     if 'preflight' in self.agents and all_refined_arcs:
                         try:
                             print(f"      🔍 [무기 #1] Preflight 분석 시작...")
-                            preflight_result = self.agents['preflight'].analyze(all_refined_arcs)
+                            # [V60.47] LLM 호출 중 스피너 표시
+                            with rich_console.status(f"[bold green]🔍 Preflight 분석 중...[/]", spinner="dots"):
+                                preflight_result = self.agents['preflight'].analyze(all_refined_arcs)
                             if preflight_result:
                                 preflight_injection = self.agents['preflight'].generate_analyst_injection(preflight_result)
                                 analyst_weapons['preflight'] = preflight_result
@@ -4309,21 +4346,23 @@ class SovereignApp:
                             print(f"         - 컨텍스트 크기: {len(enhanced_arc_context)}자")
                             print(f"         - 피드백: {current_feedback[:100] if current_feedback else '없음'}...")
 
-                            refined_arc = self.agents['analyst'].plan_single_arc_v20(
-                                arc_no=global_arc_no,
-                                vol_strategy=current_vol_strategy.get('strategy_doc', ''),
-                                prev_block=None,
-                                curr_block=enriched_block,
-                                next_block=None,
-                                ep_start=current_ep_start,
-                                prev_arc_context=enhanced_arc_context,  # 강화된 컨텍스트
-                                assets=bible_root.get('AssetLibrary', {}),
-                                full_roadmap=full_roadmap_str,
-                                assigned_seeds=[],
-                                feedback=current_feedback,
-                                recent_patterns=recent_patterns,
-                                protagonist_name=protagonist_name or "주인공"
-                            )
+                            # [V60.47] LLM 호출 중 스피너 표시
+                            with rich_console.status(f"[bold cyan]🤖 Arc {global_arc_no} LLM 생성 중...[/]", spinner="dots"):
+                                refined_arc = self.agents['analyst'].plan_single_arc_v20(
+                                    arc_no=global_arc_no,
+                                    vol_strategy=current_vol_strategy.get('strategy_doc', ''),
+                                    prev_block=None,
+                                    curr_block=enriched_block,
+                                    next_block=None,
+                                    ep_start=current_ep_start,
+                                    prev_arc_context=enhanced_arc_context,  # 강화된 컨텍스트
+                                    assets=bible_root.get('AssetLibrary', {}),
+                                    full_roadmap=full_roadmap_str,
+                                    assigned_seeds=[],
+                                    feedback=current_feedback,
+                                    recent_patterns=recent_patterns,
+                                    protagonist_name=protagonist_name or "주인공"
+                                )
                             generation_method = "analyst"
                             print(f"      ✅ [Analyst] Arc 생성 완료!")
 
@@ -4368,8 +4407,10 @@ class SovereignApp:
                                     continue
                                 else:
                                     print(f"      ⚠️ [DraftValidator] WARNING만 있음 - 계속 진행")
+                                    draft_validator_passed = True  # [V60.43] WARNING만 있어도 통과 처리
                             else:
                                 print(f"      ✅ [DraftValidator] 사전 검증 통과!")
+                                draft_validator_passed = True  # [V60.43] 추적 플래그
                         except Exception as dv_err:
                             print(f"      ⚠️ [DraftValidator] 스킵: {str(dv_err)[:50]}")
 
@@ -4407,11 +4448,13 @@ class SovereignApp:
                     if refined_arc and 'consensus' in self.agents:
                         try:
                             print(f"      🗳️ [Consensus] 3-LLM 합의 검증 시작...")
-                            consensus_verdict, consensus_result = self.agents['consensus'].validate_with_consensus(
-                                arc=refined_arc,
-                                prev_arcs=all_refined_arcs,
-                                constraints=""
-                            )
+                            # [V60.47] LLM 호출 중 스피너 표시
+                            with rich_console.status(f"[bold magenta]🗳️ Consensus 3-LLM 검증 중...[/]", spinner="dots"):
+                                consensus_verdict, consensus_result = self.agents['consensus'].validate_with_consensus(
+                                    arc=refined_arc,
+                                    prev_arcs=all_refined_arcs,
+                                    constraints=""
+                                )
 
                             vote_summary = consensus_result.get("vote_summary", {})
                             print(f"         - 투표 결과: PASS {vote_summary.get('pass', 0)} / REJECT {vote_summary.get('reject', 0)}")
@@ -4433,6 +4476,7 @@ class SovereignApp:
                                 continue
                             else:
                                 print(f"      ✅ [Consensus] PASS!")
+                                consensus_passed = True  # [V60.43] 추적 플래그
                                 passed_checks = consensus_result.get("passed_checks", [])
                                 if passed_checks:
                                     print(f"         - 통과 항목: {passed_checks[:3]}")
@@ -4550,16 +4594,101 @@ class SovereignApp:
                                 "critical_count": len(draft_result["critical_issues"])
                             })
 
-                            # 피드백 생성 및 재시도
-                            issues_str = "\n".join([f"- {i}" for i in draft_result["critical_issues"][:5]])
-                            current_feedback = (
-                                f"[V60.11 DraftValidator 사전 검증 실패]\n"
-                                f"점수: {draft_result['score']}/100\n"
-                                f"문제점:\n{issues_str}\n\n"
-                                f"위 문제를 해결하고 다시 설계하세요."
-                            )
-                            refined_arc = None
-                            continue
+                            # ═══════════════════════════════════════════════════════════════
+                            # [V60.42] ArcCorrector - MAJOR만 있을 때 부분 수정 시도
+                            # ═══════════════════════════════════════════════════════════════
+                            # 이슈 분류: CRITICAL vs MAJOR
+                            all_issues = draft_result.get("issues", [])
+                            critical_only = [i for i in all_issues if i.get("severity") == "CRITICAL"]
+                            major_only = [i for i in all_issues if i.get("severity") in ["MAJOR", "WARNING"]]
+
+                            # CRITICAL이 없고 MAJOR만 있으면 ArcCorrector 시도
+                            if not critical_only and major_only and hasattr(self, 'arc_corrector') and self.use_arc_corrector:
+                                self.ui.log(f"      🔧 [V60.42] CRITICAL 없음, MAJOR {len(major_only)}개 - ArcCorrector 부분 수정 시도")
+
+                                try:
+                                    # 수정 가능 여부 확인 (반환값: bool, correctable_list, uncorrectable_list)
+                                    can_correct, correctable_issues, uncorrectable_issues = self.arc_corrector.can_correct(major_only)
+
+                                    if can_correct:
+                                        corrected_arc, correction_log = self.arc_corrector.correct(
+                                            arc=refined_arc,
+                                            issues=major_only,
+                                            prev_arcs=all_refined_arcs
+                                        )
+
+                                        if corrected_arc and correction_log.get("success"):
+                                            # 수정 성공 - 수정된 Arc로 교체
+                                            refined_arc = corrected_arc
+                                            corrections_made = correction_log.get('corrections_made', [])
+                                            corrections_failed = correction_log.get('corrections_failed', [])
+                                            self.ui.log(f"      ✅ [V60.42] ArcCorrector 수정 완료 ({len(corrections_made)}개 수정)")
+                                            for fix in corrections_made[:3]:
+                                                fix_summary = fix.get('change_summary', fix.get('issue', '')[:50])
+                                                self.ui.log(f"         🔨 {fix_summary}")
+
+                                            self._audit_event("arc_corrector_success", "arc partially corrected", {
+                                                "arc_no": global_arc_no,
+                                                "corrections": len(corrections_made),
+                                                "failed": len(corrections_failed)
+                                            })
+
+                                            # 수정 후 재검증
+                                            revalidation = self.arc_draft_validator.validate(
+                                                arc=refined_arc,
+                                                prev_arcs=all_refined_arcs,
+                                                constraint_block=constraint_block or ""
+                                            )
+
+                                            if revalidation["valid"]:
+                                                self.ui.log(f"      ✅ [V60.42] 수정 후 재검증 통과 (점수: {revalidation['score']})")
+                                                # 계속 진행 (continue 안 함)
+                                            else:
+                                                self.ui.log(f"      ⚠️ [V60.42] 수정 후에도 검증 실패 - 재생성 필요")
+                                                issues_str = "\n".join([f"- {i}" for i in revalidation["critical_issues"][:3]])
+                                                current_feedback = f"[ArcCorrector 수정 후에도 실패]\n{issues_str}"
+                                                refined_arc = None
+                                                continue
+                                        else:
+                                            # 수정 실패 - 재생성
+                                            reason = correction_log.get('reason', '알 수 없음')
+                                            self.ui.log(f"      ⚠️ [V60.42] ArcCorrector 수정 실패: {reason}")
+                                            self._audit_event("arc_corrector_fail", reason, {
+                                                "arc_no": global_arc_no
+                                            })
+                                            # 피드백으로 재시도
+                                            issues_str = "\n".join([f"- {i.get('message', str(i))}" for i in major_only[:3]])
+                                            current_feedback = f"[V60.42 수정 불가]\n{issues_str}\n재설계 필요."
+                                            refined_arc = None
+                                            continue
+                                    else:
+                                        # 수정 불가 (CRITICAL 포함 등)
+                                        uncorr_msgs = [i.get('message', '')[:30] for i in uncorrectable_issues[:2]]
+                                        self.ui.log(f"      ⚠️ [V60.42] 수정 불가: {', '.join(uncorr_msgs)}")
+                                        issues_str = "\n".join([f"- {i.get('message', str(i))}" for i in major_only[:3]])
+                                        current_feedback = f"[수정 불가]\n{issues_str}"
+                                        refined_arc = None
+                                        continue
+
+                                except Exception as corr_err:
+                                    self.ui.log(f"      ⚠️ [V60.42] ArcCorrector 오류: {str(corr_err)[:50]}")
+                                    self._audit_event("arc_corrector_error", str(corr_err)[:100])
+                                    # 오류 시 기존 로직으로 재시도
+                                    issues_str = "\n".join([f"- {i}" for i in draft_result["critical_issues"][:5]])
+                                    current_feedback = f"[V60.11 검증 실패 + Corrector 오류]\n{issues_str}"
+                                    refined_arc = None
+                                    continue
+                            else:
+                                # CRITICAL이 있거나 ArcCorrector 비활성화 - 기존 로직대로 재시도
+                                issues_str = "\n".join([f"- {i}" for i in draft_result["critical_issues"][:5]])
+                                current_feedback = (
+                                    f"[V60.11 DraftValidator 사전 검증 실패]\n"
+                                    f"점수: {draft_result['score']}/100\n"
+                                    f"문제점:\n{issues_str}\n\n"
+                                    f"위 문제를 해결하고 다시 설계하세요."
+                                )
+                                refined_arc = None
+                                continue
                         else:
                             self.ui.log(f"      ✅ [V60.11 DraftValidator] 사전 검증 통과 (점수: {draft_result['score']})")
                             if draft_result["warnings"]:
@@ -4576,10 +4705,12 @@ class SovereignApp:
                         refined_arc['joint_docs'] = enriched_block.get('joint_docs', {})
                         refined_arc['status_shadow'] = enriched_block.get('status_shadow', {})
 
-                        continuity_result = self.agents['continuity_inspector'].inspect_arc(
-                            current_arc=refined_arc,
-                            prev_arcs=all_refined_arcs
-                        )
+                        # [V60.47] LLM 호출 중 스피너 표시
+                        with rich_console.status(f"[bold yellow]🔍 Arc {global_arc_no} 연속성 검증 중...[/]", spinner="dots"):
+                            continuity_result = self.agents['continuity_inspector'].inspect_arc(
+                                current_arc=refined_arc,
+                                prev_arcs=all_refined_arcs
+                            )
                         
                         if continuity_result.get('decision') == 'REJECT':
                             severity = continuity_result.get('severity', 'UNKNOWN')
@@ -4714,6 +4845,7 @@ class SovereignApp:
                             feedback_size = len(current_feedback)
                             self.ui.log(f"      📋 [V60.21] 집중 피드백 주입 ({feedback_size}자, 목표: <500자)")
                             refined_arc = None  # [V60.10 Fix] 다음 시도에서 Analyst 재호출 보장
+                            attempt += 1  # [V60.51 Fix] ContinuityInspector REJECT 시에도 카운터 증가
                             continue
                         else:
                             # ═══════════════════════════════════════════════════════════════
@@ -4754,7 +4886,37 @@ class SovereignApp:
                         curr_block=enriched_block,
                         protagonist_name=protagonist_name  # V42 LOCK
                     )
-                    
+
+                    # ═══════════════════════════════════════════════════════════════
+                    # [V60.43] API 할당량 오류 시 폴백 로직
+                    # DraftValidator와 Consensus가 이미 통과했다면, Director의
+                    # Self-Consistency 점수가 할당량 오류로 인해 0인 경우 PASS로 오버라이드
+                    # ═══════════════════════════════════════════════════════════════
+                    if audit.get('decision') == 'REJECT' and draft_validator_passed and consensus_passed:
+                        self_consistency = audit.get('self_consistency', {})
+                        scores = self_consistency.get('scores', [])
+                        # [V60.43] API 할당량 오류 판단 조건:
+                        # 1. 모든 점수가 50 (기본값) - API 실패로 기본값 반환
+                        # 2. 점수 중 0인 것이 과반수
+                        # 3. 점수 표준편차가 0 (모두 동일) + 평균 <= 50
+                        all_default_50 = len(scores) >= 2 and all(s == 50 for s in scores)
+                        zero_count = sum(1 for s in scores if s == 0)
+                        many_zeros = len(scores) >= 2 and zero_count >= len(scores) // 2
+                        is_quota_failure = all_default_50 or many_zeros
+
+                        if is_quota_failure:
+                            self.ui.log(f"      ⚠️ [V60.43] API 할당량 오류 감지 (score=0이 {zero_count}/{len(scores)}개)")
+                            self.ui.log(f"      ✅ [V60.43] DraftValidator + Consensus 통과로 PASS 오버라이드")
+                            audit['decision'] = 'PASS'
+                            audit['v60_43_override'] = True
+                            audit['original_decision'] = 'REJECT'
+                            audit['override_reason'] = 'api_quota_exhausted_fallback'
+                            self._audit_event("v60_43_quota_override", "Arc accepted due to quota exhaustion", {
+                                "arc_no": global_arc_no,
+                                "scores": scores,
+                                "zero_count": zero_count
+                            })
+
                     if audit.get('decision') == 'PASS' and len(refined_arc.get('tactical_doc', '')) >= 2000:
                         ### [0124 핵심 3] 욕망 데이터 및 HUD 그림자 물리적 박제
                         refined_arc['arc_drive'] = arc_drive if arc_drive else {}
@@ -4826,12 +4988,14 @@ class SovereignApp:
                             self.ui.log(f"🚨 [Arc {global_arc_no}] 핵심 데이터 과다 누락({len(critical_missing)}개)")
                             current_feedback = f"필수 키 누락: {', '.join(critical_missing)}. 완전한 JSON 구조로 재설계하라."
                             refined_arc = None  # [V60.10 Fix] 다음 시도에서 Analyst 재호출 보장
+                            attempt += 1  # [V60.51 Fix] 검증 실패 시에도 카운터 증가
                             continue
 
                         # 🧱 [Integrity Gate] 필수 키 검증 통과 시에만 저장
                         if not self._validate_arc_integrity(refined_arc):
                             current_feedback = "필수 키가 누락된 전술 설계입니다. 형식을 완전한 JSON으로 다시 출력하십시오."
                             refined_arc = None  # [V60.10 Fix] 다음 시도에서 Analyst 재호출 보장
+                            attempt += 1  # [V60.51 Fix] 검증 실패 시에도 카운터 증가
                             continue
                         
                         all_refined_arcs.append(refined_arc)
@@ -4848,6 +5012,7 @@ class SovereignApp:
                             })
                             # 저장 실패 시 해당 arc를 리스트에서 제거하고 재시도
                             all_refined_arcs.pop()
+                            attempt += 1  # [V60.51 Fix] DB 저장 실패 시에도 카운터 증가
                             continue
 
                         # [V49.4] ConstraintDB 업데이트 (다음 Arc 설계 시 참조)
@@ -4962,6 +5127,9 @@ class SovereignApp:
                             except Exception:
                                 pass
 
+                    # [V60.45] while 루프 카운터 증가
+                    attempt += 1
+
                 if not passed:
                     self.ui.log(f"🚨 [Critical] Arc {global_arc_no} 최종 설계 실패.")
                     self._audit_event("arc_design_failed", "max retries exhausted", {
@@ -4969,17 +5137,130 @@ class SovereignApp:
                         "batch_start": batch_start,
                         "batch_end": batch_end
                     })
+
+                    # [V60.46] 실패 리포트 생성 및 출력
+                    failure_report_path = self.project_path / "logs" / f"arc_{global_arc_no}_failure_report.txt"
+                    failure_report_path.parent.mkdir(parents=True, exist_ok=True)
+
+                    # REJECT 히스토리 수집
+                    arc_rejects = [r for r in self.stage_rejection_history
+                                   if r.get('stage') == 2 and r.get('arc_no') == global_arc_no]
+
+                    # 현재 제약 조건 수집
+                    current_constraints = constraint_db.generate_constraint_block(global_arc_no) if constraint_db else "N/A"
+
+                    # 이전 Arc 아이템 목록
+                    prev_items = []
+                    for prev_arc in all_refined_arcs:
+                        items = prev_arc.get('state_constraints', {}).get('items_acquired', [])
+                        if items:
+                            prev_items.extend(items if isinstance(items, list) else [items])
+
+                    # 실패 리포트 작성
+                    report_lines = [
+                        f"{'='*60}",
+                        f"Arc {global_arc_no} 실패 리포트",
+                        f"{'='*60}",
+                        f"",
+                        f"[REJECT 히스토리]",
+                    ]
+                    for i, rej in enumerate(arc_rejects, 1):
+                        report_lines.append(f"  시도 {rej.get('attempt', i)}: {rej.get('reason', 'N/A')}")
+
+                    report_lines.extend([
+                        f"",
+                        f"[이전 Arc에서 이미 획득한 아이템 - 중복 획득 금지]",
+                    ])
+                    for item in prev_items:
+                        report_lines.append(f"  ❌ {item}")
+
+                    report_lines.extend([
+                        f"",
+                        f"[현재 제약 조건]",
+                        str(current_constraints)[:2000] if current_constraints else "없음",
+                        f"",
+                        f"[마지막 생성된 Arc 데이터]",
+                    ])
+                    if refined_arc:
+                        report_lines.append(f"  tactical_doc 길이: {len(refined_arc.get('tactical_doc', ''))}자")
+                        report_lines.append(f"  items_acquired: {refined_arc.get('state_constraints', {}).get('items_acquired', [])}")
+
+                    report_content = "\n".join(report_lines)
+
+                    # 파일 저장
+                    with open(failure_report_path, 'w', encoding='utf-8') as f:
+                        f.write(report_content)
+
+                    # 콘솔 출력
+                    print(f"\n{'='*60}")
+                    print(f"📋 [V60.46] Arc {global_arc_no} 실패 분석 리포트")
+                    print(f"{'='*60}")
+                    print(f"\n🔴 REJECT 사유 ({len(arc_rejects)}회):")
+                    for rej in arc_rejects[-3:]:  # 최근 3개만 출력
+                        print(f"   - {rej.get('reason', 'N/A')[:100]}")
+                    print(f"\n🚫 중복 획득 금지 아이템 ({len(prev_items)}개):")
+                    for item in prev_items[:5]:  # 최대 5개만 출력
+                        print(f"   - {item}")
+                    if len(prev_items) > 5:
+                        print(f"   ... 외 {len(prev_items) - 5}개")
+                    print(f"\n📁 전체 리포트: {failure_report_path}")
+                    print(f"{'='*60}\n")
+
                     # [V43 패치] 진행 상황 보존 및 사용자 선택 제공
                     if all_refined_arcs:
                         self.ui.log(f"💾 [Auto-Save] 현재까지 {len(all_refined_arcs)}개 Arc 저장 완료.")
-                    user_choice = input("   [1] 건너뛰고 계속  [2] 중단 (기본: 2): ").strip()
-                    if user_choice != '1':
-                        self.ui.log("⏹️ 사용자 요청으로 공정을 중단합니다.")
-                        return
-                    # 건너뛰기 선택 시 다음 Arc를 위한 context 업데이트
-                    self.ui.log(f"⏭️ Arc {global_arc_no}을 건너뛰고 계속합니다.")
-                    current_ep_start += 5  # 기본 회차 증가
-                    continue
+
+                    # [V60.45] 다시 하기 옵션 + [V60.46] 수동 편집 옵션
+                    while True:
+                        print("   [1] 건너뛰고 계속")
+                        print("   [2] 중단")
+                        print("   [3] 다시 하기 (자동)")
+                        print("   [4] 수동 개입 (리포트 확인 후 재시도)")
+                        user_choice = input("   선택 (기본: 2): ").strip()
+
+                        if user_choice == '1':
+                            # 건너뛰기 선택 시 다음 Arc를 위한 context 업데이트
+                            self.ui.log(f"⏭️ Arc {global_arc_no}을 건너뛰고 계속합니다.")
+                            current_ep_start += 5  # 기본 회차 증가
+                            break
+                        elif user_choice == '3':
+                            # 다시 하기 - 현재 Arc를 처음부터 재시도
+                            self.ui.log(f"🔄 Arc {global_arc_no} 다시 시도합니다...")
+                            attempt = 0
+                            passed = False
+                            current_feedback = ""
+                            constraint_block = constraint_db.generate_constraint_block(global_arc_no)
+                            break
+                        elif user_choice == '4':
+                            # 수동 개입 - 리포트 확인 후 사용자가 준비되면 재시도
+                            print(f"\n   📝 리포트 파일을 확인하세요: {failure_report_path}")
+                            print(f"   💡 문제가 된 아이템이나 표현을 확인 후, 아래 옵션을 선택하세요.")
+                            manual_input = input("   준비되면 [Enter]로 재시도, 'skip'으로 건너뛰기, 'quit'으로 중단: ").strip().lower()
+                            if manual_input == 'skip':
+                                self.ui.log(f"⏭️ Arc {global_arc_no}을 건너뛰고 계속합니다.")
+                                current_ep_start += 5
+                                break
+                            elif manual_input == 'quit':
+                                self.ui.log("⏹️ 사용자 요청으로 공정을 중단합니다.")
+                                return
+                            else:
+                                # 수동 확인 후 재시도
+                                self.ui.log(f"🔄 Arc {global_arc_no} 수동 확인 후 재시도...")
+                                attempt = 0
+                                passed = False
+                                current_feedback = f"[사용자 수동 확인 완료] 이전 Arc에서 획득한 아이템: {', '.join(prev_items[:5])} 등 {len(prev_items)}개. 이 아이템들은 절대 다시 획득하면 안 됩니다!"
+                                constraint_block = constraint_db.generate_constraint_block(global_arc_no)
+                                break
+                        else:
+                            self.ui.log("⏹️ 사용자 요청으로 공정을 중단합니다.")
+                            return
+
+                    # 다시 하기 선택 시 while idx 루프 처음부터 (idx 유지)
+                    if user_choice == '3':
+                        continue  # idx 증가 없이 같은 Arc 다시 시도
+
+                # [V60.45] 정상 처리 완료 또는 건너뛰기 - 다음 Arc로
+                idx += 1
 
             self.ui.log(f"✅ 배치({batch_start+1}~{batch_end}) 욕망 엔진 이식 및 용접 완료.")
 

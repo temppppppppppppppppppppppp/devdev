@@ -129,7 +129,7 @@ class ArcCritic(BaseAgent):
     def __init__(self, context, client, model_tier: str = "gemini-3-pro-preview"):
         # [V60.24] Gemini 3로 변경
         super().__init__(context, client, model_tier)
-        self.backup_model = "gemini-3-pro-preview"
+        # [V60.37] 스마트 폴백 (BaseAgent에서 자동 설정: gemini-3 → gemini-2.5-pro)
 
     def critique(
         self,
@@ -266,6 +266,9 @@ class ArcCritic(BaseAgent):
 
         # 1. tactical_doc 분량 체크
         tactical = arc.get("tactical_doc", "")
+        # [V60.37] 타입 안전성
+        if not isinstance(tactical, str):
+            tactical = str(tactical) if tactical else ""
         if len(tactical) < 2000:
             issues.append({
                 "category": "tactical_quality",

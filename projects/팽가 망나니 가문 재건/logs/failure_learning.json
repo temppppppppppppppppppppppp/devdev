@@ -1,74 +1,178 @@
 {
   "records": [
     {
-      "category": "unknown",
+      "category": "state_discontinuity",
       "stage": 2,
-      "episode": 6,
+      "episode": 4,
       "arc": 2,
-      "reason": "duplicate_acquisition: '녹슨 백근 대도'은(는) 이미 Arc 1에서 획득했습니다. Arc 2에서 다시 획득하려 합니다.",
+      "reason": "state_discontinuity: Arc 1 종료 시점의 내공 수치와 Arc 2 시작 시점의 내공 수치가 불일치함. Arc 1은 5%로 종료되었으나, Arc 2는 0%로 시작함.",
       "details": {
-        "severity": "CRITICAL",
+        "severity": "MINOR",
         "violation": {
-          "type": "duplicate_acquisition",
-          "severity": "CRITICAL",
-          "item_or_subject": "간섭도",
-          "prev_arc": 1,
-          "description": "'녹슨 백근 대도'은(는) 이미 Arc 1에서 획득했습니다. Arc 2에서 다시 획득하려 합니다.",
-          "evidence_prev": "Arc 1에서 획득",
-          "evidence_curr": "현재 Arc에서 '간섭도' 획득 시도"
+          "type": "state_discontinuity",
+          "severity": "MINOR",
+          "item_or_subject": "내공 (Internal Energy)",
+          "prev_arc": "1",
+          "prev_ep": "3",
+          "curr_ep": "4",
+          "description": "Arc 1 종료 시점의 내공 수치와 Arc 2 시작 시점의 내공 수치가 불일치함. Arc 1은 5%로 종료되었으나, Arc 2는 0%로 시작함.",
+          "evidence_prev": "최종 내공: 5% ← 다음 Arc는 이 값으로 시작해야 함",
+          "evidence_curr": "내공: 0% (완전 고갈)"
         }
       },
-      "timestamp": "2026-02-01T23:59:08.396326"
+      "timestamp": "2026-02-02T14:22:00.374640"
     },
     {
       "category": "unknown",
       "stage": 2,
-      "episode": 6,
-      "arc": 2,
-      "reason": "duplicate_acquisition: '하북 동부 운송권 문서'은(는) 이미 Arc 1에서 획득했습니다. Arc 2에서 다시 획득하려 합니다.",
+      "episode": 7,
+      "arc": 3,
+      "reason": "duplicate_acquisition: '하북 동부 운송 통로 문서'은(는) 이미 Arc 1에서 획득했습니다. Arc 3에서 다시 획득하려 합니다.",
       "details": {
         "severity": "CRITICAL",
         "violation": {
           "type": "duplicate_acquisition",
           "severity": "CRITICAL",
-          "item_or_subject": "가문 형법서",
+          "item_or_subject": "황금 오십 관(증서)",
           "prev_arc": 1,
-          "description": "'하북 동부 운송권 문서'은(는) 이미 Arc 1에서 획득했습니다. Arc 2에서 다시 획득하려 합니다.",
+          "description": "'하북 동부 운송 통로 문서'은(는) 이미 Arc 1에서 획득했습니다. Arc 3에서 다시 획득하려 합니다.",
           "evidence_prev": "Arc 1에서 획득",
-          "evidence_curr": "현재 Arc에서 '가문 형법서' 획득 시도"
+          "evidence_curr": "현재 Arc에서 '황금 오십 관(증서)' 획득 시도"
         }
       },
-      "timestamp": "2026-02-02T00:08:26.586803"
+      "timestamp": "2026-02-02T14:34:23.191968"
     },
     {
       "category": "unknown",
       "stage": 2,
-      "episode": 6,
-      "arc": 2,
-      "reason": "duplicate_acquisition: '하북 동부 운송권 문서'은(는) 이미 Arc 1에서 획득했습니다. Arc 2에서 다시 획득하려 합니다.",
+      "episode": 10,
+      "arc": 4,
+      "reason": "duplicate_acquisition: '이가 빠지고 핏물이 밴 녹슨 거구도'은(는) 이미 Arc 1에서 획득했습니다. Arc 4에서 다시 획득하려 합니다.",
       "details": {
         "severity": "CRITICAL",
         "violation": {
           "type": "duplicate_acquisition",
           "severity": "CRITICAL",
-          "item_or_subject": "가문 형법서",
+          "item_or_subject": "대방성도 비급",
           "prev_arc": 1,
-          "description": "'하북 동부 운송권 문서'은(는) 이미 Arc 1에서 획득했습니다. Arc 2에서 다시 획득하려 합니다.",
+          "description": "'이가 빠지고 핏물이 밴 녹슨 거구도'은(는) 이미 Arc 1에서 획득했습니다. Arc 4에서 다시 획득하려 합니다.",
           "evidence_prev": "Arc 1에서 획득",
-          "evidence_curr": "현재 Arc에서 '가문 형법서' 획득 시도"
+          "evidence_curr": "현재 Arc에서 '대방성도 비급' 획득 시도"
         }
       },
-      "timestamp": "2026-02-02T00:10:45.789505"
+      "timestamp": "2026-02-02T14:50:59.100135"
+    },
+    {
+      "category": "unknown",
+      "stage": 2,
+      "episode": 10,
+      "arc": 4,
+      "reason": "duplicate_acquisition: '이가 빠지고 핏물이 밴 녹슨 거구도'은(는) 이미 Arc 1에서 획득했습니다. Arc 4에서 다시 획득하려 합니다.",
+      "details": {
+        "severity": "CRITICAL",
+        "violation": {
+          "type": "duplicate_acquisition",
+          "severity": "CRITICAL",
+          "item_or_subject": "대방성도 비급",
+          "prev_arc": 1,
+          "description": "'이가 빠지고 핏물이 밴 녹슨 거구도'은(는) 이미 Arc 1에서 획득했습니다. Arc 4에서 다시 획득하려 합니다.",
+          "evidence_prev": "Arc 1에서 획득",
+          "evidence_curr": "현재 Arc에서 '대방성도 비급' 획득 시도"
+        }
+      },
+      "timestamp": "2026-02-02T14:57:25.871430"
+    },
+    {
+      "category": "unknown",
+      "stage": 2,
+      "episode": 10,
+      "arc": 4,
+      "reason": "duplicate_acquisition: '이가 빠지고 핏물이 밴 녹슨 거구도'은(는) 이미 Arc 1에서 획득했습니다. Arc 4에서 다시 획득하려 합니다.",
+      "details": {
+        "severity": "CRITICAL",
+        "violation": {
+          "type": "duplicate_acquisition",
+          "severity": "CRITICAL",
+          "item_or_subject": "이가 빠지고 핏물이 밴 녹슨 거구도",
+          "prev_arc": 1,
+          "description": "'이가 빠지고 핏물이 밴 녹슨 거구도'은(는) 이미 Arc 1에서 획득했습니다. Arc 4에서 다시 획득하려 합니다.",
+          "evidence_prev": "Arc 1에서 획득",
+          "evidence_curr": "현재 Arc에서 '이가 빠지고 핏물이 밴 녹슨 거구도' 획득 시도"
+        }
+      },
+      "timestamp": "2026-02-02T14:57:25.871430"
+    },
+    {
+      "category": "unknown",
+      "stage": 2,
+      "episode": 10,
+      "arc": 4,
+      "reason": "duplicate_acquisition: '철혈사자패'은(는) 이미 Arc 3에서 획득했습니다. Arc 4에서 다시 획득하려 합니다.",
+      "details": {
+        "severity": "CRITICAL",
+        "violation": {
+          "type": "duplicate_acquisition",
+          "severity": "CRITICAL",
+          "item_or_subject": "철혈사자패",
+          "prev_arc": 3,
+          "description": "'철혈사자패'은(는) 이미 Arc 3에서 획득했습니다. Arc 4에서 다시 획득하려 합니다.",
+          "evidence_prev": "Arc 3에서 획득",
+          "evidence_curr": "현재 Arc에서 '철혈사자패' 획득 시도"
+        }
+      },
+      "timestamp": "2026-02-02T14:57:25.871430"
+    },
+    {
+      "category": "unknown",
+      "stage": 2,
+      "episode": 10,
+      "arc": 4,
+      "reason": "duplicate_acquisition: '이가 빠지고 핏물이 밴 녹슨 거구도'은(는) 이미 Arc 1에서 획득했습니다. Arc 4에서 다시 획득하려 합니다.",
+      "details": {
+        "severity": "CRITICAL",
+        "violation": {
+          "type": "duplicate_acquisition",
+          "severity": "CRITICAL",
+          "item_or_subject": "대방성도 비급",
+          "prev_arc": 1,
+          "description": "'이가 빠지고 핏물이 밴 녹슨 거구도'은(는) 이미 Arc 1에서 획득했습니다. Arc 4에서 다시 획득하려 합니다.",
+          "evidence_prev": "Arc 1에서 획득",
+          "evidence_curr": "현재 Arc에서 '대방성도 비급' 획득 시도"
+        }
+      },
+      "timestamp": "2026-02-02T15:01:05.303161"
+    },
+    {
+      "category": "unknown",
+      "stage": 2,
+      "episode": 10,
+      "arc": 4,
+      "reason": "duplicate_acquisition: '이가 빠지고 핏물이 밴 녹슨 거구도'은(는) 이미 Arc 1에서 획득했습니다. Arc 4에서 다시 획득하려 합니다.",
+      "details": {
+        "severity": "CRITICAL",
+        "violation": {
+          "type": "duplicate_acquisition",
+          "severity": "CRITICAL",
+          "item_or_subject": "대방성도 비급(기초편)",
+          "prev_arc": 1,
+          "description": "'이가 빠지고 핏물이 밴 녹슨 거구도'은(는) 이미 Arc 1에서 획득했습니다. Arc 4에서 다시 획득하려 합니다.",
+          "evidence_prev": "Arc 1에서 획득",
+          "evidence_curr": "현재 Arc에서 '대방성도 비급(기초편)' 획득 시도"
+        }
+      },
+      "timestamp": "2026-02-02T15:04:44.718032"
     }
   ],
   "stats": {
-    "total_failures": 3,
+    "total_failures": 8,
     "by_category": {
-      "unknown": 3
+      "state_discontinuity": 1,
+      "unknown": 7
     },
     "by_stage": {
       "2": {
-        "unknown": 3
+        "state_discontinuity": 1,
+        "unknown": 7
       },
       "3": {},
       "4": {}
@@ -76,7 +180,11 @@
     "top_5": [
       {
         "category": "unknown",
-        "count": 3
+        "count": 7
+      },
+      {
+        "category": "state_discontinuity",
+        "count": 1
       }
     ]
   }

@@ -1115,6 +1115,42 @@ class ContinuityInspector(BaseAgent):
                         current_acquisitions.append(item)
         
         # ═══════════════════════════════════════════════════════════════
+        # [V60.50] 이미 소지 중인 아이템은 중복 검사에서 제외
+        # "뽑아 들었다", "사용했다" 같은 문맥은 획득이 아니라 사용임
+        # ═══════════════════════════════════════════════════════════════
+        prev_inventory_items = []
+        if isinstance(prev_inventory, dict):
+            inv_list = prev_inventory.get('physical_inventory', [])
+            if isinstance(inv_list, list):
+                prev_inventory_items = [str(i) for i in inv_list if i]
+            elif isinstance(inv_list, str) and inv_list:
+                prev_inventory_items = [inv_list]
+
+        # 현재 Arc의 시작 소지품도 확인
+        current_joint = current_arc.get('joint_docs', {})
+        current_inventory_items = []
+        if isinstance(current_joint, dict):
+            curr_inv = current_joint.get('physical_inventory', [])
+            if isinstance(curr_inv, list):
+                current_inventory_items = [str(i) for i in curr_inv if i]
+            elif isinstance(curr_inv, str) and curr_inv:
+                current_inventory_items = [curr_inv]
+
+        # 이미 소지 중인 아이템 필터링
+        all_existing_items = prev_inventory_items + current_inventory_items
+        filtered_current_acquisitions = []
+        for curr_item in current_acquisitions:
+            is_already_owned = False
+            for owned_item in all_existing_items:
+                if self._is_same_item(curr_item, owned_item):
+                    is_already_owned = True
+                    break
+            if not is_already_owned:
+                filtered_current_acquisitions.append(curr_item)
+
+        current_acquisitions = filtered_current_acquisitions
+
+        # ═══════════════════════════════════════════════════════════════
         # 검증 1: 중복 획득 (이전 Arc에서 이미 획득한 아이템을 다시 획득)
         # ═══════════════════════════════════════════════════════════════
         for curr_item in current_acquisitions:
