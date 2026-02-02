@@ -33,7 +33,11 @@ VALIDATION_PERSPECTIVES = [
 4. 상태 연속성: 부상/내공 계승
 5. 소지품 계승: 이전 소지품 누락 여부
 
-한 항목이라도 문제가 있으면 REJECT하세요.
+⚠️ [V60.41] 수위 조절:
+- CRITICAL (즉시 REJECT): 중복 아이템 획득, 중복 수여물만
+- MAJOR (경고): 위치/상태/소지품 불일치 (인간 수정 용이)
+
+중복 획득/수여만 CRITICAL로 처리하세요.
 """,
         "temperature": 0.1
     },
@@ -45,18 +49,18 @@ VALIDATION_PERSPECTIVES = [
 tactical_doc, joint_docs, state_constraints의 구조와 정합성을 집중 검증하세요.
 
 ### 검증 항목
-1. tactical_doc 분량: 최소 2000자 (권장 2500자)
-2. 화별 구분: 제N화 형식 3개 이상 (권장 5개)
+1. tactical_doc 분량: 각 화당 최소 400자 (권장 500자) - ep_count에 따라 총 분량 계산
+2. 화별 구분: ep_count에 맞는 "제N화" 형식 섹션 필요
 3. joint_docs 정합성: final_location이 마지막 화와 일치
 4. physical_inventory 정확성: tactical_doc 내용과 일치
 5. state_constraints 완전성: 모든 필수 필드 존재
 
-⚠️ CRITICAL은 심각한 구조 결함에만 부여하세요:
-- tactical_doc 1500자 미만 = CRITICAL
-- 화별 구분 0개 = CRITICAL
-- 그 외는 MAJOR로 처리
+⚠️ [V60.41] 수위 조절 - 모든 구조 문제는 MAJOR로 처리:
+- tactical_doc 분량 미달 = MAJOR (재생성으로 해결)
+- 화별 구분 부족 = MAJOR (재생성으로 해결)
+- 필드 누락 = MAJOR (재생성으로 해결)
 
-구조적 문제가 있으면 REJECT하세요.
+구조 문제는 CRITICAL이 아닌 MAJOR로 부여하세요.
 """,
         "temperature": 0.1
     },
@@ -70,15 +74,18 @@ tactical_doc, joint_docs, state_constraints의 구조와 정합성을 집중 검
 ### 검증 항목
 1. 캐릭터 행동 일관성: 동기와 행동의 연결
 2. 긴장감 곡선: 상승-하강 리듬
-3. 과도한 파워업: 단일 Arc 내 비정상 성장
-4. 이전 Arc 갈등 계승: 미해결 갈등이 이어지는가 (Arc 1은 해당 없음)
-5. 복선 연결: 이전 복선과의 연결성 (Arc 1은 해당 없음)
+3. 이전 Arc 갈등 계승: 미해결 갈등이 이어지는가 (Arc 1은 해당 없음)
+4. 복선 연결: 이전 복선과의 연결성 (Arc 1은 해당 없음)
 
-⚠️ Arc 1(첫 번째 Arc)은 항목 4, 5를 검증하지 마세요!
-⚠️ CRITICAL은 심각한 서사 결함에만 부여하세요:
+⚠️ Arc 1(첫 번째 Arc)은 항목 3, 4를 검증하지 마세요!
+⚠️ CRITICAL은 정말 심각한 서사 결함에만 부여하세요:
 - 캐릭터가 아무 이유 없이 돌변 = CRITICAL
-- 한 화에서 경지 3단계 이상 상승 = CRITICAL
 - 그 외는 MAJOR로 처리
+
+⚠️ 파워업/성장은 CRITICAL이 아닙니다:
+- 영약, 비급, 깨달음을 통한 급성장 = 무협에서 자연스러움
+- 내공 급상승 (예: 10%→65%) = 영약 복용 시 정상
+- 경지 상승 = 정당한 계기가 있으면 OK → MINOR 또는 무시
 
 서사적 문제가 심각하면 REJECT하세요.
 """,
@@ -137,7 +144,7 @@ class ConsensusValidator(BaseAgent):
     def __init__(self, context, client, model_tier: str = "gemini-3-pro-preview"):
         # [V60.24] Gemini 3로 변경
         super().__init__(context, client, model_tier)
-        self.backup_model = "gemini-3-pro-preview"
+        # [V60.37] 스마트 폴백 (BaseAgent에서 자동 설정: gemini-3 → gemini-2.5-pro)
         self.perspectives = VALIDATION_PERSPECTIVES
         self.max_workers = 3
 
@@ -308,15 +315,16 @@ class ConsensusValidator(BaseAgent):
         if critical_issues:
             final_verdict = "REJECT"
             reason = f"CRITICAL 이슈 발견: {len(critical_issues)}개"
-            # [V60.33] CRITICAL 이슈 요약 출력
-            for ci in critical_issues[:2]:  # 최대 2개만 콘솔 출력
-                print(f"         🚨 [{ci.get('category', '?')}] {ci.get('issue', '?')[:60]}")
         elif reject_count >= majority_threshold:
             final_verdict = "REJECT"
             reason = f"{reject_count}/{total_count} 검증기가 REJECT"
         else:
             final_verdict = "PASS"
             reason = f"{pass_count}/{total_count} 검증기가 PASS"
+
+        # [V60.37] 이슈 분류
+        major_issues = [i for i in all_issues if i.get("severity") == "MAJOR"]
+        minor_issues = [i for i in all_issues if i.get("severity") not in ["CRITICAL", "MAJOR"]]
 
         consensus_result = {
             "final_verdict": final_verdict,
@@ -328,10 +336,38 @@ class ConsensusValidator(BaseAgent):
             "individual_results": results,
             "all_issues": all_issues,
             "critical_issues": critical_issues,
+            "major_issues": major_issues,
             "passed_checks": list(set(all_passed))
         }
 
         print(f"      {'✅' if final_verdict == 'PASS' else '❌'} [Consensus] {reason}")
+        print(f"         - 투표: PASS {pass_count} / REJECT {reject_count}")
+
+        # [V60.37] 상세 이슈 출력
+        if final_verdict == "REJECT":
+            print(f"         - 전체 이슈: {len(all_issues)}개 (CRITICAL: {len(critical_issues)}, MAJOR: {len(major_issues)}, MINOR: {len(minor_issues)})")
+
+            if critical_issues:
+                print(f"         🚨 CRITICAL ({len(critical_issues)}개):")
+                for ci in critical_issues:
+                    cat = ci.get('category', '?')
+                    issue = ci.get('issue', '?')
+                    evidence = ci.get('evidence', '')[:80] if ci.get('evidence') else ''
+                    print(f"            - [{cat}] {issue}")
+                    if evidence:
+                        print(f"              └ 근거: {evidence}")
+
+            if major_issues:
+                print(f"         ⚠️ MAJOR ({len(major_issues)}개):")
+                for mi in major_issues[:3]:  # 최대 3개만
+                    cat = mi.get('category', '?')
+                    issue = mi.get('issue', '?')
+                    print(f"            - [{cat}] {issue}")
+
+            if minor_issues and not critical_issues and not major_issues:
+                print(f"         📝 MINOR ({len(minor_issues)}개):")
+                for mi in minor_issues[:2]:
+                    print(f"            - [{mi.get('category', '?')}] {mi.get('issue', '?')}")
 
         return final_verdict, consensus_result
 

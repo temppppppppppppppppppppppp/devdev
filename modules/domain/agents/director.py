@@ -648,6 +648,9 @@ class Director(BaseAgent):
 
         # 명확한 REJECT → 추가 평가 없이 반환
         if first_decision == 'REJECT' and first_score < self.ambiguous_lower:
+            reject_reason = first_eval.get('reason', first_eval.get('re_slice_instruction', '사유 미상'))
+            print(f"         🎬 [Director] REJECT (score={first_score})")
+            print(f"            └─ 사유: {reject_reason[:80]}{'...' if len(str(reject_reason)) > 80 else ''}")
             first_eval['self_consistency'] = {
                 'votes': 1,
                 'reason': 'clear_reject',
@@ -657,6 +660,9 @@ class Director(BaseAgent):
 
         # 명확한 PASS (점수가 높음) → 추가 평가 없이 반환
         if first_decision == 'PASS' and first_score > self.ambiguous_upper:
+            pass_reason = first_eval.get('reason', first_eval.get('strengths', '판단 근거 미상'))
+            print(f"         🎬 [Director] PASS (score={first_score})")
+            print(f"            └─ 근거: {str(pass_reason)[:80]}{'...' if len(str(pass_reason)) > 80 else ''}")
             first_eval['self_consistency'] = {
                 'votes': 1,
                 'reason': 'clear_pass',

@@ -42,11 +42,21 @@ class BaseAgent:
         "maximum": 24576
     }
 
+    # [V60.37] 모델별 폴백 체인 정의 (할당량 초과 시)
+    MODEL_FALLBACK_CHAIN = {
+        "gemini-3-pro-preview": "gemini-2.5-pro",      # 3 Pro → 2.5 Pro
+        "gemini-3-flash-preview": "gemini-2.5-flash",  # 3 Flash → 2.5 Flash
+        "gemini-2.5-pro": "gemini-2.0-flash",          # 2.5 Pro → 2.0 Flash
+        "gemini-2.5-flash": "gemini-2.0-flash",        # 2.5 Flash → 2.0 Flash
+        "gemini-2.0-flash": "gemini-2.0-flash",        # 2.0 Flash → 유지
+    }
+
     def __init__(self, context, client, model_tier="gemini-2.0-flash", enable_cascade=False):
         self.context = context
         self.client = client
         self.primary_model = model_tier
-        self.backup_model = "gemini-2.0-flash"
+        # [V60.37] 스마트 폴백: 모델 티어에 따라 자동 백업 모델 설정
+        self.backup_model = self.MODEL_FALLBACK_CHAIN.get(model_tier, "gemini-2.0-flash")
         self.cache_name = None
         self.enable_cascade = enable_cascade
         self.cascade = None  # ModelCascade instance (lazy init)

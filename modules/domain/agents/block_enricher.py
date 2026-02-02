@@ -210,8 +210,7 @@ class BlockEnricher(BaseAgent):
             model_tier: 사용할 모델 (V60.24: Flash - 농축용)
         """
         super().__init__(context, client, model_tier)
-        # [V60.24] 실패 시 Pro 폴백
-        self.backup_model = "gemini-3-pro-preview"
+        # [V60.37] 스마트 폴백 (BaseAgent에서 자동 설정: gemini-3-flash → gemini-2.5-flash)
 
     def analyze_block_density(self, block: dict) -> dict:
         """

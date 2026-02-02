@@ -125,7 +125,7 @@ class StateExtractor(BaseAgent):
             model_tier: 사용할 모델 (V60.24: Flash로 변경 - 추출 작업)
         """
         super().__init__(context, client, model_tier)
-        self.backup_model = "gemini-3-pro-preview"  # 실패 시 Pro 폴백
+        # [V60.37] 스마트 폴백 (BaseAgent에서 자동 설정: gemini-3-flash → gemini-2.5-flash)
 
     def extract_state(self, arc_data: dict) -> dict:
         """

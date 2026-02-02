@@ -64,9 +64,11 @@ ENSEMBLE_ARC_PROMPT = """
 
 ### [🚨 ABSOLUTE CONSTRAINTS - 위반 시 0점]
 
-⚠️ CRITICAL: tactical_doc은 반드시 3000자 이상이어야 합니다!
-- 각 화(제 N화)당 최소 600자 이상 상세 서술
-- 5개 화 합계 3000자 미만이면 무조건 REJECT됩니다
+████████████████████████████████████████████████████████████████████████████████
+█   🚨 [V60.38] tactical_doc 분량 필수 - 위반 시 즉시 REJECT                   █
+█   ⚠️ 총 분량: 최소 (ep_count × 500)자 이상                                   █
+█   ⚠️ 1,500자 미만 = CRITICAL REJECT (시스템 자동 거부)                        █
+████████████████████████████████████████████████████████████████████████████████
 
 ⚠️ CRITICAL: tactical_doc 내용과 state_constraints는 반드시 일치해야 합니다!
 - 이전 Arc 종료 시 내공이 70%이면, tactical_doc에서도 "내공 70%" 또는 "7할의 내공"으로 표현
@@ -90,14 +92,19 @@ ENSEMBLE_ARC_PROMPT = """
 ### [피드백 (있다면)]
 {feedback}
 
+### [V60.40] 화간 상태 체크포인트 필수
+각 화는 반드시 시작 상태와 종료 상태를 명시하라:
+- 시작 상태: 위치, 내공%, 부상, 소지품 (이전 화 종료 상태와 동일)
+- 종료 상태: 위치, 내공%, 부상, 획득/소모 아이템
+
 ### [Output JSON Schema]
 {{
     "arc_no": {arc_no},
-    "ep_count": 5,
+    "ep_count": "2~6 중 사건 밀도에 맞게 결정",
     "ep_start": {ep_start},
     "ep_end": {ep_end},
     "title": "Arc 제목",
-    "tactical_doc": "[중요: 최소 3000자 이상 필수] 5개 화 각각 600자 이상 상세 서술. '제 N화:' 형식으로 5개 화 명확 구분",
+    "tactical_doc": "[V60.40] 각 화마다 시작/종료 상태 체크포인트 필수. 화당 500자 이상. '제 N화:' 형식으로 화별 명확 구분",
     "beat_sequence": ["제 N화: 핵심 비트", ...],
     "hybrid_composition": {{
         "primary": "주 서사 패턴",
@@ -147,7 +154,7 @@ class ArcEnsembleGenerator(BaseAgent):
     def __init__(self, context, client, model_tier: str = "gemini-3-pro-preview"):
         # [V60.24] Gemini 3로 변경 - 최고 품질의 Arc 생성
         super().__init__(context, client, model_tier)
-        self.backup_model = "gemini-3-pro-preview"
+        # [V60.37] 스마트 폴백 (BaseAgent에서 자동 설정: gemini-3 → gemini-2.5-pro)
         self.strategies = GENERATION_STRATEGIES
         self.max_workers = 3
 
@@ -220,7 +227,11 @@ class ArcEnsembleGenerator(BaseAgent):
         MIN_TACTICAL_DOC_LENGTH = 2500
         valid_candidates = []
         for candidate in candidates:
-            tactical_len = len(candidate.get("tactical_doc", ""))
+            # [V60.37] 타입 안전성
+            tactical = candidate.get("tactical_doc", "")
+            if not isinstance(tactical, str):
+                tactical = str(tactical) if tactical else ""
+            tactical_len = len(tactical)
             if tactical_len >= MIN_TACTICAL_DOC_LENGTH:
                 valid_candidates.append(candidate)
             else:
@@ -230,7 +241,10 @@ class ArcEnsembleGenerator(BaseAgent):
         if not valid_candidates:
             print(f"      ⚠️ [Ensemble] 모든 후보 tactical_doc 부족, 최대 분량 후보 선택")
             # tactical_doc 길이가 가장 긴 후보 선택
-            candidates.sort(key=lambda x: len(x.get("tactical_doc", "")), reverse=True)
+            def safe_tactical_len(x):
+                t = x.get("tactical_doc", "")
+                return len(t) if isinstance(t, str) else len(str(t)) if t else 0
+            candidates.sort(key=safe_tactical_len, reverse=True)
             valid_candidates = candidates[:1]
 
         # 후보 평가 및 선택
@@ -245,7 +259,9 @@ class ArcEnsembleGenerator(BaseAgent):
         scored_candidates.sort(key=lambda x: x.get("_score", 0), reverse=True)
 
         best = scored_candidates[0]
-        tactical_len = len(best.get("tactical_doc", ""))
+        # [V60.37] 타입 안전성
+        best_tactical = best.get("tactical_doc", "")
+        tactical_len = len(best_tactical) if isinstance(best_tactical, str) else len(str(best_tactical)) if best_tactical else 0
         print(f"      🏆 [Ensemble] 최적 후보 선택: {best.get('_strategy')} (점수: {best.get('_score', 0)}, tactical: {tactical_len}자)")
 
         # 메타데이터 제거 후 반환
@@ -337,6 +353,9 @@ class ArcEnsembleGenerator(BaseAgent):
             # 획득 금지 아이템 검사
             items_acquired = candidate.get("state_constraints", {}).get("items_acquired", [])
             tactical = candidate.get("tactical_doc", "")
+            # [V60.37] 타입 안전성
+            if not isinstance(tactical, str):
+                tactical = str(tactical) if tactical else ""
 
             # 금지 아이템 패턴 추출
             forbidden_items = re.findall(r'❌\s*([가-힣\w]+)', constraint_block)
@@ -373,6 +392,9 @@ class ArcEnsembleGenerator(BaseAgent):
 
         # 4. tactical_doc 품질 (25점) - 최소 2500자 필수 (ConsensusValidator 기준)
         tactical = candidate.get("tactical_doc", "")
+        # [V60.37] 타입 안전성
+        if not isinstance(tactical, str):
+            tactical = str(tactical) if tactical else ""
         if len(tactical) < 2500:
             score -= 40  # 2500자 미만은 사실상 실격 (-40점으로 최저 점수)
             issues.append(f"[CRITICAL] tactical_doc 분량 심각 부족: {len(tactical)}자 (최소 2500자 필수)")

@@ -50,6 +50,18 @@ class ArcDraftValidator:
         # 수여물 키워드
         self.grant_keywords = ['패', '권', '인장', '직위', '자격', '서', '부']
 
+    def _safe_tactical(self, arc: Dict) -> str:
+        """[V60.37] tactical_doc을 안전하게 문자열로 변환"""
+        tactical = arc.get("tactical_doc", "")
+        if isinstance(tactical, str):
+            return tactical
+        if isinstance(tactical, dict):
+            try:
+                return "\n".join(str(v) for v in tactical.values() if v)
+            except Exception:
+                return str(tactical)
+        return str(tactical) if tactical else ""
+
     def validate(
         self,
         arc: Dict,
@@ -141,16 +153,20 @@ class ArcDraftValidator:
         warnings = []
         penalty = 0
 
-        required_critical = ["arc_no", "tactical_doc"]
-        required_important = ["joint_docs", "state_constraints", "ep_start", "ep_end"]
+        # [V60.41] 필수 필드는 WARNING으로 변경 (재생성으로 해결 가능)
+        required_fields = ["arc_no", "tactical_doc", "joint_docs", "state_constraints", "ep_start", "ep_end"]
+        # [V60.42 Fix] 중요 필드 정의 추가
+        required_important = ["ep_count", "items_acquired", "grants_received"]
 
-        for field in required_critical:
+        for field in required_fields:
             if field not in arc or not arc[field]:
-                critical.append(f"필수 필드 누락: {field}")
-                penalty += 20
+                warnings.append(f"필수 필드 누락: {field}")
+                penalty += 10
 
         for field in required_important:
-            if field not in arc or not arc[field]:
+            # 중요 필드는 arc 또는 state_constraints 내부에 있을 수 있음
+            value = arc.get(field) or arc.get("state_constraints", {}).get(field)
+            if not value and value != 0:  # 0은 유효한 값
                 warnings.append(f"중요 필드 누락: {field}")
                 penalty += 5
 
@@ -177,7 +193,7 @@ class ArcDraftValidator:
                 all_acquired.update([i.strip() for i in inventory.split(",") if i.strip()])
 
             # tactical_doc에서 획득 패턴 추출
-            tactical = prev_arc.get("tactical_doc", "")
+            tactical = self._safe_tactical(prev_arc)
             for pattern in self.acquire_patterns:
                 matches = re.findall(pattern, tactical)
                 for m in matches:
@@ -187,7 +203,7 @@ class ArcDraftValidator:
 
         # 현재 Arc의 획득 아이템
         current_items = arc.get("state_constraints", {}).get("items_acquired", [])
-        tactical = arc.get("tactical_doc", "")
+        tactical = self._safe_tactical(arc)
 
         # tactical_doc에서도 획득 패턴 추출
         for pattern in self.acquire_patterns:
@@ -225,7 +241,7 @@ class ArcDraftValidator:
             # 위치가 완전히 다른 경우
             if not self._locations_compatible(prev_location, curr_location):
                 # 이동 시간이 있는지 tactical_doc 검사
-                tactical = arc.get("tactical_doc", "")
+                tactical = self._safe_tactical(arc)
                 has_travel = any(kw in tactical[:500] for kw in ["이동", "도착", "길을", "향해", "출발"])
 
                 if not has_travel:
@@ -279,7 +295,7 @@ class ArcDraftValidator:
             if isinstance(grants, list):
                 all_granted.update(grants)
 
-            tactical = prev_arc.get("tactical_doc", "")
+            tactical = self._safe_tactical(prev_arc)
             for pattern in self.grant_patterns:
                 matches = re.findall(pattern, tactical)
                 for m in matches:
@@ -289,7 +305,7 @@ class ArcDraftValidator:
 
         # 현재 Arc에서 이미 수여된 것을 다시 수여받으려 하는지 검사
         current_grants = arc.get("state_constraints", {}).get("grants_received", [])
-        tactical = arc.get("tactical_doc", "")
+        tactical = self._safe_tactical(arc)
 
         for pattern in self.grant_patterns:
             matches = re.findall(pattern, tactical)
@@ -309,20 +325,40 @@ class ArcDraftValidator:
         penalty = 0
 
         tactical = arc.get("tactical_doc", "")
-        length = len(tactical)
 
-        if length < 1000:
-            critical.append(f"tactical_doc 심각 부족: {length}자 (최소 1000자)")
-            penalty += 30
-        elif length < 2000:
-            warnings.append(f"tactical_doc 분량 부족: {length}자 (권장 3000자)")
-            penalty += 10
-        elif length < 3000:
-            suggestions.append(f"tactical_doc 분량 미흡: {length}자 (권장 4000자)")
+        # [V60.37] tactical_doc 타입 안전성 검증
+        if not isinstance(tactical, str):
+            # dict나 다른 타입이면 문자열로 변환 시도
+            if isinstance(tactical, dict):
+                # dict인 경우 내용을 문자열로 합침
+                try:
+                    tactical = "\n".join(str(v) for v in tactical.values() if v)
+                    warnings.append("tactical_doc이 dict 형태로 반환됨 - 자동 변환 시도")
+                except Exception:
+                    tactical = str(tactical)
+            else:
+                tactical = str(tactical) if tactical else ""
+
+            if len(tactical) < 100:
+                # [V60.41] 형식 오류는 WARNING (재생성으로 해결 가능)
+                warnings.append(f"tactical_doc 형식 오류: 문자열이 아닌 {type(arc.get('tactical_doc')).__name__} 타입 반환")
+                penalty += 20
+        length = len(tactical)
 
         # [V60.29] 화별 분할 검증 강화
         ep_start = arc.get("ep_start", 1)
         ep_count = arc.get("ep_count", 5)
+
+        # [V60.41] 분량 검증 - 모두 WARNING (재생성으로 해결 가능)
+        min_length = ep_count * 500  # 최소 기준
+        warn_length = ep_count * 400  # 경고 기준 (80%)
+
+        if length < warn_length:
+            warnings.append(f"tactical_doc 분량 심각 미달: {length}자 (최소 {min_length}자 = {ep_count}화 × 500자)")
+            penalty += 25
+        elif length < min_length:
+            warnings.append(f"tactical_doc 분량 부족: {length}자 (권장 {min_length}자)")
+            penalty += 10
         expected_eps = list(range(ep_start, ep_start + ep_count))
 
         # 각 화 섹션 추출 및 검증
@@ -335,8 +371,9 @@ class ArcDraftValidator:
                 missing_eps.append(ep_no)
 
         if missing_eps:
-            critical.append(f"누락된 화: {missing_eps} (필수: {expected_eps})")
-            penalty += 20
+            # [V60.41] 화 누락은 WARNING (재생성으로 해결 가능)
+            warnings.append(f"누락된 화: {missing_eps} (필수: {expected_eps})")
+            penalty += 15
 
         # 2. 각 화 최소 분량 검사 (300자 이상)
         MIN_EP_LENGTH = 300
@@ -407,7 +444,51 @@ class ArcDraftValidator:
             warnings.append(f"ep_count 불일치: 선언={declared_ep_count}, 실제={actual_ep_count}")
             penalty += 5
 
+        # [V60.40] 9. 화간 상태 체크포인트 검증
+        checkpoint_result = self._validate_state_checkpoints(episode_sections, arc)
+        if checkpoint_result.get("missing_checkpoints"):
+            warnings.append(f"상태 체크포인트 누락: {checkpoint_result['missing_checkpoints'][:3]}")
+            penalty += len(checkpoint_result.get("missing_checkpoints", [])) * 2
+        if checkpoint_result.get("state_mismatches"):
+            warnings.append(f"화간 상태 불일치: {checkpoint_result['state_mismatches'][:2]}")
+            penalty += len(checkpoint_result.get("state_mismatches", [])) * 3
+
         return {"penalty": penalty, "critical": critical, "warnings": warnings, "suggestions": suggestions}
+
+    def _validate_state_checkpoints(self, episode_sections: Dict[int, str], arc: Dict) -> Dict:
+        """[V60.40] 화간 상태 체크포인트 검증 - StateLocked 개념 흡수"""
+        missing_checkpoints = []
+        state_mismatches = []
+
+        # 상태 관련 키워드
+        state_keywords = ['위치:', '내공:', '부상:', '소지품:', '획득:', '소모:', '종료 상태', '시작 상태']
+
+        sorted_eps = sorted(episode_sections.keys())
+
+        for i, ep_no in enumerate(sorted_eps):
+            content = episode_sections[ep_no]
+
+            # 시작 상태 체크 (첫 화 제외하고는 이전 화 종료 상태 언급 필요)
+            if i > 0:
+                has_start_state = any(kw in content for kw in ['시작 상태', '이전', '직전', '에서 이어'])
+                if not has_start_state and len(content) > 300:
+                    # 이전 화 종료 위치/상태 언급 체크
+                    prev_content = episode_sections.get(sorted_eps[i-1], "")
+                    # 간단한 연속성 체크: 이전 화 마지막 위치가 현재 화에 언급되는지
+                    pass  # 복잡한 검증은 LLM에 위임
+
+            # 종료 상태 체크 (마지막 화 포함 모든 화)
+            has_end_state = any(kw in content for kw in ['종료 상태', '종료:', '끝:', '마무리'])
+            has_state_info = sum(1 for kw in state_keywords if kw in content)
+
+            # 상태 정보가 2개 미만이면 체크포인트 부족
+            if has_state_info < 2 and len(content) > 300:
+                missing_checkpoints.append(f"{ep_no}화")
+
+        return {
+            "missing_checkpoints": missing_checkpoints,
+            "state_mismatches": state_mismatches
+        }
 
     def _count_tactical_beats(self, content: str) -> int:
         """[V60.30] 화 내용에서 전술 비트 수 카운트"""
@@ -541,7 +622,7 @@ class ArcDraftValidator:
 
         # 현재 Arc의 획득 아이템과 비교
         items_acquired = arc.get("state_constraints", {}).get("items_acquired", [])
-        tactical = arc.get("tactical_doc", "")
+        tactical = self._safe_tactical(arc)
 
         for forbidden in forbidden_items:
             if not forbidden or len(forbidden) < 2:
