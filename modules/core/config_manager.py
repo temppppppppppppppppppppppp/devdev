@@ -18,18 +18,17 @@ class ConfigManager:
         
         print(f"📁 [System] 필수 경로 점검 완료: {self.logs_dir}")
         
-        # [V20 Master Model Tiers] 각 단계별 최적 모델 배정
-        # Stage 1~2: 대량의 맥락 분석 (Gemini 3 Pro급 권장)
-        # Stage 3~4: 고해상도 묘사 및 집필 (Gemini 2.5 Pro급 권장)
+        # [V60.24] 모든 모델을 Gemini 3로 통일
+        # Stage 1~4: 모든 단계에서 Gemini 3 Pro 사용
         self.settings = {
             "models": {
-                "analyst": "gemini-2.5-pro",   # 전략/전술 설계 (고지능)
-                "architect": "gemini-2.5-pro", # 초정밀 시나리오 설계
-                "writer": "gemini-3-pro-preview",#"gemini-3-pro-preview",    # 7,000자 고해상도 집필
-                "director": "gemini-2.5-flash",#"gemini-2.5-pro", # 빠른 품질 검수
-                "manager": "gemini-2.5-flash",   # 인과 분석 및 데이터 박제
-                "editor": "gemini-2.5-flash"   # 최후의 보루
-                
+                "analyst": "gemini-3-pro-preview",   # [V60.24] Gemini 3
+                "architect": "gemini-3-pro-preview", # [V60.24] Gemini 3
+                "writer": "gemini-3-pro-preview",    # 7,000자 고해상도 집필
+                "director": "gemini-3-pro-preview",  # [V60.24] Gemini 3
+                "manager": "gemini-3-pro-preview",   # [V60.24] Gemini 3
+                "editor": "gemini-3-pro-preview"     # [V60.24] Gemini 3
+
             },
             "limits": {
                 "max_retries": 10,             # V20 매니페스토 기준 재시도 횟수
@@ -51,6 +50,6 @@ class ConfigManager:
         }
 
     def get_model_for_agent(self, agent_role):
-        return self.settings["models"].get(agent_role, "gemini-1.5-flash")
+        return self.settings["models"].get(agent_role, "gemini-2.5-flash")
 
     def __getitem__(self, key): return self.settings[key]

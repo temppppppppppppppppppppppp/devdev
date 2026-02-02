@@ -1,0 +1,44 @@
+{
+  "session_id": "20260201_115650",
+  "start_time": "2026-02-01T11:56:50.628840",
+  "end_time": "2026-02-01T11:59:39.464249",
+  "total_calls": 15,
+  "successful_calls": 14,
+  "failed_calls": 1,
+  "total_retries": 0,
+  "total_tokens": 33876,
+  "total_cost_usd": 0.0069,
+  "agent_stats": {
+    "BlockEnricher": {
+      "agent_name": "BlockEnricher",
+      "total_calls": 15,
+      "successful_calls": 14,
+      "failed_calls": 1,
+      "success_rate": 93.33333333333333,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 10725.564871515546,
+        "min_ms": 1798.3224391937256,
+        "max_ms": 21098.366498947144,
+        "p50_ms": 10609.386205673218,
+        "p90_ms": 19438.050723075867,
+        "p99_ms": 20931.353247165676
+      }
+    }
+  },
+  "model_stats": {
+    "gemini-2.5-flash": {
+      "input_tokens": 19548,
+      "output_tokens": 5191,
+      "total_tokens": 24739,
+      "cost_usd": 0.006
+    },
+    "gemini-2.0-flash": {
+      "input_tokens": 8587,
+      "output_tokens": 550,
+      "total_tokens": 9137,
+      "cost_usd": 0.0008
+    }
+  }
+}

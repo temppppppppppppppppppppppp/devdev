@@ -2,15 +2,16 @@
 [V40 Multi-Genre] 헌터물 전용 Guard
 [V46] 일관성 검증 규칙 추가 - 상태 vs 행동, 정당화 패턴, 등급 위계
 [V46.1] 권위 위임, 미해결 갈등(고구마), 빌런 반응 검증 추가
+[V57] 던전/각성/쿨다운 규칙 확장
 헌터물 장르의 일관성을 유지하고 무협 용어를 차단
 """
 
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 from .base_guard import BaseGuard
 
 
 class HunterGuard(BaseGuard):
-    """[헌터물] 장르 일관성 보호자 + V46 일관성 검증"""
+    """[헌터물] 장르 일관성 보호자 + V46 일관성 검증 + V57 확장"""
 
     def __init__(self):
         super().__init__()
@@ -59,6 +60,64 @@ class HunterGuard(BaseGuard):
             '중상': [r'전력.*질주', r'고속.*이동', r'연속.*공격', r'회피.*기동'],
             '기절': [r'눈.*떠', r'공격', r'방어', r'이동'],
             'HP 위험': [r'무리.*공격', r'전력.*질주', r'자폭'],
+        }
+
+        # [V57] 던전 등급별 입장 제한
+        self._dungeon_entry_requirements = {
+            'E급': {'min_rank': 'E', 'recommended_rank': 'E', 'min_party': 1},
+            'D급': {'min_rank': 'E', 'recommended_rank': 'D', 'min_party': 2},
+            'C급': {'min_rank': 'D', 'recommended_rank': 'C', 'min_party': 3},
+            'B급': {'min_rank': 'C', 'recommended_rank': 'B', 'min_party': 4},
+            'A급': {'min_rank': 'B', 'recommended_rank': 'A', 'min_party': 5},
+            'S급': {'min_rank': 'A', 'recommended_rank': 'S', 'min_party': 8},
+            'SS급': {'min_rank': 'S', 'recommended_rank': 'SS', 'min_party': 10},
+            'SSS급': {'min_rank': 'SS', 'recommended_rank': 'SSS', 'min_party': 20},
+            '레드 게이트': {'min_rank': 'S', 'special': '탈출 불가'},
+            '블랙 게이트': {'min_rank': 'SS', 'special': '국가급 헌터 필수'},
+        }
+
+        # [V57] 던전 연속 입장 제한 (시간 단위)
+        self._dungeon_break_rules = {
+            'E급': {'max_consecutive': 3, 'rest_required': 0},    # 연속 3회까지, 휴식 불필요
+            'D급': {'max_consecutive': 3, 'rest_required': 0},
+            'C급': {'max_consecutive': 2, 'rest_required': 4},    # 연속 2회, 4시간 휴식
+            'B급': {'max_consecutive': 2, 'rest_required': 8},
+            'A급': {'max_consecutive': 1, 'rest_required': 24},   # 연속 1회, 24시간 휴식
+            'S급': {'max_consecutive': 1, 'rest_required': 48},
+        }
+
+        # [V57] 각성 단계 (스킵 불가)
+        self._awakening_stages = [
+            '미각성',           # 0
+            '초기 각성',        # 1
+            '1차 각성',         # 2
+            '2차 각성',         # 3
+            '3차 각성',         # 4
+            '완전 각성',        # 5
+            '초월 각성',        # 6
+        ]
+
+        # [V57] 각성 단계별 능력 범위
+        self._awakening_abilities = {
+            '미각성': {'max_skills': 0, 'stat_multiplier': 1.0, 'can_see_system': False},
+            '초기 각성': {'max_skills': 1, 'stat_multiplier': 1.5, 'can_see_system': True},
+            '1차 각성': {'max_skills': 3, 'stat_multiplier': 2.0, 'can_see_system': True},
+            '2차 각성': {'max_skills': 5, 'stat_multiplier': 3.0, 'can_see_system': True},
+            '3차 각성': {'max_skills': 8, 'stat_multiplier': 5.0, 'can_see_system': True},
+            '완전 각성': {'max_skills': 12, 'stat_multiplier': 10.0, 'can_see_system': True},
+            '초월 각성': {'max_skills': -1, 'stat_multiplier': -1, 'can_see_system': True},  # 무제한
+        }
+
+        # [V57] 스킬 쿨타임 기본값 (초)
+        self._default_skill_cooldowns = {
+            '기본 공격': 0,
+            '버프': 60,
+            '디버프': 90,
+            '회복': 30,
+            '궁극기': 300,      # 5분
+            '영역 전개': 600,   # 10분
+            '각성 스킬': 3600,  # 1시간
+            '유니크 스킬': 86400,  # 24시간
         }
 
     def get_genre_name(self):
@@ -441,3 +500,254 @@ class HunterGuard(BaseGuard):
             r'다음.*기회',
             r'반드시',
         ]
+
+    # ========================================================================
+    # [V57] 던전 메카닉스 검증
+    # ========================================================================
+
+    def validate_dungeon_entry(
+        self,
+        dungeon_grade: str,
+        hunter_rank: str,
+        party_size: int = 1
+    ) -> Tuple[bool, str]:
+        """
+        [V57] 던전 입장 가능 여부 검증
+
+        Args:
+            dungeon_grade: 던전 등급 (예: 'A급', 'S급')
+            hunter_rank: 헌터 등급 (예: 'B', 'A')
+            party_size: 파티원 수
+
+        Returns:
+            (허용 여부, 사유)
+        """
+        requirements = self._dungeon_entry_requirements.get(dungeon_grade)
+        if not requirements:
+            return True, "등급 정보 없음 - 기본 허용"
+
+        # 최소 등급 체크
+        min_rank = requirements.get('min_rank', 'E')
+        if self._compare_ranks(hunter_rank, min_rank) < 0:
+            return False, f"[V57] {dungeon_grade} 던전 입장 불가: 최소 {min_rank}급 필요 (현재: {hunter_rank}급)"
+
+        # 파티 인원 체크
+        min_party = requirements.get('min_party', 1)
+        if party_size < min_party:
+            return False, f"[V57] {dungeon_grade} 던전 입장 불가: 최소 {min_party}인 필요 (현재: {party_size}인)"
+
+        # 특수 조건 체크
+        special = requirements.get('special')
+        if special:
+            return True, f"[V57] {dungeon_grade} 던전 입장 가능 (특수 조건: {special})"
+
+        return True, f"[V57] {dungeon_grade} 던전 입장 가능"
+
+    def validate_dungeon_break(
+        self,
+        dungeon_grade: str,
+        consecutive_count: int,
+        rest_hours: float = 0
+    ) -> Tuple[bool, str]:
+        """
+        [V57] 던전 연속 입장 제한 검증
+
+        Args:
+            dungeon_grade: 던전 등급
+            consecutive_count: 연속 입장 횟수
+            rest_hours: 마지막 던전 이후 휴식 시간
+
+        Returns:
+            (허용 여부, 사유/경고)
+        """
+        rules = self._dungeon_break_rules.get(dungeon_grade)
+        if not rules:
+            return True, "규칙 없음 - 기본 허용"
+
+        max_consecutive = rules.get('max_consecutive', 99)
+        rest_required = rules.get('rest_required', 0)
+
+        if consecutive_count > max_consecutive:
+            if rest_hours < rest_required:
+                return False, f"[V57] {dungeon_grade} 던전 연속 {consecutive_count}회 입장 불가: " \
+                             f"{rest_required}시간 휴식 필요 (현재: {rest_hours}시간)"
+
+        return True, f"[V57] {dungeon_grade} 던전 입장 가능 (연속 {consecutive_count}회)"
+
+    def _compare_ranks(self, rank1: str, rank2: str) -> int:
+        """
+        등급 비교: rank1 > rank2이면 양수, 같으면 0, 작으면 음수
+        """
+        r1 = rank1.upper().replace('급', '')
+        r2 = rank2.upper().replace('급', '')
+
+        try:
+            idx1 = self._rank_hierarchy.index(r1)
+            idx2 = self._rank_hierarchy.index(r2)
+            return idx1 - idx2
+        except ValueError:
+            return 0
+
+    # ========================================================================
+    # [V57] 각성 진행 검증
+    # ========================================================================
+
+    def validate_awakening_progression(
+        self,
+        current_stage: str,
+        target_stage: str
+    ) -> Tuple[bool, str]:
+        """
+        [V57] 각성 단계 진행 검증 (스킵 불가)
+
+        Args:
+            current_stage: 현재 각성 단계
+            target_stage: 목표 각성 단계
+
+        Returns:
+            (허용 여부, 사유)
+        """
+        try:
+            current_idx = self._awakening_stages.index(current_stage)
+            target_idx = self._awakening_stages.index(target_stage)
+        except ValueError:
+            return True, "각성 단계 정보 없음 - 기본 허용"
+
+        # 역행 불가
+        if target_idx < current_idx:
+            return False, f"[V57] 각성 역행 불가: {current_stage} → {target_stage}"
+
+        # 2단계 이상 스킵 불가
+        if target_idx - current_idx > 1:
+            intermediate = self._awakening_stages[current_idx + 1]
+            return False, f"[V57] 각성 스킵 불가: {current_stage} → {intermediate} → {target_stage} 순서 필요"
+
+        return True, f"[V57] 각성 진행 가능: {current_stage} → {target_stage}"
+
+    def get_awakening_abilities(self, stage: str) -> Dict[str, Any]:
+        """
+        [V57] 각성 단계별 능력 범위 조회
+        """
+        return self._awakening_abilities.get(stage, self._awakening_abilities['미각성'])
+
+    def validate_skill_count(
+        self,
+        awakening_stage: str,
+        skill_count: int
+    ) -> Tuple[bool, str]:
+        """
+        [V57] 각성 단계별 스킬 보유 수 검증
+
+        Args:
+            awakening_stage: 각성 단계
+            skill_count: 보유 스킬 수
+
+        Returns:
+            (허용 여부, 사유)
+        """
+        abilities = self.get_awakening_abilities(awakening_stage)
+        max_skills = abilities.get('max_skills', 0)
+
+        if max_skills == -1:  # 무제한
+            return True, f"[V57] {awakening_stage}: 스킬 제한 없음"
+
+        if skill_count > max_skills:
+            return False, f"[V57] {awakening_stage}에서 최대 {max_skills}개 스킬 보유 가능 (현재: {skill_count}개)"
+
+        return True, f"[V57] {awakening_stage}: 스킬 {skill_count}/{max_skills}개"
+
+    # ========================================================================
+    # [V57] 쿨타임 관리
+    # ========================================================================
+
+    def get_skill_cooldown(self, skill_type: str) -> int:
+        """
+        [V57] 스킬 유형별 기본 쿨타임 조회 (초)
+        """
+        return self._default_skill_cooldowns.get(skill_type, 60)
+
+    def validate_skill_usage(
+        self,
+        skill_name: str,
+        skill_type: str,
+        last_used_seconds_ago: float,
+        custom_cooldown: int = None
+    ) -> Tuple[bool, str]:
+        """
+        [V57] 스킬 쿨타임 검증
+
+        Args:
+            skill_name: 스킬명
+            skill_type: 스킬 유형
+            last_used_seconds_ago: 마지막 사용 후 경과 시간 (초)
+            custom_cooldown: 커스텀 쿨타임 (있으면 사용)
+
+        Returns:
+            (허용 여부, 사유)
+        """
+        cooldown = custom_cooldown if custom_cooldown else self.get_skill_cooldown(skill_type)
+
+        if last_used_seconds_ago < cooldown:
+            remaining = cooldown - last_used_seconds_ago
+            return False, f"[V57] '{skill_name}' 쿨타임 중: {remaining:.0f}초 남음"
+
+        return True, f"[V57] '{skill_name}' 사용 가능"
+
+    def get_dungeon_rules_prompt(self) -> str:
+        """
+        [V57] 던전 규칙 프롬프트 생성 (Writer/Architect 주입용)
+        """
+        return """
+[V57 헌터물 던전 메카닉스]
+
+1. **입장 제한**
+   - E~D급 던전: 솔로 가능
+   - C~B급 던전: 최소 3~4인 파티 권장
+   - A급 이상: 협회 허가 + 최소 5인 이상 필수
+   - S급 이상: 길드 공식 레이드 필수
+
+2. **연속 입장 제한**
+   - A급 이상 던전: 1회 클리어 후 24시간 휴식 필수
+   - S급 던전: 48시간 휴식 필수
+   - 무시 시: 스탯 저하, 스킬 약화, 심하면 각성 역행
+
+3. **특수 던전**
+   - 레드 게이트: 클리어 전 탈출 불가
+   - 블랙 게이트: 국가급 헌터 동반 필수
+   - 던전 브레이크 임박: 24시간 내 클리어 필수
+
+4. **던전 내 규칙**
+   - 포션/아이템: 제한적 사용 (인벤토리 크기)
+   - 귀환석: 보스룸 이후 사용 불가
+   - 통신: 던전 내 외부 연락 불가
+"""
+
+    def get_awakening_rules_prompt(self) -> str:
+        """
+        [V57] 각성 규칙 프롬프트 생성
+        """
+        stages_str = " → ".join(self._awakening_stages)
+        return f"""
+[V57 헌터물 각성 시스템]
+
+1. **각성 단계**: {stages_str}
+
+2. **단계별 제한**
+   - 미각성: 스킬 0개, 시스템 창 불가
+   - 초기 각성: 스킬 1개, 기본 스탯만 확인
+   - 1차 각성: 스킬 3개, 스킬 레벨업 가능
+   - 2차 각성: 스킬 5개, 유니크 스킬 각성 가능
+   - 3차 각성: 스킬 8개, 영역 전개 가능
+   - 완전 각성: 스킬 12개, 초월 능력 해금
+   - 초월 각성: 제한 없음, 신화급 능력
+
+3. **각성 진행 규칙**
+   - 단계 스킵 불가 (1차 → 3차 X)
+   - 각성 역행 불가 (정신적 충격으로 약화는 가능)
+   - 각성 진행: 생사의 고비, 던전 클리어, 특수 이벤트
+
+4. **각성별 행동 제약**
+   - 미각성자가 스킬 사용 언급 → 즉시 REJECT
+   - 초기 각성자가 영역 전개 → 즉시 REJECT
+   - 각성 단계에 맞지 않는 스킬 수 → WARNING
+"""

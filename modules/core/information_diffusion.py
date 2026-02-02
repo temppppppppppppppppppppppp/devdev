@@ -1,7 +1,22 @@
 """
 [Phase 2.2] Information Diffusion Model
 정보(소문) 전파 시뮬레이션 - NPC가 특정 사건을 알고 있어야 하는지 판단
+
+[V49.7] 정보 비대칭 추적 - NPC별 알고 있는 정보 관리 및 검증
 """
+
+from typing import Dict, List, Set, Any, Optional
+from dataclasses import dataclass, field
+
+
+@dataclass
+class KnowledgeEntry:
+    """[V49.7] NPC 지식 엔트리"""
+    info_id: str  # 정보 식별자
+    description: str  # 정보 내용
+    learned_arc: int
+    learned_episode: int
+    source: str  # 어떻게 알게 되었는지
 
 
 class InformationDiffusion:
@@ -177,3 +192,287 @@ class InformationDiffusion:
                 importance -= 2
 
         return max(0, min(10, importance))
+
+    # ═══════════════════════════════════════════════════════════════
+    # [V49.7] 정보 비대칭 추적 메서드
+    # ═══════════════════════════════════════════════════════════════
+
+    def __init_knowledge_tracker(self):
+        """지식 추적기 초기화 (필요시 호출)"""
+        if not hasattr(self, 'npc_knowledge'):
+            self.npc_knowledge: Dict[str, List[KnowledgeEntry]] = {}
+            self.global_events: Dict[str, dict] = {}  # {event_id: event_data}
+
+    def register_event(
+        self,
+        event_id: str,
+        description: str,
+        arc: int,
+        episode: int,
+        location: str = "",
+        witnesses: List[str] = None
+    ) -> None:
+        """
+        사건 등록 및 목격자에게 지식 부여
+
+        Args:
+            event_id: 사건 식별자 (예: "arc1_ep4_비무승리")
+            description: 사건 설명
+            arc: Arc 번호
+            episode: 에피소드 번호
+            location: 사건 장소
+            witnesses: 목격한 NPC 목록
+        """
+        self.__init_knowledge_tracker()
+
+        event_data = {
+            "id": event_id,
+            "description": description,
+            "arc": arc,
+            "episode": episode,
+            "location": location
+        }
+        self.global_events[event_id] = event_data
+
+        # 목격자에게 즉시 지식 부여
+        if witnesses:
+            for npc_name in witnesses:
+                self.grant_knowledge(
+                    npc_name=npc_name,
+                    info_id=event_id,
+                    description=description,
+                    arc=arc,
+                    episode=episode,
+                    source="직접 목격"
+                )
+
+    def grant_knowledge(
+        self,
+        npc_name: str,
+        info_id: str,
+        description: str,
+        arc: int,
+        episode: int,
+        source: str = "소문"
+    ) -> None:
+        """
+        NPC에게 지식 부여
+
+        Args:
+            npc_name: NPC 이름
+            info_id: 정보 식별자
+            description: 정보 내용
+            arc: 습득 Arc
+            episode: 습득 에피소드
+            source: 습득 경로
+        """
+        self.__init_knowledge_tracker()
+
+        if npc_name not in self.npc_knowledge:
+            self.npc_knowledge[npc_name] = []
+
+        # 중복 체크
+        existing = [k for k in self.npc_knowledge[npc_name] if k.info_id == info_id]
+        if not existing:
+            entry = KnowledgeEntry(
+                info_id=info_id,
+                description=description,
+                learned_arc=arc,
+                learned_episode=episode,
+                source=source
+            )
+            self.npc_knowledge[npc_name].append(entry)
+
+    def npc_knows(self, npc_name: str, info_id: str) -> bool:
+        """
+        NPC가 특정 정보를 알고 있는지 확인
+
+        Args:
+            npc_name: NPC 이름
+            info_id: 정보 식별자
+
+        Returns:
+            알고 있으면 True
+        """
+        self.__init_knowledge_tracker()
+
+        if npc_name not in self.npc_knowledge:
+            return False
+
+        return any(k.info_id == info_id for k in self.npc_knowledge[npc_name])
+
+    def npc_knows_about(self, npc_name: str, keyword: str) -> bool:
+        """
+        NPC가 특정 키워드 관련 정보를 알고 있는지 확인
+
+        Args:
+            npc_name: NPC 이름
+            keyword: 검색 키워드
+
+        Returns:
+            관련 정보를 알고 있으면 True
+        """
+        self.__init_knowledge_tracker()
+
+        if npc_name not in self.npc_knowledge:
+            return False
+
+        return any(keyword in k.description for k in self.npc_knowledge[npc_name])
+
+    def get_npc_knowledge(self, npc_name: str) -> List[Dict]:
+        """
+        NPC가 알고 있는 모든 정보 조회
+
+        Args:
+            npc_name: NPC 이름
+
+        Returns:
+            지식 목록
+        """
+        self.__init_knowledge_tracker()
+
+        if npc_name not in self.npc_knowledge:
+            return []
+
+        return [
+            {
+                "info_id": k.info_id,
+                "description": k.description,
+                "learned_arc": k.learned_arc,
+                "learned_episode": k.learned_episode,
+                "source": k.source
+            }
+            for k in self.npc_knowledge[npc_name]
+        ]
+
+    def validate_npc_reaction(
+        self,
+        npc_name: str,
+        reaction_text: str,
+        required_knowledge: List[str]
+    ) -> Dict[str, Any]:
+        """
+        NPC 반응이 그들의 지식과 일치하는지 검증
+
+        Args:
+            npc_name: NPC 이름
+            reaction_text: NPC의 반응/대사
+            required_knowledge: 이 반응에 필요한 정보 ID 목록
+
+        Returns:
+            {
+                "valid": bool,
+                "violations": [],
+                "warnings": []
+            }
+        """
+        self.__init_knowledge_tracker()
+
+        violations = []
+        warnings = []
+
+        for info_id in required_knowledge:
+            if not self.npc_knows(npc_name, info_id):
+                # 이 정보를 모르는데 반응함
+                event_data = self.global_events.get(info_id, {})
+                violations.append({
+                    "type": "knowledge_violation",
+                    "npc": npc_name,
+                    "missing_info": info_id,
+                    "event_description": event_data.get("description", info_id),
+                    "message": f"'{npc_name}'은(는) '{info_id}' 사건을 모르는데 이에 반응함"
+                })
+
+        return {
+            "valid": len(violations) == 0,
+            "violations": violations,
+            "warnings": warnings
+        }
+
+    def propagate_event(
+        self,
+        event_id: str,
+        current_arc: int,
+        current_episode: int,
+        npc_locations: Dict[str, str]
+    ) -> List[str]:
+        """
+        사건 정보를 자연스럽게 전파 (시간 경과에 따라)
+
+        Args:
+            event_id: 전파할 사건 ID
+            current_arc: 현재 Arc
+            current_episode: 현재 에피소드
+            npc_locations: {npc_name: location} 맵
+
+        Returns:
+            새로 정보를 습득한 NPC 목록
+        """
+        self.__init_knowledge_tracker()
+
+        if event_id not in self.global_events:
+            return []
+
+        event = self.global_events[event_id]
+        event_ep = event.get("episode", 0)
+        event_location = event.get("location", "")
+        time_passed = current_episode - event_ep
+
+        newly_informed = []
+
+        for npc_name, npc_location in npc_locations.items():
+            if self.npc_knows(npc_name, event_id):
+                continue  # 이미 앎
+
+            # 전파 조건 확인
+            if npc_location == event_location:
+                distance_type = "same_location"
+            elif self._is_nearby(event_location, npc_location):
+                distance_type = "nearby_region"
+            else:
+                distance_type = "distant_region"
+
+            required_time = self.DIFFUSION_RATES.get(distance_type, 999)
+
+            if time_passed >= required_time:
+                self.grant_knowledge(
+                    npc_name=npc_name,
+                    info_id=event_id,
+                    description=event.get("description", ""),
+                    arc=current_arc,
+                    episode=current_episode,
+                    source=f"소문 ({distance_type})"
+                )
+                newly_informed.append(npc_name)
+
+        return newly_informed
+
+    def generate_knowledge_prompt(self, npc_name: str) -> str:
+        """
+        NPC의 지식 상태를 LLM 프롬프트용 텍스트로 생성
+
+        Args:
+            npc_name: NPC 이름
+
+        Returns:
+            프롬프트 텍스트
+        """
+        knowledge = self.get_npc_knowledge(npc_name)
+
+        if not knowledge:
+            return f"\n[{npc_name}의 지식 상태: 주요 사건에 대해 아는 것이 없음]\n"
+
+        lines = [
+            "",
+            f"[{npc_name}의 지식 상태]",
+            f"알고 있는 정보 ({len(knowledge)}개):"
+        ]
+
+        for k in knowledge[:5]:  # 최대 5개
+            lines.append(f"  - {k['description'][:50]}... (Ep{k['learned_episode']}에 {k['source']})")
+
+        if len(knowledge) > 5:
+            lines.append(f"  ... 외 {len(knowledge) - 5}개")
+
+        lines.append("")
+        return "\n".join(lines)

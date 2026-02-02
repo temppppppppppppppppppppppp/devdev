@@ -35,8 +35,9 @@ class RetryLimits:
     """재시도 횟수 및 제한"""
     # 에이전트 재시도
     DIRECTOR_MAX_ATTEMPTS = 3          # 디렉터 검증 최대 시도
+    ANALYST_MAX_ATTEMPTS = 4           # Analyst Arc 설계 최대 시도 (V55.4: 3회 실패 후 10초 대기 + 4회차)
     ARCHITECT_MAX_ATTEMPTS = 5         # 아키텍트 설계 최대 시도
-    WRITER_MAX_ATTEMPTS = 3            # 작가 집필 최대 시도
+    WRITER_MAX_ATTEMPTS = 4            # 작가 집필 최대 시도 (V55.4: 3회 실패 후 10초 대기 + 4회차)
     BLUEPRINT_MAX_ATTEMPTS = 12        # 블루프린트 생성 최대 시도
 
     # 시스템 재시도
@@ -63,24 +64,31 @@ class WritingLimits:
 
 class AIModels:
     """AI 모델 이름 상수"""
-    # 점진적 모델 업그레이드 체계 - Architect
-    TIER_1_ARCHITECT = "gemini-2.5-flash"          # 1차 시도
-    TIER_2_ARCHITECT = "gemini-2.5-pro"            # 2차 시도 (1회 reject 후)
-    TIER_3_ARCHITECT = "gemini-3-pro-preview"      # 3차 시도 이후 (2회 이상 reject)
+    # [V60.24] Stage 2 Gemini 3 통일 - 모든 Stage 2 모델을 Gemini 3로 변경
 
-    # 점진적 모델 업그레이드 체계 - Writer
-    TIER_1_WRITER = "gemini-2.5-flash"             # 1차 시도
-    TIER_2_WRITER = "gemini-2.5-pro"               # 2차 시도 (1회 reject 후)
-    TIER_3_WRITER = "gemini-3-pro-preview"         # 3차 시도 이후 (2회 이상 reject)
+    # 점진적 모델 업그레이드 체계 - Architect (V60.24: Gemini 3 통일)
+    TIER_1_ARCHITECT = "gemini-3-pro-preview"      # 1차 시도부터 Gemini 3
+    TIER_2_ARCHITECT = "gemini-3-pro-preview"      # 2차+ 시도
+    TIER_3_ARCHITECT = "gemini-3-pro-preview"      # 호환성 유지
+
+    # 점진적 모델 업그레이드 체계 - Writer (V60.24: Gemini 3 통일)
+    TIER_1_WRITER = "gemini-3-pro-preview"         # 1차 시도부터 Gemini 3
+    TIER_2_WRITER = "gemini-3-pro-preview"         # 2차 시도
+    TIER_3_WRITER = "gemini-3-pro-preview"         # 3차 시도 이후
 
     EMERGENCY_FALLBACK = "gemini-3-pro-preview"    # 긴급 시 사용 모델 (레거시)
     DEFAULT_WRITER = "gemini-3-pro-preview"
-    DEFAULT_ARCHITECT = "gemini-2.5-flash"         # 기본은 Tier 1부터 시작
+    DEFAULT_ARCHITECT = "gemini-3-pro-preview"     # [V60.24] Gemini 3로 변경
     DEFAULT_ANALYST = "gemini-3-pro-preview"
-    DEFAULT_REVIEWER = "gemini-2.0-flash"
+    DEFAULT_REVIEWER = "gemini-3-pro-preview"      # [V60.24] Gemini 3로 변경
 
     # [V40 Fix] Stage 4 전용 고정 모델
     STAGE4_FIXED_WRITER_MODEL = "gemini-3-pro-preview"  # Stage 4에서 재시도 시에도 변경 없이 고정
+
+    # [V60.24] Stage 2 전용 모델 상수
+    STAGE2_MAIN_MODEL = "gemini-3-pro-preview"     # Stage 2 주요 생성 모델
+    STAGE2_EXTRACTION_MODEL = "gemini-3-pro-preview"  # Stage 2 추출 모델
+    STAGE2_VALIDATION_MODEL = "gemini-3-pro-preview"  # Stage 2 검증 모델
 
 
 class BatchSizes:

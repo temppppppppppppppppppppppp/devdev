@@ -1,0 +1,83 @@
+{
+  "records": [
+    {
+      "category": "unknown",
+      "stage": 2,
+      "episode": 6,
+      "arc": 2,
+      "reason": "duplicate_acquisition: '녹슨 백근 대도'은(는) 이미 Arc 1에서 획득했습니다. Arc 2에서 다시 획득하려 합니다.",
+      "details": {
+        "severity": "CRITICAL",
+        "violation": {
+          "type": "duplicate_acquisition",
+          "severity": "CRITICAL",
+          "item_or_subject": "간섭도",
+          "prev_arc": 1,
+          "description": "'녹슨 백근 대도'은(는) 이미 Arc 1에서 획득했습니다. Arc 2에서 다시 획득하려 합니다.",
+          "evidence_prev": "Arc 1에서 획득",
+          "evidence_curr": "현재 Arc에서 '간섭도' 획득 시도"
+        }
+      },
+      "timestamp": "2026-02-01T23:59:08.396326"
+    },
+    {
+      "category": "unknown",
+      "stage": 2,
+      "episode": 6,
+      "arc": 2,
+      "reason": "duplicate_acquisition: '하북 동부 운송권 문서'은(는) 이미 Arc 1에서 획득했습니다. Arc 2에서 다시 획득하려 합니다.",
+      "details": {
+        "severity": "CRITICAL",
+        "violation": {
+          "type": "duplicate_acquisition",
+          "severity": "CRITICAL",
+          "item_or_subject": "가문 형법서",
+          "prev_arc": 1,
+          "description": "'하북 동부 운송권 문서'은(는) 이미 Arc 1에서 획득했습니다. Arc 2에서 다시 획득하려 합니다.",
+          "evidence_prev": "Arc 1에서 획득",
+          "evidence_curr": "현재 Arc에서 '가문 형법서' 획득 시도"
+        }
+      },
+      "timestamp": "2026-02-02T00:08:26.586803"
+    },
+    {
+      "category": "unknown",
+      "stage": 2,
+      "episode": 6,
+      "arc": 2,
+      "reason": "duplicate_acquisition: '하북 동부 운송권 문서'은(는) 이미 Arc 1에서 획득했습니다. Arc 2에서 다시 획득하려 합니다.",
+      "details": {
+        "severity": "CRITICAL",
+        "violation": {
+          "type": "duplicate_acquisition",
+          "severity": "CRITICAL",
+          "item_or_subject": "가문 형법서",
+          "prev_arc": 1,
+          "description": "'하북 동부 운송권 문서'은(는) 이미 Arc 1에서 획득했습니다. Arc 2에서 다시 획득하려 합니다.",
+          "evidence_prev": "Arc 1에서 획득",
+          "evidence_curr": "현재 Arc에서 '가문 형법서' 획득 시도"
+        }
+      },
+      "timestamp": "2026-02-02T00:10:45.789505"
+    }
+  ],
+  "stats": {
+    "total_failures": 3,
+    "by_category": {
+      "unknown": 3
+    },
+    "by_stage": {
+      "2": {
+        "unknown": 3
+      },
+      "3": {},
+      "4": {}
+    },
+    "top_5": [
+      {
+        "category": "unknown",
+        "count": 3
+      }
+    ]
+  }
+}

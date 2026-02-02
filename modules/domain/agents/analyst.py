@@ -1,7 +1,17 @@
 import json
 import re
+import os
 from .base_agent import BaseAgent
+from .state_tracker import StateTracker
 import asyncio
+
+# [V49.4] Structured Output Schema
+try:
+    from modules.core.response_schemas import ARC_DESIGN_SCHEMA
+    SCHEMA_ENABLED = True
+except ImportError:
+    SCHEMA_ENABLED = False
+    ARC_DESIGN_SCHEMA = None
 
 # =================================================================
 # V25 고해상도 전략 프롬프트 정의 영역
@@ -59,6 +69,34 @@ ENRICH_BLOCK_PROMPT_V30 = """
 2. 인과율 락(Lock): 주인공이 아직 얻지 못한 능력(Realm)이나 아이템을 사용하여 문제를 해결하는 '데우스 엑스 마키나'를 창조하지 마라.
 3. 팩트 기반 증폭: 새로운 사건을 '창조'하지 말고, 기존 사건의 '물리적 마디'를 $0.1$초 단위로 쪼개어 서술하라.
 4. HUD 동기화: 현재 주인공의 상태(Martial HUD)를 초과하는 무위 묘사 발견 시 해당 설계도는 즉시 파기된다.
+
+[📚 V49.3 Few-Shot 학습 예시 - 반드시 참고할 것]
+
+❌ [WRONG - 데우스 엑스 마키나 위반]:
+"주인공은 아직 배우지 않은 '천마강신공'의 오의를 터득하여 절대 강자를 물리쳤다."
+→ 문제: HUD에 '천마강신공'이 없는데 갑자기 사용. 개연성 제로.
+
+✅ [CORRECT - 보유 능력 활용]:
+"주인공은 최근 익힌 '쌍검연무'의 허점을 역으로 이용해 상대의 빈틈을 노렸다.
+경지 차이를 지형지물과 기습으로 메웠다."
+→ 올바름: HUD에 있는 '쌍검연무'만 사용. 약자가 강자를 이기는 논리적 근거 제시.
+
+❌ [WRONG - 미래 정보 오염]:
+"다음 아크에서 만날 '청풍검객'을 대비해 미리 해독약을 준비했다."
+→ 문제: 아직 만나지 않은 NPC를 미리 알고 있음. 시간선 오염.
+
+✅ [CORRECT - 현재 정보만 활용]:
+"최근 강호에 독문이 활개친다는 소문을 듣고, 만약을 대비해 해독약을 챙겼다."
+→ 올바름: 현재 시점에서 알 수 있는 정보만으로 행동의 근거 제시.
+
+❌ [WRONG - 상태 무시]:
+"중상을 입은 주인공이 다음 날 아무렇지 않게 비무 대회에 출전했다."
+→ 문제: 부상 상태가 갑자기 사라짐. 연속성 붕괴.
+
+✅ [CORRECT - 상태 반영]:
+"아직 완치되지 않은 어깨를 감싸며 비무장에 올랐다.
+상처가 열릴 위험을 감수한 필사의 선택이었다."
+→ 올바름: 이전 상태를 명시적으로 계승하며 서사적 긴장감 추가.
 
 [📦 경계선 데이터]
 - [Previous]: {prev_context}
@@ -128,6 +166,26 @@ PLAN_VOLUME_PROMPT_V25 = """
 6. 당신은 최종 목적지를 향해 가고 있음을 잊지 마십시오. 직전 아크의 결과를 계승하여 현재 아크의 분량을 결정하고, 차후 전개가 자연스럽게 이어지도록 다리를 놓으십시오.
 
 
+[🧠 V49.3 Chain-of-Thought: 단계별 사고 프로세스]
+설계를 시작하기 전에 반드시 아래 단계를 순서대로 수행하라:
+
+**Step 1: 현재 상태 확인**
+- 주인공이 현재 보유한 능력 목록은 무엇인가?
+- 주인공이 현재 소지한 아이템 목록은 무엇인가?
+- 주인공의 현재 부상/내공 상태는 어떠한가?
+
+**Step 2: 목표 분석**
+- 이 권에서 주인공이 달성해야 할 목표는 무엇인가?
+- 그 목표를 달성하기 위해 필요한 능력/아이템은 무엇인가?
+
+**Step 3: 가능성 검증**
+- Step 1의 보유 능력으로 Step 2의 목표가 달성 가능한가?
+- 불가능하다면, 어떤 과정을 통해 필요한 것을 획득할 수 있는가?
+
+**Step 4: 설계 조정**
+- Step 3에서 불가능으로 판단되면, 목표를 조정하거나 획득 과정을 추가하라.
+- "갑자기" 능력이 생기거나, "이미" 보유한 것을 재획득하는 설정은 금지한다.
+
 [📜 V25 매니페스토: 6대 섹션 쿼터제 (Compact)]
 1. **핵심 사건 (300자+)**: 권 전체를 관통하는 메인 플롯과 위기 전개.
 2. **주인공 설계 (250자+)**: 능동적 목적의식과 판을 짜는 행동 원리(Agency).
@@ -154,6 +212,18 @@ PLAN_ARC_PROMPT_V25 = """
 [🚨 SYSTEM: HIGH-PRECISION HYBRID STRATEGIST]
 {genre_prompt}
 
+### 🚨🚨🚨 0. [CRITICAL] 직전 Arc 종료 상태 - 절대 무시 금지 🚨🚨🚨
+**아래 상태는 신성불가침의 진실이다. 이 상태를 무시하거나 리셋하면 즉시 REJECT된다.**
+
+{prev_arc_context}
+
+**[V60.10 HARD LOCK] 위 상태에서 명시된:**
+- 부상/내공: 회복 없이 활동 불가. 회복 장면 필수.
+- 소지품: 이미 있으면 다시 획득 금지.
+- 위치: 순간이동 금지, 이동 과정 명시.
+
+═══════════════════════════════════════════════════════════════
+
 ### 📦 1. 서사 도구 및 자산 (Library & Assets)
 - [아키타입]: {archetype_library}
 - [원자 패턴]: 도입({intro_library}) / 전개({dev_library}) / 전환({trans_library}) / 결말({ending_library})
@@ -166,9 +236,70 @@ PLAN_ARC_PROMPT_V25 = """
 
 ### 📐 2. 서사 맥락 및 연결 (Narrative Window)
 - [🧭 대전략 나침반]: {strategic_compass}
-- [🕒 실전 연표]: {prev_arc_context}
 - [🔗 전술 연결]: {prev_block} -> [🎯 현재 설계 대상: {curr_block}] -> {next_block}
 - [🗺️ 전체 로드맵]: {full_roadmap}
+- ⚠️ 직전 Arc 상태는 섹션 0번에서 이미 명시됨. 반드시 참조할 것.
+
+### 🚨 2-1. 연속성 절대 준수 (CONTINUITY ABSOLUTE RULE) [V49.2]
+**위 [🕒 실전 연표]에 명시된 직전 Arc의 종료 상태는 성경과 같은 불변의 진실이다.**
+
+1. **소지품 연속성**: 직전 Arc에서 획득/소지한 아이템(무기, 패, 문서 등)은 현재 Arc 시작 시 반드시 소지하고 있어야 한다.
+   - 이미 획득한 아이템을 다시 획득하러 가는 설정은 CRITICAL 위반이다.
+   - 아이템 소지 상태를 명시적으로 언급하라.
+
+2. **부상 연속성**: 직전 Arc에서 입은 부상/내공 소모는 현재 Arc 도입부에 반드시 반영되어야 한다.
+   - 부상 상태에서 무리한 행동은 회복/치료 장면이 선행되어야 한다.
+   - "갑자기 멀쩡해지는" 설정은 CRITICAL 위반이다.
+
+3. **위상 연속성**: 직전 Arc에서 획득한 신분/권한/인정은 현재 Arc에서 일관되게 반영되어야 한다.
+   - 이미 복권된 인물이 다시 무시당하는 설정은 MAJOR 위반이다.
+   - 정보 전파 시간(반나절~하루)을 고려하여 반응을 설계하라.
+
+4. **복장/장비 연속성**: 직전 Arc 종료 시점의 복장/장비 상태가 현재 Arc 시작 시 유지되어야 한다.
+   - 화려한 복장에서 갑자기 허름한 복장으로 변경되려면 명확한 서사적 근거가 필요하다.
+
+### 🔢 2-2. 내공 상태 누적 계산 규칙 (V49.6 NEW)
+**내공은 Arc를 넘어 누적된다. 다음 공식을 반드시 준수하라:**
+
+- Arc N 시작 내공 = Arc N-1 종료 내공
+- Arc N 종료 내공 = Arc N 시작 내공 - (이번 Arc에서 소모한 내공)
+
+**예시 계산:**
+- Arc 1: 시작 100% → 소모 30% → 종료 70%
+- Arc 2: 시작 70% (Arc 1 종료값 그대로!) → 소모 20% → 종료 50%
+- Arc 3: 시작 50% → 회복 +30% (치료/운기조식) → 종료 80%
+
+**🚨 CRITICAL 위반 사례:**
+❌ Arc 1 종료 내공 70%인데 → Arc 2 시작을 100%로 설정 (리셋 금지)
+❌ Arc 2에서 "내공 20% 소모"라고 했는데 → 종료 내공을 "50%"가 아닌 다른 값으로 기록
+❌ Arc 2 시작 내공 70%인데 → "80% 소모"하여 음수 내공 발생
+
+**회복 가능 조건 (명시적 서사 근거 필수):**
+- 운기조식 장면 (최소 반나절~하루 필요, 최대 +20~30%)
+- 영약/단약 복용 (아이템 소모 필수 기록)
+- 비급/심법 수련 (최소 며칠~일주일 필요)
+
+### 🧠 V49.3 Chain-of-Thought: Arc 설계 사고 프로세스
+설계를 시작하기 전에 반드시 아래 단계를 순서대로 수행하라:
+
+**Step 1: 직전 Arc 상태 확인**
+- 직전 Arc 종료 시 주인공의 위치는 어디인가?
+- 직전 Arc 종료 시 주인공이 소지한 아이템은 무엇인가?
+- 직전 Arc 종료 시 주인공의 부상/내공 상태는 어떠한가?
+
+**Step 2: 현재 Arc 도입부 설계**
+- Step 1의 상태를 그대로 계승하여 첫 화를 시작하라.
+- 위치 이동이 필요하면 이동 과정을 명시하라.
+- 부상 회복이 필요하면 치료 장면을 선행하라.
+
+**Step 3: 아이템/능력 사용 검증**
+- 이 Arc에서 사용하려는 아이템이 Step 1에서 소지 중인가?
+- 이 Arc에서 사용하려는 능력이 주인공이 이미 배운 것인가?
+- NO라면 → 획득 과정을 먼저 설계하라.
+
+**Step 4: 상태 변화 추적**
+- 각 화에서 발생하는 상태 변화를 명시하라.
+- Arc 종료 시 상태가 다음 Arc의 시작 조건이 됨을 인지하라.
 
 ### 🧬 3. 지정 복선 연출 미션 (Assigned Seeds Mission)
 {assigned_seeds_info}
@@ -190,6 +321,35 @@ PLAN_ARC_PROMPT_V25 = """
 4. **합리적 이기주의**: 주인공은 전생/회빙환의 지식을 이용하여 상황을 의도적으로 지배하고 설계해야 함.
 5. 번호 절대 준수: {curr_block}에 적힌 Block 번호나 회차 번호는 무시하라. 오직 시스템이 부여한 **{ep_start}**를 첫 번째 회차 번호로 사용하여 beat_sequence를 작성하라. 이를 어길 시 서사 무결성 파괴로 간주한다.
 
+### 📚 V49.3 Arc 설계 Few-Shot 예시
+
+❌ [WRONG - 아이템 중복 획득]:
+"제3화: 주인공이 대도를 획득한다" (이미 Arc 1에서 획득함)
+→ 문제: 직전 Arc에서 이미 소지한 아이템을 다시 획득. CRITICAL 위반.
+
+✅ [CORRECT - 소지품 연속성]:
+"제1화 도입: 허리에 찬 대도의 무게를 느끼며 객잔 문을 열었다."
+→ 올바름: 이전 Arc에서 획득한 아이템 소지 상태를 명시적으로 계승.
+
+❌ [WRONG - 부상 상태 무시]:
+"제1화: 어제 중상을 입은 주인공이 곧바로 비무에 참가하여 압승했다."
+→ 문제: 부상 상태에서 무리한 행동, 회복 과정 생략. CRITICAL 위반.
+
+✅ [CORRECT - 부상 연속성]:
+"제1화: 아직 아물지 않은 상처를 억지로 동여매고 비무장에 올랐다.
+제2화: 상처가 벌어지며 피가 스며들었지만, 치료는 승부 후로 미뤘다."
+→ 올바름: 부상 상태를 계승하고, 무리한 행동의 대가를 서사적으로 활용.
+
+❌ [WRONG - 화 간 모순]:
+"제2화: 검을 손에 쥐고 적진에 뛰어들었다"
+"제3화: 검을 찾으러 무기고로 향했다"
+→ 문제: 단일 Arc 내에서 아이템 상태 모순. MAJOR 위반.
+
+✅ [CORRECT - 화 간 일관성]:
+"제2화: 검을 손에 쥐고 적진에 뛰어들었다. 검이 부러지며 전투 종료."
+"제3화: 부러진 검 대신 새 무기를 구하러 무기고로 향했다."
+→ 올바름: 상태 변화에 명확한 서사적 근거 제시.
+
 {special_instructions}  # 👈 [V27.6 핵심 슬롯] Arc 1/50 규칙이 이곳에 박힙니다.
 
 ### [🚨 SYSTEM RESTRICTION: NO CHATTER]
@@ -207,20 +367,148 @@ PLAN_ARC_PROMPT_V25 = """
         "secondary": ["부 패턴 리스트"],
         "mixing_logic": "패턴 조합 및 복선 연출 통합 전략"
     }},
-    "ep_count": {ep_count},
+    "pacing_decision": {{
+        "chosen_pacing": "Blitz(2-3화) / Standard(3-4화) / Epic(5-6화) 중 선택",
+        "reasoning": "사건 밀도와 긴장감 분석 근거"
+    }},
+    "ep_count": "{ep_count_suggestion} (시스템 추천) 또는 2~6 중 사건 밀도에 맞게 직접 결정",
     "ep_start": {ep_start},
-    "ep_end": {ep_end},
+    "ep_end": "ep_start + ep_count - 1 로 계산",
     "title": "에피소드 묶음 제목",
     "beat_sequence": [
         "제 N화: [패턴/비트] 구체적 실행 액션 및 복선 노출 지점",
         "..."
     ],
-    "tactical_doc": "단순 요약을 절대 금지한다. 제 {ep_start}화부터 {ep_end}화까지 '각 회차별'로 섹션을 명확히 분리하여 [제 N화 전술 설계] 형태로 작성하라. 
+    "state_constraints": {{
+        "arc_start_state": {{
+            "location": "Arc 시작 시 주인공 위치",
+            "equipment": ["소지 중인 무기/아이템 목록"],
+            "injuries": "부상 상태 (정상/경상/중상)",
+            "internal_energy": "내공 상태 (%)"
+        }},
+        "arc_end_state": {{
+            "location": "Arc 종료 시 주인공 위치",
+            "equipment": ["종료 시 주인공이 직접 소지하는 아이템만"],
+            "injuries": "종료 시 부상 상태",
+            "internal_energy": "종료 시 내공 상태 (%)"
+        }},
+        "protagonist_items": ["주인공이 직접 소지하게 되는 아이템만"],
+        "distributed_items": ["주인공이 타인에게 지급/분배한 아이템"],
+        "items_consumed": ["이 Arc에서 소모되는 아이템 (금전, 소모품 등)"],
+        "relationship_changes": [
+            {{"target": "NPC/집단명", "from": "이전 상태", "to": "변경 후 상태", "trigger": "변화 계기", "justification": "서사적 근거"}}
+        ],
+        "power_changes": {{
+            "start_power": 30,
+            "end_power": 35,
+            "growth_justification": "성장 근거 (수련/비급/각성 등)"
+        }},
+        "foreshadowings": [
+            {{"id": "복선ID", "type": "아이템/인물/사건/능력/비밀", "description": "복선 내용", "expected_payoff": "예상 회수 시점/방법"}}
+        ],
+        "continuity_checkpoints": [
+            "제 N화: [상태 변화] 구체적 변화 내용"
+        ]
+    }},
+
+    🚨🚨🚨 [V49.6 아이템 분류 규칙 - 필수 준수] 🚨🚨🚨
+
+    ❌ 잘못된 예 (REJECT됨):
+    - 주인공이 금화로 강철도를 구매해서 병사들에게 지급
+    - items_acquired: ["강철도"]  ← 틀림! 병사들에게 준 것은 주인공 아이템이 아님
+
+    ✅ 올바른 예:
+    - 주인공이 금화로 강철도를 구매해서 병사들에게 지급
+    - protagonist_items: []  ← 주인공이 직접 갖는 것 없음
+    - distributed_items: ["강철도", "돈피 갑옷"]  ← 타인에게 지급
+    - items_consumed: ["황금 일천 냥"]  ← 구매에 소모된 금전
+
+    ✅ 올바른 예 2:
+    - 주인공이 철혈사자패를 하사받아 허리에 참
+    - protagonist_items: ["철혈사자패"]  ← 주인공이 직접 소지
+    - distributed_items: []
+    - items_consumed: []
+
+    [핵심 구분법]
+    - 주인공 허리/품속/손에 있으면 → protagonist_items
+    - 타인에게 건네주면 → distributed_items
+    - 사용해서 사라지면 → items_consumed
+
+    🔧 [V49.7 품질 추적 필드 - 선택적 작성]
+
+    ▶ relationship_changes (관계 변화):
+    - target: 변화 대상 NPC/집단명 (예: "사병들", "팽가 장로들")
+    - from: 이전 관계 상태 (적대/무시/의심/중립/경외/충성)
+    - to: 변경 후 상태
+    - trigger: 변화를 유발한 사건 (예: "비무 승리", "금화 지급")
+    - justification: 서사적 근거 (급변 방지)
+
+    예시:
+    - 사병들이 "무시" → "경외"로 변하려면 trigger("비무 압승")와 justification("압도적 무력 목격") 필요
+
+    ▶ power_changes (파워 스케일링):
+    - start_power: Arc 시작 시 파워 (0-100)
+    - end_power: Arc 종료 시 파워 (Arc당 최대 +20 권장)
+    - growth_justification: 성장 근거 (수련/비급/영약/각성 중 하나)
+
+    ▶ foreshadowings (복선 설치):
+    - id: 복선 식별자 (예: "심마박동독", "가주_비밀")
+    - type: 복선 유형 (아이템/인물/사건/능력/비밀/예언)
+    - description: 복선 내용
+    - expected_payoff: 예상 회수 시점/방법 (5 Arc 이내 권장),
+    "tactical_doc": "단순 요약을 절대 금지한다. 제 {ep_start}화부터 {ep_end}화까지 '각 회차별'로 섹션을 명확히 분리하여 [제 N화 전술 설계] 형태로 작성하라.
+
+    ████████████████████████████████████████████████████████████████████
+    █ [V60.29] 화별 분할 필수 형식 - 위반 시 REJECT                      █
+    ████████████████████████████████████████████████████████████████████
+
+    🔴 반드시 아래 형식으로 각 화를 분리하라:
+
+    [제 {ep_start}화 전술 설계]
+    (최소 500자 이상의 상세 내용)
+    - 공간 묘사: ...
+    - 핵심 사건: ...
+    - 상태 변화: ...
+
+    [제 {ep_start}+1화 전술 설계]
+    (최소 500자 이상의 상세 내용)
+    ...
+
+    (제 {ep_end}화까지 반복)
+
+    🚨 검증 기준:
+    - 각 화마다 [제 N화 전술 설계] 헤더 필수
+    - 각 화 최소 300자 이상 (500자 권장)
+    - 화 순서 연속 필수 ({ep_start}, {ep_start}+1, ..., {ep_end})
+    - 화 누락 시 즉시 REJECT
+
+    ████████████████████████████████████████████████████████████████████
+
+    🚨 [연속성 필수 반영 - V49.2]:
+    - 제 {ep_start}화 도입부에 직전 Arc 종료 상태(소지품, 부상, 위치, 복장)를 명시적으로 반영하라.
+    - 이미 획득한 아이템을 다시 획득하거나, 부상 상태를 무시하는 설정은 즉시 REJECT된다.
+    - 예시: '대도를 허리에 찬 채로 시작', '아직 회복 중인 어깨 부상을 감싸며', '비단옷 차림 그대로'
+
+    🔢 [수치 일관성 필수 규칙 - V60.10]:
+    1. 금액/재화: 이전 화에서 획득한 금액을 명시적으로 인용 후 계산하라.
+       ❌ "황금 삼천 냥 획득" → 다음 화 "이천 냥 소모" (총액 불명확)
+       ✅ "황금 삼천 냥 획득" → 다음 화 "삼천 냥 중 천 냥 소모, 이천 냥 잔여"
+    2. 내공/기력: 백분율 계산을 명시적으로 작성하라.
+       ❌ "삼할(30%) 보유 → 구푼(9%) 소모 → 이십일 할(210%) 잔여" (산수 오류)
+       ✅ "삼할(30%) 보유 → 구푼(9%) 소모 → 이할 일푼(21%) 잔여" (30-9=21)
+    3. 부상 추적: 같은 부상의 부위는 Arc 끝까지 일관되게 유지하라.
+       ❌ 제N화 "어깨를 스쳤다" → 제N+1화 "전완부 자상 치료" (부위 변경)
+       ✅ 제N화 "어깨를 스쳤다" → 제N+1화 "어깨 상처가 아물어가며" (부위 일관)
+       ※ 신규 부상은 "제N화에서 새로 입은 [부위] 부상"으로 명시
+    4. 수량/개수: 아이템 수량 변화 시 계산 과정을 기록하라.
+       ❌ "영약 다섯 알 획득" → "영약 복용 후 세 알 소모" → "남은 영약 네 알" (5-3≠4)
+       ✅ "영약 다섯 알 획득" → "영약 세 알 복용" → "남은 영약 두 알" (5-3=2)
 
     각 회차별 섹션은 반드시 '3개 이상의 핵심 전술 비트(Tactical Beats)'로 구성되어야 하며, 각 비트는 아래 요소를 포함해야 한다:
     (1) 공간의 질감: 장소의 오감 데이터 (냄새, 온도, 소리, 기물 배치).
     (2) 인과의 마디: 인물의 행동이 상황을 반전시키는 0.1초 단위의 세부 공정. (단, 해당 화에 배정된 비트만 전개하고 다음 화 내용을 미리 쓰지 마라.)
     (3) 파동의 전이: 주인공의 행동에 대한 주변 인물들의 경악, 착각, 평판 변화 관찰 리포트.
+    (4) 연속성 체크포인트: 해당 화에서 변경되는 상태(아이템 획득/소모, 부상/회복, 위상 변화)를 명시하라.
 
     [주의] 1개 회차당 최소 800자 이상의 재료를 투입하여, 전체 전술서 분량을 {ep_count} * 800자 이상으로 확보하라. 아키텍트가 10장면을 설계할 수 있는 '충분한 원재료'를 공급하는 것이 목적이다."
 }}
@@ -231,13 +519,48 @@ PLAN_ARC_PROMPT_V25 = """
 
 #region // SELF CRITIC PROMPT
 ANALYST_SELF_CRITIC_PROMPT = """
-당신은 아크 설계안의 무결성을 검사하는 수석 감사관입니다. 
-설정한 `ep_count`가 `tactical_doc`의 사건 밀도와 일치하는지, 아키타입의 비트가 살아있는지 판정하십시오.
+당신은 아크 설계안의 무결성을 검사하는 수석 감사관입니다.
+
+[검사 항목 - 모두 통과해야 PASS]
+
+1. **ep_count 밀도 검사**: 설정한 `ep_count`가 `tactical_doc`의 사건 밀도와 일치하는가?
+
+2. **아키타입 비트 검사**: 패턴 라이브러리의 비트가 tactical_doc에 살아있는가?
+
+3. **[V49.2 신규] 연속성 검사**:
+   - 제 {ep_start}화 도입부에 직전 Arc 종료 상태(소지품, 부상, 위치)가 반영되어 있는가?
+   - 이미 획득한 아이템을 다시 획득하려는 설정이 있는가? (있으면 FAIL)
+   - 부상 상태에서 무리한 행동을 회복/치료 없이 하려는 설정이 있는가? (있으면 FAIL)
+   - Arc 내에서 화 사이에 모순이 있는가? (있으면 FAIL)
+
+4. **복장/장비 일관성 검사**:
+   - 화마다 복장/장비 묘사가 모순되지 않는가?
+   - 갑작스러운 복장 변경에 서사적 근거가 있는가?
+
+5. **[V49.3 신규] state_constraints 일관성 검사**:
+   - `state_constraints.arc_start_state`가 직전 Arc의 종료 상태와 일치하는가?
+   - `items_acquired`에 있는 아이템이 `arc_end_state.equipment`에 포함되어 있는가?
+   - `items_consumed`에 있는 아이템이 `arc_start_state.equipment`에 있었는가?
+   - `continuity_checkpoints`가 `tactical_doc`의 상태 변화와 일치하는가?
+
+6. **[V49.7 신규] 품질 추적 필드 검사**:
+   - `relationship_changes`가 있으면 from→to 전이가 합리적인가? (무시→충성 직행 FAIL)
+   - `power_changes`의 end_power - start_power가 20을 초과하면 FAIL (근거 없이 급성장)
+   - `foreshadowings`가 있으면 expected_payoff가 5 Arc 이내인가? (너무 먼 복선 WARNING)
+
+7. **[V60.10 신규] 수치 일관성 검사**:
+   - 금액/재화가 화마다 맞는가? (획득-소모=잔여 계산 확인)
+   - 내공 백분율 계산이 정확한가? (30%-9%=21%, NOT 210%)
+   - 부상 부위가 화마다 일관되는가? (어깨 부상이 전완부로 바뀌면 FAIL)
+   - 아이템 수량 변화가 산술적으로 맞는가? (5개-3개=2개)
+   - 수치 계산 오류 발견 시 즉시 FAIL 처리
 
 [Output Format - JSON Only]
 {{
     "status": "PASS" 또는 "FAIL",
     "feedback": "수정 지시사항",
+    "continuity_issues": ["발견된 연속성 문제 목록"],
+    "state_constraint_issues": ["발견된 상태 제약 문제 목록"],
     "final_arc": {{ ... }}
 }}
 """
@@ -285,7 +608,9 @@ class Analyst(BaseAgent):
         )
         
         response = self.ask(prompt, temperature=0.7)
-        print(f"\n--- [DEBUG: Vol {vol_no} AI Raw Response] ---\n{response[:500]}...\n")
+        # [V60.2] DEBUG → 조건부 로깅 (프로덕션에서는 비활성화)
+        if os.getenv("DEBUG_MODE", "").lower() == "true":
+            print(f"\n--- [Vol {vol_no} AI Raw Response] ---\n{response[:500]}...\n")
         
         # 3. 🚨 결과물 정제 및 안전장치 가동
         result = self._extract_json_robust(response)
@@ -311,12 +636,277 @@ class Analyst(BaseAgent):
     #region //arc planning
         
 
-    def plan_single_arc_v20(self, arc_no, vol_strategy, prev_block, curr_block, next_block, ep_start, 
-                            prev_arc_context="", assets=None, full_roadmap="", assigned_seeds=None, feedback="", recent_patterns=None):
+    # ═══════════════════════════════════════════════════════════════
+    # [V60] Arc 상태 계승 검증 메서드
+    # ═══════════════════════════════════════════════════════════════
+
+    def _validate_arc_state_continuity_v60(self, current_arc: dict, prev_arc: dict) -> dict:
+        """
+        [V60] 이전 Arc의 종료 상태가 현재 Arc의 시작 상태로 정확히 계승되었는지 검증
+
+        Args:
+            current_arc: 현재 Arc 설계 데이터
+            prev_arc: 이전 Arc 설계 데이터
+
+        Returns:
+            {
+                "valid": bool,
+                "issues": list,
+                "severity": "CRITICAL" | "WARNING" | "NONE",
+                "auto_corrections": dict
+            }
+        """
+        if not prev_arc or not isinstance(prev_arc, dict):
+            return {"valid": True, "issues": [], "severity": "NONE", "auto_corrections": {}}
+
+        issues = []
+        auto_corrections = {}
+
+        # 이전 Arc의 종료 상태
+        prev_constraints = prev_arc.get('state_constraints', {})
+        prev_end = prev_constraints.get('arc_end_state', {})
+        prev_joint = prev_constraints.get('joint_docs', {})
+
+        # 현재 Arc의 시작 상태
+        curr_constraints = current_arc.get('state_constraints', {})
+        curr_start = curr_constraints.get('arc_start_state', {})
+
+        # 1. 위치 검증
+        prev_location = prev_joint.get('final_location') or prev_end.get('location', '')
+        curr_location = curr_start.get('location', '')
+        if prev_location and curr_location and prev_location != curr_location:
+            # 자동 보정 시도
+            issues.append(f"CRITICAL: 위치 단절 - Arc 끝 '{prev_location}' → Arc 시작 '{curr_location}'")
+            auto_corrections['location'] = prev_location
+
+        # 2. 소지품 검증
+        prev_inventory = prev_joint.get('physical_inventory', []) or prev_end.get('equipment', [])
+        curr_inventory = curr_start.get('equipment', [])
+
+        if isinstance(prev_inventory, str):
+            prev_inventory = [prev_inventory] if prev_inventory else []
+        if isinstance(curr_inventory, str):
+            curr_inventory = [curr_inventory] if curr_inventory else []
+
+        prev_set = set(prev_inventory) if prev_inventory else set()
+        curr_set = set(curr_inventory) if curr_inventory else set()
+
+        missing_items = prev_set - curr_set
+        if missing_items:
+            issues.append(f"CRITICAL: 아이템 손실 - {missing_items} (이전 Arc에서 소지 중이던 아이템)")
+            auto_corrections['missing_items'] = list(missing_items)
+
+        # 3. 내공/상태 검증
+        prev_energy = prev_end.get('internal_energy', 0)
+        curr_energy = curr_start.get('internal_energy', 0)
+
+        try:
+            prev_e = int(str(prev_energy).replace('%', '')) if prev_energy else 0
+            curr_e = int(str(curr_energy).replace('%', '')) if curr_energy else 0
+
+            # 회복 없이 증가는 위반 (30% 이상 급증)
+            if curr_e > prev_e + 30:
+                issues.append(f"WARNING: 내공 급증 감지 ({prev_e}% → {curr_e}%) - 회복 근거 필요")
+        except (ValueError, TypeError):
+            pass
+
+        # 4. 부상 상태 검증
+        prev_injuries = prev_end.get('injuries', []) or prev_end.get('status', '')
+        curr_injuries = curr_start.get('injuries', []) or curr_start.get('status', '')
+
+        if prev_injuries and not curr_injuries:
+            if '중상' in str(prev_injuries) or '부상' in str(prev_injuries):
+                issues.append(f"WARNING: 부상 상태 누락 - 이전 Arc 종료 시 '{prev_injuries}' 상태였으나 현재 Arc 시작에 반영 안 됨")
+
+        # 심각도 결정
+        critical_count = sum(1 for i in issues if i.startswith('CRITICAL'))
+        if critical_count > 0:
+            severity = "CRITICAL"
+        elif issues:
+            severity = "WARNING"
+        else:
+            severity = "NONE"
+
+        return {
+            "valid": critical_count == 0,
+            "issues": issues,
+            "severity": severity,
+            "auto_corrections": auto_corrections
+        }
+
+    def _validate_tactical_doc_continuity_v60(self, tactical_doc: str, ep_count: int) -> dict:
+        """
+        [V60] Arc 내 화 간 연속성 검증 - 아이템/부상 상태 추적
+
+        Args:
+            tactical_doc: 전술 문서 텍스트
+            ep_count: 예상 에피소드 수
+
+        Returns:
+            {
+                "valid": bool,
+                "issues": list,
+                "item_tracking": dict,
+                "injury_tracking": dict
+            }
+        """
+        # [V60.36 FIX] tactical_doc이 dict인 경우 문자열로 변환
+        if isinstance(tactical_doc, dict):
+            tactical_doc = tactical_doc.get('tactical_doc', '') or str(tactical_doc)
+        if not isinstance(tactical_doc, str):
+            tactical_doc = str(tactical_doc) if tactical_doc else ''
+
+        issues = []
+        item_states = {}  # {item: 'acquired' | 'lost'}
+        injury_states = {}  # {ep: 'injured' | 'recovered' | 'normal'}
+
+        for i in range(1, ep_count + 1):
+            # 각 화 섹션 추출
+            pattern = rf'제\s*{i}\s*화.*?(?=제\s*{i+1}\s*화|$)'
+            ep_match = re.search(pattern, tactical_doc, re.DOTALL | re.IGNORECASE)
+
+            if not ep_match:
+                continue
+
+            section = ep_match.group(0)
+
+            # 1. 아이템 획득 추적
+            acquired_patterns = [
+                r'(.+?)(?:을|를)\s*(?:획득|집어\s*들|뽑아\s*들|챙기|주워)',
+                r'(.+?)(?:을|를)\s*(?:받|하사받|전달받|넘겨받)',
+            ]
+            for pattern in acquired_patterns:
+                matches = re.findall(pattern, section)
+                for item in matches:
+                    item = item.strip()
+                    if len(item) >= 2 and len(item) <= 15:
+                        if item in item_states and item_states[item] == 'lost':
+                            issues.append(f"EP{i}: 이미 잃어버린 '{item}' 재획득 시도")
+                        item_states[item] = 'acquired'
+
+            # 2. 아이템 손실 추적
+            lost_patterns = [
+                r'(.+?)(?:을|를)\s*(?:잃|파괴|손상|부러)',
+                r'(.+?)(?:이|가)\s*(?:부러지|망가지|사라지)',
+            ]
+            for pattern in lost_patterns:
+                matches = re.findall(pattern, section)
+                for item in matches:
+                    item = item.strip()
+                    if len(item) >= 2 and len(item) <= 15:
+                        if item not in item_states or item_states[item] != 'acquired':
+                            issues.append(f"EP{i}: 미소지 아이템 '{item}' 손실 시도")
+                        item_states[item] = 'lost'
+
+            # 3. 부상 상태 추적
+            if re.search(r'중상|부상|다치|피를 흘리', section):
+                injury_states[i] = 'injured'
+            elif re.search(r'회복|치료|완치|상처가 아물', section):
+                injury_states[i] = 'recovered'
+            else:
+                injury_states[i] = 'normal'
+
+            # 4. 부상 상태 연속성 검증
+            if i > 1:
+                prev_injury = injury_states.get(i - 1, 'normal')
+                curr_injury = injury_states.get(i, 'normal')
+
+                # 부상 상태에서 격렬한 행동
+                if prev_injury == 'injured' and curr_injury == 'normal':
+                    intense_actions = re.findall(r'전투|비무|격투|도약|비약|질주', section)
+                    if len(intense_actions) >= 2:
+                        issues.append(f"EP{i}: 부상 미회복 상태에서 과도한 행동 ({len(intense_actions)}회 격렬 행동)")
+
+        return {
+            "valid": len([i for i in issues if 'CRITICAL' in i or '재획득' in i or '미소지' in i]) == 0,
+            "issues": issues,
+            "item_tracking": item_states,
+            "injury_tracking": injury_states
+        }
+
+    def _auto_correct_joint_docs_v60(self, tactical_doc: str, arc_data: dict) -> dict:
+        """
+        [V60] 마지막 화 내용에서 joint_docs 자동 추출하여 보정
+
+        Args:
+            tactical_doc: 전술 문서 텍스트
+            arc_data: Arc 설계 데이터
+
+        Returns:
+            보정된 arc_data
+        """
+        # [V60.36 FIX] tactical_doc이 dict인 경우 문자열로 변환
+        if isinstance(tactical_doc, dict):
+            tactical_doc = tactical_doc.get('tactical_doc', '') or str(tactical_doc)
+        if not isinstance(tactical_doc, str):
+            tactical_doc = str(tactical_doc) if tactical_doc else ''
+
+        # 마지막 화 섹션 추출
+        ep_sections = re.findall(r'제\s*(\d+)\s*화.*?(?=제\s*\d+\s*화|$)', tactical_doc, re.DOTALL)
+        if not ep_sections:
+            return arc_data
+
+        # 마지막 화 번호 및 내용 찾기
+        last_match = list(re.finditer(r'제\s*(\d+)\s*화', tactical_doc))
+        if not last_match:
+            return arc_data
+
+        last_ep_start = last_match[-1].start()
+        last_section = tactical_doc[last_ep_start:]
+
+        # 1. 최종 위치 추출
+        location_patterns = [
+            r'(?:도착|도달|들어서|위치한?)\s*(?:곳은?\s*)?([가-힣\w]+(?:전|관|각|루|궁|산|촌|장|성|문)?)',
+            r'([가-힣\w]+(?:전|관|각|루|궁|산|촌|장|성|문))(?:에서|에|으로)\s*(?:향하|떠나|이동)',
+        ]
+        final_location = None
+        for pattern in location_patterns:
+            match = re.search(pattern, last_section[-500:])  # 마지막 500자에서 검색
+            if match:
+                final_location = match.group(1)
+                break
+
+        # 2. 최종 소지품 추출
+        inventory_patterns = [
+            r'(?:손에|허리에|품속에|등에)\s*([가-힣\w]+?)(?:을|를|이|가)?\s*(?:들고|쥐고|차고|지니)',
+        ]
+        final_inventory = []
+        for pattern in inventory_patterns:
+            matches = re.findall(pattern, last_section)
+            for item in matches:
+                if len(item) >= 2 and len(item) <= 15 and item not in final_inventory:
+                    final_inventory.append(item)
+
+        # 3. arc_data 보정
+        if 'state_constraints' not in arc_data:
+            arc_data['state_constraints'] = {}
+        if 'joint_docs' not in arc_data['state_constraints']:
+            arc_data['state_constraints']['joint_docs'] = {}
+
+        joint_docs = arc_data['state_constraints']['joint_docs']
+
+        if final_location:
+            existing_location = joint_docs.get('final_location', '')
+            if not existing_location or existing_location != final_location:
+                print(f"      🔧 [V60] joint_docs 위치 보정: '{existing_location}' → '{final_location}'")
+                joint_docs['final_location'] = final_location
+
+        if final_inventory:
+            existing_inventory = joint_docs.get('physical_inventory', [])
+            if not existing_inventory:
+                print(f"      🔧 [V60] joint_docs 소지품 보정: {final_inventory}")
+                joint_docs['physical_inventory'] = final_inventory
+
+        return arc_data
+
+    def plan_single_arc_v20(self, arc_no, vol_strategy, prev_block, curr_block, next_block, ep_start,
+                            prev_arc_context="", assets=None, full_roadmap="", assigned_seeds=None, feedback="", recent_patterns=None,
+                            protagonist_name=None):  # [V60.32] 주인공 이름 파라미터 추가
         """
         [V31 Sovereign] 3중 캐시 대응: 선 압축 후 설계 방식의 고해상도 전략 엔진
         - 캐시 존재 시: 지침 치환 후 서버 캐시 참조 (비용 90% 절감)
         - 호출 실패 시: 즉시 Full-Text로 자동 복구하여 서사 밀도 보존 (Fallback Safety)
+        [V60] Arc 상태 계승 검증 + 화 간 모순 탐지 + Joint Docs 자동 보정
         """
         from google.genai import types
         import json
@@ -346,14 +936,62 @@ class Analyst(BaseAgent):
         except (ValueError, TypeError):
             clean_arc_no, vol_no = arc_no, "Unknown"
 
+        # [V60.31] 페이싱 계산 - Block 구조에 맞게 수정
         original_guess = 5
-        if isinstance(curr_block, dict) and 'logic' in curr_block:
-            content_sample = str(curr_block.get('logic', {}))
-            # 내용 길이에 따라 기본 분량 추정
-            original_guess = 4 if len(content_sample) < 300 else (6 if len(content_sample) > 800 else 5)
-        
+        if isinstance(curr_block, dict):
+            # Block 구조: content.context/event_villain/solution/reward 또는 raw
+            content_parts = []
+
+            # 1. content 객체에서 추출
+            content_obj = curr_block.get('content', {})
+            if isinstance(content_obj, dict):
+                for key in ['context', 'event_villain', 'solution', 'reward']:
+                    if content_obj.get(key):
+                        content_parts.append(str(content_obj[key]))
+            elif isinstance(content_obj, str):
+                content_parts.append(content_obj)
+
+            # 2. raw 필드에서 추출 (enriched block)
+            if curr_block.get('raw'):
+                content_parts.append(str(curr_block['raw']))
+
+            # 3. title도 고려
+            if curr_block.get('title'):
+                content_parts.append(str(curr_block['title']))
+
+            content_sample = " ".join(content_parts)
+            content_len = len(content_sample)
+
+            # 내용 길이/복잡도에 따라 화수 추정
+            # - 500자 미만: 간단한 블록 → 3화
+            # - 500~1000자: 표준 블록 → 4화
+            # - 1000~1500자: 복잡한 블록 → 5화
+            # - 1500자 이상: 매우 복잡 → 6화
+            if content_len < 500:
+                original_guess = 4  # → 3화
+            elif content_len < 1000:
+                original_guess = 5  # → 4화
+            elif content_len < 1500:
+                original_guess = 6  # → 5화
+            else:
+                original_guess = 7  # → 6화 (max)
+
         # 실제 타겟 화수는 추정치보다 1화 적게 잡아 긴장감 유도 (2~6화 제한)
         target_ep_count = max(2, min(6, original_guess - 1))
+
+        # [V60.31] Block 빈약 경고 - 화당 200자 이상 권장
+        min_content_per_ep = 200
+        if isinstance(curr_block, dict):
+            content_obj = curr_block.get('content', {})
+            content_parts = []
+            if isinstance(content_obj, dict):
+                for key in ['context', 'event_villain', 'solution', 'reward']:
+                    if content_obj.get(key):
+                        content_parts.append(str(content_obj[key]))
+            content_len = len(" ".join(content_parts))
+
+            if content_len < target_ep_count * min_content_per_ep:
+                print(f"      ⚠️ [V60.31] Block 빈약 경고: {content_len}자 / {target_ep_count}화 = 화당 {content_len//target_ep_count}자 (권장 200자+)")
 
         # 3. [V43] 장르별 라이브러리 로드 - 장르에 맞는 서사 패턴 사용
         current_genre = self._get_current_genre()
@@ -399,19 +1037,23 @@ class Analyst(BaseAgent):
                 empty_json = json.dumps({}, ensure_ascii=False)
                 intro_lib_full = dev_lib_full = ending_lib_full = trans_lib_full = archetype_lib_full = empty_json
 
-        # 3-1. [V42] Bible에서 주인공 이름 추출 (PROTAGONIST IDENTITY LOCK)
-        protagonist_name = "주인공"  # 기본값
-        try:
-            bible_data = self.context.db.load_anchor('bible')
-            if bible_data:
-                mb = bible_data.get('MasterBible', bible_data)
-                hud = mb.get('MartialHUD', {})
-                protag = hud.get('Protagonist', {})
-                actual = protag.get('actual_truth', {})
-                if actual.get('name'):
-                    protagonist_name = actual.get('name')
-        except Exception as e:
-            print(f"      ⚠️ [Analyst] 주인공 이름 추출 실패, 기본값 사용: {e}")
+        # 3-1. [V42 + V60.32] 주인공 이름 결정 (파라미터 우선, 없으면 Bible 추출)
+        final_protagonist_name = protagonist_name  # 파라미터로 받은 값 우선
+        if not final_protagonist_name or final_protagonist_name == "주인공":
+            try:
+                bible_data = self.context.db.load_anchor('bible')
+                if bible_data:
+                    mb = bible_data.get('MasterBible', bible_data)
+                    hud = mb.get('MartialHUD', {})
+                    protag = hud.get('Protagonist', {})
+                    actual = protag.get('actual_truth', {})
+                    if actual.get('name'):
+                        final_protagonist_name = actual.get('name')
+            except Exception as e:
+                print(f"      ⚠️ [Analyst] 주인공 이름 추출 실패, 기본값 사용: {e}")
+        if not final_protagonist_name:
+            final_protagonist_name = "주인공"
+        protagonist_name = final_protagonist_name  # 이후 코드 호환
 
         # 4. 공통 데이터셋 조립 (데이터 이스케이프 적용)
         safe_data = {
@@ -427,18 +1069,21 @@ class Analyst(BaseAgent):
             "vol_no": vol_no,
             "ep_start": ep_start,
             "ep_end": ep_start + target_ep_count - 1,
+            "ep_count": target_ep_count,  # [V60.36 FIX] 템플릿에서 사용하는 ep_count 추가
             "assets": self._escape_braces(json.dumps(assets, ensure_ascii=False)) if assets else "{}",
             "full_roadmap": self._escape_braces(full_roadmap)
         }
 
         # 5. 설계 및 자기 비판 루프 (최대 3회 재시도)
         max_retries = 3
-        current_feedback = feedback if feedback else f"반드시 총 {target_ep_count}화 분량으로 압축 설계하십시오."
+        # [V60.31] 가변 페이싱: 권장값만 제시, LLM이 사건 밀도로 최종 결정
+        pacing_guide = f"시스템 권장: {target_ep_count}화 (Blitz:2-3 / Standard:3-4 / Epic:5-6 중 사건 밀도에 맞게 조정 가능)"
+        current_feedback = feedback if feedback else pacing_guide
         final_arc_data = None
 
         for attempt in range(max_retries):
-            # 템플릿의 ep_count 변수를 동적으로 치환
-            adjusted_prompt_tpl = PLAN_ARC_PROMPT_V25.replace("{ep_count}", str(target_ep_count))
+            # [V60.31] 템플릿의 ep_count_suggestion 변수를 동적으로 치환
+            adjusted_prompt_tpl = PLAN_ARC_PROMPT_V25.replace("{ep_count_suggestion}", str(target_ep_count))
             
             # 6. [API 호출 분기 로직]
             try:
@@ -447,24 +1092,30 @@ class Analyst(BaseAgent):
                     cache_safe_data = safe_data.copy()
                     placeholder = "[CACHED: Narrative Patterns Library Active - Refer to system memory]"
                     cache_safe_data.update({
-                        "intro_library": placeholder, "dev_library": placeholder, 
-                        "ending_library": placeholder, "trans_library": placeholder, 
+                        "intro_library": placeholder, "dev_library": placeholder,
+                        "ending_library": placeholder, "trans_library": placeholder,
                         "archetype_library": placeholder,
-                        "special_instructions": f"\n[🚨 MISSION]: {target_ep_count}화 압축 설계 필수."
+                        "special_instructions": f"\n[🚨 PACING GUIDE]: 권장 {target_ep_count}화 (사건 밀도에 따라 2~6화 범위 내 조정 가능)"
                     })
                     prompt = adjusted_prompt_tpl.format(**cache_safe_data)
                     if attempt > 0 or feedback: 
                         prompt += f"\n\n🚨 [FEEDBACK]: {current_feedback}"
                     
+                    # [V49.4] Structured Output Schema 적용
+                    # [V49.6] 온도 상향: 0.4 → 0.5 (추론력 강화)
+                    config_params = {
+                        "cached_content": self.cache_name,  # 🔥 캐시 참조
+                        "temperature": 0.5,
+                        "max_output_tokens": 8192,
+                        "response_mime_type": "application/json"
+                    }
+                    if SCHEMA_ENABLED and ARC_DESIGN_SCHEMA:
+                        config_params["response_schema"] = ARC_DESIGN_SCHEMA
+
                     response = self.client.models.generate_content(
                         model=self.primary_model,
                         contents=prompt,
-                        config=types.GenerateContentConfig(
-                            cached_content=self.cache_name, # 🔥 캐시 참조
-                            temperature=0.4,
-                            max_output_tokens=8192,
-                            response_mime_type="application/json"
-                        )
+                        config=types.GenerateContentConfig(**config_params)
                     )
                     draft_result = self._extract_json_robust(response.text)
                 else:
@@ -482,24 +1133,42 @@ class Analyst(BaseAgent):
                     "ending_library": self._escape_braces(ending_lib_full),
                     "trans_library": self._escape_braces(trans_lib_full),
                     "archetype_library": self._escape_braces(archetype_lib_full),
-                    "special_instructions": f"\n[🚨 MISSION]: {target_ep_count}화 압축 설계 필수."
+                    "special_instructions": f"\n[🚨 PACING GUIDE]: 권장 {target_ep_count}화 (사건 밀도에 따라 2~6화 범위 내 조정 가능)"
                 })
                 prompt = adjusted_prompt_tpl.format(**full_safe_data)
                 if attempt > 0: prompt += f"\n\n🚨 [FEEDBACK]: {current_feedback}"
-                
-                # 일반 API 호출
-                draft_result = self._extract_json_robust(self.ask(prompt, temperature=0.4))
 
-            # 7. 비트수 강제 보정 및 자기 비판 (기존 로직 완벽 보존)
+                # [V49.4] 일반 API 호출 (Structured Schema 적용)
+                # [V49.7] 온도 점진적 상향: 0.5 → 0.6 → 0.7 (재시도 시 창의적 접근 유도)
+                schema = ARC_DESIGN_SCHEMA if SCHEMA_ENABLED else None
+                temp = 0.5 if attempt == 0 else (0.6 if attempt == 1 else 0.7)
+                draft_result = self._extract_json_robust(self.ask(prompt, temperature=temp, response_schema=schema))
+
+            # 7. [V60.31] 가변 페이싱: LLM이 결정한 ep_count 존중 (2~6 범위 내)
+            llm_ep_count = draft_result.get("ep_count")
+            if isinstance(llm_ep_count, str):
+                # "4 (시스템 추천)" 같은 형태에서 숫자 추출
+                import re
+                match = re.search(r'(\d+)', str(llm_ep_count))
+                llm_ep_count = int(match.group(1)) if match else target_ep_count
+            elif not isinstance(llm_ep_count, int):
+                llm_ep_count = target_ep_count
+
+            # 범위 제한 (2~6화)
+            actual_ep_count = max(2, min(6, llm_ep_count))
+            if actual_ep_count != target_ep_count:
+                print(f"      📊 [V60.31] 가변 페이싱: 권장 {target_ep_count}화 → LLM 결정 {actual_ep_count}화")
+
+            # 비트수를 LLM 결정 ep_count에 맞춤
             beats = draft_result.get("beat_sequence", [])
-            if len(beats) != target_ep_count:
-                if len(beats) > target_ep_count:
+            if len(beats) != actual_ep_count:
+                if len(beats) > actual_ep_count:
                     # 넘치는 비트는 마지막에 통합
-                    combined = " / ".join(beats[target_ep_count-1:])
-                    beats = beats[:target_ep_count-1] + [f"[통합 전개]: {combined}"]
+                    combined = " / ".join(beats[actual_ep_count-1:])
+                    beats = beats[:actual_ep_count-1] + [f"[통합 전개]: {combined}"]
                 else:
                     # 부족한 비트는 서사 빌드업으로 채움
-                    while len(beats) < target_ep_count: beats.append("서사적 긴장감 고조 및 빌드업 수행")
+                    while len(beats) < actual_ep_count: beats.append("서사적 긴장감 고조 및 빌드업 수행")
                 draft_result["beat_sequence"] = beats
 
             # 자기 비판 감사 (Self-Critic) 호출
@@ -508,20 +1177,110 @@ class Analyst(BaseAgent):
 
             if audit_result.get("status") == "PASS":
                 final_arc_data = draft_result
+                final_arc_data["_actual_ep_count"] = actual_ep_count  # [V60.31] 가변 페이싱 결과 저장
                 break
             current_feedback = audit_result.get("feedback", "밀도 및 개연성 보강 필요")
 
         # 8. 메타데이터 최종 동기화 및 반환 (인과율 유지)
-        if not final_arc_data: final_arc_data = draft_result
-        
+        if not final_arc_data:
+            final_arc_data = draft_result
+            final_arc_data["_actual_ep_count"] = actual_ep_count  # [V60.31]
+
+        # [V60.31] 가변 페이싱: LLM 결정 ep_count 사용
+        final_ep_count = final_arc_data.get("_actual_ep_count", target_ep_count)
         final_arc_data.update({
             "arc_no": clean_arc_no,
             "vol_no": vol_no,
-            "ep_start": ep_start, 
-            "ep_count": target_ep_count,
-            "ep_end": ep_start + target_ep_count - 1
+            "ep_start": ep_start,
+            "ep_count": final_ep_count,
+            "ep_end": ep_start + final_ep_count - 1
         })
-        self._normalize_arc_output(final_arc_data, ep_start, target_ep_count)
+        if "_actual_ep_count" in final_arc_data:
+            del final_arc_data["_actual_ep_count"]  # 임시 키 제거
+        self._normalize_arc_output(final_arc_data, ep_start, final_ep_count)
+
+        # 9. [V49.3] StateTracker를 통한 상태 일관성 검증
+        state_issues = self._validate_arc_with_state_tracker(final_arc_data)
+        if state_issues:
+            print(f"      ⚠️ [Analyst] StateTracker 검증 이슈 발견: {len(state_issues)}건")
+            # 검증 이슈를 Arc 데이터에 첨부 (Director/ContinuityInspector 참조용)
+            final_arc_data['state_tracker_issues'] = state_issues
+            # Critical 이슈가 있으면 tactical_doc에 경고 주입
+            critical_issues = [i for i in state_issues if i.get('severity') in ['critical', 'major']]
+            if critical_issues:
+                warning_text = "\n\n⚠️ [STATE TRACKER WARNING]:\n"
+                for issue in critical_issues[:3]:  # 최대 3개
+                    warning_text += f"- [{issue['severity'].upper()}] {issue['description']}\n"
+                if 'tactical_doc' in final_arc_data and isinstance(final_arc_data['tactical_doc'], str):
+                    final_arc_data['tactical_doc'] = warning_text + final_arc_data['tactical_doc']
+
+        # ═══════════════════════════════════════════════════════════════
+        # 10. [V60] Arc 상태 계승 검증 + 화 간 모순 탐지 + Joint Docs 보정
+        # ═══════════════════════════════════════════════════════════════
+
+        # 10-1. 이전 Arc 데이터 로드
+        prev_arc_data = None
+        if clean_arc_no > 1:
+            try:
+                arcs_anchor = self.context.db.load_anchor('arcs')
+                if arcs_anchor and isinstance(arcs_anchor, dict):
+                    prev_arc_data = arcs_anchor.get(f'arc_{clean_arc_no - 1}')
+            except Exception as e:
+                print(f"      ⚠️ [V60] 이전 Arc 로드 실패: {e}")
+
+        # 10-2. Arc 상태 계승 검증
+        if prev_arc_data:
+            continuity_result = self._validate_arc_state_continuity_v60(final_arc_data, prev_arc_data)
+            if continuity_result['issues']:
+                print(f"      🔍 [V60] Arc 상태 계승 검증: {continuity_result['severity']}")
+                for issue in continuity_result['issues'][:3]:
+                    print(f"         - {issue}")
+
+                # 자동 보정 적용
+                if continuity_result['auto_corrections']:
+                    if 'state_constraints' not in final_arc_data:
+                        final_arc_data['state_constraints'] = {}
+                    if 'arc_start_state' not in final_arc_data['state_constraints']:
+                        final_arc_data['state_constraints']['arc_start_state'] = {}
+
+                    start_state = final_arc_data['state_constraints']['arc_start_state']
+
+                    if 'location' in continuity_result['auto_corrections']:
+                        start_state['location'] = continuity_result['auto_corrections']['location']
+                        print(f"      🔧 [V60] 시작 위치 자동 보정: {start_state['location']}")
+
+                    if 'missing_items' in continuity_result['auto_corrections']:
+                        existing = start_state.get('equipment', [])
+                        if isinstance(existing, str):
+                            existing = [existing] if existing else []
+                        existing.extend(continuity_result['auto_corrections']['missing_items'])
+                        start_state['equipment'] = list(set(existing))
+                        print(f"      🔧 [V60] 시작 소지품 자동 보정: {start_state['equipment']}")
+
+                # 검증 결과 첨부
+                final_arc_data['v60_continuity_check'] = continuity_result
+
+        # 10-3. Arc 내 화 간 모순 탐지
+        tactical_doc = final_arc_data.get('tactical_doc', '')
+        if tactical_doc:
+            doc_continuity = self._validate_tactical_doc_continuity_v60(tactical_doc, final_ep_count)
+            if doc_continuity['issues']:
+                print(f"      🔍 [V60] 화 간 연속성 검증: {len(doc_continuity['issues'])}건 이슈")
+                for issue in doc_continuity['issues'][:3]:
+                    print(f"         - {issue}")
+
+                # 경고 주입
+                warning_text = "\n\n⚠️ [V60 CONTINUITY WARNING]:\n"
+                for issue in doc_continuity['issues'][:5]:
+                    warning_text += f"- {issue}\n"
+                final_arc_data['tactical_doc'] = warning_text + tactical_doc
+
+            final_arc_data['v60_doc_continuity'] = doc_continuity
+
+        # 10-4. Joint Docs 자동 추출 보정
+        if tactical_doc:
+            final_arc_data = self._auto_correct_joint_docs_v60(tactical_doc, final_arc_data)
+
         return final_arc_data
 
 
@@ -1024,3 +1783,70 @@ class Analyst(BaseAgent):
         # [V45 Fix] 루트 config 경로 사용 (modules/domain/agents/analyst.py -> 3단계 상위)
         root_config = Path(__file__).parent.parent.parent.parent / "config"
         return root_config / "prompts" / lib_filename
+
+    def _validate_arc_with_state_tracker(self, arc_data: dict) -> list:
+        """
+        [V49.3] StateTracker를 사용하여 Arc 설계의 상태 일관성 검증
+
+        Args:
+            arc_data: Arc 전술 문서
+
+        Returns:
+            검증 이슈 목록 (빈 리스트면 문제 없음)
+        """
+        try:
+            tracker = StateTracker()
+            if not tracker.load_arc_design(arc_data):
+                print("      ⚠️ [Analyst] StateTracker 로드 실패, 검증 스킵")
+                return []
+
+            # 타임라인 검증
+            issues = tracker.validate_timeline()
+
+            if issues:
+                # DAG 시각화 출력 (디버깅용)
+                print(tracker.get_dag_visualization())
+
+            return issues
+
+        except Exception as e:
+            print(f"      ⚠️ [Analyst] StateTracker 검증 중 오류: {e}")
+            return []
+
+    def get_state_constraint_prompt(self, arc_no: int) -> str:
+        """
+        [V49.3] 이전 Arc들의 상태를 분석하여 제약 프롬프트 생성
+
+        Architect/Writer에게 전달하여 상태 일관성 유지
+
+        Args:
+            arc_no: 현재 Arc 번호
+
+        Returns:
+            상태 제약 프롬프트 문자열
+        """
+        try:
+            # DB에서 이전 Arc들 로드
+            arcs_anchor = self.context.db.load_anchor('arcs')
+            if not arcs_anchor:
+                return ""
+
+            prev_arcs = []
+            for i in range(1, arc_no):
+                arc_key = f"arc_{i}"
+                if arc_key in arcs_anchor:
+                    prev_arcs.append(arcs_anchor[arc_key])
+
+            if not prev_arcs:
+                return ""
+
+            # 통합 StateTracker 생성
+            from .state_tracker import create_tracker_from_arcs
+            master_tracker = create_tracker_from_arcs(prev_arcs)
+
+            # 제약 프롬프트 생성
+            return master_tracker.generate_constraint_prompt()
+
+        except Exception as e:
+            print(f"      ⚠️ [Analyst] 상태 제약 프롬프트 생성 실패: {e}")
+            return ""

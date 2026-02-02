@@ -7,6 +7,8 @@
 3. 클리셰 키워드 빈도 추적
 4. 문장 구조 패턴 추적 (시작어, 종결어)
 5. 캐릭터 반응 패턴 추적
+
+[V59] 장르별 패턴 확장 및 트렌드 분석 추가
 """
 
 import json
@@ -423,3 +425,430 @@ class PatternTracker:
         except Exception as e:
             print(f"[PatternTracker] DB 로드 실패: {e}")
             return False
+
+    # ========================================================================
+    # [V59] 장르별 패턴 확장
+    # ========================================================================
+
+    # [V59] 장르별 확장 플롯 패턴
+    GENRE_PLOT_PATTERNS = {
+        'wuxia': {
+            'revenge': [
+                ('원수', '추적', '대결', '복수'),
+                ('스승', '사망', '수련', '복수'),
+                ('가문', '멸문', '은거', '재기'),
+            ],
+            'growth': [
+                ('수련', '고난', '깨달음', '돌파'),
+                ('비급', '발견', '수련', '체득'),
+                ('사부', '전수', '연마', '완성'),
+            ],
+            'jianghu': [
+                ('모함', '위기', '동맹', '반격'),
+                ('비무', '패배', '수련', '재대결'),
+                ('음모', '발각', '탈출', '역전'),
+            ],
+            'romance': [
+                ('만남', '오해', '위기', '화해'),
+                ('구출', '감사', '동행', '정'),
+            ]
+        },
+        'hunter': {
+            'dungeon': [
+                ('진입', '탐색', '보스', '클리어'),
+                ('함정', '위기', '스킬', '탈출'),
+                ('레이드', '협력', '전투', '보상'),
+            ],
+            'awakening': [
+                ('각성', '훈련', '테스트', '등급'),
+                ('재각성', '고통', '진화', '강화'),
+                ('잠재력', '발현', '폭주', '제어'),
+            ],
+            'guild': [
+                ('가입', '테스트', '인정', '활동'),
+                ('갈등', '경쟁', '협력', '성장'),
+                ('배신', '위기', '탈퇴', '재기'),
+            ]
+        },
+        'investment': {
+            'trade': [
+                ('분석', '매수', '변동', '익절'),
+                ('하락', '공포', '인내', '반등'),
+                ('정보', '확신', '배팅', '대박'),
+            ],
+            'crisis': [
+                ('폭락', '손절', '반성', '재기'),
+                ('파산', '도피', '재기', '복귀'),
+                ('공황', '기회', '매수', '수익'),
+            ],
+            'insider': [
+                ('정보', '분석', '확인', '선매수'),
+                ('소문', '조사', '진실', '활용'),
+            ]
+        }
+    }
+
+    # [V59] 장르별 감정 패턴
+    GENRE_EMOTION_PATTERNS = {
+        'wuxia': {
+            'positive': ['통쾌', '희열', '자부심', '경외', '감동'],
+            'negative': ['분노', '좌절', '굴욕', '비통', '복수심'],
+            'neutral': ['냉정', '관조', '의연', '무심'],
+        },
+        'hunter': {
+            'positive': ['성취감', '쾌감', '희열', '안도', '자신감'],
+            'negative': ['공포', '절망', '좌절', '분노', '후회'],
+            'neutral': ['긴장', '집중', '계산', '판단'],
+        },
+        'investment': {
+            'positive': ['희열', '자신감', '만족', '안도', '흥분'],
+            'negative': ['공포', '탐욕', '후회', '좌절', '분노'],
+            'neutral': ['냉정', '분석', '관망', '인내'],
+        }
+    }
+
+    def analyze_genre_patterns_v59(self, manuscripts: List[str]) -> Dict:
+        """
+        [V59] 장르별 확장 패턴 분석
+
+        Args:
+            manuscripts: 원고 리스트
+
+        Returns:
+            장르 특화 패턴 분석 결과
+        """
+        if not manuscripts:
+            return {'status': 'no_data'}
+
+        genre_patterns = self.GENRE_PLOT_PATTERNS.get(self.genre, {})
+        emotion_patterns = self.GENRE_EMOTION_PATTERNS.get(self.genre, {})
+
+        combined = '\n'.join(manuscripts[-self.window_size:])
+
+        result = {
+            'plot_patterns': {},
+            'emotion_distribution': {},
+            'genre_health': 'unknown',
+            'recommendations': []
+        }
+
+        # 플롯 패턴 매칭
+        for category, patterns in genre_patterns.items():
+            category_matches = []
+            for pattern in patterns:
+                if self._check_pattern_sequence(combined, pattern):
+                    category_matches.append('→'.join(pattern))
+
+            if category_matches:
+                result['plot_patterns'][category] = {
+                    'count': len(category_matches),
+                    'patterns': category_matches
+                }
+
+        # 감정 분포 분석
+        for emotion_type, keywords in emotion_patterns.items():
+            count = sum(combined.count(kw) for kw in keywords)
+            result['emotion_distribution'][emotion_type] = count
+
+        # 장르 건강도 평가
+        result['genre_health'] = self._evaluate_genre_health(result, self.genre)
+
+        # 권장 사항 생성
+        result['recommendations'] = self._generate_genre_recommendations(result, self.genre)
+
+        return result
+
+    def _check_pattern_sequence(self, text: str, pattern: tuple) -> bool:
+        """패턴 시퀀스가 순서대로 등장하는지 확인"""
+        positions = []
+        for keyword in pattern:
+            pos = text.find(keyword)
+            if pos == -1:
+                return False
+            positions.append(pos)
+
+        return positions == sorted(positions)
+
+    def _evaluate_genre_health(self, analysis: Dict, genre: str) -> str:
+        """장르 건강도 평가"""
+        plot_count = sum(len(p.get('patterns', [])) for p in analysis['plot_patterns'].values())
+        emotion_dist = analysis['emotion_distribution']
+
+        # 감정 균형 체크
+        total_emotion = sum(emotion_dist.values())
+        if total_emotion == 0:
+            return 'poor'
+
+        negative_ratio = emotion_dist.get('negative', 0) / total_emotion
+
+        # 장르별 기준
+        if genre == 'wuxia':
+            # 무협은 적절한 갈등(부정 감정)이 필요
+            if plot_count >= 3 and 0.3 <= negative_ratio <= 0.5:
+                return 'excellent'
+            elif plot_count >= 2 and 0.2 <= negative_ratio <= 0.6:
+                return 'good'
+            elif plot_count >= 1:
+                return 'fair'
+        elif genre == 'hunter':
+            # 헌터는 성장과 긴장이 중요
+            if plot_count >= 3 and 0.25 <= negative_ratio <= 0.45:
+                return 'excellent'
+            elif plot_count >= 2:
+                return 'good'
+        elif genre == 'investment':
+            # 투자는 감정 기복이 핵심
+            if plot_count >= 2 and 0.3 <= negative_ratio <= 0.5:
+                return 'excellent'
+            elif plot_count >= 1 and 0.2 <= negative_ratio <= 0.6:
+                return 'good'
+
+        return 'fair'
+
+    def _generate_genre_recommendations(self, analysis: Dict, genre: str) -> List[str]:
+        """장르별 권장 사항 생성"""
+        recommendations = []
+        emotion_dist = analysis['emotion_distribution']
+
+        if genre == 'wuxia':
+            if emotion_dist.get('negative', 0) < emotion_dist.get('positive', 0) * 0.5:
+                recommendations.append('갈등/위기 요소를 추가하여 긴장감 강화 필요')
+            if not analysis['plot_patterns'].get('growth'):
+                recommendations.append('성장 요소(수련, 깨달음) 추가 고려')
+
+        elif genre == 'hunter':
+            if not analysis['plot_patterns'].get('dungeon'):
+                recommendations.append('던전/전투 씬 추가 고려')
+            if not analysis['plot_patterns'].get('awakening'):
+                recommendations.append('각성/성장 이벤트 배치 고려')
+
+        elif genre == 'investment':
+            if emotion_dist.get('neutral', 0) > sum(emotion_dist.values()) * 0.5:
+                recommendations.append('감정적 기복 추가 (탐욕/공포 묘사)')
+            if not analysis['plot_patterns'].get('trade'):
+                recommendations.append('거래/투자 씬 추가 필요')
+
+        return recommendations[:5]
+
+    # ========================================================================
+    # [V59] 트렌드 분석 시스템
+    # ========================================================================
+
+    def analyze_trend_v59(self, manuscripts: List[str], window_splits: int = 3) -> Dict:
+        """
+        [V59] 패턴 트렌드 분석 - 시간에 따른 패턴 변화 추적
+
+        Args:
+            manuscripts: 전체 원고 리스트
+            window_splits: 분석 구간 수 (기본 3: 초반/중반/최근)
+
+        Returns:
+            트렌드 분석 결과
+        """
+        if len(manuscripts) < window_splits * 2:
+            return {'status': 'insufficient_data', 'min_required': window_splits * 2}
+
+        # 구간별 분할
+        split_size = len(manuscripts) // window_splits
+        windows = []
+        for i in range(window_splits):
+            start = i * split_size
+            end = start + split_size if i < window_splits - 1 else len(manuscripts)
+            windows.append(manuscripts[start:end])
+
+        # 구간별 분석
+        window_analyses = []
+        for i, window in enumerate(windows):
+            analysis = {
+                'window_index': i,
+                'window_name': ['초반', '중반', '최근'][min(i, 2)],
+                'episode_range': f"{i * split_size + 1}~{(i + 1) * split_size if i < window_splits - 1 else len(manuscripts)}화",
+                'cliche_density': self._calculate_cliche_density(window),
+                'diversity_score': self._calculate_diversity_score(window),
+                'emotion_balance': self._calculate_emotion_balance(window),
+            }
+            window_analyses.append(analysis)
+
+        # 트렌드 계산
+        trends = self._calculate_trends(window_analyses)
+
+        # 트렌드 해석
+        interpretations = self._interpret_trends(trends)
+
+        return {
+            'status': 'analyzed',
+            'total_episodes': len(manuscripts),
+            'window_count': window_splits,
+            'windows': window_analyses,
+            'trends': trends,
+            'interpretations': interpretations,
+            'overall_health': self._assess_overall_health(trends)
+        }
+
+    def _calculate_cliche_density(self, manuscripts: List[str]) -> float:
+        """클리셰 밀도 계산 (1000자당 클리셰 수)"""
+        combined = '\n'.join(manuscripts)
+        total_chars = len(combined)
+
+        if total_chars == 0:
+            return 0
+
+        cliche_count = sum(combined.count(kw) for kw in self.cliche_keywords)
+        return round(cliche_count / (total_chars / 1000), 2)
+
+    def _calculate_diversity_score(self, manuscripts: List[str]) -> float:
+        """다양성 점수 계산 (0-100)"""
+        combined = '\n'.join(manuscripts)
+
+        if not combined:
+            return 0
+
+        # 문장 시작 다양성
+        sentences = re.split(r'[.!?]\s*', combined)
+        sentences = [s.strip() for s in sentences if s.strip()]
+
+        if len(sentences) < 5:
+            return 50
+
+        starters = [s[:3] for s in sentences if len(s) >= 3]
+        unique_ratio = len(set(starters)) / len(starters) if starters else 0
+
+        # 어휘 다양성 (간단 TTR)
+        words = re.findall(r'[가-힣]{2,}', combined)
+        word_ttr = len(set(words)) / len(words) if words else 0
+
+        # 종합 점수
+        score = (unique_ratio * 50 + word_ttr * 50)
+        return round(score, 1)
+
+    def _calculate_emotion_balance(self, manuscripts: List[str]) -> Dict:
+        """감정 균형 계산"""
+        combined = '\n'.join(manuscripts)
+        emotion_patterns = self.GENRE_EMOTION_PATTERNS.get(self.genre, {})
+
+        counts = {}
+        for emotion_type, keywords in emotion_patterns.items():
+            counts[emotion_type] = sum(combined.count(kw) for kw in keywords)
+
+        total = sum(counts.values())
+        if total == 0:
+            return {'positive': 0.33, 'negative': 0.33, 'neutral': 0.34}
+
+        return {
+            emotion_type: round(count / total, 2)
+            for emotion_type, count in counts.items()
+        }
+
+    def _calculate_trends(self, window_analyses: List[Dict]) -> Dict:
+        """구간별 분석에서 트렌드 추출"""
+        if len(window_analyses) < 2:
+            return {}
+
+        first = window_analyses[0]
+        last = window_analyses[-1]
+
+        return {
+            'cliche_trend': {
+                'direction': 'increasing' if last['cliche_density'] > first['cliche_density'] else 'decreasing',
+                'change': round(last['cliche_density'] - first['cliche_density'], 2)
+            },
+            'diversity_trend': {
+                'direction': 'improving' if last['diversity_score'] > first['diversity_score'] else 'declining',
+                'change': round(last['diversity_score'] - first['diversity_score'], 1)
+            },
+            'emotion_shift': {
+                'from': max(first['emotion_balance'], key=first['emotion_balance'].get),
+                'to': max(last['emotion_balance'], key=last['emotion_balance'].get),
+            }
+        }
+
+    def _interpret_trends(self, trends: Dict) -> List[str]:
+        """트렌드 해석"""
+        interpretations = []
+
+        cliche = trends.get('cliche_trend', {})
+        if cliche.get('direction') == 'increasing' and cliche.get('change', 0) > 0.5:
+            interpretations.append('⚠️ 클리셰 사용이 증가하고 있습니다. 표현 다양화 필요.')
+        elif cliche.get('direction') == 'decreasing':
+            interpretations.append('✅ 클리셰 사용이 감소하고 있습니다. 좋은 추세입니다.')
+
+        diversity = trends.get('diversity_trend', {})
+        if diversity.get('direction') == 'declining' and diversity.get('change', 0) < -5:
+            interpretations.append('⚠️ 표현 다양성이 감소하고 있습니다. 어휘 확장 필요.')
+        elif diversity.get('direction') == 'improving':
+            interpretations.append('✅ 표현 다양성이 개선되고 있습니다.')
+
+        emotion = trends.get('emotion_shift', {})
+        if emotion.get('from') != emotion.get('to'):
+            interpretations.append(f'📊 감정 톤 변화: {emotion.get("from", "?")} → {emotion.get("to", "?")}')
+
+        return interpretations
+
+    def _assess_overall_health(self, trends: Dict) -> str:
+        """전체 건강도 평가"""
+        issues = 0
+
+        cliche = trends.get('cliche_trend', {})
+        if cliche.get('direction') == 'increasing':
+            issues += 1
+
+        diversity = trends.get('diversity_trend', {})
+        if diversity.get('direction') == 'declining':
+            issues += 1
+
+        if issues == 0:
+            return 'excellent'
+        elif issues == 1:
+            return 'good'
+        else:
+            return 'needs_improvement'
+
+    def generate_trend_report_v59(self, trend_result: Dict) -> str:
+        """
+        [V59] 트렌드 분석 결과를 읽기 좋은 형태로 포맷
+
+        Args:
+            trend_result: analyze_trend_v59() 결과
+
+        Returns:
+            포맷팅된 리포트 텍스트
+        """
+        if trend_result.get('status') == 'insufficient_data':
+            return f"📊 트렌드 분석에 최소 {trend_result.get('min_required', 6)}화 이상 필요합니다."
+
+        lines = [
+            f"\n{'='*50}",
+            f"📊 [V59] 패턴 트렌드 분석 리포트",
+            f"{'='*50}",
+            f"총 분석 화수: {trend_result.get('total_episodes', 0)}화",
+            f"전체 건강도: {trend_result.get('overall_health', '?')}\n",
+        ]
+
+        # 구간별 요약
+        windows = trend_result.get('windows', [])
+        if windows:
+            lines.append("📈 구간별 분석:")
+            for w in windows:
+                lines.append(f"  [{w['window_name']}] {w['episode_range']}")
+                lines.append(f"    - 클리셰 밀도: {w['cliche_density']}/1000자")
+                lines.append(f"    - 다양성 점수: {w['diversity_score']}/100")
+
+        # 트렌드
+        trends = trend_result.get('trends', {})
+        if trends:
+            lines.append("\n📉 변화 추세:")
+            cliche = trends.get('cliche_trend', {})
+            lines.append(f"  - 클리셰: {cliche.get('direction', '?')} ({cliche.get('change', 0):+.2f})")
+            diversity = trends.get('diversity_trend', {})
+            lines.append(f"  - 다양성: {diversity.get('direction', '?')} ({diversity.get('change', 0):+.1f}점)")
+
+        # 해석
+        interpretations = trend_result.get('interpretations', [])
+        if interpretations:
+            lines.append("\n💡 분석 결과:")
+            for interp in interpretations:
+                lines.append(f"  {interp}")
+
+        lines.append(f"{'='*50}\n")
+
+        return "\n".join(lines)

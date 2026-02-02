@@ -1,6 +1,8 @@
 """
 [V0128] TIER 2: SCORING Validator
 LLM 기반 점수 평가 (가중치 합산)
+
+[V59] 장르별 가중치 / 세분화된 피드백 고도화
 """
 import statistics
 import re
@@ -500,40 +502,114 @@ Step 5: Article 6 (패턴 다양성) 분석
         return {'score': score, 'max': 5, 'reason': reason, 'distribution': counts}
 
     def _evaluate_show_dont_tell(self, manuscript: str) -> dict:
-        """Show Don't Tell 평가"""
-        # 직접 감정 서술 패턴
-        tell_patterns = [
-            r'정말 .+했다',
-            r'매우 .+했다',
-            r'너무 .+했다',
-            r'굉장히 .+했다',
-            r'.+라는 느낌이',
-            r'기분이 .+했다',
-            r'마음이 .+했다'
-        ]
+        """
+        Show Don't Tell 평가
 
-        tell_count = sum(len(re.findall(pattern, manuscript)) for pattern in tell_patterns)
+        [V56] 강화: 패턴 8개 → 22개, 감각 묘사 누락 체크 추가
+        """
+        # [V56] 확장된 직접 감정/상태 서술 패턴 (22개)
+        tell_patterns = {
+            "강조부사": [
+                r'정말 .+했다',
+                r'매우 .+했다',
+                r'너무 .+했다',
+                r'굉장히 .+했다',
+                r'아주 .+했다',
+                r'몹시 .+했다',
+            ],
+            "직접감정": [
+                r'.+라는 느낌이',
+                r'기분이 .+했다',
+                r'마음이 .+했다',
+                r'기쁨이 .+했다',
+                r'분노가 .+했다',
+                r'슬픔이 .+했다',
+                r'두려움이 .+했다',
+            ],
+            "약한서술": [
+                r'어떻게든 .+했다',
+                r'뭔가 .+했다',
+                r'그냥 .+했다',
+                r'아무튼 .+했다',
+            ],
+            "설명동사": [
+                r'생각했다[.!?\s]',
+                r'느꼈다[.!?\s]',
+                r'알았다[.!?\s]',
+                r'깨달았다[.!?\s]',
+            ],
+        }
+
+        # 카테고리별 카운트
+        category_counts = {}
+        total_tell_count = 0
+
+        for category, patterns in tell_patterns.items():
+            count = sum(len(re.findall(pattern, manuscript)) for pattern in patterns)
+            category_counts[category] = count
+            total_tell_count += count
 
         # 1000자당 직접 서술 횟수
-        ratio = tell_count / (len(manuscript) / 1000) if len(manuscript) > 0 else 0
+        ratio = total_tell_count / (len(manuscript) / 1000) if len(manuscript) > 0 else 0
 
+        # [V56] 감각 묘사 균형 체크
+        sensory_keywords = {
+            "visual": ["보았다", "보이", "빛", "색", "형태", "눈에", "모습"],
+            "auditory": ["소리", "들렸다", "들었다", "울렸다", "고요", "시끄"],
+            "tactile": ["느껴졌다", "차가", "따뜻", "부드", "거칠", "아팠다"],
+            "olfactory": ["냄새", "향기", "악취", "향이"],
+            "martial": ["기혈", "내공", "기운", "살기", "검기", "파동"],  # 무협 특화
+        }
+
+        sensory_counts = {}
+        total_sensory = 0
+        for sense, keywords in sensory_keywords.items():
+            count = sum(manuscript.count(kw) for kw in keywords)
+            sensory_counts[sense] = count
+            total_sensory += count
+
+        # 감각 묘사 부족 페널티
+        sensory_penalty = 0
+        if total_sensory < len(manuscript) / 500:  # 500자당 1회 미만
+            sensory_penalty = 1
+            sensory_note = "감각 묘사 부족"
+        elif sensory_counts.get("visual", 0) > total_sensory * 0.7:  # 시각 70% 초과
+            sensory_penalty = 0.5
+            sensory_note = "시각 편중"
+        else:
+            sensory_note = "감각 균형 양호"
+
+        # 점수 계산
         if ratio < 1:
-            score = 5
+            base_score = 5
             reason = f"직접 서술 {ratio:.1f}/1000자 (우수)"
         elif ratio < 2:
-            score = 4
+            base_score = 4
             reason = f"직접 서술 {ratio:.1f}/1000자 (양호)"
         elif ratio < 3:
-            score = 3
+            base_score = 3
             reason = f"직접 서술 {ratio:.1f}/1000자 (보통)"
         elif ratio < 4:
-            score = 2
+            base_score = 2
             reason = f"직접 서술 {ratio:.1f}/1000자 (과다)"
         else:
-            score = 1
+            base_score = 1
             reason = f"직접 서술 {ratio:.1f}/1000자 (극심)"
 
-        return {'score': score, 'max': 5, 'reason': reason, 'ratio': ratio}
+        # [V56] 최종 점수 = 기본 점수 - 감각 페널티
+        final_score = max(1, base_score - sensory_penalty)
+
+        return {
+            'score': final_score,
+            'max': 5,
+            'reason': f"{reason}, {sensory_note}",
+            'ratio': ratio,
+            'category_counts': category_counts,
+            'sensory_counts': sensory_counts,
+            'sensory_penalty': sensory_penalty,
+            # [V56] 사전 REJECT 신호 (극심한 경우)
+            'pre_reject': ratio > 5 or total_sensory < 3
+        }
 
     # ========================================================================
     # 유틸리티 메서드
@@ -552,3 +628,329 @@ Step 5: Article 6 (패턴 다양성) 분석
         # 불용어 제거
         stopwords = {'것이다', '있다', '없다', '하다', '되다', '이다', '그', '저', '이'}
         return [w for w in words if w not in stopwords]
+
+    # ========================================================================
+    # [V59] 장르별 가중치 시스템
+    # ========================================================================
+
+    # [V59] 장르별 점수 항목 가중치
+    GENRE_WEIGHTS = {
+        'wuxia': {
+            # 무협: 액션 묘사와 긴장감이 중요
+            'prose_rhythm': 1.2,      # 문장 리듬 중요 (전투 장면)
+            'vocabulary_diversity': 1.0,
+            'sensory_balance': 1.3,   # 감각 묘사 중요 (무술 동작)
+            'show_dont_tell': 1.0,
+            'character_consistency': 1.0,
+            'emotion_arc': 0.9,       # 감정선 약간 덜 중요
+            'dialogue_quality': 1.0,
+            'commercial_appeal': 1.1, # 상업성 약간 중요
+            'pattern_diversity': 1.1, # 패턴 다양성 약간 중요
+        },
+        'hunter': {
+            # 헌터: 시스템/스킬 묘사와 성장이 중요
+            'prose_rhythm': 1.0,
+            'vocabulary_diversity': 0.9,
+            'sensory_balance': 1.1,   # 스킬 이펙트 묘사
+            'show_dont_tell': 1.2,    # 설명 대신 묘사 중요
+            'character_consistency': 1.1,
+            'emotion_arc': 1.0,
+            'dialogue_quality': 0.9,
+            'commercial_appeal': 1.3, # 상업성 매우 중요
+            'pattern_diversity': 1.0,
+        },
+        'investment': {
+            # 투자: 논리적 전개와 긴장감이 중요
+            'prose_rhythm': 0.9,
+            'vocabulary_diversity': 1.2,  # 금융 용어 다양성
+            'sensory_balance': 0.8,       # 감각 묘사 덜 중요
+            'show_dont_tell': 1.1,
+            'character_consistency': 1.2, # 인물 일관성 중요
+            'emotion_arc': 1.2,           # 감정선 중요 (돈에 대한 감정)
+            'dialogue_quality': 1.1,
+            'commercial_appeal': 1.0,
+            'pattern_diversity': 1.2,     # 패턴 다양성 중요 (뻔한 전개 방지)
+        }
+    }
+
+    def validate_v59(self, manuscript: str, validation_context: dict) -> dict:
+        """
+        [V59] 장르별 가중치 적용 + 세분화된 피드백 제공
+
+        Returns:
+            {
+                "tier": "SCORING",
+                "passed": True/False,
+                "total_score": int,  # 가중치 적용 후
+                "raw_score": int,    # 가중치 적용 전
+                "weighted_breakdown": {...},  # 가중치 적용된 세부 점수
+                "detailed_feedback": {...},   # 세분화된 피드백
+                "improvement_priorities": [...],  # 우선 개선 항목
+            }
+        """
+        # 기본 검증 수행
+        base_result = self.validate(manuscript, validation_context)
+
+        # [V59] 장르별 가중치 적용
+        genre = self.genre or validation_context.get('genre', 'wuxia')
+        weights = self.GENRE_WEIGHTS.get(genre, self.GENRE_WEIGHTS['wuxia'])
+
+        weighted_breakdown = {}
+        weighted_total = 0
+        raw_total = base_result['total_score']
+
+        for item_name, item_data in base_result['breakdown'].items():
+            if not isinstance(item_data, dict):
+                continue
+
+            raw_score = item_data.get('score', 0)
+            max_score = item_data.get('max', 0)
+            weight = weights.get(item_name, 1.0)
+
+            # 가중치 적용
+            weighted_score = raw_score * weight
+            weighted_max = max_score * weight
+
+            weighted_breakdown[item_name] = {
+                **item_data,
+                'raw_score': raw_score,
+                'weighted_score': round(weighted_score, 1),
+                'weight': weight,
+                'weighted_max': round(weighted_max, 1),
+                'genre_note': self._get_genre_item_note(genre, item_name)
+            }
+            weighted_total += weighted_score
+
+        # [V59] 세분화된 피드백 생성
+        detailed_feedback = self._generate_detailed_feedback(
+            manuscript, weighted_breakdown, genre
+        )
+
+        # [V59] 우선 개선 항목 도출
+        improvement_priorities = self._get_improvement_priorities(
+            weighted_breakdown, genre
+        )
+
+        # 가중치 적용된 총점으로 PASS/FAIL 재계산
+        weighted_max_total = sum(
+            w.get('weighted_max', 0)
+            for w in weighted_breakdown.values()
+            if isinstance(w, dict)
+        )
+        weighted_percentage = (weighted_total / weighted_max_total * 100) if weighted_max_total > 0 else 0
+        passed = weighted_percentage >= self.pass_threshold
+
+        return {
+            "tier": "SCORING",
+            "version": "V59",
+            "passed": passed,
+            "total_score": round(weighted_total, 1),
+            "raw_score": raw_total,
+            "max_score": round(weighted_max_total, 1),
+            "percentage": round(weighted_percentage, 1),
+            "threshold": self.pass_threshold,
+            "genre": genre,
+            "breakdown": base_result['breakdown'],  # 원본 유지
+            "weighted_breakdown": weighted_breakdown,
+            "detailed_feedback": detailed_feedback,
+            "improvement_priorities": improvement_priorities,
+            "message": f"{'PASS' if passed else 'FAIL'} - {round(weighted_total, 1)}/{round(weighted_max_total, 1)}점 "
+                      f"(기준: {self.pass_threshold}%, 장르: {genre})"
+        }
+
+    def _get_genre_item_note(self, genre: str, item_name: str) -> str:
+        """[V59] 장르별 항목 설명 반환"""
+        notes = {
+            'wuxia': {
+                'prose_rhythm': '무협 전투 장면에서 리듬감 있는 문장이 필수',
+                'sensory_balance': '무술 동작과 내공 묘사에 다양한 감각 필요',
+                'commercial_appeal': '사이다 요소와 긴장감이 독자 유입에 영향',
+                'pattern_diversity': '뻔한 복수극/성장물 패턴 탈피 필요',
+            },
+            'hunter': {
+                'show_dont_tell': '스킬/시스템 설명보다 체감 묘사가 중요',
+                'commercial_appeal': '레벨업/성장의 쾌감이 핵심 상업성',
+                'character_consistency': '헌터/각성자 능력치 일관성 필수',
+            },
+            'investment': {
+                'vocabulary_diversity': '금융 용어와 시장 표현의 다양성',
+                'character_consistency': '투자 결정의 논리적 일관성',
+                'emotion_arc': '돈과 성공에 대한 감정 변화가 핵심',
+                'pattern_diversity': '예측 가능한 성공 패턴 탈피 필요',
+            }
+        }
+        return notes.get(genre, {}).get(item_name, '')
+
+    def _generate_detailed_feedback(self, manuscript: str, breakdown: dict, genre: str) -> dict:
+        """[V59] 세분화된 피드백 생성"""
+        feedback = {
+            'strengths': [],      # 강점
+            'weaknesses': [],     # 약점
+            'suggestions': [],    # 개선 제안
+            'genre_specific': []  # 장르 특화 피드백
+        }
+
+        # 각 항목별 피드백 생성
+        for item_name, item_data in breakdown.items():
+            if not isinstance(item_data, dict):
+                continue
+
+            score = item_data.get('weighted_score', 0)
+            max_score = item_data.get('weighted_max', 1)
+            ratio = score / max_score if max_score > 0 else 0
+            reason = item_data.get('reason', '')
+
+            # 강점/약점 분류
+            if ratio >= 0.8:
+                feedback['strengths'].append({
+                    'item': item_name,
+                    'score': f"{score:.1f}/{max_score:.1f}",
+                    'note': self._get_strength_note(item_name, reason)
+                })
+            elif ratio < 0.5:
+                weakness = {
+                    'item': item_name,
+                    'score': f"{score:.1f}/{max_score:.1f}",
+                    'issue': reason,
+                    'suggestion': self._get_improvement_suggestion(item_name, item_data, genre)
+                }
+                feedback['weaknesses'].append(weakness)
+                feedback['suggestions'].append(weakness['suggestion'])
+
+        # 장르 특화 피드백
+        genre_feedback = self._get_genre_specific_feedback(manuscript, breakdown, genre)
+        feedback['genre_specific'] = genre_feedback
+
+        return feedback
+
+    def _get_strength_note(self, item_name: str, reason: str) -> str:
+        """강점 설명 생성"""
+        notes = {
+            'prose_rhythm': '문장 리듬이 자연스러워 읽기 편합니다',
+            'vocabulary_diversity': '다양한 어휘를 사용하여 풍부한 표현력을 보입니다',
+            'sensory_balance': '다양한 감각 묘사로 생동감 있는 장면을 연출합니다',
+            'show_dont_tell': '직접 설명보다 묘사를 통해 효과적으로 전달합니다',
+            'character_consistency': '캐릭터의 행동이 설정과 잘 부합합니다',
+            'emotion_arc': '감정 변화가 자연스럽고 공감됩니다',
+            'dialogue_quality': '대사가 캐릭터를 잘 드러냅니다',
+            'commercial_appeal': '독자를 끄는 매력적인 요소가 있습니다',
+            'pattern_diversity': '신선하고 예측하기 어려운 전개입니다',
+        }
+        return notes.get(item_name, reason)
+
+    def _get_improvement_suggestion(self, item_name: str, item_data: dict, genre: str) -> str:
+        """개선 제안 생성"""
+        suggestions = {
+            'prose_rhythm': {
+                'default': '문장 길이에 변화를 주세요. 짧은 문장과 긴 문장을 번갈아 사용하면 리듬감이 생깁니다.',
+                'wuxia': '전투 장면에서는 짧고 강렬한 문장을, 묘사 장면에서는 긴 문장을 사용해보세요.',
+            },
+            'vocabulary_diversity': {
+                'default': '같은 단어의 반복을 피하고 유의어를 활용하세요.',
+                'investment': '금융 용어를 다양하게 활용하되, 설명 없이 남발하지 마세요.',
+            },
+            'sensory_balance': {
+                'default': '시각 외에 청각, 촉각, 후각 묘사를 추가하세요.',
+                'wuxia': '내공의 흐름, 검기의 파동, 살기의 무게 같은 무협 특유의 감각을 묘사하세요.',
+            },
+            'show_dont_tell': {
+                'default': '"슬펐다" 대신 "눈물이 볼을 타고 흘렀다"처럼 행동/묘사로 감정을 전달하세요.',
+                'hunter': '스킬 설명 대신 사용 시 체감되는 감각으로 묘사하세요.',
+            },
+            'character_consistency': {
+                'default': '캐릭터의 과거 행동과 현재 행동이 일관되게 연결되어야 합니다.',
+                'investment': '투자 결정에는 항상 논리적 근거가 있어야 합니다.',
+            },
+            'emotion_arc': {
+                'default': '감정 변화에 계기와 과정을 명시하세요. 갑작스러운 변화는 독자를 놓칩니다.',
+                'investment': '돈에 대한 탐욕, 두려움, 희열의 감정을 입체적으로 그리세요.',
+            },
+            'dialogue_quality': {
+                'default': '각 캐릭터만의 말투와 어휘를 설정하세요.',
+            },
+            'commercial_appeal': {
+                'default': '다음 화에 대한 기대감을 유발하는 떡밥이나 클리프행어를 추가하세요.',
+                'hunter': '레벨업, 스킬 획득 등 성장의 쾌감을 더 강조하세요.',
+            },
+            'pattern_diversity': {
+                'default': '예상 가능한 전개를 의도적으로 비틀어보세요.',
+                'wuxia': '단순 복수극이나 "스승 복수" 패턴을 넘어서는 동기를 부여하세요.',
+            }
+        }
+
+        item_suggestions = suggestions.get(item_name, {})
+        return item_suggestions.get(genre, item_suggestions.get('default', '이 항목을 개선해주세요.'))
+
+    def _get_genre_specific_feedback(self, manuscript: str, breakdown: dict, genre: str) -> List[str]:
+        """장르 특화 피드백 생성"""
+        feedback = []
+
+        if genre == 'wuxia':
+            # 무협 특화 체크
+            martial_keywords = ['내공', '검기', '장풍', '경공', '비급', '검법', '장법']
+            martial_count = sum(manuscript.count(kw) for kw in martial_keywords)
+            if martial_count < 3:
+                feedback.append('무협 장르임에도 무술 관련 묘사(내공, 검기 등)가 부족합니다.')
+
+            # 클리셰 체크
+            cliche_patterns = ['피가 끓어오르', '복수의 칼날', '스승의 원수']
+            cliche_count = sum(1 for p in cliche_patterns if p in manuscript)
+            if cliche_count >= 2:
+                feedback.append('무협 클리셰 표현이 다수 발견됩니다. 신선한 표현을 시도해보세요.')
+
+        elif genre == 'hunter':
+            # 헌터 특화 체크
+            system_keywords = ['레벨', '스킬', '스탯', '던전', '게이트', '마나', '각성']
+            system_count = sum(manuscript.count(kw) for kw in system_keywords)
+            if system_count < 5:
+                feedback.append('헌터 장르 특유의 시스템 요소(스킬, 레벨, 던전 등) 언급이 부족합니다.')
+
+            # 성장 묘사 체크
+            growth_patterns = ['강해졌', '올랐다', '상승', '레벨업', '각성']
+            if not any(p in manuscript for p in growth_patterns):
+                feedback.append('성장/강화 묘사가 부족합니다. 헌터물의 핵심 재미 요소입니다.')
+
+        elif genre == 'investment':
+            # 투자 특화 체크
+            finance_keywords = ['주식', '투자', '수익', '시장', '매수', '매도', '차트']
+            finance_count = sum(manuscript.count(kw) for kw in finance_keywords)
+            if finance_count < 3:
+                feedback.append('투자 장르임에도 금융/투자 관련 용어가 부족합니다.')
+
+            # 논리적 설명 체크
+            explanation_patterns = ['때문에', '왜냐하면', '따라서', '결과적으로']
+            if not any(p in manuscript for p in explanation_patterns):
+                feedback.append('투자 결정의 논리적 근거 설명이 부족합니다.')
+
+        return feedback
+
+    def _get_improvement_priorities(self, breakdown: dict, genre: str) -> List[dict]:
+        """[V59] 우선 개선 항목 도출 (가중치 × 부족분 기준)"""
+        priorities = []
+
+        weights = self.GENRE_WEIGHTS.get(genre, self.GENRE_WEIGHTS['wuxia'])
+
+        for item_name, item_data in breakdown.items():
+            if not isinstance(item_data, dict):
+                continue
+
+            score = item_data.get('weighted_score', 0)
+            max_score = item_data.get('weighted_max', 1)
+            weight = weights.get(item_name, 1.0)
+
+            # 부족분 계산 (가중치 반영)
+            deficit = (max_score - score) * weight
+
+            if deficit > 0:
+                priorities.append({
+                    'item': item_name,
+                    'deficit': round(deficit, 2),
+                    'weight': weight,
+                    'current_ratio': round(score / max_score * 100, 1) if max_score > 0 else 0,
+                    'genre_importance': '높음' if weight > 1.1 else ('중간' if weight >= 1.0 else '낮음')
+                })
+
+        # 부족분 기준 정렬 (큰 것부터)
+        priorities.sort(key=lambda x: x['deficit'], reverse=True)
+
+        return priorities[:5]  # 상위 5개만 반환

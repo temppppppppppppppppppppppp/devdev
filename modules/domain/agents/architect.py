@@ -10,6 +10,7 @@ class Architect(BaseAgent):
     - Core/Buffer 밸런싱: 아크별 긴장도 예산에 따라 장면 밀도 강제 조절
     - 무결성 가드: 위버의 목적과 무관한 '지랄(불필요한 서사)' 차단
     - [V48 NEW] 이전 블루프린트 컨텍스트 주입: 연속성 사전 확보
+    - [V59] 긴장도 곡선 분석 및 자동 씬 밸런싱
     """
     def __init__(self, context, client, model_tier="gemini-3-flash-preview"):
         super().__init__(context, client, model_tier)
@@ -36,14 +37,16 @@ class Architect(BaseAgent):
         except Exception:
             return "안정적"
 
-    def load_prev_blueprints_context(self, ep_num: int, window: int = 5) -> str:
+    def load_prev_blueprints_context(self, ep_num: int, window: int = 15) -> str:
         """
         [V48] 이전 블루프린트 요약 로드 및 캐싱
-        
+        [V60] 윈도우 5→10화 확장, 아이템 추출 정밀화, 중복 획득 경고 강화
+        [V60.9] 윈도우 10→15화 확장, 장기 아이템/NPC 추적 강화
+
         Args:
             ep_num: 현재 에피소드 번호
-            window: 조회할 이전 에피소드 수
-        
+            window: 조회할 이전 에피소드 수 (V60.9: 기본 15화)
+
         Returns:
             str: 이전 블루프린트 요약 (프롬프트용)
         """
@@ -95,19 +98,55 @@ class Architect(BaseAgent):
             return ""
     
     def _extract_acquisitions(self, scenario: str) -> list:
-        """시나리오에서 획득 아이템 추출"""
-        patterns = [
-            r"(.+?)(?:을|를)\s*(?:집어\s*들|뽑아\s*들|획득|챙기|주워\s*들)",
-            r"(.+?)(?:을|를)\s*(?:손에\s*넣|가져가|챙겨\s*들)",
+        """
+        [V60 Enhanced] 시나리오에서 획득 아이템 정밀 추출
+
+        오탐 방지:
+        - 일반 동작 필터링 (펼쳤다, 꺼냈다 등은 제외)
+        - 길이 필터 (2-15자)
+        - 불용어 필터
+        """
+        # 획득 확정 패턴 (소유권 이전 명확)
+        acquisition_patterns = [
+            (r'(.+?)(?:을|를)\s*(?:획득|소유|얻|받)', 'acquire'),
+            (r'(.+?)(?:을|를)\s*(?:집어\s*들|뽑아\s*들|주워\s*들|낚아\s*챔)', 'pickup'),
+            (r'(.+?)(?:을|를)\s*(?:가져가|챙겨\s*들|손에\s*넣)', 'take'),
+            (r'(?:전달받|하사받|넘겨받|지급받).*?(.+?)(?:을|를)', 'receive'),
         ]
+
+        # 오탐 방지: 일반 동작 (소유권 이전 아님)
+        false_positive_patterns = [
+            r'펼치|꺼내|열어|들여다|바라보|확인|살펴',
+        ]
+
+        # 불용어 (아이템이 아닌 것)
+        stopwords = {'것', '이것', '그것', '저것', '무엇', '뭔가', '모든', '여러', '각종',
+                    '손', '발', '눈', '입', '말', '몸', '마음', '생각', '기억', '힘',
+                    '그', '이', '저', '그녀', '그들', '자신', '상대'}
+
         items = []
-        for pattern in patterns:
+        for pattern, source_type in acquisition_patterns:
             matches = re.findall(pattern, scenario)
             for item in matches:
                 item = item.strip()
-                if item and 2 <= len(item) <= 20:
-                    items.append(item)
-        return list(set(items))[:5]  # 중복 제거, 최대 5개
+
+                # 길이 필터 (2-15자)
+                if not (2 <= len(item) <= 15):
+                    continue
+
+                # 불용어 필터
+                if item in stopwords:
+                    continue
+
+                # 오탐 필터: 해당 문장에 일반 동작 패턴이 있으면 제외
+                item_context = scenario[max(0, scenario.find(item)-30):scenario.find(item)+30]
+                is_false_positive = any(re.search(fp, item_context) for fp in false_positive_patterns)
+                if is_false_positive:
+                    continue
+
+                items.append(item)
+
+        return list(set(items))[:8]  # 중복 제거, 최대 8개 (V60: 5→8)
     
     def _extract_grants(self, scenario: str) -> list:
         """시나리오에서 수여물 추출"""
@@ -123,6 +162,57 @@ class Architect(BaseAgent):
                 if grant and 2 <= len(grant) <= 20:
                     grants.append(grant)
         return list(set(grants))[:3]
+
+    def load_semantic_context(self, ep_num: int, current_scenario: str = "") -> str:
+        """
+        [V49.3] Semantic RAG를 통한 관련 Blueprint 검색
+
+        시간 순서가 아닌 의미적 유사성으로 관련 Blueprint를 찾아
+        연속성 컨텍스트를 보강합니다.
+
+        Args:
+            ep_num: 현재 에피소드 번호
+            current_scenario: 현재 설계하려는 시나리오 (쿼리용)
+
+        Returns:
+            str: 시맨틱 컨텍스트 프롬프트
+        """
+        try:
+            from modules.core.blueprint_memory import BlueprintMemory
+
+            # BlueprintMemory 초기화
+            bp_memory = BlueprintMemory(self.context)
+            if not bp_memory.initialized:
+                return ""
+
+            # 쿼리 텍스트 결정
+            query = current_scenario[:500] if current_scenario else ""
+            if not query:
+                # 현재 설계하려는 아크 전술서에서 쿼리 추출
+                if hasattr(self, 'prev_blueprints_context') and self.prev_blueprints_context:
+                    query = self.prev_blueprints_context[:500]
+                else:
+                    return ""
+
+            # 관련 Blueprint 검색 (현재 에피소드 제외)
+            exclude_list = list(range(max(1, ep_num - 3), ep_num + 1))  # 최근 3화 제외
+            related_bps = bp_memory.search_related(
+                query=query,
+                n_results=5,
+                exclude_eps=exclude_list
+            )
+
+            if not related_bps:
+                return ""
+
+            # 프롬프트 생성
+            return bp_memory.generate_context_prompt(related_bps)
+
+        except ImportError:
+            return ""
+        except Exception as e:
+            print(f"      ⚠️ [Architect] Semantic RAG 실패: {e}")
+            return ""
 
     def design_v20_breakdown(self, ep_num, arc_pos, arc_tactical_doc, martial_hud, encyclopedia, 
                               narrative_context="", tactical_references="", style_guide="", 
@@ -278,10 +368,11 @@ class Architect(BaseAgent):
             print(f"      ⚠️ [Architect] Reflexion 로드 실패: {e}")
 
         # [V48] 이전 블루프린트 연속성 컨텍스트 로드
+        # [V60.9] 윈도우 5→15화 확장 (장기 아이템/NPC 추적)
         continuity_context = ""
         try:
             if ep_num > 1:
-                continuity_context = self.load_prev_blueprints_context(ep_num, window=5)
+                continuity_context = self.load_prev_blueprints_context(ep_num, window=15)
         except Exception as e:
             print(f"      ⚠️ [Architect] 연속성 컨텍스트 로드 실패: {e}")
         
@@ -439,8 +530,36 @@ class Architect(BaseAgent):
                 "scene_5": "[Buffer]: 묘사 내용...",
                 "scene_6": "[Cliffhanger]: 다음 화 유도..."
             }},
-            "integrated_scenario": "3,000자 이상의 고해상도 시나리오 (6개 장면의 모든 대사와 상황을 물 흐르듯 연결)"
+            "integrated_scenario": "3,000자 이상의 고해상도 시나리오",
+            "time_flow": "이전 화 대비 시간 흐름 (예: 같은 날 밤, 다음 날 아침, 3일 후)",
+            "relationship_changes": [
+                {{"target": "변화 대상(NPC/집단)", "from_state": "이전 관계", "to_state": "변화 후 관계", "justification": "변화 근거 (어떤 사건으로?)"}}
+            ],
+            "item_movements": {{
+                "scene_1": {{"acquired": [], "used": [], "lost": []}},
+                "scene_2": {{"acquired": ["대도 획득"], "used": [], "lost": []}},
+                "scene_3": {{"acquired": [], "used": ["회복단 사용"], "lost": []}},
+                "scene_4": {{"acquired": [], "used": [], "lost": []}},
+                "scene_5": {{"acquired": ["비급 발견"], "used": [], "lost": []}},
+                "scene_6": {{"acquired": [], "used": [], "lost": []}}
+            }},
+            "inventory_snapshot": {{
+                "start": ["이전 화 종료 시점 소지품"],
+                "end": ["이번 화 종료 시점 소지품"]
+            }}
         }}
+
+        ※ relationship_changes 규칙:
+        - 2단계 이상 점프 금지 (무시→충성 X, 무시→경외→충성 O)
+        - 허용 전환: 멸시→무시/의심, 무시→의심/경외, 의심→경외, 경외→충성
+        - 점프 시 반드시 justification에 구체적 사건 명시
+
+        ※ [V57] item_movements 규칙:
+        - 각 씬에서 발생하는 아이템 변동을 명시
+        - acquired: 해당 씬에서 새로 획득한 아이템
+        - used: 해당 씬에서 사용/소모한 아이템
+        - lost: 해당 씬에서 잃어버린/파괴된 아이템
+        - inventory_snapshot.end는 시작 + 획득 - 소모/손실로 계산
         """
 
         # 6. [API 호출] 캐시 유무에 따른 분기 처리 (기능 저하 없음)
@@ -488,9 +607,11 @@ class Architect(BaseAgent):
 
     def _validate_blueprint_structure(self, blueprint: dict, ep_num: int) -> dict:
         """
-        [V47] 블루프린트 구조 검증 및 보완
-        - scene_breakdown에 최소 4개 scene 필요
+        [V57] 블루프린트 구조 검증 및 보완
+        [V60] 최소 Scene 기준 4→6개 상향, 부족 시 자동 생성
+        - scene_breakdown에 최소 6개 scene 필요 (V60)
         - 필수 필드 존재 여부 확인
+        - [V57] item_movements 일관성 검증
         """
         if not blueprint or not isinstance(blueprint, dict):
             print(f"      ⚠️ [Architect] 블루프린트 구조 오류 - 빈 응답")
@@ -503,20 +624,662 @@ class Architect(BaseAgent):
             print(f"      ⚠️ [Architect] 필수 필드 누락: {missing_fields}")
             blueprint['validation_warning'] = f"missing_fields: {missing_fields}"
 
-        # scene_breakdown 검증
+        # [V60] scene_breakdown 검증 (최소 6개 요구)
         scene_breakdown = blueprint.get('scene_breakdown', {})
+        MIN_SCENES = 6  # V60: 4→6 상향
+
         if isinstance(scene_breakdown, dict):
-            scene_count = len([k for k in scene_breakdown.keys() if k.startswith('scene')])
-            if scene_count < 4:
-                print(f"      ⚠️ [Architect] Scene 부족 ({scene_count}/6) - 품질 저하 가능")
-                blueprint['validation_warning'] = f"insufficient_scenes: {scene_count}"
+            scene_count = len([k for k in scene_breakdown.keys() if k.startswith('scene') or k.startswith('Scene')])
+            if scene_count < MIN_SCENES:
+                print(f"      ⚠️ [V60] Scene 부족 ({scene_count}/{MIN_SCENES}) - 자동 생성 시도")
+                blueprint = self._auto_generate_missing_scenes_v60(blueprint, MIN_SCENES)
+                blueprint['validation_warning'] = f"auto_generated_scenes: {MIN_SCENES - scene_count}"
         elif isinstance(scene_breakdown, str):
             # scene_breakdown이 문자열로 왔을 때 복구 시도
-            print(f"      ⚠️ [Architect] scene_breakdown이 문자열 - dict 변환 시도")
+            print(f"      ⚠️ [Architect] scene_breakdown이 문자열 - dict 변환 + 자동 생성")
             blueprint['scene_breakdown'] = {"scene_1": scene_breakdown}
-            blueprint['validation_warning'] = "scene_breakdown_was_string"
+            blueprint = self._auto_generate_missing_scenes_v60(blueprint, MIN_SCENES)
+            blueprint['validation_warning'] = "scene_breakdown_was_string_and_generated"
+
+        # [V57] item_movements 검증 및 보완
+        item_movements = blueprint.get('item_movements', {})
+        if not item_movements or not isinstance(item_movements, dict):
+            # item_movements 자동 생성
+            blueprint['item_movements'] = self._generate_item_movements_from_scenario(blueprint)
+            print(f"      [V57] item_movements 자동 생성됨")
+        else:
+            # item_movements 일관성 검증
+            validation_result = self._validate_item_movements(item_movements, blueprint)
+            if validation_result.get('warnings'):
+                for warn in validation_result['warnings']:
+                    print(f"      ⚠️ [V57] {warn}")
+                blueprint['item_movement_warnings'] = validation_result['warnings']
+
+        # [V57] inventory_snapshot 보완
+        if 'inventory_snapshot' not in blueprint:
+            blueprint['inventory_snapshot'] = self._compute_inventory_snapshot(blueprint)
 
         # ep_num 강제 설정
         blueprint['ep_num'] = ep_num
 
         return blueprint
+
+    def _auto_generate_missing_scenes_v60(self, blueprint: dict, target_count: int = 6) -> dict:
+        """
+        [V60] 부족한 Scene 자동 생성
+
+        기존 씬의 내용을 분석하여 누락된 씬을 추론적으로 생성합니다.
+        Buffer/Transition 씬 위주로 자동 생성됩니다.
+
+        Args:
+            blueprint: 원본 블루프린트
+            target_count: 목표 씬 개수
+
+        Returns:
+            보완된 블루프린트
+        """
+        scene_breakdown = blueprint.get('scene_breakdown', {})
+        if not isinstance(scene_breakdown, dict):
+            scene_breakdown = {}
+
+        current_count = len([k for k in scene_breakdown.keys() if k.startswith('scene') or k.startswith('Scene')])
+
+        if current_count >= target_count:
+            return blueprint
+
+        # 기존 씬에서 컨텍스트 추출
+        existing_scenes = list(scene_breakdown.values())
+        last_scene_content = existing_scenes[-1] if existing_scenes else ""
+
+        # 씬 타입 패턴
+        scene_type_rotation = ['Buffer', 'Core', 'Buffer', 'Core', 'Buffer', 'Cliffhanger']
+
+        # 부족한 씬 자동 생성
+        for i in range(current_count + 1, target_count + 1):
+            scene_type = scene_type_rotation[(i - 1) % len(scene_type_rotation)]
+
+            if scene_type == 'Buffer':
+                auto_content = f"[{scene_type}]: (V60 자동 생성) 전환 씬 - 이전 장면의 여운을 정리하고 다음 전개를 준비하는 장면. 상세 내용은 Writer 단계에서 확장 필요."
+            elif scene_type == 'Core':
+                auto_content = f"[{scene_type}]: (V60 자동 생성) 핵심 씬 - 에피소드의 주요 갈등/사건을 전개하는 장면. 상세 내용은 Writer 단계에서 확장 필요."
+            else:  # Cliffhanger
+                auto_content = f"[{scene_type}]: (V60 자동 생성) 클리프행어 - 긴장감 있는 엔딩으로 다음 화에 대한 기대를 유발하는 장면. 상세 내용은 Writer 단계에서 확장 필요."
+
+            scene_breakdown[f'scene_{i}'] = auto_content
+
+        blueprint['scene_breakdown'] = scene_breakdown
+        blueprint['v60_auto_generated_scenes'] = target_count - current_count
+
+        print(f"      🔧 [V60] {target_count - current_count}개 씬 자동 생성 완료 (총 {target_count}개)")
+
+        return blueprint
+
+    def _generate_item_movements_from_scenario(self, blueprint: dict) -> dict:
+        """
+        [V57] integrated_scenario에서 item_movements 자동 추출
+        """
+        scenario = blueprint.get('integrated_scenario', '')
+        scene_breakdown = blueprint.get('scene_breakdown', {})
+
+        movements = {}
+
+        # 씬별로 아이템 이동 추출
+        for scene_key in scene_breakdown.keys():
+            scene_content = scene_breakdown.get(scene_key, '')
+            if not isinstance(scene_content, str):
+                scene_content = str(scene_content)
+
+            movements[scene_key] = {
+                "acquired": self._extract_acquisitions(scene_content),
+                "used": self._extract_item_usage(scene_content),
+                "lost": self._extract_item_loss(scene_content)
+            }
+
+        return movements
+
+    def _extract_item_usage(self, text: str) -> list:
+        """텍스트에서 아이템 사용/소모 추출"""
+        patterns = [
+            r"(.+?)(?:을|를)\s*(?:사용|복용|먹|마시|소모|꺼내|써)",
+            r"(.+?)(?:으로|로)\s*(?:치료|회복|수련)",
+        ]
+        items = []
+        for pattern in patterns:
+            matches = re.findall(pattern, text)
+            for item in matches:
+                item = item.strip()
+                if item and 2 <= len(item) <= 15:
+                    items.append(item)
+        return list(set(items))[:3]
+
+    def _extract_item_loss(self, text: str) -> list:
+        """텍스트에서 아이템 손실/파괴 추출"""
+        patterns = [
+            r"(.+?)(?:이|가)\s*(?:부러지|깨지|파괴|망가지|잃어버리|빼앗|도난)",
+            r"(.+?)(?:을|를)\s*(?:잃|빼앗기|떨어뜨)",
+        ]
+        items = []
+        for pattern in patterns:
+            matches = re.findall(pattern, text)
+            for item in matches:
+                item = item.strip()
+                if item and 2 <= len(item) <= 15:
+                    items.append(item)
+        return list(set(items))[:3]
+
+    def _validate_item_movements(self, item_movements: dict, blueprint: dict) -> dict:
+        """
+        [V57] item_movements 일관성 검증
+
+        검증 항목:
+        1. 획득 전 사용 방지
+        2. 중복 획득 방지
+        3. inventory_snapshot과의 일관성
+        """
+        result = {"valid": True, "warnings": []}
+
+        # 누적 인벤토리 추적
+        inventory = set()
+        inventory_snapshot = blueprint.get('inventory_snapshot', {})
+        start_items = inventory_snapshot.get('start', [])
+        if isinstance(start_items, list):
+            inventory.update(start_items)
+
+        all_acquired = []
+        all_used = []
+        all_lost = []
+
+        for scene_key in sorted(item_movements.keys()):
+            movements = item_movements.get(scene_key, {})
+            if not isinstance(movements, dict):
+                continue
+
+            acquired = movements.get('acquired', [])
+            used = movements.get('used', [])
+            lost = movements.get('lost', [])
+
+            # 획득 전 사용 검증
+            for item in used:
+                if item not in inventory and item not in all_acquired:
+                    result['warnings'].append(
+                        f"{scene_key}: '{item}' 사용 - 미획득 아이템"
+                    )
+
+            # 중복 획득 검증
+            for item in acquired:
+                if item in all_acquired:
+                    result['warnings'].append(
+                        f"{scene_key}: '{item}' 중복 획득"
+                    )
+
+            all_acquired.extend(acquired)
+            all_used.extend(used)
+            all_lost.extend(lost)
+
+            # 인벤토리 업데이트
+            inventory.update(acquired)
+            for item in used + lost:
+                inventory.discard(item)
+
+        if result['warnings']:
+            result['valid'] = False
+
+        return result
+
+    def _compute_inventory_snapshot(self, blueprint: dict) -> dict:
+        """
+        [V57] item_movements 기반 inventory_snapshot 계산
+        """
+        item_movements = blueprint.get('item_movements', {})
+
+        # 이전 화 정보에서 시작 인벤토리 추출
+        start_inventory = []
+        if hasattr(self, 'prev_blueprints_context') and self.prev_blueprints_context:
+            # 이미 획득한 아이템 섹션에서 추출
+            import re
+            match = re.search(r'\[이미 획득한 아이템\]\s*(.+?)(?:\n|$)', self.prev_blueprints_context)
+            if match:
+                items_str = match.group(1)
+                items = re.findall(r"'([^']+)'", items_str)
+                start_inventory = items[:10]  # 최대 10개
+
+        # 종료 인벤토리 계산
+        end_inventory = set(start_inventory)
+
+        for scene_key in sorted(item_movements.keys()):
+            movements = item_movements.get(scene_key, {})
+            if not isinstance(movements, dict):
+                continue
+
+            acquired = movements.get('acquired', [])
+            used = movements.get('used', [])
+            lost = movements.get('lost', [])
+
+            end_inventory.update(acquired)
+            for item in used + lost:
+                end_inventory.discard(item)
+
+        return {
+            "start": start_inventory,
+            "end": list(end_inventory)
+        }
+
+    # ========================================================================
+    # [V59] 긴장도 곡선 시스템
+    # ========================================================================
+
+    # [V59] 씬 유형별 기본 긴장도
+    SCENE_TYPE_TENSION = {
+        'buffer': {'base': 30, 'range': (20, 40)},
+        'core': {'base': 70, 'range': (60, 85)},
+        'cliffhanger': {'base': 80, 'range': (70, 95)},
+        'dialogue': {'base': 40, 'range': (30, 55)},
+        'action': {'base': 75, 'range': (65, 90)},
+        'discovery': {'base': 55, 'range': (45, 70)},
+        'training': {'base': 45, 'range': (35, 60)},
+        'crisis': {'base': 85, 'range': (75, 100)},
+    }
+
+    # [V59] 장르별 권장 긴장도 패턴
+    GENRE_TENSION_PATTERNS = {
+        'wuxia': {
+            'standard': [30, 45, 65, 75, 60, 85],  # 점진적 상승 + 클리프
+            'training': [40, 55, 50, 65, 70, 55],  # 수련 에피소드
+            'crisis': [60, 75, 85, 90, 70, 95],     # 위기 에피소드
+        },
+        'hunter': {
+            'dungeon': [50, 60, 75, 85, 65, 90],   # 던전 공략
+            'growth': [35, 50, 60, 55, 70, 75],    # 성장 에피소드
+            'boss': [55, 70, 80, 90, 75, 95],      # 보스전
+        },
+        'investment': {
+            'analysis': [35, 45, 55, 50, 60, 70],  # 분석/준비
+            'trade': [45, 60, 75, 80, 65, 85],     # 거래 실행
+            'crisis': [70, 80, 90, 85, 75, 95],    # 시장 위기
+        }
+    }
+
+    def analyze_tension_curve(self, blueprint: dict, genre: str = 'wuxia') -> dict:
+        """
+        [V59] Blueprint의 긴장도 곡선 분석
+
+        Args:
+            blueprint: 블루프린트
+            genre: 장르
+
+        Returns:
+            {
+                'scene_tensions': [{'scene': 'scene_1', 'tension': 35, 'type': 'buffer'}, ...],
+                'curve_shape': 'ascending' | 'descending' | 'plateau' | 'wave',
+                'climax_scene': 4,
+                'average_tension': 55.5,
+                'tension_variance': 18.2,
+                'recommendations': [...]
+            }
+        """
+        scene_breakdown = blueprint.get('scene_breakdown', {})
+        if not scene_breakdown:
+            return {'error': 'No scene breakdown', 'scene_tensions': []}
+
+        scene_tensions = []
+
+        for scene_key in sorted(scene_breakdown.keys()):
+            scene_content = scene_breakdown.get(scene_key, '')
+            if not isinstance(scene_content, str):
+                scene_content = str(scene_content)
+
+            # 씬 유형 감지
+            scene_type = self._detect_scene_type(scene_content)
+
+            # 긴장도 계산
+            tension = self._calculate_scene_tension(scene_content, scene_type, genre)
+
+            scene_tensions.append({
+                'scene': scene_key,
+                'type': scene_type,
+                'tension': tension,
+                'content_preview': scene_content[:100]
+            })
+
+        # 곡선 형태 분석
+        tensions = [s['tension'] for s in scene_tensions]
+        curve_shape = self._analyze_curve_shape(tensions)
+
+        # 클라이맥스 찾기
+        max_tension = max(tensions) if tensions else 0
+        climax_scene = tensions.index(max_tension) + 1 if tensions else 1
+
+        # 통계
+        avg_tension = sum(tensions) / len(tensions) if tensions else 0
+        variance = sum((t - avg_tension) ** 2 for t in tensions) / len(tensions) if tensions else 0
+
+        # 권장 사항 생성
+        recommendations = self._generate_tension_recommendations(
+            scene_tensions, curve_shape, genre
+        )
+
+        return {
+            'scene_tensions': scene_tensions,
+            'curve_shape': curve_shape,
+            'climax_scene': climax_scene,
+            'average_tension': round(avg_tension, 1),
+            'tension_variance': round(variance ** 0.5, 1),
+            'recommended_pattern': self._get_recommended_pattern(genre, curve_shape),
+            'recommendations': recommendations
+        }
+
+    def _detect_scene_type(self, content: str) -> str:
+        """씬 유형 감지"""
+        content_lower = content.lower()
+
+        type_keywords = {
+            'cliffhanger': ['cliffhanger', '절벽', '급전환', '돌연', '그때'],
+            'core': ['core', '핵심', '중심', '주요', '목표 달성'],
+            'buffer': ['buffer', '완충', '분위기', '일상'],
+            'action': ['전투', '격돌', '공격', '방어', '결투'],
+            'dialogue': ['대화', '협상', '설득', '정보 수집'],
+            'discovery': ['발견', '비밀', '진실', '단서'],
+            'training': ['수련', '연마', '깨달음', '경지'],
+            'crisis': ['위기', '절체절명', '궁지', '함정'],
+        }
+
+        for scene_type, keywords in type_keywords.items():
+            if any(kw in content_lower for kw in keywords):
+                return scene_type
+
+        return 'buffer'  # 기본값
+
+    def _calculate_scene_tension(self, content: str, scene_type: str, genre: str) -> int:
+        """씬 긴장도 계산"""
+        type_info = self.SCENE_TYPE_TENSION.get(scene_type, self.SCENE_TYPE_TENSION['buffer'])
+        base_tension = type_info['base']
+        min_t, max_t = type_info['range']
+
+        # 콘텐츠 기반 조정
+        adjustments = 0
+
+        # 긴장 키워드
+        tension_keywords = ['위기', '급박', '공격', '도망', '추격', '죽음', '피', '부상']
+        tension_count = sum(1 for kw in tension_keywords if kw in content)
+        adjustments += min(tension_count * 3, 15)
+
+        # 완화 키워드
+        calm_keywords = ['평화', '휴식', '안전', '회복', '대화', '설명']
+        calm_count = sum(1 for kw in calm_keywords if kw in content)
+        adjustments -= min(calm_count * 2, 10)
+
+        # 장르별 조정
+        if genre == 'wuxia' and any(kw in content for kw in ['검기', '내공', '살기']):
+            adjustments += 5
+        elif genre == 'hunter' and any(kw in content for kw in ['보스', '레이드', '던전']):
+            adjustments += 5
+        elif genre == 'investment' and any(kw in content for kw in ['폭락', '파산', '대박']):
+            adjustments += 5
+
+        # 범위 내로 클램핑
+        final_tension = max(min_t, min(max_t, base_tension + adjustments))
+        return final_tension
+
+    def _analyze_curve_shape(self, tensions: list) -> str:
+        """긴장도 곡선 형태 분석"""
+        if len(tensions) < 2:
+            return 'flat'
+
+        # 전반부와 후반부 평균 비교
+        mid = len(tensions) // 2
+        first_half = sum(tensions[:mid]) / mid if mid > 0 else 0
+        second_half = sum(tensions[mid:]) / (len(tensions) - mid) if len(tensions) > mid else 0
+
+        # 변동성 체크
+        differences = [tensions[i+1] - tensions[i] for i in range(len(tensions)-1)]
+        ascending_count = sum(1 for d in differences if d > 5)
+        descending_count = sum(1 for d in differences if d < -5)
+
+        if second_half > first_half + 10:
+            return 'ascending'  # 점진적 상승
+        elif first_half > second_half + 10:
+            return 'descending'  # 하강형
+        elif ascending_count >= 2 and descending_count >= 2:
+            return 'wave'  # 파도형 (기복)
+        else:
+            return 'plateau'  # 평탄형
+
+    def _get_recommended_pattern(self, genre: str, current_shape: str) -> list:
+        """장르별 권장 패턴 반환"""
+        patterns = self.GENRE_TENSION_PATTERNS.get(genre, self.GENRE_TENSION_PATTERNS['wuxia'])
+        return patterns.get('standard', [50, 55, 60, 65, 60, 75])
+
+    def _generate_tension_recommendations(self, scene_tensions: list, curve_shape: str, genre: str) -> list:
+        """긴장도 개선 권장 사항 생성"""
+        recommendations = []
+
+        if not scene_tensions:
+            return ["씬 정보 부족 - 긴장도 분석 불가"]
+
+        tensions = [s['tension'] for s in scene_tensions]
+        avg = sum(tensions) / len(tensions)
+
+        # 1. 평균 긴장도 체크
+        if avg < 45:
+            recommendations.append(
+                f"평균 긴장도 {avg:.0f}점으로 낮음 - Core 씬 추가 또는 갈등 강화 필요"
+            )
+        elif avg > 80:
+            recommendations.append(
+                f"평균 긴장도 {avg:.0f}점으로 높음 - Buffer 씬 추가로 독자 피로도 관리 필요"
+            )
+
+        # 2. 곡선 형태별 권장
+        if curve_shape == 'plateau':
+            recommendations.append(
+                "긴장도 변화가 적음 - 클라이맥스 씬(Scene 4-5)에 긴장 집중 필요"
+            )
+        elif curve_shape == 'descending':
+            recommendations.append(
+                "긴장도 하강형 - 마지막 씬(Cliffhanger)에서 긴장 회복 필요"
+            )
+
+        # 3. 클리프행어 체크
+        if tensions and tensions[-1] < 70:
+            recommendations.append(
+                f"마지막 씬 긴장도 {tensions[-1]}점 - Cliffhanger 효과 약화, 70점 이상 권장"
+            )
+
+        # 4. 연속 저긴장 체크
+        low_tension_streak = 0
+        for t in tensions:
+            if t < 50:
+                low_tension_streak += 1
+            else:
+                low_tension_streak = 0
+
+            if low_tension_streak >= 3:
+                recommendations.append(
+                    "3개 이상 연속 저긴장 씬 - 독자 이탈 위험, 중간에 갈등 씬 삽입 필요"
+                )
+                break
+
+        return recommendations[:5]  # 최대 5개
+
+    # ========================================================================
+    # [V59] 자동 씬 밸런싱 시스템
+    # ========================================================================
+
+    def auto_balance_scenes(self, blueprint: dict, genre: str = 'wuxia') -> dict:
+        """
+        [V59] 씬 밸런싱 자동 조정
+
+        Args:
+            blueprint: 블루프린트
+            genre: 장르
+
+        Returns:
+            {
+                'balanced_breakdown': {...},
+                'adjustments_made': [...],
+                'balance_score': float (0-100)
+            }
+        """
+        scene_breakdown = blueprint.get('scene_breakdown', {})
+        if not scene_breakdown:
+            return {'error': 'No scene breakdown', 'balanced_breakdown': {}}
+
+        adjustments = []
+        balanced = dict(scene_breakdown)
+
+        # 1. 긴장도 분석
+        tension_analysis = self.analyze_tension_curve(blueprint, genre)
+        scene_tensions = tension_analysis.get('scene_tensions', [])
+
+        # 2. Core/Buffer 비율 체크
+        core_count = sum(1 for s in scene_tensions if s['type'] == 'core')
+        total_scenes = len(scene_tensions)
+
+        if total_scenes > 0:
+            core_ratio = core_count / total_scenes
+
+            # Core 부족 시 (30% 미만)
+            if core_ratio < 0.3 and total_scenes >= 4:
+                # 중간 씬을 Core로 전환 제안
+                mid_scene = f"scene_{total_scenes // 2}"
+                if mid_scene in balanced:
+                    adjustments.append({
+                        'scene': mid_scene,
+                        'action': 'upgrade_to_core',
+                        'reason': f'Core 비율 {core_ratio:.0%}로 부족'
+                    })
+
+            # Core 과다 시 (50% 초과)
+            elif core_ratio > 0.5:
+                adjustments.append({
+                    'action': 'add_buffer',
+                    'reason': f'Core 비율 {core_ratio:.0%}로 과다 - 독자 피로'
+                })
+
+        # 3. 긴장도 균형 조정
+        if tension_analysis.get('curve_shape') == 'plateau':
+            # 클라이맥스 강화 제안
+            climax_scene = f"scene_{tension_analysis.get('climax_scene', 4)}"
+            adjustments.append({
+                'scene': climax_scene,
+                'action': 'intensify',
+                'reason': '긴장도 변화 부족 - 클라이맥스 강화'
+            })
+
+        # 4. 씬 길이 균형 체크
+        scene_lengths = {}
+        for scene_key, content in scene_breakdown.items():
+            if isinstance(content, str):
+                scene_lengths[scene_key] = len(content)
+
+        if scene_lengths:
+            avg_length = sum(scene_lengths.values()) / len(scene_lengths)
+            for scene_key, length in scene_lengths.items():
+                if length < avg_length * 0.5:
+                    adjustments.append({
+                        'scene': scene_key,
+                        'action': 'expand',
+                        'reason': f'씬 분량 {length}자로 평균({avg_length:.0f}자)의 50% 미만'
+                    })
+                elif length > avg_length * 1.5:
+                    adjustments.append({
+                        'scene': scene_key,
+                        'action': 'trim',
+                        'reason': f'씬 분량 {length}자로 평균({avg_length:.0f}자)의 150% 초과'
+                    })
+
+        # 5. 밸런스 점수 계산
+        balance_score = self._calculate_balance_score(
+            scene_tensions, core_count, total_scenes, tension_analysis.get('curve_shape', 'unknown')
+        )
+
+        return {
+            'balanced_breakdown': balanced,
+            'adjustments_made': adjustments[:10],  # 최대 10개
+            'balance_score': round(balance_score, 1),
+            'tension_analysis': tension_analysis,
+            'metrics': {
+                'core_ratio': core_count / total_scenes if total_scenes > 0 else 0,
+                'total_scenes': total_scenes,
+                'core_scenes': core_count,
+                'curve_shape': tension_analysis.get('curve_shape', 'unknown')
+            }
+        }
+
+    def _calculate_balance_score(self, scene_tensions: list, core_count: int,
+                                  total_scenes: int, curve_shape: str) -> float:
+        """밸런스 점수 계산"""
+        score = 100.0
+
+        if total_scenes == 0:
+            return 0
+
+        # Core 비율 점수 (30-50% 이상적)
+        core_ratio = core_count / total_scenes
+        if core_ratio < 0.3:
+            score -= (0.3 - core_ratio) * 50
+        elif core_ratio > 0.5:
+            score -= (core_ratio - 0.5) * 30
+
+        # 곡선 형태 점수
+        shape_scores = {
+            'ascending': 0,      # 가장 좋음
+            'wave': -5,          # 괜찮음
+            'descending': -15,   # 주의
+            'plateau': -20,      # 나쁨
+            'flat': -25,         # 매우 나쁨
+        }
+        score += shape_scores.get(curve_shape, -10)
+
+        # 긴장도 분산 점수
+        if scene_tensions:
+            tensions = [s['tension'] for s in scene_tensions]
+            variance = sum((t - sum(tensions)/len(tensions)) ** 2 for t in tensions) / len(tensions)
+
+            # 적정 분산 (150-400)
+            if variance < 100:
+                score -= 10  # 변화 부족
+            elif variance > 500:
+                score -= 10  # 변화 과다
+
+        return max(0, min(100, score))
+
+    def build_tension_curve_prompt(self, tension_analysis: dict) -> str:
+        """
+        [V59] 긴장도 곡선 분석 결과를 프롬프트에 주입할 형태로 변환
+
+        Args:
+            tension_analysis: analyze_tension_curve() 결과
+
+        Returns:
+            str: 프롬프트 주입용 텍스트
+        """
+        if not tension_analysis or tension_analysis.get('error'):
+            return ""
+
+        lines = [
+            "\n📊 [V59 TENSION CURVE ANALYSIS]\n"
+        ]
+
+        # 곡선 시각화
+        scene_tensions = tension_analysis.get('scene_tensions', [])
+        if scene_tensions:
+            lines.append("씬별 긴장도:")
+            for st in scene_tensions:
+                tension = st.get('tension', 50)
+                bar = '█' * (tension // 10) + '░' * (10 - tension // 10)
+                lines.append(f"  {st['scene']}: [{bar}] {tension}점 ({st['type']})")
+
+        # 요약 정보
+        lines.append(f"\n곡선 형태: {tension_analysis.get('curve_shape', '?')}")
+        lines.append(f"클라이맥스: 씬 {tension_analysis.get('climax_scene', '?')}")
+        lines.append(f"평균 긴장도: {tension_analysis.get('average_tension', 0)}점")
+
+        # 권장 사항
+        recommendations = tension_analysis.get('recommendations', [])
+        if recommendations:
+            lines.append("\n⚠️ 권장 사항:")
+            for rec in recommendations[:3]:
+                lines.append(f"  - {rec}")
+
+        return "\n".join(lines)
