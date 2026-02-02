@@ -26,20 +26,45 @@ class BaseGuard(ABC):
         """장르 이름 반환"""
         pass
     
-    def convert_to_numeric(self, text):
-        """한글/한자 수사를 숫자로 변환 (무협 전용이지만 공통으로 제공)"""
-        if not text or not isinstance(text, (str, int, float)): return 0.0
+    def convert_to_numeric(self, text, current_value: float = None):
+        """
+        [V60.22] 한글/한자 수사를 숫자로 변환 + 델타값 처리
+
+        Args:
+            text: 변환할 텍스트 (예: "80%", "+50", "현상 유지", "무공 100%")
+            current_value: 현재 값 (델타 계산용, None이면 절대값으로 처리)
+
+        Returns:
+            float: 변환된 숫자값
+        """
+        if not text or not isinstance(text, (str, int, float)):
+            # [V60.22] None이면 현재 값 유지
+            return current_value if current_value is not None else 0.0
         if isinstance(text, (int, float)): return float(text)
 
-        clean_text = text.replace(" ", "")
+        clean_text = str(text).replace(" ", "").strip()
 
-        # 1. [V40.1 Critical Fix] 제로 가드 - 정확한 매칭으로 변경
-        # "0"을 부분 문자열로 체크하면 "80", "5.0" 등이 모두 0이 됨!
-        zero_keywords = ["영", "무", "없음", "소멸"]
-        if any(keyword in clean_text for keyword in zero_keywords):
+        # [V60.22] "현상 유지" 처리 - 현재 값 반환
+        if clean_text in ["현상유지", "유지", "변화없음", "동일"]:
+            return current_value if current_value is not None else 0.0
+
+        # [V60.22] 델타값 처리 ("+50", "-20" 등)
+        delta_match = re.match(r'^([+-])(\d+(?:\.\d+)?)%?$', clean_text)
+        if delta_match and current_value is not None:
+            sign = 1 if delta_match.group(1) == '+' else -1
+            delta = float(delta_match.group(2))
+            return max(0, min(100, current_value + sign * delta))
+
+        # 1. [V60.22 Fix] 제로 가드 - "무" 단독일 때만 0 처리
+        # "무공", "무형", "무림" 등은 0이 아님!
+        zero_exact = ["영", "없음", "소멸", "고갈", "전무"]
+        if clean_text in zero_exact:
+            return 0.0
+        # "무"는 단독으로 쓰일 때만 0 (예: "내공: 무")
+        if clean_text == "무":
             return 0.0
         # 정확히 "0" 또는 "0.0"인 경우만 체크 (아라비아 숫자 추출 전에)
-        if clean_text in ["0", "0.0", "0.", ".0"]:
+        if clean_text in ["0", "0.0", "0.", ".0", "0%"]:
             return 0.0
 
         # 2. 단위 멀티플라이어 (갑자 대응)

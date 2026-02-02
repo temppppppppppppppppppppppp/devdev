@@ -93,7 +93,7 @@ class MetricsCollector:
     """
 
     _instance: Optional['MetricsCollector'] = None
-    _lock = threading.Lock()
+    _lock = threading.RLock()  # [V49.6 FIX] Lock → RLock (재진입 가능, 데드락 방지)
 
     def __new__(cls, *args, **kwargs):
         """싱글톤 패턴"""
@@ -133,7 +133,8 @@ class MetricsCollector:
         self._model_tokens: Dict[str, Dict[str, int]] = defaultdict(lambda: {'input': 0, 'output': 0})
 
         # 스레드 안전성
-        self._lock = threading.Lock()
+        # [V49.6 FIX] Lock → RLock (재진입 가능, 데드락 방지)
+        self._lock = threading.RLock()
 
     def start_call(self, agent_name: str, model: str) -> str:
         """

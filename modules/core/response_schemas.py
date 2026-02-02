@@ -205,6 +205,157 @@ CHARACTER_LOGIC_SCHEMA = types.Schema(
 
 
 # =================================================================
+# [V49.4] Analyst Arc Design Schema
+# =================================================================
+
+ARC_STATE_SCHEMA = types.Schema(
+    type=types.Type.OBJECT,
+    properties={
+        "location": types.Schema(type=types.Type.STRING),
+        "equipment": types.Schema(
+            type=types.Type.ARRAY,
+            items=types.Schema(type=types.Type.STRING)
+        ),
+        "injuries": types.Schema(
+            type=types.Type.STRING,
+            enum=["정상", "경상", "중상", "위독"]
+        ),
+        "internal_energy": types.Schema(
+            type=types.Type.INTEGER,
+            minimum=0,
+            maximum=100
+        )
+    },
+    required=["location", "equipment", "injuries", "internal_energy"]
+)
+
+ARC_STATE_CONSTRAINTS_SCHEMA = types.Schema(
+    type=types.Type.OBJECT,
+    properties={
+        "arc_start_state": ARC_STATE_SCHEMA,
+        "arc_end_state": ARC_STATE_SCHEMA,
+        # [V49.6] 아이템 소유권 명확화
+        "protagonist_items": types.Schema(
+            type=types.Type.ARRAY,
+            items=types.Schema(type=types.Type.STRING),
+            description="주인공이 직접 소지하게 되는 아이템만 기록. 타인에게 지급한 것은 제외."
+        ),
+        "distributed_items": types.Schema(
+            type=types.Type.ARRAY,
+            items=types.Schema(type=types.Type.STRING),
+            description="주인공이 구매/획득 후 타인(병사, NPC 등)에게 지급한 아이템"
+        ),
+        "items_consumed": types.Schema(
+            type=types.Type.ARRAY,
+            items=types.Schema(type=types.Type.STRING),
+            description="이 Arc에서 소모/사용되어 사라진 아이템 (금전, 소모품 등)"
+        ),
+        # [V49.7] 품질 추적 필드
+        "relationship_changes": types.Schema(
+            type=types.Type.ARRAY,
+            items=types.Schema(
+                type=types.Type.OBJECT,
+                properties={
+                    "target": types.Schema(type=types.Type.STRING, description="변화 대상 NPC/집단명"),
+                    "from": types.Schema(type=types.Type.STRING, description="이전 관계 상태"),
+                    "to": types.Schema(type=types.Type.STRING, description="변경 후 상태"),
+                    "trigger": types.Schema(type=types.Type.STRING, description="변화 계기"),
+                    "justification": types.Schema(type=types.Type.STRING, description="서사적 근거")
+                },
+                required=["target", "from", "to", "trigger"]
+            ),
+            description="이 Arc에서 발생하는 관계 변화 목록"
+        ),
+        "power_changes": types.Schema(
+            type=types.Type.OBJECT,
+            properties={
+                "start_power": types.Schema(type=types.Type.INTEGER, description="Arc 시작 시 파워 (0-100)"),
+                "end_power": types.Schema(type=types.Type.INTEGER, description="Arc 종료 시 파워 (0-100)"),
+                "growth_justification": types.Schema(type=types.Type.STRING, description="성장 근거")
+            },
+            description="주인공 파워 스케일링 정보"
+        ),
+        "foreshadowings": types.Schema(
+            type=types.Type.ARRAY,
+            items=types.Schema(
+                type=types.Type.OBJECT,
+                properties={
+                    "id": types.Schema(type=types.Type.STRING, description="복선 식별자"),
+                    "type": types.Schema(type=types.Type.STRING, description="복선 유형 (아이템/인물/사건/능력/비밀/예언)"),
+                    "description": types.Schema(type=types.Type.STRING, description="복선 내용"),
+                    "expected_payoff": types.Schema(type=types.Type.STRING, description="예상 회수 시점/방법")
+                },
+                required=["id", "description"]
+            ),
+            description="이 Arc에서 설치하는 복선 목록"
+        ),
+        "continuity_checkpoints": types.Schema(
+            type=types.Type.ARRAY,
+            items=types.Schema(type=types.Type.STRING)
+        )
+    },
+    required=["arc_start_state", "arc_end_state", "protagonist_items", "items_consumed"]
+)
+
+ARC_DESIGN_SCHEMA = types.Schema(
+    type=types.Type.OBJECT,
+    properties={
+        "arc_no": types.Schema(type=types.Type.INTEGER),
+        "hybrid_composition": types.Schema(
+            type=types.Type.OBJECT,
+            properties={
+                "primary": types.Schema(type=types.Type.STRING),
+                "secondary": types.Schema(
+                    type=types.Type.ARRAY,
+                    items=types.Schema(type=types.Type.STRING)
+                ),
+                "mixing_logic": types.Schema(type=types.Type.STRING)
+            },
+            required=["primary", "mixing_logic"]
+        ),
+        "ep_count": types.Schema(
+            type=types.Type.INTEGER,
+            minimum=2,
+            maximum=6
+        ),
+        "ep_start": types.Schema(type=types.Type.INTEGER),
+        "ep_end": types.Schema(type=types.Type.INTEGER),
+        "title": types.Schema(type=types.Type.STRING),
+        "beat_sequence": types.Schema(
+            type=types.Type.ARRAY,
+            items=types.Schema(type=types.Type.STRING)
+        ),
+        "state_constraints": ARC_STATE_CONSTRAINTS_SCHEMA,
+        "tactical_doc": types.Schema(type=types.Type.STRING),
+        "joint_docs": types.Schema(
+            type=types.Type.OBJECT,
+            properties={
+                "final_location": types.Schema(type=types.Type.STRING),
+                "physical_inventory": types.Schema(
+                    type=types.Type.ARRAY,
+                    items=types.Schema(type=types.Type.STRING)
+                ),
+                "world_joint": types.Schema(type=types.Type.STRING)
+            },
+            required=["final_location", "physical_inventory", "world_joint"]
+        ),
+        "status_shadow": types.Schema(
+            type=types.Type.OBJECT,
+            properties={
+                "internal_energy_loss": types.Schema(type=types.Type.STRING),
+                "expected_injuries": types.Schema(type=types.Type.STRING),
+                "item_consumption": types.Schema(
+                    type=types.Type.ARRAY,
+                    items=types.Schema(type=types.Type.STRING)
+                )
+            }
+        )
+    },
+    required=["arc_no", "ep_count", "ep_start", "ep_end", "title", "beat_sequence", "tactical_doc"]
+)
+
+
+# =================================================================
 # Writer & Architect Schemas
 # =================================================================
 
@@ -215,7 +366,22 @@ BLUEPRINT_SCHEMA = types.Schema(
         "scene_breakdown": types.Schema(type=types.Type.OBJECT),
         "integrated_scenario": types.Schema(type=types.Type.STRING),
         "pacing_notes": types.Schema(type=types.Type.STRING),
-        "target_beat": types.Schema(type=types.Type.STRING)
+        "target_beat": types.Schema(type=types.Type.STRING),
+        # [V49.5] 관계 변화 추적
+        "relationship_changes": types.Schema(
+            type=types.Type.ARRAY,
+            items=types.Schema(
+                type=types.Type.OBJECT,
+                properties={
+                    "target": types.Schema(type=types.Type.STRING),  # 대상 (NPC/집단)
+                    "from_state": types.Schema(type=types.Type.STRING),  # 이전 관계
+                    "to_state": types.Schema(type=types.Type.STRING),  # 변화 후 관계
+                    "justification": types.Schema(type=types.Type.STRING)  # 변화 근거
+                }
+            )
+        ),
+        # [V49.5] 시간 흐름
+        "time_flow": types.Schema(type=types.Type.STRING)  # 예: "같은 날 밤", "3일 후"
     },
     required=["episode_number", "scene_breakdown", "integrated_scenario"]
 )
@@ -256,7 +422,8 @@ def get_schema_for_task(task_type: str) -> types.Schema:
         "STRATEGIC_AUDIT": STRATEGIC_AUDIT_SCHEMA,
         "CHARACTER_LOGIC": CHARACTER_LOGIC_SCHEMA,
         "BLUEPRINT": BLUEPRINT_SCHEMA,
-        "MANUSCRIPT": MANUSCRIPT_SCHEMA
+        "MANUSCRIPT": MANUSCRIPT_SCHEMA,
+        "ARC_DESIGN": ARC_DESIGN_SCHEMA,  # [V49.4] Arc 설계 스키마
     }
 
     return schemas.get(task_type)
@@ -298,6 +465,159 @@ def validate_response_against_schema(response: dict, schema: types.Schema) -> bo
 # =================================================================
 # Schema Usage Examples
 # =================================================================
+
+# =================================================================
+# [V49.3] Stage 0 (Phase 0) Input Validation Schemas
+# =================================================================
+
+# Bible 파일 필수 구조 정의 (Python dict 형태로 validation)
+BIBLE_REQUIRED_STRUCTURE = {
+    "MasterBible": {
+        "required_fields": ["ProjectData"],
+        "optional_fields": ["plot_roadmap", "world_setting", "character_profiles"]
+    },
+    "ProjectData": {
+        "required_fields": ["MetaInfo"],
+        "optional_fields": ["WorldRules", "CharacterArcs"]
+    },
+    "MetaInfo": {
+        "required_fields": ["title"],
+        "optional_fields": ["author", "genre", "synopsis", "total_episodes"]
+    }
+}
+
+# Treatment 파일 필수 구조 정의 (배열 항목별)
+TREATMENT_BLOCK_REQUIRED_FIELDS = ["title"]
+TREATMENT_BLOCK_OPTIONAL_FIELDS = ["content", "summary", "beats", "arc_number"]
+TREATMENT_CONTENT_FIELDS = ["situation", "crisis", "solution"]  # content 내부 필드
+
+
+def validate_bible_structure(bible_data: dict) -> tuple:
+    """
+    [V49.3] Bible 파일 구조 검증
+
+    Args:
+        bible_data: 로드된 Bible JSON 데이터
+
+    Returns:
+        tuple: (is_valid: bool, errors: list, warnings: list)
+    """
+    errors = []
+    warnings = []
+
+    if not isinstance(bible_data, dict):
+        return False, ["Bible 데이터가 dict 형식이 아닙니다"], []
+
+    # MasterBible 래퍼 확인
+    master_bible = bible_data.get("MasterBible", bible_data)
+    if "MasterBible" not in bible_data:
+        warnings.append("MasterBible 래퍼가 없습니다. 루트를 MasterBible로 간주합니다.")
+
+    # ProjectData 확인
+    project_data = master_bible.get("ProjectData")
+    if not project_data:
+        errors.append("ProjectData 필드가 누락되었습니다")
+    elif not isinstance(project_data, dict):
+        errors.append("ProjectData가 dict 형식이 아닙니다")
+    else:
+        # MetaInfo 확인
+        meta_info = project_data.get("MetaInfo")
+        if not meta_info:
+            errors.append("ProjectData.MetaInfo 필드가 누락되었습니다")
+        elif not isinstance(meta_info, dict):
+            errors.append("MetaInfo가 dict 형식이 아닙니다")
+        else:
+            if "title" not in meta_info:
+                errors.append("MetaInfo.title 필드가 누락되었습니다")
+
+    # plot_roadmap 확인 (선택적이지만 있으면 검증)
+    if "plot_roadmap" in master_bible:
+        roadmap = master_bible["plot_roadmap"]
+        if not isinstance(roadmap, list):
+            errors.append("plot_roadmap이 list 형식이 아닙니다")
+        elif len(roadmap) == 0:
+            warnings.append("plot_roadmap이 비어있습니다")
+
+    is_valid = len(errors) == 0
+    return is_valid, errors, warnings
+
+
+def validate_treatment_structure(treatment_data: list) -> tuple:
+    """
+    [V49.3] Treatment 파일 구조 검증
+
+    Args:
+        treatment_data: 로드된 Treatment JSON 데이터 (배열)
+
+    Returns:
+        tuple: (is_valid: bool, errors: list, warnings: list)
+    """
+    errors = []
+    warnings = []
+
+    if not isinstance(treatment_data, list):
+        return False, ["Treatment 데이터가 list 형식이 아닙니다"], []
+
+    if len(treatment_data) == 0:
+        return False, ["Treatment 데이터가 비어있습니다"], []
+
+    # 각 블록 검증
+    for i, block in enumerate(treatment_data):
+        block_idx = i + 1
+
+        if not isinstance(block, dict):
+            errors.append(f"블록 {block_idx}: dict 형식이 아닙니다")
+            continue
+
+        # 필수 필드 확인
+        if "title" not in block:
+            errors.append(f"블록 {block_idx}: title 필드 누락")
+
+        # content 구조 확인 (선택적)
+        if "content" in block:
+            content = block["content"]
+            if isinstance(content, dict):
+                for field in TREATMENT_CONTENT_FIELDS:
+                    if field not in content:
+                        warnings.append(f"블록 {block_idx}: content.{field} 필드 누락")
+            elif not isinstance(content, str):
+                warnings.append(f"블록 {block_idx}: content가 dict/str 형식이 아닙니다")
+
+    is_valid = len(errors) == 0
+    return is_valid, errors, warnings
+
+
+def validate_phase0_files(bible_data: dict, treatment_data: list) -> tuple:
+    """
+    [V49.3] Phase 0 파일들 통합 검증
+
+    Args:
+        bible_data: Bible JSON 데이터
+        treatment_data: Treatment JSON 데이터
+
+    Returns:
+        tuple: (is_valid: bool, report: dict)
+    """
+    bible_valid, bible_errors, bible_warnings = validate_bible_structure(bible_data)
+    treatment_valid, treatment_errors, treatment_warnings = validate_treatment_structure(treatment_data)
+
+    report = {
+        "bible": {
+            "valid": bible_valid,
+            "errors": bible_errors,
+            "warnings": bible_warnings
+        },
+        "treatment": {
+            "valid": treatment_valid,
+            "errors": treatment_errors,
+            "warnings": treatment_warnings,
+            "block_count": len(treatment_data) if isinstance(treatment_data, list) else 0
+        },
+        "overall_valid": bible_valid and treatment_valid
+    }
+
+    return report["overall_valid"], report
+
 
 """
 사용 예제:

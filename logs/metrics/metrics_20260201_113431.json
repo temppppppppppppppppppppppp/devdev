@@ -1,0 +1,50 @@
+{
+  "session_id": "20260201_113431",
+  "start_time": "2026-02-01T11:34:31.377694",
+  "end_time": "2026-02-01T11:50:54.482300",
+  "total_calls": 47,
+  "successful_calls": 46,
+  "failed_calls": 1,
+  "total_retries": 0,
+  "total_tokens": 101655,
+  "total_cost_usd": 0.2609,
+  "agent_stats": {
+    "BlockEnricher": {
+      "agent_name": "BlockEnricher",
+      "total_calls": 47,
+      "successful_calls": 46,
+      "failed_calls": 1,
+      "success_rate": 97.87234042553192,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 20788.209583448326,
+        "min_ms": 6916.761875152588,
+        "max_ms": 40361.16528511047,
+        "p50_ms": 19677.5039434433,
+        "p90_ms": 33602.301597595215,
+        "p99_ms": 39342.44867563247
+      }
+    }
+  },
+  "model_stats": {
+    "gemini-3-pro-preview": {
+      "input_tokens": 33429,
+      "output_tokens": 12909,
+      "total_tokens": 46338,
+      "cost_usd": 0.2127
+    },
+    "gemini-2.5-flash": {
+      "input_tokens": 25933,
+      "output_tokens": 1111,
+      "total_tokens": 27044,
+      "cost_usd": 0.0046
+    },
+    "gemini-2.5-pro": {
+      "input_tokens": 26046,
+      "output_tokens": 2227,
+      "total_tokens": 28273,
+      "cost_usd": 0.0437
+    }
+  }
+}

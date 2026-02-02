@@ -21,6 +21,17 @@ import re
 from typing import Dict, List, Any, Optional, Set, Tuple
 from .base_agent import BaseAgent
 
+# [V49.7] 품질 향상 모듈 임포트
+try:
+    from modules.core.state_delta_tracker import StateDeltaTracker
+    from modules.core.relationship_tracker import RelationshipTracker
+    from modules.core.power_scaling import PowerScalingTracker
+    from modules.core.foreshadowing_tracker import ForeshadowingTracker
+    from modules.core.information_diffusion import InformationDiffusion
+    V49_7_MODULES_AVAILABLE = True
+except ImportError:
+    V49_7_MODULES_AVAILABLE = False
+
 
 CONTINUITY_INSPECTION_PROMPT = """
 [Role] 연속성 검증 전문가 (Continuity Inspector) - 전체 타임라인 분석
@@ -240,6 +251,51 @@ Step 6: 최종 판정
 
 
 # =================================================================
+# [V49.2 NEW] Joint Docs 정밀 추출 프롬프트
+# =================================================================
+JOINT_DOCS_EXTRACTION_PROMPT = """
+[Role] Arc 종료 상태 추출기 (Joint Docs Extractor)
+[Task] Arc의 마지막 화(제 {last_ep}화) 내용을 분석하여 정확한 종료 상태를 추출하라.
+
+### 📋 Arc {arc_no} 전술 설계서 (마지막 화 중심)
+{last_ep_content}
+
+### 🎯 추출 항목
+
+#### 1. final_location (종료 시점 위치)
+- 마지막 화가 끝나는 시점에 주인공이 위치한 **구체적인 장소**
+- 예: "팽가 연무장", "무기고 앞", "가주 집무실"
+- 단순히 "팽가"가 아닌 **세부 장소**까지 명시
+
+#### 2. physical_inventory (물리적 소지품) [⚠️ 매우 중요]
+- 마지막 화 종료 시점에 주인공이 **소지 중인 모든 핵심 물품**
+- **🚨 핵심 원칙**: 무기, 패, 문서 등은 **명시적으로 버리거나 잃어버리지 않는 한 계속 소지 중**
+- 예: 주인공이 제5화에서 "백근 대도"를 획득했고, 제8화까지 버린 언급이 없다면 → "백근 대도"는 여전히 소지 중
+- 예시 목록: ["백근 대도", "철혈사자패", "비급서", "양피지 문서"]
+- 소모품(영약 등)만 소모 처리, **무기/패/문서는 버리지 않으면 항상 포함**
+- ❌ 빈 배열 `[]` 반환 금지 - 최소한 주무기와 핵심 아이템은 항상 포함
+
+#### 3. world_joint (환경적 변화)
+- 이 Arc가 끝나면서 **다음 Arc가 즉시 계승해야 할** 세계 상태
+- 예: "팽가의 권력 구도가 뒤집힘", "청사가 가문 감옥에 수감됨"
+
+### 🚨 추출 원칙
+1. 추론하지 말고 **문서에 명시된 내용만** 추출하라
+2. 획득 vs 소지 구분: 새로 획득한 것만이 아닌, 현재 소지 중인 모든 핵심 아이템
+3. 마지막 화의 "(4) 연속성 체크포인트" 섹션이 있다면 우선 참조
+
+[Output Format] JSON Only
+{{
+    "final_location": "종료 시점의 구체적 장소",
+    "physical_inventory": ["소지품 1", "소지품 2", ...],
+    "world_joint": "다음 Arc가 계승할 환경 변화",
+    "extraction_confidence": "HIGH | MEDIUM | LOW",
+    "extraction_notes": "추출 시 참고한 문서 내 근거 (선택)"
+}}
+"""
+
+
+# =================================================================
 # [V49.1 NEW] Stage 4 원고 연속성 검증 프롬프트
 # =================================================================
 MANUSCRIPT_CONTINUITY_PROMPT = """
@@ -361,35 +417,37 @@ class ContinuityInspector(BaseAgent):
     5. 모순 감지 시 구체적 수정 지시 제공
     
     [V49 Update]
-    - 모델: gemini-2.5-pro (대용량 컨텍스트, 고정밀 추론)
+    - 모델: gemini-3-pro-preview (V60.24: Gemini 3로 업그레이드)
     - [NEW] inspect_arc(): Stage 2에서 Arc 설계 후 호출
     - inspect(): Stage 3에서 블루프린트 생성 후 호출
     """
-    
-    def __init__(self, context, client, model_tier="gemini-2.5-pro"):
+
+    def __init__(self, context, client, model_tier="gemini-3-pro-preview"):
         """
+        [V60.24] Gemini 3로 변경
         Args:
             context: ProjectContext 객체
             client: Gemini API 클라이언트
-            model_tier: 사용할 모델 (기본: gemini-2.5-pro - 고정밀 분석)
+            model_tier: 사용할 모델 (V60.24: gemini-3-pro-preview)
         """
         super().__init__(context, client, model_tier)
         
-        # 아이템 획득 패턴 (한국어)
+        # 아이템 획득 패턴 (한국어) - [V49.4 FIX] 더 엄격한 패턴
+        # 아이템 이름은 보통 2~25자의 한글/숫자로 구성
         self.acquire_patterns = [
-            r"(.+?)(?:을|를)\s*(?:집어\s*들|뽑아\s*들|획득|챙기|얻|주워\s*들|가져)",
-            r"(.+?)(?:을|를)\s*(?:손에\s*넣|가져가|챙겨\s*들)",
-            r"(?:녹슨|묵직한|육중한)?\s*(.+?)(?:을|를)\s*(?:집어\s*들|뽑아\s*들)",
-            r"(.+?)(?:을|를)\s*(?:발견|찾아)",
+            r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:집어\s*들|뽑아\s*들|획득|챙기|얻|주워\s*들|가져)",
+            r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:손에\s*넣|가져가|챙겨\s*들)",
+            r"(?:녹슨|묵직한|육중한|날카로운)?\s*['\"]?([가-힣a-zA-Z0-9]{2,20})['\"]?(?:을|를)\s*(?:집어\s*들|뽑아\s*들)",
+            r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:발견|찾아)",
         ]
         
-        # 수여/하사 패턴 (범용)
+        # 수여/하사 패턴 (범용) - [V49.4 FIX] 더 엄격한 패턴
         self.grant_patterns = [
-            r"(.+?)(?:을|를)\s*(?:하사|수여|내리|던져\s*주|건네)",
-            r"(.+?)(?:을|를)\s*(?:풀어|떼어)\s*(?:던지|주)",
-            r"(.+?)(?:을|를)\s*(?:위임|부여|임명)",
-            r"(.+?권).*?(?:위임|부여|하사)",  # ~권 패턴
-            r"(.+?패).*?(?:하사|수여|던지)",  # ~패 패턴
+            r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:하사|수여|내리|던져\s*주|건네)",
+            r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:풀어|떼어)\s*(?:던지|주)",
+            r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:위임|부여|임명)",
+            r"['\"]?([가-힣a-zA-Z0-9]{2,20}권)['\"]?.*?(?:위임|부여|하사)",  # ~권 패턴
+            r"['\"]?([가-힣a-zA-Z0-9]{2,20}패)['\"]?.*?(?:하사|수여|던지)",  # ~패 패턴
         ]
         
         # 소지/사용 패턴
@@ -398,6 +456,32 @@ class ContinuityInspector(BaseAgent):
             r"(.+?)(?:을|를)\s*(?:들어\s*보이|꺼내|쥐)",
             r"(?:쥔|든|멘)\s*(.+?)",
         ]
+
+        # [V49.2] 복장/의복 패턴 (복장 일관성 검증용)
+        self.attire_patterns = [
+            r"(?:비단|명주|무명|삼베|가죽|철갑|갑옷)\s*(?:옷|의|포|복|갑)",
+            r"(?:화려한|허름한|낡은|깨끗한|더러운|피묻은|찢어진)\s*(?:옷|의|포|복|차림)",
+            r"(?:옷|의복|복장|차림)(?:이|을|를)\s*(?:갈아입|바꾸|벗)",
+        ]
+
+        # [V49.2] 부상/상태 패턴
+        self.injury_patterns = [
+            r"(?:부상|상처|파열|골절|출혈|기절|내상|중상|경상)",
+            r"(?:어깨|팔|다리|허리|등|가슴|복부|머리).*?(?:부상|상처|다치)",
+            r"(?:피가|피를)\s*(?:흘|뿜|쏟)",
+        ]
+
+        # [V49.6] 분배/지급 제외 패턴 - 타인에게 지급한 아이템은 주인공 획득에서 제외
+        self.distribution_patterns = [
+            r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:나눠\s*주|지급|분배|하사하|배분)",
+            r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?[이가]?\s*(?:실린|담긴)\s*(?:수레|마차|짐|보따리)",
+            r"(?:병사|무사|사병|부하)들?(?:에게|한테).*?['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?",
+            r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:내려\s*보내|전달하|건네주)",
+            r"(?:막사|연무장|무기고).*?(?:도착|배달|전달).*?['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?",
+        ]
+
+        # [V49.7] 품질 향상 트래커 초기화
+        self._init_v49_7_trackers()
     
     def inspect(self, current_ep: int, current_blueprint: dict,
                 prev_blueprints: List[dict], hud_history: List[dict] = None) -> dict:
@@ -582,13 +666,81 @@ class ContinuityInspector(BaseAgent):
             }
         
         # ═══════════════════════════════════════════════════════════════
+        # Phase 1.5: Joint Docs Auto-Correction [V49.2 NEW]
+        # - tactical_doc에서 정확한 joint_docs를 추출하여 불일치 사전 방지
+        # ═══════════════════════════════════════════════════════════════
+        corrected_joint_docs = self._extract_accurate_joint_docs(
+            tactical_doc=tactical_doc,
+            arc_no=arc_no,
+            ep_end=ep_end,
+            original_joint_docs=joint_docs
+        )
+
+        # joint_docs가 수정되었으면 current_arc에 반영
+        joint_docs_corrected = False
+        if corrected_joint_docs and corrected_joint_docs != joint_docs:
+            joint_docs = corrected_joint_docs
+            joint_docs_corrected = True
+            print(f"         🔧 [V49.2] Joint Docs 자동 수정 완료")
+
+        # ═══════════════════════════════════════════════════════════════
+        # Phase 1.6: Arc Start State Auto-Correction [V60.13 NEW]
+        # - 이전 Arc의 arc_end_state를 현재 Arc의 arc_start_state로 강제 적용
+        # ═══════════════════════════════════════════════════════════════
+        start_state_corrected = False
+        if prev_arcs:
+            last_arc = prev_arcs[-1]
+            prev_state = last_arc.get('state_constraints', {})
+            prev_end = prev_state.get('arc_end_state', {})
+            prev_joint = last_arc.get('joint_docs', {})
+            prev_shadow = last_arc.get('status_shadow', {})
+
+            # 이전 Arc의 정확한 종료 상태 추출
+            correct_energy = prev_end.get('internal_energy')
+            if correct_energy is None:
+                loss_str = prev_shadow.get('internal_energy_loss', '0%')
+                try:
+                    import re
+                    loss = int(re.search(r'(\d+)', str(loss_str)).group(1))
+                    correct_energy = max(0, 100 - loss)
+                except:
+                    correct_energy = 100
+
+            correct_injuries = prev_end.get('injuries') or prev_shadow.get('expected_injuries', '없음')
+            correct_location = prev_end.get('location') or prev_joint.get('final_location', '알 수 없음')
+            correct_equipment = prev_end.get('equipment') or prev_joint.get('physical_inventory', [])
+
+            # 현재 Arc의 state_constraints 수정
+            curr_state = current_arc.get('state_constraints', {})
+            curr_start = curr_state.get('arc_start_state', {})
+
+            # 불일치 검사 및 수정
+            needs_correction = (
+                curr_start.get('internal_energy') != correct_energy or
+                curr_start.get('injuries') != correct_injuries or
+                curr_start.get('location') != correct_location
+            )
+
+            if needs_correction:
+                corrected_start = {
+                    'internal_energy': correct_energy,
+                    'injuries': correct_injuries,
+                    'location': correct_location,
+                    'equipment': correct_equipment
+                }
+                curr_state['arc_start_state'] = corrected_start
+                current_arc['state_constraints'] = curr_state
+                start_state_corrected = True
+                print(f"         🔧 [V60.13] Arc Start State 자동 수정 완료 (내공: {correct_energy}%, 부상: {correct_injuries})")
+
+        # ═══════════════════════════════════════════════════════════════
         # Phase 2: LLM 기반 정밀 검증 (미묘한 모순 탐지)
         # ═══════════════════════════════════════════════════════════════
-        
+
         # 이전 Arc 요약 생성
         prev_arcs_summary = self._format_prev_arcs(prev_arcs)
-        
-        # 프롬프트 조립
+
+        # 프롬프트 조립 (수정된 joint_docs 사용)
         prompt = ARC_CONTINUITY_INSPECTION_PROMPT.format(
             current_arc_no=arc_no,
             ep_count=ep_count,
@@ -604,18 +756,64 @@ class ContinuityInspector(BaseAgent):
         try:
             response = self.ask(prompt, temperature=0.1)
             result = self._extract_json_robust(response)
-            
+
             # 결과 검증 및 보완
             if not isinstance(result, dict):
                 result = {"decision": "PASS", "severity": "NONE", "violations": [], "warnings": []}
-            
+
             # Python 검증 결과 병합
             if python_check.get('warnings'):
                 result.setdefault('warnings', [])
                 result['warnings'].extend(python_check['warnings'])
-            
+
+            # ═══════════════════════════════════════════════════════════════
+            # [V49.2] Joint Docs 자동 수정 정보 포함
+            # ═══════════════════════════════════════════════════════════════
+            if joint_docs_corrected:
+                result['corrected_joint_docs'] = joint_docs
+                result.setdefault('warnings', [])
+                if "[V49.2]" not in str(result.get('warnings', [])):
+                    result['warnings'].append("[V49.2] joint_docs가 tactical_doc 기반으로 자동 수정됨")
+
+            # ═══════════════════════════════════════════════════════════════
+            # [V60.13] Arc Start State 자동 수정 정보 포함
+            # ═══════════════════════════════════════════════════════════════
+            if start_state_corrected:
+                result['corrected_state_constraints'] = current_arc.get('state_constraints', {})
+                result.setdefault('warnings', [])
+                if "[V60.13]" not in str(result.get('warnings', [])):
+                    result['warnings'].append("[V60.13] arc_start_state가 이전 Arc의 arc_end_state 기반으로 자동 수정됨")
+
+            # ═══════════════════════════════════════════════════════════════
+            # [V60.13] intra_arc_contradiction은 WARNING으로 완화
+            # - 내공 계산 오류 등 Arc 내부 모순은 치명적이지 않음
+            # - cross-arc 문제가 없으면 PASS 처리
+            # ═══════════════════════════════════════════════════════════════
+            violations = result.get('violations', [])
+            has_critical_cross_arc = any(
+                v.get('type') in ['duplicate_acquisition', 'premature_possession', 'state_discontinuity']
+                and v.get('severity') in ['CRITICAL', 'MAJOR']
+                for v in violations
+            )
+
+            # cross-arc 문제 없이 intra_arc만 있으면 WARNING으로 완화
+            if result.get('decision') == 'REJECT' and not has_critical_cross_arc:
+                intra_only = all(
+                    v.get('type') in ['intra_arc_contradiction', 'setting_inconsistency']
+                    for v in violations
+                )
+                if intra_only and start_state_corrected:
+                    # REJECT → PASS로 변경, violations → warnings로 이동
+                    result['decision'] = 'PASS'
+                    result['severity'] = 'MINOR'
+                    result.setdefault('warnings', [])
+                    for v in violations:
+                        result['warnings'].append(f"[완화됨] {v.get('type')}: {v.get('description', '')[:100]}")
+                    result['violations'] = []
+                    print(f"         ⚠️ [V60.13] intra-arc 오류 완화 → PASS (cross-arc 정상)")
+
             return result
-            
+
         except Exception as e:
             print(f"      🚨 [ContinuityInspector] Arc LLM 검증 실패: {e}")
             # LLM 실패 시 Python 검증 결과만 반환
@@ -688,7 +886,114 @@ class ContinuityInspector(BaseAgent):
             "warnings": [],
             "fix_instructions": ""
         }
-    
+
+    # =================================================================
+    # [V49.2 NEW] Joint Docs 자동 추출 메서드
+    # =================================================================
+
+    def _extract_accurate_joint_docs(
+        self,
+        tactical_doc: str,
+        arc_no: int,
+        ep_end: int,
+        original_joint_docs: dict
+    ) -> Optional[dict]:
+        """
+        [V49.2] tactical_doc의 마지막 화 내용에서 정확한 joint_docs를 추출
+
+        Analyst가 tactical_doc과 joint_docs를 동시 생성하면서 발생하는
+        불일치 문제를 해결하기 위해, tactical_doc에서 joint_docs를 추출합니다.
+
+        Args:
+            tactical_doc: Arc의 전술 설계서 전문
+            arc_no: Arc 번호
+            ep_end: Arc의 마지막 화 번호
+            original_joint_docs: 원래 생성된 joint_docs (비교용)
+
+        Returns:
+            추출된 joint_docs dict 또는 None (추출 실패 시)
+        """
+        if not tactical_doc:
+            return None
+
+        # 마지막 화 내용 추출
+        last_ep_content = self._extract_last_episode_content(tactical_doc, ep_end)
+
+        if not last_ep_content or len(last_ep_content) < 100:
+            # 마지막 화 추출 실패 시 원본 유지
+            return original_joint_docs
+
+        # LLM 호출하여 정확한 joint_docs 추출
+        prompt = JOINT_DOCS_EXTRACTION_PROMPT.format(
+            arc_no=arc_no,
+            last_ep=ep_end,
+            last_ep_content=self._escape_braces(last_ep_content[:4000])
+        )
+
+        try:
+            response = self.ask(prompt, temperature=0.1)
+            extracted = self._extract_json_robust(response)
+
+            if not isinstance(extracted, dict):
+                return original_joint_docs
+
+            # 추출 결과 검증
+            if not extracted.get('final_location') and not extracted.get('physical_inventory'):
+                return original_joint_docs
+
+            # 추출 신뢰도 확인
+            confidence = extracted.get('extraction_confidence', 'LOW')
+            if confidence == 'LOW':
+                # 낮은 신뢰도면 원본과 병합
+                merged = original_joint_docs.copy() if isinstance(original_joint_docs, dict) else {}
+                if extracted.get('final_location'):
+                    merged['final_location'] = extracted['final_location']
+                if extracted.get('physical_inventory'):
+                    merged['physical_inventory'] = extracted['physical_inventory']
+                if extracted.get('world_joint'):
+                    merged['world_joint'] = extracted['world_joint']
+                return merged
+
+            # 높은 신뢰도면 추출 결과 사용
+            return {
+                'final_location': extracted.get('final_location', ''),
+                'physical_inventory': extracted.get('physical_inventory', []),
+                'world_joint': extracted.get('world_joint', '')
+            }
+
+        except Exception as e:
+            print(f"         ⚠️ [V49.2] Joint Docs 추출 실패: {e}")
+            return original_joint_docs
+
+    def _extract_last_episode_content(self, tactical_doc: str, ep_end: int) -> str:
+        """
+        [V49.2] tactical_doc에서 마지막 화 내용만 추출
+
+        패턴: "[제 N화 전술 설계]" 또는 "제 N화:" 형태
+        """
+        # 마지막 화 시작 패턴들
+        patterns = [
+            rf'\[제\s*{ep_end}화\s*전술\s*설계\]',
+            rf'제\s*{ep_end}화[:\s]',
+            rf'\[제{ep_end}화\]',
+            rf'Beat\s*{ep_end}:',
+        ]
+
+        last_ep_start = -1
+        for pattern in patterns:
+            match = re.search(pattern, tactical_doc)
+            if match:
+                last_ep_start = match.start()
+                break
+
+        if last_ep_start < 0:
+            # 패턴 매칭 실패 시 마지막 30% 반환
+            cutoff = int(len(tactical_doc) * 0.7)
+            return tactical_doc[cutoff:]
+
+        # 마지막 화부터 끝까지 반환
+        return tactical_doc[last_ep_start:]
+
     def _arc_python_precheck(self, current_arc: dict, prev_arcs: List[dict]) -> dict:
         """
         [V49] Arc 수준 Python 기반 사전 검증
@@ -719,45 +1024,95 @@ class ContinuityInspector(BaseAgent):
             arc_tactical = arc.get('tactical_doc', '')
             arc_joint = arc.get('joint_docs', {})
             arc_status = arc.get('status_shadow', {})
-            
-            # tactical_doc에서 획득 패턴 검색
-            for pattern in self.acquire_patterns:
-                matches = re.findall(pattern, arc_tactical)
-                for item in matches:
-                    item = item.strip()
-                    if item and len(item) >= 2:
-                        acquired_items[item] = arc_no
-            
-            # tactical_doc에서 수여 패턴 검색
+            arc_state_constraints = arc.get('state_constraints', {})
+
+            # [V49.6] protagonist_items 우선 사용, items_acquired는 하위 호환
+            items_from_constraints = arc_state_constraints.get('protagonist_items', [])
+            if not items_from_constraints:
+                # Fallback to legacy field
+                items_from_constraints = arc_state_constraints.get('items_acquired', [])
+
+            if isinstance(items_from_constraints, list):
+                # [V49.6] 분배된 아이템 필터링 (이중 안전망)
+                filtered_items = self._filter_distributed_items(
+                    [i for i in items_from_constraints if i and isinstance(i, str) and 2 <= len(i) <= 30],
+                    arc_tactical
+                )
+                for item in filtered_items:
+                    acquired_items[item] = arc_no
+
+            # Fallback: tactical_doc에서 획득 패턴 검색 (길이 제한 추가)
+            if not items_from_constraints:
+                raw_items = []
+                for pattern in self.acquire_patterns:
+                    matches = re.findall(pattern, arc_tactical)
+                    for item in matches:
+                        item = item.strip()
+                        # [V49.4 FIX] 길이 상한 추가 (2~30자)
+                        if item and 2 <= len(item) <= 30:
+                            raw_items.append(item)
+                # [V49.6] 분배된 아이템 필터링
+                for item in self._filter_distributed_items(raw_items, arc_tactical):
+                    acquired_items[item] = arc_no
+
+            # tactical_doc에서 수여 패턴 검색 (길이 제한 추가)
             for pattern in self.grant_patterns:
                 matches = re.findall(pattern, arc_tactical)
                 for item in matches:
                     item = item.strip()
-                    if item and len(item) >= 2:
+                    # [V49.4 FIX] 길이 상한 추가 (2~30자)
+                    if item and 2 <= len(item) <= 30:
                         granted_items[item] = arc_no
-            
+
             # joint_docs에서 physical_inventory 추출
             inventory = arc_joint.get('physical_inventory', '')
-            if inventory:
+            # [V49.4 FIX] 리스트인 경우 직접 처리
+            # [V49.6] 분배된 아이템 필터링 적용
+            if isinstance(inventory, list):
+                filtered_inv = self._filter_distributed_items(
+                    [i for i in inventory if i and isinstance(i, str) and 2 <= len(i) <= 30],
+                    arc_tactical
+                )
+                for item in filtered_inv:
+                    acquired_items[item] = arc_no
+            elif isinstance(inventory, str) and inventory:
+                raw_inv = []
                 for pattern in self.acquire_patterns:
                     matches = re.findall(pattern, inventory)
                     for item in matches:
                         item = item.strip()
-                        if item and len(item) >= 2:
-                            acquired_items[item] = arc_no
-            
+                        if item and 2 <= len(item) <= 30:
+                            raw_inv.append(item)
+                for item in self._filter_distributed_items(raw_inv, arc_tactical):
+                    acquired_items[item] = arc_no
+
             # 직전 Arc 정보 저장
             prev_inventory = arc_joint
             prev_status = arc_status
         
         # 현재 Arc에서 획득하려는 아이템 검색
         current_acquisitions = []
-        for pattern in self.acquire_patterns:
-            matches = re.findall(pattern, tactical_doc)
-            for item in matches:
-                item = item.strip()
-                if item and len(item) >= 2:
+        current_state_constraints = current_arc.get('state_constraints', {})
+
+        # [V49.6] protagonist_items 우선 사용, items_acquired는 하위 호환
+        items_from_current = current_state_constraints.get('protagonist_items', [])
+        if not items_from_current:
+            items_from_current = current_state_constraints.get('items_acquired', [])
+
+        if isinstance(items_from_current, list):
+            for item in items_from_current:
+                if item and isinstance(item, str) and 2 <= len(item) <= 30:
                     current_acquisitions.append(item)
+
+        # Fallback: tactical_doc에서 패턴 검색 (길이 제한 추가)
+        if not current_acquisitions:
+            for pattern in self.acquire_patterns:
+                matches = re.findall(pattern, tactical_doc)
+                for item in matches:
+                    item = item.strip()
+                    # [V49.4 FIX] 길이 상한 추가 (2~30자)
+                    if item and 2 <= len(item) <= 30:
+                        current_acquisitions.append(item)
         
         # ═══════════════════════════════════════════════════════════════
         # 검증 1: 중복 획득 (이전 Arc에서 이미 획득한 아이템을 다시 획득)
@@ -857,7 +1212,8 @@ class ContinuityInspector(BaseAgent):
                 matches = re.findall(pattern, content)
                 for item in matches:
                     item = item.strip()
-                    if item and len(item) >= 2:
+                    # [V49.4 FIX] 길이 상한 추가 (2~30자)
+                    if item and 2 <= len(item) <= 30:
                         if item in arc_acquisitions:
                             # 같은 Arc 내에서 동일 아이템 중복 획득
                             prev_ep = arc_acquisitions[item]
@@ -897,7 +1253,39 @@ class ContinuityInspector(BaseAgent):
                         "description": f"제{curr_ep}화에서 부상이 발생했으나, "
                                       f"제{next_ep}화에서 회복 없이 격렬한 활동이 설정됨 (경고)"
                     })
-        
+
+            # [V49.2] 복장 일관성 검증
+            # 현재 화에서 복장 묘사 추출
+            curr_attire_fancy = re.search(r'(?:비단|명주|화려한)\s*(?:옷|의|포|복|차림)', curr_content)
+            curr_attire_plain = re.search(r'(?:허름한|낡은|무명|삼베)\s*(?:옷|의|포|복|차림)', curr_content)
+            next_attire_fancy = re.search(r'(?:비단|명주|화려한)\s*(?:옷|의|포|복|차림)', next_content)
+            next_attire_plain = re.search(r'(?:허름한|낡은|무명|삼베)\s*(?:옷|의|포|복|차림)', next_content)
+
+            # 복장 급변 감지 (비단 → 허름한, 허름한 → 비단)
+            attire_change_pattern = r'(?:옷|의복|복장|차림)(?:을|를)\s*(?:갈아입|바꾸|벗)'
+            has_change_scene = re.search(attire_change_pattern, next_content)
+
+            if curr_attire_fancy and next_attire_plain and not has_change_scene:
+                violations.append({
+                    "type": "setting_inconsistency",
+                    "severity": "MAJOR",
+                    "item_or_subject": "복장",
+                    "prev_ep": curr_ep,
+                    "curr_ep": next_ep,
+                    "description": f"제{curr_ep}화에서 '화려한/비단 복장'이었으나, "
+                                  f"제{next_ep}화에서 복장 변경 장면 없이 '허름한 복장'으로 설정됨"
+                })
+            elif curr_attire_plain and next_attire_fancy and not has_change_scene:
+                violations.append({
+                    "type": "setting_inconsistency",
+                    "severity": "MINOR",
+                    "item_or_subject": "복장",
+                    "prev_ep": curr_ep,
+                    "curr_ep": next_ep,
+                    "description": f"제{curr_ep}화에서 '허름한 복장'이었으나, "
+                                  f"제{next_ep}화에서 복장 변경 장면 없이 '화려한 복장'으로 설정됨 (경고)"
+                })
+
         return violations
     
     def _format_prev_arcs(self, prev_arcs: List[dict]) -> str:
@@ -915,28 +1303,42 @@ class ContinuityInspector(BaseAgent):
             tactical_doc = arc.get('tactical_doc', '')
             joint_docs = arc.get('joint_docs', {})
             status_shadow = arc.get('status_shadow', {})
+            state_constraints = arc.get('state_constraints', {})  # [V60.12 FIX] 핵심 상태 추가
+            arc_end_state = state_constraints.get('arc_end_state', {})  # [V60.12 FIX] 종료 상태
             ep_start = arc.get('ep_start', '?')
             ep_end = arc.get('ep_end', '?')
-            
+
             # 핵심 정보 추출
             items = self._extract_acquisitions(tactical_doc)
             grants = self._extract_grants(tactical_doc)
-            
+
             # 타임라인에 추가
             for item in items:
                 all_acquisitions.append((arc_no, item))
             for grant in grants:
                 all_grants.append((arc_no, grant))
-            
-            # Arc별 요약
+
+            # [V60.12 FIX] 정확한 종료 상태 값 추출
+            final_internal_energy = arc_end_state.get('internal_energy', status_shadow.get('internal_energy_loss', '?'))
+            final_injuries = arc_end_state.get('injuries', status_shadow.get('expected_injuries', '없음'))
+            final_location = arc_end_state.get('location', joint_docs.get('final_location', '미정'))
+            final_equipment = arc_end_state.get('equipment', joint_docs.get('physical_inventory', []))
+
+            # Arc별 요약 [V60.12 FIX] state_constraints.arc_end_state 정보 추가
             summary = f"""
 ═══ Arc {arc_no} (제 {ep_start}화 ~ 제 {ep_end}화) ═══
-[종료 시점 상태 (joint_docs)]
+[🔴 정확한 종료 상태 (state_constraints.arc_end_state) - 다음 Arc 시작점]
+- 최종 내공: {final_internal_energy}% ← 다음 Arc는 이 값으로 시작해야 함
+- 최종 부상: {final_injuries}
+- 최종 위치: {final_location}
+- 최종 소지품: {final_equipment}
+
+[참고: joint_docs]
 - 위치: {joint_docs.get('final_location', '미정')}
 - 소지품: {joint_docs.get('physical_inventory', '미정')}
 - 세계 변화: {joint_docs.get('world_joint', '미정')}
 
-[예상 손실 (status_shadow)]
+[참고: status_shadow]
 - 내공 소모: {status_shadow.get('internal_energy_loss', '0%')}
 - 예상 부상: {status_shadow.get('expected_injuries', '없음')}
 
@@ -1036,39 +1438,43 @@ class ContinuityInspector(BaseAgent):
         for bp in prev_blueprints:
             ep_num = bp.get('ep_num', 0)
             scenario = bp.get('integrated_scenario', '')
-            
-            # 획득 패턴 검색
+
+            # 획득 패턴 검색 (길이 제한 추가)
             for pattern in self.acquire_patterns:
                 matches = re.findall(pattern, scenario)
                 for item in matches:
                     item = item.strip()
-                    if item and len(item) >= 2:
+                    # [V49.4 FIX] 길이 상한 추가 (2~30자)
+                    if item and 2 <= len(item) <= 30:
                         acquired_items[item] = ep_num
-            
-            # 수여 패턴 검색
+
+            # 수여 패턴 검색 (길이 제한 추가)
             for pattern in self.grant_patterns:
                 matches = re.findall(pattern, scenario)
                 for item in matches:
                     item = item.strip()
-                    if item and len(item) >= 2:
+                    # [V49.4 FIX] 길이 상한 추가 (2~30자)
+                    if item and 2 <= len(item) <= 30:
                         granted_items[item] = ep_num
-        
-        # 현재 블루프린트에서 획득하려는 아이템 검색
+
+        # 현재 블루프린트에서 획득하려는 아이템 검색 (길이 제한 추가)
         current_acquisitions = []
         for pattern in self.acquire_patterns:
             matches = re.findall(pattern, current_scenario)
             for item in matches:
                 item = item.strip()
-                if item and len(item) >= 2:
+                # [V49.4 FIX] 길이 상한 추가 (2~30자)
+                if item and 2 <= len(item) <= 30:
                     current_acquisitions.append(item)
-        
-        # 현재 블루프린트에서 소지/사용하는 수여물 검색
+
+        # 현재 블루프린트에서 소지/사용하는 수여물 검색 (길이 제한 추가)
         current_possessions = []
         for pattern in self.possession_patterns:
             matches = re.findall(pattern, current_scenario)
             for item in matches:
                 item = item.strip()
-                if item and len(item) >= 2:
+                # [V49.4 FIX] 길이 상한 추가 (2~30자)
+                if item and 2 <= len(item) <= 30:
                     current_possessions.append(item)
         
         # ═══════════════════════════════════════════════════════════════
@@ -1283,7 +1689,76 @@ class ContinuityInspector(BaseAgent):
                 return True
         
         return False
-    
+
+    def _is_distributed_item(self, item: str, context: str) -> bool:
+        """
+        [V49.6] 아이템이 타인에게 분배/지급된 것인지 판단
+
+        Args:
+            item: 아이템 이름
+            context: 해당 아이템이 언급된 맥락 (tactical_doc의 일부)
+
+        Returns:
+            True if the item was distributed to others (not protagonist's personal acquisition)
+        """
+        if not item or not context:
+            return False
+
+        # 아이템 주변 맥락 추출 (아이템 언급 전후 100자)
+        item_pos = context.find(item)
+        if item_pos == -1:
+            return False
+
+        start = max(0, item_pos - 100)
+        end = min(len(context), item_pos + len(item) + 100)
+        local_context = context[start:end]
+
+        # 분배/지급 키워드 확인
+        distribution_keywords = [
+            '지급', '분배', '나눠', '배분', '내려 보내', '하사하',
+            '수레', '마차', '도착', '배달', '전달',
+            '병사들', '무사들', '사병들', '부하들',
+            '병사에게', '무사에게', '사병에게', '부하에게',
+            '막사 앞', '연무장에', '도착한다', '실린',
+        ]
+
+        for keyword in distribution_keywords:
+            if keyword in local_context:
+                # 분배 맥락에서 언급됨 - 주인공 획득이 아님
+                return True
+
+        # 분배 패턴으로 정규식 검사
+        for pattern in self.distribution_patterns:
+            matches = re.findall(pattern, local_context)
+            for match in matches:
+                if self._is_same_item(item, match):
+                    return True
+
+        return False
+
+    def _filter_distributed_items(self, items: List[str], context: str) -> List[str]:
+        """
+        [V49.6] 분배된 아이템을 필터링
+
+        Args:
+            items: 추출된 아이템 목록
+            context: 전체 맥락 텍스트
+
+        Returns:
+            분배된 아이템이 제외된 목록
+        """
+        if not items or not context:
+            return items
+
+        filtered = []
+        for item in items:
+            if not self._is_distributed_item(item, context):
+                filtered.append(item)
+            # else:
+            #     print(f"      📦 [V49.6] 분배 아이템 제외: {item}")
+
+        return filtered
+
     def _generate_fix_instructions(self, violations: List[dict]) -> str:
         """위반 사항에 대한 수정 지시 생성"""
         instructions = []
@@ -1459,20 +1934,45 @@ class ContinuityInspector(BaseAgent):
         if scene_breakdown:
             core_scenes = [k for k, v in scene_breakdown.items() if '[Core]' in str(v)]
             reflected_count = 0
-            
+
             for scene_key in core_scenes:
                 scene_desc = scene_breakdown.get(scene_key, '')
                 keywords = self._extract_keywords(scene_desc)
                 if any(kw in manuscript for kw in keywords if kw):
                     reflected_count += 1
-            
+
             if core_scenes and reflected_count < len(core_scenes) // 2:
                 critical_violations.append({
                     'type': 'blueprint_violation',
                     'severity': 'MAJOR',
                     'description': f"Blueprint 핵심 씬 {len(core_scenes)}개 중 {reflected_count}개만 반영됨"
                 })
-        
+
+        # 6. [V49.5] 관계 급변 탐지 (무시→충성 같은 급격한 점프 방지)
+        relationship_issues = self._check_relationship_jump(prev_manuscripts, manuscript)
+        for issue in relationship_issues:
+            if issue.get('severity') == 'MAJOR':
+                critical_violations.append(issue)  # 점프 거리 2 이상이면 REJECT
+            else:
+                warnings.append(issue)
+
+        # 7. [V49.5] 악역 지능 보호 (과소평가 패턴 반복 감지)
+        # [V55.5] 강화: 2회 이상 과소평가 시 CRITICAL로 REJECT 처리
+        villain_issues = self._check_villain_intelligence(prev_manuscripts, manuscript)
+        for issue in villain_issues:
+            if issue.get('severity') == 'CRITICAL':
+                critical_violations.append(issue)  # [V55.5] REJECT 처리
+            else:
+                warnings.append(issue)
+
+        # 8. [V49.5] 시간 흐름 검증 (비현실적 동선 감지)
+        time_issues = self._check_time_flow(prev_manuscripts, manuscript)
+        warnings.extend(time_issues)
+
+        # 9. [V49.5] 독자 몰입도 예측 (납득 불가 위험 플래깅)
+        immersion_issues = self._check_reader_immersion(prev_manuscripts, manuscript, current_ep)
+        warnings.extend(immersion_issues)
+
         return {
             'critical_violations': critical_violations,
             'warnings': warnings,
@@ -1494,17 +1994,307 @@ class ContinuityInspector(BaseAgent):
         
         return False
     
+    def _check_relationship_jump(self, prev_manuscripts: List[dict], manuscript: str) -> List[dict]:
+        """
+        [V49.5] 관계 급변 탐지 - 무시→충성 같은 급격한 관계 점프 감지
+
+        NPC 개별 등록 없이 원고 텍스트에서 자동으로 관계 상태 추론 및 비교
+        """
+        warnings = []
+
+        # 관계 상태 키워드 정의 (낮은 상태 → 높은 상태 순서)
+        RELATIONSHIP_KEYWORDS = {
+            "멸시": ["멸시", "비웃", "하찮", "하인 취급", "깔보", "경멸", "조롱", "무시당"],
+            "무시": ["무시", "대수롭지", "관심 없", "신경 쓰지", "거들떠보지"],
+            "의심": ["의심", "수상", "이상하", "믿을 수 없", "의구심", "진심인가"],
+            "경외": ["경외", "두려워", "떨며", "감히 못", "공포", "벌벌", "존경", "눈빛이 달라"],
+            "충성": ["충성", "주군", "목숨 바쳐", "명을 따르", "따르겠", "주군님", "만세"],
+        }
+
+        # 상태 우선순위 (높을수록 강한 긍정 관계)
+        STATE_PRIORITY = {"멸시": 0, "무시": 1, "의심": 2, "경외": 3, "충성": 4}
+
+        # 허용되는 1단계 전환만 (급격한 점프 방지)
+        ALLOWED_TRANSITIONS = {
+            "멸시": ["무시", "의심"],
+            "무시": ["의심", "경외"],  # 무시→충성 직행 불가
+            "의심": ["경외", "무시"],
+            "경외": ["충성", "의심"],
+            "충성": ["경외"],  # 역행도 1단계만
+        }
+
+        # 집단/인물 키워드 (개별 NPC 등록 없이 자동 탐지)
+        GROUP_KEYWORDS = ["사병", "무사들", "병사들", "부하들", "수하들", "호위", "교두", "장로들"]
+
+        # 이전 원고들에서 각 집단의 최종 관계 상태 추론 (마지막 등장 = 어떻게 끝났는지)
+        prev_states = {}
+        for prev_ms in prev_manuscripts:
+            content = prev_ms.get('content', '')
+            for group in GROUP_KEYWORDS:
+                if group in content:
+                    # 마지막 등장 위치의 문맥 추출 (이전 화가 어떤 관계로 끝났는지)
+                    idx = content.rfind(group)
+                    context = content[max(0, idx-300):min(len(content), idx+300)]
+
+                    for state, keywords in RELATIONSHIP_KEYWORDS.items():
+                        if any(kw in context for kw in keywords):
+                            prev_states[group] = state
+                            break
+
+        # 현재 원고에서 관계 상태 추론 (첫 등장 = 어떻게 시작하는지)
+        current_states = {}
+        for group in GROUP_KEYWORDS:
+            if group in manuscript:
+                # 첫 등장 위치의 문맥 추출 (현재 화가 어떤 관계로 시작하는지)
+                idx = manuscript.find(group)
+                context = manuscript[max(0, idx-300):min(len(manuscript), idx+300)]
+
+                for state, keywords in RELATIONSHIP_KEYWORDS.items():
+                    if any(kw in context for kw in keywords):
+                        current_states[group] = state
+                        break
+
+        # 급격한 점프 감지
+        for group, current_state in current_states.items():
+            if group in prev_states:
+                prev_state = prev_states[group]
+                if current_state != prev_state:
+                    allowed = ALLOWED_TRANSITIONS.get(prev_state, [])
+                    if current_state not in allowed:
+                        # 점프 거리 계산
+                        jump_distance = abs(STATE_PRIORITY.get(current_state, 0) - STATE_PRIORITY.get(prev_state, 0))
+                        severity = "MAJOR" if jump_distance >= 2 else "MINOR"
+
+                        warnings.append({
+                            'type': 'relationship_jump',
+                            'severity': severity,
+                            'description': f"'{group}'의 관계가 '{prev_state}'→'{current_state}'로 급변함 (점프 거리: {jump_distance}단계). "
+                                          f"'{prev_state}'에서 허용된 전환: {allowed}. "
+                                          f"중간 단계(예: 경외)를 거치는 묘사 필요."
+                        })
+
+        return warnings
+
+    def _check_villain_intelligence(self, prev_manuscripts: List[dict], manuscript: str) -> List[dict]:
+        """
+        [V49.5] 악역 지능 보호 - 과소평가 패턴 반복 감지
+
+        [V55.5] 강화: 2회 이상 과소평가 → CRITICAL (REJECT)
+        악역이 주인공을 계속 과소평가하는 "어리석은 악역" 클리셰 방지
+        """
+        issues = []
+
+        # 과소평가 키워드
+        UNDERESTIMATE_KEYWORDS = [
+            "철부지", "객기", "어린 놈", "망나니", "한심", "우습",
+            "내버려 둬", "방심", "신경 쓸 것 없", "겁줄 것 없",
+            "어차피", "알아서 망할", "제풀에 지쳐"
+        ]
+
+        # 경계 키워드 (악역이 주인공을 경계하는 묘사)
+        VIGILANT_KEYWORDS = [
+            "의심", "경계", "감시", "조사", "확인", "주시",
+            "예의주시", "눈여겨", "수상", "이상하"
+        ]
+
+        # [V55.5] 학습 반응 키워드 (악역이 실패에서 배우는 묘사)
+        LEARNING_KEYWORDS = [
+            "다음엔", "이번엔", "대비", "각오", "반드시", "두 번 다시",
+            "실수를 반복", "방심했던", "얕보았던 게", "조심해야"
+        ]
+
+        # 이전 원고들에서 과소평가 횟수 카운트
+        underestimate_count = 0
+        vigilant_found = False
+        learning_found = False
+
+        for prev_ms in prev_manuscripts:
+            content = prev_ms.get('content', '')
+            if any(kw in content for kw in UNDERESTIMATE_KEYWORDS):
+                underestimate_count += 1
+            if any(kw in content for kw in VIGILANT_KEYWORDS):
+                vigilant_found = True
+            if any(kw in content for kw in LEARNING_KEYWORDS):
+                learning_found = True
+
+        # 현재 원고에서 또 과소평가?
+        current_underestimate = any(kw in manuscript for kw in UNDERESTIMATE_KEYWORDS)
+        current_vigilant = any(kw in manuscript for kw in VIGILANT_KEYWORDS)
+        current_learning = any(kw in manuscript for kw in LEARNING_KEYWORDS)
+
+        # [V55.5] 2회 이상 과소평가 + 경계/학습 묘사 없음 → CRITICAL (REJECT)
+        if current_underestimate and underestimate_count >= 1 and not vigilant_found and not current_vigilant:
+            if not learning_found and not current_learning:
+                issues.append({
+                    'type': 'stupid_villain',
+                    'severity': 'CRITICAL',  # [V55.5] MAJOR → CRITICAL
+                    'description': f"악역이 주인공을 {underestimate_count + 1}회 연속 과소평가 중. "
+                                  f"'어리석은 악역' 클리셰로 서사 몰입도 저하. "
+                                  f"최소 1회는 경계/의심 또는 '다음엔 대비하겠다'는 학습 반응 필요.",
+                    'fix_suggestion': "악역이 주인공에게 당한 후 '이 녀석, 만만치 않군...' 또는 "
+                                     "'다음엔 반드시 대비하겠다' 같은 학습 반응 추가"
+                })
+            else:
+                # 학습 반응이 있으면 WARNING만
+                issues.append({
+                    'type': 'stupid_villain',
+                    'severity': 'WARNING',
+                    'description': f"악역이 주인공을 {underestimate_count + 1}회 과소평가 (학습 반응 감지됨). "
+                                  f"지속적인 과소평가 주의."
+                })
+
+        return issues
+
+    def _check_time_flow(self, prev_manuscripts: List[dict], manuscript: str) -> List[dict]:
+        """
+        [V49.5] 시간 흐름 검증 - 비현실적 동선/일정 감지
+
+        하룻밤에 너무 많은 대형 이벤트, 부상 후 즉시 활동 등 체크
+        """
+        warnings = []
+
+        # 시간 경과 키워드
+        TIME_PASS_KEYWORDS = ["다음 날", "이틀 후", "며칠 후", "일주일", "한 달", "다음날 아침"]
+        SAME_DAY_KEYWORDS = ["그날 밤", "같은 날", "그 시각", "잠시 후", "얼마 지나지 않아"]
+
+        # 대형 이벤트 키워드
+        MAJOR_EVENT_KEYWORDS = [
+            "전투", "혈투", "습격", "잠입", "도박장", "연회",
+            "대결", "비무", "암살", "폭발", "화재"
+        ]
+
+        # 부상 키워드
+        INJURY_KEYWORDS = ["부상", "중상", "피를 흘", "골절", "탈골", "찢어", "터져"]
+        RECOVERY_KEYWORDS = ["회복", "치료", "요양", "휴식", "쉬"]
+
+        # 직전 원고 분석
+        if prev_manuscripts:
+            last_ms = prev_manuscripts[-1]
+            last_content = last_ms.get('content', '')
+
+            # 직전 화에서 대형 이벤트 + 부상
+            last_had_event = any(kw in last_content for kw in MAJOR_EVENT_KEYWORDS)
+            last_had_injury = any(kw in last_content[-1000:] for kw in INJURY_KEYWORDS)
+
+            # 현재 화 분석
+            current_same_day = any(kw in manuscript[:500] for kw in SAME_DAY_KEYWORDS)
+            current_time_passed = any(kw in manuscript[:500] for kw in TIME_PASS_KEYWORDS)
+            current_has_event = any(kw in manuscript for kw in MAJOR_EVENT_KEYWORDS)
+            current_has_recovery = any(kw in manuscript[:500] for kw in RECOVERY_KEYWORDS)
+
+            # 같은 날 + 연속 대형 이벤트
+            if last_had_event and current_has_event and current_same_day and not current_time_passed:
+                warnings.append({
+                    'type': 'unrealistic_timeline',
+                    'severity': 'MINOR',
+                    'description': "연속된 대형 이벤트가 같은 날에 발생. "
+                                  "시간 경과 묘사 또는 체력적 한계 묘사 권장."
+                })
+
+            # 부상 후 회복 없이 즉시 활동
+            if last_had_injury and current_has_event and not current_has_recovery and not current_time_passed:
+                warnings.append({
+                    'type': 'injury_ignored',
+                    'severity': 'MINOR',
+                    'description': "직전 화에서 부상 후 회복/시간 경과 없이 대형 이벤트 진행. "
+                                  "응급처치, 회복 묘사, 또는 무리하는 대가 묘사 권장."
+                })
+
+        # 현재 원고 내 대형 이벤트 수 체크
+        event_count = sum(1 for kw in MAJOR_EVENT_KEYWORDS if kw in manuscript)
+        if event_count >= 3:
+            warnings.append({
+                'type': 'event_overload',
+                'severity': 'MINOR',
+                'description': f"한 화에 대형 이벤트가 {event_count}개 이상. "
+                              f"집중도 분산 위험. 일부를 다음 화로 분리 권장."
+            })
+
+        return warnings
+
+    def _check_reader_immersion(self, prev_manuscripts: List[dict], manuscript: str, current_ep: int) -> List[dict]:
+        """
+        [V49.5] 독자 몰입도 예측 - 납득 불가 위험 구간 플래깅
+
+        - 공짜 파워업 감지
+        - 복선 회수 없이 결과만 나오는 경우
+        - 설정 충돌 (이전에 언급된 내용과 모순)
+        """
+        warnings = []
+
+        # === 1. 공짜 파워업 감지 ===
+        POWERUP_KEYWORDS = ["경지 상승", "돌파", "각성", "깨달음", "내공 증가", "실력 향상", "한 수 위"]
+        COST_KEYWORDS = ["대가", "희생", "고통", "부작용", "한계", "무리", "피를 토", "쓰러"]
+
+        has_powerup = any(kw in manuscript for kw in POWERUP_KEYWORDS)
+        has_cost = any(kw in manuscript for kw in COST_KEYWORDS)
+
+        if has_powerup and not has_cost:
+            warnings.append({
+                'type': 'free_powerup',
+                'severity': 'MINOR',
+                'description': "파워업/성장이 묘사되었으나 대가/고통 묘사 없음. "
+                              "'공짜 파워업' 느낌 방지를 위해 대가 묘사 권장."
+            })
+
+        # === 2. 갑작스러운 능력 사용 ===
+        # 이전에 언급 없이 갑자기 특수 능력 사용
+        ABILITY_KEYWORDS = ["비전", "절기", "비급", "암기", "독문", "가전"]
+
+        current_abilities = [kw for kw in ABILITY_KEYWORDS if kw in manuscript]
+        if current_abilities and prev_manuscripts:
+            # 이전 원고에서 언급된 적 있는지 체크
+            prev_all_text = " ".join(m.get('content', '') for m in prev_manuscripts)
+            new_abilities = [a for a in current_abilities if a not in prev_all_text]
+
+            if new_abilities and current_ep > 3:  # 초반 3화는 설정 구축 기간이므로 제외
+                warnings.append({
+                    'type': 'sudden_ability',
+                    'severity': 'MINOR',
+                    'description': f"이전에 언급 없던 능력 갑자기 등장: {new_abilities}. "
+                                  f"복선이나 기연 묘사 없이 등장하면 '설정 추가' 느낌."
+                })
+
+        # === 3. 주인공 무쌍 과다 ===
+        WIN_KEYWORDS = ["쓰러뜨", "제압", "격파", "승리", "이겼", "물리쳤", "쓰러졌다"]
+        STRUGGLE_KEYWORDS = ["위기", "궁지", "밀리", "고전", "위험", "절체절명"]
+
+        win_count = sum(1 for kw in WIN_KEYWORDS if kw in manuscript)
+        has_struggle = any(kw in manuscript for kw in STRUGGLE_KEYWORDS)
+
+        if win_count >= 3 and not has_struggle:
+            warnings.append({
+                'type': 'effortless_victory',
+                'severity': 'MINOR',
+                'description': f"다수의 승리({win_count}회) 묘사가 있으나 고전/위기 묘사 없음. "
+                              f"긴장감 저하 우려. 최소 1회 위기 상황 권장."
+            })
+
+        # === 4. 연속 행운 ===
+        LUCK_KEYWORDS = ["마침", "우연히", "때마침", "운 좋게", "다행히", "공교롭게"]
+        luck_count = sum(1 for kw in LUCK_KEYWORDS if kw in manuscript)
+
+        if luck_count >= 2:
+            warnings.append({
+                'type': 'excessive_luck',
+                'severity': 'MINOR',
+                'description': f"우연/행운 표현이 {luck_count}회 사용됨. "
+                              f"'작가 편의' 느낌 방지를 위해 인과관계 강화 권장."
+            })
+
+        return warnings
+
     def _extract_keywords(self, text: str, max_keywords: int = 5) -> List[str]:
         """텍스트에서 핵심 키워드 추출"""
         pattern = r'[가-힣]{2,}'
         words = re.findall(pattern, text)
-        
-        stopwords = {'것이다', '있다', '없다', '하다', '되다', '이다', '그', '저', '이', 
+
+        stopwords = {'것이다', '있다', '없다', '하다', '되다', '이다', '그', '저', '이',
                      '그것', '저것', '이것', '때문', '그래서', '하지만', '그러나'}
         keywords = [w for w in words if w not in stopwords and len(w) >= 2]
-        
+
         return keywords[:max_keywords]
-    
+
     def _format_prev_manuscripts(self, prev_manuscripts: List[dict]) -> str:
         """이전 원고들을 LLM용 타임라인 형식으로 변환"""
         lines = []
@@ -1744,5 +2534,781 @@ class ContinuityInspector(BaseAgent):
                     f"[Blueprint 미준수] 설계된 핵심 씬이 원고에 반영되지 않았습니다. "
                     f"Blueprint의 scene_breakdown에 명시된 씬들을 원고에 포함시키세요."
                 )
-        
+
+        return "\n".join(instructions) if instructions else "위반 사항을 확인하고 수정하세요."
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # [V49.7] 품질 향상 트래커 초기화 및 통합
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    def _init_v49_7_trackers(self):
+        """
+        [V49.7] 품질 향상 모듈 트래커 초기화
+
+        사용 가능한 경우:
+        - StateDeltaTracker: 내공/부상 변화 추적
+        - RelationshipTracker: NPC 관계 상태 전이
+        - PowerScalingTracker: 파워 레벨 스케일링
+        - ForeshadowingTracker: 복선 설치/회수
+        - InformationDiffusion: 정보 비대칭 추적
+        """
+        if V49_7_MODULES_AVAILABLE:
+            self.state_tracker = StateDeltaTracker(
+                initial_energy=100,
+                protagonist_name=self._get_protagonist_name()
+            )
+            self.relationship_tracker = RelationshipTracker()
+            self.power_tracker = PowerScalingTracker()
+            self.foreshadow_tracker = ForeshadowingTracker()
+
+            # InformationDiffusion은 context가 필요함
+            try:
+                self.info_diffusion = InformationDiffusion(self.context)
+            except Exception:
+                self.info_diffusion = None
+
+            self.v49_7_enabled = True
+        else:
+            self.state_tracker = None
+            self.relationship_tracker = None
+            self.power_tracker = None
+            self.foreshadow_tracker = None
+            self.info_diffusion = None
+            self.v49_7_enabled = False
+
+    def _get_protagonist_name(self) -> str:
+        """프로젝트에서 주인공 이름 추출"""
+        try:
+            bible = getattr(self.context, 'master_bible', {})
+            bible_root = bible.get('MasterBible', bible)
+            proj_data = bible_root.get('ProjectData', {})
+            return proj_data.get('protagonist', '주인공')
+        except Exception:
+            return '주인공'
+
+    def _validate_with_v49_7_trackers(
+        self,
+        arc: int,
+        episode: int,
+        content: str,
+        content_type: str = "blueprint"
+    ) -> Dict[str, Any]:
+        """
+        [V49.7] 트래커 기반 검증 실행
+
+        Args:
+            arc: 현재 Arc 번호
+            episode: 현재 에피소드 번호
+            content: 검증할 내용 (blueprint scenario 또는 manuscript)
+            content_type: "blueprint" 또는 "manuscript"
+
+        Returns:
+            {
+                "warnings": [],
+                "violations": [],
+                "tracker_results": {
+                    "state_delta": {...},
+                    "relationship": {...},
+                    "power_scaling": {...},
+                    "foreshadowing": {...}
+                }
+            }
+        """
+        if not self.v49_7_enabled:
+            return {"warnings": [], "violations": [], "tracker_results": {}}
+
+        warnings = []
+        violations = []
+        tracker_results = {}
+
+        # ═══════════════════════════════════════════════════════════════
+        # 1. 관계 상태 검증 (RelationshipTracker)
+        # ═══════════════════════════════════════════════════════════════
+        if self.relationship_tracker:
+            rel_result = self._check_relationship_with_tracker(arc, episode, content)
+            if rel_result.get("violations"):
+                violations.extend(rel_result["violations"])
+            if rel_result.get("warnings"):
+                warnings.extend(rel_result["warnings"])
+            tracker_results["relationship"] = rel_result.get("details", {})
+
+        # ═══════════════════════════════════════════════════════════════
+        # 2. 파워 스케일링 검증 (PowerScalingTracker)
+        # ═══════════════════════════════════════════════════════════════
+        if self.power_tracker:
+            power_result = self._check_power_with_tracker(arc, episode, content)
+            if power_result.get("warnings"):
+                warnings.extend(power_result["warnings"])
+            tracker_results["power_scaling"] = power_result.get("details", {})
+
+        # ═══════════════════════════════════════════════════════════════
+        # 3. 복선 상태 검증 (ForeshadowingTracker)
+        # ═══════════════════════════════════════════════════════════════
+        if self.foreshadow_tracker:
+            foreshadow_result = self._check_foreshadowing_with_tracker(arc, episode, content)
+            if foreshadow_result.get("warnings"):
+                warnings.extend(foreshadow_result["warnings"])
+            tracker_results["foreshadowing"] = foreshadow_result.get("details", {})
+
+        # ═══════════════════════════════════════════════════════════════
+        # 4. 상태 델타 검증 (StateDeltaTracker) - manuscript에서만
+        # ═══════════════════════════════════════════════════════════════
+        if self.state_tracker and content_type == "manuscript":
+            state_result = self._check_state_with_tracker(arc, episode, content)
+            if state_result.get("warnings"):
+                warnings.extend(state_result["warnings"])
+            tracker_results["state_delta"] = state_result.get("details", {})
+
+        return {
+            "warnings": warnings,
+            "violations": violations,
+            "tracker_results": tracker_results
+        }
+
+    def _check_relationship_with_tracker(
+        self, arc: int, episode: int, content: str
+    ) -> Dict[str, Any]:
+        """RelationshipTracker를 사용한 관계 전이 검증"""
+        warnings = []
+        violations = []
+        details = {}
+
+        # 집단 키워드 정의
+        group_keywords = ["사병", "무사들", "병사들", "부하들", "수하들", "호위", "교두", "장로들"]
+
+        for group in group_keywords:
+            if group in content:
+                # 현재 상태 추론
+                current_state = self.relationship_tracker.infer_state_from_manuscript(
+                    group, content
+                )
+
+                if current_state:
+                    # 이전 상태 확인
+                    prev_history = self.relationship_tracker.get_transition_history(group)
+
+                    if prev_history:
+                        prev_state = prev_history[-1].get("to_state", "무시")
+
+                        # 전이 유효성 검증
+                        validation = self.relationship_tracker.validate_transition_with_justification(
+                            npc_name=group,
+                            from_state=prev_state,
+                            to_state=current_state,
+                            proposed_justification="",
+                            arc=arc,
+                            episode=episode
+                        )
+
+                        if not validation.get("valid"):
+                            severity = validation.get("severity", "MINOR")
+                            if severity in ["CRITICAL", "MAJOR"]:
+                                violations.append({
+                                    "type": "relationship_violation",
+                                    "severity": severity,
+                                    "description": validation.get("message", "관계 전이 오류")
+                                })
+                            else:
+                                warnings.append({
+                                    "type": "relationship_warning",
+                                    "severity": "MINOR",
+                                    "description": validation.get("message", "관계 전이 경고")
+                                })
+
+                        details[group] = {
+                            "from": prev_state,
+                            "to": current_state,
+                            "valid": validation.get("valid", True)
+                        }
+
+        return {"warnings": warnings, "violations": violations, "details": details}
+
+    def _check_power_with_tracker(
+        self, arc: int, episode: int, content: str
+    ) -> Dict[str, Any]:
+        """PowerScalingTracker를 사용한 파워 스케일링 검증"""
+        warnings = []
+        details = {}
+
+        protagonist = self._get_protagonist_name()
+
+        # 파워 관련 키워드 탐지
+        power_keywords = {
+            "각성": 25,
+            "돌파": 20,
+            "비급": 20,
+            "영약": 15,
+            "수련": 15,
+            "깨달음": 15,
+            "경지 상승": 20,
+            "내공 증가": 10,
+        }
+
+        detected_growth = 0
+        growth_reason = ""
+
+        for keyword, power_delta in power_keywords.items():
+            if keyword in content:
+                detected_growth = max(detected_growth, power_delta)
+                growth_reason = keyword
+
+        if detected_growth > 0:
+            current_power = self.power_tracker.get_power(protagonist) or 30
+            new_power = current_power + detected_growth
+
+            validation = self.power_tracker.validate_growth(
+                character=protagonist,
+                arc=arc,
+                new_power=new_power,
+                justification=growth_reason
+            )
+
+            if validation.get("severity") == "CRITICAL":
+                warnings.append({
+                    "type": "power_scaling_critical",
+                    "severity": "MAJOR",
+                    "description": validation.get("message", "급격한 파워업")
+                })
+            elif validation.get("severity") == "WARNING":
+                warnings.append({
+                    "type": "power_scaling_warning",
+                    "severity": "MINOR",
+                    "description": validation.get("suggestion", "성장 속도 조절 권장")
+                })
+
+            details["detected_growth"] = detected_growth
+            details["reason"] = growth_reason
+            details["validation"] = validation
+
+        return {"warnings": warnings, "details": details}
+
+    def _check_foreshadowing_with_tracker(
+        self, arc: int, episode: int, content: str
+    ) -> Dict[str, Any]:
+        """ForeshadowingTracker를 사용한 복선 상태 검증"""
+        warnings = []
+        details = {}
+
+        # 미회수 복선 경고
+        pending = self.foreshadow_tracker.get_pending_foreshadowings(arc)
+
+        critical_pending = [p for p in pending if p.get("severity") == "CRITICAL"]
+        warning_pending = [p for p in pending if p.get("severity") == "WARNING"]
+
+        if critical_pending:
+            warnings.append({
+                "type": "foreshadowing_critical",
+                "severity": "MAJOR",
+                "description": f"미회수 복선 {len(critical_pending)}개가 10개 Arc 이상 방치됨: " +
+                              ", ".join([p["id"] for p in critical_pending[:3]])
+            })
+
+        if warning_pending:
+            warnings.append({
+                "type": "foreshadowing_warning",
+                "severity": "MINOR",
+                "description": f"미회수 복선 {len(warning_pending)}개가 5개 Arc 이상 방치됨"
+            })
+
+        # 복선 설치/회수 키워드 탐지 (선택적)
+        foreshadow_keywords = ["암시", "복선", "떡밥", "비밀", "예언", "숨겨진"]
+        detected_foreshadows = [kw for kw in foreshadow_keywords if kw in content]
+
+        details["pending_count"] = len(pending)
+        details["critical_count"] = len(critical_pending)
+        details["detected_keywords"] = detected_foreshadows
+
+        return {"warnings": warnings, "details": details}
+
+    def _check_state_with_tracker(
+        self, arc: int, episode: int, content: str
+    ) -> Dict[str, Any]:
+        """StateDeltaTracker를 사용한 내공/부상 상태 검증"""
+        warnings = []
+        details = {}
+
+        # 부상 키워드 탐지
+        injury_level = "정상"
+        if any(kw in content for kw in ["위독", "사경", "기절", "의식 잃"]):
+            injury_level = "위독"
+        elif any(kw in content for kw in ["중상", "심한 부상", "피투성이", "골절"]):
+            injury_level = "중상"
+        elif any(kw in content for kw in ["경상", "가벼운 상처", "찰과상"]):
+            injury_level = "경상"
+
+        # 내공 소모 키워드 탐지
+        energy_delta = 0
+        if any(kw in content for kw in ["내공 고갈", "기력 소진", "탈진"]):
+            energy_delta = -50
+        elif any(kw in content for kw in ["내공 소모", "기력 사용", "힘이 빠져"]):
+            energy_delta = -20
+        elif any(kw in content for kw in ["운기조식", "회복", "휴식"]):
+            energy_delta = 15
+
+        # 상태 변화 적용 및 검증
+        if energy_delta != 0:
+            result = self.state_tracker.apply_energy_delta(
+                arc=arc,
+                episode=episode,
+                delta=energy_delta,
+                reason="자동 탐지"
+            )
+            if result.get("warning"):
+                warnings.append({
+                    "type": "energy_warning",
+                    "severity": "MINOR",
+                    "description": result["warning"]
+                })
+            details["energy"] = result
+
+        if injury_level != "정상":
+            result = self.state_tracker.apply_injury(
+                arc=arc,
+                episode=episode,
+                level=injury_level,
+                body_part="전신",
+                cause="자동 탐지"
+            )
+            if result.get("warning"):
+                warnings.append({
+                    "type": "injury_warning",
+                    "severity": "MINOR",
+                    "description": result["warning"]
+                })
+            details["injury"] = result
+
+        details["current_energy"] = self.state_tracker.get_current_energy()
+        details["current_injury"] = self.state_tracker.get_current_injury_level()
+
+        return {"warnings": warnings, "details": details}
+
+    def load_trackers_from_db(self, arcs_data: List[Dict] = None) -> Dict[str, int]:
+        """
+        [V49.7] DB에서 트래커 상태 로드
+
+        Arc 데이터에서 복선, 파워, 관계 정보를 추출하여
+        트래커들을 초기화합니다.
+
+        Args:
+            arcs_data: Arc 데이터 리스트 (None이면 DB에서 로드)
+
+        Returns:
+            로드 결과 {foreshadowings: int, relationships: int, ...}
+        """
+        if not self.v49_7_enabled:
+            return {"error": "V49.7 modules not available"}
+
+        results = {
+            "foreshadowings": 0,
+            "relationships": 0,
+            "power_entries": 0
+        }
+
+        # Arc 데이터 로드
+        if arcs_data is None:
+            try:
+                arcs_data = self.context.db.load_anchor("arcs") or []
+            except Exception:
+                arcs_data = []
+
+        # 복선 로드
+        if self.foreshadow_tracker and arcs_data:
+            results["foreshadowings"] = self.foreshadow_tracker.load_from_arcs(arcs_data)
+
+        # 관계/파워는 Arc의 state_constraints에서 추출
+        for arc in arcs_data:
+            if not isinstance(arc, dict):
+                continue
+
+            arc_no = arc.get("arc_no", 0)
+            state_constraints = arc.get("state_constraints", {})
+
+            # 파워 정보 로드
+            if self.power_tracker:
+                protagonist = self._get_protagonist_name()
+                arc_end = state_constraints.get("arc_end_state", {})
+                if "power_level" in arc_end:
+                    self.power_tracker.set_power(
+                        character=protagonist,
+                        arc=arc_no,
+                        power=arc_end.get("power_level", 30),
+                        reason="Arc 종료 상태"
+                    )
+                    results["power_entries"] += 1
+
+            # 관계 변화 로드
+            if self.relationship_tracker:
+                rel_changes = arc.get("relationship_changes", [])
+                for change in rel_changes:
+                    if isinstance(change, dict):
+                        self.relationship_tracker.record_transition(
+                            arc=arc_no,
+                            episode=arc.get("ep_end", 0),
+                            npc_name=change.get("target", ""),
+                            from_state=change.get("from", "무시"),
+                            to_state=change.get("to", "무시"),
+                            trigger=change.get("trigger", ""),
+                            justification=change.get("justification", "")
+                        )
+                        results["relationships"] += 1
+
+        return results
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # [V59] 스킬 사용 타임라인 추적
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    # 무공/스킬 관련 패턴
+    SKILL_ACQUISITION_PATTERNS = [
+        r"['\"]?([가-힣a-zA-Z0-9]{2,20}(?:법|결|공|권법|검법|장법|각법|신법|보법|심법|기공))['\"]?(?:을|를)\s*(?:익히|배우|습득|전수받|깨달|체득)",
+        r"['\"]?([가-힣a-zA-Z0-9]{2,20}(?:초식|절초|절기|비기|오의))['\"]?(?:을|를)\s*(?:익히|배우|습득|전수받|터득)",
+        r"(?:전수|가르침|지도).*?['\"]?([가-힣a-zA-Z0-9]{2,20}(?:법|공|결|술))['\"]?",
+        r"비급.*?['\"]?([가-힣a-zA-Z0-9]{2,20}(?:법|공|결|심법))['\"]?",
+    ]
+
+    SKILL_USAGE_PATTERNS = [
+        r"['\"]?([가-힣a-zA-Z0-9]{2,20}(?:법|결|공|권법|검법|장법|각법|신법|보법))['\"]?(?:을|를)?\s*(?:펼치|시전|사용|발동|구사)",
+        r"['\"]?([가-힣a-zA-Z0-9]{2,20}(?:초식|절초|절기|비기|오의))['\"]?(?:을|를)?\s*(?:펼치|날리|전개)",
+        r"(?:내공|진기).*?['\"]?([가-힣a-zA-Z0-9]{2,20}(?:법|공|결))['\"]?",
+    ]
+
+    def _check_skill_timeline(
+        self,
+        current_ep: int,
+        manuscript: str,
+        prev_manuscripts: List[dict]
+    ) -> dict:
+        """
+        [V59] 스킬 사용 타임라인 검증
+
+        습득 전에 스킬을 사용하는 모순 감지
+
+        Args:
+            current_ep: 현재 에피소드 번호
+            manuscript: 현재 원고
+            prev_manuscripts: 이전 원고 리스트
+
+        Returns:
+            {
+                "violations": [...],
+                "warnings": [...],
+                "skill_timeline": {skill_name: acquired_ep}
+            }
+        """
+        violations = []
+        warnings = []
+        skill_timeline = {}  # {스킬명: 습득 에피소드}
+
+        # 1. 이전 원고들에서 습득한 스킬 추적
+        for prev_ms in prev_manuscripts:
+            prev_content = prev_ms.get('content', '')
+            ep_num = prev_ms.get('ep_num', 0)
+
+            for pattern in self.SKILL_ACQUISITION_PATTERNS:
+                matches = re.findall(pattern, prev_content)
+                for skill in matches:
+                    skill = skill.strip() if isinstance(skill, str) else ''
+                    if skill and len(skill) >= 2:
+                        if skill not in skill_timeline:
+                            skill_timeline[skill] = ep_num
+
+        # 2. 현재 원고에서 새로 습득하는 스킬 추가
+        for pattern in self.SKILL_ACQUISITION_PATTERNS:
+            matches = re.findall(pattern, manuscript)
+            for skill in matches:
+                skill = skill.strip() if isinstance(skill, str) else ''
+                if skill and len(skill) >= 2:
+                    if skill not in skill_timeline:
+                        skill_timeline[skill] = current_ep
+
+        # 3. 현재 원고에서 사용하는 스킬 추출
+        used_skills = set()
+        for pattern in self.SKILL_USAGE_PATTERNS:
+            matches = re.findall(pattern, manuscript)
+            for skill in matches:
+                skill = skill.strip() if isinstance(skill, str) else ''
+                if skill and len(skill) >= 2:
+                    used_skills.add(skill)
+
+        # 4. 미습득 스킬 사용 감지
+        for skill in used_skills:
+            # 일반 명사 필터링
+            generic_terms = ['내공', '진기', '기력', '무공', '검법', '권법', '장법']
+            if skill in generic_terms:
+                continue
+
+            # 습득 여부 확인
+            is_acquired = False
+            acquired_ep = None
+
+            for known_skill, acq_ep in skill_timeline.items():
+                if self._is_same_skill(skill, known_skill):
+                    is_acquired = True
+                    acquired_ep = acq_ep
+                    break
+
+            if not is_acquired:
+                # 5화 이후에만 엄격하게 체크 (초반은 설정 구축 기간)
+                if current_ep > 5:
+                    violations.append({
+                        'type': 'unlearned_skill_usage',
+                        'severity': 'MAJOR',
+                        'skill': skill,
+                        'description': f"'{skill}'은(는) 이전에 습득한 기록이 없습니다. "
+                                      f"배우지 않은 무공/스킬 사용은 연속성 오류입니다."
+                    })
+                else:
+                    warnings.append({
+                        'type': 'unlearned_skill_usage',
+                        'severity': 'MINOR',
+                        'skill': skill,
+                        'description': f"'{skill}' 사용됨 (습득 장면 권장)"
+                    })
+
+        return {
+            'violations': violations,
+            'warnings': warnings,
+            'skill_timeline': skill_timeline
+        }
+
+    def _is_same_skill(self, skill1: str, skill2: str) -> bool:
+        """두 스킬이 같은 것인지 판단"""
+        skill1 = skill1.strip().lower()
+        skill2 = skill2.strip().lower()
+
+        if skill1 == skill2:
+            return True
+
+        if skill1 in skill2 or skill2 in skill1:
+            return True
+
+        # 핵심 키워드 비교
+        keywords1 = set(re.findall(r'[가-힣]{2,}', skill1))
+        keywords2 = set(re.findall(r'[가-힣]{2,}', skill2))
+
+        stopwords = {'법', '공', '결', '술', '식', '초'}
+        keywords1 -= stopwords
+        keywords2 -= stopwords
+
+        common = keywords1 & keywords2
+        if len(common) >= 1 and (len(keywords1) <= 2 or len(keywords2) <= 2):
+            return True
+
+        return False
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # [V59] 관계 변화 히스토리 추적 강화
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    def _track_relationship_history(
+        self,
+        current_ep: int,
+        manuscript: str,
+        prev_manuscripts: List[dict]
+    ) -> dict:
+        """
+        [V59] 관계 변화 히스토리 추적 강화
+
+        에피소드별 NPC 관계 상태 변화를 추적하고 급변 감지
+
+        Returns:
+            {
+                "relationship_history": {npc: [(ep, state), ...]},
+                "violations": [...],
+                "warnings": [...]
+            }
+        """
+        violations = []
+        warnings = []
+        relationship_history = {}  # {NPC명: [(ep_num, state), ...]}
+
+        # 관계 상태 키워드 (우선순위 순서)
+        STATE_KEYWORDS = {
+            "사망": ["죽었", "숨이 끊", "사망", "절명", "목숨을 잃", "숨을 거두"],
+            "굴복": ["굴복", "용서를", "목숨을 구걸", "바닥을 기", "살려주", "복종", "무릎"],
+            "충성": ["충성", "주군", "목숨 바쳐", "명을 따르", "따르겠", "만세", "주군님"],
+            "경외": ["경외", "두려워", "떨며", "감히 못", "공포", "벌벌", "존경", "눈빛이 달라"],
+            "의심": ["의심", "수상", "이상하", "믿을 수 없", "의구심", "진심인가", "정체가"],
+            "무시": ["무시", "대수롭지", "관심 없", "신경 쓰지", "거들떠보지", "하찮"],
+            "적대": ["적대", "원수", "죽이겠", "공격", "증오", "살의", "적의"],
+        }
+
+        # 상태 순서 (관계 발전 방향)
+        STATE_ORDER = ["적대", "무시", "의심", "경외", "충성"]
+
+        # 주요 NPC/집단 키워드
+        NPC_KEYWORDS = [
+            "사병", "무사들", "병사들", "부하들", "수하들", "호위", "교두",
+            "장로들", "가주", "대장로", "청사", "가솔들", "문주", "총관"
+        ]
+
+        def infer_state_from_context(npc: str, content: str) -> str:
+            """문맥에서 NPC 관계 상태 추론"""
+            if npc not in content:
+                return "알 수 없음"
+
+            idx = content.find(npc)
+            context = content[max(0, idx-300):min(len(content), idx+300)]
+
+            for state, keywords in STATE_KEYWORDS.items():
+                if any(kw in context for kw in keywords):
+                    return state
+
+            return "중립"
+
+        # 1. 이전 원고들에서 관계 히스토리 구축
+        for prev_ms in prev_manuscripts:
+            prev_content = prev_ms.get('content', '')
+            ep_num = prev_ms.get('ep_num', 0)
+
+            for npc in NPC_KEYWORDS:
+                if npc in prev_content:
+                    state = infer_state_from_context(npc, prev_content)
+                    if state != "알 수 없음":
+                        if npc not in relationship_history:
+                            relationship_history[npc] = []
+                        relationship_history[npc].append((ep_num, state))
+
+        # 2. 현재 원고에서 관계 상태 추론
+        current_states = {}
+        for npc in NPC_KEYWORDS:
+            if npc in manuscript:
+                state = infer_state_from_context(npc, manuscript)
+                if state != "알 수 없음":
+                    current_states[npc] = state
+                    if npc not in relationship_history:
+                        relationship_history[npc] = []
+                    relationship_history[npc].append((current_ep, state))
+
+        # 3. 급격한 관계 변화 감지
+        for npc, history in relationship_history.items():
+            if len(history) < 2:
+                continue
+
+            # 마지막 두 상태 비교
+            prev_ep, prev_state = history[-2] if len(history) >= 2 else (0, "무시")
+            curr_ep, curr_state = history[-1]
+
+            if prev_state == curr_state:
+                continue
+
+            # 점프 거리 계산
+            if prev_state in STATE_ORDER and curr_state in STATE_ORDER:
+                prev_idx = STATE_ORDER.index(prev_state)
+                curr_idx = STATE_ORDER.index(curr_state)
+                jump_distance = abs(curr_idx - prev_idx)
+
+                if jump_distance >= 2:
+                    # 2단계 이상 점프는 위반
+                    violations.append({
+                        'type': 'relationship_jump',
+                        'severity': 'MAJOR',
+                        'npc': npc,
+                        'from_state': prev_state,
+                        'to_state': curr_state,
+                        'from_ep': prev_ep,
+                        'to_ep': curr_ep,
+                        'jump_distance': jump_distance,
+                        'description': f"'{npc}'의 관계가 제{prev_ep}화 '{prev_state}'에서 "
+                                      f"제{curr_ep}화 '{curr_state}'로 {jump_distance}단계 급변. "
+                                      f"중간 단계(예: {STATE_ORDER[prev_idx + 1] if prev_idx < len(STATE_ORDER) - 1 else prev_state})를 거치는 묘사 필요."
+                    })
+                elif jump_distance == 1:
+                    # 1단계 점프는 경고만
+                    warnings.append({
+                        'type': 'relationship_change',
+                        'severity': 'INFO',
+                        'npc': npc,
+                        'description': f"'{npc}' 관계: {prev_state}→{curr_state} (정상 전환)"
+                    })
+
+        return {
+            'relationship_history': relationship_history,
+            'violations': violations,
+            'warnings': warnings
+        }
+
+    def inspect_manuscript_v59(
+        self,
+        current_ep: int,
+        manuscript: str,
+        blueprint: dict,
+        prev_manuscripts: List[dict],
+        hud_history: List[dict] = None
+    ) -> dict:
+        """
+        [V59] 강화된 원고 연속성 검증 (스킬 + 관계 타임라인 포함)
+
+        기존 inspect_manuscript()에 V59 검증을 추가
+
+        Args:
+            current_ep: 현재 에피소드 번호
+            manuscript: Writer가 생성한 원고 텍스트
+            blueprint: 현재 에피소드 Blueprint dict
+            prev_manuscripts: 이전 원고 리스트
+            hud_history: HUD 스냅샷 히스토리 (선택적)
+
+        Returns:
+            기존 결과 + skill_timeline + relationship_history
+        """
+        # 기존 검증 실행
+        base_result = self.inspect_manuscript(
+            current_ep, manuscript, blueprint, prev_manuscripts, hud_history
+        )
+
+        # V59 스킬 타임라인 검증
+        skill_check = self._check_skill_timeline(current_ep, manuscript, prev_manuscripts)
+
+        # V59 관계 히스토리 검증
+        rel_check = self._track_relationship_history(current_ep, manuscript, prev_manuscripts)
+
+        # 결과 병합
+        all_violations = base_result.get('violations', []) + skill_check.get('violations', []) + rel_check.get('violations', [])
+        all_warnings = base_result.get('warnings', []) + skill_check.get('warnings', []) + rel_check.get('warnings', [])
+
+        # 위반 여부에 따라 decision 조정
+        if any(v.get('severity') in ['CRITICAL', 'MAJOR'] for v in all_violations):
+            final_decision = "REJECT"
+            final_severity = "CRITICAL" if any(v.get('severity') == 'CRITICAL' for v in all_violations) else "MAJOR"
+        else:
+            final_decision = base_result.get('decision', 'PASS')
+            final_severity = base_result.get('severity', 'NONE')
+
+        return {
+            **base_result,
+            "decision": final_decision,
+            "severity": final_severity,
+            "violations": all_violations,
+            "warnings": all_warnings,
+            "v59_skill_timeline": skill_check.get('skill_timeline', {}),
+            "v59_relationship_history": rel_check.get('relationship_history', {}),
+            "fix_instructions": self._generate_v59_fix_instructions(all_violations) if all_violations else base_result.get('fix_instructions', '')
+        }
+
+    def _generate_v59_fix_instructions(self, violations: List[dict]) -> str:
+        """[V59] 위반 사항에 대한 수정 지시 생성"""
+        instructions = []
+
+        for v in violations:
+            v_type = v.get('type', '')
+
+            if v_type == 'unlearned_skill_usage':
+                skill = v.get('skill', '')
+                instructions.append(
+                    f"[V59 스킬 연속성] '{skill}'은(는) 습득 기록 없이 사용됨. "
+                    f"해당 스킬의 습득 장면을 이전 원고에 추가하거나, "
+                    f"현재 원고에서 '이전에 배운'으로 언급하세요."
+                )
+            elif v_type == 'relationship_jump':
+                npc = v.get('npc', '')
+                from_state = v.get('from_state', '')
+                to_state = v.get('to_state', '')
+                instructions.append(
+                    f"[V59 관계 연속성] '{npc}'의 '{from_state}'→'{to_state}' 급변. "
+                    f"중간 단계를 묘사하거나, 급변의 서사적 근거를 추가하세요."
+                )
+            else:
+                # 기존 수정 지시
+                instructions.append(self._generate_manuscript_fix_instructions([v]))
+
         return "\n".join(instructions) if instructions else "위반 사항을 확인하고 수정하세요."

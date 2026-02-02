@@ -5,11 +5,14 @@ from google.genai import types
 from .base_agent import BaseAgent
 
 class Writer(BaseAgent):
-    """[V31 Sovereign Writer] 듀얼 캐시 시스템 대응 및 비용 최적화 집필 엔진"""
+    """[V31 Sovereign Writer] 듀얼 캐시 시스템 대응 및 비용 최적화 집필 엔진
+    [V59] 감정선 스켈레톤 시스템 추가
+    """
 
     def __init__(self, context, client, model_tier="gemini-1.5-pro"):
         super().__init__(context, client, model_tier)
         self.cache_name = None # main_a.py에서 주입됨
+        self.last_hud_anomalies = None  # [V60] 마지막 HUD 급변 감지 결과 저장 (main_a.py에서 로깅용)
 
     def _get_hud_trend_safe(self, ep_num: int) -> str:
         """
@@ -30,6 +33,152 @@ class Writer(BaseAgent):
                 return "HUD 추세 정보 없음"
         except Exception:
             return "안정적"
+
+    def _check_hud_anomalies_v60(self, current_ep: int) -> dict:
+        """
+        [V60] HUD 급변 감지 - 내공/경지/부상 상태의 급격한 변화 탐지
+
+        이전 화 대비 비현실적인 HUD 변화를 감지하여 Writer에게 경고
+
+        Args:
+            current_ep: 현재 화 번호
+
+        Returns:
+            {
+                'has_anomalies': bool,
+                'anomalies': [
+                    {'type': 'internal_energy_spike', 'description': '...', 'recommendation': '...'},
+                    ...
+                ]
+            }
+        """
+        anomalies = []
+
+        if current_ep < 2:
+            return {'has_anomalies': False, 'anomalies': []}
+
+        try:
+            # 이전 3화의 HUD 스냅샷 수집
+            hud_history = []
+            for ep in range(max(1, current_ep - 3), current_ep):
+                try:
+                    ms_data = self.context.db.get_manuscript(ep)
+                    if ms_data and isinstance(ms_data, dict):
+                        hud_snapshot = ms_data.get('hud_snapshot', {})
+                        if hud_snapshot:
+                            hud_history.append({'ep': ep, 'hud': hud_snapshot})
+                except Exception:
+                    continue
+
+            if not hud_history:
+                return {'has_anomalies': False, 'anomalies': []}
+
+            # 가장 최근 HUD
+            latest = hud_history[-1]['hud'] if hud_history else {}
+
+            # 1. 내공 급변 감지 (단일 화에서 +500 이상 증가는 비정상)
+            if len(hud_history) >= 2:
+                prev_hud = hud_history[-2]['hud']
+
+                # 내공 변화
+                curr_energy = self._extract_numeric_value(latest.get('internal_energy', 0))
+                prev_energy = self._extract_numeric_value(prev_hud.get('internal_energy', 0))
+
+                if curr_energy - prev_energy > 500:
+                    anomalies.append({
+                        'type': '내공 급상승',
+                        'description': f'직전 화 대비 내공 +{curr_energy - prev_energy} 증가 감지 (제{hud_history[-2]["ep"]}화: {prev_energy} → 제{hud_history[-1]["ep"]}화: {curr_energy})',
+                        'recommendation': '점진적 성장 또는 특별한 기연(비급 획득, 영약 복용)을 통한 정당화 필요',
+                        'severity': 'high'
+                    })
+                elif curr_energy - prev_energy > 200:
+                    anomalies.append({
+                        'type': '내공 빠른 성장',
+                        'description': f'직전 화 대비 내공 +{curr_energy - prev_energy} 증가 (통상 범위 초과)',
+                        'recommendation': '수련 또는 깨달음 장면으로 자연스럽게 정당화 권장',
+                        'severity': 'medium'
+                    })
+
+                # 2. 경지 급변 감지
+                curr_realm = latest.get('realm', '')
+                prev_realm = prev_hud.get('realm', '')
+
+                realm_tiers = ['하수', '삼류', '이류', '일류', '초일류', '절정', '화경', '현경', '귀환']
+
+                if curr_realm and prev_realm and curr_realm != prev_realm:
+                    try:
+                        curr_tier = realm_tiers.index(curr_realm) if curr_realm in realm_tiers else -1
+                        prev_tier = realm_tiers.index(prev_realm) if prev_realm in realm_tiers else -1
+
+                        if curr_tier - prev_tier >= 2:
+                            anomalies.append({
+                                'type': '경지 급상승',
+                                'description': f'직전 화 대비 경지 2단계 이상 상승 ({prev_realm} → {curr_realm})',
+                                'recommendation': '연속적인 돌파 장면 또는 특수 기연(선천진기, 비급 체득)으로 정당화 필수',
+                                'severity': 'critical'
+                            })
+                    except ValueError:
+                        pass
+
+                # 3. 부상 상태 급변 감지
+                curr_injury = str(latest.get('causal_injuries', '')).lower()
+                prev_injury = str(prev_hud.get('causal_injuries', '')).lower()
+
+                injury_levels = {'정상': 0, '경상': 1, '중상': 2, '중독': 2, '내상': 2, '빈사': 3, '치명상': 3}
+
+                curr_level = 0
+                prev_level = 0
+                for injury_name, level in injury_levels.items():
+                    if injury_name in curr_injury:
+                        curr_level = max(curr_level, level)
+                    if injury_name in prev_injury:
+                        prev_level = max(prev_level, level)
+
+                # 중상/빈사에서 갑자기 정상으로 회복
+                if prev_level >= 2 and curr_level == 0:
+                    anomalies.append({
+                        'type': '부상 급회복',
+                        'description': f'직전 화에서 심각한 부상 상태였으나 갑자기 완치됨 ({prev_injury} → {curr_injury})',
+                        'recommendation': '치료 과정(의원, 영약, 휴식 기간) 명시적 묘사 필요',
+                        'severity': 'high'
+                    })
+
+            # 4. 3화 연속 추세 분석 (급격한 성장 곡선)
+            if len(hud_history) >= 3:
+                energies = [self._extract_numeric_value(h['hud'].get('internal_energy', 0)) for h in hud_history]
+
+                # 3화 동안 총 1000 이상 성장은 비정상
+                total_growth = energies[-1] - energies[0]
+                if total_growth > 1000:
+                    anomalies.append({
+                        'type': '연속 급성장',
+                        'description': f'최근 3화 동안 내공 +{total_growth} 성장 (과도한 파워 인플레이션)',
+                        'recommendation': '성장 속도 조절 또는 장기 수련/비급 습득 스토리라인으로 정당화',
+                        'severity': 'medium'
+                    })
+
+        except Exception as e:
+            print(f"      ⚠️ [V60] HUD 급변 감지 실패: {e}")
+            return {'has_anomalies': False, 'anomalies': [], 'error': str(e)}
+
+        return {
+            'has_anomalies': len(anomalies) > 0,
+            'anomalies': anomalies
+        }
+
+    def _extract_numeric_value(self, value) -> int:
+        """HUD 값에서 숫자 추출 (문자열/정수 모두 처리)"""
+        if isinstance(value, int):
+            return value
+        if isinstance(value, float):
+            return int(value)
+        if isinstance(value, str):
+            # "+100" 또는 "500" 형식 처리
+            import re
+            match = re.search(r'[+-]?\d+', value)
+            if match:
+                return int(match.group())
+        return 0
 
     def write_v20_manuscript(self, ep_num, breakdown_doc, master_bible, hud_report, purism_prompt, 
                              style_mode="", intro_dna="CYNICAL", feedback="", prev_full_manuscript="", 
@@ -209,22 +358,27 @@ class Writer(BaseAgent):
         - **부 패턴**: {self._escape_braces(str(pattern_secondary))}
         - **조합 논리**: {self._escape_braces(str(pattern_logic))}
 
-        ### ⚠️ 출력 형식 (Strict JSON) [V41 State Updates Protocol]
+        ### ⚠️ 출력 형식 (Strict JSON) [V60.22 State Updates Protocol]
         - 제목, 본문, 상태 변화로 구성된 JSON을 출력하라.
         {{
             "title": "에피소드 제목 (한글만)",
             "content": "5,000자 이상의 소설 본문 (줄바꿈은 \\n)",
             "state_updates": {{
-                "internal_energy": "+50" 또는 "현상 유지",
+                "internal_energy": "70%" (현재 내공 퍼센트, 0~100 사이 숫자),
                 "realm": "경지명" 또는 "현상 유지",
                 "causal_injuries": "부상 상태 (예: 경상, 중상, 정상)",
-                "wealth": "+/-금액" 또는 "현상 유지",
-                "misunderstanding": "+10" 또는 "현상 유지",
-                "obsession": "+5" 또는 "현상 유지",
-                "equipment": "새로 획득한 아이템" 또는 "현상 유지",
-                "martial_arts": "새로 습득한 무공" 또는 "현상 유지"
+                "wealth": "은자 500냥" (현재 총 자산),
+                "misunderstanding": 30 (현재 착각 수치, 0~100),
+                "obsession": 20 (현재 집착 수치, 0~100),
+                "equipment": ["소지 중인 아이템 전체 목록"],
+                "martial_arts": ["습득한 무공 전체 목록"]
             }}
         }}
+
+        🔴 [V60.22] internal_energy 필수 규칙:
+        - 반드시 0~100 사이 숫자로 작성 (예: "70%", "85%", "50%")
+        - 전투 후 소모되면 숫자 감소, 휴식/수련 후 회복되면 증가
+        - "현상 유지", "+50" 같은 표현 금지! 반드시 현재 상태를 숫자로!
 
         ### 📌 state_updates 작성 지침
         1. 이번 화에서 실제로 발생한 변화만 기록하라
@@ -403,6 +557,15 @@ class Writer(BaseAgent):
         """[Phase 1.2] 강제 맥락 주입"""
         mandatory_parts = ["📌 [MANDATORY CONTEXT - 반드시 인지하고 집필할 것]\n"]
 
+        # [V60] HUD 급변 감지 (내공/경지/부상 상태 급변 경고)
+        hud_anomalies = self._check_hud_anomalies_v60(current_ep)
+        self.last_hud_anomalies = hud_anomalies  # [V60] 결과 저장 (main_a.py에서 로깅용)
+        if hud_anomalies.get('has_anomalies'):
+            mandatory_parts.append("\n🚨 [V60 HUD ANOMALY WARNING - 급변 감지]\n")
+            for anomaly in hud_anomalies.get('anomalies', []):
+                mandatory_parts.append(f"⚠️ {anomaly['type']}: {anomaly['description']}")
+                mandatory_parts.append(f"   → 권장: {anomaly['recommendation']}\n")
+
         # 1. 최근 3화의 핵심 사건 추출
         recent_events = self._extract_recent_events(current_ep, n_episodes=3)
 
@@ -568,9 +731,9 @@ class Writer(BaseAgent):
 
     def _apply_self_critique(self, manuscript: str, hud_report: str, npcs: list, genre_name: str, ep_num: int = None) -> str:
         """
-        [Phase 5.2.1] Self-Critique 적용 (헬퍼)
+        [Phase 5.2.1 → V49.3 Multi-Round] Self-Critique 적용
 
-        원고에 Self-Critique를 실행하고, 문제가 있으면 수정 후 반환
+        원고에 Self-Critique를 최대 3회 반복 실행하고, 문제가 있으면 수정 후 반환
 
         Args:
             manuscript: 원고 (JSON 문자열)
@@ -583,15 +746,131 @@ class Writer(BaseAgent):
             str: 검토 및 수정된 원고
         """
         encyclopedia = {'npcs': npcs}
+        MAX_CRITIQUE_ROUNDS = 3
 
-        # Self-Critique 실행 (ep_num 전달)
-        critique_result = self._self_critique(manuscript, hud_report, encyclopedia, genre_name, ep_num)
+        current_manuscript = manuscript
+        total_issues_fixed = 0
 
-        # 문제가 있으면 수정
-        if critique_result['has_issues'] and critique_result['severity'] in ['medium', 'high']:
-            manuscript = self._fix_manuscript_issues(manuscript, critique_result, hud_report)
+        for round_num in range(1, MAX_CRITIQUE_ROUNDS + 1):
+            # Self-Critique 실행 (ep_num 전달)
+            critique_result = self._self_critique(current_manuscript, hud_report, encyclopedia, genre_name, ep_num)
 
-        return manuscript
+            # 문제가 없으면 종료
+            if not critique_result['has_issues']:
+                if round_num > 1:
+                    print(f"      ✅ [Multi-Round] Round {round_num}: 모든 문제 해결됨 (총 {total_issues_fixed}건 수정)")
+                break
+
+            # 경미한 문제만 있으면 종료
+            if critique_result['severity'] == 'low':
+                print(f"      ℹ️ [Multi-Round] Round {round_num}: 경미한 문제만 남음, 수정 스킵")
+                break
+
+            # 문제 수정
+            print(f"      🔄 [Multi-Round] Round {round_num}/{MAX_CRITIQUE_ROUNDS}: {len(critique_result['issues'])}건 수정 중...")
+            current_manuscript = self._fix_manuscript_issues(current_manuscript, critique_result, hud_report)
+            total_issues_fixed += len(critique_result['issues'])
+
+            # 마지막 라운드면 루프 종료
+            if round_num == MAX_CRITIQUE_ROUNDS:
+                print(f"      ⚠️ [Multi-Round] 최대 라운드 도달 (총 {total_issues_fixed}건 수정)")
+
+        # [V49.3] Rubric 기반 최종 품질 평가
+        rubric_score = self._evaluate_with_rubric(current_manuscript, genre_name)
+        if rubric_score < 3.0:  # 4점 만점 기준 3점 미만이면 경고
+            print(f"      ⚠️ [Rubric] 품질 점수 {rubric_score:.1f}/4.0 - 개선 권장")
+
+        return current_manuscript
+
+    def _evaluate_with_rubric(self, manuscript: str, genre_name: str) -> float:
+        """
+        [V49.3] Rubric 기반 품질 평가
+
+        Args:
+            manuscript: 원고 (JSON 문자열)
+            genre_name: 장르
+
+        Returns:
+            float: 품질 점수 (1.0 ~ 4.0)
+        """
+        try:
+            data = json.loads(manuscript)
+            content = data.get('content', '')
+        except:
+            content = manuscript
+
+        if not content or len(content) < 100:
+            return 1.0
+
+        scores = []
+
+        # 1. 감정 표현 평가 (Show vs Tell)
+        direct_emotions = ['기뻤다', '슬펐다', '화났다', '놀랐다', '두려웠다', '경악했다', '분노했다']
+        direct_count = sum(content.count(e) for e in direct_emotions)
+        chars_per_1000 = len(content) / 1000
+        direct_rate = direct_count / max(chars_per_1000, 1)
+
+        if direct_rate <= 0.5:
+            scores.append(4)  # 거의 Show만 사용
+        elif direct_rate <= 1.5:
+            scores.append(3)  # Show 위주, 약간 Tell
+        elif direct_rate <= 3.0:
+            scores.append(2)  # Tell 위주
+        else:
+            scores.append(1)  # Tell 과다
+
+        # 2. 문장 시작 다양성
+        sentences = [s.strip() for s in re.split(r'[.!?]', content) if len(s.strip()) > 5]
+        if sentences:
+            starters = [s[:2] for s in sentences[:20]]  # 첫 20문장의 시작 2글자
+            unique_rate = len(set(starters)) / max(len(starters), 1)
+            if unique_rate >= 0.7:
+                scores.append(4)
+            elif unique_rate >= 0.5:
+                scores.append(3)
+            elif unique_rate >= 0.3:
+                scores.append(2)
+            else:
+                scores.append(1)
+        else:
+            scores.append(2)
+
+        # 3. 대화 자연스러움 (대화 비율)
+        dialogue_matches = re.findall(r'["\'].*?["\']', content)
+        dialogue_chars = sum(len(d) for d in dialogue_matches)
+        dialogue_ratio = dialogue_chars / max(len(content), 1)
+
+        if 0.15 <= dialogue_ratio <= 0.40:
+            scores.append(4)  # 적정 비율
+        elif 0.10 <= dialogue_ratio <= 0.50:
+            scores.append(3)
+        elif dialogue_ratio > 0:
+            scores.append(2)
+        else:
+            scores.append(1)
+
+        # 4. 오감 묘사 균형
+        sensory_keywords = {
+            'visual': ['보였다', '빛', '색', '어둠', '그림자'],
+            'auditory': ['소리', '울림', '침묵', '들렸다', '속삭'],
+            'tactile': ['차가', '뜨거', '거친', '부드러', '통증'],
+            'olfactory': ['냄새', '향기', '악취', '피비린']
+        }
+        sensory_counts = {k: sum(content.count(w) for w in words) for k, words in sensory_keywords.items()}
+        active_senses = sum(1 for c in sensory_counts.values() if c > 0)
+
+        if active_senses >= 3:
+            scores.append(4)
+        elif active_senses >= 2:
+            scores.append(3)
+        elif active_senses >= 1:
+            scores.append(2)
+        else:
+            scores.append(1)
+
+        # 최종 점수 (평균)
+        avg_score = sum(scores) / len(scores) if scores else 2.0
+        return round(avg_score, 1)
 
     def _self_critique(self, manuscript: str, hud_report: str, encyclopedia: dict, genre_name: str, ep_num: int = None) -> dict:
         """
@@ -1079,3 +1358,896 @@ class Writer(BaseAgent):
         except Exception as e:
             print(f"      ❌ [Self-Refine] 정제 실패: {e}")
             return manuscript
+
+    # ========================================================================
+    # [V59] 감정선 스켈레톤 시스템
+    # ========================================================================
+
+    # [V59] 감정 상태 정의
+    EMOTION_STATES = {
+        '평온': {'intensity': 0, 'valence': 0},
+        '불안': {'intensity': 2, 'valence': -1},
+        '긴장': {'intensity': 3, 'valence': -1},
+        '분노': {'intensity': 4, 'valence': -2},
+        '공포': {'intensity': 4, 'valence': -2},
+        '절망': {'intensity': 5, 'valence': -3},
+        '기대': {'intensity': 2, 'valence': 1},
+        '희열': {'intensity': 4, 'valence': 2},
+        '통쾌': {'intensity': 5, 'valence': 3},
+        '감동': {'intensity': 4, 'valence': 2},
+        '슬픔': {'intensity': 3, 'valence': -2},
+        '결의': {'intensity': 4, 'valence': 1},
+    }
+
+    # [V59] 장르별 권장 감정 흐름 패턴
+    GENRE_EMOTION_PATTERNS = {
+        'wuxia': {
+            'standard': ['평온', '긴장', '분노', '결의', '통쾌'],
+            'training': ['평온', '불안', '긴장', '절망', '결의', '희열'],
+            'revenge': ['슬픔', '분노', '결의', '긴장', '통쾌'],
+            'crisis': ['평온', '불안', '공포', '절망', '결의'],
+        },
+        'hunter': {
+            'dungeon': ['긴장', '불안', '공포', '결의', '통쾌'],
+            'awakening': ['평온', '기대', '긴장', '희열'],
+            'boss_fight': ['긴장', '분노', '절망', '결의', '통쾌'],
+            'growth': ['평온', '기대', '긴장', '희열', '결의'],
+        },
+        'investment': {
+            'opportunity': ['평온', '기대', '긴장', '희열'],
+            'crisis': ['긴장', '불안', '공포', '절망', '결의'],
+            'victory': ['긴장', '불안', '결의', '통쾌', '감동'],
+            'betrayal': ['평온', '불안', '분노', '결의'],
+        }
+    }
+
+    def generate_emotion_skeleton(self, blueprint: dict, genre: str = 'wuxia') -> dict:
+        """
+        [V59] 감정선 스켈레톤 생성 - Blueprint 기반으로 씬별 감정 흐름 설계
+
+        Args:
+            blueprint: 에피소드 Blueprint
+            genre: 장르
+
+        Returns:
+            {
+                'scenes': [
+                    {'scene_id': 1, 'emotion': '긴장', 'intensity': 3, 'target_emotion': '분노'},
+                    ...
+                ],
+                'overall_arc': '상승형',
+                'climax_scene': 4,
+                'recommended_pattern': 'revenge'
+            }
+        """
+        scene_breakdown = blueprint.get('scene_breakdown', {})
+        if not scene_breakdown:
+            return {'scenes': [], 'overall_arc': 'unknown', 'error': 'No scene breakdown'}
+
+        # 1. 씬 유형 분석
+        scene_types = self._analyze_scene_types(scene_breakdown, genre)
+
+        # 2. 적합한 감정 패턴 선택
+        pattern_name, pattern = self._select_emotion_pattern(scene_types, genre)
+
+        # 3. 씬별 감정 배치
+        scenes = []
+        num_scenes = len(scene_breakdown)
+        pattern_length = len(pattern)
+
+        for i, (scene_name, scene_desc) in enumerate(scene_breakdown.items()):
+            # 패턴 인덱스 계산 (씬 수와 패턴 길이가 다를 수 있음)
+            pattern_idx = int(i * pattern_length / num_scenes) if num_scenes > 0 else 0
+            pattern_idx = min(pattern_idx, pattern_length - 1)
+
+            emotion = pattern[pattern_idx]
+            emotion_data = self.EMOTION_STATES.get(emotion, {'intensity': 2, 'valence': 0})
+
+            # 다음 감정 (전환 목표)
+            next_idx = min(pattern_idx + 1, pattern_length - 1)
+            target_emotion = pattern[next_idx] if next_idx != pattern_idx else None
+
+            scenes.append({
+                'scene_id': i + 1,
+                'scene_name': scene_name,
+                'emotion': emotion,
+                'intensity': emotion_data['intensity'],
+                'valence': emotion_data['valence'],
+                'target_emotion': target_emotion,
+                'description': scene_desc[:100] if scene_desc else ''
+            })
+
+        # 4. 클라이맥스 씬 식별 (intensity가 가장 높은 씬)
+        climax_scene = max(scenes, key=lambda x: x['intensity'])['scene_id'] if scenes else 1
+
+        # 5. 전체 아크 유형 판단
+        overall_arc = self._determine_arc_type(scenes)
+
+        return {
+            'scenes': scenes,
+            'overall_arc': overall_arc,
+            'climax_scene': climax_scene,
+            'recommended_pattern': pattern_name,
+            'pattern_emotions': pattern
+        }
+
+    def _analyze_scene_types(self, scene_breakdown: dict, genre: str) -> list:
+        """씬 유형 분석"""
+        scene_types = []
+
+        # 장르별 키워드
+        type_keywords = {
+            'wuxia': {
+                'battle': ['전투', '대결', '격돌', '검', '공격', '방어'],
+                'training': ['수련', '연마', '깨달음', '돌파', '경지'],
+                'dialogue': ['대화', '협상', '설득', '정보'],
+                'discovery': ['발견', '비밀', '진실', '단서'],
+                'revenge': ['복수', '원수', '청산', '응징'],
+            },
+            'hunter': {
+                'battle': ['전투', '몬스터', '보스', '스킬', '공격'],
+                'growth': ['레벨업', '성장', '각성', '스킬 획득'],
+                'dungeon': ['던전', '게이트', '탐색', '클리어'],
+                'social': ['길드', '동료', '대화', '협력'],
+            },
+            'investment': {
+                'analysis': ['분석', '차트', '데이터', '연구'],
+                'trade': ['매수', '매도', '거래', '투자'],
+                'crisis': ['폭락', '위기', '손실', '공황'],
+                'victory': ['수익', '성공', '대박', '승리'],
+            }
+        }
+
+        genre_keywords = type_keywords.get(genre, type_keywords['wuxia'])
+
+        for scene_name, scene_desc in scene_breakdown.items():
+            full_text = f"{scene_name} {scene_desc}".lower()
+            detected_type = 'unknown'
+
+            for scene_type, keywords in genre_keywords.items():
+                if any(kw in full_text for kw in keywords):
+                    detected_type = scene_type
+                    break
+
+            scene_types.append(detected_type)
+
+        return scene_types
+
+    def _select_emotion_pattern(self, scene_types: list, genre: str) -> tuple:
+        """적합한 감정 패턴 선택"""
+        patterns = self.GENRE_EMOTION_PATTERNS.get(genre, self.GENRE_EMOTION_PATTERNS['wuxia'])
+
+        # 씬 유형 빈도 분석
+        type_counts = {}
+        for t in scene_types:
+            type_counts[t] = type_counts.get(t, 0) + 1
+
+        # 가장 빈번한 유형으로 패턴 선택
+        dominant_type = max(type_counts, key=type_counts.get) if type_counts else 'standard'
+
+        # 패턴 매칭
+        if dominant_type in patterns:
+            return dominant_type, patterns[dominant_type]
+        else:
+            # 기본 패턴
+            default_key = list(patterns.keys())[0]
+            return default_key, patterns[default_key]
+
+    def _determine_arc_type(self, scenes: list) -> str:
+        """전체 감정 아크 유형 판단"""
+        if not scenes:
+            return 'unknown'
+
+        intensities = [s['intensity'] for s in scenes]
+
+        # 단순 패턴 분석
+        first_half = sum(intensities[:len(intensities)//2]) / max(len(intensities)//2, 1)
+        second_half = sum(intensities[len(intensities)//2:]) / max(len(intensities) - len(intensities)//2, 1)
+
+        if second_half > first_half + 1:
+            return '상승형'  # 후반 긴장 상승
+        elif first_half > second_half + 1:
+            return '하강형'  # 전반 긴장, 후반 해소
+        else:
+            return '균형형'  # 전반적으로 균형
+
+    def build_emotion_prompt_injection(self, emotion_skeleton: dict) -> str:
+        """
+        [V59] 감정 스켈레톤을 프롬프트에 주입할 형태로 변환
+
+        Args:
+            emotion_skeleton: generate_emotion_skeleton() 결과
+
+        Returns:
+            str: 프롬프트 주입용 텍스트
+        """
+        if not emotion_skeleton or not emotion_skeleton.get('scenes'):
+            return ""
+
+        lines = [
+            "\n🎭 [V59 EMOTION SKELETON - 감정선 가이드]\n",
+            f"📈 전체 아크: {emotion_skeleton.get('overall_arc', '균형형')}",
+            f"🎯 클라이맥스: 씬 {emotion_skeleton.get('climax_scene', '?')}",
+            f"📊 추천 패턴: {emotion_skeleton.get('recommended_pattern', 'standard')}\n",
+            "씬별 감정 흐름:"
+        ]
+
+        for scene in emotion_skeleton.get('scenes', []):
+            emotion = scene.get('emotion', '평온')
+            intensity = scene.get('intensity', 2)
+            target = scene.get('target_emotion')
+
+            # 강도 시각화
+            intensity_bar = '▓' * intensity + '░' * (5 - intensity)
+
+            target_str = f" → {target}" if target and target != emotion else ""
+            lines.append(f"  씬{scene['scene_id']}: {emotion} [{intensity_bar}]{target_str}")
+
+        lines.append("\n⚠️ 지침:")
+        lines.append("- 각 씬에서 지정된 감정을 독자가 느끼도록 묘사하라")
+        lines.append("- 감정 전환(→)이 있는 씬은 그 과정을 자연스럽게 표현하라")
+        lines.append("- 클라이맥스 씬에서 감정 강도를 최대로 끌어올려라")
+        lines.append("- 감정 직접 서술('슬펐다') 대신 행동/묘사로 전달하라")
+
+        return "\n".join(lines)
+
+    def auto_map_emotions_to_manuscript(self, manuscript: str, emotion_skeleton: dict) -> dict:
+        """
+        [V59] 원고에서 감정 표현 자동 매핑 및 평가
+
+        Args:
+            manuscript: 생성된 원고
+            emotion_skeleton: 감정 스켈레톤
+
+        Returns:
+            {
+                'alignment_score': float (0-100),
+                'scene_analysis': [...],
+                'missing_emotions': [...],
+                'suggestions': [...]
+            }
+        """
+        try:
+            data = json.loads(manuscript)
+            content = data.get('content', '')
+        except:
+            content = manuscript
+
+        if not content or not emotion_skeleton.get('scenes'):
+            return {'alignment_score': 0, 'error': 'No content or skeleton'}
+
+        # 감정 표현 키워드
+        emotion_keywords = {
+            '평온': ['평화', '고요', '잔잔', '평온', '안정'],
+            '불안': ['불안', '초조', '두근', '떨리', '긴장'],
+            '긴장': ['긴장', '살기', '위압', '팽팽', '숨막'],
+            '분노': ['분노', '화가', '격분', '치밀', '울분'],
+            '공포': ['공포', '두려움', '소름', '전율', '무섭'],
+            '절망': ['절망', '무력', '좌절', '막막', '암담'],
+            '기대': ['기대', '설렘', '희망', '기다'],
+            '희열': ['희열', '환희', '황홀', '짜릿', '쾌감'],
+            '통쾌': ['통쾌', '시원', '후련', '사이다', '속시원'],
+            '감동': ['감동', '뭉클', '눈물', '감격'],
+            '슬픔': ['슬픔', '비통', '눈물', '안타', '서러'],
+            '결의': ['결의', '각오', '다짐', '결심', '굳건'],
+        }
+
+        # 씬별 분석 (원고를 대략적으로 분할)
+        num_scenes = len(emotion_skeleton['scenes'])
+        chunk_size = len(content) // max(num_scenes, 1)
+
+        scene_analysis = []
+        matched_count = 0
+
+        for i, scene_info in enumerate(emotion_skeleton['scenes']):
+            # 해당 씬 영역 추출
+            start = i * chunk_size
+            end = start + chunk_size if i < num_scenes - 1 else len(content)
+            scene_text = content[start:end]
+
+            expected_emotion = scene_info['emotion']
+            expected_keywords = emotion_keywords.get(expected_emotion, [])
+
+            # 키워드 매칭
+            found_keywords = [kw for kw in expected_keywords if kw in scene_text]
+            is_matched = len(found_keywords) > 0
+
+            if is_matched:
+                matched_count += 1
+
+            # 다른 감정 검출
+            detected_emotions = []
+            for emotion, keywords in emotion_keywords.items():
+                if any(kw in scene_text for kw in keywords):
+                    detected_emotions.append(emotion)
+
+            scene_analysis.append({
+                'scene_id': scene_info['scene_id'],
+                'expected': expected_emotion,
+                'detected': detected_emotions,
+                'matched': is_matched,
+                'found_keywords': found_keywords
+            })
+
+        # 정렬 점수 계산
+        alignment_score = (matched_count / max(num_scenes, 1)) * 100
+
+        # 누락된 감정 추출
+        missing_emotions = [
+            s['expected']
+            for s in scene_analysis
+            if not s['matched']
+        ]
+
+        # 개선 제안 생성
+        suggestions = []
+        for s in scene_analysis:
+            if not s['matched']:
+                suggestions.append(
+                    f"씬{s['scene_id']}: '{s['expected']}' 감정 표현 추가 필요 "
+                    f"(키워드 예시: {', '.join(emotion_keywords.get(s['expected'], [])[:3])})"
+                )
+
+        return {
+            'alignment_score': round(alignment_score, 1),
+            'scene_analysis': scene_analysis,
+            'missing_emotions': missing_emotions,
+            'suggestions': suggestions[:5],  # 최대 5개
+            'matched_scenes': matched_count,
+            'total_scenes': num_scenes
+        }
+
+    def self_review_and_refine(
+        self,
+        manuscript: str,
+        blueprint: dict,
+        checklist_feedback: str = "",
+        max_refinements: int = 1
+    ) -> dict:
+        """
+        [V60.6] Writer 자가 수정 루프
+
+        생성된 원고를 자가 검토하여 수정본 생성.
+        Director 호출 전 품질 향상 목적.
+
+        Args:
+            manuscript: 초기 생성된 원고
+            blueprint: 블루프린트 (씬 목록 포함)
+            checklist_feedback: Pre-Director Checklist 피드백 (있으면)
+            max_refinements: 최대 수정 횟수 (기본 1회)
+
+        Returns:
+            {
+                'refined_manuscript': str,
+                'changes_made': list,
+                'refinement_count': int,
+                'self_review_passed': bool
+            }
+        """
+        result = {
+            'refined_manuscript': manuscript,
+            'changes_made': [],
+            'refinement_count': 0,
+            'self_review_passed': False
+        }
+
+        if not manuscript or len(manuscript) < 1000:
+            return result
+
+        # 씬 정보 추출
+        scene_breakdown = blueprint.get('scene_breakdown', {}) if blueprint else {}
+        scene_list = list(scene_breakdown.keys()) if scene_breakdown else []
+
+        # 자가 검토 프롬프트 구성
+        review_prompt = f"""당신은 무협 소설 원고를 검토하는 편집자입니다.
+
+아래 원고를 검토하고 문제점을 수정한 개선본을 작성하세요.
+
+## 검토 기준
+1. **분량**: 4,500자 이상이어야 함 (현재: {len(manuscript)}자)
+2. **씬 반영**: Blueprint의 모든 씬이 반영되어야 함 ({len(scene_list)}개 씬: {', '.join(scene_list[:6])})
+3. **대화/묘사 균형**: 대화 25-40%, 묘사/서술 60-75%
+4. **문장 다양성**: 연속으로 같은 단어로 시작하는 문장 금지
+5. **클리셰 회피**: "이를 악물", "눈빛이 날카롭" 등 진부한 표현 최소화
+6. **후반부 완성도**: Scene 5-6 (클라이맥스)이 급하게 요약되지 않아야 함
+
+{f"## 사전 체크리스트 피드백{chr(10)}{checklist_feedback}" if checklist_feedback else ""}
+
+## 원본 원고
+{manuscript}
+
+## 출력 형식 (JSON)
+```json
+{{
+    "needs_refinement": true/false,
+    "issues_found": ["이슈1", "이슈2", ...],
+    "refined_manuscript": "수정된 원고 전문 (문제없으면 원본 그대로)"
+}}
+```
+
+문제가 없으면 needs_refinement: false로 응답하고 refined_manuscript에 원본을 그대로 넣으세요.
+문제가 있으면 수정된 원고를 refined_manuscript에 작성하세요.
+"""
+
+        current_manuscript = manuscript
+
+        for i in range(max_refinements):
+            try:
+                # 자가 검토 호출 (빠른 모델 사용)
+                response = self.ask(
+                    review_prompt.replace(manuscript, current_manuscript) if i > 0 else review_prompt,
+                    temperature=0.3  # 낮은 온도로 일관성 확보
+                )
+
+                if not response:
+                    break
+
+                # JSON 파싱
+                review_result = self._extract_json_robust(response)
+
+                if not review_result:
+                    break
+
+                needs_refinement = review_result.get('needs_refinement', False)
+                issues = review_result.get('issues_found', [])
+                refined = review_result.get('refined_manuscript', '')
+
+                if not needs_refinement:
+                    result['self_review_passed'] = True
+                    break
+
+                if refined and len(refined) >= len(current_manuscript) * 0.8:
+                    # 수정본이 원본의 80% 이상이면 채택
+                    result['changes_made'].extend(issues)
+                    current_manuscript = refined
+                    result['refinement_count'] += 1
+
+                    # 수정 후에도 통과 여부 확인
+                    if len(issues) <= 1:
+                        result['self_review_passed'] = True
+
+            except Exception as e:
+                # 자가 검토 실패 시 원본 유지
+                break
+
+        result['refined_manuscript'] = current_manuscript
+        return result
+
+    def quick_self_check(self, manuscript: str, blueprint: dict) -> dict:
+        """
+        [V60.6] 빠른 자가 점검 (LLM 없이 Python만)
+
+        LLM 호출 없이 기본적인 품질 지표를 체크.
+        self_review_and_refine 호출 여부 결정에 사용.
+
+        Returns:
+            {
+                'needs_llm_review': bool,
+                'quick_issues': list,
+                'scores': dict
+            }
+        """
+        issues = []
+        scores = {}
+
+        # 1. 분량 체크
+        length = len(manuscript)
+        scores['length'] = length
+        if length < 4000:
+            issues.append(f"분량 부족: {length}자 (최소 4000자)")
+        elif length < 4500:
+            issues.append(f"분량 경계: {length}자")
+
+        # 2. 대화 비율 체크
+        dialogue_matches = re.findall(r'"[^"]+?"', manuscript)
+        dialogue_chars = sum(len(m) for m in dialogue_matches)
+        dialogue_ratio = dialogue_chars / length if length > 0 else 0
+        scores['dialogue_ratio'] = dialogue_ratio
+
+        if dialogue_ratio < 0.15:
+            issues.append(f"대화 부족: {dialogue_ratio:.0%}")
+        elif dialogue_ratio > 0.50:
+            issues.append(f"대화 과다: {dialogue_ratio:.0%}")
+
+        # 3. 씬 반영 체크 (키워드 기반)
+        scene_breakdown = blueprint.get('scene_breakdown', {}) if blueprint else {}
+        if scene_breakdown:
+            reflected = 0
+            for scene_key, scene_data in scene_breakdown.items():
+                if isinstance(scene_data, dict):
+                    desc = scene_data.get('description', '') or scene_data.get('title', '')
+                else:
+                    desc = str(scene_data)
+
+                keywords = re.findall(r'[\w가-힣]{2,}', desc)[:5]
+                if any(kw in manuscript for kw in keywords):
+                    reflected += 1
+
+            coverage = reflected / len(scene_breakdown) if scene_breakdown else 0
+            scores['scene_coverage'] = coverage
+
+            if coverage < 0.5:
+                issues.append(f"씬 반영 부족: {coverage:.0%}")
+
+        # 4. 문장 시작어 반복 체크
+        sentences = re.split(r'[.?!]\s*', manuscript)
+        sentences = [s.strip() for s in sentences if s.strip() and len(s.strip()) > 10]
+
+        consecutive_same = 0
+        max_consecutive = 0
+        for i in range(1, len(sentences)):
+            if sentences[i][:2] == sentences[i-1][:2]:
+                consecutive_same += 1
+                max_consecutive = max(max_consecutive, consecutive_same)
+            else:
+                consecutive_same = 0
+
+        if max_consecutive >= 4:
+            issues.append(f"문장 시작어 {max_consecutive}회 연속 반복")
+
+        # 5. 후반부 분량 체크
+        if length > 3000:
+            first_half = manuscript[:length // 2]
+            second_half = manuscript[length // 2:]
+            if len(second_half) < len(first_half) * 0.7:
+                issues.append("후반부 분량 부족 (급하게 요약됨)")
+
+        return {
+            'needs_llm_review': len(issues) >= 2,
+            'quick_issues': issues,
+            'scores': scores
+        }
+
+    def write_manuscript_by_beats(
+        self,
+        ep_num: int,
+        blueprint: dict,
+        master_bible: dict,
+        hud_report: str,
+        style_guide: str = "",
+        feedback: str = "",
+        prev_manuscript: str = ""
+    ) -> dict:
+        """
+        [V60.6] Beat 단위 분할 생성
+
+        6개 씬을 한 번에 생성하지 않고 2개 그룹으로 나눠 생성.
+        - Phase 1: Scene 1-3 (도입/전개)
+        - Phase 2: Scene 4-6 (절정/결말)
+
+        후반부 요약 문제를 해결하고 각 씬에 균등한 분량 배분.
+
+        Args:
+            ep_num: 에피소드 번호
+            blueprint: 블루프린트 (scene_breakdown 포함)
+            master_bible: 설정집
+            hud_report: HUD 현황
+            style_guide: 스타일 가이드
+            feedback: 이전 피드백
+            prev_manuscript: 이전 원고
+
+        Returns:
+            {
+                'title': str,
+                'content': str,
+                'phase_lengths': [int, int],
+                'generation_method': 'beat_split'
+            }
+        """
+        scene_breakdown = blueprint.get('scene_breakdown', {})
+        scene_keys = list(scene_breakdown.keys())
+
+        if len(scene_keys) < 4:
+            # 씬이 4개 미만이면 일반 생성
+            return None
+
+        # 씬 분할
+        mid_point = len(scene_keys) // 2
+        first_half_scenes = {k: scene_breakdown[k] for k in scene_keys[:mid_point]}
+        second_half_scenes = {k: scene_breakdown[k] for k in scene_keys[mid_point:]}
+
+        # 공통 컨텍스트
+        bible_root = master_bible.get('MasterBible', master_bible)
+        core_identity = bible_root.get('ProjectData', {}).get('CoreIdentity', {})
+        protagonist = core_identity.get('protagonist', '주인공')
+        desire = core_identity.get('desire', '목표 달성')
+
+        ending_hook = blueprint.get('ending_hook', '') or blueprint.get('cliffhanger', '')
+        integrated_scenario = blueprint.get('integrated_scenario', '')
+
+        # Phase 1: 전반부 (Scene 1-3)
+        phase1_prompt = f"""당신은 무협 소설 작가입니다. 제 {ep_num} 화의 **전반부**를 집필합니다.
+
+## 설정
+- 주인공: {protagonist}
+- 핵심 욕망: {desire}
+- HUD 현황: {hud_report[:500]}
+
+## 전반부 씬 (반드시 모두 포함)
+{json.dumps(first_half_scenes, ensure_ascii=False, indent=2)}
+
+## 전체 시나리오 (참고)
+{integrated_scenario[:800]}
+
+## 이전 화 끝 (연결)
+{prev_manuscript[-800:] if prev_manuscript else '없음 (첫 화)'}
+
+{f"## 스타일 가이드{chr(10)}{style_guide}" if style_guide else ""}
+
+{f"## 피드백{chr(10)}{feedback}" if feedback else ""}
+
+## 작성 지침
+1. 위 씬들을 **모두** 포함하여 약 2,000-2,500자로 작성
+2. 각 씬에 대화와 묘사를 균등하게 배분
+3. 마지막 문장은 다음 씬으로 자연스럽게 이어지게 작성
+4. 문장 시작어를 다양하게 사용
+
+## 출력
+원고 본문만 출력하세요. JSON 형식이 아닌 순수 텍스트로."""
+
+        # Phase 2: 후반부 (Scene 4-6)
+        phase2_prompt_template = """당신은 무협 소설 작가입니다. 제 {ep_num} 화의 **후반부 (클라이맥스)**를 집필합니다.
+
+## 설정
+- 주인공: {protagonist}
+- 핵심 욕망: {desire}
+
+## 후반부 씬 (반드시 모두 포함) - 클라이맥스 영역!
+{second_half_json}
+
+## 전반부 내용 (이어서 작성)
+{phase1_content}
+
+## 엔딩 훅 (반드시 이 방향으로 마무리)
+{ending_hook}
+
+## 작성 지침
+1. 위 씬들을 **모두** 포함하여 약 2,500-3,000자로 작성
+2. 클라이맥스 씬은 더 상세하게! 절대 요약하지 마라
+3. 액션 장면은 동작 하나하나를 묘사
+4. 마지막은 절벽 걸기(cliffhanger)로 마무리
+5. 문장 시작어를 다양하게 사용
+
+## 출력
+원고 본문만 출력하세요. JSON 형식이 아닌 순수 텍스트로."""
+
+        try:
+            # Phase 1 생성
+            phase1_response = self.ask(phase1_prompt, temperature=0.7)
+            phase1_content = phase1_response.strip() if phase1_response else ""
+
+            if not phase1_content or len(phase1_content) < 1000:
+                return None
+
+            # Phase 2 생성 (Phase 1 결과를 컨텍스트로)
+            phase2_prompt = phase2_prompt_template.format(
+                ep_num=ep_num,
+                protagonist=protagonist,
+                desire=desire,
+                second_half_json=json.dumps(second_half_scenes, ensure_ascii=False, indent=2),
+                phase1_content=phase1_content[-1500:],  # 마지막 1500자만
+                ending_hook=ending_hook
+            )
+
+            phase2_response = self.ask(phase2_prompt, temperature=0.7)
+            phase2_content = phase2_response.strip() if phase2_response else ""
+
+            if not phase2_content or len(phase2_content) < 1000:
+                return None
+
+            # 두 파트 결합
+            combined_content = f"{phase1_content}\n\n{phase2_content}"
+
+            return {
+                'title': f"제 {ep_num} 화",
+                'content': combined_content,
+                'phase_lengths': [len(phase1_content), len(phase2_content)],
+                'generation_method': 'beat_split'
+            }
+
+        except Exception as e:
+            return None
+
+    def identify_problem_scenes(
+        self,
+        manuscript: str,
+        blueprint: dict,
+        reject_reason: str
+    ) -> list:
+        """
+        [V60.6] 문제 씬 식별
+
+        REJECT 사유를 분석하여 어떤 씬에 문제가 있는지 식별.
+
+        Args:
+            manuscript: 현재 원고
+            blueprint: 블루프린트
+            reject_reason: REJECT 사유
+
+        Returns:
+            list: 문제 씬 목록 [{'scene_key': str, 'issue': str, 'severity': str}]
+        """
+        problems = []
+        scene_breakdown = blueprint.get('scene_breakdown', {})
+        scene_keys = list(scene_breakdown.keys())
+
+        if not scene_keys:
+            return problems
+
+        # 원고를 씬 수로 균등 분할
+        num_scenes = len(scene_keys)
+        section_len = len(manuscript) // num_scenes if num_scenes > 0 else len(manuscript)
+
+        sections = []
+        for i in range(num_scenes):
+            start = i * section_len
+            end = (i + 1) * section_len if i < num_scenes - 1 else len(manuscript)
+            sections.append(manuscript[start:end])
+
+        # 문제 패턴 분석
+        for i, (scene_key, section) in enumerate(zip(scene_keys, sections)):
+            scene_data = scene_breakdown.get(scene_key, {})
+            scene_desc = scene_data.get('description', '') if isinstance(scene_data, dict) else str(scene_data)
+
+            issues = []
+
+            # 1. 분량 부족 체크
+            avg_section_len = len(manuscript) // num_scenes
+            if len(section) < avg_section_len * 0.6:
+                issues.append(('분량 부족', 'HIGH'))
+
+            # 2. 키워드 미반영 체크
+            keywords = re.findall(r'[\w가-힣]{2,}', scene_desc)[:5]
+            matched = sum(1 for kw in keywords if kw in section)
+            if keywords and matched / len(keywords) < 0.3:
+                issues.append(('씬 내용 미반영', 'HIGH'))
+
+            # 3. REJECT 사유 관련 체크
+            if '후반부' in reject_reason and i >= num_scenes - 2:
+                issues.append(('후반부 요약 문제', 'CRITICAL'))
+
+            if '폭주' in reject_reason:
+                # 해결 키워드가 이 씬에 있는지
+                resolution_kw = ['해결', '처치', '승리', '성공', '완료']
+                if any(kw in section for kw in resolution_kw):
+                    if i < num_scenes // 2:  # 전반부에 해결이 있으면 문제
+                        issues.append(('조기 해결 (폭주)', 'CRITICAL'))
+
+            if '정체' in reject_reason:
+                # 다음 씬과 키워드 중복도 체크
+                if i < len(sections) - 1:
+                    next_section = sections[i + 1]
+                    words_current = set(re.findall(r'[\w가-힣]{3,}', section))
+                    words_next = set(re.findall(r'[\w가-힣]{3,}', next_section))
+                    overlap = len(words_current & words_next) / max(len(words_current), 1)
+                    if overlap > 0.5:
+                        issues.append(('반복 정체', 'HIGH'))
+
+            # 4. 클라이맥스 씬 밀도 체크
+            if i >= num_scenes - 2:  # 마지막 2개 씬
+                if len(section) < 600:
+                    issues.append(('클라이맥스 분량 부족', 'CRITICAL'))
+
+            # 문제 기록
+            for issue, severity in issues:
+                problems.append({
+                    'scene_key': scene_key,
+                    'scene_index': i + 1,
+                    'issue': issue,
+                    'severity': severity,
+                    'current_length': len(section)
+                })
+
+        # 심각도 순 정렬
+        severity_order = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2}
+        problems.sort(key=lambda x: severity_order.get(x['severity'], 3))
+
+        return problems
+
+    def partial_rewrite(
+        self,
+        manuscript: str,
+        blueprint: dict,
+        problem_scenes: list,
+        max_scenes_to_rewrite: int = 2
+    ) -> dict:
+        """
+        [V60.6] 부분 수정 (특정 씬만 재작성)
+
+        전체 원고를 재생성하지 않고 문제 씬만 재작성.
+
+        Args:
+            manuscript: 현재 원고
+            blueprint: 블루프린트
+            problem_scenes: identify_problem_scenes() 결과
+            max_scenes_to_rewrite: 최대 재작성 씬 수
+
+        Returns:
+            {
+                'content': str,  # 수정된 원고
+                'rewritten_scenes': list,  # 재작성된 씬 목록
+                'generation_method': 'partial_rewrite'
+            }
+        """
+        if not problem_scenes:
+            return None
+
+        scene_breakdown = blueprint.get('scene_breakdown', {})
+        scene_keys = list(scene_breakdown.keys())
+        num_scenes = len(scene_keys)
+
+        if num_scenes == 0:
+            return None
+
+        # 원고 분할
+        section_len = len(manuscript) // num_scenes
+        sections = []
+        for i in range(num_scenes):
+            start = i * section_len
+            end = (i + 1) * section_len if i < num_scenes - 1 else len(manuscript)
+            sections.append(manuscript[start:end])
+
+        # 재작성할 씬 선택 (심각도 높은 것 우선)
+        scenes_to_rewrite = problem_scenes[:max_scenes_to_rewrite]
+        rewritten_indices = set()
+
+        for problem in scenes_to_rewrite:
+            scene_idx = problem.get('scene_index', 1) - 1
+            if scene_idx < 0 or scene_idx >= num_scenes:
+                continue
+
+            scene_key = scene_keys[scene_idx]
+            scene_data = scene_breakdown.get(scene_key, {})
+
+            # 이전/이후 씬 컨텍스트
+            prev_context = sections[scene_idx - 1][-500:] if scene_idx > 0 else ""
+            next_context = sections[scene_idx + 1][:300] if scene_idx < num_scenes - 1 else ""
+
+            # 재작성 프롬프트
+            rewrite_prompt = f"""현재 씬을 개선하여 재작성하세요.
+
+## 현재 씬 ({scene_key})
+{sections[scene_idx]}
+
+## 문제점
+{problem.get('issue', '품질 미달')}
+
+## 씬 설계
+{json.dumps(scene_data, ensure_ascii=False, indent=2) if isinstance(scene_data, dict) else scene_data}
+
+## 이전 씬 끝 (자연스럽게 연결)
+{prev_context if prev_context else '(첫 번째 씬)'}
+
+## 다음 씬 시작 (이 방향으로 마무리)
+{next_context if next_context else '(마지막 씬 - 절벽걸기로 마무리)'}
+
+## 개선 지침
+1. 분량을 800자 이상으로 확보
+2. 씬 설계의 핵심 요소를 모두 반영
+3. 이전/다음 씬과 자연스럽게 연결
+4. 대화와 묘사의 균형 유지
+5. {'절벽걸기로 마무리' if scene_idx == num_scenes - 1 else '다음 씬으로 자연스럽게 연결'}
+
+## 출력
+개선된 씬 본문만 출력하세요."""
+
+            try:
+                rewritten = self.ask(rewrite_prompt, temperature=0.6)
+                if rewritten and len(rewritten.strip()) > len(sections[scene_idx]) * 0.8:
+                    sections[scene_idx] = rewritten.strip()
+                    rewritten_indices.add(scene_idx)
+            except Exception:
+                continue
+
+        if not rewritten_indices:
+            return None
+
+        # 재조합
+        combined = "\n\n".join(sections)
+
+        return {
+            'title': f"제 {blueprint.get('ep_num', '?')} 화",
+            'content': combined,
+            'rewritten_scenes': [scene_keys[i] for i in rewritten_indices],
+            'generation_method': 'partial_rewrite'
+        }

@@ -222,7 +222,7 @@ class DBManager:
         ''')
 
         # 9. [NEW] 로어 백과사전 (Encyclopedia)
-        self.cursor.execute('''                
+        self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS encyclopedia (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 category TEXT,
@@ -230,6 +230,22 @@ class DBManager:
                 description TEXT,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(item)
+            )
+        ''')
+
+        # 10. [V49.5] 화별 Bible (에피소드별 설정 변화 추적)
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS episode_bibles (
+                ep_num INTEGER PRIMARY KEY,
+                new_items TEXT,              -- JSON: 새로 획득한 아이템
+                lost_items TEXT,             -- JSON: 잃어버린/파괴된 아이템
+                new_npcs TEXT,               -- JSON: 새로 등장한 NPC
+                npc_deaths TEXT,             -- JSON: 사망한 NPC
+                relationship_changes TEXT,   -- JSON: [{target, from, to, justification}]
+                state_changes TEXT,          -- JSON: 상태 변화 (부상, 경지 등)
+                time_passed TEXT,            -- 경과 시간 (예: "같은 날 밤", "3일 후")
+                reveals TEXT,                -- JSON: 밝혀진 사실/복선 회수
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
 
@@ -279,8 +295,140 @@ class DBManager:
         query = f"INSERT OR REPLACE INTO martial_tracker (ep_num, {columns}) VALUES (?, {placeholders})"
         
         self.cursor.execute(query, [ep_num] + list(sanitized_data.values()))
-        if not self.conn.in_transaction: 
+        if not self.conn.in_transaction:
             self.conn.commit()
+
+    # --- [V49.5] 화별 Bible CRUD ---
+    def save_episode_bible(self, ep_num: int, bible_delta: dict):
+        """화별 Bible 저장 (원고에서 추출된 설정 변화)"""
+        self.cursor.execute('''
+            INSERT OR REPLACE INTO episode_bibles
+            (ep_num, new_items, lost_items, new_npcs, npc_deaths,
+             relationship_changes, state_changes, time_passed, reveals)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            ep_num,
+            json.dumps(bible_delta.get('new_items', []), ensure_ascii=False),
+            json.dumps(bible_delta.get('lost_items', []), ensure_ascii=False),
+            json.dumps(bible_delta.get('new_npcs', []), ensure_ascii=False),
+            json.dumps(bible_delta.get('npc_deaths', []), ensure_ascii=False),
+            json.dumps(bible_delta.get('relationship_changes', []), ensure_ascii=False),
+            json.dumps(bible_delta.get('state_changes', []), ensure_ascii=False),
+            bible_delta.get('time_passed', ''),
+            json.dumps(bible_delta.get('reveals', []), ensure_ascii=False)
+        ))
+        if not self.conn.in_transaction:
+            self.conn.commit()
+
+    def get_episode_bible(self, ep_num: int) -> dict:
+        """특정 화의 Bible delta 조회"""
+        cur = self.cursor.execute(
+            "SELECT * FROM episode_bibles WHERE ep_num = ?", (ep_num,)
+        )
+        row = cur.fetchone()
+        if not row:
+            return {}
+        return {
+            'ep_num': row['ep_num'],
+            'new_items': json.loads(row['new_items'] or '[]'),
+            'lost_items': json.loads(row['lost_items'] or '[]'),
+            'new_npcs': json.loads(row['new_npcs'] or '[]'),
+            'npc_deaths': json.loads(row['npc_deaths'] or '[]'),
+            'relationship_changes': json.loads(row['relationship_changes'] or '[]'),
+            'state_changes': json.loads(row['state_changes'] or '[]'),
+            'time_passed': row['time_passed'] or '',
+            'reveals': json.loads(row['reveals'] or '[]')
+        }
+
+    def get_cumulative_bible(self, up_to_ep: int) -> dict:
+        """1화부터 특정 화까지의 누적 Bible 계산"""
+        cur = self.cursor.execute(
+            "SELECT * FROM episode_bibles WHERE ep_num <= ? ORDER BY ep_num", (up_to_ep,)
+        )
+        rows = cur.fetchall()
+
+        cumulative = {
+            'items': [],           # 현재 소지 아이템
+            'npcs': [],            # 등장한 NPC 목록
+            'dead_npcs': [],       # 사망 NPC 목록
+            'relationships': {},   # {target: current_state}
+            'states': {},          # {subject: current_state}
+            'total_time': '',      # 누적 시간 흐름
+            'all_reveals': []      # 모든 밝혀진 사실
+        }
+
+        for row in rows:
+            # 아이템: 획득은 추가, 분실은 제거
+            new_items = json.loads(row['new_items'] or '[]')
+            lost_items = json.loads(row['lost_items'] or '[]')
+            cumulative['items'].extend(new_items)
+            cumulative['items'] = [i for i in cumulative['items'] if i not in lost_items]
+
+            # NPC: 등장 추가, 사망은 별도 추적
+            new_npcs = json.loads(row['new_npcs'] or '[]')
+            npc_deaths = json.loads(row['npc_deaths'] or '[]')
+            cumulative['npcs'].extend(new_npcs)
+            cumulative['dead_npcs'].extend(npc_deaths)
+
+            # 관계: 최신 상태로 덮어씀
+            rel_changes = json.loads(row['relationship_changes'] or '[]')
+            for change in rel_changes:
+                if isinstance(change, dict):
+                    target = change.get('target', '')
+                    if target:
+                        cumulative['relationships'][target] = change.get('to', '')
+
+            # 상태: 최신 상태로 덮어씀
+            state_changes = json.loads(row['state_changes'] or '[]')
+            for state in state_changes:
+                if isinstance(state, dict):
+                    subject = state.get('subject', '')
+                    if subject:
+                        cumulative['states'][subject] = state.get('to', '')
+
+            # 밝혀진 사실 누적
+            reveals = json.loads(row['reveals'] or '[]')
+            cumulative['all_reveals'].extend(reveals)
+
+        return cumulative
+
+    def get_all_episode_bibles(self) -> list:
+        """
+        [V60.8] 모든 Episode Bible 조회
+
+        Returns:
+            list: Episode Bible dict 목록 (ep_num 순 정렬)
+        """
+        cur = self.cursor.execute(
+            "SELECT * FROM episode_bibles ORDER BY ep_num"
+        )
+        rows = cur.fetchall()
+
+        bibles = []
+        for row in rows:
+            bibles.append({
+                'ep_num': row['ep_num'],
+                'new_items': json.loads(row['new_items'] or '[]'),
+                'lost_items': json.loads(row['lost_items'] or '[]'),
+                'new_npcs': json.loads(row['new_npcs'] or '[]'),
+                'npc_deaths': json.loads(row['npc_deaths'] or '[]'),
+                'relationship_changes': json.loads(row['relationship_changes'] or '[]'),
+                'state_changes': json.loads(row['state_changes'] or '[]'),
+                'time_passed': row['time_passed'] or '',
+                'reveals': json.loads(row['reveals'] or '[]')
+            })
+
+        return bibles
+
+    def delete_episode_bibles_after(self, ep_num: int):
+        """특정 화 이후의 Bible delta 삭제 (롤백용)"""
+        self.cursor.execute(
+            "DELETE FROM episode_bibles WHERE ep_num > ?", (ep_num,)
+        )
+        if not self.conn.in_transaction:
+            self.conn.commit()
+        return self.cursor.rowcount
+
     # --- [Section 2: 복선 및 로어] ---
 # modules/core/db_manager.py
 # [V35.5] 수술 기록 박제 메서드 추가

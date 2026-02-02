@@ -57,6 +57,22 @@ class WuxiaGuard(BaseGuard):
             '단전 손상': [r'내공', r'진기', r'단전', r'기해'],
         }
 
+        # [V49.5] 괄호 현대어 금지 패턴 (BLOCKING 검증용)
+        self.FORBIDDEN_MODERN_PATTERNS = [
+            # 퍼센트/비율
+            (r'\(\s*약?\s*\d+\.?\d*\s*%\s*\)', '퍼센트 표기 금지'),
+            (r'\d+\.?\d*\s*%', '퍼센트 기호 금지'),
+            # 현대 단위 (괄호 내)
+            (r'\(\s*약?\s*\d+\.?\d*\s*(km|m|cm|mm|kg|g|mg)\s*\)', '현대 단위 금지'),
+            (r'\(\s*약?\s*\d+\.?\d*\s*(킬로미터|미터|센티미터|킬로그램|그램)\s*\)', '현대 단위 금지'),
+            # 시간 환산 (괄호 내)
+            (r'\(\s*약?\s*\d+\s*(시간|분|초)\s*\)', '현대 시간 단위 금지'),
+            # 영어 주석 (괄호 내)
+            (r'\(\s*[A-Za-z]{2,}\s*\)', '영어 주석 금지'),
+            # 부연 설명 (괄호 내)
+            (r'\(\s*(즉|다시 말해|쉽게 말해|예를 들어)\s*[,\s]', '현대식 부연 설명 금지'),
+        ]
+
     def get_genre_name(self):
         return "무협(WUXIA)"
 
@@ -65,7 +81,12 @@ class WuxiaGuard(BaseGuard):
         return f"""
 [🛡️ V40 무협 순혈주의 절대 준수 (Wuxia Purism Enforcement)]
 
-1. **괄호 부연 설명 절대 금지**: 단어 옆에 (Anchor), (10cm), (100근) 등 괄호를 써서 영어/수치를 보충하는 행위를 엄금한다. 한자 표기용 괄호만 허용한다.
+1. **괄호 현대어 주석 절대 금지**: 다음 패턴은 즉시 REJECT 대상이다:
+   - 퍼센트/비율: (30%), (약 50%), 30% 등 → 대신 '삼할(三割)', '절반', '태반' 사용
+   - 현대 단위: (10km), (약 5m), (100kg) 등 → 대신 '십 리(十里)', '오 장(五丈)', '백 근(百斤)' 사용
+   - 시간 환산: (약 3시간), (30분) 등 → 대신 '한 시진(一時辰)', '일각(一刻)', '한 식경(一食頃)' 사용
+   - 영어/외래어 주석: (Anchor), (즉, ~), (다시 말해) 등 완전 금지
+   - 허용되는 괄호: 한자 표기용만 허용 (예: 철혈사자패(鐵血獅子牌))
 2. **과학/현대 용어 절대 금지**: 현대 과학/물리 지식을 무협적 개념으로 '번역'하여 서술하라.
    - 분자/원자/세포/질량 → 미진(微塵), 근원(根源), 기(氣)의 입자, 무게
    - 중력/압력/에너지 → 천근추(千斤墜), 태산 같은 기세, 공압(空壓), 기운
@@ -424,3 +445,28 @@ class WuxiaGuard(BaseGuard):
             r'반드시',
             r'복수.*다짐',
         ]
+
+    # ========================================================================
+    # [V49.5] 괄호 현대어 검증
+    # ========================================================================
+
+    def check_modern_notation(self, text: str) -> List[Dict[str, str]]:
+        """
+        [V49.5] 원고에서 금지된 현대어 표기 패턴 검출
+
+        Returns:
+            List of violations: [{'pattern': str, 'reason': str, 'match': str}]
+        """
+        import re
+        violations = []
+
+        for pattern, reason in self.FORBIDDEN_MODERN_PATTERNS:
+            matches = re.findall(pattern, text, re.IGNORECASE)
+            for match in matches:
+                violations.append({
+                    'pattern': pattern,
+                    'reason': reason,
+                    'match': match if isinstance(match, str) else str(match)
+                })
+
+        return violations

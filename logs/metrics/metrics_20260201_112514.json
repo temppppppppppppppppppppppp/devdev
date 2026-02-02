@@ -1,0 +1,70 @@
+{
+  "session_id": "20260201_112514",
+  "start_time": "2026-02-01T11:25:14.119290",
+  "end_time": "2026-02-01T11:27:14.826341",
+  "total_calls": 498,
+  "successful_calls": 7,
+  "failed_calls": 491,
+  "total_retries": 0,
+  "total_tokens": 372195,
+  "total_cost_usd": 0.068,
+  "agent_stats": {
+    "BlockEnricher": {
+      "agent_name": "BlockEnricher",
+      "total_calls": 245,
+      "successful_calls": 0,
+      "failed_calls": 245,
+      "success_rate": 0.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 0.36077110134825413,
+        "min_ms": 0.0,
+        "max_ms": 5.545377731323242,
+        "p50_ms": 0.0,
+        "p90_ms": 1.0453224182128906,
+        "p99_ms": 2.004823684692383
+      }
+    },
+    "BlockEnricher_Backup": {
+      "agent_name": "BlockEnricher_Backup",
+      "total_calls": 245,
+      "successful_calls": 0,
+      "failed_calls": 245,
+      "success_rate": 0.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0
+    },
+    "Analyst": {
+      "agent_name": "Analyst",
+      "total_calls": 8,
+      "successful_calls": 7,
+      "failed_calls": 1,
+      "success_rate": 87.5,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 31920.57180404663,
+        "min_ms": 22657.02223777771,
+        "max_ms": 39936.80953979492,
+        "p50_ms": 31705.288887023926,
+        "p90_ms": 38325.42533874512,
+        "p99_ms": 39775.67111968994
+      }
+    }
+  },
+  "model_stats": {
+    "gemini-2.0-flash": {
+      "input_tokens": 355090,
+      "output_tokens": 0,
+      "total_tokens": 355090,
+      "cost_usd": 0.0266
+    },
+    "gemini-2.5-pro": {
+      "input_tokens": 11778,
+      "output_tokens": 5327,
+      "total_tokens": 17105,
+      "cost_usd": 0.0414
+    }
+  }
+}

@@ -13,6 +13,15 @@ except ImportError:
     # 폴백: 유틸리티 없을 시 기본 구현 사용
     util_escape_braces = None
 
+# [V49.3] 비용 추적 시스템 임포트
+try:
+    from modules.core.metrics_collector import get_metrics_collector
+    METRICS_ENABLED = True
+except ImportError:
+    METRICS_ENABLED = False
+    def get_metrics_collector():
+        return None
+
 
 # [V44] 에러 타입 분류
 class AgentErrorType:
@@ -24,6 +33,15 @@ class AgentErrorType:
 
 
 class BaseAgent:
+    # [V60.27] Thinking Level → Budget 변환 맵 (Gemini 3 API)
+    THINKING_BUDGET_MAP = {
+        "minimal": 1024,
+        "low": 4096,
+        "medium": 8192,
+        "high": 16384,
+        "maximum": 24576
+    }
+
     def __init__(self, context, client, model_tier="gemini-2.0-flash", enable_cascade=False):
         self.context = context
         self.client = client
@@ -36,17 +54,33 @@ class BaseAgent:
         self.last_partial_response = ""
         self.requires_human_intervention = False
         self.last_error_type = None
+        # [V49.3] 에이전트 이름 (비용 추적용)
+        self._agent_name = self.__class__.__name__
+
+    @property
+    def agent_name(self) -> str:
+        """[V49.3] 에이전트 이름 반환 (비용 추적용)"""
+        return self._agent_name
 
     # 📂 modules/domain/agents/base_agent.py
 
-    def ask(self, prompt, temperature=0.5, response_schema=None):
+    def ask(self, prompt, temperature=0.5, response_schema=None, thinking_level=None):
+        """
+        LLM에 질의
+
+        Args:
+            prompt: 질의 프롬프트
+            temperature: 생성 온도 (0.0-1.0)
+            response_schema: JSON 스키마 (선택)
+            thinking_level: [V60.25] Gemini 3 thinking level ("minimal", "low", "medium", "high")
+        """
         directives = self._escape_braces(getattr(self.context, 'author_directives', ""))
         base_prompt = (
             f"### [AUTHOR'S ABSOLUTE DIRECTIVES]\n{directives}\n\n"
             f"### [TASK]\n{prompt}\n\n"
             f"### [FORMAT]\nRespond ONLY in valid JSON format."
         )
-        
+
         full_response = ""
         current_prompt = base_prompt
 
@@ -61,7 +95,27 @@ class BaseAgent:
         if response_schema:
             config_params["response_schema"] = response_schema
 
+        # [V60.27] Gemini 3 Thinking Level 지원 (문자열 → 정수 변환)
+        if thinking_level and "gemini-3" in self.primary_model:
+            # 문자열이면 정수로 변환, 이미 정수면 그대로 사용
+            if isinstance(thinking_level, str):
+                budget = self.THINKING_BUDGET_MAP.get(thinking_level.lower(), 8192)
+            else:
+                budget = int(thinking_level)
+            config_params["thinking_config"] = types.ThinkingConfig(
+                thinking_budget=budget
+            )
+
         config = types.GenerateContentConfig(**config_params)
+
+        # [V49.3] 비용 추적 시작
+        metric_id = None
+        if METRICS_ENABLED:
+            try:
+                collector = get_metrics_collector()
+                metric_id = collector.start_call(self.agent_name, self.primary_model)
+            except Exception:
+                pass  # 메트릭 실패가 본 작업에 영향 주지 않음
 
         try:
             # 🔒 Circuit Breaker: 최대 5회 시도 (API 비용 폭증 방지)
@@ -129,7 +183,22 @@ class BaseAgent:
                     time.sleep(1)
                 else:
                     break
-            
+
+            # [V49.3] 비용 추적 종료 (성공)
+            if METRICS_ENABLED and metric_id:
+                try:
+                    collector = get_metrics_collector()
+                    input_tokens = collector.estimate_tokens(base_prompt, is_input=True)
+                    output_tokens = collector.estimate_tokens(full_response, is_input=False)
+                    collector.end_call(
+                        metric_id,
+                        success=True,
+                        input_tokens=input_tokens,
+                        output_tokens=output_tokens
+                    )
+                except Exception:
+                    pass
+
             return full_response
 
         except Exception as e:
@@ -137,6 +206,22 @@ class BaseAgent:
             error_type = self._classify_error(e)
             self.last_error_type = error_type
             print(f"      ⚠️ [Warning] 모델 실패 ({error_type}), 백업 가동: {str(e)[:50]}")
+
+            # [V49.3] 비용 추적 종료 (실패, 백업 시도 전)
+            if METRICS_ENABLED and metric_id:
+                try:
+                    collector = get_metrics_collector()
+                    input_tokens = collector.estimate_tokens(base_prompt, is_input=True)
+                    output_tokens = collector.estimate_tokens(full_response, is_input=False) if full_response else 0
+                    collector.end_call(
+                        metric_id,
+                        success=False,
+                        input_tokens=input_tokens,
+                        output_tokens=output_tokens,
+                        error_type=error_type
+                    )
+                except Exception:
+                    pass
 
             # 부분 응답이 있으면 저장
             if full_response:
@@ -153,12 +238,36 @@ class BaseAgent:
                 }
                 backup_config = types.GenerateContentConfig(**backup_config_params)
 
+                # [V49.3] 백업 모델 비용 추적 시작
+                backup_metric_id = None
+                if METRICS_ENABLED:
+                    try:
+                        collector = get_metrics_collector()
+                        backup_metric_id = collector.start_call(f"{self.agent_name}_Backup", self.backup_model)
+                    except Exception:
+                        pass
+
                 res = self.client.models.generate_content(
                     model=self.backup_model,
                     contents=base_prompt,
                     config=backup_config
                 )
                 backup_text = res.text if res.text else ""
+
+                # [V49.3] 백업 모델 비용 추적 종료
+                if METRICS_ENABLED and backup_metric_id:
+                    try:
+                        collector = get_metrics_collector()
+                        input_tokens = collector.estimate_tokens(base_prompt, is_input=True)
+                        output_tokens = collector.estimate_tokens(backup_text, is_input=False)
+                        collector.end_call(
+                            backup_metric_id,
+                            success=bool(backup_text),
+                            input_tokens=input_tokens,
+                            output_tokens=output_tokens
+                        )
+                    except Exception:
+                        pass
 
                 # [V44] 응답 검증
                 if backup_text:

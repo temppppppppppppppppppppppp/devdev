@@ -1,0 +1,430 @@
+"""
+[V60.12] Preflight Checker
+생성 전 완벽한 제약 맵 구축 - 모든 이전 Arc를 철저히 분석
+
+목적:
+- 생성 전에 모든 제약 조건을 LLM이 완벽히 이해하도록 함
+- 단순 목록이 아닌 "왜 금지인지" 맥락까지 제공
+- 초기 통과율 극대화
+
+비용: ~$0.03-0.05/Arc (gemini-2.5-pro 사용)
+"""
+
+import json
+import re
+from typing import Dict, List, Any, Optional
+from .base_agent import BaseAgent
+
+
+PREFLIGHT_ANALYSIS_PROMPT = """
+[V60.12 PREFLIGHT CHECKER - 생성 전 완벽 분석]
+
+당신은 Arc 생성 전 모든 제약 조건을 분석하는 전문가입니다.
+다음 Arc를 설계하기 위해 이전 Arc들을 철저히 분석하세요.
+
+### 분석 대상: Arc 1 ~ Arc {prev_arc_count}
+
+{prev_arcs_data}
+
+### 분석 지시
+
+1. **아이템 타임라인 완전 분석**
+   - 각 Arc에서 획득한 모든 아이템 (언제, 어디서, 어떻게)
+   - 현재 주인공이 소지 중인 아이템 전체 목록
+   - 소모/분실된 아이템과 그 시점
+
+2. **수여물/권한 타임라인**
+   - 누구에게 무엇을 수여받았는지
+   - 수여 후 위상 변화
+   - 현재 보유 중인 모든 수여물
+
+3. **관계 상태 맵**
+   - 주요 NPC별 현재 관계 상태
+   - 관계 변화 이력 (언제, 왜 변했는지)
+
+4. **세계 상태**
+   - 현재 위치
+   - 알려진 정보
+   - 진행 중인 갈등/사건
+
+5. **다음 Arc 절대 금지 사항**
+   - 이미 획득한 아이템 재획득 시도
+   - 이미 수여받은 것 재수여
+   - 위치 순간이동
+   - 부상 무시
+
+### 출력 형식 (JSON)
+
+{{
+    "timeline_analysis": {{
+        "items": [
+            {{"arc": 1, "episode": 2, "item": "대도", "action": "획득", "context": "장로에게서 하사"}}
+        ],
+        "grants": [
+            {{"arc": 2, "episode": 4, "grant": "철혈사자패", "grantor": "단주", "significance": "정식 단원 인정"}}
+        ],
+        "current_inventory": ["대도", "철혈사자패", "금창약"],
+        "consumed_items": []
+    }},
+    "relationship_map": {{
+        "단주": {{"current_state": "경외", "history": ["Arc1: 무시 → Arc2: 인정"]}},
+        "장로": {{"current_state": "신뢰", "history": ["Arc1: 의심 → 신뢰"]}}
+    }},
+    "world_state": {{
+        "current_location": "철혈단 본거지",
+        "known_information": ["적대 세력의 침입 계획"],
+        "ongoing_conflicts": ["철혈단 vs 흑풍문"],
+        "protagonist_status": {{
+            "injuries": "왼팔 경상 (Arc 2에서 부상)",
+            "internal_energy": 85,
+            "martial_level": "일류 초입"
+        }}
+    }},
+    "absolute_prohibitions": {{
+        "items_cannot_acquire": [
+            {{"item": "대도", "reason": "Arc 1 제2화에서 이미 획득", "violation_type": "DUPLICATE_ACQUISITION"}}
+        ],
+        "grants_cannot_receive": [
+            {{"grant": "철혈사자패", "reason": "Arc 2 제4화에서 이미 수여받음", "violation_type": "DUPLICATE_GRANT"}}
+        ],
+        "state_constraints": [
+            {{"constraint": "Arc 시작 위치는 '철혈단 본거지'여야 함", "reason": "Arc 2 종료 위치"}},
+            {{"constraint": "왼팔 경상 상태로 시작", "reason": "Arc 2 종료 시 부상 상태"}}
+        ]
+    }},
+    "next_arc_guidance": {{
+        "must_start_with": "철혈단 본거지에서 왼팔 경상 상태로",
+        "recommended_focus": "흑풍문과의 갈등 심화 또는 내부 음모",
+        "available_resources": ["대도", "철혈사자패", "금창약"],
+        "potential_new_acquisitions": ["새로운 무공 비급", "정보", "동료"],
+        "warning": "절대로 이미 가진 것을 다시 획득하지 마세요"
+    }}
+}}
+
+반드시 유효한 JSON만 출력하세요.
+"""
+
+
+class PreflightChecker(BaseAgent):
+    """
+    [V60.12] Preflight Checker
+
+    생성 전 모든 이전 Arc를 분석하여 완벽한 제약 맵 구축
+    """
+
+    def __init__(self, context, client, model_tier: str = "gemini-3-flash-preview"):
+        # [V60.24] Flash로 변경 (분석용)
+        super().__init__(context, client, model_tier)
+        self.backup_model = "gemini-3-pro-preview"  # 실패 시 Pro 폴백
+
+    def analyze(self, prev_arcs: List[Dict]) -> Dict:
+        """
+        이전 Arc들을 완전 분석하여 제약 맵 생성
+
+        Args:
+            prev_arcs: 이전 Arc 리스트
+
+        Returns:
+            완벽한 제약 맵 딕셔너리
+        """
+        if not prev_arcs:
+            return self._get_initial_state()
+
+        # 이전 Arc 데이터 포맷팅
+        prev_arcs_data = self._format_prev_arcs(prev_arcs)
+
+        prompt = PREFLIGHT_ANALYSIS_PROMPT.format(
+            prev_arc_count=len(prev_arcs),
+            prev_arcs_data=prev_arcs_data
+        )
+
+        try:
+            result = self.ask(prompt, temperature=0.2)  # 낮은 온도로 정확성 우선
+
+            if isinstance(result, str):
+                result = json.loads(result)
+
+            # 필수 필드 보장
+            result = self._ensure_required_fields(result)
+
+            return result
+
+        except Exception as e:
+            print(f"      ⚠️ [Preflight] 분석 오류: {str(e)[:50]}")
+            return self._extract_constraints_fallback(prev_arcs)
+
+    def _format_prev_arcs(self, prev_arcs: List[Dict]) -> str:
+        """이전 Arc 데이터를 분석용 텍스트로 포맷팅"""
+        lines = []
+
+        for arc in prev_arcs:
+            arc_no = arc.get("arc_no", "?")
+            lines.append(f"\n{'='*60}")
+            lines.append(f"[ARC {arc_no}]")
+            lines.append(f"{'='*60}")
+
+            # tactical_doc
+            tactical = arc.get("tactical_doc", "")
+            if tactical:
+                # 너무 길면 요약
+                if len(tactical) > 3000:
+                    tactical = tactical[:1500] + "\n...(중략)...\n" + tactical[-1500:]
+                lines.append(f"\n[전술 문서]\n{tactical}")
+
+            # state_constraints
+            state = arc.get("state_constraints", {})
+            if state:
+                lines.append(f"\n[상태 제약]\n{json.dumps(state, ensure_ascii=False, indent=2)}")
+
+            # joint_docs
+            joint = arc.get("joint_docs", {})
+            if joint:
+                lines.append(f"\n[연결 문서]\n{json.dumps(joint, ensure_ascii=False, indent=2)}")
+
+            # status_shadow
+            shadow = arc.get("status_shadow", {})
+            if shadow:
+                lines.append(f"\n[상태 그림자]\n{json.dumps(shadow, ensure_ascii=False, indent=2)}")
+
+        return "\n".join(lines)
+
+    def _ensure_required_fields(self, result: Dict) -> Dict:
+        """필수 필드 보장"""
+        if "timeline_analysis" not in result:
+            result["timeline_analysis"] = {
+                "items": [],
+                "grants": [],
+                "current_inventory": [],
+                "consumed_items": []
+            }
+
+        if "relationship_map" not in result:
+            result["relationship_map"] = {}
+
+        if "world_state" not in result:
+            result["world_state"] = {
+                "current_location": "알 수 없음",
+                "known_information": [],
+                "ongoing_conflicts": [],
+                "protagonist_status": {}
+            }
+
+        if "absolute_prohibitions" not in result:
+            result["absolute_prohibitions"] = {
+                "items_cannot_acquire": [],
+                "grants_cannot_receive": [],
+                "state_constraints": []
+            }
+
+        if "next_arc_guidance" not in result:
+            result["next_arc_guidance"] = {
+                "must_start_with": "",
+                "recommended_focus": "",
+                "available_resources": [],
+                "potential_new_acquisitions": [],
+                "warning": ""
+            }
+
+        return result
+
+    def _get_initial_state(self) -> Dict:
+        """첫 Arc용 초기 상태"""
+        return {
+            "timeline_analysis": {
+                "items": [],
+                "grants": [],
+                "current_inventory": [],
+                "consumed_items": []
+            },
+            "relationship_map": {},
+            "world_state": {
+                "current_location": "서사 시작점",
+                "known_information": [],
+                "ongoing_conflicts": [],
+                "protagonist_status": {
+                    "injuries": "없음",
+                    "internal_energy": 100,
+                    "martial_level": "초기"
+                }
+            },
+            "absolute_prohibitions": {
+                "items_cannot_acquire": [],
+                "grants_cannot_receive": [],
+                "state_constraints": []
+            },
+            "next_arc_guidance": {
+                "must_start_with": "서사 시작점에서 출발",
+                "recommended_focus": "세계관 소개 + 주인공 소개 + 첫 갈등",
+                "available_resources": [],
+                "potential_new_acquisitions": ["첫 무기", "첫 동료", "첫 적"],
+                "warning": "첫 Arc이므로 과도한 파워업 금지"
+            }
+        }
+
+    def _extract_constraints_fallback(self, prev_arcs: List[Dict]) -> Dict:
+        """LLM 실패 시 Python 폴백으로 제약 추출"""
+        items = set()
+        grants = set()
+        last_location = "알 수 없음"
+        last_injuries = "없음"
+        last_energy = 100
+
+        for arc in prev_arcs:
+            # items_acquired
+            acquired = arc.get("state_constraints", {}).get("items_acquired", [])
+            if isinstance(acquired, list):
+                items.update(acquired)
+
+            # grants_received
+            received = arc.get("state_constraints", {}).get("grants_received", [])
+            if isinstance(received, list):
+                grants.update(received)
+
+            # 마지막 위치
+            joint = arc.get("joint_docs", {})
+            if joint.get("final_location"):
+                last_location = joint["final_location"]
+
+            # [V60.13 FIX] arc_end_state 우선 사용
+            state_constraints = arc.get("state_constraints", {})
+            arc_end_state = state_constraints.get("arc_end_state", {})
+            shadow = arc.get("status_shadow", {})
+
+            # 내공: arc_end_state 우선
+            if arc_end_state.get("internal_energy") is not None:
+                last_energy = arc_end_state["internal_energy"]
+            elif shadow.get("internal_energy_loss"):
+                try:
+                    loss = int(re.search(r'(\d+)', str(shadow["internal_energy_loss"])).group(1))
+                    last_energy = max(0, last_energy - loss)
+                except:
+                    pass
+
+            # 부상: arc_end_state 우선
+            if arc_end_state.get("injuries"):
+                last_injuries = arc_end_state["injuries"]
+            elif shadow.get("expected_injuries"):
+                last_injuries = shadow["expected_injuries"]
+
+        return {
+            "timeline_analysis": {
+                "items": [{"item": i, "action": "획득"} for i in items],
+                "grants": [{"grant": g} for g in grants],
+                "current_inventory": list(items),
+                "consumed_items": []
+            },
+            "relationship_map": {},
+            "world_state": {
+                "current_location": last_location,
+                "known_information": [],
+                "ongoing_conflicts": [],
+                "protagonist_status": {
+                    "injuries": last_injuries,
+                    "internal_energy": last_energy
+                }
+            },
+            "absolute_prohibitions": {
+                "items_cannot_acquire": [{"item": i, "reason": "이미 획득", "violation_type": "DUPLICATE_ACQUISITION"} for i in items],
+                "grants_cannot_receive": [{"grant": g, "reason": "이미 수여받음", "violation_type": "DUPLICATE_GRANT"} for g in grants],
+                "state_constraints": [
+                    {"constraint": f"시작 위치: {last_location}", "reason": "이전 Arc 종료 위치"},
+                    {"constraint": f"부상 상태: {last_injuries}", "reason": "이전 Arc 종료 시 상태"}
+                ]
+            },
+            "next_arc_guidance": {
+                "must_start_with": f"{last_location}에서 시작",
+                "available_resources": list(items),
+                "warning": "이미 획득한 아이템 재획득 금지"
+            }
+        }
+
+    def generate_analyst_injection(self, preflight_result: Dict) -> str:
+        """Analyst 프롬프트에 주입할 제약 텍스트 생성"""
+        # 절대 금지 사항
+        prohibitions = preflight_result.get("absolute_prohibitions", {})
+        items_forbidden = prohibitions.get("items_cannot_acquire", [])
+
+        lines = []
+
+        # [V60.28] 금지 아이템이 있으면 최상단에 대형 경고
+        if items_forbidden:
+            lines.append("")
+            lines.append("█" * 72)
+            lines.append("█" + " " * 70 + "█")
+            lines.append("█" + "  🚨🚨🚨 절대 획득 금지 아이템 🚨🚨🚨  ".center(70) + "█")
+            lines.append("█" + " " * 70 + "█")
+            lines.append("█" * 72)
+            lines.append("")
+            for item in items_forbidden:
+                item_name = item.get("item", item) if isinstance(item, dict) else item
+                lines.append(f"  ❌ '{item_name}' → items_acquired에 포함 시 즉시 REJECT!")
+            lines.append("")
+            lines.append("█" * 72)
+            lines.append("")
+
+        lines.append("╔" + "═" * 70 + "╗")
+        lines.append("║" + " [V60.12 PREFLIGHT ANALYSIS - 생성 전 필수 확인] ".center(70) + "║")
+        lines.append("╚" + "═" * 70 + "╝")
+        lines.append("")
+
+        lines.append("🚫 [절대 금지 - 위반 시 즉시 REJECT]")
+        lines.append("-" * 50)
+
+        # 아이템 금지 (상세)
+        if items_forbidden:
+            lines.append("❌ 다음 아이템 획득 금지 (이미 보유 중):")
+            for item in items_forbidden:
+                item_name = item.get("item", item) if isinstance(item, dict) else item
+                reason = item.get("reason", "") if isinstance(item, dict) else ""
+                lines.append(f"   • {item_name} - {reason}")
+
+        # 수여물 금지
+        grants_forbidden = prohibitions.get("grants_cannot_receive", [])
+        if grants_forbidden:
+            lines.append("❌ 다음 수여물 재수여 금지:")
+            for grant in grants_forbidden:
+                grant_name = grant.get("grant", grant) if isinstance(grant, dict) else grant
+                reason = grant.get("reason", "") if isinstance(grant, dict) else ""
+                lines.append(f"   • {grant_name} - {reason}")
+
+        lines.append("")
+
+        # 필수 계승 상태
+        world = preflight_result.get("world_state", {})
+        guidance = preflight_result.get("next_arc_guidance", {})
+
+        lines.append("📋 [필수 계승 상태]")
+        lines.append("-" * 50)
+        lines.append(f"🗺️ 시작 위치: {world.get('current_location', '알 수 없음')}")
+
+        status = world.get("protagonist_status", {})
+        if status.get("injuries") and status["injuries"] != "없음":
+            lines.append(f"💔 부상 상태: {status['injuries']}")
+        lines.append(f"⚡ 내공: {status.get('internal_energy', 100)}%")
+
+        inventory = preflight_result.get("timeline_analysis", {}).get("current_inventory", [])
+        if inventory:
+            lines.append(f"📦 소지품: {', '.join(inventory[:10])}")
+
+        lines.append("")
+
+        # 가이드
+        lines.append("💡 [다음 Arc 가이드]")
+        lines.append("-" * 50)
+        if guidance.get("must_start_with"):
+            lines.append(f"시작: {guidance['must_start_with']}")
+        if guidance.get("recommended_focus"):
+            lines.append(f"권장: {guidance['recommended_focus']}")
+        if guidance.get("potential_new_acquisitions"):
+            lines.append(f"획득 가능: {', '.join(guidance['potential_new_acquisitions'][:5])}")
+        if guidance.get("warning"):
+            lines.append(f"⚠️ 경고: {guidance['warning']}")
+
+        lines.append("")
+
+        return "\n".join(lines)
+
+
+def create_preflight_checker(context, client, model_tier: str = "gemini-3-pro-preview"):
+    """[V60.24] PreflightChecker 생성 헬퍼 - Gemini 3 사용"""
+    return PreflightChecker(context, client, model_tier)

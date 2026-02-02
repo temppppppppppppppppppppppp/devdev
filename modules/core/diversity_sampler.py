@@ -340,9 +340,10 @@ class DiversitySampler:
 
 class ConditionalDiversitySampler:
     """
-    조건부 Diversity Sampling
+    [V57] 조건부 Diversity Sampling
 
     Pattern Tracker와 연동하여 필요시에만 활성화
+    패턴 심각도에 따라 동적으로 샘플 수 조정
     """
 
     def __init__(self, pattern_tracker=None, reference_texts: List[str] = None):
@@ -370,19 +371,97 @@ class ConditionalDiversitySampler:
 
         return self.pattern_tracker.should_activate_diversity_sampling()
 
+    def _calculate_dynamic_samples(self, base_samples: int = 3) -> Tuple[int, str]:
+        """
+        [V57] 패턴 심각도에 따른 동적 샘플 수 계산
+
+        심각도 레벨:
+        - NONE (0): 샘플링 비활성화 → 1개
+        - LOW (1): 경미한 반복 → 2개
+        - MEDIUM (2): 중간 반복 → 3개 (기본)
+        - HIGH (3): 심각한 반복 → 4개
+        - CRITICAL (4): 위험 수준 → 5개
+
+        Returns:
+            (샘플 수, 심각도 레벨 설명)
+        """
+        if self.pattern_tracker is None:
+            return base_samples, "MEDIUM (기본값)"
+
+        # PatternTracker에서 심각도 수준 조회
+        severity = self._get_pattern_severity()
+
+        severity_to_samples = {
+            "NONE": (1, "NONE - 단일 생성"),
+            "LOW": (2, "LOW - 경미한 반복"),
+            "MEDIUM": (3, "MEDIUM - 중간 반복"),
+            "HIGH": (4, "HIGH - 심각한 반복"),
+            "CRITICAL": (5, "CRITICAL - 위험 수준")
+        }
+
+        return severity_to_samples.get(severity, (base_samples, "MEDIUM (기본값)"))
+
+    def _get_pattern_severity(self) -> str:
+        """
+        [V57] PatternTracker에서 패턴 심각도 레벨 조회
+
+        반환 레벨:
+        - NONE: 패턴 없음
+        - LOW: 1-2개 패턴 감지
+        - MEDIUM: 3-4개 패턴 감지
+        - HIGH: 5-6개 패턴 감지
+        - CRITICAL: 7개 이상 패턴 감지
+        """
+        if self.pattern_tracker is None:
+            return "MEDIUM"
+
+        try:
+            # PatternTracker의 분석 결과 조회
+            if hasattr(self.pattern_tracker, 'get_severity_level'):
+                return self.pattern_tracker.get_severity_level()
+
+            if hasattr(self.pattern_tracker, 'pattern_flags'):
+                flags = self.pattern_tracker.pattern_flags
+                count = sum(1 for v in flags.values() if v)
+
+                if count == 0:
+                    return "NONE"
+                elif count <= 2:
+                    return "LOW"
+                elif count <= 4:
+                    return "MEDIUM"
+                elif count <= 6:
+                    return "HIGH"
+                else:
+                    return "CRITICAL"
+
+            # should_activate 결과로 대체
+            should_activate, reason = self.pattern_tracker.should_activate_diversity_sampling()
+            if not should_activate:
+                return "NONE"
+            elif "심각" in reason or "위험" in reason or "반복" in reason:
+                return "HIGH"
+            else:
+                return "MEDIUM"
+
+        except Exception:
+            return "MEDIUM"
+
     def sample_or_single(
         self,
         generator_fn: Callable,
         n_samples: int = 3,
-        force: bool = False
+        force: bool = False,
+        use_dynamic_samples: bool = True  # [V57] 동적 샘플링 활성화
     ) -> Tuple[any, Dict]:
         """
-        조건에 따라 샘플링 또는 단일 생성
+        [V57] 조건에 따라 샘플링 또는 단일 생성
 
         Args:
             generator_fn: 생성 함수
-            n_samples: 샘플 수
+            n_samples: 기본 샘플 수 (동적 샘플링 비활성화 시 사용)
             force: 강제 활성화
+            use_dynamic_samples: [V57] 패턴 심각도 기반 동적 샘플링 활성화
 
         Returns:
             (결과, 메타데이터)
@@ -390,8 +469,16 @@ class ConditionalDiversitySampler:
         should_sample, reason = self.should_sample()
 
         if force or should_sample:
-            print(f"      [ConditionalSampler] Diversity Sampling 활성화: {reason}")
-            return self.sampler.sample_and_select(generator_fn, n_samples)
+            # [V57] 동적 샘플 수 계산
+            if use_dynamic_samples:
+                actual_samples, severity_desc = self._calculate_dynamic_samples(n_samples)
+                print(f"      [ConditionalSampler] Diversity Sampling 활성화: {reason}")
+                print(f"      [V57] 동적 샘플 수: {actual_samples}개 ({severity_desc})")
+            else:
+                actual_samples = n_samples
+                print(f"      [ConditionalSampler] Diversity Sampling 활성화: {reason}")
+
+            return self.sampler.sample_and_select(generator_fn, actual_samples)
         else:
             print(f"      [ConditionalSampler] 단일 생성 모드: {reason}")
             result = generator_fn()
@@ -401,21 +488,32 @@ class ConditionalDiversitySampler:
         self,
         generator_fn: Callable,
         n_samples: int = 3,
-        force: bool = True  # Stage 3는 기본 활성화
+        force: bool = True,  # Stage 3는 기본 활성화
+        use_dynamic_samples: bool = True  # [V57] 동적 샘플링 활성화
     ) -> Tuple[dict, Dict]:
         """
-        블루프린트 조건부 샘플링
+        [V57] 블루프린트 조건부 샘플링
 
         Stage 3 (Architect)는 기본적으로 force=True
+        패턴 심각도에 따라 동적으로 샘플 수 조정
         """
+        # [V57] 동적 샘플 수 계산
+        if use_dynamic_samples and (force or self.should_sample()[0]):
+            actual_samples, severity_desc = self._calculate_dynamic_samples(n_samples)
+        else:
+            actual_samples = n_samples
+            severity_desc = "고정"
+
         if force:
             print(f"      [ConditionalSampler] Blueprint Diversity Sampling (Stage 3 기본)")
-            return self.sampler.sample_blueprints(generator_fn, n_samples)
+            print(f"      [V57] 동적 샘플 수: {actual_samples}개 ({severity_desc})")
+            return self.sampler.sample_blueprints(generator_fn, actual_samples)
         else:
             should_sample, reason = self.should_sample()
             if should_sample:
                 print(f"      [ConditionalSampler] Blueprint Diversity Sampling 활성화: {reason}")
-                return self.sampler.sample_blueprints(generator_fn, n_samples)
+                print(f"      [V57] 동적 샘플 수: {actual_samples}개 ({severity_desc})")
+                return self.sampler.sample_blueprints(generator_fn, actual_samples)
             else:
                 result = generator_fn()
                 return result, {'mode': 'single', 'reason': reason}

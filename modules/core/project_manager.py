@@ -628,9 +628,41 @@ class ProjectContext:
         try:
             with open(bible_path, 'r', encoding='utf-8') as f:
                 bible_data = json.load(f)
-            
+
             with open(treatment_path, 'r', encoding='utf-8') as f:
                 treatment_data = json.load(f)
+
+            # [V49.3] Phase 0 JSON 스키마 검증
+            try:
+                from modules.core.response_schemas import validate_phase0_files
+                is_valid, report = validate_phase0_files(bible_data, treatment_data)
+
+                # 검증 결과 출력
+                print(f"📋 [V49.3] Phase 0 파일 검증 결과:")
+                print(f"   Bible: {'✅ 유효' if report['bible']['valid'] else '❌ 오류'}")
+                if report['bible']['errors']:
+                    for err in report['bible']['errors']:
+                        print(f"      ❌ {err}")
+                if report['bible']['warnings']:
+                    for warn in report['bible']['warnings']:
+                        print(f"      ⚠️ {warn}")
+
+                print(f"   Treatment: {'✅ 유효' if report['treatment']['valid'] else '❌ 오류'} ({report['treatment']['block_count']}개 블록)")
+                if report['treatment']['errors']:
+                    for err in report['treatment']['errors']:
+                        print(f"      ❌ {err}")
+                if report['treatment']['warnings']:
+                    for warn in report['treatment']['warnings'][:5]:  # 최대 5개만 표시
+                        print(f"      ⚠️ {warn}")
+                    if len(report['treatment']['warnings']) > 5:
+                        print(f"      ⚠️ ... 외 {len(report['treatment']['warnings'])-5}개 경고")
+
+                if not is_valid:
+                    print(f"🚨 [V49.3] 파일 검증 실패. Phase 0을 중단합니다.")
+                    print(f"   → Bible 또는 Treatment 파일 구조를 확인하세요.")
+                    return False
+            except ImportError:
+                print(f"⚠️ [V49.3] 스키마 검증 모듈 로드 실패. 검증 없이 진행합니다.")
 
             # 2. MasterBible 루트 확보 (포장지가 있든 없든 대응)
             master_bible = bible_data.get("MasterBible", bible_data)

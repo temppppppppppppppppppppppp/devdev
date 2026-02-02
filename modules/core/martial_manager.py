@@ -290,28 +290,71 @@ class MartialManager:
                 if canonical_key in ['misunderstanding', 'obsession', 'internal_energy']:
                     raw_str_val = str(val).strip()
 
+                    # [V60.22] 현재 값 가져오기 (델타 계산용)
+                    current_val = actual.get(canonical_key)
+                    if current_val is not None:
+                        try:
+                            current_val = float(current_val)
+                        except (ValueError, TypeError):
+                            current_val = None
+
                     # [V40.1 Critical Fix] guard가 None일 경우 대비
                     if self.context.guard is None:
                         # guard 없이 직접 변환 시도
                         try:
-                            numeric_res = float(raw_str_val)
+                            # [V60.22] 델타값 처리
+                            if raw_str_val.startswith(('+', '-')) and current_val is not None:
+                                delta = float(raw_str_val)
+                                numeric_res = max(0, min(100, current_val + delta))
+                            elif raw_str_val in ["현상유지", "현상 유지", "유지"]:
+                                numeric_res = current_val if current_val is not None else 0
+                            else:
+                                numeric_res = float(raw_str_val.replace('%', ''))
                         except (ValueError, TypeError):
-                            numeric_res = 0
+                            numeric_res = current_val if current_val is not None else 0
                     else:
-                        # [V44] guard.convert_to_numeric 안전화
+                        # [V60.22] guard.convert_to_numeric에 현재 값 전달
                         try:
-                            numeric_res = self.context.guard.convert_to_numeric(raw_str_val)
+                            numeric_res = self.context.guard.convert_to_numeric(raw_str_val, current_val)
                             if numeric_res is None:
-                                numeric_res = 0
+                                numeric_res = current_val if current_val is not None else 0
                         except (ValueError, TypeError, AttributeError):
-                            numeric_res = 0
+                            numeric_res = current_val if current_val is not None else 0
 
                     # 변환 결과가 0이지만, 원본이 실제 숫자 '0' 계열이 아닌 경우 텍스트 보존
-                    if numeric_res == 0 and raw_str_val not in ["0", "0.0", "영", "없음"]:
+                    if numeric_res == 0 and raw_str_val not in ["0", "0.0", "0%", "영", "없음", "고갈", "전무"]:
+                        # [V60.22] "현상 유지" 등은 현재 값 유지
+                        if raw_str_val in ["현상유지", "현상 유지", "유지", "변화없음"]:
+                            val = current_val if current_val is not None else 0
                         # 수치화할 수 없는 고유 묘사(예: "매우 높음")는 문자열 그대로 유지
                         pass
                     else:
                         val = numeric_res
+
+                # [V60.23] 내공 바닥 방지 - 무협 주인공이 0%로 5화 연속은 서사적으로 불가능
+                if canonical_key == 'internal_energy' and isinstance(val, (int, float)):
+                    # 내공 0% 연속 카운터 체크
+                    zero_streak = actual.get('_internal_energy_zero_streak', 0)
+
+                    if val <= 5:  # 5% 이하면 "바닥" 상태
+                        zero_streak += 1
+                        actual['_internal_energy_zero_streak'] = zero_streak
+
+                        if zero_streak >= 3:
+                            # 3화 연속 바닥이면 강제 회복 (휴식/조식 묘사 가정)
+                            val = max(val, 20)  # 최소 20%로 강제 회복
+                            update_logs.append(f"⚠️ [V60.23] 내공 {zero_streak}화 연속 바닥 → 강제 회복 20%")
+                        elif zero_streak >= 2:
+                            # 2화 연속이면 경고만
+                            update_logs.append(f"⚠️ [V60.23] 내공 2화 연속 바닥 - 회복 장면 필요")
+                    else:
+                        # 바닥 아니면 카운터 리셋
+                        actual['_internal_energy_zero_streak'] = 0
+
+                    # 절대 하한선: 살아있는 무협 주인공은 최소 5% (폐인 아닌 이상)
+                    if val < 5 and actual.get('causal_injuries', '') not in ['폐인', '사망', '식물인간']:
+                        val = 5
+                        update_logs.append(f"⚠️ [V60.23] 내공 하한선 적용 (5%)")
 
                 # 3단계: 실제 업데이트 수행
                 old_val = actual.get(canonical_key)
