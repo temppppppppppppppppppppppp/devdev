@@ -1,0 +1,72 @@
+{
+  "session_id": "20260203_081648",
+  "start_time": "2026-02-03T08:16:48.849654",
+  "end_time": "2026-02-03T08:47:52.275540",
+  "total_calls": 44,
+  "successful_calls": 44,
+  "failed_calls": 0,
+  "total_retries": 0,
+  "total_tokens": 398598,
+  "total_cost_usd": 1.4969,
+  "agent_stats": {
+    "Architect": {
+      "agent_name": "Architect",
+      "total_calls": 25,
+      "successful_calls": 25,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 51799.27247047424,
+        "min_ms": 46183.96067619324,
+        "max_ms": 60980.16262054443,
+        "p50_ms": 50705.517053604126,
+        "p90_ms": 57968.344020843506,
+        "p99_ms": 60526.47201538086
+      }
+    },
+    "ContinuityInspector": {
+      "agent_name": "ContinuityInspector",
+      "total_calls": 7,
+      "successful_calls": 7,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 26474.901369639807,
+        "min_ms": 21507.596492767334,
+        "max_ms": 31478.426456451416,
+        "p50_ms": 25826.59101486206,
+        "p90_ms": 30886.196994781494,
+        "p99_ms": 31419.203510284424
+      }
+    },
+    "Director": {
+      "agent_name": "Director",
+      "total_calls": 12,
+      "successful_calls": 12,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 31456.991096337635,
+        "min_ms": 19659.77954864502,
+        "max_ms": 45473.99616241455,
+        "p50_ms": 29132.672786712646,
+        "p90_ms": 40658.158564567566,
+        "p99_ms": 44960.62510728837
+      }
+    }
+  },
+  "model_stats": {
+    "gemini-3-pro-preview": {
+      "input_tokens": 331881,
+      "output_tokens": 66717,
+      "total_tokens": 398598,
+      "cost_usd": 1.4969
+    }
+  }
+}

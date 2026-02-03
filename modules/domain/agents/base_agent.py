@@ -43,13 +43,18 @@ class BaseAgent:
     }
 
     # [V60.37] 모델별 폴백 체인 정의 (할당량 초과 시)
+    # [V60.57] 개선: 2.0-flash 실패 시 2.5-flash로 업그레이드 (quota 회피)
     MODEL_FALLBACK_CHAIN = {
         "gemini-3-pro-preview": "gemini-2.5-pro",      # 3 Pro → 2.5 Pro
         "gemini-3-flash-preview": "gemini-2.5-flash",  # 3 Flash → 2.5 Flash
-        "gemini-2.5-pro": "gemini-2.0-flash",          # 2.5 Pro → 2.0 Flash
+        "gemini-2.5-pro": "gemini-2.5-flash",          # 2.5 Pro → 2.5 Flash (quota 분산)
         "gemini-2.5-flash": "gemini-2.0-flash",        # 2.5 Flash → 2.0 Flash
-        "gemini-2.0-flash": "gemini-2.0-flash",        # 2.0 Flash → 유지
+        "gemini-2.0-flash": "gemini-2.5-flash",        # [V60.57] 2.0 Flash → 2.5 Flash (quota 회피)
     }
+
+    # [V60.68] 쿼터 소진 모델 캐싱 (클래스 변수 - 세션 전체 공유)
+    _quota_exhausted_models = {}  # {model_name: exhausted_until_timestamp}
+    _QUOTA_CACHE_DURATION = 60    # 60초 동안 해당 모델 시도 스킵
 
     def __init__(self, context, client, model_tier="gemini-2.0-flash", enable_cascade=False):
         self.context = context
@@ -94,6 +99,37 @@ class BaseAgent:
         full_response = ""
         current_prompt = base_prompt
 
+        # [V60.66] 429 폴백용 모델 스택 (primary → fallbacks)
+        model_stack = [self.primary_model]
+        if self.backup_model and self.backup_model != self.primary_model:
+            model_stack.append(self.backup_model)
+        # 추가 폴백 체인 확장
+        next_fallback = self.MODEL_FALLBACK_CHAIN.get(self.backup_model)
+        if next_fallback and next_fallback not in model_stack:
+            model_stack.append(next_fallback)
+
+        # [V60.68] 쿼터 소진 모델 필터링 (세션 캐싱)
+        current_time = time.time()
+        available_models = []
+        for model in model_stack:
+            exhausted_until = self._quota_exhausted_models.get(model, 0)
+            if current_time >= exhausted_until:
+                available_models.append(model)
+            else:
+                remaining = int(exhausted_until - current_time)
+                # 첫 번째 모델(primary)이 스킵되는 경우에만 로그 출력
+                if model == self.primary_model:
+                    print(f"      ⏭️ [V60.68] {model} 쿼터 캐시 히트 - {remaining}초 남음, 스킵")
+
+        # [V60.68] 사용 가능한 모델이 있으면 그것으로 시작, 없으면 원래 스택 사용
+        if available_models:
+            model_stack = available_models
+            current_model = available_models[0]
+        else:
+            current_model = self.primary_model  # fallback: 원래대로
+
+        # [V60.66] 현재 사용 중인 모델 추적 (V60.68에서 업데이트됨)
+
         config_params = {
             "temperature": temperature,
             "max_output_tokens": 8192,
@@ -106,7 +142,8 @@ class BaseAgent:
             config_params["response_schema"] = response_schema
 
         # [V60.27] Gemini 3 Thinking Level 지원 (문자열 → 정수 변환)
-        if thinking_level and "gemini-3" in self.primary_model:
+        # [V60.66] 현재 모델 기준으로 thinking 지원 여부 체크
+        if thinking_level and "gemini-3" in current_model:
             # 문자열이면 정수로 변환, 이미 정수면 그대로 사용
             if isinstance(thinking_level, str):
                 budget = self.THINKING_BUDGET_MAP.get(thinking_level.lower(), 8192)
@@ -123,7 +160,7 @@ class BaseAgent:
         if METRICS_ENABLED:
             try:
                 collector = get_metrics_collector()
-                metric_id = collector.start_call(self.agent_name, self.primary_model)
+                metric_id = collector.start_call(self.agent_name, current_model)
             except Exception:
                 pass  # 메트릭 실패가 본 작업에 영향 주지 않음
 
@@ -132,12 +169,62 @@ class BaseAgent:
             MAX_CONTINUATIONS = 5
             WARN_THRESHOLD = 3
 
+            # [V60.66] 429 폴백 재시도 횟수
+            MAX_QUOTA_RETRIES = len(model_stack)
+            quota_retry_count = 0
+
             for attempt in range(MAX_CONTINUATIONS):
-                response = self.client.models.generate_content(
-                    model=self.primary_model,
-                    contents=current_prompt,
-                    config=config
-                )
+                try:
+                    response = self.client.models.generate_content(
+                        model=current_model,
+                        contents=current_prompt,
+                        config=config
+                    )
+                except Exception as api_error:
+                    # [V60.66] 429 쿼터 에러 감지 및 자동 모델 폴백
+                    error_str = str(api_error).lower()
+                    is_quota_error = "429" in error_str or "quota" in error_str or "resource_exhausted" in error_str or "rate" in error_str
+
+                    if is_quota_error and quota_retry_count < MAX_QUOTA_RETRIES - 1:
+                        quota_retry_count += 1
+                        # 다음 폴백 모델로 전환
+                        old_model = current_model
+                        current_model = model_stack[quota_retry_count] if quota_retry_count < len(model_stack) else model_stack[-1]
+
+                        # [V60.68] 쿼터 소진 모델 캐시 등록 (60초간 스킵)
+                        BaseAgent._quota_exhausted_models[old_model] = time.time() + BaseAgent._QUOTA_CACHE_DURATION
+                        print(f"      ⏭️ [V60.68] {old_model} 쿼터 소진 캐시 등록 ({BaseAgent._QUOTA_CACHE_DURATION}초)")
+
+                        print(f"      🔄 [V60.66 Quota Fallback] {old_model} 할당량 초과 → {current_model}로 전환 ({quota_retry_count}/{MAX_QUOTA_RETRIES-1})")
+
+                        # [V60.66] 폴백 모델용 config 재생성 (thinking 제거 - 2.5 모델은 미지원)
+                        fallback_config_params = {
+                            "temperature": temperature,
+                            "max_output_tokens": 8192,
+                            "top_p": 0.95,
+                            "response_mime_type": "application/json"
+                        }
+                        # thinking config는 gemini-3 모델에서만 지원
+                        if thinking_level and "gemini-3" in current_model:
+                            if isinstance(thinking_level, str):
+                                budget = self.THINKING_BUDGET_MAP.get(thinking_level.lower(), 8192)
+                            else:
+                                budget = int(thinking_level)
+                            fallback_config_params["thinking_config"] = types.ThinkingConfig(
+                                thinking_budget=budget
+                            )
+                        config = types.GenerateContentConfig(**fallback_config_params)
+
+                        # [V60.68] 캐시 히트로 대기 시간 제거 (기존 2초 → 0초)
+                        # time.sleep(2)  # 제거: 캐시로 인해 불필요
+                        response = self.client.models.generate_content(
+                            model=current_model,
+                            contents=current_prompt,
+                            config=config
+                        )
+                    else:
+                        # 폴백 불가 - 예외 재발생
+                        raise api_error
 
                 chunk = response.text if response.text else ""
 
@@ -215,7 +302,11 @@ class BaseAgent:
             # [V44] 에러 타입 분류 및 적절한 복구 전략 선택
             error_type = self._classify_error(e)
             self.last_error_type = error_type
-            print(f"      ⚠️ [Warning] 모델 실패 ({error_type}), 백업 가동: {str(e)[:50]}")
+            # [V60.66] 429 폴백이 인라인에서 이미 시도되었음을 표시
+            if error_type == AgentErrorType.QUOTA_EXCEEDED:
+                print(f"      🚨 [V60.66] 모든 폴백 모델 할당량 초과 ({model_stack}): {str(e)[:50]}")
+            else:
+                print(f"      ⚠️ [Warning] 모델 실패 ({error_type}), 백업 가동: {str(e)[:50]}")
 
             # [V49.3] 비용 추적 종료 (실패, 백업 시도 전)
             if METRICS_ENABLED and metric_id:

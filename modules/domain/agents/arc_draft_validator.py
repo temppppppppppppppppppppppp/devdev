@@ -1,19 +1,21 @@
 """
-[V60.11] Arc Draft Validator
-ContinuityInspector 호출 전 빠른 사전 검증
+[V60.56] Arc Draft Validator - Advisory Mode
+Python 사전 검증 → LLM에게 정보 제공용 (REJECT 권한 없음)
 
 목적:
-- LLM 비용이 비싼 ContinuityInspector 호출 전에 명백한 오류 필터링
-- Python 기반 빠른 검증 (LLM 비용 0원)
-- 90% 이상의 명백한 오류를 사전 차단
+- [V60.56 변경] Python은 정보 수집만, 최종 판정은 LLM(ConsensusValidator)에 위임
+- 소설은 컨텍스트가 중요하므로 LLM이 문맥을 보고 판단해야 함
+- Python 패턴 매칭의 오탐 문제 해결
 
-검증 항목:
+검증 항목 (모두 advisory - 정보 제공만):
 1. 필수 필드 존재 여부
 2. 중복 아이템 획득 (이전 Arc들에서 이미 획득한 것)
 3. 위치 연속성 (시작 위치 ≠ 이전 종료 위치)
 4. 부상 상태 연속성 (급격한 회복 없이)
 5. 수여물 타임라인 (수여 전 소지)
 6. tactical_doc 최소 분량
+
+[V60.56] valid는 항상 True, warnings만 수집하여 LLM에게 전달
 """
 
 import re
@@ -136,13 +138,18 @@ class ArcDraftValidator:
             score -= constraint_result["penalty"]
             critical_issues.extend(constraint_result["critical"])
 
-        # 최종 판정
-        is_valid = len(critical_issues) == 0 and score >= 50
+        # [V60.56] 최종 판정 - Python은 REJECT 권한 없음, 항상 valid=True
+        # critical_issues를 advisory_issues로 변환 (LLM에게 전달할 정보)
+        advisory_issues = critical_issues  # 기존 critical을 advisory로 변환
+
+        # [V60.56] 항상 valid=True, Python은 정보 제공만
+        is_valid = True  # REJECT 권한 제거
 
         return {
             "valid": is_valid,
             "score": max(0, score),
-            "critical_issues": critical_issues,
+            "critical_issues": [],  # [V60.56] 빈 리스트 (REJECT 안 함)
+            "advisory_issues": advisory_issues,  # [V60.56] LLM에게 전달할 정보
             "warnings": warnings,
             "suggestions": suggestions
         }

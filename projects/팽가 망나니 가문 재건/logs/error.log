@@ -1,0 +1,54 @@
+
+==================================================
+Time: 2026-02-03 04:35:34
+Traceback (most recent call last):
+  File "C:\Users\PC\Desktop\글도비\main_a.py", line 3425, in _run_main_process
+    self._stage_3_batch_blueprinting()
+  File "C:\Users\PC\Desktop\글도비\main_a.py", line 7151, in _stage_3_batch_blueprinting
+    director_result=audit_result,
+                    ^^^^^^^^^^^^
+NameError: name 'audit_result' is not defined
+
+==================================================
+Time: 2026-02-03 08:04:12
+Traceback (most recent call last):
+  File "C:\Users\PC\Desktop\글도비\main_a.py", line 3425, in _run_main_process
+    self._stage_3_batch_blueprinting()
+  File "C:\Users\PC\Desktop\글도비\main_a.py", line 7152, in _stage_3_batch_blueprinting
+    blueprint=bp,
+              ^^
+NameError: name 'bp' is not defined
+
+==================================================
+Time: 2026-02-03 08:16:31
+Traceback (most recent call last):
+  File "C:\Users\PC\Desktop\글도비\main_a.py", line 3422, in _run_main_process
+    self._stage_2_arcs()
+  File "C:\Users\PC\Desktop\글도비\main_a.py", line 3813, in _stage_2_arcs
+    asyncio.run(self._stage_2_arcs_async_logic())
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py", line 194, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\asyncio\base_events.py", line 684, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\PC\Desktop\글도비\main_a.py", line 3883, in _stage_2_arcs_async_logic
+    target_limit = self._get_int_input(
+                   ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\Desktop\글도비\main_a.py", line 5569, in _get_int_input
+    raw = input(prompt).strip()
+          ^^^^^^^^^^^^^
+EOFError
+
+==================================================
+Time: 2026-02-03 08:47:52
+Traceback (most recent call last):
+  File "C:\Users\PC\Desktop\글도비\main_a.py", line 3425, in _run_main_process
+    self._stage_3_batch_blueprinting()
+  File "C:\Users\PC\Desktop\글도비\main_a.py", line 7152, in _stage_3_batch_blueprinting
+    blueprint=blueprint_candidate,  # [V60.67 Fix] bp → blueprint_candidate
+              ^^
+NameError: name 'bp' is not defined

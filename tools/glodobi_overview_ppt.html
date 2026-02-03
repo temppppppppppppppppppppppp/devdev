@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>글도비 시스템 개요 - PPT Generator</title>
+    <script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            margin: 0;
+            padding: 60px 40px;
+            color: #fff;
+        }
+        .container { max-width: 600px; margin: 0 auto; }
+        h1 {
+            font-size: 2rem;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 50px;
+        }
+        .preview {
+            background: #111;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .preview h2 {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0 0 16px 0;
+        }
+        .slides {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            font-size: 0.8rem;
+            color: #888;
+        }
+        .slides span { color: #444; margin-right: 6px; }
+        button {
+            width: 100%;
+            padding: 16px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #fff;
+            color: #000;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.9; }
+        .note {
+            text-align: center;
+            color: #444;
+            font-size: 0.75rem;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>글도비 시스템 개요</h1>
+        <p class="subtitle">경영진 대상 프레젠테이션</p>
+
+        <div class="preview">
+            <h2>14 Slides</h2>
+            <div class="slides">
+                <div><span>01</span>타이틀</div>
+                <div><span>02</span>What is 글도비</div>
+                <div><span>03</span>Pipeline Overview</div>
+                <div><span>04</span>Stage 0: Setup</div>
+                <div><span>05</span>Stage 1: Strategy</div>
+                <div><span>06</span>Stage 2: Arc Design</div>
+                <div><span>07</span>Stage 3: Blueprint</div>
+                <div><span>08</span>Stage 4: Writing</div>
+                <div><span>09</span>AI Agents</div>
+                <div><span>10</span>Quality System</div>
+                <div><span>11</span>Key Technology</div>
+                <div><span>12</span>Cost & ROI</div>
+                <div><span>13</span>Supported Genres</div>
+                <div><span>14</span>Summary</div>
+            </div>
+        </div>
+
+        <button onclick="generatePPT()">Download .pptx</button>
+        <p class="note">Minimal & Modern Design</p>
+    </div>
+
+    <script>
+    function generatePPT() {
+        const pptx = new PptxGenJS();
+        pptx.author = 'Wuxia Studio';
+        pptx.title = '글도비 시스템 개요';
+
+        // 세련된 컬러 팔레트
+        const C = {
+            bg: '0D0D0D',
+            bgAlt: '161616',
+            bgCard: '1A1A1A',
+            white: 'FFFFFF',
+            gray: '888888',
+            grayLight: 'CCCCCC',
+            grayDark: '444444',
+            accent: '6366F1',    // 인디고
+            accentLight: '818CF8',
+            green: '22C55E',
+            blue: '3B82F6',
+            purple: 'A855F7',
+            orange: 'F97316',
+            pink: 'EC4899'
+        };
+
+        // 슬라이드 마스터 함수
+        function addSlide(title, subtitle) {
+            const slide = pptx.addSlide();
+            slide.background = { color: C.bg };
+
+            if (title) {
+                slide.addText(title, {
+                    x: 0.6, y: 0.5, w: 8.8, h: 0.6,
+                    fontSize: 28, fontFace: 'Arial', bold: true, color: C.white
+                });
+            }
+            if (subtitle) {
+                slide.addText(subtitle, {
+                    x: 0.6, y: 1.05, w: 8.8, h: 0.35,
+                    fontSize: 13, fontFace: 'Arial', color: C.gray
+                });
+            }
+            return slide;
+        }
+
+        // ========================================
+        // Slide 1: 타이틀
+        // ========================================
+        let slide = pptx.addSlide();
+        slide.background = { color: C.bg };
+
+        slide.addText('글도비', {
+            x: 0.6, y: 2.0, w: 8.8, h: 0.9,
+            fontSize: 56, fontFace: 'Arial', bold: true, color: C.white
+        });
+        slide.addText('AI-Powered Web Novel Generation System', {
+            x: 0.6, y: 2.85, w: 8.8, h: 0.45,
+            fontSize: 18, fontFace: 'Arial', color: C.gray
+        });
+
+        // 하단 인디케이터
+        slide.addShape(pptx.ShapeType.rect, {
+            x: 0.6, y: 4.8, w: 0.8, h: 0.04, fill: { color: C.accent }
+        });
+        slide.addText('Wuxia Studio V60', {
+            x: 0.6, y: 4.95, w: 3, h: 0.3,
+            fontSize: 10, fontFace: 'Arial', color: C.grayDark
+        });
+
+        // ========================================
+        // Slide 2: What is 글도비
+        // ========================================
+        slide = addSlide('What is 글도비', '');
+
+        slide.addText('AI가 웹소설을 쓴다', {
+            x: 0.6, y: 1.6, w: 8.8, h: 0.5,
+            fontSize: 20, fontFace: 'Arial', color: C.grayLight
+        });
+
+        slide.addText(
+            '설정집 하나로 500화 장편 소설을 자동 생성하는 시스템.\n' +
+            '5개의 전문화된 AI 에이전트가 협업하여\n' +
+            '설정 오류 없는 일관된 스토리를 만들어냅니다.',
+            {
+                x: 0.6, y: 2.2, w: 6, h: 1.2,
+                fontSize: 14, fontFace: 'Arial', color: C.gray, lineSpacingMultiple: 1.5
+            }
+        );
+
+        // 숫자 하이라이트
+        const nums = [
+            { n: '500+', label: '화 연재 가능', x: 0.6 },
+            { n: '90%', label: '비용 절감', x: 3.1 },
+            { n: '5', label: 'AI 에이전트', x: 5.6 },
+            { n: '<1%', label: '설정 오류율', x: 8.1 }
+        ];
+        nums.forEach(item => {
+            slide.addText(item.n, {
+                x: item.x, y: 3.8, w: 2, h: 0.5,
+                fontSize: 28, fontFace: 'Arial', bold: true, color: C.accent
+            });
+            slide.addText(item.label, {
+                x: item.x, y: 4.3, w: 2, h: 0.3,
+                fontSize: 11, fontFace: 'Arial', color: C.grayDark
+            });
+        });
+
+        // ========================================
+        // Slide 3: Pipeline Overview
+        // ========================================
+        slide = addSlide('Pipeline', '5-Stage Production Process');
+
+        const stages = [
+            { num: '0', name: 'Setup', color: C.grayDark },
+            { num: '1', name: 'Strategy', color: C.blue },
+            { num: '2', name: 'Arc', color: C.purple },
+            { num: '3', name: 'Blueprint', color: C.orange },
+            { num: '4', name: 'Write', color: C.green }
+        ];
+
+        stages.forEach((s, i) => {
+            const x = 0.6 + i * 1.9;
+
+            // 원형 넘버
+            slide.addShape(pptx.ShapeType.ellipse, {
+                x: x + 0.45, y: 1.8, w: 0.7, h: 0.7,
+                fill: { color: s.color }
+            });
+            slide.addText(s.num, {
+                x: x + 0.45, y: 1.85, w: 0.7, h: 0.6,
+                fontSize: 20, fontFace: 'Arial', bold: true, color: C.white, align: 'center', valign: 'middle'
+            });
+
+            slide.addText(s.name, {
+                x: x, y: 2.6, w: 1.6, h: 0.35,
+                fontSize: 13, fontFace: 'Arial', bold: true, color: C.white, align: 'center'
+            });
+
+            // 연결선
+            if (i < 4) {
+                slide.addShape(pptx.ShapeType.rect, {
+                    x: x + 1.45, y: 2.1, w: 0.5, h: 0.02,
+                    fill: { color: C.grayDark }
+                });
+            }
+        });
+
+        // 설명
+        const stageDesc = [
+            '세계관, 캐릭터\n설정 입력',
+            '10권 전체\n방향 설계',
+            '50개 Arc\n전술 설계',
+            '에피소드별\n씬 구성',
+            '최종 원고\n집필'
+        ];
+        stageDesc.forEach((desc, i) => {
+            slide.addText(desc, {
+                x: 0.6 + i * 1.9, y: 3.0, w: 1.6, h: 0.7,
+                fontSize: 10, fontFace: 'Arial', color: C.gray, align: 'center', lineSpacingMultiple: 1.3
+            });
+        });
+
+        // 하단 플로우
+        slide.addShape(pptx.ShapeType.rect, {
+            x: 0.6, y: 4.3, w: 8.8, h: 0.6,
+            fill: { color: C.bgCard }
+        });
+        slide.addText('Input: 설정집 (JSON)    →    Process: AI 협업    →    Output: 원고 (4,000~8,000자/화)', {
+            x: 0.6, y: 4.4, w: 8.8, h: 0.4,
+            fontSize: 11, fontFace: 'Arial', color: C.gray, align: 'center'
+        });
+
+        // ========================================
+        // Slide 4: Stage 0 - Setup
+        // ========================================
+        slide = addSlide('Stage 0', 'Setup — 설정집 로드');
+
+        slide.addText('입력', {
+            x: 0.6, y: 1.6, w: 4, h: 0.3,
+            fontSize: 11, fontFace: 'Arial', bold: true, color: C.grayDark, charSpacing: 2
+        });
+
+        const inputs = ['세계관 설정', '주인공 정보', 'NPC 목록', '능력 체계', '핵심 아이템'];
+        inputs.forEach((t, i) => {
+            slide.addText(t, {
+                x: 0.6, y: 1.95 + i * 0.38, w: 4, h: 0.35,
+                fontSize: 13, fontFace: 'Arial', color: C.grayLight
+            });
+        });
+
+        slide.addText('처리', {
+            x: 5.4, y: 1.6, w: 4, h: 0.3,
+            fontSize: 11, fontFace: 'Arial', bold: true, color: C.grayDark, charSpacing: 2
+        });
+
+        const processes = ['JSON 구조화', 'SQLite 저장', '벡터 인덱싱', '설정 검증', '기준점 확립'];
+        processes.forEach((t, i) => {
+            slide.addText(t, {
+                x: 5.4, y: 1.95 + i * 0.38, w: 4, h: 0.35,
+                fontSize: 13, fontFace: 'Arial', color: C.grayLight
+            });
+        });
+
+        // 포인트
+        slide.addShape(pptx.ShapeType.rect, {
+            x: 0.6, y: 4.2, w: 8.8, h: 0.7,
+            fill: { color: C.bgCard }
+        });
+        slide.addText('이 단계의 정확성이 500화 전체의 일관성을 결정합니다', {
+            x: 0.6, y: 4.35, w: 8.8, h: 0.4,
+            fontSize: 12, fontFace: 'Arial', color: C.accent, align: 'center'
+        });
+
+        // ========================================
+        // Slide 5: Stage 1 - Strategy
+        // ========================================
+        slide = addSlide('Stage 1', 'Strategy — 10권 전략 수립');
+
+        // 10권 시각화
+        for (let i = 0; i < 10; i++) {
+            const x = 0.6 + i * 0.9;
+            const isHighlight = i < 3 ? C.blue : (i < 7 ? C.purple : C.orange);
+
+            slide.addShape(pptx.ShapeType.rect, {
+                x: x, y: 1.7, w: 0.8, h: 0.5,
+                fill: { color: isHighlight }
+            });
+            slide.addText(`${i + 1}`, {
+                x: x, y: 1.75, w: 0.8, h: 0.4,
+                fontSize: 14, fontFace: 'Arial', bold: true, color: C.white, align: 'center'
+            });
+        }
+
+        // 레이블
+        slide.addText('도입', { x: 0.6, y: 2.3, w: 2.5, h: 0.25, fontSize: 10, color: C.blue });
+        slide.addText('전개', { x: 3.3, y: 2.3, w: 3.5, h: 0.25, fontSize: 10, color: C.purple });
+        slide.addText('클라이막스', { x: 6.9, y: 2.3, w: 2.6, h: 0.25, fontSize: 10, color: C.orange });
+
+        // 설계 요소
+        slide.addText('권별 설계 요소', {
+            x: 0.6, y: 2.9, w: 8.8, h: 0.3,
+            fontSize: 11, fontFace: 'Arial', bold: true, color: C.grayDark, charSpacing: 2
+        });
+
+        const volElements = [
+            { title: '핵심 갈등', desc: '권별 주요 사건과 목표' },
+            { title: '성장 곡선', desc: '주인공 능력/위상 변화' },
+            { title: '복선 설계', desc: '장기 회수될 떡밥 배치' },
+            { title: '사이다 지수', desc: '독자 만족도 예측' }
+        ];
+        volElements.forEach((el, i) => {
+            const x = 0.6 + (i % 2) * 4.5;
+            const y = 3.3 + Math.floor(i / 2) * 0.65;
+            slide.addText(el.title, { x: x, y: y, w: 1.5, h: 0.3, fontSize: 12, fontFace: 'Arial', bold: true, color: C.grayLight });
+            slide.addText(el.desc, { x: x + 1.5, y: y, w: 2.8, h: 0.3, fontSize: 12, fontFace: 'Arial', color: C.gray });
+        });
+
+        // ========================================
+        // Slide 6: Stage 2 - Arc Design
+        // ========================================
+        slide = addSlide('Stage 2', 'Arc Design — 50개 Arc 전술 설계');
+
+        slide.addText('1권 = 5개 Arc = 25화', {
+            x: 0.6, y: 1.6, w: 8.8, h: 0.4,
+            fontSize: 16, fontFace: 'Arial', color: C.grayLight
+        });
+
+        // Arc 시각화
+        for (let i = 0; i < 5; i++) {
+            const x = 0.6 + i * 1.8;
+            slide.addShape(pptx.ShapeType.rect, {
+                x: x, y: 2.1, w: 1.6, h: 0.8,
+                fill: { color: C.purple }
+            });
+            slide.addText(`Arc ${i + 1}`, {
+                x: x, y: 2.2, w: 1.6, h: 0.3,
+                fontSize: 12, fontFace: 'Arial', bold: true, color: C.white, align: 'center'
+            });
+            slide.addText(`${i * 5 + 1}–${(i + 1) * 5}화`, {
+                x: x, y: 2.5, w: 1.6, h: 0.3,
+                fontSize: 10, fontFace: 'Arial', color: 'D8B4FE', align: 'center'
+            });
+        }
+
+        // Arc 내용
+        const arcContent = [
+            { title: 'Tactical Doc', desc: '화별 상세 전개' },
+            { title: 'State Constraints', desc: '시작/종료 상태' },
+            { title: 'Item Timeline', desc: '획득/소모 관리' },
+            { title: 'Joint Docs', desc: '다음 Arc 연결' }
+        ];
+        arcContent.forEach((el, i) => {
+            const x = 0.6 + (i % 2) * 4.5;
+            const y = 3.3 + Math.floor(i / 2) * 0.55;
+            slide.addText(el.title, { x: x, y: y, w: 1.8, h: 0.3, fontSize: 11, fontFace: 'Arial', color: C.accent });
+            slide.addText(el.desc, { x: x + 1.8, y: y, w: 2.5, h: 0.3, fontSize: 11, fontFace: 'Arial', color: C.gray });
+        });
+
+        slide.addShape(pptx.ShapeType.rect, { x: 0.6, y: 4.4, w: 8.8, h: 0.5, fill: { color: C.bgCard } });
+        slide.addText('중복 아이템 획득, 설정 모순 자동 차단', {
+            x: 0.6, y: 4.5, w: 8.8, h: 0.3, fontSize: 11, fontFace: 'Arial', color: C.accent, align: 'center'
+        });
+
+        // ========================================
+        // Slide 7: Stage 3 - Blueprint
+        // ========================================
+        slide = addSlide('Stage 3', 'Blueprint — 에피소드별 씬 구성');
+
+        slide.addText('1화 = 5–7개 씬', {
+            x: 0.6, y: 1.6, w: 8.8, h: 0.4,
+            fontSize: 16, fontFace: 'Arial', color: C.grayLight
+        });
+
+        // 씬 시각화
+        const sceneNames = ['Opening', 'Build-up', 'Conflict', 'Climax', 'Hook'];
+        sceneNames.forEach((name, i) => {
+            const x = 0.6 + i * 1.8;
+            const isClimax = i === 3;
+            slide.addShape(pptx.ShapeType.rect, {
+                x: x, y: 2.1, w: 1.6, h: 0.6,
+                fill: { color: isClimax ? C.orange : C.bgCard },
+                line: { color: C.grayDark, pt: isClimax ? 0 : 0.5 }
+            });
+            slide.addText(name, {
+                x: x, y: 2.2, w: 1.6, h: 0.4,
+                fontSize: 11, fontFace: 'Arial', bold: isClimax, color: C.white, align: 'center'
+            });
+        });
+
+        // 씬 요소
+        const sceneElements = ['장소/시간', '등장인물', '핵심 대사', '감정 곡선', '연출 지시', '클리프행어'];
+        sceneElements.forEach((el, i) => {
+            const x = 0.6 + (i % 3) * 3;
+            const y = 3.0 + Math.floor(i / 3) * 0.4;
+            slide.addText('· ' + el, { x: x, y: y, w: 2.8, h: 0.35, fontSize: 12, fontFace: 'Arial', color: C.gray });
+        });
+
+        slide.addShape(pptx.ShapeType.rect, { x: 0.6, y: 4.0, w: 8.8, h: 0.5, fill: { color: C.bgCard } });
+        slide.addText('정지선 시스템: 다음 화 내용 미리 작성 방지', {
+            x: 0.6, y: 4.1, w: 8.8, h: 0.3, fontSize: 11, fontFace: 'Arial', color: C.orange, align: 'center'
+        });
+
+        // ========================================
+        // Slide 8: Stage 4 - Writing
+        // ========================================
+        slide = addSlide('Stage 4', 'Write — 최종 원고 생성');
+
+        slide.addText('4,000–8,000자 / 화', {
+            x: 0.6, y: 1.6, w: 8.8, h: 0.4,
+            fontSize: 16, fontFace: 'Arial', color: C.grayLight
+        });
+
+        // 플랫폼
+        slide.addText('플랫폼 최적화', {
+            x: 0.6, y: 2.2, w: 4, h: 0.3,
+            fontSize: 11, fontFace: 'Arial', bold: true, color: C.grayDark, charSpacing: 2
+        });
+
+        slide.addShape(pptx.ShapeType.rect, { x: 0.6, y: 2.55, w: 4.2, h: 0.5, fill: { color: C.bgCard } });
+        slide.addText('카카오페이지', { x: 0.75, y: 2.6, w: 1.4, h: 0.4, fontSize: 11, fontFace: 'Arial', bold: true, color: 'FFEB3B' });
+        slide.addText('사이다 전개, 절벽걸기', { x: 2.1, y: 2.6, w: 2.5, h: 0.4, fontSize: 10, fontFace: 'Arial', color: C.gray });
+
+        slide.addShape(pptx.ShapeType.rect, { x: 0.6, y: 3.1, w: 4.2, h: 0.5, fill: { color: C.bgCard } });
+        slide.addText('네이버 시리즈', { x: 0.75, y: 3.15, w: 1.4, h: 0.4, fontSize: 11, fontFace: 'Arial', bold: true, color: '00E676' });
+        slide.addText('유려한 문장, 심리 묘사', { x: 2.1, y: 3.15, w: 2.5, h: 0.4, fontSize: 10, fontFace: 'Arial', color: C.gray });
+
+        // 품질 관리
+        slide.addText('품질 관리', {
+            x: 5.4, y: 2.2, w: 4, h: 0.3,
+            fontSize: 11, fontFace: 'Arial', bold: true, color: C.grayDark, charSpacing: 2
+        });
+
+        const qcItems = ['설계도 준수율 검증', '분량/밀도 체크', '연속성 확인', '불합격 시 자동 재작성'];
+        qcItems.forEach((item, i) => {
+            slide.addText('✓ ' + item, {
+                x: 5.4, y: 2.55 + i * 0.35, w: 4, h: 0.32,
+                fontSize: 11, fontFace: 'Arial', color: C.gray
+            });
+        });
+
+        slide.addShape(pptx.ShapeType.rect, { x: 0.6, y: 4.2, w: 8.8, h: 0.6, fill: { color: C.green } });
+        slide.addText('최고 품질 AI 모델 고정 사용', {
+            x: 0.6, y: 4.35, w: 8.8, h: 0.3, fontSize: 12, fontFace: 'Arial', bold: true, color: C.white, align: 'center'
+        });
+
+        // ========================================
+        // Slide 9: AI Agents
+        // ========================================
+        slide = addSlide('AI Agents', '5개의 전문화된 에이전트');
+
+        const agents = [
+            { name: 'Analyst', role: '전략가', desc: '전체 방향', color: C.blue },
+            { name: 'Architect', role: '설계사', desc: '구조 설계', color: C.purple },
+            { name: 'Writer', role: '작가', desc: '원고 집필', color: C.orange },
+            { name: 'Director', role: '감독', desc: '품질 승인', color: C.green },
+            { name: 'Inspector', role: '검수', desc: '연속성 검증', color: C.pink }
+        ];
+
+        agents.forEach((a, i) => {
+            const x = 0.5 + i * 1.9;
+
+            slide.addShape(pptx.ShapeType.ellipse, {
+                x: x + 0.4, y: 1.7, w: 0.9, h: 0.9,
+                fill: { color: a.color }
+            });
+            slide.addText(a.role.charAt(0), {
+                x: x + 0.4, y: 1.8, w: 0.9, h: 0.7,
+                fontSize: 22, fontFace: 'Arial', bold: true, color: C.white, align: 'center'
+            });
+
+            slide.addText(a.name, {
+                x: x, y: 2.7, w: 1.7, h: 0.3,
+                fontSize: 12, fontFace: 'Arial', bold: true, color: C.white, align: 'center'
+            });
+            slide.addText(a.desc, {
+                x: x, y: 3.0, w: 1.7, h: 0.3,
+                fontSize: 10, fontFace: 'Arial', color: C.gray, align: 'center'
+            });
+        });
+
+        // 플로우
+        slide.addShape(pptx.ShapeType.rect, { x: 0.6, y: 3.8, w: 8.8, h: 0.6, fill: { color: C.bgCard } });
+        slide.addText('Analyst → Architect → Writer → Director → Inspector', {
+            x: 0.6, y: 3.95, w: 8.8, h: 0.3, fontSize: 12, fontFace: 'Arial', color: C.grayLight, align: 'center'
+        });
+
+        // ========================================
+        // Slide 10: Quality System
+        // ========================================
+        slide = addSlide('Quality System', '7단계 검증 체계');
+
+        const tiers = [
+            { tier: 'Tier -1', name: 'Arc 연속성', type: 'LLM' },
+            { tier: 'Tier 0', name: '에피소드 연속성', type: 'LLM' },
+            { tier: 'Tier 0.5', name: 'Python 체크', type: 'Free' },
+            { tier: 'Tier 1', name: 'Blocking', type: '즉시차단' },
+            { tier: 'Tier 2', name: 'Scoring', type: '70점+' },
+            { tier: 'Tier 3', name: 'Advisory', type: '권고' }
+        ];
+
+        tiers.forEach((t, i) => {
+            const x = 0.6 + (i % 3) * 3.1;
+            const y = 1.6 + Math.floor(i / 3) * 1.2;
+
+            slide.addShape(pptx.ShapeType.rect, {
+                x: x, y: y, w: 2.9, h: 1.0,
+                fill: { color: C.bgCard },
+                line: { color: t.type === 'Free' ? C.green : C.grayDark, pt: t.type === 'Free' ? 1 : 0.5 }
+            });
+            slide.addText(t.tier, { x: x + 0.15, y: y + 0.1, w: 1, h: 0.25, fontSize: 9, fontFace: 'Arial', color: C.grayDark });
+            slide.addText(t.name, { x: x + 0.15, y: y + 0.35, w: 2.6, h: 0.3, fontSize: 12, fontFace: 'Arial', bold: true, color: C.white });
+            slide.addText(t.type, { x: x + 0.15, y: y + 0.65, w: 2.6, h: 0.25, fontSize: 10, fontFace: 'Arial', color: t.type === 'Free' ? C.green : C.gray });
+        });
+
+        slide.addShape(pptx.ShapeType.rect, { x: 0.6, y: 4.2, w: 8.8, h: 0.5, fill: { color: C.bgCard } });
+        slide.addText('Python 검증 = 비용 0원 → 불필요한 AI 호출 방지', {
+            x: 0.6, y: 4.3, w: 8.8, h: 0.3, fontSize: 11, fontFace: 'Arial', color: C.green, align: 'center'
+        });
+
+        // ========================================
+        // Slide 11: Key Technology
+        // ========================================
+        slide = addSlide('Key Technology', '핵심 기술 차별점');
+
+        const techs = [
+            { title: '연속성 보장', desc: 'DB 기반 아이템/상태 추적으로\n500화에서도 설정 오류 제로', color: C.blue },
+            { title: '제약 컴파일러', desc: '"이미 가진 아이템" 자동 차단\nAI 실수를 시스템이 방어', color: C.purple },
+            { title: '자동 재시도', desc: '품질 불합격 시 최대 4회 재작성\n점진적 피드백으로 개선', color: C.orange },
+            { title: '벡터 메모리', desc: '과거 내용 시맨틱 검색\n관련 맥락 자동 참조', color: C.green }
+        ];
+
+        techs.forEach((t, i) => {
+            const x = 0.6 + (i % 2) * 4.6;
+            const y = 1.5 + Math.floor(i / 2) * 1.5;
+
+            slide.addShape(pptx.ShapeType.rect, {
+                x: x, y: y, w: 0.06, h: 1.2,
+                fill: { color: t.color }
+            });
+            slide.addText(t.title, {
+                x: x + 0.25, y: y, w: 4, h: 0.35,
+                fontSize: 14, fontFace: 'Arial', bold: true, color: C.white
+            });
+            slide.addText(t.desc, {
+                x: x + 0.25, y: y + 0.4, w: 4, h: 0.8,
+                fontSize: 11, fontFace: 'Arial', color: C.gray, lineSpacingMultiple: 1.4
+            });
+        });
+
+        // ========================================
+        // Slide 12: Cost & ROI
+        // ========================================
+        slide = addSlide('Cost & ROI', '비용 효율성');
+
+        // 비용
+        slide.addText('단가', {
+            x: 0.6, y: 1.5, w: 4, h: 0.3,
+            fontSize: 11, fontFace: 'Arial', bold: true, color: C.grayDark, charSpacing: 2
+        });
+
+        const costs = [
+            ['Stage 2 (Arc)', '$0.15–0.20'],
+            ['Stage 3 (Blueprint)', '$0.05–0.10'],
+            ['Stage 4 (원고)', '$0.10–0.15'],
+            ['Python 검증', '$0'],
+            ['1화 총 비용', '$0.20–0.40']
+        ];
+        costs.forEach((c, i) => {
+            const y = 1.85 + i * 0.4;
+            slide.addText(c[0], { x: 0.6, y: y, w: 2.5, h: 0.35, fontSize: 12, fontFace: 'Arial', color: C.gray });
+            slide.addText(c[1], { x: 3.1, y: y, w: 1.5, h: 0.35, fontSize: 12, fontFace: 'Arial', color: i === 4 ? C.accent : C.grayLight, bold: i === 4 });
+        });
+
+        // 성과
+        slide.addText('성과', {
+            x: 5.4, y: 1.5, w: 4, h: 0.3,
+            fontSize: 11, fontFace: 'Arial', bold: true, color: C.grayDark, charSpacing: 2
+        });
+
+        const metrics = [
+            ['초기 통과율', '90%+'],
+            ['1화 생성 시간', '2–3분'],
+            ['연속성 오류율', '<1%'],
+            ['최대 연재', '500화+'],
+            ['비용 절감', '90%+']
+        ];
+        metrics.forEach((m, i) => {
+            const y = 1.85 + i * 0.4;
+            slide.addText(m[0], { x: 5.4, y: y, w: 2.5, h: 0.35, fontSize: 12, fontFace: 'Arial', color: C.gray });
+            slide.addText(m[1], { x: 7.9, y: y, w: 1.5, h: 0.35, fontSize: 12, fontFace: 'Arial', color: C.green });
+        });
+
+        // 하이라이트
+        slide.addShape(pptx.ShapeType.rect, { x: 0.6, y: 4.2, w: 8.8, h: 0.7, fill: { color: C.accent } });
+        slide.addText('500화 기준 총 $100–200 | 작가 인건비 대비 90% 이상 절감', {
+            x: 0.6, y: 4.35, w: 8.8, h: 0.4, fontSize: 14, fontFace: 'Arial', bold: true, color: C.white, align: 'center'
+        });
+
+        // ========================================
+        // Slide 13: Supported Genres
+        // ========================================
+        slide = addSlide('Supported Genres', '지원 장르');
+
+        const genres = [
+            { name: '무협', sub: 'Wuxia', features: ['무공 체계', '경지 시스템', '문파/세가'], color: 'B91C1C' },
+            { name: '헌터', sub: 'Hunter', features: ['각성 능력', '던전/게이트', '길드'], color: '1D4ED8' },
+            { name: '투자', sub: 'Investment', features: ['금융 지식', '회귀/빙의', '비즈니스'], color: '15803D' }
+        ];
+
+        genres.forEach((g, i) => {
+            const x = 0.6 + i * 3.1;
+
+            slide.addShape(pptx.ShapeType.rect, {
+                x: x, y: 1.5, w: 2.9, h: 2.6,
+                fill: { color: C.bgCard },
+                line: { color: g.color, pt: 1.5 }
+            });
+
+            slide.addText(g.name, {
+                x: x, y: 1.7, w: 2.9, h: 0.5,
+                fontSize: 22, fontFace: 'Arial', bold: true, color: C.white, align: 'center'
+            });
+            slide.addText(g.sub, {
+                x: x, y: 2.15, w: 2.9, h: 0.3,
+                fontSize: 11, fontFace: 'Arial', color: C.grayDark, align: 'center'
+            });
+
+            g.features.forEach((f, j) => {
+                slide.addText('· ' + f, {
+                    x: x + 0.4, y: 2.6 + j * 0.35, w: 2.2, h: 0.32,
+                    fontSize: 11, fontFace: 'Arial', color: C.gray
+                });
+            });
+        });
+
+        slide.addText('장르별 전용 검증 규칙 (Genre Guard) 적용', {
+            x: 0.6, y: 4.4, w: 8.8, h: 0.3, fontSize: 11, fontFace: 'Arial', color: C.grayDark, align: 'center'
+        });
+
+        // ========================================
+        // Slide 14: Summary
+        // ========================================
+        slide = addSlide('Summary', '');
+
+        const summary = [
+            '설정집 입력만으로 500화 장편 자동 생성',
+            '5개 AI 에이전트 협업 시스템',
+            '7단계 검증으로 설정 오류 < 1%',
+            '500화 기준 $100–200, 90% 비용 절감',
+            '카카오/네이버 플랫폼 최적화'
+        ];
+
+        summary.forEach((s, i) => {
+            slide.addText(s, {
+                x: 0.6, y: 1.4 + i * 0.55, w: 8.8, h: 0.5,
+                fontSize: 16, fontFace: 'Arial', color: C.grayLight
+            });
+        });
+
+        // 마무리
+        slide.addShape(pptx.ShapeType.rect, { x: 0.6, y: 4.4, w: 8.8, h: 0.5, fill: { color: C.accent } });
+        slide.addText('AI로 웹소설 생산성을 혁신합니다', {
+            x: 0.6, y: 4.5, w: 8.8, h: 0.3, fontSize: 14, fontFace: 'Arial', bold: true, color: C.white, align: 'center'
+        });
+
+        // 저장
+        pptx.writeFile({ fileName: 'Glodobi_Overview.pptx' });
+    }
+    </script>
+</body>
+</html>

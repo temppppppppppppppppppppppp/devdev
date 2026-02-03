@@ -1,0 +1,146 @@
+{
+  "session_id": "20260203_085640",
+  "start_time": "2026-02-03T08:56:40.523172",
+  "end_time": "2026-02-03T09:46:43.275270",
+  "total_calls": 61,
+  "successful_calls": 60,
+  "failed_calls": 1,
+  "total_retries": 0,
+  "total_tokens": 1120880,
+  "total_cost_usd": 3.5498,
+  "agent_stats": {
+    "Analyst": {
+      "agent_name": "Analyst",
+      "total_calls": 32,
+      "successful_calls": 31,
+      "failed_calls": 1,
+      "success_rate": 96.875,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 77890.6366902013,
+        "min_ms": 28399.598598480225,
+        "max_ms": 163717.8463935852,
+        "p50_ms": 77492.65575408936,
+        "p90_ms": 117174.80778694153,
+        "p99_ms": 154549.8140096664
+      }
+    },
+    "Weaver": {
+      "agent_name": "Weaver",
+      "total_calls": 3,
+      "successful_calls": 3,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 38434.890826543175,
+        "min_ms": 28638.79942893982,
+        "max_ms": 43439.87512588501,
+        "p50_ms": 43225.99792480469,
+        "p90_ms": 43397.099685668945,
+        "p99_ms": 43435.5975818634
+      }
+    },
+    "ConsensusValidator": {
+      "agent_name": "ConsensusValidator",
+      "total_calls": 11,
+      "successful_calls": 11,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 29376.346371390602,
+        "min_ms": 24814.813375473022,
+        "max_ms": 35932.91354179382,
+        "p50_ms": 28420.32265663147,
+        "p90_ms": 32979.75397109985,
+        "p99_ms": 35637.597584724426
+      }
+    },
+    "Director": {
+      "agent_name": "Director",
+      "total_calls": 5,
+      "successful_calls": 5,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 32971.739292144775,
+        "min_ms": 27894.386529922485,
+        "max_ms": 38720.155477523804,
+        "p50_ms": 32786.908864974976,
+        "p90_ms": 37319.37155723572,
+        "p99_ms": 38580.077085494995
+      }
+    },
+    "StateExtractor": {
+      "agent_name": "StateExtractor",
+      "total_calls": 6,
+      "successful_calls": 6,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 14843.263109525045,
+        "min_ms": 13730.324029922485,
+        "max_ms": 16944.132566452026,
+        "p50_ms": 14569.302320480347,
+        "p90_ms": 15962.512969970703,
+        "p99_ms": 16845.970606803894
+      }
+    },
+    "PreflightChecker": {
+      "agent_name": "PreflightChecker",
+      "total_calls": 2,
+      "successful_calls": 2,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 18427.623629570007,
+        "min_ms": 17844.393968582153,
+        "max_ms": 19010.85329055786,
+        "p50_ms": 18427.623629570007,
+        "p90_ms": 18894.20735836029,
+        "p99_ms": 18999.188697338104
+      }
+    },
+    "ContinuityInspector": {
+      "agent_name": "ContinuityInspector",
+      "total_calls": 2,
+      "successful_calls": 2,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 30457.833886146545,
+        "min_ms": 18413.06710243225,
+        "max_ms": 42502.60066986084,
+        "p50_ms": 30457.833886146545,
+        "p90_ms": 40093.64731311798,
+        "p99_ms": 42261.705334186554
+      }
+    }
+  },
+  "model_stats": {
+    "gemini-3-pro-preview": {
+      "input_tokens": 978383,
+      "output_tokens": 107577,
+      "total_tokens": 1085960,
+      "cost_usd": 3.5217
+    },
+    "gemini-3-flash-preview": {
+      "input_tokens": 27833,
+      "output_tokens": 7087,
+      "total_tokens": 34920,
+      "cost_usd": 0.0281
+    }
+  }
+}

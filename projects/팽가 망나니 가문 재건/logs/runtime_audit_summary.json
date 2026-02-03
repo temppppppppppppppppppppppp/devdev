@@ -1,0 +1,13 @@
+{
+  "tag": "stage2_complete",
+  "timestamp": "2026-02-03 02:52:52",
+  "total_events": 51,
+  "counts": {
+    "v60_25_auto_correct": 17,
+    "db_commit": 10,
+    "v60_10_state_extracted": 11,
+    "arc_continuity_reject": 8,
+    "v60_43_quota_override": 4,
+    "data_missing": 1
+  }
+}

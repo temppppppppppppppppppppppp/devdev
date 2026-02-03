@@ -1,8 +1,8 @@
 """
-[V56] Pre-LLM Validator
-LLM 호출 전에 비용 0원으로 명백한 오류 탐지
+[V60.56] Pre-LLM Validator - Advisory Mode
+Python 기반 검사 → LLM에게 정보 제공용 (REJECT 권한 없음)
 
-9가지 Python 기반 검사:
+9가지 Python 기반 검사 (모두 advisory):
 1. 중복 단어 과다 (vocabulary diversity)
 2. 문장 길이 극단화 (prose rhythm)
 3. 대사 절대 부족
@@ -14,7 +14,7 @@ LLM 호출 전에 비용 0원으로 명백한 오류 탐지
 9. 반복되는 문장 구조
 
 비용: $0 (Python 기반)
-효과: LLM 호출 전 50~60% 오류 조기 차단
+[V60.56] REJECT 권한 제거: Python은 정보 수집만, LLM이 최종 판단
 """
 
 import re
@@ -110,15 +110,17 @@ class PreLLMValidator:
             warnings.append(repetitive)
             score_deduction += 1
 
-        # 최종 판정
-        passed = len(issues) == 0  # Issues만 REJECT, Warnings는 점수만 감점
+        # [V60.56] 최종 판정 - Python은 REJECT 권한 없음, 항상 passed=True
+        # issues를 advisory로 변환 (LLM에게 전달할 정보)
+        advisory_issues = issues
 
         return {
-            "passed": passed,
-            "critical_issues": issues,
+            "passed": True,  # [V60.56] 항상 통과, LLM이 최종 판단
+            "critical_issues": [],  # [V60.56] 빈 리스트 (REJECT 안 함)
+            "advisory_issues": advisory_issues,  # [V60.56] LLM에게 전달할 정보
             "warnings": warnings,
             "score_deduction": min(10, score_deduction),
-            "reason": f"{'통과' if passed else 'REJECT'} - 이슈 {len(issues)}개, 경고 {len(warnings)}개",
+            "reason": f"Advisory - 참고사항 {len(advisory_issues)}개, 경고 {len(warnings)}개",
             "check_count": 9
         }
 

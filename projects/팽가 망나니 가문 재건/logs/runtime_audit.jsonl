@@ -1,82 +1,125 @@
-{"timestamp": "2026-02-02 14:14:42", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["final_location 자동 추출: '향하는 길'", "arc_start_state 내공 하한 적용: 1% → 5%", "arc_end_state 내공 하한 적용: 0% → 5%"]}}
-{"timestamp": "2026-02-02 14:15:10", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-02 14:15:27", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "items_tracked": 3}}
-{"timestamp": "2026-02-02 14:20:55", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["시작 위치 수정: '하북팽가 본가 중앙 연무장' → '팽가 본가 중앙 연무장, 부서진 비무대 위'", "시작 내공 수정: 0% → 5%", "final_location 자동 추출: '도'"]}}
-{"timestamp": "2026-02-02 14:22:00", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 2, "severity": "MINOR", "violations_count": 1}}
-{"timestamp": "2026-02-02 14:25:11", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["시작 위치 수정: '하북팽가 본가 중앙 연무장' → '팽가 본가 중앙 연무장, 부서진 비무대 위'", "시작 내공 수정: 0% → 5%", "final_location 자동 추출: '가득 차 있다'"]}}
-{"timestamp": "2026-02-02 14:26:33", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-02 14:26:48", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "items_tracked": 6}}
-{"timestamp": "2026-02-02 14:34:23", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 3, "severity": "CRITICAL", "violations_count": 1}}
-{"timestamp": "2026-02-02 14:40:27", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-02 14:40:43", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "items_tracked": 7}}
-{"timestamp": "2026-02-02 14:50:53", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 4, "corrections": ["final_location 자동 추출: '향했다'"]}}
-{"timestamp": "2026-02-02 14:50:59", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 4, "severity": "CRITICAL", "violations_count": 1}}
-{"timestamp": "2026-02-02 14:57:25", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 4, "severity": "CRITICAL", "violations_count": 3}}
-{"timestamp": "2026-02-02 15:00:59", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 4, "corrections": ["final_location 자동 추출: '뒷산'"]}}
-{"timestamp": "2026-02-02 15:01:05", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 4, "severity": "CRITICAL", "violations_count": 1}}
-{"timestamp": "2026-02-02 15:01:05", "type": "stage2_cooldown", "message": "3 rejects, waiting 10s before final attempt", "data": {"arc_no": 4, "attempt": 3}}
-{"timestamp": "2026-02-02 15:04:39", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 4, "corrections": ["final_location 자동 추출: '소환단'"]}}
-{"timestamp": "2026-02-02 15:04:44", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 4, "severity": "CRITICAL", "violations_count": 1}}
-{"timestamp": "2026-02-02 15:04:44", "type": "arc_design_failed", "message": "max retries exhausted", "data": {"arc_no": 4, "batch_start": 0, "batch_end": 5}}
-{"timestamp": "2026-02-02 15:15:59", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "items_tracked": 7}}
-{"timestamp": "2026-02-02 15:26:40", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 4, "corrections": ["final_location 자동 추출: '뒷산'"]}}
-{"timestamp": "2026-02-02 15:26:46", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 4, "severity": "CRITICAL", "violations_count": 1}}
-{"timestamp": "2026-02-02 15:30:21", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 4, "corrections": ["final_location 자동 추출: '비전각 내부로 들어선다'"]}}
-{"timestamp": "2026-02-02 15:30:26", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 4, "severity": "CRITICAL", "violations_count": 1}}
-{"timestamp": "2026-02-02 15:35:25", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 4, "severity": "CRITICAL", "violations_count": 1}}
-{"timestamp": "2026-02-02 15:38:54", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 4, "severity": "CRITICAL", "violations_count": 1}}
-{"timestamp": "2026-02-02 15:44:21", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 4, "corrections": ["final_location 자동 추출: '뒷산'"]}}
-{"timestamp": "2026-02-02 15:44:26", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 4, "severity": "CRITICAL", "violations_count": 1}}
-{"timestamp": "2026-02-02 15:47:38", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "items_tracked": 7}}
-{"timestamp": "2026-02-02 15:57:19", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 4, "corrections": ["final_location 자동 추출: '뒷산'"]}}
-{"timestamp": "2026-02-02 15:57:24", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 4, "severity": "CRITICAL", "violations_count": 1}}
-{"timestamp": "2026-02-02 16:03:23", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 4, "corrections": ["final_location 자동 추출: '회색빛'"]}}
-{"timestamp": "2026-02-02 16:03:29", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 4, "severity": "CRITICAL", "violations_count": 1}}
-{"timestamp": "2026-02-02 16:07:02", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 4, "severity": "CRITICAL", "violations_count": 6}}
-{"timestamp": "2026-02-02 16:11:46", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 4, "severity": "CRITICAL", "violations_count": 1}}
-{"timestamp": "2026-02-02 16:32:52", "type": "analyst_error", "message": "get_lack_report failed", "data": {"arc_no": 1, "error": "'StudioSystem' object has no attribute 'hud'"}}
-{"timestamp": "2026-02-02 16:37:48", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["final_location 자동 추출: '가득하다'", "arc_start_state 내공 하한 적용: 1% → 5%", "arc_end_state 내공 하한 적용: 0% → 5%"]}}
-{"timestamp": "2026-02-02 16:38:15", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-02 16:38:31", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "items_tracked": 3}}
-{"timestamp": "2026-02-02 16:38:31", "type": "analyst_error", "message": "get_lack_report failed", "data": {"arc_no": 2, "error": "'StudioSystem' object has no attribute 'hud'"}}
-{"timestamp": "2026-02-02 16:48:31", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["시작 위치 수정: '팽가 본가 중앙 연무장 단상 위' → '팽가 본가 중앙 연무장(演武場) 단상 위'", "final_location 자동 추출: '가득 차 있다'"]}}
-{"timestamp": "2026-02-02 16:52:56", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["시작 위치 수정: '팽가 본가 중앙 연무장 단상 위' → '팽가 본가 중앙 연무장(演武場) 단상 위'", "시작 내공 수정: 0% → 5%", "final_location 자동 추출: '권 문서\n\n1'"]}}
-{"timestamp": "2026-02-02 16:54:32", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-02 16:54:50", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "items_tracked": 5}}
-{"timestamp": "2026-02-02 16:54:50", "type": "analyst_error", "message": "get_lack_report failed", "data": {"arc_no": 3, "error": "'StudioSystem' object has no attribute 'hud'"}}
-{"timestamp": "2026-02-02 16:58:55", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["final_location 자동 추출: '남궁'"]}}
-{"timestamp": "2026-02-02 17:00:02", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-02 17:00:16", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "items_tracked": 6}}
-{"timestamp": "2026-02-02 17:00:16", "type": "analyst_error", "message": "get_lack_report failed", "data": {"arc_no": 4, "error": "'StudioSystem' object has no attribute 'hud'"}}
-{"timestamp": "2026-02-02 17:06:43", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 4, "corrections": ["final_location 자동 추출: '낡은 책 한 권'"]}}
-{"timestamp": "2026-02-02 17:06:49", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 4, "severity": "CRITICAL", "violations_count": 1}}
-{"timestamp": "2026-02-02 17:10:03", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 4, "corrections": ["시작 위치 수정: '하북 팽가 제1 연무장 중앙' → '팽가 제1 연무장'"]}}
-{"timestamp": "2026-02-02 17:10:08", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 4, "severity": "CRITICAL", "violations_count": 1}}
-{"timestamp": "2026-02-02 17:14:42", "type": "analyst_error", "message": "get_lack_report failed", "data": {"arc_no": 1, "error": "'StudioSystem' object has no attribute 'hud'"}}
-{"timestamp": "2026-02-02 17:22:38", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["final_location 자동 추출: '가득하다'"]}}
-{"timestamp": "2026-02-02 17:28:00", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["final_location 자동 추출: '가득 차 있다'", "arc_start_state 내공 하한 적용: 0% → 5%", "arc_end_state 내공 하한 적용: 1% → 5%"]}}
-{"timestamp": "2026-02-02 17:28:27", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-02 17:28:44", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "items_tracked": 3}}
-{"timestamp": "2026-02-02 17:28:44", "type": "analyst_error", "message": "get_lack_report failed", "data": {"arc_no": 2, "error": "'StudioSystem' object has no attribute 'hud'"}}
-{"timestamp": "2026-02-02 17:38:35", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 2, "severity": "MAJOR", "violations_count": 1}}
-{"timestamp": "2026-02-02 17:46:12", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["시작 위치 수정: '하북 팽가 제1 연무장 중앙' → '하북 팽가 제1 연무장 중앙, 반파된 바닥석 위'", "시작 내공 수정: 1% → 5%", "arc_end_state 내공 하한 적용: 0% → 5%"]}}
-{"timestamp": "2026-02-02 17:47:09", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 2, "severity": "MAJOR", "violations_count": 3}}
-{"timestamp": "2026-02-02 17:53:03", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["시작 위치 수정: '하북 팽가 제1 연무장 중앙' → '하북 팽가 제1 연무장 중앙, 반파된 바닥석 위'", "시작 내공 수정: 1% → 5%", "final_location 자동 추출: '운 파열음과 함께 흑룡각의 소란'", "arc_end_state 내공 하한 적용: 2% → 5%"]}}
-{"timestamp": "2026-02-02 17:54:03", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 2, "severity": "MAJOR", "violations_count": 1}}
-{"timestamp": "2026-02-02 17:57:35", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["시작 위치 수정: '하북 팽가 제1 연무장 중앙' → '하북 팽가 제1 연무장 중앙, 반파된 바닥석 위'", "시작 내공 수정: 1% → 5%", "arc_end_state 내공 하한 적용: 0% → 5%"]}}
-{"timestamp": "2026-02-02 17:58:28", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 2, "severity": "MAJOR", "violations_count": 2}}
-{"timestamp": "2026-02-02 18:05:40", "type": "analyst_error", "message": "get_lack_report failed", "data": {"arc_no": 1, "error": "'StudioSystem' object has no attribute 'hud'"}}
-{"timestamp": "2026-02-02 18:13:13", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["arc_start_state 내공 하한 적용: 0% → 5%", "arc_end_state 내공 하한 적용: 0% → 5%"]}}
-{"timestamp": "2026-02-02 18:18:41", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["arc_start_state 내공 하한 적용: 0% → 5%", "arc_end_state 내공 하한 적용: 0% → 5%"]}}
-{"timestamp": "2026-02-02 18:24:11", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["final_location 자동 추출: '웅성거림'", "arc_start_state 내공 하한 적용: 0% → 5%", "arc_end_state 내공 하한 적용: 0% → 5%"]}}
-{"timestamp": "2026-02-02 18:24:36", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-02 18:24:51", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "items_tracked": 3}}
-{"timestamp": "2026-02-02 18:24:51", "type": "analyst_error", "message": "get_lack_report failed", "data": {"arc_no": 2, "error": "'StudioSystem' object has no attribute 'hud'"}}
-{"timestamp": "2026-02-02 18:32:46", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["arc_end_state 내공 하한 적용: 2% → 5%"]}}
-{"timestamp": "2026-02-02 18:34:09", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-02 18:34:22", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "items_tracked": 5}}
-{"timestamp": "2026-02-02 18:34:22", "type": "analyst_error", "message": "get_lack_report failed", "data": {"arc_no": 3, "error": "'StudioSystem' object has no attribute 'hud'"}}
-{"timestamp": "2026-02-02 18:38:27", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["시작 내공 수정: 2% → 5%", "arc_end_state 내공 하한 적용: 1% → 5%"]}}
-{"timestamp": "2026-02-02 18:39:40", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-02 18:39:58", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "items_tracked": 6}}
-{"timestamp": "2026-02-02 18:39:58", "type": "analyst_error", "message": "get_lack_report failed", "data": {"arc_no": 4, "error": "'StudioSystem' object has no attribute 'hud'"}}
+{"timestamp": "2026-02-03 00:03:44", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["arc_start_state 내공 하한 적용: 0% → 5%", "arc_end_state 내공 하한 적용: 1% → 5%"]}}
+{"timestamp": "2026-02-03 00:04:07", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 00:04:21", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "items_tracked": 3}}
+{"timestamp": "2026-02-03 00:14:47", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["시작 위치 수정: '하북팽가 제1 연무장 중앙 비무대' → '하북 팽가 제1 연무장 중앙 비무대'", "final_location 자동 추출: '뛰어내린다'", "arc_end_state 내공 하한 적용: 2% → 5%"]}}
+{"timestamp": "2026-02-03 00:20:45", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["시작 위치 수정: '하북팽가 제1 연무장 중앙 비무대' → '하북 팽가 제1 연무장 중앙 비무대'"]}}
+{"timestamp": "2026-02-03 00:22:02", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 00:22:18", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "items_tracked": 6}}
+{"timestamp": "2026-02-03 00:27:16", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["final_location 자동 추출: '정리되었다'"]}}
+{"timestamp": "2026-02-03 00:29:02", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 00:29:16", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "items_tracked": 5}}
+{"timestamp": "2026-02-03 00:33:25", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 4, "corrections": ["final_location 자동 추출: '정갈했다'"]}}
+{"timestamp": "2026-02-03 00:35:33", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 00:35:47", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 4, "items_tracked": 8}}
+{"timestamp": "2026-02-03 00:46:01", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 5, "corrections": ["시작 위치 수정: '하북팽가 뒷산 심원곡 비전각 내부' → '비전각 내부'"]}}
+{"timestamp": "2026-02-03 00:47:41", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 00:47:56", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 5, "items_tracked": 6}}
+{"timestamp": "2026-02-03 00:48:10", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 5, "items_tracked": 8}}
+{"timestamp": "2026-02-03 00:57:59", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 6, "corrections": ["시작 위치 수정: '하북팽가 본가 청풍루 대연회장 중앙' → '하북팽가 본가 청풍루 대연회장'"]}}
+{"timestamp": "2026-02-03 00:59:17", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 00:59:34", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 6, "items_tracked": 9}}
+{"timestamp": "2026-02-03 01:05:09", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 7, "severity": "MAJOR", "violations_count": 2}}
+{"timestamp": "2026-02-03 01:18:34", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 7, "severity": "MAJOR", "violations_count": 2}}
+{"timestamp": "2026-02-03 01:26:17", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 7, "corrections": ["시작 부상 수정: '중상' → '경상'", "final_location 자동 추출: '이루어진 천혜의 요새'"]}}
+{"timestamp": "2026-02-03 01:29:13", "type": "v60_43_quota_override", "message": "Arc accepted due to quota exhaustion", "data": {"arc_no": 7, "scores": [50, 50, 50], "zero_count": 0}}
+{"timestamp": "2026-02-03 01:29:13", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 01:29:40", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 7, "items_tracked": 12}}
+{"timestamp": "2026-02-03 01:38:09", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 8, "corrections": ["시작 내공 수정: None% → 25%", "시작 부상 수정: '' → '경상'"]}}
+{"timestamp": "2026-02-03 01:38:15", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 8, "severity": "CRITICAL", "violations_count": 1}}
+{"timestamp": "2026-02-03 01:45:35", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 8, "corrections": ["시작 내공 수정: None% → 25%", "시작 부상 수정: '' → '경상'"]}}
+{"timestamp": "2026-02-03 01:45:41", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 8, "severity": "CRITICAL", "violations_count": 1}}
+{"timestamp": "2026-02-03 01:53:56", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 8, "corrections": ["시작 내공 수정: None% → 25%", "시작 부상 수정: '' → '경상'"]}}
+{"timestamp": "2026-02-03 01:57:01", "type": "v60_43_quota_override", "message": "Arc accepted due to quota exhaustion", "data": {"arc_no": 8, "scores": [50, 50, 50], "zero_count": 0}}
+{"timestamp": "2026-02-03 01:57:01", "type": "data_missing", "message": "hybrid_composition missing", "data": {"arc_no": 8}}
+{"timestamp": "2026-02-03 01:57:01", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 01:57:21", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 8, "items_tracked": 11}}
+{"timestamp": "2026-02-03 02:06:16", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 9, "corrections": ["시작 부상 수정: '' → '우측 손목 인대 통증 재발(경미), 허벅지 근육 긴장 지속'"]}}
+{"timestamp": "2026-02-03 02:06:22", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 9, "severity": "CRITICAL", "violations_count": 1}}
+{"timestamp": "2026-02-03 02:13:48", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 9, "corrections": ["시작 부상 수정: '' → '우측 손목 인대 통증 재발(경미), 허벅지 근육 긴장 지속'"]}}
+{"timestamp": "2026-02-03 02:13:54", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 9, "severity": "CRITICAL", "violations_count": 1}}
+{"timestamp": "2026-02-03 02:22:14", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 9, "corrections": ["시작 부상 수정: '우측 손목 인대 통증(경미), 허벅지 근육 긴장' → '우측 손목 인대 통증 재발(경미), 허벅지 근육 긴장 지속'"]}}
+{"timestamp": "2026-02-03 02:25:05", "type": "v60_43_quota_override", "message": "Arc accepted due to quota exhaustion", "data": {"arc_no": 9, "scores": [50, 50, 50], "zero_count": 0}}
+{"timestamp": "2026-02-03 02:25:05", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 02:25:18", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 9, "items_tracked": 5}}
+{"timestamp": "2026-02-03 02:34:06", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 10, "corrections": ["시작 내공 수정: None% → 89%%", "시작 부상 수정: '' → '정상 (완전 회복)'"]}}
+{"timestamp": "2026-02-03 02:34:11", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 10, "severity": "CRITICAL", "violations_count": 1}}
+{"timestamp": "2026-02-03 02:41:45", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 10, "corrections": ["시작 내공 수정: None% → 89%%", "시작 부상 수정: '' → '정상 (완전 회복)'"]}}
+{"timestamp": "2026-02-03 02:41:50", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 10, "severity": "CRITICAL", "violations_count": 1}}
+{"timestamp": "2026-02-03 02:50:03", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 10, "corrections": ["시작 위치 수정: '무림맹 본산 천룡 비무장 선수 대기실' → '천룡 비무장 선수 대기실'", "시작 부상 수정: '정상' → '정상 (완전 회복)'"]}}
+{"timestamp": "2026-02-03 02:52:37", "type": "v60_43_quota_override", "message": "Arc accepted due to quota exhaustion", "data": {"arc_no": 10, "scores": [50, 50, 50], "zero_count": 0}}
+{"timestamp": "2026-02-03 02:52:37", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 02:52:52", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 10, "items_tracked": 8}}
+{"timestamp": "2026-02-03 04:31:38", "type": "reference_loaded", "message": "genre references loaded for wuxia", "data": {"cliche_count": 60, "location_count": 400}}
+{"timestamp": "2026-02-03 04:34:05", "type": "diversity_sampling", "message": "blueprint diversity sampling", "data": {"ep_num": 1, "n_samples": 3, "selected_score": 71.29731806418036}}
+{"timestamp": "2026-02-03 04:34:05", "type": "cross_agent_reject", "message": "architect arc compliance violation", "data": {"ep_num": 1, "score": 0.3, "violations": 2}}
+{"timestamp": "2026-02-03 07:16:14", "type": "reference_loaded", "message": "genre references loaded for wuxia", "data": {"cliche_count": 60, "location_count": 400}}
+{"timestamp": "2026-02-03 07:18:41", "type": "diversity_sampling", "message": "blueprint diversity sampling", "data": {"ep_num": 1, "n_samples": 3, "selected_score": 70.25297715988472}}
+{"timestamp": "2026-02-03 07:18:41", "type": "cross_agent_reject", "message": "architect arc compliance violation", "data": {"ep_num": 1, "score": 0.3, "violations": 2}}
+{"timestamp": "2026-02-03 07:20:29", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 07:23:05", "type": "diversity_sampling", "message": "blueprint diversity sampling", "data": {"ep_num": 2, "n_samples": 3, "selected_score": 70.76814828365363}}
+{"timestamp": "2026-02-03 07:23:05", "type": "cross_agent_reject", "message": "architect arc compliance violation", "data": {"ep_num": 2, "score": 0.3, "violations": 2}}
+{"timestamp": "2026-02-03 07:23:55", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 2, "arc_no": 1, "reject_count": 1, "model": "gemini-3-pro-preview", "scene_count": 6}}
+{"timestamp": "2026-02-03 07:25:14", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 07:27:55", "type": "diversity_sampling", "message": "blueprint diversity sampling", "data": {"ep_num": 3, "n_samples": 3, "selected_score": 70.14627634417165}}
+{"timestamp": "2026-02-03 07:27:55", "type": "cross_agent_reject", "message": "architect arc compliance violation", "data": {"ep_num": 3, "score": 0.3, "violations": 2}}
+{"timestamp": "2026-02-03 07:28:47", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 3, "arc_no": 1, "reject_count": 1, "model": "gemini-3-pro-preview", "scene_count": 6}}
+{"timestamp": "2026-02-03 07:30:02", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 07:32:34", "type": "diversity_sampling", "message": "blueprint diversity sampling", "data": {"ep_num": 4, "n_samples": 3, "selected_score": 69.84059221740083}}
+{"timestamp": "2026-02-03 07:32:34", "type": "cross_agent_reject", "message": "architect arc compliance violation", "data": {"ep_num": 4, "score": 0.3, "violations": 2}}
+{"timestamp": "2026-02-03 07:33:23", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 4, "arc_no": 1, "reject_count": 1, "model": "gemini-3-pro-preview", "scene_count": 6}}
+{"timestamp": "2026-02-03 07:34:34", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 07:37:18", "type": "diversity_sampling", "message": "blueprint diversity sampling", "data": {"ep_num": 5, "n_samples": 3, "selected_score": 72.09245062371993}}
+{"timestamp": "2026-02-03 07:37:18", "type": "cross_agent_reject", "message": "architect arc compliance violation", "data": {"ep_num": 5, "score": 0.3, "violations": 2}}
+{"timestamp": "2026-02-03 07:39:34", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 07:42:19", "type": "diversity_sampling", "message": "blueprint diversity sampling", "data": {"ep_num": 6, "n_samples": 3, "selected_score": 69.57036376631248}}
+{"timestamp": "2026-02-03 07:42:19", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 6, "arc_no": 2, "reject_count": 0, "model": "gemini-3-pro-preview", "scene_count": 6}}
+{"timestamp": "2026-02-03 07:43:40", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 07:46:04", "type": "diversity_sampling", "message": "blueprint diversity sampling", "data": {"ep_num": 7, "n_samples": 3, "selected_score": 70.00642063642152}}
+{"timestamp": "2026-02-03 07:46:04", "type": "cross_agent_reject", "message": "architect arc compliance violation", "data": {"ep_num": 7, "score": 0.3, "violations": 2}}
+{"timestamp": "2026-02-03 07:46:55", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 7, "arc_no": 2, "reject_count": 1, "model": "gemini-3-pro-preview", "scene_count": 6}}
+{"timestamp": "2026-02-03 07:48:05", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 07:50:40", "type": "diversity_sampling", "message": "blueprint diversity sampling", "data": {"ep_num": 8, "n_samples": 3, "selected_score": 72.20981098405002}}
+{"timestamp": "2026-02-03 07:50:40", "type": "cross_agent_reject", "message": "architect arc compliance violation", "data": {"ep_num": 8, "score": 0.3, "violations": 2}}
+{"timestamp": "2026-02-03 07:51:38", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 8, "arc_no": 2, "reject_count": 1, "model": "gemini-3-pro-preview", "scene_count": 6}}
+{"timestamp": "2026-02-03 07:52:58", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 07:55:43", "type": "diversity_sampling", "message": "blueprint diversity sampling", "data": {"ep_num": 9, "n_samples": 3, "selected_score": 71.8818468294254}}
+{"timestamp": "2026-02-03 07:55:43", "type": "cross_agent_reject", "message": "architect arc compliance violation", "data": {"ep_num": 9, "score": 0.3, "violations": 2}}
+{"timestamp": "2026-02-03 07:57:08", "type": "continuity_reject", "message": "blueprint continuity violation", "data": {"ep_num": 9, "severity": "MAJOR", "violations": 1}}
+{"timestamp": "2026-02-03 07:58:00", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 9, "arc_no": 2, "reject_count": 2, "model": "gemini-3-pro-preview", "scene_count": 6}}
+{"timestamp": "2026-02-03 07:59:16", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 08:01:57", "type": "diversity_sampling", "message": "blueprint diversity sampling", "data": {"ep_num": 10, "n_samples": 3, "selected_score": 70.10504616463388}}
+{"timestamp": "2026-02-03 08:01:57", "type": "cross_agent_reject", "message": "architect arc compliance violation", "data": {"ep_num": 10, "score": 0.3, "violations": 2}}
+{"timestamp": "2026-02-03 08:02:53", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 10, "arc_no": 3, "reject_count": 1, "model": "gemini-3-pro-preview", "scene_count": 6}}
+{"timestamp": "2026-02-03 08:16:48", "type": "reference_loaded", "message": "genre references loaded for wuxia", "data": {"cliche_count": 60, "location_count": 400}}
+{"timestamp": "2026-02-03 08:19:16", "type": "diversity_sampling", "message": "blueprint diversity sampling", "data": {"ep_num": 10, "n_samples": 3, "selected_score": 71.29442365448878}}
+{"timestamp": "2026-02-03 08:19:16", "type": "cross_agent_reject", "message": "architect arc compliance violation", "data": {"ep_num": 10, "score": 0.3, "violations": 2}}
+{"timestamp": "2026-02-03 08:20:35", "type": "continuity_reject", "message": "blueprint continuity violation", "data": {"ep_num": 10, "severity": "MAJOR", "violations": 1}}
+{"timestamp": "2026-02-03 08:21:22", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 10, "arc_no": 3, "reject_count": 2, "model": "gemini-3-pro-preview", "scene_count": 6}}
+{"timestamp": "2026-02-03 08:22:42", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 08:25:18", "type": "diversity_sampling", "message": "blueprint diversity sampling", "data": {"ep_num": 11, "n_samples": 3, "selected_score": 73.04358359737462}}
+{"timestamp": "2026-02-03 08:25:18", "type": "cross_agent_reject", "message": "architect arc compliance violation", "data": {"ep_num": 11, "score": 0.3, "violations": 2}}
+{"timestamp": "2026-02-03 08:27:50", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 08:30:33", "type": "diversity_sampling", "message": "blueprint diversity sampling", "data": {"ep_num": 12, "n_samples": 3, "selected_score": 71.03183947456255}}
+{"timestamp": "2026-02-03 08:30:33", "type": "cross_agent_reject", "message": "architect arc compliance violation", "data": {"ep_num": 12, "score": 0.3, "violations": 2}}
+{"timestamp": "2026-02-03 08:31:30", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 12, "arc_no": 3, "reject_count": 1, "model": "gemini-3-pro-preview", "scene_count": 6}}
+{"timestamp": "2026-02-03 08:33:03", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 08:35:42", "type": "diversity_sampling", "message": "blueprint diversity sampling", "data": {"ep_num": 13, "n_samples": 3, "selected_score": 88.75020357496469}}
+{"timestamp": "2026-02-03 08:35:42", "type": "cross_agent_reject", "message": "architect arc compliance violation", "data": {"ep_num": 13, "score": 0.3, "violations": 2}}
+{"timestamp": "2026-02-03 08:36:43", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 13, "arc_no": 3, "reject_count": 1, "model": "gemini-3-pro-preview", "scene_count": 6}}
+{"timestamp": "2026-02-03 08:38:19", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 08:40:59", "type": "diversity_sampling", "message": "blueprint diversity sampling", "data": {"ep_num": 14, "n_samples": 3, "selected_score": 70.59491136331995}}
+{"timestamp": "2026-02-03 08:40:59", "type": "cross_agent_reject", "message": "architect arc compliance violation", "data": {"ep_num": 14, "score": 0.3, "violations": 2}}
+{"timestamp": "2026-02-03 08:41:48", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 14, "arc_no": 4, "reject_count": 1, "model": "gemini-3-pro-preview", "scene_count": 6}}
+{"timestamp": "2026-02-03 08:43:10", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 08:45:35", "type": "diversity_sampling", "message": "blueprint diversity sampling", "data": {"ep_num": 15, "n_samples": 3, "selected_score": 70.37240831020799}}
+{"timestamp": "2026-02-03 08:45:35", "type": "cross_agent_reject", "message": "architect arc compliance violation", "data": {"ep_num": 15, "score": 0.3, "violations": 2}}
+{"timestamp": "2026-02-03 08:46:28", "type": "pattern_warning", "message": "blueprint pattern weak but accepted", "data": {"ep_num": 15, "arc_no": 4, "reject_count": 1, "model": "gemini-3-pro-preview", "scene_count": 6}}
+{"timestamp": "2026-02-03 09:11:37", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["final_location 자동 추출: '향하는 서늘하고 어두운 석조 계단'"]}}
+{"timestamp": "2026-02-03 09:26:52", "type": "arc_continuity_reject", "message": "continuity violation detected", "data": {"arc_no": 1, "severity": "CRITICAL", "violations_count": 1}}
+{"timestamp": "2026-02-03 09:26:52", "type": "stage2_cooldown", "message": "3 rejects, waiting 10s before final attempt", "data": {"arc_no": 1, "attempt": 3}}
+{"timestamp": "2026-02-03 09:30:40", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 09:30:54", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "items_tracked": 3}}
+{"timestamp": "2026-02-03 09:42:08", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["시작 내공 수정: None% → 거의 고갈 (일푼 미만)%", "시작 부상 수정: '' → '심부(心部)의 미세한 내상, 양팔의 근골 뒤틀림 및 어혈(瘀血)'"]}}
+{"timestamp": "2026-02-03 09:43:49", "type": "data_missing", "message": "hybrid_composition missing", "data": {"arc_no": 2}}
+{"timestamp": "2026-02-03 09:43:49", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-03 09:44:04", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "items_tracked": 3}}
