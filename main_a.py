@@ -2599,7 +2599,7 @@ class SovereignApp:
             # 5. 주인공 이름 추출 (Bible에서)
             protagonist_name = "주인공"
             try:
-                bible_path = Path("bibles")
+                bible_path = Path("bible")  # [V60.60 Fix] bibles → bible 오타 수정
                 bible_files = list(bible_path.glob("*.json"))
                 if bible_files:
                     with open(bible_files[0], 'r', encoding='utf-8') as f:
@@ -2690,7 +2690,7 @@ class SovereignApp:
                 self.ui.log("🚨 [Critical] 모델 설정을 불러올 수 없습니다.")
                 return False
             
-            default_model = "gemini-3-pro-preview"  # [V60.24] 모든 에이전트 기본값 Gemini 3
+            default_model = "gemini-3-pro-preview"  # [V60.65] 기본 3 Pro, 429 시 폴백
             
             self.agents = {
                 'analyst': Analyst(self.current_project, self.sys.api_client, model_tier=models.get("analyst", default_model)),
@@ -2701,23 +2701,23 @@ class SovereignApp:
                 # [V45 Fix] weaver는 manager가 아닌 weaver 모델 사용 (fallback: manager)
                 'weaver': Weaver(self.current_project, self.sys.api_client, model_tier=models.get("weaver", models.get("manager", default_model))),
                 # [V48.1] ContinuityInspector - Director 산하 연속성 검증 에이전트 (2.5-pro 모델, 전체 BP 분석)
-                'continuity_inspector': ContinuityInspector(self.current_project, self.sys.api_client, model_tier="gemini-3-pro-preview"),  # [V60.13] 생성 티어와 동급
+                'continuity_inspector': ContinuityInspector(self.current_project, self.sys.api_client, model_tier="gemini-3-pro-preview"),  # [V60.65] 기본 3 Pro
                 # [V52.2] Critic - 원고 비평 에이전트 (빠른 모델 사용)
                 'critic': Critic(self.current_project, self.sys.api_client, model_tier="gemini-2.0-flash"),
                 # [V60.10] StateExtractor - 상태 추출 에이전트 (빠른 모델로 구조화된 상태 추출)
                 'state_extractor': StateExtractor(self.current_project, self.sys.api_client, model_tier="gemini-3-flash-preview"),  # [V60.24] Flash (추출용)
                 # [V60.11] ArcEnsembleGenerator - Arc 앙상블 생성기 (3개 후보 병렬 생성)
-                'arc_ensemble': ArcEnsembleGenerator(self.current_project, self.sys.api_client, model_tier="gemini-3-pro-preview"),  # [V60.24] Gemini 3
+                'arc_ensemble': ArcEnsembleGenerator(self.current_project, self.sys.api_client, model_tier="gemini-3-pro-preview"),  # [V60.65] 기본 3 Pro
                 # [V60.12] FourPhaseArcGenerator - 4단계 Arc 생성 파이프라인 (초기 통과율 극대화)
-                'four_phase': FourPhaseArcGenerator(self.current_project, self.sys.api_client, model_tier="gemini-3-pro-preview"),  # [V60.24] Gemini 3
+                'four_phase': FourPhaseArcGenerator(self.current_project, self.sys.api_client, model_tier="gemini-3-pro-preview"),  # [V60.65] 기본 3 Pro
                 # [V60.14] StateLockedArcGenerator - 상태 잠금 Arc 생성기 (구조적 모순 불가)
-                'state_locked': StateLockedArcGenerator(self.current_project, self.sys.api_client, model_tier="gemini-3-pro-preview"),  # [V60.24] Gemini 3
+                'state_locked': StateLockedArcGenerator(self.current_project, self.sys.api_client, model_tier="gemini-3-pro-preview"),  # [V60.65] 기본 3 Pro
                 # [V60.12] PreflightChecker - 생성 전 완벽 분석
                 'preflight': PreflightChecker(self.current_project, self.sys.api_client, model_tier="gemini-3-flash-preview"),  # [V60.24] Flash (분석용)
                 # [V60.12] ArcCritic - Arc 즉시 비평
-                'arc_critic': ArcCritic(self.current_project, self.sys.api_client, model_tier="gemini-3-pro-preview"),  # [V60.24] Gemini 3
+                'arc_critic': ArcCritic(self.current_project, self.sys.api_client, model_tier="gemini-3-pro-preview"),  # [V60.65] 기본 3 Pro
                 # [V60.12] ConsensusValidator - 3-LLM 합의 검증
-                'consensus': ConsensusValidator(self.current_project, self.sys.api_client, model_tier="gemini-3-pro-preview"),  # [V60.24] Gemini 3
+                'consensus': ConsensusValidator(self.current_project, self.sys.api_client, model_tier="gemini-3-pro-preview"),  # [V60.65] 기본 3 Pro
             }
 
             # [V60.11] Python 기반 헬퍼 초기화 (LLM 미사용)
@@ -2937,7 +2937,7 @@ class SovereignApp:
                     # V53.5 Tree of Thoughts
                     self.tree_of_thoughts = TreeOfThoughts(
                         api_client=self.sys.api_client,
-                        model="gemini-3-pro-preview"  # [V60.24] Stage 2 Gemini 3
+                        model="gemini-3-pro-preview"  # [V60.65] 기본 3 Pro
                     )
                     self.ui.log(f"   🌳 [V53.5] Tree of Thoughts 활성화 (Gemini 3)")
 
@@ -2996,7 +2996,7 @@ class SovereignApp:
                     # V55.1+V60.10 2단계 Arc 생성 (Stage 2 전용, StateExtractor 통합)
                     self.two_phase_arc = TwoPhaseArcGenerator(
                         client=self.sys.api_client,
-                        model="gemini-3-pro-preview",  # [V60.24] Stage 2 Gemini 3
+                        model="gemini-3-pro-preview",  # [V60.65] 기본 3 Pro
                         state_extractor=self.agents.get('state_extractor')  # [V60.10] StateExtractor 통합
                     )
                     self.ui.log(f"   🏗️ [V55.1+V60.10] Two-Phase Arc Generator 활성화 (Gemini 3, StateExtractor 통합)")
@@ -4281,9 +4281,9 @@ class SovereignApp:
                             print(f"      ⚠️ [Constraints] 스킵: {str(cc_err)[:50]}")
 
                     # ─────────────────────────────────────────────────────────────
-                    # [attempt >= 2] 필살기: ToT / TwoPhase
+                    # [V60.58] 필살기: ToT / TwoPhase - 1회차부터 즉시 발동
                     # ─────────────────────────────────────────────────────────────
-                    if attempt >= 2:
+                    if attempt >= 0:  # [V60.58] 기존 attempt >= 2 → 0으로 변경 (1회차부터 TOT)
                         print(f"      🔥 [필살기] attempt {attempt + 1} - 서브 에이전트 투입!")
 
                         # ToT 우선
@@ -4378,11 +4378,13 @@ class SovereignApp:
                                 "error": str(analyst_err)
                             })
                             current_feedback = f"Analyst 엔진 오류: {str(analyst_err)[:100]}. 안정적인 JSON 출력을 확보하라."
+                            attempt += 1  # [V60.52 Fix] Analyst 에러 시에도 카운터 증가
                             continue
 
                     # ─────────────────────────────────────────────────────────────
-                    # [무기 #3] DraftValidator - 즉시 사전 검증 (LLM 비용 0원)
+                    # [무기 #3] DraftValidator - 정보 수집용 (V60.56: REJECT 권한 없음)
                     # ─────────────────────────────────────────────────────────────
+                    python_advisory = []  # [V60.56] ConsensusValidator에 전달할 Python 분석 결과
                     if refined_arc and hasattr(self, 'arc_draft_validator') and self.arc_draft_validator:
                         try:
                             print(f"      🔬 [무기 #3] DraftValidator 사전 검증...")
@@ -4390,27 +4392,18 @@ class SovereignApp:
                                 arc=refined_arc,
                                 prev_arcs=all_refined_arcs
                             )
-                            if not draft_result.get('valid', True):
-                                issues = draft_result.get('issues', [])
-                                print(f"      ❌ [DraftValidator] {len(issues)}개 이슈 발견:")
-                                for issue in issues[:3]:
-                                    severity = issue.get('severity', 'UNKNOWN')
-                                    msg = issue.get('message', str(issue))
-                                    print(f"         - [{severity}] {msg[:80]}")
-
-                                # CRITICAL 있으면 즉시 재시도
-                                critical_issues = [i for i in issues if i.get('severity') == 'CRITICAL']
-                                if critical_issues:
-                                    print(f"      🔄 [DraftValidator] CRITICAL 발견 - 재시도 유도")
-                                    current_feedback = "DraftValidator 검증 실패: " + "; ".join([i.get('message', '')[:50] for i in critical_issues[:2]])
-                                    refined_arc = None
-                                    continue
-                                else:
-                                    print(f"      ⚠️ [DraftValidator] WARNING만 있음 - 계속 진행")
-                                    draft_validator_passed = True  # [V60.43] WARNING만 있어도 통과 처리
-                            else:
-                                print(f"      ✅ [DraftValidator] 사전 검증 통과!")
-                                draft_validator_passed = True  # [V60.43] 추적 플래그
+                            # [V60.56] advisory_issues를 수집 (LLM에게 전달할 정보)
+                            advisory_issues = draft_result.get('advisory_issues', [])
+                            if advisory_issues:
+                                print(f"      📋 [V60.56] DraftValidator advisory {len(advisory_issues)}개 발견 - LLM에게 전달")
+                                for issue in advisory_issues[:3]:
+                                    if isinstance(issue, dict):
+                                        print(f"         - {issue.get('message', str(issue))[:60]}")
+                                    else:
+                                        print(f"         - {str(issue)[:60]}")
+                                python_advisory.extend(advisory_issues)
+                            print(f"      ✅ [DraftValidator] 사전 검증 통과!")
+                            draft_validator_passed = True  # [V60.56] 항상 통과
                         except Exception as dv_err:
                             print(f"      ⚠️ [DraftValidator] 스킵: {str(dv_err)[:50]}")
 
@@ -4443,7 +4436,7 @@ class SovereignApp:
                             print(f"      ⚠️ [SelfReflector] 스킵: {str(sr_err)[:50]}")
 
                     # ─────────────────────────────────────────────────────────────
-                    # [V60.36] Consensus 검증 - 3-LLM 합의
+                    # [V60.36] Consensus 검증 - 3-LLM 합의 (V60.56: Python advisory 전달)
                     # ─────────────────────────────────────────────────────────────
                     if refined_arc and 'consensus' in self.agents:
                         try:
@@ -4453,7 +4446,8 @@ class SovereignApp:
                                 consensus_verdict, consensus_result = self.agents['consensus'].validate_with_consensus(
                                     arc=refined_arc,
                                     prev_arcs=all_refined_arcs,
-                                    constraints=""
+                                    constraints="",
+                                    python_advisory=python_advisory  # [V60.56] Python 분석 결과 전달
                                 )
 
                             vote_summary = consensus_result.get("vote_summary", {})
@@ -4473,6 +4467,7 @@ class SovereignApp:
                                 current_feedback = "Consensus 검증 실패: " + "; ".join(feedback_parts)
                                 refined_arc = None
                                 print(f"      🔄 재시도 피드백: {current_feedback[:100]}...")
+                                attempt += 1  # [V60.52 Fix] Consensus REJECT 시에도 카운터 증가
                                 continue
                             else:
                                 print(f"      ✅ [Consensus] PASS!")
@@ -4491,6 +4486,7 @@ class SovereignApp:
                             "type": str(type(refined_arc))
                         })
                         current_feedback = "Analyst가 유효한 딕셔너리를 반환하지 않았습니다. JSON 규격을 확인하라."
+                        attempt += 1  # [V60.52 Fix] 데이터 검증 실패 시에도 카운터 증가
                         continue
 
                     # 🧭 [Mapping Validation] 블록↔아크 매핑 및 회차 범위 정합성 점검
@@ -4529,6 +4525,7 @@ class SovereignApp:
                         # 위반 내용을 피드백에 포함하여 재생성 유도
                         violation_summary = "; ".join(pre_validation['violations'][:2])
                         current_feedback = f"[제약 위반] {violation_summary}. 이미 획득한 아이템을 다시 획득하지 마십시오."
+                        attempt += 1  # [V60.52 Fix] ConstraintDB 제약 위반 시에도 카운터 증가
                         continue
 
                     # 경고만 있는 경우 로그 출력
@@ -4544,6 +4541,7 @@ class SovereignApp:
                             "arc_no": global_arc_no
                         })
                         current_feedback = flow_guard.get("feedback", "서사 폭주/정체 위험이 감지되었습니다.")
+                        attempt += 1  # [V60.52 Fix] Flow Guard REJECT 시에도 카운터 증가
                         continue
 
                     # 🛡️ [Duplicate Guard] 직전 아크와 전술서 중복 차단
@@ -4557,6 +4555,7 @@ class SovereignApp:
                             })
                             current_feedback = "직전 아크와 동일한 전술 설계입니다. 사건/공간/인과를 완전히 새로 구성하십시오."
                             refined_arc = None  # [V60.10 Fix] 다음 시도에서 Analyst 재호출 보장
+                            attempt += 1  # [V60.52 Fix] Duplicate Guard 시에도 카운터 증가
                             continue
 
                     # [안전성 패치] Director 호출 전 필수 데이터 검증
@@ -4564,17 +4563,19 @@ class SovereignApp:
                         self.ui.log(f"🚨 [Data Error] refined_arc가 유효하지 않습니다")
                         self._audit_event("data_validation_error", "refined_arc invalid", {"arc_no": global_arc_no})
                         current_feedback = "설계 데이터 구조 오류. 전술 설계를 완전한 JSON으로 재작성하라."
+                        attempt += 1  # [V60.52 Fix] refined_arc 검증 실패 시에도 카운터 증가
                         continue
 
                     if not enriched_block or not isinstance(enriched_block, dict):
                         self.ui.log(f"🚨 [Data Error] enriched_block이 유효하지 않습니다")
                         self._audit_event("data_validation_error", "enriched_block invalid", {"arc_no": global_arc_no})
                         current_feedback = "농축 데이터 누락. 블록 정보를 포함하여 재설계하라."
+                        attempt += 1  # [V60.52 Fix] enriched_block 검증 실패 시에도 카운터 증가
                         continue
 
                     # ═══════════════════════════════════════════════════════════════
-                    # [V60.11] Arc Draft 빠른 사전 검증 (Python 기반, LLM 비용 0원)
-                    # ContinuityInspector 호출 전 명백한 오류 필터링
+                    # [V60.56] Arc Draft 정보 수집 (Python - REJECT 권한 없음)
+                    # ContinuityInspector와 LLM에게 advisory 정보 제공
                     # ═══════════════════════════════════════════════════════════════
                     if hasattr(self, 'arc_draft_validator'):
                         draft_result = self.arc_draft_validator.validate(
@@ -4583,7 +4584,14 @@ class SovereignApp:
                             constraint_block=constraint_block or ""
                         )
 
-                        if not draft_result["valid"]:
+                        # [V60.56] advisory_issues 로깅 (REJECT 아님)
+                        advisory_issues = draft_result.get("advisory_issues", [])
+                        if advisory_issues:
+                            self.ui.log(f"      📋 [V60.56 DraftValidator] Advisory {len(advisory_issues)}개 - LLM이 최종 판단")
+                            for issue in advisory_issues[:3]:
+                                self.ui.log(f"         📝 {issue}")
+
+                        if not draft_result["valid"]:  # [V60.56] 항상 True이므로 이 블록은 실행되지 않음
                             self.ui.log(f"      🚨 [V60.11 DraftValidator] 사전 검증 실패 (점수: {draft_result['score']})")
                             for issue in draft_result["critical_issues"][:3]:
                                 self.ui.log(f"         ❌ {issue}")
@@ -4648,6 +4656,7 @@ class SovereignApp:
                                                 issues_str = "\n".join([f"- {i}" for i in revalidation["critical_issues"][:3]])
                                                 current_feedback = f"[ArcCorrector 수정 후에도 실패]\n{issues_str}"
                                                 refined_arc = None
+                                                attempt += 1  # [V60.52 Fix] ArcCorrector 수정 후 재검증 실패 시에도 카운터 증가
                                                 continue
                                         else:
                                             # 수정 실패 - 재생성
@@ -4660,6 +4669,7 @@ class SovereignApp:
                                             issues_str = "\n".join([f"- {i.get('message', str(i))}" for i in major_only[:3]])
                                             current_feedback = f"[V60.42 수정 불가]\n{issues_str}\n재설계 필요."
                                             refined_arc = None
+                                            attempt += 1  # [V60.52 Fix] ArcCorrector 수정 실패 시에도 카운터 증가
                                             continue
                                     else:
                                         # 수정 불가 (CRITICAL 포함 등)
@@ -4668,6 +4678,7 @@ class SovereignApp:
                                         issues_str = "\n".join([f"- {i.get('message', str(i))}" for i in major_only[:3]])
                                         current_feedback = f"[수정 불가]\n{issues_str}"
                                         refined_arc = None
+                                        attempt += 1  # [V60.52 Fix] 수정 불가 시에도 카운터 증가
                                         continue
 
                                 except Exception as corr_err:
@@ -4677,6 +4688,7 @@ class SovereignApp:
                                     issues_str = "\n".join([f"- {i}" for i in draft_result["critical_issues"][:5]])
                                     current_feedback = f"[V60.11 검증 실패 + Corrector 오류]\n{issues_str}"
                                     refined_arc = None
+                                    attempt += 1  # [V60.52 Fix] Corrector 오류 시에도 카운터 증가
                                     continue
                             else:
                                 # CRITICAL이 있거나 ArcCorrector 비활성화 - 기존 로직대로 재시도
@@ -4688,6 +4700,7 @@ class SovereignApp:
                                     f"위 문제를 해결하고 다시 설계하세요."
                                 )
                                 refined_arc = None
+                                attempt += 1  # [V60.52 Fix] DraftValidator 사전 검증 실패 시에도 카운터 증가
                                 continue
                         else:
                             self.ui.log(f"      ✅ [V60.11 DraftValidator] 사전 검증 통과 (점수: {draft_result['score']})")
@@ -6302,6 +6315,11 @@ class SovereignApp:
             if arc_data_validated:
                 arc_data = arc_data_validated  # 검증/복구된 데이터로 교체
 
+            # [V60.60 Fix] arc_no, arc_num, volume_num 변수 정의 (미정의 NameError 방지)
+            arc_no = arc_data.get('arc_no', arc_idx + 1)
+            arc_num = arc_no
+            volume_num = ((arc_no - 1) // VolumeSettings.ARCS_PER_VOLUME) + 1
+
             arc_pos = working_ep - ep_start_val + 1
             total_ep_in_arc = arc_data.get('ep_count', VolumeSettings.EPISODES_PER_ARC)
 
@@ -6315,6 +6333,7 @@ class SovereignApp:
 
             # 4. [V35 무결성 루프: Strike-Enrichment System]
             blueprint = None
+            prev_blueprint = self.current_project.get_blueprint(working_ep - 1) if working_ep > 1 else None  # [V60.69 Fix] 초기화
             reject_count = 0     # 설계 시도 및 반려 횟수
             surgery_count = 0    # 아크 수술 횟수
             enrichment_level = 0 # 정밀도 레벨
@@ -6665,7 +6684,8 @@ class SovereignApp:
                             })
                             blueprint_candidate = architect_generator()
 
-                    # [V53.5] Tree of Thoughts: 마지막 시도에서 필살기로 발동 (reject_count >= 2)
+                    # [V60.69 Fix] Tree of Thoughts: 3회차부터 필살기 발동 (reject_count >= 2)
+                    # 기존 reject_count >= 0은 모든 시도에서 참 → Diversity 경로 불가능 버그
                     elif V50_MODULES_AVAILABLE and self.tree_of_thoughts and reject_count >= 2:
                         self.ui.log(f"🔥 [V53.5] Tree of Thoughts 필살기 발동! (시도 {reject_count + 1}회차)")
                         try:
@@ -6681,7 +6701,9 @@ class SovereignApp:
                                 try:
                                     blueprint_candidate = json.loads(blueprint_candidate)
                                 except:
-                                    pass  # 이미 dict이면 그대로
+                                    # [V60.69 Fix] JSON 파싱 실패 시 기본 생성기로 폴백
+                                    self.ui.log(f"   ⚠️ [V60.69] ToT 결과 JSON 파싱 실패, 기본 생성기 사용")
+                                    blueprint_candidate = architect_generator()
                             blueprint_generation_method = "tot"
                             self.ui.log(f"   🌳 [V53.5] ToT 완료: 최고 경로 '{tot_result.best_path.approach}' ({tot_result.best_path.score}점)")
                             self._audit_event("tree_of_thoughts_ultimate", "blueprint tot as last resort", {
@@ -7130,8 +7152,8 @@ class SovereignApp:
 
                             # [V60.9] 구조화된 Blueprint 피드백 생성
                             structured_bp_feedback = self._generate_structured_blueprint_feedback(
-                                director_result=audit_result,
-                                blueprint=bp,
+                                director_result=blueprint_audit,  # [V60.63 Fix] audit_result → blueprint_audit
+                                blueprint=blueprint_candidate,  # [V60.67 Fix] bp → blueprint_candidate
                                 retry_count=reject_count
                             )
 
@@ -7512,6 +7534,8 @@ class SovereignApp:
             max_episode_loops = (target_ep or total_planned_ep) - self.current_project.get_latest_episode_number() + 3
             if max_episode_loops < WritingLimits.MIN_EPISODE_LOOP_GUARD:
                 max_episode_loops = WritingLimits.MIN_EPISODE_LOOP_GUARD
+            # [V60.69 Fix] 절대 상한 추가 (무한루프 방지)
+            max_episode_loops = min(max_episode_loops, 100)
 
             # 5. 원고 생산 루프 (Sovereign Production)
             while True:
@@ -7573,6 +7597,7 @@ class SovereignApp:
                     arc_pos = next_ep - ep_start_val + 1
                     total_ep_in_arc = arc_data.get('ep_count', 5)
                     arc_tactical = arc_data.get('tactical_doc', '설계도 내용 없음')
+                    arc_no = arc_data.get('arc_no', 0)  # [V60.69 Fix] arc_no 미정의 버그 수정
 
                     # 직전 화 원고 및 엔딩 추출 [V43 안전 패치]
                     prev_ms_data = self.current_project.db.get_manuscript(next_ep - 1)
@@ -8515,6 +8540,12 @@ class SovereignApp:
                                             
                                     except Exception as ci_err:
                                         self.ui.log(f"⚠️ [ContinuityInspector] 원고 검증 중 오류 (비치명적): {ci_err}")
+                                        # [V60.69 Fix] 오류 기록 추가 (추적 가능성 향상)
+                                        self._audit_event("continuity_inspector_error", "manuscript continuity check failed", {
+                                            "ep_num": next_ep,
+                                            "error": str(ci_err)[:200],
+                                            "attempt": audit_attempt
+                                        })
                                         # 오류 시 통과 처리 (프로세스 중단 방지)
                                         continuity_passed = True
                                 
@@ -8963,7 +8994,8 @@ class SovereignApp:
                                     if audit_attempt >= 2:
                                         # 심각한 문제 체크 (서사 폭주, 서사 정체, 모순)
                                         critical_keywords = self._get_dynamic_critical_keywords()  # [V60.3] 동적 생성
-                                        is_critical = any(kw in reason for kw in critical_keywords) or score < 20
+                                        # [V60.69 Fix] CRITICAL 점수 기준 확장 (20 → 40)
+                                        is_critical = any(kw in reason for kw in critical_keywords) or score < 40
 
                                         if is_critical:
                                             # 심각한 문제는 계속 거부

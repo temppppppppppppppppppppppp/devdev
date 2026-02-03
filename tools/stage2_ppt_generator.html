@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stage 2: Arc Tactical Design - PPT Generator</title>
+    <script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px;
+            color: #fff;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 40px;
+        }
+        .card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .card h2 {
+            margin-top: 0;
+            color: #00d4ff;
+            font-size: 1.3rem;
+        }
+        .slide-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .slide-list li {
+            padding: 12px 16px;
+            margin: 8px 0;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            border-left: 3px solid #7b2cbf;
+            font-size: 0.95rem;
+        }
+        .slide-list li span.num {
+            color: #00d4ff;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        button {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            background: linear-gradient(90deg, #7b2cbf, #00d4ff);
+            color: #fff;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(123, 44, 191, 0.4);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .info {
+            text-align: center;
+            color: #666;
+            font-size: 0.85rem;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Stage 2: Arc Tactical Design</h1>
+        <p class="subtitle">Wuxia Studio V60 - PPT Generator</p>
+
+        <div class="card">
+            <h2>슬라이드 구성 (총 15장)</h2>
+            <ul class="slide-list">
+                <li><span class="num">01</span> 타이틀</li>
+                <li><span class="num">02</span> Stage 2 개요</li>
+                <li><span class="num">03</span> 전체 흐름도</li>
+                <li><span class="num">04</span> 초기화 단계</li>
+                <li><span class="num">05</span> 배치 처리 루프</li>
+                <li><span class="num">06</span> Arc 생성 시도 루프</li>
+                <li><span class="num">07</span> 4-Phase Pipeline 개요</li>
+                <li><span class="num">08</span> Phase 1: Preflight</li>
+                <li><span class="num">09</span> Phase 2: Generate (Ensemble)</li>
+                <li><span class="num">10</span> Phase 3: Critique</li>
+                <li><span class="num">11</span> Phase 4: Validate (Consensus)</li>
+                <li><span class="num">12</span> 후처리 검증 파이프라인</li>
+                <li><span class="num">13</span> Arc 데이터 구조</li>
+                <li><span class="num">14</span> 에러 처리 & 모델 사용</li>
+                <li><span class="num">15</span> 요약</li>
+            </ul>
+        </div>
+
+        <button onclick="generatePPT()">PPT 다운로드 (.pptx)</button>
+        <p class="info">PptxGenJS 3.12.0 사용 | 클릭 시 자동 다운로드</p>
+    </div>
+
+    <script>
+    function generatePPT() {
+        const pptx = new PptxGenJS();
+
+        // 기본 설정
+        pptx.author = 'Wuxia Studio V60';
+        pptx.title = 'Stage 2: Arc Tactical Design';
+        pptx.subject = 'Arc 설계 로직 상세';
+        pptx.company = 'Wuxia Studio';
+
+        // 색상 팔레트
+        const COLORS = {
+            primary: '7B2CBF',      // 보라
+            secondary: '00D4FF',    // 시안
+            dark: '1A1A2E',         // 다크
+            accent: 'FF6B6B',       // 레드
+            success: '4CAF50',      // 그린
+            warning: 'FFC107',      // 옐로우
+            text: 'FFFFFF',
+            subtext: 'AAAAAA',
+            bg: '16213E'
+        };
+
+        // 공통 스타일
+        const titleStyle = { fontSize: 32, bold: true, color: COLORS.text };
+        const subtitleStyle = { fontSize: 18, color: COLORS.subtext };
+        const bodyStyle = { fontSize: 14, color: COLORS.text };
+        const bulletStyle = { fontSize: 13, color: COLORS.text, bullet: { type: 'bullet', color: COLORS.secondary } };
+
+        // ========================================
+        // Slide 1: 타이틀
+        // ========================================
+        let slide = pptx.addSlide();
+        slide.background = { color: COLORS.dark };
+        slide.addText('Stage 2', { x: 0.5, y: 2.0, w: '90%', h: 1, ...titleStyle, fontSize: 54 });
+        slide.addText('Arc Tactical Design', { x: 0.5, y: 2.8, w: '90%', h: 0.6, fontSize: 36, color: COLORS.secondary, bold: true });
+        slide.addText('50개 Arc의 전술적 설계 (권당 5개 Arc)', { x: 0.5, y: 3.6, w: '90%', h: 0.5, ...subtitleStyle, fontSize: 20 });
+        slide.addText('Wuxia Studio V60', { x: 0.5, y: 4.8, w: '90%', h: 0.4, fontSize: 14, color: COLORS.subtext });
+
+        // ========================================
+        // Slide 2: 개요
+        // ========================================
+        slide = pptx.addSlide();
+        slide.background = { color: COLORS.dark };
+        slide.addText('Stage 2 개요', { x: 0.5, y: 0.3, w: '90%', h: 0.6, ...titleStyle });
+
+        slide.addText([
+            { text: '목적', options: { bold: true, color: COLORS.secondary } },
+            { text: '\n50개 Arc의 전술적 설계 (권당 5개 Arc)', options: bodyStyle }
+        ], { x: 0.5, y: 1.1, w: '45%', h: 1.2, valign: 'top' });
+
+        slide.addText([
+            { text: '입력', options: { bold: true, color: COLORS.secondary } },
+            { text: '\n• Stage 1의 Volume 전략\n• Bible 데이터 (설정집)', options: bodyStyle }
+        ], { x: 5.2, y: 1.1, w: '45%', h: 1.2, valign: 'top' });
+
+        slide.addText([
+            { text: '출력 (Arc당)', options: { bold: true, color: COLORS.secondary } },
+            { text: '\n• tactical_doc: 화별 상세 전술\n• joint_docs: Arc 종료 시 상태\n• state_constraints: 상태 제약\n• beat_sequence: 화별 비트\n• hybrid_composition: 서사 패턴', options: bodyStyle }
+        ], { x: 0.5, y: 2.5, w: '45%', h: 2.2, valign: 'top' });
+
+        slide.addText([
+            { text: '핵심 지표', options: { bold: true, color: COLORS.secondary } },
+            { text: '\n• 비용: ~$0.15-0.20/Arc\n• 목표 통과율: 90%+\n• 최대 재시도: 4회\n• 배치 단위: 5개 Arc', options: bodyStyle }
+        ], { x: 5.2, y: 2.5, w: '45%', h: 2.2, valign: 'top' });
+
+        // ========================================
+        // Slide 3: 전체 흐름도
+        // ========================================
+        slide = pptx.addSlide();
+        slide.background = { color: COLORS.dark };
+        slide.addText('전체 흐름도', { x: 0.5, y: 0.3, w: '90%', h: 0.6, ...titleStyle });
+
+        // 흐름도 박스들
+        const boxes = [
+            { text: '초기화\nBible/Volumes 로드', x: 0.5, y: 1.2, w: 2.2, h: 0.9, fill: COLORS.primary },
+            { text: '배치 처리 루프\n(5개씩)', x: 3.2, y: 1.2, w: 2.2, h: 0.9, fill: COLORS.secondary },
+            { text: 'A. 병렬 농축\nenrich_raw_block ×5', x: 0.5, y: 2.5, w: 2.2, h: 0.9, fill: '4A4A6A' },
+            { text: 'B. 사후 용접\nstitch_joints', x: 3.2, y: 2.5, w: 2.2, h: 0.9, fill: '4A4A6A' },
+            { text: 'C. 순차 설계\nArc별 생성', x: 5.9, y: 2.5, w: 2.2, h: 0.9, fill: '4A4A6A' },
+            { text: 'Arc 생성 시도\n최대 4회', x: 5.9, y: 3.8, w: 2.2, h: 0.9, fill: COLORS.accent },
+            { text: '검증 파이프라인\n7-Tier 검증', x: 3.2, y: 3.8, w: 2.2, h: 0.9, fill: COLORS.warning },
+            { text: '저장\nDB + ConstraintDB', x: 0.5, y: 3.8, w: 2.2, h: 0.9, fill: COLORS.success }
+        ];
+
+        boxes.forEach(b => {
+            slide.addShape(pptx.ShapeType.roundRect, {
+                x: b.x, y: b.y, w: b.w, h: b.h,
+                fill: { color: b.fill },
+                line: { color: COLORS.text, pt: 1 }
+            });
+            slide.addText(b.text, { x: b.x, y: b.y, w: b.w, h: b.h, fontSize: 11, color: COLORS.text, align: 'center', valign: 'middle', bold: true });
+        });
+
+        // 화살표 대신 텍스트로 표시
+        slide.addText('→', { x: 2.7, y: 1.45, w: 0.5, h: 0.4, fontSize: 24, color: COLORS.text });
+        slide.addText('↓', { x: 1.4, y: 2.1, w: 0.5, h: 0.4, fontSize: 24, color: COLORS.text });
+        slide.addText('→', { x: 2.7, y: 2.75, w: 0.5, h: 0.4, fontSize: 24, color: COLORS.text });
+        slide.addText('→', { x: 5.4, y: 2.75, w: 0.5, h: 0.4, fontSize: 24, color: COLORS.text });
+        slide.addText('↓', { x: 6.8, y: 3.4, w: 0.5, h: 0.4, fontSize: 24, color: COLORS.text });
+        slide.addText('←', { x: 5.4, y: 4.05, w: 0.5, h: 0.4, fontSize: 24, color: COLORS.text });
+        slide.addText('←', { x: 2.7, y: 4.05, w: 0.5, h: 0.4, fontSize: 24, color: COLORS.text });
+
+        // ========================================
+        // Slide 4: 초기화 단계
+        // ========================================
+        slide = pptx.addSlide();
+        slide.background = { color: COLORS.dark };
+        slide.addText('1. 초기화 단계', { x: 0.5, y: 0.3, w: '90%', h: 0.6, ...titleStyle });
+
+        slide.addText('데이터 로드', { x: 0.5, y: 1.0, w: 4, h: 0.4, fontSize: 18, bold: true, color: COLORS.secondary });
+        slide.addText([
+            { text: '1. master_bible 로드 (DB anchor)\n', options: bulletStyle },
+            { text: '2. volumes 전략 로드 (Stage 1 결과)\n', options: bulletStyle },
+            { text: '3. 기존 arcs 데이터 로드 (이어하기 지원)\n', options: bulletStyle },
+            { text: '4. plot_roadmap에서 전체 Arc 수 파악\n', options: bulletStyle },
+            { text: '5. 주인공 이름 추출', options: bulletStyle }
+        ], { x: 0.5, y: 1.4, w: 4.5, h: 2.5, valign: 'top' });
+
+        slide.addText('주요 변수', { x: 5.2, y: 1.0, w: 4, h: 0.4, fontSize: 18, bold: true, color: COLORS.secondary });
+        const varsData = [
+            ['변수', '설명'],
+            ['all_refined_arcs', '완성된 Arc 리스트'],
+            ['done_count', '완료된 Arc 수'],
+            ['total_count', '전체 Arc 수'],
+            ['constraint_db', '제약 조건 관리']
+        ];
+        slide.addTable(varsData, {
+            x: 5.2, y: 1.4, w: 4.3, h: 2.0,
+            fontSize: 11,
+            color: COLORS.text,
+            fill: { color: '2A2A4A' },
+            border: { pt: 0.5, color: '4A4A6A' },
+            colW: [1.8, 2.5]
+        });
+
+        // ========================================
+        // Slide 5: 배치 처리 루프
+        // ========================================
+        slide = pptx.addSlide();
+        slide.background = { color: COLORS.dark };
+        slide.addText('2. 배치 처리 루프', { x: 0.5, y: 0.3, w: '90%', h: 0.6, ...titleStyle });
+        slide.addText('단위: 5개 Arc씩 | 이유: 인과율 정밀 용접', { x: 0.5, y: 0.85, w: '90%', h: 0.3, ...subtitleStyle });
+
+        slide.addText('A. 병렬 농축 (Enrichment)', { x: 0.5, y: 1.3, w: 4.5, h: 0.4, fontSize: 16, bold: true, color: COLORS.secondary });
+        slide.addText([
+            { text: '• enrich_raw_block_async() × 5 병렬 실행\n', options: bulletStyle },
+            { text: '• Semaphore로 동시 실행 제한\n', options: bulletStyle },
+            { text: '• 출력: context, joint_docs, status_shadow', options: bulletStyle }
+        ], { x: 0.5, y: 1.7, w: 4.5, h: 1.3, valign: 'top' });
+
+        slide.addText('B. 사후 용접 (Stitch Joints)', { x: 5.2, y: 1.3, w: 4.5, h: 0.4, fontSize: 16, bold: true, color: COLORS.secondary });
+        slide.addText([
+            { text: '• Arc 간 인과율 연결\n', options: bulletStyle },
+            { text: '• Entity Anchoring (고유 명사)\n', options: bulletStyle },
+            { text: '• joint_docs 불일치 시 REPAIRED', options: bulletStyle }
+        ], { x: 5.2, y: 1.7, w: 4.5, h: 1.3, valign: 'top' });
+
+        slide.addText('C. 순차 설계', { x: 0.5, y: 3.2, w: '90%', h: 0.4, fontSize: 16, bold: true, color: COLORS.secondary });
+        slide.addText([
+            { text: '1. 결핍 리포트 생성 (Analyst.get_lack_report)\n', options: bulletStyle },
+            { text: '2. 욕망 드라이브 생성 (Weaver.generate_arc_drive)\n', options: bulletStyle },
+            { text: '3. ConstraintDB 제약 블록 생성\n', options: bulletStyle },
+            { text: '4. ConstraintCompiler 체크리스트 생성\n', options: bulletStyle },
+            { text: '5. Arc 생성 시도 루프 진입 (최대 4회)', options: bulletStyle }
+        ], { x: 0.5, y: 3.6, w: '90%', h: 1.8, valign: 'top' });
+
+        // ========================================
+        // Slide 6: Arc 생성 시도 루프
+        // ========================================
+        slide = pptx.addSlide();
+        slide.background = { color: COLORS.dark };
+        slide.addText('Arc 생성 시도 루프', { x: 0.5, y: 0.3, w: '90%', h: 0.6, ...titleStyle });
+        slide.addText('최대 4회 시도 | 3회 실패 후 10초 대기', { x: 0.5, y: 0.85, w: '90%', h: 0.3, ...subtitleStyle });
+
+        const loopSteps = [
+            { num: '1', text: 'Preflight 분석', desc: '이전 Arc 분석, 금지 맵 구축' },
+            { num: '2', text: 'ConstraintCompiler', desc: 'MUST DO / MUST NOT DO 체크리스트' },
+            { num: '3', text: 'Arc 생성', desc: 'Analyst / ToT / TwoPhase' },
+            { num: '4', text: 'DraftValidator', desc: 'Python 검증 (무료)' },
+            { num: '5', text: 'SelfReflector', desc: '자기 비판 및 개선' },
+            { num: '6', text: 'Consensus', desc: '3-LLM 합의 검증' },
+            { num: '7', text: 'ContinuityInspector', desc: 'LLM 심층 검증' },
+            { num: '8', text: 'Director', desc: '최종 승인' }
+        ];
+
+        loopSteps.forEach((step, i) => {
+            const row = Math.floor(i / 2);
+            const col = i % 2;
+            const x = 0.5 + col * 4.7;
+            const y = 1.3 + row * 0.9;
+
+            slide.addShape(pptx.ShapeType.roundRect, {
+                x: x, y: y, w: 4.3, h: 0.75,
+                fill: { color: i < 6 ? '3A3A5A' : (i === 7 ? COLORS.success : COLORS.warning) },
+                line: { color: COLORS.secondary, pt: 1 }
+            });
+            slide.addText(step.num, { x: x + 0.1, y: y + 0.1, w: 0.4, h: 0.55, fontSize: 18, bold: true, color: COLORS.secondary, valign: 'middle' });
+            slide.addText(step.text, { x: x + 0.5, y: y + 0.05, w: 3.7, h: 0.35, fontSize: 13, bold: true, color: COLORS.text });
+            slide.addText(step.desc, { x: x + 0.5, y: y + 0.4, w: 3.7, h: 0.3, fontSize: 10, color: COLORS.subtext });
+        });
+
+        slide.addText('PASS → 저장 & 다음 Arc  |  REJECT → 피드백 주입 & 재시도', { x: 0.5, y: 4.95, w: '90%', h: 0.3, fontSize: 12, color: COLORS.accent, align: 'center', bold: true });
+
+        // ========================================
+        // Slide 7: 4-Phase Pipeline 개요
+        // ========================================
+        slide = pptx.addSlide();
+        slide.background = { color: COLORS.dark };
+        slide.addText('4-Phase Pipeline', { x: 0.5, y: 0.3, w: '90%', h: 0.6, ...titleStyle });
+        slide.addText('FourPhaseArcGenerator | 비용: ~$0.15-0.20/Arc | 목표: 90%+ 통과율', { x: 0.5, y: 0.85, w: '90%', h: 0.3, ...subtitleStyle });
+
+        const phases = [
+            { phase: 'Phase 1', name: 'PREFLIGHT', desc: 'PreflightChecker\nConstraintCompiler\nNegativeExampleInjector', color: COLORS.primary },
+            { phase: 'Phase 2', name: 'GENERATE', desc: 'Ensemble 생성\n3개 전략 병렬\n최고 점수 선택', color: COLORS.secondary },
+            { phase: 'Phase 3', name: 'CRITIQUE', desc: 'ArcCritic\n7가지 기준 평가\n자동 수정', color: COLORS.warning },
+            { phase: 'Phase 4', name: 'VALIDATE', desc: '3-LLM 합의\nCRITICAL→REJECT\n과반수 판정', color: COLORS.success }
+        ];
+
+        phases.forEach((p, i) => {
+            const x = 0.3 + i * 2.4;
+            slide.addShape(pptx.ShapeType.roundRect, {
+                x: x, y: 1.4, w: 2.2, h: 2.8,
+                fill: { color: p.color },
+                line: { color: COLORS.text, pt: 1 }
+            });
+            slide.addText(p.phase, { x: x, y: 1.5, w: 2.2, h: 0.4, fontSize: 12, color: COLORS.text, align: 'center' });
+            slide.addText(p.name, { x: x, y: 1.85, w: 2.2, h: 0.5, fontSize: 16, bold: true, color: COLORS.text, align: 'center' });
+            slide.addText(p.desc, { x: x + 0.1, y: 2.4, w: 2.0, h: 1.6, fontSize: 11, color: COLORS.text, align: 'center', valign: 'top' });
+
+            if (i < 3) {
+                slide.addText('→', { x: x + 2.2, y: 2.5, w: 0.3, h: 0.4, fontSize: 24, color: COLORS.text });
+            }
+        });
+
+        slide.addText('Phase 2.5: Quick Duplicate Check (Python, API 비용 0)', { x: 0.5, y: 4.5, w: '90%', h: 0.3, fontSize: 12, color: COLORS.accent, align: 'center' });
+
+        // ========================================
+        // Slide 8: Phase 1 - Preflight
+        // ========================================
+        slide = pptx.addSlide();
+        slide.background = { color: COLORS.dark };
+        slide.addText('Phase 1: Preflight', { x: 0.5, y: 0.3, w: '90%', h: 0.6, ...titleStyle });
+        slide.addText('PreflightChecker | 비용: ~$0.03-0.05/Arc | gemini-3-flash-preview', { x: 0.5, y: 0.85, w: '90%', h: 0.3, ...subtitleStyle });
+
+        slide.addText('분석 출력 구조', { x: 0.5, y: 1.2, w: 4.5, h: 0.4, fontSize: 16, bold: true, color: COLORS.secondary });
+
+        const preflightItems = [
+            { title: 'timeline_analysis', items: ['items: 아이템 타임라인', 'grants: 수여물 타임라인', 'current_inventory', 'consumed_items'] },
+            { title: 'relationship_map', items: ['NPC별 관계 상태', 'history: 변화 이력'] },
+            { title: 'world_state', items: ['current_location', 'protagonist_status'] },
+            { title: 'absolute_prohibitions', items: ['items_cannot_acquire', 'grants_cannot_receive', 'state_constraints'] }
+        ];
+
+        preflightItems.forEach((item, i) => {
+            const col = i % 2;
+            const row = Math.floor(i / 2);
+            const x = 0.5 + col * 4.7;
+            const y = 1.6 + row * 1.5;
+
+            slide.addText(item.title, { x: x, y: y, w: 4.3, h: 0.35, fontSize: 13, bold: true, color: COLORS.secondary });
+            slide.addText(item.items.map(t => '• ' + t).join('\n'), { x: x, y: y + 0.35, w: 4.3, h: 1.0, fontSize: 11, color: COLORS.text });
+        });
+
+        // ========================================
+        // Slide 9: Phase 2 - Generate (Ensemble)
+        // ========================================
+        slide = pptx.addSlide();
+        slide.background = { color: COLORS.dark };
+        slide.addText('Phase 2: Generate (Ensemble)', { x: 0.5, y: 0.3, w: '90%', h: 0.6, ...titleStyle });
+        slide.addText('ArcEnsembleGenerator | gemini-3-pro-preview | Thinking "high"', { x: 0.5, y: 0.85, w: '90%', h: 0.3, ...subtitleStyle });
+
+        slide.addText('3가지 전략 병렬 생성', { x: 0.5, y: 1.2, w: '90%', h: 0.4, fontSize: 16, bold: true, color: COLORS.secondary });
+
+        const strategies = [
+            ['전략', 'Temperature', '특징'],
+            ['Conservative', '0.3', '안정성 우선, 검증된 패턴'],
+            ['Balanced', '0.5', '안정성 + 창의성 균형'],
+            ['Creative', '0.7', '창의성 우선, 신선한 전개']
+        ];
+
+        slide.addTable(strategies, {
+            x: 0.5, y: 1.6, w: 5.5, h: 1.5,
+            fontSize: 12,
+            color: COLORS.text,
+            fill: { color: '2A2A4A' },
+            border: { pt: 0.5, color: COLORS.secondary },
+            colW: [2.0, 1.5, 2.0]
+        });
+
+        slide.addText('평가 기준 (100점 만점)', { x: 6.2, y: 1.2, w: 3.5, h: 0.4, fontSize: 16, bold: true, color: COLORS.secondary });
+        slide.addText([
+            { text: '• 구조 완성도\n', options: bulletStyle },
+            { text: '• 연속성 준수\n', options: bulletStyle },
+            { text: '• 서사 밀도\n', options: bulletStyle },
+            { text: '• 제약 준수율\n', options: bulletStyle },
+            { text: '• tactical_doc 품질', options: bulletStyle }
+        ], { x: 6.2, y: 1.6, w: 3.5, h: 1.8, valign: 'top' });
+
+        slide.addText('→ 최고 점수 후보 선택', { x: 0.5, y: 3.4, w: '90%', h: 0.4, fontSize: 14, color: COLORS.success, bold: true });
+
+        // ========================================
+        // Slide 10: Phase 3 - Critique
+        // ========================================
+        slide = pptx.addSlide();
+        slide.background = { color: COLORS.dark };
+        slide.addText('Phase 3: Critique', { x: 0.5, y: 0.3, w: '90%', h: 0.6, ...titleStyle });
+        slide.addText('ArcCritic | gemini-3-pro-preview | Thinking "medium"', { x: 0.5, y: 0.85, w: '90%', h: 0.3, ...subtitleStyle });
+
+        slide.addText('7가지 평가 기준 (각 10점)', { x: 0.5, y: 1.2, w: '90%', h: 0.4, fontSize: 16, bold: true, color: COLORS.secondary });
+
+        const criteria = [
+            ['기준', '검증 내용'],
+            ['아이템 연속성', '중복 획득, 소지품 계승'],
+            ['위치 연속성', '시작 위치 = 이전 종료 위치'],
+            ['상태 연속성', '부상, 내공 수치 일관성'],
+            ['수여물 타임라인', '중복 수여, 수여자 존재'],
+            ['tactical_doc 품질', '분량, 화별 구분 명확성'],
+            ['joint_docs 정합성', '종료 상태 기록 완전성'],
+            ['서사적 일관성', '캐릭터, 갈등 계승']
+        ];
+
+        slide.addTable(criteria, {
+            x: 0.5, y: 1.6, w: 6.5, h: 2.8,
+            fontSize: 11,
+            color: COLORS.text,
+            fill: { color: '2A2A4A' },
+            border: { pt: 0.5, color: COLORS.secondary },
+            colW: [2.0, 4.5]
+        });
+
+        slide.addText('자동 수정 적용', { x: 7.2, y: 1.6, w: 2.5, h: 0.4, fontSize: 14, bold: true, color: COLORS.success });
+        slide.addText('가능한 오류는\nArcCritic이\n자동으로 수정', { x: 7.2, y: 2.0, w: 2.5, h: 1.0, fontSize: 12, color: COLORS.text });
+
+        // ========================================
+        // Slide 11: Phase 4 - Validate (Consensus)
+        // ========================================
+        slide = pptx.addSlide();
+        slide.background = { color: COLORS.dark };
+        slide.addText('Phase 4: Validate (Consensus)', { x: 0.5, y: 0.3, w: '90%', h: 0.6, ...titleStyle });
+        slide.addText('ConsensusValidator | gemini-3-pro-preview × 3 병렬 | 비용: ~$0.06-0.10/Arc', { x: 0.5, y: 0.85, w: '90%', h: 0.3, ...subtitleStyle });
+
+        slide.addText('3가지 검증 관점', { x: 0.5, y: 1.2, w: '90%', h: 0.4, fontSize: 16, bold: true, color: COLORS.secondary });
+
+        const validators = [
+            ['관점', '역할', '집중 항목', 'Temp'],
+            ['continuity_focused', '연속성 전문가', '아이템/수여물/위치/상태', '0.1'],
+            ['structure_focused', '구조 전문가', 'tactical_doc, 필드 완성도', '0.1'],
+            ['narrative_focused', '서사 전문가', '캐릭터, 긴장감, 갈등', '0.2']
+        ];
+
+        slide.addTable(validators, {
+            x: 0.5, y: 1.6, w: 9, h: 1.5,
+            fontSize: 11,
+            color: COLORS.text,
+            fill: { color: '2A2A4A' },
+            border: { pt: 0.5, color: COLORS.secondary },
+            colW: [2.2, 1.8, 3.5, 0.8]
+        });
+
+        slide.addText('합의 로직', { x: 0.5, y: 3.3, w: '90%', h: 0.4, fontSize: 16, bold: true, color: COLORS.secondary });
+
+        const consensusBoxes = [
+            { text: 'CRITICAL 이슈\n→ 즉시 REJECT', x: 0.5, y: 3.7, fill: COLORS.accent },
+            { text: '과반수 REJECT\n→ REJECT', x: 3.5, y: 3.7, fill: COLORS.warning },
+            { text: '그 외\n→ PASS', x: 6.5, y: 3.7, fill: COLORS.success }
+        ];
+
+        consensusBoxes.forEach(b => {
+            slide.addShape(pptx.ShapeType.roundRect, {
+                x: b.x, y: b.y, w: 2.7, h: 0.9,
+                fill: { color: b.fill },
+                line: { color: COLORS.text, pt: 1 }
+            });
+            slide.addText(b.text, { x: b.x, y: b.y, w: 2.7, h: 0.9, fontSize: 12, color: COLORS.text, align: 'center', valign: 'middle', bold: true });
+        });
+
+        // ========================================
+        // Slide 12: 후처리 검증 파이프라인
+        // ========================================
+        slide = pptx.addSlide();
+        slide.background = { color: COLORS.dark };
+        slide.addText('후처리 검증 파이프라인', { x: 0.5, y: 0.3, w: '90%', h: 0.6, ...titleStyle });
+
+        const postSteps = [
+            { num: '1', text: 'Arc 매핑 검증', desc: '블록↔아크 매핑, 회차 범위 정합성' },
+            { num: '2', text: 'Stage2Optimizer', desc: '자동 수정 가능한 오류 수정' },
+            { num: '3', text: 'ConstraintDB 즉시 검증', desc: 'Python 기반, 제약 위반 감지' },
+            { num: '4', text: 'Flow Guard', desc: '서사 폭주/정체 차단' },
+            { num: '5', text: 'Duplicate Guard', desc: '전술서 중복 검사' },
+            { num: '6', text: 'DraftValidator 2차', desc: 'ArcCorrector로 부분 수정' },
+            { num: '7', text: 'ContinuityInspector', desc: 'LLM 심층 검증' },
+            { num: '8', text: 'Director', desc: '최종 승인 (70점 이상)' }
+        ];
+
+        postSteps.forEach((step, i) => {
+            const x = 0.5 + (i % 4) * 2.35;
+            const y = 1.1 + Math.floor(i / 4) * 1.8;
+
+            slide.addShape(pptx.ShapeType.roundRect, {
+                x: x, y: y, w: 2.2, h: 1.5,
+                fill: { color: i < 6 ? '3A3A5A' : (i === 7 ? COLORS.success : COLORS.warning) },
+                line: { color: COLORS.secondary, pt: 1 }
+            });
+            slide.addText(step.num, { x: x + 0.1, y: y + 0.1, w: 0.35, h: 0.35, fontSize: 14, bold: true, color: COLORS.secondary });
+            slide.addText(step.text, { x: x + 0.1, y: y + 0.45, w: 2.0, h: 0.4, fontSize: 11, bold: true, color: COLORS.text });
+            slide.addText(step.desc, { x: x + 0.1, y: y + 0.85, w: 2.0, h: 0.55, fontSize: 9, color: COLORS.subtext });
+        });
+
+        slide.addText('ContinuityInspector 판정: CRITICAL → 즉시 REJECT | MAJOR → REJECT | MINOR → WARNING (PASS 가능)', { x: 0.5, y: 4.8, w: '90%', h: 0.3, fontSize: 10, color: COLORS.accent });
+
+        // ========================================
+        // Slide 13: Arc 데이터 구조
+        // ========================================
+        slide = pptx.addSlide();
+        slide.background = { color: COLORS.dark };
+        slide.addText('Arc 데이터 구조', { x: 0.5, y: 0.3, w: '90%', h: 0.6, ...titleStyle });
+
+        const arcFields = [
+            { field: 'arc_no, ep_start, ep_end, ep_count', desc: '기본 정보' },
+            { field: 'tactical_doc', desc: '화별 상세 전술 (3000자+)' },
+            { field: 'beat_sequence[]', desc: '화별 핵심 비트' },
+            { field: 'hybrid_composition', desc: 'primary, secondary, mixing_logic' },
+            { field: 'state_constraints', desc: 'arc_start_state, arc_end_state, items_acquired/consumed' },
+            { field: 'joint_docs', desc: 'final_location, physical_inventory, world_joint' },
+            { field: 'status_shadow', desc: 'internal_energy_loss, expected_injuries' },
+            { field: 'arc_drive', desc: '욕망 벡터, 핵심 동기' }
+        ];
+
+        arcFields.forEach((item, i) => {
+            const y = 1.0 + i * 0.48;
+            slide.addText(item.field, { x: 0.5, y: y, w: 4.2, h: 0.45, fontSize: 11, bold: true, color: COLORS.secondary });
+            slide.addText(item.desc, { x: 4.8, y: y, w: 4.8, h: 0.45, fontSize: 11, color: COLORS.text });
+        });
+
+        // ========================================
+        // Slide 14: 에러 처리 & 모델 사용
+        // ========================================
+        slide = pptx.addSlide();
+        slide.background = { color: COLORS.dark };
+        slide.addText('에러 처리 & 모델 사용', { x: 0.5, y: 0.3, w: '90%', h: 0.6, ...titleStyle });
+
+        slide.addText('재시도 전략', { x: 0.5, y: 1.0, w: 4.5, h: 0.4, fontSize: 16, bold: true, color: COLORS.secondary });
+        const retryData = [
+            ['시도', '대응'],
+            ['1회차', '기본 생성 (모든 주입 적용)'],
+            ['2회차', 'Focus Mode + ToT/TwoPhase'],
+            ['3회차', 'REJECT 패턴 분석 주입'],
+            ['4회차', '10초 대기 후 최종 시도']
+        ];
+        slide.addTable(retryData, {
+            x: 0.5, y: 1.4, w: 4.3, h: 1.8,
+            fontSize: 10,
+            color: COLORS.text,
+            fill: { color: '2A2A4A' },
+            border: { pt: 0.5, color: COLORS.secondary },
+            colW: [1.0, 3.3]
+        });
+
+        slide.addText('모델 사용', { x: 5.2, y: 1.0, w: 4.5, h: 0.4, fontSize: 16, bold: true, color: COLORS.secondary });
+        const modelData = [
+            ['에이전트', '모델'],
+            ['Analyst', 'gemini-3-pro-preview'],
+            ['PreflightChecker', 'gemini-3-flash-preview'],
+            ['ArcEnsemble', 'gemini-3-pro-preview'],
+            ['ConsensusValidator', 'gemini-3-pro × 3'],
+            ['ContinuityInspector', 'gemini-2.5-flash'],
+            ['Director', 'gemini-2.0-flash']
+        ];
+        slide.addTable(modelData, {
+            x: 5.2, y: 1.4, w: 4.3, h: 2.4,
+            fontSize: 10,
+            color: COLORS.text,
+            fill: { color: '2A2A4A' },
+            border: { pt: 0.5, color: COLORS.secondary },
+            colW: [1.8, 2.5]
+        });
+
+        slide.addText('실패 시 사용자 선택: [1] 건너뛰고 계속  [2] 중단  [3] 다시 하기  [4] 수동 개입', { x: 0.5, y: 4.0, w: '90%', h: 0.3, fontSize: 11, color: COLORS.accent });
+
+        // ========================================
+        // Slide 15: 요약
+        // ========================================
+        slide = pptx.addSlide();
+        slide.background = { color: COLORS.dark };
+        slide.addText('요약', { x: 0.5, y: 0.3, w: '90%', h: 0.6, ...titleStyle });
+
+        const summaryItems = [
+            { icon: '🎯', title: '목적', text: '50개 Arc 전술 설계 (권당 5개)' },
+            { icon: '⚙️', title: '핵심 파이프라인', text: '4-Phase: Preflight → Generate → Critique → Validate' },
+            { icon: '🔒', title: '제약 관리', text: 'ConstraintCompiler + ConstraintDB (중복 획득 방지)' },
+            { icon: '✅', title: '검증 체계', text: '7-Tier 검증 (Python 무료 + LLM 심층)' },
+            { icon: '💰', title: '비용 효율', text: '~$0.15-0.20/Arc, DraftValidator는 무료' },
+            { icon: '🔄', title: '안정성', text: '최대 4회 재시도, 목표 90%+ 초기 통과율' }
+        ];
+
+        summaryItems.forEach((item, i) => {
+            const y = 1.0 + i * 0.65;
+            slide.addText(item.icon, { x: 0.5, y: y, w: 0.5, h: 0.55, fontSize: 20 });
+            slide.addText(item.title, { x: 1.1, y: y, w: 1.8, h: 0.55, fontSize: 14, bold: true, color: COLORS.secondary, valign: 'middle' });
+            slide.addText(item.text, { x: 3.0, y: y, w: 6.5, h: 0.55, fontSize: 13, color: COLORS.text, valign: 'middle' });
+        });
+
+        slide.addText('Wuxia Studio V60 - Stage 2: Arc Tactical Design', { x: 0.5, y: 5.0, w: '90%', h: 0.3, fontSize: 12, color: COLORS.subtext, align: 'center' });
+
+        // 파일 저장
+        pptx.writeFile({ fileName: 'Stage2_Arc_Tactical_Design.pptx' });
+    }
+    </script>
+</body>
+</html>

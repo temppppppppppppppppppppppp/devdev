@@ -732,7 +732,10 @@ class ProjectContext:
             
             # 3. 동기화 상태 갱신
             self.db.update_sync_status(ep_num, 1)
-            print(f"   ⚓ 제 {ep_num}화 역사 박제 완료.")        
+            print(f"   ⚓ 제 {ep_num}화 역사 박제 완료.")
+
+        # [V60.60 Fix] 반환값 추가 - 동기화 성공 표시
+        return True
 
 
     # modules/core/project_manager.py (ProjectContext 클래스 내부)

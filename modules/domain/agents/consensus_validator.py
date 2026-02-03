@@ -95,7 +95,7 @@ tactical_doc, joint_docs, state_constraints의 구조와 정합성을 집중 검
 
 
 CONSENSUS_VALIDATION_PROMPT = """
-[V60.12 CONSENSUS VALIDATOR - {role}]
+[V60.56 CONSENSUS VALIDATOR - {role}]
 
 {focus}
 
@@ -107,6 +107,11 @@ CONSENSUS_VALIDATION_PROMPT = """
 
 ### [제약 조건]
 {constraints}
+
+### [V60.56 Python 사전 분석 결과 - 참고용]
+아래는 Python 패턴 매칭으로 발견된 잠재적 문제입니다.
+⚠️ 주의: Python은 문맥을 모르므로 오탐일 수 있습니다. 당신이 컨텍스트를 보고 최종 판단하세요.
+{python_advisory}
 
 ### [출력 형식 - JSON]
 
@@ -141,10 +146,10 @@ class ConsensusValidator(BaseAgent):
     3개 LLM이 서로 다른 관점으로 검증, 합의 도출
     """
 
-    def __init__(self, context, client, model_tier: str = "gemini-3-pro-preview"):
-        # [V60.24] Gemini 3로 변경
+    def __init__(self, context, client, model_tier: str = "gemini-2.5-flash"):
+        # [V60.53] Flash로 변경 - 단순 투표 로직, Pro 불필요
         super().__init__(context, client, model_tier)
-        # [V60.37] 스마트 폴백 (BaseAgent에서 자동 설정: gemini-3 → gemini-2.5-pro)
+        # [V60.37] 스마트 폴백 (BaseAgent에서 자동 설정)
         self.perspectives = VALIDATION_PERSPECTIVES
         self.max_workers = 3
 
@@ -152,7 +157,8 @@ class ConsensusValidator(BaseAgent):
         self,
         arc: Dict,
         prev_arcs: List[Dict],
-        constraints: str = ""
+        constraints: str = "",
+        python_advisory: List[Dict] = None
     ) -> Tuple[str, Dict]:
         """
         3개 LLM 합의 검증
@@ -161,10 +167,12 @@ class ConsensusValidator(BaseAgent):
             arc: 검증할 Arc
             prev_arcs: 이전 Arc 리스트
             constraints: 제약 조건
+            python_advisory: [V60.56] Python 사전 검사에서 발견한 잠재적 문제 (LLM이 최종 판단)
 
         Returns:
             (final_verdict, consensus_result)
         """
+        python_advisory = python_advisory or []
         # [V60.28] Arc 1 (이전 Arc 없음)은 연속성 검증 불필요 - 구조/서사만 검증
         if not prev_arcs:
             print("      ⏭️ [Consensus] Arc 1 - 연속성 검증 스킵, 구조/서사만 검증")
@@ -175,6 +183,16 @@ class ConsensusValidator(BaseAgent):
 
         prev_summary = self._generate_prev_summary(prev_arcs)
         arc_data = json.dumps(arc, ensure_ascii=False, indent=2)[:6000]
+
+        # [V60.56] Python advisory 정보 포맷팅
+        advisory_text = "(없음)"
+        if python_advisory:
+            advisory_lines = []
+            for adv in python_advisory[:5]:  # 최대 5개만
+                adv_type = adv.get('type', '?')
+                adv_item = adv.get('item_or_subject', adv.get('description', '?'))
+                advisory_lines.append(f"- [{adv_type}] {adv_item}")
+            advisory_text = "\n".join(advisory_lines) if advisory_lines else "(없음)"
 
         results = []
 
@@ -187,7 +205,8 @@ class ConsensusValidator(BaseAgent):
                     arc_data=arc_data,
                     prev_summary=prev_summary,
                     constraints=constraints,
-                    perspective=perspective
+                    perspective=perspective,
+                    python_advisory_text=advisory_text
                 )
                 futures[future] = perspective["name"]
 
@@ -218,7 +237,8 @@ class ConsensusValidator(BaseAgent):
         arc_data: str,
         prev_summary: str,
         constraints: str,
-        perspective: Dict
+        perspective: Dict,
+        python_advisory_text: str = "(없음)"
     ) -> Dict:
         """단일 관점 검증"""
         prompt = CONSENSUS_VALIDATION_PROMPT.format(
@@ -227,7 +247,8 @@ class ConsensusValidator(BaseAgent):
             perspective_name=perspective["name"],
             arc_data=self._escape_braces(arc_data),
             prev_summary=self._escape_braces(prev_summary),
-            constraints=self._escape_braces(constraints[:2000] if constraints else "(없음)")
+            constraints=self._escape_braces(constraints[:2000] if constraints else "(없음)"),
+            python_advisory=self._escape_braces(python_advisory_text)
         )
 
         result = self.ask(prompt, temperature=perspective["temperature"])
@@ -402,6 +423,6 @@ class ConsensusValidator(BaseAgent):
         return "\n".join(lines)
 
 
-def create_consensus_validator(context, client, model_tier: str = "gemini-3-pro-preview"):
-    """[V60.24] ConsensusValidator 생성 헬퍼 - Gemini 3 사용"""
+def create_consensus_validator(context, client, model_tier: str = "gemini-2.5-flash"):
+    """[V60.53] ConsensusValidator 생성 헬퍼 - Flash로 변경"""
     return ConsensusValidator(context, client, model_tier)

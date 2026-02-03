@@ -434,11 +434,21 @@ class ContinuityInspector(BaseAgent):
         
         # 아이템 획득 패턴 (한국어) - [V49.4 FIX] 더 엄격한 패턴
         # 아이템 이름은 보통 2~25자의 한글/숫자로 구성
+        # [V60.53] "집어 들", "뽑아 들" 제거 - 사용과 획득 혼동 방지
         self.acquire_patterns = [
-            r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:집어\s*들|뽑아\s*들|획득|챙기|얻|주워\s*들|가져)",
+            r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:획득|챙기|얻|주워\s*들|가져)",
             r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:손에\s*넣|가져가|챙겨\s*들)",
-            r"(?:녹슨|묵직한|육중한|날카로운)?\s*['\"]?([가-힣a-zA-Z0-9]{2,20})['\"]?(?:을|를)\s*(?:집어\s*들|뽑아\s*들)",
             r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:발견|찾아)",
+            # [V60.53] 명시적 획득만 인정 (새로, 처음으로 등)
+            r"(?:새로운?|처음으로?)\s*['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:얻|획득|손에\s*넣)",
+        ]
+
+        # [V60.53] 사용/꺼내기 패턴 - 이미 가진 것을 쓰는 행동 (획득 아님)
+        self.usage_patterns = [
+            r"(?:다시|이미|자신의|허리춤의|품속의|등에\s*멘)\s*['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?",
+            r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:다시\s*)?(?:세우|휘두르|내리치|찔러|베|쥐)",
+            r"['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)\s*(?:뽑아\s*들|집어\s*들|꺼내\s*들)",
+            r"(?:허리춤|품속|등|어깨)(?:에서|의)\s*['\"]?([가-힣a-zA-Z0-9]{2,25})['\"]?(?:을|를)",
         ]
         
         # 수여/하사 패턴 (범용) - [V49.4 FIX] 더 엄격한 패턴
@@ -531,20 +541,16 @@ class ContinuityInspector(BaseAgent):
             }
         
         # ═══════════════════════════════════════════════════════════════
-        # Phase 1: Python 기반 사전 필터링 (빠른 검증)
+        # Phase 1: Python 기반 사전 정보 수집 (Advisory Only)
+        # [V60.56] Python은 REJECT 권한 없음, 정보만 수집
         # ═══════════════════════════════════════════════════════════════
         python_check = self._python_precheck(current_ep, current_scenario, prev_blueprints)
-        
-        # 명백한 위반이 감지되면 LLM 호출 없이 즉시 REJECT
-        if python_check['critical_violations']:
-            return {
-                "decision": "REJECT",
-                "severity": "CRITICAL",
-                "timeline_analysis": python_check.get('timeline', {}),
-                "violations": python_check['critical_violations'],
-                "warnings": python_check.get('warnings', []),
-                "fix_instructions": self._generate_fix_instructions(python_check['critical_violations'])
-            }
+
+        # [V60.56] Python 검사 결과를 advisory로 변환 (LLM에게 전달할 정보)
+        python_advisory = python_check.get('critical_violations', [])
+        if python_advisory:
+            print(f"      📋 [V60.56] Python advisory 발견 {len(python_advisory)}건 - LLM에게 전달")
+        # Python은 더 이상 REJECT하지 않음, LLM이 최종 판단
         
         # ═══════════════════════════════════════════════════════════════
         # Phase 2: LLM 기반 정밀 검증 (미묘한 모순 탐지)
@@ -649,21 +655,18 @@ class ContinuityInspector(BaseAgent):
             }
         
         # ═══════════════════════════════════════════════════════════════
-        # Phase 1: Python 기반 사전 필터링 (빠른 검증)
+        # Phase 1: Python 기반 사전 정보 수집 (Advisory Only)
+        # [V60.56] Python은 REJECT 권한 없음, 정보만 수집하여 LLM에게 전달
         # ═══════════════════════════════════════════════════════════════
         python_check = self._arc_python_precheck(current_arc, prev_arcs)
-        
-        # 명백한 위반이 감지되면 LLM 호출 없이 즉시 REJECT
-        if python_check['critical_violations']:
-            return {
-                "decision": "REJECT",
-                "severity": "CRITICAL",
-                "cross_arc_analysis": python_check.get('cross_arc_timeline', {}),
-                "intra_arc_analysis": python_check.get('intra_arc_analysis', {}),
-                "violations": python_check['critical_violations'],
-                "warnings": python_check.get('warnings', []),
-                "fix_instructions": self._generate_arc_fix_instructions(python_check['critical_violations'])
-            }
+
+        # [V60.56] Python 검사 결과를 advisory로 변환 (LLM이 최종 판단)
+        python_advisory = python_check.get('critical_violations', [])
+        if python_advisory:
+            print(f"      📋 [V60.56] Python advisory 발견 {len(python_advisory)}건 - LLM에게 전달")
+            for adv in python_advisory[:3]:
+                print(f"         - [{adv.get('type', '?')}] {adv.get('item_or_subject', adv.get('description', '?'))[:50]}")
+        # Python은 더 이상 REJECT하지 않음, LLM이 컨텍스트를 보고 최종 판단
         
         # ═══════════════════════════════════════════════════════════════
         # Phase 1.5: Joint Docs Auto-Correction [V49.2 NEW]
@@ -1040,20 +1043,22 @@ class ContinuityInspector(BaseAgent):
                 )
                 for item in filtered_items:
                     acquired_items[item] = arc_no
+                    print(f"      📝 [V60.54 DEBUG] Arc {arc_no} 획득 기록: '{item}'")
 
-            # Fallback: tactical_doc에서 획득 패턴 검색 (길이 제한 추가)
+            # [V60.54] Fallback 패턴 검색 비활성화 - 오탐 방지
+            # 명시적으로 state_constraints에 선언된 아이템만 추적
             if not items_from_constraints:
-                raw_items = []
-                for pattern in self.acquire_patterns:
-                    matches = re.findall(pattern, arc_tactical)
-                    for item in matches:
-                        item = item.strip()
-                        # [V49.4 FIX] 길이 상한 추가 (2~30자)
-                        if item and 2 <= len(item) <= 30:
-                            raw_items.append(item)
-                # [V49.6] 분배된 아이템 필터링
-                for item in self._filter_distributed_items(raw_items, arc_tactical):
-                    acquired_items[item] = arc_no
+                print(f"      ⚠️ [V60.54 DEBUG] Arc {arc_no} state_constraints에 획득 아이템 없음")
+                # raw_items = []
+                # for pattern in self.acquire_patterns:
+                #     matches = re.findall(pattern, arc_tactical)
+                #     for item in matches:
+                #         item = item.strip()
+                #         if item and 2 <= len(item) <= 30:
+                #             raw_items.append(item)
+                # for item in self._filter_distributed_items(raw_items, arc_tactical):
+                #     acquired_items[item] = arc_no
+                pass  # 명시적 선언만 인정
 
             # tactical_doc에서 수여 패턴 검색 (길이 제한 추가)
             for pattern in self.grant_patterns:
@@ -1099,20 +1104,27 @@ class ContinuityInspector(BaseAgent):
         if not items_from_current:
             items_from_current = current_state_constraints.get('items_acquired', [])
 
+        # [V60.54] 디버깅: state_constraints에서 획득 아이템
+        if items_from_current:
+            print(f"      📥 [V60.54 DEBUG] state_constraints 획득 아이템: {items_from_current}")
+
         if isinstance(items_from_current, list):
             for item in items_from_current:
                 if item and isinstance(item, str) and 2 <= len(item) <= 30:
                     current_acquisitions.append(item)
 
         # Fallback: tactical_doc에서 패턴 검색 (길이 제한 추가)
+        # [V60.54] state_constraints에 명시된 경우만 사용, 패턴 검색 비활성화
         if not current_acquisitions:
-            for pattern in self.acquire_patterns:
-                matches = re.findall(pattern, tactical_doc)
-                for item in matches:
-                    item = item.strip()
-                    # [V49.4 FIX] 길이 상한 추가 (2~30자)
-                    if item and 2 <= len(item) <= 30:
-                        current_acquisitions.append(item)
+            print(f"      ⚠️ [V60.54 DEBUG] state_constraints에 획득 아이템 없음 - 패턴 검색 스킵")
+            # [V60.54] 패턴 검색 비활성화 - 오탐 방지
+            # for pattern in self.acquire_patterns:
+            #     matches = re.findall(pattern, tactical_doc)
+            #     for item in matches:
+            #         item = item.strip()
+            #         if item and 2 <= len(item) <= 30:
+            #             current_acquisitions.append(item)
+            pass  # 명시적 획득 선언만 인정
         
         # ═══════════════════════════════════════════════════════════════
         # [V60.50] 이미 소지 중인 아이템은 중복 검사에서 제외
@@ -1136,26 +1148,56 @@ class ContinuityInspector(BaseAgent):
             elif isinstance(curr_inv, str) and curr_inv:
                 current_inventory_items = [curr_inv]
 
-        # 이미 소지 중인 아이템 필터링
-        all_existing_items = prev_inventory_items + current_inventory_items
+        # ═══════════════════════════════════════════════════════════════
+        # [V60.53] 사용 패턴 필터링 - "다시 세웠다", "뽑아 들었다" 등은 획득 아님
+        # ═══════════════════════════════════════════════════════════════
+        usage_items = set()
+        for pattern in self.usage_patterns:
+            matches = re.findall(pattern, tactical_doc)
+            for item in matches:
+                item = item.strip() if isinstance(item, str) else str(item)
+                if item and 2 <= len(item) <= 30:
+                    usage_items.add(item)
+
+        # [V60.54] 디버깅: 사용 패턴 감지 결과
+        if usage_items:
+            print(f"      📦 [V60.54 DEBUG] 사용 패턴 감지: {list(usage_items)[:5]}")
+
+        # 이미 소지 중인 아이템 + 사용 패턴 아이템 모두 제외
+        all_existing_items = prev_inventory_items + current_inventory_items + list(usage_items)
+
+        # [V60.54] 디버깅: 필터링 전 상태
+        print(f"      📦 [V60.54 DEBUG] Arc {current_arc_no} 중복 검사 시작")
+        print(f"         - 현재 획득 후보: {current_acquisitions[:5] if current_acquisitions else '없음'}")
+        print(f"         - 이전 소지품: {prev_inventory_items[:3] if prev_inventory_items else '없음'}")
+        print(f"         - 현재 소지품: {current_inventory_items[:3] if current_inventory_items else '없음'}")
+        print(f"         - 이전 Arc 획득 기록: {list(acquired_items.keys())[:5] if acquired_items else '없음'}")
+
         filtered_current_acquisitions = []
         for curr_item in current_acquisitions:
             is_already_owned = False
             for owned_item in all_existing_items:
                 if self._is_same_item(curr_item, owned_item):
+                    print(f"         ⏭️ 필터링: '{curr_item}' (이미 소지: '{owned_item}')")
                     is_already_owned = True
                     break
             if not is_already_owned:
                 filtered_current_acquisitions.append(curr_item)
 
         current_acquisitions = filtered_current_acquisitions
+        print(f"         - 필터링 후 획득 후보: {current_acquisitions if current_acquisitions else '없음'}")
 
         # ═══════════════════════════════════════════════════════════════
-        # 검증 1: 중복 획득 (이전 Arc에서 이미 획득한 아이템을 다시 획득)
+        # [V60.54] 검증 1: 중복 획득 - 보수적 접근
+        # 정확히 같은 아이템만 REJECT, 애매하면 PASS
         # ═══════════════════════════════════════════════════════════════
         for curr_item in current_acquisitions:
             for prev_item, prev_arc in acquired_items.items():
-                if self._is_same_item(curr_item, prev_item):
+                is_same = self._is_same_item(curr_item, prev_item)
+                if is_same:
+                    print(f"      🚨 [V60.54] 중복 획득 감지!")
+                    print(f"         - 현재 Arc: {current_arc_no}, 아이템: '{curr_item}'")
+                    print(f"         - 이전 Arc: {prev_arc}, 아이템: '{prev_item}'")
                     critical_violations.append({
                         "type": "duplicate_acquisition",
                         "severity": "CRITICAL",
@@ -1167,6 +1209,9 @@ class ContinuityInspector(BaseAgent):
                         "evidence_curr": f"현재 Arc에서 '{curr_item}' 획득 시도"
                     })
                     break
+
+        if not critical_violations:
+            print(f"      ✅ [V60.54] Arc {current_arc_no} 중복 획득 없음")
         
         # ═══════════════════════════════════════════════════════════════
         # 검증 2: 단일 Arc 내 모순
@@ -1696,34 +1741,25 @@ class ContinuityInspector(BaseAgent):
         return result
     
     def _is_same_item(self, item1: str, item2: str) -> bool:
-        """두 아이템이 같은 것인지 판단"""
-        item1 = item1.strip().lower()
-        item2 = item2.strip().lower()
-        
-        if item1 == item2:
+        """
+        [V60.55] 두 아이템이 같은 것인지 판단 - 초보수적 접근
+        100% 확실한 경우만 True, 조금이라도 다르면 False
+        "녹슨 대도" vs "대도" = False (다른 아이템)
+        """
+        item1_clean = item1.strip()
+        item2_clean = item2.strip()
+
+        # 정확히 같은 경우만 True (공백, 대소문자 무시)
+        item1_normalized = ''.join(item1_clean.lower().split())
+        item2_normalized = ''.join(item2_clean.lower().split())
+
+        if item1_normalized == item2_normalized:
+            print(f"      🔍 [_is_same_item] 정확 매칭: '{item1_clean}' == '{item2_clean}'")
             return True
-        
-        if item1 in item2 or item2 in item1:
-            return True
-        
-        # 핵심 키워드 비교
-        keywords1 = set(re.findall(r'[가-힣]{2,}', item1))
-        keywords2 = set(re.findall(r'[가-힣]{2,}', item2))
-        
-        stopwords = {'을', '를', '이', '가', '에', '에서', '으로', '로', '의', '한', '된', '인', '와', '과'}
-        keywords1 -= stopwords
-        keywords2 -= stopwords
-        
-        common = keywords1 & keywords2
-        if len(common) >= 2:
-            return True
-        
-        # 핵심 무기/아이템 단어
-        important_words = ['대도', '검', '창', '도', '패', '환', '단', '권', '서']
-        for word in important_words:
-            if word in item1 and word in item2:
-                return True
-        
+
+        # [V60.55] 포함 매칭도 제거 - "녹슨 대도" vs "대도" 오탐 방지
+        # 정확히 같은 문자열만 같은 아이템으로 인정
+        print(f"      ⏭️ [_is_same_item] 다른 아이템: '{item1_clean}' != '{item2_clean}'")
         return False
 
     def _is_distributed_item(self, item: str, context: str) -> bool:
@@ -2403,19 +2439,11 @@ class ContinuityInspector(BaseAgent):
             current_ep, manuscript, prev_manuscripts, blueprint
         )
         
-        # 명백한 위반이 감지되면 LLM 호출 없이 즉시 REJECT
-        if python_check['critical_violations']:
-            return {
-                "decision": "REJECT",
-                "severity": "CRITICAL",
-                "continuity_analysis": python_check.get('timeline', {}),
-                "blueprint_alignment": {},
-                "violations": python_check['critical_violations'],
-                "warnings": python_check.get('warnings', []),
-                "fix_instructions": self._generate_manuscript_fix_instructions(
-                    python_check['critical_violations']
-                )
-            }
+        # [V60.56] Python 검사 결과를 advisory로 변환 (LLM이 최종 판단)
+        python_advisory = python_check.get('critical_violations', [])
+        if python_advisory:
+            print(f"      📋 [V60.56] Python advisory 발견 {len(python_advisory)}건 - LLM에게 전달")
+        # Python은 더 이상 REJECT하지 않음, LLM이 컨텍스트를 보고 최종 판단
         
         # ═══════════════════════════════════════════════════════════════
         # Phase 2: LLM 기반 정밀 검증 (미묘한 모순 탐지)

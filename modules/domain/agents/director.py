@@ -586,7 +586,17 @@ class Director(BaseAgent):
 
         # 🔒 [V42 Hard Guard] 주인공 이름 일관성 검증
         if protagonist_name and len(protagonist_name) >= 2:
-            if protagonist_name not in arc_dump:
+            # [V60.55 DEBUG] 주인공 이름 검색 디버깅
+            tactical_doc = arc_plan.get('tactical_doc', '')
+            name_in_tactical = protagonist_name in tactical_doc
+            name_in_dump = protagonist_name in arc_dump
+            print(f"      🔍 [V60.55 DEBUG] 주인공 이름 검증: '{protagonist_name}'")
+            print(f"         - tactical_doc 내 존재: {name_in_tactical}")
+            print(f"         - arc_dump 내 존재: {name_in_dump}")
+            print(f"         - tactical_doc 앞 200자: {tactical_doc[:200]}...")
+
+            if not name_in_dump:
+                print(f"      🚨 [V60.55] 주인공 이름 '{protagonist_name}' 미발견 → REJECT")
                 return {
                     "decision": "REJECT",
                     "score": 0,
@@ -594,6 +604,8 @@ class Director(BaseAgent):
                     "reason": f"주인공 이름 '{protagonist_name}' 누락 감지 - 서사 무결성 파괴",
                     "re_slice_instruction": f"모든 주인공 서술에서 '{protagonist_name}'을 명시적으로 사용하라. 유사 명칭이나 다른 인물 이름으로 대체 금지."
                 }
+            else:
+                print(f"      ✅ [V60.55] 주인공 이름 '{protagonist_name}' 확인됨")
 
         # 🔒 [Hard Guard] 미래 무구 조기 노출 차단 (V43: Bible 기반 동적 검증)
         # 특정 아이템 하드코딩 제거 - Bible의 'future_items' 또는 블록별 보상 데이터로 검증
@@ -674,17 +686,30 @@ class Director(BaseAgent):
         print(f"         ⚖️ [V49.3] 애매한 결과({first_decision}, score={first_score}) → Self-Consistency 활성화")
 
         evaluations = [first_eval]
-        for i in range(1, self.consistency_votes):
-            # 약간의 온도 변화로 다양한 관점 유도
-            temp = 0.1 + (i * 0.05)
-            response = self.ask(prompt, temperature=temp)
-            eval_result = self._extract_json_robust(response)
 
-            if isinstance(eval_result, dict):
-                evaluations.append(eval_result)
-                eval_decision = eval_result.get('decision', 'REJECT')
-                eval_score = eval_result.get('score', 0)
-                print(f"            Vote {i+1}: {eval_decision} (score={eval_score})")
+        # [V60.68] Self-Consistency 병렬화
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        def _vote_task(vote_idx, temp):
+            """단일 투표 작업"""
+            response = self.ask(prompt, temperature=temp)
+            return vote_idx, self._extract_json_robust(response)
+
+        vote_tasks = [(i, 0.1 + (i * 0.05)) for i in range(1, self.consistency_votes)]
+
+        with ThreadPoolExecutor(max_workers=min(3, len(vote_tasks))) as executor:
+            futures = {executor.submit(_vote_task, idx, temp): idx for idx, temp in vote_tasks}
+
+            for future in as_completed(futures):
+                try:
+                    vote_idx, eval_result = future.result()
+                    if isinstance(eval_result, dict):
+                        evaluations.append(eval_result)
+                        eval_decision = eval_result.get('decision', 'REJECT')
+                        eval_score = eval_result.get('score', 0)
+                        print(f"            Vote {vote_idx+1}: {eval_decision} (score={eval_score})")
+                except Exception as e:
+                    print(f"            ⚠️ Vote 오류: {str(e)[:50]}")
 
         # 점수들의 중앙값
         scores = [e.get('score', 50) for e in evaluations if isinstance(e, dict)]

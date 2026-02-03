@@ -126,10 +126,10 @@ class ArcCritic(BaseAgent):
     생성된 Arc를 즉시 비평하고 자동 수정
     """
 
-    def __init__(self, context, client, model_tier: str = "gemini-3-pro-preview"):
-        # [V60.24] Gemini 3로 변경
+    def __init__(self, context, client, model_tier: str = "gemini-2.5-flash"):
+        # [V60.53] Flash로 변경 - 비평은 Flash로 충분
         super().__init__(context, client, model_tier)
-        # [V60.37] 스마트 폴백 (BaseAgent에서 자동 설정: gemini-3 → gemini-2.5-pro)
+        # [V60.37] 스마트 폴백 (BaseAgent에서 자동 설정)
 
     def critique(
         self,
@@ -355,6 +355,6 @@ class ArcCritic(BaseAgent):
         return "\n".join(lines)
 
 
-def create_arc_critic(context, client, model_tier: str = "gemini-3-pro-preview"):
-    """[V60.24] ArcCritic 생성 헬퍼 - Gemini 3 사용"""
+def create_arc_critic(context, client, model_tier: str = "gemini-2.5-flash"):
+    """[V60.53] ArcCritic 생성 헬퍼 - Flash로 변경"""
     return ArcCritic(context, client, model_tier)

@@ -987,12 +987,17 @@ class Analyst(BaseAgent):
             clean_arc_no, vol_no = arc_no, "Unknown"
 
         # [V60.31] 페이싱 계산 - Block 구조에 맞게 수정
+        # [V60.62] 3가지 구조 모두 대응: flatten, nested content, plot_roadmap
         original_guess = 5
         if isinstance(curr_block, dict):
-            # Block 구조: content.context/event_villain/solution/reward 또는 raw
             content_parts = []
 
-            # 1. content 객체에서 추출
+            # [V60.62] 1. 최상위 레벨에서 직접 추출 (LLM이 flatten된 구조로 반환)
+            for key in ['context', 'event_villain', 'solution', 'reward']:
+                if curr_block.get(key) and isinstance(curr_block.get(key), str):
+                    content_parts.append(str(curr_block[key]))
+
+            # 2. content 객체 내부에서 추출 (nested 구조)
             content_obj = curr_block.get('content', {})
             if isinstance(content_obj, dict):
                 for key in ['context', 'event_villain', 'solution', 'reward']:
@@ -1001,11 +1006,23 @@ class Analyst(BaseAgent):
             elif isinstance(content_obj, str):
                 content_parts.append(content_obj)
 
-            # 2. raw 필드에서 추출 (enriched block)
-            if curr_block.get('raw'):
-                content_parts.append(str(curr_block['raw']))
+            # 3. raw_data 필드에서 추출 (plot_roadmap 구조: force_sync_v25_dna 변환)
+            raw_data = curr_block.get('raw_data', {})
+            if isinstance(raw_data, dict):
+                rd_content = raw_data.get('content', {})
+                if isinstance(rd_content, dict):
+                    for key in ['context', 'event_villain', 'solution', 'reward']:
+                        if rd_content.get(key):
+                            content_parts.append(str(rd_content[key]))
+                if raw_data.get('title'):
+                    content_parts.append(str(raw_data['title']))
 
-            # 3. title도 고려
+            # 3. logic.title에서도 추출 (plot_roadmap 구조)
+            logic = curr_block.get('logic', {})
+            if isinstance(logic, dict) and logic.get('title'):
+                content_parts.append(str(logic['title']))
+
+            # 4. 최상위 title
             if curr_block.get('title'):
                 content_parts.append(str(curr_block['title']))
 
@@ -1030,14 +1047,46 @@ class Analyst(BaseAgent):
         target_ep_count = max(2, min(6, original_guess - 1))
 
         # [V60.31] Block 빈약 경고 - 화당 200자 이상 권장
+        # [V60.59] plot_roadmap 구조 대응: raw_data.content에서 추출
         min_content_per_ep = 200
         if isinstance(curr_block, dict):
-            content_obj = curr_block.get('content', {})
             content_parts = []
+
+            # [V60.62] 1. 최상위 레벨에서 직접 추출 (LLM이 flatten된 구조로 반환하는 경우)
+            for key in ['context', 'event_villain', 'solution', 'reward']:
+                if curr_block.get(key) and isinstance(curr_block.get(key), str):
+                    content_parts.append(str(curr_block[key]))
+
+            # 2. content 객체 내부에서 추출 (nested 구조인 경우)
+            content_obj = curr_block.get('content', {})
             if isinstance(content_obj, dict):
                 for key in ['context', 'event_villain', 'solution', 'reward']:
                     if content_obj.get(key):
                         content_parts.append(str(content_obj[key]))
+            elif isinstance(content_obj, str):
+                content_parts.append(content_obj)
+
+            # 2. raw_data 필드에서 추출 (plot_roadmap 구조: force_sync_v25_dna 변환 결과)
+            raw_data = curr_block.get('raw_data', {})
+            if isinstance(raw_data, dict):
+                rd_content = raw_data.get('content', {})
+                if isinstance(rd_content, dict):
+                    for key in ['context', 'event_villain', 'solution', 'reward']:
+                        if rd_content.get(key):
+                            content_parts.append(str(rd_content[key]))
+                # raw_data 내 title도 검사
+                if raw_data.get('title'):
+                    content_parts.append(str(raw_data['title']))
+
+            # 3. logic.title에서도 추출 (plot_roadmap 구조)
+            logic = curr_block.get('logic', {})
+            if isinstance(logic, dict) and logic.get('title'):
+                content_parts.append(str(logic['title']))
+
+            # 4. 최상위 title
+            if curr_block.get('title'):
+                content_parts.append(str(curr_block['title']))
+
             content_len = len(" ".join(content_parts))
 
             if content_len < target_ep_count * min_content_per_ep:

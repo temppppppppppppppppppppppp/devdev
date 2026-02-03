@@ -35,11 +35,11 @@ class FourPhaseArcGenerator(BaseAgent):
         # [V60.24] Gemini 3로 변경
         super().__init__(context, client, model_tier)
 
-        # [V60.24] 모든 서브 모듈 Gemini 3로 통일
-        self.preflight = PreflightChecker(context, client, "gemini-3-pro-preview")
+        # [V60.53] 서브 모듈 모델 최적화 - Critic/Consensus는 Flash로 비용 절감
+        self.preflight = PreflightChecker(context, client, "gemini-3-flash-preview")
         self.ensemble = ArcEnsembleGenerator(context, client, "gemini-3-pro-preview")
-        self.critic = ArcCritic(context, client, "gemini-3-pro-preview")
-        self.consensus = ConsensusValidator(context, client, "gemini-3-pro-preview")
+        self.critic = ArcCritic(context, client, "gemini-2.5-flash")
+        self.consensus = ConsensusValidator(context, client, "gemini-2.5-flash")
         self.compiler = ConstraintCompiler()
         self.negative_injector = NegativeExampleInjector("wuxia")
 

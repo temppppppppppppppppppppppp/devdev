@@ -1,0 +1,271 @@
+{
+  "session_id": "20260202_235137",
+  "start_time": "2026-02-02T23:51:37.826948",
+  "end_time": "2026-02-03T04:35:34.367424",
+  "total_calls": 398,
+  "successful_calls": 287,
+  "failed_calls": 111,
+  "total_retries": 0,
+  "total_tokens": 7276264,
+  "total_cost_usd": 15.9799,
+  "agent_stats": {
+    "Analyst": {
+      "agent_name": "Analyst",
+      "total_calls": 109,
+      "successful_calls": 56,
+      "failed_calls": 53,
+      "success_rate": 51.37614678899083,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 35854.439698228045,
+        "min_ms": 226.15933418273926,
+        "max_ms": 195150.35247802734,
+        "p50_ms": 26884.042024612427,
+        "p90_ms": 77840.60459136963,
+        "p99_ms": 166652.81944274905
+      }
+    },
+    "Weaver": {
+      "agent_name": "Weaver",
+      "total_calls": 10,
+      "successful_calls": 7,
+      "failed_calls": 3,
+      "success_rate": 70.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 24873.9000082016,
+        "min_ms": 122.68781661987305,
+        "max_ms": 49999.71532821655,
+        "p50_ms": 31223.530173301697,
+        "p90_ms": 38208.36293697357,
+        "p99_ms": 48820.580089092255
+      }
+    },
+    "ConsensusValidator": {
+      "agent_name": "ConsensusValidator",
+      "total_calls": 59,
+      "successful_calls": 29,
+      "failed_calls": 30,
+      "success_rate": 49.152542372881356,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 17433.420561127743,
+        "min_ms": 110.22377014160156,
+        "max_ms": 62355.46350479126,
+        "p50_ms": 386.9621753692627,
+        "p90_ms": 43366.193771362305,
+        "p99_ms": 60233.60612869263
+      }
+    },
+    "Director": {
+      "agent_name": "Director",
+      "total_calls": 23,
+      "successful_calls": 9,
+      "failed_calls": 14,
+      "success_rate": 39.130434782608695,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 13232.721214709074,
+        "min_ms": 109.26008224487305,
+        "max_ms": 73880.13434410095,
+        "p50_ms": 144.58155632019043,
+        "p90_ms": 33881.95838928223,
+        "p99_ms": 66523.51203918461
+      }
+    },
+    "StateExtractor": {
+      "agent_name": "StateExtractor",
+      "total_calls": 39,
+      "successful_calls": 39,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 16859.679264900013,
+        "min_ms": 12477.323770523071,
+        "max_ms": 39249.65572357178,
+        "p50_ms": 15177.606105804443,
+        "p90_ms": 22410.25562286377,
+        "p99_ms": 34728.40720653531
+      }
+    },
+    "PreflightChecker": {
+      "agent_name": "PreflightChecker",
+      "total_calls": 19,
+      "successful_calls": 19,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 24006.164500587864,
+        "min_ms": 16471.708297729492,
+        "max_ms": 37691.12539291382,
+        "p50_ms": 24269.341945648193,
+        "p90_ms": 28045.25609016418,
+        "p99_ms": 36265.601897239685
+      }
+    },
+    "ContinuityInspector": {
+      "agent_name": "ContinuityInspector",
+      "total_calls": 24,
+      "successful_calls": 16,
+      "failed_calls": 8,
+      "success_rate": 66.66666666666666,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 19048.310548067093,
+        "min_ms": 97.19967842102051,
+        "max_ms": 50780.48872947693,
+        "p50_ms": 17545.02236843109,
+        "p90_ms": 48057.63351917267,
+        "p99_ms": 50748.51644039154
+      }
+    },
+    "ConsensusValidator_Backup": {
+      "agent_name": "ConsensusValidator_Backup",
+      "total_calls": 30,
+      "successful_calls": 30,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 27679.118998845417,
+        "min_ms": 13429.877996444702,
+        "max_ms": 40352.195739746094,
+        "p50_ms": 28428.37619781494,
+        "p90_ms": 39098.58019351959,
+        "p99_ms": 40308.57962369919
+      }
+    },
+    "ContinuityInspector_Backup": {
+      "agent_name": "ContinuityInspector_Backup",
+      "total_calls": 8,
+      "successful_calls": 8,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 30883.850276470184,
+        "min_ms": 9334.74063873291,
+        "max_ms": 52486.31954193115,
+        "p50_ms": 31525.090098381042,
+        "p90_ms": 48896.95017337799,
+        "p99_ms": 52127.382605075836
+      }
+    },
+    "Director_Backup": {
+      "agent_name": "Director_Backup",
+      "total_calls": 14,
+      "successful_calls": 14,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 32415.903653417314,
+        "min_ms": 17690.11640548706,
+        "max_ms": 48723.48237037659,
+        "p50_ms": 32143.707156181335,
+        "p90_ms": 43887.84167766571,
+        "p99_ms": 48182.984709739685
+      }
+    },
+    "Weaver_Backup": {
+      "agent_name": "Weaver_Backup",
+      "total_calls": 3,
+      "successful_calls": 3,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 33765.31060536703,
+        "min_ms": 29460.98232269287,
+        "max_ms": 36049.36218261719,
+        "p50_ms": 35785.587310791016,
+        "p90_ms": 35996.60720825195,
+        "p99_ms": 36044.086685180664
+      }
+    },
+    "Analyst_Backup": {
+      "agent_name": "Analyst_Backup",
+      "total_calls": 53,
+      "successful_calls": 53,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 64549.74751202566,
+        "min_ms": 22271.35443687439,
+        "max_ms": 89730.72624206543,
+        "p50_ms": 75125.2646446228,
+        "p90_ms": 85954.32438850403,
+        "p99_ms": 88866.85671806335
+      }
+    },
+    "Architect": {
+      "agent_name": "Architect",
+      "total_calls": 4,
+      "successful_calls": 1,
+      "failed_calls": 3,
+      "success_rate": 25.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 11137.777626514435,
+        "min_ms": 116.75858497619629,
+        "max_ms": 44067.052364349365,
+        "p50_ms": 183.64977836608887,
+        "p90_ms": 30905.060911178596,
+        "p99_ms": 42750.853219032295
+      }
+    },
+    "Architect_Backup": {
+      "agent_name": "Architect_Backup",
+      "total_calls": 3,
+      "successful_calls": 3,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 49646.47857348124,
+        "min_ms": 46460.55340766907,
+        "max_ms": 51811.57064437866,
+        "p50_ms": 50667.311668395996,
+        "p90_ms": 51582.71884918213,
+        "p99_ms": 51788.68546485901
+      }
+    }
+  },
+  "model_stats": {
+    "gemini-3-pro-preview": {
+      "input_tokens": 4131292,
+      "output_tokens": 142945,
+      "total_tokens": 4274237,
+      "cost_usd": 11.7577
+    },
+    "gemini-3-flash-preview": {
+      "input_tokens": 393920,
+      "output_tokens": 54856,
+      "total_tokens": 448776,
+      "cost_usd": 0.3067
+    },
+    "gemini-2.5-pro": {
+      "input_tokens": 2360183,
+      "output_tokens": 193068,
+      "total_tokens": 2553251,
+      "cost_usd": 3.9156
+    }
+  }
+}

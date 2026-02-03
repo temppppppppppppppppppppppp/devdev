@@ -64,31 +64,32 @@ class WritingLimits:
 
 class AIModels:
     """AI 모델 이름 상수"""
-    # [V60.24] Stage 2 Gemini 3 통일 - 모든 Stage 2 모델을 Gemini 3로 변경
+    # [V60.65] 기본 3-pro, 할당량 초과 시 2.5-pro 폴백
 
-    # 점진적 모델 업그레이드 체계 - Architect (V60.24: Gemini 3 통일)
-    TIER_1_ARCHITECT = "gemini-3-pro-preview"      # 1차 시도부터 Gemini 3
-    TIER_2_ARCHITECT = "gemini-3-pro-preview"      # 2차+ 시도
-    TIER_3_ARCHITECT = "gemini-3-pro-preview"      # 호환성 유지
+    # 점진적 모델 업그레이드 체계 - Architect
+    TIER_1_ARCHITECT = "gemini-3-pro-preview"      # 1차 시도: 3 Pro
+    TIER_2_ARCHITECT = "gemini-3-pro-preview"      # 2차 시도: 3 Pro
+    TIER_3_ARCHITECT = "gemini-3-pro-preview"      # 3차+ 시도: 3 Pro
 
-    # 점진적 모델 업그레이드 체계 - Writer (V60.24: Gemini 3 통일)
-    TIER_1_WRITER = "gemini-3-pro-preview"         # 1차 시도부터 Gemini 3
-    TIER_2_WRITER = "gemini-3-pro-preview"         # 2차 시도
-    TIER_3_WRITER = "gemini-3-pro-preview"         # 3차 시도 이후
+    # 점진적 모델 업그레이드 체계 - Writer
+    TIER_1_WRITER = "gemini-3-pro-preview"         # 1차 시도: 3 Pro
+    TIER_2_WRITER = "gemini-3-pro-preview"         # 2차 시도: 3 Pro
+    TIER_3_WRITER = "gemini-3-pro-preview"         # 3차 시도 이후: 3 Pro
 
-    EMERGENCY_FALLBACK = "gemini-3-pro-preview"    # 긴급 시 사용 모델 (레거시)
+    EMERGENCY_FALLBACK = "gemini-2.5-pro"          # [V60.65] 긴급/할당량 초과 시 2.5 Pro
+    QUOTA_FALLBACK = "gemini-2.5-pro"              # [V60.65] 429 에러 시 폴백 모델
     DEFAULT_WRITER = "gemini-3-pro-preview"
-    DEFAULT_ARCHITECT = "gemini-3-pro-preview"     # [V60.24] Gemini 3로 변경
+    DEFAULT_ARCHITECT = "gemini-3-pro-preview"
     DEFAULT_ANALYST = "gemini-3-pro-preview"
-    DEFAULT_REVIEWER = "gemini-2.5-pro"      # [V60.44] 할당량 분산을 위해 2.5 Pro 사용
+    DEFAULT_REVIEWER = "gemini-2.5-pro"
 
     # [V40 Fix] Stage 4 전용 고정 모델
-    STAGE4_FIXED_WRITER_MODEL = "gemini-3-pro-preview"  # Stage 4에서 재시도 시에도 변경 없이 고정
+    STAGE4_FIXED_WRITER_MODEL = "gemini-3-pro-preview"
 
-    # [V60.44] Stage 2 전용 모델 상수 - 할당량 분산
-    STAGE2_MAIN_MODEL = "gemini-3-pro-preview"     # Stage 2 주요 생성 모델 (3 Pro 유지)
-    STAGE2_EXTRACTION_MODEL = "gemini-2.5-pro"     # [V60.44] Stage 2 추출 모델 (2.5 Pro)
-    STAGE2_VALIDATION_MODEL = "gemini-2.5-pro"     # [V60.44] Stage 2 검증 모델 (2.5 Pro)
+    # Stage 2 전용 모델 상수
+    STAGE2_MAIN_MODEL = "gemini-3-pro-preview"     # Stage 2 주요 생성 모델
+    STAGE2_EXTRACTION_MODEL = "gemini-2.5-pro"     # Stage 2 추출 모델
+    STAGE2_VALIDATION_MODEL = "gemini-2.5-pro"     # Stage 2 검증 모델
 
 
 class BatchSizes:
