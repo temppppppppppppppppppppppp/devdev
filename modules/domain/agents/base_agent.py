@@ -43,25 +43,25 @@ class BaseAgent:
     }
 
     # [V60.37] 모델별 폴백 체인 정의 (할당량 초과 시)
-    # [V60.57] 개선: 2.0-flash 실패 시 2.5-flash로 업그레이드 (quota 회피)
+    # [V60.78] 2.5-flash를 최종 폴백으로 설정 (2.0 이하 미사용)
     MODEL_FALLBACK_CHAIN = {
         "gemini-3-pro-preview": "gemini-2.5-pro",      # 3 Pro → 2.5 Pro
         "gemini-3-flash-preview": "gemini-2.5-flash",  # 3 Flash → 2.5 Flash
-        "gemini-2.5-pro": "gemini-2.5-flash",          # 2.5 Pro → 2.5 Flash (quota 분산)
-        "gemini-2.5-flash": "gemini-2.0-flash",        # 2.5 Flash → 2.0 Flash
-        "gemini-2.0-flash": "gemini-2.5-flash",        # [V60.57] 2.0 Flash → 2.5 Flash (quota 회피)
+        "gemini-2.5-pro": "gemini-2.5-flash",          # 2.5 Pro → 2.5 Flash (최종)
+        # [V60.78] 2.5-flash가 최종 폴백 (2.0 이하 미사용 정책)
     }
 
     # [V60.68] 쿼터 소진 모델 캐싱 (클래스 변수 - 세션 전체 공유)
     _quota_exhausted_models = {}  # {model_name: exhausted_until_timestamp}
     _QUOTA_CACHE_DURATION = 60    # 60초 동안 해당 모델 시도 스킵
 
-    def __init__(self, context, client, model_tier="gemini-2.0-flash", enable_cascade=False):
+    def __init__(self, context, client, model_tier="gemini-2.5-flash", enable_cascade=False):
         self.context = context
         self.client = client
         self.primary_model = model_tier
         # [V60.37] 스마트 폴백: 모델 티어에 따라 자동 백업 모델 설정
-        self.backup_model = self.MODEL_FALLBACK_CHAIN.get(model_tier, "gemini-2.0-flash")
+        # [V60.78] 기본 폴백을 2.5-flash로 변경 (2.0 이하 미사용 정책)
+        self.backup_model = self.MODEL_FALLBACK_CHAIN.get(model_tier, "gemini-2.5-flash")
         self.cache_name = None
         self.enable_cascade = enable_cascade
         self.cascade = None  # ModelCascade instance (lazy init)

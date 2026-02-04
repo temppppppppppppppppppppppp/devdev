@@ -234,6 +234,7 @@ class DBManager:
         ''')
 
         # 10. [V49.5] 화별 Bible (에피소드별 설정 변화 추적)
+        # [V60.82] causal_links, karma_matrix, knowledge_map 컬럼 추가
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS episode_bibles (
                 ep_num INTEGER PRIMARY KEY,
@@ -245,9 +246,26 @@ class DBManager:
                 state_changes TEXT,          -- JSON: 상태 변화 (부상, 경지 등)
                 time_passed TEXT,            -- 경과 시간 (예: "같은 날 밤", "3일 후")
                 reveals TEXT,                -- JSON: 밝혀진 사실/복선 회수
+                causal_links TEXT,           -- [V60.82] JSON: 인과관계 링크
+                karma_matrix TEXT,           -- [V60.82] JSON: 카르마 매트릭스
+                knowledge_map TEXT,          -- [V60.82] JSON: 지식 맵 (목격자/오해자)
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
+
+        # [V60.82] 기존 테이블에 새 컬럼 추가 (마이그레이션)
+        try:
+            self.cursor.execute("ALTER TABLE episode_bibles ADD COLUMN causal_links TEXT")
+        except:
+            pass  # 이미 존재
+        try:
+            self.cursor.execute("ALTER TABLE episode_bibles ADD COLUMN karma_matrix TEXT")
+        except:
+            pass
+        try:
+            self.cursor.execute("ALTER TABLE episode_bibles ADD COLUMN knowledge_map TEXT")
+        except:
+            pass
 
         self.conn.commit()
 
@@ -299,13 +317,15 @@ class DBManager:
             self.conn.commit()
 
     # --- [V49.5] 화별 Bible CRUD ---
+    # [V60.82] causal_links, karma_matrix, knowledge_map 필드 추가
     def save_episode_bible(self, ep_num: int, bible_delta: dict):
         """화별 Bible 저장 (원고에서 추출된 설정 변화)"""
         self.cursor.execute('''
             INSERT OR REPLACE INTO episode_bibles
             (ep_num, new_items, lost_items, new_npcs, npc_deaths,
-             relationship_changes, state_changes, time_passed, reveals)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+             relationship_changes, state_changes, time_passed, reveals,
+             causal_links, karma_matrix, knowledge_map)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             ep_num,
             json.dumps(bible_delta.get('new_items', []), ensure_ascii=False),
@@ -313,9 +333,12 @@ class DBManager:
             json.dumps(bible_delta.get('new_npcs', []), ensure_ascii=False),
             json.dumps(bible_delta.get('npc_deaths', []), ensure_ascii=False),
             json.dumps(bible_delta.get('relationship_changes', []), ensure_ascii=False),
-            json.dumps(bible_delta.get('state_changes', []), ensure_ascii=False),
+            json.dumps(bible_delta.get('state_changes', {}), ensure_ascii=False),
             bible_delta.get('time_passed', ''),
-            json.dumps(bible_delta.get('reveals', []), ensure_ascii=False)
+            json.dumps(bible_delta.get('reveals', []), ensure_ascii=False),
+            json.dumps(bible_delta.get('causal_links', []), ensure_ascii=False),
+            json.dumps(bible_delta.get('karma_matrix', []), ensure_ascii=False),
+            json.dumps(bible_delta.get('knowledge_map', {}), ensure_ascii=False)
         ))
         if not self.conn.in_transaction:
             self.conn.commit()
@@ -328,6 +351,13 @@ class DBManager:
         row = cur.fetchone()
         if not row:
             return {}
+        # [V60.82] 새 컬럼 안전 조회 (마이그레이션 전 DB 호환)
+        def safe_get(key, default='[]'):
+            try:
+                return row[key] if key in row.keys() else default
+            except:
+                return default
+
         return {
             'ep_num': row['ep_num'],
             'new_items': json.loads(row['new_items'] or '[]'),
@@ -335,9 +365,13 @@ class DBManager:
             'new_npcs': json.loads(row['new_npcs'] or '[]'),
             'npc_deaths': json.loads(row['npc_deaths'] or '[]'),
             'relationship_changes': json.loads(row['relationship_changes'] or '[]'),
-            'state_changes': json.loads(row['state_changes'] or '[]'),
+            'state_changes': json.loads(row['state_changes'] or '{}'),
             'time_passed': row['time_passed'] or '',
-            'reveals': json.loads(row['reveals'] or '[]')
+            'reveals': json.loads(row['reveals'] or '[]'),
+            # [V60.82] 새 필드
+            'causal_links': json.loads(safe_get('causal_links', '[]') or '[]'),
+            'karma_matrix': json.loads(safe_get('karma_matrix', '[]') or '[]'),
+            'knowledge_map': json.loads(safe_get('knowledge_map', '{}') or '{}')
         }
 
     def get_cumulative_bible(self, up_to_ep: int) -> dict:
@@ -395,6 +429,7 @@ class DBManager:
     def get_all_episode_bibles(self) -> list:
         """
         [V60.8] 모든 Episode Bible 조회
+        [V60.82] causal_links, karma_matrix, knowledge_map 추가
 
         Returns:
             list: Episode Bible dict 목록 (ep_num 순 정렬)
@@ -406,6 +441,13 @@ class DBManager:
 
         bibles = []
         for row in rows:
+            # [V60.82] 새 컬럼 안전 조회
+            def safe_get(key, default='[]'):
+                try:
+                    return row[key] if key in row.keys() else default
+                except:
+                    return default
+
             bibles.append({
                 'ep_num': row['ep_num'],
                 'new_items': json.loads(row['new_items'] or '[]'),
@@ -413,9 +455,13 @@ class DBManager:
                 'new_npcs': json.loads(row['new_npcs'] or '[]'),
                 'npc_deaths': json.loads(row['npc_deaths'] or '[]'),
                 'relationship_changes': json.loads(row['relationship_changes'] or '[]'),
-                'state_changes': json.loads(row['state_changes'] or '[]'),
+                'state_changes': json.loads(row['state_changes'] or '{}'),
                 'time_passed': row['time_passed'] or '',
-                'reveals': json.loads(row['reveals'] or '[]')
+                'reveals': json.loads(row['reveals'] or '[]'),
+                # [V60.82] 새 필드
+                'causal_links': json.loads(safe_get('causal_links', '[]') or '[]'),
+                'karma_matrix': json.loads(safe_get('karma_matrix', '[]') or '[]'),
+                'knowledge_map': json.loads(safe_get('knowledge_map', '{}') or '{}')
             })
 
         return bibles

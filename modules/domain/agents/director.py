@@ -19,6 +19,15 @@ STRATEGIC_AUDIT_PROMPT_V30 = """
 - **직전 아크 요약**: {prev_context}
 - **현재 블록 원문**: {curr_block}
 
+### 🔍 [V60.76] Python 의심 아이템 재검증
+{suspected_duplicates}
+위 목록은 Python 유사도 검사에서 "기존 아이템과 유사"하다고 플래그된 항목입니다.
+**당신의 임무**: 이 아이템들이 정말로 기존에 획득한 아이템의 중복인지 판단하세요.
+- "대방성도"와 "백근도"는 서로 다른 무기입니다 (이름만 비슷할 뿐)
+- "철혈사자패"와 "형법 집행권"은 서로 다른 권한입니다
+- 실제로 동일한 아이템을 다시 획득하는 경우에만 REJECT하세요
+- 이름이 비슷하지만 다른 아이템이면 PASS입니다
+
 ### 🎯 핵심 검수 항목 (S-Grade Flexible Criteria)
 1. **서사 분절성 (Temporal Slicing)**: 각 회차가 고유한 사건을 담고 있는가?
 2. **루프 차단 (Zero-Overlap Guard)**: 직전 사건의 단순 반복이 아닌가?
@@ -64,8 +73,8 @@ Step 4: 인과율 밀도 검사
     "decision": "PASS" 또는 "REJECT",
     "score": 0~100,
     "loop_detected": true/false,
-    "reason": "서사 정체 지점 및 번호 불일치 사유 기술",
-    "re_slice_instruction": "개선 제안 (REJECT 시에만 필수, PASS 시에는 공란 가능)"
+    "reason": "REJECT 사유를 구체적으로 기술 (어떤 화에서 어떤 문제가 있는지)",
+    "re_slice_instruction": "REJECT 시 반드시 구체적 수정 지시 포함. 예: '제N화에서 X 대신 Y를 하라', '아이템 Z를 삭제하고 W로 대체하라' 등 실행 가능한 지시"
 }}
 """
 
@@ -227,6 +236,12 @@ class Director(BaseAgent):
     """
     [V0128] Director - 품질 검증 총괄
     [V59] 품질 등급화 A/B/C 및 구체적 수정 가이드 시스템 추가
+    [V61] Entity 명칭 일관성 검증 - 최종 방어선 역할
+
+    [V61 NEW]
+    - validate_entity_consistency(): Entity 명칭 일관성 LLM 검증
+    - audit_manuscript(), audit_strategic_plan()에 entity_registry 파라미터 추가
+    - entity_consistency_enabled 플래그로 기능 활성화/비활성화
     """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -243,6 +258,9 @@ class Director(BaseAgent):
         # [V60.24] 적응형 PASS 기준선 기본값 - 살짝 완화
         self.base_pass_threshold = 60  # 기본 PASS 기준 점수 (65→60)
         self.adaptive_thresholds_enabled = True
+
+        # [V61] Entity 일관성 검증 설정
+        self.entity_consistency_enabled = True  # Entity 일관성 검증 활성화
 
     def get_adaptive_threshold(
         self,
@@ -421,13 +439,177 @@ class Director(BaseAgent):
         """V0128 검증 시스템 활성화/비활성화"""
         self.use_v0128 = enabled
 
-    def audit_manuscript(self, ep_num, manuscript, arc_doc, history_summary, prev_full_text, arc_pos, total_eps=None, target_len=4500, retry_count=0, validation_context=None):
+    def validate_entity_consistency(self, content: str, entity_registry: dict,
+                                     content_type: str = "manuscript") -> dict:
         """
-        원고 검수 (V0128 통합 + V46 캐릭터 논리 검증)
+        [V61] Entity 명칭 일관성 검증 - Director의 최종 방어선
+
+        Args:
+            content: 검증 대상 텍스트 (원고, 블루프린트, Arc 전술서 등)
+            entity_registry: Entity Registry dict {characters:[], organizations:[], locations:[], objects:[], concepts:[]}
+            content_type: "manuscript", "blueprint", "arc" 중 하나
+
+        Returns:
+            {
+                "decision": "PASS" | "WARNING" | "REJECT",
+                "mismatches": [
+                    {
+                        "category": "character | organization | location | object | concept",
+                        "registered_name": "등록된 정식 명칭",
+                        "found_variant": "발견된 변형 명칭",
+                        "severity": "CRITICAL | MAJOR | MINOR",
+                        "context": "발견된 문맥 일부"
+                    }
+                ],
+                "fix_instructions": "수정 지시"
+            }
+        """
+        if not self.entity_consistency_enabled:
+            return {"decision": "PASS", "mismatches": [], "fix_instructions": ""}
+
+        if not entity_registry or not content:
+            return {"decision": "PASS", "mismatches": [], "fix_instructions": ""}
+
+        # Entity Registry 포맷팅
+        registry_str = self._format_entity_registry_for_director(entity_registry)
+        if registry_str == "(등록된 Entity 없음)":
+            return {"decision": "PASS", "mismatches": [], "fix_instructions": ""}
+
+        # LLM 기반 검증 프롬프트
+        prompt = f"""[Role] Entity 명칭 일관성 최종 검증관 (Director's Final Defense)
+[Task] 주어진 {content_type}에서 Entity Registry에 등록된 명칭과 다른 표기가 사용되었는지 검사하라.
+
+### Entity Registry (정식 명칭 목록)
+{self._escape_braces(registry_str)}
+
+### 검증 대상 ({content_type})
+{self._escape_braces(content[:5000])}
+
+### 검증 기준
+1. **캐릭터명**: 등록된 이름 외의 다른 표기 사용 시 WARNING
+   - 예: '팽무진'이 등록되었는데 '무진', '주인공'으로 표기
+   - 별칭(aliases)은 허용
+2. **조직/문파명**: 등록된 명칭과 다른 표기 사용 시 WARNING
+   - 예: '철혈문'이 등록되었는데 '철혈파'로 표기
+3. **장소명**: 동일 장소가 다른 명칭으로 표기 시 MINOR
+4. **물품명**: 등록된 무기/아이템이 다른 이름으로 표기 시 MAJOR
+   - 예: '백근도'가 등록되었는데 '거구도'로 표기
+5. **기술/무공명**: 등록된 기술이 다른 이름으로 표기 시 MAJOR
+   - 예: '이화접목'이 등록되었는데 '중검무봉'으로 표기
+
+### 판정 기준
+- REJECT: CRITICAL 1개 이상 또는 MAJOR 3개 이상
+- WARNING: MAJOR 1-2개 또는 MINOR 다수
+- PASS: 문제 없음 또는 MINOR 소수
+
+[Output Format] JSON Only
+{{
+    "decision": "PASS" 또는 "WARNING" 또는 "REJECT",
+    "mismatches": [
+        {{
+            "category": "character | organization | location | object | concept",
+            "registered_name": "등록된 정식 명칭",
+            "found_variant": "발견된 변형 명칭",
+            "severity": "CRITICAL | MAJOR | MINOR",
+            "context": "발견된 문맥 일부 (50자 이내)"
+        }}
+    ],
+    "fix_instructions": "수정 지시 (REJECT/WARNING 시 필수)"
+}}"""
+
+        try:
+            response = self.ask(prompt, temperature=0.1)
+            result = self._extract_json_robust(response)
+
+            if not isinstance(result, dict):
+                return {"decision": "PASS", "mismatches": [], "fix_instructions": "", "parsing_error": True}
+
+            # 결과 로깅
+            mismatches = result.get('mismatches', [])
+            if mismatches:
+                decision = result.get('decision', 'WARNING')
+                print(f"      ⚠️ [V61] Entity 일관성 검증: {decision} ({len(mismatches)}개 불일치)")
+                for m in mismatches[:3]:
+                    print(f"         - [{m.get('category', '?')}] {m.get('registered_name', '?')} → {m.get('found_variant', '?')}")
+
+            return result
+
+        except Exception as e:
+            print(f"      ⚠️ [V61] Entity 일관성 검증 실패: {e}")
+            return {"decision": "PASS", "mismatches": [], "fix_instructions": "", "error": str(e)}
+
+    def _format_entity_registry_for_director(self, entity_registry: dict) -> str:
+        """[V61] Entity Registry를 Director용 포맷으로 변환"""
+        if not entity_registry:
+            return "(등록된 Entity 없음)"
+
+        lines = []
+        categories = [
+            ('characters', '캐릭터'),
+            ('organizations', '조직/문파'),
+            ('locations', '장소'),
+            ('objects', '물품/아이템'),
+            ('concepts', '기술/개념')
+        ]
+
+        has_any = False
+        for key, label in categories:
+            items = entity_registry.get(key, [])
+            if items:
+                has_any = True
+                formatted_items = []
+                for item in items:
+                    if isinstance(item, dict):
+                        name = item.get('name', item.get('canonical_name', str(item)))
+                        aliases = item.get('aliases', [])
+                        if aliases:
+                            formatted_items.append(f"{name} (별칭: {', '.join(aliases)})")
+                        else:
+                            formatted_items.append(name)
+                    else:
+                        formatted_items.append(str(item))
+                lines.append(f"[{label}] {', '.join(formatted_items)}")
+
+        if not has_any:
+            return "(등록된 Entity 없음)"
+
+        return "\n".join(lines)
+
+    def audit_manuscript(self, ep_num, manuscript, arc_doc, history_summary, prev_full_text, arc_pos, total_eps=None, target_len=4500, retry_count=0, validation_context=None, entity_registry=None):
+        """
+        원고 검수 (V0128 통합 + V46 캐릭터 논리 검증 + V61 Entity 일관성 검증)
 
         V0128 활성화 시 3-Tier 검증 시스템 사용
         비활성화 시 기존 LLM 기반 검증 사용
+
+        [V61 NEW] entity_registry 파라미터 추가 - Entity 명칭 일관성 최종 검증
         """
+        # ═══════════════════════════════════════════════════════════════
+        # [V61] Entity 일관성 검증 - Director의 최종 방어선
+        # ═══════════════════════════════════════════════════════════════
+        if entity_registry and self.entity_consistency_enabled:
+            entity_check = self.validate_entity_consistency(
+                content=manuscript,
+                entity_registry=entity_registry,
+                content_type="manuscript"
+            )
+            if entity_check.get('decision') == 'REJECT':
+                mismatches = entity_check.get('mismatches', [])
+                return {
+                    "decision": "REJECT",
+                    "score": 40,
+                    "error_category": "LOGIC_ERROR",
+                    "diagnostic_report": f"Entity 명칭 불일치 {len(mismatches)}건 발견",
+                    "current_beat_achieved": False,
+                    "reason": entity_check.get('fix_instructions', 'Entity 명칭을 통일하세요'),
+                    "feedback": f"[V61] Entity 일관성 오류: {entity_check.get('fix_instructions', '')}",
+                    "v61_entity_check": entity_check
+                }
+            elif entity_check.get('decision') == 'WARNING':
+                # WARNING은 경고만 하고 계속 진행, 결과에 포함
+                if validation_context is None:
+                    validation_context = {}
+                validation_context['v61_entity_warnings'] = entity_check.get('mismatches', [])
         # [V46] 캐릭터 논리성 검증 (assess_character_logic 활성화)
         if validation_context:
             npc_profiles = validation_context.get('npc_profiles', {})
@@ -573,16 +755,40 @@ class Director(BaseAgent):
         return self._extract_json_robust(response)
     
 
-    def audit_strategic_plan(self, arc_plan, prev_arc_context, curr_block=None, protagonist_name=None):
+    def audit_strategic_plan(self, arc_plan, prev_arc_context, curr_block=None, protagonist_name=None, suspected_duplicates=None, entity_registry=None):
         """
         [Stage 2] Analyst의 아크 설계안에 대한 전략적 무결성 검수 (루프/미래 오염 방지)
 
         [V49.3] Self-Consistency 투표 적용:
         - 1차 평가 후 애매한 결과면 추가 평가 진행
         - 중앙값 + 다수결로 최종 결정
+
+        [V60.76] suspected_duplicates: Python이 의심하는 중복 아이템 목록 (LLM 재검증용)
+        [V61 NEW] entity_registry: Entity 명칭 일관성 검증용 레지스트리
         """
         arc_no = arc_plan.get("arc_no")
         arc_dump = json.dumps(arc_plan, ensure_ascii=False)
+
+        # ═══════════════════════════════════════════════════════════════
+        # [V61] Entity 일관성 검증 - Director의 최종 방어선
+        # ═══════════════════════════════════════════════════════════════
+        if entity_registry and self.entity_consistency_enabled:
+            tactical_doc = arc_plan.get('tactical_doc', '')
+            entity_check = self.validate_entity_consistency(
+                content=tactical_doc,
+                entity_registry=entity_registry,
+                content_type="arc"
+            )
+            if entity_check.get('decision') == 'REJECT':
+                mismatches = entity_check.get('mismatches', [])
+                return {
+                    "decision": "REJECT",
+                    "score": 40,
+                    "loop_detected": False,
+                    "reason": f"[V61] Entity 명칭 불일치 {len(mismatches)}건 발견",
+                    "re_slice_instruction": entity_check.get('fix_instructions', 'Entity 명칭을 통일하세요'),
+                    "v61_entity_check": entity_check
+                }
 
         # 🔒 [V42 Hard Guard] 주인공 이름 일관성 검증
         if protagonist_name and len(protagonist_name) >= 2:
@@ -618,6 +824,12 @@ class Director(BaseAgent):
         safe_prev = self._escape_braces(prev_arc_context)
         safe_curr = self._escape_braces(json.dumps(curr_block, ensure_ascii=False)) if curr_block else "없음"
 
+        # [V60.76] Python 의심 아이템 포맷팅
+        if suspected_duplicates:
+            safe_suspected = "\n".join([f"- {item}" for item in suspected_duplicates])
+        else:
+            safe_suspected = "(없음 - Python 검사 통과)"
+
         prompt = STRATEGIC_AUDIT_PROMPT_V30.format(
             arc_no=arc_plan.get('arc_no', '?'),
             ep_count=arc_plan.get('ep_count', 0),
@@ -626,7 +838,8 @@ class Director(BaseAgent):
             beat_sequence=safe_beats,
             tactical_doc=safe_tactical,
             prev_context=safe_prev,
-            curr_block=safe_curr
+            curr_block=safe_curr,
+            suspected_duplicates=safe_suspected
         )
 
         # [V49.3] Self-Consistency 적용
@@ -1653,3 +1866,312 @@ class Director(BaseAgent):
         lines.append(f"{'='*60}\n")
 
         return "\n".join(lines)
+
+    # =================================================================
+    # [V60.80] Stage 4 앙상블 선택 프로토콜 (3개 후보 중 최선 선택)
+    # =================================================================
+
+    # 3개 후보 선택용 프롬프트
+    ENSEMBLE_SELECTION_PROMPT = """
+[Role] 웹소설 1타 편집장 (Chief Director)
+[Task] 3개 원고 후보를 검토하고 최선을 선택한 뒤 PASS/REJECT 판정하라.
+
+### 핵심 철학
+"Blueprint를 토대로 양질의 원고를 연속성 있게 생산한다"
+
+### 📋 Blueprint (이번 화 설계)
+{blueprint}
+
+### 🔗 직전 화 엔딩 (연속성 기준)
+{previous_ending}
+
+---
+
+### 📝 [후보 A - {strategy_a}]
+{manuscript_a}
+
+⚠️ Python 경고:
+{warnings_a}
+
+---
+
+### 📝 [후보 B - {strategy_b}]
+{manuscript_b}
+
+⚠️ Python 경고:
+{warnings_b}
+
+---
+
+### 📝 [후보 C - {strategy_c}]
+{manuscript_c}
+
+⚠️ Python 경고:
+{warnings_c}
+
+---
+
+### 🎯 평가 기준 (가중치)
+1. **Blueprint 씬 반영률 (40%)**: 설계된 모든 씬이 균등하게 반영되었는가?
+2. **직전 화 연속성 (30%)**: 직전 화 엔딩에서 자연스럽게 이어지는가?
+3. **문장 품질 + 몰입도 (20%)**: 독자가 다음 화를 기다리게 만드는가?
+4. **분량 충족 (10%)**: 5,000자 이상인가? (최소 4,000자)
+
+### 🚨 자동 REJECT 조건 (어느 후보든)
+- 죽은 NPC가 활동하는 경우
+- 미습득 무공을 사용하는 경우
+- 분량 4,000자 미만
+- Blueprint 씬 50% 이상 누락
+
+### 📌 출력 형식 (Strict JSON)
+{{
+    "selected": "A" | "B" | "C",
+    "selection_reason": "선택 이유 (어떤 점에서 다른 후보보다 우수한지)",
+    "verdict": "PASS" | "REJECT",
+    "score": 0-100,
+    "score_breakdown": {{
+        "blueprint_coverage": 0-40,
+        "continuity": 0-30,
+        "quality": 0-20,
+        "length": 0-10
+    }},
+    "feedback": {{
+        "strengths": ["강점 1", "강점 2"],
+        "issues": ["문제점 1 (있을 경우)"],
+        "action_items": ["REJECT 시 필수 수정 사항"]
+    }},
+    "state_updates": {{선택된 원고의 state_updates를 그대로 복사}},
+    "other_candidates_notes": {{
+        "A": "후보 A 간단 평가",
+        "B": "후보 B 간단 평가",
+        "C": "후보 C 간단 평가"
+    }}
+}}
+"""
+
+    def select_and_judge_ensemble(
+        self,
+        ep_num: int,
+        candidates: list,
+        validation_results: list,
+        blueprint: dict,
+        previous_ending: str,
+        arc_pos: int = 1,
+        total_eps: int = 5,
+        retry_count: int = 0
+    ) -> dict:
+        """
+        [V60.80] 3개 후보 중 최선 선택 + PASS/REJECT 판정
+
+        Args:
+            ep_num: 에피소드 번호
+            candidates: Chief Writer가 생성한 3개 후보
+            validation_results: ManuscriptValidator의 검증 결과
+            blueprint: Blueprint 데이터
+            previous_ending: 직전 화 마지막 500자
+            arc_pos: Arc 내 위치
+            total_eps: Arc 내 총 에피소드 수
+            retry_count: 재시도 횟수
+
+        Returns:
+            {
+                "selected": "A" | "B" | "C",
+                "selected_candidate": dict,  # 선택된 후보 전체 데이터
+                "verdict": "PASS" | "REJECT",
+                "score": int,
+                "feedback": dict,
+                "state_updates": dict,
+                "action_items": list
+            }
+        """
+        # 후보가 3개 미만이면 있는 것만 사용
+        while len(candidates) < 3:
+            candidates.append({
+                "strategy": f"fallback_{len(candidates)}",
+                "strategy_name": "폴백",
+                "manuscript": "",
+                "title": "",
+                "state_updates": {}
+            })
+
+        while len(validation_results) < 3:
+            validation_results.append({
+                "warnings": ["후보 없음"],
+                "focus_points": ["빈 후보"]
+            })
+
+        # 프롬프트 구성
+        blueprint_str = json.dumps(blueprint, ensure_ascii=False, indent=2) if isinstance(blueprint, dict) else str(blueprint)
+
+        # 각 후보 데이터 추출
+        def get_candidate_info(idx):
+            c = candidates[idx] if idx < len(candidates) else {}
+            v = validation_results[idx] if idx < len(validation_results) else {}
+            return {
+                "strategy": c.get("strategy_name", c.get("strategy", f"후보{idx+1}")),
+                "manuscript": c.get("manuscript", "")[:8000],  # 토큰 제한
+                "warnings": "\n".join(v.get("warnings", [])) or "(경고 없음)"
+            }
+
+        info_a = get_candidate_info(0)
+        info_b = get_candidate_info(1)
+        info_c = get_candidate_info(2)
+
+        prompt = self.ENSEMBLE_SELECTION_PROMPT.format(
+            blueprint=self._escape_braces(blueprint_str[:3000]),
+            previous_ending=self._escape_braces(previous_ending[-500:] if previous_ending else ""),
+            strategy_a=info_a["strategy"],
+            manuscript_a=self._escape_braces(info_a["manuscript"]),
+            warnings_a=self._escape_braces(info_a["warnings"]),
+            strategy_b=info_b["strategy"],
+            manuscript_b=self._escape_braces(info_b["manuscript"]),
+            warnings_b=self._escape_braces(info_b["warnings"]),
+            strategy_c=info_c["strategy"],
+            manuscript_c=self._escape_braces(info_c["manuscript"]),
+            warnings_c=self._escape_braces(info_c["warnings"])
+        )
+
+        # LLM 호출
+        response = self.ask(prompt, temperature=0.1)
+        result = self._extract_json_robust(response)
+
+        if not result or result.get("parsing_error"):
+            # 파싱 실패 시 첫 번째 후보 선택
+            print("      ⚠️ [Director] 앙상블 선택 파싱 실패 - 첫 번째 후보 기본 선택")
+            return {
+                "selected": "A",
+                "selected_candidate": candidates[0] if candidates else {},
+                "verdict": "REJECT",
+                "score": 50,
+                "feedback": {"issues": ["Director 판정 파싱 실패"]},
+                "state_updates": candidates[0].get("state_updates", {}) if candidates else {},
+                "action_items": ["재생성 필요"],
+                "parsing_error": True
+            }
+
+        # 선택된 후보 매핑
+        selected_letter = result.get("selected", "A").upper()
+        selected_idx = {"A": 0, "B": 1, "C": 2}.get(selected_letter, 0)
+        selected_candidate = candidates[selected_idx] if selected_idx < len(candidates) else candidates[0]
+
+        # 적응형 기준 적용
+        original_verdict = result.get("verdict", "REJECT")
+        score = result.get("score", 50)
+
+        adaptive_result = self.apply_adaptive_decision(
+            score=score,
+            original_decision=original_verdict,
+            arc_pos=arc_pos,
+            total_eps=total_eps,
+            retry_count=retry_count
+        )
+
+        final_verdict = adaptive_result["decision"]
+        if final_verdict == "CONDITIONAL_PASS":
+            final_verdict = "PASS"  # 조건부 통과는 PASS로 처리
+
+        # 결과 구성
+        feedback = result.get("feedback", {})
+        if isinstance(feedback, str):
+            feedback = {"issues": [feedback]}
+
+        return {
+            "selected": selected_letter,
+            "selected_candidate": selected_candidate,
+            "verdict": final_verdict,
+            "original_verdict": original_verdict,
+            "score": score,
+            "score_breakdown": result.get("score_breakdown", {}),
+            "selection_reason": result.get("selection_reason", ""),
+            "feedback": feedback,
+            "state_updates": result.get("state_updates", selected_candidate.get("state_updates", {})),
+            "action_items": feedback.get("action_items", []) if isinstance(feedback, dict) else [],
+            "other_candidates_notes": result.get("other_candidates_notes", {}),
+            "adaptive_threshold": adaptive_result.get("threshold_used", 65),
+            "adaptive_reason": adaptive_result.get("reason", "")
+        }
+
+    def quick_judge_single(
+        self,
+        ep_num: int,
+        manuscript: str,
+        blueprint: dict,
+        previous_ending: str,
+        retry_count: int = 0
+    ) -> dict:
+        """
+        [V60.80] 냉동인간 Writer용 간소 검토
+
+        3번 면담 모두 실패 후 냉동인간이 생성한 원고의 간소 검토.
+
+        Args:
+            ep_num: 에피소드 번호
+            manuscript: 원고
+            blueprint: Blueprint
+            previous_ending: 직전 화 엔딩
+            retry_count: 재시도 횟수
+
+        Returns:
+            {
+                "verdict": "PASS" | "REJECT",
+                "score": int,
+                "reason": str
+            }
+        """
+        # 기본 분량 체크
+        if len(manuscript) < 3500:
+            return {
+                "verdict": "REJECT",
+                "score": 20,
+                "reason": f"분량 심각 부족: {len(manuscript)}자 (최소 3,500자)"
+            }
+
+        # 간소 프롬프트
+        prompt = f"""
+[Role] 편집장 (Emergency Review)
+[Task] 냉동인간 Writer가 생성한 원고를 빠르게 검토하라.
+
+### 원고 (제{ep_num}화)
+{self._escape_braces(manuscript[:6000])}
+
+### Blueprint 요약
+{self._escape_braces(str(blueprint)[:1500])}
+
+### 판정 기준 (완화됨)
+1. 분량 3,500자 이상: OK
+2. 치명적 설정 오류 없음: OK
+3. 최소한의 서사 진행: OK
+
+[Output Format] JSON Only
+{{
+    "verdict": "PASS" 또는 "REJECT",
+    "score": 0-100,
+    "reason": "판정 사유",
+    "critical_issues": ["치명적 문제 (있을 경우)"]
+}}
+"""
+
+        response = self.ask(prompt, temperature=0.1)
+        result = self._extract_json_robust(response)
+
+        if not result or result.get("parsing_error"):
+            # 파싱 실패 시 분량만 체크하고 통과
+            if len(manuscript) >= 3500:
+                return {
+                    "verdict": "PASS",
+                    "score": 55,
+                    "reason": "간소 검토 파싱 실패 - 분량 기준 충족으로 통과",
+                    "forced": True
+                }
+            return {
+                "verdict": "REJECT",
+                "score": 30,
+                "reason": "간소 검토 파싱 실패 + 분량 미달"
+            }
+
+        return {
+            "verdict": result.get("verdict", "REJECT"),
+            "score": result.get("score", 50),
+            "reason": result.get("reason", ""),
+            "critical_issues": result.get("critical_issues", [])
+        }

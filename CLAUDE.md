@@ -27,10 +27,15 @@ echo "GOOGLE_API_KEY=your_key_here" > .env
 python main_a.py
 
 # 대시보드 실행 (선택)
-streamlit run studio_dashboard.py
+streamlit run tools2/studio_dashboard.py
 
 # 프로젝트 리셋 (DB/ChromaDB 초기화)
 python RESET.py
+
+# 테스트 실행
+pytest tests/                          # 전체 테스트
+pytest tests/test_db_manager.py -v     # 단일 모듈 테스트
+pytest tests/ -k "test_name" -v        # 특정 테스트만
 ```
 
 ## 유틸리티 도구
@@ -40,6 +45,9 @@ python RESET.py
 | `tools/` | `concat_txt.py` | 에피소드 텍스트 파일 병합 |
 | `tools/` | `db_porter.py` | DB 마이그레이션 |
 | `tools/` | `normalize_arcs_db.py` | Arc 데이터 정규화 |
+| `tools2/` | `studio_dashboard.py` | Streamlit 대시보드 |
+| `tools2/` | `arc_dashboard.py` | Arc 분석 대시보드 |
+| `tools2/` | `cost_calculation.py` | API 비용 계산 |
 | root | `RESET.py` | 프로젝트 선택적 리셋 |
 | root | `make_md.py` | 원고 → 마크다운 변환 |
 
@@ -65,11 +73,21 @@ SovereignApp (main_a.py)
 │   └── KarmaService   → 인과율 추적
 ├── LongTermMemory     → ChromaDB 벡터 검색
 └── Agent Orchestra (modules/domain/agents/)
-    ├── Analyst    → 전략 계획 (Stage 1-2)
-    ├── Architect  → 블루프린트 생성 (Stage 3)
-    ├── Writer     → 원고 작성 (Stage 4)
-    ├── Director   → 품질 검증
-    └── ContinuityInspector → 연속성 검증
+    ├── Core Agents:
+    │   ├── Analyst      → 전략 계획 (Stage 1-2)
+    │   ├── Architect    → 블루프린트 생성 (Stage 3)
+    │   ├── Writer       → 원고 작성 (Stage 4)
+    │   └── Director     → 품질 검증
+    └── Stage 2 Specialized Agents:
+        ├── FourPhaseArcGenerator → 4단계 Arc 파이프라인 조율
+        ├── ConstraintCompiler    → 제약 체크리스트 생성
+        ├── PreflightChecker      → 생성 전 제약 맵 구축
+        ├── ArcEnsembleGenerator  → 3개 후보 병렬 생성
+        ├── ArcCritic             → 즉시 비평 + 자동 수정
+        ├── ArcCorrector          → Arc 부분 수정
+        ├── ConsensusValidator    → 3-LLM 합의 검증
+        ├── ContinuityInspector   → 연속성 검증 (Arc/Episode/Manuscript)
+        └── ArcDraftValidator     → Python 사전 검증 (무료)
 ```
 
 ## 트리플 데이터베이스
@@ -107,26 +125,29 @@ TIER  2: SCORING             → 100점 만점, 70점 통과
 TIER  3: ADVISORY            → 비차단 제안 (항상 PASS)
 ```
 
-## 모델 티어 시스템
+## 모델 설정
 
-| 에이전트 | Tier 1 (첫 시도) | Tier 2 (1회 실패) | Tier 3 (2회+ 실패) |
-|---------|-----------------|------------------|-------------------|
-| Architect | gemini-2.5-flash | gemini-2.5-pro | gemini-3-pro-preview |
-| Writer | gemini-2.5-flash | gemini-2.5-pro | gemini-3-pro-preview |
-| Analyst | gemini-3-pro-preview (고정) | - | - |
-| Director | gemini-2.0-flash (고정) | - | - |
+기본 모델 설정은 `config/settings.json`에서 관리:
 
-**Stage 4 예외:** Writer는 항상 `gemini-3-pro-preview` 사용 (품질 저하 방지)
+| 에이전트 | 기본 모델 | 비고 |
+|---------|----------|------|
+| Architect | gemini-3-pro-preview | Stage 3 블루프린트 생성 |
+| Writer | gemini-3-pro-preview | Stage 4 원고 작성 |
+| Analyst | gemini-3-pro-preview | Stage 1-2 전략/Arc |
+| Director | gemini-2.5-pro | 품질 검증 |
+
+**폴백 체인 (`base_agent.py`):** 할당량 초과 시 자동 폴백
+- `gemini-3-pro-preview` → `gemini-2.5-pro` → `gemini-2.5-flash` → `gemini-2.0-flash`
 
 ## 필수 안전 규칙
 
 1. **ChromaDB 파일 삭제 금지** - `chroma.sqlite3`, `*.wal` 절대 삭제 금지. `LOCK`, `*-shm`만 삭제 가능
-2. **DB 쓰기 후 항상 커밋** - `_safe_commit()` (동기) 또는 `_safe_commit_async()` (비동기) 사용
-3. **프롬프트 내 사용자 콘텐츠 이스케이프** - `_escape_braces()`로 `{}` 문자 처리
-4. **에피소드 번호 검증** - `get_latest_episode_number()` 사용, 가정 금지
+2. **DB 쓰기 후 항상 커밋** - `SovereignApp._safe_commit()` (동기) 또는 `_safe_commit_async()` (비동기) 사용. 이 메서드는 `main_a.py`의 `SovereignApp` 클래스에 정의됨
+3. **프롬프트 내 사용자 콘텐츠 이스케이프** - `EscapeUtils` (`modules/core/escape_utils.py`) 또는 `BaseAgent._escape_braces()`로 `{}` 문자 처리
+4. **에피소드 번호 검증** - `DBManager.get_latest_episode_number()` 또는 `ProjectContext` 메서드 사용, 가정 금지
 5. **장르 컨텍스트 확인** - 장르별 로직 전 `self.selected_genre` 확인
 6. **Windows UTF-8** - `main_a.py` 5-11줄에서 이미 처리됨. 재래핑 금지
-7. **모델 티어 자동 진행** - 수동 오버라이드 금지, 거부 횟수가 자연스럽게 Tier 1→2→3 진행
+7. **모델 폴백 자동 진행** - 할당량 초과 시 `BaseAgent.MODEL_FALLBACK_CHAIN`이 자동으로 다음 모델로 폴백
 
 ## 장르 추가 방법
 
@@ -183,13 +204,16 @@ ep_num (PK), new_items, lost_items, relationship_changes, ...
 
 | 파일 | 역할 |
 |------|------|
-| `main_a.py` | 진입점, SovereignApp 오케스트레이터 |
+| `main_a.py` | 진입점, SovereignApp 오케스트레이터 (~9000줄) |
 | `modules/core/project_manager.py` | ProjectContext - 모든 데이터 I/O |
-| `modules/core/db_manager.py` | DBManager - SQLite 연산 |
-| `modules/core/constants.py` | 전역 상수, GenreTypes, AI 파라미터 |
-| `modules/domain/agents/base_agent.py` | BaseAgent - API 호출, JSON 치유 |
+| `modules/core/db_manager.py` | DBManager - SQLite 연산, 스키마 정의 |
+| `modules/core/constants.py` | 전역 상수 (GenreTypes, RetryLimits, AIModels, BatchSizes 등) |
+| `modules/core/escape_utils.py` | EscapeUtils - 중괄호 이스케이프 유틸리티 |
+| `modules/domain/agents/base_agent.py` | BaseAgent - API 호출, JSON 자가치유, 모델 폴백 |
+| `modules/domain/agents/four_phase_arc_generator.py` | Stage 2 Arc 생성 4단계 파이프라인 |
 | `modules/domain/agents/continuity_inspector.py` | 연속성 검증 (Arc/Episode/Manuscript) |
-| `config/settings.json` | 모델 티어 설정 |
+| `config/settings.json` | 모델 설정, 검증 임계값 |
+| `tests/conftest.py` | pytest fixtures (mock API, DB, contexts) |
 
 ## 용어 정리
 
@@ -217,11 +241,24 @@ ep_num (PK), new_items, lost_items, relationship_changes, ...
 ## 비동기/동기 패턴
 
 ```python
-# 동기 컨텍스트
+# 동기 컨텍스트 (SovereignApp 메서드 내)
 self._safe_commit()
 
-# 비동기 컨텍스트
+# 비동기 컨텍스트 (SovereignApp 메서드 내)
 await self._safe_commit_async()
+
+# DBManager 직접 사용 시
+self.current_project.db.conn.commit()
 ```
 
 **주의:** SQLite는 동기지만 비동기 컨텍스트에서 호출될 수 있음. `asyncio.to_thread()` 사용.
+
+## 상수 클래스 (`modules/core/constants.py`)
+
+| 클래스 | 용도 |
+|--------|------|
+| `GenreTypes` | 장르 타입 상수 (WUXIA, HUNTER, INVESTMENT) |
+| `RetryLimits` | 재시도 횟수 (DIRECTOR_MAX_ATTEMPTS, WRITER_MAX_ATTEMPTS 등) |
+| `AIModels` | 모델 이름 상수 (TIER_1_WRITER, EMERGENCY_FALLBACK 등) |
+| `BatchSizes` | 배치 크기 (ARC_BATCH_SIZE, EPISODE_BATCH_SIZE) |
+| `WritingLimits` | 집필 제한 (MAX_RETRY_PER_EPISODE, MAX_FAILURE_STREAK) |

@@ -20,6 +20,7 @@ Python 사전 검증 → LLM에게 정보 제공용 (REJECT 권한 없음)
 
 import re
 from typing import Dict, List, Any, Tuple, Set
+from modules.core.constants import Stage2Limits
 
 
 class ArcDraftValidator:
@@ -91,6 +92,10 @@ class ArcDraftValidator:
         warnings = []
         suggestions = []
         score = 100
+
+        # [V60.74] Arc 1 처리 명시적 로그
+        if not prev_arcs:
+            print(f"      ⏭️ [ArcDraftValidator] Arc 1 - 연속성 검증 스킵, 구조만 검증")
 
         # 1. 필수 필드 검증
         field_result = self._validate_required_fields(arc)
@@ -357,7 +362,7 @@ class ArcDraftValidator:
         ep_count = arc.get("ep_count", 5)
 
         # [V60.41] 분량 검증 - 모두 WARNING (재생성으로 해결 가능)
-        min_length = ep_count * 500  # 최소 기준
+        min_length = ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE  # 최소 기준
         warn_length = ep_count * 400  # 경고 기준 (80%)
 
         if length < warn_length:

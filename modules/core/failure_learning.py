@@ -367,6 +367,29 @@ class FailureLearner:
             ]
         }
 
+    def get_recent_failures(self, limit: int = 50, stage: int = None) -> List[FailureRecord]:
+        """
+        [V61] 최근 실패 기록 반환
+
+        Args:
+            limit: 반환할 최대 개수
+            stage: 특정 스테이지만 필터링 (None이면 전체)
+
+        Returns:
+            최근 실패 기록 리스트
+        """
+        if stage is not None:
+            return self.recent_failures.get(stage, [])[-limit:]
+
+        # 전체 스테이지 합치기
+        all_recent = []
+        for stage_failures in self.recent_failures.values():
+            all_recent.extend(stage_failures)
+
+        # 타임스탬프 기준 정렬 (최신 순)
+        all_recent.sort(key=lambda x: x.timestamp if hasattr(x, 'timestamp') else '', reverse=True)
+        return all_recent[:limit]
+
     def save_to_json(self, filepath: str):
         """기록을 JSON 파일로 저장"""
         data = {

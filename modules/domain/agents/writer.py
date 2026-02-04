@@ -180,9 +180,9 @@ class Writer(BaseAgent):
                 return int(match.group())
         return 0
 
-    def write_v20_manuscript(self, ep_num, breakdown_doc, master_bible, hud_report, purism_prompt, 
-                             style_mode="", intro_dna="CYNICAL", feedback="", prev_full_manuscript="", 
-                             arc_doc="", tactical_references=""):     
+    def write_v20_manuscript(self, ep_num, breakdown_doc, master_bible, hud_report, purism_prompt,
+                             style_mode="", intro_dna="CYNICAL", feedback="", prev_full_manuscript="",
+                             arc_doc="", tactical_references="", protagonist_name="주인공"):  # [V61] 주인공 이름     
         
         # 1. [변동 데이터] Dynamic Payload 구성
         # 매 화 바뀌는 정보만 모아서 가볍게 만듭니다.
@@ -291,6 +291,15 @@ class Writer(BaseAgent):
         # 2. [프롬프트 조립] Dynamic Context
         # 캐시가 있다면 이 내용만 전송됩니다. (비용 절감 핵심)
         dynamic_prompt = f"""
+        ╔══════════════════════════════════════════════════════════════╗
+        ║ 🔒 [V61] 주인공 정보 - 반드시 이 이름만 사용하세요!           ║
+        ╠══════════════════════════════════════════════════════════════╣
+        ║ 주인공 이름: {protagonist_name}                               ║
+        ║ → 본문에서 반드시 '{protagonist_name}'만 사용                 ║
+        ║ → '주인공', '그', '청년', '사내' 등 대명사 사용 금지          ║
+        ║ → 이름을 줄여 부르거나 다른 호칭 사용 금지                   ║
+        ╚══════════════════════════════════════════════════════════════╝
+
         {mandatory_context}
 
         {feedback_section}

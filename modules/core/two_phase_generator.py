@@ -371,7 +371,9 @@ class TwoPhaseGenerator:
         """Phase 2: Flesh 생성"""
         try:
             ep_start = skeleton.get("ep_start", 1)
-            ep_end = skeleton.get("ep_end", ep_start + 4)
+            # [V60.73] ep_count 기반 ep_end 폴백 (기존 +4 오류 수정)
+            ep_count = skeleton.get("ep_count", 5)
+            ep_end = skeleton.get("ep_end", ep_start + ep_count - 1)
 
             # 장르 프롬프트
             genre_prompt = ""

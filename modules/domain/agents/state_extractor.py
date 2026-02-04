@@ -1,11 +1,12 @@
 """
-V60.10 State Extractor Agent
+V61.0 State Extractor Agent
 이전 Arc/Episode에서 핵심 상태 정보를 구조화하여 추출
 
 Purpose:
 - LLM이 무시하기 쉬운 문자열 컨텍스트를 구조화된 JSON으로 변환
 - 다음 Arc 설계 시 명확한 제약으로 주입
 - Flash 모델로 빠르고 저렴하게 실행
+- [V61] Entity Registry 추출 - 고유명사 일관성 추적
 """
 
 import json
@@ -59,6 +60,17 @@ STATE_EXTRACTION_PROMPT = """
    - 이미 해결했으므로 다시 등장 불가한 문제
    - 이미 수여받았으므로 다시 받을 수 없는 권한
 
+8. **[V61] 고유명사 레지스트리 (entity_registry)**
+   이번 Arc에서 등장한 모든 고유명사를 추출하라. 장르 무관 범용 카테고리 사용.
+
+   - **character**: 인물 (NPC, 적, 동료, 조연 - 주인공 제외)
+   - **organization**: 조직/집단 (문파, 길드, 회사, 산적단, 세력)
+   - **location**: 장소 (지역, 던전, 건물, 영역)
+   - **object**: 물건 (무기, 아이템, 도구, 신물) - inventory와 별개로 명칭 추적용
+   - **concept**: 개념 (무공, 스킬, 깨달음, 경지, 비급, 기술명)
+
+   각 항목에는 name, context(등장 맥락), arc_no를 포함하라.
+
 ### [Output Format - JSON Only]
 {{
     "arc_no": {arc_no},
@@ -102,6 +114,23 @@ STATE_EXTRACTION_PROMPT = """
         "recovery_scene_required": true/false,
         "min_time_skip_days": 숫자,
         "mandatory_items_in_possession": ["반드시 소지해야 할 아이템"]
+    }},
+    "entity_registry": {{
+        "characters": [
+            {{"name": "인물명", "role": "역할(적/동료/조연 등)", "context": "등장 맥락"}}
+        ],
+        "organizations": [
+            {{"name": "조직명", "type": "유형(문파/산적단/세력 등)", "context": "등장 맥락"}}
+        ],
+        "locations": [
+            {{"name": "장소명", "type": "유형(지역/건물/영역 등)", "context": "등장 맥락"}}
+        ],
+        "objects": [
+            {{"name": "물건명", "type": "유형(무기/도구/신물 등)", "context": "등장 맥락"}}
+        ],
+        "concepts": [
+            {{"name": "개념명", "type": "유형(무공/깨달음/경지 등)", "context": "등장 맥락"}}
+        ]
     }}
 }}
 """
@@ -174,11 +203,13 @@ class StateExtractor(BaseAgent):
         """
         여러 Arc의 누적 상태 추출
 
+        [V61.1] Entity Registry도 전체 Arc에서 누적
+
         Args:
             arcs: Arc 데이터 리스트 (시간순)
 
         Returns:
-            누적된 상태 정보
+            누적된 상태 정보 + 누적 entity_registry
         """
         if not arcs:
             return self._empty_state()
@@ -192,7 +223,17 @@ class StateExtractor(BaseAgent):
         all_grants = []
         all_deceased = []
 
-        for arc in arcs:
+        # [V61.1] 전체 Arc에서 Entity 누적
+        cumulative_entities = {
+            'characters': {},    # name -> entity dict
+            'organizations': {},
+            'locations': {},
+            'objects': {},
+            'concepts': {}
+        }
+
+        for arc_idx, arc in enumerate(arcs):
+            arc_no = arc.get('arc_no', arc_idx + 1)
             joint = arc.get('joint_docs', {})
             inventory = joint.get('physical_inventory', '')
 
@@ -213,11 +254,53 @@ class StateExtractor(BaseAgent):
                 # 간단한 추출 로직
                 pass
 
+            # [V61.1] Arc별 entity_registry 추출 및 누적
+            arc_state = self.extract_state(arc)
+            arc_entities = arc_state.get('entity_registry', {})
+
+            for category in ['characters', 'organizations', 'locations', 'objects', 'concepts']:
+                category_entities = arc_entities.get(category, [])
+                if not isinstance(category_entities, list):
+                    continue
+
+                for entity in category_entities:
+                    if isinstance(entity, dict):
+                        name = entity.get('name', '')
+                    elif isinstance(entity, str):
+                        name = entity
+                        entity = {'name': name}
+                    else:
+                        continue
+
+                    if not name:
+                        continue
+
+                    # 기존에 없으면 추가 (first_appearance 설정)
+                    if name not in cumulative_entities[category]:
+                        entity['first_appearance'] = f"Arc {arc_no}"
+                        cumulative_entities[category][name] = entity
+                    # 기존에 있으면 정보 보강 (alias 등)
+                    else:
+                        existing = cumulative_entities[category][name]
+                        # alias 병합
+                        if 'aliases' in entity:
+                            existing_aliases = existing.get('aliases', [])
+                            for alias in entity.get('aliases', []):
+                                if alias not in existing_aliases:
+                                    existing_aliases.append(alias)
+                            existing['aliases'] = existing_aliases
+
         # 중복 제거
         current_state['cumulative'] = {
             'all_acquired_items': list(set(all_acquired)),
             'all_grants_received': list(set(all_grants)),
             'total_arcs_completed': len(arcs)
+        }
+
+        # [V61.1] 누적된 entity_registry를 리스트 형태로 변환
+        current_state['entity_registry'] = {
+            category: list(entities.values())
+            for category, entities in cumulative_entities.items()
         }
 
         return current_state
@@ -349,6 +432,16 @@ class StateExtractor(BaseAgent):
                 'mandatory_items_in_possession': inv.get('current_items', [])
             }
 
+        # [V61] entity_registry 보정
+        if 'entity_registry' not in result:
+            result['entity_registry'] = self._empty_entity_registry()
+        else:
+            # 각 카테고리 존재 확인
+            er = result['entity_registry']
+            for cat in ['characters', 'organizations', 'locations', 'objects', 'concepts']:
+                if cat not in er:
+                    er[cat] = []
+
         return result
 
     def _fallback_extraction(self, arc_data: dict) -> dict:
@@ -390,8 +483,10 @@ class StateExtractor(BaseAgent):
                 loss_percent = int(str(energy_loss).replace('%', '').strip())
                 current_energy = 100 - loss_percent
             except:
-                loss_percent = 0
-                current_energy = 100
+                # [V60.73] 보수적 기본값 50 (파싱 실패 시 만땅 가정 위험)
+                print(f"      ⚠️ [V60.73] internal_energy_loss 파싱 실패: '{energy_loss}' → 50% 가정")
+                loss_percent = 50
+                current_energy = 50
 
         return {
             'arc_no': arc_data.get('arc_no', 'Unknown'),
@@ -421,7 +516,21 @@ class StateExtractor(BaseAgent):
                 'recovery_scene_required': bool(injuries) or loss_percent > 30,
                 'min_time_skip_days': max([i.get('recovery_days', 0) for i in injuries] + [0]),
                 'mandatory_items_in_possession': current_items
-            }
+            },
+            # [V61.1] Python regex fallback으로 entity 추출 (LLM 실패 시)
+            'entity_registry': self._fallback_entity_extraction(
+                str(arc_data.get('tactical_doc', '')) + ' ' + str(joint)
+            )
+        }
+
+    def _empty_entity_registry(self) -> dict:
+        """[V61] 빈 Entity Registry 반환"""
+        return {
+            'characters': [],
+            'organizations': [],
+            'locations': [],
+            'objects': [],
+            'concepts': []
         }
 
     def _empty_state(self) -> dict:
@@ -447,7 +556,8 @@ class StateExtractor(BaseAgent):
                 'recovery_scene_required': False,
                 'min_time_skip_days': 0,
                 'mandatory_items_in_possession': []
-            }
+            },
+            'entity_registry': self._empty_entity_registry()
         }
 
     def _extract_grants_from_text(self, text: str) -> List[str]:
@@ -466,3 +576,113 @@ class StateExtractor(BaseAgent):
             grants.extend(matches)
 
         return list(set(grants))
+
+    def _fallback_entity_extraction(self, text: str) -> dict:
+        """
+        [V61.1] Python regex 기반 Entity 추출 (LLM 실패 시 fallback)
+
+        tactical_doc, joint_docs 등에서 고유명사를 패턴 매칭으로 추출
+        """
+        import re
+
+        entities = {
+            'characters': [],
+            'organizations': [],
+            'locations': [],
+            'objects': [],
+            'concepts': []
+        }
+
+        if not text or not isinstance(text, str):
+            return entities
+
+        # ═══════════════════════════════════════════════════════════════
+        # 1. 캐릭터 추출 (이름 패턴)
+        # ═══════════════════════════════════════════════════════════════
+        # 한글 이름 패턴: 2~4글자 (성+이름)
+        char_patterns = [
+            r'([가-힣]{2,4})(?:이|가|은|는|을|를|와|과|의|에게|한테|로부터)\s',  # 조사 앞 이름
+            r'(?:노|고|용|악|적|협객|검객|무사|협사|소협|대협|장로|문주|가주|종주|제자|사형|사제|사매|사숙|도장|대사|법사|방주|당주|주군|공자|소저)\s+([가-힣]{2,4})',  # 호칭 뒤 이름
+            r'([가-힣]{2,4})\s*(?:노|선생|장로|문주|가주|종주|대협|소협)',  # 이름 뒤 호칭
+        ]
+
+        found_chars = set()
+        for pattern in char_patterns:
+            matches = re.findall(pattern, text)
+            for m in matches:
+                name = m.strip() if isinstance(m, str) else m
+                # 일반 단어 필터링
+                if len(name) >= 2 and name not in ['그것', '이것', '저것', '무엇', '어디', '여기', '저기', '누구']:
+                    found_chars.add(name)
+
+        # 명시적 캐릭터 언급
+        explicit_char = re.findall(r'(?:등장인물|캐릭터|NPC)[:：]\s*([가-힣]{2,4})', text)
+        found_chars.update(explicit_char)
+
+        entities['characters'] = [{'name': c, 'role': 'extracted', 'first_appearance': 'unknown'} for c in found_chars]
+
+        # ═══════════════════════════════════════════════════════════════
+        # 2. 조직 추출 (문파/세력 패턴)
+        # ═══════════════════════════════════════════════════════════════
+        org_patterns = [
+            r'([가-힣]{2,6}(?:문|파|방|단|회|맹|련|종|가|당|세|교|군|대))',  # ~문, ~파, ~방 등
+            r'([가-힣]{2,8}(?:문파|세력|조직|가문|단체|연맹|동맹))',  # 명시적 조직
+            r'(?:정파|사파|마교|흑도|백도|무림|강호)의?\s*([가-힣]{2,6})',  # 무림 관련
+        ]
+
+        found_orgs = set()
+        for pattern in org_patterns:
+            matches = re.findall(pattern, text)
+            found_orgs.update(matches)
+
+        entities['organizations'] = [{'name': o, 'type': 'extracted', 'first_appearance': 'unknown'} for o in found_orgs]
+
+        # ═══════════════════════════════════════════════════════════════
+        # 3. 장소 추출
+        # ═══════════════════════════════════════════════════════════════
+        loc_patterns = [
+            r'([가-힣]{2,8}(?:산|성|촌|진|루|각|전|관|당|원|궁|부|현|주|도|강|호|해))',  # 지명 접미사
+            r'([가-힣]{2,6}(?:객잔|주막|여관|시장|광장|거리|골목|동굴|폐허|절벽))',  # 장소 유형
+            r'(?:에서|에|으로|로)\s*([가-힣]{2,8}(?:산|성|촌|전|관|당|원))',  # 조사 뒤 장소
+        ]
+
+        found_locs = set()
+        for pattern in loc_patterns:
+            matches = re.findall(pattern, text)
+            found_locs.update(matches)
+
+        entities['locations'] = [{'name': l, 'type': 'extracted', 'first_appearance': 'unknown'} for l in found_locs]
+
+        # ═══════════════════════════════════════════════════════════════
+        # 4. 물품/아이템 추출
+        # ═══════════════════════════════════════════════════════════════
+        obj_patterns = [
+            r'([가-힣]{2,8}(?:검|도|창|봉|편|권|갑|의|환|단|서|비급|병기|무기|보물|신물|영약|영단))',  # 무기/아이템
+            r'([가-힣]{2,6}(?:패|표|령|인|부|증))',  # 신표류
+            r'(?:획득|입수|수령|전수받은?)\s*([가-힣]{3,10})',  # 획득 문맥
+        ]
+
+        found_objs = set()
+        for pattern in obj_patterns:
+            matches = re.findall(pattern, text)
+            found_objs.update(matches)
+
+        entities['objects'] = [{'name': o, 'type': 'extracted', 'first_appearance': 'unknown'} for o in found_objs]
+
+        # ═══════════════════════════════════════════════════════════════
+        # 5. 개념/무공 추출
+        # ═══════════════════════════════════════════════════════════════
+        concept_patterns = [
+            r'([가-힣]{2,10}(?:공|결|법|술|식|초|장|권|검|도|보|신공|심법|비급|무공|무학|절학|비전))',  # 무공명
+            r'([가-힣]{2,8}(?:경지|경계|단계|층|성|화경|선천|후천|절정|화경|현경))',  # 경지
+            r'(?:수련|전수|깨달|익힌?)\s*([가-힣]{3,10})',  # 수련 문맥
+        ]
+
+        found_concepts = set()
+        for pattern in concept_patterns:
+            matches = re.findall(pattern, text)
+            found_concepts.update(matches)
+
+        entities['concepts'] = [{'name': c, 'type': 'extracted', 'first_appearance': 'unknown'} for c in found_concepts]
+
+        return entities

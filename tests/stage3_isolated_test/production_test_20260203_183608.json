@@ -1,0 +1,93 @@
+{
+  "start_time": "2026-02-03T18:20:43.557782",
+  "target_episodes": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "results": {
+    "1": {
+      "status": "PASS",
+      "title": "회귀, 그리고 살의",
+      "scenes": 4,
+      "length": 1258,
+      "retries": 1
+    },
+    "2": {
+      "status": "PASS",
+      "title": "위선의 탕약",
+      "scenes": 4,
+      "length": 1187,
+      "retries": 0
+    },
+    "3": {
+      "status": "PASS",
+      "title": "녹슨 백근도",
+      "scenes": 4,
+      "length": 1214,
+      "retries": 0
+    },
+    "4": {
+      "status": "PASS",
+      "title": "백근의 무게",
+      "scenes": 4,
+      "length": 1120,
+      "retries": 1
+    },
+    "5": {
+      "status": "PASS",
+      "title": "사자와 이빨",
+      "scenes": 4,
+      "length": 1572,
+      "retries": 0
+    },
+    "6": {
+      "status": "PASS",
+      "title": "독행(獨行): 홀로 걷다",
+      "scenes": 4,
+      "length": 1025,
+      "retries": 0
+    },
+    "7": {
+      "status": "PASS",
+      "title": "독(毒)을 태워 법(法)을 벼리다",
+      "scenes": 4,
+      "length": 1470,
+      "retries": 0
+    },
+    "8": {
+      "status": "PASS",
+      "title": "망나니의 가면",
+      "scenes": 4,
+      "length": 1340,
+      "retries": 0
+    },
+    "9": {
+      "status": "PASS",
+      "title": "어둠이 내린 흑룡각",
+      "scenes": 4,
+      "length": 1280,
+      "retries": 0
+    },
+    "10": {
+      "status": "PASS",
+      "title": "심판과 분배",
+      "scenes": 4,
+      "length": 1355,
+      "retries": 1
+    }
+  },
+  "summary": {
+    "total": 10,
+    "pass": 10,
+    "fail": 0
+  },
+  "end_time": "2026-02-03T18:36:08.789468"
+}

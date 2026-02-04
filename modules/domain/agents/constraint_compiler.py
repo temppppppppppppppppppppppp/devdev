@@ -176,7 +176,9 @@ class ConstraintCompiler:
                 loss_percent = int(re.search(r'(\d+)', str(energy_loss)).group(1))
                 internal_energy = 100 - loss_percent
             except:
-                internal_energy = 100
+                # [V60.73] 보수적 기본값 50 (파싱 실패 시 만땅 가정 위험)
+                print(f"      ⚠️ [V60.73] internal_energy_loss 파싱 실패: '{energy_loss}' → 50% 가정")
+                internal_energy = 50
 
         # 부상: arc_end_state 우선
         if arc_end_state.get("injuries"):
@@ -277,7 +279,15 @@ class ConstraintCompiler:
         else:
             lines.append("│ 💔 부상 상태: 없음".ljust(71) + "│")
 
-        energy = current_state.get("internal_energy", 100)
+        energy_raw = current_state.get("internal_energy", 100)
+        # [V60.75] 문자열/숫자 모두 처리
+        try:
+            if isinstance(energy_raw, str):
+                energy = int(''.join(filter(str.isdigit, energy_raw)) or '100')
+            else:
+                energy = int(energy_raw)
+        except (ValueError, TypeError):
+            energy = 100
         lines.append(f"│ ⚡ 내공: {energy}%".ljust(71) + "│")
 
         lines.append("└" + "─" * 70 + "┘")

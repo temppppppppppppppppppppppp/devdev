@@ -243,10 +243,14 @@ class ArcCritic(BaseAgent):
                 fixed["joint_docs"][key] = value
 
         # state_constraints 수정
+        # [V60.73] 자동 수정 시 경고 로그 (tactical_doc과 불일치 가능성)
         if "state_constraints" in auto_fixes:
             if "state_constraints" not in fixed:
                 fixed["state_constraints"] = {}
             for key, value in auto_fixes["state_constraints"].items():
+                old_value = fixed["state_constraints"].get(key)
+                if old_value != value:
+                    print(f"      ⚠️ [V60.73] state_constraints 자동 수정: {key}: {old_value} → {value} (tactical_doc 불일치 주의)")
                 fixed["state_constraints"][key] = value
 
         # items_acquired 수정 (중복 제거)

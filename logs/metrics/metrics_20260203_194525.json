@@ -1,0 +1,38 @@
+{
+  "session_id": "20260203_194525",
+  "start_time": "2026-02-03T19:45:25.430733",
+  "end_time": "2026-02-03T19:46:15.316973",
+  "total_calls": 2,
+  "successful_calls": 2,
+  "failed_calls": 0,
+  "total_retries": 0,
+  "total_tokens": 4132,
+  "total_cost_usd": 0.0324,
+  "agent_stats": {
+    "BlueprintEnsembleGenerator": {
+      "agent_name": "BlueprintEnsembleGenerator",
+      "total_calls": 2,
+      "successful_calls": 2,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 42305.34541606903,
+        "min_ms": 39703.71150970459,
+        "max_ms": 44906.97932243347,
+        "p50_ms": 42305.34541606903,
+        "p90_ms": 44386.65254116058,
+        "p99_ms": 44854.94664430618
+      }
+    }
+  },
+  "model_stats": {
+    "gemini-3-pro-preview": {
+      "input_tokens": 1183,
+      "output_tokens": 2949,
+      "total_tokens": 4132,
+      "cost_usd": 0.0324
+    }
+  }
+}
