@@ -108,7 +108,8 @@ class UnifiedArcValidator(BaseAgent):
         self,
         arc: Dict,
         prev_arcs: List[Dict],
-        constraints: str = ""
+        constraints: str = "",
+        state_tracker=None  # [V60.94] StateTracker (죽은 NPC 검증용)
     ) -> Tuple[str, Dict]:
         """
         Arc 통합 검증
@@ -117,6 +118,7 @@ class UnifiedArcValidator(BaseAgent):
             arc: 검증할 Arc
             prev_arcs: 이전 Arc 리스트
             constraints: 제약 조건 텍스트
+            state_tracker: [V60.94] StateTracker (죽은 NPC 검증용)
 
         Returns:
             (verdict, result) - "PASS"/"REJECT", 상세 결과
@@ -124,7 +126,7 @@ class UnifiedArcValidator(BaseAgent):
         # ═══════════════════════════════════════════════════════════════
         # Phase A: Python 즉시 검증 (무료)
         # ═══════════════════════════════════════════════════════════════
-        python_result = self._python_validate(arc, prev_arcs)
+        python_result = self._python_validate(arc, prev_arcs, state_tracker)
 
         # Python에서 CRITICAL 발견 시 LLM 스킵 (비용 절감)
         if python_result["has_critical"]:
@@ -173,9 +175,40 @@ class UnifiedArcValidator(BaseAgent):
 
         return verdict, result
 
-    def _python_validate(self, arc: Dict, prev_arcs: List[Dict]) -> Dict:
+    def _python_validate(self, arc: Dict, prev_arcs: List[Dict], state_tracker=None) -> Dict:
         """Python 즉시 검증 (무료, 빠름)"""
         issues = []
+
+        # [V60.94] 0. 죽은 NPC 등장 체크 (CRITICAL - REJECT 대상)
+        if state_tracker and prev_arcs:
+            arc_no = arc.get("arc_no", 0)
+            tactical = arc.get("tactical_doc", "")
+            if not isinstance(tactical, str):
+                tactical = str(tactical) if tactical else ""
+
+            dead_npc_violations = state_tracker.check_dead_npc_appearance(tactical, arc_no)
+            for v in dead_npc_violations:
+                issues.append({
+                    "severity": "CRITICAL",
+                    "category": "npc_death",
+                    "issue": f"💀 죽은 NPC 등장: '{v.get('npc_name', '?')}'",
+                    "evidence": f"Arc {v.get('death_arc', '?')}에서 사망, Arc {arc_no}에서 다시 등장",
+                    "fix_hint": f"'{v.get('npc_name', '?')}'을(를) 등장시키지 마세요 (사망 NPC)"
+                })
+                print(f"      💀 [V60.94] REJECT: 죽은 NPC '{v.get('npc_name')}' 등장!")
+
+            # [V60.95] NPC 무장/수준 변경 체크 (WARNING - 정당화 사유 필요)
+            npc_changes = state_tracker.check_npc_changes(tactical, arc_no)
+            for change in npc_changes:
+                change_type = "무장" if change.get("change_type") == "weapon" else "수준"
+                issues.append({
+                    "severity": "WARNING",
+                    "category": "npc_change",
+                    "issue": f"⚠️ NPC {change_type} 변경: '{change.get('npc_name', '?')}'",
+                    "evidence": change.get("reason", ""),
+                    "fix_hint": f"'{change.get('npc_name', '?')}'의 {change_type} 변경에 대한 정당화 사유 필요 (습득, 성장 등)"
+                })
+                print(f"      ⚠️ [V60.95] WARNING: NPC '{change.get('npc_name')}' {change_type} 변경 감지")
 
         # 1. 분량 체크
         ep_count = arc.get("ep_count", 5)

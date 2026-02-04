@@ -232,16 +232,65 @@ Step 5: 최종 판정
 }}
 """
 
+# =================================================================
+# [V60.87] 원고 역사 충돌 검사 프롬프트 (Manuscript History Conflict Check)
+# =================================================================
+MANUSCRIPT_HISTORY_CONFLICT_PROMPT = """
+[Role] 원고 연속성 전문가 (Manuscript Continuity Expert)
+[Task] 현재 원고가 이전에 작성된 원고들과 충돌하는지 검사하라.
+
+### 📜 검사 대상: 제 {ep_num}화 원고
+### 📚 이전 원고 역사 (진실의 원천 - 이것이 실제로 일어난 일이다):
+{manuscript_history}
+
+### 📝 현재 원고:
+{current_manuscript}
+
+### 🔍 충돌 검사 항목 (Hard Constraints)
+1. **사망 충돌**: 이전 원고에서 사망한 인물이 현재 원고에서 살아있는 것처럼 등장하는가?
+2. **아이템 충돌**: 이전 원고에서 잃어버리거나 파괴된 아이템이 현재 원고에서 사용되는가?
+3. **장소 충돌**: 이전 원고에서 파괴된 장소가 현재 원고에서 멀쩡한 것처럼 묘사되는가?
+4. **타임라인 충돌**: 이전 원고의 시간 흐름과 현재 원고의 시간 순서가 맞지 않는가?
+5. **관계 충돌**: 이전 원고에서 확립된 인물 관계가 현재 원고에서 모순되는가?
+6. **상태 충돌**: 이전 원고에서의 부상/상태가 현재 원고에서 무시되었는가?
+
+### [Chain-of-Thought Analysis]
+1. 이전 원고에서 확립된 핵심 사실(사망, 아이템 획득/손실, 장소 상태)을 나열하라
+2. 현재 원고에서 이 사실들과 충돌하는 부분이 있는지 대조하라
+3. 충돌이 발견되면 정확히 어떤 사실이 어떻게 모순되는지 명시하라
+
+[Output Format] JSON Only
+{{
+    "decision": "PASS" 또는 "CONFLICT",
+    "conflicts": [
+        {{
+            "type": "사망/아이템/장소/타임라인/관계/상태",
+            "prev_fact": "이전 원고에서 확립된 사실",
+            "current_violation": "현재 원고에서의 위반 내용",
+            "prev_episode": "이전 원고 회차 (알 수 있는 경우)",
+            "severity": "CRITICAL/MAJOR/MINOR"
+        }}
+    ],
+    "summary": "전체 검사 요약"
+}}
+"""
+
+
 class Director(BaseAgent):
     """
     [V0128] Director - 품질 검증 총괄
     [V59] 품질 등급화 A/B/C 및 구체적 수정 가이드 시스템 추가
     [V61] Entity 명칭 일관성 검증 - 최종 방어선 역할
+    [V60.87] 원고 역사 충돌 검사 - 전체 원고 대비 연속성 검증
 
     [V61 NEW]
     - validate_entity_consistency(): Entity 명칭 일관성 LLM 검증
     - audit_manuscript(), audit_strategic_plan()에 entity_registry 파라미터 추가
     - entity_consistency_enabled 플래그로 기능 활성화/비활성화
+
+    [V60.87 NEW]
+    - check_manuscript_history_conflicts(): 전체 원고 역사 대비 충돌 검사
+    - manuscript_history_check_enabled 플래그로 기능 활성화/비활성화
     """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -261,6 +310,19 @@ class Director(BaseAgent):
 
         # [V61] Entity 일관성 검증 설정
         self.entity_consistency_enabled = True  # Entity 일관성 검증 활성화
+
+        # [V60.87] 원고 역사 충돌 검사 설정
+        self.manuscript_history_check_enabled = True  # 전체 원고 대비 충돌 검사 활성화
+        self.history_check_max_episodes = 10  # 최대 몇 화까지 역사 참조할지 (너무 많으면 토큰 초과)
+
+        # [V60.88] 원고 컨텍스트 캐싱 (Gemini 대용량 컨텍스트 활용)
+        self.manuscript_cache_name = None  # 원고 합본 캐시 이름
+        self.manuscript_cache_enabled = True  # 캐싱 기능 활성화 여부
+        self._cached_manuscript_count = 0  # 캐시된 원고 수 (캐시 갱신 판단용)
+
+        # [V60.89] 주인공 설정 검증 (protagonist_config)
+        self.protagonist_config_check_enabled = True
+        self._protagonist_config = None  # 캐싱용
 
     def get_adaptive_threshold(
         self,
@@ -575,15 +637,113 @@ class Director(BaseAgent):
 
         return "\n".join(lines)
 
-    def audit_manuscript(self, ep_num, manuscript, arc_doc, history_summary, prev_full_text, arc_pos, total_eps=None, target_len=4500, retry_count=0, validation_context=None, entity_registry=None):
+    def audit_manuscript(self, ep_num, manuscript, arc_doc, history_summary, prev_full_text, arc_pos, total_eps=None, target_len=4500, retry_count=0, validation_context=None, entity_registry=None, manuscript_history=None, state_tracker=None):
         """
-        원고 검수 (V0128 통합 + V46 캐릭터 논리 검증 + V61 Entity 일관성 검증)
+        원고 검수 (V0128 통합 + V46 캐릭터 논리 검증 + V61 Entity 일관성 검증 + V60.87 원고 역사 충돌 검사)
 
         V0128 활성화 시 3-Tier 검증 시스템 사용
         비활성화 시 기존 LLM 기반 검증 사용
 
         [V61 NEW] entity_registry 파라미터 추가 - Entity 명칭 일관성 최종 검증
+        [V60.87 NEW] manuscript_history 파라미터 추가 - 전체 원고 역사 대비 충돌 검사
+        [V60.96 NEW] state_tracker 파라미터 추가 - 죽은 NPC 등장 검증
         """
+        # ═══════════════════════════════════════════════════════════════
+        # [V60.96] 죽은 NPC 등장 검사 - REJECT 대상 (최우선 체크)
+        # ═══════════════════════════════════════════════════════════════
+        if state_tracker:
+            dead_npc_violations = state_tracker.check_dead_npc_in_manuscript(manuscript, ep_num)
+            if dead_npc_violations:
+                violation_names = [v["npc_name"] for v in dead_npc_violations]
+                print(f"      💀 [V60.96] 죽은 NPC 등장 감지: {', '.join(violation_names)}")
+                return {
+                    "decision": "REJECT",
+                    "score": 20,
+                    "error_category": "LOGIC_ERROR",
+                    "diagnostic_report": f"죽은 NPC {len(dead_npc_violations)}명 등장",
+                    "current_beat_achieved": False,
+                    "reason": f"[V60.96] 사망한 NPC가 살아있는 것처럼 등장: {', '.join(violation_names)}",
+                    "feedback": f"[V60.96 REJECT] 다음 NPC는 이미 사망했습니다:\n" +
+                               "\n".join([f"  - {v['npc_name']}: Arc {v['death_arc']}에서 사망" for v in dead_npc_violations]) +
+                               "\n\n회상이나 언급만 허용됩니다. 살아있는 것처럼 대화/행동시키지 마세요.",
+                    "v60_96_dead_npc": dead_npc_violations
+                }
+
+        # ═══════════════════════════════════════════════════════════════
+        # [V60.88] 원고 역사 충돌 검사 - 캐시 우선, 폴백은 기존 방식
+        # ═══════════════════════════════════════════════════════════════
+        if self.manuscript_history_check_enabled:
+            history_check = None
+
+            # [V60.88] 캐시가 있으면 캐시 참조 검사 (전문 비교, 고품질)
+            if self.manuscript_cache_name:
+                history_check = self.check_manuscript_history_with_cache(
+                    ep_num=ep_num,
+                    current_manuscript=manuscript
+                )
+                if history_check.get('cache_used'):
+                    print(f"      ⚡ [V60.88] 캐시 참조 충돌 검사 완료")
+
+            # 캐시 없거나 실패 시 기존 방식 (manuscript_history 사용)
+            if not history_check or history_check.get('error'):
+                if manuscript_history:
+                    history_check = self.check_manuscript_history_conflicts(
+                        ep_num=ep_num,
+                        current_manuscript=manuscript,
+                        manuscript_history=manuscript_history,
+                        use_summary=True  # 토큰 절약을 위해 요약본 우선 사용
+                    )
+
+            if history_check and history_check.get('decision') == 'CONFLICT':
+                conflicts = history_check.get('conflicts', [])
+                conflict_details = "; ".join([
+                    f"[{c.get('type', '?')}] {c.get('prev_fact', '')} vs {c.get('current_violation', '')}"
+                    for c in conflicts[:3]  # 최대 3개만 표시
+                ])
+                return {
+                    "decision": "REJECT",
+                    "score": 25,
+                    "error_category": "LOGIC_ERROR",
+                    "diagnostic_report": f"원고 역사 충돌 {len(conflicts)}건 발견",
+                    "current_beat_achieved": False,
+                    "reason": f"이전 원고와 충돌: {conflict_details}",
+                    "feedback": f"[V60.88] 이전 원고에서 확립된 사실과 모순됨. {history_check.get('summary', '')}",
+                    "v60_87_history_check": history_check
+                }
+            elif history_check and history_check.get('conflicts'):
+                # 경고만 있는 경우 validation_context에 기록
+                if validation_context is None:
+                    validation_context = {}
+                validation_context['v60_87_history_warnings'] = history_check.get('conflicts', [])
+
+        # ═══════════════════════════════════════════════════════════════
+        # [V60.89] 주인공 설정 준수 검증 (protagonist_config)
+        # ═══════════════════════════════════════════════════════════════
+        if self.protagonist_config_check_enabled:
+            config_check = self.validate_protagonist_config_compliance(
+                manuscript=manuscript,
+                ep_num=ep_num
+            )
+
+            if config_check.get('decision') == 'REJECT':
+                violations = config_check.get('violations', [])
+                return {
+                    "decision": "REJECT",
+                    "score": 30,
+                    "error_category": "LOGIC_ERROR",
+                    "diagnostic_report": f"주인공 설정 위반 {len(violations)}건 발견",
+                    "current_beat_achieved": False,
+                    "reason": f"[V60.89] {config_check.get('feedback', '주인공 설정 위반')}",
+                    "feedback": config_check.get('feedback', ''),
+                    "v60_89_config_check": config_check
+                }
+            elif config_check.get('decision') == 'WARNING':
+                # WARNING은 기록만 하고 계속 진행
+                if validation_context is None:
+                    validation_context = {}
+                validation_context['v60_89_config_warnings'] = config_check.get('violations', [])
+                print(f"      ⚠️ [V60.89] 주인공 설정 경고: {len(config_check.get('violations', []))}건")
+
         # ═══════════════════════════════════════════════════════════════
         # [V61] Entity 일관성 검증 - Director의 최종 방어선
         # ═══════════════════════════════════════════════════════════════
@@ -2174,4 +2334,481 @@ class Director(BaseAgent):
             "score": result.get("score", 50),
             "reason": result.get("reason", ""),
             "critical_issues": result.get("critical_issues", [])
+        }
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # [V60.87] 원고 역사 충돌 검사 (Manuscript History Conflict Check)
+    # ═══════════════════════════════════════════════════════════════════════
+
+    def check_manuscript_history_conflicts(
+        self,
+        ep_num: int,
+        current_manuscript: str,
+        manuscript_history: list,
+        use_summary: bool = True
+    ) -> dict:
+        """
+        [V60.87] 현재 원고가 이전 원고들과 충돌하는지 검사
+
+        Args:
+            ep_num: 현재 회차 번호
+            current_manuscript: 현재 원고 전문
+            manuscript_history: 이전 원고 리스트 [{"ep_num": 1, "text": "...", "summary": "..."}, ...]
+            use_summary: True면 요약본 사용, False면 전문 사용 (토큰 절약)
+
+        Returns:
+            {
+                "decision": "PASS" | "CONFLICT",
+                "conflicts": [...],
+                "summary": "..."
+            }
+        """
+        if not self.manuscript_history_check_enabled:
+            return {"decision": "PASS", "conflicts": [], "summary": "충돌 검사 비활성화"}
+
+        if not manuscript_history:
+            return {"decision": "PASS", "conflicts": [], "summary": "이전 원고 없음"}
+
+        # 최근 N화만 참조 (토큰 절약)
+        recent_history = manuscript_history[-self.history_check_max_episodes:]
+
+        # 역사 텍스트 구성
+        history_parts = []
+        for h in recent_history:
+            h_ep = h.get('ep_num', '?')
+            if use_summary and h.get('summary'):
+                h_text = h.get('summary', '')[:1000]  # 요약본 1000자 제한
+                history_parts.append(f"[제{h_ep}화 요약] {h_text}")
+            else:
+                h_text = h.get('text', '')[:2000]  # 전문 2000자 제한
+                history_parts.append(f"[제{h_ep}화] {h_text}")
+
+        history_text = "\n\n".join(history_parts)
+
+        # 토큰 초과 방지: 역사가 너무 길면 축약
+        if len(history_text) > 15000:
+            history_text = history_text[:15000] + "\n... (이하 생략)"
+
+        # 프롬프트 구성
+        prompt = MANUSCRIPT_HISTORY_CONFLICT_PROMPT.format(
+            ep_num=ep_num,
+            manuscript_history=self._escape_braces(history_text),
+            current_manuscript=self._escape_braces(current_manuscript[:8000])  # 현재 원고도 제한
+        )
+
+        try:
+            response = self.ask(prompt, temperature=0.1)
+            result = self._extract_json_robust(response)
+
+            if not result or result.get('parsing_error'):
+                # 파싱 실패 시 PASS (비차단)
+                return {
+                    "decision": "PASS",
+                    "conflicts": [],
+                    "summary": "충돌 검사 응답 파싱 실패 - 비차단 통과",
+                    "parsing_error": True
+                }
+
+            decision = result.get('decision', 'PASS')
+            conflicts = result.get('conflicts', [])
+
+            # CRITICAL 충돌이 있으면 CONFLICT, 아니면 경고만
+            critical_count = sum(1 for c in conflicts if c.get('severity') == 'CRITICAL')
+
+            if decision == 'CONFLICT' and critical_count > 0:
+                return {
+                    "decision": "CONFLICT",
+                    "conflicts": conflicts,
+                    "summary": result.get('summary', ''),
+                    "critical_count": critical_count
+                }
+            else:
+                # MAJOR/MINOR는 경고만 (비차단)
+                return {
+                    "decision": "PASS",
+                    "conflicts": conflicts,  # 경고용으로 전달
+                    "summary": result.get('summary', ''),
+                    "warnings_only": True
+                }
+
+        except Exception as e:
+            # 에러 시 비차단 통과
+            return {
+                "decision": "PASS",
+                "conflicts": [],
+                "summary": f"충돌 검사 중 오류 발생 (비차단): {str(e)}",
+                "error": str(e)
+            }
+
+    def build_manuscript_history_for_check(self, db_manager, ep_num: int) -> list:
+        """
+        [V60.87] DB에서 이전 원고 역사를 가져와 충돌 검사용으로 구성
+
+        Args:
+            db_manager: DBManager 인스턴스
+            ep_num: 현재 회차 (이전 회차들만 가져옴)
+
+        Returns:
+            [{"ep_num": 1, "text": "...", "summary": "..."}, ...]
+        """
+        history = []
+        try:
+            for prev_ep in range(1, ep_num):
+                ms_data = db_manager.get_manuscript(prev_ep)
+                if ms_data and ms_data.get('text'):
+                    history.append({
+                        "ep_num": prev_ep,
+                        "text": ms_data.get('text', ''),
+                        "summary": ms_data.get('summary', '')  # 요약이 있으면 활용
+                    })
+        except Exception as e:
+            print(f"      ⚠️ [V60.87] 원고 역사 로드 실패: {e}")
+
+        return history
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # [V60.88] 원고 컨텍스트 캐싱 (Manuscript Context Caching)
+    # ═══════════════════════════════════════════════════════════════════════
+
+    def create_manuscript_cache(
+        self,
+        db_manager,
+        current_ep: int,
+        ttl_seconds: int = 3600  # 1시간 TTL (짧게 - 에피소드마다 갱신 필요)
+    ) -> str:
+        """
+        [V60.88] 전체 원고를 합본하여 Gemini 컨텍스트 캐시 생성
+
+        Gemini의 대용량 컨텍스트 윈도우를 활용하여 전체 원고를 캐싱.
+        Stage 4 검증 전에 호출하여 원고 전문가가 전체 맥락을 파악할 수 있게 함.
+
+        Args:
+            db_manager: DBManager 인스턴스
+            current_ep: 현재 작성 중인 회차 (이전 회차들만 캐싱)
+            ttl_seconds: 캐시 유효 시간 (초)
+
+        Returns:
+            캐시 이름 (성공 시) 또는 None (실패 시)
+        """
+        if not self.manuscript_cache_enabled:
+            print("      ⏭️ [V60.88] 원고 캐싱 비활성화됨")
+            return None
+
+        try:
+            from google.genai import types
+
+            # 1. 모든 이전 원고 수집 (순서대로)
+            manuscripts_compiled = []
+            total_chars = 0
+
+            for ep_num in range(1, current_ep):
+                ms_data = db_manager.get_manuscript(ep_num)
+                if ms_data and ms_data.get('text'):
+                    ep_text = ms_data.get('text', '')
+                    ep_title = ms_data.get('title', f'제{ep_num}화')
+                    formatted = f"\n{'='*60}\n# 제{ep_num}화. {ep_title}\n{'='*60}\n{ep_text}\n"
+                    manuscripts_compiled.append(formatted)
+                    total_chars += len(formatted)
+
+            if not manuscripts_compiled:
+                print("      ⚠️ [V60.88] 캐싱할 이전 원고가 없습니다.")
+                return None
+
+            # 2. 합본 텍스트 구성
+            compiled_text = f"""[📚 V60.88 원고 합본 - 총 {len(manuscripts_compiled)}화]
+이 캐시는 제1화부터 제{current_ep - 1}화까지의 전체 원고입니다.
+원고 연속성 전문가로서 이 내용을 숙지하고 새 원고의 충돌을 검사하세요.
+
+[🔍 검사 핵심]
+1. 사망 충돌: 죽은 인물이 다시 등장하면 CRITICAL
+2. 아이템 충돌: 잃어버린/파괴된 아이템이 다시 사용되면 CRITICAL
+3. 관계 충돌: 적대 관계가 갑자기 우호적으로 변하면 검토 필요
+4. 타임라인 충돌: 시간 순서가 맞지 않으면 검토 필요
+5. 지리 충돌: 물리적으로 불가능한 이동이면 검토 필요
+
+{''.join(manuscripts_compiled)}
+"""
+
+            # 3. 캐시 최소 크기 체크 (1024 토큰 ≈ 1500자)
+            if total_chars < 1500:
+                print(f"      ⚠️ [V60.88] 원고 분량 부족 ({total_chars}자) - 캐싱 스킵")
+                return None
+
+            # 4. 기존 캐시가 유효하고 원고 수가 동일하면 재사용
+            if self.manuscript_cache_name and self._cached_manuscript_count == len(manuscripts_compiled):
+                print(f"      ⚡ [V60.88] 기존 캐시 재사용 ({self._cached_manuscript_count}화)")
+                return self.manuscript_cache_name
+
+            # 5. 새 캐시 생성
+            print(f"      ⚡ [V60.88] 원고 캐시 생성 중... ({len(manuscripts_compiled)}화, {total_chars:,}자)")
+
+            cache = self.client.caches.create(
+                model=self.primary_model,
+                config=types.CreateCachedContentConfig(
+                    display_name=f"MANUSCRIPT_HISTORY_EP{current_ep}",
+                    system_instruction="원고 연속성 전문가 (Manuscript Continuity Expert)",
+                    contents=[compiled_text],
+                    ttl=f"{ttl_seconds}s"
+                )
+            )
+
+            self.manuscript_cache_name = cache.name
+            self._cached_manuscript_count = len(manuscripts_compiled)
+
+            print(f"      ✅ [V60.88] 원고 캐시 생성 완료: {cache.name}")
+            print(f"         - 총 {len(manuscripts_compiled)}화 / {total_chars:,}자 캐싱됨")
+
+            return cache.name
+
+        except Exception as e:
+            print(f"      ❌ [V60.88] 원고 캐시 생성 실패: {e}")
+            self.manuscript_cache_name = None
+            return None
+
+    def check_manuscript_history_with_cache(
+        self,
+        ep_num: int,
+        current_manuscript: str
+    ) -> dict:
+        """
+        [V60.88] 캐시된 원고를 활용한 충돌 검사
+
+        캐시가 있으면 캐시 참조로 LLM 호출 (토큰 비용 절감),
+        캐시가 없으면 기존 방식 (축약된 역사 사용).
+
+        Args:
+            ep_num: 현재 회차 번호
+            current_manuscript: 현재 원고 전문
+
+        Returns:
+            충돌 검사 결과 dict
+        """
+        if not self.manuscript_history_check_enabled:
+            return {"decision": "PASS", "conflicts": [], "summary": "충돌 검사 비활성화"}
+
+        if not self.manuscript_cache_name:
+            # 캐시 없으면 PASS (캐시 생성은 main_a.py에서 담당)
+            return {"decision": "PASS", "conflicts": [], "summary": "캐시 미생성 - 스킵"}
+
+        try:
+            from google.genai import types
+
+            # 캐시 참조 프롬프트 (원고 역사는 캐시에 포함됨)
+            prompt = f"""[V60.88 원고 충돌 검사]
+
+### 📋 검사 대상: 제{ep_num}화 신규 원고
+
+### 현재 원고 (제{ep_num}화)
+{self._escape_braces(current_manuscript[:12000])}
+
+### 🔍 검사 지시
+위 신규 원고가 캐시에 저장된 이전 원고들 (제1화~제{ep_num-1}화)과 충돌하는지 검사하세요.
+
+[Output Format] JSON Only
+{{
+    "decision": "PASS" 또는 "CONFLICT",
+    "conflicts": [
+        {{
+            "type": "death|item|relationship|timeline|geography",
+            "severity": "CRITICAL|MAJOR|MINOR",
+            "description": "충돌 설명",
+            "evidence_ep": 충돌하는 이전 회차 번호,
+            "evidence_text": "이전 원고의 관련 문장"
+        }}
+    ],
+    "summary": "검사 결과 요약"
+}}
+"""
+
+            # 캐시 참조 LLM 호출
+            response = self.client.models.generate_content(
+                model=self.primary_model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    cached_content=self.manuscript_cache_name,  # 🔥 원고 캐시 참조
+                    temperature=0.1,
+                    max_output_tokens=4096,
+                    response_mime_type="application/json"
+                )
+            )
+
+            result = self._extract_json_robust(response.text)
+
+            if not result or result.get('parsing_error'):
+                return {
+                    "decision": "PASS",
+                    "conflicts": [],
+                    "summary": "캐시 검사 응답 파싱 실패 - 비차단 통과",
+                    "parsing_error": True
+                }
+
+            decision = result.get('decision', 'PASS')
+            conflicts = result.get('conflicts', [])
+            critical_count = sum(1 for c in conflicts if c.get('severity') == 'CRITICAL')
+
+            if decision == 'CONFLICT' and critical_count > 0:
+                return {
+                    "decision": "CONFLICT",
+                    "conflicts": conflicts,
+                    "summary": result.get('summary', ''),
+                    "critical_count": critical_count,
+                    "cache_used": True
+                }
+            else:
+                return {
+                    "decision": "PASS",
+                    "conflicts": conflicts,
+                    "summary": result.get('summary', ''),
+                    "warnings_only": True,
+                    "cache_used": True
+                }
+
+        except Exception as e:
+            print(f"      ⚠️ [V60.88] 캐시 검사 오류: {e}")
+            return {
+                "decision": "PASS",
+                "conflicts": [],
+                "summary": f"캐시 검사 중 오류 (비차단): {str(e)}",
+                "error": str(e)
+            }
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # [V60.89] 주인공 설정 준수 검증 (Protagonist Config Compliance)
+    # ═══════════════════════════════════════════════════════════════════════
+
+    def _get_protagonist_config(self) -> dict:
+        """[V60.89] context에서 protagonist_config 추출 (캐싱)"""
+        if self._protagonist_config is not None:
+            return self._protagonist_config
+
+        try:
+            master_bible = getattr(self.context, 'master_bible', {})
+            if master_bible:
+                bible_root = master_bible.get('MasterBible', master_bible)
+                self._protagonist_config = bible_root.get('protagonist_config', {})
+            else:
+                self._protagonist_config = {}
+        except Exception:
+            self._protagonist_config = {}
+
+        return self._protagonist_config
+
+    def validate_protagonist_config_compliance(
+        self,
+        manuscript: str,
+        ep_num: int = 0
+    ) -> dict:
+        """
+        [V60.89] 원고가 protagonist_config 설정을 준수하는지 검증
+
+        검증 항목:
+        1. world_origin == '원시인': 현대 용어 사용 여부 (CRITICAL)
+        2. world_origin == '현대인': 검증 없음 (제약 없음)
+        3. incarnation_type == '회귀자': 미래 지식 직접 노출 여부 (WARNING)
+        4. incarnation_type == '빙의자': 검증 없음 (인지 목적)
+        5. incarnation_type == '환생자': 검증 없음 (인지 목적)
+
+        Returns:
+            {
+                "decision": "PASS" | "WARNING" | "REJECT",
+                "violations": [...],
+                "feedback": "..."
+            }
+        """
+        if not self.protagonist_config_check_enabled:
+            return {"decision": "PASS", "violations": [], "feedback": ""}
+
+        config = self._get_protagonist_config()
+        if not config:
+            return {"decision": "PASS", "violations": [], "feedback": "설정 없음"}
+
+        world_origin = config.get('world_origin', '원시인')
+        incarnation_type = config.get('incarnation_type', '회귀자')
+
+        violations = []
+        decision = "PASS"
+
+        # ═══════════════════════════════════════════════════════════════
+        # 1. 원시인 모드: 현대 용어 검사 (CRITICAL - REJECT)
+        # ═══════════════════════════════════════════════════════════════
+        if world_origin == '원시인':
+            # WuxiaGuard 보완 - 추가 현대 용어 패턴 검사
+            modern_patterns = [
+                # 단위
+                (r'킬로(그램|미터|칼로리)', '현대 단위'),
+                (r'\d+\s*(kg|km|cm|mm|ml|L)', '현대 단위 (영문)'),
+                # 과학/의학
+                (r'아드레날린|도파민|세로토닌|호르몬', '현대 의학 용어'),
+                (r'바이러스|박테리아|세포|DNA|유전자', '현대 과학 용어'),
+                (r'산소|이산화탄소|질소', '현대 화학 용어'),
+                # 기술
+                (r'소프트웨어|하드웨어|프로그램|알고리즘', 'IT 용어'),
+                (r'컴퓨터|인터넷|스마트폰|핸드폰', '현대 기기'),
+                # 외래어
+                (r'스트레스|쇼크|트라우마|멘탈', '현대 심리 용어'),
+                (r'시스템|프로세스|메커니즘|메소드', '현대 개념어'),
+            ]
+
+            import re
+            for pattern, category in modern_patterns:
+                matches = re.findall(pattern, manuscript, re.IGNORECASE)
+                if matches:
+                    violations.append({
+                        "type": "MODERN_TERM",
+                        "severity": "CRITICAL",
+                        "category": category,
+                        "found": list(set(matches))[:5],
+                        "message": f"[원시인 모드] {category} 사용 금지: {matches[:3]}"
+                    })
+                    decision = "REJECT"
+
+        # ═══════════════════════════════════════════════════════════════
+        # 2. 회귀자 모드: 미래 지식 직접 노출 검사 (WARNING)
+        # ═══════════════════════════════════════════════════════════════
+        if incarnation_type == '회귀자':
+            # 미래 예언 패턴 (직접적 스포일러)
+            future_spoiler_patterns = [
+                (r'(곧|머지않아|얼마 후면?)\s*.{0,20}(죽|망|멸|패)', '미래 예언'),
+                (r'(전생|회귀)\s*[에의]서?\s*(알|봤|경험)', '직접적 회귀 언급'),
+                (r'미래[에서의]?\s*.{0,10}(기억|지식)', '미래 지식 직접 언급'),
+            ]
+
+            import re
+            for pattern, category in future_spoiler_patterns:
+                matches = re.findall(pattern, manuscript)
+                if matches:
+                    # 내면 독백인지 확인 (작은따옴표, '~라고 생각했다' 등)
+                    # 여기서는 단순 경고만 (합리적 이유 허용)
+                    violations.append({
+                        "type": "FUTURE_KNOWLEDGE",
+                        "severity": "WARNING",
+                        "category": category,
+                        "found": [str(m) for m in matches[:3]],
+                        "message": f"[회귀자] {category} 감지 - 합리적 이유 확인 필요"
+                    })
+                    if decision == "PASS":
+                        decision = "WARNING"
+
+        # 피드백 생성
+        feedback = ""
+        if violations:
+            critical_violations = [v for v in violations if v.get('severity') == 'CRITICAL']
+            warning_violations = [v for v in violations if v.get('severity') == 'WARNING']
+
+            if critical_violations:
+                feedback = f"[V60.89 CRITICAL] 주인공 설정 위반 {len(critical_violations)}건:\n"
+                for v in critical_violations[:3]:
+                    feedback += f"  - {v.get('message', '')}\n"
+
+            if warning_violations:
+                feedback += f"[V60.89 WARNING] 확인 필요 {len(warning_violations)}건:\n"
+                for v in warning_violations[:2]:
+                    feedback += f"  - {v.get('message', '')}\n"
+
+        return {
+            "decision": decision,
+            "violations": violations,
+            "feedback": feedback,
+            "world_origin": world_origin,
+            "incarnation_type": incarnation_type
         }

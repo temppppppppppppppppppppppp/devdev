@@ -154,6 +154,14 @@ PLAN_VOLUME_PROMPT_V25 = """
 [📦 가용 자산 정보 (Asset Library)]
 {assets}
 
+[🌍 V60.88 주인공 설정 (Protagonist Configuration)]
+{protagonist_config}
+
+[👤 V60.93 주인공 이름 - 반드시 이 이름만 사용!]
+주인공 이름: {protagonist_name}
+→ 전략 문서에서 반드시 '{protagonist_name}'을 사용하세요!
+→ 다른 이름(이현, 강민수 등 임의 이름) 사용 금지!
+
 ---
 
 ### ⚖️ V25 서사 내면화 (Narrative Agency & Logic)
@@ -626,10 +634,45 @@ class Analyst(BaseAgent):
     - 서사 수술: ARC_RECONSTRUCTION을 통한 인과율 보정
     """
     #region //volume planning
-    def plan_single_volume_v20(self, vol_no, master_bible, treatment_raw_part, previous_volumes_context="", structured_context=""):
+    def plan_single_volume_v20(self, vol_no, master_bible, treatment_raw_part, previous_volumes_context="", structured_context="", protagonist_name: str = None):
         """[Stage 1] 10권 전략 수립 (가공 데이터 보존 및 슬라이싱 단일화)"""
         bible_root = master_bible.get('MasterBible', master_bible)
         assets = bible_root.get('AssetLibrary', {})
+
+        # [V60.93] 주인공 이름 추출 (파라미터 > MartialHUD > AssetLibrary > 기본값)
+        if not protagonist_name:
+            try:
+                hud = bible_root.get('MartialHUD', {})
+                protag = hud.get('Protagonist', {})
+                actual = protag.get('actual_truth', {})
+                protagonist_name = actual.get('name', '')
+                if not protagonist_name:
+                    # AssetLibrary에서 주인공 역할 찾기
+                    key_npcs = assets.get('KeyNPCs', [])
+                    for npc in key_npcs:
+                        if isinstance(npc, dict) and npc.get('role') in ['주인공', '주역', 'protagonist']:
+                            protagonist_name = npc.get('name', '')
+                            break
+                if not protagonist_name:
+                    protagonist_name = "주인공"
+            except Exception:
+                protagonist_name = "주인공"
+
+        # [V60.88] 주인공 설정 추출 (인지 목적, 제약 최소화)
+        protagonist_config = bible_root.get('protagonist_config', {})
+        world_origin = protagonist_config.get('world_origin', '원시인')
+        incarnation_type = protagonist_config.get('incarnation_type', '회귀자')
+        protagonist_config_text = f"- 세계 출신: {world_origin}\n- 환생 유형: {incarnation_type}"
+        if world_origin == '원시인':
+            protagonist_config_text += "\n⚠️ 현대 용어 사용 금지"
+        else:
+            protagonist_config_text += "\n📝 주인공은 현대 사회를 알고 있음"
+        if incarnation_type == '회귀자':
+            protagonist_config_text += "\n🔄 미래를 알고 있음 (합리적 이유 없이는 내면 독백으로 처리)"
+        elif incarnation_type == '빙의자':
+            protagonist_config_text += "\n👤 원래 인물의 기억/관계를 의식"
+        elif incarnation_type == '환생자':
+            protagonist_config_text += "\n👶 전생의 기억이 있음"
         
         # 1. 권역 데이터 통합 추출 (Block 5개 단위)
         # treatment_raw_part가 리스트면 그대로 쓰고, 문자열이면 JSON으로 변환
@@ -654,7 +697,9 @@ class Analyst(BaseAgent):
             previous_context=self._escape_braces(previous_volumes_context),
             target_blocks=self._escape_braces(target_blocks_str),
             treatment_raw_part=self._escape_braces(target_blocks_str),
-            assets=self._escape_braces(json.dumps(assets, ensure_ascii=False))
+            assets=self._escape_braces(json.dumps(assets, ensure_ascii=False)),
+            protagonist_config=self._escape_braces(protagonist_config_text),  # [V60.88]
+            protagonist_name=protagonist_name  # [V60.93]
         )
         
         response = self.ask(prompt, temperature=0.7)

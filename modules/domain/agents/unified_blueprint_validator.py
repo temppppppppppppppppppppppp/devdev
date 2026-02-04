@@ -7,14 +7,16 @@ Stage 3 사전검사기 + Director 최종 판정
 - 사전검사는 Director 호출 전 자가점검 수준
 
 구조:
-1. Python 사전검사 (무료, 빠름)
+1. Python 사전검사 (무료, 빠름) - 경고만, REJECT 권한 없음
    - 분량 체크 (integrated_scenario 길이)
    - 필수 필드 체크 (scene_breakdown, integrated_scenario)
    - 정지선 위반 체크 (다음 화 내용 침범)
    - 연속성 체크 (위치, 시간)
+   - [V60.96] 죽은 NPC 등장 체크 (CRITICAL 경고 → Director에게 전달)
 2. Director 최종 판정 (audit_manuscript)
    - Arc 준수, 서사 개연성, 캐릭터 논리 검증
    - Director의 verdict가 최종 결정
+   - [V60.96] 죽은 NPC 경고 포함 시 REJECT 권고
 """
 
 import json
@@ -50,7 +52,8 @@ class UnifiedBlueprintValidator:
         director=None,  # [V60.80] Director 인스턴스 (최종 판정용)
         working_ep: int = 1,
         arc_idx: int = 0,
-        entity_registry: Optional[Dict] = None  # [V61] Entity 일관성 검증용
+        entity_registry: Optional[Dict] = None,  # [V61] Entity 일관성 검증용
+        state_tracker=None  # [V60.96] StateTracker (죽은 NPC 검증용)
     ) -> Tuple[str, Dict]:
         """
         Blueprint 통합 검증 (사전검사 + Director 최종 판정)
@@ -63,6 +66,8 @@ class UnifiedBlueprintValidator:
             director: Director 에이전트 (최종 판정)
             working_ep: 현재 에피소드 번호
             arc_idx: Arc 인덱스
+            entity_registry: [V61] Entity 일관성 검증용
+            state_tracker: [V60.96] StateTracker (죽은 NPC 검증용)
 
         Returns:
             (verdict, result) - "PASS"/"REJECT", 상세 결과
@@ -71,6 +76,23 @@ class UnifiedBlueprintValidator:
         # Phase A: Python 사전검사 (무료) - 경고만, REJECT 권한 없음
         # ═══════════════════════════════════════════════════════════════
         pre_result = self._python_pre_validate(blueprint, constraint_block, prev_blueprint)
+
+        # [V60.96] 죽은 NPC 등장 체크 - 경고로 Director에게 전달 (디렉터주권주의)
+        dead_npc_violations = []
+        if state_tracker:
+            dead_npc_violations = state_tracker.check_dead_npc_in_blueprint(blueprint, working_ep)
+            if dead_npc_violations:
+                violation_names = [v["npc_name"] for v in dead_npc_violations]
+                print(f"      💀 [V60.96] 죽은 NPC 감지 → Director에게 전달: {', '.join(violation_names)}")
+                # Director 주의 포인트로 추가 (Python은 REJECT 안 함)
+                pre_result["issues"].append({
+                    "severity": "CRITICAL",
+                    "category": "dead_npc",
+                    "issue": f"죽은 NPC 등장: {', '.join(violation_names)}",
+                    "evidence": dead_npc_violations[0]["reason"],
+                    "fix_hint": "사망한 NPC는 회상/언급만 가능"
+                })
+                pre_result["has_critical"] = True
 
         # [V60.80] Python은 경고만 - REJECT 권한 없음, Director가 최종 판정
         if pre_result["has_critical"]:

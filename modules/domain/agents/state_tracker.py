@@ -68,6 +68,12 @@ class StateTracker:
         self.acquired_items: Dict[str, int] = {}  # item -> 획득 에피소드
         self.consumed_items: Dict[str, int] = {}  # item -> 소모 에피소드
 
+        # [V60.94] NPC 상태 추적 (생사, 무장, 수준)
+        self.npc_registry: Dict[str, Dict] = {}  # name -> {status, weapon, level, death_arc, last_arc}
+        # [V60.94] 주인공 무공 목록 추적
+        self.protagonist_skills: Set[str] = set()  # 습득한 무공 목록
+        self.skill_acquisitions: Dict[str, int] = {}  # skill -> 습득 Arc
+
     def _parse_internal_energy(self, value) -> int:
         """
         [V49.3 Fix] 내공 수치 파싱 - 한글 서술형 텍스트도 처리
@@ -608,6 +614,554 @@ class StateTracker:
         self.global_items.update(prev_tracker.global_items)
 
 
+    # ═══════════════════════════════════════════════════════════════
+    # [V60.94] NPC 상태 추적 메서드
+    # ═══════════════════════════════════════════════════════════════
+
+    def register_npc_death(self, npc_name: str, death_arc: int, death_context: str = ""):
+        """
+        [V60.94] NPC 사망 등록
+
+        Args:
+            npc_name: NPC 이름
+            death_arc: 사망한 Arc 번호
+            death_context: 사망 맥락 (선택)
+        """
+        if npc_name not in self.npc_registry:
+            self.npc_registry[npc_name] = {}
+
+        self.npc_registry[npc_name].update({
+            "status": "dead",
+            "death_arc": death_arc,
+            "death_context": death_context
+        })
+        print(f"      💀 [V60.94] NPC 사망 등록: {npc_name} (Arc {death_arc})")
+
+    def register_npc_info(self, npc_name: str, arc_no: int, weapon: str = None, level: str = None):
+        """
+        [V60.94] NPC 정보 등록/업데이트
+
+        Args:
+            npc_name: NPC 이름
+            arc_no: Arc 번호
+            weapon: 무장 (선택)
+            level: 수준/경지 (선택)
+        """
+        if npc_name not in self.npc_registry:
+            self.npc_registry[npc_name] = {"status": "alive"}
+
+        npc = self.npc_registry[npc_name]
+        npc["last_arc"] = arc_no
+
+        if weapon:
+            npc["weapon"] = weapon
+        if level:
+            npc["level"] = level
+
+    def check_npc_changes(self, content: str, arc_no: int) -> List[dict]:
+        """
+        [V60.95] NPC 무장/수준 변경 검사 - WARNING 대상 (정당화 사유 필요)
+
+        Args:
+            content: 검사할 텍스트 (tactical_doc 등)
+            arc_no: 현재 Arc 번호
+
+        Returns:
+            변경 목록 [{npc_name, change_type, old_value, new_value, severity}]
+        """
+        warnings = []
+
+        # NPC 무장 패턴
+        weapon_patterns = [
+            r'([가-힣]{2,10})[이가은는]\s*([가-힣]{2,10}(?:검|도|창|궁|봉|부|낫))[을를으로]?\s*(?:들|휘두르|뽑)',
+            r'([가-힣]{2,10})[의]\s*([가-힣]{2,10}(?:검|도|창|궁|봉|부|낫))',
+        ]
+
+        # NPC 수준 패턴
+        level_patterns = [
+            r'([가-힣]{2,10})[이가은는]\s*(절대고수|화경|현경|초절정|일류|이류|삼류)',
+            r'(절대고수|화경|현경|초절정|일류)[인의]\s*([가-힣]{2,10})',
+        ]
+
+        # 무장 변경 검사
+        for pattern in weapon_patterns:
+            matches = re.findall(pattern, content)
+            for match in matches:
+                npc_name = match[0] if len(match) > 0 else None
+                weapon = match[1] if len(match) > 1 else None
+
+                if npc_name and weapon and npc_name in self.npc_registry:
+                    npc = self.npc_registry[npc_name]
+                    old_weapon = npc.get("weapon")
+
+                    if old_weapon and old_weapon != weapon:
+                        warnings.append({
+                            "npc_name": npc_name,
+                            "change_type": "weapon",
+                            "old_value": old_weapon,
+                            "new_value": weapon,
+                            "arc_no": arc_no,
+                            "severity": "WARNING",
+                            "reason": f"Arc {npc.get('last_arc', '?')}에서 '{old_weapon}' 사용 → Arc {arc_no}에서 '{weapon}' 사용"
+                        })
+
+        # 수준 변경 검사
+        for pattern in level_patterns:
+            matches = re.findall(pattern, content)
+            for match in matches:
+                # 패턴에 따라 순서가 다를 수 있음
+                if match[0] in ['절대고수', '화경', '현경', '초절정', '일류', '이류', '삼류']:
+                    level, npc_name = match[0], match[1]
+                else:
+                    npc_name, level = match[0], match[1]
+
+                if npc_name and level and npc_name in self.npc_registry:
+                    npc = self.npc_registry[npc_name]
+                    old_level = npc.get("level")
+
+                    if old_level and old_level != level:
+                        warnings.append({
+                            "npc_name": npc_name,
+                            "change_type": "level",
+                            "old_value": old_level,
+                            "new_value": level,
+                            "arc_no": arc_no,
+                            "severity": "WARNING",
+                            "reason": f"Arc {npc.get('last_arc', '?')}에서 '{old_level}' → Arc {arc_no}에서 '{level}'"
+                        })
+
+        return warnings
+
+    def extract_npc_info_from_arc(self, arc: dict) -> List[dict]:
+        """
+        [V60.95] Arc의 tactical_doc에서 NPC 정보(무장, 수준) 추출 및 등록
+
+        Args:
+            arc: Arc 데이터
+
+        Returns:
+            추출된 NPC 정보 목록
+        """
+        arc_no = arc.get("arc_no", 0)
+        tactical = arc.get("tactical_doc", "")
+        if isinstance(tactical, dict):
+            tactical = "\n".join(str(v) for v in tactical.values() if v)
+
+        extracted = []
+
+        # NPC 무장 패턴
+        weapon_patterns = [
+            r'([가-힣]{2,10})[이가은는의]\s*([가-힣]{2,10}(?:검|도|창|궁|봉|부|낫))',
+        ]
+
+        # NPC 수준 패턴
+        level_patterns = [
+            r'([가-힣]{2,10})[이가은는]\s*(절대고수|화경|현경|초절정|일류|이류|삼류)',
+            r'(절대고수|화경|현경|초절정|일류)[인의]\s*([가-힣]{2,10})',
+        ]
+
+        # 제외할 일반 명사
+        exclude_words = ['주인공', '적', '상대', '자신', '그', '그녀', '적수', '상대방']
+
+        for pattern in weapon_patterns:
+            matches = re.findall(pattern, tactical)
+            for match in matches:
+                npc_name, weapon = match[0], match[1]
+                if npc_name not in exclude_words and len(npc_name) >= 2:
+                    self.register_npc_info(npc_name, arc_no, weapon=weapon)
+                    extracted.append({"name": npc_name, "weapon": weapon, "arc": arc_no})
+
+        for pattern in level_patterns:
+            matches = re.findall(pattern, tactical)
+            for match in matches:
+                if match[0] in ['절대고수', '화경', '현경', '초절정', '일류', '이류', '삼류']:
+                    level, npc_name = match[0], match[1]
+                else:
+                    npc_name, level = match[0], match[1]
+
+                if npc_name not in exclude_words and len(npc_name) >= 2:
+                    self.register_npc_info(npc_name, arc_no, level=level)
+                    extracted.append({"name": npc_name, "level": level, "arc": arc_no})
+
+        return extracted
+
+    def check_dead_npc_appearance(self, content: str, arc_no: int) -> List[dict]:
+        """
+        [V60.94] 죽은 NPC 등장 검사 - REJECT 대상
+
+        Args:
+            content: 검사할 텍스트 (tactical_doc 등)
+            arc_no: 현재 Arc 번호
+
+        Returns:
+            위반 목록 [{npc_name, death_arc, severity}]
+        """
+        violations = []
+
+        for npc_name, info in self.npc_registry.items():
+            if info.get("status") == "dead":
+                death_arc = info.get("death_arc", 0)
+
+                # 죽은 NPC 이름이 콘텐츠에 등장하는지 검사
+                if npc_name in content:
+                    # 회상/과거 언급은 허용 (패턴 검사)
+                    flashback_patterns = [
+                        f"{npc_name}의 죽음",
+                        f"{npc_name}을 떠올",
+                        f"{npc_name}를 떠올",
+                        f"고인이 된 {npc_name}",
+                        f"죽은 {npc_name}",
+                        f"{npc_name}의 유언",
+                        f"{npc_name}의 무덤",
+                        f"{npc_name}의 원혼",
+                        f"{npc_name}의 유품",
+                    ]
+
+                    is_flashback = any(pattern in content for pattern in flashback_patterns)
+
+                    if not is_flashback:
+                        # 실제 등장으로 간주 (대화, 행동 등)
+                        action_patterns = [
+                            f"{npc_name}이 ",
+                            f"{npc_name}가 ",
+                            f"{npc_name}은 ",
+                            f"{npc_name}는 ",
+                            f'"{npc_name}',  # 대사
+                            f"{npc_name}의 검",
+                            f"{npc_name}의 공격",
+                        ]
+
+                        if any(pattern in content for pattern in action_patterns):
+                            violations.append({
+                                "npc_name": npc_name,
+                                "death_arc": death_arc,
+                                "current_arc": arc_no,
+                                "severity": "CRITICAL",
+                                "reason": f"Arc {death_arc}에서 사망한 '{npc_name}'이 Arc {arc_no}에서 다시 등장"
+                            })
+
+        return violations
+
+    def register_protagonist_skill(self, skill_name: str, arc_no: int):
+        """
+        [V60.94] 주인공 무공 습득 등록
+
+        Args:
+            skill_name: 무공 이름
+            arc_no: 습득 Arc 번호
+        """
+        if skill_name not in self.protagonist_skills:
+            self.protagonist_skills.add(skill_name)
+            self.skill_acquisitions[skill_name] = arc_no
+            print(f"      🥋 [V60.94] 무공 습득 등록: {skill_name} (Arc {arc_no})")
+
+    def check_unlearned_skill_usage(self, content: str, arc_no: int) -> List[dict]:
+        """
+        [V60.94] 미습득 무공 사용 검사 - 기록용 (REJECT 안 함)
+
+        Args:
+            content: 검사할 텍스트
+            arc_no: 현재 Arc 번호
+
+        Returns:
+            의심 목록 [{skill_name, context}] - 정보 제공용
+        """
+        suspicious = []
+
+        # 무공 사용 패턴
+        skill_patterns = [
+            r'([가-힣]{2,10}(?:장|권|법|공|결|식|초))[을를]?\s*(?:시전|펼치|사용|발동)',
+            r'([가-힣]{2,10}(?:심법|내공|기공))[으로]?\s*(?:운기|조식)',
+        ]
+
+        for pattern in skill_patterns:
+            matches = re.findall(pattern, content)
+            for skill in matches:
+                if skill and len(skill) >= 2:
+                    # 등록된 무공인지 확인
+                    if skill not in self.protagonist_skills:
+                        # 새로운 무공일 수도 있으므로 INFO 레벨
+                        suspicious.append({
+                            "skill_name": skill,
+                            "arc_no": arc_no,
+                            "severity": "INFO",
+                            "note": "습득 기록 없음 - 새 무공이거나 숨겨둔 패일 수 있음"
+                        })
+
+        return suspicious
+
+    def get_entity_registry(self) -> dict:
+        """
+        [V60.94] Director/Validator용 Entity Registry 반환
+
+        Returns:
+            {
+                "dead_npcs": [{name, death_arc}],
+                "npc_info": [{name, weapon, level, status}],
+                "protagonist_skills": [skill_names],
+                "protagonist_items": [item_names]
+            }
+        """
+        dead_npcs = []
+        npc_info = []
+
+        for name, info in self.npc_registry.items():
+            if info.get("status") == "dead":
+                dead_npcs.append({
+                    "name": name,
+                    "death_arc": info.get("death_arc", 0)
+                })
+            npc_info.append({
+                "name": name,
+                "weapon": info.get("weapon", ""),
+                "level": info.get("level", ""),
+                "status": info.get("status", "alive"),
+                "last_arc": info.get("last_arc", 0)
+            })
+
+        # 최신 상태의 아이템 목록
+        protagonist_items = []
+        if self.states:
+            latest_ep = max(self.states.keys())
+            latest_state = self.states[latest_ep]
+            protagonist_items = latest_state.items + latest_state.weapons
+
+        return {
+            "dead_npcs": dead_npcs,
+            "npc_info": npc_info,
+            "protagonist_skills": list(self.protagonist_skills),
+            "protagonist_items": protagonist_items
+        }
+
+    def merge_npc_registry(self, other: 'StateTracker'):
+        """[V60.94] 다른 StateTracker의 NPC 레지스트리 병합"""
+        for name, info in other.npc_registry.items():
+            if name not in self.npc_registry:
+                self.npc_registry[name] = info.copy()
+            else:
+                # 기존 정보 업데이트 (사망 정보 우선)
+                if info.get("status") == "dead":
+                    self.npc_registry[name] = info.copy()
+                else:
+                    self.npc_registry[name].update(info)
+
+        # 무공 목록 병합
+        self.protagonist_skills.update(other.protagonist_skills)
+        for skill, arc in other.skill_acquisitions.items():
+            if skill not in self.skill_acquisitions:
+                self.skill_acquisitions[skill] = arc
+
+    def extract_npc_deaths_from_arc(self, arc: dict) -> List[str]:
+        """
+        [V60.94] Arc의 tactical_doc에서 NPC 사망 추출 및 등록
+
+        Args:
+            arc: Arc 데이터 (tactical_doc 포함)
+
+        Returns:
+            사망한 NPC 이름 목록
+        """
+        arc_no = arc.get("arc_no", 0)
+        tactical = arc.get("tactical_doc", "")
+        if isinstance(tactical, dict):
+            tactical = "\n".join(str(v) for v in tactical.values() if v)
+
+        dead_npcs = []
+
+        # 사망 패턴들
+        death_patterns = [
+            r'([가-힣]{2,10})[이가을를]\s*(?:죽이|처단|살해|베어|제거|처형|사살)',  # 주인공이 죽임
+            r'([가-힣]{2,10})[이가은는]\s*(?:죽|사망|전사|명을\s*다|숨을\s*거두|운명)',  # NPC가 죽음
+            r'([가-힣]{2,10})[의]\s*(?:죽음|최후|사망|전사)',  # ~의 죽음
+            r'([가-힣]{2,10})[을를]\s*(?:끝장|마무리|처리)',  # 처리/끝장
+        ]
+
+        for pattern in death_patterns:
+            matches = re.findall(pattern, tactical)
+            for npc_name in matches:
+                if npc_name and len(npc_name) >= 2:
+                    # 일반 명사 제외 (단순 필터)
+                    exclude_words = ['주인공', '적', '상대', '자신', '목숨', '생명', '원수', '원한']
+                    if npc_name not in exclude_words:
+                        self.register_npc_death(npc_name, arc_no, f"Arc {arc_no} tactical_doc에서 추출")
+                        dead_npcs.append(npc_name)
+
+        return list(set(dead_npcs))  # 중복 제거
+
+    def extract_skill_acquisitions_from_arc(self, arc: dict) -> List[str]:
+        """
+        [V60.94] Arc의 tactical_doc에서 무공 습득 추출 및 등록 (기록용)
+
+        Args:
+            arc: Arc 데이터
+
+        Returns:
+            습득한 무공 이름 목록
+        """
+        arc_no = arc.get("arc_no", 0)
+        tactical = arc.get("tactical_doc", "")
+        if isinstance(tactical, dict):
+            tactical = "\n".join(str(v) for v in tactical.values() if v)
+
+        learned_skills = []
+
+        # 습득 패턴들
+        learn_patterns = [
+            r'([가-힣]{2,10}(?:장|권|법|공|결|식|초|심법))[을를]?\s*(?:습득|익히|배우|터득|깨우치|전수받)',
+            r'([가-힣]{2,10}(?:장|권|법|공|결|식|초|심법))[의]?\s*(?:오의|진수|비전)[을를]?\s*(?:깨달|얻)',
+        ]
+
+        for pattern in learn_patterns:
+            matches = re.findall(pattern, tactical)
+            for skill_name in matches:
+                if skill_name and len(skill_name) >= 2:
+                    self.register_protagonist_skill(skill_name, arc_no)
+                    learned_skills.append(skill_name)
+
+        return list(set(learned_skills))
+
+    # ═══════════════════════════════════════════════════════════════
+    # [V60.96] Stage 3/4 확장 메서드 (Blueprint/Manuscript 검증)
+    # ═══════════════════════════════════════════════════════════════
+
+    def check_dead_npc_in_blueprint(self, blueprint: dict, ep_num: int) -> List[dict]:
+        """
+        [V60.96] Blueprint에서 죽은 NPC 등장 검사 - REJECT 대상
+
+        Args:
+            blueprint: Blueprint 데이터 (integrated_scenario, scene_breakdown 포함)
+            ep_num: 에피소드 번호
+
+        Returns:
+            위반 목록 [{npc_name, death_arc, severity, context}]
+        """
+        violations = []
+
+        # integrated_scenario 추출
+        content = blueprint.get("integrated_scenario", "")
+        if not isinstance(content, str):
+            content = str(content) if content else ""
+
+        # scene_breakdown 추가
+        scenes = blueprint.get("scene_breakdown", {})
+        if isinstance(scenes, dict):
+            for scene in scenes.values():
+                if isinstance(scene, dict):
+                    content += "\n" + scene.get("content", "")
+                    content += "\n" + scene.get("summary", "")
+                elif isinstance(scene, str):
+                    content += "\n" + scene
+
+        # 죽은 NPC 검사
+        for npc_name, info in self.npc_registry.items():
+            if info.get("status") == "dead":
+                death_arc = info.get("death_arc", 0)
+
+                if npc_name in content:
+                    # 회상/언급 패턴은 허용
+                    flashback_patterns = [
+                        f"{npc_name}의 죽음", f"{npc_name}을 떠올", f"{npc_name}를 떠올",
+                        f"고인이 된 {npc_name}", f"죽은 {npc_name}", f"{npc_name}의 유언",
+                        f"{npc_name}의 무덤", f"{npc_name}의 원혼", f"{npc_name}의 유품",
+                        f"{npc_name}을 추모", f"{npc_name}의 복수"
+                    ]
+                    is_flashback = any(pattern in content for pattern in flashback_patterns)
+
+                    if not is_flashback:
+                        # 실제 등장 패턴 검사
+                        action_patterns = [
+                            f"{npc_name}이 ", f"{npc_name}가 ", f"{npc_name}은 ", f"{npc_name}는 ",
+                            f'"{npc_name}', f"{npc_name}와 ", f"{npc_name}과 ",
+                            f"{npc_name}의 검", f"{npc_name}의 공격", f"{npc_name}에게"
+                        ]
+                        if any(pattern in content for pattern in action_patterns):
+                            violations.append({
+                                "npc_name": npc_name,
+                                "death_arc": death_arc,
+                                "current_ep": ep_num,
+                                "severity": "CRITICAL",
+                                "context": "blueprint",
+                                "reason": f"Arc {death_arc}에서 사망한 '{npc_name}'이 제{ep_num}화 Blueprint에서 다시 등장"
+                            })
+
+        return violations
+
+    def check_dead_npc_in_manuscript(self, manuscript: str, ep_num: int) -> List[dict]:
+        """
+        [V60.96] Manuscript에서 죽은 NPC 등장 검사 - REJECT 대상
+
+        Args:
+            manuscript: 원고 텍스트
+            ep_num: 에피소드 번호
+
+        Returns:
+            위반 목록 [{npc_name, death_arc, severity, context}]
+        """
+        violations = []
+
+        if not manuscript or not isinstance(manuscript, str):
+            return violations
+
+        for npc_name, info in self.npc_registry.items():
+            if info.get("status") == "dead":
+                death_arc = info.get("death_arc", 0)
+
+                if npc_name in manuscript:
+                    # 회상/언급 패턴은 허용 (더 광범위)
+                    flashback_patterns = [
+                        f"{npc_name}의 죽음", f"{npc_name}을 떠올", f"{npc_name}를 떠올",
+                        f"고인이 된 {npc_name}", f"죽은 {npc_name}", f"{npc_name}의 유언",
+                        f"{npc_name}의 무덤", f"{npc_name}의 원혼", f"{npc_name}의 유품",
+                        f"{npc_name}을 추모", f"{npc_name}의 복수", f"{npc_name}의 이름",
+                        f"{npc_name}처럼", f"{npc_name}같은", f"과거의 {npc_name}",
+                        f"{npc_name}의 기억", f"{npc_name}의 영혼"
+                    ]
+                    is_flashback = any(pattern in manuscript for pattern in flashback_patterns)
+
+                    if not is_flashback:
+                        # 실제 등장 패턴 (대화, 행동)
+                        action_patterns = [
+                            f"{npc_name}이 말", f"{npc_name}가 말", f"{npc_name}이 대답",
+                            f"{npc_name}가 대답", f"{npc_name}은 고개", f"{npc_name}는 고개",
+                            f'"{npc_name}', f"{npc_name}이 검", f"{npc_name}가 검",
+                            f"{npc_name}의 손", f"{npc_name}이 다가", f"{npc_name}가 다가"
+                        ]
+                        if any(pattern in manuscript for pattern in action_patterns):
+                            violations.append({
+                                "npc_name": npc_name,
+                                "death_arc": death_arc,
+                                "current_ep": ep_num,
+                                "severity": "CRITICAL",
+                                "context": "manuscript",
+                                "reason": f"Arc {death_arc}에서 사망한 '{npc_name}'이 제{ep_num}화 원고에서 살아있는 것처럼 등장"
+                            })
+
+        return violations
+
+    def get_dead_npc_summary(self) -> str:
+        """
+        [V60.96] 죽은 NPC 목록 요약 (Writer/Architect 프롬프트 주입용)
+
+        Returns:
+            죽은 NPC 목록 문자열
+        """
+        dead_npcs = []
+        for name, info in self.npc_registry.items():
+            if info.get("status") == "dead":
+                death_arc = info.get("death_arc", 0)
+                dead_npcs.append(f"  - {name} (Arc {death_arc}에서 사망)")
+
+        if not dead_npcs:
+            return ""
+
+        lines = [
+            "🚨 [사망 NPC 목록 - 절대 살아있는 것처럼 등장시키지 말 것]",
+            *dead_npcs,
+            ""
+        ]
+        return "\n".join(lines)
+
+
 def create_tracker_from_arcs(arcs_data: List[dict]) -> StateTracker:
     """
     여러 Arc 데이터로부터 통합 StateTracker 생성
@@ -624,6 +1178,7 @@ def create_tracker_from_arcs(arcs_data: List[dict]) -> StateTracker:
         arc_tracker = StateTracker()
         if arc_tracker.load_arc_design(arc_doc):
             master_tracker.merge_from_previous_arcs(arc_tracker)
+            master_tracker.merge_npc_registry(arc_tracker)  # [V60.94] NPC 레지스트리 병합
             # 상태도 병합
             master_tracker.states.update(arc_tracker.states)
             master_tracker.transitions.extend(arc_tracker.transitions)

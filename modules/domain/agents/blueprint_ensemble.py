@@ -73,6 +73,8 @@ Arc 전술서를 바탕으로 제{ep_num}화 Blueprint를 설계하세요.
 ║ 주인공 이름: {protagonist_name}                               ║
 ║ → 모든 씬에서 '{protagonist_name}'만 사용하세요               ║
 ║ → '주인공', '그', '청년' 등 대명사 사용 금지                  ║
+╠══════════════════════════════════════════════════════════════╣
+{protagonist_instructions}
 ╚══════════════════════════════════════════════════════════════╝
 
 ### [Arc 전술서 - 이번 화 핵심]
@@ -147,7 +149,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
         constraint_block: Dict,
         prev_blueprint: Optional[Dict] = None,
         feedback: str = "",
-        protagonist_name: str = "주인공"  # [V61] 주인공 이름 (필수!)
+        protagonist_name: str = "주인공",  # [V61] 주인공 이름 (필수!)
+        protagonist_config: Dict = None  # [V60.90] 주인공 설정 (world_origin, incarnation_type)
     ) -> Tuple[Optional[Dict], List[Dict]]:
         """
         앙상블 Blueprint 생성
@@ -159,6 +162,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
             prev_blueprint: 직전 Blueprint
             feedback: 이전 REJECT 피드백
             protagonist_name: [V61] 주인공 이름 (환각 방지)
+            protagonist_config: [V60.90] 주인공 설정 {world_origin, incarnation_type}
 
         Returns:
             (best_blueprint, all_candidates) - 최적 Blueprint와 모든 후보 리스트
@@ -192,7 +196,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
                     prev_info=prev_info,
                     strategy=strategy,
                     feedback=feedback,
-                    protagonist_name=protagonist_name  # [V61] 주인공 이름 전달
+                    protagonist_name=protagonist_name,  # [V61] 주인공 이름 전달
+                    protagonist_config=protagonist_config  # [V60.90] 주인공 설정 전달
                 )
                 futures[future] = strategy["name"]
 
@@ -257,7 +262,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
         prev_info: str,
         strategy: Dict,
         feedback: str = "",
-        protagonist_name: str = "주인공"  # [V61] 주인공 이름
+        protagonist_name: str = "주인공",  # [V61] 주인공 이름
+        protagonist_config: Dict = None  # [V60.90] 주인공 설정
     ) -> Optional[Dict]:
         """단일 Blueprint 생성"""
         # [V60.80] 피드백 강화 주입 - Director 피드백은 반드시 반영
@@ -274,10 +280,14 @@ class BlueprintEnsembleGenerator(BaseAgent):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 
+        # [V60.90] protagonist_config 기반 지시사항 생성
+        protagonist_instructions = self._build_protagonist_instructions(protagonist_config)
+
         prompt = BLUEPRINT_GENERATION_PROMPT.format(
             strategy_display=strategy["display"],
             ep_num=ep_num,
             protagonist_name=protagonist_name,  # [V61] 주인공 이름 주입
+            protagonist_instructions=protagonist_instructions,  # [V60.90] 주인공 설정 지시
             arc_focus=self._escape_braces(arc_focus),
             constraints=self._escape_braces(constraints_str),
             strategy_directive=strategy["directive"] + extra_directive,
@@ -382,6 +392,42 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 })
 
         return warnings
+
+    def _build_protagonist_instructions(self, protagonist_config: Dict) -> str:
+        """
+        [V60.90] protagonist_config 기반 프롬프트 지시사항 생성
+
+        Args:
+            protagonist_config: {world_origin: '원시인'|'현대인', incarnation_type: '회귀자'|'빙의자'|'환생자'}
+
+        Returns:
+            프롬프트에 삽입할 지시사항 문자열
+        """
+        if not protagonist_config:
+            return "║ (주인공 설정 정보 없음)"
+
+        lines = []
+        world_origin = protagonist_config.get('world_origin', '원시인')
+        incarnation_type = protagonist_config.get('incarnation_type', '회귀자')
+
+        # world_origin 기반 지시
+        if world_origin == '원시인':
+            lines.append("║ ⚠️ [원시인 모드] 현대 용어 절대 금지!")
+            lines.append("║   - kg, km, cm, ml 등 현대 단위 사용 금지")
+            lines.append("║   - '백 근', '열 장', '한 리' 등 전통 단위 사용")
+            lines.append("║   - 스트레스, 시스템, 프로세스 등 현대 개념어 금지")
+        else:
+            lines.append("║ 📝 [현대인 모드] 주인공은 현대 사회를 알고 있음")
+
+        # incarnation_type 기반 지시
+        if incarnation_type == '회귀자':
+            lines.append("║ 🔄 [회귀자] 미래를 알고 있음 (합리적 이유 없이는 내면 독백으로 처리)")
+        elif incarnation_type == '빙의자':
+            lines.append("║ 👤 [빙의자] 원래 인물의 기억/관계를 의식")
+        elif incarnation_type == '환생자':
+            lines.append("║ 👶 [환생자] 전생의 기억이 있음")
+
+        return "\n".join(lines) if lines else "║ (주인공 설정 정보 없음)"
 
     def _format_constraints(self, constraint_block: Dict) -> str:
         """제약 조건 포맷팅"""

@@ -246,6 +246,38 @@ class Architect(BaseAgent):
         is_surgery = focus_info.get('v35_surgery', False)
         
 
+        # [V60.88] 주인공 설정 추출 (context에서 master_bible 접근)
+        protagonist_config_section = ""
+        try:
+            master_bible = getattr(self.context, 'master_bible', {})
+            if master_bible:
+                bible_root = master_bible.get('MasterBible', master_bible)
+                protagonist_config = bible_root.get('protagonist_config', {})
+                world_origin = protagonist_config.get('world_origin', '원시인')
+                incarnation_type = protagonist_config.get('incarnation_type', '회귀자')
+
+                protagonist_instructions = []
+                if world_origin == '원시인':
+                    protagonist_instructions.append('⚠️ 현대 용어 완전 금지 (킬로그램, 아드레날린 등)')
+                else:
+                    protagonist_instructions.append('📝 주인공은 현대 사회를 알고 있음')
+                if incarnation_type == '회귀자':
+                    protagonist_instructions.append('🔄 미래를 알고 있음 (합리적 이유 없이는 내면 독백으로 처리)')
+                elif incarnation_type == '빙의자':
+                    protagonist_instructions.append('👤 원래 인물의 기억/관계를 의식')
+                elif incarnation_type == '환생자':
+                    protagonist_instructions.append('👶 전생의 기억이 있음')
+
+                if protagonist_instructions:
+                    protagonist_config_section = f"""
+[🌍 V60.88 주인공 설정]
+- 세계 출신: {world_origin}
+- 환생 유형: {incarnation_type}
+{chr(10).join(protagonist_instructions)}
+"""
+        except Exception:
+            pass  # 실패 시 무시
+
         # 3. [0124 핵심] 목적 중심 설계 지침 강화
         objective_enforcement = f"""
 [🚨 MISSION CRITICAL: OBJECTIVE ALIGNMENT]
@@ -476,6 +508,7 @@ class Architect(BaseAgent):
 
         {surgery_header}
         {emotion_directive}
+        {protagonist_config_section}
         {physical_constraints}
         {surgery_instructions}
         {pattern_guidance}
