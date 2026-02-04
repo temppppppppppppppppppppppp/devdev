@@ -125,7 +125,9 @@ class ChiefWriter(BaseAgent):
         genre_name: str = "무협",
         # [V60.81] 추가 파라미터
         npc_equipment_summary: str = "",
-        intro_dna: str = "CYNICAL"
+        intro_dna: str = "CYNICAL",
+        # [V60.85] 장르 Guard Purism Prompt
+        purism_prompt: str = ""
     ) -> List[Dict]:
         """
         3개 후보 원고 병렬 생성
@@ -140,6 +142,7 @@ class ChiefWriter(BaseAgent):
             style_guide: 플랫폼 스타일 가이드
             director_feedback: Director 피드백 (재시도 시)
             failure_constraints: 실패 학습 제약 (이전 REJECT 패턴)
+            purism_prompt: 장르 Guard의 순혈주의 지침 (V60.85)
 
         Returns:
             List[Dict]: 3개 후보 원고 [{
@@ -178,7 +181,9 @@ class ChiefWriter(BaseAgent):
             genre_name=genre_name,
             # [V60.81] 추가 파라미터
             npc_equipment_summary=npc_equipment_summary,
-            intro_dna=intro_dna
+            intro_dna=intro_dna,
+            # [V60.85] 장르 Guard Purism Prompt
+            purism_prompt=purism_prompt
         )
 
         # 병렬 생성
@@ -352,7 +357,9 @@ class ChiefWriter(BaseAgent):
         genre_name: str = "무협",
         # [V60.81] 추가 파라미터
         npc_equipment_summary: str = "",
-        intro_dna: str = "CYNICAL"
+        intro_dna: str = "CYNICAL",
+        # [V60.85] 장르 Guard Purism Prompt
+        purism_prompt: str = ""
     ) -> str:
         """
         [V60.81] 공통 컨텍스트 구성 (CoT 기반 + Writer 핵심 기능 완전 통합)
@@ -363,6 +370,7 @@ class ChiefWriter(BaseAgent):
         - HUD 변화 추세
         - DNA 모드 (1화 특수)
         - HUD 급변 감지
+        - [V60.85] 장르 Guard Purism Prompt 주입
         """
         current_inventory = current_inventory or []
         current_martial_arts = current_martial_arts or []
@@ -470,6 +478,14 @@ class ChiefWriter(BaseAgent):
         # [V60.81] DNA 모드 지시문
         dna_instruction = self._get_dna_instruction(ep_num, intro_dna)
 
+        # [V60.85] 장르 Guard Purism 섹션
+        purism_section = ""
+        if purism_prompt:
+            purism_section = f"""
+### 🛡️ [장르 순혈주의 절대 준수]
+{self._escape_braces(purism_prompt)}
+"""
+
         return f"""
 [Role] 웹소설 1타 작가 (Chief Writer)
 [Task] 제{ep_num}화 원고를 Blueprint 기반으로 집필하라.
@@ -478,6 +494,8 @@ class ChiefWriter(BaseAgent):
 "Blueprint를 토대로 양질의 원고를 연속성 있게 생산한다"
 
 {dna_instruction}
+
+{purism_section}
 
 {feedback_section}
 {constraint_section}
@@ -745,7 +763,9 @@ class ChiefWriter(BaseAgent):
         genre_name: str = "무협",
         # [V60.81] 추가 파라미터
         npc_equipment_summary: str = "",
-        intro_dna: str = "CYNICAL"
+        intro_dna: str = "CYNICAL",
+        # [V60.85] 장르 Guard Purism Prompt
+        purism_prompt: str = ""
     ) -> List[Dict]:
         """
         Director 피드백 반영 재생성
@@ -759,6 +779,7 @@ class ChiefWriter(BaseAgent):
             current_martial_arts: 현재 무공 목록
             dead_npcs: 죽은 NPC 목록
             item_acquisition_timeline: 아이템 획득 타임라인
+            purism_prompt: 장르 Guard의 순혈주의 지침 (V60.85)
 
         Returns:
             List[Dict]: 새로운 3개 후보
@@ -806,7 +827,9 @@ class ChiefWriter(BaseAgent):
             genre_name=genre_name,
             # [V60.81] 추가 파라미터
             npc_equipment_summary=npc_equipment_summary,
-            intro_dna=intro_dna
+            intro_dna=intro_dna,
+            # [V60.85] 장르 Guard Purism Prompt
+            purism_prompt=purism_prompt
         )
 
     # =========================================================================

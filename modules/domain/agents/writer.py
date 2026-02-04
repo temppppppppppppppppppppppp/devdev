@@ -182,7 +182,8 @@ class Writer(BaseAgent):
 
     def write_v20_manuscript(self, ep_num, breakdown_doc, master_bible, hud_report, purism_prompt,
                              style_mode="", intro_dna="CYNICAL", feedback="", prev_full_manuscript="",
-                             arc_doc="", tactical_references="", protagonist_name="주인공"):  # [V61] 주인공 이름     
+                             arc_doc="", tactical_references="", protagonist_name="주인공",
+                             entity_registry=None):  # [V61] 주인공 이름, [V60.91] Entity Registry     
         
         # 1. [변동 데이터] Dynamic Payload 구성
         # 매 화 바뀌는 정보만 모아서 가볍게 만듭니다.
@@ -201,6 +202,27 @@ class Writer(BaseAgent):
         core_identity = bible_root.get('ProjectData', {}).get('CoreIdentity', {})
         assets = bible_root.get('AssetLibrary', {})
 
+        # [V60.88] 주인공 설정 (world_origin, incarnation_type)
+        protagonist_config = bible_root.get('protagonist_config', {})
+        world_origin = protagonist_config.get('world_origin', '원시인')  # 기본값: 원시인
+        incarnation_type = protagonist_config.get('incarnation_type', '회귀자')  # 기본값: 회귀자
+
+        # [V60.88] 주인공 설정 기반 지침 구성 (인지 목적, 제약 최소화)
+        protagonist_instructions = []
+        if world_origin == '원시인':
+            protagonist_instructions.append('⚠️ [원시인 모드] 현대 용어 절대 금지! "킬로그램", "아드레날린", "메소드" 등 현대 개념은 절대 사용 불가!')
+        else:
+            protagonist_instructions.append('📝 [현대인 모드] 주인공은 현대 사회를 알고 있음 (현대 지식 활용 가능)')
+
+        if incarnation_type == '회귀자':
+            protagonist_instructions.append('🔄 [회귀자] 미래를 알고 있음 (합리적 이유 없이는 내면 독백으로 처리)')
+        elif incarnation_type == '빙의자':
+            protagonist_instructions.append('👤 [빙의자] 원래 인물의 기억/관계를 의식하며 행동')
+        elif incarnation_type == '환생자':
+            protagonist_instructions.append('👶 [환생자] 전생의 기억이 있음')
+
+        protagonist_instructions_text = "\n        ".join(protagonist_instructions) if protagonist_instructions else ""
+
         # [V45] NPC 장비 현황 추출 (Writer가 NPC 소지품을 명확히 인지하도록)
         npc_equipment_summary = []
         key_npcs = assets.get('KeyNPCs', []) or assets.get('Key_NPCs', [])
@@ -213,10 +235,15 @@ class Writer(BaseAgent):
                     if equip:
                         npc_equipment_summary.append(f"- {npc_name}: {equip}")
 
+        # [V60.91] Entity Registry 포맷팅 (NPC 명칭 일관성 유지용)
+        entity_registry_text = self._format_entity_registry_for_writer(entity_registry)
+
         # 3. [데이터 보호/에스케이프]
         safe_desire = self._escape_braces(core_identity.get('desire', '전설적 무인으로의 복귀'))
         safe_assets = self._escape_braces(json.dumps(assets, ensure_ascii=False))
-        safe_npc_equipment = self._escape_braces("\n".join(npc_equipment_summary)) if npc_equipment_summary else "NPC 장비 정보 없음"    
+        safe_npc_equipment = self._escape_braces("\n".join(npc_equipment_summary)) if npc_equipment_summary else "NPC 장비 정보 없음"
+        safe_entity_registry = self._escape_braces(entity_registry_text)
+
         # (A) 피드백 섹션
         feedback_section = f"\n[🚨 REJECTION FEEDBACK]: {feedback}" if feedback else ""
         
@@ -335,8 +362,17 @@ class Writer(BaseAgent):
         {safe_npc_equipment}
         ⚠️ NPC가 소지한 무기/장비는 반드시 일관되게 묘사하라. 갑자기 없던 무기가 생기거나 사라지면 안 된다.
 
+        ### 📋 [V60.91] Entity Registry (명칭 일관성 필수)
+        {safe_entity_registry}
+        ⚠️ 위 목록에 등록된 이름만 사용하세요. 다른 표기나 별명 사용 시 REJECT됩니다.
+
         👥 [Lightweight] 주요 NPC 등장 빈도 (최근 10화):
         {self._get_npc_frequency_warning(ep_num)}
+
+        ### 🌍 [V60.88] 주인공 설정 (Protagonist Configuration)
+        - **세계 출신**: {world_origin}
+        - **환생 유형**: {incarnation_type}
+        {protagonist_instructions_text}
 
         ### 📋 1. 씬 설계도 (Blueprint)
         {self._escape_braces(breakdown_doc)}
@@ -1025,6 +1061,51 @@ class Writer(BaseAgent):
             return frequency
         except Exception:
             return {}
+
+    def _format_entity_registry_for_writer(self, entity_registry: dict) -> str:
+        """
+        [V60.91] Entity Registry를 Writer 프롬프트용 포맷으로 변환
+
+        Args:
+            entity_registry: {characters:[], organizations:[], locations:[], objects:[], concepts:[]}
+
+        Returns:
+            str: 프롬프트에 삽입할 포맷팅된 문자열
+        """
+        if not entity_registry:
+            return "(Entity Registry 없음 - master_bible 참조)"
+
+        lines = []
+        categories = [
+            ('characters', '👤 캐릭터 (이 이름만 사용)'),
+            ('organizations', '🏛️ 조직/문파'),
+            ('locations', '📍 장소'),
+            ('objects', '⚔️ 무기/아이템'),
+            ('concepts', '📜 무공/기술')
+        ]
+
+        has_any = False
+        for key, label in categories:
+            items = entity_registry.get(key, [])
+            if items:
+                has_any = True
+                formatted_items = []
+                for item in items[:10]:  # 최대 10개만
+                    if isinstance(item, dict):
+                        name = item.get('name', item.get('canonical_name', str(item)))
+                        aliases = item.get('aliases', [])
+                        if aliases:
+                            formatted_items.append(f"{name} (별칭: {', '.join(aliases[:3])})")
+                        else:
+                            formatted_items.append(name)
+                    else:
+                        formatted_items.append(str(item))
+                lines.append(f"{label}: {', '.join(formatted_items)}")
+
+        if not has_any:
+            return "(등록된 Entity 없음)"
+
+        return "\n        ".join(lines)
 
     def _get_npc_frequency_warning(self, ep_num: int) -> str:
         """
@@ -1915,7 +1996,8 @@ class Writer(BaseAgent):
         hud_report: str,
         style_guide: str = "",
         feedback: str = "",
-        prev_manuscript: str = ""
+        prev_manuscript: str = "",
+        entity_registry: dict = None  # [V60.91] Entity Registry
     ) -> dict:
         """
         [V60.6] Beat 단위 분할 생성
@@ -1964,8 +2046,13 @@ class Writer(BaseAgent):
         ending_hook = blueprint.get('ending_hook', '') or blueprint.get('cliffhanger', '')
         integrated_scenario = blueprint.get('integrated_scenario', '')
 
+        # [V60.91] Entity Registry 포맷팅
+        entity_registry_text = self._format_entity_registry_for_writer(entity_registry) if entity_registry else ""
+        entity_section = f"\n## [V60.91] 명칭 일관성 (이 이름만 사용하세요)\n{entity_registry_text}\n" if entity_registry_text else ""
+
         # Phase 1: 전반부 (Scene 1-3)
         phase1_prompt = f"""당신은 무협 소설 작가입니다. 제 {ep_num} 화의 **전반부**를 집필합니다.
+{entity_section}
 
 ## 설정
 - 주인공: {protagonist}

@@ -1,0 +1,249 @@
+{
+  "$schema": "블록 라이브러리 Core + Extension 스키마 v2.0",
+  "version": "2.0",
+
+  "core": {
+    "description": "모든 장르 공통 스토리 비트",
+    "fields": {
+      "block_id": "블록 식별자 (Block N)",
+      "title": "임팩트 있는 블록 제목",
+
+      "content": {
+        "context": "상황/배경 - 주인공의 현재 상태, 장소, 시간적 배경",
+        "event_villain": "갈등/위기 - 적대 요소, 장애물, 위협",
+        "solution": "해결 - 주인공의 대응, 전략, 행동",
+        "reward": "보상 - 물리적/정신적 성장, 관계 변화"
+      },
+
+      "stakes": "판돈/리스크 - 실패 시 잃는 것",
+
+      "power_shift": {
+        "protagonist": "주인공 권력/지위 변화",
+        "antagonist": "적대자 권력/지위 변화"
+      },
+
+      "relationship_delta": [
+        {"target": "대상", "before": "이전 관계", "after": "이후 관계"}
+      ],
+
+      "foreshadow": ["이 블록에서 심은 복선들"],
+      "callback": ["이 블록에서 회수한 복선들"],
+
+      "emotional_beat": {
+        "type": "감정 비트 유형 (tension/catharsis/despair/triumph/revelation/betrayal)",
+        "intensity": "강도 (1-10)"
+      },
+
+      "tension_level": "긴장도 (1-10, 1=일상, 10=클라이맥스)",
+
+      "pov_character": "시점 캐릭터 (주로 누구 관점인지)",
+
+      "location": {
+        "place": "장소명",
+        "type": "장소 유형 (실내/실외/던전/회의실/전장 등)"
+      },
+
+      "time_span": {
+        "duration": "소요 시간 (1일/1주/1달/etc)",
+        "in_story_time": "작중 시간 (1997년 10월 등)"
+      }
+    }
+  },
+
+  "extensions": {
+
+    "investment": {
+      "description": "재벌물/투자물/회귀재벌 특화",
+      "fields": {
+        "capital_before": "블록 시작 시 자산 (예: 10억, 무일푼)",
+        "capital_after": "블록 종료 시 자산",
+        "profit_loss": "손익 (예: +90억, -50%)",
+
+        "method": "돈 버는 방법 (주식선점/M&A/부동산투자/사업인수/IPO/etc)",
+        "investment_type": "투자 유형 (주식/부동산/선물/옵션/암호화폐/채권/etc)",
+
+        "deal_type": "거래 유형 (협상/경쟁입찰/적대적인수/우호적인수/비밀매수/etc)",
+        "leverage_used": ["활용한 레버리지 (정보/인맥/자금력/권력/협박/etc)"],
+
+        "opponent": {
+          "name": "상대방 (개인/기업명)",
+          "type": "상대 유형 (경쟁재벌/가족/정부/외국자본/etc)",
+          "weakness_exploited": "공략한 약점"
+        },
+
+        "historical_event": {
+          "name": "사건명 (IMF/오일쇼크/비트코인/부동산버블/etc)",
+          "year": "연도",
+          "how_exploited": "활용 방법"
+        },
+
+        "time_pressure": "시간 제약 (예: 'IMF 전 3개월')",
+        "knowledge_used": "사용한 미래지식 (회귀자 특화)",
+        "risk_level": "리스크 레벨 (극고위험/고위험/중위험/저위험)",
+
+        "business_sector": "사업 섹터 (IT/제조/금융/유통/건설/엔터/etc)"
+      }
+    },
+
+    "wuxia": {
+      "description": "무협물/무림/강호 특화",
+      "fields": {
+        "martial_arts": {
+          "used": ["사용한 무공/초식 목록"],
+          "acquired": "새로 습득한 무공 (없으면 null)",
+          "type": "무공 계열 (검/도/권/장/암기/내공/etc)"
+        },
+
+        "power_level": {
+          "before": "블록 시작 경지 (예: 후천3성, 화경초입)",
+          "after": "블록 종료 경지",
+          "breakthrough": "돌파 여부 (true/false)"
+        },
+
+        "combat": {
+          "type": "전투 유형 (비무/암습/대전/공성/암살/etc)",
+          "scale": "전투 규모 (일대일/소규모/대규모/전면전)",
+          "outcome": "결과 (완승/신승/무승부/패배/전략적후퇴)"
+        },
+
+        "sect_politics": {
+          "involved_sects": ["관련 문파들"],
+          "alliance_change": "동맹 변화",
+          "sect_standing": "문파 내 지위 변화"
+        },
+
+        "treasure": {
+          "gained": ["획득한 보물/영약/비급"],
+          "lost": ["잃은 것들"],
+          "type": "보물 유형 (영약/신병/비급/내단/etc)"
+        },
+
+        "injury_status": {
+          "received": "입은 부상",
+          "inflicted": "가한 부상",
+          "recovery": "회복 상태"
+        },
+
+        "qi_cultivation": {
+          "method": "수련법",
+          "progress": "내공 진전",
+          "side_effect": "부작용 (주화입마 등)"
+        },
+
+        "reputation_change": {
+          "jianghu_fame": "강호 명성 변화",
+          "title_gained": "얻은 별호/칭호"
+        }
+      }
+    },
+
+    "hunter": {
+      "description": "헌터물/던전물/게이트물/아포칼립스 특화",
+      "fields": {
+        "dungeon": {
+          "name": "던전명 (없으면 null)",
+          "grade": "등급 (SSS/SS/S/A/B/C/D/E/F)",
+          "type": "유형 (일반/보스/레이드/비밀/이벤트)",
+          "clear_status": "클리어 상태 (최초/재도전/실패)"
+        },
+
+        "raid": {
+          "type": "레이드 유형 (솔로/파티/길드/연합)",
+          "party_size": "파티 인원",
+          "role": "주인공 역할 (탱커/딜러/힐러/서포터/올라운더)"
+        },
+
+        "skill": {
+          "used": ["사용한 스킬들"],
+          "acquired": "획득/각성 스킬 (없으면 null)",
+          "evolved": "진화/강화된 스킬",
+          "skill_type": "스킬 계열 (물리/마법/소환/버프/패시브/etc)"
+        },
+
+        "rank": {
+          "before": "블록 시작 랭크",
+          "after": "블록 종료 랭크",
+          "evaluation_type": "평가 방식 (재각성/승급시험/실적)"
+        },
+
+        "loot": {
+          "items": ["획득 아이템"],
+          "grade": "최고 등급 아이템",
+          "value": "추정 가치",
+          "magic_stones": "마석 획득량"
+        },
+
+        "guild": {
+          "name": "소속 길드",
+          "position": "길드 내 직위",
+          "guild_event": "길드 관련 이벤트 (가입/탈퇴/창설/전쟁)"
+        },
+
+        "monster": {
+          "boss_name": "보스 몬스터명 (있으면)",
+          "boss_grade": "보스 등급",
+          "special_ability": "특수 능력"
+        },
+
+        "awakening": {
+          "type": "각성 유형 (최초각성/재각성/이중각성/etc)",
+          "trigger": "각성 트리거",
+          "new_ability": "새 능력"
+        },
+
+        "hunter_politics": {
+          "association_relation": "협회와의 관계",
+          "rival_guilds": ["경쟁 길드"],
+          "government_relation": "정부/군과의 관계"
+        },
+
+        "survival_status": {
+          "party_casualties": "파티 피해",
+          "near_death": "사경 경험 여부",
+          "recovery_method": "회복 방법 (포션/힐러/자연회복)"
+        }
+      }
+    },
+
+    "regression": {
+      "description": "회귀물 공통 (다른 장르와 중첩 사용)",
+      "fields": {
+        "timeline_knowledge": {
+          "info_used": "사용한 미래 정보",
+          "accuracy": "정보 정확도 (정확/부분변경/완전변경)",
+          "source": "정보 출처 (직접경험/소문/기록)"
+        },
+
+        "butterfly_effect": {
+          "original_event": "원래 역사에서 일어났어야 할 일",
+          "changed_event": "바뀐 결과",
+          "ripple_effect": "파급 효과"
+        },
+
+        "death_flag": {
+          "avoided": "회피한 사망/파멸 플래그",
+          "method": "회피 방법",
+          "original_death": "원래 죽었어야 할 방식"
+        },
+
+        "regression_hint": {
+          "slip_up": "회귀자임을 암시하는 실수/발언",
+          "suspicion_from": "의심하는 캐릭터",
+          "cover_story": "변명/위장"
+        },
+
+        "future_prep": {
+          "action": "미래를 위해 미리 한 행동",
+          "target_event": "대비하는 미래 사건",
+          "prep_timeline": "준비 기간"
+        }
+      }
+    }
+  },
+
+  "usage_note": {
+    "combination": "regression extension은 다른 장르와 중첩 사용 가능 (investment+regression, wuxia+regression 등)",
+    "null_handling": "해당 없는 필드는 null로 처리",
+    "array_empty": "해당 없는 배열은 빈 배열 []로 처리"
+  }
+}

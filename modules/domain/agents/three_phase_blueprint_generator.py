@@ -61,7 +61,9 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         director=None,  # [V60.80] Director 인스턴스 (최종 판정용)
         arc_idx: int = 0,  # Arc 인덱스
         entity_registry: Optional[Dict] = None,  # [V61] Entity 일관성 검증용
-        protagonist_name: str = "주인공"  # [V61] 주인공 이름 (필수!)
+        protagonist_name: str = "주인공",  # [V61] 주인공 이름 (필수!)
+        protagonist_config: Optional[Dict] = None,  # [V60.90] 주인공 설정 {world_origin, incarnation_type}
+        state_tracker=None  # [V60.96] StateTracker (죽은 NPC 검증용)
     ) -> Tuple[Optional[Dict], Dict]:
         """
         3단계 Blueprint 생성 (ToT 방식: 3전략 × 3시도 = 최대 9회 생성)
@@ -75,6 +77,10 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             external_feedback: 외부 피드백 (Director REJECT 등)
             director: Director 에이전트 (최종 판정용) - 디렉터주권주의
             arc_idx: Arc 인덱스
+            entity_registry: [V61] Entity 일관성 검증용
+            protagonist_name: [V61] 주인공 이름
+            protagonist_config: [V60.90] 주인공 설정
+            state_tracker: [V60.96] StateTracker (죽은 NPC 검증용)
 
         Returns:
             (generated_blueprint, pipeline_result)
@@ -86,6 +92,16 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         - Director 판정: 시도당 1회, 최대 3회
         """
         self.stats["total_attempts"] += 1
+
+        # [V60.90] protagonist_config 추출 (context에서 직접 로드, 파라미터 우선)
+        if not protagonist_config:
+            try:
+                master_bible = getattr(self.context, 'master_bible', {})
+                if master_bible:
+                    bible_root = master_bible.get('MasterBible', master_bible)
+                    protagonist_config = bible_root.get('protagonist_config', {})
+            except Exception:
+                protagonist_config = {}
 
         pipeline_result = {
             "ep_num": ep_num,
@@ -143,7 +159,8 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 constraint_block=constraint_block,
                 prev_blueprint=prev_blueprint,
                 feedback=feedback,
-                protagonist_name=protagonist_name  # [V61] 주인공 이름 전달
+                protagonist_name=protagonist_name,  # [V61] 주인공 이름 전달
+                protagonist_config=protagonist_config  # [V60.90] 주인공 설정 전달
             )
 
             if not best_blueprint:
@@ -174,7 +191,8 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 director=director,  # Director 최종 판정
                 working_ep=ep_num,
                 arc_idx=arc_idx,
-                entity_registry=entity_registry  # [V61] Entity 일관성 검증
+                entity_registry=entity_registry,  # [V61] Entity 일관성 검증
+                state_tracker=state_tracker  # [V60.96] 죽은 NPC 검증
             )
 
             pipeline_result["phases"]["validate"] = {

@@ -1,0 +1,4496 @@
+{
+  "version": "1.0",
+  "created": "2026-02-04T17:59:41.176626",
+  "model": "gemini-2.5-pro",
+  "opportunities": [
+    {
+      "id": "OPP_001",
+      "name": "중화학공업 육성 정책 발표 전후 관련주 선점 (1972-1973)",
+      "category": "주식/금융",
+      "subcategory": "우량주",
+      "entity": {
+        "type": "policy",
+        "name": "중화학공업 육성 선언",
+        "sector": "철강, 조선, 석유화학"
+      },
+      "entry_phase": "initial",
+      "timeline": {
+        "real_event_year": 1973,
+        "korea_timing": 1973,
+        "earliest_possible": 1972,
+        "golden_window": {
+          "start": 1972,
+          "end": 1974
+        },
+        "obsolete_after": 1979
+      },
+      "requirements": {
+        "min_capital": "1억",
+        "capital_tier": "소규모",
+        "prerequisites": [
+          {
+            "name": "정부의 산업 육성 정책 방향에 대한 확신",
+            "critical": true
+          },
+          {
+            "name": "당시 비상장 상태였던 포항제철, 현대조선 등에 투자할 비공식적 루트",
+            "critical": false
+          }
+        ],
+        "skills_needed": [
+          "거시 경제 분석",
+          "산업 정책 이해",
+          "장기 투자 인내심"
+        ],
+        "legal_barriers": [
+          "비상장 우량 기업에 대한 개인 투자 제한"
+        ],
+        "time_to_execute": "3~6개월"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "1975-1980년대",
+        "peak_roi": "10배 ~ 50배",
+        "risk_level": "medium",
+        "failure_probability": 0.2
+      },
+      "historical_context": {
+        "real_winner": "정부 정책 자금을 받은 재벌 그룹 (현대, 포스코 등)",
+        "real_losers": [
+          "경공업 중심의 기존 기업들",
+          "정책의 수혜를 받지 못한 중소기업"
+        ],
+        "why_others_failed": "정부 주도 경제의 방향성을 읽지 못하고 단기 시세에만 집중했기 때문. 대부분의 개인 투자자들은 정보 접근성이 매우 낮았음.",
+        "key_insight": "박정희 정부가 국가의 명운을 걸고 중화학공업을 추진할 것이라는 사실. 이는 단순한 부양책이 아닌, 국가 차원의 장기 프로젝트임을 인지하는 것이 핵심."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "정책 발표 전 정보를 선점하려는 중앙정보부와의 암투",
+          "기존 경공업 기반 재벌들의 견제"
+        ],
+        "complications": [
+          "1차 오일쇼크(1973)로 인한 단기적인 투자 심리 위축",
+          "정부의 갑작스러운 외환 통제 강화"
+        ],
+        "dramatic_moments": [
+          "1973년 1월, 대통령의 중화학공업 육성 선언 발표 순간",
+          "오일쇼크로 주가가 폭락했을 때, 추가 매수를 결심하는 장면"
+        ],
+        "villain_candidates": [
+          "정경유착을 통해 이권을 독점하려는 경쟁 재벌",
+          "주인공의 정보 출처를 의심하는 정부 관료"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "medium",
+        "butterfly_risk": "low",
+        "detection_risk": "low",
+        "alt_history_impact": "주인공의 매집으로 특정 종목의 초기 유동성에 영향을 줄 수 있으나, 국가 정책의 큰 흐름을 바꾸기는 어려움."
+      },
+      "related_opportunities": [
+        "중동 건설붐 테마주 투자 (1974-1976)",
+        "제1금융권 은행주 매입 (1970년대 후반)"
+      ],
+      "enables": [
+        "중화학공업 기업들과의 파트너십 형성",
+        "80년대 반도체 산업 투자를 위한 자본 축적"
+      ],
+      "tags": [
+        "정부정책",
+        "우량주",
+        "장기투자",
+        "중화학공업",
+        "오일쇼크"
+      ],
+      "_source_category": "stock",
+      "_source_era": "1970년대"
+    },
+    {
+      "id": "OPP_002",
+      "name": "삼성전자 IPO 공모주 청약 및 초기 투자 (1975)",
+      "category": "주식/금융",
+      "subcategory": "IPO",
+      "entity": {
+        "type": "company",
+        "name": "삼성전자",
+        "sector": "전자/반도체"
+      },
+      "entry_phase": "initial",
+      "timeline": {
+        "real_event_year": 1975,
+        "korea_timing": 1975,
+        "earliest_possible": 1975,
+        "golden_window": {
+          "start": 1975,
+          "end": 1976
+        },
+        "obsolete_after": 1980
+      },
+      "requirements": {
+        "min_capital": "1,000만원",
+        "capital_tier": "개인",
+        "prerequisites": [
+          {
+            "name": "기업공개촉진법(1972)에 따른 대기업 상장 추세 파악",
+            "critical": true
+          },
+          {
+            "name": "공모주 청약을 위한 증권 계좌 및 자금",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "미래 가치 평가",
+          "IPO 정보 수집 능력",
+          "인내심"
+        ],
+        "legal_barriers": [
+          "당시 개인 투자자의 정보 접근성 매우 낮음"
+        ],
+        "time_to_execute": "1개월"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "1980년대 이후",
+        "peak_roi": "100배 이상 (장기 보유시)",
+        "risk_level": "low",
+        "failure_probability": 0.01
+      },
+      "historical_context": {
+        "real_winner": "초기 투자자, 삼성 그룹 오너 일가",
+        "real_losers": [
+          "단기 차익만 노리고 일찍 매도한 투자자들"
+        ],
+        "why_others_failed": "당시 삼성전자는 가전제품 회사로 인식되었고, 반도체 산업의 폭발적인 성장을 예측한 사람은 거의 없었기 때문.",
+        "key_insight": "삼성전자가 단순한 가전 회사가 아니라, 미래 반도체 산업의 패권을 쥘 기업이라는 것을 아는 것. 이병철 회장의 반도체 산업 진출 의지를 파악하는 것이 중요."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "공모주 물량을 확보하기 위한 증권사와의 경쟁",
+          "가족이나 주변인들의 '근본 없는 전자회사' 투자에 대한 반대"
+        ],
+        "complications": [
+          "예상보다 낮은 공모주 배정 물량",
+          "상장 초기 주가 지지부진으로 인한 심리적 압박"
+        ],
+        "dramatic_moments": [
+          "공모주 청약 마지막 날, 모든 자금을 쏟아붓는 장면",
+          "1983년 '도쿄 선언' 뉴스를 보며 자신의 선택이 옳았음을 확인하는 순간"
+        ],
+        "villain_candidates": [
+          "유망한 공모주를 기관에 우선 배정하려는 부패한 증권사 직원",
+          "삼성의 성장을 견제하는 경쟁사 (럭키금성 등)"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "high",
+        "butterfly_risk": "low",
+        "detection_risk": "low",
+        "alt_history_impact": "개인 투자자 수준에서는 역사에 거의 영향을 주지 못함. 다만 재벌급 자본으로 지분을 대량 매입할 경우, 삼성의 경영권에 미미한 영향을 줄 가능성 존재."
+      },
+      "related_opportunities": [
+        "현대자동차 IPO 투자 (1975)",
+        "대우중공업 IPO 투자 (1976)"
+      ],
+      "enables": [
+        "80년대 반도체 산업 투자를 위한 자본 축적",
+        "전자 산업에 대한 깊은 이해와 네트워크 형성"
+      ],
+      "tags": [
+        "IPO",
+        "삼성전자",
+        "반도체",
+        "대박",
+        "장기투자"
+      ],
+      "_source_category": "stock",
+      "_source_era": "1970년대"
+    },
+    {
+      "id": "OPP_003",
+      "name": "'8.3 사채 동결 조치'를 이용한 부실기업 인수 (1972)",
+      "category": "주식/금융",
+      "subcategory": "채권",
+      "entity": {
+        "type": "event",
+        "name": "8.3 긴급경제조치",
+        "sector": "사채시장, 기업금융"
+      },
+      "entry_phase": "initial",
+      "timeline": {
+        "real_event_year": 1972,
+        "korea_timing": 1972,
+        "earliest_possible": 1972,
+        "golden_window": {
+          "start": 1972,
+          "end": 1972
+        },
+        "obsolete_after": 1973
+      },
+      "requirements": {
+        "min_capital": "10억",
+        "capital_tier": "중소기업",
+        "prerequisites": [
+          {
+            "name": "정부가 기업 부채 문제 해결을 위해 사채 시장에 개입할 것이라는 극비 정보",
+            "critical": true
+          },
+          {
+            "name": "사채 시장의 큰 손들과의 네트워크",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "정치적 통찰력",
+          "협상 능력",
+          "기업 구조조정 능력"
+        ],
+        "legal_barriers": [
+          "사채 거래의 불법성 및 위험성",
+          "대통령 긴급명령이라는 초법규적 조치"
+        ],
+        "time_to_execute": "3개월"
+      },
+      "returns": {
+        "profit_type": "사업수익",
+        "profit_timeline": "1973년 이후",
+        "peak_roi": "인수 기업 가치에 따라 수십배 가능",
+        "risk_level": "extreme",
+        "failure_probability": 0.7
+      },
+      "historical_context": {
+        "real_winner": "과도한 사채를 쓴 기업들, 정부",
+        "real_losers": [
+          "사채업자들 ('명동의 백할머니' 등)",
+          "사채 시장에 돈을 빌려준 일반 전주(錢主)들"
+        ],
+        "why_others_failed": "아무도 국가가 사적 계약인 사채에 직접 개입하여 동결시킬 것이라고는 상상조차 못했음. 정보의 완벽한 비대칭성.",
+        "key_insight": "정부가 수출 주도 기업들을 살리기 위해 사채업자들을 희생시키는 극약 처방을 내릴 것이라는 점. 조치 발표 직전, 사채로 연명하는 우량 기술 보유 부실기업의 채권을 헐값에 사들이거나, 사채업자에게 자금을 빌려준 뒤 조치 이후 기업 지분으로 출자전환하는 전략이 유효."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "돈을 떼일 위기에 처한 사채업자들의 보복",
+          "주인공의 비정상적인 자금 흐름을 추적하는 중앙정보부"
+        ],
+        "complications": [
+          "예상과 달리 회생 불가능한 좀비 기업을 인수할 위험",
+          "정부 조치의 세부 내용이 예상과 미세하게 달라 계획이 틀어지는 경우"
+        ],
+        "dramatic_moments": [
+          "8월 3일 자정, 라디오에서 긴급명령이 발표되는 순간",
+          "인수한 기업의 공장에서 노동자들과 마주하며 회생을 다짐하는 장면"
+        ],
+        "villain_candidates": [
+          "명동 사채시장을 주름잡는 악덕 사채업자",
+          "주인공을 이용해 정치적 이득을 챙기려는 부패한 관료"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "very_high",
+        "butterfly_risk": "medium",
+        "detection_risk": "high",
+        "alt_history_impact": "주인공의 개입으로 몇몇 기업의 운명이 바뀔 수 있음. 너무 큰 규모로 개입 시, 정부의 조치 내용이 일부 수정될 가능성도 존재."
+      },
+      "related_opportunities": [],
+      "enables": [
+        "헐값에 인수한 기업을 되살려 그룹의 초석 마련",
+        "정부 고위층과의 비밀스러운 커넥션 형성"
+      ],
+      "tags": [
+        "8.3조치",
+        "사채시장",
+        "하이리스크",
+        "M&A",
+        "정경유착"
+      ],
+      "_source_category": "stock",
+      "_source_era": "1970년대"
+    },
+    {
+      "id": "OPP_004",
+      "name": "중동 건설붐 테마주 투자 (1974-1976)",
+      "category": "주식/금융",
+      "subcategory": "우량주",
+      "entity": {
+        "type": "market",
+        "name": "중동 건설 시장",
+        "sector": "건설"
+      },
+      "entry_phase": "growth",
+      "timeline": {
+        "real_event_year": 1976,
+        "korea_timing": 1976,
+        "earliest_possible": 1974,
+        "golden_window": {
+          "start": 1974,
+          "end": 1977
+        },
+        "obsolete_after": 1982
+      },
+      "requirements": {
+        "min_capital": "5,000만원",
+        "capital_tier": "개인",
+        "prerequisites": [
+          {
+            "name": "1차 오일쇼크 이후 오일달러가 중동 인프라 투자로 이어질 것이라는 예측",
+            "critical": true
+          },
+          {
+            "name": "현대건설, 대우 등 한국 기업의 수주 경쟁력에 대한 믿음",
+            "critical": false
+          }
+        ],
+        "skills_needed": [
+          "국제 정세 분석",
+          "산업 트렌드 파악"
+        ],
+        "legal_barriers": [],
+        "time_to_execute": "1~3개월"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "1976-1978년",
+        "peak_roi": "10배 ~ 20배",
+        "risk_level": "medium",
+        "failure_probability": 0.3
+      },
+      "historical_context": {
+        "real_winner": "현대건설, 대우 등 중동에 진출한 건설 대기업",
+        "real_losers": [
+          "과열된 붐 후반에 투자한 개인 투자자들",
+          "현지 리스크 관리에 실패한 중소 건설사들"
+        ],
+        "why_others_failed": "대부분의 사람들은 중동에서의 성공을 '사막의 신기루'처럼 여겼고, 실제 대규모 수주 계약이 발표된 후에야 뒤늦게 추격 매수에 나섰기 때문.",
+        "key_insight": "주베일 산업항 건설(1976년)과 같은 '단군 이래 최대 해외 건설 공사'의 수주 가능성을 미리 아는 것. 이는 한국 건설업계의 기술력과 가격 경쟁력이 세계 수준임을 의미."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "건설주 주가를 조작하려는 작전 세력과의 수 싸움",
+          "수주 정보를 미리 빼내려는 경쟁사와의 첩보전"
+        ],
+        "complications": [
+          "중동 전쟁 발발로 인한 프로젝트 지연 또는 취소 리스크",
+          "정부의 외화벌이 독려 정책과 건설사 자금난 사이의 불일치"
+        ],
+        "dramatic_moments": [
+          "현대건설의 주베일 산업항 수주 소식이 신문 1면에 실리는 순간",
+          "오일쇼크로 모두가 좌절할 때, 오히려 기회로 보고 건설주를 매집하는 장면"
+        ],
+        "villain_candidates": [
+          "허위 정보로 개미들을 터는 악질 작전 세력의 리더",
+          "해외 수주를 방해하는 일본 등 경쟁국 기업"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "medium",
+        "butterfly_risk": "low",
+        "detection_risk": "low",
+        "alt_history_impact": "주인공의 투자 규모가 어지간히 크지 않고서는 실제 수주 결과나 주가 흐름의 대세를 바꾸기 어렵다."
+      },
+      "related_opportunities": [
+        "중화학공업 육성 정책 발표 전후 관련주 선점 (1972-1973)"
+      ],
+      "enables": [
+        "건설사와의 협력을 통한 80년대 부동산 개발 사업 진출",
+        "해외 비즈니스 네트워크 구축"
+      ],
+      "tags": [
+        "중동특수",
+        "건설주",
+        "테마주",
+        "오일달러",
+        "현대건설"
+      ],
+      "_source_category": "stock",
+      "_source_era": "1970년대"
+    },
+    {
+      "id": "OPP_005",
+      "name": "삼원건설 주가 조작 및 폭락 (1977) - 실패 사례",
+      "category": "주식/금융",
+      "subcategory": "작전주",
+      "entity": {
+        "type": "company",
+        "name": "삼원건설 (가상)",
+        "sector": "건설"
+      },
+      "entry_phase": "peak",
+      "timeline": {
+        "real_event_year": 1977,
+        "korea_timing": 1977,
+        "earliest_possible": 1977,
+        "golden_window": {
+          "start": 1977,
+          "end": 1977
+        },
+        "obsolete_after": 1978
+      },
+      "requirements": {
+        "min_capital": "5억",
+        "capital_tier": "소규모",
+        "prerequisites": [
+          {
+            "name": "증권가에 퍼진 '대규모 해외 수주 임박' 루머에 대한 정보",
+            "critical": true
+          },
+          {
+            "name": "작전 세력과의 연계 또는 내부 정보망",
+            "critical": false
+          }
+        ],
+        "skills_needed": [
+          "정보 분석 및 팩트 체크",
+          "군중 심리 이해",
+          "과감한 손절매 능력"
+        ],
+        "legal_barriers": [
+          "주가 조작은 불법이며, 당시에도 증권감독원의 감시 대상이었음."
+        ],
+        "time_to_execute": "1~2주"
+      },
+      "returns": {
+        "profit_type": "시세차익 (공매도 전략 시)",
+        "profit_timeline": "1977년 말",
+        "peak_roi": "5배 (폭락 직전 매도 시)",
+        "risk_level": "extreme",
+        "failure_probability": 0.9
+      },
+      "historical_context": {
+        "real_winner": "루머를 퍼뜨리고 초기에 빠져나간 작전 세력",
+        "real_losers": [
+          "루머를 믿고 고점에 추격 매수한 개인 투자자('개미')",
+          "실제로 부실했던 삼원건설"
+        ],
+        "why_others_failed": "중동 건설붐에 대한 맹목적인 기대로 인해, 기업의 실제 재무 상태나 수주 가능성에 대한 분석 없이 루머에만 의존하여 '묻지마 투자'를 했기 때문.",
+        "key_insight": "삼원건설의 해외 수주 계약이 실제로는 없거나, 감당할 수 없는 규모의 부실 계약이라는 내부 정보를 아는 것. 회귀자는 이 주식의 폭락을 알고 있으므로, 고점에서 공매도(당시 제도적으로 어려웠다면, 대주거래 등을 활용)를 하거나, 주변인들이 투자하는 것을 막는 방식으로 이익/명성을 얻을 수 있다."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "주가를 띄우려는 작전 세력과, 폭락을 예견하고 이를 이용하려는 주인공의 대결",
+          "주인공의 경고를 무시하고 투자했다가 파산한 지인과의 갈등"
+        ],
+        "complications": [
+          "작전 세력의 자금력으로 주가가 예상보다 훨씬 더 오르는 오버슈팅 현상",
+          "주가 폭락의 책임을 뒤집어쓸 위험"
+        ],
+        "dramatic_moments": [
+          "거래량이 터지며 상한가를 기록하는 날, 주인공 혼자 조용히 주식을 처분하는 장면",
+          "수주 실패 공시가 뜨고 하한가로 추락하는 주식 시장의 모습"
+        ],
+        "villain_candidates": [
+          "언론과 정치인까지 매수해 루머를 퍼뜨리는 작전 총책",
+          "회사의 부실을 숨기고 주가 부양에 동참한 부도덕한 경영진"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "high",
+        "butterfly_risk": "medium",
+        "detection_risk": "medium",
+        "alt_history_impact": "주인공이 작전 세력의 계획을 미리 폭로할 경우, 주가 조작이 실패하고 수많은 개인 투자자들의 피해를 막을 수 있다. 이는 역사에 상당한 영향을 미치는 행위."
+      },
+      "related_opportunities": [
+        "중동 건설붐 테마주 투자 (1974-1976)"
+      ],
+      "enables": [
+        "금융 시장의 어두운 면에 대한 이해",
+        "위기관리 능력 입증 및 명성 획득"
+      ],
+      "tags": [
+        "작전주",
+        "실패사례",
+        "하이리스크",
+        "공매도",
+        "버블"
+      ],
+      "_source_category": "stock",
+      "_source_era": "1970년대"
+    },
+    {
+      "id": "OPP_006",
+      "name": "제1호 투자신탁회사 설립 및 시장 선점 (1974)",
+      "category": "주식/금융",
+      "subcategory": "금융업",
+      "entity": {
+        "type": "company",
+        "name": "한국투자신탁 (실제 역사) 또는 새로운 투자신탁회사",
+        "sector": "증권, 자산운용"
+      },
+      "entry_phase": "initial",
+      "timeline": {
+        "real_event_year": 1974,
+        "korea_timing": 1974,
+        "earliest_possible": 1973,
+        "golden_window": {
+          "start": 1973,
+          "end": 1975
+        },
+        "obsolete_after": 1980
+      },
+      "requirements": {
+        "min_capital": "100억",
+        "capital_tier": "대기업/재벌급",
+        "prerequisites": [
+          {
+            "name": "정부가 자본시장 육성을 위해 간접투자 제도를 도입할 것이라는 정책 방향 인지",
+            "critical": true
+          },
+          {
+            "name": "재무부 등 금융 관료와의 강력한 네트워크 및 인허가 획득 능력",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "금융 상품 개발",
+          "정치적 로비 능력",
+          "조직 관리 능력"
+        ],
+        "legal_barriers": [
+          "투자신탁업법에 따른 엄격한 설립 요건",
+          "정부의 인허가가 필요한 규제 산업"
+        ],
+        "time_to_execute": "1~2년"
+      },
+      "returns": {
+        "profit_type": "사업수익",
+        "profit_timeline": "1970년대 후반부터 지속",
+        "peak_roi": "시장 선점에 따른 독과점적 이익",
+        "risk_level": "high",
+        "failure_probability": 0.6
+      },
+      "historical_context": {
+        "real_winner": "정부(자본시장 육성), 대한증권(한국투자신탁 설립 주도)",
+        "real_losers": [
+          "경쟁에서 밀린 다른 증권사들"
+        ],
+        "why_others_failed": "대부분의 금융 주체들이 직접 투자 시장에만 집중했고, 개인들의 쌈짓돈을 모아 운용하는 간접투자 시장의 미래 성장성을 과소평가했음. 또한, 정부의 인허가를 얻어낼 정치력이 부족했음.",
+        "key_insight": "정부의 자본시장 육성 의지와 개인 투자자들의 투자 수요가 만나는 지점에 '투자신탁'이라는 새로운 금융 비즈니스가 있다는 것을 아는 것. 이는 단순 투자가 아니라 금융 산업의 판도를 바꾸는 기회."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "제1호 투신사 인허가를 놓고 벌이는 다른 재벌 그룹과의 치열한 경쟁",
+          "기존 은행 및 증권사들의 견제와 방해 공작"
+        ],
+        "complications": [
+          "초기 투자자 모집의 어려움",
+          "1970년대 후반 증시 침체로 인한 펀드 수익률 악화 및 고객 항의"
+        ],
+        "dramatic_moments": [
+          "재무부로부터 투자신탁업 인가를 최종적으로 받아내는 순간",
+          "최초의 수익증권(펀드) 상품을 출시하고 완판시키는 장면"
+        ],
+        "villain_candidates": [
+          "사사건건 발목을 잡는 경쟁 재벌 그룹의 총수",
+          "새로운 금융 제도 도입에 반대하는 보수적인 재무부 관료"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "high",
+        "butterfly_risk": "high",
+        "detection_risk": "medium",
+        "alt_history_impact": "주인공이 제1호 투자신탁회사를 설립하면, 한국 금융사의 흐름이 크게 바뀐다. 실제 역사 속의 한국투자신탁 대신 주인공의 회사가 시장을 주도하게 되며, 이는 80~90년대 금융 산업 전체에 영향을 미친다."
+      },
+      "related_opportunities": [],
+      "enables": [
+        "자본시장의 지배자적 위치 확보",
+        "80년대 증권사, 종합금융사 등으로 금융 영토 확장",
+        "수많은 기업들의 IPO 및 자금 조달에 영향력 행사"
+      ],
+      "tags": [
+        "금융업",
+        "투자신탁",
+        "재벌",
+        "독점",
+        "창업"
+      ],
+      "_source_category": "stock",
+      "_source_era": "1970년대"
+    },
+    {
+      "id": "OPP_007",
+      "name": "'3저 호황' 트로이카주(금융, 건설, 무역) 집중 투자 (1985-1988)",
+      "category": "주식/금융",
+      "subcategory": "우량주",
+      "entity": {
+        "type": "market",
+        "name": "증권거래소 트로이카주",
+        "sector": "금융/건설/무역"
+      },
+      "entry_phase": "growth",
+      "timeline": {
+        "real_event_year": 1988,
+        "korea_timing": 1988,
+        "earliest_possible": 1985,
+        "golden_window": {
+          "start": 1985,
+          "end": 1988
+        },
+        "obsolete_after": 1989
+      },
+      "requirements": {
+        "min_capital": "5천만원",
+        "capital_tier": "개인/소규모",
+        "prerequisites": [
+          {
+            "name": "증권 계좌 개설",
+            "critical": true
+          },
+          {
+            "name": "3저 호황에 대한 이해",
+            "critical": false
+          }
+        ],
+        "skills_needed": [
+          "시장 흐름 파악",
+          "분산 투자",
+          "과열 시점에서의 매도 타이밍 결정"
+        ],
+        "legal_barriers": [],
+        "time_to_execute": "1주일 이내"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "1988년 하반기 ~ 1989년 초",
+        "peak_roi": "평균 10배 이상",
+        "risk_level": "medium",
+        "failure_probability": 0.3
+      },
+      "historical_context": {
+        "real_winner": "당시 증권사 및 시장에 일찍 진입한 개인/기관 투자자",
+        "real_losers": [
+          "1989년 최고점에 투자하여 폭락을 맞은 투자자들"
+        ],
+        "why_others_failed": "과도한 레버리지 사용 및 탐욕으로 인해 매도 시점을 놓치고 1989년 대폭락을 그대로 맞음.",
+        "key_insight": "3저 호황은 영원하지 않으며, 88 올림픽을 기점으로 버블이 정점에 달한 후 곧 붕괴한다는 사실을 아는 것."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "시장의 광적인 분위기에 휩쓸리지 않고 냉정함을 유지해야 하는 내적 갈등",
+          "주변의 비관론자 혹은 과격한 낙관론자와의 대립"
+        ],
+        "complications": [
+          "예상보다 빠른 과열 또는 정부의 갑작스러운 시장 안정화 정책 발표",
+          "특정 종목의 예기치 않은 악재 발생"
+        ],
+        "dramatic_moments": [
+          "종합주가지수(KOSPI)가 사상 최초로 1000포인트를 돌파하는 순간",
+          "폭락 직전, 모두가 환호할 때 혼자 모든 주식을 매도하는 장면"
+        ],
+        "villain_candidates": [
+          "과도한 레버리지를 부추기는 탐욕스러운 증권사 직원",
+          "내부 정보를 이용해 개미들을 터는 작전 세력"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "high",
+        "butterfly_risk": "low",
+        "detection_risk": "low",
+        "alt_history_impact": "주인공의 대규모 자금이 시장에 유입될 경우, 특정 종목의 과열이 더 빨리 오거나 정부 개입을 촉발할 수 있음."
+      },
+      "related_opportunities": [
+        "신생 증권사 설립 및 지분 투자 (1980년대 초반)",
+        "반도체 굴기, 삼성전자 집중 투자 (1983년 이후)"
+      ],
+      "enables": [
+        "90년대 초 IT 버블 대비를 위한 자금 확보",
+        "IMF 사태 당시 우량 자산 매입을 위한 기반 마련"
+      ],
+      "tags": [
+        "3저호황",
+        "트로이카주",
+        "주식시장",
+        "버블경제"
+      ],
+      "_source_category": "stock",
+      "_source_era": "1980년대"
+    },
+    {
+      "id": "OPP_008",
+      "name": "포항제철 국민주 1호 청약 (1988)",
+      "category": "주식/금융",
+      "subcategory": "IPO",
+      "entity": {
+        "type": "company",
+        "name": "포항제철 (현 POSCO)",
+        "sector": "철강"
+      },
+      "entry_phase": "initial",
+      "timeline": {
+        "real_event_year": 1988,
+        "korea_timing": 1988,
+        "earliest_possible": 1988,
+        "golden_window": {
+          "start": 1988,
+          "end": 1988
+        },
+        "obsolete_after": 1989
+      },
+      "requirements": {
+        "min_capital": "100만원",
+        "capital_tier": "개인",
+        "prerequisites": [
+          {
+            "name": "국민주 청약 자격 획득 (서민, 근로자 등)",
+            "critical": true
+          },
+          {
+            "name": "청약 증거금 마련",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "정보 수집 능력",
+          "신속한 행정 처리 능력"
+        ],
+        "legal_barriers": [
+          "1인당 청약 한도 존재"
+        ],
+        "time_to_execute": "1개월"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "상장 직후 1년 이내",
+        "peak_roi": "공모가 대비 200~300%",
+        "risk_level": "low",
+        "failure_probability": 0.01
+      },
+      "historical_context": {
+        "real_winner": "청약에 성공한 대다수의 국민들",
+        "real_losers": [
+          "정보가 없거나 자금이 부족해 청약에 참여하지 못한 사람들"
+        ],
+        "why_others_failed": "실패라기보다는 기회 자체를 인지하지 못하거나, 소액의 시세차익을 경시하여 참여하지 않음.",
+        "key_insight": "정부 주도의 국민주 보급 정책은 실패 가능성이 거의 없는 안정적인 투자 기회이며, 상장 후 주가가 단기 급등한다는 사실."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "한정된 주식을 배정받기 위한 치열한 경쟁",
+          "가족이나 지인의 명의를 빌려 최대한 많은 주식을 확보하려는 노력"
+        ],
+        "complications": [
+          "청약 서류 미비 또는 마감 시간 임박",
+          "예상보다 낮은 주식 배정 수량"
+        ],
+        "dramatic_moments": [
+          "청약 경쟁률이 발표되는 순간",
+          "상장 첫날 '따상' (공모가 두배로 시작해 상한가)을 기록하는 주가 전광판"
+        ],
+        "villain_candidates": [
+          "청약 대행을 미끼로 수수료를 챙기는 사기꾼",
+          "배정 과정에서 특혜를 받는 유력 인사"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "medium",
+        "butterfly_risk": "low",
+        "detection_risk": "low",
+        "alt_history_impact": "주인공이 주변인들을 동원해 대규모 청약을 시도할 경우, 일부 창구에서 조기 마감될 수 있으나 전체 판도에 영향은 미미함."
+      },
+      "related_opportunities": [],
+      "enables": [
+        "소액 자본을 중단기적으로 불려 다른 투자 기회의 시드머니로 활용"
+      ],
+      "tags": [
+        "국민주",
+        "IPO",
+        "포항제철",
+        "공모주"
+      ],
+      "_source_category": "stock",
+      "_source_era": "1980년대"
+    },
+    {
+      "id": "OPP_009",
+      "name": "국제그룹 해체 자산 인수전 참여 (1985)",
+      "category": "주식/금융",
+      "subcategory": "채권",
+      "entity": {
+        "type": "event",
+        "name": "국제그룹 공중분해 사건",
+        "sector": "복합기업(재벌)"
+      },
+      "entry_phase": "decline",
+      "timeline": {
+        "real_event_year": 1985,
+        "korea_timing": 1985,
+        "earliest_possible": 1984,
+        "golden_window": {
+          "start": 1985,
+          "end": 1985
+        },
+        "obsolete_after": 1986
+      },
+      "requirements": {
+        "min_capital": "1조원",
+        "capital_tier": "재벌급",
+        "prerequisites": [
+          {
+            "name": "전두환 정권과의 강력한 정치적 커넥션",
+            "critical": true
+          },
+          {
+            "name": "주거래 은행과의 우호적인 관계",
+            "critical": true
+          },
+          {
+            "name": "인수 자산을 운영할 수 있는 경영 능력",
+            "critical": false
+          }
+        ],
+        "skills_needed": [
+          "정치적 협상 능력",
+          "자산 실사 및 가치 평가",
+          "M&A 전략 수립"
+        ],
+        "legal_barriers": [
+          "정부의 인수 주체 지정에 따라 참여가 제한될 수 있음"
+        ],
+        "time_to_execute": "6개월"
+      },
+      "returns": {
+        "profit_type": "사업수익/독점수익",
+        "profit_timeline": "인수 후 지속적",
+        "peak_roi": "측정불가 (핵심 사업부 및 부동산 등 알짜 자산 확보)",
+        "risk_level": "high",
+        "failure_probability": 0.6
+      },
+      "historical_context": {
+        "real_winner": "한일그룹 등 국제그룹의 자산을 분할 인수한 기업들",
+        "real_losers": [
+          "국제그룹 양정모 회장 일가"
+        ],
+        "why_others_failed": "정권의 미움을 사서 '부실기업 정리'라는 명목 하에 강제 해체당함. 정치적 리스크를 관리하지 못했기 때문.",
+        "key_insight": "당시 기업의 운명은 경영 성과가 아닌 '정치적 관계'에 의해 결정될 수 있다는 사실. 누가 정권의 후원을 받는지를 아는 것이 핵심."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "알짜 자산을 차지하기 위한 다른 재벌들과의 물밑 경쟁",
+          "정권 실세에게 줄을 대기 위한 암투"
+        ],
+        "complications": [
+          "인수 대상 자산에 숨겨진 부실 발견",
+          "국제그룹 노동조합의 강력한 저항"
+        ],
+        "dramatic_moments": [
+          "청와대에서 인수 기업이 낙점되는 순간",
+          "하루아침에 그룹을 잃고 망연자실하는 양정모 회장의 모습"
+        ],
+        "villain_candidates": [
+          "대통령의 신임을 등에 업고 기업들을 쥐락펴락하는 권력 실세",
+          "경쟁 재벌 그룹의 비정한 오너"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "very_high",
+        "butterfly_risk": "high",
+        "detection_risk": "high",
+        "alt_history_impact": "주인공이 국제그룹 해체를 막거나 다른 기업이 인수하게 만들 경우, 한국 재계 순위가 크게 변동되고 후속 역사에 지대한 영향을 미침."
+      },
+      "related_opportunities": [],
+      "enables": [
+        "단숨에 재계 순위 상승",
+        "신발(프로스펙스), 철강, 건설 등 핵심 사업 포트폴리오 확보"
+      ],
+      "tags": [
+        "재벌",
+        "M&A",
+        "정경유착",
+        "권력"
+      ],
+      "_source_category": "stock",
+      "_source_era": "1980년대"
+    },
+    {
+      "id": "OPP_010",
+      "name": "장영자 어음 사기 사건을 이용한 시장 붕괴 예측 (1982)",
+      "category": "주식/금융",
+      "subcategory": "작전주",
+      "entity": {
+        "type": "event",
+        "name": "장영자-이철희 어음 사기 사건",
+        "sector": "사채시장/금융"
+      },
+      "entry_phase": "peak",
+      "timeline": {
+        "real_event_year": 1982,
+        "korea_timing": 1982,
+        "earliest_possible": 1981,
+        "golden_window": {
+          "start": 1982,
+          "end": 1982
+        },
+        "obsolete_after": 1983
+      },
+      "requirements": {
+        "min_capital": "1억원",
+        "capital_tier": "소규모/중소기업",
+        "prerequisites": [
+          {
+            "name": "사건의 전개와 파급 효과에 대한 정확한 정보",
+            "critical": true
+          },
+          {
+            "name": "당시 제한적이었던 공매도 또는 유사한 포지션을 취할 방법론",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "금융 파생상품 설계 (가상)",
+          "위기관리",
+          "정보 보안"
+        ],
+        "legal_barriers": [
+          "개인 투자자의 공매도가 사실상 불가능했던 시기",
+          "내부자 거래 또는 시세 조종으로 오인받을 법적 위험"
+        ],
+        "time_to_execute": "3개월"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "1982년 5월 사건 발표 직후",
+        "peak_roi": "10배 이상 (사건 연루 기업 주가 폭락분)",
+        "risk_level": "extreme",
+        "failure_probability": 0.8
+      },
+      "historical_context": {
+        "real_winner": "사건에 연루되지 않고 현금을 보유했던 소수",
+        "real_losers": [
+          "장영자에게 돈을 빌려준 사채업자들",
+          "연루된 기업(공영사, 일신제강 등)과 그 주주들",
+          "주식시장 전체 투자자"
+        ],
+        "why_others_failed": "정권 비호설까지 나돌던 장영자의 화려한 인맥과 큰 손을 믿고 의심없이 어음을 할인해주다가 연쇄 부도를 맞음.",
+        "key_insight": "사건의 정확한 폭발 시점과 연루된 기업 목록을 아는 것. 이는 단순한 경제 예측이 아닌 범죄 정보에 해당함."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "범죄 정보를 이용해 돈을 버는 것에 대한 도덕적 딜레마",
+          "사채시장의 큰 손들과의 위험한 접촉"
+        ],
+        "complications": [
+          "정보를 눈치챈 정보기관(안기부)의 추적",
+          "예상과 달리 정부가 시장 붕괴를 막기 위해 조기 개입하는 시나리오"
+        ],
+        "dramatic_moments": [
+          "사건이 언론에 터지기 직전, 모든 것을 건 하락에 베팅하는 순간",
+          "주가 폭락으로 비명이 가득한 객장에서 혼자 미소 짓는 장면"
+        ],
+        "villain_candidates": [
+          "사건의 주범 장영자, 이철희",
+          "사건을 정치적으로 이용하려는 권력층"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "very_high",
+        "butterfly_risk": "medium",
+        "detection_risk": "high",
+        "alt_history_impact": "사전에 정보를 유출할 경우 사건이 조기에 종결되거나 다른 방향으로 흘러가 이익을 얻지 못할 수 있음. 주인공의 포지션이 노출되면 즉시 수사 대상이 됨."
+      },
+      "related_opportunities": [],
+      "enables": [
+        "급락한 주식시장에서 우량 자산을 헐값에 매입할 기회"
+      ],
+      "tags": [
+        "금융스캔들",
+        "사채시장",
+        "공매도",
+        "블랙스완"
+      ],
+      "_source_category": "stock",
+      "_source_era": "1980년대"
+    },
+    {
+      "id": "OPP_011",
+      "name": "신생 증권사 설립 및 지분 투자 (1980년대 초반)",
+      "category": "주식/금융",
+      "subcategory": "우량주",
+      "entity": {
+        "type": "sector",
+        "name": "증권업",
+        "sector": "금융"
+      },
+      "entry_phase": "initial",
+      "timeline": {
+        "real_event_year": 1985,
+        "korea_timing": 1985,
+        "earliest_possible": 1981,
+        "golden_window": {
+          "start": 1981,
+          "end": 1984
+        },
+        "obsolete_after": 1988
+      },
+      "requirements": {
+        "min_capital": "100억원",
+        "capital_tier": "중소기업/대기업",
+        "prerequisites": [
+          {
+            "name": "재무부로부터 증권업 허가 획득",
+            "critical": true
+          },
+          {
+            "name": "초기 전산 시스템 구축 및 전문 인력 확보",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "금융 산업에 대한 깊은 이해",
+          "정부 인허가 관련 대관 업무 능력",
+          "경영 능력"
+        ],
+        "legal_barriers": [
+          "까다로운 정부의 인허가 절차",
+          "자본금 규제"
+        ],
+        "time_to_execute": "1-2년"
+      },
+      "returns": {
+        "profit_type": "사업수익/배당/시세차익",
+        "profit_timeline": "1985년 이후 지속적",
+        "peak_roi": "100배 이상 (사업 가치 상승분)",
+        "risk_level": "medium",
+        "failure_probability": 0.4
+      },
+      "historical_context": {
+        "real_winner": "동원증권, 동양증권 등 80년대에 급성장한 증권사들",
+        "real_losers": [
+          "변화에 대응하지 못하고 시장 점유율을 잃은 기존의 소규모 증권사"
+        ],
+        "why_others_failed": "다가올 주식시장 대호황의 규모를 예측하지 못하고 과감한 투자를 하지 못했거나, 리스크 관리에 실패하여 위기를 맞음.",
+        "key_insight": "80년대 중반부터 '3저 호황'으로 인해 한국 주식시장이 폭발적으로 성장할 것이라는 사실. 이는 증권사들의 수수료 수입이 기하급수적으로 늘어남을 의미함."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "기존 증권사들의 텃세와 견제",
+          "최고의 트레이더와 분석가를 영입하기 위한 스카우트 전쟁"
+        ],
+        "complications": [
+          "정부의 갑작스러운 금융 정책 변경",
+          "초기 전산 시스템의 잦은 오류 발생"
+        ],
+        "dramatic_moments": [
+          "증권사 라이선스가 발급되는 순간",
+          "종합주가지수 1000포인트 돌파일에 사상 최대 거래대금을 기록하며 서버가 다운되는 사태"
+        ],
+        "villain_candidates": [
+          "인허가권을 쥐고 부당한 요구를 하는 재무부 관료",
+          "고객 돈으로 위험한 투자를 감행하는 부도덕한 펀드매니저"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "high",
+        "butterfly_risk": "medium",
+        "detection_risk": "low",
+        "alt_history_impact": "주인공이 설립한 증권사가 시장을 선도할 경우, 한국 금융시장의 발전이 몇 년 앞당겨지거나, 새로운 금융 기법이 조기 도입될 수 있음."
+      },
+      "related_opportunities": [
+        "'3저 호황' 트로이카주(금융, 건설, 무역) 집중 투자 (1985-1988)"
+      ],
+      "enables": [
+        "90년대 M&A, VC, PE 등 투자은행(IB) 업무로의 확장",
+        "자체적인 경제 연구소 설립을 통한 정보력 강화"
+      ],
+      "tags": [
+        "증권사",
+        "금융업",
+        "창업",
+        "라이선스"
+      ],
+      "_source_category": "stock",
+      "_source_era": "1980년대"
+    },
+    {
+      "id": "OPP_012",
+      "name": "대우조선 부실채권 매입 및 구조조정 참여 (1989)",
+      "category": "주식/금융",
+      "subcategory": "채권",
+      "entity": {
+        "type": "company",
+        "name": "대우조선해양",
+        "sector": "조선/중공업"
+      },
+      "entry_phase": "decline",
+      "timeline": {
+        "real_event_year": 1989,
+        "korea_timing": 1989,
+        "earliest_possible": 1988,
+        "golden_window": {
+          "start": 1989,
+          "end": 1990
+        },
+        "obsolete_after": 1992
+      },
+      "requirements": {
+        "min_capital": "5,000억원",
+        "capital_tier": "대기업/재벌급",
+        "prerequisites": [
+          {
+            "name": "정부 및 채권단과의 협상력",
+            "critical": true
+          },
+          {
+            "name": "조선업에 대한 깊은 이해와 턴어라운드 전략",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "구조조정 전문가",
+          "채권 협상",
+          "정무적 판단력"
+        ],
+        "legal_barriers": [
+          "정부의 강력한 개입으로 인해 민간 주도의 협상이 어려움"
+        ],
+        "time_to_execute": "1년 이상"
+      },
+      "returns": {
+        "profit_type": "사업수익/자산가치 상승",
+        "profit_timeline": "1990년대 중반 이후",
+        "peak_roi": "10배 이상 (정상화 후 기업 가치)",
+        "risk_level": "high",
+        "failure_probability": 0.5
+      },
+      "historical_context": {
+        "real_winner": "정부와 산업은행 (결과적으로 회사를 살려냄)",
+        "real_losers": [
+          "대우그룹 (경영권 상실 및 막대한 자금 부담)",
+          "기존 채권단"
+        ],
+        "why_others_failed": "대우그룹의 무리한 확장과 조선업 불황이 겹쳐 감당할 수 없는 부실을 안게 됨. 다른 기업들은 리스크가 너무 커 인수를 꺼렸음.",
+        "key_insight": "대우조선은 'Too Big to Fail'이므로 정부가 반드시 살려낼 것이라는 믿음. 그리고 90년대에 조선업이 다시 호황을 맞이할 것이라는 미래 지식."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "회사의 운명을 두고 벌이는 정부, 대우그룹, 채권단 간의 첨예한 대립",
+          "대규모 인력 감축을 동반한 고통스러운 구조조정 과정과 노조의 반발"
+        ],
+        "complications": [
+          "숨겨져 있던 추가 부실의 발견",
+          "조선업 불황이 예상보다 길어지는 상황"
+        ],
+        "dramatic_moments": [
+          "김우중 회장이 경영권 포기를 선언하는 순간",
+          "극적인 채권단 협상 타결로 부도를 막아내는 장면"
+        ],
+        "villain_candidates": [
+          "회사를 공중분해시켜 이익을 챙기려는 해외 벌처펀드",
+          "정치적 입지를 위해 대우조선을 희생시키려는 관료"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "high",
+        "butterfly_risk": "high",
+        "detection_risk": "medium",
+        "alt_history_impact": "주인공이 대우조선을 인수할 경우, 대우그룹의 운명이 바뀌고 90년대 후반 대우 사태(IMF의 원인 중 하나)가 발생하지 않을 수 있어 한국 현대사에 큰 영향을 줌."
+      },
+      "related_opportunities": [
+        "국제그룹 해체 자산 인수전 참여 (1985)"
+      ],
+      "enables": [
+        "한국 중공업의 핵심 플레이어로 부상",
+        "방위산업 진출의 교두보 마련"
+      ],
+      "tags": [
+        "구조조정",
+        "부실채권",
+        "NPL",
+        "대마불사"
+      ],
+      "_source_category": "stock",
+      "_source_era": "1980년대"
+    },
+    {
+      "id": "OPP_013",
+      "name": "반도체 굴기, 삼성전자 집중 투자 (1983년 이후)",
+      "category": "주식/금융",
+      "subcategory": "우량주",
+      "entity": {
+        "type": "company",
+        "name": "삼성전자",
+        "sector": "반도체"
+      },
+      "entry_phase": "initial",
+      "timeline": {
+        "real_event_year": 1983,
+        "korea_timing": 1983,
+        "earliest_possible": 1983,
+        "golden_window": {
+          "start": 1983,
+          "end": 1989
+        },
+        "obsolete_after": null
+      },
+      "requirements": {
+        "min_capital": "100만원",
+        "capital_tier": "개인/소규모/중소기업",
+        "prerequisites": [
+          {
+            "name": "증권 계좌",
+            "critical": true
+          },
+          {
+            "name": "반도체 산업의 미래에 대한 확신",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "장기 투자 안목",
+          "기술 트렌드 이해"
+        ],
+        "legal_barriers": [],
+        "time_to_execute": "1일"
+      },
+      "returns": {
+        "profit_type": "시세차익/배당",
+        "profit_timeline": "1990년대 이후 폭발적 성장",
+        "peak_roi": "수천 배 이상 (장기 보유 시)",
+        "risk_level": "medium",
+        "failure_probability": 0.2
+      },
+      "historical_context": {
+        "real_winner": "삼성그룹 이병철/이건희 회장, 삼성전자 주식을 장기 보유한 투자자들",
+        "real_losers": [
+          "반도체 사업 진출을 비관적으로 보고 반대했던 내부 임원 및 외부 전문가들",
+          "단기 시세만 보고 매도한 투자자들"
+        ],
+        "why_others_failed": "당시 일본과 미국이 장악한 메모리 반도체 시장에 후발주자로 뛰어드는 것을 무모한 도박으로 여김. 천문학적인 초기 투자 비용과 '치킨 게임'의 위험을 감당할 수 없다고 판단.",
+        "key_insight": "삼성이 결국 반도체 '치킨 게임'의 최종 승자가 되어 세계 1위 메모리 반도체 기업으로 등극한다는 사실을 아는 것."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "주변의 모든 전문가가 투자를 만류하는 상황에서 신념을 지키는 것",
+          "반도체 불황으로 주가가 폭락할 때 추가 매수(물타기)를 할 것인가에 대한 고뇌"
+        ],
+        "complications": [
+          "미일 반도체 협정으로 인한 시장 왜곡",
+          "경쟁사의 기술 유출 및 특허 소송"
+        ],
+        "dramatic_moments": [
+          "이병철 회장이 도쿄에서 반도체 사업 진출을 선언하는 '도쿄 선언'",
+          "64K D램 개발 성공 뉴스가 보도되는 순간"
+        ],
+        "villain_candidates": [
+          "한국의 반도체 기술을 훔치려는 일본 경쟁사 스파이",
+          "삼성의 도전을 비웃고 방해하는 미국 상무부 관리"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "very_high",
+        "butterfly_risk": "low",
+        "detection_risk": "low",
+        "alt_history_impact": "개인의 투자가 삼성의 역사에 영향을 줄 가능성은 거의 없음. 만약 재벌급 자금으로 초기 지분을 대량 확보한다면 경영권에 영향을 줄 수도 있으나 가능성은 희박."
+      },
+      "related_opportunities": [
+        "'3저 호황' 트로이카주(금융, 건설, 무역) 집중 투자 (1985-1988)"
+      ],
+      "enables": [
+        "대한민국 최고의 자산주 보유",
+        "2000년대 IT 버블 시기 의사결정의 기준점"
+      ],
+      "tags": [
+        "삼성전자",
+        "반도체",
+        "장기투자",
+        "황제주",
+        "가치투자"
+      ],
+      "_source_category": "stock",
+      "_source_era": "1980년대"
+    },
+    {
+      "id": "OPP_014",
+      "name": "한국이동통신 민영화 및 IPO 투자 (1993-1994)",
+      "category": "주식/금융",
+      "subcategory": "우량주",
+      "entity": {
+        "type": "company",
+        "name": "한국이동통신 (현 SK텔레콤)",
+        "sector": "정보통신"
+      },
+      "entry_phase": "growth",
+      "timeline": {
+        "real_event_year": 1994,
+        "korea_timing": 1994,
+        "earliest_possible": 1993,
+        "golden_window": {
+          "start": 1993,
+          "end": 1994
+        },
+        "obsolete_after": 1995
+      },
+      "requirements": {
+        "min_capital": "1000억 (인수) / 1000만원 (IPO 청약)",
+        "capital_tier": "재벌급 (인수전 참여) / 개인 (IPO 청약)",
+        "prerequisites": [
+          {
+            "name": "정부의 민영화 방침 및 일정에 대한 정보",
+            "critical": true
+          },
+          {
+            "name": "인수전 참여 시 컨소시엄 구성 능력",
+            "critical": false
+          }
+        ],
+        "skills_needed": [
+          "미래 통신시장 성장성 예측",
+          "M&A 협상 능력",
+          "정부 정책 분석"
+        ],
+        "legal_barriers": [
+          "공기업 민영화 참여 자격 조건",
+          "외국인 지분 한도"
+        ],
+        "time_to_execute": "6개월 ~ 1년"
+      },
+      "returns": {
+        "profit_type": "시세차익/배당",
+        "profit_timeline": "1995년 이후 지속적",
+        "peak_roi": "100배 이상 (장기 보유시)",
+        "risk_level": "low",
+        "failure_probability": 0.1
+      },
+      "historical_context": {
+        "real_winner": "선경그룹 (현 SK그룹)",
+        "real_losers": [
+          "인수전 경쟁 상대 (포항제철 등)"
+        ],
+        "why_others_failed": "자금력 부족, 정부와의 교감 실패, 통신 사업에 대한 비전 부재.",
+        "key_insight": "개인 이동통신(PCS) 시대의 도래를 예측하고, '1인 1휴대폰'이 현실이 될 것을 아는 것. 당시 휴대폰은 부의 상징이었으나, 미래에는 생필품이 된다는 확신이 핵심."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "SK와 포스코 등 재벌 간의 치열한 인수 경쟁",
+          "정치권의 입김과 특혜 시비"
+        ],
+        "complications": [
+          "인수자금 조달 과정에서의 예상치 못한 난관",
+          "노조의 민영화 반대 투쟁"
+        ],
+        "dramatic_moments": [
+          "인수 후보 최종 발표 순간",
+          "IPO 첫날 '따상' 기록"
+        ],
+        "villain_candidates": [
+          "경쟁 재벌 그룹의 정보팀",
+          "특혜를 주려는 부패한 정치인"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "very_high",
+        "butterfly_risk": "high",
+        "detection_risk": "medium",
+        "alt_history_impact": "주인공이 인수에 성공할 경우, SK그룹의 운명이 바뀌고 한국 통신시장의 판도가 완전히 달라짐. 이는 후속 IT 투자에도 큰 영향을 미침."
+      },
+      "related_opportunities": [
+        "IMF 사태 저점, 삼성전자 집중 매수 (1998)"
+      ],
+      "enables": [
+        "닷컴 버블 시기 SK텔레콤의 자금력을 이용한 벤처 투자",
+        "SK하이닉스(구 현대전자) 인수 기반 마련"
+      ],
+      "tags": [
+        "IPO",
+        "민영화",
+        "재벌",
+        "정보통신",
+        "SK텔레콤"
+      ],
+      "_source_category": "stock",
+      "_source_era": "1990년대"
+    },
+    {
+      "id": "OPP_015",
+      "name": "KOSDAQ 닷컴 버블 초기 우량주 선점 (1998-1999)",
+      "category": "주식/금융",
+      "subcategory": "IPO",
+      "entity": {
+        "type": "market",
+        "name": "KOSDAQ 시장 및 닷컴 기업 (새롬기술, 다음, 한글과컴퓨터 등)",
+        "sector": "IT/인터넷"
+      },
+      "entry_phase": "growth",
+      "timeline": {
+        "real_event_year": 1999,
+        "korea_timing": 1999,
+        "earliest_possible": 1998,
+        "golden_window": {
+          "start": 1998,
+          "end": 1999
+        },
+        "obsolete_after": 2000
+      },
+      "requirements": {
+        "min_capital": "1000만원",
+        "capital_tier": "개인/소규모",
+        "prerequisites": [
+          {
+            "name": "증권 계좌",
+            "critical": true
+          },
+          {
+            "name": "초고속 인터넷 환경에 대한 이해",
+            "critical": false
+          }
+        ],
+        "skills_needed": [
+          "옥석 가리기 (실체 있는 기술기업 식별)",
+          "과감한 투자 및 매도 타이밍 포착 능력",
+          "군중심리에 휩쓸리지 않는 냉철함"
+        ],
+        "legal_barriers": [],
+        "time_to_execute": "1주일 이내"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "1999년 말 ~ 2000년 초",
+        "peak_roi": "수십 배 ~ 수백 배 (종목별 상이)",
+        "risk_level": "extreme",
+        "failure_probability": 0.8
+      },
+      "historical_context": {
+        "real_winner": "초기 벤처 투자자, IT기업 창업자 (이재웅, 이택경 등), 버블 붕괴 직전 탈출한 개인 투자자",
+        "real_losers": [
+          "버블 최상투에 매수한 개인 투자자 ('묻지마 투자자')",
+          "실체 없이 상장했던 수많은 닷컴 기업들"
+        ],
+        "why_others_failed": "기술에 대한 이해 없이 '닷컴'이라는 이름만 보고 투자했으며, 버블 붕괴의 전조를 무시하고 탐욕에 눈이 멀었기 때문.",
+        "key_insight": "버블은 반드시 터진다는 사실과, 2000년 3월이 그 정점이라는 것을 아는 것. 또한 '새롬기술'의 다이얼패드처럼 혁신적이지만 수익모델이 없는 기술의 한계를 꿰뚫어보는 것이 중요."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "가족이나 친구의 '묻지마 투자'를 말리는 주인공",
+          "작전 세력과의 의도치 않은 조우"
+        ],
+        "complications": [
+          "투자한 기업이 갑작스러운 유상증자나 CB 발행으로 주가 희석",
+          "예상보다 빨리 터지거나 늦게 터지는 버블 (나비효과)"
+        ],
+        "dramatic_moments": [
+          "단 며칠 만에 자산이 10배로 불어나는 순간",
+          "버블 붕괴 직전, 주변의 비웃음을 받으며 전량 매도하는 장면"
+        ],
+        "villain_candidates": [
+          "허위 기술로 투자자를 현혹하는 닷컴 기업 CEO",
+          "주가 조작을 일삼는 작전 세력"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "very_high",
+        "butterfly_risk": "medium",
+        "detection_risk": "low",
+        "alt_history_impact": "주인공이 특정 유망 벤처에 초기에 거액을 투자하면, 해당 기업이 역사를 넘어 글로벌 기업으로 성장할 가능성이 있음. (예: 초기의 네이버, 다음)"
+      },
+      "related_opportunities": [],
+      "enables": [
+        "닷컴 버블 붕괴 후 헐값에 나온 IT 기업 인수",
+        "2000년대 초반 게임 산업 투자"
+      ],
+      "tags": [
+        "KOSDAQ",
+        "닷컴버블",
+        "벤처",
+        "개인투자자",
+        "새롬기술",
+        "다음"
+      ],
+      "_source_category": "stock",
+      "_source_era": "1990년대"
+    },
+    {
+      "id": "OPP_016",
+      "name": "KOSPI 200 선물시장 활용, IMF 외환위기 공매도 (1997)",
+      "category": "주식/금융",
+      "subcategory": "선물/옵션",
+      "entity": {
+        "type": "market",
+        "name": "KOSPI 200 지수 선물",
+        "sector": "파생상품"
+      },
+      "entry_phase": "decline",
+      "timeline": {
+        "real_event_year": 1997,
+        "korea_timing": 1997,
+        "earliest_possible": 1997,
+        "golden_window": {
+          "start": 1997,
+          "end": 1997
+        },
+        "obsolete_after": 1998
+      },
+      "requirements": {
+        "min_capital": "5000만원",
+        "capital_tier": "개인/소규모",
+        "prerequisites": [
+          {
+            "name": "선물/옵션 거래 계좌 개설",
+            "critical": true
+          },
+          {
+            "name": "파생상품의 레버리지 및 위험성에 대한 정확한 이해",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "거시 경제 지표 분석 (환율, 외환보유고)",
+          "강력한 정신력 (마진콜 압박 극복)",
+          "정확한 진입 및 청산 타이밍"
+        ],
+        "legal_barriers": [
+          "당시 파생상품 시장의 초기 규제 및 거래 제한 가능성"
+        ],
+        "time_to_execute": "1일"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "1997년 11월 ~ 12월",
+        "peak_roi": "10배 이상 (레버리지 활용 시)",
+        "risk_level": "extreme",
+        "failure_probability": 0.5
+      },
+      "historical_context": {
+        "real_winner": "외국계 헤지펀드, 극소수의 국내 기관 투자자",
+        "real_losers": [
+          "지수 하락을 예상 못 하고 롱포지션을 잡은 대다수 투자자",
+          "정부의 시장 방어를 믿었던 개인들"
+        ],
+        "why_others_failed": "정부의 '펀더멘털은 튼튼하다'는 발표를 믿었고, 국가 부도라는 극단적 상황을 상상하지 못했다. 파생상품의 위험성을 제대로 인지하지 못했다.",
+        "key_insight": "기아차 부도, 한보 사태 등으로 이미 시스템 리스크가 임계점에 도달했으며, 정부의 외환보유고 발표가 실제와 다르다는 것을 아는 것. IMF 구제금융 신청이 '루머'가 아닌 '확정된 미래'임을 아는 것이 핵심."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "국가의 위기에 베팅하는 것에 대한 도덕적 고뇌",
+          "주변인들의 비난과 '매국노'라는 오해"
+        ],
+        "complications": [
+          "정부의 일시적인 시장 개입으로 인한 단기 반등 (마진콜 위기)",
+          "증권사 직원의 거래 중단 권유 또는 압박"
+        ],
+        "dramatic_moments": [
+          "IMF 구제금융 신청 발표가 뉴스 속보로 뜨는 순간",
+          "계좌 잔고가 기하급수적으로 불어나는 것을 보며 느끼는 복잡한 감정"
+        ],
+        "villain_candidates": [
+          "외환위기를 유발한 부패한 관료 및 재벌",
+          "주인공의 포지션을 눈치채고 반대매매를 유도하려는 시장 세력"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "very_high",
+        "butterfly_risk": "low",
+        "detection_risk": "high",
+        "alt_history_impact": "개인의 선물 거래가 시장 전체에 미치는 영향은 미미함. 그러나 거액을 베팅할 경우, 금융당국의 조사를 받을 수 있음."
+      },
+      "related_opportunities": [
+        "IMF 외환위기, 연 30% 초고금리 채권 매입 (1998)",
+        "IMF 사태 저점, 삼성전자 집중 매수 (1998)",
+        "한보철강 부도 사태, 연루 은행주 공매도 (1997)"
+      ],
+      "enables": [
+        "IMF 사태로 헐값이 된 부동산 및 기업 자산 매입 자금 확보"
+      ],
+      "tags": [
+        "IMF",
+        "외환위기",
+        "선물",
+        "공매도",
+        "파생상품",
+        "KOSPI200"
+      ],
+      "_source_category": "stock",
+      "_source_era": "1990년대"
+    },
+    {
+      "id": "OPP_017",
+      "name": "IMF 외환위기, 연 30% 초고금리 채권 매입 (1998)",
+      "category": "주식/금융",
+      "subcategory": "채권",
+      "entity": {
+        "type": "asset",
+        "name": "대한민국 국고채, 통안채, 우량 회사채",
+        "sector": "채권시장"
+      },
+      "entry_phase": "decline",
+      "timeline": {
+        "real_event_year": 1998,
+        "korea_timing": 1998,
+        "earliest_possible": 1997,
+        "golden_window": {
+          "start": 1997,
+          "end": 1998
+        },
+        "obsolete_after": 1999
+      },
+      "requirements": {
+        "min_capital": "1억원",
+        "capital_tier": "개인/중소기업",
+        "prerequisites": [
+          {
+            "name": "현금 동원 능력",
+            "critical": true
+          },
+          {
+            "name": "채권 거래가 가능한 금융기관 계좌",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "국가 부도 가능성에 대한 냉정한 판단력",
+          "금리 변동 예측",
+          "공포에 맞서는 용기"
+        ],
+        "legal_barriers": [],
+        "time_to_execute": "1주일"
+      },
+      "returns": {
+        "profit_type": "이자수익/시세차익",
+        "profit_timeline": "1998년 이후 (만기보유 또는 중도매각)",
+        "peak_roi": "연 30% 이자 + 금리 하락 시 채권가격 상승분",
+        "risk_level": "medium",
+        "failure_probability": 0.05
+      },
+      "historical_context": {
+        "real_winner": "현금을 보유했던 자산가, 외국인 투자자",
+        "real_losers": [
+          "공포에 질려 헐값에 자산을 매각한 개인들",
+          "고금리를 감당하지 못하고 부도난 기업들"
+        ],
+        "why_others_failed": "대한민국이 정말로 디폴트(채무 불이행)를 선언할 것이라는 공포에 사로잡혀 안전자산인 달러나 금으로만 몰려갔다.",
+        "key_insight": "IMF의 지원을 받는 국가가 디폴트를 선언할 확률은 극히 낮다는 믿음. 고금리 정책은 경제를 살리기 위한 일시적 충격요법이며, 경제가 안정되면 금리는 반드시 내려간다는 것을 아는 것. (금리 하락 = 채권 가격 상승)"
+      },
+      "story_hooks": {
+        "conflicts": [
+          "달러를 사라는 주변의 권유와 압박",
+          "은행 직원이 '위험하다'며 채권 매입을 만류하는 상황"
+        ],
+        "complications": [
+          "매입하려던 우량 회사채 발행 기업의 갑작스러운 부도 위기설",
+          "정치적 불안으로 인한 일시적 금리 추가 폭등"
+        ],
+        "dramatic_moments": [
+          "전 재산을 털어 국고채를 매입하는 순간",
+          "금리가 안정되고 채권 가격이 급등하여 막대한 평가이익을 확인하는 장면"
+        ],
+        "villain_candidates": [
+          "국가 부도 위기를 조장하며 이익을 챙기는 해외 핫머니",
+          "대중의 공포를 이용해 이득을 취하는 악덕 사채업자"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "high",
+        "butterfly_risk": "low",
+        "detection_risk": "low",
+        "alt_history_impact": "개인의 채권 매입은 시장에 영향을 주지 않음. 역사가 바뀌어 한국이 디폴트를 선언하는 극단적인 상황이 아니라면 안정적인 수익 확보 가능."
+      },
+      "related_opportunities": [
+        "IMF 사태 저점, 삼성전자 집중 매수 (1998)",
+        "IMF 이후 금융권 강제 구조조정, 피인수 은행 예측 투자 (1998-1999)"
+      ],
+      "enables": [
+        "안정적인 현금 흐름 확보",
+        "주식 시장 저점 매수를 위한 시드머니 마련"
+      ],
+      "tags": [
+        "IMF",
+        "채권",
+        "고금리",
+        "안전자산",
+        "국가부도"
+      ],
+      "_source_category": "stock",
+      "_source_era": "1990년대"
+    },
+    {
+      "id": "OPP_018",
+      "name": "IMF 사태 최저점, 삼성전자 주식 집중 매수 (1998)",
+      "category": "주식/금융",
+      "subcategory": "우량주",
+      "entity": {
+        "type": "company",
+        "name": "삼성전자",
+        "sector": "반도체/전자"
+      },
+      "entry_phase": "decline",
+      "timeline": {
+        "real_event_year": 1998,
+        "korea_timing": 1998,
+        "earliest_possible": 1998,
+        "golden_window": {
+          "start": 1998,
+          "end": 1998
+        },
+        "obsolete_after": 1999
+      },
+      "requirements": {
+        "min_capital": "1000만원",
+        "capital_tier": "개인/중소기업/대기업",
+        "prerequisites": [
+          {
+            "name": "증권 계좌",
+            "critical": true
+          },
+          {
+            "name": "투매 공포를 이겨낼 강한 정신력",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "가치 투자에 대한 이해",
+          "산업 사이클(반도체)에 대한 통찰",
+          "환율 효과 분석"
+        ],
+        "legal_barriers": [
+          "당시 외국인 투자 한도 (점차 완화됨)"
+        ],
+        "time_to_execute": "1주일 이내"
+      },
+      "returns": {
+        "profit_type": "시세차익/배당",
+        "profit_timeline": "1999년 이후",
+        "peak_roi": "10배 이상 (2년 내), 100배 이상 (장기 보유시)",
+        "risk_level": "medium",
+        "failure_probability": 0.2
+      },
+      "historical_context": {
+        "real_winner": "워렌 버핏 등 가치 투자자, 외국인 투자자, 박현주(미래에셋) 등 국내 펀드매니저",
+        "real_losers": [
+          "공포에 질려 최저점에 주식을 던진 개인 투자자",
+          "IMF 위기를 버티지 못하고 쓰러진 경쟁 기업들"
+        ],
+        "why_others_failed": "삼성전자도 대우그룹처럼 부도날 수 있다는 극단적인 공포감에 사로잡혔다. 반도체 산업의 사이클과, 고환율이 오히려 수출 기업에게는 기회가 될 수 있다는 점을 간과했다.",
+        "key_insight": "삼성전자의 메모리 반도체 기술력은 세계 1위이며, 이는 국가 부도와는 별개의 경쟁력이라는 것을 아는 것. 1998년 6월 16일 KOSPI 지수 280 포인트가 역사적 대바닥이라는 사실."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "집을 팔아서 삼성전자에 투자하려는 주인공과 이를 말리는 가족 간의 갈등",
+          "외국인들이 헐값에 국부를 유출해간다는 비난 여론"
+        ],
+        "complications": [
+          "매수 직후 주가가 더 떨어지는 추가 하락 공포",
+          "삼성그룹의 다른 계열사(삼성자동차 등) 부실 문제가 삼성전자로 전이될 것이라는 루머"
+        ],
+        "dramatic_moments": [
+          "모두가 주식을 팔 때, 증권사 창구에서 묵묵히 삼성전자 주식을 사들이는 장면",
+          "1년 뒤, 폭등한 주가와 함께 'BUY KOREA' 펀드가 열풍을 일으키는 것을 보는 장면"
+        ],
+        "villain_candidates": [
+          "공매도로 주가 하락을 부추기는 외국계 펀드",
+          "기업의 위기를 과장하여 개인 투자자들의 투매를 유도하는 사이비 증권 분석가"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "high",
+        "butterfly_risk": "low",
+        "detection_risk": "low",
+        "alt_history_impact": "개인의 주식 매수가 삼성전자의 펀더멘털에 영향을 주지는 않음. 매우 안정적인 미래 지식 활용 기회."
+      },
+      "related_opportunities": [
+        "IMF 외환위기, 연 30% 초고금리 채권 매입 (1998)",
+        "한국이동통신 민영화 및 IPO 투자 (1993-1994)"
+      ],
+      "enables": [
+        "장기적인 부의 기반 마련",
+        "IT 버블 시기 투자 자금 확보"
+      ],
+      "tags": [
+        "IMF",
+        "우량주",
+        "가치투자",
+        "삼성전자",
+        "주식"
+      ],
+      "_source_category": "stock",
+      "_source_era": "1990년대"
+    },
+    {
+      "id": "OPP_019",
+      "name": "한보철강 부도 사태, 연루 은행주 공매도 (1997)",
+      "category": "주식/금융",
+      "subcategory": "작전주",
+      "entity": {
+        "type": "event",
+        "name": "한보그룹 부도 사태",
+        "sector": "금융/철강"
+      },
+      "entry_phase": "peak",
+      "timeline": {
+        "real_event_year": 1997,
+        "korea_timing": 1997,
+        "earliest_possible": 1996,
+        "golden_window": {
+          "start": 1996,
+          "end": 1997
+        },
+        "obsolete_after": 1997
+      },
+      "requirements": {
+        "min_capital": "10억",
+        "capital_tier": "중소기업/대기업",
+        "prerequisites": [
+          {
+            "name": "대차거래를 통한 주식 공매도 채널 확보",
+            "critical": true
+          },
+          {
+            "name": "정치권 및 금융권 내부 정보망",
+            "critical": false
+          }
+        ],
+        "skills_needed": [
+          "기업 부실 분석 능력",
+          "정경유착의 메커니즘 이해",
+          "금융 시스템의 취약성 간파"
+        ],
+        "legal_barriers": [
+          "당시 개인 투자자의 공매도는 거의 불가능했음",
+          "내부자 거래로 오인받을 위험"
+        ],
+        "time_to_execute": "1개월"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "1997년 1월 ~ 3월",
+        "peak_roi": "200% ~ 300%",
+        "risk_level": "high",
+        "failure_probability": 0.4
+      },
+      "historical_context": {
+        "real_winner": "사태를 미리 감지하고 대출을 회수하거나 주식을 매도한 일부 기관",
+        "real_losers": [
+          "한보그룹에 거액을 대출해준 제일은행, 조흥은행 등 시중은행",
+          "은행의 부실을 믿지 않았던 주주들"
+        ],
+        "why_others_failed": "'대마불사(too big to fail)' 신화를 맹신. 정부가 어떻게든 한보그룹과 은행을 살릴 것이라고 믿었기 때문에 부실의 심각성을 외면했다.",
+        "key_insight": "한보의 부실 규모가 수 조원에 달해 은행권의 지원만으로는 막을 수 없으며, 김영삼 정부의 '역사 바로 세우기' 기조상 정치적 비호에도 한계가 올 것임을 아는 것. 이 사건이 연쇄 부도의 시발점이 될 것이라는 예측."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "주인공의 공매도 시도를 막으려는 은행 및 정치권의 외압",
+          "내부 고발자와의 위험한 접촉"
+        ],
+        "complications": [
+          "정부의 예상치 못한 구제금융 발표로 인한 '숏 스퀴즈' 발생 위험",
+          "공매도 정보 유출로 인한 역공격"
+        ],
+        "dramatic_moments": [
+          "한보그룹 최종 부도 처리 뉴스가 발표되는 순간",
+          "국회에서 한보 사태 청문회가 열리는 장면"
+        ],
+        "villain_candidates": [
+          "한보그룹 정태수 회장",
+          "부실 대출을 승인해준 부패한 은행장 및 정치인"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "high",
+        "butterfly_risk": "medium",
+        "detection_risk": "high",
+        "alt_history_impact": "주인공의 대규모 공매도가 시장에 알려질 경우, 부도 시점이 앞당겨지거나 정부의 대응 방식이 달라질 수 있음. 이는 IMF 사태의 전개 과정에도 영향을 미칠 수 있다."
+      },
+      "related_opportunities": [
+        "KOSPI 200 선물시장 활용, IMF 외환위기 공매도 (1997)"
+      ],
+      "enables": [
+        "외환위기 발생에 대한 확신 강화",
+        "금융권 부실에 대한 심층 정보 획득"
+      ],
+      "tags": [
+        "한보사태",
+        "부도",
+        "공매도",
+        "정경유착",
+        "은행"
+      ],
+      "_source_category": "stock",
+      "_source_era": "1990년대"
+    },
+    {
+      "id": "OPP_020",
+      "name": "IMF 이후 금융권 강제 구조조정, 피인수 은행 예측 투자 (1998-1999)",
+      "category": "주식/금융",
+      "subcategory": "우량주",
+      "entity": {
+        "type": "event",
+        "name": "금융산업 구조조정 (Bank Mergers)",
+        "sector": "금융"
+      },
+      "entry_phase": "revival",
+      "timeline": {
+        "real_event_year": 1998,
+        "korea_timing": 1998,
+        "earliest_possible": 1998,
+        "golden_window": {
+          "start": 1998,
+          "end": 1999
+        },
+        "obsolete_after": 2000
+      },
+      "requirements": {
+        "min_capital": "1000억",
+        "capital_tier": "대기업/재벌급",
+        "prerequisites": [
+          {
+            "name": "외국 자본과의 컨소시엄 구성 능력",
+            "critical": true
+          },
+          {
+            "name": "금융감독위원회 등 정부 당국과의 협상 채널",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "M&A 전략 및 실사 능력",
+          "부실자산(NPL) 가치 평가 능력",
+          "정부 정책 방향 예측"
+        ],
+        "legal_barriers": [
+          "은행법상 동일인 주식 보유 한도",
+          "외국계 펀드에 대한 부정적 국민 정서"
+        ],
+        "time_to_execute": "1년 이상"
+      },
+      "returns": {
+        "profit_type": "사업수익/독점수익",
+        "profit_timeline": "2000년대 초반",
+        "peak_roi": "5배 ~ 10배 (인수 후 되팔 시)",
+        "risk_level": "high",
+        "failure_probability": 0.3
+      },
+      "historical_context": {
+        "real_winner": "뉴브리지 캐피탈 (제일은행 인수), 골드만삭스 (국민은행 투자), 칼라일/론스타 등 외국계 사모펀드",
+        "real_losers": [
+          "헐값에 은행을 매각해야 했던 정부",
+          "인수합병 과정에서 대량 해고된 은행원들"
+        ],
+        "why_others_failed": "국내 대기업들은 자체적인 구조조정으로 은행을 인수할 자금 여력이 없었고, 부실 규모에 대한 두려움과 은행 경영 노하우 부족으로 M&A에 소극적이었다.",
+        "key_insight": "정부가 공적자금을 투입해 부실채권을 정리해준 '우량 은행'을 헐값에 인수할 절호의 기회라는 것을 아는 것. '국부 유출'이라는 비난을 감수하고 과감하게 베팅할 수 있는 배짱이 필요. 어떤 은행이 어떤 은행과 합병될지 정부의 로드맵을 미리 아는 것이 핵심."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "은행 인수를 두고 벌이는 외국계 펀드와의 치열한 경쟁",
+          "'먹튀' 자본이라는 국민적 비난과 노조의 거센 저항"
+        ],
+        "complications": [
+          "인수하려는 은행의 숨겨진 추가 부실 발견",
+          "정권 교체로 인한 금융 정책의 급작스러운 변경"
+        ],
+        "dramatic_moments": [
+          "정부와의 비밀 매각 협상 타결 순간",
+          "인수한 은행의 턴어라운드 성공 후, 성공적인 재매각(Exit) 장면"
+        ],
+        "villain_candidates": [
+          "더 높은 가격을 부르며 M&A를 방해하는 경쟁 펀드",
+          "국부유출 프레임으로 주인공을 공격하는 정치인"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "very_high",
+        "butterfly_risk": "high",
+        "detection_risk": "high",
+        "alt_history_impact": "주인공이 국내 자본으로 은행 인수에 성공하면, 론스타 사태 같은 외환은행 매각 논란이 발생하지 않을 수 있음. 한국 금융 시장의 주인이 바뀌는 거대한 변화를 초래."
+      },
+      "related_opportunities": [
+        "IMF 외환위기, 연 30% 초고금리 채권 매입 (1998)"
+      ],
+      "enables": [
+        "거대 금융 그룹의 총수가 될 기회",
+        "향후 카드사 분사 및 매각 차익 실현 (LG카드 사태 등)"
+      ],
+      "tags": [
+        "IMF",
+        "M&A",
+        "은행",
+        "구조조정",
+        "사모펀드",
+        "재벌"
+      ],
+      "_source_category": "stock",
+      "_source_era": "1990년대"
+    },
+    {
+      "id": "OPP_021",
+      "name": "KOSDAQ 닷컴 버블 붕괴 직전 공매도 (2000)",
+      "category": "주식/금융",
+      "subcategory": "선물/옵션",
+      "entity": {
+        "type": "market",
+        "name": "KOSDAQ 지수 및 관련 기술주",
+        "sector": "정보기술(IT)"
+      },
+      "entry_phase": "peak",
+      "timeline": {
+        "real_event_year": 2000,
+        "korea_timing": 2000,
+        "earliest_possible": 1999,
+        "golden_window": {
+          "start": 2000,
+          "end": 2000
+        },
+        "obsolete_after": 2001
+      },
+      "requirements": {
+        "min_capital": "1천만원",
+        "capital_tier": "개인/소규모",
+        "prerequisites": [
+          {
+            "name": "선물/옵션 계좌 개설 및 공매도 메커니즘 이해",
+            "critical": true
+          },
+          {
+            "name": "버블의 정점 시점 파악",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "기술적 분석",
+          "시장 심리 파악",
+          "리스크 관리"
+        ],
+        "legal_barriers": [
+          "당시 개인 투자자의 공매도 접근성 제한"
+        ],
+        "time_to_execute": "1~3개월"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "수개월 내",
+        "peak_roi": "10배 이상 (레버리지 활용 시)",
+        "risk_level": "extreme",
+        "failure_probability": 0.8
+      },
+      "historical_context": {
+        "real_winner": "일부 외국계 펀드 및 소수 비관론자",
+        "real_losers": [
+          "대다수 개인 투자자 ('개미')",
+          "신규 상장 벤처기업들"
+        ],
+        "why_others_failed": "펀더멘털 분석 없이 '묻지마 투자'에 편승했으며, 버블이 영원할 것이라는 비이성적 과열에 휩싸임.",
+        "key_insight": "KOSDAQ 지수가 단기간에 5배 이상 폭등한 것은 지속 불가능한 버블이며, 미국 나스닥 붕괴가 한국 시장에 직격탄이 될 것임을 아는 것."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "시장의 광기와 싸우는 주인공의 고독",
+          "주변인들의 비웃음과 불신"
+        ],
+        "complications": [
+          "예상보다 길어지는 버블에 따른 증거금 압박 (마진콜)",
+          "정부의 증시 부양책으로 인한 단기 반등"
+        ],
+        "dramatic_moments": [
+          "나스닥 폭락 소식과 함께 KOSDAQ이 연일 하한가를 기록하는 순간",
+          "단 며칠 만에 계좌 잔고가 수십 배로 불어나는 장면"
+        ],
+        "villain_candidates": [
+          "근거 없는 장밋빛 전망을 내놓는 증권사 애널리스트",
+          "작전을 통해 주가를 띄우고 개미에게 물량을 떠넘기는 세력"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "very_high",
+        "butterfly_risk": "medium",
+        "detection_risk": "low",
+        "alt_history_impact": "주인공의 대규모 공매도로 특정 종목의 붕괴가 며칠 앞당겨질 수 있으나, 전체적인 버블 붕괴라는 대세는 바뀌지 않음."
+      },
+      "related_opportunities": [
+        "Post-GFC Blue-Chip Bottom Fishing (Late 2008 - Early 2009)"
+      ],
+      "enables": [
+        "닷컴 버블 붕괴 후 헐값에 나온 우량 IT 기업 인수"
+      ],
+      "tags": [
+        "닷컴버블",
+        "공매도",
+        "KOSDAQ",
+        "하이리스크",
+        "2000년"
+      ],
+      "_source_category": "stock",
+      "_source_era": "2000년대"
+    },
+    {
+      "id": "OPP_022",
+      "name": "하이닉스 반도체 회생 투자 (2002-2003)",
+      "category": "주식/금융",
+      "subcategory": "우량주",
+      "entity": {
+        "type": "company",
+        "name": "하이닉스 반도체 (현 SK하이닉스)",
+        "sector": "반도체"
+      },
+      "entry_phase": "revival",
+      "timeline": {
+        "real_event_year": 2003,
+        "korea_timing": 2003,
+        "earliest_possible": 2001,
+        "golden_window": {
+          "start": 2002,
+          "end": 2003
+        },
+        "obsolete_after": 2005
+      },
+      "requirements": {
+        "min_capital": "1백만원",
+        "capital_tier": "개인/소규모/중소기업",
+        "prerequisites": [
+          {
+            "name": "회사의 기술력과 반도체 산업의 사이클에 대한 믿음",
+            "critical": true
+          },
+          {
+            "name": "채권단의 워크아웃(기업개선작업)이 성공할 것이라는 확신",
+            "critical": false
+          }
+        ],
+        "skills_needed": [
+          "장기 투자 안목",
+          "산업 분석 능력",
+          "인내심"
+        ],
+        "legal_barriers": [],
+        "time_to_execute": "즉시 (매수)"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "5~10년",
+        "peak_roi": "100배 이상 (장기 보유 시)",
+        "risk_level": "high",
+        "failure_probability": 0.5
+      },
+      "historical_context": {
+        "real_winner": "장기 보유한 소액주주 및 워크아웃을 주도한 채권단",
+        "real_losers": [
+          "파산 우려로 헐값에 주식을 매도한 투자자",
+          "미국 마이크론 테크놀로지에 매각을 주장했던 세력"
+        ],
+        "why_others_failed": "수조원대의 부채와 반도체 불황이라는 단기적 악재에 매몰되어 회사의 본질적인 기술 경쟁력과 메모리 반도체 시장의 회복 가능성을 보지 못함.",
+        "key_insight": "하이닉스는 망하기에는 너무 큰(Too Big to Fail) 기업이며, 정부와 채권단이 어떻게든 살려낼 것. DRAM 가격 사이클은 반드시 돌아온다는 사실을 아는 것."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "해외 매각파 vs 독자 생존파 간의 치열한 여론전",
+          "주변의 모든 사람이 '망할 회사'라며 투자를 말리는 상황"
+        ],
+        "complications": [
+          "예상치 못한 DRAM 가격 추가 하락",
+          "미국, 유럽 등 경쟁국의 반덤핑 관세 부과"
+        ],
+        "dramatic_moments": [
+          "마이크론과의 매각 협상이 최종 결렬되는 순간",
+          "수년간의 적자 끝에 분기 흑자 전환을 발표하는 날"
+        ],
+        "villain_candidates": [
+          "국부 유출을 감수하고 헐값 매각을 추진하는 관료",
+          "회사의 위기를 이용해 단기 시세차익을 노리는 외국계 투기자본"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "high",
+        "butterfly_risk": "low",
+        "detection_risk": "low",
+        "alt_history_impact": "주인공의 매수 행위는 주가에 거의 영향을 미치지 못함. 역사의 큰 흐름은 채권단의 결정에 따라 흘러갈 것."
+      },
+      "related_opportunities": [],
+      "enables": [
+        "반도체 산업 내 독점적 정보망 구축",
+        "SK 그룹의 하이닉스 인수를 미리 예측하고 추가 투자"
+      ],
+      "tags": [
+        "턴어라운드",
+        "가치투자",
+        "하이닉스",
+        "반도체사이클",
+        "2002년"
+      ],
+      "_source_category": "stock",
+      "_source_era": "2000년대"
+    },
+    {
+      "id": "OPP_023",
+      "name": "LG카드 사태 부실채권(NPL) 매입 및 신한금융지주 M&A 베팅 (2003-2006)",
+      "category": "주식/금융",
+      "subcategory": "채권",
+      "entity": {
+        "type": "event",
+        "name": "LG카드 유동성 위기 및 신용카드 대란",
+        "sector": "금융"
+      },
+      "entry_phase": "decline",
+      "timeline": {
+        "real_event_year": 2003,
+        "korea_timing": 2003,
+        "earliest_possible": 2003,
+        "golden_window": {
+          "start": 2003,
+          "end": 2004
+        },
+        "obsolete_after": 2007
+      },
+      "requirements": {
+        "min_capital": "100억",
+        "capital_tier": "중소기업/대기업",
+        "prerequisites": [
+          {
+            "name": "부실채권(NPL) 시장에 대한 전문 지식",
+            "critical": true
+          },
+          {
+            "name": "금융 당국 및 채권단과의 네트워크",
+            "critical": false
+          }
+        ],
+        "skills_needed": [
+          "자산 실사 능력",
+          "채권 추심 전략",
+          "M&A 협상 기술"
+        ],
+        "legal_barriers": [
+          "부실채권 매입 및 추심 관련 법규"
+        ],
+        "time_to_execute": "6개월~1년"
+      },
+      "returns": {
+        "profit_type": "사업수익/시세차익",
+        "profit_timeline": "2~4년",
+        "peak_roi": "300% 이상",
+        "risk_level": "high",
+        "failure_probability": 0.3
+      },
+      "historical_context": {
+        "real_winner": "신한금융지주 (LG카드 인수로 업계 1위 도약), 골드만삭스 등 NPL을 헐값에 매입한 외국계 자본",
+        "real_losers": [
+          "LG카드 기존 주주 (전액 감자)",
+          "카드 돌려막기를 하던 다중채무자들"
+        ],
+        "why_others_failed": "위기의 전염성을 두려워하여 섣불리 나서지 못했거나, 부실채권의 회수율을 지나치게 비관적으로 평가함.",
+        "key_insight": "정부는 카드 산업의 시스템 붕괴를 막기 위해 결국 공적자금을 투입하고 우량 금융사에 매각할 것임을 아는 것. LG카드의 고객 기반과 시장 점유율은 부실을 털어내면 매우 가치있는 자산임."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "채권 회수 과정에서 발생하는 채무자들과의 인간적 갈등",
+          "NPL 시장을 선점하려는 다른 투자 세력과의 경쟁"
+        ],
+        "complications": [
+          "예상보다 낮은 채권 회수율",
+          "정부의 채무자 구제 정책으로 인한 사업 차질"
+        ],
+        "dramatic_moments": [
+          "채권단이 LG카드에 대한 3조원대 긴급 지원을 결정하는 밤",
+          "신한금융지주가 LG카드 인수 우선협상대상자로 선정되는 순간"
+        ],
+        "villain_candidates": [
+          "과도한 수수료와 불법 추심으로 채무자들을 괴롭히는 경쟁 NPL 업체",
+          "내부 정보를 이용해 이득을 챙기려는 부패한 금융 관료"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "medium",
+        "butterfly_risk": "high",
+        "detection_risk": "medium",
+        "alt_history_impact": "주인공이 NPL 시장의 주요 플레이어가 될 경우, 채권 가격이나 회수율에 영향을 미쳐 역사가 바뀔 수 있음. 신한금융 외 다른 주체가 LG카드를 인수할 가능성도 생김."
+      },
+      "related_opportunities": [],
+      "enables": [
+        "국내 NPL 시장의 강자로 부상",
+        "금융권 내 주요 인사들과의 인맥 형성"
+      ],
+      "tags": [
+        "카드대란",
+        "NPL",
+        "부실채권",
+        "M&A",
+        "2003년"
+      ],
+      "_source_category": "stock",
+      "_source_era": "2000년대"
+    },
+    {
+      "id": "OPP_024",
+      "name": "중국 특수(China Boom) 기반 '차이나투' 우량주 투자 (2004-2007)",
+      "category": "주식/금융",
+      "subcategory": "우량주",
+      "entity": {
+        "type": "company",
+        "name": "POSCO, 현대중공업, OCI 등",
+        "sector": "철강/조선/화학"
+      },
+      "entry_phase": "growth",
+      "timeline": {
+        "real_event_year": 2007,
+        "korea_timing": 2007,
+        "earliest_possible": 2003,
+        "golden_window": {
+          "start": 2004,
+          "end": 2007
+        },
+        "obsolete_after": 2008
+      },
+      "requirements": {
+        "min_capital": "1백만원",
+        "capital_tier": "개인/소규모/중소기업/대기업/재벌급",
+        "prerequisites": [
+          {
+            "name": "중국의 성장이 한국의 기간산업에 미치는 영향 이해",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "매크로 경제 분석",
+          "장기 보유 인내심",
+          "포트폴리오 관리"
+        ],
+        "legal_barriers": [],
+        "time_to_execute": "즉시 (매수)"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "3~4년",
+        "peak_roi": "500% ~ 10배",
+        "risk_level": "medium",
+        "failure_probability": 0.2
+      },
+      "historical_context": {
+        "real_winner": "중국 특수를 예측하고 관련 주식을 매집한 투자자들, 특히 미래에셋자산운용",
+        "real_losers": [
+          "2007년 최고점에서 추격 매수한 투자자",
+          "내수주 및 IT주에만 집중했던 투자자"
+        ],
+        "why_others_failed": "과거 IMF 외환위기의 트라우마로 인해 한국의 중후장대 산업의 부활을 믿지 못했거나, 중국발 수요가 일시적일 것이라 과소평가함.",
+        "key_insight": "2008년 베이징 올림픽을 앞둔 중국의 인프라 투자는 전례 없는 규모이며, 이는 한국의 철강, 조선, 화학, 해운업에 수년간의 슈퍼 사이클을 안겨줄 것이라는 점."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "IT 버블 이후 기술주에만 편중된 시장의 편견과 싸움",
+          "'굴뚝주'는 성장성이 없다고 비판하는 전문가들과의 논쟁"
+        ],
+        "complications": [
+          "원자재 가격 급등으로 인한 수익성 악화 우려",
+          "미국의 금리 인상으로 인한 단기적인 시장 조정"
+        ],
+        "dramatic_moments": [
+          "조선사들이 사상 최대 규모의 선박 수주 계약을 연이어 발표하는 장면",
+          "KOSPI 지수가 사상 최초로 2000 포인트를 돌파하는 순간"
+        ],
+        "villain_candidates": [
+          "중국 경제 경착륙을 주장하며 시장에 공포를 조장하는 비관론자",
+          "특정 종목에 대한 허위 사실을 유포하여 주가를 흔드는 세력"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "medium",
+        "butterfly_risk": "low",
+        "detection_risk": "low",
+        "alt_history_impact": "개인의 투자로는 거대한 산업 사이클의 방향을 바꿀 수 없음. 2008년 금융위기 이전에 매도하는 타이밍이 핵심."
+      },
+      "related_opportunities": [
+        "미래에셋 주도 펀드 투자 열풍 편승 및 고점 매도 (2005-2007)"
+      ],
+      "enables": [
+        "막대한 자본을 바탕으로 2008년 금융위기 기회 포착"
+      ],
+      "tags": [
+        "차이나붐",
+        "중국특수",
+        "가치주",
+        "POSCO",
+        "현대중공업",
+        "2007년"
+      ],
+      "_source_category": "stock",
+      "_source_era": "2000년대"
+    },
+    {
+      "id": "OPP_025",
+      "name": "KIKO 통화옵션상품의 구조적 위험성 간파 및 역이용 (2007-2008)",
+      "category": "주식/금융",
+      "subcategory": "선물/옵션",
+      "entity": {
+        "type": "asset",
+        "name": "KIKO (Knock-In Knock-Out) 통화옵션상품",
+        "sector": "파생금융상품"
+      },
+      "entry_phase": "growth",
+      "timeline": {
+        "real_event_year": 2008,
+        "korea_timing": 2008,
+        "earliest_possible": 2007,
+        "golden_window": {
+          "start": 2007,
+          "end": 2008
+        },
+        "obsolete_after": 2009
+      },
+      "requirements": {
+        "min_capital": "1000억",
+        "capital_tier": "대기업/재벌급",
+        "prerequisites": [
+          {
+            "name": "파생상품 구조 설계 및 가격 결정에 대한 전문 지식",
+            "critical": true
+          },
+          {
+            "name": "환율의 변동성에 대한 깊은 이해",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "금융공학",
+          "리스크 모델링",
+          "B2B 영업/자문 능력"
+        ],
+        "legal_barriers": [
+          "파생상품 판매 관련 금융 규제"
+        ],
+        "time_to_execute": "3~6개월"
+      },
+      "returns": {
+        "profit_type": "수수료/사업수익/손실회피",
+        "profit_timeline": "1~2년",
+        "peak_roi": "측정불가 (수천억원의 손실 방어 또는 헤지 수익)",
+        "risk_level": "medium",
+        "failure_probability": 0.1
+      },
+      "historical_context": {
+        "real_winner": "KIKO 상품을 설계하고 판매한 시중 은행들",
+        "real_losers": [
+          "환헤지를 위해 KIKO에 가입했던 수많은 중소 수출기업들"
+        ],
+        "why_others_failed": "은행의 전문성과 브랜드를 믿고 계약서의 독소 조항을 제대로 파악하지 못함. 원/달러 환율이 단기간에 1000원에서 1500원까지 폭등할 가능성을 전혀 예상하지 못함.",
+        "key_insight": "KIKO는 환율이 일정 범위 내에서 움직일 때만 기업에 유리하고, 상방이 뚫리면 손실이 무한대인 '제로 코스트'를 가장한 극도로 위험한 상품이라는 것을 아는 것. 2008년 금융위기로 환율이 폭등할 것을 아는 것이 핵심."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "주인공이 KIKO의 위험성을 경고하지만, 은행의 달콤한 제안에 넘어간 기업 대표들과의 갈등",
+          "KIKO 판매 실적에 혈안이 된 은행들과의 대립"
+        ],
+        "complications": [
+          "단기적으로 환율이 안정되어 KIKO 가입 기업들이 이익을 보는 상황 발생",
+          "주인공의 경고를 음해나 영업 방해로 모는 여론"
+        ],
+        "dramatic_moments": [
+          "리먼 브라더스 파산 후 환율이 하루에 수십 원씩 폭등하며 KIKO의 녹인(Knock-in) 구간이 발동되는 순간",
+          "평생 일군 회사가 KIKO 때문에 부도 위기에 처했다며 주인공에게 뒤늦게 도움을 청하는 기업 대표"
+        ],
+        "villain_candidates": [
+          "위험성을 알면서도 실적을 위해 중소기업에 KIKO 가입을 강권하는 은행 PB",
+          "상품의 구조적 결함을 교묘하게 숨긴 파생상품 설계자"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "high",
+        "butterfly_risk": "high",
+        "detection_risk": "high",
+        "alt_history_impact": "주인공이 적극적으로 개입하여 KIKO의 위험성을 공론화할 경우, 피해 기업 수가 줄어들고 은행들이 상품 판매를 중단하여 역사가 크게 바뀔 수 있음."
+      },
+      "related_opportunities": [
+        "Global Financial Crisis KOSPI 200 Put Option Jackpot (September 2008)"
+      ],
+      "enables": [
+        "국내 최고의 환리스크 관리 전문가로 명성 획득",
+        "위기에서 구해준 중소기업들과의 강력한 파트너십 형성"
+      ],
+      "tags": [
+        "KIKO",
+        "파생상품",
+        "환율",
+        "실패사례",
+        "2008년"
+      ],
+      "_source_category": "stock",
+      "_source_era": "2000년대"
+    },
+    {
+      "id": "OPP_026",
+      "name": "리먼 브라더스 사태 직전 KOSPI 200 풋옵션 매수 (2008.09)",
+      "category": "주식/금융",
+      "subcategory": "선물/옵션",
+      "entity": {
+        "type": "asset",
+        "name": "KOSPI 200 풋옵션",
+        "sector": "파생금융상품"
+      },
+      "entry_phase": "peak",
+      "timeline": {
+        "real_event_year": 2008,
+        "korea_timing": 2008,
+        "earliest_possible": 2008,
+        "golden_window": {
+          "start": 2008,
+          "end": 2008
+        },
+        "obsolete_after": 2008
+      },
+      "requirements": {
+        "min_capital": "100만원",
+        "capital_tier": "개인/소규모",
+        "prerequisites": [
+          {
+            "name": "리먼 브라더스 파산 날짜(2008년 9월 15일)를 정확히 아는 것",
+            "critical": true
+          },
+          {
+            "name": "옵션, 특히 외가격(OTM) 옵션의 특성 이해",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "과감한 베팅 능력",
+          "정확한 타이밍 포착",
+          "탐욕 제어"
+        ],
+        "legal_barriers": [],
+        "time_to_execute": "1주일 이내"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "수일 내",
+        "peak_roi": "100배 ~ 1000배",
+        "risk_level": "extreme",
+        "failure_probability": 0.99
+      },
+      "historical_context": {
+        "real_winner": "극소수의 시장 붕괴 예측가 및 헤지펀드",
+        "real_losers": [
+          "대부분의 주식 투자자",
+          "낙관적인 전망에 기반해 콜옵션을 매수했던 투자자"
+        ],
+        "why_others_failed": "미국 4위 투자은행인 리먼 브라더스가 실제로 파산할 것이라고는 상상하지 못함. '대마불사'의 신화가 깨질 것이라 예상하지 못함.",
+        "key_insight": "미국 정부가 리먼 브라더스에 대한 구제금융을 끝내 거부할 것이며, 이는 전 세계 금융시장의 연쇄 붕괴를 촉발하는 트리거가 될 것이라는 사실."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "모두가 반등을 기대할 때 홀로 시장 붕괴에 베팅하는 고독함",
+          "풋옵션 매수를 '비애국적 행위'라고 비난하는 여론"
+        ],
+        "complications": [
+          "파산 직전 구제금융 협상 타결 루머로 인한 시장의 일시적 급등",
+          "거래소의 갑작스러운 거래 중단 조치 (사이드카, 서킷브레이커)"
+        ],
+        "dramatic_moments": [
+          "리먼 브라더스 파산 신청 뉴스가 속보로 뜨는 순간",
+          "매수한 풋옵션 가격이 몇 시간 만에 수백 배 폭등하며 비현실적인 수익률을 기록하는 장면"
+        ],
+        "villain_candidates": [
+          "위기 상황에서도 개인 투자자들에게 '저가 매수 기회'라며 주식 매입을 부추기는 증권사 직원",
+          "시장의 붕괴를 이용해 부당한 이득을 취하려는 거대 투기 자본"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "very_high",
+        "butterfly_risk": "low",
+        "detection_risk": "medium",
+        "alt_history_impact": "개인의 옵션 거래는 시장의 방향에 영향을 주지 못함. 그러나 비정상적으로 큰 규모의 거래는 금융당국의 조사를 유발할 수 있음."
+      },
+      "related_opportunities": [
+        "Post-GFC Blue-Chip Bottom Fishing (Late 2008 - Early 2009)"
+      ],
+      "enables": [
+        "금융위기 이후의 투자 기회를 잡을 수 있는 막대한 시드머니 확보"
+      ],
+      "tags": [
+        "글로벌금융위기",
+        "리먼브라더스",
+        "풋옵션",
+        "대박",
+        "2008년"
+      ],
+      "_source_category": "stock",
+      "_source_era": "2000년대"
+    },
+    {
+      "id": "OPP_027",
+      "name": "글로벌 금융위기 KOSPI 대폭락 시점 우량주 매집 (2008.10 ~ 2009.02)",
+      "category": "주식/금융",
+      "subcategory": "우량주",
+      "entity": {
+        "type": "company",
+        "name": "삼성전자, 현대자동차, LG화학 등",
+        "sector": "IT/자동차/화학"
+      },
+      "entry_phase": "decline",
+      "timeline": {
+        "real_event_year": 2008,
+        "korea_timing": 2008,
+        "earliest_possible": 2008,
+        "golden_window": {
+          "start": 2008,
+          "end": 2009
+        },
+        "obsolete_after": 2010
+      },
+      "requirements": {
+        "min_capital": "1백만원",
+        "capital_tier": "개인/소규모/중소기업/대기업/재벌급",
+        "prerequisites": [
+          {
+            "name": "시장의 공포가 극에 달했을 때 투자할 수 있는 용기",
+            "critical": true
+          },
+          {
+            "name": "현금 유동성 확보",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "역발상 투자",
+          "기업 펀더멘털 분석",
+          "분할 매수 전략"
+        ],
+        "legal_barriers": [],
+        "time_to_execute": "3~6개월 (분할 매수)"
+      },
+      "returns": {
+        "profit_type": "시세차익/배당",
+        "profit_timeline": "1~3년",
+        "peak_roi": "200% ~ 500%",
+        "risk_level": "low",
+        "failure_probability": 0.05
+      },
+      "historical_context": {
+        "real_winner": "위기를 기회로 삼아 현금을 동원한 모든 투자자 (개인, 기관, 외국인)",
+        "real_losers": [
+          "공포에 질려 최저점에서 투매한 개인 투자자",
+          "과도한 레버리지로 인해 반대매매를 당한 투자자"
+        ],
+        "why_others_failed": "세계 경제가 대공황에 빠질 것이라는 극단적인 비관론에 사로잡혀 자산을 모두 현금화하고 시장을 떠남.",
+        "key_insight": "정부와 중앙은행의 전례 없는 공조(양적완화, 제로금리)가 금융 시스템의 완전한 붕괴를 막고 자산 시장을 빠르게 회복시킬 것이라는 사실을 아는 것. 위기 속에서 옥석(우량 기업)은 살아남아 시장 지배력을 더욱 강화함."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "모든 자산을 팔고 떠나라고 조언하는 가족 및 친구들과의 갈등",
+          "연일 폭락하는 주가와 계좌를 보며 느끼는 심리적 압박감"
+        ],
+        "complications": [
+          "KOSPI 지수가 1000선 아래로 떨어지는 '검은 10월'",
+          "환율 급등으로 인한 외국인 자금의 급격한 유출"
+        ],
+        "dramatic_moments": [
+          "모두가 공포에 떨 때, 전 재산을 걸고 삼성전자 주식을 매수하는 장면",
+          "V자 반등이 시작되며 계좌가 빠르게 회복되고 수익으로 전환되는 순간"
+        ],
+        "villain_candidates": [
+          "시장의 종말을 외치며 개인들의 투매를 유도하는 사이비 전문가",
+          "기업의 단기적 어려움을 부풀려 공매도를 통해 이익을 얻으려는 세력"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "high",
+        "butterfly_risk": "low",
+        "detection_risk": "low",
+        "alt_history_impact": "개인의 매수 행위는 시장 전체에 미미한 영향을 줌. 역사의 큰 흐름인 V자 반등은 변하지 않음."
+      },
+      "related_opportunities": [
+        "리먼 브라더스 사태 직전 KOSPI 200 풋옵션 매수 (2008.09)"
+      ],
+      "enables": [
+        "경제적 자유 획득",
+        "스마트폰 시대의 도래에 맞춰 IT 기업에 대한 후속 투자"
+      ],
+      "tags": [
+        "글로벌금융위기",
+        "역발상투자",
+        "우량주",
+        "삼성전자",
+        "2009년"
+      ],
+      "_source_category": "stock",
+      "_source_era": "2000년대"
+    },
+    {
+      "id": "OPP_028",
+      "name": "미래에셋 주도 펀드 투자 열풍 편승 및 고점 매도 (2005-2007)",
+      "category": "주식/금융",
+      "subcategory": "펀드",
+      "entity": {
+        "type": "company",
+        "name": "미래에셋자산운용 및 관련 해외투자 펀드",
+        "sector": "자산운용"
+      },
+      "entry_phase": "growth",
+      "timeline": {
+        "real_event_year": 2007,
+        "korea_timing": 2007,
+        "earliest_possible": 2005,
+        "golden_window": {
+          "start": 2005,
+          "end": 2007
+        },
+        "obsolete_after": 2008
+      },
+      "requirements": {
+        "min_capital": "1백만원",
+        "capital_tier": "개인/소규모",
+        "prerequisites": [
+          {
+            "name": "2008년 글로벌 금융위기가 온다는 사실을 아는 것",
+            "critical": true
+          },
+          {
+            "name": "적립식 펀드 투자의 개념 이해",
+            "critical": false
+          }
+        ],
+        "skills_needed": [
+          "시장 트렌드 파악",
+          "과감한 매도 타이밍 결정"
+        ],
+        "legal_barriers": [],
+        "time_to_execute": "즉시 (가입)"
+      },
+      "returns": {
+        "profit_type": "시세차익 (펀드 수익률)",
+        "profit_timeline": "2~3년",
+        "peak_roi": "100% ~ 200%",
+        "risk_level": "medium",
+        "failure_probability": 0.2
+      },
+      "historical_context": {
+        "real_winner": "박현주 회장과 미래에셋, 그리고 2007년 이전에 환매한 초기 투자자들",
+        "real_losers": [
+          "2007년 하반기 '인사이트 펀드' 등 고점에 가입하여 2008년 금융위기를 맞은 대다수 개인 투자자"
+        ],
+        "why_others_failed": "언론과 광고가 만들어낸 '박현주 신드롬'과 '해외투자' 열풍에 휩쓸려 시장이 과열된 정점에서 진입함. 탐욕으로 인해 적절한 시점에 이익을 실현하지 못하고 폭락을 그대로 맞음.",
+        "key_insight": "미래에셋이 주도한 적립식 펀드 열풍은 한국인의 투자 패러다임을 바꾼 중요한 사건이지만, 모든 대중적 광풍의 끝은 폭락이라는 점을 아는 것. 2007년 말 KOSPI 2000 돌파가 파티의 끝을 알리는 신호임."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "주변 사람들이 모두 펀드에 가입하며 열광할 때, 홀로 환매를 준비하는 주인공",
+          "수익률이 더 오를 것이라며 환매를 만류하는 펀드 판매 직원과의 갈등"
+        ],
+        "complications": [
+          "환매 후에도 주가가 계속 올라 조기 매도에 대한 아쉬움과 후회를 느낌",
+          "세금 문제로 인해 예상보다 수익금이 줄어드는 상황"
+        ],
+        "dramatic_moments": [
+          "뉴스에서 연일 'KOSPI 2000 돌파', '펀드 수익률 대박' 보도가 나올 때 과감히 환매 버튼을 누르는 장면",
+          "몇 달 후, 금융위기로 펀드가 반토막 났다는 소식을 들으며 자신의 선택을 확인하는 순간"
+        ],
+        "villain_candidates": [
+          "시장 과열을 부추기며 위험 고지 없이 펀드 판매에만 열을 올리는 금융기관",
+          "자신의 명성을 이용해 대중을 현혹하는 스타 펀드매니저"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "high",
+        "butterfly_risk": "low",
+        "detection_risk": "low",
+        "alt_history_impact": "개인의 펀드 환매는 시장에 아무런 영향을 주지 않음. 대중의 광기와 그로 인한 버블 형성은 예정대로 진행될 것."
+      },
+      "related_opportunities": [
+        "중국 특수(China Boom) 기반 '차이나투' 우량주 투자 (2004-2007)"
+      ],
+      "enables": [
+        "금융위기 직전 최대의 현금을 확보하여 다음 기회를 준비"
+      ],
+      "tags": [
+        "펀드",
+        "미래에셋",
+        "박현주",
+        "적립식투자",
+        "2007년"
+      ],
+      "_source_category": "stock",
+      "_source_era": "2000년대"
+    },
+    {
+      "id": "OPP_029",
+      "name": "카카오-다음 합병 전 지분 투자 (2011-2014)",
+      "category": "주식/금융",
+      "subcategory": "IPO",
+      "entity": {
+        "type": "company",
+        "name": "카카오 (Kakao)",
+        "sector": "IT/플랫폼"
+      },
+      "entry_phase": "initial",
+      "timeline": {
+        "real_event_year": 2014,
+        "korea_timing": 2014,
+        "earliest_possible": 2010,
+        "golden_window": {
+          "start": 2011,
+          "end": 2014
+        },
+        "obsolete_after": 2015
+      },
+      "requirements": {
+        "min_capital": "1억",
+        "capital_tier": "개인/소규모",
+        "prerequisites": [
+          {
+            "name": "초기 벤처캐피탈 또는 엔젤 투자 네트워크",
+            "critical": true
+          },
+          {
+            "name": "모바일 플랫폼의 미래 가치에 대한 확신",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "벤처 투자 심사 역량",
+          "IT 트렌드 분석",
+          "네트워킹"
+        ],
+        "legal_barriers": [
+          "비상장 주식 거래의 제한성"
+        ],
+        "time_to_execute": "1~3개월"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "합병(2014) 및 상장(2017) 이후",
+        "peak_roi": "100배 이상 (초기 투자자 기준)",
+        "risk_level": "high",
+        "failure_probability": 0.6
+      },
+      "historical_context": {
+        "real_winner": "김범수 의장, 초기 투자 VC(한국투자파트너스 등), 텐센트",
+        "real_losers": [
+          "카카오의 성장성을 과소평가한 경쟁사 및 투자자들"
+        ],
+        "why_others_failed": "PC 시대의 강자였던 네이버(당시 NHN)의 '라인'에 집중하여 카카오톡의 국내 시장 장악력을 간과함. 수익 모델 부재를 지나치게 우려함.",
+        "key_insight": "카카오톡이 단순 메시징 앱을 넘어 한국인의 '모바일 라이프 플랫폼'이 될 것이라는 사실과, 2014년 다음과 합병하여 우회상장할 것이라는 미래 정보를 아는 것."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "네이버 '라인'과의 국내외 메신저 전쟁",
+          "수익모델 증명을 요구하는 기존 투자자들과의 갈등"
+        ],
+        "complications": [
+          "정부의 인터넷 기업 규제 강화 움직임",
+          "다음(Daum) 내부의 합병 반대 여론"
+        ],
+        "dramatic_moments": [
+          "2014년 5월 26일, 다음과의 깜짝 합병 발표",
+          "텐센트로부터 대규모 투자를 유치하는 순간"
+        ],
+        "villain_candidates": [
+          "경쟁사 네이버의 경영진",
+          "카카오의 가치를 폄하하는 보수적인 금융계 인사"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "very_high",
+        "butterfly_risk": "medium",
+        "detection_risk": "low",
+        "alt_history_impact": "주인공의 개입으로 합병 조건이 바뀌거나, 제3의 경쟁자가 부상하여 카카오의 독점적 지위가 약화될 수 있음."
+      },
+      "related_opportunities": [
+        "중국 '유커' 특수에 편승한 화장품 주식 투자 (2014-2016)"
+      ],
+      "enables": [
+        "카카오뱅크/카카오페이 등 핀테크 사업 초기 투자",
+        "카카오 기반 콘텐츠(웹툰, 게임) 사업 확장"
+      ],
+      "tags": [
+        "벤처투자",
+        "IPO",
+        "플랫폼",
+        "M&A",
+        "카카오"
+      ],
+      "_source_category": "stock",
+      "_source_era": "2010년대"
+    },
+    {
+      "id": "OPP_030",
+      "name": "셀트리온 공매도 세력과의 전쟁 (2011-2018)",
+      "category": "주식/금융",
+      "subcategory": "우량주",
+      "entity": {
+        "type": "company",
+        "name": "셀트리온 (Celltrion)",
+        "sector": "바이오/제약"
+      },
+      "entry_phase": "growth",
+      "timeline": {
+        "real_event_year": 2015,
+        "korea_timing": 2015,
+        "earliest_possible": 2011,
+        "golden_window": {
+          "start": 2012,
+          "end": 2017
+        },
+        "obsolete_after": 2019
+      },
+      "requirements": {
+        "min_capital": "1억",
+        "capital_tier": "개인/소규모",
+        "prerequisites": [
+          {
+            "name": "바이오시밀러 산업에 대한 깊은 이해",
+            "critical": true
+          },
+          {
+            "name": "극심한 주가 변동성을 견딜 수 있는 정신력",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "기업가치 분석",
+          "공매도 리포트 분석 및 반박 논리 구성",
+          "심리적 강인함"
+        ],
+        "legal_barriers": [],
+        "time_to_execute": "지속적인 분할 매수 (수개월 ~ 수년)"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "2015년 이후 점진적 실현",
+        "peak_roi": "약 10배",
+        "risk_level": "high",
+        "failure_probability": 0.4
+      },
+      "historical_context": {
+        "real_winner": "서정진 회장, 셀트리온 소액주주 연대",
+        "real_losers": [
+          "싱가포르계 투자펀드 등 외국계 공매도 세력"
+        ],
+        "why_others_failed": "셀트리온의 회계 방식(R&D 비용 자산화)에 대한 의심과 바이오시밀러의 시장성에 대한 불신으로 공매도 포지션을 고수하다가, 램시마의 유럽 허가 등 실적이 가시화되자 숏 스퀴즈(Short Squeeze)를 당함.",
+        "key_insight": "글로벌 공매도 세력의 공격이 거세질수록, 이는 역으로 주가 상승의 기폭제가 될 수 있다는 점을 이해하고, 서정진 회장의 비전과 바이오시밀러의 성공 가능성을 믿는 것."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "개인 투자자 vs 외국계 헤지펀드",
+          "서정진 회장 vs 시장의 불신"
+        ],
+        "complications": [
+          "금융당국의 회계 감리 및 조사 압박",
+          "경쟁사들의 바이오시밀러 개발 경쟁 심화"
+        ],
+        "dramatic_moments": [
+          "서정진 회장의 눈물의 기자회견 ('회사를 팔겠다' 발언)",
+          "램시마(Remsima)의 유럽의약품청(EMA) 허가 발표"
+        ],
+        "villain_candidates": [
+          "악의적인 공매도 리포트를 발행하는 외국계 펀드매니저",
+          "내부 정보를 이용해 이득을 취하려는 세력"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "high",
+        "butterfly_risk": "medium",
+        "detection_risk": "low",
+        "alt_history_impact": "주인공의 대규모 매수로 인해 숏 스퀴즈가 더 빨리, 더 격렬하게 발생할 수 있음. 반대로 공매도 세력이 주인공의 존재를 눈치채고 다른 방식으로 공격할 수도 있음."
+      },
+      "related_opportunities": [
+        "한미약품 기술수출 '잭팟' 및 공시 사태 (2015-2016)",
+        "삼성바이오로직스 상장과 분식회계 논란을 이용한 변동성 투자 (2016-2018)"
+      ],
+      "enables": [
+        "바이오/헬스케어 전문 투자 펀드 설립",
+        "코스닥 시장의 '큰 손'으로 부상"
+      ],
+      "tags": [
+        "공매도",
+        "바이오",
+        "기업가정신",
+        "숏스퀴즈",
+        "셀트리온"
+      ],
+      "_source_category": "stock",
+      "_source_era": "2010년대"
+    },
+    {
+      "id": "OPP_031",
+      "name": "한미약품 기술수출 '잭팟' 및 공시 사태 (2015-2016)",
+      "category": "주식/금융",
+      "subcategory": "우량주",
+      "entity": {
+        "type": "company",
+        "name": "한미약품",
+        "sector": "바이오/제약"
+      },
+      "entry_phase": "growth",
+      "timeline": {
+        "real_event_year": 2015,
+        "korea_timing": 2015,
+        "earliest_possible": 2014,
+        "golden_window": {
+          "start": 2015,
+          "end": 2015
+        },
+        "obsolete_after": 2016
+      },
+      "requirements": {
+        "min_capital": "1천만원",
+        "capital_tier": "개인",
+        "prerequisites": [
+          {
+            "name": "신약 개발 파이프라인의 가치 평가 능력",
+            "critical": false
+          },
+          {
+            "name": "정확한 이벤트(계약 발표, 계약 파기) 날짜에 대한 미래 정보",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "과감한 베팅 능력",
+          "정해진 시나리오에 따른 기계적 매매"
+        ],
+        "legal_barriers": [
+          "미공개 정보 이용 거래로 오인받을 리스크"
+        ],
+        "time_to_execute": "수일"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "2015년 하반기 ~ 2016년 상반기",
+        "peak_roi": "10배 이상 (연간)",
+        "risk_level": "extreme",
+        "failure_probability": 0.1
+      },
+      "historical_context": {
+        "real_winner": "기술수출 계약을 미리 알거나 예측하고 저점 매수한 투자자",
+        "real_losers": [
+          "베링거잉겔하임 계약 파기 '늑장 공시' 직전에 매수한 개인 투자자들"
+        ],
+        "why_others_failed": "연이은 '잭팟'에 대한 과도한 낙관으로 리스크 관리에 실패함. 특히 2016년 9월 30일, 장 마감 후 호재성 공시(제넨텍 기술이전)와 장 시작 전 악재성 공시(베링거잉겔하임 계약 취소)가 연달아 나오며 대응할 시간을 놓침.",
+        "key_insight": "2015년 한 해 동안 릴리, 베링거잉겔하임, 사노피 등과의 조 단위 기술수출 계약이 연이어 터진다는 사실과, 결정적으로 2016년 9월 29일 저녁에 계약 파기 정보가 이미 내부적으로 돌았다는 것을 아는 것."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "내부 정보를 이용하려는 세력과의 암투",
+          "성공에 도취된 시장의 광기"
+        ],
+        "complications": [
+          "예상치 못한 공시 지연 또는 시점 변경",
+          "금융당국의 주가조작 혐의 조사"
+        ],
+        "dramatic_moments": [
+          "조 단위 기술수출 계약이 공시될 때마다 주가가 수직 상승하는 순간",
+          "악재 공시 전, 내부자들의 미묘한 매도 움직임"
+        ],
+        "villain_candidates": [
+          "내부 정보를 유출하여 개인적 이득을 취하는 경영진",
+          "공매도를 위해 악성 루머를 퍼뜨리는 세력"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "very_high",
+        "butterfly_risk": "low",
+        "detection_risk": "high",
+        "alt_history_impact": "주인공의 대량 매매가 시장의 주목을 끌어 금융당국의 조사를 유발할 수 있음. 이로 인해 공시 시점이나 방식이 미세하게 변경될 가능성 존재."
+      },
+      "related_opportunities": [
+        "셀트리온 공매도 세력과의 전쟁 (2011-2018)"
+      ],
+      "enables": [
+        "K-바이오 붐에 대한 확신을 가지고 다른 유망 바이오벤처에 투자"
+      ],
+      "tags": [
+        "바이오",
+        "기술수출",
+        "정보 비대칭",
+        "작전주",
+        "한미약품"
+      ],
+      "_source_category": "stock",
+      "_source_era": "2010년대"
+    },
+    {
+      "id": "OPP_032",
+      "name": "동양그룹 CP 사태를 이용한 공매도 또는 회피 (2013)",
+      "category": "주식/금융",
+      "subcategory": "채권",
+      "entity": {
+        "type": "company",
+        "name": "동양그룹 (Dongyang Group)",
+        "sector": "복합기업/금융"
+      },
+      "entry_phase": "decline",
+      "timeline": {
+        "real_event_year": 2013,
+        "korea_timing": 2013,
+        "earliest_possible": 2012,
+        "golden_window": {
+          "start": 2013,
+          "end": 2013
+        },
+        "obsolete_after": 2014
+      },
+      "requirements": {
+        "min_capital": "10억",
+        "capital_tier": "중소기업/대기업",
+        "prerequisites": [
+          {
+            "name": "대차거래를 통한 공매도 실행 능력",
+            "critical": true
+          },
+          {
+            "name": "그룹의 재무상태가 회복 불가능하다는 확신",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "재무제표 분석 및 분식회계 탐지 능력",
+          "파생상품(공매도) 투자 전략",
+          "리스크 관리"
+        ],
+        "legal_barriers": [
+          "공매도에 대한 부정적 여론 및 규제"
+        ],
+        "time_to_execute": "1~2개월"
+      },
+      "returns": {
+        "profit_type": "시세차익 (공매도) / 손실회피",
+        "profit_timeline": "2013년 9~10월",
+        "peak_roi": "200% (공매도 수익률)",
+        "risk_level": "medium",
+        "failure_probability": 0.2
+      },
+      "historical_context": {
+        "real_winner": "그룹의 부실을 미리 파악하고 공매도에 나선 일부 기관 투자자",
+        "real_losers": [
+          "동양증권을 통해 계열사 CP, 회사채에 투자한 4만여 명의 개인 투자자"
+        ],
+        "why_others_failed": "재계 서열 30위권의 대기업이 무너지지 않을 것이라는 막연한 믿음과, 동양증권 직원의 '안전하다'는 말을 믿고 '돌려막기'식으로 발행된 CP에 재투자했기 때문.",
+        "key_insight": "동양그룹이 계열사들의 부실을 감추기 위해 동양증권을 통해 개인 투자자들에게 사기성 CP(기업어음)를 판매하고 있으며, 곧 유동성 위기로 법정관리에 들어갈 것이라는 사실을 아는 것."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "공매도를 통한 이익 추구 vs 피해자 발생에 대한 도덕적 딜레마",
+          "그룹의 붕괴를 막으려는 오너 일가와의 대결"
+        ],
+        "complications": [
+          "정부의 예상치 못한 구제금융 발표 가능성",
+          "공매도 세력에 대한 '시장 교란' 비난 여론"
+        ],
+        "dramatic_moments": [
+          "동양시멘트 등 핵심 계열사들이 법정관리를 신청하는 순간",
+          "국정감사에서 동양 사태가 주요 이슈로 떠오르는 장면"
+        ],
+        "villain_candidates": [
+          "투자자들을 기만한 현재현 동양그룹 회장 등 오너 일가",
+          "위험을 알면서도 실적 압박에 CP 판매에 나선 증권사 직원들"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "high",
+        "butterfly_risk": "low",
+        "detection_risk": "medium",
+        "alt_history_impact": "주인공이 사전에 이 사실을 폭로할 경우, 피해 규모는 줄어들지만 공매도를 통한 수익 기회는 사라짐. 이는 주인공의 성향을 보여주는 중요한 분기점이 될 수 있음."
+      },
+      "related_opportunities": [],
+      "enables": [
+        "부실기업 전문 구조조정 펀드 설립",
+        "금융시장의 '해결사' 또는 '악마'로서의 명성 획득"
+      ],
+      "tags": [
+        "채권",
+        "CP",
+        "기업부도",
+        "공매도",
+        "도덕적해이"
+      ],
+      "_source_category": "stock",
+      "_source_era": "2010년대"
+    },
+    {
+      "id": "OPP_033",
+      "name": "중국 '유커' 특수에 편승한 화장품 주식 투자 (2014-2016)",
+      "category": "주식/금융",
+      "subcategory": "우량주",
+      "entity": {
+        "type": "company",
+        "name": "아모레퍼시픽, LG생활건강 등",
+        "sector": "화장품/소비재"
+      },
+      "entry_phase": "growth",
+      "timeline": {
+        "real_event_year": 2015,
+        "korea_timing": 2015,
+        "earliest_possible": 2013,
+        "golden_window": {
+          "start": 2014,
+          "end": 2016
+        },
+        "obsolete_after": 2017
+      },
+      "requirements": {
+        "min_capital": "1천만원",
+        "capital_tier": "개인/소규모",
+        "prerequisites": [
+          {
+            "name": "중국 소비 시장의 트렌드 변화 감지",
+            "critical": false
+          },
+          {
+            "name": "THAAD 배치 결정과 한한령(限韓令)이라는 지정학적 리스크에 대한 미래 정보",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "거시경제 및 국제정세 분석",
+          "소비재 산업 분석",
+          "과감한 비중 투자 및 이익 실현 타이밍 포착"
+        ],
+        "legal_barriers": [],
+        "time_to_execute": "수일 (매수) ~ 수개월 (보유)"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "2015-2016년",
+        "peak_roi": "500% 이상 (아모레퍼시픽 기준)",
+        "risk_level": "medium",
+        "failure_probability": 0.1
+      },
+      "historical_context": {
+        "real_winner": "서경배 아모레퍼시픽 회장, 기관 및 외국인 투자자",
+        "real_losers": [
+          "THAAD 사태 이후 고점에서 주식을 매수했거나, 하락세에 손절하지 못한 개인 투자자"
+        ],
+        "why_others_failed": "화장품 산업의 성장이 영원할 것이라 믿고 지정학적 리스크를 무시함. 주가가 고점에 이르렀음에도 '더 오를 것'이라는 탐욕 때문에 매도 시점을 놓침.",
+        "key_insight": "중국인 관광객(유커)의 폭발적인 증가가 한국 면세점과 화장품 기업의 실적을 견인할 것이라는 점, 그리고 이 황금기가 2016년 7월 대한민국의 '사드(THAAD) 배치 결정'으로 인해 끝날 것이라는 사실을 아는 것."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "주변의 비관론을 뚫고 화장품 주에 '몰빵' 투자",
+          "최고점에서 매도해야 하는 순간의 심리적 갈등"
+        ],
+        "complications": [
+          "중국 정부의 따이궁(보따리상) 규제 강화 뉴스",
+          "예상보다 빠른 주가 과열로 인한 조기 매도 유혹"
+        ],
+        "dramatic_moments": [
+          "아모레퍼시픽 주가가 '황제주(100만원 이상)'를 넘어 400만원을 향해 가는 모습",
+          "사드 배치 발표 이후, 관련 주식들이 일제히 하한가로 추락하는 장면"
+        ],
+        "villain_candidates": [
+          "단기 시세차익을 노리고 시장을 교란하는 투기 세력",
+          "안보 논리로 경제적 리스크를 무시하는 정치인"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "high",
+        "butterfly_risk": "low",
+        "detection_risk": "low",
+        "alt_history_impact": "사드 배치가 철회되거나 지연되지 않는 한, 이 기회의 본질은 변하지 않음. 주인공의 시장 참여는 주가 등락폭을 키울 수는 있으나 추세를 바꾸지는 못함."
+      },
+      "related_opportunities": [
+        "카카오-다음 합병 전 지분 투자 (2011-2014)"
+      ],
+      "enables": [
+        "엔터테인먼트, 미디어 등 다른 한류 관련 산업 투자",
+        "면세점 사업 진출 또는 지분 투자"
+      ],
+      "tags": [
+        "중국",
+        "소비재",
+        "화장품",
+        "지정학리스크",
+        "아모레퍼시픽"
+      ],
+      "_source_category": "stock",
+      "_source_era": "2010년대"
+    },
+    {
+      "id": "OPP_034",
+      "name": "변동성 지수(VIX) ETN 대폭락 사태 ('볼마겟돈') 베팅 (2018.02)",
+      "category": "주식/금융",
+      "subcategory": "선물/옵션",
+      "entity": {
+        "type": "event",
+        "name": "볼마겟돈 (Volmageddon)",
+        "sector": "파생상품"
+      },
+      "entry_phase": "peak",
+      "timeline": {
+        "real_event_year": 2018,
+        "korea_timing": 2018,
+        "earliest_possible": 2017,
+        "golden_window": {
+          "start": 2018,
+          "end": 2018
+        },
+        "obsolete_after": 2018
+      },
+      "requirements": {
+        "min_capital": "5천만원",
+        "capital_tier": "개인/소규모",
+        "prerequisites": [
+          {
+            "name": "ETN, 선물/옵션 등 파생상품 구조에 대한 완벽한 이해",
+            "critical": true
+          },
+          {
+            "name": "정확한 이벤트 발생일 (2018년 2월 5일)에 대한 미래 정보",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "파생상품 트레이딩",
+          "글로벌 시장 동향 분석",
+          "리스크 관리"
+        ],
+        "legal_barriers": [
+          "파생상품 투자에 필요한 기본예탁금 및 교육이수 요건"
+        ],
+        "time_to_execute": "1일"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "2018년 2월 5~6일",
+        "peak_roi": "수십 배",
+        "risk_level": "extreme",
+        "failure_probability": 0.01
+      },
+      "historical_context": {
+        "real_winner": "변동성 폭발에 베팅한 소수의 헤지펀드 및 전문 트레이더",
+        "real_losers": [
+          "VIX 지수를 추종하는 인버스 ETN(XIV, SVXY 등)에 투자한 전세계, 그리고 한국의 수많은 개인 투자자들"
+        ],
+        "why_others_failed": "수년간 이어진 저변동성 장세에서 VIX 인버스 상품이 '매일 돈을 복사해주는' 안전자산이라는 착각에 빠짐. 하루 만에 VIX 지수가 115% 폭등하며 ETN의 가치가 90% 이상 증발하고 청산(liquidation)될 수 있는 구조적 위험을 간과함.",
+        "key_insight": "2018년 2월 5일, 미국 증시 급락으로 VIX 지수가 폭등하면서 VIX 인버스 ETN 상품들이 구조적인 문제로 하루아침에 휴지조각이 될 것이라는 사실을 정확히 아는 것."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "시장의 탐욕과 공포 사이에서의 줄타기",
+          "파생상품의 위험성을 경고하는 주인공 vs '이번엔 다르다'고 믿는 시장 참여자들"
+        ],
+        "complications": [
+          "거래 증권사의 갑작스러운 증거금 상향 요구",
+          "예상치 못한 시장 변수로 이벤트 발생일이 하루이틀 어긋나는 경우"
+        ],
+        "dramatic_moments": [
+          "미국 증시 마감 후, VIX 지수가 미친듯이 치솟는 것을 실시간으로 목격하는 순간",
+          "다음 날 아침, 자신이 투자한 VIX 롱(Long) 포지션의 수익률과 반대 포지션의 비명을 확인하는 장면"
+        ],
+        "villain_candidates": [
+          "구조적 결함을 알면서도 개인들에게 위험한 상품을 판매한 자산운용사",
+          "시장의 변동성을 인위적으로 조작하려는 거대 기관"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "very_high",
+        "butterfly_risk": "low",
+        "detection_risk": "medium",
+        "alt_history_impact": "이 사건은 특정 상품의 구조적 결함과 시장의 과열이 만들어낸 필연적 사건이므로, 주인공의 개입이 결과를 바꾸기는 거의 불가능함. 다만 너무 큰 규모로 베팅할 경우, 시장의 주목을 받을 수 있다."
+      },
+      "related_opportunities": [],
+      "enables": [
+        "글로벌 매크로 헤지펀드 설립",
+        "금융시장의 '블랙스완'을 예측하는 전문가로 명성을 얻음"
+      ],
+      "tags": [
+        "파생상품",
+        "VIX",
+        "ETN",
+        "블랙스완",
+        "금융위기"
+      ],
+      "_source_category": "stock",
+      "_source_era": "2010년대"
+    },
+    {
+      "id": "OPP_035",
+      "name": "삼성바이오로직스 상장과 분식회계 논란을 이용한 변동성 투자 (2016-2018)",
+      "category": "주식/금융",
+      "subcategory": "IPO",
+      "entity": {
+        "type": "company",
+        "name": "삼성바이오로직스",
+        "sector": "바이오/제약"
+      },
+      "entry_phase": "initial",
+      "timeline": {
+        "real_event_year": 2016,
+        "korea_timing": 2016,
+        "earliest_possible": 2016,
+        "golden_window": {
+          "start": 2016,
+          "end": 2018
+        },
+        "obsolete_after": 2019
+      },
+      "requirements": {
+        "min_capital": "100억",
+        "capital_tier": "중소기업/대기업",
+        "prerequisites": [
+          {
+            "name": "삼성그룹 지배구조에 대한 이해",
+            "critical": true
+          },
+          {
+            "name": "회계 및 법률 지식",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "정치/정책 분석",
+          "이벤트 드리븐 투자 전략",
+          "공매도 및 롱/숏 전략 구사"
+        ],
+        "legal_barriers": [
+          "대규모 공매도를 위한 주식 대차의 어려움"
+        ],
+        "time_to_execute": "수개월"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "2017-2018년",
+        "peak_roi": "변동성 플레이를 통해 수십 %",
+        "risk_level": "high",
+        "failure_probability": 0.3
+      },
+      "historical_context": {
+        "real_winner": "IPO 초기 투자자 및 저점에서 매수한 기관",
+        "real_losers": [
+          "분식회계 이슈가 터진 후 거래정지 기간 동안 자금이 묶인 투자자들",
+          "고점에서 공매도했다가 주가 반등으로 손실을 본 투자자"
+        ],
+        "why_others_failed": "단순히 바이오 산업의 성장성만 보거나, 혹은 분식회계 리스크만 보고 극단적인 포지션을 취함. 삼성이라는 거대 그룹이 연관된 사건의 복잡성과 정치적 역학관계를 읽지 못함.",
+        "key_insight": "삼성바이오로직스의 상장이 이재용 부회장의 경영권 승계 과정(제일모직-삼성물산 합병)을 정당화하기 위한 핵심 요소임을 아는 것. 따라서 분식회계 논란이 터져도 그룹 차원에서 회사를 지켜낼 것이며, 이는 주가 급락 시 매수 기회가 된다는 것을 예측하는 것."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "참여연대 등 시민단체 vs 삼성그룹",
+          "금융감독원 vs 회계법인 및 삼성"
+        ],
+        "complications": [
+          "이재용 부회장의 구속 등 예상치 못한 사법 리스크",
+          "증권선물위원회의 결론이 계속해서 지연되는 상황"
+        ],
+        "dramatic_moments": [
+          "금융감독원이 '고의 분식회계'라는 잠정 결론을 발표하는 순간",
+          "거래소의 상장유지 결정으로 거래가 재개되자 주가가 급등하는 장면"
+        ],
+        "villain_candidates": [
+          "그룹 총수의 승계를 위해 불법을 저지른 삼성 미래전략실",
+          "삼성의 논리를 대변하며 전문가적 양심을 저버린 회계사/변호사"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "high",
+        "butterfly_risk": "high",
+        "detection_risk": "medium",
+        "alt_history_impact": "주인공이 분식회계의 결정적 증거를 외부에 미리 흘릴 경우, 상장 자체가 무산되거나 정권의 향방에 따라 그룹 전체가 더 큰 위기에 빠질 수 있는 초대형 나비효과를 유발할 수 있다."
+      },
+      "related_opportunities": [
+        "셀트리온 공매도 세력과의 전쟁 (2011-2018)"
+      ],
+      "enables": [
+        "대한민국 재벌 그룹의 지배구조 개편에 영향을 미치는 플레이어로 성장",
+        "정치권 및 법조계와의 강력한 네트워크 형성"
+      ],
+      "tags": [
+        "IPO",
+        "분식회계",
+        "재벌",
+        "지배구조",
+        "삼성"
+      ],
+      "_source_category": "stock",
+      "_source_era": "2010년대"
+    },
+    {
+      "id": "OPP_036",
+      "name": "코로나19 팬데믹 KOSPI 저점 매수 (2020년 3월)",
+      "category": "주식/금융",
+      "subcategory": "우량주",
+      "entity": {
+        "type": "market",
+        "name": "KOSPI 지수 및 우량주",
+        "sector": "종합주가지수"
+      },
+      "entry_phase": "decline",
+      "timeline": {
+        "real_event_year": 2020,
+        "korea_timing": 2020,
+        "earliest_possible": 2020,
+        "golden_window": {
+          "start": 2020,
+          "end": 2020
+        },
+        "obsolete_after": 2021
+      },
+      "requirements": {
+        "min_capital": "100만원",
+        "capital_tier": "개인",
+        "prerequisites": [
+          {
+            "name": "증권 계좌 보유",
+            "critical": true
+          },
+          {
+            "name": "강력한 정신력과 시장에 대한 믿음",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "역발상 투자",
+          "거시경제 동향 파악 (특히 중앙은행 정책)"
+        ],
+        "legal_barriers": [],
+        "time_to_execute": "1~2주"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "6개월 ~ 1.5년",
+        "peak_roi": "KOSPI 지수 기준 120%, 개별 종목 200% 이상",
+        "risk_level": "high",
+        "failure_probability": 0.4
+      },
+      "historical_context": {
+        "real_winner": "동학개미운동에 참여한 개인 투자자들",
+        "real_losers": [
+          "공포에 질려 투매한 개인 투자자",
+          "초기 자금을 회수한 외국인 투자자"
+        ],
+        "why_others_failed": "전례 없는 팬데믹 공포로 인한 패닉셀, V자 반등에 대한 불신, 중앙은행의 유동성 공급 파워를 과소평가함.",
+        "key_insight": "미국 연준의 '무제한 양적완화' 선언이 모든 공포를 이기는 결정적 변곡점이었다는 사실. 패닉의 정점에서 가장 탐욕스러워야 한다."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "주변 모든 이들이 주식을 팔고 떠나라고 만류하는 상황",
+          "가진 모든 것을 걸고 '영끌' 투자를 감행할 것인가에 대한 내적 갈등"
+        ],
+        "complications": [
+          "예상보다 길어지는 팬데믹 상황과 사회적 거리두기",
+          "매수 후 추가적인 주가 하락으로 인한 마진콜 압박"
+        ],
+        "dramatic_moments": [
+          "KOSPI 1400선이 붕괴되는 순간",
+          "미 연준의 무제한 QE 발표 후 시장이 급반전하는 순간"
+        ],
+        "villain_candidates": [
+          "시장의 공포를 조장하는 비관론자 유튜버/전문가",
+          "주인공의 투자를 비웃는 가족이나 친구"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "very_high",
+        "butterfly_risk": "low",
+        "detection_risk": "low",
+        "alt_history_impact": "미 연준의 정책이 바뀌지 않는 한, 개인의 매수 행위가 시장의 큰 흐름을 바꾸기는 어려움."
+      },
+      "related_opportunities": [
+        "HMM 주가 턴어라운드 베팅 (2020년 4월 ~ 2021년 5월)"
+      ],
+      "enables": [
+        "BBIG(바이오, 배터리, 인터넷, 게임) 주도주 투자 자금 확보",
+        "부동산 '영끌' 투자 시드머니 마련"
+      ],
+      "tags": [
+        "코로나19",
+        "동학개미운동",
+        "역발상투자",
+        "우량주"
+      ],
+      "_source_category": "stock",
+      "_source_era": "2020년대"
+    },
+    {
+      "id": "OPP_037",
+      "name": "HMM 주가 턴어라운드 베팅 (2020년 4월 ~ 2021년 5월)",
+      "category": "주식/금융",
+      "subcategory": "우량주",
+      "entity": {
+        "type": "company",
+        "name": "HMM (구 현대상선)",
+        "sector": "해운업"
+      },
+      "entry_phase": "revival",
+      "timeline": {
+        "real_event_year": 2021,
+        "korea_timing": 2021,
+        "earliest_possible": 2020,
+        "golden_window": {
+          "start": 2020,
+          "end": 2020
+        },
+        "obsolete_after": 2022
+      },
+      "requirements": {
+        "min_capital": "1,000만원",
+        "capital_tier": "개인/소규모",
+        "prerequisites": [
+          {
+            "name": "산업 사이클에 대한 이해",
+            "critical": true
+          },
+          {
+            "name": "부실기업으로 낙인찍힌 주식을 매수할 용기",
+            "critical": false
+          }
+        ],
+        "skills_needed": [
+          "펀더멘탈 분석",
+          "산업 리포트 분석",
+          "장기 투자 인내심"
+        ],
+        "legal_barriers": [],
+        "time_to_execute": "1개월"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "1년 ~ 1.5년",
+        "peak_roi": "20배 이상 (2000%)",
+        "risk_level": "high",
+        "failure_probability": 0.6
+      },
+      "historical_context": {
+        "real_winner": "해운업 턴어라운드를 예측하고 장기 투자한 개인 투자자들",
+        "real_losers": [
+          "주가 상승을 비관하며 공매도한 기관 투자자",
+          "과거 부실기업 이미지만 보고 투자를 기피한 투자자"
+        ],
+        "why_others_failed": "수년간 이어진 해운업 불황과 HMM의 재무 부실에 대한 고정관념에서 벗어나지 못했고, 팬데믹이 초래할 글로벌 물류 대란의 규모를 예측하지 못했다.",
+        "key_insight": "코로나19로 인한 비대면 소비 급증과 항만 봉쇄가 전례 없는 해상 운임 급등을 유발할 것이라는 점. HMM은 구조조정을 마친 상태라 이익이 폭발적으로 증가할 수밖에 없었다."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "HMM의 전환사채(CB) 물량 부담과 공매도 세력의 공격",
+          "주가가 급등할 때마다 '이제는 팔아야 한다'는 시장의 압박과 싸움"
+        ],
+        "complications": [
+          "수에즈 운하 에버기븐호 좌초 사건으로 인한 단기 주가 변동성",
+          "정부의 해운업 재건 정책에 대한 불확실성"
+        ],
+        "dramatic_moments": [
+          "주가가 2,000원대에서 50,000원대를 돌파하는 과정",
+          "사상 최대 실적 발표로 시장의 의심을 확신으로 바꾼 순간"
+        ],
+        "villain_candidates": [
+          "지속적으로 HMM에 대한 부정적 리포트를 내는 증권사 애널리스트",
+          "공매도를 통해 주가 하락을 유도하는 외국계 펀드"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "very_high",
+        "butterfly_risk": "medium",
+        "detection_risk": "low",
+        "alt_history_impact": "주인공의 대규모 매집이 공매도 세력을 자극해 더 큰 변동성을 유발하거나, 수급 구조를 바꿔 최고점이 달라질 수 있다."
+      },
+      "related_opportunities": [
+        "코로나19 팬데믹 KOSPI 저점 매수 (2020년 3월)"
+      ],
+      "enables": [
+        "차세대 주도주(2차전지, 플랫폼) 투자 자금 확보",
+        "해운업 호황을 기반으로 한 조선주 투자"
+      ],
+      "tags": [
+        "턴어라운드",
+        "해운업",
+        "사이클투자",
+        "HMM"
+      ],
+      "_source_category": "stock",
+      "_source_era": "2020년대"
+    },
+    {
+      "id": "OPP_038",
+      "name": "LG에너지솔루션 역대급 IPO 청약 (2022년 1월)",
+      "category": "주식/금융",
+      "subcategory": "IPO",
+      "entity": {
+        "type": "company",
+        "name": "LG에너지솔루션",
+        "sector": "2차전지"
+      },
+      "entry_phase": "growth",
+      "timeline": {
+        "real_event_year": 2022,
+        "korea_timing": 2022,
+        "earliest_possible": 2021,
+        "golden_window": {
+          "start": 2022,
+          "end": 2022
+        },
+        "obsolete_after": 2022
+      },
+      "requirements": {
+        "min_capital": "1억",
+        "capital_tier": "개인/중소기업",
+        "prerequisites": [
+          {
+            "name": "대규모 청약 증거금 확보 능력",
+            "critical": true
+          },
+          {
+            "name": "여러 증권사 계좌 사전 개설",
+            "critical": false
+          }
+        ],
+        "skills_needed": [
+          "IPO 시장 분석",
+          "자금 조달 및 관리 능력"
+        ],
+        "legal_barriers": [],
+        "time_to_execute": "1개월"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "1일 (상장일 매도)",
+        "peak_roi": "약 100% (공모가 대비 시초가)",
+        "risk_level": "low",
+        "failure_probability": 0.05
+      },
+      "historical_context": {
+        "real_winner": "많은 증거금을 동원해 비례배정으로 많은 주식을 받은 고액 자산가 및 기관",
+        "real_losers": [
+          "상장 첫날 최고가에 추격 매수한 투자자",
+          "적은 증거금으로 균등배정만 받은 소액 투자자"
+        ],
+        "why_others_failed": "실패 사례는 적었으나, 기대수익률은 자본 규모에 정비례했다. 일부는 상장 후 주가가 더 오를 것이라 기대하고 매도하지 않았다가 물렸다.",
+        "key_insight": "역대 최대 증거금(114조)이 몰릴 정도로 시장의 관심이 뜨거워 '따상'은 못해도 '따'는 확실한 게임이었다는 것. 상장 첫날 시초가에 파는 것이 가장 확실한 수익 실현 전략이었다."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "청약 자금을 마련하기 위한 단기 대출(마이너스 통장 등)의 이자 부담",
+          "상장 첫날 매도할 것인가, 장기 보유할 것인가에 대한 선택의 기로"
+        ],
+        "complications": [
+          "예상보다 낮은 비례배정 경쟁률로 인한 수익률 감소",
+          "상장 직후 시장 상황 악화로 인한 매도 타이밍 문제"
+        ],
+        "dramatic_moments": [
+          "청약 증거금 집계 결과가 발표되는 순간",
+          "상장일 시초가가 결정되고 첫 거래가 체결되는 순간"
+        ],
+        "villain_candidates": [
+          "과도한 대출을 부추기는 증권사 직원",
+          "상장 후 주가가 폭등할 것이라고 허황된 전망을 내놓는 유튜버"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "medium",
+        "butterfly_risk": "low",
+        "detection_risk": "low",
+        "alt_history_impact": "개인의 자금 규모가 아무리 커도 전체 IPO 판도를 바꾸지는 못한다. 다만, 더 많은 자금을 동원해 더 큰 수익을 얻을 수 있다."
+      },
+      "related_opportunities": [],
+      "enables": [
+        "금리 인상기 대비 현금 확보",
+        "2차전지 소재주 투자로 포트폴리오 확장"
+      ],
+      "tags": [
+        "IPO",
+        "공모주",
+        "2차전지",
+        "LG에너지솔루션"
+      ],
+      "_source_category": "stock",
+      "_source_era": "2020년대"
+    },
+    {
+      "id": "OPP_039",
+      "name": "신풍제약 코로나 치료제 버블 공매도 (2020년 하반기)",
+      "category": "주식/금융",
+      "subcategory": "작전주",
+      "entity": {
+        "type": "company",
+        "name": "신풍제약",
+        "sector": "제약/바이오"
+      },
+      "entry_phase": "peak",
+      "timeline": {
+        "real_event_year": 2020,
+        "korea_timing": 2020,
+        "earliest_possible": 2020,
+        "golden_window": {
+          "start": 2020,
+          "end": 2020
+        },
+        "obsolete_after": 2021
+      },
+      "requirements": {
+        "min_capital": "10억",
+        "capital_tier": "중소기업",
+        "prerequisites": [
+          {
+            "name": "공매도 가능한 투자 주체 (기관 또는 전문투자자)",
+            "critical": true
+          },
+          {
+            "name": "임상 데이터 및 바이오 산업에 대한 깊은 이해",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "기술적 분석 (과매수 구간 파악)",
+          "숏 스퀴즈를 견딜 수 있는 자금 관리 능력",
+          "가치평가(Valuation) 능력"
+        ],
+        "legal_barriers": [
+          "개인 투자자 공매도 제한"
+        ],
+        "time_to_execute": "1주"
+      },
+      "returns": {
+        "profit_type": "시세차익 (공매도)",
+        "profit_timeline": "3개월 ~ 6개월",
+        "peak_roi": "500% 이상",
+        "risk_level": "extreme",
+        "failure_probability": 0.8
+      },
+      "historical_context": {
+        "real_winner": "고점에서 성공적으로 공매도 포지션을 잡고 버틴 일부 기관 투자자",
+        "real_losers": [
+          "치료제 개발 기대감에 최고점에서 매수한 개인 투자자",
+          "섣불리 공매도에 나섰다가 숏 스퀴즈로 막대한 손실을 본 투자자"
+        ],
+        "why_others_failed": "광기에 가까운 시장 분위기와 끝없이 오를 것 같은 주가에 압도당했다. 공매도 세력은 개인 투자자들의 집단적인 매수세와 '밈 주식' 현상으로 인해 숏 스퀴즈를 당하며 강제로 포지션을 청산해야 했다.",
+        "key_insight": "피라맥스의 코로나19 치료제 임상 성공 가능성이 매우 희박하며, 주가는 순전히 투기적 수요로 형성된 버블이라는 확신. 버블의 정점(214,000원)이 언제인지 정확히 아는 것이 핵심이다."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "공매도 포지션 진입 후에도 주가가 계속 올라 막대한 평가손 발생",
+          "'매국노'라는 비난을 퍼붓는 개인 투자자들과의 온라인 전쟁"
+        ],
+        "complications": [
+          "정부의 공매도 금지 조치 연장 가능성",
+          "예상치 못한 긍정적 임상 중간 결과 발표로 인한 주가 급등"
+        ],
+        "dramatic_moments": [
+          "주가 20만원을 돌파하며 숏 스퀴즈가 절정에 달하는 순간",
+          "임상 실패 공식 발표와 함께 주가가 하한가로 직행하는 순간"
+        ],
+        "villain_candidates": [
+          "허위 사실과 희망 회로로 개인 투자자들을 선동하는 유튜버",
+          "내부 정보를 이용해 주가를 부양하고 고점에서 물량을 떠넘기는 경영진"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "very_high",
+        "butterfly_risk": "high",
+        "detection_risk": "medium",
+        "alt_history_impact": "주인공의 대규모 공매도가 시장에 알려지면 개인 투자자들의 반발 매수가 더 거세져 숏 스퀴즈가 더 빨리, 더 강력하게 올 수 있다. 역으로, 공매도 리포트를 통해 버블 붕괴를 앞당길 수도 있다."
+      },
+      "related_opportunities": [],
+      "enables": [
+        "시장 버블을 이용한 차익 실현 전문 투자사 설립"
+      ],
+      "tags": [
+        "공매도",
+        "버블",
+        "작전주",
+        "바이오",
+        "밈주식"
+      ],
+      "_source_category": "stock",
+      "_source_era": "2020년대"
+    },
+    {
+      "id": "OPP_040",
+      "name": "레고랜드 사태로 인한 단기 금융시장 경색 역이용 (2022년 10월)",
+      "category": "주식/금융",
+      "subcategory": "채권",
+      "entity": {
+        "type": "event",
+        "name": "레고랜드 사태",
+        "sector": "채권/부동산PF"
+      },
+      "entry_phase": "decline",
+      "timeline": {
+        "real_event_year": 2022,
+        "korea_timing": 2022,
+        "earliest_possible": 2022,
+        "golden_window": {
+          "start": 2022,
+          "end": 2022
+        },
+        "obsolete_after": 2023
+      },
+      "requirements": {
+        "min_capital": "1000억",
+        "capital_tier": "대기업/재벌급",
+        "prerequisites": [
+          {
+            "name": "채권 시장 및 파생상품에 대한 전문적 지식",
+            "critical": true
+          },
+          {
+            "name": "기관 투자자로서 시장 접근성",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "신용 위험 분석",
+          "유동성 관리",
+          "거시경제 정책 분석"
+        ],
+        "legal_barriers": [],
+        "time_to_execute": "1~2주"
+      },
+      "returns": {
+        "profit_type": "시세차익 (채권 저가매수, 주식 공매도)",
+        "profit_timeline": "3개월",
+        "peak_roi": "10~20% (안전마진 위주)",
+        "risk_level": "medium",
+        "failure_probability": 0.2
+      },
+      "historical_context": {
+        "real_winner": "패닉에 빠진 채권시장에서 우량 회사채, 한전채 등을 헐값에 사들인 자금력 있는 기관들",
+        "real_losers": [
+          "부동산 PF-ABCP에 물린 증권사, 자산운용사",
+          "자금 조달이 막힌 건설사 및 시행사",
+          "투매에 동참한 채권 투자자"
+        ],
+        "why_others_failed": "지방정부의 지급보증마저 믿을 수 없다는 신뢰의 위기가 시스템 리스크로 번질 것이라는 공포에 사로잡혀, 우량 자산과 부실 자산을 구분하지 않고 투매했다.",
+        "key_insight": "정부가 단기 금융시장 붕괴를 절대 방관하지 않을 것이라는 믿음. 따라서 정부의 유동성 공급 프로그램 발표(채안펀드 등) 직전에, 일시적 공포로 가격이 급락한 우량 채권을 매수하고, 직접적 타격을 입을 건설/증권주를 공매도하는 것이 핵심 전략이다."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "정부의 시장 개입이 늦어질 경우 유동성 위기가 시스템 위기로 번질 수 있다는 공포",
+          "어디까지가 우량 자산이고 어디부터가 부실 자산인지 가려내야 하는 압박"
+        ],
+        "complications": [
+          "예상보다 강력한 정부의 시장 안정화 대책으로 공매도 포지션이 조기에 청산될 위험",
+          "글로벌 금리 인상 기조와 맞물려 채권 시장의 변동성 확대"
+        ],
+        "dramatic_moments": [
+          "강원도지사의 채무불이행 선언으로 시장이 얼어붙는 순간",
+          "정부의 50조원+α 유동성 공급 프로그램이 발표되는 순간"
+        ],
+        "villain_candidates": [
+          "정치적 계산으로 금융시장 혼란을 야기한 지방자치단체장",
+          "위기를 기회로 삼아 부실 자산을 우량 자산으로 속여 파는 금융기관"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "high",
+        "butterfly_risk": "high",
+        "detection_risk": "high",
+        "alt_history_impact": "주인공의 대규모 자금 움직임이 시장의 특정 섹터에 유동성을 공급하거나 고갈시켜 정부의 정책 대응 강도나 시점을 변화시킬 수 있다. 이는 예측 불가능한 결과를 낳을 수 있다."
+      },
+      "related_opportunities": [],
+      "enables": [
+        "부실 PF 사업장 인수",
+        "구조조정 전문 투자회사 설립"
+      ],
+      "tags": [
+        "레고랜드",
+        "채권",
+        "신용경색",
+        "부동산PF",
+        "거시경제"
+      ],
+      "_source_category": "stock",
+      "_source_era": "2020년대"
+    },
+    {
+      "id": "OPP_041",
+      "name": "SG증권발 CFD 주가조작 붕괴 공매도 (2023년 4월)",
+      "category": "주식/금융",
+      "subcategory": "작전주",
+      "entity": {
+        "type": "event",
+        "name": "SG증권발 하한가 사태",
+        "sector": "주가조작"
+      },
+      "entry_phase": "peak",
+      "timeline": {
+        "real_event_year": 2023,
+        "korea_timing": 2023,
+        "earliest_possible": 2023,
+        "golden_window": {
+          "start": 2023,
+          "end": 2023
+        },
+        "obsolete_after": 2023
+      },
+      "requirements": {
+        "min_capital": "50억",
+        "capital_tier": "중소기업/대기업",
+        "prerequisites": [
+          {
+            "name": "주가조작 세력의 내부 정보 또는 확실한 붕괴 시점 정보",
+            "critical": true
+          },
+          {
+            "name": "대차거래를 통한 공매도 물량 확보 능력",
+            "critical": true
+          }
+        ],
+        "skills_needed": [
+          "정보 분석 및 보안 유지",
+          "파생상품(CFD) 메커니즘 이해",
+          "신속한 의사결정 및 실행력"
+        ],
+        "legal_barriers": [
+          "내부자거래 및 시장교란행위로 오인받을 위험"
+        ],
+        "time_to_execute": "1주"
+      },
+      "returns": {
+        "profit_type": "시세차익 (공매도)",
+        "profit_timeline": "1주일",
+        "peak_roi": "1000% 이상",
+        "risk_level": "extreme",
+        "failure_probability": 0.5
+      },
+      "historical_context": {
+        "real_winner": "붕괴 직전 정보를 입수하고 공매도에 성공한 소수의 투자자 (존재한다면)",
+        "real_losers": [
+          "주가조작 세력에게 돈을 맡긴 투자자들 (의사, 연예인 등)",
+          "해당 종목이 우량주인 줄 알고 투자했던 일반 주주들"
+        ],
+        "why_others_failed": "수년간 아주 서서히, 거래량 없이 주가를 올리는 방식이라 작전주로 의심하기 어려웠다. 또한 CFD(차액결제거래)라는 전문적인 수단을 사용해 수면 아래에서 움직였기 때문에 외부에서 감지하기가 거의 불가능했다.",
+        "key_insight": "라덕연 일당이 CFD를 활용해 특정 종목 8개(삼천리, 다우데이타 등)의 주가를 조작해왔으며, 2023년 4월 24일에 반대매매로 인한 연쇄 폭락이 시작된다는 사실. 폭락 직전에 해당 종목들을 공매도하는 것이 유일한 기회다."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "주가조작 세력에게 정체가 발각될 경우 신변의 위협",
+          "공매도 포지션을 구축하는 과정에서 금융당국의 감시를 피해야 하는 어려움"
+        ],
+        "complications": [
+          "예상보다 일찍 또는 늦게 붕괴가 시작될 경우의 리스크",
+          "공매도를 위한 주식 대여(대차)가 특정 종목에 몰려 실패할 가능성"
+        ],
+        "dramatic_moments": [
+          "8개 종목이 일제히 하한가로 추락하기 시작하는 2023년 4월 24일 오전",
+          "주가조작 총책 라덕연이 투자자들 앞에서 변명하는 기자회견"
+        ],
+        "villain_candidates": [
+          "주가조작 총책 라덕연과 그 일당",
+          "고객들에게 CFD 투자를 부추긴 증권사 PB들"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "very_high",
+        "butterfly_risk": "high",
+        "detection_risk": "very_high",
+        "alt_history_impact": "주인공의 공매도 움직임이 조작 세력에게 감지되면, 그들이 계획을 변경하거나 주인공을 역으로 공격할 수 있다. 이는 사태의 전개 양상을 완전히 바꿀 수 있다."
+      },
+      "related_opportunities": [],
+      "enables": [
+        "금융 범죄를 추적하는 탐정 또는 헤지펀드 설립"
+      ],
+      "tags": [
+        "주가조작",
+        "작전주",
+        "CFD",
+        "공매도",
+        "금융범죄"
+      ],
+      "_source_category": "stock",
+      "_source_era": "2020년대"
+    },
+    {
+      "id": "OPP_042",
+      "name": "에코프로 중심 2차전지 랠리 초기 투자 (2023년 1월 ~ 7월)",
+      "category": "주식/금융",
+      "subcategory": "우량주",
+      "entity": {
+        "type": "company",
+        "name": "에코프로, 에코프로비엠",
+        "sector": "2차전지"
+      },
+      "entry_phase": "initial",
+      "timeline": {
+        "real_event_year": 2023,
+        "korea_timing": 2023,
+        "earliest_possible": 2022,
+        "golden_window": {
+          "start": 2023,
+          "end": 2023
+        },
+        "obsolete_after": 2024
+      },
+      "requirements": {
+        "min_capital": "1,000만원",
+        "capital_tier": "개인/소규모",
+        "prerequisites": [
+          {
+            "name": "기관 및 외국인의 비관론을 무시할 수 있는 소신",
+            "critical": true
+          },
+          {
+            "name": "SNS 및 유튜브를 통한 개인 투자자 여론 파악",
+            "critical": false
+          }
+        ],
+        "skills_needed": [
+          "성장주 투자",
+          "시장 심리 파악",
+          "숏 스퀴즈 메커니즘 이해"
+        ],
+        "legal_barriers": [],
+        "time_to_execute": "1주"
+      },
+      "returns": {
+        "profit_type": "시세차익",
+        "profit_timeline": "6개월",
+        "peak_roi": "10배 이상 (1000%)",
+        "risk_level": "high",
+        "failure_probability": 0.3
+      },
+      "historical_context": {
+        "real_winner": "'밧데리 아저씨'로 불리는 박순혁 이사와 그의 논리를 추종한 개인 투자자들",
+        "real_losers": [
+          "에코프로의 고평가를 주장하며 지속적으로 공매도 포지션을 취한 기관 및 외국인 투자자",
+          "랠리 초기에 비관적인 리포트를 내고 시장의 흐름을 놓친 증권사 애널리스트들"
+        ],
+        "why_others_failed": "전통적인 가치평가(PER, PBR 등) 잣대로는 설명할 수 없는 주가 상승을 이해하지 못했다. 개인 투자자들의 집단적인 힘과 숏 스퀴즈가 만들어내는 랠리의 파괴력을 과소평가했다.",
+        "key_insight": "에코프로 그룹의 수직계열화가 가진 경쟁력과 미래 성장성을 시장이 과소평가하고 있다는 점. 무엇보다도, 개인 투자자들의 'K-배터리'에 대한 맹목적인 믿음과 공매도 세력에 대한 적개심이 합쳐져 비이성적인 오버슈팅을 만들어낼 것이라는 사실을 아는 것이 중요하다."
+      },
+      "story_hooks": {
+        "conflicts": [
+          "모든 증권사가 '매도' 리포트를 쏟아내는 상황에서 '매수' 포지션을 유지해야 하는 심리적 압박",
+          "공매도 세력과의 치열한 수급 전쟁"
+        ],
+        "complications": [
+          "회사 경영진의 내부자 거래 혐의 발생으로 인한 주가 급락",
+          "미국의 IRA 법안, 유럽 CRMA 등 예상치 못한 외부 정책 변수"
+        ],
+        "dramatic_moments": [
+          "에코프로 주가가 100만원을 돌파하며 '황제주'에 등극하는 순간",
+          "공매도 세력이 숏커버링에 나서면서 주가가 수직으로 상승하는 숏 스퀴즈 발생"
+        ],
+        "villain_candidates": [
+          "지속적으로 2차전지 산업에 대해 부정적인 전망을 내놓는 유명 애널리스트",
+          "개인 투자자들의 투기 심리를 비난하는 주류 언론"
+        ]
+      },
+      "regression_notes": {
+        "future_knowledge_value": "very_high",
+        "butterfly_risk": "medium",
+        "detection_risk": "low",
+        "alt_history_impact": "주인공의 자금이 클 경우, 랠리의 시작 시점을 앞당기거나 숏 스퀴즈를 더 격렬하게 만들 수 있다. 이는 최고점과 랠리 기간에 영향을 줄 수 있다."
+      },
+      "related_opportunities": [
+        "LG에너지솔루션 역대급 IPO 청약 (2022년 1월)"
+      ],
+      "enables": [
+        "2차전지 랠리 이후의 주도주(AI, 반도체) 선점 투자"
+      ],
+      "tags": [
+        "2차전지",
+        "에코프로",
+        "성장주",
+        "숏스퀴즈",
+        "테마주"
+      ],
+      "_source_category": "stock",
+      "_source_era": "2020년대"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "OPP_003",
+      "to": "OPP_006",
+      "relation": "인맥축적",
+      "description": "부실기업 인수 과정에서 형성된 금융권 및 정부와의 네트워크를 활용하여 제1호 투자신탁회사 설립 허가를 획득."
+    },
+    {
+      "from": "OPP_001",
+      "to": "OPP_004",
+      "relation": "자본축적",
+      "description": "중화학공업 관련주 투자로 얻은 수익을 다음 테마인 중동 건설붐 관련주에 재투자."
+    },
+    {
+      "from": "OPP_006",
+      "to": "OPP_002",
+      "relation": "자본축적",
+      "description": "설립한 투자신탁회사를 통해 기관 투자자로서 삼성전자 IPO에 대규모로 참여."
+    },
+    {
+      "from": "OPP_006",
+      "to": "OPP_005",
+      "relation": "자본축적",
+      "description": "투자신탁회사를 통해 축적한 막대한 자금과 시장 영향력을 이용해 주가 조작을 시도."
+    },
+    {
+      "from": "OPP_010",
+      "to": "OPP_013",
+      "relation": "자본축적",
+      "description": "1982년 시장 붕괴 예측을 통해 확보한 자본으로 1983년 삼성전자 초기 투자를 집행함"
+    },
+    {
+      "from": "OPP_011",
+      "to": "OPP_007",
+      "relation": "기술축적",
+      "description": "증권사 설립을 통해 확보한 전문 정보와 거래 시스템을 활용하여 '3저 호황' 시기 주도주에 집중 투자함"
+    },
+    {
+      "from": "OPP_011",
+      "to": "OPP_012",
+      "relation": "인맥축적",
+      "description": "증권사 운영을 통해 금융권 네트워크를 확보하여 대우조선 부실채권 매입 및 구조조정 참여 기회를 얻음"
+    },
+    {
+      "from": "OPP_009",
+      "to": "OPP_012",
+      "relation": "기술축적",
+      "description": "국제그룹 자산 인수 과정에서 얻은 기업 실사 및 구조조정 경험이 대우조선 건에 참여하는 기반이 됨"
+    },
+    {
+      "from": "OPP_007",
+      "to": "OPP_012",
+      "relation": "자본축적",
+      "description": "'3저 호황' 시기 주식투자로 불린 막대한 자금이 대우조선 부실채권 매입과 같은 대규모 투자의 재원이 됨"
+    },
+    {
+      "from": "OPP_013",
+      "to": "OPP_007",
+      "relation": "자본축적",
+      "description": "삼성전자 투자로 얻은 초기 수익을 '3저 호황' 시기에 재투자하여 자산 규모를 폭발적으로 증식시킴"
+    },
+    {
+      "from": "OPP_014",
+      "to": "OPP_016",
+      "relation": "자본축적",
+      "description": "한국이동통신 IPO 투자 수익을 IMF 위기 선물 공매도 증거금으로 활용"
+    },
+    {
+      "from": "OPP_016",
+      "to": "OPP_018",
+      "relation": "자본축적",
+      "description": "선물 공매도로 얻은 막대한 현금으로 외환위기 최저점의 삼성전자 주식을 대량 매수"
+    },
+    {
+      "from": "OPP_016",
+      "to": "OPP_017",
+      "relation": "자본축적",
+      "description": "선물 공매도 수익을 안전자산인 초고금리 채권에 투자하여 자산 방어 및 증식"
+    },
+    {
+      "from": "OPP_019",
+      "to": "OPP_020",
+      "relation": "기술축적",
+      "description": "한보 사태 당시 은행권 분석 경험을 바탕으로 구조조정 대상 은행을 예측하여 투자"
+    },
+    {
+      "from": "OPP_018",
+      "to": "OPP_015",
+      "relation": "자본축적",
+      "description": "IMF 위기 극복 후 삼성전자 주가 상승으로 얻은 차익을 KOSDAQ 닷컴 유망주에 재투자"
+    },
+    {
+      "from": "OPP_021",
+      "to": "OPP_022",
+      "relation": "자본축적",
+      "description": "닷컴 버블 공매도로 확보한 막대한 자금은 부실기업이었던 하이닉스에 대한 대규모 투자를 가능하게 하는 선행 조건이 됨."
+    },
+    {
+      "from": "OPP_022",
+      "to": "OPP_024",
+      "relation": "자본축적",
+      "description": "하이닉스 투자 성공으로 크게 불어난 자산을 바탕으로, 차기 성장 동력이었던 중국 특수 관련 우량주에 투자할 자본을 마련함."
+    },
+    {
+      "from": "OPP_025",
+      "to": "OPP_026",
+      "relation": "기술축적",
+      "description": "KIKO라는 복잡한 파생상품의 구조적 허점을 분석하고 역이용한 경험은, 리먼 브라더스 사태라는 거시적 위기 속에서 KOSPI 풋옵션이라는 파생상품을 활용하는 판단의 기반이 됨."
+    },
+    {
+      "from": "OPP_028",
+      "to": "OPP_026",
+      "relation": "자본축적",
+      "description": "펀드 투자 열풍의 정점에서 자산을 현금화하여 유동성을 확보했기 때문에, 리먼 브라더스 사태 직전 시장 붕괴에 베팅하는 풋옵션을 대량 매수할 수 있었음."
+    },
+    {
+      "from": "OPP_026",
+      "to": "OPP_027",
+      "relation": "자본축적",
+      "description": "KOSPI 풋옵션으로 얻은 막대한 수익은, 금융위기로 인해 폭락한 우량주들을 바닥 가격에 대량으로 매집할 수 있는 실탄으로 사용됨."
+    },
+    {
+      "from": "OPP_030",
+      "to": "OPP_031",
+      "relation": "기술축적",
+      "description": "셀트리온 투자/공매도 대응 경험을 통해 얻은 바이오 산업에 대한 깊은 이해가 한미약품의 기술수출 가치를 판단하는 기반이 됨"
+    },
+    {
+      "from": "OPP_031",
+      "to": "OPP_035",
+      "relation": "기술축적",
+      "description": "한미약품의 주가 급등락 사태를 경험하며 얻은 바이오 기업의 이벤트 기반 변동성 대응 노하우가 삼성바이오로직스 투자 전략에 직접적으로 활용됨"
+    },
+    {
+      "from": "OPP_029",
+      "to": "OPP_033",
+      "relation": "자본축적",
+      "description": "카카오-다음 합병 전 지분 투자로 확보한 막대한 자본이 새로운 성장 동력이었던 화장품 주식에 대규모로 투자할 수 있는 기반을 마련함"
+    },
+    {
+      "from": "OPP_032",
+      "to": "OPP_030",
+      "relation": "기술축적",
+      "description": "동양그룹 CP 사태에서 공매도 전략을 성공시킨 경험이 장기간 진행된 셀트리온 공매도 세력과의 전쟁을 수행하는 데 필요한 전략적 노하우를 제공함"
+    },
+    {
+      "from": "OPP_035",
+      "to": "OPP_034",
+      "relation": "기술축적",
+      "description": "삼성바이오로직스라는 특정 종목의 회계 이슈로 발생한 변동성을 거래한 경험이 시장 전체의 변동성 지수(VIX) 상품에 베팅하는 고난도 전략의 기반이 됨"
+    },
+    {
+      "from": "OPP_036",
+      "to": "OPP_037",
+      "relation": "자본축적",
+      "description": "코로나19 저점 매수로 시장 회복에 대한 확신과 자본을 확보하여, HMM과 같은 개별 턴어라운드 주식에 과감히 투자할 수 있는 기반을 마련함."
+    },
+    {
+      "from": "OPP_036",
+      "to": "OPP_038",
+      "relation": "자본축적",
+      "description": "KOSPI 저점 매수를 통해 증식한 자산을 LG에너지솔루션 IPO 청약 증거금으로 활용하여 대규모 배정을 노릴 수 있었음."
+    },
+    {
+      "from": "OPP_036",
+      "to": "OPP_042",
+      "relation": "자본축적",
+      "description": "2020년 시장 전반의 반등을 통해 축적한 자본을 2023년 새로운 주도주인 2차전지 랠리의 초기 투자금으로 활용함."
+    },
+    {
+      "from": "OPP_037",
+      "to": "OPP_038",
+      "relation": "자본축적",
+      "description": "HMM 투자로 얻은 큰 수익을 안정적인 대어급 IPO인 LG에너지솔루션 청약에 재투자하여 자산을 증식함."
+    },
+    {
+      "from": "OPP_037",
+      "to": "OPP_042",
+      "relation": "자본축적",
+      "description": "HMM과 같은 경기민감주 투자 성공으로 확보한 목돈을 차세대 주도주로 부상한 2차전지 섹터의 핵심인 에코프로에 초기에 투자함."
+    },
+    {
+      "from": "OPP_038",
+      "to": "OPP_042",
+      "relation": "기술축적",
+      "description": "LG에너지솔루션 IPO 참여를 계기로 2차전지 산업 생태계를 깊이 있게 학습하게 되었고, 이는 핵심 소재 기업인 에코프로의 가치를 조기에 발견하는 기반이 됨."
+    },
+    {
+      "from": "OPP_039",
+      "to": "OPP_041",
+      "relation": "기술축적",
+      "description": "신풍제약 버블 공매도 성공 경험을 통해, 특정 종목의 과열 및 수급 왜곡을 파악하고 공매도 전략을 실행하는 노하우를 축적하여 SG증권발 붕괴 상황에 효과적으로 대응함."
+    },
+    {
+      "from": "OPP_040",
+      "to": "OPP_041",
+      "relation": "기술축적",
+      "description": "레고랜드 사태로 단기 금융시장의 신용 리스크를 경험하며 레버리지의 위험성을 학습했고, 이는 CFD라는 고위험 레버리지 상품의 붕괴 가능성을 예측하는 기반이 됨."
+    }
+  ],
+  "categories": {
+    "real_estate": {
+      "name": "부동산",
+      "subcategories": [
+        "재개발",
+        "분양",
+        "경매",
+        "상가",
+        "토지"
+      ]
+    },
+    "stock": {
+      "name": "주식/금융",
+      "subcategories": [
+        "IPO",
+        "우량주",
+        "작전주",
+        "선물/옵션",
+        "채권"
+      ]
+    },
+    "forex_commodity": {
+      "name": "외환/원자재",
+      "subcategories": [
+        "환율",
+        "금",
+        "석유",
+        "원자재"
+      ]
+    },
+    "crypto": {
+      "name": "암호화폐",
+      "subcategories": [
+        "비트코인",
+        "알트코인",
+        "ICO",
+        "NFT"
+      ]
+    },
+    "it_tech": {
+      "name": "IT/기술",
+      "subcategories": [
+        "인터넷",
+        "모바일",
+        "반도체",
+        "AI",
+        "플랫폼"
+      ]
+    },
+    "manufacturing": {
+      "name": "제조업",
+      "subcategories": [
+        "자동차",
+        "배터리",
+        "디스플레이",
+        "조선",
+        "철강"
+      ]
+    },
+    "retail_distribution": {
+      "name": "유통/소매",
+      "subcategories": [
+        "홈쇼핑",
+        "이커머스",
+        "편의점",
+        "프랜차이즈"
+      ]
+    },
+    "content_media": {
+      "name": "콘텐츠/미디어",
+      "subcategories": [
+        "게임",
+        "엔터테인먼트",
+        "웹툰/웹소설",
+        "방송"
+      ]
+    },
+    "finance_service": {
+      "name": "금융서비스",
+      "subcategories": [
+        "보험",
+        "카드",
+        "핀테크",
+        "대부업"
+      ]
+    },
+    "crisis_event": {
+      "name": "위기/이벤트",
+      "subcategories": [
+        "IMF",
+        "금융위기",
+        "버블붕괴",
+        "팬데믹",
+        "전쟁"
+      ]
+    }
+  },
+  "era_ranges": [
+    {
+      "name": "1970년대",
+      "start": 1970,
+      "end": 1979
+    },
+    {
+      "name": "1980년대",
+      "start": 1980,
+      "end": 1989
+    },
+    {
+      "name": "1990년대",
+      "start": 1990,
+      "end": 1999
+    },
+    {
+      "name": "2000년대",
+      "start": 2000,
+      "end": 2009
+    },
+    {
+      "name": "2010년대",
+      "start": 2010,
+      "end": 2019
+    },
+    {
+      "name": "2020년대",
+      "start": 2020,
+      "end": 2025
+    }
+  ]
+}

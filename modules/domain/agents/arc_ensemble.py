@@ -51,6 +51,7 @@ ENSEMBLE_ARC_PROMPT = """
 주인공 이름: {protagonist_name}
 → tactical_doc에서 반드시 '{protagonist_name}'을 사용하세요!
 → 다른 이름(이현, 강민수 등)은 절대 사용 금지!
+{protagonist_instructions}
 ##############################################################
 
 ##############################################################
@@ -92,6 +93,8 @@ ENSEMBLE_ARC_PROMPT = """
 
 ### [피드백 (있다면)]
 {feedback}
+
+{entity_registry_section}
 
 ### [V60.40] 화간 상태 체크포인트 필수
 각 화는 반드시 시작 상태와 종료 상태를 명시하라:
@@ -169,7 +172,9 @@ class ArcEnsembleGenerator(BaseAgent):
         constraint_block: str,
         assets: Dict = None,
         feedback: str = "",
-        protagonist_name: str = "주인공"  # [V60.18] 주인공 이름 (필수!)
+        protagonist_name: str = "주인공",  # [V60.18] 주인공 이름 (필수!)
+        protagonist_config: Dict = None,  # [V60.88] 주인공 설정 (world_origin, incarnation_type)
+        entity_registry: Dict = None  # [V60.92] Entity Registry (NPC 명칭 일관성)
     ) -> Tuple[Optional[Dict], List[Dict]]:
         """
         앙상블 Arc 생성
@@ -184,6 +189,8 @@ class ArcEnsembleGenerator(BaseAgent):
             assets: AssetLibrary
             feedback: 이전 피드백
             protagonist_name: [V60.18] 주인공 이름 (환각 방지)
+            protagonist_config: [V60.88] 주인공 설정 (world_origin, incarnation_type)
+            entity_registry: [V60.92] Entity Registry (NPC 명칭 일관성)
 
         Returns:
             (best_arc, all_candidates) - 최적 Arc와 모든 후보 리스트
@@ -209,7 +216,9 @@ class ArcEnsembleGenerator(BaseAgent):
                     assets=assets,
                     feedback=feedback,
                     strategy=strategy,
-                    protagonist_name=protagonist_name  # [V60.18]
+                    protagonist_name=protagonist_name,  # [V60.18]
+                    protagonist_config=protagonist_config,  # [V60.88]
+                    entity_registry=entity_registry  # [V60.92]
                 )
                 futures[future] = strategy["name"]
 
@@ -306,12 +315,35 @@ class ArcEnsembleGenerator(BaseAgent):
         assets: Dict,
         feedback: str,
         strategy: Dict,
-        protagonist_name: str = "주인공"  # [V60.18]
+        protagonist_name: str = "주인공",  # [V60.18]
+        protagonist_config: Dict = None,  # [V60.88]
+        entity_registry: Dict = None  # [V60.92]
     ) -> Optional[Dict]:
         """단일 전략으로 Arc 생성"""
         try:
             # [V60.13] 최우선 금지 요약 생성 - 프롬프트 최상단에 배치
             prohibition_summary = self._generate_prohibition_summary(prev_arc_context, constraint_block)
+
+            # [V60.88] 주인공 설정 기반 지침 생성
+            protagonist_instructions = ""
+            if protagonist_config:
+                world_origin = protagonist_config.get('world_origin', '원시인')
+                incarnation_type = protagonist_config.get('incarnation_type', '회귀자')
+                lines = [f"- 세계 출신: {world_origin}", f"- 환생 유형: {incarnation_type}"]
+                if world_origin == '원시인':
+                    lines.append("⚠️ 현대 용어 사용 금지")
+                else:
+                    lines.append("📝 주인공은 현대 사회를 알고 있음")
+                if incarnation_type == '회귀자':
+                    lines.append("🔄 미래를 알고 있음 (합리적 이유 없이는 내면 독백으로 처리)")
+                elif incarnation_type == '빙의자':
+                    lines.append("👤 원래 인물의 기억/관계를 의식")
+                elif incarnation_type == '환생자':
+                    lines.append("👶 전생의 기억이 있음")
+                protagonist_instructions = "\n[🌍 주인공 설정]\n" + "\n".join(lines)
+
+            # [V60.92] Entity Registry 섹션 생성
+            entity_registry_section = self._format_entity_registry(entity_registry) if entity_registry else ""
 
             prompt = ENSEMBLE_ARC_PROMPT.format(
                 strategy_name=strategy["name"].upper(),
@@ -319,12 +351,14 @@ class ArcEnsembleGenerator(BaseAgent):
                 strategy_style=strategy["style"],
                 prohibition_summary=prohibition_summary,
                 protagonist_name=protagonist_name,  # [V60.18]
+                protagonist_instructions=protagonist_instructions,  # [V60.88]
                 constraint_block=self._escape_braces(constraint_block or "(없음)"),
                 prev_arc_context=self._escape_braces(prev_arc_context or "시작점"),
                 curr_block=self._escape_braces(json.dumps(curr_block, ensure_ascii=False)[:3000] if curr_block else "{}"),
                 vol_strategy=self._escape_braces(vol_strategy[:2000] if vol_strategy else "(없음)"),
                 assets=self._escape_braces(json.dumps(assets, ensure_ascii=False)[:2000] if assets else "{}"),
                 feedback=self._escape_braces(feedback[:1500] if feedback else "(없음)"),
+                entity_registry_section=self._escape_braces(entity_registry_section),  # [V60.92]
                 arc_no=arc_no,
                 ep_start=ep_start,
                 ep_end=ep_end
@@ -550,6 +584,52 @@ class ArcEnsembleGenerator(BaseAgent):
         if not isinstance(text, str):
             return str(text)
         return text.replace("{", "{{").replace("}", "}}")
+
+    def _format_entity_registry(self, entity_registry: Dict) -> str:
+        """
+        [V60.92] Entity Registry를 프롬프트용 문자열로 변환
+        NPC 명칭 일관성을 위해 등록된 이름만 사용하도록 안내
+        """
+        if not entity_registry:
+            return ""
+
+        lines = [
+            "### [V60.92] 🏷️ Entity Registry - 명칭 일관성 필수!",
+            "╔══════════════════════════════════════════════════════════════════╗",
+            "║ ⚠️ 아래 등록된 이름만 사용하세요! 다른 명칭/별명 사용 금지!      ║",
+            "╚══════════════════════════════════════════════════════════════════╝"
+        ]
+
+        categories = [
+            ('characters', '👤 캐릭터'),
+            ('organizations', '🏛️ 조직/문파'),
+            ('locations', '📍 장소'),
+            ('objects', '🗡️ 아이템/물건'),
+            ('concepts', '📜 개념/기술')
+        ]
+
+        has_content = False
+        for key, label in categories:
+            items = entity_registry.get(key, [])
+            if items:
+                has_content = True
+                lines.append(f"\n{label}:")
+                for item in items[:20]:  # 최대 20개
+                    if isinstance(item, dict):
+                        name = item.get('name', item.get('이름', str(item)))
+                        alias = item.get('alias', item.get('별칭', ''))
+                        if alias:
+                            lines.append(f"  • {name} (={alias})")
+                        else:
+                            lines.append(f"  • {name}")
+                    else:
+                        lines.append(f"  • {item}")
+
+        if not has_content:
+            return ""
+
+        lines.append("\n→ 위 목록에 없는 새 NPC/조직 등장 시 반드시 명확한 이름 부여!")
+        return "\n".join(lines)
 
 
 def create_ensemble_generator(context, client, model_tier: str = "gemini-3-pro-preview"):

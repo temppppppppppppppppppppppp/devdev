@@ -64,7 +64,9 @@ class FourPhaseArcGenerator(BaseAgent):
         assets: Dict = None,
         max_internal_retries: int = 2,
         protagonist_name: str = "주인공",
-        director_feedback: str = ""
+        director_feedback: str = "",
+        entity_registry: Dict = None,  # [V60.92] Entity Registry (NPC 명칭 일관성)
+        state_tracker=None  # [V60.94] StateTracker (죽은 NPC 검증용)
     ) -> Tuple[Optional[Dict], Dict]:
         """
         3단계 Arc 생성
@@ -79,11 +81,23 @@ class FourPhaseArcGenerator(BaseAgent):
             max_internal_retries: 내부 재시도 횟수
             protagonist_name: 주인공 이름
             director_feedback: [V60.77] Director REJECT 피드백 (재시도 시 반영)
+            entity_registry: [V60.92] Entity Registry (NPC 명칭 일관성)
+            state_tracker: [V60.94] StateTracker (죽은 NPC 검증용)
 
         Returns:
             (generated_arc, pipeline_result)
         """
         self.stats["total_attempts"] += 1
+
+        # [V60.88] protagonist_config 추출 (context에서 직접 로드)
+        protagonist_config = {}
+        try:
+            master_bible = getattr(self.context, 'master_bible', {})
+            if master_bible:
+                bible_root = master_bible.get('MasterBible', master_bible)
+                protagonist_config = bible_root.get('protagonist_config', {})
+        except Exception:
+            pass
 
         # ep_count 추출 및 검증
         if isinstance(curr_block, dict):
@@ -166,7 +180,9 @@ class FourPhaseArcGenerator(BaseAgent):
                 constraint_block=full_constraint_block,
                 assets=assets,
                 feedback=feedback,
-                protagonist_name=protagonist_name
+                protagonist_name=protagonist_name,
+                protagonist_config=protagonist_config,  # [V60.88]
+                entity_registry=entity_registry  # [V60.92] Entity Registry
             )
 
             if not best_arc:
@@ -190,7 +206,8 @@ class FourPhaseArcGenerator(BaseAgent):
             verdict, validation_result = self.validator.validate(
                 arc=best_arc,
                 prev_arcs=prev_arcs,
-                constraints=full_constraint_block
+                constraints=full_constraint_block,
+                state_tracker=state_tracker  # [V60.94] 죽은 NPC 검증용
             )
 
             pipeline_result["phases"]["validate"] = {
