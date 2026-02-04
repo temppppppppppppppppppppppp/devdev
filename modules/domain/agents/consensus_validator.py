@@ -282,7 +282,9 @@ class ConsensusValidator(BaseAgent):
                     loss = int(str(loss_str).replace("%", "").strip())
                     final_internal_energy = max(0, 100 - loss)
                 except:
-                    final_internal_energy = "?"
+                    # [V60.73] "?" 대신 보수적 기본값 50 반환 (타입 안전성 + 안전한 Arc 설계 유도)
+                    print(f"      ⚠️ [V60.73] internal_energy_loss 파싱 실패: '{loss_str}' → 50% 가정")
+                    final_internal_energy = 50
 
             if final_injuries is None:
                 final_injuries = shadow.get("expected_injuries", "없음")

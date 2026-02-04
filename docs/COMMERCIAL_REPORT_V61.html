@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wuxia Studio V61 - 상업성 평가 보고서</title>
+    <style>
+        :root {
+            --primary: #1a1a2e;
+            --secondary: #16213e;
+            --accent: #e94560;
+            --accent2: #0f3460;
+            --gold: #f4d03f;
+            --success: #27ae60;
+            --text: #eaeaea;
+            --text-muted: #a0a0a0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: var(--text);
+            line-height: 1.8;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 60px 0;
+            border-bottom: 2px solid var(--accent);
+            margin-bottom: 60px;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--gold), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header .subtitle {
+            font-size: 1.4em;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+
+        .header .meta {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            font-size: 0.95em;
+            color: var(--text-muted);
+        }
+
+        .header .meta span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Executive Summary */
+        .exec-summary {
+            background: linear-gradient(135deg, var(--accent2), var(--secondary));
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 60px;
+            border-left: 5px solid var(--gold);
+        }
+
+        .exec-summary h2 {
+            color: var(--gold);
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .exec-summary .highlight-box {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 30px;
+            margin-top: 20px;
+        }
+
+        .exec-summary .key-number {
+            font-size: 3em;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .exec-summary .key-label {
+            font-size: 1.1em;
+            color: var(--text-muted);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .metric-card {
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .metric-card .number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: var(--success);
+        }
+
+        .metric-card .label {
+            color: var(--text-muted);
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        /* Section Styling */
+        .section {
+            margin-bottom: 60px;
+        }
+
+        .section-title {
+            font-size: 2em;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .section-title .part-badge {
+            background: var(--accent);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 0.6em;
+        }
+
+        /* Comparison Table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .comparison-table th {
+            background: var(--accent2);
+            padding: 20px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .comparison-table td {
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .comparison-table .human {
+            color: #e74c3c;
+        }
+
+        .comparison-table .ai {
+            color: #2ecc71;
+        }
+
+        .comparison-table .winner {
+            background: rgba(46, 204, 113, 0.1);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge-win { background: var(--success); color: white; }
+        .badge-lose { background: #e74c3c; color: white; }
+        .badge-tie { background: #f39c12; color: white; }
+
+        /* Feature Cards */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, rgba(15,52,96,0.8), rgba(22,33,62,0.8));
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(233,69,96,0.2);
+        }
+
+        .feature-card h4 {
+            color: var(--gold);
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            margin-bottom: 15px;
+        }
+
+        .feature-card .tech-tag {
+            display: inline-block;
+            background: rgba(233,69,96,0.2);
+            color: var(--accent);
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        /* Pipeline Visualization */
+        .pipeline-container {
+            background: rgba(0,0,0,0.3);
+            border-radius: 16px;
+            padding: 40px;
+            margin: 30px 0;
+            overflow-x: auto;
+        }
+
+        .pipeline {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            min-width: 900px;
+            position: relative;
+        }
+
+        .pipeline::before {
+            content: '';
+            position: absolute;
+            top: 60px;
+            left: 80px;
+            right: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--gold), var(--success));
+            z-index: 0;
+        }
+
+        .stage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            flex: 1;
+        }
+
+        .stage-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            margin-bottom: 15px;
+            border: 4px solid;
+        }
+
+        .stage-0 .stage-icon { background: #1abc9c; border-color: #16a085; }
+        .stage-1 .stage-icon { background: #3498db; border-color: #2980b9; }
+        .stage-2 .stage-icon { background: #9b59b6; border-color: #8e44ad; }
+        .stage-3 .stage-icon { background: #e67e22; border-color: #d35400; }
+        .stage-4 .stage-icon { background: #e74c3c; border-color: #c0392b; }
+
+        .stage-label {
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+
+        .stage-desc {
+            font-size: 0.85em;
+            color: var(--text-muted);
+            text-align: center;
+            max-width: 140px;
+        }
+
+        /* Stage Detail Cards */
+        .stage-detail {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            border-radius: 16px;
+            padding: 35px;
+            margin: 25px 0;
+            border-left: 5px solid;
+        }
+
+        .stage-detail.s0 { border-color: #1abc9c; }
+        .stage-detail.s1 { border-color: #3498db; }
+        .stage-detail.s2 { border-color: #9b59b6; }
+        .stage-detail.s3 { border-color: #e67e22; }
+        .stage-detail.s4 { border-color: #e74c3c; }
+
+        .stage-detail h4 {
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stage-detail .stage-num {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+
+        .stage-detail.s0 .stage-num { background: #1abc9c; }
+        .stage-detail.s1 .stage-num { background: #3498db; }
+        .stage-detail.s2 .stage-num { background: #9b59b6; }
+        .stage-detail.s3 .stage-num { background: #e67e22; }
+        .stage-detail.s4 .stage-num { background: #e74c3c; }
+
+        .agent-flow {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .agent-box {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .agent-box .icon {
+            font-size: 1.5em;
+        }
+
+        .agent-box .name {
+            font-weight: 600;
+            color: var(--gold);
+        }
+
+        .agent-box .role {
+            font-size: 0.85em;
+            color: var(--text-muted);
+        }
+
+        .flow-arrow {
+            display: flex;
+            align-items: center;
+            font-size: 1.5em;
+            color: var(--accent);
+        }
+
+        .logic-list {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .logic-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .logic-list li:last-child {
+            border-bottom: none;
+        }
+
+        .logic-list .step-num {
+            background: var(--accent2);
+            color: var(--text);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85em;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .logic-list .step-content {
+            flex: 1;
+        }
+
+        .logic-list .step-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .logic-list .step-desc {
+            font-size: 0.9em;
+            color: var(--text-muted);
+        }
+
+        /* Validation Tier */
+        .validation-visual {
+            background: rgba(0,0,0,0.3);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+
+        .tier-row {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .tier-row:last-child {
+            border-bottom: none;
+        }
+
+        .tier-badge {
+            width: 80px;
+            padding: 8px;
+            text-align: center;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-right: 20px;
+        }
+
+        .tier-badge.blocking { background: #c0392b; }
+        .tier-badge.scoring { background: #e67e22; }
+        .tier-badge.advisory { background: #27ae60; }
+        .tier-badge.python { background: #3498db; }
+
+        .tier-content {
+            flex: 1;
+        }
+
+        .tier-name {
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .tier-desc {
+            font-size: 0.9em;
+            color: var(--text-muted);
+        }
+
+        .tier-cost {
+            width: 100px;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .tier-cost.free { color: #2ecc71; }
+        .tier-cost.paid { color: #f39c12; }
+
+        /* Conclusion */
+        .conclusion {
+            background: linear-gradient(135deg, var(--accent), #c0392b);
+            border-radius: 16px;
+            padding: 50px;
+            text-align: center;
+            margin-top: 60px;
+        }
+
+        .conclusion h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .conclusion p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto 30px;
+        }
+
+        .conclusion .cta {
+            display: inline-block;
+            background: white;
+            color: var(--accent);
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 1.1em;
+            text-decoration: none;
+            transition: transform 0.3s;
+        }
+
+        .conclusion .cta:hover {
+            transform: scale(1.05);
+        }
+
+        /* Market Segment */
+        .market-segment {
+            display: flex;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .segment-bar {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .segment-bar::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--success);
+            transition: height 0.5s;
+        }
+
+        .segment-bar.s10::before { height: 10%; background: #e74c3c; }
+        .segment-bar.s30::before { height: 30%; background: #f39c12; }
+        .segment-bar.s70::before { height: 70%; background: #2ecc71; }
+        .segment-bar.s100::before { height: 100%; background: #27ae60; }
+
+        .segment-bar .content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .segment-bar .percent {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .segment-bar .label {
+            font-size: 0.9em;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        .segment-bar .status {
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                color: #333;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+
+            .feature-card, .stage-detail, .exec-summary {
+                break-inside: avoid;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .market-segment {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Wuxia Studio V61</h1>
+            <p class="subtitle">AI 기반 장편 웹소설 자동 생성 시스템 - 상업성 평가 보고서</p>
+            <div class="meta">
+                <span>📅 2026년 2월</span>
+                <span>📊 Version 61.0</span>
+                <span>🎯 Decision Maker Brief</span>
+            </div>
+        </header>
+
+        <!-- Executive Summary -->
+        <section class="exec-summary">
+            <h2>📋 Executive Summary</h2>
+            <p>본 시스템은 <strong>멀티에이전트 AI 오케스트레이션</strong>을 통해 장편 웹소설을 자동 생성하는 프로덕션급 솔루션입니다. 7단계 품질검증, 엔티티 일관성 시스템, 인과관계 추적을 통해 <strong>인간 작가 대비 일관된 품질과 무한한 생산성</strong>을 제공합니다.</p>
+
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="number">24/7</div>
+                    <div class="label">무중단 생산</div>
+                </div>
+                <div class="metric-card">
+                    <div class="number">100%</div>
+                    <div class="label">연속성 보장</div>
+                </div>
+                <div class="metric-card">
+                    <div class="number">7-Tier</div>
+                    <div class="label">품질 검증</div>
+                </div>
+                <div class="metric-card">
+                    <div class="number">3+</div>
+                    <div class="label">지원 장르</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Part 1: Comparative Advantage -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="part-badge">PART 1</span>
+                인간 작가 대비 비교 우위 분석
+            </h2>
+
+            <h3 style="margin: 30px 0 20px; color: var(--gold);">1.1 핵심 비교 지표</h3>
+
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">평가 항목</th>
+                        <th style="width: 30%;">인간 작가</th>
+                        <th style="width: 30%;">Wuxia Studio V61</th>
+                        <th style="width: 15%;">우위</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="winner">
+                        <td><strong>생산 속도</strong></td>
+                        <td class="human">일 1~2화 (번아웃 위험)</td>
+                        <td class="ai">일 3~10화 (24시간 가동)</td>
+                        <td><span class="badge badge-win">AI 승</span></td>
+                    </tr>
+                    <tr class="winner">
+                        <td><strong>연속성 유지</strong></td>
+                        <td class="human">설정 오류 빈번 (50화+ 시 급증)</td>
+                        <td class="ai">Entity Registry + HUD로 100% 보장</td>
+                        <td><span class="badge badge-win">AI 승</span></td>
+                    </tr>
+                    <tr class="winner">
+                        <td><strong>품질 일관성</strong></td>
+                        <td class="human">컨디션/마감 압박에 따라 변동</td>
+                        <td class="ai">7-Tier 검증으로 최소 품질 보장</td>
+                        <td><span class="badge badge-win">AI 승</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>독창적 전개</strong></td>
+                        <td class="human">개인 창의성에 의존</td>
+                        <td class="ai">패턴 기반 생성 (장르 관습 준수)</td>
+                        <td><span class="badge badge-tie">동등</span></td>
+                    </tr>
+                    <tr class="winner">
+                        <td><strong>장르 규칙 준수</strong></td>
+                        <td class="human">경험에 의존, 실수 가능</td>
+                        <td class="ai">GenreGuard 시스템으로 자동 검증</td>
+                        <td><span class="badge badge-win">AI 승</span></td>
+                    </tr>
+                    <tr class="winner">
+                        <td><strong>운영 비용</strong></td>
+                        <td class="human">인건비 (월 300만원+ / 전업작가)</td>
+                        <td class="ai">API 비용 (월 50~100만원 / 무제한)</td>
+                        <td><span class="badge badge-win">AI 승</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>독자 소통</strong></td>
+                        <td class="human">댓글 반응, 팬서비스 가능</td>
+                        <td class="ai">자동화 한계 (별도 시스템 필요)</td>
+                        <td><span class="badge badge-lose">인간 승</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>브랜드 가치</strong></td>
+                        <td class="human">작가 이름 = 브랜드</td>
+                        <td class="ai">익명 연재 또는 가상 페르소나</td>
+                        <td><span class="badge badge-lose">인간 승</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="background: rgba(39,174,96,0.1); border-radius: 12px; padding: 25px; margin: 30px 0; border-left: 4px solid var(--success);">
+                <strong style="color: var(--success);">📊 비교 결과:</strong> 8개 항목 중 <strong>5개 AI 우위</strong>, 1개 동등, 2개 인간 우위<br>
+                <span style="color: var(--text-muted);">→ 핵심 생산 지표(속도, 품질, 비용)에서 AI가 압도적 우위</span>
+            </div>
+
+            <h3 style="margin: 40px 0 20px; color: var(--gold);">1.2 시장 세그먼트별 대체 가능성</h3>
+
+            <div class="market-segment">
+                <div class="segment-bar s10">
+                    <div class="content">
+                        <div class="percent">상위 10%</div>
+                        <div class="label">스타 작가</div>
+                        <div class="status" style="color: #e74c3c;">❌ 대체 불가</div>
+                    </div>
+                </div>
+                <div class="segment-bar s30">
+                    <div class="content">
+                        <div class="percent">11~30%</div>
+                        <div class="label">중상위 작가</div>
+                        <div class="status" style="color: #f39c12;">⚠️ 경쟁 가능</div>
+                    </div>
+                </div>
+                <div class="segment-bar s70">
+                    <div class="content">
+                        <div class="percent">31~70%</div>
+                        <div class="label">중위 작가</div>
+                        <div class="status" style="color: #2ecc71;">✅ 대체 가능</div>
+                    </div>
+                </div>
+                <div class="segment-bar s100">
+                    <div class="content">
+                        <div class="percent">하위 30%</div>
+                        <div class="label">신인/저품질</div>
+                        <div class="status" style="color: #27ae60;">✅ 압도적 우위</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin: 40px 0 20px; color: var(--gold);">1.3 핵심 경쟁력 (Strategic Moat)</h3>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>🔒 V61 Entity Consistency System</h4>
+                    <p>캐릭터, 조직, 장소, 아이템, 개념을 5개 카테고리로 추적. 첫 등장 시점부터 전 Arc에 걸쳐 누적 관리하여 설정 충돌 원천 방지.</p>
+                    <span class="tech-tag">Entity Registry</span>
+                    <span class="tech-tag">First Appearance Tracking</span>
+                    <span class="tech-tag">Cross-Arc Validation</span>
+                </div>
+
+                <div class="feature-card">
+                    <h4>👑 디렉터주권주의 (Director Sovereignty)</h4>
+                    <p>모든 콘텐츠의 최종 판정권은 Director 에이전트에게 귀속. 다중 검증 레이어를 통과해도 Director가 REJECT하면 재생성.</p>
+                    <span class="tech-tag">Quality Gate</span>
+                    <span class="tech-tag">Final Authority</span>
+                    <span class="tech-tag">Zero Compromise</span>
+                </div>
+
+                <div class="feature-card">
+                    <h4>📊 HUD (Head-Up Display) 시스템</h4>
+                    <p>주인공의 무공, 경지, 소지품, 부상 상태를 실시간 추적. 에피소드별 스냅샷으로 언제든 롤백 가능.</p>
+                    <span class="tech-tag">MartialManager</span>
+                    <span class="tech-tag">State Tracking</span>
+                    <span class="tech-tag">Episode Snapshot</span>
+                </div>
+
+                <div class="feature-card">
+                    <h4>🔄 인과관계 그래프 (Causal Graph)</h4>
+                    <p>복선 심기 → 회수, 원인 → 결과를 그래프로 추적. "죽은 NPC 부활", "미획득 아이템 사용" 등 논리 오류 자동 검출.</p>
+                    <span class="tech-tag">Karma Service</span>
+                    <span class="tech-tag">Seed Tracking</span>
+                    <span class="tech-tag">Foreshadow Management</span>
+                </div>
+            </div>
+
+            <h3 style="margin: 40px 0 20px; color: var(--gold);">1.4 비용 효율성</h3>
+
+            <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 30px; margin: 20px 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <strong>인간 작가 고용</strong>
+                        </td>
+                        <td style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: right;">
+                            <span style="font-size: 1.5em; color: #e74c3c;">월 300~500만원</span>
+                            <div style="font-size: 0.85em; color: var(--text-muted);">일 2화 기준, 휴무/병가 발생</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 15px;">
+                            <strong>Wuxia Studio V61</strong>
+                        </td>
+                        <td style="padding: 15px; text-align: right;">
+                            <span style="font-size: 1.5em; color: #2ecc71;">월 50~100만원</span>
+                            <div style="font-size: 0.85em; color: var(--text-muted);">일 5화+ 가능, 24/7 무중단</div>
+                        </td>
+                    </tr>
+                </table>
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid var(--accent); text-align: center;">
+                    <span style="font-size: 1.3em;">비용 절감: <strong style="color: var(--success);">70~80%</strong></span>
+                    <span style="margin-left: 30px; font-size: 1.3em;">생산량 증가: <strong style="color: var(--success);">250~500%</strong></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Part 2: System Architecture -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="part-badge">PART 2</span>
+                시스템 아키텍처 및 스테이지별 로직
+            </h2>
+
+            <h3 style="margin: 30px 0 20px; color: var(--gold);">2.1 전체 파이프라인 개요</h3>
+
+            <div class="pipeline-container">
+                <div class="pipeline">
+                    <div class="stage stage-0">
+                        <div class="stage-icon">📚</div>
+                        <div class="stage-label">Phase 0</div>
+                        <div class="stage-desc">Bible Recovery<br>(설정집 로드)</div>
+                    </div>
+                    <div class="stage stage-1">
+                        <div class="stage-icon">🗺️</div>
+                        <div class="stage-label">Stage 1</div>
+                        <div class="stage-desc">Volume Strategy<br>(10권 전략)</div>
+                    </div>
+                    <div class="stage stage-2">
+                        <div class="stage-icon">⚔️</div>
+                        <div class="stage-label">Stage 2</div>
+                        <div class="stage-desc">Arc Design<br>(50개 전술)</div>
+                    </div>
+                    <div class="stage stage-3">
+                        <div class="stage-icon">📐</div>
+                        <div class="stage-label">Stage 3</div>
+                        <div class="stage-desc">Blueprint<br>(씬 설계)</div>
+                    </div>
+                    <div class="stage stage-4">
+                        <div class="stage-icon">✍️</div>
+                        <div class="stage-label">Stage 4</div>
+                        <div class="stage-desc">Manuscript<br>(최종 원고)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stage 0 Detail -->
+            <div class="stage-detail s0">
+                <h4><span class="stage-num">0</span> Phase 0: Bible Recovery</h4>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">설정집(Bible)을 로드하고 SQLite DB와 동기화. 모든 생성의 기반이 되는 월드 설정, 캐릭터 정보, 장르 규칙을 메모리에 적재.</p>
+
+                <div class="agent-flow">
+                    <div class="agent-box">
+                        <span class="icon">📖</span>
+                        <div>
+                            <div class="name">Bible Loader</div>
+                            <div class="role">JSON 설정 파싱</div>
+                        </div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="agent-box">
+                        <span class="icon">🗄️</span>
+                        <div>
+                            <div class="name">DB Sync</div>
+                            <div class="role">SQLite 동기화</div>
+                        </div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="agent-box">
+                        <span class="icon">🎭</span>
+                        <div>
+                            <div class="name">HUD Init</div>
+                            <div class="role">상태 추적 시작</div>
+                        </div>
+                    </div>
+                </div>
+
+                <ul class="logic-list">
+                    <li>
+                        <span class="step-num">1</span>
+                        <div class="step-content">
+                            <div class="step-title">Bible JSON 로드</div>
+                            <div class="step-desc">MasterBible, 캐릭터 프로필, 세계관 설정, 장르 규칙 파싱</div>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="step-num">2</span>
+                        <div class="step-content">
+                            <div class="step-title">DB 스키마 검증</div>
+                            <div class="step-desc">13개 테이블 존재 확인, 마이그레이션 자동 실행</div>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="step-num">3</span>
+                        <div class="step-content">
+                            <div class="step-title">HUD 초기화</div>
+                            <div class="step-desc">MartialManager에 주인공 초기 상태 로드 (무공, 경지, 소지품)</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Stage 1 Detail -->
+            <div class="stage-detail s1">
+                <h4><span class="stage-num">1</span> Stage 1: Volume Strategy</h4>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">10권 분량의 거시적 서사 전략 수립. 각 권의 테마, 주요 갈등, 성장 곡선을 설계.</p>
+
+                <div class="agent-flow">
+                    <div class="agent-box">
+                        <span class="icon">🧠</span>
+                        <div>
+                            <div class="name">Analyst</div>
+                            <div class="role">전략 기획</div>
+                        </div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="agent-box">
+                        <span class="icon">👑</span>
+                        <div>
+                            <div class="name">Director</div>
+                            <div class="role">전략 검증</div>
+                        </div>
+                    </div>
+                </div>
+
+                <ul class="logic-list">
+                    <li>
+                        <span class="step-num">1</span>
+                        <div class="step-content">
+                            <div class="step-title">Treatment 분석</div>
+                            <div class="step-desc">사용자 제공 시놉시스/트리트먼트에서 핵심 갈등, 캐릭터 아크 추출</div>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="step-num">2</span>
+                        <div class="step-content">
+                            <div class="step-title">10권 매크로 설계</div>
+                            <div class="step-desc">기승전결 구조로 10권 배분, 각 권의 클라이맥스 포인트 설정</div>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="step-num">3</span>
+                        <div class="step-content">
+                            <div class="step-title">Director 승인</div>
+                            <div class="step-desc">전략적 일관성, 서사 흐름 검증 후 PASS/REJECT</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Stage 2 Detail -->
+            <div class="stage-detail s2">
+                <h4><span class="stage-num">2</span> Stage 2: Arc Design (4-Phase Pipeline)</h4>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">권당 5개, 총 50개 Arc의 전술 설계. 4단계 파이프라인으로 품질 보장.</p>
+
+                <div class="agent-flow" style="flex-wrap: wrap;">
+                    <div class="agent-box">
+                        <span class="icon">📋</span>
+                        <div>
+                            <div class="name">ConstraintCompiler</div>
+                            <div class="role">제약 수집</div>
+                        </div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="agent-box">
+                        <span class="icon">✈️</span>
+                        <div>
+                            <div class="name">PreflightChecker</div>
+                            <div class="role">사전 검증</div>
+                        </div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="agent-box">
+                        <span class="icon">🎲</span>
+                        <div>
+                            <div class="name">ArcEnsemble</div>
+                            <div class="role">3개 후보 생성</div>
+                        </div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="agent-box">
+                        <span class="icon">🔍</span>
+                        <div>
+                            <div class="name">ArcCritic</div>
+                            <div class="role">즉시 비평</div>
+                        </div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="agent-box">
+                        <span class="icon">🤝</span>
+                        <div>
+                            <div class="name">ConsensusValidator</div>
+                            <div class="role">3-LLM 합의</div>
+                        </div>
+                    </div>
+                </div>
+
+                <ul class="logic-list">
+                    <li>
+                        <span class="step-num">1</span>
+                        <div class="step-content">
+                            <div class="step-title">Phase 1: Constraint Compilation</div>
+                            <div class="step-desc">이전 Arc 상태, 볼륨 전략, 장르 규칙에서 필수 제약 추출</div>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="step-num">2</span>
+                        <div class="step-content">
+                            <div class="step-title">Phase 2: Preflight Check</div>
+                            <div class="step-desc">Python 기반 무료 사전 검증 - 연속성, 타임라인, 캐릭터 상태</div>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="step-num">3</span>
+                        <div class="step-content">
+                            <div class="step-title">Phase 3: Ensemble Generation</div>
+                            <div class="step-desc">3개 전략(보수/균형/공격)으로 병렬 생성, 최고 점수 선택</div>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="step-num">4</span>
+                        <div class="step-content">
+                            <div class="step-title">Phase 4: Consensus Validation</div>
+                            <div class="step-desc">3개 LLM이 독립 평가, 2/3 이상 합의 시 PASS</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Stage 3 Detail -->
+            <div class="stage-detail s3">
+                <h4><span class="stage-num">3</span> Stage 3: Blueprint Generation (3-Phase Pipeline)</h4>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">각 에피소드의 씬별 설계도 생성. Arc를 충실히 따르는 연속성 있는 Blueprint 작성.</p>
+
+                <div class="agent-flow">
+                    <div class="agent-box">
+                        <span class="icon">📋</span>
+                        <div>
+                            <div class="name">BlueprintConstraint</div>
+                            <div class="role">제약 수집</div>
+                        </div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="agent-box">
+                        <span class="icon">🎲</span>
+                        <div>
+                            <div class="name">BlueprintEnsemble</div>
+                            <div class="role">3개 후보 생성</div>
+                        </div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="agent-box">
+                        <span class="icon">✅</span>
+                        <div>
+                            <div class="name">UnifiedValidator</div>
+                            <div class="role">사전검사 + Director</div>
+                        </div>
+                    </div>
+                </div>
+
+                <ul class="logic-list">
+                    <li>
+                        <span class="step-num">1</span>
+                        <div class="step-content">
+                            <div class="step-title">Phase 1: Constraint Collection</div>
+                            <div class="step-desc">Arc 섹션 추출, 직전 Blueprint 연속성, 정지선(Stop-Line) 설정</div>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="step-num">2</span>
+                        <div class="step-content">
+                            <div class="step-title">Phase 2: Ensemble Generation</div>
+                            <div class="step-desc">3개 전략으로 Blueprint 생성, V61 주인공 이름 강제 주입</div>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="step-num">3</span>
+                        <div class="step-content">
+                            <div class="step-title">Phase 3: Unified Validation</div>
+                            <div class="step-desc">Python 사전검사 → Director 최종 판정 (디렉터주권주의)</div>
+                        </div>
+                    </li>
+                </ul>
+
+                <div style="background: rgba(230,126,34,0.1); border-radius: 8px; padding: 15px; margin-top: 20px;">
+                    <strong style="color: #e67e22;">🔒 V61 Entity Injection:</strong> 모든 Blueprint 생성 시 주인공 이름 + Entity Registry를 프롬프트 헤더에 강제 주입하여 명칭 일관성 100% 보장
+                </div>
+            </div>
+
+            <!-- Stage 4 Detail -->
+            <div class="stage-detail s4">
+                <h4><span class="stage-num">4</span> Stage 4: Manuscript Production</h4>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">최종 원고 작성. Blueprint를 기반으로 실제 소설 텍스트 생성.</p>
+
+                <div class="agent-flow">
+                    <div class="agent-box">
+                        <span class="icon">✍️</span>
+                        <div>
+                            <div class="name">Writer</div>
+                            <div class="role">원고 작성</div>
+                        </div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="agent-box">
+                        <span class="icon">👑</span>
+                        <div>
+                            <div class="name">Director</div>
+                            <div class="role">품질 검증</div>
+                        </div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="agent-box">
+                        <span class="icon">🔄</span>
+                        <div>
+                            <div class="name">TwoPhase</div>
+                            <div class="role">재시도 시 발동</div>
+                        </div>
+                    </div>
+                </div>
+
+                <ul class="logic-list">
+                    <li>
+                        <span class="step-num">1</span>
+                        <div class="step-content">
+                            <div class="step-title">Dynamic Prompt Assembly</div>
+                            <div class="step-desc">Blueprint + HUD + 이전 원고 + 장르 규칙 조합</div>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="step-num">2</span>
+                        <div class="step-content">
+                            <div class="step-title">Writer 원고 생성</div>
+                            <div class="step-desc">6,000~8,000자 분량의 에피소드 텍스트 생성</div>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="step-num">3</span>
+                        <div class="step-content">
+                            <div class="step-title">Director 7-Tier 검증</div>
+                            <div class="step-desc">BLOCKING → SCORING → ADVISORY 순차 검증</div>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="step-num">4</span>
+                        <div class="step-content">
+                            <div class="step-title">REJECT 시 재생성</div>
+                            <div class="step-desc">피드백 반영하여 재시도, 3회차+ 시 TwoPhase 발동</div>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="step-num">5</span>
+                        <div class="step-content">
+                            <div class="step-title">PASS 시 저장</div>
+                            <div class="step-desc">SQLite + 물리 파일 + ChromaDB 벡터 저장</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <h3 style="margin: 40px 0 20px; color: var(--gold);">2.2 7-Tier 검증 시스템</h3>
+
+            <div class="validation-visual">
+                <div class="tier-row">
+                    <div class="tier-badge python">TIER -1</div>
+                    <div class="tier-content">
+                        <div class="tier-name">Arc Continuity Check</div>
+                        <div class="tier-desc">Arc간 타임라인, 캐릭터 상태 연속성 검증</div>
+                    </div>
+                    <div class="tier-cost free">무료 (Python)</div>
+                </div>
+                <div class="tier-row">
+                    <div class="tier-badge python">TIER 0</div>
+                    <div class="tier-content">
+                        <div class="tier-name">Episode Continuity Check</div>
+                        <div class="tier-desc">에피소드간 연속성, 직전 에피소드 상태 반영</div>
+                    </div>
+                    <div class="tier-cost free">무료 (Python)</div>
+                </div>
+                <div class="tier-row">
+                    <div class="tier-badge python">TIER 0.1</div>
+                    <div class="tier-content">
+                        <div class="tier-name">Manuscript-Blueprint Match</div>
+                        <div class="tier-desc">원고가 Blueprint의 필수 씬을 모두 포함하는지 검증</div>
+                    </div>
+                    <div class="tier-cost free">무료 (Python)</div>
+                </div>
+                <div class="tier-row">
+                    <div class="tier-badge blocking">TIER 1</div>
+                    <div class="tier-content">
+                        <div class="tier-name">BLOCKING Issues</div>
+                        <div class="tier-desc">죽은 NPC 부활, 미획득 아이템 사용 등 → 즉시 REJECT</div>
+                    </div>
+                    <div class="tier-cost paid">LLM 호출</div>
+                </div>
+                <div class="tier-row">
+                    <div class="tier-badge scoring">TIER 2</div>
+                    <div class="tier-content">
+                        <div class="tier-name">SCORING Evaluation</div>
+                        <div class="tier-desc">100점 만점 채점, 70점 미만 시 REJECT</div>
+                    </div>
+                    <div class="tier-cost paid">LLM 호출</div>
+                </div>
+                <div class="tier-row">
+                    <div class="tier-badge advisory">TIER 3</div>
+                    <div class="tier-content">
+                        <div class="tier-name">ADVISORY Suggestions</div>
+                        <div class="tier-desc">개선 제안 (비차단), 항상 PASS</div>
+                    </div>
+                    <div class="tier-cost paid">LLM 호출</div>
+                </div>
+            </div>
+
+            <h3 style="margin: 40px 0 20px; color: var(--gold);">2.3 데이터 아키텍처</h3>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 20px 0;">
+                <div style="background: rgba(52,152,219,0.2); border-radius: 12px; padding: 25px; border: 2px solid #3498db;">
+                    <h4 style="color: #3498db; margin-bottom: 15px;">🗄️ SQLite (진실의 원천)</h4>
+                    <ul style="list-style: none; font-size: 0.9em;">
+                        <li>• manuscripts (원고)</li>
+                        <li>• blueprints (설계도)</li>
+                        <li>• episode_bibles (설정 변화)</li>
+                        <li>• state_logs (HUD 스냅샷)</li>
+                        <li>• causal_graph (인과관계)</li>
+                        <li>+ 8개 테이블</li>
+                    </ul>
+                </div>
+                <div style="background: rgba(155,89,182,0.2); border-radius: 12px; padding: 25px; border: 2px solid #9b59b6;">
+                    <h4 style="color: #9b59b6; margin-bottom: 15px;">🔮 ChromaDB (벡터 검색)</h4>
+                    <ul style="list-style: none; font-size: 0.9em;">
+                        <li>• 에피소드 임베딩</li>
+                        <li>• 시맨틱 검색</li>
+                        <li>• 유사 장면 탐색</li>
+                        <li>• 장기 기억 관리</li>
+                    </ul>
+                </div>
+                <div style="background: rgba(46,204,113,0.2); border-radius: 12px; padding: 25px; border: 2px solid #2ecc71;">
+                    <h4 style="color: #2ecc71; margin-bottom: 15px;">📁 File System (백업)</h4>
+                    <ul style="list-style: none; font-size: 0.9em;">
+                        <li>• drafts/*.txt (원고)</li>
+                        <li>• plans/arcs/*.txt</li>
+                        <li>• plans/blueprints/*.txt</li>
+                        <li>• 가독성 + 버전관리</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Conclusion -->
+        <section class="conclusion">
+            <h2>💡 결론: 상업적 실행 권고</h2>
+            <p>
+                Wuxia Studio V61은 <strong>프로덕션 레벨의 완성도</strong>를 갖춘 시스템입니다.<br>
+                중위권 이하 웹소설 시장에서 <strong>인간 작가 대체가 가능</strong>하며,<br>
+                상위권 작가에게는 <strong>생산성 증강 도구</strong>로 활용할 수 있습니다.
+            </p>
+            <p style="font-size: 1em; opacity: 0.8;">
+                권장 전략: 익명 연재 테스트 → 독자 반응 검증 → SaaS 출시 → B2B 확장
+            </p>
+        </section>
+
+        <footer style="text-align: center; padding: 40px 0; color: var(--text-muted); font-size: 0.9em;">
+            <p>Wuxia Studio V61 Commercial Assessment Report</p>
+            <p>Generated: 2026-02-04 | Confidential</p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시스템 보고서</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        header .subtitle {
+            font-size: 1.25rem;
+            opacity: 0.9;
+        }
+
+        header .meta {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* Navigation */
+        nav {
+            background: var(--card-bg);
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        nav a {
+            color: var(--primary-color);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        nav a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* Sections */
+        section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            color: var(--primary-color);
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 3px solid var(--accent-color);
+        }
+
+        h3 {
+            color: var(--secondary-color);
+            font-size: 1.25rem;
+            margin: 1.5rem 0 1rem;
+        }
+
+        h4 {
+            color: var(--text-color);
+            font-size: 1.1rem;
+            margin: 1rem 0 0.5rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+
+        th,
+        td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background: var(--bg-color);
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        tr:hover {
+            background: var(--bg-color);
+        }
+
+        /* Code blocks */
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            margin: 1rem 0;
+        }
+
+        code {
+            background: var(--bg-color);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.9em;
+        }
+
+        pre code {
+            background: transparent;
+            padding: 0;
+        }
+
+        /* Blockquotes */
+        blockquote {
+            border-left: 4px solid var(--accent-color);
+            padding: 1rem 1.5rem;
+            margin: 1rem 0;
+            background: var(--bg-color);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Lists */
+        ul,
+        ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Highlight boxes */
+        .highlight-box {
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+        }
+
+        .highlight-box.blue {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .highlight-box.green {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            border-left: 4px solid var(--success-color);
+        }
+
+        .highlight-box.yellow {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .highlight-box.red {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            border-left: 4px solid var(--danger-color);
+        }
+
+        /* Diagram containers */
+        .diagram {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 2rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            margin: 1.5rem 0;
+            white-space: pre;
+        }
+
+        /* Stats grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .stat-card .label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Pipeline visualization */
+        .pipeline {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+            justify-content: center;
+            margin: 1.5rem 0;
+        }
+
+        .pipeline-step {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .pipeline-step .step-name {
+            font-weight: 600;
+        }
+
+        .pipeline-step .step-desc {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        .pipeline-arrow {
+            color: var(--text-muted);
+            font-size: 1.5rem;
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .badge.blue {
+            background: #dbeafe;
+            color: var(--primary-color);
+        }
+
+        .badge.green {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .badge.yellow {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .badge.red {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        /* Two-column comparison */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .comparison>div {
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .comparison .bad {
+            background: #fee2e2;
+            border: 2px solid var(--danger-color);
+        }
+
+        .comparison .good {
+            background: #d1fae5;
+            border: 2px solid var(--success-color);
+        }
+
+        /* Flowchart */
+        .flowchart {
+            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+            padding: 2rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+        }
+
+        .flowchart-title {
+            text-align: center;
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Part divider */
+        .part-divider {
+            text-align: center;
+            margin: 3rem 0;
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--secondary-color), #1e3a8a);
+            color: white;
+            border-radius: 16px;
+        }
+
+        .part-divider h2 {
+            color: white;
+            border-bottom: none;
+            margin-bottom: 0.5rem;
+        }
+
+        .part-divider p {
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            header h1 {
+                font-size: 1.75rem;
+            }
+
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+
+            nav ul {
+                flex-direction: column;
+            }
+
+            .pipeline {
+                flex-direction: column;
+            }
+
+            .pipeline-arrow {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>AI 웹소설 자동 생산 시스템 V60</h1>
+        <p class="subtitle">기술 현황 및 사업적 가치 보고서</p>
+        <p class="meta">
+            <strong>작성일:</strong> 2026년 2월 4일 |
+            <strong>버전:</strong> Wuxia Studio V60.83 |
+            <strong>대상:</strong> 투자자
+        </p>
+    </header>
+
+    <div class="container">
+        <nav>
+            <ul>
+                <li><a href="#summary">핵심 요약</a></li>
+                <li><a href="#structure">시스템 구조</a></li>
+                <li><a href="#quality">품질 보증</a></li>
+                <li><a href="#justification">정당화 시스템</a></li>
+                <li><a href="#cost">비용 구조</a></li>
+                <li><a href="#business">사업 시나리오</a></li>
+                <li><a href="#architecture">기술 아키텍처</a></li>
+                <li><a href="#stages">Stage별 로직</a></li>
+                <li><a href="#tech-details">핵심 기술</a></li>
+            </ul>
+        </nav>
+
+        <!-- Section 1: Executive Summary -->
+        <section id="summary">
+            <h2>1. 핵심 요약 (Executive Summary)</h2>
+
+            <h3>이 시스템은 무엇인가?</h3>
+            <div class="highlight-box blue">
+                <strong>AI가 웹소설을 자동으로 써주는 공장</strong>입니다.
+                <p style="margin-top: 0.5rem; margin-bottom: 0;">
+                    사람이 "팽가의 망나니가 가문을 재건하는 이야기"라고 설정집만 주면,
+                    AI가 알아서 1화부터 50화, 100화까지 연재 소설을 생산합니다.
+                </p>
+            </div>
+
+            <h3>왜 이것이 가치 있는가?</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="value">3-5분</div>
+                    <div class="label">1화 작성 시간</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">50-100화</div>
+                    <div class="label">일일 생산량</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">50-100배</div>
+                    <div class="label">비용 효율</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">24/7</div>
+                    <div class="label">무중단 운영</div>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>항목</th>
+                        <th>기존 방식 (인간 작가)</th>
+                        <th>AI 시스템</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>1화 작성 시간</strong></td>
+                        <td>4-8시간</td>
+                        <td><span class="badge green">3-5분</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>일일 생산량</strong></td>
+                        <td>1-2화</td>
+                        <td><span class="badge green">50-100화</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>품질 일관성</strong></td>
+                        <td>작가 컨디션에 의존</td>
+                        <td><span class="badge green">일정한 품질 유지</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>설정 오류</strong></td>
+                        <td>사람이 기억에 의존</td>
+                        <td><span class="badge green">DB가 모든 설정 추적</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>핵심 경쟁력</h3>
+            <ol>
+                <li><strong>연속성 자동 관리:</strong> "3화에서 얻은 검을 7화에서 잃어버렸는데 10화에서 다시 사용" 같은 실수를 자동 차단</li>
+                <li><strong>품질 보증 시스템:</strong> 3단계 검증을 거쳐 최소 품질 보장</li>
+                <li><strong>다중 후보 생성:</strong> 같은 장면을 3가지 다른 스타일로 생성 후 최선 선택</li>
+                <li><strong>비용 최적화:</strong> 싼 AI로 검증하고, 비싼 AI로 창작하는 효율적 구조</li>
+            </ol>
+        </section>
+
+        <!-- Section 2: System Structure -->
+        <section id="structure">
+            <h2>2. 시스템 구조 (생산 라인 비유)</h2>
+
+            <h3>자동차 공장으로 비유하면</h3>
+            <div class="pipeline">
+                <div class="pipeline-step">
+                    <div class="step-name">설정집 투입</div>
+                    <div class="step-desc">원재료 (Bible)</div>
+                </div>
+                <span class="pipeline-arrow">→</span>
+                <div class="pipeline-step">
+                    <div class="step-name">Stage 1</div>
+                    <div class="step-desc">권별 전략</div>
+                </div>
+                <span class="pipeline-arrow">→</span>
+                <div class="pipeline-step">
+                    <div class="step-name">Stage 2</div>
+                    <div class="step-desc">Arc 설계</div>
+                </div>
+                <span class="pipeline-arrow">→</span>
+                <div class="pipeline-step">
+                    <div class="step-name">Stage 3</div>
+                    <div class="step-desc">씬 설계도</div>
+                </div>
+                <span class="pipeline-arrow">→</span>
+                <div class="pipeline-step">
+                    <div class="step-name">Stage 4</div>
+                    <div class="step-desc">원고 집필</div>
+                </div>
+                <span class="pipeline-arrow">→</span>
+                <div class="pipeline-step" style="background: var(--success-color);">
+                    <div class="step-name">출고</div>
+                    <div class="step-desc">완성 원고</div>
+                </div>
+            </div>
+
+            <h3>각 단계별 역할</h3>
+
+            <h4>Stage 1: 권별 전략 (기획실)</h4>
+            <ul>
+                <li><strong>역할:</strong> 전체 스토리를 10권으로 나누고, 각 권의 방향성 결정</li>
+                <li><strong>산출물:</strong> "1권은 각성, 2권은 복수의 시작, 3권은 첫 번째 강적..."</li>
+                <li><strong>비유:</strong> 자동차의 전체 라인업 기획</li>
+            </ul>
+
+            <h4>Stage 2: Arc 설계 (설계실)</h4>
+            <ul>
+                <li><strong>역할:</strong> 각 권을 5개의 Arc(에피소드 묶음)로 세분화</li>
+                <li><strong>산출물:</strong> "Arc 1은 1-5화, 주인공이 독을 해독하고 첫 승리를 거둔다"</li>
+                <li><strong>핵심 기능:</strong> 앞 Arc와의 연속성 자동 체크</li>
+            </ul>
+
+            <h4>Stage 3: 씬 설계도 (부품 명세서)</h4>
+            <ul>
+                <li><strong>역할:</strong> 각 화(에피소드)를 장면 단위로 쪼개어 상세 설계</li>
+                <li><strong>산출물:</strong> "1화 Scene 1: 독에 중독된 주인공이 눈을 뜬다. 위치: 감옥..."</li>
+                <li><strong>핵심 기능:</strong> 다음 화 내용 침범 방지 (정지선 시스템)</li>
+            </ul>
+
+            <h4>Stage 4: 원고 집필 (조립 공장)</h4>
+            <ul>
+                <li><strong>역할:</strong> 설계도를 바탕으로 실제 소설 문장 생성</li>
+                <li><strong>산출물:</strong> 완성된 소설 원고 (4,000-6,000자/화)</li>
+                <li><strong>핵심 기능:</strong> 3개 후보 생성 → 품질 검사 → 최선 선택</li>
+            </ul>
+        </section>
+
+        <!-- Section 3: Quality Assurance -->
+        <section id="quality">
+            <h2>3. 품질 보증 시스템</h2>
+
+            <h3>왜 품질 관리가 중요한가?</h3>
+            <div class="highlight-box yellow">
+                웹소설 독자는 <strong>설정 오류에 민감</strong>합니다.
+            </div>
+
+            <blockquote>
+                "3화에서 죽은 캐릭터가 10화에 멀쩡히 나왔어요" → 별점 테러<br>
+                "주인공이 검을 잃어버렸는데 다음 화에서 쓰고 있네요" → 구독 취소
+            </blockquote>
+
+            <h3>3단계 품질 검증 체계</h3>
+            <div class="pipeline">
+                <div class="pipeline-step" style="background: var(--success-color);">
+                    <div class="step-name">1단계</div>
+                    <div class="step-desc">Python 검증 (무료)</div>
+                </div>
+                <span class="pipeline-arrow">→</span>
+                <div class="pipeline-step" style="background: var(--warning-color);">
+                    <div class="step-name">2단계</div>
+                    <div class="step-desc">AI 교차 검증</div>
+                </div>
+                <span class="pipeline-arrow">→</span>
+                <div class="pipeline-step" style="background: var(--danger-color);">
+                    <div class="step-name">3단계</div>
+                    <div class="step-desc">Director 판정</div>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>단계</th>
+                        <th>비용</th>
+                        <th>속도</th>
+                        <th>검사 항목</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>1단계: Python</strong></td>
+                        <td><span class="badge green">0원</span></td>
+                        <td>즉시</td>
+                        <td>분량, 필수요소, 중복아이템, 죽은 캐릭터</td>
+                    </tr>
+                    <tr>
+                        <td><strong>2단계: AI 교차</strong></td>
+                        <td><span class="badge yellow">~50원</span></td>
+                        <td>10-20초</td>
+                        <td>서사 개연성, 캐릭터 일관성, 복선 연결</td>
+                    </tr>
+                    <tr>
+                        <td><strong>3단계: Director</strong></td>
+                        <td><span class="badge red">~200원</span></td>
+                        <td>30-60초</td>
+                        <td>최종 판정 (PASS/REJECT)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Section 4: Justification System -->
+        <section id="justification">
+            <h2>4. what-how : 정당화 시스템</h2>
+
+            <h3>문제 상황</h3>
+            <blockquote>
+                "주인공이 너무 쉽게 이김" / "말도 안 되는 전개" / "먼치킨이 심함"
+            </blockquote>
+
+            <p>약한 주인공이 강한 적을 이기는 것 자체는 문제가 아닙니다. <strong>어떻게 이겼는지 설명이 없는 것</strong>이 문제입니다.</p>
+
+            <h3>나쁜 예시 vs 좋은 예시</h3>
+            <p><strong>상황:</strong> 기력이 고갈된 주인공이 100근(60kg) 대도를 들어야 함</p>
+
+            <div class="comparison">
+                <div class="bad">
+                    <h4 style="color: var(--danger-color);">나쁜 글</h4>
+                    <p>"주인공이 대도를 가볍게 들어올렸다."</p>
+                    <p><strong>문제:</strong> 어떻게? 왜?</p>
+                </div>
+                <div class="good">
+                    <h4 style="color: var(--success-color);">좋은 글</h4>
+                    <p>"전생에 체득한 발경법으로 팔목의 기혈을 순간 폭발시켰다. 뼈마디가 어긋나는 고통이 밀려왔지만, 녹슨 철괴는 지면에서 떨어졌다."</p>
+                    <p><strong>해결:</strong> 방법(발경법) + 대가(고통) + 결과(성공)</p>
+                </div>
+            </div>
+
+            <h3>정당화 공식</h3>
+            <div class="highlight-box green">
+                <strong>[제약 인정]</strong> → <strong>[특수 방법]</strong> → <strong>[대가 지불]</strong> → <strong>[결과
+                    달성]</strong>
+                <p style="margin-top: 0.5rem; margin-bottom: 0;">
+                    "나약한 상태였지만" → "전생의 기술로" → "뼈가 부러지는 고통을 감수하고" → "해냈다"
+                </p>
+            </div>
+        </section>
+
+        <!-- Section 5: Cost Structure -->
+        <section id="cost">
+            <h2>5. 비용 구조</h2>
+
+            <h3>API 비용 (Google Gemini 기준)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>모델</th>
+                        <th>용도</th>
+                        <th>비용 (1000토큰당)</th>
+                        <th>사용처</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Gemini 2.5 Flash</td>
+                        <td>검증, 간단한 작업</td>
+                        <td>~$0.01</td>
+                        <td>사전 검증, 교차 검증</td>
+                    </tr>
+                    <tr>
+                        <td>Gemini 2.5 Pro</td>
+                        <td>창작, 최종 판정</td>
+                        <td>~$0.05</td>
+                        <td>원고 생성, Director</td>
+                    </tr>
+                    <tr>
+                        <td>Gemini 3 Pro</td>
+                        <td>고품질 창작</td>
+                        <td>~$0.10</td>
+                        <td>핵심 창작 작업</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>1화 생산 비용 추정</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>단계</th>
+                        <th>호출 수</th>
+                        <th>예상 비용</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Stage 3 (설계도)</td>
+                        <td>3-5회</td>
+                        <td>약 100-200원</td>
+                    </tr>
+                    <tr>
+                        <td>Stage 4 (원고 생성)</td>
+                        <td>3-9회</td>
+                        <td>약 300-600원</td>
+                    </tr>
+                    <tr>
+                        <td>검증</td>
+                        <td>3-6회</td>
+                        <td>약 50-100원</td>
+                    </tr>
+                    <tr style="font-weight: 600; background: var(--bg-color);">
+                        <td>총계</td>
+                        <td></td>
+                        <td><span class="badge blue">약 500-1,000원/화</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>인건비 대비 효율</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>항목</th>
+                        <th>인간 작가</th>
+                        <th>AI 시스템</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1화 비용</td>
+                        <td>5-10만원</td>
+                        <td><span class="badge green">500-1,000원</span></td>
+                    </tr>
+                    <tr>
+                        <td>1화 시간</td>
+                        <td>4-8시간</td>
+                        <td><span class="badge green">3-5분</span></td>
+                    </tr>
+                    <tr>
+                        <td>일 생산량</td>
+                        <td>1-2화</td>
+                        <td><span class="badge green">50-100화</span></td>
+                    </tr>
+                    <tr style="font-weight: 600; background: var(--bg-color);">
+                        <td>비용 효율</td>
+                        <td>기준</td>
+                        <td><span class="badge green">50-100배</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Section 6: Business Scenarios -->
+        <section id="business">
+            <h2>6. 사업적 활용 시나리오</h2>
+
+            <h3>시나리오 A: 웹소설 플랫폼 대량 공급</h3>
+            <div class="highlight-box blue">
+                <ul style="margin: 0;">
+                    <li><strong>목표:</strong> 카카오페이지, 네이버시리즈 등에 대량 연재</li>
+                    <li><strong>전략:</strong> 10개 설정 → 500화 생산 → 플랫폼 입점</li>
+                    <li><strong>예상 비용:</strong> 500화 × 1,000원 = 50만원</li>
+                </ul>
+            </div>
+
+            <h3>시나리오 B: IP 양산 공장</h3>
+            <div class="highlight-box green">
+                <ul style="margin: 0;">
+                    <li><strong>목표:</strong> 웹툰/드라마화 가능한 IP 대량 생산</li>
+                    <li><strong>전략:</strong> 다양한 설정으로 프로토타입 생산 → 반응 좋은 것만 정식 연재</li>
+                    <li><strong>장점:</strong> 실패 비용이 낮아 공격적 시도 가능</li>
+                </ul>
+            </div>
+
+            <h3>시나리오 C: 작가 어시스턴트</h3>
+            <div class="highlight-box yellow">
+                <ul style="margin: 0;">
+                    <li><strong>목표:</strong> 인간 작가의 생산성 향상 도구</li>
+                    <li><strong>전략:</strong> AI가 초안 생성 → 인간이 감수/수정</li>
+                    <li><strong>장점:</strong> 작가 번아웃 방지, 연재 안정성 확보</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Part 2 Divider -->
+        <div class="part-divider">
+            <h2>PART 2: 기술 상세</h2>
+            <p>Technical Deep Dive</p>
+        </div>
+
+        <!-- Section 7: Architecture -->
+        <section id="architecture">
+            <h2>9. 시스템 아키텍처</h2>
+
+            <h3>9.1 전체 구조도</h3>
+            <div class="diagram">
+                ┌─────────────────────────────────────────────────────────────────────────────┐
+                │ SovereignApp (main_a.py) │
+                │ ~ 9,000 Lines Orchestrator │
+                ├─────────────────────────────────────────────────────────────────────────────┤
+                │ │
+                │ ┌─────────────────────────────────────────────────────────────────────┐ │
+                │ │ StudioSystem (Core Engine) │ │
+                │ │ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌────────────┐ │ │
+                │ │ │ProjectContext│ │ LoreManager │ │MartialManager│ │ GenreGuard │ │ │
+                │ │ │ (DB I/O) │ │(설정집 관리) │ │ (HUD 상태) │ │(장르 검증) │ │ │
+                │ │ └─────────────┘ └─────────────┘ └─────────────┘ └────────────┘ │ │
+                │ └─────────────────────────────────────────────────────────────────────┘ │
+                │ │
+                │ ┌─────────────────────────────────────────────────────────────────────┐ │
+                │ │ Triple Database System │ │
+                │ │ ┌───────────────┐ ┌────────────────┐ ┌─────────────────────────┐ │ │
+                │ │ │ SQLite │ │ ChromaDB │ │ File System │ │ │
+                │ │ │ (진실의 원천) │ │ (벡터 임베딩) │ │ (백업/가독용) │ │ │
+                │ │ │ project_data │ │ semantic_search│ │ drafts/*.txt │ │ │
+                │ │ └───────────────┘ └────────────────┘ └─────────────────────────┘ │ │
+                │ └─────────────────────────────────────────────────────────────────────┘ │
+                │ │
+                │ ┌─────────────────────────────────────────────────────────────────────┐ │
+                │ │ Agent Orchestra (Stage별 Chief) │ │
+                │ │ │ │
+                │ │ Stage 1 Stage 2 Stage 3 Stage 4 │ │
+                │ │ ┌────────┐ ┌──────────────┐ ┌──────────────┐ ┌─────────┐ │ │
+                │ │ │Analyst │ │FourPhaseArc │ │ThreePhase │ │Chief │ │ │
+                │ │ │ │ │Generator │ │Blueprint │ │Writer │ │ │
+                │ │ │ 전략 │ │ │ │Generator │ │ │ │ │
+                │ │ └────────┘ └──────────────┘ └──────────────┘ └─────────┘ │ │
+                │ │ │ │
+                │ │ ┌────────────────────────────────────────────────────────────────┐ │ │
+                │ │ │ Director (최종 판정권) │ │ │
+                │ │ │ "디렉터주권주의" - Stage 3, 4 최종 PASS/REJECT │ │ │
+                │ │ └────────────────────────────────────────────────────────────────┘ │ │
+                │ └─────────────────────────────────────────────────────────────────────┘ │
+                │ │
+                └─────────────────────────────────────────────────────────────────────────────┘</div>
+
+            <h3>9.2 에이전트 상속 구조 (Stage별 Chief)</h3>
+            <div class="diagram">
+                BaseAgent
+                (ask, _extract_json_robust, 모델 폴백)
+                │
+                ┌───────────────────────────┼───────────────────────────┐
+                │ │ │
+                ▼ ▼ ▼
+                ┌─────────────┐ ┌──────────────┐ ┌──────────────┐
+                │ Analyst │ │ Architect │ │ Writer │
+                │ Stage 1 │ │ (기본 생성) │ │ (기본 생성) │
+                └─────────────┘ └──────────────┘ └──────────────┘
+
+                ========================= STAGE별 CHIEF AGENTS =========================
+
+                ┌─────────────────────────────────────────────────────────────────────┐
+                │ STAGE 2 Chief: FourPhaseArcGenerator + Director (Orchestrator) │
+                │ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────────────┐ │
+                │ │ PreflightChecker│ │ ConstraintCompiler│ │ NegativeExampleInjector│ │
+                │ │ (gemini-3-flash)│ │ (Python Only) │ │ (Python Only) │ │
+                │ └─────────────────┘ └─────────────────┘ └─────────────────────────┘ │
+                │ ┌─────────────────────┐ ┌─────────────────────────────────────────┐ │
+                │ │ArcEnsembleGenerator │ │ UnifiedArcValidator │ │
+                │ │ (gemini-3-pro) │ │ (gemini-2.5-flash) │ │
+                │ └─────────────────────┘ └─────────────────────────────────────────┘ │
+                │ ┌─────────────────────────────────────────────────────────────────┐ │
+                │ │ Director.audit_strategic_plan() - 최종 PASS/REJECT (2.5-pro) │ │
+                │ └─────────────────────────────────────────────────────────────────┘ │
+                └─────────────────────────────────────────────────────────────────────┘
+
+                ┌─────────────────────────────────────────────────────────────────────┐
+                │ STAGE 3 Chief: ThreePhaseBlueprintGenerator │
+                │ ┌───────────────────────┐ ┌─────────────────────────────────────┐ │
+                │ │BlueprintConstraint │ │ BlueprintEnsembleGenerator │ │
+                │ │ Compiler (Python) │ │ (gemini-3-pro) │ │
+                │ └───────────────────────┘ └─────────────────────────────────────┘ │
+                │ ┌───────────────────────┐ ┌─────────────────────────────────────┐ │
+                │ │UnifiedBlueprint │ │ Director │ │
+                │ │ Validator (2.5-flash)│ │ (gemini-2.5-pro) │ │
+                │ └───────────────────────┘ └─────────────────────────────────────┘ │
+                └─────────────────────────────────────────────────────────────────────┘
+
+                ┌─────────────────────────────────────────────────────────────────────┐
+                │ STAGE 4 Chief: ChiefWriter │
+                │ ┌─────────────────────────────────────────────────────────────────┐ │
+                │ │ ChiefWriter (gemini-3-pro) │ │
+                │ │ • 3개 후보 병렬 생성 (Balanced/Narrative/Tension) │ │
+                │ │ • Self-Critique, Leakage 방지, NPC 추적, DNA 모드 │ │
+                │ └─────────────────────────────────────────────────────────────────┘ │
+                │ ┌─────────────────────────┐ ┌─────────────────────────────────────┐ │
+                │ │ ManuscriptValidator │ │ Director │ │
+                │ │ (Python Only, 경고만) │ │ (gemini-2.5-pro) │ │
+                │ │ REJECT 권한 없음! │ │ 최종 PASS/REJECT │ │
+                │ └─────────────────────────┘ └─────────────────────────────────────┘ │
+                └─────────────────────────────────────────────────────────────────────┘</div>
+
+            <h3>9.3 데이터 흐름 (Chief Agent 기준)</h3>
+            <div class="diagram">
+                Bible.json ───────────────────────────────────────────────────────────────────┐
+                │
+                ▼
+                ┌──────────────────────────────────────────────────────────────────────────────┐
+                │ Stage 0: Bible Recovery │
+                │ • 설정집 로드 → SQLite 동기화 │
+                └────────────────────────────────────┬─────────────────────────────────────────┘
+                │
+                ▼
+                ┌──────────────────────────────────────────────────────────────────────────────┐
+                │ Stage 1: Volume Strategy Chief: Analyst │
+                │ • 10권 전략 수립 → volumes anchor 저장 │
+                └────────────────────────────────────┬─────────────────────────────────────────┘
+                │
+                ▼
+                ┌──────────────────────────────────────────────────────────────────────────────┐
+                │ Stage 2: Arc Design Chief: FourPhaseArcGenerator + Director │
+                │ • 4단계 파이프라인 (Constraint → Generate → Validate → Director) │
+                │ • 3개 후보 앙상블 생성 (Conservative/Balanced/Creative) │
+                │ • Director 최종 판정 (디렉터주권주의) ← Orchestrator Level │
+                │ • arcs anchor 저장 │
+                └────────────────────────────────────┬─────────────────────────────────────────┘
+                │
+                ▼
+                ┌──────────────────────────────────────────────────────────────────────────────┐
+                │ Stage 3: Blueprint Creation Chief: ThreePhaseBlueprintGenerator │
+                │ • 3단계 파이프라인 (Constraint → Generate → Validate) │
+                │ • 3개 후보 앙상블 생성 (Action/Emotion/Dialogue) │
+                │ • Director 최종 판정 (디렉터주권주의) │
+                │ • blueprints 테이블 저장 │
+                └────────────────────────────────────┬─────────────────────────────────────────┘
+                │
+                ▼
+                ┌──────────────────────────────────────────────────────────────────────────────┐
+                │ Stage 4: Manuscript Writing Chief: ChiefWriter │
+                │ • 3개 후보 병렬 생성 (Balanced/Narrative/Tension) │
+                │ • ManuscriptValidator 경고 생성 (REJECT 권한 없음) │
+                │ • Director 최종 판정 (디렉터주권주의) │
+                │ • manuscripts 테이블 저장 + drafts/*.txt 백업 │
+                └────────────────────────────────────┬─────────────────────────────────────────┘
+                │
+                ▼
+                [완성된 연재물]</div>
+        </section>
+
+        <!-- Section 8: Stage Details -->
+        <section id="stages">
+            <h2>10. Stage별 상세 로직</h2>
+
+            <!-- Stage별 Chief 요약 -->
+            <h3>10.0 Stage별 Chief Agent 요약</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Stage</th>
+                        <th>Chief Agent</th>
+                        <th>핵심 역할</th>
+                        <th>사용 모델</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Stage 1</strong></td>
+                        <td>Analyst</td>
+                        <td>10권 전략 수립</td>
+                        <td>gemini-3-pro</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Stage 2</strong></td>
+                        <td>FourPhaseArcGenerator + Director</td>
+                        <td>Arc 4단계 파이프라인 (Orchestrator에서 Director 최종 판정)</td>
+                        <td>gemini-3-pro + 2.5-flash + Director</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Stage 3</strong></td>
+                        <td>ThreePhaseBlueprintGenerator</td>
+                        <td>Blueprint 3단계 파이프라인</td>
+                        <td>gemini-3-pro + Director</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Stage 4</strong></td>
+                        <td>ChiefWriter</td>
+                        <td>앙상블 원고 생성</td>
+                        <td>gemini-3-pro + Director</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>10.1 Stage 2: Arc 설계 파이프라인</h3>
+            <div class="flowchart">
+                <div class="flowchart-title">FourPhaseArcGenerator + Director (FOUR-PHASE ARC GENERATOR)</div>
+            </div>
+            <div class="diagram">
+                ┌─────────────────────────────────────────────────────────────────────────────┐
+                │ STAGE 2: FOUR-PHASE ARC GENERATOR │
+                │ Chief: FourPhaseArcGenerator + Director (Orchestrator Level) │
+                ├─────────────────────────────────────────────────────────────────────────────┤
+                │ │
+                │ ╔═══════════════════════════════════════════════════════════════════════╗ │
+                │ ║ PHASE 1: CONSTRAINT (제약 수집) ║ │
+                │ ║ ║ │
+                │ ║ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐ ║ │
+                │ ║ │ PreflightChecker│ → │ConstraintCompiler│ → │NegativeExample │ ║ │
+                │ ║ │ (gemini-3-flash)│ │ (Python Only) │ │ Injector │ ║ │
+                │ ║ │ │ │ │ │ │ ║ │
+                │ ║ │ • 이전 Arc 분석 │ │ • 체크리스트 │ │ • 안티패턴 주입 │ ║ │
+                │ ║ │ • 상태 추출 │ │ • 금지 목록 │ │ • "이러면 REJECT"│ ║ │
+                │ ║ └─────────────────┘ └─────────────────┘ └─────────────────┘ ║ │
+                │ ╚═══════════════════════════════════════════════════════════════════════╝ │
+                │ │ │
+                │ ▼ │
+                │ ╔═══════════════════════════════════════════════════════════════════════╗ │
+                │ ║ PHASE 2: GENERATE (앙상블 생성) - ArcEnsembleGenerator ║ │
+                │ ║ ║ │
+                │ ║ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ║ │
+                │ ║ │ Conservative│ │ Balanced │ │ Creative │ 병렬 생성 ║ │
+                │ ║ │ temp=0.3 │ │ temp=0.5 │ │ temp=0.7 │ ║ │
+                │ ║ │ 안정성 우선 │ │ 균형 │ │ 흥미 우선 │ ║ │
+                │ ║ └──────┬──────┘ └──────┬──────┘ └──────┬──────┘ ║ │
+                │ ║ └─────────────────┼─────────────────┘ ║ │
+                │ ║ ▼ ║ │
+                │ ║ ┌─────────────────┐ ║ │
+                │ ║ │ Python Scoring │ → 최고 점수 후보 선택 ║ │
+                │ ║ └─────────────────┘ ║ │
+                │ ╚═══════════════════════════════════════════════════════════════════════╝ │
+                │ │ │
+                │ ▼ │
+                │ ╔═══════════════════════════════════════════════════════════════════════╗ │
+                │ ║ PHASE 3: VALIDATE (통합 검증) - UnifiedArcValidator ║ │
+                │ ║ ║ │
+                │ ║ ┌──────────────────────┐ ┌──────────────────────┐ ║ │
+                │ ║ │ Python 즉시 검증 │ │ LLM 문맥 검증 │ ║ │
+                │ ║ │ (무료) │ │ (gemini-2.5-flash) │ ║ │
+                │ ║ │ • 분량 체크 │ │ • 연속성 검증 │ ║ │
+                │ ║ │ • 필수 필드 │ │ • 개연성 검증 │ ║ │
+                │ ║ │ • 중복 패턴 매칭 │ │ • 일관성 검증 │ ║ │
+                │ ║ └──────────┬───────────┘ └──────────┬───────────┘ ║ │
+                │ ║ └───────────────┬──────────┘ ║ │
+                │ ║ ▼ ║ │
+                │ ║ ┌─────────────────┐ ║ │
+                │ ║ │ 내부 PASS │ → FourPhaseArcGenerator 반환║ │
+                │ ║ └─────────────────┘ ║ │
+                │ ╚═══════════════════════════════════════════════════════════════════════╝ │
+                │ │ │
+                │ ▼ │
+                │ ╔═══════════════════════════════════════════════════════════════════════╗ │
+                │ ║ PHASE 4: DIRECTOR FINAL JUDGMENT (Orchestrator Level - main_a.py) ║ │
+                │ ║ ║ │
+                │ ║ ┌──────────────────────────────────────────────────────────────┐ ║ │
+                │ ║ │ 🎬 Director.audit_strategic_plan() │ ║ │
+                │ ║ │ (gemini-2.5-pro) │ ║ │
+                │ ║ │ │ ║ │
+                │ ║ │ "디렉터주권주의" - Arc도 Director의 최종 PASS/REJECT 필요 │ ║ │
+                │ ║ │ │ ║ │
+                │ ║ │ • Self-Consistency 점수 검증 │ ║ │
+                │ ║ │ • 전략적 일관성 판단 │ ║ │
+                │ ║ │ • REJECT 시 구조화된 피드백 생성 │ ║ │
+                │ ║ └──────────────────────────────────────────────────────────────┘ ║ │
+                │ ║ │ ║ │
+                │ ║ ┌───────────┴───────────┐ ║ │
+                │ ║ ▼ ▼ ║ │
+                │ ║ ┌─────────────┐ ┌─────────────┐ ║ │
+                │ ║ │ PASS │ │ REJECT │ ║ │
+                │ ║ │ → Arc 저장 │ │ │ ║ │
+                │ ║ └─────────────┘ └──────┬──────┘ ║ │
+                │ ║ │ ║ │
+                │ ║ ▼ ║ │
+                │ ║ ┌─────────────────────────────┐ ║ │
+                │ ║ │ Director 피드백 구조화 │ ║ │
+                │ ║ │ • REJECT 사유 │ ║ │
+                │ ║ │ • 수정 지시 │ ║ │
+                │ ║ │ • 재시도 가이드 │ ║ │
+                │ ║ └──────────────┬──────────────┘ ║ │
+                │ ║ │ ║ │
+                │ ║ ▼ ║ │
+                │ ║ FourPhaseArcGenerator에 피드백 전달 ║ │
+                │ ║ → PHASE 2로 재시도 (최대 3회) ║ │
+                │ ╚═══════════════════════════════════════════════════════════════════════╝ │
+                │ │
+                └─────────────────────────────────────────────────────────────────────────────┘</div>
+
+            <h3>10.2 Stage 3: Blueprint 생성 파이프라인</h3>
+            <div class="flowchart">
+                <div class="flowchart-title">ThreePhaseBlueprintGenerator (디렉터주권주의)</div>
+            </div>
+            <div class="diagram">
+                ┌─────────────────────────────────────────────────────────────────────────────┐
+                │ STAGE 3: THREE-PHASE BLUEPRINT GENERATOR │
+                │ Chief: ThreePhaseBlueprintGenerator │
+                ├─────────────────────────────────────────────────────────────────────────────┤
+                │ │
+                │ ╔═══════════════════════════════════════════════════════════════════════╗ │
+                │ ║ PHASE 1: CONSTRAINT (제약 수집) - BlueprintConstraintCompiler ║ │
+                │ ║ ║ │
+                │ ║ ┌─────────────────────────────────────────────────────────────────┐ ║ │
+                │ ║ │ Arc 전술서에서 해당 화 섹션 추출 │ ║ │
+                │ ║ │ ├─ must_focus: 이번 화에서 반드시 다룰 내용 │ ║ │
+                │ ║ │ ├─ stop_line: 다음 화 내용 침범 금지선 │ ║ │
+                │ ║ │ ├─ continuity: 이전 Blueprint 연속성 체크 │ ║ │
+                │ ║ │ └─ state_inheritance: 위치/부상/내공/소지품 계승 │ ║ │
+                │ ║ └─────────────────────────────────────────────────────────────────┘ ║ │
+                │ ╚═══════════════════════════════════════════════════════════════════════╝ │
+                │ │ │
+                │ ▼ │
+                │ ╔═══════════════════════════════════════════════════════════════════════╗ │
+                │ ║ PHASE 2: GENERATE (앙상블 생성) - BlueprintEnsembleGenerator ║ │
+                │ ║ ║ │
+                │ ║ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ║ │
+                │ ║ │Action Focused│ │Emotion Focus│ │Dialogue Focus│ 병렬 생성 ║ │
+                │ ║ │ 긴장도 7-9 │ │ 긴장도 4-6 │ │ 긴장도 3-7 │ ║ │
+                │ ║ │ 전투/추격 │ │ 심리/갈등 │ │ 대화/음모 │ ║ │
+                │ ║ └──────┬──────┘ └──────┬──────┘ └──────┬──────┘ ║ │
+                │ ║ └─────────────────┼─────────────────┘ ║ │
+                │ ║ ▼ ║ │
+                │ ║ ┌─────────────────────────────────────────────────────┐ ║ │
+                │ ║ │ Two-Phase 내부 처리: │ ║ │
+                │ ║ │ 1. 구조 생성 (scene_breakdown) │ ║ │
+                │ ║ │ 2. 상세화 (integrated_scenario) │ ║ │
+                │ ║ └─────────────────────────────────────────────────────┘ ║ │
+                │ ╚═══════════════════════════════════════════════════════════════════════╝ │
+                │ │ │
+                │ ▼ │
+                │ ╔═══════════════════════════════════════════════════════════════════════╗ │
+                │ ║ PHASE 3: VALIDATE - UnifiedBlueprintValidator + Director ║ │
+                │ ║ ║ │
+                │ ║ ┌──────────────────────┐ ║ │
+                │ ║ │ Python 사전 검증 │ (무료, 경고만) ║ │
+                │ ║ │ • 분량 체크 │ ║ │
+                │ ║ │ • 씬 개수 체크 │ ║ │
+                │ ║ │ • 필수 필드 체크 │ ║ │
+                │ ║ └──────────┬───────────┘ ║ │
+                │ ║ │ ║ │
+                │ ║ ▼ ║ │
+                │ ║ ┌──────────────────────────────────────────────────────────┐ ║ │
+                │ ║ │ 🎬 Director (gemini-2.5-pro) │ ║ │
+                │ ║ │ │ ║ │
+                │ ║ │ "디렉터주권주의" - 모든 결정의 최종 책임은 Director │ ║ │
+                │ ║ │ │ ║ │
+                │ ║ │ ┌────────────┐ ┌────────────┐ │ ║ │
+                │ ║ │ │ PASS │ │ REJECT │ │ ║ │
+                │ ║ │ │ → DB 저장 │ │ → 피드백 │ │ ║ │
+                │ ║ │ │ blueprints │ │ → 재생성 │ │ ║ │
+                │ ║ │ └────────────┘ └────────────┘ │ ║ │
+                │ ║ └──────────────────────────────────────────────────────────┘ ║ │
+                │ ╚═══════════════════════════════════════════════════════════════════════╝ │
+                │ │
+                │ ToT 방식: 3전략 × 3시도 = 최대 9회 Blueprint 생성 기회 │
+                └─────────────────────────────────────────────────────────────────────────────┘</div>
+
+            <h3>10.3 Stage 4: 원고 집필 파이프라인</h3>
+            <div class="flowchart">
+                <div class="flowchart-title">ChiefWriter + ManuscriptValidator + Director (디렉터주권주의)</div>
+            </div>
+            <div class="diagram">
+                ┌─────────────────────────────────────────────────────────────────────────────┐
+                │ STAGE 4: MANUSCRIPT WRITING │
+                │ Chief: ChiefWriter │
+                ├─────────────────────────────────────────────────────────────────────────────┤
+                │ │
+                │ ╔═══════════════════════════════════════════════════════════════════════╗ │
+                │ ║ INPUT: 컨텍스트 구성 ║ │
+                │ ║ ║ │
+                │ ║ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ║ │
+                │ ║ │Blueprint │ │ 이전원고 │ │ HUD상태 │ │Arc전술서 │ │ Bible │ ║ │
+                │ ║ │(씬설계도)│ │(문체참조)│ │(캐릭터) │ │(방향성) │ │(세계관) │ ║ │
+                │ ║ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ ║ │
+                │ ║ └────────────┴────────────┴────────────┴────────────┘ ║ │
+                │ ║ │ ║ │
+                │ ║ ┌────────────▼────────────┐ ║ │
+                │ ║ │ Common Context 구성 │ ║ │
+                │ ║ │ + 정당화 프롬프트 │ ║ │
+                │ ║ │ + 참조 앵커 │ ║ │
+                │ ║ │ + 안티 트로프 │ ║ │
+                │ ║ └─────────────────────────┘ ║ │
+                │ ╚═══════════════════════════════════════════════════════════════════════╝ │
+                │ │ │
+                │ ▼ │
+                │ ╔═══════════════════════════════════════════════════════════════════════╗ │
+                │ ║ GENERATE: ChiefWriter 앙상블 생성 (gemini-3-pro) ║ │
+                │ ║ ║ │
+                │ ║ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ║ │
+                │ ║ │ Balanced │ │ Narrative │ │ Tension │ 병렬 생성 ║ │
+                │ ║ │ temp=0.7 │ │ temp=0.8 │ │ temp=0.75 │ ║ │
+                │ ║ │ │ │ │ │ │ ║ │
+                │ ║ │ • Blueprint │ │ • 심리 묘사 │ │ • 액션/전투 │ ║ │
+                │ ║ │ 충실 재현 │ │ • 관계 발전 │ │ • 서스펜스 │ ║ │
+                │ ║ │ • 안정 품질 │ │ • 감정선 │ │ • 클리프행어 │ ║ │
+                │ ║ └──────┬───────┘ └──────┬───────┘ └──────┬───────┘ ║ │
+                │ ║ │ │ │ ║ │
+                │ ║ └─────────────────┼─────────────────┘ ║ │
+                │ ║ │ ║ │
+                │ ║ 3개 후보 원고 (각 5,000자+) ║ │
+                │ ╚═══════════════════════════════════════════════════════════════════════╝ │
+                │ │ │
+                │ ▼ │
+                │ ╔═══════════════════════════════════════════════════════════════════════╗ │
+                │ ║ PRE-VALIDATE: ManuscriptValidator (Python Only, REJECT 권한 없음) ║ │
+                │ ║ ║ │
+                │ ║ ┌─────────────────────────────────────────────────────────────────┐ ║ │
+                │ ║ │ 모든 후보에 대해 경고 포인트 생성 (Director 집중 검토용) │ ║ │
+                │ ║ │ │ ║ │
+                │ ║ │ • 분량 체크: 4,500자 미만 시 경고 │ ║ │
+                │ ║ │ • 씬 반영률: Blueprint 씬 미반영 의심 시 경고 │ ║ │
+                │ ║ │ • 연속성 체크: 이전 화와의 불일치 경고 │ ║ │
+                │ ║ │ • 키워드 체크: Blueprint 핵심 키워드 누락 경고 │ ║ │
+                │ ║ │ • 후반부 품질: 끊김/요약 징후 경고 │ ║ │
+                │ ║ │ │ ║ │
+                │ ║ │ 출력: warnings[], focus_points[] → Director에게 전달 │ ║ │
+                │ ║ └─────────────────────────────────────────────────────────────────┘ ║ │
+                │ ╚═══════════════════════════════════════════════════════════════════════╝ │
+                │ │ │
+                │ ▼ │
+                │ ╔═══════════════════════════════════════════════════════════════════════╗ │
+                │ ║ FINAL: Director 최종 판정 (gemini-2.5-pro) ║ │
+                │ ║ ║ │
+                │ ║ ┌─────────────────────────────────────────────────────────────────┐ ║ │
+                │ ║ │ 🎬 Director (최종 권한) │ ║ │
+                │ ║ │ │ ║ │
+                │ ║ │ 입력: │ ║ │
+                │ ║ │ • 3개 후보 원고 │ ║ │
+                │ ║ │ • ManuscriptValidator 경고 포인트 │ ║ │
+                │ ║ │ • Blueprint (기준) │ ║ │
+                │ ║ │ • 이전 원고 (연속성 기준) │ ║ │
+                │ ║ │ │ ║ │
+                │ ║ │ 판정: │ ║ │
+                │ ║ │ ┌───────────────────┐ ┌───────────────────┐ │ ║ │
+                │ ║ │ │ PASS │ │ REJECT │ │ ║ │
+                │ ║ │ │ │ │ │ │ ║ │
+                │ ║ │ │ • 최적 후보 선택 │ │ • 구체적 피드백 │ │ ║ │
+                │ ║ │ │ • manuscripts 저장│ │ • ChiefWriter에 │ │ ║ │
+                │ ║ │ │ • drafts/*.txt │ │ 재생성 지시 │ │ ║ │
+                │ ║ │ │ • HUD 스냅샷 저장 │ │ • 최대 4회 재시도 │ │ ║ │
+                │ ║ │ └───────────────────┘ └───────────────────┘ │ ║ │
+                │ ║ └─────────────────────────────────────────────────────────────────┘ ║ │
+                │ ╚═══════════════════════════════════════════════════════════════════════╝ │
+                │ │
+                │ 산출물: 완성된 원고 (4,000-6,000자/화) │
+                └─────────────────────────────────────────────────────────────────────────────┘</div>
+
+            <h3>10.4 검증 흐름 총괄 로직도</h3>
+            <div class="flowchart">
+                <div class="flowchart-title">전체 검증 아키텍처 (Stage 2 → 3 → 4)</div>
+            </div>
+            <div class="diagram">
+                ┌─────────────────────────────────────────────────────────────────────────────┐
+                │ 전체 검증 아키텍처 │
+                ├─────────────────────────────────────────────────────────────────────────────┤
+                │ │
+                │ Stage 2 (Arc) Stage 3 (Blueprint) Stage 4 (Manuscript) │
+                │ ┌─────────────┐ ┌─────────────────┐ ┌─────────────────┐ │
+                │ │ │ │ │ │ │ │
+                │ │ Preflight │ │ Constraint │ │ Common Context │ │
+                │ │ Checker │ │ Compiler │ │ Builder │ │
+                │ │ │ │ │ │ │ │
+                │ └──────┬──────┘ └────────┬────────┘ └────────┬────────┘ │
+                │ │ │ │ │
+                │ ▼ ▼ ▼ │
+                │ ┌─────────────┐ ┌─────────────────┐ ┌─────────────────┐ │
+                │ │ Arc │ │ Blueprint │ │ Chief │ │
+                │ │ Ensemble │ │ Ensemble │ │ Writer │ │
+                │ │ (3개 후보) │ │ (3개 후보) │ │ (3개 후보) │ │
+                │ └──────┬──────┘ └────────┬────────┘ └────────┬────────┘ │
+                │ │ │ │ │
+                │ ▼ ▼ ▼ │
+                │ ┌─────────────┐ ┌─────────────────┐ ┌─────────────────┐ │
+                │ │ Python │ │ Python │ │ Manuscript │ │
+                │ │ Scoring │ │ Pre-Validate │ │ Validator │ │
+                │ │ (무료) │ │ (무료) │ │ (무료, 경고만) │ │
+                │ └──────┬──────┘ └────────┬────────┘ └────────┬────────┘ │
+                │ │ │ │ │
+                │ ▼ ▼ ▼ │
+                │ ┌─────────────┐ ┌─────────────────┐ ┌─────────────────┐ │
+                │ │ Unified │ │ │ │ │ │
+                │ │ Arc │ │ Director │ │ Director │ │
+                │ │ Validator │ │ (최종 판정) │ │ (최종 판정) │ │
+                │ │ (LLM) │ │ │ │ │ │
+                │ └──────┬──────┘ └────────┬────────┘ └────────┬────────┘ │
+                │ │ │ │ │
+                │ ▼ ▼ ▼ │
+                │ ┌─────────────┐ ┌─────────────────┐ ┌─────────────────┐ │
+                │ │ PASS/REJECT │ │ PASS/REJECT │ │ PASS/REJECT │ │
+                │ └─────────────┘ └─────────────────┘ └─────────────────┘ │
+                │ │
+                │ ════════════════════════════════════════════════════════════════════ │
+                │ 핵심 원칙: "디렉터주권주의" │
+                │ - Stage 3, 4에서 Director가 최종 PASS/REJECT 결정권 보유 │
+                │ - Python 검증은 경고/포인트만 생성 (REJECT 권한 없음) │
+                │ - 모든 피드백은 구체적이고 실행 가능해야 함 │
+                │ ════════════════════════════════════════════════════════════════════ │
+                │ │
+                └─────────────────────────────────────────────────────────────────────────────┘</div>
+        </section>
+
+        <!-- Section 9: Tech Details -->
+        <section id="tech-details">
+            <h2>11. 핵심 기술 상세</h2>
+
+            <h3>11.1 모델 폴백 체인 (Quota Failover)</h3>
+            <div class="diagram"> gemini-3-pro-preview ──429 에러──▶ gemini-2.5-pro
+                │ │
+                │ │
+                ▼ ▼
+                gemini-3-flash-preview ──429 에러──▶ gemini-2.5-flash
+                │
+                ▼
+                (최종 폴백)
+
+                특징:
+                - 쿼터 소진 모델 60초간 캐싱 (불필요한 재시도 방지)
+                - 자동 config 재구성 (thinking 모드 제거 등)
+                - 세션 전체 공유 캐시 (클래스 변수)</div>
+
+            <h3>11.2 JSON 자가 치유 (Self-Healing Parser)</h3>
+            <div class="diagram"> LLM 응답
+                │
+                ▼
+                ┌───────────────────┐
+                │ 1. 괄호 쌍 검사 │ { 개수 > } 개수 → } 자동 추가
+                │ 강제 폐쇄 │ 따옴표 홀수 → " 자동 추가
+                └─────────┬─────────┘
+                │
+                ▼
+                ┌───────────────────┐
+                │ 2. JSON 블록 추출 │ ```json ... ``` 제거
+                │ │ {.*} 또는 [.*] 패턴 매칭
+                └─────────┬─────────┘
+                │
+                ▼
+                ┌───────────────────┐
+                │ 3. 2단계 파싱 │ json.loads(strict=False)
+                │ │ │ 실패 시
+                │ │ ▼
+                │ │ ast.literal_eval() (작은따옴표 처리)
+                └─────────┬─────────┘
+                │ 실패 시
+                ▼
+                ┌───────────────────┐
+                │ 4. Hard Repair │ null → None, true → True 치환
+                │ │ 정규식 키-값 추출
+                └─────────┬─────────┘
+                │ 실패 시
+                ▼
+                ┌───────────────────┐
+                │ 5. 필드별 추출 │ tactical_doc, content 등
+                │ (최후 수단) │ 개별 정규식으로 핵심 필드만 추출
+                └─────────┬─────────┘
+                │
+                ▼
+                ┌───────────────────┐
+                │ 6. 재귀적 평탄화 │ 중첩 구조 해제
+                │ (깊이 제한 20) │ 순환 참조 감지
+                └───────────────────┘</div>
+
+            <h3>11.3 주요 상수 클래스</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>클래스</th>
+                        <th>용도</th>
+                        <th>주요 값</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>GenreTypes</code></td>
+                        <td>장르 타입</td>
+                        <td>WUXIA, HUNTER, INVESTMENT</td>
+                    </tr>
+                    <tr>
+                        <td><code>RetryLimits</code></td>
+                        <td>재시도 횟수</td>
+                        <td>DIRECTOR=3, WRITER=4, BLUEPRINT=12</td>
+                    </tr>
+                    <tr>
+                        <td><code>AIModels</code></td>
+                        <td>모델 이름</td>
+                        <td>TIER_1=gemini-3-pro, FALLBACK=2.5-pro</td>
+                    </tr>
+                    <tr>
+                        <td><code>Stage2Limits</code></td>
+                        <td>Arc 설계 제한</td>
+                        <td>EP_COUNT: 3~7, MIN_CHARS: 500/화</td>
+                    </tr>
+                    <tr>
+                        <td><code>Thresholds</code></td>
+                        <td>검증 임계값</td>
+                        <td>MIN_MANUSCRIPT: 2000자, SCORE: 70점</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>11.4 데이터베이스 스키마</h3>
+            <pre><code>-- anchors: 핵심 설정 저장소 (키-값)
+CREATE TABLE anchors (
+    key TEXT PRIMARY KEY,     -- bible, volumes, arcs, sys_caches
+    value TEXT                -- JSON 형태
+);
+
+-- blueprints: 에피소드별 씬 설계도
+CREATE TABLE blueprints (
+    ep_num INTEGER PRIMARY KEY,
+    data TEXT,                -- JSON: {scene_breakdown, stop_line, ...}
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- manuscripts: 최종 원고
+CREATE TABLE manuscripts (
+    ep_num INTEGER PRIMARY KEY,
+    text TEXT,                -- 완성된 원고 텍스트
+    hud_snapshot TEXT,        -- JSON: 작성 시점 캐릭터 상태
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);</code></pre>
+        </section>
+
+        <!-- Glossary -->
+        <section>
+            <h2>14. 기술 용어 해설</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>용어</th>
+                        <th>의미</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Bible</strong></td>
+                        <td>설정집. 세계관, 캐릭터, 스토리 로드맵이 담긴 기초 자료</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Arc</strong></td>
+                        <td>5개 에피소드 묶음. 하나의 소주제를 다룸</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Blueprint</strong></td>
+                        <td>에피소드 설계도. 장면별 상세 기획</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Director</strong></td>
+                        <td>품질 최종 판정을 내리는 AI 에이전트</td>
+                    </tr>
+                    <tr>
+                        <td><strong>HUD</strong></td>
+                        <td>캐릭터 상태판. 체력, 소지품, 관계 등 실시간 추적</td>
+                    </tr>
+                    <tr>
+                        <td><strong>tactical_doc</strong></td>
+                        <td>Arc 전술 계획 문서 (화별 상세 시나리오)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>joint_docs</strong></td>
+                        <td>Arc 종료 시점 상태 (위치, 소지품, 세계상태)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Preflight</strong></td>
+                        <td>생성 전 제약 조건 사전 점검</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ensemble</strong></td>
+                        <td>여러 후보 중 최적 선택 전략</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <footer>
+            <p>본 보고서는 <strong>Wuxia Studio V60.83</strong> 기준으로 작성되었습니다.</p>
+            <p>작성일: 2026년 2월 4일</p>
+        </footer>
+    </div>
+</body>
+
+</html>

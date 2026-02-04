@@ -16,6 +16,7 @@ import re
 from typing import Dict, List, Any, Optional, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from .base_agent import BaseAgent
+from modules.core.constants import Stage2Limits
 
 
 # 다양한 생성 전략
@@ -100,7 +101,7 @@ ENSEMBLE_ARC_PROMPT = """
 ### [Output JSON Schema]
 {{
     "arc_no": {arc_no},
-    "ep_count": "2~6 중 사건 밀도에 맞게 결정",
+    "ep_count": "3~7 중 사건 밀도에 맞게 결정",
     "ep_start": {ep_start},
     "ep_end": {ep_end},
     "title": "Arc 제목",
@@ -187,7 +188,9 @@ class ArcEnsembleGenerator(BaseAgent):
         Returns:
             (best_arc, all_candidates) - 최적 Arc와 모든 후보 리스트
         """
-        ep_end = ep_start + 4
+        # [V60.73] ep_count 기반 ep_end 계산 (기존 고정값 +4 오류 수정)
+        ep_count = curr_block.get("ep_count", 5) if isinstance(curr_block, dict) else 5
+        ep_end = ep_start + ep_count - 1
         candidates = []
 
         # 병렬 생성
@@ -223,28 +226,38 @@ class ArcEnsembleGenerator(BaseAgent):
         if not candidates:
             return None, []
 
-        # tactical_doc 최소 길이 필터 (2500자 미만은 제외)
-        MIN_TACTICAL_DOC_LENGTH = 2500
+        # [V60.73] tactical_doc 최소 길이 필터 (가변 페이싱: 화당 500자)
+        min_tactical_length = ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE  # 3화=1500자, 5화=2500자, 7화=3500자
         valid_candidates = []
         for candidate in candidates:
-            # [V60.37] 타입 안전성
+            # [V60.74] tactical_doc 타입 안전 변환 (dict/list 처리)
             tactical = candidate.get("tactical_doc", "")
-            if not isinstance(tactical, str):
-                tactical = str(tactical) if tactical else ""
+            tactical = self._safe_tactical_str(tactical)
+            candidate["tactical_doc"] = tactical  # 변환된 값으로 업데이트
             tactical_len = len(tactical)
-            if tactical_len >= MIN_TACTICAL_DOC_LENGTH:
+            if tactical_len >= min_tactical_length:
                 valid_candidates.append(candidate)
             else:
-                print(f"      ⚠️ [Ensemble] {candidate.get('_strategy', '?')} 제외: tactical_doc {tactical_len}자 < {MIN_TACTICAL_DOC_LENGTH}자")
+                print(f"      ⚠️ [Ensemble] {candidate.get('_strategy', '?')} 제외: tactical_doc {tactical_len}자 < {min_tactical_length}자 (ep_count={ep_count})")
 
-        # 유효한 후보가 없으면 원래 후보 중 최고 점수로 fallback
+        # [V60.74] 유효한 후보가 없으면 최장 후보 선택 + 경고 레벨 판단
         if not valid_candidates:
-            print(f"      ⚠️ [Ensemble] 모든 후보 tactical_doc 부족, 최대 분량 후보 선택")
-            # tactical_doc 길이가 가장 긴 후보 선택
             def safe_tactical_len(x):
                 t = x.get("tactical_doc", "")
                 return len(t) if isinstance(t, str) else len(str(t)) if t else 0
+
             candidates.sort(key=safe_tactical_len, reverse=True)
+            longest = candidates[0]
+            longest_len = safe_tactical_len(longest)
+            min_required = ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE
+
+            # 권장값의 60% 미만이면 경고 레벨 높임
+            if longest_len < min_required * 0.6:
+                print(f"      🚨 [Ensemble] 모든 후보 심각한 분량 부족: {longest_len}자 < {int(min_required * 0.6)}자 (권장의 60%)")
+                print(f"         → Critic/Consensus에서 REJECT 가능성 높음")
+            else:
+                print(f"      ⚠️ [Ensemble] 모든 후보 분량 미달, 최대 분량 후보 선택: {longest_len}자")
+
             valid_candidates = candidates[:1]
 
         # 후보 평가 및 선택
@@ -264,7 +277,16 @@ class ArcEnsembleGenerator(BaseAgent):
         tactical_len = len(best_tactical) if isinstance(best_tactical, str) else len(str(best_tactical)) if best_tactical else 0
         print(f"      🏆 [Ensemble] 최적 후보 선택: {best.get('_strategy')} (점수: {best.get('_score', 0)}, tactical: {tactical_len}자)")
 
-        # 메타데이터 제거 후 반환
+        # [V60.74] 메타데이터 보존 (디버깅용) - _ensemble_meta에 저장
+        ensemble_meta = {
+            "best_strategy": best.get("_strategy", "unknown"),
+            "best_score": best.get("_score", 0),
+            "all_scores": [(c.get("_strategy", "?"), c.get("_score", 0)) for c in scored_candidates],
+            "total_candidates": len(scored_candidates)
+        }
+        best["_ensemble_meta"] = ensemble_meta
+
+        # 메타데이터 제거 후 반환 (단, _ensemble_meta는 유지)
         for c in scored_candidates:
             c.pop("_strategy", None)
             c.pop("_score", None)
@@ -390,18 +412,21 @@ class ArcEnsembleGenerator(BaseAgent):
                             score -= 5
                             issues.append(f"소지품 미계승: {item}")
 
-        # 4. tactical_doc 품질 (25점) - 최소 2500자 필수 (ConsensusValidator 기준)
+        # 4. tactical_doc 품질 (25점) - [V60.73] 가변 페이싱 기준 (화당 500자)
         tactical = candidate.get("tactical_doc", "")
         # [V60.37] 타입 안전성
         if not isinstance(tactical, str):
             tactical = str(tactical) if tactical else ""
-        if len(tactical) < 2500:
-            score -= 40  # 2500자 미만은 사실상 실격 (-40점으로 최저 점수)
-            issues.append(f"[CRITICAL] tactical_doc 분량 심각 부족: {len(tactical)}자 (최소 2500자 필수)")
-        elif len(tactical) < 3000:
+        ep_count = candidate.get("ep_count", 5)
+        min_length = ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE  # 3화=1500자, 5화=2500자, 7화=3500자
+        recommended_length = ep_count * 600  # 권장: 화당 600자
+        if len(tactical) < min_length:
+            score -= 40  # 최소 기준 미달은 사실상 실격
+            issues.append(f"[CRITICAL] tactical_doc 분량 심각 부족: {len(tactical)}자 (최소 {min_length}자, ep_count={ep_count})")
+        elif len(tactical) < recommended_length:
             score -= 10
-            issues.append(f"tactical_doc 분량 미흡: {len(tactical)}자 (권장 3000자)")
-        elif len(tactical) < 4000:
+            issues.append(f"tactical_doc 분량 미흡: {len(tactical)}자 (권장 {recommended_length}자)")
+        elif len(tactical) < ep_count * 700:
             score -= 5
             issues.append(f"tactical_doc 분량 보통: {len(tactical)}자")
 
@@ -448,6 +473,33 @@ class ArcEnsembleGenerator(BaseAgent):
             }
 
         return result
+
+    def _safe_tactical_str(self, tactical) -> str:
+        """
+        [V60.74] tactical_doc을 안전하게 문자열로 변환
+
+        Args:
+            tactical: str, dict, list, None 등 다양한 타입
+
+        Returns:
+            str: 변환된 문자열
+        """
+        if isinstance(tactical, str):
+            return tactical
+        if tactical is None:
+            return ""
+        if isinstance(tactical, dict):
+            # dict라면 값들을 조인 (content, text 등 우선 시도)
+            if "content" in tactical:
+                return str(tactical["content"])
+            if "text" in tactical:
+                return str(tactical["text"])
+            # 그 외에는 모든 값 조인
+            return "\n".join(str(v) for v in tactical.values() if v)
+        if isinstance(tactical, list):
+            return "\n".join(str(item) for item in tactical if item)
+        # 기타 타입
+        return str(tactical)
 
     def _generate_prohibition_summary(self, prev_arc_context: str, constraint_block: str) -> str:
         """

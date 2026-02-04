@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Wuxia Studio V60 - Pipeline Visualizer</title>
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+        .header {
+            padding: 15px 30px;
+            background: rgba(0,0,0,0.3);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header p { color: #888; font-size: 0.85rem; }
+        .container {
+            display: flex;
+            height: calc(100vh - 70px);
+        }
+        #network {
+            flex: 1;
+            background: rgba(0,0,0,0.2);
+        }
+        .sidebar {
+            width: 380px;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border-left: 1px solid rgba(255,255,255,0.1);
+            overflow-y: auto;
+        }
+        .info-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .info-card h3 {
+            color: #00d4ff;
+            margin-bottom: 10px;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .info-card p {
+            color: #aaa;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+        .info-card ul {
+            margin: 8px 0 0 18px;
+            color: #ccc;
+            font-size: 0.8rem;
+        }
+        .info-card li { margin: 4px 0; }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: #aaa;
+        }
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .view-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #7b2cbf, #00d4ff);
+            color: #fff;
+            grid-column: span 2;
+        }
+        .btn-stage {
+            background: rgba(123, 44, 191, 0.3);
+            color: #d4a5ff;
+            border: 1px solid rgba(123, 44, 191, 0.5);
+        }
+        .btn-stage:hover, .btn-stage.active {
+            background: rgba(123, 44, 191, 0.6);
+            color: #fff;
+        }
+        button:hover { transform: translateY(-1px); }
+        #node-detail { display: none; }
+        #node-detail.active { display: block; }
+        .tag {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            margin-right: 4px;
+            margin-bottom: 4px;
+        }
+        .tag-stage { background: #7b2cbf; }
+        .tag-agent { background: #00d4ff; color: #000; }
+        .tag-validator { background: #4caf50; }
+        .tag-db { background: #ff9800; color: #000; }
+        .tag-io { background: #e91e63; }
+        .tag-loop { background: #9c27b0; }
+        .current-view {
+            padding: 8px 12px;
+            background: rgba(0,212,255,0.2);
+            border-radius: 6px;
+            color: #00d4ff;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .step-list {
+            counter-reset: step;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .step-list li {
+            counter-increment: step;
+            position: relative;
+            padding-left: 28px;
+            margin: 8px 0;
+            font-size: 0.8rem;
+            color: #ccc;
+        }
+        .step-list li::before {
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 20px;
+            height: 20px;
+            background: #7b2cbf;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: #fff;
+        }
+        .model-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            background: rgba(0,212,255,0.2);
+            border-radius: 4px;
+            font-size: 0.7rem;
+            color: #00d4ff;
+            margin-left: 5px;
+        }
+        .cost-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            background: rgba(76,175,80,0.2);
+            border-radius: 4px;
+            font-size: 0.7rem;
+            color: #4caf50;
+        }
+        .flow-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.75rem;
+            color: #888;
+            margin: 5px 0;
+        }
+        .flow-indicator .arrow { color: #7b2cbf; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>Wuxia Studio V60 Pipeline Visualizer</h1>
+            <p>노드 클릭 → 상세 정보 | 휠 → 줌 | 드래그 → 이동</p>
+        </div>
+        <div class="cost-badge">총 예상 비용: ~$7-10/권</div>
+    </div>
+
+    <div class="container">
+        <div id="network"></div>
+
+        <div class="sidebar">
+            <div class="current-view" id="current-view-label">전체 파이프라인</div>
+
+            <div class="info-card">
+                <h3>📊 뷰 선택</h3>
+                <div class="view-buttons">
+                    <button class="btn-primary" onclick="showFullPipeline()">전체 파이프라인</button>
+                    <button class="btn-stage" id="btn-phase0" onclick="showPhase0Detail()">Phase 0</button>
+                    <button class="btn-stage" id="btn-stage1" onclick="showStage1Detail()">Stage 1</button>
+                    <button class="btn-stage" id="btn-stage2" onclick="showStage2Detail()">Stage 2</button>
+                    <button class="btn-stage" id="btn-stage2-inner" onclick="showStage2InnerLoop()">Stage 2 내부</button>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h3>🎨 범례</h3>
+                <div class="legend">
+                    <div class="legend-item"><div class="legend-dot" style="background: #7b2cbf;"></div>Stage/Phase</div>
+                    <div class="legend-item"><div class="legend-dot" style="background: #00d4ff;"></div>Agent</div>
+                    <div class="legend-item"><div class="legend-dot" style="background: #4caf50;"></div>Validator</div>
+                    <div class="legend-item"><div class="legend-dot" style="background: #ff9800;"></div>Database</div>
+                    <div class="legend-item"><div class="legend-dot" style="background: #ff6b6b;"></div>Output</div>
+                    <div class="legend-item"><div class="legend-dot" style="background: #e91e63;"></div>I/O</div>
+                    <div class="legend-item"><div class="legend-dot" style="background: #9c27b0;"></div>Loop</div>
+                </div>
+            </div>
+
+            <div id="node-detail" class="info-card">
+                <h3 id="detail-title">노드 선택</h3>
+                <div id="detail-tags"></div>
+                <p id="detail-desc">좌측 그래프에서 노드를 클릭하세요</p>
+                <ul id="detail-list"></ul>
+            </div>
+
+            <div class="info-card" id="stage-summary">
+                <h3>📋 현재 스테이지 요약</h3>
+                <div id="stage-summary-content">
+                    <p>뷰를 선택하면 해당 스테이지의 상세 흐름이 표시됩니다.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ========================================
+    // 노드 상세 정보 데이터베이스
+    // ========================================
+    const nodeDetails = {
+        // === FULL PIPELINE ===
+        'phase0': {
+            title: 'Phase 0: Bible Recovery',
+            tags: ['stage'],
+            desc: '설정집(Bible) 로드 및 SQLite 동기화. 프로젝트의 모든 기초 데이터를 준비하는 단계.',
+            items: ['bible.json 파싱', 'treatment.json 로드', 'DB anchor 저장', '기존 원고 동기화']
+        },
+        'stage1': {
+            title: 'Stage 1: Volume Strategy',
+            tags: ['stage'],
+            desc: '10권 전체 전략 계획 수립. 각 권의 테마, 긴장감 곡선, Arc 배분을 설계.',
+            items: ['스킵 가능 (선택 사항)', 'plot_roadmap 기반 권 수 계산', 'Analyst가 권별 전략 생성', '2000자 이상 품질 검증']
+        },
+        'stage2': {
+            title: 'Stage 2: Arc Design',
+            tags: ['stage'],
+            desc: '50개 Arc 전술 설계. 가장 복잡한 단계로, 다양한 에이전트와 검증 시스템이 협업.',
+            items: ['배치 처리 (5개씩)', '병렬 농축 → 사후 용접', 'FourPhaseArcGenerator', '7-Tier 검증 체계']
+        },
+        'stage3': {
+            title: 'Stage 3: Blueprint',
+            tags: ['stage'],
+            desc: '에피소드별 씬 설계도 생성. Arc의 전술을 구체적인 씬 단위로 분해.',
+            items: ['Architect 에이전트', 'beat_sequence 상세화', '씬별 분량 배분', '대사/액션 비율 설정']
+        },
+        'stage4': {
+            title: 'Stage 4: Manuscript',
+            tags: ['stage'],
+            desc: '최종 원고 작성. Blueprint를 바탕으로 실제 소설 텍스트를 생성.',
+            items: ['Writer 에이전트', '3000자+ 원고 생성', 'Director 품질 검증', 'HUD 스냅샷 저장']
+        },
+
+        // === PHASE 0 DETAIL ===
+        'p0_start': { title: '시작', tags: ['io'], desc: 'Phase 0 진입점', items: [] },
+        'p0_select_bible': {
+            title: 'Bible 파일 선택',
+            tags: ['io'],
+            desc: '사용자가 설정집(bible.json) 파일을 선택',
+            items: ['_ui_select_bible()', 'bibles/ 폴더에서 선택', 'MasterBible 구조 포함']
+        },
+        'p0_select_treatment': {
+            title: 'Treatment 파일 선택',
+            tags: ['io'],
+            desc: '50개 블록이 담긴 treatment.json 선택',
+            items: ['_ui_select_treatment()', 'treatments/ 폴더에서 선택', 'plot_roadmap 50개 블록']
+        },
+        'p0_enrich_option': {
+            title: 'Treatment 농축 옵션',
+            tags: ['io'],
+            desc: '[V60.10] Treatment Block 자동 농축 여부 선택',
+            items: ['BlockEnricher 에이전트', 'StateExtractor 활용', '각 블록에 joint_docs 추가']
+        },
+        'p0_force_sync': {
+            title: 'DNA 강제 이식',
+            tags: ['agent'],
+            desc: '50개 설계도 DNA를 DB에 강제 동기화',
+            items: ['force_sync_v25_dna()', 'AI 호출 없음 (직접 삽입)', 'plot_roadmap → arcs 매핑']
+        },
+        'p0_check_existing': {
+            title: '기존 원고 확인',
+            tags: ['validator'],
+            desc: '이전에 작성된 원고 파일 존재 여부 확인',
+            items: ['drafts/ 폴더 스캔', '*.txt 파일 카운트', '있으면 동기화 진행']
+        },
+        'p0_sync_manuscripts': {
+            title: '원고 역사 동기화',
+            tags: ['agent'],
+            desc: '기존 원고를 DB와 벡터 DB에 박제',
+            items: ['sync_existing_manuscripts()', 'SQLite 저장', 'ChromaDB 임베딩']
+        },
+        'p0_reload': {
+            title: '데이터 리로드',
+            tags: ['db'],
+            desc: 'DB에서 최신 데이터를 메모리로 로드',
+            items: ['_load_from_db()', 'master_bible 갱신', 'volumes, arcs 갱신']
+        },
+        'p0_end': { title: '완료', tags: ['io'], desc: 'Phase 0 종료. Stage 1 진입 가능', items: [] },
+
+        // === STAGE 1 DETAIL ===
+        's1_start': { title: '시작', tags: ['io'], desc: 'Stage 1 진입점', items: [] },
+        's1_skip_option': {
+            title: '스킵 옵션',
+            tags: ['io'],
+            desc: 'Stage 1은 선택 사항. 스킵해도 Stage 2 진행 가능.',
+            items: ['[1] 진행', '[2] 스킵', '스킵 시 기본값으로 진행']
+        },
+        's1_load_roadmap': {
+            title: 'plot_roadmap 로드',
+            tags: ['db'],
+            desc: 'Bible에서 plot_roadmap 추출',
+            items: ['master_bible 파싱', '50개 Arc DNA 확인', '없으면 DB에서 복구 시도']
+        },
+        's1_calc_volumes': {
+            title: '권 수 계산',
+            tags: ['agent'],
+            desc: 'Arc 총량에서 권 수 자동 계산',
+            items: ['총 Arc 수 / 5 = 권 수', '올림 처리', '예: 50 Arc → 10권']
+        },
+        's1_vol_loop': {
+            title: '권별 설계 루프',
+            tags: ['loop'],
+            desc: '각 권에 대해 순차적으로 전략 설계',
+            items: ['for vol_idx in range(1, total_volumes+1)', '권당 5개 Arc 슬라이싱', '최대 3회 재시도']
+        },
+        's1_analyst_plan': {
+            title: 'Analyst 전략 생성',
+            tags: ['agent'],
+            desc: 'Analyst가 권별 고해상도 전략 문서 작성',
+            items: ['plan_single_volume_v20()', 'gemini-3-pro-preview', '이전 권 요약 누적 주입']
+        },
+        's1_quality_check': {
+            title: '품질 검증',
+            tags: ['validator'],
+            desc: '전략 문서가 최소 2000자 이상인지 확인',
+            items: ['doc_len >= 2000', '미달 시 재시도', '최대 3회']
+        },
+        's1_boundary_check': {
+            title: '경계 검증',
+            tags: ['validator'],
+            desc: '[V39] Volume 경계 검증',
+            items: ['_validate_volume_boundaries()', 'Arc 범위 확인', 'REJECT 시 재시도']
+        },
+        's1_save': {
+            title: 'DB 저장',
+            tags: ['db'],
+            desc: '완성된 Volume 전략을 DB에 저장',
+            items: ['save_v20_anchor("volumes")', '메모리 동기화', 'volumes 앵커']
+        },
+        's1_end': { title: '완료', tags: ['io'], desc: 'Stage 1 종료. Stage 2 진입 가능', items: [] },
+
+        // === STAGE 2 OVERVIEW ===
+        's2_start': { title: '시작', tags: ['io'], desc: 'Stage 2 진입점', items: [] },
+        's2_load_data': {
+            title: '기초 데이터 로드',
+            tags: ['db'],
+            desc: 'bible, volumes, arcs 데이터 확보',
+            items: ['load_anchor("bible")', 'load_anchor("volumes")', 'load_anchor("arcs")']
+        },
+        's2_extract_protag': {
+            title: '주인공 이름 추출',
+            tags: ['agent'],
+            desc: '[V42] 주인공 Identity Lock',
+            items: ['MartialHUD 파싱', 'Protagonist.actual_truth.name', '이후 모든 생성에 주입']
+        },
+        's2_init_constraintdb': {
+            title: 'ConstraintDB 초기화',
+            tags: ['db'],
+            desc: '[V49.4] 제약 조건 DB 초기화',
+            items: ['아이템 획득 기록', '수여물 추적', '중복 방지 메커니즘']
+        },
+        's2_batch_loop': {
+            title: '배치 처리 루프',
+            tags: ['loop'],
+            desc: '5개 Arc씩 배치 처리',
+            items: ['for batch_start in range(done, target, 5)', '인과율 정밀 용접 위해 소규모 배치', '병렬 농축 → 사후 용접 → 순차 설계']
+        },
+        's2_parallel_enrich': {
+            title: '병렬 농축',
+            tags: ['agent'],
+            desc: '5개 블록을 비동기로 동시 농축',
+            items: ['enrich_raw_block_async() × 5', 'Semaphore(5) 동시성 제한', 'context, joint_docs, status_shadow 생성']
+        },
+        's2_stitch': {
+            title: '사후 용접',
+            tags: ['agent'],
+            desc: 'Arc 간 인과율 연결',
+            items: ['stitch_joints()', 'Entity Anchoring', 'joint_docs 불일치 시 REPAIRED']
+        },
+        's2_sequential_design': {
+            title: '순차 설계',
+            tags: ['loop'],
+            desc: '각 Arc를 순서대로 상세 설계',
+            items: ['Arc별 최대 4회 재시도', 'FourPhase 또는 Analyst', 'Director 최종 승인']
+        },
+        's2_save': {
+            title: 'DB 저장',
+            tags: ['db'],
+            desc: '완성된 Arc를 DB에 저장',
+            items: ['save_v20_anchor("arcs")', 'ConstraintDB 업데이트', 'ChromaDB 임베딩']
+        },
+        's2_end': { title: '완료', tags: ['io'], desc: 'Stage 2 종료. Stage 3 진입 가능', items: [] },
+
+        // === STAGE 2 INNER LOOP (순차 설계 상세) ===
+        's2i_start': { title: 'Arc N 시작', tags: ['io'], desc: '단일 Arc 설계 시작', items: [] },
+        's2i_lack_report': {
+            title: '결핍 리포트',
+            tags: ['agent'],
+            desc: 'Analyst가 주인공의 현재 결핍 분석',
+            items: ['get_lack_report()', 'MartialHUD 분석', '부족한 능력/아이템 파악']
+        },
+        's2i_arc_drive': {
+            title: '욕망 드라이브',
+            tags: ['agent'],
+            desc: 'Weaver가 Arc의 핵심 동기 생성',
+            items: ['generate_arc_drive()', '결핍 → 욕망 변환', '북극성(grand_objective) 연결']
+        },
+        's2i_constraint_block': {
+            title: '제약 블록 생성',
+            tags: ['db'],
+            desc: 'ConstraintDB에서 제약 조건 추출',
+            items: ['generate_constraint_block()', '중복 획득 방지', '미래 아이템 차단']
+        },
+        's2i_compiler': {
+            title: 'ConstraintCompiler',
+            tags: ['agent'],
+            desc: 'MUST DO / MUST NOT DO 체크리스트 생성',
+            items: ['compile()', 'Python 기반 (API 비용 0)', '구조화된 제약 목록']
+        },
+        's2i_fourphase': {
+            title: 'FourPhaseArcGenerator',
+            tags: ['agent'],
+            desc: '3단계 Arc 생성 파이프라인',
+            items: ['Phase 1: Constraint (Preflight)', 'Phase 2: Generate (Ensemble 3개)', 'Phase 3: Validate (통합 검증)']
+        },
+        's2i_preflight': {
+            title: 'PreflightChecker',
+            tags: ['agent'],
+            desc: '제약 맵 구축 및 금지 목록 생성',
+            items: ['gemini-3-flash-preview', '아이템/수여물 타임라인', 'absolute_prohibitions 생성']
+        },
+        's2i_ensemble': {
+            title: 'ArcEnsemble',
+            tags: ['agent'],
+            desc: '3개 전략으로 병렬 생성 후 최적 선택',
+            items: ['Conservative (T=0.3)', 'Balanced (T=0.5)', 'Creative (T=0.7)']
+        },
+        's2i_unified_validator': {
+            title: 'UnifiedValidator',
+            tags: ['validator'],
+            desc: 'Python + LLM 통합 검증',
+            items: ['구조 완성도 검사', '연속성 검증', 'gemini-2.5-flash']
+        },
+        's2i_draft_validator': {
+            title: 'ArcDraftValidator',
+            tags: ['validator'],
+            desc: 'Python 기반 사전 검증 (API 비용 0)',
+            items: ['필수 필드 존재 확인', 'ep_count 범위 검증', 'joint_docs 완전성']
+        },
+        's2i_consensus': {
+            title: 'ConsensusValidator',
+            tags: ['validator'],
+            desc: '3-LLM 합의 검증',
+            items: ['continuity_focused', 'structure_focused', 'narrative_focused', 'CRITICAL → 즉시 REJECT']
+        },
+        's2i_continuity': {
+            title: 'ContinuityInspector',
+            tags: ['validator'],
+            desc: 'LLM 심층 연속성 검증',
+            items: ['Arc간 타임라인 검증', 'CRITICAL/MAJOR/MINOR 등급', 'gemini-2.5-flash']
+        },
+        's2i_director': {
+            title: 'Director',
+            tags: ['validator'],
+            desc: '최종 품질 승인',
+            items: ['gemini-2.5-pro', '70점 이상 PASS', '피드백 생성 → 재시도']
+        },
+        's2i_pass': { title: 'PASS', tags: ['io'], desc: 'Arc 설계 완료. DB 저장 후 다음 Arc로', items: [] },
+        's2i_reject': { title: 'REJECT', tags: ['io'], desc: '재시도 (최대 4회). 4회 실패 시 Analyst 폴백', items: [] },
+
+        // DBs
+        'sqlite': {
+            title: 'SQLite (project_data.db)',
+            tags: ['db'],
+            desc: '진실의 원천 - 모든 데이터 저장',
+            items: ['anchors (bible, volumes, arcs)', 'blueprints', 'manuscripts', 'episode_bibles']
+        },
+        'chromadb': {
+            title: 'ChromaDB',
+            tags: ['db'],
+            desc: '벡터 임베딩 - 시맨틱 검색',
+            items: ['long_term_anchor', '유사 씬 검색', 'RAG 지원']
+        },
+        'constraintdb': {
+            title: 'ConstraintDB',
+            tags: ['db'],
+            desc: '제약 조건 관리',
+            items: ['아이템 획득 기록', '수여물 추적', '중복 방지']
+        },
+
+        // Agents
+        'analyst': { title: 'Analyst Agent', tags: ['agent'], desc: 'Stage 1-2 전략/Arc 담당', items: ['gemini-3-pro-preview', 'Volume 전략 생성', 'Arc DNA 설계', '결핍 리포트'] },
+        'weaver': { title: 'Weaver Agent', tags: ['agent'], desc: '욕망 드라이브 생성', items: ['캐릭터 동기 분석', '욕망 벡터 계산', '북극성 연결'] },
+        'architect': { title: 'Architect Agent', tags: ['agent'], desc: 'Stage 3 블루프린트 생성', items: ['gemini-3-pro-preview', '씬 구조 설계', 'beat → 상세 전개'] },
+        'writer': { title: 'Writer Agent', tags: ['agent'], desc: 'Stage 4 원고 작성', items: ['gemini-3-pro-preview', '3000자+ 원고', '캐릭터 보이스 유지'] },
+        'director': { title: 'Director Agent', tags: ['validator'], desc: '품질 최종 검증', items: ['gemini-2.5-pro', '70점 이상 PASS', '7-Tier 검증 체계'] },
+
+        // Outputs
+        'volumes': { title: 'Volumes Output', tags: ['output'], desc: '10권 전략 문서', items: ['plot_roadmap', '권별 테마', 'Arc 배분'] },
+        'arcs': { title: 'Arcs Output', tags: ['output'], desc: '50개 Arc 전술 문서', items: ['tactical_doc', 'joint_docs', 'beat_sequence'] },
+        'blueprints': { title: 'Blueprints Output', tags: ['output'], desc: '에피소드별 설계도', items: ['씬 목록', '대사/액션 비트', '분량 가이드'] },
+        'manuscripts': { title: 'Manuscripts Output', tags: ['output'], desc: '최종 원고', items: ['3000자+ 텍스트', 'HUD 스냅샷', '품질 점수'] }
+    };
+
+    // ========================================
+    // 전체 파이프라인
+    // ========================================
+    const fullPipelineNodes = [
+        { id: 'phase0', label: 'Phase 0\nBible Recovery', group: 'stage', level: 0, size: 35 },
+        { id: 'stage1', label: 'Stage 1\nVolume Strategy', group: 'stage', level: 1, size: 35 },
+        { id: 'stage2', label: 'Stage 2\nArc Design', group: 'stage', level: 2, size: 40 },
+        { id: 'stage3', label: 'Stage 3\nBlueprint', group: 'stage', level: 3, size: 35 },
+        { id: 'stage4', label: 'Stage 4\nManuscript', group: 'stage', level: 4, size: 35 },
+        { id: 'analyst', label: 'Analyst', group: 'agent', level: 1.5 },
+        { id: 'weaver', label: 'Weaver', group: 'agent', level: 2 },
+        { id: 'architect', label: 'Architect', group: 'agent', level: 3 },
+        { id: 'writer', label: 'Writer', group: 'agent', level: 4 },
+        { id: 'director', label: 'Director', group: 'validator', level: 4.5 },
+        { id: 'sqlite', label: 'SQLite\n(진실의 원천)', group: 'db', level: 2.5 },
+        { id: 'chromadb', label: 'ChromaDB\n(벡터)', group: 'db', level: 2.5 },
+        { id: 'volumes', label: 'Volumes', group: 'output', level: 1 },
+        { id: 'arcs', label: 'Arcs', group: 'output', level: 2 },
+        { id: 'blueprints', label: 'Blueprints', group: 'output', level: 3 },
+        { id: 'manuscripts', label: 'Manuscripts', group: 'output', level: 4 }
+    ];
+
+    const fullPipelineEdges = [
+        { from: 'phase0', to: 'stage1', arrows: 'to', color: { color: '#7b2cbf' }, width: 4 },
+        { from: 'stage1', to: 'stage2', arrows: 'to', color: { color: '#7b2cbf' }, width: 4 },
+        { from: 'stage2', to: 'stage3', arrows: 'to', color: { color: '#7b2cbf' }, width: 4 },
+        { from: 'stage3', to: 'stage4', arrows: 'to', color: { color: '#7b2cbf' }, width: 4 },
+        { from: 'stage1', to: 'analyst', arrows: 'to', dashes: true },
+        { from: 'stage2', to: 'analyst', arrows: 'to', dashes: true },
+        { from: 'stage2', to: 'weaver', arrows: 'to', dashes: true },
+        { from: 'stage3', to: 'architect', arrows: 'to', dashes: true },
+        { from: 'stage4', to: 'writer', arrows: 'to', dashes: true },
+        { from: 'writer', to: 'director', arrows: 'to' },
+        { from: 'sqlite', to: 'phase0', arrows: 'to', dashes: true, color: { color: '#ff9800' } },
+        { from: 'stage1', to: 'sqlite', arrows: 'to', color: { color: '#ff9800' } },
+        { from: 'stage2', to: 'sqlite', arrows: 'to', color: { color: '#ff9800' } },
+        { from: 'stage3', to: 'sqlite', arrows: 'to', color: { color: '#ff9800' } },
+        { from: 'stage4', to: 'sqlite', arrows: 'to', color: { color: '#ff9800' } },
+        { from: 'chromadb', to: 'stage3', arrows: 'to', dashes: true, color: { color: '#ff9800' } },
+        { from: 'chromadb', to: 'stage4', arrows: 'to', dashes: true, color: { color: '#ff9800' } },
+        { from: 'analyst', to: 'volumes', arrows: 'to', color: { color: '#ff6b6b' } },
+        { from: 'analyst', to: 'arcs', arrows: 'to', color: { color: '#ff6b6b' } },
+        { from: 'architect', to: 'blueprints', arrows: 'to', color: { color: '#ff6b6b' } },
+        { from: 'director', to: 'manuscripts', arrows: 'to', color: { color: '#ff6b6b' } }
+    ];
+
+    // ========================================
+    // Phase 0 상세
+    // ========================================
+    const phase0Nodes = [
+        { id: 'p0_start', label: '시작', group: 'io', level: 0 },
+        { id: 'p0_select_bible', label: 'Bible 파일\n선택', group: 'io', level: 1 },
+        { id: 'p0_select_treatment', label: 'Treatment 파일\n선택', group: 'io', level: 2 },
+        { id: 'p0_enrich_option', label: 'Treatment 농축\n옵션 (V60.10)', group: 'io', level: 3 },
+        { id: 'p0_force_sync', label: 'DNA 강제 이식\n(50개 블록)', group: 'agent', level: 4 },
+        { id: 'p0_check_existing', label: '기존 원고\n확인', group: 'validator', level: 5 },
+        { id: 'p0_sync_manuscripts', label: '원고 역사\n동기화', group: 'agent', level: 6 },
+        { id: 'p0_reload', label: '데이터\n리로드', group: 'db', level: 7 },
+        { id: 'p0_end', label: '완료', group: 'io', level: 8 },
+        { id: 'sqlite', label: 'SQLite', group: 'db', level: 5 },
+        { id: 'chromadb', label: 'ChromaDB', group: 'db', level: 6 }
+    ];
+
+    const phase0Edges = [
+        { from: 'p0_start', to: 'p0_select_bible', arrows: 'to', width: 3, color: { color: '#7b2cbf' } },
+        { from: 'p0_select_bible', to: 'p0_select_treatment', arrows: 'to', width: 3, color: { color: '#7b2cbf' } },
+        { from: 'p0_select_treatment', to: 'p0_enrich_option', arrows: 'to', width: 3, color: { color: '#7b2cbf' } },
+        { from: 'p0_enrich_option', to: 'p0_force_sync', arrows: 'to', width: 3, color: { color: '#7b2cbf' } },
+        { from: 'p0_force_sync', to: 'p0_check_existing', arrows: 'to', width: 3, color: { color: '#7b2cbf' } },
+        { from: 'p0_check_existing', to: 'p0_sync_manuscripts', arrows: 'to', width: 3, color: { color: '#7b2cbf' }, label: '원고 있음' },
+        { from: 'p0_check_existing', to: 'p0_reload', arrows: 'to', width: 2, dashes: true, color: { color: '#888' }, label: '원고 없음' },
+        { from: 'p0_sync_manuscripts', to: 'p0_reload', arrows: 'to', width: 3, color: { color: '#7b2cbf' } },
+        { from: 'p0_reload', to: 'p0_end', arrows: 'to', width: 3, color: { color: '#7b2cbf' } },
+        { from: 'p0_force_sync', to: 'sqlite', arrows: 'to', dashes: true, color: { color: '#ff9800' } },
+        { from: 'p0_sync_manuscripts', to: 'sqlite', arrows: 'to', dashes: true, color: { color: '#ff9800' } },
+        { from: 'p0_sync_manuscripts', to: 'chromadb', arrows: 'to', dashes: true, color: { color: '#ff9800' } },
+        { from: 'sqlite', to: 'p0_reload', arrows: 'to', dashes: true, color: { color: '#ff9800' } }
+    ];
+
+    // ========================================
+    // Stage 1 상세
+    // ========================================
+    const stage1Nodes = [
+        { id: 's1_start', label: '시작', group: 'io', level: 0 },
+        { id: 's1_skip_option', label: '스킵 옵션\n[1]진행 [2]스킵', group: 'io', level: 1 },
+        { id: 's1_load_roadmap', label: 'plot_roadmap\n로드', group: 'db', level: 2 },
+        { id: 's1_calc_volumes', label: '권 수 계산\n(Arc수/5)', group: 'agent', level: 3 },
+        { id: 's1_vol_loop', label: '권별 설계 루프\nfor vol in 1..10', group: 'loop', level: 4, size: 35 },
+        { id: 's1_analyst_plan', label: 'Analyst\n전략 생성', group: 'agent', level: 5 },
+        { id: 's1_quality_check', label: '품질 검증\n(≥2000자)', group: 'validator', level: 6 },
+        { id: 's1_boundary_check', label: '경계 검증\n(V39)', group: 'validator', level: 7 },
+        { id: 's1_save', label: 'DB 저장', group: 'db', level: 8 },
+        { id: 's1_end', label: '완료', group: 'io', level: 9 },
+        { id: 's1_skip_end', label: '스킵 완료', group: 'io', level: 2 }
+    ];
+
+    const stage1Edges = [
+        { from: 's1_start', to: 's1_skip_option', arrows: 'to', width: 3, color: { color: '#7b2cbf' } },
+        { from: 's1_skip_option', to: 's1_load_roadmap', arrows: 'to', width: 3, color: { color: '#7b2cbf' }, label: '진행' },
+        { from: 's1_skip_option', to: 's1_skip_end', arrows: 'to', width: 2, dashes: true, color: { color: '#888' }, label: '스킵' },
+        { from: 's1_load_roadmap', to: 's1_calc_volumes', arrows: 'to', width: 3, color: { color: '#7b2cbf' } },
+        { from: 's1_calc_volumes', to: 's1_vol_loop', arrows: 'to', width: 3, color: { color: '#7b2cbf' } },
+        { from: 's1_vol_loop', to: 's1_analyst_plan', arrows: 'to', width: 3, color: { color: '#00d4ff' } },
+        { from: 's1_analyst_plan', to: 's1_quality_check', arrows: 'to', width: 3, color: { color: '#00d4ff' } },
+        { from: 's1_quality_check', to: 's1_boundary_check', arrows: 'to', width: 3, color: { color: '#4caf50' }, label: 'PASS' },
+        { from: 's1_quality_check', to: 's1_analyst_plan', arrows: 'to', width: 2, dashes: true, color: { color: '#ff6b6b' }, label: '재시도' },
+        { from: 's1_boundary_check', to: 's1_vol_loop', arrows: 'to', width: 2, color: { color: '#4caf50' }, label: '다음 권' },
+        { from: 's1_boundary_check', to: 's1_analyst_plan', arrows: 'to', width: 2, dashes: true, color: { color: '#ff6b6b' }, label: 'REJECT' },
+        { from: 's1_vol_loop', to: 's1_save', arrows: 'to', width: 3, color: { color: '#7b2cbf' }, label: '모든 권 완료' },
+        { from: 's1_save', to: 's1_end', arrows: 'to', width: 3, color: { color: '#7b2cbf' } }
+    ];
+
+    // ========================================
+    // Stage 2 개요
+    // ========================================
+    const stage2Nodes = [
+        { id: 's2_start', label: '시작', group: 'io', level: 0 },
+        { id: 's2_load_data', label: '기초 데이터\n로드', group: 'db', level: 1 },
+        { id: 's2_extract_protag', label: '주인공 이름\n추출 (V42)', group: 'agent', level: 2 },
+        { id: 's2_init_constraintdb', label: 'ConstraintDB\n초기화', group: 'db', level: 3 },
+        { id: 's2_batch_loop', label: '배치 루프\n(5개씩)', group: 'loop', level: 4, size: 40 },
+        { id: 's2_parallel_enrich', label: '병렬 농축\n×5 async', group: 'agent', level: 5 },
+        { id: 's2_stitch', label: '사후 용접\nstitch_joints', group: 'agent', level: 6 },
+        { id: 's2_sequential_design', label: '순차 설계\n(Arc별)', group: 'loop', level: 7, size: 35 },
+        { id: 's2_save', label: 'DB 저장', group: 'db', level: 8 },
+        { id: 's2_end', label: '완료', group: 'io', level: 9 },
+        { id: 'constraintdb', label: 'ConstraintDB', group: 'db', level: 4 }
+    ];
+
+    const stage2Edges = [
+        { from: 's2_start', to: 's2_load_data', arrows: 'to', width: 3, color: { color: '#7b2cbf' } },
+        { from: 's2_load_data', to: 's2_extract_protag', arrows: 'to', width: 3, color: { color: '#7b2cbf' } },
+        { from: 's2_extract_protag', to: 's2_init_constraintdb', arrows: 'to', width: 3, color: { color: '#7b2cbf' } },
+        { from: 's2_init_constraintdb', to: 's2_batch_loop', arrows: 'to', width: 3, color: { color: '#7b2cbf' } },
+        { from: 's2_batch_loop', to: 's2_parallel_enrich', arrows: 'to', width: 3, color: { color: '#9c27b0' } },
+        { from: 's2_parallel_enrich', to: 's2_stitch', arrows: 'to', width: 3, color: { color: '#9c27b0' } },
+        { from: 's2_stitch', to: 's2_sequential_design', arrows: 'to', width: 3, color: { color: '#9c27b0' } },
+        { from: 's2_sequential_design', to: 's2_batch_loop', arrows: 'to', width: 2, color: { color: '#9c27b0' }, label: '다음 배치' },
+        { from: 's2_batch_loop', to: 's2_save', arrows: 'to', width: 3, color: { color: '#7b2cbf' }, label: '모든 Arc 완료' },
+        { from: 's2_save', to: 's2_end', arrows: 'to', width: 3, color: { color: '#7b2cbf' } },
+        { from: 's2_init_constraintdb', to: 'constraintdb', arrows: 'to', dashes: true, color: { color: '#ff9800' } },
+        { from: 's2_sequential_design', to: 'constraintdb', arrows: 'to', dashes: true, color: { color: '#ff9800' } }
+    ];
+
+    // ========================================
+    // Stage 2 내부 루프 (순차 설계 상세)
+    // ========================================
+    const stage2InnerNodes = [
+        { id: 's2i_start', label: 'Arc N 시작', group: 'io', level: 0 },
+        { id: 's2i_lack_report', label: '결핍 리포트\n(Analyst)', group: 'agent', level: 1 },
+        { id: 's2i_arc_drive', label: '욕망 드라이브\n(Weaver)', group: 'agent', level: 2 },
+        { id: 's2i_constraint_block', label: '제약 블록\n(ConstraintDB)', group: 'db', level: 3 },
+        { id: 's2i_compiler', label: 'ConstraintCompiler\n(Python, 무료)', group: 'agent', level: 4 },
+
+        // FourPhase 박스
+        { id: 's2i_fourphase', label: 'FourPhaseArcGenerator\n(3단계 파이프라인)', group: 'loop', level: 5, size: 45 },
+        { id: 's2i_preflight', label: 'Phase 1\nPreflight', group: 'agent', level: 6 },
+        { id: 's2i_ensemble', label: 'Phase 2\nEnsemble ×3', group: 'agent', level: 6 },
+        { id: 's2i_unified_validator', label: 'Phase 3\nUnifiedValidator', group: 'validator', level: 6 },
+
+        // 후처리 검증
+        { id: 's2i_draft_validator', label: 'DraftValidator\n(Python, 무료)', group: 'validator', level: 7 },
+        { id: 's2i_consensus', label: 'Consensus\n3-LLM 합의', group: 'validator', level: 8 },
+        { id: 's2i_continuity', label: 'ContinuityInspector\n(LLM 심층)', group: 'validator', level: 9 },
+        { id: 's2i_director', label: 'Director\n(최종 승인)', group: 'validator', level: 10, size: 35 },
+
+        { id: 's2i_pass', label: 'PASS\n저장', group: 'output', level: 11 },
+        { id: 's2i_reject', label: 'REJECT\n재시도', group: 'error', level: 10 }
+    ];
+
+    const stage2InnerEdges = [
+        { from: 's2i_start', to: 's2i_lack_report', arrows: 'to', width: 3, color: { color: '#7b2cbf' } },
+        { from: 's2i_lack_report', to: 's2i_arc_drive', arrows: 'to', width: 3, color: { color: '#7b2cbf' } },
+        { from: 's2i_arc_drive', to: 's2i_constraint_block', arrows: 'to', width: 3, color: { color: '#7b2cbf' } },
+        { from: 's2i_constraint_block', to: 's2i_compiler', arrows: 'to', width: 3, color: { color: '#7b2cbf' } },
+        { from: 's2i_compiler', to: 's2i_fourphase', arrows: 'to', width: 3, color: { color: '#7b2cbf' } },
+
+        // FourPhase 내부
+        { from: 's2i_fourphase', to: 's2i_preflight', arrows: 'to', width: 2, color: { color: '#00d4ff' } },
+        { from: 's2i_preflight', to: 's2i_ensemble', arrows: 'to', width: 2, color: { color: '#00d4ff' } },
+        { from: 's2i_ensemble', to: 's2i_unified_validator', arrows: 'to', width: 2, color: { color: '#00d4ff' } },
+
+        // 후처리
+        { from: 's2i_unified_validator', to: 's2i_draft_validator', arrows: 'to', width: 3, color: { color: '#4caf50' } },
+        { from: 's2i_draft_validator', to: 's2i_consensus', arrows: 'to', width: 3, color: { color: '#4caf50' } },
+        { from: 's2i_consensus', to: 's2i_continuity', arrows: 'to', width: 3, color: { color: '#4caf50' } },
+        { from: 's2i_continuity', to: 's2i_director', arrows: 'to', width: 3, color: { color: '#4caf50' } },
+
+        // 결과
+        { from: 's2i_director', to: 's2i_pass', arrows: 'to', width: 3, color: { color: '#4caf50' }, label: '≥70점' },
+        { from: 's2i_director', to: 's2i_reject', arrows: 'to', width: 2, color: { color: '#ff6b6b' }, label: '<70점' },
+        { from: 's2i_reject', to: 's2i_fourphase', arrows: 'to', width: 2, dashes: true, color: { color: '#ff6b6b' }, label: '최대 4회' }
+    ];
+
+    // ========================================
+    // vis.js 설정
+    // ========================================
+    const options = {
+        nodes: {
+            shape: 'box',
+            borderWidth: 2,
+            shadow: true,
+            font: { color: '#ffffff', size: 13, face: 'Segoe UI' },
+            margin: 10
+        },
+        edges: {
+            smooth: { type: 'cubicBezier', forceDirection: 'vertical' },
+            font: { size: 10, color: '#888888', strokeWidth: 0 }
+        },
+        groups: {
+            stage: { color: { background: '#7b2cbf', border: '#9b4ddf' }, font: { size: 14 } },
+            agent: { color: { background: '#00d4ff', border: '#33ddff' }, font: { color: '#000000' } },
+            validator: { color: { background: '#4caf50', border: '#66bb6a' } },
+            db: { color: { background: '#ff9800', border: '#ffb74d' }, font: { color: '#000000' } },
+            output: { color: { background: '#ff6b6b', border: '#ff8a8a' } },
+            io: { color: { background: '#e91e63', border: '#f06292' } },
+            loop: { color: { background: '#9c27b0', border: '#ba68c8' } },
+            error: { color: { background: '#d32f2f', border: '#f44336' } }
+        },
+        layout: {
+            hierarchical: {
+                direction: 'UD',
+                sortMethod: 'directed',
+                levelSeparation: 100,
+                nodeSpacing: 140
+            }
+        },
+        physics: false,
+        interaction: { hover: true, tooltipDelay: 200 }
+    };
+
+    let network = null;
+    const container = document.getElementById('network');
+
+    // ========================================
+    // 뷰 함수들
+    // ========================================
+    function clearActiveButtons() {
+        document.querySelectorAll('.btn-stage').forEach(b => b.classList.remove('active'));
+    }
+
+    function updateStageSummary(title, steps) {
+        document.getElementById('stage-summary-content').innerHTML = `
+            <p style="margin-bottom: 10px; color: #00d4ff;">${title}</p>
+            <ol class="step-list">${steps.map(s => `<li>${s}</li>`).join('')}</ol>
+        `;
+    }
+
+    function showFullPipeline() {
+        clearActiveButtons();
+        document.getElementById('current-view-label').textContent = '전체 파이프라인';
+
+        const data = {
+            nodes: new vis.DataSet(fullPipelineNodes),
+            edges: new vis.DataSet(fullPipelineEdges)
+        };
+
+        if (network) network.destroy();
+        network = new vis.Network(container, data, options);
+        network.on('click', params => { if (params.nodes.length > 0) showNodeDetail(params.nodes[0]); });
+
+        updateStageSummary('전체 5단계 파이프라인', [
+            'Phase 0: Bible/Treatment 로드 → DB 동기화',
+            'Stage 1: 10권 전략 설계 (선택)',
+            'Stage 2: 50개 Arc 전술 설계',
+            'Stage 3: 에피소드별 Blueprint',
+            'Stage 4: 최종 원고 작성'
+        ]);
+    }
+
+    function showPhase0Detail() {
+        clearActiveButtons();
+        document.getElementById('btn-phase0').classList.add('active');
+        document.getElementById('current-view-label').textContent = 'Phase 0: Bible Recovery 상세';
+
+        const data = {
+            nodes: new vis.DataSet(phase0Nodes),
+            edges: new vis.DataSet(phase0Edges)
+        };
+
+        const opts = { ...options };
+        opts.layout.hierarchical.levelSeparation = 90;
+        opts.layout.hierarchical.nodeSpacing = 160;
+
+        if (network) network.destroy();
+        network = new vis.Network(container, data, opts);
+        network.on('click', params => { if (params.nodes.length > 0) showNodeDetail(params.nodes[0]); });
+
+        updateStageSummary('Phase 0 흐름', [
+            'Bible 파일 선택 (bibles/ 폴더)',
+            'Treatment 파일 선택 (treatments/ 폴더)',
+            '[선택] Treatment Block 자동 농축',
+            '50개 설계도 DNA 강제 이식 (AI 미사용)',
+            '기존 원고 확인 및 동기화',
+            'DB에서 최신 데이터 리로드'
+        ]);
+    }
+
+    function showStage1Detail() {
+        clearActiveButtons();
+        document.getElementById('btn-stage1').classList.add('active');
+        document.getElementById('current-view-label').textContent = 'Stage 1: Volume Strategy 상세';
+
+        const data = {
+            nodes: new vis.DataSet(stage1Nodes),
+            edges: new vis.DataSet(stage1Edges)
+        };
+
+        const opts = { ...options };
+        opts.layout.hierarchical.levelSeparation = 85;
+        opts.layout.hierarchical.nodeSpacing = 150;
+
+        if (network) network.destroy();
+        network = new vis.Network(container, data, opts);
+        network.on('click', params => { if (params.nodes.length > 0) showNodeDetail(params.nodes[0]); });
+
+        updateStageSummary('Stage 1 흐름', [
+            '스킵 옵션 제공 (선택 사항)',
+            'plot_roadmap 로드 (50개 Arc)',
+            '권 수 자동 계산 (Arc수 ÷ 5)',
+            '권별 순차 설계 루프 시작',
+            'Analyst가 전략 문서 생성 (gemini-3-pro)',
+            '품질 검증 (2000자 이상)',
+            '경계 검증 후 DB 저장'
+        ]);
+    }
+
+    function showStage2Detail() {
+        clearActiveButtons();
+        document.getElementById('btn-stage2').classList.add('active');
+        document.getElementById('current-view-label').textContent = 'Stage 2: Arc Design 개요';
+
+        const data = {
+            nodes: new vis.DataSet(stage2Nodes),
+            edges: new vis.DataSet(stage2Edges)
+        };
+
+        const opts = { ...options };
+        opts.layout.hierarchical.levelSeparation = 85;
+        opts.layout.hierarchical.nodeSpacing = 150;
+
+        if (network) network.destroy();
+        network = new vis.Network(container, data, opts);
+        network.on('click', params => { if (params.nodes.length > 0) showNodeDetail(params.nodes[0]); });
+
+        updateStageSummary('Stage 2 흐름 (배치 단위)', [
+            '기초 데이터 로드 (bible, volumes)',
+            '주인공 이름 추출 (Identity Lock)',
+            'ConstraintDB 초기화',
+            '배치 처리 루프 시작 (5개씩)',
+            '병렬 농축 (async ×5)',
+            '사후 용접 (Arc간 인과율 연결)',
+            '순차 설계 (Arc별 상세)',
+            'DB 저장 후 다음 배치'
+        ]);
+    }
+
+    function showStage2InnerLoop() {
+        clearActiveButtons();
+        document.getElementById('btn-stage2-inner').classList.add('active');
+        document.getElementById('current-view-label').textContent = 'Stage 2: 순차 설계 내부 루프';
+
+        const data = {
+            nodes: new vis.DataSet(stage2InnerNodes),
+            edges: new vis.DataSet(stage2InnerEdges)
+        };
+
+        const opts = { ...options };
+        opts.layout.hierarchical.levelSeparation = 75;
+        opts.layout.hierarchical.nodeSpacing = 130;
+
+        if (network) network.destroy();
+        network = new vis.Network(container, data, opts);
+        network.on('click', params => { if (params.nodes.length > 0) showNodeDetail(params.nodes[0]); });
+
+        updateStageSummary('Arc별 순차 설계 흐름', [
+            'Analyst → 결핍 리포트 생성',
+            'Weaver → 욕망 드라이브 생성',
+            'ConstraintDB → 제약 블록 추출',
+            'ConstraintCompiler → 체크리스트 (무료)',
+            'FourPhaseArcGenerator (3단계)',
+            '  └ Preflight → Ensemble ×3 → Validate',
+            'DraftValidator (Python, 무료)',
+            'Consensus (3-LLM 합의)',
+            'ContinuityInspector (LLM 심층)',
+            'Director (최종 승인, ≥70점)'
+        ]);
+    }
+
+    function showNodeDetail(nodeId) {
+        const detail = nodeDetails[nodeId];
+        const detailCard = document.getElementById('node-detail');
+
+        if (!detail) {
+            detailCard.classList.remove('active');
+            return;
+        }
+
+        detailCard.classList.add('active');
+        document.getElementById('detail-title').textContent = detail.title;
+
+        const tagClasses = {
+            'stage': 'tag-stage', 'agent': 'tag-agent', 'validator': 'tag-validator',
+            'db': 'tag-db', 'output': 'tag-stage', 'io': 'tag-io', 'loop': 'tag-loop'
+        };
+
+        let tagsHtml = detail.tags.map(tag =>
+            `<span class="tag ${tagClasses[tag] || 'tag-stage'}">${tag}</span>`
+        ).join('');
+        document.getElementById('detail-tags').innerHTML = tagsHtml;
+        document.getElementById('detail-desc').innerHTML = detail.desc;
+
+        const listEl = document.getElementById('detail-list');
+        listEl.innerHTML = '';
+        detail.items.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item;
+            listEl.appendChild(li);
+        });
+    }
+
+    // 초기 로드
+    showFullPipeline();
+    </script>
+</body>
+</html>

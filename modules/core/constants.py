@@ -62,6 +62,25 @@ class WritingLimits:
     MAX_FAILURE_STREAK = 3             # 연속 실패 허용 횟수
 
 
+class Stage2Limits:
+    """[V60.74] Stage 2 Arc 설계 관련 상수"""
+    # 가변 페이싱 범위
+    MIN_EP_COUNT = 3                   # 최소 화수 (Blitz)
+    MAX_EP_COUNT = 7                   # 최대 화수 (Epic)
+    DEFAULT_EP_COUNT = 5               # 기본 화수 (Standard)
+
+    # tactical_doc 분량 기준
+    MIN_CHARS_PER_EPISODE = 500        # 화당 최소 문자 수
+    RECOMMENDED_CHARS_PER_EPISODE = 600  # 화당 권장 문자 수
+
+    # 아이템 유사도 판단 기준
+    ITEM_SIMILARITY_RATIO_MIN = 0.5    # 50% 이상 겹치면 유사
+    ITEM_SIMILARITY_RATIO_MAX = 2.0    # 2배 이내 길이 차이면 유사
+
+    # 내공 기본값
+    INTERNAL_ENERGY_FALLBACK = 50      # 파싱 실패 시 보수적 기본값
+
+
 class AIModels:
     """AI 모델 이름 상수"""
     # [V60.65] 기본 3-pro, 할당량 초과 시 2.5-pro 폴백
@@ -127,9 +146,9 @@ class Thresholds:
 class VolumeSettings:
     """권 및 아크 설정"""
     ARCS_PER_VOLUME = 5                     # 권당 아크 개수
-    EPISODES_PER_ARC = 3                    # 아크당 기본 에피소드 개수
-    MIN_EPISODES_PER_ARC = 2                # 아크당 최소 에피소드
-    MAX_EPISODES_PER_ARC = 5                # 아크당 최대 에피소드
+    EPISODES_PER_ARC = 5                    # 아크당 기본 에피소드 개수 (Standard 기준)
+    MIN_EPISODES_PER_ARC = 3                # 아크당 최소 에피소드 (Blitz 최소)
+    MAX_EPISODES_PER_ARC = 7                # 아크당 최대 에피소드 (Epic 최대)
 
 
 class SceneSettings:

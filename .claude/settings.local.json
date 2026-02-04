@@ -21,7 +21,10 @@
       "WebSearch",
       "Bash(del \"C:\\\\Users\\\\PC\\\\Desktop\\\\글도비\\\\modules\\\\core\\\\foreshadowing_tracker.py\")",
       "Bash(timeout:*)",
-      "Bash(powershell -Command:*)"
+      "Bash(powershell -Command:*)",
+      "Bash(git restore:*)",
+      "Bash(xcopy /E /I /Y \"projects\\\\팽가 망나니 가문 재건\\\\project_data.db\" \"tests\\\\stage4_v2_test\\\\project\"\")",
+      "Bash(git checkout:*)"
     ]
   }
 }

@@ -23,6 +23,194 @@ from rich.status import Status
 
 # [V60.47] 전역 Rich 콘솔 (스피너용)
 rich_console = Console()
+
+# [V60.75] 멋진 스피너 클래스
+import threading
+class FancySpinner:
+    """Claude Code 스타일 스피너 - 전체 시간 + 현재 작업 시간 표시"""
+
+    _session_start = None  # 세션 시작 시간 (클래스 변수)
+
+    def __init__(self, task_name: str, console: Console = None):
+        self.task_name = task_name
+        self.console = console or rich_console
+        self.task_start = None
+        self.live = None
+        self._stop_event = threading.Event()
+        self._thread = None
+
+        # 세션 시작 시간 초기화 (최초 1회)
+        if FancySpinner._session_start is None:
+            FancySpinner._session_start = time.time()
+
+    def _format_time(self, seconds: float) -> str:
+        """시간을 m s 또는 s 형식으로 포맷"""
+        if seconds >= 60:
+            m = int(seconds // 60)
+            s = int(seconds % 60)
+            return f"{m}m {s}s"
+        return f"{int(seconds)}s"
+
+    def _render(self) -> str:
+        """스피너 텍스트 렌더링"""
+        now = time.time()
+        session_elapsed = now - FancySpinner._session_start
+        task_elapsed = now - self.task_start if self.task_start else 0
+
+        return (
+            f"[bold orange1]✽[/] [orange1]{self.task_name}[/] "
+            f"[dim](전체: {self._format_time(session_elapsed)} · "
+            f"현재: {self._format_time(task_elapsed)})[/]"
+        )
+
+    def _update_loop(self):
+        """백그라운드에서 Live 업데이트"""
+        while not self._stop_event.is_set():
+            if self.live:
+                self.live.update(self._render())
+            time.sleep(0.5)
+
+    def __enter__(self):
+        self.task_start = time.time()
+        self.live = Live(self._render(), console=self.console, refresh_per_second=2, transient=True)
+        self.live.__enter__()
+        self._stop_event.clear()
+        self._thread = threading.Thread(target=self._update_loop, daemon=True)
+        self._thread.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._stop_event.set()
+        if self._thread:
+            self._thread.join(timeout=1)
+        if self.live:
+            self.live.__exit__(exc_type, exc_val, exc_tb)
+        return False
+
+
+# [V60.83] Stage별 테마 스피너
+class StageSpinner:
+    """
+    각 Stage별 고유 테마를 가진 스피너
+
+    Stage 1: 📜 Volume Strategy - 고대 두루마리 테마 (gold)
+    Stage 2: ⚔️ Arc Design - 전투/전략 테마 (red)
+    Stage 3: 📐 Blueprint - 설계도 테마 (cyan)
+    Stage 4: ✍️ Manuscript - 집필 테마 (green)
+    """
+
+    STAGE_THEMES = {
+        1: {
+            "name": "Volume Strategy",
+            "color": "gold1",
+            "frames": ["📜", "📖", "📚", "📖"],
+            "verbs": ["두루마리 펼치는 중", "대서사시 구상 중", "권별 전략 수립 중", "운명의 실 엮는 중"]
+        },
+        2: {
+            "name": "Arc Design",
+            "color": "red1",
+            "frames": ["⚔️", "🗡️", "🛡️", "⚔️"],
+            "verbs": ["전술 설계 중", "Arc 용접 중", "인과율 계산 중", "욕망 주입 중"]
+        },
+        3: {
+            "name": "Blueprint",
+            "color": "cyan1",
+            "frames": ["📐", "📏", "🔧", "⚙️"],
+            "verbs": ["설계도 제도 중", "씬 배치 중", "연속성 체크 중", "정밀 조립 중"]
+        },
+        4: {
+            "name": "Manuscript",
+            "color": "green1",
+            "frames": ["✍️", "🖋️", "📝", "✒️"],
+            "verbs": ["원고 집필 중", "문장 조탁 중", "서사 직조 중", "영혼 불어넣는 중"]
+        }
+    }
+
+    _session_start = None
+
+    def __init__(self, stage: int, task_detail: str = "", console: Console = None):
+        self.stage = stage
+        self.task_detail = task_detail
+        self.theme = self.STAGE_THEMES.get(stage, self.STAGE_THEMES[1])
+        self.console = console or rich_console
+        self.task_start = None
+        self.live = None
+        self._stop_event = threading.Event()
+        self._thread = None
+        self._frame_idx = 0
+        self._verb_idx = 0
+
+        if StageSpinner._session_start is None:
+            StageSpinner._session_start = time.time()
+
+    def _format_time(self, seconds: float) -> str:
+        if seconds >= 60:
+            m = int(seconds // 60)
+            s = int(seconds % 60)
+            return f"{m}m {s}s"
+        return f"{int(seconds)}s"
+
+    def _render(self) -> str:
+        now = time.time()
+        session_elapsed = now - StageSpinner._session_start
+        task_elapsed = now - self.task_start if self.task_start else 0
+
+        # 프레임 애니메이션
+        frame = self.theme["frames"][self._frame_idx % len(self.theme["frames"])]
+        verb = self.theme["verbs"][self._verb_idx % len(self.theme["verbs"])]
+        color = self.theme["color"]
+        stage_name = self.theme["name"]
+
+        # 프로그레스 바 (10칸)
+        progress_chars = "▰▱"
+        filled = int((task_elapsed % 10))
+        bar = progress_chars[0] * filled + progress_chars[1] * (10 - filled)
+
+        detail = f" · {self.task_detail}" if self.task_detail else ""
+
+        return (
+            f"[bold {color}]{frame}[/] "
+            f"[{color}]Stage {self.stage}: {stage_name}[/] "
+            f"[dim]│[/] [{color}]{verb}[/]{detail} "
+            f"[dim]│ {bar} │ "
+            f"전체: {self._format_time(session_elapsed)} · "
+            f"현재: {self._format_time(task_elapsed)}[/]"
+        )
+
+    def _update_loop(self):
+        tick = 0
+        while not self._stop_event.is_set():
+            if self.live:
+                self.live.update(self._render())
+            time.sleep(0.3)
+            tick += 1
+            if tick % 2 == 0:
+                self._frame_idx += 1
+            if tick % 8 == 0:
+                self._verb_idx += 1
+
+    def __enter__(self):
+        self.task_start = time.time()
+        self.live = Live(self._render(), console=self.console, refresh_per_second=4, transient=True)
+        self.live.__enter__()
+        self._stop_event.clear()
+        self._thread = threading.Thread(target=self._update_loop, daemon=True)
+        self._thread.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._stop_event.set()
+        if self._thread:
+            self._thread.join(timeout=1)
+        if self.live:
+            self.live.__exit__(exc_type, exc_val, exc_tb)
+        return False
+
+    def update_detail(self, new_detail: str):
+        """작업 상세 정보 업데이트"""
+        self.task_detail = new_detail
+
+
 from google import genai
 import re 
 from modules.core.slack_bot import notifier # [V40] Slack 알림 추가 
@@ -49,6 +237,7 @@ from modules.domain.agents.arc_critic import ArcCritic  # [V60.12] Arc 비평가
 from modules.domain.agents.consensus_validator import ConsensusValidator  # [V60.12] 합의 검증기
 from modules.domain.agents.negative_example_injector import NegativeExampleInjector  # [V60.12] 실패 사례 주입
 from modules.domain.agents.arc_corrector import ArcCorrector  # [V60.42] Arc 부분 수정
+from modules.domain.agents.three_phase_blueprint_generator import ThreePhaseBlueprintGenerator  # [V60.80] 3단계 Blueprint 생성기
 from modules.core.narrative_diversity import NarrativeDiversityEngine  # [V48] 서사 다양성 엔진
 from modules.core.metrics_collector import get_metrics_collector  # [V49.3] 비용 추적 시스템
 from modules.core.constraint_db import ConstraintDB  # [V49.4] Pre-Generation Constraint DB
@@ -2702,8 +2891,9 @@ class SovereignApp:
                 'weaver': Weaver(self.current_project, self.sys.api_client, model_tier=models.get("weaver", models.get("manager", default_model))),
                 # [V48.1] ContinuityInspector - Director 산하 연속성 검증 에이전트 (2.5-pro 모델, 전체 BP 분석)
                 'continuity_inspector': ContinuityInspector(self.current_project, self.sys.api_client, model_tier="gemini-3-pro-preview"),  # [V60.65] 기본 3 Pro
-                # [V52.2] Critic - 원고 비평 에이전트 (빠른 모델 사용)
-                'critic': Critic(self.current_project, self.sys.api_client, model_tier="gemini-2.0-flash"),
+                # [V52.2] Critic - 원고 비평 에이전트
+                # [V60.78] 2.5-flash로 변경 (2.0 이하 미사용 정책)
+                'critic': Critic(self.current_project, self.sys.api_client, model_tier="gemini-2.5-flash"),
                 # [V60.10] StateExtractor - 상태 추출 에이전트 (빠른 모델로 구조화된 상태 추출)
                 'state_extractor': StateExtractor(self.current_project, self.sys.api_client, model_tier="gemini-3-flash-preview"),  # [V60.24] Flash (추출용)
                 # [V60.11] ArcEnsembleGenerator - Arc 앙상블 생성기 (3개 후보 병렬 생성)
@@ -2718,6 +2908,8 @@ class SovereignApp:
                 'arc_critic': ArcCritic(self.current_project, self.sys.api_client, model_tier="gemini-3-pro-preview"),  # [V60.65] 기본 3 Pro
                 # [V60.12] ConsensusValidator - 3-LLM 합의 검증
                 'consensus': ConsensusValidator(self.current_project, self.sys.api_client, model_tier="gemini-3-pro-preview"),  # [V60.65] 기본 3 Pro
+                # [V60.80] ThreePhaseBlueprintGenerator - 3단계 Blueprint 파이프라인
+                'three_phase_bp': ThreePhaseBlueprintGenerator(self.current_project, self.sys.api_client, model_tier="gemini-3-pro-preview"),
             }
 
             # [V60.11] Python 기반 헬퍼 초기화 (LLM 미사용)
@@ -3424,8 +3616,15 @@ class SovereignApp:
                     # 📐 [Stage 3] 설계도만 일괄 생성 (Architect 전용)
                     self._stage_3_batch_blueprinting()
                 elif choice == "4":
-                    # 캐시는 _stage_4_sovereign_writing() 내부에서 호출됨 (중복 제거)
-                    self._stage_4_sovereign_writing(limit_mode=True)
+                    # [V60.80] Stage 4 버전 선택
+                    self.ui.log("\n📝 Stage 4 버전 선택:")
+                    self.ui.log("   1. V1 (기존) - 레거시 파이프라인")
+                    self.ui.log("   2. V2 (신규) - Chief Writer 주권주의 🆕")
+                    v4_choice = self._get_int_input("   👉 버전 선택 (1/2): ", default=2, min_val=1, max_val=2)
+                    if v4_choice == 2:
+                        self._stage_4_v2_chief_writer(limit_mode=True)
+                    else:
+                        self._stage_4_sovereign_writing(limit_mode=True)
                 elif choice == "5":
                     self._shutdown_app()
                     break
@@ -3697,13 +3896,15 @@ class SovereignApp:
 
                 # [안전성 패치] Analyst에게 슬라이싱된 데이터와 성경, 그리고 '누적된 앞 권 내용' 주입
                 try:
-                    vol_data = self.agents['analyst'].plan_single_volume_v20(
-                        vol_idx,
-                        self.current_project.master_bible,
-                        treatment_slice,
-                        context_accumulator,
-                        meta_info
-                    )
+                    # [V60.83] Stage 1 스피너
+                    with StageSpinner(1, f"제{vol_idx}권 설계"):
+                        vol_data = self.agents['analyst'].plan_single_volume_v20(
+                            vol_idx,
+                            self.current_project.master_bible,
+                            treatment_slice,
+                            context_accumulator,
+                            meta_info
+                        )
                 except Exception as analyst_err:
                     self.ui.log(f"🚨 [Analyst Error] 제 {vol_idx}권 설계 중 에러: {analyst_err}")
                     self._audit_event("analyst_error", "plan_single_volume_v20 failed", {
@@ -4093,23 +4294,29 @@ class SovereignApp:
                     except Exception as cc_err:
                         self._audit_event("v60_11_constraint_compiler_error", str(cc_err)[:100])
 
-                # [V60.45] while 루프로 변경 - "다시 하기" 지원
+                # [V60.77] FourPhase-Director 대면 루프 (최대 3회) + Analyst 최후 1회
+                # 구조: FourPhase(3회) × Director 대면 3회 → Analyst 최후 1회
                 attempt = 0
-                max_attempts = RetryLimits.ANALYST_MAX_ATTEMPTS
+                max_fourphase_attempts = 3  # FourPhase × Director 대면 횟수
+                max_attempts = max_fourphase_attempts + 1  # +1은 Analyst 최후 기회
+                director_feedback_for_fourphase = ""  # [V60.77] Director 피드백 저장
+                use_analyst_fallback = False  # [V60.77] Analyst 폴백 플래그
+
                 while attempt < max_attempts:
                     # [V60.43] 검증 통과 추적 플래그 초기화
                     draft_validator_passed = False
                     consensus_passed = False
 
-                    # [V55.4] 3회 실패 후 10초 대기 → 4회차 최종 시도
-                    if attempt == 3:
-                        self.ui.log(f"   ⏸️ [V55.4] 3회 실패. 10초 대기 후 4회차 최종 시도...")
-                        self._audit_event("stage2_cooldown", "3 rejects, waiting 10s before final attempt", {
+                    # [V60.77] 마지막 시도는 Analyst 최후의 기회
+                    if attempt == max_fourphase_attempts:
+                        use_analyst_fallback = True
+                        self.ui.log(f"   ⏸️ [V60.77] FourPhase 3회 실패. Analyst 최후의 기회...")
+                        self._audit_event("stage2_analyst_fallback", "FourPhase 3 rejects, Analyst last chance", {
                             "arc_no": global_arc_no,
                             "attempt": attempt
                         })
-                        time.sleep(10)  # 10초 대기 (API 안정화)
-                        current_feedback = f"[🚨 최종 시도] 이전 3회 모두 실패. Arc 설계의 근본적 문제 해결 필요.\n{current_feedback}"
+                        time.sleep(5)  # 5초 대기 (API 안정화)
+                        current_feedback = f"[🚨 최종 시도] FourPhase 3회 모두 Director REJECT. Analyst가 근본적 재설계 필요.\n{director_feedback_for_fourphase}"
 
                     # [V60.10] 이전 시도 REJECT 패턴 분석 (2회차 이상 시 적용)
                     if attempt >= 1 and self.stage_rejection_history:
@@ -4268,12 +4475,17 @@ class SovereignApp:
                     # [무기 #2] ConstraintCompiler - 명확한 제약 체크리스트
                     # ─────────────────────────────────────────────────────────────
                     constraint_block = ""
+                    entity_registry_for_director = None  # [V61] Director용 Entity Registry
                     if hasattr(self, 'constraint_compiler') and all_refined_arcs:
                         try:
                             print(f"      📋 [무기 #2] ConstraintCompiler 컴파일 중...")
                             state_result = None
                             if 'state_extractor' in self.agents:
                                 state_result = self.agents['state_extractor'].extract_cumulative_state(all_refined_arcs)
+                                # [V61] Entity Registry 추출 - Director에게 전달
+                                entity_registry_for_director = state_result.get('entity_registry') if state_result else None
+                                if entity_registry_for_director:
+                                    print(f"      🏷️ [V61] Entity Registry 추출됨 (Director용)")
                             constraint_block = self.constraint_compiler.compile(all_refined_arcs, state_result)
                             analyst_weapons['constraints'] = constraint_block
                             print(f"      ✅ [Constraints] 제약 블록 생성 완료 ({len(constraint_block)}자)")
@@ -4281,60 +4493,73 @@ class SovereignApp:
                             print(f"      ⚠️ [Constraints] 스킵: {str(cc_err)[:50]}")
 
                     # ─────────────────────────────────────────────────────────────
-                    # [V60.58] 필살기: ToT / TwoPhase - 1회차부터 즉시 발동
+                    # [V60.77] FourPhaseArcGenerator - 통합 생성+검증 파이프라인
+                    # 구조: FourPhase(내부3회) × Director 대면 3회 → Analyst 최후 1회
                     # ─────────────────────────────────────────────────────────────
-                    if attempt >= 0:  # [V60.58] 기존 attempt >= 2 → 0으로 변경 (1회차부터 TOT)
-                        print(f"      🔥 [필살기] attempt {attempt + 1} - 서브 에이전트 투입!")
+                    four_phase_passed = False  # [V60.75] FourPhase 성공 시 검증 스킵 플래그
 
-                        # ToT 우선
-                        if V50_MODULES_AVAILABLE and self.tree_of_thoughts:
-                            try:
-                                print(f"      🌳 [ToT] Tree of Thoughts 발동...")
-                                tot_result = self.tree_of_thoughts.explore_arc(
-                                    arc_no=global_arc_no,
-                                    vol_strategy=current_vol_strategy.get('strategy_doc', ''),
-                                    curr_block=enriched_block,
-                                    prev_arc_context=enhanced_context + "\n" + constraint_block,
-                                    assets=bible_root.get('AssetLibrary', {}),
-                                    feedback=current_feedback,
-                                    num_branches=3,
-                                    depth=2,
-                                    protagonist_name=protagonist_name or "주인공"
-                                )
-                                if tot_result and isinstance(tot_result, dict):
-                                    refined_arc = tot_result
-                                    generation_method = "tot"
-                                    print(f"      ✅ [ToT] 성공!")
-                            except Exception as tot_err:
-                                print(f"      ❌ [ToT] 실패: {str(tot_err)[:80]}")
-
-                        # ToT 실패 시 TwoPhase
-                        if refined_arc is None and V50_MODULES_AVAILABLE and self.two_phase_arc:
-                            try:
-                                print(f"      🏗️ [TwoPhase] 2단계 생성 시도...")
-                                two_phase_result = self.two_phase_arc.generate(
-                                    arc_no=global_arc_no,
-                                    vol_strategy=current_vol_strategy.get('strategy_doc', ''),
-                                    curr_block=enriched_block,
-                                    prev_arc_context=enhanced_context,
-                                    assets=bible_root.get('AssetLibrary', {}),
-                                    constraints=current_feedback + "\n" + constraint_block,
-                                    prev_arcs=all_refined_arcs,
-                                    protagonist_name=protagonist_name or "주인공"
-                                )
-                                if two_phase_result and isinstance(two_phase_result, dict):
-                                    refined_arc = two_phase_result
-                                    generation_method = "two_phase"
-                                    print(f"      ✅ [TwoPhase] 성공!")
-                            except Exception as tp_err:
-                                print(f"      ❌ [TwoPhase] 실패: {str(tp_err)[:80]}")
-
-                    # ─────────────────────────────────────────────────────────────
-                    # [핵심] Analyst 호출 - 무장된 상태로 Arc 설계
-                    # ─────────────────────────────────────────────────────────────
-                    if refined_arc is None:
+                    # [V60.77] Analyst 폴백이 아닐 때만 FourPhase 시도
+                    if 'four_phase' in self.agents and not use_analyst_fallback:
                         try:
-                            print(f"      🎯 [Analyst] Arc {global_arc_no} 설계 시작...")
+                            self.ui.log(f"      🎯 [V60.77] FourPhase-Director 대면 {attempt + 1}/3")
+                            # [V60.83] Stage 2 스피너
+                            with StageSpinner(2, f"Arc {global_arc_no}"):
+                                four_phase_arc, pipeline_result = self.agents['four_phase'].generate(
+                                    arc_no=global_arc_no,
+                                    ep_start=current_ep_start,
+                                    vol_strategy=current_vol_strategy.get('strategy_doc', ''),
+                                    curr_block=enriched_block,
+                                    prev_arcs=all_refined_arcs,
+                                    assets=bible_root.get('AssetLibrary', {}),
+                                    max_internal_retries=2,
+                                    protagonist_name=protagonist_name or "주인공",
+                                    director_feedback=director_feedback_for_fourphase  # [V60.77] Director 피드백 전달
+                                )
+
+                            if four_phase_arc and pipeline_result.get('final_verdict') == 'PASS':
+                                refined_arc = four_phase_arc
+                                generation_method = "four_phase"
+                                four_phase_passed = True
+                                draft_validator_passed = True   # [V60.75] 호환성 플래그
+                                consensus_passed = True         # [V60.75] 호환성 플래그
+
+                                # [V60.75] enriched_block 데이터 주입 (ContinuityInspector 스킵되므로 여기서 처리)
+                                refined_arc['joint_docs'] = enriched_block.get('joint_docs', {})
+                                refined_arc['status_shadow'] = enriched_block.get('status_shadow', {})
+
+                                print(f"      ✅ [V60.77] FourPhase 성공! (내부 재시도: {pipeline_result.get('retries', 0)}회)")
+
+                                # 파이프라인 결과 로깅
+                                phases = pipeline_result.get('phases', {})
+                                if phases.get('generate'):
+                                    print(f"         - 후보 수: {phases['generate'].get('candidates_count', '?')}개")
+                                    print(f"         - 선택 전략: {phases['generate'].get('selected_strategy', '?')}")
+                            else:
+                                print(f"      ⚠️ [V60.77] FourPhase 내부 검증 실패")
+                                if pipeline_result.get('phases', {}).get('validate'):
+                                    issues = pipeline_result['phases']['validate'].get('issues_count', 0)
+                                    print(f"         - 검증 이슈: {issues}개")
+                                # [V60.77] FourPhase 실패 시 attempt 증가하고 다음 대면으로
+                                director_feedback_for_fourphase = "FourPhase 내부 검증 실패. 구조적 문제 해결 필요."
+                        except Exception as fp_err:
+                            print(f"      ❌ [V60.77] FourPhase 오류: {str(fp_err)[:80]}")
+                            self._audit_event("four_phase_error", str(fp_err)[:100], {"arc_no": global_arc_no})
+                            director_feedback_for_fourphase = f"FourPhase 오류 발생: {str(fp_err)[:100]}"
+
+                    # ─────────────────────────────────────────────────────────────
+                    # [V60.77] FourPhase 실패 시 다음 대면으로 (Analyst 폴백 아닌 경우)
+                    # ─────────────────────────────────────────────────────────────
+                    if refined_arc is None and not use_analyst_fallback:
+                        self.ui.log(f"      🔄 [V60.77] FourPhase 실패 → Director 대면 {attempt + 2}/3 재시도")
+                        attempt += 1
+                        continue
+
+                    # ─────────────────────────────────────────────────────────────
+                    # [V60.77] Analyst 호출 - 최후의 기회 (use_analyst_fallback일 때만)
+                    # ─────────────────────────────────────────────────────────────
+                    if refined_arc is None and use_analyst_fallback:
+                        try:
+                            self.ui.log(f"      🆘 [V60.77] Analyst 최후의 기회! Arc {global_arc_no} 설계 시작...")
 
                             # 강화된 컨텍스트 구성
                             enhanced_arc_context = enhanced_context
@@ -4385,7 +4610,8 @@ class SovereignApp:
                     # [무기 #3] DraftValidator - 정보 수집용 (V60.56: REJECT 권한 없음)
                     # ─────────────────────────────────────────────────────────────
                     python_advisory = []  # [V60.56] ConsensusValidator에 전달할 Python 분석 결과
-                    if refined_arc and hasattr(self, 'arc_draft_validator') and self.arc_draft_validator:
+                    # [V60.75] FourPhase 성공 시 아래 검증들 스킵 (이미 UnifiedValidator에서 완료)
+                    if not four_phase_passed and refined_arc and hasattr(self, 'arc_draft_validator') and self.arc_draft_validator:
                         try:
                             print(f"      🔬 [무기 #3] DraftValidator 사전 검증...")
                             draft_result = self.arc_draft_validator.validate(
@@ -4437,8 +4663,9 @@ class SovereignApp:
 
                     # ─────────────────────────────────────────────────────────────
                     # [V60.36] Consensus 검증 - 3-LLM 합의 (V60.56: Python advisory 전달)
+                    # [V60.75] FourPhase 성공 시 스킵 (UnifiedValidator에서 이미 검증됨)
                     # ─────────────────────────────────────────────────────────────
-                    if refined_arc and 'consensus' in self.agents:
+                    if not four_phase_passed and refined_arc and 'consensus' in self.agents:
                         try:
                             print(f"      🗳️ [Consensus] 3-LLM 합의 검증 시작...")
                             # [V60.47] LLM 호출 중 스피너 표시
@@ -4513,25 +4740,27 @@ class SovereignApp:
                             self._audit_event("v60_25_auto_correct_error", str(ac_err)[:100])
 
                     # 🔒 [V49.4] Pre-Validation: ConstraintDB로 즉시 검증 (무료)
-                    pre_validation = constraint_db.validate_arc_design(refined_arc)
-                    if not pre_validation['valid']:
-                        self.ui.log(f"      🔒 [V49.4 Pre-Check] 제약 위반 감지!")
-                        for v in pre_validation['violations'][:2]:
-                            self.ui.log(f"         {v}")
-                        self._audit_event("constraint_violation", "pre-generation constraint violated", {
-                            "arc_no": global_arc_no,
-                            "violations": pre_validation['violations'][:3]
-                        })
-                        # 위반 내용을 피드백에 포함하여 재생성 유도
-                        violation_summary = "; ".join(pre_validation['violations'][:2])
-                        current_feedback = f"[제약 위반] {violation_summary}. 이미 획득한 아이템을 다시 획득하지 마십시오."
-                        attempt += 1  # [V60.52 Fix] ConstraintDB 제약 위반 시에도 카운터 증가
-                        continue
+                    # [V60.76] FourPhase 성공 시 스킵 (UnifiedValidator에서 이미 검증됨)
+                    # [V60.76] Python 오탐 방지 - CRITICAL도 Director LLM에게 재검증 위임
+                    suspected_duplicates = []  # Director에게 전달할 의심 아이템 목록
 
-                    # 경고만 있는 경우 로그 출력
-                    if pre_validation['warnings']:
-                        for w in pre_validation['warnings'][:2]:
-                            self.ui.log(f"      ⚠️ [V49.4 Warning] {w}")
+                    if not four_phase_passed:
+                        pre_validation = constraint_db.validate_arc_design(refined_arc)
+                        if not pre_validation['valid']:
+                            self.ui.log(f"      🔍 [V60.76] 의심 아이템 감지 (Director LLM 재검증 예정)")
+                            for v in pre_validation['violations'][:2]:
+                                self.ui.log(f"         {v}")
+                            suspected_duplicates = pre_validation['violations'][:3]
+                            self._audit_event("constraint_suspected", "suspected duplicates for LLM review", {
+                                "arc_no": global_arc_no,
+                                "suspected": suspected_duplicates
+                            })
+                            # [V60.76] continue 제거 - Director LLM이 최종 판정
+
+                        # 경고만 있는 경우 로그 출력
+                        if pre_validation.get('warnings'):
+                            for w in pre_validation['warnings'][:2]:
+                                self.ui.log(f"      ⚠️ [V49.4 Warning] {w}")
 
                     # 🚨 [Stage2 Flow Guard] 서사 폭주/정체 1차 차단
                     flow_guard = self._stage2_flow_guard(refined_arc)
@@ -4576,8 +4805,9 @@ class SovereignApp:
                     # ═══════════════════════════════════════════════════════════════
                     # [V60.56] Arc Draft 정보 수집 (Python - REJECT 권한 없음)
                     # ContinuityInspector와 LLM에게 advisory 정보 제공
+                    # [V60.75] FourPhase 성공 시 스킵 (UnifiedValidator에서 이미 검증됨)
                     # ═══════════════════════════════════════════════════════════════
-                    if hasattr(self, 'arc_draft_validator'):
+                    if not four_phase_passed and hasattr(self, 'arc_draft_validator'):
                         draft_result = self.arc_draft_validator.validate(
                             arc=refined_arc,
                             prev_arcs=all_refined_arcs,
@@ -4710,8 +4940,9 @@ class SovereignApp:
 
                     # ═══════════════════════════════════════════════════════════════
                     # [V49 NEW] Arc 수준 연속성 검증 - Director 검증 전에 실행
+                    # [V60.75] FourPhase 성공 시 스킵 (UnifiedValidator에서 이미 검증됨)
                     # ═══════════════════════════════════════════════════════════════
-                    if 'continuity_inspector' in self.agents:
+                    if not four_phase_passed and 'continuity_inspector' in self.agents:
                         self.ui.log(f"      🔍 [V49] Arc {global_arc_no} 연속성 검증 중...")
 
                         # enriched_block의 joint_docs, status_shadow를 refined_arc에 미리 주입
@@ -4722,7 +4953,8 @@ class SovereignApp:
                         with rich_console.status(f"[bold yellow]🔍 Arc {global_arc_no} 연속성 검증 중...[/]", spinner="dots"):
                             continuity_result = self.agents['continuity_inspector'].inspect_arc(
                                 current_arc=refined_arc,
-                                prev_arcs=all_refined_arcs
+                                prev_arcs=all_refined_arcs,
+                                entity_registry=entity_registry_for_director  # [V61] Entity 일관성 검증
                             )
                         
                         if continuity_result.get('decision') == 'REJECT':
@@ -4897,7 +5129,9 @@ class SovereignApp:
                         refined_arc,
                         last_refined_context,
                         curr_block=enriched_block,
-                        protagonist_name=protagonist_name  # V42 LOCK
+                        protagonist_name=protagonist_name,  # V42 LOCK
+                        suspected_duplicates=suspected_duplicates,  # [V60.76] Python 의심 아이템 LLM 재검증
+                        entity_registry=entity_registry_for_director  # [V61] Entity 일관성 검증
                     )
 
                     # ═══════════════════════════════════════════════════════════════
@@ -5078,17 +5312,35 @@ class SovereignApp:
 
                         break
                     else:
-                        # [V60.9] Director REJECT 시 구조화된 피드백 생성
+                        # [V60.77] Director REJECT 시 구조화된 피드백 생성 → FourPhase에 전달
                         base_feedback = audit.get('re_slice_instruction', '밀도 보강 필요')
+                        reject_reason = audit.get('reason', '사유 미상')
 
                         # 적응형 피드백 강도
                         adaptive_intensity = self._get_adaptive_feedback_intensity(attempt, stage=2)
                         intensity_guide = f"\n\n[V60.9 재시도 가이드 ({attempt + 1}회차)]\n{adaptive_intensity['guidance']}"
 
-                        current_feedback = f"{base_feedback}{intensity_guide}"
-                        refined_arc = None  # [V60.10 Fix] 다음 시도에서 Analyst 재호출 보장
-                        self.ui.log(f"      🎬 [Reject] {audit.get('reason')}")
-                        self.ui.log(f"      📋 [V60.9] 적응형 피드백 (기준: {adaptive_intensity['pass_threshold']}점)")
+                        self.ui.log(f"      🎬 [Director REJECT] {reject_reason[:100]}")
+                        self.ui.log(f"      📋 피드백: {base_feedback[:100]}")
+
+                        # [V60.77] FourPhase 대면 중이면 FourPhase에 피드백 전달
+                        if not use_analyst_fallback:
+                            director_feedback_for_fourphase = f"""[Director REJECT 사유]
+{reject_reason}
+
+[수정 지시]
+{base_feedback}
+
+[재시도 가이드]
+{intensity_guide}
+"""
+                            refined_arc = None  # 다음 FourPhase 시도를 위해
+                            self.ui.log(f"      🔄 [V60.77] Director 피드백 → FourPhase 대면 {attempt + 2}/3")
+                        else:
+                            # Analyst 최후의 기회도 REJECT → 최종 실패
+                            current_feedback = f"{base_feedback}{intensity_guide}"
+                            refined_arc = None
+                            self.ui.log(f"      ❌ [V60.77] Analyst 최후 기회도 REJECT → Arc {global_arc_no} 최종 실패")
 
                         # [V55.3] PassRateMonitor: Stage 2 실패 기록
                         if V50_MODULES_AVAILABLE and self.pass_rate_monitor:
@@ -5152,7 +5404,7 @@ class SovereignApp:
                     })
 
                     # [V60.46] 실패 리포트 생성 및 출력
-                    failure_report_path = self.project_path / "logs" / f"arc_{global_arc_no}_failure_report.txt"
+                    failure_report_path = self.current_project.paths.root / "logs" / f"arc_{global_arc_no}_failure_report.txt"
                     failure_report_path.parent.mkdir(parents=True, exist_ok=True)
 
                     # REJECT 히스토리 수집
@@ -5387,7 +5639,7 @@ class SovereignApp:
         beats = refined_arc.get("beat_sequence", [])
         ep_count = refined_arc.get("ep_count", 0)
 
-        if not isinstance(beats, list) or len(beats) < max(2, ep_count):
+        if not isinstance(beats, list) or len(beats) < max(3, ep_count):
             return {
                 "status": "REJECT",
                 "reason": "서사 폭주 위험: 비트 수가 화수보다 부족",
@@ -5541,6 +5793,50 @@ class SovereignApp:
             # 전체 오류 시 0 반환 (비차단)
             print(f"         ⚠️ [V49.3] 시맨틱 분석 오류 (비차단): {e}")
             return 0
+
+    def _build_item_acquisition_timeline(self, up_to_ep: int) -> str:
+        """
+        [V60.80] 아이템 획득 타임라인 생성 (미래 침범 방지용)
+
+        에피소드 바이블에서 아이템 획득 기록을 추출하여
+        "몇 화에서 무엇을 얻었는지" 타임라인 문자열 생성.
+
+        Args:
+            up_to_ep: 추출할 마지막 화 번호 (현재 화 - 1)
+
+        Returns:
+            str: 타임라인 문자열 (예: "1화: 비무검 획득\n3화: 천잠사 획득")
+        """
+        if up_to_ep <= 0:
+            return ""
+
+        try:
+            timeline_lines = []
+
+            # 모든 에피소드 바이블에서 아이템 획득 기록 추출
+            for ep in range(1, up_to_ep + 1):
+                ep_bible = self.current_project.db.get_episode_bible(ep)
+                if not ep_bible:
+                    continue
+
+                new_items = ep_bible.get('new_items', [])
+                if new_items:
+                    items_str = ", ".join(new_items) if isinstance(new_items, list) else str(new_items)
+                    timeline_lines.append(f"제{ep}화: {items_str} 획득")
+
+                lost_items = ep_bible.get('lost_items', [])
+                if lost_items:
+                    lost_str = ", ".join(lost_items) if isinstance(lost_items, list) else str(lost_items)
+                    timeline_lines.append(f"제{ep}화: {lost_str} 분실/파괴")
+
+            if timeline_lines:
+                return "\n".join(timeline_lines)
+            else:
+                return ""
+
+        except Exception as e:
+            self.ui.log(f"⚠️ 아이템 타임라인 생성 실패 (비차단): {e}")
+            return ""
 
     def _get_int_input(
         self,
@@ -6244,37 +6540,39 @@ class SovereignApp:
 
     def _stage_3_batch_blueprinting(self) -> None:
         """
-        [Stage 3] 설계도 일괄 생성 및 V35 매니페스토 역전파 제어 공정
+        [V60.80] Stage 3 - Three Phase Blueprint Generator
 
-        에피소드별 블루프린트를 생성합니다. V35 Strike-Enrichment System을
-        사용하여 설계 품질을 보장하고, 디렉터 검증을 통과한 설계도만 저장합니다.
+        3단계 파이프라인: 제약수집 → 앙상블생성 → 통합검증
+        - Phase 1: Constraint compilation (Arc 섹션 추출, 연속성, 정지선)
+        - Phase 2: Ensemble generation (3개 후보 → 최적 선택)
+        - Phase 3: Unified validation (Python + LLM)
 
-        주요 기능:
-            - 장르별 레퍼런스 데이터 로드
-            - 아크 컨텍스트 기반 블루프린트 생성
-            - 디렉터 검증 및 반려 시 재설계
-            - 동적 모델 스위칭 (Emergency Fallback)
-
-        Raises:
-            Stage 2 설계가 선행되지 않은 경우 조기 종료
+        철학: "Arc를 충실히 따르는, 연속성 있는 Blueprint"
         """
         if not self.current_project.arcs:
             self.ui.log(f"{Emojis.ERROR} {ErrorMessages.STAGE_PREREQUISITE_MISSING}")
             return
 
+        # ═══════════════════════════════════════════════════════════════
         # 1. 목표 범위 설정
-        # [V45 Fix] ep_end 키 접근 방어
+        # ═══════════════════════════════════════════════════════════════
         total_planned_ep = self.current_project.arcs[-1].get('ep_end', 50)
-        production_head = self.current_project.get_latest_episode_number()
 
-        # [V40.1 Smart Skip] 기존 원고가 있다면 자동으로 다음 화부터 시작
+        # [V60.80 FIX] Blueprint 테이블 기준으로 시작점 결정
+        existing_bp_max = self.current_project.db.get_latest_blueprint_number()  # 0 if empty
+
+        # [Smart Skip] 기존 원고가 있다면 원고 기준으로도 체크
         existing_ms_max_ep = self._get_max_episode_from_manuscripts()
-        if existing_ms_max_ep > production_head:
-            self.ui.log(f"📂 [Manuscript Detected] 기존 원고 {existing_ms_max_ep}화까지 발견")
-            self.ui.log(f"⏭️  [Smart Skip] {existing_ms_max_ep + 1}화부터 설계도 생성을 시작합니다")
-            production_head = existing_ms_max_ep
 
-        self.ui.log(f"📊 [Info] 현재 총 {total_planned_ep}화까지 설계가 가능합니다.")
+        # 둘 중 큰 값을 기준으로 (Blueprint나 원고가 있는 화 다음부터)
+        production_head = max(existing_bp_max, existing_ms_max_ep)
+
+        if production_head > 0:
+            self.ui.log(f"📂 [Detected] Blueprint {existing_bp_max}화, 원고 {existing_ms_max_ep}화까지 발견")
+        else:
+            self.ui.log(f"📂 [Fresh Start] 기존 데이터 없음 - 1화부터 시작")
+
+        self.ui.log(f"📊 [V60.80] 현재 총 {total_planned_ep}화까지 설계가 가능합니다.")
         target_ep = self._get_int_input(
             f"👉 몇 화까지 설계도를 생성하시겠습니까? (현재 {production_head}화 / 최대 {total_planned_ep}화): ",
             default=total_planned_ep,
@@ -6282,1156 +6580,198 @@ class SovereignApp:
             max_val=total_planned_ep
         )
 
-        # 2. [V40.1 Fix] 장르별 레퍼런스 데이터 로드 (공통 메서드 사용)
-        cliche_data, location_data = self._load_genre_references()
-        if not cliche_data or not location_data:
-            self.ui.log(f"{Emojis.ERROR} 레퍼런스 데이터가 비어있어 공정을 중단합니다.")
-            return
+        # ═══════════════════════════════════════════════════════════════
+        # 2. 메인 에피소드 루프
+        # ═══════════════════════════════════════════════════════════════
+        working_ep = production_head + 1
+        success_count = 0
+        fail_count = 0
+        prev_blueprints = []  # 연속성 검증용
 
-        # [V48] 서사 다양성 엔진 초기화
-        self._init_diversity_engine(window_size=10)
+        # 이전 Blueprint들 로드 (최근 5개)
+        for prev_ep in range(max(1, working_ep - 5), working_ep):
+            prev_bp = self.current_project.get_blueprint(prev_ep)
+            if prev_bp:
+                prev_blueprints.append(prev_bp)
 
-        working_ep = production_head
+        self.ui.log(f"\n{'═' * 60}")
+        self.ui.log(f"🎯 [V60.80] Three Phase Blueprint Generator 시작")
+        self.ui.log(f"   범위: 제{working_ep}화 ~ 제{target_ep}화 ({target_ep - working_ep + 1}개)")
+        self.ui.log(f"{'═' * 60}\n")
 
-        # 메인 에피소드 루프
         while working_ep <= target_ep:
+            # ───────────────────────────────────────────────────────────
+            # 이미 설계도가 존재하면 스킵
+            # ───────────────────────────────────────────────────────────
+            if self.current_project.get_blueprint(working_ep):
+                self.ui.log(f"   ⏭️  제{working_ep}화 - 기존 설계도 존재, 스킵")
+                working_ep += 1
+                continue
 
-            # [V40.1 Fix] 3. 아크 맥락 확보 (공통 메서드 사용)
+            # ───────────────────────────────────────────────────────────
+            # [V60.83] 직전 화 Blueprint 필수 체크 (연속성 보장)
+            # ───────────────────────────────────────────────────────────
+            if working_ep > 1:
+                prev_bp_check = self.current_project.get_blueprint(working_ep - 1)
+                if not prev_bp_check:
+                    self.ui.log(f"🚨 [V60.83] 제{working_ep - 1}화 Blueprint 없음! 연속성 보장 불가.")
+                    self.ui.log(f"   → 제{working_ep - 1}화를 먼저 생성하세요.")
+                    self._audit_event("continuity_block", f"ep_{working_ep}_blocked_no_prev", {
+                        "blocked_ep": working_ep,
+                        "missing_ep": working_ep - 1
+                    })
+                    break  # 연속성 깨진 상태로 진행 금지
+
+            # ───────────────────────────────────────────────────────────
+            # Arc 컨텍스트 확보
+            # ───────────────────────────────────────────────────────────
             arc_idx, arc_data = self._get_arc_context_for_episode(working_ep)
             if arc_idx is None or arc_data is None:
+                self.ui.log(f"❌ [V60.80] 제{working_ep}화의 Arc 컨텍스트를 찾을 수 없습니다.")
                 break
 
             ep_start_val = arc_data.get('ep_start')
             if ep_start_val is None or not isinstance(ep_start_val, int):
-                self.ui.log(f"⚠️ [Stop] 아크 ep_start 누락 또는 잘못된 타입: arc_idx={arc_idx}, ep_start={ep_start_val}")
-                self._audit_event("data_missing", "arc ep_start missing or invalid", {
-                    "arc_idx": arc_idx,
-                    "ep_start": ep_start_val
-                })
+                self.ui.log(f"⚠️ [Stop] Arc ep_start 누락: arc_idx={arc_idx}")
+                self._audit_event("data_missing", "arc ep_start missing", {"arc_idx": arc_idx})
                 break
 
-            # [V43 패치] arc_data 필수 필드 검증 및 자동 복구
+            # Arc 데이터 검증
             arc_data_validated = self._validate_arc_data_fields(arc_data, arc_idx)
             if arc_data_validated:
-                arc_data = arc_data_validated  # 검증/복구된 데이터로 교체
+                arc_data = arc_data_validated
 
-            # [V60.60 Fix] arc_no, arc_num, volume_num 변수 정의 (미정의 NameError 방지)
             arc_no = arc_data.get('arc_no', arc_idx + 1)
-            arc_num = arc_no
-            volume_num = ((arc_no - 1) // VolumeSettings.ARCS_PER_VOLUME) + 1
 
-            arc_pos = working_ep - ep_start_val + 1
-            total_ep_in_arc = arc_data.get('ep_count', VolumeSettings.EPISODES_PER_ARC)
+            # ───────────────────────────────────────────────────────────
+            # [V61] Entity Registry 추출 (Stage 3용)
+            # ───────────────────────────────────────────────────────────
+            entity_registry_for_stage3 = None
+            try:
+                if 'state_extractor' in self.agents and self.current_project.arcs:
+                    # 현재 Arc까지의 누적 데이터로 Entity Registry 추출
+                    all_arcs_for_entity = list(self.current_project.arcs)[:arc_idx + 1]
+                    if all_arcs_for_entity:
+                        state_for_entity = self.agents['state_extractor'].extract_cumulative_state(all_arcs_for_entity)
+                        entity_registry_for_stage3 = state_for_entity.get('entity_registry') if state_for_entity else None
+                        if entity_registry_for_stage3:
+                            total_entities = sum(len(v) for v in entity_registry_for_stage3.values() if isinstance(v, list))
+                            self.ui.log(f"      📋 [V61] Entity Registry 로드: {total_entities}개 엔티티")
+            except Exception as entity_err:
+                self.ui.log(f"      ⚠️ [V61] Entity Registry 추출 실패: {str(entity_err)[:50]}")
+                entity_registry_for_stage3 = None
 
-            # 이미 설계도가 존재하는 경우 스킵
-            if self.current_project.get_blueprint(working_ep):
-                working_ep += 1
-                continue
+            # ───────────────────────────────────────────────────────────
+            # 직전 Blueprint 로드
+            # ───────────────────────────────────────────────────────────
+            prev_blueprint = self.current_project.get_blueprint(working_ep - 1) if working_ep > 1 else None
 
-            # [V40.1 Fix] 직전 화 원고 엔딩 추출 (공통 메서드 사용)
-            prev_ms_ending = self._get_prev_manuscript_ending(working_ep)
+            # ───────────────────────────────────────────────────────────
+            # [V61] 주인공 이름 추출
+            # ───────────────────────────────────────────────────────────
+            protagonist_name_for_stage3 = self._get_protagonist_name()
 
-            # 4. [V35 무결성 루프: Strike-Enrichment System]
-            blueprint = None
-            prev_blueprint = self.current_project.get_blueprint(working_ep - 1) if working_ep > 1 else None  # [V60.69 Fix] 초기화
-            reject_count = 0     # 설계 시도 및 반려 횟수
-            surgery_count = 0    # 아크 수술 횟수
-            enrichment_level = 0 # 정밀도 레벨
-            retry_feedback = ""
-            blueprint_attempts = 0
-            max_blueprint_attempts = 12
+            # ───────────────────────────────────────────────────────────
+            # [V60.80] Three Phase Blueprint Generation
+            # ───────────────────────────────────────────────────────────
+            self.ui.log(f"\n   📐 제{working_ep}화 Blueprint 생성 중... (Arc {arc_no}, 주인공: {protagonist_name_for_stage3})")
 
-            while not blueprint:
-                blueprint_attempts += 1
-                if blueprint_attempts > RetryLimits.BLUEPRINT_MAX_ATTEMPTS:
-                    self.ui.log("🛑 [Safety] 설계도 시도 횟수 초과로 공정을 중단합니다.")
-                    self._audit_event("safety_stop", "blueprint attempts exceeded", {
-                        "ep_num": working_ep,
-                        "attempts": blueprint_attempts
-                    })
-                    # [V40.1 Critical Fix] break 대신 return으로 메서드 완전 종료
-                    # break 후 blueprint=None 상태로 다음 코드 진행 방지
-                    self._write_audit_summary("stage3_safety_stop")
-                    return
-                # 🛡️ [V55.4] 2단계 모델 업그레이드 (비용 효율화)
-                if reject_count == 0 and enrichment_level == 0:
-                    # 1차 시도: Tier 1 (gemini-2.5-pro) - 첫 시도부터 pro 사용
-                    current_model = AIModels.TIER_1_ARCHITECT
-                else:
-                    # 2차+ 시도: Tier 2 (gemini-3-pro-preview) - reject 시 최고 모델
-                    current_model = AIModels.TIER_2_ARCHITECT
-                    self.ui.log(f"🚀 [V55.4] 아키텍트 최고 모델 격상: {current_model}")
-
-                self.agents['architect'].primary_model = current_model
-                if hasattr(self.agents['architect'], 'model_tier'):
-                    self.agents['architect'].model_tier = current_model
-
-                self.ui.log(f"🧠 [Architect] 제 {working_ep}화 설계 시도... (Strike {reject_count}/3, Lv.{enrichment_level})")
-                
-
-                if reject_count == 0:
-                    retry_feedback = arc_data.get('feedback', "")                
-                # 🔥 [V35.5] 정밀도 레벨에 따른 동적 지시어 강화 (User Suggestion Applied)
-                enrichment_directive = ""
-                if enrichment_level > 0:
-                    intensity = "HIGH" if enrichment_level == 1 else "EXTREME"
-                    enrichment_directive = (
-                        f"\n\n[🚨 SYSTEM OVERRIDE: ENRICHMENT LEVEL {enrichment_level} ({intensity})]\n"
-                        f"현재 설계 정밀도가 부족하여 {enrichment_level}단계로 격상되었습니다. 아래 지침을 강제 이행하십시오:\n"
-                        "1. **Micro-Segmentation**: 사건을 진행하려 하지 말고, 현재의 장면을 0.1초 단위로 쪼개어 묘사하십시오.\n"
-                        "2. **Sensory Amplification**: 시각, 청각, 후각적 디테일을 문단마다 필수적으로 포함하십시오.\n"
-                        "3. **Reaction Shot**: 주인공의 행동에 대한 조연들의 미세한 표정 변화와 귓속말을 대사에 포함하십시오."
+            try:
+                # [V60.83] Stage 3 스피너
+                with StageSpinner(3, f"제{working_ep}화"):
+                    # [V60.80] ToT 방식: 3전략 × 3시도 = 최대 9회 생성, Director 최대 3회 판정
+                    # [V61] entity_registry 전달하여 NPC 명칭 일관성 검증
+                    blueprint, pipeline_result = self.agents['three_phase_bp'].generate(
+                        ep_num=working_ep,
+                        arc_data=arc_data,
+                        prev_blueprint=prev_blueprint,
+                        prev_blueprints=prev_blueprints[-5:] if prev_blueprints else None,
+                        max_retries=3,  # 총 4번 시도 (0, 1, 2, 3)
+                        director=self.agents['director'],  # 디렉터주권주의 - 최종 판정
+                        arc_idx=arc_idx,
+                        entity_registry=entity_registry_for_stage3,  # [V61] Entity 일관성 검증
+                        protagonist_name=protagonist_name_for_stage3  # [V61] 주인공 이름 주입
                     )
 
-                # 매 시도마다 새로운 아이템 수혈
-                sampled_cliches = [c.get('description', '') for c in random.sample(cliche_data, min(len(cliche_data), 3))]
-                sampled_locations = [l.get('name', '') + ": " + l.get('note', '') for l in random.sample(location_data, min(len(location_data), 2))]
-                
-                # [V40] 장르별 전투/스킬 시스템 분기
-                combat_ref = ""
-                genre_type = self.selected_genre.get('type', 'wuxia') if self.selected_genre else 'wuxia'
-                
-                if genre_type == 'wuxia':
-                    # 무협만 techniques 시스템 사용
-                    if hasattr(self.sys, 'techniques') and hasattr(self.sys.hud, 'mental_method'):
-                        combat_ref = "[⚔️ 실시간 무공/전투]: " + str(self.sys.techniques.weave_v20_combat(self.sys.hud.mental_method, '강(强)'))
-                    else:
-                        combat_ref = "[⚔️ 무공/전투]: 기본 무공 시스템"
-                elif genre_type == 'hunter':
-                    combat_ref = "[⚔️ 스킬/전투]: 각성 능력 기반 전투"
-                elif genre_type == 'investment':
-                    combat_ref = "[💼 협상/거래]: 비즈니스 전략 기반 교섭"
-                else:
-                    combat_ref = "[⚔️ 전투]: 기본 전투 시스템"
-                
-                tactical_references = (
-                    "[💡 이번 화 수혈 아이템]\n - " + "\n - ".join(sampled_cliches) + "\n\n" +
-                    "[🏮 배경 지리 레퍼런스]\n - " + "\n - ".join(sampled_locations) + "\n\n" +
-                    combat_ref
-                )
-
-                # 💡 Architect 호출 (try-except 추가)
-
-                # --- [강조 패치: Spotlight & Stop-line Logic] ---
-                # 1. 이번 화 전술 섹션만 정밀 추출 (정규식 활용)
-
-
-                # --- [V33.1 긴급 패치: 딕셔너리 탈출 로직] ---
-                full_tactical = arc_data.get('tactical_doc', '')
-                if isinstance(full_tactical, dict):
-                    # 만약 AI가 구조화된 데이터를 줬다면, 이를 문자열로 평탄화하여 정규식이 읽을 수 있게 함
-                    full_tactical = json.dumps(full_tactical, ensure_ascii=False, indent=2)
-                # --------------------------------------------
-
-                focus_tag = f"[제 {working_ep}화 전술 설계]"
-
-                # 🎯 f-string의 중복 중괄호 문제를 피하기 위해 변수를 분리하여 안전하게 조립합니다.
-                escaped_tag = re.escape(focus_tag) 
-                pattern = escaped_tag + r".*?(?=\[제 \d+화 전술 설계\]|$)"
-
-                match = re.search(pattern, full_tactical, re.DOTALL)
-                ep_material = match.group(0).strip() if match else ""
-                
-                # [V39.1 패치] 정규식 실패 시 전술서 앞부분 사용
-                if not ep_material or ep_material == "이번 화 상세 재료를 찾을 수 없습니다.":
-                    ep_material = full_tactical[:2000]  # 앞부분만 사용
-                    self.ui.log(f"   ⚠️ [Regex Fail] 정규식 매칭 실패, 전술서 앞부분({len(ep_material)}자) 사용")
-                    self._audit_event("regex_fallback", "tactical doc regex failed", {
-                        "ep_num": working_ep,
-                        "fallback_length": len(ep_material)
-                    })
-
-                # 2. 다음 화의 비트 (정지선/브레이크 역할)
-                beats = arc_data.get('beat_sequence', [])
-                next_beat = beats[arc_pos] if arc_pos < len(beats) else "아크 최종 결말 및 보상"
-
-                # [V39 패치 C] FULL_MAP 마스킹 - 미래 정보 차단
-                masked_full_map = (
-                    "[🚨 FULL MAP MASKED]\n"
-                    "전체 아크 지도는 마스킹되었습니다.\n"
-                    "MUST_FOCUS 섹션의 내용만 사용하십시오.\n"
-                    "다른 화의 내용을 가져오면 즉시 REJECT됩니다."
-                )
-                
-                # 3. 🔦 아키텍트에게 '강조 패키지'로 변환하여 전달
-                focus_package = {
-                    "MUST_FOCUS": ep_material,          # 🎯 이번 화 핵심 재료 (Spotlight)
-                    "FULL_MAP": masked_full_map,        # 🗺️ [V39 마스킹] 미래 오염 차단
-                    "STOP_LINE": next_beat,             # 🛑 넘지 말아야 할 선 (Pacing Guard)
-                    "target_episode_focus": focus_tag,
-                    "beat_sequence": arc_data.get('beat_sequence', []),
-                    "arc_drive": arc_data.get('arc_drive', {}),
-                    "joint_docs": arc_data.get('joint_docs', {}),
-                    "status_shadow": arc_data.get('status_shadow', {}),
-                    "v35_surgery": arc_data.get('v35_surgery', False),
-                    "tactical_doc": arc_data.get('tactical_doc', ''),
-                    "ep_count": arc_data.get('ep_count', 5),
-                    "hybrid_composition": arc_data.get('hybrid_composition', {})
-                }
-                # ---------------------------------------------
-                # [V60.3] 정지선 위반 사전 경고 주입
-                stopline_warning = ""
-                if next_beat:
-                    stopline_warning = (
-                        f"\n🚨🚨🚨 [정지선 경고 - 절대 준수] 🚨🚨🚨\n"
-                        f"다음 화 내용: 「{next_beat}」\n"
-                        f"→ 위 내용은 이번 화에서 절대 다루지 마세요.\n"
-                        f"→ 이번 화는 「{focus_tag}」 범위 내에서만 설계하세요.\n"
-                        f"→ 정지선을 넘으면 즉시 REJECT됩니다.\n"
-                        f"🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨\n"
-                    )
-
-                # [V48] 서사 다양성 엔진 프롬프트 주입
-                diversity_injection = ""
-                if self.diversity_engine and reject_count == 0:
-                    diversity_injection = self.diversity_engine.get_architect_injection()
-
-                # [V51] Architect 지능 향상 주입
-                v51_architect_injection = ""
-                if V50_MODULES_AVAILABLE and reject_count == 0:  # 첫 시도에서만 주입
-                    try:
-                        # 직전 화 블루프린트 가져오기
-                        prev_blueprint = self.current_project.get_blueprint(working_ep - 1) if working_ep > 1 else None
-
-                        # V51.2 품질 제약 주입
-                        if self.quality_amplifier:
-                            architect_constraints = self.quality_amplifier.generate_architect_constraints(
-                                ep_num=working_ep,
-                                arc_data=arc_data,
-                                prev_blueprint=prev_blueprint
-                            )
-                            v51_architect_injection += architect_constraints + "\n\n"
-
-                        # V51.3 지능 향상 주입 (Few-Shot + Anti-Pattern + 위치 가이드)
-                        if self.agent_intelligence:
-                            intel_prompt = self.agent_intelligence.get_architect_enhancement(
-                                ep_num=working_ep,
-                                arc_data=arc_data,
-                                prev_blueprint=prev_blueprint
-                            )
-                            v51_architect_injection += intel_prompt + "\n\n"
-
-                        # V51.4 실패 학습 제약 주입
-                        if self.failure_learner:
-                            learned_constraints = self.failure_learner.generate_constraint_prompt(stage=3)
-                            if learned_constraints:
-                                v51_architect_injection += learned_constraints + "\n\n"
-
-                        # [V60.3] Stage 2 REJECT 히스토리 참조
-                        if self.stage_rejection_history:
-                            stage2_rejects = [r for r in self.stage_rejection_history if r.get('stage') == 2 and r.get('arc_no') == arc_no]
-                            if stage2_rejects:
-                                reject_warning = "\n⚠️ [이전 Stage 2 REJECT 이력]\n"
-                                for rej in stage2_rejects[-3:]:  # 최근 3개
-                                    reject_warning += f"  - Arc {rej.get('arc_no')}: {rej.get('reason', '')[:100]}\n"
-                                reject_warning += "→ 위 원인을 이번 Blueprint 설계에서 반복하지 마세요.\n"
-                                v51_architect_injection += reject_warning + "\n"
-
-                        # [V60.9] Stage 4→3 역방향 피드백 주입 (직전 에피소드의 Writer REJECT로부터 학습)
-                        if self.stage_rejection_history:
-                            # 직전 에피소드(working_ep - 1)의 Stage 4 REJECT 이력 확인
-                            stage4_rejects = [r for r in self.stage_rejection_history
-                                              if r.get('stage') == 4 and r.get('ep_num') == working_ep - 1]
-                            if stage4_rejects:
-                                latest_reject = stage4_rejects[-1]  # 가장 최근 REJECT
-                                reverse_guidance = latest_reject.get('reverse_guidance', '')
-                                if reverse_guidance:
-                                    stage4_warning = f"\n🔄 [V60.9 Stage 4→3 역방향 피드백]\n"
-                                    stage4_warning += f"직전 화(제{working_ep - 1}화)에서 Writer가 REJECT된 원인 분석:\n"
-                                    stage4_warning += f"  → 원인: {latest_reject.get('reason', '')[:150]}\n"
-                                    stage4_warning += f"\n이번 Blueprint에 반영할 구조적 개선:\n{reverse_guidance}\n"
-                                    v51_architect_injection += stage4_warning + "\n"
-                                    self.ui.log(f"      🔄 [V60.9] Stage 4→3 역방향 피드백 주입 (직전 화 Writer REJECT 기반)")
-
-                        # V51.6 복선 관리 주입
-                        if self.foreshadow_tracker:
-                            foreshadow_prompt = self.foreshadow_tracker.generate_architect_prompt(working_ep)
-                            if foreshadow_prompt:
-                                v51_architect_injection += foreshadow_prompt
-
-                        # V55.2 Constitutional Self-Check 주입
-                        if self.constitutional_checker:
-                            constitutional_prompt = self.constitutional_checker.get_full_injection(
-                                stage=3,
-                                context={
-                                    'prev_blueprint': prev_blueprint,
-                                    'arc_data': arc_data,
-                                    'feedback': blueprint_feedback if 'blueprint_feedback' in dir() else ""
-                                }
-                            )
-                            v51_architect_injection = constitutional_prompt + "\n\n" + v51_architect_injection
-
-                        # [V60.3] 정지선 경고 추가
-                        if stopline_warning:
-                            v51_architect_injection = stopline_warning + v51_architect_injection
-
-                        if v51_architect_injection:
-                            self.ui.log(f"      🧠 [V51+V55.2+V60.3] Architect 지능 향상 + 정지선 경고 주입 완료")
-                    except Exception as v51_err:
-                        self.ui.log(f"      ⚠️ [V51] Architect 향상 실패: {v51_err}")
-
-                # [안전성 패치] Architect 호출 및 예외 처리
-                try:
-                    # [V54.1] Semantic Cache: 유사 블루프린트 캐시 확인
-                    cached_blueprint = None
-                    cache_structure_hint = ""
-                    if V50_MODULES_AVAILABLE and self.semantic_cache and reject_count == 0:
-                        try:
-                            cache_context = {
-                                "ep_num": working_ep,
-                                "arc_num": arc_no,
-                                "scene_type": arc_data.get('hybrid_composition', {}).get('primary', '') if arc_data else ''
-                            }
-                            cached_blueprint = self.semantic_cache.get("blueprint_structure", cache_context)
-                            if cached_blueprint and isinstance(cached_blueprint, dict):
-                                # 캐시된 구조를 힌트로 활용
-                                cached_scenes = cached_blueprint.get('scene_breakdown', {})
-                                cached_hook = cached_blueprint.get('ending_hook', '')
-                                if cached_scenes:
-                                    cache_structure_hint = f"\n[V54.1 Cache Hint] 유사 성공 사례 구조:\n- 씬 수: {len(cached_scenes)}개\n- 엔딩훅 유형: {cached_hook[:50]}..."
-                                    self.ui.log(f"   💾 [V54.1] 캐시 히트! 구조 힌트 주입 (씬 {len(cached_scenes)}개)")
-                        except Exception as cache_err:
-                            self._audit_event("v54_cache_error", "semantic cache lookup failed", {"error": str(cache_err)[:100]})
-
-                    # [V54.5] 성공 패턴 가이드 (Architect용)
-                    architect_pattern_guide = ""
-                    if V50_MODULES_AVAILABLE and self.success_patterns and reject_count == 0:
-                        try:
-                            architect_pattern_guide = self.success_patterns.get_guidance_from_patterns(
-                                content_type="blueprint",
-                                target_context={
-                                    "ep_num": working_ep,
-                                    "arc_num": arc_no if arc_no else 0
-                                }
-                            )
-                            if architect_pattern_guide:
-                                self.ui.log(f"   🏆 [V54.5] Architect 성공 패턴 가이드 주입")
-                        except Exception as pattern_err:
-                            self._audit_event("v54_pattern_error", "architect pattern guide failed", {"error": str(pattern_err)[:100]})
-
-                    # [V48] Diversity Sampling: 첫 시도에서만 3개 후보 생성
-                    use_diversity_sampling = (self.diversity_engine and reject_count == 0 and enrichment_level == 0)
-
-                    def architect_generator():
-                        """블루프린트 단일 생성 함수"""
-                        # V54.1 캐시 힌트 + V54.5 성공 패턴 가이드 주입
-                        full_narrative = str(self.current_project.get_causal_history_summary()) + f"\n{enrichment_directive}\n{diversity_injection}\n{v51_architect_injection}"
-                        if cache_structure_hint:
-                            full_narrative += f"\n{cache_structure_hint}"
-                        if architect_pattern_guide:
-                            full_narrative += f"\n\n{architect_pattern_guide}"
-                        full_narrative += f"\n\n[🚨 Retry Feedback]: {retry_feedback}"
-
-                        return self.agents['architect'].design_v20_breakdown(
-                            ep_num=working_ep,
-                            arc_pos=arc_pos,
-                            arc_tactical_doc=focus_package,
-                            martial_hud=self.sys.hud.get_structured_hud(),
-                            encyclopedia=self.sys.lore.db.get_lore_list_by_category(None),
-                            narrative_context=full_narrative,
-                            tactical_references=tactical_references,
-                            style_guide=self.current_project.selected_tone.get('guide', '표준 웹소설 연출'),
-                            prev_ms_ending=prev_ms_ending,
-                            surgery_intel=self.current_project.get_surgery_intelligence(limit=3),
-                            enrichment_level=enrichment_level
-                        )
-
-                    # [V55.3] 블루프린트 생성 방법 추적
-                    blueprint_generation_method = "architect"  # 기본값
-
-                    # [V54.4.1] Two-Phase Blueprint: 첫 번째 재시도에서 발동 (reject_count == 1)
-                    if V50_MODULES_AVAILABLE and self.two_phase_bp and reject_count == 1:
-                        self.ui.log(f"📐 [V54.4.1] Two-Phase Blueprint 필살기 발동! (시도 {reject_count + 1}회차)")
-                        try:
-                            # tactical_doc 추출
-                            tactical_doc_text = ""
-                            if arc_data:
-                                tactical_doc_text = arc_data.get('tactical_doc', '')
-                                if not tactical_doc_text and focus_package:
-                                    tactical_doc_text = focus_package
-
-                            # Two-Phase 블루프린트 생성
-                            two_phase_result = self.two_phase_bp.generate(
-                                ep_num=working_ep,
-                                arc_num=arc_num,
-                                volume_num=volume_num,
-                                tactical_doc=tactical_doc_text,
-                                prev_blueprint=self.current_project.get_blueprint(working_ep - 1) if working_ep > 1 else None,
-                                context={
-                                    "narrative_context": full_narrative[:2000] if full_narrative else "",
-                                    "prev_ms_ending": prev_ms_ending[:1000] if prev_ms_ending else ""
-                                },
-                                constraints=retry_feedback  # 이전 REJECT 이유를 제약 조건으로 전달
-                            )
-
-                            if two_phase_result:
-                                blueprint_candidate = two_phase_result
-                                blueprint_generation_method = "two_phase"
-                                self.ui.log(f"   ✅ [V54.4.1] Two-Phase 블루프린트 생성 완료")
-                                self._audit_event("two_phase_blueprint", "blueprint generated via two-phase", {
-                                    "ep_num": working_ep,
-                                    "reject_count": reject_count,
-                                    "scene_count": len(two_phase_result.get('scene_breakdown', {}))
-                                })
-                            else:
-                                self.ui.log(f"   ⚠️ [V54.4.1] Two-Phase 실패, 기본 생성기 사용")
-                                blueprint_candidate = architect_generator()
-                        except Exception as tp_err:
-                            self.ui.log(f"   ⚠️ [V54.4.1] Two-Phase 오류: {tp_err}")
-                            self._audit_event("two_phase_blueprint_error", "two-phase generation failed", {
-                                "ep_num": working_ep,
-                                "error": str(tp_err)
-                            })
-                            blueprint_candidate = architect_generator()
-
-                    # [V60.69 Fix] Tree of Thoughts: 3회차부터 필살기 발동 (reject_count >= 2)
-                    # 기존 reject_count >= 0은 모든 시도에서 참 → Diversity 경로 불가능 버그
-                    elif V50_MODULES_AVAILABLE and self.tree_of_thoughts and reject_count >= 2:
-                        self.ui.log(f"🔥 [V53.5] Tree of Thoughts 필살기 발동! (시도 {reject_count + 1}회차)")
-                        try:
-                            tot_result = self.tree_of_thoughts.explore_blueprint(
-                                ep_num=working_ep,
-                                arc_data=arc_data,
-                                prev_blueprint=self.current_project.get_blueprint(working_ep - 1) if working_ep > 1 else None,
-                                generator_fn=architect_generator,
-                                n_branches=4  # V55.2: 4분기 확장
-                            )
-                            blueprint_candidate = tot_result.best_path.output
-                            if isinstance(blueprint_candidate, str):
-                                try:
-                                    blueprint_candidate = json.loads(blueprint_candidate)
-                                except:
-                                    # [V60.69 Fix] JSON 파싱 실패 시 기본 생성기로 폴백
-                                    self.ui.log(f"   ⚠️ [V60.69] ToT 결과 JSON 파싱 실패, 기본 생성기 사용")
-                                    blueprint_candidate = architect_generator()
-                            blueprint_generation_method = "tot"
-                            self.ui.log(f"   🌳 [V53.5] ToT 완료: 최고 경로 '{tot_result.best_path.approach}' ({tot_result.best_path.score}점)")
-                            self._audit_event("tree_of_thoughts_ultimate", "blueprint tot as last resort", {
-                                "ep_num": working_ep,
-                                "reject_count": reject_count,
-                                "best_score": tot_result.best_path.score,
-                                "paths_explored": len(tot_result.paths)
-                            })
-                        except Exception as tot_err:
-                            self.ui.log(f"   ⚠️ [V53.5] ToT 필살기 실패, 기본 생성기 사용: {tot_err}")
-                            blueprint_candidate = architect_generator()
-                    elif use_diversity_sampling:
-                        self.ui.log(f"🎲 [V48 Diversity] 블루프린트 3개 후보 생성 중...")
-                        blueprint_candidate, diversity_meta = self.diversity_engine.generate_diverse_blueprint(
-                            generator_fn=architect_generator,
-                            n_samples=3
-                        )
-                        blueprint_generation_method = "diversity"
-                        if diversity_meta.get('selected_score'):
-                            self.ui.log(f"   ✨ 선택된 블루프린트 다양성 점수: {diversity_meta['selected_score'].get('total', 0):.1f}")
-                        self._audit_event("diversity_sampling", "blueprint diversity sampling", {
-                            "ep_num": working_ep,
-                            "n_samples": diversity_meta.get('n_samples', 0),
-                            "selected_score": diversity_meta.get('selected_score', {}).get('total', 0)
-                        })
-                    else:
-                        blueprint_candidate = architect_generator()
-
-                except Exception as architect_err:
-                    self.ui.log(f"🚨 [Architect Error] 제 {working_ep}화 설계 중 에러: {architect_err}")
-                    self._audit_event("architect_error", "design_v20_breakdown failed", {
-                        "ep_num": working_ep,
-                        "error": str(architect_err)
-                    })
-                    retry_feedback = f"Architect 엔진 오류: {str(architect_err)[:100]}. 안정적인 JSON 출력을 확보하라."
-                    reject_count += 1
-                    continue
-
-                # [V52.1] Self-Reflection: 첫 시도에서만 Architect 자기 성찰 적용
-                if V50_MODULES_AVAILABLE and self.self_reflector and reject_count == 0 and blueprint_candidate:
-                    try:
-                        bp_text = blueprint_candidate.get('integrated_scenario', '')
-                        if bp_text and len(bp_text) > 500:
-                            arc_context = json.dumps(arc_data.get('tactical_doc', '')[:2000], ensure_ascii=False) if arc_data else ""
-                            reflection_result = self.self_reflector.reflect_and_improve(
-                                output=bp_text,
-                                context=arc_context,
-                                target=ReflectionTarget.ARCHITECT
-                            )
-                            if reflection_result.improvement_score > 0:
-                                blueprint_candidate['integrated_scenario'] = reflection_result.improved
-                                self.ui.log(f"   🔄 [V52.1] Architect Self-Reflection: {len(reflection_result.changes_made)}개 이슈 자체 수정")
-                                self._audit_event("self_reflection", "architect self-improved", {
-                                    "ep_num": working_ep,
-                                    "changes": reflection_result.changes_made,
-                                    "score": reflection_result.improvement_score
-                                })
-                    except Exception as sr_err:
-                        self.ui.log(f"   ⚠️ [V52.1] Architect Self-Reflection 실패 (비치명적): {sr_err}")
-
-                # [V52.4] Cross-Agent Verification: Architect → Arc 설계 준수 검증
-                if V50_MODULES_AVAILABLE and self.cross_verifier and blueprint_candidate and reject_count == 0:
-                    try:
-                        compliance_result = self.cross_verifier.verify_architect_compliance(
-                            blueprint=blueprint_candidate,
-                            arc_design=arc_data,
-                            use_llm=True
-                        )
-
-                        if compliance_result.level == ComplianceLevel.VIOLATION:
-                            self.ui.log(f"   🚨 [V52.4] Arc 설계 준수 위반 감지 (점수: {compliance_result.score:.0%})")
-                            for v in compliance_result.violations[:2]:
-                                self.ui.log(f"      - {v.get('item', '')}: {v.get('reason', '')[:60]}...")
-
-                            self._audit_event("cross_agent_reject", "architect arc compliance violation", {
-                                "ep_num": working_ep,
-                                "score": compliance_result.score,
-                                "violations": len(compliance_result.violations)
-                            })
-
-                            # 실패 기록
-                            if self.failure_learner:
-                                self.failure_learner.record_failure(
-                                    stage=3,
-                                    episode=working_ep,
-                                    arc=arc_data.get('arc_no', 0),
-                                    reason=f"Arc 준수 위반: {compliance_result.details[:100]}",
-                                    details={"violations": compliance_result.violations}
-                                )
-
-                            retry_feedback = self.cross_verifier.generate_feedback(compliance_result, "architect")
-                            reject_count += 1
-                            continue
-                        elif compliance_result.level == ComplianceLevel.PARTIAL:
-                            self.ui.log(f"   ⚠️ [V52.4] Arc 설계 부분 준수 (점수: {compliance_result.score:.0%}, 계속 진행)")
-                        else:
-                            self.ui.log(f"   ✅ [V52.4] Arc 설계 완전 준수 확인")
-                    except Exception as cv_err:
-                        self.ui.log(f"   ⚠️ [V52.4] Cross-Agent 검증 실패 (비치명적): {cv_err}")
-
-                # 5. 설계도 품질 및 논리 검수 (Director 가동)
-                if blueprint_candidate and "integrated_scenario" in blueprint_candidate:
-                    raw_content = blueprint_candidate['integrated_scenario']
-                    threshold = 1200 if enrichment_level == 0 else 1000 
-
-                    # 🧩 [Pattern Check] 블루프린트에 패턴이 반영되었는지 확인
-                    # [V40.3 User Fix] gemini-2.5-pro부터는 패턴 부족으로 반려하지 않음
-                    # [V40.3 User Fix] 4개 이상 장면이면 패턴 부족 무시
-                    scene_count = len(blueprint_candidate.get('scene_breakdown', {}))
-                    should_check_pattern = (reject_count == 0 and current_model == AIModels.TIER_1_ARCHITECT) and scene_count < 4
-
-                    if should_check_pattern:
-                        if not self._pattern_presence_check(raw_content, arc_data.get('hybrid_composition', {})):
-                            self.ui.log("   🚨 [Pattern Check] 패턴 반영이 부족합니다. 재설계합니다.")
-                            self._audit_event("pattern_missing", "blueprint pattern missing", {
-                                "ep_num": working_ep,
-                                "arc_no": arc_data.get("arc_no")
-                            })
-                            retry_feedback = "아크의 주/부 패턴이 장면에 드러나지 않습니다. 패턴을 최소 2개 장면에 명시적으로 반영하십시오."
-                            reject_count += 1
-                            time.sleep(1)
-                            continue
-                    else:
-                        # Tier 2 이상 모델이거나 4개 이상 장면이면 패턴 부족은 경고만
-                        if not self._pattern_presence_check(raw_content, arc_data.get('hybrid_composition', {})):
-                            if current_model != AIModels.TIER_1_ARCHITECT:
-                                self.ui.log(f"   ⚠️ [Pattern Check] 패턴 반영이 부족하지만, {current_model} 사용으로 진행합니다.")
-                            elif scene_count >= 4:
-                                self.ui.log(f"   ⚠️ [Pattern Check] 패턴 반영이 부족하지만, {scene_count}개 장면 확보로 진행합니다.")
-                            else:
-                                self.ui.log("   ⚠️ [Pattern Check] 패턴 반영이 부족하지만, 재시도 횟수를 고려하여 진행합니다.")
-                            self._audit_event("pattern_warning", "blueprint pattern weak but accepted", {
-                                "ep_num": working_ep,
-                                "arc_no": arc_data.get("arc_no"),
-                                "reject_count": reject_count,
-                                "model": current_model,
-                                "scene_count": scene_count
-                            })
-
-                    # [V39 패치 B] 정지선 강제 검증
-                    stopline_violation = False
-                    if next_beat and next_beat != "아크 최종 결말 및 보상":
-                        # 다음 화의 핵심 키워드가 현재 설계도에 포함되었는지 체크
-                        next_beat_keywords = next_beat[:30].strip()
-                        if next_beat_keywords in raw_content:
-                            self.ui.log(f"   🚨 [Stopline Violation] 다음 화 내용 감지: '{next_beat_keywords}...'")
-                            retry_feedback = f"[정지선 위반] '{next_beat_keywords}'는 다음 화 내용입니다. 현재 화에서 제거하십시오."
-                            reject_count += 1
-                            stopline_violation = True
-                    
-                    if not stopline_violation:
-                        # ═══════════════════════════════════════════════════════════════
-                        # [V48.1] ContinuityInspector: Director 호출 전 연속성 검증 (전체 BP)
-                        # ═══════════════════════════════════════════════════════════════
-                        continuity_passed = True
-                        try:
-                            # [V48.1] 전체 블루프린트 조회 (1화부터 현재 직전까지)
-                            prev_blueprints = self.agents['continuity_inspector'].get_prev_blueprints(
-                                current_ep=working_ep, window=None  # None = 전체 조회
-                            )
-                            
-                            if prev_blueprints:
-                                self.ui.log(f"   🔗 [V48.1] 연속성 검증 중... (제1화~제{working_ep-1}화, 총 {len(prev_blueprints)}화 전체 분석)")
-                                
-                                continuity_result = self.agents['continuity_inspector'].inspect(
-                                    current_ep=working_ep,
-                                    current_blueprint=blueprint_candidate,
-                                    prev_blueprints=prev_blueprints
-                                )
-                                
-                                if continuity_result.get('decision') == 'REJECT':
-                                    severity = continuity_result.get('severity', 'UNKNOWN')
-                                    violations = continuity_result.get('violations', [])
-                                    fix_instructions = continuity_result.get('fix_instructions', '')
-                                    
-                                    self.ui.log(f"   🚨 [V48 CONTINUITY REJECT] 연속성 위반 감지 ({severity})")
-                                    for v in violations[:3]:
-                                        self.ui.log(f"      - {v.get('type', '')}: {v.get('description', '')[:80]}...")
-                                    
-                                    self._audit_event("continuity_reject", "blueprint continuity violation", {
-                                        "ep_num": working_ep,
-                                        "severity": severity,
-                                        "violations": len(violations)
-                                    })
-
-                                    # [V51.4] 실패 기록
-                                    if V50_MODULES_AVAILABLE and self.failure_learner:
-                                        for v in violations[:3]:
-                                            self.failure_learner.record_failure(
-                                                stage=3,
-                                                episode=working_ep,
-                                                arc=arc_data.get('arc_no', 0),
-                                                reason=f"Blueprint: {v.get('type', 'unknown')}: {v.get('description', '')[:150]}",
-                                                details={"severity": severity}
-                                            )
-
-                                    retry_feedback = f"[연속성 위반] {fix_instructions}"
-                                    reject_count += 1
-                                    continuity_passed = False
-                                else:
-                                    # PASS 또는 경고만 있는 경우
-                                    warnings = continuity_result.get('warnings', [])
-                                    if warnings:
-                                        self.ui.log(f"   ⚠️ [V48] 연속성 경고 {len(warnings)}건 (계속 진행)")
-                                    else:
-                                        self.ui.log(f"   ✅ [V48] 연속성 검증 통과")
-                        except Exception as continuity_err:
-                            self.ui.log(f"   ⚠️ [V48] ContinuityInspector 오류: {continuity_err}")
-                            self._audit_event("continuity_error", "continuity inspection failed", {
-                                "ep_num": working_ep,
-                                "error": str(continuity_err)
-                            })
-                            # 연속성 검증 실패해도 Director로 계속 진행
-                        
-                        if not continuity_passed:
-                            continue  # 연속성 위반 시 재시도
-
-                        # ═══════════════════════════════════════════════════════════════
-                        # [V60.3] Stage 3 Pre-Director Checklist (Director 호출 전 빠른 체크)
-                        # ═══════════════════════════════════════════════════════════════
-                        if V50_MODULES_AVAILABLE and self.pre_director_checklist:
-                            try:
-                                bp_checklist_result = self.pre_director_checklist.check(
-                                    content=raw_content,
-                                    content_type="blueprint",
-                                    context={
-                                        "arc_data": arc_data,
-                                        "prev_blueprint": prev_blueprint
-                                    }
-                                )
-
-                                if not bp_checklist_result.passed:
-                                    self.ui.log(f"   ❌ [V60.3] Blueprint Pre-Check 실패: {bp_checklist_result.summary}")
-                                    for reason in bp_checklist_result.blocking_reasons[:2]:
-                                        self.ui.log(f"      - {reason}")
-
-                                    self._audit_event("pre_director_blueprint_fail", "blueprint pre-checklist failed", {
-                                        "ep_num": working_ep,
-                                        "fail_count": bp_checklist_result.fail_count
-                                    })
-
-                                    # 피드백 추가 후 재생성
-                                    retry_feedback = self.pre_director_checklist.get_feedback(bp_checklist_result)
-                                    reject_count += 1
-                                    continue  # Architect 재생성
-
-                                elif bp_checklist_result.warning_count > 0:
-                                    self.ui.log(f"   ⚠️ [V60.3] Blueprint Pre-Check 경고 {bp_checklist_result.warning_count}건 (진행)")
-                                else:
-                                    self.ui.log(f"   ✅ [V60.3] Blueprint Pre-Check 통과")
-
-                            except Exception as bp_checklist_err:
-                                self.ui.log(f"   ⚠️ [V60.3] Blueprint Pre-Checklist 실패 (비치명적): {bp_checklist_err}")
-
-                        # ═══════════════════════════════════════════════════════════════
-                        # [안전성 패치] Director 호출 예외 처리
-                        # ═══════════════════════════════════════════════════════════════
-                        try:
-                            # [V45] validation_context 구성 (V0128 검증용)
-                            validation_context = self._build_validation_context(
-                                ep_num=working_ep,
-                                blueprint=blueprint_candidate,
-                                mode='BLUEPRINT'
-                            )
-                            blueprint_audit = self.agents['director'].audit_manuscript(
-                                ep_num=working_ep,
-                                manuscript=raw_content,
-                                arc_doc=self.current_project.arcs[arc_idx].get('tactical_doc', ''),
-                                history_summary=self.current_project.get_causal_history_summary(),
-                                prev_full_text=prev_ms_ending,
-                                arc_pos=arc_pos,
-                                total_eps=total_ep_in_arc,
-                                target_len=threshold,
-                                retry_count=reject_count,  # [V40.3 추가] 재시도 횟수 전달
-                                validation_context=validation_context  # [V45] V0128 검증용
-                            )
-                        except Exception as director_err:
-                            self.ui.log(f"🚨 [Director Error] 제 {working_ep}화 검수 중 에러: {director_err}")
-                            self._audit_event("director_error", "audit_manuscript failed", {
-                                "ep_num": working_ep,
-                                "error": str(director_err)
-                            })
-                            # Director 실패 시 기본 통과 처리 (블로커 방지)
-                            blueprint_audit = {
-                                "decision": "PASS",
-                                "reason": "Director 오류로 인한 기본 통과",
-                                "feedback": "",
-                                "score": 50
-                            }
-                    else:
-                        continue  # 정지선 위반 시 재시도
-
-                    if blueprint_audit.get('decision') == "PASS":
-                        if self._validate_blueprint_integrity(blueprint_candidate):
-                            blueprint = blueprint_candidate
-
-                            # [V54.1] 캐시 저장 + [V54.5] 성공 패턴 기록
-                            if V50_MODULES_AVAILABLE:
-                                try:
-                                    # 캐시 저장
-                                    if self.semantic_cache:
-                                        cache_ctx = {
-                                            "ep_num": working_ep,
-                                            "arc_num": arc_no,
-                                            "scene_type": blueprint.get('hybrid_composition', {}).get('primary', '') if isinstance(blueprint, dict) else ''
-                                        }
-                                        self.semantic_cache.set("blueprint_structure", cache_ctx, blueprint)
-
-                                    # 성공 패턴 기록
-                                    if self.success_patterns:
-                                        self.success_patterns.record_success(
-                                            content_type="blueprint",
-                                            content=blueprint,
-                                            context={"ep_num": working_ep, "arc_num": arc_no if arc_no else 0},
-                                            score=blueprint_audit.get('score', 80)
-                                        )
-                                except Exception as sp_err:
-                                    self._audit_event("v54_success_pattern_error", "blueprint success pattern recording failed", {"error": str(sp_err)[:50]})
-
-                            # [V55.3] PassRateMonitor: Stage 3 성공 기록
-                            if V50_MODULES_AVAILABLE and self.pass_rate_monitor:
-                                try:
-                                    # 모델 티어 계산 (1=flash, 2=pro, 3=preview)
-                                    _tier = 2 if 'preview' in current_model else 1  # V55.4: 2단계 (1=2.5-pro, 2=3-pro-preview)
-                                    self.pass_rate_monitor.record_attempt(
-                                        stage=3,
-                                        episode=working_ep,
-                                        arc=arc_no if arc_no else 0,
-                                        attempt_num=reject_count + 1,
-                                        success=True,
-                                        generation_method=blueprint_generation_method,
-                                        model_tier=_tier
-                                    )
-                                except Exception:
-                                    pass
-
-                            # [V60.2] QualityDashboard: Stage 3 Blueprint PASS 기록
-                            if V50_MODULES_AVAILABLE and self.quality_dashboard:
-                                try:
-                                    self.quality_dashboard.record_validation(
-                                        ep_num=working_ep,
-                                        result={
-                                            'decision': 'PASS',
-                                            'score': blueprint_audit.get('score', 80),
-                                            'violations': [],
-                                            'warnings': []
-                                        },
-                                        stage=3
-                                    )
-                                except Exception:
-                                    pass
-
-                        else:
-                            retry_feedback = "설계도 필수 키 누락. scene_breakdown과 integrated_scenario를 포함하라."
-                            reject_count += 1
-                            continue
-                        self.ui.log(f"   ✅ [PASS] 제 {working_ep}화 설계도 안착.")
-                        break
-                    else:
-                        reason = blueprint_audit.get('reason', '품질 미달')
-                        feedback = blueprint_audit.get('feedback', '상세 묘사 부족')
-                        score = blueprint_audit.get('score', 0)
-
-                        # [V40.2 User Request] 2번 재시도 후에는 심각한 문제가 아니면 수용
-                        if reject_count >= 2:
-                            # 심각한 문제 체크 (서사 폭주, 서사 정체, 모순)
-                            critical_keywords = self._get_dynamic_critical_keywords()  # [V60.3] 동적 생성
-                            is_critical = any(kw in reason for kw in critical_keywords) or score < 20
-
-                            if is_critical:
-                                # 심각한 문제는 계속 거부
-                                self.ui.log(f"   🚨 [Critical Issue] {reason} - 심각한 문제로 계속 재시도합니다.")
-                                self._audit_event("critical_issue", "serious problem detected", {
-                                    "ep_num": working_ep,
-                                    "reason": reason,
-                                    "score": score
-                                })
-                                retry_feedback = f"심각한 문제: {reason} -> {feedback}"
-                                reject_count += 1
-                            else:
-                                # 심각하지 않은 문제는 경고만 하고 통과
-                                self.ui.log(f"   ⚠️ [Director Warning] {reason} - 재시도 횟수를 고려하여 수용합니다.")
-                                self._audit_event("quality_warning", "minor issue accepted after retries", {
-                                    "ep_num": working_ep,
-                                    "reason": reason,
-                                    "score": score,
-                                    "reject_count": reject_count
-                                })
-                                if self._validate_blueprint_integrity(blueprint_candidate):
-                                    blueprint = blueprint_candidate
-
-                                    # [V54.5] 성공 패턴 기록 (품질 경고 포함 통과)
-                                    if V50_MODULES_AVAILABLE and self.success_patterns:
-                                        try:
-                                            self.success_patterns.record_success(
-                                                content_type="blueprint",
-                                                content=blueprint,
-                                                context={"ep_num": working_ep, "arc_num": arc_no if arc_no else 0},
-                                                score=score  # 경고 포함이므로 실제 점수 사용
-                                            )
-                                        except Exception as sp_err:
-                                            self._audit_event("v54_success_pattern_error", "blueprint success pattern recording failed (warning)", {"error": str(sp_err)[:50]})
-
-                                    # [V55.3] PassRateMonitor: Stage 3 조건부 성공 기록
-                                    if V50_MODULES_AVAILABLE and self.pass_rate_monitor:
-                                        try:
-                                            _tier = 2 if 'preview' in current_model else 1  # V55.4: 2단계 (1=2.5-pro, 2=3-pro-preview)
-                                            self.pass_rate_monitor.record_attempt(
-                                                stage=3,
-                                                episode=working_ep,
-                                                arc=arc_no if arc_no else 0,
-                                                attempt_num=reject_count + 1,
-                                                success=True,
-                                                generation_method=blueprint_generation_method,
-                                                model_tier=_tier
-                                            )
-                                        except Exception:
-                                            pass
-
-                                    # [V60.2] QualityDashboard: Stage 3 Blueprint 조건부 PASS 기록
-                                    if V50_MODULES_AVAILABLE and self.quality_dashboard:
-                                        try:
-                                            self.quality_dashboard.record_validation(
-                                                ep_num=working_ep,
-                                                result={
-                                                    'decision': 'CONDITIONAL_PASS',
-                                                    'score': score,
-                                                    'violations': [],
-                                                    'warnings': [{'type': 'quality_warning', 'description': reason[:100]}]
-                                                },
-                                                stage=3
-                                            )
-                                        except Exception:
-                                            pass
-
-                                    self.ui.log(f"   ✅ [ACCEPTED] 제 {working_ep}화 설계도 안착 (품질 경고 포함).")
-                                    break
-                                else:
-                                    retry_feedback = "설계도 필수 키 누락. scene_breakdown과 integrated_scenario를 포함하라."
-                                    reject_count += 1
-                                    continue
-                        else:
-                            # 일반 거부 (2번 미만)
-                            self.ui.log(f"   🎬 [Director REJECT]: {reason}")
-                            self.ui.log(f"   📝 [수정 지시]: {feedback}")
-
-                            # [V60.9] 구조화된 Blueprint 피드백 생성
-                            structured_bp_feedback = self._generate_structured_blueprint_feedback(
-                                director_result=blueprint_audit,  # [V60.63 Fix] audit_result → blueprint_audit
-                                blueprint=blueprint_candidate,  # [V60.67 Fix] bp → blueprint_candidate
-                                retry_count=reject_count
-                            )
-
-                            # [V60.9] 적응형 피드백 강도
-                            adaptive_intensity = self._get_adaptive_feedback_intensity(reject_count, stage=3)
-                            intensity_guide = f"\n\n[V60.9 재시도 가이드 ({reject_count + 1}회차)]\n{adaptive_intensity['guidance']}"
-
-                            retry_feedback = f"이전 설계 거절 사유: {reason} -> {feedback}{structured_bp_feedback}{intensity_guide}"
-                            reject_count += 1
-                            self.ui.log(f"   📋 [V60.9] 구조화된 Blueprint 피드백 주입 (기준: {adaptive_intensity['pass_threshold']}점)")
-
-                            # [V55.3] PassRateMonitor: Stage 3 실패 기록
-                            if V50_MODULES_AVAILABLE and self.pass_rate_monitor:
-                                try:
-                                    _tier = 2 if 'preview' in current_model else 1  # V55.4: 2단계 (1=2.5-pro, 2=3-pro-preview)
-                                    self.pass_rate_monitor.record_attempt(
-                                        stage=3,
-                                        episode=working_ep,
-                                        arc=arc_no if arc_no else 0,
-                                        attempt_num=reject_count,
-                                        success=False,
-                                        reject_reason=reason[:100],
-                                        generation_method=blueprint_generation_method,
-                                        model_tier=_tier
-                                    )
-                                except Exception:
-                                    pass
-
-                            # [V60.2] QualityDashboard: Stage 3 Blueprint REJECT 기록
-                            if V50_MODULES_AVAILABLE and self.quality_dashboard:
-                                try:
-                                    self.quality_dashboard.record_validation(
-                                        ep_num=working_ep,
-                                        result={
-                                            'decision': 'REJECT',
-                                            'score': score,
-                                            'violations': [{'type': 'director_reject', 'description': reason[:200]}],
-                                            'warnings': []
-                                        },
-                                        stage=3
-                                    )
-                                except Exception:
-                                    pass
-
-                            # [V60.9] Stage 3→2 역방향 피드백 기록 (3회 이상 실패 시 Arc 재설계에 활용)
-                            try:
-                                self.stage_rejection_history.append({
-                                    'stage': 3,
-                                    'ep_num': working_ep,
-                                    'arc_no': arc_no if arc_no else 0,
-                                    'reason': reason[:200],
-                                    'feedback': feedback[:200] if feedback else '',
-                                    'reject_count': reject_count,
-                                    'score': score,
-                                    'timestamp': datetime.now().isoformat()
-                                })
-                                # 3회 이상 실패 시 경고 로그
-                                if reject_count >= 3:
-                                    self.ui.log(f"   ⚠️ [V60.9] Stage 3 실패 {reject_count}회 - Arc 재설계 피드백 축적 중")
-                            except Exception as s3_track_err:
-                                self._audit_event("v60_9_stage3_track_error", "stage 3 reject tracking failed", {"error": str(s3_track_err)[:100]})
-
-                            # [V60.2] FailureLearner: Stage 3 실패 기록 추가
-                            if V50_MODULES_AVAILABLE and self.failure_learner:
-                                try:
-                                    self.failure_learner.record_failure(
-                                        stage=3,
-                                        episode=working_ep,
-                                        arc=arc_no if arc_no else 0,
-                                        reason=f"Director REJECT: {reason[:150]}",
-                                        details={"score": score, "feedback": feedback[:200]}
-                                    )
-                                except Exception:
-                                    pass
-                else:
-                    self.ui.log("   🚨 [Structure Error] JSON 파싱 실패 또는 필드 누락.")
-                    retry_feedback = "반드시 'integrated_scenario' 필드를 포함한 유효한 JSON으로 응답하라."
-                    reject_count += 1
-                    time.sleep(1)
-
-                # [V55.4] 3회 실패 후 10초 대기 → 4회차 최종 시도
-                if reject_count == 3:
-                    self.ui.log(f"⏸️ [V55.4] 3회 실패. 10초 대기 후 4회차 최종 시도...")
-                    self._audit_event("stage3_cooldown", "3 rejects, waiting 10s before final attempt", {
-                        "ep_num": working_ep,
-                        "reject_count": reject_count
-                    })
-                    time.sleep(10)  # 10초 대기 (API 안정화, 컨텍스트 리셋 효과)
-
-                    # 4회차 최종 시도를 위해 카운트 증가하지 않고 continue
-                    # (다음 루프에서 reject_count=3 상태로 최고 모델 + ToT로 시도)
-                    retry_feedback = f"[🚨 최종 시도] 이전 3회 모두 실패. 구조적 문제를 근본적으로 해결하라.\n{retry_feedback}"
-                    reject_count += 1  # 4로 증가
-                    continue
-
-                # 6. ####== [V35.5 Pro: 다층적 역전파 자율 수술 시스템]
-                if reject_count >= 4:
-                    surgery_count += 1
-
-                    # [Step 1] 아크 전술서 재구성 (기존 수술 로직)
-                    self.ui.log(f"🚑 [V35 Emergency] {surgery_count}차 아크 수술 및 인과관계 용접 시작")
-                    
-                    prev_arc = self.current_project.arcs[arc_idx-1] if arc_idx > 0 else None
-                    curr_arc = self.current_project.arcs[arc_idx]
-                    next_arc = self.current_project.arcs[arc_idx+1] if arc_idx < len(self.current_project.arcs)-1 else None
-                    
-                    surgical_feedback = f"에피소드 {working_ep} 설계 반복 실패: {retry_feedback}"
-
-                    # [안전성 패치] Analyst를 호출하여 아크 전술서 자체를 5배 농축 보강
-                    try:
-                        new_arc_data = self.agents['analyst'].analyze_context(
-                            mode="ARC_RECONSTRUCTION",
-                            prev_arc=prev_arc, curr_arc=curr_arc, next_arc=next_arc,
-                            feedback=surgical_feedback
-                        )
-                    except Exception as analyst_surgery_err:
-                        self.ui.log(f"🚨 [Analyst Surgery Error] 아크 수술 실패: {analyst_surgery_err}")
-                        self._audit_event("analyst_error", "analyze_context failed", {
-                            "ep_num": working_ep,
-                            "arc_idx": arc_idx,
-                            "error": str(analyst_surgery_err)
-                        })
-                        new_arc_data = None
-
-                    if new_arc_data and isinstance(new_arc_data, dict):
-                        reference_docs = []
-                        if curr_arc:
-                            reference_docs.append(curr_arc.get('tactical_doc', ''))
-                        if prev_arc:
-                            reference_docs.append(prev_arc.get('tactical_doc', ''))
-                        if reference_docs and self._is_tactical_doc_duplicate(new_arc_data.get('tactical_doc', ''), reference_docs):
-                            self.ui.log("🚨 [Duplicate Guard] 수술 결과가 기존 아크와 중복됩니다. 수술을 무효 처리합니다.")
-                            new_arc_data = None
-
-                    if new_arc_data:
-                        # 🔧 [V40.2 Fix] 수술 결과 무결성 검증 후 저장
-                        if not self._validate_arc_integrity(new_arc_data):
-                            self.ui.log(f"🚨 [Surgery Validation] Arc {arc_idx+1} 수술 결과 무결성 검증 실패")
-                            self._audit_event("surgery_validation_fail", "arc integrity check failed after surgery", {
-                                "arc_idx": arc_idx,
-                                "missing_keys": [k for k in ["arc_no", "ep_start", "ep_end", "ep_count", "tactical_doc", "beat_sequence"] if not new_arc_data.get(k)]
-                            })
-                            new_arc_data = None
-                        else:
-                            self.current_project.arcs[arc_idx] = new_arc_data
-                            self.current_project.save_v20_anchor("arcs", self.current_project.arcs)
-                            self.ui.log(f"   ✨ [V35] Arc {arc_idx+1} 전술서 수술 및 DB 박제 완료.")
-
-                            # [무결성 보완] 수술 후 페이싱 변수 재계산 (검증 통과 시에만)
-                            arc_data = new_arc_data
-                            total_ep_in_arc = arc_data.get('ep_count', 5)
-                            arc_pos = working_ep - arc_data.get('ep_start', working_ep) + 1
-
-                    if not new_arc_data:
-                        # Analyst 수술 실패 시 무리하게 진행하지 않고 중단 가드
-                        self.ui.log("🚨 [Critical] Analyst의 아크 재구성이 실패했습니다. 수동 확인이 필요합니다.")
-                        break
-                    
-                    # ####== [Step 2] 성경 수치 강제 보정 (Bible Calibration)
-                    # 수술 후 첫 번째 시도(surgery_count == 1)에서 해결되지 않을 조짐일 때 HUD 수치 교정
-                    if surgery_count == 1:
-                        self.ui.log("🧬 [V35.5 Calibration] HUD 수치 보정을 통한 개연성 확보 가동")
-                        # [안전성 패치] calibration 호출 예외 처리
-                        try:
-                            calibration = self.agents['analyst'].perform_v35_calibration(
-                                self.sys.hud.pro_data,
-                                arc_data # 👈 arc_data 딕셔너리를 통째로 전달
-                            )
-                        except Exception as calibration_err:
-                            self.ui.log(f"🚨 [Calibration Error] HUD 보정 실패: {calibration_err}")
-                            self._audit_event("analyst_error", "perform_v35_calibration failed", {
-                                "ep_num": working_ep,
-                                "error": str(calibration_err)
-                            })
-                            calibration = None
-
-                        if calibration and isinstance(calibration, dict):
-                            # 1. 물리적 HUD 수치 강제 업데이트 및 성경 박제 (예외 처리 추가)
-                            try:
-                                if 'calibrated_metrics' in calibration:
-                                    self.sys.hud.update_physical_status(calibration['calibrated_metrics'])
-                                else:
-                                    self.ui.log("⚠️ [Calibration] calibrated_metrics 누락")
-                            except Exception as hud_calibration_err:
-                                self.ui.log(f"🚨 [HUD Calibration Error] 수치 업데이트 실패: {hud_calibration_err}")
-                                self._audit_event("hud_error", "calibration update failed", {
-                                    "ep_num": working_ep,
-                                    "error": str(hud_calibration_err)
-                                })
-
-                            # 2. 작가 에이전트에게 수치 상승의 정당성(기연 등)을 강제로 주입
-                            if 'narrative_patch' in calibration:
-                                retry_feedback += f"\n[🚨 BIBLE PATCH]: {calibration['narrative_patch']}"
-                            # 3. 수술 기록 저장 (Surgery Log - 예외 처리 추가)
-                            try:
-                                self.current_project.record_surgery_result(
-                                    working_ep, "CALIBRATION", surgical_feedback,
-                                    str(calibration.get('calibrated_metrics', {}))
-                                )
-                            except Exception as surgery_log_err:
-                                self.ui.log(f"⚠️ [Surgery Log] 기록 저장 실패: {surgery_log_err}")
-                                self._audit_event("surgery_log_error", "record failed", {
-                                    "ep_num": working_ep,
-                                    "error": str(surgery_log_err)
-                                })
-                            
-                            # 수치 수정 후 즉시 다시 시도 (reject_count 초기화)
-                            reject_count = 0
-                            enrichment_level = 0
-                            continue
-
-                    # ####== [Step 3] 자동 타임라인 되감기 (Multi-Step Backtracking)
-                    # 수술과 수치 보정으로도 해결 불가능한(surgery_count >= 2) '인과의 기점' 발견 시 강제 리셋
-                    if surgery_count >= 2:
-                        self.ui.log("⏪ [V35.5 Backtrack] 설계 불능 판단. 타임라인 자동 되감기 실행")
-                        
-                        # Director의 반려 사유를 분석하여 모순이 시작된 지점으로 롤백 수행
-                        rewind_ep = self.current_project.auto_backtrack_v35(
-                                blueprint_audit.get('reason', '설계 불능'), 
-                                self.memory
-                            )
-                        
-                        if rewind_ep:
-                            self.ui.log(f"🔄 제 {rewind_ep}화로 되감기 완료. 공정을 이 시점부터 다시 시작합니다.")
-                            # [핵심] 되감기 후 DB 연결을 안전하게 커밋하고 루프 종료
-                            if hasattr(self.current_project, 'db'):
-                                self.current_project.db.conn.commit()
-                            return 
-                        else:
-                            # 되감기 로직 실패 시 최후의 인간 개입 가드
-                            self.ui.log("🛑 [CRITICAL] 자율 되감기 실패. 시스템을 정지합니다.")
-                            choice = input("👉 직접 수정 후 [R]etry / 공정 [S]top: ").upper()
-                            if choice == 'R':
-                                reject_count = 0; enrichment_level = 0; surgery_count = 0; continue
-                            else: return
-
-                    # 일반적인 반려 상황 시 피드백 초기화 및 재시도
-                    retry_feedback = "" 
-                    reject_count = 0
-                    enrichment_level = 0
-                    continue 
-                
-                # 아직 3회 미달이면 밀도(Enrichment)만 높여서 단순 리트라이
-                enrichment_level += 1
-
-            # 7. ####== [Sovereign 결과 확정 및 트랜잭션 종료]
-            if blueprint:
-                # 설계도 무결성 재검증 후 박제
+            except Exception as gen_err:
+                self.ui.log(f"❌ [V60.80] 제{working_ep}화 생성 실패: {str(gen_err)[:100]}")
+                self._audit_event("blueprint_gen_error", str(gen_err)[:200], {"ep_num": working_ep})
+                blueprint = None
+                pipeline_result = {"final_verdict": "ERROR", "error": str(gen_err)[:200]}
+
+            # ───────────────────────────────────────────────────────────
+            # 결과 처리
+            # ───────────────────────────────────────────────────────────
+            if blueprint and pipeline_result.get("final_verdict") == "PASS":
+                # 무결성 검증 후 저장
                 if not self._validate_blueprint_integrity(blueprint):
-                    self.ui.log(f"🚨 [Integrity] 제 {working_ep}화 설계도 무결성 실패로 저장 중단")
-                    self._audit_event("integrity_fail", "blueprint save blocked", {"ep_num": working_ep})
-                    break
-                self.current_project.save_episode_blueprint(working_ep, blueprint)
-                
-                # [V38 패치] 안전한 커밋
-                self._safe_commit()
-                
-                # [V45 Fix] blueprints는 anchors 테이블이 아니므로 불필요한 로드 제거
-                # 개별 blueprint는 self.current_project.get_blueprint(ep_num)으로 접근
-                self.ui.log(f"💾 [System] 제 {working_ep}화 설계도 최종 박제 완료.")
-                working_ep += 1 
-            else:
-                self.ui.log(f"🚨 제 {working_ep}화 공정 최종 실패.")
-                break
+                    self.ui.log(f"   🚨 [Integrity] 제{working_ep}화 Blueprint 무결성 실패")
+                    self._audit_event("integrity_fail", "blueprint integrity check failed", {"ep_num": working_ep})
+                    fail_count += 1
+                    working_ep += 1
+                    continue
 
+                # DB에 저장
+                self.current_project.save_episode_blueprint(working_ep, blueprint)
+                self._safe_commit()
+
+                # prev_blueprints 업데이트
+                prev_blueprints.append(blueprint)
+                if len(prev_blueprints) > 5:
+                    prev_blueprints = prev_blueprints[-5:]
+
+                # 메트릭 기록
+                self._audit_event("blueprint_success", f"ep_{working_ep}_blueprint_generated", {
+                    "ep_num": working_ep,
+                    "arc_no": arc_no,
+                    "strategy": pipeline_result.get("phases", {}).get("generate", {}).get("selected_strategy", "unknown"),
+                    "score": pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 0)
+                })
+
+                self.ui.log(f"   ✅ 제{working_ep}화 Blueprint 저장 완료")
+                success_count += 1
+                working_ep += 1
+
+            else:
+                # 생성 실패
+                self.ui.log(f"   ❌ 제{working_ep}화 Blueprint 생성 실패")
+                self._audit_event("blueprint_fail", f"ep_{working_ep}_all_retries_exhausted", {
+                    "ep_num": working_ep,
+                    "final_verdict": pipeline_result.get("final_verdict", "UNKNOWN")
+                })
+                fail_count += 1
+
+                # 연속 실패 3회 시 중단
+                if fail_count >= 3:
+                    self.ui.log(f"🛑 [Safety] 연속 {fail_count}회 실패로 공정을 중단합니다.")
+                    break
+
+                working_ep += 1
+
+        # ═══════════════════════════════════════════════════════════════
+        # 3. 완료 처리
+        # ═══════════════════════════════════════════════════════════════
         self._write_audit_summary("stage3_complete")
-        
-        # [V40] Slack 알림 전송 (Blueprint 설계 완료 - 전체 루프 종료 후) - 실패해도 계속 진행
-        if working_ep > production_head:
-            completed_count = working_ep - production_head
+
+        # 통계 출력
+        self.ui.log(f"\n{'═' * 60}")
+        self.ui.log(f"📊 [V60.80] Stage 3 완료 통계")
+        self.ui.log(f"   성공: {success_count}개 | 실패: {fail_count}개")
+        if hasattr(self.agents.get('three_phase_bp'), 'get_stats'):
+            stats = self.agents['three_phase_bp'].get_stats()
+            self.ui.log(f"   통과율: {stats.get('pass_rate', 'N/A')}")
+        self.ui.log(f"{'═' * 60}\n")
+
+        # Slack 알림
+        if success_count > 0:
             try:
                 notifier.send_notification(
-                    title=f"✅ [Blueprint] 제 {production_head}~{working_ep-1}화 설계도 생성 완료",
-                    message=f"프로젝트: {self.current_project.name}\n생성된 화수: {completed_count}화",
-                    key_metrics={"완료 구간": f"{production_head} ~ {working_ep-1}화", "총 생성": f"{completed_count}개"}
+                    title=f"✅ [V60.80 Blueprint] 설계도 생성 완료",
+                    message=f"프로젝트: {self.current_project.name}\n성공: {success_count}개 | 실패: {fail_count}개",
+                    key_metrics={"성공": f"{success_count}개", "실패": f"{fail_count}개"}
                 )
             except Exception as slack_err:
-                self.ui.log(f"⚠️ [Slack] 알림 전송 실패 (무시하고 계속): {slack_err}")
+                self.ui.log(f"⚠️ [Slack] 알림 전송 실패: {str(slack_err)[:50]}")
 
 
     def _stage_4_sovereign_writing(self, limit_mode: bool = False) -> None:
@@ -7654,6 +6994,22 @@ class SovereignApp:
                         if not npc_hud and enemy_data:
                             npc_hud = {k: v for k, v in enemy_data.items()
                                       if k in ['rank', 'realm', 'level', 'skills', 'combat_style', 'strength']}
+
+                    # [V61] Stage 4용 Entity Registry 추출 (Director 최종 방어용)
+                    entity_registry_for_stage4 = None
+                    try:
+                        if 'state_extractor' in self.agents and self.current_project.arcs:
+                            all_arcs_for_entity = list(self.current_project.arcs)
+                            if all_arcs_for_entity:
+                                state_for_entity = self.agents['state_extractor'].extract_cumulative_state(all_arcs_for_entity)
+                                entity_registry_for_stage4 = state_for_entity.get('entity_registry') if state_for_entity else None
+                                if entity_registry_for_stage4:
+                                    self.ui.log(f"      🏷️ [V61] Entity Registry 준비됨 (Stage 4 Director용)")
+                    except Exception as entity_err:
+                        self.ui.log(f"      ⚠️ [V61] Entity Registry 추출 스킵: {str(entity_err)[:50]}")
+
+                    # [V61] Stage 4용 주인공 이름 추출
+                    protagonist_name_for_stage4 = self._get_protagonist_name()
 
                     # 유동적 서사 아이템 수혈
                     # [V44 Fix] 리스트가 비어있거나 샘플 수보다 작을 때 처리
@@ -8078,7 +7434,8 @@ class SovereignApp:
                                                 "PATTERN_PROFILE": arc_data.get('hybrid_composition', {}),
                                                 "PATTERN_MIXING_LOGIC": arc_data.get('hybrid_composition', {}).get('mixing_logic', '')
                                             },
-                                        tactical_references=tactical_refs
+                                        tactical_references=tactical_refs,
+                                        protagonist_name=protagonist_name_for_stage4  # [V61] 주인공 이름 주입
                                     )
 
                                 # [V55.3] 원고 생성 방법 추적
@@ -8499,7 +7856,8 @@ class SovereignApp:
                                             current_ep=next_ep,
                                             manuscript=temp_content,
                                             blueprint=current_blueprint,
-                                            prev_manuscripts=prev_manuscripts
+                                            prev_manuscripts=prev_manuscripts,
+                                            entity_registry=entity_registry_for_stage4  # [V61] Entity 일관성 검증
                                         )
                                         
                                         if manuscript_continuity.get('decision') == 'REJECT':
@@ -8759,7 +8117,8 @@ class SovereignApp:
                                         arc_pos=arc_pos, total_eps=total_ep_in_arc,
                                         target_len=5000,
                                         retry_count=audit_attempt,  # [V40.3 추가] 재시도 횟수 전달
-                                        validation_context=validation_context  # [V45] V0128 검증용
+                                        validation_context=validation_context,  # [V45] V0128 검증용
+                                        entity_registry=entity_registry_for_stage4  # [V61] Entity 일관성 검증
                                     )
 
                                     # [V60.3] Director 결과 풍부화 (action_items, 에러 카테고리)
@@ -9591,6 +8950,56 @@ class SovereignApp:
                                         except Exception:
                                             pass
 
+                                # ═══════════════════════════════════════════════════════════════
+                                # [V60.77] Episode Bible 저장 (화별 설정 변화 기록)
+                                # ═══════════════════════════════════════════════════════════════
+                                try:
+                                    # audit에서 추출
+                                    new_lore = audit.get('new_lore', {}) if isinstance(audit, dict) else {}
+                                    knowledge_map = audit.get('knowledge_map_updates', {}) if isinstance(audit, dict) else {}
+                                    recovered = audit.get('recovered_seeds', []) if isinstance(audit, dict) else []
+                                    state_updates = audit.get('state_updates', {}) if isinstance(audit, dict) else {}
+
+                                    # equipment 변화 추출 (new_items, lost_items)
+                                    prev_equipment = set(prev_actual.get('equipment', []) if isinstance(prev_actual.get('equipment'), list) else [])
+                                    curr_equipment = set(actual_truth_data.get('equipment', []) if isinstance(actual_truth_data.get('equipment'), list) else [])
+                                    new_items_from_equip = list(curr_equipment - prev_equipment)
+                                    lost_items_from_equip = list(prev_equipment - curr_equipment)
+
+                                    # Key_Items와 병합
+                                    key_items = new_lore.get('Key_Items', []) if isinstance(new_lore.get('Key_Items'), list) else []
+                                    all_new_items = list(set(new_items_from_equip + [i.get('name', str(i)) if isinstance(i, dict) else str(i) for i in key_items]))
+
+                                    # bible_delta 구성
+                                    bible_delta = {
+                                        'new_items': all_new_items,
+                                        'lost_items': lost_items_from_equip,
+                                        'new_npcs': [npc.get('name', str(npc)) if isinstance(npc, dict) else str(npc) for npc in new_lore.get('Key_NPCs', [])] if isinstance(new_lore.get('Key_NPCs'), list) else [],
+                                        'npc_deaths': [],  # 원고에서 직접 추출 필요 (추후 확장)
+                                        'relationship_changes': [
+                                            *knowledge_map.get('new_witnesses', []),
+                                            *knowledge_map.get('new_misled', [])
+                                        ] if isinstance(knowledge_map, dict) else [],
+                                        'state_changes': state_updates,
+                                        'time_passed': '',  # 원고에서 직접 추출 필요 (추후 확장)
+                                        'reveals': [seed.get('seed_id', str(seed)) if isinstance(seed, dict) else str(seed) for seed in recovered] if isinstance(recovered, list) else [],
+                                        # [V60.82] 추가 필드 (V2와 스키마 일관성)
+                                        'causal_links': audit.get('causal_links', []) if isinstance(audit, dict) else [],
+                                        'karma_matrix': audit.get('karma_matrix', []) if isinstance(audit, dict) else [],
+                                        'knowledge_map': knowledge_map if isinstance(knowledge_map, dict) else {}
+                                    }
+
+                                    # DB 저장
+                                    self.current_project.db.save_episode_bible(next_ep, bible_delta)
+
+                                    # 변화가 있으면 로그 출력
+                                    changes_count = len(all_new_items) + len(lost_items_from_equip) + len(bible_delta['new_npcs']) + len(bible_delta['reveals'])
+                                    if changes_count > 0:
+                                        self.ui.log(f"      📖 [V60.77] Episode Bible 저장: {changes_count}개 변화 기록")
+
+                                except Exception as bible_err:
+                                    self.ui.log(f"      ⚠️ [V60.77] Episode Bible 저장 실패 (비치명적): {str(bible_err)[:50]}")
+
                                 self.ui.log(f"✅ 제 {next_ep}화 S등급 박제 완료!"); failure_streak = 0
                             else:
                                 raise Exception("DB 트랜잭션 커밋 실패 (False 반환)")
@@ -9856,6 +9265,10 @@ class SovereignApp:
             )
             self.ui.log("   📚 [Lore/Seeds] 인과 관계 초기화 완료")
 
+            # 3.5 [V61] Episode Bibles 롤백 (에피소드별 설정 변화 - 아이템, NPC, 관계 등)
+            deleted_bibles = self.current_project.db.delete_episode_bibles_after(target_ep - 1)
+            self.ui.log(f"   📖 [Episode Bibles] {deleted_bibles}개 에피소드 설정 변화 삭제 완료")
+
             # 4. 🔢 ID 카운터 초기화 (sqlite_sequence)
             seq_targets = "('manuscripts', 'blueprints', 'state_logs', 'martial_tracker', 'causal_graph', 'sync_status')"
             self.current_project.db.cursor.execute(f"DELETE FROM sqlite_sequence WHERE name IN {seq_targets}")
@@ -9937,6 +9350,651 @@ class SovereignApp:
             self.ui.log("✅ [Wipe] 원고 기록이 청소되었습니다. 이제 1화부터 다시 생산 가능합니다.")
             input("\n[Enter] 메뉴로 돌아가기")
         except Exception as e:
-            self.ui.log(f"❌ 리셋 실패: {e}")            
+            self.ui.log(f"❌ 리셋 실패: {e}")
+
+    # =================================================================
+    # [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처
+    # =================================================================
+
+    def _stage_4_v2_chief_writer(self, limit_mode: bool = False) -> None:
+        """
+        [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처
+
+        핵심 철학: "Blueprint를 토대로 양질의 원고를 연속성 있게 생산한다"
+
+        구조:
+        - Phase 1: 프롬프트 조립 (필수만)
+        - Phase 2: Chief Writer 앙상블 (3개 병렬 생성)
+        - Phase 3: Python 사전 검증 (경고만, REJECT 권한 없음)
+        - Phase 4: Director 면담 (3번 기회)
+        - 냉동인간: 기존 Writer (3번 실패 시)
+        - 인간 개입: 냉동인간도 실패 시 중단
+        """
+        from modules.domain.agents.chief_writer import ChiefWriter
+        from modules.domain.agents.manuscript_validator import ManuscriptValidator
+        from modules.core.constants import AIModels, RetryLimits, WritingLimits
+
+        # 1. 기초 데이터 점검
+        if not self.current_project.master_bible or not self.current_project.arcs:
+            self.ui.log(f"{Emojis.ERROR} [System] Bible 또는 Arc 데이터가 없습니다. Stage 1-2를 먼저 실행하세요.")
+            return
+
+        # 2. Chief Writer 및 Validator 초기화
+        chief_writer = ChiefWriter(
+            context=self.current_project,
+            client=self.sys.api_client,
+            model_tier=AIModels.STAGE4_FIXED_WRITER_MODEL
+        )
+        manuscript_validator = ManuscriptValidator(context=self.current_project)
+
+        self.ui.log(f"🎬 [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처 가동")
+        self.ui.log(f"   • Chief Writer 모델: {AIModels.STAGE4_FIXED_WRITER_MODEL}")
+        self.ui.log(f"   • 앙상블: 3개 병렬 생성")
+        self.ui.log(f"   • Director 면담: 3번 기회")
+        self.ui.log(f"   • 냉동인간: 기존 Writer (최후의 수단)")
+
+        # 3. 환경 설정
+        output_dir = self.current_project.paths.drafts
+        output_dir.mkdir(exist_ok=True)
+        total_planned_ep = self.current_project.db.get_latest_blueprint_number()
+        target_ep = None
+
+        try:
+            # 4. 플랫폼 스타일 선택
+            if limit_mode:
+                target_ep = self._get_int_input(
+                    f"\n👉 몇 화까지 집필하시겠습니까? (최대 {total_planned_ep}화): ",
+                    default=None, min_val=1, max_val=total_planned_ep
+                )
+
+            self.ui.console.clear()
+            self.ui.title("V60.80 CHIEF WRITER", "Director 주권주의 아키텍처")
+
+            style_choice = self._get_int_input(
+                "\n👉 스타일 선택 (1.카카오 / 2.네이버): ",
+                default=1, min_val=1, max_val=2
+            )
+            style_guide = (
+                "네이버: 심리 묘사 강조, 3-4문장 단위 줄바꿈, 여백 극대화"
+                if style_choice == 2 else
+                "카카오: 사이다 전개, 절벽걸기, 4K 해상도 묘사"
+            )
+
+            loop_guard = 0
+            max_loops = min((target_ep or total_planned_ep) - self.current_project.get_latest_episode_number() + 5, 100)
+
+            # 5. 원고 생산 메인 루프
+            while True:
+                loop_guard += 1
+                if loop_guard > max_loops:
+                    self.ui.log("🛑 [Safety] 루프 제한 도달. 중단합니다.")
+                    break
+
+                next_ep = self.current_project.get_latest_episode_number()
+                if target_ep and next_ep > target_ep:
+                    self.ui.log(f"🏁 목표 회차({target_ep}화) 도달. 종료합니다.")
+                    break
+
+                # Blueprint 로드
+                blueprint = self.current_project.get_blueprint(next_ep)
+                if not blueprint:
+                    self.ui.log(f"⚠️ 제{next_ep}화 Blueprint 없음. Stage 3 먼저 실행하세요.")
+                    break
+
+                # Arc 데이터 검색
+                arc_data = next(
+                    (a for a in self.current_project.arcs
+                     if isinstance(a, dict) and a.get('ep_start', 0) <= next_ep <= a.get('ep_end', 0)),
+                    None
+                )
+                if not arc_data:
+                    self.ui.log(f"⚠️ 제{next_ep}화 Arc 데이터 없음.")
+                    break
+
+                arc_pos = next_ep - arc_data.get('ep_start', next_ep) + 1
+                total_ep_in_arc = arc_data.get('ep_count', 5)
+                arc_tactical = arc_data.get('tactical_doc', '')
+
+                # 직전 화 원고
+                prev_ms_data = self.current_project.db.get_manuscript(next_ep - 1)
+                prev_text = prev_ms_data.get('content', '') if prev_ms_data else ""
+                prev_ending = prev_text[-500:] if prev_text else ""
+
+                # HUD 리포트
+                hud_report = self.sys.hud.get_v20_hud_report() if hasattr(self.sys, 'hud') else ""
+
+                # ===== [V60.80 FIX] 미래 침범 방지 데이터 추출 =====
+                # 1. 현재 인벤토리/무공 (HUD에서)
+                current_inventory = []
+                current_martial_arts = []
+                if hasattr(self.sys, 'hud') and self.sys.hud:
+                    current_inventory = list(self.sys.hud.inventory) if self.sys.hud.inventory else []
+                    # [V61 Fix] MartialManager의 속성명은 'techniques' (martial_arts 아님)
+                    current_martial_arts = list(self.sys.hud.techniques) if hasattr(self.sys.hud, 'techniques') and self.sys.hud.techniques else []
+
+                # 2. 누적 Bible에서 죽은 NPC와 아이템 획득 기록
+                cumulative_bible = self.current_project.db.get_cumulative_bible(next_ep - 1)
+                dead_npcs = cumulative_bible.get('dead_npcs', []) if cumulative_bible else []
+
+                # 3. 아이템 획득 타임라인 생성
+                item_acquisition_timeline = self._build_item_acquisition_timeline(next_ep - 1)
+
+                # ===== [V60.80+] 기존 Writer 핵심 기능 추출 =====
+                # (Writer 인스턴스의 유틸리티 메서드 활용)
+                reference_anchor_prompt = ""
+                mandatory_context = ""
+                anti_trope_prompt = ""
+                justification_prompt = ""
+                reflexion_prompt = ""
+                genre_name = getattr(self.current_project, 'genre', {}).get('name', '무협')
+
+                # 기존 Writer 인스턴스에서 핵심 기능 프롬프트 추출
+                if 'writer' in self.agents:
+                    writer_agent = self.agents['writer']
+                    try:
+                        # 1. ReferenceAnchor (과거 사건 강제 기억)
+                        from modules.core.reference_anchor import ReferenceAnchor
+                        anchor_sys = ReferenceAnchor(self.current_project)
+                        relevant_anchors = anchor_sys.get_relevant_anchors(
+                            current_ep_num=next_ep,
+                            arc_context=arc_tactical or "",
+                            n_anchors=5
+                        )
+                        critical_anchors = anchor_sys.get_critical_anchors(
+                            current_ep_num=next_ep,
+                            anchor_types=['item', 'injury', 'power', 'location']
+                        )
+                        if relevant_anchors or critical_anchors:
+                            reference_anchor_prompt = anchor_sys.generate_reference_prompt(
+                                relevant_anchors=relevant_anchors,
+                                critical_anchors=critical_anchors
+                            )
+                    except Exception as e:
+                        self.ui.log(f"   ⚠️ ReferenceAnchor 로드 실패 (비차단): {e}")
+
+                    try:
+                        # 2. Mandatory Context (최근 사건, NPC 상태, HUD 급변)
+                        mandatory_context = writer_agent._build_mandatory_context(next_ep)
+                    except Exception as e:
+                        self.ui.log(f"   ⚠️ Mandatory Context 실패 (비차단): {e}")
+
+                    try:
+                        # 3. Anti-Trope Instructions (반클리셰)
+                        anti_trope_prompt = writer_agent._build_anti_trope_instructions(genre_name)
+                    except Exception as e:
+                        self.ui.log(f"   ⚠️ Anti-Trope 실패 (비차단): {e}")
+
+                    try:
+                        # 4. Justification Guidance (정당화 패턴)
+                        justification_prompt = writer_agent._build_justification_guidance(hud_report, genre_name)
+                    except Exception as e:
+                        self.ui.log(f"   ⚠️ Justification 실패 (비차단): {e}")
+
+                    try:
+                        # 5. Reflexion (과거 실패 패턴 - 20화 이후)
+                        if next_ep >= 20:
+                            from modules.core.reflexion_manager import ReflexionManager
+                            reflexion = ReflexionManager(self.current_project)
+                            reflexion_prompt = reflexion.get_prompt_injection(min_frequency=2)
+                    except Exception as e:
+                        self.ui.log(f"   ⚠️ Reflexion 실패 (비차단): {e}")
+
+                # [V60.81] NPC 장비 현황 추출
+                npc_equipment_summary = ""
+                try:
+                    bible_root = self.current_project.master_bible.get('MasterBible', self.current_project.master_bible)
+                    assets = bible_root.get('AssetLibrary', {})
+                    key_npcs = assets.get('KeyNPCs', []) or assets.get('Key_NPCs', [])
+                    npc_equipment_lines = []
+                    for npc in key_npcs:
+                        if isinstance(npc, dict):
+                            npc_name = npc.get('name') or npc.get('Name', '알 수 없음')
+                            npc_hud = npc.get('NPC_Martial_HUD', {})
+                            if isinstance(npc_hud, dict):
+                                equip = npc_hud.get('equipment', [])
+                                if equip:
+                                    npc_equipment_lines.append(f"- {npc_name}: {equip}")
+                    npc_equipment_summary = "\n".join(npc_equipment_lines) if npc_equipment_lines else "NPC 장비 정보 없음"
+                except Exception as e:
+                    self.ui.log(f"   ⚠️ NPC 장비 현황 추출 실패 (비차단): {e}")
+                    npc_equipment_summary = ""
+
+                # [V60.81] DNA 모드 설정
+                intro_dna = "CYNICAL"  # 기본값
+
+                self.ui.log(f"\n{'='*60}")
+                self.ui.log(f"📝 제{next_ep}화 집필 시작 (Arc {arc_data.get('arc_no', '?')}, 위치 {arc_pos}/{total_ep_in_arc})")
+                self.ui.log(f"{'='*60}")
+
+                # ===== Phase 4: Director 면담 (3번 기회) =====
+                final_manuscript = None
+                final_title = None
+                final_state_updates = {}
+                director_feedback = ""
+                previous_attempt = {}
+
+                for interview_round in range(3):
+                    self.ui.log(f"\n🎬 [{interview_round + 1}차 면담] Chief Writer 앙상블 생성 중...")
+
+                    # Phase 2: Chief Writer 앙상블 생성
+                    # [V60.83] Stage 4 스피너
+                    with StageSpinner(4, f"제{next_ep}화 · {interview_round + 1}차 면담"):
+                        if interview_round == 0:
+                            candidates = chief_writer.generate_ensemble(
+                                ep_num=next_ep,
+                                blueprint=blueprint,
+                                prev_manuscript=prev_text,
+                                hud_report=hud_report,
+                                arc_doc=arc_tactical,
+                                master_bible=self.current_project.master_bible,
+                                style_guide=style_guide,
+                                # [V60.80 FIX] 미래 침범 방지
+                                current_inventory=current_inventory,
+                                current_martial_arts=current_martial_arts,
+                                dead_npcs=dead_npcs,
+                                item_acquisition_timeline=item_acquisition_timeline,
+                                # [V60.80+] 기존 Writer 핵심 기능
+                                reference_anchor_prompt=reference_anchor_prompt,
+                                mandatory_context=mandatory_context,
+                                anti_trope_prompt=anti_trope_prompt,
+                                justification_prompt=justification_prompt,
+                                reflexion_prompt=reflexion_prompt,
+                                genre_name=genre_name,
+                                # [V60.81] 추가 파라미터
+                                npc_equipment_summary=npc_equipment_summary,
+                                intro_dna=intro_dna
+                            )
+                        else:
+                            candidates = chief_writer.regenerate_with_feedback(
+                                ep_num=next_ep,
+                                blueprint=blueprint,
+                                prev_manuscript=prev_text,
+                                hud_report=hud_report,
+                                arc_doc=arc_tactical,
+                                master_bible=self.current_project.master_bible,
+                                style_guide=style_guide,
+                                director_feedback=director_feedback,
+                                previous_attempt=previous_attempt,
+                                attempt_number=interview_round + 1,
+                                # [V60.80 FIX] 미래 침범 방지
+                                current_inventory=current_inventory,
+                                current_martial_arts=current_martial_arts,
+                                dead_npcs=dead_npcs,
+                                item_acquisition_timeline=item_acquisition_timeline,
+                                # [V60.80+] 기존 Writer 핵심 기능
+                                reference_anchor_prompt=reference_anchor_prompt,
+                                mandatory_context=mandatory_context,
+                                anti_trope_prompt=anti_trope_prompt,
+                                justification_prompt=justification_prompt,
+                                reflexion_prompt=reflexion_prompt,
+                                genre_name=genre_name,
+                                # [V60.81] 추가 파라미터
+                                npc_equipment_summary=npc_equipment_summary,
+                                intro_dna=intro_dna
+                            )
+
+                    # Phase 3: Python 사전 검증 (경고만)
+                    self.ui.log(f"   🔍 Python 사전 검증 중...")
+                    validation_results = manuscript_validator.validate_all_candidates(
+                        candidates=candidates,
+                        blueprint=blueprint,
+                        prev_manuscript=prev_text,
+                        hud_report=hud_report
+                    )
+
+                    for i, vr in enumerate(validation_results):
+                        strategy = candidates[i].get('strategy_name', f'후보{i+1}') if i < len(candidates) else f'후보{i+1}'
+                        self.ui.log(f"      • {strategy}: 경고 {vr.get('warning_count', 0)}개, 분량 {vr.get('metrics', {}).get('length', 0)}자")
+
+                    # Phase 4: Director 면담
+                    self.ui.log(f"   🎬 Director 면담 중...")
+                    director_result = self.agents['director'].select_and_judge_ensemble(
+                        ep_num=next_ep,
+                        candidates=candidates,
+                        validation_results=validation_results,
+                        blueprint=blueprint,
+                        previous_ending=prev_ending,
+                        arc_pos=arc_pos,
+                        total_eps=total_ep_in_arc,
+                        retry_count=interview_round
+                    )
+
+                    selected = director_result.get('selected', 'A')
+                    verdict = director_result.get('verdict', 'REJECT')
+                    score = director_result.get('score', 0)
+                    reason = director_result.get('selection_reason', '')
+
+                    self.ui.log(f"   📊 Director 판정: {verdict} (점수: {score}, 선택: 후보 {selected})")
+                    self.ui.log(f"      └─ 사유: {reason[:80]}...")
+
+                    if verdict == "PASS":
+                        selected_candidate = director_result.get('selected_candidate', {})
+                        final_manuscript = selected_candidate.get('manuscript', '')
+                        final_title = selected_candidate.get('title', f'제{next_ep}화')
+                        final_state_updates = director_result.get('state_updates', {})
+                        self.ui.log(f"   ✅ {interview_round + 1}차 면담 PASS!")
+                        break
+                    else:
+                        # REJECT - 피드백 수집
+                        feedback = director_result.get('feedback', {})
+                        action_items = director_result.get('action_items', [])
+                        director_feedback = "\n".join(action_items) if action_items else str(feedback.get('issues', []))
+                        previous_attempt = {
+                            'strategy': selected,
+                            'rejection_reason': director_feedback,
+                            'action_items': action_items,
+                            'score': score
+                        }
+                        self.ui.log(f"   ❌ {interview_round + 1}차 면담 REJECT. 피드백: {director_feedback[:100]}...")
+
+                # ===== 3번 모두 실패: 냉동인간 소환 =====
+                if not final_manuscript:
+                    self.ui.log(f"\n🧊 [냉동인간 소환] 3번 면담 모두 실패. 기존 Writer로 최종 시도...")
+
+                    # 기존 Writer 호출
+                    try:
+                        frozen_result = self.agents['writer'].write_v20_manuscript(
+                            ep_num=next_ep,
+                            breakdown_doc=blueprint.get('integrated_scenario', ''),
+                            master_bible=self.current_project.master_bible,
+                            hud_report=hud_report,
+                            purism_prompt="",
+                            style_mode=style_guide,
+                            feedback=director_feedback,
+                            prev_full_manuscript=prev_text,
+                            arc_doc=arc_tactical,
+                            protagonist_name=self._get_protagonist_name()  # [V61] 주인공 이름 주입
+                        )
+
+                        frozen_manuscript = frozen_result.get('content', '') if isinstance(frozen_result, dict) else str(frozen_result)
+                        frozen_title = frozen_result.get('title', f'제{next_ep}화') if isinstance(frozen_result, dict) else f'제{next_ep}화'
+
+                        # 냉동인간 원고 간소 검토
+                        frozen_judge = self.agents['director'].quick_judge_single(
+                            ep_num=next_ep,
+                            manuscript=frozen_manuscript,
+                            blueprint=blueprint,
+                            previous_ending=prev_ending,
+                            retry_count=3
+                        )
+
+                        if frozen_judge.get('verdict') == 'PASS':
+                            final_manuscript = frozen_manuscript
+                            final_title = frozen_title
+                            final_state_updates = frozen_result.get('state_updates', {}) if isinstance(frozen_result, dict) else {}
+                            self.ui.log(f"   ✅ 냉동인간 PASS (점수: {frozen_judge.get('score', 0)})")
+                            self.ui.log(f"   ⚠️ [경고] 냉동인간 통과 - 품질 재검토 권장")
+                        else:
+                            # 냉동인간도 실패 - 인간 개입 대기
+                            self.ui.log(f"   ❌ 냉동인간도 REJECT. 인간 개입 필요!")
+                            self.ui.log(f"      사유: {frozen_judge.get('reason', '알 수 없음')}")
+                            self.ui.log(f"\n⛔ [EP {next_ep}] 자동 생산 실패. 인간 검토 필요.")
+                            self.ui.log(f"   다음 옵션:")
+                            self.ui.log(f"   1. Blueprint 수정 후 재시도")
+                            self.ui.log(f"   2. 수동 원고 작성")
+                            self.ui.log(f"   3. 이 에피소드 건너뛰기")
+
+                            choice = self._get_int_input(
+                                "\n👉 선택 (1.Blueprint수정 / 2.수동작성 / 3.건너뛰기 / 4.강제진행): ",
+                                default=4, min_val=1, max_val=4
+                            )
+
+                            if choice == 4:
+                                # 강제 진행
+                                final_manuscript = frozen_manuscript
+                                final_title = f"[⚠️ 강제 통과] {frozen_title}"
+                                final_state_updates = frozen_result.get('state_updates', {}) if isinstance(frozen_result, dict) else {}
+                                self.ui.log(f"   ⚠️ 강제 진행 선택됨. 품질 보장 불가.")
+                            else:
+                                self.ui.log(f"   🛑 제{next_ep}화 생산 중단. 메뉴로 돌아갑니다.")
+                                return
+
+                    except Exception as frozen_err:
+                        self.ui.log(f"   🚨 냉동인간 호출 실패: {frozen_err}")
+                        self.ui.log(f"\n⛔ [EP {next_ep}] 자동 생산 완전 실패. 인간 검토 필요.")
+                        return
+
+                # ===== Phase 5: 데이터 정산 =====
+                if final_manuscript:
+                    self.ui.log(f"\n📦 제{next_ep}화 데이터 정산 중...")
+
+                    # HUD 업데이트
+                    if final_state_updates and hasattr(self.sys, 'hud'):
+                        try:
+                            approved = self.agents['director'].on_approve_workflow(
+                                ep_num=next_ep,
+                                state_updates=final_state_updates,
+                                current_hud=self.sys.hud.snapshot() if hasattr(self.sys.hud, 'snapshot') else {}
+                            )
+                            if approved.get('applied_updates'):
+                                self.sys.hud.bulk_update(approved['applied_updates'])
+                                self.ui.log(f"   ✅ HUD 업데이트 완료")
+                        except Exception as hud_err:
+                            self.ui.log(f"   ⚠️ HUD 업데이트 실패: {hud_err}")
+
+                    # DB 저장
+                    try:
+                        self.current_project.db.save_manuscript(
+                            ep_num=next_ep,
+                            title=final_title,
+                            content=final_manuscript
+                        )
+
+                        # [V60.80 FIX] HUD 상태 저장 (15대 지표 트래커)
+                        if final_state_updates:
+                            self.current_project.db.update_martial_tracker(next_ep, final_state_updates)
+                            self.ui.log(f"      📊 제 {next_ep}화 15대 지표 트래커 저장 완료")
+
+                        self.current_project.db.conn.commit()
+                        self.ui.log(f"   ✅ DB 저장 완료")
+                    except Exception as db_err:
+                        self.ui.log(f"   🚨 DB 저장 실패: {db_err}")
+                        continue
+
+                    # 파일 저장
+                    try:
+                        file_path = output_dir / f"ep_{next_ep:04d}.txt"
+                        file_path.write_text(f"# {final_title}\n\n{final_manuscript}", encoding='utf-8')
+                        self.ui.log(f"   ✅ 파일 저장: {file_path.name}")
+                    except Exception as file_err:
+                        self.ui.log(f"   ⚠️ 파일 저장 실패: {file_err}")
+
+                    # 벡터 메모리 동기화
+                    try:
+                        # [V61 Fix] 올바른 메서드명: memorize_v20_episode(ep_num, text, summary, causal_links)
+                        self.memory.memorize_v20_episode(
+                            ep_num=next_ep,
+                            text=final_manuscript,
+                            summary=final_title[:100] if final_title else f"제{next_ep}화",
+                            causal_links={"title": final_title}
+                        )
+                        self.ui.log(f"   ✅ 벡터 메모리 동기화 완료")
+                    except Exception as vec_err:
+                        self.ui.log(f"   ⚠️ 벡터 메모리 동기화 실패: {vec_err}")
+
+                    # ===== [V60.82] Episode Bible 저장 (Manager 기반 완전 추출) =====
+                    try:
+                        self.ui.log(f"   📖 [V60.82] Manager 정산 시작...")
+
+                        # 1. Manager를 통한 LLM 기반 원고 분석
+                        audit = {}
+                        try:
+                            # 현재 상태 준비
+                            current_state = self.current_project.latest_state if hasattr(self.current_project, 'latest_state') else {}
+                            if not current_state and hasattr(self.sys, 'hud') and self.sys.hud:
+                                current_state = {'actual_truth': self.sys.hud.pro_data}
+
+                            # 로어 및 복선 준비
+                            lore_list = []
+                            active_seeds = []
+                            causal_history = ""
+
+                            if hasattr(self.current_project, 'master_bible'):
+                                bible_root = self.current_project.master_bible.get('MasterBible', self.current_project.master_bible)
+                                assets = bible_root.get('AssetLibrary', {})
+                                lore_list = assets.get('KeyNPCs', []) or assets.get('Key_NPCs', [])
+
+                            if hasattr(self.current_project, 'db'):
+                                try:
+                                    seeds_data = self.current_project.db.get_anchor('active_seeds')
+                                    if seeds_data:
+                                        active_seeds = seeds_data if isinstance(seeds_data, list) else []
+                                except:
+                                    pass
+
+                            # Manager 호출
+                            raw_audit = self.agents['manager'].update_state_and_lore_v20(
+                                ep_num=next_ep,
+                                manuscript=final_manuscript,
+                                current_state=current_state,
+                                lore_list=lore_list,
+                                active_seeds=active_seeds,
+                                causal_history=causal_history
+                            )
+
+                            if raw_audit and not raw_audit.get('parsing_error'):
+                                audit = raw_audit
+                                self.ui.log(f"      ✅ Manager 정산 완료")
+                            else:
+                                self.ui.log(f"      ⚠️ Manager 파싱 실패, 기본 추출 사용")
+                        except Exception as mgr_err:
+                            self.ui.log(f"      ⚠️ Manager 호출 실패: {str(mgr_err)[:50]}")
+
+                        # 2. audit 결과에서 데이터 추출
+                        new_lore = audit.get('new_lore', {}) if isinstance(audit, dict) else {}
+                        knowledge_map = audit.get('knowledge_map_updates', {}) if isinstance(audit, dict) else {}
+                        recovered = audit.get('recovered_seeds', []) if isinstance(audit, dict) else []
+                        state_updates_from_audit = audit.get('state_updates', {}) if isinstance(audit, dict) else {}
+                        causal_links = audit.get('causal_links', []) if isinstance(audit, dict) else []
+
+                        # 3. actual_truth에서 장비/무공 변화 추출
+                        actual_truth = state_updates_from_audit.get('actual_truth', {}) if isinstance(state_updates_from_audit, dict) else {}
+
+                        # 이전 상태
+                        prev_actual = {}
+                        if hasattr(self.current_project, 'latest_state'):
+                            prev_actual = self.current_project.latest_state.get('actual_truth', {})
+
+                        prev_equipment = set(prev_actual.get('equipment', []) if isinstance(prev_actual.get('equipment'), list) else [])
+                        curr_equipment = set(actual_truth.get('equipment', []) if isinstance(actual_truth.get('equipment'), list) else [])
+                        prev_martial = set(prev_actual.get('martial_arts', []) if isinstance(prev_actual.get('martial_arts'), list) else [])
+                        curr_martial = set(actual_truth.get('martial_arts', []) if isinstance(actual_truth.get('martial_arts'), list) else [])
+
+                        new_items_from_equip = list(curr_equipment - prev_equipment)
+                        lost_items_from_equip = list(prev_equipment - curr_equipment)
+                        new_martial_arts = list(curr_martial - prev_martial)
+
+                        # 4. new_lore에서 Key_Items 추출
+                        key_items = new_lore.get('Key_Items', []) if isinstance(new_lore.get('Key_Items'), list) else []
+                        key_item_names = [i.get('name', str(i)) if isinstance(i, dict) else str(i) for i in key_items]
+
+                        # 5. new_lore에서 Key_NPCs 추출
+                        key_npcs = new_lore.get('Key_NPCs', []) if isinstance(new_lore.get('Key_NPCs'), list) else []
+                        new_npc_names = [npc.get('name', str(npc)) if isinstance(npc, dict) else str(npc) for npc in key_npcs]
+
+                        # 6. NPC 사망 추출 (actual_truth 또는 new_lore에서)
+                        npc_deaths = []
+                        for npc in key_npcs:
+                            if isinstance(npc, dict):
+                                status = npc.get('NPC_Martial_HUD', {}).get('current_status', '')
+                                if '사망' in str(status) or '죽' in str(status) or '절명' in str(status):
+                                    npc_deaths.append(npc.get('name', ''))
+
+                        # 7. 관계 변화 추출
+                        relationship_changes = []
+                        if isinstance(knowledge_map, dict):
+                            witnesses = knowledge_map.get('new_witnesses', [])
+                            misled = knowledge_map.get('new_misled', [])
+                            if witnesses:
+                                relationship_changes.extend([f"목격: {w}" for w in witnesses if w])
+                            if misled:
+                                relationship_changes.extend([f"오해: {m}" for m in misled if m])
+
+                        # 8. karma_matrix에서 관계 변화 추가
+                        karma_matrix = state_updates_from_audit.get('karma_matrix', [])
+                        if isinstance(karma_matrix, list):
+                            for karma in karma_matrix:
+                                if isinstance(karma, dict) and karma.get('target'):
+                                    obs = karma.get('obsession', 0)
+                                    val = karma.get('value', 0)
+                                    if obs > 50 or val > 50:
+                                        relationship_changes.append(f"{karma['target']}: 집착{obs}/오해{val}")
+
+                        # 9. reveals 추출
+                        reveal_list = []
+                        if isinstance(recovered, list):
+                            for seed in recovered:
+                                if isinstance(seed, dict):
+                                    reveal_list.append(seed.get('seed_id', seed.get('description', str(seed))))
+                                else:
+                                    reveal_list.append(str(seed))
+
+                        # 10. 종합 아이템 목록
+                        all_new_items = list(set(new_items_from_equip + key_item_names + new_martial_arts))
+
+                        # 11. 최종 Bible Delta 구성
+                        bible_delta = {
+                            'new_items': all_new_items,
+                            'lost_items': lost_items_from_equip,
+                            'new_npcs': new_npc_names,
+                            'npc_deaths': npc_deaths,
+                            'relationship_changes': relationship_changes,
+                            'state_changes': actual_truth if actual_truth else final_state_updates,
+                            'time_passed': state_updates_from_audit.get('location', ''),  # 위치 변화 기록
+                            'reveals': reveal_list,
+                            # [V60.82] 추가 필드
+                            'causal_links': causal_links,
+                            'karma_matrix': karma_matrix,
+                            'knowledge_map': knowledge_map
+                        }
+
+                        # 12. DB 저장
+                        self.current_project.db.save_episode_bible(next_ep, bible_delta)
+
+                        # 13. state_logs 저장 (latest_state 연속성 보장)
+                        if actual_truth or state_updates_from_audit:
+                            state_log_data = {
+                                'actual_truth': actual_truth if actual_truth else final_state_updates,
+                                'karma_matrix': karma_matrix,
+                                'knowledge_map': knowledge_map,
+                                'public_reputation': state_updates_from_audit.get('public_reputation', {})
+                            }
+                            try:
+                                summary = f"제{next_ep}화 정산: {', '.join(all_new_items[:3]) if all_new_items else '변화없음'}"
+                                self.current_project.db.save_state_log_with_summary(next_ep, state_log_data, summary)
+                            except Exception as state_err:
+                                self.ui.log(f"      ⚠️ state_logs 저장 실패: {str(state_err)[:30]}")
+
+                        # 14. 로그 출력
+                        changes_count = len(all_new_items) + len(lost_items_from_equip) + len(new_npc_names) + len(npc_deaths) + len(relationship_changes) + len(reveal_list)
+                        if changes_count > 0:
+                            self.ui.log(f"   📖 Episode Bible 저장: {changes_count}개 변화 기록")
+                            if all_new_items:
+                                self.ui.log(f"      • 신규 아이템/무공: {', '.join(all_new_items[:5])}")
+                            if new_npc_names:
+                                self.ui.log(f"      • 신규/갱신 NPC: {', '.join(new_npc_names[:5])}")
+                            if npc_deaths:
+                                self.ui.log(f"      • NPC 사망: {', '.join(npc_deaths)}")
+                            if reveal_list:
+                                self.ui.log(f"      • 복선 회수: {', '.join(reveal_list[:3])}")
+                        else:
+                            self.ui.log(f"   📖 Episode Bible 저장 완료 (변화 없음)")
+
+                    except Exception as bible_err:
+                        self.ui.log(f"   ⚠️ Episode Bible 저장 실패 (비차단): {str(bible_err)[:50]}")
+                        import traceback
+                        traceback.print_exc()
+
+                    self.ui.log(f"\n✅ 제{next_ep}화 '{final_title}' 생산 완료! ({len(final_manuscript)}자)")
+
+        except KeyboardInterrupt:
+            self.ui.log("\n⚠️ 사용자 중단 요청. 저장 후 종료합니다.")
+            self._safe_commit()
+        except Exception as e:
+            self.ui.log(f"\n🚨 Stage 4 V2 오류: {e}")
+            import traceback
+            traceback.print_exc()
+            self._safe_commit()
+
 if __name__ == "__main__":
     SovereignApp().boot()

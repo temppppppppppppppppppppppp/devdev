@@ -331,7 +331,7 @@ PLAN_ARC_PROMPT_V25 = """
    # 🚨 [Arc 50 특수 규칙]:
    - 만약 `arc_no`가 **50**인 경우, 반드시 `ending_library` 패턴 중 최소 1개를 선택하여 포함하라. (대서사시의 종지부 및 여운 형성)
 2. **DNA 절대 준수**: {curr_block}에 명시된 핵심 사건과 보상은 반드시 포함하되, 방식만 패턴 라이브러리를 통해 변주하라.
-3. **가변 페이싱**: Blitz(2~3화), Standard(3~4화), Epic(5~6화) 가이드에 따라 사건의 밀도를 판단하여 `ep_count`를 결정하라.
+3. **가변 페이싱**: Blitz(3~4화), Standard(5화), Epic(6~7화) 가이드에 따라 사건의 밀도를 판단하여 `ep_count`를 결정하라.
 4. **합리적 이기주의**: 주인공은 전생/회빙환의 지식을 이용하여 상황을 의도적으로 지배하고 설계해야 함.
 5. 번호 절대 준수: {curr_block}에 적힌 Block 번호나 회차 번호는 무시하라. 오직 시스템이 부여한 **{ep_start}**를 첫 번째 회차 번호로 사용하여 beat_sequence를 작성하라. 이를 어길 시 서사 무결성 파괴로 간주한다.
 
@@ -382,10 +382,10 @@ PLAN_ARC_PROMPT_V25 = """
         "mixing_logic": "패턴 조합 및 복선 연출 통합 전략"
     }},
     "pacing_decision": {{
-        "chosen_pacing": "Blitz(2-3화) / Standard(3-4화) / Epic(5-6화) 중 선택",
+        "chosen_pacing": "Blitz(3-4화) / Standard(5화) / Epic(6-7화) 중 선택",
         "reasoning": "사건 밀도와 긴장감 분석 근거"
     }},
-    "ep_count": "{ep_count_suggestion} (시스템 추천) 또는 2~6 중 사건 밀도에 맞게 직접 결정",
+    "ep_count": "{ep_count_suggestion} (시스템 추천) 또는 3~7 중 사건 밀도에 맞게 직접 결정",
     "ep_start": {ep_start},
     "ep_end": "ep_start + ep_count - 1 로 계산",
     "title": "에피소드 묶음 제목",
@@ -1043,8 +1043,8 @@ class Analyst(BaseAgent):
             else:
                 original_guess = 7  # → 6화 (max)
 
-        # 실제 타겟 화수는 추정치보다 1화 적게 잡아 긴장감 유도 (2~6화 제한)
-        target_ep_count = max(2, min(6, original_guess - 1))
+        # 실제 타겟 화수는 추정치보다 1화 적게 잡아 긴장감 유도 (3~7화 제한)
+        target_ep_count = max(3, min(7, original_guess - 1))
 
         # [V60.31] Block 빈약 경고 - 화당 200자 이상 권장
         # [V60.59] plot_roadmap 구조 대응: raw_data.content에서 추출
@@ -1194,7 +1194,7 @@ class Analyst(BaseAgent):
                         "intro_library": placeholder, "dev_library": placeholder,
                         "ending_library": placeholder, "trans_library": placeholder,
                         "archetype_library": placeholder,
-                        "special_instructions": f"\n[🚨 PACING GUIDE]: 권장 {target_ep_count}화 (사건 밀도에 따라 2~6화 범위 내 조정 가능)"
+                        "special_instructions": f"\n[🚨 PACING GUIDE]: 권장 {target_ep_count}화 (사건 밀도에 따라 3~7화 범위 내 조정 가능)"
                     })
                     prompt = adjusted_prompt_tpl.format(**cache_safe_data)
                     if attempt > 0 or feedback: 
@@ -1232,7 +1232,7 @@ class Analyst(BaseAgent):
                     "ending_library": self._escape_braces(ending_lib_full),
                     "trans_library": self._escape_braces(trans_lib_full),
                     "archetype_library": self._escape_braces(archetype_lib_full),
-                    "special_instructions": f"\n[🚨 PACING GUIDE]: 권장 {target_ep_count}화 (사건 밀도에 따라 2~6화 범위 내 조정 가능)"
+                    "special_instructions": f"\n[🚨 PACING GUIDE]: 권장 {target_ep_count}화 (사건 밀도에 따라 3~7화 범위 내 조정 가능)"
                 })
                 prompt = adjusted_prompt_tpl.format(**full_safe_data)
                 if attempt > 0: prompt += f"\n\n🚨 [FEEDBACK]: {current_feedback}"
@@ -1243,7 +1243,7 @@ class Analyst(BaseAgent):
                 temp = 0.5 if attempt == 0 else (0.6 if attempt == 1 else 0.7)
                 draft_result = self._extract_json_robust(self.ask(prompt, temperature=temp, response_schema=schema))
 
-            # 7. [V60.31] 가변 페이싱: LLM이 결정한 ep_count 존중 (2~6 범위 내)
+            # 7. [V60.31] 가변 페이싱: LLM이 결정한 ep_count 존중 (3~7 범위 내)
             llm_ep_count = draft_result.get("ep_count")
             if isinstance(llm_ep_count, str):
                 # "4 (시스템 추천)" 같은 형태에서 숫자 추출
@@ -1253,8 +1253,29 @@ class Analyst(BaseAgent):
             elif not isinstance(llm_ep_count, int):
                 llm_ep_count = target_ep_count
 
-            # 범위 제한 (2~6화)
-            actual_ep_count = max(2, min(6, llm_ep_count))
+            # [V60.70] chosen_pacing과 ep_count 강제 동기화 (자기모순 방지)
+            pacing_decision = draft_result.get("pacing_decision", {})
+            chosen_pacing = pacing_decision.get("chosen_pacing", "") if isinstance(pacing_decision, dict) else ""
+            chosen_pacing_lower = chosen_pacing.lower() if isinstance(chosen_pacing, str) else ""
+
+            # chosen_pacing에 따른 ep_count 범위 강제
+            if "epic" in chosen_pacing_lower:
+                pacing_min, pacing_max = 6, 7
+            elif "standard" in chosen_pacing_lower:
+                pacing_min, pacing_max = 5, 5
+            elif "blitz" in chosen_pacing_lower:
+                pacing_min, pacing_max = 3, 4
+            else:
+                pacing_min, pacing_max = 3, 7  # 기본값
+
+            # ep_count가 chosen_pacing 범위를 벗어나면 강제 조정
+            if llm_ep_count < pacing_min or llm_ep_count > pacing_max:
+                corrected_ep_count = max(pacing_min, min(pacing_max, llm_ep_count))
+                print(f"      🔧 [V60.70] 자기모순 교정: chosen_pacing={chosen_pacing} 인데 ep_count={llm_ep_count} → {corrected_ep_count}화로 강제 조정")
+                llm_ep_count = corrected_ep_count
+
+            # 범위 제한 (3~7화)
+            actual_ep_count = max(3, min(7, llm_ep_count))
             if actual_ep_count != target_ep_count:
                 print(f"      📊 [V60.31] 가변 페이싱: 권장 {target_ep_count}화 → LLM 결정 {actual_ep_count}화")
 

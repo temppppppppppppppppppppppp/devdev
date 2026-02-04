@@ -12,7 +12,12 @@
 
 import json
 import re
+import threading
 from typing import Dict, List, Any, Optional
+
+
+# [V60.74] 스레드 안전성을 위한 Lock
+_rejection_lock = threading.Lock()
 
 
 # 무협 장르 기본 실패 사례 라이브러리
@@ -130,19 +135,20 @@ class NegativeExampleInjector:
         return WUXIA_NEGATIVE_EXAMPLES
 
     def record_rejection(self, arc: Dict, rejection_reason: str, category: str):
-        """REJECT 사례 기록"""
-        self.rejection_history.append({
-            "arc_no": arc.get("arc_no", "?"),
-            "reason": rejection_reason,
-            "category": category,
-            "items_acquired": arc.get("state_constraints", {}).get("items_acquired", []),
-            "grants_received": arc.get("state_constraints", {}).get("grants_received", []),
-            "timestamp": "now"
-        })
+        """REJECT 사례 기록 - [V60.74] 스레드 안전"""
+        with _rejection_lock:
+            self.rejection_history.append({
+                "arc_no": arc.get("arc_no", "?"),
+                "reason": rejection_reason,
+                "category": category,
+                "items_acquired": arc.get("state_constraints", {}).get("items_acquired", []),
+                "grants_received": arc.get("state_constraints", {}).get("grants_received", []),
+                "timestamp": "now"
+            })
 
-        # 최근 20개만 유지
-        if len(self.rejection_history) > 20:
-            self.rejection_history = self.rejection_history[-20:]
+            # 최근 20개만 유지
+            if len(self.rejection_history) > 20:
+                self.rejection_history = self.rejection_history[-20:]
 
     def generate_injection(self, context: Dict = None) -> str:
         """Analyst 프롬프트에 주입할 실패 사례 텍스트 생성"""

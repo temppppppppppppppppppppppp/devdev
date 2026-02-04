@@ -1,0 +1,72 @@
+{
+  "session_id": "20260204_085858",
+  "start_time": "2026-02-04T08:58:58.686323",
+  "end_time": "2026-02-04T09:41:56.906351",
+  "total_calls": 80,
+  "successful_calls": 80,
+  "failed_calls": 0,
+  "total_retries": 0,
+  "total_tokens": 557985,
+  "total_cost_usd": 2.8468,
+  "agent_stats": {
+    "ChiefWriter": {
+      "agent_name": "ChiefWriter",
+      "total_calls": 65,
+      "successful_calls": 65,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 65273.48885536194,
+        "min_ms": 46947.083711624146,
+        "max_ms": 137213.50169181824,
+        "p50_ms": 60257.150650024414,
+        "p90_ms": 82023.12850952148,
+        "p99_ms": 137081.65858268738
+      }
+    },
+    "Director": {
+      "agent_name": "Director",
+      "total_calls": 8,
+      "successful_calls": 8,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 59530.617415905,
+        "min_ms": 28748.829126358032,
+        "max_ms": 123536.54956817627,
+        "p50_ms": 60145.63715457916,
+        "p90_ms": 84882.9999923706,
+        "p99_ms": 119671.19461059569
+      }
+    },
+    "Manager": {
+      "agent_name": "Manager",
+      "total_calls": 7,
+      "successful_calls": 7,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 39211.88759803772,
+        "min_ms": 32816.93148612976,
+        "max_ms": 43917.12784767151,
+        "p50_ms": 40469.95568275452,
+        "p90_ms": 42076.902294158936,
+        "p99_ms": 43733.10529232025
+      }
+    }
+  },
+  "model_stats": {
+    "gemini-3-pro-preview": {
+      "input_tokens": 364403,
+      "output_tokens": 193582,
+      "total_tokens": 557985,
+      "cost_usd": 2.8468
+    }
+  }
+}

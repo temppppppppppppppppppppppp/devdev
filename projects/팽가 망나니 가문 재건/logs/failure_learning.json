@@ -1,39 +1,13 @@
 {
-  "records": [
-    {
-      "category": "unknown",
-      "stage": 2,
-      "episode": 1,
-      "arc": 1,
-      "reason": "missing_tactical_doc: Arc에 tactical_doc이 없습니다.",
-      "details": {
-        "severity": "CRITICAL",
-        "violation": {
-          "type": "missing_tactical_doc",
-          "severity": "CRITICAL",
-          "description": "Arc에 tactical_doc이 없습니다."
-        }
-      },
-      "timestamp": "2026-02-03T09:26:52.110138"
-    }
-  ],
+  "records": [],
   "stats": {
-    "total_failures": 1,
-    "by_category": {
-      "unknown": 1
-    },
+    "total_failures": 0,
+    "by_category": {},
     "by_stage": {
-      "2": {
-        "unknown": 1
-      },
+      "2": {},
       "3": {},
       "4": {}
     },
-    "top_5": [
-      {
-        "category": "unknown",
-        "count": 1
-      }
-    ]
+    "top_5": []
   }
 }

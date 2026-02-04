@@ -6,10 +6,12 @@
 2. 아이템/패 획득 타임라인 추적
 3. 캐릭터 상태 흐름 검증
 4. 모순 감지 시 구체적 수정 지시 제공
+5. [V61 NEW] Entity 명칭 일관성 검증 (캐릭터, 조직, 장소, 물품, 기술)
 
 실행 시점:
 - [V49 NEW] Stage 2에서 Analyst가 Arc 설계 후 - Arc 간 연속성 + 단일 Arc 내 모순 검증
 - Stage 3에서 Architect가 블루프린트 생성 후 - 에피소드 연속성 검증
+- [V61 NEW] Stage 4에서 원고 검증 시 - Entity 명칭 일관성 검증
 - Director 검증 전에 실행
 - REJECT 시 재생성 (모순 지점 피드백 포함)
 
@@ -97,8 +99,18 @@ Step 4: 반응 개연성 분석
 - 현재 블루프린트의 NPC 반응 확인
 - 불일치 여부 판정
 
-Step 5: 최종 판정
-- 위 4단계를 종합하여 PASS/REJECT 결정
+Step 5: [V61 NEW] Entity 명칭 일관성 검증
+- Entity Registry가 제공된 경우, 등록된 정식 명칭과 현재 블루프린트의 명칭 비교
+- 캐릭터: 이전 에피소드에서 '팽무진'으로 확립되었는데 현재 '무진' 또는 '주인공'으로 표기되면 WARNING
+- 조직/문파: '철혈문' vs '철혈파' 같은 미묘한 명칭 차이 탐지
+- 장소: '무기고' vs '병기고' 같은 동일 장소의 다른 명칭 탐지
+- 물품: '백근도' vs '거구도' 같은 동일 무기의 다른 명칭 탐지
+- 기술/무공: '이화접목' vs '중검무봉' 같은 기술명 불일치 탐지
+- Entity Registry:
+{entity_registry}
+
+Step 6: 최종 판정
+- 위 5단계를 종합하여 PASS/REJECT 결정
 - 위반 사항 목록 작성
 - 수정 지시 작성
 
@@ -112,9 +124,22 @@ Step 5: 최종 판정
         "grants_received_before": ["이전에 수여받은 것들"],
         "grants_used_now": ["현재 사용/소지하는 수여물"]
     }},
+    "entity_consistency": {{
+        "registered_entities": {{"characters": [], "organizations": [], "locations": [], "objects": [], "concepts": []}},
+        "current_entities": {{"characters": [], "organizations": [], "locations": [], "objects": [], "concepts": []}},
+        "mismatches": [
+            {{
+                "category": "character | organization | location | object | concept",
+                "registered_name": "등록된 정식 명칭",
+                "current_name": "현재 사용된 명칭",
+                "severity": "CRITICAL | MAJOR | MINOR",
+                "recommendation": "수정 권고"
+            }}
+        ]
+    }},
     "violations": [
         {{
-            "type": "duplicate_acquisition | premature_possession | state_discontinuity | reaction_mismatch",
+            "type": "duplicate_acquisition | premature_possession | state_discontinuity | reaction_mismatch | entity_name_mismatch",
             "severity": "CRITICAL | MAJOR | MINOR",
             "item_or_subject": "문제 대상",
             "prev_ep": "이전 발생 에피소드",
@@ -212,8 +237,18 @@ Step 5: 설정 일관성 검증
 - 인물 호칭/별호 일관성
 - 장소 이동의 물리적 타당성
 
-Step 6: 최종 판정
-- 위 5단계를 종합하여 PASS/REJECT 결정
+Step 6: [V61 NEW] Entity 명칭 일관성 검증
+- Entity Registry가 제공된 경우, 등록된 정식 명칭과 현재 Arc의 명칭 비교
+- 캐릭터: 이전 Arc에서 '팽무진'으로 확립되었는데 현재 '무진' 또는 '주인공'으로 표기되면 WARNING
+- 조직/문파: '철혈문' vs '철혈파' 같은 미묘한 명칭 차이 탐지
+- 장소: '무기고' vs '병기고' 같은 동일 장소의 다른 명칭 탐지
+- 물품: '백근도' vs '거구도' 같은 동일 무기의 다른 명칭 탐지
+- 기술/무공: '이화접목' vs '중검무봉' 같은 기술명 불일치 탐지
+- Entity Registry:
+{entity_registry}
+
+Step 7: 최종 판정
+- 위 6단계를 종합하여 PASS/REJECT 결정
 - 위반 사항 목록 작성
 - 수정 지시 작성
 
@@ -231,9 +266,22 @@ Step 6: 최종 판정
         "internal_timeline": ["Arc 내 각 화별 핵심 사건"],
         "internal_contradictions": ["Arc 내부에서 발견된 모순"]
     }},
+    "entity_consistency": {{
+        "registered_entities": {{"characters": [], "organizations": [], "locations": [], "objects": [], "concepts": []}},
+        "current_entities": {{"characters": [], "organizations": [], "locations": [], "objects": [], "concepts": []}},
+        "mismatches": [
+            {{
+                "category": "character | organization | location | object | concept",
+                "registered_name": "등록된 정식 명칭",
+                "current_name": "현재 사용된 명칭",
+                "severity": "CRITICAL | MAJOR | MINOR",
+                "recommendation": "수정 권고"
+            }}
+        ]
+    }},
     "violations": [
         {{
-            "type": "duplicate_acquisition | premature_possession | state_discontinuity | intra_arc_contradiction | setting_inconsistency",
+            "type": "duplicate_acquisition | premature_possession | state_discontinuity | intra_arc_contradiction | setting_inconsistency | entity_name_mismatch",
             "severity": "CRITICAL | MAJOR | MINOR",
             "item_or_subject": "문제 대상",
             "prev_arc": "이전 발생 Arc 번호 (Arc 간 모순인 경우)",
@@ -363,8 +411,15 @@ Step 4: Blueprint 준수 분석
 - 원고에서 해당 씬 반영 여부 확인
 - 누락/과잉 생성 여부 판정
 
-Step 5: 최종 판정
-- 위 4단계를 종합하여 PASS/REJECT 결정
+Step 5: [V61 NEW] Entity 명칭 일관성 검증
+- Entity Registry가 제공된 경우, 등록된 정식 명칭과 현재 원고의 명칭 비교
+- 캐릭터명이 일관되게 사용되는지 확인 (예: '팽무진' vs '무진' vs '주인공')
+- 조직/문파명, 장소명, 물품명, 기술명의 일관성 확인
+- Entity Registry:
+{entity_registry}
+
+Step 6: 최종 판정
+- 위 5단계를 종합하여 PASS/REJECT 결정
 - 위반 사항 목록 작성
 - 수정 지시 작성
 
@@ -390,6 +445,17 @@ Step 5: 최종 판정
         "missing_elements": ["누락된 요소 목록"],
         "excess_elements": ["과잉 생성된 요소 목록"]
     }},
+    "entity_consistency": {{
+        "mismatches": [
+            {{
+                "category": "character | organization | location | object | concept",
+                "registered_name": "등록된 정식 명칭",
+                "current_name": "현재 사용된 명칭",
+                "severity": "CRITICAL | MAJOR | MINOR",
+                "recommendation": "수정 권고"
+            }}
+        ]
+    }},
     "violations": [
         {{
             "type": "unowned_item_usage" | "state_discontinuity" | "relationship_reversal" | "blueprint_violation",
@@ -408,18 +474,24 @@ Step 5: 최종 판정
 class ContinuityInspector(BaseAgent):
     """
     [V49] Director 산하 연속성 검증 전문 에이전트
-    
+
     역할:
     1. [V49 NEW] Arc 수준 연속성 검증 - Arc 간 + 단일 Arc 내 모순 탐지
     2. 전체 블루프린트 분석 (1화부터 현재까지)
     3. 아이템/패 획득 타임라인 추적
     4. 캐릭터 상태 흐름 검증
     5. 모순 감지 시 구체적 수정 지시 제공
-    
+    6. [V61 NEW] Entity 명칭 일관성 검증
+
     [V49 Update]
     - 모델: gemini-3-pro-preview (V60.24: Gemini 3로 업그레이드)
     - [NEW] inspect_arc(): Stage 2에서 Arc 설계 후 호출
     - inspect(): Stage 3에서 블루프린트 생성 후 호출
+
+    [V61 Update]
+    - [NEW] entity_registry 파라미터: 모든 inspect 메서드에 추가
+    - Entity 명칭 일관성 검증: 캐릭터, 조직, 장소, 물품, 기술명 일관성 체크
+    - entity_consistency 출력 필드 추가
     """
 
     def __init__(self, context, client, model_tier="gemini-3-pro-preview"):
@@ -494,23 +566,26 @@ class ContinuityInspector(BaseAgent):
         self._init_v49_7_trackers()
     
     def inspect(self, current_ep: int, current_blueprint: dict,
-                prev_blueprints: List[dict], hud_history: List[dict] = None) -> dict:
+                prev_blueprints: List[dict], hud_history: List[dict] = None,
+                entity_registry: dict = None) -> dict:
         """
         블루프린트 연속성 검증 실행
-        
+
         Args:
             current_ep: 현재 에피소드 번호
             current_blueprint: 현재 블루프린트 dict
             prev_blueprints: 이전 에피소드 블루프린트 리스트 [{ep_num, integrated_scenario, ...}, ...]
             hud_history: HUD 스냅샷 히스토리 (선택적)
-        
+            entity_registry: [V61] Entity Registry dict {characters:[], organizations:[], locations:[], objects:[], concepts:[]}
+
         Returns:
             {
                 "decision": "PASS" | "REJECT",
                 "severity": "NONE" | "MINOR" | "MAJOR" | "CRITICAL",
                 "violations": [...],
                 "warnings": [...],
-                "fix_instructions": "..."
+                "fix_instructions": "...",
+                "entity_consistency": {...}  # V61 NEW
             }
         """
         # 1화는 이전 에피소드가 없으므로 자동 PASS
@@ -558,28 +633,40 @@ class ContinuityInspector(BaseAgent):
         
         # 이전 블루프린트 요약 생성
         prev_summaries = self._format_prev_blueprints(prev_blueprints)
-        
+
+        # [V61] Entity Registry 포맷팅
+        entity_registry_str = self._format_entity_registry(entity_registry)
+
         # 프롬프트 조립
         prompt = CONTINUITY_INSPECTION_PROMPT.format(
             current_ep=current_ep,
             current_scenario=self._escape_braces(current_scenario[:4000]),  # 토큰 제한
             prev_count=len(prev_blueprints),
-            prev_summaries=self._escape_braces(prev_summaries)
+            prev_summaries=self._escape_braces(prev_summaries),
+            entity_registry=self._escape_braces(entity_registry_str)
         )
         
         try:
             response = self.ask(prompt, temperature=0.1)
             result = self._extract_json_robust(response)
-            
-            # 결과 검증 및 보완
+
+            # [V60.74] 결과 검증 및 보완 - 파싱 실패 시 신뢰도 0 표시
             if not isinstance(result, dict):
-                result = {"decision": "PASS", "severity": "NONE", "violations": [], "warnings": []}
-            
+                print(f"      ⚠️ [V60.74] JSON 파싱 실패 - 수동 검수 권장")
+                result = {
+                    "decision": "PASS",
+                    "severity": "NONE",
+                    "violations": [],
+                    "warnings": ["[V60.74] LLM 응답 파싱 실패 - 수동 검수 필요"],
+                    "confidence": 0.0,
+                    "parsing_error": True
+                }
+
             # Python 검증 결과 병합
             if python_check.get('warnings'):
                 result.setdefault('warnings', [])
                 result['warnings'].extend(python_check['warnings'])
-            
+
             return result
             
         except Exception as e:
@@ -606,23 +693,26 @@ class ContinuityInspector(BaseAgent):
     # [V49 NEW] Arc 수준 연속성 검증
     # =================================================================
     
-    def inspect_arc(self, current_arc: dict, prev_arcs: List[dict]) -> dict:
+    def inspect_arc(self, current_arc: dict, prev_arcs: List[dict],
+                    entity_registry: dict = None) -> dict:
         """
         [V49] Arc 수준 연속성 검증 실행
-        
+
         Stage 2에서 Analyst가 Arc 설계 후, Director 검증 전에 호출
-        
+
         Args:
             current_arc: 현재 Arc dict {arc_no, tactical_doc, joint_docs, status_shadow, ep_start, ep_end, ...}
             prev_arcs: 이전 Arc 리스트 [{arc_no, tactical_doc, joint_docs, ...}, ...]
-        
+            entity_registry: [V61] Entity Registry dict {characters:[], organizations:[], locations:[], objects:[], concepts:[]}
+
         Returns:
             {
                 "decision": "PASS" | "REJECT",
                 "severity": "NONE" | "MINOR" | "MAJOR" | "CRITICAL",
                 "violations": [...],
                 "warnings": [...],
-                "fix_instructions": "..."
+                "fix_instructions": "...",
+                "entity_consistency": {...}  # V61 NEW
             }
         """
         arc_no = current_arc.get('arc_no', 0)
@@ -636,8 +726,9 @@ class ContinuityInspector(BaseAgent):
         joint_docs = current_arc.get('joint_docs', {})
         status_shadow = current_arc.get('status_shadow', {})
         ep_start = current_arc.get('ep_start', 1)
-        ep_end = current_arc.get('ep_end', ep_start + 4)
-        ep_count = current_arc.get('ep_count', ep_end - ep_start + 1)
+        # [V60.73] ep_count 우선 참조, ep_end는 ep_count 기반 계산 (기존 +4 폴백 오류 수정)
+        ep_count = current_arc.get('ep_count', 5)
+        ep_end = current_arc.get('ep_end', ep_start + ep_count - 1)
         
         if not tactical_doc:
             return {
@@ -707,7 +798,9 @@ class ContinuityInspector(BaseAgent):
                     loss = int(re.search(r'(\d+)', str(loss_str)).group(1))
                     correct_energy = max(0, 100 - loss)
                 except:
-                    correct_energy = 100
+                    # [V60.73] 보수적 기본값 50 (파싱 실패 시 만땅 가정 위험)
+                    print(f"      ⚠️ [V60.73] internal_energy_loss 파싱 실패: '{loss_str}' → 50% 가정")
+                    correct_energy = 50
 
             correct_injuries = prev_end.get('injuries') or prev_shadow.get('expected_injuries', '없음')
             correct_location = prev_end.get('location') or prev_joint.get('final_location', '알 수 없음')
@@ -743,6 +836,9 @@ class ContinuityInspector(BaseAgent):
         # 이전 Arc 요약 생성
         prev_arcs_summary = self._format_prev_arcs(prev_arcs)
 
+        # [V61] Entity Registry 포맷팅
+        entity_registry_str = self._format_entity_registry(entity_registry)
+
         # 프롬프트 조립 (수정된 joint_docs 사용)
         prompt = ARC_CONTINUITY_INSPECTION_PROMPT.format(
             current_arc_no=arc_no,
@@ -753,16 +849,25 @@ class ContinuityInspector(BaseAgent):
             joint_docs=self._escape_braces(json.dumps(joint_docs, ensure_ascii=False)),
             status_shadow=self._escape_braces(json.dumps(status_shadow, ensure_ascii=False)),
             prev_arc_count=len(prev_arcs),
-            prev_arcs_summary=self._escape_braces(prev_arcs_summary)
+            prev_arcs_summary=self._escape_braces(prev_arcs_summary),
+            entity_registry=self._escape_braces(entity_registry_str)
         )
         
         try:
             response = self.ask(prompt, temperature=0.1)
             result = self._extract_json_robust(response)
 
-            # 결과 검증 및 보완
+            # [V60.74] 결과 검증 및 보완 - 파싱 실패 시 신뢰도 0 표시
             if not isinstance(result, dict):
-                result = {"decision": "PASS", "severity": "NONE", "violations": [], "warnings": []}
+                print(f"      ⚠️ [V60.74] JSON 파싱 실패 - 수동 검수 권장")
+                result = {
+                    "decision": "PASS",
+                    "severity": "NONE",
+                    "violations": [],
+                    "warnings": ["[V60.74] LLM 응답 파싱 실패 - 수동 검수 필요"],
+                    "confidence": 0.0,
+                    "parsing_error": True
+                }
 
             # Python 검증 결과 병합
             if python_check.get('warnings'):
@@ -1454,7 +1559,54 @@ class ContinuityInspector(BaseAgent):
         for arc_no, item in items:
             lines.append(f"- Arc {arc_no}: {item}")
         return "\n".join(lines)
-    
+
+    def _format_entity_registry(self, entity_registry: dict) -> str:
+        """
+        [V61] Entity Registry를 LLM용 포맷으로 변환
+
+        Args:
+            entity_registry: {characters:[], organizations:[], locations:[], objects:[], concepts:[]}
+
+        Returns:
+            포맷된 문자열 (Entity Registry가 없으면 "(등록된 Entity 없음)" 반환)
+        """
+        if not entity_registry:
+            return "(등록된 Entity 없음 - 이전 에피소드/Arc에서 추출된 Entity가 없습니다)"
+
+        lines = []
+        categories = [
+            ('characters', '캐릭터'),
+            ('organizations', '조직/문파'),
+            ('locations', '장소'),
+            ('objects', '물품/아이템'),
+            ('concepts', '기술/개념')
+        ]
+
+        has_any = False
+        for key, label in categories:
+            items = entity_registry.get(key, [])
+            if items:
+                has_any = True
+                # 각 Entity는 dict 또는 str일 수 있음
+                formatted_items = []
+                for item in items:
+                    if isinstance(item, dict):
+                        name = item.get('name', item.get('canonical_name', str(item)))
+                        aliases = item.get('aliases', [])
+                        first_ep = item.get('first_appearance', item.get('first_ep', '?'))
+                        if aliases:
+                            formatted_items.append(f"{name} (별칭: {', '.join(aliases)}, 첫등장: ep{first_ep})")
+                        else:
+                            formatted_items.append(f"{name} (첫등장: ep{first_ep})")
+                    else:
+                        formatted_items.append(str(item))
+                lines.append(f"[{label}] {', '.join(formatted_items)}")
+
+        if not has_any:
+            return "(등록된 Entity 없음)"
+
+        return "\n".join(lines)
+
     def _generate_arc_fix_instructions(self, violations: List[dict]) -> str:
         """Arc 위반 사항에 대한 수정 지시 생성"""
         instructions = []
@@ -2390,23 +2542,26 @@ class ContinuityInspector(BaseAgent):
     
     def inspect_manuscript(self, current_ep: int, manuscript: str,
                            blueprint: dict, prev_manuscripts: List[dict],
-                           hud_history: List[dict] = None) -> dict:
+                           hud_history: List[dict] = None,
+                           entity_registry: dict = None) -> dict:
         """
         [V49.1] 원고 연속성 검증 실행
-        
+
         Args:
             current_ep: 현재 에피소드 번호
             manuscript: Writer가 생성한 원고 텍스트
             blueprint: 현재 에피소드 Blueprint dict
             prev_manuscripts: 이전 원고 리스트 [{ep_num, content, title}, ...]
             hud_history: HUD 스냅샷 히스토리 (선택적)
-        
+            entity_registry: [V61] Entity Registry dict {characters:[], organizations:[], locations:[], objects:[], concepts:[]}
+
         Returns:
             {
                 "decision": "PASS" | "REJECT",
                 "severity": "NONE" | "MINOR" | "MAJOR" | "CRITICAL",
                 "continuity_analysis": {...},
                 "blueprint_alignment": {...},
+                "entity_consistency": {...},  # V61 NEW
                 "violations": [...],
                 "warnings": [...],
                 "fix_instructions": "..."
@@ -2459,29 +2614,36 @@ class ContinuityInspector(BaseAgent):
         
         # 원고 발췌 (토큰 제한)
         manuscript_excerpt = manuscript[:4000] if len(manuscript) > 4000 else manuscript
-        
+
+        # [V61] Entity Registry 포맷팅
+        entity_registry_str = self._format_entity_registry(entity_registry)
+
         # 프롬프트 조립
         prompt = MANUSCRIPT_CONTINUITY_PROMPT.format(
             current_ep=current_ep,
             manuscript_excerpt=self._escape_braces(manuscript_excerpt),
             prev_count=len(prev_manuscripts),
             prev_manuscripts_timeline=self._escape_braces(prev_timeline[:6000]),
-            blueprint_scenario=self._escape_braces(blueprint_scenario[:2000])
+            blueprint_scenario=self._escape_braces(blueprint_scenario[:2000]),
+            entity_registry=self._escape_braces(entity_registry_str)
         )
         
         try:
             response = self.ask(prompt, temperature=0.1)
             result = self._extract_json_robust(response)
-            
-            # 결과 검증 및 보완
+
+            # [V60.74] 결과 검증 및 보완 - 파싱 실패 시 신뢰도 0 표시
             if not isinstance(result, dict):
+                print(f"      ⚠️ [V60.74] JSON 파싱 실패 - 수동 검수 권장")
                 result = {
-                    "decision": "PASS", 
-                    "severity": "NONE", 
+                    "decision": "PASS",
+                    "severity": "NONE",
                     "continuity_analysis": {},
                     "blueprint_alignment": {},
-                    "violations": [], 
-                    "warnings": []
+                    "violations": [],
+                    "warnings": ["[V60.74] LLM 응답 파싱 실패 - 수동 검수 필요"],
+                    "confidence": 0.0,
+                    "parsing_error": True
                 }
             
             # Python 검증 결과 병합
