@@ -136,6 +136,13 @@ class ManuscriptValidator:
             strategy = candidate.get("strategy", "unknown")
             strategy_name = candidate.get("strategy_name", strategy)
 
+            # 타입 안전성 보장 - manuscript가 문자열이 아닌 경우 변환
+            if not isinstance(manuscript, str):
+                if isinstance(manuscript, list):
+                    manuscript = "\n".join(str(item) for item in manuscript)
+                else:
+                    manuscript = str(manuscript) if manuscript else ""
+
             if not manuscript:
                 results.append({
                     "strategy": strategy,

@@ -55,6 +55,15 @@ class BaseAgent:
     _quota_exhausted_models = {}  # {model_name: exhausted_until_timestamp}
     _QUOTA_CACHE_DURATION = 60    # 60초 동안 해당 모델 시도 스킵
 
+    # [V60.99] API Rate Limit 예방 딜레이 (초)
+    API_DELAY = 0.3  # 기본 0.3초, 문제 시 0.5초로 조정
+
+    # [V61.2] 네트워크 복원력 설정 (야간 무인 운영 대응)
+    API_TIMEOUT = 90              # API 호출 타임아웃 (초)
+    NETWORK_RETRY_DELAY_BASE = 10 # 기본 대기 시간 (초)
+    NETWORK_RETRY_DELAY_MAX = 30  # 최대 대기 시간 (초) - 백오프 상한
+    MAX_NETWORK_RETRIES = 22      # 최대 재시도 (22회 = ~10분 커버) - 이거 넘으면 진짜 문제
+
     def __init__(self, context, client, model_tier="gemini-2.5-flash", enable_cascade=False):
         self.context = context
         self.client = client
@@ -169,61 +178,136 @@ class BaseAgent:
             MAX_CONTINUATIONS = 5
             WARN_THRESHOLD = 3
 
-            # [V60.66] 429 폴백 재시도 횟수
+            # [V60.97] Rate Limit vs Quota 구분 대응
             MAX_QUOTA_RETRIES = len(model_stack)
             quota_retry_count = 0
+            rate_limit_retry_count = 0  # [V60.97] Rate Limit 전용 재시도 카운터
+            MAX_RATE_LIMIT_RETRIES = 3  # [V60.97] Rate Limit 최대 재시도 (같은 모델)
+            network_retry_count = 0     # [V61.2] 네트워크 오류 재시도 카운터
 
             for attempt in range(MAX_CONTINUATIONS):
                 try:
+                    # [V60.99] API Rate Limit 예방 딜레이
+                    time.sleep(self.API_DELAY)
                     response = self.client.models.generate_content(
                         model=current_model,
                         contents=current_prompt,
                         config=config
                     )
+                    # [V60.97] 성공 시 카운터 리셋
+                    rate_limit_retry_count = 0
+                    network_retry_count = 0  # [V61.2] 네트워크 카운터도 리셋
                 except Exception as api_error:
-                    # [V60.66] 429 쿼터 에러 감지 및 자동 모델 폴백
-                    error_str = str(api_error).lower()
-                    is_quota_error = "429" in error_str or "quota" in error_str or "resource_exhausted" in error_str or "rate" in error_str
-
-                    if is_quota_error and quota_retry_count < MAX_QUOTA_RETRIES - 1:
-                        quota_retry_count += 1
-                        # 다음 폴백 모델로 전환
-                        old_model = current_model
-                        current_model = model_stack[quota_retry_count] if quota_retry_count < len(model_stack) else model_stack[-1]
-
-                        # [V60.68] 쿼터 소진 모델 캐시 등록 (60초간 스킵)
-                        BaseAgent._quota_exhausted_models[old_model] = time.time() + BaseAgent._QUOTA_CACHE_DURATION
-                        print(f"      ⏭️ [V60.68] {old_model} 쿼터 소진 캐시 등록 ({BaseAgent._QUOTA_CACHE_DURATION}초)")
-
-                        print(f"      🔄 [V60.66 Quota Fallback] {old_model} 할당량 초과 → {current_model}로 전환 ({quota_retry_count}/{MAX_QUOTA_RETRIES-1})")
-
-                        # [V60.66] 폴백 모델용 config 재생성 (thinking 제거 - 2.5 모델은 미지원)
-                        fallback_config_params = {
-                            "temperature": temperature,
-                            "max_output_tokens": 8192,
-                            "top_p": 0.95,
-                            "response_mime_type": "application/json"
-                        }
-                        # thinking config는 gemini-3 모델에서만 지원
-                        if thinking_level and "gemini-3" in current_model:
-                            if isinstance(thinking_level, str):
-                                budget = self.THINKING_BUDGET_MAP.get(thinking_level.lower(), 8192)
-                            else:
-                                budget = int(thinking_level)
-                            fallback_config_params["thinking_config"] = types.ThinkingConfig(
-                                thinking_budget=budget
-                            )
-                        config = types.GenerateContentConfig(**fallback_config_params)
-
-                        # [V60.68] 캐시 히트로 대기 시간 제거 (기존 2초 → 0초)
-                        # time.sleep(2)  # 제거: 캐시로 인해 불필요
-                        response = self.client.models.generate_content(
-                            model=current_model,
-                            contents=current_prompt,
-                            config=config
+                    # ═══════════════════════════════════════════════════════════════
+                    # [V61.2] Case 0: 네트워크/타임아웃 오류 → 백오프 + 연결 체크 후 재시도
+                    # 야간 무인 운영 시 3-5분 인터넷 끊김에도 작업 유지
+                    # ═══════════════════════════════════════════════════════════════
+                    if self._is_network_error(api_error) and network_retry_count < self.MAX_NETWORK_RETRIES:
+                        network_retry_count += 1
+                        # 백오프: 10초 → 15초 → 20초 → ... → 최대 30초
+                        wait_time = min(
+                            self.NETWORK_RETRY_DELAY_BASE + (network_retry_count - 1) * 5,
+                            self.NETWORK_RETRY_DELAY_MAX
                         )
+                        total_waited = sum(min(self.NETWORK_RETRY_DELAY_BASE + i * 5, self.NETWORK_RETRY_DELAY_MAX) for i in range(network_retry_count))
+
+                        # [V61.2] 타임스탬프 포함 출력 (하트비트 역할)
+                        from datetime import datetime
+                        timestamp = datetime.now().strftime("%H:%M:%S")
+                        print(f"\n      🌐 [{timestamp}] 연결 오류 → {wait_time}초 대기 ({network_retry_count}/{self.MAX_NETWORK_RETRIES}, 누적 {total_waited}초)")
+
+                        # 대기 중 하트비트 (10초마다 점 출력)
+                        for tick in range(wait_time):
+                            time.sleep(1)
+                            if (tick + 1) % 10 == 0:
+                                print(f"         💓 대기 중... {tick + 1}/{wait_time}초", end="\r")
+                        print()  # 줄바꿈
+
+                        # 연결 체크
+                        if self._check_connectivity():
+                            print(f"      ✅ [{datetime.now().strftime('%H:%M:%S')}] 연결 복구! 재시도...")
+                            continue  # 루프 처음으로
+                        else:
+                            # 연결 안 됨 - 다음 재시도로 (루프 계속)
+                            print(f"      ⏳ [{datetime.now().strftime('%H:%M:%S')}] 연결 대기 중...")
+                            continue
+
+                    # [V60.97] Rate Limit vs Quota Exhausted 구분
+                    error_str = str(api_error).lower()
+
+                    # Rate Limit: 429 + (rate 또는 limit) - 분당 요청 제한
+                    is_rate_limit = "429" in error_str and ("rate" in error_str or "limit" in error_str)
+                    # Quota Exhausted: resource_exhausted 또는 quota - 일일/월간 할당량 초과
+                    is_quota_exhausted = "resource_exhausted" in error_str or ("quota" in error_str and "429" not in error_str)
+                    # 애매한 경우 (429만 있음) - Rate Limit으로 간주
+                    is_ambiguous_429 = "429" in error_str and not is_rate_limit and not is_quota_exhausted
+
+                    # ═══════════════════════════════════════════════════════════════
+                    # [V60.98] gemini-3-pro는 할당량이 적으므로 Rate Limit 시 즉시 폴백
+                    # ═══════════════════════════════════════════════════════════════
+                    is_gemini3_rate_limit = (is_rate_limit or is_ambiguous_429) and "gemini-3-pro" in current_model
+
+                    # ═══════════════════════════════════════════════════════════════
+                    # [V60.97] Case A: Rate Limit (gemini-3-pro 제외) → Backoff 후 재시도
+                    # ═══════════════════════════════════════════════════════════════
+                    if (is_rate_limit or is_ambiguous_429) and not is_gemini3_rate_limit and rate_limit_retry_count < MAX_RATE_LIMIT_RETRIES:
+                        rate_limit_retry_count += 1
+                        # Linear Backoff: 30초 → 60초 → 90초 (분당 제한 대응)
+                        wait_time = 30 * rate_limit_retry_count
+                        print(f"      ⏳ [V60.97 Rate Limit] {current_model} 분당 제한 감지 → {wait_time}초 대기 후 재시도 ({rate_limit_retry_count}/{MAX_RATE_LIMIT_RETRIES})")
+                        time.sleep(wait_time)
+                        # 루프 처음으로 돌아가서 try/except 안에서 재시도
+                        continue
+
+                    # ═══════════════════════════════════════════════════════════════
+                    # [V60.97] Case B: Quota/Rate Limit 초과 또는 gemini-3-pro Rate Limit → 즉시 폴백
+                    # ═══════════════════════════════════════════════════════════════
+                    elif is_quota_exhausted or is_gemini3_rate_limit or (is_rate_limit and rate_limit_retry_count >= MAX_RATE_LIMIT_RETRIES):
+                        if is_gemini3_rate_limit:
+                            print(f"      ⚡ [V60.98] {current_model} Rate Limit → 즉시 폴백 (할당량 부족 모델)")
+                        if quota_retry_count < MAX_QUOTA_RETRIES - 1:
+                            quota_retry_count += 1
+                            rate_limit_retry_count = 0  # 폴백 시 Rate Limit 카운터 리셋
+
+                            old_model = current_model
+                            current_model = model_stack[quota_retry_count] if quota_retry_count < len(model_stack) else model_stack[-1]
+
+                            # [V60.68] 쿼터 소진 모델 캐시 등록
+                            cache_duration = BaseAgent._QUOTA_CACHE_DURATION if is_quota_exhausted else 30  # Rate Limit은 30초만
+                            BaseAgent._quota_exhausted_models[old_model] = time.time() + cache_duration
+
+                            error_type = "Quota 소진" if is_quota_exhausted else "Rate Limit 초과"
+                            print(f"      🔄 [V60.97 Fallback] {old_model} {error_type} → {current_model}로 전환")
+
+                            # 폴백 모델용 config 재생성
+                            fallback_config_params = {
+                                "temperature": temperature,
+                                "max_output_tokens": 8192,
+                                "top_p": 0.95,
+                                "response_mime_type": "application/json"
+                            }
+                            if thinking_level and "gemini-3" in current_model:
+                                if isinstance(thinking_level, str):
+                                    budget = self.THINKING_BUDGET_MAP.get(thinking_level.lower(), 8192)
+                                else:
+                                    budget = int(thinking_level)
+                                fallback_config_params["thinking_config"] = types.ThinkingConfig(
+                                    thinking_budget=budget
+                                )
+                            config = types.GenerateContentConfig(**fallback_config_params)
+
+                            # [V60.99] API Rate Limit 예방 딜레이
+                            time.sleep(self.API_DELAY)
+                            response = self.client.models.generate_content(
+                                model=current_model,
+                                contents=current_prompt,
+                                config=config
+                            )
+                        else:
+                            # 모든 폴백 소진
+                            raise api_error
                     else:
-                        # 폴백 불가 - 예외 재발생
+                        # 기타 에러 - 예외 재발생
                         raise api_error
 
                 chunk = response.text if response.text else ""
@@ -348,6 +432,8 @@ class BaseAgent:
                     except Exception:
                         pass
 
+                # [V60.99] API Rate Limit 예방 딜레이
+                time.sleep(self.API_DELAY)
                 res = self.client.models.generate_content(
                     model=self.backup_model,
                     contents=base_prompt,
@@ -454,6 +540,33 @@ class BaseAgent:
             return AgentErrorType.MALFORMED_RESPONSE
         else:
             return AgentErrorType.UNKNOWN
+
+    # [V61.2] 네트워크 연결 체크
+    def _check_connectivity(self) -> bool:
+        """
+        네트워크 연결 상태 확인 (가벼운 요청으로)
+
+        Returns:
+            True: 연결 정상
+            False: 연결 불가
+        """
+        try:
+            # 모델 목록 조회 (가벼운 API 호출)
+            self.client.models.list()
+            return True
+        except Exception:
+            return False
+
+    # [V61.2] 네트워크 오류 여부 판단
+    def _is_network_error(self, error: Exception) -> bool:
+        """타임아웃/네트워크 관련 오류인지 판단"""
+        error_str = str(error).lower()
+        network_keywords = [
+            "timeout", "deadline", "connection", "network",
+            "ssl", "socket", "refused", "reset", "broken pipe",
+            "eof", "closed", "unavailable"
+        ]
+        return any(kw in error_str for kw in network_keywords)
 
     def _validate_response(self, response: str) -> dict:
         """응답이 유효한 JSON 구조인지 검증"""

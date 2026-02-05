@@ -69,7 +69,8 @@ class ArcDraftValidator:
         self,
         arc: Dict,
         prev_arcs: List[Dict],
-        constraint_block: str = ""
+        constraint_block: str = "",
+        state_tracker=None  # [V60.94] StateTracker 인스턴스 (NPC 생사 검증용)
     ) -> Dict[str, Any]:
         """
         Arc 초안 검증
@@ -78,6 +79,7 @@ class ArcDraftValidator:
             arc: 검증할 Arc 데이터
             prev_arcs: 이전 Arc들
             constraint_block: 제약 조건 블록
+            state_tracker: [V60.94] StateTracker 인스턴스 (죽은 NPC 검증용)
 
         Returns:
             {
@@ -92,10 +94,19 @@ class ArcDraftValidator:
         warnings = []
         suggestions = []
         score = 100
+        reject_reason = None  # [V60.94] REJECT 사유
 
         # [V60.74] Arc 1 처리 명시적 로그
         if not prev_arcs:
             print(f"      ⏭️ [ArcDraftValidator] Arc 1 - 연속성 검증 스킵, 구조만 검증")
+
+        # [V60.94] 0. 죽은 NPC 등장 검증 - 유일한 REJECT 사유
+        if state_tracker and prev_arcs:
+            dead_npc_result = self._validate_dead_npc_appearance(arc, state_tracker)
+            if dead_npc_result["critical"]:
+                critical_issues.extend(dead_npc_result["critical"])
+                score -= dead_npc_result["penalty"]
+                reject_reason = dead_npc_result["critical"][0]  # 첫 번째 위반 사유
 
         # 1. 필수 필드 검증
         field_result = self._validate_required_fields(arc)
@@ -143,20 +154,21 @@ class ArcDraftValidator:
             score -= constraint_result["penalty"]
             critical_issues.extend(constraint_result["critical"])
 
-        # [V60.56] 최종 판정 - Python은 REJECT 권한 없음, 항상 valid=True
+        # [V60.94] 죽은 NPC 등장만 REJECT, 나머지는 advisory
         # critical_issues를 advisory_issues로 변환 (LLM에게 전달할 정보)
-        advisory_issues = critical_issues  # 기존 critical을 advisory로 변환
+        advisory_issues = [c for c in critical_issues if "사망한" not in c and "죽은" not in c]
 
-        # [V60.56] 항상 valid=True, Python은 정보 제공만
-        is_valid = True  # REJECT 권한 제거
+        # [V60.94] 죽은 NPC 등장만 REJECT 가능
+        is_valid = reject_reason is None
 
         return {
             "valid": is_valid,
             "score": max(0, score),
-            "critical_issues": [],  # [V60.56] 빈 리스트 (REJECT 안 함)
+            "critical_issues": [reject_reason] if reject_reason else [],  # [V60.94] 죽은 NPC만 REJECT
             "advisory_issues": advisory_issues,  # [V60.56] LLM에게 전달할 정보
             "warnings": warnings,
-            "suggestions": suggestions
+            "suggestions": suggestions,
+            "reject_reason": reject_reason  # [V60.94] REJECT 사유
         }
 
     def _validate_required_fields(self, arc: Dict) -> Dict:
@@ -741,6 +753,38 @@ class ArcDraftValidator:
             return True
 
         return False
+
+    def _validate_dead_npc_appearance(self, arc: Dict, state_tracker) -> Dict:
+        """
+        [V60.94] 죽은 NPC 등장 검증 - REJECT 대상
+
+        Args:
+            arc: 검증할 Arc
+            state_tracker: StateTracker 인스턴스
+
+        Returns:
+            {"penalty": int, "critical": list}
+        """
+        critical = []
+        penalty = 0
+
+        arc_no = arc.get("arc_no", 0)
+        tactical = self._safe_tactical(arc)
+
+        # StateTracker의 죽은 NPC 검사 메서드 활용
+        violations = state_tracker.check_dead_npc_appearance(tactical, arc_no)
+
+        for v in violations:
+            npc_name = v.get("npc_name", "")
+            death_arc = v.get("death_arc", 0)
+            reason = v.get("reason", f"죽은 NPC '{npc_name}' 등장")
+
+            critical.append(f"🚨 [V60.94] {reason}")
+            penalty += 100  # 즉시 REJECT 수준
+
+            print(f"      💀 [V60.94] REJECT: Arc {death_arc}에서 사망한 '{npc_name}'이 Arc {arc_no}에서 등장!")
+
+        return {"penalty": penalty, "critical": critical}
 
 
 def create_draft_validator() -> ArcDraftValidator:
