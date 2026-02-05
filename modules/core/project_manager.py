@@ -232,6 +232,19 @@ class ProjectContext:
         # 3. Anchor(JSON) 최종 박제
         return self.db.save_anchor(stage, data)
 
+    def load_v20_anchor(self, stage, default=None):
+        """
+        [V61.3] DB에서 특정 앵커 데이터를 로드
+
+        Args:
+            stage: 앵커 키 (bible, volumes, arcs, style_guide 등)
+            default: 키가 없을 때 반환할 기본값
+
+        Returns:
+            dict: 앵커 데이터 또는 기본값
+        """
+        return self.db.load_anchor(stage, default)
+
     def save_episode_blueprint(self, ep_num, data):
         """Stage 3 설계도 DB 박제"""
         self.db.save_blueprint(ep_num, data)

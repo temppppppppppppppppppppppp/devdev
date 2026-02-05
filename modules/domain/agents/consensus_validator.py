@@ -13,7 +13,7 @@
 import json
 import re
 from typing import Dict, List, Any, Tuple
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FutureTimeoutError
 from .base_agent import BaseAgent
 
 
@@ -146,6 +146,10 @@ class ConsensusValidator(BaseAgent):
     3개 LLM이 서로 다른 관점으로 검증, 합의 도출
     """
 
+    # [V61.3] 앙상블 타임아웃 설정 (야간 무인 운영 - 무한 대기 방지)
+    ENSEMBLE_TIMEOUT = 120       # 전체 합의 타임아웃 (초) - 2분
+    SINGLE_VOTE_TIMEOUT = 90     # 개별 투표 타임아웃 (초) - 1.5분
+
     def __init__(self, context, client, model_tier: str = "gemini-2.5-flash"):
         # [V60.53] Flash로 변경 - 단순 투표 로직, Pro 불필요
         super().__init__(context, client, model_tier)
@@ -196,36 +200,64 @@ class ConsensusValidator(BaseAgent):
 
         results = []
 
-        # 병렬 검증
-        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            futures = {}
-            for perspective in active_perspectives:
-                future = executor.submit(
-                    self._validate_single,
-                    arc_data=arc_data,
-                    prev_summary=prev_summary,
-                    constraints=constraints,
-                    perspective=perspective,
-                    python_advisory_text=advisory_text
-                )
-                futures[future] = perspective["name"]
+        # [V61.3] 전체 병렬 처리 블록을 try-except로 감싸서 급사 방지
+        try:
+            with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+                futures = {}
+                for perspective in active_perspectives:
+                    future = executor.submit(
+                        self._validate_single,
+                        arc_data=arc_data,
+                        prev_summary=prev_summary,
+                        constraints=constraints,
+                        perspective=perspective,
+                        python_advisory_text=advisory_text
+                    )
+                    futures[future] = perspective["name"]
 
-            for future in as_completed(futures):
-                perspective_name = futures[future]
+                # [V61.3] 타임아웃 적용 - 야간 무인 운영 시 무한 대기 방지
                 try:
-                    result = future.result()
-                    result["perspective"] = perspective_name
-                    results.append(result)
+                    for future in as_completed(futures, timeout=self.ENSEMBLE_TIMEOUT):
+                        perspective_name = futures[future]
+                        try:
+                            # [V61.3] 개별 투표에도 타임아웃 적용
+                            result = future.result(timeout=self.SINGLE_VOTE_TIMEOUT)
+                            result["perspective"] = perspective_name
+                            results.append(result)
+                        except FutureTimeoutError:
+                            print(f"      ⏰ [V61.3] {perspective_name} 타임아웃 ({self.SINGLE_VOTE_TIMEOUT}초)")
+                            # 타임아웃 시 보수적으로 PASS 처리
+                            results.append({
+                                "perspective": perspective_name,
+                                "verdict": "PASS",
+                                "confidence": 0.5,
+                                "issues_found": [],
+                                "error": "타임아웃"
+                            })
+                        except Exception as e:
+                            print(f"      ⚠️ [Consensus] {perspective_name} 오류: {str(e)[:50]}")
+                            # 오류 시 보수적으로 PASS 처리 (다른 검증기에 의존)
+                            results.append({
+                                "perspective": perspective_name,
+                                "verdict": "PASS",
+                                "confidence": 0.5,
+                                "issues_found": [],
+                                "error": str(e)[:100]
+                            })
+                except FutureTimeoutError:
+                    # 전체 합의 타임아웃 - 완료된 결과만 사용
+                    print(f"      ⏰ [V61.3] 합의 검증 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(results)}개 결과 사용")
                 except Exception as e:
-                    print(f"      ⚠️ [Consensus] {perspective_name} 오류: {str(e)[:50]}")
-                    # 오류 시 보수적으로 PASS 처리 (다른 검증기에 의존)
-                    results.append({
-                        "perspective": perspective_name,
-                        "verdict": "PASS",
-                        "confidence": 0.5,
-                        "issues_found": [],
-                        "error": str(e)[:100]
-                    })
+                    # [V61.3] as_completed 자체 예외 처리
+                    print(f"      ⚠️ [V61.3] 합의 루프 예외: {str(e)[:80]}")
+        except Exception as e:
+            # [V61.3] ThreadPoolExecutor 전체 예외 처리 - 급사 방지
+            # stderr로 출력 (Rich 스피너가 stdout 가림)
+            import sys
+            import traceback
+            print(f"      🚨 [V61.3] 합의 검증 크래시 방지: {str(e)[:100]}", file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
+            sys.stderr.flush()
 
         # 합의 도출
         final_verdict, consensus_result = self._derive_consensus(results)

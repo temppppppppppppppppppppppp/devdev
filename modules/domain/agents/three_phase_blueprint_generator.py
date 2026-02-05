@@ -61,7 +61,9 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         director=None,  # [V60.80] Director 인스턴스 (최종 판정용)
         arc_idx: int = 0,  # Arc 인덱스
         entity_registry: Optional[Dict] = None,  # [V61] Entity 일관성 검증용
-        protagonist_name: str = "주인공"  # [V61] 주인공 이름 (필수!)
+        protagonist_name: str = "주인공",  # [V61] 주인공 이름 (필수!)
+        protagonist_config: Optional[Dict] = None,  # [V60.90] 주인공 설정 {world_origin, incarnation_type}
+        state_tracker=None  # [V60.96] StateTracker (죽은 NPC 검증용)
     ) -> Tuple[Optional[Dict], Dict]:
         """
         3단계 Blueprint 생성 (ToT 방식: 3전략 × 3시도 = 최대 9회 생성)
@@ -75,6 +77,10 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             external_feedback: 외부 피드백 (Director REJECT 등)
             director: Director 에이전트 (최종 판정용) - 디렉터주권주의
             arc_idx: Arc 인덱스
+            entity_registry: [V61] Entity 일관성 검증용
+            protagonist_name: [V61] 주인공 이름
+            protagonist_config: [V60.90] 주인공 설정
+            state_tracker: [V60.96] StateTracker (죽은 NPC 검증용)
 
         Returns:
             (generated_blueprint, pipeline_result)
@@ -86,6 +92,16 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         - Director 판정: 시도당 1회, 최대 3회
         """
         self.stats["total_attempts"] += 1
+
+        # [V60.90] protagonist_config 추출 (context에서 직접 로드, 파라미터 우선)
+        if not protagonist_config:
+            try:
+                master_bible = getattr(self.context, 'master_bible', {})
+                if master_bible:
+                    bible_root = master_bible.get('MasterBible', master_bible)
+                    protagonist_config = bible_root.get('protagonist_config', {})
+            except Exception:
+                protagonist_config = {}
 
         pipeline_result = {
             "ep_num": ep_num,
@@ -143,7 +159,9 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 constraint_block=constraint_block,
                 prev_blueprint=prev_blueprint,
                 feedback=feedback,
-                protagonist_name=protagonist_name  # [V61] 주인공 이름 전달
+                protagonist_name=protagonist_name,  # [V61] 주인공 이름 전달
+                protagonist_config=protagonist_config,  # [V60.90] 주인공 설정 전달
+                state_tracker=state_tracker  # [V60.95] 고밀도 HUD 전달
             )
 
             if not best_blueprint:
@@ -155,27 +173,35 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             pipeline_result["phases"]["generate"] = {
                 "status": "complete",
                 "candidates_count": len(all_candidates),
-                "selected_strategy": best_blueprint.get("_ensemble_meta", {}).get("best_strategy", "unknown"),
-                "selected_score": best_blueprint.get("_ensemble_meta", {}).get("best_score", 0)
+                "qualified_candidates": len(all_candidates),  # [V60.85] 최소 기준 통과 후보 수
+                "selection_by": "director"  # [V60.85] Director가 선택
             }
             self.stats["phase2_complete"] += 1
 
             # ═══════════════════════════════════════════════════════════════
-            # PHASE 3: VALIDATE - 사전검사 + Director 최종 판정
+            # PHASE 3: VALIDATE - Director 비교 선택 + 최종 판정
             # ═══════════════════════════════════════════════════════════════
-            print(f"      🔍 [Phase 3] 사전검사 + Director 판정 중...")
+            print(f"      🔍 [Phase 3] Director 비교 선택 + 판정 중...")
 
-            # [V60.80] Director 전달하여 최종 판정 위임
+            # [V60.85] 전체 후보를 Director에게 전달하여 비교 선택
             verdict, validation_result = self.validator.validate(
-                blueprint=best_blueprint,
+                blueprint=best_blueprint,  # 대표 후보 (폴백용)
                 arc_data=arc_data,
                 constraint_block=constraint_block,
                 prev_blueprint=prev_blueprint,
-                director=director,  # Director 최종 판정
+                director=director,  # Director 비교 선택 + 최종 판정
                 working_ep=ep_num,
                 arc_idx=arc_idx,
-                entity_registry=entity_registry  # [V61] Entity 일관성 검증
+                entity_registry=entity_registry,  # [V61] Entity 일관성 검증
+                state_tracker=state_tracker,  # [V60.96] 죽은 NPC 검증
+                all_candidates=all_candidates  # [V60.85] 전체 후보 리스트
             )
+
+            # [V60.85] Director가 선택한 Blueprint로 교체
+            if validation_result.get("selected_blueprint"):
+                best_blueprint = validation_result["selected_blueprint"]
+                selected_idx = validation_result.get("selected_index", 0)
+                print(f"      🎯 [V60.85] Director 선택: 후보 {selected_idx + 1}")
 
             pipeline_result["phases"]["validate"] = {
                 "status": "complete",
@@ -183,7 +209,9 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 "issues_count": len(validation_result.get("issues", [])),
                 "confidence": validation_result.get("confidence", 0),
                 "score": validation_result.get("score", 0),
-                "phase": validation_result.get("phase", "unknown")  # pre_validate/director
+                "phase": validation_result.get("phase", "unknown"),  # pre_validate/director/director_compare
+                "selected_index": validation_result.get("selected_index", 0),  # [V60.85] Director 선택 인덱스
+                "comparison_notes": validation_result.get("comparison_notes", "")  # [V60.85] 비교 근거
             }
 
             if verdict == "PASS":

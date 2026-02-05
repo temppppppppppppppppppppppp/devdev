@@ -7,14 +7,16 @@ Stage 3 사전검사기 + Director 최종 판정
 - 사전검사는 Director 호출 전 자가점검 수준
 
 구조:
-1. Python 사전검사 (무료, 빠름)
+1. Python 사전검사 (무료, 빠름) - 경고만, REJECT 권한 없음
    - 분량 체크 (integrated_scenario 길이)
    - 필수 필드 체크 (scene_breakdown, integrated_scenario)
    - 정지선 위반 체크 (다음 화 내용 침범)
    - 연속성 체크 (위치, 시간)
+   - [V60.96] 죽은 NPC 등장 체크 (CRITICAL 경고 → Director에게 전달)
 2. Director 최종 판정 (audit_manuscript)
    - Arc 준수, 서사 개연성, 캐릭터 논리 검증
    - Director의 verdict가 최종 결정
+   - [V60.96] 죽은 NPC 경고 포함 시 REJECT 권고
 """
 
 import json
@@ -50,27 +52,92 @@ class UnifiedBlueprintValidator:
         director=None,  # [V60.80] Director 인스턴스 (최종 판정용)
         working_ep: int = 1,
         arc_idx: int = 0,
-        entity_registry: Optional[Dict] = None  # [V61] Entity 일관성 검증용
+        entity_registry: Optional[Dict] = None,  # [V61] Entity 일관성 검증용
+        state_tracker=None,  # [V60.96] StateTracker (죽은 NPC 검증용)
+        all_candidates: Optional[List[Dict]] = None  # [V60.85] 전체 후보 리스트
     ) -> Tuple[str, Dict]:
         """
         Blueprint 통합 검증 (사전검사 + Director 최종 판정)
 
+        [V60.85] all_candidates가 있으면 Director가 비교 선택
+
         Args:
-            blueprint: 검증할 Blueprint
+            blueprint: 검증할 Blueprint (단일 후보 또는 대표 후보)
             arc_data: 현재 Arc 데이터
             constraint_block: 제약 조건 블록
             prev_blueprint: 직전 Blueprint
             director: Director 에이전트 (최종 판정)
             working_ep: 현재 에피소드 번호
             arc_idx: Arc 인덱스
+            entity_registry: [V61] Entity 일관성 검증용
+            state_tracker: [V60.96] StateTracker (죽은 NPC 검증용)
+            all_candidates: [V60.85] 전체 후보 리스트 (있으면 Director 비교 선택)
 
         Returns:
             (verdict, result) - "PASS"/"REJECT", 상세 결과
         """
         # ═══════════════════════════════════════════════════════════════
+        # [V60.85] 여러 후보가 있으면 Director 비교 선택 모드
+        # ═══════════════════════════════════════════════════════════════
+        if all_candidates and len(all_candidates) > 1 and director:
+            print(f"      🎭 [V60.85] Director 비교 선택 모드 ({len(all_candidates)}개 후보)")
+
+            compare_result = director.compare_and_select_blueprint(
+                candidates=all_candidates,
+                arc_data=arc_data,
+                ep_num=working_ep,
+                prev_blueprint=prev_blueprint,
+                entity_registry=entity_registry,
+                state_tracker=state_tracker
+            )
+
+            verdict = compare_result.get("decision", "REJECT")
+            selected_bp = compare_result.get("selected_blueprint")
+
+            result = {
+                "verdict": verdict,
+                "phase": "director_compare",
+                "issues": [],
+                "summary": compare_result.get("reason", ""),
+                "score": compare_result.get("score", 0),
+                "feedback": compare_result.get("feedback", ""),
+                "confidence": 0.9 if compare_result.get("score", 0) >= 70 else 0.6,
+                "selected_index": compare_result.get("selected_index", 0),
+                "selected_blueprint": selected_bp,
+                "comparison_notes": compare_result.get("comparison_notes", "")
+            }
+
+            status = "✅ PASS" if verdict == "PASS" else "❌ REJECT"
+            print(f"      {status} [Director] 후보 {compare_result.get('selected_index', 0)+1} 선택, 점수: {compare_result.get('score', 0)}")
+
+            return verdict, result
+
+        # ═══════════════════════════════════════════════════════════════
         # Phase A: Python 사전검사 (무료) - 경고만, REJECT 권한 없음
         # ═══════════════════════════════════════════════════════════════
-        pre_result = self._python_pre_validate(blueprint, constraint_block, prev_blueprint)
+        pre_result = self._python_pre_validate(blueprint, constraint_block, prev_blueprint, state_tracker)
+
+        # [V60.96] 죽은 NPC 등장 체크 - 경고로 Director에게 전달 (디렉터주권주의)
+        # [V60.97] arc_no 추출 (타임라인 비교용)
+        arc_no = arc_data.get("arc_no", 0) if arc_data else arc_idx
+        if arc_no <= 0:
+            arc_no = arc_idx
+
+        dead_npc_violations = []
+        if state_tracker:
+            dead_npc_violations = state_tracker.check_dead_npc_in_blueprint(blueprint, working_ep, arc_no)
+            if dead_npc_violations:
+                violation_names = [v["npc_name"] for v in dead_npc_violations]
+                print(f"      💀 [V60.96] 죽은 NPC 감지 → Director에게 전달: {', '.join(violation_names)}")
+                # Director 주의 포인트로 추가 (Python은 REJECT 안 함)
+                pre_result["issues"].append({
+                    "severity": "CRITICAL",
+                    "category": "dead_npc",
+                    "issue": f"죽은 NPC 등장: {', '.join(violation_names)}",
+                    "evidence": dead_npc_violations[0]["reason"],
+                    "fix_hint": "사망한 NPC는 회상/언급만 가능"
+                })
+                pre_result["has_critical"] = True
 
         # [V60.80] Python은 경고만 - REJECT 권한 없음, Director가 최종 판정
         if pre_result["has_critical"]:
@@ -198,7 +265,8 @@ class UnifiedBlueprintValidator:
         self,
         blueprint: Dict,
         constraint_block: Dict,
-        prev_blueprint: Optional[Dict]
+        prev_blueprint: Optional[Dict],
+        state_tracker=None  # [V60.95] 고밀도 HUD 검증용
     ) -> Dict:
         """Python 사전검사 (무료, 빠름)"""
         issues = []

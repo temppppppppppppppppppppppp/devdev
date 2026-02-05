@@ -54,6 +54,72 @@ class FourPhaseArcGenerator(BaseAgent):
             "phase3_reject": 0
         }
 
+    def _determine_ep_count(self, curr_block: Dict, arc_no: int, prev_arcs: List[Dict]) -> Tuple[int, str]:
+        """
+        [V61.1] LLM 기반 가변 페이싱 - ep_count 동적 결정 (정보량 기반)
+
+        Args:
+            curr_block: 현재 블록 DNA
+            arc_no: Arc 번호
+            prev_arcs: 이전 Arc 리스트
+
+        Returns:
+            (ep_count, reasoning) - 3~7 범위의 화수와 결정 이유
+        """
+        # 블록 내용 추출
+        block_content = ""
+        if isinstance(curr_block, dict):
+            for key in ['context', 'event_villain', 'solution', 'reward', 'content']:
+                val = curr_block.get(key, '')
+                if isinstance(val, str):
+                    block_content += val + " "
+                elif isinstance(val, dict):
+                    block_content += json.dumps(val, ensure_ascii=False) + " "
+
+        # 이전 Arc 평균 ep_count 참고
+        prev_ep_counts = [a.get('ep_count', 5) for a in prev_arcs if isinstance(a, dict)]
+        avg_prev = sum(prev_ep_counts) / len(prev_ep_counts) if prev_ep_counts else 5
+
+        # 간단한 프롬프트 (정보량 기반, 장르 무관)
+        prompt = f"""[가변 페이싱 판단기]
+Arc {arc_no}의 적절한 화수(ep_count)를 3~7 중에서 결정하라.
+
+[블록 내용]
+{block_content[:1500]}
+
+[참고: 이전 Arc 평균 화수]
+{avg_prev:.1f}화
+
+[판단 기준 - 정보량/복잡도]
+- 3~4화: 단일 사건, 적은 등장인물, 단순 갈등
+- 5화: 보통 수준의 사건 전개
+- 6~7화: 다중 사건, 많은 등장인물, 복잡한 갈등/음모
+
+[Output - JSON Only]
+{{"ep_count": 3~7 중 정수, "reasoning": "한 문장 이유"}}"""
+
+        try:
+            response = self.ask(prompt, temperature=0.3)
+            result = self._extract_json_robust(response)
+
+            ep_count = result.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT)
+            reasoning = result.get("reasoning", "기본값 적용")
+
+            # 타입 안전 변환
+            if isinstance(ep_count, str):
+                import re
+                match = re.search(r'(\d+)', ep_count)
+                ep_count = int(match.group(1)) if match else Stage2Limits.DEFAULT_EP_COUNT
+
+            # 범위 강제
+            ep_count = max(Stage2Limits.MIN_EP_COUNT, min(Stage2Limits.MAX_EP_COUNT, int(ep_count)))
+
+            return ep_count, reasoning
+
+        except Exception as e:
+            print(f"      ⚠️ [V61.1] 페이싱 판단 실패: {e} → 기본값 5화")
+            return Stage2Limits.DEFAULT_EP_COUNT, "판단 불가로 기본값 적용"
+
     def generate(
         self,
         arc_no: int,
@@ -64,7 +130,9 @@ class FourPhaseArcGenerator(BaseAgent):
         assets: Dict = None,
         max_internal_retries: int = 2,
         protagonist_name: str = "주인공",
-        director_feedback: str = ""
+        director_feedback: str = "",
+        entity_registry: Dict = None,  # [V60.92] Entity Registry (NPC 명칭 일관성)
+        state_tracker=None  # [V60.94] StateTracker (죽은 NPC 검증용)
     ) -> Tuple[Optional[Dict], Dict]:
         """
         3단계 Arc 생성
@@ -79,23 +147,27 @@ class FourPhaseArcGenerator(BaseAgent):
             max_internal_retries: 내부 재시도 횟수
             protagonist_name: 주인공 이름
             director_feedback: [V60.77] Director REJECT 피드백 (재시도 시 반영)
+            entity_registry: [V60.92] Entity Registry (NPC 명칭 일관성)
+            state_tracker: [V60.94] StateTracker (죽은 NPC 검증용)
 
         Returns:
             (generated_arc, pipeline_result)
         """
         self.stats["total_attempts"] += 1
 
-        # ep_count 추출 및 검증
-        if isinstance(curr_block, dict):
-            ep_count = curr_block.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT)
-        else:
-            print(f"      ⚠️ [V60.75] curr_block 타입 오류 → ep_count={Stage2Limits.DEFAULT_EP_COUNT}")
-            ep_count = Stage2Limits.DEFAULT_EP_COUNT
+        # [V60.88] protagonist_config 추출 (context에서 직접 로드)
+        protagonist_config = {}
+        try:
+            master_bible = getattr(self.context, 'master_bible', {})
+            if master_bible:
+                bible_root = master_bible.get('MasterBible', master_bible)
+                protagonist_config = bible_root.get('protagonist_config', {})
+        except Exception:
+            pass
 
-        # 범위 강제 (3~7)
-        if not isinstance(ep_count, int) or ep_count < Stage2Limits.MIN_EP_COUNT or ep_count > Stage2Limits.MAX_EP_COUNT:
-            print(f"      ⚠️ [V60.75] ep_count 범위 오류: {ep_count} → {Stage2Limits.DEFAULT_EP_COUNT}")
-            ep_count = Stage2Limits.DEFAULT_EP_COUNT
+        # [V61.1] LLM 기반 가변 페이싱 - ep_count 동적 결정
+        ep_count, pacing_reason = self._determine_ep_count(curr_block, arc_no, prev_arcs)
+        print(f"      📊 [V61.1] 가변 페이싱: {ep_count}화 결정 - {pacing_reason}")
 
         ep_end = ep_start + ep_count - 1
 
@@ -166,7 +238,10 @@ class FourPhaseArcGenerator(BaseAgent):
                 constraint_block=full_constraint_block,
                 assets=assets,
                 feedback=feedback,
-                protagonist_name=protagonist_name
+                protagonist_name=protagonist_name,
+                protagonist_config=protagonist_config,  # [V60.88]
+                entity_registry=entity_registry,  # [V60.92] Entity Registry
+                ep_count=ep_count  # [V61.1] 가변 페이싱
             )
 
             if not best_arc:
@@ -190,7 +265,8 @@ class FourPhaseArcGenerator(BaseAgent):
             verdict, validation_result = self.validator.validate(
                 arc=best_arc,
                 prev_arcs=prev_arcs,
-                constraints=full_constraint_block
+                constraints=full_constraint_block,
+                state_tracker=state_tracker  # [V60.94] 죽은 NPC 검증용
             )
 
             pipeline_result["phases"]["validate"] = {

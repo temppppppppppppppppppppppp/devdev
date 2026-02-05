@@ -1,6 +1,12 @@
 import sys
 import os
 
+# [V61.3] Faulthandler 활성화 - segfault 등 치명적 오류 추적
+import faulthandler
+_fault_log = open("crash_dump.log", "w", encoding="utf-8")
+faulthandler.enable(file=_fault_log, all_threads=True)
+print(f"[V61.3] Faulthandler 활성화 → crash_dump.log", file=sys.stderr)
+
 # Windows에서 UTF-8 인코딩 강제 설정 (이모지 및 한글 출력 지원)
 if sys.platform == 'win32':
     try:
@@ -20,6 +26,7 @@ from rich.live import Live
 from rich.panel import Panel
 from rich.console import Console
 from rich.status import Status
+from rich.text import Text
 
 # [V60.47] 전역 Rich 콘솔 (스피너용)
 rich_console = Console()
@@ -88,41 +95,62 @@ class FancySpinner:
         return False
 
 
-# [V60.83] Stage별 테마 스피너
+# [V60.83] Stage별 테마 스피너 (파도치는 색상)
 class StageSpinner:
     """
-    각 Stage별 고유 테마를 가진 스피너
+    각 Stage별 고유 테마를 가진 스피너 (파도치는 그라데이션)
 
-    Stage 1: 📜 Volume Strategy - 고대 두루마리 테마 (gold)
-    Stage 2: ⚔️ Arc Design - 전투/전략 테마 (red)
-    Stage 3: 📐 Blueprint - 설계도 테마 (cyan)
-    Stage 4: ✍️ Manuscript - 집필 테마 (green)
+    Stage 0: 📚 Bible/Setup - 책/설정 테마 (purple wave)
+    Stage 1: 📜 Volume Strategy - 고대 두루마리 테마 (gold wave)
+    Stage 2: ⚔️ Arc Design - 전투/전략 테마 (red wave)
+    Stage 3: 📐 Blueprint - 설계도 테마 (cyan wave)
+    Stage 4: ✍️ Manuscript - 집필 테마 (green wave)
     """
 
+    # 파도치는 색상 팔레트
+    WAVE_PALETTES = {
+        "purple": ["#E1BEE7", "#CE93D8", "#BA68C8", "#AB47BC", "#9C27B0", "#8E24AA", "#7B1FA2", "#6A1B9A"],
+        "gold": ["#FFF8E1", "#FFECB3", "#FFE082", "#FFD54F", "#FFCA28", "#FFC107", "#FFB300", "#FFA000"],
+        "red": ["#FFCDD2", "#EF9A9A", "#E57373", "#EF5350", "#F44336", "#E53935", "#D32F2F", "#C62828"],
+        "cyan": ["#E0F7FA", "#B2EBF2", "#80DEEA", "#4DD0E1", "#26C6DA", "#00BCD4", "#00ACC1", "#0097A7"],
+        "green": ["#E8F5E9", "#C8E6C9", "#A5D6A7", "#81C784", "#66BB6A", "#4CAF50", "#43A047", "#388E3C"],
+    }
+
     STAGE_THEMES = {
+        0: {
+            "name": "Bible & Setup",
+            "base_color": "magenta",
+            "wave_palette": "purple",
+            "frames": ["📚", "📖", "🔮", "✨", "💫", "🌟"],
+            "verbs": ["Bible 로딩 중", "설정 추출 중", "스타일 분석 중", "프리셋 활성화 중", "DNA 동기화 중"]
+        },
         1: {
             "name": "Volume Strategy",
-            "color": "gold1",
-            "frames": ["📜", "📖", "📚", "📖"],
+            "base_color": "yellow",
+            "wave_palette": "gold",
+            "frames": ["📜", "📖", "📚", "📖", "✨", "💫"],
             "verbs": ["두루마리 펼치는 중", "대서사시 구상 중", "권별 전략 수립 중", "운명의 실 엮는 중"]
         },
         2: {
             "name": "Arc Design",
-            "color": "red1",
-            "frames": ["⚔️", "🗡️", "🛡️", "⚔️"],
-            "verbs": ["전술 설계 중", "Arc 용접 중", "인과율 계산 중", "욕망 주입 중"]
+            "base_color": "red",
+            "wave_palette": "red",
+            "frames": ["⚔️", "🗡️", "🛡️", "⚔️", "💥", "🔥"],
+            "verbs": ["전술 설계 중", "Arc 용접 중", "인과율 계산 중", "욕망 주입 중", "서사 단조 중"]
         },
         3: {
             "name": "Blueprint",
-            "color": "cyan1",
-            "frames": ["📐", "📏", "🔧", "⚙️"],
-            "verbs": ["설계도 제도 중", "씬 배치 중", "연속성 체크 중", "정밀 조립 중"]
+            "base_color": "cyan",
+            "wave_palette": "cyan",
+            "frames": ["📐", "📏", "🔧", "⚙️", "💎", "🌊"],
+            "verbs": ["설계도 제도 중", "씬 배치 중", "연속성 체크 중", "정밀 조립 중", "밀도 계산 중"]
         },
         4: {
             "name": "Manuscript",
-            "color": "green1",
-            "frames": ["✍️", "🖋️", "📝", "✒️"],
-            "verbs": ["원고 집필 중", "문장 조탁 중", "서사 직조 중", "영혼 불어넣는 중"]
+            "base_color": "green",
+            "wave_palette": "green",
+            "frames": ["✍️", "🖋️", "📝", "✒️", "💚", "🌿"],
+            "verbs": ["원고 집필 중", "문장 조탁 중", "서사 직조 중", "영혼 불어넣는 중", "독자 마법 걸기 중"]
         }
     }
 
@@ -132,6 +160,7 @@ class StageSpinner:
         self.stage = stage
         self.task_detail = task_detail
         self.theme = self.STAGE_THEMES.get(stage, self.STAGE_THEMES[1])
+        self.wave_palette = self.WAVE_PALETTES.get(self.theme.get("wave_palette", "cyan"), self.WAVE_PALETTES["cyan"])
         self.console = console or rich_console
         self.task_start = None
         self.live = None
@@ -139,6 +168,7 @@ class StageSpinner:
         self._thread = None
         self._frame_idx = 0
         self._verb_idx = 0
+        self._wave_offset = 0
 
         if StageSpinner._session_start is None:
             StageSpinner._session_start = time.time()
@@ -150,32 +180,48 @@ class StageSpinner:
             return f"{m}m {s}s"
         return f"{int(seconds)}s"
 
-    def _render(self) -> str:
+    def _wave_text(self, text: str) -> Text:
+        """파도치는 색상 텍스트 생성"""
+        result = Text()
+        for i, char in enumerate(text):
+            color_idx = (i + self._wave_offset) % len(self.wave_palette)
+            result.append(char, style=f"{self.wave_palette[color_idx]}")
+        return result
+
+    def _render(self) -> Text:
         now = time.time()
         session_elapsed = now - StageSpinner._session_start
         task_elapsed = now - self.task_start if self.task_start else 0
 
-        # 프레임 애니메이션
-        frame = self.theme["frames"][self._frame_idx % len(self.theme["frames"])]
-        verb = self.theme["verbs"][self._verb_idx % len(self.theme["verbs"])]
-        color = self.theme["color"]
-        stage_name = self.theme["name"]
+        # [V61.2] 클로드 스타일 미니멀 스피너
+        # 펄스 도트 애니메이션
+        pulse_frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+        pulse = pulse_frames[self._frame_idx % len(pulse_frames)]
 
-        # 프로그레스 바 (10칸)
-        progress_chars = "▰▱"
-        filled = int((task_elapsed % 10))
-        bar = progress_chars[0] * filled + progress_chars[1] * (10 - filled)
+        # 색상 그라데이션 펄스 (밝기 변화)
+        color_cycle = [
+            "#6366f1",  # indigo
+            "#818cf8",  # lighter
+            "#a5b4fc",  # lightest
+            "#818cf8",  # lighter
+            "#6366f1",  # indigo
+            "#4f46e5",  # darker
+            "#4338ca",  # darkest
+            "#4f46e5",  # darker
+        ]
+        current_color = color_cycle[self._wave_offset % len(color_cycle)]
 
-        detail = f" · {self.task_detail}" if self.task_detail else ""
+        detail = self.task_detail if self.task_detail else self.theme["verbs"][0]
 
-        return (
-            f"[bold {color}]{frame}[/] "
-            f"[{color}]Stage {self.stage}: {stage_name}[/] "
-            f"[dim]│[/] [{color}]{verb}[/]{detail} "
-            f"[dim]│ {bar} │ "
-            f"전체: {self._format_time(session_elapsed)} · "
-            f"현재: {self._format_time(task_elapsed)}[/]"
-        )
+        # 심플한 구성: [펄스] 작업내용 · 시간
+        result = Text()
+        result.append(f" {pulse} ", style=f"bold {current_color}")
+        result.append(f"{detail}", style=f"{current_color}")
+        result.append(f"  ", style="dim")
+        result.append(f"{self._format_time(task_elapsed)}", style="dim #888888")
+
+        self._wave_offset += 1
+        return result
 
     def _update_loop(self):
         tick = 0
@@ -191,7 +237,17 @@ class StageSpinner:
 
     def __enter__(self):
         self.task_start = time.time()
-        self.live = Live(self._render(), console=self.console, refresh_per_second=4, transient=True)
+        # [V61.2] 스피너 가시성 개선:
+        # - redirect_stdout/stderr: print()가 스피너 위에 표시됨
+        # - transient=True: 완료 후 깔끔하게 사라짐
+        self.live = Live(
+            self._render(),
+            console=self.console,
+            refresh_per_second=4,
+            transient=True,
+            redirect_stdout=True,
+            redirect_stderr=True
+        )
         self.live.__enter__()
         self._stop_event.clear()
         self._thread = threading.Thread(target=self._update_loop, daemon=True)
@@ -237,10 +293,19 @@ from modules.domain.agents.arc_critic import ArcCritic  # [V60.12] Arc 비평가
 from modules.domain.agents.consensus_validator import ConsensusValidator  # [V60.12] 합의 검증기
 from modules.domain.agents.negative_example_injector import NegativeExampleInjector  # [V60.12] 실패 사례 주입
 from modules.domain.agents.arc_corrector import ArcCorrector  # [V60.42] Arc 부분 수정
+from modules.domain.agents.state_tracker import StateTracker  # [V60.94] 상태 추적기 (NPC 생사, 무공 습득)
 from modules.domain.agents.three_phase_blueprint_generator import ThreePhaseBlueprintGenerator  # [V60.80] 3단계 Blueprint 생성기
 from modules.core.narrative_diversity import NarrativeDiversityEngine  # [V48] 서사 다양성 엔진
 from modules.core.metrics_collector import get_metrics_collector  # [V49.3] 비용 추적 시스템
 from modules.core.constraint_db import ConstraintDB  # [V49.4] Pre-Generation Constraint DB
+
+# [V60.95] Stage 0 모듈 - 프로젝트 초기화 및 역설계
+try:
+    from modules.core.stage0 import StageZeroManager, PresetRegistry, StyleGuide
+    STAGE0_AVAILABLE = True
+except ImportError as e:
+    print(f"[!] Stage 0 모듈 로드 실패: {e}")
+    STAGE0_AVAILABLE = False
 
 # [V50] 서사 품질 향상 모듈
 try:
@@ -364,6 +429,9 @@ class SovereignApp:
         self.writer_template = None         # [V55.3] 원고 템플릿
         self.pass_rate_monitor = None       # [V55.3] 통과율 모니터
         self.quality_dashboard = None       # [V60] 품질 대시보드
+
+        # [V60.95] Stage 0 프리셋 레지스트리
+        self.preset_registry = None         # PresetRegistry 인스턴스
 
     def _safe_commit(self) -> bool:
         """
@@ -2944,6 +3012,19 @@ class SovereignApp:
                 self.agents['director'].set_genre(genre_type)
                 self.ui.log(f"   🎭 Director 장르 설정: {genre_type}")
 
+                # [V60.90] Director에 Guard 연결 (장르별 특화 검증용)
+                if hasattr(self.sys, 'guard') and self.sys.guard:
+                    self.agents['director'].set_guard(self.sys.guard)
+                    self.ui.log(f"   🛡️ Director Guard 연결 완료")
+
+                # [V60.90] Writer에 Guard/Genre 연결 (장르별 프롬프트 주입용)
+                if 'writer' in self.agents:
+                    if hasattr(self.agents['writer'], 'set_genre'):
+                        self.agents['writer'].set_genre(genre_type)
+                    if hasattr(self.agents['writer'], 'set_guard') and hasattr(self.sys, 'guard'):
+                        self.agents['writer'].set_guard(self.sys.guard)
+                    self.ui.log(f"   ✍️ Writer Guard/Genre 연결 완료")
+
             # V0128 검증 시스템 활성화 여부 확인
             # [V44 Fix] settings 변수 안전하게 로드
             # [V60 Fix] 프로젝트 config 없으면 루트 config로 fallback
@@ -3305,17 +3386,51 @@ class SovereignApp:
             self.ui.log(f"   ⚠️ [V50] 히스토리 로드 실패 (비치명적): {e}")
 
     def _get_protagonist_name(self) -> str:
-        """주인공 이름 추출 (bible에서)"""
+        """
+        주인공 이름 추출 (bible에서)
+
+        [V60.90 Fix] 올바른 경로로 수정:
+        1순위: MasterBible.MartialHUD.Protagonist.actual_truth.name
+        2순위: MasterBible.AssetLibrary.KeyNPCs[0].name (role에 '주인공' 포함)
+        3순위: characters 리스트 (레거시 호환)
+        """
         try:
             bible = self.current_project.db.load_anchor("bible") or {}
+            bible_root = bible.get('MasterBible', bible)
+
+            # 1순위: MartialHUD.Protagonist.actual_truth.name
+            hud = bible_root.get('MartialHUD', {})
+            protag = hud.get('Protagonist', {})
+            actual = protag.get('actual_truth', {})
+            if actual.get('name'):
+                return actual['name']
+
+            # 2순위: AssetLibrary.KeyNPCs에서 주인공 역할 찾기
+            assets = bible_root.get('AssetLibrary', {})
+            key_npcs = assets.get('KeyNPCs', []) or assets.get('Key_NPCs', [])
+            for npc in key_npcs:
+                if isinstance(npc, dict):
+                    role = npc.get('role', '')
+                    if '주인공' in role or '주인' in role:
+                        if npc.get('name'):
+                            return npc['name']
+
+            # 3순위: 첫 번째 NPC (주인공일 가능성 높음)
+            if key_npcs and isinstance(key_npcs[0], dict):
+                if key_npcs[0].get('name'):
+                    return key_npcs[0]['name']
+
+            # 4순위: 레거시 characters 리스트
             chars = bible.get('characters', bible.get('등장인물', []))
             if chars and isinstance(chars, list) and len(chars) > 0:
                 first_char = chars[0]
                 if isinstance(first_char, dict):
                     return first_char.get('name', first_char.get('이름', '주인공'))
                 return str(first_char)
+
             return '주인공'
-        except:
+        except Exception as e:
+            print(f"      ⚠️ [V60.90] 주인공 이름 추출 실패: {e}")
             return '주인공'
 
     def _process_v50_post_episode(self, ep_num: int, manuscript: str, blueprint: dict) -> None:
@@ -3586,7 +3701,7 @@ class SovereignApp:
                 # 3. 메뉴 구성 (V41 유동 아크 + 스킵 옵션)
                 vol_status = '✅' if status.get('Stage 1 (Volumes)', False) else '⏭️ 스킵가능'
                 menu = {
-                    "0": f"Phase 0: Bible Recovery & DNA Sync [{'✅' if status.get('Stage 0 (Bible)', False) else '❌'}]",
+                    "0": f"Stage 0: Bible/역설계/스타일 추출 [{'✅' if status.get('Stage 0 (Bible)', False) else '❌'}]",
                     "1": f"Stage 1: Volume Strategy (선택) [{vol_status}]",
                     "2": f"Stage 2: Arc Tactical Design (유동) [{'✅' if status.get('Stage 2 (Arcs)', False) else '❌'}]",
                     "3": "📐 Stage 3: Episode Blueprinting (Batch Design)", # 분리됨
@@ -3616,18 +3731,14 @@ class SovereignApp:
                     # 📐 [Stage 3] 설계도만 일괄 생성 (Architect 전용)
                     self._stage_3_batch_blueprinting()
                 elif choice == "4":
-                    # [V60.80] Stage 4 버전 선택
-                    self.ui.log("\n📝 Stage 4 버전 선택:")
-                    self.ui.log("   1. V1 (기존) - 레거시 파이프라인")
-                    self.ui.log("   2. V2 (신규) - Chief Writer 주권주의 🆕")
-                    v4_choice = self._get_int_input("   👉 버전 선택 (1/2): ", default=2, min_val=1, max_val=2)
-                    if v4_choice == 2:
-                        self._stage_4_v2_chief_writer(limit_mode=True)
-                    else:
-                        self._stage_4_sovereign_writing(limit_mode=True)
+                    # [V60.95] Stage 4 - Chief Writer 단일화 (V1 레거시 제거)
+                    self._stage_4_v2_chief_writer(limit_mode=True)
                 elif choice == "5":
                     self._shutdown_app()
                     break
+                elif choice == "6":
+                    # [V60.91] Pipeline Mode
+                    self._pipeline_production()
                 elif choice == "44":
                     self._rollback_episode()
                 elif choice == "77":
@@ -3766,11 +3877,42 @@ class SovereignApp:
             
     def _phase_0_recovery(self):
         print("\n⚙️ Phase 0: S-Grade 데이터 주권 동기화 가동...")
-        
+
         # [V40] 장르 정보 표시
         if self.selected_genre:
             print(f"📌 현재 장르: {self.selected_genre['name']} ({self.selected_genre['type']})")
-        
+
+        # [V60.95] Stage 0 서브메뉴
+        print("\n" + "=" * 50)
+        print("  📚 Stage 0 - 프로젝트 설정")
+        print("=" * 50)
+        print("\n  [1] 기존 방식 - Bible/Treatment 파일 선택")
+        if STAGE0_AVAILABLE:
+            print("  [2] 🆕 컨셉 → Bible 생성 (AI 확장)")
+            print("  [3] 🔄 역설계 - 기존 원고에서 Bible/스타일 추출")
+            print("  [4] 📥 Bible JSON 임포트")
+            print("  [5] 📈 Block 확장 - 기존 Treatment에 블록 추가")
+        print("\n  [0] 취소")
+
+        p0_choice = input("\n  선택 (기본: 1): ").strip()
+
+        if p0_choice == "0":
+            print("❌ Stage 0이 취소되었습니다.")
+            return
+        elif p0_choice == "2" and STAGE0_AVAILABLE:
+            self._stage_0_extended(mode=1)  # 컨셉 → Bible
+            return
+        elif p0_choice == "3" and STAGE0_AVAILABLE:
+            self._stage_0_extended(mode=2)  # 역설계
+            return
+        elif p0_choice == "4" and STAGE0_AVAILABLE:
+            self._stage_0_extended(mode=3)  # Bible 임포트
+            return
+        elif p0_choice == "5" and STAGE0_AVAILABLE:
+            self._stage_0_extended(mode=4)  # Block 확장
+            return
+
+        # 기존 방식 계속...
         # 1. 파일 선택 (Bible & Treatment)
         bible_file = self._ui_select_bible()
         treatment_file = self._ui_select_treatment()
@@ -3784,11 +3926,58 @@ class SovereignApp:
         if enrich_choice == 'y':
             treatment_file = self._enrich_treatment_blocks(treatment_file)
 
+        # ============================================================
+        # [V60.87] 주인공 유형 설정 (Bible에 저장)
+        # ============================================================
+        print("\n📌 [V60.87] 주인공 기본 설정")
+
+        # 1) 세계관 출신 (현대인/원시인)
+        print("   🌍 주인공의 세계관 출신을 선택하세요:")
+        print("      [1] 원시인 - 현대 지식/용어 사용 제한 (권장: 무협/판타지)")
+        print("      [2] 현대인 - 제약 없음 (권장: 회귀/빙의물)")
+        world_choice = input("   선택 (기본: 1): ").strip()
+        world_origin = "현대인" if world_choice == "2" else "원시인"
+
+        # 2) 주인공 유형 (빙의자/회귀자/환생자/기타)
+        print("   🎭 주인공의 유형을 선택하세요:")
+        print("      [1] 회귀자 - 먼 미래에서 과거로 회귀 (기억 보존)")
+        print("      [2] 빙의자 - 다른 사람의 몸에 빙의")
+        print("      [3] 환생자 - 아기로 다시 태어남")
+        print("      [4] 기타 - 특별한 유형 없음")
+        type_choice = input("   선택 (기본: 1): ").strip()
+        incarnation_types = {"1": "회귀자", "2": "빙의자", "3": "환생자", "4": "기타"}
+        incarnation_type = incarnation_types.get(type_choice, "회귀자")
+
+        protagonist_config = {
+            "world_origin": world_origin,
+            "incarnation_type": incarnation_type
+        }
+        print(f"   ✅ 설정 완료: {world_origin} / {incarnation_type}")
+
+        # ============================================================
+        # [TODO V60.88+] 주인공 유형에 따른 장르 가드 세분화
+        # - world_origin == "원시인": 현대어 Guard 강화 (WuxiaGuard 강화 모드)
+        # - incarnation_type == "빙의자": 원래 인물의 기억/관계 충돌 검사
+        # - incarnation_type == "회귀자": 미래 지식 사용 타당성 검사
+        # - incarnation_type == "환생자": 성장 단계별 지식 제한
+        # ============================================================
+
         # 2. [필수] 50개 설계도 DNA 강제 이식 (원고 유무 상관없이 무조건 수행)
         # 이 함수가 실행되면 AI를 안 거치고 50개 블록이 DB에 100% 들어갑니다.
         dna_success = self.current_project.force_sync_v25_dna(bible_file, treatment_file)
 
         if dna_success:
+            # 2.5 [V60.87] 주인공 설정을 Bible에 주입
+            try:
+                master_bible = self.current_project.master_bible or {}
+                bible_root = master_bible.get('MasterBible', master_bible)
+                bible_root['protagonist_config'] = protagonist_config
+                self.current_project.master_bible = {'MasterBible': bible_root}
+                self.current_project.save_v20_anchor('bible', self.current_project.master_bible)
+                print(f"   💾 [V60.87] 주인공 설정이 Bible에 저장됨: {protagonist_config}")
+            except Exception as pc_err:
+                print(f"   ⚠️ [V60.87] 주인공 설정 저장 실패 (비차단): {pc_err}")
+
             # 3. [선택] 기존 원고 유무 확인 및 자동 동기화
             draft_path = self.current_project.paths.drafts
             existing_drafts = list(draft_path.glob("*.txt"))
@@ -3817,6 +4006,269 @@ class SovereignApp:
             print(f"✨ [Success] 설계도(50개)와 원고 역사가 무결하게 통합되었습니다.")
         
         input("\n[Enter] 메뉴로 돌아가기")
+
+    def _stage_0_extended(self, mode: int = 0):
+        """
+        [V60.95] Stage 0 확장 기능
+        - 컨셉 입력 → Bible/Treatment 생성 (mode=1)
+        - 역설계 → 기존 원고에서 설정 추출 (mode=2)
+        - Bible 임포트 → 기존 JSON 불러오기 (mode=3)
+        - Block 확장 → 기존 Treatment에 블록 추가 (mode=4)
+        - mode=0: 메뉴 표시
+        """
+        if not STAGE0_AVAILABLE:
+            print("❌ Stage 0 모듈이 로드되지 않았습니다.")
+            return
+
+        # StageZeroManager 초기화
+        project_path = str(self.current_project.paths.root) if self.current_project else None
+        stage0_manager = StageZeroManager(project_path=project_path)
+
+        # 장르 정보 전달 (선택된 장르가 있으면)
+        if self.selected_genre:
+            genre_type = self.selected_genre.get('type', '')
+            if genre_type:
+                stage0_manager.genre = genre_type.lower()
+                stage0_manager.preset_registry = PresetRegistry(base_genre=genre_type.lower())
+
+        # Stage 0 메뉴 표시 (mode=0일 때만)
+        if mode == 0:
+            choice = stage0_manager.show_menu(is_new_project=True)
+        else:
+            choice = mode  # 직접 모드 지정
+
+        bible = None
+        treatment = None
+
+        if choice == 1:
+            # 컨셉 입력 → Bible/Treatment 생성
+            bible, treatment, _ = stage0_manager.run_new_project_flow()
+        elif choice == 2:
+            # 역설계
+            bible, episode_bibles, style_guide = stage0_manager.run_reverse_engineering_flow()
+            if style_guide:
+                print(f"\n📝 스타일 가이드 추출 완료:")
+                print(f"   - 톤: {style_guide.tone}")
+                print(f"   - 시점: {style_guide.pov}")
+                print(f"   - 대화 비율: {style_guide.dialogue_ratio:.0%}")
+
+            # [V60.95] 원고 벡터화 (ChromaDB)
+            try:
+                from modules.core.stage0 import ReverseExpander
+                # stage0_manager 내부의 ReverseExpander 접근 또는 새로 생성
+                if hasattr(stage0_manager, '_reverse_expander') and stage0_manager._reverse_expander:
+                    vectorize_result = stage0_manager._reverse_expander.persist_to_chromadb(self.current_project)
+                    if vectorize_result > 0:
+                        print(f"✅ [V60.95] ChromaDB 벡터화 완료: {vectorize_result}개 에피소드")
+            except Exception as ve:
+                print(f"⚠️ [V60.95] 벡터화 스킵: {str(ve)[:50]}")
+
+            # [V61] SQLite DB 저장 (manuscripts, blueprints stub, arcs stub)
+            try:
+                if hasattr(stage0_manager, '_reverse_expander') and stage0_manager._reverse_expander:
+                    db_result = stage0_manager._reverse_expander.persist_to_db(self.current_project)
+                    if db_result:
+                        print(f"✅ [V61] DB 저장 완료:")
+                        print(f"   - Manuscripts: {db_result.get('manuscripts', 0)}개")
+                        print(f"   - State Logs (HUD): {db_result.get('state_logs', 0)}개")
+                        print(f"   - Episode Bibles: {db_result.get('episode_bibles', 0)}개")
+                        print(f"   - Blueprint stubs: {db_result.get('blueprints', 0)}개")
+                        print(f"   - Arc stubs: {db_result.get('arcs', 0)}개")
+
+                    # Stub 요약 정보
+                    summary = stage0_manager._reverse_expander.get_stub_summary()
+                    if summary:
+                        print(f"\n📊 역설계 요약:")
+                        print(f"   - 처리된 에피소드: {summary.get('ep_range', 'N/A')} ({summary.get('episodes', 0)}개)")
+                        print(f"   - Arc stubs: {summary.get('arc_stub_range', 'N/A')}")
+                        print(f"\n🎯 다음 생성 시작점:")
+                        print(f"   - Stage 2 (Arc): Arc {summary.get('next_arc', 'N/A')}부터")
+                        print(f"   - Stage 3 (Blueprint): ep {summary.get('next_blueprint', 'N/A')}부터")
+                        print(f"   - Stage 4 (Manuscript): ep {summary.get('next_episode', 'N/A')}부터")
+            except Exception as db_err:
+                print(f"⚠️ [V61] DB 저장 스킵: {str(db_err)[:50]}")
+        elif choice == 3:
+            # Bible 임포트
+            bible = stage0_manager.import_bible()
+        elif choice == 4:
+            # Block 확장
+            treatment = self._extend_blocks(stage0_manager)
+            if treatment:
+                # 1. 확장된 Treatment 파일 저장
+                try:
+                    treatment_path = self.current_project.paths.root / "treatment_extended.json"
+                    with open(treatment_path, 'w', encoding='utf-8') as f:
+                        json.dump({"treatments": treatment}, f, ensure_ascii=False, indent=2)
+                    print(f"✅ 확장된 Treatment 저장: {treatment_path}")
+                    print(f"   총 {len(treatment)} 블록")
+                except Exception as e:
+                    print(f"❌ Treatment 저장 실패: {e}")
+
+                # 2. [V61] Treatment → plot_roadmap 변환 후 Master Bible에 주입
+                try:
+                    # plot_roadmap 형식으로 변환
+                    refined_roadmap = []
+                    for i, block in enumerate(treatment):
+                        refined_roadmap.append({
+                            "block_no": i + 1,
+                            "directive": {
+                                "title": block.get("title", f"제 {i+1} 단계"),
+                                "objective": block.get("content", {}).get("solution", "목표 분석 필요")
+                            },
+                            "raw_data": block  # 원본 데이터 전체 보존
+                        })
+
+                    # Master Bible 로드
+                    master_bible = self.current_project.master_bible or {}
+                    bible_root = master_bible.get('MasterBible', master_bible)
+
+                    # plot_roadmap 주입
+                    bible_root['plot_roadmap'] = refined_roadmap
+                    self.current_project.master_bible = {'MasterBible': bible_root}
+
+                    # DB anchor 저장
+                    self.current_project.save_v20_anchor('bible', self.current_project.master_bible)
+                    self.current_project._load_from_db()
+
+                    print(f"✅ [V61] plot_roadmap 주입 완료: {len(refined_roadmap)} 블록 → Master Bible")
+                    print(f"   이제 Stage 2 (Arc 생성)를 진행할 수 있습니다.")
+
+                except Exception as pr_err:
+                    print(f"❌ plot_roadmap 주입 실패: {pr_err}")
+                    import traceback
+                    traceback.print_exc()
+
+            input("\n[Enter] 메뉴로 돌아가기")
+            return
+        else:
+            print("❌ Stage 0 확장이 취소되었습니다.")
+            return
+
+        # 결과물이 있으면 DB에 저장
+        if bible:
+            try:
+                # Bible을 프로젝트에 저장
+                self.current_project.master_bible = bible
+                self.current_project.save_v20_anchor('bible', bible)
+                print("✅ Bible이 DB에 저장되었습니다.")
+
+                # 주인공 설정 추출
+                master = bible.get('MasterBible', bible)
+                protagonist_config = master.get('protagonist_config', {})
+                if protagonist_config:
+                    print(f"   💾 주인공 설정: {protagonist_config}")
+
+                # Preset 상태 저장 + SovereignApp에 보관
+                if stage0_manager.preset_registry:
+                    self.preset_registry = stage0_manager.preset_registry  # [V60.95] 앱 레벨 보관
+                    preset_state = stage0_manager.preset_registry.to_json()
+                    self.current_project.save_v20_anchor('preset_state', json.loads(preset_state))
+                    print(f"   📦 프리셋 상태 저장: {list(stage0_manager.preset_registry.active_presets)}")
+
+                # 스타일 가이드 저장 (있으면)
+                if stage0_manager.style_guide:
+                    self.current_project.save_v20_anchor('style_guide', stage0_manager.style_guide.to_dict())
+                    print("   🎨 스타일 가이드 저장 완료")
+
+            except Exception as e:
+                print(f"❌ 저장 중 오류: {e}")
+
+        # Treatment가 있으면 Treatment 파일 생성
+        if treatment:
+            try:
+                treatment_path = self.current_project.paths.root / "treatment_generated.json"
+                with open(treatment_path, 'w', encoding='utf-8') as f:
+                    json.dump({"treatments": treatment}, f, ensure_ascii=False, indent=2)
+                print(f"✅ Treatment 저장: {treatment_path}")
+            except Exception as e:
+                print(f"❌ Treatment 저장 실패: {e}")
+
+        # 데이터 리로드
+        if bible:
+            self.current_project._load_from_db()
+            print("✨ [Stage 0 Complete] 프로젝트 설정이 완료되었습니다.")
+
+        input("\n[Enter] 메뉴로 돌아가기")
+
+    def _extend_blocks(self, stage0_manager) -> List[Dict[str, Any]]:
+        """
+        [V61] Block 확장 기능
+        기존 Treatment에 블록을 추가
+        """
+        print("\n" + "=" * 50)
+        print("  📈 Block 확장 - 기존 Treatment에 블록 추가")
+        print("=" * 50)
+
+        # 1. 기존 Treatment 로드
+        existing_treatment = []
+        treatment_files = [
+            self.current_project.paths.root / "treatment_extended.json",
+            self.current_project.paths.root / "treatment_generated.json",
+            self.current_project.paths.root / "treatment.json",
+        ]
+
+        for tf in treatment_files:
+            if tf.exists():
+                try:
+                    with open(tf, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                        existing_treatment = data.get("treatments", [])
+                        if existing_treatment:
+                            print(f"   📂 기존 Treatment 로드: {tf.name} ({len(existing_treatment)} 블록)")
+                            break
+                except Exception as e:
+                    print(f"   ⚠️ 파일 로드 실패: {tf.name} - {e}")
+
+        if not existing_treatment:
+            print("   ❌ 기존 Treatment를 찾을 수 없습니다.")
+            print("   먼저 [2] 컨셉 → Bible 생성 또는 [3] 역설계를 실행하세요.")
+            return []
+
+        # 2. 확장 설정
+        print(f"\n   현재 블록 수: {len(existing_treatment)}")
+        print(f"   마지막 블록: {existing_treatment[-1].get('block_id', 'N/A')} - {existing_treatment[-1].get('title', 'N/A')}")
+
+        try:
+            extend_count = int(input("\n   추가할 블록 수 (기본: 10): ").strip() or "10")
+        except ValueError:
+            extend_count = 10
+
+        direction_hint = input("   방향 힌트 (예: '클라이맥스로', '새 빌런 등장', 생략 가능): ").strip()
+
+        # 3. 배치별 확인 콜백
+        def confirm_batch(batch):
+            print(f"\n   --- 생성된 블록 ({len(batch)}개) ---")
+            for b in batch[:3]:  # 미리보기 3개
+                print(f"   • {b.get('block_id', 'N/A')}: {b.get('title', 'N/A')}")
+            if len(batch) > 3:
+                print(f"   ... 외 {len(batch) - 3}개")
+
+            confirm = input("   계속 진행하시겠습니까? (Y/n): ").strip().lower()
+            return confirm != 'n'
+
+        # 4. StoryExpander 사용하여 확장
+        try:
+            from modules.core.stage0.story_expander import StoryExpander
+            expander = StoryExpander(genre=stage0_manager.genre)
+
+            print(f"\n   🔄 Block {len(existing_treatment)+1}부터 {extend_count}개 생성 시작...")
+
+            extended_treatment = expander.extend_treatment(
+                existing_treatment=existing_treatment,
+                extend_count=extend_count,
+                direction_hint=direction_hint,
+                batch_size=10,
+                confirm_callback=confirm_batch
+            )
+
+            print(f"\n   ✅ 확장 완료: {len(existing_treatment)} → {len(extended_treatment)} 블록")
+            return extended_treatment
+
+        except Exception as e:
+            print(f"   ❌ Block 확장 중 오류: {e}")
+            import traceback
+            traceback.print_exc()
+            return existing_treatment
 
     def _stage_1_volumes(self):
         """[Stage 1] 아크 기반 권별 고해상도 전략 설계 (V41 스킵 옵션 추가)"""
@@ -3897,13 +4349,16 @@ class SovereignApp:
                 # [안전성 패치] Analyst에게 슬라이싱된 데이터와 성경, 그리고 '누적된 앞 권 내용' 주입
                 try:
                     # [V60.83] Stage 1 스피너
+                    # [V60.93] 주인공 이름 추출
+                    stage1_protagonist_name = self._get_protagonist_name()
                     with StageSpinner(1, f"제{vol_idx}권 설계"):
                         vol_data = self.agents['analyst'].plan_single_volume_v20(
                             vol_idx,
                             self.current_project.master_bible,
                             treatment_slice,
                             context_accumulator,
-                            meta_info
+                            meta_info,
+                            protagonist_name=stage1_protagonist_name  # [V60.93]
                         )
                 except Exception as analyst_err:
                     self.ui.log(f"🚨 [Analyst Error] 제 {vol_idx}권 설계 중 에러: {analyst_err}")
@@ -4056,6 +4511,19 @@ class SovereignApp:
         done_count = len(all_refined_arcs)
         total_count = len(arcs_source)
 
+        # [V60.94] StateTracker 초기화 - NPC 생사/무공 습득/정보 추적
+        # [V60.96] 클래스 레벨로 저장하여 Stage 3/4에서 공유
+        # [V60.95] PresetRegistry 연동
+        self.state_tracker = StateTracker(preset_registry=self.preset_registry)
+        for prev_arc in all_refined_arcs:
+            self.state_tracker.extract_npc_deaths_from_arc(prev_arc)
+            self.state_tracker.extract_skill_acquisitions_from_arc(prev_arc)
+            self.state_tracker.extract_npc_info_from_arc(prev_arc)  # [V60.95] NPC 무장/수준 정보
+        if self.state_tracker.npc_registry:
+            dead_count = sum(1 for info in self.state_tracker.npc_registry.values() if info.get("status") == "dead")
+            total_npcs = len(self.state_tracker.npc_registry)
+            self.ui.log(f"      👤 [V60.96] StateTracker: 기존 Arc에서 NPC {total_npcs}명 로드 (사망: {dead_count}명)")
+
         # [V40.1 Smart Skip] 기존 원고가 있다면 해당 Arc까지 자동 건너뛰기
         # ⚠️ 주의: 원고가 있어도 Arc 데이터가 DB에 없으면 생성이 필요함
         existing_ms_max_ep = self._get_max_episode_from_manuscripts()
@@ -4100,32 +4568,35 @@ class SovereignApp:
         for batch_start in range(done_count, target_limit, 5):
             batch_end = min(batch_start + 5, target_limit)
             batch_start_count = len(all_refined_arcs)  # 배치 시작 시 Arc 개수 추적
-            self.ui.log(f"📦 [Batch] {batch_start + 1}~{batch_end}번 구간 욕망 수혈 공정 가동...")
 
-            # [V60.10] 수혈 맥락 준비 - StateExtractor 활용
-            last_refined_context = self._generate_arc_context_v60(all_refined_arcs, batch_start + 1)
-            if all_refined_arcs:
-                self.ui.log(f"      🧠 [V60.10] StateExtractor: {len(all_refined_arcs)}개 Arc 상태 추출 완료")
+            # [V61.2] 배치 전체를 스피너로 감싸기 (준비 + 농축)
+            with StageSpinner(2, f"Batch {batch_start + 1}~{batch_end} 준비 및 농축"):
+                self.ui.log(f"📦 [Batch] {batch_start + 1}~{batch_end}번 구간 욕망 수혈 공정 가동...")
 
-            # A. [병렬 농축 단계] (비동기 처리)
-            async def throttled_enrich(idx):
-                async with sem:
-                    prev_b = arcs_source[idx-1] if idx > 0 else None
-                    curr_b = arcs_source[idx]
-                    
-                    # [V39 패치 A] 미래 블록 격리: 제목만 전달하여 내용 오염 차단
-                    next_b_safe = {
-                        "block_id": arcs_source[idx+1].get("block_id", f"Block {idx+2}"),
-                        "title": arcs_source[idx+1].get("title", "미정")
-                    } if idx < total_count-1 else {"title": "최종 블록"}
-                    
-                    return await self.agents['analyst'].enrich_raw_block_async(
-                        curr_b, prev_b, next_b_safe, [],  # 👈 안전화된 next_b
-                        transfused_history=last_refined_context
-                    )
+                # [V60.10] 수혈 맥락 준비 - StateExtractor 활용
+                last_refined_context = self._generate_arc_context_v60(all_refined_arcs, batch_start + 1)
+                if all_refined_arcs:
+                    self.ui.log(f"      🧠 [V60.10] StateExtractor: {len(all_refined_arcs)}개 Arc 상태 추출 완료")
 
-            enrichment_tasks = [throttled_enrich(i) for i in range(batch_start, batch_end)]
-            enriched_batch = await asyncio.gather(*enrichment_tasks, return_exceptions=True)
+                # A. [병렬 농축 단계] (비동기 처리)
+                async def throttled_enrich(idx):
+                    async with sem:
+                        prev_b = arcs_source[idx-1] if idx > 0 else None
+                        curr_b = arcs_source[idx]
+
+                        # [V39 패치 A] 미래 블록 격리: 제목만 전달하여 내용 오염 차단
+                        next_b_safe = {
+                            "block_id": arcs_source[idx+1].get("block_id", f"Block {idx+2}"),
+                            "title": arcs_source[idx+1].get("title", "미정")
+                        } if idx < total_count-1 else {"title": "최종 블록"}
+
+                        return await self.agents['analyst'].enrich_raw_block_async(
+                            curr_b, prev_b, next_b_safe, [],  # 👈 안전화된 next_b
+                            transfused_history=last_refined_context
+                        )
+
+                enrichment_tasks = [throttled_enrich(i) for i in range(batch_start, batch_end)]
+                enriched_batch = await asyncio.gather(*enrichment_tasks, return_exceptions=True)
 
             # [안전성 패치] 실패한 항목에 대한 재시도 메커니즘
             sanitized_batch = []
@@ -4193,37 +4664,39 @@ class SovereignApp:
                 return
 
             ### [B. 사후 용접 및 고유 명사 앵커링 (Entity Anchoring) 복구 - 예외 처리 추가]
-            for i in range(len(enriched_batch) - 1):
-                arc_a = enriched_batch[i]
-                arc_b = enriched_batch[i+1]
+            # [V61.2] 용접 구간 스피너
+            with StageSpinner(2, f"Arc {batch_start + 1}~{batch_end} 인과율 용접"):
+                for i in range(len(enriched_batch) - 1):
+                    arc_a = enriched_batch[i]
+                    arc_b = enriched_batch[i+1]
 
-                # [안전성 패치] stitch_joints 호출 예외 처리
-                try:
-                    stitch_res = self.agents['analyst'].stitch_joints(
-                        arc_a.get('joint_docs', {}),
-                        arc_b.get('joint_docs', {}),
-                        arc_b.get('content', {}).get('context', "")
-                    )
-                except Exception as stitch_err:
-                    self.ui.log(f"⚠️ [Analyst] Arc {batch_start+i+1}-{batch_start+i+2} 용접 실패: {stitch_err}")
-                    self._audit_event("analyst_error", "stitch_joints failed", {
-                        "arc_pair": f"{batch_start+i+1}-{batch_start+i+2}",
-                        "error": str(stitch_err)
-                    })
-                    continue  # 용접 실패 시 다음 쌍으로 이동
+                    # [안전성 패치] stitch_joints 호출 예외 처리
+                    try:
+                        stitch_res = self.agents['analyst'].stitch_joints(
+                            arc_a.get('joint_docs', {}),
+                            arc_b.get('joint_docs', {}),
+                            arc_b.get('content', {}).get('context', "")
+                        )
+                    except Exception as stitch_err:
+                        self.ui.log(f"⚠️ [Analyst] Arc {batch_start+i+1}-{batch_start+i+2} 용접 실패: {stitch_err}")
+                        self._audit_event("analyst_error", "stitch_joints failed", {
+                            "arc_pair": f"{batch_start+i+1}-{batch_start+i+2}",
+                            "error": str(stitch_err)
+                        })
+                        continue  # 용접 실패 시 다음 쌍으로 이동
 
-                if stitch_res and isinstance(stitch_res, dict) and stitch_res.get('status') == "REPAIRED":
-                    if 'content' in arc_b:
-                        arc_b['content']['context'] = stitch_res.get('repaired_joint_b', arc_b['content'].get('context', ''))
+                    if stitch_res and isinstance(stitch_res, dict) and stitch_res.get('status') == "REPAIRED":
+                        if 'content' in arc_b:
+                            arc_b['content']['context'] = stitch_res.get('repaired_joint_b', arc_b['content'].get('context', ''))
 
-                    # 생성된 고유 명사를 시스템 로어(Lore)에 즉시 반영하여 설정 충돌 방지
-                    if stitch_res.get('entity_anchors'):
-                        try:
-                            self.sys.lore.update_v20_assets({"Temporary_Anchors": stitch_res['entity_anchors']})
-                            self.ui.log(f"      ⚓ Arc {batch_start+i+1}-{batch_start+i+2} 고유 명사 앵커링 완료.")
-                        except Exception as lore_err:
-                            self.ui.log(f"⚠️ [Lore] 앵커링 실패: {lore_err}")
-                    self.ui.log(f"   🧶 Arc {batch_start+i+1}-{batch_start+i+2} 인과율 용접 완료.")
+                        # 생성된 고유 명사를 시스템 로어(Lore)에 즉시 반영하여 설정 충돌 방지
+                        if stitch_res.get('entity_anchors'):
+                            try:
+                                self.sys.lore.update_v20_assets({"Temporary_Anchors": stitch_res['entity_anchors']})
+                                self.ui.log(f"      ⚓ Arc {batch_start+i+1}-{batch_start+i+2} 고유 명사 앵커링 완료.")
+                            except Exception as lore_err:
+                                self.ui.log(f"⚠️ [Lore] 앵커링 실패: {lore_err}")
+                        self.ui.log(f"   🧶 Arc {batch_start+i+1}-{batch_start+i+2} 인과율 용접 완료.")
 
             # C. [순차 설계 단계] 농축된 데이터를 전술서로 풀이하고 욕망을 박제
             # [V45 Fix] ep_end 키 접근 방어
@@ -4513,7 +4986,9 @@ class SovereignApp:
                                     assets=bible_root.get('AssetLibrary', {}),
                                     max_internal_retries=2,
                                     protagonist_name=protagonist_name or "주인공",
-                                    director_feedback=director_feedback_for_fourphase  # [V60.77] Director 피드백 전달
+                                    director_feedback=director_feedback_for_fourphase,  # [V60.77] Director 피드백 전달
+                                    entity_registry=entity_registry_for_director,  # [V60.92] Entity Registry 전달
+                                    state_tracker=self.state_tracker  # [V60.94] 죽은 NPC 검증용
                                 )
 
                             if four_phase_arc and pipeline_result.get('final_verdict') == 'PASS':
@@ -4528,6 +5003,18 @@ class SovereignApp:
                                 refined_arc['status_shadow'] = enriched_block.get('status_shadow', {})
 
                                 print(f"      ✅ [V60.77] FourPhase 성공! (내부 재시도: {pipeline_result.get('retries', 0)}회)")
+
+                                # [V60.94] NPC 사망/무공 습득 추출 및 StateTracker 업데이트
+                                dead_npcs = self.state_tracker.extract_npc_deaths_from_arc(refined_arc)
+                                learned_skills = self.state_tracker.extract_skill_acquisitions_from_arc(refined_arc)
+                                # [V60.95] NPC 정보(무장, 수준) 추출 및 등록
+                                npc_info = self.state_tracker.extract_npc_info_from_arc(refined_arc)
+                                if dead_npcs:
+                                    print(f"         - 💀 사망 NPC 기록: {', '.join(dead_npcs)}")
+                                if learned_skills:
+                                    print(f"         - 🥋 무공 습득 기록: {', '.join(learned_skills)}")
+                                if npc_info:
+                                    print(f"         - 👤 NPC 정보 기록: {len(npc_info)}건")
 
                                 # 파이프라인 결과 로깅
                                 phases = pipeline_result.get('phases', {})
@@ -4586,7 +5073,8 @@ class SovereignApp:
                                     assigned_seeds=[],
                                     feedback=current_feedback,
                                     recent_patterns=recent_patterns,
-                                    protagonist_name=protagonist_name or "주인공"
+                                    protagonist_name=protagonist_name or "주인공",
+                                    state_tracker=getattr(self, 'state_tracker', None)  # [V60.95] 고밀도 HUD
                                 )
                             generation_method = "analyst"
                             print(f"      ✅ [Analyst] Arc 생성 완료!")
@@ -4616,7 +5104,8 @@ class SovereignApp:
                             print(f"      🔬 [무기 #3] DraftValidator 사전 검증...")
                             draft_result = self.arc_draft_validator.validate(
                                 arc=refined_arc,
-                                prev_arcs=all_refined_arcs
+                                prev_arcs=all_refined_arcs,
+                                state_tracker=getattr(self, 'state_tracker', None)  # [V60.95]
                             )
                             # [V60.56] advisory_issues를 수집 (LLM에게 전달할 정보)
                             advisory_issues = draft_result.get('advisory_issues', [])
@@ -4811,7 +5300,8 @@ class SovereignApp:
                         draft_result = self.arc_draft_validator.validate(
                             arc=refined_arc,
                             prev_arcs=all_refined_arcs,
-                            constraint_block=constraint_block or ""
+                            constraint_block=constraint_block or "",
+                            state_tracker=getattr(self, 'state_tracker', None)  # [V60.95]
                         )
 
                         # [V60.56] advisory_issues 로깅 (REJECT 아님)
@@ -4875,7 +5365,8 @@ class SovereignApp:
                                             revalidation = self.arc_draft_validator.validate(
                                                 arc=refined_arc,
                                                 prev_arcs=all_refined_arcs,
-                                                constraint_block=constraint_block or ""
+                                                constraint_block=constraint_block or "",
+                                                state_tracker=getattr(self, 'state_tracker', None)  # [V60.95]
                                             )
 
                                             if revalidation["valid"]:
@@ -6554,6 +7045,21 @@ class SovereignApp:
             return
 
         # ═══════════════════════════════════════════════════════════════
+        # [V60.96] StateTracker 초기화 (Stage 2에서 생성되지 않은 경우)
+        # [V60.95] PresetRegistry 연동
+        # ═══════════════════════════════════════════════════════════════
+        if not hasattr(self, 'state_tracker') or self.state_tracker is None:
+            self.state_tracker = StateTracker(preset_registry=self.preset_registry)
+            all_arcs = self.current_project.db.load_anchor('arcs') or []
+            for arc in all_arcs:
+                self.state_tracker.extract_npc_deaths_from_arc(arc)
+                self.state_tracker.extract_skill_acquisitions_from_arc(arc)
+                self.state_tracker.extract_npc_info_from_arc(arc)
+            if self.state_tracker.npc_registry:
+                dead_count = sum(1 for info in self.state_tracker.npc_registry.values() if info.get("status") == "dead")
+                self.ui.log(f"      👤 [V60.96] StateTracker 초기화: NPC {len(self.state_tracker.npc_registry)}명 (사망: {dead_count}명)")
+
+        # ═══════════════════════════════════════════════════════════════
         # 1. 목표 범위 설정
         # ═══════════════════════════════════════════════════════════════
         total_planned_ep = self.current_project.arcs[-1].get('ep_end', 50)
@@ -6662,14 +7168,32 @@ class SovereignApp:
                 entity_registry_for_stage3 = None
 
             # ───────────────────────────────────────────────────────────
-            # 직전 Blueprint 로드
+            # 직전 Blueprint 로드 [V61.3 보호]
             # ───────────────────────────────────────────────────────────
-            prev_blueprint = self.current_project.get_blueprint(working_ep - 1) if working_ep > 1 else None
+            prev_blueprint = None
+            try:
+                prev_blueprint = self.current_project.get_blueprint(working_ep - 1) if working_ep > 1 else None
+            except Exception as prev_bp_err:
+                import sys
+                import traceback
+                print(f"🚨 [V61.3] prev_blueprint 로드 크래시: {str(prev_bp_err)[:100]}", file=sys.stderr)
+                traceback.print_exc(file=sys.stderr)
+                sys.stderr.flush()
+                self.ui.log(f"      ⚠️ 직전 Blueprint 로드 실패, None으로 진행")
 
             # ───────────────────────────────────────────────────────────
-            # [V61] 주인공 이름 추출
+            # [V61] 주인공 이름 추출 [V61.3 보호]
             # ───────────────────────────────────────────────────────────
-            protagonist_name_for_stage3 = self._get_protagonist_name()
+            protagonist_name_for_stage3 = "주인공"  # 기본값
+            try:
+                protagonist_name_for_stage3 = self._get_protagonist_name()
+            except Exception as protag_err:
+                import sys
+                import traceback
+                print(f"🚨 [V61.3] protagonist_name 추출 크래시: {str(protag_err)[:100]}", file=sys.stderr)
+                traceback.print_exc(file=sys.stderr)
+                sys.stderr.flush()
+                self.ui.log(f"      ⚠️ 주인공 이름 추출 실패, 기본값 사용")
 
             # ───────────────────────────────────────────────────────────
             # [V60.80] Three Phase Blueprint Generation
@@ -6681,6 +7205,7 @@ class SovereignApp:
                 with StageSpinner(3, f"제{working_ep}화"):
                     # [V60.80] ToT 방식: 3전략 × 3시도 = 최대 9회 생성, Director 최대 3회 판정
                     # [V61] entity_registry 전달하여 NPC 명칭 일관성 검증
+                    # [V60.96] state_tracker 전달하여 죽은 NPC 검증
                     blueprint, pipeline_result = self.agents['three_phase_bp'].generate(
                         ep_num=working_ep,
                         arc_data=arc_data,
@@ -6690,10 +7215,18 @@ class SovereignApp:
                         director=self.agents['director'],  # 디렉터주권주의 - 최종 판정
                         arc_idx=arc_idx,
                         entity_registry=entity_registry_for_stage3,  # [V61] Entity 일관성 검증
-                        protagonist_name=protagonist_name_for_stage3  # [V61] 주인공 이름 주입
+                        protagonist_name=protagonist_name_for_stage3,  # [V61] 주인공 이름 주입
+                        state_tracker=getattr(self, 'state_tracker', None)  # [V60.96] 죽은 NPC 검증
                     )
 
             except Exception as gen_err:
+                # [V61.3] stderr로도 출력 (Rich 스피너가 stdout 가림)
+                import sys
+                import traceback
+                print(f"🚨 [V61.3] 제{working_ep}화 Blueprint 생성 크래시: {str(gen_err)[:100]}", file=sys.stderr)
+                traceback.print_exc(file=sys.stderr)
+                sys.stderr.flush()
+
                 self.ui.log(f"❌ [V60.80] 제{working_ep}화 생성 실패: {str(gen_err)[:100]}")
                 self._audit_event("blueprint_gen_error", str(gen_err)[:200], {"ep_num": working_ep})
                 blueprint = None
@@ -6799,6 +7332,19 @@ class SovereignApp:
         if not self.current_project.master_bible or not self.current_project.arcs:
             self.ui.log(f"{Emojis.ERROR} [System] {ErrorMessages.STAGE_PREREQUISITE_MISSING}")
             return
+
+        # [V60.96] StateTracker 초기화 (Stage 2/3에서 생성되지 않은 경우)
+        # [V60.95] PresetRegistry 연동
+        if not hasattr(self, 'state_tracker') or self.state_tracker is None:
+            self.state_tracker = StateTracker(preset_registry=self.preset_registry)
+            all_arcs = self.current_project.db.load_anchor('arcs') or []
+            for arc in all_arcs:
+                self.state_tracker.extract_npc_deaths_from_arc(arc)
+                self.state_tracker.extract_skill_acquisitions_from_arc(arc)
+                self.state_tracker.extract_npc_info_from_arc(arc)
+            if self.state_tracker.npc_registry:
+                dead_count = sum(1 for info in self.state_tracker.npc_registry.values() if info.get("status") == "dead")
+                self.ui.log(f"      👤 [V60.96] StateTracker 초기화: NPC {len(self.state_tracker.npc_registry)}명 (사망: {dead_count}명)")
 
         # 2. 🔥 V30 유전자 점화 (문체 복제 엔진 가동)
         self._ignite_quad_cache_system()
@@ -7435,7 +7981,8 @@ class SovereignApp:
                                                 "PATTERN_MIXING_LOGIC": arc_data.get('hybrid_composition', {}).get('mixing_logic', '')
                                             },
                                         tactical_references=tactical_refs,
-                                        protagonist_name=protagonist_name_for_stage4  # [V61] 주인공 이름 주입
+                                        protagonist_name=protagonist_name_for_stage4,  # [V61] 주인공 이름 주입
+                                        entity_registry=entity_registry_for_stage4  # [V60.91] Entity Registry 전달
                                     )
 
                                 # [V55.3] 원고 생성 방법 추적
@@ -7494,7 +8041,8 @@ class SovereignApp:
                                                 hud_report=hud_report,
                                                 style_guide=selected_style.get("guide", ""),
                                                 feedback=enhanced_feedback,
-                                                prev_manuscript=prev_text[-2000:] if prev_text else ""
+                                                prev_manuscript=prev_text[-2000:] if prev_text else "",
+                                                entity_registry=entity_registry_for_stage4  # [V60.91] Entity Registry 전달
                                             )
                                             if beat_result and beat_result.get('content') and len(beat_result.get('content', '')) > 3500:
                                                 writer_res = beat_result
@@ -8111,6 +8659,33 @@ class SovereignApp:
                                         mode='MANUSCRIPT',
                                         blueprint_text=blueprint_text  # [V49] 씬 범위 체크용
                                     )
+
+                                    # [V60.88] 원고 컨텍스트 캐시 생성 (Stage 4 시작 전)
+                                    try:
+                                        if hasattr(self.agents['director'], 'create_manuscript_cache'):
+                                            cache_name = self.agents['director'].create_manuscript_cache(
+                                                db_manager=self.current_project.db,
+                                                current_ep=next_ep,
+                                                ttl_seconds=3600  # 1시간 TTL
+                                            )
+                                            if cache_name:
+                                                self.ui.log(f"   ⚡ [V60.88] 원고 전문 캐시 활성화")
+                                    except Exception as cache_err:
+                                        self.ui.log(f"   ⚠️ [V60.88] 원고 캐시 생성 실패 (비차단): {cache_err}")
+
+                                    # [V60.87] 원고 역사 충돌 검사용 데이터 구성 (캐시 폴백용)
+                                    manuscript_history = None
+                                    try:
+                                        if hasattr(self.agents['director'], 'build_manuscript_history_for_check'):
+                                            manuscript_history = self.agents['director'].build_manuscript_history_for_check(
+                                                db_manager=self.current_project.db,
+                                                ep_num=next_ep
+                                            )
+                                            if manuscript_history:
+                                                self.ui.log(f"   📚 [V60.87] 원고 역사 {len(manuscript_history)}화 로드 완료 (폴백용)")
+                                    except Exception as mh_err:
+                                        self.ui.log(f"   ⚠️ [V60.87] 원고 역사 로드 실패 (비차단): {mh_err}")
+
                                     audit_res = self.agents['director'].audit_manuscript(
                                         ep_num=next_ep, manuscript=temp_content, arc_doc=arc_tactical,
                                         history_summary=causal_summary, prev_full_text=prev_text,
@@ -8118,7 +8693,9 @@ class SovereignApp:
                                         target_len=5000,
                                         retry_count=audit_attempt,  # [V40.3 추가] 재시도 횟수 전달
                                         validation_context=validation_context,  # [V45] V0128 검증용
-                                        entity_registry=entity_registry_for_stage4  # [V61] Entity 일관성 검증
+                                        entity_registry=entity_registry_for_stage4,  # [V61] Entity 일관성 검증
+                                        manuscript_history=manuscript_history,  # [V60.87] 원고 역사 충돌 검사
+                                        state_tracker=getattr(self, 'state_tracker', None)  # [V60.96] 죽은 NPC 검증
                                     )
 
                                     # [V60.3] Director 결과 풍부화 (action_items, 에러 카테고리)
@@ -8312,6 +8889,26 @@ class SovereignApp:
                                     final_ep_title = temp_title
                                     self.ui.log(f"✅ [Director 최종 승인] 제 {next_ep}화 무결성 확인 완료.")
 
+                                    # [V60.87 C] CharacterVoiceTracker: 원고에서 캐릭터 음성 분석
+                                    if V50_MODULES_AVAILABLE and self.character_voice:
+                                        try:
+                                            voice_result = self.character_voice.analyze_manuscript(next_ep, temp_content)
+                                            if voice_result and voice_result.get('characters_analyzed', 0) > 0:
+                                                self.ui.log(f"   🎭 [V60.87] 캐릭터 음성 분석: {voice_result.get('characters_analyzed')}명")
+                                        except Exception as cv_err:
+                                            self._audit_event("character_voice_error", "manuscript voice analysis failed", {"error": str(cv_err)[:50]})
+
+                                    # [V60.87 C] ForeshadowTracker: 원고에서 복선 자동 감지
+                                    if V50_MODULES_AVAILABLE and self.foreshadow_tracker:
+                                        try:
+                                            detected_hooks = self.foreshadow_tracker.auto_detect_from_manuscript(next_ep, temp_content)
+                                            if detected_hooks:
+                                                self.ui.log(f"   🔮 [V60.87] 복선 자동 감지: {len(detected_hooks)}개")
+                                                for hook in detected_hooks[:3]:
+                                                    self.ui.log(f"      - {hook.hook[:30]}... ({hook.category.value})")
+                                        except Exception as fs_err:
+                                            self._audit_event("foreshadow_tracker_error", "manuscript foreshadow detection failed", {"error": str(fs_err)[:50]})
+
                                     # [V54.5] 성공 패턴 기록
                                     if V50_MODULES_AVAILABLE and self.success_patterns:
                                         try:
@@ -8392,6 +8989,23 @@ class SovereignApp:
                                             )
                                             current_feedback = f"{current_feedback}{critical_intensity_guide}"
                                             self.ui.log(f"   📋 [V60.9] CRITICAL 적응형 피드백 주입 (엄격 기준: 80점)")
+
+                                            # [V60.87 C] FailureLearner: CRITICAL 실패 기록
+                                            if V50_MODULES_AVAILABLE and self.failure_learner:
+                                                try:
+                                                    self.failure_learner.record_failure(
+                                                        stage=4,
+                                                        episode=next_ep,
+                                                        reason=f"[CRITICAL] {reason[:150]}",
+                                                        details={
+                                                            "score": score,
+                                                            "is_critical": True,
+                                                            "attempt": audit_attempt + 1
+                                                        }
+                                                    )
+                                                    self.ui.log(f"   📚 [V60.87] CRITICAL 실패 기록 저장")
+                                                except Exception:
+                                                    pass
                                         else:
                                             # 심각하지 않은 문제는 경고만 하고 통과
                                             self.ui.log(f"⚠️ [Director Warning] {reason} - 재시도 횟수를 고려하여 수용합니다.")
@@ -8436,6 +9050,24 @@ class SovereignApp:
                                                         generation_method=manuscript_generation_method,
                                                         model_tier=3
                                                     )
+                                                except Exception:
+                                                    pass
+
+                                            # [V60.87 C] CharacterVoiceTracker: 원고에서 캐릭터 음성 분석 (완화 경로)
+                                            if V50_MODULES_AVAILABLE and self.character_voice:
+                                                try:
+                                                    voice_result = self.character_voice.analyze_manuscript(next_ep, temp_content)
+                                                    if voice_result and voice_result.get('characters_analyzed', 0) > 0:
+                                                        self.ui.log(f"   🎭 [V60.87] 캐릭터 음성 분석: {voice_result.get('characters_analyzed')}명 (완화)")
+                                                except Exception:
+                                                    pass
+
+                                            # [V60.87 C] ForeshadowTracker: 원고에서 복선 자동 감지 (완화 경로)
+                                            if V50_MODULES_AVAILABLE and self.foreshadow_tracker:
+                                                try:
+                                                    detected_hooks = self.foreshadow_tracker.auto_detect_from_manuscript(next_ep, temp_content)
+                                                    if detected_hooks:
+                                                        self.ui.log(f"   🔮 [V60.87] 복선 자동 감지: {len(detected_hooks)}개 (완화)")
                                                 except Exception:
                                                     pass
 
@@ -8522,6 +9154,24 @@ class SovereignApp:
                                                 )
                                             except Exception:
                                                 pass
+
+                                        # [V60.87 C] FailureLearner: Stage 4 실패 기록
+                                        if V50_MODULES_AVAILABLE and self.failure_learner:
+                                            try:
+                                                self.failure_learner.record_failure(
+                                                    stage=4,
+                                                    episode=next_ep,
+                                                    reason=reason[:200],
+                                                    details={
+                                                        "score": score,
+                                                        "feedback": feedback[:300] if feedback else "",
+                                                        "attempt": audit_attempt + 1,
+                                                        "action_items": [item.get('description', '')[:100] for item in action_items[:3]] if action_items else []
+                                                    }
+                                                )
+                                                self.ui.log(f"   📚 [V60.87] 실패 기록 저장 (Stage 4, ep{next_ep})")
+                                            except Exception as fl_err:
+                                                self._audit_event("failure_learner_error", "Stage 4 failure recording failed", {"error": str(fl_err)[:50]})
 
                                         # [V60.9] Stage 4→3 역방향 피드백 기록 (다음 에피소드 Blueprint에 전달)
                                         try:
@@ -9111,9 +9761,20 @@ class SovereignApp:
         selected = genres[str(choice)]
         self.ui.log(f"✅ [{selected['name']}] 전문 공정이 선택되었습니다.")
         self.ui.log(f"   📌 HUD 시스템: {selected['type'].upper()}")
-        
+
+        # [V60.95] PresetRegistry 초기화
+        if STAGE0_AVAILABLE:
+            genre_map = {
+                GenreTypes.WUXIA: "wuxia",
+                GenreTypes.HUNTER: "hunter",
+                GenreTypes.INVESTMENT: "investment",
+            }
+            base_genre = genre_map.get(selected['type'], "wuxia")
+            self.preset_registry = PresetRegistry(base_genre=base_genre)
+            self.ui.log(f"   📦 프리셋 초기화: {base_genre}")
+
         input("\n[Enter] 프로젝트 선택으로 이동")
-        
+
         return selected
     
     def _select_project(self) -> str:
@@ -9410,15 +10071,30 @@ class SovereignApp:
             self.ui.console.clear()
             self.ui.title("V60.80 CHIEF WRITER", "Director 주권주의 아키텍처")
 
-            style_choice = self._get_int_input(
-                "\n👉 스타일 선택 (1.카카오 / 2.네이버): ",
-                default=1, min_val=1, max_val=2
-            )
-            style_guide = (
-                "네이버: 심리 묘사 강조, 3-4문장 단위 줄바꿈, 여백 극대화"
-                if style_choice == 2 else
-                "카카오: 사이다 전개, 절벽걸기, 4K 해상도 묘사"
-            )
+            # [V60.95] 스타일 가이드 로드 (역설계에서 추출된 것 우선)
+            style_guide = ""
+            saved_style = self.current_project.load_v20_anchor('style_guide')
+            if saved_style and STAGE0_AVAILABLE:
+                try:
+                    from modules.core.stage0 import StyleGuide
+                    loaded_sg = StyleGuide.from_dict(saved_style)
+                    style_guide = loaded_sg.to_prompt()
+                    self.ui.log(f"🎨 [V60.95] 저장된 스타일 가이드 로드됨 (톤: {loaded_sg.tone})")
+                except Exception as e:
+                    self.ui.log(f"⚠️ 스타일 가이드 로드 실패: {e}")
+                    saved_style = None
+
+            if not style_guide:
+                # 폴백: 기존 카카오/네이버 선택
+                style_choice = self._get_int_input(
+                    "\n👉 스타일 선택 (1.카카오 / 2.네이버): ",
+                    default=1, min_val=1, max_val=2
+                )
+                style_guide = (
+                    "네이버: 심리 묘사 강조, 3-4문장 단위 줄바꿈, 여백 극대화"
+                    if style_choice == 2 else
+                    "카카오: 사이다 전개, 절벽걸기, 4K 해상도 묘사"
+                )
 
             loop_guard = 0
             max_loops = min((target_ep or total_planned_ep) - self.current_project.get_latest_episode_number() + 5, 100)
@@ -9487,6 +10163,14 @@ class SovereignApp:
                 justification_prompt = ""
                 reflexion_prompt = ""
                 genre_name = getattr(self.current_project, 'genre', {}).get('name', '무협')
+
+                # [V60.85] 장르 Guard에서 Purism Prompt 추출
+                purism_prompt = ""
+                if hasattr(self.sys, 'guard') and self.sys.guard:
+                    try:
+                        purism_prompt = self.sys.guard.get_v20_purism_prompt()
+                    except Exception as e:
+                        self.ui.log(f"   ⚠️ Guard Purism Prompt 추출 실패 (비차단): {e}")
 
                 # 기존 Writer 인스턴스에서 핵심 기능 프롬프트 추출
                 if 'writer' in self.agents:
@@ -9602,7 +10286,11 @@ class SovereignApp:
                                 genre_name=genre_name,
                                 # [V60.81] 추가 파라미터
                                 npc_equipment_summary=npc_equipment_summary,
-                                intro_dna=intro_dna
+                                intro_dna=intro_dna,
+                                # [V60.85] 장르 Guard Purism Prompt
+                                purism_prompt=purism_prompt,
+                                # [V60.95] 고밀도 HUD 전달
+                                state_tracker=getattr(self, 'state_tracker', None)
                             )
                         else:
                             candidates = chief_writer.regenerate_with_feedback(
@@ -9630,7 +10318,11 @@ class SovereignApp:
                                 genre_name=genre_name,
                                 # [V60.81] 추가 파라미터
                                 npc_equipment_summary=npc_equipment_summary,
-                                intro_dna=intro_dna
+                                intro_dna=intro_dna,
+                                # [V60.85] 장르 Guard Purism Prompt
+                                purism_prompt=purism_prompt,
+                                # [V60.95] 고밀도 HUD 전달
+                                state_tracker=getattr(self, 'state_tracker', None)
                             )
 
                     # Phase 3: Python 사전 검증 (경고만)
@@ -9698,7 +10390,7 @@ class SovereignApp:
                             breakdown_doc=blueprint.get('integrated_scenario', ''),
                             master_bible=self.current_project.master_bible,
                             hud_report=hud_report,
-                            purism_prompt="",
+                            purism_prompt=purism_prompt,  # [V60.85] 장르 Guard Purism Prompt
                             style_mode=style_guide,
                             feedback=director_feedback,
                             prev_full_manuscript=prev_text,
@@ -9811,6 +10503,24 @@ class SovereignApp:
                         self.ui.log(f"   ✅ 벡터 메모리 동기화 완료")
                     except Exception as vec_err:
                         self.ui.log(f"   ⚠️ 벡터 메모리 동기화 실패: {vec_err}")
+
+                    # [V60.87 C] 로그 파일 저장 (에피소드 완료 시)
+                    try:
+                        logs_dir = os.path.join("projects", self.current_project.name, "logs")
+                        os.makedirs(logs_dir, exist_ok=True)
+
+                        if V50_MODULES_AVAILABLE and self.failure_learner:
+                            self.failure_learner.save_to_json(os.path.join(logs_dir, "failure_learning.json"))
+
+                        if V50_MODULES_AVAILABLE and self.character_voice:
+                            self.character_voice.save_to_json(os.path.join(logs_dir, "character_voice.json"))
+
+                        if V50_MODULES_AVAILABLE and self.foreshadow_tracker:
+                            self.foreshadow_tracker.save_to_json(os.path.join(logs_dir, "foreshadow.json"))
+
+                        self.ui.log(f"   💾 [V60.87] 로그 파일 저장 완료")
+                    except Exception as log_err:
+                        self.ui.log(f"   ⚠️ 로그 저장 실패: {log_err}")
 
                     # ===== [V60.82] Episode Bible 저장 (Manager 기반 완전 추출) =====
                     try:

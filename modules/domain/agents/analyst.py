@@ -1,3 +1,18 @@
+"""
+#레거시 에이전트 - Analyst
+=========================
+Stage 2 진짜 주인: FourPhaseArcGenerator (four_phase_arc_generator.py)
+이 Analyst의 plan_single_arc_v20은 FourPhase 실패 시 fallback으로만 사용됨.
+
+여전히 사용되는 기능:
+- plan_single_volume_v20: Stage 1 Volume Strategy
+- enrich_raw_block_async: Raw block enrichment
+- stitch_joints: Arc joints stitching
+- get_lack_report: Lack report
+
+#레거시 태그: Arc 생성 관련 코드
+"""
+
 import json
 import re
 import os
@@ -154,6 +169,14 @@ PLAN_VOLUME_PROMPT_V25 = """
 [📦 가용 자산 정보 (Asset Library)]
 {assets}
 
+[🌍 V60.88 주인공 설정 (Protagonist Configuration)]
+{protagonist_config}
+
+[👤 V60.93 주인공 이름 - 반드시 이 이름만 사용!]
+주인공 이름: {protagonist_name}
+→ 전략 문서에서 반드시 '{protagonist_name}'을 사용하세요!
+→ 다른 이름(이현, 강민수 등 임의 이름) 사용 금지!
+
 ---
 
 ### ⚖️ V25 서사 내면화 (Narrative Agency & Logic)
@@ -230,6 +253,9 @@ PLAN_ARC_PROMPT_V25 = """
 **아래 상태는 신성불가침의 진실이다. 이 상태를 무시하거나 리셋하면 즉시 REJECT된다.**
 
 {prev_arc_context}
+
+### 📊 [V60.95 고밀도 HUD - Arc 시작 전 주인공 상태]
+{protagonist_hud_state}
 
 **[V60.10 HARD LOCK] 위 상태에서 명시된:**
 - 부상/내공: 회복 없이 활동 불가. 회복 장면 필수.
@@ -624,12 +650,52 @@ class Analyst(BaseAgent):
     - 3대 지표 분석: 무력(Martial), 경제(Economy), 권위(Authority) 결핍 진단
     - 위버 동력 수혈: 주인공의 욕망을 점화할 '결핍 리포트' 생성
     - 서사 수술: ARC_RECONSTRUCTION을 통한 인과율 보정
+
+    #레거시 노트:
+    - Stage 2 Arc 생성: FourPhaseArcGenerator가 진짜 주인
+    - plan_single_arc_v20: FourPhase 실패 시 fallback으로만 사용
+    - Stage 1 Volume (plan_single_volume_v20): 여전히 활성
     """
     #region //volume planning
-    def plan_single_volume_v20(self, vol_no, master_bible, treatment_raw_part, previous_volumes_context="", structured_context=""):
+    def plan_single_volume_v20(self, vol_no, master_bible, treatment_raw_part, previous_volumes_context="", structured_context="", protagonist_name: str = None):
         """[Stage 1] 10권 전략 수립 (가공 데이터 보존 및 슬라이싱 단일화)"""
         bible_root = master_bible.get('MasterBible', master_bible)
         assets = bible_root.get('AssetLibrary', {})
+
+        # [V60.93] 주인공 이름 추출 (파라미터 > MartialHUD > AssetLibrary > 기본값)
+        if not protagonist_name:
+            try:
+                hud = bible_root.get('MartialHUD', {})
+                protag = hud.get('Protagonist', {})
+                actual = protag.get('actual_truth', {})
+                protagonist_name = actual.get('name', '')
+                if not protagonist_name:
+                    # AssetLibrary에서 주인공 역할 찾기
+                    key_npcs = assets.get('KeyNPCs', [])
+                    for npc in key_npcs:
+                        if isinstance(npc, dict) and npc.get('role') in ['주인공', '주역', 'protagonist']:
+                            protagonist_name = npc.get('name', '')
+                            break
+                if not protagonist_name:
+                    protagonist_name = "주인공"
+            except Exception:
+                protagonist_name = "주인공"
+
+        # [V60.88] 주인공 설정 추출 (인지 목적, 제약 최소화)
+        protagonist_config = bible_root.get('protagonist_config', {})
+        world_origin = protagonist_config.get('world_origin', '원시인')
+        incarnation_type = protagonist_config.get('incarnation_type', '회귀자')
+        protagonist_config_text = f"- 세계 출신: {world_origin}\n- 환생 유형: {incarnation_type}"
+        if world_origin == '원시인':
+            protagonist_config_text += "\n⚠️ 현대 용어 사용 금지"
+        else:
+            protagonist_config_text += "\n📝 주인공은 현대 사회를 알고 있음"
+        if incarnation_type == '회귀자':
+            protagonist_config_text += "\n🔄 미래를 알고 있음 (합리적 이유 없이는 내면 독백으로 처리)"
+        elif incarnation_type == '빙의자':
+            protagonist_config_text += "\n👤 원래 인물의 기억/관계를 의식"
+        elif incarnation_type == '환생자':
+            protagonist_config_text += "\n👶 전생의 기억이 있음"
         
         # 1. 권역 데이터 통합 추출 (Block 5개 단위)
         # treatment_raw_part가 리스트면 그대로 쓰고, 문자열이면 JSON으로 변환
@@ -654,7 +720,9 @@ class Analyst(BaseAgent):
             previous_context=self._escape_braces(previous_volumes_context),
             target_blocks=self._escape_braces(target_blocks_str),
             treatment_raw_part=self._escape_braces(target_blocks_str),
-            assets=self._escape_braces(json.dumps(assets, ensure_ascii=False))
+            assets=self._escape_braces(json.dumps(assets, ensure_ascii=False)),
+            protagonist_config=self._escape_braces(protagonist_config_text),  # [V60.88]
+            protagonist_name=protagonist_name  # [V60.93]
         )
         
         response = self.ask(prompt, temperature=0.7)
@@ -951,8 +1019,11 @@ class Analyst(BaseAgent):
 
     def plan_single_arc_v20(self, arc_no, vol_strategy, prev_block, curr_block, next_block, ep_start,
                             prev_arc_context="", assets=None, full_roadmap="", assigned_seeds=None, feedback="", recent_patterns=None,
-                            protagonist_name=None):  # [V60.32] 주인공 이름 파라미터 추가
+                            protagonist_name=None, state_tracker=None):  # [V60.32] 주인공 이름, [V60.95] state_tracker 추가
         """
+        #레거시 - FourPhaseArcGenerator.generate()가 Stage 2 진짜 주인
+        이 메서드는 FourPhase 실패 시 fallback으로만 호출됨.
+
         [V31 Sovereign] 3중 캐시 대응: 선 압축 후 설계 방식의 고해상도 전략 엔진
         - 캐시 존재 시: 지침 치환 후 서버 캐시 참조 (비용 90% 절감)
         - 호출 실패 시: 즉시 Full-Text로 자동 복구하여 서사 밀도 보존 (Fallback Safety)
@@ -1154,6 +1225,25 @@ class Analyst(BaseAgent):
             final_protagonist_name = "주인공"
         protagonist_name = final_protagonist_name  # 이후 코드 호환
 
+        # [V60.95] 고밀도 HUD 컨텍스트 구축
+        hud_context = ""
+        if state_tracker and ep_start > 1:
+            try:
+                prev_ep = ep_start - 1
+                prev_state = state_tracker.get_state_at_episode(prev_ep) if hasattr(state_tracker, 'get_state_at_episode') else None
+                if prev_state:
+                    state_dict = prev_state.to_dict() if hasattr(prev_state, 'to_dict') else {}
+                    hud_lines = [f"[Arc 시작 전 주인공 상태 - 제{prev_ep}화 종료 시점]"]
+                    for k in ['location', 'hp', 'mp', 'martial_level', 'status', 'injuries']:
+                        if k in state_dict and state_dict[k]:
+                            hud_lines.append(f"  {k}: {state_dict[k]}")
+                    items = state_dict.get('items', [])
+                    if items:
+                        hud_lines.append(f"  보유 아이템: {', '.join(items[:8])}")
+                    hud_context = "\n".join(hud_lines)
+            except Exception as e:
+                hud_context = f"(HUD 로드 오류: {str(e)[:30]})"
+
         # 4. 공통 데이터셋 조립 (데이터 이스케이프 적용)
         safe_data = {
             "genre_prompt": self.context.guard.get_v20_purism_prompt(),
@@ -1170,7 +1260,8 @@ class Analyst(BaseAgent):
             "ep_end": ep_start + target_ep_count - 1,
             "ep_count": target_ep_count,  # [V60.36 FIX] 템플릿에서 사용하는 ep_count 추가
             "assets": self._escape_braces(json.dumps(assets, ensure_ascii=False)) if assets else "{}",
-            "full_roadmap": self._escape_braces(full_roadmap)
+            "full_roadmap": self._escape_braces(full_roadmap),
+            "protagonist_hud_state": self._escape_braces(hud_context) if hud_context else ""  # [V60.95] 고밀도 HUD
         }
 
         # 5. 설계 및 자기 비판 루프 (최대 3회 재시도)
@@ -1499,7 +1590,7 @@ class Analyst(BaseAgent):
         [🚨 S-Grade 통합 정산 강령 - 단 하나의 조항도 누락 금지]
         1. **현재 시점 확정**: 원고의 마지막 화수를 기준으로 서사의 현 위치를 확정하라.
         2. **역사 기록 (RecoveredEvents)**: 원고의 핵심 사건을 각 화당 한 문장으로 압축하여 박제하라.
-        3. **DNA 1:1 이식 (plot_roadmap)**: [🧬 트리트먼트]의 Block 1~50 제목과 핵심 목표를 1:1로 이식하라.
+        3. **DNA 1:1 이식 (plot_roadmap)**: [🧬 트리트먼트]에 포함된 모든 Block(Block 1부터 마지막 Block까지)의 제목과 핵심 목표를 1:1로 이식하라.
         4. **HUD 추출 우선순위**: 주인공 상태는 원고 마지막 장면 근거, 원고 없으면 트리트먼트 Block 1 채택.
         5. **다층 HUD 정산**: actual_truth(진실)와 public_reputation(세간의 인식)을 철저히 분리하라.
         6. **자율적 로어 생성**: 조연의 무공/성격 누락 시 문파 설정에 근거해 개연성 있게 보완하라.

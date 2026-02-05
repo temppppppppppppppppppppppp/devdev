@@ -1,0 +1,350 @@
+{
+  "_schema_version": "2.0",
+  "_schema_description": "투자물(Investment) 장르 Bible 샘플 - 범용 템플릿",
+  "_last_updated": "2026-02-05",
+
+  "MasterBible": {
+    "ProjectData": {
+      "MetaInfo": {
+        "title": "투자물 샘플 프로젝트",
+        "grand_objective": "IMF 외환위기를 이용해 재벌 그룹을 인수하고 복수를 완성하는 것",
+        "genre_archetype": "investment + 회귀물 + 복수극",
+        "logline": "2024년 실패한 투자자로 죽은 주인공이 1996년으로 회귀, IMF 외환위기를 예측하여 달러를 축적하고 자신을 배신한 자들에게 복수하며 재벌 총수의 자리에 오른다.",
+        "total_episodes": 200,
+        "episodes_per_arc": 5,
+        "arcs_per_volume": 5
+      },
+      "CoreIdentity": {
+        "protagonist": "김현우",
+        "protagonist_faction": "독립 (초기) → 현우투자 (중기) → HW그룹 (후기)",
+        "edge": "2024년까지의 경제사 지식 + 전생에서 쌓은 투자 경험 + 냉철한 판단력",
+        "desire": "복수와 성공 - 배신자들을 무너뜨리고 자신의 힘으로 정상에 서는 것",
+        "crisis": "회귀 시점에 빚더미와 신용불량 상태, 종잣돈 50만원으로 시작"
+      },
+      "CommercialCode": {
+        "cider_point": "미래 지식으로 모두가 틀렸다고 비웃을 때 정확히 맞추는 통쾌함 + 배신자들이 무릎 꿇는 장면",
+        "success_device": "역대급 수익률 달성, 적대 세력의 파산, 히로인의 재평가",
+        "attitude": "능동적 설계자 - 운에 맡기지 않고 미래를 직접 설계"
+      }
+    },
+
+    "protagonist_config": {
+      "world_origin": "현대인",
+      "incarnation_type": "회귀자",
+      "regression_point": {
+        "death_year": 2024,
+        "death_cause": "투자 실패로 인한 자살",
+        "return_year": 1996,
+        "return_month": "1996년 1월"
+      }
+    },
+
+    "FinanceHUD": {
+      "_description": "투자물 전용 HUD - 자산/포트폴리오/인맥 상태 추적",
+      "Protagonist": {
+        "actual_truth": {
+          "name": "김현우",
+          "alias": "없음 (초기) → '귀신 손' (중기) → '투자의 신' (후기)",
+          "age": 28,
+          "rank": "무직 (초기) → 개인투자자 → 펀드매니저 → 그룹 회장",
+
+          "financial_status": {
+            "total_assets": "50만원",
+            "liquid_cash": "50만원",
+            "stocks": [],
+            "real_estate": [],
+            "foreign_currency": {
+              "USD": 0,
+              "JPY": 0
+            },
+            "debt": "3000만원 (사채)"
+          },
+
+          "portfolio_history": [
+            {
+              "episode": 0,
+              "month": "1996-01",
+              "total_assets": "50만원",
+              "event": "회귀 시작점"
+            }
+          ],
+
+          "investment_style": "미래 지식 기반 역발상 투자 + 레버리지 활용",
+          "risk_tolerance": "극고위험 감수 (확신이 있을 때만)",
+
+          "network_level": {
+            "financial_sector": 0,
+            "political_sector": 0,
+            "business_sector": 0,
+            "underground_sector": 0
+          },
+
+          "credentials": [],
+
+          "current_objective": "종잣돈 50만원을 1억으로 불리기",
+          "mid_term_goal": "IMF 전까지 100억 달러 확보",
+          "final_goal": "재벌 그룹 인수 및 복수 완성",
+
+          "causal_injuries": "전생의 트라우마 (배신, 실패), 신용불량 상태"
+        },
+
+        "public_reputation": {
+          "identity": "빚더미에 앉은 실패한 청년",
+          "wealth_level": "빈곤층",
+          "perceived_influence": "없음",
+          "credit_rating": "신용불량"
+        }
+      }
+    },
+
+    "WorldState": {
+      "CurrentEra": "1996년 1월",
+      "CurrentLocation": "서울 구로구 원룸",
+      "economic_context": {
+        "kospi": 850,
+        "usd_krw": 780,
+        "interest_rate": "12%",
+        "upcoming_events": [
+          {"year": 1997, "event": "IMF 외환위기", "impact": "원화 폭락, 주가 폭락"},
+          {"year": 1998, "event": "금 모으기 운동", "impact": "금값 변동"},
+          {"year": 1999, "event": "IT 버블", "impact": "기술주 폭등"},
+          {"year": 2000, "event": "닷컴 버블 붕괴", "impact": "기술주 폭락"}
+        ]
+      },
+      "KarmaMatrix": {
+        "장태호": {
+          "relation_score": -100,
+          "status": "적대",
+          "note": "전생에 주인공을 배신한 사업 파트너"
+        },
+        "이수진": {
+          "relation_score": -50,
+          "status": "경계",
+          "note": "전생의 약혼녀, 장태호에게 넘어감"
+        },
+        "박민수": {
+          "relation_score": 30,
+          "status": "중립",
+          "note": "대학 후배, 잠재적 조력자"
+        },
+        "김사장 (사채업자)": {
+          "relation_score": -70,
+          "status": "적대",
+          "note": "빚 독촉 중"
+        },
+        "증권사 직원 최과장": {
+          "relation_score": 0,
+          "status": "중립",
+          "note": "향후 협력 가능"
+        }
+      }
+    },
+
+    "AssetLibrary": {
+      "KeyNPCs": [
+        {
+          "name": "장태호",
+          "role": "메인 빌런",
+          "desc": "주인공의 전생 사업 파트너이자 배신자. 현재는 중소기업 사장 아들로 승승장구 중. 주인공의 아이디어를 훔쳐 성공하고, 약혼녀까지 빼앗은 원수.",
+          "NPC_Finance_HUD": {
+            "current_assets": "가문 자산 약 500억",
+            "position": "태호건설 전무",
+            "network": "재벌 2세 인맥",
+            "weakness": "실력보다 아버지 빽으로 성공, 실패 경험 없음",
+            "status": "활동중"
+          }
+        },
+        {
+          "name": "이수진",
+          "role": "전 약혼녀/히로인 후보",
+          "desc": "주인공의 전생 약혼녀. 주인공이 실패하자 장태호에게 넘어갔다. 현재 시점에서는 아직 주인공과 교제 중이지만 마음이 흔들리고 있다.",
+          "NPC_Finance_HUD": {
+            "current_assets": "없음 (일반 직장인)",
+            "position": "대기업 사원",
+            "network": "평범",
+            "weakness": "물질적 성공에 약함",
+            "status": "활동중"
+          }
+        },
+        {
+          "name": "박민수",
+          "role": "조력자",
+          "desc": "대학 후배로 현재 증권사 인턴. 성실하고 충직하며 주인공을 존경한다. 향후 주인공의 오른팔이 될 인물.",
+          "NPC_Finance_HUD": {
+            "current_assets": "없음",
+            "position": "증권사 인턴",
+            "network": "증권업계 입문",
+            "weakness": "경험 부족",
+            "status": "활동중"
+          }
+        },
+        {
+          "name": "오정환",
+          "role": "멘토/조력자",
+          "desc": "전설적인 은퇴 트레이더. 전생에서 주인공이 가장 존경했던 인물이나 만나지 못했다. 이번 생에서는 반드시 그의 가르침을 받으려 한다.",
+          "NPC_Finance_HUD": {
+            "current_assets": "은퇴 후 은둔 (추정 수백억)",
+            "position": "은퇴",
+            "network": "금융계 전설",
+            "weakness": "세상에 대한 환멸로 은둔 중",
+            "status": "은둔중"
+          }
+        },
+        {
+          "name": "김사장",
+          "role": "초반 빌런",
+          "desc": "사채업자. 주인공에게 3000만원을 빌려줬고 독촉 중. 폭력배와 연결되어 있다.",
+          "NPC_Finance_HUD": {
+            "current_assets": "사채 자금 약 10억",
+            "position": "사채업자",
+            "network": "폭력조직",
+            "weakness": "탐욕, 법적 리스크",
+            "status": "활동중"
+          }
+        }
+      ],
+
+      "KeyItems": [
+        {
+          "item": "낡은 수첩",
+          "desc": "전생의 기억을 정리한 수첩. 주요 경제 이벤트 날짜와 주가 변동이 기록되어 있다. 주인공의 가장 중요한 무기."
+        },
+        {
+          "item": "아버지의 시계",
+          "desc": "돌아가신 아버지의 유품. 어려울 때마다 힘을 주는 정신적 지주."
+        },
+        {
+          "item": "첫 번째 100만원",
+          "desc": "종잣돈 50만원을 처음으로 2배로 불린 돈. 성공의 시작을 상징."
+        }
+      ],
+
+      "KeyLocations": [
+        {
+          "name": "여의도 증권가",
+          "desc": "대한민국 금융의 심장. 주인공이 정복해야 할 무대."
+        },
+        {
+          "name": "명동 사채골목",
+          "desc": "초반 위기의 배경. 김사장의 사무실이 있다."
+        },
+        {
+          "name": "강남 태호건설 사옥",
+          "desc": "장태호의 근거지. 복수의 최종 목적지."
+        }
+      ],
+
+      "Persona": "냉철하면서도 인간미 있는 복수자. 돈에 집착하지만 진정한 목적은 인정받는 것.",
+      "SpeechStyle": {
+        "tone": "냉소적이나 유머 섞임",
+        "vocabulary": "금융 용어 + 현대 구어체",
+        "inner_monologue": "전생 회상 + 미래 예측 + 자조적 독백"
+      }
+    },
+
+    "Seeds": [
+      {
+        "id": "S-001",
+        "category": "인물",
+        "description": "오정환 멘토의 존재 - 전설의 트레이더가 은둔 중이라는 언급",
+        "status": "active",
+        "planted_ep": 1,
+        "target_harvest_ep": 30,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-002",
+        "category": "사건",
+        "description": "1997년 IMF 외환위기 - 주인공이 대비하고 있다는 암시",
+        "status": "active",
+        "planted_ep": 1,
+        "target_harvest_ep": 80,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-003",
+        "category": "인물",
+        "description": "이수진의 양다리 - 장태호에게 마음이 흔들리고 있다는 복선",
+        "status": "active",
+        "planted_ep": 5,
+        "target_harvest_ep": 25,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-004",
+        "category": "아이템",
+        "description": "낡은 수첩의 비밀 - 누군가 수첩을 보게 될 위기",
+        "status": "active",
+        "planted_ep": 3,
+        "target_harvest_ep": 50,
+        "echo_count": 0,
+        "harvested_ep": null
+      }
+    ],
+
+    "HistoricalEvents": {
+      "_description": "투자물에서 활용 가능한 실제 역사적 이벤트 DB",
+      "events": [
+        {
+          "month": "1996-04",
+          "event": "한보그룹 부도",
+          "impact": "건설주 폭락"
+        },
+        {
+          "month": "1997-01",
+          "event": "한보철강 부도",
+          "impact": "금융권 위기 시작"
+        },
+        {
+          "month": "1997-07",
+          "event": "기아차 부도",
+          "impact": "대기업 불안 확산"
+        },
+        {
+          "month": "1997-11",
+          "event": "IMF 구제금융 신청",
+          "impact": "원화 폭락, KOSPI 폭락"
+        },
+        {
+          "month": "1998-06",
+          "event": "금 모으기 운동",
+          "impact": "금값 변동"
+        },
+        {
+          "month": "1999-03",
+          "event": "IT 버블 시작",
+          "impact": "기술주 폭등"
+        },
+        {
+          "month": "2000-03",
+          "event": "닷컴 버블 붕괴",
+          "impact": "기술주 폭락"
+        }
+      ]
+    },
+
+    "GenreRules": {
+      "_description": "투자물 장르 규칙 및 제약",
+      "must_include": [
+        "자본 변화가 명확히 추적되어야 함",
+        "투자 논리가 설득력 있어야 함 (미래지식만으로 X)",
+        "리스크와 보상의 균형",
+        "적대자도 합리적인 판단을 해야 함"
+      ],
+      "forbidden": [
+        "말도 안 되는 수익률 (1000배 등)",
+        "법적 문제 무시 (내부자거래 등 합리화 필요)",
+        "경제 상식에 어긋나는 전개"
+      ],
+      "tension_devices": [
+        "투자 실패 위기",
+        "미래 지식이 틀릴 뻔한 순간",
+        "적대자의 역공",
+        "신원 노출 위기"
+      ]
+    }
+  }
+}

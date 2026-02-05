@@ -1,0 +1,595 @@
+{
+  "work_name": "재벌물 (가제)",
+  "genre": "investment",
+  "author": "Claude Opus 4.5",
+  "created_at": "2026-02-05",
+  "block_range": "21-30",
+  "description": "글로벌 확장 & 유럽의 몰락편 - 비트코인 탄생부터 알리바바 IPO까지",
+  "treatments": [
+    {
+      "block_id": "Block 21",
+      "title": "사토시의 선물",
+      "content": {
+        "context": "2009년 10월. 금융위기의 잔해 속에서 한시우는 이상한 논문 하나를 읽고 있다. 'Bitcoin: A Peer-to-Peer Electronic Cash System'. 사토시 나카모토라는 익명의 인물이 쓴 9페이지짜리 백서. 은행 없이 돈을 주고받는다? 대부분은 '사이버펑크의 망상'으로 치부하지만, 한시우는 전율한다. 이것이 화폐의 미래다.",
+        "event_villain": "비트코인은 아무도 모른다. 채굴자는 전 세계에 수백 명뿐이고, 거래소도 없다. 1BTC의 가치는 0.001달러도 안 된다. 댄 킴은 '보스, 이건 진짜 미친 짓입니다. 실체도 없는 디지털 숫자에 돈을 쓴다고요?'라며 격하게 반대한다. 모든 측근이 같은 생각이다.",
+        "solution": "한시우는 설명하지 않는다. 대신 명령한다. 전 세계에 채굴 서버를 분산 설치하고, 비트코인을 묵묵히 채굴한다. 초기 난이도는 낮아서 일반 컴퓨터로도 하루에 수백 개씩 캔다. 한시우는 '10만 개가 될 때까지 멈추지 마라'고 지시한다. 동시에 사토시 나카모토에게 익명으로 접촉을 시도하지만, 그는 유령처럼 사라진다.",
+        "reward": "2010년 말까지 비트코인 약 10만 BTC 축적. 당시 가치는 거의 0에 가깝다. 하지만 2021년 $60,000 기준으로 이 10만 개는 60억 달러. 한시우는 세계 최대의 비트코인 고래 중 하나가 된다."
+      },
+      "stakes": "비트코인이 영원히 0원이면 채굴 비용(전기료, 서버)만 날린다. 또한 '미친 짓'에 자원을 쓴다는 내부 불만이 커질 수 있다.",
+      "power_shift": {
+        "protagonist": "전통 금융을 넘어 '탈중앙화 금융'의 최전선에 선다. 아무도 모르는 사이에 미래 화폐의 왕좌를 선점.",
+        "antagonist": "전 세계 중앙은행과 금융 시스템. 그들은 비트코인의 존재조차 모른다. 10년 후 그들은 이것과 전쟁을 벌이게 된다."
+      },
+      "relationship_delta": [
+        { "target": "댄 킴", "before": "보스의 판단을 신뢰", "after": "비트코인 채굴 지시에 처음으로 심각한 의문. 하지만 따른다." },
+        { "target": "사토시 나카모토", "before": "존재도 몰랐음", "after": "익명의 접촉 시도. 한시우는 그가 누군지 알고 싶어하지만 영원히 미스터리로 남는다." }
+      ],
+      "foreshadow": [
+        "한시우가 '10년 후 이 숫자들이 금보다 비싸집니다'라고 말하지만 아무도 믿지 않는다.",
+        "사토시에게 보낸 이메일에 '당신이 세상을 바꿀 겁니다'라고 썼지만 답장은 없다.",
+        "한시우가 '절대 팔지 마라. 최소 2021년까지'라고 지시하는 장면."
+      ],
+      "callback": [
+        "Block 19에서 '비트코인'이라는 단어를 처음 언급한 복선이 현실화.",
+        "9/11(Block 10)처럼 '알면서 행동하지만 증명할 수 없는' 딜레마."
+      ],
+      "emotional_beat": { "type": "anticipation", "intensity": 7 },
+      "tension_level": "5",
+      "pov_character": "한시우",
+      "location": { "place": "미국 뉴욕 및 전 세계 데이터센터", "type": "실내" },
+      "time_span": { "duration": "약 6개월", "in_story_time": "2009년 10월 ~ 2010년 3월" },
+      "genre_ext": {
+        "type": "investment",
+        "capital_before": "포트폴리오 약 600억 달러",
+        "capital_after": "비트코인 10만 BTC + 기존 포트폴리오",
+        "profit_loss": "미실현 (채굴 비용 수백만 달러)",
+        "method": "채굴",
+        "investment_type": "암호화폐",
+        "deal_type": "채굴/축적",
+        "leverage_used": ["미래 정보 (비트코인 가격)", "초기 진입", "인내심"],
+        "opponent": { "name": "회의론 / 무지", "type": "심리", "weakness_exploited": "새로운 기술에 대한 인간의 불신" },
+        "historical_event": { "name": "비트코인 탄생 (2008-2009)", "year": 2009, "how_exploited": "초기 채굴이 쉬운 시기에 대량 축적" },
+        "time_pressure": "채굴 난이도는 시간이 갈수록 높아진다. 지금이 가장 쉬운 시기.",
+        "knowledge_used": "비트코인이 2021년 $60,000을 찍고, 2024년 ETF 승인으로 제도권에 편입된다는 미래 정보",
+        "risk_level": "저위험 (비용 대비)",
+        "business_sector": "암호화폐/핀테크",
+        "special_ability": { "has_ability": false }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "비트코인이 2021년 $60,000, 2024년 $70,000 이상을 기록하며 '디지털 금'이 된다는 사실.", "accuracy": "정확", "source": "직접경험" },
+        "butterfly_effect": { "original_event": "원래 역사에서 초기 채굴자들은 대부분 비트코인을 잃어버리거나 헐값에 팔았다.", "changed_event": "한시우가 10만 BTC를 장기 보유함으로써, 시장의 유통량이 줄어들 수 있다.", "ripple_effect": "한시우의 보유량이 시장에 영향을 줄 정도로 크다면, 가격 변동성에 영향을 미칠 수 있다." },
+        "death_flag": { "avoided": null, "method": null },
+        "regression_hint": { "slip_up": "한시우가 '사토시는 2011년에 사라집니다'라고 말했다가 얼버무린다.", "suspicion_from": "댄 킴" },
+        "future_prep": { "action": "비트코인 채굴을 유지하며, 유럽 재정위기에 대비.", "target_event": "그리스 위기 (2010)" }
+      }
+    },
+    {
+      "block_id": "Block 22",
+      "title": "유럽의 균열",
+      "content": {
+        "context": "2010년 4월. 그리스가 무너지고 있다. 국가 부채가 GDP의 150%를 넘어섰고, 신용등급은 정크 수준으로 추락했다. 유로존 전체가 흔들린다. 포르투갈, 아일랜드, 이탈리아, 스페인(PIIGS)까지 위기가 번질 조짐이다. 월가는 '유로화의 종말'을 외치고, 세계 시장은 패닉에 빠진다. 한시우는 유럽으로 날아간다.",
+        "event_villain": "유럽중앙은행(ECB)과 독일은 딜레마에 빠져 있다. 그리스를 구하자니 도덕적 해이, 버리자니 유로존 붕괴. 정치인들은 책임을 미루고, 시장은 매일 급락한다. 그리스 국채 금리는 30%를 넘어섰다. '유럽연합 해체'라는 말이 진지하게 나온다.",
+        "solution": "한시우는 두 가지 베팅을 한다. 첫째, 그리스 국채 CDS를 대량 매입한다. 그리스가 디폴트하면 대박이다. 둘째, 동시에 독일 국채(분트)를 매입한다. 위기 때 안전자산으로 몰리는 패턴이다. 그리고 런던에 유럽 헤드쿼터를 설립한다. '유럽이 무너질 때 가장 가까이서 지켜봐야 합니다.'",
+        "reward": "그리스 국채 CDS로 2010-2012년간 약 15억 달러 수익. 독일 국채 가격 상승으로 추가 수억 달러. 런던 거점 확보로 유럽 금융 시장에 직접 접근권 확보."
+      },
+      "stakes": "유럽이 예상보다 빨리 안정되면 CDS 프리미엄 손실. 또한 '유럽의 위기로 돈을 번 외국인'이라는 비난을 받을 수 있다.",
+      "power_shift": {
+        "protagonist": "미국을 넘어 유럽까지 영역 확장. 글로벌 매크로 투자자로서의 위상 확립.",
+        "antagonist": "PIIGS 국가들의 정치인과 중앙은행. 그들의 무능과 지연이 위기를 키웠다."
+      },
+      "relationship_delta": [
+        { "target": "유럽 금융계", "before": "미국의 신비로운 투자자", "after": "런던 진출로 유럽 시장의 주요 플레이어로 인식" }
+      ],
+      "foreshadow": [
+        "한시우가 '그리스는 시작일 뿐입니다. 2012년이 진짜 위기입니다.'라고 예언.",
+        "런던 사무실에서 '브렉시트'라는 단어를 처음 언급. 직원들은 무슨 뜻인지 모른다.",
+        "한시우가 마리오 드라기라는 이름을 기억해두라고 지시."
+      ],
+      "callback": [
+        "2008 금융위기(Block 15-20)에서 CDS로 수익을 낸 경험이 유럽에서 반복.",
+        "위기를 기회로 바꾸는 패턴 확립."
+      ],
+      "emotional_beat": { "type": "anticipation", "intensity": 7 },
+      "tension_level": "7",
+      "pov_character": "한시우",
+      "location": { "place": "영국 런던, 그리스 아테네", "type": "실내" },
+      "time_span": { "duration": "약 6개월", "in_story_time": "2010년 4월 ~ 10월" },
+      "genre_ext": {
+        "type": "investment",
+        "capital_before": "포트폴리오 약 650억 달러",
+        "capital_after": "그리스 CDS + 독일 국채 + 런던 거점",
+        "profit_loss": "+15억 달러 (2012년까지 누적)",
+        "method": "CDS 매입 + 국채 투자",
+        "investment_type": "파생상품 + 채권",
+        "deal_type": "장외 거래",
+        "leverage_used": ["미래 정보 (유럽 위기 전개)", "양다리 전략 (숏+롱)", "지역 거점 확보"],
+        "opponent": { "name": "유럽 정치인들 / ECB", "type": "기관", "weakness_exploited": "정치적 결정의 지연, 도덕적 해이 우려" },
+        "historical_event": { "name": "유럽 재정위기 (2010-2012)", "year": 2010, "how_exploited": "PIIGS 국채 CDS로 디폴트 리스크에 베팅" },
+        "time_pressure": "그리스 상황이 악화되기 전에 CDS 포지션 구축 필요.",
+        "knowledge_used": "그리스가 2012년 부분 디폴트(채무 재조정)하고, 유로존은 붕괴하지 않는다는 미래 정보",
+        "risk_level": "중위험",
+        "business_sector": "금융/매크로",
+        "special_ability": { "has_ability": false }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "유럽 재정위기가 2012년 정점을 찍고, 드라기의 'Whatever it takes' 발언으로 진정된다는 사실.", "accuracy": "정확", "source": "직접경험" },
+        "butterfly_effect": { "original_event": "원래 역사에서 유럽 위기는 2010-2012년간 지속되었다.", "changed_event": "한시우의 CDS 매입이 시장에 신호가 될 수 있지만, 헤지펀드들도 같은 베팅을 하고 있어 큰 영향은 없다.", "ripple_effect": "한시우가 유럽에 거점을 확보함으로써 이후 브렉시트 등 유럽 이벤트에 더 빠르게 대응 가능." },
+        "death_flag": { "avoided": null, "method": null },
+        "regression_hint": { "slip_up": "한시우가 '드라기'라는 이름을 너무 확신 있게 언급. 아직 드라기는 ECB 총재가 아니다(2011년 취임).", "suspicion_from": "런던 사무실 직원들" },
+        "future_prep": { "action": "유럽 포지션 유지하며, 일본의 재난에 대비.", "target_event": "후쿠시마 원전 사고 (2011.03)" }
+      }
+    },
+    {
+      "block_id": "Block 23",
+      "title": "후쿠시마",
+      "content": {
+        "context": "2011년 3월 11일. 일본 동북부 해안에 규모 9.0 지진이 발생한다. 뒤이은 쓰나미가 후쿠시마 원자력 발전소를 덮친다. 노심 용융. 체르노빌 이후 최악의 원전 사고. 일본 경제는 마비되고, 닛케이 지수는 폭락한다. 세계는 공포에 떤다. 한시우는 도쿄행 비행기에 오른다.",
+        "event_villain": "방사능 공포가 일본을 뒤덮고 있다. 외국인들은 탈출하고, 투자자들은 일본 자산을 투매한다. 엔화는 역설적으로 급등한다(본국 송금 수요). 한시우의 측근들은 '방사능 위험 지역에 왜 가십니까?'라며 만류한다. 하지만 한시우는 안다. 일본은 무너지지 않는다.",
+        "solution": "한시우는 폭락한 일본 주식을 쓸어담는다. 도요타, 소니, 소프트뱅크. 특히 손정의의 소프트뱅크에 집중 투자한다. 동시에 손정의를 직접 만나 '재생 에너지'에 대한 비전을 나눈다. 손정의는 후쿠시마 이후 원전 반대론자가 되어 태양광에 올인한다. 한시우는 그에게 '당신의 진짜 미래는 투자입니다. 비전펀드를 만드세요.'라고 조언한다.",
+        "reward": "일본 주식 저점 매수로 2년간 약 30% 수익. 손정의와의 파트너십 구축. 소프트뱅크 지분 확보. 손정의가 훗날 만드는 비전펀드(2017년)의 초기 구상에 영향을 미친다."
+      },
+      "stakes": "방사능 오염이 예상보다 심각하면 일본 경제가 장기 침체. 또한 재난에서 돈을 번다는 비난.",
+      "power_shift": {
+        "protagonist": "아시아 시장(일본)에 본격 진출. 손정의라는 또 다른 '미래의 황제'와 연결.",
+        "antagonist": "자연재해. 하지만 진짜 적은 인간의 공포와 패닉이다."
+      },
+      "relationship_delta": [
+        { "target": "손정의", "before": "이름만 아는 사이", "after": "재난 속에서 일본에 투자한 유일한 외국인 거물. 의리를 아는 파트너로 인정." }
+      ],
+      "foreshadow": [
+        "한시우가 손정의에게 '비전펀드'라는 개념을 제안. 손정의는 '1000억 달러 펀드? 미쳤군요.'라고 웃지만 기억해둔다.",
+        "한시우가 '일본은 10년 후에도 건재합니다. 걱정 마세요.'라고 말함.",
+        "손정의가 '한국 시장에도 관심 있습니까?'라고 묻자, 한시우의 눈빛이 달라진다."
+      ],
+      "callback": [
+        "2008 금융위기(Block 20) 때 폭락장에서 쇼핑한 경험이 일본에서 반복.",
+        "Block 6에서 제프 베조스에게 AWS를 제안한 것처럼, 손정의에게 비전펀드를 제안."
+      ],
+      "emotional_beat": { "type": "determination", "intensity": 7 },
+      "tension_level": "7",
+      "pov_character": "한시우",
+      "location": { "place": "일본 도쿄", "type": "실내/실외" },
+      "time_span": { "duration": "약 2개월", "in_story_time": "2011년 3월 ~ 5월" },
+      "genre_ext": {
+        "type": "investment",
+        "capital_before": "포트폴리오 약 700억 달러",
+        "capital_after": "일본 주식 + 소프트뱅크 지분",
+        "profit_loss": "+약 20억 달러 (2년간)",
+        "method": "폭락장 매수",
+        "investment_type": "상장 주식",
+        "deal_type": "시장 거래 + 전략적 제휴",
+        "leverage_used": ["미래 정보 (일본 회복)", "재난 속 역발상", "손정의 네트워크"],
+        "opponent": { "name": "공포 / 방사능 패닉", "type": "심리", "weakness_exploited": "재난에 대한 과잉 반응" },
+        "historical_event": { "name": "후쿠시마 원전 사고 (2011.03.11)", "year": 2011, "how_exploited": "패닉 매도 시 저점 매수" },
+        "time_pressure": "패닉이 가라앉기 전에 매수해야 최대 수익.",
+        "knowledge_used": "일본 경제가 후쿠시마 이후 회복하고, 소프트뱅크가 글로벌 투자 제국이 된다는 미래 정보",
+        "risk_level": "중위험",
+        "business_sector": "전 산업 (일본)",
+        "special_ability": { "has_ability": false }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "일본이 후쿠시마 이후 회복하고, 손정의가 비전펀드로 세계 최대 VC가 된다는 사실.", "accuracy": "정확", "source": "직접경험" },
+        "butterfly_effect": { "original_event": "원래 역사에서 손정의는 2017년 비전펀드를 설립했다.", "changed_event": "한시우의 제안으로 손정의가 비전펀드 구상을 더 일찍 시작할 수 있다.", "ripple_effect": "손정의와의 파트너십이 한시우의 아시아 전략에 중요한 역할." },
+        "death_flag": { "avoided": null, "method": null },
+        "regression_hint": { "slip_up": "한시우가 '비전펀드'라는 아직 존재하지 않는 이름을 사용.", "suspicion_from": "손정의" },
+        "future_prep": { "action": "일본 포지션 유지하며, 잡스의 건강 악화에 대비.", "target_event": "스티브 잡스 사망 (2011.10)" }
+      }
+    },
+    {
+      "block_id": "Block 24",
+      "title": "잡스의 마지막",
+      "content": {
+        "context": "2011년 10월 5일. 스티브 잡스가 세상을 떠났다. 췌장암. 56세. 한시우는 쿠퍼티노의 애플 본사 앞에서 수천 명의 조문객들 사이에 서 있다. 1998년 냅킨에 아이팟을 그려주던 그 날이 떠오른다. 13년. 한시우에게 잡스는 투자 대상이 아니었다. 유일하게 마음을 연 친구였다.",
+        "event_villain": "죽음 앞에서 한시우는 무력하다. 미래를 알아도 암을 막을 수는 없었다. 잡스가 2003년 처음 췌장암 진단을 받았을 때, 한시우는 '제발 수술을 받으세요'라고 애원했다. 하지만 잡스는 9개월간 대체 요법을 고집했다. 한시우는 안다. 그 9개월이 잡스의 목숨을 앗아갔다는 것을. 막을 수 있었는데 막지 못했다.",
+        "solution": "한시우는 아무것도 하지 않는다. 할 수 있는 것이 없다. 장례식에서 잡스의 유족들과 조용히 인사를 나누고, 팀 쿡에게 '스티브가 만든 것을 지켜달라'고 부탁한다. 그리고 혼자 호텔에 돌아와 술을 마신다. 9/11 이후 처음 느끼는 무력감. 미래를 안다는 것의 저주.",
+        "reward": "없다. 이 블록에서 한시우는 아무것도 얻지 못한다. 대신 잃는다. 유일한 친구를. 하지만 이 상실이 한시우를 변화시킨다. 돈만이 전부가 아니라는 것을. 시간이 얼마 남지 않았다는 것을."
+      },
+      "stakes": "경제적 스테이크 없음. 감정적 스테이크만 존재. 한시우의 인간성이 시험받는 순간.",
+      "power_shift": {
+        "protagonist": "세계 최고의 부자 중 하나이지만, 친구의 죽음 앞에서 무력한 인간. 돈으로 살 수 없는 것들을 깨닫는다.",
+        "antagonist": "죽음. 운명. 회귀자의 한계."
+      },
+      "relationship_delta": [
+        { "target": "스티브 잡스", "before": "13년간의 파트너이자 친구", "after": "영원한 이별. 한시우의 가슴에 평생의 빈자리." },
+        { "target": "팀 쿡", "before": "잡스의 후계자", "after": "한시우가 '잡스의 유산을 부탁한다'고 한 유일한 외부인. 특별한 신뢰 관계." }
+      ],
+      "foreshadow": [
+        "한시우가 '2003년에 막을 수 있었는데'라고 중얼거리는 장면. 회귀자의 딜레마.",
+        "장례식에서 한시우가 '나도 시간이 얼마 남지 않았을지 모른다'고 생각함. Block 54 건강 이슈 복선.",
+        "팀 쿡에게 '애플은 괜찮을 겁니다. 당신이 지키면'이라고 말함."
+      ],
+      "callback": [
+        "Block 4에서 냅킨에 아이팟을 그려주던 장면.",
+        "Block 14에서 아이폰 발표를 함께 지켜보던 장면.",
+        "Block 10의 9/11 때 느꼈던 '알면서 막지 못한 자'의 죄책감이 다시 찾아온다."
+      ],
+      "emotional_beat": { "type": "tragedy", "intensity": 10 },
+      "tension_level": "3",
+      "pov_character": "한시우",
+      "location": { "place": "미국 캘리포니아 쿠퍼티노, 애플 본사 및 팔로알토", "type": "실외/실내" },
+      "time_span": { "duration": "약 1주일", "in_story_time": "2011년 10월 5일 ~ 12일" },
+      "genre_ext": {
+        "type": "investment",
+        "capital_before": "해당 없음",
+        "capital_after": "해당 없음",
+        "profit_loss": "해당 없음",
+        "method": "해당 없음",
+        "investment_type": "해당 없음",
+        "deal_type": "해당 없음",
+        "leverage_used": [],
+        "opponent": { "name": "죽음 / 운명", "type": "추상적 존재", "weakness_exploited": "없음" },
+        "historical_event": { "name": "스티브 잡스 사망 (2011.10.05)", "year": 2011, "how_exploited": "없음 - 순수한 감정적 에피소드" },
+        "time_pressure": "없음",
+        "knowledge_used": "잡스가 2011년 10월에 사망한다는 미래 정보. 하지만 막을 수 없었다.",
+        "risk_level": "없음",
+        "business_sector": "해당 없음",
+        "special_ability": { "has_ability": false }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "스티브 잡스가 2011년 10월 5일 사망한다는 사실. 2003년 첫 진단 때 즉시 수술했으면 살 수 있었다는 추측.", "accuracy": "정확", "source": "직접경험" },
+        "butterfly_effect": { "original_event": "원래 역사에서 잡스는 2011년 10월 5일 사망했다.", "changed_event": "한시우가 2003년에 수술을 권유했지만, 잡스는 거절했다. 역사는 바뀌지 않았다.", "ripple_effect": "한시우는 '운명을 바꿀 수 없다'는 회귀자의 한계를 절감한다." },
+        "death_flag": { "avoided": "시도했으나 실패", "method": "2003년 수술 권유 → 잡스 거절" },
+        "regression_hint": { "slip_up": "장례식에서 한시우가 '2003년에 내 말을 들었어야 했어'라고 중얼거림. 옆에 있던 팀 쿡이 의아해한다.", "suspicion_from": "팀 쿡" },
+        "future_prep": { "action": "상실을 딛고 다시 전장으로. 유럽 위기가 정점을 향해 간다.", "target_event": "마리오 드라기의 'Whatever it takes' (2012.07)" }
+      }
+    },
+    {
+      "block_id": "Block 25",
+      "title": "Whatever It Takes",
+      "content": {
+        "context": "2012년 7월 26일. 런던 투자 컨퍼런스. ECB 총재 마리오 드라기가 연단에 선다. 유로존은 붕괴 직전이다. 스페인과 이탈리아 국채 금리가 7%를 돌파했고, 유로화 붕괴론이 최고조에 달했다. 모두가 드라기의 입을 주목한다. 그리고 그가 세 단어를 말한다. 'Whatever it takes.'",
+        "event_villain": "2년간 지속된 유럽 위기가 정점에 달했다. 그리스는 사실상 디폴트했고, 스페인 은행들은 파산 직전이다. 독일 국민들은 '왜 우리 돈으로 남유럽을 구해야 하나'고 분노한다. 유럽 분열은 초읽기에 들어갔다.",
+        "solution": "한시우는 드라기의 말이 떨어지는 순간 행동한다. 그리스/스페인/이탈리아 국채 CDS 전량 매도(숏 포지션 청산), 동시에 유럽 은행주 대량 매수. '드라기가 유로를 구했다'는 것을 아는 한시우는 이 순간이 유럽 위기의 바닥임을 확신한다. 2시간 만에 포트폴리오를 180도 전환한다.",
+        "reward": "CDS 수익 확정 + 유럽 은행주 저점 매수. 2012-2014년간 유럽 자산에서 약 50억 달러 수익. 런던 거점의 가치가 빛을 발한다."
+      },
+      "stakes": "드라기의 말이 허풍이면 유럽은 정말 붕괴하고 한시우의 롱 포지션은 전멸. 하지만 한시우는 안다. 드라기가 진심이라는 것을.",
+      "power_shift": {
+        "protagonist": "유럽 위기의 최대 수혜자. 숏에서 롱으로 완벽한 타이밍 전환.",
+        "antagonist": "유로 붕괴에 베팅한 헤지펀드들. 그들은 드라기의 세 단어에 패배한다."
+      },
+      "relationship_delta": [
+        { "target": "런던 사무실 팀", "before": "보스의 지시를 따르는 직원들", "after": "2시간 만에 포지션을 전환하는 보스의 결단력에 경악" }
+      ],
+      "foreshadow": [
+        "한시우가 '드라기가 유럽을 구한다. 하지만 2016년에 영국이 떠난다.'고 예언. 브렉시트 복선.",
+        "런던 사무실을 확장하며 '여기가 곧 가장 중요한 거점이 됩니다'라고 말함.",
+        "한시우가 '다음 위기는 중국에서 온다'고 암시."
+      ],
+      "callback": [
+        "Block 22에서 '드라기'라는 이름을 기억해두라고 한 복선이 현실화.",
+        "Block 17의 베어 스턴스 때처럼 정확한 타이밍에 포지션 전환."
+      ],
+      "emotional_beat": { "type": "triumph", "intensity": 8 },
+      "tension_level": "8",
+      "pov_character": "한시우",
+      "location": { "place": "영국 런던, 컨퍼런스장 및 SW인베스트먼트 런던 사무실", "type": "실내" },
+      "time_span": { "duration": "1일", "in_story_time": "2012년 7월 26일" },
+      "genre_ext": {
+        "type": "investment",
+        "capital_before": "그리스 CDS 포지션 + 현금",
+        "capital_after": "유럽 은행주 + 남유럽 국채",
+        "profit_loss": "+50억 달러 (2014년까지 누적)",
+        "method": "포지션 전환",
+        "investment_type": "주식 + 채권",
+        "deal_type": "시장 거래",
+        "leverage_used": ["미래 정보 (드라기의 성공)", "정확한 타이밍", "지역 거점 활용"],
+        "opponent": { "name": "유로 붕괴론자들 / 숏 헤지펀드", "type": "시장 참여자", "weakness_exploited": "중앙은행의 힘을 과소평가" },
+        "historical_event": { "name": "드라기의 'Whatever it takes' (2012.07.26)", "year": 2012, "how_exploited": "발언 직후 즉시 숏→롱 전환" },
+        "time_pressure": "드라기 발언 직후 시장이 급등하기 전에 전환해야 함.",
+        "knowledge_used": "드라기의 발언이 유럽 위기의 전환점이 된다는 미래 정보",
+        "risk_level": "고위험 (단기)",
+        "business_sector": "금융/매크로",
+        "special_ability": { "has_ability": false }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "2012년 7월 26일 드라기의 발언이 유로 위기의 종료를 알린다는 사실.", "accuracy": "정확", "source": "직접경험" },
+        "butterfly_effect": { "original_event": "원래 역사에서 드라기의 발언 후 유럽 시장은 급등했다.", "changed_event": "한시우의 대규모 매수가 반등을 조금 더 강화했을 수 있다.", "ripple_effect": "한시우가 유럽 은행의 주요 주주가 됨으로써 이후 유럽 금융 정책에 간접적 영향력." },
+        "death_flag": { "avoided": null, "method": null },
+        "regression_hint": { "slip_up": "한시우가 드라기 발언 전에 이미 매수 주문을 준비해둠. 런던 팀이 '어떻게 아셨어요?'라고 의아해함.", "suspicion_from": "런던 사무실 팀" },
+        "future_prep": { "action": "유럽 포지션 정리하며, 페이스북 IPO 참패에 대비.", "target_event": "페이스북 IPO (2012.05) → 저점 매수 (2012.09)" }
+      }
+    },
+    {
+      "block_id": "Block 26",
+      "title": "페이스북의 굴욕",
+      "content": {
+        "context": "2012년 5월 18일. 페이스북이 나스닥에 상장한다. 역사상 최대 규모의 테크 IPO. 공모가 $38. 모두가 '제2의 구글'을 기대한다. 하지만 한시우는 첫날부터 이상함을 감지한다. 주가가 공모가 아래로 떨어진다. 한 달 후 $26, 석 달 후 $19. 시가총액이 절반으로 증발한다.",
+        "event_villain": "모바일 시대가 왔는데 페이스북은 준비가 안 됐다. 모바일 광고 수익이 0%다. 저커버그는 '모바일 전환'을 외치지만 시장은 믿지 않는다. '페이스북은 끝났다'는 기사가 쏟아진다. 초기 투자자들조차 매도하고 있다. 한시우가 Block 12에서 투자한 지분도 반토막 났다.",
+        "solution": "한시우는 다른 방향으로 움직인다. $19 바닥에서 페이스북 주식을 추가 대량 매수한다. '저커버그는 해냅니다. 모바일 광고, 인스타그램 인수, 왓츠앱까지.' 측근들은 '침몰하는 배에 올라타는 격'이라며 반대하지만, 한시우는 '이 배는 침몰하지 않아'라고 단언한다.",
+        "reward": "$19에서 대량 매수한 페이스북 주식은 2년 후 $70, 5년 후 $150을 돌파한다. 바닥 매수 수익만 수십억 달러. 저커버그와의 관계도 더욱 강화된다. '모두가 떠날 때 남아있던 사람'으로."
+      },
+      "stakes": "페이스북이 정말 침몰하면 기존 지분 + 추가 매수분 모두 손실. '구글의 재림'이 아니라 '마이스페이스의 재림'이 될 수도.",
+      "power_shift": {
+        "protagonist": "소셜 네트워크의 가장 충성스러운 투자자. 저커버그의 신뢰를 독점.",
+        "antagonist": "페이스북을 버린 월가와 미디어. 그들은 2년 후 땅을 치며 후회한다."
+      },
+      "relationship_delta": [
+        { "target": "마크 저커버그", "before": "초기 투자자", "after": "IPO 참패 때도 떠나지 않은 유일한 대형 투자자. '형님'이라 부르기 시작." }
+      ],
+      "foreshadow": [
+        "한시우가 '인스타그램 인수는 역사상 최고의 딜입니다'라고 말함. 2012년 10억 달러 인수, 2020년대 가치 1000억 달러 이상.",
+        "저커버그에게 '왓츠앱도 사세요. 가격이 얼마든'이라고 조언. 2014년 190억 달러 인수 복선.",
+        "한시우가 '메타버스'라는 단어를 처음 언급하지만 저커버그는 '뭔가요?'라고 되묻는다."
+      ],
+      "callback": [
+        "Block 12에서 '절대 팔지 마세요. 야후가 10억 달러를 제안해도'라고 했던 조언이 IPO 이후에도 유효.",
+        "Block 20에서 금융위기 바닥 매수 경험이 페이스북에서 반복."
+      ],
+      "emotional_beat": { "type": "determination", "intensity": 7 },
+      "tension_level": "6",
+      "pov_character": "한시우",
+      "location": { "place": "미국 캘리포니아 멘로파크, 페이스북 본사", "type": "실내" },
+      "time_span": { "duration": "약 4개월", "in_story_time": "2012년 5월 ~ 9월" },
+      "genre_ext": {
+        "type": "investment",
+        "capital_before": "페이스북 지분 2% (가치 하락)",
+        "capital_after": "페이스북 지분 약 3.5% ($19 매수분 포함)",
+        "profit_loss": "단기 -50% → 장기 +500%",
+        "method": "저점 매수",
+        "investment_type": "상장 주식",
+        "deal_type": "시장 거래",
+        "leverage_used": ["미래 정보 (모바일 전환 성공)", "역발상", "장기 투자 관점"],
+        "opponent": { "name": "월가 / 페이스북 회의론자들", "type": "시장", "weakness_exploited": "단기 실적에만 집착하는 근시안" },
+        "historical_event": { "name": "페이스북 IPO 참패 (2012.05-09)", "year": 2012, "how_exploited": "$19 바닥에서 대량 매수" },
+        "time_pressure": "바닥이 오래 지속되지 않음. $19에서 매수할 기회는 몇 주뿐.",
+        "knowledge_used": "페이스북이 모바일 전환에 성공하고, 인스타그램/왓츠앱 인수로 제국을 확장한다는 미래 정보",
+        "risk_level": "중위험",
+        "business_sector": "소셜 네트워크/IT",
+        "special_ability": { "has_ability": false }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "페이스북이 모바일 광고에서 성공하고, 2012년 인스타그램, 2014년 왓츠앱을 인수하며 성장한다는 사실.", "accuracy": "정확", "source": "직접경험" },
+        "butterfly_effect": { "original_event": "원래 역사에서 페이스북은 2012년 IPO 후 급락했다가 회복했다.", "changed_event": "한시우의 대규모 바닥 매수가 주가 회복을 조금 앞당겼을 수 있다.", "ripple_effect": "저커버그가 한시우의 조언을 더 신뢰하게 되어 이후 결정에 영향." },
+        "death_flag": { "avoided": null, "method": null },
+        "regression_hint": { "slip_up": "한시우가 '왓츠앱 190억 달러'라는 아직 결정되지 않은 숫자를 언급.", "suspicion_from": "마크 저커버그" },
+        "future_prep": { "action": "페이스북 포지션 확보 후, 중국 시장 진출 준비.", "target_event": "텐센트/알리바바 투자 (2013)" }
+      }
+    },
+    {
+      "block_id": "Block 27",
+      "title": "붉은 용의 심장",
+      "content": {
+        "context": "2013년 봄. 한시우는 베이징에 있다. 중국. 14억 인구의 거대한 시장. 그동안 미국과 유럽에 집중했지만, 진짜 21세기의 주인공은 여기다. 텐센트의 마화텅, 알리바바의 마윈. 두 마(馬)씨가 중국 인터넷을 양분하고 있다. 한시우는 둘 다 만나야 한다.",
+        "event_villain": "중국은 외국인에게 열려 있지 않다. 구글은 쫓겨났고, 페이스북과 트위터는 차단됐다. 외국 자본에 대한 경계심이 높다. 게다가 한시우는 미국에 기반을 둔 투자자다. 중국 정부의 의심을 살 수 있다. 마윈과 마화텅도 외국인 투자자를 경계한다.",
+        "solution": "한시우는 다른 접근법을 택한다. 직접 투자가 아니라 '파트너'로 접근한다. 마화텅에게는 '게임'에 대해, 마윈에게는 '물류'에 대해 이야기한다. 그들이 아직 보지 못하는 미래의 청사진을 보여준다. 특히 마윈에게 '클라우드(알리클라우드)'의 가능성을 강조한다. 그 결과, 텐센트와 알리바바 양쪽에 소수 지분 투자에 성공한다.",
+        "reward": "텐센트 약 1%, 알리바바 약 0.5% 지분 확보. 금액은 크지 않지만, 중국 인터넷 양대 산맥에 발을 들인 것 자체가 수확. 2014년 알리바바 IPO 때 이 지분은 수십억 달러가 된다."
+      },
+      "stakes": "중국 정부의 견제를 받으면 투자금이 동결되거나 추방당할 수 있다. 또한 마윈/마화텅의 신뢰를 잃으면 중국 시장에서 영원히 배제될 수 있다.",
+      "power_shift": {
+        "protagonist": "미국-유럽-일본을 넘어 중국까지. 진정한 글로벌 투자자로 완성.",
+        "antagonist": "중국 시장에서 배제된 구글, 페이스북, 아마존. 그들은 14억 시장을 놓쳤다."
+      },
+      "relationship_delta": [
+        { "target": "마윈", "before": "이름만 아는 사이", "after": "알리클라우드의 잠재력을 알아본 유일한 외국인 투자자. 특별한 신뢰." },
+        { "target": "마화텅", "before": "이름만 아는 사이", "after": "게임 산업의 미래를 함께 논의한 전략적 파트너." }
+      ],
+      "foreshadow": [
+        "한시우가 마윈에게 '2014년에 뉴욕에서 봅시다'라고 말함. 알리바바 IPO 복선.",
+        "마화텅에게 '위챗 페이가 알리페이를 위협할 겁니다'라고 예언.",
+        "한시우가 '중국은 10년 후 미국과 충돌합니다'라고 암시. 미중 무역전쟁 복선."
+      ],
+      "callback": [
+        "Block 5-6에서 구글/아마존 창업자들과 관계를 구축한 것처럼, 중국판을 실행.",
+        "Block 23에서 손정의를 만난 것처럼 아시아 네트워크 확장."
+      ],
+      "emotional_beat": { "type": "triumph", "intensity": 7 },
+      "tension_level": "6",
+      "pov_character": "한시우",
+      "location": { "place": "중국 베이징, 항저우, 선전", "type": "실내" },
+      "time_span": { "duration": "약 3개월", "in_story_time": "2013년 3월 ~ 6월" },
+      "genre_ext": {
+        "type": "investment",
+        "capital_before": "포트폴리오 약 800억 달러",
+        "capital_after": "텐센트 1% + 알리바바 0.5%",
+        "profit_loss": "미실현 → 알리바바 IPO 시 수십억 달러",
+        "method": "전략적 투자",
+        "investment_type": "비상장(알리바바) + 상장(텐센트)",
+        "deal_type": "협상",
+        "leverage_used": ["미래 정보 (중국 인터넷 성장)", "비전 공유", "파트너 접근법"],
+        "opponent": { "name": "중국 정부 / 외국인 투자 규제", "type": "규제", "weakness_exploited": "파트너십 구조로 규제 우회" },
+        "historical_event": { "name": "중국 인터넷 빅테크 성장기 (2013-2014)", "year": 2013, "how_exploited": "알리바바 IPO 전 지분 확보" },
+        "time_pressure": "알리바바 IPO가 2014년으로 예정. 그 전에 지분 확보 필요.",
+        "knowledge_used": "텐센트와 알리바바가 세계 10대 기업에 진입한다는 미래 정보",
+        "risk_level": "고위험 (정치적 리스크)",
+        "business_sector": "인터넷/이커머스",
+        "special_ability": { "has_ability": false }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "알리바바가 2014년 사상 최대 IPO를 하고, 텐센트가 게임/핀테크로 세계 최대 기업 중 하나가 된다는 사실.", "accuracy": "정확", "source": "직접경험" },
+        "butterfly_effect": { "original_event": "원래 역사에서 알리바바와 텐센트는 주로 아시아 자본이 투자했다.", "changed_event": "한시우라는 서방 거물이 참여함으로써 중국 기업의 글로벌 인지도에 기여.", "ripple_effect": "한시우가 중국 시장에 발을 들임으로써 이후 미중 갈등에서 복잡한 위치에 놓일 수 있다." },
+        "death_flag": { "avoided": null, "method": null },
+        "regression_hint": { "slip_up": "한시우가 '알리클라우드'라는 아직 작은 사업의 잠재력을 너무 확신 있게 말함.", "suspicion_from": "마윈" },
+        "future_prep": { "action": "중국 포지션 확보 후, NSA 폭로 사태에 대비.", "target_event": "에드워드 스노든 폭로 (2013.06)" }
+      }
+    },
+    {
+      "block_id": "Block 28",
+      "title": "스노든",
+      "content": {
+        "context": "2013년 6월. 에드워드 스노든이 세상을 뒤흔든다. NSA(미 국가안보국)가 전 세계를 감시하고 있다는 폭로. 프리즘 프로그램. 빅테크 기업들이 정부에 데이터를 제공했다는 의혹. 애플, 구글, 페이스북, 마이크로소프트 모두 곤경에 빠진다. 한시우의 포트폴리오 기업들이다.",
+        "event_villain": "미국 정부는 스노든을 반역자로 규정하고 체포령을 내린다. 스노든은 홍콩을 거쳐 러시아로 도주한다. 빅테크 기업들은 '우리는 몰랐다'고 발뺌하지만, 신뢰는 무너졌다. 개인정보 논쟁이 폭발한다. 한시우도 FBI의 비공식 방문을 받는다. '당신의 통신 기록이 필요합니다.'",
+        "solution": "한시우는 두 가지 대응을 한다. 첫째, FBI에 협조하되 선을 긋는다. '법원 영장 가져오세요.' 둘째, 사이버 보안 분야에 대규모 투자를 시작한다. 팔로알토 네트웍스, 크라우드스트라이크 같은 보안 회사들. '감시의 시대가 오면, 보안이 황금이 됩니다.' 동시에 피터 틸의 팔란티어에 추가 투자한다.",
+        "reward": "사이버 보안 포트폴리오 구축. 2020년대 사이버 위협 증가로 이 투자는 10배 이상 수익. 팔란티어 지분 확대로 정부/군사 데이터 분석 시장에 간접 접근."
+      },
+      "stakes": "미국 정보기관과의 관계가 악화되면 사업에 악영향. 또한 빅테크 지분 가치가 개인정보 논쟁으로 하락할 수 있다.",
+      "power_shift": {
+        "protagonist": "단순 투자자를 넘어 '데이터 시대의 권력 구조'를 이해하는 전략가로 진화.",
+        "antagonist": "NSA와 미국 정보기관. 하지만 한시우는 그들과 적대하지 않는다. 거리를 유지할 뿐."
+      },
+      "relationship_delta": [
+        { "target": "피터 틸", "before": "페이팔/페이스북 파트너", "after": "팔란티어 공동 투자자. 정부와 테크의 교차점에서 협력." },
+        { "target": "미국 정보기관", "before": "무관", "after": "주시 대상. 한시우가 너무 많은 것을 알고 있다는 의심." }
+      ],
+      "foreshadow": [
+        "한시우가 '사이버 전쟁이 진짜 전쟁보다 중요해집니다'라고 말함.",
+        "FBI 요원에게 '러시아가 미국 선거에 개입합니다'라고 농담처럼 말함. 2016년 선거 개입 복선.",
+        "한시우가 '스노든은 러시아에서 10년을 보냅니다'라고 예언."
+      ],
+      "callback": [
+        "Block 7에서 피터 틸과 구축한 관계가 팔란티어 투자로 심화.",
+        "Block 27에서 중국 진출 직후 미국 정보기관의 주목을 받는 아이러니."
+      ],
+      "emotional_beat": { "type": "tension", "intensity": 7 },
+      "tension_level": "7",
+      "pov_character": "한시우",
+      "location": { "place": "미국 뉴욕, 워싱턴 D.C.", "type": "실내" },
+      "time_span": { "duration": "약 2개월", "in_story_time": "2013년 6월 ~ 8월" },
+      "genre_ext": {
+        "type": "investment",
+        "capital_before": "포트폴리오 약 850억 달러",
+        "capital_after": "사이버 보안 포트폴리오 추가",
+        "profit_loss": "미실현 → 2020년대 10배 이상",
+        "method": "섹터 투자",
+        "investment_type": "상장/비상장 혼합",
+        "deal_type": "시장 거래 + 전략적 투자",
+        "leverage_used": ["미래 정보 (사이버 위협 증가)", "스노든 사태 활용", "피터 틸 네트워크"],
+        "opponent": { "name": "사이버 위협 / 정보기관", "type": "환경", "weakness_exploited": "보안 수요 증가" },
+        "historical_event": { "name": "스노든 폭로 (2013.06)", "year": 2013, "how_exploited": "사이버 보안 투자 계기" },
+        "time_pressure": "스노든 사태 직후가 보안주 저점 매수 적기.",
+        "knowledge_used": "사이버 보안 시장이 급성장하고, 2020년대 랜섬웨어/국가 해킹이 일상화된다는 미래 정보",
+        "risk_level": "중위험",
+        "business_sector": "사이버 보안",
+        "special_ability": { "has_ability": false }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "스노든이 러시아에 망명하고, 사이버 보안이 국가 안보 이슈가 된다는 사실. 2016년 러시아의 미국 선거 개입.", "accuracy": "정확", "source": "직접경험" },
+        "butterfly_effect": { "original_event": "원래 역사에서 스노든 폭로는 빅테크에 대한 불신을 높였다.", "changed_event": "한시우가 사이버 보안에 일찍 투자함으로써 일부 기업의 성장이 앞당겨질 수 있다.", "ripple_effect": "한시우가 정보기관의 주시 대상이 됨으로써 이후 비밀 유지에 더 신경 써야 한다." },
+        "death_flag": { "avoided": null, "method": null },
+        "regression_hint": { "slip_up": "FBI 요원에게 '2016년 선거'를 언급한 것이 기록에 남음.", "suspicion_from": "FBI" },
+        "future_prep": { "action": "보안 포트폴리오 구축 후, 러시아-우크라이나 긴장에 주목.", "target_event": "크림반도 합병 (2014.03)" }
+      }
+    },
+    {
+      "block_id": "Block 29",
+      "title": "크림반도",
+      "content": {
+        "context": "2014년 2월. 우크라이나 키이우에서 혁명이 일어난다. 친러 대통령이 축출되고, 친서방 정부가 들어선다. 푸틴은 분노한다. 3월 18일, 러시아는 크림반도를 전격 합병한다. 국제사회는 경악하고, 서방은 러시아에 경제 제재를 가한다. 유가가 요동친다. 한시우는 이 모든 것을 예견하고 있었다.",
+        "event_villain": "푸틴의 러시아. 하지만 한시우에게 푸틴은 적이 아니다. 변수다. 예측 가능한 변수. 문제는 서방의 대응이 어디까지 갈 것인가다. 제재가 강화되면 러시아 경제는 무너지고, 유가는 폭락한다. 한시우는 이 연쇄 반응을 정확히 계산한다.",
+        "solution": "한시우는 세 가지 베팅을 한다. 첫째, 러시아 주식/채권 전량 매도. 제재 전에 탈출. 둘째, 유가 하락에 베팅하는 풋옵션 대량 매입. 셋째, 방산주(록히드마틴, 레이시온) 매수. '냉전 2.0'의 시작이다. 2014년 하반기, 유가는 $100에서 $50 아래로 폭락한다.",
+        "reward": "러시아 자산 손실 회피. 유가 풋옵션으로 약 10억 달러 수익. 방산주 상승으로 추가 수억 달러. 지정학적 리스크를 수익으로 전환하는 능력 입증."
+      },
+      "stakes": "유가가 폭락하지 않으면 풋옵션 손실. 서방 제재가 약하면 러시아 자산을 너무 일찍 판 셈이 된다.",
+      "power_shift": {
+        "protagonist": "지정학적 이벤트를 투자 기회로 전환하는 '매크로 마스터'.",
+        "antagonist": "푸틴과 러시아. 하지만 진짜 패배자는 제재에 휘말린 유럽 기업들과 러시아 국민들."
+      },
+      "relationship_delta": [
+        { "target": "러시아 비즈니스계", "before": "잠재적 파트너", "after": "한시우가 제재 전에 탈출함으로써 관계 단절. 러시아 시장에서 배제." }
+      ],
+      "foreshadow": [
+        "한시우가 '이건 시작입니다. 2022년에 전면전이 옵니다.'라고 예언. 러시아-우크라이나 전쟁 복선.",
+        "측근에게 '유럽은 러시아 가스에 중독되어 있습니다. 그게 약점이 될 겁니다.'라고 말함.",
+        "한시우가 우크라이나 지도를 보며 '돈바스'라는 지명을 기억해두라고 지시."
+      ],
+      "callback": [
+        "Block 22-25의 유럽 위기 경험이 지정학적 리스크 판단에 도움.",
+        "Block 10의 9/11 때처럼 '예측할 수 없는 것을 예측'."
+      ],
+      "emotional_beat": { "type": "tension", "intensity": 8 },
+      "tension_level": "8",
+      "pov_character": "한시우",
+      "location": { "place": "영국 런던, 미국 뉴욕", "type": "실내" },
+      "time_span": { "duration": "약 3개월", "in_story_time": "2014년 2월 ~ 5월" },
+      "genre_ext": {
+        "type": "investment",
+        "capital_before": "러시아 자산 포함 포트폴리오",
+        "capital_after": "러시아 제로 + 유가 풋옵션 + 방산주",
+        "profit_loss": "+약 15억 달러 (2014년)",
+        "method": "매크로 베팅",
+        "investment_type": "파생상품 + 주식",
+        "deal_type": "시장 거래",
+        "leverage_used": ["미래 정보 (크림반도, 유가 폭락)", "지정학적 분석", "선제적 탈출"],
+        "opponent": { "name": "러시아 / 지정학적 불확실성", "type": "지정학", "weakness_exploited": "푸틴의 예측 가능한 행동 패턴" },
+        "historical_event": { "name": "크림반도 합병 (2014.03.18)", "year": 2014, "how_exploited": "합병 전 러시아 자산 매도, 유가 숏, 방산 롱" },
+        "time_pressure": "제재 발동 전에 러시아 자산 청산 필요.",
+        "knowledge_used": "크림반도 합병, 서방 제재, 유가 $100→$50 폭락이라는 미래 정보",
+        "risk_level": "고위험",
+        "business_sector": "에너지/방산",
+        "special_ability": { "has_ability": false }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "2014년 크림반도 합병, 서방 제재, 유가 폭락. 그리고 2022년 전면 침공.", "accuracy": "정확", "source": "직접경험" },
+        "butterfly_effect": { "original_event": "원래 역사에서 크림반도 합병 후 유가는 폭락했다.", "changed_event": "한시우의 대규모 유가 숏이 폭락을 조금 가속했을 수 있다.", "ripple_effect": "한시우가 러시아 시장에서 완전 철수함으로써 2022년 전쟁 때 손실 제로." },
+        "death_flag": { "avoided": null, "method": null },
+        "regression_hint": { "slip_up": "한시우가 '2022년'이라는 연도를 너무 확신 있게 언급.", "suspicion_from": "런던 사무실 지정학 분석가" },
+        "future_prep": { "action": "지정학 베팅 정리 후, 알리바바 IPO 준비.", "target_event": "알리바바 뉴욕 상장 (2014.09)" }
+      }
+    },
+    {
+      "block_id": "Block 30",
+      "title": "마윈의 날",
+      "content": {
+        "context": "2014년 9월 19일. 뉴욕증권거래소. 알리바바가 상장한다. 공모가 $68, 조달 금액 $250억. 역사상 최대 IPO. 마윈이 종을 치는 순간, 중국 인터넷의 시대가 공식적으로 열린다. 한시우는 거래소 플로어에서 이 역사적 순간을 지켜본다. 2013년 항저우에서 마윈을 만났던 날이 떠오른다.",
+        "event_villain": "없다. 이 블록은 순수한 승리의 순간이다. 다만 월가의 일부는 '중국 기업을 믿을 수 있느냐'며 의심한다. 회계 투명성, 정부 개입 리스크. 하지만 시장은 열광한다. 첫날 주가 38% 상승. 시가총액 $2,300억.",
+        "solution": "한시우는 IPO 당일 아무것도 하지 않는다. 이미 Block 27에서 지분을 확보해뒀기 때문이다. 대신 마윈과 함께 성공을 축하하고, 향후 계획을 논의한다. '한국 시장은 어떻습니까?' 마윈이 묻는다. 한시우의 눈이 빛난다. '관심 있습니다. 하지만 아직 때가 아닙니다.'",
+        "reward": "알리바바 IPO로 한시우의 0.5% 지분은 약 10억 달러 이상의 가치가 된다. 하지만 진짜 수확은 마윈과의 대화다. 한국 시장. 송경그룹. 19년간 미뤄왔던 본래의 목적이 드디어 시야에 들어온다."
+      },
+      "stakes": "경제적 스테이크는 이미 확보됨. 감정적 스테이크 - 한국 귀환에 대한 결심이 시작된다.",
+      "power_shift": {
+        "protagonist": "중국 인터넷의 승리를 함께한 외국인 투자자. 글로벌 투자 제국 완성의 마지막 조각 - 한국만 남았다.",
+        "antagonist": "없음. 하지만 한국에서 기다리는 숙부들의 그림자가 어른거린다."
+      },
+      "relationship_delta": [
+        { "target": "마윈", "before": "투자자", "after": "알리바바 IPO의 성공을 함께 축하한 파트너. 한국 진출에 대한 암묵적 지원 약속." }
+      ],
+      "foreshadow": [
+        "마윈이 '한국 시장은 삼성과 재벌들이 지배합니다. 힘들 겁니다.'라고 말하자, 한시우가 '그래서 제가 가야 합니다'라고 답함.",
+        "한시우가 '내년에 한국에 갑니다. 19년 만에.'라고 선언. Block 32 복선.",
+        "마윈이 '적이 있습니까?'라고 묻자, 한시우가 '가족입니다'라고 쓸쓸하게 답함."
+      ],
+      "callback": [
+        "Block 27에서 마윈을 처음 만났을 때 '2014년 뉴욕에서 봅시다'라고 한 약속이 현실화.",
+        "Block 1에서 시작된 '송경그룹 탈환'이라는 본래 목적이 드디어 수면 위로."
+      ],
+      "emotional_beat": { "type": "anticipation", "intensity": 9 },
+      "tension_level": "5",
+      "pov_character": "한시우",
+      "location": { "place": "미국 뉴욕, 뉴욕증권거래소", "type": "실내" },
+      "time_span": { "duration": "1일", "in_story_time": "2014년 9월 19일" },
+      "genre_ext": {
+        "type": "investment",
+        "capital_before": "알리바바 0.5% (비상장)",
+        "capital_after": "알리바바 0.5% (상장, 약 10억 달러+)",
+        "profit_loss": "원금 대비 약 20배 수익 실현 가능",
+        "method": "IPO",
+        "investment_type": "상장 주식",
+        "deal_type": "보유 유지",
+        "leverage_used": ["미래 정보 (알리바바 성장)", "조기 진입", "마윈 네트워크"],
+        "opponent": { "name": "없음", "type": "없음", "weakness_exploited": "없음" },
+        "historical_event": { "name": "알리바바 IPO (2014.09.19)", "year": 2014, "how_exploited": "IPO 전 지분 확보, 상장 후 가치 급등" },
+        "time_pressure": "없음. 이미 승리.",
+        "knowledge_used": "알리바바가 사상 최대 IPO를 기록하고, 중국 이커머스/클라우드의 왕이 된다는 미래 정보",
+        "risk_level": "저위험 (이미 확보)",
+        "business_sector": "이커머스/인터넷",
+        "special_ability": { "has_ability": false }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "2014년 9월 알리바바 IPO가 역사상 최대가 된다는 사실.", "accuracy": "정확", "source": "직접경험" },
+        "butterfly_effect": { "original_event": "원래 역사에서 알리바바 IPO는 $250억을 조달했다.", "changed_event": "한시우의 참여가 IPO 자체를 바꾸지는 않았다.", "ripple_effect": "마윈과의 관계가 이후 한국 시장 진출에 간접적 도움이 될 수 있다." },
+        "death_flag": { "avoided": null, "method": null },
+        "regression_hint": { "slip_up": "한시우가 '19년'이라는 숫자를 여러 번 언급. 왜 정확히 19년인지 의아해하는 마윈.", "suspicion_from": "마윈" },
+        "future_prep": { "action": "알리바바 IPO 축하를 마치고, 한국 귀환 준비 시작.", "target_event": "한국 귀환 (Block 32, 2015)" }
+      }
+    }
+  ]
+}

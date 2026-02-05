@@ -1,0 +1,76 @@
+{"timestamp": "2026-02-05 20:48:31", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "items_tracked": 5}}
+{"timestamp": "2026-02-05 20:57:34", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 20:58:51", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 4, "items_tracked": 9}}
+{"timestamp": "2026-02-05 21:04:28", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 5, "corrections": ["시작 위치 수정: '샌프란시스코 국제공항 출국장' → '미국 캘리포니아 쿠퍼티노, 애플 본사 임원 회의실'"]}}
+{"timestamp": "2026-02-05 21:05:33", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 21:07:06", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 5, "items_tracked": 8}}
+{"timestamp": "2026-02-05 21:14:01", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 21:16:09", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 6, "items_tracked": 13}}
+{"timestamp": "2026-02-05 21:23:46", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 7, "corrections": ["시작 위치 수정: '시애틀-타코마 국제공항 출국장' → '미국 워싱턴주 시애틀, 아마존 본사 로비'"]}}
+{"timestamp": "2026-02-05 21:32:37", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 7, "corrections": ["시작 위치 수정: '시애틀-타코마 국제공항 출국장' → '미국 워싱턴주 시애틀, 아마존 본사 로비'"]}}
+{"timestamp": "2026-02-05 21:56:13", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 6, "items_tracked": 13}}
+{"timestamp": "2026-02-05 22:08:17", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 6, "items_tracked": 13}}
+{"timestamp": "2026-02-05 22:18:04", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 7, "corrections": ["시작 위치 수정: '시애틀-타코마 국제공항 출국장' → '미국 워싱턴주 시애틀, 아마존 본사 로비'"]}}
+{"timestamp": "2026-02-05 22:19:23", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 22:21:32", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 7, "items_tracked": 13}}
+{"timestamp": "2026-02-05 22:30:31", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 22:33:09", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 8, "items_tracked": 16}}
+{"timestamp": "2026-02-05 22:42:58", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 9, "corrections": ["시작 위치 수정: '뉴욕 JFK 국제공항' → '미국 뉴욕 맨해튼, 송경글로벌 미국 지사 트레이딩 룸'"]}}
+{"timestamp": "2026-02-05 22:44:50", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 22:47:47", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 9, "items_tracked": 13}}
+{"timestamp": "2026-02-05 22:59:54", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 23:03:10", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 10, "items_tracked": 13}}
+{"timestamp": "2026-02-06 04:10:42", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 04:10:42", "type": "blueprint_success", "message": "ep_16_blueprint_generated", "data": {"ep_num": 16, "arc_no": 4, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 04:13:27", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 04:13:27", "type": "blueprint_success", "message": "ep_17_blueprint_generated", "data": {"ep_num": 17, "arc_no": 4, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 04:16:18", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 04:16:18", "type": "blueprint_success", "message": "ep_18_blueprint_generated", "data": {"ep_num": 18, "arc_no": 4, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 04:18:45", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 04:18:45", "type": "blueprint_success", "message": "ep_19_blueprint_generated", "data": {"ep_num": 19, "arc_no": 4, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 04:21:37", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 04:21:37", "type": "blueprint_success", "message": "ep_20_blueprint_generated", "data": {"ep_num": 20, "arc_no": 5, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 05:07:11", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 05:07:11", "type": "blueprint_success", "message": "ep_21_blueprint_generated", "data": {"ep_num": 21, "arc_no": 5, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 05:10:02", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 05:10:02", "type": "blueprint_success", "message": "ep_22_blueprint_generated", "data": {"ep_num": 22, "arc_no": 5, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 05:12:41", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 05:12:41", "type": "blueprint_success", "message": "ep_23_blueprint_generated", "data": {"ep_num": 23, "arc_no": 5, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 05:25:50", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 05:25:50", "type": "blueprint_success", "message": "ep_24_blueprint_generated", "data": {"ep_num": 24, "arc_no": 6, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 05:29:01", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 05:29:01", "type": "blueprint_success", "message": "ep_25_blueprint_generated", "data": {"ep_num": 25, "arc_no": 6, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 05:31:59", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 05:31:59", "type": "blueprint_success", "message": "ep_26_blueprint_generated", "data": {"ep_num": 26, "arc_no": 6, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 05:34:57", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 05:34:57", "type": "blueprint_success", "message": "ep_27_blueprint_generated", "data": {"ep_num": 27, "arc_no": 6, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 06:11:09", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 06:11:09", "type": "blueprint_success", "message": "ep_28_blueprint_generated", "data": {"ep_num": 28, "arc_no": 7, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 06:23:24", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 06:23:24", "type": "blueprint_success", "message": "ep_29_blueprint_generated", "data": {"ep_num": 29, "arc_no": 7, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 06:27:10", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 06:27:10", "type": "blueprint_success", "message": "ep_30_blueprint_generated", "data": {"ep_num": 30, "arc_no": 7, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 06:30:34", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 06:30:34", "type": "blueprint_success", "message": "ep_31_blueprint_generated", "data": {"ep_num": 31, "arc_no": 7, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 06:54:09", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 06:54:09", "type": "blueprint_success", "message": "ep_32_blueprint_generated", "data": {"ep_num": 32, "arc_no": 8, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 06:58:17", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 06:58:17", "type": "blueprint_success", "message": "ep_33_blueprint_generated", "data": {"ep_num": 33, "arc_no": 8, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 07:04:03", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 07:04:03", "type": "blueprint_success", "message": "ep_34_blueprint_generated", "data": {"ep_num": 34, "arc_no": 8, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 07:09:31", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 07:09:31", "type": "blueprint_success", "message": "ep_35_blueprint_generated", "data": {"ep_num": 35, "arc_no": 8, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 07:17:33", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 07:17:33", "type": "blueprint_success", "message": "ep_36_blueprint_generated", "data": {"ep_num": 36, "arc_no": 9, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 07:21:59", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 07:21:59", "type": "blueprint_success", "message": "ep_37_blueprint_generated", "data": {"ep_num": 37, "arc_no": 9, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 07:27:13", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 07:27:13", "type": "blueprint_success", "message": "ep_38_blueprint_generated", "data": {"ep_num": 38, "arc_no": 9, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 07:32:36", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 07:32:36", "type": "blueprint_success", "message": "ep_39_blueprint_generated", "data": {"ep_num": 39, "arc_no": 9, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 07:36:39", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 07:36:39", "type": "blueprint_success", "message": "ep_40_blueprint_generated", "data": {"ep_num": 40, "arc_no": 9, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 07:43:06", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 07:43:06", "type": "blueprint_success", "message": "ep_41_blueprint_generated", "data": {"ep_num": 41, "arc_no": 10, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-06 07:47:49", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-06 07:47:49", "type": "blueprint_success", "message": "ep_42_blueprint_generated", "data": {"ep_num": 42, "arc_no": 10, "strategy": "unknown", "score": 0}}

@@ -1,0 +1,24 @@
+
+==================================================
+Time: 2026-02-05 20:38:33
+Traceback (most recent call last):
+  File "C:\Users\PC\Desktop\글도비\main_a.py", line 3712, in _run_main_process
+    self._stage_2_arcs()
+  File "C:\Users\PC\Desktop\글도비\main_a.py", line 4452, in _stage_2_arcs
+    asyncio.run(self._stage_2_arcs_async_logic())
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py", line 194, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\asyncio\base_events.py", line 684, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\PC\Desktop\글도비\main_a.py", line 4535, in _stage_2_arcs_async_logic
+    target_limit = self._get_int_input(
+                   ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\Desktop\글도비\main_a.py", line 6334, in _get_int_input
+    raw = input(prompt).strip()
+          ^^^^^^^^^^^^^
+EOFError
