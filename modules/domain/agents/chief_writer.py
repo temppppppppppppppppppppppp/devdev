@@ -21,6 +21,13 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, List, Optional, Tuple
 from .base_agent import BaseAgent
 
+# [V60.95] 원시인 모드 금지어 Guard (JSON 기반)
+try:
+    from modules.core.primitive_guard import get_primitive_guard, get_primitive_constraint_section
+    PRIMITIVE_GUARD_AVAILABLE = True
+except ImportError:
+    PRIMITIVE_GUARD_AVAILABLE = False
+
 
 class ChiefWriter(BaseAgent):
     """
@@ -125,7 +132,11 @@ class ChiefWriter(BaseAgent):
         genre_name: str = "무협",
         # [V60.81] 추가 파라미터
         npc_equipment_summary: str = "",
-        intro_dna: str = "CYNICAL"
+        intro_dna: str = "CYNICAL",
+        # [V60.85] 장르 Guard Purism Prompt
+        purism_prompt: str = "",
+        # [V60.95] 고밀도 HUD 전달
+        state_tracker=None
     ) -> List[Dict]:
         """
         3개 후보 원고 병렬 생성
@@ -140,6 +151,7 @@ class ChiefWriter(BaseAgent):
             style_guide: 플랫폼 스타일 가이드
             director_feedback: Director 피드백 (재시도 시)
             failure_constraints: 실패 학습 제약 (이전 REJECT 패턴)
+            purism_prompt: 장르 Guard의 순혈주의 지침 (V60.85)
 
         Returns:
             List[Dict]: 3개 후보 원고 [{
@@ -178,7 +190,11 @@ class ChiefWriter(BaseAgent):
             genre_name=genre_name,
             # [V60.81] 추가 파라미터
             npc_equipment_summary=npc_equipment_summary,
-            intro_dna=intro_dna
+            intro_dna=intro_dna,
+            # [V60.85] 장르 Guard Purism Prompt
+            purism_prompt=purism_prompt,
+            # [V60.95] 고밀도 HUD 전달
+            state_tracker=state_tracker
         )
 
         # 병렬 생성
@@ -278,8 +294,14 @@ class ChiefWriter(BaseAgent):
             if not data or data.get("parsing_error"):
                 return None
 
-            # 원고 추출
+            # 원고 추출 (타입 안전성 보장)
             manuscript_content = data.get("content", "")
+            if not isinstance(manuscript_content, str):
+                # content가 리스트/딕셔너리인 경우 문자열로 변환 시도
+                if isinstance(manuscript_content, list):
+                    manuscript_content = "\n".join(str(item) for item in manuscript_content)
+                else:
+                    manuscript_content = str(manuscript_content) if manuscript_content else ""
             manuscript_json = json.dumps(data, ensure_ascii=False)
 
             # [V60.81] Self-Critique 적용 (NPC 정보 필요)
@@ -352,7 +374,11 @@ class ChiefWriter(BaseAgent):
         genre_name: str = "무협",
         # [V60.81] 추가 파라미터
         npc_equipment_summary: str = "",
-        intro_dna: str = "CYNICAL"
+        intro_dna: str = "CYNICAL",
+        # [V60.85] 장르 Guard Purism Prompt
+        purism_prompt: str = "",
+        # [V60.95] 고밀도 HUD 전달
+        state_tracker=None
     ) -> str:
         """
         [V60.81] 공통 컨텍스트 구성 (CoT 기반 + Writer 핵심 기능 완전 통합)
@@ -363,6 +389,7 @@ class ChiefWriter(BaseAgent):
         - HUD 변화 추세
         - DNA 모드 (1화 특수)
         - HUD 급변 감지
+        - [V60.85] 장르 Guard Purism Prompt 주입
         """
         current_inventory = current_inventory or []
         current_martial_arts = current_martial_arts or []
@@ -382,6 +409,38 @@ class ChiefWriter(BaseAgent):
         bible_root = master_bible.get('MasterBible', master_bible) if isinstance(master_bible, dict) else {}
         core_identity = bible_root.get('ProjectData', {}).get('CoreIdentity', {})
         assets = bible_root.get('AssetLibrary', {})
+
+        # [V60.95] 주인공 설정 추출 (원시인/현대인 제약)
+        protagonist_config = bible_root.get('protagonist_config', {})
+        world_origin = protagonist_config.get('world_origin', '원시인')
+        incarnation_type = protagonist_config.get('incarnation_type', '회귀자')
+
+        # [V60.96] 장르 코드 변환 (장르별 금지어 적용)
+        genre_code_map = {"무협": "wuxia", "판타지": "fantasy", "헌터물": "hunter", "투자물": "investment"}
+        genre_code = genre_code_map.get(genre_name, bible_root.get('_genre', 'wuxia'))
+
+        # [V60.96] 원시인 모드 제약 섹션 (장르별 JSON 기반 PrimitiveGuard)
+        world_origin_constraint_section = ""
+        if world_origin == '원시인':
+            if PRIMITIVE_GUARD_AVAILABLE:
+                # 장르별 JSON 기반 동적 생성
+                world_origin_constraint_section = get_primitive_constraint_section(
+                    protagonist_config, genre=genre_code, length="build"
+                )
+            else:
+                # 폴백: 최소한의 경고
+                world_origin_constraint_section = """
+### 🚨 [원시인 모드] 현대 용어 절대 금지!
+❌ 금지: 헬스장, 바벨, 병원, 학교, 시스템, 스트레스, 축구, 자동차
+✅ 대체: 무관, 석추, 의원, 서당, 체계, 심기, 격구, 마차
+⚠️ 회귀자라도 현대 용어 사용 불가!
+"""
+        elif world_origin == '현대인':
+            world_origin_constraint_section = """
+### ✅ [현대인 모드] 현대 지식 활용 가능
+주인공은 현대 세계 출신으로 현대 지식을 내적 독백에서 활용 가능합니다.
+단, 대화에서 현대 용어 남발은 자제하고 세계관에 맞게 표현하세요.
+"""
 
         # 직전 원고 엔딩 (마지막 1500자)
         prev_ending = prev_manuscript[-1500:] if prev_manuscript else ""
@@ -470,6 +529,24 @@ class ChiefWriter(BaseAgent):
         # [V60.81] DNA 모드 지시문
         dna_instruction = self._get_dna_instruction(ep_num, intro_dna)
 
+        # [V60.85] 장르 Guard Purism 섹션
+        purism_section = ""
+        if purism_prompt:
+            purism_section = f"""
+### 🛡️ [장르 순혈주의 절대 준수]
+{self._escape_braces(purism_prompt)}
+"""
+
+        # [V60.95] 고밀도 HUD 컨텍스트 구축
+        high_density_hud_section = ""
+        if state_tracker:
+            hd_hud = self._build_hud_context(state_tracker, ep_num)
+            if hd_hud:
+                high_density_hud_section = f"""
+### 📊 [V60.95 고밀도 HUD - 주인공 상세 상태]
+{self._escape_braces(hd_hud)}
+"""
+
         return f"""
 [Role] 웹소설 1타 작가 (Chief Writer)
 [Task] 제{ep_num}화 원고를 Blueprint 기반으로 집필하라.
@@ -478,6 +555,10 @@ class ChiefWriter(BaseAgent):
 "Blueprint를 토대로 양질의 원고를 연속성 있게 생산한다"
 
 {dna_instruction}
+
+{purism_section}
+
+{world_origin_constraint_section}
 
 {feedback_section}
 {constraint_section}
@@ -503,6 +584,8 @@ class ChiefWriter(BaseAgent):
 
 ### 📋 [STEP 3: 현재 상태 반영]
 {self._escape_braces(hud_report)}
+
+{high_density_hud_section}
 
 {hud_trend_section}
 
@@ -745,7 +828,11 @@ class ChiefWriter(BaseAgent):
         genre_name: str = "무협",
         # [V60.81] 추가 파라미터
         npc_equipment_summary: str = "",
-        intro_dna: str = "CYNICAL"
+        intro_dna: str = "CYNICAL",
+        # [V60.85] 장르 Guard Purism Prompt
+        purism_prompt: str = "",
+        # [V60.95] 고밀도 HUD 전달
+        state_tracker=None
     ) -> List[Dict]:
         """
         Director 피드백 반영 재생성
@@ -759,6 +846,7 @@ class ChiefWriter(BaseAgent):
             current_martial_arts: 현재 무공 목록
             dead_npcs: 죽은 NPC 목록
             item_acquisition_timeline: 아이템 획득 타임라인
+            purism_prompt: 장르 Guard의 순혈주의 지침 (V60.85)
 
         Returns:
             List[Dict]: 새로운 3개 후보
@@ -806,7 +894,11 @@ class ChiefWriter(BaseAgent):
             genre_name=genre_name,
             # [V60.81] 추가 파라미터
             npc_equipment_summary=npc_equipment_summary,
-            intro_dna=intro_dna
+            intro_dna=intro_dna,
+            # [V60.85] 장르 Guard Purism Prompt
+            purism_prompt=purism_prompt,
+            # [V60.95] 고밀도 HUD 전달
+            state_tracker=state_tracker
         )
 
     # =========================================================================
@@ -1394,6 +1486,118 @@ class ChiefWriter(BaseAgent):
             if match:
                 return int(match.group())
         return 0
+
+    def _build_hud_context(self, state_tracker, ep_num: int) -> str:
+        """
+        [V60.95] StateTracker에서 고밀도 HUD 컨텍스트 구축
+
+        PresetRegistry 기반 17+ 필드를 프롬프트에 주입
+        NPC 레지스트리 정보도 포함
+
+        Args:
+            state_tracker: StateTracker 인스턴스
+            ep_num: 현재 에피소드 번호
+
+        Returns:
+            str: 프롬프트용 HUD 컨텍스트
+        """
+        if not state_tracker:
+            return ""
+
+        lines = []
+
+        # 1. 주인공 상태 (고밀도 필드)
+        try:
+            # 직전 에피소드 상태 가져오기
+            prev_state = None
+            if ep_num > 1 and hasattr(state_tracker, 'episode_states'):
+                prev_state = state_tracker.episode_states.get(ep_num - 1)
+
+            if prev_state:
+                state_dict = prev_state.to_dict() if hasattr(prev_state, 'to_dict') else {}
+
+                lines.append("[주인공 현재 상태 - 고밀도]")
+
+                # 핵심 필드 (항상 표시)
+                core_fields = ['location', 'internal_energy', 'injuries']
+                for field in core_fields:
+                    if field in state_dict:
+                        lines.append(f"  - {field}: {state_dict[field]}")
+
+                # 확장 필드 (있으면 표시)
+                extended_fields = [
+                    ('realm', '경지'), ('reputation', '평판'), ('mental_state', '정신상태'),
+                    ('faction', '소속'), ('rank', '지위'), ('gold', '재화'),
+                    ('awakening_grade', '각성등급'), ('gate_clearance', '클리어 게이트'),
+                    ('net_worth', '자산'), ('market_reputation', '시장평판'),
+                    ('mana', '마나'), ('skills', '스킬'), ('titles', '칭호')
+                ]
+
+                for field, display in extended_fields:
+                    if field in state_dict and state_dict[field]:
+                        value = state_dict[field]
+                        # 리스트는 쉼표로 연결
+                        if isinstance(value, list):
+                            value = ', '.join(str(v) for v in value[:5])  # 최대 5개
+                        lines.append(f"  - {display}: {value}")
+
+                # 소지품
+                items = state_dict.get('items', [])
+                weapons = state_dict.get('weapons', [])
+                if items or weapons:
+                    all_items = weapons + items
+                    lines.append(f"  - 소지품: {', '.join(str(i) for i in all_items[:8])}")
+
+                # 관계
+                relationships = state_dict.get('relationships', {})
+                if relationships:
+                    rel_str = ', '.join(f"{k}:{v}" for k, v in list(relationships.items())[:5])
+                    lines.append(f"  - 관계: {rel_str}")
+
+        except Exception as e:
+            lines.append(f"  (상태 로드 오류: {str(e)[:30]})")
+
+        # 2. NPC 레지스트리 (살아있는 주요 NPC)
+        try:
+            if hasattr(state_tracker, 'npc_registry') and state_tracker.npc_registry:
+                alive_npcs = [
+                    (name, info) for name, info in state_tracker.npc_registry.items()
+                    if info.get('status') != 'dead'
+                ][:10]  # 최대 10명
+
+                if alive_npcs:
+                    lines.append("")
+                    lines.append("[등장 가능 NPC]")
+                    for name, info in alive_npcs:
+                        role = info.get('role', '')
+                        relationship = info.get('relationship', '')
+                        faction = info.get('faction', '')
+
+                        npc_desc = f"  - {name}"
+                        details = []
+                        if role:
+                            details.append(role)
+                        if faction:
+                            details.append(faction)
+                        if relationship:
+                            details.append(f"관계:{relationship}")
+                        if details:
+                            npc_desc += f" ({', '.join(details)})"
+                        lines.append(npc_desc)
+
+                # 사망 NPC 경고
+                dead_npcs = [
+                    name for name, info in state_tracker.npc_registry.items()
+                    if info.get('status') == 'dead'
+                ]
+                if dead_npcs:
+                    lines.append("")
+                    lines.append(f"⚠️ [사망 NPC - 등장 금지]: {', '.join(dead_npcs[:5])}")
+
+        except Exception:
+            pass  # NPC 로드 실패 시 무시
+
+        return "\n".join(lines) if lines else ""
 
     def _check_hud_anomalies(self, current_ep: int) -> dict:
         """

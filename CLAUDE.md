@@ -4,12 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Wuxia Studio V60** - AI 기반 다중 장르 웹소설 자동 생성 시스템. Google Gemini API를 사용하여 전문화된 에이전트들이 연재 소설을 생산.
+**Wuxia Studio V61** - AI 기반 다중 장르 웹소설 자동 생성 시스템. Google Gemini API를 사용하여 전문화된 에이전트들이 연재 소설을 생산.
 
 **지원 장르:**
 - Wuxia (무협) - 무협 소설
 - Hunter (헌터) - 현대 던전/게이트물
 - Investment (투자) - 금융 회귀물
+- Fantasy (판타지) - 이세계물
 
 ## 실행 명령어
 
@@ -38,30 +39,24 @@ pytest tests/test_db_manager.py -v     # 단일 모듈 테스트
 pytest tests/ -k "test_name" -v        # 특정 테스트만
 ```
 
-## 유틸리티 도구
-
-| 위치 | 파일 | 용도 |
-|------|------|------|
-| `tools/` | `concat_txt.py` | 에피소드 텍스트 파일 병합 |
-| `tools/` | `db_porter.py` | DB 마이그레이션 |
-| `tools/` | `normalize_arcs_db.py` | Arc 데이터 정규화 |
-| `tools2/` | `studio_dashboard.py` | Streamlit 대시보드 |
-| `tools2/` | `arc_dashboard.py` | Arc 분석 대시보드 |
-| `tools2/` | `cost_calculation.py` | API 비용 계산 |
-| root | `RESET.py` | 프로젝트 선택적 리셋 |
-| root | `make_md.py` | 원고 → 마크다운 변환 |
-
-## 생산 파이프라인 (5단계)
+## 생산 파이프라인 (5단계) - 스테이지별 메인 에이전트
 
 ```
-Phase 0: Bible Recovery    → 설정집 로드, SQLite 동기화
-Stage 1: Volume Strategy   → 10권 전략 계획 (기존 존재 시 스킵 가능)
-Stage 2: Arc Design        → 50개 Arc 전술 설계 (권당 5개)
-Stage 3: Episode Blueprint → 씬별 설계도 생성
-Stage 4: Manuscript        → 최종 원고 작성
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Stage   │ 설명                    │ 메인 에이전트              │ 레거시      │
+├─────────┼─────────────────────────┼───────────────────────────┼────────────┤
+│ Stage 0 │ Bible 생성/역설계        │ StageZeroManager          │ -          │
+│ Stage 1 │ Volume Strategy (10권)  │ Analyst                   │ -          │
+│ Stage 2 │ Arc Design (50개)       │ FourPhaseArcGenerator     │ Analyst    │
+│ Stage 3 │ Episode Blueprint       │ ThreePhaseBlueprintGenerator │ Architect │
+│ Stage 4 │ Manuscript 집필         │ ChiefWriter               │ Writer     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+* 레거시 에이전트: 메인 에이전트 실패 시 폴백으로만 사용
+* Director: 모든 스테이지에서 품질 검증 담당 (PASS/REJECT 판정권)
 ```
 
-## 핵심 아키텍처
+## 핵심 아키텍처 (V61)
 
 ```
 SovereignApp (main_a.py)
@@ -70,25 +65,90 @@ SovereignApp (main_a.py)
 │   ├── LoreManager    → 설정집/자산 관리
 │   ├── MartialManager → 캐릭터 HUD 상태
 │   ├── GenreGuard     → 장르별 검증 규칙
+│   ├── PrimitiveGuard → 원시인 금지어 검증 [V60.96]
 │   └── KarmaService   → 인과율 추적
+├── StateTracker       → NPC 생사/무공/관계 추적 [V61]
+├── PresetRegistry     → 장르별 프리셋 스키마 [V60.95]
 ├── LongTermMemory     → ChromaDB 벡터 검색
+│
 └── Agent Orchestra (modules/domain/agents/)
-    ├── Core Agents:
-    │   ├── Analyst      → 전략 계획 (Stage 1-2)
-    │   ├── Architect    → 블루프린트 생성 (Stage 3)
-    │   ├── Writer       → 원고 작성 (Stage 4)
-    │   └── Director     → 품질 검증
-    └── Stage 2 Specialized Agents:
-        ├── FourPhaseArcGenerator → 4단계 Arc 파이프라인 조율
-        ├── ConstraintCompiler    → 제약 체크리스트 생성
-        ├── PreflightChecker      → 생성 전 제약 맵 구축
-        ├── ArcEnsembleGenerator  → 3개 후보 병렬 생성
-        ├── ArcCritic             → 즉시 비평 + 자동 수정
-        ├── ArcCorrector          → Arc 부분 수정
-        ├── ConsensusValidator    → 3-LLM 합의 검증
-        ├── ContinuityInspector   → 연속성 검증 (Arc/Episode/Manuscript)
-        └── ArcDraftValidator     → Python 사전 검증 (무료)
+    │
+    ├── [Stage 0] modules/core/stage0/
+    │   ├── StageZeroManager   → 통합 Stage 0 관리
+    │   ├── StoryExpander      → 컨셉 → Bible 생성
+    │   ├── ReverseExpander    → 역설계 (원고 → Bible)
+    │   └── StyleExtractor     → 톤/문체 추출
+    │
+    ├── [Stage 1] Analyst
+    │   └── plan_single_volume_v20() → Volume 전략 생성
+    │
+    ├── [Stage 2] FourPhaseArcGenerator (메인)
+    │   ├── PreflightChecker      → 제약 맵 구축
+    │   ├── ArcEnsembleGenerator  → 3개 후보 병렬 생성
+    │   ├── UnifiedArcValidator   → Python + LLM 통합 검증
+    │   └── (Analyst → 폴백 전용)
+    │
+    ├── [Stage 3] ThreePhaseBlueprintGenerator (메인)
+    │   ├── BlueprintEnsembleGenerator → 3개 후보 병렬 생성
+    │   ├── UnifiedBlueprintValidator  → 통합 검증
+    │   └── (Architect → 레거시, 미사용)
+    │
+    ├── [Stage 4] ChiefWriter (메인)
+    │   ├── generate_ensemble()    → 3개 후보 병렬 생성
+    │   ├── ManuscriptValidator    → Python 사전 검증
+    │   └── (Writer → 냉동인간, 최후 폴백)
+    │
+    └── [공통] Director → 모든 스테이지 최종 판정
 ```
+
+## StateTracker & state_changes (V61)
+
+Arc 생성 시 `state_changes` 필드로 이벤트를 구조화하여 추출 정확도 98% 달성:
+
+```json
+{
+  "arc_no": 5,
+  "tactical_doc": "...",
+  "state_changes": {
+    "npc_deaths": [
+      {"name": "철무련주", "episode": 23, "cause": "주인공에게 패배"}
+    ],
+    "skill_acquisitions": [
+      {"name": "파천검법", "episode": 24, "source": "비급 습득"}
+    ],
+    "relationship_changes": [
+      {"npc": "흑도", "from": "적", "to": "중립", "episode": 25}
+    ],
+    "major_items": [
+      {"name": "용린검", "episode": 24, "action": "획득"}
+    ]
+  }
+}
+```
+
+**StateTracker 흐름:**
+```
+Stage 2 생성 → state_changes 추출 → StateTracker 업데이트
+     ↓
+Stage 3 전달 → 죽은 NPC 등장 시 REJECT
+     ↓
+Stage 4 전달 → 죽은 NPC 등장 시 REJECT
+```
+
+## PrimitiveGuard (V60.96) - 원시인 금지어
+
+`protagonist_config.world_origin == '원시인'`일 때 현대 용어 차단:
+
+| 장르 | 적용 수준 | 차단 대상 |
+|------|-----------|-----------|
+| 무협 (wuxia) | full | 전체 (~600개 단어) |
+| 판타지 (fantasy) | partial | IT/지구브랜드만 (카페/커피 허용) |
+| 헌터 (hunter) | none | 제한 없음 |
+| 투자물 (investment) | none | 제한 없음 |
+
+**파일 위치:**
+- `modules/core/laws/primitive_forbidden.json` - 금지어 DB (~1400개)
+- `modules/core/primitive_guard.py` - 검증 유틸리티
 
 ## 트리플 데이터베이스
 
@@ -104,14 +164,29 @@ SovereignApp (main_a.py)
 
 모든 에이전트는 `BaseAgent` 상속 (`modules/domain/agents/base_agent.py`):
 
-- `ask(prompt, temperature)` - JSON 모드 API 호출, MAX_TOKENS 시 자동 연속
+```python
+class BaseAgent:
+    API_DELAY = 0.3  # [V60.99] Rate Limit 예방 딜레이
+
+    MODEL_FALLBACK_CHAIN = {
+        "gemini-3-pro-preview": "gemini-2.5-pro",
+        "gemini-2.5-pro": "gemini-2.5-flash",  # 최종 폴백
+    }
+```
+
+- `ask(prompt, temperature, thinking_level)` - JSON 모드 API 호출
 - `_extract_json_robust()` - 자가 치유 JSON 파서 (3단계 폴백)
 
-**JSON 파싱 폴백 체인:**
-1. `json.loads(strict=False)`
-2. `ast.literal_eval()` (작은따옴표 처리)
-3. 정규식 필드 추출
-4. 부분 데이터 + `"parsing_error": True` 반환
+## 모델 설정
+
+| 에이전트 | 기본 모델 | 비고 |
+|---------|----------|------|
+| FourPhaseArcGenerator | gemini-3-pro-preview | Stage 2 Arc |
+| ThreePhaseBlueprintGenerator | gemini-3-pro-preview | Stage 3 Blueprint |
+| ChiefWriter | gemini-3-pro-preview | Stage 4 원고 |
+| Director | gemini-2.5-pro | 품질 검증 |
+
+**폴백 체인:** `gemini-3-pro → gemini-2.5-pro → gemini-2.5-flash`
 
 ## 검증 시스템 (7-Tier)
 
@@ -120,57 +195,89 @@ TIER -1: Arc Continuity      → Arc간 타임라인 검증 (Stage 2)
 TIER  0: Episode Continuity  → 에피소드간 연속성 (Stage 3)
 TIER  0.1: Manuscript Check  → 원고-블루프린트 일치 (Stage 4)
 TIER  0.5: Python Continuity → 무료 Python 체크
-TIER  1: BLOCKING            → 즉시 REJECT (죽은 NPC 부활 등)
+TIER  1: BLOCKING            → 즉시 REJECT (죽은 NPC 부활, 원시인 금지어)
 TIER  2: SCORING             → 100점 만점, 70점 통과
 TIER  3: ADVISORY            → 비차단 제안 (항상 PASS)
 ```
 
-## 모델 설정
-
-기본 모델 설정은 `config/settings.json`에서 관리:
-
-| 에이전트 | 기본 모델 | 비고 |
-|---------|----------|------|
-| Architect | gemini-3-pro-preview | Stage 3 블루프린트 생성 |
-| Writer | gemini-3-pro-preview | Stage 4 원고 작성 |
-| Analyst | gemini-3-pro-preview | Stage 1-2 전략/Arc |
-| Director | gemini-2.5-pro | 품질 검증 |
-
-**폴백 체인 (`base_agent.py`):** 할당량 초과 시 자동 폴백
-- `gemini-3-pro-preview` → `gemini-2.5-pro` → `gemini-2.5-flash` → `gemini-2.0-flash`
-
 ## 필수 안전 규칙
 
-1. **ChromaDB 파일 삭제 금지** - `chroma.sqlite3`, `*.wal` 절대 삭제 금지. `LOCK`, `*-shm`만 삭제 가능
-2. **DB 쓰기 후 항상 커밋** - `SovereignApp._safe_commit()` (동기) 또는 `_safe_commit_async()` (비동기) 사용. 이 메서드는 `main_a.py`의 `SovereignApp` 클래스에 정의됨
-3. **프롬프트 내 사용자 콘텐츠 이스케이프** - `EscapeUtils` (`modules/core/escape_utils.py`) 또는 `BaseAgent._escape_braces()`로 `{}` 문자 처리
-4. **에피소드 번호 검증** - `DBManager.get_latest_episode_number()` 또는 `ProjectContext` 메서드 사용, 가정 금지
+1. **ChromaDB 파일 삭제 금지** - `chroma.sqlite3`, `*.wal` 절대 삭제 금지
+2. **DB 쓰기 후 항상 커밋** - `SovereignApp._safe_commit()` 사용
+3. **프롬프트 내 사용자 콘텐츠 이스케이프** - `BaseAgent._escape_braces()`로 `{}` 처리
+4. **에피소드 번호 검증** - `DBManager.get_latest_episode_number()` 사용
 5. **장르 컨텍스트 확인** - 장르별 로직 전 `self.selected_genre` 확인
-6. **Windows UTF-8** - `main_a.py` 5-11줄에서 이미 처리됨. 재래핑 금지
-7. **모델 폴백 자동 진행** - 할당량 초과 시 `BaseAgent.MODEL_FALLBACK_CHAIN`이 자동으로 다음 모델로 폴백
+6. **원시인 금지어** - `PrimitiveGuard` 통해 장르별 적용
 
-## 장르 추가 방법
+## 주요 파일 맵
 
-1. `modules/core/genre_guards/{genre}_guard.py` 생성 (BaseGuard 상속)
-2. `modules/core/genre_hud_manager.py`에 HUD 클래스 추가
-3. `constants.py:GenreTypes`에 등록
-4. `modules/core/laws/{genre}.json` 생성
-5. `main_a.py:_select_genre()` 메뉴 업데이트
+| 파일 | 역할 |
+|------|------|
+| `main_a.py` | 진입점, SovereignApp 오케스트레이터 |
+| `modules/core/stage0/` | Stage 0 모듈 (Bible 생성/역설계) |
+| `modules/core/primitive_guard.py` | 원시인 금지어 검증 |
+| `modules/core/laws/primitive_forbidden.json` | 금지어 DB |
+| `modules/domain/agents/base_agent.py` | BaseAgent (API_DELAY 포함) |
+| `modules/domain/agents/four_phase_arc_generator.py` | Stage 2 메인 |
+| `modules/domain/agents/three_phase_blueprint_generator.py` | Stage 3 메인 |
+| `modules/domain/agents/chief_writer.py` | Stage 4 메인 |
+| `modules/domain/agents/state_tracker.py` | NPC/무공/관계 추적 |
+| `modules/domain/agents/director.py` | 품질 검증 |
+| `modules/domain/agents/analyst.py` | #레거시 (Stage 2 폴백) |
+| `modules/domain/agents/architect.py` | #레거시 (Stage 3 미사용) |
+| `modules/domain/agents/writer.py` | #레거시 (Stage 4 냉동인간) |
 
-## 에이전트 동작 수정
+## Stage 2 Arc 생성 흐름 (V61)
 
-프롬프트는 `config/prompts/{agent}_rules.json`에서 로드:
-- `analyst_libraries.json` - 전략 라이브러리
-- `architect_rules.json` - 블루프린트 규칙
-- `writer_rules.json` - 작문 매니페스토
+```
+1. ConstraintCompiler.compile()     → 제약 체크리스트 생성
+2. FourPhaseArcGenerator.generate() → 3단계 파이프라인
+   ├── Phase 1: Constraint         → Preflight + Compiler + NegativeExamples
+   ├── Phase 2: Generate           → ArcEnsemble 3개 병렬 (state_changes 포함)
+   └── Phase 3: Validate           → UnifiedArcValidator (Python + LLM)
+3. StateTracker.extract_*()        → state_changes 우선 읽기 (Regex 폴백)
+4. Director 대면                    → 최종 PASS/REJECT
+```
 
-**캐시 무효화:** 앱 재시작 또는 `RESET.py` 실행
+## Stage 3 Blueprint 생성 흐름
+
+```
+1. ThreePhaseBlueprintGenerator.generate()
+   ├── Phase 1: BlueprintEnsemble  → 3개 후보 병렬 생성
+   ├── Phase 2: Python 검증        → 분량/필드/죽은NPC 체크
+   └── Phase 3: Director 대면      → 최종 PASS/REJECT
+```
+
+## Stage 4 Manuscript 생성 흐름
+
+```
+1. ChiefWriter.generate_ensemble() → 3개 후보 병렬 생성
+   ├── PrimitiveGuard 주입         → 원시인 금지어 프롬프트
+   ├── state_tracker HUD 주입      → 죽은 NPC 목록
+   └── 스타일 가이드 주입          → 톤/문체/대화비율
+2. ManuscriptValidator             → Python 사전 검증
+3. Director.validate_manuscript()  → 최종 PASS/REJECT (원시인 사후 검증 포함)
+4. (실패 시) Writer                → 냉동인간 폴백
+```
+
+## 용어 정리
+
+| 용어 | 의미 |
+|------|------|
+| `anchor` | DB 저장 JSON 데이터 |
+| `HUD` | 캐릭터/세계 상태 (Head-Up Display) |
+| `tactical_doc` | Arc 전술 계획 문서 |
+| `blueprint` | 에피소드 씬별 설계도 |
+| `joint_docs` | Arc 종료 시 상태 (위치, 소지품, 세계상태) |
+| `state_changes` | Arc 내 이벤트 구조화 (사망/습득/관계변화) |
+| `world_origin` | 주인공 출신 (원시인/현대인) |
+| `incarnation_type` | 환생 유형 (회귀자/빙의자/환생자) |
 
 ## 데이터베이스 스키마
 
 ```sql
 -- anchors: 키-값 저장소
-bible, volumes, arcs, sys_caches
+bible, volumes, arcs, sys_caches, style_guide
 
 -- blueprints: 에피소드별 씬 계획
 ep_num (PK), data (JSON)
@@ -184,10 +291,6 @@ ep_num (PK), new_items, lost_items, relationship_changes, ...
 
 ## 디버깅
 
-**콘솔 UI:** `StudioVisualizer` (Rich 라이브러리)
-- `ui.log(message)` - 일반 로그
-- `ui.error(message)` - 에러 표시
-
 **ChromaDB 잠금 오류 시:**
 1. 모든 Python 프로세스 종료
 2. `projects/{name}/chroma_db/`에서 `LOCK`, `.db-shm`만 삭제
@@ -198,67 +301,16 @@ ep_num (PK), new_items, lost_items, relationship_changes, ...
 |------|------|------|
 | KeyError in f-string | `{}` 문자 미이스케이프 | `_escape_braces()` 사용 |
 | JSON 파싱 실패 | 잘린 응답 | MAX_TOKENS 연속 확인 |
-| HUD 상태 불일치 | 스냅샷 누락 | `MartialManager.snapshot()` 확인 |
-
-## 주요 파일 맵
-
-| 파일 | 역할 |
-|------|------|
-| `main_a.py` | 진입점, SovereignApp 오케스트레이터 (~9000줄) |
-| `modules/core/project_manager.py` | ProjectContext - 모든 데이터 I/O |
-| `modules/core/db_manager.py` | DBManager - SQLite 연산, 스키마 정의 |
-| `modules/core/constants.py` | 전역 상수 (GenreTypes, RetryLimits, AIModels, BatchSizes 등) |
-| `modules/core/escape_utils.py` | EscapeUtils - 중괄호 이스케이프 유틸리티 |
-| `modules/domain/agents/base_agent.py` | BaseAgent - API 호출, JSON 자가치유, 모델 폴백 |
-| `modules/domain/agents/four_phase_arc_generator.py` | Stage 2 Arc 생성 4단계 파이프라인 |
-| `modules/domain/agents/continuity_inspector.py` | 연속성 검증 (Arc/Episode/Manuscript) |
-| `config/settings.json` | 모델 설정, 검증 임계값 |
-| `tests/conftest.py` | pytest fixtures (mock API, DB, contexts) |
-
-## 용어 정리
-
-| 용어 | 의미 |
-|------|------|
-| `anchor` | DB 저장 JSON 데이터 |
-| `HUD` | 캐릭터/세계 상태 (Head-Up Display) |
-| `tactical_doc` | Arc 전술 계획 문서 |
-| `blueprint` | 에피소드 씬별 설계도 |
-| `joint_docs` | Arc 종료 시 상태 (위치, 소지품, 세계상태) |
-
-## Stage 2 Arc 생성 흐름 (V60+)
-
-```
-1. ConstraintCompiler.compile()     → 제약 체크리스트 생성
-2. FourPhaseArcGenerator.generate() → 4단계 파이프라인
-   ├── Phase 1: PreflightChecker    → 제약 맵 구축
-   ├── Phase 2: ArcEnsembleGenerator → 3개 후보 병렬 생성
-   ├── Phase 3: ArcCritic           → 즉시 비평 + 자동 수정
-   └── Phase 4: ConsensusValidator  → 3-LLM 합의 검증
-3. ArcDraftValidator.validate()     → Python 사전 검증 (무료)
-4. ContinuityInspector.inspect_arc() → LLM 심층 검증
-```
-
-## 비동기/동기 패턴
-
-```python
-# 동기 컨텍스트 (SovereignApp 메서드 내)
-self._safe_commit()
-
-# 비동기 컨텍스트 (SovereignApp 메서드 내)
-await self._safe_commit_async()
-
-# DBManager 직접 사용 시
-self.current_project.db.conn.commit()
-```
-
-**주의:** SQLite는 동기지만 비동기 컨텍스트에서 호출될 수 있음. `asyncio.to_thread()` 사용.
+| 죽은 NPC 부활 | StateTracker 미전달 | state_tracker 파라미터 확인 |
+| 원시인 금지어 통과 | PrimitiveGuard 미적용 | 장르 + world_origin 확인 |
 
 ## 상수 클래스 (`modules/core/constants.py`)
 
 | 클래스 | 용도 |
 |--------|------|
-| `GenreTypes` | 장르 타입 상수 (WUXIA, HUNTER, INVESTMENT) |
-| `RetryLimits` | 재시도 횟수 (DIRECTOR_MAX_ATTEMPTS, WRITER_MAX_ATTEMPTS 등) |
-| `AIModels` | 모델 이름 상수 (TIER_1_WRITER, EMERGENCY_FALLBACK 등) |
-| `BatchSizes` | 배치 크기 (ARC_BATCH_SIZE, EPISODE_BATCH_SIZE) |
-| `WritingLimits` | 집필 제한 (MAX_RETRY_PER_EPISODE, MAX_FAILURE_STREAK) |
+| `GenreTypes` | 장르 타입 상수 (WUXIA, HUNTER, INVESTMENT, FANTASY) |
+| `RetryLimits` | 재시도 횟수 |
+| `AIModels` | 모델 이름 상수 |
+| `BatchSizes` | 배치 크기 |
+| `Stage2Limits` | Arc ep_count 범위 (3~7) |
+| `WritingLimits` | 집필 제한 |

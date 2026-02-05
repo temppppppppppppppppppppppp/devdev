@@ -1,11 +1,28 @@
+"""
+#레거시 에이전트 - Architect (완전 레거시)
+==========================================
+Stage 3 진짜 주인: ThreePhaseBlueprintGenerator (three_phase_blueprint_generator.py)
+이 Architect는 현재 캐시 이름 설정용으로만 존재하며, 실제 Blueprint 생성에 사용되지 않음.
+
+design_v20_breakdown 등 모든 메서드가 #레거시 상태.
+main_a.py에서 three_phase_bp.generate()가 Stage 3 파이프라인의 진짜 진입점.
+
+#레거시 태그: 전체 파일
+"""
+
 import json
 import re
 from google.genai import types
 from .base_agent import BaseAgent
 
-class Architect(BaseAgent):
+class Architect(BaseAgent):  # #레거시: ThreePhaseBlueprintGenerator로 대체됨
     """
-    [V48 Sovereign Architect - 0130 Manifesto]
+    #레거시 - 완전 레거시 클래스
+    Stage 3 진짜 주인: ThreePhaseBlueprintGenerator (three_phase_blueprint_generator.py)
+    main_a.py에서 캐시 이름 설정용으로만 인스턴스화됨.
+    design_v20_breakdown 등 모든 메서드가 실제로 호출되지 않음.
+
+    [V48 Sovereign Architect - 0130 Manifesto] (레거시)
     - 욕망 기반 장면 정렬: 위버의 'short_term_objective'를 설계도의 중심축으로 설정
     - Core/Buffer 밸런싱: 아크별 긴장도 예산에 따라 장면 밀도 강제 조절
     - 무결성 가드: 위버의 목적과 무관한 '지랄(불필요한 서사)' 차단
@@ -214,9 +231,10 @@ class Architect(BaseAgent):
             print(f"      ⚠️ [Architect] Semantic RAG 실패: {e}")
             return ""
 
-    def design_v20_breakdown(self, ep_num, arc_pos, arc_tactical_doc, martial_hud, encyclopedia, 
-                              narrative_context="", tactical_references="", style_guide="", 
-                              prev_ms_ending="", surgery_intel="", enrichment_level=0):
+    def design_v20_breakdown(self, ep_num, arc_pos, arc_tactical_doc, martial_hud, encyclopedia,
+                              narrative_context="", tactical_references="", style_guide="",
+                              prev_ms_ending="", surgery_intel="", enrichment_level=0,
+                              state_tracker=None):  # [V60.95] 고밀도 HUD 전달
 
         """
         [0124 매니페스토] 위버의 '욕망 엔진' 데이터를 블루프린트에 이식하는 핵심 메서드
@@ -245,6 +263,38 @@ class Architect(BaseAgent):
         status_shadow = focus_info.get('status_shadow', {})
         is_surgery = focus_info.get('v35_surgery', False)
         
+
+        # [V60.88] 주인공 설정 추출 (context에서 master_bible 접근)
+        protagonist_config_section = ""
+        try:
+            master_bible = getattr(self.context, 'master_bible', {})
+            if master_bible:
+                bible_root = master_bible.get('MasterBible', master_bible)
+                protagonist_config = bible_root.get('protagonist_config', {})
+                world_origin = protagonist_config.get('world_origin', '원시인')
+                incarnation_type = protagonist_config.get('incarnation_type', '회귀자')
+
+                protagonist_instructions = []
+                if world_origin == '원시인':
+                    protagonist_instructions.append('⚠️ 현대 용어 완전 금지 (킬로그램, 아드레날린 등)')
+                else:
+                    protagonist_instructions.append('📝 주인공은 현대 사회를 알고 있음')
+                if incarnation_type == '회귀자':
+                    protagonist_instructions.append('🔄 미래를 알고 있음 (합리적 이유 없이는 내면 독백으로 처리)')
+                elif incarnation_type == '빙의자':
+                    protagonist_instructions.append('👤 원래 인물의 기억/관계를 의식')
+                elif incarnation_type == '환생자':
+                    protagonist_instructions.append('👶 전생의 기억이 있음')
+
+                if protagonist_instructions:
+                    protagonist_config_section = f"""
+[🌍 V60.88 주인공 설정]
+- 세계 출신: {world_origin}
+- 환생 유형: {incarnation_type}
+{chr(10).join(protagonist_instructions)}
+"""
+        except Exception:
+            pass  # 실패 시 무시
 
         # 3. [0124 핵심] 목적 중심 설계 지침 강화
         objective_enforcement = f"""
@@ -467,6 +517,31 @@ class Architect(BaseAgent):
 - integrated_scenario는 3000자+ 고해상도 시나리오
 """
 
+        # [V60.95] 고밀도 HUD 컨텍스트 구축
+        high_density_hud = ""
+        if state_tracker and ep_num > 1:
+            try:
+                prev_ep = ep_num - 1
+                prev_state = state_tracker.get_state_at_episode(prev_ep) if hasattr(state_tracker, 'get_state_at_episode') else None
+                if prev_state:
+                    state_dict = prev_state.to_dict() if hasattr(prev_state, 'to_dict') else {}
+                    hud_lines = [f"[고밀도 HUD - 제{prev_ep}화 종료 시점]"]
+                    for k in ['location', 'hp', 'mp', 'martial_level', 'inner_power', 'status', 'injuries']:
+                        if k in state_dict and state_dict[k]:
+                            hud_lines.append(f"    {k}: {state_dict[k]}")
+                    extra = state_dict.get('extra_fields', {})
+                    if extra:
+                        hud_lines.append("    [확장 필드]")
+                        for ek, ev in list(extra.items())[:5]:
+                            if ev:
+                                hud_lines.append(f"      {ek}: {ev}")
+                    items = state_dict.get('items', [])
+                    if items:
+                        hud_lines.append(f"    보유 아이템: {', '.join(items[:8])}")
+                    high_density_hud = "\n".join(hud_lines)
+            except Exception as e:
+                high_density_hud = f"(HUD 로드 오류: {str(e)[:30]})"
+
         dynamic_prompt = f"""
         {cot_structure}
 
@@ -476,6 +551,7 @@ class Architect(BaseAgent):
 
         {surgery_header}
         {emotion_directive}
+        {protagonist_config_section}
         {physical_constraints}
         {surgery_instructions}
         {pattern_guidance}
@@ -507,6 +583,7 @@ class Architect(BaseAgent):
 
         ### 🛡️ 3. 서사 무결성 데이터 (Fact Check)
         - 주인공 실시간 HUD: {self._escape_braces(json.dumps(martial_hud, ensure_ascii=False))}
+        - 📊 [V60.95 고밀도 HUD]: {self._escape_braces(high_density_hud) if high_density_hud else "(없음)"}
         - 직전 화 실제 엔딩: "...{self._escape_braces(prev_ms_ending)}"
         - 최근 서사 맥락 요약: {self._escape_braces(narrative_context)}
         - 세계관 백과사전 참조: {self._escape_braces(json.dumps(encyclopedia, ensure_ascii=False))}

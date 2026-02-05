@@ -1,0 +1,78 @@
+{
+  "session_id": "20260205_125518",
+  "start_time": "2026-02-05T12:55:18.241743",
+  "end_time": "2026-02-05T13:41:45.912145",
+  "total_calls": 94,
+  "successful_calls": 94,
+  "failed_calls": 0,
+  "total_retries": 0,
+  "total_tokens": 540943,
+  "total_cost_usd": 2.0938,
+  "agent_stats": {
+    "ChiefWriter": {
+      "agent_name": "ChiefWriter",
+      "total_calls": 84,
+      "successful_calls": 84,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 70323.70463439396,
+        "min_ms": 10845.471620559692,
+        "max_ms": 200263.84663581848,
+        "p50_ms": 60537.24455833435,
+        "p90_ms": 118765.0206565857,
+        "p99_ms": 186638.7903404236
+      }
+    },
+    "Director": {
+      "agent_name": "Director",
+      "total_calls": 5,
+      "successful_calls": 5,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 35036.33532524109,
+        "min_ms": 29055.590391159058,
+        "max_ms": 37738.2287979126,
+        "p50_ms": 36302.17361450195,
+        "p90_ms": 37258.47864151001,
+        "p99_ms": 37690.25378227234
+      }
+    },
+    "Manager": {
+      "agent_name": "Manager",
+      "total_calls": 5,
+      "successful_calls": 5,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 53460.32338142395,
+        "min_ms": 46356.72926902771,
+        "max_ms": 63444.30327415466,
+        "p50_ms": 49753.98540496826,
+        "p90_ms": 61981.64944648743,
+        "p99_ms": 63298.03789138794
+      }
+    }
+  },
+  "model_stats": {
+    "gemini-3-pro-preview": {
+      "input_tokens": 196407,
+      "output_tokens": 89737,
+      "total_tokens": 286144,
+      "cost_usd": 1.3884
+    },
+    "gemini-2.5-pro": {
+      "input_tokens": 151623,
+      "output_tokens": 103176,
+      "total_tokens": 254799,
+      "cost_usd": 0.7054
+    }
+  }
+}

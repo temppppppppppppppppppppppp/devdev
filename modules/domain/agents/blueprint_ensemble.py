@@ -18,6 +18,13 @@ from typing import Dict, List, Any, Optional, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from .base_agent import BaseAgent
 
+# [V60.95] 원시인 모드 금지어 Guard (JSON 기반)
+try:
+    from modules.core.primitive_guard import get_primitive_constraint_section
+    PRIMITIVE_GUARD_AVAILABLE = True
+except ImportError:
+    PRIMITIVE_GUARD_AVAILABLE = False
+
 
 # Blueprint 생성 전략
 BLUEPRINT_STRATEGIES = [
@@ -60,6 +67,22 @@ BLUEPRINT_STRATEGIES = [
 ]
 
 
+# [V60.98] 씬 프리셋 정의 - 장면/화자 전환 연출
+SCENE_PRESETS = {
+    "opening_hook": "화 시작, 독자 유입용. 시각 중심, 임팩트 있는 오프닝.",
+    "daily_routine": "일상 묘사, 세계관 노출. 여유로운 호흡.",
+    "tension_build": "긴장감 축적. 불안한 분위기, 짧은 문장.",
+    "action_peak": "전투/액션 클라이맥스. 빠른 호흡, 시각 중심, 대사 최소.",
+    "emotional_reveal": "감정 폭발, 내면 묘사. 느린 호흡, 대사/독백 중심.",
+    "dialogue_duel": "설전/협상/대립. 대사 중심, 긴장감 있는 대화.",
+    "villain_scheme": "★악역 시점 전환★ 음모/계략 노출. 독자에게 위협 암시.",
+    "side_glimpse": "★조연 시점 전환★ 주인공 부재 상황, '저 사람 대단해!' 반응.",
+    "flashback": "과거 회상. 몽환적 전환, 과거 시제.",
+    "omniscient_hint": "★전지적 시점★ 복선/떡밥 암시. '그는 아직 몰랐다...'",
+    "cliffhanger": "화 끝 훅. 급박한 전개, 긴장 최고조에서 끊기.",
+    "resolution": "갈등 해소, 정리. 여운 있는 마무리."
+}
+
 # Blueprint 생성 프롬프트 템플릿
 BLUEPRINT_GENERATION_PROMPT = """
 [V60.80 BLUEPRINT ENSEMBLE - {strategy_display}]
@@ -73,6 +96,8 @@ Arc 전술서를 바탕으로 제{ep_num}화 Blueprint를 설계하세요.
 ║ 주인공 이름: {protagonist_name}                               ║
 ║ → 모든 씬에서 '{protagonist_name}'만 사용하세요               ║
 ║ → '주인공', '그', '청년' 등 대명사 사용 금지                  ║
+╠══════════════════════════════════════════════════════════════╣
+{protagonist_instructions}
 ╚══════════════════════════════════════════════════════════════╝
 
 ### [Arc 전술서 - 이번 화 핵심]
@@ -86,7 +111,33 @@ Arc 전술서를 바탕으로 제{ep_num}화 Blueprint를 설계하세요.
 ### [이전 화 정보]
 {prev_info}
 
+### [V60.95 고밀도 HUD - 주인공 상태]
+{hud_context}
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### [V60.98 씬 프리셋 - 장면/화자 전환 연출]
+각 씬에 적합한 프리셋을 선택하세요. 시점 전환을 통해 다채로운 연출이 가능합니다.
+
+| 프리셋 | 용도 |
+|--------|------|
+| opening_hook | 화 시작, 독자 유입 |
+| daily_routine | 일상 묘사, 세계관 노출 |
+| tension_build | 긴장감 축적 |
+| action_peak | 전투/액션 클라이맥스 |
+| emotional_reveal | 감정 폭발, 내면 묘사 |
+| dialogue_duel | 설전/협상/대립 |
+| villain_scheme | ★악역 시점★ 음모 노출 (예: 악당이 함정 준비) |
+| side_glimpse | ★조연 시점★ 주인공 칭송/반응 (예: "저 사람 대체 뭐지?") |
+| flashback | 과거 회상 |
+| omniscient_hint | ★전지적 시점★ 복선 암시 (예: "그는 아직 몰랐다...") |
+| cliffhanger | 화 끝 훅 |
+| resolution | 갈등 해소, 정리 |
+
+💡 시점 전환 팁:
+- 악당 음모 씬 → villain_scheme (악역 시점으로 위협감 부여)
+- 주인공 활약 직후 → side_glimpse (조연 시점으로 "대단해!" 반응)
+- 떡밥 투척 → omniscient_hint (전지적 시점으로 독자에게만 정보 제공)
 
 ### [출력 형식 - 반드시 JSON만 출력]
 
@@ -95,6 +146,7 @@ Arc 전술서를 바탕으로 제{ep_num}화 Blueprint를 설계하세요.
     "title": "에피소드 제목 (10자 이내)",
     "scene_breakdown": {{
         "scene_1": {{
+            "type": "opening_hook",
             "title": "씬 제목",
             "location": "장소",
             "characters": ["등장인물1", "등장인물2"],
@@ -102,9 +154,9 @@ Arc 전술서를 바탕으로 제{ep_num}화 Blueprint를 설계하세요.
             "tension": 5,
             "key_events": ["이벤트1", "이벤트2"]
         }},
-        "scene_2": {{...}},
-        "scene_3": {{...}},
-        "scene_4": {{...}}
+        "scene_2": {{"type": "tension_build", ...}},
+        "scene_3": {{"type": "action_peak", ...}},
+        "scene_4": {{"type": "cliffhanger", ...}}
     }},
     "integrated_scenario": "전체 에피소드 시나리오 (1000자 이상, 씬별 흐름을 자연스럽게 연결)",
     "start_location": "시작 위치",
@@ -123,6 +175,8 @@ Arc 전술서를 바탕으로 제{ep_num}화 Blueprint를 설계하세요.
 2. integrated_scenario는 최소 1000자 이상
 3. 이전 화 종료 위치에서 시작해야 함
 4. 정지선(다음 화 내용)을 침범하지 말 것
+5. [V60.98] 각 씬에 반드시 type(프리셋) 필드 포함할 것
+6. [V60.98] 시점 전환 프리셋(villain_scheme, side_glimpse, omniscient_hint)은 상황에 맞게 적극 활용
 
 반드시 유효한 JSON만 출력하세요.
 """
@@ -147,7 +201,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
         constraint_block: Dict,
         prev_blueprint: Optional[Dict] = None,
         feedback: str = "",
-        protagonist_name: str = "주인공"  # [V61] 주인공 이름 (필수!)
+        protagonist_name: str = "주인공",  # [V61] 주인공 이름 (필수!)
+        protagonist_config: Dict = None,  # [V60.90] 주인공 설정 (world_origin, incarnation_type)
+        state_tracker=None  # [V60.95] StateTracker (고밀도 HUD 전달)
     ) -> Tuple[Optional[Dict], List[Dict]]:
         """
         앙상블 Blueprint 생성
@@ -159,6 +215,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
             prev_blueprint: 직전 Blueprint
             feedback: 이전 REJECT 피드백
             protagonist_name: [V61] 주인공 이름 (환각 방지)
+            protagonist_config: [V60.90] 주인공 설정 {world_origin, incarnation_type}
+            state_tracker: [V60.95] StateTracker (고밀도 HUD - 17+ 필드, NPC 레지스트리)
 
         Returns:
             (best_blueprint, all_candidates) - 최적 Blueprint와 모든 후보 리스트
@@ -179,6 +237,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
         # 이전 화 정보
         prev_info = self._format_prev_info(prev_blueprint)
 
+        # [V60.95] 고밀도 HUD 컨텍스트 구축
+        hud_context = self._build_hud_context(state_tracker, ep_num)
+
         # 병렬 생성
         print(f"      🎲 [BPEnsemble] 3개 후보 병렬 생성 중... (주인공: {protagonist_name})")
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
@@ -192,7 +253,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
                     prev_info=prev_info,
                     strategy=strategy,
                     feedback=feedback,
-                    protagonist_name=protagonist_name  # [V61] 주인공 이름 전달
+                    protagonist_name=protagonist_name,  # [V61] 주인공 이름 전달
+                    protagonist_config=protagonist_config,  # [V60.90] 주인공 설정 전달
+                    hud_context=hud_context  # [V60.95] 고밀도 HUD 주입
                 )
                 futures[future] = strategy["name"]
 
@@ -211,43 +274,57 @@ class BlueprintEnsembleGenerator(BaseAgent):
             print(f"      ❌ [BPEnsemble] 모든 후보 생성 실패")
             return None, []
 
-        # [V60.80] 후보 평가 - Python 영향 최소화 (콘텐츠 풍부도만)
-        scored_candidates = []
+        # [V60.85] Python 최소 기준 필터링 - 씬 4개 이상만 통과
+        # 철학: Python은 "당선 불가" 후보만 걸러냄, 선택은 Director가 함
+        qualified_candidates = []
+        disqualified = []
+
         for candidate in candidates:
-            score = self._evaluate_candidate(candidate, constraint_block)
-            candidate["_score"] = score
-            scored_candidates.append(candidate)
+            strategy_name = candidate.get("_strategy", "unknown")
+            scenes = candidate.get("scene_breakdown", {})
+            scene_count = len(scenes) if isinstance(scenes, (dict, list)) else 0
+            integrated = candidate.get("integrated_scenario", "")
+            integrated_len = len(integrated) if isinstance(integrated, str) else 0
 
-        # 점수순 정렬 (= 콘텐츠 길이순, Director가 판단할 재료 많은 순)
-        scored_candidates.sort(key=lambda x: x.get("_score", 0), reverse=True)
+            # 최소 기준: 씬 4개 이상, 시나리오 500자 이상
+            if scene_count >= 4 and integrated_len >= 500:
+                candidate["_qualified"] = True
+                candidate["_scene_count"] = scene_count
+                candidate["_length"] = integrated_len
+                qualified_candidates.append(candidate)
+                print(f"         ✓ {strategy_name}: 통과 (씬 {scene_count}개, {integrated_len}자)")
+            else:
+                disqualified.append((strategy_name, scene_count, integrated_len))
+                print(f"         ✗ {strategy_name}: 탈락 (씬 {scene_count}개, {integrated_len}자)")
 
-        best = scored_candidates[0]
-        best_strategy = best.get('_strategy', 'unknown')
-        best_len = len(best.get('integrated_scenario', ''))
-        print(f"      🏆 [BPEnsemble] 최적 후보: {best_strategy} ({best_len}자)")
+        if not qualified_candidates:
+            print(f"      ❌ [BPEnsemble] 모든 후보 최소 기준 미달")
+            return None, candidates  # 원본 반환 (디버깅용)
 
-        # [V60.80] Python 경고 수집 - Director 주의 포인트용 (투표 영향 없음)
-        warnings = self.collect_warnings(best, constraint_block)
-        if warnings:
-            print(f"      ⚠️ [BPEnsemble] Director 주의 포인트 {len(warnings)}개:")
-            for w in warnings[:3]:
-                print(f"         - {w.get('message', '?')}")
+        # [V60.85] Director가 선택할 수 있도록 후보 목록 반환
+        # Python은 선택하지 않음 - Director에게 전체 전달
+        print(f"      📋 [BPEnsemble] {len(qualified_candidates)}개 후보 → Director 선택 대기")
 
-        # 메타데이터 저장 (경고 포함 → Director에게 전달)
-        best["_ensemble_meta"] = {
-            "best_strategy": best_strategy,
-            "best_length": best_len,
-            "all_lengths": [(c.get("_strategy", "?"), len(c.get("integrated_scenario", ""))) for c in scored_candidates],
-            "total_candidates": len(scored_candidates),
-            "python_warnings": warnings  # Director가 집중해야 할 포인트
-        }
+        # 메타데이터 저장 (Director 비교용)
+        for idx, candidate in enumerate(qualified_candidates):
+            strategy_name = candidate.get("_strategy", "unknown")
+            candidate["_ensemble_meta"] = {
+                "candidate_index": idx,
+                "strategy": strategy_name,
+                "scene_count": candidate.get("_scene_count", 0),
+                "length": candidate.get("_length", 0),
+                "total_candidates": len(qualified_candidates),
+                "disqualified": disqualified
+            }
+            # 임시 필드 정리
+            candidate.pop("_strategy", None)
+            candidate.pop("_qualified", None)
+            candidate.pop("_scene_count", None)
+            candidate.pop("_length", None)
 
-        # 내부 메타 제거 (단, _ensemble_meta 유지)
-        for c in scored_candidates:
-            c.pop("_strategy", None)
-            c.pop("_score", None)
-
-        return best, scored_candidates
+        # [V60.85] 첫 번째 후보를 "대표"로 반환하되, 전체 후보 리스트도 함께 반환
+        # Validator에서 Director가 전체 비교 후 최종 선택
+        return qualified_candidates[0], qualified_candidates
 
     def _generate_single(
         self,
@@ -257,7 +334,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
         prev_info: str,
         strategy: Dict,
         feedback: str = "",
-        protagonist_name: str = "주인공"  # [V61] 주인공 이름
+        protagonist_name: str = "주인공",  # [V61] 주인공 이름
+        protagonist_config: Dict = None,  # [V60.90] 주인공 설정
+        hud_context: str = ""  # [V60.95] 고밀도 HUD 컨텍스트
     ) -> Optional[Dict]:
         """단일 Blueprint 생성"""
         # [V60.80] 피드백 강화 주입 - Director 피드백은 반드시 반영
@@ -274,14 +353,19 @@ class BlueprintEnsembleGenerator(BaseAgent):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 
+        # [V60.90] protagonist_config 기반 지시사항 생성
+        protagonist_instructions = self._build_protagonist_instructions(protagonist_config)
+
         prompt = BLUEPRINT_GENERATION_PROMPT.format(
             strategy_display=strategy["display"],
             ep_num=ep_num,
             protagonist_name=protagonist_name,  # [V61] 주인공 이름 주입
+            protagonist_instructions=protagonist_instructions,  # [V60.90] 주인공 설정 지시
             arc_focus=self._escape_braces(arc_focus),
             constraints=self._escape_braces(constraints_str),
             strategy_directive=strategy["directive"] + extra_directive,
-            prev_info=self._escape_braces(prev_info)
+            prev_info=self._escape_braces(prev_info),
+            hud_context=self._escape_braces(hud_context) if hud_context else "(상태 정보 없음)"  # [V60.95]
         )
 
         try:
@@ -383,6 +467,53 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         return warnings
 
+    def _build_protagonist_instructions(self, protagonist_config: Dict) -> str:
+        """
+        [V60.90] protagonist_config 기반 프롬프트 지시사항 생성
+
+        Args:
+            protagonist_config: {world_origin: '원시인'|'현대인', incarnation_type: '회귀자'|'빙의자'|'환생자'}
+
+        Returns:
+            프롬프트에 삽입할 지시사항 문자열
+        """
+        if not protagonist_config:
+            return "║ (주인공 설정 정보 없음)"
+
+        lines = []
+        world_origin = protagonist_config.get('world_origin', '원시인')
+        incarnation_type = protagonist_config.get('incarnation_type', '회귀자')
+
+        # [V60.96] 장르 추출 (장르별 금지어 적용)
+        genre = "wuxia"
+        try:
+            if hasattr(self, 'context') and hasattr(self.context, 'db'):
+                bible = self.context.db.load_anchor('bible')
+                if bible:
+                    genre = bible.get('_genre', 'wuxia')
+        except:
+            pass
+
+        # [V60.96] world_origin 기반 지시 (장르별 JSON 기반 PrimitiveGuard)
+        if world_origin == '원시인':
+            if PRIMITIVE_GUARD_AVAILABLE:
+                prim_section = get_primitive_constraint_section(protagonist_config, genre=genre, length="short")
+                lines.append(f"║ {prim_section}")
+            else:
+                lines.append("║ ⚠️ [원시인 모드] 현대 용어 절대 금지!")
+        else:
+            lines.append("║ 📝 [현대인 모드] 주인공은 현대 사회를 알고 있음")
+
+        # incarnation_type 기반 지시
+        if incarnation_type == '회귀자':
+            lines.append("║ 🔄 [회귀자] 미래를 알고 있음 (합리적 이유 없이는 내면 독백으로 처리)")
+        elif incarnation_type == '빙의자':
+            lines.append("║ 👤 [빙의자] 원래 인물의 기억/관계를 의식")
+        elif incarnation_type == '환생자':
+            lines.append("║ 👶 [환생자] 전생의 기억이 있음")
+
+        return "\n".join(lines) if lines else "║ (주인공 설정 정보 없음)"
+
     def _format_constraints(self, constraint_block: Dict) -> str:
         """제약 조건 포맷팅"""
         lines = []
@@ -418,6 +549,118 @@ class BlueprintEnsembleGenerator(BaseAgent):
             lines.append(f"  {equip}")
 
         return "\n".join(lines) if lines else "(제약 없음)"
+
+    def _build_hud_context(self, state_tracker, ep_num: int) -> str:
+        """
+        [V60.95] StateTracker에서 고밀도 HUD 컨텍스트 구축
+
+        PresetRegistry 기반 17+ 필드를 프롬프트에 주입
+        NPC 레지스트리 정보도 포함
+
+        Args:
+            state_tracker: StateTracker 인스턴스
+            ep_num: 현재 에피소드 번호
+
+        Returns:
+            str: 프롬프트용 HUD 컨텍스트
+        """
+        if not state_tracker:
+            return ""
+
+        lines = []
+
+        # 1. 주인공 상태 (고밀도 필드)
+        try:
+            # 직전 에피소드 상태 가져오기
+            prev_state = None
+            if ep_num > 1 and hasattr(state_tracker, 'episode_states'):
+                prev_state = state_tracker.episode_states.get(ep_num - 1)
+
+            if prev_state:
+                state_dict = prev_state.to_dict() if hasattr(prev_state, 'to_dict') else {}
+
+                lines.append("[주인공 현재 상태]")
+
+                # 핵심 필드 (항상 표시)
+                core_fields = ['location', 'internal_energy', 'injuries']
+                for field in core_fields:
+                    if field in state_dict:
+                        lines.append(f"  - {field}: {state_dict[field]}")
+
+                # 확장 필드 (있으면 표시)
+                extended_fields = [
+                    ('realm', '경지'), ('reputation', '평판'), ('mental_state', '정신상태'),
+                    ('faction', '소속'), ('rank', '지위'), ('gold', '재화'),
+                    ('awakening_grade', '각성등급'), ('gate_clearance', '클리어 게이트'),
+                    ('net_worth', '자산'), ('market_reputation', '시장평판'),
+                    ('mana', '마나'), ('skills', '스킬'), ('titles', '칭호')
+                ]
+
+                for field, display in extended_fields:
+                    if field in state_dict and state_dict[field]:
+                        value = state_dict[field]
+                        # 리스트는 쉼표로 연결
+                        if isinstance(value, list):
+                            value = ', '.join(str(v) for v in value[:5])  # 최대 5개
+                        lines.append(f"  - {display}: {value}")
+
+                # 소지품
+                items = state_dict.get('items', [])
+                weapons = state_dict.get('weapons', [])
+                if items or weapons:
+                    all_items = weapons + items
+                    lines.append(f"  - 소지품: {', '.join(str(i) for i in all_items[:8])}")
+
+                # 관계
+                relationships = state_dict.get('relationships', {})
+                if relationships:
+                    rel_str = ', '.join(f"{k}:{v}" for k, v in list(relationships.items())[:5])
+                    lines.append(f"  - 관계: {rel_str}")
+
+        except Exception as e:
+            lines.append(f"  (상태 로드 오류: {str(e)[:30]})")
+
+        # 2. NPC 레지스트리 (살아있는 주요 NPC)
+        try:
+            if hasattr(state_tracker, 'npc_registry') and state_tracker.npc_registry:
+                alive_npcs = [
+                    (name, info) for name, info in state_tracker.npc_registry.items()
+                    if info.get('status') != 'dead'
+                ][:10]  # 최대 10명
+
+                if alive_npcs:
+                    lines.append("")
+                    lines.append("[등장 가능 NPC]")
+                    for name, info in alive_npcs:
+                        role = info.get('role', '')
+                        relationship = info.get('relationship', '')
+                        faction = info.get('faction', '')
+
+                        npc_desc = f"  - {name}"
+                        details = []
+                        if role:
+                            details.append(role)
+                        if faction:
+                            details.append(faction)
+                        if relationship:
+                            details.append(f"관계:{relationship}")
+                        if details:
+                            npc_desc += f" ({', '.join(details)})"
+                        lines.append(npc_desc)
+
+                # 사망 NPC 경고
+                dead_npcs = [
+                    name for name, info in state_tracker.npc_registry.items()
+                    if info.get('status') == 'dead'
+                ]
+                if dead_npcs:
+                    lines.append("")
+                    lines.append(f"⚠️ [사망 NPC - 등장 금지]: {', '.join(dead_npcs[:5])}")
+
+        except Exception as e:
+            pass  # NPC 로드 실패 시 무시
+
+        return "\n".join(lines) if lines else "(상태 정보 없음)"
 
     def _format_prev_info(self, prev_blueprint: Optional[Dict]) -> str:
         """이전 Blueprint 정보 포맷팅"""
