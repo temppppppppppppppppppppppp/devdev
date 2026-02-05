@@ -7,12 +7,231 @@ from .base_agent import BaseAgent
 class Writer(BaseAgent):
     """[V31 Sovereign Writer] 듀얼 캐시 시스템 대응 및 비용 최적화 집필 엔진
     [V59] 감정선 스켈레톤 시스템 추가
+    [V60.98] 씬 프리셋 시스템 추가 - 장면/화자 전환 연출 가이드
     """
+
+    # [V60.98] 씬 프리셋 정의
+    SCENE_PRESETS = {
+        "opening_hook": {
+            "transition": "fade",
+            "pacing": "normal",
+            "pov": "protagonist",
+            "sensory": "visual",
+            "dialogue_ratio": 0.3,
+            "guide": "독자를 끌어들이는 임팩트 있는 시작. 시각적 묘사 중심, 상황 설정."
+        },
+        "daily_routine": {
+            "transition": "cut",
+            "pacing": "slow",
+            "pov": "protagonist",
+            "sensory": "mixed",
+            "dialogue_ratio": 0.5,
+            "guide": "일상 묘사로 세계관과 캐릭터 노출. 여유로운 호흡, 감각 다양하게."
+        },
+        "tension_build": {
+            "transition": "cut",
+            "pacing": "normal",
+            "pov": "protagonist",
+            "sensory": "auditory",
+            "dialogue_ratio": 0.4,
+            "guide": "긴장감 축적. 소리/분위기 묘사로 불안감 조성. 짧은 문장 섞기."
+        },
+        "action_peak": {
+            "transition": "cut",
+            "pacing": "fast",
+            "pov": "protagonist",
+            "sensory": "visual",
+            "dialogue_ratio": 0.2,
+            "guide": "전투/액션 클라이맥스. 빠른 호흡, 짧은 문장, 시각 중심. 대사 최소화."
+        },
+        "emotional_reveal": {
+            "transition": "fade",
+            "pacing": "slow",
+            "pov": "protagonist",
+            "sensory": "tactile",
+            "dialogue_ratio": 0.7,
+            "guide": "감정 폭발/내면 묘사. 느린 호흡, 촉각/체감 묘사, 대사와 독백 중심."
+        },
+        "dialogue_duel": {
+            "transition": "cut",
+            "pacing": "normal",
+            "pov": "protagonist",
+            "sensory": "auditory",
+            "dialogue_ratio": 0.8,
+            "guide": "설전/협상/대립. 대사 중심, 표정과 어조 묘사. 긴장감 있는 대화."
+        },
+        "villain_scheme": {
+            "transition": "cut",
+            "pacing": "normal",
+            "pov": "villain",
+            "sensory": "visual",
+            "dialogue_ratio": 0.5,
+            "guide": "악역 시점 전환. 음모와 계략 노출. 독자에게 위협 암시."
+        },
+        "side_glimpse": {
+            "transition": "fade",
+            "pacing": "normal",
+            "pov": "side_char",
+            "sensory": "mixed",
+            "dialogue_ratio": 0.4,
+            "guide": "조연 시점 삽입. 주인공 부재 상황, 다른 시각에서 사건 조명."
+        },
+        "flashback": {
+            "transition": "dissolve",
+            "pacing": "slow",
+            "pov": "protagonist",
+            "sensory": "visual",
+            "dialogue_ratio": 0.3,
+            "guide": "과거 회상. 몽환적 전환, 과거 시제, 현재와 대비되는 분위기."
+        },
+        "omniscient_hint": {
+            "transition": "fade",
+            "pacing": "slow",
+            "pov": "omniscient",
+            "sensory": "visual",
+            "dialogue_ratio": 0.1,
+            "guide": "전지적 시점으로 복선/떡밥 암시. 서술자 목소리, 독자에게만 정보 제공."
+        },
+        "cliffhanger": {
+            "transition": "cut",
+            "pacing": "fast",
+            "pov": "protagonist",
+            "sensory": "visual",
+            "dialogue_ratio": 0.4,
+            "guide": "화 끝 훅. 급박한 전개, 긴장 최고조에서 끊기. 다음 화 유도."
+        },
+        "resolution": {
+            "transition": "fade",
+            "pacing": "slow",
+            "pov": "protagonist",
+            "sensory": "mixed",
+            "dialogue_ratio": 0.6,
+            "guide": "갈등 해소, 정리. 여운 있는 마무리, 감정 정리, 다음 전개 암시."
+        }
+    }
 
     def __init__(self, context, client, model_tier="gemini-1.5-pro"):
         super().__init__(context, client, model_tier)
         self.cache_name = None # main_a.py에서 주입됨
         self.last_hud_anomalies = None  # [V60] 마지막 HUD 급변 감지 결과 저장 (main_a.py에서 로깅용)
+
+        # [V60.90] 장르별 Guard 연결 (특화 프롬프트용)
+        self.guard = None  # main_a.py에서 set_guard()로 설정
+        self.genre = 'wuxia'  # 기본 장르
+
+    def set_guard(self, guard):
+        """[V60.90] 장르 Guard 설정"""
+        self.guard = guard
+
+    def set_genre(self, genre: str):
+        """[V60.90] 장르 설정"""
+        self.genre = genre
+
+    def get_scene_preset_guide(self, scene_breakdown: dict) -> str:
+        """
+        [V60.98] 씬 프리셋에서 연출 가이드 생성
+
+        Args:
+            scene_breakdown: Blueprint의 scene_breakdown (각 씬에 'type' 필드 포함 가능)
+
+        Returns:
+            Writer용 연출 가이드 문자열
+        """
+        if not scene_breakdown:
+            return ""
+
+        guides = []
+        guides.append("=" * 50)
+        guides.append("[씬별 연출 가이드 - V60.98]")
+        guides.append("=" * 50)
+
+        for scene_key, scene_data in scene_breakdown.items():
+            # scene_data가 문자열인 경우 (구버전 호환)
+            if isinstance(scene_data, str):
+                continue
+
+            # scene_data가 dict인 경우
+            if isinstance(scene_data, dict):
+                preset_type = scene_data.get('type', scene_data.get('preset', None))
+                override = scene_data.get('override', {})
+
+                if preset_type and preset_type in self.SCENE_PRESETS:
+                    preset = self.SCENE_PRESETS[preset_type].copy()
+
+                    # 오버라이드 적용
+                    for key, value in override.items():
+                        if key in preset:
+                            preset[key] = value
+
+                    # 연출 가이드 생성
+                    pov_map = {
+                        "protagonist": "주인공 시점",
+                        "villain": "악역 시점",
+                        "side_char": "조연 시점",
+                        "omniscient": "전지적 시점"
+                    }
+                    pacing_map = {
+                        "slow": "느린 호흡 (장문, 여유)",
+                        "normal": "보통 호흡",
+                        "fast": "빠른 호흡 (단문, 긴박)"
+                    }
+                    sensory_map = {
+                        "visual": "시각 중심 묘사",
+                        "auditory": "청각 중심 묘사",
+                        "tactile": "촉각/체감 중심 묘사",
+                        "mixed": "감각 골고루"
+                    }
+
+                    scene_title = scene_data.get('title', scene_key)
+                    guide_text = f"""
+## {scene_key}: {scene_title}
+- 프리셋: {preset_type}
+- 시점: {pov_map.get(preset['pov'], preset['pov'])}
+- 호흡: {pacing_map.get(preset['pacing'], preset['pacing'])}
+- 감각: {sensory_map.get(preset['sensory'], preset['sensory'])}
+- 대사 비중: {int(preset['dialogue_ratio'] * 100)}%
+- 전환: {preset['transition']}
+- 연출 지침: {preset['guide']}
+"""
+                    guides.append(guide_text)
+
+        if len(guides) <= 3:  # 헤더만 있는 경우
+            return ""
+
+        guides.append("=" * 50)
+        return "\n".join(guides)
+
+    def get_genre_rules_prompt(self) -> str:
+        """
+        [V60.90] 장르별 특화 규칙 프롬프트 반환
+
+        Returns:
+            장르별 특화 규칙 문자열
+        """
+        if not self.guard:
+            return ""
+
+        try:
+            if self.genre == 'hunter':
+                prompts = []
+                if hasattr(self.guard, 'get_dungeon_rules_prompt'):
+                    prompts.append(self.guard.get_dungeon_rules_prompt())
+                if hasattr(self.guard, 'get_awakening_rules_prompt'):
+                    prompts.append(self.guard.get_awakening_rules_prompt())
+                return "\n\n".join(filter(None, prompts))
+
+            elif self.genre == 'investment':
+                if hasattr(self.guard, 'get_finance_rules_prompt'):
+                    return self.guard.get_finance_rules_prompt()
+
+            elif self.genre == 'wuxia':
+                # Wuxia는 기존 purism_prompt 사용
+                pass
+
+            return ""
+        except Exception as e:
+            print(f"[V60.90] 장르 규칙 프롬프트 로드 실패: {e}")
+            return ""
 
     def _get_hud_trend_safe(self, ep_num: int) -> str:
         """
@@ -182,7 +401,8 @@ class Writer(BaseAgent):
 
     def write_v20_manuscript(self, ep_num, breakdown_doc, master_bible, hud_report, purism_prompt,
                              style_mode="", intro_dna="CYNICAL", feedback="", prev_full_manuscript="",
-                             arc_doc="", tactical_references="", protagonist_name="주인공"):  # [V61] 주인공 이름     
+                             arc_doc="", tactical_references="", protagonist_name="주인공",
+                             entity_registry=None):  # [V61] 주인공 이름, [V60.91] Entity Registry     
         
         # 1. [변동 데이터] Dynamic Payload 구성
         # 매 화 바뀌는 정보만 모아서 가볍게 만듭니다.
@@ -201,6 +421,27 @@ class Writer(BaseAgent):
         core_identity = bible_root.get('ProjectData', {}).get('CoreIdentity', {})
         assets = bible_root.get('AssetLibrary', {})
 
+        # [V60.88] 주인공 설정 (world_origin, incarnation_type)
+        protagonist_config = bible_root.get('protagonist_config', {})
+        world_origin = protagonist_config.get('world_origin', '원시인')  # 기본값: 원시인
+        incarnation_type = protagonist_config.get('incarnation_type', '회귀자')  # 기본값: 회귀자
+
+        # [V60.88] 주인공 설정 기반 지침 구성 (인지 목적, 제약 최소화)
+        protagonist_instructions = []
+        if world_origin == '원시인':
+            protagonist_instructions.append('⚠️ [원시인 모드] 현대 용어 절대 금지! "킬로그램", "아드레날린", "메소드" 등 현대 개념은 절대 사용 불가!')
+        else:
+            protagonist_instructions.append('📝 [현대인 모드] 주인공은 현대 사회를 알고 있음 (현대 지식 활용 가능)')
+
+        if incarnation_type == '회귀자':
+            protagonist_instructions.append('🔄 [회귀자] 미래를 알고 있음 (합리적 이유 없이는 내면 독백으로 처리)')
+        elif incarnation_type == '빙의자':
+            protagonist_instructions.append('👤 [빙의자] 원래 인물의 기억/관계를 의식하며 행동')
+        elif incarnation_type == '환생자':
+            protagonist_instructions.append('👶 [환생자] 전생의 기억이 있음')
+
+        protagonist_instructions_text = "\n        ".join(protagonist_instructions) if protagonist_instructions else ""
+
         # [V45] NPC 장비 현황 추출 (Writer가 NPC 소지품을 명확히 인지하도록)
         npc_equipment_summary = []
         key_npcs = assets.get('KeyNPCs', []) or assets.get('Key_NPCs', [])
@@ -213,10 +454,15 @@ class Writer(BaseAgent):
                     if equip:
                         npc_equipment_summary.append(f"- {npc_name}: {equip}")
 
+        # [V60.91] Entity Registry 포맷팅 (NPC 명칭 일관성 유지용)
+        entity_registry_text = self._format_entity_registry_for_writer(entity_registry)
+
         # 3. [데이터 보호/에스케이프]
         safe_desire = self._escape_braces(core_identity.get('desire', '전설적 무인으로의 복귀'))
         safe_assets = self._escape_braces(json.dumps(assets, ensure_ascii=False))
-        safe_npc_equipment = self._escape_braces("\n".join(npc_equipment_summary)) if npc_equipment_summary else "NPC 장비 정보 없음"    
+        safe_npc_equipment = self._escape_braces("\n".join(npc_equipment_summary)) if npc_equipment_summary else "NPC 장비 정보 없음"
+        safe_entity_registry = self._escape_braces(entity_registry_text)
+
         # (A) 피드백 섹션
         feedback_section = f"\n[🚨 REJECTION FEEDBACK]: {feedback}" if feedback else ""
         
@@ -271,6 +517,9 @@ class Writer(BaseAgent):
         genre_name = getattr(self.context, 'genre', {}).get('name', '무협')
         anti_trope = self._build_anti_trope_instructions(genre_name)
 
+        # [V60.90] 장르별 특화 규칙 프롬프트
+        genre_rules_prompt = self.get_genre_rules_prompt()
+
         # 2. [Phase 1.2] Mandatory Context Injection (맥락 강제 주입)
         mandatory_context = self._build_mandatory_context(ep_num)
 
@@ -307,6 +556,8 @@ class Writer(BaseAgent):
 
         {anti_trope}
 
+        {genre_rules_prompt}
+
         {justification_guidance}
 
         {reflexion_prompt}
@@ -335,8 +586,17 @@ class Writer(BaseAgent):
         {safe_npc_equipment}
         ⚠️ NPC가 소지한 무기/장비는 반드시 일관되게 묘사하라. 갑자기 없던 무기가 생기거나 사라지면 안 된다.
 
+        ### 📋 [V60.91] Entity Registry (명칭 일관성 필수)
+        {safe_entity_registry}
+        ⚠️ 위 목록에 등록된 이름만 사용하세요. 다른 표기나 별명 사용 시 REJECT됩니다.
+
         👥 [Lightweight] 주요 NPC 등장 빈도 (최근 10화):
         {self._get_npc_frequency_warning(ep_num)}
+
+        ### 🌍 [V60.88] 주인공 설정 (Protagonist Configuration)
+        - **세계 출신**: {world_origin}
+        - **환생 유형**: {incarnation_type}
+        {protagonist_instructions_text}
 
         ### 📋 1. 씬 설계도 (Blueprint)
         {self._escape_braces(breakdown_doc)}
@@ -1025,6 +1285,51 @@ class Writer(BaseAgent):
             return frequency
         except Exception:
             return {}
+
+    def _format_entity_registry_for_writer(self, entity_registry: dict) -> str:
+        """
+        [V60.91] Entity Registry를 Writer 프롬프트용 포맷으로 변환
+
+        Args:
+            entity_registry: {characters:[], organizations:[], locations:[], objects:[], concepts:[]}
+
+        Returns:
+            str: 프롬프트에 삽입할 포맷팅된 문자열
+        """
+        if not entity_registry:
+            return "(Entity Registry 없음 - master_bible 참조)"
+
+        lines = []
+        categories = [
+            ('characters', '👤 캐릭터 (이 이름만 사용)'),
+            ('organizations', '🏛️ 조직/문파'),
+            ('locations', '📍 장소'),
+            ('objects', '⚔️ 무기/아이템'),
+            ('concepts', '📜 무공/기술')
+        ]
+
+        has_any = False
+        for key, label in categories:
+            items = entity_registry.get(key, [])
+            if items:
+                has_any = True
+                formatted_items = []
+                for item in items[:10]:  # 최대 10개만
+                    if isinstance(item, dict):
+                        name = item.get('name', item.get('canonical_name', str(item)))
+                        aliases = item.get('aliases', [])
+                        if aliases:
+                            formatted_items.append(f"{name} (별칭: {', '.join(aliases[:3])})")
+                        else:
+                            formatted_items.append(name)
+                    else:
+                        formatted_items.append(str(item))
+                lines.append(f"{label}: {', '.join(formatted_items)}")
+
+        if not has_any:
+            return "(등록된 Entity 없음)"
+
+        return "\n        ".join(lines)
 
     def _get_npc_frequency_warning(self, ep_num: int) -> str:
         """
@@ -1915,7 +2220,8 @@ class Writer(BaseAgent):
         hud_report: str,
         style_guide: str = "",
         feedback: str = "",
-        prev_manuscript: str = ""
+        prev_manuscript: str = "",
+        entity_registry: dict = None  # [V60.91] Entity Registry
     ) -> dict:
         """
         [V60.6] Beat 단위 분할 생성
@@ -1964,8 +2270,17 @@ class Writer(BaseAgent):
         ending_hook = blueprint.get('ending_hook', '') or blueprint.get('cliffhanger', '')
         integrated_scenario = blueprint.get('integrated_scenario', '')
 
+        # [V60.91] Entity Registry 포맷팅
+        entity_registry_text = self._format_entity_registry_for_writer(entity_registry) if entity_registry else ""
+        entity_section = f"\n## [V60.91] 명칭 일관성 (이 이름만 사용하세요)\n{entity_registry_text}\n" if entity_registry_text else ""
+
+        # [V60.98] 씬 프리셋 가이드 생성
+        preset_guide = self.get_scene_preset_guide(scene_breakdown)
+        preset_section = f"\n{preset_guide}\n" if preset_guide else ""
+
         # Phase 1: 전반부 (Scene 1-3)
         phase1_prompt = f"""당신은 무협 소설 작가입니다. 제 {ep_num} 화의 **전반부**를 집필합니다.
+{entity_section}
 
 ## 설정
 - 주인공: {protagonist}
@@ -1984,12 +2299,13 @@ class Writer(BaseAgent):
 {f"## 스타일 가이드{chr(10)}{style_guide}" if style_guide else ""}
 
 {f"## 피드백{chr(10)}{feedback}" if feedback else ""}
-
+{preset_section}
 ## 작성 지침
 1. 위 씬들을 **모두** 포함하여 약 2,000-2,500자로 작성
 2. 각 씬에 대화와 묘사를 균등하게 배분
 3. 마지막 문장은 다음 씬으로 자연스럽게 이어지게 작성
 4. 문장 시작어를 다양하게 사용
+5. [V60.98] 씬 프리셋 가이드가 있다면 해당 연출 지침을 따를 것
 
 ## 출력
 원고 본문만 출력하세요. JSON 형식이 아닌 순수 텍스트로."""
@@ -2009,13 +2325,14 @@ class Writer(BaseAgent):
 
 ## 엔딩 훅 (반드시 이 방향으로 마무리)
 {ending_hook}
-
+{preset_guide}
 ## 작성 지침
 1. 위 씬들을 **모두** 포함하여 약 2,500-3,000자로 작성
 2. 클라이맥스 씬은 더 상세하게! 절대 요약하지 마라
 3. 액션 장면은 동작 하나하나를 묘사
 4. 마지막은 절벽 걸기(cliffhanger)로 마무리
 5. 문장 시작어를 다양하게 사용
+6. [V60.98] 씬 프리셋 가이드가 있다면 해당 연출 지침을 따를 것
 
 ## 출력
 원고 본문만 출력하세요. JSON 형식이 아닌 순수 텍스트로."""
@@ -2035,7 +2352,8 @@ class Writer(BaseAgent):
                 desire=desire,
                 second_half_json=json.dumps(second_half_scenes, ensure_ascii=False, indent=2),
                 phase1_content=phase1_content[-1500:],  # 마지막 1500자만
-                ending_hook=ending_hook
+                ending_hook=ending_hook,
+                preset_guide=preset_section  # [V60.98] 프리셋 가이드 추가
             )
 
             phase2_response = self.ask(phase2_prompt, temperature=0.7)

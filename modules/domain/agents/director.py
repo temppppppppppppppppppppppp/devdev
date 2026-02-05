@@ -3,6 +3,13 @@ import statistics
 from .base_agent import BaseAgent
 from modules.validation.validation_orchestrator import ValidationOrchestrator
 
+# [V60.95] 원시인 모드 금지어 Guard (JSON 기반)
+try:
+    from modules.core.primitive_guard import get_primitive_guard, validate_primitive_compliance
+    PRIMITIVE_GUARD_AVAILABLE = True
+except ImportError:
+    PRIMITIVE_GUARD_AVAILABLE = False
+
 
 
 # =================================================================
@@ -140,6 +147,9 @@ DIRECTOR_AUDIT_PROMPT_V30 = """
 
 
 
+### 📊 [V60.95 고밀도 HUD - 주인공/NPC 상세 상태]
+{high_density_hud_context}
+
 ### 📋 검수 데이터
 - 현재 회차: 제 {ep_num}화 (아크 내 {arc_pos}번째)
 - 📜 아크 전술 설계도: {arc_doc}
@@ -232,16 +242,65 @@ Step 5: 최종 판정
 }}
 """
 
+# =================================================================
+# [V60.87] 원고 역사 충돌 검사 프롬프트 (Manuscript History Conflict Check)
+# =================================================================
+MANUSCRIPT_HISTORY_CONFLICT_PROMPT = """
+[Role] 원고 연속성 전문가 (Manuscript Continuity Expert)
+[Task] 현재 원고가 이전에 작성된 원고들과 충돌하는지 검사하라.
+
+### 📜 검사 대상: 제 {ep_num}화 원고
+### 📚 이전 원고 역사 (진실의 원천 - 이것이 실제로 일어난 일이다):
+{manuscript_history}
+
+### 📝 현재 원고:
+{current_manuscript}
+
+### 🔍 충돌 검사 항목 (Hard Constraints)
+1. **사망 충돌**: 이전 원고에서 사망한 인물이 현재 원고에서 살아있는 것처럼 등장하는가?
+2. **아이템 충돌**: 이전 원고에서 잃어버리거나 파괴된 아이템이 현재 원고에서 사용되는가?
+3. **장소 충돌**: 이전 원고에서 파괴된 장소가 현재 원고에서 멀쩡한 것처럼 묘사되는가?
+4. **타임라인 충돌**: 이전 원고의 시간 흐름과 현재 원고의 시간 순서가 맞지 않는가?
+5. **관계 충돌**: 이전 원고에서 확립된 인물 관계가 현재 원고에서 모순되는가?
+6. **상태 충돌**: 이전 원고에서의 부상/상태가 현재 원고에서 무시되었는가?
+
+### [Chain-of-Thought Analysis]
+1. 이전 원고에서 확립된 핵심 사실(사망, 아이템 획득/손실, 장소 상태)을 나열하라
+2. 현재 원고에서 이 사실들과 충돌하는 부분이 있는지 대조하라
+3. 충돌이 발견되면 정확히 어떤 사실이 어떻게 모순되는지 명시하라
+
+[Output Format] JSON Only
+{{
+    "decision": "PASS" 또는 "CONFLICT",
+    "conflicts": [
+        {{
+            "type": "사망/아이템/장소/타임라인/관계/상태",
+            "prev_fact": "이전 원고에서 확립된 사실",
+            "current_violation": "현재 원고에서의 위반 내용",
+            "prev_episode": "이전 원고 회차 (알 수 있는 경우)",
+            "severity": "CRITICAL/MAJOR/MINOR"
+        }}
+    ],
+    "summary": "전체 검사 요약"
+}}
+"""
+
+
 class Director(BaseAgent):
     """
     [V0128] Director - 품질 검증 총괄
     [V59] 품질 등급화 A/B/C 및 구체적 수정 가이드 시스템 추가
     [V61] Entity 명칭 일관성 검증 - 최종 방어선 역할
+    [V60.87] 원고 역사 충돌 검사 - 전체 원고 대비 연속성 검증
 
     [V61 NEW]
     - validate_entity_consistency(): Entity 명칭 일관성 LLM 검증
     - audit_manuscript(), audit_strategic_plan()에 entity_registry 파라미터 추가
     - entity_consistency_enabled 플래그로 기능 활성화/비활성화
+
+    [V60.87 NEW]
+    - check_manuscript_history_conflicts(): 전체 원고 역사 대비 충돌 검사
+    - manuscript_history_check_enabled 플래그로 기능 활성화/비활성화
     """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -261,6 +320,23 @@ class Director(BaseAgent):
 
         # [V61] Entity 일관성 검증 설정
         self.entity_consistency_enabled = True  # Entity 일관성 검증 활성화
+
+        # [V60.87] 원고 역사 충돌 검사 설정
+        self.manuscript_history_check_enabled = True  # 전체 원고 대비 충돌 검사 활성화
+        self.history_check_max_episodes = 10  # 최대 몇 화까지 역사 참조할지 (너무 많으면 토큰 초과)
+
+        # [V60.88] 원고 컨텍스트 캐싱 (Gemini 대용량 컨텍스트 활용)
+        self.manuscript_cache_name = None  # 원고 합본 캐시 이름
+        self.manuscript_cache_enabled = True  # 캐싱 기능 활성화 여부
+        self._cached_manuscript_count = 0  # 캐시된 원고 수 (캐시 갱신 판단용)
+
+        # [V60.89] 주인공 설정 검증 (protagonist_config)
+        self.protagonist_config_check_enabled = True
+        self._protagonist_config = None  # 캐싱용
+
+        # [V60.90] 장르별 Guard 연결 - 특화 검증 메서드 호출용
+        self.guard = None  # main_a.py에서 set_guard()로 설정
+        self.genre_validation_enabled = True  # 장르별 특화 검증 활성화
 
     def get_adaptive_threshold(
         self,
@@ -435,6 +511,237 @@ class Director(BaseAgent):
         # 기존 orchestrator 리셋 (장르 변경 시 재초기화 필요)
         self.v0128_orchestrator = None
 
+    def set_guard(self, guard):
+        """[V60.90] 장르 Guard 설정 (main_a.py에서 호출)"""
+        self.guard = guard
+
+    def _build_hud_context(self, state_tracker, ep_num: int) -> str:
+        """
+        [V60.95] StateTracker에서 고밀도 HUD 컨텍스트 구축
+
+        Director의 원고 검증 시 참조할 주인공/NPC 상태 정보를 구축한다.
+        ChiefWriter의 _build_hud_context와 동일한 패턴.
+
+        Args:
+            state_tracker: StateTracker 인스턴스
+            ep_num: 현재 에피소드 번호
+
+        Returns:
+            고밀도 HUD 문자열 (프롬프트 주입용)
+        """
+        if not state_tracker:
+            return "(상태 추적기 없음)"
+
+        lines = []
+
+        # 1. 주인공 상태 (고밀도 필드)
+        try:
+            prev_state = None
+            if ep_num > 1 and hasattr(state_tracker, 'episode_states'):
+                prev_state = state_tracker.episode_states.get(ep_num - 1)
+
+            if prev_state:
+                state_dict = prev_state.to_dict() if hasattr(prev_state, 'to_dict') else {}
+                lines.append("[주인공 현재 상태 - 고밀도]")
+
+                # Core fields
+                core_fields = ['name', 'location', 'hp', 'mp', 'martial_level', 'inner_power', 'status']
+                for field in core_fields:
+                    if field in state_dict and state_dict[field]:
+                        lines.append(f"  {field}: {state_dict[field]}")
+
+                # Extended fields (extra_fields)
+                extra = state_dict.get('extra_fields', {})
+                if extra:
+                    lines.append("  [확장 상태]")
+                    for k, v in extra.items():
+                        if v:
+                            lines.append(f"    {k}: {v}")
+
+                # Items
+                items = state_dict.get('items', [])
+                if items:
+                    lines.append(f"  보유 아이템: {', '.join(items[:10])}")
+
+                # Relationships
+                relationships = state_dict.get('relationships', {})
+                if relationships:
+                    lines.append("  관계:")
+                    for name, rel in list(relationships.items())[:5]:
+                        lines.append(f"    - {name}: {rel}")
+            else:
+                lines.append("[주인공 상태: 이전 에피소드 기록 없음]")
+
+        except Exception as e:
+            lines.append(f"  (주인공 상태 로드 오류: {str(e)[:30]})")
+
+        # 2. NPC 레지스트리 (살아있는 주요 NPC)
+        try:
+            if hasattr(state_tracker, 'npc_registry') and state_tracker.npc_registry:
+                npc_reg = state_tracker.npc_registry
+                alive_npcs = [
+                    name for name, data in npc_reg.items()
+                    if isinstance(data, dict) and data.get('status') != 'dead'
+                ]
+                dead_npcs = [
+                    name for name, data in npc_reg.items()
+                    if isinstance(data, dict) and data.get('status') == 'dead'
+                ]
+
+                if alive_npcs:
+                    lines.append(f"\n[활성 NPC ({len(alive_npcs)}명)]")
+                    for name in alive_npcs[:8]:
+                        npc_data = npc_reg.get(name, {})
+                        role = npc_data.get('role', '?')
+                        location = npc_data.get('location', '?')
+                        lines.append(f"  - {name} ({role}) @ {location}")
+
+                if dead_npcs:
+                    lines.append(f"\n[사망 NPC ({len(dead_npcs)}명) - 등장 금지!]")
+                    for name in dead_npcs[:5]:
+                        npc_data = npc_reg.get(name, {})
+                        death_arc = npc_data.get('death_arc', '?')
+                        lines.append(f"  - {name}: Arc {death_arc}에서 사망")
+        except Exception:
+            pass
+
+        return "\n".join(lines) if lines else "(HUD 정보 없음)"
+
+    def _run_genre_specific_validation(self, manuscript: str, ep_num: int) -> dict:
+        """
+        [V60.90] 장르별 특화 검증 실행
+
+        Hunter: 던전 진입, 각성 단계, 스킬 쿨타임 등
+        Investment: 투자 규모, 수익률, 타임라인 이벤트 등
+        Wuxia: (base guard에서 처리)
+
+        Returns:
+            {
+                'has_critical': bool,
+                'violations': list,
+                'summary': str,
+                'feedback': str
+            }
+        """
+        if not self.guard:
+            return {'has_critical': False, 'violations': [], 'summary': '', 'feedback': ''}
+
+        violations = []
+        critical_found = False
+
+        try:
+            # ─────────────────────────────────────────────────────────────
+            # Hunter 장르 특화 검증
+            # ─────────────────────────────────────────────────────────────
+            if self.genre == 'hunter':
+                # 던전 진입 규칙 검증
+                if hasattr(self.guard, 'validate_dungeon_entry'):
+                    # 원고에서 던전 진입 패턴 추출
+                    import re
+                    dungeon_patterns = re.findall(r'(\w+)\s*(?:등급|랭크|급)\s*던전', manuscript)
+                    for dungeon_rank in dungeon_patterns:
+                        # 현재 캐릭터 등급은 원고에서 추출 필요 (간이 체크)
+                        result = self.guard.validate_dungeon_entry(dungeon_rank, 'E')  # 보수적 체크
+                        if not result[0]:
+                            violations.append({
+                                'type': 'dungeon_entry',
+                                'message': result[1],
+                                'severity': 'warning'
+                            })
+
+                # 각성 단계 스킵 검증
+                if hasattr(self.guard, 'validate_awakening_progression'):
+                    awakening_patterns = re.findall(r'(\w)급.*?각성|각성.*?(\w)급', manuscript)
+                    # 연속 등급 체크 (E→D→C→B→A→S)
+                    for match in awakening_patterns:
+                        rank = match[0] or match[1]
+                        # 이전 등급 대비 스킵 체크 필요
+
+                # 스킬 사용 검증
+                if hasattr(self.guard, 'validate_skill_usage'):
+                    # 스킬 쿨타임, 마나 소모 등
+                    pass
+
+                print(f"      🎮 [V60.90] Hunter 특화 검증: {len(violations)}개 이슈")
+
+            # ─────────────────────────────────────────────────────────────
+            # Investment 장르 특화 검증
+            # ─────────────────────────────────────────────────────────────
+            elif self.genre == 'investment':
+                import re
+
+                # 투자 규모 검증
+                if hasattr(self.guard, 'validate_investment_scale'):
+                    # 금액 패턴 추출
+                    amount_patterns = re.findall(r'(\d+(?:,\d{3})*)\s*(?:억|만|원)', manuscript)
+                    for amount_str in amount_patterns:
+                        amount = int(amount_str.replace(',', ''))
+                        result = self.guard.validate_investment_scale(amount, 'small')  # 보수적
+                        if not result[0]:
+                            violations.append({
+                                'type': 'investment_scale',
+                                'message': result[1],
+                                'severity': 'warning'
+                            })
+
+                # 수익률 검증
+                if hasattr(self.guard, 'validate_return_rate'):
+                    roi_patterns = re.findall(r'(\d+(?:\.\d+)?)\s*%', manuscript)
+                    for roi_str in roi_patterns:
+                        roi = float(roi_str)
+                        if roi > 100:  # 100% 이상 수익률 체크
+                            result = self.guard.validate_return_rate(roi, 'stock', '1month')
+                            if not result[0]:
+                                violations.append({
+                                    'type': 'return_rate',
+                                    'message': result[1],
+                                    'severity': 'warning'
+                                })
+
+                # 타임라인 이벤트 검증
+                if hasattr(self.guard, 'validate_timeline_event'):
+                    year_patterns = re.findall(r'(19\d{2}|20\d{2})년', manuscript)
+                    # 연도별 역사적 사건 일치 여부 체크 가능
+
+                print(f"      💰 [V60.90] Investment 특화 검증: {len(violations)}개 이슈")
+
+            # ─────────────────────────────────────────────────────────────
+            # Wuxia 장르 특화 검증
+            # ─────────────────────────────────────────────────────────────
+            elif self.genre == 'wuxia':
+                # 현대 표기 검증
+                if hasattr(self.guard, 'check_modern_notation'):
+                    modern_violations = self.guard.check_modern_notation(manuscript)
+                    # [V60.97] check_modern_notation은 List[Dict] 반환
+                    if modern_violations and isinstance(modern_violations, list):
+                        examples = [v.get('match', '')[:20] for v in modern_violations[:3]]
+                        violations.append({
+                            'type': 'modern_notation',
+                            'message': f"현대 표기 발견: {examples}",
+                            'severity': 'warning'
+                        })
+
+                print(f"      ⚔️ [V60.90] Wuxia 특화 검증: {len(violations)}개 이슈")
+
+            # Critical 여부 판단 (3개 이상이면 critical)
+            if len(violations) >= 3:
+                critical_found = True
+
+            # 결과 반환
+            summary = "; ".join([v['message'][:50] for v in violations[:3]])
+            feedback = "\n".join([f"- [{v['type']}] {v['message']}" for v in violations])
+
+            return {
+                'has_critical': critical_found,
+                'violations': violations,
+                'summary': summary,
+                'feedback': feedback
+            }
+
+        except Exception as e:
+            print(f"      ⚠️ [V60.90] 장르 검증 오류: {str(e)[:50]}")
+            return {'has_critical': False, 'violations': [], 'summary': '', 'feedback': ''}
+
     def set_v0128_enabled(self, enabled: bool):
         """V0128 검증 시스템 활성화/비활성화"""
         self.use_v0128 = enabled
@@ -575,15 +882,377 @@ class Director(BaseAgent):
 
         return "\n".join(lines)
 
-    def audit_manuscript(self, ep_num, manuscript, arc_doc, history_summary, prev_full_text, arc_pos, total_eps=None, target_len=4500, retry_count=0, validation_context=None, entity_registry=None):
+    def compare_and_select_blueprint(
+        self,
+        candidates: list,
+        arc_data: dict,
+        ep_num: int,
+        prev_blueprint: dict = None,
+        entity_registry: dict = None,
+        state_tracker=None
+    ) -> dict:
         """
-        원고 검수 (V0128 통합 + V46 캐릭터 논리 검증 + V61 Entity 일관성 검증)
+        [V60.85] 여러 Blueprint 후보 중 최적 선택 + PASS/REJECT 판정
+
+        Args:
+            candidates: Blueprint 후보 리스트 (최소 기준 통과한 것들)
+            arc_data: 현재 Arc 데이터
+            ep_num: 에피소드 번호
+            prev_blueprint: 직전 Blueprint
+            entity_registry: Entity 일관성 검증용
+            state_tracker: 죽은 NPC 검증용
+
+        Returns:
+            {
+                "decision": "PASS" | "REJECT",
+                "selected_index": int,  # 선택된 후보 인덱스
+                "selected_blueprint": dict,  # 선택된 Blueprint
+                "score": int,
+                "reason": str,
+                "feedback": str,
+                "comparison_notes": str  # 비교 근거
+            }
+        """
+        if not candidates:
+            return {
+                "decision": "REJECT",
+                "selected_index": -1,
+                "selected_blueprint": None,
+                "score": 0,
+                "reason": "후보 없음",
+                "feedback": "Blueprint 후보가 없습니다.",
+                "comparison_notes": ""
+            }
+
+        # 후보가 1개면 바로 판정
+        if len(candidates) == 1:
+            single_result = self._evaluate_single_blueprint(
+                candidates[0], arc_data, ep_num, prev_blueprint, entity_registry, state_tracker
+            )
+            single_result["selected_index"] = 0
+            single_result["selected_blueprint"] = candidates[0] if single_result["decision"] == "PASS" else None
+            single_result["comparison_notes"] = "단일 후보"
+            return single_result
+
+        # 여러 후보 비교 선택
+        print(f"      🎭 [Director] {len(candidates)}개 후보 비교 중...")
+
+        # Arc 전술서 추출
+        arc_tactical = arc_data.get("tactical_doc", "")
+        if isinstance(arc_tactical, dict):
+            arc_tactical = json.dumps(arc_tactical, ensure_ascii=False)
+
+        # 이전 화 정보
+        prev_ending = ""
+        if prev_blueprint:
+            prev_ending = prev_blueprint.get("ending_hook", "")
+            prev_location = prev_blueprint.get("end_location", "")
+            if prev_location:
+                prev_ending = f"위치: {prev_location}, 훅: {prev_ending}"
+
+        # 후보별 요약 생성
+        candidate_summaries = []
+        for idx, bp in enumerate(candidates):
+            meta = bp.get("_ensemble_meta", {})
+            strategy = meta.get("strategy", f"후보{idx+1}")
+            scene_count = meta.get("scene_count", len(bp.get("scene_breakdown", {})))
+            length = meta.get("length", len(bp.get("integrated_scenario", "")))
+
+            integrated = bp.get("integrated_scenario", "")
+            if not isinstance(integrated, str):
+                integrated = str(integrated) if integrated else ""
+
+            summary = f"""
+[후보 {idx+1}: {strategy}]
+- 씬 개수: {scene_count}개
+- 분량: {length}자
+- 시작 위치: {bp.get('start_location', '?')}
+- 종료 위치: {bp.get('end_location', '?')}
+- 시간 흐름: {bp.get('time_flow', '?')}
+- 엔딩 훅: {bp.get('ending_hook', '?')[:100]}
+
+[시나리오 요약]
+{integrated[:1500]}...
+"""
+            candidate_summaries.append(summary)
+
+        # 비교 선택 프롬프트
+        comparison_prompt = f"""[V60.85 Blueprint 비교 선택]
+
+당신은 웹소설 시리즈의 품질 관리 감독입니다.
+제{ep_num}화 Blueprint 후보 {len(candidates)}개 중 최적의 것을 선택하고 판정하세요.
+
+### Arc 전술서 (이번 화 기준)
+{arc_tactical[:2000]}
+
+### 이전 화 정보
+{prev_ending if prev_ending else "(1화 또는 이전 정보 없음)"}
+
+### 후보 목록
+{''.join(candidate_summaries)}
+
+### 평가 기준
+1. **Arc 준수**: 전술서의 이번 화 내용을 충실히 반영하는가?
+2. **연속성**: 이전 화 종료 상태에서 자연스럽게 이어지는가?
+3. **서사 밀도**: 씬 구성과 시나리오가 충분히 풍부한가?
+4. **다음 화 연결**: 적절한 훅으로 마무리하는가?
+
+### 출력 형식 (JSON)
+{{
+    "selected_index": 0,  // 0부터 시작, 가장 좋은 후보 번호
+    "decision": "PASS" | "REJECT",  // 선택한 후보도 기준 미달이면 REJECT
+    "score": 0-100,
+    "reason": "선택/판정 이유 (50자 이내)",
+    "comparison_notes": "후보별 비교 분석 (각 후보의 장단점)",
+    "feedback": "REJECT인 경우 수정 지침"
+}}
+
+반드시 유효한 JSON만 출력하세요.
+"""
+
+        try:
+            response = self.ask(comparison_prompt, temperature=0.3)
+            result = self._extract_json_robust(response)
+
+            if not isinstance(result, dict):
+                print(f"      ⚠️ [Director] 비교 응답 파싱 실패")
+                # 폴백: 첫 번째 후보 선택
+                return self._fallback_first_candidate(candidates, arc_data, ep_num, prev_blueprint, entity_registry, state_tracker)
+
+            selected_idx = result.get("selected_index", 0)
+            if selected_idx < 0 or selected_idx >= len(candidates):
+                selected_idx = 0
+
+            decision = result.get("decision", "PASS")
+            score = result.get("score", 70)
+
+            print(f"      🎯 [Director] 후보 {selected_idx+1} 선택 ({decision}, 점수: {score})")
+
+            return {
+                "decision": decision,
+                "selected_index": selected_idx,
+                "selected_blueprint": candidates[selected_idx] if decision == "PASS" else None,
+                "score": score,
+                "reason": result.get("reason", ""),
+                "feedback": result.get("feedback", "") if decision == "REJECT" else "",
+                "comparison_notes": result.get("comparison_notes", "")
+            }
+
+        except Exception as e:
+            print(f"      ⚠️ [Director] 비교 오류: {str(e)[:50]}")
+            return self._fallback_first_candidate(candidates, arc_data, ep_num, prev_blueprint, entity_registry, state_tracker)
+
+    def _evaluate_single_blueprint(
+        self,
+        blueprint: dict,
+        arc_data: dict,
+        ep_num: int,
+        prev_blueprint: dict,
+        entity_registry: dict,
+        state_tracker
+    ) -> dict:
+        """단일 Blueprint 평가 (기존 audit_manuscript 간소화 버전)"""
+        integrated = blueprint.get("integrated_scenario", "")
+        if not isinstance(integrated, str):
+            integrated = str(integrated) if integrated else ""
+
+        arc_tactical = arc_data.get("tactical_doc", "")
+        if isinstance(arc_tactical, dict):
+            arc_tactical = json.dumps(arc_tactical, ensure_ascii=False)
+
+        prev_ending = prev_blueprint.get("ending_hook", "") if prev_blueprint else ""
+
+        # [V60.97] arc_no 추출 (타임라인 비교용)
+        arc_no = arc_data.get("arc_no", 0) if arc_data else 0
+
+        # 죽은 NPC 체크
+        if state_tracker:
+            dead_violations = state_tracker.check_dead_npc_in_blueprint(blueprint, ep_num, arc_no)
+            if dead_violations:
+                names = [v["npc_name"] for v in dead_violations]
+                return {
+                    "decision": "REJECT",
+                    "score": 20,
+                    "reason": f"죽은 NPC 등장: {', '.join(names)}",
+                    "feedback": f"사망한 NPC가 등장합니다: {', '.join(names)}. 회상/언급만 허용됩니다."
+                }
+
+        # 기본 품질 체크
+        scene_count = len(blueprint.get("scene_breakdown", {}))
+        if scene_count < 4:
+            return {
+                "decision": "REJECT",
+                "score": 30,
+                "reason": f"씬 개수 부족: {scene_count}개",
+                "feedback": "최소 4개 이상의 씬이 필요합니다."
+            }
+
+        if len(integrated) < 800:
+            return {
+                "decision": "REJECT",
+                "score": 40,
+                "reason": f"분량 부족: {len(integrated)}자",
+                "feedback": "시나리오가 800자 이상이어야 합니다."
+            }
+
+        # 기본 통과
+        return {
+            "decision": "PASS",
+            "score": 75,
+            "reason": "기본 기준 충족",
+            "feedback": ""
+        }
+
+    def _fallback_first_candidate(
+        self,
+        candidates: list,
+        arc_data: dict,
+        ep_num: int,
+        prev_blueprint: dict,
+        entity_registry: dict,
+        state_tracker
+    ) -> dict:
+        """폴백: 첫 번째 후보 선택 (비교 실패 시)"""
+        print(f"      ⚠️ [Director] 폴백 - 첫 번째 후보 평가")
+        result = self._evaluate_single_blueprint(
+            candidates[0], arc_data, ep_num, prev_blueprint, entity_registry, state_tracker
+        )
+        result["selected_index"] = 0
+        result["selected_blueprint"] = candidates[0] if result["decision"] == "PASS" else None
+        result["comparison_notes"] = "폴백 선택 (비교 실패)"
+        return result
+
+    def audit_manuscript(self, ep_num, manuscript, arc_doc, history_summary, prev_full_text, arc_pos, total_eps=None, target_len=4500, retry_count=0, validation_context=None, entity_registry=None, manuscript_history=None, state_tracker=None):
+        """
+        원고 검수 (V0128 통합 + V46 캐릭터 논리 검증 + V61 Entity 일관성 검증 + V60.87 원고 역사 충돌 검사)
 
         V0128 활성화 시 3-Tier 검증 시스템 사용
         비활성화 시 기존 LLM 기반 검증 사용
 
         [V61 NEW] entity_registry 파라미터 추가 - Entity 명칭 일관성 최종 검증
+        [V60.87 NEW] manuscript_history 파라미터 추가 - 전체 원고 역사 대비 충돌 검사
+        [V60.96 NEW] state_tracker 파라미터 추가 - 죽은 NPC 등장 검증
         """
+        # ═══════════════════════════════════════════════════════════════
+        # [V60.96] 죽은 NPC 등장 검사 - REJECT 대상 (최우선 체크)
+        # ═══════════════════════════════════════════════════════════════
+        # [V60.97] arc_no 추출 (타임라인 비교용)
+        arc_no = 0
+        if arc_doc and isinstance(arc_doc, dict):
+            arc_no = arc_doc.get("arc_no", 0)
+        if arc_no <= 0 and arc_pos:
+            arc_no = arc_pos  # arc_pos가 있으면 사용
+
+        if state_tracker:
+            dead_npc_violations = state_tracker.check_dead_npc_in_manuscript(manuscript, ep_num, arc_no)
+            if dead_npc_violations:
+                violation_names = [v["npc_name"] for v in dead_npc_violations]
+                print(f"      💀 [V60.96] 죽은 NPC 등장 감지: {', '.join(violation_names)}")
+                return {
+                    "decision": "REJECT",
+                    "score": 20,
+                    "error_category": "LOGIC_ERROR",
+                    "diagnostic_report": f"죽은 NPC {len(dead_npc_violations)}명 등장",
+                    "current_beat_achieved": False,
+                    "reason": f"[V60.96] 사망한 NPC가 살아있는 것처럼 등장: {', '.join(violation_names)}",
+                    "feedback": f"[V60.96 REJECT] 다음 NPC는 이미 사망했습니다:\n" +
+                               "\n".join([f"  - {v['npc_name']}: Arc {v['death_arc']}에서 사망" for v in dead_npc_violations]) +
+                               "\n\n회상이나 언급만 허용됩니다. 살아있는 것처럼 대화/행동시키지 마세요.",
+                    "v60_96_dead_npc": dead_npc_violations
+                }
+
+        # ═══════════════════════════════════════════════════════════════
+        # [V60.90] 장르별 특화 검증 - Guard 메서드 호출
+        # ═══════════════════════════════════════════════════════════════
+        if self.genre_validation_enabled and self.guard:
+            genre_violations = self._run_genre_specific_validation(manuscript, ep_num)
+            if genre_violations.get('has_critical'):
+                return {
+                    "decision": "REJECT",
+                    "score": 25,
+                    "error_category": "GENRE_VIOLATION",
+                    "diagnostic_report": genre_violations.get('summary', '장르 규칙 위반'),
+                    "current_beat_achieved": False,
+                    "reason": f"[V60.90] 장르 규칙 위반: {genre_violations.get('summary', '')}",
+                    "feedback": genre_violations.get('feedback', ''),
+                    "v60_90_genre_violations": genre_violations.get('violations', [])
+                }
+
+        # ═══════════════════════════════════════════════════════════════
+        # [V60.88] 원고 역사 충돌 검사 - 캐시 우선, 폴백은 기존 방식
+        # ═══════════════════════════════════════════════════════════════
+        if self.manuscript_history_check_enabled:
+            history_check = None
+
+            # [V60.88] 캐시가 있으면 캐시 참조 검사 (전문 비교, 고품질)
+            if self.manuscript_cache_name:
+                history_check = self.check_manuscript_history_with_cache(
+                    ep_num=ep_num,
+                    current_manuscript=manuscript
+                )
+                if history_check.get('cache_used'):
+                    print(f"      ⚡ [V60.88] 캐시 참조 충돌 검사 완료")
+
+            # 캐시 없거나 실패 시 기존 방식 (manuscript_history 사용)
+            if not history_check or history_check.get('error'):
+                if manuscript_history:
+                    history_check = self.check_manuscript_history_conflicts(
+                        ep_num=ep_num,
+                        current_manuscript=manuscript,
+                        manuscript_history=manuscript_history,
+                        use_summary=True  # 토큰 절약을 위해 요약본 우선 사용
+                    )
+
+            if history_check and history_check.get('decision') == 'CONFLICT':
+                conflicts = history_check.get('conflicts', [])
+                conflict_details = "; ".join([
+                    f"[{c.get('type', '?')}] {c.get('prev_fact', '')} vs {c.get('current_violation', '')}"
+                    for c in conflicts[:3]  # 최대 3개만 표시
+                ])
+                return {
+                    "decision": "REJECT",
+                    "score": 25,
+                    "error_category": "LOGIC_ERROR",
+                    "diagnostic_report": f"원고 역사 충돌 {len(conflicts)}건 발견",
+                    "current_beat_achieved": False,
+                    "reason": f"이전 원고와 충돌: {conflict_details}",
+                    "feedback": f"[V60.88] 이전 원고에서 확립된 사실과 모순됨. {history_check.get('summary', '')}",
+                    "v60_87_history_check": history_check
+                }
+            elif history_check and history_check.get('conflicts'):
+                # 경고만 있는 경우 validation_context에 기록
+                if validation_context is None:
+                    validation_context = {}
+                validation_context['v60_87_history_warnings'] = history_check.get('conflicts', [])
+
+        # ═══════════════════════════════════════════════════════════════
+        # [V60.89] 주인공 설정 준수 검증 (protagonist_config)
+        # ═══════════════════════════════════════════════════════════════
+        if self.protagonist_config_check_enabled:
+            config_check = self.validate_protagonist_config_compliance(
+                manuscript=manuscript,
+                ep_num=ep_num
+            )
+
+            if config_check.get('decision') == 'REJECT':
+                violations = config_check.get('violations', [])
+                return {
+                    "decision": "REJECT",
+                    "score": 30,
+                    "error_category": "LOGIC_ERROR",
+                    "diagnostic_report": f"주인공 설정 위반 {len(violations)}건 발견",
+                    "current_beat_achieved": False,
+                    "reason": f"[V60.89] {config_check.get('feedback', '주인공 설정 위반')}",
+                    "feedback": config_check.get('feedback', ''),
+                    "v60_89_config_check": config_check
+                }
+            elif config_check.get('decision') == 'WARNING':
+                # WARNING은 기록만 하고 계속 진행
+                if validation_context is None:
+                    validation_context = {}
+                validation_context['v60_89_config_warnings'] = config_check.get('violations', [])
+                print(f"      ⚠️ [V60.89] 주인공 설정 경고: {len(config_check.get('violations', []))}건")
+
         # ═══════════════════════════════════════════════════════════════
         # [V61] Entity 일관성 검증 - Director의 최종 방어선
         # ═══════════════════════════════════════════════════════════════
@@ -736,7 +1405,11 @@ class Director(BaseAgent):
             print(f"      ⚠️ [Director] RepetitionGuard 실행 중 예상치 못한 오류: {type(e).__name__}: {e}")
             repetition_check_passed = False
 
-        # 3. 프롬프트 조립 (모든 데이터 유실 없이 매핑)
+        # 3. [V60.95] 고밀도 HUD 컨텍스트 구축
+        high_density_hud = self._build_hud_context(state_tracker, ep_num)
+        safe_hud = self._escape_braces(high_density_hud)
+
+        # 4. 프롬프트 조립 (모든 데이터 유실 없이 매핑)
         prompt = DIRECTOR_AUDIT_PROMPT_V30.format(
             ep_num=ep_num,
             audit_mode=audit_mode,
@@ -748,7 +1421,8 @@ class Director(BaseAgent):
             history_summary=safe_history,
             prev_full_text=safe_prev, # 👈 뚫려있던 구멍을 메움
             manuscript=safe_ms,
-            retry_count=retry_count  # [V40.3 추가] 재시도 횟수 전달
+            retry_count=retry_count,  # [V40.3 추가] 재시도 횟수 전달
+            high_density_hud_context=safe_hud  # [V60.95] 고밀도 HUD 주입
         )
         
         response = self.ask(prompt, temperature=0.1)
@@ -2000,6 +2674,38 @@ class Director(BaseAgent):
                 "focus_points": ["빈 후보"]
             })
 
+        # ═══════════════════════════════════════════════════════════════
+        # [V60.97] 분량 절대 기준 체크 - 4000자 미만 후보 필터링
+        # ═══════════════════════════════════════════════════════════════
+        MIN_MANUSCRIPT_LENGTH = 4000
+        qualified_indices = []
+        for idx, c in enumerate(candidates):
+            ms_len = len(c.get("manuscript", ""))
+            if ms_len >= MIN_MANUSCRIPT_LENGTH:
+                qualified_indices.append(idx)
+
+        # 모든 후보가 분량 미달이면 즉시 REJECT
+        if not qualified_indices:
+            lengths = [len(c.get("manuscript", "")) for c in candidates]
+            best_idx = lengths.index(max(lengths))
+            print(f"      🚨 [V60.97] 모든 후보 분량 미달 (최대: {max(lengths)}자 < {MIN_MANUSCRIPT_LENGTH}자)")
+            return {
+                "selected": ["A", "B", "C"][best_idx],
+                "selected_candidate": candidates[best_idx],
+                "verdict": "REJECT",
+                "score": 30,
+                "feedback": {
+                    "issues": [f"모든 후보 분량 미달: {lengths}자 (최소 {MIN_MANUSCRIPT_LENGTH}자 필요)"],
+                    "action_items": ["분량을 4,000자 이상으로 확장하세요", "장면 묘사와 대사를 더 풍부하게"]
+                },
+                "state_updates": {},
+                "action_items": ["분량 확장 필요 - 최소 4,000자"],
+                "length_violation": True
+            }
+
+        # 분량 통과 후보만 있으면 통과 후보 중에서만 선택하도록 마킹
+        print(f"      ✅ [V60.97] 분량 통과 후보: {len(qualified_indices)}개 ({[['A','B','C'][i] for i in qualified_indices]})")
+
         # 프롬프트 구성
         blueprint_str = json.dumps(blueprint, ensure_ascii=False, indent=2) if isinstance(blueprint, dict) else str(blueprint)
 
@@ -2052,6 +2758,14 @@ class Director(BaseAgent):
         # 선택된 후보 매핑
         selected_letter = result.get("selected", "A").upper()
         selected_idx = {"A": 0, "B": 1, "C": 2}.get(selected_letter, 0)
+
+        # [V60.97] LLM이 분량 미달 후보를 선택했으면 → 분량 통과 후보로 강제 교체
+        if selected_idx not in qualified_indices and qualified_indices:
+            old_selection = selected_letter
+            selected_idx = qualified_indices[0]  # 분량 통과 후보 중 첫 번째로
+            selected_letter = ["A", "B", "C"][selected_idx]
+            print(f"      ⚠️ [V60.97] LLM 선택 {old_selection} → {selected_letter}로 교체 (분량 기준)")
+
         selected_candidate = candidates[selected_idx] if selected_idx < len(candidates) else candidates[0]
 
         # 적응형 기준 적용
@@ -2174,4 +2888,489 @@ class Director(BaseAgent):
             "score": result.get("score", 50),
             "reason": result.get("reason", ""),
             "critical_issues": result.get("critical_issues", [])
+        }
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # [V60.87] 원고 역사 충돌 검사 (Manuscript History Conflict Check)
+    # ═══════════════════════════════════════════════════════════════════════
+
+    def check_manuscript_history_conflicts(
+        self,
+        ep_num: int,
+        current_manuscript: str,
+        manuscript_history: list,
+        use_summary: bool = True
+    ) -> dict:
+        """
+        [V60.87] 현재 원고가 이전 원고들과 충돌하는지 검사
+
+        Args:
+            ep_num: 현재 회차 번호
+            current_manuscript: 현재 원고 전문
+            manuscript_history: 이전 원고 리스트 [{"ep_num": 1, "text": "...", "summary": "..."}, ...]
+            use_summary: True면 요약본 사용, False면 전문 사용 (토큰 절약)
+
+        Returns:
+            {
+                "decision": "PASS" | "CONFLICT",
+                "conflicts": [...],
+                "summary": "..."
+            }
+        """
+        if not self.manuscript_history_check_enabled:
+            return {"decision": "PASS", "conflicts": [], "summary": "충돌 검사 비활성화"}
+
+        if not manuscript_history:
+            return {"decision": "PASS", "conflicts": [], "summary": "이전 원고 없음"}
+
+        # 최근 N화만 참조 (토큰 절약)
+        recent_history = manuscript_history[-self.history_check_max_episodes:]
+
+        # 역사 텍스트 구성
+        history_parts = []
+        for h in recent_history:
+            h_ep = h.get('ep_num', '?')
+            if use_summary and h.get('summary'):
+                h_text = h.get('summary', '')[:1000]  # 요약본 1000자 제한
+                history_parts.append(f"[제{h_ep}화 요약] {h_text}")
+            else:
+                h_text = h.get('text', '')[:2000]  # 전문 2000자 제한
+                history_parts.append(f"[제{h_ep}화] {h_text}")
+
+        history_text = "\n\n".join(history_parts)
+
+        # 토큰 초과 방지: 역사가 너무 길면 축약
+        if len(history_text) > 15000:
+            history_text = history_text[:15000] + "\n... (이하 생략)"
+
+        # 프롬프트 구성
+        prompt = MANUSCRIPT_HISTORY_CONFLICT_PROMPT.format(
+            ep_num=ep_num,
+            manuscript_history=self._escape_braces(history_text),
+            current_manuscript=self._escape_braces(current_manuscript[:8000])  # 현재 원고도 제한
+        )
+
+        try:
+            response = self.ask(prompt, temperature=0.1)
+            result = self._extract_json_robust(response)
+
+            if not result or result.get('parsing_error'):
+                # 파싱 실패 시 PASS (비차단)
+                return {
+                    "decision": "PASS",
+                    "conflicts": [],
+                    "summary": "충돌 검사 응답 파싱 실패 - 비차단 통과",
+                    "parsing_error": True
+                }
+
+            decision = result.get('decision', 'PASS')
+            conflicts = result.get('conflicts', [])
+
+            # CRITICAL 충돌이 있으면 CONFLICT, 아니면 경고만
+            critical_count = sum(1 for c in conflicts if c.get('severity') == 'CRITICAL')
+
+            if decision == 'CONFLICT' and critical_count > 0:
+                return {
+                    "decision": "CONFLICT",
+                    "conflicts": conflicts,
+                    "summary": result.get('summary', ''),
+                    "critical_count": critical_count
+                }
+            else:
+                # MAJOR/MINOR는 경고만 (비차단)
+                return {
+                    "decision": "PASS",
+                    "conflicts": conflicts,  # 경고용으로 전달
+                    "summary": result.get('summary', ''),
+                    "warnings_only": True
+                }
+
+        except Exception as e:
+            # 에러 시 비차단 통과
+            return {
+                "decision": "PASS",
+                "conflicts": [],
+                "summary": f"충돌 검사 중 오류 발생 (비차단): {str(e)}",
+                "error": str(e)
+            }
+
+    def build_manuscript_history_for_check(self, db_manager, ep_num: int) -> list:
+        """
+        [V60.87] DB에서 이전 원고 역사를 가져와 충돌 검사용으로 구성
+
+        Args:
+            db_manager: DBManager 인스턴스
+            ep_num: 현재 회차 (이전 회차들만 가져옴)
+
+        Returns:
+            [{"ep_num": 1, "text": "...", "summary": "..."}, ...]
+        """
+        history = []
+        try:
+            for prev_ep in range(1, ep_num):
+                ms_data = db_manager.get_manuscript(prev_ep)
+                if ms_data and ms_data.get('text'):
+                    history.append({
+                        "ep_num": prev_ep,
+                        "text": ms_data.get('text', ''),
+                        "summary": ms_data.get('summary', '')  # 요약이 있으면 활용
+                    })
+        except Exception as e:
+            print(f"      ⚠️ [V60.87] 원고 역사 로드 실패: {e}")
+
+        return history
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # [V60.88] 원고 컨텍스트 캐싱 (Manuscript Context Caching)
+    # ═══════════════════════════════════════════════════════════════════════
+
+    def create_manuscript_cache(
+        self,
+        db_manager,
+        current_ep: int,
+        ttl_seconds: int = 3600  # 1시간 TTL (짧게 - 에피소드마다 갱신 필요)
+    ) -> str:
+        """
+        [V60.88] 전체 원고를 합본하여 Gemini 컨텍스트 캐시 생성
+
+        Gemini의 대용량 컨텍스트 윈도우를 활용하여 전체 원고를 캐싱.
+        Stage 4 검증 전에 호출하여 원고 전문가가 전체 맥락을 파악할 수 있게 함.
+
+        Args:
+            db_manager: DBManager 인스턴스
+            current_ep: 현재 작성 중인 회차 (이전 회차들만 캐싱)
+            ttl_seconds: 캐시 유효 시간 (초)
+
+        Returns:
+            캐시 이름 (성공 시) 또는 None (실패 시)
+        """
+        if not self.manuscript_cache_enabled:
+            print("      ⏭️ [V60.88] 원고 캐싱 비활성화됨")
+            return None
+
+        try:
+            from google.genai import types
+
+            # 1. 모든 이전 원고 수집 (순서대로)
+            manuscripts_compiled = []
+            total_chars = 0
+
+            for ep_num in range(1, current_ep):
+                ms_data = db_manager.get_manuscript(ep_num)
+                if ms_data and ms_data.get('text'):
+                    ep_text = ms_data.get('text', '')
+                    ep_title = ms_data.get('title', f'제{ep_num}화')
+                    formatted = f"\n{'='*60}\n# 제{ep_num}화. {ep_title}\n{'='*60}\n{ep_text}\n"
+                    manuscripts_compiled.append(formatted)
+                    total_chars += len(formatted)
+
+            if not manuscripts_compiled:
+                print("      ⚠️ [V60.88] 캐싱할 이전 원고가 없습니다.")
+                return None
+
+            # 2. 합본 텍스트 구성
+            compiled_text = f"""[📚 V60.88 원고 합본 - 총 {len(manuscripts_compiled)}화]
+이 캐시는 제1화부터 제{current_ep - 1}화까지의 전체 원고입니다.
+원고 연속성 전문가로서 이 내용을 숙지하고 새 원고의 충돌을 검사하세요.
+
+[🔍 검사 핵심]
+1. 사망 충돌: 죽은 인물이 다시 등장하면 CRITICAL
+2. 아이템 충돌: 잃어버린/파괴된 아이템이 다시 사용되면 CRITICAL
+3. 관계 충돌: 적대 관계가 갑자기 우호적으로 변하면 검토 필요
+4. 타임라인 충돌: 시간 순서가 맞지 않으면 검토 필요
+5. 지리 충돌: 물리적으로 불가능한 이동이면 검토 필요
+
+{''.join(manuscripts_compiled)}
+"""
+
+            # 3. 캐시 최소 크기 체크 (1024 토큰 ≈ 1500자)
+            if total_chars < 1500:
+                print(f"      ⚠️ [V60.88] 원고 분량 부족 ({total_chars}자) - 캐싱 스킵")
+                return None
+
+            # 4. 기존 캐시가 유효하고 원고 수가 동일하면 재사용
+            if self.manuscript_cache_name and self._cached_manuscript_count == len(manuscripts_compiled):
+                print(f"      ⚡ [V60.88] 기존 캐시 재사용 ({self._cached_manuscript_count}화)")
+                return self.manuscript_cache_name
+
+            # 5. 새 캐시 생성
+            print(f"      ⚡ [V60.88] 원고 캐시 생성 중... ({len(manuscripts_compiled)}화, {total_chars:,}자)")
+
+            cache = self.client.caches.create(
+                model=self.primary_model,
+                config=types.CreateCachedContentConfig(
+                    display_name=f"MANUSCRIPT_HISTORY_EP{current_ep}",
+                    system_instruction="원고 연속성 전문가 (Manuscript Continuity Expert)",
+                    contents=[compiled_text],
+                    ttl=f"{ttl_seconds}s"
+                )
+            )
+
+            self.manuscript_cache_name = cache.name
+            self._cached_manuscript_count = len(manuscripts_compiled)
+
+            print(f"      ✅ [V60.88] 원고 캐시 생성 완료: {cache.name}")
+            print(f"         - 총 {len(manuscripts_compiled)}화 / {total_chars:,}자 캐싱됨")
+
+            return cache.name
+
+        except Exception as e:
+            print(f"      ❌ [V60.88] 원고 캐시 생성 실패: {e}")
+            self.manuscript_cache_name = None
+            return None
+
+    def check_manuscript_history_with_cache(
+        self,
+        ep_num: int,
+        current_manuscript: str
+    ) -> dict:
+        """
+        [V60.88] 캐시된 원고를 활용한 충돌 검사
+
+        캐시가 있으면 캐시 참조로 LLM 호출 (토큰 비용 절감),
+        캐시가 없으면 기존 방식 (축약된 역사 사용).
+
+        Args:
+            ep_num: 현재 회차 번호
+            current_manuscript: 현재 원고 전문
+
+        Returns:
+            충돌 검사 결과 dict
+        """
+        if not self.manuscript_history_check_enabled:
+            return {"decision": "PASS", "conflicts": [], "summary": "충돌 검사 비활성화"}
+
+        if not self.manuscript_cache_name:
+            # 캐시 없으면 PASS (캐시 생성은 main_a.py에서 담당)
+            return {"decision": "PASS", "conflicts": [], "summary": "캐시 미생성 - 스킵"}
+
+        try:
+            from google.genai import types
+
+            # 캐시 참조 프롬프트 (원고 역사는 캐시에 포함됨)
+            prompt = f"""[V60.88 원고 충돌 검사]
+
+### 📋 검사 대상: 제{ep_num}화 신규 원고
+
+### 현재 원고 (제{ep_num}화)
+{self._escape_braces(current_manuscript[:12000])}
+
+### 🔍 검사 지시
+위 신규 원고가 캐시에 저장된 이전 원고들 (제1화~제{ep_num-1}화)과 충돌하는지 검사하세요.
+
+[Output Format] JSON Only
+{{
+    "decision": "PASS" 또는 "CONFLICT",
+    "conflicts": [
+        {{
+            "type": "death|item|relationship|timeline|geography",
+            "severity": "CRITICAL|MAJOR|MINOR",
+            "description": "충돌 설명",
+            "evidence_ep": 충돌하는 이전 회차 번호,
+            "evidence_text": "이전 원고의 관련 문장"
+        }}
+    ],
+    "summary": "검사 결과 요약"
+}}
+"""
+
+            # 캐시 참조 LLM 호출
+            response = self.client.models.generate_content(
+                model=self.primary_model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    cached_content=self.manuscript_cache_name,  # 🔥 원고 캐시 참조
+                    temperature=0.1,
+                    max_output_tokens=4096,
+                    response_mime_type="application/json"
+                )
+            )
+
+            result = self._extract_json_robust(response.text)
+
+            if not result or result.get('parsing_error'):
+                return {
+                    "decision": "PASS",
+                    "conflicts": [],
+                    "summary": "캐시 검사 응답 파싱 실패 - 비차단 통과",
+                    "parsing_error": True
+                }
+
+            decision = result.get('decision', 'PASS')
+            conflicts = result.get('conflicts', [])
+            critical_count = sum(1 for c in conflicts if c.get('severity') == 'CRITICAL')
+
+            if decision == 'CONFLICT' and critical_count > 0:
+                return {
+                    "decision": "CONFLICT",
+                    "conflicts": conflicts,
+                    "summary": result.get('summary', ''),
+                    "critical_count": critical_count,
+                    "cache_used": True
+                }
+            else:
+                return {
+                    "decision": "PASS",
+                    "conflicts": conflicts,
+                    "summary": result.get('summary', ''),
+                    "warnings_only": True,
+                    "cache_used": True
+                }
+
+        except Exception as e:
+            print(f"      ⚠️ [V60.88] 캐시 검사 오류: {e}")
+            return {
+                "decision": "PASS",
+                "conflicts": [],
+                "summary": f"캐시 검사 중 오류 (비차단): {str(e)}",
+                "error": str(e)
+            }
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # [V60.89] 주인공 설정 준수 검증 (Protagonist Config Compliance)
+    # ═══════════════════════════════════════════════════════════════════════
+
+    def _get_protagonist_config(self) -> dict:
+        """[V60.89] context에서 protagonist_config 추출 (캐싱)"""
+        if self._protagonist_config is not None:
+            return self._protagonist_config
+
+        try:
+            master_bible = getattr(self.context, 'master_bible', {})
+            if master_bible:
+                bible_root = master_bible.get('MasterBible', master_bible)
+                self._protagonist_config = bible_root.get('protagonist_config', {})
+            else:
+                self._protagonist_config = {}
+        except Exception:
+            self._protagonist_config = {}
+
+        return self._protagonist_config
+
+    def validate_protagonist_config_compliance(
+        self,
+        manuscript: str,
+        ep_num: int = 0
+    ) -> dict:
+        """
+        [V60.89] 원고가 protagonist_config 설정을 준수하는지 검증
+
+        검증 항목:
+        1. world_origin == '원시인': 현대 용어 사용 여부 (CRITICAL)
+        2. world_origin == '현대인': 검증 없음 (제약 없음)
+        3. incarnation_type == '회귀자': 미래 지식 직접 노출 여부 (WARNING)
+        4. incarnation_type == '빙의자': 검증 없음 (인지 목적)
+        5. incarnation_type == '환생자': 검증 없음 (인지 목적)
+
+        Returns:
+            {
+                "decision": "PASS" | "WARNING" | "REJECT",
+                "violations": [...],
+                "feedback": "..."
+            }
+        """
+        if not self.protagonist_config_check_enabled:
+            return {"decision": "PASS", "violations": [], "feedback": ""}
+
+        config = self._get_protagonist_config()
+        if not config:
+            return {"decision": "PASS", "violations": [], "feedback": "설정 없음"}
+
+        world_origin = config.get('world_origin', '원시인')
+        incarnation_type = config.get('incarnation_type', '회귀자')
+
+        # [V60.96] 장르 추출 (장르별 금지어 적용)
+        genre = "wuxia"  # 기본값
+        try:
+            if hasattr(self.context, 'db'):
+                bible = self.context.db.load_anchor('bible')
+                if bible:
+                    genre = bible.get('_genre', 'wuxia')
+        except:
+            pass
+
+        violations = []
+        decision = "PASS"
+
+        # ═══════════════════════════════════════════════════════════════
+        # 1. 원시인 모드: 현대 용어 검사 (CRITICAL - REJECT)
+        # [V60.96] 장르별 JSON 기반 PrimitiveGuard 사용
+        # ═══════════════════════════════════════════════════════════════
+        if world_origin == '원시인':
+            if PRIMITIVE_GUARD_AVAILABLE:
+                # 장르별 JSON 기반 검증 (primitive_forbidden.json)
+                guard = get_primitive_guard()
+                prim_decision, prim_violations = guard.validate(manuscript, genre)
+                violations.extend(prim_violations)
+                if prim_decision == "REJECT":
+                    decision = "REJECT"
+            else:
+                # 폴백: 기본 패턴만 검사
+                import re
+                fallback_patterns = [
+                    (r'헬스장|바벨|덤벨', '현대 운동기구'),
+                    (r'시스템|프로세스|알고리즘', '현대 개념어'),
+                    (r'병원|학교|은행', '현대 시설'),
+                ]
+                for pattern, category in fallback_patterns:
+                    matches = re.findall(pattern, manuscript, re.IGNORECASE)
+                    if matches:
+                        violations.append({
+                            "type": "MODERN_TERM",
+                            "severity": "CRITICAL",
+                            "category": category,
+                            "found": list(set(matches))[:5],
+                            "message": f"[원시인 모드] {category} 사용 금지: {matches[:3]}"
+                        })
+                        decision = "REJECT"
+
+        # ═══════════════════════════════════════════════════════════════
+        # 2. 회귀자 모드: 미래 지식 직접 노출 검사 (WARNING)
+        # ═══════════════════════════════════════════════════════════════
+        if incarnation_type == '회귀자':
+            # 미래 예언 패턴 (직접적 스포일러)
+            future_spoiler_patterns = [
+                (r'(곧|머지않아|얼마 후면?)\s*.{0,20}(죽|망|멸|패)', '미래 예언'),
+                (r'(전생|회귀)\s*[에의]서?\s*(알|봤|경험)', '직접적 회귀 언급'),
+                (r'미래[에서의]?\s*.{0,10}(기억|지식)', '미래 지식 직접 언급'),
+            ]
+
+            import re
+            for pattern, category in future_spoiler_patterns:
+                matches = re.findall(pattern, manuscript)
+                if matches:
+                    # 내면 독백인지 확인 (작은따옴표, '~라고 생각했다' 등)
+                    # 여기서는 단순 경고만 (합리적 이유 허용)
+                    violations.append({
+                        "type": "FUTURE_KNOWLEDGE",
+                        "severity": "WARNING",
+                        "category": category,
+                        "found": [str(m) for m in matches[:3]],
+                        "message": f"[회귀자] {category} 감지 - 합리적 이유 확인 필요"
+                    })
+                    if decision == "PASS":
+                        decision = "WARNING"
+
+        # 피드백 생성
+        feedback = ""
+        if violations:
+            critical_violations = [v for v in violations if v.get('severity') == 'CRITICAL']
+            warning_violations = [v for v in violations if v.get('severity') == 'WARNING']
+
+            if critical_violations:
+                feedback = f"[V60.89 CRITICAL] 주인공 설정 위반 {len(critical_violations)}건:\n"
+                for v in critical_violations[:3]:
+                    feedback += f"  - {v.get('message', '')}\n"
+
+            if warning_violations:
+                feedback += f"[V60.89 WARNING] 확인 필요 {len(warning_violations)}건:\n"
+                for v in warning_violations[:2]:
+                    feedback += f"  - {v.get('message', '')}\n"
+
+        return {
+            "decision": decision,
+            "violations": violations,
+            "feedback": feedback,
+            "world_origin": world_origin,
+            "incarnation_type": incarnation_type
         }

@@ -55,6 +55,9 @@ class BaseAgent:
     _quota_exhausted_models = {}  # {model_name: exhausted_until_timestamp}
     _QUOTA_CACHE_DURATION = 60    # 60초 동안 해당 모델 시도 스킵
 
+    # [V60.99] API Rate Limit 예방 딜레이 (초)
+    API_DELAY = 0.3  # 기본 0.3초, 문제 시 0.5초로 조정
+
     def __init__(self, context, client, model_tier="gemini-2.5-flash", enable_cascade=False):
         self.context = context
         self.client = client
@@ -169,61 +172,100 @@ class BaseAgent:
             MAX_CONTINUATIONS = 5
             WARN_THRESHOLD = 3
 
-            # [V60.66] 429 폴백 재시도 횟수
+            # [V60.97] Rate Limit vs Quota 구분 대응
             MAX_QUOTA_RETRIES = len(model_stack)
             quota_retry_count = 0
+            rate_limit_retry_count = 0  # [V60.97] Rate Limit 전용 재시도 카운터
+            MAX_RATE_LIMIT_RETRIES = 3  # [V60.97] Rate Limit 최대 재시도 (같은 모델)
 
             for attempt in range(MAX_CONTINUATIONS):
                 try:
+                    # [V60.99] API Rate Limit 예방 딜레이
+                    time.sleep(self.API_DELAY)
                     response = self.client.models.generate_content(
                         model=current_model,
                         contents=current_prompt,
                         config=config
                     )
+                    # [V60.97] 성공 시 Rate Limit 카운터 리셋
+                    rate_limit_retry_count = 0
                 except Exception as api_error:
-                    # [V60.66] 429 쿼터 에러 감지 및 자동 모델 폴백
+                    # [V60.97] Rate Limit vs Quota Exhausted 구분
                     error_str = str(api_error).lower()
-                    is_quota_error = "429" in error_str or "quota" in error_str or "resource_exhausted" in error_str or "rate" in error_str
 
-                    if is_quota_error and quota_retry_count < MAX_QUOTA_RETRIES - 1:
-                        quota_retry_count += 1
-                        # 다음 폴백 모델로 전환
-                        old_model = current_model
-                        current_model = model_stack[quota_retry_count] if quota_retry_count < len(model_stack) else model_stack[-1]
+                    # Rate Limit: 429 + (rate 또는 limit) - 분당 요청 제한
+                    is_rate_limit = "429" in error_str and ("rate" in error_str or "limit" in error_str)
+                    # Quota Exhausted: resource_exhausted 또는 quota - 일일/월간 할당량 초과
+                    is_quota_exhausted = "resource_exhausted" in error_str or ("quota" in error_str and "429" not in error_str)
+                    # 애매한 경우 (429만 있음) - Rate Limit으로 간주
+                    is_ambiguous_429 = "429" in error_str and not is_rate_limit and not is_quota_exhausted
 
-                        # [V60.68] 쿼터 소진 모델 캐시 등록 (60초간 스킵)
-                        BaseAgent._quota_exhausted_models[old_model] = time.time() + BaseAgent._QUOTA_CACHE_DURATION
-                        print(f"      ⏭️ [V60.68] {old_model} 쿼터 소진 캐시 등록 ({BaseAgent._QUOTA_CACHE_DURATION}초)")
+                    # ═══════════════════════════════════════════════════════════════
+                    # [V60.98] gemini-3-pro는 할당량이 적으므로 Rate Limit 시 즉시 폴백
+                    # ═══════════════════════════════════════════════════════════════
+                    is_gemini3_rate_limit = (is_rate_limit or is_ambiguous_429) and "gemini-3-pro" in current_model
 
-                        print(f"      🔄 [V60.66 Quota Fallback] {old_model} 할당량 초과 → {current_model}로 전환 ({quota_retry_count}/{MAX_QUOTA_RETRIES-1})")
+                    # ═══════════════════════════════════════════════════════════════
+                    # [V60.97] Case A: Rate Limit (gemini-3-pro 제외) → Backoff 후 재시도
+                    # ═══════════════════════════════════════════════════════════════
+                    if (is_rate_limit or is_ambiguous_429) and not is_gemini3_rate_limit and rate_limit_retry_count < MAX_RATE_LIMIT_RETRIES:
+                        rate_limit_retry_count += 1
+                        # Linear Backoff: 30초 → 60초 → 90초 (분당 제한 대응)
+                        wait_time = 30 * rate_limit_retry_count
+                        print(f"      ⏳ [V60.97 Rate Limit] {current_model} 분당 제한 감지 → {wait_time}초 대기 후 재시도 ({rate_limit_retry_count}/{MAX_RATE_LIMIT_RETRIES})")
+                        time.sleep(wait_time)
+                        # 루프 처음으로 돌아가서 try/except 안에서 재시도
+                        continue
 
-                        # [V60.66] 폴백 모델용 config 재생성 (thinking 제거 - 2.5 모델은 미지원)
-                        fallback_config_params = {
-                            "temperature": temperature,
-                            "max_output_tokens": 8192,
-                            "top_p": 0.95,
-                            "response_mime_type": "application/json"
-                        }
-                        # thinking config는 gemini-3 모델에서만 지원
-                        if thinking_level and "gemini-3" in current_model:
-                            if isinstance(thinking_level, str):
-                                budget = self.THINKING_BUDGET_MAP.get(thinking_level.lower(), 8192)
-                            else:
-                                budget = int(thinking_level)
-                            fallback_config_params["thinking_config"] = types.ThinkingConfig(
-                                thinking_budget=budget
+                    # ═══════════════════════════════════════════════════════════════
+                    # [V60.97] Case B: Quota/Rate Limit 초과 또는 gemini-3-pro Rate Limit → 즉시 폴백
+                    # ═══════════════════════════════════════════════════════════════
+                    elif is_quota_exhausted or is_gemini3_rate_limit or (is_rate_limit and rate_limit_retry_count >= MAX_RATE_LIMIT_RETRIES):
+                        if is_gemini3_rate_limit:
+                            print(f"      ⚡ [V60.98] {current_model} Rate Limit → 즉시 폴백 (할당량 부족 모델)")
+                        if quota_retry_count < MAX_QUOTA_RETRIES - 1:
+                            quota_retry_count += 1
+                            rate_limit_retry_count = 0  # 폴백 시 Rate Limit 카운터 리셋
+
+                            old_model = current_model
+                            current_model = model_stack[quota_retry_count] if quota_retry_count < len(model_stack) else model_stack[-1]
+
+                            # [V60.68] 쿼터 소진 모델 캐시 등록
+                            cache_duration = BaseAgent._QUOTA_CACHE_DURATION if is_quota_exhausted else 30  # Rate Limit은 30초만
+                            BaseAgent._quota_exhausted_models[old_model] = time.time() + cache_duration
+
+                            error_type = "Quota 소진" if is_quota_exhausted else "Rate Limit 초과"
+                            print(f"      🔄 [V60.97 Fallback] {old_model} {error_type} → {current_model}로 전환")
+
+                            # 폴백 모델용 config 재생성
+                            fallback_config_params = {
+                                "temperature": temperature,
+                                "max_output_tokens": 8192,
+                                "top_p": 0.95,
+                                "response_mime_type": "application/json"
+                            }
+                            if thinking_level and "gemini-3" in current_model:
+                                if isinstance(thinking_level, str):
+                                    budget = self.THINKING_BUDGET_MAP.get(thinking_level.lower(), 8192)
+                                else:
+                                    budget = int(thinking_level)
+                                fallback_config_params["thinking_config"] = types.ThinkingConfig(
+                                    thinking_budget=budget
+                                )
+                            config = types.GenerateContentConfig(**fallback_config_params)
+
+                            # [V60.99] API Rate Limit 예방 딜레이
+                            time.sleep(self.API_DELAY)
+                            response = self.client.models.generate_content(
+                                model=current_model,
+                                contents=current_prompt,
+                                config=config
                             )
-                        config = types.GenerateContentConfig(**fallback_config_params)
-
-                        # [V60.68] 캐시 히트로 대기 시간 제거 (기존 2초 → 0초)
-                        # time.sleep(2)  # 제거: 캐시로 인해 불필요
-                        response = self.client.models.generate_content(
-                            model=current_model,
-                            contents=current_prompt,
-                            config=config
-                        )
+                        else:
+                            # 모든 폴백 소진
+                            raise api_error
                     else:
-                        # 폴백 불가 - 예외 재발생
+                        # 기타 에러 - 예외 재발생
                         raise api_error
 
                 chunk = response.text if response.text else ""
@@ -348,6 +390,8 @@ class BaseAgent:
                     except Exception:
                         pass
 
+                # [V60.99] API Rate Limit 예방 딜레이
+                time.sleep(self.API_DELAY)
                 res = self.client.models.generate_content(
                     model=self.backup_model,
                     contents=base_prompt,

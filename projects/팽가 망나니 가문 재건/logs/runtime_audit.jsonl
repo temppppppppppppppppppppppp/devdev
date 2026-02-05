@@ -1,151 +1,170 @@
-{"timestamp": "2026-02-03 15:06:08", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-03 15:06:21", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "items_tracked": 3}}
-{"timestamp": "2026-02-03 15:09:24", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["시작 위치 수정: '하북 팽가 제1 연무장 중앙' → '하북 팽가 제1 연무장 중앙, 파편이 흩어진 비무대 위'", "시작 내공 수정: 0% → 0% (일시적 생성 진기 완전 소진)%", "final_location 자동 추출: '나온 무진은 몰라보게 달라진 눈빛'"]}}
-{"timestamp": "2026-02-03 15:09:57", "type": "data_missing", "message": "joint_docs missing", "data": {"arc_no": 2}}
-{"timestamp": "2026-02-03 15:09:57", "type": "data_missing", "message": "status_shadow missing", "data": {"arc_no": 2}}
-{"timestamp": "2026-02-03 15:09:57", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-03 15:10:11", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "items_tracked": 6}}
-{"timestamp": "2026-02-03 15:13:30", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["시작 위치 수정: '반파된 흑룡각 앞 거리' → '위치 미정'", "시작 부상 수정: '우측 어깨 회전근개 파열(고정됨), 우측 손등 열상, 좌측 어깨 타박상, 호흡기 연기 흡입으로 인한 흉통' → '우측 어깨 회전근개 파열(고정됨), 우측 손등 열상, 좌측 어깨 타박상, 호흡기 연기 흡입'"]}}
-{"timestamp": "2026-02-03 15:14:00", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-03 15:14:12", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "items_tracked": 6}}
-{"timestamp": "2026-02-03 15:17:21", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 4, "corrections": ["시작 위치 수정: '팽가 본가 정문 앞마당' → '균열이 발생한 팽가 본가 정문 앞마당'", "시작 부상 수정: '우측 어깨 회전근개 파열(악화), 우측 손목 인대 미세 손상, 전신 근육통 및 탈진' → '우측 어깨 회전근개 파열(악화), 우측 손목 인대 미세 손상, 전신 근육통, 내공 고갈 직전'"]}}
-{"timestamp": "2026-02-03 15:17:21", "type": "constraint_violation", "message": "pre-generation constraint violated", "data": {"arc_no": 4, "violations": ["[CRITICAL] '대방성도(大方聖刀) 기초편 비급'은(는) Arc 1에서 획득한 '도'와(과) 유사 (유사도: 90%)"]}}
-{"timestamp": "2026-02-03 15:19:38", "type": "constraint_violation", "message": "pre-generation constraint violated", "data": {"arc_no": 4, "violations": ["[CRITICAL] '대방성도(大方聖刀) 비급'은(는) Arc 1에서 획득한 '도'와(과) 유사 (유사도: 90%)"]}}
-{"timestamp": "2026-02-03 15:22:18", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 4, "corrections": ["시작 위치 수정: '팽가 본가 정문 앞마당' → '균열이 발생한 팽가 본가 정문 앞마당'"]}}
-{"timestamp": "2026-02-03 15:22:18", "type": "constraint_violation", "message": "pre-generation constraint violated", "data": {"arc_no": 4, "violations": ["[CRITICAL] '대방성도(大方聖刀) 비급'은(는) Arc 1에서 획득한 '도'와(과) 유사 (유사도: 90%)"]}}
-{"timestamp": "2026-02-03 15:22:18", "type": "stage2_cooldown", "message": "3 rejects, waiting 10s before final attempt", "data": {"arc_no": 4, "attempt": 3}}
-{"timestamp": "2026-02-03 15:25:28", "type": "arc_design_failed", "message": "max retries exhausted", "data": {"arc_no": 4, "batch_start": 0, "batch_end": 5}}
-{"timestamp": "2026-02-03 15:56:11", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "items_tracked": 6}}
-{"timestamp": "2026-02-03 16:02:26", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-03 16:02:41", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 4, "items_tracked": 7}}
-{"timestamp": "2026-02-03 16:05:59", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 5, "corrections": ["시작 위치 수정: '팽가 뒷산 심원곡 비전각 내부' → '팽가 뒷산 심원곡 비전각 내부 (가부좌를 튼 상태)'", "시작 내공 수정: 40%% → 40%"]}}
-{"timestamp": "2026-02-03 16:07:12", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-03 16:07:26", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 5, "items_tracked": 8}}
-{"timestamp": "2026-02-03 16:10:23", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 6, "corrections": ["시작 내공 수정: 10% → 10%%", "final_location 자동 추출: '협곡'", "arc_end_state 내공 하한 적용: 0% → 5%"]}}
-{"timestamp": "2026-02-03 16:11:29", "type": "data_missing", "message": "joint_docs missing", "data": {"arc_no": 6}}
-{"timestamp": "2026-02-03 16:11:29", "type": "data_missing", "message": "status_shadow missing", "data": {"arc_no": 6}}
-{"timestamp": "2026-02-03 16:11:29", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-03 16:11:43", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 6, "items_tracked": 10}}
-{"timestamp": "2026-02-03 16:14:55", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 7, "corrections": ["시작 위치 수정: '흑룡령 협곡 입구' → '위치 미정'", "시작 내공 수정: 5%% → 5%"]}}
-{"timestamp": "2026-02-03 16:19:39", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 7, "corrections": ["시작 위치 수정: '흑룡령 협곡 입구' → '위치 미정'"]}}
-{"timestamp": "2026-02-03 16:20:53", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-03 16:21:07", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 7, "items_tracked": 9}}
-{"timestamp": "2026-02-03 16:25:43", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 8, "corrections": ["시작 위치 수정: '하북 팽가 본가로 향하는 특수 후송 마차' → '흑룡령 산적채 본거지 (하북 서부 경계)'"]}}
-{"timestamp": "2026-02-03 16:26:37", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-03 16:26:55", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 8, "items_tracked": 9}}
-{"timestamp": "2026-02-03 16:27:11", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 8, "items_tracked": 9}}
-{"timestamp": "2026-02-03 16:32:01", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 9, "corrections": ["시작 위치 수정: '하북 팽가 본가 내 '정심원' 밀실' → '무림맹 내 청풍당(淸風堂) 본채'"]}}
-{"timestamp": "2026-02-03 16:32:37", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-03 16:32:50", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 9, "items_tracked": 10}}
-{"timestamp": "2026-02-03 16:35:50", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 10, "corrections": ["시작 위치 수정: '무림맹 제3 객관 독채' → '무림맹 제3 객관 독채 (본선 대기소)'"]}}
-{"timestamp": "2026-02-03 16:36:17", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-03 16:36:32", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 10, "items_tracked": 14}}
-{"timestamp": "2026-02-03 19:52:55", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-03 19:52:55", "type": "blueprint_success", "message": "ep_1_blueprint_generated", "data": {"ep_num": 1, "arc_no": 1, "strategy": "emotion_focused", "score": 0}}
-{"timestamp": "2026-02-03 19:54:40", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-03 19:54:40", "type": "blueprint_success", "message": "ep_2_blueprint_generated", "data": {"ep_num": 2, "arc_no": 1, "strategy": "emotion_focused", "score": 0}}
-{"timestamp": "2026-02-03 19:56:07", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-03 19:56:07", "type": "blueprint_success", "message": "ep_3_blueprint_generated", "data": {"ep_num": 3, "arc_no": 1, "strategy": "emotion_focused", "score": 0}}
-{"timestamp": "2026-02-03 19:57:47", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-03 19:57:47", "type": "blueprint_success", "message": "ep_4_blueprint_generated", "data": {"ep_num": 4, "arc_no": 1, "strategy": "dialogue_focused", "score": 0}}
-{"timestamp": "2026-02-03 19:59:34", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-03 19:59:34", "type": "blueprint_success", "message": "ep_5_blueprint_generated", "data": {"ep_num": 5, "arc_no": 1, "strategy": "dialogue_focused", "score": 0}}
-{"timestamp": "2026-02-03 20:01:09", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-03 20:01:09", "type": "blueprint_success", "message": "ep_6_blueprint_generated", "data": {"ep_num": 6, "arc_no": 2, "strategy": "action_focused", "score": 0}}
-{"timestamp": "2026-02-03 20:05:58", "type": "blueprint_fail", "message": "ep_7_all_retries_exhausted", "data": {"ep_num": 7, "final_verdict": "FAILED"}}
-{"timestamp": "2026-02-03 20:07:34", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-03 20:07:34", "type": "blueprint_success", "message": "ep_8_blueprint_generated", "data": {"ep_num": 8, "arc_no": 2, "strategy": "dialogue_focused", "score": 0}}
-{"timestamp": "2026-02-03 20:09:07", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-03 20:09:07", "type": "blueprint_success", "message": "ep_9_blueprint_generated", "data": {"ep_num": 9, "arc_no": 2, "strategy": "dialogue_focused", "score": 0}}
-{"timestamp": "2026-02-03 20:10:28", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-03 20:10:28", "type": "blueprint_success", "message": "ep_10_blueprint_generated", "data": {"ep_num": 10, "arc_no": 2, "strategy": "emotion_focused", "score": 0}}
-{"timestamp": "2026-02-04 00:20:10", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 00:20:10", "type": "blueprint_success", "message": "ep_7_blueprint_generated", "data": {"ep_num": 7, "arc_no": 2, "strategy": "emotion_focused", "score": 0}}
-{"timestamp": "2026-02-04 00:22:05", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 00:22:05", "type": "blueprint_success", "message": "ep_8_blueprint_generated", "data": {"ep_num": 8, "arc_no": 2, "strategy": "action_focused", "score": 0}}
-{"timestamp": "2026-02-04 00:24:53", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 00:24:53", "type": "blueprint_success", "message": "ep_9_blueprint_generated", "data": {"ep_num": 9, "arc_no": 2, "strategy": "dialogue_focused", "score": 0}}
-{"timestamp": "2026-02-04 00:26:34", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 00:26:34", "type": "blueprint_success", "message": "ep_10_blueprint_generated", "data": {"ep_num": 10, "arc_no": 2, "strategy": "dialogue_focused", "score": 0}}
-{"timestamp": "2026-02-04 00:29:14", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 00:29:14", "type": "blueprint_success", "message": "ep_11_blueprint_generated", "data": {"ep_num": 11, "arc_no": 3, "strategy": "action_focused", "score": 0}}
-{"timestamp": "2026-02-04 00:34:01", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 00:34:01", "type": "blueprint_success", "message": "ep_12_blueprint_generated", "data": {"ep_num": 12, "arc_no": 3, "strategy": "action_focused", "score": 0}}
-{"timestamp": "2026-02-04 00:35:08", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 00:35:08", "type": "blueprint_success", "message": "ep_13_blueprint_generated", "data": {"ep_num": 13, "arc_no": 3, "strategy": "dialogue_focused", "score": 0}}
-{"timestamp": "2026-02-04 00:37:30", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 00:37:30", "type": "blueprint_success", "message": "ep_14_blueprint_generated", "data": {"ep_num": 14, "arc_no": 3, "strategy": "emotion_focused", "score": 0}}
-{"timestamp": "2026-02-04 00:39:58", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 00:39:58", "type": "blueprint_success", "message": "ep_15_blueprint_generated", "data": {"ep_num": 15, "arc_no": 3, "strategy": "dialogue_focused", "score": 0}}
-{"timestamp": "2026-02-04 00:41:04", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 00:41:04", "type": "blueprint_success", "message": "ep_16_blueprint_generated", "data": {"ep_num": 16, "arc_no": 4, "strategy": "emotion_focused", "score": 0}}
-{"timestamp": "2026-02-04 00:42:37", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 00:42:37", "type": "blueprint_success", "message": "ep_17_blueprint_generated", "data": {"ep_num": 17, "arc_no": 4, "strategy": "emotion_focused", "score": 0}}
-{"timestamp": "2026-02-04 00:43:52", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 00:43:52", "type": "blueprint_success", "message": "ep_18_blueprint_generated", "data": {"ep_num": 18, "arc_no": 4, "strategy": "dialogue_focused", "score": 0}}
-{"timestamp": "2026-02-04 00:46:25", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 00:46:25", "type": "blueprint_success", "message": "ep_19_blueprint_generated", "data": {"ep_num": 19, "arc_no": 4, "strategy": "action_focused", "score": 0}}
-{"timestamp": "2026-02-04 00:48:13", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 00:48:13", "type": "blueprint_success", "message": "ep_20_blueprint_generated", "data": {"ep_num": 20, "arc_no": 4, "strategy": "action_focused", "score": 0}}
-{"timestamp": "2026-02-04 00:50:46", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 00:50:46", "type": "blueprint_success", "message": "ep_21_blueprint_generated", "data": {"ep_num": 21, "arc_no": 5, "strategy": "action_focused", "score": 0}}
-{"timestamp": "2026-02-04 00:55:05", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 00:55:05", "type": "blueprint_success", "message": "ep_22_blueprint_generated", "data": {"ep_num": 22, "arc_no": 5, "strategy": "emotion_focused", "score": 0}}
-{"timestamp": "2026-02-04 00:57:30", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 00:57:30", "type": "blueprint_success", "message": "ep_23_blueprint_generated", "data": {"ep_num": 23, "arc_no": 5, "strategy": "emotion_focused", "score": 0}}
-{"timestamp": "2026-02-04 00:59:57", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 00:59:57", "type": "blueprint_success", "message": "ep_24_blueprint_generated", "data": {"ep_num": 24, "arc_no": 5, "strategy": "emotion_focused", "score": 0}}
-{"timestamp": "2026-02-04 01:02:55", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 01:02:55", "type": "blueprint_success", "message": "ep_25_blueprint_generated", "data": {"ep_num": 25, "arc_no": 5, "strategy": "dialogue_focused", "score": 0}}
-{"timestamp": "2026-02-04 01:05:33", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 01:05:33", "type": "blueprint_success", "message": "ep_26_blueprint_generated", "data": {"ep_num": 26, "arc_no": 6, "strategy": "dialogue_focused", "score": 0}}
-{"timestamp": "2026-02-04 01:09:22", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 01:09:22", "type": "blueprint_success", "message": "ep_27_blueprint_generated", "data": {"ep_num": 27, "arc_no": 6, "strategy": "emotion_focused", "score": 0}}
-{"timestamp": "2026-02-04 01:11:56", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 01:11:56", "type": "blueprint_success", "message": "ep_28_blueprint_generated", "data": {"ep_num": 28, "arc_no": 6, "strategy": "emotion_focused", "score": 0}}
-{"timestamp": "2026-02-04 01:13:35", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 01:13:35", "type": "blueprint_success", "message": "ep_29_blueprint_generated", "data": {"ep_num": 29, "arc_no": 6, "strategy": "dialogue_focused", "score": 0}}
-{"timestamp": "2026-02-04 01:16:28", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 01:16:28", "type": "blueprint_success", "message": "ep_30_blueprint_generated", "data": {"ep_num": 30, "arc_no": 6, "strategy": "emotion_focused", "score": 0}}
-{"timestamp": "2026-02-04 01:21:54", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 01:21:54", "type": "blueprint_success", "message": "ep_31_blueprint_generated", "data": {"ep_num": 31, "arc_no": 7, "strategy": "emotion_focused", "score": 0}}
-{"timestamp": "2026-02-04 01:24:33", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 01:24:33", "type": "blueprint_success", "message": "ep_32_blueprint_generated", "data": {"ep_num": 32, "arc_no": 7, "strategy": "action_focused", "score": 0}}
-{"timestamp": "2026-02-04 01:26:43", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 01:26:43", "type": "blueprint_success", "message": "ep_33_blueprint_generated", "data": {"ep_num": 33, "arc_no": 7, "strategy": "action_focused", "score": 0}}
-{"timestamp": "2026-02-04 01:28:04", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 01:28:04", "type": "blueprint_success", "message": "ep_34_blueprint_generated", "data": {"ep_num": 34, "arc_no": 7, "strategy": "dialogue_focused", "score": 0}}
-{"timestamp": "2026-02-04 01:32:53", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 01:32:53", "type": "blueprint_success", "message": "ep_35_blueprint_generated", "data": {"ep_num": 35, "arc_no": 7, "strategy": "dialogue_focused", "score": 0}}
-{"timestamp": "2026-02-04 01:34:06", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 01:34:06", "type": "blueprint_success", "message": "ep_36_blueprint_generated", "data": {"ep_num": 36, "arc_no": 8, "strategy": "emotion_focused", "score": 0}}
-{"timestamp": "2026-02-04 01:39:26", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 01:39:26", "type": "blueprint_success", "message": "ep_37_blueprint_generated", "data": {"ep_num": 37, "arc_no": 8, "strategy": "action_focused", "score": 0}}
-{"timestamp": "2026-02-04 01:42:05", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 01:42:05", "type": "blueprint_success", "message": "ep_38_blueprint_generated", "data": {"ep_num": 38, "arc_no": 8, "strategy": "dialogue_focused", "score": 0}}
-{"timestamp": "2026-02-04 01:44:34", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 01:44:34", "type": "blueprint_success", "message": "ep_39_blueprint_generated", "data": {"ep_num": 39, "arc_no": 8, "strategy": "action_focused", "score": 0}}
-{"timestamp": "2026-02-04 01:47:13", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 01:47:13", "type": "blueprint_success", "message": "ep_40_blueprint_generated", "data": {"ep_num": 40, "arc_no": 8, "strategy": "dialogue_focused", "score": 0}}
-{"timestamp": "2026-02-04 01:48:27", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 01:48:27", "type": "blueprint_success", "message": "ep_41_blueprint_generated", "data": {"ep_num": 41, "arc_no": 9, "strategy": "dialogue_focused", "score": 0}}
-{"timestamp": "2026-02-04 01:51:01", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 01:51:01", "type": "blueprint_success", "message": "ep_42_blueprint_generated", "data": {"ep_num": 42, "arc_no": 9, "strategy": "action_focused", "score": 0}}
-{"timestamp": "2026-02-04 01:56:25", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 01:56:25", "type": "blueprint_success", "message": "ep_43_blueprint_generated", "data": {"ep_num": 43, "arc_no": 9, "strategy": "dialogue_focused", "score": 0}}
-{"timestamp": "2026-02-04 01:58:59", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 01:58:59", "type": "blueprint_success", "message": "ep_44_blueprint_generated", "data": {"ep_num": 44, "arc_no": 9, "strategy": "action_focused", "score": 0}}
-{"timestamp": "2026-02-04 02:01:32", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 02:01:32", "type": "blueprint_success", "message": "ep_45_blueprint_generated", "data": {"ep_num": 45, "arc_no": 9, "strategy": "dialogue_focused", "score": 0}}
-{"timestamp": "2026-02-04 02:02:48", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 02:02:48", "type": "blueprint_success", "message": "ep_46_blueprint_generated", "data": {"ep_num": 46, "arc_no": 10, "strategy": "action_focused", "score": 0}}
-{"timestamp": "2026-02-04 02:04:00", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 02:04:00", "type": "blueprint_success", "message": "ep_47_blueprint_generated", "data": {"ep_num": 47, "arc_no": 10, "strategy": "emotion_focused", "score": 0}}
-{"timestamp": "2026-02-04 02:06:37", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 02:06:37", "type": "blueprint_success", "message": "ep_48_blueprint_generated", "data": {"ep_num": 48, "arc_no": 10, "strategy": "dialogue_focused", "score": 0}}
-{"timestamp": "2026-02-04 02:08:56", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 02:08:56", "type": "blueprint_success", "message": "ep_49_blueprint_generated", "data": {"ep_num": 49, "arc_no": 10, "strategy": "dialogue_focused", "score": 0}}
-{"timestamp": "2026-02-04 02:11:31", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 02:11:31", "type": "blueprint_success", "message": "ep_50_blueprint_generated", "data": {"ep_num": 50, "arc_no": 10, "strategy": "dialogue_focused", "score": 0}}
-{"timestamp": "2026-02-04 08:38:42", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
-{"timestamp": "2026-02-04 09:41:53", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-04 15:14:17", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-04 15:14:54", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "items_tracked": 3}}
+{"timestamp": "2026-02-04 15:18:15", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["시작 내공 수정: 10%% → 10%"]}}
+{"timestamp": "2026-02-04 15:27:10", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-04 15:28:12", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "items_tracked": 4}}
+{"timestamp": "2026-02-04 15:38:14", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["arc_end_state 내공 하한 적용: 2% → 5%"]}}
+{"timestamp": "2026-02-04 15:40:59", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-04 15:42:15", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "items_tracked": 3}}
+{"timestamp": "2026-02-04 15:47:09", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 4, "corrections": ["시작 내공 수정: 5%% → 5%"]}}
+{"timestamp": "2026-02-04 15:53:40", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 4, "corrections": ["시작 내공 수정: 5%% → 5%", "시작 부상 수정: '우측 어깨 회전근 파열(심각), 우측 손아귀 찢어짐, 전신 탈진' → '우측 어깨 통증 악화, 내력 소진으로 인한 탈진'"]}}
+{"timestamp": "2026-02-04 15:56:35", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-04 15:58:44", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 4, "items_tracked": 3}}
+{"timestamp": "2026-02-04 16:04:18", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 5, "corrections": ["시작 위치 수정: '팽가 본가 연무장 앞' → '팽가 뒷산 금지 구역, 폐서관 내부 석실 중앙'", "시작 내공 수정: 25% → 25%%", "시작 부상 수정: '기경팔맥 정화로 인한 일시적 탈진, 각혈 흔적' → '기경팔맥 정화로 인한 일시적 탈진, 각혈 흔적(내상은 치유됨)'"]}}
+{"timestamp": "2026-02-04 16:05:38", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-04 16:07:32", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 5, "items_tracked": 3}}
+{"timestamp": "2026-02-04 16:09:23", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 5, "items_tracked": 3}}
+{"timestamp": "2026-02-04 16:18:35", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 6, "corrections": ["시작 위치 수정: '팽가 무진의 침소' → '하북 팽가 대연회장 중앙, 술상으로 변한 거석 앞'", "시작 부상 수정: '회복 중인 탈진 상태, 전신 근육통 및 오른쪽 손목 인대 미세 손상' → '회복 중인 탈진 상태, 근육통'", "arc_end_state 내공 하한 적용: 0% → 5%"]}}
+{"timestamp": "2026-02-04 16:18:35", "type": "flow_guard", "message": "서사 폭주 위험: 비트가 과도하게 축약됨", "data": {"arc_no": 6}}
+{"timestamp": "2026-02-04 16:22:33", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 6, "corrections": ["시작 위치 수정: '팽가 무진의 침소' → '하북 팽가 대연회장 중앙, 술상으로 변한 거석 앞'", "arc_end_state 내공 하한 적용: 0% → 5%"]}}
+{"timestamp": "2026-02-04 16:23:24", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-04 16:25:36", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 6, "items_tracked": 4}}
+{"timestamp": "2026-02-04 16:34:55", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-04 16:38:52", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 7, "items_tracked": 6}}
+{"timestamp": "2026-02-04 16:46:54", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 8, "corrections": ["시작 위치 수정: '하북팽가 본가, 무진의 침소 내 약탕(藥湯) 안' → '흑풍채의 박살 난 정문 안쪽, 먼지가 채 가라앉지 않은 연무장 한가운데. 겁에 질려 무기를 떨어뜨린 산적들에게 둘러싸여 있다.'", "시작 부상 수정: '치료 중인 심각한 내상 및 골절. 생명은 건졌으나 절대 안정이 필요한 상태.' → '치료 중인 심각한 내상. 응급 처치로 생명은 건졌으나 절대 안정이 필요한 상태.'"]}}
+{"timestamp": "2026-02-04 16:48:02", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-04 16:50:50", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 8, "items_tracked": 4}}
+{"timestamp": "2026-02-04 17:00:51", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 9, "corrections": ["시작 위치 수정: '무림맹 내 귀빈용 독채 '서광원(瑞光院)'' → '무림맹 내 귀빈용 독채 '서광원(瑞光院)' 침소'"]}}
+{"timestamp": "2026-02-04 17:11:14", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 9, "corrections": ["시작 위치 수정: '하북팽가 장로회의장' → '무림맹 내 귀빈용 독채 '서광원(瑞光院)' 침소'"]}}
+{"timestamp": "2026-02-04 17:22:59", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 9, "corrections": ["시작 위치 수정: '하북팽가 연무장' → '무림맹 내 귀빈용 독채 '서광원(瑞光院)' 침소'"]}}
+{"timestamp": "2026-02-04 17:25:59", "type": "stage2_analyst_fallback", "message": "FourPhase 3 rejects, Analyst last chance", "data": {"arc_no": 9, "attempt": 3}}
+{"timestamp": "2026-02-04 17:35:19", "type": "arc_design_failed", "message": "max retries exhausted", "data": {"arc_no": 9, "batch_start": 5, "batch_end": 10}}
+{"timestamp": "2026-02-04 17:57:21", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-04 18:00:31", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 9, "items_tracked": 4}}
+{"timestamp": "2026-02-04 18:12:45", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 10, "corrections": ["시작 위치 수정: '무림맹 내 귀빈용 독채 '서광원(瑞光院)' 침소' → '소룡제 예선 연무장 대기석'"]}}
+{"timestamp": "2026-02-04 18:12:45", "type": "flow_guard", "message": "서사 폭주 위험: 비트가 과도하게 축약됨", "data": {"arc_no": 10}}
+{"timestamp": "2026-02-04 19:07:08", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-04 19:07:08", "type": "blueprint_success", "message": "ep_1_blueprint_generated", "data": {"ep_num": 1, "arc_no": 1, "strategy": "emotion_focused", "score": 0}}
+{"timestamp": "2026-02-04 19:15:33", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-04 19:15:33", "type": "blueprint_success", "message": "ep_2_blueprint_generated", "data": {"ep_num": 2, "arc_no": 1, "strategy": "action_focused", "score": 0}}
+{"timestamp": "2026-02-04 19:27:12", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 9, "items_tracked": 4}}
+{"timestamp": "2026-02-04 19:38:26", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 10, "corrections": ["중복 아이템 제거: 소림소환단", "시작 위치 수정: '무림맹 내 귀빈용 독채 '서광원(瑞光院)' 침소' → '소룡제 예선 연무장 대기석'"]}}
+{"timestamp": "2026-02-04 19:50:40", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 10, "corrections": ["시작 위치 수정: '무림맹 내 귀빈용 독채 '서광원(瑞光院)' 침소' → '소룡제 예선 연무장 대기석'"]}}
+{"timestamp": "2026-02-04 19:53:08", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-04 19:56:38", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 10, "items_tracked": 6}}
+{"timestamp": "2026-02-04 20:08:49", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-04 20:12:35", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 11, "items_tracked": 7}}
+{"timestamp": "2026-02-04 20:23:44", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-04 20:27:39", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 12, "items_tracked": 7}}
+{"timestamp": "2026-02-04 20:37:58", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 13, "corrections": ["시작 위치 수정: '서광원(曙光園) 회의장 밖' → '바닥의 청석판이 발자국 모양으로 가루가 된 회의장 내부'"]}}
+{"timestamp": "2026-02-04 20:40:52", "type": "data_missing", "message": "status_shadow missing", "data": {"arc_no": 13}}
+{"timestamp": "2026-02-04 20:40:52", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-04 20:44:56", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 13, "items_tracked": 8}}
+{"timestamp": "2026-02-04 21:03:53", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-04 21:08:43", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 14, "items_tracked": 10}}
+{"timestamp": "2026-02-04 21:13:25", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 14, "items_tracked": 10}}
+{"timestamp": "2026-02-04 21:29:21", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 15, "corrections": ["시작 위치 수정: '하북 팽가 본가 영접실' → '팽가 거처 객잔 접객실'"]}}
+{"timestamp": "2026-02-04 21:30:51", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-04 21:36:09", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 15, "items_tracked": 9}}
+{"timestamp": "2026-02-04 21:49:21", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 16, "corrections": ["시작 위치 수정: '팽가 연무장' → '무림맹 소룡회 대진표 게시판 앞 (지하 구역에서 복귀 후 이동)'"]}}
+{"timestamp": "2026-02-04 21:51:24", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-04 21:56:54", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 16, "items_tracked": 13}}
+{"timestamp": "2026-02-04 22:23:39", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 17, "corrections": ["시작 위치 수정: '북해빙궁 객실' → '북해빙궁, 궁주의 집무실 (회복 후 중원 복귀 준비 중)'"]}}
+{"timestamp": "2026-02-04 22:25:02", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-04 22:32:49", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 17, "items_tracked": 10}}
+{"timestamp": "2026-02-04 22:49:52", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 18, "corrections": ["시작 위치 수정: '하북 팽가 제1연무장' → '하북 팽가 제1연무장 (소룡회 본선 대비 훈련 중)'", "시작 부상 수정: '없음' → '없음 (설삼 복용으로 완치)'"]}}
+{"timestamp": "2026-02-04 23:15:53", "type": "stage2_analyst_fallback", "message": "FourPhase 3 rejects, Analyst last chance", "data": {"arc_no": 18, "attempt": 3}}
+{"timestamp": "2026-02-04 23:25:02", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 18, "corrections": ["시작 위치 수정: '하북 팽가 성문 앞' → '하북 팽가 제1연무장 (소룡회 본선 대비 훈련 중)'", "시작 부상 수정: '정상' → '없음 (설삼 복용으로 완치)'"]}}
+{"timestamp": "2026-02-04 23:28:33", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-04 23:34:37", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 18, "items_tracked": 11}}
+{"timestamp": "2026-02-05 00:18:17", "type": "stage2_analyst_fallback", "message": "FourPhase 3 rejects, Analyst last chance", "data": {"arc_no": 19, "attempt": 3}}
+{"timestamp": "2026-02-05 00:31:02", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 19, "corrections": ["시작 위치 수정: '하북 변방 폐촌 공터 (소림사로 이동 시작)' → '폐촌 공터 (무림맹으로 이동 준비 중)'", "final_location 자동 추출: '소림대환단'"]}}
+{"timestamp": "2026-02-05 00:33:59", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 00:40:19", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 19, "items_tracked": 14}}
+{"timestamp": "2026-02-05 00:48:48", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 19, "items_tracked": 13}}
+{"timestamp": "2026-02-05 01:29:41", "type": "stage2_analyst_fallback", "message": "FourPhase 3 rejects, Analyst last chance", "data": {"arc_no": 20, "attempt": 3}}
+{"timestamp": "2026-02-05 01:40:48", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 20, "corrections": ["시작 내공 수정: None% → 45%", "시작 부상 수정: '' → '경상'"]}}
+{"timestamp": "2026-02-05 01:43:50", "type": "arc_design_failed", "message": "max retries exhausted", "data": {"arc_no": 20, "batch_start": 19, "batch_end": 24}}
+{"timestamp": "2026-02-05 08:19:24", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 08:19:24", "type": "blueprint_success", "message": "ep_3_blueprint_generated", "data": {"ep_num": 3, "arc_no": 1, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 08:22:40", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 08:22:40", "type": "blueprint_success", "message": "ep_4_blueprint_generated", "data": {"ep_num": 4, "arc_no": 1, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 08:24:16", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 08:24:16", "type": "blueprint_success", "message": "ep_5_blueprint_generated", "data": {"ep_num": 5, "arc_no": 1, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 08:27:15", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 08:27:15", "type": "blueprint_success", "message": "ep_6_blueprint_generated", "data": {"ep_num": 6, "arc_no": 2, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 08:30:13", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 08:30:13", "type": "blueprint_success", "message": "ep_7_blueprint_generated", "data": {"ep_num": 7, "arc_no": 2, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 08:33:11", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 08:33:11", "type": "blueprint_success", "message": "ep_8_blueprint_generated", "data": {"ep_num": 8, "arc_no": 2, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 08:36:09", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 08:36:09", "type": "blueprint_success", "message": "ep_9_blueprint_generated", "data": {"ep_num": 9, "arc_no": 2, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 08:41:14", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 08:41:14", "type": "blueprint_success", "message": "ep_10_blueprint_generated", "data": {"ep_num": 10, "arc_no": 2, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 08:43:53", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 08:43:53", "type": "blueprint_success", "message": "ep_11_blueprint_generated", "data": {"ep_num": 11, "arc_no": 3, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 08:46:07", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 08:46:07", "type": "blueprint_success", "message": "ep_12_blueprint_generated", "data": {"ep_num": 12, "arc_no": 3, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 08:48:40", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 08:48:40", "type": "blueprint_success", "message": "ep_13_blueprint_generated", "data": {"ep_num": 13, "arc_no": 3, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 08:52:19", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 08:52:19", "type": "blueprint_success", "message": "ep_14_blueprint_generated", "data": {"ep_num": 14, "arc_no": 3, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 08:54:27", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 08:54:27", "type": "blueprint_success", "message": "ep_15_blueprint_generated", "data": {"ep_num": 15, "arc_no": 3, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 08:58:58", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 08:58:58", "type": "blueprint_success", "message": "ep_16_blueprint_generated", "data": {"ep_num": 16, "arc_no": 4, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 09:02:50", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 09:02:50", "type": "blueprint_success", "message": "ep_17_blueprint_generated", "data": {"ep_num": 17, "arc_no": 4, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 09:05:32", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 09:05:32", "type": "blueprint_success", "message": "ep_18_blueprint_generated", "data": {"ep_num": 18, "arc_no": 4, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 09:10:47", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 09:10:47", "type": "blueprint_success", "message": "ep_19_blueprint_generated", "data": {"ep_num": 19, "arc_no": 4, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 09:13:34", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 09:13:34", "type": "blueprint_success", "message": "ep_20_blueprint_generated", "data": {"ep_num": 20, "arc_no": 4, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 09:18:22", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 09:18:22", "type": "blueprint_success", "message": "ep_21_blueprint_generated", "data": {"ep_num": 21, "arc_no": 5, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 09:22:23", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 09:22:23", "type": "blueprint_success", "message": "ep_22_blueprint_generated", "data": {"ep_num": 22, "arc_no": 5, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 09:25:14", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 09:25:14", "type": "blueprint_success", "message": "ep_23_blueprint_generated", "data": {"ep_num": 23, "arc_no": 5, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 09:28:51", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 09:28:51", "type": "blueprint_success", "message": "ep_24_blueprint_generated", "data": {"ep_num": 24, "arc_no": 5, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 09:32:09", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 09:32:09", "type": "blueprint_success", "message": "ep_25_blueprint_generated", "data": {"ep_num": 25, "arc_no": 5, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 09:45:12", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 10:43:17", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 10:43:17", "type": "blueprint_success", "message": "ep_4_blueprint_generated", "data": {"ep_num": 4, "arc_no": 1, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 10:44:54", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 10:44:54", "type": "blueprint_success", "message": "ep_5_blueprint_generated", "data": {"ep_num": 5, "arc_no": 1, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 10:48:05", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 10:48:05", "type": "blueprint_success", "message": "ep_6_blueprint_generated", "data": {"ep_num": 6, "arc_no": 2, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 10:50:05", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 10:50:05", "type": "blueprint_success", "message": "ep_7_blueprint_generated", "data": {"ep_num": 7, "arc_no": 2, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 10:52:20", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 10:52:20", "type": "blueprint_success", "message": "ep_8_blueprint_generated", "data": {"ep_num": 8, "arc_no": 2, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 10:55:28", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 10:55:28", "type": "blueprint_success", "message": "ep_9_blueprint_generated", "data": {"ep_num": 9, "arc_no": 2, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 10:58:54", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 10:58:54", "type": "blueprint_success", "message": "ep_10_blueprint_generated", "data": {"ep_num": 10, "arc_no": 2, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 11:03:08", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 11:03:08", "type": "blueprint_success", "message": "ep_11_blueprint_generated", "data": {"ep_num": 11, "arc_no": 3, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 11:06:45", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 11:06:45", "type": "blueprint_success", "message": "ep_12_blueprint_generated", "data": {"ep_num": 12, "arc_no": 3, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 11:09:35", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 11:09:35", "type": "blueprint_success", "message": "ep_13_blueprint_generated", "data": {"ep_num": 13, "arc_no": 3, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 11:15:01", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 11:15:01", "type": "blueprint_success", "message": "ep_14_blueprint_generated", "data": {"ep_num": 14, "arc_no": 3, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 11:17:18", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 11:17:18", "type": "blueprint_success", "message": "ep_15_blueprint_generated", "data": {"ep_num": 15, "arc_no": 3, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 11:21:52", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 11:21:52", "type": "blueprint_success", "message": "ep_16_blueprint_generated", "data": {"ep_num": 16, "arc_no": 4, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 11:24:51", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 11:24:51", "type": "blueprint_success", "message": "ep_17_blueprint_generated", "data": {"ep_num": 17, "arc_no": 4, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 11:27:22", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 11:27:22", "type": "blueprint_success", "message": "ep_18_blueprint_generated", "data": {"ep_num": 18, "arc_no": 4, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 11:32:15", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 11:32:15", "type": "blueprint_success", "message": "ep_19_blueprint_generated", "data": {"ep_num": 19, "arc_no": 4, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 11:35:03", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 11:35:03", "type": "blueprint_success", "message": "ep_20_blueprint_generated", "data": {"ep_num": 20, "arc_no": 4, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 11:38:13", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 11:38:13", "type": "blueprint_success", "message": "ep_21_blueprint_generated", "data": {"ep_num": 21, "arc_no": 5, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 11:41:16", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 11:41:16", "type": "blueprint_success", "message": "ep_22_blueprint_generated", "data": {"ep_num": 22, "arc_no": 5, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 11:44:19", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 11:44:19", "type": "blueprint_success", "message": "ep_23_blueprint_generated", "data": {"ep_num": 23, "arc_no": 5, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 11:47:19", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 11:47:19", "type": "blueprint_success", "message": "ep_24_blueprint_generated", "data": {"ep_num": 24, "arc_no": 5, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 11:50:21", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 11:50:21", "type": "blueprint_success", "message": "ep_25_blueprint_generated", "data": {"ep_num": 25, "arc_no": 5, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-05 12:13:26", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-05 13:41:16", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}

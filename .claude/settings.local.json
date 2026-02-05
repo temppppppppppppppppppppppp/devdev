@@ -24,7 +24,14 @@
       "Bash(powershell -Command:*)",
       "Bash(git restore:*)",
       "Bash(xcopy /E /I /Y \"projects\\\\팽가 망나니 가문 재건\\\\project_data.db\" \"tests\\\\stage4_v2_test\\\\project\"\")",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(PYTHONIOENCODING=utf-8 python:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(set PYTHONIOENCODING=utf-8)",
+      "Bash(copy:*)",
+      "Bash(ls:*)"
     ]
   }
 }
