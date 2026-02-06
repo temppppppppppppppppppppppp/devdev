@@ -1960,6 +1960,18 @@ class Analyst(BaseAgent):
                     return 'investment'
                 elif 'wuxia' in genre_name.lower() or '무협' in genre_name:
                     return 'wuxia'
+                elif 'actor' in genre_name.lower() or '배우' in genre_name:
+                    return 'actor'
+                elif 'sports' in genre_name.lower() or '스포츠' in genre_name:
+                    return 'sports'
+                elif 'medical' in genre_name.lower() or '의학' in genre_name or '의료' in genre_name:
+                    return 'medical'
+                elif 'cook' in genre_name.lower() or '요리' in genre_name:
+                    return 'cooking'
+                elif 'composer' in genre_name.lower() or '작곡' in genre_name:
+                    return 'composer'
+                elif 'alt_history' in genre_name.lower() or '대체역사' in genre_name or '조선' in genre_name:
+                    return 'alt_history'
         except Exception as e:
             print(f"      ⚠️ [Analyst] 장르 감지 실패: {e}")
 
@@ -1976,7 +1988,11 @@ class Analyst(BaseAgent):
         genre_library_map = {
             'wuxia': 'analyst_libraries.json',
             'hunter': 'analyst_libraries_hunter.json',
-            'investment': 'analyst_libraries_investment.json'
+            'investment': 'analyst_libraries_investment.json',
+            'cooking': 'analyst_libraries_cooking.json',
+            'actor': 'analyst_libraries_actor.json',
+            'sports': 'analyst_libraries_sports.json',
+            'medical': 'analyst_libraries_medical.json',
         }
 
         lib_filename = genre_library_map.get(genre, 'analyst_libraries.json')

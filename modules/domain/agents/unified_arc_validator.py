@@ -69,8 +69,8 @@ UNIFIED_VALIDATION_PROMPT = """
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ### [판정 기준]
-- **REJECT**: CRITICAL 이슈 1개 이상 OR MAJOR 이슈 3개 이상
-- **PASS**: 그 외
+- **REJECT**: CRITICAL 이슈 1개 이상인 경우만
+- **PASS**: 그 외 (MAJOR는 경고로 기록하되 PASS 처리 → Director가 최종 판정)
 
 ### [출력 형식 - 반드시 JSON만 출력]
 
@@ -154,10 +154,14 @@ class UnifiedArcValidator(BaseAgent):
         critical_count = sum(1 for i in all_issues if i.get("severity") == "CRITICAL")
         major_count = sum(1 for i in all_issues if i.get("severity") == "MAJOR")
 
-        if critical_count > 0 or major_count >= 3:
+        # [V61.9] Director 주권주의: CRITICAL만 REJECT, MAJOR는 경고로 Director에게 넘김
+        if critical_count > 0:
             verdict = "REJECT"
         else:
-            verdict = llm_result.get("verdict", "PASS")
+            # MAJOR가 있어도 PASS → Director가 최종 판정
+            verdict = "PASS"
+            if major_count > 0:
+                print(f"      ⚠️ [UnifiedValidator] MAJOR {major_count}건 경고 → Director에게 위임")
 
         result = {
             "verdict": verdict,

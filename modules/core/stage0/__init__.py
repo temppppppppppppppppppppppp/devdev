@@ -36,10 +36,14 @@ class StageZeroManager:
         "investment": "투자물/재벌물",
         "wuxia": "무협",
         "hunter": "헌터물/던전물",
+        "composer": "작곡가물",
+        "cooking": "요리물",
         "fantasy": "판타지",
         "romance": "로맨스",
         "politics": "정치물",
         "military": "군사/전쟁물",
+        "sports": "스포츠물",
+        "medical": "의학물/닥터물",
     }
 
     # 주인공 설정 옵션

@@ -410,6 +410,18 @@ class Director(BaseAgent):
             # 투자: 논리성 중시
             base += 3
             reason_parts.append("투자장르(+3점)")
+        elif self.genre == 'actor':
+            # 배우물: 연기/업계 묘사 중시
+            base += 2
+            reason_parts.append("배우장르(+2점)")
+        elif self.genre == 'sports':
+            # 스포츠: 경기/훈련 역동성 중시
+            base += 2
+            reason_parts.append("스포츠장르(+2점)")
+        elif self.genre == 'medical':
+            # 의학: 의학 정확성/긴장감 중시
+            base += 2
+            reason_parts.append("의학장르(+2점)")
 
         # 3. 에피소드 타입별 조정
         if ep_type == "climax":
@@ -726,6 +738,54 @@ class Director(BaseAgent):
                         })
 
                 print(f"      ⚔️ [V60.90] Wuxia 특화 검증: {len(violations)}개 이슈")
+
+            # ─────────────────────────────────────────────────────────────
+            # Actor 장르 특화 검증
+            # ─────────────────────────────────────────────────────────────
+            elif self.genre == 'actor':
+                # 금지 용어 검증 (무협/판타지 용어 혼입 차단)
+                if hasattr(self.guard, 'FORBIDDEN_TERMS'):
+                    found_terms = [t for t in self.guard.FORBIDDEN_TERMS if t in manuscript]
+                    if found_terms:
+                        violations.append({
+                            'type': 'forbidden_terms',
+                            'message': f"장르 부적합 용어 발견: {found_terms[:5]}",
+                            'severity': 'warning'
+                        })
+
+                print(f"      🎬 [V62] Actor 특화 검증: {len(violations)}개 이슈")
+
+            # ─────────────────────────────────────────────────────────────
+            # Sports 장르 특화 검증
+            # ─────────────────────────────────────────────────────────────
+            elif self.genre == 'sports':
+                # 금지 용어 검증 (무협/판타지 용어 혼입 차단)
+                if hasattr(self.guard, 'FORBIDDEN_TERMS'):
+                    found_terms = [t for t in self.guard.FORBIDDEN_TERMS if t in manuscript]
+                    if found_terms:
+                        violations.append({
+                            'type': 'forbidden_terms',
+                            'message': f"장르 부적합 용어 발견: {found_terms[:5]}",
+                            'severity': 'warning'
+                        })
+
+                print(f"      🏆 [V62.1] Sports 특화 검증: {len(violations)}개 이슈")
+
+            # ─────────────────────────────────────────────────────────────
+            # Medical 장르 특화 검증
+            # ─────────────────────────────────────────────────────────────
+            elif self.genre == 'medical':
+                # 금지 용어 검증 (무협/판타지 용어 혼입 차단)
+                if hasattr(self.guard, 'FORBIDDEN_TERMS'):
+                    found_terms = [t for t in self.guard.FORBIDDEN_TERMS if t in manuscript]
+                    if found_terms:
+                        violations.append({
+                            'type': 'forbidden_terms',
+                            'message': f"장르 부적합 용어 발견: {found_terms[:5]}",
+                            'severity': 'warning'
+                        })
+
+                print(f"      🏥 [V62.1] Medical 특화 검증: {len(violations)}개 이슈")
 
             # Critical 여부 판단 (3개 이상이면 critical)
             if len(violations) >= 3:
@@ -3151,7 +3211,14 @@ class Director(BaseAgent):
             return cache.name
 
         except Exception as e:
-            print(f"      ❌ [V60.88] 원고 캐시 생성 실패: {e}")
+            # [V61.9] 캐싱 중 429/quota → 키 전환 예약
+            error_str = str(e).lower()
+            if "429" in error_str or "resource_exhausted" in error_str or "quota" in error_str:
+                print(f"      ⚠️ [V61.9] 원고 캐시 생성 중 API 제한 → 키 전환 예약")
+                with BaseAgent._rotation_lock:
+                    BaseAgent._key_rotation_pending = True
+            else:
+                print(f"      ❌ [V60.88] 원고 캐시 생성 실패: {e}")
             self.manuscript_cache_name = None
             return None
 

@@ -2469,6 +2469,12 @@ class SovereignApp:
             new_api_key = os.getenv("GOOGLE_API_KEY")
             if new_api_key:
                 self.sys = StudioSystem(api_client=genai.Client(api_key=new_api_key))
+                # [V61.9] 프로젝트별 멀티키 재초기화 (GOOGLE_API_KEY_2~9 반영)
+                from modules.domain.agents.base_agent import BaseAgent
+                BaseAgent._keys_initialized = False
+                BaseAgent._current_key_idx = 0
+                BaseAgent._context_caches.clear()
+                BaseAgent._init_api_keys()
 
         self.sys.boot_v20_project(project_name)
         self.current_project = self.sys.project
@@ -7532,7 +7538,13 @@ class SovereignApp:
                     npc_hud_keys = {
                         'wuxia': ['NPC_Martial_HUD', 'martial_hud', 'combat_stats'],
                         'hunter': ['NPC_Hunter_HUD', 'hunter_hud', 'awakening_stats'],
-                        'investment': ['NPC_Finance_HUD', 'finance_hud', 'business_stats']
+                        'investment': ['NPC_Finance_HUD', 'finance_hud', 'business_stats'],
+                        'alt_history': ['NPC_Joseon_Status', 'joseon_hud', 'court_stats'],
+                        'composer': ['NPC_Music_Profile', 'music_profile', 'music_stats'],
+                        'cooking': ['NPC_Cooking_Profile', 'cooking_profile', 'culinary_stats'],
+                        'actor': ['NPC_Actor_Profile', 'actor_profile', 'acting_stats'],
+                        'sports': ['NPC_Sports_Profile', 'sports_profile', 'athletic_stats'],
+                        'medical': ['NPC_Medical_Profile', 'medical_profile', 'medical_stats'],
                     }
                     possible_keys = npc_hud_keys.get(genre_type, npc_hud_keys['wuxia'])
 
@@ -7630,7 +7642,7 @@ class SovereignApp:
                             # [V40] 장르별 Purism Prompt 분기
                             genre_type = self.selected_genre.get('type', 'wuxia') if self.selected_genre else 'wuxia'
 
-                            if genre_type == 'wuxia' and hasattr(self.sys, 'guard'):
+                            if hasattr(self.sys, 'guard') and hasattr(self.sys.guard, 'get_v20_purism_prompt'):
                                 purism = self.sys.guard.get_v20_purism_prompt()
                             elif genre_type == 'hunter':
                                 purism = "[헌터 장르 가이드] 각성/던전/길드 설정을 준수하라. 게임 시스템은 일관성 있게 유지하라."
@@ -9385,7 +9397,13 @@ class SovereignApp:
                             genre_fallback_keys = {
                                 'wuxia': ['alias', 'rank', 'realm', 'internal_energy', 'mental_method', 'reputation'],
                                 'hunter': ['awakening_rank', 'mana', 'skills', 'guild', 'level', 'reputation'],
-                                'investment': ['capital', 'total_assets', 'reputation', 'connections', 'market_insight']
+                                'investment': ['capital', 'total_assets', 'reputation', 'connections', 'market_insight'],
+                                'alt_history': ['social_class', 'court_rank', 'position', 'faction', 'political_influence', 'wealth'],
+                                'composer': ['composition', 'arrangement', 'production', 'reputation', 'wealth', 'mental_state'],
+                                'cooking': ['chef_rank', 'signature_dish', 'culinary_techniques', 'restaurant_tier', 'reputation_score', 'capital'],
+                                'actor': ['acting_skill', 'fame', 'filmography', 'agency', 'fandom', 'scandal_index'],
+                                'sports': ['athlete_tier', 'sport_type', 'physical_stats', 'record', 'team', 'ranking', 'reputation'],
+                                'medical': ['doctor_rank', 'specialty', 'hospital', 'surgery_count', 'success_rate', 'reputation'],
                             }
                             default_keys = genre_fallback_keys.get(genre_type, genre_fallback_keys['wuxia'])
 
@@ -9748,6 +9766,48 @@ class SovereignApp:
                 "hud_key": HUDKeys.INVESTMENT_HUD_ROOT,
                 "description": "금융 배경, 자본/투자 시스템, 기업/시장",
                 "critical_keys": ['capital', 'total_assets', 'stocks', 'reputation', 'connections', 'market_insight', 'status']
+            },
+            "4": {
+                "name": f"{GenreTypes.get_name(GenreTypes.COMPOSER)} (Composer Fiction)",
+                "type": GenreTypes.COMPOSER,
+                "hud_key": HUDKeys.COMPOSER_HUD_ROOT,
+                "description": "현대 배경, 음악 창작/산업 시스템, 작곡/프로듀싱",
+                "critical_keys": ['composition', 'arrangement', 'production', 'reputation', 'wealth', 'mental_state', 'current_objective']
+            },
+            "5": {
+                "name": f"{GenreTypes.get_name(GenreTypes.COOKING)} (Cooking Fiction)",
+                "type": GenreTypes.COOKING,
+                "hud_key": HUDKeys.COOKING_HUD_ROOT,
+                "description": "현대 배경, 셰프 성장/식당 경영 시스템, 요리/미식",
+                "critical_keys": ['chef_rank', 'signature_dish', 'culinary_techniques', 'restaurant_tier', 'reputation_score', 'capital', 'current_objective']
+            },
+            "6": {
+                "name": f"{GenreTypes.get_name(GenreTypes.ALT_HISTORY)} (Alt History)",
+                "type": GenreTypes.ALT_HISTORY,
+                "hud_key": HUDKeys.ALT_HISTORY_HUD_ROOT,
+                "description": "조선 시대 배경, 관직/당파/신분 시스템, 궁중 정치",
+                "critical_keys": ['social_class', 'court_rank', 'position', 'faction', 'political_influence', 'wealth', 'public_trust', 'current_objective']
+            },
+            "7": {
+                "name": f"{GenreTypes.get_name(GenreTypes.ACTOR)} (Actor Fiction)",
+                "type": GenreTypes.ACTOR,
+                "hud_key": HUDKeys.ACTOR_HUD_ROOT,
+                "description": "현대 배경, 연예계/배우 성장 시스템, 오디션/촬영/시상식",
+                "critical_keys": ['acting_skill', 'fame', 'filmography', 'agency', 'fandom', 'scandal_index', 'box_office', 'current_objective']
+            },
+            "8": {
+                "name": f"{GenreTypes.get_name(GenreTypes.SPORTS)} (Sports Fiction)",
+                "type": GenreTypes.SPORTS,
+                "hud_key": HUDKeys.SPORTS_HUD_ROOT,
+                "description": "현대 배경, 선수 성장/팀 스포츠 시스템, 경기/훈련",
+                "critical_keys": ['athlete_tier', 'sport_type', 'physical_stats', 'record', 'team', 'ranking', 'reputation', 'current_objective']
+            },
+            "9": {
+                "name": f"{GenreTypes.get_name(GenreTypes.MEDICAL)} (Medical Fiction)",
+                "type": GenreTypes.MEDICAL,
+                "hud_key": HUDKeys.MEDICAL_HUD_ROOT,
+                "description": "현대 배경, 의사 성장/병원 시스템, 수술/진료",
+                "critical_keys": ['doctor_rank', 'specialty', 'hospital', 'surgery_count', 'success_rate', 'reputation', 'current_objective']
             }
         }
         
@@ -9757,10 +9817,10 @@ class SovereignApp:
             print(f"      → {genre['description']}\n")
         
         choice = self._get_int_input(
-            f"{Emojis.PENCIL} Choice (1.무협 / 2.헌터 / 3.투자): ",
+            f"{Emojis.PENCIL} Choice (1.무협 / 2.헌터 / 3.투자 / 4.작곡가 / 5.요리 / 6.대체역사 / 7.배우물 / 8.스포츠 / 9.의학): ",
             default=1,
             min_val=1,
-            max_val=3
+            max_val=9
         )
         
         selected = genres[str(choice)]
@@ -9773,6 +9833,12 @@ class SovereignApp:
                 GenreTypes.WUXIA: "wuxia",
                 GenreTypes.HUNTER: "hunter",
                 GenreTypes.INVESTMENT: "investment",
+                GenreTypes.COMPOSER: "composer",
+                GenreTypes.COOKING: "cooking",
+                GenreTypes.ALT_HISTORY: "alt_history",
+                GenreTypes.ACTOR: "actor",
+                GenreTypes.SPORTS: "sports",
+                GenreTypes.MEDICAL: "medical",
             }
             base_genre = genre_map.get(selected['type'], "wuxia")
             self.preset_registry = PresetRegistry(base_genre=base_genre)
