@@ -176,7 +176,7 @@ class StyleExtractor:
         total_chars = len(all_text)
         total_episodes = len(drafts)
 
-        print(f"      📖 [V2] 문체 분석 시작: {total_episodes}화, {total_chars:,}자")
+        print(f"      [V2] 문체 분석 시작: {total_episodes}화, {total_chars:,}자")
 
         # Phase 1: Python 통계 분석 (전체 원고)
         print(f"         [1/5] 통계 분석...")
@@ -213,7 +213,7 @@ class StyleExtractor:
             merged["reference_works"] = [reference_name]
 
         guide = StyleGuide(**{k: v for k, v in merged.items() if k in {f.name for f in fields(StyleGuide)}})
-        print(f"      ✅ 문체 DNA 추출 완료 (v2, {total_episodes}화 분석)")
+        print(f"      [OK] 문체 DNA 추출 완료 (v2, {total_episodes}화 분석)")
         return guide
 
     # ═══════════════════════════════════════════════════════════════
@@ -537,7 +537,7 @@ JSON만 출력하세요.
                     print(f"      [!] 파일 로드 실패: {txt_file.name}: {e}")
             if episodes:
                 works[work_dir.name] = episodes
-                print(f"      📚 {work_dir.name}: {len(episodes)}화 로드")
+                print(f"      [+] {work_dir.name}: {len(episodes)}화 로드")
 
         return works
 
@@ -562,7 +562,7 @@ JSON만 출력하세요.
             all_drafts.extend(episodes)
             work_names.append(f"{name}({len(episodes)}화)")
 
-        print(f"      📊 총 {len(all_drafts)}화, 작품 {len(works)}개 분석")
+        print(f"      [*] 총 {len(all_drafts)}화, 작품 {len(works)}개 분석")
 
         guide = self.extract_from_drafts(all_drafts, reference_name=", ".join(work_names))
         guide.reference_works = list(works.keys())
@@ -604,19 +604,29 @@ JSON만 출력하세요.
             pass
 
     def _llm_call(self, prompt: str) -> Dict[str, Any]:
-        """LLM 호출 + JSON 파싱"""
+        """LLM 호출 + JSON 파싱 (폴백: 3-pro → 2.5-pro → 2.5-flash)"""
         from google.genai import types
         time.sleep(self.API_DELAY)
-        response = self.client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=0.3,
-                max_output_tokens=4000,
-                response_mime_type="application/json"
-            )
-        )
-        return self._parse_json(response.text)
+
+        models = ["gemini-3-pro-preview", "gemini-2.5-pro", "gemini-2.5-flash"]
+        last_err = None
+        for model_name in models:
+            try:
+                response = self.client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0.3,
+                        max_output_tokens=4000,
+                        response_mime_type="application/json"
+                    )
+                )
+                return self._parse_json(response.text)
+            except Exception as e:
+                last_err = e
+                print(f"         [!] {model_name} 실패, 다음 모델 시도...")
+                time.sleep(1)
+        raise last_err if last_err else RuntimeError("All models failed")
 
     def _parse_json(self, text: str) -> Dict[str, Any]:
         """JSON 파싱 (자가 치유)"""
