@@ -1036,18 +1036,28 @@ class StateTracker:
 
         return violations
 
+    # [V61.7.1] 장르별 능력 습득 로그 표시
+    _SKILL_LOG_LABEL = {
+        'wuxia': ('🥋', '무공 습득'),
+        'hunter': ('⚔️', '스킬 습득'),
+        'investment': ('📈', '핵심 지식 등록'),
+        'fantasy': ('✨', '마법 습득'),
+    }
+
     def register_protagonist_skill(self, skill_name: str, arc_no: int):
         """
-        [V60.94] 주인공 무공 습득 등록
+        [V60.94] 주인공 능력 습득 등록 (장르별 로그 표시)
 
         Args:
-            skill_name: 무공 이름
+            skill_name: 능력 이름
             arc_no: 습득 Arc 번호
         """
         if skill_name not in self.protagonist_skills:
             self.protagonist_skills.add(skill_name)
             self.skill_acquisitions[skill_name] = arc_no
-            print(f"      🥋 [V60.94] 무공 습득 등록: {skill_name} (Arc {arc_no})")
+            genre = getattr(self.preset_registry, 'base_genre', '') or ''
+            emoji, label = self._SKILL_LOG_LABEL.get(genre, ('🥋', '능력 습득'))
+            print(f"      {emoji} [V60.94] {label}: {skill_name} (Arc {arc_no})")
 
     def check_unlearned_skill_usage(self, content: str, arc_no: int) -> List[dict]:
         """
