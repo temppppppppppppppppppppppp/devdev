@@ -3,8 +3,10 @@ import os
 
 # [V61.3] Faulthandler 활성화 - segfault 등 치명적 오류 추적
 import faulthandler
+import atexit
 _fault_log = open("crash_dump.log", "w", encoding="utf-8")
 faulthandler.enable(file=_fault_log, all_threads=True)
+atexit.register(_fault_log.close)
 print(f"[V61.3] Faulthandler 활성화 → crash_dump.log", file=sys.stderr)
 
 # Windows에서 UTF-8 인코딩 강제 설정 (이모지 및 한글 출력 지원)
@@ -172,6 +174,10 @@ class StageSpinner:
 
         if StageSpinner._session_start is None:
             StageSpinner._session_start = time.time()
+
+    def update_detail(self, new_detail: str):
+        """스피너 작업 상세 텍스트 실시간 갱신"""
+        self.task_detail = new_detail
 
     def _format_time(self, seconds: float) -> str:
         if seconds >= 60:
@@ -1091,7 +1097,7 @@ class SovereignApp:
             try:
                 loss_val = int(str(loss).replace('%', '').strip())
                 energy = max(0, 100 - loss_val)
-            except:
+            except (ValueError, TypeError):
                 energy = '?'
 
         # 부상
@@ -2493,10 +2499,13 @@ class SovereignApp:
                 self.ui.log(f"💾 프로젝트 장르 정보 저장: {self.selected_genre['name']}")
         
         # [V40] 장르별 HUD 매니저 초기화
-        from modules.core.genre_hud_manager import create_hud_manager
+        from modules.core.genre_hud_manager import create_hud_manager, log_hud_compatibility_report
         self.sys.hud = create_hud_manager(self.selected_genre['type'], self.current_project)
-        self.ui.log(f"✅ [{self.selected_genre['name']}] HUD 시스템 초기화 완료")
-        
+        self.ui.log(f"   ✅ [{self.selected_genre['name']}] HUD 시스템 초기화 완료")
+
+        # [V61.3] HUD 호환성 체크 (에러 사전 감지)
+        log_hud_compatibility_report(self.sys.hud, logger=self.ui.log)
+
         # [V40] 장르별 GenreGuard 초기화
         from modules.core.genre_guards import create_genre_guard
         self.sys.guard = create_genre_guard(self.selected_genre['type'])
@@ -2853,24 +2862,21 @@ class SovereignApp:
                 self.ui.log("⏭️ 농축을 건너뜁니다.")
                 return treatment_file
 
-            # 5. 주인공 이름 추출 (Bible에서)
+            # 5. 주인공 이름 추출 (Bible에서) [V61.2 Fix] 장르별 HUD 탐색
+            # 6. 장르 확인
+            genre = self.selected_genre.get('type', 'wuxia') if self.selected_genre else 'wuxia'
+
             protagonist_name = "주인공"
             try:
-                bible_path = Path("bible")  # [V60.60 Fix] bibles → bible 오타 수정
+                bible_path = Path("bible")
                 bible_files = list(bible_path.glob("*.json"))
                 if bible_files:
                     with open(bible_files[0], 'r', encoding='utf-8') as f:
                         bible_data = json.load(f)
                     bible_root = bible_data.get('MasterBible', bible_data)
-                    hud = bible_root.get('MartialHUD', {})
-                    protag = hud.get('Protagonist', {})
-                    actual = protag.get('actual_truth', {})
-                    protagonist_name = actual.get('name', '주인공')
+                    protagonist_name = HUDKeys.get_protagonist_name(bible_root, genre)
             except Exception:
                 pass
-
-            # 6. 장르 확인
-            genre = self.selected_genre.get('type', 'wuxia') if self.selected_genre else 'wuxia'
 
             # 7. [V60.10] 병렬 농축 + 인과 검증 수행
             self.ui.log("🔄 Block 병렬 농축 시작... (Block 1을 품질 기준으로 사용)")
@@ -3338,7 +3344,7 @@ class SovereignApp:
             manuscripts = self.current_project.db.get_all_manuscripts() or []
             for ms in manuscripts[-10:]:  # 최근 10개만 로드 (성능)
                 ep_num = ms.get('ep_num', 0)
-                text = ms.get('text', '')
+                text = ms.get('content', '')
 
                 if text and self.dialogue_engine:
                     # 주인공 대사 학습 (간단 추출)
@@ -3354,7 +3360,7 @@ class SovereignApp:
                 if isinstance(data, str):
                     try:
                         data = json.loads(data)
-                    except:
+                    except (ValueError, json.JSONDecodeError):
                         continue
 
                 tension_level = data.get('tension_level', data.get('긴장도', 5))
@@ -3389,38 +3395,20 @@ class SovereignApp:
         """
         주인공 이름 추출 (bible에서)
 
-        [V60.90 Fix] 올바른 경로로 수정:
-        1순위: MasterBible.MartialHUD.Protagonist.actual_truth.name
-        2순위: MasterBible.AssetLibrary.KeyNPCs[0].name (role에 '주인공' 포함)
-        3순위: characters 리스트 (레거시 호환)
+        [V61.2 Fix] 장르별 HUD 탐색으로 변경 (MartialHUD 하드코딩 제거)
+        HUDKeys.get_protagonist_name()이 모든 HUD 후보를 순회하고
+        AssetLibrary.KeyNPCs 폴백까지 처리함
         """
         try:
             bible = self.current_project.db.load_anchor("bible") or {}
             bible_root = bible.get('MasterBible', bible)
+            genre = self.selected_genre.get('type', '') if self.selected_genre else ''
 
-            # 1순위: MartialHUD.Protagonist.actual_truth.name
-            hud = bible_root.get('MartialHUD', {})
-            protag = hud.get('Protagonist', {})
-            actual = protag.get('actual_truth', {})
-            if actual.get('name'):
-                return actual['name']
+            name = HUDKeys.get_protagonist_name(bible_root, genre)
+            if name and name != '주인공':
+                return name
 
-            # 2순위: AssetLibrary.KeyNPCs에서 주인공 역할 찾기
-            assets = bible_root.get('AssetLibrary', {})
-            key_npcs = assets.get('KeyNPCs', []) or assets.get('Key_NPCs', [])
-            for npc in key_npcs:
-                if isinstance(npc, dict):
-                    role = npc.get('role', '')
-                    if '주인공' in role or '주인' in role:
-                        if npc.get('name'):
-                            return npc['name']
-
-            # 3순위: 첫 번째 NPC (주인공일 가능성 높음)
-            if key_npcs and isinstance(key_npcs[0], dict):
-                if key_npcs[0].get('name'):
-                    return key_npcs[0]['name']
-
-            # 4순위: 레거시 characters 리스트
+            # 레거시 characters 리스트 폴백
             chars = bible.get('characters', bible.get('등장인물', []))
             if chars and isinstance(chars, list) and len(chars) > 0:
                 first_char = chars[0]
@@ -3428,9 +3416,9 @@ class SovereignApp:
                     return first_char.get('name', first_char.get('이름', '주인공'))
                 return str(first_char)
 
-            return '주인공'
+            return name  # '주인공' 기본값
         except Exception as e:
-            print(f"      ⚠️ [V60.90] 주인공 이름 추출 실패: {e}")
+            print(f"      ⚠️ [V61.2] 주인공 이름 추출 실패: {e}")
             return '주인공'
 
     def _process_v50_post_episode(self, ep_num: int, manuscript: str, blueprint: dict) -> None:
@@ -4491,13 +4479,12 @@ class SovereignApp:
         arcs_source = bible_root.get('plot_roadmap', [])
 
         # [V42] 주인공 이름 추출 (PROTAGONIST IDENTITY LOCK)
+        # [V61.2 Fix] 장르별 HUD 탐색으로 변경
         protagonist_name = None
         try:
-            hud = bible_root.get('MartialHUD', {})
-            protag = hud.get('Protagonist', {})
-            actual = protag.get('actual_truth', {})
-            protagonist_name = actual.get('name')
-            if protagonist_name:
+            genre = self.selected_genre.get('type', '') if self.selected_genre else ''
+            protagonist_name = HUDKeys.get_protagonist_name(bible_root, genre)
+            if protagonist_name and protagonist_name != '주인공':
                 self.ui.log(f"🔒 [V42] 주인공 이름 락: {protagonist_name}")
         except Exception as e:
             self.ui.log(f"⚠️ [V42] 주인공 이름 추출 실패: {e}")
@@ -5009,6 +4996,14 @@ class SovereignApp:
                                 learned_skills = self.state_tracker.extract_skill_acquisitions_from_arc(refined_arc)
                                 # [V60.95] NPC 정보(무장, 수준) 추출 및 등록
                                 npc_info = self.state_tracker.extract_npc_info_from_arc(refined_arc)
+
+                                # [V61.3] 동적 장르 감지 및 프리셋 확장
+                                tactical_doc = refined_arc.get('tactical_doc', '')
+                                if tactical_doc and hasattr(self.state_tracker, 'check_and_expand_genre'):
+                                    new_genre = self.state_tracker.check_and_expand_genre(tactical_doc)
+                                    if new_genre:
+                                        print(f"         - 🎭 새 장르 감지: {new_genre}")
+
                                 if dead_npcs:
                                     print(f"         - 💀 사망 NPC 기록: {', '.join(dead_npcs)}")
                                 if learned_skills:
@@ -5655,7 +5650,9 @@ class SovereignApp:
                                 "zero_count": zero_count
                             })
 
-                    if audit.get('decision') == 'PASS' and len(refined_arc.get('tactical_doc', '')) >= 2000:
+                    # [V61.6 Fix] Director PASS 시 tactical_doc 길이 부족해도 수용
+                    # (2000자 미만이면 REJECT 분기로 빠져 PASS audit에 없는 re_slice_instruction 참조 → 크래시)
+                    if audit.get('decision') == 'PASS' and len(refined_arc.get('tactical_doc', '')) >= 1500:
                         ### [0124 핵심 3] 욕망 데이터 및 HUD 그림자 물리적 박제
                         refined_arc['arc_drive'] = arc_drive if arc_drive else {}
                         refined_arc['joint_docs'] = enriched_block.get('joint_docs', {})
@@ -5804,8 +5801,8 @@ class SovereignApp:
                         break
                     else:
                         # [V60.77] Director REJECT 시 구조화된 피드백 생성 → FourPhase에 전달
-                        base_feedback = audit.get('re_slice_instruction', '밀도 보강 필요')
-                        reject_reason = audit.get('reason', '사유 미상')
+                        base_feedback = audit.get('re_slice_instruction') or '밀도 보강 필요'
+                        reject_reason = audit.get('reason') or '사유 미상'
 
                         # 적응형 피드백 강도
                         adaptive_intensity = self._get_adaptive_feedback_intensity(attempt, stage=2)
@@ -7151,21 +7148,31 @@ class SovereignApp:
 
             # ───────────────────────────────────────────────────────────
             # [V61] Entity Registry 추출 (Stage 3용)
+            # [V61.6] Arc 내 캐싱 - 같은 arc_idx면 캐시 재사용 (LLM 80% 절감)
             # ───────────────────────────────────────────────────────────
-            entity_registry_for_stage3 = None
-            try:
-                if 'state_extractor' in self.agents and self.current_project.arcs:
-                    # 현재 Arc까지의 누적 데이터로 Entity Registry 추출
-                    all_arcs_for_entity = list(self.current_project.arcs)[:arc_idx + 1]
-                    if all_arcs_for_entity:
-                        state_for_entity = self.agents['state_extractor'].extract_cumulative_state(all_arcs_for_entity)
-                        entity_registry_for_stage3 = state_for_entity.get('entity_registry') if state_for_entity else None
-                        if entity_registry_for_stage3:
-                            total_entities = sum(len(v) for v in entity_registry_for_stage3.values() if isinstance(v, list))
-                            self.ui.log(f"      📋 [V61] Entity Registry 로드: {total_entities}개 엔티티")
-            except Exception as entity_err:
-                self.ui.log(f"      ⚠️ [V61] Entity Registry 추출 실패: {str(entity_err)[:50]}")
-                entity_registry_for_stage3 = None
+            if not hasattr(self, '_entity_cache_arc_idx') or self._entity_cache_arc_idx != arc_idx:
+                # arc_idx가 바뀌었을 때만 새로 추출
+                try:
+                    if 'state_extractor' in self.agents and self.current_project.arcs:
+                        all_arcs_for_entity = list(self.current_project.arcs)[:arc_idx + 1]
+                        if all_arcs_for_entity:
+                            state_for_entity = self.agents['state_extractor'].extract_cumulative_state(all_arcs_for_entity)
+                            self._cached_entity_registry = state_for_entity.get('entity_registry') if state_for_entity else None
+                            if self._cached_entity_registry:
+                                total_entities = sum(len(v) for v in self._cached_entity_registry.values() if isinstance(v, list))
+                                self.ui.log(f"      📋 [V61] Entity Registry 추출: {total_entities}개 엔티티")
+                        else:
+                            self._cached_entity_registry = None
+                    else:
+                        self._cached_entity_registry = None
+                    self._entity_cache_arc_idx = arc_idx
+                except Exception as entity_err:
+                    self.ui.log(f"      ⚠️ [V61] Entity Registry 추출 실패: {str(entity_err)[:50]}")
+                    self._cached_entity_registry = None
+                    self._entity_cache_arc_idx = arc_idx  # 실패해도 캐시 마킹 (반복 시도 방지)
+            else:
+                self.ui.log(f"      ♻️ [V61.6] Entity Registry 캐시 재사용 (Arc {arc_idx})")
+            entity_registry_for_stage3 = getattr(self, '_cached_entity_registry', None)
 
             # ───────────────────────────────────────────────────────────
             # 직전 Blueprint 로드 [V61.3 보호]
@@ -7216,7 +7223,8 @@ class SovereignApp:
                         arc_idx=arc_idx,
                         entity_registry=entity_registry_for_stage3,  # [V61] Entity 일관성 검증
                         protagonist_name=protagonist_name_for_stage3,  # [V61] 주인공 이름 주입
-                        state_tracker=getattr(self, 'state_tracker', None)  # [V60.96] 죽은 NPC 검증
+                        state_tracker=getattr(self, 'state_tracker', None),  # [V60.96] 죽은 NPC 검증
+                        db=self.current_project.db  # [V61.6] 연속성 검사 활성화
                     )
 
             except Exception as gen_err:
@@ -9671,14 +9679,13 @@ class SovereignApp:
                                 )
                                 if rewind_ep:
                                     self.ui.log(f"🔄 제 {rewind_ep}화로 되감기 완료. 공정을 이 시점부터 다시 시작합니다.")
-                                    if hasattr(self.current_project, 'db'):
-                                        self.current_project.db.conn.commit()
+                                    self._safe_commit()
                                     return
-                            
-                            if failure_streak >= MAX_RETRY: 
+
+                            if failure_streak >= MAX_RETRY:
                                 self.ui.log("🛑 치명적 오류 반복으로 인해 집필 라인을 긴급 정지합니다.")
                                 break
-                            time.sleep(5)                   
+                            time.sleep(5)
 
 
 
@@ -9698,14 +9705,13 @@ class SovereignApp:
                         )
                         if rewind_ep:
                             self.ui.log(f"🔄 제 {rewind_ep}화로 되감기 완료. 공정을 이 시점부터 다시 시작합니다.")
-                            if hasattr(self.current_project, 'db'):
-                                self.current_project.db.conn.commit()
+                            self._safe_commit()
                             return
-                    
-                    if failure_streak >= MAX_RETRY: 
+
+                    if failure_streak >= MAX_RETRY:
                         self.ui.log("🛑 치명적 오류 반복으로 인해 집필 라인을 긴급 정지합니다.")
                         break
-                    
+
                     time.sleep(5)
         finally:
             # 🛑 finally에서는 커밋하지 않고 연결 상태만 관리 (성공 시엔 이미 커밋됨)
@@ -9800,7 +9806,7 @@ class SovereignApp:
         if confirm == 'y':
             # SQL DB에서 'arcs' 앵커만 삭제합니다.
             self.current_project.db.cursor.execute("DELETE FROM anchors WHERE key = 'arcs'")
-            self.current_project.db.conn.commit()
+            self._safe_commit()
             
             # 메모리에서도 아크 데이터를 비웁니다.
             self.current_project.arcs = []
@@ -9889,8 +9895,17 @@ class SovereignApp:
                         bible_row = self.current_project.db.cursor.fetchone()
                         if bible_row:
                             bible_data = json.loads(bible_row['data'])
-                            if 'MasterBible' in bible_data and 'MartialHUD' in bible_data['MasterBible']:
-                                bible_data['MasterBible']['MartialHUD']['Protagonist']['actual_truth'] = past_actual
+                            if 'MasterBible' in bible_data:
+                                # [V61.2 Fix] 장르별 HUD 탐색
+                                genre = self.selected_genre.get('type', '') if self.selected_genre else ''
+                                hud_key = HUDKeys.get_hud_root(genre)
+                                # 존재하는 HUD 키를 우선 탐색
+                                for hk in [hud_key, 'MartialHUD', 'FinanceHUD', 'HunterHUD']:
+                                    if hk in bible_data['MasterBible']:
+                                        hud_key = hk
+                                        break
+                                if hud_key in bible_data['MasterBible']:
+                                    bible_data['MasterBible'][hud_key].setdefault('Protagonist', {})['actual_truth'] = past_actual
                                 self.current_project.db.cursor.execute(
                                     "UPDATE anchors SET data = ? WHERE key = 'bible'",
                                     (json.dumps(bible_data, ensure_ascii=False),)
@@ -9936,7 +9951,7 @@ class SovereignApp:
             self.ui.log("   🔢 [Sequence] 테이블 ID 카운터 초기화 완료")
 
             # 커밋
-            self.current_project.db.conn.commit()
+            self._safe_commit()
 
             # 5. 📝 물리 파일 삭제
             for f in self.current_project.paths.drafts.glob("*.txt"):
@@ -10144,7 +10159,8 @@ class SovereignApp:
                 current_inventory = []
                 current_martial_arts = []
                 if hasattr(self.sys, 'hud') and self.sys.hud:
-                    current_inventory = list(self.sys.hud.inventory) if self.sys.hud.inventory else []
+                    # [V61.3 Fix] 장르별 HUD 호환 - inventory는 무협에만 존재
+                    current_inventory = list(self.sys.hud.inventory) if hasattr(self.sys.hud, 'inventory') and self.sys.hud.inventory else []
                     # [V61 Fix] MartialManager의 속성명은 'techniques' (martial_arts 아님)
                     current_martial_arts = list(self.sys.hud.techniques) if hasattr(self.sys.hud, 'techniques') and self.sys.hud.techniques else []
 
@@ -10257,75 +10273,77 @@ class SovereignApp:
                 director_feedback = ""
                 previous_attempt = {}
 
-                for interview_round in range(3):
+                # [V61.6] 전체 면담 루프를 스피너로 감싸기
+                with StageSpinner(4, f"제{next_ep}화 · 앙상블 준비") as stage4_spinner:
+                  for interview_round in range(3):
+                    stage4_spinner.update_detail(f"제{next_ep}화 · {interview_round + 1}차 면담 · 앙상블 생성")
                     self.ui.log(f"\n🎬 [{interview_round + 1}차 면담] Chief Writer 앙상블 생성 중...")
 
                     # Phase 2: Chief Writer 앙상블 생성
-                    # [V60.83] Stage 4 스피너
-                    with StageSpinner(4, f"제{next_ep}화 · {interview_round + 1}차 면담"):
-                        if interview_round == 0:
-                            candidates = chief_writer.generate_ensemble(
-                                ep_num=next_ep,
-                                blueprint=blueprint,
-                                prev_manuscript=prev_text,
-                                hud_report=hud_report,
-                                arc_doc=arc_tactical,
-                                master_bible=self.current_project.master_bible,
-                                style_guide=style_guide,
-                                # [V60.80 FIX] 미래 침범 방지
-                                current_inventory=current_inventory,
-                                current_martial_arts=current_martial_arts,
-                                dead_npcs=dead_npcs,
-                                item_acquisition_timeline=item_acquisition_timeline,
-                                # [V60.80+] 기존 Writer 핵심 기능
-                                reference_anchor_prompt=reference_anchor_prompt,
-                                mandatory_context=mandatory_context,
-                                anti_trope_prompt=anti_trope_prompt,
-                                justification_prompt=justification_prompt,
-                                reflexion_prompt=reflexion_prompt,
-                                genre_name=genre_name,
-                                # [V60.81] 추가 파라미터
-                                npc_equipment_summary=npc_equipment_summary,
-                                intro_dna=intro_dna,
-                                # [V60.85] 장르 Guard Purism Prompt
-                                purism_prompt=purism_prompt,
-                                # [V60.95] 고밀도 HUD 전달
-                                state_tracker=getattr(self, 'state_tracker', None)
-                            )
-                        else:
-                            candidates = chief_writer.regenerate_with_feedback(
-                                ep_num=next_ep,
-                                blueprint=blueprint,
-                                prev_manuscript=prev_text,
-                                hud_report=hud_report,
-                                arc_doc=arc_tactical,
-                                master_bible=self.current_project.master_bible,
-                                style_guide=style_guide,
-                                director_feedback=director_feedback,
-                                previous_attempt=previous_attempt,
-                                attempt_number=interview_round + 1,
-                                # [V60.80 FIX] 미래 침범 방지
-                                current_inventory=current_inventory,
-                                current_martial_arts=current_martial_arts,
-                                dead_npcs=dead_npcs,
-                                item_acquisition_timeline=item_acquisition_timeline,
-                                # [V60.80+] 기존 Writer 핵심 기능
-                                reference_anchor_prompt=reference_anchor_prompt,
-                                mandatory_context=mandatory_context,
-                                anti_trope_prompt=anti_trope_prompt,
-                                justification_prompt=justification_prompt,
-                                reflexion_prompt=reflexion_prompt,
-                                genre_name=genre_name,
-                                # [V60.81] 추가 파라미터
-                                npc_equipment_summary=npc_equipment_summary,
-                                intro_dna=intro_dna,
-                                # [V60.85] 장르 Guard Purism Prompt
-                                purism_prompt=purism_prompt,
-                                # [V60.95] 고밀도 HUD 전달
-                                state_tracker=getattr(self, 'state_tracker', None)
-                            )
+                    if interview_round == 0:
+                        candidates = chief_writer.generate_ensemble(
+                            ep_num=next_ep,
+                            blueprint=blueprint,
+                            prev_manuscript=prev_text,
+                            hud_report=hud_report,
+                            arc_doc=arc_tactical,
+                            master_bible=self.current_project.master_bible,
+                            style_guide=style_guide,
+                            # [V60.80 FIX] 미래 침범 방지
+                            current_inventory=current_inventory,
+                            current_martial_arts=current_martial_arts,
+                            dead_npcs=dead_npcs,
+                            item_acquisition_timeline=item_acquisition_timeline,
+                            # [V60.80+] 기존 Writer 핵심 기능
+                            reference_anchor_prompt=reference_anchor_prompt,
+                            mandatory_context=mandatory_context,
+                            anti_trope_prompt=anti_trope_prompt,
+                            justification_prompt=justification_prompt,
+                            reflexion_prompt=reflexion_prompt,
+                            genre_name=genre_name,
+                            # [V60.81] 추가 파라미터
+                            npc_equipment_summary=npc_equipment_summary,
+                            intro_dna=intro_dna,
+                            # [V60.85] 장르 Guard Purism Prompt
+                            purism_prompt=purism_prompt,
+                            # [V60.95] 고밀도 HUD 전달
+                            state_tracker=getattr(self, 'state_tracker', None)
+                        )
+                    else:
+                        candidates = chief_writer.regenerate_with_feedback(
+                            ep_num=next_ep,
+                            blueprint=blueprint,
+                            prev_manuscript=prev_text,
+                            hud_report=hud_report,
+                            arc_doc=arc_tactical,
+                            master_bible=self.current_project.master_bible,
+                            style_guide=style_guide,
+                            director_feedback=director_feedback,
+                            previous_attempt=previous_attempt,
+                            attempt_number=interview_round + 1,
+                            # [V60.80 FIX] 미래 침범 방지
+                            current_inventory=current_inventory,
+                            current_martial_arts=current_martial_arts,
+                            dead_npcs=dead_npcs,
+                            item_acquisition_timeline=item_acquisition_timeline,
+                            # [V60.80+] 기존 Writer 핵심 기능
+                            reference_anchor_prompt=reference_anchor_prompt,
+                            mandatory_context=mandatory_context,
+                            anti_trope_prompt=anti_trope_prompt,
+                            justification_prompt=justification_prompt,
+                            reflexion_prompt=reflexion_prompt,
+                            genre_name=genre_name,
+                            # [V60.81] 추가 파라미터
+                            npc_equipment_summary=npc_equipment_summary,
+                            intro_dna=intro_dna,
+                            # [V60.85] 장르 Guard Purism Prompt
+                            purism_prompt=purism_prompt,
+                            # [V60.95] 고밀도 HUD 전달
+                            state_tracker=getattr(self, 'state_tracker', None)
+                        )
 
                     # Phase 3: Python 사전 검증 (경고만)
+                    stage4_spinner.update_detail(f"제{next_ep}화 · {interview_round + 1}차 면담 · Python 검증")
                     self.ui.log(f"   🔍 Python 사전 검증 중...")
                     validation_results = manuscript_validator.validate_all_candidates(
                         candidates=candidates,
@@ -10338,7 +10356,23 @@ class SovereignApp:
                         strategy = candidates[i].get('strategy_name', f'후보{i+1}') if i < len(candidates) else f'후보{i+1}'
                         self.ui.log(f"      • {strategy}: 경고 {vr.get('warning_count', 0)}개, 분량 {vr.get('metrics', {}).get('length', 0)}자")
 
+                    # [V61.5] 캐시 기반 연속성 검사 (Stage 4)
+                    if interview_round == 0 and next_ep > 1 and candidates:
+                        stage4_spinner.update_detail(f"제{next_ep}화 · 연속성 검사")
+                        first_manuscript = candidates[0].get('manuscript', '')
+                        continuity_check = self.agents['director'].check_manuscript_continuity_with_cache(
+                            new_manuscript=first_manuscript,
+                            ep_num=next_ep,
+                            db=self.current_project.db,
+                            limit=10
+                        )
+                        if continuity_check.get("decision") == "CONFLICT":
+                            conflict_summary = continuity_check.get("summary", "연속성 충돌 감지")
+                            self.ui.log(f"   ⚠️ [V61.5] 연속성 검사: {conflict_summary[:50]}...")
+                            director_feedback += f"\n[연속성 충돌]\n{conflict_summary}"
+
                     # Phase 4: Director 면담
+                    stage4_spinner.update_detail(f"제{next_ep}화 · {interview_round + 1}차 면담 · Director 심사")
                     self.ui.log(f"   🎬 Director 면담 중...")
                     director_result = self.agents['director'].select_and_judge_ensemble(
                         ep_num=next_ep,
@@ -10459,8 +10493,14 @@ class SovereignApp:
                                 current_hud=self.sys.hud.snapshot() if hasattr(self.sys.hud, 'snapshot') else {}
                             )
                             if approved.get('applied_updates'):
-                                self.sys.hud.bulk_update(approved['applied_updates'])
-                                self.ui.log(f"   ✅ HUD 업데이트 완료")
+                                # [V61.3 Fix] bulk_update는 MartialManager에만 존재할 수 있음
+                                if hasattr(self.sys.hud, 'bulk_update'):
+                                    self.sys.hud.bulk_update(approved['applied_updates'])
+                                    self.ui.log(f"   ✅ HUD 업데이트 완료")
+                                else:
+                                    # 대체: update_physical_status 사용 (모든 HUD에 존재)
+                                    self.sys.hud.update_physical_status(approved['applied_updates'])
+                                    self.ui.log(f"   ✅ HUD 업데이트 완료 (fallback)")
                         except Exception as hud_err:
                             self.ui.log(f"   ⚠️ HUD 업데이트 실패: {hud_err}")
 
@@ -10546,10 +10586,10 @@ class SovereignApp:
 
                             if hasattr(self.current_project, 'db'):
                                 try:
-                                    seeds_data = self.current_project.db.get_anchor('active_seeds')
+                                    seeds_data = self.current_project.db.load_anchor('active_seeds')
                                     if seeds_data:
                                         active_seeds = seeds_data if isinstance(seeds_data, list) else []
-                                except:
+                                except (ValueError, TypeError, json.JSONDecodeError):
                                     pass
 
                             # Manager 호출

@@ -150,6 +150,10 @@ ENSEMBLE_ARC_PROMPT = """
         "item_consumption": ["소모된 아이템"]
     }},
     "state_changes": {{
+        "timeline": {{
+            "start": {{"표현": "Arc 시작 시점 (예: year, month, period 등 장르별)"}},
+            "end": {{"표현": "Arc 종료 시점"}}
+        }},
         "npc_deaths": [
             {{"name": "사망한 NPC 이름", "episode": N, "cause": "사망 원인"}}
         ],
@@ -166,6 +170,10 @@ ENSEMBLE_ARC_PROMPT = """
 }}
 
 ⚠️ [V61] state_changes 필수 작성:
+- timeline: Arc의 시작/종료 시점 필수 기록 (장르별 표현 사용)
+  - 투자물: {{"year": 2000, "month": 3}}, 무협: {{"period": "대회 3일차", "season": "초여름"}}
+  - 헌터물: {{"day": "각성 후 15일차", "event_marker": "첫 던전 클리어 직후"}}
+  - 판타지: {{"era": "마왕 부활 후 2년", "event": "왕국 멸망 직전"}}
 - 이번 Arc에서 NPC가 죽으면 반드시 npc_deaths에 기록
 - 주인공이 무공을 배우면 반드시 skill_acquisitions에 기록
 - 관계 변화(적→아군 등)가 있으면 relationship_changes에 기록
@@ -183,8 +191,8 @@ class ArcEnsembleGenerator(BaseAgent):
     """
 
     # [V61.3] 앙상블 타임아웃 설정 (야간 무인 운영 - 무한 대기 방지)
-    ENSEMBLE_TIMEOUT = 180       # 전체 앙상블 타임아웃 (초) - 3분
-    SINGLE_CANDIDATE_TIMEOUT = 150  # 개별 후보 타임아웃 (초) - 2.5분
+    ENSEMBLE_TIMEOUT = 300       # 전체 앙상블 타임아웃 (초) - 5분 (thinking 오버헤드 반영)
+    SINGLE_CANDIDATE_TIMEOUT = 240  # 개별 후보 타임아웃 (초) - 4분
 
     def __init__(self, context, client, model_tier: str = "gemini-3-pro-preview"):
         # [V60.24] Gemini 3로 변경 - 최고 품질의 Arc 생성
@@ -206,7 +214,8 @@ class ArcEnsembleGenerator(BaseAgent):
         protagonist_name: str = "주인공",  # [V60.18] 주인공 이름 (필수!)
         protagonist_config: Dict = None,  # [V60.88] 주인공 설정 (world_origin, incarnation_type)
         entity_registry: Dict = None,  # [V60.92] Entity Registry (NPC 명칭 일관성)
-        ep_count: int = None  # [V61.1] 가변 페이싱 - 상위에서 결정된 ep_count
+        ep_count: int = None,  # [V61.1] 가변 페이싱 - 상위에서 결정된 ep_count
+        retry: int = 0  # [V61.5] 재시도 횟수 (>0이면 thinking "medium"으로 다운그레이드)
     ) -> Tuple[Optional[Dict], List[Dict]]:
         """
         앙상블 Arc 생성
@@ -264,7 +273,8 @@ class ArcEnsembleGenerator(BaseAgent):
                         protagonist_name=protagonist_name,  # [V60.18]
                         protagonist_config=protagonist_config,  # [V60.88]
                         entity_registry=entity_registry,  # [V60.92]
-                        genre=genre  # [V61.3] 미리 로드한 genre 전달 (thread-safety)
+                        genre=genre,  # [V61.3] 미리 로드한 genre 전달 (thread-safety)
+                        retry=retry  # [V61.5] 재시도 횟수 전달
                     )
                     futures[future] = strategy["name"]
 
@@ -393,7 +403,8 @@ class ArcEnsembleGenerator(BaseAgent):
         protagonist_name: str = "주인공",  # [V60.18]
         protagonist_config: Dict = None,  # [V60.88]
         entity_registry: Dict = None,  # [V60.92]
-        genre: str = "wuxia"  # [V61.3] 미리 로드한 genre (thread-safety)
+        genre: str = "wuxia",  # [V61.3] 미리 로드한 genre (thread-safety)
+        retry: int = 0  # [V61.5] 재시도 횟수
     ) -> Optional[Dict]:
         """단일 전략으로 Arc 생성"""
         try:
@@ -448,8 +459,10 @@ class ArcEnsembleGenerator(BaseAgent):
                 ep_end=ep_end
             )
 
-            # [V60.27] Thinking Level "high" 적용 - Arc 생성 품질 향상
-            result = self.ask(prompt, temperature=strategy["temperature"], thinking_level="high")
+            # [V60.27] Thinking Level 적용 - Arc 생성 품질 향상
+            # [V61.5] 재시도 시 "medium"으로 다운그레이드 (피드백이 사고를 보조)
+            thinking = "high" if retry == 0 else "medium"
+            result = self.ask(prompt, temperature=strategy["temperature"], thinking_level=thinking)
 
             if isinstance(result, str):
                 result = json.loads(result)
@@ -599,6 +612,7 @@ class ArcEnsembleGenerator(BaseAgent):
         # [V61] state_changes 필드 보장
         if "state_changes" not in result:
             result["state_changes"] = {
+                "timeline": {"start": {}, "end": {}},
                 "npc_deaths": [],
                 "skill_acquisitions": [],
                 "relationship_changes": [],
@@ -607,6 +621,15 @@ class ArcEnsembleGenerator(BaseAgent):
         else:
             # 하위 필드 보장
             sc = result["state_changes"]
+            if "timeline" not in sc:
+                sc["timeline"] = {"start": {}, "end": {}}
+            elif not isinstance(sc["timeline"], dict):
+                sc["timeline"] = {"start": {}, "end": {}}
+            else:
+                if "start" not in sc["timeline"]:
+                    sc["timeline"]["start"] = {}
+                if "end" not in sc["timeline"]:
+                    sc["timeline"]["end"] = {}
             if "npc_deaths" not in sc:
                 sc["npc_deaths"] = []
             if "skill_acquisitions" not in sc:
@@ -689,11 +712,7 @@ class ArcEnsembleGenerator(BaseAgent):
 
         return "\n".join(lines)
 
-    def _escape_braces(self, text: str) -> str:
-        """중괄호 이스케이프"""
-        if not isinstance(text, str):
-            return str(text)
-        return text.replace("{", "{{").replace("}", "}}")
+    # [V61.5] _escape_braces 오버라이드 제거 → BaseAgent의 이중 이스케이프 방지 로직 사용
 
     def _format_entity_registry(self, entity_registry: Dict) -> str:
         """

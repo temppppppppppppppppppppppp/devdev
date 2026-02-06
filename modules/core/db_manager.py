@@ -267,12 +267,38 @@ class DBManager:
         except:
             pass
 
+        # 11. Reflexion 메모리 테이블
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS reflexion_memory (
+                pattern_type TEXT PRIMARY KEY,
+                description TEXT,
+                frequency INTEGER DEFAULT 1,
+                solution TEXT,
+                first_seen TEXT,
+                last_seen TEXT,
+                first_ep INTEGER,
+                last_ep INTEGER
+            )
+        ''')
+
         self.conn.commit()
 
     # --- [트랜잭션 제어] ---
     def begin(self): self.cursor.execute("BEGIN TRANSACTION")
     def commit(self): self.conn.commit()
     def rollback(self): self.conn.rollback()
+
+    # --- [범용 쿼리] ---
+    def execute_query(self, sql: str, params: tuple = ()) -> list:
+        """SELECT 쿼리 실행 후 결과 리스트 반환"""
+        with self._lock:
+            self.cursor.execute(sql, params)
+            return self.cursor.fetchall()
+
+    def execute_update(self, sql: str, params: tuple = ()):
+        """INSERT/UPDATE/DELETE 쿼리 실행"""
+        with self._lock:
+            self.cursor.execute(sql, params)
 
     # --- [Section 1: 원고 및 지표] ---
     def save_manuscript(self, ep_num, title, content):
@@ -412,13 +438,20 @@ class DBManager:
                     if target:
                         cumulative['relationships'][target] = change.get('to', '')
 
-            # 상태: 최신 상태로 덮어씀
-            state_changes = json.loads(row['state_changes'] or '[]')
-            for state in state_changes:
-                if isinstance(state, dict):
-                    subject = state.get('subject', '')
-                    if subject:
-                        cumulative['states'][subject] = state.get('to', '')
+            # 상태: 최신 상태로 덮어씀 [V61.5] dict/list 양방향 처리
+            state_changes = json.loads(row['state_changes'] or '{}')
+            if isinstance(state_changes, dict):
+                # dict 형태: {"internal_energy": "80%", "realm": "기경팔맥"}
+                for subject, value in state_changes.items():
+                    if isinstance(value, (str, int, float)):
+                        cumulative['states'][subject] = str(value)
+            elif isinstance(state_changes, list):
+                # 레거시 list 형태: [{"subject": "내공", "to": "80%"}]
+                for state in state_changes:
+                    if isinstance(state, dict):
+                        subject = state.get('subject', '')
+                        if subject:
+                            cumulative['states'][subject] = state.get('to', '')
 
             # 밝혀진 사실 누적
             reveals = json.loads(row['reveals'] or '[]')
@@ -607,12 +640,13 @@ class DBManager:
         cur = self.cursor.execute("SELECT data FROM anchors WHERE key = ?", (key,))
         row = cur.fetchone()
         if not row:
-            return default or {}
+            # [V61.5] default=[] 전달 시 [] or {} → {} 반환 버그 수정
+            return default if default is not None else {}
         try:
             return json.loads(row['data'])
         except json.JSONDecodeError as e:
             print(f"🚨 [DB] Anchor JSON 파싱 실패 (key={key}): {e}")
-            return default or {}
+            return default if default is not None else {}
         
     def load_all_anchors(self):
         cur = self.cursor.execute("SELECT key, data FROM anchors")
@@ -947,3 +981,75 @@ class DBManager:
     def get_active_seeds(self):
         cur = self.cursor.execute("SELECT * FROM seeds WHERE status = 'active'")
         return [dict(row) for row in cur.fetchall()]
+
+    # --- [V61.5] Blueprint/Manuscript 연속성 캐싱용 메서드 ---
+    def get_recent_blueprints(self, before_ep: int, limit: int = 10) -> list:
+        """
+        [V61.5] ep_num < before_ep인 blueprint 중 최근 limit개 조회
+
+        Args:
+            before_ep: 이 에피소드 이전의 blueprint만 조회
+            limit: 최대 조회 개수
+
+        Returns:
+            list: [{'ep_num': int, 'data': dict}, ...] (ep_num 오름차순)
+        """
+        cur = self.cursor.execute(
+            """SELECT ep_num, data FROM blueprints
+               WHERE ep_num < ?
+               ORDER BY ep_num DESC
+               LIMIT ?""",
+            (before_ep, limit)
+        )
+        results = []
+        for row in cur.fetchall():
+            try:
+                data = json.loads(row['data']) if row['data'] else {}
+            except json.JSONDecodeError:
+                data = {}
+            results.append({'ep_num': row['ep_num'], 'data': data})
+        # 오름차순으로 정렬 (시간순)
+        return list(reversed(results))
+
+    def get_recent_manuscripts(self, before_ep: int, limit: int = 10) -> list:
+        """
+        [V61.5] ep_num < before_ep인 manuscript 중 최근 limit개 조회
+
+        Args:
+            before_ep: 이 에피소드 이전의 manuscript만 조회
+            limit: 최대 조회 개수
+
+        Returns:
+            list: [{'ep_num': int, 'title': str, 'content': str}, ...] (ep_num 오름차순)
+        """
+        cur = self.cursor.execute(
+            """SELECT ep_num, title, content FROM manuscripts
+               WHERE ep_num < ?
+               ORDER BY ep_num DESC
+               LIMIT ?""",
+            (before_ep, limit)
+        )
+        results = [dict(row) for row in cur.fetchall()]
+        # 오름차순으로 정렬 (시간순)
+        return list(reversed(results))
+
+    def get_all_manuscripts(self) -> list:
+        """전체 원고 목록 조회 (ep_num 오름차순)"""
+        cur = self.cursor.execute(
+            "SELECT ep_num, title, content FROM manuscripts ORDER BY ep_num ASC"
+        )
+        return [dict(row) for row in cur.fetchall()]
+
+    def get_all_blueprints(self) -> list:
+        """전체 블루프린트 목록 조회 (ep_num 오름차순)"""
+        cur = self.cursor.execute(
+            "SELECT ep_num, data FROM blueprints ORDER BY ep_num ASC"
+        )
+        results = []
+        for row in cur.fetchall():
+            try:
+                data = json.loads(row['data']) if row['data'] else {}
+            except json.JSONDecodeError:
+                data = {}
+            results.append({'ep_num': row['ep_num'], 'data': data})
+        return results

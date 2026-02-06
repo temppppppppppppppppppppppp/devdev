@@ -84,7 +84,7 @@ class StageZeroManager:
         try:
             choice = input("\n  선택: ").strip()
             return int(choice) if choice.isdigit() else -1
-        except:
+        except (ValueError, EOFError):
             return -1
 
     def show_genre_menu(self) -> str:
@@ -105,7 +105,7 @@ class StageZeroManager:
             idx = int(choice) - 1
             if 0 <= idx < len(genres):
                 return genres[idx][0]
-        except:
+        except (ValueError, IndexError, EOFError):
             pass
         return ""
 
@@ -127,7 +127,7 @@ class StageZeroManager:
                 config["world_origin"] = self.WORLD_ORIGIN_OPTIONS[choice]
             else:
                 config["world_origin"] = "현대인"
-        except:
+        except (ValueError, IndexError, EOFError):
             config["world_origin"] = "현대인"
 
         # 회귀/빙의 타입
@@ -140,7 +140,7 @@ class StageZeroManager:
                 config["incarnation_type"] = self.INCARNATION_TYPES[choice]
             else:
                 config["incarnation_type"] = "일반"
-        except:
+        except (ValueError, IndexError, EOFError):
             config["incarnation_type"] = "일반"
 
         return config
@@ -322,7 +322,7 @@ class StageZeroManager:
                         preset = active[idx]
                         self.preset_registry.deactivate_preset(preset)
                         print(f"    [v] {preset} 비활성화")
-            except:
+            except (ValueError, IndexError, EOFError):
                 pass
 
     # ============================================

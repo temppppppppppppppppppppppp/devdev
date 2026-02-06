@@ -18,6 +18,7 @@ import re
 import os
 from .base_agent import BaseAgent
 from .state_tracker import StateTracker
+from modules.core.constants import HUDKeys
 import asyncio
 
 # [V49.4] Structured Output Schema
@@ -662,22 +663,11 @@ class Analyst(BaseAgent):
         bible_root = master_bible.get('MasterBible', master_bible)
         assets = bible_root.get('AssetLibrary', {})
 
-        # [V60.93] 주인공 이름 추출 (파라미터 > MartialHUD > AssetLibrary > 기본값)
+        # [V61.2 Fix] 주인공 이름 추출 - 장르별 HUD 탐색
         if not protagonist_name:
             try:
-                hud = bible_root.get('MartialHUD', {})
-                protag = hud.get('Protagonist', {})
-                actual = protag.get('actual_truth', {})
-                protagonist_name = actual.get('name', '')
-                if not protagonist_name:
-                    # AssetLibrary에서 주인공 역할 찾기
-                    key_npcs = assets.get('KeyNPCs', [])
-                    for npc in key_npcs:
-                        if isinstance(npc, dict) and npc.get('role') in ['주인공', '주역', 'protagonist']:
-                            protagonist_name = npc.get('name', '')
-                            break
-                if not protagonist_name:
-                    protagonist_name = "주인공"
+                genre = getattr(self.context, 'genre', '') or ''
+                protagonist_name = HUDKeys.get_protagonist_name(bible_root, genre)
             except Exception:
                 protagonist_name = "주인공"
 
@@ -1214,11 +1204,11 @@ class Analyst(BaseAgent):
                 bible_data = self.context.db.load_anchor('bible')
                 if bible_data:
                     mb = bible_data.get('MasterBible', bible_data)
-                    hud = mb.get('MartialHUD', {})
-                    protag = hud.get('Protagonist', {})
-                    actual = protag.get('actual_truth', {})
-                    if actual.get('name'):
-                        final_protagonist_name = actual.get('name')
+                    # [V61.2 Fix] 장르별 HUD 탐색
+                    genre = getattr(self.context, 'genre', '') or ''
+                    name = HUDKeys.get_protagonist_name(mb, genre)
+                    if name and name != '주인공':
+                        final_protagonist_name = name
             except Exception as e:
                 print(f"      ⚠️ [Analyst] 주인공 이름 추출 실패, 기본값 사용: {e}")
         if not final_protagonist_name:

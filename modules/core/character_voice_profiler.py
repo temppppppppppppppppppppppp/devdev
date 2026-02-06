@@ -17,7 +17,7 @@
 import re
 import json
 from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field, asdict, fields
 from collections import Counter
 
 
@@ -39,7 +39,9 @@ class VoiceProfile:
 
     @classmethod
     def from_dict(cls, data: Dict) -> 'VoiceProfile':
-        return cls(**data)
+        """[V61.5] 미지 키 무시"""
+        valid_keys = {f.name for f in fields(cls)}
+        return cls(**{k: v for k, v in data.items() if k in valid_keys})
 
 
 class CharacterVoiceProfiler:
@@ -115,7 +117,7 @@ class CharacterVoiceProfiler:
             return
 
         try:
-            data = self.db.read_anchor("character_voice_profiles")
+            data = self.db.load_anchor("character_voice_profiles")
             if data and isinstance(data, dict):
                 for name, profile_data in data.items():
                     self.profiles[name] = VoiceProfile.from_dict(profile_data)
@@ -130,7 +132,7 @@ class CharacterVoiceProfiler:
 
         try:
             data = {name: p.to_dict() for name, p in self.profiles.items()}
-            self.db.write_anchor("character_voice_profiles", data)
+            self.db.save_anchor("character_voice_profiles", data)
         except Exception as e:
             print(f"      [VoiceProfiler] 저장 실패: {e}")
 

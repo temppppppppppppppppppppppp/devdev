@@ -197,16 +197,66 @@ class HUDKeys:
     WUXIA_PROTAGONIST = 'Protagonist'
     WUXIA_HUD_ROOT = 'MartialHUD'
     WUXIA_ACTUAL_TRUTH = 'actual_truth'
-    
+
     # 헌터
     HUNTER_PROTAGONIST = 'Protagonist'
     HUNTER_HUD_ROOT = 'HunterHUD'
     HUNTER_ACTUAL_TRUTH = 'actual_truth'
-    
+
     # 투자
     INVESTMENT_PROTAGONIST = 'Protagonist'
     INVESTMENT_HUD_ROOT = 'FinanceHUD'
     INVESTMENT_ACTUAL_TRUTH = 'actual_truth'
+
+    # 장르 → HUD root 매핑
+    _GENRE_HUD_MAP = {
+        'wuxia': 'MartialHUD',
+        'hunter': 'HunterHUD',
+        'investment': 'FinanceHUD',
+        'fantasy': 'MartialHUD',
+    }
+
+    @classmethod
+    def get_hud_root(cls, genre: str = '') -> str:
+        """장르에 맞는 HUD root 키 반환. 알 수 없으면 MartialHUD 폴백."""
+        return cls._GENRE_HUD_MAP.get(genre, 'MartialHUD')
+
+    @classmethod
+    def get_protagonist_name(cls, bible_root: dict, genre: str = '') -> str:
+        """Bible에서 장르별 HUD를 탐색하여 주인공 이름 추출.
+
+        탐색 순서:
+        1. 장르별 HUD (FinanceHUD/HunterHUD/MartialHUD)
+        2. 모든 HUD 후보 순회
+        3. AssetLibrary.KeyNPCs에서 role='주인공'
+        4. KeyNPCs[0]
+        5. '주인공' 기본값
+        """
+        # 1순위: 장르별 HUD
+        hud_keys = [cls.get_hud_root(genre)] if genre else []
+        # 2순위: 모든 HUD 후보 순회
+        for hk in ['MartialHUD', 'FinanceHUD', 'HunterHUD']:
+            if hk not in hud_keys:
+                hud_keys.append(hk)
+
+        for hud_key in hud_keys:
+            hud = bible_root.get(hud_key, {})
+            name = hud.get('Protagonist', {}).get('actual_truth', {}).get('name')
+            if name:
+                return name
+
+        # 3순위: AssetLibrary.KeyNPCs
+        assets = bible_root.get('AssetLibrary', {})
+        key_npcs = assets.get('KeyNPCs', []) or assets.get('Key_NPCs', [])
+        for npc in key_npcs:
+            if isinstance(npc, dict) and ('주인공' in npc.get('role', '') or '주인' in npc.get('role', '')):
+                if npc.get('name'):
+                    return npc['name']
+        # 4순위: 첫 번째 NPC
+        if key_npcs and isinstance(key_npcs[0], dict) and key_npcs[0].get('name'):
+            return key_npcs[0]['name']
+
+        return '주인공'
 
 
 class NPCHUDKeys:

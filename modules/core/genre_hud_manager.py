@@ -288,3 +288,86 @@ def create_hud_manager(genre_type, context):
         return FinanceHUDManager(context)
     else:
         raise ValueError(f"Unknown genre type: {genre_type}")
+
+
+def validate_hud_compatibility(hud_manager, required_attrs: list = None) -> dict:
+    """
+    [V61.3] HUD 호환성 검증 - 필수 속성 존재 여부 체크
+
+    Args:
+        hud_manager: GenreHUDManager 인스턴스
+        required_attrs: 체크할 속성 목록 (기본: Stage 4에서 사용하는 속성들)
+
+    Returns:
+        {
+            "valid": bool,
+            "genre": str,
+            "missing": [str],  # 누락된 속성
+            "warnings": [str]
+        }
+    """
+    if required_attrs is None:
+        # Stage 4에서 사용하는 주요 속성들
+        required_attrs = [
+            ("pro_root", "property"),
+            ("pro_data", "property"),
+            ("get_v20_hud_report", "method"),
+            ("get_critical_keys", "method"),
+            ("update_physical_status", "method"),
+        ]
+
+    # 선택적 속성 (무협에만 있음)
+    optional_attrs = [
+        ("inventory", "property"),
+        ("techniques", "property"),
+        ("snapshot", "method"),
+        ("bulk_update", "method"),
+    ]
+
+    result = {
+        "valid": True,
+        "genre": type(hud_manager).__name__,
+        "missing": [],
+        "optional_missing": [],
+        "warnings": []
+    }
+
+    # 필수 속성 체크
+    for attr_name, attr_type in required_attrs:
+        if not hasattr(hud_manager, attr_name):
+            result["missing"].append(f"{attr_name} ({attr_type})")
+            result["valid"] = False
+
+    # 선택적 속성 체크 (경고만)
+    for attr_name, attr_type in optional_attrs:
+        if not hasattr(hud_manager, attr_name):
+            result["optional_missing"].append(f"{attr_name} ({attr_type})")
+            result["warnings"].append(
+                f"'{attr_name}' 속성 없음 - 무협 전용 기능, 다른 장르에서는 hasattr 체크 필요"
+            )
+
+    return result
+
+
+def log_hud_compatibility_report(hud_manager, logger=None):
+    """
+    [V61.3] HUD 호환성 보고서 출력
+
+    Args:
+        hud_manager: GenreHUDManager 인스턴스
+        logger: 로거 함수 (기본: print)
+    """
+    if logger is None:
+        logger = print
+
+    report = validate_hud_compatibility(hud_manager)
+
+    logger(f"   🔍 [V61.3] HUD 호환성 체크: {report['genre']}")
+
+    if report["valid"]:
+        logger(f"      ✅ 필수 속성 모두 존재")
+    else:
+        logger(f"      ❌ 누락된 필수 속성: {', '.join(report['missing'])}")
+
+    if report["optional_missing"]:
+        logger(f"      ⚠️ 선택적 속성 누락 (정상): {', '.join(report['optional_missing'])}")

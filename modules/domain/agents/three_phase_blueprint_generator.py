@@ -63,7 +63,8 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         entity_registry: Optional[Dict] = None,  # [V61] Entity 일관성 검증용
         protagonist_name: str = "주인공",  # [V61] 주인공 이름 (필수!)
         protagonist_config: Optional[Dict] = None,  # [V60.90] 주인공 설정 {world_origin, incarnation_type}
-        state_tracker=None  # [V60.96] StateTracker (죽은 NPC 검증용)
+        state_tracker=None,  # [V60.96] StateTracker (죽은 NPC 검증용)
+        db=None  # [V61.5] DBManager (캐시 연속성 검사용)
     ) -> Tuple[Optional[Dict], Dict]:
         """
         3단계 Blueprint 생성 (ToT 방식: 3전략 × 3시도 = 최대 9회 생성)
@@ -182,6 +183,22 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             # PHASE 3: VALIDATE - Director 비교 선택 + 최종 판정
             # ═══════════════════════════════════════════════════════════════
             print(f"      🔍 [Phase 3] Director 비교 선택 + 판정 중...")
+
+            # [V61.5] 캐시 기반 연속성 검사 (ep_num 바뀔 때만 캐시 갱신)
+            continuity_feedback = ""
+            if director and db and ep_num > 1:
+                continuity_result = director.check_blueprint_continuity_with_cache(
+                    new_blueprint=best_blueprint,
+                    ep_num=ep_num,
+                    db=db,
+                    limit=10
+                )
+                if continuity_result.get("decision") == "REJECT":
+                    # 연속성 REJECT면 피드백에 추가하고 재시도
+                    continuity_feedback = continuity_result.get("feedback", "")
+                    feedback += f"\n[연속성 오류]\n{continuity_feedback}"
+                    print(f"      ⚠️ [V61.5] 연속성 검사 REJECT")
+                    continue  # 다음 재시도로
 
             # [V60.85] 전체 후보를 Director에게 전달하여 비교 선택
             verdict, validation_result = self.validator.validate(

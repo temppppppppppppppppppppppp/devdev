@@ -210,7 +210,8 @@ class UnifiedBlueprintValidator:
                 total_eps=total_eps,
                 target_len=self.min_chars,  # Blueprint용 짧은 기준
                 retry_count=0,
-                entity_registry=entity_registry  # [V61] Entity 일관성 검증
+                entity_registry=entity_registry,  # [V61] Entity 일관성 검증
+                state_tracker=state_tracker  # [V61.5] 죽은 NPC 검증 (BUG FIX: 누락되어 있었음)
             )
 
             # Director 결과 처리

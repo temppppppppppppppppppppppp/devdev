@@ -24,7 +24,7 @@ import json
 import time
 from enum import Enum
 from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field, asdict, fields
 from datetime import datetime
 
 
@@ -91,8 +91,9 @@ class Seed:
 
     @classmethod
     def from_dict(cls, data: Dict) -> 'Seed':
-        """딕셔너리에서 생성"""
-        return cls(**data)
+        """딕셔너리에서 생성 [V61.5] 미지 키 무시"""
+        valid_keys = {f.name for f in fields(cls)}
+        return cls(**{k: v for k, v in data.items() if k in valid_keys})
 
 
 class SeedTracker:
@@ -175,7 +176,7 @@ class SeedTracker:
             return
 
         try:
-            data = self.db.read_anchor("seed_tracker")
+            data = self.db.load_anchor("seed_tracker")
             if data:
                 self._seed_counter = data.get("counter", 0)
                 for seed_data in data.get("seeds", []):
@@ -196,7 +197,7 @@ class SeedTracker:
                 "seeds": [s.to_dict() for s in self.seeds.values()],
                 "updated_at": datetime.now().isoformat()
             }
-            self.db.write_anchor("seed_tracker", data)
+            self.db.save_anchor("seed_tracker", data)
         except Exception as e:
             print(f"      [SeedTracker] 저장 실패: {e}")
 
