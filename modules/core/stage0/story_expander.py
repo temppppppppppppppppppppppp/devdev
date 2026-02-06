@@ -106,7 +106,7 @@ class StoryExpander:
     "start_era": "시작 시점",
     "story_span": "스토리 기간"
   }},
-  "suggested_genre": "investment/wuxia/hunter/fantasy",
+  "suggested_genre": "investment/wuxia/hunter/fantasy/composer/cooking/alt_history/actor/sports/medical",
   "themes": ["테마1", "테마2"],
   "tone": "작품 톤"
 }}

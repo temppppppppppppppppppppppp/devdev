@@ -27,6 +27,37 @@
       "apply_level": "none",
       "description": "현대 배경 - 원시인 개념 미적용",
       "blocked_categories": []
+    },
+    "composer": {
+      "apply_level": "none",
+      "description": "현대 한국 배경 - 원시인 개념 미적용",
+      "blocked_categories": []
+    },
+    "cooking": {
+      "apply_level": "none",
+      "description": "현대 한국 배경 - 원시인 개념 미적용",
+      "blocked_categories": []
+    },
+    "alt_history": {
+      "apply_level": "moderate",
+      "description": "조선 시대 배경 - IT/전자기기/근현대 시설 금지, 기초 과학은 허용",
+      "blocked_categories": ["technology_it", "earth_brands", "earth_only"],
+      "allowed_categories": ["food_modern", "game_system"]
+    },
+    "actor": {
+      "apply_level": "none",
+      "description": "현대 한국 배경 - 원시인 개념 미적용",
+      "blocked_categories": []
+    },
+    "sports": {
+      "apply_level": "none",
+      "description": "현대 한국 배경 - 원시인 개념 미적용",
+      "blocked_categories": []
+    },
+    "medical": {
+      "apply_level": "none",
+      "description": "현대 한국 배경 - 원시인 개념 미적용",
+      "blocked_categories": []
     }
   },
 

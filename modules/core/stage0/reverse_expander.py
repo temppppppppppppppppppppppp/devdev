@@ -174,6 +174,12 @@ class ReverseExpander:
 - hunter: 헌터물, 던전물, 각성물
 - fantasy: 판타지, 마법, 이세계
 - romance: 로맨스, 연애
+- composer: 작곡가물, 음악, 프로듀싱
+- cooking: 요리물, 셰프, 미식
+- alt_history: 대체역사, 조선, 궁중
+- actor: 배우물, 연기, 연예계
+- sports: 스포츠물, 선수, 경기, 팀
+- medical: 의학물, 의사, 수술, 병원
 
 ## 출력 (JSON)
 ```json

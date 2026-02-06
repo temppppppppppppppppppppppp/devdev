@@ -1042,6 +1042,10 @@ class StateTracker:
         'hunter': ('⚔️', '스킬 습득'),
         'investment': ('📈', '핵심 지식 등록'),
         'fantasy': ('✨', '마법 습득'),
+        'cooking': ('👨‍🍳', '조리법 습득'),
+        'actor': ('🎬', '연기 습득'),
+        'sports': ('🏅', '기술 습득'),
+        'medical': ('🔬', '의술 습득'),
     }
 
     def register_protagonist_skill(self, skill_name: str, arc_no: int):

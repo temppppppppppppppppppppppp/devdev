@@ -501,7 +501,7 @@ class ChiefWriter(BaseAgent):
         incarnation_type = protagonist_config.get('incarnation_type', '회귀자')
 
         # [V60.96] 장르 코드 변환 (장르별 금지어 적용)
-        genre_code_map = {"무협": "wuxia", "판타지": "fantasy", "헌터물": "hunter", "투자물": "investment"}
+        genre_code_map = {"무협": "wuxia", "판타지": "fantasy", "헌터물": "hunter", "투자물": "investment", "배우물": "actor", "스포츠": "sports", "의학": "medical", "요리": "cooking", "작곡가": "composer", "대체역사": "alt_history"}
         genre_code = genre_code_map.get(genre_name, bible_root.get('_genre', 'wuxia'))
 
         # [V60.96] 원시인 모드 제약 섹션 (장르별 JSON 기반 PrimitiveGuard)
@@ -2186,7 +2186,19 @@ class ChiefWriter(BaseAgent):
             'crisis': ['긴장', '불안', '공포', '절망', '결의'],
             'victory': ['긴장', '불안', '결의', '통쾌', '감동'],
             'betrayal': ['평온', '불안', '분노', '결의'],
-        }
+        },
+        'sports': {
+            'match': ['긴장', '불안', '결의', '분노', '통쾌'],
+            'training': ['평온', '고통', '절망', '결의', '희열'],
+            'rivalry': ['긴장', '분노', '결의', '긴장', '통쾌'],
+            'injury': ['충격', '절망', '슬픔', '결의', '희열'],
+        },
+        'medical': {
+            'surgery': ['긴장', '불안', '결의', '공포', '안도'],
+            'diagnosis': ['평온', '긴장', '불안', '결의'],
+            'crisis': ['긴장', '공포', '절망', '결의', '안도'],
+            'growth': ['평온', '불안', '결의', '희열'],
+        },
     }
 
     def get_emotion_skeleton_lazy(self, blueprint: dict, genre: str = 'wuxia') -> dict:
@@ -2282,7 +2294,19 @@ class ChiefWriter(BaseAgent):
                 'trade': ['매수', '매도', '거래', '투자'],
                 'crisis': ['폭락', '위기', '손실', '공황'],
                 'victory': ['수익', '성공', '대박', '승리'],
-            }
+            },
+            'sports': {
+                'match': ['경기', '시합', '대결', '승부', '결승'],
+                'training': ['훈련', '연습', '트레이닝', '체력'],
+                'rivalry': ['라이벌', '경쟁', '도전', '설욕'],
+                'injury': ['부상', '재활', '회복', '수술'],
+            },
+            'medical': {
+                'surgery': ['수술', '집도', '절개', '봉합', '시술'],
+                'diagnosis': ['진단', '검사', '판독', '소견'],
+                'crisis': ['응급', '위급', '코드블루', '심정지'],
+                'growth': ['연수', '수련', '연구', '논문'],
+            },
         }
 
         genre_keywords = type_keywords.get(genre, type_keywords['wuxia'])

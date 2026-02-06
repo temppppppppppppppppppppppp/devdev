@@ -12,18 +12,30 @@ class GenreTypes:
     WUXIA = 'wuxia'
     HUNTER = 'hunter'
     INVESTMENT = 'investment'
-    
+    COMPOSER = 'composer'
+    COOKING = 'cooking'
+    ALT_HISTORY = 'alt_history'
+    ACTOR = 'actor'
+    SPORTS = 'sports'
+    MEDICAL = 'medical'
+
     @classmethod
     def all(cls):
-        return [cls.WUXIA, cls.HUNTER, cls.INVESTMENT]
-    
+        return [cls.WUXIA, cls.HUNTER, cls.INVESTMENT, cls.COMPOSER, cls.COOKING, cls.ALT_HISTORY, cls.ACTOR, cls.SPORTS, cls.MEDICAL]
+
     @classmethod
     def get_name(cls, genre_type):
         """장르 타입 → 한글 이름"""
         return {
             cls.WUXIA: '무협',
             cls.HUNTER: '헌터',
-            cls.INVESTMENT: '투자'
+            cls.INVESTMENT: '투자',
+            cls.COMPOSER: '작곡가',
+            cls.COOKING: '요리',
+            cls.ALT_HISTORY: '대체역사',
+            cls.ACTOR: '배우물',
+            cls.SPORTS: '스포츠',
+            cls.MEDICAL: '의학',
         }.get(genre_type, '알 수 없음')
 
 
@@ -208,11 +220,47 @@ class HUDKeys:
     INVESTMENT_HUD_ROOT = 'FinanceHUD'
     INVESTMENT_ACTUAL_TRUTH = 'actual_truth'
 
+    # 작곡가
+    COMPOSER_PROTAGONIST = 'Protagonist'
+    COMPOSER_HUD_ROOT = 'ComposerHUD'
+    COMPOSER_ACTUAL_TRUTH = 'actual_truth'
+
+    # 요리
+    COOKING_PROTAGONIST = 'Protagonist'
+    COOKING_HUD_ROOT = 'CookingHUD'
+    COOKING_ACTUAL_TRUTH = 'actual_truth'
+
+    # 대체역사
+    ALT_HISTORY_PROTAGONIST = 'Protagonist'
+    ALT_HISTORY_HUD_ROOT = 'JoseonHUD'
+    ALT_HISTORY_ACTUAL_TRUTH = 'actual_truth'
+
+    # 배우물
+    ACTOR_PROTAGONIST = 'Protagonist'
+    ACTOR_HUD_ROOT = 'ActorHUD'
+    ACTOR_ACTUAL_TRUTH = 'actual_truth'
+
+    # 스포츠
+    SPORTS_PROTAGONIST = 'Protagonist'
+    SPORTS_HUD_ROOT = 'SportsHUD'
+    SPORTS_ACTUAL_TRUTH = 'actual_truth'
+
+    # 의학
+    MEDICAL_PROTAGONIST = 'Protagonist'
+    MEDICAL_HUD_ROOT = 'MedicalHUD'
+    MEDICAL_ACTUAL_TRUTH = 'actual_truth'
+
     # 장르 → HUD root 매핑
     _GENRE_HUD_MAP = {
         'wuxia': 'MartialHUD',
         'hunter': 'HunterHUD',
         'investment': 'FinanceHUD',
+        'composer': 'ComposerHUD',
+        'cooking': 'CookingHUD',
+        'alt_history': 'JoseonHUD',
+        'actor': 'ActorHUD',
+        'sports': 'SportsHUD',
+        'medical': 'MedicalHUD',
         'fantasy': 'MartialHUD',
     }
 
@@ -221,29 +269,62 @@ class HUDKeys:
         """장르에 맞는 HUD root 키 반환. 알 수 없으면 MartialHUD 폴백."""
         return cls._GENRE_HUD_MAP.get(genre, 'MartialHUD')
 
+    # [V61.10] 장르 역할명 블랙리스트 - HUD name 기본값 오염 방지
+    _ROLE_NAME_BLACKLIST = {
+        '투자자', '헌터', '무협인', '요리사', '작곡가', '배우', '주인공',
+        '사냥꾼', '검사', '궁사', '마법사', '기사', '용사', '모험가',
+        '조선인', '선비', '관리', '왕', '임금', '각성자',
+        '선수', '운동선수', '의사', '닥터',
+    }
+
     @classmethod
     def get_protagonist_name(cls, bible_root: dict, genre: str = '') -> str:
-        """Bible에서 장르별 HUD를 탐색하여 주인공 이름 추출.
+        """Bible에서 주인공 이름 추출. CoreIdentity와 교차검증.
+
+        [V61.10] 역할명 오염 방지: HUD name이 장르 역할명(투자자, 헌터 등)이면
+        CoreIdentity.protagonist를 우선 사용.
 
         탐색 순서:
+        0. CoreIdentity.protagonist (권위적 소스)
         1. 장르별 HUD (FinanceHUD/HunterHUD/MartialHUD)
         2. 모든 HUD 후보 순회
         3. AssetLibrary.KeyNPCs에서 role='주인공'
         4. KeyNPCs[0]
         5. '주인공' 기본값
         """
+        # [V61.10] 0순위: CoreIdentity.protagonist (가장 권위적)
+        core_name = None
+        try:
+            core_name = bible_root.get('ProjectData', {}).get('CoreIdentity', {}).get('protagonist')
+        except Exception:
+            pass
+
         # 1순위: 장르별 HUD
         hud_keys = [cls.get_hud_root(genre)] if genre else []
         # 2순위: 모든 HUD 후보 순회
-        for hk in ['MartialHUD', 'FinanceHUD', 'HunterHUD']:
+        for hk in ['MartialHUD', 'FinanceHUD', 'HunterHUD', 'ComposerHUD', 'CookingHUD', 'JoseonHUD', 'ActorHUD', 'SportsHUD', 'MedicalHUD']:
             if hk not in hud_keys:
                 hud_keys.append(hk)
 
+        hud_name = None
         for hud_key in hud_keys:
             hud = bible_root.get(hud_key, {})
             name = hud.get('Protagonist', {}).get('actual_truth', {}).get('name')
             if name:
-                return name
+                hud_name = name
+                break
+
+        # [V61.10] 교차검증: HUD name이 역할명이면 CoreIdentity 우선
+        if hud_name and hud_name in cls._ROLE_NAME_BLACKLIST:
+            if core_name and core_name not in cls._ROLE_NAME_BLACKLIST:
+                print(f"      ⚠️ [V61.10] HUD name '{hud_name}'은 역할명 → CoreIdentity '{core_name}' 사용")
+                return core_name
+        # HUD name이 정상이면 그대로 사용
+        if hud_name and hud_name not in cls._ROLE_NAME_BLACKLIST:
+            return hud_name
+        # CoreIdentity가 있으면 사용
+        if core_name and core_name not in cls._ROLE_NAME_BLACKLIST:
+            return core_name
 
         # 3순위: AssetLibrary.KeyNPCs
         assets = bible_root.get('AssetLibrary', {})
@@ -264,14 +345,26 @@ class NPCHUDKeys:
     WUXIA = 'NPC_Martial_HUD'
     HUNTER = 'NPC_Hunter_Status'
     INVESTMENT = 'NPC_Business_Profile'
-    
+    COMPOSER = 'NPC_Music_Profile'
+    COOKING = 'NPC_Cooking_Profile'
+    ALT_HISTORY = 'NPC_Joseon_Status'
+    ACTOR = 'NPC_Actor_Profile'
+    SPORTS = 'NPC_Sports_Profile'
+    MEDICAL = 'NPC_Medical_Profile'
+
     @classmethod
     def get_key(cls, genre_type):
         """장르 타입에 따른 NPC HUD 키 반환"""
         return {
             GenreTypes.WUXIA: cls.WUXIA,
             GenreTypes.HUNTER: cls.HUNTER,
-            GenreTypes.INVESTMENT: cls.INVESTMENT
+            GenreTypes.INVESTMENT: cls.INVESTMENT,
+            GenreTypes.COMPOSER: cls.COMPOSER,
+            GenreTypes.COOKING: cls.COOKING,
+            GenreTypes.ALT_HISTORY: cls.ALT_HISTORY,
+            GenreTypes.ACTOR: cls.ACTOR,
+            GenreTypes.SPORTS: cls.SPORTS,
+            GenreTypes.MEDICAL: cls.MEDICAL,
         }.get(genre_type, cls.WUXIA)
 
 
