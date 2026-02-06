@@ -8,6 +8,7 @@ DAG(Directed Acyclic Graph) 형태로 타임라인을 구성하여 검증합니�
 
 import json
 import re
+import copy
 from typing import Dict, List, Optional, Tuple, Set, Any
 from dataclasses import dataclass, field
 from collections import defaultdict
@@ -146,6 +147,68 @@ class StateTracker:
     def get_active_tracking_fields(self) -> List[str]:
         """현재 추적 중인 필드 목록"""
         return list(self.tracking_fields.keys())
+
+    def check_and_expand_genre(self, content: str) -> Optional[str]:
+        """
+        [V61.3] 콘텐츠에서 새 장르 요소 감지 및 자동 프리셋 확장
+
+        Args:
+            content: Arc tactical_doc 또는 원고 텍스트
+
+        Returns:
+            새로 활성화된 장르명 또는 None
+        """
+        if not self.preset_registry or not PRESET_AVAILABLE:
+            return None
+
+        # 새 장르 감지
+        new_genre = self.preset_registry.detect_new_genre(content)
+
+        if new_genre:
+            # 프리셋 활성화
+            activated = self.preset_registry.activate_preset(new_genre)
+            if activated:
+                # 추적 필드 갱신
+                self.refresh_tracking_fields()
+                print(f"      🎭 [V61.3] 새 장르 감지: {new_genre} → 프리셋 활성화, 추적 필드 확장")
+                return new_genre
+
+        return None
+
+    def refresh_tracking_fields(self):
+        """
+        [V61.3] 프리셋 변경 후 추적 필드 갱신
+
+        기존 필드는 유지하면서 새 필드만 추가
+        """
+        if not self.preset_registry or not PRESET_AVAILABLE:
+            return
+
+        # 새 필드 가져오기
+        active_fields = self.preset_registry.get_active_fields()
+
+        # 기존 필드 유지하면서 새 필드 추가
+        for name, field_def in active_fields.items():
+            if name not in self.tracking_fields:
+                self.tracking_fields[name] = field_def.default
+
+        # NPC 필드도 갱신 [V61.5] .default 추가 + deepcopy로 mutable 오염 방지
+        npc_fields = self.preset_registry.get_npc_fields()
+        for name, field_def in npc_fields.items():
+            if name not in self.npc_tracking_fields:
+                self.npc_tracking_fields[name] = copy.deepcopy(field_def.default)
+
+        # 기존 NPC 레지스트리의 엔트리들에도 새 필드 추가
+        for npc_name, npc_data in self.npc_registry.items():
+            for name, field_def in npc_fields.items():
+                if name not in npc_data:
+                    npc_data[name] = copy.deepcopy(field_def.default)
+
+    def get_active_presets(self) -> List[str]:
+        """[V61.3] 현재 활성화된 프리셋 목록"""
+        if self.preset_registry and PRESET_AVAILABLE:
+            return list(self.preset_registry.active_presets)
+        return ["common"]
 
     def create_episode_state(self, ep_num: int, **kwargs) -> EpisodeState:
         """[V60.95] 프리셋 기반 EpisodeState 생성"""

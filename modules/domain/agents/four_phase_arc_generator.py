@@ -99,7 +99,7 @@ Arc {arc_no}의 적절한 화수(ep_count)를 3~7 중에서 결정하라.
 {{"ep_count": 3~7 중 정수, "reasoning": "한 문장 이유"}}"""
 
         try:
-            response = self.ask(prompt, temperature=0.3)
+            response = self.ask(prompt, temperature=0.3, thinking_level="low")
             result = self._extract_json_robust(response)
 
             ep_count = result.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT)
@@ -241,7 +241,8 @@ Arc {arc_no}의 적절한 화수(ep_count)를 3~7 중에서 결정하라.
                 protagonist_name=protagonist_name,
                 protagonist_config=protagonist_config,  # [V60.88]
                 entity_registry=entity_registry,  # [V60.92] Entity Registry
-                ep_count=ep_count  # [V61.1] 가변 페이싱
+                ep_count=ep_count,  # [V61.1] 가변 페이싱
+                retry=retry  # [V61.5] 재시도 시 thinking 다운그레이드
             )
 
             if not best_arc:
@@ -334,7 +335,7 @@ Arc {arc_no}의 적절한 화수(ep_count)를 3~7 중에서 결정하라.
                 import re
                 loss = int(re.search(r'(\d+)', str(loss_str)).group(1))
                 final_energy = max(0, 100 - loss)
-            except:
+            except Exception:
                 final_energy = Stage2Limits.INTERNAL_ENERGY_FALLBACK
 
         final_injuries = arc_end.get("injuries") or shadow.get("expected_injuries", "없음")

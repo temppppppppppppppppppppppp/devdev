@@ -58,6 +58,55 @@ class BaseAgent:
     # [V60.99] API Rate Limit 예방 딜레이 (초)
     API_DELAY = 0.3  # 기본 0.3초, 문제 시 0.5초로 조정
 
+    # [V61.5] API 키 순환 (429 방어)
+    _api_keys = []
+    _current_key_idx = 0
+    _keys_initialized = False
+    _key_rotation_pending = False
+    _last_rotation_time = 0
+    _MIN_ROTATION_INTERVAL = 10  # 최소 순환 간격 (초)
+
+    @classmethod
+    def _init_api_keys(cls):
+        """환경변수에서 모든 API 키 로드 (GOOGLE_API_KEY, _2, _3, ...)"""
+        if cls._keys_initialized:
+            return
+        cls._keys_initialized = True
+        keys = []
+        primary = os.getenv("GOOGLE_API_KEY")
+        if primary:
+            keys.append(primary)
+        for i in range(2, 10):
+            k = os.getenv(f"GOOGLE_API_KEY_{i}")
+            if k:
+                keys.append(k)
+        cls._api_keys = keys
+        if len(keys) > 1:
+            print(f"      🔑 [V61.5] API 키 {len(keys)}개 로드 완료 (자동 순환 활성화)")
+
+    @classmethod
+    def _try_rotate_key(cls):
+        """다음 API 키로 순환. 새 Client 반환 또는 None."""
+        cls._init_api_keys()
+        if len(cls._api_keys) <= 1:
+            cls._key_rotation_pending = False
+            return None
+
+        # 너무 빠른 순환 방지
+        if time.time() - cls._last_rotation_time < cls._MIN_ROTATION_INTERVAL:
+            cls._key_rotation_pending = False
+            return None
+
+        old_idx = cls._current_key_idx
+        cls._current_key_idx = (cls._current_key_idx + 1) % len(cls._api_keys)
+        cls._last_rotation_time = time.time()
+        cls._quota_exhausted_models.clear()
+        cls._key_rotation_pending = False
+
+        new_client = genai.Client(api_key=cls._api_keys[cls._current_key_idx])
+        print(f"      🔑 [V61.5] API 키 순환: Key {old_idx + 1} → Key {cls._current_key_idx + 1} (총 {len(cls._api_keys)}개)")
+        return new_client
+
     # [V61.2] 네트워크 복원력 설정 (야간 무인 운영 대응)
     API_TIMEOUT = 90              # API 호출 타임아웃 (초)
     NETWORK_RETRY_DELAY_BASE = 10 # 기본 대기 시간 (초)
@@ -108,6 +157,12 @@ class BaseAgent:
         full_response = ""
         current_prompt = base_prompt
 
+        # [V61.5] API 키 순환 체크 (이전 작업에서 429 발생 시)
+        if BaseAgent._key_rotation_pending:
+            new_client = self._try_rotate_key()
+            if new_client:
+                self.client = new_client
+
         # [V60.66] 429 폴백용 모델 스택 (primary → fallbacks)
         model_stack = [self.primary_model]
         if self.backup_model and self.backup_model != self.primary_model:
@@ -150,9 +205,8 @@ class BaseAgent:
         if response_schema:
             config_params["response_schema"] = response_schema
 
-        # [V60.27] Gemini 3 Thinking Level 지원 (문자열 → 정수 변환)
-        # [V60.66] 현재 모델 기준으로 thinking 지원 여부 체크
-        if thinking_level and "gemini-3" in current_model:
+        # [V61.6] Thinking Budget 지원 (모든 모델 공통 - gemini-3, 2.5-pro, 2.5-flash)
+        if thinking_level:
             # 문자열이면 정수로 변환, 이미 정수면 그대로 사용
             if isinstance(thinking_level, str):
                 budget = self.THINKING_BUDGET_MAP.get(thinking_level.lower(), 8192)
@@ -276,6 +330,9 @@ class BaseAgent:
                             cache_duration = BaseAgent._QUOTA_CACHE_DURATION if is_quota_exhausted else 30  # Rate Limit은 30초만
                             BaseAgent._quota_exhausted_models[old_model] = time.time() + cache_duration
 
+                            # [V61.5] 다음 작업에서 키 순환 예약
+                            BaseAgent._key_rotation_pending = True
+
                             error_type = "Quota 소진" if is_quota_exhausted else "Rate Limit 초과"
                             print(f"      🔄 [V60.97 Fallback] {old_model} {error_type} → {current_model}로 전환")
 
@@ -286,7 +343,7 @@ class BaseAgent:
                                 "top_p": 0.95,
                                 "response_mime_type": "application/json"
                             }
-                            if thinking_level and "gemini-3" in current_model:
+                            if thinking_level:
                                 if isinstance(thinking_level, str):
                                     budget = self.THINKING_BUDGET_MAP.get(thinking_level.lower(), 8192)
                                 else:
@@ -701,7 +758,7 @@ class BaseAgent:
                         try:
                             scene_data = json.loads(scene_match.group(1))
                             return {"scene_breakdown": scene_data, "repaired": True}
-                        except:
+                        except Exception:
                             return {"scene_breakdown": {"scene_1": scene_match.group(1)}, "repaired": True}
 
                     # [V47 Fix] integrated_scenario 강제 추출
@@ -787,3 +844,231 @@ class BaseAgent:
         except Exception as e:
             print(f"🚨 [JSON Parser] CRITICAL_FAILURE: {str(e)[:100]}")
             return {"content": json_str, "error": "CRITICAL_FAILURE"}
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # [V61.5] Context Caching 유틸리티 (Blueprint/Manuscript 연속성 검증용)
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    # 클래스 변수: 캐시 저장소
+    _context_caches = {}  # {cache_key: {"name": str, "created_at": float, "content_hash": str}}
+
+    def _get_or_create_context_cache(
+        self,
+        cache_type: str,
+        content: str,
+        ttl_seconds: int = 1800,
+        project_name: str = ""
+    ) -> dict:
+        """
+        [V61.5] 컨텍스트 캐시 생성 또는 기존 캐시 반환
+
+        Gemini Context Caching API를 활용하여 대용량 컨텍스트를 캐싱한다.
+        TTL 내에 동일 content_hash면 기존 캐시 재사용.
+
+        Args:
+            cache_type: 캐시 타입 ("blueprint", "manuscript")
+            content: 캐싱할 컨텍스트 텍스트
+            ttl_seconds: 캐시 TTL (기본 30분)
+            project_name: 프로젝트 이름 (캐시 식별용)
+
+        Returns:
+            {
+                "cache_name": str,  # Gemini 캐시 이름 (None이면 캐싱 실패)
+                "cached": bool,     # 기존 캐시 재사용 여부
+                "content_hash": str # 콘텐츠 해시
+            }
+        """
+        import hashlib
+
+        # 콘텐츠 해시 생성
+        content_hash = hashlib.md5(content.encode('utf-8')).hexdigest()[:16]
+        cache_key = f"{cache_type}_{project_name}_{content_hash}"
+
+        current_time = time.time()
+
+        # 기존 캐시 확인
+        if cache_key in self._context_caches:
+            cached_info = self._context_caches[cache_key]
+            if current_time - cached_info["created_at"] < ttl_seconds:
+                return {
+                    "cache_name": cached_info.get("name"),
+                    "cached": True,
+                    "content_hash": content_hash
+                }
+            else:
+                # 만료된 캐시 삭제
+                del self._context_caches[cache_key]
+
+        # Gemini Context Caching API 호출 시도
+        try:
+            # 콘텐츠가 너무 짧으면 캐싱 스킵 (32k 토큰 이하)
+            if len(content) < 50000:
+                return {
+                    "cache_name": None,
+                    "cached": False,
+                    "content_hash": content_hash,
+                    "reason": "content_too_short"
+                }
+
+            cache = self.client.caches.create(
+                model=self.primary_model,
+                contents=[{"role": "user", "parts": [{"text": content}]}],
+                ttl=f"{ttl_seconds}s",
+                display_name=f"{cache_type}_cache_{project_name}"
+            )
+
+            # 캐시 정보 저장
+            self._context_caches[cache_key] = {
+                "name": cache.name,
+                "created_at": current_time,
+                "content_hash": content_hash
+            }
+
+            print(f"      📦 [V61.5] 컨텍스트 캐시 생성: {cache_type} ({len(content)}자)")
+
+            return {
+                "cache_name": cache.name,
+                "cached": False,
+                "content_hash": content_hash
+            }
+
+        except Exception as e:
+            # 캐싱 실패해도 진행 (폴백: 캐싱 없이 직접 사용)
+            print(f"      ⚠️ [V61.5] 컨텍스트 캐싱 실패 (계속 진행): {str(e)[:50]}")
+            return {
+                "cache_name": None,
+                "cached": False,
+                "content_hash": content_hash,
+                "error": str(e)[:100]
+            }
+
+    def _ask_with_cached_context(
+        self,
+        cache_name: str,
+        prompt: str,
+        temperature: float = 0.3,
+        thinking_level=None,
+        full_prompt_fallback: str = ""
+    ) -> str:
+        """
+        [V61.5] 캐시된 컨텍스트를 사용하여 LLM 질의
+        [V61.7] thinking_level 지원, max_output_tokens 보정, 프롬프트 래핑 추가
+
+        Args:
+            cache_name: 캐시 이름 (from _get_or_create_context_cache)
+            prompt: 추가 프롬프트 (전략별 부분만)
+            temperature: 생성 온도
+            thinking_level: Gemini thinking budget ("minimal"/"low"/"medium"/"high")
+            full_prompt_fallback: 캐시 실패 시 ask()에 전달할 전체 프롬프트
+
+        Returns:
+            LLM 응답 텍스트
+        """
+        if not cache_name:
+            fallback_prompt = full_prompt_fallback if full_prompt_fallback else prompt
+            return self.ask(fallback_prompt, temperature=temperature, thinking_level=thinking_level)
+
+        try:
+            # [V61.7] 전략 프롬프트를 ask()와 동일한 형식으로 래핑
+            directives = self._escape_braces(getattr(self.context, 'author_directives', ""))
+            wrapped_prompt = (
+                f"### [AUTHOR'S ABSOLUTE DIRECTIVES]\n{directives}\n\n"
+                f"### [TASK]\n{prompt}\n\n"
+                f"### [FORMAT]\nRespond ONLY in valid JSON format."
+            )
+
+            config_params = {
+                "temperature": temperature,
+                "max_output_tokens": 8192,
+                "top_p": 0.95,
+                "response_mime_type": "application/json",
+                "cached_content": cache_name
+            }
+
+            # [V61.7] Thinking Budget 지원
+            if thinking_level:
+                if isinstance(thinking_level, str):
+                    budget = self.THINKING_BUDGET_MAP.get(thinking_level.lower(), 8192)
+                else:
+                    budget = int(thinking_level)
+                config_params["thinking_config"] = types.ThinkingConfig(
+                    thinking_budget=budget
+                )
+
+            config = types.GenerateContentConfig(**config_params)
+
+            time.sleep(self.API_DELAY)
+            response = self.client.models.generate_content(
+                model=self.primary_model,
+                contents=[{"role": "user", "parts": [{"text": wrapped_prompt}]}],
+                config=config
+            )
+
+            return response.text if response.text else ""
+
+        except Exception as e:
+            print(f"      ⚠️ [V61.7] 캐시 기반 질의 실패, 일반 질의로 폴백: {str(e)[:80]}")
+            fallback_prompt = full_prompt_fallback if full_prompt_fallback else prompt
+            return self.ask(fallback_prompt, temperature=temperature, thinking_level=thinking_level)
+
+    def merge_contexts_for_caching(
+        self,
+        items: list,
+        item_type: str = "blueprint"
+    ) -> str:
+        """
+        [V61.5] Blueprint/Manuscript 리스트를 캐싱용 텍스트로 병합
+
+        Args:
+            items: Blueprint 또는 Manuscript dict 리스트
+            item_type: "blueprint" 또는 "manuscript"
+
+        Returns:
+            병합된 텍스트 (캐싱용)
+        """
+        if not items:
+            return ""
+
+        lines = [f"=== {item_type.upper()} 연속성 컨텍스트 ===\n"]
+
+        for item in items:
+            if item_type == "blueprint":
+                ep_num = item.get("ep_num", "?")
+                data = item.get("data", item)
+                if isinstance(data, str):
+                    try:
+                        data = json.loads(data)
+                    except:
+                        data = {}
+
+                title = data.get("title", "")
+                end_loc = data.get("end_location", "")
+                time_flow = data.get("time_flow", "")
+                ending_hook = data.get("ending_hook", "")
+                ending_state = data.get("ending_state", {})
+
+                lines.append(f"\n--- 제{ep_num}화 Blueprint ---")
+                if title:
+                    lines.append(f"제목: {title}")
+                if end_loc:
+                    lines.append(f"종료 위치: {end_loc}")
+                if time_flow:
+                    lines.append(f"시간 흐름: {time_flow}")
+                if ending_hook:
+                    lines.append(f"엔딩 훅: {ending_hook}")
+                if ending_state:
+                    lines.append(f"종료 상태: {json.dumps(ending_state, ensure_ascii=False)}")
+
+            elif item_type == "manuscript":
+                ep_num = item.get("ep_num", "?")
+                title = item.get("title", "")
+                content = item.get("content", "")
+
+                lines.append(f"\n--- 제{ep_num}화 원고 ---")
+                if title:
+                    lines.append(f"제목: {title}")
+                # 원고는 앞부분만 (토큰 절약)
+                if content:
+                    lines.append(f"내용 요약: {content[:2000]}...")
+
+        return "\n".join(lines)

@@ -116,6 +116,20 @@ class LongTermMemory:
         embedding_func = None
         try:
             vector_db_path = self.db_path.parent / "vector_db"
+            # [V61.6] ChromaDB 스키마 마이그레이션 - topic 컬럼 누락 시 추가
+            chroma_sqlite_path = vector_db_path / "chroma.sqlite3"
+            if chroma_sqlite_path.exists():
+                try:
+                    _conn = sqlite3.connect(str(chroma_sqlite_path))
+                    for _tbl in ("collections", "segments"):
+                        _cur = _conn.execute(f"PRAGMA table_info({_tbl})")
+                        _cols = [row[1] for row in _cur.fetchall()]
+                        if _cols and "topic" not in _cols:
+                            _conn.execute(f"ALTER TABLE {_tbl} ADD COLUMN topic TEXT")
+                    _conn.commit()
+                    _conn.close()
+                except Exception:
+                    pass
             temp_client = chromadb.PersistentClient(path=str(vector_db_path))
             embedding_func = GoogleEmbeddingFunction(api_key)
             temp_collection = temp_client.get_or_create_collection(

@@ -167,16 +167,22 @@ Arc 전술서를 바탕으로 제{ep_num}화 Blueprint를 설계하세요.
         "mood": "감정 상태",
         "injuries": "부상 상태",
         "equipment": ["소지품"]
+    }},
+    "ending_state": {{
+        "location": "이 화 종료 시 정확한 위치",
+        "timeline": {{"표현": "종료 시점 (장르별: year/month, period/season 등)"}},
+        "protagonist_status": "종료 시 주인공 상태 요약"
     }}
 }}
 
 ### [필수 조건]
 1. scene_breakdown은 최소 3개, 최대 5개 씬
 2. integrated_scenario는 최소 1000자 이상
-3. 이전 화 종료 위치에서 시작해야 함
+3. 이전 화 종료 위치에서 시작해야 함 (위치 불연속 절대 금지!)
 4. 정지선(다음 화 내용)을 침범하지 말 것
 5. [V60.98] 각 씬에 반드시 type(프리셋) 필드 포함할 것
 6. [V60.98] 시점 전환 프리셋(villain_scheme, side_glimpse, omniscient_hint)은 상황에 맞게 적극 활용
+7. [V61.5] ending_state 필수 - 다음 화 시작점 정보 (location, timeline, protagonist_status)
 
 반드시 유효한 JSON만 출력하세요.
 """
@@ -190,8 +196,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
     """
 
     # [V61.3] 앙상블 타임아웃 설정 (야간 무인 운영 - 무한 대기 방지)
-    ENSEMBLE_TIMEOUT = 180       # 전체 앙상블 타임아웃 (초) - 3분
-    SINGLE_CANDIDATE_TIMEOUT = 150  # 개별 후보 타임아웃 (초) - 2.5분
+    ENSEMBLE_TIMEOUT = 300       # 전체 앙상블 타임아웃 (초) - 5분 (thinking 오버헤드 반영)
+    SINGLE_CANDIDATE_TIMEOUT = 240  # 개별 후보 타임아웃 (초) - 4분
 
     def __init__(self, context, client, model_tier: str = "gemini-3-pro-preview"):
         super().__init__(context, client, model_tier)
@@ -408,7 +414,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 hud_context=self._escape_braces(hud_context) if hud_context else "(상태 정보 없음)"  # [V60.95]
             )
 
-            response = self.ask(prompt, temperature=0.7)  # 다양성을 위해 약간 높은 온도
+            response = self.ask(prompt, temperature=0.7, thinking_level="medium")  # [V61.6] thinking 활성화
             result = self._extract_json_robust(response)
 
             if not isinstance(result, dict):
@@ -706,24 +712,54 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         lines = []
 
+        # [V61.5] 이전 에피소드 종료 상태 섹션 강화
+        lines.append("━━━━━ [V61.5] 이전 에피소드 종료 상태 ━━━━━")
+        lines.append("⚠️ 아래 상태에서 시작해야 합니다. 위치/시점 불연속 금지!")
+
         ending_hook = prev_blueprint.get("ending_hook", "")
         if ending_hook:
-            lines.append(f"엔딩 훅: {ending_hook}")
+            lines.append(f"📌 엔딩 훅: {ending_hook}")
 
         end_location = prev_blueprint.get("end_location", "")
         if end_location:
-            lines.append(f"종료 위치: {end_location}")
+            lines.append(f"📍 종료 위치: {end_location}")
+
+        # [V61.5] 시간 흐름 정보 추가
+        time_flow = prev_blueprint.get("time_flow", "")
+        if time_flow:
+            lines.append(f"🕐 시간 흐름: {time_flow}")
+
+        # [V61.5] ending_state 필드 (있으면)
+        ending_state = prev_blueprint.get("ending_state", {})
+        if ending_state:
+            if ending_state.get("location"):
+                lines.append(f"📍 종료 위치 (상세): {ending_state['location']}")
+            if ending_state.get("timeline"):
+                tl = ending_state["timeline"]
+                if isinstance(tl, dict):
+                    tl_str = ", ".join(f"{k}:{v}" for k, v in tl.items())
+                else:
+                    tl_str = str(tl)
+                lines.append(f"📅 종료 시점: {tl_str}")
+            if ending_state.get("protagonist_status"):
+                lines.append(f"🧑 주인공 상태: {ending_state['protagonist_status']}")
 
         protag_state = prev_blueprint.get("protagonist_state", {})
         if protag_state:
             mood = protag_state.get("mood", "")
             injuries = protag_state.get("injuries", "")
+            equipment = protag_state.get("equipment", [])
             if mood:
-                lines.append(f"주인공 상태: {mood}")
+                lines.append(f"😊 감정 상태: {mood}")
             if injuries and injuries != "없음":
-                lines.append(f"부상: {injuries}")
+                lines.append(f"🩹 부상: {injuries}")
+            if equipment:
+                equip_str = ", ".join(equipment[:5]) if isinstance(equipment, list) else str(equipment)
+                lines.append(f"🎒 소지품: {equip_str}")
 
-        return "\n".join(lines) if lines else "(이전 화 정보 없음)"
+        lines.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+        return "\n".join(lines) if len(lines) > 3 else "(이전 화 정보 없음)"
 
 
 def create_blueprint_ensemble(context, client, model_tier: str = "gemini-3-pro-preview"):

@@ -255,6 +255,36 @@ class UnifiedArcValidator(BaseAgent):
         # [V61] state_changes 형식 검증
         state_changes = arc.get("state_changes", {})
         if state_changes and isinstance(state_changes, dict):
+            # [V61.5] timeline 필드 검증
+            timeline = state_changes.get("timeline", {})
+            if not timeline or not isinstance(timeline, dict):
+                issues.append({
+                    "severity": "WARNING",
+                    "category": "state_changes",
+                    "issue": "state_changes.timeline 필드 누락",
+                    "evidence": "timeline 필드가 없거나 형식이 잘못됨",
+                    "fix_hint": "timeline: {start: {...}, end: {...}} 형식으로 작성하세요"
+                })
+            else:
+                start = timeline.get("start", {})
+                end = timeline.get("end", {})
+                if not start or not isinstance(start, dict) or len(start) == 0:
+                    issues.append({
+                        "severity": "MINOR",
+                        "category": "state_changes",
+                        "issue": "timeline.start 필드 비어있음",
+                        "evidence": f"start: {start}",
+                        "fix_hint": "Arc 시작 시점을 명시하세요 (예: {year: 2000, month: 3})"
+                    })
+                if not end or not isinstance(end, dict) or len(end) == 0:
+                    issues.append({
+                        "severity": "MINOR",
+                        "category": "state_changes",
+                        "issue": "timeline.end 필드 비어있음",
+                        "evidence": f"end: {end}",
+                        "fix_hint": "Arc 종료 시점을 명시하세요"
+                    })
+
             # npc_deaths 형식 검증
             npc_deaths = state_changes.get("npc_deaths", [])
             if isinstance(npc_deaths, list):
@@ -358,18 +388,20 @@ class UnifiedArcValidator(BaseAgent):
         )
 
         try:
-            response = self.ask(prompt, temperature=0.1)
+            response = self.ask(prompt, temperature=0.1, thinking_level="low")  # [V61.6] Arc 검증
             result = self._extract_json_robust(response)
 
             if not isinstance(result, dict):
-                print(f"      ⚠️ [UnifiedValidator] JSON 파싱 실패")
-                return {"verdict": "PASS", "issues": [], "summary": "LLM 응답 파싱 실패", "confidence": 0.0}
+                print(f"      ⚠️ [UnifiedValidator] JSON 파싱 실패 → REJECT")
+                # [V61.5] fail-open → fail-closed: 파싱 실패 시 REJECT
+                return {"verdict": "REJECT", "issues": [{"severity": "CRITICAL", "category": "system", "issue": "LLM 응답 파싱 실패", "evidence": "JSON 파싱 불가", "fix_hint": "재시도"}], "summary": "LLM 응답 파싱 실패로 REJECT", "confidence": 0.0}
 
             return result
 
         except Exception as e:
-            print(f"      ⚠️ [UnifiedValidator] LLM 오류: {str(e)[:50]}")
-            return {"verdict": "PASS", "issues": [], "summary": f"LLM 오류: {str(e)[:50]}", "confidence": 0.0}
+            print(f"      ⚠️ [UnifiedValidator] LLM 오류: {str(e)[:50]} → REJECT")
+            # [V61.5] fail-open → fail-closed: LLM 오류 시 REJECT
+            return {"verdict": "REJECT", "issues": [{"severity": "CRITICAL", "category": "system", "issue": f"LLM 오류: {str(e)[:50]}", "evidence": "API 호출 실패", "fix_hint": "재시도"}], "summary": f"LLM 오류로 REJECT: {str(e)[:50]}", "confidence": 0.0}
 
     def _generate_prev_summary(self, prev_arcs: List[Dict]) -> str:
         """이전 Arc 요약 생성"""
@@ -392,7 +424,7 @@ class UnifiedArcValidator(BaseAgent):
                 try:
                     loss = int(re.search(r'(\d+)', str(loss_str)).group(1))
                     final_energy = 100 - loss
-                except:
+                except Exception:
                     final_energy = Stage2Limits.INTERNAL_ENERGY_FALLBACK
 
             lines.append(f"[Arc {arc_no}]")

@@ -5,6 +5,7 @@ Preset Registry - 프리셋 기반 동적 스키마 체계
 """
 
 import json
+import copy
 from typing import Dict, List, Set, Any, Optional
 from dataclasses import dataclass, field
 
@@ -326,7 +327,8 @@ class PresetRegistry:
             if field_name in protagonist_info:
                 hud[field_name] = protagonist_info[field_name]
             else:
-                hud[field_name] = field_def.default
+                # [V61.5] mutable default 복사 ([], {} 공유 객체 오염 방지)
+                hud[field_name] = copy.deepcopy(field_def.default)
 
         return hud
 

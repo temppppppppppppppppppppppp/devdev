@@ -45,7 +45,7 @@ class ReverseExpander:
             api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
             if api_key:
                 self.client = genai.Client(api_key=api_key)
-        except:
+        except Exception:
             pass
 
     def _call_llm(self, prompt: str, temperature: float = 0.7, max_tokens: int = 8192) -> str:
@@ -79,7 +79,7 @@ class ReverseExpander:
             elif "```" in json_str:
                 json_str = json_str.split("```")[1].split("```")[0]
             return json.loads(json_str.strip())
-        except:
+        except Exception:
             return None
 
     # ============================================
@@ -648,11 +648,12 @@ JSON:
             except Exception as e:
                 print(f"   [!] 원고 저장 실패 (ep_{ep_num}): {e}")
 
-        # 커밋
+        # 커밋 [V61.5] 실패 시 경고 + count 보정
         try:
             ctx.db.conn.commit()
-        except:
-            pass
+        except Exception as e:
+            print(f"   [!] 원고 커밋 실패: {e}")
+            count = 0
 
         return count
 
@@ -696,8 +697,9 @@ JSON:
 
         try:
             ctx.db.conn.commit()
-        except:
-            pass
+        except Exception as e:
+            print(f"   [!] State Log 커밋 실패: {e}")
+            count = 0
 
         return count
 
@@ -782,8 +784,9 @@ JSON:
 
         try:
             ctx.db.conn.commit()
-        except:
-            pass
+        except Exception as e:
+            print(f"   [!] Episode Bible 커밋 실패: {e}")
+            count = 0
 
         return count
 
@@ -824,8 +827,9 @@ JSON:
 
         try:
             ctx.db.conn.commit()
-        except:
-            pass
+        except Exception as e:
+            print(f"   [!] Blueprint stub 커밋 실패: {e}")
+            count = 0
 
         return count
 

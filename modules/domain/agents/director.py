@@ -327,6 +327,10 @@ class Director(BaseAgent):
 
         # [V60.88] 원고 컨텍스트 캐싱 (Gemini 대용량 컨텍스트 활용)
         self.manuscript_cache_name = None  # 원고 합본 캐시 이름
+
+        # [V61.5] 캐시 연속성 검사 - ep_num 기반 갱신
+        self._cached_blueprint_ep = None  # 현재 캐싱된 Blueprint 대상 ep_num
+        self._cached_manuscript_ep = None  # 현재 캐싱된 Manuscript 대상 ep_num
         self.manuscript_cache_enabled = True  # 캐싱 기능 활성화 여부
         self._cached_manuscript_count = 0  # 캐시된 원고 수 (캐시 갱신 판단용)
 
@@ -825,7 +829,7 @@ class Director(BaseAgent):
 }}"""
 
         try:
-            response = self.ask(prompt, temperature=0.1)
+            response = self.ask(prompt, temperature=0.1, thinking_level="low")  # [V61.6] 엔티티 검증
             result = self._extract_json_robust(response)
 
             if not isinstance(result, dict):
@@ -1011,7 +1015,7 @@ class Director(BaseAgent):
 """
 
         try:
-            response = self.ask(comparison_prompt, temperature=0.3)
+            response = self.ask(comparison_prompt, temperature=0.3, thinking_level="high")  # [V61.6] 블루프린트 비교
             result = self._extract_json_robust(response)
 
             if not isinstance(result, dict):
@@ -1144,9 +1148,16 @@ class Director(BaseAgent):
         # [V60.96] 죽은 NPC 등장 검사 - REJECT 대상 (최우선 체크)
         # ═══════════════════════════════════════════════════════════════
         # [V60.97] arc_no 추출 (타임라인 비교용)
+        # NOTE: main_a.py에서 arc_doc은 보통 string(tactical_doc)으로 전달됨 → dict 분기 거의 미진입
         arc_no = 0
         if arc_doc and isinstance(arc_doc, dict):
             arc_no = arc_doc.get("arc_no", 0)
+        elif arc_doc and isinstance(arc_doc, str):
+            # [V61.5] string인 경우 "Arc N" 패턴에서 추출 시도
+            import re
+            arc_match = re.search(r'[Aa]rc\s*(\d+)', arc_doc[:200])
+            if arc_match:
+                arc_no = int(arc_match.group(1))
         if arc_no <= 0 and arc_pos:
             arc_no = arc_pos  # arc_pos가 있으면 사용
 
@@ -1431,8 +1442,8 @@ class Director(BaseAgent):
             retry_count=retry_count,  # [V40.3 추가] 재시도 횟수 전달
             high_density_hud_context=safe_hud  # [V60.95] 고밀도 HUD 주입
         )
-        
-        response = self.ask(prompt, temperature=0.1)
+
+        response = self.ask(prompt, temperature=0.1, thinking_level="high")  # [V61.6] 원고 PASS/REJECT
         return self._extract_json_robust(response)
     
 
@@ -1527,7 +1538,7 @@ class Director(BaseAgent):
         if self.use_self_consistency:
             return self._strategic_audit_with_self_consistency(prompt, arc_no)
         else:
-            response = self.ask(prompt, temperature=0.1)
+            response = self.ask(prompt, temperature=0.1, thinking_level="medium")  # [V61.6] Arc 감사
             return self._extract_json_robust(response)
 
     def _strategic_audit_with_self_consistency(self, prompt: str, arc_no: int) -> dict:
@@ -1543,7 +1554,7 @@ class Director(BaseAgent):
             dict: 감사 결과 (self_consistency 정보 포함)
         """
         # 1차 평가
-        response = self.ask(prompt, temperature=0.1)
+        response = self.ask(prompt, temperature=0.1, thinking_level="medium")  # [V61.6] SC 1차
         first_eval = self._extract_json_robust(response)
 
         if not isinstance(first_eval, dict):
@@ -1586,12 +1597,12 @@ class Director(BaseAgent):
         from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FutureTimeoutError
 
         # [V61.3] 타임아웃 상수
-        VOTE_ENSEMBLE_TIMEOUT = 90   # 전체 투표 타임아웃 (초)
-        SINGLE_VOTE_TIMEOUT = 60     # 개별 투표 타임아웃 (초)
+        VOTE_ENSEMBLE_TIMEOUT = 150  # 전체 투표 타임아웃 (초) - thinking 오버헤드 반영
+        SINGLE_VOTE_TIMEOUT = 90     # 개별 투표 타임아웃 (초)
 
         def _vote_task(vote_idx, temp):
             """단일 투표 작업"""
-            response = self.ask(prompt, temperature=temp)
+            response = self.ask(prompt, temperature=temp, thinking_level="low")  # [V61.6] SC 추가투표
             return vote_idx, self._extract_json_robust(response)
 
         vote_tasks = [(i, 0.1 + (i * 0.05)) for i in range(1, self.consistency_votes)]
@@ -1667,7 +1678,7 @@ class Director(BaseAgent):
             "correction_guide": "모순 해결을 위한 구체적 수정 지시"
         }}
         """
-        response = self.ask(prompt, temperature=0.1)
+        response = self.ask(prompt, temperature=0.1, thinking_level="medium")  # [V61.6] 타임라인 검증
         return self._extract_json_robust(response)
 
 
@@ -2019,7 +2030,7 @@ class Director(BaseAgent):
                 "feedback": "NPC 프로필 없음 - 캐릭터 논리 검증 생략"
             }
 
-        response = self.ask(prompt, temperature=0.1)
+        response = self.ask(prompt, temperature=0.1, thinking_level="low")  # [V61.6] 캐릭터 로직
         return self._extract_json_robust(response)
 
 
@@ -2714,10 +2725,10 @@ class Director(BaseAgent):
                 "score": 30,
                 "feedback": {
                     "issues": [f"모든 후보 분량 미달: {lengths}자 (최소 {MIN_MANUSCRIPT_LENGTH}자 필요)"],
-                    "action_items": ["분량을 4,000자 이상으로 확장하세요", "장면 묘사와 대사를 더 풍부하게"]
+                    "action_items": ["분량을 5,000자 이상으로 확장하세요", "장면 묘사와 대사를 더 풍부하게"]
                 },
                 "state_updates": {},
-                "action_items": ["분량 확장 필요 - 최소 4,000자"],
+                "action_items": ["분량 확장 필요 - 최소 5,000자"],
                 "length_violation": True
             }
 
@@ -2756,7 +2767,7 @@ class Director(BaseAgent):
         )
 
         # LLM 호출
-        response = self.ask(prompt, temperature=0.1)
+        response = self.ask(prompt, temperature=0.1, thinking_level="high")  # [V61.6] 앙상블 최종 선택
         result = self._extract_json_robust(response)
 
         if not result or result.get("parsing_error"):
@@ -2778,10 +2789,12 @@ class Director(BaseAgent):
         selected_idx = {"A": 0, "B": 1, "C": 2}.get(selected_letter, 0)
 
         # [V60.97] LLM이 분량 미달 후보를 선택했으면 → 분량 통과 후보로 강제 교체
+        v60_97_swapped = False
         if selected_idx not in qualified_indices and qualified_indices:
             old_selection = selected_letter
             selected_idx = qualified_indices[0]  # 분량 통과 후보 중 첫 번째로
             selected_letter = ["A", "B", "C"][selected_idx]
+            v60_97_swapped = True
             print(f"      ⚠️ [V60.97] LLM 선택 {old_selection} → {selected_letter}로 교체 (분량 기준)")
 
         selected_candidate = candidates[selected_idx] if selected_idx < len(candidates) else candidates[0]
@@ -2789,6 +2802,11 @@ class Director(BaseAgent):
         # 적응형 기준 적용
         original_verdict = result.get("verdict", "REJECT")
         score = result.get("score", 50)
+
+        # [V61.5] 후보 교체 시 LLM 점수는 원래 후보에 대한 것이므로 리셋
+        if v60_97_swapped:
+            score = 50  # 중립 점수로 리셋
+            original_verdict = "CONDITIONAL_PASS"  # 교체된 후보는 재평가 필요
 
         adaptive_result = self.apply_adaptive_decision(
             score=score,
@@ -2887,12 +2905,12 @@ class Director(BaseAgent):
         result = self._extract_json_robust(response)
 
         if not result or result.get("parsing_error"):
-            # 파싱 실패 시 분량만 체크하고 통과
+            # [V61.5] 파싱 실패 시 REJECT (기존: 분량만 충족하면 자동 PASS → 품질 검증 우회 버그)
             if len(manuscript) >= 3500:
                 return {
-                    "verdict": "PASS",
-                    "score": 55,
-                    "reason": "간소 검토 파싱 실패 - 분량 기준 충족으로 통과",
+                    "verdict": "REJECT",
+                    "score": 45,
+                    "reason": "간소 검토 파싱 실패 - 분량 충족이나 품질 검증 불가로 REJECT",
                     "forced": True
                 }
             return {
@@ -2969,7 +2987,7 @@ class Director(BaseAgent):
         )
 
         try:
-            response = self.ask(prompt, temperature=0.1)
+            response = self.ask(prompt, temperature=0.1, thinking_level="medium")  # [V61.6] 역사 충돌 검사
             result = self._extract_json_robust(response)
 
             if not result or result.get('parsing_error'):
@@ -3294,16 +3312,16 @@ class Director(BaseAgent):
         if not config:
             return {"decision": "PASS", "violations": [], "feedback": "설정 없음"}
 
-        world_origin = config.get('world_origin', '원시인')
-        incarnation_type = config.get('incarnation_type', '회귀자')
+        world_origin = config.get('world_origin', '현대인')  # [V61.5] 기본값: 느슨한 모드 (기존 '원시인' → '현대인')
+        incarnation_type = config.get('incarnation_type', '기타')  # [V61.5] 기본값: 느슨한 모드 (기존 '회귀자' → '기타')
 
         # [V60.96] 장르 추출 (장르별 금지어 적용)
-        genre = "wuxia"  # 기본값
+        genre = self.genre  # [V61.5] self.genre 사용 (기존 "wuxia" 하드코딩 버그 수정)
         try:
             if hasattr(self.context, 'db'):
                 bible = self.context.db.load_anchor('bible')
                 if bible:
-                    genre = bible.get('_genre', 'wuxia')
+                    genre = bible.get('_genre', self.genre)
         except:
             pass
 
@@ -3392,3 +3410,213 @@ class Director(BaseAgent):
             "world_origin": world_origin,
             "incarnation_type": incarnation_type
         }
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # [V61.5] 컨텍스트 캐싱 기반 연속성 검증 (Blueprint/Manuscript)
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    def check_blueprint_continuity_with_cache(
+        self,
+        new_blueprint: dict,
+        ep_num: int,
+        db=None,
+        limit: int = 10
+    ) -> dict:
+        """
+        [V61.5] 이전 Blueprint 컨텍스트 캐싱 기반 연속성 검증
+
+        최근 N화의 Blueprint를 캐싱하고, 새 Blueprint와의 연속성을 검증한다.
+        위치, 시점, 상태 불일치를 감지한다.
+
+        Args:
+            new_blueprint: 새로 생성된 Blueprint
+            ep_num: 현재 에피소드 번호
+            db: DBManager 인스턴스
+            limit: 최근 몇 화까지 참조할지
+
+        Returns:
+            {
+                "decision": "PASS" | "WARNING" | "REJECT",
+                "issues": [...],
+                "feedback": str
+            }
+        """
+        if not db or ep_num <= 1:
+            return {"decision": "PASS", "issues": [], "feedback": ""}
+
+        try:
+            # [V61.5] ep_num 기반 캐시 갱신 - 같은 ep면 캐시 유지, 다르면 갱신
+            project_name = getattr(self.context, 'project_name', '') if hasattr(self, 'context') else ''
+
+            if self._cached_blueprint_ep != ep_num:
+                # ep_num이 바뀌었을 때만 캐시 갱신
+                recent_blueprints = db.get_recent_blueprints(ep_num, limit=limit)
+                if not recent_blueprints:
+                    return {"decision": "PASS", "issues": [], "feedback": "이전 Blueprint 없음"}
+
+                context_text = self.merge_contexts_for_caching(recent_blueprints, item_type="blueprint")
+                cache_result = self._get_or_create_context_cache(
+                    cache_type="blueprint",
+                    content=context_text,
+                    ttl_seconds=1800,  # 30분
+                    project_name=project_name
+                )
+                self._cached_blueprint_ep = ep_num
+                self._cached_recent_blueprints = recent_blueprints  # 직전 BP용
+                print(f"      📦 [V61.5] Blueprint 캐시 갱신 (ep={ep_num})")
+            else:
+                # 같은 ep_num이면 캐시 재사용
+                recent_blueprints = getattr(self, '_cached_recent_blueprints', [])
+                cache_result = {"cached": True}
+                print(f"      ♻️ [V61.5] Blueprint 캐시 재사용 (ep={ep_num})")
+
+            # 직전 Blueprint 정보 추출
+            prev_bp = recent_blueprints[-1] if recent_blueprints else {}
+            prev_data = prev_bp.get("data", {})
+            if isinstance(prev_data, str):
+                try:
+                    prev_data = json.loads(prev_data)
+                except:
+                    prev_data = {}
+
+            prev_end_location = prev_data.get("end_location", "")
+            prev_ending_state = prev_data.get("ending_state", {})
+            prev_time_flow = prev_data.get("time_flow", "")
+
+            # 새 Blueprint 정보 추출
+            new_start_location = new_blueprint.get("start_location", "")
+            new_time_flow = new_blueprint.get("time_flow", "")
+
+            # Python 기반 빠른 체크 (LLM 호출 없이)
+            issues = []
+
+            # 위치 불연속 체크
+            if prev_end_location and new_start_location:
+                if prev_end_location not in new_start_location and new_start_location not in prev_end_location:
+                    # 완전히 다른 위치면 경고
+                    issues.append({
+                        "type": "location_discontinuity",
+                        "severity": "MAJOR",
+                        "message": f"위치 불연속: 이전 종료 '{prev_end_location}' → 현재 시작 '{new_start_location}'",
+                        "prev_value": prev_end_location,
+                        "new_value": new_start_location
+                    })
+
+            # 시점 체크 (있으면)
+            if prev_ending_state.get("timeline") and new_blueprint.get("ending_state", {}).get("timeline"):
+                # 시간 역행 체크는 복잡하므로 여기서는 경고만
+                pass
+
+            # 결정 로직
+            major_count = sum(1 for i in issues if i.get("severity") == "MAJOR")
+            critical_count = sum(1 for i in issues if i.get("severity") == "CRITICAL")
+
+            if critical_count > 0:
+                decision = "REJECT"
+            elif major_count >= 2:
+                decision = "WARNING"
+            else:
+                decision = "PASS"
+
+            feedback = ""
+            if issues:
+                feedback = "[V61.5 연속성 검증]\n"
+                for issue in issues[:3]:
+                    feedback += f"- [{issue['severity']}] {issue['message']}\n"
+
+            return {
+                "decision": decision,
+                "issues": issues,
+                "feedback": feedback,
+                "cache_used": cache_result.get("cached", False)
+            }
+
+        except Exception as e:
+            print(f"      ⚠️ [V61.5] Blueprint 연속성 검증 오류: {str(e)[:50]}")
+            return {"decision": "PASS", "issues": [], "feedback": "", "error": str(e)}
+
+    def check_manuscript_continuity_with_cache(
+        self,
+        new_manuscript: str,
+        ep_num: int,
+        db=None,
+        limit: int = 10
+    ) -> dict:
+        """
+        [V61.5] 이전 Manuscript 컨텍스트 캐싱 기반 연속성 검증
+
+        최근 N화의 원고를 캐싱하고, 새 원고와의 충돌을 LLM으로 검증한다.
+        기존 check_manuscript_history_conflicts와 유사하지만 캐싱을 활용한다.
+
+        Args:
+            new_manuscript: 새로 생성된 원고 텍스트
+            ep_num: 현재 에피소드 번호
+            db: DBManager 인스턴스
+            limit: 최근 몇 화까지 참조할지
+
+        Returns:
+            {
+                "decision": "PASS" | "CONFLICT",
+                "conflicts": [...],
+                "summary": str
+            }
+        """
+        if not db or ep_num <= 1:
+            return {"decision": "PASS", "conflicts": [], "summary": ""}
+
+        try:
+            # [V61.5] ep_num 기반 캐시 갱신 - 같은 ep면 캐시 유지, 다르면 갱신
+            project_name = getattr(self.context, 'project_name', '') if hasattr(self, 'context') else ''
+
+            if self._cached_manuscript_ep != ep_num:
+                # ep_num이 바뀌었을 때만 캐시 갱신
+                recent_manuscripts = db.get_recent_manuscripts(ep_num, limit=limit)
+                if not recent_manuscripts:
+                    return {"decision": "PASS", "conflicts": [], "summary": "이전 원고 없음"}
+
+                context_text = self.merge_contexts_for_caching(recent_manuscripts, item_type="manuscript")
+                cache_result = self._get_or_create_context_cache(
+                    cache_type="manuscript",
+                    content=context_text,
+                    ttl_seconds=1800,  # 30분
+                    project_name=project_name
+                )
+                self._cached_manuscript_ep = ep_num
+                self._cached_context_text_manuscript = context_text  # LLM 호출용
+                print(f"      📦 [V61.5] Manuscript 캐시 갱신 (ep={ep_num})")
+            else:
+                # 같은 ep_num이면 캐시 재사용
+                context_text = getattr(self, '_cached_context_text_manuscript', '')
+                cache_result = {"cached": True, "cache_name": getattr(self, '_manuscript_cache_name', None)}
+                print(f"      ♻️ [V61.5] Manuscript 캐시 재사용 (ep={ep_num})")
+
+            # 캐시가 있으면 캐시 기반 질의, 없으면 일반 질의
+            prompt = MANUSCRIPT_HISTORY_CONFLICT_PROMPT.format(
+                ep_num=ep_num,
+                manuscript_history="(캐시된 컨텍스트 참조)" if cache_result.get("cache_name") else context_text[:15000],
+                current_manuscript=new_manuscript[:8000]
+            )
+
+            if cache_result.get("cache_name"):
+                response = self._ask_with_cached_context(
+                    cache_result["cache_name"],
+                    prompt,
+                    temperature=0.1
+                )
+            else:
+                response = self.ask(prompt, temperature=0.1, thinking_level="low")  # [V61.6] 연속성 검사
+
+            result = self._extract_json_robust(response)
+            if not isinstance(result, dict):
+                return {"decision": "PASS", "conflicts": [], "summary": "파싱 오류"}
+
+            return {
+                "decision": result.get("decision", "PASS"),
+                "conflicts": result.get("conflicts", []),
+                "summary": result.get("summary", ""),
+                "cache_used": cache_result.get("cached", False)
+            }
+
+        except Exception as e:
+            print(f"      ⚠️ [V61.5] Manuscript 연속성 검증 오류: {str(e)[:50]}")
+            return {"decision": "PASS", "conflicts": [], "summary": "", "error": str(e)}

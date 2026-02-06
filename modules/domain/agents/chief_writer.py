@@ -40,8 +40,8 @@ class ChiefWriter(BaseAgent):
     """
 
     # [V61.3] 앙상블 타임아웃 설정 (야간 무인 운영 - 무한 대기 방지)
-    ENSEMBLE_TIMEOUT = 240       # 전체 앙상블 타임아웃 (초) - 4분 (원고는 더 김)
-    SINGLE_CANDIDATE_TIMEOUT = 200  # 개별 후보 타임아웃 (초) - 3분 20초
+    ENSEMBLE_TIMEOUT = 600       # 전체 앙상블 타임아웃 (초) - 10분 (thinking 오버헤드 반영)
+    SINGLE_CANDIDATE_TIMEOUT = 540  # 개별 후보 타임아웃 (초) - 9분
 
     # 앙상블 전략 정의
     ENSEMBLE_STRATEGIES = {
@@ -54,6 +54,7 @@ class ChiefWriter(BaseAgent):
 - Blueprint의 모든 씬을 균등한 비중으로 반영
 - 서사와 액션의 조화로운 배분
 - 안정적인 품질 우선
+- ⚠️ 반드시 5,000자 이상 작성. 각 씬에 충분한 묘사와 대화를 배분할 것
 """
         },
         "narrative": {
@@ -65,6 +66,7 @@ class ChiefWriter(BaseAgent):
 - 캐릭터 내면 묘사 강화
 - 관계 발전과 감정선에 집중
 - 대화와 심리 갈등 확대
+- ⚠️ 반드시 5,000자 이상 작성. 심리 묘사와 대화를 충분히 확장할 것
 """
         },
         "tension": {
@@ -76,6 +78,7 @@ class ChiefWriter(BaseAgent):
 - 액션/전투 씬 밀도 강화
 - 서스펜스와 긴장감 극대화
 - 강렬한 클리프행어 엔딩
+- ⚠️ 반드시 5,000자 이상 작성. 액션 묘사와 긴장 고조를 충분히 전개할 것
 """
         }
     }
@@ -201,6 +204,21 @@ class ChiefWriter(BaseAgent):
             state_tracker=state_tracker
         )
 
+        # [V61.7] 컨텍스트 캐싱 시도 (토큰 비용 50-67% 절감)
+        cache_name = None
+        try:
+            cache_info = self._get_or_create_context_cache(
+                cache_type="manuscript",
+                content=common_context,
+                ttl_seconds=600,  # 10분 (같은 에피소드 재시도 대비)
+                project_name=f"ep{ep_num}"
+            )
+            cache_name = cache_info.get("cache_name")
+            if cache_name:
+                print(f"      📦 [V61.7] 컨텍스트 캐시 활성 (ep{ep_num}, {len(common_context)}자)")
+        except Exception:
+            pass  # 캐싱 실패해도 기존 방식으로 진행
+
         # 병렬 생성
         candidates = []
         strategies = ["balanced", "narrative", "tension"]
@@ -216,7 +234,8 @@ class ChiefWriter(BaseAgent):
                         common_context=common_context,
                         hud_report=hud_report,
                         master_bible=master_bible,
-                        genre_name=genre_name
+                        genre_name=genre_name,
+                        cache_name=cache_name
                     ): strategy
                     for strategy in strategies
                 }
@@ -277,7 +296,8 @@ class ChiefWriter(BaseAgent):
                 common_context=common_context,
                 hud_report=hud_report,
                 master_bible=master_bible,
-                genre_name=genre_name
+                genre_name=genre_name,
+                cache_name=cache_name
             )
             if fallback:
                 candidates = [fallback]
@@ -291,10 +311,12 @@ class ChiefWriter(BaseAgent):
         common_context: str,
         hud_report: str = "",
         master_bible: dict = None,
-        genre_name: str = "무협"
+        genre_name: str = "무협",
+        cache_name: str = None
     ) -> Optional[Dict]:
         """
         [V60.81] 단일 후보 생성 + Self-Critique + Leakage 방지
+        [V61.7] 컨텍스트 캐싱 지원 - 토큰 비용 50-67% 절감
 
         Args:
             ep_num: 에피소드 번호
@@ -303,22 +325,46 @@ class ChiefWriter(BaseAgent):
             hud_report: HUD 상태 (Self-Critique용)
             master_bible: 마스터 바이블 (NPC 정보 추출용)
             genre_name: 장르명
+            cache_name: [V61.7] 캐시 이름 (있으면 캐시 사용, 없으면 기존 방식)
         """
         # [V61.3] 전체 메서드를 try-except로 감싸서 worker thread 크래시 방지
         try:
             strategy_config = self.ENSEMBLE_STRATEGIES.get(strategy, self.ENSEMBLE_STRATEGIES["balanced"])
 
-            # [V60.82] 프리컴파일 템플릿 사용
-            prompt = f"""{common_context}
+            # [V61.7] 캐시 사용 분기
+            if cache_name:
+                # 캐시 활성: common_context는 캐시에 있으므로 전략 부분만 전송
+                strategy_prompt = f"""{strategy_config["instruction"]}
+
+{self.PROMPT_TEMPLATE_OUTPUT.format(strategy=strategy)}"""
+
+                # 폴백용 전체 프롬프트 (캐시 실패 시)
+                full_prompt = f"""{common_context}
 
 {strategy_config["instruction"]}
 
 {self.PROMPT_TEMPLATE_OUTPUT.format(strategy=strategy)}"""
 
-            response = self.ask(
-                prompt=prompt,
-                temperature=strategy_config["temperature"]
-            )
+                response = self._ask_with_cached_context(
+                    cache_name=cache_name,
+                    prompt=strategy_prompt,
+                    temperature=strategy_config["temperature"],
+                    thinking_level="medium",
+                    full_prompt_fallback=full_prompt
+                )
+            else:
+                # [V60.82] 기존 방식: 전체 프롬프트
+                full_prompt = f"""{common_context}
+
+{strategy_config["instruction"]}
+
+{self.PROMPT_TEMPLATE_OUTPUT.format(strategy=strategy)}"""
+
+                response = self.ask(
+                    prompt=full_prompt,
+                    temperature=strategy_config["temperature"],
+                    thinking_level="medium"  # [V61.6] 원고 생성 추론 강화
+                )
 
             # [V60.81] Leakage 방지 적용
             response = self._sanitize_leakage(response)
@@ -359,7 +405,7 @@ class ChiefWriter(BaseAgent):
                 final_content = critiqued_data.get("content", manuscript_content)
                 final_title = critiqued_data.get("title", data.get("title", f"제{ep_num}화"))
                 final_state = critiqued_data.get("state_updates", data.get("state_updates", {}))
-            except:
+            except Exception:
                 final_content = manuscript_content
                 final_title = data.get("title", f"제{ep_num}화")
                 final_state = data.get("state_updates", {})
@@ -646,12 +692,19 @@ class ChiefWriter(BaseAgent):
 ### 📋 [STEP 6: 스타일 가이드]
 {self._escape_braces(style_guide) if style_guide else "기본 웹소설 문체"}
 
-### 📌 집필 지침
-1. 분량: 5,000자 이상 (4,000자 미만 시 REJECT)
-2. 모든 씬을 균등한 비중으로 전개
-3. 후반부 급전개/요약 금지
+### 🔥 변환 원칙 (Common Rules) - 위반 시 AI티 판정
+1. 감정어 삭제 → 행동 변환: '화가 났다', '슬펐다', '당황했다' 같은 추상적 감정 단어를 금지한다. 대신 미세한 표정 변화, 손짓, 호흡, 시선 처리, 주변 사물과의 상호작용으로 감정을 유추하게 만들어라. (예: "그는 초조해했다" → "그는 마른입술을 혀로 훑으며 펜을 톡, 톡, 책상에 두드렸다.")
+2. 감각적 묘사 강화 (오감 활용): 상황을 설명하지 말고, 독자가 그 현장에 있는 것처럼 느끼게 해라. 소리(청각), 냄새(후각), 질감(촉각)을 문장에 녹여내라.
+3. 요약된 대화의 장면화: "그들은 협상에 대해 길게 논쟁했다"처럼 요약된 서술을 금지한다. 날 선 티키타카(대화)가 오가는 실제 장면으로 풀어 써라.
+4. 문장 밀도 조절: 무의미한 미사여구로 문장 길이를 늘리지 마라. 불필요한 접속사와 수식어는 쳐내고, '동사(Action)' 위주로 문장을 짧고 힘 있게 끊어쳐라.
+
+### 📌 집필 지침 (위반 시 즉시 REJECT)
+1. ⚠️ 분량: 반드시 5,000자 이상. 4,999자 이하는 무조건 REJECT. 부족하면 장면 묘사, 인물 심리, 대화를 확장하라
+2. 모든 씬을 균등한 비중으로 전개 - 각 씬 최소 1,000자 이상
+3. 후반부 급전개/요약 절대 금지 - 마지막 씬도 앞 씬과 동일한 밀도로 작성
 4. 클리프행어 엔딩 필수
 5. 죽은 NPC 부활, 미습득 무공 사용 절대 금지
+6. 영문 병기 금지 - "윈도우(Windows)", "검(Sword)" 같은 한글(English) 표기 금지. 한글만 사용
 """
 
     def _detect_deaths_from_manuscript(self, prev_manuscript: str) -> List[str]:
@@ -977,7 +1030,12 @@ class ChiefWriter(BaseAgent):
                 continue
             filtered_lines.append(line)
 
-        return "\n".join(filtered_lines)
+        text = "\n".join(filtered_lines)
+
+        # 3. 영문 괄호 병기 제거: "윈도우(Windows)" → "윈도우"
+        text = re.sub(r'([가-힣]+)\([A-Za-z][A-Za-z\s&\-\'\.,;:0-9]*\)', r'\1', text)
+
+        return text
 
     def _apply_self_critique(
         self,
@@ -1063,7 +1121,7 @@ class ChiefWriter(BaseAgent):
         try:
             data = json.loads(manuscript)
             content = data.get('content', '')
-        except:
+        except Exception:
             content = manuscript
 
         issues = []
@@ -1271,7 +1329,7 @@ class ChiefWriter(BaseAgent):
 수정된 JSON 원고만 출력하라. 설명 없이 JSON만.
 """
         try:
-            fixed = self.ask(prompt, temperature=0.5)
+            fixed = self.ask(prompt, temperature=0.5, thinking_level="low")
             fixed = self._sanitize_leakage(fixed)
 
             # JSON 유효성 검증
@@ -1294,7 +1352,7 @@ class ChiefWriter(BaseAgent):
         try:
             data = json.loads(manuscript)
             content = data.get('content', '')
-        except:
+        except Exception:
             content = manuscript
 
         if not content or len(content) < 100:
@@ -2314,7 +2372,7 @@ class ChiefWriter(BaseAgent):
         try:
             data = json.loads(manuscript)
             content = data.get('content', '')
-        except:
+        except Exception:
             content = manuscript
 
         if not content or not emotion_skeleton.get('scenes'):
@@ -2419,9 +2477,9 @@ class ChiefWriter(BaseAgent):
         length = len(content)
         scores['length'] = length
         if length < 4000:
-            issues.append(f"분량 부족: {length}자 (최소 4000자)")
+            issues.append(f"분량 부족: {length}자 (최소 5000자)")
         elif length < 4500:
-            issues.append(f"분량 경계: {length}자")
+            issues.append(f"분량 경계: {length}자 (목표 5000자)")
 
         # 2. 대화 비율 체크
         dialogue_matches = re.findall(r'"[^"]+?"', content)
@@ -2534,7 +2592,7 @@ class ChiefWriter(BaseAgent):
 아래 원고를 검토하고 문제점을 수정한 개선본을 작성하세요.
 
 ## 검토 기준
-1. **분량**: 4,500자 이상이어야 함 (현재: {len(content)}자)
+1. **분량**: 5,000자 이상이어야 함 (현재: {len(content)}자)
 2. **씬 반영**: Blueprint의 모든 씬이 반영되어야 함 ({len(scene_list)}개 씬)
 3. **대화/묘사 균형**: 대화 25-40%, 묘사/서술 60-75%
 4. **문장 다양성**: 연속으로 같은 단어로 시작하는 문장 금지
@@ -2562,7 +2620,8 @@ class ChiefWriter(BaseAgent):
             try:
                 response = self.ask(
                     review_prompt if i == 0 else review_prompt.replace(manuscript, current_manuscript),
-                    temperature=0.3
+                    temperature=0.3,
+                    thinking_level="low"  # [V61.6] 자체 리뷰 추론 강화
                 )
 
                 if not response:

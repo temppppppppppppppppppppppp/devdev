@@ -206,7 +206,7 @@ D: 오해 → 갈등 → 진실 발견 → 관계 심화
                         manuscripts.append(content)
 
                 # 블루프린트 로드
-                bp_data = self.context.db.load_blueprint(ep_num)
+                bp_data = self.context.db.get_blueprint(ep_num)
                 if bp_data:
                     blueprints.append(bp_data)
 
