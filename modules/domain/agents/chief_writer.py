@@ -689,7 +689,7 @@ class ChiefWriter(BaseAgent):
 ### 📋 [STEP 5: 세계관 설정]
 - 주인공 동기: {self._escape_braces(str(core_identity.get('desire', '')))}
 
-### 📋 [STEP 6: 스타일 가이드]
+### 📋 [STEP 6: 문체 DNA 가이드 - 위반 시 AI티 판정]
 {self._escape_braces(style_guide) if style_guide else "기본 웹소설 문체"}
 
 ### 🔥 변환 원칙 (Common Rules) - 위반 시 AI티 판정
