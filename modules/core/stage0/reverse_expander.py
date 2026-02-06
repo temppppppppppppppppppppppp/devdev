@@ -348,7 +348,7 @@ JSON:
     def extract_style_guide(self) -> StyleGuide:
         """스타일 가이드 추출"""
         extractor = StyleExtractor(llm_client=self.client)
-        drafts_text = [d["content"] for d in self.raw_drafts[:5]]
+        drafts_text = [d["content"] for d in self.raw_drafts]
         self.style_guide = extractor.extract_from_drafts(drafts_text)
         return self.style_guide
 

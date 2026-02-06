@@ -73,12 +73,14 @@ class StageZeroManager:
             print("\n  [1] 컨셉 입력 → Bible + Treatment 생성")
             print("  [2] 역설계 → 기존 원고에서 설정 추출")
             print("  [3] Bible 임포트 → 기존 JSON 불러오기")
+            print("  [4] 스타일 레퍼런스 분석 → 참조 원고에서 문체 DNA 추출")
             print("\n  [0] 취소")
         else:
             print("\n  [1] Bible 재생성/수정")
             print("  [2] 역설계 추가 (원고 추가 분석)")
             print("  [3] 스타일 가이드 재추출")
             print("  [4] 프리셋 관리")
+            print("  [5] 스타일 레퍼런스 분석 → 참조 원고에서 문체 DNA 추출")
             print("\n  [0] 메인 메뉴로")
 
         try:
@@ -324,6 +326,62 @@ class StageZeroManager:
                         print(f"    [v] {preset} 비활성화")
             except (ValueError, IndexError, EOFError):
                 pass
+
+    # ============================================
+    # 스타일 레퍼런스 분석
+    # ============================================
+
+    def run_reference_analysis(self, genre: str = None) -> Optional[StyleGuide]:
+        """config/style_references/{genre}/ 폴더의 참조 원고를 분석하여 StyleGuide 생성"""
+        # 장르 결정
+        if not genre:
+            genre = self.genre
+        if not genre:
+            genre = self.show_genre_menu()
+        if not genre:
+            print("  [!] 장르가 지정되지 않았습니다.")
+            return None
+
+        # 레퍼런스 로드
+        ref_data = StyleExtractor.load_reference_manuscripts(genre)
+        if not ref_data:
+            ref_base = Path("config/style_references") / genre
+            print(f"  [!] 레퍼런스 원고가 없습니다: {ref_base}/")
+            print(f"      폴더 구조: config/style_references/{genre}/작품명/0001.txt")
+            return None
+
+        total_eps = sum(len(eps) for eps in ref_data.values())
+        works = list(ref_data.keys())
+        print(f"\n  [*] 레퍼런스 로드 완료: {len(works)}개 작품, {total_eps}개 에피소드")
+        for w in works:
+            print(f"      - {w}: {len(ref_data[w])}편")
+
+        confirm = input("\n  분석을 시작하시겠습니까? (y/n): ").strip().lower()
+        if confirm != 'y':
+            return None
+
+        # 분석 실행
+        extractor = StyleExtractor(llm_client=self.client)
+        print("\n  [*] 문체 DNA 추출 중... (대량 원고 분석 - 시간 소요)")
+        self.style_guide = extractor.extract_from_references(ref_data, genre=genre)
+        self.genre = genre
+
+        if self.style_guide:
+            print(f"\n  [v] 문체 DNA 추출 완료 (v{self.style_guide.analysis_version})")
+            print(f"      - 분석 원고: {self.style_guide.source_episode_count}편 / {self.style_guide.source_char_count:,}자")
+            print(f"      - 참조 작품: {', '.join(self.style_guide.reference_works or [])}")
+            print(f"      - 모범 문단: {len(self.style_guide.exemplary_passages or [])}개")
+            print(f"      - AI 금지 패턴: {len(self.style_guide.anti_ai_patterns or [])}개")
+
+            # 저장
+            if self.project_path:
+                output_dir = Path(self.project_path) / "stage0_output"
+                output_dir.mkdir(parents=True, exist_ok=True)
+                with open(output_dir / "style_guide.json", 'w', encoding='utf-8') as f:
+                    f.write(self.style_guide.to_json())
+                print(f"      - 저장: {output_dir / 'style_guide.json'}")
+
+        return self.style_guide
 
     # ============================================
     # 유틸리티
