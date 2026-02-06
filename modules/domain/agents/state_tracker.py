@@ -122,10 +122,13 @@ class StateTracker:
             # 프리셋에서 필드 가져오기
             active_fields = self.preset_registry.get_active_fields()
             for name, field_def in active_fields.items():
-                self.tracking_fields[name] = field_def.default
+                self.tracking_fields[name] = copy.deepcopy(field_def.default)
 
-            # NPC 필드도 설정
-            self.npc_tracking_fields = self.preset_registry.get_npc_fields()
+            # NPC 필드도 설정 (FieldDefinition → .default 값으로 변환)
+            npc_field_defs = self.preset_registry.get_npc_fields()
+            self.npc_tracking_fields = {
+                name: copy.deepcopy(fd.default) for name, fd in npc_field_defs.items()
+            }
         else:
             # 기본 필드 (하위 호환성)
             self.tracking_fields = {
@@ -190,7 +193,7 @@ class StateTracker:
         # 기존 필드 유지하면서 새 필드 추가
         for name, field_def in active_fields.items():
             if name not in self.tracking_fields:
-                self.tracking_fields[name] = field_def.default
+                self.tracking_fields[name] = copy.deepcopy(field_def.default)
 
         # NPC 필드도 갱신 [V61.5] .default 추가 + deepcopy로 mutable 오염 방지
         npc_fields = self.preset_registry.get_npc_fields()
@@ -298,12 +301,12 @@ class StateTracker:
             if any(k in value for k in very_low_patterns):
                 return 5
 
-            # 낮음 (10-30%) - 단독 단어로만 매칭 (오탐지 방지)
-            if re.search(r'(탈진|고갈|소진|바닥|전멸|방전)', value):
+            # 낮음 (10-30%) - 짧은 서술형에서만 매칭 (오탐지 방지)
+            if len(value) <= 10 and re.search(r'(탈진|고갈|소진|바닥|전멸|방전)', value):
                 return 10
 
-            # 높음 (80-100%) - 단독 단어로만 매칭
-            if re.search(r'(최대|충만|가득|완전회복|만땅)', value):
+            # 높음 (80-100%) - 짧은 서술형에서만 매칭
+            if len(value) <= 10 and re.search(r'(최대|충만|가득|완전회복|만땅)', value):
                 return 100
 
             # 중간 (40-60%)

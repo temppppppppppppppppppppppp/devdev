@@ -3,6 +3,7 @@ import os
 import re
 import time
 import ast  # 👈 [필수] literal_eval 가동을 위해 반드시 필요
+import threading
 from google import genai
 from google.genai import types
 
@@ -65,6 +66,7 @@ class BaseAgent:
     _key_rotation_pending = False
     _last_rotation_time = 0
     _MIN_ROTATION_INTERVAL = 10  # 최소 순환 간격 (초)
+    _rotation_lock = threading.Lock()  # [V61.7] 병렬 앙상블 시 race condition 방지
 
     @classmethod
     def _init_api_keys(cls):
@@ -86,23 +88,25 @@ class BaseAgent:
 
     @classmethod
     def _try_rotate_key(cls):
-        """다음 API 키로 순환. 새 Client 반환 또는 None."""
-        cls._init_api_keys()
-        if len(cls._api_keys) <= 1:
+        """다음 API 키로 순환. 새 Client 반환 또는 None. [V61.7] Lock 보호."""
+        with cls._rotation_lock:
+            cls._init_api_keys()
+            if len(cls._api_keys) <= 1:
+                cls._key_rotation_pending = False
+                return None
+
+            # 너무 빠른 순환 방지
+            if time.time() - cls._last_rotation_time < cls._MIN_ROTATION_INTERVAL:
+                cls._key_rotation_pending = False
+                return None
+
+            old_idx = cls._current_key_idx
+            cls._current_key_idx = (cls._current_key_idx + 1) % len(cls._api_keys)
+            cls._last_rotation_time = time.time()
+            cls._quota_exhausted_models.clear()
             cls._key_rotation_pending = False
-            return None
 
-        # 너무 빠른 순환 방지
-        if time.time() - cls._last_rotation_time < cls._MIN_ROTATION_INTERVAL:
-            cls._key_rotation_pending = False
-            return None
-
-        old_idx = cls._current_key_idx
-        cls._current_key_idx = (cls._current_key_idx + 1) % len(cls._api_keys)
-        cls._last_rotation_time = time.time()
-        cls._quota_exhausted_models.clear()
-        cls._key_rotation_pending = False
-
+        # Client 생성은 lock 밖에서 (네트워크 IO 포함하므로)
         new_client = genai.Client(api_key=cls._api_keys[cls._current_key_idx])
         print(f"      🔑 [V61.5] API 키 순환: Key {old_idx + 1} → Key {cls._current_key_idx + 1} (총 {len(cls._api_keys)}개)")
         return new_client
@@ -157,8 +161,10 @@ class BaseAgent:
         full_response = ""
         current_prompt = base_prompt
 
-        # [V61.5] API 키 순환 체크 (이전 작업에서 429 발생 시)
-        if BaseAgent._key_rotation_pending:
+        # [V61.5] API 키 순환 체크 (이전 작업에서 429 발생 시) [V61.7] Lock 보호
+        with BaseAgent._rotation_lock:
+            pending = BaseAgent._key_rotation_pending
+        if pending:
             new_client = self._try_rotate_key()
             if new_client:
                 self.client = new_client
@@ -330,8 +336,9 @@ class BaseAgent:
                             cache_duration = BaseAgent._QUOTA_CACHE_DURATION if is_quota_exhausted else 30  # Rate Limit은 30초만
                             BaseAgent._quota_exhausted_models[old_model] = time.time() + cache_duration
 
-                            # [V61.5] 다음 작업에서 키 순환 예약
-                            BaseAgent._key_rotation_pending = True
+                            # [V61.5] 다음 작업에서 키 순환 예약 [V61.7] Lock 보호
+                            with BaseAgent._rotation_lock:
+                                BaseAgent._key_rotation_pending = True
 
                             error_type = "Quota 소진" if is_quota_exhausted else "Rate Limit 초과"
                             print(f"      🔄 [V60.97 Fallback] {old_model} {error_type} → {current_model}로 전환")
@@ -599,17 +606,22 @@ class BaseAgent:
             return AgentErrorType.UNKNOWN
 
     # [V61.2] 네트워크 연결 체크
-    def _check_connectivity(self) -> bool:
+    def _check_connectivity(self, timeout: int = 15) -> bool:
         """
         네트워크 연결 상태 확인 (가벼운 요청으로)
 
+        Args:
+            timeout: 최대 대기 시간 (초). 기본 15초.
+
         Returns:
             True: 연결 정상
-            False: 연결 불가
+            False: 연결 불가 또는 타임아웃
         """
+        import concurrent.futures
         try:
-            # 모델 목록 조회 (가벼운 API 호출)
-            self.client.models.list()
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(self.client.models.list)
+                future.result(timeout=timeout)
             return True
         except Exception:
             return False
