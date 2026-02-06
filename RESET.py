@@ -23,7 +23,8 @@ def selective_reset():
     try:
         p_idx = int(input("\n👉 Choice: ")) - 1
         project_name = projects[p_idx]
-    except: return
+    except (ValueError, IndexError):
+        return
 
     project_root = Path(f"projects/{project_name}")
     db_path = project_root / "project_data.db"

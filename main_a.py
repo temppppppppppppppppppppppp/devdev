@@ -442,16 +442,15 @@ class SovereignApp:
     def _safe_commit(self) -> bool:
         """
         [V40 Enhanced] 안전한 DB 커밋 래퍼 (동기 전용)
+        [V61.7] 항상 커밋 보장 (in_transaction 조건 제거)
 
         Returns:
             bool: 커밋 성공 여부
         """
         if hasattr(self, 'current_project') and self.current_project and hasattr(self.current_project, 'db'):
             try:
-                if self.current_project.db.conn.in_transaction:
-                    self.current_project.db.conn.commit()
-                    self._audit_event(AuditEvents.DB_COMMIT, SuccessMessages.DB_COMMIT_SUCCESS)
-                    return True
+                self.current_project.db.conn.commit()
+                self._audit_event(AuditEvents.DB_COMMIT, SuccessMessages.DB_COMMIT_SUCCESS)
                 return True
             except Exception as e:
                 self.ui.log(f"{Emojis.ERROR} [DB] {ErrorMessages.DB_COMMIT_FAILED}: {e}")

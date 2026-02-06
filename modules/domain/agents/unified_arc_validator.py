@@ -268,7 +268,7 @@ class UnifiedArcValidator(BaseAgent):
             else:
                 start = timeline.get("start", {})
                 end = timeline.get("end", {})
-                if not start or not isinstance(start, dict) or len(start) == 0:
+                if not start or not isinstance(start, dict):
                     issues.append({
                         "severity": "MINOR",
                         "category": "state_changes",
@@ -276,7 +276,7 @@ class UnifiedArcValidator(BaseAgent):
                         "evidence": f"start: {start}",
                         "fix_hint": "Arc 시작 시점을 명시하세요 (예: {year: 2000, month: 3})"
                     })
-                if not end or not isinstance(end, dict) or len(end) == 0:
+                if not end or not isinstance(end, dict):
                     issues.append({
                         "severity": "MINOR",
                         "category": "state_changes",
