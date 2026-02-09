@@ -183,19 +183,19 @@ Step 4: 분량 및 품질 종합 평가
 - 분량이 기준을 충족하는가? (MANUSCRIPT: 4000자+)
 - 문체가 유려하고 독자 경험이 좋은가?
 
-### [V60.4 점수 산정 공식 (Score Formula)]
-점수는 아래 5개 항목의 합계로 산정 (총 100점):
+### [V63 점수 산정 공식 (Score Formula)]
+점수는 아래 6개 항목의 합계로 산정 (총 100점):
 
-1. **설정 일관성 (25점)**:
-   - 25점: 설정 완벽 준수 (무공, 인물, 물리적 인과 모두 정상)
-   - 15점: 경미한 설정 미비 (보조 NPC 이름 오타 등)
+1. **설정 일관성 (20점)**:
+   - 20점: 설정 완벽 준수 (무공, 인물, 물리적 인과 모두 정상)
+   - 12점: 경미한 설정 미비 (보조 NPC 이름 오타 등)
    - 0점: Hard Constraint 위반 (미습득 무공, 죽은 자 부활 등)
 
-2. **장면 구성 (25점)**:
-   - 25점: 6개 씬 모두 균등한 밀도로 반영
-   - 20점: 5개 씬 반영 또는 밀도 약간 불균등
-   - 15점: 4개 씬 반영
-   - 10점: 3개 씬 반영 (재시도 2회+ 시만 PASS 가능)
+2. **장면 구성 (20점)**:
+   - 20점: 6개 씬 모두 균등한 밀도로 반영
+   - 16점: 5개 씬 반영 또는 밀도 약간 불균등
+   - 12점: 4개 씬 반영
+   - 8점: 3개 씬 반영 (재시도 2회+ 시만 PASS 가능)
    - 0점: 2개 씬 이하
 
 3. **서사 흐름 (20점)**:
@@ -203,23 +203,27 @@ Step 4: 분량 및 품질 종합 평가
    - 10점: 약간의 반복 또는 급전개
    - 0점: 서사 폭주(압축) 또는 정체(반복 3회+)
 
-4. **분량 충족 (15점)**:
-   - 15점: 5,000자 이상 (이상적)
-   - 12점: 4,500~5,000자 (안전)
-   - 8점: 4,000~4,500자 (위험)
-   - 0점: 4,000자 미만 (절대 REJECT)
+4. **독자 몰입도 (20점)**:
+   - 20점: 다음 화를 즉시 읽고 싶은 클리프행어 + 예측 불가능 전개
+   - 15점: 적절한 궁금증 유발, 캐릭터 매력 발휘
+   - 10점: 무난한 전개이나 특별히 끌리는 요소 없음
+   - 5점: 예측 가능한 전개, 진부한 클리프행어
+   - 0점: 다음 화를 읽을 동기 없음
 
-5. **문체 품질 (15점)**:
-   - 15점: 유려하고 몰입감 높음
-   - 10점: 가독성 양호
+5. **문체 품질 (20점)**:
+   - 20점: 유려하고 몰입감 높음, 감각적 묘사 탁월
+   - 15점: 가독성 양호, 문장에 리듬감 있음
+   - 10점: 가독성 양호하나 AI티 잔존
    - 5점: 건조하나 의미 전달됨
    - 0점: 가독성 심각하게 떨어짐
 
+**분량 체크**: 4,000자 미만은 자동 REJECT (점수 항목에서 제외, 사전 필터)
+
 **PASS 기준**: 총점 65점 이상이면 PASS (재시도 2회+ 시 55점) [V60.24 완화]
-**자동 REJECT**: 설정 일관성 0점, 장면 구성 0점, 서사 흐름 0점, 분량 0점 중 하나라도 해당 시
+**자동 REJECT**: 설정 일관성 0점, 장면 구성 0점, 서사 흐름 0점, 분량 4000자 미만 중 하나라도 해당 시
 
 Step 5: 최종 판정
-- 위 4단계를 종합하여 PASS/REJECT 결정
+- 위 5단계를 종합하여 PASS/REJECT 결정
 - 에러 카테고리 분류 (QUALITY_ISSUE vs LOGIC_ERROR)
 
 [Output Format] JSON Only
@@ -227,18 +231,18 @@ Step 5: 최종 판정
     "decision": "PASS" 또는 "REJECT",
     "score": 0~100,
     "score_breakdown": {{
-        "setting_consistency": 0~25,
-        "scene_composition": 0~25,
+        "setting_consistency": 0~20,
+        "scene_composition": 0~20,
         "narrative_flow": 0~20,
-        "length_fulfillment": 0~15,
-        "prose_quality": 0~15
+        "reader_engagement": 0~20,
+        "prose_quality": 0~20
     }},
     "error_category": "QUALITY_ISSUE" 또는 "LOGIC_ERROR",
     "diagnostic_report": "논리적 모순 발생 시, 정확히 어떤 설정(무기, 인물, 시간)이 충돌했는지 기술",
     "current_beat_achieved": true/false,
     "reason": "판정 근거 (반드시 {audit_mode} 관점에서 서술)",
     "feedback": "증폭/수정을 위한 구체적 지시",
-    "lowest_score_area": "가장 낮은 점수를 받은 영역 (setting_consistency/scene_composition/narrative_flow/length_fulfillment/prose_quality)"
+    "lowest_score_area": "가장 낮은 점수를 받은 영역 (setting_consistency/scene_composition/narrative_flow/reader_engagement/prose_quality)"
 }}
 """
 
@@ -857,9 +861,13 @@ class Director(BaseAgent):
 {self._escape_braces(content[:5000])}
 
 ### 검증 기준
+⚠️ 중요: 이름이 비슷해도 **다른 인물**이면 불일치가 아니다! (예: '김성태'와 '김태민'은 성만 같은 별개 인물)
+   Registry에 등록된 모든 인물을 먼저 파악하고, role이 "주인공"인 인물은 절대 다른 NPC와 혼동하지 마라.
+
 1. **캐릭터명**: 등록된 이름 외의 다른 표기 사용 시 WARNING
    - 예: '팽무진'이 등록되었는데 '무진', '주인공'으로 표기
    - 별칭(aliases)은 허용
+   - ❌ 절대 금지: 성이 같다는 이유로 다른 인물을 동일인으로 판단
 2. **조직/문파명**: 등록된 명칭과 다른 표기 사용 시 WARNING
    - 예: '철혈문'이 등록되었는데 '철혈파'로 표기
 3. **장소명**: 동일 장소가 다른 명칭으로 표기 시 MINOR
@@ -1205,8 +1213,10 @@ class Director(BaseAgent):
         [V60.96 NEW] state_tracker 파라미터 추가 - 죽은 NPC 등장 검증
         """
         # ═══════════════════════════════════════════════════════════════
-        # [V60.96] 죽은 NPC 등장 검사 - REJECT 대상 (최우선 체크)
+        # [V63.4] Python 사전 검증 → 경고 수집 (최종 판단은 LLM)
         # ═══════════════════════════════════════════════════════════════
+        _pre_llm_warnings = []
+
         # [V60.97] arc_no 추출 (타임라인 비교용)
         # NOTE: main_a.py에서 arc_doc은 보통 string(tactical_doc)으로 전달됨 → dict 분기 거의 미진입
         arc_no = 0
@@ -1221,40 +1231,27 @@ class Director(BaseAgent):
         if arc_no <= 0 and arc_pos:
             arc_no = arc_pos  # arc_pos가 있으면 사용
 
+        # [V63.4] 죽은 NPC → LLM 경고로 전달 (기존: 즉시 REJECT)
         if state_tracker:
             dead_npc_violations = state_tracker.check_dead_npc_in_manuscript(manuscript, ep_num, arc_no)
             if dead_npc_violations:
                 violation_names = [v["npc_name"] for v in dead_npc_violations]
-                print(f"      💀 [V60.96] 죽은 NPC 등장 감지: {', '.join(violation_names)}")
-                return {
-                    "decision": "REJECT",
-                    "score": 20,
-                    "error_category": "LOGIC_ERROR",
-                    "diagnostic_report": f"죽은 NPC {len(dead_npc_violations)}명 등장",
-                    "current_beat_achieved": False,
-                    "reason": f"[V60.96] 사망한 NPC가 살아있는 것처럼 등장: {', '.join(violation_names)}",
-                    "feedback": f"[V60.96 REJECT] 다음 NPC는 이미 사망했습니다:\n" +
-                               "\n".join([f"  - {v['npc_name']}: Arc {v['death_arc']}에서 사망" for v in dead_npc_violations]) +
-                               "\n\n회상이나 언급만 허용됩니다. 살아있는 것처럼 대화/행동시키지 마세요.",
-                    "v60_96_dead_npc": dead_npc_violations
-                }
+                print(f"      ⚠️ [V63.4] 죽은 NPC 경고 → LLM 전달: {', '.join(violation_names)}")
+                _pre_llm_warnings.append(
+                    f"[CRITICAL 경고] 죽은 NPC 등장 의심: {', '.join(violation_names)}\n" +
+                    "\n".join(f"  - {v['npc_name']}: Arc {v['death_arc']}에서 사망" for v in dead_npc_violations) +
+                    "\n  ※ 회상/과거 언급만 허용. 살아있는 것처럼 대화/행동하면 REJECT 필요."
+                )
 
-        # ═══════════════════════════════════════════════════════════════
-        # [V60.90] 장르별 특화 검증 - Guard 메서드 호출
-        # ═══════════════════════════════════════════════════════════════
+        # [V63.4] 장르 위반 → LLM 경고로 전달 (기존: 즉시 REJECT)
         if self.genre_validation_enabled and self.guard:
             genre_violations = self._run_genre_specific_validation(manuscript, ep_num)
             if genre_violations.get('has_critical'):
-                return {
-                    "decision": "REJECT",
-                    "score": 25,
-                    "error_category": "GENRE_VIOLATION",
-                    "diagnostic_report": genre_violations.get('summary', '장르 규칙 위반'),
-                    "current_beat_achieved": False,
-                    "reason": f"[V60.90] 장르 규칙 위반: {genre_violations.get('summary', '')}",
-                    "feedback": genre_violations.get('feedback', ''),
-                    "v60_90_genre_violations": genre_violations.get('violations', [])
-                }
+                print(f"      ⚠️ [V63.4] 장르 위반 경고 → LLM 전달: {genre_violations.get('summary', '')}")
+                _pre_llm_warnings.append(
+                    f"[CRITICAL 경고] 장르 규칙 위반: {genre_violations.get('summary', '')}\n"
+                    f"  {genre_violations.get('feedback', '')}"
+                )
 
         # ═══════════════════════════════════════════════════════════════
         # [V60.88] 원고 역사 충돌 검사 - 캐시 우선, 폴백은 기존 방식
@@ -1271,8 +1268,8 @@ class Director(BaseAgent):
                 if history_check.get('cache_used'):
                     print(f"      ⚡ [V60.88] 캐시 참조 충돌 검사 완료")
 
-            # 캐시 없거나 실패 시 기존 방식 (manuscript_history 사용)
-            if not history_check or history_check.get('error'):
+            # [V63.4 P0] 캐시 없거나 실패 시 기존 방식 폴백 (manuscript_history 사용)
+            if not history_check or history_check.get('error') or history_check.get('needs_fallback'):
                 if manuscript_history:
                     history_check = self.check_manuscript_history_conflicts(
                         ep_num=ep_num,
@@ -1280,6 +1277,8 @@ class Director(BaseAgent):
                         manuscript_history=manuscript_history,
                         use_summary=True  # 토큰 절약을 위해 요약본 우선 사용
                     )
+                elif history_check and history_check.get('needs_fallback'):
+                    print(f"      ⚠️ [V63.4] 캐시 폴백 필요하나 manuscript_history 없음 → 검증 스킵")
 
             if history_check and history_check.get('decision') == 'CONFLICT':
                 conflicts = history_check.get('conflicts', [])
@@ -1312,18 +1311,14 @@ class Director(BaseAgent):
                 ep_num=ep_num
             )
 
+            # [V63.4] Python REJECT → LLM 경고로 전달 (기존: 즉시 REJECT)
             if config_check.get('decision') == 'REJECT':
                 violations = config_check.get('violations', [])
-                return {
-                    "decision": "REJECT",
-                    "score": 30,
-                    "error_category": "LOGIC_ERROR",
-                    "diagnostic_report": f"주인공 설정 위반 {len(violations)}건 발견",
-                    "current_beat_achieved": False,
-                    "reason": f"[V60.89] {config_check.get('feedback', '주인공 설정 위반')}",
-                    "feedback": config_check.get('feedback', ''),
-                    "v60_89_config_check": config_check
-                }
+                print(f"      ⚠️ [V63.4] 주인공 설정 위반 경고 → LLM 전달: {len(violations)}건")
+                _pre_llm_warnings.append(
+                    f"[CRITICAL 경고] 주인공 설정 위반 {len(violations)}건\n"
+                    f"  {config_check.get('feedback', '주인공 설정 위반')}"
+                )
             elif config_check.get('decision') == 'WARNING':
                 # WARNING은 기록만 하고 계속 진행
                 if validation_context is None:
@@ -1402,6 +1397,15 @@ class Director(BaseAgent):
         # ═══════════════════════════════════════════════════════════════
         # Note: validation_context.get('bp_completeness_done', False)가 True면 이미 검증됨
         # main_a.py에서 _validate_blueprint_completeness_v60()을 먼저 호출하므로 여기서 재검증하지 않음
+
+        # [V63.4] Python 경고를 validation_context에 주입 (V0128 경로 포함)
+        if _pre_llm_warnings:
+            if validation_context is None:
+                validation_context = {}
+            validation_context['pre_llm_critical_warnings'] = (
+                "\n\n[⚠️ Python 사전 검증 경고 — 문맥 확인 후 최종 판단 필요]\n"
+                + "\n---\n".join(_pre_llm_warnings)
+            )
 
         # [V43] V0128 검증 시스템 조건부 사용
         if self.use_v0128 and validation_context:
@@ -1503,9 +1507,14 @@ class Director(BaseAgent):
             high_density_hud_context=safe_hud  # [V60.95] 고밀도 HUD 주입
         )
 
+        # [V63.4] Python 사전 경고를 LLM 프롬프트에 주입
+        if _pre_llm_warnings:
+            _warning_block = "\n\n[⚠️ Python 사전 검증 경고 — 문맥 확인 후 최종 판단 필요]\n" + "\n---\n".join(_pre_llm_warnings)
+            prompt += self._escape_braces(_warning_block)
+
         response = self.ask(prompt, temperature=0.1, thinking_level="high")  # [V61.6] 원고 PASS/REJECT
         return self._extract_json_robust(response)
-    
+
 
     def audit_strategic_plan(self, arc_plan, prev_arc_context, curr_block=None, protagonist_name=None, suspected_duplicates=None, entity_registry=None):
         """
@@ -1714,33 +1723,7 @@ class Director(BaseAgent):
 
         return result    
 
-    def audit_timeline_logic(self, ep_num, current_manuscript, prev_summary):
-        """[V38.1] 시공간 및 동선 모순 정밀 감사 (Timeline Auditor)"""
-
-        prompt = f"""
-        [Role] 시공간 정합성 감사관 (Continuity Supervisor)
-        [Task] 직전 화의 요약본과 현재 원고를 대조하여 '동선'과 '시간'의 모순을 적발하라.
-
-        ### 🔍 감시 대상 데이터
-        1. [직전 화 요약 (Prev Context)]: {prev_summary}
-        2. [현재 원고 (Current Draft)]: {current_manuscript[:3000]}... (이하 생략)
-
-        ### 🚨 집중 단속 항목 (Red Flags)
-        1. **동선 충돌**: A장소에 이미 들어와 있는데, 묘사 없이 다시 A장소 입구로 들어오는 장면이 있는가?
-        2. **시간 역행**: 밤(Night)에 잠들거나 활동했는데, 갑자기 설명 없이 낮(Day)이나 황혼으로 시간이 튀는가?
-        3. **사건 중복**: 이미 해결된 사건(예: 특정인과의 만남)이 마치 처음인 것처럼 다시 발생하는가?
-
-        [Output Format] JSON Only
-        {{
-            "status": "PASS" 또는 "FAIL",
-            "contradiction_level": 0~10 (0이면 모순 없음, 10이면 치명적),
-            "reason": "발견된 모순점 상세 기술 (없으면 '이상 없음')",
-            "correction_guide": "모순 해결을 위한 구체적 수정 지시"
-        }}
-        """
-        response = self.ask(prompt, temperature=0.1, thinking_level="medium")  # [V61.6] 타임라인 검증
-        return self._extract_json_robust(response)
-
+    # [V63.4 P1] audit_timeline_logic() 삭제 — Dead Code (코드베이스 전체에서 미호출)
 
     # =================================================================
     # ═══════════════════════════════════════════════════════════════
@@ -2233,13 +2216,13 @@ class Director(BaseAgent):
         }
     }
 
-    # [V59] 품질 항목별 가중치
+    # [V63.2] 품질 항목별 가중치 — 일관성 강화
     QUALITY_WEIGHTS = {
-        'structure': 0.20,      # 구조적 완성도
-        'prose': 0.20,          # 문장력
-        'consistency': 0.25,    # 설정 일관성
-        'engagement': 0.20,     # 독자 몰입도
-        'commercial': 0.15,     # 상업적 매력
+        'structure': 0.15,      # 구조적 완성도
+        'prose': 0.15,          # 문장력 (0.20→0.15)
+        'consistency': 0.30,    # 설정 일관성 (0.20→0.30)
+        'engagement': 0.20,     # 독자 몰입도 (0.25→0.20)
+        'commercial': 0.20,     # 상업적 매력
     }
 
     def grade_manuscript_v59(self, ep_num: int, manuscript: str, validation_result: dict) -> dict:
@@ -2645,7 +2628,10 @@ class Director(BaseAgent):
 ### 📋 Blueprint (이번 화 설계)
 {blueprint}
 
-### 🔗 직전 화 엔딩 (연속성 기준)
+### 🔗 직전 화 상태 (연속성 기준)
+{episode_digest}
+
+[직전 화 엔딩]
 {previous_ending}
 
 ---
@@ -2674,17 +2660,19 @@ class Director(BaseAgent):
 
 ---
 
-### 🎯 평가 기준 (가중치)
-1. **Blueprint 씬 반영률 (40%)**: 설계된 모든 씬이 균등하게 반영되었는가?
-2. **직전 화 연속성 (30%)**: 직전 화 엔딩에서 자연스럽게 이어지는가?
-3. **문장 품질 + 몰입도 (20%)**: 독자가 다음 화를 기다리게 만드는가?
+### 🎯 [V63] 평가 기준 (가중치)
+1. **직전 화 연속성 + 내부 일관성 (35%)**: 직전 화 엔딩 및 상태 다이제스트와 자연스럽게 이어지는가? 원고 내 앞뒤 모순이 없는가? (잃어버린 아이템 재사용, 쓰러진 NPC 활동, 부상 부위 멀쩡히 사용, NPC 위치 순간이동 등) 모순이 1건이라도 있으면 해당 후보의 이 항목 점수를 0으로 부여하세요.
+2. **Blueprint 씬 반영률 (25%)**: 설계된 모든 씬이 균등하게 반영되었는가?
+3. **문장 품질 + 몰입도 (20%)**: 독자가 다음 화를 기다리게 만드는가? 문장이 유려하고 긴장감이 있는가? 클리프행어가 강렬한가?
 4. **분량 충족 (10%)**: 5,000자 이상인가? (최소 4,000자)
+5. **Python 경고 반영 (10%)**: 아래 Python 사전 검증에서 경고가 많은 후보는 감점하세요.
 
 ### 🚨 자동 REJECT 조건 (어느 후보든)
 - 죽은 NPC가 활동하는 경우
 - 미습득 무공을 사용하는 경우
 - 분량 4,000자 미만
 - Blueprint 씬 50% 이상 누락
+- 원고 내부에서 앞뒤가 맞지 않는 명백한 모순 (아이템/NPC/부상 상태 불일치)
 
 ### 📌 출력 형식 (Strict JSON)
 {{
@@ -2693,9 +2681,10 @@ class Director(BaseAgent):
     "verdict": "PASS" | "REJECT",
     "score": 0-100,
     "score_breakdown": {{
-        "blueprint_coverage": 0-40,
-        "continuity": 0-30,
-        "quality": 0-20,
+        "quality_engagement": 0-30,
+        "blueprint_coverage": 0-25,
+        "continuity": 0-20,
+        "internal_consistency": 0-15,
         "length": 0-10
     }},
     "feedback": {{
@@ -2721,7 +2710,8 @@ class Director(BaseAgent):
         previous_ending: str,
         arc_pos: int = 1,
         total_eps: int = 5,
-        retry_count: int = 0
+        retry_count: int = 0,
+        episode_digest: str = ""  # [V62.6] 에피소드 상태 다이제스트
     ) -> dict:
         """
         [V60.80] 3개 후보 중 최선 선택 + PASS/REJECT 판정
@@ -2735,6 +2725,7 @@ class Director(BaseAgent):
             arc_pos: Arc 내 위치
             total_eps: Arc 내 총 에피소드 수
             retry_count: 재시도 횟수
+            episode_digest: [V62.6] 직전 화 상태 다이제스트 (Python 추출)
 
         Returns:
             {
@@ -2814,6 +2805,7 @@ class Director(BaseAgent):
 
         prompt = self.ENSEMBLE_SELECTION_PROMPT.format(
             blueprint=self._escape_braces(blueprint_str[:3000]),
+            episode_digest=self._escape_braces(episode_digest) if episode_digest else "(다이제스트 없음)",
             previous_ending=self._escape_braces(previous_ending[-500:] if previous_ending else ""),
             strategy_a=info_a["strategy"],
             manuscript_a=self._escape_braces(info_a["manuscript"]),
@@ -3321,12 +3313,14 @@ class Director(BaseAgent):
                 }
 
         except Exception as e:
-            print(f"      ⚠️ [V60.88] 캐시 검사 오류: {e}")
+            # [V63.4 P0] 캐시 실패 시 폴백 트리거 보장 — error 키로 호출부에서 fallback 유도
+            print(f"      ⚠️ [V60.88] 캐시 검사 오류 → 폴백 경로 전환: {e}")
             return {
-                "decision": "PASS",
+                "decision": "SKIP",
                 "conflicts": [],
-                "summary": f"캐시 검사 중 오류 (비차단): {str(e)}",
-                "error": str(e)
+                "summary": f"캐시 검사 실패 → 기존 방식 폴백 필요: {str(e)}",
+                "error": str(e),
+                "needs_fallback": True
             }
 
     # ═══════════════════════════════════════════════════════════════════════

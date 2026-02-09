@@ -109,7 +109,9 @@ class UnifiedArcValidator(BaseAgent):
         arc: Dict,
         prev_arcs: List[Dict],
         constraints: str = "",
-        state_tracker=None  # [V60.94] StateTracker (죽은 NPC 검증용)
+        state_tracker=None,  # [V60.94] StateTracker (죽은 NPC 검증용)
+        pre_collected_items: Optional[set] = None,  # [V62.5] ConstraintCompiler에서 수집된 아이템
+        pre_collected_grants: Optional[set] = None  # [V62.5] ConstraintCompiler에서 수집된 수여물
     ) -> Tuple[str, Dict]:
         """
         Arc 통합 검증
@@ -119,6 +121,8 @@ class UnifiedArcValidator(BaseAgent):
             prev_arcs: 이전 Arc 리스트
             constraints: 제약 조건 텍스트
             state_tracker: [V60.94] StateTracker (죽은 NPC 검증용)
+            pre_collected_items: [V62.5] 이미 수집된 이전 Arc 아이템 set (중복 스캔 방지)
+            pre_collected_grants: [V62.5] 이미 수집된 이전 Arc 수여물 set (중복 스캔 방지)
 
         Returns:
             (verdict, result) - "PASS"/"REJECT", 상세 결과
@@ -126,19 +130,12 @@ class UnifiedArcValidator(BaseAgent):
         # ═══════════════════════════════════════════════════════════════
         # Phase A: Python 즉시 검증 (무료)
         # ═══════════════════════════════════════════════════════════════
-        python_result = self._python_validate(arc, prev_arcs, state_tracker)
+        python_result = self._python_validate(arc, prev_arcs, state_tracker,
+                                              pre_collected_items, pre_collected_grants)
 
-        # Python에서 CRITICAL 발견 시 LLM 스킵 (비용 절감)
+        # [V63.4] Python CRITICAL도 LLM에 전달 (Python은 정보 제공만, 최종 판단은 LLM)
         if python_result["has_critical"]:
-            print(f"      🚨 [UnifiedValidator] Python CRITICAL 발견 - LLM 스킵")
-            return "REJECT", {
-                "verdict": "REJECT",
-                "phase": "python",
-                "issues": python_result["issues"],
-                "summary": f"Python 검증에서 CRITICAL 이슈 발견: {python_result['critical_summary']}",
-                "confidence": 1.0,
-                "feedback": self._generate_feedback(python_result["issues"])
-            }
+            print(f"      ⚠️ [V63.4] Python CRITICAL {len(python_result.get('critical_summary',''))}자 → LLM 검증으로 전달")
 
         # ═══════════════════════════════════════════════════════════════
         # Phase B: LLM 문맥 검증 (유료)
@@ -179,42 +176,45 @@ class UnifiedArcValidator(BaseAgent):
 
         return verdict, result
 
-    def _python_validate(self, arc: Dict, prev_arcs: List[Dict], state_tracker=None) -> Dict:
-        """Python 즉시 검증 (무료, 빠름)"""
+    # [V63.4 P1] _python_validate → 8개 독립 체크 메서드로 분할
+
+    def _check_dead_npc(self, arc: Dict, state_tracker, prev_arcs: List[Dict]) -> List[Dict]:
+        """[#0] 죽은 NPC 등장 + NPC 변경 체크"""
         issues = []
+        if not state_tracker or not prev_arcs:
+            return issues
 
-        # [V60.94] 0. 죽은 NPC 등장 체크 (CRITICAL - REJECT 대상)
-        if state_tracker and prev_arcs:
-            arc_no = arc.get("arc_no", 0)
-            tactical = arc.get("tactical_doc", "")
-            if not isinstance(tactical, str):
-                tactical = str(tactical) if tactical else ""
+        arc_no = arc.get("arc_no", 0)
+        tactical = arc.get("tactical_doc", "")
+        if not isinstance(tactical, str):
+            tactical = str(tactical) if tactical else ""
 
-            dead_npc_violations = state_tracker.check_dead_npc_appearance(tactical, arc_no)
-            for v in dead_npc_violations:
-                issues.append({
-                    "severity": "CRITICAL",
-                    "category": "npc_death",
-                    "issue": f"💀 죽은 NPC 등장: '{v.get('npc_name', '?')}'",
-                    "evidence": f"Arc {v.get('death_arc', '?')}에서 사망, Arc {arc_no}에서 다시 등장",
-                    "fix_hint": f"'{v.get('npc_name', '?')}'을(를) 등장시키지 마세요 (사망 NPC)"
-                })
-                print(f"      💀 [V60.94] REJECT: 죽은 NPC '{v.get('npc_name')}' 등장!")
+        dead_npc_violations = state_tracker.check_dead_npc_appearance(tactical, arc_no)
+        for v in dead_npc_violations:
+            issues.append({
+                "severity": "CRITICAL", "category": "npc_death",
+                "issue": f"💀 죽은 NPC 등장: '{v.get('npc_name', '?')}'",
+                "evidence": f"Arc {v.get('death_arc', '?')}에서 사망, Arc {arc_no}에서 다시 등장",
+                "fix_hint": f"'{v.get('npc_name', '?')}'을(를) 등장시키지 마세요 (사망 NPC)"
+            })
+            print(f"      💀 [V60.94] REJECT: 죽은 NPC '{v.get('npc_name')}' 등장!")
 
-            # [V60.95] NPC 무장/수준 변경 체크 (WARNING - 정당화 사유 필요)
-            npc_changes = state_tracker.check_npc_changes(tactical, arc_no)
-            for change in npc_changes:
-                change_type = "무장" if change.get("change_type") == "weapon" else "수준"
-                issues.append({
-                    "severity": "WARNING",
-                    "category": "npc_change",
-                    "issue": f"⚠️ NPC {change_type} 변경: '{change.get('npc_name', '?')}'",
-                    "evidence": change.get("reason", ""),
-                    "fix_hint": f"'{change.get('npc_name', '?')}'의 {change_type} 변경에 대한 정당화 사유 필요 (습득, 성장 등)"
-                })
-                print(f"      ⚠️ [V60.95] WARNING: NPC '{change.get('npc_name')}' {change_type} 변경 감지")
+        npc_changes = state_tracker.check_npc_changes(tactical, arc_no)
+        for change in npc_changes:
+            change_type = "무장" if change.get("change_type") == "weapon" else "수준"
+            issues.append({
+                "severity": "WARNING", "category": "npc_change",
+                "issue": f"⚠️ NPC {change_type} 변경: '{change.get('npc_name', '?')}'",
+                "evidence": change.get("reason", ""),
+                "fix_hint": f"'{change.get('npc_name', '?')}'의 {change_type} 변경에 대한 정당화 사유 필요 (습득, 성장 등)"
+            })
+            print(f"      ⚠️ [V60.95] WARNING: NPC '{change.get('npc_name')}' {change_type} 변경 감지")
 
-        # 1. 분량 체크
+        return issues
+
+    def _check_length(self, arc: Dict) -> List[Dict]:
+        """[#1] 분량 체크"""
+        issues = []
         ep_count = arc.get("ep_count", 5)
         tactical = arc.get("tactical_doc", "")
         if not isinstance(tactical, str):
@@ -223,48 +223,42 @@ class UnifiedArcValidator(BaseAgent):
         min_length = ep_count * self.min_chars_per_ep
         if len(tactical) < min_length:
             issues.append({
-                "severity": "MAJOR",
-                "category": "structure",
+                "severity": "MAJOR", "category": "structure",
                 "issue": f"tactical_doc 분량 부족: {len(tactical)}자 < {min_length}자",
                 "evidence": f"ep_count={ep_count}, 필요={min_length}자",
                 "fix_hint": f"tactical_doc을 {min_length}자 이상으로 작성"
             })
 
-        # 2. 화 구분 체크
         ep_pattern = re.findall(r'제\s*\d+\s*화', tactical)
         if len(ep_pattern) < ep_count:
             issues.append({
-                "severity": "MAJOR",
-                "category": "structure",
+                "severity": "MAJOR", "category": "structure",
                 "issue": f"화 구분 부족: {len(ep_pattern)}개 < {ep_count}개",
                 "evidence": f"'제N화' 패턴 {len(ep_pattern)}개 발견",
                 "fix_hint": f"'제1화', '제2화' 등 {ep_count}개 섹션 명시"
             })
+        return issues
 
-        # 3. 필수 필드 체크
-        # [V61] state_changes 추가
+    def _check_required_fields(self, arc: Dict) -> List[Dict]:
+        """[#3] 필수 필드 + state_changes 형식 검증"""
+        issues = []
         required_fields = ["arc_no", "ep_count", "tactical_doc", "state_constraints", "joint_docs", "state_changes"]
         for field in required_fields:
             if field not in arc or not arc[field]:
-                # [V61] state_changes는 WARNING으로 (하위 호환)
                 severity = "WARNING" if field == "state_changes" else "MAJOR"
                 issues.append({
-                    "severity": severity,
-                    "category": "structure",
+                    "severity": severity, "category": "structure",
                     "issue": f"필수 필드 누락: {field}",
                     "evidence": f"{field} 필드가 없거나 비어있음",
                     "fix_hint": f"{field} 필드를 올바르게 작성"
                 })
 
-        # [V61] state_changes 형식 검증
         state_changes = arc.get("state_changes", {})
         if state_changes and isinstance(state_changes, dict):
-            # [V61.5] timeline 필드 검증
             timeline = state_changes.get("timeline", {})
             if not timeline or not isinstance(timeline, dict):
                 issues.append({
-                    "severity": "WARNING",
-                    "category": "state_changes",
+                    "severity": "WARNING", "category": "state_changes",
                     "issue": "state_changes.timeline 필드 누락",
                     "evidence": "timeline 필드가 없거나 형식이 잘못됨",
                     "fix_hint": "timeline: {start: {...}, end: {...}} 형식으로 작성하세요"
@@ -274,89 +268,176 @@ class UnifiedArcValidator(BaseAgent):
                 end = timeline.get("end", {})
                 if not start or not isinstance(start, dict):
                     issues.append({
-                        "severity": "MINOR",
-                        "category": "state_changes",
+                        "severity": "MINOR", "category": "state_changes",
                         "issue": "timeline.start 필드 비어있음",
                         "evidence": f"start: {start}",
                         "fix_hint": "Arc 시작 시점을 명시하세요 (예: {year: 2000, month: 3})"
                     })
                 if not end or not isinstance(end, dict):
                     issues.append({
-                        "severity": "MINOR",
-                        "category": "state_changes",
+                        "severity": "MINOR", "category": "state_changes",
                         "issue": "timeline.end 필드 비어있음",
                         "evidence": f"end: {end}",
                         "fix_hint": "Arc 종료 시점을 명시하세요"
                     })
 
-            # npc_deaths 형식 검증
             npc_deaths = state_changes.get("npc_deaths", [])
             if isinstance(npc_deaths, list):
                 for death in npc_deaths:
-                    if isinstance(death, dict):
-                        if not death.get("name"):
-                            issues.append({
-                                "severity": "MINOR",
-                                "category": "state_changes",
-                                "issue": "npc_deaths에 name 필드 누락",
-                                "evidence": str(death)[:100],
-                                "fix_hint": "사망 NPC 이름을 명시하세요"
-                            })
-            # skill_acquisitions 형식 검증
+                    if isinstance(death, dict) and not death.get("name"):
+                        issues.append({
+                            "severity": "MINOR", "category": "state_changes",
+                            "issue": "npc_deaths에 name 필드 누락",
+                            "evidence": str(death)[:100],
+                            "fix_hint": "사망 NPC 이름을 명시하세요"
+                        })
             skill_acq = state_changes.get("skill_acquisitions", [])
             if isinstance(skill_acq, list):
                 for skill in skill_acq:
-                    if isinstance(skill, dict):
-                        if not skill.get("name"):
-                            issues.append({
-                                "severity": "MINOR",
-                                "category": "state_changes",
-                                "issue": "skill_acquisitions에 name 필드 누락",
-                                "evidence": str(skill)[:100],
-                                "fix_hint": "습득 무공 이름을 명시하세요"
-                            })
+                    if isinstance(skill, dict) and not skill.get("name"):
+                        issues.append({
+                            "severity": "MINOR", "category": "state_changes",
+                            "issue": "skill_acquisitions에 name 필드 누락",
+                            "evidence": str(skill)[:100],
+                            "fix_hint": "습득 무공 이름을 명시하세요"
+                        })
+        return issues
 
-        # 4. 중복 아이템 체크 (CRITICAL)
-        if prev_arcs:
+    def _check_duplicate_items(self, arc: Dict, prev_arcs: List[Dict],
+                                pre_collected_items: Optional[set] = None) -> List[Dict]:
+        """[#4] 중복 아이템 획득 체크"""
+        issues = []
+        if not prev_arcs:
+            return issues
+
+        if pre_collected_items is not None:
+            prev_items = pre_collected_items
+        else:
             prev_items = set()
             for prev in prev_arcs:
                 acquired = prev.get("state_constraints", {}).get("items_acquired", [])
                 if isinstance(acquired, list):
                     prev_items.update(item.strip() for item in acquired if item)
 
-            current_acquired = arc.get("state_constraints", {}).get("items_acquired", [])
-            if isinstance(current_acquired, list):
-                for item in current_acquired:
-                    item_str = item.strip() if isinstance(item, str) else str(item)
-                    if item_str in prev_items:
-                        issues.append({
-                            "severity": "CRITICAL",
-                            "category": "continuity",
-                            "issue": f"중복 아이템 획득: '{item_str}'",
-                            "evidence": f"이전 Arc에서 이미 획득한 아이템",
-                            "fix_hint": f"items_acquired에서 '{item_str}' 제거"
-                        })
+        current_acquired = arc.get("state_constraints", {}).get("items_acquired", [])
+        if isinstance(current_acquired, list):
+            for item in current_acquired:
+                item_str = item.strip() if isinstance(item, str) else str(item)
+                if item_str in prev_items:
+                    issues.append({
+                        "severity": "CRITICAL", "category": "continuity",
+                        "issue": f"중복 아이템 획득: '{item_str}'",
+                        "evidence": f"이전 Arc에서 이미 획득한 아이템",
+                        "fix_hint": f"items_acquired에서 '{item_str}' 제거"
+                    })
+        return issues
 
-        # 5. 중복 수여물 체크 (CRITICAL)
-        if prev_arcs:
+    def _check_duplicate_grants(self, arc: Dict, prev_arcs: List[Dict],
+                                 pre_collected_grants: Optional[set] = None) -> List[Dict]:
+        """[#5] 중복 수여물 체크"""
+        issues = []
+        if not prev_arcs:
+            return issues
+
+        if pre_collected_grants is not None:
+            prev_grants = pre_collected_grants
+        else:
             prev_grants = set()
             for prev in prev_arcs:
                 grants = prev.get("state_constraints", {}).get("grants_received", [])
                 if isinstance(grants, list):
                     prev_grants.update(g.strip() for g in grants if g)
 
-            current_grants = arc.get("state_constraints", {}).get("grants_received", [])
-            if isinstance(current_grants, list):
-                for grant in current_grants:
-                    grant_str = grant.strip() if isinstance(grant, str) else str(grant)
-                    if grant_str in prev_grants:
-                        issues.append({
-                            "severity": "CRITICAL",
-                            "category": "continuity",
-                            "issue": f"중복 수여물: '{grant_str}'",
-                            "evidence": f"이전 Arc에서 이미 수여받은 것",
-                            "fix_hint": f"grants_received에서 '{grant_str}' 제거"
-                        })
+        current_grants = arc.get("state_constraints", {}).get("grants_received", [])
+        if isinstance(current_grants, list):
+            for grant in current_grants:
+                grant_str = grant.strip() if isinstance(grant, str) else str(grant)
+                if grant_str in prev_grants:
+                    issues.append({
+                        "severity": "CRITICAL", "category": "continuity",
+                        "issue": f"중복 수여물: '{grant_str}'",
+                        "evidence": f"이전 Arc에서 이미 수여받은 것",
+                        "fix_hint": f"grants_received에서 '{grant_str}' 제거"
+                    })
+        return issues
+
+    def _check_injury_escalation(self, arc: Dict) -> List[Dict]:
+        """[#6] 부상 에스컬레이션 체크"""
+        issues = []
+        CHRONIC_KEYWORDS = [
+            "성대 결절", "성대결절", "실명", "마비", "불구", "절단",
+            "암", "종양", "만성", "대화 불가", "말 못함", "목소리 상실",
+            "청력 상실", "시력 상실", "반신불수",
+        ]
+        end_state = arc.get("state_constraints", {}).get("arc_end_state", {})
+        end_injuries = str(end_state.get("injuries", "없음"))
+        shadow_injuries = str(arc.get("status_shadow", {}).get("expected_injuries", "없음"))
+
+        for inj_text in [end_injuries, shadow_injuries]:
+            for kw in CHRONIC_KEYWORDS:
+                if kw in inj_text:
+                    issues.append({
+                        "severity": "ADVISORY", "category": "injury_escalation",
+                        "issue": f"부상 에스컬레이션 잔여: '{kw}' (자동 세정 대상)",
+                        "evidence": inj_text[:60],
+                        "fix_hint": "Phase 2.5 자동 세정에서 처리됨"
+                    })
+                    break
+        return issues
+
+    def _check_resolved_plots(self, arc: Dict, state_tracker) -> List[Dict]:
+        """[#7] 완결된 플롯 재생성 체크"""
+        issues = []
+        if not state_tracker or not hasattr(state_tracker, 'resolved_plots') or not state_tracker.resolved_plots:
+            return issues
+
+        tactical_str = arc.get("tactical_doc", "")
+        if not isinstance(tactical_str, str):
+            tactical_str = str(tactical_str) if tactical_str else ""
+        for resolved in state_tracker.resolved_plots:
+            plot_name = resolved.get("plot", "")
+            if plot_name and len(plot_name) >= 5 and plot_name in tactical_str:  # [V63.4] 3→5자 (오탐 방지)
+                issues.append({
+                    "severity": "MAJOR", "category": "resolved_plot",
+                    "issue": f"완결된 플롯 재등장 의심: '{plot_name}'",
+                    "evidence": f"Arc {resolved.get('arc_no','?')}에서 완결: {resolved.get('resolution','')}",
+                    "fix_hint": f"'{plot_name}'은 이미 해결된 사건입니다. 새로운 갈등을 설계하세요."
+                })
+        return issues
+
+    def _check_entity_consistency(self, arc: Dict, state_tracker) -> List[Dict]:
+        """[#8] 비-NPC 엔티티 명칭 일관성 체크"""
+        issues = []
+        if not state_tracker or not hasattr(state_tracker, 'check_entity_name_consistency'):
+            return issues
+
+        arc_no = arc.get("arc_no", 0)
+        tactical_str = arc.get("tactical_doc", "")
+        if not isinstance(tactical_str, str):
+            tactical_str = str(tactical_str) if tactical_str else ""
+        entity_warnings = state_tracker.check_entity_name_consistency(tactical_str, arc_no)
+        for ew in entity_warnings:
+            issues.append({
+                "severity": "WARNING", "category": "entity_consistency",
+                "issue": f"엔티티 명칭 불일치: '{ew.get('entity','')}' vs '{ew.get('variant','')}'",
+                "evidence": f"'{ew.get('entity','')}' (Arc {ew.get('first_arc','?')}에서 등록)과 유사",
+                "fix_hint": f"'{ew.get('entity','')}'로 통일하세요."
+            })
+        return issues
+
+    def _python_validate(self, arc: Dict, prev_arcs: List[Dict], state_tracker=None,
+                         pre_collected_items: Optional[set] = None,
+                         pre_collected_grants: Optional[set] = None) -> Dict:
+        """[V63.4 P1] Python 즉시 검증 — 8개 독립 체크 조합"""
+        issues = []
+        issues.extend(self._check_dead_npc(arc, state_tracker, prev_arcs))
+        issues.extend(self._check_length(arc))
+        issues.extend(self._check_required_fields(arc))
+        issues.extend(self._check_duplicate_items(arc, prev_arcs, pre_collected_items))
+        issues.extend(self._check_duplicate_grants(arc, prev_arcs, pre_collected_grants))
+        issues.extend(self._check_injury_escalation(arc))
+        issues.extend(self._check_resolved_plots(arc, state_tracker))
+        issues.extend(self._check_entity_consistency(arc, state_tracker))
 
         has_critical = any(i["severity"] == "CRITICAL" for i in issues)
         critical_items = [i["issue"] for i in issues if i["severity"] == "CRITICAL"]

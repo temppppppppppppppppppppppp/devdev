@@ -68,7 +68,15 @@ class BlueprintConstraintCompiler:
         # 4. 계승 상태 추출
         inherited_state = self._extract_inherited_state(arc_data, prev_blueprint)
 
-        # 5. 제약 블록 생성
+        # 5. [V63] Arc에서 전달된 constraint_summary (Stage 2 → Stage 3)
+        arc_constraint_summary = arc_data.get("constraint_summary", "")
+        if not arc_constraint_summary:
+            print(f"      ⚠️ [V63.4 P1] Arc {arc_no}에 constraint_summary 필드 없음 → Stage 2 제약 전달 누락 가능")
+
+        # 6. [V63.2] Arc state_changes 요약 (Stage 2 → Stage 3 직접 전달)
+        state_changes_summary = self._summarize_state_changes(arc_data.get("state_changes", {}))
+
+        # 7. 제약 블록 생성
         constraint_block = {
             "ep_num": ep_num,
             "arc_no": arc_no,
@@ -76,7 +84,9 @@ class BlueprintConstraintCompiler:
             "must_focus": must_focus,
             "stop_line": stop_line,
             "continuity": continuity,
-            "inherited_state": inherited_state
+            "inherited_state": inherited_state,
+            "arc_constraint_summary": arc_constraint_summary,  # [V63]
+            "state_changes_summary": state_changes_summary  # [V63.2]
         }
 
         return constraint_block
@@ -145,6 +155,20 @@ class BlueprintConstraintCompiler:
         if inherited.get("companions"):
             lines.append(f"동행: {', '.join(inherited['companions'])}")
         lines.append("")
+
+        # [V63] Arc-level constraint summary (Stage 2 → Stage 3 전달)
+        arc_cs = constraint_block.get("arc_constraint_summary", "")
+        if arc_cs:
+            lines.append("### 🚫 ARC 제약 (MUST NOT DO)")
+            lines.append(arc_cs)
+            lines.append("")
+
+        # [V63.2] Arc state_changes 요약 (Stage 2 → Stage 3 직접 전달)
+        sc_summary = constraint_block.get("state_changes_summary", "")
+        if sc_summary:
+            lines.append("### 📊 ARC 상태 변화 (이 Arc에서 발생한/발생할 이벤트)")
+            lines.append(sc_summary)
+            lines.append("")
 
         lines.append("=" * 60)
 
@@ -350,6 +374,81 @@ class BlueprintConstraintCompiler:
                     inherited["mood"] = protag["mood"]
 
         return inherited
+
+    def _summarize_state_changes(self, state_changes: dict) -> str:
+        """
+        [V63.2] Arc state_changes를 Blueprint 제약용 요약 문자열로 변환.
+
+        Stage 2에서 생성된 state_changes의 핵심 이벤트를 추출하여
+        Blueprint 생성 시 참조할 수 있도록 한다.
+        """
+        if not state_changes or not isinstance(state_changes, dict):
+            return ""
+
+        lines = []
+
+        # NPC 사망
+        deaths = state_changes.get("npc_deaths", [])
+        if deaths:
+            names = []
+            for d in deaths[:5]:
+                if isinstance(d, dict):
+                    names.append(f"{d.get('name', '?')}(EP{d.get('episode', '?')})")
+                elif isinstance(d, str):
+                    names.append(d)
+            if names:
+                lines.append(f"⚠️ 사망 NPC: {', '.join(names)} → 이후 등장 금지")
+
+        # 무공/스킬 습득
+        skills = state_changes.get("skill_acquisitions", [])
+        if skills:
+            names = []
+            for s in skills[:5]:
+                if isinstance(s, dict):
+                    names.append(s.get("name", "?"))
+                elif isinstance(s, str):
+                    names.append(s)
+            if names:
+                lines.append(f"🗡️ 습득 무공: {', '.join(names)}")
+
+        # 관계 변화
+        relations = state_changes.get("relationship_changes", [])
+        if relations:
+            for r in relations[:3]:
+                if isinstance(r, dict):
+                    lines.append(
+                        f"🤝 관계변화: {r.get('npc', '?')} "
+                        f"{r.get('from', '?')}→{r.get('to', '?')}"
+                    )
+
+        # 주요 아이템
+        items = state_changes.get("major_items", [])
+        if items:
+            for it in items[:3]:
+                if isinstance(it, dict):
+                    lines.append(
+                        f"📦 아이템: {it.get('name', '?')} ({it.get('action', '?')})"
+                    )
+
+        # NPC 부상
+        injuries = state_changes.get("npc_injuries", [])
+        if injuries:
+            for inj in injuries[:3]:
+                if isinstance(inj, dict):
+                    lines.append(
+                        f"🩹 부상: {inj.get('npc', '?')} - {inj.get('injury', '?')}"
+                    )
+
+        # NPC 이동
+        movements = state_changes.get("npc_movements", [])
+        if movements:
+            for mv in movements[:3]:
+                if isinstance(mv, dict):
+                    lines.append(
+                        f"📍 이동: {mv.get('npc', '?')} → {mv.get('to', '?')}"
+                    )
+
+        return "\n".join(lines) if lines else ""
 
 
 def create_blueprint_constraint_compiler():

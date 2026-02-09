@@ -392,6 +392,10 @@ class SovereignApp:
         self.selected_genre = None  # [V40] 선택된 장르 정보
         self.diversity_engine = None  # [V48] 서사 다양성 엔진
         self.stage_rejection_history = []  # [V60.3] Stage간 REJECT 히스토리 전달
+        # [V62.5] extract_cumulative_state 배치 캐시
+        self._cumulative_state_cache = None
+        self._cumulative_state_cache_key = 0
+        self._state_tracker_loaded_arcs = 0  # [V62.5] StateTracker 증분 업데이트 추적
 
         # [V50] 서사 품질 향상 모듈
         self.tension_manager = None    # [V50.1] 긴장감 곡선 관리
@@ -2037,13 +2041,21 @@ class SovereignApp:
             # StateExtractor 사용 시도
             state_extractor = self.agents.get('state_extractor')
             if state_extractor:
-                # 누적 상태 추출
-                cumulative_state = state_extractor.extract_cumulative_state(all_refined_arcs)
+                # [V62.5] 배치 캐시 활용: 동일 Arc 수면 캐시 재사용
+                arc_count = len(all_refined_arcs)
+                if (self._cumulative_state_cache is not None and
+                        self._cumulative_state_cache_key == arc_count):
+                    cumulative_state = self._cumulative_state_cache
+                else:
+                    cumulative_state = state_extractor.extract_cumulative_state(all_refined_arcs)
+                    self._cumulative_state_cache = cumulative_state
+                    self._cumulative_state_cache_key = arc_count
+
                 # 제약 프롬프트 생성
                 constraint_prompt = state_extractor.generate_constraint_prompt(cumulative_state)
 
                 self._audit_event("v60_10_state_extracted", "StateExtractor generated context", {
-                    "arc_count": len(all_refined_arcs),
+                    "arc_count": arc_count,
                     "items_tracked": len(cumulative_state.get('inventory', {}).get('current_items', []))
                 })
 
@@ -2069,31 +2081,36 @@ class SovereignApp:
         state_constraints = last_arc.get('state_constraints', {})
         arc_end_state = state_constraints.get('arc_end_state', {})
 
-        # 전체 Arc에서 획득한 아이템 목록 수집
+        # [V62.5] 전체 Arc에서 획득한 아이템 목록 수집 (set 기반 O(n) 중복 제거)
         all_acquired_items = []
+        _seen_item_names = set()  # [V62.5] O(1) 중복 체크용
         all_grants_received = []
+        _seen_grant_names = set()  # [V62.5] O(1) 중복 체크용
 
         for prev_arc in all_refined_arcs:
+            arc_label = prev_arc.get('arc_no', '?')
+
             # state_constraints에서 획득 아이템 추출
             state_constraints = prev_arc.get('state_constraints', {})
             items_acquired = state_constraints.get('items_acquired', [])
             if items_acquired:
                 for item in items_acquired:
-                    if item and item not in all_acquired_items:
-                        all_acquired_items.append(f"Arc{prev_arc.get('arc_no')}: {item}")
+                    if item and item not in _seen_item_names:
+                        _seen_item_names.add(item)
+                        all_acquired_items.append(f"Arc{arc_label}: {item}")
 
             # joint_docs.physical_inventory에서 추가 추출
             prev_joint = prev_arc.get('joint_docs', {})
             prev_inventory = prev_joint.get('physical_inventory', [])
             if isinstance(prev_inventory, list):
                 for item in prev_inventory:
-                    item_names_only = [x.split(': ', 1)[-1] if ': ' in x else x for x in all_acquired_items]
-                    if item and item not in item_names_only:
-                        all_acquired_items.append(f"Arc{prev_arc.get('arc_no')}: {item}")
+                    if item and item not in _seen_item_names:
+                        _seen_item_names.add(item)
+                        all_acquired_items.append(f"Arc{arc_label}: {item}")
             elif isinstance(prev_inventory, str) and prev_inventory:
-                item_names_only = [x.split(': ', 1)[-1] if ': ' in x else x for x in all_acquired_items]
-                if prev_inventory not in item_names_only:
-                    all_acquired_items.append(f"Arc{prev_arc.get('arc_no')}: {prev_inventory}")
+                if prev_inventory not in _seen_item_names:
+                    _seen_item_names.add(prev_inventory)
+                    all_acquired_items.append(f"Arc{arc_label}: {prev_inventory}")
 
             # tactical_doc에서 수여물 패턴 추출
             tactical = prev_arc.get('tactical_doc', '')
@@ -2101,8 +2118,9 @@ class SovereignApp:
                 matches = pattern_compiled.findall(tactical)
                 for match in matches:
                     grant_item = match if isinstance(match, str) else match[0] if match else None
-                    if grant_item and grant_item not in str(all_grants_received):
-                        all_grants_received.append(f"Arc{prev_arc.get('arc_no')}: {grant_item}")
+                    if grant_item and grant_item not in _seen_grant_names:
+                        _seen_grant_names.add(grant_item)
+                        all_grants_received.append(f"Arc{arc_label}: {grant_item}")
 
         # 내공 누적 계산
         korean_hal = {'일': 10, '이': 20, '삼': 30, '사': 40, '오': 50, '육': 60, '칠': 70, '팔': 80, '구': 90}
@@ -2522,8 +2540,15 @@ class SovereignApp:
             self.ui.log("🛑 [System] 치명적 데이터 결함으로 인해 기동을 중지합니다.")
             return # 또는 sys.exit()
             
-        self.memory = LongTermMemory(self.current_project) 
-        
+        self.memory = LongTermMemory(self.current_project)
+        # [V63.3] BlueprintMemory 초기화 (Stage 3 시맨틱 검색용)
+        self.blueprint_memory = None
+        try:
+            from modules.core.blueprint_memory import BlueprintMemory
+            self.blueprint_memory = BlueprintMemory(self.current_project)
+        except Exception as _bm_err:
+            self.ui.log(f"   ⚠️ [V63.3] BlueprintMemory 초기화 실패 (비차단): {str(_bm_err)[:60]}")
+
         # [V38 패치] 에이전트 초기화 검증
         if not self._attach_agents():
             self.ui.log("🛑 [System] 에이전트 초기화 실패로 인해 기동을 중지합니다.")
@@ -2900,17 +2925,20 @@ class SovereignApp:
             stats = result.get("statistics", {})
             causal_fixes = result.get("causal_issues_found", 0)
 
-            # 결과 정리 (enrichment_metadata 제거)
+            # [V62.2] 결과 정리: 원본 필드 보존 + 농축 결과 머지 (genre_ext 등 유지)
             enriched_blocks = []
             for i, block in enumerate(enriched_blocks_raw):
                 if block is None:
                     enriched_blocks.append(treatment_blocks[i])
                 elif isinstance(block, dict):
-                    clean_block = {
-                        "block_id": block.get("block_id", f"Block {i+1}"),
-                        "title": block.get("title", ""),
-                        "content": block.get("content", {})
-                    }
+                    clean_block = dict(treatment_blocks[i]) if i < len(treatment_blocks) else {}
+                    clean_block["block_id"] = block.get("block_id", clean_block.get("block_id", f"Block {i+1}"))
+                    clean_block["title"] = block.get("title", clean_block.get("title", ""))
+                    clean_block["content"] = block.get("content", clean_block.get("content", {}))
+                    if "joint_docs" in block:
+                        clean_block["joint_docs"] = block["joint_docs"]
+                    if "status_shadow" in block:
+                        clean_block["status_shadow"] = block["status_shadow"]
                     enriched_blocks.append(clean_block)
                 else:
                     enriched_blocks.append(treatment_blocks[i])
@@ -3425,6 +3453,34 @@ class SovereignApp:
         except Exception as e:
             print(f"      ⚠️ [V61.2] 주인공 이름 추출 실패: {e}")
             return '주인공'
+
+    def _fix_entity_registry_protagonist(self, entity_registry: dict, protagonist_name: str = None) -> dict:
+        """
+        [V62.4] Entity Registry에서 주인공 이름을 락된 이름으로 보정
+
+        StateExtractor LLM이 주인공 이름을 잘못 추출하거나,
+        '주인공 제외' 지시에도 불구하고 빠뜨리는 경우 방지.
+        주인공이 Registry에 없으면 Director가 비슷한 NPC 이름과 혼동하여 오탐 REJECT 발생.
+        """
+        if not entity_registry or not protagonist_name or protagonist_name == "주인공":
+            return entity_registry
+
+        chars = entity_registry.get('characters', [])
+        protag_found = False
+        for ch in chars:
+            if isinstance(ch, dict) and ch.get('role') in ('주인공', 'protagonist', '주역'):
+                if ch.get('name') != protagonist_name:
+                    old_name = ch.get('name', '?')
+                    ch['name'] = protagonist_name
+                    print(f"      🔒 [V62.4] Entity Registry 주인공 보정: {old_name} → {protagonist_name}")
+                protag_found = True
+                break
+
+        if not protag_found:
+            chars.insert(0, {"name": protagonist_name, "role": "주인공", "context": "락 고정"})
+            entity_registry['characters'] = chars
+
+        return entity_registry
 
     def _process_v50_post_episode(self, ep_num: int, manuscript: str, blueprint: dict) -> None:
         """
@@ -4099,17 +4155,12 @@ class SovereignApp:
 
                 # 2. [V61] Treatment → plot_roadmap 변환 후 Master Bible에 주입
                 try:
-                    # plot_roadmap 형식으로 변환
+                    # [V62.2] plot_roadmap flat 구조 변환 (중복 래핑 제거)
                     refined_roadmap = []
                     for i, block in enumerate(treatment):
-                        refined_roadmap.append({
-                            "block_no": i + 1,
-                            "directive": {
-                                "title": block.get("title", f"제 {i+1} 단계"),
-                                "objective": block.get("content", {}).get("solution", "목표 분석 필요")
-                            },
-                            "raw_data": block  # 원본 데이터 전체 보존
-                        })
+                        entry = {"block_no": i + 1}
+                        entry.update(block)
+                        refined_roadmap.append(entry)
 
                     # Master Bible 로드
                     master_bible = self.current_project.master_bible or {}
@@ -4392,8 +4443,27 @@ class SovereignApp:
                     final_volumes.append(vol_data)
                     
                     # [중요] 다음 권 설계를 위해 현재 권의 요약을 누적
+                    # [V62.8] 최근 3권만 상세 유지, 나머지 1줄 압축
                     summary = vol_data.get('strategy_doc', '')[:500]
                     context_accumulator += f"\n[제 {vol_idx}권 요약]: {summary}..."
+                    MAX_CONTEXT_VOLUMES = 3
+                    if vol_idx > MAX_CONTEXT_VOLUMES:
+                        # 오래된 권 요약을 1줄로 압축
+                        acc_lines = context_accumulator.split('\n')
+                        compressed_lines = []
+                        kept_recent = 0
+                        for line in reversed(acc_lines):
+                            if line.startswith('[제 ') and '권 요약]' in line:
+                                if kept_recent < MAX_CONTEXT_VOLUMES:
+                                    compressed_lines.insert(0, line)
+                                    kept_recent += 1
+                                else:
+                                    # 오래된 권은 제목만
+                                    vol_label = line.split(']:')[0] + ']: (요약 생략)'
+                                    compressed_lines.insert(0, vol_label)
+                            elif line.strip():
+                                compressed_lines.insert(0, line)
+                        context_accumulator = '\n'.join(compressed_lines)
                     passed = True
                     break
                 else:
@@ -4506,15 +4576,39 @@ class SovereignApp:
         # [V60.94] StateTracker 초기화 - NPC 생사/무공 습득/정보 추적
         # [V60.96] 클래스 레벨로 저장하여 Stage 3/4에서 공유
         # [V60.95] PresetRegistry 연동
-        self.state_tracker = StateTracker(preset_registry=self.preset_registry)
-        for prev_arc in all_refined_arcs:
+        # [V62.5] 증분 업데이트: 기존 StateTracker가 있으면 재사용, 새 Arc만 추가
+        existing_tracker_arcs = getattr(self, '_state_tracker_loaded_arcs', 0)
+        if (not hasattr(self, 'state_tracker') or self.state_tracker is None
+                or existing_tracker_arcs == 0
+                or existing_tracker_arcs > len(all_refined_arcs)):  # [V62.5] Arc 삭제 감지 → 리셋
+            self.state_tracker = StateTracker(preset_registry=self.preset_registry, llm_client=self.sys.api_client)
+            existing_tracker_arcs = 0
+            # [V63.4 P0] DB에서 금융 레지스트리 복원 (투자물)
+            _saved_fin = self.current_project.load_v20_anchor("financial_registry", default=None)
+            if _saved_fin:
+                self.state_tracker.import_financial_registry(_saved_fin)
+
+        new_arcs_to_load = all_refined_arcs[existing_tracker_arcs:]
+        _genre_for_tracker = self.selected_genre.get('type', '') if self.selected_genre else ''
+        for prev_arc in new_arcs_to_load:
             self.state_tracker.extract_npc_deaths_from_arc(prev_arc)
             self.state_tracker.extract_skill_acquisitions_from_arc(prev_arc)
             self.state_tracker.extract_npc_info_from_arc(prev_arc)  # [V60.95] NPC 무장/수준 정보
+            self.state_tracker.extract_resolved_plots_from_arc(prev_arc)  # [V62.7] 완결된 플롯
+            # [V63.1] 투자물: 금융 이벤트 추출
+            if _genre_for_tracker == 'investment':
+                self.state_tracker.extract_financial_events_from_arc(prev_arc)
+        self._state_tracker_loaded_arcs = len(all_refined_arcs)
+
+        # [V63.4 P0] 금융 레지스트리 DB 영구 저장 (투자물)
+        if _genre_for_tracker == 'investment' and self.state_tracker.financial_number_registry:
+            self.current_project.save_v20_anchor("financial_registry", self.state_tracker.export_financial_registry())
+
         if self.state_tracker.npc_registry:
             dead_count = sum(1 for info in self.state_tracker.npc_registry.values() if info.get("status") == "dead")
             total_npcs = len(self.state_tracker.npc_registry)
-            self.ui.log(f"      👤 [V60.96] StateTracker: 기존 Arc에서 NPC {total_npcs}명 로드 (사망: {dead_count}명)")
+            loaded_msg = f"(신규 {len(new_arcs_to_load)}개)" if new_arcs_to_load else "(캐시 재사용)"
+            self.ui.log(f"      👤 [V62.5] StateTracker: NPC {total_npcs}명 로드 (사망: {dead_count}명) {loaded_msg}")
 
         # [V40.1 Smart Skip] 기존 원고가 있다면 해당 Arc까지 자동 건너뛰기
         # ⚠️ 주의: 원고가 있어도 Arc 데이터가 DB에 없으면 생성이 필요함
@@ -4555,6 +4649,10 @@ class SovereignApp:
         # [V49.4] Pre-Generation Constraint DB 초기화
         constraint_db = ConstraintDB(self.current_project)
         self.ui.log(f"🔒 [V49.4] ConstraintDB 초기화 완료 (기존 Arc: {len(constraint_db.arc_states)}개)")
+
+        # [V62.5] extract_cumulative_state 배치 캐시: 동일 배치 내 중복 호출 방지
+        self._cumulative_state_cache = None  # 캐시된 결과
+        self._cumulative_state_cache_key = 0  # 캐시 키: len(all_refined_arcs)
 
         # 2. 배치(Batch) 처리 루프 시작
         for batch_start in range(done_count, target_limit, 5):
@@ -4745,24 +4843,45 @@ class SovereignApp:
                 # [V60.11] ConstraintCompiler로 구조화된 체크리스트 생성
                 if hasattr(self, 'constraint_compiler') and all_refined_arcs:
                     try:
-                        # StateExtractor 결과 가져오기 (있으면)
+                        # [V62.5] 배치 캐시 활용: extract_cumulative_state 중복 호출 방지
                         state_result = None
                         if 'state_extractor' in self.agents:
                             try:
-                                state_result = self.agents['state_extractor'].extract_cumulative_state(all_refined_arcs)
+                                arc_count = len(all_refined_arcs)
+                                if (self._cumulative_state_cache is not None and
+                                        self._cumulative_state_cache_key == arc_count):
+                                    state_result = self._cumulative_state_cache
+                                else:
+                                    state_result = self.agents['state_extractor'].extract_cumulative_state(all_refined_arcs)
+                                    self._cumulative_state_cache = state_result
+                                    self._cumulative_state_cache_key = arc_count
                             except Exception:
                                 pass
 
-                        compiled_constraints = self.constraint_compiler.compile(all_refined_arcs, state_result)
+                        _resolved = getattr(self.state_tracker, 'resolved_plots', []) if hasattr(self, 'state_tracker') else []
+                        compiled_constraints = self.constraint_compiler.compile(all_refined_arcs, state_result, resolved_plots=_resolved)
                         constraint_block = compiled_constraints + "\n\n" + (constraint_block or "")
                         self.ui.log(f"      📋 [V60.11] ConstraintCompiler 체크리스트 생성 완료")
+
+                        # [V63] SemanticPlotGuard: 시맨틱 플롯 중복 감지
+                        if _resolved and len(_resolved) >= 2:
+                            try:
+                                from modules.core.semantic_plot_guard import SemanticPlotGuard
+                                _spg = getattr(self, '_semantic_plot_guard', None)
+                                if _spg is None:
+                                    _api_key = os.getenv("GOOGLE_API_KEY", "")
+                                    _spg = SemanticPlotGuard(api_key=_api_key)
+                                    self._semantic_plot_guard = _spg
+                                _spg.index_resolved_plots(_resolved)
+                            except Exception:
+                                pass
                     except Exception as cc_err:
                         self._audit_event("v60_11_constraint_compiler_error", str(cc_err)[:100])
 
                 # [V60.77] FourPhase-Director 대면 루프 (최대 3회) + Analyst 최후 1회
                 # 구조: FourPhase(3회) × Director 대면 3회 → Analyst 최후 1회
                 attempt = 0
-                max_fourphase_attempts = 3  # FourPhase × Director 대면 횟수
+                max_fourphase_attempts = 5  # [V62.4] FourPhase × Director 대면 횟수
                 max_attempts = max_fourphase_attempts + 1  # +1은 Analyst 최후 기회
                 director_feedback_for_fourphase = ""  # [V60.77] Director 피드백 저장
                 use_analyst_fallback = False  # [V60.77] Analyst 폴백 플래그
@@ -4775,8 +4894,8 @@ class SovereignApp:
                     # [V60.77] 마지막 시도는 Analyst 최후의 기회
                     if attempt == max_fourphase_attempts:
                         use_analyst_fallback = True
-                        self.ui.log(f"   ⏸️ [V60.77] FourPhase 3회 실패. Analyst 최후의 기회...")
-                        self._audit_event("stage2_analyst_fallback", "FourPhase 3 rejects, Analyst last chance", {
+                        self.ui.log(f"   ⏸️ [V60.77] FourPhase {max_fourphase_attempts}회 실패. Analyst 최후의 기회...")
+                        self._audit_event("stage2_analyst_fallback", f"FourPhase {max_fourphase_attempts} rejects, Analyst last chance", {
                             "arc_no": global_arc_no,
                             "attempt": attempt
                         })
@@ -4944,14 +5063,27 @@ class SovereignApp:
                     if hasattr(self, 'constraint_compiler') and all_refined_arcs:
                         try:
                             print(f"      📋 [무기 #2] ConstraintCompiler 컴파일 중...")
+                            # [V62.5] 배치 캐시 활용: extract_cumulative_state 중복 호출 방지
                             state_result = None
                             if 'state_extractor' in self.agents:
-                                state_result = self.agents['state_extractor'].extract_cumulative_state(all_refined_arcs)
+                                arc_count = len(all_refined_arcs)
+                                if (self._cumulative_state_cache is not None and
+                                        self._cumulative_state_cache_key == arc_count):
+                                    state_result = self._cumulative_state_cache
+                                else:
+                                    state_result = self.agents['state_extractor'].extract_cumulative_state(all_refined_arcs)
+                                    self._cumulative_state_cache = state_result
+                                    self._cumulative_state_cache_key = arc_count
                                 # [V61] Entity Registry 추출 - Director에게 전달
                                 entity_registry_for_director = state_result.get('entity_registry') if state_result else None
                                 if entity_registry_for_director:
+                                    # [V62.4] 주인공 이름 락 → Entity Registry 강제 보정
+                                    entity_registry_for_director = self._fix_entity_registry_protagonist(
+                                        entity_registry_for_director, protagonist_name
+                                    )
                                     print(f"      🏷️ [V61] Entity Registry 추출됨 (Director용)")
-                            constraint_block = self.constraint_compiler.compile(all_refined_arcs, state_result)
+                            _resolved = getattr(self.state_tracker, 'resolved_plots', []) if hasattr(self, 'state_tracker') else []
+                            constraint_block = self.constraint_compiler.compile(all_refined_arcs, state_result, resolved_plots=_resolved)
                             analyst_weapons['constraints'] = constraint_block
                             print(f"      ✅ [Constraints] 제약 블록 생성 완료 ({len(constraint_block)}자)")
                         except Exception as cc_err:
@@ -4969,6 +5101,16 @@ class SovereignApp:
                             self.ui.log(f"      🎯 [V60.77] FourPhase-Director 대면 {attempt + 1}/3")
                             # [V60.83] Stage 2 스피너
                             with StageSpinner(2, f"Arc {global_arc_no}"):
+                                # [V63.3] Stage 2 벡터 검색 — 아크 생성 전 유사 맥락 주입
+                                _s2_vector_ctx = ""
+                                try:
+                                    if hasattr(self, 'memory') and self.memory and current_ep_start > 1:
+                                        _s2_vector_ctx = self.memory.retrieve_high_res_context(
+                                            enriched_block.get('block_theme', ''),
+                                            current_ep_start, n_results=2
+                                        )
+                                except Exception:
+                                    pass
                                 four_phase_arc, pipeline_result = self.agents['four_phase'].generate(
                                     arc_no=global_arc_no,
                                     ep_start=current_ep_start,
@@ -4976,11 +5118,12 @@ class SovereignApp:
                                     curr_block=enriched_block,
                                     prev_arcs=all_refined_arcs,
                                     assets=bible_root.get('AssetLibrary', {}),
-                                    max_internal_retries=2,
+                                    max_internal_retries=4,  # [V62.4] 총 5번 시도 (0,1,2,3,4)
                                     protagonist_name=protagonist_name or "주인공",
                                     director_feedback=director_feedback_for_fourphase,  # [V60.77] Director 피드백 전달
                                     entity_registry=entity_registry_for_director,  # [V60.92] Entity Registry 전달
-                                    state_tracker=self.state_tracker  # [V60.94] 죽은 NPC 검증용
+                                    state_tracker=self.state_tracker,  # [V60.94] 죽은 NPC 검증용
+                                    vector_context=_s2_vector_ctx  # [V63.3] 과거 유사 맥락
                                 )
 
                             if four_phase_arc and pipeline_result.get('final_verdict') == 'PASS':
@@ -5001,6 +5144,13 @@ class SovereignApp:
                                 learned_skills = self.state_tracker.extract_skill_acquisitions_from_arc(refined_arc)
                                 # [V60.95] NPC 정보(무장, 수준) 추출 및 등록
                                 npc_info = self.state_tracker.extract_npc_info_from_arc(refined_arc)
+                                # [V62.7] 완결된 플롯 추출
+                                self.state_tracker.extract_resolved_plots_from_arc(refined_arc)
+                                # [V63.1] 투자물: 금융 이벤트 추출
+                                if _genre_for_tracker == 'investment':
+                                    self.state_tracker.extract_financial_events_from_arc(refined_arc)
+                                    # [V63.4 P0] 금융 레지스트리 즉시 영구 저장
+                                    self.current_project.save_v20_anchor("financial_registry", self.state_tracker.export_financial_registry())
 
                                 # [V61.3] 동적 장르 감지 및 프리셋 확장
                                 tactical_doc = refined_arc.get('tactical_doc', '')
@@ -5738,7 +5888,29 @@ class SovereignApp:
                             attempt += 1  # [V60.51 Fix] 검증 실패 시에도 카운터 증가
                             continue
                         
+                        # [V63] SemanticPlotGuard 중복 체크 (비차단 — 경고만)
+                        _spg = getattr(self, '_semantic_plot_guard', None)
+                        if _spg and _spg._resolved_embeddings:
+                            try:
+                                _new_tactical = refined_arc.get("tactical_doc", "")
+                                _spg_warnings = _spg.check_new_arc(tactical_doc=_new_tactical)
+                                if _spg_warnings:
+                                    _warn_str = _spg.format_warnings(_spg_warnings)
+                                    self.ui.log(f"      {_warn_str}")
+                                    self._audit_event("v63_semantic_plot_warning", _warn_str[:300])
+                            except Exception:
+                                pass
+
+                        # [V63] constraint_summary 저장 (Stage 3/4에서 참조)
+                        if constraint_block:
+                            _constraint_lines = constraint_block.strip().split("\n")
+                            _must_not = [l.strip() for l in _constraint_lines if "금지" in l or "MUST NOT" in l or "절대" in l]
+                            refined_arc["constraint_summary"] = "\n".join(_must_not[:10]) if _must_not else ""
+
                         all_refined_arcs.append(refined_arc)
+                        # [V62.5] 새 Arc 추가 시 배치 캐시 무효화
+                        self._cumulative_state_cache = None
+                        self._cumulative_state_cache_key = 0
 
                         ### [0124 핵심 4] DB 원자적 커밋 (비동기 환경 안전화)
                         try:
@@ -7051,12 +7223,13 @@ class SovereignApp:
         # [V60.95] PresetRegistry 연동
         # ═══════════════════════════════════════════════════════════════
         if not hasattr(self, 'state_tracker') or self.state_tracker is None:
-            self.state_tracker = StateTracker(preset_registry=self.preset_registry)
+            self.state_tracker = StateTracker(preset_registry=self.preset_registry, llm_client=self.sys.api_client)
             all_arcs = self.current_project.db.load_anchor('arcs') or []
             for arc in all_arcs:
                 self.state_tracker.extract_npc_deaths_from_arc(arc)
                 self.state_tracker.extract_skill_acquisitions_from_arc(arc)
                 self.state_tracker.extract_npc_info_from_arc(arc)
+                self.state_tracker.extract_resolved_plots_from_arc(arc)  # [V62.7]
             if self.state_tracker.npc_registry:
                 dead_count = sum(1 for info in self.state_tracker.npc_registry.values() if info.get("status") == "dead")
                 self.ui.log(f"      👤 [V60.96] StateTracker 초기화: NPC {len(self.state_tracker.npc_registry)}명 (사망: {dead_count}명)")
@@ -7157,6 +7330,7 @@ class SovereignApp:
             # ───────────────────────────────────────────────────────────
             if not hasattr(self, '_entity_cache_arc_idx') or self._entity_cache_arc_idx != arc_idx:
                 # arc_idx가 바뀌었을 때만 새로 추출
+                self.ui.log(f"      ⏳ Entity Registry 추출 중... (Arc {arc_idx}, 첫 호출)")
                 try:
                     if 'state_extractor' in self.agents and self.current_project.arcs:
                         all_arcs_for_entity = list(self.current_project.arcs)[:arc_idx + 1]
@@ -7164,6 +7338,11 @@ class SovereignApp:
                             state_for_entity = self.agents['state_extractor'].extract_cumulative_state(all_arcs_for_entity)
                             self._cached_entity_registry = state_for_entity.get('entity_registry') if state_for_entity else None
                             if self._cached_entity_registry:
+                                # [V62.4] 주인공 이름 보정
+                                stage3_protag = self._get_protagonist_name()
+                                self._cached_entity_registry = self._fix_entity_registry_protagonist(
+                                    self._cached_entity_registry, stage3_protag
+                                )
                                 total_entities = sum(len(v) for v in self._cached_entity_registry.values() if isinstance(v, list))
                                 self.ui.log(f"      📋 [V61] Entity Registry 추출: {total_entities}개 엔티티")
                         else:
@@ -7213,6 +7392,20 @@ class SovereignApp:
             self.ui.log(f"\n   📐 제{working_ep}화 Blueprint 생성 중... (Arc {arc_no}, 주인공: {protagonist_name_for_stage3})")
 
             try:
+                # [V63.3] BlueprintMemory 시맨틱 검색
+                _bp_semantic_ctx = ""
+                try:
+                    if self.blueprint_memory and self.blueprint_memory.initialized and arc_data:
+                        _bp_scenario = arc_data.get('tactical_doc', '')[:300]
+                        if _bp_scenario:
+                            _bp_related = self.blueprint_memory.search_related(
+                                _bp_scenario, n_results=3, exclude_eps=[working_ep]
+                            )
+                            if _bp_related:
+                                _bp_semantic_ctx = self.blueprint_memory.generate_context_prompt(_bp_related)
+                except Exception:
+                    pass
+
                 # [V60.83] Stage 3 스피너
                 with StageSpinner(3, f"제{working_ep}화"):
                     # [V60.80] ToT 방식: 3전략 × 3시도 = 최대 9회 생성, Director 최대 3회 판정
@@ -7223,13 +7416,14 @@ class SovereignApp:
                         arc_data=arc_data,
                         prev_blueprint=prev_blueprint,
                         prev_blueprints=prev_blueprints[-5:] if prev_blueprints else None,
-                        max_retries=3,  # 총 4번 시도 (0, 1, 2, 3)
+                        max_retries=4,  # [V62.4] 총 5번 시도 (0, 1, 2, 3, 4)
                         director=self.agents['director'],  # 디렉터주권주의 - 최종 판정
                         arc_idx=arc_idx,
                         entity_registry=entity_registry_for_stage3,  # [V61] Entity 일관성 검증
                         protagonist_name=protagonist_name_for_stage3,  # [V61] 주인공 이름 주입
                         state_tracker=getattr(self, 'state_tracker', None),  # [V60.96] 죽은 NPC 검증
-                        db=self.current_project.db  # [V61.6] 연속성 검사 활성화
+                        db=self.current_project.db,  # [V61.6] 연속성 검사 활성화
+                        semantic_context=_bp_semantic_ctx  # [V63.3] 유사 블루프린트 참조
                     )
 
             except Exception as gen_err:
@@ -7260,6 +7454,13 @@ class SovereignApp:
                 # DB에 저장
                 self.current_project.save_episode_blueprint(working_ep, blueprint)
                 self._safe_commit()
+
+                # [V63.3] BlueprintMemory 인덱싱
+                try:
+                    if self.blueprint_memory and self.blueprint_memory.initialized:
+                        self.blueprint_memory.index_blueprint(working_ep, blueprint)
+                except Exception:
+                    pass
 
                 # prev_blueprints 업데이트
                 prev_blueprints.append(blueprint)
@@ -7349,12 +7550,13 @@ class SovereignApp:
         # [V60.96] StateTracker 초기화 (Stage 2/3에서 생성되지 않은 경우)
         # [V60.95] PresetRegistry 연동
         if not hasattr(self, 'state_tracker') or self.state_tracker is None:
-            self.state_tracker = StateTracker(preset_registry=self.preset_registry)
+            self.state_tracker = StateTracker(preset_registry=self.preset_registry, llm_client=self.sys.api_client)
             all_arcs = self.current_project.db.load_anchor('arcs') or []
             for arc in all_arcs:
                 self.state_tracker.extract_npc_deaths_from_arc(arc)
                 self.state_tracker.extract_skill_acquisitions_from_arc(arc)
                 self.state_tracker.extract_npc_info_from_arc(arc)
+                self.state_tracker.extract_resolved_plots_from_arc(arc)  # [V62.7]
             if self.state_tracker.npc_registry:
                 dead_count = sum(1 for info in self.state_tracker.npc_registry.values() if info.get("status") == "dead")
                 self.ui.log(f"      👤 [V60.96] StateTracker 초기화: NPC {len(self.state_tracker.npc_registry)}명 (사망: {dead_count}명)")
@@ -7569,6 +7771,10 @@ class SovereignApp:
                                 state_for_entity = self.agents['state_extractor'].extract_cumulative_state(all_arcs_for_entity)
                                 entity_registry_for_stage4 = state_for_entity.get('entity_registry') if state_for_entity else None
                                 if entity_registry_for_stage4:
+                                    # [V62.4] 주인공 이름 보정
+                                    entity_registry_for_stage4 = self._fix_entity_registry_protagonist(
+                                        entity_registry_for_stage4, self._get_protagonist_name()
+                                    )
                                     self.ui.log(f"      🏷️ [V61] Entity Registry 준비됨 (Stage 4 Director용)")
                     except Exception as entity_err:
                         self.ui.log(f"      ⚠️ [V61] Entity Registry 추출 스킵: {str(entity_err)[:50]}")
@@ -10097,6 +10303,101 @@ class SovereignApp:
     # [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처
     # =================================================================
 
+    # ═══════════════════════════════════════════════════════════════
+    # [V63.2] 10화 단위 내러티브 요약 시스템
+    # ═══════════════════════════════════════════════════════════════
+
+    def _generate_narrative_summary(self, up_to_ep: int) -> None:
+        """
+        [V63.2] 10화 단위 내러티브 요약 생성 및 DB 저장.
+
+        최근 10화 원고를 LLM(gemini-2.5-flash)으로 요약하여
+        'narrative_summary_ep_XXX' anchor에 저장.
+        이후 생성 시 장기 기억으로 활용.
+        """
+        import time as _time
+
+        start_ep = max(1, up_to_ep - 9)
+        self.ui.log(f"   📝 [V63.2] 내러티브 요약 생성 중 (제{start_ep}~{up_to_ep}화)...")
+
+        # 최근 10화 원고 수집
+        manuscripts = self.current_project.db.get_recent_manuscripts(
+            before_ep=up_to_ep + 1, limit=10
+        )
+        if not manuscripts or len(manuscripts) < 3:
+            self.ui.log(f"   ⚠️ 원고 부족 ({len(manuscripts)}화) - 요약 건너뜀")
+            return
+
+        # 원고 텍스트 결합 (각 화 앞 500자만 + 뒤 300자)
+        combined = []
+        for ms in manuscripts:
+            ep = ms.get("ep_num", "?")
+            content = ms.get("content", "")
+            if content:
+                excerpt = content[:500] + "\n...(중략)...\n" + content[-300:] if len(content) > 800 else content
+                combined.append(f"[제{ep}화]\n{excerpt}")
+
+        combined_text = "\n\n---\n\n".join(combined)
+
+        # LLM 요약 호출
+        try:
+            from google.genai import types as _types
+
+            prompt = (
+                f"다음은 웹소설의 제{start_ep}~{up_to_ep}화 원고 발췌입니다.\n"
+                f"500자 이내로 핵심 내러티브를 요약해주세요.\n\n"
+                f"반드시 포함할 내용:\n"
+                f"1. 주요 사건 (각 화의 핵심 전개)\n"
+                f"2. 캐릭터 변화 (관계 변화, 성장, 사망 등)\n"
+                f"3. 미해결 갈등/복선 (아직 해결되지 않은 것)\n"
+                f"4. 현재 상황 (마지막 화 기준 위치, 상태, 다음 전개 방향)\n\n"
+                f"[원고 발췌]\n{combined_text[:8000]}\n\n"
+                f"요약 (500자 이내, 한국어):"
+            )
+
+            _time.sleep(0.3)
+            response = self.sys.api_client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config=_types.GenerateContentConfig(
+                    temperature=0.1,
+                    max_output_tokens=1024,
+                ),
+            )
+
+            summary = response.text.strip()
+            if summary and len(summary) > 50:
+                anchor_key = f"narrative_summary_ep_{up_to_ep:03d}"
+                self.current_project.db.save_anchor(anchor_key, {
+                    "ep_range": f"{start_ep}-{up_to_ep}",
+                    "summary": summary,
+                    "ep_count": len(manuscripts),
+                })
+                self.current_project.db.conn.commit()
+                self.ui.log(f"   ✅ [V63.2] 내러티브 요약 저장: {anchor_key} ({len(summary)}자)")
+            else:
+                self.ui.log(f"   ⚠️ 요약이 너무 짧음 ({len(summary)}자) - 저장 건너뜀")
+
+        except Exception as e:
+            self.ui.log(f"   ⚠️ [V63.2] LLM 요약 실패: {str(e)[:60]}")
+
+    def _load_narrative_summaries(self) -> str:
+        """
+        [V63.2] 저장된 내러티브 요약들을 로드하여 프롬프트 주입용 문자열 반환.
+        """
+        summaries = []
+        for ep_marker in range(10, 500, 10):
+            anchor_key = f"narrative_summary_ep_{ep_marker:03d}"
+            data = self.current_project.db.load_anchor(anchor_key, default=None)
+            if data and isinstance(data, dict) and data.get("summary"):
+                summaries.append(f"[제{data['ep_range']}화 요약] {data['summary']}")
+            else:
+                continue  # [V63.3] 빈 구간 건너뛰기 (break→continue, 이후 요약도 로드)
+
+        if summaries:
+            return "### 📚 장기 내러티브 요약 (과거 스토리)\n" + "\n\n".join(summaries)
+        return ""
+
     def _stage_4_v2_chief_writer(self, limit_mode: bool = False) -> None:
         """
         [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처
@@ -10113,6 +10414,7 @@ class SovereignApp:
         """
         from modules.domain.agents.chief_writer import ChiefWriter
         from modules.domain.agents.manuscript_validator import ManuscriptValidator
+        from modules.validation.consistency_validator import ConsistencyValidator  # [V63.2]
         from modules.core.constants import AIModels, RetryLimits, WritingLimits
 
         # 1. 기초 데이터 점검
@@ -10126,7 +10428,17 @@ class SovereignApp:
             client=self.sys.api_client,
             model_tier=AIModels.STAGE4_FIXED_WRITER_MODEL
         )
-        manuscript_validator = ManuscriptValidator(context=self.current_project)
+        _s4_genre_type = self.selected_genre.get('type', 'wuxia') if self.selected_genre else 'wuxia'
+        manuscript_validator = ManuscriptValidator(
+            context=self.current_project,
+            genre_type=_s4_genre_type,  # [V63.1] 장르 타입 전달
+            llm_client=self.sys.api_client  # [V63.1.1] LLM 경고 검증용
+        )
+        # [V63.2] ConsistencyValidator 활성화 (기존 V46 코드 재활용)
+        consistency_validator = ConsistencyValidator(
+            guard=getattr(self.sys, 'guard', None),
+            genre=_s4_genre_type
+        )
 
         self.ui.log(f"🎬 [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처 가동")
         self.ui.log(f"   • Chief Writer 모델: {AIModels.STAGE4_FIXED_WRITER_MODEL}")
@@ -10176,6 +10488,16 @@ class SovereignApp:
                     "카카오: 사이다 전개, 절벽걸기, 4K 해상도 묘사"
                 )
 
+            # [V62.5] 캐릭터 보이스 가이드 주입 (ChiefWriter V2 경로)
+            if self.character_voice and self.character_voice.profiles:
+                try:
+                    voice_prompt = self.character_voice.get_writer_injection()
+                    if voice_prompt:
+                        style_guide += f"\n\n{voice_prompt}"
+                        self.ui.log(f"🎤 [V62.5] 캐릭터 보이스 가이드 주입됨 ({len(self.character_voice.profiles)}명)")
+                except Exception as voice_err:
+                    self.ui.log(f"   ⚠️ 캐릭터 보이스 주입 실패 (비차단): {voice_err}")
+
             loop_guard = 0
             max_loops = min((target_ep or total_planned_ep) - self.current_project.get_latest_episode_number() + 5, 100)
 
@@ -10216,6 +10538,11 @@ class SovereignApp:
                 prev_text = prev_ms_data.get('content', '') if prev_ms_data else ""
                 prev_ending = prev_text[-500:] if prev_text else ""
 
+                # [V62.6] 에피소드 상태 다이제스트 (Director 앙상블 선택용)
+                _episode_digest = ""
+                if prev_text and hasattr(self.agents.get('chief_writer', None), '_generate_episode_digest'):
+                    _episode_digest = self.agents['chief_writer']._generate_episode_digest(prev_text, next_ep - 1)
+
                 # HUD 리포트
                 hud_report = self.sys.hud.get_v20_hud_report() if hasattr(self.sys, 'hud') else ""
 
@@ -10240,6 +10567,13 @@ class SovereignApp:
                 # (Writer 인스턴스의 유틸리티 메서드 활용)
                 reference_anchor_prompt = ""
                 mandatory_context = ""
+                # [V63.2] 장기 내러티브 요약 주입
+                try:
+                    _narrative_summaries = self._load_narrative_summaries()
+                    if _narrative_summaries:
+                        mandatory_context = _narrative_summaries + "\n\n"
+                except Exception:
+                    pass
                 anti_trope_prompt = ""
                 justification_prompt = ""
                 reflexion_prompt = ""
@@ -10283,6 +10617,47 @@ class SovereignApp:
                     except Exception as e:
                         self.ui.log(f"   ⚠️ Mandatory Context 실패 (비차단): {e}")
 
+                    # [V63] Arc 제약 요약을 mandatory_context에 주입
+                    _arc_cs = arc_data.get("constraint_summary", "") if arc_data else ""
+                    if _arc_cs:
+                        mandatory_context = f"{mandatory_context}\n\n[Arc 제약 - MUST NOT DO]\n{_arc_cs}"
+
+                    # [V63.1] 금융 상태 레지스트리 주입 (투자물)
+                    if _s4_genre_type == 'investment' and hasattr(self, 'state_tracker'):
+                        _fin_summary = self.state_tracker.get_financial_state_summary()
+                        if _fin_summary:
+                            mandatory_context = f"{mandatory_context}\n\n{_fin_summary}"
+
+                    # [V63.3] ChromaDB 멀티쿼리 시맨틱 검색 — 과거 유사 맥락 주입
+                    try:
+                        if hasattr(self, 'memory') and self.memory and prev_ending:
+                            # 쿼리 1: 직전 화 맥락 (시맨틱 유사도)
+                            _mq_queries = [prev_ending]
+                            # 쿼리 2: 현재 아크 핵심 NPC/엔터티명
+                            if arc_data and arc_data.get("state_changes"):
+                                _sc = arc_data["state_changes"]
+                                _npc_names = []
+                                for _field in ["npc_deaths", "relationship_changes", "npc_injuries"]:
+                                    for _entry in (_sc.get(_field) or []):
+                                        _n = _entry.get("name") or _entry.get("npc", "")
+                                        if _n:
+                                            _npc_names.append(_n)
+                                if _npc_names:
+                                    _mq_queries.append(" ".join(_npc_names[:5]))
+                            # 쿼리 3: 아크 전술문서 핵심 키워드
+                            if arc_tactical and len(arc_tactical) > 50:
+                                _mq_queries.append(arc_tactical[:300])
+                            _vector_memory = self.memory.retrieve_multi_query_context(
+                                queries=_mq_queries,
+                                current_ep=next_ep,
+                                n_per_query=3,
+                                max_results=5
+                            )
+                            if _vector_memory:
+                                mandatory_context = f"{mandatory_context}\n\n[과거 유사 맥락 (벡터 검색)]\n{_vector_memory}"
+                    except Exception as e:
+                        self.ui.log(f"   ⚠️ ChromaDB 시맨틱 검색 실패 (비차단): {e}")
+
                     try:
                         # 3. Anti-Trope Instructions (반클리셰)
                         anti_trope_prompt = writer_agent._build_anti_trope_instructions(genre_name)
@@ -10324,6 +10699,16 @@ class SovereignApp:
                     self.ui.log(f"   ⚠️ NPC 장비 현황 추출 실패 (비차단): {e}")
                     npc_equipment_summary = ""
 
+                # [V63] Contrastive CoT를 ChiefWriter 앙상블 경로에도 주입
+                _effective_anti_trope = anti_trope_prompt
+                if self.diversity_engine:
+                    try:
+                        _diversity_cot = self.diversity_engine.get_writer_injection()
+                        if _diversity_cot:
+                            _effective_anti_trope = f"{anti_trope_prompt}\n\n{_diversity_cot}"
+                    except Exception:
+                        pass
+
                 # [V60.81] DNA 모드 설정
                 intro_dna = "CYNICAL"  # 기본값
 
@@ -10362,7 +10747,7 @@ class SovereignApp:
                             # [V60.80+] 기존 Writer 핵심 기능
                             reference_anchor_prompt=reference_anchor_prompt,
                             mandatory_context=mandatory_context,
-                            anti_trope_prompt=anti_trope_prompt,
+                            anti_trope_prompt=_effective_anti_trope,  # [V63] Contrastive CoT 포함
                             justification_prompt=justification_prompt,
                             reflexion_prompt=reflexion_prompt,
                             genre_name=genre_name,
@@ -10394,7 +10779,7 @@ class SovereignApp:
                             # [V60.80+] 기존 Writer 핵심 기능
                             reference_anchor_prompt=reference_anchor_prompt,
                             mandatory_context=mandatory_context,
-                            anti_trope_prompt=anti_trope_prompt,
+                            anti_trope_prompt=_effective_anti_trope,  # [V63] Contrastive CoT 포함
                             justification_prompt=justification_prompt,
                             reflexion_prompt=reflexion_prompt,
                             genre_name=genre_name,
@@ -10410,16 +10795,55 @@ class SovereignApp:
                     # Phase 3: Python 사전 검증 (경고만)
                     stage4_spinner.update_detail(f"제{next_ep}화 · {interview_round + 1}차 면담 · Python 검증")
                     self.ui.log(f"   🔍 Python 사전 검증 중...")
+                    # [V62.7] 크로스 에피소드 씬 중복 검사용 최근 원고 로드
+                    _recent_ms = []
+                    try:
+                        _recent_ms = self.current_project.db.get_recent_manuscripts(before_ep=next_ep, limit=5)
+                    except Exception:
+                        pass
                     validation_results = manuscript_validator.validate_all_candidates(
                         candidates=candidates,
                         blueprint=blueprint,
                         prev_manuscript=prev_text,
-                        hud_report=hud_report
+                        hud_report=hud_report,
+                        recent_manuscripts=_recent_ms
                     )
 
                     for i, vr in enumerate(validation_results):
                         strategy = candidates[i].get('strategy_name', f'후보{i+1}') if i < len(candidates) else f'후보{i+1}'
                         self.ui.log(f"      • {strategy}: 경고 {vr.get('warning_count', 0)}개, 분량 {vr.get('metrics', {}).get('length', 0)}자")
+
+                    # [V63.2] ConsistencyValidator: 상태/관계/직위/태도 일관성 검증
+                    try:
+                        _cv_martial_hud = {}
+                        if hasattr(self.sys, 'hud') and self.sys.hud:
+                            _cv_martial_hud = self.sys.hud.get_full_state() if hasattr(self.sys.hud, 'get_full_state') else {}
+                        _cv_context = {
+                            'martial_hud': _cv_martial_hud,
+                            'karma_matrix': {},
+                            'asset_library': {},
+                            'npc_profiles': {},
+                            'prev_episode_events': [],
+                            'ep_num': next_ep,
+                        }
+                        for ci, cand in enumerate(candidates):
+                            _cv_ms = cand.get('manuscript', '')
+                            if _cv_ms and ci < len(validation_results):
+                                cv_result = consistency_validator.validate(_cv_ms, _cv_context)
+                                cv_violations = cv_result.get('violations', [])
+                                cv_penalty = cv_result.get('score_penalty', 0)
+                                if cv_violations:
+                                    # 기존 validation_results에 경고 추가
+                                    for v in cv_violations:
+                                        reason = v.get('reason', str(v))
+                                        validation_results[ci]['warnings'].append(f"[V63.2] 일관성: {reason}")
+                                    validation_results[ci]['warning_count'] = len(validation_results[ci]['warnings'])
+                                    validation_results[ci]['focus_points'].append(
+                                        f"일관성 위반 {len(cv_violations)}건 (감점 {cv_penalty})"
+                                    )
+                                    self.ui.log(f"      ⚠️ 후보{ci+1} 일관성 위반 {len(cv_violations)}건")
+                    except Exception as _cv_err:
+                        self.ui.log(f"      ⚠️ [V63.2] ConsistencyValidator 실행 실패: {str(_cv_err)[:60]}")
 
                     # [V61.5] 캐시 기반 연속성 검사 (Stage 4)
                     if interview_round == 0 and next_ep > 1 and candidates:
@@ -10447,7 +10871,8 @@ class SovereignApp:
                         previous_ending=prev_ending,
                         arc_pos=arc_pos,
                         total_eps=total_ep_in_arc,
-                        retry_count=interview_round
+                        retry_count=interview_round,
+                        episode_digest=_episode_digest  # [V62.6]
                     )
 
                     selected = director_result.get('selected', 'A')
@@ -10596,18 +11021,55 @@ class SovereignApp:
                     except Exception as file_err:
                         self.ui.log(f"   ⚠️ 파일 저장 실패: {file_err}")
 
-                    # 벡터 메모리 동기화
+                    # [V63.3] 벡터 메모리 즉시 저장 (풍부한 메타데이터 포함)
                     try:
-                        # [V61 Fix] 올바른 메서드명: memorize_v20_episode(ep_num, text, summary, causal_links)
+                        _mem_arc_no = arc_data.get("arc_no") if arc_data else None
+                        _mem_event_types = set()
+                        _mem_entity_names = set()
+                        if arc_data and arc_data.get("state_changes"):
+                            _sc = arc_data["state_changes"]
+                            if _sc.get("npc_deaths"):
+                                _mem_event_types.add("death")
+                                for d in _sc["npc_deaths"]:
+                                    _mem_entity_names.add(d.get("name", ""))
+                            if _sc.get("skill_acquisitions"):
+                                _mem_event_types.add("skill")
+                                for s in _sc["skill_acquisitions"]:
+                                    _mem_entity_names.add(s.get("name", ""))
+                            if _sc.get("relationship_changes"):
+                                _mem_event_types.add("relationship")
+                                for r in _sc["relationship_changes"]:
+                                    _mem_entity_names.add(r.get("npc", ""))
+                            if _sc.get("major_items"):
+                                _mem_event_types.add("item")
+                                for i in _sc["major_items"]:
+                                    _mem_entity_names.add(i.get("name", ""))
+                            if _sc.get("npc_injuries"):
+                                _mem_event_types.add("injury")
+                            if _sc.get("npc_movements"):
+                                _mem_event_types.add("movement")
+                            if _sc.get("resolved_plots"):
+                                _mem_event_types.add("resolved_plot")
+                        _mem_entity_names.discard("")
                         self.memory.memorize_v20_episode(
                             ep_num=next_ep,
                             text=final_manuscript,
                             summary=final_title[:100] if final_title else f"제{next_ep}화",
-                            causal_links={"title": final_title}
+                            causal_links=[],
+                            arc_no=_mem_arc_no,
+                            event_types=list(_mem_event_types),
+                            entity_names=list(_mem_entity_names)
                         )
-                        self.ui.log(f"   ✅ 벡터 메모리 동기화 완료")
-                    except Exception as vec_err:
-                        self.ui.log(f"   ⚠️ 벡터 메모리 동기화 실패: {vec_err}")
+                        self.ui.log(f"   ✅ 벡터 메모리 저장 (arc={_mem_arc_no}, events={_mem_event_types})")
+                    except Exception as _mem_err:
+                        self.ui.log(f"   ⚠️ [V63.3] 벡터 메모리 저장 실패 (비차단): {str(_mem_err)[:60]}")
+
+                    # [V63.2] 10화 단위 내러티브 요약 생성
+                    if next_ep % 10 == 0:
+                        try:
+                            self._generate_narrative_summary(next_ep)
+                        except Exception as _ns_err:
+                            self.ui.log(f"   ⚠️ [V63.2] 내러티브 요약 생성 실패: {str(_ns_err)[:60]}")
 
                     # [V60.87 C] 로그 파일 저장 (에피소드 완료 시)
                     try:
@@ -10618,6 +11080,11 @@ class SovereignApp:
                             self.failure_learner.save_to_json(os.path.join(logs_dir, "failure_learning.json"))
 
                         if V50_MODULES_AVAILABLE and self.character_voice:
+                            # [V62.5] 보이스 프로파일 분석 후 저장
+                            try:
+                                self.character_voice.analyze_manuscript(next_ep, final_manuscript)
+                            except Exception:
+                                pass
                             self.character_voice.save_to_json(os.path.join(logs_dir, "character_voice.json"))
 
                         if V50_MODULES_AVAILABLE and self.foreshadow_tracker:
@@ -10800,7 +11267,26 @@ class SovereignApp:
                         import traceback
                         traceback.print_exc()
 
+                    # [V62.3] 벡터 메모리: 루프 내 인라인 호출 제거 (ChromaDB 네이티브 크래시 방지)
+                    # → 루프 종료 후 sync_v20_drafts()로 일괄 동기화
+
                     self.ui.log(f"\n✅ 제{next_ep}화 '{final_title}' 생산 완료! ({len(final_manuscript)}자)")
+
+            # [V62.3] Stage 4 루프 종료
+            self.ui.log(f"\n{'='*50}")
+            self.ui.log(f"📋 Stage 4 집필 세션 종료.")
+            try:
+                input("   ⏎ Enter를 누르면 메뉴로 돌아갑니다...")
+            except EOFError:
+                pass
+
+            # [V62.3] 벡터 메모리 일괄 동기화 (루프 종료 후, 크래시해도 원고는 안전)
+            try:
+                self.ui.log(f"   🔄 벡터 메모리 일괄 동기화 중...")
+                self.memory.sync_v20_drafts()
+                self.ui.log(f"   ✅ 벡터 메모리 동기화 완료")
+            except Exception as vec_err:
+                self.ui.log(f"   ⚠️ 벡터 메모리 동기화 실패 (비차단): {vec_err}")
 
         except KeyboardInterrupt:
             self.ui.log("\n⚠️ 사용자 중단 요청. 저장 후 종료합니다.")
