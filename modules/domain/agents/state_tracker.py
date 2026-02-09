@@ -9,7 +9,8 @@ DAG(Directed Acyclic Graph) 형태로 타임라인을 구성하여 검증합니�
 import json
 import re
 import copy
-from typing import Dict, List, Optional, Tuple, Set, Any
+import time
+from typing import Dict, List, Optional, Tuple, Set, Any, Callable
 from dataclasses import dataclass, field
 from collections import defaultdict
 
@@ -97,7 +98,7 @@ class StateTracker:
         issues = tracker.validate_timeline()
     """
 
-    def __init__(self, preset_registry=None):
+    def __init__(self, preset_registry=None, llm_client=None):
         self.states: Dict[int, EpisodeState] = {}  # ep_num -> state
         self.transitions: List[StateTransition] = []
         self.global_items: Set[str] = set()  # 전체 소지 아이템 추적
@@ -109,6 +110,18 @@ class StateTracker:
         # [V60.94] 주인공 무공 목록 추적
         self.protagonist_skills: Set[str] = set()  # 습득한 무공 목록
         self.skill_acquisitions: Dict[str, int] = {}  # skill -> 습득 Arc
+
+        # [V62.7] 완결된 플롯 누적 추적
+        self.resolved_plots: List[Dict] = []
+        # [V62.7] 비-NPC 엔티티 명칭 레지스트리
+        self.entity_name_registry: Dict[str, Dict] = {}
+
+        # [V63.1] 금융 상태 추적 (투자물)
+        self.financial_number_registry: Dict[int, Dict[str, Any]] = {}
+        # arc_no → {exchange_rates: [...], total_assets: [...], leverage: [...], key_transactions: [...]}
+
+        # [V62.5] LLM 클라이언트 (Regex NPC 사망 검증용, Optional)
+        self._llm_client = llm_client
 
         # [V60.95] PresetRegistry 연동
         self.preset_registry = preset_registry
@@ -145,6 +158,10 @@ class StateTracker:
                 "level": "",
                 "death_arc": None,
                 "last_arc": 0,
+                # [V63] NPC 상세 상태 확장
+                "injury": "정상",         # 정상/경상/중상/위독
+                "location": "",           # NPC 마지막 위치
+                "disposition": "중립",    # 적대/경계/중립/호의/충성
             }
 
     def get_active_tracking_fields(self) -> List[str]:
@@ -975,6 +992,31 @@ class StateTracker:
 
         return extracted
 
+    def _is_standalone_name(self, name: str, text: str) -> bool:
+        """[V63.4] 한글 단어 경계 검증 — 이름 앞뒤에 한글이 붙어있으면 오탐"""
+        idx = 0
+        while idx <= len(text) - len(name):
+            pos = text.find(name, idx)
+            if pos == -1:
+                return False
+            before = text[pos - 1] if pos > 0 else ''
+            after_pos = pos + len(name)
+            after = text[after_pos] if after_pos < len(text) else ''
+            # [V63.4 P0] 앞쪽 한글 경계 검사
+            if before and '\uAC00' <= before <= '\uD7A3':
+                idx = pos + 1
+                continue  # 앞에 한글 붙어있으면 오탐
+            # [V63.4 P0] 뒤쪽 한글 경계 검사 — "강철"이 "강철무"에 매칭 방지
+            if after and '\uAC00' <= after <= '\uD7A3':
+                # 뒤에 조사/어미가 올 수 있으므로, 일반 한글 글자만 차단
+                # 조사 패턴: 이/가/은/는/을/를/의/와/과/에/도/로/라/며 등
+                ALLOWED_PARTICLES = set('이가은는을를의와과에도로서라며면고께한')
+                if after not in ALLOWED_PARTICLES:
+                    idx = pos + 1
+                    continue  # 뒤에 일반 한글 붙어있으면 오탐
+            return True  # 독립 매칭 확인
+        return False
+
     def check_dead_npc_appearance(self, content: str, arc_no: int) -> List[dict]:
         """
         [V60.94] 죽은 NPC 등장 검사 - REJECT 대상
@@ -996,8 +1038,8 @@ class StateTracker:
                 if arc_no < death_arc:
                     continue  # 아직 죽지 않은 시점
 
-                # 죽은 NPC 이름이 콘텐츠에 등장하는지 검사
-                if npc_name in content:
+                # [V63.4] 단어 경계 검증으로 오탐 방지 (e.g. "박정" → "박정적인")
+                if self._is_standalone_name(npc_name, content):
                     # 회상/과거 언급은 허용 (패턴 검사)
                     flashback_patterns = [
                         f"{npc_name}의 죽음",
@@ -1147,11 +1189,14 @@ class StateTracker:
             if name not in self.npc_registry:
                 self.npc_registry[name] = info.copy()
             else:
-                # 기존 정보 업데이트 (사망 정보 우선)
-                if info.get("status") == "dead":
+                # [V63.4 P0] 사망 정보 보호: 이미 dead인 NPC는 비사망 업데이트로 덮어쓰기 차단
+                existing = self.npc_registry[name]
+                if existing.get("status") == "dead" and info.get("status") != "dead":
+                    continue  # 사망 상태 보존
+                elif info.get("status") == "dead":
                     self.npc_registry[name] = info.copy()
                 else:
-                    self.npc_registry[name].update(info)
+                    existing.update(info)
 
         # 무공 목록 병합
         self.protagonist_skills.update(other.protagonist_skills)
@@ -1206,14 +1251,66 @@ class StateTracker:
         ]
 
         exclude_words = ['주인공', '적', '상대', '자신', '목숨', '생명', '원수', '원한', '일격', '공격', '반격']
+
+        regex_candidates = []
         for pattern in death_patterns:
             matches = re.findall(pattern, tactical)
             for npc_name in matches:
                 if npc_name and len(npc_name) >= 2 and npc_name not in exclude_words:
-                    self.register_npc_death(npc_name, arc_no, f"Arc {arc_no} tactical_doc Regex 추출")
-                    dead_npcs.append(npc_name)
+                    regex_candidates.append(npc_name)
+        regex_candidates = list(set(regex_candidates))
+
+        # [V62.5] LLM 검증: regex 후보가 실제 인물 이름인지 확인
+        if regex_candidates:
+            verified = self._verify_npc_names_llm(regex_candidates, tactical, arc_no)
+            for npc_name in verified:
+                self.register_npc_death(npc_name, arc_no, f"Arc {arc_no} tactical_doc Regex+LLM검증")
+                dead_npcs.append(npc_name)
 
         return list(set(dead_npcs))
+
+    def _verify_npc_names_llm(self, candidates: List[str], context: str, arc_no: int) -> List[str]:
+        """
+        [V62.5] LLM으로 regex 추출 NPC 이름 후보 검증
+        일반 명사(데이터, 후원자, 시장 등) 오탐을 필터링한다.
+        LLM 없으면 원본 반환 (하위 호환).
+        """
+        if not self._llm_client or not candidates:
+            return candidates
+
+        try:
+            from google.genai import types as _types
+            prompt = (
+                f"다음은 소설 텍스트에서 regex로 추출한 'NPC 사망 후보' 목록입니다.\n"
+                f"후보: {json.dumps(candidates, ensure_ascii=False)}\n\n"
+                f"원문 (Arc {arc_no}):\n{context[:3000]}\n\n"
+                f"위 후보 중 실제 작중 등장인물 이름(고유명사)이면서 "
+                f"해당 Arc에서 실제로 죽거나 처단당한 캐릭터만 JSON 배열로 반환하세요.\n"
+                f"일반 명사(데이터, 후원자, 시장, 사태, 세력, 조직, 몬스터 등)는 반드시 제외.\n"
+                f"해당하는 인물이 없으면 빈 배열 []을 반환하세요."
+            )
+            # [V63.3] 중복 딜레이 제거 (직접 API 호출이므로 최소 지연만)
+            time.sleep(0.1)
+            response = self._llm_client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config=_types.GenerateContentConfig(
+                    temperature=0.0,
+                    max_output_tokens=256,
+                    response_mime_type="application/json",
+                ),
+            )
+            result = json.loads(response.text)
+            if isinstance(result, list):
+                verified = [name for name in result if isinstance(name, str) and name in candidates]
+                filtered = set(candidates) - set(verified)
+                if filtered:
+                    print(f"      🔍 [V62.5] NPC 오탐 필터링: {filtered} (LLM 검증으로 제외)")
+                return verified
+        except Exception as e:
+            print(f"      ⚠️ [V62.5] NPC LLM 검증 실패, regex 결과 그대로 사용: {str(e)[:60]}")
+
+        return candidates
 
     def extract_skill_acquisitions_from_arc(self, arc: dict) -> List[str]:
         """
@@ -1305,24 +1402,333 @@ class StateTracker:
 
         return changes
 
+    def extract_npc_injuries_from_arc(self, arc: dict) -> List[Dict]:
+        """
+        [V63] Arc에서 NPC 부상 상태 추출 및 레지스트리 반영.
+        state_changes.npc_injuries 필드에서 직접 읽기.
+        새 필드가 없으면 빈 리스트 반환 (하위 호환).
+        """
+        arc_no = arc.get("arc_no", 0)
+        injuries = []
+        state_changes = arc.get("state_changes", {})
+        if isinstance(state_changes, dict):
+            npc_injuries = state_changes.get("npc_injuries", [])
+            if isinstance(npc_injuries, list):
+                for entry in npc_injuries:
+                    if isinstance(entry, dict):
+                        npc_name = entry.get("name", "")
+                        state = entry.get("state", "")
+                        if npc_name and state:
+                            injuries.append({
+                                "name": npc_name,
+                                "episode": entry.get("episode", arc_no),
+                                "state": state,
+                                "cause": entry.get("cause", ""),
+                                "arc_no": arc_no
+                            })
+                            # NPC registry 반영
+                            if npc_name in self.npc_registry:
+                                self.npc_registry[npc_name]["injury"] = state
+                                self.npc_registry[npc_name]["last_arc"] = arc_no
+        return injuries
+
+    def extract_npc_movements_from_arc(self, arc: dict) -> List[Dict]:
+        """
+        [V63] Arc에서 NPC 이동 추출 및 레지스트리 반영.
+        state_changes.npc_movements 필드에서 직접 읽기.
+        새 필드가 없으면 빈 리스트 반환 (하위 호환).
+        """
+        arc_no = arc.get("arc_no", 0)
+        movements = []
+        state_changes = arc.get("state_changes", {})
+        if isinstance(state_changes, dict):
+            npc_movements = state_changes.get("npc_movements", [])
+            if isinstance(npc_movements, list):
+                for entry in npc_movements:
+                    if isinstance(entry, dict):
+                        npc_name = entry.get("name", "")
+                        to_loc = entry.get("to", "")
+                        if npc_name and to_loc:
+                            movements.append({
+                                "name": npc_name,
+                                "episode": entry.get("episode", arc_no),
+                                "from": entry.get("from", ""),
+                                "to": to_loc,
+                                "arc_no": arc_no
+                            })
+                            # NPC registry 반영
+                            if npc_name in self.npc_registry:
+                                self.npc_registry[npc_name]["location"] = to_loc
+                                self.npc_registry[npc_name]["last_arc"] = arc_no
+        return movements
+
     def extract_all_state_changes(self, arc: dict) -> Dict:
         """
         [V61] Arc에서 모든 state_changes 추출 (통합 메서드)
+        [V63] npc_injuries, npc_movements 추가
+        [V63.1] financial_events 추가
 
         Returns:
             {
                 "npc_deaths": [...],
                 "skill_acquisitions": [...],
                 "relationship_changes": [...],
-                "major_items": [...]
+                "major_items": [...],
+                "resolved_plots": [...],
+                "npc_injuries": [...],
+                "npc_movements": [...],
+                "financial_events": {...}
             }
         """
         return {
             "npc_deaths": self.extract_npc_deaths_from_arc(arc),
             "skill_acquisitions": self.extract_skill_acquisitions_from_arc(arc),
             "relationship_changes": self.extract_relationship_changes_from_arc(arc),
-            "major_items": arc.get("state_changes", {}).get("major_items", [])
+            "major_items": arc.get("state_changes", {}).get("major_items", []),
+            "resolved_plots": self.extract_resolved_plots_from_arc(arc),
+            "npc_injuries": self.extract_npc_injuries_from_arc(arc),
+            "npc_movements": self.extract_npc_movements_from_arc(arc),
+            "financial_events": self.extract_financial_events_from_arc(arc),
         }
+
+    # ═══════════════════════════════════════════════════════════════
+    # [V63.1] 금융 상태 추적 (투자물)
+    # ═══════════════════════════════════════════════════════════════
+
+    def extract_financial_events_from_arc(self, arc: dict) -> Dict:
+        """
+        [V63.1] state_changes.financial_events에서 금융 이벤트 추출
+
+        Args:
+            arc: Arc 데이터 (state_changes.financial_events 포함)
+
+        Returns:
+            추출된 금융 이벤트 dict (빈 dict면 해당 없음)
+        """
+        arc_no = arc.get("arc_no", 0)
+        state_changes = arc.get("state_changes", {})
+        if not isinstance(state_changes, dict):
+            return {}
+
+        fin_events = state_changes.get("financial_events", {})
+        if not fin_events or not isinstance(fin_events, dict):
+            return {}
+
+        entry = {
+            "exchange_rates": fin_events.get("exchange_rates", []),
+            "total_assets": fin_events.get("total_assets", []),
+            "leverage": fin_events.get("leverage", []),
+            "key_transactions": fin_events.get("key_transactions", []),
+        }
+
+        self.financial_number_registry[arc_no] = entry
+        return entry
+
+    def _get_latest_financial_value(self, field_name: str) -> Optional[Dict]:
+        """
+        [V63.1] financial_number_registry에서 특정 필드의 최신 값 반환
+
+        Args:
+            field_name: "exchange_rates" | "total_assets" | "leverage"
+
+        Returns:
+            최신 엔트리 dict ({"value": ..., "arc_no": ...}) 또는 None
+        """
+        latest = None
+        latest_arc = -1
+
+        for arc_no in sorted(self.financial_number_registry.keys()):
+            entries = self.financial_number_registry[arc_no].get(field_name, [])
+            if entries and isinstance(entries, list):
+                for entry in entries:
+                    if isinstance(entry, dict) and "value" in entry:
+                        latest = {**entry, "arc_no": arc_no}
+                        latest_arc = arc_no
+
+        return latest
+
+    def get_financial_state_summary(self) -> str:
+        """
+        [V63.1] 금융 상태 요약 → 프롬프트 주입용
+
+        Returns:
+            금융 레지스트리 요약 문자열 (빈 문자열이면 데이터 없음)
+        """
+        if not self.financial_number_registry:
+            return ""
+
+        lines = ["[V63.1] [금융 상태 레지스트리 - 수치 일관성 유지 필수]"]
+
+        # 최신 환율
+        latest_rate = self._get_latest_financial_value("exchange_rates")
+        if latest_rate:
+            lines.append(f"  환율: {latest_rate['value']}원/달러 (Arc {latest_rate.get('arc_no', '?')})")
+
+        # 최신 자산
+        latest_assets = self._get_latest_financial_value("total_assets")
+        if latest_assets:
+            lines.append(f"  총 자산: {latest_assets['value']} (Arc {latest_assets.get('arc_no', '?')})")
+
+        # 최신 레버리지
+        latest_lev = self._get_latest_financial_value("leverage")
+        if latest_lev:
+            lines.append(f"  레버리지: {latest_lev['value']}배 (Arc {latest_lev.get('arc_no', '?')})")
+
+        # 주요 거래 내역 (최근 5건)
+        all_txns = []
+        for arc_no, data in sorted(self.financial_number_registry.items()):
+            for txn in data.get("key_transactions", []):
+                if isinstance(txn, dict):
+                    all_txns.append(
+                        f"  - Arc {arc_no}: {txn.get('type', '')} "
+                        f"{txn.get('target', '')} {txn.get('amount', '')}"
+                    )
+        if all_txns:
+            lines.append("  거래 내역:")
+            lines.extend(all_txns[-5:])
+
+        return "\n".join(lines)
+
+    def export_financial_registry(self) -> Dict:
+        """[V63.4 P0] 금융 레지스트리를 직렬화 (DB 저장용)"""
+        # Dict[int, Dict] → Dict[str, Dict] (JSON 키는 문자열)
+        return {str(k): v for k, v in self.financial_number_registry.items()}
+
+    def import_financial_registry(self, data: Dict):
+        """[V63.4 P0] DB에서 금융 레지스트리 로드"""
+        if not data or not isinstance(data, dict):
+            return
+        for k, v in data.items():
+            try:
+                self.financial_number_registry[int(k)] = v
+            except (ValueError, TypeError):
+                continue
+
+    # ═══════════════════════════════════════════════════════════════
+    # [V62.7] 완결된 플롯 추적
+    # ═══════════════════════════════════════════════════════════════
+
+    def extract_resolved_plots_from_arc(self, arc: dict) -> List[Dict]:
+        """
+        [V62.7] Arc에서 resolved_plots 추출 및 누적.
+        state_changes.resolved_plots 필드에서 직접 읽기.
+        """
+        arc_no = arc.get("arc_no", 0)
+        plots = []
+
+        state_changes = arc.get("state_changes", {})
+        if isinstance(state_changes, dict):
+            resolved = state_changes.get("resolved_plots", [])
+            if isinstance(resolved, list):
+                for plot in resolved:
+                    if isinstance(plot, dict) and plot.get("plot"):
+                        entry = {
+                            "plot": str(plot["plot"]),
+                            "resolution": str(plot.get("resolution", "")),
+                            "episode": plot.get("episode", 0),
+                            "arc_no": arc_no
+                        }
+                        plots.append(entry)
+                        # 누적 (중복 방지: 같은 plot+arc_no 조합)
+                        if not any(
+                            p.get("plot") == entry["plot"] and p.get("arc_no") == arc_no
+                            for p in self.resolved_plots
+                        ):
+                            self.resolved_plots.append(entry)
+        return plots
+
+    def get_resolved_plots_summary(self) -> str:
+        """[V62.7] 완결된 플롯 목록 → 프롬프트 주입용 문자열"""
+        if not self.resolved_plots:
+            return ""
+        lines = ["[V62.7] 완결된 플롯 - 동일/유사 갈등 재생성 금지:"]
+        for p in self.resolved_plots:
+            lines.append(
+                f"  - [{p.get('plot','')}] "
+                f"Arc {p.get('arc_no','?')} Ep{p.get('episode','?')}: "
+                f"{p.get('resolution','')}"
+            )
+        return "\n".join(lines)
+
+    # ═══════════════════════════════════════════════════════════════
+    # [V62.7] 비-NPC 엔티티 명칭 일관성
+    # ═══════════════════════════════════════════════════════════════
+
+    def register_entity_name(self, name: str, entity_type: str, arc_no: int):
+        """[V62.7] 비-NPC 엔티티 명칭 등록 (회사, 조직, 장소 등)"""
+        if name and len(name) >= 2:
+            if name not in self.entity_name_registry:
+                self.entity_name_registry[name] = {
+                    "type": entity_type,
+                    "first_arc": arc_no,
+                    "aliases": set()
+                }
+
+    def load_entities_from_entity_registry(self, entity_registry: Dict, arc_no: int):
+        """[V62.7] StateExtractor의 entity_registry에서 비-NPC 엔티티를 로드"""
+        if not entity_registry:
+            return
+
+        type_mapping = {
+            "organizations": "organization",
+            "locations": "location",
+            "objects": "object",
+        }
+
+        for category, entity_type in type_mapping.items():
+            entities = entity_registry.get(category, [])
+            if isinstance(entities, list):
+                for entity in entities:
+                    if isinstance(entity, dict):
+                        name = entity.get("name", "")
+                    elif isinstance(entity, str):
+                        name = entity
+                    else:
+                        continue
+                    if name and len(name) >= 2:
+                        self.register_entity_name(name, entity_type, arc_no)
+
+    def check_entity_name_consistency(self, content: str, arc_no: int = 0) -> List[Dict]:
+        """
+        [V62.7] 비-NPC 엔티티 명칭 일관성 검사.
+        등록된 엔티티 이름과 유사하지만 다른 이름이 등장하면 WARNING.
+        """
+        warnings = []
+        if not self.entity_name_registry or not content:
+            return warnings
+
+        checked = set()
+        for canonical, info in self.entity_name_registry.items():
+            if len(canonical) < 3:
+                continue
+            if canonical in content:
+                continue  # 정확한 이름 사용 중 - OK
+
+            # 접두어 기반 유사 이름 탐지
+            prefix_len = max(2, int(len(canonical) * 0.6))
+            prefix = canonical[:prefix_len]
+            suffix = canonical[-2:] if len(canonical) >= 4 else ""
+
+            pattern = re.compile(re.escape(prefix) + r'[가-힣]{1,4}')
+            matches = pattern.findall(content)
+            for match in matches:
+                if match == canonical or match in checked:
+                    continue
+                if match in info.get("aliases", set()):
+                    continue
+                # 길이 차이 2자 이내
+                if abs(len(match) - len(canonical)) <= 2:
+                    key = (canonical, match)
+                    if key not in checked:
+                        checked.add(key)
+                        warnings.append({
+                            "entity": canonical,
+                            "variant": match,
+                            "entity_type": info.get("type", "?"),
+                            "first_arc": info.get("first_arc", 0),
+                            "severity": "WARNING",
+                        })
+        return warnings
 
     # ═══════════════════════════════════════════════════════════════
     # [V60.96] Stage 3/4 확장 메서드 (Blueprint/Manuscript 검증)
@@ -1373,7 +1779,8 @@ class StateTracker:
                 if arc_no < death_arc:
                     continue  # 아직 죽지 않은 시점
 
-                if npc_name in content:
+                # [V63.4] 단어 경계 검증으로 오탐 방지
+                if self._is_standalone_name(npc_name, content):
                     # 회상/언급 패턴은 허용
                     flashback_patterns = [
                         f"{npc_name}의 죽음", f"{npc_name}을 떠올", f"{npc_name}를 떠올",
@@ -1432,7 +1839,8 @@ class StateTracker:
                 if arc_no < death_arc:
                     continue  # 아직 죽지 않은 시점
 
-                if npc_name in manuscript:
+                # [V63.4] 단어 경계 검증으로 오탐 방지
+                if self._is_standalone_name(npc_name, manuscript):
                     # 회상/언급 패턴은 허용 (더 광범위)
                     flashback_patterns = [
                         f"{npc_name}의 죽음", f"{npc_name}을 떠올", f"{npc_name}를 떠올",
