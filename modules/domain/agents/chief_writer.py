@@ -30,10 +30,16 @@ except ImportError:
     PRIMITIVE_GUARD_AVAILABLE = False
 
 from modules.core.constants import ManuscriptLimits  # [V64.P4]
-from .chief_writer_prompts import (  # [V64.P4] 프롬프트 외부화
+from .chief_writer_prompts import (  # [V64.P4→V65] 프롬프트 외부화
     PROMPT_TEMPLATE_OUTPUT as _PROMPT_TEMPLATE_OUTPUT,
     COMMON_RULES_SECTION,
     WRITING_GUIDELINES_SECTION,
+    # [V65] C-4 Part 2: 잔존 프롬프트 외부화
+    PRIMITIVE_CONSTRAINT_FALLBACK,
+    MODERN_ORIGIN_SECTION,
+    build_chief_writer_main_prompt,
+    get_fix_issues_prompt,
+    get_anti_trope_instructions,
 )
 
 
@@ -502,19 +508,10 @@ class ChiefWriter(BaseAgent):
                     protagonist_config, genre=genre_code, length="build"
                 )
             else:
-                # 폴백: 최소한의 경고
-                world_origin_constraint_section = """
-### 🚨 [원시인 모드] 현대 용어 절대 금지!
-❌ 금지: 헬스장, 바벨, 병원, 학교, 시스템, 스트레스, 축구, 자동차
-✅ 대체: 무관, 석추, 의원, 서당, 체계, 심기, 격구, 마차
-⚠️ 회귀자라도 현대 용어 사용 불가!
-"""
+                # [V65] 폴백: 최소한의 경고 → chief_writer_prompts.py
+                world_origin_constraint_section = PRIMITIVE_CONSTRAINT_FALLBACK
         elif world_origin == '현대인':
-            world_origin_constraint_section = """
-### ✅ [현대인 모드] 현대 지식 활용 가능
-주인공은 현대 세계 출신으로 현대 지식을 내적 독백에서 활용 가능합니다.
-단, 대화에서 현대 용어 남발은 자제하고 세계관에 맞게 표현하세요.
-"""
+            world_origin_constraint_section = MODERN_ORIGIN_SECTION  # [V65]
 
         # [V62.6→V63.2] 직전 원고: 구조화 다이제스트 + 엔딩 2500자 (800→2500 확대)
         prev_ending = prev_manuscript[-2500:] if prev_manuscript else ""
@@ -622,71 +619,32 @@ class ChiefWriter(BaseAgent):
 {self._escape_braces(hd_hud)}
 """
 
-        return f"""
-[Role] 웹소설 1타 작가 (Chief Writer)
-[Task] 제{ep_num}화 원고를 Blueprint 기반으로 집필하라.
-
-### 핵심 철학
-"Blueprint를 토대로 양질의 원고를 연속성 있게 생산한다"
-
-{dna_instruction}
-
-{purism_section}
-
-{world_origin_constraint_section}
-
-{feedback_section}
-{constraint_section}
-
-{future_guard_section}
-
-{past_guard_section}
-
-{writer_core_section}
-
-{hud_anomaly_section}
-
-### 📋 [STEP 1: Blueprint 분석]
-아래 Blueprint의 모든 씬을 파악하고, 누락 없이 반영하라.
-
-{self._escape_braces(scene_breakdown)}
-
-### 📋 [STEP 2: 연속성 확인]
-{self._escape_braces(prev_digest)}
-
-직전 화 엔딩에서 자연스럽게 이어져야 한다. 위 다이제스트의 상태를 반드시 준수하라.
-
-[직전 화 마지막 장면]
-...{self._escape_braces(prev_ending)}
-
-### 📋 [STEP 3: 현재 상태 반영]
-{self._escape_braces(hud_report)}
-
-{high_density_hud_section}
-
-{hud_trend_section}
-
-⚠️ 필수 준수:
-- 현재 경지/내공 범위 내에서만 무공 사용
-- 부상 상태는 전투/행동에 반영
-- 소지품/자금 상태 일관성 유지
-
-{npc_equipment_section}
-
-{npc_frequency_section}
-
-### 📋 [STEP 4: Arc 전술 참조]
-{self._escape_braces(arc_doc) if arc_doc else "특이사항 없음"}
-
-### 📋 [STEP 5: 세계관 설정]
-- 주인공 동기: {self._escape_braces(str(core_identity.get('desire', '')))}
-
-### 📋 [STEP 6: 문체 DNA 가이드 - 위반 시 AI티 판정]
-{self._escape_braces(style_guide) if style_guide else "기본 웹소설 문체"}
-
-{COMMON_RULES_SECTION}
-{WRITING_GUIDELINES_SECTION}
-"""
+        # [V65] 메인 프롬프트 → chief_writer_prompts.build_chief_writer_main_prompt()
+        return build_chief_writer_main_prompt(
+            ep_num=ep_num,
+            dna_instruction=dna_instruction,
+            purism_section=purism_section,
+            world_origin_constraint_section=world_origin_constraint_section,
+            feedback_section=feedback_section,
+            constraint_section=constraint_section,
+            future_guard_section=future_guard_section,
+            past_guard_section=past_guard_section,
+            writer_core_section=writer_core_section,
+            hud_anomaly_section=hud_anomaly_section,
+            scene_breakdown=self._escape_braces(scene_breakdown),
+            prev_digest=self._escape_braces(prev_digest),
+            prev_ending=self._escape_braces(prev_ending),
+            hud_report=self._escape_braces(hud_report),
+            high_density_hud_section=high_density_hud_section,
+            hud_trend_section=hud_trend_section,
+            npc_equipment_section=npc_equipment_section,
+            npc_frequency_section=npc_frequency_section,
+            arc_doc=self._escape_braces(arc_doc) if arc_doc else "특이사항 없음",
+            core_identity_desire=self._escape_braces(str(core_identity.get('desire', ''))),
+            style_guide=self._escape_braces(style_guide) if style_guide else "기본 웹소설 문체",
+            common_rules=COMMON_RULES_SECTION,
+            writing_guidelines=WRITING_GUIDELINES_SECTION,
+        )
 
     # ── [V62.6] 에피소드 상태 다이제스트 ──────────────────────────
 
@@ -1451,22 +1409,12 @@ class ChiefWriter(BaseAgent):
         for issue in issues[:3]:  # 최대 3개만 수정
             fix_instructions.append(f"- {issue['type']}: {issue['description']}")
 
-        prompt = f"""
-[Role] 원고 교정 전문가
-[Task] 아래 원고에서 발견된 문제를 수정하라.
-
-### 발견된 문제
-{chr(10).join(fix_instructions)}
-
-### 현재 HUD 상태 (참고)
-{self._escape_braces(hud_report[:500])}
-
-### 수정 대상 원고
-{self._escape_braces(manuscript[:8000])}
-
-### 출력 형식
-수정된 JSON 원고만 출력하라. 설명 없이 JSON만.
-"""
+        # [V65] 교정 프롬프트 → chief_writer_prompts.get_fix_issues_prompt()
+        prompt = get_fix_issues_prompt(
+            fix_instructions_text=chr(10).join(fix_instructions),
+            hud_report_escaped=self._escape_braces(hud_report[:500]),
+            manuscript_escaped=self._escape_braces(manuscript[:8000]),
+        )
         try:
             fixed = self.ask(prompt, temperature=0.5, thinking_level="low")
             fixed = self._sanitize_leakage(fixed)
@@ -1892,36 +1840,9 @@ class ChiefWriter(BaseAgent):
         [V60.81] 반클리셰 명령 생성
 
         ChiefWriter가 독립적으로 동작할 수 있도록 내장
+        [V65] 프롬프트 본문 → chief_writer_prompts.get_anti_trope_instructions()
         """
-        return f"""
-[ANTI-TROPE PROTOCOL - 장르 관습 재정의]
-
-이 작품은 일반적인 {genre_name}물과 다릅니다. 다음 클리셰는 절대 사용하지 마십시오:
-
-1. "약해 보이는 주인공" 클리셰 금지
-   - X "허름한 행색", "평범해 보이는", "별 볼일 없어 보이는"
-   - O 주인공의 실제 HUD 상태를 직접 반영
-   - O "증표를 본 순간 안색이 창백해졌다" (데이터 기반 묘사)
-
-2. "무시-사이다" 공식 과다 사용 금지
-   - X 매 에피소드마다 무시당하고 압도하는 반복
-   - O 주인공의 명성/권위가 증가하면 무시는 감소해야 함
-   - O 무시가 필요하면 반드시 알리바이 (정보 차단, 변장 등)
-
-3. "조연의 영구 생존" 클리셰 금지
-   - X 모욕한 하인이 아무 처벌 없이 계속 등장
-   - O 모욕/배신한 조연은 반드시 청산 (처단/퇴장/굴복)
-
-4. "순간 회복" 클리셰 금지
-   - X 전투 중 부상 -> 다음 장면에서 멀쩡함 (설명 없이)
-   - O 부상은 지속적으로 영향 주거나, 치료 과정 명시
-
-5. "NPC의 기억상실" 클리셰 금지
-   - X 이전 화에서 경외했던 NPC가 이번 화에서 다시 무시
-   - O 관계는 단방향 발전 (무시->경외는 가능, 경외->무시는 정당화 필요)
-
-[당신이 쓰려는 문장이 위 클리셰에 해당하는가? YES -> 다시 쓰십시오]
-"""
+        return get_anti_trope_instructions(genre_name=genre_name)
 
     def _build_mandatory_context(self, current_ep: int) -> str:
         """
