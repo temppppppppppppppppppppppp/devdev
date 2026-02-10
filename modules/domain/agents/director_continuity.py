@@ -7,46 +7,8 @@ Entity 일관성, 원고 역사 충돌 검사, Blueprint/Manuscript 연속성 �
 
 import json
 
-# [V60.87] 원고 역사 충돌 검사 프롬프트 — check_manuscript_history_conflicts, check_manuscript_continuity_with_cache에서 공유
-MANUSCRIPT_HISTORY_CONFLICT_PROMPT = """
-[Role] 원고 연속성 전문가 (Manuscript Continuity Expert)
-[Task] 현재 원고가 이전에 작성된 원고들과 충돌하는지 검사하라.
-
-### 📜 검사 대상: 제 {ep_num}화 원고
-### 📚 이전 원고 역사 (진실의 원천 - 이것이 실제로 일어난 일이다):
-{manuscript_history}
-
-### 📝 현재 원고:
-{current_manuscript}
-
-### 🔍 충돌 검사 항목 (Hard Constraints)
-1. **사망 충돌**: 이전 원고에서 사망한 인물이 현재 원고에서 살아있는 것처럼 등장하는가?
-2. **아이템 충돌**: 이전 원고에서 잃어버리거나 파괴된 아이템이 현재 원고에서 사용되는가?
-3. **장소 충돌**: 이전 원고에서 파괴된 장소가 현재 원고에서 멀쩡한 것처럼 묘사되는가?
-4. **타임라인 충돌**: 이전 원고의 시간 흐름과 현재 원고의 시간 순서가 맞지 않는가?
-5. **관계 충돌**: 이전 원고에서 확립된 인물 관계가 현재 원고에서 모순되는가?
-6. **상태 충돌**: 이전 원고에서의 부상/상태가 현재 원고에서 무시되었는가?
-
-### [Chain-of-Thought Analysis]
-1. 이전 원고에서 확립된 핵심 사실(사망, 아이템 획득/손실, 장소 상태)을 나열하라
-2. 현재 원고에서 이 사실들과 충돌하는 부분이 있는지 대조하라
-3. 충돌이 발견되면 정확히 어떤 사실이 어떻게 모순되는지 명시하라
-
-[Output Format] JSON Only
-{{
-    "decision": "PASS" 또는 "CONFLICT",
-    "conflicts": [
-        {{
-            "type": "사망/아이템/장소/타임라인/관계/상태",
-            "prev_fact": "이전 원고에서 확립된 사실",
-            "current_violation": "현재 원고에서의 위반 내용",
-            "prev_episode": "이전 원고 회차 (알 수 있는 경우)",
-            "severity": "CRITICAL/MAJOR/MINOR"
-        }}
-    ],
-    "summary": "전체 검사 요약"
-}}
-"""
+# [V64.P4] 프롬프트 외부화 — director_prompts.py에서 import
+from .director_prompts import MANUSCRIPT_HISTORY_CONFLICT_PROMPT
 
 
 class DirectorContinuityValidator:
@@ -625,7 +587,7 @@ class DirectorContinuityValidator:
             if isinstance(prev_data, str):
                 try:
                     prev_data = json.loads(prev_data)
-                except:
+                except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] JSON parse with safe default
                     prev_data = {}
 
             prev_end_location = prev_data.get("end_location", "")

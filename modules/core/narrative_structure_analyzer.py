@@ -172,7 +172,7 @@ class NarrativeStructureAnalyzer:
                 cleaned = re.sub(r'```json\s*|\s*```', '', result)
                 try:
                     return json.loads(cleaned)
-                except:
+                except (json.JSONDecodeError, ValueError):  # [V64.P4] JSON parse fallback
                     pass
 
                 # 방법 2: episodes 배열만 추출
@@ -182,7 +182,7 @@ class NarrativeStructureAnalyzer:
                         episodes_str = '[' + match.group(1) + ']'
                         episodes = json.loads(episodes_str)
                         return {"episodes": episodes}
-                    except:
+                    except (json.JSONDecodeError, ValueError):  # [V64.P4] JSON parse fallback
                         pass
 
                 # 방법 3: 실패 시 기본값 반환 (PASS 처리)

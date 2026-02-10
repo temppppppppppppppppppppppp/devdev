@@ -26,6 +26,7 @@ import re
 from typing import Dict, List, Any, Optional, Tuple
 from .base_agent import BaseAgent
 from modules.core.constants import Stage2Limits
+from modules.core.arc_summary_utils import generate_prev_arc_summary  # [V64.P4]
 
 
 # 통합 검증 프롬프트
@@ -489,37 +490,8 @@ class UnifiedArcValidator(BaseAgent):
             return {"verdict": "REJECT", "issues": [{"severity": "CRITICAL", "category": "system", "issue": f"LLM 오류: {str(e)[:50]}", "evidence": "API 호출 실패", "fix_hint": "재시도"}], "summary": f"LLM 오류로 REJECT: {str(e)[:50]}", "confidence": 0.0}
 
     def _generate_prev_summary(self, prev_arcs: List[Dict]) -> str:
-        """이전 Arc 요약 생성"""
-        if not prev_arcs:
-            return "첫 Arc (이전 Arc 없음)"
-
-        lines = []
-        for arc in prev_arcs[-3:]:  # 최근 3개만
-            arc_no = arc.get("arc_no", "?")
-            state = arc.get("state_constraints", {})
-            joint = arc.get("joint_docs", {})
-            shadow = arc.get("status_shadow", {})
-
-            # arc_end_state 우선
-            arc_end = state.get("arc_end_state", {})
-            final_location = arc_end.get("location") or joint.get("final_location", "?")
-            final_energy = arc_end.get("internal_energy")
-            if final_energy is None:
-                loss_str = shadow.get("internal_energy_loss", "0%")
-                try:
-                    loss = int(re.search(r'(\d+)', str(loss_str)).group(1))
-                    final_energy = 100 - loss
-                except Exception:
-                    final_energy = Stage2Limits.INTERNAL_ENERGY_FALLBACK
-
-            lines.append(f"[Arc {arc_no}]")
-            lines.append(f"  종료 위치: {final_location}")
-            lines.append(f"  최종 내공: {final_energy}%")
-            lines.append(f"  소지품: {joint.get('physical_inventory', [])}")
-            lines.append(f"  획득 아이템: {state.get('items_acquired', [])}")
-            lines.append(f"  수여물: {state.get('grants_received', [])}")
-
-        return "\n".join(lines)
+        """[V64.P4] 위임 → modules.core.arc_summary_utils.generate_prev_arc_summary"""
+        return generate_prev_arc_summary(prev_arcs, include_energy=True)
 
     def _format_python_result(self, python_result: Dict) -> str:
         """Python 검증 결과 포맷팅"""

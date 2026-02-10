@@ -176,7 +176,7 @@ JSON 형식으로:
             if json_match:
                 return json.loads(json_match.group(1))
             return json.loads(text)
-        except:
+        except (json.JSONDecodeError, ValueError):  # [V64.P4] JSON parse failure
             return {}
 
     def explore(
@@ -463,7 +463,7 @@ JSON 형식으로:
                 bp = json.loads(output)
             else:
                 bp = output
-        except:
+        except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] JSON parse failure
             bp = {}
             weaknesses.append("JSON 파싱 실패")
             return {"total": 30, "strengths": strengths, "weaknesses": weaknesses}

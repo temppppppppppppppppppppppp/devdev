@@ -209,7 +209,7 @@ JSON 형식:
             if json_match:
                 return json.loads(json_match.group(1))
             return json.loads(text)
-        except:
+        except (json.JSONDecodeError, ValueError):  # [V64.P4] JSON parse failure
             return {}
 
     def _get_agent_opinion(

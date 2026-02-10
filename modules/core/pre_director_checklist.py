@@ -28,6 +28,7 @@ from dataclasses import dataclass
 from enum import Enum
 import json
 import re
+from modules.core.constants import ManuscriptLimits  # [V64.P4]
 
 
 class CheckCategory(Enum):
@@ -78,11 +79,11 @@ class ChecklistResult:
 class PreDirectorChecklist:
     """사전 체크리스트 시스템"""
 
-    # 원고 최소/최대 길이
+    # [V64.P4] 원고 최소/최대 길이 — ManuscriptLimits 참조
     MANUSCRIPT_LENGTH = {
-        "min": 4000,
-        "max": 15000,
-        "warning_min": 4500,
+        "min": ManuscriptLimits.MIN_LENGTH,
+        "max": ManuscriptLimits.MAX_LENGTH,
+        "warning_min": ManuscriptLimits.WARNING_LENGTH,
         "warning_max": 12000
     }
 
@@ -993,7 +994,7 @@ class PreDirectorChecklist:
             content_str = content
             try:
                 bp = json.loads(content)
-            except:
+            except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] JSON parse failure
                 bp = {}
                 items.append(CheckItem(
                     category=CheckCategory.STRUCTURE,

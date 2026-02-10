@@ -48,6 +48,8 @@ class DBManager:
         self.cursor = None
         # [V45] 멀티스레드 안전성을 위한 Lock
         self._lock = threading.RLock()
+        # [V64 P2-7] 누적 Bible 증분 캐시 {up_to_ep: cumulative_dict}
+        self._cumulative_bible_cache: dict = {}
         self._boot_db()
 
     def _boot_db(self):
@@ -254,18 +256,19 @@ class DBManager:
         ''')
 
         # [V60.82] 기존 테이블에 새 컬럼 추가 (마이그레이션)
+        # [V64.P4] sqlite3.OperationalError: column already exists — expected during migration
         try:
             self.cursor.execute("ALTER TABLE episode_bibles ADD COLUMN causal_links TEXT")
-        except:
+        except sqlite3.OperationalError:
             pass  # 이미 존재
         try:
             self.cursor.execute("ALTER TABLE episode_bibles ADD COLUMN karma_matrix TEXT")
-        except:
-            pass
+        except sqlite3.OperationalError:
+            pass  # 이미 존재
         try:
             self.cursor.execute("ALTER TABLE episode_bibles ADD COLUMN knowledge_map TEXT")
-        except:
-            pass
+        except sqlite3.OperationalError:
+            pass  # 이미 존재
 
         # 11. Reflexion 메모리 테이블
         self.cursor.execute('''
@@ -368,6 +371,10 @@ class DBManager:
         ))
         if not self.conn.in_transaction:
             self.conn.commit()
+        # [V64 P2-7] 누적 Bible 캐시 무효화: 이 ep 이후 캐시 모두 삭제
+        invalidate_eps = [k for k in self._cumulative_bible_cache if k >= ep_num]
+        for k in invalidate_eps:
+            del self._cumulative_bible_cache[k]
 
     def get_episode_bible(self, ep_num: int) -> dict:
         """특정 화의 Bible delta 조회"""
@@ -381,7 +388,7 @@ class DBManager:
         def safe_get(key, default='[]'):
             try:
                 return row[key] if key in row.keys() else default
-            except:
+            except (KeyError, IndexError, TypeError):  # [V64.P4] specific exception for row access
                 return default
 
         return {
@@ -401,21 +408,42 @@ class DBManager:
         }
 
     def get_cumulative_bible(self, up_to_ep: int) -> dict:
-        """1화부터 특정 화까지의 누적 Bible 계산"""
+        """
+        1화부터 특정 화까지의 누적 Bible 계산
+        [V64 P2-7] 증분 캐시: 이전 결과를 재활용하여 새 에피소드만 DB 조회
+        """
+        import copy as _copy
+
+        # [V64 P2-7] 정확히 같은 ep 캐시가 있으면 즉시 반환 (deep copy로 mutation 방지)
+        if up_to_ep in self._cumulative_bible_cache:
+            return _copy.deepcopy(self._cumulative_bible_cache[up_to_ep])
+
+        # 이전 캐시 중 가장 큰 ep 찾아서 재활용
+        best_cached_ep = 0
+        for cached_ep in self._cumulative_bible_cache:
+            if cached_ep < up_to_ep and cached_ep > best_cached_ep:
+                best_cached_ep = cached_ep
+
+        if best_cached_ep > 0:
+            cumulative = _copy.deepcopy(self._cumulative_bible_cache[best_cached_ep])
+            start_ep = best_cached_ep + 1
+        else:
+            cumulative = {
+                'items': [],           # 현재 소지 아이템
+                'npcs': [],            # 등장한 NPC 목록
+                'dead_npcs': [],       # 사망 NPC 목록
+                'relationships': {},   # {target: current_state}
+                'states': {},          # {subject: current_state}
+                'total_time': '',      # 누적 시간 흐름
+                'all_reveals': []      # 모든 밝혀진 사실
+            }
+            start_ep = 1
+
         cur = self.cursor.execute(
-            "SELECT * FROM episode_bibles WHERE ep_num <= ? ORDER BY ep_num", (up_to_ep,)
+            "SELECT * FROM episode_bibles WHERE ep_num >= ? AND ep_num <= ? ORDER BY ep_num",
+            (start_ep, up_to_ep)
         )
         rows = cur.fetchall()
-
-        cumulative = {
-            'items': [],           # 현재 소지 아이템
-            'npcs': [],            # 등장한 NPC 목록
-            'dead_npcs': [],       # 사망 NPC 목록
-            'relationships': {},   # {target: current_state}
-            'states': {},          # {subject: current_state}
-            'total_time': '',      # 누적 시간 흐름
-            'all_reveals': []      # 모든 밝혀진 사실
-        }
 
         for row in rows:
             # 아이템: 획득은 추가, 분실은 제거
@@ -457,6 +485,9 @@ class DBManager:
             reveals = json.loads(row['reveals'] or '[]')
             cumulative['all_reveals'].extend(reveals)
 
+        # 캐시 저장
+        self._cumulative_bible_cache[up_to_ep] = _copy.deepcopy(cumulative)
+
         return cumulative
 
     def get_all_episode_bibles(self) -> list:
@@ -478,7 +509,7 @@ class DBManager:
             def safe_get(key, default='[]'):
                 try:
                     return row[key] if key in row.keys() else default
-                except:
+                except (KeyError, IndexError, TypeError):  # [V64.P4] specific exception for row access
                     return default
 
             bibles.append({

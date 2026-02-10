@@ -58,7 +58,7 @@ class BibleExtractor(BaseAgent):
             if json_match:
                 try:
                     return json.loads(json_match.group(1))
-                except:
+                except (json.JSONDecodeError, ValueError):  # [V64.P4] JSON parse fallback
                     pass
 
             # { 또는 [ 로 시작하는 부분 추출
@@ -71,7 +71,7 @@ class BibleExtractor(BaseAgent):
             if start_idx >= 0:
                 try:
                     return json.loads(response[start_idx:])
-                except:
+                except (json.JSONDecodeError, ValueError):  # [V64.P4] JSON parse fallback
                     pass
 
             print(f"      [WARN] JSON 파싱 실패, 응답 일부: {response[:200]}...")

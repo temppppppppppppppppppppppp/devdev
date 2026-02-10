@@ -42,7 +42,7 @@ class StoryExpander:
             api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
             if api_key:
                 self.client = genai.Client(api_key=api_key)
-        except:
+        except (ImportError, ValueError, RuntimeError):  # [V64.P4] LLM client init failure
             pass
 
     def _call_llm(self, prompt: str, temperature: float = 0.85, max_tokens: int = 8192) -> str:
@@ -76,7 +76,7 @@ class StoryExpander:
             elif "```" in json_str:
                 json_str = json_str.split("```")[1].split("```")[0]
             return json.loads(json_str.strip())
-        except:
+        except (json.JSONDecodeError, ValueError, IndexError):  # [V64.P4] JSON parse failure
             return None
 
     # ============================================

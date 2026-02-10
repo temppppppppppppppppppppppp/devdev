@@ -21,6 +21,7 @@ class StudioSystem:
         self.world = None
         self.techniques = None
         self.guard = None
+        self.hud = None
         self.api_client = api_client # main.py에서 주입받은 클라이언트를 할당
 
     def boot_v20_project(self, project_name):

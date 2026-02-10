@@ -188,7 +188,7 @@ JSON 형식으로 응답:
 
             # 직접 JSON 시도
             return json.loads(critique_text)
-        except:
+        except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] JSON parse failure
             # 파싱 실패 시 기본값
             return {
                 "issues": [],

@@ -344,7 +344,7 @@ class StateLockedArcGenerator(BaseAgent):
             try:
                 loss = int(re.search(r'(\d+)', str(loss_str)).group(1))
                 energy = max(0, 100 - loss)
-            except:
+            except (ValueError, AttributeError, TypeError):  # [V64.P4] energy parse failure
                 # [V60.73] 보수적 기본값 50 (파싱 실패 시 만땅 가정 위험)
                 print(f"      ⚠️ [V60.73] internal_energy_loss 파싱 실패: '{loss_str}' → 50% 가정")
                 energy = 50

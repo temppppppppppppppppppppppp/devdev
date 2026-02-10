@@ -346,7 +346,7 @@ class BlueprintConstraintCompiler:
                 try:
                     loss = int(re.search(r'(\d+)', str(energy)).group(1))
                     inherited["internal_energy"] = f"{100 - loss}%"
-                except:
+                except (ValueError, AttributeError, TypeError):  # [V64.P4] energy parse failure
                     pass
 
         # Arc의 state_constraints에서 추출

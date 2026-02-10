@@ -7,91 +7,10 @@ Director reference를 통해 BaseAgent 메서드(ask, _extract_json_robust 등) 
 """
 
 import json
+from modules.core.constants import ManuscriptLimits  # [V64.P4]
 
-
-# [V60.80] Stage 4 앙상블 선택용 프롬프트
-ENSEMBLE_SELECTION_PROMPT = """
-[Role] 웹소설 1타 편집장 (Chief Director)
-[Task] 3개 원고 후보를 검토하고 최선을 선택한 뒤 PASS/REJECT 판정하라.
-
-### 핵심 철학
-"Blueprint를 토대로 양질의 원고를 연속성 있게 생산한다"
-
-### 📋 Blueprint (이번 화 설계)
-{blueprint}
-
-### 🔗 직전 화 상태 (연속성 기준)
-{episode_digest}
-
-[직전 화 엔딩]
-{previous_ending}
-
----
-
-### 📝 [후보 A - {strategy_a}]
-{manuscript_a}
-
-⚠️ Python 경고:
-{warnings_a}
-
----
-
-### 📝 [후보 B - {strategy_b}]
-{manuscript_b}
-
-⚠️ Python 경고:
-{warnings_b}
-
----
-
-### 📝 [후보 C - {strategy_c}]
-{manuscript_c}
-
-⚠️ Python 경고:
-{warnings_c}
-
----
-
-### 🎯 [V63] 평가 기준 (가중치)
-1. **직전 화 연속성 + 내부 일관성 (35%)**: 직전 화 엔딩 및 상태 다이제스트와 자연스럽게 이어지는가? 원고 내 앞뒤 모순이 없는가? (잃어버린 아이템 재사용, 쓰러진 NPC 활동, 부상 부위 멀쩡히 사용, NPC 위치 순간이동 등) 모순이 1건이라도 있으면 해당 후보의 이 항목 점수를 0으로 부여하세요.
-2. **Blueprint 씬 반영률 (25%)**: 설계된 모든 씬이 균등하게 반영되었는가?
-3. **문장 품질 + 몰입도 (20%)**: 독자가 다음 화를 기다리게 만드는가? 문장이 유려하고 긴장감이 있는가? 클리프행어가 강렬한가?
-4. **분량 충족 (10%)**: 5,000자 이상인가? (최소 4,000자)
-5. **Python 경고 반영 (10%)**: 아래 Python 사전 검증에서 경고가 많은 후보는 감점하세요.
-
-### 🚨 자동 REJECT 조건 (어느 후보든)
-- 죽은 NPC가 활동하는 경우
-- 미습득 무공을 사용하는 경우
-- 분량 4,000자 미만
-- Blueprint 씬 50% 이상 누락
-- 원고 내부에서 앞뒤가 맞지 않는 명백한 모순 (아이템/NPC/부상 상태 불일치)
-
-### 📌 출력 형식 (Strict JSON)
-{{
-    "selected": "A" | "B" | "C",
-    "selection_reason": "선택 이유 (어떤 점에서 다른 후보보다 우수한지)",
-    "verdict": "PASS" | "REJECT",
-    "score": 0-100,
-    "score_breakdown": {{
-        "quality_engagement": 0-30,
-        "blueprint_coverage": 0-25,
-        "continuity": 0-20,
-        "internal_consistency": 0-15,
-        "length": 0-10
-    }},
-    "feedback": {{
-        "strengths": ["강점 1", "강점 2"],
-        "issues": ["문제점 1 (있을 경우)"],
-        "action_items": ["REJECT 시 필수 수정 사항"]
-    }},
-    "state_updates": {{선택된 원고의 state_updates를 그대로 복사}},
-    "other_candidates_notes": {{
-        "A": "후보 A 간단 평가",
-        "B": "후보 B 간단 평가",
-        "C": "후보 C 간단 평가"
-    }}
-}}
-"""
+# [V64.P4] 프롬프트 외부화 — director_prompts.py에서 import
+from .director_prompts import ENSEMBLE_SELECTION_PROMPT
 
 
 class DirectorEnsembleSelector:
@@ -353,7 +272,7 @@ class DirectorEnsembleSelector:
                 "focus_points": ["빈 후보"]
             })
 
-        MIN_MANUSCRIPT_LENGTH = 4000
+        MIN_MANUSCRIPT_LENGTH = ManuscriptLimits.MIN_LENGTH  # [V64.P4]
         qualified_indices = []
         for idx, c in enumerate(candidates):
             ms_len = len(c.get("manuscript", ""))

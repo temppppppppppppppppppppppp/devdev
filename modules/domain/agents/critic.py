@@ -58,7 +58,7 @@ class Critic(BaseAgent):
         try:
             data = json.loads(manuscript)
             content = data.get('content', '')
-        except:
+        except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] JSON parse with safe default
             content = manuscript
 
         if not content or len(content) < 100:
@@ -247,7 +247,7 @@ class Critic(BaseAgent):
         try:
             prev_data = json.loads(prev_content)
             prev_text = prev_data.get('content', '')
-        except:
+        except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] JSON parse with safe default
             prev_text = prev_content
 
         if not prev_text:
@@ -670,7 +670,7 @@ JSON 형식으로 응답:
                     import json as json_module
                     prev_data = json_module.loads(prev_manuscript)
                     prev_ending = prev_data.get('content', '')[-300:]
-                except:
+                except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] JSON parse with safe default
                     prev_ending = prev_manuscript[-300:]
 
             llm_result = self.deep_review(

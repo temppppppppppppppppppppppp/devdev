@@ -424,7 +424,7 @@ class PresetRegistry:
                     return value
                 # 가장 가까운 값 찾기
                 return field_def.default
-        except:
+        except (ValueError, TypeError, KeyError, AttributeError):  # [V64.P4] field validation failure
             return field_def.default
         return value
 

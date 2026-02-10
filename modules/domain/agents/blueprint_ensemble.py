@@ -17,6 +17,8 @@ import re
 from typing import Dict, List, Any, Optional, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FutureTimeoutError
 from .base_agent import BaseAgent
+from .ensemble_prompts import BLUEPRINT_GENERATION_PROMPT  # [V64.P4] 프롬프트 외부화
+from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
 
 # [V60.95] 원시인 모드 금지어 Guard (JSON 기반)
 try:
@@ -82,117 +84,6 @@ SCENE_PRESETS = {
     "cliffhanger": "화 끝 훅. 급박한 전개, 긴장 최고조에서 끊기.",
     "resolution": "갈등 해소, 정리. 여운 있는 마무리."
 }
-
-# Blueprint 생성 프롬프트 템플릿
-BLUEPRINT_GENERATION_PROMPT = """
-[V60.80 BLUEPRINT ENSEMBLE - {strategy_display}]
-
-당신은 웹소설 에피소드 설계 전문가입니다.
-Arc 전술서를 바탕으로 제{ep_num}화 Blueprint를 설계하세요.
-
-╔══════════════════════════════════════════════════════════════╗
-║ 🔒 [V61] 주인공 정보 - 반드시 이 이름을 사용하세요!           ║
-╠══════════════════════════════════════════════════════════════╣
-║ 주인공 이름: {protagonist_name}                               ║
-║ → 모든 씬에서 '{protagonist_name}'만 사용하세요               ║
-║ → '주인공', '그', '청년' 등 대명사 사용 금지                  ║
-╠══════════════════════════════════════════════════════════════╣
-{protagonist_instructions}
-╚══════════════════════════════════════════════════════════════╝
-
-### [Arc 전술서 - 이번 화 핵심]
-{arc_focus}
-
-### [제약 조건]
-{constraints}
-
-{strategy_directive}
-
-### [이전 화 정보]
-{prev_info}
-
-### [V60.95 고밀도 HUD - 주인공 상태]
-{hud_context}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-### [V60.98 씬 프리셋 - 장면/화자 전환 연출]
-각 씬에 적합한 프리셋을 선택하세요. 시점 전환을 통해 다채로운 연출이 가능합니다.
-
-| 프리셋 | 용도 |
-|--------|------|
-| opening_hook | 화 시작, 독자 유입 |
-| daily_routine | 일상 묘사, 세계관 노출 |
-| tension_build | 긴장감 축적 |
-| action_peak | 전투/액션 클라이맥스 |
-| emotional_reveal | 감정 폭발, 내면 묘사 |
-| dialogue_duel | 설전/협상/대립 |
-| villain_scheme | ★악역 시점★ 음모 노출 (예: 악당이 함정 준비) |
-| side_glimpse | ★조연 시점★ 주인공 칭송/반응 (예: "저 사람 대체 뭐지?") |
-| flashback | 과거 회상 |
-| omniscient_hint | ★전지적 시점★ 복선 암시 (예: "그는 아직 몰랐다...") |
-| cliffhanger | 화 끝 훅 |
-| resolution | 갈등 해소, 정리 |
-
-💡 시점 전환 팁:
-- 악당 음모 씬 → villain_scheme (악역 시점으로 위협감 부여)
-- 주인공 활약 직후 → side_glimpse (조연 시점으로 "대단해!" 반응)
-- 떡밥 투척 → omniscient_hint (전지적 시점으로 독자에게만 정보 제공)
-
-### [출력 형식 - 반드시 JSON만 출력]
-
-{{
-    "ep_num": {ep_num},
-    "title": "에피소드 제목 (10자 이내)",
-    "scene_breakdown": {{
-        "scene_1": {{
-            "type": "opening_hook",
-            "title": "씬 제목",
-            "location": "장소",
-            "characters": ["등장인물1", "등장인물2"],
-            "summary": "씬 요약 (50자 이내)",
-            "tension": 5,
-            "key_events": ["이벤트1", "이벤트2"]
-        }},
-        "scene_2": {{"type": "tension_build", ...}},
-        "scene_3": {{"type": "action_peak", ...}},
-        "scene_4": {{"type": "cliffhanger", ...}}
-    }},
-    "integrated_scenario": "전체 에피소드 시나리오 (1000자 이상, 씬별 흐름을 자연스럽게 연결)",
-    "start_location": "시작 위치",
-    "end_location": "종료 위치",
-    "time_flow": "시간 흐름 (예: 오전 → 저녁)",
-    "ending_hook": "다음 화 연결 훅 (50자 이내)",
-    "protagonist_state": {{
-        "mood": "감정 상태",
-        "injuries": "부상 상태",
-        "equipment": ["소지품"]
-    }},
-    "ending_state": {{
-        "location": "이 화 종료 시 정확한 위치",
-        "timeline": {{"표현": "종료 시점 (장르별: year/month, period/season 등)"}},
-        "protagonist_status": "종료 시 주인공 상태 요약"
-    }}
-}}
-
-### [V63] 독자 경험 설계
-각 씬의 목표 독자 감정:
-- 놀라움 / 분노→쾌감(사이다) / 감동 / 긴장 / 궁금증
-전체 씬에서 최소 3가지 이상 서로 다른 감정 반응을 유발할 것.
-마지막 씬은 반드시 긴장 또는 궁금증으로 끝낼 것 (클리프행어).
-
-### [필수 조건]
-1. scene_breakdown은 최소 3개, 최대 5개 씬
-2. integrated_scenario는 최소 1000자 이상
-3. 이전 화 종료 위치에서 시작해야 함 (위치 불연속 절대 금지!)
-4. 정지선(다음 화 내용)을 침범하지 말 것
-5. [V60.98] 각 씬에 반드시 type(프리셋) 필드 포함할 것
-6. [V60.98] 시점 전환 프리셋(villain_scheme, side_glimpse, omniscient_hint)은 상황에 맞게 적극 활용
-7. [V61.5] ending_state 필수 - 다음 화 시작점 정보 (location, timeline, protagonist_status)
-
-반드시 유효한 JSON만 출력하세요.
-"""
-
 
 class BlueprintEnsembleGenerator(BaseAgent):
     """
@@ -601,116 +492,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
         return "\n".join(lines) if lines else "(제약 없음)"
 
     def _build_hud_context(self, state_tracker, ep_num: int) -> str:
-        """
-        [V60.95] StateTracker에서 고밀도 HUD 컨텍스트 구축
-
-        PresetRegistry 기반 17+ 필드를 프롬프트에 주입
-        NPC 레지스트리 정보도 포함
-
-        Args:
-            state_tracker: StateTracker 인스턴스
-            ep_num: 현재 에피소드 번호
-
-        Returns:
-            str: 프롬프트용 HUD 컨텍스트
-        """
-        if not state_tracker:
-            return ""
-
-        lines = []
-
-        # 1. 주인공 상태 (고밀도 필드)
-        try:
-            # 직전 에피소드 상태 가져오기
-            prev_state = None
-            if ep_num > 1 and hasattr(state_tracker, 'episode_states'):
-                prev_state = state_tracker.episode_states.get(ep_num - 1)
-
-            if prev_state:
-                state_dict = prev_state.to_dict() if hasattr(prev_state, 'to_dict') else {}
-
-                lines.append("[주인공 현재 상태]")
-
-                # 핵심 필드 (항상 표시)
-                core_fields = ['location', 'internal_energy', 'injuries']
-                for field in core_fields:
-                    if field in state_dict:
-                        lines.append(f"  - {field}: {state_dict[field]}")
-
-                # 확장 필드 (있으면 표시)
-                extended_fields = [
-                    ('realm', '경지'), ('reputation', '평판'), ('mental_state', '정신상태'),
-                    ('faction', '소속'), ('rank', '지위'), ('gold', '재화'),
-                    ('awakening_grade', '각성등급'), ('gate_clearance', '클리어 게이트'),
-                    ('net_worth', '자산'), ('market_reputation', '시장평판'),
-                    ('mana', '마나'), ('skills', '스킬'), ('titles', '칭호')
-                ]
-
-                for field, display in extended_fields:
-                    if field in state_dict and state_dict[field]:
-                        value = state_dict[field]
-                        # 리스트는 쉼표로 연결
-                        if isinstance(value, list):
-                            value = ', '.join(str(v) for v in value[:5])  # 최대 5개
-                        lines.append(f"  - {display}: {value}")
-
-                # 소지품
-                items = state_dict.get('items', [])
-                weapons = state_dict.get('weapons', [])
-                if items or weapons:
-                    all_items = weapons + items
-                    lines.append(f"  - 소지품: {', '.join(str(i) for i in all_items[:8])}")
-
-                # 관계
-                relationships = state_dict.get('relationships', {})
-                if relationships:
-                    rel_str = ', '.join(f"{k}:{v}" for k, v in list(relationships.items())[:5])
-                    lines.append(f"  - 관계: {rel_str}")
-
-        except Exception as e:
-            lines.append(f"  (상태 로드 오류: {str(e)[:30]})")
-
-        # 2. NPC 레지스트리 (살아있는 주요 NPC)
-        try:
-            if hasattr(state_tracker, 'npc_registry') and state_tracker.npc_registry:
-                alive_npcs = [
-                    (name, info) for name, info in state_tracker.npc_registry.items()
-                    if info.get('status') != 'dead'
-                ][:10]  # 최대 10명
-
-                if alive_npcs:
-                    lines.append("")
-                    lines.append("[등장 가능 NPC]")
-                    for name, info in alive_npcs:
-                        role = info.get('role', '')
-                        relationship = info.get('relationship', '')
-                        faction = info.get('faction', '')
-
-                        npc_desc = f"  - {name}"
-                        details = []
-                        if role:
-                            details.append(role)
-                        if faction:
-                            details.append(faction)
-                        if relationship:
-                            details.append(f"관계:{relationship}")
-                        if details:
-                            npc_desc += f" ({', '.join(details)})"
-                        lines.append(npc_desc)
-
-                # 사망 NPC 경고
-                dead_npcs = [
-                    name for name, info in state_tracker.npc_registry.items()
-                    if info.get('status') == 'dead'
-                ]
-                if dead_npcs:
-                    lines.append("")
-                    lines.append(f"⚠️ [사망 NPC - 등장 금지]: {', '.join(dead_npcs[:5])}")
-
-        except Exception as e:
-            pass  # NPC 로드 실패 시 무시
-
-        return "\n".join(lines) if lines else "(상태 정보 없음)"
+        """[V64 P2-7] 위임 → modules.core.hud_utils.build_hud_context (blueprint variant)"""
+        return _build_hud_context_shared(state_tracker, ep_num, variant="blueprint")
 
     def _format_prev_info(self, prev_blueprint: Optional[Dict]) -> str:
         """이전 Blueprint 정보 포맷팅"""

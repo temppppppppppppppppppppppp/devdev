@@ -14,6 +14,7 @@ import json
 import re
 from google.genai import types
 from .base_agent import BaseAgent
+from modules.core.hud_utils import get_hud_trend_safe as _get_hud_trend_safe_shared  # [V64.P4]
 
 class Architect(BaseAgent):  # #레거시: ThreePhaseBlueprintGenerator로 대체됨
     """
@@ -35,24 +36,8 @@ class Architect(BaseAgent):  # #레거시: ThreePhaseBlueprintGenerator로 대�
         self.prev_blueprints_context = ""  # [V48] 이전 블루프린트 요약
 
     def _get_hud_trend_safe(self, ep_num: int) -> str:
-        """
-        [Lightweight Alternative] HUD 추세 안전 호출
-
-        Args:
-            ep_num: 에피소드 번호
-
-        Returns:
-            str: HUD 추세 또는 에러 메시지
-        """
-        try:
-            if hasattr(self.context, 'sys') and hasattr(self.context.sys, 'hud'):
-                return self.context.sys.hud.get_hud_trend(ep_num, window=5)
-            elif hasattr(self, 'martial'):  # fallback
-                return self.martial.get_hud_trend(ep_num, window=5)
-            else:
-                return "HUD 추세 정보 없음"
-        except Exception:
-            return "안정적"
+        """[V64.P4] 위임 → modules.core.hud_utils.get_hud_trend_safe"""
+        return _get_hud_trend_safe_shared(self.context, ep_num)
 
     def load_prev_blueprints_context(self, ep_num: int, window: int = 15) -> str:
         """

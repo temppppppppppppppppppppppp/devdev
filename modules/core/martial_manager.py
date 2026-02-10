@@ -504,7 +504,7 @@ class MartialManager:
                                         if nums:
                                             values.append(float(nums[0]))
                                             valid_eps.append(i)
-                                except:
+                                except (ValueError, TypeError, AttributeError):  # [V64.P4] numeric parse failure
                                     pass
                 except Exception:
                     continue

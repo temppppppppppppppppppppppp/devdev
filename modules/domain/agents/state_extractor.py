@@ -505,7 +505,7 @@ class StateExtractor(BaseAgent):
             try:
                 loss_percent = int(str(energy_loss).replace('%', '').strip())
                 current_energy = 100 - loss_percent
-            except:
+            except (ValueError, AttributeError, TypeError):  # [V64.P4] energy parse failure
                 # [V60.73] 보수적 기본값 50 (파싱 실패 시 만땅 가정 위험)
                 print(f"      ⚠️ [V60.73] internal_energy_loss 파싱 실패: '{energy_loss}' → 50% 가정")
                 loss_percent = 50
