@@ -104,6 +104,8 @@ class Stage4Orchestrator:
         from modules.domain.agents.chief_writer import ChiefWriter
         from modules.domain.agents.manuscript_validator import ManuscriptValidator
         from modules.validation.consistency_validator import ConsistencyValidator  # [V63.2]
+        from modules.validation.blocking_validator import BlockingValidator  # [V66.1]
+        from modules.validation.continuity_validator import ContinuityValidator  # [V66.1]
         from modules.core.constants import AIModels, RetryLimits, WritingLimits, Emojis
 
         # [V65] 스피너 & 전역 상수 → spinners 모듈에서 직접 import (순환 참조 해소)
@@ -130,6 +132,9 @@ class Stage4Orchestrator:
             guard=getattr(self.app.sys, 'guard', None),
             genre=_s4_genre_type
         )
+        # [V66.1] BlockingValidator/ContinuityValidator — item_states, npc_personalities, time_warnings 라우팅
+        blocking_validator = BlockingValidator(context=self.app.current_project)
+        continuity_validator = ContinuityValidator(context=self.app.current_project)
 
         self.app.ui.log(f"🎬 [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처 가동")
         self.app.ui.log(f"   • Chief Writer 모델: {AIModels.STAGE4_FIXED_WRITER_MODEL}")
@@ -703,6 +708,50 @@ class Stage4Orchestrator:
                                     self.app.ui.log(f"      ⚠️ 후보{ci+1} 일관성 위반 {len(cv_violations)}건")
                     except Exception as _cv_err:
                         self.app.ui.log(f"      ⚠️ [V63.2] ConsistencyValidator 실행 실패: {str(_cv_err)[:60]}")
+
+                    # [V66.1] BlockingValidator — item_states 기반 파손 아이템 사용 체크
+                    try:
+                        for ci, cand in enumerate(candidates):
+                            _bv_ms = cand.get('manuscript', '')
+                            if _bv_ms and ci < len(validation_results):
+                                bv_result = blocking_validator.validate(_bv_ms, _cv_context)
+                                bv_failures = bv_result.get('failures', [])
+                                if bv_failures:
+                                    for f in bv_failures:
+                                        reason = f.get('reason', str(f))
+                                        validation_results[ci]['warnings'].append(f"[V66.1] BLOCKING: {reason}")
+                                    validation_results[ci]['warning_count'] = len(validation_results[ci]['warnings'])
+                                    validation_results[ci]['focus_points'].append(
+                                        f"BLOCKING 위반 {len(bv_failures)}건"
+                                    )
+                                    self.app.ui.log(f"      ⚠️ 후보{ci+1} BLOCKING 위반 {len(bv_failures)}건")
+                    except Exception as _bv_err:
+                        self.app.ui.log(f"      ⚠️ [V66.1] BlockingValidator 실행 실패: {str(_bv_err)[:60]}")
+
+                    # [V66.1] ContinuityValidator — npc_personalities, time_warnings 라우팅
+                    try:
+                        for ci, cand in enumerate(candidates):
+                            _ct_ms = cand.get('manuscript', '')
+                            if _ct_ms and ci < len(validation_results):
+                                ct_result = continuity_validator.validate(next_ep, _ct_ms, _cv_context)
+                                ct_violations = ct_result.get('violations', [])
+                                ct_warnings = ct_result.get('warnings', [])
+                                if ct_violations:
+                                    for v in ct_violations:
+                                        reason = v.get('reason', str(v))
+                                        validation_results[ci]['warnings'].append(f"[V66.1] 연속성: {reason}")
+                                    validation_results[ci]['warning_count'] = len(validation_results[ci]['warnings'])
+                                    validation_results[ci]['focus_points'].append(
+                                        f"연속성 위반 {len(ct_violations)}건"
+                                    )
+                                    self.app.ui.log(f"      ⚠️ 후보{ci+1} 연속성 위반 {len(ct_violations)}건")
+                                if ct_warnings:
+                                    for w in ct_warnings:
+                                        w_msg = w.get('reason', str(w)) if isinstance(w, dict) else str(w)
+                                        validation_results[ci]['warnings'].append(f"[V66.1] 연속성 경고: {w_msg}")
+                                    validation_results[ci]['warning_count'] = len(validation_results[ci]['warnings'])
+                    except Exception as _ct_err:
+                        self.app.ui.log(f"      ⚠️ [V66.1] ContinuityValidator 실행 실패: {str(_ct_err)[:60]}")
 
                     # [V61.5] 캐시 기반 연속성 검사
                     if interview_round == 0 and next_ep > 1 and candidates:

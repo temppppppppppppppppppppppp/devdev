@@ -104,57 +104,53 @@ class ContinuityValidator:
         if prev_hud is None:
             prev_hud = self._get_prev_hud(current_ep, validation_context)
         
+        # [V66.1] prev_hud 의존 검증 (1~4)은 HUD가 있을 때만 실행
+        # 검증 5~6 (성격/시간)은 prev_hud 없이도 실행 가능하므로 분리
         if not prev_hud:
-            return {
-                "tier": "CONTINUITY",
-                "passed": True,
-                "violations": [],
-                "warnings": [{"type": "no_prev_hud", "message": "직전 HUD 없음 - 연속성 검증 제한적"}],
-                "message": "직전 HUD 없음 - 일부 검증 스킵"
-            }
-        
-        # 직전 원고 가져오기 (선택적)
-        prev_manuscript = self._get_prev_manuscript(current_ep, validation_context)
-        
-        # ═══════════════════════════════════════════════════════════════
-        # 검증 1: 아이템 소지 연속성
-        # ═══════════════════════════════════════════════════════════════
-        item_check = self._check_item_continuity(
-            current_ep, manuscript, prev_hud, prev_manuscript
-        )
-        if not item_check['passed']:
-            violations.extend(item_check['violations'])
-        warnings.extend(item_check.get('warnings', []))
-        
-        # ═══════════════════════════════════════════════════════════════
-        # 검증 2: 무기 소지 연속성
-        # ═══════════════════════════════════════════════════════════════
-        weapon_check = self._check_weapon_continuity(
-            current_ep, manuscript, prev_hud, prev_manuscript
-        )
-        if not weapon_check['passed']:
-            violations.extend(weapon_check['violations'])
-        warnings.extend(weapon_check.get('warnings', []))
-        
-        # ═══════════════════════════════════════════════════════════════
-        # 검증 3: 부상 상태 연속성
-        # ═══════════════════════════════════════════════════════════════
-        injury_check = self._check_injury_continuity(
-            current_ep, manuscript, prev_hud, prev_manuscript
-        )
-        if not injury_check['passed']:
-            violations.extend(injury_check['violations'])
-        warnings.extend(injury_check.get('warnings', []))
-        
-        # ═══════════════════════════════════════════════════════════════
-        # 검증 4: 위치 연속성 [V66.1] 불가능한 순간이동 BLOCKING 추가
-        # ═══════════════════════════════════════════════════════════════
-        location_check = self._check_location_continuity(
-            current_ep, manuscript, prev_hud, prev_manuscript
-        )
-        if not location_check['passed']:
-            violations.extend(location_check['violations'])
-        warnings.extend(location_check.get('warnings', []))
+            warnings.append({"type": "no_prev_hud", "message": "직전 HUD 없음 - 연속성 검증 제한적"})
+        else:
+            # 직전 원고 가져오기 (선택적)
+            prev_manuscript = self._get_prev_manuscript(current_ep, validation_context)
+
+            # ═══════════════════════════════════════════════════════════════
+            # 검증 1: 아이템 소지 연속성
+            # ═══════════════════════════════════════════════════════════════
+            item_check = self._check_item_continuity(
+                current_ep, manuscript, prev_hud, prev_manuscript
+            )
+            if not item_check['passed']:
+                violations.extend(item_check['violations'])
+            warnings.extend(item_check.get('warnings', []))
+
+            # ═══════════════════════════════════════════════════════════════
+            # 검증 2: 무기 소지 연속성
+            # ═══════════════════════════════════════════════════════════════
+            weapon_check = self._check_weapon_continuity(
+                current_ep, manuscript, prev_hud, prev_manuscript
+            )
+            if not weapon_check['passed']:
+                violations.extend(weapon_check['violations'])
+            warnings.extend(weapon_check.get('warnings', []))
+
+            # ═══════════════════════════════════════════════════════════════
+            # 검증 3: 부상 상태 연속성
+            # ═══════════════════════════════════════════════════════════════
+            injury_check = self._check_injury_continuity(
+                current_ep, manuscript, prev_hud, prev_manuscript
+            )
+            if not injury_check['passed']:
+                violations.extend(injury_check['violations'])
+            warnings.extend(injury_check.get('warnings', []))
+
+            # ═══════════════════════════════════════════════════════════════
+            # 검증 4: 위치 연속성 [V66.1] 불가능한 순간이동 BLOCKING 추가
+            # ═══════════════════════════════════════════════════════════════
+            location_check = self._check_location_continuity(
+                current_ep, manuscript, prev_hud, prev_manuscript
+            )
+            if not location_check['passed']:
+                violations.extend(location_check['violations'])
+            warnings.extend(location_check.get('warnings', []))
         
         # ═══════════════════════════════════════════════════════════════
         # 검증 5: [V66.1] NPC 성격 연속성 (MAJOR WARNING)
