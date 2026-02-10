@@ -467,10 +467,10 @@ class LongTermMemory:
                     chunk_counter += 1
                     if chunk_counter >= CHUNK_SIZE:
                         self.ui_log(f"⏳ [System] API 부하 방지 대기 중 (Chunk {CHUNK_SIZE} 완료)")
-                        time.sleep(1.5) # [V63.3] 5개마다 1.5초 휴식 (3.0→1.5)
+                        time.sleep(0.5)  # [V66.1] 5개마다 0.5초 휴식 (1.5→0.5, 임베딩 API는 Rate Limit 관대)
                         chunk_counter = 0
                     else:
-                        time.sleep(0.3) # [V63.3] 파일 간 미세 지연 (0.5→0.3)
+                        time.sleep(0.1)  # [V66.1] 파일 간 미세 지연 (0.3→0.1)
 
                 except Exception as e:
                     self.ui_log(f"⚠️ [Sync Failed] 제 {ep_num} 화: {e}")

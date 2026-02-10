@@ -91,6 +91,7 @@ class DirectorQualityAuditor:
     def assess_character_logic(self, ep_num, manuscript, npc_profiles, character_traits):
         """
         [V41 Red Team] 캐릭터 논리성 적대적 검증
+        [V66.1] 원고 truncation 6000→12000자, 빈 프로필 시에도 원고 기반 검증 수행
 
         Args:
             ep_num: 에피소드 번호
@@ -101,9 +102,14 @@ class DirectorQualityAuditor:
         Returns:
             dict: {decision, score, violations, severity, feedback}
         """
-        safe_manuscript = self._d._escape_braces(manuscript[:6000])
+        safe_manuscript = self._d._escape_braces(manuscript[:12000])  # [V66.1] 6000→12000자 확대
         safe_npc = self._d._escape_braces(json.dumps(npc_profiles, ensure_ascii=False))
         safe_traits = self._d._escape_braces(json.dumps(character_traits, ensure_ascii=False))
+
+        # [V66.1] NPC 정보가 비어있으면 WARNING 로그 후 원고 기반으로 검증 진행
+        _profiles_empty = not npc_profiles and not character_traits
+        if _profiles_empty:
+            print(f"      ⚠️ [V66.1] NPC 프로필/특성 DB 비어있음 (ep {ep_num}) — 원고 기반 검증 진행")
 
         prompt = f"""
 [Role] 레드팀 캐릭터 논리성 감사관 (Character Logic Auditor)
@@ -133,9 +139,10 @@ class DirectorQualityAuditor:
    - 특히 주인공에게 유리한 방향으로 '우연히' 행동하는 조연
 
 ### [🚨 판정 기준]
-- NPC 프로필이나 특성 DB가 비어있으면 자동 PASS (검증 불가)
+- NPC 프로필이나 특성 DB가 비어있더라도, 원고 내부의 인물 묘사/대사/행동만으로 논리 검증을 수행하라
 - 경미한 위반(MINOR)은 경고만 하고 PASS
 - 중대한 위반(MAJOR) 2개 이상 또는 치명적 위반(CRITICAL) 1개 이상 시 REJECT
+- NPC 프로필이 비어있으면 원고 내에서 스스로 모순되는 행동(앞에서 부상인데 뒤에서 멀쩡)만 검증
 
 [Output Format] JSON Only
 {{
@@ -153,15 +160,6 @@ class DirectorQualityAuditor:
     "feedback": "수정 지침 (REJECT 시 필수, PASS 시 권고사항)"
 }}
 """
-        # NPC 정보가 비어있으면 자동 PASS
-        if not npc_profiles and not character_traits:
-            return {
-                "decision": "PASS",
-                "score": 100,
-                "violations": [],
-                "severity": "NONE",
-                "feedback": "NPC 프로필 없음 - 캐릭터 논리 검증 생략"
-            }
 
         response = self._d.ask(prompt, temperature=0.1, thinking_level="low")
         return self._d._extract_json_robust(response)
@@ -262,6 +260,46 @@ class DirectorQualityAuditor:
                 "feedback": "검증 시스템 오류 - 수동 검토 필요",
                 "error": str(e)
             }
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # [V66.1] prev_full_text 확대 — 최대 3화 이전 원고 로드
+    # ═══════════════════════════════════════════════════════════════════════
+
+    def _expand_prev_full_text(self, ep_num: int, prev_full_text: str) -> str:
+        """
+        [V66.1] 기존 prev_full_text(직전 1화)를 최대 3화로 확대.
+
+        DB에서 ep_num-3 ~ ep_num-1 원고를 로드하여 에피소드 마커와 함께 결합.
+        DB 접근 실패 시 기존 prev_full_text를 그대로 반환 (graceful fallback).
+
+        Returns:
+            str: "[제N화]\n본문\n\n---\n\n[제N+1화]\n본문..." 형태의 결합 텍스트
+        """
+        try:
+            db = self._d.context.db
+            if not db:
+                return prev_full_text or ""
+        except (AttributeError, TypeError):
+            return prev_full_text or ""
+
+        loaded_parts = []
+        for target_ep in range(max(1, ep_num - 3), ep_num):
+            try:
+                ms = db.get_manuscript(target_ep)
+                if ms:
+                    content = ms.get('content', '') if isinstance(ms, dict) else str(ms)
+                    if content and len(content) > 100:
+                        loaded_parts.append(f"[제{target_ep}화]\n{content}")
+            except Exception:
+                pass  # [V66.1] DB 조회 실패는 무시
+
+        if loaded_parts:
+            result = "\n\n---\n\n".join(loaded_parts)
+            print(f"      📖 [V66.1] Director 컨텍스트 확대: {len(loaded_parts)}화 이전 원고 로드 (ep {ep_num})")
+            return result
+
+        # 폴백: 기존 prev_full_text 사용
+        return prev_full_text or ""
 
     # ═══════════════════════════════════════════════════════════════════════
     # [V65 C-5] audit_manuscript — Director에서 이관
@@ -417,43 +455,43 @@ class DirectorQualityAuditor:
                     validation_context = {}
                 validation_context['v61_entity_warnings'] = entity_check.get('mismatches', [])
         # [V46] 캐릭터 논리성 검증 (assess_character_logic 활성화)
+        # [V66.1] NPC 프로필 비어있어도 원고 기반 검증 수행 (auto-PASS 제거)
         if validation_context:
             npc_profiles = validation_context.get('npc_profiles', {})
             character_traits = validation_context.get('character_traits', {})
 
-            # NPC 정보가 있을 때만 캐릭터 논리 검증 수행
-            if npc_profiles or character_traits:
-                char_logic_result = self.assess_character_logic(
-                    ep_num=ep_num,
-                    manuscript=manuscript,
-                    npc_profiles=npc_profiles,
-                    character_traits=character_traits
-                )
+            # [V66.1] NPC 정보 유무와 무관하게 항상 캐릭터 논리 검증 수행
+            char_logic_result = self.assess_character_logic(
+                ep_num=ep_num,
+                manuscript=manuscript,
+                npc_profiles=npc_profiles,
+                character_traits=character_traits
+            )
 
-                # [FIX] CRITICAL 1개 또는 MAJOR 2개 이상일 때만 REJECT (주석과 코드 일치)
-                if char_logic_result.get('decision') == 'REJECT':
-                    severity = char_logic_result.get('severity', 'NONE')
-                    violations = char_logic_result.get('violations', [])
-                    major_count = sum(1 for v in violations if isinstance(v, dict) and v.get('severity') == 'MAJOR')
+            # [FIX] CRITICAL 1개 또는 MAJOR 2개 이상일 때만 REJECT (주석과 코드 일치)
+            if char_logic_result.get('decision') == 'REJECT':
+                severity = char_logic_result.get('severity', 'NONE')
+                violations = char_logic_result.get('violations', [])
+                major_count = sum(1 for v in violations if isinstance(v, dict) and v.get('severity') == 'MAJOR')
 
-                    # CRITICAL은 1개라도 REJECT, MAJOR는 2개 이상일 때만 REJECT
-                    should_reject = (severity == 'CRITICAL') or (severity == 'MAJOR' and major_count >= 2)
+                # CRITICAL은 1개라도 REJECT, MAJOR는 2개 이상일 때만 REJECT
+                should_reject = (severity == 'CRITICAL') or (severity == 'MAJOR' and major_count >= 2)
 
-                    if should_reject:
-                        print(f"      🚨 [V46] 캐릭터 논리 위반 감지 ({severity}, MAJOR {major_count}개)")
-                        return {
-                            "decision": "REJECT",
-                            "score": char_logic_result.get('score', 30),
-                            "error_category": "LOGIC_ERROR",
-                            "diagnostic_report": f"캐릭터 논리 위반: {violations}",
-                            "current_beat_achieved": False,
-                            "reason": char_logic_result.get('feedback', '캐릭터 행동이 설정과 불일치'),
-                            "feedback": char_logic_result.get('feedback', ''),
-                            "v46_character_logic": char_logic_result
-                        }
-                    else:
-                        # MAJOR 1개 또는 MINOR는 경고만 하고 계속 진행
-                        print(f"      ⚠️ [V46] 캐릭터 논리 이슈 ({severity}, MAJOR {major_count}개) - 계속 진행")
+                if should_reject:
+                    print(f"      🚨 [V46] 캐릭터 논리 위반 감지 ({severity}, MAJOR {major_count}개)")
+                    return {
+                        "decision": "REJECT",
+                        "score": char_logic_result.get('score', 30),
+                        "error_category": "LOGIC_ERROR",
+                        "diagnostic_report": f"캐릭터 논리 위반: {violations}",
+                        "current_beat_achieved": False,
+                        "reason": char_logic_result.get('feedback', '캐릭터 행동이 설정과 불일치'),
+                        "feedback": char_logic_result.get('feedback', ''),
+                        "v46_character_logic": char_logic_result
+                    }
+                else:
+                    # MAJOR 1개 또는 MINOR는 경고만 하고 계속 진행
+                    print(f"      ⚠️ [V46] 캐릭터 논리 이슈 ({severity}, MAJOR {major_count}개) - 계속 진행")
 
         # ═══════════════════════════════════════════════════════════════
         # [V60] Blueprint 완전성 검증 - main_a.py에서 사전 검증하므로 여기서는 스킵
@@ -471,6 +509,13 @@ class DirectorQualityAuditor:
                 + "\n---\n".join(_pre_llm_warnings)
             )
 
+        # [V66.1] V0128 경로에도 prev_full_text 확대 적용 (기존 legacy 경로만 적용 → 양쪽 모두)
+        expanded_prev_for_v0128 = self._expand_prev_full_text(ep_num, prev_full_text)
+        if validation_context is None:
+            validation_context = {}
+        if expanded_prev_for_v0128:
+            validation_context['expanded_prev_full_text'] = expanded_prev_for_v0128
+
         # [V43] V0128 검증 시스템 조건부 사용
         if self._d.use_v0128 and validation_context:
             return self._audit_with_v0128(
@@ -487,7 +532,11 @@ class DirectorQualityAuditor:
         safe_ms = self._d._escape_braces(manuscript)
         safe_arc = self._d._escape_braces(arc_doc)
         safe_history = self._d._escape_braces(history_summary)
-        safe_prev = self._d._escape_braces(prev_full_text)
+
+        # [V66.1] prev_full_text 확대: 1화→최대 3화 이전 원고 로드
+        expanded_prev = self._expand_prev_full_text(ep_num, prev_full_text)
+        safe_prev = self._d._escape_braces(expanded_prev)
+
         current_len = len(manuscript)
 
         # 2-1. 🔒 [V40 Fix] 분량 강제 체크 (AI 판단 이전에 Python 레벨에서 검증)

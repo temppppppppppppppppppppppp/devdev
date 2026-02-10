@@ -654,8 +654,7 @@ class BlockEnricher(BaseAgent):
                         if ui:
                             ui.log(f"      ⚠️ Block {idx+1} 농축 실패: {str(e)[:30]}")
 
-            # [V63.3] Rate Limit 회피 딜레이 (1.0→0.2, BaseAgent에서 이미 적용)
-            time.sleep(0.2)
+            # [V66.1] Rate Limit 딜레이 제거 (BaseAgent.API_DELAY에서 이미 적용)
 
         # ─────────────────────────────────────────────────────────────────────
         # Phase 2: 인과 에러 검증

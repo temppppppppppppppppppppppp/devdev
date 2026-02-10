@@ -45,9 +45,9 @@ class InformationDiffusion:
             if isinstance(stored_events, list):
                 events.extend(stored_events)
 
-            # 최근 10화의 state_log에서도 추출
+            # [V66.1] 전체 에피소드의 state_log에서 추출 (이전: 최근 10화만 → 장기 사건 누락)
             latest_ep = self.context.db.get_latest_episode_number()
-            for ep in range(max(1, latest_ep - 10), latest_ep + 1):
+            for ep in range(1, latest_ep + 1):
                 log_data = self.context.db.load_state_log(ep)
 
                 if log_data and isinstance(log_data, dict):
@@ -468,11 +468,9 @@ class InformationDiffusion:
             f"알고 있는 정보 ({len(knowledge)}개):"
         ]
 
-        for k in knowledge[:5]:  # 최대 5개
-            lines.append(f"  - {k['description'][:50]}... (Ep{k['learned_episode']}에 {k['source']})")
-
-        if len(knowledge) > 5:
-            lines.append(f"  ... 외 {len(knowledge) - 5}개")
+        # [V66.1] 전체 지식 표시 (이전: [:5] 제한 → 100화+ 정보 누락 방지)
+        for k in knowledge:
+            lines.append(f"  - {k['description'][:80]} (Ep{k['learned_episode']}에 {k['source']})")
 
         lines.append("")
         return "\n".join(lines)

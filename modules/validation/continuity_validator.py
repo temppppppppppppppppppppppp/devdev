@@ -147,21 +147,40 @@ class ContinuityValidator:
         warnings.extend(injury_check.get('warnings', []))
         
         # ═══════════════════════════════════════════════════════════════
-        # 검증 4: 위치 연속성 (선택적 - 경고만)
+        # 검증 4: 위치 연속성 [V66.1] 불가능한 순간이동 BLOCKING 추가
         # ═══════════════════════════════════════════════════════════════
         location_check = self._check_location_continuity(
             current_ep, manuscript, prev_hud, prev_manuscript
         )
+        if not location_check['passed']:
+            violations.extend(location_check['violations'])
         warnings.extend(location_check.get('warnings', []))
         
+        # ═══════════════════════════════════════════════════════════════
+        # 검증 5: [V66.1] NPC 성격 연속성 (MAJOR WARNING)
+        # ═══════════════════════════════════════════════════════════════
+        personality_check = self._check_personality_continuity(
+            manuscript, validation_context
+        )
+        # 성격 위반은 MAJOR WARNING (violations가 아닌 warnings에 추가)
+        warnings.extend(personality_check.get('violations', []))
+
+        # ═══════════════════════════════════════════════════════════════
+        # 검증 6: [V66.1] 시간 일관성 (BLOCKING if severe)
+        # ═══════════════════════════════════════════════════════════════
+        time_check = self._check_time_consistency(manuscript, validation_context)
+        if not time_check['passed']:
+            violations.extend(time_check.get('violations', []))
+        warnings.extend(time_check.get('warnings', []))
+
         # 결과 집계
         passed = len(violations) == 0
-        
+
         if passed:
             message = "연속성 검증 통과"
         else:
             message = f"연속성 위반 {len(violations)}건 감지"
-        
+
         return {
             "tier": "CONTINUITY",
             "passed": passed,
@@ -371,20 +390,26 @@ class ContinuityValidator:
     def _check_injury_continuity(self, current_ep: int, manuscript: str,
                                  prev_hud: dict, prev_manuscript: Optional[str]) -> dict:
         """
-        부상 상태 연속성 검증
-        - 부상 상태에서 무리한 행동 감지
+        [V66.1] 부상 상태 연속성 검증 (강화)
+        - SEVERE 부상(위독/빈사/중상/골절/파열)에서 회복 묘사 없이 정상 행동 → BLOCKING
+        - 경미한 부상에서 무리한 행동 → WARNING (기존)
         """
         violations = []
         warnings = []
-        
+
         # 직전 HUD에서 부상 상태 확인
         actual_truth = prev_hud.get('actual_truth', {})
         condition = actual_truth.get('condition', prev_hud.get('condition', ''))
-        
+        condition_str = str(condition)
+
         # 부상 상태인지 확인
         injury_keywords = ['부상', '상처', '파열', '골절', '중상', '경상', '출혈', '다친']
-        has_injury = any(kw in str(condition) for kw in injury_keywords)
-        
+        has_injury = any(kw in condition_str for kw in injury_keywords)
+
+        # [V66.1] SEVERE 부상 키워드 (회복 없이 정상 행동 시 BLOCKING)
+        severe_keywords = ['위독', '빈사', '중상', '골절', '파열', '의식불명', '혼수']
+        has_severe_injury = any(kw in condition_str for kw in severe_keywords)
+
         # 직전 원고에서 부상 언급 확인
         if prev_manuscript and not has_injury:
             last_part = prev_manuscript[-1000:] if len(prev_manuscript) > 1000 else prev_manuscript
@@ -392,17 +417,57 @@ class ContinuityValidator:
                 if re.search(pattern, last_part):
                     has_injury = True
                     break
-        
+            # [V66.1] 직전 원고에서 SEVERE 부상 감지
+            if not has_severe_injury:
+                severe_manuscript_patterns = [
+                    r'위독', r'빈사', r'의식을?\s*잃', r'혼수',
+                    r'골절', r'파열', r'피를\s*토하',
+                ]
+                for sp in severe_manuscript_patterns:
+                    if re.search(sp, last_part):
+                        has_severe_injury = True
+                        break
+
         if has_injury:
             # 현재 원고에서 부상 부위 특정
-            injury_detail = self._extract_injury_detail(str(condition), prev_manuscript)
-            
+            injury_detail = self._extract_injury_detail(condition_str, prev_manuscript)
+
+            # [V66.1] SEVERE 부상: 회복 묘사 없이 정상 행동 → BLOCKING
+            if has_severe_injury:
+                recovery_patterns = [
+                    r"치료", r"요양", r"회복", r"낫", r"치유",
+                    r"약을?\s*먹", r"금창약", r"영약", r"내상.*?회복",
+                    r"며칠.*?지나", r"시간이?\s*흘러", r"이튿날",
+                    r"의원", r"의술", r"침을?\s*놓",
+                ]
+                first_500 = manuscript[:500] if len(manuscript) > 500 else manuscript
+                has_recovery = any(re.search(rp, first_500) for rp in recovery_patterns)
+
+                # 정상 행동 패턴 (SEVERE 부상과 양립 불가)
+                normal_action_patterns = [
+                    r"힘차게", r"거침없이", r"가볍게", r"자유롭게",
+                    r"아무런?\s*문제.*?없", r"멀쩡", r"성한",
+                    r"평소처럼", r"평소와?\s*다름없",
+                ]
+                acts_normal = any(re.search(np, manuscript) for np in normal_action_patterns)
+
+                if not has_recovery and acts_normal:
+                    violations.append({
+                        "type": "severe_injury_ignored",
+                        "severity": "BLOCKING",
+                        "injury": injury_detail,
+                        "reason": f"SEVERE 부상({injury_detail})에서 회복 묘사 없이 정상 행동. "
+                                f"치료/요양/시간경과 장면 필수.",
+                        "fix_suggestion": "에피소드 초반에 치료/회복 장면을 추가하거나, "
+                                        "부상 상태를 반영한 행동으로 수정하세요."
+                    })
+
             # 부상 부위와 관련된 무리한 행동 검색
             strenuous_actions = []
             for pattern in self.strenuous_patterns:
                 matches = re.findall(pattern, manuscript)
                 strenuous_actions.extend(matches)
-            
+
             if strenuous_actions:
                 # 정당화 패턴 확인 (역근경, 진기, 내공 등)
                 justification_patterns = [
@@ -412,11 +477,11 @@ class ContinuityValidator:
                     r"고통.*?억누르",
                     r"이를\s*악물",
                 ]
-                
+
                 has_justification = any(
                     re.search(jp, manuscript) for jp in justification_patterns
                 )
-                
+
                 if not has_justification:
                     warnings.append({
                         "type": "injury_action_mismatch",
@@ -427,63 +492,107 @@ class ContinuityValidator:
                                 f"정당화 묘사 권장 (역근경, 내공 운용 등)",
                         "fix_suggestion": "부상에도 불구하고 행동하는 이유를 내공/정신력 등으로 정당화"
                     })
-        
+
         return {
-            "passed": True,  # 부상은 경고만, REJECT하지 않음
+            "passed": len(violations) == 0,  # [V66.1] SEVERE 부상 무시 시 REJECT
             "violations": violations,
             "warnings": warnings
         }
     
+    # [V66.1] 물리적으로 불가능한 순간이동 쌍 (시간 경과 없이 이동 불가)
+    DISTANT_LOCATION_PAIRS = [
+        # 무협: 대륙 반대편
+        ("하북", "사천"), ("하북", "강남"), ("산서", "강남"), ("산동", "사천"),
+        ("중원", "서역"), ("강북", "남해"), ("요동", "사천"), ("요동", "강남"),
+        # 헌터: 대도시 간 (순간이동 게이트 없이)
+        ("서울", "부산"), ("서울", "제주"), ("경기", "제주"),
+        # 투자: 글로벌
+        ("서울", "뉴욕"), ("서울", "런던"), ("서울", "도쿄"),
+    ]
+
     def _check_location_continuity(self, current_ep: int, manuscript: str,
                                    prev_hud: dict, prev_manuscript: Optional[str]) -> dict:
         """
-        위치 연속성 검증 (경고만)
-        - 급격한 위치 변화 감지
+        [V66.1] 위치 연속성 검증 (강화)
+        - 불가능한 순간이동 (DISTANT_LOCATION_PAIRS) → BLOCKING
+        - 일반적인 위치 변화 → WARNING (기존)
         """
+        violations = []
         warnings = []
-        
+
+        # HUD에서 위치 정보 추출 (가장 신뢰할 수 있는 소스)
+        actual_truth = prev_hud.get('actual_truth', {})
+        prev_hud_location = actual_truth.get('location', prev_hud.get('location', ''))
+
         # 직전 원고 끝부분에서 위치 확인
         if prev_manuscript:
             last_part = prev_manuscript[-300:] if len(prev_manuscript) > 300 else prev_manuscript
             first_part = manuscript[:300] if len(manuscript) > 300 else manuscript
-            
+
             # 직전 위치 키워드
             prev_locations = set()
             location_markers = [
                 r"(?:에서|에)\s*(.{2,10}?)(?:에서|에|를|을)",
                 r"(.{2,10}?)(?:로|으로)\s*(?:향하|이동|가|걸어)",
             ]
-            
+
             for pattern in location_markers:
                 matches = re.findall(pattern, last_part)
                 prev_locations.update(m.strip() for m in matches if m.strip())
-            
+
+            # HUD 위치도 추가
+            if prev_hud_location:
+                prev_locations.add(prev_hud_location)
+
             # 현재 위치 키워드
             curr_locations = set()
             for pattern in location_markers:
                 matches = re.findall(pattern, first_part)
                 curr_locations.update(m.strip() for m in matches if m.strip())
-            
+
             # 위치 연결 확인 (시간 경과 없이 급격한 위치 변화)
-            time_markers = ['이튿날', '다음날', '며칠 후', '시간이 지나', '해가 지고', '날이 밝']
+            time_markers = ['이튿날', '다음날', '며칠 후', '시간이 지나', '해가 지고', '날이 밝',
+                            '몇 달', '수일', '한 달', '보름', '열흘']
             has_time_skip = any(tm in first_part for tm in time_markers)
-            
+
             if prev_locations and curr_locations and not has_time_skip:
-                # 위치가 완전히 다르면 경고
-                overlap = prev_locations & curr_locations
-                if not overlap and len(prev_locations) > 0 and len(curr_locations) > 0:
-                    warnings.append({
-                        "type": "location_jump",
-                        "severity": "INFO",
-                        "prev_locations": list(prev_locations)[:3],
-                        "curr_locations": list(curr_locations)[:3],
-                        "reason": "위치 변화가 감지됨. 이동 경위 묘사 권장",
-                        "fix_suggestion": "이전 위치에서 현재 위치로 이동하는 과정을 간략히 묘사"
-                    })
-        
+                # [V66.1] 불가능한 순간이동 체크 (DISTANT_LOCATION_PAIRS)
+                for prev_loc in prev_locations:
+                    for curr_loc in curr_locations:
+                        for loc_a, loc_b in self.DISTANT_LOCATION_PAIRS:
+                            if ((loc_a in prev_loc and loc_b in curr_loc) or
+                                    (loc_b in prev_loc and loc_a in curr_loc)):
+                                violations.append({
+                                    "type": "impossible_teleportation",
+                                    "severity": "BLOCKING",
+                                    "prev_location": prev_loc,
+                                    "curr_location": curr_loc,
+                                    "reason": f"불가능한 순간이동: '{prev_loc}' → '{curr_loc}' "
+                                            f"(시간 경과 묘사 없이 먼 거리 이동)",
+                                    "fix_suggestion": "이동 경위를 묘사하거나, "
+                                                    "시간 경과 표현(며칠 후, 이튿날 등)을 추가하세요."
+                                })
+                                break  # 한 쌍만 감지하면 충분
+                    if violations:
+                        break
+                if violations:
+                    pass  # 이미 violation 발생
+                else:
+                    # 위치가 완전히 다르면 경고 (기존)
+                    overlap = prev_locations & curr_locations
+                    if not overlap and len(prev_locations) > 0 and len(curr_locations) > 0:
+                        warnings.append({
+                            "type": "location_jump",
+                            "severity": "INFO",
+                            "prev_locations": list(prev_locations)[:3],
+                            "curr_locations": list(curr_locations)[:3],
+                            "reason": "위치 변화가 감지됨. 이동 경위 묘사 권장",
+                            "fix_suggestion": "이전 위치에서 현재 위치로 이동하는 과정을 간략히 묘사"
+                        })
+
         return {
-            "passed": True,  # 위치는 경고만
-            "violations": [],
+            "passed": len(violations) == 0,  # [V66.1] 불가능한 순간이동 시 REJECT
+            "violations": violations,
             "warnings": warnings
         }
     
@@ -538,3 +647,180 @@ class ContinuityValidator:
         if '파열' in condition:
             return "근육 파열"
         return "부상 상태"
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # [V66.1] NPC 성격 연속성 검증
+    # ═══════════════════════════════════════════════════════════════════════
+
+    # 냉혹/잔혹 성격에 모순되는 감정 표현 (NPC 이름 근처에서 검색)
+    _COLD_TRAITS = {'냉혹', '잔혹', '무자비', '냉정', '냉담', '비정', '살벌'}
+    _COLD_CONTRADICTIONS = {'눈물', '울며', '감동', '미소', '따뜻', '다정', '온화', '부드럽'}
+
+    # 자비/온화 성격에 모순되는 표현
+    _KIND_TRAITS = {'자비', '온화', '인자', '자상', '다정', '따뜻', '온유'}
+    _KIND_CONTRADICTIONS = {'잔인', '학살', '무자비', '냉혹', '살육', '처형', '도살', '참수'}
+
+    def _check_personality_continuity(self, manuscript: str, validation_context: dict) -> dict:
+        """
+        [V66.1] NPC 성격 모순 검증
+
+        냉혹한 NPC가 따뜻한 감정을 보이거나, 자비로운 NPC가 잔인한 행동을
+        하는 경우를 감지. severity: MAJOR (BLOCKING은 아니지만 강한 WARNING).
+
+        Args:
+            manuscript: 현재 원고
+            validation_context: {
+                'npc_personalities': {NPC이름: {"traits": "냉혹한", "motivation": "복수"}}
+            }
+
+        Returns:
+            {"passed": True/False, "violations": [...]}
+        """
+        npc_personalities = validation_context.get('npc_personalities', {})
+
+        if not npc_personalities or not isinstance(npc_personalities, dict):
+            return {"passed": True, "violations": []}
+
+        violations = []
+        # NPC 이름 근처 탐색 범위 (앞뒤 N자)
+        proximity = 150
+
+        for npc_name, personality_data in npc_personalities.items():
+            if not npc_name or not isinstance(personality_data, dict):
+                continue
+
+            traits_str = str(personality_data.get('traits', ''))
+            if not traits_str:
+                continue
+
+            # NPC가 원고에 등장하는지 확인
+            if npc_name not in manuscript:
+                continue
+
+            # 모든 등장 위치 찾기
+            npc_positions = []
+            start = 0
+            while True:
+                idx = manuscript.find(npc_name, start)
+                if idx == -1:
+                    break
+                npc_positions.append(idx)
+                start = idx + 1
+
+            # 냉혹 계열 NPC → 따뜻한 표현 모순 체크
+            has_cold_trait = any(t in traits_str for t in self._COLD_TRAITS)
+            if has_cold_trait:
+                for pos in npc_positions:
+                    context_start = max(0, pos - proximity)
+                    context_end = min(len(manuscript), pos + len(npc_name) + proximity)
+                    nearby_text = manuscript[context_start:context_end]
+
+                    for contradiction in self._COLD_CONTRADICTIONS:
+                        if contradiction in nearby_text:
+                            violations.append({
+                                "type": "personality_contradiction",
+                                "severity": "MAJOR",
+                                "npc": npc_name,
+                                "traits": traits_str,
+                                "contradiction": contradiction,
+                                "reason": f"냉혹한 NPC '{npc_name}'(성격: {traits_str}) 근처에서 "
+                                          f"모순 표현 '{contradiction}' 감지",
+                                "context": nearby_text[:200],
+                                "fix_suggestion": f"'{npc_name}'의 성격({traits_str})에 맞게 "
+                                                  f"'{contradiction}' 표현을 수정하거나, "
+                                                  f"성격 변화의 계기를 명시하세요."
+                            })
+                            break  # 한 위치에서 하나만 감지
+                    if violations and violations[-1].get('npc') == npc_name:
+                        break  # NPC당 하나만 보고
+
+            # 자비 계열 NPC → 잔인한 표현 모순 체크
+            has_kind_trait = any(t in traits_str for t in self._KIND_TRAITS)
+            if has_kind_trait:
+                for pos in npc_positions:
+                    context_start = max(0, pos - proximity)
+                    context_end = min(len(manuscript), pos + len(npc_name) + proximity)
+                    nearby_text = manuscript[context_start:context_end]
+
+                    for contradiction in self._KIND_CONTRADICTIONS:
+                        if contradiction in nearby_text:
+                            violations.append({
+                                "type": "personality_contradiction",
+                                "severity": "MAJOR",
+                                "npc": npc_name,
+                                "traits": traits_str,
+                                "contradiction": contradiction,
+                                "reason": f"온화한 NPC '{npc_name}'(성격: {traits_str}) 근처에서 "
+                                          f"모순 표현 '{contradiction}' 감지",
+                                "context": nearby_text[:200],
+                                "fix_suggestion": f"'{npc_name}'의 성격({traits_str})에 맞게 "
+                                                  f"'{contradiction}' 표현을 수정하거나, "
+                                                  f"성격 변화의 계기를 명시하세요."
+                            })
+                            break
+                    if violations and violations[-1].get('npc') == npc_name:
+                        break
+
+        return {
+            "passed": len(violations) == 0,
+            "violations": violations
+        }
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # [V66.1] 시간 일관성 검증
+    # ═══════════════════════════════════════════════════════════════════════
+
+    def _check_time_consistency(self, manuscript: str, validation_context: dict) -> dict:
+        """
+        [V66.1] 시간 일관성 검증
+
+        time_warnings(외부 시스템에서 전달)를 분석하여:
+        - "중상"/"급속"/"불가능" 포함 시 → BLOCKING (passed=False)
+        - 그 외 → WARNING
+
+        Args:
+            manuscript: 현재 원고 (미사용, 인터페이스 일관성 유지)
+            validation_context: {
+                'time_warnings': ["중상에서 급속 회복 - 불가능한 시간 경과", ...]
+            }
+
+        Returns:
+            {"passed": True/False, "violations": [...], "warnings": [...]}
+        """
+        time_warnings = validation_context.get('time_warnings', [])
+
+        if not time_warnings or not isinstance(time_warnings, list):
+            return {"passed": True, "violations": [], "warnings": []}
+
+        violations = []
+        warnings = []
+
+        severe_keywords = ['중상', '급속', '불가능']
+
+        for warning_msg in time_warnings:
+            if not isinstance(warning_msg, str):
+                continue
+
+            is_severe = any(kw in warning_msg for kw in severe_keywords)
+
+            if is_severe:
+                violations.append({
+                    "type": "time_inconsistency",
+                    "severity": "BLOCKING",
+                    "reason": f"시간 일관성 위반 (심각): {warning_msg}",
+                    "fix_suggestion": "시간 경과를 현실적으로 조정하거나, "
+                                      "회복/이동에 필요한 시간 묘사를 추가하세요."
+                })
+            else:
+                warnings.append({
+                    "type": "time_inconsistency",
+                    "severity": "WARNING",
+                    "reason": f"시간 일관성 경고: {warning_msg}",
+                    "fix_suggestion": "시간 경과 묘사를 보완하세요."
+                })
+
+        return {
+            "passed": len(violations) == 0,
+            "violations": violations,
+            "warnings": warnings
+        }

@@ -18,6 +18,7 @@ import json
 import time
 import asyncio
 import logging
+import concurrent.futures  # [V66.1] arc_drive + preflight 병렬화
 from typing import Optional
 
 _perf_logger = logging.getLogger(__name__)  # [V65] PerfTimer 로깅
@@ -126,6 +127,31 @@ class Stage2Orchestrator:
             self.app.state_tracker.extract_skill_acquisitions_from_arc(prev_arc)
             self.app.state_tracker.extract_npc_info_from_arc(prev_arc)  # [V60.95] NPC 무장/수준 정보
             self.app.state_tracker.extract_resolved_plots_from_arc(prev_arc)  # [V62.7] 완결된 플롯
+            # [V66.1] F-1: 시간선 마커 추출
+            try:
+                self.app.state_tracker.extract_time_markers_from_arc(prev_arc)
+            except Exception as e:
+                print(f"  [V66.1] 시간선 추출 실패 (무시): {e}")
+            # [V66.1] F-8: NPC 신체 변화 추출
+            try:
+                self.app.state_tracker.extract_permanent_injuries_from_arc(prev_arc)
+            except Exception as e:
+                print(f"  [V66.1] 신체 변화 추출 실패 (무시): {e}")
+            # [V66.1] 동행자 변경 추출
+            try:
+                self.app.state_tracker.update_companions_from_arc(prev_arc)
+            except Exception as e:
+                print(f"  [V66.1] 동행자 추출 실패 (무시): {e}")
+            # [V66.1] 약속/맹세 추출
+            try:
+                self.app.state_tracker.extract_commitments_from_arc(prev_arc)
+            except Exception as e:
+                print(f"  [V66.1] 약속 추출 실패 (무시): {e}")
+            # [V66.1] 주인공 감정 추출
+            try:
+                self.app.state_tracker.extract_protagonist_emotion_from_arc(prev_arc)
+            except Exception as e:
+                print(f"  [V66.1] 감정 추출 실패 (무시): {e}")
             # [V63.1] 투자물: 금융 이벤트 추출
             if _genre_for_tracker == 'investment':
                 self.app.state_tracker.extract_financial_events_from_arc(prev_arc)
@@ -316,7 +342,7 @@ class Stage2Orchestrator:
                     volumes_strategy[0] if volumes_strategy else default_vol_strategy
                 )
 
-                ### [0124 핵심 1] Analyst: 결핍 리포트 생성
+                ### [0124 핵심 1] Analyst: 결핍 리포트 생성 (순수 Python, 즉시 완료)
                 try:
                     lack_report = self.app.agents['analyst'].get_lack_report(self.app.sys.hud.pro_root)
                 except Exception as lack_err:
@@ -327,20 +353,56 @@ class Stage2Orchestrator:
                     })
                     lack_report = {"martial_deficit": "분석 실패", "status": "error"}
 
-                ### [0124 핵심 2] Weaver: 욕망 드라이브(Arc Drive) 생성
-                try:
-                    arc_drive = self.app.agents['weaver'].generate_arc_drive(
-                        current_arc_dna=arcs_source[batch_start + idx],
-                        analyst_lack_report=lack_report,
-                        grand_objective=grand_obj
-                    )
-                except Exception as weaver_err:
-                    self.app.ui.log(f"⚠️ [Weaver] 욕망 드라이브 생성 실패: {weaver_err}")
-                    self.app._audit_event("weaver_error", "generate_arc_drive failed", {
-                        "arc_no": global_arc_no,
-                        "error": str(weaver_err)
-                    })
-                    arc_drive = {"desire_vector": "생성 실패", "status": "error"}
+                ### [V66.1] arc_drive + preflight 병렬 실행 (ThreadPoolExecutor)
+                # arc_drive: LLM 호출 (lack_report 의존, lack_report는 위에서 즉시 완료)
+                # preflight: LLM 호출 (독립적 — all_refined_arcs만 사용)
+                # 두 호출이 독립적이므로 병렬 실행하여 15-30s 절감
+
+                def _compute_arc_drive():
+                    """Weaver 욕망 드라이브 생성 (LLM)"""
+                    try:
+                        return self.app.agents['weaver'].generate_arc_drive(
+                            current_arc_dna=arcs_source[batch_start + idx],
+                            analyst_lack_report=lack_report,
+                            grand_objective=grand_obj
+                        )
+                    except Exception as weaver_err:
+                        self.app.ui.log(f"⚠️ [Weaver] 욕망 드라이브 생성 실패: {weaver_err}")
+                        self.app._audit_event("weaver_error", "generate_arc_drive failed", {
+                            "arc_no": global_arc_no,
+                            "error": str(weaver_err)
+                        })
+                        return {"desire_vector": "생성 실패", "status": "error"}
+
+                def _compute_preflight():
+                    """Preflight 분석 (LLM) — 결과를 attempt 루프에서 재사용"""
+                    _pf_injection = ""
+                    _pf_result = None
+                    if 'preflight' in self.app.agents and all_refined_arcs:
+                        try:
+                            _resolved_plots = ""
+                            if hasattr(self.app, 'state_tracker'):
+                                _resolved_plots = self.app.state_tracker.get_resolved_plots_summary()
+                            _pf_result = self.app.agents['preflight'].analyze(
+                                all_refined_arcs, resolved_plots_summary=_resolved_plots
+                            )
+                            if _pf_result:
+                                _pf_injection = self.app.agents['preflight'].generate_analyst_injection(_pf_result)
+                        except Exception as pf_err:
+                            print(f"      ⚠️ [Preflight] 스킵: {str(pf_err)[:50]}")
+                    return _pf_injection, _pf_result
+
+                with concurrent.futures.ThreadPoolExecutor(max_workers=2) as _parallel_exec:
+                    _fut_drive = _parallel_exec.submit(_compute_arc_drive)
+                    _fut_preflight = _parallel_exec.submit(_compute_preflight)
+                    arc_drive = _fut_drive.result()
+                    _cached_preflight_injection, _cached_preflight_result = _fut_preflight.result()
+
+                if _cached_preflight_result:
+                    print(f"      ✅ [V66.1] arc_drive + preflight 병렬 완료")
+                    print(f"         - 아이템 타임라인: {len(_cached_preflight_result.get('item_timeline', []))}개")
+                    print(f"         - 금지 사항: {len(_cached_preflight_result.get('absolute_prohibitions', []))}개")
+                    print(f"         - 관계 맵: {len(_cached_preflight_result.get('relationship_map', {}))}명")
 
                 passed = False
                 current_feedback = ""
@@ -400,7 +462,7 @@ class Stage2Orchestrator:
                             "arc_no": global_arc_no,
                             "attempt": attempt
                         })
-                        time.sleep(5)
+                        time.sleep(1)  # [V66.1] 5→1초 축소 (폴백 전 불필요 대기 제거)
                         current_feedback = f"[🚨 최종 시도] FourPhase 3회 모두 Director REJECT. Analyst가 근본적 재설계 필요.\n{director_feedback_for_fourphase}"
 
                     # [V60.10] 이전 시도 REJECT 패턴 분석
@@ -521,29 +583,11 @@ class Stage2Orchestrator:
                     print(f"      {'='*60}")
 
                     # ─────────────────────────────────────────────────────────────
-                    # [무기 #1] Preflight 분석
+                    # [무기 #1] Preflight 분석 — [V66.1] 병렬 실행 캐시 재사용
                     # ─────────────────────────────────────────────────────────────
-                    preflight_injection = ""
-                    if 'preflight' in self.app.agents and all_refined_arcs:
-                        try:
-                            print(f"      🔍 [무기 #1] Preflight 분석 시작...")
-                            with rich_console.status(f"[bold green]🔍 Preflight 분석 중...[/]", spinner="dots"):
-                                # [V66] 완결 플롯 요약 전달
-                                _resolved_plots = ""
-                                if hasattr(self.app, 'state_tracker'):
-                                    _resolved_plots = self.app.state_tracker.get_resolved_plots_summary()
-                                preflight_result = self.app.agents['preflight'].analyze(
-                                    all_refined_arcs, resolved_plots_summary=_resolved_plots
-                                )
-                            if preflight_result:
-                                preflight_injection = self.app.agents['preflight'].generate_analyst_injection(preflight_result)
-                                analyst_weapons['preflight'] = preflight_result
-                                print(f"      ✅ [Preflight] 분석 완료:")
-                                print(f"         - 아이템 타임라인: {len(preflight_result.get('item_timeline', []))}개")
-                                print(f"         - 금지 사항: {len(preflight_result.get('absolute_prohibitions', []))}개")
-                                print(f"         - 관계 맵: {len(preflight_result.get('relationship_map', {}))}명")
-                        except Exception as pf_err:
-                            print(f"      ⚠️ [Preflight] 스킵: {str(pf_err)[:50]}")
+                    preflight_injection = _cached_preflight_injection
+                    if _cached_preflight_result:
+                        analyst_weapons['preflight'] = _cached_preflight_result
 
                     # ─────────────────────────────────────────────────────────────
                     # [무기 #2] ConstraintCompiler
@@ -673,6 +717,36 @@ class Stage2Orchestrator:
                                     self.app.state_tracker.extract_npc_dialogue_styles_from_arc(refined_arc)
                                 except Exception:
                                     pass  # [V66] OPTIONAL: 대화 스타일 추출 실패 비차단
+
+                                # [V66.1] F-1: 시간선 마커 추출
+                                try:
+                                    self.app.state_tracker.extract_time_markers_from_arc(refined_arc)
+                                except Exception as e:
+                                    print(f"  [V66.1] 시간선 추출 실패 (무시): {e}")
+
+                                # [V66.1] F-8: NPC 신체 변화 추출
+                                try:
+                                    self.app.state_tracker.extract_permanent_injuries_from_arc(refined_arc)
+                                except Exception as e:
+                                    print(f"  [V66.1] 신체 변화 추출 실패 (무시): {e}")
+
+                                # [V66.1] 동행자 변경 추출
+                                try:
+                                    self.app.state_tracker.update_companions_from_arc(refined_arc)
+                                except Exception as e:
+                                    print(f"  [V66.1] 동행자 추출 실패 (무시): {e}")
+
+                                # [V66.1] 약속/맹세 추출
+                                try:
+                                    self.app.state_tracker.extract_commitments_from_arc(refined_arc)
+                                except Exception as e:
+                                    print(f"  [V66.1] 약속 추출 실패 (무시): {e}")
+
+                                # [V66.1] 주인공 감정 추출
+                                try:
+                                    self.app.state_tracker.extract_protagonist_emotion_from_arc(refined_arc)
+                                except Exception as e:
+                                    print(f"  [V66.1] 감정 추출 실패 (무시): {e}")
 
                                 # [V66] 멀티-Arc 요약 생성 및 저장
                                 try:

@@ -887,7 +887,7 @@ class ChiefWriter(BaseAgent):
         all_dead_npcs = list(set(existing_dead_npcs + detected_deaths))
 
         if all_dead_npcs:
-            dead_str = ", ".join(all_dead_npcs[:15])
+            dead_str = ", ".join(all_dead_npcs)  # [V66.1] 상한 제거 - 전체 사망 NPC 표시
             sections.append(f"""
 ### 🔒 [PAST CONSTRAINT] 사망 NPC - 절대 부활 금지
 이미 사망한 인물: {dead_str}
@@ -962,7 +962,7 @@ class ChiefWriter(BaseAgent):
 
         # 3. 죽은 NPC 목록
         if dead_npcs:
-            dead_str = ", ".join(dead_npcs[:10])  # 최대 10개
+            dead_str = ", ".join(dead_npcs)  # [V66.1] 상한 제거 - 전체 사망 NPC 표시
             sections.append(f"""
 ### 🔒 [HARD CONSTRAINT] 사망 NPC 목록
 다음 인물들은 이미 사망했습니다:

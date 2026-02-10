@@ -488,6 +488,13 @@ class DBManager:
         # 캐시 저장
         self._cumulative_bible_cache[up_to_ep] = _copy.deepcopy(cumulative)
 
+        # [V66.1] C-3: LRU 캐시 크기 제한 (최대 5개 — 장기 세션 메모리 안정화)
+        _MAX_BIBLE_CACHE = 5
+        while len(self._cumulative_bible_cache) > _MAX_BIBLE_CACHE:
+            # 가장 오래된 (가장 작은 ep) 캐시 제거
+            oldest_ep = min(self._cumulative_bible_cache.keys())
+            del self._cumulative_bible_cache[oldest_ep]
+
         return cumulative
 
     def get_all_episode_bibles(self) -> list:
@@ -1059,6 +1066,30 @@ class DBManager:
                ORDER BY ep_num DESC
                LIMIT ?""",
             (before_ep, limit)
+        )
+        results = [dict(row) for row in cur.fetchall()]
+        # 오름차순으로 정렬 (시간순)
+        return list(reversed(results))
+
+    def get_recent_manuscript_excerpts(self, before_ep: int, limit: int = 10, max_chars: int = 200) -> list:
+        """
+        [V66.1] B-4: ep_num < before_ep인 manuscript 중 최근 limit개의 발췌만 조회.
+        SQL SUBSTR로 content의 첫 max_chars 문자만 가져와 ~100KB I/O 제거/ep.
+
+        Args:
+            before_ep: 이 에피소드 이전의 manuscript만 조회
+            limit: 최대 조회 개수
+            max_chars: content에서 가져올 최대 문자 수 (기본 200)
+
+        Returns:
+            list: [{'ep_num': int, 'title': str, 'content': str}, ...] (ep_num 오름차순)
+        """
+        cur = self.cursor.execute(
+            """SELECT ep_num, title, SUBSTR(content, 1, ?) AS content FROM manuscripts
+               WHERE ep_num < ?
+               ORDER BY ep_num DESC
+               LIMIT ?""",
+            (max_chars, before_ep, limit)
         )
         results = [dict(row) for row in cur.fetchall()]
         # 오름차순으로 정렬 (시간순)
