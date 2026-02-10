@@ -152,6 +152,40 @@ class Stage2Orchestrator:
                 self.app.state_tracker.extract_protagonist_emotion_from_arc(prev_arc)
             except Exception as e:
                 print(f"  [V66.1] 감정 추출 실패 (무시): {e}")
+            # [V66.2] H-1~H-5: 재시작 시 V66 확장 데이터 복원
+            try:
+                self.app.state_tracker.extract_item_states_from_arc(prev_arc)
+            except (KeyError, ValueError, TypeError) as e:
+                logging.warning(f"[V66.3] Init load 복원 실패 (major_items): {e}")
+            try:
+                self.app.state_tracker.extract_entity_destructions_from_arc(prev_arc)
+            except (KeyError, ValueError, TypeError) as e:
+                logging.warning(f"[V66.3] Init load 복원 실패 (entity_destructions): {e}")
+            try:
+                self.app.state_tracker.extract_npc_personality_from_arc(prev_arc)
+            except (KeyError, ValueError, TypeError) as e:
+                logging.warning(f"[V66.3] Init load 복원 실패 (npc_personality): {e}")
+            try:
+                self.app.state_tracker.extract_npc_npc_relationships_from_arc(prev_arc)
+            except (KeyError, ValueError, TypeError) as e:
+                logging.warning(f"[V66.3] Init load 복원 실패 (npc_npc_relationships): {e}")
+            try:
+                self.app.state_tracker.extract_npc_dialogue_styles_from_arc(prev_arc)
+            except (KeyError, ValueError, TypeError) as e:
+                logging.warning(f"[V66.3] Init load 복원 실패 (dialogue_profiles): {e}")
+            # [V66.2] D-1,2,3: 관계/부상/이동 추출 연결
+            try:
+                self.app.state_tracker.extract_relationship_changes_from_arc(prev_arc)
+            except Exception as e:
+                print(f"  [V66.2] 관계 변화 추출 실패 (무시): {e}")
+            try:
+                self.app.state_tracker.extract_npc_injuries_from_arc(prev_arc)
+            except Exception as e:
+                print(f"  [V66.2] NPC 부상 추출 실패 (무시): {e}")
+            try:
+                self.app.state_tracker.extract_npc_movements_from_arc(prev_arc)
+            except Exception as e:
+                print(f"  [V66.2] NPC 이동 추출 실패 (무시): {e}")
             # [V63.1] 투자물: 금융 이벤트 추출
             if _genre_for_tracker == 'investment':
                 self.app.state_tracker.extract_financial_events_from_arc(prev_arc)
@@ -747,6 +781,20 @@ class Stage2Orchestrator:
                                     self.app.state_tracker.extract_protagonist_emotion_from_arc(refined_arc)
                                 except Exception as e:
                                     print(f"  [V66.1] 감정 추출 실패 (무시): {e}")
+
+                                # [V66.2] D-1,2,3: 관계/부상/이동 추출 연결
+                                try:
+                                    self.app.state_tracker.extract_relationship_changes_from_arc(refined_arc)
+                                except Exception as e:
+                                    print(f"  [V66.2] 관계 변화 추출 실패 (무시): {e}")
+                                try:
+                                    self.app.state_tracker.extract_npc_injuries_from_arc(refined_arc)
+                                except Exception as e:
+                                    print(f"  [V66.2] NPC 부상 추출 실패 (무시): {e}")
+                                try:
+                                    self.app.state_tracker.extract_npc_movements_from_arc(refined_arc)
+                                except Exception as e:
+                                    print(f"  [V66.2] NPC 이동 추출 실패 (무시): {e}")
 
                                 # [V66] 멀티-Arc 요약 생성 및 저장
                                 try:

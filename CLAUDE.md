@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Wuxia Studio V61** - AI 기반 다중 장르 웹소설 자동 생성 시스템. Google Gemini API를 사용하여 전문화된 에이전트들이 연재 소설을 생산.
+**Wuxia Studio V66.3** - AI 기반 다중 장르 웹소설 자동 생성 시스템. Google Gemini API를 사용하여 전문화된 에이전트들이 연재 소설을 생산.
 
 **지원 장르:**
 - Wuxia (무협) - 무협 소설
@@ -56,18 +56,25 @@ pytest tests/ -k "test_name" -v        # 특정 테스트만
 * Director: 모든 스테이지에서 품질 검증 담당 (PASS/REJECT 판정권)
 ```
 
-## 핵심 아키텍처 (V61)
+## 핵심 아키텍처 (V66.3)
 
 ```
-SovereignApp (main_a.py)
+SovereignApp (main_a.py, 4,090+줄)
 ├── StudioSystem (modules/core/system.py)
 │   ├── ProjectContext → DBManager (SQLite)
 │   ├── LoreManager    → 설정집/자산 관리
 │   ├── MartialManager → 캐릭터 HUD 상태
-│   ├── GenreGuard     → 장르별 검증 규칙
+│   ├── GenreGuard     → 장르별 검증 규칙 (다형성 run_deep_validation) [V66]
 │   ├── PrimitiveGuard → 원시인 금지어 검증 [V60.96]
 │   └── KarmaService   → 인과율 추적
-├── StateTracker       → NPC 생사/무공/관계 추적 [V61]
+├── StateTracker       → NPC 생사/무공/관계/성격/대화스타일 추적 [V66]
+│   ├── state_tracker_npc.py   → NPC 전용 (1,820+줄)
+│   ├── state_tracker_plots.py → 플롯/아이템/시간선 (650+줄)
+│   └── state_tracker_financial.py → 금융 (129줄)
+├── Stage2Orchestrator → Arc 생성 오케스트레이션 (1,800+줄) [V64]
+├── Stage4Orchestrator → 원고 생성 오케스트레이션 (1,140+줄) [V64]
+├── SemanticPlotGuard  → ChromaDB cosine 유사도 플롯 중복 감지 [V66]
+├── ForeshadowTracker  → 복선/회수 추적 [V66]
 ├── PresetRegistry     → 장르별 프리셋 스키마 [V60.95]
 ├── LongTermMemory     → ChromaDB 벡터 검색
 │
@@ -79,9 +86,6 @@ SovereignApp (main_a.py)
     │   ├── ReverseExpander    → 역설계 (원고 → Bible)
     │   └── StyleExtractor     → 톤/문체 추출
     │
-    ├── [Stage 1] Analyst
-    │   └── plan_single_volume_v20() → Volume 전략 생성
-    │
     ├── [Stage 2] FourPhaseArcGenerator (메인)
     │   ├── PreflightChecker      → 제약 맵 구축
     │   ├── ArcEnsembleGenerator  → 3개 후보 병렬 생성
@@ -91,48 +95,71 @@ SovereignApp (main_a.py)
     ├── [Stage 3] ThreePhaseBlueprintGenerator (메인)
     │   ├── BlueprintEnsembleGenerator → 3개 후보 병렬 생성
     │   ├── UnifiedBlueprintValidator  → 통합 검증
-    │   └── (Architect → 레거시, 미사용)
+    │   └── (Architect → 레거시)
     │
-    ├── [Stage 4] ChiefWriter (메인)
-    │   ├── generate_ensemble()    → 3개 후보 병렬 생성
+    ├── [Stage 4] ChiefWriter (메인, 2,010+줄)
+    │   ├── generate_ensemble()    → 3개 후보 병렬 생성 (빈 배열 방어 [V66.3])
     │   ├── ManuscriptValidator    → Python 사전 검증
     │   └── (Writer → 냉동인간, 최후 폴백)
     │
-    └── [공통] Director → 모든 스테이지 최종 판정
+    └── [공통] Director (facade 256줄 + 5 sub-modules) [V64/V66.3]
+        ├── director_ensemble.py   → 앙상블 선정 (mandatory_context 수신 [V66.3])
+        ├── director_grading.py    → 점수 채점
+        ├── director_auditor.py    → 장르/연속성 감사
+        ├── director_continuity.py → 연속성 검증
+        └── director_caching.py    → 캐싱 관리
 ```
 
-## StateTracker & state_changes (V61)
+### 핵심 설계 원칙 (V66.2+)
 
-Arc 생성 시 `state_changes` 필드로 이벤트를 구조화하여 추출 정확도 98% 달성:
+**"Python 감지 → Director LLM 판단"**: Python 검증기(BlockingValidator, ContinuityValidator 등)는 문제를 **감지**만 하고, 최종 PASS/REJECT **판정**은 Director LLM이 수행. Python이 직접 REJECT하지 않음.
+
+```
+mandatory_context (21항목) ──→ ChiefWriter LLM (원고 생성 시 참조)
+         │
+         └──→ Director LLM (PASS/REJECT 판정 시 참조) [V66.3]
+                  ↑
+Python 검증 경고 ──┘ (죽은NPC 감지, 성격 모순, 파괴 엔티티 등)
+```
+
+## StateTracker & state_changes (V66.3)
+
+Arc 생성 시 `state_changes` 필드로 이벤트를 구조화하여 추출. 16개 필드 E2E 파이프라인 완성:
 
 ```json
 {
   "arc_no": 5,
   "tactical_doc": "...",
   "state_changes": {
-    "npc_deaths": [
-      {"name": "철무련주", "episode": 23, "cause": "주인공에게 패배"}
-    ],
-    "skill_acquisitions": [
-      {"name": "파천검법", "episode": 24, "source": "비급 습득"}
-    ],
-    "relationship_changes": [
-      {"npc": "흑도", "from": "적", "to": "중립", "episode": 25}
-    ],
-    "major_items": [
-      {"name": "용린검", "episode": 24, "action": "획득"}
-    ]
+    "npc_deaths": [{"name": "철무련주", "episode": 23, "cause": "주인공에게 패배"}],
+    "skill_acquisitions": [{"name": "파천검법", "episode": 24, "source": "비급 습득"}],
+    "relationship_changes": [{"npc": "흑도", "from": "적", "to": "중립", "episode": 25}],
+    "major_items": [{"name": "용린검", "episode": 24, "action": "획득"}],
+    "entity_destructions": [{"name": "조직명", "type": "organization", "cause": "...", "episode": 23}],
+    "npc_personality_changes": [{"name": "NPC명", "traits": "성격", "motivation": "동기", "episode": 24}],
+    "npc_npc_relationships": [{"npc1": "A", "npc2": "B", "relation": "동맹", "episode": 25}],
+    "npc_dialogue_profiles": [{"name": "NPC명", "speech_style": "말투", "catchphrase": "습관 표현", "episode": 24}],
+    "npc_injuries": [{"name": "NPC명", "injury": "부상 내용", "episode": 23}],
+    "npc_movements": [{"name": "NPC명", "from": "장소A", "to": "장소B", "episode": 24}],
+    "time_markers": [{"description": "시간 경과", "episode": 25}],
+    "companion_changes": [{"name": "동행자명", "action": "합류/이탈", "episode": 24}],
+    "promises_obligations": [{"description": "약속 내용", "episode": 23}],
+    "protagonist_emotion": [{"emotion": "감정 상태", "trigger": "원인", "episode": 25}]
   }
 }
 ```
 
-**StateTracker 흐름:**
+**StateTracker 흐름 (V66.3):**
 ```
 Stage 2 생성 → state_changes 추출 → StateTracker 업데이트
      ↓
-Stage 3 전달 → 죽은 NPC 등장 시 REJECT
+mandatory_context 21항목 조립 (Priority 순서)
      ↓
-Stage 4 전달 → 죽은 NPC 등장 시 REJECT
+ChiefWriter LLM → 원고 생성 시 참조 (죽은NPC/파괴장소/스킬/관계 등)
+     ↓
+Python 검증 (BlockingValidator + ContinuityValidator) → 경고 감지
+     ↓
+Director LLM → mandatory_context + Python 경고 수신 → PASS/REJECT [V66.3]
 ```
 
 ## PrimitiveGuard (V60.96) - 원시인 금지어
@@ -170,7 +197,9 @@ class BaseAgent:
 
     MODEL_FALLBACK_CHAIN = {
         "gemini-3-pro-preview": "gemini-2.5-pro",
-        "gemini-2.5-pro": "gemini-2.5-flash",  # 최종 폴백
+        "gemini-3-flash-preview": "gemini-2.5-flash",
+        "gemini-2.0-flash": "gemini-2.5-flash",
+        # gemini-2.5-pro는 최종 방어선 (체인 없음)
     }
 ```
 
@@ -184,18 +213,19 @@ class BaseAgent:
 | FourPhaseArcGenerator | gemini-3-pro-preview | Stage 2 Arc |
 | ThreePhaseBlueprintGenerator | gemini-3-pro-preview | Stage 3 Blueprint |
 | ChiefWriter | gemini-3-pro-preview | Stage 4 원고 |
-| Director | gemini-2.5-pro | 품질 검증 |
+| Director | gemini-3-pro-preview | 품질 검증 |
 
 **폴백 체인:** `gemini-3-pro → gemini-2.5-pro → gemini-2.5-flash`
 
-## 검증 시스템 (7-Tier)
+## 검증 시스템 (8-Tier)
 
 ```
 TIER -1: Arc Continuity      → Arc간 타임라인 검증 (Stage 2)
 TIER  0: Episode Continuity  → 에피소드간 연속성 (Stage 3)
-TIER  0.1: Manuscript Check  → 원고-블루프린트 일치 (Stage 4)
-TIER  0.5: Python Continuity → 무료 Python 체크
-TIER  1: BLOCKING            → 즉시 REJECT (죽은 NPC 부활, 원시인 금지어)
+TIER  0.25: PRE_LLM          → Python 사전 검증 (PreLLMValidator)
+TIER  0.5: Python Continuity → Python 연속성 체크
+TIER  1: BLOCKING            → 필수 통과 (죽은 NPC 부활, 원시인 금지어)
+TIER  1.5: CONSISTENCY       → 일관성 검증 (ConsistencyValidator)
 TIER  2: SCORING             → 100점 만점, 70점 통과
 TIER  3: ADVISORY            → 비차단 제안 (항상 PASS)
 ```
@@ -221,8 +251,10 @@ TIER  3: ADVISORY            → 비차단 제안 (항상 PASS)
 | `modules/domain/agents/four_phase_arc_generator.py` | Stage 2 메인 |
 | `modules/domain/agents/three_phase_blueprint_generator.py` | Stage 3 메인 |
 | `modules/domain/agents/chief_writer.py` | Stage 4 메인 |
-| `modules/domain/agents/state_tracker.py` | NPC/무공/관계 추적 |
-| `modules/domain/agents/director.py` | 품질 검증 |
+| `modules/domain/agents/state_tracker.py` | NPC/무공/관계/성격/대화스타일 추적 (facade + 3 sub-modules) |
+| `modules/domain/agents/director.py` | 품질 검증 (facade + 5 sub-modules) [V64] |
+| `modules/core/stage2_orchestrator.py` | Stage 2 오케스트레이션 [V64] |
+| `modules/core/stage4_orchestrator.py` | Stage 4 오케스트레이션 (mandatory_context 조립) [V64] |
 | `modules/domain/agents/analyst.py` | #레거시 (Stage 2 폴백) |
 | `modules/domain/agents/architect.py` | #레거시 (Stage 3 미사용) |
 | `modules/domain/agents/writer.py` | #레거시 (Stage 4 냉동인간) |
@@ -248,16 +280,20 @@ TIER  3: ADVISORY            → 비차단 제안 (항상 PASS)
    └── Phase 3: Director 대면      → 최종 PASS/REJECT
 ```
 
-## Stage 4 Manuscript 생성 흐름
+## Stage 4 Manuscript 생성 흐름 (V66.3)
 
 ```
-1. ChiefWriter.generate_ensemble() → 3개 후보 병렬 생성
-   ├── PrimitiveGuard 주입         → 원시인 금지어 프롬프트
-   ├── state_tracker HUD 주입      → 죽은 NPC 목록
-   └── 스타일 가이드 주입          → 톤/문체/대화비율
-2. ManuscriptValidator             → Python 사전 검증
-3. Director.validate_manuscript()  → 최종 PASS/REJECT (원시인 사후 검증 포함)
-4. (실패 시) Writer                → 냉동인간 폴백
+1. mandatory_context 조립 (21항목, Priority 순서, 25K자 스마트 truncation)
+   ├── Priority 1-5:  죽은NPC, 파괴엔티티, 완결플롯, 시간선, 복선
+   ├── Priority 6-12: NPC성격, 대화스타일, 관계, 스킬목록, 아이템, 위치
+   └── Priority 13-21: Arc요약, 검증경고, 호흡분석, 서사요약
+2. ChiefWriter.generate_ensemble() → 3개 후보 병렬 생성 (빈 배열 방어 [V66.3])
+   ├── mandatory_context 주입       → 세계 상태 전달
+   ├── PrimitiveGuard 주입          → 원시인 금지어 프롬프트
+   └── 스타일 가이드 주입           → 톤/문체/대화비율
+3. Python 검증 (ManuscriptValidator + BlockingValidator + ContinuityValidator)
+4. Director.select_and_judge_ensemble() → mandatory_context + Python 경고 수신 → PASS/REJECT [V66.3]
+5. (실패 시) Writer                 → 냉동인간 폴백
 ```
 
 ## 용어 정리
@@ -269,7 +305,9 @@ TIER  3: ADVISORY            → 비차단 제안 (항상 PASS)
 | `tactical_doc` | Arc 전술 계획 문서 |
 | `blueprint` | 에피소드 씬별 설계도 |
 | `joint_docs` | Arc 종료 시 상태 (위치, 소지품, 세계상태) |
-| `state_changes` | Arc 내 이벤트 구조화 (사망/습득/관계변화) |
+| `state_changes` | Arc 내 이벤트 구조화 (16필드: 사망/습득/관계/파괴/성격/대화 등) |
+| `mandatory_context` | Stage 4 LLM에 전달되는 세계 상태 (21항목, Priority 순서) [V66] |
+| `validation_context` | Python 검증기에 전달되는 컨텍스트 dict [V66.2] |
 | `world_origin` | 주인공 출신 (원시인/현대인) |
 | `incarnation_type` | 환생 유형 (회귀자/빙의자/환생자) |
 

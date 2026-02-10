@@ -177,11 +177,13 @@ class Director(BaseAgent):
     ENSEMBLE_SELECTION_PROMPT = _ENSEMBLE_PROMPT
 
     def select_and_judge_ensemble(self, ep_num, candidates, validation_results, blueprint, previous_ending,
-                                   arc_pos=1, total_eps=5, retry_count=0, episode_digest=""):
-        """[V64] 위임 → DirectorEnsembleSelector"""
+                                   arc_pos=1, total_eps=5, retry_count=0, episode_digest="",
+                                   mandatory_context=""):
+        """[V66.3] 위임 → DirectorEnsembleSelector (mandatory_context 전달 추가)"""
         return self._ensemble.select_and_judge_ensemble(
             ep_num, candidates, validation_results, blueprint, previous_ending,
-            arc_pos, total_eps, retry_count, episode_digest
+            arc_pos, total_eps, retry_count, episode_digest,
+            mandatory_context=mandatory_context
         )
 
     def quick_judge_single(self, ep_num, manuscript, blueprint, previous_ending, retry_count=0):

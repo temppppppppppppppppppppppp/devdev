@@ -175,6 +175,9 @@ ENSEMBLE_ARC_PROMPT = """
             {{"parties": ["A", "B"], "description": "3일 후 금 100냥 상환", "episode": N}}
         ],
         "protagonist_emotion": {{"emotion": "비통", "trigger": "부모 사망", "episode": N}},
+        "npc_dialogue_profiles": [
+            {{"name": "NPC명", "speech_style": "말투 특징", "catchphrase": "습관적 표현", "episode": N}}
+        ],
         "financial_events": {{
             "exchange_rates": [
                 {{"value": 숫자, "episode": N, "context": "환율 설명"}}
@@ -210,6 +213,7 @@ ENSEMBLE_ARC_PROMPT = """
 - [V66.1] companion_changes: NPC가 주인공 일행에 합류/이탈할 때 반드시 기록 (동행자 실종 방지)
 - [V66.1] commitments: 약속/맹세/빚 발생 시 반드시 기록 (미이행 약속 추적)
 - [V66.1] protagonist_emotion: Arc 종료 시 주인공 감정 상태 기록 (감정 급변 방지, 없으면 빈 객체 {{}})
+- [V66.3] npc_dialogue_profiles: NPC 고유 말투/캐치프레이즈 해당 시 반드시 기록 (대화 스타일 일관성 유지, 빈 배열도 가능)
 - [V63] npc_movements: NPC가 장소를 이동하면 출발지/도착지 기록
 - [V63.1] financial_events: 투자/재벌물에서 환율, 자산, 레버리지, 거래 내역 기록 (비투자 장르는 빈 객체 {{}})
 - 해당 사항 없으면 빈 배열 [] 또는 빈 객체 {{}}로 표시

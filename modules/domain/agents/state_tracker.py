@@ -1010,6 +1010,14 @@ class StateTracker:
     def get_npc_dialogue_style_summary(self) -> str:
         return self._npc.get_npc_dialogue_style_summary()
 
+    def register_npc_npc_relationship(self, npc1: str, npc2: str, relation: str, arc_no: int):
+        return self._npc.register_npc_npc_relationship(npc1, npc2, relation, arc_no)
+
+    def register_npc_dialogue_style(self, npc_name: str, speech_level: str = "",
+                                     catchphrase: str = "", emotion_baseline: str = "",
+                                     arc_no: int = 0):
+        return self._npc.register_npc_dialogue_style(npc_name, speech_level, catchphrase, emotion_baseline, arc_no)
+
     # ═══════════════════════════════════════════════════════════════
     # [V66.1] F-1: 시간선 추적 위임 (Plots 서브모듈)
     # ═══════════════════════════════════════════════════════════════
@@ -1089,6 +1097,20 @@ class StateTracker:
 
     def get_protagonist_emotion_summary(self) -> str:
         return self._npc.get_protagonist_emotion_summary()
+
+    # [V66.2] D-1,2,3: mandatory_context 주입용 summary 위임 스텁
+    def get_relationship_changes_summary(self) -> str:
+        return self._npc.get_relationship_changes_summary()
+
+    def get_npc_injury_summary(self) -> str:
+        return self._npc.get_npc_injury_summary()
+
+    def get_npc_movement_summary(self) -> str:
+        return self._npc.get_npc_movement_summary()
+
+    # [V66.2] C-2: 주인공 습득 무공/스킬 요약 위임
+    def get_protagonist_skills_summary(self) -> str:
+        return self._npc.get_protagonist_skills_summary()
 
     # ═══════════════════════════════════════════════════════════════
     # [V66] 멀티-Arc 요약
