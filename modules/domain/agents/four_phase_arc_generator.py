@@ -35,12 +35,12 @@ class FourPhaseArcGenerator(BaseAgent):
     (클래스명은 호환성을 위해 유지)
     """
 
-    def __init__(self, context, client, model_tier: str = "gemini-3-pro-preview"):
+    def __init__(self, context, client, model_tier: str = "gemini-2.5-pro"):
         super().__init__(context, client, model_tier)
 
         # 서브 모듈
         self.preflight = PreflightChecker(context, client, "gemini-3-flash-preview")
-        self.ensemble = ArcEnsembleGenerator(context, client, "gemini-3-pro-preview")
+        self.ensemble = ArcEnsembleGenerator(context, client, "gemini-2.5-pro")
         self.validator = UnifiedArcValidator(context, client, "gemini-2.5-flash")
         self.compiler = ConstraintCompiler()
         self.negative_injector = NegativeExampleInjector("wuxia")
@@ -132,7 +132,8 @@ Arc {arc_no}의 적절한 화수(ep_count)를 3~7 중에서 결정하라.
         protagonist_name: str = "주인공",
         director_feedback: str = "",
         entity_registry: Dict = None,  # [V60.92] Entity Registry (NPC 명칭 일관성)
-        state_tracker=None  # [V60.94] StateTracker (죽은 NPC 검증용)
+        state_tracker=None,  # [V60.94] StateTracker (죽은 NPC 검증용)
+        vector_context: str = ""  # [V63.3] ChromaDB 벡터 검색 결과
     ) -> Tuple[Optional[Dict], Dict]:
         """
         3단계 Arc 생성
@@ -149,6 +150,7 @@ Arc {arc_no}의 적절한 화수(ep_count)를 3~7 중에서 결정하라.
             director_feedback: [V60.77] Director REJECT 피드백 (재시도 시 반영)
             entity_registry: [V60.92] Entity Registry (NPC 명칭 일관성)
             state_tracker: [V60.94] StateTracker (죽은 NPC 검증용)
+            vector_context: [V63.3] ChromaDB 벡터 검색 결과 (과거 유사 맥락)
 
         Returns:
             (generated_arc, pipeline_result)
@@ -178,6 +180,17 @@ Arc {arc_no}의 적절한 화수(ep_count)를 3~7 중에서 결정하라.
             "retries": 0
         }
 
+        # [V62.5] 이전 Arc 아이템/수여물 사전 수집 (UnifiedArcValidator 중복 스캔 방지)
+        _pre_items = set()
+        _pre_grants = set()
+        for _prev in prev_arcs:
+            _acq = _prev.get("state_constraints", {}).get("items_acquired", [])
+            if isinstance(_acq, list):
+                _pre_items.update(i.strip() for i in _acq if i)
+            _grt = _prev.get("state_constraints", {}).get("grants_received", [])
+            if isinstance(_grt, list):
+                _pre_grants.update(g.strip() for g in _grt if g)
+
         # Preflight 캐싱
         cached_constraint_block = None
         cached_preflight = None
@@ -198,7 +211,7 @@ Arc {arc_no}의 적절한 화수(ep_count)를 3~7 중에서 결정하라.
                 full_constraint_block = cached_constraint_block
                 preflight_result = cached_preflight
             else:
-                print(f"      📋 [Phase 1] 제약 수집 중...")
+                print(f"      📋 [Phase 1] 제약 수집 중... (이전 Arc {len(prev_arcs)}개)")
 
                 preflight_result = self.preflight.analyze(prev_arcs)
                 preflight_injection = self.preflight.generate_analyst_injection(preflight_result)
@@ -228,6 +241,9 @@ Arc {arc_no}의 적절한 화수(ep_count)를 3~7 중에서 결정하라.
             print(f"      🎲 [Phase 2] Ensemble 생성 중 (3개 후보)...")
 
             prev_arc_context = self._generate_prev_context(prev_arcs, preflight_result)
+            # [V63.3] 벡터 메모리 컨텍스트 주입
+            if vector_context:
+                prev_arc_context = f"{prev_arc_context}\n\n[과거 유사 맥락 (벡터 검색)]\n{vector_context}"
 
             best_arc, all_candidates = self.ensemble.generate_ensemble(
                 arc_no=arc_no,
@@ -259,6 +275,11 @@ Arc {arc_no}의 적절한 화수(ep_count)를 3~7 중에서 결정하라.
             self.stats["phase2_complete"] += 1
 
             # ═══════════════════════════════════════════════════════════════
+            # PHASE 2.5: AUTO-SANITIZE - 부상 에스컬레이션 자동 세정
+            # ═══════════════════════════════════════════════════════════════
+            best_arc = self._auto_sanitize_injuries(best_arc)
+
+            # ═══════════════════════════════════════════════════════════════
             # PHASE 3: VALIDATE - 통합 검증
             # ═══════════════════════════════════════════════════════════════
             print(f"      🔍 [Phase 3] 통합 검증 중...")
@@ -267,7 +288,9 @@ Arc {arc_no}의 적절한 화수(ep_count)를 3~7 중에서 결정하라.
                 arc=best_arc,
                 prev_arcs=prev_arcs,
                 constraints=full_constraint_block,
-                state_tracker=state_tracker  # [V60.94] 죽은 NPC 검증용
+                state_tracker=state_tracker,  # [V60.94] 죽은 NPC 검증용
+                pre_collected_items=_pre_items,  # [V62.5] 중복 스캔 방지
+                pre_collected_grants=_pre_grants  # [V62.5] 중복 스캔 방지
             )
 
             pipeline_result["phases"]["validate"] = {
@@ -327,18 +350,24 @@ Arc {arc_no}의 적절한 화수(ep_count)를 3~7 중에서 결정하라.
         joint = last_arc.get("joint_docs", {})
         shadow = last_arc.get("status_shadow", {})
 
-        # 상태 추출 (arc_end_state 우선)
-        final_energy = arc_end.get("internal_energy")
-        if final_energy is None:
+        # 상태 추출 (arc_end_state 우선) + [V62.2] 아크 간 자연 회복
+        raw_energy = arc_end.get("internal_energy")
+        if raw_energy is None:
             loss_str = shadow.get("internal_energy_loss", "0%")
             try:
                 import re
                 loss = int(re.search(r'(\d+)', str(loss_str)).group(1))
-                final_energy = max(0, 100 - loss)
+                raw_energy = max(0, 100 - loss)
             except Exception:
-                final_energy = Stage2Limits.INTERNAL_ENERGY_FALLBACK
+                raw_energy = Stage2Limits.INTERNAL_ENERGY_FALLBACK
 
-        final_injuries = arc_end.get("injuries") or shadow.get("expected_injuries", "없음")
+        # [V62.2] 내공 자연 회복: 아크 간 시간 경과로 최소 100%로 회복
+        final_energy = 100
+        if isinstance(raw_energy, (int, float)) and raw_energy < 100:
+            print(f"      🩹 [V62.2] 내공 자연 회복: {int(raw_energy)}% → 100% (아크 간 휴식)")
+
+        raw_injuries = arc_end.get("injuries") or shadow.get("expected_injuries", "없음")
+        final_injuries = self._sanitize_injuries(raw_injuries)
         final_location = arc_end.get("location") or joint.get("final_location", "알 수 없음")
         final_equipment = arc_end.get("equipment") or joint.get("physical_inventory", [])
         if isinstance(final_equipment, str):
@@ -361,12 +390,75 @@ Arc {arc_no}의 적절한 화수(ep_count)를 3~7 중에서 결정하라.
         if conflicts:
             lines.append(f"진행 중인 갈등: {', '.join(conflicts[:3])}")
 
+        # [V62.7] 완결된 갈등 (재생성 금지)
+        resolved = world.get("resolved_conflicts", [])
+        if resolved:
+            lines.append(f"완결된 갈등 (재생성 금지): {', '.join(resolved[:5])}")
+
         relationships = preflight_result.get("relationship_map", {})
         if relationships:
             rel_summary = ", ".join([f"{k}: {v.get('current_state', '?')}" for k, v in list(relationships.items())[:5]])
             lines.append(f"주요 관계: {rel_summary}")
 
         return "\n".join(lines)
+
+    # ──────────────────────────────────────────────
+    # [V62.2] Injury Escalation Guard
+    # 부상 자기강화 루프 차단: 만성질환/에스컬레이션 필터
+    # ──────────────────────────────────────────────
+    CHRONIC_INJURY_KEYWORDS = [
+        "성대 결절", "성대결절", "실명", "마비", "불구", "절단",
+        "암", "종양", "만성", "대화 불가", "말 못함", "목소리 상실",
+        "청력 상실", "시력 상실", "반신불수", "전신 탈진", "코피",
+    ]
+
+    def _sanitize_injuries(self, raw: str) -> str:
+        """[V62.2] 이전 Arc → 다음 Arc 전파 시 부상은 항상 '없음'.
+        소설 세계관: 아크 간 시간 경과로 자연 치유 가정 (힐링팩터).
+        """
+        if not raw or raw.strip() in ("없음", "정상", ""):
+            return "없음"
+        print(f"      🩹 [V62.2] 자연 치유: '{raw[:50]}' → '없음' (아크 간 회복)")
+        return "없음"
+
+    def _auto_sanitize_injuries(self, arc: Dict) -> Dict:
+        """[V62.2] 생성된 Arc 종료 시 자연 회복 적용.
+        - 부상: arc_end → '없음'
+        - 내공: arc_end → 100% 복원
+        """
+        cleaned = 0
+
+        sc = arc.get("state_constraints", {})
+        end_state = sc.get("arc_end_state", {})
+        if isinstance(end_state, dict):
+            # 부상 → 없음
+            inj = str(end_state.get("injuries", "없음"))
+            if inj not in ("없음", "정상", ""):
+                end_state["injuries"] = "없음"
+                cleaned += 1
+            # 내공 → 100%
+            energy = end_state.get("internal_energy")
+            if isinstance(energy, (int, float)) and energy < 100:
+                end_state["internal_energy"] = 100
+                cleaned += 1
+
+        # status_shadow
+        ss = arc.get("status_shadow", {})
+        if isinstance(ss, dict):
+            ei = str(ss.get("expected_injuries", "없음"))
+            if ei not in ("없음", "정상", ""):
+                ss["expected_injuries"] = "없음"
+                cleaned += 1
+            # energy_loss → 0%
+            el = ss.get("internal_energy_loss", "")
+            if el and el != "0%":
+                ss["internal_energy_loss"] = "0%"
+                cleaned += 1
+
+        if cleaned:
+            print(f"      🩹 [V62.2] 자연 회복 적용: {cleaned}건 (부상→없음, 내공→100%)")
+
+        return arc
 
     def get_stats(self) -> Dict:
         """통계 반환"""
@@ -391,6 +483,6 @@ Arc {arc_no}의 적절한 화수(ep_count)를 3~7 중에서 결정하라.
         print(f"  최종 통과율: {stats.get('pass_rate', 'N/A')}")
 
 
-def create_four_phase_generator(context, client, model_tier: str = "gemini-3-pro-preview"):
+def create_four_phase_generator(context, client, model_tier: str = "gemini-2.5-pro"):
     """FourPhaseArcGenerator 생성 헬퍼 (호환성 유지)"""
     return FourPhaseArcGenerator(context, client, model_tier)

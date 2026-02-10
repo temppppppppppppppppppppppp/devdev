@@ -146,6 +146,18 @@ class SeedTracker:
             "medium": 2,
             "high": 1,
             "critical": 1
+        },
+        "cooking": {
+            "low": 3,
+            "medium": 2,
+            "high": 2,
+            "critical": 1
+        },
+        "alt_history": {
+            "low": 3,
+            "medium": 2,
+            "high": 2,
+            "critical": 1
         }
     }
 
@@ -153,7 +165,9 @@ class SeedTracker:
     GENRE_SEED_TYPES = {
         "wuxia": ["technique", "secret", "enemy", "treasure", "relationship", "promise"],
         "hunter": ["dungeon", "awakening", "system", "secret", "enemy", "treasure"],
-        "investment": ["information", "crisis", "opportunity", "secret", "promise"]
+        "investment": ["information", "crisis", "opportunity", "secret", "promise"],
+        "cooking": ["recipe", "ingredient", "secret", "rival", "customer", "promise"],
+        "alt_history": ["court_intrigue", "technology", "diplomacy", "secret", "rebellion", "promise"]
     }
 
     def __init__(self, genre: str = "wuxia", db_manager=None):

@@ -70,15 +70,16 @@ class ChiefWriter(BaseAgent):
 """
         },
         "tension": {
-            "name": "긴장감 강조",
-            "temperature": 0.75,
-            "emphasis": "액션 + 클리프행어 강화",
+            "name": "긴장감 + 반전 강조",
+            "temperature": 0.8,
+            "emphasis": "반전 + 클리프행어 + 예측 불가능 전개",
             "instruction": """
-[전략 C: 긴장감 강조]
-- 액션/전투 씬 밀도 강화
-- 서스펜스와 긴장감 극대화
-- 강렬한 클리프행어 엔딩
-- ⚠️ 반드시 5,000자 이상 작성. 액션 묘사와 긴장 고조를 충분히 전개할 것
+[전략 C: 몰입감 극대화]
+- 독자 예측을 벗어나는 전개 1개 이상 포함
+- 서스펜스와 긴장감 극대화. 정보를 독자에게 천천히 공개하라
+- 강렬한 클리프행어 (단순 전투 외: 정보 폭탄, 배신, 반전)
+- 캐릭터 간 긴장감 있는 대화 (침묵, 눈빛, 서브텍스트)
+- ⚠️ 반드시 5,000자 이상 작성. 긴장 고조와 반전을 충분히 전개할 것
 """
         }
     }
@@ -527,8 +528,9 @@ class ChiefWriter(BaseAgent):
 단, 대화에서 현대 용어 남발은 자제하고 세계관에 맞게 표현하세요.
 """
 
-        # 직전 원고 엔딩 (마지막 1500자)
-        prev_ending = prev_manuscript[-1500:] if prev_manuscript else ""
+        # [V62.6→V63.2] 직전 원고: 구조화 다이제스트 + 엔딩 2500자 (800→2500 확대)
+        prev_ending = prev_manuscript[-2500:] if prev_manuscript else ""
+        prev_digest = self._generate_episode_digest(prev_manuscript, ep_num - 1) if prev_manuscript else ""
 
         # Director 피드백 섹션
         feedback_section = ""
@@ -662,7 +664,9 @@ class ChiefWriter(BaseAgent):
 {self._escape_braces(scene_breakdown)}
 
 ### 📋 [STEP 2: 연속성 확인]
-직전 화 엔딩에서 자연스럽게 이어져야 한다.
+{self._escape_braces(prev_digest)}
+
+직전 화 엔딩에서 자연스럽게 이어져야 한다. 위 다이제스트의 상태를 반드시 준수하라.
 
 [직전 화 마지막 장면]
 ...{self._escape_braces(prev_ending)}
@@ -697,15 +701,176 @@ class ChiefWriter(BaseAgent):
 2. 감각적 묘사 강화 (오감 활용): 상황을 설명하지 말고, 독자가 그 현장에 있는 것처럼 느끼게 해라. 소리(청각), 냄새(후각), 질감(촉각)을 문장에 녹여내라.
 3. 요약된 대화의 장면화: "그들은 협상에 대해 길게 논쟁했다"처럼 요약된 서술을 금지한다. 날 선 티키타카(대화)가 오가는 실제 장면으로 풀어 써라.
 4. 문장 밀도 조절: 무의미한 미사여구로 문장 길이를 늘리지 마라. 불필요한 접속사와 수식어는 쳐내고, '동사(Action)' 위주로 문장을 짧고 힘 있게 끊어쳐라.
+5. [V63] 예측 가능한 전개 금지 → 반전 삽입: 독자가 예상하는 결과를 한 번 비틀어라. (예: "적이 도발했다 → 주인공이 화를 내며 싸웠다" ❌ → "적이 도발했다 → 주인공이 무시하고 지나가자 적이 당황해 실수했다" ✅)
+6. [V63] 긴장 유지 원칙: 매 씬의 마지막 문장은 불확실성/궁금증을 남겨라. (예: "그렇게 싸움은 끝났다." ❌ → "싸움은 끝났다. 하지만 구석에서 지켜보던 그림자가 먼저 움직이기 시작했다." ✅)
+7. [V63] 캐릭터 고유 반응: 같은 상황에서도 캐릭터마다 다르게 반응시켜라. (예: 모두 "놀라며 경악했다" ❌ → 장로는 찻잔을 내려놓고, 소녀는 주먹을 움켜쥐고, 하인은 몸을 낮추는 ✅)
 
 ### 📌 집필 지침 (위반 시 즉시 REJECT)
 1. ⚠️ 분량: 반드시 5,000자 이상. 4,999자 이하는 무조건 REJECT. 부족하면 장면 묘사, 인물 심리, 대화를 확장하라
 2. 모든 씬을 균등한 비중으로 전개 - 각 씬 최소 1,000자 이상
 3. 후반부 급전개/요약 절대 금지 - 마지막 씬도 앞 씬과 동일한 밀도로 작성
-4. 클리프행어 엔딩 필수
+4. [V63] 클리프행어 엔딩: 단순 "...했다"가 아닌, 독자가 다음 화를 즉시 누를 수밖에 없는 미해결 질문/위기/반전으로 끝내라. (예: "그는 집으로 돌아갔다." ❌ → "문을 열자, 이미 죽었어야 할 남자가 탁자 앞에 앉아 있었다." ✅)
 5. 죽은 NPC 부활, 미습득 무공 사용 절대 금지
 6. 영문 병기 금지 - "윈도우(Windows)", "검(Sword)" 같은 한글(English) 표기 금지. 한글만 사용
 """
+
+    # ── [V62.6] 에피소드 상태 다이제스트 ──────────────────────────
+
+    def _generate_episode_digest(self, manuscript: str, ep_num: int = 0) -> str:
+        """
+        [V62.6] Python 기반 에피소드 상태 다이제스트 생성
+
+        이전 에피소드 전체를 분석하여 핵심 상태 정보를 구조화된 텍스트로 반환.
+        LLM 호출 없이 regex로 추출 (비용 $0).
+
+        ChiefWriter가 원고 생성 시 prev_manuscript[-2500:]와 함께 사용하여
+        이전 에피소드의 컨텍스트 손실 문제를 완화.
+        """
+        if not manuscript or len(manuscript) < 200:
+            return ""
+
+        digest_parts = []
+
+        # 1. NPC 사망
+        death_patterns = [
+            r'([가-힣]{2,4})[이가은는]\s*(?:죽었다|사망했다|숨을\s*거두|최후를\s*맞|절명)',
+            r'([가-힣]{2,4})[의]\s*(?:시신|주검|유해)',
+            r'([가-힣]{2,4})[을를]\s*(?:죽였다|베었다|처단했다|살해했다)',
+        ]
+        dead_npcs = set()
+        for pattern in death_patterns:
+            for m in re.finditer(pattern, manuscript):
+                dead_npcs.add(m.group(1))
+        if dead_npcs:
+            digest_parts.append(f"사망 NPC: {', '.join(dead_npcs)}")
+
+        # 2. 아이템 획득/상실
+        gain_patterns = [
+            r'([가-힣]{2,6})[을를]\s*(?:획득|입수|얻었|받았|수령|전수받|건네받)',
+        ]
+        loss_patterns = [
+            r'([가-힣]{2,6})[을를]\s*(?:잃어|버렸|빼앗겼|떨어뜨렸)',
+            r'([가-힣]{2,6})[이가]\s*(?:부서졌|파괴되었|산산조각)',
+        ]
+        gained = set()
+        for p in gain_patterns:
+            for m in re.finditer(p, manuscript):
+                name = m.group(1)
+                if len(name) >= 2:
+                    gained.add(name)
+        lost = set()
+        for p in loss_patterns:
+            for m in re.finditer(p, manuscript):
+                name = m.group(1)
+                if len(name) >= 2:
+                    lost.add(name)
+        if gained:
+            digest_parts.append(f"획득 아이템: {', '.join(gained)}")
+        if lost:
+            digest_parts.append(f"상실 아이템: {', '.join(lost)}")
+
+        # 3. 부상
+        injury_patterns = [
+            r'(왼팔|오른팔|왼손|오른손|왼다리|오른다리|갈비뼈|어깨)[이가을를에]?\s*'
+            r'(?:부러[졌져]|골절|부상|절단|찢[어겼]|관통|으스러)',
+            r'(?:중상|내상|중독|출혈)[을를에]?\s*(?:입었|당했|걸렸)',
+        ]
+        injuries = set()
+        for p in injury_patterns:
+            for m in re.finditer(p, manuscript):
+                injuries.add(m.group(0)[:20])
+        if injuries:
+            digest_parts.append(f"부상 상태: {', '.join(injuries)}")
+
+        # 4. 위치 (마지막 언급)
+        loc_patterns = [
+            r'([가-힣]{2,8}(?:산|성|촌|루|각|관|당|원|궁|객잔|주막|동굴|절벽|광장|채|봉))'
+            r'[에으로]?\s*(?:도착|돌아|들어|향|당도)',
+        ]
+        locations = []
+        for p in loc_patterns:
+            for m in re.finditer(p, manuscript):
+                locations.append((m.start(), m.group(1)))
+        if locations:
+            last_loc = max(locations, key=lambda x: x[0])
+            digest_parts.append(f"마지막 위치: {last_loc[1]}")
+
+        # 5. 무공 습득
+        skill_patterns = [
+            r'([가-힣]{2,8}(?:공|법|결|식|초))[을를]\s*(?:익히|깨달|습득|전수받|터득)',
+        ]
+        skills = set()
+        for p in skill_patterns:
+            for m in re.finditer(p, manuscript):
+                skills.add(m.group(1))
+        if skills:
+            digest_parts.append(f"습득 무공: {', '.join(skills)}")
+
+        # 6. NPC 쓰러짐/기절 (사망 미만)
+        down_patterns = [
+            r'([가-힣]{2,4})[이가은는]\s*(?:쓰러졌|의식을\s*잃|기절했)',
+        ]
+        downed = set()
+        for p in down_patterns:
+            for m in re.finditer(p, manuscript):
+                name = m.group(1)
+                if name not in dead_npcs:
+                    downed.add(name)
+        if downed:
+            digest_parts.append(f"부상/기절 NPC: {', '.join(downed)}")
+
+        # 7. [V63.2] 관계 변화 (동맹/배신/화해)
+        relation_patterns = [
+            r'([가-힣]{2,4})[과와][의]?\s*(?:동맹|협력|연합)[을를]?\s*(?:맺|결성|체결)',
+            r'([가-힣]{2,4})[이가은는]\s*(?:배신|배반|이탈)했',
+            r'([가-힣]{2,4})[과와]\s*(?:화해|휴전|협정)[을를]?\s*(?:했|이루|맺)',
+            r'([가-힣]{2,4})[이가은는]\s*(?:적이\s*되|원수가\s*되|등을\s*돌)',
+        ]
+        relation_changes = set()
+        for p in relation_patterns:
+            for m in re.finditer(p, manuscript):
+                relation_changes.add(m.group(0)[:30])
+        if relation_changes:
+            digest_parts.append(f"관계 변화: {', '.join(relation_changes)}")
+
+        # 8. [V63.2] 미스터리/비밀/복선
+        mystery_patterns = [
+            r'(?:비밀|정체|진실|음모)[이가을를]\s*(?:밝혀|드러나|알게\s*되)',
+            r'(?:수수께끼|의문|미스터리)[이가을를]?\s*(?:남|생겨|던져)',
+            r'숨겨진\s*[가-힣]{2,6}[이가을를]?\s*(?:발견|알아)',
+        ]
+        mysteries = set()
+        for p in mystery_patterns:
+            for m in re.finditer(p, manuscript):
+                mysteries.add(m.group(0)[:30])
+        if mysteries:
+            digest_parts.append(f"미스터리/복선: {', '.join(mysteries)}")
+
+        # 9. [V63.2] 클리프행어 (마지막 200자에서 추출)
+        ending = manuscript[-200:] if len(manuscript) > 200 else manuscript
+        cliff_patterns = [
+            r'(?:그\s*순간|갑자기|그때)[,\s]',
+            r'눈[이가]\s*(?:커졌|번뜩|휘둥)',
+            r'(?:불길한|섬뜩한|낯선)\s*(?:기운|예감|느낌)',
+            r'(?:정체|그림자|인영)[이가]\s*(?:나타|드러|모습)',
+        ]
+        cliffhanger_found = False
+        for p in cliff_patterns:
+            if re.search(p, ending):
+                cliffhanger_found = True
+                break
+        if cliffhanger_found:
+            # 마지막 문장 추출
+            last_sentences = re.split(r'[.!?]\s*', ending.strip())
+            last_sentence = last_sentences[-1] if last_sentences else ""
+            if last_sentence and len(last_sentence) > 5:
+                digest_parts.append(f"클리프행어: \"{last_sentence[:50]}\"")
+
+        if not digest_parts:
+            return ""
+
+        header = f"[제{ep_num}화 상태 다이제스트]" if ep_num > 0 else "[직전 화 상태 다이제스트]"
+        return header + "\n" + "\n".join(f"- {p}" for p in digest_parts)
 
     def _detect_deaths_from_manuscript(self, prev_manuscript: str) -> List[str]:
         """

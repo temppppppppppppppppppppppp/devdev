@@ -71,6 +71,12 @@ ENSEMBLE_ARC_PROMPT = """
 {strategy_focus}
 스타일: {strategy_style}
 
+### [V63] 서사 흥미 설계 (필수)
+1. **갈등 구조**: 이 Arc의 핵심 갈등 정의. 외적 갈등(적/장애물)과 내적 갈등(딜레마/성장통) 모두 포함.
+2. **반전 포인트**: Arc 내 최소 1개의 독자 예측을 벗어나는 전개 포함. (아군 배신, 적의 도움, 해결이라 생각한 갈등이 더 큰 위기의 시작 등)
+3. **감정 곡선**: 연속 3화 이상 같은 감정 톤 금지.
+4. **캐릭터 선택의 순간**: 주인공이 양쪽 다 손해인 딜레마에서 의미 있는 선택을 하는 장면 최소 1개.
+
 ### [🚨 ABSOLUTE CONSTRAINTS - 위반 시 0점]
 
 ████████████████████████████████████████████████████████████████████████████████
@@ -92,6 +98,8 @@ ENSEMBLE_ARC_PROMPT = """
 ### [현재 블록 DNA]
 {curr_block}
 
+{genre_ext_guide}
+
 ### [Volume 전략]
 {vol_strategy}
 
@@ -103,10 +111,23 @@ ENSEMBLE_ARC_PROMPT = """
 
 {entity_registry_section}
 
+### [V62.2] 🩹 주인공 자연 회복 원칙 (전 장르 공통)
+- 주인공은 소설 주인공이다. 힐링팩터가 있다. 절대 약해지지 않는다.
+- 아크 시작: 부상="없음", 내공=100%. 예외 없음.
+- 화별 내공 규칙:
+  · 한 화 안에서 긴장/전투로 소모 가능 (최저 60%까지만)
+  · 다음 화 시작 시 반드시 90% 이상으로 회복
+  · 내공이 화를 거듭하며 떨어지기만 하는 것은 절대 금지
+  · 주인공은 점점 강해진다. 내공은 우상향이 기본이다.
+- 부상: Arc 내 일시적 피로/타박 허용, 다음 화면 회복됨. 만성화 금지.
+- arc_end_state: injuries="없음", internal_energy=100
+- status_shadow: expected_injuries="없음", internal_energy_loss="0%"
+
 ### [V60.40] 화간 상태 체크포인트 필수
 각 화는 반드시 시작 상태와 종료 상태를 명시하라:
-- 시작 상태: 위치, 내공%, 부상, 소지품 (이전 화 종료 상태와 동일)
+- 시작 상태: 위치, 내공%, 부상, 소지품 (이전 화 종료 상태 기반 + 자연 회복 적용)
 - 종료 상태: 위치, 내공%, 부상, 획득/소모 아이템
+- ⚠️ 내공이 화를 넘기며 계속 떨어지는 패턴은 REJECT 사유임
 
 ### [Output JSON Schema]
 {{
@@ -165,7 +186,30 @@ ENSEMBLE_ARC_PROMPT = """
         ],
         "major_items": [
             {{"name": "중요 아이템", "episode": N, "action": "획득/소모/분실"}}
-        ]
+        ],
+        "resolved_plots": [
+            {{"plot": "완결된 갈등/사건 이름", "resolution": "해결 방법", "episode": N}}
+        ],
+        "npc_injuries": [
+            {{"name": "NPC명", "episode": N, "state": "경상/중상/위독", "cause": "부상 원인"}}
+        ],
+        "npc_movements": [
+            {{"name": "NPC명", "episode": N, "from": "출발지", "to": "도착지"}}
+        ],
+        "financial_events": {{
+            "exchange_rates": [
+                {{"value": 숫자, "episode": N, "context": "환율 설명"}}
+            ],
+            "total_assets": [
+                {{"value": "금액 문자열", "episode": N, "context": "평가액 설명"}}
+            ],
+            "leverage": [
+                {{"value": 숫자, "episode": N, "context": "레버리지 설명"}}
+            ],
+            "key_transactions": [
+                {{"type": "매수/매도/인수/청산", "target": "대상", "amount": "금액", "episode": N}}
+            ]
+        }}
     }}
 }}
 
@@ -177,7 +221,11 @@ ENSEMBLE_ARC_PROMPT = """
 - 이번 Arc에서 NPC가 죽으면 반드시 npc_deaths에 기록
 - 주인공이 무공을 배우면 반드시 skill_acquisitions에 기록
 - 관계 변화(적→아군 등)가 있으면 relationship_changes에 기록
-- 해당 사항 없으면 빈 배열 []로 표시
+- resolved_plots: 이번 Arc에서 완결된 갈등/사건을 기록 (예: 인수전 완료, 적 조직 괴멸 등)
+- [V63] npc_injuries: NPC가 부상당하면 상태 기록 (경상/중상/위독)
+- [V63] npc_movements: NPC가 장소를 이동하면 출발지/도착지 기록
+- [V63.1] financial_events: 투자/재벌물에서 환율, 자산, 레버리지, 거래 내역 기록 (비투자 장르는 빈 객체 {{}})
+- 해당 사항 없으면 빈 배열 [] 또는 빈 객체 {{}}로 표시
 
 반드시 유효한 JSON만 출력하세요.
 """
@@ -194,8 +242,8 @@ class ArcEnsembleGenerator(BaseAgent):
     ENSEMBLE_TIMEOUT = 300       # 전체 앙상블 타임아웃 (초) - 5분 (thinking 오버헤드 반영)
     SINGLE_CANDIDATE_TIMEOUT = 240  # 개별 후보 타임아웃 (초) - 4분
 
-    def __init__(self, context, client, model_tier: str = "gemini-3-pro-preview"):
-        # [V60.24] Gemini 3로 변경 - 최고 품질의 Arc 생성
+    def __init__(self, context, client, model_tier: str = "gemini-2.5-pro"):
+        # [V62.4] gemini-2.5-pro로 변경 - 3-pro 쿼터 소진 문제 방지
         super().__init__(context, client, model_tier)
         # [V60.37] 스마트 폴백 (BaseAgent에서 자동 설정: gemini-3 → gemini-2.5-pro)
         self.strategies = GENERATION_STRATEGIES
@@ -440,6 +488,17 @@ class ArcEnsembleGenerator(BaseAgent):
             # [V60.92] Entity Registry 섹션 생성
             entity_registry_section = self._format_entity_registry(entity_registry) if entity_registry else ""
 
+            # [V62.2] genre_ext 가이드 생성 - 장르별 핵심 필드를 AI에게 명시
+            genre_ext_guide = ""
+            if isinstance(curr_block, dict):
+                ge = curr_block.get("genre_ext") or (curr_block.get("raw_data") or {}).get("genre_ext")
+                if ge and isinstance(ge, dict):
+                    lines = ["### [장르 특화 정보 - genre_ext]",
+                             "이 블록의 장르 고유 데이터입니다. Arc 설계 시 반드시 반영하세요:"]
+                    for k, v in ge.items():
+                        lines.append(f"- **{k}**: {v}")
+                    genre_ext_guide = "\n".join(lines)
+
             prompt = ENSEMBLE_ARC_PROMPT.format(
                 strategy_name=strategy["name"].upper(),
                 strategy_focus=strategy["focus"],
@@ -449,7 +508,8 @@ class ArcEnsembleGenerator(BaseAgent):
                 protagonist_instructions=protagonist_instructions,  # [V60.88]
                 constraint_block=self._escape_braces(constraint_block or "(없음)"),
                 prev_arc_context=self._escape_braces(prev_arc_context or "시작점"),
-                curr_block=self._escape_braces(json.dumps(curr_block, ensure_ascii=False)[:3000] if curr_block else "{}"),
+                curr_block=self._escape_braces(json.dumps(curr_block, ensure_ascii=False) if curr_block else "{}"),
+                genre_ext_guide=self._escape_braces(genre_ext_guide),
                 vol_strategy=self._escape_braces(vol_strategy[:2000] if vol_strategy else "(없음)"),
                 assets=self._escape_braces(json.dumps(assets, ensure_ascii=False)[:2000] if assets else "{}"),
                 feedback=self._escape_braces(feedback[:1500] if feedback else "(없음)"),
@@ -465,7 +525,7 @@ class ArcEnsembleGenerator(BaseAgent):
             result = self.ask(prompt, temperature=strategy["temperature"], thinking_level=thinking)
 
             if isinstance(result, str):
-                result = json.loads(result)
+                result = self._extract_json_robust(result)
 
             # 필수 필드 보장
             result = self._ensure_required_fields(result, arc_no, ep_start, ep_end)
@@ -616,7 +676,8 @@ class ArcEnsembleGenerator(BaseAgent):
                 "npc_deaths": [],
                 "skill_acquisitions": [],
                 "relationship_changes": [],
-                "major_items": []
+                "major_items": [],
+                "resolved_plots": []
             }
         else:
             # 하위 필드 보장
@@ -638,6 +699,8 @@ class ArcEnsembleGenerator(BaseAgent):
                 sc["relationship_changes"] = []
             if "major_items" not in sc:
                 sc["major_items"] = []
+            if "resolved_plots" not in sc:
+                sc["resolved_plots"] = []
 
         return result
 
@@ -761,6 +824,6 @@ class ArcEnsembleGenerator(BaseAgent):
         return "\n".join(lines)
 
 
-def create_ensemble_generator(context, client, model_tier: str = "gemini-3-pro-preview"):
-    """[V60.24] ArcEnsembleGenerator 생성 헬퍼 - Gemini 3 사용"""
+def create_ensemble_generator(context, client, model_tier: str = "gemini-2.5-pro"):
+    """[V62.4] ArcEnsembleGenerator 생성 헬퍼 - gemini-2.5-pro 사용"""
     return ArcEnsembleGenerator(context, client, model_tier)

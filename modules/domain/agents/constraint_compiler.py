@@ -42,7 +42,8 @@ class ConstraintCompiler:
     def compile(
         self,
         prev_arcs: List[Dict],
-        state_extractor_result: Dict = None
+        state_extractor_result: Dict = None,
+        resolved_plots: List[Dict] = None  # [V62.7]
     ) -> str:
         """
         제약 조건 컴파일
@@ -50,6 +51,7 @@ class ConstraintCompiler:
         Args:
             prev_arcs: 이전 Arc 리스트
             state_extractor_result: StateExtractor 결과 (있으면 활용)
+            resolved_plots: [V62.7] 완결된 플롯 리스트
 
         Returns:
             구조화된 제약 체크리스트 문자열
@@ -71,24 +73,32 @@ class ConstraintCompiler:
             all_items=all_items,
             all_grants=all_grants,
             current_state=current_state,
-            arc_count=len(prev_arcs)
+            arc_count=len(prev_arcs),
+            resolved_plots=resolved_plots
         )
 
-    def _collect_all_items(self, prev_arcs: List[Dict]) -> Dict[str, int]:
-        """모든 획득 아이템과 획득 시점 수집"""
-        items = {}  # {아이템명: 획득 Arc 번호}
+    # [V62.3] 윈도잉: regex 스캔은 최근 N개만 (구조화 필드는 전체)
+    REGEX_WINDOW = 3
 
-        for arc in prev_arcs:
+    def _collect_all_items(self, prev_arcs: List[Dict]) -> Dict[str, int]:
+        """모든 획득 아이템과 획득 시점 수집
+        [V62.3] 구조화 필드(items_acquired, inventory)는 전체 Arc 스캔 (O(n), 가벼움)
+                regex 스캔(tactical_doc)은 최근 REGEX_WINDOW개만 (비용 절감)
+        """
+        items = {}  # {아이템명: 획득 Arc 번호}
+        regex_start = max(0, len(prev_arcs) - self.REGEX_WINDOW)
+
+        for idx, arc in enumerate(prev_arcs):
             arc_no = arc.get("arc_no", 0)
 
-            # state_constraints.items_acquired
+            # state_constraints.items_acquired (구조화 → 전체 스캔)
             acquired = arc.get("state_constraints", {}).get("items_acquired", [])
             if isinstance(acquired, list):
                 for item in acquired:
                     if item and len(item) >= 2:
                         items[item] = arc_no
 
-            # joint_docs.physical_inventory
+            # joint_docs.physical_inventory (구조화 → 전체 스캔)
             inventory = arc.get("joint_docs", {}).get("physical_inventory", [])
             if isinstance(inventory, list):
                 for item in inventory:
@@ -100,46 +110,48 @@ class ConstraintCompiler:
                     if item and len(item) >= 2 and item not in items:
                         items[item] = arc_no
 
-            # tactical_doc에서 추출
-            tactical = arc.get("tactical_doc", "")
-            for pattern in self.acquire_patterns:
-                matches = re.findall(pattern, tactical)
-                for m in matches:
-                    item = m.strip() if isinstance(m, str) else m[0].strip() if m else None
-                    if item and 2 <= len(item) <= 20 and item not in items:
-                        # 획득 문맥인지 확인
-                        if re.search(rf'{re.escape(item)}[를을]?\s*(?:획득|얻|받|손에)', tactical):
-                            items[item] = arc_no
+            # tactical_doc regex (비싼 연산 → 최근 REGEX_WINDOW개만)
+            if idx >= regex_start:
+                tactical = arc.get("tactical_doc", "")
+                for pattern in self.acquire_patterns:
+                    matches = re.findall(pattern, tactical)
+                    for m in matches:
+                        item = m.strip() if isinstance(m, str) else m[0].strip() if m else None
+                        if item and 2 <= len(item) <= 20 and item not in items:
+                            if re.search(rf'{re.escape(item)}[를을]?\s*(?:획득|얻|받|손에)', tactical):
+                                items[item] = arc_no
 
         return items
 
     def _collect_all_grants(self, prev_arcs: List[Dict]) -> Dict[str, Tuple[int, str]]:
-        """모든 수여물과 수여 시점/수여자 수집"""
+        """모든 수여물과 수여 시점/수여자 수집
+        [V62.3] 구조화 필드는 전체, regex는 최근 REGEX_WINDOW개만
+        """
         grants = {}  # {수여물명: (Arc 번호, 수여자)}
+        regex_start = max(0, len(prev_arcs) - self.REGEX_WINDOW)
 
-        for arc in prev_arcs:
+        for idx, arc in enumerate(prev_arcs):
             arc_no = arc.get("arc_no", 0)
 
-            # state_constraints.grants_received
+            # state_constraints.grants_received (구조화 → 전체)
             received = arc.get("state_constraints", {}).get("grants_received", [])
             if isinstance(received, list):
                 for grant in received:
                     if grant and len(grant) >= 2:
                         grants[grant] = (arc_no, "알 수 없음")
 
-            # tactical_doc에서 수여 문맥 추출
-            tactical = arc.get("tactical_doc", "")
-            for pattern in self.grant_patterns:
-                matches = re.findall(pattern, tactical)
-                for m in matches:
-                    grant = m.strip() if isinstance(m, str) else m[0].strip() if m else None
-                    if grant and 2 <= len(grant) <= 20 and grant not in grants:
-                        # 수여 문맥인지 확인
-                        if re.search(rf'{re.escape(grant)}[를을]?\s*(?:하사|수여|받|얻)', tactical):
-                            # 수여자 추출 시도
-                            grantor_match = re.search(rf'([가-힣]{{2,10}})[이가으로부터]?\s*{re.escape(grant)}', tactical)
-                            grantor = grantor_match.group(1) if grantor_match else "알 수 없음"
-                            grants[grant] = (arc_no, grantor)
+            # tactical_doc regex (최근 REGEX_WINDOW개만)
+            if idx >= regex_start:
+                tactical = arc.get("tactical_doc", "")
+                for pattern in self.grant_patterns:
+                    matches = re.findall(pattern, tactical)
+                    for m in matches:
+                        grant = m.strip() if isinstance(m, str) else m[0].strip() if m else None
+                        if grant and 2 <= len(grant) <= 20 and grant not in grants:
+                            if re.search(rf'{re.escape(grant)}[를을]?\s*(?:하사|수여|받|얻)', tactical):
+                                grantor_match = re.search(rf'([가-힣]{{2,10}})[이가으로부터]?\s*{re.escape(grant)}', tactical)
+                                grantor = grantor_match.group(1) if grantor_match else "알 수 없음"
+                                grants[grant] = (arc_no, grantor)
 
         return grants
 
@@ -167,24 +179,9 @@ class ConstraintCompiler:
         if isinstance(equipment, str):
             equipment = [i.strip() for i in equipment.split(",") if i.strip()]
 
-        # 내공: arc_end_state 우선
-        if arc_end_state.get("internal_energy") is not None:
-            internal_energy = arc_end_state["internal_energy"]
-        else:
-            energy_loss = shadow.get("internal_energy_loss", "0%")
-            try:
-                loss_percent = int(re.search(r'(\d+)', str(energy_loss)).group(1))
-                internal_energy = 100 - loss_percent
-            except:
-                # [V60.73] 보수적 기본값 50 (파싱 실패 시 만땅 가정 위험)
-                print(f"      ⚠️ [V60.73] internal_energy_loss 파싱 실패: '{energy_loss}' → 50% 가정")
-                internal_energy = 50
-
-        # 부상: arc_end_state 우선
-        if arc_end_state.get("injuries"):
-            injuries = arc_end_state["injuries"]
-        else:
-            injuries = shadow.get("expected_injuries", "")
+        # [V62.2] 내공 + 부상: 아크 간 자연 회복 → 항상 100% / 없음
+        internal_energy = 100
+        injuries = ""
 
         return {
             "location": joint.get("final_location", "알 수 없음"),
@@ -199,7 +196,8 @@ class ConstraintCompiler:
         all_items: Dict[str, int],
         all_grants: Dict[str, Tuple[int, str]],
         current_state: Dict,
-        arc_count: int
+        arc_count: int,
+        resolved_plots: List[Dict] = None  # [V62.7]
     ) -> str:
         """구조화된 제약 체크리스트 생성"""
         lines = [
@@ -249,6 +247,16 @@ class ConstraintCompiler:
                 lines.append(f"│   ❌ {grant} (Arc {arc_no}: {grantor}이(가) 수여)".ljust(71) + "│")
         else:
             lines.append("│   (수여물 금지 목록 없음)".ljust(71) + "│")
+
+        # [V62.7] 완결된 플롯 재생성 금지
+        if resolved_plots:
+            lines.append("│".ljust(72) + "│")
+            lines.append("│ [완결된 플롯 재생성 금지 - 동일/유사 갈등 시 REJECT]".ljust(71) + "│")
+            for rp in resolved_plots[-10:]:
+                plot_name = str(rp.get("plot", "?"))[:35]
+                resolution = str(rp.get("resolution", ""))[:20]
+                arc = rp.get("arc_no", "?")
+                lines.append(f"│   ❌ {plot_name} ({resolution}, Arc {arc})".ljust(71) + "│")
 
         lines.append("└" + "─" * 70 + "┘")
         lines.append("")

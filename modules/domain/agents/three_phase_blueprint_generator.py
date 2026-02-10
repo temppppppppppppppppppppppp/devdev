@@ -64,7 +64,8 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         protagonist_name: str = "주인공",  # [V61] 주인공 이름 (필수!)
         protagonist_config: Optional[Dict] = None,  # [V60.90] 주인공 설정 {world_origin, incarnation_type}
         state_tracker=None,  # [V60.96] StateTracker (죽은 NPC 검증용)
-        db=None  # [V61.5] DBManager (캐시 연속성 검사용)
+        db=None,  # [V61.5] DBManager (캐시 연속성 검사용)
+        semantic_context: str = ""  # [V63.3] BlueprintMemory 시맨틱 검색 결과
     ) -> Tuple[Optional[Dict], Dict]:
         """
         3단계 Blueprint 생성 (ToT 방식: 3전략 × 3시도 = 최대 9회 생성)
@@ -114,8 +115,10 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
 
         # 피드백 초기화
         feedback = ""
+        if semantic_context:
+            feedback = f"[과거 유사 블루프린트 참조 (시맨틱 검색)]\n{semantic_context}\n"
         if external_feedback:
-            feedback = f"[Director 외부 피드백 - 반드시 반영]\n{external_feedback}\n"
+            feedback += f"[Director 외부 피드백 - 반드시 반영]\n{external_feedback}\n"
             print(f"      📢 [V60.80] 외부 피드백 주입됨 ({len(external_feedback)}자)")
 
         # 제약 블록 캐싱

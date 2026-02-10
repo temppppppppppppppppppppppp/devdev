@@ -46,10 +46,10 @@ class GenreTypes:
 class RetryLimits:
     """재시도 횟수 및 제한"""
     # 에이전트 재시도
-    DIRECTOR_MAX_ATTEMPTS = 3          # 디렉터 검증 최대 시도
-    ANALYST_MAX_ATTEMPTS = 4           # Analyst Arc 설계 최대 시도 (V55.4: 3회 실패 후 10초 대기 + 4회차)
+    DIRECTOR_MAX_ATTEMPTS = 5          # 디렉터 검증 최대 시도 [V62.4]
+    ANALYST_MAX_ATTEMPTS = 5           # Analyst Arc 설계 최대 시도 [V62.4]
     ARCHITECT_MAX_ATTEMPTS = 5         # 아키텍트 설계 최대 시도
-    WRITER_MAX_ATTEMPTS = 4            # 작가 집필 최대 시도 (V55.4: 3회 실패 후 10초 대기 + 4회차)
+    WRITER_MAX_ATTEMPTS = 5            # 작가 집필 최대 시도 [V62.4]
     BLUEPRINT_MAX_ATTEMPTS = 12        # 블루프린트 생성 최대 시도
 
     # 시스템 재시도

@@ -484,7 +484,7 @@ class ContinuityInspector(BaseAgent):
     6. [V61 NEW] Entity 명칭 일관성 검증
 
     [V49 Update]
-    - 모델: gemini-3-pro-preview (V60.24: Gemini 3로 업그레이드)
+    - 모델: gemini-2.5-pro (V62.5: 검증 작업 특성상 다운그레이드, 3-pro 쿼터 절감)
     - [NEW] inspect_arc(): Stage 2에서 Arc 설계 후 호출
     - inspect(): Stage 3에서 블루프린트 생성 후 호출
 
@@ -494,13 +494,13 @@ class ContinuityInspector(BaseAgent):
     - entity_consistency 출력 필드 추가
     """
 
-    def __init__(self, context, client, model_tier="gemini-3-pro-preview"):
+    def __init__(self, context, client, model_tier="gemini-2.5-pro"):
         """
-        [V60.24] Gemini 3로 변경
+        [V62.5] gemini-2.5-pro로 다운그레이드 (검증 작업 - 3-pro 쿼터 절감)
         Args:
             context: ProjectContext 객체
             client: Gemini API 클라이언트
-            model_tier: 사용할 모델 (V60.24: gemini-3-pro-preview)
+            model_tier: 사용할 모델 (V62.5: gemini-2.5-pro)
         """
         super().__init__(context, client, model_tier)
         

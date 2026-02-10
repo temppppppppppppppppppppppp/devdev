@@ -141,10 +141,14 @@ class ReferenceAnchor:
         if not all_anchors:
             return []
 
-        # 최근 10화 내의 앵커만 필터링
+        # [V63.3] 최근 30화 내의 앵커 + 핵심 타입은 전 구간 검색
+        critical_types = {'item', 'injury', 'power', 'relationship', 'revelation'}
         recent_anchors = [
             a for a in all_anchors
-            if current_ep_num - 10 <= a.get('ep_num', 0) < current_ep_num
+            if a.get('ep_num', 0) < current_ep_num and (
+                current_ep_num - a.get('ep_num', 0) <= 30
+                or a.get('type', '') in critical_types
+            )
         ]
 
         if not recent_anchors:
@@ -247,8 +251,16 @@ class ReferenceAnchor:
         # 새 앵커 추가
         all_anchors.extend(new_anchors)
 
-        # 최근 100개만 유지 (메모리 절약)
-        all_anchors = all_anchors[-100:]
+        # [V63.3] 300개 유지 + 오래된 앵커 중 핵심 타입만 보존
+        MAX_ANCHORS = 300
+        if len(all_anchors) > MAX_ANCHORS:
+            # 최근 200개는 무조건 보존
+            recent = all_anchors[-200:]
+            older = all_anchors[:-200]
+            # 오래된 것 중 핵심 타입(item/injury/power/relationship)만 유지
+            critical_types = {'item', 'injury', 'power', 'relationship', 'revelation'}
+            preserved_old = [a for a in older if a.get('type', '') in critical_types]
+            all_anchors = preserved_old[-(MAX_ANCHORS - 200):] + recent
 
         # DB 저장
         self.context.db.save_anchor('reference_anchors', all_anchors)

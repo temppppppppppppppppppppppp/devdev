@@ -685,30 +685,24 @@ class ProjectContext:
             # 2. MasterBible 루트 확보 (포장지가 있든 없든 대응)
             master_bible = bible_data.get("MasterBible", bible_data)
             
-            # 3. 50개 트리트먼트 블록을 plot_roadmap 규격으로 변환하여 주입
-            # AI가 짤라먹지 못하도록 파이썬 리스트 연산으로 직접 합침
+            # 3. 트리트먼트 블록을 plot_roadmap 규격으로 변환하여 주입
+            # [V62.2] flat 구조: block_no + 원본 필드 전체 (중복 래핑 제거)
             refined_roadmap = []
             for i, block in enumerate(treatment_data):
-                # 원본 JSON의 구조에 맞춰 block_no와 내용을 매핑
-                refined_roadmap.append({
-                    "block_no": i + 1,
-                    "logic": {
-                        "title": block.get("title", f"제 {i+1} 단계"),
-                        "objective": block.get("content", {}).get("solution", "목표 분석 필요")
-                    },
-                    "raw_data": block # 원본 데이터 전체를 보존 (나중에 AI가 참고하도록)
-                })
+                entry = {"block_no": i + 1}
+                entry.update(block)
+                refined_roadmap.append(entry)
 
             # 4. 성경 객체에 최종 로드맵 결합
             master_bible["plot_roadmap"] = refined_roadmap
             self.master_bible = {"MasterBible": master_bible}
 
-            # 5. [핵심] SQLite DB에 'bible' 앵커로 50개 전체 강제 박제
+            # 5. [핵심] SQLite DB에 'bible' 앵커로 전체 블록 강제 박제
             # 여기서 DBManager의 save_anchor를 호출함
             success = self.save_v20_anchor('bible', self.master_bible)
 
             if success:
-                print(f"✅ [S-Grade Success] 50개 블록이 포함된 '완전한 성경'이 DB에 안착되었습니다.")
+                print(f"✅ [S-Grade Success] {len(refined_roadmap)}개 블록이 포함된 '완전한 성경'이 DB에 안착되었습니다.")
                 print(f"📊 로드맵 크기: {len(self.master_bible['MasterBible']['plot_roadmap'])} blocks")
                 return True
         
@@ -746,7 +740,26 @@ class ProjectContext:
             
             # 2. Vector DB 기억 주입 (AI 요약 대신 원고 앞부분 사용해서 토큰 절약)
             summary = content[:300].replace('\n', ' ') + "..."
-            memory_engine.memorize_v20_episode(ep_num, content, summary, causal_links=[])
+            # [V63.3] Python regex로 핵심 이벤트 추출 (LLM 비용 0)
+            import re as _re
+            _bulk_events = set()
+            _bulk_entities = set()
+            if _re.search(r'사망|죽였|처단|숨을\s*거두', content):
+                _bulk_events.add("death")
+            if _re.search(r'습득|비급|전수|깨달', content):
+                _bulk_events.add("skill")
+            if _re.search(r'획득|발견|손에\s*넣', content):
+                _bulk_events.add("item")
+            if _re.search(r'배신|동맹|화해|적대', content):
+                _bulk_events.add("relationship")
+            # NPC 이름 패턴 (한글 2-4자 + "은/는/이/가/을/를")
+            for _m in _re.finditer(r'([가-힣]{2,4})(?:은|는|이|가|을|를)\s', content[:3000]):
+                _bulk_entities.add(_m.group(1))
+            memory_engine.memorize_v20_episode(
+                ep_num, content, summary, causal_links=[],
+                event_types=list(_bulk_events) if _bulk_events else None,
+                entity_names=list(_bulk_entities)[:10] if _bulk_entities else None
+            )
             
             # 3. 동기화 상태 갱신
             self.db.update_sync_status(ep_num, 1)

@@ -25,8 +25,9 @@ class GoogleEmbeddingFunction(EmbeddingFunction):
             clean_text = text.replace("\n", " ").strip()
             
             if len(clean_text) > max_chars:
-                # 앞 6000자(설정/발단) + 공백 + 뒤 3000자(결과/복선) 조합
-                processed_text = clean_text[:6000] + " " + clean_text[-3000:]
+                # [V63.3] 앞 4000자(설정/발단) + 중간 3000자(전개) + 뒤 3000자(결과/복선)
+                mid_start = len(clean_text) // 2 - 1500
+                processed_text = clean_text[:4000] + " " + clean_text[mid_start:mid_start+3000] + " " + clean_text[-3000:]
             else:
                 processed_text = clean_text
             
@@ -40,8 +41,7 @@ class GoogleEmbeddingFunction(EmbeddingFunction):
                         model="gemini-embedding-001",
                         contents=processed_text
                     )
-                    # [V45] 중복 import time 제거 (파일 상단에서 이미 임포트됨)
-                    time.sleep(0.8)
+                    # [V63.3] 임베딩 응답 수신 완료 — 불필요 sleep 제거
                     
                     # 🚨 [무결성 보완] 응답 속성 이중 체크 및 값 추출
                     val = None
@@ -334,17 +334,92 @@ class LongTermMemory:
             self.ui_log(f"⚠️ [Memory Retrieve Error] {e}")
             return ""
 
-    def memorize_v20_episode(self, ep_num, text, summary, causal_links):
-        """[V44] 에피소드 박제 및 시스템 상태 동기화 (안전 접근)"""
+    def retrieve_multi_query_context(self, queries: list, current_ep: int,
+                                     n_per_query: int = 3, max_results: int = 5) -> str:
+        """[V63.3] 멀티쿼리 벡터 검색 — 다양한 쿼리로 검색 후 merge+dedup.
+
+        Args:
+            queries: 쿼리 문자열 리스트 (예: [prev_ending, npc_names, keywords])
+            current_ep: 현재 에피소드 번호 (이전 에피소드만 검색)
+            n_per_query: 쿼리당 검색 결과 수
+            max_results: 최종 반환할 최대 결과 수
+
+        Returns:
+            서사적 맥락 블록 문자열 (에피소드 다양성 보장)
+        """
+        if not self._ensure_collection():
+            return ""
+
+        seen_eps = {}  # ep_num → (doc, meta) — 중복 제거용
+        for q in queries:
+            if not q or not str(q).strip():
+                continue
+            query_text = json.dumps(q, ensure_ascii=False) if isinstance(q, (dict, list)) else str(q)
+            try:
+                results = self.collection.query(
+                    query_texts=[query_text],
+                    n_results=n_per_query,
+                    where={"episode": {"$lt": current_ep}}
+                )
+                docs_list = results.get('documents', [[]])
+                docs = docs_list[0] if docs_list else []
+                metas_list = results.get('metadatas', [[]])
+                metas = metas_list[0] if metas_list else []
+                for d, m in zip(docs, metas):
+                    ep = m.get('episode', -1)
+                    if ep not in seen_eps:
+                        seen_eps[ep] = (d, m)
+            except Exception as e:
+                self.ui_log(f"⚠️ [MultiQuery] 쿼리 실패: {str(e)[:50]}")
+                continue
+
+        if not seen_eps:
+            return ""
+
+        # 다양성 보장: 에피소드 번호 기준 정렬 후 간격 최대화 선택
+        sorted_eps = sorted(seen_eps.keys())
+        if len(sorted_eps) <= max_results:
+            selected = sorted_eps
+        else:
+            # 균등 간격 샘플링
+            step = len(sorted_eps) / max_results
+            selected = [sorted_eps[int(i * step)] for i in range(max_results)]
+
+        context_blocks = []
+        for ep in selected:
+            d, m = seen_eps[ep]
+            summary = m.get('summary', '')
+            event_types = m.get('event_types', '')
+            excerpt = d[:800].replace('\n', ' ').strip()
+            header = f"### [제 {ep} 화의 기억]"
+            if event_types:
+                header += f" ({event_types})"
+            block = f"{header}\n요약: {summary}\n본문 발췌: {excerpt}..."
+            context_blocks.append(block)
+
+        return "\n\n".join(context_blocks)
+
+    def memorize_v20_episode(self, ep_num, text, summary, causal_links,
+                             arc_no=None, event_types=None, entity_names=None):
+        """[V44] 에피소드 박제 및 시스템 상태 동기화 (안전 접근)
+        [V63.3] arc_no, event_types, entity_names 메타데이터 추가
+        """
         if not self._ensure_collection():
             self.ui_log(f"⚠️ [Memory] 컬렉션 없음 - 제 {ep_num}화 벡터 저장 건너뜀")
             return False
         doc_id = f"ep_{ep_num:04d}"
         metadata = {
-            "episode": ep_num, 
-            "summary": summary[:500], 
+            "episode": ep_num,
+            "summary": summary[:500],
             "causal_data": json.dumps(causal_links, ensure_ascii=False)[:500]
         }
+        # [V63.3] 풍부한 메타데이터: 아크/이벤트/엔터티
+        if arc_no is not None:
+            metadata["arc_no"] = int(arc_no)
+        if event_types:
+            metadata["event_types"] = ",".join(str(e) for e in event_types)[:200]
+        if entity_names:
+            metadata["entity_names"] = ",".join(str(n) for n in entity_names)[:300]
         try:
             self.collection.upsert(ids=[doc_id], documents=[text], metadatas=[metadata])
             if hasattr(self.context, 'db') and hasattr(self.context.db, 'update_sync_status'):
@@ -392,10 +467,10 @@ class LongTermMemory:
                     chunk_counter += 1
                     if chunk_counter >= CHUNK_SIZE:
                         self.ui_log(f"⏳ [System] API 부하 방지 대기 중 (Chunk {CHUNK_SIZE} 완료)")
-                        time.sleep(3.0) # 5개마다 3초 휴식
+                        time.sleep(1.5) # [V63.3] 5개마다 1.5초 휴식 (3.0→1.5)
                         chunk_counter = 0
                     else:
-                        time.sleep(0.5) # 파일 간 미세 지연
+                        time.sleep(0.3) # [V63.3] 파일 간 미세 지연 (0.5→0.3)
 
                 except Exception as e:
                     self.ui_log(f"⚠️ [Sync Failed] 제 {ep_num} 화: {e}")

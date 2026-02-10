@@ -589,7 +589,9 @@ def render_sidebar():
         genres = {
             'wuxia': '⚔️ 무협 (武俠)',
             'hunter': '🏹 헌터 (Hunter)',
-            'investment': '💰 투자 (Investment)'
+            'investment': '💰 투자 (Investment)',
+            'composer': '🎵 작곡가 (Composer)',
+            'cooking': '🍳 요리 (Cooking)'
         }
         selected_genre = st.radio(
             "장르",
@@ -1249,17 +1251,21 @@ def render_block_selector(db, arcs, blocks):
     else:
         for block in available_blocks[:15]:  # 15개까지 표시
             block_no = block.get('block_no', '?')
-            logic = block.get('logic', {})
-            title = logic.get('title', block.get('title', 'N/A'))
+            # [V62.2] flat + 레거시 호환: content에서 직접 읽기, raw_data 폴백
+            raw = block.get('raw_data', {}) or {}
+            content_obj = block.get('content', raw.get('content', {}))
+            if not isinstance(content_obj, dict):
+                content_obj = {}
+            title = block.get('title', raw.get('title', 'N/A'))
 
             col1, col2, col3 = st.columns([3, 1, 1])
             with col1:
                 st.markdown(f"**Block {block_no}**: {title[:40]}{'...' if len(title) > 40 else ''}")
-                context_preview = logic.get('context', logic.get('objective', ''))[:80]
+                context_preview = content_obj.get('context', content_obj.get('solution', ''))[:80]
                 st.caption(context_preview)
             with col2:
                 # 자동 예상 화수
-                content_len = len(logic.get('context', '')) + len(logic.get('event_villain', ''))
+                content_len = len(content_obj.get('context', '')) + len(content_obj.get('event_villain', ''))
                 auto_ep = 12 if content_len > 1000 else (8 if content_len > 500 else 5)
                 st.markdown(f"~{auto_ep}화")
             with col3:
@@ -1282,14 +1288,17 @@ def render_block_selector(db, arcs, blocks):
 
 
 def create_arc_from_block(block, arc_no, last_arc, ep_count=None):
-    """Block에서 Arc 생성 (가변 페이싱 지원)"""
-    logic = block.get('logic', {})
+    """Block에서 Arc 생성 (가변 페이싱 지원) [V62.2] flat + 레거시 호환"""
+    raw = block.get('raw_data', {}) or {}
+    content_obj = block.get('content', raw.get('content', {}))
+    if not isinstance(content_obj, dict):
+        content_obj = {}
     ep_start = last_arc.get('ep_end', 0) + 1
 
     # 가변 페이싱: 사용자 지정 또는 기본값
     if ep_count is None:
         # Block 내용 복잡도에 따른 자동 추정 (기본 5~15화)
-        content_len = len(logic.get('context', '')) + len(logic.get('event_villain', ''))
+        content_len = len(content_obj.get('context', '')) + len(content_obj.get('event_villain', ''))
         if content_len > 1000:
             ep_count = 12
         elif content_len > 500:
@@ -1298,19 +1307,19 @@ def create_arc_from_block(block, arc_no, last_arc, ep_count=None):
             ep_count = 5
 
     # 전술 문서 자동 생성
-    tactical_doc = f"""[Block {block.get('block_no')}] {logic.get('title', '')}
+    tactical_doc = f"""[Block {block.get('block_no')}] {block.get('title', '')}
 
 ▣ CONTEXT
-{logic.get('context', '내용 없음')}
+{content_obj.get('context', '내용 없음')}
 
 ▣ EVENT/VILLAIN
-{logic.get('event_villain', '내용 없음')}
+{content_obj.get('event_villain', '내용 없음')}
 
 ▣ SOLUTION
-{logic.get('solution', '내용 없음')}
+{content_obj.get('solution', '내용 없음')}
 
 ▣ REWARD
-{logic.get('reward', '내용 없음')}
+{content_obj.get('reward', '내용 없음')}
 """
 
     return {
