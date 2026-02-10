@@ -183,41 +183,7 @@ class TestWriterAgent:
         # 스타일 시드 로딩 로직 테스트
 
 
-class TestArchitectAgent:
-    """Architect 에이전트 테스트"""
-
-    def test_architect_initialization(self, agent_config):
-        """Architect 초기화 테스트"""
-        from modules.domain.agents.architect import Architect
-
-        architect = Architect(agent_config)
-        assert architect is not None
-
-    def test_create_blueprint_structure(self, agent_config):
-        """블루프린트 생성 구조 테스트"""
-        from modules.domain.agents.architect import Architect
-
-        # Mock 응답
-        mock_response = MagicMock()
-        mock_response.text = json.dumps({
-            "ep_num": 1,
-            "title": "테스트 에피소드",
-            "scenes": [
-                {"scene_num": 1, "location": "청풍산장", "action": "수련"},
-                {"scene_num": 2, "location": "산길", "action": "전투"}
-            ],
-            "required_elements": {
-                "foreshadowing": ["복선1"],
-                "character_development": ["성장1"]
-            }
-        })
-        agent_config["api_client"].models.generate_content.return_value = mock_response
-
-        architect = Architect(agent_config)
-
-        # create_v20_blueprint 메서드가 있는 경우
-        if hasattr(architect, 'create_v20_blueprint'):
-            pass
+# [V65] TestArchitectAgent 삭제됨 — architect.py Dead Code 제거
 
 
 class TestDirectorAgent:

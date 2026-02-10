@@ -23,7 +23,7 @@ class ConfigManager:
         self.settings = {
             "models": {
                 "analyst": "gemini-3-pro-preview",   # [V60.24] Gemini 3
-                "architect": "gemini-3-pro-preview", # [V60.24] Gemini 3
+                # [V65] architect 삭제 (레거시 에이전트 제거)
                 "writer": "gemini-3-pro-preview",    # 7,000자 고해상도 집필
                 "director": "gemini-3-pro-preview",  # [V60.24] Gemini 3
                 "manager": "gemini-3-pro-preview",   # [V60.24] Gemini 3

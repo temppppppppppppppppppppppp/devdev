@@ -342,19 +342,7 @@ class TestManuscriptEnhancer:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# TwoPhaseArcGenerator Tests
-# ═══════════════════════════════════════════════════════════════════════════════
-
-class TestTwoPhaseArcGenerator:
-    """Two Phase Arc Generator 테스트"""
-
-    def test_import(self):
-        """모듈 임포트 테스트"""
-        from modules.core.two_phase_generator import TwoPhaseArcGenerator
-        # client 없이 인스턴스 생성
-        generator = TwoPhaseArcGenerator(client=None)
-        assert generator is not None
-        assert generator.enabled == True
+# [V65] TwoPhaseArcGenerator 삭제됨 — TestTwoPhaseArcGenerator 클래스 제거
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -371,7 +359,7 @@ class TestIntegration:
             "modules.core.constitutional_checker",
             "modules.core.writer_template",
             "modules.core.pass_rate_monitor",
-            "modules.core.two_phase_generator",
+            # [V65] two_phase_generator 삭제됨
             "modules.core.tree_of_thoughts",
         ]
 
@@ -390,7 +378,7 @@ class TestIntegration:
 
         required_imports = [
             "ConstitutionalChecker",
-            "TwoPhaseArcGenerator",
+            # [V65] TwoPhaseArcGenerator 삭제됨
             "ManuscriptEnhancer",
         ]
 

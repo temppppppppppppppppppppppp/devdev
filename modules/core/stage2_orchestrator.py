@@ -17,7 +17,10 @@ import re
 import json
 import time
 import asyncio
+import logging
 from typing import Optional
+
+_perf_logger = logging.getLogger(__name__)  # [V65] PerfTimer 로깅
 
 
 class Stage2Orchestrator:
@@ -46,21 +49,18 @@ class Stage2Orchestrator:
         # [V64.P3] lazy imports (main_a.py 스코프 밖이므로)
         from modules.core.constants import (
             VolumeSettings, RecoveryLimits, RetryLimits, Emojis, AuditEvents,
-            SuccessMessages, ErrorMessages
+            SuccessMessages, ErrorMessages, AIModels
         )
         from modules.core.constants import HUDKeys
         from modules.domain.agents.state_tracker import StateTracker
         from modules.core.constraint_db import ConstraintDB
         from modules.core.slack_bot import notifier
 
-        # [V65] 모델명 인라인 상수
-        _SUMMARY_MODEL = "gemini-2.5-flash"
+        # [V65] 모델명 상수 — constants.py AIModels SSOT
+        _SUMMARY_MODEL = AIModels.SUMMARY_MODEL
 
-        # [V64.P3] 스피너 클래스 참조 (main_a.py 전역)
-        import main_a as _main_mod
-        StageSpinner = _main_mod.StageSpinner
-        rich_console = _main_mod.rich_console
-        V50_MODULES_AVAILABLE = _main_mod.V50_MODULES_AVAILABLE
+        # [V65] 스피너 & 전역 상수 → spinners 모듈에서 직접 import (순환 참조 해소)
+        from modules.core.spinners import StageSpinner, rich_console, V50_MODULES_AVAILABLE
         ReflectionTarget = None
         if V50_MODULES_AVAILABLE:
             try:
@@ -595,6 +595,11 @@ class Stage2Orchestrator:
                                         )
                                 except Exception as e:  # [V64.P4] OPTIONAL: vector search — non-blocking
                                     self.app._audit_event("s2_vector_search_failed", str(e)[:100])
+                                # [V65] PerfTimer: Arc 생성 측정
+                                try:
+                                    self.app.perf_timer.start(f"s2_arc_{global_arc_no}_generate")
+                                except Exception:
+                                    pass
                                 four_phase_arc, pipeline_result = self.app.agents['four_phase'].generate(
                                     arc_no=global_arc_no,
                                     ep_start=current_ep_start,
@@ -609,6 +614,10 @@ class Stage2Orchestrator:
                                     state_tracker=self.app.state_tracker,
                                     vector_context=_s2_vector_ctx
                                 )
+                                try:
+                                    self.app.perf_timer.stop(f"s2_arc_{global_arc_no}_generate")
+                                except Exception:
+                                    pass
 
                             if four_phase_arc and pipeline_result.get('final_verdict') == 'PASS':
                                 refined_arc = four_phase_arc
@@ -1191,6 +1200,11 @@ class Stage2Orchestrator:
                                 except Exception:  # [V64.P4] OPTIONAL: success example storage
                                     pass  # Stage2Optimizer example save failure is non-blocking
 
+                    # [V65] PerfTimer: Director 대면 측정
+                    try:
+                        self.app.perf_timer.start(f"s2_arc_{global_arc_no}_director")
+                    except Exception:
+                        pass
                     audit = self.app.agents['director'].audit_strategic_plan(
                         refined_arc,
                         last_refined_context,
@@ -1199,6 +1213,10 @@ class Stage2Orchestrator:
                         suspected_duplicates=suspected_duplicates,
                         entity_registry=entity_registry_for_director
                     )
+                    try:
+                        self.app.perf_timer.stop(f"s2_arc_{global_arc_no}_director")
+                    except Exception:
+                        pass
 
                     # ═══════════════════════════════════════════════════════════════
                     # [V60.43] API 할당량 오류 시 폴백 로직
@@ -1375,6 +1393,13 @@ class Stage2Orchestrator:
                                 self.app.ui.log(f"      ✨ [V60.25] Arc {global_arc_no} 최종 성공 - 실패 메모리 클리어")
                             except Exception:  # [V64.P4] OPTIONAL: optimizer memory clear
                                 pass
+
+                        # [V65] PerfTimer: Arc 완료 시 요약 로그
+                        try:
+                            self.app.perf_timer.log_summary()
+                            self.app.perf_timer.reset()
+                        except Exception:
+                            pass
 
                         break
                     else:
@@ -1645,7 +1670,8 @@ class Stage2Orchestrator:
         """
         [V60.15] Stage2: 진짜 서사 구조 분석 기반 Flow Guard
         """
-        _SUMMARY_MODEL = "gemini-2.5-flash"
+        from modules.core.constants import AIModels  # [V65] SSOT
+        _SUMMARY_MODEL = AIModels.SUMMARY_MODEL
 
         beats = refined_arc.get("beat_sequence", [])
         ep_count = refined_arc.get("ep_count", 0)

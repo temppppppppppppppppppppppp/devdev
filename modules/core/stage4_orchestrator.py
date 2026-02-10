@@ -9,7 +9,10 @@ SovereignApp에서 분리된 Stage 4 관련 메서드:
 
 import os
 import json
+import logging
 from typing import Optional
+
+_perf_logger = logging.getLogger(__name__)  # [V65] PerfTimer 로깅
 
 
 class Stage4Orchestrator:
@@ -50,11 +53,8 @@ class Stage4Orchestrator:
         from modules.validation.consistency_validator import ConsistencyValidator  # [V63.2]
         from modules.core.constants import AIModels, RetryLimits, WritingLimits, Emojis
 
-        # [V64.P3] 스피너/전역 참조
-        import main_a as _main_mod
-        StageSpinner = _main_mod.StageSpinner
-        V50_MODULES_AVAILABLE = _main_mod.V50_MODULES_AVAILABLE
-        STAGE0_AVAILABLE = _main_mod.STAGE0_AVAILABLE
+        # [V65] 스피너 & 전역 상수 → spinners 모듈에서 직접 import (순환 참조 해소)
+        from modules.core.spinners import StageSpinner, V50_MODULES_AVAILABLE, STAGE0_AVAILABLE
 
         # 1. 기초 데이터 점검
         if not self.app.current_project.master_bible or not self.app.current_project.arcs:
@@ -205,6 +205,17 @@ class Stage4Orchestrator:
                         mandatory_context = _narrative_summaries + "\n\n"
                 except Exception as e:  # [V64.P4] IMPORTANT: narrative summary load failure
                     self.app.ui.log(f"   ⚠️ [V64.P4] 내러티브 요약 로드 실패 (비차단): {str(e)[:60]}")
+                # [V65] 호흡 분석기 — 직전 원고 분석 후 가이드 주입
+                _pacing_analyzer = getattr(self.app, 'pacing_analyzer', None)
+                if _pacing_analyzer and prev_text and len(prev_text) >= 100:
+                    try:
+                        _pacing_result = _pacing_analyzer.analyze(prev_text)
+                        _pacing_prompt = _pacing_analyzer.generate_pacing_prompt(_pacing_result)
+                        if _pacing_prompt:
+                            mandatory_context = f"{mandatory_context}\n\n{_pacing_prompt}"
+                    except Exception as _pace_err:
+                        self.app.ui.log(f"   ⚠️ [V65] 호흡 분석 실패 (비차단): {str(_pace_err)[:60]}")
+
                 anti_trope_prompt = ""
                 justification_prompt = ""
                 reflexion_prompt = ""
@@ -352,6 +363,11 @@ class Stage4Orchestrator:
                     self.app.ui.log(f"\n🎬 [{interview_round + 1}차 면담] Chief Writer 앙상블 생성 중...")
 
                     # Phase 2: Chief Writer 앙상블 생성
+                    # [V65] PerfTimer: 원고 생성 측정
+                    try:
+                        self.app.perf_timer.start(f"s4_ep{next_ep}_generate_r{interview_round}")
+                    except Exception:
+                        pass
                     if interview_round == 0:
                         candidates = chief_writer.generate_ensemble(
                             ep_num=next_ep,
@@ -403,6 +419,12 @@ class Stage4Orchestrator:
                             purism_prompt=purism_prompt,
                             state_tracker=getattr(self.app, 'state_tracker', None)
                         )
+
+                    # [V65] PerfTimer: 원고 생성 종료
+                    try:
+                        self.app.perf_timer.stop(f"s4_ep{next_ep}_generate_r{interview_round}")
+                    except Exception:
+                        pass
 
                     # Phase 3: Python 사전 검증
                     stage4_spinner.update_detail(f"제{next_ep}화 · {interview_round + 1}차 면담 · Python 검증")
@@ -470,6 +492,11 @@ class Stage4Orchestrator:
                     # Phase 4: Director 면담
                     stage4_spinner.update_detail(f"제{next_ep}화 · {interview_round + 1}차 면담 · Director 심사")
                     self.app.ui.log(f"   🎬 Director 면담 중...")
+                    # [V65] PerfTimer: Director 대면 측정
+                    try:
+                        self.app.perf_timer.start(f"s4_ep{next_ep}_director_r{interview_round}")
+                    except Exception:
+                        pass
                     director_result = self.app.agents['director'].select_and_judge_ensemble(
                         ep_num=next_ep,
                         candidates=candidates,
@@ -481,6 +508,10 @@ class Stage4Orchestrator:
                         retry_count=interview_round,
                         episode_digest=_episode_digest
                     )
+                    try:
+                        self.app.perf_timer.stop(f"s4_ep{next_ep}_director_r{interview_round}")
+                    except Exception:
+                        pass
 
                     selected = director_result.get('selected', 'A')
                     verdict = director_result.get('verdict', 'REJECT')
@@ -847,6 +878,13 @@ class Stage4Orchestrator:
                         traceback.print_exc()
 
                     self.app.ui.log(f"\n✅ 제{next_ep}화 '{final_title}' 생산 완료! ({len(final_manuscript)}자)")
+
+                    # [V65] PerfTimer: 에피소드 완료 시 요약 로그
+                    try:
+                        self.app.perf_timer.log_summary()
+                        self.app.perf_timer.reset()
+                    except Exception:
+                        pass
 
             # [V62.3] Stage 4 루프 종료
             self.app.ui.log(f"\n{'='*50}")
