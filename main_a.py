@@ -25,247 +25,13 @@ from typing import Optional, Dict, List, Any, Tuple
 from dotenv import load_dotenv
 load_dotenv(override=True)  # Slack 알림용 환경변수 먼저 로드
 from rich.live import Live
-from rich.panel import Panel
 from rich.console import Console
 from rich.text import Text
 
-# [V60.47] 전역 Rich 콘솔 (스피너용)
-rich_console = Console()
-
-# [V60.75] 멋진 스피너 클래스
+# [V65] 스피너 & 전역 콘솔 → modules/core/spinners.py로 이동 (순환 참조 해소)
 import threading
-class FancySpinner:
-    """Claude Code 스타일 스피너 - 전체 시간 + 현재 작업 시간 표시"""
-
-    _session_start = None  # 세션 시작 시간 (클래스 변수)
-
-    def __init__(self, task_name: str, console: Console = None):
-        self.task_name = task_name
-        self.console = console or rich_console
-        self.task_start = None
-        self.live = None
-        self._stop_event = threading.Event()
-        self._thread = None
-
-        # 세션 시작 시간 초기화 (최초 1회)
-        if FancySpinner._session_start is None:
-            FancySpinner._session_start = time.time()
-
-    def _format_time(self, seconds: float) -> str:
-        """시간을 m s 또는 s 형식으로 포맷"""
-        if seconds >= 60:
-            m = int(seconds // 60)
-            s = int(seconds % 60)
-            return f"{m}m {s}s"
-        return f"{int(seconds)}s"
-
-    def _render(self) -> str:
-        """스피너 텍스트 렌더링"""
-        now = time.time()
-        session_elapsed = now - FancySpinner._session_start
-        task_elapsed = now - self.task_start if self.task_start else 0
-
-        return (
-            f"[bold orange1]✽[/] [orange1]{self.task_name}[/] "
-            f"[dim](전체: {self._format_time(session_elapsed)} · "
-            f"현재: {self._format_time(task_elapsed)})[/]"
-        )
-
-    def _update_loop(self):
-        """백그라운드에서 Live 업데이트"""
-        while not self._stop_event.is_set():
-            if self.live:
-                self.live.update(self._render())
-            time.sleep(0.5)
-
-    def __enter__(self):
-        self.task_start = time.time()
-        self.live = Live(self._render(), console=self.console, refresh_per_second=2, transient=True)
-        self.live.__enter__()
-        self._stop_event.clear()
-        self._thread = threading.Thread(target=self._update_loop, daemon=True)
-        self._thread.start()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self._stop_event.set()
-        if self._thread:
-            self._thread.join(timeout=1)
-        if self.live:
-            self.live.__exit__(exc_type, exc_val, exc_tb)
-        return False
-
-
-# [V60.83] Stage별 테마 스피너 (파도치는 색상)
-class StageSpinner:
-    """
-    각 Stage별 고유 테마를 가진 스피너 (파도치는 그라데이션)
-
-    Stage 0: 📚 Bible/Setup - 책/설정 테마 (purple wave)
-    Stage 1: 📜 Volume Strategy - 고대 두루마리 테마 (gold wave)
-    Stage 2: ⚔️ Arc Design - 전투/전략 테마 (red wave)
-    Stage 3: 📐 Blueprint - 설계도 테마 (cyan wave)
-    Stage 4: ✍️ Manuscript - 집필 테마 (green wave)
-    """
-
-    # 파도치는 색상 팔레트
-    WAVE_PALETTES = {
-        "purple": ["#E1BEE7", "#CE93D8", "#BA68C8", "#AB47BC", "#9C27B0", "#8E24AA", "#7B1FA2", "#6A1B9A"],
-        "gold": ["#FFF8E1", "#FFECB3", "#FFE082", "#FFD54F", "#FFCA28", "#FFC107", "#FFB300", "#FFA000"],
-        "red": ["#FFCDD2", "#EF9A9A", "#E57373", "#EF5350", "#F44336", "#E53935", "#D32F2F", "#C62828"],
-        "cyan": ["#E0F7FA", "#B2EBF2", "#80DEEA", "#4DD0E1", "#26C6DA", "#00BCD4", "#00ACC1", "#0097A7"],
-        "green": ["#E8F5E9", "#C8E6C9", "#A5D6A7", "#81C784", "#66BB6A", "#4CAF50", "#43A047", "#388E3C"],
-    }
-
-    STAGE_THEMES = {
-        0: {
-            "name": "Bible & Setup",
-            "base_color": "magenta",
-            "wave_palette": "purple",
-            "frames": ["📚", "📖", "🔮", "✨", "💫", "🌟"],
-            "verbs": ["Bible 로딩 중", "설정 추출 중", "스타일 분석 중", "프리셋 활성화 중", "DNA 동기화 중"]
-        },
-        1: {
-            "name": "Volume Strategy",
-            "base_color": "yellow",
-            "wave_palette": "gold",
-            "frames": ["📜", "📖", "📚", "📖", "✨", "💫"],
-            "verbs": ["두루마리 펼치는 중", "대서사시 구상 중", "권별 전략 수립 중", "운명의 실 엮는 중"]
-        },
-        2: {
-            "name": "Arc Design",
-            "base_color": "red",
-            "wave_palette": "red",
-            "frames": ["⚔️", "🗡️", "🛡️", "⚔️", "💥", "🔥"],
-            "verbs": ["전술 설계 중", "Arc 용접 중", "인과율 계산 중", "욕망 주입 중", "서사 단조 중"]
-        },
-        3: {
-            "name": "Blueprint",
-            "base_color": "cyan",
-            "wave_palette": "cyan",
-            "frames": ["📐", "📏", "🔧", "⚙️", "💎", "🌊"],
-            "verbs": ["설계도 제도 중", "씬 배치 중", "연속성 체크 중", "정밀 조립 중", "밀도 계산 중"]
-        },
-        4: {
-            "name": "Manuscript",
-            "base_color": "green",
-            "wave_palette": "green",
-            "frames": ["✍️", "🖋️", "📝", "✒️", "💚", "🌿"],
-            "verbs": ["원고 집필 중", "문장 조탁 중", "서사 직조 중", "영혼 불어넣는 중", "독자 마법 걸기 중"]
-        }
-    }
-
-    _session_start = None
-
-    def __init__(self, stage: int, task_detail: str = "", console: Console = None):
-        self.stage = stage
-        self.task_detail = task_detail
-        self.theme = self.STAGE_THEMES.get(stage, self.STAGE_THEMES[1])
-        self.wave_palette = self.WAVE_PALETTES.get(self.theme.get("wave_palette", "cyan"), self.WAVE_PALETTES["cyan"])
-        self.console = console or rich_console
-        self.task_start = None
-        self.live = None
-        self._stop_event = threading.Event()
-        self._thread = None
-        self._frame_idx = 0
-        self._verb_idx = 0
-        self._wave_offset = 0
-
-        if StageSpinner._session_start is None:
-            StageSpinner._session_start = time.time()
-
-    def _format_time(self, seconds: float) -> str:
-        if seconds >= 60:
-            m = int(seconds // 60)
-            s = int(seconds % 60)
-            return f"{m}m {s}s"
-        return f"{int(seconds)}s"
-
-    def _wave_text(self, text: str) -> Text:
-        """파도치는 색상 텍스트 생성"""
-        result = Text()
-        for i, char in enumerate(text):
-            color_idx = (i + self._wave_offset) % len(self.wave_palette)
-            result.append(char, style=f"{self.wave_palette[color_idx]}")
-        return result
-
-    def _render(self) -> Text:
-        now = time.time()
-        session_elapsed = now - StageSpinner._session_start
-        task_elapsed = now - self.task_start if self.task_start else 0
-
-        # [V61.2] 클로드 스타일 미니멀 스피너
-        # 펄스 도트 애니메이션
-        pulse_frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
-        pulse = pulse_frames[self._frame_idx % len(pulse_frames)]
-
-        # 색상 그라데이션 펄스 (밝기 변화)
-        color_cycle = [
-            "#6366f1",  # indigo
-            "#818cf8",  # lighter
-            "#a5b4fc",  # lightest
-            "#818cf8",  # lighter
-            "#6366f1",  # indigo
-            "#4f46e5",  # darker
-            "#4338ca",  # darkest
-            "#4f46e5",  # darker
-        ]
-        current_color = color_cycle[self._wave_offset % len(color_cycle)]
-
-        detail = self.task_detail if self.task_detail else self.theme["verbs"][0]
-
-        # 심플한 구성: [펄스] 작업내용 · 시간
-        result = Text()
-        result.append(f" {pulse} ", style=f"bold {current_color}")
-        result.append(f"{detail}", style=f"{current_color}")
-        result.append(f"  ", style="dim")
-        result.append(f"{self._format_time(task_elapsed)}", style="dim #888888")
-
-        self._wave_offset += 1
-        return result
-
-    def _update_loop(self):
-        tick = 0
-        while not self._stop_event.is_set():
-            if self.live:
-                self.live.update(self._render())
-            time.sleep(0.3)
-            tick += 1
-            if tick % 2 == 0:
-                self._frame_idx += 1
-            if tick % 8 == 0:
-                self._verb_idx += 1
-
-    def __enter__(self):
-        self.task_start = time.time()
-        # [V61.2] 스피너 가시성 개선:
-        # - redirect_stdout/stderr: print()가 스피너 위에 표시됨
-        # - transient=True: 완료 후 깔끔하게 사라짐
-        self.live = Live(
-            self._render(),
-            console=self.console,
-            refresh_per_second=4,
-            transient=True,
-            redirect_stdout=True,
-            redirect_stderr=True
-        )
-        self.live.__enter__()
-        self._stop_event.clear()
-        self._thread = threading.Thread(target=self._update_loop, daemon=True)
-        self._thread.start()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self._stop_event.set()
-        if self._thread:
-            self._thread.join(timeout=1)
-        if self.live:
-            self.live.__exit__(exc_type, exc_val, exc_tb)
-        return False
-
-    def update_detail(self, new_detail: str):
-        """작업 상세 정보 업데이트"""
-        self.task_detail = new_detail
+from modules.core.spinners import rich_console, FancySpinner, StageSpinner  # noqa: F401
+import modules.core.spinners as _spinners_mod  # [V65] 플래그 동기화용
 
 
 from google import genai
@@ -278,8 +44,9 @@ from modules.core.prompt_builder import PromptBuilder  # [V64 P2-2]
 from modules.core.feedback_system import FeedbackSystem  # [V64 P2-3]
 from modules.core.stage2_orchestrator import Stage2Orchestrator  # [V64.P3]
 from modules.core.stage4_orchestrator import Stage4Orchestrator  # [V64.P3]
+from modules.core.perf_timer import PerfTimer  # [V65] 파이프라인 성능 프로파일링
 from modules.domain.agents.analyst import Analyst
-from modules.domain.agents.architect import Architect
+# [V65] Architect 삭제 (완전 레거시 — ThreePhaseBlueprintGenerator로 대체됨)
 from modules.domain.agents.writer import Writer
 from modules.domain.agents.director import Director
 from modules.domain.agents.manager import Manager
@@ -302,7 +69,7 @@ from modules.domain.agents.state_tracker import StateTracker  # [V60.94] 상태 
 from modules.domain.agents.three_phase_blueprint_generator import ThreePhaseBlueprintGenerator  # [V60.80] 3단계 Blueprint 생성기
 from modules.core.narrative_diversity import NarrativeDiversityEngine  # [V48] 서사 다양성 엔진
 from modules.core.metrics_collector import get_metrics_collector  # [V49.3] 비용 추적 시스템
-from modules.core.constraint_db import ConstraintDB  # [V49.4] Pre-Generation Constraint DB
+# [V65] ConstraintDB 미사용 import 삭제
 
 # [V60.95] Stage 0 모듈 - 프로젝트 초기화 및 역설계
 try:
@@ -314,13 +81,15 @@ except ImportError as e:
 
 # [V50] 서사 품질 향상 모듈
 try:
-    # [V65] V50.1~V51.1 삭제: TensionCurveManager, DialogueQualityEngine, SubplotWeaver, ReaderSimulator, PacingAnalyzer
+    # [V65] V50.1~V51.1 삭제: TensionCurveManager, DialogueQualityEngine, SubplotWeaver, ReaderSimulator
+    # [V65] PacingAnalyzer 재연결 완료
     # Stage 4 V2 전환 이후 호출 경로 없음 — 모듈 파일은 보존 (재연결 가능)
     from modules.core.quality_amplifier import QualityAmplifier  # [V51.2] 품질 증폭기
     from modules.core.agent_intelligence import AgentIntelligence  # [V51.3] 에이전트 지능 향상
     from modules.core.failure_learning import FailureLearner  # [V51.4] 실패 학습 시스템
     from modules.core.character_voice import CharacterVoiceTracker  # [V51.5] 캐릭터 음성 추적
     from modules.core.foreshadow_tracker import ForeshadowTracker  # [V51.6] 복선 추적
+    from modules.core.pacing_analyzer import PacingAnalyzer  # [V65] 호흡 분석기 재연결
     from modules.core.emotion_tracker import EmotionArcTracker  # [V60.26] 감정선 추적
     from modules.core.power_scaling import PowerScalingTracker  # [V60.26] 파워 스케일링 추적
     from modules.core.state_delta_tracker import StateDeltaTracker  # [V60.26] 상태 변화 추적
@@ -340,18 +109,22 @@ try:
     from modules.core.semantic_cache import SemanticCache  # [V54.1] 의미론적 캐시
     from modules.core.context_compression import ContextCompressor  # [V54.2] 컨텍스트 압축
     from modules.core.adaptive_retry import get_adaptive_manager  # [V54.3] 적응형 재시도
-    from modules.core.two_phase_generator import TwoPhaseManuscriptGenerator, TwoPhaseBlueprintGenerator, TwoPhaseArcGenerator  # [V54.4] 2단계 생성
+    # [V65] TwoPhaseGenerator 삭제 (Dead Code — Stage 4 V2 전환으로 미사용)
     from modules.core.blueprint_memory import SuccessPatternMemory  # [V54.5] 성공 패턴 메모리
     from modules.core.manuscript_enhancer import ManuscriptEnhancer  # [V55] 원고 품질/분량 향상
     from modules.core.constitutional_checker import ConstitutionalChecker  # [V55.2] 헌법적 자기검증
     from modules.core.writer_template import WriterTemplate  # [V55.3] 원고 템플릿
     from modules.core.pass_rate_monitor import PassRateMonitor  # [V55.3] 통과율 모니터
     from modules.core.quality_dashboard import QualityDashboard  # [V60] 품질 대시보드
-    from modules.core.stage2_optimizer import Stage2Optimizer, create_stage2_optimizer  # [V60.25] Stage 2 최적화
+    from modules.core.stage2_optimizer import create_stage2_optimizer  # [V60.25] [V65] Stage2Optimizer 미사용 삭제
     V50_MODULES_AVAILABLE = True
 except ImportError as e:
     V50_MODULES_AVAILABLE = False
     print(f"⚠️ [V50] 일부 모듈 미설치: {e}")
+
+# [V65] 모듈 가용성 플래그를 spinners 모듈에 동기화 (orchestrator 순환 참조 해소)
+_spinners_mod.V50_MODULES_AVAILABLE = V50_MODULES_AVAILABLE
+_spinners_mod.STAGE0_AVAILABLE = STAGE0_AVAILABLE
 
 import random
 from google.genai import types
@@ -364,10 +137,10 @@ from modules.core.constants import (
     SuccessMessages, Emojis, RecoveryLimits, AIModels, WritingLimits
 )
 
-# [V65] 모델명 인라인 상수 — constants.py 미추가 (다른 팀 수정 중)
-_V50_MODULE_MODEL = "gemini-2.0-flash"   # V50 품질 모듈 전용 (SelfReflector, CrossVerifier 등)
-_FLASH_ANALYSIS_MODEL = "gemini-3-flash-preview"  # 경량 분석/추출용 (Preflight, StateExtractor 등)
-_SUMMARY_MODEL = "gemini-2.5-flash"      # 요약/저비용 LLM 호출용
+# [V65] 모델명 상수 — constants.py AIModels SSOT
+_V50_MODULE_MODEL = AIModels.V50_MODULE_MODEL
+_FLASH_ANALYSIS_MODEL = AIModels.FLASH_ANALYSIS_MODEL
+_SUMMARY_MODEL = AIModels.SUMMARY_MODEL
 
 
 
@@ -392,13 +165,15 @@ class SovereignApp:
         self._feedback_system = FeedbackSystem()  # [V64 P2-3]
         self._stage2_orch = Stage2Orchestrator(app=self)  # [V64.P3]
         self._stage4_orch = Stage4Orchestrator(app=self)  # [V64.P3]
+        self.perf_timer = PerfTimer("Pipeline")  # [V65] 파이프라인 성능 프로파일링
 
         # [V64.P4] 동적 주입 속성 선언 (monkey-patching 제거)
         self._entity_cache_arc_idx = -1      # Entity Registry 캐시 arc 인덱스
         self._cached_entity_registry = None  # Entity Registry 캐시
 
         # [V50] 서사 품질 향상 모듈
-        # [V65] V50.1~V51.1 속성 삭제 (tension_manager, dialogue_engine, subplot_weaver, reader_simulator, pacing_analyzer)
+        # [V65] V50.1~V51.1 속성 삭제 (tension_manager, dialogue_engine, subplot_weaver, reader_simulator)
+        self.pacing_analyzer = None   # [V65] 호흡 분석기 재연결
         self.quality_amplifier = None  # [V51.2] 품질 증폭기
         self.agent_intelligence = None # [V51.3] 에이전트 지능 향상
         self.failure_learner = None    # [V51.4] 실패 학습 시스템
@@ -426,9 +201,7 @@ class SovereignApp:
         self.semantic_cache = None      # [V54.1] 의미론적 캐시
         self.context_compressor = None  # [V54.2] 컨텍스트 압축
         self.adaptive_manager = None    # [V54.3] 적응형 재시도 관리자
-        self.two_phase_ms = None        # [V54.4] 2단계 원고 생성
-        self.two_phase_bp = None        # [V54.4.1] 2단계 블루프린트 생성
-        self.two_phase_arc = None       # [V55.1] 2단계 Arc 생성
+        # [V65] two_phase_ms/bp/arc 삭제 (Dead Code — TwoPhaseGenerator 제거)
         self.success_patterns = None    # [V54.5] 성공 패턴 메모리
         self.manuscript_enhancer = None # [V55] 원고 품질/분량 향상
         self.constitutional_checker = None  # [V55.2] 헌법적 자기검증
@@ -1100,11 +873,7 @@ class SovereignApp:
         if style_seed_path.exists():
             writer_context += f"### [STYLE SEEDS]\n{style_seed_path.read_text(encoding='utf-8')}"
 
-        # (B) Architect
-        arch_rules_path = self.current_project.paths.config / "prompts" / "architect_rules.json"
-        architect_context = "[SYSTEM: ARCHITECT STRUCTURAL RULES]\n"
-        if arch_rules_path.exists():
-            architect_context += arch_rules_path.read_text(encoding='utf-8')
+        # [V65] (B) Architect 캐시 삭제 (레거시 에이전트 제거)
 
         # (C) Analyst
         analyst_lib_path = self.current_project.paths.config / "prompts" / "analyst_libraries.json"
@@ -1149,26 +918,7 @@ class SovereignApp:
 
 
 
-        # [B] Architect Cache (수정됨)
-        if not self._is_cache_alive(cache_info.get("architect_cache")):
-            context_str = str(architect_context)
-            if len(context_str) < 1500: # 1024 토큰 가드 
-                self.ui.log(f"   ⚠️ [System] Architect 데이터량이 적어 캐싱을 건너뜁니다. ({len(context_str)} chars)")
-                cache_info["architect_cache"] = None
-            else:
-                self.ui.log("   ⚡ [Architect] 신규 캐시 생성 중...")
-                try:
-                    a_cache = self.sys.api_client.caches.create(
-                        model=fix_model_id(config["architect"]),
-                        config=types.CreateCachedContentConfig(
-                            display_name="ARCHITECT_V31", system_instruction="아키텍트",
-                            contents=[architect_context], ttl="86400s"
-                        )
-                    )
-                    cache_info["architect_cache"] = a_cache.name
-                except Exception as e:
-                    self.ui.log(f"   ❌ Architect 캐시 생성 실패: {e}")
-                    cache_info["architect_cache"] = None
+        # [V65] [B] Architect Cache 삭제 (레거시 에이전트 제거)
 
         # [C] Analyst Cache (수정됨)
         if not self._is_cache_alive(cache_info.get("analyst_cache")):
@@ -1220,7 +970,7 @@ class SovereignApp:
             self.ui.log(f"{Emojis.SAVE} [System] 캐시 정보 DB 저장 완료")
             self._audit_event(AuditEvents.CACHE_CREATED, SuccessMessages.CACHE_CREATED, {
                 "writer": bool(cache_info.get("writer_cache")),
-                "architect": bool(cache_info.get("architect_cache")),
+                # [V65] architect 캐시 항목 삭제
                 "analyst": bool(cache_info.get("analyst_cache")),
                 "weaver": bool(cache_info.get("weaver_cache"))
             })
@@ -1233,9 +983,7 @@ class SovereignApp:
             if cache_info.get("writer_cache"):
                 self.agents['writer'].cache_name = cache_info["writer_cache"]
                 self.ui.log("   ✅ Writer 캐시 주입 완료")
-            if cache_info.get("architect_cache"):
-                self.agents['architect'].cache_name = cache_info["architect_cache"]
-                self.ui.log("   ✅ Architect 캐시 주입 완료")
+            # [V65] Architect 캐시 주입 삭제
             if cache_info.get("analyst_cache"):
                 self.agents['analyst'].cache_name = cache_info["analyst_cache"]
                 self.ui.log("   ✅ Analyst 캐시 주입 완료")
@@ -1511,7 +1259,7 @@ class SovereignApp:
 
             self.agents = {
                 'analyst': Analyst(self.current_project, self.sys.api_client, model_tier=models.get("analyst", default_model)),
-                'architect': Architect(self.current_project, self.sys.api_client, model_tier=models.get("architect", default_model)),
+                # [V65] Architect 삭제 (ThreePhaseBlueprintGenerator로 완전 대체)
                 'writer': Writer(self.current_project, self.sys.api_client, model_tier=models.get("writer", default_model)),
                 'director': Director(self.current_project, self.sys.api_client, model_tier=models.get("director", default_model)),
                 'manager': Manager(self.current_project, self.sys.api_client, model_tier=models.get("manager", default_model)),
@@ -1638,6 +1386,9 @@ class SovereignApp:
                     genre_type = self.selected_genre.get('type', 'wuxia') if self.selected_genre else 'wuxia'
 
                     # [V65] V50.1~V51.1 초기화 삭제 (Dead Code 정리)
+
+                    # [V65] V51.1 호흡 분석기 재연결
+                    self.pacing_analyzer = PacingAnalyzer()
 
                     # V51.2 품질 증폭기
                     self.quality_amplifier = QualityAmplifier()
@@ -1799,27 +1550,7 @@ class SovereignApp:
                     else:
                         self.ui.log(f"   🔄 [V54.3] Adaptive Retry Manager 활성화")
 
-                    # V54.4 2단계 원고 생성
-                    self.two_phase_ms = TwoPhaseManuscriptGenerator(
-                        client=self.sys.api_client,
-                        model=_V50_MODULE_MODEL  # [V65] 중앙 상수
-                    )
-                    self.ui.log(f"   ✌️ [V54.4] Two-Phase Manuscript Generator 활성화")
-
-                    # V54.4.1 2단계 블루프린트 생성
-                    self.two_phase_bp = TwoPhaseBlueprintGenerator(
-                        client=self.sys.api_client,
-                        model=_SUMMARY_MODEL  # [V65] 중앙 상수
-                    )
-                    self.ui.log(f"   📐 [V54.4.1] Two-Phase Blueprint Generator 활성화")
-
-                    # V55.1+V60.10 2단계 Arc 생성 (Stage 2 전용, StateExtractor 통합)
-                    self.two_phase_arc = TwoPhaseArcGenerator(
-                        client=self.sys.api_client,
-                        model=AIModels.STAGE2_MAIN_MODEL,  # [V65] 중앙 상수
-                        state_extractor=self.agents.get('state_extractor')  # [V60.10] StateExtractor 통합
-                    )
-                    self.ui.log(f"   🏗️ [V55.1+V60.10] Two-Phase Arc Generator 활성화 (Gemini 3, StateExtractor 통합)")
+                    # [V65] TwoPhaseGenerator 삭제 (two_phase_ms/bp/arc — Dead Code)
 
                     # V54.5 성공 패턴 메모리
                     self.success_patterns = SuccessPatternMemory(

@@ -677,52 +677,13 @@ class PromptBuilder:
 
         - V50.1: 긴장도 가이드
         - V50.2: 대사 DNA 가이드
-        - V50.3: 서브플롯 리마인더
+        - V50.3: 서브플롯 리마인더 (V65 삭제)
         """
         app = self._app
 
-        # V50_MODULES_AVAILABLE 체크 (main_a.py 모듈 레벨 플래그)
-        v50_available = getattr(app, 'tension_manager', None) is not None or \
-                        getattr(app, 'dialogue_engine', None) is not None
-
         prompts = []
 
-        # V50.1: 긴장도 가이드
-        tension_manager = getattr(app, 'tension_manager', None)
-        if tension_manager:
-            try:
-                suggestion = tension_manager.suggest_next_tension(ep_num)
-                if suggestion.get('suggestion'):
-                    prompts.append(f"[V50 긴장도 가이드]\n{suggestion['suggestion']}")
-            except Exception:
-                pass
-
-        # V50.2: 대사 DNA 가이드
-        dialogue_engine = getattr(app, 'dialogue_engine', None)
-        if dialogue_engine:
-            try:
-                protagonist = app._get_protagonist_name()
-                dialogue_prompt = dialogue_engine.generate_dialogue_prompt(protagonist)
-                if dialogue_prompt:
-                    prompts.append(f"[V50 대사 가이드]\n{dialogue_prompt}")
-            except Exception:
-                pass
-
-        # V50.3: 서브플롯 리마인더
-        subplot_weaver = getattr(app, 'subplot_weaver', None)
-        if subplot_weaver:
-            try:
-                neglected = subplot_weaver.get_neglected_subplots(threshold_episodes=3)
-                if neglected:
-                    reminders = []
-                    for sp in neglected[:2]:
-                        beat = subplot_weaver.suggest_subplot_beat(sp.name)
-                        if beat:
-                            reminders.append(f"- '{sp.name}': {beat}")
-                    if reminders:
-                        prompts.append(f"[V50 서브플롯 리마인더]\n다음 서브플롯을 진행시켜주세요:\n" + "\n".join(reminders))
-            except Exception:
-                pass
+        # [V65] V50.1 tension_manager, V50.2 dialogue_engine, V50.3 subplot_weaver 삭제 (Dead Code)
 
         # V51.1: 호흡 가이드
         pacing_analyzer = getattr(app, 'pacing_analyzer', None)
