@@ -162,6 +162,19 @@ ENSEMBLE_ARC_PROMPT = """
         "npc_npc_relationships": [
             {{"npc1": "NPC_A", "npc2": "NPC_B", "relation": "동맹|적대|사제|부자|연인", "episode": N}}
         ],
+        "time_markers": [
+            {{"type": "elapsed_time|season|time_of_day|specific_date", "description": "시간 표현 (예: 3일 경과, 겨울, 새벽)", "episode": N}}
+        ],
+        "permanent_injuries": [
+            {{"name": "NPC명", "type": "amputation|blindness|scar|disfigurement", "description": "왼팔 절단/실명/흉터 등", "episode": N}}
+        ],
+        "companion_changes": [
+            {{"name": "NPC명", "action": "join|leave", "episode": N, "reason": "합류/이탈 사유"}}
+        ],
+        "commitments": [
+            {{"parties": ["A", "B"], "description": "3일 후 금 100냥 상환", "episode": N}}
+        ],
+        "protagonist_emotion": {{"emotion": "비통", "trigger": "부모 사망", "episode": N}},
         "financial_events": {{
             "exchange_rates": [
                 {{"value": 숫자, "episode": N, "context": "환율 설명"}}
@@ -192,6 +205,11 @@ ENSEMBLE_ARC_PROMPT = """
 - [V66] entity_destructions: 조직 괴멸/장소 파괴 해당 시 반드시 기록 (이후 재등장 방지, 빈 배열도 가능)
 - [V66] npc_personality_changes: NPC 성격/동기 변화 해당 시 반드시 기록 (성격 일관성 유지, 빈 배열도 가능)
 - [V66] npc_npc_relationships: NPC 간 관계 해당 시 반드시 기록 (동맹/적대/사제 등, 빈 배열도 가능)
+- [V66.1] time_markers: Arc 내 시간 흐름 마커 반드시 기록 (경과 시간, 계절, 시각, 특정 날짜)
+- [V66.1] permanent_injuries: NPC 절단/실명/흉터 등 영구 부상 해당 시 반드시 기록 (이후 묘사 일관성 유지)
+- [V66.1] companion_changes: NPC가 주인공 일행에 합류/이탈할 때 반드시 기록 (동행자 실종 방지)
+- [V66.1] commitments: 약속/맹세/빚 발생 시 반드시 기록 (미이행 약속 추적)
+- [V66.1] protagonist_emotion: Arc 종료 시 주인공 감정 상태 기록 (감정 급변 방지, 없으면 빈 객체 {{}})
 - [V63] npc_movements: NPC가 장소를 이동하면 출발지/도착지 기록
 - [V63.1] financial_events: 투자/재벌물에서 환율, 자산, 레버리지, 거래 내역 기록 (비투자 장르는 빈 객체 {{}})
 - 해당 사항 없으면 빈 배열 [] 또는 빈 객체 {{}}로 표시

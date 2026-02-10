@@ -167,6 +167,13 @@ class SovereignApp:
         self._stage4_orch = Stage4Orchestrator(app=self)  # [V64.P3]
         self.perf_timer = PerfTimer("Pipeline")  # [V65] 파이프라인 성능 프로파일링
 
+        # [V66.1] B-1: narrative_summaries 캐시 (99회 DB 조회 → 1회)
+        self._narrative_summaries_cache: Optional[str] = None
+
+        # [V66.1] B-3: audit_event 배치 버퍼 (매회 파일 open → 배치 기록)
+        self._audit_buffer: list = []
+        atexit.register(self._flush_audit_buffer)  # [V66.1] B-3: 프로세스 종료 시 flush 보장
+
         # [V64.P4] 동적 주입 속성 선언 (monkey-patching 제거)
         self._entity_cache_arc_idx = -1      # Entity Registry 캐시 arc 인덱스
         self._cached_entity_registry = None  # Entity Registry 캐시
@@ -695,6 +702,8 @@ class SovereignApp:
         - 감사 로그 기록
         """
         self._audit_event("emergency_shutdown", "System emergency shutdown initiated")
+        # [V66.1] B-3: 종료 전 버퍼 flush
+        self._flush_audit_buffer()
         try:
             if hasattr(self, 'current_project') and self.current_project:
                 if hasattr(self.current_project, 'db') and self.current_project.db:
@@ -2816,6 +2825,10 @@ class SovereignApp:
         return self._feedback_system.classify_rejection_feedback(reason, feedback, blueprint)
 
     def _audit_event(self, event_type, message, data=None):
+        """
+        [V66.1] B-3: 배치 버퍼 방식으로 변경 — 매회 파일 open 대신 버퍼에 append,
+        스테이지/에피소드 완료 시점에 _flush_audit_buffer()로 일괄 기록 (~500ms/세션 절감)
+        """
         event = {
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
             "type": event_type,
@@ -2823,18 +2836,30 @@ class SovereignApp:
             "data": data or {}
         }
         self.runtime_audit.append(event)
-        if not self.current_project:
+        # [V66.1] B-3: 버퍼에 append만 수행 (파일 I/O 지연)
+        self._audit_buffer.append(event)
+
+    def _flush_audit_buffer(self):
+        """
+        [V66.1] B-3: 버퍼에 쌓인 audit 이벤트를 한 번에 파일 기록.
+        스테이지 완료, 에피소드 완료, 프로세스 종료 시 호출.
+        """
+        if not self._audit_buffer or not self.current_project:
             return
         try:
             log_dir = self.current_project.paths.root / "logs"
             log_dir.mkdir(parents=True, exist_ok=True)
             log_path = log_dir / "runtime_audit.jsonl"
             with log_path.open("a", encoding="utf-8") as f:
-                f.write(json.dumps(event, ensure_ascii=False) + "\n")
+                for event in self._audit_buffer:
+                    f.write(json.dumps(event, ensure_ascii=False) + "\n")
+            self._audit_buffer.clear()
         except Exception as e:
             self.ui.log(f"⚠️ [Audit] 로그 기록 실패: {e}")
 
     def _write_audit_summary(self, tag="snapshot"):
+        # [V66.1] B-3: 요약 기록 전 버퍼 flush
+        self._flush_audit_buffer()
         if not self.current_project:
             return
         try:
@@ -3775,15 +3800,18 @@ class SovereignApp:
     def _generate_narrative_summary(self, up_to_ep: int) -> None:
         """
         [V66] 5화 단위 내러티브 요약 생성 및 DB 저장.
+        [V66.1] 발췌 품질 개선: 앞 800자 + 중간 핵심 500자 + 뒤 500자 (~1800자/화)
+                키워드 기반 중간 핵심 추출, LLM 요약 800자로 확대
 
         최근 5화 원고를 LLM(gemini-2.5-flash)으로 요약하여
         'narrative_summary_ep_XXX' anchor에 저장.
         이후 생성 시 장기 기억으로 활용.
         """
         import time as _time
+        import re as _re
 
         start_ep = max(1, up_to_ep - 4)  # [V66] 10→5화 범위
-        self.ui.log(f"   📝 [V66] 내러티브 요약 생성 중 (제{start_ep}~{up_to_ep}화)...")
+        self.ui.log(f"   📝 [V66.1] 내러티브 요약 생성 중 (제{start_ep}~{up_to_ep}화)...")
 
         # 최근 5화 원고 수집
         manuscripts = self.current_project.db.get_recent_manuscripts(
@@ -3793,14 +3821,50 @@ class SovereignApp:
             self.ui.log(f"   ⚠️ 원고 부족 ({len(manuscripts)}화) - 요약 건너뜀")
             return
 
-        # 원고 텍스트 결합 (각 화 앞 500자만 + 뒤 300자)
+        # [V66.1] 원고 텍스트 결합 (앞 800자 + 중간 핵심 500자 + 뒤 500자 ≈ 1800자/화)
+        # 중간 핵심: 사망/습득/부상/배신 등 키워드 주변 250자씩 추출
+        _KEY_EVENT_PATTERN = _re.compile(
+            r'사망|죽|습득|획득|부상|배신|발견|파괴|탈출|각성|잃|빼앗|살해|처단|중상|결별|동맹|합류'
+        )
+
         combined = []
         for ms in manuscripts:
             ep = ms.get("ep_num", "?")
             content = ms.get("content", "")
-            if content:
-                excerpt = content[:500] + "\n...(중략)...\n" + content[-300:] if len(content) > 800 else content
-                combined.append(f"[제{ep}화]\n{excerpt}")
+            if not content:
+                continue
+
+            if len(content) <= 1800:
+                # 짧은 원고는 전문 사용
+                combined.append(f"[제{ep}화]\n{content}")
+                continue
+
+            # 앞 800자
+            head = content[:800]
+
+            # [V66.1] 중간 핵심 500자: 키워드 기반 추출
+            middle_section = ""
+            mid_start = 800  # 앞 800자 이후부터 검색
+            mid_end = max(mid_start, len(content) - 500)  # 뒤 500자 이전까지
+            mid_content = content[mid_start:mid_end]
+
+            match = _KEY_EVENT_PATTERN.search(mid_content)
+            if match:
+                # 키워드 발견: 키워드 중심 앞뒤 250자
+                kw_pos = match.start() + mid_start  # 원문 기준 위치
+                extract_start = max(mid_start, kw_pos - 250)
+                extract_end = min(len(content) - 500, kw_pos + 250)
+                middle_section = content[extract_start:extract_end]
+            else:
+                # 키워드 미발견: 원고 중간 지점 500자
+                mid_point = len(content) // 2
+                middle_section = content[max(0, mid_point - 250):mid_point + 250]
+
+            # 뒤 500자
+            tail = content[-500:]
+
+            excerpt = head + "\n...(중략)...\n" + middle_section + "\n...(중략)...\n" + tail
+            combined.append(f"[제{ep}화]\n{excerpt}")
 
         combined_text = "\n\n---\n\n".join(combined)
 
@@ -3808,16 +3872,22 @@ class SovereignApp:
         try:
             from google.genai import types as _types
 
+            # [V66.1] 요약 800자로 확대, 우선순위 지시 추가
             prompt = (
                 f"다음은 웹소설의 제{start_ep}~{up_to_ep}화 원고 발췌입니다.\n"
-                f"500자 이내로 핵심 내러티브를 요약해주세요.\n\n"
-                f"반드시 포함할 내용:\n"
-                f"1. 주요 사건 (각 화의 핵심 전개)\n"
-                f"2. 캐릭터 변화 (관계 변화, 성장, 사망 등)\n"
-                f"3. 미해결 갈등/복선 (아직 해결되지 않은 것)\n"
-                f"4. 현재 상황 (마지막 화 기준 위치, 상태, 다음 전개 방향)\n\n"
-                f"[원고 발췌]\n{combined_text[:8000]}\n\n"
-                f"요약 (500자 이내, 한국어):"
+                f"800자 이내로 핵심 내러티브를 요약해주세요.\n\n"
+                f"**우선 포함 항목 (절대 누락 금지)**:\n"
+                f"1. 사망/살해: 누가, 어떻게 죽었는지 (사망자 이름 필수 기재)\n"
+                f"2. 아이템 변화: 획득/상실/파괴된 무기/비급/소지품\n"
+                f"3. 관계 변화: 동맹/배신/결별 등 인물 간 관계 전환\n"
+                f"4. 위치 변화: 주인공 및 핵심 인물의 이동/현재 위치\n"
+                f"5. 중요 결정: 주인공의 핵심 선택과 그 결과\n\n"
+                f"추가 포함 내용:\n"
+                f"6. 캐릭터 성장/각성/부상 상태\n"
+                f"7. 미해결 갈등/복선\n"
+                f"8. 현재 상황 (마지막 화 기준 위치, 상태, 다음 전개 방향)\n\n"
+                f"[원고 발췌]\n{combined_text[:12000]}\n\n"
+                f"요약 (800자 이내, 한국어):"
             )
 
             _time.sleep(0.3)
@@ -3826,7 +3896,7 @@ class SovereignApp:
                 contents=prompt,
                 config=_types.GenerateContentConfig(
                     temperature=0.1,
-                    max_output_tokens=1024,
+                    max_output_tokens=2048,  # [V66.1] 1024→2048 (800자 요약 수용)
                 ),
             )
 
@@ -3839,17 +3909,25 @@ class SovereignApp:
                     "ep_count": len(manuscripts),
                 })
                 self.current_project.db.conn.commit()
-                self.ui.log(f"   ✅ [V63.2] 내러티브 요약 저장: {anchor_key} ({len(summary)}자)")
+                self.ui.log(f"   ✅ [V66.1] 내러티브 요약 저장: {anchor_key} ({len(summary)}자)")
             else:
                 self.ui.log(f"   ⚠️ 요약이 너무 짧음 ({len(summary)}자) - 저장 건너뜀")
 
         except Exception as e:
-            self.ui.log(f"   ⚠️ [V63.2] LLM 요약 실패: {str(e)[:60]}")
+            self.ui.log(f"   ⚠️ [V66.1] LLM 요약 실패: {str(e)[:60]}")
+        finally:
+            # [V66.1] B-1: 요약 생성/실패 후 캐시 무효화 (다음 로드 시 재구축)
+            self._narrative_summaries_cache = None
 
     def _load_narrative_summaries(self) -> str:
         """
         [V63.2] 저장된 내러티브 요약들을 로드하여 프롬프트 주입용 문자열 반환.
+        [V66.1] B-1: 캐시 적용 — 첫 호출 시 전체 로드, 이후 캐시 반환 (~2s/ep 절감)
         """
+        # [V66.1] B-1: 캐시 히트 시 즉시 반환
+        if self._narrative_summaries_cache is not None:
+            return self._narrative_summaries_cache
+
         summaries = []
         for ep_marker in range(5, 500, 5):  # [V66] 10→5화 간격
             anchor_key = f"narrative_summary_ep_{ep_marker:03d}"
@@ -3860,8 +3938,13 @@ class SovereignApp:
                 continue  # [V63.3] 빈 구간 건너뛰기 (break→continue, 이후 요약도 로드)
 
         if summaries:
-            return "### 📚 장기 내러티브 요약 (과거 스토리)\n" + "\n\n".join(summaries)
-        return ""
+            result = "### 📚 장기 내러티브 요약 (과거 스토리)\n" + "\n\n".join(summaries)
+        else:
+            result = ""
+
+        # [V66.1] B-1: 캐시 저장
+        self._narrative_summaries_cache = result
+        return result
 
     def _stage_4_v2_chief_writer(self, limit_mode: bool = False) -> None:
         """[V64.P3] Stage 4 V2 Chief Writer -> Stage4Orchestrator 위임"""

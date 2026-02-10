@@ -38,6 +38,9 @@ class Stage4Orchestrator:
         [V66] 직전 10화 원고에서 1-2줄 요약 추출 → mandatory_context 주입.
         기존 3화 lookback을 보완하여 중장기 맥락 제공.
         총 1,500자 이내 truncate.
+
+        [V66.1] B-4: 전문 로드 → SQL SUBSTR 발췌 조회로 최적화 (~100KB I/O 제거/ep).
+        첫 200자만 사용하므로 DB에서 200자만 가져옴.
         """
         import re
         if next_ep <= 3:
@@ -46,8 +49,9 @@ class Stage4Orchestrator:
             # 직전 10화 (기존 3화 제외 → ep-10 ~ ep-4 범위)
             start_ep = max(1, next_ep - 10)
             end_ep = max(1, next_ep - 3)  # 최근 3화는 기존 lookback이 커버
-            manuscripts = self.app.current_project.db.get_recent_manuscripts(
-                before_ep=next_ep, limit=10
+            # [V66.1] B-4: 발췌 전용 쿼리 (첫 200자만 DB에서 조회)
+            manuscripts = self.app.current_project.db.get_recent_manuscript_excerpts(
+                before_ep=next_ep, limit=10, max_chars=200
             )
             if not manuscripts or not isinstance(manuscripts, list):
                 return ""
@@ -60,7 +64,7 @@ class Stage4Orchestrator:
                 content = ms.get("content", "")
                 if not content:
                     continue
-                # 첫 문단 또는 첫 100자에서 핵심 요약 추출
+                # 첫 문단 또는 첫 150자에서 핵심 요약 추출
                 first_para = content.split("\n\n")[0] if "\n\n" in content else content[:150]
                 # 줄바꿈 정리
                 first_para = re.sub(r'\s+', ' ', first_para).strip()
@@ -187,6 +191,10 @@ class Stage4Orchestrator:
             loop_guard = 0
             max_loops = min((target_ep or total_planned_ep) - self.app.current_project.get_latest_episode_number() + 5, 100)
 
+            # [V66.1] B-2: ReferenceAnchor 루프 밖 1회 생성 (내부 캐시로 DB 중복 조회 방지)
+            from modules.core.reference_anchor import ReferenceAnchor
+            _anchor_sys = ReferenceAnchor(self.app.current_project)
+
             # 5. 원고 생산 메인 루프
             while True:
                 loop_guard += 1
@@ -247,23 +255,6 @@ class Stage4Orchestrator:
                 # ===== [V60.80+] 기존 Writer 핵심 기능 추출 =====
                 reference_anchor_prompt = ""
                 mandatory_context = ""
-                # [V63.2] 장기 내러티브 요약 주입
-                try:
-                    _narrative_summaries = self.app._load_narrative_summaries()
-                    if _narrative_summaries:
-                        mandatory_context = _narrative_summaries + "\n\n"
-                except Exception as e:  # [V64.P4] IMPORTANT: narrative summary load failure
-                    self.app.ui.log(f"   ⚠️ [V64.P4] 내러티브 요약 로드 실패 (비차단): {str(e)[:60]}")
-                # [V65] 호흡 분석기 — 직전 원고 분석 후 가이드 주입
-                _pacing_analyzer = getattr(self.app, 'pacing_analyzer', None)
-                if _pacing_analyzer and prev_text and len(prev_text) >= 100:
-                    try:
-                        _pacing_result = _pacing_analyzer.analyze(prev_text)
-                        _pacing_prompt = _pacing_analyzer.generate_pacing_prompt(_pacing_result)
-                        if _pacing_prompt:
-                            mandatory_context = f"{mandatory_context}\n\n{_pacing_prompt}"
-                    except Exception as _pace_err:
-                        self.app.ui.log(f"   ⚠️ [V65] 호흡 분석 실패 (비차단): {str(_pace_err)[:60]}")
 
                 anti_trope_prompt = ""
                 justification_prompt = ""
@@ -282,19 +273,18 @@ class Stage4Orchestrator:
                 if 'writer' in self.app.agents:
                     writer_agent = self.app.agents['writer']
                     try:
-                        from modules.core.reference_anchor import ReferenceAnchor
-                        anchor_sys = ReferenceAnchor(self.app.current_project)
-                        relevant_anchors = anchor_sys.get_relevant_anchors(
+                        # [V66.1] B-2: 루프 밖에서 생성된 _anchor_sys 재사용 (내부 캐시로 DB 1회 로드)
+                        relevant_anchors = _anchor_sys.get_relevant_anchors(
                             current_ep_num=next_ep,
                             arc_context=arc_tactical or "",
                             n_anchors=5
                         )
-                        critical_anchors = anchor_sys.get_critical_anchors(
+                        critical_anchors = _anchor_sys.get_critical_anchors(
                             current_ep_num=next_ep,
                             anchor_types=['item', 'injury', 'power', 'location']
                         )
                         if relevant_anchors or critical_anchors:
-                            reference_anchor_prompt = anchor_sys.generate_reference_prompt(
+                            reference_anchor_prompt = _anchor_sys.generate_reference_prompt(
                                 relevant_anchors=relevant_anchors,
                                 critical_anchors=critical_anchors
                             )
@@ -306,43 +296,88 @@ class Stage4Orchestrator:
                     except Exception as e:
                         self.app.ui.log(f"   ⚠️ Mandatory Context 실패 (비차단): {e}")
 
-                    # [V63] Arc 제약 요약을 mandatory_context에 주입
+                    # [V66.1] mandatory_context를 list로 조립 후 마지막에 join (O(n^2) → O(n) GC 경감)
+                    _mc_parts = [mandatory_context] if mandatory_context else []  # [V66.1] C-1
+
+                # [V63] Arc 제약 요약을 mandatory_context에 주입
                     _arc_cs = arc_data.get("constraint_summary", "") if arc_data else ""
                     if _arc_cs:
-                        mandatory_context = f"{mandatory_context}\n\n[Arc 제약 - MUST NOT DO]\n{_arc_cs}"
+                        _mc_parts.append(f"[Arc 제약 - MUST NOT DO]\n{_arc_cs}")
 
-                    # [V66] 완결 플롯 주입 (재발생 방지)
-                    if hasattr(self.app, 'state_tracker'):
-                        _resolved = self.app.state_tracker.get_resolved_plots_summary()
-                        if _resolved:
-                            mandatory_context = f"{mandatory_context}\n\n{_resolved}"
-                        # [V66] 파괴된 조직/장소 주입
+                    # [V66.1] F-6: mandatory_context 우선순위 재배치 — 중요도 순 (25K truncation 시 상위가 생존)
+                    # Priority 1: 파괴된 조직/장소 (BLOCKING level)
+                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
                         _destroyed = self.app.state_tracker.get_entity_destruction_summary()
                         if _destroyed:
-                            mandatory_context = f"{mandatory_context}\n\n{_destroyed}"
-                        # [V66] NPC 성격/동기 주입
+                            _mc_parts.append(_destroyed)
+
+                    # Priority 2: 완결 플롯 (재발생 방지)
+                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                        _resolved = self.app.state_tracker.get_resolved_plots_summary()
+                        if _resolved:
+                            _mc_parts.append(_resolved)
+
+                    # Priority 3: NPC 성격/동기 (성격 이탈 방지)
+                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
                         _personality = self.app.state_tracker.get_npc_personality_summary()
                         if _personality:
-                            mandatory_context = f"{mandatory_context}\n\n{_personality}"
-                        # [V66] NPC-NPC 관계 주입
+                            _mc_parts.append(_personality)
+
+                    # Priority 4: NPC-NPC 관계 (관계 모순 방지)
+                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
                         _npc_rel = self.app.state_tracker.get_npc_npc_relationship_summary()
                         if _npc_rel:
-                            mandatory_context = f"{mandatory_context}\n\n{_npc_rel}"
-                        # [V66] 아이템 상태 주입
+                            _mc_parts.append(_npc_rel)
+
+                    # [V66.1] Priority 5: NPC 신체 변화 (신체 일관성 — F-8)
+                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                        _perm_inj = self.app.state_tracker.get_permanent_injury_summary()
+                        if _perm_inj:
+                            _mc_parts.append(_perm_inj)
+
+                    # [V66.1] Priority 6: 시간선 요약 (시간 모순 방지 — F-1)
+                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                        _timeline = self.app.state_tracker.get_time_timeline_summary()
+                        if _timeline:
+                            _mc_parts.append(_timeline)
+
+                    # [V66.1] Priority 7: 동행자 현황 (동행 모순 방지)
+                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                        _companions = self.app.state_tracker.get_companion_summary()
+                        if _companions:
+                            _mc_parts.append(_companions)
+
+                    # [V66.1] Priority 8: 미이행 약속/맹세 (서사 약속 추적)
+                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                        _commitments = self.app.state_tracker.get_commitment_summary()
+                        if _commitments:
+                            _mc_parts.append(_commitments)
+
+                    # [V66.1] Priority 9: 주인공 감정 상태 (감정 일관성)
+                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                        _emotion = self.app.state_tracker.get_protagonist_emotion_summary()
+                        if _emotion:
+                            _mc_parts.append(_emotion)
+
+                    # Priority 10: 아이템 상태 (아이템 모순 방지)
+                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
                         _item_state = self.app.state_tracker.get_item_state_summary()
                         if _item_state:
-                            mandatory_context = f"{mandatory_context}\n\n{_item_state}"
-                        # [V66] 플롯 서스펜션 주입
+                            _mc_parts.append(_item_state)
+
+                    # Priority 11: 플롯 서스펜션 (플롯 관리)
+                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
                         _plot_suspension = self.app.state_tracker.get_plot_suspension_summary(arc_data.get('arc_no', 0))
                         if _plot_suspension:
-                            mandatory_context = f"{mandatory_context}\n\n{_plot_suspension}"
+                            _mc_parts.append(_plot_suspension)
 
-                        # [V66] NPC 대화 스타일 주입
+                    # Priority 12: NPC 대화 스타일 (캐릭터 보이스)
+                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
                         _dialogue_style = self.app.state_tracker.get_npc_dialogue_style_summary()
                         if _dialogue_style:
-                            mandatory_context = f"{mandatory_context}\n\n{_dialogue_style}"
+                            _mc_parts.append(_dialogue_style)
 
-                    # [V66] 멀티-Arc 요약 주입 (직전 3개 Arc)
+                    # Priority 13: 멀티-Arc 요약 (직전 3개 Arc)
                     try:
                         arc_summaries = []
                         current_arc_no = arc_data.get('arc_no', 1) if arc_data else 1
@@ -353,17 +388,17 @@ class Stage4Orchestrator:
                         if arc_summaries:
                             _arc_summary_text = self.app.state_tracker.format_arc_summary_for_prompt(arc_summaries)
                             if _arc_summary_text:
-                                mandatory_context = f"{mandatory_context}\n\n{_arc_summary_text}"
+                                _mc_parts.append(_arc_summary_text)
                     except Exception as e:
                         self.app.ui.log(f"   \u26a0\ufe0f [V66] Arc 요약 주입 실패 (비차단): {e}")
 
-                    # [V63.1] 금융 상태 레지스트리 주입 (투자물)
+                    # Priority 14: 금융 상태 레지스트리 (투자물 전용)
                     if _s4_genre_type == 'investment' and hasattr(self.app, 'state_tracker'):
                         _fin_summary = self.app.state_tracker.get_financial_state_summary()
                         if _fin_summary:
-                            mandatory_context = f"{mandatory_context}\n\n{_fin_summary}"
+                            _mc_parts.append(_fin_summary)
 
-                    # [V63.3] ChromaDB 멀티쿼리 시맨틱 검색
+                    # Priority 15: ChromaDB 멀티쿼리 시맨틱 검색
                     try:
                         if hasattr(self.app, 'memory') and self.app.memory and prev_ending:
                             _mq_queries = [prev_ending]
@@ -394,28 +429,28 @@ class Stage4Orchestrator:
                                 max_results=5
                             )
                             if _vector_memory:
-                                mandatory_context = f"{mandatory_context}\n\n[과거 유사 맥락 (벡터 검색)]\n{_vector_memory}"
+                                _mc_parts.append(f"[과거 유사 맥락 (벡터 검색)]\n{_vector_memory}")
                     except Exception as e:
                         self.app.ui.log(f"   ⚠️ ChromaDB 시맨틱 검색 실패 (비차단): {e}")
 
-                    # [V66] 확장 Lookback (직전 4~10화 요약)
+                    # Priority 16: 확장 Lookback (직전 4~10화 요약)
                     try:
                         _ext_lookback = self._build_extended_lookback_digest(next_ep)
                         if _ext_lookback:
-                            mandatory_context = f"{mandatory_context}\n\n{_ext_lookback}"
+                            _mc_parts.append(_ext_lookback)
                     except Exception as e:
                         self.app.ui.log(f"   ⚠️ 확장 Lookback 실패 (비차단): {e}")
 
-                    # [V66] ForeshadowTracker 프롬프트 주입 (루프 밖 1회만)
+                    # Priority 17: ForeshadowTracker 프롬프트 주입
                     try:
                         if V50_MODULES_AVAILABLE and self.app.foreshadow_tracker:
                             _foreshadow_prompt = self.app.foreshadow_tracker.generate_writer_prompt(next_ep)
                             if _foreshadow_prompt:
-                                mandatory_context = f"{mandatory_context}\n\n{_foreshadow_prompt}"
+                                _mc_parts.append(_foreshadow_prompt)
                     except Exception as e:
                         self.app.ui.log(f"   ⚠️ ForeshadowTracker 프롬프트 실패 (비차단): {e}")
 
-                    # [V66] SemanticPlotGuard 경고 주입
+                    # Priority 18: SemanticPlotGuard 경고 주입
                     if getattr(self.app, 'semantic_plot_guard', None):
                         try:
                             tactical_text = arc_data.get('tactical_doc', '') if arc_data else ''
@@ -425,9 +460,31 @@ class Stage4Orchestrator:
                             if _spg_warnings:
                                 _spg_text = self.app.semantic_plot_guard.format_warnings(_spg_warnings)
                                 if _spg_text:
-                                    mandatory_context = f"{mandatory_context}\n\n{_spg_text}"
+                                    _mc_parts.append(_spg_text)
                         except Exception:
                             pass
+
+                    # Priority 19: 호흡 분석기 (코스메틱 — truncation 우선 대상)
+                    _pacing_analyzer = getattr(self.app, 'pacing_analyzer', None)
+                    if _pacing_analyzer and prev_text and len(prev_text) >= 100:
+                        try:
+                            _pacing_result = _pacing_analyzer.analyze(prev_text)
+                            _pacing_prompt = _pacing_analyzer.generate_pacing_prompt(_pacing_result)
+                            if _pacing_prompt:
+                                _mc_parts.append(_pacing_prompt)
+                        except Exception as _pace_err:
+                            self.app.ui.log(f"   ⚠️ [V65] 호흡 분석 실패 (비차단): {str(_pace_err)[:60]}")
+
+                    # Priority 20: 장기 내러티브 요약 (Arc 요약 등으로 이미 커버 — 최하위)
+                    try:
+                        _narrative_summaries = self.app._load_narrative_summaries()
+                        if _narrative_summaries:
+                            _mc_parts.append(_narrative_summaries)
+                    except Exception as e:  # [V64.P4] IMPORTANT: narrative summary load failure
+                        self.app.ui.log(f"   ⚠️ [V64.P4] 내러티브 요약 로드 실패 (비차단): {str(e)[:60]}")
+
+                    # [V66.1] C-1: list → join (O(n) 단일 할당)
+                    mandatory_context = "\n\n".join(_mc_parts)
 
                     try:
                         anti_trope_prompt = writer_agent._build_anti_trope_instructions(genre_name)
@@ -490,10 +547,31 @@ class Stage4Orchestrator:
                 director_feedback = ""
                 previous_attempt = {}
 
-                # [V66] mandatory_context 크기 상한 (25,000자)
+                # [V66.1] mandatory_context 우선순위 기반 스마트 트렁케이션 (25,000자 상한)
                 if len(mandatory_context) > 25000:
-                    mandatory_context = mandatory_context[:24950] + "\n\n...(컨텍스트 크기 초과로 일부 생략)"
-                    self.app.ui.log(f"   ⚠️ [V66] mandatory_context {len(mandatory_context)}자 → 25,000자로 truncate")
+                    _original_len = len(mandatory_context)
+                    # 섹션 분리: "\n[" 또는 "\n\n[" 마커 기준으로 분할
+                    import re as _re_trunc
+                    _section_pattern = _re_trunc.compile(r'\n(?=\[)')
+                    _sections = _section_pattern.split(mandatory_context)
+                    # 빈 섹션 제거
+                    _sections = [s for s in _sections if s.strip()]
+                    if len(_sections) > 1:
+                        # 뒤에서부터 (낮은 우선순위) 하나씩 제거
+                        _removed_count = 0
+                        _removed_chars = 0
+                        while len("\n".join(_sections)) > 25000 and len(_sections) > 1:
+                            _removed_section = _sections.pop()
+                            _removed_count += 1
+                            _removed_chars += len(_removed_section)
+                        mandatory_context = "\n".join(_sections)
+                        if _removed_count > 0:
+                            print(f"  [V66.1] mandatory_context {_removed_count}개 섹션 제거 ({_removed_chars}자)")
+                            self.app.ui.log(f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → {len(mandatory_context)}자 (섹션 {_removed_count}개 제거)")
+                    else:
+                        # 섹션 분리 불가 시 기존 방식 폴백
+                        mandatory_context = mandatory_context[:24950] + "\n\n...(컨텍스트 크기 초과로 일부 생략)"
+                        self.app.ui.log(f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → 25,000자로 truncate (폴백)")
 
                 # [V61.6] 전체 면담 루프를 스피너로 감싸기
                 with StageSpinner(4, f"제{next_ep}화 · 앙상블 준비") as stage4_spinner:
@@ -595,6 +673,19 @@ class Stage4Orchestrator:
                             'prev_episode_events': [],
                             'ep_num': next_ep,
                         }
+                        # [V66.1] 시간선 경고를 검증 컨텍스트에 주입
+                        _cv_context["time_warnings"] = getattr(self, '_time_consistency_warnings', [])
+                        # [V66.1] BlockingValidator/ContinuityValidator에 추적 데이터 전달
+                        if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                            _cv_context["item_states"] = {
+                                name: info.get("condition", "정상")
+                                for name, info in self.app.state_tracker.item_state_registry.items()
+                            } if hasattr(self.app.state_tracker, 'item_state_registry') else {}
+                            _cv_context["npc_personalities"] = {
+                                name: {"traits": info.get("personality_traits", ""), "motivation": info.get("primary_motivation", "")}
+                                for name, info in self.app.state_tracker.npc_registry.items()
+                                if info.get("personality_traits")
+                            } if hasattr(self.app.state_tracker, 'npc_registry') else {}
                         for ci, cand in enumerate(candidates):
                             _cv_ms = cand.get('manuscript', '')
                             if _cv_ms and ci < len(validation_results):
@@ -675,6 +766,20 @@ class Stage4Orchestrator:
                                         self.app.ui.log(f"   ⚠️ [V66] 파괴 엔티티 경고: {_dw.get('message', '')}")
                         except Exception:
                             pass
+
+                        # [V66.1] F-1: 시간선 일관성 체크 → 검증 파이프라인에 경고 전달
+                        if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                            try:
+                                _time_warnings = self.app.state_tracker.check_time_consistency(final_manuscript, self.app.state_tracker.in_world_timeline)
+                                if _time_warnings:
+                                    for tw in _time_warnings:
+                                        self.app.ui.log(f"   ⏰ [V66.1] 시간선 경고: {tw}")
+                                    # [V66.1] 검증 파이프라인용 경고 저장
+                                    if not hasattr(self, '_time_consistency_warnings'):
+                                        self._time_consistency_warnings = []
+                                    self._time_consistency_warnings.extend(_time_warnings)
+                            except Exception:
+                                pass
 
                         self.app.ui.log(f"   ✅ {interview_round + 1}차 면담 PASS!")
                         break
@@ -1034,6 +1139,9 @@ class Stage4Orchestrator:
 
                     self.app.ui.log(f"\n✅ 제{next_ep}화 '{final_title}' 생산 완료! ({len(final_manuscript)}자)")
 
+                    # [V66.1] B-3: 에피소드 완료 시 audit 버퍼 flush
+                    self.app._flush_audit_buffer()
+
                     # [V65] PerfTimer: 에피소드 완료 시 요약 로그
                     try:
                         self.app.perf_timer.log_summary()
@@ -1059,9 +1167,11 @@ class Stage4Orchestrator:
 
         except KeyboardInterrupt:
             self.app.ui.log("\n⚠️ 사용자 중단 요청. 저장 후 종료합니다.")
+            self.app._flush_audit_buffer()  # [V66.1] B-3
             self.app._safe_commit()
         except Exception as e:
             self.app.ui.log(f"\n🚨 Stage 4 V2 오류: {e}")
             import traceback
             traceback.print_exc()
+            self.app._flush_audit_buffer()  # [V66.1] B-3
             self.app._safe_commit()

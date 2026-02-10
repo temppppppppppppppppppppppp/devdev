@@ -26,16 +26,23 @@ class BlockingValidator:
     최소한의 항목만 포함하여 통과율 유지
     """
 
-    def __init__(self, context=None, enable_justification_checks=False):
+    def __init__(self, context=None, enable_justification_checks=True):
         """
         Args:
             context: ProjectContext 객체 (정보 일관성 체크용)
-            enable_justification_checks: Phase 4 정당화 체크 활성화 (기본값: False)
+            enable_justification_checks: [V66.1] Phase 4 정당화 체크 활성화 (기본값: True)
                 - True 시 물리적 능력, 권위 행사 등 제약 위반을 감지하고 정당화 패턴 제안
                 - 서사 관성 극복을 위한 옵션 (통과율 약간 감소 가능)
         """
         self.context = context
         self.enable_justification_checks = enable_justification_checks
+        # [V66.1] 비활성화 시 경고 로그
+        if not enable_justification_checks:
+            import logging
+            logging.getLogger(__name__).warning(
+                "[V66.1] BlockingValidator: justification checks disabled - "
+                "physical capability and authority checks will be skipped"
+            )
 
     def validate(self, manuscript: str, validation_context: dict) -> dict:
         """
@@ -91,35 +98,40 @@ class BlockingValidator:
             if not scope_check['passed']:
                 failures.append(scope_check)
 
-        # [Phase 2.1] 6. 관계 일관성 체크 (관계 역행 방지)
+        # [V66.1] 6. 파괴/분실/소모된 아이템 사용
+        damaged_item_check = self._check_damaged_item_usage(manuscript, validation_context)
+        if not damaged_item_check['passed']:
+            failures.append(damaged_item_check)
+
+        # [Phase 2.1] 7. 관계 일관성 체크 (관계 역행 방지)
         relationship_check = self._check_relationship_consistency(manuscript, validation_context)
         if not relationship_check['passed']:
             failures.append(relationship_check)
 
-        # [Phase 2.2] 7. 정보 일관성 체크 (NPC가 알아야 할 것을 모르는가?)
+        # [Phase 2.2] 8. 정보 일관성 체크 (NPC가 알아야 할 것을 모르는가?)
         information_check = self._check_information_consistency(manuscript, validation_context)
         if not information_check['passed']:
             failures.append(information_check)
 
-        # [Phase 4.2] 8. 물리적 능력 체크 (옵션, 정당화 제안 포함)
+        # [Phase 4.2] 9. 물리적 능력 체크 (옵션, 정당화 제안 포함)
         if self.enable_justification_checks:
             physical_check = self._check_physical_capability(manuscript, validation_context)
             if not physical_check['passed']:
                 failures.append(physical_check)
 
-        # [Phase 4.2] 9. 권위 행사 체크 (옵션, 정당화 제안 포함)
+        # [Phase 4.2] 10. 권위 행사 체크 (옵션, 정당화 제안 포함)
         if self.enable_justification_checks:
             authority_check = self._check_authority_exercise(manuscript, validation_context)
             if not authority_check['passed']:
                 failures.append(authority_check)
 
-        # [V59] 10. 씬별 완성도 체크 (MANUSCRIPT 모드만)
+        # [V59] 11. 씬별 완성도 체크 (MANUSCRIPT 모드만)
         if validation_context.get('mode') == 'MANUSCRIPT':
             scene_completeness_check = self._check_scene_completeness(manuscript, validation_context)
             if not scene_completeness_check['passed']:
                 failures.append(scene_completeness_check)
 
-        # [V59] 11. 클리프행어 엔딩 체크 (MANUSCRIPT 모드만)
+        # [V59] 12. 클리프행어 엔딩 체크 (MANUSCRIPT 모드만)
         if validation_context.get('mode') == 'MANUSCRIPT':
             cliffhanger_check = self._check_cliffhanger_ending(manuscript, validation_context)
             if not cliffhanger_check['passed']:
@@ -356,6 +368,151 @@ class BlockingValidator:
                         }
 
         return {"check": "unowned_item_usage", "passed": True}
+
+    def _check_damaged_item_usage(self, manuscript: str, context: dict) -> dict:
+        """
+        [V66.1] 파괴/분실/소모된 아이템 사용 체크
+
+        item_state_registry에서 아이템 상태(파괴/분실/소모)를 읽고,
+        해당 아이템이 원고에서 사용 패턴으로 등장하면 REJECT.
+        """
+        item_states = context.get('item_states', {})
+
+        if not item_states or not isinstance(item_states, dict):
+            return {"check": "damaged_item_usage", "passed": True}
+
+        # 조건 → REJECT 사유 매핑
+        condition_reason_map = {
+            "파괴": "파괴된 아이템 사용",
+            "분실": "분실된 아이템 사용",
+            "소모": "소모된 아이템 사용",
+        }
+
+        for item_name, condition in item_states.items():
+            if not isinstance(condition, str):
+                continue
+            # "정상" 상태는 스킵
+            if condition == "정상":
+                continue
+
+            # 매핑에 없는 상태도 스킵 (알 수 없는 상태)
+            reason_template = condition_reason_map.get(condition)
+            if not reason_template:
+                continue
+
+            if not item_name or len(item_name) < 2:
+                continue
+
+            # word boundary 체크로 부분 매칭 방지 (unowned_item_usage와 동일 방식)
+            matches = []
+            start = 0
+            while True:
+                idx = manuscript.find(item_name, start)
+                if idx == -1:
+                    break
+
+                prev_char = manuscript[idx - 1] if idx > 0 else ''
+                next_char = manuscript[idx + len(item_name)] if idx + len(item_name) < len(manuscript) else ''
+
+                is_prev_hangul = prev_char and '\uAC00' <= prev_char <= '\uD7A3'
+                is_next_hangul = next_char and '\uAC00' <= next_char <= '\uD7A3'
+
+                if not is_prev_hangul and not is_next_hangul:
+                    matches.append(idx)
+                elif not is_prev_hangul or not is_next_hangul:
+                    matches.append(idx)
+
+                start = idx + 1
+
+            if not matches:
+                continue
+
+            # 사용 패턴 체크 (unowned_item_usage와 동일 패턴)
+            usage_patterns = [
+                f"{item_name}을 휘둘",
+                f"{item_name}를 휘둘",
+                f"{item_name}으로",
+                f"{item_name}를 사용",
+                f"{item_name}을 사용",
+                f"{item_name}를 꺼내",
+                f"{item_name}을 꺼내",
+                f"{item_name}를 움켜",
+                f"{item_name}을 움켜",
+                f"{item_name}를 뽑",
+                f"{item_name}을 뽑",
+                f"{item_name}를 들",
+                f"{item_name}을 들",
+                f"{item_name}를 잡",
+                f"{item_name}을 잡",
+                f"{item_name}를 착용",
+                f"{item_name}을 착용",
+                f"{item_name}를 먹",
+                f"{item_name}을 먹",
+            ]
+
+            # 부정문 패턴 (오탐 방지)
+            negation_patterns = [
+                f"{item_name}을 사용하지",
+                f"{item_name}를 사용하지",
+                f"{item_name}을 꺼내지",
+                f"{item_name}를 꺼내지",
+                f"{item_name}을 보았다",
+                f"{item_name}를 보았다",
+                f"{item_name}을 보며",
+                f"{item_name}를 보며",
+                f"{item_name}을 회상",
+                f"{item_name}를 회상",
+                f"{item_name}에 대해",
+                f"{item_name}이 부서진",
+                f"{item_name}가 부서진",
+                f"{item_name}을 잃어",
+                f"{item_name}를 잃어",
+            ]
+
+            for pattern in usage_patterns:
+                if pattern in manuscript:
+                    location = manuscript.find(pattern)
+
+                    # 문장 경계 찾기
+                    def _find_sentence_start(text, pos):
+                        candidates = []
+                        for delim in '.!?\n':
+                            idx = text.rfind(delim, 0, pos)
+                            if idx != -1:
+                                candidates.append(idx + 1)
+                        return max(candidates) if candidates else 0
+
+                    def _find_sentence_end(text, pos):
+                        candidates = []
+                        for delim in '.!?\n':
+                            idx = text.find(delim, pos)
+                            if idx != -1:
+                                candidates.append(idx)
+                        return min(candidates) if candidates else len(text)
+
+                    sentence_start = _find_sentence_start(manuscript, location)
+                    sentence_end = _find_sentence_end(manuscript, location + len(pattern))
+                    sentence_context = manuscript[sentence_start:sentence_end + 1]
+
+                    # 부정문이면 pass
+                    is_negation = any(neg in sentence_context for neg in negation_patterns)
+                    negation_keywords = ["않았", "못했", "없었", "아니었", "안 했", "못 했", "아직"]
+                    has_direct_negation = any(nk in sentence_context for nk in negation_keywords)
+                    if is_negation or has_direct_negation:
+                        continue
+
+                    return {
+                        "check": "damaged_item_usage",
+                        "passed": False,
+                        "reason": f"{reason_template}: '{item_name}' (상태: {condition})",
+                        "severity": "CRITICAL",
+                        "item_name": item_name,
+                        "item_condition": condition,
+                        "location": location,
+                        "context": sentence_context,
+                    }
+
+        return {"check": "damaged_item_usage", "passed": True}
 
     def _check_destroyed_location_visit(self, manuscript: str, context: dict) -> dict:
         """파괴된 장소 방문 체크"""
@@ -779,8 +936,8 @@ class BlockingValidator:
                 if not name or name not in manuscript:
                     continue  # 등장하지 않으면 스킵
 
-                # 최근 3개 주요 사건만 체크 (성능 고려)
-                for event in major_events[-3:]:
+                # [V66.1] 전체 주요 사건 체크 (이전: [-3:] 제한 → 100화+ 정보 누락 방지)
+                for event in major_events:
                     knowledge_check = diffusion.should_npc_know(npc, event, current_ep)
 
                     if knowledge_check['should_know']:

@@ -478,15 +478,16 @@ class TestDirectorAuditor:
         assert result["violations"] == []
 
     def test_assess_character_logic_no_profiles(self, director):
-        """37. assess_character_logic returns PASS with empty profiles."""
-        result = director._auditor.assess_character_logic(
-            ep_num=1,
-            manuscript="원고 내용",
-            npc_profiles={},
-            character_traits={}
-        )
-        assert result["decision"] == "PASS"
-        assert result["score"] == 100
+        """37. [V66.1] assess_character_logic proceeds even with empty profiles (no auto-PASS)."""
+        # [V66.1] F-5: 빈 프로필이어도 LLM 검증 진행 (auto-PASS 제거)
+        with patch.object(director, 'ask', return_value='{"decision":"PASS","score":90,"violations":[],"severity":"NONE","feedback":""}'):
+            result = director._auditor.assess_character_logic(
+                ep_num=1,
+                manuscript="원고 내용",
+                npc_profiles={},
+                character_traits={}
+            )
+            assert result["decision"] == "PASS"
 
     def test_audit_with_v0128_delegation(self, director):
         """38. _audit_with_v0128 sets mode and delegates to audit_manuscript_v0128."""

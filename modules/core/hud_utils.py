@@ -165,7 +165,7 @@ def _build_writer_protagonist(lines: list, state_dict: dict, header: str):
 
 
 def _build_director_npcs(lines: list, npc_registry: dict):
-    """Director variant: alive(8명) role/location, dead(5명) death_arc"""
+    """Director variant: alive(8명) role/location, dead(전체) death_arc"""
     alive_npcs = [
         name for name, data in npc_registry.items()
         if isinstance(data, dict) and data.get('status') != 'dead'
@@ -184,8 +184,9 @@ def _build_director_npcs(lines: list, npc_registry: dict):
             lines.append(f"  - {name} ({role}) @ {location}")
 
     if dead_npcs:
+        # [V66.1] 상한 제거 - 전체 사망 NPC 표시 (100화+ 부활 방지)
         lines.append(f"\n[사망 NPC ({len(dead_npcs)}명) - 등장 금지!]")
-        for name in dead_npcs[:5]:
+        for name in dead_npcs:
             npc_data = npc_registry.get(name, {})
             death_arc = npc_data.get('death_arc', '?')
             lines.append(f"  - {name}: Arc {death_arc}에서 사망")
@@ -225,7 +226,8 @@ def _build_writer_npcs(lines: list, npc_registry: dict):
     ]
     if dead_npcs:
         lines.append("")
-        lines.append(f"\u26a0\ufe0f [사망 NPC - 등장 금지]: {', '.join(dead_npcs[:5])}")
+        # [V66.1] 상한 제거 - 전체 사망 NPC 표시 (100화+ 부활 방지)
+        lines.append(f"\u26a0\ufe0f [사망 NPC ({len(dead_npcs)}명) - 등장 금지]: {', '.join(dead_npcs)}")
 
 
 # ═══════════════════════════════════════════════════════════════════════

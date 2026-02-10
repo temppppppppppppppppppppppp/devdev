@@ -804,6 +804,12 @@ class PromptBuilder:
             # 캐시 저장
             self._item_timeline_cache[up_to_ep] = list(timeline_lines)
 
+            # [V66.1] C-3: LRU 캐시 크기 제한 (최대 3개 — 장기 세션 메모리 안정화)
+            _MAX_TIMELINE_CACHE = 3
+            while len(self._item_timeline_cache) > _MAX_TIMELINE_CACHE:
+                oldest_ep = min(self._item_timeline_cache.keys())
+                del self._item_timeline_cache[oldest_ep]
+
             if timeline_lines:
                 return "\n".join(timeline_lines)
             else:

@@ -2,14 +2,16 @@
 [V49.3] State Tracker Agent - 상태 추적 및 DAG 타임라인 검증
 [V60.95] PresetRegistry 연동 - 동적 필드 기반 상태 추적
 [V64.P3] Facade 패턴 리팩토링 - NPC/Financial/Plots 서브모듈 분리
+[V66.1] F-1 시간선추적 + F-3 regex폴백 + F-8 영구부상 + F-10 사망취소
+[V66.1] 동행자 추적 + 약속/맹세 추적 + 주인공 감정 상태 추적
 
 Arc 내 각 회차의 상태를 자동 추적하고
 DAG(Directed Acyclic Graph) 형태로 타임라인을 구성하여 검증합니다.
 
 서브모듈:
-  - state_tracker_npc.py      → NPC 레지스트리, 사망/무공/관계/부상/이동 추적
+  - state_tracker_npc.py      → NPC 레지스트리, 사망/무공/관계/부상/이동/영구부상/동행자/주인공감정 추적
   - state_tracker_financial.py → 금융 상태 추적 (투자물)
-  - state_tracker_plots.py     → 완결된 플롯 + 엔티티 명칭 일관성
+  - state_tracker_plots.py     → 완결된 플롯 + 엔티티 명칭 일관성 + 시간선 추적 + 약속/맹세 추적
 """
 
 import re
@@ -142,6 +144,18 @@ class StateTracker:
         self.active_plots: Dict = {}  # plot_name → {status, first_arc, last_mention_arc}
         # [V66] NPC 대화 스타일 레지스트리
         self.npc_dialogue_profiles: Dict = {}  # npc_name → {speech_level, catchphrase, emotion_baseline}
+
+        # [V66.1] F-1: 작중 시간선 추적 (시간 모순 방지)
+        self.in_world_timeline: list = []  # [{arc_no, episode, type, description}]
+
+        # [V66.1] 동행자 추적 (합류/이탈)
+        self.current_companions: list = []  # [{name, joined_arc, joined_episode, reason}]
+
+        # [V66.1] 약속/맹세 추적
+        self.pending_commitments: list = []  # [{arc_no, episode, parties, description, deadline_hint, status}]
+
+        # [V66.1] 주인공 감정 상태
+        self.protagonist_emotion: dict = {"emotion": "평온", "trigger": "", "arc_no": 0}
 
         # [V63.1] 금융 상태 추적 (투자물)
         self.financial_number_registry: Dict[int, Dict[str, Any]] = {}
@@ -997,6 +1011,86 @@ class StateTracker:
         return self._npc.get_npc_dialogue_style_summary()
 
     # ═══════════════════════════════════════════════════════════════
+    # [V66.1] F-1: 시간선 추적 위임 (Plots 서브모듈)
+    # ═══════════════════════════════════════════════════════════════
+
+    def register_time_marker(self, arc_no: int, episode: int,
+                             marker_type: str, description: str):
+        return self._plots.register_time_marker(arc_no, episode, marker_type, description)
+
+    def extract_time_markers_from_arc(self, arc_data: dict) -> List[Dict]:
+        return self._plots.extract_time_markers_from_arc(arc_data)
+
+    def get_time_timeline_summary(self) -> str:
+        return self._plots.get_time_timeline_summary()
+
+    def check_time_consistency(self, manuscript: str,
+                               current_timeline: list = None) -> List[Dict]:
+        return self._plots.check_time_consistency(manuscript, current_timeline)
+
+    # ═══════════════════════════════════════════════════════════════
+    # [V66.1] F-8: NPC 영구 부상 위임 (NPC 서브모듈)
+    # ═══════════════════════════════════════════════════════════════
+
+    def register_permanent_injury(self, name: str, injury_type: str,
+                                  description: str, arc_no: int):
+        return self._npc.register_permanent_injury(name, injury_type, description, arc_no)
+
+    def extract_permanent_injuries_from_arc(self, arc_data: dict) -> List[Dict]:
+        return self._npc.extract_permanent_injuries_from_arc(arc_data)
+
+    def get_permanent_injury_summary(self) -> str:
+        return self._npc.get_permanent_injury_summary()
+
+    # ═══════════════════════════════════════════════════════════════
+    # [V66.1] F-10: NPC 사망 등록 취소 위임 (NPC 서브모듈)
+    # ═══════════════════════════════════════════════════════════════
+
+    def revive_npc(self, name: str, reason: str) -> bool:
+        return self._npc.revive_npc(name, reason)
+
+    # ═══════════════════════════════════════════════════════════════
+    # [V66.1] 동행자(Companion) 추적 위임 (NPC 서브모듈)
+    # ═══════════════════════════════════════════════════════════════
+
+    def update_companions_from_arc(self, arc_data: dict) -> List[Dict]:
+        return self._npc.update_companions_from_arc(arc_data)
+
+    def get_companion_summary(self) -> str:
+        return self._npc.get_companion_summary()
+
+    # ═══════════════════════════════════════════════════════════════
+    # [V66.1] 약속/맹세(Commitment) 추적 위임 (Plots 서브모듈)
+    # ═══════════════════════════════════════════════════════════════
+
+    def register_commitment(self, arc_no: int, episode: int, parties: List[str],
+                            description: str, deadline_hint: str = ""):
+        return self._plots.register_commitment(arc_no, episode, parties, description, deadline_hint)
+
+    def extract_commitments_from_arc(self, arc_data: dict) -> List[Dict]:
+        return self._plots.extract_commitments_from_arc(arc_data)
+
+    def resolve_commitment(self, description: str) -> bool:
+        return self._plots.resolve_commitment(description)
+
+    def get_commitment_summary(self) -> str:
+        return self._plots.get_commitment_summary()
+
+    # ═══════════════════════════════════════════════════════════════
+    # [V66.1] 주인공 감정 상태 추적 위임 (NPC 서브모듈)
+    # ═══════════════════════════════════════════════════════════════
+
+    def update_protagonist_emotion(self, arc_no: int, episode: int,
+                                    emotion: str, trigger: str):
+        return self._npc.update_protagonist_emotion(arc_no, episode, emotion, trigger)
+
+    def extract_protagonist_emotion_from_arc(self, arc_data: dict):
+        return self._npc.extract_protagonist_emotion_from_arc(arc_data)
+
+    def get_protagonist_emotion_summary(self) -> str:
+        return self._npc.get_protagonist_emotion_summary()
+
+    # ═══════════════════════════════════════════════════════════════
     # [V66] 멀티-Arc 요약
     # ═══════════════════════════════════════════════════════════════
 
@@ -1097,6 +1191,7 @@ class StateTracker:
         [V63] npc_injuries, npc_movements 추가
         [V63.1] financial_events 추가
         [V66] entity_destructions, npc_personality_changes, npc_npc_relationships 추가
+        [V66.1] time_markers, permanent_injuries, companion_changes, commitments, protagonist_emotion 추가
 
         Returns:
             {
@@ -1110,7 +1205,12 @@ class StateTracker:
                 "financial_events": {...},
                 "entity_destructions": [...],
                 "npc_personality_changes": [...],
-                "npc_npc_relationships": [...]
+                "npc_npc_relationships": [...],
+                "time_markers": [...],
+                "permanent_injuries": [...],
+                "companion_changes": [...],
+                "commitments": [...],
+                "protagonist_emotion": {...}
             }
         """
         return {
@@ -1125,6 +1225,11 @@ class StateTracker:
             "entity_destructions": self.extract_entity_destructions_from_arc(arc),
             "npc_personality_changes": self.extract_npc_personality_from_arc(arc),
             "npc_npc_relationships": self.extract_npc_npc_relationships_from_arc(arc),
+            "time_markers": self.extract_time_markers_from_arc(arc),
+            "permanent_injuries": self.extract_permanent_injuries_from_arc(arc),
+            "companion_changes": self.update_companions_from_arc(arc),
+            "commitments": self.extract_commitments_from_arc(arc),
+            "protagonist_emotion": self.extract_protagonist_emotion_from_arc(arc),
         }
 
     def _populate_genre_registries_from_arc(self, arc: dict):

@@ -56,7 +56,10 @@ class FourPhaseArcGenerator(BaseAgent):
 
     def _determine_ep_count(self, curr_block: Dict, arc_no: int, prev_arcs: List[Dict]) -> Tuple[int, str]:
         """
-        [V61.1] LLM 기반 가변 페이싱 - ep_count 동적 결정 (정보량 기반)
+        [V66.1] Python 휴리스틱 기반 가변 페이싱 - ep_count 동적 결정 (정보량 기반)
+
+        LLM 호출 없이 블록 텍스트 길이/문장 수로 적정 화수를 판단.
+        기존 LLM 호출 대비 5-10s 절감.
 
         Args:
             curr_block: 현재 블록 DNA
@@ -76,49 +79,33 @@ class FourPhaseArcGenerator(BaseAgent):
                 elif isinstance(val, dict):
                     block_content += json.dumps(val, ensure_ascii=False) + " "
 
-        # 이전 Arc 평균 ep_count 참고
-        prev_ep_counts = [a.get('ep_count', 5) for a in prev_arcs if isinstance(a, dict)]
-        avg_prev = sum(prev_ep_counts) / len(prev_ep_counts) if prev_ep_counts else 5
+        content_len = len(block_content.strip())
 
-        # 간단한 프롬프트 (정보량 기반, 장르 무관)
-        prompt = f"""[가변 페이싱 판단기]
-Arc {arc_no}의 적절한 화수(ep_count)를 3~7 중에서 결정하라.
+        # [V66.1] Python 휴리스틱: 텍스트 길이 + 문장 수 기반 판단
+        if content_len < 500:
+            ep_count = Stage2Limits.MIN_EP_COUNT  # 3화
+            reasoning = f"블록 정보량 부족 ({content_len}자 < 500자) → 최소 화수"
+        elif content_len > 1500:
+            ep_count = Stage2Limits.MAX_EP_COUNT  # 7화
+            reasoning = f"블록 정보량 풍부 ({content_len}자 > 1500자) → 최대 화수"
+        else:
+            # 500~1500자 구간: 문장 수 비례로 4~6화 결정
+            import re
+            sentence_count = len(re.split(r'[.。!?!\?\n]+', block_content))
+            if sentence_count <= 8:
+                ep_count = 4
+                reasoning = f"보통 정보량 ({content_len}자, {sentence_count}문장) → 4화"
+            elif sentence_count >= 15:
+                ep_count = 6
+                reasoning = f"높은 정보량 ({content_len}자, {sentence_count}문장) → 6화"
+            else:
+                ep_count = Stage2Limits.DEFAULT_EP_COUNT  # 5화
+                reasoning = f"표준 정보량 ({content_len}자, {sentence_count}문장) → 기본 5화"
 
-[블록 내용]
-{block_content[:1500]}
+        # 범위 강제 (안전장치)
+        ep_count = max(Stage2Limits.MIN_EP_COUNT, min(Stage2Limits.MAX_EP_COUNT, ep_count))
 
-[참고: 이전 Arc 평균 화수]
-{avg_prev:.1f}화
-
-[판단 기준 - 정보량/복잡도]
-- 3~4화: 단일 사건, 적은 등장인물, 단순 갈등
-- 5화: 보통 수준의 사건 전개
-- 6~7화: 다중 사건, 많은 등장인물, 복잡한 갈등/음모
-
-[Output - JSON Only]
-{{"ep_count": 3~7 중 정수, "reasoning": "한 문장 이유"}}"""
-
-        try:
-            response = self.ask(prompt, temperature=0.3, thinking_level="low")
-            result = self._extract_json_robust(response)
-
-            ep_count = result.get("ep_count", Stage2Limits.DEFAULT_EP_COUNT)
-            reasoning = result.get("reasoning", "기본값 적용")
-
-            # 타입 안전 변환
-            if isinstance(ep_count, str):
-                import re
-                match = re.search(r'(\d+)', ep_count)
-                ep_count = int(match.group(1)) if match else Stage2Limits.DEFAULT_EP_COUNT
-
-            # 범위 강제
-            ep_count = max(Stage2Limits.MIN_EP_COUNT, min(Stage2Limits.MAX_EP_COUNT, int(ep_count)))
-
-            return ep_count, reasoning
-
-        except Exception as e:
-            print(f"      ⚠️ [V61.1] 페이싱 판단 실패: {e} → 기본값 5화")
-            return Stage2Limits.DEFAULT_EP_COUNT, "판단 불가로 기본값 적용"
+        return ep_count, reasoning
 
     def generate(
         self,
