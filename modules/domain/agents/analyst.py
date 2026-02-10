@@ -668,21 +668,25 @@ class Analyst(BaseAgent):
             "protagonist_hud_state": self._escape_braces(hud_context) if hud_context else ""  # [V60.95] 고밀도 HUD
         }
 
-        # 5. 설계 및 자기 비판 루프 (최대 3회 재시도)
+        # 5. [V65] 설계 및 자기 비판 루프 — retry_with_feedback 래퍼 적용
         max_retries = 3
         # [V60.31] 가변 페이싱: 권장값만 제시, LLM이 사건 밀도로 최종 결정
         pacing_guide = f"시스템 권장: {target_ep_count}화 (Blitz:2-3 / Standard:3-4 / Epic:5-6 중 사건 밀도에 맞게 조정 가능)"
-        current_feedback = feedback if feedback else pacing_guide
+        initial_feedback = feedback if feedback else pacing_guide
         final_arc_data = None
+        # [V65] 루프 간 공유 상태를 dict로 관리 (클로저 캡처용)
+        _arc_loop_state = {"draft_result": None, "actual_ep_count": target_ep_count}
 
-        for attempt in range(max_retries):
+        def _arc_attempt_func(attempt, retry_feedback):
+            """[V65] 단일 시도 로직 — retry_with_feedback에 전달"""
+            current_feedback = retry_feedback if retry_feedback else initial_feedback
             # [V60.31] 템플릿의 ep_count_suggestion 변수를 동적으로 치환
             adjusted_prompt_tpl = PLAN_ARC_PROMPT_V25.replace("{ep_count_suggestion}", str(target_ep_count))
-            
+
             # 6. [API 호출 분기 로직]
             try:
                 if self.cache_name:
-                    # ✅ Case A: 캐시 활성 시에만 지침을 치환하여 전송 (토큰 절약 핵심)
+                    # Case A: 캐시 활성 시에만 지침을 치환하여 전송 (토큰 절약 핵심)
                     cache_safe_data = safe_data.copy()
                     placeholder = "[CACHED: Narrative Patterns Library Active - Refer to system memory]"
                     cache_safe_data.update({
@@ -692,13 +696,13 @@ class Analyst(BaseAgent):
                         "special_instructions": f"\n[🚨 PACING GUIDE]: 권장 {target_ep_count}화 (사건 밀도에 따라 3~7화 범위 내 조정 가능)"
                     })
                     prompt = adjusted_prompt_tpl.format(**cache_safe_data)
-                    if attempt > 0 or feedback: 
+                    if attempt > 0 or feedback:
                         prompt += f"\n\n🚨 [FEEDBACK]: {current_feedback}"
-                    
+
                     # [V49.4] Structured Output Schema 적용
                     # [V49.6] 온도 상향: 0.4 → 0.5 (추론력 강화)
                     config_params = {
-                        "cached_content": self.cache_name,  # 🔥 캐시 참조
+                        "cached_content": self.cache_name,
                         "temperature": 0.5,
                         "max_output_tokens": 8192,
                         "response_mime_type": "application/json"
@@ -716,10 +720,10 @@ class Analyst(BaseAgent):
                     raise Exception("No Cache Found")
 
             except Exception as e:
-                # ⚠️ Case B: 캐시가 없거나 호출 실패 시 즉시 Full-Text로 복구 (품질 보존)
+                # Case B: 캐시가 없거나 호출 실패 시 즉시 Full-Text로 복구 (품질 보존)
                 if self.cache_name:
                     print(f"      ⚠️ [Analyst] 캐시 호출 실패. 일반 모드 전환: {str(e)[:50]}")
-                
+
                 full_safe_data = safe_data.copy()
                 full_safe_data.update({
                     "intro_library": self._escape_braces(intro_lib_full),
@@ -741,8 +745,6 @@ class Analyst(BaseAgent):
             # 7. [V60.31] 가변 페이싱: LLM이 결정한 ep_count 존중 (3~7 범위 내)
             llm_ep_count = draft_result.get("ep_count")
             if isinstance(llm_ep_count, str):
-                # "4 (시스템 추천)" 같은 형태에서 숫자 추출
-                import re
                 match = re.search(r'(\d+)', str(llm_ep_count))
                 llm_ep_count = int(match.group(1)) if match else target_ep_count
             elif not isinstance(llm_ep_count, int):
@@ -753,7 +755,6 @@ class Analyst(BaseAgent):
             chosen_pacing = pacing_decision.get("chosen_pacing", "") if isinstance(pacing_decision, dict) else ""
             chosen_pacing_lower = chosen_pacing.lower() if isinstance(chosen_pacing, str) else ""
 
-            # chosen_pacing에 따른 ep_count 범위 강제
             if "epic" in chosen_pacing_lower:
                 pacing_min, pacing_max = 6, 7
             elif "standard" in chosen_pacing_lower:
@@ -761,40 +762,58 @@ class Analyst(BaseAgent):
             elif "blitz" in chosen_pacing_lower:
                 pacing_min, pacing_max = 3, 4
             else:
-                pacing_min, pacing_max = 3, 7  # 기본값
+                pacing_min, pacing_max = 3, 7
 
-            # ep_count가 chosen_pacing 범위를 벗어나면 강제 조정
             if llm_ep_count < pacing_min or llm_ep_count > pacing_max:
                 corrected_ep_count = max(pacing_min, min(pacing_max, llm_ep_count))
                 print(f"      🔧 [V60.70] 자기모순 교정: chosen_pacing={chosen_pacing} 인데 ep_count={llm_ep_count} → {corrected_ep_count}화로 강제 조정")
                 llm_ep_count = corrected_ep_count
 
-            # 범위 제한 (3~7화)
             actual_ep_count = max(3, min(7, llm_ep_count))
             if actual_ep_count != target_ep_count:
                 print(f"      📊 [V60.31] 가변 페이싱: 권장 {target_ep_count}화 → LLM 결정 {actual_ep_count}화")
 
-            # 비트수를 LLM 결정 ep_count에 맞춤
             beats = draft_result.get("beat_sequence", [])
             if len(beats) != actual_ep_count:
                 if len(beats) > actual_ep_count:
-                    # 넘치는 비트는 마지막에 통합
                     combined = " / ".join(beats[actual_ep_count-1:])
                     beats = beats[:actual_ep_count-1] + [f"[통합 전개]: {combined}"]
                 else:
-                    # 부족한 비트는 서사 빌드업으로 채움
                     while len(beats) < actual_ep_count: beats.append("서사적 긴장감 고조 및 빌드업 수행")
                 draft_result["beat_sequence"] = beats
+
+            # 공유 상태 업데이트
+            _arc_loop_state["draft_result"] = draft_result
+            _arc_loop_state["actual_ep_count"] = actual_ep_count
 
             # 자기 비판 감사 (Self-Critic) 호출
             critic_input = f"{ANALYST_SELF_CRITIC_PROMPT}\n[Draft to Review]: {json.dumps(draft_result, ensure_ascii=False)}"
             audit_result = self._extract_json_robust(self.ask(critic_input, temperature=0.2))
+            return audit_result
 
-            if audit_result.get("status") == "PASS":
-                final_arc_data = draft_result
-                final_arc_data["_actual_ep_count"] = actual_ep_count  # [V60.31] 가변 페이싱 결과 저장
-                break
-            current_feedback = audit_result.get("feedback", "밀도 및 개연성 보강 필요")
+        def _arc_on_success(audit_result):
+            """[V65] Self-Critic PASS 판정"""
+            return audit_result.get("status") == "PASS"
+
+        def _arc_on_failure(audit_result, attempt):
+            """[V65] Self-Critic REJECT → 피드백 추출"""
+            return audit_result.get("feedback", "밀도 및 개연성 보강 필요")
+
+        from modules.core.adaptive_retry import retry_with_feedback
+        audit_result, _arc_attempts, _arc_success = retry_with_feedback(
+            func=_arc_attempt_func,
+            max_attempts=max_retries,
+            on_success=_arc_on_success,
+            on_failure=_arc_on_failure,
+            task_name=f"plan_single_arc(arc={clean_arc_no})",
+        )
+
+        # [V65] 루프 결과 반영 — 기존 동작 보존
+        draft_result = _arc_loop_state["draft_result"]
+        actual_ep_count = _arc_loop_state["actual_ep_count"]
+        if _arc_success:
+            final_arc_data = draft_result
+            final_arc_data["_actual_ep_count"] = actual_ep_count
 
         # 8. 메타데이터 최종 동기화 및 반환 (인과율 유지)
         if not final_arc_data:

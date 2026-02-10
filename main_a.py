@@ -2339,95 +2339,105 @@ class SovereignApp:
                 continue
 
             treatment_slice = json.dumps(vol_arcs_chunk, ensure_ascii=False, indent=2)
-            passed = False
-            
 
-            # [V40 Enhanced] 밀도 확보를 위한 재시도 루프
-            for attempt in range(RetryLimits.DIRECTOR_MAX_ATTEMPTS):
+            # [V65] retry_with_feedback 래퍼로 밀도 확보 재시도 루프 표준화
+            from modules.core.adaptive_retry import retry_with_feedback
+
+            def _vol_attempt_func(attempt, _feedback):
+                """[V65] 단일 권 설계 시도 로직"""
                 self.ui.log(f"   {Emojis.BRAIN} 제 {vol_idx}권 전략 설계 중... (시도 {attempt+1}/{RetryLimits.DIRECTOR_MAX_ATTEMPTS})")
 
                 # [안전성 패치] Analyst에게 슬라이싱된 데이터와 성경, 그리고 '누적된 앞 권 내용' 주입
-                try:
-                    # [V60.83] Stage 1 스피너
-                    # [V60.93] 주인공 이름 추출
-                    stage1_protagonist_name = self._get_protagonist_name()
-                    with StageSpinner(1, f"제{vol_idx}권 설계"):
-                        vol_data = self.agents['analyst'].plan_single_volume_v20(
-                            vol_idx,
-                            self.current_project.master_bible,
-                            treatment_slice,
-                            context_accumulator,
-                            meta_info,
-                            protagonist_name=stage1_protagonist_name  # [V60.93]
-                        )
-                except Exception as analyst_err:
-                    self.ui.log(f"🚨 [Analyst Error] 제 {vol_idx}권 설계 중 에러: {analyst_err}")
-                    self._audit_event("analyst_error", "plan_single_volume_v20 failed", {
-                        "vol_no": vol_idx,
-                        "error": str(analyst_err)
-                    })
-                    continue  # 재시도
+                # [V60.83] Stage 1 스피너  [V60.93] 주인공 이름 추출
+                stage1_protagonist_name = self._get_protagonist_name()
+                with StageSpinner(1, f"제{vol_idx}권 설계"):
+                    vol_data = self.agents['analyst'].plan_single_volume_v20(
+                        vol_idx,
+                        self.current_project.master_bible,
+                        treatment_slice,
+                        context_accumulator,
+                        meta_info,
+                        protagonist_name=stage1_protagonist_name  # [V60.93]
+                    )
+                return vol_data
 
-                # [데이터 검증] vol_data가 유효한지 확인
+            def _vol_on_success(vol_data):
+                """[V65] 볼륨 설계 성공 판정 — 유효성 + 분량 + 경계 검증"""
                 if not vol_data or not isinstance(vol_data, dict):
                     self.ui.log(f"🚨 [Analyst Error] 제 {vol_idx}권 설계 결과가 유효하지 않음: {type(vol_data)}")
                     self._audit_event("analyst_error", "invalid volume data", {
-                        "vol_no": vol_idx,
-                        "type": str(type(vol_data))
+                        "vol_no": vol_idx, "type": str(type(vol_data))
                     })
-                    continue
+                    return False
 
-                # V25 품질 기준: 전략 문서가 최소 2,500~3,000자 이상이어야 함
+                # V25 품질 기준: 전략 문서가 최소 2,000자 이상
                 raw_doc = vol_data.get('strategy_doc', '')
-                if isinstance(raw_doc, dict): # 만약 AI가 객체로 줬다면 문자열로 변환
+                if isinstance(raw_doc, dict):
                     raw_doc = json.dumps(raw_doc, ensure_ascii=False)
                 doc_len = len(raw_doc)
-                if doc_len >= 2000: # 한글 기준 2500자면 충분한 고해상도
-                    # [V39 패치 D] Volume 경계 검증 추가
-                    boundary_check = self._validate_volume_boundaries(vol_data, vol_idx)
-                    if boundary_check.get("status") == "REJECT":
-                        self.ui.log(f"   🚨 [Boundary Violation] {boundary_check.get('reason')}")
-                        self.ui.log(f"   📝 수정 요청: {boundary_check.get('feedback')}")
-                        # [V39.1 패치] 경고 → 강제 재시도로 격상
-                        self._audit_event("volume_boundary_violation", boundary_check.get("reason"), {
-                            "vol_no": vol_idx,
-                            "feedback": boundary_check.get("feedback")
-                        })
-                        continue  # 재시도 루프로 돌아감
-                    
-                    self.ui.log(f"   ✅ [Pass] {vol_idx}권 검수 완료 (분량: {doc_len}자)")
-                    final_volumes.append(vol_data)
-                    
-                    # [중요] 다음 권 설계를 위해 현재 권의 요약을 누적
-                    # [V62.8] 최근 3권만 상세 유지, 나머지 1줄 압축
-                    summary = vol_data.get('strategy_doc', '')[:500]
-                    context_accumulator += f"\n[제 {vol_idx}권 요약]: {summary}..."
-                    MAX_CONTEXT_VOLUMES = 3
-                    if vol_idx > MAX_CONTEXT_VOLUMES:
-                        # 오래된 권 요약을 1줄로 압축
-                        acc_lines = context_accumulator.split('\n')
-                        compressed_lines = []
-                        kept_recent = 0
-                        for line in reversed(acc_lines):
-                            if line.startswith('[제 ') and '권 요약]' in line:
-                                if kept_recent < MAX_CONTEXT_VOLUMES:
-                                    compressed_lines.insert(0, line)
-                                    kept_recent += 1
-                                else:
-                                    # 오래된 권은 제목만
-                                    vol_label = line.split(']:')[0] + ']: (요약 생략)'
-                                    compressed_lines.insert(0, vol_label)
-                            elif line.strip():
-                                compressed_lines.insert(0, line)
-                        context_accumulator = '\n'.join(compressed_lines)
-                    passed = True
-                    break
-                else:
+                if doc_len < 2000:
                     self.ui.log(f"   ⚠️ [Low Density] 분량 부족({doc_len}/2000). 다시 설계합니다.")
+                    return False
 
-            if not passed:
+                # [V39 패치 D] Volume 경계 검증 추가
+                boundary_check = self._validate_volume_boundaries(vol_data, vol_idx)
+                if boundary_check.get("status") == "REJECT":
+                    self.ui.log(f"   🚨 [Boundary Violation] {boundary_check.get('reason')}")
+                    self.ui.log(f"   📝 수정 요청: {boundary_check.get('feedback')}")
+                    self._audit_event("volume_boundary_violation", boundary_check.get("reason"), {
+                        "vol_no": vol_idx, "feedback": boundary_check.get("feedback")
+                    })
+                    return False
+
+                return True
+
+            def _vol_on_failure(vol_data, attempt):
+                """[V65] 실패 시 피드백 (로그/감사만, 원래 루프도 피드백 미사용)"""
+                return ""
+
+            vol_result, _vol_attempts, vol_passed = retry_with_feedback(
+                func=_vol_attempt_func,
+                max_attempts=RetryLimits.DIRECTOR_MAX_ATTEMPTS,
+                on_success=_vol_on_success,
+                on_failure=_vol_on_failure,
+                logger=lambda msg: self.ui.log(msg),
+                task_name=f"Stage1_Volume_{vol_idx}",
+            )
+
+            if not vol_passed:
                 self.ui.log(f"❌ [Critical] 제 {vol_idx}권 품질 미달로 공정 중단.")
                 return
+
+            # 성공 후처리 — 기존 동작 보존
+            vol_data = vol_result
+            raw_doc = vol_data.get('strategy_doc', '')
+            if isinstance(raw_doc, dict):
+                raw_doc = json.dumps(raw_doc, ensure_ascii=False)
+            doc_len = len(raw_doc)
+            self.ui.log(f"   ✅ [Pass] {vol_idx}권 검수 완료 (분량: {doc_len}자)")
+            final_volumes.append(vol_data)
+
+            # [중요] 다음 권 설계를 위해 현재 권의 요약을 누적
+            # [V62.8] 최근 3권만 상세 유지, 나머지 1줄 압축
+            summary = vol_data.get('strategy_doc', '')[:500]
+            context_accumulator += f"\n[제 {vol_idx}권 요약]: {summary}..."
+            MAX_CONTEXT_VOLUMES = 3
+            if vol_idx > MAX_CONTEXT_VOLUMES:
+                # 오래된 권 요약을 1줄로 압축
+                acc_lines = context_accumulator.split('\n')
+                compressed_lines = []
+                kept_recent = 0
+                for line in reversed(acc_lines):
+                    if line.startswith('[제 ') and '권 요약]' in line:
+                        if kept_recent < MAX_CONTEXT_VOLUMES:
+                            compressed_lines.insert(0, line)
+                            kept_recent += 1
+                        else:
+                            vol_label = line.split(']:')[0] + ']: (요약 생략)'
+                            compressed_lines.insert(0, vol_label)
+                    elif line.strip():
+                        compressed_lines.insert(0, line)
+                context_accumulator = '\n'.join(compressed_lines)
 
         # 3. 전체 데이터 DB 박제 및 메모리 동기화
         self.current_project.save_v20_anchor("volumes", final_volumes)
