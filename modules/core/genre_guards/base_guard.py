@@ -152,6 +152,67 @@ class BaseGuard(ABC):
         return True
 
     # ========================================================================
+    # [V66] 통합 심층 검증 (다형성 진입점)
+    # ========================================================================
+
+    def run_deep_validation(self, manuscript: str, current_state: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        [V66] Guard 다형성 심층 검증.
+        Director가 장르별 if/elif 없이 단일 호출로 검증 가능.
+        각 장르 Guard에서 override하여 장르 고유 체크 추가.
+
+        Args:
+            manuscript: 검증 대상 원고
+            current_state: HUD actual_truth 데이터 (없으면 {})
+
+        Returns:
+            {
+                "has_critical": bool,  # REJECT 사유 존재 여부
+                "violations": [...],   # 위반 목록
+                "summary": str,        # 요약 문자열
+                "feedback": str        # Director 피드백용
+            }
+        """
+        if current_state is None:
+            current_state = {}
+
+        all_violations = []
+
+        # 1. 금기어 검사
+        for term in self.FORBIDDEN_TERMS:
+            if term in manuscript:
+                all_violations.append({
+                    "type": "forbidden_term",
+                    "term": term,
+                    "severity": "HIGH",
+                    "message": f"장르 금기어 '{term}' 발견"
+                })
+
+        # 2. 상태-행동 일관성
+        consistency = self.check_state_action_consistency(manuscript, current_state)
+        for v in consistency.get("violations", []):
+            all_violations.append({
+                "type": "state_action_inconsistency",
+                "severity": v.get("severity", "MEDIUM"),
+                "message": f"{v.get('reason', '')}: {v.get('action', '')}"
+            })
+
+        has_critical = any(v.get("severity") == "HIGH" for v in all_violations)
+        summary_parts = [v.get("message", "") for v in all_violations[:5]]
+        summary = "; ".join(summary_parts) if summary_parts else "검증 통과"
+
+        feedback = ""
+        if all_violations:
+            feedback = f"[{self.get_genre_name()} Guard] {len(all_violations)}건 위반 발견: {summary}"
+
+        return {
+            "has_critical": has_critical,
+            "violations": all_violations,
+            "summary": summary,
+            "feedback": feedback,
+        }
+
+    # ========================================================================
     # [V46] 일관성 검증 인터페이스 (Consistency Validation Interface)
     # ========================================================================
 

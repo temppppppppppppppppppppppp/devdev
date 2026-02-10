@@ -448,6 +448,17 @@ class BlueprintConstraintCompiler:
                         f"📍 이동: {mv.get('npc', '?')} → {mv.get('to', '?')}"
                     )
 
+        # [V66] 완결된 플롯
+        resolved = state_changes.get("resolved_plots", [])
+        if resolved:
+            for rp in resolved[:5]:
+                if isinstance(rp, dict):
+                    lines.append(
+                        f"✅ 완결 플롯: {rp.get('plot', '?')} (Arc {rp.get('arc_no', '?')}) → 재발생 금지"
+                    )
+                elif isinstance(rp, str):
+                    lines.append(f"✅ 완결 플롯: {rp} → 재발생 금지")
+
         return "\n".join(lines) if lines else ""
 
 

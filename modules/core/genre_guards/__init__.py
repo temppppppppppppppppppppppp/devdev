@@ -6,6 +6,7 @@
 from .wuxia_guard import WuxiaGuard
 from .hunter_guard import HunterGuard
 from .investment_guard import InvestmentGuard
+from .fantasy_guard import FantasyGuard  # [V66] 독립 분리
 from .composer_guard import ComposerGuard
 from .cooking_guard import CookingGuard
 from .alt_history_guard import AltHistoryGuard
@@ -30,8 +31,8 @@ def create_genre_guard(genre_type):
     elif genre_type == 'investment':
         return InvestmentGuard()
     elif genre_type == 'fantasy':
-        # [V65] 판타지는 WuxiaGuard 공유 (MartialHUD 기반, 순혈주의 일부 완화)
-        return WuxiaGuard()
+        # [V66] 판타지 독립 Guard (WuxiaGuard 공유 → 분리)
+        return FantasyGuard()
     elif genre_type == 'composer':
         return ComposerGuard()
     elif genre_type == 'cooking':
@@ -48,4 +49,4 @@ def create_genre_guard(genre_type):
         # 기본값: 무협
         return WuxiaGuard()
 
-__all__ = ['WuxiaGuard', 'HunterGuard', 'InvestmentGuard', 'ComposerGuard', 'CookingGuard', 'AltHistoryGuard', 'ActorGuard', 'SportsGuard', 'MedicalGuard', 'create_genre_guard']
+__all__ = ['WuxiaGuard', 'HunterGuard', 'InvestmentGuard', 'FantasyGuard', 'ComposerGuard', 'CookingGuard', 'AltHistoryGuard', 'ActorGuard', 'SportsGuard', 'MedicalGuard', 'create_genre_guard']

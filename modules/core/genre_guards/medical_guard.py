@@ -311,3 +311,30 @@ class MedicalGuard(BaseGuard):
             r'새.*치료법', r'세계.*최초', r'학술.*업적',
             r'화해', r'협력', r'팀워크',
         ]
+
+    # ========================================================================
+    # [V66] 심층 검증 오버라이드
+    # ========================================================================
+
+    def run_deep_validation(self, manuscript: str, current_state: Dict[str, Any] = None) -> Dict[str, Any]:
+        """[V66] 의학물 심층 검증."""
+        result = super().run_deep_validation(manuscript, current_state or {})
+
+        # 의학물 추가 검증: 직급/상태 기반 불가 행동 체크
+        if current_state:
+            impossible = self.get_impossible_actions(current_state)
+            import re
+            for action in impossible:
+                pattern = action.get('pattern', '')
+                if pattern and re.search(pattern, manuscript):
+                    result["violations"].append({
+                        "type": "impossible_action",
+                        "severity": action.get('severity', 'HIGH'),
+                        "message": f"불가 행동 감지: {action.get('reason', '')}"
+                    })
+
+        result["has_critical"] = any(v.get("severity") == "HIGH" for v in result["violations"])
+        if result["violations"]:
+            result["summary"] = "; ".join(v.get("message", "") for v in result["violations"][:5])
+            result["feedback"] = f"[의학물 Guard] {len(result['violations'])}건: {result['summary']}"
+        return result

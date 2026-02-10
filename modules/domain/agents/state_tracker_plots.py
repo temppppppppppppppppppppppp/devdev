@@ -63,6 +63,81 @@ class StateTrackerPlots:
         return "\n".join(lines)
 
     # ═══════════════════════════════════════════════════════════════
+    # [V66] 조직/장소 파괴 추적
+    # ═══════════════════════════════════════════════════════════════
+
+    def extract_entity_destructions_from_arc(self, arc: dict) -> List[Dict]:
+        """[V66] Arc에서 entity_destructions 추출 및 누적."""
+        arc_no = arc.get("arc_no", 0)
+        results = []
+
+        state_changes = arc.get("state_changes", {})
+        if isinstance(state_changes, dict):
+            destructions = state_changes.get("entity_destructions", [])
+            if isinstance(destructions, list):
+                for d in destructions:
+                    if isinstance(d, dict) and d.get("name"):
+                        entry = {
+                            "name": str(d["name"]),
+                            "type": str(d.get("type", "unknown")),
+                            "cause": str(d.get("cause", "")),
+                            "episode": d.get("episode", 0),
+                            "arc_no": arc_no,
+                        }
+                        results.append(entry)
+                        # 중복 방지
+                        if not any(
+                            e.get("name") == entry["name"] and e.get("arc_no") == arc_no
+                            for e in self.tracker.entity_destructions
+                        ):
+                            self.tracker.entity_destructions.append(entry)
+        return results
+
+    def register_entity_destruction(self, name: str, entity_type: str, cause: str, arc_no: int):
+        """[V66] 수동 파괴 등록."""
+        entry = {"name": name, "type": entity_type, "cause": cause, "arc_no": arc_no}
+        if not any(e.get("name") == name for e in self.tracker.entity_destructions):
+            self.tracker.entity_destructions.append(entry)
+
+    def check_destroyed_entity_in_manuscript(self, content: str) -> List[Dict]:
+        """[V66] 파괴된 조직/장소가 원고에서 활동 중으로 등장하는지 검사."""
+        warnings = []
+        if not self.tracker.entity_destructions or not content:
+            return warnings
+        for entity in self.tracker.entity_destructions:
+            name = entity.get("name", "")
+            if not name or len(name) < 2:
+                continue
+            # 단순 등장은 허용 (회상 등), 활동 표현 패턴 검사
+            activity_patterns = [
+                re.compile(re.escape(name) + r'[이가은는에서의]?\s*(?:공격|방어|전투|활동|지원|파견|출격|모집|개방)'),
+                re.compile(r'(?:건재|부활|재건)[한된]\s*' + re.escape(name)),
+            ]
+            for pat in activity_patterns:
+                if pat.search(content):
+                    warnings.append({
+                        "entity": name,
+                        "type": entity.get("type", "?"),
+                        "destroyed_arc": entity.get("arc_no", "?"),
+                        "severity": "WARNING",
+                        "message": f"파괴된 {entity.get('type', '엔티티')} '{name}'이(가) 활동 중으로 묘사됨",
+                    })
+                    break
+        return warnings
+
+    def get_entity_destruction_summary(self) -> str:
+        """[V66] 파괴된 조직/장소 목록 → 프롬프트 주입용 문자열."""
+        if not self.tracker.entity_destructions:
+            return ""
+        lines = ["[V66] 파괴된 조직/장소 - 활동 상태로 재등장 금지:"]
+        for e in self.tracker.entity_destructions:
+            lines.append(
+                f"  - {e.get('name','')} ({e.get('type','?')}) "
+                f"Arc {e.get('arc_no','?')}: {e.get('cause','')}"
+            )
+        return "\n".join(lines)
+
+    # ═══════════════════════════════════════════════════════════════
     # [V62.7] 비-NPC 엔티티 명칭 일관성
     # ═══════════════════════════════════════════════════════════════
 

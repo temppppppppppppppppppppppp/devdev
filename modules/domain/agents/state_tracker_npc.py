@@ -53,15 +53,19 @@ class StateTrackerNPC:
         })
         print(f"      \U0001f480 [V60.94] NPC 사망 등록: {npc_name} (Arc {death_arc})")
 
-    def register_npc_info(self, npc_name: str, arc_no: int, weapon: str = None, level: str = None):
+    def register_npc_info(self, npc_name: str, arc_no: int, weapon: str = None, level: str = None,
+                          personality_traits: str = None, primary_motivation: str = None):
         """
         [V60.94] NPC 정보 등록/업데이트
+        [V66] personality_traits, primary_motivation 추가
 
         Args:
             npc_name: NPC 이름
             arc_no: Arc 번호
             weapon: 무장 (선택)
             level: 수준/경지 (선택)
+            personality_traits: [V66] 성격 특성 (선택)
+            primary_motivation: [V66] 주요 동기 (선택)
         """
         if npc_name not in self.tracker.npc_registry:
             self.tracker.npc_registry[npc_name] = {"status": "alive"}
@@ -73,6 +77,10 @@ class StateTrackerNPC:
             npc["weapon"] = weapon
         if level:
             npc["level"] = level
+        if personality_traits:
+            npc["personality_traits"] = personality_traits
+        if primary_motivation:
+            npc["primary_motivation"] = primary_motivation
 
     def check_npc_changes(self, content: str, arc_no: int) -> List[dict]:
         """
@@ -835,4 +843,106 @@ class StateTrackerNPC:
             *dead_npcs,
             ""
         ]
+        return "\n".join(lines)
+
+    # ═══════════════════════════════════════════════════════════════
+    # [V66] NPC 성격/동기 baseline
+    # ═══════════════════════════════════════════════════════════════
+
+    def extract_npc_personality_from_arc(self, arc: dict) -> List[Dict]:
+        """[V66] Arc에서 npc_personality_changes 추출 및 NPC 레지스트리 업데이트."""
+        arc_no = arc.get("arc_no", 0)
+        results = []
+
+        state_changes = arc.get("state_changes", {})
+        if isinstance(state_changes, dict):
+            changes = state_changes.get("npc_personality_changes", [])
+            if isinstance(changes, list):
+                for pc in changes:
+                    if isinstance(pc, dict) and pc.get("name"):
+                        name = str(pc["name"])
+                        traits = str(pc.get("traits", ""))
+                        motivation = str(pc.get("motivation", ""))
+                        self.register_npc_info(
+                            name, arc_no,
+                            personality_traits=traits,
+                            primary_motivation=motivation
+                        )
+                        results.append({
+                            "name": name, "traits": traits,
+                            "motivation": motivation, "arc_no": arc_no
+                        })
+        return results
+
+    def get_npc_personality_summary(self) -> str:
+        """[V66] NPC 성격/동기 목록 → 프롬프트 주입용 문자열."""
+        lines = []
+        for name, info in self.tracker.npc_registry.items():
+            traits = info.get("personality_traits", "")
+            motivation = info.get("primary_motivation", "")
+            if traits or motivation:
+                parts = [f"  - {name}:"]
+                if traits:
+                    parts.append(f"성격={traits}")
+                if motivation:
+                    parts.append(f"동기={motivation}")
+                lines.append(" ".join(parts))
+
+        if not lines:
+            return ""
+        return "[V66] NPC 성격/동기 (급변 금지):\n" + "\n".join(lines)
+
+    # ═══════════════════════════════════════════════════════════════
+    # [V66] NPC-NPC 관계 추적
+    # ═══════════════════════════════════════════════════════════════
+
+    def extract_npc_npc_relationships_from_arc(self, arc: dict) -> List[Dict]:
+        """[V66] Arc에서 npc_npc_relationships 추출 및 레지스트리 업데이트."""
+        arc_no = arc.get("arc_no", 0)
+        results = []
+
+        state_changes = arc.get("state_changes", {})
+        if isinstance(state_changes, dict):
+            rels = state_changes.get("npc_npc_relationships", [])
+            if isinstance(rels, list):
+                for r in rels:
+                    if isinstance(r, dict) and r.get("npc1") and r.get("npc2"):
+                        npc1 = str(r["npc1"])
+                        npc2 = str(r["npc2"])
+                        relation = str(r.get("relation", ""))
+                        self.register_npc_npc_relationship(npc1, npc2, relation, arc_no)
+                        results.append({
+                            "npc1": npc1, "npc2": npc2,
+                            "relation": relation, "arc_no": arc_no
+                        })
+        return results
+
+    def register_npc_npc_relationship(self, npc1: str, npc2: str, relation: str, arc_no: int):
+        """[V66] NPC 간 관계 등록. key=정렬된 (name1, name2) 튜플. 이력 보존."""
+        key = tuple(sorted([npc1, npc2]))
+        existing = self.tracker.npc_npc_relationships.get(key)
+        new_entry = {
+            "npc1": key[0], "npc2": key[1],
+            "relation": relation, "arc_no": arc_no
+        }
+        # 이력 보존: prev_relation 필드로 이전 관계 기록
+        if existing and existing.get("relation") != relation:
+            new_entry["prev_relation"] = existing.get("relation", "")
+            new_entry["prev_arc"] = existing.get("arc_no", 0)
+        self.tracker.npc_npc_relationships[key] = new_entry
+        # 최근 50쌍 한도 [V66 확장: 20→50]
+        if len(self.tracker.npc_npc_relationships) > 50:
+            oldest_key = next(iter(self.tracker.npc_npc_relationships))
+            del self.tracker.npc_npc_relationships[oldest_key]
+
+    def get_npc_npc_relationship_summary(self) -> str:
+        """[V66] NPC-NPC 관계 목록 → 프롬프트 주입용 문자열."""
+        if not self.tracker.npc_npc_relationships:
+            return ""
+        lines = ["[V66] NPC 간 관계 (변경 시 명시적 사유 필요):"]
+        for info in self.tracker.npc_npc_relationships.values():
+            lines.append(
+                f"  - {info['npc1']} ↔ {info['npc2']}: "
+                f"{info.get('relation', '?')} (Arc {info.get('arc_no', '?')})"
+            )
         return "\n".join(lines)

@@ -53,11 +53,8 @@ class DirectorQualityAuditor:
 
     def _run_genre_specific_validation(self, manuscript: str, ep_num: int) -> dict:
         """
-        [V60.90] 장르별 특화 검증 실행
-
-        Hunter: 던전 진입, 각성 단계, 스킬 쿨타임 등
-        Investment: 투자 규모, 수익률, 타임라인 이벤트 등
-        Wuxia: (base guard에서 처리)
+        [V66] 장르별 특화 검증 실행 — Guard 다형성 단일 호출.
+        기존 if/elif 체인 → guard.run_deep_validation() 위임.
 
         Returns:
             {
@@ -70,156 +67,25 @@ class DirectorQualityAuditor:
         if not self._d.guard:
             return {'has_critical': False, 'violations': [], 'summary': '', 'feedback': ''}
 
-        violations = []
-        critical_found = False
-
         try:
-            # ─────────────────────────────────────────────────────────────
-            # Hunter 장르 특화 검증
-            # ─────────────────────────────────────────────────────────────
-            if self._d.genre == 'hunter':
-                # 던전 진입 규칙 검증
-                if hasattr(self._d.guard, 'validate_dungeon_entry'):
-                    import re
-                    dungeon_patterns = re.findall(r'(\w+)\s*(?:등급|랭크|급)\s*던전', manuscript)
-                    for dungeon_rank in dungeon_patterns:
-                        result = self._d.guard.validate_dungeon_entry(dungeon_rank, 'E')
-                        if not result[0]:
-                            violations.append({
-                                'type': 'dungeon_entry',
-                                'message': result[1],
-                                'severity': 'warning'
-                            })
-
-                # 각성 단계 스킵 검증
-                if hasattr(self._d.guard, 'validate_awakening_progression'):
-                    awakening_patterns = re.findall(r'(\w)급.*?각성|각성.*?(\w)급', manuscript)
-                    for match in awakening_patterns:
-                        rank = match[0] or match[1]
-
-                # 스킬 사용 검증
-                if hasattr(self._d.guard, 'validate_skill_usage'):
+            # [V66] 다형성 진입: 각 Guard가 자체 override에서 장르별 검증 수행
+            current_state = {}
+            if hasattr(self._d, 'context') and self._d.context:
+                try:
+                    current_state = getattr(self._d.context, 'actual_truth', {}) or {}
+                except Exception:
                     pass
 
-                print(f"      🎮 [V60.90] Hunter 특화 검증: {len(violations)}개 이슈")
+            result = self._d.guard.run_deep_validation(manuscript, current_state)
 
-            # ─────────────────────────────────────────────────────────────
-            # Investment 장르 특화 검증
-            # ─────────────────────────────────────────────────────────────
-            elif self._d.genre == 'investment':
-                import re
+            genre_name = self._d.guard.get_genre_name() if hasattr(self._d.guard, 'get_genre_name') else self._d.genre
+            v_count = len(result.get('violations', []))
+            print(f"      🔍 [V66] {genre_name} Guard 심층 검증: {v_count}개 이슈")
 
-                # 투자 규모 검증
-                if hasattr(self._d.guard, 'validate_investment_scale'):
-                    amount_patterns = re.findall(r'(\d+(?:,\d{3})*)\s*(?:억|만|원)', manuscript)
-                    for amount_str in amount_patterns:
-                        amount = int(amount_str.replace(',', ''))
-                        result = self._d.guard.validate_investment_scale(amount, 'small')
-                        if not result[0]:
-                            violations.append({
-                                'type': 'investment_scale',
-                                'message': result[1],
-                                'severity': 'warning'
-                            })
-
-                # 수익률 검증
-                if hasattr(self._d.guard, 'validate_return_rate'):
-                    roi_patterns = re.findall(r'(\d+(?:\.\d+)?)\s*%', manuscript)
-                    for roi_str in roi_patterns:
-                        roi = float(roi_str)
-                        if roi > 100:
-                            result = self._d.guard.validate_return_rate(roi, 'stock', '1month')
-                            if not result[0]:
-                                violations.append({
-                                    'type': 'return_rate',
-                                    'message': result[1],
-                                    'severity': 'warning'
-                                })
-
-                # 타임라인 이벤트 검증
-                if hasattr(self._d.guard, 'validate_timeline_event'):
-                    year_patterns = re.findall(r'(19\d{2}|20\d{2})년', manuscript)
-
-                print(f"      💰 [V60.90] Investment 특화 검증: {len(violations)}개 이슈")
-
-            # ─────────────────────────────────────────────────────────────
-            # Wuxia 장르 특화 검증
-            # ─────────────────────────────────────────────────────────────
-            elif self._d.genre == 'wuxia':
-                if hasattr(self._d.guard, 'check_modern_notation'):
-                    modern_violations = self._d.guard.check_modern_notation(manuscript)
-                    if modern_violations and isinstance(modern_violations, list):
-                        examples = [v.get('match', '')[:20] for v in modern_violations[:3]]
-                        violations.append({
-                            'type': 'modern_notation',
-                            'message': f"현대 표기 발견: {examples}",
-                            'severity': 'warning'
-                        })
-
-                print(f"      ⚔️ [V60.90] Wuxia 특화 검증: {len(violations)}개 이슈")
-
-            # ─────────────────────────────────────────────────────────────
-            # Actor 장르 특화 검증
-            # ─────────────────────────────────────────────────────────────
-            elif self._d.genre == 'actor':
-                if hasattr(self._d.guard, 'FORBIDDEN_TERMS'):
-                    found_terms = [t for t in self._d.guard.FORBIDDEN_TERMS if t in manuscript]
-                    if found_terms:
-                        violations.append({
-                            'type': 'forbidden_terms',
-                            'message': f"장르 부적합 용어 발견: {found_terms[:5]}",
-                            'severity': 'warning'
-                        })
-
-                print(f"      🎬 [V62] Actor 특화 검증: {len(violations)}개 이슈")
-
-            # ─────────────────────────────────────────────────────────────
-            # Sports 장르 특화 검증
-            # ─────────────────────────────────────────────────────────────
-            elif self._d.genre == 'sports':
-                if hasattr(self._d.guard, 'FORBIDDEN_TERMS'):
-                    found_terms = [t for t in self._d.guard.FORBIDDEN_TERMS if t in manuscript]
-                    if found_terms:
-                        violations.append({
-                            'type': 'forbidden_terms',
-                            'message': f"장르 부적합 용어 발견: {found_terms[:5]}",
-                            'severity': 'warning'
-                        })
-
-                print(f"      🏆 [V62.1] Sports 특화 검증: {len(violations)}개 이슈")
-
-            # ─────────────────────────────────────────────────────────────
-            # Medical 장르 특화 검증
-            # ─────────────────────────────────────────────────────────────
-            elif self._d.genre == 'medical':
-                if hasattr(self._d.guard, 'FORBIDDEN_TERMS'):
-                    found_terms = [t for t in self._d.guard.FORBIDDEN_TERMS if t in manuscript]
-                    if found_terms:
-                        violations.append({
-                            'type': 'forbidden_terms',
-                            'message': f"장르 부적합 용어 발견: {found_terms[:5]}",
-                            'severity': 'warning'
-                        })
-
-                print(f"      🏥 [V62.1] Medical 특화 검증: {len(violations)}개 이슈")
-
-            # Critical 여부 판단 (3개 이상이면 critical)
-            if len(violations) >= 3:
-                critical_found = True
-
-            # 결과 반환
-            summary = "; ".join([v['message'][:50] for v in violations[:3]])
-            feedback = "\n".join([f"- [{v['type']}] {v['message']}" for v in violations])
-
-            return {
-                'has_critical': critical_found,
-                'violations': violations,
-                'summary': summary,
-                'feedback': feedback
-            }
+            return result
 
         except Exception as e:
-            print(f"      ⚠️ [V60.90] 장르 검증 오류: {str(e)[:50]}")
+            print(f"      ⚠️ [V66] 장르 검증 오류: {str(e)[:50]}")
             return {'has_critical': False, 'violations': [], 'summary': '', 'feedback': ''}
 
     def assess_character_logic(self, ep_num, manuscript, npc_profiles, character_traits):

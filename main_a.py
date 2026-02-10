@@ -3421,41 +3421,48 @@ class SovereignApp:
                 "critical_keys": ['capital', 'total_assets', 'stocks', 'reputation', 'connections', 'market_insight', 'status']
             },
             "4": {
+                "name": f"{GenreTypes.get_name(GenreTypes.FANTASY)} (Fantasy)",
+                "type": GenreTypes.FANTASY,
+                "hud_key": HUDKeys.FANTASY_HUD_ROOT,
+                "description": "이세계 배경, 마법/마나 시스템, 종족/길드",
+                "critical_keys": ['magic_tier', 'mana', 'spells', 'race', 'blessings', 'level', 'wealth', 'injuries', 'reputation', 'current_objective']
+            },
+            "5": {
                 "name": f"{GenreTypes.get_name(GenreTypes.COMPOSER)} (Composer Fiction)",
                 "type": GenreTypes.COMPOSER,
                 "hud_key": HUDKeys.COMPOSER_HUD_ROOT,
                 "description": "현대 배경, 음악 창작/산업 시스템, 작곡/프로듀싱",
                 "critical_keys": ['composition', 'arrangement', 'production', 'reputation', 'wealth', 'mental_state', 'current_objective']
             },
-            "5": {
+            "6": {
                 "name": f"{GenreTypes.get_name(GenreTypes.COOKING)} (Cooking Fiction)",
                 "type": GenreTypes.COOKING,
                 "hud_key": HUDKeys.COOKING_HUD_ROOT,
                 "description": "현대 배경, 셰프 성장/식당 경영 시스템, 요리/미식",
                 "critical_keys": ['chef_rank', 'signature_dish', 'culinary_techniques', 'restaurant_tier', 'reputation_score', 'capital', 'current_objective']
             },
-            "6": {
+            "7": {
                 "name": f"{GenreTypes.get_name(GenreTypes.ALT_HISTORY)} (Alt History)",
                 "type": GenreTypes.ALT_HISTORY,
                 "hud_key": HUDKeys.ALT_HISTORY_HUD_ROOT,
                 "description": "조선 시대 배경, 관직/당파/신분 시스템, 궁중 정치",
                 "critical_keys": ['social_class', 'court_rank', 'position', 'faction', 'political_influence', 'wealth', 'public_trust', 'current_objective']
             },
-            "7": {
+            "8": {
                 "name": f"{GenreTypes.get_name(GenreTypes.ACTOR)} (Actor Fiction)",
                 "type": GenreTypes.ACTOR,
                 "hud_key": HUDKeys.ACTOR_HUD_ROOT,
                 "description": "현대 배경, 연예계/배우 성장 시스템, 오디션/촬영/시상식",
                 "critical_keys": ['acting_skill', 'fame', 'filmography', 'agency', 'fandom', 'scandal_index', 'box_office', 'current_objective']
             },
-            "8": {
+            "9": {
                 "name": f"{GenreTypes.get_name(GenreTypes.SPORTS)} (Sports Fiction)",
                 "type": GenreTypes.SPORTS,
                 "hud_key": HUDKeys.SPORTS_HUD_ROOT,
                 "description": "현대 배경, 선수 성장/팀 스포츠 시스템, 경기/훈련",
                 "critical_keys": ['athlete_tier', 'sport_type', 'physical_stats', 'record', 'team', 'ranking', 'reputation', 'current_objective']
             },
-            "9": {
+            "10": {
                 "name": f"{GenreTypes.get_name(GenreTypes.MEDICAL)} (Medical Fiction)",
                 "type": GenreTypes.MEDICAL,
                 "hud_key": HUDKeys.MEDICAL_HUD_ROOT,
@@ -3756,22 +3763,22 @@ class SovereignApp:
 
     def _generate_narrative_summary(self, up_to_ep: int) -> None:
         """
-        [V63.2] 10화 단위 내러티브 요약 생성 및 DB 저장.
+        [V66] 5화 단위 내러티브 요약 생성 및 DB 저장.
 
-        최근 10화 원고를 LLM(gemini-2.5-flash)으로 요약하여
+        최근 5화 원고를 LLM(gemini-2.5-flash)으로 요약하여
         'narrative_summary_ep_XXX' anchor에 저장.
         이후 생성 시 장기 기억으로 활용.
         """
         import time as _time
 
-        start_ep = max(1, up_to_ep - 9)
-        self.ui.log(f"   📝 [V63.2] 내러티브 요약 생성 중 (제{start_ep}~{up_to_ep}화)...")
+        start_ep = max(1, up_to_ep - 4)  # [V66] 10→5화 범위
+        self.ui.log(f"   📝 [V66] 내러티브 요약 생성 중 (제{start_ep}~{up_to_ep}화)...")
 
-        # 최근 10화 원고 수집
+        # 최근 5화 원고 수집
         manuscripts = self.current_project.db.get_recent_manuscripts(
-            before_ep=up_to_ep + 1, limit=10
+            before_ep=up_to_ep + 1, limit=5
         )
-        if not manuscripts or len(manuscripts) < 3:
+        if not manuscripts or len(manuscripts) < 2:  # [V66] 최소 2화로 완화
             self.ui.log(f"   ⚠️ 원고 부족 ({len(manuscripts)}화) - 요약 건너뜀")
             return
 
@@ -3833,7 +3840,7 @@ class SovereignApp:
         [V63.2] 저장된 내러티브 요약들을 로드하여 프롬프트 주입용 문자열 반환.
         """
         summaries = []
-        for ep_marker in range(10, 500, 10):
+        for ep_marker in range(5, 500, 5):  # [V66] 10→5화 간격
             anchor_key = f"narrative_summary_ep_{ep_marker:03d}"
             data = self.current_project.db.load_anchor(anchor_key, default=None)
             if data and isinstance(data, dict) and data.get("summary"):

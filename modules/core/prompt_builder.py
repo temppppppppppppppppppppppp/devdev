@@ -781,7 +781,19 @@ class PromptBuilder:
 
                 new_items = ep_bible.get('new_items', [])
                 if new_items:
-                    items_str = ", ".join(new_items) if isinstance(new_items, list) else str(new_items)
+                    # [V66] dict/str 양쪽 호환 처리
+                    if isinstance(new_items, list):
+                        item_parts = []
+                        for item in new_items:
+                            if isinstance(item, dict):
+                                name = item.get('name', str(item))
+                                desc = item.get('description', '')
+                                item_parts.append(f"{name}({desc})" if desc else name)
+                            else:
+                                item_parts.append(str(item))
+                        items_str = ", ".join(item_parts)
+                    else:
+                        items_str = str(new_items)
                     timeline_lines.append(f"제{ep}화: {items_str} 획득")
 
                 lost_items = ep_bible.get('lost_items', [])
