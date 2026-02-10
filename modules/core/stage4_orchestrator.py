@@ -30,6 +30,55 @@ class Stage4Orchestrator:
         self.app = app
 
     # ═══════════════════════════════════════════════════════════════════════
+    # [V66] 확장 Lookback
+    # ═══════════════════════════════════════════════════════════════════════
+
+    def _build_extended_lookback_digest(self, next_ep: int) -> str:
+        """
+        [V66] 직전 10화 원고에서 1-2줄 요약 추출 → mandatory_context 주입.
+        기존 3화 lookback을 보완하여 중장기 맥락 제공.
+        총 1,500자 이내 truncate.
+        """
+        import re
+        if next_ep <= 3:
+            return ""
+        try:
+            # 직전 10화 (기존 3화 제외 → ep-10 ~ ep-4 범위)
+            start_ep = max(1, next_ep - 10)
+            end_ep = max(1, next_ep - 3)  # 최근 3화는 기존 lookback이 커버
+            manuscripts = self.app.current_project.db.get_recent_manuscripts(
+                before_ep=next_ep, limit=10
+            )
+            if not manuscripts or not isinstance(manuscripts, list):
+                return ""
+
+            lines = []
+            for ms in manuscripts:
+                ep_num = ms.get("ep_num", 0)
+                if ep_num < start_ep or ep_num >= end_ep:  # end_ep exclusive: 최근 3화는 기존 lookback이 커버
+                    continue
+                content = ms.get("content", "")
+                if not content:
+                    continue
+                # 첫 문단 또는 첫 100자에서 핵심 요약 추출
+                first_para = content.split("\n\n")[0] if "\n\n" in content else content[:150]
+                # 줄바꿈 정리
+                first_para = re.sub(r'\s+', ' ', first_para).strip()
+                if len(first_para) > 150:
+                    first_para = first_para[:147] + "..."
+                lines.append(f"[제{ep_num}화] {first_para}")
+
+            if not lines:
+                return ""
+
+            digest = "\n".join(lines)
+            if len(digest) > 1500:
+                digest = digest[:1497] + "..."
+            return f"[확장 Lookback: 직전 4~10화 요약]\n{digest}"
+        except Exception:
+            return ""
+
+    # ═══════════════════════════════════════════════════════════════════════
     # 메인 파이프라인
     # ═══════════════════════════════════════════════════════════════════════
 
@@ -262,6 +311,24 @@ class Stage4Orchestrator:
                     if _arc_cs:
                         mandatory_context = f"{mandatory_context}\n\n[Arc 제약 - MUST NOT DO]\n{_arc_cs}"
 
+                    # [V66] 완결 플롯 주입 (재발생 방지)
+                    if hasattr(self.app, 'state_tracker'):
+                        _resolved = self.app.state_tracker.get_resolved_plots_summary()
+                        if _resolved:
+                            mandatory_context = f"{mandatory_context}\n\n{_resolved}"
+                        # [V66] 파괴된 조직/장소 주입
+                        _destroyed = self.app.state_tracker.get_entity_destruction_summary()
+                        if _destroyed:
+                            mandatory_context = f"{mandatory_context}\n\n{_destroyed}"
+                        # [V66] NPC 성격/동기 주입
+                        _personality = self.app.state_tracker.get_npc_personality_summary()
+                        if _personality:
+                            mandatory_context = f"{mandatory_context}\n\n{_personality}"
+                        # [V66] NPC-NPC 관계 주입
+                        _npc_rel = self.app.state_tracker.get_npc_npc_relationship_summary()
+                        if _npc_rel:
+                            mandatory_context = f"{mandatory_context}\n\n{_npc_rel}"
+
                     # [V63.1] 금융 상태 레지스트리 주입 (투자물)
                     if _s4_genre_type == 'investment' and hasattr(self.app, 'state_tracker'):
                         _fin_summary = self.app.state_tracker.get_financial_state_summary()
@@ -284,6 +351,14 @@ class Stage4Orchestrator:
                                     _mq_queries.append(" ".join(_npc_names[:5]))
                             if arc_tactical and len(arc_tactical) > 50:
                                 _mq_queries.append(arc_tactical[:300])
+                            # [V66] 장르별 추가 쿼리
+                            _genre_queries = {
+                                'hunter': ['던전 클리어 각성 스킬 랭크'],
+                                'investment': ['포트폴리오 거래 수익률 투자'],
+                                'fantasy': ['마법 축복 주문 마나 정령'],
+                            }
+                            if _s4_genre_type in _genre_queries:
+                                _mq_queries.extend(_genre_queries[_s4_genre_type])
                             _vector_memory = self.app.memory.retrieve_multi_query_context(
                                 queries=_mq_queries,
                                 current_ep=next_ep,
@@ -294,6 +369,23 @@ class Stage4Orchestrator:
                                 mandatory_context = f"{mandatory_context}\n\n[과거 유사 맥락 (벡터 검색)]\n{_vector_memory}"
                     except Exception as e:
                         self.app.ui.log(f"   ⚠️ ChromaDB 시맨틱 검색 실패 (비차단): {e}")
+
+                    # [V66] 확장 Lookback (직전 4~10화 요약)
+                    try:
+                        _ext_lookback = self._build_extended_lookback_digest(next_ep)
+                        if _ext_lookback:
+                            mandatory_context = f"{mandatory_context}\n\n{_ext_lookback}"
+                    except Exception as e:
+                        self.app.ui.log(f"   ⚠️ 확장 Lookback 실패 (비차단): {e}")
+
+                    # [V66] ForeshadowTracker 프롬프트 주입 (루프 밖 1회만)
+                    try:
+                        if V50_MODULES_AVAILABLE and self.app.foreshadow_tracker:
+                            _foreshadow_prompt = self.app.foreshadow_tracker.generate_writer_prompt(next_ep)
+                            if _foreshadow_prompt:
+                                mandatory_context = f"{mandatory_context}\n\n{_foreshadow_prompt}"
+                    except Exception as e:
+                        self.app.ui.log(f"   ⚠️ ForeshadowTracker 프롬프트 실패 (비차단): {e}")
 
                     try:
                         anti_trope_prompt = writer_agent._build_anti_trope_instructions(genre_name)
@@ -355,6 +447,11 @@ class Stage4Orchestrator:
                 final_state_updates = {}
                 director_feedback = ""
                 previous_attempt = {}
+
+                # [V66] mandatory_context 크기 상한 (25,000자)
+                if len(mandatory_context) > 25000:
+                    mandatory_context = mandatory_context[:24950] + "\n\n...(컨텍스트 크기 초과로 일부 생략)"
+                    self.app.ui.log(f"   ⚠️ [V66] mandatory_context {len(mandatory_context)}자 → 25,000자로 truncate")
 
                 # [V61.6] 전체 면담 루프를 스피너로 감싸기
                 with StageSpinner(4, f"제{next_ep}화 · 앙상블 준비") as stage4_spinner:
@@ -526,6 +623,17 @@ class Stage4Orchestrator:
                         final_manuscript = selected_candidate.get('manuscript', '')
                         final_title = selected_candidate.get('title', f'제{next_ep}화')
                         final_state_updates = director_result.get('state_updates', {})
+
+                        # [V66] 파괴된 조직/장소 원고 내 활동 검사
+                        try:
+                            if hasattr(self.app, 'state_tracker') and final_manuscript:
+                                _destroyed_warnings = self.app.state_tracker.check_destroyed_entity_in_manuscript(final_manuscript)
+                                if _destroyed_warnings:
+                                    for _dw in _destroyed_warnings:
+                                        self.app.ui.log(f"   ⚠️ [V66] 파괴 엔티티 경고: {_dw.get('message', '')}")
+                        except Exception:
+                            pass
+
                         self.app.ui.log(f"   ✅ {interview_round + 1}차 면담 PASS!")
                         break
                     else:
@@ -694,8 +802,8 @@ class Stage4Orchestrator:
                     except Exception as _mem_err:
                         self.app.ui.log(f"   ⚠️ [V63.3] 벡터 메모리 저장 실패 (비차단): {str(_mem_err)[:60]}")
 
-                    # [V63.2] 10화 단위 내러티브 요약 생성
-                    if next_ep % 10 == 0:
+                    # [V66] 5화 단위 내러티브 요약 생성 (V63.2 10→5 단축)
+                    if next_ep % 5 == 0:
                         try:
                             self.app._generate_narrative_summary(next_ep)
                         except Exception as _ns_err:
@@ -717,6 +825,11 @@ class Stage4Orchestrator:
                             self.app.character_voice.save_to_json(os.path.join(logs_dir, "character_voice.json"))
 
                         if V50_MODULES_AVAILABLE and self.app.foreshadow_tracker:
+                            # [V66] 원고에서 복선 자동 감지
+                            try:
+                                self.app.foreshadow_tracker.auto_detect_from_manuscript(next_ep, final_manuscript)
+                            except Exception:  # [V66] OPTIONAL: foreshadow auto-detect
+                                pass
                             self.app.foreshadow_tracker.save_to_json(os.path.join(logs_dir, "foreshadow.json"))
 
                         self.app.ui.log(f"   💾 [V60.87] 로그 파일 저장 완료")

@@ -123,9 +123,19 @@ class StateTracker:
 
         # [V62.7] 완결된 플롯 누적 추적
         self.resolved_plots: List[Dict] = []
-        # [V62.7→V64 P2-4] 비-NPC 엔티티 명칭 레지스트리 (LRU, max 200)
+        # [V62.7→V64 P2-4] 비-NPC 엔티티 명칭 레지스트리 (LRU, max 500)
         self.entity_name_registry: OrderedDict = OrderedDict()
-        self._entity_registry_max_size = 200
+        self._entity_registry_max_size = 500  # [V66] 200→500 엔티티 망각 방지
+        # [V66] 조직/장소 파괴 추적
+        self.entity_destructions: List[Dict] = []
+        # [V66] NPC-NPC 관계 추적 (key: sorted tuple of names)
+        self.npc_npc_relationships: Dict = {}
+        # [V66] 장르별 확장 레지스트리 (필요 시 초기화)
+        self.skill_cooldown_registry: Dict = {}   # hunter: skill → {cooldown, last_used_ep}
+        self.dungeon_clear_registry: Dict = {}    # hunter: dungeon_id → {cleared_ep, rank}
+        self.spell_repertoire: Dict = {}          # fantasy: spell_name → {tier, learned_ep}
+        self.blessing_curse_registry: Dict = {}   # fantasy: name → {type, source, ep}
+        self.filmography_registry: Dict = {}      # actor: work_name → {role, year, ep}
 
         # [V63.1] 금융 상태 추적 (투자물)
         self.financial_number_registry: Dict[int, Dict[str, Any]] = {}
@@ -932,6 +942,30 @@ class StateTracker:
     def check_entity_name_consistency(self, content: str, arc_no: int = 0) -> List[Dict]:
         return self._plots.check_entity_name_consistency(content, arc_no)
 
+    # [V66] 조직/장소 파괴 추적 위임
+    def extract_entity_destructions_from_arc(self, arc: dict) -> List[Dict]:
+        return self._plots.extract_entity_destructions_from_arc(arc)
+
+    def get_entity_destruction_summary(self) -> str:
+        return self._plots.get_entity_destruction_summary()
+
+    def check_destroyed_entity_in_manuscript(self, content: str) -> List[Dict]:
+        return self._plots.check_destroyed_entity_in_manuscript(content)
+
+    # [V66] NPC 성격/동기 위임
+    def extract_npc_personality_from_arc(self, arc: dict) -> List[Dict]:
+        return self._npc.extract_npc_personality_from_arc(arc)
+
+    def get_npc_personality_summary(self) -> str:
+        return self._npc.get_npc_personality_summary()
+
+    # [V66] NPC-NPC 관계 위임
+    def extract_npc_npc_relationships_from_arc(self, arc: dict) -> List[Dict]:
+        return self._npc.extract_npc_npc_relationships_from_arc(arc)
+
+    def get_npc_npc_relationship_summary(self) -> str:
+        return self._npc.get_npc_npc_relationship_summary()
+
     # ═══════════════════════════════════════════════════════════════
     # [V64.P3] 통합 추출 메서드 (여러 서브모듈 조합)
     # ═══════════════════════════════════════════════════════════════
@@ -941,6 +975,7 @@ class StateTracker:
         [V61] Arc에서 모든 state_changes 추출 (통합 메서드)
         [V63] npc_injuries, npc_movements 추가
         [V63.1] financial_events 추가
+        [V66] entity_destructions, npc_personality_changes, npc_npc_relationships 추가
 
         Returns:
             {
@@ -951,7 +986,10 @@ class StateTracker:
                 "resolved_plots": [...],
                 "npc_injuries": [...],
                 "npc_movements": [...],
-                "financial_events": {...}
+                "financial_events": {...},
+                "entity_destructions": [...],
+                "npc_personality_changes": [...],
+                "npc_npc_relationships": [...]
             }
         """
         return {
@@ -963,7 +1001,38 @@ class StateTracker:
             "npc_injuries": self.extract_npc_injuries_from_arc(arc),
             "npc_movements": self.extract_npc_movements_from_arc(arc),
             "financial_events": self.extract_financial_events_from_arc(arc),
+            "entity_destructions": self.extract_entity_destructions_from_arc(arc),
+            "npc_personality_changes": self.extract_npc_personality_from_arc(arc),
+            "npc_npc_relationships": self.extract_npc_npc_relationships_from_arc(arc),
         }
+
+    def _populate_genre_registries_from_arc(self, arc: dict):
+        """[V66] Arc에서 장르별 레지스트리 데이터 추출 및 저장."""
+        state_changes = arc.get("state_changes", {})
+        if not isinstance(state_changes, dict):
+            return
+        arc_no = arc.get("arc_no", 0)
+
+        # Hunter: 던전 클리어 기록
+        for item in state_changes.get("major_items", []):
+            if isinstance(item, dict) and '던전' in str(item.get("name", "")):
+                self.dungeon_clear_registry[item["name"]] = {
+                    "cleared_ep": item.get("episode", 0), "arc_no": arc_no
+                }
+
+        # Hunter: 스킬 쿨다운 (skill_acquisitions에서 추출)
+        for skill in state_changes.get("skill_acquisitions", []):
+            if isinstance(skill, dict) and skill.get("name"):
+                self.skill_cooldown_registry[skill["name"]] = {
+                    "learned_ep": skill.get("episode", 0), "arc_no": arc_no
+                }
+
+        # Fantasy: 주문 레퍼토리
+        for skill in state_changes.get("skill_acquisitions", []):
+            if isinstance(skill, dict) and skill.get("name"):
+                self.spell_repertoire[skill["name"]] = {
+                    "tier": skill.get("tier", ""), "learned_ep": skill.get("episode", 0)
+                }
 
 
 def create_tracker_from_arcs(arcs_data: List[dict]) -> StateTracker:

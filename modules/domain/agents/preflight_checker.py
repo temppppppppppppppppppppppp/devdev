@@ -77,6 +77,7 @@ PREFLIGHT_ANALYSIS_PROMPT = """
         "known_information": ["적대 세력의 침입 계획"],
         "ongoing_conflicts": ["현재 진행 중인 갈등만"],
         "resolved_conflicts": ["이미 완결된 갈등 (재생성 금지)"],
+        "resolved_plots_from_tracker": ["이전에 완결된 플롯 라인 (절대 반복 금지)"],
         "protagonist_status": {{
             "injuries": "왼팔 경상 (Arc 2에서 부상)",
             "internal_energy": 85,
@@ -120,12 +121,13 @@ class PreflightChecker(BaseAgent):
         super().__init__(context, client, model_tier)
         # [V60.37] 스마트 폴백 (BaseAgent에서 자동 설정: gemini-3-flash → gemini-2.5-flash)
 
-    def analyze(self, prev_arcs: List[Dict]) -> Dict:
+    def analyze(self, prev_arcs: List[Dict], resolved_plots_summary: str = "") -> Dict:
         """
         이전 Arc들을 완전 분석하여 제약 맵 생성
 
         Args:
             prev_arcs: 이전 Arc 리스트
+            resolved_plots_summary: [V66] 완결 플롯 요약 문자열
 
         Returns:
             완벽한 제약 맵 딕셔너리
@@ -135,6 +137,10 @@ class PreflightChecker(BaseAgent):
 
         # 이전 Arc 데이터 포맷팅
         prev_arcs_data = self._format_prev_arcs(prev_arcs)
+
+        # [V66] 완결 플롯 섹션 주입
+        if resolved_plots_summary:
+            prev_arcs_data += f"\n\n### 완결 플롯 (절대 재발생 금지)\n{resolved_plots_summary}"
 
         prompt = PREFLIGHT_ANALYSIS_PROMPT.format(
             prev_arc_count=len(prev_arcs),

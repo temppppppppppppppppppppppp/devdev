@@ -242,6 +242,11 @@ class HUDKeys:
     MEDICAL_HUD_ROOT = 'MedicalHUD'
     MEDICAL_ACTUAL_TRUTH = 'actual_truth'
 
+    # 판타지
+    FANTASY_PROTAGONIST = 'Protagonist'
+    FANTASY_HUD_ROOT = 'FantasyHUD'
+    FANTASY_ACTUAL_TRUTH = 'actual_truth'
+
     # 장르 → HUD root 매핑
     _GENRE_HUD_MAP = {
         'wuxia': 'MartialHUD',
@@ -253,7 +258,7 @@ class HUDKeys:
         'actor': 'ActorHUD',
         'sports': 'SportsHUD',
         'medical': 'MedicalHUD',
-        'fantasy': 'MartialHUD',
+        'fantasy': 'FantasyHUD',  # [V66] MartialHUD → FantasyHUD 독립
     }
 
     @classmethod
@@ -337,7 +342,7 @@ class NPCHUDKeys:
     WUXIA = 'NPC_Martial_HUD'
     HUNTER = 'NPC_Hunter_Status'
     INVESTMENT = 'NPC_Business_Profile'
-    FANTASY = 'NPC_Martial_HUD'  # [V65] 판타지 → MartialHUD 공유
+    FANTASY = 'NPC_Fantasy_Status'  # [V66] 판타지 독립
     COMPOSER = 'NPC_Music_Profile'
     COOKING = 'NPC_Cooking_Profile'
     ALT_HISTORY = 'NPC_Joseon_Status'

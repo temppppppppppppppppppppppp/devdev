@@ -526,3 +526,50 @@ class InvestmentGuard(BaseGuard):
    - 주가 조작: 범죄, 조사 대상
    - 횡령/배임: 구속, 파산 가능성
 """
+
+    # ========================================================================
+    # [V66] run_deep_validation override
+    # ========================================================================
+
+    def run_deep_validation(self, manuscript: str, current_state: Dict[str, Any] = None) -> Dict[str, Any]:
+        """[V66] Investment 심층 검증: base + 투자 규모/수익률 범위 검증."""
+        import re
+        result = super().run_deep_validation(manuscript, current_state or {})
+
+        # 투자 규모 검증
+        amount_patterns = re.findall(r'(\d+(?:,\d{3})*)\s*(?:억|만)\s*(?:원|달러|불)', manuscript)
+        for amount_str in amount_patterns:
+            try:
+                amount = int(amount_str.replace(',', ''))
+                _wealth = float((current_state or {}).get('total_assets', 0) or 0)
+                valid, msg = self.validate_investment_scale('stock', amount, _wealth)
+                if not valid:
+                    result["violations"].append({
+                        "type": "investment_scale",
+                        "severity": "MEDIUM",
+                        "message": msg
+                    })
+            except (ValueError, TypeError):
+                pass
+
+        # 수익률 범위 검증
+        roi_patterns = re.findall(r'(\d+(?:\.\d+)?)\s*%', manuscript)
+        for roi_str in roi_patterns:
+            try:
+                roi = float(roi_str)
+                if roi > 100:
+                    valid, msg = self.validate_return_rate('stock', roi, 1.0)
+                    if not valid:
+                        result["violations"].append({
+                            "type": "return_rate",
+                            "severity": "MEDIUM",
+                            "message": msg
+                        })
+            except (ValueError, TypeError):
+                pass
+
+        result["has_critical"] = any(v.get("severity") == "HIGH" for v in result["violations"])
+        if result["violations"]:
+            result["summary"] = "; ".join(v.get("message", "") for v in result["violations"][:5])
+            result["feedback"] = f"[투자 Guard] {len(result['violations'])}건: {result['summary']}"
+        return result

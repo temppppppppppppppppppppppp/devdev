@@ -534,7 +534,13 @@ class Stage2Orchestrator:
                         try:
                             print(f"      🔍 [무기 #1] Preflight 분석 시작...")
                             with rich_console.status(f"[bold green]🔍 Preflight 분석 중...[/]", spinner="dots"):
-                                preflight_result = self.app.agents['preflight'].analyze(all_refined_arcs)
+                                # [V66] 완결 플롯 요약 전달
+                                _resolved_plots = ""
+                                if hasattr(self.app, 'state_tracker'):
+                                    _resolved_plots = self.app.state_tracker.get_resolved_plots_summary()
+                                preflight_result = self.app.agents['preflight'].analyze(
+                                    all_refined_arcs, resolved_plots_summary=_resolved_plots
+                                )
                             if preflight_result:
                                 preflight_injection = self.app.agents['preflight'].generate_analyst_injection(preflight_result)
                                 analyst_weapons['preflight'] = preflight_result
@@ -636,6 +642,15 @@ class Stage2Orchestrator:
                                 learned_skills = self.app.state_tracker.extract_skill_acquisitions_from_arc(refined_arc)
                                 npc_info = self.app.state_tracker.extract_npc_info_from_arc(refined_arc)
                                 self.app.state_tracker.extract_resolved_plots_from_arc(refined_arc)
+                                # [V66] 조직/장소 파괴, NPC 성격, NPC-NPC 관계 추출
+                                self.app.state_tracker.extract_entity_destructions_from_arc(refined_arc)
+                                self.app.state_tracker.extract_npc_personality_from_arc(refined_arc)
+                                self.app.state_tracker.extract_npc_npc_relationships_from_arc(refined_arc)
+                                # [V66] 장르별 레지스트리 업데이트
+                                try:
+                                    self.app.state_tracker._populate_genre_registries_from_arc(refined_arc)
+                                except Exception:
+                                    pass
                                 if _genre_for_tracker == 'investment':
                                     self.app.state_tracker.extract_financial_events_from_arc(refined_arc)
                                     self.app.current_project.save_v20_anchor("financial_registry", self.app.state_tracker.export_financial_registry())

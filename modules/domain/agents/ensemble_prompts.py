@@ -153,6 +153,15 @@ ENSEMBLE_ARC_PROMPT = """
         "npc_movements": [
             {{"name": "NPC명", "episode": N, "from": "출발지", "to": "도착지"}}
         ],
+        "entity_destructions": [
+            {{"name": "파괴된 조직/장소명", "type": "organization|location", "cause": "파괴 원인", "episode": N}}
+        ],
+        "npc_personality_changes": [
+            {{"name": "NPC명", "traits": "성격 특성 요약", "motivation": "주요 동기", "episode": N}}
+        ],
+        "npc_npc_relationships": [
+            {{"npc1": "NPC_A", "npc2": "NPC_B", "relation": "동맹|적대|사제|부자|연인", "episode": N}}
+        ],
         "financial_events": {{
             "exchange_rates": [
                 {{"value": 숫자, "episode": N, "context": "환율 설명"}}
@@ -180,6 +189,9 @@ ENSEMBLE_ARC_PROMPT = """
 - 관계 변화(적→아군 등)가 있으면 relationship_changes에 기록
 - resolved_plots: 이번 Arc에서 완결된 갈등/사건을 기록 (예: 인수전 완료, 적 조직 괴멸 등)
 - [V63] npc_injuries: NPC가 부상당하면 상태 기록 (경상/중상/위독)
+- [V66] entity_destructions: 조직 괴멸/장소 파괴 해당 시 반드시 기록 (이후 재등장 방지, 빈 배열도 가능)
+- [V66] npc_personality_changes: NPC 성격/동기 변화 해당 시 반드시 기록 (성격 일관성 유지, 빈 배열도 가능)
+- [V66] npc_npc_relationships: NPC 간 관계 해당 시 반드시 기록 (동맹/적대/사제 등, 빈 배열도 가능)
 - [V63] npc_movements: NPC가 장소를 이동하면 출발지/도착지 기록
 - [V63.1] financial_events: 투자/재벌물에서 환율, 자산, 레버리지, 거래 내역 기록 (비투자 장르는 빈 객체 {{}})
 - 해당 사항 없으면 빈 배열 [] 또는 빈 객체 {{}}로 표시

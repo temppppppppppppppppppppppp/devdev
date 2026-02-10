@@ -517,3 +517,41 @@ class WuxiaGuard(BaseGuard):
                 })
 
         return violations
+
+    # ========================================================================
+    # [V66] run_deep_validation override
+    # ========================================================================
+
+    def run_deep_validation(self, manuscript: str, current_state: Dict[str, Any] = None) -> Dict[str, Any]:
+        """[V66] Wuxia 심층 검증: base + 현대 표기 검사 + 경지별 무공 제한."""
+        result = super().run_deep_validation(manuscript, current_state or {})
+
+        # 현대 표기 검사
+        modern_violations = self.check_modern_notation(manuscript)
+        if modern_violations:
+            examples = [v.get('match', '')[:20] for v in modern_violations[:3]]
+            result["violations"].append({
+                "type": "modern_notation",
+                "severity": "MEDIUM",
+                "message": f"현대 표기 발견: {examples}"
+            })
+
+        # 경지별 무공 제한 (HUD 상태 기반)
+        if current_state:
+            realm = str(current_state.get('realm', '')).strip()
+            if realm and realm in ('삼류', '이류'):
+                # 절대고수급 무공 사용 검사
+                forbidden_moves = ['파천', '멸세', '천지', '신마', '파천성장']
+                for move in forbidden_moves:
+                    if move in manuscript:
+                        result["violations"].append({
+                            "type": "power_mismatch",
+                            "severity": "HIGH",
+                            "message": f"경지 '{realm}'에서 절대고수급 무공 '{move}' 사용"
+                        })
+
+        result["has_critical"] = any(v.get("severity") == "HIGH" for v in result["violations"])
+        if result["violations"]:
+            result["summary"] = "; ".join(v.get("message", "") for v in result["violations"][:5])
+            result["feedback"] = f"[무협 Guard] {len(result['violations'])}건: {result['summary']}"
+        return result

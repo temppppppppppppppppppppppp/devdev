@@ -309,3 +309,30 @@ class SportsGuard(BaseGuard):
             r'팬.*지지', r'여론.*반전',
             r'결백.*증명', r'징계.*해제',
         ]
+
+    # ========================================================================
+    # [V66] 심층 검증 오버라이드
+    # ========================================================================
+
+    def run_deep_validation(self, manuscript: str, current_state: Dict[str, Any] = None) -> Dict[str, Any]:
+        """[V66] 스포츠물 심층 검증."""
+        result = super().run_deep_validation(manuscript, current_state or {})
+
+        # 스포츠물 추가 검증: 선수등급/상태 기반 불가 행동 체크
+        if current_state:
+            impossible = self.get_impossible_actions(current_state)
+            import re
+            for action in impossible:
+                pattern = action.get('pattern', '')
+                if pattern and re.search(pattern, manuscript):
+                    result["violations"].append({
+                        "type": "impossible_action",
+                        "severity": action.get('severity', 'HIGH'),
+                        "message": f"불가 행동 감지: {action.get('reason', '')}"
+                    })
+
+        result["has_critical"] = any(v.get("severity") == "HIGH" for v in result["violations"])
+        if result["violations"]:
+            result["summary"] = "; ".join(v.get("message", "") for v in result["violations"][:5])
+            result["feedback"] = f"[스포츠물 Guard] {len(result['violations'])}건: {result['summary']}"
+        return result

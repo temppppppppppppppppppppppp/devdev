@@ -1030,6 +1030,91 @@ class MedicalHUDManager(GenreHUDManager):
         return changes
 
 
+class FantasyHUDManager(GenreHUDManager):
+    """[V66] 판타지(이세계) 전용 HUD 시스템"""
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.canonical_map = {
+            'magic_tier': ['magic_tier', 'realm', 'magic_level', '마법등급', '마법티어'],
+            'mana': ['mana', 'magic_power', 'mp', '마나', '마력'],
+            'spells': ['spells', 'spell_list', 'magic_skills', '주문', '마법목록'],
+            'race': ['race', 'species', '종족'],
+            'blessings': ['blessings', 'buffs', '축복', '버프'],
+            'curses': ['curses', 'debuffs', '저주', '디버프'],
+            'equipment': ['equipment', 'items', '장비', '아이템'],
+            'wealth': ['wealth', 'gold', 'money', '골드', '재산'],
+            'injuries': ['injuries', 'status', 'hp', '부상', '상태'],
+            'reputation': ['reputation', 'fame', '명성', '평판'],
+            'guild': ['guild', 'party', 'affiliation', '길드', '소속'],
+            'current_objective': ['objective', 'quest', '목표', '퀘스트'],
+            'level': ['level', 'lv', '레벨'],
+        }
+
+    @property
+    def pro_root(self):
+        bible = self.context.master_bible.get('MasterBible', self.context.master_bible)
+        hud_data = bible.get('FantasyHUD', bible.get('fantasy_hud', bible.get('MartialHUD', {})))
+
+        if not hud_data or not isinstance(hud_data, dict):
+            default_name = '주인공'
+            try:
+                default_name = (
+                    bible.get('ProjectData', {}).get('CoreIdentity', {}).get('protagonist')
+                    or bible.get('InitialHUD', {}).get('name')
+                    or '주인공'
+                )
+            except Exception:
+                pass
+            hud_data = {
+                'Protagonist': {
+                    'actual_truth': {
+                        'name': default_name,
+                        'magic_tier': '견습',
+                        'mana': 100,
+                        'level': 1,
+                        'spells': '없음',
+                        'race': '인간',
+                        'blessings': '없음',
+                        'curses': '없음',
+                        'equipment': '없음',
+                        'guild': '무소속',
+                        'wealth': '0골드',
+                        'injuries': '정상',
+                        'reputation': '무명',
+                        'current_objective': '생존'
+                    }
+                }
+            }
+            bible['FantasyHUD'] = hud_data
+
+        return hud_data.get('Protagonist', hud_data)
+
+    @property
+    def pro_data(self):
+        root = self.pro_root
+        return root.get('actual_truth', root)
+
+    def snapshot(self):
+        return dict(self.pro_data)
+
+    def update_physical_status(self, updates):
+        data = self.pro_data
+        changes = []
+        for key, val in updates.items():
+            canonical_key = self._resolve_key(key)
+            if canonical_key and canonical_key in data:
+                old_val = data[canonical_key]
+                if str(old_val) != str(val):
+                    data[canonical_key] = val
+                    changes.append(f"{canonical_key}: {old_val} → {val}")
+
+        if changes:
+            self.context.save_v20_anchor("bible", self.context.master_bible)
+
+        return changes
+
+
 def create_hud_manager(genre_type, context):
     """
     [V40 Factory] 장르별 HUD 매니저 생성 팩토리 함수
@@ -1061,6 +1146,8 @@ def create_hud_manager(genre_type, context):
         return SportsHUDManager(context)
     elif genre_type == 'medical':
         return MedicalHUDManager(context)
+    elif genre_type == 'fantasy':
+        return FantasyHUDManager(context)  # [V66]
     else:
         raise ValueError(f"Unknown genre type: {genre_type}")
 

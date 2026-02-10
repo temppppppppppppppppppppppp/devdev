@@ -751,3 +751,54 @@ class HunterGuard(BaseGuard):
    - 초기 각성자가 영역 전개 → 즉시 REJECT
    - 각성 단계에 맞지 않는 스킬 수 → WARNING
 """
+
+    # ========================================================================
+    # [V66] run_deep_validation override
+    # ========================================================================
+
+    def run_deep_validation(self, manuscript: str, current_state: Dict[str, Any] = None) -> Dict[str, Any]:
+        """[V66] Hunter 심층 검증: base + 던전 진입 + 각성 순서 + 랭크 스킵 감지."""
+        import re
+        result = super().run_deep_validation(manuscript, current_state or {})
+
+        # 던전 진입 검증
+        dungeon_patterns = re.findall(r'(\w+)\s*(?:등급|랭크|급)\s*던전', manuscript)
+        hunter_rank = str((current_state or {}).get('realm', 'E'))
+        for dungeon_rank in dungeon_patterns:
+            valid, msg = self.validate_dungeon_entry(dungeon_rank, hunter_rank)
+            if not valid:
+                result["violations"].append({
+                    "type": "dungeon_entry",
+                    "severity": "HIGH",
+                    "message": msg
+                })
+
+        # 각성 순서 검증 (단계 스킵 감지)
+        awakening_patterns = re.findall(r'(\d)차\s*각성', manuscript)
+        for stage_str in awakening_patterns:
+            try:
+                stage = int(stage_str)
+                if stage >= 3:
+                    # 현재 상태에서 1-2차가 이미 완료됐는지 체크 불가 → WARNING 등급
+                    result["violations"].append({
+                        "type": "awakening_skip_risk",
+                        "severity": "MEDIUM",
+                        "message": f"{stage}차 각성 언급 — 이전 단계 완료 여부 확인 필요"
+                    })
+            except ValueError:
+                pass
+
+        # 스킬 개수 제한 (미각성 → 0, 초기 → 3, ...)
+        skill_mentions = re.findall(r'스킬\s*[:\-]?\s*([가-힣]+)', manuscript)
+        if skill_mentions and not (current_state or {}).get('realm'):
+            result["violations"].append({
+                "type": "skill_without_awakening",
+                "severity": "MEDIUM",
+                "message": f"각성 전 스킬 언급 ({len(skill_mentions)}건)"
+            })
+
+        result["has_critical"] = any(v.get("severity") == "HIGH" for v in result["violations"])
+        if result["violations"]:
+            result["summary"] = "; ".join(v.get("message", "") for v in result["violations"][:5])
+            result["feedback"] = f"[헌터 Guard] {len(result['violations'])}건: {result['summary']}"
+        return result
