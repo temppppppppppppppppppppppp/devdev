@@ -136,6 +136,12 @@ class StateTracker:
         self.spell_repertoire: Dict = {}          # fantasy: spell_name → {tier, learned_ep}
         self.blessing_curse_registry: Dict = {}   # fantasy: name → {type, source, ep}
         self.filmography_registry: Dict = {}      # actor: work_name → {role, year, ep}
+        # [V66] 아이템 상태 레지스트리
+        self.item_state_registry: Dict = {}  # item_name → {description, source, condition, arc_no}
+        # [V66] 플롯 서스펜션 추적 (active/in_progress/suspended/resolved)
+        self.active_plots: Dict = {}  # plot_name → {status, first_arc, last_mention_arc}
+        # [V66] NPC 대화 스타일 레지스트리
+        self.npc_dialogue_profiles: Dict = {}  # npc_name → {speech_level, catchphrase, emotion_baseline}
 
         # [V63.1] 금융 상태 추적 (투자물)
         self.financial_number_registry: Dict[int, Dict[str, Any]] = {}
@@ -965,6 +971,121 @@ class StateTracker:
 
     def get_npc_npc_relationship_summary(self) -> str:
         return self._npc.get_npc_npc_relationship_summary()
+
+    # [V66] 아이템 상태 위임
+    def extract_item_states_from_arc(self, arc: dict) -> List[Dict]:
+        return self._plots.extract_item_states_from_arc(arc)
+
+    def get_item_state_summary(self) -> str:
+        return self._plots.get_item_state_summary()
+
+    # [V66] 플롯 서스펜션 위임
+    def update_plot_mentions_from_arc(self, arc: dict) -> List[Dict]:
+        return self._plots.update_plot_mentions_from_arc(arc)
+
+    def check_suspended_plots(self, current_arc_no: int, threshold: int = 3) -> List[Dict]:
+        return self._plots.check_suspended_plots(current_arc_no, threshold)
+
+    def get_plot_suspension_summary(self, current_arc_no: int) -> str:
+        return self._plots.get_plot_suspension_summary(current_arc_no)
+
+    # [V66] NPC 대화 스타일 위임
+    def extract_npc_dialogue_styles_from_arc(self, arc: dict) -> List[Dict]:
+        return self._npc.extract_npc_dialogue_styles_from_arc(arc)
+
+    def get_npc_dialogue_style_summary(self) -> str:
+        return self._npc.get_npc_dialogue_style_summary()
+
+    # ═══════════════════════════════════════════════════════════════
+    # [V66] 멀티-Arc 요약
+    # ═══════════════════════════════════════════════════════════════
+
+    def generate_arc_summary(self, arc_no: int, arc: dict = None) -> Dict:
+        """[V66] Arc 완료 시 자동 요약 생성 -- NPC 관계/세계 상태/플롯 현황."""
+        summary = {
+            "arc_no": arc_no,
+            "npc_status": {},
+            "world_changes": [],
+            "resolved_plots": [],
+            "active_plots": [],
+            "destroyed_entities": [],
+        }
+        # NPC 상태 스냅샷 (최근 10명)
+        recent_npcs = {}
+        for name, info in self.npc_registry.items():
+            if info.get("last_arc", 0) >= max(1, arc_no - 2):
+                recent_npcs[name] = {
+                    "status": info.get("status", "alive"),
+                    "relation": info.get("relation_to_protag", ""),
+                    "personality": info.get("personality_traits", ""),
+                    "location": info.get("location", ""),
+                }
+                if len(recent_npcs) >= 10:
+                    break
+        summary["npc_status"] = recent_npcs
+
+        # 완결 플롯 (현재 arc)
+        for rp in self.resolved_plots:
+            if rp.get("arc_no") == arc_no:
+                summary["resolved_plots"].append(rp.get("plot", ""))
+
+        # 파괴된 엔티티
+        for ed in self.entity_destructions:
+            if ed.get("arc_no") == arc_no:
+                summary["destroyed_entities"].append(f"{ed.get('name', '')} ({ed.get('type', '')})")
+
+        # 활성 플롯 (있으면)
+        if hasattr(self, 'active_plots') and self.active_plots:
+            for plot_name, info in self.active_plots.items():
+                if info.get("status") != "resolved":
+                    summary["active_plots"].append(plot_name)
+
+        # NPC-NPC 관계 스냅샷
+        npc_relations = []
+        for info in self.npc_npc_relationships.values():
+            npc_relations.append(f"{info.get('npc1', '')}↔{info.get('npc2', '')}: {info.get('relation', '')}")
+        if npc_relations:
+            summary["npc_relations"] = npc_relations[:10]
+
+        return summary
+
+    def format_arc_summary_for_prompt(self, arc_summaries: list) -> str:
+        """[V66] Arc 요약 목록 -> mandatory_context 주입용 문자열."""
+        if not arc_summaries:
+            return ""
+        lines = ["[V66] 이전 Arc 요약 (서사 연속성 유지 필수):"]
+        for s in arc_summaries[-3:]:  # 직전 3개 Arc만
+            arc_no = s.get("arc_no", "?")
+            lines.append(f"\n  === Arc {arc_no} ===")
+
+            npcs = s.get("npc_status", {})
+            if npcs:
+                for name, info in list(npcs.items())[:5]:
+                    status = info.get("status", "alive")
+                    rel = info.get("relation", "")
+                    lines.append(f"  NPC {name}: {status}" + (f", 관계={rel}" if rel else ""))
+
+            resolved = s.get("resolved_plots", [])
+            if resolved:
+                lines.append(f"  완결: {', '.join(resolved[:3])}")
+
+            active = s.get("active_plots", [])
+            if active:
+                lines.append(f"  진행중: {', '.join(active[:3])}")
+
+            destroyed = s.get("destroyed_entities", [])
+            if destroyed:
+                lines.append(f"  파괴: {', '.join(destroyed[:3])}")
+
+            npc_rels = s.get("npc_relations", [])
+            if npc_rels:
+                lines.append(f"  관계: {'; '.join(npc_rels[:3])}")
+
+        result = "\n".join(lines)
+        # 3,000자 상한
+        if len(result) > 3000:
+            result = result[:2997] + "..."
+        return result
 
     # ═══════════════════════════════════════════════════════════════
     # [V64.P3] 통합 추출 메서드 (여러 서브모듈 조합)

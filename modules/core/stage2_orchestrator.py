@@ -373,18 +373,12 @@ class Stage2Orchestrator:
                         constraint_block = compiled_constraints + "\n\n" + (constraint_block or "")
                         self.app.ui.log(f"      📋 [V60.11] ConstraintCompiler 체크리스트 생성 완료")
 
-                        # [V63] SemanticPlotGuard
-                        if _resolved and len(_resolved) >= 2:
+                        # [V66] SemanticPlotGuard — 중앙 인스턴스 사용
+                        if _resolved and len(_resolved) >= 2 and getattr(self.app, 'semantic_plot_guard', None):
                             try:
-                                from modules.core.semantic_plot_guard import SemanticPlotGuard
-                                _spg = getattr(self.app, '_semantic_plot_guard', None)
-                                if _spg is None:
-                                    _api_key = os.getenv("GOOGLE_API_KEY", "")
-                                    _spg = SemanticPlotGuard(api_key=_api_key)
-                                    self.app._semantic_plot_guard = _spg
-                                _spg.index_resolved_plots(_resolved)
-                            except (ImportError, ValueError, RuntimeError) as e:  # [V64.P4] SPG init — OPTIONAL
-                                self.app._audit_event("semantic_plot_guard_init_failed", str(e)[:100])
+                                self.app.semantic_plot_guard.index_resolved_plots(_resolved)
+                            except Exception as e:  # [V64.P4] SPG init — OPTIONAL
+                                self.app._audit_event("semantic_plot_guard_index_failed", str(e)[:100])
                     except Exception as cc_err:
                         self.app._audit_event("v60_11_constraint_compiler_error", str(cc_err)[:100])
 
@@ -646,6 +640,14 @@ class Stage2Orchestrator:
                                 self.app.state_tracker.extract_entity_destructions_from_arc(refined_arc)
                                 self.app.state_tracker.extract_npc_personality_from_arc(refined_arc)
                                 self.app.state_tracker.extract_npc_npc_relationships_from_arc(refined_arc)
+                                # [V66] 아이템 상태 추출
+                                self.app.state_tracker.extract_item_states_from_arc(refined_arc)
+                                # [V66] 플롯 서스펜션 추적
+                                self.app.state_tracker.update_plot_mentions_from_arc(refined_arc)
+                                _suspended = self.app.state_tracker.check_suspended_plots(global_arc_no)
+                                if _suspended:
+                                    for sw in _suspended:
+                                        print(f"      ⚠️ [V66] {sw['message']}")
                                 # [V66] 장르별 레지스트리 업데이트
                                 try:
                                     self.app.state_tracker._populate_genre_registries_from_arc(refined_arc)
@@ -654,6 +656,36 @@ class Stage2Orchestrator:
                                 if _genre_for_tracker == 'investment':
                                     self.app.state_tracker.extract_financial_events_from_arc(refined_arc)
                                     self.app.current_project.save_v20_anchor("financial_registry", self.app.state_tracker.export_financial_registry())
+
+                                # [V66] SemanticPlotGuard 인덱싱
+                                if getattr(self.app, 'semantic_plot_guard', None) and self.app.state_tracker.resolved_plots:
+                                    try:
+                                        indexed = self.app.semantic_plot_guard.index_resolved_plots(
+                                            self.app.state_tracker.resolved_plots
+                                        )
+                                        if indexed > 0:
+                                            print(f"      📊 [V66] SemanticPlotGuard: {indexed}개 플롯 인덱싱")
+                                    except Exception:
+                                        pass
+
+                                # [V66] NPC 대화 스타일 추출
+                                try:
+                                    self.app.state_tracker.extract_npc_dialogue_styles_from_arc(refined_arc)
+                                except Exception:
+                                    pass  # [V66] OPTIONAL: 대화 스타일 추출 실패 비차단
+
+                                # [V66] 멀티-Arc 요약 생성 및 저장
+                                try:
+                                    arc_summary = self.app.state_tracker.generate_arc_summary(
+                                        global_arc_no, refined_arc
+                                    )
+                                    self.app.current_project.save_v20_anchor(
+                                        f"arc_summary_{global_arc_no}",
+                                        arc_summary
+                                    )
+                                    print(f"      \U0001f4ca [V66] Arc {global_arc_no} 요약 저장 완료")
+                                except Exception as e:
+                                    print(f"      \u26a0\ufe0f [V66] Arc 요약 저장 실패 (비차단): {e}")
 
                                 # [V61.3] 동적 장르 감지
                                 tactical_doc = refined_arc.get('tactical_doc', '')
@@ -1215,6 +1247,26 @@ class Stage2Orchestrator:
                                 except Exception:  # [V64.P4] OPTIONAL: success example storage
                                     pass  # Stage2Optimizer example save failure is non-blocking
 
+                    # [V66] SemanticPlotGuard 중복 검사
+                    if getattr(self.app, 'semantic_plot_guard', None):
+                        try:
+                            tactical_text = refined_arc.get('tactical_doc', '')
+                            if isinstance(tactical_text, dict):
+                                tactical_text = str(tactical_text)
+                            spg_warnings = self.app.semantic_plot_guard.check_new_arc(
+                                tactical_doc=tactical_text
+                            )
+                            if spg_warnings:
+                                spg_text = self.app.semantic_plot_guard.format_warnings(spg_warnings)
+                                print(f"      ⚠️ [V66] {spg_text}")
+                                # Director 피드백에 추가
+                                if current_feedback:
+                                    current_feedback = f"{current_feedback}\n{spg_text}"
+                                else:
+                                    current_feedback = spg_text
+                        except Exception:
+                            pass
+
                     # [V65] PerfTimer: Director 대면 측정
                     try:
                         self.app.perf_timer.start(f"s2_arc_{global_arc_no}_director")
@@ -1329,8 +1381,8 @@ class Stage2Orchestrator:
                             attempt += 1
                             continue
 
-                        # [V63] SemanticPlotGuard 중복 체크
-                        _spg = getattr(self.app, '_semantic_plot_guard', None)
+                        # [V66] SemanticPlotGuard 중복 체크 (중앙 인스턴스)
+                        _spg = getattr(self.app, 'semantic_plot_guard', None)
                         if _spg and _spg._resolved_embeddings:
                             try:
                                 _new_tactical = refined_arc.get("tactical_doc", "")
@@ -1338,7 +1390,7 @@ class Stage2Orchestrator:
                                 if _spg_warnings:
                                     _warn_str = _spg.format_warnings(_spg_warnings)
                                     self.app.ui.log(f"      {_warn_str}")
-                                    self.app._audit_event("v63_semantic_plot_warning", _warn_str[:300])
+                                    self.app._audit_event("v66_semantic_plot_warning", _warn_str[:300])
                             except Exception as e:  # [V64.P4] IMPORTANT: plot dedup check — log but continue
                                 self.app._audit_event("semantic_plot_check_failed", str(e)[:100])
 

@@ -138,6 +138,169 @@ class StateTrackerPlots:
         return "\n".join(lines)
 
     # ═══════════════════════════════════════════════════════════════
+    # [V66] 아이템 상태 레지스트리
+    # ═══════════════════════════════════════════════════════════════
+
+    def register_item_state(self, item_name: str, arc_no: int, description: str = "",
+                           source: str = "", condition: str = "정상"):
+        """[V66] 아이템 상태 등록/업데이트."""
+        if not item_name or len(item_name) < 2:
+            return
+        existing = self.tracker.item_state_registry.get(item_name)
+        entry = {
+            "name": item_name,
+            "description": description or (existing or {}).get("description", ""),
+            "source": source or (existing or {}).get("source", ""),
+            "condition": condition,
+            "arc_no": arc_no,
+        }
+        if existing:
+            # 이전 상태 기록
+            if existing.get("condition") and existing["condition"] != condition:
+                entry["prev_condition"] = existing["condition"]
+                entry["prev_arc"] = existing.get("arc_no", 0)
+        self.tracker.item_state_registry[item_name] = entry
+
+    def extract_item_states_from_arc(self, arc: dict) -> List[Dict]:
+        """[V66] Arc의 state_changes.major_items에서 아이템 상태 추출."""
+        arc_no = arc.get("arc_no", 0)
+        results = []
+        state_changes = arc.get("state_changes", {})
+        if isinstance(state_changes, dict):
+            items = state_changes.get("major_items", [])
+            if isinstance(items, list):
+                for item in items:
+                    if isinstance(item, dict) and item.get("name"):
+                        name = str(item["name"])
+                        action = str(item.get("action", ""))
+                        condition = "정상"
+                        if action in ("분실", "파괴", "소모"):
+                            condition = action
+                        self.register_item_state(
+                            name, arc_no,
+                            description=item.get("description", ""),
+                            source=item.get("source", ""),
+                            condition=condition,
+                        )
+                        results.append({"name": name, "action": action, "arc_no": arc_no})
+        return results
+
+    def get_item_state_summary(self) -> str:
+        """[V66] 아이템 상태 목록 → 프롬프트 주입용 문자열."""
+        if not self.tracker.item_state_registry:
+            return ""
+        lines = ["[V66] 아이템 상태 (손상/소모 아이템은 멀쩡한 것처럼 사용 금지):"]
+        for name, info in self.tracker.item_state_registry.items():
+            cond = info.get("condition", "정상")
+            desc = info.get("description", "")
+            parts = [f"  - {name}: 상태={cond}"]
+            if desc:
+                parts.append(f"({desc[:30]})")
+            lines.append(" ".join(parts))
+        return "\n".join(lines)
+
+    # ═══════════════════════════════════════════════════════════════
+    # [V66] 플롯 서스펜션 추적
+    # ═══════════════════════════════════════════════════════════════
+
+    def register_active_plot(self, plot_name: str, arc_no: int, status: str = "active"):
+        """[V66] 활성 플롯 등록. status: active/in_progress/suspended/resolved"""
+        if not plot_name:
+            return
+        existing = self.tracker.active_plots.get(plot_name)
+        entry = {
+            "plot": plot_name,
+            "status": status,
+            "first_arc": (existing or {}).get("first_arc", arc_no),
+            "last_mention_arc": arc_no,
+        }
+        if existing and existing.get("status") != status:
+            entry["prev_status"] = existing.get("status", "")
+        self.tracker.active_plots[plot_name] = entry
+
+    def update_plot_mentions_from_arc(self, arc: dict) -> List[Dict]:
+        """[V66] Arc에서 언급된 플롯들의 last_mention_arc 갱신 + 신규 플롯 등록."""
+        arc_no = arc.get("arc_no", 0)
+        updated = []
+
+        state_changes = arc.get("state_changes", {})
+        if not isinstance(state_changes, dict):
+            return updated
+
+        # resolved_plots → resolved 상태로 전환
+        resolved = state_changes.get("resolved_plots", [])
+        if isinstance(resolved, list):
+            for rp in resolved:
+                if isinstance(rp, dict) and rp.get("plot"):
+                    plot_name = str(rp["plot"])
+                    self.register_active_plot(plot_name, arc_no, status="resolved")
+                    updated.append({"plot": plot_name, "status": "resolved"})
+
+        # tactical_doc에서 활성 플롯 추출 (키워드: 갈등, 계략, 목표, 복수 등)
+        tactical = arc.get("tactical_doc", "")
+        if isinstance(tactical, dict):
+            tactical = str(tactical)
+
+        # 기존 활성 플롯 중 이번 arc tactical_doc에 언급되면 last_mention 갱신
+        for plot_name, info in list(self.tracker.active_plots.items()):
+            if info.get("status") == "resolved":
+                continue
+            if plot_name in tactical:
+                info["last_mention_arc"] = arc_no
+                updated.append({"plot": plot_name, "status": "mentioned"})
+
+        return updated
+
+    def check_suspended_plots(self, current_arc_no: int, threshold: int = 3) -> List[Dict]:
+        """[V66] 3+ Arc 방치된 플롯 감지 → WARNING."""
+        warnings = []
+        for plot_name, info in self.tracker.active_plots.items():
+            if info.get("status") == "resolved":
+                continue
+            last_mention = info.get("last_mention_arc", 0)
+            gap = current_arc_no - last_mention
+            if gap >= threshold:
+                info["status"] = "suspended"
+                warnings.append({
+                    "plot": plot_name,
+                    "last_mention_arc": last_mention,
+                    "gap": gap,
+                    "severity": "WARNING",
+                    "message": f"플롯 '{plot_name}'이 {gap}개 Arc 동안 미언급 (Arc {last_mention} 이후)",
+                })
+        return warnings
+
+    def get_plot_suspension_summary(self, current_arc_no: int) -> str:
+        """[V66] 플롯 서스펜션 상태 → 프롬프트 주입용 문자열."""
+        if not self.tracker.active_plots:
+            return ""
+        active_lines = []
+        suspended_lines = []
+        for plot_name, info in self.tracker.active_plots.items():
+            status = info.get("status", "active")
+            if status == "resolved":
+                continue
+            last_arc = info.get("last_mention_arc", 0)
+            gap = current_arc_no - last_arc
+            line = f"  - {plot_name} (마지막 언급: Arc {last_arc}, {gap}개 Arc 전)"
+            if status == "suspended" or gap >= 3:
+                suspended_lines.append(f"  - {plot_name} -- {gap}개 Arc 방치! 재개/해결 필요")
+            else:
+                active_lines.append(line)
+
+        if not active_lines and not suspended_lines:
+            return ""
+
+        lines = []
+        if suspended_lines:
+            lines.append("[V66] 방치된 플롯 (재개/해결 필요):")
+            lines.extend(suspended_lines)
+        if active_lines:
+            lines.append("[V66] 진행 중 플롯:")
+            lines.extend(active_lines)
+        return "\n".join(lines)
+
+    # ═══════════════════════════════════════════════════════════════
     # [V62.7] 비-NPC 엔티티 명칭 일관성
     # ═══════════════════════════════════════════════════════════════
 
