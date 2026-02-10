@@ -9,6 +9,7 @@ Director God Object 분해의 다섯 번째 단계.
 """
 
 import json
+import logging
 import re
 import statistics
 from modules.validation.validation_orchestrator import ValidationOrchestrator
@@ -84,7 +85,7 @@ class DirectorQualityAuditor:
 
             return result
 
-        except Exception as e:
+        except (ValueError, KeyError, IndexError) as e:
             print(f"      ⚠️ [V66] 장르 검증 오류: {str(e)[:50]}")
             return {'has_critical': False, 'violations': [], 'summary': '', 'feedback': ''}
 
@@ -290,8 +291,8 @@ class DirectorQualityAuditor:
                     content = ms.get('content', '') if isinstance(ms, dict) else str(ms)
                     if content and len(content) > 100:
                         loaded_parts.append(f"[제{target_ep}화]\n{content}")
-            except Exception:
-                pass  # [V66.1] DB 조회 실패는 무시
+            except Exception as e:
+                logging.warning(f"[V66.3] Director prev manuscript 조회 실패: {e}")
 
         if loaded_parts:
             result = "\n\n---\n\n".join(loaded_parts)

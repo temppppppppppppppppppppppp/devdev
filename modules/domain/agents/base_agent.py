@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import re
 import time
@@ -636,7 +637,8 @@ class BaseAgent:
                 future = executor.submit(self.client.models.list)
                 future.result(timeout=timeout)
             return True
-        except (ConnectionError, TimeoutError, OSError, Exception):  # [V64.P4] connectivity check — any failure means offline
+        except Exception as e:  # [V64.P4] connectivity check — any failure means offline
+            logging.debug(f"[V66.3] 온라인 체크 실패: {e}")
             return False
 
     # [V61.2] 네트워크 오류 여부 판단

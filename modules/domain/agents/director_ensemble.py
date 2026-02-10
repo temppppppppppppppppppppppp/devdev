@@ -254,7 +254,8 @@ class DirectorEnsembleSelector:
         arc_pos: int = 1,
         total_eps: int = 5,
         retry_count: int = 0,
-        episode_digest: str = ""
+        episode_digest: str = "",
+        mandatory_context: str = ""
     ) -> dict:
         """[V60.80] 3개 후보 중 최선 선택 + PASS/REJECT 판정"""
         while len(candidates) < 3:
@@ -328,6 +329,23 @@ class DirectorEnsembleSelector:
             manuscript_c=self._d._escape_braces(info_c["manuscript"]),
             warnings_c=self._d._escape_braces(info_c["warnings"])
         )
+
+        # [V66.3] C-1: mandatory_context → Director LLM 프롬프트에 주입
+        # Python 사전 검증 결과(validation_context warnings)와 StateTracker 상태가
+        # Director의 PASS/REJECT 판단에 반영되도록 함. 8,000자 상한으로 truncate.
+        if mandatory_context:
+            _mc_for_director = mandatory_context[:8000]
+            if len(mandatory_context) > 8000:
+                _mc_for_director = _mc_for_director[:7950] + "\n...(mandatory_context 8,000자 초과로 일부 생략)"
+            prompt += f"""
+
+### 📌 [V66.3] 필수 컨텍스트 (Python 감지 + StateTracker 상태)
+아래는 Python 사전 검증 및 StateTracker에서 수집된 세계 상태입니다.
+죽은 NPC, 파괴된 장소/아이템, 시간선, 관계 변화 등이 포함되어 있으므로
+원고가 이 사실들과 모순되면 반드시 REJECT하세요.
+
+{self._d._escape_braces(_mc_for_director)}
+"""
 
         response = self._d.ask(prompt, temperature=0.1, thinking_level="high")
         result = self._d._extract_json_robust(response)

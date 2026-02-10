@@ -382,6 +382,30 @@ class Stage4Orchestrator:
                         if _dialogue_style:
                             _mc_parts.append(_dialogue_style)
 
+                    # [V66.2] Priority 12-A: NPC-주인공 관계 현황 (D-1)
+                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                        _rel_summary = self.app.state_tracker.get_relationship_changes_summary()
+                        if _rel_summary:
+                            _mc_parts.append(_rel_summary)
+
+                    # [V66.2] Priority 12-B: NPC 부상 현황 (D-2)
+                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                        _injury_summary = self.app.state_tracker.get_npc_injury_summary()
+                        if _injury_summary:
+                            _mc_parts.append(_injury_summary)
+
+                    # [V66.2] Priority 12-C: NPC 위치 현황 (D-3)
+                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                        _movement_summary = self.app.state_tracker.get_npc_movement_summary()
+                        if _movement_summary:
+                            _mc_parts.append(_movement_summary)
+
+                    # [V66.2] Priority 12-D: 주인공 습득 무공/스킬 (C-2)
+                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                        _skills_summary = self.app.state_tracker.get_protagonist_skills_summary()
+                        if _skills_summary:
+                            _mc_parts.append(_skills_summary)
+
                     # Priority 13: 멀티-Arc 요약 (직전 3개 Arc)
                     try:
                         arc_summaries = []
@@ -648,6 +672,14 @@ class Stage4Orchestrator:
                     except Exception:
                         pass
 
+                    # [V66.3] C-3: 빈 candidates 방어 — 모든 후보 생성 실패 시 다음 면담으로 스킵
+                    if not candidates:
+                        logging.error(f"[Stage4] 제{next_ep}화 {interview_round + 1}차 면담: candidates 빈 배열 — 모든 후보 생성 실패")
+                        self.app.ui.log(f"   🚨 [V66.3] 모든 후보 생성 실패 — {'냉동인간 소환' if interview_round >= 2 else '다음 면담으로 진행'}")
+                        director_feedback += "\n[시스템] 모든 후보 생성 실패. 재시도 필요."
+                        previous_attempt = {"strategy": "none", "rejection_reason": "모든 후보 생성 실패", "action_items": [], "score": 0}
+                        continue
+
                     # Phase 3: Python 사전 검증
                     stage4_spinner.update_detail(f"제{next_ep}화 · {interview_round + 1}차 면담 · Python 검증")
                     self.app.ui.log(f"   🔍 Python 사전 검증 중...")
@@ -678,6 +710,17 @@ class Stage4Orchestrator:
                             'prev_episode_events': [],
                             'ep_num': next_ep,
                         }
+                        # [V66.2] C-1: BlockingValidator dead NPC 감지 활성화
+                        _encyclopedia_npcs = []
+                        if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                            for _npc_name, _npc_info in getattr(self.app.state_tracker, 'npc_registry', {}).items():
+                                _encyclopedia_npcs.append({
+                                    "name": _npc_name,
+                                    "status": _npc_info.get("status", "alive"),
+                                    "death_arc": _npc_info.get("death_arc"),
+                                    "aliases": _npc_info.get("aliases", []),
+                                })
+                        _cv_context["encyclopedia"] = {"npcs": _encyclopedia_npcs}
                         # [V66.1] 시간선 경고를 검증 컨텍스트에 주입
                         _cv_context["time_warnings"] = getattr(self, '_time_consistency_warnings', [])
                         # [V66.1] BlockingValidator/ContinuityValidator에 추적 데이터 전달
@@ -753,6 +796,21 @@ class Stage4Orchestrator:
                     except Exception as _ct_err:
                         self.app.ui.log(f"      ⚠️ [V66.1] ContinuityValidator 실행 실패: {str(_ct_err)[:60]}")
 
+                    # [V66.2] C-4: 파괴 엔티티 감지 → Director에 경고 전달
+                    try:
+                        if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                            for ci, cand in enumerate(candidates):
+                                _de_ms = cand.get('manuscript', '')
+                                if _de_ms and ci < len(validation_results):
+                                    _de_warnings = self.app.state_tracker.check_destroyed_entity_in_manuscript(_de_ms)
+                                    if _de_warnings:
+                                        for _dw in _de_warnings:
+                                            _dw_msg = _dw.get('message', str(_dw)) if isinstance(_dw, dict) else str(_dw)
+                                            validation_results[ci]['warnings'].append(f"[V66.2] 파괴된 엔티티 등장: {_dw_msg}")
+                                        validation_results[ci]['warning_count'] = len(validation_results[ci]['warnings'])
+                    except (KeyError, ValueError, TypeError) as _de_err:
+                        print(f"      ⚠️ [V66.2] 파괴 엔티티 검사 오류: {_de_err}")
+
                     # [V61.5] 캐시 기반 연속성 검사
                     if interview_round == 0 and next_ep > 1 and candidates:
                         stage4_spinner.update_detail(f"제{next_ep}화 · 연속성 검사")
@@ -776,6 +834,24 @@ class Stage4Orchestrator:
                         self.app.perf_timer.start(f"s4_ep{next_ep}_director_r{interview_round}")
                     except Exception:
                         pass
+                    # [V66.3] C-1: mandatory_context + Python 검증 경고를 Director에 전달
+                    # validation_results에서 경고를 추출하여 mandatory_context에 병합
+                    _director_mc_parts = [mandatory_context] if mandatory_context else []
+                    _vr_warnings_for_director = []
+                    for _vr_idx, _vr in enumerate(validation_results):
+                        _vr_warns = _vr.get('warnings', [])
+                        if _vr_warns:
+                            _label = ['A', 'B', 'C'][_vr_idx] if _vr_idx < 3 else f'{_vr_idx+1}'
+                            _vr_warnings_for_director.append(
+                                f"[후보 {_label} Python 감지 경고]\n" + "\n".join(_vr_warns[:10])
+                            )
+                    if _vr_warnings_for_director:
+                        _director_mc_parts.append(
+                            "[V66.3] Python 사전 검증 결과 (Director 참고용)\n" +
+                            "\n\n".join(_vr_warnings_for_director)
+                        )
+                    _director_mandatory_context = "\n\n".join(_director_mc_parts)
+
                     director_result = self.app.agents['director'].select_and_judge_ensemble(
                         ep_num=next_ep,
                         candidates=candidates,
@@ -785,7 +861,8 @@ class Stage4Orchestrator:
                         arc_pos=arc_pos,
                         total_eps=total_ep_in_arc,
                         retry_count=interview_round,
-                        episode_digest=_episode_digest
+                        episode_digest=_episode_digest,
+                        mandatory_context=_director_mandatory_context
                     )
                     try:
                         self.app.perf_timer.stop(f"s4_ep{next_ep}_director_r{interview_round}")
@@ -806,16 +883,6 @@ class Stage4Orchestrator:
                         final_title = selected_candidate.get('title', f'제{next_ep}화')
                         final_state_updates = director_result.get('state_updates', {})
 
-                        # [V66] 파괴된 조직/장소 원고 내 활동 검사
-                        try:
-                            if hasattr(self.app, 'state_tracker') and final_manuscript:
-                                _destroyed_warnings = self.app.state_tracker.check_destroyed_entity_in_manuscript(final_manuscript)
-                                if _destroyed_warnings:
-                                    for _dw in _destroyed_warnings:
-                                        self.app.ui.log(f"   ⚠️ [V66] 파괴 엔티티 경고: {_dw.get('message', '')}")
-                        except Exception:
-                            pass
-
                         # [V66.1] F-1: 시간선 일관성 체크 → 검증 파이프라인에 경고 전달
                         if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
                             try:
@@ -827,8 +894,8 @@ class Stage4Orchestrator:
                                     if not hasattr(self, '_time_consistency_warnings'):
                                         self._time_consistency_warnings = []
                                     self._time_consistency_warnings.extend(_time_warnings)
-                            except Exception:
-                                pass
+                            except (KeyError, ValueError, TypeError) as _tc_err:
+                                print(f"      ⚠️ [V66.1] 시간선 검사 오류: {_tc_err}")
 
                         self.app.ui.log(f"   ✅ {interview_round + 1}차 면담 PASS!")
                         break
@@ -1056,8 +1123,8 @@ class Stage4Orchestrator:
                                     seeds_data = self.app.current_project.db.load_anchor('active_seeds')
                                     if seeds_data:
                                         active_seeds = seeds_data if isinstance(seeds_data, list) else []
-                                except (ValueError, TypeError, json.JSONDecodeError):
-                                    pass
+                                except (ValueError, TypeError, json.JSONDecodeError) as e:
+                                    logging.warning(f"[V66.3] active_seeds 로드 실패: {e}")
 
                             raw_audit = self.app.agents['manager'].update_state_and_lore_v20(
                                 ep_num=next_ep,

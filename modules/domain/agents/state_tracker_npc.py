@@ -1740,3 +1740,58 @@ class StateTrackerNPC:
             lines.append(f"  원인: {trigger}")
         lines.append("  (감정 급변 금지 -- 전이 과정을 자연스럽게 묘사할 것)")
         return "\n".join(lines)
+
+    # ═══════════════════════════════════════════════════════════════
+    # [V66.2] D-1,2,3: mandatory_context 주입용 summary 메서드
+    # ═══════════════════════════════════════════════════════════════
+
+    def get_relationship_changes_summary(self) -> str:
+        """[V66.2] D-1: NPC-주인공 관계 현황 요약 -- mandatory_context 주입용."""
+        lines = []
+        for npc_name, npc_info in self.tracker.npc_registry.items():
+            if npc_info.get("status") == "dead":
+                continue
+            rel = npc_info.get("relation_to_protag")
+            if rel:
+                lines.append(f"  - {npc_name}: {rel}")
+        if not lines:
+            return ""
+        return "[V66.2] NPC-주인공 관계 현황 (관계 급변 금지):\n" + "\n".join(lines[:30])
+
+    def get_npc_injury_summary(self) -> str:
+        """[V66.2] D-2: NPC 부상 현황 요약 -- mandatory_context 주입용."""
+        lines = []
+        for npc_name, npc_info in self.tracker.npc_registry.items():
+            injury = npc_info.get("injury")
+            if injury and injury != "정상" and npc_info.get("status") == "alive":
+                lines.append(f"  - {npc_name}: {injury}")
+        if not lines:
+            return ""
+        return "[V66.2] NPC 부상 현황 (미치료 시 유지 필수):\n" + "\n".join(lines[:20])
+
+    def get_npc_movement_summary(self) -> str:
+        """[V66.2] D-3: NPC 위치 현황 요약 -- mandatory_context 주입용."""
+        lines = []
+        for npc_name, npc_info in self.tracker.npc_registry.items():
+            loc = npc_info.get("location")
+            if loc and npc_info.get("status") == "alive":
+                lines.append(f"  - {npc_name}: {loc}")
+        if not lines:
+            return ""
+        return "[V66.2] NPC 위치 현황 (위치 모순 금지):\n" + "\n".join(lines[:30])
+
+    def get_protagonist_skills_summary(self) -> str:
+        """
+        [V66.2] C-2: 주인공 습득 무공/스킬 요약 -- mandatory_context 주입용.
+        skill_acquisitions (Dict[skill_name, arc_no])에서 요약 생성.
+        빈 리스트일 때 빈 문자열 반환 (mandatory_context에 빈 섹션 방지).
+        """
+        if not self.tracker.skill_acquisitions:
+            return ""
+        genre = getattr(self.tracker.preset_registry, 'base_genre', '') or ''
+        _, label = self._SKILL_LOG_LABEL.get(genre, ('\U0001f94b', '능력 습득'))
+        lines = []
+        for skill_name, arc_no in self.tracker.skill_acquisitions.items():
+            lines.append(f"  - {skill_name} (Arc {arc_no})")
+        header = f"[V66.2] 주인공 {label} 목록 (미습득 무공 사용 금지):"
+        return header + "\n" + "\n".join(lines)

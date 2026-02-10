@@ -16,6 +16,7 @@ Stage 4 "Director 주권주의" 아키텍처의 핵심 생성 에이전트.
 """
 
 import json
+import logging
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FutureTimeoutError
 from typing import Dict, List, Optional, Tuple
@@ -296,6 +297,20 @@ class ChiefWriter(BaseAgent):
             )
             if fallback:
                 candidates = [fallback]
+
+        # [V66.3] C-4: 모든 후보 생성 실패 시 에러 dict 반환 (빈 배열 방지 → downstream IndexError 크래시 방어)
+        if not candidates:
+            logging.error("[ChiefWriter] generate_ensemble: 앙상블 + 단일 폴백 모두 실패 — 에러 후보 반환")
+            candidates = [{
+                "strategy": "error_fallback",
+                "strategy_name": "에러 폴백",
+                "manuscript": "",
+                "title": f"제{ep_num}화 (생성 실패)",
+                "state_updates": {},
+                "metadata": {"error": "모든 후보 생성 실패"},
+                "error": True,
+                "error_message": "모든 후보 생성 실패"
+            }]
 
         return candidates
 
@@ -1117,8 +1132,8 @@ class ChiefWriter(BaseAgent):
                     if key in data:
                         del data[key]
                 return json.dumps(data, ensure_ascii=False, indent=4)
-        except (json.JSONDecodeError, ValueError):
-            pass
+        except (json.JSONDecodeError, ValueError) as e:
+            logging.debug(f"[V66.3] ChiefWriter JSON 파싱 부분실패: {e}")
 
         # 2. 텍스트 라인 필터링 (비상 대책)
         filtered_lines = []
