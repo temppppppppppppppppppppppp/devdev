@@ -328,6 +328,34 @@ class Stage4Orchestrator:
                         _npc_rel = self.app.state_tracker.get_npc_npc_relationship_summary()
                         if _npc_rel:
                             mandatory_context = f"{mandatory_context}\n\n{_npc_rel}"
+                        # [V66] 아이템 상태 주입
+                        _item_state = self.app.state_tracker.get_item_state_summary()
+                        if _item_state:
+                            mandatory_context = f"{mandatory_context}\n\n{_item_state}"
+                        # [V66] 플롯 서스펜션 주입
+                        _plot_suspension = self.app.state_tracker.get_plot_suspension_summary(arc_data.get('arc_no', 0))
+                        if _plot_suspension:
+                            mandatory_context = f"{mandatory_context}\n\n{_plot_suspension}"
+
+                        # [V66] NPC 대화 스타일 주입
+                        _dialogue_style = self.app.state_tracker.get_npc_dialogue_style_summary()
+                        if _dialogue_style:
+                            mandatory_context = f"{mandatory_context}\n\n{_dialogue_style}"
+
+                    # [V66] 멀티-Arc 요약 주입 (직전 3개 Arc)
+                    try:
+                        arc_summaries = []
+                        current_arc_no = arc_data.get('arc_no', 1) if arc_data else 1
+                        for prev_arc in range(max(1, current_arc_no - 3), current_arc_no):
+                            arc_sum = self.app.current_project.load_v20_anchor(f"arc_summary_{prev_arc}")
+                            if arc_sum and isinstance(arc_sum, dict):
+                                arc_summaries.append(arc_sum)
+                        if arc_summaries:
+                            _arc_summary_text = self.app.state_tracker.format_arc_summary_for_prompt(arc_summaries)
+                            if _arc_summary_text:
+                                mandatory_context = f"{mandatory_context}\n\n{_arc_summary_text}"
+                    except Exception as e:
+                        self.app.ui.log(f"   \u26a0\ufe0f [V66] Arc 요약 주입 실패 (비차단): {e}")
 
                     # [V63.1] 금융 상태 레지스트리 주입 (투자물)
                     if _s4_genre_type == 'investment' and hasattr(self.app, 'state_tracker'):
@@ -386,6 +414,20 @@ class Stage4Orchestrator:
                                 mandatory_context = f"{mandatory_context}\n\n{_foreshadow_prompt}"
                     except Exception as e:
                         self.app.ui.log(f"   ⚠️ ForeshadowTracker 프롬프트 실패 (비차단): {e}")
+
+                    # [V66] SemanticPlotGuard 경고 주입
+                    if getattr(self.app, 'semantic_plot_guard', None):
+                        try:
+                            tactical_text = arc_data.get('tactical_doc', '') if arc_data else ''
+                            if isinstance(tactical_text, dict):
+                                tactical_text = str(tactical_text)
+                            _spg_warnings = self.app.semantic_plot_guard.check_new_arc(tactical_doc=tactical_text)
+                            if _spg_warnings:
+                                _spg_text = self.app.semantic_plot_guard.format_warnings(_spg_warnings)
+                                if _spg_text:
+                                    mandatory_context = f"{mandatory_context}\n\n{_spg_text}"
+                        except Exception:
+                            pass
 
                     try:
                         anti_trope_prompt = writer_agent._build_anti_trope_instructions(genre_name)

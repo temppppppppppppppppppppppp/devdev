@@ -209,6 +209,9 @@ class SovereignApp:
         self.pass_rate_monitor = None       # [V55.3] 통과율 모니터
         self.quality_dashboard = None       # [V60] 품질 대시보드
 
+        # [V66] SemanticPlotGuard 활성화
+        self.semantic_plot_guard = None
+
         # [V60.95] Stage 0 프리셋 레지스트리
         self.preset_registry = None         # PresetRegistry 인스턴스
 
@@ -1424,6 +1427,14 @@ class SovereignApp:
                         self.foreshadow_tracker.load_from_json(foreshadow_log_path)
                         stats = self.foreshadow_tracker.get_stats()
                         self.ui.log(f"   🔮 [V51.6] 복선 {stats['total']}개 로드 (활성: {stats['active']}, 회수율: {stats['payoff_rate']}%)")
+
+                    # [V66] SemanticPlotGuard 활성화
+                    try:
+                        from modules.core.semantic_plot_guard import SemanticPlotGuard
+                        self.semantic_plot_guard = SemanticPlotGuard(api_key=os.getenv("GOOGLE_API_KEY", ""))
+                        self.ui.log(f"   📊 [V66] SemanticPlotGuard 초기화 완료")
+                    except Exception:
+                        self.semantic_plot_guard = None
 
                     # ============================================================
                     # [V60.26] 품질 향상 모듈 (미사용 → 활성화)

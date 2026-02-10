@@ -946,3 +946,82 @@ class StateTrackerNPC:
                 f"{info.get('relation', '?')} (Arc {info.get('arc_no', '?')})"
             )
         return "\n".join(lines)
+
+    # ═══════════════════════════════════════════════════════════════
+    # [V66] NPC 대화 스타일 레지스트리
+    # ═══════════════════════════════════════════════════════════════
+
+    def register_npc_dialogue_style(self, npc_name: str, speech_level: str = "",
+                                     catchphrase: str = "", emotion_baseline: str = "",
+                                     arc_no: int = 0):
+        """[V66] NPC 대화 스타일 등록."""
+        if not npc_name:
+            return
+        existing = self.tracker.npc_dialogue_profiles.get(npc_name, {})
+        entry = {
+            "speech_level": speech_level or existing.get("speech_level", ""),
+            "catchphrase": catchphrase or existing.get("catchphrase", ""),
+            "emotion_baseline": emotion_baseline or existing.get("emotion_baseline", ""),
+            "arc_no": arc_no,
+        }
+        self.tracker.npc_dialogue_profiles[npc_name] = entry
+
+    def extract_npc_dialogue_styles_from_arc(self, arc: dict) -> List[Dict]:
+        """[V66] Arc의 state_changes에서 npc_personality_changes 기반 대화 스타일 추출."""
+        arc_no = arc.get("arc_no", 0)
+        results = []
+        state_changes = arc.get("state_changes", {})
+        if not isinstance(state_changes, dict):
+            return results
+
+        # npc_personality_changes에서 대화 스타일 추론
+        personality_changes = state_changes.get("npc_personality_changes", [])
+        if isinstance(personality_changes, list):
+            for pc in personality_changes:
+                if isinstance(pc, dict) and pc.get("name"):
+                    name = str(pc["name"])
+                    traits = str(pc.get("traits", ""))
+                    motivation = str(pc.get("motivation", ""))
+                    # 성격에서 말투 추론
+                    speech = ""
+                    if any(k in traits for k in ["냉혹", "살벌", "무뚝뚝", "차가운"]):
+                        speech = "극존칭_회피/짧은문장"
+                    elif any(k in traits for k in ["쾌활", "활발", "수다", "장난"]):
+                        speech = "비격식/긴문장"
+                    elif any(k in traits for k in ["학자", "현인", "지식", "박식"]):
+                        speech = "격식/고어체"
+                    # 감정 기저선 추론
+                    emotion = ""
+                    if any(k in traits for k in ["냉혹", "무감", "차가운"]):
+                        emotion = "무감정"
+                    elif any(k in traits for k in ["분노", "복수"]):
+                        emotion = "분노기저"
+                    elif any(k in traits for k in ["쾌활", "밝은"]):
+                        emotion = "긍정기저"
+
+                    if speech or emotion:
+                        self.register_npc_dialogue_style(
+                            name, speech_level=speech,
+                            emotion_baseline=emotion, arc_no=arc_no,
+                        )
+                        results.append({"name": name, "speech": speech, "emotion": emotion})
+        return results
+
+    def get_npc_dialogue_style_summary(self) -> str:
+        """[V66] NPC 대화 스타일 -> 프롬프트 주입용 문자열."""
+        if not self.tracker.npc_dialogue_profiles:
+            return ""
+        lines = ["[V66] NPC 대화 스타일 (말투 일관성 유지 필수):"]
+        for name, info in self.tracker.npc_dialogue_profiles.items():
+            parts = [f"  - {name}:"]
+            if info.get("speech_level"):
+                parts.append(f"말투={info['speech_level']}")
+            if info.get("emotion_baseline"):
+                parts.append(f"감정={info['emotion_baseline']}")
+            if info.get("catchphrase"):
+                parts.append(f"캐치프레이즈=\"{info['catchphrase']}\"")
+            if len(parts) > 1:
+                lines.append(" ".join(parts))
+        if len(lines) <= 1:
+            return ""
+        return "\n".join(lines)
