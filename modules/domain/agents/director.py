@@ -6,7 +6,11 @@ from .director_grading import DirectorGradingSystem
 from .director_ensemble import DirectorEnsembleSelector, ENSEMBLE_SELECTION_PROMPT as _ENSEMBLE_PROMPT
 from .director_continuity import DirectorContinuityValidator, MANUSCRIPT_HISTORY_CONFLICT_PROMPT as _HISTORY_CONFLICT_PROMPT
 from .director_auditor import DirectorQualityAuditor
+# [V64.P4] 프롬프트 외부화 — director_prompts.py에서 import
+from .director_prompts import STRATEGIC_AUDIT_PROMPT_V30, DIRECTOR_AUDIT_PROMPT_V30
 from modules.validation.validation_orchestrator import ValidationOrchestrator
+from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
+from modules.core.constants import ManuscriptLimits  # [V64.P4]
 
 # [V60.95] 원시인 모드 금지어 Guard (JSON 기반)
 try:
@@ -16,242 +20,9 @@ except ImportError:
     PRIMITIVE_GUARD_AVAILABLE = False
 
 
+# [V64.P4] STRATEGIC_AUDIT_PROMPT_V30, DIRECTOR_AUDIT_PROMPT_V30 → director_prompts.py 이관
 
-# =================================================================
-# [NEW] V30 Analyst 전용 전략 감사관(Strategic Plot Auditor) 프롬프트
-# =================================================================
-STRATEGIC_AUDIT_PROMPT_V30 = """
-[Role] V30 Sovereign 전략 감사관 (Pragmatic Plot Auditor)
-[Task] Analyst가 설계한 '아크 전술서'의 논리적 무결성을 검수하되, 작가의 창의적 허용 범위를 존중하라.
-
-### 📋 검수 대상: Arc {arc_no} 전략 계획
-- **설정 화수**: {ep_count}화 (제 {ep_start}화 ~ 제 {ep_end}화)
-- **회차별 비트**: {beat_sequence}
-- **전술서 내용**: {tactical_doc}
-- **직전 아크 요약**: {prev_context}
-- **현재 블록 원문**: {curr_block}
-
-### 🔍 [V60.76] Python 의심 아이템 재검증
-{suspected_duplicates}
-위 목록은 Python 유사도 검사에서 "기존 아이템과 유사"하다고 플래그된 항목입니다.
-**당신의 임무**: 이 아이템들이 정말로 기존에 획득한 아이템의 중복인지 판단하세요.
-- "대방성도"와 "백근도"는 서로 다른 무기입니다 (이름만 비슷할 뿐)
-- "철혈사자패"와 "형법 집행권"은 서로 다른 권한입니다
-- 실제로 동일한 아이템을 다시 획득하는 경우에만 REJECT하세요
-- 이름이 비슷하지만 다른 아이템이면 PASS입니다
-
-### 🎯 핵심 검수 항목 (S-Grade Flexible Criteria)
-1. **서사 분절성 (Temporal Slicing)**: 각 회차가 고유한 사건을 담고 있는가?
-2. **루프 차단 (Zero-Overlap Guard)**: 직전 사건의 단순 반복이 아닌가?
-3. **가변 페이싱 적합성**: 설정된 화수에 담기에 사건의 양이 적절한가?
-4. **미래 오염 차단 (Future Contamination Guard)**:
-   - 현재 블록의 보상/해결/상태에 존재하지 않는 고유 명사(무구, 비기, 인맥, 조직)가 전술서에 등장하면 REJECT.
-   - 주인공이 아직 획득하지 않은 아이템이나 배우지 않은 무공은 절대 등장해선 안 된다.
-
-### [🚨 유연한 판정 지침 (Pragmatism)]
-1. **관대한 승인**: 전술 설계도의 핵심 맥락이 80% 이상 반영되었고 치명적인 설정 오류(예: 죽은 자의 부활, 성별 바뀜 등)가 없다면, 세부 묘사의 미비함은 '수정 지시'만 남기고 [PASS] 판정하라.
-2. **요약질 판정 완화**: 결과 중심 서술(그는 승리했다 식)이라 하더라도, 장면의 제목과 핵심 액션이 명확하다면 집필(Writer) 단계에서 충분히 보완이 가능하므로 승인하라.
-3. **분량 하한선 조정**: tactical_doc의 전체 텍스트가 한글 기준 1,500자 이상이고 정보 밀도가 충분하다면 [PASS] 처리하라. 기존의 2,000자 기준을 엄격하게 적용하지 않는다.
-4. **인과율 밀도 검수 (Causal Anchor Guard)**:
-   - 각 장면의 물리적 분량보다 '사건의 전진'이 있는지를 우선하라.
-   - 6개의 장면 중 2개 이상이 '단순 묘사'가 아닌, 인물의 심경 변화나 물리적 타격 등 '인과적 전진'이 느껴지는 핵심 키워드를 포함해야 한다.
-   - 문장이 길더라도 알맹이가 없는 '중언부언'은 REJECT하되, 문장이 짧더라도 다음 장면으로 넘어가는 '징검다리' 역할이 확실하다면 PASS하라.
-
-### [Chain-of-Thought Strategic Audit]
-다음 단계로 검수하십시오:
-
-Step 1: 미래 오염 검사
-- 현재 블록의 보상/해결에 존재하지 않는 무구/비기가 전술서에 등장하는가?
-- 아직 획득하지 않은 아이템이나 미습득 무공이 등장하면 REJECT
-→ 위반 시 REJECT, 아니면 다음 단계
-
-Step 2: 서사 분절성 검사
-- 각 회차가 고유한 사건을 담고 있는가?
-- 직전 아크의 단순 반복이 아닌가?
-→ 루프 감지 시 REJECT, 아니면 다음 단계
-
-Step 3: 페이싱 적합성 검사
-- 설정된 화수({ep_count}화)에 사건의 양이 적절한가?
-- 너무 압축되거나 늘어지지 않는가?
-→ 부적합 시 REJECT, 적합 시 다음 단계
-
-Step 4: 인과율 밀도 검사
-- 6개 장면 중 2개 이상이 '인과적 전진'을 포함하는가?
-- 단순 묘사로만 채워지지 않았는가?
-→ 밀도 미달 시 REJECT, 충족 시 PASS
-
-[Output Format] JSON Only
-{{
-    "decision": "PASS" 또는 "REJECT",
-    "score": 0~100,
-    "loop_detected": true/false,
-    "reason": "REJECT 사유를 구체적으로 기술 (어떤 화에서 어떤 문제가 있는지)",
-    "re_slice_instruction": "REJECT 시 반드시 구체적 수정 지시 포함. 예: '제N화에서 X 대신 Y를 하라', '아이템 Z를 삭제하고 W로 대체하라' 등 실행 가능한 지시"
-}}
-"""
-
-
-
-# =================================================================
-# V30 S-Grade 서사/밀도 이중 검수(Director) 프롬프트
-# =================================================================
-
-DIRECTOR_AUDIT_PROMPT_V30 = """
-[Role] 웹소설 유료 연재 시장의 1타 편집장 (Pacing & Volume Specialist)
-[Task] 제 {ep_num}화 {audit_mode}의 품질을 검수하여 'PASS' 혹은 'REJECT'를 판정하라.
-
-### 📊 서사 컨텍스트 및 페이싱
-- **아크 전체 분량: {total_eps}화** (이 숫자를 기준으로 전체 전개 속도를 조절하라)
-- **현재 아크 내 위치: {arc_pos} / {total_eps}**
-- **검수 모드: {audit_mode}** (대상에 맞는 검수 강령을 적용할 것)
-- **재시도 횟수: {retry_count}회** (2회 이상 시 유연한 판정 적용)
-
-### 🎯 모드별 검수 강령 (V40.3 실용주의 판정)
-1. **[BLUEPRINT/MANUSCRIPT 모드 공통]**:
-   - **창작권 존중 (Creative Freedom)**: 작가(Writer)가 서사의 줄기를 해치지 않는 선에서 추가하는 대사, 배경 묘사, 조연의 리액션은 무조건 승인하라.
-   - **[V45 원고 우선 원칙 (Manuscript Supremacy)]**:
-     (A) 직전 원고(prev_full_text)에서 실제로 일어난 사건이 **진실**이다.
-     (B) HUD는 참고 자료일 뿐, 원고와 HUD가 충돌하면 **원고가 우선**한다.
-     (C) 직전 원고에서 장비를 획득했다면, HUD에 없더라도 사용 가능하다.
-     (D) 직전 원고에서 부상을 입었다면, HUD 상태와 무관하게 부상 상태로 간주한다.
-   - **설정 절대 가드 (Hard Constraints)**: 오직 아래 세 가지만 무조건 REJECT하라.
-     (A) 주인공의 경지가 직전 원고 기준으로 불가능한 초월적 무공 사용 (예: 아직 배우지 않은 무공 구사).
-     (B) 전술 설계도에 명시된 핵심 인물 이름 변경 또는 누락.
-     (C) 죽은 자가 살아나거나 장소가 순간이동하는 등 '물리적 인과' 붕괴.
-   - **[페이싱 및 흐름 관리]**:
-     (A) **속도 우선**: 서사가 다음 화로 넘어가는 추진력이 확보되었다면 세부 미비점은 PASS하라.
-     (B) **흐름 검수**: 사건이 한 장면에서 허무하게 끝나버리는 '서사 폭주'나, 똑같은 상황이 3장면 이상 반복되는 '서사 정체'는 REJECT하라.
-     (C) **장면 수 체크 (유연한 기준)**:
-         - 6개 장면(Scene 1~6)이 목표이나, 재시도 횟수가 2회 이상이면 최소 3개 장면만 있어도 PASS 가능.
-         - 재시도 0-1회: 최소 4개 장면 필수, 미만 시 REJECT.
-         - 재시도 2회 이상: 최소 3개 장면이 명확하고 서사 흐름이 자연스러우면 PASS.
-
-2. **[MANUSCRIPT 모드] (실제 원고 검수)**:
-   - **핵심 목표**: 독자의 가독성, 문체의 유려함, 카타르시스 극대화.
-   - **검수 기준**: 지문과 대사의 비율, 플랫폼 특화 문체(사이다/절벽걸기)가 구현되었는가?
-   - ⚠️ **구조보다는 '독자 경험과 문장력'**을 최우선으로 본다. (목표: {target_len}자)
-   - 🚨 **분량 절대 기준**: 공백 포함 4,000자 미만은 무조건 REJECT. 5,000자 이상을 목표로 하되, 최소 4,000자는 반드시 확보해야 함.
-
-
-   ###   [🚨 SCENE INTEGRITY CHECK]:
-1. Architect가 설계한 6개의 장면(Scene 1~6)이 원고에 모두 포함되었는가? (최소 4개 이상 필수)
-2. 특정 장면이 생략되거나 후반부로 갈수록 묘사 밀도가 급격히 떨어지지 않는가?
-3. 초반 장면은 상세한데 후반 장면이 급격히 요약되거나 비약했다면, 분량이 충분하더라도 무조건 REJECT하라. 모든 씬이 아키텍트의 설계도와 비슷한 비중으로 작성되었는지 검수하라.
-
-   ### 🚑 [V35 진단 시스템: 에러 분류 가이드]
-만약 판정이 'REJECT'일 경우, 반드시 아래 카테고리 중 하나로 분류하십시오.
-
-1. **QUALITY_ISSUE (품질 미달)**:
-   - 문체가 건조함, 묘사가 부족함, 목표 분량 미달, 장면의 재미가 떨어짐.
-   - 이는 아키텍트의 '노력'으로 해결 가능하며, 즉각적인 아크 수술이 필요하지 않음.
-
-2. **LOGIC_ERROR (논리적 모순 - V35 Surgery Trigger)**:
-   - 인과관계 붕괴(예: 검을 들었는데 창을 씀), 설정 오류(죽은 인물 등장), 캐릭터 붕괴.
-   - 이는 아크 전술서 자체의 결함으로 간주하며, **애널리스트의 수술이 즉시 필요함.**
-
-
-
-
-### 📊 [V60.95 고밀도 HUD - 주인공/NPC 상세 상태]
-{high_density_hud_context}
-
-### 📋 검수 데이터
-- 현재 회차: 제 {ep_num}화 (아크 내 {arc_pos}번째)
-- 📜 아크 전술 설계도: {arc_doc}
-- 🕒 최근 서사 요약: {history_summary}
-- 📄 직전 회차 실제 본문: {prev_full_text} 👈 (중복 방지를 위해 반드시 참조!)
-- 📝 검수 대상 ({audit_mode}): {manuscript}
-
-### [Chain-of-Thought Evaluation]
-다음 순서로 단계적으로 검수하십시오:
-
-Step 1: 설정 일관성 체크 (V45 원고 우선 원칙 적용)
-- 직전 원고 기준으로 불가능한 무공이 등장하는가? (HUD보다 원고 우선)
-- 사망한 인물, 파괴된 장소가 정상적으로 등장하는가?
-- 핵심 인물 이름이 설계도와 일치하는가?
-- 직전 원고에서 획득한 장비를 사용하는 것은 허용 (HUD 미반영이라도 OK)
-→ 위반 시 REJECT, 아니면 다음 단계로
-
-Step 2: 장면 구성 평가
-- 설계된 장면(Scene 1~6)이 충실히 반영되었는가?
-- 각 장면의 밀도가 균등한가? (앞만 상세하고 뒤는 요약 아닌가?)
-- 장면 수가 기준을 충족하는가?
-→ 미달 시 REJECT, 충족 시 다음 단계로
-
-Step 3: 서사 흐름 검수
-- 사건이 다음 화로 넘어가는 추진력이 있는가?
-- 같은 상황이 3장면 이상 반복되지 않는가?
-- 직전 회차와 내용이 중복되지 않는가?
-→ 문제 있으면 REJECT, 없으면 다음 단계로
-
-Step 4: 분량 및 품질 종합 평가
-- 분량이 기준을 충족하는가? (MANUSCRIPT: 4000자+)
-- 문체가 유려하고 독자 경험이 좋은가?
-
-### [V63 점수 산정 공식 (Score Formula)]
-점수는 아래 6개 항목의 합계로 산정 (총 100점):
-
-1. **설정 일관성 (20점)**:
-   - 20점: 설정 완벽 준수 (무공, 인물, 물리적 인과 모두 정상)
-   - 12점: 경미한 설정 미비 (보조 NPC 이름 오타 등)
-   - 0점: Hard Constraint 위반 (미습득 무공, 죽은 자 부활 등)
-
-2. **장면 구성 (20점)**:
-   - 20점: 6개 씬 모두 균등한 밀도로 반영
-   - 16점: 5개 씬 반영 또는 밀도 약간 불균등
-   - 12점: 4개 씬 반영
-   - 8점: 3개 씬 반영 (재시도 2회+ 시만 PASS 가능)
-   - 0점: 2개 씬 이하
-
-3. **서사 흐름 (20점)**:
-   - 20점: 추진력 있고 정체/폭주 없음
-   - 10점: 약간의 반복 또는 급전개
-   - 0점: 서사 폭주(압축) 또는 정체(반복 3회+)
-
-4. **독자 몰입도 (20점)**:
-   - 20점: 다음 화를 즉시 읽고 싶은 클리프행어 + 예측 불가능 전개
-   - 15점: 적절한 궁금증 유발, 캐릭터 매력 발휘
-   - 10점: 무난한 전개이나 특별히 끌리는 요소 없음
-   - 5점: 예측 가능한 전개, 진부한 클리프행어
-   - 0점: 다음 화를 읽을 동기 없음
-
-5. **문체 품질 (20점)**:
-   - 20점: 유려하고 몰입감 높음, 감각적 묘사 탁월
-   - 15점: 가독성 양호, 문장에 리듬감 있음
-   - 10점: 가독성 양호하나 AI티 잔존
-   - 5점: 건조하나 의미 전달됨
-   - 0점: 가독성 심각하게 떨어짐
-
-**분량 체크**: 4,000자 미만은 자동 REJECT (점수 항목에서 제외, 사전 필터)
-
-**PASS 기준**: 총점 65점 이상이면 PASS (재시도 2회+ 시 55점) [V60.24 완화]
-**자동 REJECT**: 설정 일관성 0점, 장면 구성 0점, 서사 흐름 0점, 분량 4000자 미만 중 하나라도 해당 시
-
-Step 5: 최종 판정
-- 위 5단계를 종합하여 PASS/REJECT 결정
-- 에러 카테고리 분류 (QUALITY_ISSUE vs LOGIC_ERROR)
-
-[Output Format] JSON Only
-{{
-    "decision": "PASS" 또는 "REJECT",
-    "score": 0~100,
-    "score_breakdown": {{
-        "setting_consistency": 0~20,
-        "scene_composition": 0~20,
-        "narrative_flow": 0~20,
-        "reader_engagement": 0~20,
-        "prose_quality": 0~20
-    }},
-    "error_category": "QUALITY_ISSUE" 또는 "LOGIC_ERROR",
-    "diagnostic_report": "논리적 모순 발생 시, 정확히 어떤 설정(무기, 인물, 시간)이 충돌했는지 기술",
-    "current_beat_achieved": true/false,
-    "reason": "판정 근거 (반드시 {audit_mode} 관점에서 서술)",
-    "feedback": "증폭/수정을 위한 구체적 지시",
-    "lowest_score_area": "가장 낮은 점수를 받은 영역 (setting_consistency/scene_composition/narrative_flow/reader_engagement/prose_quality)"
-}}
-"""
-
-# [V64 P2-1] MANUSCRIPT_HISTORY_CONFLICT_PROMPT → director_continuity.py 이관
+# [V64 P2-1] MANUSCRIPT_HISTORY_CONFLICT_PROMPT → director_continuity.py → director_prompts.py 이관
 MANUSCRIPT_HISTORY_CONFLICT_PROMPT = _HISTORY_CONFLICT_PROMPT
 
 
@@ -345,13 +116,13 @@ class Director(BaseAgent):
         if not self.adaptive_thresholds_enabled:
             return {
                 'pass_threshold': self.base_pass_threshold,
-                'length_threshold': 4500,
+                'length_threshold': ManuscriptLimits.WARNING_LENGTH,  # [V64.P4]
                 'strictness_level': 'standard',
                 'reason': 'adaptive thresholds disabled'
             }
 
         base = self.base_pass_threshold
-        length_base = 4500
+        length_base = ManuscriptLimits.WARNING_LENGTH  # [V64.P4]
         reason_parts = []
 
         # 1. Arc 위치 기반 조정
@@ -506,96 +277,8 @@ class Director(BaseAgent):
         self.guard = guard
 
     def _build_hud_context(self, state_tracker, ep_num: int) -> str:
-        """
-        [V60.95] StateTracker에서 고밀도 HUD 컨텍스트 구축
-
-        Director의 원고 검증 시 참조할 주인공/NPC 상태 정보를 구축한다.
-        ChiefWriter의 _build_hud_context와 동일한 패턴.
-
-        Args:
-            state_tracker: StateTracker 인스턴스
-            ep_num: 현재 에피소드 번호
-
-        Returns:
-            고밀도 HUD 문자열 (프롬프트 주입용)
-        """
-        if not state_tracker:
-            return "(상태 추적기 없음)"
-
-        lines = []
-
-        # 1. 주인공 상태 (고밀도 필드)
-        try:
-            prev_state = None
-            if ep_num > 1 and hasattr(state_tracker, 'episode_states'):
-                prev_state = state_tracker.episode_states.get(ep_num - 1)
-
-            if prev_state:
-                state_dict = prev_state.to_dict() if hasattr(prev_state, 'to_dict') else {}
-                lines.append("[주인공 현재 상태 - 고밀도]")
-
-                # Core fields
-                core_fields = ['name', 'location', 'hp', 'mp', 'martial_level', 'inner_power', 'status']
-                for field in core_fields:
-                    if field in state_dict and state_dict[field]:
-                        lines.append(f"  {field}: {state_dict[field]}")
-
-                # Extended fields (extra_fields)
-                extra = state_dict.get('extra_fields', {})
-                if extra:
-                    lines.append("  [확장 상태]")
-                    for k, v in extra.items():
-                        if v:
-                            lines.append(f"    {k}: {v}")
-
-                # Items
-                items = state_dict.get('items', [])
-                if items:
-                    lines.append(f"  보유 아이템: {', '.join(items[:10])}")
-
-                # Relationships
-                relationships = state_dict.get('relationships', {})
-                if relationships:
-                    lines.append("  관계:")
-                    for name, rel in list(relationships.items())[:5]:
-                        lines.append(f"    - {name}: {rel}")
-            else:
-                lines.append("[주인공 상태: 이전 에피소드 기록 없음]")
-
-        except Exception as e:
-            lines.append(f"  (주인공 상태 로드 오류: {str(e)[:30]})")
-
-        # 2. NPC 레지스트리 (살아있는 주요 NPC)
-        try:
-            if hasattr(state_tracker, 'npc_registry') and state_tracker.npc_registry:
-                npc_reg = state_tracker.npc_registry
-                alive_npcs = [
-                    name for name, data in npc_reg.items()
-                    if isinstance(data, dict) and data.get('status') != 'dead'
-                ]
-                dead_npcs = [
-                    name for name, data in npc_reg.items()
-                    if isinstance(data, dict) and data.get('status') == 'dead'
-                ]
-
-                if alive_npcs:
-                    lines.append(f"\n[활성 NPC ({len(alive_npcs)}명)]")
-                    for name in alive_npcs[:8]:
-                        npc_data = npc_reg.get(name, {})
-                        role = npc_data.get('role', '?')
-                        location = npc_data.get('location', '?')
-                        lines.append(f"  - {name} ({role}) @ {location}")
-
-                if dead_npcs:
-                    lines.append(f"\n[사망 NPC ({len(dead_npcs)}명) - 등장 금지!]")
-                    for name in dead_npcs[:5]:
-                        npc_data = npc_reg.get(name, {})
-                        death_arc = npc_data.get('death_arc', '?')
-                        lines.append(f"  - {name}: Arc {death_arc}에서 사망")
-        except Exception:
-            pass
-
-        return "\n".join(lines) if lines else "(HUD 정보 없음)"
+        """[V64 P2-7] 위임 → modules.core.hud_utils.build_hud_context (director variant)"""
+        return _build_hud_context_shared(state_tracker, ep_num, variant="director")
 
     def _run_genre_specific_validation(self, manuscript: str, ep_num: int) -> dict:
         """[V64] 위임 → DirectorQualityAuditor"""
@@ -834,7 +517,7 @@ class Director(BaseAgent):
             )
 
         # 1. 검수 모드 자동 결정 (기존 로직)
-        audit_mode = "BLUEPRINT" if target_len <= 4000 else "MANUSCRIPT"
+        audit_mode = "BLUEPRINT" if target_len <= ManuscriptLimits.MIN_LENGTH else "MANUSCRIPT"  # [V64.P4]
 
         # 2. 데이터 안전 처리
         safe_ms = self._escape_braces(manuscript)
@@ -844,15 +527,15 @@ class Director(BaseAgent):
         current_len = len(manuscript)
 
         # 2-1. 🔒 [V40 Fix] 분량 강제 체크 (AI 판단 이전에 Python 레벨에서 검증)
-        if audit_mode == "MANUSCRIPT" and current_len < 4000:
+        if audit_mode == "MANUSCRIPT" and current_len < ManuscriptLimits.MIN_LENGTH:  # [V64.P4]
             return {
                 "decision": "REJECT",
                 "score": 0,
                 "error_category": "QUALITY_ISSUE",
                 "diagnostic_report": f"분량 절대 미달: {current_len}자",
                 "current_beat_achieved": False,
-                "reason": f"공백 포함 {current_len}자로 최소 기준(4,000자) 미달. 목표는 5,000자 이상입니다.",
-                "feedback": "장면의 밀도를 높이고, 대사와 묘사를 추가하여 5,000자 이상으로 확장하십시오."
+                "reason": f"공백 포함 {current_len}자로 최소 기준({ManuscriptLimits.MIN_LENGTH}자) 미달. 목표는 {ManuscriptLimits.TARGET_LENGTH}자 이상입니다.",
+                "feedback": f"장면의 밀도를 높이고, 대사와 묘사를 추가하여 {ManuscriptLimits.TARGET_LENGTH}자 이상으로 확장하십시오."
             }
 
         # 2-2. 🚫 [V40 Premium] 반복 구문 체크 (N-gram Deduplication)
@@ -1391,7 +1074,7 @@ class Director(BaseAgent):
                 bible = self.context.db.load_anchor('bible')
                 if bible:
                     genre = bible.get('_genre', self.genre)
-        except:
+        except (AttributeError, KeyError, TypeError):  # [V64.P4] IMPORTANT: genre extraction with safe default
             pass
 
         violations = []

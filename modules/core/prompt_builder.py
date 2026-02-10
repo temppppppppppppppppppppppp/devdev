@@ -37,6 +37,8 @@ class PromptBuilder:
                  Pure 메서드들은 app 없이도 동작.
         """
         self._app = app
+        # [V64 P2-7] 아이템 타임라인 증분 캐시 {up_to_ep: (timeline_lines_list, max_ep_loaded)}
+        self._item_timeline_cache: dict = {}
 
     # ═══════════════════════════════════════════════════════════════════════
     # [V60.5] Writer 가이드 — Pure (app 의존 없음)
@@ -781,6 +783,7 @@ class PromptBuilder:
     def build_item_acquisition_timeline(self, up_to_ep: int) -> str:
         """
         [V60.80] 아이템 획득 타임라인 생성 (미래 침범 방지용)
+        [V64 P2-7] 증분 캐시: 이전 호출 결과를 재활용하여 새 에피소드만 DB 조회
 
         에피소드 바이블에서 아이템 획득 기록을 추출하여
         "몇 화에서 무엇을 얻었는지" 타임라인 문자열 생성.
@@ -789,9 +792,28 @@ class PromptBuilder:
             return ""
 
         try:
-            timeline_lines = []
+            # [V64 P2-7] 증분 캐시 활용: 가장 가까운 이전 캐시 찾기
+            cached_lines = []
+            start_ep = 1
 
-            for ep in range(1, up_to_ep + 1):
+            # 정확히 같은 ep까지 캐시가 있으면 즉시 반환
+            if up_to_ep in self._item_timeline_cache:
+                cached = self._item_timeline_cache[up_to_ep]
+                return "\n".join(cached) if cached else ""
+
+            # 이전 캐시 중 가장 큰 ep 찾아서 재활용
+            best_cached_ep = 0
+            for cached_ep in self._item_timeline_cache:
+                if cached_ep < up_to_ep and cached_ep > best_cached_ep:
+                    best_cached_ep = cached_ep
+
+            if best_cached_ep > 0:
+                cached_lines = list(self._item_timeline_cache[best_cached_ep])
+                start_ep = best_cached_ep + 1
+
+            timeline_lines = cached_lines
+
+            for ep in range(start_ep, up_to_ep + 1):
                 ep_bible = self._app.current_project.db.get_episode_bible(ep)
                 if not ep_bible:
                     continue
@@ -805,6 +827,9 @@ class PromptBuilder:
                 if lost_items:
                     lost_str = ", ".join(lost_items) if isinstance(lost_items, list) else str(lost_items)
                     timeline_lines.append(f"제{ep}화: {lost_str} 분실/파괴")
+
+            # 캐시 저장
+            self._item_timeline_cache[up_to_ep] = list(timeline_lines)
 
             if timeline_lines:
                 return "\n".join(timeline_lines)

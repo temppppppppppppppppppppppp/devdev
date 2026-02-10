@@ -7,6 +7,7 @@ Python 기반 필수 검증 (LLM 호출 불필요)
 """
 import re
 from typing import Dict, List, Any
+from modules.core.constants import ManuscriptLimits  # [V64.P4]
 
 # [Phase 4.2] Justification pattern 임포트
 try:
@@ -396,7 +397,7 @@ class BlockingValidator:
         if mode == 'BLUEPRINT':
             threshold = 500
         else:  # MANUSCRIPT
-            threshold = 4000
+            threshold = ManuscriptLimits.MIN_LENGTH  # [V64.P4]
 
         length = len(manuscript)
 

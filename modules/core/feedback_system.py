@@ -13,6 +13,7 @@ SovereignApp에서 분리된 15개 피드백 생성 메서드.
 - 적응형 (2개): get_adaptive_feedback_intensity, classify_rejection_feedback
 - 재시도 (1개): simplify_prompt_for_retry
 """
+from modules.core.constants import ManuscriptLimits  # [V64.P4]
 
 
 class FeedbackSystem:
@@ -87,8 +88,8 @@ class FeedbackSystem:
         quantified = []
 
         # 1. 분량 정량화
-        if '분량' in reason or content_length < 4500:
-            target_length = 5000
+        if '분량' in reason or content_length < ManuscriptLimits.WARNING_LENGTH:  # [V64.P4]
+            target_length = ManuscriptLimits.TARGET_LENGTH  # [V64.P4]
             shortage = max(0, target_length - content_length)
 
             if shortage > 0:

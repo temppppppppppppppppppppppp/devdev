@@ -11,6 +11,7 @@ import json
 import re
 import time
 from typing import Dict, List, Optional
+from modules.core.constants import ManuscriptLimits  # [V64.P4]
 
 
 class ManuscriptValidator:
@@ -26,9 +27,9 @@ class ManuscriptValidator:
     중요: REJECT 권한 없음! 모든 결과는 Director에게 "주의 깊게 볼 포인트"로 전달
     """
 
-    # 분량 기준
-    LENGTH_WARNING_THRESHOLD = 4500  # 이 미만이면 경고
-    LENGTH_TARGET = 5000  # 목표 분량
+    # [V64.P4] 분량 기준 — ManuscriptLimits 참조
+    LENGTH_WARNING_THRESHOLD = ManuscriptLimits.WARNING_LENGTH
+    LENGTH_TARGET = ManuscriptLimits.TARGET_LENGTH
 
     # [V63.3] 클래스 레벨 regex 상수 (매 호출마다 re.compile 방지)
     _ITEM_LOSS_PATTERNS = [
@@ -253,8 +254,8 @@ class ManuscriptValidator:
         length = len(manuscript) if manuscript else 0
         warnings = []
 
-        if length < 4000:
-            warnings.append(f"⚠️ 분량 심각 부족: {length}자 (최소 4,000자 필요)")
+        if length < ManuscriptLimits.MIN_LENGTH:  # [V64.P4]
+            warnings.append(f"⚠️ 분량 심각 부족: {length}자 (최소 {ManuscriptLimits.MIN_LENGTH}자 필요)")
         elif length < self.LENGTH_WARNING_THRESHOLD:
             warnings.append(f"⚠️ 분량 부족: {length}자 (목표 {self.LENGTH_TARGET}자)")
 

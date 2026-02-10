@@ -12,6 +12,7 @@ class GenreTypes:
     WUXIA = 'wuxia'
     HUNTER = 'hunter'
     INVESTMENT = 'investment'
+    FANTASY = 'fantasy'       # [V65] 판타지 (이세계물)
     COMPOSER = 'composer'
     COOKING = 'cooking'
     ALT_HISTORY = 'alt_history'
@@ -21,7 +22,7 @@ class GenreTypes:
 
     @classmethod
     def all(cls):
-        return [cls.WUXIA, cls.HUNTER, cls.INVESTMENT, cls.COMPOSER, cls.COOKING, cls.ALT_HISTORY, cls.ACTOR, cls.SPORTS, cls.MEDICAL]
+        return [cls.WUXIA, cls.HUNTER, cls.INVESTMENT, cls.FANTASY, cls.COMPOSER, cls.COOKING, cls.ALT_HISTORY, cls.ACTOR, cls.SPORTS, cls.MEDICAL]
 
     @classmethod
     def get_name(cls, genre_type):
@@ -30,6 +31,7 @@ class GenreTypes:
             cls.WUXIA: '무협',
             cls.HUNTER: '헌터',
             cls.INVESTMENT: '투자',
+            cls.FANTASY: '판타지',
             cls.COMPOSER: '작곡가',
             cls.COOKING: '요리',
             cls.ALT_HISTORY: '대체역사',
@@ -65,6 +67,14 @@ class RecoveryLimits:
     """복구 관련 제한"""
     MAX_PARALLEL_RECOVERY = 2          # 병렬 복구 최대 시도 횟수
     CRITICAL_MISSING_THRESHOLD = 3     # 핵심 데이터 누락 임계값
+
+
+class ManuscriptLimits:
+    """[V64.P4] 원고 분량 임계값 중앙 관리 (Single Source of Truth)."""
+    MIN_LENGTH = 4000       # 최소 글자수 (blocking - 이 미만 자동 REJECT)
+    WARNING_LENGTH = 4500   # 경고 글자수 (scoring 감점 시작)
+    TARGET_LENGTH = 5000    # 목표 글자수 (작가 지시용)
+    MAX_LENGTH = 15000      # 최대 글자수
 
 
 class WritingLimits:
@@ -146,8 +156,7 @@ class Thresholds:
     MAX_TACTICAL_DOC_LENGTH = 5000          # 전술서 최대 길이
     MIN_BLUEPRINT_LENGTH = 500              # 블루프린트 최소 길이
     MAX_BLUEPRINT_LENGTH = 8000             # 블루프린트 최대 길이
-    MIN_MANUSCRIPT_LENGTH = 2000            # 원고 최소 길이
-    
+
     # 캐시
     MIN_CACHE_CONTENT_LENGTH = 1500         # 캐시 최소 콘텐츠 길이 (토큰)
     
@@ -167,28 +176,6 @@ class SceneSettings:
     """장면(Scene) 구성 설정"""
     TARGET_SCENE_COUNT = 6                  # 목표 장면 개수 (하향: 10→6)
     MIN_SCENE_COUNT = 4                     # 최소 장면 개수 (반려 기준)
-
-
-# ============================================================================
-# 온도 및 AI 파라미터
-# ============================================================================
-
-class AIParameters:
-    """AI 모델 파라미터"""
-    # 온도 설정
-    TEMPERATURE_CREATIVE = 0.9              # 창의적 작업 (Writer)
-    TEMPERATURE_BALANCED = 0.7              # 균형 작업 (Architect)
-    TEMPERATURE_PRECISE = 0.3               # 정밀 작업 (Analyst, Director)
-    TEMPERATURE_SURGERY = 0.3               # 수술 모드 (Arc Reconstruction)
-    
-    # Top-P 설정
-    TOP_P_DEFAULT = 0.95
-    TOP_P_FOCUSED = 0.85
-    
-    # 토큰 제한
-    MAX_OUTPUT_TOKENS_SHORT = 2048          # 짧은 응답
-    MAX_OUTPUT_TOKENS_MEDIUM = 4096         # 중간 응답
-    MAX_OUTPUT_TOKENS_LONG = 8192           # 긴 응답
 
 
 # ============================================================================
@@ -345,6 +332,7 @@ class NPCHUDKeys:
     WUXIA = 'NPC_Martial_HUD'
     HUNTER = 'NPC_Hunter_Status'
     INVESTMENT = 'NPC_Business_Profile'
+    FANTASY = 'NPC_Martial_HUD'  # [V65] 판타지 → MartialHUD 공유
     COMPOSER = 'NPC_Music_Profile'
     COOKING = 'NPC_Cooking_Profile'
     ALT_HISTORY = 'NPC_Joseon_Status'
@@ -359,6 +347,7 @@ class NPCHUDKeys:
             GenreTypes.WUXIA: cls.WUXIA,
             GenreTypes.HUNTER: cls.HUNTER,
             GenreTypes.INVESTMENT: cls.INVESTMENT,
+            GenreTypes.FANTASY: cls.FANTASY,
             GenreTypes.COMPOSER: cls.COMPOSER,
             GenreTypes.COOKING: cls.COOKING,
             GenreTypes.ALT_HISTORY: cls.ALT_HISTORY,
@@ -588,9 +577,9 @@ class V40PremiumThresholds:
     ANCHOR_COMPRESSION_THRESHOLD = 5000     # 원고 압축 기준 (문자 수)
     ANCHOR_COMPRESSED_PART_SIZE = 2000      # 압축 시 추출 부분 크기
 
-    # Manuscript Quality (원고 품질)
-    MANUSCRIPT_MIN_LENGTH_DIRECTOR = 4000   # Director 통과 최소 글자 수
-    MANUSCRIPT_TARGET_LENGTH_WRITER = 5000  # Writer 목표 글자 수
+    # Manuscript Quality (원고 품질) — [V64.P4] ManuscriptLimits 참조
+    MANUSCRIPT_MIN_LENGTH_DIRECTOR = ManuscriptLimits.MIN_LENGTH
+    MANUSCRIPT_TARGET_LENGTH_WRITER = ManuscriptLimits.TARGET_LENGTH
 
     # Emotion States (감정 상태 값)
     EMOTION_STATE_DESPAIR = -2              # 절망

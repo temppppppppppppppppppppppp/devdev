@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from enum import Enum
 import json
 import re
+from modules.core.constants import ManuscriptLimits  # [V64.P4]
 
 
 class ComplianceLevel(Enum):
@@ -145,7 +146,7 @@ JSON 형식으로 응답:
                 return json.loads(json_match.group(1))
             # 직접 JSON 시도
             return json.loads(response_text)
-        except:
+        except (json.JSONDecodeError, ValueError):  # [V64.P4] JSON parse failure
             return {
                 "compliance_score": 0.7,
                 "violations": [],
@@ -214,10 +215,10 @@ JSON 형식으로 응답:
         violations = []
 
         # 1. 최소 길이 체크
-        if len(manuscript) < 4000:
+        if len(manuscript) < ManuscriptLimits.MIN_LENGTH:  # [V64.P4]
             violations.append({
                 "item": "분량 부족",
-                "reason": f"최소 4000자 필요, 현재 {len(manuscript)}자"
+                "reason": f"최소 {ManuscriptLimits.MIN_LENGTH}자 필요, 현재 {len(manuscript)}자"
             })
 
         # 2. 씬 반영 체크 (휴리스틱)
@@ -493,7 +494,7 @@ JSON 형식으로 응답:
             if isinstance(content, str):
                 try:
                     content = json.loads(content)
-                except:
+                except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] JSON parse failure
                     return False, ["Blueprint JSON 파싱 실패"]
             violations = self._python_precheck_architect(content, reference)
         elif check_type == "writer":

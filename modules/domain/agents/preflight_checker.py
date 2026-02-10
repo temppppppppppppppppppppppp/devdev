@@ -348,7 +348,7 @@ class PreflightChecker(BaseAgent):
                 try:
                     loss = int(re.search(r'(\d+)', str(shadow["internal_energy_loss"])).group(1))
                     last_energy = max(0, last_energy - loss)
-                except:
+                except (ValueError, AttributeError, TypeError):  # [V64.P4] energy parse failure
                     pass
 
             # 부상: arc_end_state 우선

@@ -27,6 +27,7 @@ from dataclasses import dataclass
 from enum import Enum
 import json
 import re
+from modules.core.constants import ManuscriptLimits  # [V64.P4]
 
 
 class ContentType(Enum):
@@ -160,7 +161,7 @@ JSON 형식으로 냉정하게:
             if json_match:
                 return json.loads(json_match.group(1))
             return json.loads(text)
-        except:
+        except (json.JSONDecodeError, ValueError):  # [V64.P4] JSON parse failure
             return {}
 
     def _get_adversary_feedback(
@@ -338,7 +339,7 @@ JSON 형식으로 냉정하게:
 
         if content_type == "manuscript":
             # 길이 체크
-            if len(content) < 4000:
+            if len(content) < ManuscriptLimits.MIN_LENGTH:  # [V64.P4]
                 issues.append(f"길이 부족 ({len(content)}자)")
 
             # 대화 체크
@@ -369,7 +370,7 @@ JSON 형식으로 냉정하게:
         elif content_type == "blueprint":
             try:
                 bp = json.loads(content) if isinstance(content, str) else content
-            except:
+            except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] JSON parse failure
                 issues.append("JSON 파싱 실패")
                 bp = {}
 

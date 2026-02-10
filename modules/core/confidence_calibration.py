@@ -326,7 +326,7 @@ class ConfidenceCalibrator:
         else:
             try:
                 bp = json.loads(content)
-            except:
+            except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] JSON parse failure
                 bp = {}
 
         # 1. 필수 필드 존재 (30점)

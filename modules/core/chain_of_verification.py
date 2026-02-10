@@ -147,7 +147,7 @@ JSON 형식으로 응답:
             if json_match:
                 return json.loads(json_match.group(1))
             return json.loads(response_text)
-        except:
+        except (json.JSONDecodeError, ValueError):  # [V64.P4] JSON parse failure
             return {
                 "passed": True,
                 "overall_severity": "none",
@@ -244,7 +244,7 @@ JSON 형식으로 응답:
             severity_str = issue_data.get("severity", "minor")
             try:
                 severity = VerificationSeverity(severity_str)
-            except:
+            except (ValueError, KeyError):  # [V64.P4] enum parse failure
                 severity = VerificationSeverity.MINOR
 
             issues.append(VerificationIssue(
@@ -258,7 +258,7 @@ JSON 형식으로 응답:
         overall_severity_str = result.get("overall_severity", "none")
         try:
             overall_severity = VerificationSeverity(overall_severity_str)
-        except:
+        except (ValueError, KeyError):  # [V64.P4] enum parse failure
             overall_severity = VerificationSeverity.NONE
 
         passed = result.get("passed", True)

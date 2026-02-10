@@ -18,7 +18,7 @@ def create_genre_guard(genre_type):
     [V40 Factory] 장르별 Guard 생성 팩토리 함수
 
     Args:
-        genre_type: 'wuxia' | 'hunter' | 'investment' | 'composer' | 'cooking' | 'alt_history' | 'actor' | 'sports' | 'medical'
+        genre_type: 'wuxia' | 'hunter' | 'investment' | 'fantasy' | 'composer' | 'cooking' | 'alt_history' | 'actor' | 'sports' | 'medical'
 
     Returns:
         GenreGuard 구현체
@@ -29,6 +29,9 @@ def create_genre_guard(genre_type):
         return HunterGuard()
     elif genre_type == 'investment':
         return InvestmentGuard()
+    elif genre_type == 'fantasy':
+        # [V65] 판타지는 WuxiaGuard 공유 (MartialHUD 기반, 순혈주의 일부 완화)
+        return WuxiaGuard()
     elif genre_type == 'composer':
         return ComposerGuard()
     elif genre_type == 'cooking':

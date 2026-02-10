@@ -279,6 +279,6 @@ def get_genre_from_context(context) -> str:
             bible = context.load_v20_anchor('bible')
             if bible:
                 return bible.get('_genre', 'wuxia')
-    except:
+    except (AttributeError, KeyError, TypeError):  # [V64.P4] genre extraction with safe default
         pass
     return 'wuxia'  # 기본값

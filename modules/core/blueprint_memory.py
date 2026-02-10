@@ -313,7 +313,7 @@ class BlueprintMemory:
                     bp_data = json.loads(data) if isinstance(data, str) else data
                     if self.index_blueprint(ep_num, bp_data):
                         indexed += 1
-                except:
+                except (json.JSONDecodeError, ValueError, TypeError, KeyError):  # [V64.P4] individual blueprint index failure
                     continue
 
             print(f"      📚 [BlueprintMemory] {indexed}개 Blueprint 인덱싱 완료")

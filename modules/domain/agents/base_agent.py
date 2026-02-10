@@ -48,6 +48,7 @@ class BaseAgent:
     MODEL_FALLBACK_CHAIN = {
         "gemini-3-pro-preview": "gemini-2.5-pro",      # 3 Pro → 2.5 Pro (최종)
         "gemini-3-flash-preview": "gemini-2.5-flash",  # 3 Flash → 2.5 Flash (Flash 계열은 유지)
+        "gemini-2.0-flash": "gemini-2.5-flash",        # V50 모듈용 폴백
         # "gemini-2.5-pro": ... 제거 — 2.5-pro가 최종 방어선
     }
 
@@ -237,7 +238,7 @@ class BaseAgent:
             try:
                 collector = get_metrics_collector()
                 metric_id = collector.start_call(self.agent_name, current_model)
-            except Exception:
+            except Exception:  # [V64.P4] OPTIONAL: metrics startup
                 pass  # 메트릭 실패가 본 작업에 영향 주지 않음
 
         try:
@@ -453,7 +454,7 @@ class BaseAgent:
                         input_tokens=input_tokens,
                         output_tokens=output_tokens
                     )
-                except Exception:
+                except Exception:  # [V64.P4] OPTIONAL: metrics end (success)
                     pass
 
             return full_response
@@ -481,7 +482,7 @@ class BaseAgent:
                         output_tokens=output_tokens,
                         error_type=error_type
                     )
-                except Exception:
+                except Exception:  # [V64.P4] OPTIONAL: metrics end (failure)
                     pass
 
             # 부분 응답이 있으면 저장
@@ -505,7 +506,7 @@ class BaseAgent:
                     try:
                         collector = get_metrics_collector()
                         backup_metric_id = collector.start_call(f"{self.agent_name}_Backup", self.backup_model)
-                    except Exception:
+                    except Exception:  # [V64.P4] OPTIONAL: backup metrics startup
                         pass
 
                 # [V60.99] API Rate Limit 예방 딜레이
@@ -529,7 +530,7 @@ class BaseAgent:
                             input_tokens=input_tokens,
                             output_tokens=output_tokens
                         )
-                    except Exception:
+                    except Exception:  # [V64.P4] OPTIONAL: backup metrics end
                         pass
 
                 # [V44] 응답 검증
@@ -635,7 +636,7 @@ class BaseAgent:
                 future = executor.submit(self.client.models.list)
                 future.result(timeout=timeout)
             return True
-        except Exception:
+        except (ConnectionError, TimeoutError, OSError, Exception):  # [V64.P4] connectivity check — any failure means offline
             return False
 
     # [V61.2] 네트워크 오류 여부 판단
@@ -702,7 +703,8 @@ class BaseAgent:
                 return None
 
             return json.dumps(merged, ensure_ascii=False)
-        except Exception:
+        except (json.JSONDecodeError, ValueError, TypeError, KeyError) as e:  # [V64.P4] IMPORTANT: partial merge failure
+            print(f"      ⚠️ [V64.P4] 부분 응답 병합 실패: {str(e)[:60]}")
             return None
 
     def _create_error_response(self, error_type: str, message: str) -> str:
@@ -754,14 +756,14 @@ class BaseAgent:
             match = json_pattern.search(clean_text)
             raw_json = match.group(1) if match else clean_text
 
-            # 3. 2단계 파싱 (json -> ast)
+            # 3. 2단계 파싱 (json -> ast)  [V64.P4] specific exception types
             data = None
             try:
                 data = json.loads(raw_json, strict=False)
-            except Exception:
+            except (json.JSONDecodeError, ValueError):
                 try:
                     data = ast.literal_eval(raw_json)
-                except Exception:
+                except (ValueError, SyntaxError):
                     # [Hard Repair] 구조 강제 수리 시도
                     repaired = self._parse_and_repair_hard(raw_json)
                     if isinstance(repaired, dict):
@@ -782,7 +784,7 @@ class BaseAgent:
                         try:
                             scene_data = json.loads(scene_match.group(1))
                             return {"scene_breakdown": scene_data, "repaired": True}
-                        except Exception:
+                        except (json.JSONDecodeError, ValueError):  # [V64.P4]
                             return {"scene_breakdown": {"scene_1": scene_match.group(1)}, "repaired": True}
 
                     # [V47 Fix] integrated_scenario 강제 추출
@@ -1069,7 +1071,7 @@ class BaseAgent:
                 if isinstance(data, str):
                     try:
                         data = json.loads(data)
-                    except:
+                    except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] specific exception
                         data = {}
 
                 title = data.get("title", "")

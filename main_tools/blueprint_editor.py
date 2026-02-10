@@ -86,7 +86,7 @@ def open_in_editor(file_path: str):
         # Windows: 기본 연결 프로그램 또는 notepad
         try:
             os.startfile(file_path)
-        except:
+        except OSError:  # [V64.P4] file open failure
             subprocess.run(['notepad', file_path])
     elif sys.platform == 'darwin':
         # macOS
@@ -162,7 +162,7 @@ def edit_blueprint_external(db_path: Path, ep_num: int):
         # 임시 파일 정리
         try:
             os.unlink(temp_path)
-        except:
+        except OSError:  # [V64.P4] temp file cleanup
             pass
 
 

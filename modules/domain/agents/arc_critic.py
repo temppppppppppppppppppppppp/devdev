@@ -14,6 +14,7 @@ import json
 import re
 from typing import Dict, List, Any, Optional, Tuple
 from .base_agent import BaseAgent
+from modules.core.arc_summary_utils import generate_prev_arc_summary  # [V64.P4]
 
 
 ARC_CRITIQUE_PROMPT = """
@@ -178,23 +179,8 @@ class ArcCritic(BaseAgent):
             return self._python_critique_fallback(generated_arc, prev_arcs), generated_arc
 
     def _generate_prev_summary(self, prev_arcs: List[Dict]) -> str:
-        """이전 Arc 요약 생성"""
-        if not prev_arcs:
-            return "첫 Arc 생성 중 (이전 Arc 없음)"
-
-        lines = []
-        for arc in prev_arcs[-3:]:  # 최근 3개만
-            arc_no = arc.get("arc_no", "?")
-            joint = arc.get("joint_docs", {})
-            state = arc.get("state_constraints", {})
-
-            lines.append(f"[Arc {arc_no}]")
-            lines.append(f"  종료 위치: {joint.get('final_location', '?')}")
-            lines.append(f"  소지품: {joint.get('physical_inventory', [])}")
-            lines.append(f"  획득 아이템: {state.get('items_acquired', [])}")
-            lines.append(f"  수여물: {state.get('grants_received', [])}")
-
-        return "\n".join(lines)
+        """[V64.P4] 위임 → modules.core.arc_summary_utils.generate_prev_arc_summary"""
+        return generate_prev_arc_summary(prev_arcs, include_energy=False)
 
     def _ensure_critique_fields(self, result: Dict) -> Dict:
         """비평 결과 필수 필드 보장"""

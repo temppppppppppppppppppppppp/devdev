@@ -310,7 +310,7 @@ Step 5: Article 6 (패턴 다양성) 분석
             if filtered_state:
                 try:
                     parts.append(json.dumps(filtered_state, ensure_ascii=False, indent=2))
-                except:
+                except (TypeError, ValueError):  # [V64.P4] JSON serialize fallback
                     parts.append(str(filtered_state))
 
         # 2. Guard 기반 불가능 행동 목록

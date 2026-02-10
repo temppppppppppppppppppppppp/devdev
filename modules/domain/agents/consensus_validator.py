@@ -15,6 +15,7 @@ import re
 from typing import Dict, List, Any, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FutureTimeoutError
 from .base_agent import BaseAgent
+from modules.core.arc_summary_utils import generate_prev_arc_summary  # [V64.P4]
 
 
 # 3가지 검증 관점
@@ -291,45 +292,8 @@ class ConsensusValidator(BaseAgent):
         return self._ensure_validation_fields(result)
 
     def _generate_prev_summary(self, prev_arcs: List[Dict]) -> str:
-        """이전 Arc 요약 - arc_end_state 포함"""
-        if not prev_arcs:
-            return "첫 Arc (이전 Arc 없음)"
-
-        lines = []
-        for arc in prev_arcs[-3:]:
-            arc_no = arc.get("arc_no", "?")
-            joint = arc.get("joint_docs", {})
-            state = arc.get("state_constraints", {})
-            shadow = arc.get("status_shadow", {})
-
-            # [V60.13 FIX] arc_end_state에서 정확한 종료 상태 추출
-            arc_end_state = state.get("arc_end_state", {})
-            final_internal_energy = arc_end_state.get("internal_energy")
-            final_injuries = arc_end_state.get("injuries")
-
-            # arc_end_state가 없으면 shadow에서 추론 (하위 호환)
-            if final_internal_energy is None:
-                loss_str = shadow.get("internal_energy_loss", "0%")
-                try:
-                    loss = int(str(loss_str).replace("%", "").strip())
-                    final_internal_energy = max(0, 100 - loss)
-                except:
-                    # [V60.73] "?" 대신 보수적 기본값 50 반환 (타입 안전성 + 안전한 Arc 설계 유도)
-                    print(f"      ⚠️ [V60.73] internal_energy_loss 파싱 실패: '{loss_str}' → 50% 가정")
-                    final_internal_energy = 50
-
-            if final_injuries is None:
-                final_injuries = shadow.get("expected_injuries", "없음")
-
-            lines.append(f"[Arc {arc_no}]")
-            lines.append(f"  🔴 최종 내공: {final_internal_energy}% ← 다음 Arc 시작점")
-            lines.append(f"  🔴 최종 부상: {final_injuries}")
-            lines.append(f"  종료 위치: {joint.get('final_location', '?')}")
-            lines.append(f"  소지품: {joint.get('physical_inventory', [])}")
-            lines.append(f"  획득 아이템: {state.get('items_acquired', [])}")
-            lines.append(f"  수여물: {state.get('grants_received', [])}")
-
-        return "\n".join(lines)
+        """[V64.P4] 위임 → modules.core.arc_summary_utils.generate_prev_arc_summary"""
+        return generate_prev_arc_summary(prev_arcs, include_energy=True)
 
     def _ensure_validation_fields(self, result: Dict) -> Dict:
         """검증 결과 필수 필드 보장"""

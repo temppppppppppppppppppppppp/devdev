@@ -65,7 +65,12 @@ class ProjectContext:
         self.volumes = []
         self.arcs = []
         self.karma_status = {}
-        
+
+        # [V64.P4] 동적 주입 속성 선언 (monkey-patching 제거)
+        self.genre = None              # main_a.py에서 selected_genre 주입
+        self.guard = None              # main_a.py에서 GenreGuard 인스턴스 주입
+        self.treatment_path = None     # main_a.py에서 트리트먼트 파일 경로 주입
+
         self._load_from_db()
         self._load_directives()
 

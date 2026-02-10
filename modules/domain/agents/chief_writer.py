@@ -20,6 +20,7 @@ import re
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FutureTimeoutError
 from typing import Dict, List, Optional, Tuple
 from .base_agent import BaseAgent
+from modules.core.hud_utils import build_hud_context as _build_hud_context_shared, get_hud_trend_safe as _get_hud_trend_safe_shared
 
 # [V60.95] 원시인 모드 금지어 Guard (JSON 기반)
 try:
@@ -27,6 +28,13 @@ try:
     PRIMITIVE_GUARD_AVAILABLE = True
 except ImportError:
     PRIMITIVE_GUARD_AVAILABLE = False
+
+from modules.core.constants import ManuscriptLimits  # [V64.P4]
+from .chief_writer_prompts import (  # [V64.P4] 프롬프트 외부화
+    PROMPT_TEMPLATE_OUTPUT as _PROMPT_TEMPLATE_OUTPUT,
+    COMMON_RULES_SECTION,
+    WRITING_GUIDELINES_SECTION,
+)
 
 
 class ChiefWriter(BaseAgent):
@@ -84,26 +92,8 @@ class ChiefWriter(BaseAgent):
         }
     }
 
-    # [V60.82] 프롬프트 템플릿 상수 (프리컴파일)
-    PROMPT_TEMPLATE_OUTPUT = """
-### 📌 출력 형식 (Strict JSON)
-{{
-    "title": "에피소드 제목 (한글만)",
-    "content": "5,000자 이상의 소설 본문 (줄바꿈은 \\n)",
-    "state_updates": {{
-        "internal_energy": "현재 내공 % (0-100)",
-        "realm": "경지명 또는 현상 유지",
-        "causal_injuries": "부상 상태",
-        "wealth": "현재 총 자산",
-        "misunderstanding": 0-100,
-        "obsession": 0-100,
-        "equipment": ["소지품 목록"],
-        "martial_arts": ["무공 목록"]
-    }},
-    "writing_strategy": "{strategy}",
-    "key_scenes_covered": ["반영한 씬 목록"]
-}}
-"""
+    # [V64.P4] 프롬프트 외부화 → chief_writer_prompts.py
+    PROMPT_TEMPLATE_OUTPUT = _PROMPT_TEMPLATE_OUTPUT
 
     def __init__(self, context, client, model_tier="gemini-3-pro-preview"):
         super().__init__(context, client, model_tier)
@@ -217,7 +207,7 @@ class ChiefWriter(BaseAgent):
             cache_name = cache_info.get("cache_name")
             if cache_name:
                 print(f"      📦 [V61.7] 컨텍스트 캐시 활성 (ep{ep_num}, {len(common_context)}자)")
-        except Exception:
+        except Exception:  # [V64.P4] OPTIONAL: context caching
             pass  # 캐싱 실패해도 기존 방식으로 진행
 
         # 병렬 생성
@@ -406,7 +396,7 @@ class ChiefWriter(BaseAgent):
                 final_content = critiqued_data.get("content", manuscript_content)
                 final_title = critiqued_data.get("title", data.get("title", f"제{ep_num}화"))
                 final_state = critiqued_data.get("state_updates", data.get("state_updates", {}))
-            except Exception:
+            except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] IMPORTANT: critique parse, safe default
                 final_content = manuscript_content
                 final_title = data.get("title", f"제{ep_num}화")
                 final_state = data.get("state_updates", {})
@@ -696,22 +686,8 @@ class ChiefWriter(BaseAgent):
 ### 📋 [STEP 6: 문체 DNA 가이드 - 위반 시 AI티 판정]
 {self._escape_braces(style_guide) if style_guide else "기본 웹소설 문체"}
 
-### 🔥 변환 원칙 (Common Rules) - 위반 시 AI티 판정
-1. 감정어 삭제 → 행동 변환: '화가 났다', '슬펐다', '당황했다' 같은 추상적 감정 단어를 금지한다. 대신 미세한 표정 변화, 손짓, 호흡, 시선 처리, 주변 사물과의 상호작용으로 감정을 유추하게 만들어라. (예: "그는 초조해했다" → "그는 마른입술을 혀로 훑으며 펜을 톡, 톡, 책상에 두드렸다.")
-2. 감각적 묘사 강화 (오감 활용): 상황을 설명하지 말고, 독자가 그 현장에 있는 것처럼 느끼게 해라. 소리(청각), 냄새(후각), 질감(촉각)을 문장에 녹여내라.
-3. 요약된 대화의 장면화: "그들은 협상에 대해 길게 논쟁했다"처럼 요약된 서술을 금지한다. 날 선 티키타카(대화)가 오가는 실제 장면으로 풀어 써라.
-4. 문장 밀도 조절: 무의미한 미사여구로 문장 길이를 늘리지 마라. 불필요한 접속사와 수식어는 쳐내고, '동사(Action)' 위주로 문장을 짧고 힘 있게 끊어쳐라.
-5. [V63] 예측 가능한 전개 금지 → 반전 삽입: 독자가 예상하는 결과를 한 번 비틀어라. (예: "적이 도발했다 → 주인공이 화를 내며 싸웠다" ❌ → "적이 도발했다 → 주인공이 무시하고 지나가자 적이 당황해 실수했다" ✅)
-6. [V63] 긴장 유지 원칙: 매 씬의 마지막 문장은 불확실성/궁금증을 남겨라. (예: "그렇게 싸움은 끝났다." ❌ → "싸움은 끝났다. 하지만 구석에서 지켜보던 그림자가 먼저 움직이기 시작했다." ✅)
-7. [V63] 캐릭터 고유 반응: 같은 상황에서도 캐릭터마다 다르게 반응시켜라. (예: 모두 "놀라며 경악했다" ❌ → 장로는 찻잔을 내려놓고, 소녀는 주먹을 움켜쥐고, 하인은 몸을 낮추는 ✅)
-
-### 📌 집필 지침 (위반 시 즉시 REJECT)
-1. ⚠️ 분량: 반드시 5,000자 이상. 4,999자 이하는 무조건 REJECT. 부족하면 장면 묘사, 인물 심리, 대화를 확장하라
-2. 모든 씬을 균등한 비중으로 전개 - 각 씬 최소 1,000자 이상
-3. 후반부 급전개/요약 절대 금지 - 마지막 씬도 앞 씬과 동일한 밀도로 작성
-4. [V63] 클리프행어 엔딩: 단순 "...했다"가 아닌, 독자가 다음 화를 즉시 누를 수밖에 없는 미해결 질문/위기/반전으로 끝내라. (예: "그는 집으로 돌아갔다." ❌ → "문을 열자, 이미 죽었어야 할 남자가 탁자 앞에 앉아 있었다." ✅)
-5. 죽은 NPC 부활, 미습득 무공 사용 절대 금지
-6. 영문 병기 금지 - "윈도우(Windows)", "검(Sword)" 같은 한글(English) 표기 금지. 한글만 사용
+{COMMON_RULES_SECTION}
+{WRITING_GUIDELINES_SECTION}
 """
 
     # ── [V62.6] 에피소드 상태 다이제스트 ──────────────────────────
@@ -1286,7 +1262,7 @@ class ChiefWriter(BaseAgent):
         try:
             data = json.loads(manuscript)
             content = data.get('content', '')
-        except Exception:
+        except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] JSON parse with safe default
             content = manuscript
 
         issues = []
@@ -1501,7 +1477,7 @@ class ChiefWriter(BaseAgent):
             try:
                 json.loads(fixed)
                 return fixed
-            except:
+            except (json.JSONDecodeError, ValueError, TypeError):
                 return manuscript  # 파싱 실패시 원본 유지
         except Exception as e:
             print(f"      ⚠️ [ChiefWriter] 수정 실패: {e}")
@@ -1517,7 +1493,7 @@ class ChiefWriter(BaseAgent):
         try:
             data = json.loads(manuscript)
             content = data.get('content', '')
-        except Exception:
+        except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] JSON parse with safe default
             content = manuscript
 
         if not content or len(content) < 100:
@@ -1621,10 +1597,10 @@ class ChiefWriter(BaseAgent):
                             'content': content,
                             'hud_snapshot': hud_snapshot
                         }
-                except Exception:
+                except (KeyError, TypeError, AttributeError) as e:  # [V64.P4] individual ms load failure
                     continue
-        except Exception:
-            pass
+        except Exception as e:  # [V64.P4] IMPORTANT: manuscript cache build failure affects continuity checks
+            print(f"      ⚠️ [V64.P4] 원고 캐시 구축 실패: {str(e)[:60]}")
 
     def _get_cached_manuscript(self, ep_num: int) -> dict:
         """[V60.82] 캐시에서 원고 조회"""
@@ -1666,7 +1642,7 @@ class ChiefWriter(BaseAgent):
                             frequency[name] += 1
 
             return frequency
-        except Exception:
+        except (AttributeError, KeyError, TypeError):  # [V64.P4] OPTIONAL: NPC frequency tracking
             return {}
 
     def _get_npc_frequency_warning(self, ep_num: int) -> str:
@@ -1694,7 +1670,7 @@ class ChiefWriter(BaseAgent):
             else:
                 return "모든 주요 NPC 적정 빈도 유지 중"
 
-        except Exception:
+        except (AttributeError, KeyError, TypeError):  # [V64.P4] OPTIONAL: NPC frequency warning
             return "빈도 추적 실패"
 
     def _count_recent_cliches(self, ep_num: int, manuscript: str, window: int = 10) -> dict:
@@ -1724,18 +1700,8 @@ class ChiefWriter(BaseAgent):
         return {k: v for k, v in counts.items() if v > 0}
 
     def _get_hud_trend_safe(self, ep_num: int) -> str:
-        """
-        HUD 추세 안전 호출
-        """
-        try:
-            if hasattr(self.context, 'sys') and hasattr(self.context.sys, 'hud'):
-                return self.context.sys.hud.get_hud_trend(ep_num, window=5)
-            elif hasattr(self.context, 'martial'):
-                return self.context.martial.get_hud_trend(ep_num, window=5)
-            else:
-                return "HUD 추세 정보 없음"
-        except Exception:
-            return "안정적"
+        """[V64.P4] 위임 → modules.core.hud_utils.get_hud_trend_safe"""
+        return _get_hud_trend_safe_shared(self.context, ep_num)
 
     def _extract_numeric_value(self, value) -> int:
         """HUD 값에서 숫자 추출"""
@@ -1750,116 +1716,8 @@ class ChiefWriter(BaseAgent):
         return 0
 
     def _build_hud_context(self, state_tracker, ep_num: int) -> str:
-        """
-        [V60.95] StateTracker에서 고밀도 HUD 컨텍스트 구축
-
-        PresetRegistry 기반 17+ 필드를 프롬프트에 주입
-        NPC 레지스트리 정보도 포함
-
-        Args:
-            state_tracker: StateTracker 인스턴스
-            ep_num: 현재 에피소드 번호
-
-        Returns:
-            str: 프롬프트용 HUD 컨텍스트
-        """
-        if not state_tracker:
-            return ""
-
-        lines = []
-
-        # 1. 주인공 상태 (고밀도 필드)
-        try:
-            # 직전 에피소드 상태 가져오기
-            prev_state = None
-            if ep_num > 1 and hasattr(state_tracker, 'episode_states'):
-                prev_state = state_tracker.episode_states.get(ep_num - 1)
-
-            if prev_state:
-                state_dict = prev_state.to_dict() if hasattr(prev_state, 'to_dict') else {}
-
-                lines.append("[주인공 현재 상태 - 고밀도]")
-
-                # 핵심 필드 (항상 표시)
-                core_fields = ['location', 'internal_energy', 'injuries']
-                for field in core_fields:
-                    if field in state_dict:
-                        lines.append(f"  - {field}: {state_dict[field]}")
-
-                # 확장 필드 (있으면 표시)
-                extended_fields = [
-                    ('realm', '경지'), ('reputation', '평판'), ('mental_state', '정신상태'),
-                    ('faction', '소속'), ('rank', '지위'), ('gold', '재화'),
-                    ('awakening_grade', '각성등급'), ('gate_clearance', '클리어 게이트'),
-                    ('net_worth', '자산'), ('market_reputation', '시장평판'),
-                    ('mana', '마나'), ('skills', '스킬'), ('titles', '칭호')
-                ]
-
-                for field, display in extended_fields:
-                    if field in state_dict and state_dict[field]:
-                        value = state_dict[field]
-                        # 리스트는 쉼표로 연결
-                        if isinstance(value, list):
-                            value = ', '.join(str(v) for v in value[:5])  # 최대 5개
-                        lines.append(f"  - {display}: {value}")
-
-                # 소지품
-                items = state_dict.get('items', [])
-                weapons = state_dict.get('weapons', [])
-                if items or weapons:
-                    all_items = weapons + items
-                    lines.append(f"  - 소지품: {', '.join(str(i) for i in all_items[:8])}")
-
-                # 관계
-                relationships = state_dict.get('relationships', {})
-                if relationships:
-                    rel_str = ', '.join(f"{k}:{v}" for k, v in list(relationships.items())[:5])
-                    lines.append(f"  - 관계: {rel_str}")
-
-        except Exception as e:
-            lines.append(f"  (상태 로드 오류: {str(e)[:30]})")
-
-        # 2. NPC 레지스트리 (살아있는 주요 NPC)
-        try:
-            if hasattr(state_tracker, 'npc_registry') and state_tracker.npc_registry:
-                alive_npcs = [
-                    (name, info) for name, info in state_tracker.npc_registry.items()
-                    if info.get('status') != 'dead'
-                ][:10]  # 최대 10명
-
-                if alive_npcs:
-                    lines.append("")
-                    lines.append("[등장 가능 NPC]")
-                    for name, info in alive_npcs:
-                        role = info.get('role', '')
-                        relationship = info.get('relationship', '')
-                        faction = info.get('faction', '')
-
-                        npc_desc = f"  - {name}"
-                        details = []
-                        if role:
-                            details.append(role)
-                        if faction:
-                            details.append(faction)
-                        if relationship:
-                            details.append(f"관계:{relationship}")
-                        if details:
-                            npc_desc += f" ({', '.join(details)})"
-                        lines.append(npc_desc)
-
-                # 사망 NPC 경고
-                dead_npcs = [
-                    name for name, info in state_tracker.npc_registry.items()
-                    if info.get('status') == 'dead'
-                ]
-                if dead_npcs:
-                    lines.append("")
-                    lines.append(f"⚠️ [사망 NPC - 등장 금지]: {', '.join(dead_npcs[:5])}")
-
-        except Exception:
-            pass  # NPC 로드 실패 시 무시
-
-        return "\n".join(lines) if lines else ""
+        """[V64 P2-7] 위임 → modules.core.hud_utils.build_hud_context (writer variant)"""
+        return _build_hud_context_shared(state_tracker, ep_num, variant="writer")
 
     def _check_hud_anomalies(self, current_ep: int) -> dict:
         """
@@ -2000,7 +1858,7 @@ class ChiefWriter(BaseAgent):
                 return "\n".join(npc_equipment_summary)
             else:
                 return "NPC 장비 정보 없음"
-        except Exception:
+        except (AttributeError, KeyError, TypeError):  # [V64.P4] OPTIONAL: NPC equipment
             return "NPC 장비 정보 로드 실패"
 
     # =========================================================================
@@ -2136,8 +1994,8 @@ class ChiefWriter(BaseAgent):
                                         'description': change.get('event', ''),
                                         'consequence': change.get('consequence', '')
                                     })
-        except Exception as e:
-            pass
+        except (AttributeError, KeyError, TypeError) as e:  # [V64.P4] IMPORTANT: plot event extraction
+            print(f"      ⚠️ [V64.P4] 플롯 이벤트 추출 실패: {str(e)[:60]}")
 
         return events[-5:] if events else []
 
@@ -2167,8 +2025,8 @@ class ChiefWriter(BaseAgent):
                         'relationship': relationship,
                         'last_ep': last_appearance
                     }
-        except Exception as e:
-            pass
+        except (AttributeError, KeyError, TypeError) as e:  # [V64.P4] IMPORTANT: NPC state extraction
+            print(f"      ⚠️ [V64.P4] NPC 상태 추출 실패: {str(e)[:60]}")
 
         return npc_states
 
@@ -2306,7 +2164,7 @@ class ChiefWriter(BaseAgent):
             try:
                 json.loads(refined)
                 return refined
-            except:
+            except (json.JSONDecodeError, ValueError, TypeError):
                 return manuscript
         except Exception as e:
             print(f"      ⚠️ [ChiefWriter Self-Refine] 정제 실패: {e}")
@@ -2561,7 +2419,7 @@ class ChiefWriter(BaseAgent):
         try:
             data = json.loads(manuscript)
             content = data.get('content', '')
-        except Exception:
+        except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] JSON parse with safe default
             content = manuscript
 
         if not content or not emotion_skeleton.get('scenes'):
@@ -2659,16 +2517,16 @@ class ChiefWriter(BaseAgent):
         try:
             data = json.loads(manuscript)
             content = data.get('content', manuscript)
-        except:
+        except (json.JSONDecodeError, ValueError, TypeError):
             content = manuscript
 
         # 1. 분량 체크
         length = len(content)
         scores['length'] = length
-        if length < 4000:
-            issues.append(f"분량 부족: {length}자 (최소 5000자)")
-        elif length < 4500:
-            issues.append(f"분량 경계: {length}자 (목표 5000자)")
+        if length < ManuscriptLimits.MIN_LENGTH:  # [V64.P4]
+            issues.append(f"분량 부족: {length}자 (최소 {ManuscriptLimits.TARGET_LENGTH}자)")
+        elif length < ManuscriptLimits.WARNING_LENGTH:  # [V64.P4]
+            issues.append(f"분량 경계: {length}자 (목표 {ManuscriptLimits.TARGET_LENGTH}자)")
 
         # 2. 대화 비율 체크
         dialogue_matches = re.findall(r'"[^"]+?"', content)
@@ -2767,7 +2625,7 @@ class ChiefWriter(BaseAgent):
         try:
             data = json.loads(manuscript)
             content = data.get('content', manuscript)
-        except:
+        except (json.JSONDecodeError, ValueError, TypeError):
             content = manuscript
 
         if not content or len(content) < 1000:
