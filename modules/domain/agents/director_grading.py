@@ -1,10 +1,14 @@
 """
 [V64 P2-1] Director GradingSystem — 원고 품질 등급화 전담 모듈
+[V65 C-5] 적응형 기준선 + 상태 업데이트 검증 메서드 추가
 
 Director God Object 분해의 두 번째 단계.
 원고 품질 평가, 등급 부여, 수정 가이드 생성을 담당.
+적응형 PASS 기준선 계산 및 상태 업데이트 검증도 포함.
 순수 데이터 가공 — LLM 호출 없음, BaseAgent 의존 없음.
 """
+
+from modules.core.constants import ManuscriptLimits
 
 
 class DirectorGradingSystem:
@@ -15,7 +19,17 @@ class DirectorGradingSystem:
     - grade_manuscript_v59(): 원고 품질 등급화 (A/B/C/D)
     - generate_revision_guide_v59(): 등급 기반 수정 가이드 생성
     - format_revision_report_v59(): 사람이 읽기 좋은 리포트 포맷
+    - get_adaptive_threshold(): 적응형 PASS 기준선 계산 [V65 C-5]
+    - apply_adaptive_decision(): 적응형 PASS/REJECT 재결정 [V65 C-5]
+    - on_approve_workflow(): 상태 업데이트 검증 및 승인 [V65 C-5]
     """
+
+    def __init__(self, director=None):
+        """
+        Args:
+            director: Director 인스턴스 (적응형 기준선 접근용, 선택적)
+        """
+        self._d = director
 
     # [V59] 등급별 기준 정의
     QUALITY_GRADES = {
@@ -425,3 +439,222 @@ class DirectorGradingSystem:
         lines.append(f"{'='*60}\n")
 
         return "\n".join(lines)
+
+    # ── [V65 C-5] 적응형 기준선 + 상태 업데이트 검증 ──────────────
+
+    def get_adaptive_threshold(
+        self,
+        arc_pos: int = 1,
+        total_eps: int = 5,
+        ep_type: str = "normal",
+        retry_count: int = 0
+    ) -> dict:
+        """
+        [V65 C-5] 적응형 PASS 기준선 계산
+
+        Arc 위치, 장르, 에피소드 타입별로 동적 기준 적용.
+        """
+        if not self._d or not self._d.adaptive_thresholds_enabled:
+            return {
+                'pass_threshold': self._d.base_pass_threshold if self._d else 60,
+                'length_threshold': ManuscriptLimits.WARNING_LENGTH,
+                'strictness_level': 'standard',
+                'reason': 'adaptive thresholds disabled'
+            }
+
+        base = self._d.base_pass_threshold
+        length_base = ManuscriptLimits.WARNING_LENGTH
+        reason_parts = []
+
+        # 1. Arc 위치 기반 조정
+        arc_position_ratio = arc_pos / total_eps if total_eps > 0 else 0.5
+
+        if arc_position_ratio <= 0.2:
+            base -= 5
+            length_base -= 300
+            reason_parts.append("도입부(-5점)")
+        elif arc_position_ratio >= 0.8:
+            base += 10
+            length_base += 300
+            reason_parts.append("절정부(+10점)")
+        elif 0.4 <= arc_position_ratio <= 0.6:
+            base += 3
+            reason_parts.append("전환점(+3점)")
+
+        # 2. 장르별 조정
+        genre = self._d.genre if self._d else 'wuxia'
+        if genre == 'wuxia':
+            base += 0
+        elif genre == 'hunter':
+            base += 2
+            reason_parts.append("헌터장르(+2점)")
+        elif genre == 'investment':
+            base += 3
+            reason_parts.append("투자장르(+3점)")
+        elif genre == 'actor':
+            base += 2
+            reason_parts.append("배우장르(+2점)")
+        elif genre == 'sports':
+            base += 2
+            reason_parts.append("스포츠장르(+2점)")
+        elif genre == 'medical':
+            base += 2
+            reason_parts.append("의학장르(+2점)")
+
+        # 3. 에피소드 타입별 조정
+        if ep_type == "climax":
+            base += 10
+            length_base += 500
+            reason_parts.append("클라이맥스(+10점)")
+        elif ep_type == "intro":
+            base -= 5
+            length_base -= 200
+            reason_parts.append("도입부(-5점)")
+        elif ep_type == "transition":
+            base -= 3
+            reason_parts.append("전환(-3점)")
+
+        # 4. 재시도 횟수별 완화
+        if retry_count >= 3:
+            base -= 10
+            reason_parts.append("3+회재시도(-10점)")
+        elif retry_count >= 2:
+            base -= 5
+            reason_parts.append("2회재시도(-5점)")
+
+        # 5. 범위 제한
+        base = max(45, min(85, base))
+        length_base = max(3500, min(6000, length_base))
+
+        if base >= 75:
+            strictness = 'strict'
+        elif base >= 60:
+            strictness = 'standard'
+        else:
+            strictness = 'lenient'
+
+        return {
+            'pass_threshold': base,
+            'length_threshold': length_base,
+            'strictness_level': strictness,
+            'reason': ', '.join(reason_parts) if reason_parts else 'standard'
+        }
+
+    def apply_adaptive_decision(
+        self,
+        score: int,
+        original_decision: str,
+        arc_pos: int = 1,
+        total_eps: int = 5,
+        retry_count: int = 0
+    ) -> dict:
+        """[V65 C-5] 적응형 기준에 따라 PASS/REJECT 재결정"""
+        threshold_info = self.get_adaptive_threshold(
+            arc_pos=arc_pos,
+            total_eps=total_eps,
+            retry_count=retry_count
+        )
+
+        threshold = threshold_info['pass_threshold']
+        adjusted = False
+        new_decision = original_decision
+
+        if score >= threshold:
+            if original_decision == 'REJECT':
+                new_decision = 'CONDITIONAL_PASS'
+                adjusted = True
+        else:
+            if original_decision == 'PASS':
+                new_decision = 'CONDITIONAL_PASS'
+                adjusted = True
+
+        return {
+            'decision': new_decision,
+            'adjusted': adjusted,
+            'threshold_used': threshold,
+            'strictness': threshold_info['strictness_level'],
+            'reason': threshold_info['reason']
+        }
+
+    def on_approve_workflow(self, ep_num, state_updates, current_hud, martial_manager=None):
+        """
+        [V65 C-5] 상태 업데이트 검증 및 적용
+
+        Writer가 제안한 state_updates를 검증하고, 승인된 항목만 반환합니다.
+        """
+        if not state_updates or not isinstance(state_updates, dict):
+            return {
+                "approved": True,
+                "applied_updates": {},
+                "rejected_updates": {},
+                "warnings": ["Writer가 state_updates를 제출하지 않음 - 상태 변경 없음"]
+            }
+
+        applied = {}
+        rejected = {}
+        warnings = []
+
+        LIMITS = {
+            "internal_energy": {"max_increase": 200, "max_decrease": -500},
+            "misunderstanding": {"max_change": 30},
+            "obsession": {"max_change": 30},
+            "wealth": {"max_change": 10000}
+        }
+
+        for key, value in state_updates.items():
+            if value in ["현상 유지", "유지", "변화 없음", None, ""]:
+                continue
+
+            if isinstance(value, str) and (value.startswith("+") or value.startswith("-")):
+                try:
+                    import re
+                    numeric_match = re.match(r'^([+-]?\d+)', value)
+                    if numeric_match:
+                        change = int(numeric_match.group(1))
+
+                        if key in LIMITS:
+                            limits = LIMITS[key]
+                            if "max_increase" in limits and change > limits["max_increase"]:
+                                rejected[key] = {
+                                    "proposed": value,
+                                    "reason": f"증가량 초과 (최대 +{limits['max_increase']})"
+                                }
+                                warnings.append(f"[REJECT] {key}: {value} → 비합리적 증가량")
+                                continue
+                            if "max_decrease" in limits and change < limits["max_decrease"]:
+                                rejected[key] = {
+                                    "proposed": value,
+                                    "reason": f"감소량 초과 (최대 {limits['max_decrease']})"
+                                }
+                                warnings.append(f"[REJECT] {key}: {value} → 비합리적 감소량")
+                                continue
+                            if "max_change" in limits and abs(change) > limits["max_change"]:
+                                rejected[key] = {
+                                    "proposed": value,
+                                    "reason": f"변화량 초과 (최대 ±{limits['max_change']})"
+                                }
+                                warnings.append(f"[REJECT] {key}: {value} → 변화량 초과")
+                                continue
+                except ValueError:
+                    pass
+
+            if key == "realm" and current_hud:
+                current_realm = current_hud.get("realm", "")
+                if value != current_realm:
+                    warnings.append(f"[INFO] 경지 변화 감지: {current_realm} → {value}")
+
+            if key == "causal_injuries" and current_hud:
+                current_injury = current_hud.get("causal_injuries", "")
+                if current_injury and "중상" in str(current_injury) and "정상" in str(value):
+                    warnings.append(f"[WARN] 부상 급회복: {current_injury} → {value} (서사적 근거 필요)")
+
+            applied[key] = value
+
+        is_approved = len(rejected) == 0 or len(applied) > 0
+
+        return {
+            "approved": is_approved,
+            "applied_updates": applied,
+            "rejected_updates": rejected,
+            "warnings": warnings
+        }
