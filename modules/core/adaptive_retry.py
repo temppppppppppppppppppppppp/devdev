@@ -778,3 +778,77 @@ def get_adaptive_manager() -> AdaptiveRetryManager:
     if _adaptive_manager_instance is None:
         _adaptive_manager_instance = AdaptiveRetryManager()
     return _adaptive_manager_instance
+
+
+# ============================================================================
+# [V65] retry_with_feedback — 범용 재시도 래퍼
+# ============================================================================
+
+def retry_with_feedback(
+    func,                    # 호출할 함수: func(attempt, feedback) -> result
+    max_attempts: int = 3,
+    on_failure=None,         # 실패 시 피드백 생성 콜백: on_failure(result, attempt) -> str
+    on_success=None,         # 성공 판정 콜백: on_success(result) -> bool
+    logger=None,             # 로깅 함수: logger(msg)
+    task_name: str = "",     # 로그용 작업명
+) -> tuple:                  # (result, attempt_count, success)
+    """
+    [V65] 범용 피드백 재시도 래퍼.
+
+    인라인 retry 루프를 표준화하기 위한 간결한 유틸리티.
+    func(attempt, feedback)를 반복 호출하되, on_success 판정이 True면 즉시 종료.
+    실패 시 on_failure로 다음 시도에 전달할 피드백 문자열을 생성한다.
+
+    Args:
+        func:         호출할 함수. (attempt: int, feedback: str) -> result
+        max_attempts: 최대 시도 횟수 (기본 3)
+        on_failure:   실패 시 피드백 생성. (result, attempt) -> str.  None이면 빈 문자열.
+        on_success:   성공 판정. (result) -> bool.  None이면 항상 True(첫 시도 성공).
+        logger:       로그 함수. None이면 무시.
+        task_name:    로그 메시지에 포함할 작업명.
+
+    Returns:
+        (result, attempt_count, success)
+        - result: 마지막 func 호출의 반환값
+        - attempt_count: 실제 시도 횟수 (1-based)
+        - success: on_success 통과 여부
+    """
+    result = None
+    feedback = ""
+    success = False
+
+    def _log(msg: str):
+        if logger:
+            try:
+                logger(msg)
+            except Exception:
+                pass
+
+    for attempt in range(max_attempts):
+        try:
+            result = func(attempt, feedback)
+        except Exception as exc:
+            _log(f"[retry_with_feedback] {task_name} attempt {attempt+1}/{max_attempts} 예외: {exc}")
+            if attempt < max_attempts - 1:
+                feedback = f"이전 시도 예외: {exc}"
+                continue
+            else:
+                return (result, attempt + 1, False)
+
+        # 성공 판정
+        if on_success is None or on_success(result):
+            success = True
+            _log(f"[retry_with_feedback] {task_name} attempt {attempt+1} 성공")
+            return (result, attempt + 1, True)
+
+        # 실패 → 피드백 생성
+        if attempt < max_attempts - 1:
+            if on_failure:
+                try:
+                    feedback = on_failure(result, attempt)
+                except Exception:
+                    feedback = ""
+            _log(f"[retry_with_feedback] {task_name} attempt {attempt+1} 실패, 재시도 예정")
+
+    # 모든 시도 소진
+    return (result, max_attempts, False)
