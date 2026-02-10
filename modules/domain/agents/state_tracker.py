@@ -12,7 +12,7 @@ import copy
 import time
 from typing import Dict, List, Optional, Tuple, Set, Any, Callable
 from dataclasses import dataclass, field
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 # [V60.95] PresetRegistry 연동
 try:
@@ -113,8 +113,9 @@ class StateTracker:
 
         # [V62.7] 완결된 플롯 누적 추적
         self.resolved_plots: List[Dict] = []
-        # [V62.7] 비-NPC 엔티티 명칭 레지스트리
-        self.entity_name_registry: Dict[str, Dict] = {}
+        # [V62.7→V64 P2-4] 비-NPC 엔티티 명칭 레지스트리 (LRU, max 200)
+        self.entity_name_registry: OrderedDict = OrderedDict()
+        self._entity_registry_max_size = 200
 
         # [V63.1] 금융 상태 추적 (투자물)
         self.financial_number_registry: Dict[int, Dict[str, Any]] = {}
@@ -1655,14 +1656,21 @@ class StateTracker:
     # ═══════════════════════════════════════════════════════════════
 
     def register_entity_name(self, name: str, entity_type: str, arc_no: int):
-        """[V62.7] 비-NPC 엔티티 명칭 등록 (회사, 조직, 장소 등)"""
+        """[V62.7→V64 P2-4] 비-NPC 엔티티 명칭 등록 (LRU, 최근 접근 우선 보존)"""
         if name and len(name) >= 2:
-            if name not in self.entity_name_registry:
+            if name in self.entity_name_registry:
+                self.entity_name_registry.move_to_end(name)
+                self.entity_name_registry[name]["last_seen_arc"] = arc_no
+            else:
                 self.entity_name_registry[name] = {
                     "type": entity_type,
                     "first_arc": arc_no,
+                    "last_seen_arc": arc_no,
                     "aliases": set()
                 }
+                # [V64 P2-4] LRU eviction
+                while len(self.entity_name_registry) > self._entity_registry_max_size:
+                    self.entity_name_registry.popitem(last=False)
 
     def load_entities_from_entity_registry(self, entity_registry: Dict, arc_no: int):
         """[V62.7] StateExtractor의 entity_registry에서 비-NPC 엔티티를 로드"""
