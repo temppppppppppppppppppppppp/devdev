@@ -1067,7 +1067,7 @@ class Analyst(BaseAgent):
             elif isinstance(content_obj, str):
                 content_parts.append(content_obj)
 
-            # 3. raw_data 필드에서 추출 (plot_roadmap 구조: force_sync_v25_dna 변환)
+            # 3. [V62.2] 레거시 호환: raw_data 래핑 구조 (기존 DB)
             raw_data = curr_block.get('raw_data', {})
             if isinstance(raw_data, dict):
                 rd_content = raw_data.get('content', {})
@@ -1075,15 +1075,23 @@ class Analyst(BaseAgent):
                     for key in ['context', 'event_villain', 'solution', 'reward']:
                         if rd_content.get(key):
                             content_parts.append(str(rd_content[key]))
+                # raw_data 내 genre_ext도 추출
+                rd_ge = raw_data.get('genre_ext', {})
+                if isinstance(rd_ge, dict):
+                    for v in rd_ge.values():
+                        if isinstance(v, str) and v:
+                            content_parts.append(v)
                 if raw_data.get('title'):
                     content_parts.append(str(raw_data['title']))
 
-            # 3. logic.title에서도 추출 (plot_roadmap 구조)
-            logic = curr_block.get('logic', {})
-            if isinstance(logic, dict) and logic.get('title'):
-                content_parts.append(str(logic['title']))
+            # 4. [V62.2] genre_ext에서도 추출 (장르 특화 정보)
+            genre_ext = curr_block.get('genre_ext', {})
+            if isinstance(genre_ext, dict):
+                for v in genre_ext.values():
+                    if isinstance(v, str) and v:
+                        content_parts.append(v)
 
-            # 4. 최상위 title
+            # 5. 최상위 title
             if curr_block.get('title'):
                 content_parts.append(str(curr_block['title']))
 
@@ -1127,7 +1135,7 @@ class Analyst(BaseAgent):
             elif isinstance(content_obj, str):
                 content_parts.append(content_obj)
 
-            # 2. raw_data 필드에서 추출 (plot_roadmap 구조: force_sync_v25_dna 변환 결과)
+            # 3. [V62.2] 레거시 호환: raw_data 래핑 구조 (기존 DB)
             raw_data = curr_block.get('raw_data', {})
             if isinstance(raw_data, dict):
                 rd_content = raw_data.get('content', {})
@@ -1135,16 +1143,22 @@ class Analyst(BaseAgent):
                     for key in ['context', 'event_villain', 'solution', 'reward']:
                         if rd_content.get(key):
                             content_parts.append(str(rd_content[key]))
-                # raw_data 내 title도 검사
+                rd_ge = raw_data.get('genre_ext', {})
+                if isinstance(rd_ge, dict):
+                    for v in rd_ge.values():
+                        if isinstance(v, str) and v:
+                            content_parts.append(v)
                 if raw_data.get('title'):
                     content_parts.append(str(raw_data['title']))
 
-            # 3. logic.title에서도 추출 (plot_roadmap 구조)
-            logic = curr_block.get('logic', {})
-            if isinstance(logic, dict) and logic.get('title'):
-                content_parts.append(str(logic['title']))
+            # 4. [V62.2] genre_ext에서도 추출 (장르 특화 정보)
+            genre_ext = curr_block.get('genre_ext', {})
+            if isinstance(genre_ext, dict):
+                for v in genre_ext.values():
+                    if isinstance(v, str) and v:
+                        content_parts.append(v)
 
-            # 4. 최상위 title
+            # 5. 최상위 title
             if curr_block.get('title'):
                 content_parts.append(str(curr_block['title']))
 
@@ -1615,7 +1629,7 @@ class Analyst(BaseAgent):
                     "Key_Items": [] 
                 }},
                 "Seeds": [ {{ "id": "S-001", "category": "...", "description": "...", "status": "active" }} ],
-                "plot_roadmap": [ {{ "block_no": 1, "logic": {{ "title": "...", "objective": "..." }} }} ]
+                "plot_roadmap": [ {{ "block_no": 1, "title": "...", "content": {{ "context": "...", "event_villain": "...", "solution": "...", "reward": "..." }}, "genre_ext": {{}} }} ]
             }}
         }}
         """

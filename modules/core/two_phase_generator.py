@@ -1332,7 +1332,7 @@ class TwoPhaseArcGenerator:
             prompt = ARC_SKELETON_PROMPT.format(
                 arc_no=arc_no,
                 vol_strategy=self._escape_braces(vol_strategy[:3000] if vol_strategy else "(없음)"),
-                curr_block=self._escape_braces(json.dumps(curr_block, ensure_ascii=False)[:3000] if curr_block else "(없음)"),
+                curr_block=self._escape_braces(json.dumps(curr_block, ensure_ascii=False) if curr_block else "(없음)"),
                 prev_arc_context=self._escape_braces(prev_arc_context[:4000] if prev_arc_context else "(첫 Arc)"),
                 constraints=self._escape_braces(constraints or "(없음)"),
                 protagonist_name=protagonist_name  # [V60.18]
@@ -1375,7 +1375,7 @@ class TwoPhaseArcGenerator:
                 skeleton=self._escape_braces(json.dumps(skeleton, ensure_ascii=False, indent=2)),
                 arc_no=arc_no,
                 vol_strategy=self._escape_braces(vol_strategy[:2000] if vol_strategy else "(없음)"),
-                curr_block=self._escape_braces(json.dumps(curr_block, ensure_ascii=False)[:2000] if curr_block else "(없음)"),
+                curr_block=self._escape_braces(json.dumps(curr_block, ensure_ascii=False) if curr_block else "(없음)"),
                 assets=self._escape_braces(json.dumps(assets, ensure_ascii=False)[:2000] if assets else "(없음)"),
                 protagonist_name=protagonist_name  # [V60.18]
             )

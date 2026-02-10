@@ -45,12 +45,14 @@ PREFLIGHT_ANALYSIS_PROMPT = """
 4. **세계 상태**
    - 현재 위치
    - 알려진 정보
-   - 진행 중인 갈등/사건
+   - 진행 중인 갈등/사건 (아직 해결되지 않은 것만)
+   - 완결된 갈등/사건 (이미 해결되어 재생성하면 안 되는 것)
 
 5. **다음 Arc 절대 금지 사항**
    - 이미 획득한 아이템 재획득 시도
    - 이미 수여받은 것 재수여
    - 위치 순간이동
+   - 이미 완결된 갈등/사건의 동일 반복
    - 부상 무시
 
 ### 출력 형식 (JSON)
@@ -73,7 +75,8 @@ PREFLIGHT_ANALYSIS_PROMPT = """
     "world_state": {{
         "current_location": "철혈단 본거지",
         "known_information": ["적대 세력의 침입 계획"],
-        "ongoing_conflicts": ["철혈단 vs 흑풍문"],
+        "ongoing_conflicts": ["현재 진행 중인 갈등만"],
+        "resolved_conflicts": ["이미 완결된 갈등 (재생성 금지)"],
         "protagonist_status": {{
             "injuries": "왼팔 경상 (Arc 2에서 부상)",
             "internal_energy": 85,
@@ -153,39 +156,82 @@ class PreflightChecker(BaseAgent):
             print(f"      ⚠️ [Preflight] 분석 오류: {str(e)[:50]}")
             return self._extract_constraints_fallback(prev_arcs)
 
-    def _format_prev_arcs(self, prev_arcs: List[Dict]) -> str:
-        """이전 Arc 데이터를 분석용 텍스트로 포맷팅"""
-        lines = []
+    # [V63] 윈도잉 상수: 상세 분석할 최근 Arc 수 (3→5 확장)
+    DETAIL_WINDOW = 5
+    # [V63] 오래된 Arc 요약 최대 개수 (10→20 확장)
+    MAX_OLD_SUMMARY = 20
 
-        for arc in prev_arcs:
+    def _format_prev_arcs(self, prev_arcs: List[Dict]) -> str:
+        """[V63] 이전 Arc 데이터를 윈도잉 포맷팅
+        - 최근 DETAIL_WINDOW개: 상세 (tactical_doc + state + joint + shadow)
+        - 나머지 오래된 Arc: 3줄 요약 (종료위치, 핵심NPC, 미해결갈등)
+        """
+        lines = []
+        window = self.DETAIL_WINDOW
+        old_arcs = prev_arcs[:-window] if len(prev_arcs) > window else []
+        recent_arcs = prev_arcs[-window:]
+
+        # ── 오래된 Arc: 3줄 요약 (MAX_OLD_SUMMARY 상한) ──
+        if old_arcs:
+            lines.append(f"\n[Arc 1~{old_arcs[-1].get('arc_no', '?')} 요약 ({len(old_arcs)}개)]")
+            lines.append("-" * 40)
+            # [V63] 오래된 Arc가 MAX_OLD_SUMMARY 초과 시 최근 것만 표시
+            if len(old_arcs) > self.MAX_OLD_SUMMARY:
+                skipped = len(old_arcs) - self.MAX_OLD_SUMMARY
+                lines.append(f"  ({skipped}개 Arc 생략)")
+                display_arcs = old_arcs[-self.MAX_OLD_SUMMARY:]
+            else:
+                display_arcs = old_arcs
+            for arc in display_arcs:
+                arc_no = arc.get("arc_no", "?")
+                title = arc.get("title", "")[:30]
+                end_loc = arc.get("joint_docs", {}).get("final_location", "?")[:20]
+                items = arc.get("state_constraints", {}).get("items_acquired", [])
+                item_count = len(items) if isinstance(items, list) else 0
+                # [V63] 핵심 NPC 추출 (deaths + relationship_changes)
+                sc = arc.get("state_changes", {})
+                key_npcs = set()
+                for d in (sc.get("npc_deaths", []) if isinstance(sc, dict) else []):
+                    if isinstance(d, dict) and d.get("name"):
+                        key_npcs.add(d["name"] + "(사망)")
+                for r in (sc.get("relationship_changes", []) if isinstance(sc, dict) else []):
+                    if isinstance(r, dict) and r.get("npc"):
+                        key_npcs.add(r["npc"])
+                npc_str = ", ".join(list(key_npcs)[:5]) if key_npcs else "없음"
+                # [V63] 미해결 갈등 (resolved_plots가 아닌 것)
+                world_joint = arc.get("joint_docs", {}).get("world_joint", "")[:50]
+                lines.append(f"  Arc {arc_no}: {title} → {end_loc} (아이템+{item_count})")
+                lines.append(f"    핵심NPC: {npc_str}")
+                lines.append(f"    세계변화: {world_joint or '없음'}")
+            lines.append("")
+
+        # ── 최근 Arc: 상세 ──
+        for arc in recent_arcs:
             arc_no = arc.get("arc_no", "?")
             lines.append(f"\n{'='*60}")
-            lines.append(f"[ARC {arc_no}]")
+            lines.append(f"[ARC {arc_no}] (상세)")
             lines.append(f"{'='*60}")
 
-            # tactical_doc
             tactical = arc.get("tactical_doc", "")
             if tactical:
-                # 너무 길면 요약
                 if len(tactical) > 3000:
                     tactical = tactical[:1500] + "\n...(중략)...\n" + tactical[-1500:]
                 lines.append(f"\n[전술 문서]\n{tactical}")
 
-            # state_constraints
             state = arc.get("state_constraints", {})
             if state:
                 lines.append(f"\n[상태 제약]\n{json.dumps(state, ensure_ascii=False, indent=2)}")
 
-            # joint_docs
             joint = arc.get("joint_docs", {})
             if joint:
                 lines.append(f"\n[연결 문서]\n{json.dumps(joint, ensure_ascii=False, indent=2)}")
 
-            # status_shadow
             shadow = arc.get("status_shadow", {})
             if shadow:
                 lines.append(f"\n[상태 그림자]\n{json.dumps(shadow, ensure_ascii=False, indent=2)}")
 
+        total_chars = sum(len(l) for l in lines)
+        print(f"      📊 [V62.3] Preflight 윈도잉: {len(old_arcs)}개 요약 + {len(recent_arcs)}개 상세 ({total_chars:,}자)")
         return "\n".join(lines)
 
     def _ensure_required_fields(self, result: Dict) -> Dict:
@@ -206,8 +252,12 @@ class PreflightChecker(BaseAgent):
                 "current_location": "알 수 없음",
                 "known_information": [],
                 "ongoing_conflicts": [],
+                "resolved_conflicts": [],
                 "protagonist_status": {}
             }
+        else:
+            if "resolved_conflicts" not in result["world_state"]:
+                result["world_state"]["resolved_conflicts"] = []
 
         if "absolute_prohibitions" not in result:
             result["absolute_prohibitions"] = {
@@ -241,6 +291,7 @@ class PreflightChecker(BaseAgent):
                 "current_location": "서사 시작점",
                 "known_information": [],
                 "ongoing_conflicts": [],
+                "resolved_conflicts": [],
                 "protagonist_status": {
                     "injuries": "없음",
                     "internal_energy": 100,
@@ -318,6 +369,7 @@ class PreflightChecker(BaseAgent):
                 "current_location": last_location,
                 "known_information": [],
                 "ongoing_conflicts": [],
+                "resolved_conflicts": [],
                 "protagonist_status": {
                     "injuries": last_injuries,
                     "internal_energy": last_energy
@@ -425,6 +477,6 @@ class PreflightChecker(BaseAgent):
         return "\n".join(lines)
 
 
-def create_preflight_checker(context, client, model_tier: str = "gemini-3-pro-preview"):
-    """[V60.24] PreflightChecker 생성 헬퍼 - Gemini 3 사용"""
+def create_preflight_checker(context, client, model_tier: str = "gemini-2.5-pro"):
+    """[V62.4] PreflightChecker 생성 헬퍼 - gemini-2.5-pro 사용"""
     return PreflightChecker(context, client, model_tier)

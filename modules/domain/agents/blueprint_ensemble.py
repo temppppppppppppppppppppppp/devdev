@@ -175,6 +175,12 @@ Arc 전술서를 바탕으로 제{ep_num}화 Blueprint를 설계하세요.
     }}
 }}
 
+### [V63] 독자 경험 설계
+각 씬의 목표 독자 감정:
+- 놀라움 / 분노→쾌감(사이다) / 감동 / 긴장 / 궁금증
+전체 씬에서 최소 3가지 이상 서로 다른 감정 반응을 유발할 것.
+마지막 씬은 반드시 긴장 또는 궁금증으로 끝낼 것 (클리프행어).
+
 ### [필수 조건]
 1. scene_breakdown은 최소 3개, 최대 5개 씬
 2. integrated_scenario는 최소 1000자 이상
@@ -239,7 +245,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
             tactical = arc_data.get("tactical_doc", "")
             if isinstance(tactical, dict):
                 tactical = json.dumps(tactical, ensure_ascii=False)
-            arc_focus = tactical[:2000]
+            # [V62.8] 절삭 상한 완화: 2000→4000 (중략 없이 전문 전달 우선)
+            arc_focus = tactical[:4000]
 
         # 제약 조건 문자열
         constraints_str = self._format_constraints(constraint_block)

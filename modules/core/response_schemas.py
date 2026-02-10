@@ -489,7 +489,7 @@ BIBLE_REQUIRED_STRUCTURE = {
 # Treatment 파일 필수 구조 정의 (배열 항목별)
 TREATMENT_BLOCK_REQUIRED_FIELDS = ["title"]
 TREATMENT_BLOCK_OPTIONAL_FIELDS = ["content", "summary", "beats", "arc_number"]
-TREATMENT_CONTENT_FIELDS = ["situation", "crisis", "solution"]  # content 내부 필드
+TREATMENT_CONTENT_FIELDS = ["context", "event_villain", "solution", "reward"]  # content 내부 필드 (V62.2)
 
 
 def validate_bible_structure(bible_data: dict) -> tuple:

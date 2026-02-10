@@ -155,6 +155,8 @@ class StateExtractor(BaseAgent):
         """
         super().__init__(context, client, model_tier)
         # [V60.37] 스마트 폴백 (BaseAgent에서 자동 설정: gemini-3-flash → gemini-2.5-flash)
+        # [V62.5] 상태 캐시: arc_no → extract_state 결과 (PASS된 Arc는 불변)
+        self._state_cache: Dict[int, dict] = {}
 
     def extract_state(self, arc_data: dict) -> dict:
         """
@@ -167,6 +169,11 @@ class StateExtractor(BaseAgent):
             구조화된 상태 정보 dict
         """
         arc_no = arc_data.get('arc_no', 'Unknown')
+
+        # [V62.5] 캐시 히트 확인 - PASS된 Arc 데이터는 불변
+        cache_key = arc_no if isinstance(arc_no, int) else hash(str(arc_no))
+        if cache_key in self._state_cache:
+            return self._state_cache[cache_key]
 
         # Arc 데이터 정리
         # [V60.13 FIX] state_constraints.arc_end_state 포함
@@ -193,11 +200,16 @@ class StateExtractor(BaseAgent):
             # 필수 필드 검증
             result = self._validate_and_fix_result(result, arc_data)
 
+            # [V62.5] 캐시 저장
+            self._state_cache[cache_key] = result
             return result
 
         except Exception as e:
             # 실패 시 기본 추출 (Python 기반)
-            return self._fallback_extraction(arc_data)
+            result = self._fallback_extraction(arc_data)
+            # [V62.5] 폴백 결과도 캐시 (재호출 시 LLM 재시도 방지)
+            self._state_cache[cache_key] = result
+            return result
 
     def extract_cumulative_state(self, arcs: List[dict]) -> dict:
         """
@@ -213,6 +225,17 @@ class StateExtractor(BaseAgent):
         """
         if not arcs:
             return self._empty_state()
+
+        # [V62.5] 캐시 통계 로깅
+        total_count = len(arcs)
+        cached_count = 0
+        for a in arcs:
+            ano = a.get('arc_no', 'Unknown')
+            key = ano if isinstance(ano, int) else hash(str(ano))
+            if key in self._state_cache:
+                cached_count += 1
+        if cached_count > 0:
+            print(f"      ⚡ [V62.5] StateExtractor 캐시: {cached_count}/{total_count} Arc 캐시 히트 (LLM {total_count - cached_count}회만 호출)")
 
         # 마지막 Arc 기준으로 추출
         latest_arc = arcs[-1]

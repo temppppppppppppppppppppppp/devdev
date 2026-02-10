@@ -44,20 +44,19 @@ class BaseAgent:
     }
 
     # [V60.37] 모델별 폴백 체인 정의 (할당량 초과 시)
-    # [V60.78] 2.5-flash를 최종 폴백으로 설정 (2.0 이하 미사용)
+    # [V62.1] 2.5-pro가 최종 폴백 (2.5-flash 폴백 제거 - 품질 하한선 보장)
     MODEL_FALLBACK_CHAIN = {
-        "gemini-3-pro-preview": "gemini-2.5-pro",      # 3 Pro → 2.5 Pro
-        "gemini-3-flash-preview": "gemini-2.5-flash",  # 3 Flash → 2.5 Flash
-        "gemini-2.5-pro": "gemini-2.5-flash",          # 2.5 Pro → 2.5 Flash (최종)
-        # [V60.78] 2.5-flash가 최종 폴백 (2.0 이하 미사용 정책)
+        "gemini-3-pro-preview": "gemini-2.5-pro",      # 3 Pro → 2.5 Pro (최종)
+        "gemini-3-flash-preview": "gemini-2.5-flash",  # 3 Flash → 2.5 Flash (Flash 계열은 유지)
+        # "gemini-2.5-pro": ... 제거 — 2.5-pro가 최종 방어선
     }
 
     # [V60.68] 쿼터 소진 모델 캐싱 (클래스 변수 - 세션 전체 공유)
     _quota_exhausted_models = {}  # {model_name: exhausted_until_timestamp}
-    _QUOTA_CACHE_DURATION = 60    # 60초 동안 해당 모델 시도 스킵
+    _QUOTA_CACHE_DURATION = 3600  # [V62.3] 1시간 (3-pro는 몇 시간 단위로 막힘)
 
     # [V60.99] API Rate Limit 예방 딜레이 (초)
-    API_DELAY = 0.3  # 기본 0.3초, 문제 시 0.5초로 조정
+    API_DELAY = 0.1  # [V63.3] 0.3→0.1 (Gemini RPM 충분, 런타임 절감)
 
     # [V61.5] API 키 순환 (429 방어)
     _api_keys = []
@@ -67,6 +66,7 @@ class BaseAgent:
     _last_rotation_time = 0
     _MIN_ROTATION_INTERVAL = 10  # 최소 순환 간격 (초)
     _rotation_lock = threading.Lock()  # [V61.7] 병렬 앙상블 시 race condition 방지
+    _rotation_count = 0  # [V62.3] 연속 키 순환 횟수 (전체 키 수 도달 시 순환 중단)
 
     @classmethod
     def _init_api_keys(cls):
@@ -95,6 +95,11 @@ class BaseAgent:
                 cls._key_rotation_pending = False
                 return None
 
+            # [V62.3] 전체 키 순환 완료 시 더 이상 순환하지 않음
+            if cls._rotation_count >= len(cls._api_keys) - 1:
+                cls._key_rotation_pending = False
+                return None
+
             # 너무 빠른 순환 방지
             if time.time() - cls._last_rotation_time < cls._MIN_ROTATION_INTERVAL:
                 cls._key_rotation_pending = False
@@ -103,7 +108,9 @@ class BaseAgent:
             old_idx = cls._current_key_idx
             cls._current_key_idx = (cls._current_key_idx + 1) % len(cls._api_keys)
             cls._last_rotation_time = time.time()
-            cls._quota_exhausted_models.clear()
+            cls._rotation_count += 1  # [V62.3]
+            cls._quota_exhausted_models.clear()  # 새 키에서 3-pro 한 번은 시도
+            cls._context_caches.clear()  # [V61.9] 키 변경 시 캐시 무효화 (API 키별 캐시 격리)
             cls._key_rotation_pending = False
 
         # Client 생성은 lock 밖에서 (네트워크 IO 포함하므로)
@@ -257,6 +264,9 @@ class BaseAgent:
                     # [V60.97] 성공 시 카운터 리셋
                     rate_limit_retry_count = 0
                     network_retry_count = 0  # [V61.2] 네트워크 카운터도 리셋
+                    # [V62.3] primary 모델 성공 시 키 순환 카운터 리셋
+                    if current_model == self.primary_model:
+                        BaseAgent._rotation_count = 0
                 except Exception as api_error:
                     # ═══════════════════════════════════════════════════════════════
                     # [V61.2] Case 0: 네트워크/타임아웃 오류 → 백오프 + 연결 체크 후 재시도
@@ -333,12 +343,14 @@ class BaseAgent:
                             current_model = model_stack[quota_retry_count] if quota_retry_count < len(model_stack) else model_stack[-1]
 
                             # [V60.68] 쿼터 소진 모델 캐시 등록
-                            cache_duration = BaseAgent._QUOTA_CACHE_DURATION if is_quota_exhausted else 30  # Rate Limit은 30초만
+                            # [V62.3] 3-pro는 시간 단위 차단 — Rate Limit도 길게 캐싱
+                            cache_duration = BaseAgent._QUOTA_CACHE_DURATION
                             BaseAgent._quota_exhausted_models[old_model] = time.time() + cache_duration
 
-                            # [V61.5] 다음 작업에서 키 순환 예약 [V61.7] Lock 보호
+                            # [V62.3] 전체 키 시도 전까지만 순환 예약
                             with BaseAgent._rotation_lock:
-                                BaseAgent._key_rotation_pending = True
+                                if BaseAgent._rotation_count < len(BaseAgent._api_keys) - 1:
+                                    BaseAgent._key_rotation_pending = True
 
                             error_type = "Quota 소진" if is_quota_exhausted else "Rate Limit 초과"
                             print(f"      🔄 [V60.97 Fallback] {old_model} {error_type} → {current_model}로 전환")
@@ -946,7 +958,14 @@ class BaseAgent:
 
         except Exception as e:
             # 캐싱 실패해도 진행 (폴백: 캐싱 없이 직접 사용)
-            print(f"      ⚠️ [V61.5] 컨텍스트 캐싱 실패 (계속 진행): {str(e)[:50]}")
+            error_str = str(e).lower()
+            # [V61.9] 캐싱 중 429/quota → 현재 작업은 캐시 없이 진행, 다음 작업에서 키 전환
+            if "429" in error_str or "resource_exhausted" in error_str or "quota" in error_str:
+                print(f"      ⚠️ [V61.9] 캐싱 중 API 제한 감지 → 키 전환 예약 (현재 작업은 캐시 없이 진행)")
+                with BaseAgent._rotation_lock:
+                    BaseAgent._key_rotation_pending = True
+            else:
+                print(f"      ⚠️ [V61.5] 컨텍스트 캐싱 실패 (계속 진행): {str(e)[:50]}")
             return {
                 "cache_name": None,
                 "cached": False,

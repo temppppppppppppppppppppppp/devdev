@@ -640,7 +640,7 @@ JSON 형식으로:
 === 입력 정보 ===
 Arc 번호: {arc_no}
 Volume 전략: {self._escape(vol_strategy[:2000] if vol_strategy else "(없음)")}
-현재 블록 DNA: {self._escape(json.dumps(curr_block, ensure_ascii=False)[:2000] if curr_block else "(없음)")}
+현재 블록 DNA: {self._escape(json.dumps(curr_block, ensure_ascii=False) if curr_block else "(없음)")}
 이전 Arc 맥락: {self._escape(prev_arc_context[:3000] if prev_arc_context else "(첫 Arc)")}
 이전 REJECT 피드백: {self._escape(feedback[:1000] if feedback else "(없음)")}
 
