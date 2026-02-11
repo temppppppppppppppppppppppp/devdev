@@ -30,6 +30,97 @@ class Stage4Orchestrator:
         self.app = app
 
     # ═══════════════════════════════════════════════════════════════════════
+    # [V68] 에피소드 연결고리 (Episode Chain Links)
+    # ═══════════════════════════════════════════════════════════════════════
+
+    def _extract_chain_link(self, ep_num: int, manuscript: str, blueprint: dict = None) -> dict:
+        """
+        [V68] 원고 확정 후 다음 화 연결고리를 구조화 추출.
+
+        Director 에이전트(LLM)로 정밀 추출.
+        추출 실패 시 빈 dict 반환 (기존 동작 유지).
+
+        Args:
+            ep_num: 확정된 에피소드 번호
+            manuscript: 확정된 원고 전문
+            blueprint: 해당 에피소드 블루프린트 (선택)
+
+        Returns:
+            dict: chain_link 구조
+        """
+        if not manuscript or len(manuscript) < 200:
+            return {}
+
+        try:
+            _escaped_tail = self.app.agents['director']._escape_braces(manuscript[-3000:])
+            prompt = f"""아래 원고의 마지막 상황을 분석하여 다음 화에서 반드시 이어받아야 할 요소를 추출하세요.
+
+원고 (제{ep_num}화, 마지막 3000자):
+{_escaped_tail}
+
+JSON으로 출력:
+{{
+    "cliffhanger": "현재 진행 중인 상황/위기/긴장 (없으면 빈 문자열)",
+    "pending_actions": ["다음 화에서 해야 할 행동 목록 (최대 5개)"],
+    "emotional_state": "주인공의 현재 감정 상태 (한 줄)",
+    "physical_state": "부상/피로/상태 (정상이면 '정상')",
+    "location": "현재 위치 (구체적으로)",
+    "time_marker": "작중 시간대 (알 수 있으면, 모르면 빈 문자열)"
+}}"""
+
+            result = self.app.agents['director'].ask(prompt, temperature=0.1)
+            chain_link = self.app.agents['director']._extract_json_robust(result)
+
+            if chain_link and isinstance(chain_link, dict):
+                chain_link.setdefault('cliffhanger', '')
+                chain_link.setdefault('pending_actions', [])
+                chain_link.setdefault('emotional_state', '')
+                chain_link.setdefault('physical_state', '정상')
+                chain_link.setdefault('location', '')
+                chain_link.setdefault('time_marker', '')
+                return chain_link
+            return {}
+        except Exception as e:
+            _perf_logger.warning(f"[V68] chain_link 추출 실패 (ep={ep_num}): {str(e)[:80]}")
+            return {}
+
+    def _load_chain_link_section(self, next_ep: int) -> str:
+        """
+        [V68] 직전 화의 chain_link를 DB에서 로드하여 프롬프트 주입용 텍스트로 변환.
+
+        1화이거나 직전 chain_link가 없으면 빈 문자열 반환.
+        """
+        if next_ep <= 1:
+            return ""
+        try:
+            _cl_raw = self.app.current_project.db.load_anchor(f'chain_link_{next_ep - 1}')
+            if not _cl_raw or not isinstance(_cl_raw, dict):
+                return ""
+            _cl_data = _cl_raw
+            _cl_parts = ["### [V68] 직전 화 연결고리 - 반드시 이어받을 것"]
+            if _cl_data.get('cliffhanger'):
+                _cl_parts.append(f"- 진행 중 상황: {_cl_data['cliffhanger']}")
+            if _cl_data.get('pending_actions'):
+                actions = _cl_data['pending_actions']
+                if isinstance(actions, list):
+                    _cl_parts.append(f"- 해야 할 행동: {', '.join(str(a) for a in actions)}")
+                else:
+                    _cl_parts.append(f"- 해야 할 행동: {actions}")
+            if _cl_data.get('emotional_state'):
+                _cl_parts.append(f"- 감정 상태: {_cl_data['emotional_state']}")
+            if _cl_data.get('physical_state') and _cl_data['physical_state'] != '정상':
+                _cl_parts.append(f"- 신체 상태: {_cl_data['physical_state']}")
+            if _cl_data.get('location'):
+                _cl_parts.append(f"- 현재 위치: {_cl_data['location']}")
+            if _cl_data.get('time_marker'):
+                _cl_parts.append(f"- 작중 시간: {_cl_data['time_marker']}")
+            if len(_cl_parts) > 1:
+                return "\n".join(_cl_parts)
+            return ""
+        except Exception:
+            return ""
+
+    # ═══════════════════════════════════════════════════════════════════════
     # [V66] 확장 Lookback
     # ═══════════════════════════════════════════════════════════════════════
 
@@ -136,6 +227,33 @@ class Stage4Orchestrator:
         blocking_validator = BlockingValidator(context=self.app.current_project)
         continuity_validator = ContinuityValidator(context=self.app.current_project)
 
+        # [V67.1] story_context 조립 — Director에게 작품 설정 전달
+        _story_context = ""
+        try:
+            _bible_root = self.app.current_project.master_bible.get('MasterBible', self.app.current_project.master_bible)
+            _prot_config = _bible_root.get('protagonist_config', {})
+            _sc_parts = []
+            _sc_parts.append(f"- 장르: {_s4_genre_type}")
+            if _prot_config:
+                _sc_parts.append(f"- 주인공 이름: {_prot_config.get('name', '미상')}")
+                _sc_parts.append(f"- 세계 출신: {_prot_config.get('world_origin', '미상')}")
+                _incarnation = _prot_config.get('incarnation_type', '미상')
+                _sc_parts.append(f"- 환생 유형: {_incarnation}")
+                if _incarnation == '회귀자':
+                    _sc_parts.append("→ 주인공은 미래에서 되돌아온 회귀자입니다. 미래의 사건, 주가, 인물 등을 미리 알고 있으며, 이 지식을 활용해 현재 역사를 의도적으로 변경하려 합니다. 이것은 모순이 아닙니다.")
+                elif _incarnation == '빙의자':
+                    _sc_parts.append("→ 주인공은 다른 인물의 몸에 빙의한 존재입니다. 원래 인물의 기억/관계와 현재 인격이 다를 수 있습니다.")
+                elif _incarnation == '환생자':
+                    _sc_parts.append("→ 주인공은 전생의 기억을 가진 환생자입니다. 전생의 지식이 단편적으로 나타날 수 있습니다.")
+                _core_traits = _prot_config.get('core_traits', '')
+                if _core_traits:
+                    _sc_parts.append(f"- 핵심 특성: {_core_traits}")
+            _story_context = "\n".join(_sc_parts)
+            print(f"   📋 [V67.1] story_context 조립 완료 ({len(_story_context)}자)")
+        except Exception as _sc_err:
+            print(f"   ⚠️ [V67.1] story_context 조립 실패 (비차단): {str(_sc_err)[:50]}")
+            _story_context = f"- 장르: {_s4_genre_type}"
+
         self.app.ui.log(f"🎬 [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처 가동")
         self.app.ui.log(f"   • Chief Writer 모델: {AIModels.STAGE4_FIXED_WRITER_MODEL}")
         self.app.ui.log(f"   • 앙상블: 3개 병렬 생성")
@@ -166,11 +284,34 @@ class Stage4Orchestrator:
                 try:
                     from modules.core.stage0 import StyleGuide
                     loaded_sg = StyleGuide.from_dict(saved_style)
+                    # [V70] Bible의 protagonist_config.pov로 오버라이드
+                    try:
+                        _bible = self.app.current_project.master_bible or {}
+                        _bible_root = _bible.get('MasterBible', _bible)
+                        _bible_pov = _bible_root.get('protagonist_config', {}).get('pov', '')
+                        if _bible_pov:
+                            loaded_sg.pov = _bible_pov
+                    except Exception:
+                        pass
                     style_guide = loaded_sg.to_prompt()
-                    self.app.ui.log(f"🎨 [V60.95] 저장된 스타일 가이드 로드됨 (톤: {loaded_sg.tone})")
+                    self.app.ui.log(f"🎨 [V60.95] 저장된 스타일 가이드 로드됨 (톤: {loaded_sg.tone}, 시점: {loaded_sg.pov})")
                 except Exception as e:
                     self.app.ui.log(f"⚠️ 스타일 가이드 로드 실패: {e}")
                     saved_style = None
+
+            # [V70] 스타일 가이드 없어도 Bible에 POV 설정이 있으면 최소 가이드 생성
+            if not style_guide and STAGE0_AVAILABLE:
+                try:
+                    from modules.core.stage0 import StyleGuide as _SG
+                    _bible = self.app.current_project.master_bible or {}
+                    _bible_root = _bible.get('MasterBible', _bible)
+                    _bible_pov = _bible_root.get('protagonist_config', {}).get('pov', '')
+                    if _bible_pov:
+                        _min_sg = _SG(pov=_bible_pov)
+                        style_guide = _min_sg.to_prompt()
+                        self.app.ui.log(f"📖 [V70] Bible POV 기반 최소 스타일 가이드 생성 (시점: {_bible_pov})")
+                except Exception:
+                    pass
 
             if not style_guide:
                 style_choice = self.app._get_int_input(
@@ -237,6 +378,21 @@ class Stage4Orchestrator:
                 prev_text = prev_ms_data.get('content', '') if prev_ms_data else ""
                 prev_ending = prev_text[-500:] if prev_text else ""
 
+                # [V67] 이전 30화 원고 전문 로드 — Director + ChiefWriter 공유
+                _prev_manuscripts_parts = []
+                for _prev_ep in range(max(1, next_ep - 30), next_ep):
+                    try:
+                        _prev_ms_data = self.app.current_project.db.get_manuscript(_prev_ep)
+                        if _prev_ms_data:
+                            _prev_content = _prev_ms_data.get('content', '') if isinstance(_prev_ms_data, dict) else str(_prev_ms_data)
+                            if _prev_content and len(_prev_content) > 100:
+                                _prev_manuscripts_parts.append(f"[제{_prev_ep}화]\n{_prev_content}")
+                    except Exception:
+                        pass
+                _prev_manuscripts_text = "\n\n---\n\n".join(_prev_manuscripts_parts) if _prev_manuscripts_parts else ""
+                if _prev_manuscripts_parts:
+                    print(f"      📚 [V67] 이전 {len(_prev_manuscripts_parts)}화 원고 전문 로드 완료 ({len(_prev_manuscripts_text):,}자)")
+
                 # [V62.6] 에피소드 상태 다이제스트
                 _episode_digest = ""
                 if prev_text and hasattr(chief_writer, '_generate_episode_digest'):
@@ -256,6 +412,19 @@ class Stage4Orchestrator:
                 dead_npcs = cumulative_bible.get('dead_npcs', []) if cumulative_bible else []
 
                 item_acquisition_timeline = self.app._build_item_acquisition_timeline(next_ep - 1)
+
+                # [V68] 직전 화 연결고리 로드
+                _chain_link_section = self._load_chain_link_section(next_ep)
+                if _chain_link_section:
+                    print(f"      [V68] 직전 화 연결고리 로드 완료 ({len(_chain_link_section)}자)")
+
+                # [V68] 세계 상태 요약 로드 (ChiefWriter 프롬프트 주입용)
+                _world_state_summary = ""
+                if hasattr(self.app, 'world_state') and self.app.world_state:
+                    try:
+                        _world_state_summary = self.app.world_state.get_summary(max_chars=5000)
+                    except Exception:
+                        pass
 
                 # ===== [V60.80+] 기존 Writer 핵심 기능 추출 =====
                 reference_anchor_prompt = ""
@@ -309,7 +478,52 @@ class Stage4Orchestrator:
                     if _arc_cs:
                         _mc_parts.append(f"[Arc 제약 - MUST NOT DO]\n{_arc_cs}")
 
-                    # [V66.1] F-6: mandatory_context 우선순위 재배치 — 중요도 순 (25K truncation 시 상위가 생존)
+                    # [V67] F-6: mandatory_context 우선순위 재배치 — 중요도 순 (50K truncation 시 상위가 생존)
+                    # [V68] Priority 0: 세계 상태 문서 (World State Document) — 최우선
+                    if hasattr(self.app, 'world_state') and self.app.world_state:
+                        try:
+                            _ws_summary = self.app.world_state.get_summary(max_chars=5000)
+                            if _ws_summary:
+                                _mc_parts.insert(0, _ws_summary)
+                                print(f"      🌍 [V68] 세계 상태 문서 주입 ({len(_ws_summary)}자)")
+                        except Exception as _ws_err:
+                            print(f"      ⚠️ [V68] 세계 상태 문서 주입 실패 (비차단): {str(_ws_err)[:50]}")
+
+                    # [V68] Priority 0.5: 계층적 요약 피라미드 (시리즈 + 볼륨 요약)
+                    try:
+                        _series_summary = self.app.current_project.load_v20_anchor('series_summary')
+                        if _series_summary:
+                            if isinstance(_series_summary, dict):
+                                _series_summary = _series_summary.get('summary', '') or str(_series_summary)
+                            if _series_summary and len(str(_series_summary)) > 10:
+                                _mc_parts.append(f"[V68 시리즈 전체 요약]\n{_series_summary}")
+
+                        # 볼륨 요약: 최근 3개 볼륨
+                        _current_arc_no = arc_data.get('arc_no', 1) if arc_data else 1
+                        _current_vol = max(1, (_current_arc_no - 1) // 10 + 1)
+                        _volume_summaries = []
+                        for _vi in range(max(1, _current_vol - 2), _current_vol + 1):
+                            _vs = self.app.current_project.load_v20_anchor(f'volume_summary_{_vi}')
+                            if _vs:
+                                if isinstance(_vs, dict):
+                                    _vs = _vs.get('summary', '') or str(_vs)
+                                if _vs and len(str(_vs)) > 10:
+                                    _volume_summaries.append(f"[볼륨 {_vi}] {_vs}")
+                        if _volume_summaries:
+                            _mc_parts.append("[V68 볼륨 요약]\n" + "\n".join(_volume_summaries))
+                    except Exception as _hier_err:
+                        self.app.ui.log(f"   ⚠️ [V68] 계층적 요약 로드 실패 (비차단): {str(_hier_err)[:60]}")
+
+                    # [V68] Priority 0.8: 팩트 원장 (Cumulative Fact Ledger) — 장기 사실 보존
+                    if hasattr(self.app, 'fact_ledger') and self.app.fact_ledger:
+                        try:
+                            _fl_summary = self.app.fact_ledger.to_summary(max_chars=15000)
+                            if _fl_summary:
+                                _mc_parts.insert(0, _fl_summary)
+                                print(f"      📋 [V68] 팩트 원장 주입 ({len(_fl_summary)}자)")
+                        except Exception as _fl_mc_err:
+                            print(f"      ⚠️ [V68] 팩트 원장 주입 실패 (비차단): {str(_fl_mc_err)[:50]}")
+
                     # Priority 1: 파괴된 조직/장소 (BLOCKING level)
                     if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
                         _destroyed = self.app.state_tracker.get_entity_destruction_summary()
@@ -414,7 +628,7 @@ class Stage4Orchestrator:
                             arc_sum = self.app.current_project.load_v20_anchor(f"arc_summary_{prev_arc}")
                             if arc_sum and isinstance(arc_sum, dict):
                                 arc_summaries.append(arc_sum)
-                        if arc_summaries:
+                        if arc_summaries and hasattr(self.app, 'state_tracker') and self.app.state_tracker:
                             _arc_summary_text = self.app.state_tracker.format_arc_summary_for_prompt(arc_summaries)
                             if _arc_summary_text:
                                 _mc_parts.append(_arc_summary_text)
@@ -576,8 +790,8 @@ class Stage4Orchestrator:
                 director_feedback = ""
                 previous_attempt = {}
 
-                # [V66.1] mandatory_context 우선순위 기반 스마트 트렁케이션 (25,000자 상한)
-                if len(mandatory_context) > 25000:
+                # [V67] mandatory_context 우선순위 기반 스마트 트렁케이션 (50,000자 상한)
+                if len(mandatory_context) > 50000:
                     _original_len = len(mandatory_context)
                     # 섹션 분리: "\n[" 또는 "\n\n[" 마커 기준으로 분할
                     import re as _re_trunc
@@ -589,7 +803,7 @@ class Stage4Orchestrator:
                         # 뒤에서부터 (낮은 우선순위) 하나씩 제거
                         _removed_count = 0
                         _removed_chars = 0
-                        while len("\n".join(_sections)) > 25000 and len(_sections) > 1:
+                        while len("\n".join(_sections)) > 50000 and len(_sections) > 1:
                             _removed_section = _sections.pop()
                             _removed_count += 1
                             _removed_chars += len(_removed_section)
@@ -599,8 +813,8 @@ class Stage4Orchestrator:
                             self.app.ui.log(f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → {len(mandatory_context)}자 (섹션 {_removed_count}개 제거)")
                     else:
                         # 섹션 분리 불가 시 기존 방식 폴백
-                        mandatory_context = mandatory_context[:24950] + "\n\n...(컨텍스트 크기 초과로 일부 생략)"
-                        self.app.ui.log(f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → 25,000자로 truncate (폴백)")
+                        mandatory_context = mandatory_context[:49950] + "\n\n...(컨텍스트 크기 초과로 일부 생략)"
+                        self.app.ui.log(f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → 50,000자로 truncate (폴백)")
 
                 # [V61.6] 전체 면담 루프를 스피너로 감싸기
                 with StageSpinner(4, f"제{next_ep}화 · 앙상블 준비") as stage4_spinner:
@@ -636,7 +850,10 @@ class Stage4Orchestrator:
                             npc_equipment_summary=npc_equipment_summary,
                             intro_dna=intro_dna,
                             purism_prompt=purism_prompt,
-                            state_tracker=getattr(self.app, 'state_tracker', None)
+                            state_tracker=getattr(self.app, 'state_tracker', None),
+                            prev_manuscripts_text=_prev_manuscripts_text,  # [V67]
+                            world_state_summary=_world_state_summary,  # [V68]
+                            chain_link_section=_chain_link_section  # [V68]
                         )
                     else:
                         candidates = chief_writer.regenerate_with_feedback(
@@ -663,7 +880,10 @@ class Stage4Orchestrator:
                             npc_equipment_summary=npc_equipment_summary,
                             intro_dna=intro_dna,
                             purism_prompt=purism_prompt,
-                            state_tracker=getattr(self.app, 'state_tracker', None)
+                            state_tracker=getattr(self.app, 'state_tracker', None),
+                            prev_manuscripts_text=_prev_manuscripts_text,  # [V67]
+                            world_state_summary=_world_state_summary,  # [V68]
+                            chain_link_section=_chain_link_section  # [V68]
                         )
 
                     # [V65] PerfTimer: 원고 생성 종료
@@ -710,6 +930,14 @@ class Stage4Orchestrator:
                             'prev_episode_events': [],
                             'ep_num': next_ep,
                         }
+                        # [V67.1] incarnation_type 주입 — Validator 오탐 방지
+                        _incarnation_type = ''
+                        try:
+                            _bible_root = self.app.current_project.master_bible.get('MasterBible', self.app.current_project.master_bible)
+                            _incarnation_type = _bible_root.get('protagonist_config', {}).get('incarnation_type', '')
+                        except Exception:
+                            pass
+                        _cv_context['incarnation_type'] = _incarnation_type
                         # [V66.2] C-1: BlockingValidator dead NPC 감지 활성화
                         _encyclopedia_npcs = []
                         if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
@@ -826,6 +1054,37 @@ class Stage4Orchestrator:
                             self.app.ui.log(f"   ⚠️ [V61.5] 연속성 검사: {conflict_summary[:50]}...")
                             director_feedback += f"\n[연속성 충돌]\n{conflict_summary}"
 
+                    # [V67] 명시적 모순 검사 — 이전 원고와 비교
+                    if _prev_manuscripts_parts and hasattr(self.app.agents.get('director', None), 'check_manuscript_history_conflicts'):
+                        _ms_history_for_check = []
+                        for _prev_ep in range(max(1, next_ep - 30), next_ep):
+                            try:
+                                _prev_ms_data = self.app.current_project.db.get_manuscript(_prev_ep)
+                                if _prev_ms_data:
+                                    _content = _prev_ms_data.get('content', '') if isinstance(_prev_ms_data, dict) else str(_prev_ms_data)
+                                    _ms_history_for_check.append({"ep_num": _prev_ep, "text": _content})
+                            except Exception:
+                                pass
+
+                        # [V67.1] story_context 포함하여 모순 검사 호출
+                        if _ms_history_for_check and candidates:
+                            _first_ms = candidates[0].get('manuscript', '')
+                            if _first_ms:
+                                try:
+                                    _conflict_result = self.app.agents['director'].check_manuscript_history_conflicts(
+                                        ep_num=next_ep,
+                                        current_manuscript=_first_ms,
+                                        manuscript_history=_ms_history_for_check,
+                                        use_summary=False,
+                                        story_context=_story_context
+                                    )
+                                    if _conflict_result.get('decision') == 'CONFLICT':
+                                        _conflict_summary = _conflict_result.get('summary', '모순 감지')
+                                        self.app.ui.log(f"   ⚠️ [V67] 원고 역사 충돌: {_conflict_summary[:80]}")
+                                        director_feedback += f"\n[V67 원고 역사 충돌]\n{_conflict_summary}"
+                                except Exception as _hc_err:
+                                    print(f"      ⚠️ [V67] 원고 역사 충돌 검사 실패 (비차단): {str(_hc_err)[:50]}")
+
                     # Phase 4: Director 면담
                     stage4_spinner.update_detail(f"제{next_ep}화 · {interview_round + 1}차 면담 · Director 심사")
                     self.app.ui.log(f"   🎬 Director 면담 중...")
@@ -850,6 +1109,12 @@ class Stage4Orchestrator:
                             "[V66.3] Python 사전 검증 결과 (Director 참고용)\n" +
                             "\n\n".join(_vr_warnings_for_director)
                         )
+                    # [V69.1] V67 원고 역사 충돌 + 연속성 충돌 경고를 Director에 전달
+                    if director_feedback and director_feedback.strip():
+                        _director_mc_parts.append(
+                            "🚨 [V69.1] Python 감지된 원고 충돌 경고 (반드시 반영하세요)\n" +
+                            director_feedback.strip()
+                        )
                     _director_mandatory_context = "\n\n".join(_director_mc_parts)
 
                     director_result = self.app.agents['director'].select_and_judge_ensemble(
@@ -862,7 +1127,9 @@ class Stage4Orchestrator:
                         total_eps=total_ep_in_arc,
                         retry_count=interview_round,
                         episode_digest=_episode_digest,
-                        mandatory_context=_director_mandatory_context
+                        mandatory_context=_director_mandatory_context,
+                        prev_manuscripts_text=_prev_manuscripts_text,  # [V67]
+                        story_context=_story_context  # [V67.1]
                     )
                     try:
                         self.app.perf_timer.stop(f"s4_ep{next_ep}_director_r{interview_round}")
@@ -1052,16 +1319,17 @@ class Stage4Orchestrator:
                             if _sc.get("resolved_plots"):
                                 _mem_event_types.add("resolved_plot")
                         _mem_entity_names.discard("")
-                        self.app.memory.memorize_v20_episode(
-                            ep_num=next_ep,
-                            text=final_manuscript,
-                            summary=final_title[:100] if final_title else f"제{next_ep}화",
-                            causal_links=[],
-                            arc_no=_mem_arc_no,
-                            event_types=list(_mem_event_types),
-                            entity_names=list(_mem_entity_names)
-                        )
-                        self.app.ui.log(f"   ✅ 벡터 메모리 저장 (arc={_mem_arc_no}, events={_mem_event_types})")
+                        if self.app.memory and self.app.memory.is_operational():
+                            self.app.memory.memorize_v20_episode(
+                                ep_num=next_ep,
+                                text=final_manuscript,
+                                summary=final_title[:100] if final_title else f"제{next_ep}화",
+                                causal_links=[],
+                                arc_no=_mem_arc_no,
+                                event_types=list(_mem_event_types),
+                                entity_names=list(_mem_entity_names)
+                            )
+                            self.app.ui.log(f"   ✅ 벡터 메모리 저장 (arc={_mem_arc_no}, events={_mem_event_types})")
                     except Exception as _mem_err:
                         self.app.ui.log(f"   ⚠️ [V63.3] 벡터 메모리 저장 실패 (비차단): {str(_mem_err)[:60]}")
 
@@ -1253,6 +1521,70 @@ class Stage4Orchestrator:
                         import traceback
                         traceback.print_exc()
 
+                    # ===== [V68] 에피소드 연결고리 추출 및 저장 =====
+                    try:
+                        _chain_link = self._extract_chain_link(next_ep, final_manuscript, blueprint)
+                        if _chain_link:
+                            self.app.current_project.db.save_anchor(
+                                f'chain_link_{next_ep}',
+                                _chain_link
+                            )
+                            _cl_cliff = _chain_link.get('cliffhanger', '')
+                            self.app.ui.log(f"   [V68] 연결고리 저장 완료 (cliffhanger: {_cl_cliff[:50]}{'...' if len(_cl_cliff) > 50 else ''})")
+                        else:
+                            self.app.ui.log(f"   [V68] 연결고리 추출 결과 없음 (비차단)")
+                    except Exception as _cl_err:
+                        self.app.ui.log(f"   [V68] 연결고리 저장 실패 (비차단): {str(_cl_err)[:50]}")
+
+                    # ===== [V68] WorldState 갱신 =====
+                    if hasattr(self.app, 'world_state') and self.app.world_state:
+                        try:
+                            # state_changes 추출 (arc_data에서)
+                            _ws_sc = arc_data.get('state_changes', {}) if arc_data else {}
+                            if _ws_sc:
+                                self.app.world_state.update_from_state_changes(next_ep, _ws_sc)
+
+                            # 주인공 이름 갱신
+                            _ws_prot_name = ''
+                            try:
+                                _ws_bible_root = self.app.current_project.master_bible.get(
+                                    'MasterBible', self.app.current_project.master_bible)
+                                _ws_prot_name = _ws_bible_root.get('protagonist_config', {}).get('name', '')
+                            except Exception:
+                                pass
+                            self.app.world_state.update_protagonist_state(
+                                ep_num=next_ep,
+                                name=_ws_prot_name if _ws_prot_name else None,
+                            )
+
+                            # DB 저장
+                            self.app.world_state.save()
+                            self.app.ui.log(f"   🌍 [V68] 세계 상태 갱신 완료 (제{next_ep}화)")
+                        except Exception as _ws_upd_err:
+                            self.app.ui.log(f"   ⚠️ [V68] 세계 상태 갱신 실패 (비차단): {str(_ws_upd_err)[:60]}")
+
+                    # ===== [V68] 팩트 원장 갱신 =====
+                    if hasattr(self.app, 'fact_ledger') and self.app.fact_ledger:
+                        try:
+                            # 1) Arc state_changes에서 갱신
+                            _fl_sc = arc_data.get('state_changes', {}) if arc_data else {}
+                            if _fl_sc:
+                                self.app.fact_ledger.update_from_state_changes(next_ep, _fl_sc)
+
+                            # 2) bible_delta에서 추가 갱신 (new_npcs, new_items, lost_items 등)
+                            try:
+                                if bible_delta:
+                                    self.app.fact_ledger.update_from_bible_delta(next_ep, bible_delta)
+                            except NameError:
+                                pass  # bible_delta가 정의되지 않은 경우 (Episode Bible 저장 실패 시)
+
+                            # 3) DB 저장
+                            self.app.fact_ledger.save()
+                            _fl_stats = self.app.fact_ledger.get_stats()
+                            self.app.ui.log(f"   📋 [V68] 팩트 원장 갱신 완료 (인물 {_fl_stats.get('characters', 0)}명, 아이템 {_fl_stats.get('items', 0)}개)")
+                        except Exception as _fl_err:
+                            self.app.ui.log(f"   ⚠️ [V68] 팩트 원장 갱신 실패 (비차단): {str(_fl_err)[:50]}")
+
                     self.app.ui.log(f"\n✅ 제{next_ep}화 '{final_title}' 생산 완료! ({len(final_manuscript)}자)")
 
                     # [V66.1] B-3: 에피소드 완료 시 audit 버퍼 flush
@@ -1274,12 +1606,14 @@ class Stage4Orchestrator:
                 pass
 
             # [V62.3] 벡터 메모리 일괄 동기화
-            try:
-                self.app.ui.log(f"   🔄 벡터 메모리 일괄 동기화 중...")
-                self.app.memory.sync_v20_drafts()
-                self.app.ui.log(f"   ✅ 벡터 메모리 동기화 완료")
-            except Exception as vec_err:
-                self.app.ui.log(f"   ⚠️ 벡터 메모리 동기화 실패 (비차단): {vec_err}")
+            # [V66.3] ChromaDB 비활성화 시 스킵
+            if self.app.memory and self.app.memory.is_operational():
+                try:
+                    self.app.ui.log(f"   🔄 벡터 메모리 일괄 동기화 중...")
+                    self.app.memory.sync_v20_drafts()
+                    self.app.ui.log(f"   ✅ 벡터 메모리 동기화 완료")
+                except Exception as vec_err:
+                    self.app.ui.log(f"   ⚠️ 벡터 메모리 동기화 실패 (비차단): {vec_err}")
 
         except KeyboardInterrupt:
             self.app.ui.log("\n⚠️ 사용자 중단 요청. 저장 후 종료합니다.")
