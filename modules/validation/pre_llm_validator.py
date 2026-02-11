@@ -2,7 +2,7 @@
 [V60.56] Pre-LLM Validator - Advisory Mode
 Python 기반 검사 → LLM에게 정보 제공용 (REJECT 권한 없음)
 
-9가지 Python 기반 검사 (모두 advisory):
+10가지 Python 기반 검사 (모두 advisory):
 1. 중복 단어 과다 (vocabulary diversity)
 2. 문장 길이 극단화 (prose rhythm)
 3. 대사 절대 부족
@@ -12,6 +12,7 @@ Python 기반 검사 → LLM에게 정보 제공용 (REJECT 권한 없음)
 7. 문장 끝 형식 일관성
 8. NPC 이름 불일치
 9. 반복되는 문장 구조
+10. [V70] 시점(POV) 일관성
 
 비용: $0 (Python 기반)
 [V60.56] REJECT 권한 제거: Python은 정보 수집만, LLM이 최종 판단
@@ -28,12 +29,14 @@ class PreLLMValidator:
     LLM 호출 비용 없이 명백한 오류를 사전 차단
     """
 
-    def __init__(self, genre: str = "wuxia"):
+    def __init__(self, genre: str = "wuxia", pov: str = ""):
         """
         Args:
             genre: 장르 (wuxia, hunter, investment)
+            pov: [V70] 서술 시점 (1인칭/3인칭/전지적/혼합)
         """
         self.genre = genre
+        self.pov = pov
 
     def validate(self, manuscript: str, context: Dict[str, Any] = None) -> Dict:
         """
@@ -110,6 +113,13 @@ class PreLLMValidator:
             warnings.append(repetitive)
             score_deduction += 1
 
+        # 10. [V70] 시점(POV) 일관성 체크
+        if self.pov:
+            pov_result = self._check_pov_consistency(manuscript)
+            if pov_result.get('has_issue'):
+                warnings.append(pov_result)
+                score_deduction += 2
+
         # [V60.56] 최종 판정 - Python은 REJECT 권한 없음, 항상 passed=True
         # issues를 advisory로 변환 (LLM에게 전달할 정보)
         advisory_issues = issues
@@ -121,7 +131,7 @@ class PreLLMValidator:
             "warnings": warnings,
             "score_deduction": min(10, score_deduction),
             "reason": f"Advisory - 참고사항 {len(advisory_issues)}개, 경고 {len(warnings)}개",
-            "check_count": 9
+            "check_count": 10
         }
 
     def _check_word_repetition(self, manuscript: str) -> Dict:
@@ -138,7 +148,7 @@ class PreLLMValidator:
             '그', '저', '이', '그것', '이것', '했다', '있었다',
             '그리고', '하지만', '그러나', '그래서', '때문에'
         }
-        word_counts = {w: c for w, c in word_counts.items() if w not in stopwords}
+        word_counts = Counter({w: c for w, c in word_counts.items() if w not in stopwords})  # [V66.2] F-3: Counter 유지 (.most_common 보존)
 
         # 같은 단어가 15회 이상 반복 = 위반
         overused = [(w, c) for w, c in word_counts.most_common(10) if c > 15]
@@ -406,6 +416,46 @@ class PreLLMValidator:
             "severity": "WARNING" if repetition_score > 0.6 else "OK",
             "description": f"상위 3개 시작 패턴 비율 {repetition_score:.0%}"
         }
+
+    def _check_pov_consistency(self, manuscript: str) -> Dict:
+        """10. [V70] 시점(POV) 일관성 체크"""
+        # 대화 내용 제거 (대화 속 '나'는 무관)
+        no_dialogue = re.sub(r'["""][^"""]*["""]', '', manuscript)
+        # ―로 시작하는 대화도 제거
+        no_dialogue = re.sub(r'―[^\n]+', '', no_dialogue)
+
+        first_person = len(re.findall(r'(?:나는|내가|나를|나에게|내 )', no_dialogue))
+        third_person = len(re.findall(r'(?:그는|그녀는|그가|그를|시우는|시우가)', no_dialogue))
+
+        violations = []
+
+        if self.pov == "1인칭":
+            # 1인칭인데 3인칭 서술이 많으면 문제
+            if third_person > 5 and third_person > first_person * 0.3:
+                violations.append(
+                    f"1인칭 모드인데 3인칭 서술 {third_person}회 감지 "
+                    f"(1인칭 {first_person}회 대비 과다)"
+                )
+        elif self.pov == "3인칭":
+            # 3인칭인데 서술자 '나'가 많으면 문제
+            if first_person > 5 and first_person > third_person * 0.3:
+                violations.append(
+                    f"3인칭 모드인데 서술자 1인칭 {first_person}회 감지 "
+                    f"(3인칭 {third_person}회 대비 과다)"
+                )
+
+        if violations:
+            return {
+                "has_issue": True,
+                "category": "시점_일관성",
+                "severity": "WARNING",
+                "description": violations[0],
+                "first_person_count": first_person,
+                "third_person_count": third_person,
+                "expected_pov": self.pov
+            }
+
+        return {"has_issue": False}
 
     def get_summary(self, result: Dict) -> str:
         """검증 결과 요약 문자열 생성"""

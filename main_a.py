@@ -166,6 +166,8 @@ class SovereignApp:
         self._stage2_orch = Stage2Orchestrator(app=self)  # [V64.P3]
         self._stage4_orch = Stage4Orchestrator(app=self)  # [V64.P3]
         self.perf_timer = PerfTimer("Pipeline")  # [V65] 파이프라인 성능 프로파일링
+        self.world_state = None  # [V68] WorldStateManager (Stage 4에서 lazy init)
+        self.fact_ledger = None  # [V68] FactLedger 누적 팩트 원장 (Stage 4에서 lazy init)
 
         # [V66.1] B-1: narrative_summaries 캐시 (99회 DB 조회 → 1회)
         self._narrative_summaries_cache: Optional[str] = None
@@ -1355,7 +1357,6 @@ class SovereignApp:
                     settings_path = Path("config/settings.json")
 
                 if settings_path.exists():
-                    import json
                     with open(settings_path, 'r', encoding='utf-8') as f:
                         settings = json.load(f)
                 else:
@@ -1597,7 +1598,6 @@ class SovereignApp:
                     self.ui.log(f"   📊 [V55.3] Pass Rate Monitor 활성화")
 
                     # V60 품질 대시보드
-                    from pathlib import Path
                     self.quality_dashboard = QualityDashboard(Path(project_path))
                     self.ui.log(f"   📊 [V60] Quality Dashboard 활성화")
 
@@ -1973,11 +1973,21 @@ class SovereignApp:
         incarnation_types = {"1": "회귀자", "2": "빙의자", "3": "환생자", "4": "기타"}
         incarnation_type = incarnation_types.get(type_choice, "회귀자")
 
+        # 3) [V70] 서술 시점 (1인칭/3인칭/전지적)
+        print("   📖 서술 시점을 선택하세요:")
+        print("      [1] 1인칭 - 주인공 '나'의 시점 (몰입감↑, 정보 제한)")
+        print("      [2] 3인칭 - 주인공을 '그/그녀'로 지칭 (자유도↑)")
+        print("      [3] 전지적 - 모든 캐릭터 내면 접근 가능")
+        pov_choice = input("   선택 (기본: 2): ").strip()
+        pov_types = {"1": "1인칭", "2": "3인칭", "3": "전지적"}
+        selected_pov = pov_types.get(pov_choice, "3인칭")
+
         protagonist_config = {
             "world_origin": world_origin,
-            "incarnation_type": incarnation_type
+            "incarnation_type": incarnation_type,
+            "pov": selected_pov  # [V70] 서술 시점
         }
-        print(f"   ✅ 설정 완료: {world_origin} / {incarnation_type}")
+        print(f"   ✅ 설정 완료: {world_origin} / {incarnation_type} / {selected_pov}")
 
         # ============================================================
         # [TODO V60.88+] 주인공 유형에 따른 장르 가드 세분화
@@ -3131,11 +3141,45 @@ class SovereignApp:
             for arc in all_arcs:
                 self.state_tracker.extract_npc_deaths_from_arc(arc)
                 self.state_tracker.extract_skill_acquisitions_from_arc(arc)
-                self.state_tracker.extract_npc_info_from_arc(arc)
+                _g = self.selected_genre.get('type', '') if self.selected_genre else ''
+                self.state_tracker.extract_npc_info_from_arc(arc, genre=_g)  # [V66.2] F-1 장르 가드
                 self.state_tracker.extract_resolved_plots_from_arc(arc)  # [V62.7]
             if self.state_tracker.npc_registry:
                 dead_count = sum(1 for info in self.state_tracker.npc_registry.values() if info.get("status") == "dead")
                 self.ui.log(f"      👤 [V60.96] StateTracker 초기화: NPC {len(self.state_tracker.npc_registry)}명 (사망: {dead_count}명)")
+
+        # ═══════════════════════════════════════════════════════════════
+        # [V68] WorldStateManager 초기화
+        # ═══════════════════════════════════════════════════════════════
+        if not hasattr(self, 'world_state') or self.world_state is None:
+            try:
+                from modules.core.world_state import WorldStateManager
+                self.world_state = WorldStateManager(self.current_project.db)
+                _ws_ep = self.world_state.last_updated_ep
+                if _ws_ep > 0:
+                    self.ui.log(f"      🌍 [V68] WorldStateManager 로드 완료 (제{_ws_ep}화 기준)")
+                else:
+                    self.ui.log(f"      🌍 [V68] WorldStateManager 초기화 (신규)")
+            except Exception as _ws_err:
+                self.ui.log(f"      ⚠️ [V68] WorldStateManager 초기화 실패 (비차단): {str(_ws_err)[:60]}")
+                self.world_state = None
+
+        # ═══════════════════════════════════════════════════════════════
+        # [V68] FactLedger 초기화
+        # ═══════════════════════════════════════════════════════════════
+        if not hasattr(self, 'fact_ledger') or self.fact_ledger is None:
+            try:
+                from modules.core.fact_ledger import FactLedger
+                self.fact_ledger = FactLedger(self.current_project.db)
+                _fl_ep = self.fact_ledger.last_updated_ep
+                if _fl_ep > 0:
+                    _fl_stats = self.fact_ledger.get_stats()
+                    self.ui.log(f"      📋 [V68] 팩트 원장 로드 완료 (제{_fl_ep}화 기준, 인물 {_fl_stats.get('characters', 0)}명, 아이템 {_fl_stats.get('items', 0)}개)")
+                else:
+                    self.ui.log(f"      📋 [V68] 팩트 원장 초기화 (신규)")
+            except Exception as _fl_err:
+                self.ui.log(f"      ⚠️ [V68] 팩트 원장 초기화 실패 (비차단): {str(_fl_err)[:60]}")
+                self.fact_ledger = None
 
         # ═══════════════════════════════════════════════════════════════
         # 1. 목표 범위 설정
@@ -3171,9 +3215,10 @@ class SovereignApp:
         success_count = 0
         fail_count = 0
         prev_blueprints = []  # 연속성 검증용
+        # [V66.3] BlueprintMemory 전면 비활성화 — ChromaDB Rust segfault (crash_dump.log)
 
-        # 이전 Blueprint들 로드 (최근 5개)
-        for prev_ep in range(max(1, working_ep - 5), working_ep):
+        # [V67] 이전 Blueprint들 로드 (최근 30개 — Gemini 대용량 컨텍스트 활용)
+        for prev_ep in range(max(1, working_ep - 30), working_ep):
             prev_bp = self.current_project.get_blueprint(prev_ep)
             if prev_bp:
                 prev_blueprints.append(prev_bp)
@@ -3294,39 +3339,52 @@ class SovereignApp:
             # ───────────────────────────────────────────────────────────
             self.ui.log(f"\n   📐 제{working_ep}화 Blueprint 생성 중... (Arc {arc_no}, 주인공: {protagonist_name_for_stage3})")
 
+            # [V67.1] protagonist_config 추출 — Stage 3 Blueprint 생성에 전달
+            _bp_protagonist_config = {}
             try:
-                # [V63.3] BlueprintMemory 시맨틱 검색
+                _bp_bible_root = self.current_project.master_bible.get('MasterBible', self.current_project.master_bible)
+                _bp_protagonist_config = _bp_bible_root.get('protagonist_config', {})
+            except Exception:
+                pass
+
+            try:
+                # [V66.3] BlueprintMemory 비활성화 — ChromaDB Rust segfault (crash_dump.log 참조)
+                # search_related()와 index_blueprint() 모두 chromadb/api/rust.py에서 access violation 발생
+                # Python except로 C-level segfault 방어 불가 → 전면 비활성화
                 _bp_semantic_ctx = ""
-                try:
-                    if self.blueprint_memory and self.blueprint_memory.initialized and arc_data:
-                        _bp_scenario = arc_data.get('tactical_doc', '')[:300]
-                        if _bp_scenario:
-                            _bp_related = self.blueprint_memory.search_related(
-                                _bp_scenario, n_results=3, exclude_eps=[working_ep]
-                            )
-                            if _bp_related:
-                                _bp_semantic_ctx = self.blueprint_memory.generate_context_prompt(_bp_related)
-                except Exception:  # [V64.P4] OPTIONAL: blueprint vector search
-                    pass
 
                 # [V60.83] Stage 3 스피너
                 with StageSpinner(3, f"제{working_ep}화"):
                     # [V60.80] ToT 방식: 3전략 × 3시도 = 최대 9회 생성, Director 최대 3회 판정
                     # [V61] entity_registry 전달하여 NPC 명칭 일관성 검증
                     # [V60.96] state_tracker 전달하여 죽은 NPC 검증
+                    # [V67] 이전 원고 로드 (Blueprint 모순 방지용)
+                    _prev_ms_for_bp = []
+                    for _ms_ep in range(max(1, working_ep - 30), working_ep):
+                        _ms_text = self.current_project.db.get_manuscript(_ms_ep)
+                        if _ms_text:
+                            _prev_ms_for_bp.append(f"━━━ 제{_ms_ep}화 원고 ━━━\n{_ms_text}")
+                    _prev_ms_text_for_bp = "\n\n".join(_prev_ms_for_bp) if _prev_ms_for_bp else ""
+                    if len(_prev_ms_text_for_bp) > 200000:
+                        _prev_ms_text_for_bp = _prev_ms_text_for_bp[:200000] + "\n... (200K자 절삭)"
+                    if _prev_ms_for_bp:
+                        print(f"      📚 [V67] Blueprint용 이전 원고 {len(_prev_ms_for_bp)}개 로드 ({len(_prev_ms_text_for_bp):,}자)")
+
                     blueprint, pipeline_result = self.agents['three_phase_bp'].generate(
                         ep_num=working_ep,
                         arc_data=arc_data,
                         prev_blueprint=prev_blueprint,
-                        prev_blueprints=prev_blueprints[-5:] if prev_blueprints else None,
+                        prev_blueprints=prev_blueprints[-30:] if prev_blueprints else None,  # [V67] 5→30 확장
                         max_retries=4,  # [V62.4] 총 5번 시도 (0, 1, 2, 3, 4)
                         director=self.agents['director'],  # 디렉터주권주의 - 최종 판정
                         arc_idx=arc_idx,
                         entity_registry=entity_registry_for_stage3,  # [V61] Entity 일관성 검증
                         protagonist_name=protagonist_name_for_stage3,  # [V61] 주인공 이름 주입
+                        protagonist_config=_bp_protagonist_config,  # [V67.1] 주인공 설정 (incarnation_type 등)
                         state_tracker=getattr(self, 'state_tracker', None),  # [V60.96] 죽은 NPC 검증
                         db=self.current_project.db,  # [V61.6] 연속성 검사 활성화
-                        semantic_context=_bp_semantic_ctx  # [V63.3] 유사 블루프린트 참조
+                        semantic_context=_bp_semantic_ctx,  # [V63.3] 유사 블루프린트 참조
+                        prev_manuscripts_text=_prev_ms_text_for_bp  # [V67] 이전 원고 전문 전달
                     )
 
             except Exception as gen_err:
@@ -3358,17 +3416,14 @@ class SovereignApp:
                 self.current_project.save_episode_blueprint(working_ep, blueprint)
                 self._safe_commit()
 
-                # [V63.3] BlueprintMemory 인덱싱
-                try:
-                    if self.blueprint_memory and self.blueprint_memory.initialized:
-                        self.blueprint_memory.index_blueprint(working_ep, blueprint)
-                except Exception:  # [V64.P4] OPTIONAL: blueprint indexing
-                    pass
+                # [V66.3] BlueprintMemory 인덱싱 비활성화 — ChromaDB Rust segfault
+                # crash_dump.log: chromadb/api/rust.py _add() → access violation
+                # Python except로 C-level segfault 방어 불가
 
                 # prev_blueprints 업데이트
                 prev_blueprints.append(blueprint)
-                if len(prev_blueprints) > 5:
-                    prev_blueprints = prev_blueprints[-5:]
+                if len(prev_blueprints) > 30:  # [V67] 5→30 확장
+                    prev_blueprints = prev_blueprints[-30:]
 
                 # 메트릭 기록
                 self._audit_event("blueprint_success", f"ep_{working_ep}_blueprint_generated", {
@@ -3411,6 +3466,12 @@ class SovereignApp:
             stats = self.agents['three_phase_bp'].get_stats()
             self.ui.log(f"   통과율: {stats.get('pass_rate', 'N/A')}")
         self.ui.log(f"{'═' * 60}\n")
+
+        # [V66.3] BlueprintMemory 배치 인덱싱 — ChromaDB Rust segfault로 전면 비활성화
+        # 향후 ChromaDB 업그레이드 후 재활성화 가능
+        # if _blueprints_to_index and self.blueprint_memory and getattr(self.blueprint_memory, 'initialized', False):
+        #     for _bp_ep, _bp_data in _blueprints_to_index:
+        #         self.blueprint_memory.index_blueprint(_bp_ep, _bp_data)
 
         # Slack 알림
         if success_count > 0:
@@ -3779,8 +3840,10 @@ class SovereignApp:
             for f in self.current_project.paths.drafts.glob("*.txt"): f.unlink()
             
             # 벡터 DB 컬렉션 초기화
+            # [V66.3] ChromaDB 비활성화 시 스킵
             try:
-                self.memory.collection.delete(where={"episode": {"$gt": 0}})
+                if self.memory and hasattr(self.memory, 'collection') and self.memory.collection:
+                    self.memory.collection.delete(where={"episode": {"$gt": 0}})
             except Exception as e:
                 self.ui.log(f"⚠️ [VectorDB] 컬렉션 초기화 실패: {e}")
 
@@ -3937,8 +4000,35 @@ class SovereignApp:
             else:
                 continue  # [V63.3] 빈 구간 건너뛰기 (break→continue, 이후 요약도 로드)
 
-        if summaries:
-            result = "### 📚 장기 내러티브 요약 (과거 스토리)\n" + "\n\n".join(summaries)
+        # [V68] 계층적 요약 피라미드 — 상위 요약 선두 배치
+        _upper_parts = []
+        try:
+            _series = self.current_project.load_v20_anchor('series_summary')
+            if _series:
+                if isinstance(_series, dict):
+                    _series = _series.get('summary', '') or str(_series)
+                if _series and len(str(_series)) > 10:
+                    _upper_parts.append(f"[시리즈 전체 요약] {_series}")
+
+            # 볼륨 요약: 존재하는 모든 볼륨 로드 (최대 20개)
+            for _vi in range(1, 21):
+                _vs = self.current_project.load_v20_anchor(f'volume_summary_{_vi}')
+                if _vs:
+                    if isinstance(_vs, dict):
+                        _vs = _vs.get('summary', '') or str(_vs)
+                    if _vs and len(str(_vs)) > 10:
+                        _upper_parts.append(f"[볼륨 {_vi} 요약] {_vs}")
+                # 빈 볼륨이면 이후도 없을 가능성이 높지만 continue
+        except Exception:
+            pass  # [V68] OPTIONAL: 상위 요약 로드 실패 시 기존 요약만 사용
+
+        if summaries or _upper_parts:
+            _all_parts = []
+            if _upper_parts:
+                _all_parts.append("### 📚 계층적 요약 피라미드 (V68)\n" + "\n\n".join(_upper_parts))
+            if summaries:
+                _all_parts.append("### 📚 장기 내러티브 요약 (과거 스토리)\n" + "\n\n".join(summaries))
+            result = "\n\n".join(_all_parts)
         else:
             result = ""
 
@@ -3947,7 +4037,54 @@ class SovereignApp:
         return result
 
     def _stage_4_v2_chief_writer(self, limit_mode: bool = False) -> None:
-        """[V64.P3] Stage 4 V2 Chief Writer -> Stage4Orchestrator 위임"""
+        """[V64.P3] Stage 4 V2 Chief Writer -> Stage4Orchestrator 위임
+        [V69.1] Stage 4 진입 시 StateTracker/WorldState/FactLedger lazy init
+        """
+        # ═══════════════════════════════════════════════════════════════
+        # [V69.1] StateTracker 초기화 (Stage 3 없이 Stage 4 직행 시 필요)
+        # ═══════════════════════════════════════════════════════════════
+        if not hasattr(self, 'state_tracker') or self.state_tracker is None:
+            self.state_tracker = StateTracker(preset_registry=self.preset_registry, llm_client=self.sys.api_client)
+            all_arcs = self.current_project.db.load_anchor('arcs') or []
+            _g = self.selected_genre.get('type', '') if self.selected_genre else ''
+            for arc in all_arcs:
+                self.state_tracker.extract_npc_deaths_from_arc(arc)
+                self.state_tracker.extract_skill_acquisitions_from_arc(arc)
+                self.state_tracker.extract_npc_info_from_arc(arc, genre=_g)
+                self.state_tracker.extract_resolved_plots_from_arc(arc)
+            if self.state_tracker.npc_registry:
+                dead_count = sum(1 for info in self.state_tracker.npc_registry.values() if info.get("status") == "dead")
+                self.ui.log(f"      👤 [V69.1] StateTracker 초기화: NPC {len(self.state_tracker.npc_registry)}명 (사망: {dead_count}명)")
+
+        # [V69.1] WorldStateManager 초기화
+        if not hasattr(self, 'world_state') or self.world_state is None:
+            try:
+                from modules.core.world_state import WorldStateManager
+                self.world_state = WorldStateManager(self.current_project.db)
+                _ws_ep = self.world_state.last_updated_ep
+                if _ws_ep > 0:
+                    self.ui.log(f"      🌍 [V69.1] WorldStateManager 로드 완료 (제{_ws_ep}화 기준)")
+                else:
+                    self.ui.log(f"      🌍 [V69.1] WorldStateManager 초기화 (신규)")
+            except Exception as _ws_err:
+                self.ui.log(f"      ⚠️ [V69.1] WorldStateManager 초기화 실패 (비차단): {str(_ws_err)[:60]}")
+                self.world_state = None
+
+        # [V69.1] FactLedger 초기화
+        if not hasattr(self, 'fact_ledger') or self.fact_ledger is None:
+            try:
+                from modules.core.fact_ledger import FactLedger
+                self.fact_ledger = FactLedger(self.current_project.db)
+                _fl_ep = self.fact_ledger.last_updated_ep
+                if _fl_ep > 0:
+                    _fl_stats = self.fact_ledger.get_stats()
+                    self.ui.log(f"      📋 [V69.1] 팩트 원장 로드 완료 (제{_fl_ep}화 기준, 인물 {_fl_stats.get('characters', 0)}명, 아이템 {_fl_stats.get('items', 0)}개)")
+                else:
+                    self.ui.log(f"      📋 [V69.1] 팩트 원장 초기화 (신규)")
+            except Exception as _fl_err:
+                self.ui.log(f"      ⚠️ [V69.1] 팩트 원장 초기화 실패 (비차단): {str(_fl_err)[:60]}")
+                self.fact_ledger = None
+
         return self._stage4_orch.stage_4_v2_chief_writer(limit_mode=limit_mode)
 
 

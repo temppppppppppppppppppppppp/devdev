@@ -835,7 +835,8 @@ class PromptBuilder:
             'blueprint': blueprint or {},
             'blueprint_text': blueprint_text,
             'history': [],
-            'npc_profiles': {}
+            'npc_profiles': {},
+            'pov': ''  # [V70] 시점 정보
         }
 
         try:
@@ -867,6 +868,13 @@ class PromptBuilder:
                     npc_name = npc.get('name', '') or npc.get('Name', '')
                     if npc_name:
                         context['npc_profiles'][npc_name] = npc
+
+            # 5. [V70] POV 추출
+            try:
+                _bible_root = app.current_project.master_bible.get('MasterBible', {})
+                context['pov'] = _bible_root.get('protagonist_config', {}).get('pov', '')
+            except Exception:
+                pass
 
         except Exception as e:
             app.ui.log(f"⚠️ [Validation Context] 구성 중 오류 (비치명적): {e}")

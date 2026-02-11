@@ -137,7 +137,11 @@ class ValidationOrchestrator:
         self.constitution = self._load_constitution_cached(genre)
 
         # [V56] TIER 0.25: PRE-LLM (Python 기반 사전검증)
-        self.pre_llm = PreLLMValidator(genre=genre) if PRE_LLM_AVAILABLE else None
+        # [V70] pov 전달: context에서 추출
+        _pov = ""
+        if context and isinstance(context, dict):
+            _pov = context.get('pov', '')
+        self.pre_llm = PreLLMValidator(genre=genre, pov=_pov) if PRE_LLM_AVAILABLE else None
         self.use_pre_llm = config.get('use_pre_llm', True)  # 기본 활성화
 
         # [V47] TIER 0.5: CONTINUITY (에피소드 간 연속성)
@@ -701,7 +705,11 @@ class ValidationOrchestrator:
 
         # SCORING 세부 점수
         scoring_result = results.get('scoring_result', {})
+        if not isinstance(scoring_result, dict):
+            scoring_result = {}
         breakdown = scoring_result.get('breakdown', {})
+        if not isinstance(breakdown, dict):
+            breakdown = {}
 
         if breakdown:
             feedback_parts.append("\n### 세부 점수")
@@ -740,6 +748,8 @@ class ValidationOrchestrator:
     def _identify_strengths(self, breakdown: dict) -> List[str]:
         """강점 식별 (높은 점수 항목)"""
         strengths = []
+        if not isinstance(breakdown, dict):
+            return strengths
 
         for category, data in breakdown.items():
             if isinstance(data, dict):
@@ -756,6 +766,8 @@ class ValidationOrchestrator:
     def _identify_weaknesses(self, breakdown: dict) -> List[str]:
         """약점 식별 (낮은 점수 항목)"""
         weaknesses = []
+        if not isinstance(breakdown, dict):
+            return weaknesses
 
         for category, data in breakdown.items():
             if isinstance(data, dict):

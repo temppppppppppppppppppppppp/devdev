@@ -110,7 +110,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
         feedback: str = "",
         protagonist_name: str = "주인공",  # [V61] 주인공 이름 (필수!)
         protagonist_config: Dict = None,  # [V60.90] 주인공 설정 (world_origin, incarnation_type)
-        state_tracker=None  # [V60.95] StateTracker (고밀도 HUD 전달)
+        state_tracker=None,  # [V60.95] StateTracker (고밀도 HUD 전달)
+        prev_blueprints: Optional[List[Dict]] = None,  # [V67] 이전 Blueprint 리스트
+        prev_manuscripts_text: str = ""  # [V67] 이전 원고 전문 (모순 방지)
     ) -> Tuple[Optional[Dict], List[Dict]]:
         """
         앙상블 Blueprint 생성
@@ -124,6 +126,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
             protagonist_name: [V61] 주인공 이름 (환각 방지)
             protagonist_config: [V60.90] 주인공 설정 {world_origin, incarnation_type}
             state_tracker: [V60.95] StateTracker (고밀도 HUD - 17+ 필드, NPC 레지스트리)
+            prev_blueprints: [V67] 이전 Blueprint 리스트 (전문 전달)
+            prev_manuscripts_text: [V67] 이전 원고 전문 (모순 방지)
 
         Returns:
             (best_blueprint, all_candidates) - 최적 Blueprint와 모든 후보 리스트
@@ -142,8 +146,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
         # 제약 조건 문자열
         constraints_str = self._format_constraints(constraint_block)
 
-        # 이전 화 정보
-        prev_info = self._format_prev_info(prev_blueprint)
+        # [V67] 이전 화 정보 확장 (이전 Blueprint 전문 + 이전 원고 전문)
+        prev_info = self._format_prev_info_expanded(prev_blueprint, prev_blueprints, prev_manuscripts_text)
 
         # [V60.95] 고밀도 HUD 컨텍스트 구축
         hud_context = self._build_hud_context(state_tracker, ep_num)
@@ -300,6 +304,20 @@ class BlueprintEnsembleGenerator(BaseAgent):
             # [V60.90] protagonist_config 기반 지시사항 생성 (genre 파라미터 전달)
             protagonist_instructions = self._build_protagonist_instructions(protagonist_config, genre=genre)
 
+            # [V70] POV 제약 생성
+            _pov = protagonist_config.get('pov', '') if isinstance(protagonist_config, dict) else ''
+            _pov_constraint = ""
+            if _pov == "1인칭":
+                _pov_constraint = """### 🎯 [V70] 시점 제약: 1인칭
+⚠️ 이 작품은 1인칭 시점입니다. Blueprint 설계 시:
+- villain_scheme, omniscient_hint 프리셋 사용 금지 (주인공 부재 장면 불가)
+- 모든 씬에 주인공이 반드시 등장해야 함
+- 주인공이 모르는 정보는 씬에 직접 노출 금지 → 나중에 전해 듣거나 발견하는 구조로 설계"""
+            elif _pov == "3인칭":
+                _pov_constraint = """### 📖 [V70] 시점: 3인칭 제한적
+- villain_scheme, side_glimpse는 씬 전환(***) 후 짧게만 사용 (1-2문단)
+- omniscient_hint는 화당 1회 이내로 제한"""
+
             prompt = BLUEPRINT_GENERATION_PROMPT.format(
                 strategy_display=strategy["display"],
                 ep_num=ep_num,
@@ -309,7 +327,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 constraints=self._escape_braces(constraints_str),
                 strategy_directive=strategy["directive"] + extra_directive,
                 prev_info=self._escape_braces(prev_info),
-                hud_context=self._escape_braces(hud_context) if hud_context else "(상태 정보 없음)"  # [V60.95]
+                hud_context=self._escape_braces(hud_context) if hud_context else "(상태 정보 없음)",  # [V60.95]
+                pov_constraint=_pov_constraint  # [V70]
             )
 
             response = self.ask(prompt, temperature=0.7, thinking_level="medium")  # [V61.6] thinking 활성화
@@ -496,7 +515,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         return _build_hud_context_shared(state_tracker, ep_num, variant="blueprint")
 
     def _format_prev_info(self, prev_blueprint: Optional[Dict]) -> str:
-        """이전 Blueprint 정보 포맷팅"""
+        """이전 Blueprint 정보 포맷팅 (레거시 - 단일 Blueprint)"""
         if not prev_blueprint:
             return "(첫 에피소드 - 이전 화 없음)"
 
@@ -508,31 +527,31 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         ending_hook = prev_blueprint.get("ending_hook", "")
         if ending_hook:
-            lines.append(f"📌 엔딩 훅: {ending_hook}")
+            lines.append(f"엔딩 훅: {ending_hook}")
 
         end_location = prev_blueprint.get("end_location", "")
         if end_location:
-            lines.append(f"📍 종료 위치: {end_location}")
+            lines.append(f"종료 위치: {end_location}")
 
         # [V61.5] 시간 흐름 정보 추가
         time_flow = prev_blueprint.get("time_flow", "")
         if time_flow:
-            lines.append(f"🕐 시간 흐름: {time_flow}")
+            lines.append(f"시간 흐름: {time_flow}")
 
         # [V61.5] ending_state 필드 (있으면)
         ending_state = prev_blueprint.get("ending_state", {})
         if ending_state:
             if ending_state.get("location"):
-                lines.append(f"📍 종료 위치 (상세): {ending_state['location']}")
+                lines.append(f"종료 위치 (상세): {ending_state['location']}")
             if ending_state.get("timeline"):
                 tl = ending_state["timeline"]
                 if isinstance(tl, dict):
                     tl_str = ", ".join(f"{k}:{v}" for k, v in tl.items())
                 else:
                     tl_str = str(tl)
-                lines.append(f"📅 종료 시점: {tl_str}")
+                lines.append(f"종료 시점: {tl_str}")
             if ending_state.get("protagonist_status"):
-                lines.append(f"🧑 주인공 상태: {ending_state['protagonist_status']}")
+                lines.append(f"주인공 상태: {ending_state['protagonist_status']}")
 
         protag_state = prev_blueprint.get("protagonist_state", {})
         if protag_state:
@@ -540,16 +559,84 @@ class BlueprintEnsembleGenerator(BaseAgent):
             injuries = protag_state.get("injuries", "")
             equipment = protag_state.get("equipment", [])
             if mood:
-                lines.append(f"😊 감정 상태: {mood}")
+                lines.append(f"감정 상태: {mood}")
             if injuries and injuries != "없음":
-                lines.append(f"🩹 부상: {injuries}")
+                lines.append(f"부상: {injuries}")
             if equipment:
                 equip_str = ", ".join(equipment[:5]) if isinstance(equipment, list) else str(equipment)
-                lines.append(f"🎒 소지품: {equip_str}")
+                lines.append(f"소지품: {equip_str}")
 
         lines.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
         return "\n".join(lines) if len(lines) > 3 else "(이전 화 정보 없음)"
+
+    def _format_prev_info_expanded(
+        self,
+        prev_blueprint: Optional[Dict],
+        prev_blueprints: Optional[List[Dict]] = None,
+        prev_manuscripts_text: str = ""
+    ) -> str:
+        """[V67] 이전 Blueprint/원고 확장 정보 포맷팅 (Gemini 대용량 컨텍스트 활용)"""
+        sections = []
+
+        # ── 직전 Blueprint 상세 (필수 계승) ──
+        direct_prev = self._format_prev_info(prev_blueprint)
+        sections.append(direct_prev)
+
+        # ── [V67] 이전 Blueprint 전문 (최대 30개) ──
+        if prev_blueprints and len(prev_blueprints) > 0:
+            bp_lines = []
+            bp_lines.append(f"\n[V67] ═══ 이전 Blueprint 전문 ({len(prev_blueprints)}개) ═══")
+            bp_lines.append("이전 에피소드의 설계도입니다. 모순되는 내용을 절대 생성하지 마세요.")
+            for bp in prev_blueprints:
+                bp_ep = bp.get("ep_num", "?")
+                bp_title = bp.get("title", "")
+                bp_scenario = bp.get("integrated_scenario", "")
+                bp_end_loc = bp.get("end_location", "")
+                bp_hook = bp.get("ending_hook", "")
+                bp_lines.append(f"\n━━━ 제{bp_ep}화 '{bp_title}' ━━━")
+                if bp_scenario:
+                    bp_lines.append(f"[시나리오] {bp_scenario}")
+                if bp_end_loc:
+                    bp_lines.append(f"[종료위치] {bp_end_loc}")
+                if bp_hook:
+                    bp_lines.append(f"[엔딩훅] {bp_hook}")
+                # 씬 구성 요약
+                scenes = bp.get("scene_breakdown", {})
+                if isinstance(scenes, dict):
+                    for sk, sv in scenes.items():
+                        if isinstance(sv, dict):
+                            s_title = sv.get("title", "")
+                            s_chars = sv.get("characters", [])
+                            s_events = sv.get("key_events", [])
+                            chars_str = ", ".join(s_chars[:5]) if s_chars else ""
+                            events_str = "; ".join(s_events[:3]) if s_events else ""
+                            bp_lines.append(f"  [{sk}] {s_title} | 등장: {chars_str} | 이벤트: {events_str}")
+
+            bp_full = "\n".join(bp_lines)
+            # 100K자 상한 (원고와 합산 200K 이내)
+            if len(bp_full) > 100000:
+                bp_full = bp_full[:100000] + "\n... (100K자 절삭)"
+            sections.append(bp_full)
+
+        # ── [V67] 이전 원고 전문 ──
+        if prev_manuscripts_text:
+            ms_section = (
+                f"\n[V67] ═══ 이전 원고 전문 ═══\n"
+                f"아래는 이전 에피소드의 최종 원고입니다. 이 내용과 모순되는 Blueprint를 절대 생성하지 마세요.\n"
+                f"특히: 사망한 캐릭터 재등장, 이미 일어난 이벤트 반복, 위치/시간 불연속에 주의하세요.\n\n"
+                f"{prev_manuscripts_text}"
+            )
+            # 100K자 상한 (Blueprint와 합산 200K 이내)
+            if len(ms_section) > 100000:
+                ms_section = ms_section[:100000] + "\n... (100K자 절삭)"
+            sections.append(ms_section)
+
+        result = "\n\n".join(sections)
+        total_len = len(result)
+        if total_len > 200000:
+            result = result[:200000] + "\n... (200K자 절삭)"
+        return result
 
 
 def create_blueprint_ensemble(context, client, model_tier: str = "gemini-3-pro-preview"):
