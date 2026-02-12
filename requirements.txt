@@ -1,0 +1,30 @@
+# ===========================
+# 글도비 (GlDobi) 프로젝트 의존성
+# ===========================
+
+# === Core (필수) ===
+google-generativeai>=0.8.0      # Gemini API
+rich>=13.0                       # 콘솔 UI (터미널 출력)
+python-dotenv>=1.0               # .env 환경변수 로드
+
+# === Data Processing ===
+numpy>=1.26                      # 벡터 연산 (cosine similarity 등)
+requests>=2.31                   # HTTP 요청 (Slack 알림 등)
+beautifulsoup4>=4.12             # HTML 파싱
+
+# === Optional: 벡터 DB (현재 비활성화) ===
+# chromadb>=0.4                  # ❌ Windows Rust segfault → 비활성화
+# sqlite-vec                     # 📌 Phase 2.5 교체 후보
+
+# === Optional: 브라우저 자동화 ===
+# selenium>=4.15                 # Gemini UI 자동화 (선택)
+# webdriver-manager>=4.0         # ChromeDriver 관리
+
+# === Optional: 대시보드 ===
+# streamlit>=1.30                # 대시보드 UI (arc_dashboard 등)
+# pandas>=2.1                    # 데이터 분석
+# plotly>=5.18                   # 차트
+
+# === Dev ===
+pytest>=8.0                      # 테스트 프레임워크
+nest-asyncio>=1.5                # 중첩 asyncio 루프 허용

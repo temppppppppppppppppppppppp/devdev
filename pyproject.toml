@@ -1,0 +1,31 @@
+[project]
+name = "gldoubi"
+version = "2.0"
+requires-python = ">=3.11"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # pyflakes (미사용 import, 미사용 변수 등)
+    "I",     # isort (import 정렬)
+    "UP",    # pyupgrade (구버전 문법 → 신버전)
+]
+ignore = [
+    "E501",  # line too long (line-length로 대체)
+    "E722",  # bare except (기존 코드에 많음, Phase 3에서 처리)
+    "F841",  # 미사용 변수 (기존 코드에 많음)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]  # __init__.py의 미사용 import는 의도적
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
