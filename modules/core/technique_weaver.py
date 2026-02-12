@@ -1,7 +1,7 @@
 class TechniqueWeaver:
     """[V24 Sovereign] 무도십이류(武道十二流)의 물리적 충돌과 인과를 계산하는 범용 엔진"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         # 무도십이류의 절대적 물리 속성 정의
         self.streams_physics = {
             "강(强)": {"vector": "직선/폭발", "sound": "파성(破聲)", "impact": "분쇄/파편"},
@@ -19,7 +19,7 @@ class TechniqueWeaver:
         }
 
     # [수정 완료] main.py의 호출 규격에 맞춰 함수명 변경 (resolve_collision -> weave_v20_combat)
-    def weave_v20_combat(self, mc_tech, enemy_style): #
+    def weave_v20_combat(self, mc_tech: str, enemy_style: str) -> dict: #
         """[V24] 두 무공의 성질이 충돌했을 때의 물리적 상호작용 계산"""
         
         # 공격자(주인공/조연)와 방어자 성질에 따른 물리 속성 매칭

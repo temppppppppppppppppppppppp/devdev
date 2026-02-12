@@ -506,7 +506,7 @@ class PresetRegistry:
             if npc_info and field_name in npc_info:
                 template[field_name] = npc_info[field_name]
             else:
-                template[field_name] = field_def.default
+                template[field_name] = copy.deepcopy(field_def.default)  # [V70] mutable default 공유 방지
 
         return template
 

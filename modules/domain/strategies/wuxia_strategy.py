@@ -4,7 +4,7 @@ class WuxiaStrategy(BaseStrategy):
     @property
     def genre_name(self): return "WUXIA"
 
-    def get_system_prompt(self):
+    def get_system_prompt(self) -> str:
         genre_rules = self.law.get('wuxia', {})
         
         # 1. 컨텍스트 및 선택된 톤(Tone) 인출

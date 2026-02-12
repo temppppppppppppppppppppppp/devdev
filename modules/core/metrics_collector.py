@@ -103,6 +103,16 @@ class MetricsCollector:
                     cls._instance = super().__new__(cls)
         return cls._instance
 
+    @classmethod
+    def reset(cls, metrics_dir: Optional[Path] = None):
+        """[V70] 싱글톤 리셋 (프로젝트 변경 시 호출)"""
+        global _collector
+        with cls._lock:
+            cls._instance = None
+            _collector = None
+        if metrics_dir:
+            return cls(metrics_dir)
+
     def __init__(self, metrics_dir: Optional[Path] = None):
         """
         메트릭 수집기 초기화
@@ -111,6 +121,10 @@ class MetricsCollector:
             metrics_dir: 메트릭 저장 디렉토리 (기본: logs/metrics/)
         """
         if hasattr(self, '_initialized') and self._initialized:
+            # [V70] 새 metrics_dir이 전달되면 갱신
+            if metrics_dir and self.metrics_dir != metrics_dir:
+                self.metrics_dir = metrics_dir
+                self.metrics_dir.mkdir(parents=True, exist_ok=True)
             return
 
         self._initialized = True
@@ -416,11 +430,11 @@ class MetricsCollector:
 _collector: Optional[MetricsCollector] = None
 
 
-def get_metrics_collector() -> MetricsCollector:
-    """전역 메트릭 수집기 반환"""
+def get_metrics_collector(metrics_dir: Optional[Path] = None) -> MetricsCollector:
+    """전역 메트릭 수집기 반환 [V70] metrics_dir 파라미터 추가"""
     global _collector
     if _collector is None:
-        _collector = MetricsCollector()
+        _collector = MetricsCollector(metrics_dir)
     return _collector
 
 

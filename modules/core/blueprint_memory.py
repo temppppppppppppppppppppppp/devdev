@@ -11,6 +11,7 @@ V54.5 신규 기능:
 """
 
 import os
+import logging
 import json
 from typing import List, Dict, Optional
 from pathlib import Path
@@ -26,7 +27,7 @@ class BlueprintMemory:
         related = memory.search_related(query="주인공이 대도를 획득", n_results=5)
     """
 
-    def __init__(self, project_context):
+    def __init__(self, project_context) -> None:
         self.context = project_context
         self.collection = None
         self.initialized = False
@@ -37,7 +38,7 @@ class BlueprintMemory:
 
             api_key = os.getenv("GOOGLE_API_KEY")
             if not api_key:
-                print("      ⚠️ [BlueprintMemory] API 키 없음, 비활성화")
+                logging.info("⚠️ [BlueprintMemory] API 키 없음, 비활성화")
                 return
 
             # ChromaDB 클라이언트 초기화
@@ -49,7 +50,10 @@ class BlueprintMemory:
 
             # Blueprint 전용 컬렉션
             project_name = self.context.paths.root.name
-            collection_name = f"{project_name}_blueprints"
+            # [V70] ChromaDB는 ASCII 영숫자+_-만 허용, 한글 등은 제거
+            import re as _re
+            safe_name = _re.sub(r'[^a-zA-Z0-9_-]', '', project_name) or 'project'
+            collection_name = f"{safe_name}_blueprints"
 
             self.collection = self.client.get_or_create_collection(
                 name=collection_name[:63],  # ChromaDB 이름 길이 제한
@@ -58,12 +62,12 @@ class BlueprintMemory:
             )
 
             self.initialized = True
-            print(f"      📚 [BlueprintMemory] 초기화 완료 (컬렉션: {collection_name[:30]}...)")
+            logging.info(f"📚 [BlueprintMemory] 초기화 완료 (컬렉션: {collection_name[:30]}...)")
 
         except ImportError as e:
-            print(f"      ⚠️ [BlueprintMemory] 의존성 없음: {e}")
+            logging.info(f"⚠️ [BlueprintMemory] 의존성 없음: {e}")
         except Exception as e:
-            print(f"      ⚠️ [BlueprintMemory] 초기화 실패: {e}")
+            logging.warning(f"⚠️ [BlueprintMemory] 초기화 실패: {e}")
 
     def index_blueprint(self, ep_num: int, blueprint_data: dict) -> bool:
         """
@@ -130,7 +134,7 @@ class BlueprintMemory:
             return True
 
         except Exception as e:
-            print(f"      ⚠️ [BlueprintMemory] 인덱싱 실패 (EP{ep_num}): {e}")
+            logging.warning(f"⚠️ [BlueprintMemory] 인덱싱 실패 (EP{ep_num}): {e}")
             return False
 
     def search_related(self, query: str, n_results: int = 5,
@@ -185,7 +189,7 @@ class BlueprintMemory:
             return related
 
         except Exception as e:
-            print(f"      ⚠️ [BlueprintMemory] 검색 실패: {e}")
+            logging.warning(f"⚠️ [BlueprintMemory] 검색 실패: {e}")
             return []
 
     def search_by_item(self, item_name: str, n_results: int = 10) -> List[Dict]:
@@ -240,7 +244,7 @@ class BlueprintMemory:
             )
 
         except Exception as e:
-            print(f"      ⚠️ [BlueprintMemory] 플롯 스레드 검색 실패: {e}")
+            logging.warning(f"⚠️ [BlueprintMemory] 플롯 스레드 검색 실패: {e}")
             return []
 
     def generate_context_prompt(self, related_bps: List[Dict]) -> str:
@@ -316,11 +320,11 @@ class BlueprintMemory:
                 except (json.JSONDecodeError, ValueError, TypeError, KeyError):  # [V64.P4] individual blueprint index failure
                     continue
 
-            print(f"      📚 [BlueprintMemory] {indexed}개 Blueprint 인덱싱 완료")
+            logging.info(f"📚 [BlueprintMemory] {indexed}개 Blueprint 인덱싱 완료")
             return indexed
 
         except Exception as e:
-            print(f"      ⚠️ [BlueprintMemory] 전체 인덱싱 실패: {e}")
+            logging.warning(f"⚠️ [BlueprintMemory] 전체 인덱싱 실패: {e}")
             return 0
 
 

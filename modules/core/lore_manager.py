@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 from functools import lru_cache
 from typing import List, Dict, Optional, Set
@@ -22,12 +23,13 @@ class LoreManager:
     MAX_CONTEXT_LENGTH = 2000  # 검색에 사용할 최대 컨텍스트 길이
     MAX_LORE_RESULTS = 10  # 최대 반환 로어 수
 
-    def __init__(self, context):
+    def __init__(self, context) -> None:
         self.context = context
         self.db = context.db
 
         # 페르소나/말투는 성경 JSON의 정수를 그대로 상속
-        bible = self.context.master_bible.get('MasterBible', self.context.master_bible)
+        _mb = self.context.master_bible if hasattr(self.context, 'master_bible') and self.context.master_bible else {}  # [V70] None 방어
+        bible = _mb.get('MasterBible', _mb)
         self.assets = bible.get('AssetLibrary', bible.get('asset_library', {}))
         self.persona_desc = self.assets.get('Persona', "")
         self.speech_style = self.assets.get('SpeechStyle', self.assets.get('persona', {}))
@@ -38,7 +40,7 @@ class LoreManager:
         self._all_lore_cache: Optional[List[dict]] = None
         self._lore_index: Dict[str, dict] = {}  # item_name -> lore 매핑
 
-    def _invalidate_cache_if_stale(self):
+    def _invalidate_cache_if_stale(self) -> None:
         """[V44] TTL 기반 캐시 무효화 (점진적 노화)"""
         cache_age = time.time() - self._cache_timestamp
 
@@ -55,10 +57,10 @@ class LoreManager:
             # 첫 경고 후 60초마다 로깅 (스팸 방지)
             if not hasattr(self, '_last_cache_warning') or \
                time.time() - self._last_cache_warning > 60:
-                print(f"   ⏰ [LoreManager] 캐시 노화 중 ({int(cache_age)}초 경과, {int(self.CACHE_HARD_TTL_SECONDS - cache_age)}초 후 갱신)")
+                logging.info(f"⏰ [LoreManager] 캐시 노화 중 ({int(cache_age)}초 경과, {int(self.CACHE_HARD_TTL_SECONDS - cache_age)}초 후 갱신)")
                 self._last_cache_warning = time.time()
 
-    def refresh_cache(self):
+    def refresh_cache(self) -> bool:
         """[V44] 수동 캐시 갱신 (프로액티브 리프레시용)"""
         self._lore_cache.clear()
         self._all_lore_cache = None
@@ -67,7 +69,7 @@ class LoreManager:
         self._build_lore_index()
         return True
 
-    def _build_lore_index(self):
+    def _build_lore_index(self) -> None:
         """[V44] 로어 인덱스 구축 (O(1) 조회용)"""
         if self._lore_index:
             return
@@ -106,7 +108,7 @@ class LoreManager:
 
         return korean_words | english_words
 
-    def get_v20_fact_sheet(self, context_text):
+    def get_v20_fact_sheet(self, context_text) -> str:
         """
         [V44] 맥락 매칭 로어 + 상세 페르소나 가이드 결합 (최적화)
 
@@ -123,9 +125,15 @@ class LoreManager:
 
         # 1. 페르소나 지침 복구
         if self.persona_desc or self.speech_style:
-            tone = self.speech_style.get('tone', '격조 있는 무인')
-            keywords = self.speech_style.get('Keywords', self.speech_style.get('words', []))
-            info.append(f"[페르소나 가이드]\n- 성격: {self.persona_desc}\n- 말투 톤: {tone}\n- 핵심 키워드: {', '.join(keywords)}")
+            if isinstance(self.speech_style, dict):  # [V70] string 타입 방어
+                tone = self.speech_style.get('tone', '격조 있는 무인')
+                keywords = self.speech_style.get('Keywords', self.speech_style.get('words', []))
+                if isinstance(keywords, list):
+                    info.append(f"[페르소나 가이드]\n- 성격: {self.persona_desc}\n- 말투 톤: {tone}\n- 핵심 키워드: {', '.join(keywords)}")
+                else:
+                    info.append(f"[페르소나 가이드]\n- 성격: {self.persona_desc}\n- 말투 톤: {tone}")
+            elif self.persona_desc:
+                info.append(f"[페르소나 가이드]\n- 성격: {self.persona_desc}")
 
         # 2. [V44] 최적화된 로어 인출
         matched_lore = self.get_lore_by_keywords(context_text)
@@ -190,7 +198,7 @@ class LoreManager:
             # DB에서 LIKE 쿼리로 직접 필터링
             query = """
                 SELECT category, item, description
-                FROM lore_items
+                FROM encyclopedia  -- [V70] 올바른 테이블명 수정
                 WHERE item LIKE ? OR description LIKE ?
                 LIMIT ?
             """
@@ -210,7 +218,7 @@ class LoreManager:
             # 테이블이 없거나 쿼리 실패 시 폴백
             return self.get_lore_by_keywords(keyword)
 
-    def update_v20_assets(self, new_lore_data):
+    def update_v20_assets(self, new_lore_data) -> None:
         """
         [V44] 정규화 및 길이 비교 기반 DB 일괄 박제
 
@@ -248,9 +256,9 @@ class LoreManager:
             self.db.update_lore_items_batch(lore_batch)
             # 캐시 재무효화 (DB 업데이트 후)
             self._invalidate_cache()
-            print(f"      [Librarian] 설정 동기화 완료: 신규 {added_cnt}건 / 보강 {updated_cnt}건")
+            logging.info(f"[Librarian] 설정 동기화 완료: 신규 {added_cnt}건 / 보강 {updated_cnt}건")
 
-    def _invalidate_cache(self):
+    def _invalidate_cache(self) -> None:
         """[V44] 캐시 강제 무효화"""
         self._lore_cache.clear()
         self._all_lore_cache = None
@@ -266,10 +274,14 @@ class LoreManager:
             "cache_age_seconds": time.time() - self._cache_timestamp if self._cache_timestamp > 0 else 0
         }
 
-    def get_persona_prompt(self):
+    def get_persona_prompt(self) -> str:
         """말투 예시(Suffix) 인출"""
+        if not isinstance(self.speech_style, dict):  # [V70] string 타입 방어
+            return ""
         suffix = self.speech_style.get('Suffix', self.speech_style.get('suffix', []))
-        return f"[🗣️ 말투 예시]: " + " / ".join(suffix) if suffix else ""
+        if isinstance(suffix, list) and suffix:
+            return f"[🗣️ 말투 예시]: " + " / ".join(suffix)
+        return ""
 
     # =================================================================
     # [V45] 아이템 자동 동기화 시스템
@@ -324,7 +336,7 @@ class LoreManager:
             self.db.update_lore_item('item', item_name.strip(), description)
             result['added'].append(item_name)
 
-            print(f"      📦 [Item Sync] 새 아이템 등록: '{item_name}' (Ep.{ep_num})")
+            logging.info(f"📦 [Item Sync] 새 아이템 등록: '{item_name}' (Ep.{ep_num})")
 
         # 캐시 무효화
         if result['added']:

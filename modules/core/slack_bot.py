@@ -1,4 +1,5 @@
 import os
+import logging
 import requests
 import json
 from datetime import datetime
@@ -8,11 +9,11 @@ class SlackNotifier:
     [V40] Slack 알림 전송 유틸리티
     - .env파일의 SLACK_WEBHOOK_URL을 사용하여 메시지 전송
     """
-    def __init__(self):
-        # .env 로드는 main_a.py 등 상위에서 이미 되었다고 가정하거나, 여기서 다시 로드
-        self.webhook_url = os.getenv("SLACK_WEBHOOK_URL")
+    def __init__(self) -> None:
+        # [V70] lazy 로딩: send_notification에서 읽음 (import 시점 load_dotenv 미호출 대응)
+        self.webhook_url = None
         
-    def send_notification(self, title, message, color="#36a64f", key_metrics=None):
+    def send_notification(self, title: str, message: str, color: str = "#36a64f", key_metrics: dict = None) -> None:
         """
         슬랙으로 리치 메시지(Attachment) 전송
         Args:
@@ -21,8 +22,10 @@ class SlackNotifier:
             color: 상태 컬러 (성공: #36a64f, 에러: #ff0000, 경고: #ffcc00)
             key_metrics: 핵심 지표 딕셔너리 (예: {"분량": "5,000자", "소요시간": "3분"})
         """
+        if self.webhook_url is None:  # [V70] lazy 로딩
+            self.webhook_url = os.getenv("SLACK_WEBHOOK_URL", "")
         if not self.webhook_url:
-            print("⚠️ [System] 슬랙 웹훅 URL이 설정되지 않아 알림을 건너뜁니다.")
+            logging.info("⚠️ [System] 슬랙 웹훅 URL이 설정되지 않아 알림을 건너뜁니다.")
             return
 
         payload = {
@@ -49,16 +52,17 @@ class SlackNotifier:
 
         try:
             response = requests.post(
-                self.webhook_url, 
+                self.webhook_url,
                 data=json.dumps(payload),
-                headers={'Content-Type': 'application/json'}
+                headers={'Content-Type': 'application/json'},
+                timeout=10  # [V70] 무한 대기 방지
             )
             if response.status_code != 200:
-                print(f"⚠️ [Slack Error] 전송 실패 ({response.status_code}): {response.text}")
+                logging.warning(f"⚠️ [Slack Error] 전송 실패 ({response.status_code}): {response.text}")
             else:
-                print("📨 [Slack] 알림이 전송되었습니다.")
+                logging.info("📨 [Slack] 알림이 전송되었습니다.")
         except Exception as e:
-            print(f"⚠️ [Slack Error] 연결 실패: {e}")
+            logging.warning(f"⚠️ [Slack Error] 연결 실패: {e}")
 
 # 전역 인스턴스 (필요시 사용)
 notifier = SlackNotifier()

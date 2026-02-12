@@ -1,7 +1,7 @@
 class JianghuLogic:
     """[V24 Sovereign] 고정된 지도를 넘어 강호 전역을 무대로 쓰는 지리 전략 엔진"""
     
-    def __init__(self, context):
+    def __init__(self, context) -> None:
         """[수정] 프로젝트 컨텍스트를 주입받도록 생성자 추가"""
         self.context = context
 
@@ -11,7 +11,7 @@ class JianghuLogic:
         "북경": (200, 600), "사천": (-600, -400)
     }
 
-    def calculate_travel_v20(self, departure, arrival):
+    def calculate_travel_v20(self, departure: str, arrival: str) -> dict:
         """[V24] 거리는 AI가 추론하되, 시스템은 '여정의 무게'만 설정함"""
         dep_pos = self.ANCHORS.get(departure, (0, 0))
         arr_pos = self.ANCHORS.get(arrival, (100, 100)) 

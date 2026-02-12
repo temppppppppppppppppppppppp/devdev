@@ -14,6 +14,7 @@ Stage 2 진짜 주인: FourPhaseArcGenerator (four_phase_arc_generator.py)
 """
 
 import json
+import logging
 import re
 import os
 from .base_agent import BaseAgent
@@ -94,7 +95,7 @@ class Analyst(BaseAgent):
                 treatment_data = json.loads(treatment_raw_part)
             except (json.JSONDecodeError, ValueError) as e:
                 # [V44] JSON 파싱 실패 경고 추가
-                print(f"      ⚠️ [Analyst] treatment 데이터 JSON 파싱 실패: {str(e)[:50]}")
+                logging.warning(f"⚠️ [Analyst] treatment 데이터 JSON 파싱 실패: {str(e)[:50]}")
                 treatment_data = []  # 변환 실패 시 빈 리스트
         else:
             treatment_data = treatment_raw_part
@@ -118,7 +119,7 @@ class Analyst(BaseAgent):
         response = self.ask(prompt, temperature=0.7)
         # [V60.2] DEBUG → 조건부 로깅 (프로덕션에서는 비활성화)
         if os.getenv("DEBUG_MODE", "").lower() == "true":
-            print(f"\n--- [Vol {vol_no} AI Raw Response] ---\n{response[:500]}...\n")
+            logging.info(f"\n--- [Vol {vol_no} AI Raw Response] ---\n{response[:500]}...\n")
         
         # 3. 🚨 결과물 정제 및 안전장치 가동
         result = self._extract_json_robust(response)
@@ -130,7 +131,7 @@ class Analyst(BaseAgent):
         # [⬇️ 추가할 코드: 필수 키 누락 방지 가드]
         # AI가 cider_score를 누락했을 경우 기본값 0 또는 50을 할당하여 KeyError 방지
         if 'cider_score' not in result:
-            print(f"      ⚠️ [Auto-Repair] Vol {vol_no}: 누락된 'cider_score'를 기본값(0)으로 보정했습니다.")
+            logging.info(f"⚠️ [Auto-Repair] Vol {vol_no}: 누락된 'cider_score'를 기본값(0)으로 보정했습니다.")
             result['cider_score'] = 0 
             
         # vol_no가 누락되었을 경우를 대비한 보정
@@ -396,13 +397,13 @@ class Analyst(BaseAgent):
         if final_location:
             existing_location = joint_docs.get('final_location', '')
             if not existing_location or existing_location != final_location:
-                print(f"      🔧 [V60] joint_docs 위치 보정: '{existing_location}' → '{final_location}'")
+                logging.info(f"🔧 [V60] joint_docs 위치 보정: '{existing_location}' → '{final_location}'")
                 joint_docs['final_location'] = final_location
 
         if final_inventory:
             existing_inventory = joint_docs.get('physical_inventory', [])
             if not existing_inventory:
-                print(f"      🔧 [V60] joint_docs 소지품 보정: {final_inventory}")
+                logging.info(f"🔧 [V60] joint_docs 소지품 보정: {final_inventory}")
                 joint_docs['physical_inventory'] = final_inventory
 
         return arc_data
@@ -565,7 +566,7 @@ class Analyst(BaseAgent):
             content_len = len(" ".join(content_parts))
 
             if content_len < target_ep_count * min_content_per_ep:
-                print(f"      ⚠️ [V60.31] Block 빈약 경고: {content_len}자 / {target_ep_count}화 = 화당 {content_len//target_ep_count}자 (권장 200자+)")
+                logging.info(f"⚠️ [V60.31] Block 빈약 경고: {content_len}자 / {target_ep_count}화 = 화당 {content_len//target_ep_count}자 (권장 200자+)")
 
         # 3. [V43] 장르별 라이브러리 로드 - 장르에 맞는 서사 패턴 사용
         current_genre = self._get_current_genre()
@@ -579,14 +580,14 @@ class Analyst(BaseAgent):
                 ending_lib_full = json.dumps(lib_data.get("ending_patterns", {}), ensure_ascii=False)
                 trans_lib_full = json.dumps(lib_data.get("transition_patterns", {}), ensure_ascii=False)
                 archetype_lib_full = dev_lib_full
-                print(f"      📚 [Analyst] {current_genre} 장르 라이브러리 로드 완료")
+                logging.info(f"📚 [Analyst] {current_genre} 장르 라이브러리 로드 완료")
             except Exception as e:
-                print(f"      🚨 [Analyst] 라이브러리 파일 파싱 실패: {e}")
+                logging.warning(f"🚨 [Analyst] 라이브러리 파일 파싱 실패: {e}")
                 # [V47 Fix] 빈 dict를 JSON 직렬화 - 이중 이스케이프 방지
                 empty_json = json.dumps({}, ensure_ascii=False)
                 intro_lib_full = dev_lib_full = ending_lib_full = trans_lib_full = archetype_lib_full = empty_json
         else:
-            print(f"      ⚠️ [Analyst] {current_genre} 라이브러리 없음, 기본 사용")
+            logging.info(f"⚠️ [Analyst] {current_genre} 라이브러리 없음, 기본 사용")
             # 폴백: 기본 라이브러리 시도 [V45 Fix] 루트 config 경로 사용
             from pathlib import Path
             root_config = Path(__file__).parent.parent.parent.parent / "config"
@@ -599,10 +600,10 @@ class Analyst(BaseAgent):
                     ending_lib_full = json.dumps(lib_data.get("ending_patterns", {}), ensure_ascii=False)
                     trans_lib_full = json.dumps(lib_data.get("transition_patterns", {}), ensure_ascii=False)
                     archetype_lib_full = dev_lib_full
-                    print(f"      📚 [Analyst] 기본 라이브러리 로드 완료")
+                    logging.info(f"📚 [Analyst] 기본 라이브러리 로드 완료")
                 except (json.JSONDecodeError, KeyError, TypeError) as e:
                     # [V44] JSON 파싱 실패 경고 추가
-                    print(f"      🚨 [Analyst] 기본 라이브러리 파싱 실패: {str(e)[:50]}")
+                    logging.warning(f"🚨 [Analyst] 기본 라이브러리 파싱 실패: {str(e)[:50]}")
                     # [V47 Fix] 빈 dict를 JSON 직렬화 - 이중 이스케이프 방지
                     empty_json = json.dumps({}, ensure_ascii=False)
                     intro_lib_full = dev_lib_full = ending_lib_full = trans_lib_full = archetype_lib_full = empty_json
@@ -624,7 +625,7 @@ class Analyst(BaseAgent):
                     if name and name != '주인공':
                         final_protagonist_name = name
             except Exception as e:
-                print(f"      ⚠️ [Analyst] 주인공 이름 추출 실패, 기본값 사용: {e}")
+                logging.warning(f"⚠️ [Analyst] 주인공 이름 추출 실패, 기본값 사용: {e}")
         if not final_protagonist_name:
             final_protagonist_name = "주인공"
         protagonist_name = final_protagonist_name  # 이후 코드 호환
@@ -722,7 +723,7 @@ class Analyst(BaseAgent):
             except Exception as e:
                 # Case B: 캐시가 없거나 호출 실패 시 즉시 Full-Text로 복구 (품질 보존)
                 if self.cache_name:
-                    print(f"      ⚠️ [Analyst] 캐시 호출 실패. 일반 모드 전환: {str(e)[:50]}")
+                    logging.warning(f"⚠️ [Analyst] 캐시 호출 실패. 일반 모드 전환: {str(e)[:50]}")
 
                 full_safe_data = safe_data.copy()
                 full_safe_data.update({
@@ -766,12 +767,12 @@ class Analyst(BaseAgent):
 
             if llm_ep_count < pacing_min or llm_ep_count > pacing_max:
                 corrected_ep_count = max(pacing_min, min(pacing_max, llm_ep_count))
-                print(f"      🔧 [V60.70] 자기모순 교정: chosen_pacing={chosen_pacing} 인데 ep_count={llm_ep_count} → {corrected_ep_count}화로 강제 조정")
+                logging.info(f"🔧 [V60.70] 자기모순 교정: chosen_pacing={chosen_pacing} 인데 ep_count={llm_ep_count} → {corrected_ep_count}화로 강제 조정")
                 llm_ep_count = corrected_ep_count
 
             actual_ep_count = max(3, min(7, llm_ep_count))
             if actual_ep_count != target_ep_count:
-                print(f"      📊 [V60.31] 가변 페이싱: 권장 {target_ep_count}화 → LLM 결정 {actual_ep_count}화")
+                logging.info(f"📊 [V60.31] 가변 페이싱: 권장 {target_ep_count}화 → LLM 결정 {actual_ep_count}화")
 
             beats = draft_result.get("beat_sequence", [])
             if len(beats) != actual_ep_count:
@@ -791,7 +792,7 @@ class Analyst(BaseAgent):
             audit_result = self._extract_json_robust(self.ask(critic_input, temperature=0.2))
             return audit_result
 
-        def _arc_on_success(audit_result):
+        def _arc_on_success(audit_result) -> bool:
             """[V65] Self-Critic PASS 판정"""
             return audit_result.get("status") == "PASS"
 
@@ -836,7 +837,7 @@ class Analyst(BaseAgent):
         # 9. [V49.3] StateTracker를 통한 상태 일관성 검증
         state_issues = self._validate_arc_with_state_tracker(final_arc_data)
         if state_issues:
-            print(f"      ⚠️ [Analyst] StateTracker 검증 이슈 발견: {len(state_issues)}건")
+            logging.info(f"⚠️ [Analyst] StateTracker 검증 이슈 발견: {len(state_issues)}건")
             # 검증 이슈를 Arc 데이터에 첨부 (Director/ContinuityInspector 참조용)
             final_arc_data['state_tracker_issues'] = state_issues
             # Critical 이슈가 있으면 tactical_doc에 경고 주입
@@ -860,15 +861,15 @@ class Analyst(BaseAgent):
                 if arcs_anchor and isinstance(arcs_anchor, dict):
                     prev_arc_data = arcs_anchor.get(f'arc_{clean_arc_no - 1}')
             except Exception as e:
-                print(f"      ⚠️ [V60] 이전 Arc 로드 실패: {e}")
+                logging.warning(f"⚠️ [V60] 이전 Arc 로드 실패: {e}")
 
         # 10-2. Arc 상태 계승 검증
         if prev_arc_data:
             continuity_result = self._validate_arc_state_continuity_v60(final_arc_data, prev_arc_data)
             if continuity_result['issues']:
-                print(f"      🔍 [V60] Arc 상태 계승 검증: {continuity_result['severity']}")
+                logging.info(f"🔍 [V60] Arc 상태 계승 검증: {continuity_result['severity']}")
                 for issue in continuity_result['issues'][:3]:
-                    print(f"         - {issue}")
+                    logging.info(f"- {issue}")
 
                 # 자동 보정 적용
                 if continuity_result['auto_corrections']:
@@ -881,7 +882,7 @@ class Analyst(BaseAgent):
 
                     if 'location' in continuity_result['auto_corrections']:
                         start_state['location'] = continuity_result['auto_corrections']['location']
-                        print(f"      🔧 [V60] 시작 위치 자동 보정: {start_state['location']}")
+                        logging.info(f"🔧 [V60] 시작 위치 자동 보정: {start_state['location']}")
 
                     if 'missing_items' in continuity_result['auto_corrections']:
                         existing = start_state.get('equipment', [])
@@ -889,7 +890,7 @@ class Analyst(BaseAgent):
                             existing = [existing] if existing else []
                         existing.extend(continuity_result['auto_corrections']['missing_items'])
                         start_state['equipment'] = list(set(existing))
-                        print(f"      🔧 [V60] 시작 소지품 자동 보정: {start_state['equipment']}")
+                        logging.info(f"🔧 [V60] 시작 소지품 자동 보정: {start_state['equipment']}")
 
                 # 검증 결과 첨부
                 final_arc_data['v60_continuity_check'] = continuity_result
@@ -899,9 +900,9 @@ class Analyst(BaseAgent):
         if tactical_doc:
             doc_continuity = self._validate_tactical_doc_continuity_v60(tactical_doc, final_ep_count)
             if doc_continuity['issues']:
-                print(f"      🔍 [V60] 화 간 연속성 검증: {len(doc_continuity['issues'])}건 이슈")
+                logging.info(f"🔍 [V60] 화 간 연속성 검증: {len(doc_continuity['issues'])}건 이슈")
                 for issue in doc_continuity['issues'][:3]:
-                    print(f"         - {issue}")
+                    logging.info(f"- {issue}")
 
                 # 경고 주입
                 warning_text = "\n\n⚠️ [V60 CONTINUITY WARNING]:\n"
@@ -914,6 +915,18 @@ class Analyst(BaseAgent):
         # 10-4. Joint Docs 자동 추출 보정
         if tactical_doc:
             final_arc_data = self._auto_correct_joint_docs_v60(tactical_doc, final_arc_data)
+
+        # [V70] state_changes 기본값 보장 (FourPhase의 _ensure_required_fields와 동일 수준)
+        if "state_changes" not in final_arc_data or not isinstance(final_arc_data.get("state_changes"), dict):
+            final_arc_data["state_changes"] = {}
+        _sc = final_arc_data["state_changes"]
+        for _sc_key in ["npc_deaths", "skill_acquisitions", "relationship_changes",
+                         "major_items", "entity_destructions", "npc_personality_changes",
+                         "npc_npc_relationships", "npc_dialogue_profiles", "npc_injuries",
+                         "npc_movements", "time_markers", "companion_changes",
+                         "promises_obligations", "protagonist_emotion"]:
+            if _sc_key not in _sc:
+                _sc[_sc_key] = []
 
         return final_arc_data
 
@@ -950,7 +963,7 @@ class Analyst(BaseAgent):
             expected_eps = list(range(ep_start, ep_start + ep_count))
             it = iter(expected_eps)
 
-            def _repl(match):
+            def _repl(match) -> str:
                 try:
                     n = next(it)
                 except StopIteration:
@@ -963,7 +976,7 @@ class Analyst(BaseAgent):
         # 2) 분량 메타 키를 ep_count로 통일 (중복/불일치 방지)
         length_keys = {"arc_length_chapters", "total_chapters_estimate", "arc_duration_episodes"}
 
-        def _walk(node):
+        def _walk(node) -> None:
             if isinstance(node, dict):
                 for k in list(node.keys()):
                     if k in length_keys:
@@ -1077,11 +1090,11 @@ class Analyst(BaseAgent):
             return enriched_result
 
         except Exception as e:
-            print(f"      🚨 [Enrich Critical Error] {e}")
+            logging.warning(f"🚨 [Enrich Critical Error] {e}")
             return raw_block # 실패 시 원본 DNA 반환
 
     
-    def analyze_context(self, mode="GENERAL", **kwargs):
+    def analyze_context(self, mode="GENERAL", **kwargs) -> dict:
         """
         [V35 Manifesto] 에이전트 간 조율 및 아크 긴급 수술 로직 (Surgery Room)
         """
@@ -1164,12 +1177,12 @@ class Analyst(BaseAgent):
         # 2. 기존 일반 분석 모드 (필요 시 확장 가능)
         return {"status": "GENERAL_MODE_ACTIVE"}
 
-    def ui_log(self, msg):
+    def ui_log(self, msg) -> None:
         """ProjectContext를 통한 UI 로그 출력"""
         if hasattr(self.context, 'ui') and hasattr(self.context.ui, 'log'):
             self.context.ui.log(msg)
         else:
-            print(f"[Analyst] {msg}")
+            logging.info(f"[Analyst] {msg}")
 
     def perform_v35_calibration(self, current_hud, target_arc):
         """[V35.5] 서사 목적에 맞게 주인공의 물리 수치를 강제 교정 및 개연성 부여"""
@@ -1209,7 +1222,7 @@ class Analyst(BaseAgent):
         return self._extract_json_robust(raw_res)    
     
 
-    def get_lack_report(self, martial_hud):
+    def get_lack_report(self, martial_hud) -> dict:
         """
         [V38.2 S-Grade] NoneType 방어막이 적용된 결핍 탐지 엔진
         """
@@ -1291,7 +1304,7 @@ class Analyst(BaseAgent):
                 elif 'alt_history' in genre_name.lower() or '대체역사' in genre_name or '조선' in genre_name:
                     return 'alt_history'
         except Exception as e:
-            print(f"      ⚠️ [Analyst] 장르 감지 실패: {e}")
+            logging.warning(f"⚠️ [Analyst] 장르 감지 실패: {e}")
 
         return 'wuxia'  # 기본값
 
@@ -1330,9 +1343,10 @@ class Analyst(BaseAgent):
             검증 이슈 목록 (빈 리스트면 문제 없음)
         """
         try:
+            # [V70] NOTE: StateTracker()는 인자 없이 호출 불가 — 항상 except로 빠짐 (dead code)
             tracker = StateTracker()
             if not tracker.load_arc_design(arc_data):
-                print("      ⚠️ [Analyst] StateTracker 로드 실패, 검증 스킵")
+                logging.warning("⚠️ [Analyst] StateTracker 로드 실패, 검증 스킵")
                 return []
 
             # 타임라인 검증
@@ -1340,12 +1354,12 @@ class Analyst(BaseAgent):
 
             if issues:
                 # DAG 시각화 출력 (디버깅용)
-                print(tracker.get_dag_visualization())
+                logging.info(tracker.get_dag_visualization())
 
             return issues
 
         except Exception as e:
-            print(f"      ⚠️ [Analyst] StateTracker 검증 중 오류: {e}")
+            logging.warning(f"⚠️ [Analyst] StateTracker 검증 중 오류: {e}")
             return []
 
     def get_state_constraint_prompt(self, arc_no: int) -> str:
@@ -1383,5 +1397,5 @@ class Analyst(BaseAgent):
             return master_tracker.generate_constraint_prompt()
 
         except Exception as e:
-            print(f"      ⚠️ [Analyst] 상태 제약 프롬프트 생성 실패: {e}")
+            logging.warning(f"⚠️ [Analyst] 상태 제약 프롬프트 생성 실패: {e}")
             return ""

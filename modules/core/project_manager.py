@@ -1,4 +1,5 @@
 import json
+import logging
 from pathlib import Path
 from dataclasses import dataclass
 from dotenv import load_dotenv
@@ -59,7 +60,7 @@ class ProjectContext:
 
         # 1. DB 엔진 기동
         self.db = DBManager(self.paths.db_file)
-        print(f"      🗄️ [Sovereign DB] SQLite S-Grade 엔진 가동: {self.db_path.name}")
+        logging.info(f"🗄️ [Sovereign DB] SQLite S-Grade 엔진 가동: {self.db_path.name}")
 
         self.master_bible = {}
         self.volumes = []
@@ -74,7 +75,7 @@ class ProjectContext:
         self._load_from_db()
         self._load_directives()
 
-    def _initialize_structure(self):
+    def _initialize_structure(self) -> None:
         for path in [self.paths.root, self.paths.config, self.paths.drafts, self.paths.memory]:
             path.mkdir(parents=True, exist_ok=True)
 
@@ -98,38 +99,38 @@ class ProjectContext:
                 try:
                     with open(seed_file, "w", encoding="utf-8") as f:
                         f.write(default_seed)
-                    print(f"      ✨ [System] 스타일 시드 파일이 생성되었습니다: {seed_file.name}")
+                    logging.info(f"✨ [System] 스타일 시드 파일이 생성되었습니다: {seed_file.name}")
                     break
                 except (IOError, OSError, PermissionError) as e:
                     if attempt < max_retries - 1:
-                        print(f"      ⚠️ [System] 스타일 시드 생성 재시도 ({attempt+1}/{max_retries}): {e}")
+                        logging.info(f"⚠️ [System] 스타일 시드 생성 재시도 ({attempt+1}/{max_retries}): {e}")
                         import time
                         time.sleep(0.5)
                     else:
-                        print(f"      🚨 [System] 스타일 시드 생성 최종 실패: {e}")
+                        logging.warning(f"🚨 [System] 스타일 시드 생성 최종 실패: {e}")
                         self._style_seed_available = False  # [V45] 실패 플래그 설정
 
 
-    def _load_directives(self):
+    def _load_directives(self) -> None:
         d_path = self.paths.config / "author_directives.txt"
         if d_path.exists():
             self.author_directives = d_path.read_text(encoding="utf-8")
         else:
             d_path.write_text("# 절대 지시 사항을 입력하세요.\n", encoding="utf-8")
 
-    def _load_from_db(self):
+    def _load_from_db(self) -> None:
         """[V44] 기동 시 DB의 앵커 데이터를 메모리로 수혈 (타입 검증 강화)"""
         # [V44] anchors 로드 및 타입 검증
         try:
             anchors = self.db.load_all_anchors()
         except (DBError, Exception) as e:
-            print(f"      🚨 [ProjectContext] DB 앵커 로드 실패: {e}")
-            print(f"         → 빈 상태로 초기화합니다")
+            logging.warning(f"🚨 [ProjectContext] DB 앵커 로드 실패: {e}")
+            logging.info(f"→ 빈 상태로 초기화합니다")
             anchors = {}
 
         # [V44] anchors 타입 검증
         if not isinstance(anchors, dict):
-            print(f"      ⚠️ [ProjectContext] anchors가 dict가 아님: {type(anchors)}")
+            logging.info(f"⚠️ [ProjectContext] anchors가 dict가 아님: {type(anchors)}")
             anchors = {}
 
         # [V44] 각 앵커 데이터 안전 추출
@@ -143,7 +144,7 @@ class ProjectContext:
             if not isinstance(self.karma_status, dict):
                 self.karma_status = {}
         except Exception as e:
-            print(f"      ⚠️ [ProjectContext] karma 로드 실패: {e}")
+            logging.warning(f"⚠️ [ProjectContext] karma 로드 실패: {e}")
             self.karma_status = {}
 
         # [V44] safe_nested_get으로 중첩 접근
@@ -218,14 +219,15 @@ class ProjectContext:
             actual_data = protagonist.get('actual_truth', {})
             if actual_data:
                 # 현재 최신 에피소드 번호 조회
-                latest_ep = self.db.get_latest_episode_number()
+                # [V70] get_latest_episode_number()는 NEXT ep 반환 → -1로 현재 ep 계산
+                latest_ep = self.db.get_latest_episode_number() - 1
                 if latest_ep > 0:
                     self.record_martial_stats(latest_ep, actual_data)
-                    print(f"      🛡️ [Sync] 성경 저장과 동시에 HUD 테이블 동기화 완료 (ep {latest_ep}).")
+                    logging.info(f"🛡️ [Sync] 성경 저장과 동시에 HUD 테이블 동기화 완료 (ep {latest_ep}).")
                 else:
                     # 에피소드가 없으면 ep_num=0으로 초기 상태 저장
                     self.record_martial_stats(0, actual_data)
-                    print(f"      🛡️ [Sync] 초기 HUD 상태 저장 (ep 0).")
+                    logging.info(f"🛡️ [Sync] 초기 HUD 상태 저장 (ep 0).")
 
         elif stage == "volumes": self.volumes = data
         elif stage == "arcs":
@@ -255,13 +257,13 @@ class ProjectContext:
         """
         return self.db.load_anchor(stage, default)
 
-    def save_episode_blueprint(self, ep_num, data):
+    def save_episode_blueprint(self, ep_num, data) -> None:
         """Stage 3 설계도 DB 박제"""
         self.db.save_blueprint(ep_num, data)
         # [V40.1] Blueprint txt 파일 저장
         self._save_blueprint_to_txt(ep_num, data)
 
-    def _save_arcs_to_txt(self, arcs_data):
+    def _save_arcs_to_txt(self, arcs_data) -> None:
         """[V40.1] Arc 데이터를 txt 파일로 저장"""
         if not arcs_data or not isinstance(arcs_data, list):
             return
@@ -327,11 +329,11 @@ class ProjectContext:
 
                 filepath.write_text('\n'.join(lines), encoding='utf-8')
 
-            print(f"      📁 [Plans] Arc txt 파일 {len(arcs_data)}개 저장 완료")
+            logging.info(f"📁 [Plans] Arc txt 파일 {len(arcs_data)}개 저장 완료")
         except Exception as e:
-            print(f"      ⚠️ [Plans] Arc txt 저장 실패: {e}")
+            logging.warning(f"⚠️ [Plans] Arc txt 저장 실패: {e}")
 
-    def _save_blueprint_to_txt(self, ep_num, data):
+    def _save_blueprint_to_txt(self, ep_num, data) -> None:
         """[V40.1] Blueprint 데이터를 txt 파일로 저장"""
         if not data or not isinstance(data, dict):
             return
@@ -387,9 +389,9 @@ class ProjectContext:
                 lines.append(f"{data['expected_ending']}")
 
             filepath.write_text('\n'.join(lines), encoding='utf-8')
-            print(f"      📁 [Plans] Blueprint {ep_num}화 txt 저장 완료")
+            logging.info(f"📁 [Plans] Blueprint {ep_num}화 txt 저장 완료")
         except Exception as e:
-            print(f"      ⚠️ [Plans] Blueprint txt 저장 실패: {e}")
+            logging.warning(f"⚠️ [Plans] Blueprint txt 저장 실패: {e}")
 
     def _normalize_seed_id(self, raw_id):
         """[V26 Integrity Filter] AI 오타 교정 및 성경 ID 매칭"""
@@ -405,13 +407,13 @@ class ProjectContext:
         for vid in valid_ids:
             clean_vid = re.sub(r'[^a-zA-Z0-9]', '', vid).upper()
             if clean_raw == clean_vid:
-                print(f"      🔧 [Normalized] Seed ID 교정: {raw_id} -> {vid}")
+                logging.info(f"🔧 [Normalized] Seed ID 교정: {raw_id} -> {vid}")
                 return vid
                 
         return raw_id # 매칭 실패 시 원본 유지(데이터 보존)
 
 
-    def sync_and_cleanup_seeds(self):
+    def sync_and_cleanup_seeds(self) -> None:
         """[V27.5 S-Grade] 성경(Bible) 기반 복선 데이터 동기화 및 유령 ID 정화"""
         bible_root = self.master_bible.get('MasterBible', self.master_bible)
         bible_seeds = bible_root.get('Seeds', [])
@@ -431,9 +433,9 @@ class ProjectContext:
         # 3. 성경의 최신 내용을 DB에 강제 동기화 (Upsert)
         self.db.sync_seeds(bible_seeds)
         self.db.conn.commit()
-        print(f"      🧹 [Cleanup] 복선 데이터 정화 완료 (유효 ID: {len(valid_ids)}건)")
+        logging.info(f"🧹 [Cleanup] 복선 데이터 정화 완료 (유효 ID: {len(valid_ids)}건)")
 
-    def commit_full_episode_data(self, ep_num, manuscript_data, martial_data, state_data, causal_links, karma_data, lore_data, recovered_seeds, memory_engine):
+    def commit_full_episode_data(self, ep_num, manuscript_data, martial_data, state_data, causal_links, karma_data, lore_data, recovered_seeds, memory_engine) -> bool:
         """
         [V35 Alpha] 트랜잭션 원자성 강화 + NPC HUD 실시간 동기화 통합 버전
         """
@@ -494,7 +496,7 @@ class ProjectContext:
                                         changes.append(f"equipment 상실: {list(removed)}")
 
                                 if changes:
-                                    print(f"      🕸️ [NPC Trace] {npc_name} 변화 감지: {', '.join(changes)}")
+                                    logging.info(f"🕸️ [NPC Trace] {npc_name} 변화 감지: {', '.join(changes)}")
 
                                 # 데이터 병합 (성경 메모리 동기화)
                                 target.setdefault('NPC_Martial_HUD', {}).update(new_hud)
@@ -510,8 +512,8 @@ class ProjectContext:
                 self.save_v20_anchor('bible', self.master_bible)
                 self.sync_and_cleanup_seeds()
             except Exception as bible_err:
-                print(f"      🚨 [Critical] Bible 선행 저장 실패: {bible_err}")
-                raise Exception(f"Bible 저장 실패로 에피소드 커밋 중단: {bible_err}")
+                logging.warning(f"🚨 [Critical] Bible 선행 저장 실패: {bible_err}")
+                raise Exception(f"Bible 저장 실패로 에피소드 커밋 중단: {bible_err}") from bible_err
 
             # 3-2. SQLite 핵심 트랜잭션 (원고, HUD, 로그, 카르마, 로어)
             db_success = self.db.commit_episode_factory(
@@ -534,14 +536,14 @@ class ProjectContext:
                     # 모든 공정 성공 시에만 최종 동기화 완료 마킹
                     self.db.update_sync_status(ep_num, 1)
                 else:
-                    print(f"      ⚠️ [Sync Warning] 제 {ep_num}화 벡터 주입 지연 (플래그 0 유지)")
+                    logging.info(f"⚠️ [Sync Warning] 제 {ep_num}화 벡터 주입 지연 (플래그 0 유지)")
                 
                 return True
 
             except Exception as sub_e:
                 # [V44 Fix] 부분 실패 시 경고 강화 및 sync 상태 업데이트
-                print(f"      🚨 [Partial Failure] 벡터 동기화 중 오류: {sub_e}")
-                print(f"      ⚠️ [WARNING] 에피소드 {ep_num}: DB/Bible 저장됨, Vector 동기화 불완전")
+                logging.warning(f"🚨 [Partial Failure] 벡터 동기화 중 오류: {sub_e}")
+                logging.warning(f"⚠️ [WARNING] 에피소드 {ep_num}: DB/Bible 저장됨, Vector 동기화 불완전")
                 # sync_status를 2로 설정하여 "부분 성공" 상태 표시
                 try:
                     self.db.update_sync_status(ep_num, 2)  # 2 = partial sync
@@ -550,7 +552,7 @@ class ProjectContext:
                 return True  # DB는 성공했으므로 진행 (단, 경고 로깅됨)
 
         except Exception as e:
-            print(f"      🛑 [Critical Error] 제 {ep_num}화 원자적 저장 실패: {e}")
+            logging.warning(f"🛑 [Critical Error] 제 {ep_num}화 원자적 저장 실패: {e}")
             self.db.update_sync_status(ep_num, 0)
             return False
 
@@ -563,7 +565,7 @@ class ProjectContext:
             return bible_root.get('MartialHUD', bible_root.get('martial_hud', {}))
         return state
 
-    def get_sequential_context(self, current_ep):
+    def get_sequential_context(self, current_ep) -> tuple:
         """직전 원고 3화와 직전 설계도를 DB에서 인출 (에이전트 지능용)"""
         manuscripts = self.db.get_context_manuscripts(current_ep, limit=3) #
         prev_blueprint = self.db.get_previous_blueprint(current_ep) #
@@ -585,14 +587,17 @@ class ProjectContext:
 
         # 물리 파일에서도 확인 (sync 누락 방지)
         try:
+            import re as _re
             draft_files = list(self.paths.drafts.glob("*.txt"))
             file_ep = 0
             for f in draft_files:
-                if f.name[:4].isdigit():
-                    file_ep = max(file_ep, int(f.name[:4]))
+                # [V70] ep_NNNN.txt 패턴 매칭 (기존 [:4].isdigit()는 "ep_0"이라 항상 False)
+                _m = _re.match(r'ep_(\d+)\.txt', f.name)
+                if _m:
+                    file_ep = max(file_ep, int(_m.group(1)))
 
-            # 둘 중 큰 값 반환 (안전장치)
-            return max(db_ep, file_ep)
+            # 둘 중 큰 값 반환 (안전장치) — file_ep+1: db_ep와 동일 스케일 (next ep)
+            return max(db_ep, file_ep + 1 if file_ep > 0 else 0)  # [V70] 스케일 통일
         except Exception:
             # 파일 확인 실패 시 DB 값 사용
             return db_ep
@@ -607,7 +612,7 @@ class ProjectContext:
         return self.db.get_lore_list_by_category(category)
 
     # --- [Bridge 보완: 15대 지표 데이터 가드] ---
-    def record_martial_stats(self, ep_num, stats_data):
+    def record_martial_stats(self, ep_num, stats_data) -> None:
         """에이전트의 데이터 키 누락이나 오타로부터 DB를 보호하며 기록"""
         # DB 테이블 컬럼과 일치하는 15대 지표 화이트리스트
         valid_keys = [
@@ -618,31 +623,34 @@ class ProjectContext:
         # 규격에 맞는 데이터만 필터링 (누락 시 None 처리하여 DB 에러 방지)
         sanitized_data = {k: stats_data.get(k) for k in valid_keys}
         self.db.update_martial_tracker(ep_num, sanitized_data)
-        print(f"      📊 [DB] 제 {ep_num}화 15대 지표 트래커 박제 완료.")
+        logging.info(f"📊 [DB] 제 {ep_num}화 15대 지표 트래커 박제 완료.")
 
     # modules/core/project_manager.py 파일 내부 ProjectContext 클래스에 추가
 
-    def save_manuscript_to_db(self, ep_num, title, content):
+    def save_manuscript_to_db(self, ep_num, title, content) -> None:
         """[Phase 0 전용] 물리 원고 데이터를 DB로 직접 미러링하여 박제"""
         # DBManager의 save_manuscript 기능을 호출함
         self.db.save_manuscript(ep_num, title, content)
-        print(f"      📝 [Mirroring] 제 {ep_num}화 원고 DB 동기화 완료.")
+        logging.info(f"📝 [Mirroring] 제 {ep_num}화 원고 DB 동기화 완료.")
     # --- [Utility: 리셋 및 동기화] ---
-    def reset_project(self, target_ep):
+    def reset_project(self, target_ep) -> None:
         """DB와 물리 파일을 동시에 정화"""
         self.db.reset_after(target_ep) #
         
         if self.paths.drafts.exists():
+            import re as _re
             for f in self.paths.drafts.glob("*.txt"):
-                if f.name[:4].isdigit() and int(f.name[:4]) >= target_ep:
+                # [V70] ep_NNNN.txt 패턴 매칭
+                _m = _re.match(r'ep_(\d+)\.txt', f.name)
+                if _m and int(_m.group(1)) >= target_ep:
                     f.unlink()
-        print(f"🔥 [Reset] 제 {target_ep}화 이후의 모든 타임라인이 소거되었습니다.")
+        logging.info(f"🔥 [Reset] 제 {target_ep}화 이후의 모든 타임라인이 소거되었습니다.")
 
-    def force_sync_v25_dna(self, bible_file_name, treatment_file_name):
+    def force_sync_v25_dna(self, bible_file_name, treatment_file_name) -> bool:
         """
         [Phase 0] AI의 출력 제한을 우회하여 50개 전술 블록을 Bible에 강제 주입 및 DB 박제
         """
-        print(f"🧬 [DNA Injection] '{treatment_file_name}' 데이터를 Bible에 강제 이식합니다...")
+        logging.info(f"🧬 [DNA Injection] '{treatment_file_name}' 데이터를 Bible에 강제 이식합니다...")
 
         # 1. Bible(성경) 데이터 로드
         bible_path = self.paths.root.parent.parent / "bible" / bible_file_name
@@ -661,31 +669,31 @@ class ProjectContext:
                 is_valid, report = validate_phase0_files(bible_data, treatment_data)
 
                 # 검증 결과 출력
-                print(f"📋 [V49.3] Phase 0 파일 검증 결과:")
-                print(f"   Bible: {'✅ 유효' if report['bible']['valid'] else '❌ 오류'}")
+                logging.info(f"📋 [V49.3] Phase 0 파일 검증 결과:")
+                logging.warning(f"Bible: {'✅ 유효' if report['bible']['valid'] else '❌ 오류'}")
                 if report['bible']['errors']:
                     for err in report['bible']['errors']:
-                        print(f"      ❌ {err}")
+                        logging.warning(f"❌ {err}")
                 if report['bible']['warnings']:
                     for warn in report['bible']['warnings']:
-                        print(f"      ⚠️ {warn}")
+                        logging.info(f"⚠️ {warn}")
 
-                print(f"   Treatment: {'✅ 유효' if report['treatment']['valid'] else '❌ 오류'} ({report['treatment']['block_count']}개 블록)")
+                logging.warning(f"Treatment: {'✅ 유효' if report['treatment']['valid'] else '❌ 오류'} ({report['treatment']['block_count']}개 블록)")
                 if report['treatment']['errors']:
                     for err in report['treatment']['errors']:
-                        print(f"      ❌ {err}")
+                        logging.warning(f"❌ {err}")
                 if report['treatment']['warnings']:
                     for warn in report['treatment']['warnings'][:5]:  # 최대 5개만 표시
-                        print(f"      ⚠️ {warn}")
+                        logging.info(f"⚠️ {warn}")
                     if len(report['treatment']['warnings']) > 5:
-                        print(f"      ⚠️ ... 외 {len(report['treatment']['warnings'])-5}개 경고")
+                        logging.info(f"⚠️ ... 외 {len(report['treatment']['warnings'])-5}개 경고")
 
                 if not is_valid:
-                    print(f"🚨 [V49.3] 파일 검증 실패. Phase 0을 중단합니다.")
-                    print(f"   → Bible 또는 Treatment 파일 구조를 확인하세요.")
+                    logging.warning(f"🚨 [V49.3] 파일 검증 실패. Phase 0을 중단합니다.")
+                    logging.info(f"→ Bible 또는 Treatment 파일 구조를 확인하세요.")
                     return False
             except ImportError:
-                print(f"⚠️ [V49.3] 스키마 검증 모듈 로드 실패. 검증 없이 진행합니다.")
+                logging.warning(f"⚠️ [V49.3] 스키마 검증 모듈 로드 실패. 검증 없이 진행합니다.")
 
             # 2. MasterBible 루트 확보 (포장지가 있든 없든 대응)
             master_bible = bible_data.get("MasterBible", bible_data)
@@ -707,12 +715,12 @@ class ProjectContext:
             success = self.save_v20_anchor('bible', self.master_bible)
 
             if success:
-                print(f"✅ [S-Grade Success] {len(refined_roadmap)}개 블록이 포함된 '완전한 성경'이 DB에 안착되었습니다.")
-                print(f"📊 로드맵 크기: {len(self.master_bible['MasterBible']['plot_roadmap'])} blocks")
+                logging.info(f"✅ [S-Grade Success] {len(refined_roadmap)}개 블록이 포함된 '완전한 성경'이 DB에 안착되었습니다.")
+                logging.info(f"📊 로드맵 크기: {len(self.master_bible['MasterBible']['plot_roadmap'])} blocks")
                 return True
         
         except Exception as e:
-            print(f"🚨 [DNA Sync Error] 강제 주입 실패: {e}")
+            logging.warning(f"🚨 [DNA Sync Error] 강제 주입 실패: {e}")
             return False
         # 📂 modules/core/project_manager.py 내부에 추가
 
@@ -720,15 +728,18 @@ class ProjectContext:
         """DB에서 해당 회차의 설계도를 가져옴"""
         return self.db.get_blueprint(ep_num)
     
-    def sync_existing_manuscripts(self, memory_engine):
+    def sync_existing_manuscripts(self, memory_engine) -> bool:
         """
         [Phase 0] 기존 원고를 AI 요약 없이 DB에 직접 박제
         """
         draft_files = sorted(list(self.paths.drafts.glob("*.txt")))
         
+        import re as _re_sync
         for f_path in draft_files:
-            if not f_path.name[:4].isdigit(): continue
-            ep_num = int(f_path.name[:4])
+            # [V70] ep_NNNN.txt + 레거시 NNNN.txt 양쪽 호환
+            _m = _re_sync.match(r'(?:ep_)?(\d{1,5})\.txt', f_path.name)
+            if not _m: continue
+            ep_num = int(_m.group(1))
             
             # 중복 체크 (이미 DB에 있으면 패스)
             if self.db.get_sync_status(ep_num) == 1: continue
@@ -736,7 +747,7 @@ class ProjectContext:
             content = f_path.read_text(encoding='utf-8')
             # [V44] 빈 content 안전 처리
             if not content or not content.strip():
-                print(f"   ⚠️ 제 {ep_num}화 파일이 비어있음. 건너뜀.")
+                logging.info(f"⚠️ 제 {ep_num}화 파일이 비어있음. 건너뜀.")
                 continue
             title = content.split('\n')[0].strip()[:50] if content else f"제{ep_num}화"
 
@@ -768,7 +779,7 @@ class ProjectContext:
             
             # 3. 동기화 상태 갱신
             self.db.update_sync_status(ep_num, 1)
-            print(f"   ⚓ 제 {ep_num}화 역사 박제 완료.")
+            logging.info(f"⚓ 제 {ep_num}화 역사 박제 완료.")
 
         # [V60.60 Fix] 반환값 추가 - 동기화 성공 표시
         return True
@@ -794,7 +805,7 @@ class ProjectContext:
             current_ep = self.get_latest_episode_number()
             target_ep = max(origin_ep, current_ep - 3)
             
-            print(f"      🚑 [V35 Backtrack] 제 {target_ep}화로 인과율을 강제 되감기합니다.")
+            logging.info(f"🚑 [V35 Backtrack] 제 {target_ep}화로 인과율을 강제 되감기합니다.")
             
             # 2. 기존 reset_project 함수명 존중하여 호출 (DB 및 물리 파일 삭제)
             # self.reset_project는 이미 구현되어 있음
@@ -803,18 +814,18 @@ class ProjectContext:
             # 3. 벡터 DB(ChromaDB) 기억 소거
             if memory_engine and memory_engine.collection:
                 memory_engine.collection.delete(where={"episode": {"$gte": target_ep}})
-                print(f"      🌌 [Memory] 제 {target_ep}화 이후의 벡터 기억을 소거했습니다.")
+                logging.info(f"🌌 [Memory] 제 {target_ep}화 이후의 벡터 기억을 소거했습니다.")
                 
             return target_ep
         except Exception as e:
-            print(f"      🚨 [Backtrack Error] 자동 되감기 실패: {e}")
+            logging.warning(f"🚨 [Backtrack Error] 자동 되감기 실패: {e}")
             return None
 
-    def record_surgery_result(self, ep_num, category, failed_logic, result):
+    def record_surgery_result(self, ep_num, category, failed_logic, result) -> None:
         """수술 결과를 DB에 저장하여 향후 '실패 사례' 지능으로 활용"""
         self.db.save_surgery_log(ep_num, category, failed_logic, result)
 
-    def get_surgery_intelligence(self, limit=3):
+    def get_surgery_intelligence(self, limit=3) -> str:
         """최근 수술 기록을 가져와 프롬프트에 주입할 '반성문' 형태로 반환"""
         cur = self.db.cursor.execute(
             "SELECT ep_num, error_category, surgery_result FROM surgery_logs ORDER BY id DESC LIMIT ?", 

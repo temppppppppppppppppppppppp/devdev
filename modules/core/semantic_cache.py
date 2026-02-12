@@ -318,6 +318,14 @@ class SemanticCache:
             last_hit=time.time()
         )
 
+        # [V70] 기존 엔트리가 있으면 시그니처 인덱스에서 먼저 제거
+        if cache_key in self._cache:
+            old_entry = self._cache[cache_key]
+            if old_entry.context_signature in self._signature_index:
+                sig_list = self._signature_index[old_entry.context_signature]
+                if cache_key in sig_list:
+                    sig_list.remove(cache_key)
+
         self._cache[cache_key] = entry
 
         # 시그니처 인덱스 업데이트
@@ -339,7 +347,7 @@ class SemanticCache:
                 if key in sig_list:
                     sig_list.remove(key)
 
-    def _evict_lru(self):
+    def _evict_lru(self) -> None:
         """LRU 정책으로 가장 오래된 것 제거"""
         if self._cache:
             oldest_key = next(iter(self._cache))

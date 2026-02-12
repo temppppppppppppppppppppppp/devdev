@@ -21,7 +21,7 @@ try:
     METRICS_ENABLED = True
 except ImportError:
     METRICS_ENABLED = False
-    def get_metrics_collector():
+    def get_metrics_collector() -> None:
         return None
 
 
@@ -71,7 +71,7 @@ class BaseAgent:
     _rotation_count = 0  # [V62.3] 연속 키 순환 횟수 (전체 키 수 도달 시 순환 중단)
 
     @classmethod
-    def _init_api_keys(cls):
+    def _init_api_keys(cls) -> None:
         """환경변수에서 모든 API 키 로드 (GOOGLE_API_KEY, _2, _3, ...)"""
         if cls._keys_initialized:
             return
@@ -86,7 +86,7 @@ class BaseAgent:
                 keys.append(k)
         cls._api_keys = keys
         if len(keys) > 1:
-            print(f"      🔑 [V61.5] API 키 {len(keys)}개 로드 완료 (자동 순환 활성화)")
+            logging.info(f"🔑 [V61.5] API 키 {len(keys)}개 로드 완료 (자동 순환 활성화)")
 
     @classmethod
     def _try_rotate_key(cls):
@@ -117,7 +117,7 @@ class BaseAgent:
 
         # Client 생성은 lock 밖에서 (네트워크 IO 포함하므로)
         new_client = genai.Client(api_key=cls._api_keys[cls._current_key_idx])
-        print(f"      🔑 [V61.5] API 키 순환: Key {old_idx + 1} → Key {cls._current_key_idx + 1} (총 {len(cls._api_keys)}개)")
+        logging.info(f"🔑 [V61.5] API 키 순환: Key {old_idx + 1} → Key {cls._current_key_idx + 1} (총 {len(cls._api_keys)}개)")
         return new_client
 
     # [V61.2] 네트워크 복원력 설정 (야간 무인 운영 대응)
@@ -126,7 +126,7 @@ class BaseAgent:
     NETWORK_RETRY_DELAY_MAX = 30  # 최대 대기 시간 (초) - 백오프 상한
     MAX_NETWORK_RETRIES = 22      # 최대 재시도 (22회 = ~10분 커버) - 이거 넘으면 진짜 문제
 
-    def __init__(self, context, client, model_tier="gemini-2.5-flash", enable_cascade=False):
+    def __init__(self, context, client, model_tier="gemini-2.5-flash", enable_cascade=False) -> None:
         self.context = context
         self.client = client
         self.primary_model = model_tier
@@ -198,7 +198,7 @@ class BaseAgent:
                 remaining = int(exhausted_until - current_time)
                 # 첫 번째 모델(primary)이 스킵되는 경우에만 로그 출력
                 if model == self.primary_model:
-                    print(f"      ⏭️ [V60.68] {model} 쿼터 캐시 히트 - {remaining}초 남음, 스킵")
+                    logging.info(f"⏭️ [V60.68] {model} 쿼터 캐시 히트 - {remaining}초 남음, 스킵")
 
         # [V60.68] 사용 가능한 모델이 있으면 그것으로 시작, 없으면 원래 스택 사용
         if available_models:
@@ -239,7 +239,8 @@ class BaseAgent:
             try:
                 collector = get_metrics_collector()
                 metric_id = collector.start_call(self.agent_name, current_model)
-            except Exception:  # [V64.P4] OPTIONAL: metrics startup
+            except Exception as e:  # [V64.P4] OPTIONAL: metrics startup
+                logging.debug(f"[SILENT] metrics startup: {e}")
                 pass  # 메트릭 실패가 본 작업에 영향 주지 않음
 
         try:
@@ -286,22 +287,22 @@ class BaseAgent:
                         # [V61.2] 타임스탬프 포함 출력 (하트비트 역할)
                         from datetime import datetime
                         timestamp = datetime.now().strftime("%H:%M:%S")
-                        print(f"\n      🌐 [{timestamp}] 연결 오류 → {wait_time}초 대기 ({network_retry_count}/{self.MAX_NETWORK_RETRIES}, 누적 {total_waited}초)")
+                        logging.warning(f"\n      🌐 [{timestamp}] 연결 오류 → {wait_time}초 대기 ({network_retry_count}/{self.MAX_NETWORK_RETRIES}, 누적 {total_waited}초)")
 
                         # 대기 중 하트비트 (10초마다 점 출력)
                         for tick in range(wait_time):
                             time.sleep(1)
                             if (tick + 1) % 10 == 0:
                                 print(f"         💓 대기 중... {tick + 1}/{wait_time}초", end="\r")
-                        print()  # 줄바꿈
+                        logging.info()
 
                         # 연결 체크
                         if self._check_connectivity():
-                            print(f"      ✅ [{datetime.now().strftime('%H:%M:%S')}] 연결 복구! 재시도...")
+                            logging.info(f"✅ [{datetime.now().strftime('%H:%M:%S')}] 연결 복구! 재시도...")
                             continue  # 루프 처음으로
                         else:
                             # 연결 안 됨 - 다음 재시도로 (루프 계속)
-                            print(f"      ⏳ [{datetime.now().strftime('%H:%M:%S')}] 연결 대기 중...")
+                            logging.info(f"⏳ [{datetime.now().strftime('%H:%M:%S')}] 연결 대기 중...")
                             continue
 
                     # [V60.97] Rate Limit vs Quota Exhausted 구분
@@ -326,7 +327,7 @@ class BaseAgent:
                         rate_limit_retry_count += 1
                         # Linear Backoff: 30초 → 60초 → 90초 (분당 제한 대응)
                         wait_time = 30 * rate_limit_retry_count
-                        print(f"      ⏳ [V60.97 Rate Limit] {current_model} 분당 제한 감지 → {wait_time}초 대기 후 재시도 ({rate_limit_retry_count}/{MAX_RATE_LIMIT_RETRIES})")
+                        logging.info(f"⏳ [V60.97 Rate Limit] {current_model} 분당 제한 감지 → {wait_time}초 대기 후 재시도 ({rate_limit_retry_count}/{MAX_RATE_LIMIT_RETRIES})")
                         time.sleep(wait_time)
                         # 루프 처음으로 돌아가서 try/except 안에서 재시도
                         continue
@@ -336,7 +337,7 @@ class BaseAgent:
                     # ═══════════════════════════════════════════════════════════════
                     elif is_quota_exhausted or is_gemini3_rate_limit or (is_rate_limit and rate_limit_retry_count >= MAX_RATE_LIMIT_RETRIES):
                         if is_gemini3_rate_limit:
-                            print(f"      ⚡ [V60.98] {current_model} Rate Limit → 즉시 폴백 (할당량 부족 모델)")
+                            logging.info(f"⚡ [V60.98] {current_model} Rate Limit → 즉시 폴백 (할당량 부족 모델)")
                         if quota_retry_count < MAX_QUOTA_RETRIES - 1:
                             quota_retry_count += 1
                             rate_limit_retry_count = 0  # 폴백 시 Rate Limit 카운터 리셋
@@ -355,7 +356,7 @@ class BaseAgent:
                                     BaseAgent._key_rotation_pending = True
 
                             error_type = "Quota 소진" if is_quota_exhausted else "Rate Limit 초과"
-                            print(f"      🔄 [V60.97 Fallback] {old_model} {error_type} → {current_model}로 전환")
+                            logging.info(f"🔄 [V60.97 Fallback] {old_model} {error_type} → {current_model}로 전환")
 
                             # 폴백 모델용 config 재생성
                             fallback_config_params = {
@@ -408,7 +409,7 @@ class BaseAgent:
                 # 이어쓰기 중 이스케이프 단절 방지
                 # [V44] 최소 길이 체크 (빈 문자열/단일 백슬래시 방지)
                 if len(full_response) > 1 and full_response.endswith("\\"):
-                    print("      ⚠️ [JSON Repair] 후행 이스케이프 감지. 강제 제거")
+                    logging.info("⚠️ [JSON Repair] 후행 이스케이프 감지. 강제 제거")
                     full_response = full_response[:-1]
 
                 if not response.candidates: break
@@ -418,20 +419,20 @@ class BaseAgent:
                 if hasattr(candidate, 'finish_reason') and candidate.finish_reason in ["MAX_TOKENS", "LENGTH"]:
                     # 🔒 Circuit Breaker 경고
                     if attempt >= WARN_THRESHOLD:
-                        print(f"      ⚠️ [Circuit Breaker] 과도한 continuation 감지 ({attempt+1}/{MAX_CONTINUATIONS}회)")
-                        print(f"      ⚠️ [Cost Warning] API 비용 증가 중 - 누적 응답 길이: {len(full_response)} chars")
+                        logging.info(f"⚠️ [Circuit Breaker] 과도한 continuation 감지 ({attempt+1}/{MAX_CONTINUATIONS}회)")
+                        logging.info(f"⚠️ [Cost Warning] API 비용 증가 중 - 누적 응답 길이: {len(full_response)} chars")
 
                     # 🔒 Circuit Breaker 트립 (최대 시도 횟수 도달)
                     if attempt >= MAX_CONTINUATIONS - 1:
-                        print(f"      🚨 [Circuit Breaker TRIP] 최대 continuation 횟수 도달 ({MAX_CONTINUATIONS}회)")
-                        print(f"      🚨 [WARNING] 응답 불완전 가능 - 수동 검토 필요")
+                        logging.warning(f"🚨 [Circuit Breaker TRIP] 최대 continuation 횟수 도달 ({MAX_CONTINUATIONS}회)")
+                        logging.warning(f"🚨 [WARNING] 응답 불완전 가능 - 수동 검토 필요")
                         break
 
                     # 마지막 50자를 앵커로 사용하여 다음 응답의 시작점을 강제 고정
                     overlap_anchor = full_response[-50:].strip()
                     # [FIX] 중괄호 이스케이프 적용 (f-string 오류 방지)
                     safe_anchor = self._escape_braces(overlap_anchor)
-                    print(f"      🔄 [System] 데이터 절단 감지. '{overlap_anchor[:20]}...' 지점부터 인과율 용접 시도 ({attempt+1}/{MAX_CONTINUATIONS})")
+                    logging.info(f"🔄 [System] 데이터 절단 감지. '{overlap_anchor[:20]}...' 지점부터 인과율 용접 시도 ({attempt+1}/{MAX_CONTINUATIONS})")
 
                     current_prompt = (
                         f"--- [SYSTEM: CONTINUATION MISSION] ---\n"
@@ -455,7 +456,8 @@ class BaseAgent:
                         input_tokens=input_tokens,
                         output_tokens=output_tokens
                     )
-                except Exception:  # [V64.P4] OPTIONAL: metrics end (success)
+                except Exception as e:  # [V64.P4] OPTIONAL: metrics end (success)
+                    logging.debug(f"[SILENT] metrics end (success): {e}")
                     pass
 
             return full_response
@@ -466,9 +468,9 @@ class BaseAgent:
             self.last_error_type = error_type
             # [V60.66] 429 폴백이 인라인에서 이미 시도되었음을 표시
             if error_type == AgentErrorType.QUOTA_EXCEEDED:
-                print(f"      🚨 [V60.66] 모든 폴백 모델 할당량 초과 ({model_stack}): {str(e)[:50]}")
+                logging.warning(f"🚨 [V60.66] 모든 폴백 모델 할당량 초과 ({model_stack}): {str(e)[:50]}")
             else:
-                print(f"      ⚠️ [Warning] 모델 실패 ({error_type}), 백업 가동: {str(e)[:50]}")
+                logging.warning(f"⚠️ [Warning] 모델 실패 ({error_type}), 백업 가동: {str(e)[:50]}")
 
             # [V49.3] 비용 추적 종료 (실패, 백업 시도 전)
             if METRICS_ENABLED and metric_id:
@@ -483,13 +485,14 @@ class BaseAgent:
                         output_tokens=output_tokens,
                         error_type=error_type
                     )
-                except Exception:  # [V64.P4] OPTIONAL: metrics end (failure)
+                except Exception as e:  # [V64.P4] OPTIONAL: metrics end (failure)
+                    logging.debug(f"[SILENT] metrics end (failure): {e}")
                     pass
 
             # 부분 응답이 있으면 저장
             if full_response:
                 self.last_partial_response = full_response
-                print(f"      📝 [Recovery] 부분 응답 {len(full_response)}자 보존")
+                logging.info(f"📝 [Recovery] 부분 응답 {len(full_response)}자 보존")
 
             try:
                 # [FIX] 백업 모델용 별도 config (response_schema 제거 - 호환성 문제 방지)
@@ -507,7 +510,8 @@ class BaseAgent:
                     try:
                         collector = get_metrics_collector()
                         backup_metric_id = collector.start_call(f"{self.agent_name}_Backup", self.backup_model)
-                    except Exception:  # [V64.P4] OPTIONAL: backup metrics startup
+                    except Exception as e:  # [V64.P4] OPTIONAL: backup metrics startup
+                        logging.debug(f"[SILENT] backup metrics startup: {e}")
                         pass
 
                 # [V60.99] API Rate Limit 예방 딜레이
@@ -531,7 +535,8 @@ class BaseAgent:
                             input_tokens=input_tokens,
                             output_tokens=output_tokens
                         )
-                    except Exception:  # [V64.P4] OPTIONAL: backup metrics end
+                    except Exception as e:  # [V64.P4] OPTIONAL: backup metrics end
+                        logging.debug(f"[SILENT] backup metrics end: {e}")
                         pass
 
                 # [V44] 응답 검증
@@ -541,17 +546,17 @@ class BaseAgent:
                         self.requires_human_intervention = False
                         return backup_text
                     else:
-                        print(f"      ⚠️ [Validation] 백업 응답 검증 실패: {validation['reason']}")
+                        logging.warning(f"⚠️ [Validation] 백업 응답 검증 실패: {validation['reason']}")
                         # 부분 응답 병합 시도
                         if self.last_partial_response:
                             merged = self._try_merge_responses(self.last_partial_response, backup_text)
                             if merged:
-                                print(f"      ✅ [Recovery] 부분 응답 병합 성공")
+                                logging.info(f"✅ [Recovery] 부분 응답 병합 성공")
                                 return merged
 
                 # 빈 응답 처리
                 if self.last_partial_response:
-                    print(f"      📝 [Fallback] 부분 응답 반환 ({len(self.last_partial_response)}자)")
+                    logging.info(f"📝 [Fallback] 부분 응답 반환 ({len(self.last_partial_response)}자)")
                     # [V44] 부분 응답은 검증되지 않음 - 플래그 설정
                     self.requires_human_intervention = True
                     return self.last_partial_response
@@ -560,11 +565,11 @@ class BaseAgent:
 
             except Exception as e_inner:
                 inner_error_type = self._classify_error(e_inner)
-                print(f"      🚨 [Critical] 백업 실패 ({inner_error_type}): {str(e_inner)[:50]}")
+                logging.warning(f"🚨 [Critical] 백업 실패 ({inner_error_type}): {str(e_inner)[:50]}")
 
                 # [V44] 최후의 복구 시도
                 if self.last_partial_response:
-                    print(f"      📝 [Last Resort] 부분 응답 반환 ({len(self.last_partial_response)}자)")
+                    logging.info(f"📝 [Last Resort] 부분 응답 반환 ({len(self.last_partial_response)}자)")
                     self.requires_human_intervention = True
                     return self.last_partial_response
 
@@ -572,7 +577,7 @@ class BaseAgent:
                 self.requires_human_intervention = True
                 return self._create_error_response(inner_error_type, str(e_inner)[:100])
 
-    def _escape_braces(self, text, force=False):
+    def _escape_braces(self, text, force=False) -> str:
         """
         [V44] 중괄호 에스케이프 (최적화 버전)
 
@@ -706,7 +711,7 @@ class BaseAgent:
 
             return json.dumps(merged, ensure_ascii=False)
         except (json.JSONDecodeError, ValueError, TypeError, KeyError) as e:  # [V64.P4] IMPORTANT: partial merge failure
-            print(f"      ⚠️ [V64.P4] 부분 응답 병합 실패: {str(e)[:60]}")
+            logging.warning(f"⚠️ [V64.P4] 부분 응답 병합 실패: {str(e)[:60]}")
             return None
 
     def _create_error_response(self, error_type: str, message: str) -> str:
@@ -747,7 +752,7 @@ class BaseAgent:
         close_braces = text.count('}')
         if open_braces > close_braces:
             text += '}' * (open_braces - close_braces)
-        quote_count = len(re.findall(r'(?<!\\\\)"', text))
+        quote_count = len(re.findall(r'(?<!\\)"', text))  # [V70] 이스케이프 따옴표 정확히 제외
         if quote_count % 2 != 0:
             text += '"'
 
@@ -802,7 +807,7 @@ class BaseAgent:
             seen_ids = set()  # 순환 참조 감지용
             MAX_DEPTH = 20    # 최대 재귀 깊이
 
-            def process_node(node, depth=0):
+            def process_node(node, depth=0) -> None:
                 nonlocal final_dict
                 # [V44] 깊이 제한 체크
                 if depth > MAX_DEPTH:
@@ -846,7 +851,7 @@ class BaseAgent:
 
 
 
-    def _parse_and_repair_hard(self, json_str):
+    def _parse_and_repair_hard(self, json_str) -> dict:
         """[V27.5 Hardened] 물리적 구조 강제 수리"""
         try:
             open_cnt, close_cnt = json_str.count('{'), json_str.count('}')
@@ -861,16 +866,16 @@ class BaseAgent:
                 return ast.literal_eval(processed)
             except (ValueError, SyntaxError):
                 # [V44] JSON 파싱 실패 시 정규식 추출 경고
-                print(f"⚠️ [JSON Parser] ast.literal_eval 실패, 정규식 fallback 사용 (길이: {len(json_str)}자)")
+                logging.warning(f"⚠️ [JSON Parser] ast.literal_eval 실패, 정규식 fallback 사용 (길이: {len(json_str)}자)")
                 kv_pattern = r'"(\w+)"\s*:\s*"(.*?)"(?="|\s*\}|\s*,)'
                 found_pairs = re.findall(kv_pattern, json_str, re.DOTALL)
                 if found_pairs:
-                    print(f"   → 정규식으로 {len(found_pairs)}개 키-값 추출 성공")
+                    logging.info(f"→ 정규식으로 {len(found_pairs)}개 키-값 추출 성공")
                     return {k: v.replace('\\n', '\n').strip() for k, v in found_pairs}
-                print(f"   → 정규식 추출 실패, RAW 반환")
+                logging.warning(f"→ 정규식 추출 실패, RAW 반환")
                 return {"content": json_str, "status": "REPAIRED_RAW"}
         except Exception as e:
-            print(f"🚨 [JSON Parser] CRITICAL_FAILURE: {str(e)[:100]}")
+            logging.warning(f"🚨 [JSON Parser] CRITICAL_FAILURE: {str(e)[:100]}")
             return {"content": json_str, "error": "CRITICAL_FAILURE"}
 
     # ═══════════════════════════════════════════════════════════════════════════
@@ -938,11 +943,14 @@ class BaseAgent:
                     "reason": "content_too_short"
                 }
 
+            # [V69.1] Gemini API 시그니처 변경 대응: config 파라미터 사용
             cache = self.client.caches.create(
                 model=self.primary_model,
-                contents=[{"role": "user", "parts": [{"text": content}]}],
-                ttl=f"{ttl_seconds}s",
-                display_name=f"{cache_type}_cache_{project_name}"
+                config=types.CreateCachedContentConfig(
+                    contents=[{"role": "user", "parts": [{"text": content}]}],
+                    ttl=f"{ttl_seconds}s",
+                    display_name=f"{cache_type}_cache_{project_name}"
+                )
             )
 
             # 캐시 정보 저장
@@ -952,7 +960,7 @@ class BaseAgent:
                 "content_hash": content_hash
             }
 
-            print(f"      📦 [V61.5] 컨텍스트 캐시 생성: {cache_type} ({len(content)}자)")
+            logging.info(f"📦 [V61.5] 컨텍스트 캐시 생성: {cache_type} ({len(content)}자)")
 
             return {
                 "cache_name": cache.name,
@@ -965,11 +973,11 @@ class BaseAgent:
             error_str = str(e).lower()
             # [V61.9] 캐싱 중 429/quota → 현재 작업은 캐시 없이 진행, 다음 작업에서 키 전환
             if "429" in error_str or "resource_exhausted" in error_str or "quota" in error_str:
-                print(f"      ⚠️ [V61.9] 캐싱 중 API 제한 감지 → 키 전환 예약 (현재 작업은 캐시 없이 진행)")
+                logging.info(f"⚠️ [V61.9] 캐싱 중 API 제한 감지 → 키 전환 예약 (현재 작업은 캐시 없이 진행)")
                 with BaseAgent._rotation_lock:
                     BaseAgent._key_rotation_pending = True
             else:
-                print(f"      ⚠️ [V61.5] 컨텍스트 캐싱 실패 (계속 진행): {str(e)[:50]}")
+                logging.warning(f"⚠️ [V61.5] 컨텍스트 캐싱 실패 (계속 진행): {str(e)[:50]}")
             return {
                 "cache_name": None,
                 "cached": False,
@@ -1042,7 +1050,7 @@ class BaseAgent:
             return response.text if response.text else ""
 
         except Exception as e:
-            print(f"      ⚠️ [V61.7] 캐시 기반 질의 실패, 일반 질의로 폴백: {str(e)[:80]}")
+            logging.warning(f"⚠️ [V61.7] 캐시 기반 질의 실패, 일반 질의로 폴백: {str(e)[:80]}")
             fallback_prompt = full_prompt_fallback if full_prompt_fallback else prompt
             return self.ask(fallback_prompt, temperature=temperature, thinking_level=thinking_level)
 

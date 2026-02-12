@@ -48,8 +48,8 @@ def build_hud_context(
     # ── 1. 주인공 상태 (고밀도 필드) ──
     try:
         prev_state = None
-        if ep_num > 1 and hasattr(state_tracker, 'episode_states'):
-            prev_state = state_tracker.episode_states.get(ep_num - 1)
+        if ep_num > 1 and hasattr(state_tracker, 'states'):
+            prev_state = state_tracker.states.get(ep_num - 1)
 
         if prev_state:
             state_dict = prev_state.to_dict() if hasattr(prev_state, 'to_dict') else {}
@@ -117,7 +117,7 @@ def _build_director_protagonist(lines: list, state_dict: dict):
 
     # Relationships (줄 단위)
     relationships = state_dict.get('relationships', {})
-    if relationships:
+    if relationships and isinstance(relationships, dict):  # [V70] str/list 타입 방어
         lines.append("  관계:")
         for name, rel in list(relationships.items())[:5]:
             lines.append(f"    - {name}: {rel}")
@@ -159,7 +159,7 @@ def _build_writer_protagonist(lines: list, state_dict: dict, header: str):
 
     # 관계 (inline)
     relationships = state_dict.get('relationships', {})
-    if relationships:
+    if relationships and isinstance(relationships, dict):  # [V70] str/list 타입 방어
         rel_str = ', '.join(f"{k}:{v}" for k, v in list(relationships.items())[:5])
         lines.append(f"  - 관계: {rel_str}")
 
@@ -196,7 +196,7 @@ def _build_writer_npcs(lines: list, npc_registry: dict):
     """Writer/Blueprint variant: alive(10명) role/faction/relationship, dead inline"""
     alive_npcs = [
         (name, info) for name, info in npc_registry.items()
-        if info.get('status') != 'dead'
+        if isinstance(info, dict) and info.get('status') != 'dead'
     ][:10]  # 최대 10명
 
     if alive_npcs:
@@ -222,7 +222,7 @@ def _build_writer_npcs(lines: list, npc_registry: dict):
     # 사망 NPC 경고
     dead_npcs = [
         name for name, info in npc_registry.items()
-        if info.get('status') == 'dead'
+        if isinstance(info, dict) and info.get('status') == 'dead'  # [V70] isinstance 방어
     ]
     if dead_npcs:
         lines.append("")

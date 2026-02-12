@@ -15,6 +15,7 @@
 """
 
 import json
+import logging
 import re
 from typing import List, Dict, Set, Optional, Any
 from dataclasses import dataclass, field
@@ -50,7 +51,7 @@ class ConstraintDB:
     중복 획득, 상태 불연속 등의 오류를 사전에 방지합니다.
     """
 
-    def __init__(self, project_context=None):
+    def __init__(self, project_context=None) -> None:
         """
         Args:
             project_context: ProjectContext 객체 (DB 접근용)
@@ -65,7 +66,7 @@ class ConstraintDB:
 
         self._load_from_db()
 
-    def _load_from_db(self):
+    def _load_from_db(self) -> None:
         """DB에서 기존 Arc 데이터 로드"""
         if not self.context or not hasattr(self.context, 'db'):
             return
@@ -87,7 +88,7 @@ class ConstraintDB:
                         self._parse_arc_state(arc)
 
         except Exception as e:
-            print(f"      ⚠️ [ConstraintDB] DB 로드 실패: {e}")
+            logging.warning(f"⚠️ [ConstraintDB] DB 로드 실패: {e}")
 
     def _parse_arc_state(self, arc_data: dict):
         """Arc 데이터에서 상태 추출"""
@@ -96,8 +97,8 @@ class ConstraintDB:
             return
 
         # state_constraints에서 상태 추출
-        state_constraints = arc_data.get('state_constraints', {})
-        arc_end_state = state_constraints.get('arc_end_state', {})
+        state_constraints = arc_data.get('state_constraints') or {}  # [V70] null → {} 방어
+        arc_end_state = state_constraints.get('arc_end_state') or {}  # [V70]
 
         # joint_docs에서 추가 정보 추출
         joint_docs = arc_data.get('joint_docs', {})
@@ -515,8 +516,8 @@ class ConstraintDB:
         # 획득 금지 아이템 검사
         forbidden = set(self.get_forbidden_items(arc_no))
 
-        state_constraints = arc_data.get('state_constraints', {})
-        new_acquired = state_constraints.get('items_acquired', [])
+        state_constraints = arc_data.get('state_constraints') or {}  # [V70] null → {} 방어
+        new_acquired = state_constraints.get('items_acquired') or []  # [V70]
 
         # [V49.4] Semantic Registry를 사용한 고급 중복 감지
         if self.item_registry and new_acquired:

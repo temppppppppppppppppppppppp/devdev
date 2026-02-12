@@ -12,6 +12,7 @@
 """
 
 import json
+import logging
 import re
 from collections import Counter, defaultdict
 from typing import Dict, List, Tuple, Optional
@@ -401,16 +402,16 @@ class PatternTracker:
                     'reaction_patterns': self.pattern_history['reaction_patterns'],
                 }
             }
-            db_manager.update_anchor('pattern_tracker', data)
+            db_manager.save_anchor('pattern_tracker', data)  # [V70] update_anchor → save_anchor
             return True
         except Exception as e:
-            print(f"[PatternTracker] DB 저장 실패: {e}")
+            logging.warning(f"[PatternTracker] DB 저장 실패: {e}")
             return False
 
     def load_from_db(self, db_manager) -> bool:
         """DB에서 패턴 히스토리 로드"""
         try:
-            data = db_manager.get_anchor('pattern_tracker')
+            data = db_manager.load_anchor('pattern_tracker')  # [V70] get_anchor → load_anchor
             if data:
                 self.window_size = data.get('window_size', 10)
                 self.genre = data.get('genre', 'wuxia')
@@ -423,7 +424,7 @@ class PatternTracker:
                 return True
             return False
         except Exception as e:
-            print(f"[PatternTracker] DB 로드 실패: {e}")
+            logging.warning(f"[PatternTracker] DB 로드 실패: {e}")
             return False
 
     # ========================================================================

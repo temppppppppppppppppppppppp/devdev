@@ -26,7 +26,7 @@ class ConstraintCompiler:
     이전 Arc들에서 제약 조건을 추출하고 구조화
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         # 아이템 획득 패턴
         self.acquire_patterns = [
             r'([가-힣]{2,20}(?:도|검|창|봉|환|단|경|비급|서|책|패|인장|권))',
@@ -92,14 +92,14 @@ class ConstraintCompiler:
             arc_no = arc.get("arc_no", 0)
 
             # state_constraints.items_acquired (구조화 → 전체 스캔)
-            acquired = arc.get("state_constraints", {}).get("items_acquired", [])
+            acquired = (arc.get("state_constraints") or {}).get("items_acquired") or []  # [V70] None 방어
             if isinstance(acquired, list):
                 for item in acquired:
                     if item and len(item) >= 2:
                         items[item] = arc_no
 
             # joint_docs.physical_inventory (구조화 → 전체 스캔)
-            inventory = arc.get("joint_docs", {}).get("physical_inventory", [])
+            inventory = (arc.get("joint_docs") or {}).get("physical_inventory") or []  # [V70] None 방어
             if isinstance(inventory, list):
                 for item in inventory:
                     if item and len(item) >= 2 and item not in items:
@@ -113,6 +113,9 @@ class ConstraintCompiler:
             # tactical_doc regex (비싼 연산 → 최근 REGEX_WINDOW개만)
             if idx >= regex_start:
                 tactical = arc.get("tactical_doc", "")
+                if isinstance(tactical, dict):  # [V70] dict 타입 방어
+                    tactical = json.dumps(tactical, ensure_ascii=False)
+                tactical = str(tactical) if tactical else ""
                 for pattern in self.acquire_patterns:
                     matches = re.findall(pattern, tactical)
                     for m in matches:
@@ -134,7 +137,7 @@ class ConstraintCompiler:
             arc_no = arc.get("arc_no", 0)
 
             # state_constraints.grants_received (구조화 → 전체)
-            received = arc.get("state_constraints", {}).get("grants_received", [])
+            received = (arc.get("state_constraints") or {}).get("grants_received", [])  # [V70] None 방어
             if isinstance(received, list):
                 for grant in received:
                     if grant and len(grant) >= 2:
@@ -143,6 +146,9 @@ class ConstraintCompiler:
             # tactical_doc regex (최근 REGEX_WINDOW개만)
             if idx >= regex_start:
                 tactical = arc.get("tactical_doc", "")
+                if isinstance(tactical, dict):  # [V70] dict 타입 방어 (_collect_all_items과 동일)
+                    tactical = json.dumps(tactical, ensure_ascii=False)
+                tactical = str(tactical) if tactical else ""
                 for pattern in self.grant_patterns:
                     matches = re.findall(pattern, tactical)
                     for m in matches:

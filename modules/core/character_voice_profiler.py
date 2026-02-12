@@ -15,6 +15,7 @@
 """
 
 import re
+import logging
 import json
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, field, asdict, fields
@@ -111,7 +112,7 @@ class CharacterVoiceProfiler:
         self.profiles: Dict[str, VoiceProfile] = {}
         self._load_from_db()
 
-    def _load_from_db(self):
+    def _load_from_db(self) -> None:
         """DB에서 프로파일 로드"""
         if self.db is None:
             return
@@ -121,11 +122,11 @@ class CharacterVoiceProfiler:
             if data and isinstance(data, dict):
                 for name, profile_data in data.items():
                     self.profiles[name] = VoiceProfile.from_dict(profile_data)
-                print(f"      [VoiceProfiler] {len(self.profiles)}개 프로파일 로드 완료")
+                logging.info(f"[VoiceProfiler] {len(self.profiles)}개 프로파일 로드 완료")
         except Exception as e:
-            print(f"      [VoiceProfiler] 로드 실패: {e}")
+            logging.warning(f"[VoiceProfiler] 로드 실패: {e}")
 
-    def _save_to_db(self):
+    def _save_to_db(self) -> None:
         """DB에 프로파일 저장"""
         if self.db is None:
             return
@@ -134,7 +135,7 @@ class CharacterVoiceProfiler:
             data = {name: p.to_dict() for name, p in self.profiles.items()}
             self.db.save_anchor("character_voice_profiles", data)
         except Exception as e:
-            print(f"      [VoiceProfiler] 저장 실패: {e}")
+            logging.warning(f"[VoiceProfiler] 저장 실패: {e}")
 
     def create_profile(
         self,
@@ -171,7 +172,7 @@ class CharacterVoiceProfiler:
         self.profiles[character_name] = profile
         self._save_to_db()
 
-        print(f"      [VoiceProfiler] '{character_name}' 프로파일 생성 완료")
+        logging.info(f"[VoiceProfiler] '{character_name}' 프로파일 생성 완료")
         return profile
 
     def extract_profile_from_text(
@@ -195,7 +196,7 @@ class CharacterVoiceProfiler:
         dialogues = self._extract_character_dialogues(character_name, text)
 
         if len(dialogues) < min_dialogues:
-            print(f"      [VoiceProfiler] '{character_name}' 대사 부족 ({len(dialogues)}/{min_dialogues})")
+            logging.info(f"[VoiceProfiler] '{character_name}' 대사 부족 ({len(dialogues)}/{min_dialogues})")
             return None
 
         # 말투 분석

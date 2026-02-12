@@ -5,6 +5,7 @@ main_a.py에서 분리된 Stage 0 전용 모듈
 """
 
 from .preset_registry import PresetRegistry, FieldDefinition
+import logging
 from .style_extractor import StyleExtractor, StyleGuide
 from .story_expander import StoryExpander
 from .reverse_expander import ReverseExpander
@@ -69,23 +70,23 @@ class StageZeroManager:
 
     def show_menu(self, is_new_project: bool = True) -> int:
         """Stage 0 메인 메뉴 표시"""
-        print("\n" + "=" * 50)
-        print("  Stage 0 - 프로젝트 설정")
-        print("=" * 50)
+        logging.info("\n" + "=" * 50)
+        logging.info("Stage 0 - 프로젝트 설정")
+        logging.info("=" * 50)
 
         if is_new_project:
-            print("\n  [1] 컨셉 입력 → Bible + Treatment 생성")
-            print("  [2] 역설계 → 기존 원고에서 설정 추출")
-            print("  [3] Bible 임포트 → 기존 JSON 불러오기")
-            print("  [4] 스타일 레퍼런스 분석 → 참조 원고에서 문체 DNA 추출")
-            print("\n  [0] 취소")
+            logging.info("\n  [1] 컨셉 입력 → Bible + Treatment 생성")
+            logging.info("[2] 역설계 → 기존 원고에서 설정 추출")
+            logging.info("[3] Bible 임포트 → 기존 JSON 불러오기")
+            logging.info("[4] 스타일 레퍼런스 분석 → 참조 원고에서 문체 DNA 추출")
+            logging.info("\n  [0] 취소")
         else:
-            print("\n  [1] Bible 재생성/수정")
-            print("  [2] 역설계 추가 (원고 추가 분석)")
-            print("  [3] 스타일 가이드 재추출")
-            print("  [4] 프리셋 관리")
-            print("  [5] 스타일 레퍼런스 분석 → 참조 원고에서 문체 DNA 추출")
-            print("\n  [0] 메인 메뉴로")
+            logging.info("\n  [1] Bible 재생성/수정")
+            logging.info("[2] 역설계 추가 (원고 추가 분석)")
+            logging.info("[3] 스타일 가이드 재추출")
+            logging.info("[4] 프리셋 관리")
+            logging.info("[5] 스타일 레퍼런스 분석 → 참조 원고에서 문체 DNA 추출")
+            logging.info("\n  [0] 메인 메뉴로")
 
         try:
             choice = input("\n  선택: ").strip()
@@ -95,14 +96,14 @@ class StageZeroManager:
 
     def show_genre_menu(self) -> str:
         """장르 선택 메뉴"""
-        print("\n" + "-" * 40)
-        print("  장르 선택")
-        print("-" * 40)
+        logging.info("\n" + "-" * 40)
+        logging.info("장르 선택")
+        logging.info("-" * 40)
 
         genres = list(self.SUPPORTED_GENRES.items())
         for i, (code, name) in enumerate(genres, 1):
-            print(f"  [{i}] {name} ({code})")
-        print(f"\n  [0] 자동 감지")
+            logging.info(f"[{i}] {name} ({code})")
+        logging.info(f"\n  [0] 자동 감지")
 
         try:
             choice = input("\n  선택: ").strip()
@@ -119,14 +120,14 @@ class StageZeroManager:
         """주인공 설정 메뉴"""
         config = {}
 
-        print("\n" + "-" * 40)
-        print("  주인공 기본 설정")
-        print("-" * 40)
+        logging.info("\n" + "-" * 40)
+        logging.info("주인공 기본 설정")
+        logging.info("-" * 40)
 
         # 세계관 출신
-        print("\n  [세계관 출신]")
+        logging.info("\n  [세계관 출신]")
         for i, opt in enumerate(self.WORLD_ORIGIN_OPTIONS, 1):
-            print(f"    [{i}] {opt}")
+            logging.info(f"[{i}] {opt}")
         try:
             choice = int(input("    선택: ").strip()) - 1
             if 0 <= choice < len(self.WORLD_ORIGIN_OPTIONS):
@@ -137,9 +138,9 @@ class StageZeroManager:
             config["world_origin"] = "현대인"
 
         # 회귀/빙의 타입
-        print("\n  [캐릭터 타입]")
+        logging.info("\n  [캐릭터 타입]")
         for i, opt in enumerate(self.INCARNATION_TYPES, 1):
-            print(f"    [{i}] {opt}")
+            logging.info(f"[{i}] {opt}")
         try:
             choice = int(input("    선택: ").strip()) - 1
             if 0 <= choice < len(self.INCARNATION_TYPES):
@@ -160,15 +161,15 @@ class StageZeroManager:
         # 1. 장르 선택
         self.genre = self.show_genre_menu()
         if not self.genre:
-            print("  [*] 컨셉에서 장르 자동 감지 예정")
+            logging.info("[*] 컨셉에서 장르 자동 감지 예정")
 
         # 2. 주인공 설정
         self.protagonist_config = self.show_protagonist_config_menu()
 
         # 3. 컨셉 입력
-        print("\n" + "-" * 40)
-        print("  스토리 컨셉 입력 (여러 줄 가능, 빈 줄로 종료)")
-        print("-" * 40)
+        logging.info("\n" + "-" * 40)
+        logging.info("스토리 컨셉 입력 (여러 줄 가능, 빈 줄로 종료)")
+        logging.info("-" * 40)
         lines = []
         while True:
             line = input()
@@ -178,7 +179,7 @@ class StageZeroManager:
         concept = "\n".join(lines)
 
         if not concept.strip():
-            print("  [!] 컨셉이 입력되지 않았습니다.")
+            logging.info("[!] 컨셉이 입력되지 않았습니다.")
             return {}, [], None
 
         # 4. 생성
@@ -189,30 +190,30 @@ class StageZeroManager:
         expander = StoryExpander(genre=self.genre, llm_client=self.client)
 
         # 분석
-        print("\n  [*] 컨셉 분석 중...")
+        logging.info("\n  [*] 컨셉 분석 중...")
         expander.analyze_concept(concept)
 
         # 장르 업데이트
         if not self.genre:
             self.genre = expander.genre
-            print(f"  [v] 감지된 장르: {self.genre}")
+            logging.info(f"[v] 감지된 장르: {self.genre}")
 
         # 프리셋 초기화
         self.preset_registry = expander.preset_registry
 
         # Bible 생성
-        print("  [*] Bible 생성 중...")
+        logging.info("[*] Bible 생성 중...")
         self.bible = expander.generate_bible(self.protagonist_config)
 
         # Treatment 생성
-        print("  [*] Treatment 생성 중...")
+        logging.info("[*] Treatment 생성 중...")
         self.treatment = expander.generate_treatment(60)
 
         # 저장
         if self.project_path:
             output_dir = Path(self.project_path) / "stage0_output"
             expander.save_all(str(output_dir))
-            print(f"  [v] 저장 완료: {output_dir}")
+            logging.info(f"[v] 저장 완료: {output_dir}")
 
         return self.bible, self.treatment, None
 
@@ -228,7 +229,7 @@ class StageZeroManager:
             input_path = input("  > ").strip()
 
         if not input_path or not Path(input_path).exists():
-            print("  [!] 유효하지 않은 경로입니다.")
+            logging.info("[!] 유효하지 않은 경로입니다.")
             return {}, [], None
 
         # 장르 (선택사항)
@@ -264,7 +265,7 @@ class StageZeroManager:
 
         path = Path(bible_path)
         if not path.exists() or path.suffix.lower() != ".json":
-            print("  [!] 유효하지 않은 JSON 파일입니다.")
+            logging.info("[!] 유효하지 않은 JSON 파일입니다.")
             return {}
 
         try:
@@ -280,39 +281,39 @@ class StageZeroManager:
             # 프리셋 초기화
             self.preset_registry = PresetRegistry(base_genre=self.genre)
 
-            print(f"  [v] Bible 임포트 완료 (장르: {self.genre})")
+            logging.info(f"[v] Bible 임포트 완료 (장르: {self.genre})")
             return self.bible
 
         except Exception as e:
-            print(f"  [!] 임포트 실패: {e}")
+            logging.warning(f"[!] 임포트 실패: {e}")
             return {}
 
     # ============================================
     # 프리셋 관리
     # ============================================
 
-    def manage_presets(self):
+    def manage_presets(self) -> None:
         """프리셋 관리 메뉴"""
         if not self.preset_registry:
             self.preset_registry = PresetRegistry(base_genre=self.genre)
 
         while True:
-            print("\n" + "-" * 40)
-            print("  프리셋 관리")
-            print("-" * 40)
-            print(f"\n  현재 활성: {list(self.preset_registry.active_presets)}")
-            print("\n  사용 가능한 프리셋:")
+            logging.info("\n" + "-" * 40)
+            logging.info("프리셋 관리")
+            logging.info("-" * 40)
+            logging.info(f"\n  현재 활성: {list(self.preset_registry.active_presets)}")
+            logging.info("\n  사용 가능한 프리셋:")
 
             available = [g for g in PresetRegistry.GENRE_PRESETS.keys()
                          if g not in self.preset_registry.active_presets]
             for i, g in enumerate(available, 1):
-                print(f"    [{i}] + {g}")
+                logging.info(f"[{i}] + {g}")
 
             active = [g for g in self.preset_registry.active_presets if g != "common"]
             for i, g in enumerate(active, len(available) + 1):
-                print(f"    [{i}] - {g}")
+                logging.info(f"[{i}] - {g}")
 
-            print("\n    [0] 돌아가기")
+            logging.info("\n    [0] 돌아가기")
 
             try:
                 choice = int(input("\n    선택: ").strip())
@@ -321,13 +322,13 @@ class StageZeroManager:
                 elif choice <= len(available):
                     preset = available[choice - 1]
                     self.preset_registry.activate_preset(preset)
-                    print(f"    [v] {preset} 활성화")
+                    logging.info(f"[v] {preset} 활성화")
                 else:
                     idx = choice - len(available) - 1
                     if 0 <= idx < len(active):
                         preset = active[idx]
                         self.preset_registry.deactivate_preset(preset)
-                        print(f"    [v] {preset} 비활성화")
+                        logging.info(f"[v] {preset} 비활성화")
             except (ValueError, IndexError, EOFError):
                 pass
 
@@ -343,22 +344,22 @@ class StageZeroManager:
         if not genre:
             genre = self.show_genre_menu()
         if not genre:
-            print("  [!] 장르가 지정되지 않았습니다.")
+            logging.info("[!] 장르가 지정되지 않았습니다.")
             return None
 
         # 레퍼런스 로드
         ref_data = StyleExtractor.load_reference_manuscripts(genre)
         if not ref_data:
             ref_base = Path("config/style_references") / genre
-            print(f"  [!] 레퍼런스 원고가 없습니다: {ref_base}/")
-            print(f"      폴더 구조: config/style_references/{genre}/작품명/0001.txt")
+            logging.info(f"[!] 레퍼런스 원고가 없습니다: {ref_base}/")
+            logging.info(f"폴더 구조: config/style_references/{genre}/작품명/0001.txt")
             return None
 
         total_eps = sum(len(eps) for eps in ref_data.values())
         works = list(ref_data.keys())
-        print(f"\n  [*] 레퍼런스 로드 완료: {len(works)}개 작품, {total_eps}개 에피소드")
+        logging.info(f"\n  [*] 레퍼런스 로드 완료: {len(works)}개 작품, {total_eps}개 에피소드")
         for w in works:
-            print(f"      - {w}: {len(ref_data[w])}편")
+            logging.info(f"- {w}: {len(ref_data[w])}편")
 
         confirm = input("\n  분석을 시작하시겠습니까? (y/n): ").strip().lower()
         if confirm != 'y':
@@ -366,16 +367,16 @@ class StageZeroManager:
 
         # 분석 실행
         extractor = StyleExtractor(llm_client=self.client)
-        print("\n  [*] 문체 DNA 추출 중... (대량 원고 분석 - 시간 소요)")
-        self.style_guide = extractor.extract_from_references(ref_data, genre=genre)
+        logging.info("\n  [*] 문체 DNA 추출 중... (대량 원고 분석 - 시간 소요)")
+        self.style_guide = extractor.extract_from_references(genre)
         self.genre = genre
 
         if self.style_guide:
-            print(f"\n  [v] 문체 DNA 추출 완료 (v{self.style_guide.analysis_version})")
-            print(f"      - 분석 원고: {self.style_guide.source_episode_count}편 / {self.style_guide.source_char_count:,}자")
-            print(f"      - 참조 작품: {', '.join(self.style_guide.reference_works or [])}")
-            print(f"      - 모범 문단: {len(self.style_guide.exemplary_passages or [])}개")
-            print(f"      - AI 금지 패턴: {len(self.style_guide.anti_ai_patterns or [])}개")
+            logging.info(f"\n  [v] 문체 DNA 추출 완료 (v{self.style_guide.analysis_version})")
+            logging.info(f"- 분석 원고: {self.style_guide.source_episode_count}편 / {self.style_guide.source_char_count:,}자")
+            logging.info(f"- 참조 작품: {', '.join(self.style_guide.reference_works or [])}")
+            logging.info(f"- 모범 문단: {len(self.style_guide.exemplary_passages or [])}개")
+            logging.info(f"- AI 금지 패턴: {len(self.style_guide.anti_ai_patterns or [])}개")
 
             # 저장
             if self.project_path:
@@ -383,7 +384,7 @@ class StageZeroManager:
                 output_dir.mkdir(parents=True, exist_ok=True)
                 with open(output_dir / "style_guide.json", 'w', encoding='utf-8') as f:
                     f.write(self.style_guide.to_json())
-                print(f"      - 저장: {output_dir / 'style_guide.json'}")
+                logging.info(f"- 저장: {output_dir / 'style_guide.json'}")
 
         return self.style_guide
 
@@ -437,7 +438,7 @@ class StageZeroManager:
             with open(out / "style_guide.json", 'w', encoding='utf-8') as f:
                 f.write(self.style_guide.to_json())
 
-        print(f"  [v] 상태 저장: {out}")
+        logging.info(f"[v] 상태 저장: {out}")
 
     @classmethod
     def load_state(cls, project_path: str, llm_client=None) -> "StageZeroManager":

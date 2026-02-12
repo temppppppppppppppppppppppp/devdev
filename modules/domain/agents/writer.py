@@ -22,14 +22,14 @@ from modules.core.hud_utils import get_hud_trend_safe as _get_hud_trend_safe_sha
 class Writer(BaseAgent):
     """[V64] Thin Fallback Writer — ChiefWriter 실패 시 최후 폴백 전용"""
 
-    def __init__(self, context, client, model_tier="gemini-1.5-pro"):
+    def __init__(self, context, client, model_tier="gemini-1.5-pro") -> None:
         super().__init__(context, client, model_tier)
         self.cache_name = None  # main_a.py에서 주입됨
         self.last_hud_anomalies = None
         self.guard = None
         self.genre = 'wuxia'
 
-    def set_guard(self, guard):
+    def set_guard(self, guard) -> None:
         """장르 Guard 설정"""
         self.guard = guard
 
@@ -110,10 +110,10 @@ class Writer(BaseAgent):
         except Exception:
             pass
 
-        anti_trope = self._build_anti_trope_instructions(getattr(self.context, 'genre', {}).get('name', '무협'))
+        anti_trope = self._build_anti_trope_instructions((getattr(self.context, 'genre', None) or {}).get('name', '무협'))  # [V70] None.get() 방어
         genre_rules_prompt = self.get_genre_rules_prompt()
         mandatory_context = self._build_mandatory_context(ep_num)
-        justification_guidance = self._build_justification_guidance(hud_report, getattr(self.context, 'genre', {}).get('name', '무협'))
+        justification_guidance = self._build_justification_guidance(hud_report, (getattr(self.context, 'genre', None) or {}).get('name', '무협'))  # [V70]
 
         # 2. 프롬프트 조립
         dynamic_prompt = f"""
@@ -212,6 +212,12 @@ class Writer(BaseAgent):
         """출력 누수 방지 필터"""
         if not text:
             return text
+        # [V70] ask()가 dict를 직접 반환할 수 있음 → re.sub TypeError 방어
+        if isinstance(text, dict):
+            banned_keys = ["Beat 3", "Beat 4", "continuation_text", "scene_summary"]
+            for key in banned_keys:
+                text.pop(key, None)
+            return json.dumps(text, ensure_ascii=False, indent=4)
         try:
             clean_text = re.sub(r"```json\s*|\s*```", "", text).strip()
             data = json.loads(clean_text)
@@ -220,7 +226,7 @@ class Writer(BaseAgent):
                 for key in banned_keys:
                     data.pop(key, None)
                 return json.dumps(data, ensure_ascii=False, indent=4)
-        except (json.JSONDecodeError, ValueError):
+        except (json.JSONDecodeError, ValueError, TypeError):  # [V70] TypeError 추가
             pass
         filtered = [line for line in text.splitlines() if not re.search(r'"(Beat \d+|continuation_text)":', line)]
         return "\n".join(filtered)

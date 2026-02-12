@@ -98,10 +98,15 @@ def build_chief_writer_main_prompt(
     style_guide: str,
     common_rules: str,
     writing_guidelines: str,
+    prev_manuscripts_section: str = "",  # [V67] 이전 원고 전문
+    incarnation_context_section: str = "",  # [V67.1] 환생 유형별 집필 맥락
+    chain_link_section: str = "",  # [V68] 직전 화 연결고리
 ) -> str:
     """[V65] _build_common_context() 메인 프롬프트 템플릿.
 
     호출부에서 self._escape_braces() 처리 완료된 값을 전달받는다.
+    [V67] prev_manuscripts_section: 이전 30화 원고 전문 (모순 방지용 컨텍스트)
+    [V68] chain_link_section: 직전 화 연결고리 (다음 화에서 반드시 이어받아야 할 것)
     """
     return f"""
 [Role] 웹소설 1타 작가 (Chief Writer)
@@ -109,6 +114,14 @@ def build_chief_writer_main_prompt(
 
 ### 핵심 철학
 "Blueprint를 토대로 양질의 원고를 연속성 있게 생산한다"
+
+### [V67] 모순 절대 금지
+이전 원고에서 확립된 사실(고유명사, 수치, 상태)을 반드시 준수하세요.
+변경이 필요한 경우 작중에서 명확한 이유를 설명해야 합니다.
+
+{incarnation_context_section}
+
+{chain_link_section}
 
 {dna_instruction}
 
@@ -127,27 +140,31 @@ def build_chief_writer_main_prompt(
 
 {hud_anomaly_section}
 
-### 📋 [STEP 1: Blueprint 분석]
+### [STEP 1: Blueprint 분석]
 아래 Blueprint의 모든 씬을 파악하고, 누락 없이 반영하라.
 
 {scene_breakdown}
 
-### 📋 [STEP 2: 연속성 확인]
+### [STEP 2: 연속성 확인]
 {prev_digest}
 
 직전 화 엔딩에서 자연스럽게 이어져야 한다. 위 다이제스트의 상태를 반드시 준수하라.
 
-[직전 화 마지막 장면]
+⛔ [V69.1] 중복 서술 금지: 직전 화의 마지막 장면을 다시 서술하지 마라.
+   직전 화가 끝난 바로 그 다음 순간부터 시작하라.
+   직전 화에서 이미 끝난 대화·행동·이동을 반복하지 마라.
+
+[직전 화 마지막 장면 — 이 장면 이후부터 시작할 것]
 ...{prev_ending}
 
-### 📋 [STEP 3: 현재 상태 반영]
+### [STEP 3: 현재 상태 반영]
 {hud_report}
 
 {high_density_hud_section}
 
 {hud_trend_section}
 
-⚠️ 필수 준수:
+필수 준수:
 - 현재 경지/내공 범위 내에서만 무공 사용
 - 부상 상태는 전투/행동에 반영
 - 소지품/자금 상태 일관성 유지
@@ -156,17 +173,18 @@ def build_chief_writer_main_prompt(
 
 {npc_frequency_section}
 
-### 📋 [STEP 4: Arc 전술 참조]
+### [STEP 4: Arc 전술 참조]
 {arc_doc}
 
-### 📋 [STEP 5: 세계관 설정]
+### [STEP 5: 세계관 설정]
 - 주인공 동기: {core_identity_desire}
 
-### 📋 [STEP 6: 문체 DNA 가이드 - 위반 시 AI티 판정]
+### [STEP 6: 문체 DNA 가이드 - 위반 시 AI티 판정]
 {style_guide}
 
 {common_rules}
 {writing_guidelines}
+{prev_manuscripts_section}
 """
 
 

@@ -12,7 +12,7 @@ from .base_guard import BaseGuard
 class WuxiaGuard(BaseGuard):
     """[무협] 순혈주의 파수꾼 + V46 일관성 검증"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         # 무협 금기어 목록
@@ -109,10 +109,10 @@ class WuxiaGuard(BaseGuard):
             (r'전생[,\s]*현대', '현대인 빙의 표현 금지'),
         ]
 
-    def get_genre_name(self):
+    def get_genre_name(self) -> str:
         return "무협(WUXIA)"
 
-    def get_v20_purism_prompt(self):
+    def get_v20_purism_prompt(self) -> str:
         """무협 순혈주의 지침 프롬프트"""
         return f"""
 [🛡️ V40 무협 순혈주의 절대 준수 (Wuxia Purism Enforcement)]

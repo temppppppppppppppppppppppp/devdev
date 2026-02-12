@@ -5,6 +5,7 @@
 Reflexion: 실패 → 분석 → 기억 → 회피
 """
 import json
+import logging
 from typing import Dict, List, Any
 from datetime import datetime
 
@@ -19,7 +20,7 @@ class ReflexionManager:
     3. 프롬프트 생성 (Writer/Architect에 주입)
     """
 
-    def __init__(self, context):
+    def __init__(self, context) -> None:
         """
         Args:
             context: ProjectContext 객체
@@ -28,7 +29,7 @@ class ReflexionManager:
         self.memory = []  # 메모리 캐시
         self.loaded = False
 
-    def load_memory(self):
+    def load_memory(self) -> None:
         """DB에서 실패 메모리 로드"""
         if self.loaded:
             return
@@ -51,11 +52,11 @@ class ReflexionManager:
                 })
 
             self.loaded = True
-            print(f"      📚 [Reflexion] 과거 실패 패턴 {len(self.memory)}개 로드됨")
+            logging.warning(f"📚 [Reflexion] 과거 실패 패턴 {len(self.memory)}개 로드됨")
 
         except Exception as e:
             # 테이블이 없거나 오류 시 빈 메모리
-            print(f"      ⚠️ [Reflexion] 메모리 로드 실패 (첫 실행일 수 있음): {e}")
+            logging.warning(f"⚠️ [Reflexion] 메모리 로드 실패 (첫 실행일 수 있음): {e}")
             self.memory = []
             self.loaded = True
 
@@ -99,7 +100,7 @@ class ReflexionManager:
             existing['frequency'] = new_frequency
             existing['last_seen'] = timestamp
 
-            print(f"      📝 [Reflexion] 패턴 '{pattern_key}' 빈도 증가: {new_frequency}회")
+            logging.info(f"📝 [Reflexion] 패턴 '{pattern_key}' 빈도 증가: {new_frequency}회")
 
         else:
             # 새 패턴 추가
@@ -122,7 +123,7 @@ class ReflexionManager:
             }
             self.memory.append(new_pattern)
 
-            print(f"      ✨ [Reflexion] 새 패턴 기록: '{pattern_key}'")
+            logging.info(f"✨ [Reflexion] 새 패턴 기록: '{pattern_key}'")
 
     def _identify_pattern(self, description: str) -> str:
         """

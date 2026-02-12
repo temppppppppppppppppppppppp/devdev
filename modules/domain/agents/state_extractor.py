@@ -10,6 +10,7 @@ Purpose:
 """
 
 import json
+import logging
 from typing import Optional, List, Dict, Any
 from .base_agent import BaseAgent
 
@@ -195,7 +196,7 @@ class StateExtractor(BaseAgent):
             result = self.ask(prompt, temperature=0.2)
 
             if isinstance(result, str):
-                result = json.loads(result)
+                result = self._extract_json_robust(result)  # [V70] bare json.loads → robust 파서
 
             # 필수 필드 검증
             result = self._validate_and_fix_result(result, arc_data)
@@ -235,7 +236,7 @@ class StateExtractor(BaseAgent):
             if key in self._state_cache:
                 cached_count += 1
         if cached_count > 0:
-            print(f"      ⚡ [V62.5] StateExtractor 캐시: {cached_count}/{total_count} Arc 캐시 히트 (LLM {total_count - cached_count}회만 호출)")
+            logging.info(f"⚡ [V62.5] StateExtractor 캐시: {cached_count}/{total_count} Arc 캐시 히트 (LLM {total_count - cached_count}회만 호출)")
 
         # 마지막 Arc 기준으로 추출
         latest_arc = arcs[-1]
@@ -269,6 +270,8 @@ class StateExtractor(BaseAgent):
 
             # 수여물 추출
             tactical = arc.get('tactical_doc', '')
+            if isinstance(tactical, dict):  # [V70] dict → str 변환
+                tactical = "\n".join(str(v) for v in tactical.values() if v)
             grants = self._extract_grants_from_text(tactical)
             all_grants.extend(grants)
 
@@ -498,7 +501,11 @@ class StateExtractor(BaseAgent):
 
         # 내공 추출 - arc_end_state 우선
         if arc_end_state.get('internal_energy') is not None:
-            current_energy = arc_end_state['internal_energy']
+            raw_energy = arc_end_state['internal_energy']
+            try:  # [V70] string/float 안전 변환
+                current_energy = int(raw_energy) if isinstance(raw_energy, (int, float)) else int(str(raw_energy).replace('%', '').strip())
+            except (ValueError, TypeError):
+                current_energy = 50
             loss_percent = 100 - current_energy
         else:
             energy_loss = shadow.get('internal_energy_loss', '0%')
@@ -507,7 +514,7 @@ class StateExtractor(BaseAgent):
                 current_energy = 100 - loss_percent
             except (ValueError, AttributeError, TypeError):  # [V64.P4] energy parse failure
                 # [V60.73] 보수적 기본값 50 (파싱 실패 시 만땅 가정 위험)
-                print(f"      ⚠️ [V60.73] internal_energy_loss 파싱 실패: '{energy_loss}' → 50% 가정")
+                logging.warning(f"⚠️ [V60.73] internal_energy_loss 파싱 실패: '{energy_loss}' → 50% 가정")
                 loss_percent = 50
                 current_energy = 50
 

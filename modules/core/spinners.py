@@ -71,7 +71,7 @@ class FancySpinner:
             f"현재: {self._format_time(task_elapsed)})[/]"
         )
 
-    def _update_loop(self):
+    def _update_loop(self) -> None:
         """백그라운드에서 Live 업데이트"""
         while not self._stop_event.is_set():
             if self.live:
@@ -87,7 +87,7 @@ class FancySpinner:
         self._thread.start()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
         self._stop_event.set()
         if self._thread:
             self._thread.join(timeout=1)
@@ -226,7 +226,7 @@ class StageSpinner:
         self._wave_offset += 1
         return result
 
-    def _update_loop(self):
+    def _update_loop(self) -> None:
         tick = 0
         while not self._stop_event.is_set():
             if self.live:
@@ -257,7 +257,7 @@ class StageSpinner:
         self._thread.start()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
         self._stop_event.set()
         if self._thread:
             self._thread.join(timeout=1)

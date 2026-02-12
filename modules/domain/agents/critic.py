@@ -11,6 +11,7 @@ V52.2 업데이트:
 """
 
 import json
+import logging
 import re
 from .base_agent import BaseAgent
 
@@ -29,7 +30,7 @@ class Critic(BaseAgent):
             # 재작성 필요
     """
 
-    def __init__(self, context, client, model_tier="gemini-2.0-flash"):
+    def __init__(self, context, client, model_tier="gemini-2.0-flash") -> None:
         super().__init__(context, client, model_tier)
         self._agent_name = "Critic"
 
@@ -52,7 +53,7 @@ class Critic(BaseAgent):
                 "recommendations": [str]
             }
         """
-        print("      👹 [Critic] 적대적 비평 시작...")
+        logging.info("👹 [Critic] 적대적 비평 시작...")
 
         # JSON 파싱
         try:
@@ -110,7 +111,7 @@ class Critic(BaseAgent):
             "recommendations": recommendations
         }
 
-        print(f"      👹 [Critic] 비평 완료: {len(issues)}건, 심각도={severity}, 점수={score}/100")
+        logging.info(f"👹 [Critic] 비평 완료: {len(issues)}건, 심각도={severity}, 점수={score}/100")
 
         return result
 
@@ -418,7 +419,7 @@ class Critic(BaseAgent):
             response = self.ask(prompt, temperature=0.3)
             return self._extract_json_robust(response)
         except Exception as e:
-            print(f"      ❌ [Critic] LLM 비평 실패: {e}")
+            logging.warning(f"❌ [Critic] LLM 비평 실패: {e}")
             return {}
 
     # ================================================================
@@ -516,7 +517,7 @@ JSON 형식으로 응답:
                 "specific_feedback": str
             }
         """
-        print(f"      🔍 [V52.2 Critic] 7가지 관점 심층 리뷰 중...")
+        logging.info(f"🔍 [V52.2 Critic] 7가지 관점 심층 리뷰 중...")
 
         import json as json_module
 
@@ -546,11 +547,11 @@ JSON 형식으로 응답:
             else:
                 result["recommendation"] = "MAJOR_REVISE"
 
-            print(f"      🔍 [V52.2 Critic] 완료: {overall}/10, 권장={result['recommendation']}")
+            logging.info(f"🔍 [V52.2 Critic] 완료: {overall}/10, 권장={result['recommendation']}")
             return result
 
         except Exception as e:
-            print(f"      ❌ [V52.2 Critic] 심층 리뷰 실패: {e}")
+            logging.warning(f"❌ [V52.2 Critic] 심층 리뷰 실패: {e}")
             return self._default_review_result()
 
     def _default_review_result(self) -> dict:

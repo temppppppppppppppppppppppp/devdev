@@ -5,6 +5,7 @@ Story Expander - 컨셉 → Bible + Treatment 생성
 """
 
 import json
+import logging
 import os
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
@@ -33,7 +34,7 @@ class StoryExpander:
         self.bible: Dict[str, Any] = {}
         self.treatment: List[Dict[str, Any]] = []
 
-    def _init_llm(self):
+    def _init_llm(self) -> None:
         """LLM 초기화"""
         if self.client:
             return
@@ -62,7 +63,7 @@ class StoryExpander:
             )
             return response.text
         except Exception as e:
-            print(f"[X] LLM 오류: {e}")
+            logging.warning(f"[X] LLM 오류: {e}")
             return ""
 
     def _parse_json(self, text: str) -> Any:
@@ -155,7 +156,7 @@ class StoryExpander:
             "MasterBible": {
                 "ProjectData": {
                     "MetaInfo": {
-                        "title": self.extracted.get("title_suggestions", ["무제"])[0],
+                        "title": (self.extracted.get("title_suggestions") or ["무제"])[0],  # [V70] 빈 리스트 방어
                         "grand_objective": proto.get("main_goal", ""),
                         "logline": f"{proto.get('background', '')} - {proto.get('main_goal', '')}",
                     },
@@ -250,7 +251,7 @@ JSON:
         # 최근 5개 블록 컨텍스트
         recent_blocks = existing_treatment[-5:] if len(existing_treatment) >= 5 else existing_treatment
         recent_context = "\n".join([
-            f"- Block {b.get('block_id', i+1)}: {b.get('title', '')} - {b.get('content', {}).get('context', '')[:100]}"
+            f"- Block {b.get('block_id', i+1)}: {b.get('title', '')} - {(b.get('content', {}).get('context', '')[:100] if isinstance(b.get('content'), dict) else str(b.get('content', ''))[:100])}"  # [V70] content str 방어
             for i, b in enumerate(recent_blocks)
         ])
 
@@ -270,13 +271,13 @@ JSON:
             )
 
             if not new_blocks:
-                print(f"[!] Block {current_block}~{current_block+batch_count-1} 생성 실패")
+                logging.warning(f"[!] Block {current_block}~{current_block+batch_count-1} 생성 실패")
                 break
 
             # 확인 콜백
             if confirm_callback:
                 if not confirm_callback(new_blocks):
-                    print("[*] 사용자가 중단함")
+                    logging.info("[*] 사용자가 중단함")
                     break
 
             extended.extend(new_blocks)
@@ -284,14 +285,14 @@ JSON:
 
             # 다음 배치를 위한 컨텍스트 업데이트
             recent_context = "\n".join([
-                f"- Block {b.get('block_id', '')}: {b.get('title', '')} - {b.get('content', {}).get('context', '')[:100]}"
+                f"- Block {b.get('block_id', '')}: {b.get('title', '')} - {(b.get('content', {}).get('context', '')[:100] if isinstance(b.get('content'), dict) else str(b.get('content', ''))[:100])}"  # [V70] content str 방어
                 for b in new_blocks[-5:]
             ])
 
             current_block += batch_count
             remaining -= batch_count
 
-            print(f"[v] Block {current_block-batch_count}~{current_block-1} 생성 완료 ({len(extended)}/{extend_count})")
+            logging.info(f"[v] Block {current_block-batch_count}~{current_block-1} 생성 완료 ({len(extended)}/{extend_count})")
 
         return self.treatment
 
@@ -371,7 +372,7 @@ JSON:
 
         for i in range(0, len(skeleton), batch_size):
             batch = skeleton[i:i + batch_size]
-            skeleton_text = "\n".join([f"- {b['block_id']}: {b['title']}" for b in batch])
+            skeleton_text = "\n".join([f"- {b.get('block_id', f'block_{i+j}')}: {b.get('title', '제목 없음')}" for j, b in enumerate(batch)])  # [V70] 인덱스 수정 (i는 이미 배치 시작)
 
             prompt = f"""블록 상세:
 
@@ -463,18 +464,18 @@ JSON:
             print_header("완료!", style="simple")
         else:
             # 스피너 없는 폴백
-            print("[*] 컨셉 분석...")
+            logging.info("[*] 컨셉 분석...")
             self.analyze_concept(concept)
 
-            print("[*] Bible 생성...")
+            logging.info("[*] Bible 생성...")
             self.generate_bible(protagonist_config)
 
-            print("[*] Treatment 생성...")
+            logging.info("[*] Treatment 생성...")
             self.generate_treatment()
 
-            print("[*] 저장...")
+            logging.info("[*] 저장...")
             self.save_all(output_dir)
 
-            print("[v] 완료!")
+            logging.info("[v] 완료!")
 
         return self.bible, self.treatment

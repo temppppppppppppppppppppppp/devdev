@@ -7,6 +7,7 @@ Director reference를 통해 BaseAgent 메서드(ask, _extract_json_robust 등) 
 """
 
 import json
+import logging
 from modules.core.constants import ManuscriptLimits  # [V64.P4]
 
 # [V64.P4] 프롬프트 외부화 — director_prompts.py에서 import
@@ -23,7 +24,7 @@ class DirectorEnsembleSelector:
     - quick_judge_single(): 냉동인간 Writer용 간소 검토
     """
 
-    def __init__(self, director):
+    def __init__(self, director) -> None:
         """
         Args:
             director: Director 인스턴스 (BaseAgent 상속, ask/extract/escape 접근용)
@@ -60,7 +61,7 @@ class DirectorEnsembleSelector:
             single_result["comparison_notes"] = "단일 후보"
             return single_result
 
-        print(f"      🎭 [Director] {len(candidates)}개 후보 비교 중...")
+        logging.info(f"🎭 [Director] {len(candidates)}개 후보 비교 중...")
 
         arc_tactical = arc_data.get("tactical_doc", "")
         if isinstance(arc_tactical, dict):
@@ -91,7 +92,7 @@ class DirectorEnsembleSelector:
 - 시작 위치: {bp.get('start_location', '?')}
 - 종료 위치: {bp.get('end_location', '?')}
 - 시간 흐름: {bp.get('time_flow', '?')}
-- 엔딩 훅: {bp.get('ending_hook', '?')[:100]}
+- 엔딩 훅: {(bp.get('ending_hook') or '?')[:100]}
 
 [시나리오 요약]
 {integrated[:1500]}...
@@ -136,7 +137,7 @@ class DirectorEnsembleSelector:
             result = self._d._extract_json_robust(response)
 
             if not isinstance(result, dict):
-                print(f"      ⚠️ [Director] 비교 응답 파싱 실패")
+                logging.warning(f"⚠️ [Director] 비교 응답 파싱 실패")
                 return self._fallback_first_candidate(candidates, arc_data, ep_num, prev_blueprint, entity_registry, state_tracker)
 
             selected_idx = result.get("selected_index", 0)
@@ -148,11 +149,11 @@ class DirectorEnsembleSelector:
             comparison_notes = result.get("comparison_notes", "")
             reason = result.get("reason", "")
 
-            print(f"      🎯 [Director] 후보 {selected_idx+1} 선택 ({decision}, 점수: {score})")
+            logging.info(f"🎯 [Director] 후보 {selected_idx+1} 선택 ({decision}, 점수: {score})")
             if comparison_notes:
-                print(f"         📝 비교: {comparison_notes[:150]}{'...' if len(comparison_notes) > 150 else ''}")
+                logging.info(f"📝 비교: {comparison_notes[:150]}{'...' if len(comparison_notes) > 150 else ''}")
             if reason:
-                print(f"         💡 이유: {reason[:100]}{'...' if len(reason) > 100 else ''}")
+                logging.info(f"💡 이유: {reason[:100]}{'...' if len(reason) > 100 else ''}")
 
             return {
                 "decision": decision,
@@ -165,7 +166,7 @@ class DirectorEnsembleSelector:
             }
 
         except Exception as e:
-            print(f"      ⚠️ [Director] 비교 오류: {str(e)[:50]}")
+            logging.warning(f"⚠️ [Director] 비교 오류: {str(e)[:50]}")
             return self._fallback_first_candidate(candidates, arc_data, ep_num, prev_blueprint, entity_registry, state_tracker)
 
     def _evaluate_single_blueprint(
@@ -235,7 +236,7 @@ class DirectorEnsembleSelector:
         state_tracker
     ) -> dict:
         """폴백: 첫 번째 후보 선택 (비교 실패 시)"""
-        print(f"      ⚠️ [Director] 폴백 - 첫 번째 후보 평가")
+        logging.info(f"⚠️ [Director] 폴백 - 첫 번째 후보 평가")
         result = self._evaluate_single_blueprint(
             candidates[0], arc_data, ep_num, prev_blueprint, entity_registry, state_tracker
         )
@@ -255,7 +256,9 @@ class DirectorEnsembleSelector:
         total_eps: int = 5,
         retry_count: int = 0,
         episode_digest: str = "",
-        mandatory_context: str = ""
+        mandatory_context: str = "",
+        prev_manuscripts_text: str = "",
+        story_context: str = ""
     ) -> dict:
         """[V60.80] 3개 후보 중 최선 선택 + PASS/REJECT 판정"""
         while len(candidates) < 3:
@@ -283,7 +286,7 @@ class DirectorEnsembleSelector:
         if not qualified_indices:
             lengths = [len(c.get("manuscript", "")) for c in candidates]
             best_idx = lengths.index(max(lengths))
-            print(f"      🚨 [V60.97] 모든 후보 분량 미달 (최대: {max(lengths)}자 < {MIN_MANUSCRIPT_LENGTH}자)")
+            logging.warning(f"🚨 [V60.97] 모든 후보 분량 미달 (최대: {max(lengths)}자 < {MIN_MANUSCRIPT_LENGTH}자)")
             return {
                 "selected": ["A", "B", "C"][best_idx],
                 "selected_candidate": candidates[best_idx],
@@ -298,16 +301,16 @@ class DirectorEnsembleSelector:
                 "length_violation": True
             }
 
-        print(f"      ✅ [V60.97] 분량 통과 후보: {len(qualified_indices)}개 ({[['A','B','C'][i] for i in qualified_indices]})")
+        logging.info(f"✅ [V60.97] 분량 통과 후보: {len(qualified_indices)}개 ({[['A','B','C'][i] for i in qualified_indices]})")
 
         blueprint_str = json.dumps(blueprint, ensure_ascii=False, indent=2) if isinstance(blueprint, dict) else str(blueprint)
 
-        def get_candidate_info(idx):
+        def get_candidate_info(idx) -> dict:
             c = candidates[idx] if idx < len(candidates) else {}
             v = validation_results[idx] if idx < len(validation_results) else {}
             return {
                 "strategy": c.get("strategy_name", c.get("strategy", f"후보{idx+1}")),
-                "manuscript": c.get("manuscript", "")[:8000],
+                "manuscript": c.get("manuscript", "")[:12000],
                 "warnings": "\n".join(v.get("warnings", [])) or "(경고 없음)"
             }
 
@@ -315,10 +318,18 @@ class DirectorEnsembleSelector:
         info_b = get_candidate_info(1)
         info_c = get_candidate_info(2)
 
+        # [V67] 이전 원고 전문 — 30+화 컨텍스트
+        _prev_ms_for_director = prev_manuscripts_text if prev_manuscripts_text else "(이전 원고 없음 — 1화)"
+        # Gemini 컨텍스트 윈도우가 크므로 넉넉히 전달 (최대 200K자)
+        if len(_prev_ms_for_director) > 200000:
+            _prev_ms_for_director = _prev_ms_for_director[:200000] + "\n...(이하 생략)"
+
         prompt = ENSEMBLE_SELECTION_PROMPT.format(
-            blueprint=self._d._escape_braces(blueprint_str[:3000]),
+            blueprint=self._d._escape_braces(blueprint_str[:5000]),
             episode_digest=self._d._escape_braces(episode_digest) if episode_digest else "(다이제스트 없음)",
-            previous_ending=self._d._escape_braces(previous_ending[-500:] if previous_ending else ""),
+            previous_ending=self._d._escape_braces(previous_ending if previous_ending else ""),
+            prev_manuscripts_text=self._d._escape_braces(_prev_ms_for_director),
+            story_context=self._d._escape_braces(story_context) if story_context else "(작품 설정 정보 없음)",
             strategy_a=info_a["strategy"],
             manuscript_a=self._d._escape_braces(info_a["manuscript"]),
             warnings_a=self._d._escape_braces(info_a["warnings"]),
@@ -330,16 +341,14 @@ class DirectorEnsembleSelector:
             warnings_c=self._d._escape_braces(info_c["warnings"])
         )
 
-        # [V66.3] C-1: mandatory_context → Director LLM 프롬프트에 주입
-        # Python 사전 검증 결과(validation_context warnings)와 StateTracker 상태가
-        # Director의 PASS/REJECT 판단에 반영되도록 함. 8,000자 상한으로 truncate.
+        # [V67] mandatory_context 확장 — 25,000자 상한 (기존 8,000자)
         if mandatory_context:
-            _mc_for_director = mandatory_context[:8000]
-            if len(mandatory_context) > 8000:
-                _mc_for_director = _mc_for_director[:7950] + "\n...(mandatory_context 8,000자 초과로 일부 생략)"
+            _mc_for_director = mandatory_context[:25000]
+            if len(mandatory_context) > 25000:
+                _mc_for_director = _mc_for_director[:24950] + "\n...(mandatory_context 25,000자 초과로 일부 생략)"
             prompt += f"""
 
-### 📌 [V66.3] 필수 컨텍스트 (Python 감지 + StateTracker 상태)
+### 📌 [V67] 필수 컨텍스트 (Python 감지 + StateTracker 상태)
 아래는 Python 사전 검증 및 StateTracker에서 수집된 세계 상태입니다.
 죽은 NPC, 파괴된 장소/아이템, 시간선, 관계 변화 등이 포함되어 있으므로
 원고가 이 사실들과 모순되면 반드시 REJECT하세요.
@@ -351,7 +360,7 @@ class DirectorEnsembleSelector:
         result = self._d._extract_json_robust(response)
 
         if not result or result.get("parsing_error"):
-            print("      ⚠️ [Director] 앙상블 선택 파싱 실패 - 첫 번째 후보 기본 선택")
+            logging.warning("⚠️ [Director] 앙상블 선택 파싱 실패 - 첫 번째 후보 기본 선택")
             return {
                 "selected": "A",
                 "selected_candidate": candidates[0] if candidates else {},
@@ -372,7 +381,7 @@ class DirectorEnsembleSelector:
             selected_idx = qualified_indices[0]
             selected_letter = ["A", "B", "C"][selected_idx]
             v60_97_swapped = True
-            print(f"      ⚠️ [V60.97] LLM 선택 {old_selection} → {selected_letter}로 교체 (분량 기준)")
+            logging.info(f"⚠️ [V60.97] LLM 선택 {old_selection} → {selected_letter}로 교체 (분량 기준)")
 
         selected_candidate = candidates[selected_idx] if selected_idx < len(candidates) else candidates[0]
 
@@ -398,6 +407,14 @@ class DirectorEnsembleSelector:
         feedback = result.get("feedback", {})
         if isinstance(feedback, str):
             feedback = {"issues": [feedback]}
+
+        # [V67.2] 자유 형식 리뷰 → feedback에 병합
+        _open_review = result.get("open_review", "")
+        if _open_review and _open_review not in ("특이사항 없음", "없음", ""):
+            if isinstance(feedback, dict):
+                _existing_issues = feedback.get("issues", [])
+                _existing_issues.append(f"[자유 리뷰] {_open_review}")
+                feedback["issues"] = _existing_issues
 
         return {
             "selected": selected_letter,

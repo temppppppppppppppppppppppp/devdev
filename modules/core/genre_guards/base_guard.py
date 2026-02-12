@@ -11,7 +11,7 @@ from typing import List, Dict, Any
 class BaseGuard(ABC):
     """장르 독립적 Guard 추상 인터페이스"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.FORBIDDEN_TERMS = []
         self.ALLOWED_TERMS = []
         self.MANDATORY_CONCEPTS = []
@@ -22,7 +22,7 @@ class BaseGuard(ABC):
         self._hierarchy_rules = {}
     
     @abstractmethod
-    def get_genre_name(self):
+    def get_genre_name(self) -> None:
         """장르 이름 반환"""
         pass
     
@@ -106,7 +106,7 @@ class BaseGuard(ABC):
         final_val = (total if total > 0 else 1.0) * unit_multiplier
         return float(final_val)
     
-    def validate_v20_manuscript(self, content):
+    def validate_v20_manuscript(self, content) -> dict:
         """원고 검증 (장르별 커스터마이징 가능)"""
         issues = []
         
@@ -139,15 +139,15 @@ class BaseGuard(ABC):
         }
     
     @abstractmethod
-    def get_v20_purism_prompt(self):
+    def get_v20_purism_prompt(self) -> None:
         """장르별 순혈주의 프롬프트 생성"""
         pass
     
-    def _should_check_english(self):
+    def _should_check_english(self) -> bool:
         """영어 검증 여부 (장르별 오버라이드 가능)"""
         return True
 
-    def _should_check_numbers(self):
+    def _should_check_numbers(self) -> bool:
         """숫자 검증 여부 (장르별 오버라이드 가능)"""
         return True
 

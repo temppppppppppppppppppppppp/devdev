@@ -8,6 +8,7 @@ inspector reference를 통해 BaseAgent 메서드(ask, _extract_json_robust 등)
 """
 
 import re
+import logging
 from typing import Dict, List, Any
 
 
@@ -144,7 +145,7 @@ class ContinuityBlueprintValidator:
     - get_prev_blueprints(): DB 조회 헬퍼
     """
 
-    def __init__(self, inspector):
+    def __init__(self, inspector) -> None:
         """
         Args:
             inspector: ContinuityInspector 인스턴스 (BaseAgent 상속, 공유 상태 접근용)
@@ -201,7 +202,7 @@ class ContinuityBlueprintValidator:
 
         python_advisory = python_check.get('critical_violations', [])
         if python_advisory:
-            print(f"      📋 [V60.56] Python advisory 발견 {len(python_advisory)}건 - LLM에게 전달")
+            logging.info(f"📋 [V60.56] Python advisory 발견 {len(python_advisory)}건 - LLM에게 전달")
 
         # ═══════════════════════════════════════════════════════════════
         # Phase 2: LLM 기반 정밀 검증
@@ -223,7 +224,7 @@ class ContinuityBlueprintValidator:
             result = self._ci._extract_json_robust(response)
 
             if not isinstance(result, dict):
-                print(f"      ⚠️ [V60.74] JSON 파싱 실패 - 수동 검수 권장")
+                logging.warning(f"⚠️ [V60.74] JSON 파싱 실패 - 수동 검수 권장")
                 result = {
                     "decision": "PASS",
                     "severity": "NONE",
@@ -241,7 +242,7 @@ class ContinuityBlueprintValidator:
             return result
 
         except Exception as e:
-            print(f"      🚨 [ContinuityInspector] LLM 검증 실패: {e}")
+            logging.warning(f"🚨 [ContinuityInspector] LLM 검증 실패: {e}")
             if python_check.get('warnings'):
                 return {
                     "decision": "PASS",
@@ -431,7 +432,7 @@ class ContinuityBlueprintValidator:
                         'scene_breakdown': bp.get('scene_breakdown', {})
                     })
             except Exception as e:
-                print(f"      ⚠️ [ContinuityInspector] 제{ep}화 블루프린트 조회 실패: {e}")
+                logging.warning(f"⚠️ [ContinuityInspector] 제{ep}화 블루프린트 조회 실패: {e}")
 
         return prev_blueprints
 

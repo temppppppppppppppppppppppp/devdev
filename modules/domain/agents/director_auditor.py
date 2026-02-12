@@ -42,7 +42,7 @@ class DirectorQualityAuditor:
     - validate_protagonist_config_compliance(): 주인공 설정 준수 검증 [V65 C-5]
     """
 
-    def __init__(self, director):
+    def __init__(self, director) -> None:
         """
         Args:
             director: Director 인스턴스 (BaseAgent 메서드 + 설정 접근용)
@@ -81,12 +81,12 @@ class DirectorQualityAuditor:
 
             genre_name = self._d.guard.get_genre_name() if hasattr(self._d.guard, 'get_genre_name') else self._d.genre
             v_count = len(result.get('violations', []))
-            print(f"      🔍 [V66] {genre_name} Guard 심층 검증: {v_count}개 이슈")
+            logging.info(f"🔍 [V66] {genre_name} Guard 심층 검증: {v_count}개 이슈")
 
             return result
 
         except (ValueError, KeyError, IndexError) as e:
-            print(f"      ⚠️ [V66] 장르 검증 오류: {str(e)[:50]}")
+            logging.warning(f"⚠️ [V66] 장르 검증 오류: {str(e)[:50]}")
             return {'has_critical': False, 'violations': [], 'summary': '', 'feedback': ''}
 
     def assess_character_logic(self, ep_num, manuscript, npc_profiles, character_traits):
@@ -110,7 +110,7 @@ class DirectorQualityAuditor:
         # [V66.1] NPC 정보가 비어있으면 WARNING 로그 후 원고 기반으로 검증 진행
         _profiles_empty = not npc_profiles and not character_traits
         if _profiles_empty:
-            print(f"      ⚠️ [V66.1] NPC 프로필/특성 DB 비어있음 (ep {ep_num}) — 원고 기반 검증 진행")
+            logging.info(f"⚠️ [V66.1] NPC 프로필/특성 DB 비어있음 (ep {ep_num}) — 원고 기반 검증 진행")
 
         prompt = f"""
 [Role] 레드팀 캐릭터 논리성 감사관 (Character Logic Auditor)
@@ -181,7 +181,7 @@ class DirectorQualityAuditor:
             genre=self._d.genre
         )
 
-    def audit_manuscript_v0128(self, ep_num, manuscript, validation_context, config=None, genre='wuxia'):
+    def audit_manuscript_v0128(self, ep_num, manuscript, validation_context, config=None, genre='wuxia') -> dict:
         """
         [V0128] 3-Tier 검증 시스템을 사용한 원고 검수
 
@@ -226,8 +226,15 @@ class DirectorQualityAuditor:
             self.v0128_orchestrator = ValidationOrchestrator(
                 config=default_config,
                 client=self._d.client,
-                genre=genre
+                genre=genre,
+                context=validation_context  # [V70] POV 등 검증 컨텍스트 전달
             )
+
+        # [V70] POV 동적 갱신 — lazy init 후에도 validation_context가 변경될 수 있으므로
+        if self.v0128_orchestrator and self.v0128_orchestrator.pre_llm and validation_context:
+            _ctx_pov = validation_context.get('pov', '') if isinstance(validation_context, dict) else ''
+            if _ctx_pov:
+                self.v0128_orchestrator.pre_llm.pov = _ctx_pov
 
         try:
             result = self.v0128_orchestrator.validate(
@@ -253,7 +260,7 @@ class DirectorQualityAuditor:
             return legacy_result
 
         except Exception as e:
-            print(f"      🚨 [V0128 Error] 검증 중 예외 발생: {e}")
+            logging.warning(f"🚨 [V0128 Error] 검증 중 예외 발생: {e}")
             return {
                 "decision": "REJECT",
                 "score": 0,
@@ -263,14 +270,15 @@ class DirectorQualityAuditor:
             }
 
     # ═══════════════════════════════════════════════════════════════════════
-    # [V66.1] prev_full_text 확대 — 최대 3화 이전 원고 로드
+    # [V67] prev_full_text 확대 — 최대 30화 이전 원고 로드 (하이엔드)
     # ═══════════════════════════════════════════════════════════════════════
 
     def _expand_prev_full_text(self, ep_num: int, prev_full_text: str) -> str:
         """
-        [V66.1] 기존 prev_full_text(직전 1화)를 최대 3화로 확대.
+        [V67] 기존 prev_full_text를 최대 30화로 확대.
 
-        DB에서 ep_num-3 ~ ep_num-1 원고를 로드하여 에피소드 마커와 함께 결합.
+        DB에서 ep_num-30 ~ ep_num-1 원고를 전문 로드하여 에피소드 마커와 함께 결합.
+        Gemini의 대용량 컨텍스트 윈도우를 활용하여 최대한 많은 이전 원고를 전달.
         DB 접근 실패 시 기존 prev_full_text를 그대로 반환 (graceful fallback).
 
         Returns:
@@ -284,7 +292,7 @@ class DirectorQualityAuditor:
             return prev_full_text or ""
 
         loaded_parts = []
-        for target_ep in range(max(1, ep_num - 3), ep_num):
+        for target_ep in range(max(1, ep_num - 30), ep_num):
             try:
                 ms = db.get_manuscript(target_ep)
                 if ms:
@@ -292,11 +300,11 @@ class DirectorQualityAuditor:
                     if content and len(content) > 100:
                         loaded_parts.append(f"[제{target_ep}화]\n{content}")
             except Exception as e:
-                logging.warning(f"[V66.3] Director prev manuscript 조회 실패: {e}")
+                logging.warning(f"[V67] Director prev manuscript 조회 실패: {e}")
 
         if loaded_parts:
             result = "\n\n---\n\n".join(loaded_parts)
-            print(f"      📖 [V66.1] Director 컨텍스트 확대: {len(loaded_parts)}화 이전 원고 로드 (ep {ep_num})")
+            logging.info(f"📖 [V67] Director 컨텍스트 확대: {len(loaded_parts)}화 이전 원고 로드 (ep {ep_num})")
             return result
 
         # 폴백: 기존 prev_full_text 사용
@@ -306,7 +314,7 @@ class DirectorQualityAuditor:
     # [V65 C-5] audit_manuscript — Director에서 이관
     # ═══════════════════════════════════════════════════════════════════════
 
-    def audit_manuscript(self, ep_num, manuscript, arc_doc, history_summary, prev_full_text, arc_pos, total_eps=None, target_len=4500, retry_count=0, validation_context=None, entity_registry=None, manuscript_history=None, state_tracker=None):
+    def audit_manuscript(self, ep_num, manuscript, arc_doc, history_summary, prev_full_text, arc_pos, total_eps=None, target_len=4500, retry_count=0, validation_context=None, entity_registry=None, manuscript_history=None, state_tracker=None) -> dict:
         """
         [V65 C-5] 원고 검수 (V0128 통합 + V46 캐릭터 논리 검증 + V61 Entity 일관성 검증 + V60.87 원고 역사 충돌 검사)
 
@@ -339,7 +347,7 @@ class DirectorQualityAuditor:
             dead_npc_violations = state_tracker.check_dead_npc_in_manuscript(manuscript, ep_num, arc_no)
             if dead_npc_violations:
                 violation_names = [v["npc_name"] for v in dead_npc_violations]
-                print(f"      ⚠️ [V63.4] 죽은 NPC 경고 → LLM 전달: {', '.join(violation_names)}")
+                logging.info(f"⚠️ [V63.4] 죽은 NPC 경고 → LLM 전달: {', '.join(violation_names)}")
                 _pre_llm_warnings.append(
                     f"[CRITICAL 경고] 죽은 NPC 등장 의심: {', '.join(violation_names)}\n" +
                     "\n".join(f"  - {v['npc_name']}: Arc {v['death_arc']}에서 사망" for v in dead_npc_violations) +
@@ -350,7 +358,7 @@ class DirectorQualityAuditor:
         if self._d.genre_validation_enabled and self._d.guard:
             genre_violations = self._run_genre_specific_validation(manuscript, ep_num)
             if genre_violations.get('has_critical'):
-                print(f"      ⚠️ [V63.4] 장르 위반 경고 → LLM 전달: {genre_violations.get('summary', '')}")
+                logging.info(f"⚠️ [V63.4] 장르 위반 경고 → LLM 전달: {genre_violations.get('summary', '')}")
                 _pre_llm_warnings.append(
                     f"[CRITICAL 경고] 장르 규칙 위반: {genre_violations.get('summary', '')}\n"
                     f"  {genre_violations.get('feedback', '')}"
@@ -369,7 +377,7 @@ class DirectorQualityAuditor:
                     current_manuscript=manuscript
                 )
                 if history_check.get('cache_used'):
-                    print(f"      ⚡ [V60.88] 캐시 참조 충돌 검사 완료")
+                    logging.info(f"⚡ [V60.88] 캐시 참조 충돌 검사 완료")
 
             # [V63.4 P0] 캐시 없거나 실패 시 기존 방식 폴백 (manuscript_history 사용)
             if not history_check or history_check.get('error') or history_check.get('needs_fallback'):
@@ -381,7 +389,7 @@ class DirectorQualityAuditor:
                         use_summary=True  # 토큰 절약을 위해 요약본 우선 사용
                     )
                 elif history_check and history_check.get('needs_fallback'):
-                    print(f"      ⚠️ [V63.4] 캐시 폴백 필요하나 manuscript_history 없음 → 검증 스킵")
+                    logging.info(f"⚠️ [V63.4] 캐시 폴백 필요하나 manuscript_history 없음 → 검증 스킵")
 
             if history_check and history_check.get('decision') == 'CONFLICT':
                 conflicts = history_check.get('conflicts', [])
@@ -417,7 +425,7 @@ class DirectorQualityAuditor:
             # [V63.4] Python REJECT → LLM 경고로 전달 (기존: 즉시 REJECT)
             if config_check.get('decision') == 'REJECT':
                 violations = config_check.get('violations', [])
-                print(f"      ⚠️ [V63.4] 주인공 설정 위반 경고 → LLM 전달: {len(violations)}건")
+                logging.info(f"⚠️ [V63.4] 주인공 설정 위반 경고 → LLM 전달: {len(violations)}건")
                 _pre_llm_warnings.append(
                     f"[CRITICAL 경고] 주인공 설정 위반 {len(violations)}건\n"
                     f"  {config_check.get('feedback', '주인공 설정 위반')}"
@@ -427,7 +435,7 @@ class DirectorQualityAuditor:
                 if validation_context is None:
                     validation_context = {}
                 validation_context['v60_89_config_warnings'] = config_check.get('violations', [])
-                print(f"      ⚠️ [V60.89] 주인공 설정 경고: {len(config_check.get('violations', []))}건")
+                logging.info(f"⚠️ [V60.89] 주인공 설정 경고: {len(config_check.get('violations', []))}건")
 
         # ═══════════════════════════════════════════════════════════════
         # [V61] Entity 일관성 검증 - Director의 최종 방어선
@@ -479,7 +487,7 @@ class DirectorQualityAuditor:
                 should_reject = (severity == 'CRITICAL') or (severity == 'MAJOR' and major_count >= 2)
 
                 if should_reject:
-                    print(f"      🚨 [V46] 캐릭터 논리 위반 감지 ({severity}, MAJOR {major_count}개)")
+                    logging.warning(f"🚨 [V46] 캐릭터 논리 위반 감지 ({severity}, MAJOR {major_count}개)")
                     return {
                         "decision": "REJECT",
                         "score": char_logic_result.get('score', 30),
@@ -492,7 +500,7 @@ class DirectorQualityAuditor:
                     }
                 else:
                     # MAJOR 1개 또는 MINOR는 경고만 하고 계속 진행
-                    print(f"      ⚠️ [V46] 캐릭터 논리 이슈 ({severity}, MAJOR {major_count}개) - 계속 진행")
+                    logging.info(f"⚠️ [V46] 캐릭터 논리 이슈 ({severity}, MAJOR {major_count}개) - 계속 진행")
 
         # ═══════════════════════════════════════════════════════════════
         # [V60] Blueprint 완전성 검증 - main_a.py에서 사전 검증하므로 여기서는 스킵
@@ -531,6 +539,10 @@ class DirectorQualityAuditor:
 
         # 2. 데이터 안전 처리
         safe_ms = self._d._escape_braces(manuscript)
+        # [V70] arc_doc dict 타입일 때 JSON 직렬화 후 이스케이프
+        if isinstance(arc_doc, dict):
+            import json as _json
+            arc_doc = _json.dumps(arc_doc, ensure_ascii=False)
         safe_arc = self._d._escape_braces(arc_doc)
         safe_history = self._d._escape_braces(history_summary)
 
@@ -592,13 +604,13 @@ class DirectorQualityAuditor:
                         "feedback": correction_prompt
                     }
         except ImportError as ie:
-            print(f"      ⚠️ [Director] RepetitionGuard 모듈 로드 실패: {ie}")
+            logging.warning(f"⚠️ [Director] RepetitionGuard 모듈 로드 실패: {ie}")
             repetition_check_passed = False
         except AttributeError as ae:
-            print(f"      ⚠️ [Director] DB 컨텍스트 오류 (RepetitionGuard): {ae}")
+            logging.warning(f"⚠️ [Director] DB 컨텍스트 오류 (RepetitionGuard): {ae}")
             repetition_check_passed = False
         except Exception as e:
-            print(f"      ⚠️ [Director] RepetitionGuard 실행 중 예상치 못한 오류: {type(e).__name__}: {e}")
+            logging.warning(f"⚠️ [Director] RepetitionGuard 실행 중 예상치 못한 오류: {type(e).__name__}: {e}")
             repetition_check_passed = False
 
         # 3. [V60.95] 고밀도 HUD 컨텍스트 구축
@@ -627,15 +639,19 @@ class DirectorQualityAuditor:
             prompt += self._d._escape_braces(_warning_block)
 
         response = self._d.ask(prompt, temperature=0.1, thinking_level="high")  # [V61.6] 원고 PASS/REJECT
-        return self._d._extract_json_robust(response)
+        result = self._d._extract_json_robust(response)
+        # [V70] 파싱 실패 시 안전한 REJECT 반환 (기본 PASS 방지)
+        if not isinstance(result, dict) or result.get('parsing_error'):
+            return {"decision": "REJECT", "score": 0, "reason": "Director 응답 파싱 실패", "feedback": "재시도 필요"}
+        return result
 
     # ═══════════════════════════════════════════════════════════════════════
     # [V65 C-5] audit_strategic_plan — Director에서 이관
     # ═══════════════════════════════════════════════════════════════════════
 
-    def audit_strategic_plan(self, arc_plan, prev_arc_context, curr_block=None, protagonist_name=None, suspected_duplicates=None, entity_registry=None):
+    def audit_strategic_plan(self, arc_plan, prev_arc_context, curr_block=None, protagonist_name=None, suspected_duplicates=None, entity_registry=None, story_context="") -> dict:
         """
-        [V65 C-5] [Stage 2] Analyst의 아크 설계안에 대한 전략적 무결성 검수 (루프/미래 오염 방지)
+        [V67.1] [Stage 2] Analyst의 아크 설계안에 대한 전략적 무결성 검수 (루프/미래 오염 방지, story_context 추가)
 
         [V49.3] Self-Consistency 투표 적용:
         - 1차 평가 후 애매한 결과면 추가 평가 진행
@@ -674,13 +690,13 @@ class DirectorQualityAuditor:
             tactical_doc = arc_plan.get('tactical_doc', '')
             name_in_tactical = protagonist_name in tactical_doc
             name_in_dump = protagonist_name in arc_dump
-            print(f"      🔍 [V60.55 DEBUG] 주인공 이름 검증: '{protagonist_name}'")
-            print(f"         - tactical_doc 내 존재: {name_in_tactical}")
-            print(f"         - arc_dump 내 존재: {name_in_dump}")
-            print(f"         - tactical_doc 앞 200자: {tactical_doc[:200]}...")
+            logging.info(f"🔍 [V60.55 DEBUG] 주인공 이름 검증: '{protagonist_name}'")
+            logging.info(f"- tactical_doc 내 존재: {name_in_tactical}")
+            logging.info(f"- arc_dump 내 존재: {name_in_dump}")
+            logging.info(f"- tactical_doc 앞 200자: {tactical_doc[:200]}...")
 
             if not name_in_dump:
-                print(f"      🚨 [V60.55] 주인공 이름 '{protagonist_name}' 미발견 → REJECT")
+                logging.warning(f"🚨 [V60.55] 주인공 이름 '{protagonist_name}' 미발견 → REJECT")
                 return {
                     "decision": "REJECT",
                     "score": 0,
@@ -689,7 +705,7 @@ class DirectorQualityAuditor:
                     "re_slice_instruction": f"모든 주인공 서술에서 '{protagonist_name}'을 명시적으로 사용하라. 유사 명칭이나 다른 인물 이름으로 대체 금지."
                 }
             else:
-                print(f"      ✅ [V60.55] 주인공 이름 '{protagonist_name}' 확인됨")
+                logging.info(f"✅ [V60.55] 주인공 이름 '{protagonist_name}' 확인됨")
 
         # 🔒 [Hard Guard] 미래 무구 조기 노출 차단 (V43: Bible 기반 동적 검증)
         pass
@@ -715,7 +731,8 @@ class DirectorQualityAuditor:
             tactical_doc=safe_tactical,
             prev_context=safe_prev,
             curr_block=safe_curr,
-            suspected_duplicates=safe_suspected
+            suspected_duplicates=safe_suspected,
+            story_context=self._d._escape_braces(story_context) if story_context else "(작품 설정 정보 없음)"
         )
 
         # [V49.3] Self-Consistency 적용
@@ -723,7 +740,11 @@ class DirectorQualityAuditor:
             return self._strategic_audit_with_self_consistency(prompt, arc_no)
         else:
             response = self._d.ask(prompt, temperature=0.1, thinking_level="medium")  # [V61.6] Arc 감사
-            return self._d._extract_json_robust(response)
+            result = self._d._extract_json_robust(response)
+            # [V70] 파싱 실패 시 안전한 REJECT 반환
+            if not isinstance(result, dict) or result.get('parsing_error'):
+                return {"decision": "REJECT", "score": 0, "reason": "Arc 감사 응답 파싱 실패", "loop_detected": False}
+            return result
 
     # ═══════════════════════════════════════════════════════════════════════
     # [V65 C-5] _strategic_audit_with_self_consistency — Director에서 이관
@@ -754,8 +775,8 @@ class DirectorQualityAuditor:
         # 명확한 REJECT → 추가 평가 없이 반환
         if first_decision == 'REJECT' and first_score < self._d.ambiguous_lower:
             reject_reason = first_eval.get('reason', first_eval.get('re_slice_instruction', '사유 미상'))
-            print(f"         🎬 [Director] REJECT (score={first_score})")
-            print(f"            └─ 사유: {reject_reason[:80]}{'...' if len(str(reject_reason)) > 80 else ''}")
+            logging.warning(f"🎬 [Director] REJECT (score={first_score})")
+            logging.info(f"└─ 사유: {reject_reason[:80]}{'...' if len(str(reject_reason)) > 80 else ''}")
             first_eval['self_consistency'] = {
                 'votes': 1,
                 'reason': 'clear_reject',
@@ -766,8 +787,8 @@ class DirectorQualityAuditor:
         # 명확한 PASS (점수가 높음) → 추가 평가 없이 반환
         if first_decision == 'PASS' and first_score > self._d.ambiguous_upper:
             pass_reason = first_eval.get('reason', first_eval.get('strengths', '판단 근거 미상'))
-            print(f"         🎬 [Director] PASS (score={first_score})")
-            print(f"            └─ 근거: {str(pass_reason)[:80]}{'...' if len(str(pass_reason)) > 80 else ''}")
+            logging.info(f"🎬 [Director] PASS (score={first_score})")
+            logging.info(f"└─ 근거: {str(pass_reason)[:80]}{'...' if len(str(pass_reason)) > 80 else ''}")
             first_eval['self_consistency'] = {
                 'votes': 1,
                 'reason': 'clear_pass',
@@ -776,7 +797,7 @@ class DirectorQualityAuditor:
             return first_eval
 
         # 애매한 구간 → 추가 평가 진행
-        print(f"         ⚖️ [V49.3] 애매한 결과({first_decision}, score={first_score}) → Self-Consistency 활성화")
+        logging.info(f"⚖️ [V49.3] 애매한 결과({first_decision}, score={first_score}) → Self-Consistency 활성화")
 
         evaluations = [first_eval]
 
@@ -788,7 +809,7 @@ class DirectorQualityAuditor:
         VOTE_ENSEMBLE_TIMEOUT = 150  # 전체 투표 타임아웃 (초) - thinking 오버헤드 반영
         SINGLE_VOTE_TIMEOUT = 90     # 개별 투표 타임아웃 (초)
 
-        def _vote_task(vote_idx, temp):
+        def _vote_task(vote_idx, temp) -> tuple:
             """단일 투표 작업"""
             response = self._d.ask(prompt, temperature=temp, thinking_level="low")  # [V61.6] SC 추가투표
             return vote_idx, self._d._extract_json_robust(response)
@@ -807,13 +828,13 @@ class DirectorQualityAuditor:
                             evaluations.append(eval_result)
                             eval_decision = eval_result.get('decision', 'REJECT')
                             eval_score = eval_result.get('score', 0)
-                            print(f"            Vote {vote_idx+1}: {eval_decision} (score={eval_score})")
+                            logging.info(f"Vote {vote_idx+1}: {eval_decision} (score={eval_score})")
                     except FutureTimeoutError:
-                        print(f"            ⏰ [V61.3] Vote 타임아웃")
+                        logging.info(f"⏰ [V61.3] Vote 타임아웃")
                     except Exception as e:
-                        print(f"            ⚠️ Vote 오류: {str(e)[:50]}")
+                        logging.warning(f"⚠️ Vote 오류: {str(e)[:50]}")
             except FutureTimeoutError:
-                print(f"         ⏰ [V61.3] Self-Consistency 전체 타임아웃 - 완료된 {len(evaluations)}개 투표 사용")
+                logging.info(f"⏰ [V61.3] Self-Consistency 전체 타임아웃 - 완료된 {len(evaluations)}개 투표 사용")
 
         # 점수들의 중앙값
         scores = [e.get('score', 50) for e in evaluations if isinstance(e, dict)]
@@ -838,7 +859,7 @@ class DirectorQualityAuditor:
             'reason': f'ambiguous_result ({first_decision}, score={first_score})'
         }
 
-        print(f"         ✅ [V49.3] Self-Consistency 완료: {final_decision} (PASS {pass_votes}/{len(evaluations)}, median={median_score})")
+        logging.info(f"✅ [V49.3] Self-Consistency 완료: {final_decision} (PASS {pass_votes}/{len(evaluations)}, median={median_score})")
 
         return result
 

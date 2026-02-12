@@ -23,6 +23,7 @@
 """
 
 from typing import Dict, Any, List, Optional, Callable, Tuple
+import logging
 from dataclasses import dataclass
 from enum import Enum
 import json
@@ -164,9 +165,9 @@ JSON 형식으로:
                     "max_output_tokens": 4096
                 }
             )
-            return response.text
+            return response.text or ""  # [V70] None 방어
         except Exception as e:
-            print(f"[TreeOfThoughts] LLM 호출 실패: {e}")
+            logging.warning(f"[TreeOfThoughts] LLM 호출 실패: {e}")
             return ""
 
     def _parse_json(self, text: str) -> Dict[str, Any]:
@@ -261,8 +262,8 @@ JSON 형식으로:
 
         prompt = self.BRANCH_GENERATION_PROMPT.format(
             n_branches=n_branches,
-            task=task,
-            context=context_str
+            task=task.replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
+            context=context_str.replace("{", "{{").replace("}", "}}")  # [V70] JSON brace escape
         )
 
         response = self._call_llm(prompt, temperature=0.8)
@@ -294,8 +295,8 @@ JSON 형식으로:
         prompt = self.PATH_DEVELOPMENT_PROMPT.format(
             approach_name=approach.get("name", "전문가"),
             approach_description=approach.get("description", ""),
-            task=task,
-            context=context_str
+            task=task.replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
+            context=context_str.replace("{", "{{").replace("}", "}}")  # [V70] brace escape
         )
 
         return self._call_llm(prompt, temperature=0.6)
@@ -303,8 +304,8 @@ JSON 형식으로:
     def _evaluate_path(self, task: str, output: str) -> Dict[str, Any]:
         """경로 평가"""
         prompt = self.PATH_EVALUATION_PROMPT.format(
-            task=task,
-            output=output[:4000]
+            task=task.replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
+            output=output[:4000].replace("{", "{{").replace("}", "}}")  # [V70] brace escape
         )
 
         response = self._call_llm(prompt, temperature=0.2)
@@ -534,7 +535,7 @@ JSON 형식으로:
         if not self.client:
             return None
 
-        print(f"      🌳 [ToT Arc] {num_branches}개 분기 탐색 시작 (Arc {arc_no}, 주인공: {protagonist_name})")
+        logging.info(f"🌳 [ToT Arc] {num_branches}개 분기 탐색 시작 (Arc {arc_no}, 주인공: {protagonist_name})")
 
         # Arc 전용 접근 방식 (V55.2: 4분기)
         arc_approaches = [
@@ -588,24 +589,24 @@ JSON 형식으로:
                         "strengths": evaluation["strengths"],
                         "weaknesses": evaluation["weaknesses"]
                     })
-                    print(f"      ✅ [ToT Arc] 분기 {i+1}/{num_branches} '{approach['name']}' 완료 (점수: {evaluation['total']})")
+                    logging.info(f"✅ [ToT Arc] 분기 {i+1}/{num_branches} '{approach['name']}' 완료 (점수: {evaluation['total']})")
 
             except Exception as e:
-                print(f"      ⚠️ [ToT Arc] 분기 {i+1} 실패: {e}")
+                logging.warning(f"⚠️ [ToT Arc] 분기 {i+1} 실패: {e}")
                 continue
 
         if not candidates:
-            print(f"      🚨 [ToT Arc] 모든 분기 실패")
+            logging.warning(f"🚨 [ToT Arc] 모든 분기 실패")
             return None
 
         # 최고 점수 선택
         candidates.sort(key=lambda x: x["score"], reverse=True)
         best = candidates[0]
 
-        print(f"      🏆 [ToT Arc] 최선 선택: '{best['approach']}' (점수: {best['score']})")
-        print(f"         강점: {', '.join(best['strengths'][:2])}")
+        logging.info(f"🏆 [ToT Arc] 최선 선택: '{best['approach']}' (점수: {best['score']})")
+        logging.info(f"강점: {', '.join(best['strengths'][:2])}")
         if best['weaknesses']:
-            print(f"         약점: {', '.join(best['weaknesses'][:2])}")
+            logging.info(f"약점: {', '.join(best['weaknesses'][:2])}")
 
         return best["design"]
 
@@ -678,7 +679,12 @@ Volume 전략: {self._escape(vol_strategy[:2000] if vol_strategy else "(없음)"
                 }
             )
 
-            text = response.text
+            try:  # [V70] response.text ValueError/None 방어
+                text = response.text
+            except (ValueError, AttributeError):
+                text = None
+            if not text:
+                return None
             import re
             json_match = re.search(r'```json\s*(.*?)\s*```', text, re.DOTALL)
             if json_match:
@@ -686,7 +692,7 @@ Volume 전략: {self._escape(vol_strategy[:2000] if vol_strategy else "(없음)"
             return json.loads(text)
 
         except Exception as e:
-            print(f"      ⚠️ [ToT Arc] '{approach['name']}' 생성 오류: {e}")
+            logging.warning(f"⚠️ [ToT Arc] '{approach['name']}' 생성 오류: {e}")
             return None
 
     def _evaluate_arc(self, arc: Dict[str, Any], focus: str) -> Dict[str, Any]:

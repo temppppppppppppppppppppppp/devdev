@@ -22,7 +22,7 @@ class GenreGuard:
     ]
 
 
-    def convert_to_numeric(self, text):
+    def convert_to_numeric(self, text) -> float:
         if not text or not isinstance(text, (str, int, float)): return 0.0
         if isinstance(text, (int, float)): return float(text)
 
@@ -78,7 +78,7 @@ class GenreGuard:
     
 
 
-    def validate_v20_manuscript(self, content):
+    def validate_v20_manuscript(self, content: str) -> dict:
         """[Stage 4] 원고 내 금기어, 숫자 표기, 괄호 부연 설명 정밀 검수"""
         issues = []
         
@@ -117,7 +117,7 @@ class GenreGuard:
             "issues": issues
         }
 
-    def get_v20_purism_prompt(self):
+    def get_v20_purism_prompt(self) -> str:
         """에이전트들에게 주입할 순혈주의 지침 프롬프트 생성"""
         return f"""
 [🛡️ V30 무협 순혈주의 절대 준수 (Purism Enforcement)]

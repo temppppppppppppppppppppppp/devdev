@@ -22,6 +22,7 @@ Stage 2 통합 검증기 - Python + LLM 단일 검증
 """
 
 import json
+import logging
 import re
 from typing import Dict, List, Any, Optional, Tuple
 from .base_agent import BaseAgent
@@ -136,12 +137,12 @@ class UnifiedArcValidator(BaseAgent):
 
         # [V63.4] Python CRITICAL도 LLM에 전달 (Python은 정보 제공만, 최종 판단은 LLM)
         if python_result["has_critical"]:
-            print(f"      ⚠️ [V63.4] Python CRITICAL {len(python_result.get('critical_summary',''))}자 → LLM 검증으로 전달")
+            logging.warning(f"⚠️ [V63.4] Python CRITICAL {len(python_result.get('critical_summary',''))}자 → LLM 검증으로 전달")
 
         # ═══════════════════════════════════════════════════════════════
         # Phase B: LLM 문맥 검증 (유료)
         # ═══════════════════════════════════════════════════════════════
-        print(f"      🔍 [UnifiedValidator] LLM 검증 중...")
+        logging.info(f"🔍 [UnifiedValidator] LLM 검증 중...")
 
         llm_result = self._llm_validate(arc, prev_arcs, constraints, python_result)
 
@@ -159,7 +160,7 @@ class UnifiedArcValidator(BaseAgent):
             # MAJOR가 있어도 PASS → Director가 최종 판정
             verdict = "PASS"
             if major_count > 0:
-                print(f"      ⚠️ [UnifiedValidator] MAJOR {major_count}건 경고 → Director에게 위임")
+                logging.info(f"⚠️ [UnifiedValidator] MAJOR {major_count}건 경고 → Director에게 위임")
 
         result = {
             "verdict": verdict,
@@ -173,7 +174,7 @@ class UnifiedArcValidator(BaseAgent):
         }
 
         status = "✅ PASS" if verdict == "PASS" else "❌ REJECT"
-        print(f"      {status} [UnifiedValidator] (CRITICAL:{critical_count}, MAJOR:{major_count})")
+        logging.warning(f"{status} [UnifiedValidator] (CRITICAL:{critical_count}, MAJOR:{major_count})")
 
         return verdict, result
 
@@ -198,7 +199,7 @@ class UnifiedArcValidator(BaseAgent):
                 "evidence": f"Arc {v.get('death_arc', '?')}에서 사망, Arc {arc_no}에서 다시 등장",
                 "fix_hint": f"'{v.get('npc_name', '?')}'을(를) 등장시키지 마세요 (사망 NPC)"
             })
-            print(f"      💀 [V60.94] REJECT: 죽은 NPC '{v.get('npc_name')}' 등장!")
+            logging.warning(f"💀 [V60.94] REJECT: 죽은 NPC '{v.get('npc_name')}' 등장!")
 
         npc_changes = state_tracker.check_npc_changes(tactical, arc_no)
         for change in npc_changes:
@@ -209,7 +210,7 @@ class UnifiedArcValidator(BaseAgent):
                 "evidence": change.get("reason", ""),
                 "fix_hint": f"'{change.get('npc_name', '?')}'의 {change_type} 변경에 대한 정당화 사유 필요 (습득, 성장 등)"
             })
-            print(f"      ⚠️ [V60.95] WARNING: NPC '{change.get('npc_name')}' {change_type} 변경 감지")
+            logging.warning(f"⚠️ [V60.95] WARNING: NPC '{change.get('npc_name')}' {change_type} 변경 감지")
 
         return issues
 
@@ -391,6 +392,8 @@ class UnifiedArcValidator(BaseAgent):
         issues = []
         if not state_tracker or not hasattr(state_tracker, 'resolved_plots') or not state_tracker.resolved_plots:
             return issues
+        if not isinstance(state_tracker.resolved_plots, list):  # [V70] 타입 방어
+            return issues
 
         tactical_str = arc.get("tactical_doc", "")
         if not isinstance(tactical_str, str):
@@ -478,14 +481,14 @@ class UnifiedArcValidator(BaseAgent):
             result = self._extract_json_robust(response)
 
             if not isinstance(result, dict):
-                print(f"      ⚠️ [UnifiedValidator] JSON 파싱 실패 → REJECT")
+                logging.warning(f"⚠️ [UnifiedValidator] JSON 파싱 실패 → REJECT")
                 # [V61.5] fail-open → fail-closed: 파싱 실패 시 REJECT
                 return {"verdict": "REJECT", "issues": [{"severity": "CRITICAL", "category": "system", "issue": "LLM 응답 파싱 실패", "evidence": "JSON 파싱 불가", "fix_hint": "재시도"}], "summary": "LLM 응답 파싱 실패로 REJECT", "confidence": 0.0}
 
             return result
 
         except Exception as e:
-            print(f"      ⚠️ [UnifiedValidator] LLM 오류: {str(e)[:50]} → REJECT")
+            logging.warning(f"⚠️ [UnifiedValidator] LLM 오류: {str(e)[:50]} → REJECT")
             # [V61.5] fail-open → fail-closed: LLM 오류 시 REJECT
             return {"verdict": "REJECT", "issues": [{"severity": "CRITICAL", "category": "system", "issue": f"LLM 오류: {str(e)[:50]}", "evidence": "API 호출 실패", "fix_hint": "재시도"}], "summary": f"LLM 오류로 REJECT: {str(e)[:50]}", "confidence": 0.0}
 

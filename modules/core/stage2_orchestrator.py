@@ -31,7 +31,7 @@ class Stage2Orchestrator:
     패턴: self.app = SovereignApp 인스턴스
     """
 
-    def __init__(self, app):
+    def __init__(self, app) -> None:
         """
         Args:
             app: SovereignApp 인스턴스 (모든 속성 접근용)
@@ -125,33 +125,33 @@ class Stage2Orchestrator:
         for prev_arc in new_arcs_to_load:
             self.app.state_tracker.extract_npc_deaths_from_arc(prev_arc)
             self.app.state_tracker.extract_skill_acquisitions_from_arc(prev_arc)
-            self.app.state_tracker.extract_npc_info_from_arc(prev_arc)  # [V60.95] NPC 무장/수준 정보
+            self.app.state_tracker.extract_npc_info_from_arc(prev_arc, genre=_genre_for_tracker)  # [V60.95] NPC 무장/수준 정보 [V66.2] F-1 장르 가드
             self.app.state_tracker.extract_resolved_plots_from_arc(prev_arc)  # [V62.7] 완결된 플롯
             # [V66.1] F-1: 시간선 마커 추출
             try:
                 self.app.state_tracker.extract_time_markers_from_arc(prev_arc)
             except Exception as e:
-                print(f"  [V66.1] 시간선 추출 실패 (무시): {e}")
+                logging.warning(f"[V66.1] 시간선 추출 실패 (무시): {e}")
             # [V66.1] F-8: NPC 신체 변화 추출
             try:
                 self.app.state_tracker.extract_permanent_injuries_from_arc(prev_arc)
             except Exception as e:
-                print(f"  [V66.1] 신체 변화 추출 실패 (무시): {e}")
+                logging.warning(f"[V66.1] 신체 변화 추출 실패 (무시): {e}")
             # [V66.1] 동행자 변경 추출
             try:
                 self.app.state_tracker.update_companions_from_arc(prev_arc)
             except Exception as e:
-                print(f"  [V66.1] 동행자 추출 실패 (무시): {e}")
+                logging.warning(f"[V66.1] 동행자 추출 실패 (무시): {e}")
             # [V66.1] 약속/맹세 추출
             try:
                 self.app.state_tracker.extract_commitments_from_arc(prev_arc)
             except Exception as e:
-                print(f"  [V66.1] 약속 추출 실패 (무시): {e}")
+                logging.warning(f"[V66.1] 약속 추출 실패 (무시): {e}")
             # [V66.1] 주인공 감정 추출
             try:
                 self.app.state_tracker.extract_protagonist_emotion_from_arc(prev_arc)
             except Exception as e:
-                print(f"  [V66.1] 감정 추출 실패 (무시): {e}")
+                logging.warning(f"[V66.1] 감정 추출 실패 (무시): {e}")
             # [V66.2] H-1~H-5: 재시작 시 V66 확장 데이터 복원
             try:
                 self.app.state_tracker.extract_item_states_from_arc(prev_arc)
@@ -177,15 +177,15 @@ class Stage2Orchestrator:
             try:
                 self.app.state_tracker.extract_relationship_changes_from_arc(prev_arc)
             except Exception as e:
-                print(f"  [V66.2] 관계 변화 추출 실패 (무시): {e}")
+                logging.warning(f"[V66.2] 관계 변화 추출 실패 (무시): {e}")
             try:
                 self.app.state_tracker.extract_npc_injuries_from_arc(prev_arc)
             except Exception as e:
-                print(f"  [V66.2] NPC 부상 추출 실패 (무시): {e}")
+                logging.warning(f"[V66.2] NPC 부상 추출 실패 (무시): {e}")
             try:
                 self.app.state_tracker.extract_npc_movements_from_arc(prev_arc)
             except Exception as e:
-                print(f"  [V66.2] NPC 이동 추출 실패 (무시): {e}")
+                logging.warning(f"[V66.2] NPC 이동 추출 실패 (무시): {e}")
             # [V63.1] 투자물: 금융 이벤트 추출
             if _genre_for_tracker == 'investment':
                 self.app.state_tracker.extract_financial_events_from_arc(prev_arc)
@@ -316,7 +316,12 @@ class Stage2Orchestrator:
 
                 # [V43 Fix] 원래 위치에 삽입하여 순서 보장
                 if recovery_map:
-                    original_batch_data = {(batch_start + i): item for i, item in enumerate(enriched_batch) if item}
+                    # [V70] compacted enriched_batch → 원본 인덱스 복원 (failed_indices 간격 반영)
+                    _success_indices = sorted(set(range(batch_start, batch_end)) - set(failed_indices))
+                    original_batch_data = {}
+                    for _si, _orig_idx in enumerate(_success_indices):
+                        if _si < len(enriched_batch) and enriched_batch[_si]:
+                            original_batch_data[_orig_idx] = enriched_batch[_si]
                     original_batch_data.update(recovery_map)
                     enriched_batch = []
                     for idx in range(batch_start, batch_end):
@@ -351,7 +356,7 @@ class Stage2Orchestrator:
                         continue
 
                     if stitch_res and isinstance(stitch_res, dict) and stitch_res.get('status') == "REPAIRED":
-                        if 'content' in arc_b:
+                        if 'content' in arc_b and isinstance(arc_b['content'], dict):  # [V70] str 타입 방어
                             arc_b['content']['context'] = stitch_res.get('repaired_joint_b', arc_b['content'].get('context', ''))
                         if stitch_res.get('entity_anchors'):
                             try:
@@ -392,7 +397,7 @@ class Stage2Orchestrator:
                 # preflight: LLM 호출 (독립적 — all_refined_arcs만 사용)
                 # 두 호출이 독립적이므로 병렬 실행하여 15-30s 절감
 
-                def _compute_arc_drive():
+                def _compute_arc_drive() -> dict:
                     """Weaver 욕망 드라이브 생성 (LLM)"""
                     try:
                         return self.app.agents['weaver'].generate_arc_drive(
@@ -408,7 +413,7 @@ class Stage2Orchestrator:
                         })
                         return {"desire_vector": "생성 실패", "status": "error"}
 
-                def _compute_preflight():
+                def _compute_preflight() -> tuple:
                     """Preflight 분석 (LLM) — 결과를 attempt 루프에서 재사용"""
                     _pf_injection = ""
                     _pf_result = None
@@ -423,7 +428,7 @@ class Stage2Orchestrator:
                             if _pf_result:
                                 _pf_injection = self.app.agents['preflight'].generate_analyst_injection(_pf_result)
                         except Exception as pf_err:
-                            print(f"      ⚠️ [Preflight] 스킵: {str(pf_err)[:50]}")
+                            logging.info(f"⚠️ [Preflight] 스킵: {str(pf_err)[:50]}")
                     return _pf_injection, _pf_result
 
                 with concurrent.futures.ThreadPoolExecutor(max_workers=2) as _parallel_exec:
@@ -433,10 +438,10 @@ class Stage2Orchestrator:
                     _cached_preflight_injection, _cached_preflight_result = _fut_preflight.result()
 
                 if _cached_preflight_result:
-                    print(f"      ✅ [V66.1] arc_drive + preflight 병렬 완료")
-                    print(f"         - 아이템 타임라인: {len(_cached_preflight_result.get('item_timeline', []))}개")
-                    print(f"         - 금지 사항: {len(_cached_preflight_result.get('absolute_prohibitions', []))}개")
-                    print(f"         - 관계 맵: {len(_cached_preflight_result.get('relationship_map', {}))}명")
+                    logging.info(f"✅ [V66.1] arc_drive + preflight 병렬 완료")
+                    logging.info(f"- 아이템 타임라인: {len(_cached_preflight_result.get('item_timeline', []))}개")
+                    logging.info(f"- 금지 사항: {len(_cached_preflight_result.get('absolute_prohibitions', []))}개")
+                    logging.info(f"- 관계 맵: {len(_cached_preflight_result.get('relationship_map', {}))}명")
 
                 passed = False
                 current_feedback = ""
@@ -484,6 +489,8 @@ class Stage2Orchestrator:
                 max_attempts = max_fourphase_attempts + 1
                 director_feedback_for_fourphase = ""
                 use_analyst_fallback = False
+
+                _st_snapshot = None  # [V70] StateTracker 롤백용 스냅샷
 
                 while attempt < max_attempts:
                     draft_validator_passed = False
@@ -612,9 +619,9 @@ class Stage2Orchestrator:
                     generation_method = "analyst"
                     analyst_weapons = {}
 
-                    print(f"\n      {'='*60}")
-                    print(f"      [V60.36] Arc {global_arc_no} 생성 시작 (attempt {attempt + 1})")
-                    print(f"      {'='*60}")
+                    logging.info(f"\n      {'='*60}")
+                    logging.info(f"[V60.36] Arc {global_arc_no} 생성 시작 (attempt {attempt + 1})")
+                    logging.info(f"{'='*60}")
 
                     # ─────────────────────────────────────────────────────────────
                     # [무기 #1] Preflight 분석 — [V66.1] 병렬 실행 캐시 재사용
@@ -630,7 +637,7 @@ class Stage2Orchestrator:
                     entity_registry_for_director = None
                     if hasattr(self.app, 'constraint_compiler') and all_refined_arcs:
                         try:
-                            print(f"      📋 [무기 #2] ConstraintCompiler 컴파일 중...")
+                            logging.info(f"📋 [무기 #2] ConstraintCompiler 컴파일 중...")
                             state_result = None
                             if 'state_extractor' in self.app.agents:
                                 arc_count = len(all_refined_arcs)
@@ -646,13 +653,13 @@ class Stage2Orchestrator:
                                     entity_registry_for_director = self.app._fix_entity_registry_protagonist(
                                         entity_registry_for_director, protagonist_name
                                     )
-                                    print(f"      🏷️ [V61] Entity Registry 추출됨 (Director용)")
+                                    logging.info(f"🏷️ [V61] Entity Registry 추출됨 (Director용)")
                             _resolved = getattr(self.app.state_tracker, 'resolved_plots', []) if hasattr(self.app, 'state_tracker') else []
                             constraint_block = self.app.constraint_compiler.compile(all_refined_arcs, state_result, resolved_plots=_resolved)
                             analyst_weapons['constraints'] = constraint_block
-                            print(f"      ✅ [Constraints] 제약 블록 생성 완료 ({len(constraint_block)}자)")
+                            logging.info(f"✅ [Constraints] 제약 블록 생성 완료 ({len(constraint_block)}자)")
                         except Exception as cc_err:
-                            print(f"      ⚠️ [Constraints] 스킵: {str(cc_err)[:50]}")
+                            logging.info(f"⚠️ [Constraints] 스킵: {str(cc_err)[:50]}")
 
                     # ─────────────────────────────────────────────────────────────
                     # [V60.77] FourPhaseArcGenerator
@@ -707,12 +714,32 @@ class Stage2Orchestrator:
                                 refined_arc['joint_docs'] = enriched_block.get('joint_docs', {})
                                 refined_arc['status_shadow'] = enriched_block.get('status_shadow', {})
 
-                                print(f"      ✅ [V60.77] FourPhase 성공! (내부 재시도: {pipeline_result.get('retries', 0)}회)")
+                                logging.info(f"✅ [V60.77] FourPhase 성공! (내부 재시도: {pipeline_result.get('retries', 0)}회)")
+
+                                # [V70] Director REJECT 시 롤백을 위한 StateTracker 핵심 레지스트리 스냅샷
+                                import copy as _copy
+                                _st = self.app.state_tracker
+                                _st_snapshot = {
+                                    'npc_registry': _copy.deepcopy(_st.npc_registry),
+                                    'resolved_plots': _copy.deepcopy(_st.resolved_plots),
+                                    'entity_destructions': _copy.deepcopy(_st.entity_destructions),
+                                    'protagonist_skills': _copy.deepcopy(_st.protagonist_skills),  # [V70] shallow→deep (set/list 내부 변형 방어)
+                                    'skill_acquisitions': _copy.deepcopy(_st.skill_acquisitions),  # [V70] shallow→deep (list of dicts)
+                                    'npc_npc_relationships': _copy.deepcopy(_st.npc_npc_relationships),
+                                    'item_state_registry': _copy.deepcopy(_st.item_state_registry),
+                                    'active_plots': _copy.deepcopy(_st.active_plots),
+                                    # [V70] 누락 필드 추가 (lines 770-818에서 수정되는 필드들)
+                                    'npc_dialogue_profiles': _copy.deepcopy(_st.npc_dialogue_profiles),
+                                    'in_world_timeline': _copy.deepcopy(_st.in_world_timeline),
+                                    'current_companions': _copy.deepcopy(_st.current_companions),
+                                    'pending_commitments': _copy.deepcopy(_st.pending_commitments),
+                                    'protagonist_emotion': _copy.deepcopy(_st.protagonist_emotion),
+                                }
 
                                 # [V60.94] NPC 사망/무공 습득 추출 및 StateTracker 업데이트
                                 dead_npcs = self.app.state_tracker.extract_npc_deaths_from_arc(refined_arc)
                                 learned_skills = self.app.state_tracker.extract_skill_acquisitions_from_arc(refined_arc)
-                                npc_info = self.app.state_tracker.extract_npc_info_from_arc(refined_arc)
+                                npc_info = self.app.state_tracker.extract_npc_info_from_arc(refined_arc, genre=_genre_for_tracker)  # [V66.2] F-1 장르 가드
                                 self.app.state_tracker.extract_resolved_plots_from_arc(refined_arc)
                                 # [V66] 조직/장소 파괴, NPC 성격, NPC-NPC 관계 추출
                                 self.app.state_tracker.extract_entity_destructions_from_arc(refined_arc)
@@ -725,7 +752,7 @@ class Stage2Orchestrator:
                                 _suspended = self.app.state_tracker.check_suspended_plots(global_arc_no)
                                 if _suspended:
                                     for sw in _suspended:
-                                        print(f"      ⚠️ [V66] {sw['message']}")
+                                        logging.info(f"⚠️ [V66] {sw['message']}")
                                 # [V66] 장르별 레지스트리 업데이트
                                 try:
                                     self.app.state_tracker._populate_genre_registries_from_arc(refined_arc)
@@ -742,7 +769,7 @@ class Stage2Orchestrator:
                                             self.app.state_tracker.resolved_plots
                                         )
                                         if indexed > 0:
-                                            print(f"      📊 [V66] SemanticPlotGuard: {indexed}개 플롯 인덱싱")
+                                            logging.info(f"📊 [V66] SemanticPlotGuard: {indexed}개 플롯 인덱싱")
                                     except Exception:
                                         pass
 
@@ -756,45 +783,45 @@ class Stage2Orchestrator:
                                 try:
                                     self.app.state_tracker.extract_time_markers_from_arc(refined_arc)
                                 except Exception as e:
-                                    print(f"  [V66.1] 시간선 추출 실패 (무시): {e}")
+                                    logging.warning(f"[V66.1] 시간선 추출 실패 (무시): {e}")
 
                                 # [V66.1] F-8: NPC 신체 변화 추출
                                 try:
                                     self.app.state_tracker.extract_permanent_injuries_from_arc(refined_arc)
                                 except Exception as e:
-                                    print(f"  [V66.1] 신체 변화 추출 실패 (무시): {e}")
+                                    logging.warning(f"[V66.1] 신체 변화 추출 실패 (무시): {e}")
 
                                 # [V66.1] 동행자 변경 추출
                                 try:
                                     self.app.state_tracker.update_companions_from_arc(refined_arc)
                                 except Exception as e:
-                                    print(f"  [V66.1] 동행자 추출 실패 (무시): {e}")
+                                    logging.warning(f"[V66.1] 동행자 추출 실패 (무시): {e}")
 
                                 # [V66.1] 약속/맹세 추출
                                 try:
                                     self.app.state_tracker.extract_commitments_from_arc(refined_arc)
                                 except Exception as e:
-                                    print(f"  [V66.1] 약속 추출 실패 (무시): {e}")
+                                    logging.warning(f"[V66.1] 약속 추출 실패 (무시): {e}")
 
                                 # [V66.1] 주인공 감정 추출
                                 try:
                                     self.app.state_tracker.extract_protagonist_emotion_from_arc(refined_arc)
                                 except Exception as e:
-                                    print(f"  [V66.1] 감정 추출 실패 (무시): {e}")
+                                    logging.warning(f"[V66.1] 감정 추출 실패 (무시): {e}")
 
                                 # [V66.2] D-1,2,3: 관계/부상/이동 추출 연결
                                 try:
                                     self.app.state_tracker.extract_relationship_changes_from_arc(refined_arc)
                                 except Exception as e:
-                                    print(f"  [V66.2] 관계 변화 추출 실패 (무시): {e}")
+                                    logging.warning(f"[V66.2] 관계 변화 추출 실패 (무시): {e}")
                                 try:
                                     self.app.state_tracker.extract_npc_injuries_from_arc(refined_arc)
                                 except Exception as e:
-                                    print(f"  [V66.2] NPC 부상 추출 실패 (무시): {e}")
+                                    logging.warning(f"[V66.2] NPC 부상 추출 실패 (무시): {e}")
                                 try:
                                     self.app.state_tracker.extract_npc_movements_from_arc(refined_arc)
                                 except Exception as e:
-                                    print(f"  [V66.2] NPC 이동 추출 실패 (무시): {e}")
+                                    logging.warning(f"[V66.2] NPC 이동 추출 실패 (무시): {e}")
 
                                 # [V66] 멀티-Arc 요약 생성 및 저장
                                 try:
@@ -805,36 +832,45 @@ class Stage2Orchestrator:
                                         f"arc_summary_{global_arc_no}",
                                         arc_summary
                                     )
-                                    print(f"      \U0001f4ca [V66] Arc {global_arc_no} 요약 저장 완료")
+                                    logging.info(f"\U0001f4ca [V66] Arc {global_arc_no} 요약 저장 완료")
                                 except Exception as e:
-                                    print(f"      \u26a0\ufe0f [V66] Arc 요약 저장 실패 (비차단): {e}")
+                                    logging.warning(f"\u26a0\ufe0f [V66] Arc 요약 저장 실패 (비차단): {e}")
+
+                                # [V69] 5 Arc마다 NPC 레지스트리 LLM 정리
+                                if global_arc_no > 0 and global_arc_no % 5 == 0:
+                                    try:
+                                        removed = self.app.state_tracker.cleanup_npc_registry_with_llm(global_arc_no)
+                                        if removed:
+                                            logging.info(f"\U0001f9f9 [V69] NPC 레지스트리 정리: {len(removed)}개 오탐 제거 ({', '.join(removed[:5])})")
+                                    except Exception as e:
+                                        logging.warning(f"\u26a0\ufe0f [V69] NPC 레지스트리 정리 실패 (비차단): {e}")
 
                                 # [V61.3] 동적 장르 감지
                                 tactical_doc = refined_arc.get('tactical_doc', '')
                                 if tactical_doc and hasattr(self.app.state_tracker, 'check_and_expand_genre'):
                                     new_genre = self.app.state_tracker.check_and_expand_genre(tactical_doc)
                                     if new_genre:
-                                        print(f"         - 🎭 새 장르 감지: {new_genre}")
+                                        logging.info(f"- 🎭 새 장르 감지: {new_genre}")
 
                                 if dead_npcs:
-                                    print(f"         - 💀 사망 NPC 기록: {', '.join(dead_npcs)}")
+                                    logging.info(f"- 💀 사망 NPC 기록: {', '.join(dead_npcs)}")
                                 if learned_skills:
-                                    print(f"         - 🥋 무공 습득 기록: {', '.join(learned_skills)}")
+                                    logging.info(f"- 🥋 무공 습득 기록: {', '.join(learned_skills)}")
                                 if npc_info:
-                                    print(f"         - 👤 NPC 정보 기록: {len(npc_info)}건")
+                                    logging.info(f"- 👤 NPC 정보 기록: {len(npc_info)}건")
 
                                 phases = pipeline_result.get('phases', {})
                                 if phases.get('generate'):
-                                    print(f"         - 후보 수: {phases['generate'].get('candidates_count', '?')}개")
-                                    print(f"         - 선택 전략: {phases['generate'].get('selected_strategy', '?')}")
+                                    logging.info(f"- 후보 수: {phases['generate'].get('candidates_count', '?')}개")
+                                    logging.info(f"- 선택 전략: {phases['generate'].get('selected_strategy', '?')}")
                             else:
-                                print(f"      ⚠️ [V60.77] FourPhase 내부 검증 실패")
+                                logging.warning(f"⚠️ [V60.77] FourPhase 내부 검증 실패")
                                 if pipeline_result.get('phases', {}).get('validate'):
                                     issues = pipeline_result['phases']['validate'].get('issues_count', 0)
-                                    print(f"         - 검증 이슈: {issues}개")
+                                    logging.info(f"- 검증 이슈: {issues}개")
                                 director_feedback_for_fourphase = "FourPhase 내부 검증 실패. 구조적 문제 해결 필요."
                         except Exception as fp_err:
-                            print(f"      ❌ [V60.77] FourPhase 오류: {str(fp_err)[:80]}")
+                            logging.warning(f"❌ [V60.77] FourPhase 오류: {str(fp_err)[:80]}")
                             self.app._audit_event("four_phase_error", str(fp_err)[:100], {"arc_no": global_arc_no})
                             director_feedback_for_fourphase = f"FourPhase 오류 발생: {str(fp_err)[:100]}"
 
@@ -859,8 +895,8 @@ class Stage2Orchestrator:
                             if constraint_block:
                                 enhanced_arc_context = constraint_block + "\n\n" + enhanced_arc_context
 
-                            print(f"         - 컨텍스트 크기: {len(enhanced_arc_context)}자")
-                            print(f"         - 피드백: {current_feedback[:100] if current_feedback else '없음'}...")
+                            logging.info(f"- 컨텍스트 크기: {len(enhanced_arc_context)}자")
+                            logging.info(f"- 피드백: {current_feedback[:100] if current_feedback else '없음'}...")
 
                             with rich_console.status(f"[bold cyan]🤖 Arc {global_arc_no} LLM 생성 중...[/]", spinner="dots"):
                                 refined_arc = self.app.agents['analyst'].plan_single_arc_v20(
@@ -880,14 +916,14 @@ class Stage2Orchestrator:
                                     state_tracker=getattr(self.app, 'state_tracker', None)
                                 )
                             generation_method = "analyst"
-                            print(f"      ✅ [Analyst] Arc 생성 완료!")
+                            logging.info(f"✅ [Analyst] Arc 생성 완료!")
 
                             if refined_arc:
-                                print(f"         - tactical_doc: {len(refined_arc.get('tactical_doc', ''))}자")
-                                print(f"         - ep_count: {refined_arc.get('ep_count', '?')}화")
-                                print(f"         - items_acquired: {refined_arc.get('state_constraints', {}).get('items_acquired', [])}")
+                                logging.info(f"- tactical_doc: {len(refined_arc.get('tactical_doc', ''))}자")
+                                logging.info(f"- ep_count: {refined_arc.get('ep_count', '?')}화")
+                                logging.info(f"- items_acquired: {refined_arc.get('state_constraints', {}).get('items_acquired', [])}")
                         except Exception as analyst_err:
-                            print(f"      ❌ [Analyst] 에러: {str(analyst_err)[:100]}")
+                            logging.warning(f"❌ [Analyst] 에러: {str(analyst_err)[:100]}")
                             self.app._audit_event("analyst_error", "plan_single_arc_v20 failed", {
                                 "arc_no": global_arc_no,
                                 "error": str(analyst_err)
@@ -902,7 +938,7 @@ class Stage2Orchestrator:
                     python_advisory = []
                     if not four_phase_passed and refined_arc and hasattr(self.app, 'arc_draft_validator') and self.app.arc_draft_validator:
                         try:
-                            print(f"      🔬 [무기 #3] DraftValidator 사전 검증...")
+                            logging.info(f"🔬 [무기 #3] DraftValidator 사전 검증...")
                             draft_result = self.app.arc_draft_validator.validate(
                                 arc=refined_arc,
                                 prev_arcs=all_refined_arcs,
@@ -910,24 +946,24 @@ class Stage2Orchestrator:
                             )
                             advisory_issues = draft_result.get('advisory_issues', [])
                             if advisory_issues:
-                                print(f"      📋 [V60.56] DraftValidator advisory {len(advisory_issues)}개 발견 - LLM에게 전달")
+                                logging.info(f"📋 [V60.56] DraftValidator advisory {len(advisory_issues)}개 발견 - LLM에게 전달")
                                 for issue in advisory_issues[:3]:
                                     if isinstance(issue, dict):
-                                        print(f"         - {issue.get('message', str(issue))[:60]}")
+                                        logging.info(f"- {issue.get('message', str(issue))[:60]}")
                                     else:
-                                        print(f"         - {str(issue)[:60]}")
+                                        logging.info(f"- {str(issue)[:60]}")
                                 python_advisory.extend(advisory_issues)
-                            print(f"      ✅ [DraftValidator] 사전 검증 통과!")
+                            logging.info(f"✅ [DraftValidator] 사전 검증 통과!")
                             draft_validator_passed = True
                         except Exception as dv_err:
-                            print(f"      ⚠️ [DraftValidator] 스킵: {str(dv_err)[:50]}")
+                            logging.info(f"⚠️ [DraftValidator] 스킵: {str(dv_err)[:50]}")
 
                     # ─────────────────────────────────────────────────────────────
                     # [V60.36] SelfReflector
                     # ─────────────────────────────────────────────────────────────
                     if V50_MODULES_AVAILABLE and self.app.self_reflector and refined_arc and generation_method == "analyst" and ReflectionTarget:
                         try:
-                            print(f"      🪞 [SelfReflector] Analyst 자기 비판 시작...")
+                            logging.info(f"🪞 [SelfReflector] Analyst 자기 비판 시작...")
                             arc_str = json.dumps(refined_arc, ensure_ascii=False, indent=2)
                             context_str = f"Arc {global_arc_no} 설계. 피드백: {current_feedback or '없음'}"
 
@@ -942,20 +978,20 @@ class Stage2Orchestrator:
                                 try:
                                     improved_arc = json.loads(reflection_result.improved)
                                     refined_arc = improved_arc
-                                    print(f"      ✅ [SelfReflector] 자기 개선 완료 (점수: {getattr(reflection_result, 'improvement_score', '?')})")
+                                    logging.info(f"✅ [SelfReflector] 자기 개선 완료 (점수: {getattr(reflection_result, 'improvement_score', '?')})")
                                 except json.JSONDecodeError:
-                                    print(f"      ⚠️ [SelfReflector] 개선 결과 파싱 실패, 원본 유지")
+                                    logging.warning(f"⚠️ [SelfReflector] 개선 결과 파싱 실패, 원본 유지")
                             else:
-                                print(f"      ℹ️ [SelfReflector] 개선 불필요")
+                                logging.info(f"ℹ️ [SelfReflector] 개선 불필요")
                         except Exception as sr_err:
-                            print(f"      ⚠️ [SelfReflector] 스킵: {str(sr_err)[:50]}")
+                            logging.info(f"⚠️ [SelfReflector] 스킵: {str(sr_err)[:50]}")
 
                     # ─────────────────────────────────────────────────────────────
                     # [V60.36] Consensus 검증
                     # ─────────────────────────────────────────────────────────────
                     if not four_phase_passed and refined_arc and 'consensus' in self.app.agents:
                         try:
-                            print(f"      🗳️ [Consensus] 3-LLM 합의 검증 시작...")
+                            logging.info(f"🗳️ [Consensus] 3-LLM 합의 검증 시작...")
                             with rich_console.status(f"[bold magenta]🗳️ Consensus 3-LLM 검증 중...[/]", spinner="dots"):
                                 consensus_verdict, consensus_result = self.app.agents['consensus'].validate_with_consensus(
                                     arc=refined_arc,
@@ -965,31 +1001,31 @@ class Stage2Orchestrator:
                                 )
 
                             vote_summary = consensus_result.get("vote_summary", {})
-                            print(f"         - 투표 결과: PASS {vote_summary.get('pass', 0)} / REJECT {vote_summary.get('reject', 0)}")
+                            logging.warning(f"- 투표 결과: PASS {vote_summary.get('pass', 0)} / REJECT {vote_summary.get('reject', 0)}")
 
                             if consensus_verdict == "REJECT":
                                 critical_issues = consensus_result.get("critical_issues", [])
                                 all_issues = consensus_result.get("all_issues", [])
-                                print(f"      ❌ [Consensus] REJECT!")
-                                print(f"         - CRITICAL: {len(critical_issues)}개")
-                                print(f"         - 전체 이슈: {len(all_issues)}개")
+                                logging.warning(f"❌ [Consensus] REJECT!")
+                                logging.warning(f"- CRITICAL: {len(critical_issues)}개")
+                                logging.info(f"- 전체 이슈: {len(all_issues)}개")
                                 for ci in critical_issues[:3]:
-                                    print(f"         🚨 [{ci.get('category', '?')}] {ci.get('issue', '?')[:80]}")
+                                    logging.warning(f"🚨 [{ci.get('category', '?')}] {ci.get('issue', '?')[:80]}")
 
                                 feedback_parts = [f"[{ci.get('category')}] {ci.get('issue')}" for ci in critical_issues[:3]]
                                 current_feedback = "Consensus 검증 실패: " + "; ".join(feedback_parts)
                                 refined_arc = None
-                                print(f"      🔄 재시도 피드백: {current_feedback[:100]}...")
+                                logging.info(f"🔄 재시도 피드백: {current_feedback[:100]}...")
                                 attempt += 1
                                 continue
                             else:
-                                print(f"      ✅ [Consensus] PASS!")
+                                logging.info(f"✅ [Consensus] PASS!")
                                 consensus_passed = True
                                 passed_checks = consensus_result.get("passed_checks", [])
                                 if passed_checks:
-                                    print(f"         - 통과 항목: {passed_checks[:3]}")
+                                    logging.info(f"- 통과 항목: {passed_checks[:3]}")
                         except Exception as cv_err:
-                            print(f"      ⚠️ [Consensus] 검증 스킵: {str(cv_err)[:50]}")
+                            logging.info(f"⚠️ [Consensus] 검증 스킵: {str(cv_err)[:50]}")
 
                     # [데이터 검증]
                     if not refined_arc or not isinstance(refined_arc, dict):
@@ -1256,7 +1292,8 @@ class Stage2Orchestrator:
                                         reject_reason=f"ContinuityInspector: {severity} - {violations[0].get('type', '') if violations else 'unknown'}",
                                         generation_method=generation_method
                                     )
-                                except Exception:  # [V64.P4] OPTIONAL: metrics recording
+                                except Exception as e:  # [V64.P4] OPTIONAL: metrics recording
+                                    logging.debug(f"[SILENT] metrics recording: {e}")
                                     pass  # PassRateMonitor failure is non-blocking
 
                             # [V60.25] Stage2Optimizer
@@ -1362,11 +1399,11 @@ class Stage2Orchestrator:
                             if hasattr(self.app, 'stage2_optimizer') and self.app.stage2_optimizer:
                                 try:
                                     self.app.stage2_optimizer.example_manager.add_successful_arc(
-                                        arc=refined_arc,
-                                        arc_no=global_arc_no
+                                        arc=refined_arc  # [V70] arc_no 불필요 kwarg 제거
                                     )
                                     self.app.ui.log(f"      📚 [V60.25] 성공 Arc 예시 저장됨")
-                                except Exception:  # [V64.P4] OPTIONAL: success example storage
+                                except Exception as e:  # [V64.P4] OPTIONAL: success example storage
+                                    logging.debug(f"[SILENT] success example storage: {e}")
                                     pass  # Stage2Optimizer example save failure is non-blocking
 
                     # [V66] SemanticPlotGuard 중복 검사
@@ -1380,7 +1417,7 @@ class Stage2Orchestrator:
                             )
                             if spg_warnings:
                                 spg_text = self.app.semantic_plot_guard.format_warnings(spg_warnings)
-                                print(f"      ⚠️ [V66] {spg_text}")
+                                logging.info(f"⚠️ [V66] {spg_text}")
                                 # Director 피드백에 추가
                                 if current_feedback:
                                     current_feedback = f"{current_feedback}\n{spg_text}"
@@ -1394,13 +1431,63 @@ class Stage2Orchestrator:
                         self.app.perf_timer.start(f"s2_arc_{global_arc_no}_director")
                     except Exception:
                         pass
+
+                    # [V67] Director 컨텍스트 확장: 이전 30개 Arc tactical_doc 전문 전달
+                    _expanded_prev_context = last_refined_context
+                    if all_refined_arcs:
+                        _prev_arc_docs = []
+                        _prev_start = max(0, len(all_refined_arcs) - 30)
+                        for _pa_idx in range(_prev_start, len(all_refined_arcs)):
+                            _pa = all_refined_arcs[_pa_idx]
+                            _pa_no = _pa.get('arc_no', _pa_idx + 1)
+                            _pa_td = _pa.get('tactical_doc', '')
+                            if isinstance(_pa_td, dict):
+                                _pa_td = json.dumps(_pa_td, ensure_ascii=False)
+                            if _pa_td:
+                                _pa_ep_s = _pa.get('ep_start', '?')
+                                _pa_ep_e = _pa.get('ep_end', '?')
+                                _prev_arc_docs.append(
+                                    f"━━━ Arc {_pa_no} (제{_pa_ep_s}화~제{_pa_ep_e}화) ━━━\n{_pa_td}"
+                                )
+                        if _prev_arc_docs:
+                            _full_arc_history = "\n\n".join(_prev_arc_docs)
+                            # 200K자 상한 (Gemini 대용량 컨텍스트 윈도우 활용)
+                            if len(_full_arc_history) > 200000:
+                                _full_arc_history = _full_arc_history[:200000] + "\n... (200K자 절삭)"
+                            _expanded_prev_context = (
+                                f"[V67] ═══ 이전 Arc 전술서 전문 ({len(_prev_arc_docs)}개) ═══\n"
+                                f"{_full_arc_history}\n\n"
+                                f"═══ 상태 요약 ═══\n{last_refined_context}"
+                            )
+                            logging.info(f"📚 [V67] Director 컨텍스트 확장: {len(_prev_arc_docs)}개 Arc ({len(_expanded_prev_context)}자)")
+
+                    # [V67.1] story_context 조립
+                    _story_context = ""
+                    try:
+                        _prot_config = bible_root.get('protagonist_config', {})
+                        _sc_parts = [f"- 장르: {genre}"]
+                        if _prot_config:
+                            _sc_parts.append(f"- 주인공: {_prot_config.get('name', protagonist_name or '미상')}")
+                            _incarnation = _prot_config.get('incarnation_type', '미상')
+                            _sc_parts.append(f"- 환생 유형: {_incarnation}")
+                            if _incarnation == '회귀자':
+                                _sc_parts.append("→ 회귀자: 미래를 알고 역사를 변경하려 함. 이것은 모순이 아님.")
+                            elif _incarnation == '빙의자':
+                                _sc_parts.append("→ 빙의자: 원래 인물과 다른 인격.")
+                            elif _incarnation == '환생자':
+                                _sc_parts.append("→ 환생자: 전생 기억 보유.")
+                        _story_context = "\n".join(_sc_parts)
+                    except Exception:
+                        _story_context = ""
+
                     audit = self.app.agents['director'].audit_strategic_plan(
                         refined_arc,
-                        last_refined_context,
+                        _expanded_prev_context,
                         curr_block=enriched_block,
                         protagonist_name=protagonist_name,
                         suspected_duplicates=suspected_duplicates,
-                        entity_registry=entity_registry_for_director
+                        entity_registry=entity_registry_for_director,
+                        story_context=_story_context  # [V67.1]
                     )
                     try:
                         self.app.perf_timer.stop(f"s2_arc_{global_arc_no}_director")
@@ -1523,6 +1610,7 @@ class Stage2Orchestrator:
                             refined_arc["constraint_summary"] = "\n".join(_must_not[:10]) if _must_not else ""
 
                         all_refined_arcs.append(refined_arc)
+                        _st_snapshot = None  # [V70] Director PASS 확정 — 스냅샷 불필요
                         self.app._cumulative_state_cache = None
                         self.app._cumulative_state_cache_key = 0
 
@@ -1558,7 +1646,8 @@ class Stage2Orchestrator:
                                     success=True,
                                     generation_method=generation_method
                                 )
-                            except Exception:  # [V64.P4] OPTIONAL: metrics
+                            except Exception as e:  # [V64.P4] OPTIONAL: metrics
+                                logging.debug(f"[SILENT] metrics (success): {e}")
                                 pass
 
                         if V50_MODULES_AVAILABLE and self.app.quality_dashboard:
@@ -1573,14 +1662,16 @@ class Stage2Orchestrator:
                                     },
                                     stage=2
                                 )
-                            except Exception:  # [V64.P4] OPTIONAL: dashboard metrics
+                            except Exception as e:  # [V64.P4] OPTIONAL: dashboard metrics
+                                logging.debug(f"[SILENT] dashboard metrics (PASS): {e}")
                                 pass
 
                         if hasattr(self.app, 'stage2_optimizer') and self.app.stage2_optimizer:
                             try:
                                 self.app.stage2_optimizer.failure_memory.clear_arc_failures(global_arc_no)
                                 self.app.ui.log(f"      ✨ [V60.25] Arc {global_arc_no} 최종 성공 - 실패 메모리 클리어")
-                            except Exception:  # [V64.P4] OPTIONAL: optimizer memory clear
+                            except Exception as e:  # [V64.P4] OPTIONAL: optimizer memory clear
+                                logging.debug(f"[SILENT] optimizer memory clear: {e}")
                                 pass
 
                         # [V65] PerfTimer: Arc 완료 시 요약 로그
@@ -1589,6 +1680,83 @@ class Stage2Orchestrator:
                             self.app.perf_timer.reset()
                         except Exception:
                             pass
+
+                        # [V68] 계층적 요약 피라미드 — 볼륨 요약 (10 Arc마다)
+                        if global_arc_no > 0 and global_arc_no % 10 == 0:
+                            try:
+                                _vol_no = global_arc_no // 10
+                                _arc_summaries_for_vol = []
+                                for _ai in range(global_arc_no - 9, global_arc_no + 1):
+                                    _as = self.app.current_project.load_v20_anchor(f"arc_summary_{_ai}")
+                                    if _as:
+                                        # arc_summary는 dict 또는 str일 수 있음
+                                        if isinstance(_as, dict):
+                                            _as_text = _as.get('summary', '') or _as.get('text', '')
+                                            if not _as_text:
+                                                # [V70] arc_summary dict를 읽기 좋은 텍스트로 변환
+                                                _parts = []
+                                                if _as.get('npc_status'):
+                                                    _parts.append("NPC: " + ", ".join(f"{n}({v.get('status','')})" for n, v in _as['npc_status'].items()))
+                                                if _as.get('world_changes'):
+                                                    _parts.append("세계변화: " + "; ".join(str(w) for w in _as['world_changes'][:5]))
+                                                if _as.get('resolved_plots'):
+                                                    _parts.append("해결플롯: " + "; ".join(str(p) for p in _as['resolved_plots'][:5]))
+                                                if _as.get('active_plots'):
+                                                    _parts.append("진행플롯: " + "; ".join(str(p) for p in _as['active_plots'][:5]))
+                                                if _as.get('destroyed_entities'):
+                                                    _parts.append("파괴: " + "; ".join(str(d) for d in _as['destroyed_entities'][:3]))
+                                                _as_text = " | ".join(_parts) if _parts else str(_as)
+                                        else:
+                                            _as_text = str(_as)
+                                        if _as_text:
+                                            _arc_summaries_for_vol.append(f"Arc {_ai}: {_as_text}")
+
+                                if _arc_summaries_for_vol:
+                                    _vol_prompt = (
+                                        "아래 10개 아크 요약을 하나의 볼륨 요약으로 합쳐주세요.\n"
+                                        "핵심 사건, 주요 인물 변화, 세계 상태 변화에 집중하세요.\n"
+                                        "1000자 이내로 작성하세요.\n\n"
+                                        + "\n".join(_arc_summaries_for_vol)
+                                        + f"\n\n볼륨 {_vol_no} 요약:"
+                                    )
+                                    _vol_result = self.app.agents['director'].ask(
+                                        _vol_prompt, temperature=0.2
+                                    )
+                                    if _vol_result and isinstance(_vol_result, str) and len(_vol_result) > 20:
+                                        self.app.current_project.save_v20_anchor(
+                                            f"volume_summary_{_vol_no}", _vol_result
+                                        )
+                                        logging.info(f"📖 [V68] 볼륨 {_vol_no} 요약 저장 완료 ({len(_vol_result)}자)")
+
+                                        # [V68] 시리즈 요약 갱신 — 기존 + 새 볼륨 통합
+                                        try:
+                                            _existing_series = self.app.current_project.load_v20_anchor(
+                                                'series_summary'
+                                            ) or ""
+                                            if isinstance(_existing_series, dict):
+                                                _existing_series = _existing_series.get('summary', '') or str(_existing_series)
+                                            _series_prompt = (
+                                                "아래는 기존 시리즈 요약과 새 볼륨 요약입니다.\n"
+                                                "이를 통합하여 전체 시리즈 요약을 1000자 이내로 갱신하세요.\n"
+                                                "핵심 사건, 주요 인물 변화, 세계 상태 변화에 집중하세요.\n\n"
+                                                f"기존 시리즈 요약:\n{_existing_series or '(아직 없음)'}\n\n"
+                                                f"새 볼륨 {_vol_no} 요약:\n{_vol_result}\n\n"
+                                                "갱신된 시리즈 요약:"
+                                            )
+                                            _series_result = self.app.agents['director'].ask(
+                                                _series_prompt, temperature=0.2
+                                            )
+                                            if _series_result and isinstance(_series_result, str) and len(_series_result) > 20:
+                                                self.app.current_project.save_v20_anchor(
+                                                    'series_summary', _series_result
+                                                )
+                                                logging.info(f"📚 [V68] 시리즈 요약 갱신 완료 ({len(_series_result)}자)")
+                                        except Exception as _se:
+                                            logging.warning(f"⚠️ [V68] 시리즈 요약 갱신 실패 (비차단): {_se}")
+                                    else:
+                                        logging.info(f"⚠️ [V68] 볼륨 요약 LLM 응답 불충분 — 건너뜀")
+                            except Exception as _ve:
+                                logging.warning(f"⚠️ [V68] 볼륨 요약 생성 실패 (비차단): {_ve}")
 
                         break
                     else:
@@ -1601,6 +1769,17 @@ class Stage2Orchestrator:
 
                         self.app.ui.log(f"      🎬 [Director REJECT] {reject_reason[:100]}")
                         self.app.ui.log(f"      📋 피드백: {base_feedback[:100]}")
+
+                        # [V70] StateTracker 롤백: FourPhase PASS → Director REJECT 시 팬텀 데이터 제거
+                        if _st_snapshot and generation_method == "four_phase":
+                            try:
+                                _st = self.app.state_tracker
+                                for _k, _v in _st_snapshot.items():
+                                    setattr(_st, _k, _v)
+                                logging.warning(f"🔄 [V70] StateTracker 롤백 완료 (Director REJECT)")
+                            except Exception as _rb_err:
+                                logging.warning(f"⚠️ [V70] StateTracker 롤백 실패 (비차단): {_rb_err}")
+                            _st_snapshot = None
 
                         if not use_analyst_fallback:
                             director_feedback_for_fourphase = f"""[Director REJECT 사유]
@@ -1630,7 +1809,8 @@ class Stage2Orchestrator:
                                     reject_reason=str(audit.get('reason', ''))[:100],
                                     generation_method=generation_method
                                 )
-                            except Exception:  # [V64.P4] OPTIONAL: metrics
+                            except Exception as e:  # [V64.P4] OPTIONAL: metrics
+                                logging.debug(f"[SILENT] metrics (reject): {e}")
                                 pass
 
                         if V50_MODULES_AVAILABLE and self.app.quality_dashboard:
@@ -1645,7 +1825,8 @@ class Stage2Orchestrator:
                                     },
                                     stage=2
                                 )
-                            except Exception:  # [V64.P4] OPTIONAL: dashboard metrics
+                            except Exception as e:  # [V64.P4] OPTIONAL: dashboard metrics
+                                logging.debug(f"[SILENT] dashboard metrics (REJECT): {e}")
                                 pass
 
                         self.app.stage_rejection_history.append({
@@ -1662,7 +1843,8 @@ class Stage2Orchestrator:
                                     failure_type='director_reject',
                                     details=str(audit.get('reason', ''))[:200]
                                 )
-                            except Exception:  # [V64.P4] OPTIONAL: optimizer failure recording
+                            except Exception as e:  # [V64.P4] OPTIONAL: optimizer failure recording
+                                logging.debug(f"[SILENT] optimizer failure recording: {e}")
                                 pass
 
                     attempt += 1
@@ -1722,34 +1904,35 @@ class Stage2Orchestrator:
                     with open(failure_report_path, 'w', encoding='utf-8') as f:
                         f.write(report_content)
 
-                    print(f"\n{'='*60}")
-                    print(f"📋 [V60.46] Arc {global_arc_no} 실패 분석 리포트")
-                    print(f"{'='*60}")
-                    print(f"\n🔴 REJECT 사유 ({len(arc_rejects)}회):")
+                    logging.info(f"\n{'='*60}")
+                    logging.warning(f"📋 [V60.46] Arc {global_arc_no} 실패 분석 리포트")
+                    logging.info(f"{'='*60}")
+                    logging.warning(f"\n🔴 REJECT 사유 ({len(arc_rejects)}회):")
                     for rej in arc_rejects[-3:]:
-                        print(f"   - {rej.get('reason', 'N/A')[:100]}")
-                    print(f"\n🚫 중복 획득 금지 아이템 ({len(prev_items)}개):")
+                        logging.info(f"- {rej.get('reason', 'N/A')[:100]}")
+                    logging.info(f"\n🚫 중복 획득 금지 아이템 ({len(prev_items)}개):")
                     for item in prev_items[:5]:
-                        print(f"   - {item}")
+                        logging.info(f"- {item}")
                     if len(prev_items) > 5:
-                        print(f"   ... 외 {len(prev_items) - 5}개")
-                    print(f"\n📁 전체 리포트: {failure_report_path}")
-                    print(f"{'='*60}\n")
+                        logging.info(f"... 외 {len(prev_items) - 5}개")
+                    logging.info(f"\n📁 전체 리포트: {failure_report_path}")
+                    logging.info(f"{'='*60}\n")
 
                     if all_refined_arcs:
                         self.app.ui.log(f"💾 [Auto-Save] 현재까지 {len(all_refined_arcs)}개 Arc 저장 완료.")
 
                     # [V60.45] 다시 하기 옵션
                     while True:
-                        print("   [1] 건너뛰고 계속")
-                        print("   [2] 중단")
-                        print("   [3] 다시 하기 (자동)")
+                        logging.info("[1] 건너뛰고 계속")
+                        logging.info("[2] 중단")
+                        logging.info("[3] 다시 하기 (자동)")
                         print("   [4] 수동 개입 (리포트 확인 후 재시도)")
                         user_choice = input("   선택 (기본: 2): ").strip()
 
                         if user_choice == '1':
                             self.app.ui.log(f"⏭️ Arc {global_arc_no}을 건너뛰고 계속합니다.")
-                            current_ep_start += 5
+                            _skip_ep = arcs_source[global_arc_no - 1].get('ep_count', 5) if global_arc_no <= len(arcs_source) else 5  # [V70] 하드코딩 5 → 실제 ep_count
+                            current_ep_start += _skip_ep
                             break
                         elif user_choice == '3':
                             self.app.ui.log(f"🔄 Arc {global_arc_no} 다시 시도합니다...")
@@ -1759,12 +1942,13 @@ class Stage2Orchestrator:
                             constraint_block = constraint_db.generate_constraint_block(global_arc_no)
                             break
                         elif user_choice == '4':
-                            print(f"\n   📝 리포트 파일을 확인하세요: {failure_report_path}")
+                            logging.info(f"\n   📝 리포트 파일을 확인하세요: {failure_report_path}")
                             print(f"   💡 문제가 된 아이템이나 표현을 확인 후, 아래 옵션을 선택하세요.")
                             manual_input = input("   준비되면 [Enter]로 재시도, 'skip'으로 건너뛰기, 'quit'으로 중단: ").strip().lower()
                             if manual_input == 'skip':
                                 self.app.ui.log(f"⏭️ Arc {global_arc_no}을 건너뛰고 계속합니다.")
-                                current_ep_start += 5
+                                _skip_ep2 = arcs_source[global_arc_no - 1].get('ep_count', 5) if global_arc_no <= len(arcs_source) else 5  # [V70]
+                                current_ep_start += _skip_ep2
                                 break
                             elif manual_input == 'quit':
                                 self.app.ui.log("⏹️ 사용자 요청으로 공정을 중단합니다.")
@@ -1809,7 +1993,7 @@ class Stage2Orchestrator:
     # Stage 2 헬퍼 메서드
     # ═══════════════════════════════════════════════════════════════════════
 
-    def _normalize_tactical_text(self, text):
+    def _normalize_tactical_text(self, text: str) -> str:
         """[V64.P3] 전술서 텍스트 정규화"""
         if not isinstance(text, str):
             return ""
@@ -1820,7 +2004,7 @@ class Stage2Orchestrator:
         normalized = re.sub(r"\s+", " ", normalized).strip()
         return normalized
 
-    def _is_tactical_doc_duplicate(self, candidate_text, reference_texts, threshold=0.98):
+    def _is_tactical_doc_duplicate(self, candidate_text: str, reference_texts: list, threshold: float = 0.98) -> bool:
         """[V64.P3] 전술서 중복 감지"""
         from difflib import SequenceMatcher
         import hashlib
@@ -1847,7 +2031,7 @@ class Stage2Orchestrator:
                 return True
         return False
 
-    def _normalize_flow_text(self, text):
+    def _normalize_flow_text(self, text: str) -> str:
         """[V64.P3] Flow Guard용 텍스트 정규화"""
         if not isinstance(text, str):
             return ""
@@ -1855,7 +2039,7 @@ class Stage2Orchestrator:
         normalized = re.sub(r"\s+", " ", normalized).strip().lower()
         return normalized
 
-    def _stage2_flow_guard(self, refined_arc):
+    def _stage2_flow_guard(self, refined_arc: dict) -> dict:
         """
         [V60.15] Stage2: 진짜 서사 구조 분석 기반 Flow Guard
         """
@@ -1906,8 +2090,8 @@ class Stage2Orchestrator:
                 pattern = result.get("pattern", "")
                 recommendation = result.get("recommendation", "")
 
-                print(f"      🔍 [V60.15] 진짜 서사 정체 감지: {stagnation_type}")
-                print(f"         패턴: {pattern}")
+                logging.info(f"🔍 [V60.15] 진짜 서사 정체 감지: {stagnation_type}")
+                logging.info(f"패턴: {pattern}")
 
                 return {
                     "status": "REJECT",
@@ -1918,24 +2102,24 @@ class Stage2Orchestrator:
             if result.get("status") == "WARNING":
                 warning_type = result.get("warning_type", "")
                 pattern = result.get("pattern", "")
-                print(f"      ⚠️ [V60.15] 서사 경고: {warning_type} - {pattern}")
+                logging.info(f"⚠️ [V60.15] 서사 경고: {warning_type} - {pattern}")
 
             diversity = result.get("diversity_score", 1.0)
             if diversity < 0.6:
-                print(f"      📊 [V60.15] 서사 다양성: {diversity:.0%} (개선 권장)")
+                logging.info(f"📊 [V60.15] 서사 다양성: {diversity:.0%} (개선 권장)")
 
             return {"status": "PASS", "diversity_score": diversity}
 
         except ImportError:
-            print(f"      ⚠️ [V60.15] NarrativeStructureAnalyzer 로드 실패, 폴백")
+            logging.warning(f"⚠️ [V60.15] NarrativeStructureAnalyzer 로드 실패, 폴백")
             return self._stage2_flow_guard_legacy(normalized)
         except Exception as e:
-            print(f"      ⚠️ [V60.15] 서사 분석 오류 (비차단): {e}")
+            logging.warning(f"⚠️ [V60.15] 서사 분석 오류 (비차단): {e}")
             return {"status": "PASS", "fallback": True}
 
-    def _stage2_flow_guard_legacy(self, normalized):
+    def _stage2_flow_guard_legacy(self, normalized: str) -> dict:
         """[V60.15] 레거시 Flow Guard (폴백용)"""
-        def jaccard(a, b):
+        def jaccard(a, b) -> float:
             sa, sb = set(a.split()), set(b.split())
             if not sa or not sb:
                 return 0.0

@@ -20,6 +20,7 @@ Stage 3 사전검사기 + Director 최종 판정
 """
 
 import json
+import logging
 import re
 from typing import Dict, List, Any, Optional, Tuple
 
@@ -80,7 +81,7 @@ class UnifiedBlueprintValidator:
         # [V60.85] 여러 후보가 있으면 Director 비교 선택 모드
         # ═══════════════════════════════════════════════════════════════
         if all_candidates and len(all_candidates) > 1 and director:
-            print(f"      🎭 [V60.85] Director 비교 선택 모드 ({len(all_candidates)}개 후보)")
+            logging.info(f"🎭 [V60.85] Director 비교 선택 모드 ({len(all_candidates)}개 후보)")
 
             compare_result = director.compare_and_select_blueprint(
                 candidates=all_candidates,
@@ -108,7 +109,7 @@ class UnifiedBlueprintValidator:
             }
 
             status = "✅ PASS" if verdict == "PASS" else "❌ REJECT"
-            print(f"      {status} [Director] 후보 {compare_result.get('selected_index', 0)+1} 선택, 점수: {compare_result.get('score', 0)}")
+            logging.info(f"{status} [Director] 후보 {compare_result.get('selected_index', 0)+1} 선택, 점수: {compare_result.get('score', 0)}")
 
             return verdict, result
 
@@ -128,7 +129,7 @@ class UnifiedBlueprintValidator:
             dead_npc_violations = state_tracker.check_dead_npc_in_blueprint(blueprint, working_ep, arc_no)
             if dead_npc_violations:
                 violation_names = [v["npc_name"] for v in dead_npc_violations]
-                print(f"      💀 [V60.96] 죽은 NPC 감지 → Director에게 전달: {', '.join(violation_names)}")
+                logging.info(f"💀 [V60.96] 죽은 NPC 감지 → Director에게 전달: {', '.join(violation_names)}")
                 # Director 주의 포인트로 추가 (Python은 REJECT 안 함)
                 pre_result["issues"].append({
                     "severity": "CRITICAL",
@@ -141,20 +142,20 @@ class UnifiedBlueprintValidator:
 
         # [V60.80] Python은 경고만 - REJECT 권한 없음, Director가 최종 판정
         if pre_result["has_critical"]:
-            print(f"      ⚠️ [PreValidator] Python 경고: CRITICAL 이슈 발견 (Director가 최종 판정)")
+            logging.warning(f"⚠️ [PreValidator] Python 경고: CRITICAL 이슈 발견 (Director가 최종 판정)")
             for issue in pre_result["issues"]:
                 if issue.get("severity") == "CRITICAL":
-                    print(f"         - {issue.get('issue', '?')}")
+                    logging.info(f"- {issue.get('issue', '?')}")
         elif pre_result["issues"]:
-            print(f"      ⚠️ [PreValidator] Python 경고: {len(pre_result['issues'])}개 이슈 (Director가 최종 판정)")
+            logging.info(f"⚠️ [PreValidator] Python 경고: {len(pre_result['issues'])}개 이슈 (Director가 최종 판정)")
 
         # ═══════════════════════════════════════════════════════════════
         # Phase B: Director 최종 판정 (디렉터주권주의) - 항상 호출
         # ═══════════════════════════════════════════════════════════════
         if director is None:
             # [V60.80] Director 없으면 PASS 처리 (Python은 REJECT 권한 없음)
-            print(f"      ⚠️ [PreValidator] Director 없음 - 경고 출력 후 PASS 처리")
-            print(f"         (Python은 REJECT 권한 없음, Director 전달 필수)")
+            logging.info(f"⚠️ [PreValidator] Director 없음 - 경고 출력 후 PASS 처리")
+            logging.warning(f"(Python은 REJECT 권한 없음, Director 전달 필수)")
             return "PASS", {
                 "verdict": "PASS",
                 "phase": "no_director",
@@ -163,7 +164,7 @@ class UnifiedBlueprintValidator:
                 "feedback": ""
             }
 
-        print(f"      🎬 [Director] Blueprint 최종 판정 중...")
+        logging.info(f"🎬 [Director] Blueprint 최종 판정 중...")
 
         try:
             # Director 호출을 위한 데이터 준비
@@ -246,12 +247,12 @@ class UnifiedBlueprintValidator:
             }
 
             status = "✅ PASS" if final_verdict == "PASS" else "❌ REJECT"
-            print(f"      {status} [Director] 점수: {director_score}, 사유: {director_reason[:50]}...")
+            logging.info(f"{status} [Director] 점수: {director_score}, 사유: {director_reason[:50]}...")
 
             return final_verdict, result
 
         except Exception as e:
-            print(f"      ⚠️ [Director] 오류: {str(e)[:50]}")
+            logging.warning(f"⚠️ [Director] 오류: {str(e)[:50]}")
             # [V60.80] Director 오류 시에도 Python은 REJECT 권한 없음
             # Director 재시도 유도를 위해 REJECT 반환하되, 피드백으로 오류 원인 전달
             return "REJECT", {

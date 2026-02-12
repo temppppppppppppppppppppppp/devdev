@@ -6,6 +6,7 @@
 """
 
 from typing import Dict, List, Set, Any, Optional
+import logging
 from dataclasses import dataclass, field
 
 
@@ -31,7 +32,7 @@ class InformationDiffusion:
         "isolated": 999          # 격리된 곳: 전파 안됨
     }
 
-    def __init__(self, context):
+    def __init__(self, context) -> None:
         self.context = context
         self.events = []
 
@@ -47,7 +48,7 @@ class InformationDiffusion:
 
             # [V66.1] 전체 에피소드의 state_log에서 추출 (이전: 최근 10화만 → 장기 사건 누락)
             latest_ep = self.context.db.get_latest_episode_number()
-            for ep in range(1, latest_ep + 1):
+            for ep in range(1, latest_ep):  # [V70] latest_ep은 MAX+1이므로 +1 불필요
                 log_data = self.context.db.load_state_log(ep)
 
                 if log_data and isinstance(log_data, dict):
@@ -63,7 +64,7 @@ class InformationDiffusion:
                             'importance': self._calculate_importance(summary)
                         })
         except Exception as e:
-            print(f"      ⚠️ [InfoDiffusion] 주요 사건 로드 실패: {e}")
+            logging.warning(f"⚠️ [InfoDiffusion] 주요 사건 로드 실패: {e}")
 
         self.events = events
         return events
@@ -197,7 +198,7 @@ class InformationDiffusion:
     # [V49.7] 정보 비대칭 추적 메서드
     # ═══════════════════════════════════════════════════════════════
 
-    def __init_knowledge_tracker(self):
+    def __init_knowledge_tracker(self) -> None:
         """지식 추적기 초기화 (필요시 호출)"""
         if not hasattr(self, 'npc_knowledge'):
             self.npc_knowledge: Dict[str, List[KnowledgeEntry]] = {}

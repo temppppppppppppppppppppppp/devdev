@@ -18,6 +18,7 @@
 """
 
 from dataclasses import dataclass, field
+import logging
 from typing import List, Dict, Any, Optional, Set, Tuple
 from collections import defaultdict
 from enum import Enum
@@ -463,8 +464,8 @@ class CharacterVoiceTracker:
         except FileNotFoundError:
             pass
         except Exception as e:
-            print(f"[CharacterVoiceTracker] Load error: {e}")
+            logging.info(f"[CharacterVoiceTracker] Load error: {e}")
 
-    def clear(self):
+    def clear(self) -> None:
         """모든 프로필 초기화"""
         self.profiles = {}

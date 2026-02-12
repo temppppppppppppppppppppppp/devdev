@@ -12,7 +12,7 @@ from typing import Dict, Optional, Any
 class StateTrackerFinancial:
     """[V64.P3] 금융 상태 추적 서브모듈 (투자물 전용)"""
 
-    def __init__(self, tracker):
+    def __init__(self, tracker) -> None:
         self.tracker = tracker  # back-reference to main StateTracker
 
     # ═══════════════════════════════════════════════════════════════

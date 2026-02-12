@@ -16,6 +16,7 @@ Components:
 """
 
 import json
+import logging
 import re
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, field
@@ -33,7 +34,7 @@ class StateSnapshotInjector:
     LLM이 시작 상태를 명확히 인식하도록 구조화된 스냅샷 제공
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.last_snapshot = None
 
     def extract_snapshot(self, prev_arc: Dict) -> Dict:
@@ -153,7 +154,7 @@ class ArcAutoCorrector:
     REJECT 전에 자동 수정 가능한 오류를 먼저 수정
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.corrections_made = []
 
     def auto_correct(self, arc: Dict, prev_arcs: List[Dict]) -> Tuple[Dict, List[str]]:
@@ -403,7 +404,7 @@ class NegativeConstraintAmplifier:
     단순 목록이 아닌 "왜 금지인지" 맥락과 증거를 제공
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def amplify_constraints(self, prev_arcs: List[Dict]) -> str:
@@ -519,7 +520,7 @@ class FocusedFeedbackGenerator:
     REJECT 시 구체적 위치 + 수정 방법을 제시
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def generate_feedback(self, validation_result: Dict, arc: Dict, prev_arcs: List[Dict]) -> str:
@@ -603,7 +604,7 @@ class SessionFailureMemory:
     같은 세션에서 반복되는 실패 패턴을 학습하여 프롬프트에 주입
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.failures: List[FailureRecord] = []
         self.pattern_counts: Dict[str, int] = defaultdict(int)
 
@@ -671,7 +672,7 @@ class SessionFailureMemory:
         recent = self.failures[-3:]
         return len(recent) >= 2
 
-    def clear(self):
+    def clear(self) -> None:
         """메모리 초기화"""
         self.failures.clear()
         self.pattern_counts.clear()
@@ -757,7 +758,7 @@ class Stage2Optimizer:
     모든 최적화 컴포넌트를 통합 관리
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.snapshot_injector = StateSnapshotInjector()
         self.auto_corrector = ArcAutoCorrector()
         self.constraint_amplifier = NegativeConstraintAmplifier()
@@ -806,9 +807,9 @@ class Stage2Optimizer:
 
         if corrections:
             self.stats["auto_corrected"] += 1
-            print(f"      [V60.25] Auto-correct: {len(corrections)} fixes applied")
+            logging.info(f"[V60.25] Auto-correct: {len(corrections)} fixes applied")
             for c in corrections[:3]:
-                print(f"         - {c}")
+                logging.info(f"- {c}")
 
         return corrected_arc, corrections
 
@@ -846,14 +847,14 @@ class Stage2Optimizer:
             "avg_retries": f"{self.stats['total_retries'] / total:.2f}",
         }
 
-    def print_stats(self):
+    def print_stats(self) -> None:
         """통계 출력"""
         stats = self.get_stats()
-        print("\n[V60.25 Stage 2 Optimizer 통계]")
-        print(f"  총 Arc: {stats['total_arcs']}")
-        print(f"  첫 시도 PASS: {stats['first_pass']} ({stats.get('first_pass_rate', 'N/A')})")
-        print(f"  자동 수정: {stats['auto_corrected']} ({stats.get('auto_correct_rate', 'N/A')})")
-        print(f"  총 재시도: {stats['total_retries']} (평균 {stats.get('avg_retries', 'N/A')})")
+        logging.info("\n[V60.25 Stage 2 Optimizer 통계]")
+        logging.info(f"총 Arc: {stats['total_arcs']}")
+        logging.info(f"첫 시도 PASS: {stats['first_pass']} ({stats.get('first_pass_rate', 'N/A')})")
+        logging.info(f"자동 수정: {stats['auto_corrected']} ({stats.get('auto_correct_rate', 'N/A')})")
+        logging.info(f"총 재시도: {stats['total_retries']} (평균 {stats.get('avg_retries', 'N/A')})")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

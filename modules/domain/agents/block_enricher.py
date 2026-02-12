@@ -275,11 +275,11 @@ class BlockEnricher(BaseAgent):
             "density_score": round(final_score, 2),
             "missing_elements": missing,
             "word_count": word_count,
-            "content_breakdown": {
-                "context": len(str(content.get("context", ""))),
-                "event_villain": len(str(content.get("event_villain", ""))),
-                "solution": len(str(content.get("solution", ""))),
-                "reward": len(str(content.get("reward", "")))
+            "content_breakdown": {  # [V70] content가 str이면 dict.get() 불가 → 분기
+                "context": len(str(content.get("context", ""))) if isinstance(content, dict) else len(content),
+                "event_villain": len(str(content.get("event_villain", ""))) if isinstance(content, dict) else 0,
+                "solution": len(str(content.get("solution", ""))) if isinstance(content, dict) else 0,
+                "reward": len(str(content.get("reward", ""))) if isinstance(content, dict) else 0,
             }
         }
 
@@ -333,7 +333,7 @@ class BlockEnricher(BaseAgent):
             result = self.ask(prompt, temperature=0.7)
 
             if isinstance(result, str):
-                result = json.loads(result)
+                result = self._extract_json_robust(result)  # [V70] json.loads → robust parser
 
             # 검증
             validation = self._validate_enrichment(
@@ -348,7 +348,7 @@ class BlockEnricher(BaseAgent):
                 retry_prompt = prompt + f"\n\n[이전 시도 실패 피드백]\n{json.dumps(validation['issues'], ensure_ascii=False)}"
                 result = self.ask(retry_prompt, temperature=0.5)
                 if isinstance(result, str):
-                    result = json.loads(result)
+                    result = self._extract_json_robust(result)  # [V70]
                 # 재검증
                 validation = self._validate_enrichment(
                     original=current_block,
@@ -381,7 +381,7 @@ class BlockEnricher(BaseAgent):
 """
                 result = self.ask(retry_prompt, temperature=0.4)
                 if isinstance(result, str):
-                    result = json.loads(result)
+                    result = self._extract_json_robust(result)  # [V70]
 
                 # 재심사
                 director_audit = self._director_audit_block(
@@ -426,12 +426,14 @@ class BlockEnricher(BaseAgent):
         try:
             # [V60.24] Flash (빠른 검증용)
             original_model = self.primary_model
-            self.primary_model = "gemini-3-flash-preview"
-            result = self.ask(prompt, temperature=0.3)
-            self.primary_model = original_model
+            try:  # [V70] 예외 시 primary_model 복원 보장 (레이스 컨디션 방지)
+                self.primary_model = "gemini-3-flash-preview"
+                result = self.ask(prompt, temperature=0.3)
+            finally:
+                self.primary_model = original_model
 
             if isinstance(result, str):
-                result = json.loads(result)
+                result = self._extract_json_robust(result)  # [V70] json.loads → robust parser
 
             return result
 
@@ -466,12 +468,14 @@ class BlockEnricher(BaseAgent):
         try:
             # [V60.24] Flash (빠른 심사용)
             original_model = self.primary_model
-            self.primary_model = "gemini-3-flash-preview"
-            result = self.ask(prompt, temperature=0.3)
-            self.primary_model = original_model
+            try:  # [V70] 예외 시 primary_model 복원 보장
+                self.primary_model = "gemini-3-flash-preview"
+                result = self.ask(prompt, temperature=0.3)
+            finally:
+                self.primary_model = original_model
 
             if isinstance(result, str):
-                result = json.loads(result)
+                result = self._extract_json_robust(result)  # [V70] json.loads → robust parser
 
             # 점수 기반 PASS/REJECT 결정
             total_score = result.get("total_score", 0)
@@ -615,7 +619,7 @@ class BlockEnricher(BaseAgent):
         # ─────────────────────────────────────────────────────────────────────
         # Phase 1: 배치 병렬 농축
         # ─────────────────────────────────────────────────────────────────────
-        def enrich_single(idx):
+        def enrich_single(idx) -> tuple:
             block = treatment_blocks[idx]
             prev_block = treatment_blocks[idx - 1] if idx > 0 else None
             next_block = treatment_blocks[idx + 1] if idx < len(treatment_blocks) - 1 else None
@@ -762,12 +766,14 @@ class BlockEnricher(BaseAgent):
         try:
             # [V60.24] Flash (빠른 검증용)
             original_model = self.primary_model
-            self.primary_model = "gemini-3-flash-preview"
-            result = self.ask(prompt, temperature=0.2)
-            self.primary_model = original_model
+            try:  # [V70] 예외 시 primary_model 복원 보장
+                self.primary_model = "gemini-3-flash-preview"
+                result = self.ask(prompt, temperature=0.2)
+            finally:
+                self.primary_model = original_model
 
             if isinstance(result, str):
-                result = json.loads(result)
+                result = self._extract_json_robust(result)  # [V70] json.loads → robust parser
 
             return result.get("issues", [])
 
@@ -839,7 +845,7 @@ class BlockEnricher(BaseAgent):
             result = self.ask(prompt, temperature=0.5)
 
             if isinstance(result, str):
-                result = json.loads(result)
+                result = self._extract_json_robust(result)  # [V70]
 
             return {
                 "enriched": True,

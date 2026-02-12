@@ -16,6 +16,7 @@ Stage 3 연결성:
 """
 
 import re
+import logging
 import json
 import copy
 from typing import Dict, List, Any, Optional, Tuple
@@ -165,7 +166,7 @@ class ArcCorrector(BaseAgent):
 
         for issue in correctable[:self.max_corrections]:
             try:
-                print(f"      🔧 [Corrector] 수정 시도: {issue.get('message', '')[:50]}...")
+                logging.info(f"🔧 [Corrector] 수정 시도: {issue.get('message', '')[:50]}...")
 
                 corrected_arc, correction_result = self._correct_single_issue(
                     corrected_arc, issue, prev_arcs, original_arc
@@ -178,30 +179,30 @@ class ArcCorrector(BaseAgent):
                         "change_summary": correction_result.get("summary")
                     })
                     correction_count += 1
-                    print(f"      ✅ [Corrector] 수정 완료: {correction_result.get('summary', '')[:50]}")
+                    logging.info(f"✅ [Corrector] 수정 완료: {correction_result.get('summary', '')[:50]}")
                 else:
                     log["corrections_failed"].append({
                         "issue": issue.get("message", ""),
                         "reason": correction_result.get("reason", "unknown")
                     })
-                    print(f"      ❌ [Corrector] 수정 실패: {correction_result.get('reason', '')[:50]}")
+                    logging.warning(f"❌ [Corrector] 수정 실패: {correction_result.get('reason', '')[:50]}")
 
             except Exception as e:
                 log["corrections_failed"].append({
                     "issue": issue.get("message", ""),
                     "reason": str(e)[:100]
                 })
-                print(f"      ❌ [Corrector] 예외 발생: {str(e)[:50]}")
+                logging.warning(f"❌ [Corrector] 예외 발생: {str(e)[:50]}")
 
         # 4. 변경 범위 검증 (20% 초과 시 거부)
         if not self._validate_change_ratio(original_arc, corrected_arc):
-            print(f"      ⚠️ [Corrector] 변경 범위 초과 (>{self.max_change_ratio*100}%) - 원본 복원")
+            logging.info(f"⚠️ [Corrector] 변경 범위 초과 (>{self.max_change_ratio*100}%) - 원본 복원")
             log["reason"] = "변경 범위 초과"
             return None, log
 
         # 5. 구조 검증 (Stage 3 연결성)
         if not self._validate_structure_preserved(original_arc, corrected_arc):
-            print(f"      ⚠️ [Corrector] 구조 손상 감지 - 원본 복원")
+            logging.info(f"⚠️ [Corrector] 구조 손상 감지 - 원본 복원")
             log["reason"] = "구조 손상"
             return None, log
 
@@ -209,7 +210,7 @@ class ArcCorrector(BaseAgent):
         if correction_count > 0:
             log["success"] = True
             log["corrections_count"] = correction_count
-            print(f"      ✅ [Corrector] 총 {correction_count}개 수정 완료")
+            logging.info(f"✅ [Corrector] 총 {correction_count}개 수정 완료")
             return corrected_arc, log
         else:
             log["reason"] = "수정된 항목 없음"
@@ -258,6 +259,9 @@ class ArcCorrector(BaseAgent):
         message = issue.get("message", "")
         ep_match = re.search(r'(\d+)화', message)
         target_ep = int(ep_match.group(1)) if ep_match else None
+        if target_ep is None:  # [V70] 대상 화수 특정 불가
+            result["reason"] = "대상 화수 특정 불가"
+            return arc, result
 
         # 컨텍스트 구성
         context = self._build_context(arc, prev_arcs)
@@ -271,6 +275,8 @@ class ArcCorrector(BaseAgent):
 
         try:
             response = self.ask(prompt, temperature=0.3)
+            if isinstance(response, str):  # [V70] ask()는 항상 str 반환
+                response = self._extract_json_robust(response)
 
             if isinstance(response, dict) and response.get("corrected_content"):
                 # 해당 화 섹션 교체
@@ -310,6 +316,9 @@ class ArcCorrector(BaseAgent):
         message = issue.get("message", "")
         ep_match = re.search(r'(\d+)화', message)
         target_ep = int(ep_match.group(1)) if ep_match else None
+        if target_ep is None:  # [V70] 대상 화수 특정 불가
+            result["reason"] = "대상 화수 특정 불가"
+            return arc, result
 
         context = self._build_context(arc, prev_arcs)
 
@@ -322,6 +331,8 @@ class ArcCorrector(BaseAgent):
 
         try:
             response = self.ask(prompt, temperature=0.3)
+            if isinstance(response, str):  # [V70] ask()는 항상 str 반환
+                response = self._extract_json_robust(response)
 
             if isinstance(response, dict) and response.get("corrected_content"):
                 corrected_tactical = self._replace_episode_section(
@@ -414,6 +425,8 @@ class ArcCorrector(BaseAgent):
 
         try:
             response = self.ask(prompt, temperature=0.4)
+            if isinstance(response, str):  # [V70] ask()는 항상 str 반환
+                response = self._extract_json_robust(response)
 
             if isinstance(response, dict) and response.get("corrected_content"):
                 # 해당 화 섹션 삽입
@@ -497,8 +510,8 @@ class ArcCorrector(BaseAgent):
 
     def _replace_episode_section(self, tactical: str, ep_num: int, new_content: str) -> Optional[str]:
         """특정 화 섹션 교체"""
-        # 제 N화 패턴 찾기
-        pattern = rf'(\[제\s*{ep_num}\s*화[^\]]*\])(.*?)(?=\[제\s*\d+\s*화|$)'
+        # [V70] 제N화 패턴 (브라켓 유무 모두 대응)
+        pattern = rf'((?:\[)?제\s*{ep_num}\s*화[^\n]*)(.*?)(?=(?:\[)?제\s*\d+\s*화|$)'
 
         match = re.search(pattern, tactical, re.DOTALL)
         if match:
@@ -513,7 +526,7 @@ class ArcCorrector(BaseAgent):
         """화 섹션 삽입 (순서 유지)"""
         # 다음 화 찾기
         next_ep = ep_num + 1
-        pattern = rf'\[제\s*{next_ep}\s*화'
+        pattern = rf'(?:\[)?제\s*{next_ep}\s*화'  # [V70] 브라켓 유무 모두 대응
 
         match = re.search(pattern, tactical)
         if match:

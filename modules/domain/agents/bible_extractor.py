@@ -10,6 +10,7 @@
 """
 
 import json
+import logging
 import re
 from typing import Dict, List, Any, Optional, Tuple
 from .base_agent import BaseAgent
@@ -74,7 +75,7 @@ class BibleExtractor(BaseAgent):
                 except (json.JSONDecodeError, ValueError):  # [V64.P4] JSON parse fallback
                     pass
 
-            print(f"      [WARN] JSON 파싱 실패, 응답 일부: {response[:200]}...")
+            logging.warning(f"[WARN] JSON 파싱 실패, 응답 일부: {response[:200]}...")
             return None
 
     def extract_from_manuscript(
@@ -98,48 +99,48 @@ class BibleExtractor(BaseAgent):
         Returns:
             MasterBible 구조의 딕셔너리
         """
-        print(f"\n[BibleExtractor] 역설계 시작 (장르: {genre}, 모드: {extract_mode})")
-        print(f"   원고 길이: {len(manuscript):,}자")
+        logging.info(f"\n[BibleExtractor] 역설계 시작 (장르: {genre}, 모드: {extract_mode})")
+        logging.info(f"원고 길이: {len(manuscript):,}자")
 
         # 1. 에피소드 분리
         episodes = self._split_episodes(manuscript, episode_delimiter)
-        print(f"   감지된 에피소드: {len(episodes)}개")
+        logging.info(f"감지된 에피소드: {len(episodes)}개")
 
         if not episodes:
-            print("   [ERROR] 에피소드 분리 실패")
+            logging.warning("[ERROR] 에피소드 분리 실패")
             return self._create_empty_bible(genre)
 
         # 2. 1차 추출: 기본 정보 (제목, 장르, 주인공 등)
-        print(f"\n   [Phase 1] 기본 정보 추출 중...")
+        logging.info(f"\n   [Phase 1] 기본 정보 추출 중...")
         basic_info = self._extract_basic_info(episodes[0], genre)
 
         # 3. 2차 추출: NPC 목록
-        print(f"   [Phase 2] NPC 추출 중...")
+        logging.info(f"[Phase 2] NPC 추출 중...")
         npcs = self._extract_npcs(episodes, genre)
         self.stats["npcs_found"] = len(npcs)
-        print(f"      발견된 NPC: {len(npcs)}명")
+        logging.info(f"발견된 NPC: {len(npcs)}명")
 
         # 4. 3차 추출: 세계 설정 & 관계
-        print(f"   [Phase 3] 세계 설정 추출 중...")
+        logging.info(f"[Phase 3] 세계 설정 추출 중...")
         world_state = self._extract_world_state(episodes, extract_mode)
 
         # 5. 4차 추출: 아이템 & 복선
-        print(f"   [Phase 4] 아이템/복선 추출 중...")
+        logging.info(f"[Phase 4] 아이템/복선 추출 중...")
         items, seeds = self._extract_items_and_seeds(episodes)
         self.stats["items_found"] = len(items)
         self.stats["seeds_found"] = len(seeds)
-        print(f"      아이템: {len(items)}개, 복선: {len(seeds)}개")
+        logging.info(f"아이템: {len(items)}개, 복선: {len(seeds)}개")
 
         # 6. 5차 추출: 주인공 상세 HUD
-        print(f"   [Phase 5] 주인공 HUD 추출 중...")
+        logging.info(f"[Phase 5] 주인공 HUD 추출 중...")
         protagonist_hud = self._extract_protagonist_hud(episodes, genre, extract_mode)
 
         # 7. 6차 추출: 문체 분석
-        print(f"   [Phase 6] 문체 분석 중...")
+        logging.info(f"[Phase 6] 문체 분석 중...")
         speech_style = self._extract_speech_style(episodes[0])
 
         # 8. Bible 조립
-        print(f"\n   [Final] Bible 조립 중...")
+        logging.info(f"\n   [Final] Bible 조립 중...")
         bible = self._assemble_bible(
             basic_info=basic_info,
             npcs=npcs,
@@ -151,7 +152,7 @@ class BibleExtractor(BaseAgent):
             genre=genre
         )
 
-        print(f"\n[BibleExtractor] 역설계 완료!")
+        logging.info(f"\n[BibleExtractor] 역설계 완료!")
         self._print_stats()
 
         return bible
@@ -213,11 +214,11 @@ JSON으로만 응답하세요.
         result = self._parse_response(response)
 
         if isinstance(result, dict):
-            print(f"      [OK] 기본 정보 추출 완료: {result.get('title', '?')}")
+            logging.info(f"[OK] 기본 정보 추출 완료: {result.get('title', '?')}")
             return result
 
         # 기본값 반환
-        print(f"      [WARN] 기본 정보 추출 실패, 기본값 사용")
+        logging.warning(f"[WARN] 기본 정보 추출 실패, 기본값 사용")
         return {
             "title": "제목 미상",
             "protagonist": "주인공",
@@ -261,17 +262,17 @@ JSON 배열로만 응답하세요.
         result = self._parse_response(response)
 
         if isinstance(result, list):
-            print(f"      [OK] NPC {len(result)}명 추출")
+            logging.info(f"[OK] NPC {len(result)}명 추출")
             return result
         elif isinstance(result, dict) and "npcs" in result:
             npcs = result["npcs"]
-            print(f"      [OK] NPC {len(npcs)}명 추출")
+            logging.info(f"[OK] NPC {len(npcs)}명 추출")
             return npcs
         elif isinstance(result, dict):
             # 단일 NPC가 반환된 경우
             return [result]
 
-        print(f"      [WARN] NPC 추출 실패")
+        logging.warning(f"[WARN] NPC 추출 실패")
         return []
 
     def _extract_world_state(self, episodes: List[str], mode: str) -> Dict:
@@ -300,10 +301,10 @@ JSON으로만 응답하세요.
         result = self._parse_response(response)
 
         if isinstance(result, dict):
-            print(f"      [OK] 세계 설정 추출 완료: {result.get('current_era', '?')}")
+            logging.info(f"[OK] 세계 설정 추출 완료: {result.get('current_era', '?')}")
             return result
 
-        print(f"      [WARN] 세계 설정 추출 실패")
+        logging.warning(f"[WARN] 세계 설정 추출 실패")
         return {
             "current_era": "",
             "current_location": "",
@@ -356,10 +357,10 @@ JSON으로만 응답하세요.
                 if "harvested_ep" not in seed:
                     seed["harvested_ep"] = None
 
-            print(f"      [OK] 아이템 {len(items)}개, 복선 {len(seeds)}개 추출")
+            logging.info(f"[OK] 아이템 {len(items)}개, 복선 {len(seeds)}개 추출")
             return items, seeds
 
-        print(f"      [WARN] 아이템/복선 추출 실패")
+        logging.warning(f"[WARN] 아이템/복선 추출 실패")
         return [], []
 
     def _extract_protagonist_hud(self, episodes: List[str], genre: str, mode: str) -> Dict:
@@ -421,10 +422,10 @@ JSON으로만 응답하세요.
         result = self._parse_response(response)
 
         if isinstance(result, dict):
-            print(f"      [OK] 주인공 HUD 추출 완료")
+            logging.info(f"[OK] 주인공 HUD 추출 완료")
             return result
 
-        print(f"      [WARN] 주인공 HUD 추출 실패")
+        logging.warning(f"[WARN] 주인공 HUD 추출 실패")
         return {"actual_truth": {}, "public_reputation": {}}
 
     def _extract_speech_style(self, first_episode: str) -> Dict:
@@ -449,10 +450,10 @@ JSON으로만 응답하세요.
         result = self._parse_response(response)
 
         if isinstance(result, dict):
-            print(f"      [OK] 문체 분석 완료: {result.get('tone', '?')}")
+            logging.info(f"[OK] 문체 분석 완료: {result.get('tone', '?')}")
             return result
 
-        print(f"      [WARN] 문체 분석 실패")
+        logging.warning(f"[WARN] 문체 분석 실패")
         return {
             "tone": "중립적",
             "vocabulary": "현대어",
@@ -584,13 +585,13 @@ JSON으로만 응답하세요.
             }
         }
 
-    def _print_stats(self):
+    def _print_stats(self) -> None:
         """통계 출력"""
-        print(f"\n[추출 통계]")
-        print(f"   처리 청크: {self.stats['chunks_processed']}")
-        print(f"   발견 NPC: {self.stats['npcs_found']}명")
-        print(f"   발견 아이템: {self.stats['items_found']}개")
-        print(f"   발견 복선: {self.stats['seeds_found']}개")
+        logging.info(f"\n[추출 통계]")
+        logging.info(f"처리 청크: {self.stats['chunks_processed']}")
+        logging.info(f"발견 NPC: {self.stats['npcs_found']}명")
+        logging.info(f"발견 아이템: {self.stats['items_found']}개")
+        logging.info(f"발견 복선: {self.stats['seeds_found']}개")
 
 
 def create_bible_extractor(context, client, model_tier: str = "gemini-2.5-pro"):

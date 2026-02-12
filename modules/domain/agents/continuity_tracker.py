@@ -15,7 +15,7 @@ try:
     from modules.core.state_delta_tracker import StateDeltaTracker
     from modules.core.relationship_tracker import RelationshipTracker
     from modules.core.power_scaling import PowerScalingTracker
-    from modules.core.foreshadowing_tracker import ForeshadowingTracker
+    from modules.core.foreshadow_tracker import ForeshadowTracker
     from modules.core.information_diffusion import InformationDiffusion
     V49_7_MODULES_AVAILABLE = True
 except ImportError:
@@ -36,14 +36,14 @@ class ContinuityTrackerIntegration:
     - load_trackers_from_db(): DB에서 트래커 상태 로드
     """
 
-    def __init__(self, inspector):
+    def __init__(self, inspector) -> None:
         """
         Args:
             inspector: ContinuityInspector 인스턴스 (BaseAgent 상속, 공유 상태 접근용)
         """
         self._ci = inspector
 
-    def init_trackers(self):
+    def init_trackers(self) -> None:
         """
         [V49.7] 품질 향상 모듈 트래커 초기화
 
@@ -57,7 +57,7 @@ class ContinuityTrackerIntegration:
             )
             self._ci.relationship_tracker = RelationshipTracker()
             self._ci.power_tracker = PowerScalingTracker()
-            self._ci.foreshadow_tracker = ForeshadowingTracker()
+            self._ci.foreshadow_tracker = ForeshadowTracker()
 
             try:
                 self._ci.info_diffusion = InformationDiffusion(self._ci.context)

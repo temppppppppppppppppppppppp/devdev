@@ -19,6 +19,7 @@
 """
 
 from typing import Dict, Any, List, Optional, Tuple
+import logging
 from dataclasses import dataclass
 from enum import Enum
 import json
@@ -132,9 +133,9 @@ JSON 형식으로 응답:
                     "max_output_tokens": 2048
                 }
             )
-            return response.text
+            return response.text or ""  # [V70] None 방어
         except Exception as e:
-            print(f"[CrossAgentVerifier] LLM 호출 실패: {e}")
+            logging.warning(f"[CrossAgentVerifier] LLM 호출 실패: {e}")
             return ""
 
     def _parse_result(self, response_text: str) -> Dict[str, Any]:
@@ -316,10 +317,10 @@ JSON 형식으로 응답:
             arc_text = json.dumps(arc_design, ensure_ascii=False, indent=2)[:4000]
             bp_text = json.dumps(blueprint, ensure_ascii=False, indent=2)[:6000]
 
-            prompt = self.ARCHITECT_COMPLIANCE_PROMPT.format(
-                arc_design=arc_text,
-                blueprint=bp_text
-            )
+            # [V70] .format() → .replace() (템플릿 내 JSON 예시 브레이스 충돌 방지)
+            prompt = self.ARCHITECT_COMPLIANCE_PROMPT \
+                .replace("{arc_design}", arc_text) \
+                .replace("{blueprint}", bp_text)
 
             response = self._call_llm(prompt)
             result = self._parse_result(response)
@@ -402,10 +403,10 @@ JSON 형식으로 응답:
             bp_text = json.dumps(blueprint, ensure_ascii=False, indent=2)[:4000]
             ms_text = manuscript[:8000]
 
-            prompt = self.WRITER_COMPLIANCE_PROMPT.format(
-                blueprint=bp_text,
-                manuscript=ms_text
-            )
+            # [V70] .format() → .replace() (템플릿 내 JSON 예시 브레이스 충돌 방지)
+            prompt = self.WRITER_COMPLIANCE_PROMPT \
+                .replace("{blueprint}", bp_text) \
+                .replace("{manuscript}", ms_text)
 
             response = self._call_llm(prompt)
             result = self._parse_result(response)

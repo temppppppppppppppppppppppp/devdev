@@ -31,6 +31,7 @@ V54.3 신규 기능:
 """
 
 import time
+import logging
 import re
 from typing import Dict, Any, Optional, List, Tuple
 from dataclasses import dataclass, field
@@ -91,7 +92,7 @@ class AdaptiveRetryStrategy:
         ErrorType.UNKNOWN: 1
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.contexts: Dict[str, RetryContext] = {}
 
     def get_context(self, task_id: str) -> RetryContext:
@@ -197,7 +198,7 @@ class AdaptiveRetryStrategy:
         max_retries = self.MAX_RETRIES_BY_TYPE.get(error_type, 2)
 
         if ctx.attempt >= max_retries:
-            print(f"      🚫 [AdaptiveRetry] 최대 재시도 횟수 도달 ({ctx.attempt}/{max_retries})")
+            logging.info(f"🚫 [AdaptiveRetry] 최대 재시도 횟수 도달 ({ctx.attempt}/{max_retries})")
             return False, error_type
 
         ctx.attempt += 1
@@ -385,7 +386,7 @@ class AdaptiveRetryStrategy:
         # 대기 시간
         wait_time = strategy.get("wait_time", 0)
         if wait_time > 0:
-            print(f"      ⏳ [AdaptiveRetry] {wait_time}초 대기 중...")
+            logging.info(f"⏳ [AdaptiveRetry] {wait_time}초 대기 중...")
             time.sleep(wait_time)
 
         # 온도 델타 저장 (호출자가 사용)
@@ -437,7 +438,7 @@ class FailureRecord:
     timestamp: float = 0
     attempt: int = 1
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.timestamp == 0:
             self.timestamp = time.time()
 
@@ -833,7 +834,7 @@ def retry_with_feedback(
                 feedback = f"이전 시도 예외: {exc}"
                 continue
             else:
-                return (result, attempt + 1, False)
+                return (None, attempt + 1, False)
 
         # 성공 판정
         if on_success is None or on_success(result):

@@ -8,6 +8,7 @@ StateTracker에서 resolved_plots 및 entity_name_registry 관련 메서드만 �
 """
 
 import re
+import logging
 from typing import Dict, List, Optional
 
 # ═══════════════════════════════════════════════════════════════
@@ -80,7 +81,7 @@ class StateTrackerPlots:
         re.compile(r'(\d{4}년\s*\d{1,2}월)'),
     ]
 
-    def __init__(self, tracker):
+    def __init__(self, tracker) -> None:
         self.tracker = tracker  # back-reference to main StateTracker
 
     # ═══════════════════════════════════════════════════════════════
@@ -696,7 +697,7 @@ class StateTrackerPlots:
             "status": "pending",  # pending | fulfilled | broken
         }
         self.tracker.pending_commitments.append(entry)
-        print(f"      [V66.1] 약속 등록: {description} (당사자: {', '.join(parties)}, Arc {arc_no})")
+        logging.info(f"[V66.1] 약속 등록: {description} (당사자: {', '.join(parties)}, Arc {arc_no})")
 
         # [V66.1] C-3: 해결된(fulfilled/broken) 약속 주기적 정리 (50개 초과 시)
         if len(self.tracker.pending_commitments) > 50:
@@ -719,10 +720,12 @@ class StateTrackerPlots:
         arc_no = arc_data.get("arc_no", 0)
         results = []
 
-        # 1순위: state_changes.commitments
+        # 1순위: state_changes.commitments (또는 Analyst 폴백의 promises_obligations)
         state_changes = arc_data.get("state_changes", {})
         if isinstance(state_changes, dict):
             commitments = state_changes.get("commitments", [])
+            if not commitments:  # [V70] Analyst 폴백 필드명 호환
+                commitments = state_changes.get("promises_obligations", [])
             if isinstance(commitments, list) and commitments:
                 for c in commitments:
                     if isinstance(c, dict) and c.get("description"):
@@ -822,7 +825,7 @@ class StateTrackerPlots:
             if description in commitment.get("description", "") or \
                commitment.get("description", "") in description:
                 commitment["status"] = "fulfilled"
-                print(f"      [V66.1] 약속 이행: {commitment['description']}")
+                logging.info(f"[V66.1] 약속 이행: {commitment['description']}")
                 return True
         return False
 
@@ -865,7 +868,7 @@ class StateTrackerPlots:
                     "type": entity_type,
                     "first_arc": arc_no,
                     "last_seen_arc": arc_no,
-                    "aliases": set()
+                    "aliases": []  # [V70] set→list (JSON 직렬화 안전)
                 }
                 # [V64 P2-4] LRU eviction
                 while len(self.tracker.entity_name_registry) > self.tracker._entity_registry_max_size:
@@ -904,7 +907,8 @@ class StateTrackerPlots:
         if not self.tracker.entity_name_registry or not content:
             return warnings
 
-        checked = set()
+        checked = set()  # (canonical, match) 튜플
+        seen_matches = set()  # [V70] match 문자열 중복 방지
         for canonical, info in self.tracker.entity_name_registry.items():
             if len(canonical) < 3:
                 continue
@@ -914,12 +918,11 @@ class StateTrackerPlots:
             # 접두어 기반 유사 이름 탐지
             prefix_len = max(2, int(len(canonical) * 0.6))
             prefix = canonical[:prefix_len]
-            suffix = canonical[-2:] if len(canonical) >= 4 else ""
 
             pattern = re.compile(re.escape(prefix) + r'[가-힣]{1,4}')
             matches = pattern.findall(content)
             for match in matches:
-                if match == canonical or match in checked:
+                if match == canonical or match in seen_matches:  # [V70] 문자열 중복 체크
                     continue
                 if match in info.get("aliases", set()):
                     continue
@@ -928,6 +931,7 @@ class StateTrackerPlots:
                     key = (canonical, match)
                     if key not in checked:
                         checked.add(key)
+                        seen_matches.add(match)  # [V70]
                         warnings.append({
                             "entity": canonical,
                             "variant": match,

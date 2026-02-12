@@ -11,6 +11,7 @@
 """
 
 import json
+import logging
 import re
 from typing import Dict, List, Any, Optional
 from .base_agent import BaseAgent
@@ -144,7 +145,7 @@ class PreflightChecker(BaseAgent):
 
         prompt = PREFLIGHT_ANALYSIS_PROMPT.format(
             prev_arc_count=len(prev_arcs),
-            prev_arcs_data=prev_arcs_data
+            prev_arcs_data=self._escape_braces(prev_arcs_data)  # [V70] JSON 중괄호 이스케이프
         )
 
         try:
@@ -159,7 +160,7 @@ class PreflightChecker(BaseAgent):
             return result
 
         except Exception as e:
-            print(f"      ⚠️ [Preflight] 분석 오류: {str(e)[:50]}")
+            logging.warning(f"⚠️ [Preflight] 분석 오류: {str(e)[:50]}")
             return self._extract_constraints_fallback(prev_arcs)
 
     # [V63] 윈도잉 상수: 상세 분석할 최근 Arc 수 (3→5 확장)
@@ -168,33 +169,29 @@ class PreflightChecker(BaseAgent):
     MAX_OLD_SUMMARY = 20
 
     def _format_prev_arcs(self, prev_arcs: List[Dict]) -> str:
-        """[V63] 이전 Arc 데이터를 윈도잉 포맷팅
-        - 최근 DETAIL_WINDOW개: 상세 (tactical_doc + state + joint + shadow)
-        - 나머지 오래된 Arc: 3줄 요약 (종료위치, 핵심NPC, 미해결갈등)
+        """[V67] 이전 Arc 데이터를 전문 포맷팅 (Gemini 대용량 컨텍스트 활용)
+        - 최근 DETAIL_WINDOW개: 최상세 (tactical_doc + state + joint + shadow)
+        - 나머지 Arc: tactical_doc 전문 + 핵심 메타데이터
+        - 200K자 상한
         """
         lines = []
         window = self.DETAIL_WINDOW
         old_arcs = prev_arcs[:-window] if len(prev_arcs) > window else []
         recent_arcs = prev_arcs[-window:]
 
-        # ── 오래된 Arc: 3줄 요약 (MAX_OLD_SUMMARY 상한) ──
+        # ── [V67] 오래된 Arc: tactical_doc 전문 + 메타데이터 ──
         if old_arcs:
-            lines.append(f"\n[Arc 1~{old_arcs[-1].get('arc_no', '?')} 요약 ({len(old_arcs)}개)]")
+            lines.append(f"\n[Arc 1~{old_arcs[-1].get('arc_no', '?')} 전문 ({len(old_arcs)}개)]")
             lines.append("-" * 40)
-            # [V63] 오래된 Arc가 MAX_OLD_SUMMARY 초과 시 최근 것만 표시
-            if len(old_arcs) > self.MAX_OLD_SUMMARY:
-                skipped = len(old_arcs) - self.MAX_OLD_SUMMARY
-                lines.append(f"  ({skipped}개 Arc 생략)")
-                display_arcs = old_arcs[-self.MAX_OLD_SUMMARY:]
-            else:
-                display_arcs = old_arcs
-            for arc in display_arcs:
+            for arc in old_arcs:
                 arc_no = arc.get("arc_no", "?")
-                title = arc.get("title", "")[:30]
-                end_loc = arc.get("joint_docs", {}).get("final_location", "?")[:20]
-                items = arc.get("state_constraints", {}).get("items_acquired", [])
-                item_count = len(items) if isinstance(items, list) else 0
-                # [V63] 핵심 NPC 추출 (deaths + relationship_changes)
+                title = arc.get("title", "")[:50]
+                ep_s = arc.get("ep_start", "?")
+                ep_e = arc.get("ep_end", "?")
+                end_loc = arc.get("joint_docs", {}).get("final_location", "?")
+                items = (arc.get("state_constraints") or {}).get("items_acquired", [])  # [V70] None 방어
+                item_str = ", ".join(items[:10]) if isinstance(items, list) and items else "없음"
+                # 핵심 NPC 추출 (deaths + relationship_changes)
                 sc = arc.get("state_changes", {})
                 key_npcs = set()
                 for d in (sc.get("npc_deaths", []) if isinstance(sc, dict) else []):
@@ -204,14 +201,25 @@ class PreflightChecker(BaseAgent):
                     if isinstance(r, dict) and r.get("npc"):
                         key_npcs.add(r["npc"])
                 npc_str = ", ".join(list(key_npcs)[:5]) if key_npcs else "없음"
-                # [V63] 미해결 갈등 (resolved_plots가 아닌 것)
-                world_joint = arc.get("joint_docs", {}).get("world_joint", "")[:50]
-                lines.append(f"  Arc {arc_no}: {title} → {end_loc} (아이템+{item_count})")
-                lines.append(f"    핵심NPC: {npc_str}")
-                lines.append(f"    세계변화: {world_joint or '없음'}")
+                world_joint = arc.get("joint_docs", {}).get("world_joint", "")
+
+                lines.append(f"\n{'='*50}")
+                lines.append(f"[ARC {arc_no}] {title} (제{ep_s}화~제{ep_e}화)")
+                lines.append(f"{'='*50}")
+                lines.append(f"  종료위치: {end_loc}")
+                lines.append(f"  획득아이템: {item_str}")
+                lines.append(f"  핵심NPC: {npc_str}")
+                lines.append(f"  세계변화: {world_joint or '없음'}")
+
+                # [V67] tactical_doc 전문 포함 (절삭 없음)
+                tactical = arc.get("tactical_doc", "")
+                if isinstance(tactical, dict):
+                    tactical = json.dumps(tactical, ensure_ascii=False)
+                if tactical:
+                    lines.append(f"\n[전술 문서 전문]\n{tactical}")
             lines.append("")
 
-        # ── 최근 Arc: 상세 ──
+        # ── 최근 Arc: 최상세 ──
         for arc in recent_arcs:
             arc_no = arc.get("arc_no", "?")
             lines.append(f"\n{'='*60}")
@@ -219,9 +227,9 @@ class PreflightChecker(BaseAgent):
             lines.append(f"{'='*60}")
 
             tactical = arc.get("tactical_doc", "")
+            if isinstance(tactical, dict):
+                tactical = json.dumps(tactical, ensure_ascii=False)
             if tactical:
-                if len(tactical) > 3000:
-                    tactical = tactical[:1500] + "\n...(중략)...\n" + tactical[-1500:]
                 lines.append(f"\n[전술 문서]\n{tactical}")
 
             state = arc.get("state_constraints", {})
@@ -237,8 +245,12 @@ class PreflightChecker(BaseAgent):
                 lines.append(f"\n[상태 그림자]\n{json.dumps(shadow, ensure_ascii=False, indent=2)}")
 
         total_chars = sum(len(l) for l in lines)
-        print(f"      📊 [V62.3] Preflight 윈도잉: {len(old_arcs)}개 요약 + {len(recent_arcs)}개 상세 ({total_chars:,}자)")
-        return "\n".join(lines)
+        # [V67] 200K자 상한 적용
+        result = "\n".join(lines)
+        if len(result) > 200000:
+            result = result[:200000] + "\n... (200K자 절삭)"
+        logging.info(f"📊 [V67] Preflight 전문: {len(old_arcs)}개 전문 + {len(recent_arcs)}개 상세 ({total_chars:,}자)")
+        return result
 
     def _ensure_required_fields(self, result: Dict) -> Dict:
         """필수 필드 보장"""
@@ -328,22 +340,22 @@ class PreflightChecker(BaseAgent):
 
         for arc in prev_arcs:
             # items_acquired
-            acquired = arc.get("state_constraints", {}).get("items_acquired", [])
+            acquired = (arc.get("state_constraints") or {}).get("items_acquired", [])  # [V70] None 방어
             if isinstance(acquired, list):
                 items.update(acquired)
 
             # grants_received
-            received = arc.get("state_constraints", {}).get("grants_received", [])
+            received = (arc.get("state_constraints") or {}).get("grants_received", [])  # [V70] None 방어
             if isinstance(received, list):
                 grants.update(received)
 
             # 마지막 위치
-            joint = arc.get("joint_docs", {})
+            joint = arc.get("joint_docs") or {}  # [V70] None 방어
             if joint.get("final_location"):
                 last_location = joint["final_location"]
 
             # [V60.13 FIX] arc_end_state 우선 사용
-            state_constraints = arc.get("state_constraints", {})
+            state_constraints = arc.get("state_constraints") or {}  # [V70] None 방어
             arc_end_state = state_constraints.get("arc_end_state", {})
             shadow = arc.get("status_shadow", {})
 

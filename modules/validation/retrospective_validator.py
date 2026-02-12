@@ -3,6 +3,7 @@
 장기 일관성 검증 - 과거 여러 에피소드와 현재 화의 일관성 체크
 """
 import re
+import logging
 from typing import Dict, List, Any
 
 
@@ -110,7 +111,7 @@ class RetrospectiveValidator:
                             "current_value": current_realm
                         })
         except Exception as e:
-            print(f"      ⚠️ [Retrospective] 경지 역행 체크 실패: {e}")
+            logging.warning(f"⚠️ [Retrospective] 경지 역행 체크 실패: {e}")
 
         return violations
 
@@ -163,7 +164,7 @@ class RetrospectiveValidator:
                         "allowed_transitions": validation.get('allowed_transitions', [])
                     })
         except Exception as e:
-            print(f"      ⚠️ [Retrospective] 관계 역행 체크 실패: {e}")
+            logging.warning(f"⚠️ [Retrospective] 관계 역행 체크 실패: {e}")
 
         return violations
 
@@ -195,7 +196,7 @@ class RetrospectiveValidator:
                         "required_fix": "아이템 소실 사유 명시 (잃어버림, 버림, 도난 등)"
                     })
         except Exception as e:
-            print(f"      ⚠️ [Retrospective] 아이템 소실 체크 실패: {e}")
+            logging.warning(f"⚠️ [Retrospective] 아이템 소실 체크 실패: {e}")
 
         return violations
 
@@ -230,7 +231,7 @@ class RetrospectiveValidator:
                             "required_fix": "재발 정당화 필요 (새로운 상황, 다른 원인 등)"
                         })
         except Exception as e:
-            print(f"      ⚠️ [Retrospective] 갈등 재발 체크 실패: {e}")
+            logging.warning(f"⚠️ [Retrospective] 갈등 재발 체크 실패: {e}")
 
         return violations
 

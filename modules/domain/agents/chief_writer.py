@@ -102,7 +102,7 @@ class ChiefWriter(BaseAgent):
     # [V64.P4] 프롬프트 외부화 → chief_writer_prompts.py
     PROMPT_TEMPLATE_OUTPUT = _PROMPT_TEMPLATE_OUTPUT
 
-    def __init__(self, context, client, model_tier="gemini-3-pro-preview"):
+    def __init__(self, context, client, model_tier="gemini-3-pro-preview") -> None:
         super().__init__(context, client, model_tier)
         self._agent_name = "ChiefWriter"
         # [V60.82] 배치 캐시 - DB 쿼리 최적화
@@ -139,7 +139,13 @@ class ChiefWriter(BaseAgent):
         # [V60.85] 장르 Guard Purism Prompt
         purism_prompt: str = "",
         # [V60.95] 고밀도 HUD 전달
-        state_tracker=None
+        state_tracker=None,
+        # [V67] 이전 원고 전문 — 모순 방지용 컨텍스트
+        prev_manuscripts_text: str = "",
+        # [V68] 세계 상태 요약 — 장기연재 모순 방지
+        world_state_summary: str = "",
+        # [V68] 에피소드 연결고리 — 직전 화에서 이어받아야 할 것
+        chain_link_section: str = ""
     ) -> List[Dict]:
         """
         3개 후보 원고 병렬 생성
@@ -155,6 +161,9 @@ class ChiefWriter(BaseAgent):
             director_feedback: Director 피드백 (재시도 시)
             failure_constraints: 실패 학습 제약 (이전 REJECT 패턴)
             purism_prompt: 장르 Guard의 순혈주의 지침 (V60.85)
+            prev_manuscripts_text: [V67] 이전 30화 원고 전문 (모순 방지용)
+            world_state_summary: [V68] 세계 상태 요약 (장기연재 모순 방지)
+            chain_link_section: [V68] 직전 화 연결고리 (다음 화에서 이어받을 것)
 
         Returns:
             List[Dict]: 3개 후보 원고 [{
@@ -197,7 +206,13 @@ class ChiefWriter(BaseAgent):
             # [V60.85] 장르 Guard Purism Prompt
             purism_prompt=purism_prompt,
             # [V60.95] 고밀도 HUD 전달
-            state_tracker=state_tracker
+            state_tracker=state_tracker,
+            # [V67] 이전 원고 전문
+            prev_manuscripts_text=prev_manuscripts_text,
+            # [V68] 세계 상태 요약
+            world_state_summary=world_state_summary,
+            # [V68] 에피소드 연결고리
+            chain_link_section=chain_link_section
         )
 
         # [V61.7] 컨텍스트 캐싱 시도 (토큰 비용 50-67% 절감)
@@ -211,8 +226,9 @@ class ChiefWriter(BaseAgent):
             )
             cache_name = cache_info.get("cache_name")
             if cache_name:
-                print(f"      📦 [V61.7] 컨텍스트 캐시 활성 (ep{ep_num}, {len(common_context)}자)")
-        except Exception:  # [V64.P4] OPTIONAL: context caching
+                logging.info(f"📦 [V61.7] 컨텍스트 캐시 활성 (ep{ep_num}, {len(common_context)}자)")
+        except Exception as e:  # [V64.P4] OPTIONAL: context caching
+            logging.debug(f"[SILENT] context caching: {e}")
             pass  # 캐싱 실패해도 기존 방식으로 진행
 
         # 병렬 생성
@@ -245,9 +261,9 @@ class ChiefWriter(BaseAgent):
                             result = future.result(timeout=self.SINGLE_CANDIDATE_TIMEOUT)
                             if result:
                                 candidates.append(result)
-                                print(f"      ✅ [ChiefWriter] 후보 {strategy} 생성 완료 ({len(result.get('manuscript', ''))}자)")
+                                logging.info(f"✅ [ChiefWriter] 후보 {strategy} 생성 완료 ({len(result.get('manuscript', ''))}자)")
                         except FutureTimeoutError:
-                            print(f"      ⏰ [V61.3] 후보 {strategy} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
+                            logging.info(f"⏰ [V61.3] 후보 {strategy} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
                             candidates.append({
                                 "strategy": strategy,
                                 "manuscript": "",
@@ -257,7 +273,7 @@ class ChiefWriter(BaseAgent):
                                 "error": True
                             })
                         except Exception as e:
-                            print(f"      ⚠️ [ChiefWriter] 후보 {strategy} 생성 실패: {str(e)[:50]}")
+                            logging.warning(f"⚠️ [ChiefWriter] 후보 {strategy} 생성 실패: {str(e)[:50]}")
                             # 실패한 전략은 빈 결과로 대체
                             candidates.append({
                                 "strategy": strategy,
@@ -269,10 +285,10 @@ class ChiefWriter(BaseAgent):
                             })
                 except FutureTimeoutError:
                     # 전체 앙상블 타임아웃 - 완료된 후보만 사용
-                    print(f"      ⏰ [V61.3] 원고 앙상블 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용")
+                    logging.info(f"⏰ [V61.3] 원고 앙상블 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용")
                 except Exception as e:
                     # [V61.3] as_completed 자체 예외 처리
-                    print(f"      ⚠️ [V61.3] 원고 앙상블 루프 예외: {str(e)[:80]}")
+                    logging.info(f"⚠️ [V61.3] 원고 앙상블 루프 예외: {str(e)[:80]}")
         except Exception as e:
             # [V61.3] ThreadPoolExecutor 전체 예외 처리 - 급사 방지
             # stderr로 출력 (Rich 스피너가 stdout 가림)
@@ -285,7 +301,7 @@ class ChiefWriter(BaseAgent):
         # 최소 1개 후보 보장
         valid_candidates = [c for c in candidates if not c.get("error")]
         if not valid_candidates:
-            print("      🚨 [ChiefWriter] 모든 후보 생성 실패 - 단일 재시도")
+            logging.warning("🚨 [ChiefWriter] 모든 후보 생성 실패 - 단일 재시도")
             fallback = self._generate_single_candidate(
                 ep_num=ep_num,
                 strategy="balanced",
@@ -473,7 +489,13 @@ class ChiefWriter(BaseAgent):
         # [V60.85] 장르 Guard Purism Prompt
         purism_prompt: str = "",
         # [V60.95] 고밀도 HUD 전달
-        state_tracker=None
+        state_tracker=None,
+        # [V67] 이전 원고 전문 — 모순 방지용 컨텍스트
+        prev_manuscripts_text: str = "",
+        # [V68] 세계 상태 요약 — 장기연재 모순 방지
+        world_state_summary: str = "",
+        # [V68] 에피소드 연결고리 — 직전 화에서 이어받아야 할 것
+        chain_link_section: str = ""
     ) -> str:
         """
         [V60.81] 공통 컨텍스트 구성 (CoT 기반 + Writer 핵심 기능 완전 통합)
@@ -485,6 +507,8 @@ class ChiefWriter(BaseAgent):
         - DNA 모드 (1화 특수)
         - HUD 급변 감지
         - [V60.85] 장르 Guard Purism Prompt 주입
+        - [V67] 이전 원고 전문 (모순 방지용 컨텍스트)
+        - [V68] 세계 상태 요약 (장기연재 모순 방지)
         """
         current_inventory = current_inventory or []
         current_martial_arts = current_martial_arts or []
@@ -509,6 +533,33 @@ class ChiefWriter(BaseAgent):
         protagonist_config = bible_root.get('protagonist_config', {})
         world_origin = protagonist_config.get('world_origin', '원시인')
         incarnation_type = protagonist_config.get('incarnation_type', '회귀자')
+
+        # [V67.1] 환생 유형별 집필 맥락 주입
+        incarnation_context_section = ""
+        if incarnation_type == '회귀자':
+            incarnation_context_section = """
+### [V67.1] 회귀자 집필 가이드
+주인공은 미래에서 되돌아온 회귀자입니다.
+- 미래의 사건/인물/가격 등을 미리 아는 것이 당연합니다
+- 내면 독백에서 "전생에서는...", "원래라면..." 같은 회고가 자연스럽습니다
+- 주인공이 역사를 의도적으로 바꾸려는 행동은 핵심 서사입니다
+- 단, NPC에게 미래 정보를 직접 말하면 어색합니다 (합리적 이유 필요)
+"""
+        elif incarnation_type == '빙의자':
+            incarnation_context_section = """
+### [V67.1] 빙의자 집필 가이드
+주인공은 다른 인물의 몸에 빙의한 존재입니다.
+- 원래 인물의 기억이 부분적으로 떠오를 수 있습니다
+- 원래 인물과 다른 반응/성격을 보이면 주변이 의아해합니다
+- "이 몸의 주인은..." 같은 내면 갈등이 자연스럽습니다
+"""
+        elif incarnation_type == '환생자':
+            incarnation_context_section = """
+### [V67.1] 환생자 집필 가이드
+주인공은 전생의 기억을 가진 환생자입니다.
+- 전생의 지식/기술이 단편적으로 떠오를 수 있습니다
+- 현생의 몸이 전생의 능력을 완전히 재현하지 못할 수 있습니다
+"""
 
         # [V60.96] 장르 코드 변환 (장르별 금지어 적용)
         genre_code_map = {"무협": "wuxia", "판타지": "fantasy", "헌터물": "hunter", "투자물": "investment", "배우물": "actor", "스포츠": "sports", "의학": "medical", "요리": "cooking", "작곡가": "composer", "대체역사": "alt_history"}
@@ -562,8 +613,19 @@ class ChiefWriter(BaseAgent):
             existing_dead_npcs=dead_npcs
         )
 
+        # [V68] 세계 상태 요약 섹션 (최우선 주입)
+        world_state_section = ""
+        if world_state_summary:
+            world_state_section = f"""
+### [V68] 세계 상태 문서 (World State) — 반드시 참조
+{self._escape_braces(world_state_summary)}
+⚠️ 위 세계 상태와 모순되는 묘사/대화/사건은 절대 금지.
+"""
+
         # [V60.80+] 기존 Writer 핵심 기능 섹션 조립
         writer_core_section = ""
+        if world_state_section:
+            writer_core_section += f"\n{world_state_section}\n"
         if reference_anchor_prompt:
             writer_core_section += f"\n{reference_anchor_prompt}\n"
         if mandatory_context:
@@ -634,6 +696,20 @@ class ChiefWriter(BaseAgent):
 {self._escape_braces(hd_hud)}
 """
 
+        # [V67] 이전 원고 전문 — 모순 방지용 컨텍스트
+        prev_manuscripts_section = ""
+        if prev_manuscripts_text:
+            prev_manuscripts_section = f"""
+
+### [V67] 이전 원고 전문 — 진실의 원천 (모순 절대 금지)
+아래는 이전에 확정·출판된 원고 전문입니다. 이 내용이 "실제로 일어난 일"입니다.
+현재 원고를 작성할 때 아래 사실과 모순되면 안 됩니다.
+특히 고유명사(인물, 조직, 장소, 회사명), 수치(금액, 가격, 환율), 상태(부상, 관계, 소지품)가
+이전 원고와 달라지면 반드시 작중에서 이유를 명확히 설명해야 합니다.
+
+{self._escape_braces(prev_manuscripts_text[:200000])}
+"""
+
         # [V65] 메인 프롬프트 → chief_writer_prompts.build_chief_writer_main_prompt()
         return build_chief_writer_main_prompt(
             ep_num=ep_num,
@@ -659,6 +735,9 @@ class ChiefWriter(BaseAgent):
             style_guide=self._escape_braces(style_guide) if style_guide else "기본 웹소설 문체",
             common_rules=COMMON_RULES_SECTION,
             writing_guidelines=WRITING_GUIDELINES_SECTION,
+            prev_manuscripts_section=prev_manuscripts_section,  # [V67]
+            incarnation_context_section=incarnation_context_section,  # [V67.1]
+            chain_link_section=self._escape_braces(chain_link_section) if chain_link_section else "",  # [V68]
         )
 
     # ── [V62.6] 에피소드 상태 다이제스트 ──────────────────────────
@@ -1036,7 +1115,13 @@ class ChiefWriter(BaseAgent):
         # [V60.85] 장르 Guard Purism Prompt
         purism_prompt: str = "",
         # [V60.95] 고밀도 HUD 전달
-        state_tracker=None
+        state_tracker=None,
+        # [V67] 이전 원고 전문 — 모순 방지용 컨텍스트
+        prev_manuscripts_text: str = "",
+        # [V68] 세계 상태 요약 — 장기연재 모순 방지
+        world_state_summary: str = "",
+        # [V68] 에피소드 연결고리 — 직전 화에서 이어받아야 할 것
+        chain_link_section: str = ""
     ) -> List[Dict]:
         """
         Director 피드백 반영 재생성
@@ -1051,6 +1136,9 @@ class ChiefWriter(BaseAgent):
             dead_npcs: 죽은 NPC 목록
             item_acquisition_timeline: 아이템 획득 타임라인
             purism_prompt: 장르 Guard의 순혈주의 지침 (V60.85)
+            prev_manuscripts_text: [V67] 이전 30화 원고 전문 (모순 방지용)
+            world_state_summary: [V68] 세계 상태 요약 (장기연재 모순 방지)
+            chain_link_section: [V68] 직전 화 연결고리 (다음 화에서 이어받을 것)
 
         Returns:
             List[Dict]: 새로운 3개 후보
@@ -1102,7 +1190,13 @@ class ChiefWriter(BaseAgent):
             # [V60.85] 장르 Guard Purism Prompt
             purism_prompt=purism_prompt,
             # [V60.95] 고밀도 HUD 전달
-            state_tracker=state_tracker
+            state_tracker=state_tracker,
+            # [V67] 이전 원고 전문
+            prev_manuscripts_text=prev_manuscripts_text,
+            # [V68] 세계 상태 요약
+            world_state_summary=world_state_summary,
+            # [V68] 에피소드 연결고리
+            chain_link_section=chain_link_section
         )
 
     # =========================================================================
@@ -1191,7 +1285,7 @@ class ChiefWriter(BaseAgent):
 
             if not critique_result['has_issues']:
                 if round_num > 1:
-                    print(f"      [ChiefWriter] Self-Critique R{round_num}: 완료 ({total_issues_fixed}건 수정)")
+                    logging.info(f"[ChiefWriter] Self-Critique R{round_num}: 완료 ({total_issues_fixed}건 수정)")
                 break
 
             if critique_result['severity'] == 'low':
@@ -1203,7 +1297,7 @@ class ChiefWriter(BaseAgent):
                 if mid_score >= 3.5:
                     break
 
-            print(f"      [ChiefWriter] Self-Critique R{round_num}/{MAX_CRITIQUE_ROUNDS}: {len(critique_result['issues'])}건...")
+            logging.info(f"[ChiefWriter] Self-Critique R{round_num}/{MAX_CRITIQUE_ROUNDS}: {len(critique_result['issues'])}건...")
             current_manuscript = self._fix_manuscript_issues(
                 current_manuscript, critique_result, hud_report
             )
@@ -1441,7 +1535,7 @@ class ChiefWriter(BaseAgent):
             except (json.JSONDecodeError, ValueError, TypeError):
                 return manuscript  # 파싱 실패시 원본 유지
         except Exception as e:
-            print(f"      ⚠️ [ChiefWriter] 수정 실패: {e}")
+            logging.warning(f"⚠️ [ChiefWriter] 수정 실패: {e}")
             return manuscript
 
     def _evaluate_with_rubric(self, manuscript: str, genre_name: str) -> float:
@@ -1553,6 +1647,7 @@ class ChiefWriter(BaseAgent):
                     past_ms = self.context.db.get_manuscript(i)
                     if past_ms:
                         content = past_ms.get('content', '') if isinstance(past_ms, dict) else str(past_ms)
+                        # [V70] NOTE: manuscripts 테이블에 hud_snapshot 컬럼 없음 — 항상 {} 반환 (dead code)
                         hud_snapshot = past_ms.get('hud_snapshot', {}) if isinstance(past_ms, dict) else {}
                         self._manuscript_cache[i] = {
                             'content': content,
@@ -1561,7 +1656,7 @@ class ChiefWriter(BaseAgent):
                 except (KeyError, TypeError, AttributeError) as e:  # [V64.P4] individual ms load failure
                     continue
         except Exception as e:  # [V64.P4] IMPORTANT: manuscript cache build failure affects continuity checks
-            print(f"      ⚠️ [V64.P4] 원고 캐시 구축 실패: {str(e)[:60]}")
+            logging.warning(f"⚠️ [V64.P4] 원고 캐시 구축 실패: {str(e)[:60]}")
 
     def _get_cached_manuscript(self, ep_num: int) -> dict:
         """[V60.82] 캐시에서 원고 조회"""
@@ -1929,7 +2024,7 @@ class ChiefWriter(BaseAgent):
                                         'consequence': change.get('consequence', '')
                                     })
         except (AttributeError, KeyError, TypeError) as e:  # [V64.P4] IMPORTANT: plot event extraction
-            print(f"      ⚠️ [V64.P4] 플롯 이벤트 추출 실패: {str(e)[:60]}")
+            logging.warning(f"⚠️ [V64.P4] 플롯 이벤트 추출 실패: {str(e)[:60]}")
 
         return events[-5:] if events else []
 
@@ -1960,7 +2055,7 @@ class ChiefWriter(BaseAgent):
                         'last_ep': last_appearance
                     }
         except (AttributeError, KeyError, TypeError) as e:  # [V64.P4] IMPORTANT: NPC state extraction
-            print(f"      ⚠️ [V64.P4] NPC 상태 추출 실패: {str(e)[:60]}")
+            logging.warning(f"⚠️ [V64.P4] NPC 상태 추출 실패: {str(e)[:60]}")
 
         return npc_states
 

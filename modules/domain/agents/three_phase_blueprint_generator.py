@@ -18,6 +18,7 @@ Stage 3 통합 파이프라인 - 단순화 + 효율화
 """
 
 import json
+import logging
 from typing import Dict, List, Any, Optional, Tuple
 
 from .base_agent import BaseAgent
@@ -65,7 +66,8 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         protagonist_config: Optional[Dict] = None,  # [V60.90] 주인공 설정 {world_origin, incarnation_type}
         state_tracker=None,  # [V60.96] StateTracker (죽은 NPC 검증용)
         db=None,  # [V61.5] DBManager (캐시 연속성 검사용)
-        semantic_context: str = ""  # [V63.3] BlueprintMemory 시맨틱 검색 결과
+        semantic_context: str = "",  # [V63.3] BlueprintMemory 시맨틱 검색 결과
+        prev_manuscripts_text: str = ""  # [V67] 이전 원고 전문 (모순 방지)
     ) -> Tuple[Optional[Dict], Dict]:
         """
         3단계 Blueprint 생성 (ToT 방식: 3전략 × 3시도 = 최대 9회 생성)
@@ -119,7 +121,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             feedback = f"[과거 유사 블루프린트 참조 (시맨틱 검색)]\n{semantic_context}\n"
         if external_feedback:
             feedback += f"[Director 외부 피드백 - 반드시 반영]\n{external_feedback}\n"
-            print(f"      📢 [V60.80] 외부 피드백 주입됨 ({len(external_feedback)}자)")
+            logging.info(f"📢 [V60.80] 외부 피드백 주입됨 ({len(external_feedback)}자)")
 
         # 제약 블록 캐싱
         cached_constraint_block = None
@@ -131,10 +133,10 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             # PHASE 1: CONSTRAINT - 제약 수집
             # ═══════════════════════════════════════════════════════════════
             if cached_constraint_block and retry > 0:
-                print(f"      📋 [Phase 1] 제약 캐시 사용")
+                logging.info(f"📋 [Phase 1] 제약 캐시 사용")
                 constraint_block = cached_constraint_block
             else:
-                print(f"      📋 [Phase 1] 제약 수집 중...")
+                logging.info(f"📋 [Phase 1] 제약 수집 중...")
 
                 constraint_block = self.constraint_compiler.compile(
                     arc_data=arc_data,
@@ -155,7 +157,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             # ═══════════════════════════════════════════════════════════════
             # PHASE 2: GENERATE - Ensemble 생성
             # ═══════════════════════════════════════════════════════════════
-            print(f"      🎲 [Phase 2] Ensemble 생성 중 (3개 후보)...")
+            logging.info(f"🎲 [Phase 2] Ensemble 생성 중 (3개 후보)...")
 
             best_blueprint, all_candidates = self.ensemble.generate_ensemble(
                 ep_num=ep_num,
@@ -165,11 +167,13 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 feedback=feedback,
                 protagonist_name=protagonist_name,  # [V61] 주인공 이름 전달
                 protagonist_config=protagonist_config,  # [V60.90] 주인공 설정 전달
-                state_tracker=state_tracker  # [V60.95] 고밀도 HUD 전달
+                state_tracker=state_tracker,  # [V60.95] 고밀도 HUD 전달
+                prev_blueprints=prev_blueprints,  # [V67] 이전 Blueprint 전문 전달
+                prev_manuscripts_text=prev_manuscripts_text  # [V67] 이전 원고 전문 전달
             )
 
             if not best_blueprint:
-                print(f"      ❌ [Phase 2] Ensemble 생성 실패")
+                logging.warning(f"❌ [Phase 2] Ensemble 생성 실패")
                 pipeline_result["phases"]["generate"] = {"status": "failed"}
                 feedback = "Blueprint 생성 실패. 다시 시도하세요."
                 continue
@@ -185,7 +189,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             # ═══════════════════════════════════════════════════════════════
             # PHASE 3: VALIDATE - Director 비교 선택 + 최종 판정
             # ═══════════════════════════════════════════════════════════════
-            print(f"      🔍 [Phase 3] Director 비교 선택 + 판정 중...")
+            logging.info(f"🔍 [Phase 3] Director 비교 선택 + 판정 중...")
 
             # [V61.5] 캐시 기반 연속성 검사 (ep_num 바뀔 때만 캐시 갱신)
             continuity_feedback = ""
@@ -200,7 +204,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                     # 연속성 REJECT면 피드백에 추가하고 재시도
                     continuity_feedback = continuity_result.get("feedback", "")
                     feedback += f"\n[연속성 오류]\n{continuity_feedback}"
-                    print(f"      ⚠️ [V61.5] 연속성 검사 REJECT")
+                    logging.warning(f"⚠️ [V61.5] 연속성 검사 REJECT")
                     continue  # 다음 재시도로
 
             # [V60.85] 전체 후보를 Director에게 전달하여 비교 선택
@@ -221,7 +225,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             if validation_result.get("selected_blueprint"):
                 best_blueprint = validation_result["selected_blueprint"]
                 selected_idx = validation_result.get("selected_index", 0)
-                print(f"      🎯 [V60.85] Director 선택: 후보 {selected_idx + 1}")
+                logging.info(f"🎯 [V60.85] Director 선택: 후보 {selected_idx + 1}")
 
             pipeline_result["phases"]["validate"] = {
                 "status": "complete",
@@ -237,7 +241,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             if verdict == "PASS":
                 self.stats["phase3_pass"] += 1
                 pipeline_result["final_verdict"] = "PASS"
-                print(f"      ✅ [Phase 3] PASS - 제{ep_num}화 Blueprint 생성 완료")
+                logging.info(f"✅ [Phase 3] PASS - 제{ep_num}화 Blueprint 생성 완료")
 
                 # 메타데이터 정리 (_ensemble_meta 유지)
                 return best_blueprint, pipeline_result
@@ -248,20 +252,20 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 # 이슈 출력
                 issues = validation_result.get("issues", [])
                 if issues:
-                    print(f"      🚨 [Phase 3] REJECT - 주요 이슈:")
+                    logging.warning(f"🚨 [Phase 3] REJECT - 주요 이슈:")
                     for issue in issues[:3]:
                         sev = issue.get("severity", "?")
                         cat = issue.get("category", "?")
                         text = issue.get("issue", "?")
-                        print(f"         [{sev}][{cat}] {text}")
+                        logging.info(f"[{sev}][{cat}] {text}")
 
-                print(f"      ❌ [Phase 3] REJECT - 재시도 {retry + 1}/{max_retries + 1}")
+                logging.warning(f"❌ [Phase 3] REJECT - 재시도 {retry + 1}/{max_retries + 1}")
 
         # 모든 재시도 실패
         pipeline_result["final_verdict"] = "FAILED"
-        print(f"      ❌ [ThreePhase] 제{ep_num}화 모든 재시도 실패 ({max_retries + 1}회)")
+        logging.warning(f"❌ [ThreePhase] 제{ep_num}화 모든 재시도 실패 ({max_retries + 1}회)")
         if feedback:
-            print(f"         마지막 피드백: {feedback[:200]}...")
+            logging.info(f"마지막 피드백: {feedback[:200]}...")
         return None, pipeline_result
 
     def get_stats(self) -> Dict:
@@ -275,16 +279,16 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             "pass_rate": f"{(self.stats['phase3_pass'] / total * 100):.1f}%" if total > 0 else "N/A"
         }
 
-    def print_stats(self):
+    def print_stats(self) -> None:
         """통계 출력"""
         stats = self.get_stats()
-        print("\n[ThreePhaseBlueprintGenerator 통계]")
-        print(f"  총 시도: {stats['total_attempts']}")
-        print(f"  Phase 1 완료: {stats['phase1_complete']}")
-        print(f"  Phase 2 완료: {stats['phase2_complete']}")
-        print(f"  Phase 3 PASS: {stats['phase3_pass']}")
-        print(f"  Phase 3 REJECT: {stats['phase3_reject']}")
-        print(f"  최종 통과율: {stats.get('pass_rate', 'N/A')}")
+        logging.info("\n[ThreePhaseBlueprintGenerator 통계]")
+        logging.info(f"총 시도: {stats['total_attempts']}")
+        logging.info(f"Phase 1 완료: {stats['phase1_complete']}")
+        logging.info(f"Phase 2 완료: {stats['phase2_complete']}")
+        logging.info(f"Phase 3 PASS: {stats['phase3_pass']}")
+        logging.warning(f"Phase 3 REJECT: {stats['phase3_reject']}")
+        logging.info(f"최종 통과율: {stats.get('pass_rate', 'N/A')}")
 
 
 def create_three_phase_blueprint_generator(context, client, model_tier: str = "gemini-3-pro-preview"):

@@ -8,6 +8,7 @@ StateTracker에서 NPC 관련 메서드만 분리.
 """
 
 import json
+import logging
 import re
 import time
 from typing import Dict, List, Optional, Any
@@ -84,7 +85,7 @@ class StateTrackerNPC:
         'medical': ('\U0001f52c', '의술 습득'),
     }
 
-    def __init__(self, tracker):
+    def __init__(self, tracker) -> None:
         self.tracker = tracker  # back-reference to main StateTracker
 
     # ═══════════════════════════════════════════════════════════════
@@ -108,7 +109,7 @@ class StateTrackerNPC:
             "death_arc": death_arc,
             "death_context": death_context
         })
-        print(f"      \U0001f480 [V60.94] NPC 사망 등록: {npc_name} (Arc {death_arc})")
+        logging.info(f"\U0001f480 [V60.94] NPC 사망 등록: {npc_name} (Arc {death_arc})")
 
     def register_npc_info(self, npc_name: str, arc_no: int, weapon: str = None, level: str = None,
                           personality_traits: str = None, primary_motivation: str = None):
@@ -213,16 +214,23 @@ class StateTrackerNPC:
 
         return warnings
 
-    def extract_npc_info_from_arc(self, arc: dict) -> List[dict]:
+    def extract_npc_info_from_arc(self, arc: dict, genre: str = "") -> List[dict]:
         """
         [V60.95] Arc의 tactical_doc에서 NPC 정보(무장, 수준) 추출 및 등록
+        [V66.2] F-1: 비무협 장르에서 weapon/level regex 오탐 방지 — genre 가드 추가
 
         Args:
             arc: Arc 데이터
+            genre: 장르 타입 ('wuxia', 'hunter', 'investment', 'fantasy' 등).
+                   'wuxia'가 아니면 무장/수준 regex를 스킵하고 빈 리스트를 반환.
 
         Returns:
             추출된 NPC 정보 목록
         """
+        # [V66.2] F-1: 비무협 장르에서는 무기/경지 regex가 일반 명사를 오탐하므로 스킵
+        if genre and genre != 'wuxia':
+            return []
+
         arc_no = arc.get("arc_no", 0)
         tactical = arc.get("tactical_doc", "")
         if isinstance(tactical, dict):
@@ -373,7 +381,7 @@ class StateTrackerNPC:
             self.tracker.skill_acquisitions[skill_name] = arc_no
             genre = getattr(self.tracker.preset_registry, 'base_genre', '') or ''
             emoji, label = self._SKILL_LOG_LABEL.get(genre, ('\U0001f94b', '능력 습득'))
-            print(f"      {emoji} [V60.94] {label}: {skill_name} (Arc {arc_no})")
+            logging.info(f"{emoji} [V60.94] {label}: {skill_name} (Arc {arc_no})")
 
     def check_unlearned_skill_usage(self, content: str, arc_no: int) -> List[dict]:
         """
@@ -574,15 +582,21 @@ class StateTrackerNPC:
                     response_mime_type="application/json",
                 ),
             )
-            result = json.loads(response.text)
+            try:  # [V70] response.text ValueError 방어
+                _resp_text = response.text
+            except (ValueError, AttributeError):
+                _resp_text = None
+            if not _resp_text:
+                return candidates
+            result = json.loads(_resp_text)
             if isinstance(result, list):
                 verified = [name for name in result if isinstance(name, str) and name in candidates]
                 filtered = set(candidates) - set(verified)
                 if filtered:
-                    print(f"      \U0001f50d [V62.5] NPC 오탐 필터링: {filtered} (LLM 검증으로 제외)")
+                    logging.info(f"\U0001f50d [V62.5] NPC 오탐 필터링: {filtered} (LLM 검증으로 제외)")
                 return verified
         except Exception as e:
-            print(f"      \u26a0\ufe0f [V62.5] NPC LLM 검증 실패, regex 결과 그대로 사용: {str(e)[:60]}")
+            logging.warning(f"\u26a0\ufe0f [V62.5] NPC LLM 검증 실패, regex 결과 그대로 사용: {str(e)[:60]}")
 
         return candidates
 
@@ -977,7 +991,7 @@ class StateTrackerNPC:
             "arc_no": arc_no,
         })
         npc["last_arc"] = arc_no
-        print(f"      [V66.1] NPC 영구 부상 등록: {name} - {description} (Arc {arc_no})")
+        logging.info(f"[V66.1] NPC 영구 부상 등록: {name} - {description} (Arc {arc_no})")
 
     def extract_permanent_injuries_from_arc(self, arc_data: dict) -> List[Dict]:
         """
@@ -1109,12 +1123,12 @@ class StateTrackerNPC:
             True: 성공적으로 부활, False: NPC 미등록 또는 이미 alive
         """
         if name not in self.tracker.npc_registry:
-            print(f"      [V66.1] NPC 부활 실패: '{name}' 레지스트리에 미등록")
+            logging.warning(f"[V66.1] NPC 부활 실패: '{name}' 레지스트리에 미등록")
             return False
 
         npc = self.tracker.npc_registry[name]
         if npc.get("status") != "dead":
-            print(f"      [V66.1] NPC 부활 불필요: '{name}' 이미 alive 상태")
+            logging.info(f"[V66.1] NPC 부활 불필요: '{name}' 이미 alive 상태")
             return False
 
         # 사망 정보 백업 후 제거
@@ -1134,7 +1148,7 @@ class StateTrackerNPC:
             "previous_death_context": old_death_context,
         })
 
-        print(f"      [V66.1] NPC 사망 취소: '{name}' (사유: {reason}, 이전 사망 Arc: {old_death_arc})")
+        logging.info(f"[V66.1] NPC 사망 취소: '{name}' (사유: {reason}, 이전 사망 Arc: {old_death_arc})")
         return True
 
     # ═══════════════════════════════════════════════════════════════
@@ -1169,7 +1183,14 @@ class StateTrackerNPC:
 
         # scene_breakdown 추가
         scenes = blueprint.get("scene_breakdown", {})
-        if isinstance(scenes, dict):
+        if isinstance(scenes, list):  # [V70] list 타입 대응
+            for scene in scenes:
+                if isinstance(scene, dict):
+                    content += "\n" + scene.get("content", "")
+                    content += "\n" + scene.get("summary", "")
+                elif isinstance(scene, str):
+                    content += "\n" + scene
+        elif isinstance(scenes, dict):
             for scene in scenes.values():
                 if isinstance(scene, dict):
                     content += "\n" + scene.get("content", "")
@@ -1432,12 +1453,30 @@ class StateTrackerNPC:
         if not isinstance(state_changes, dict):
             return results
 
-        # npc_personality_changes에서 대화 스타일 추론
+        # [V70] 1순위: npc_dialogue_profiles 명시적 프로필 (LLM 직접 출력)
+        _seen_names = set()
+        dialogue_profiles = state_changes.get("npc_dialogue_profiles", [])
+        if isinstance(dialogue_profiles, list):
+            for dp in dialogue_profiles:
+                if isinstance(dp, dict) and dp.get("name"):
+                    name = str(dp["name"])
+                    _seen_names.add(name)
+                    self.register_npc_dialogue_style(
+                        name,
+                        speech_level=str(dp.get("speech_style", "")),
+                        catchphrase=str(dp.get("catchphrase", "")),
+                        arc_no=arc_no,
+                    )
+                    results.append({"name": name, "speech": dp.get("speech_style", ""), "emotion": ""})
+
+        # 2순위: npc_personality_changes에서 대화 스타일 추론 (명시적 프로필 없는 NPC만)
         personality_changes = state_changes.get("npc_personality_changes", [])
         if isinstance(personality_changes, list):
             for pc in personality_changes:
                 if isinstance(pc, dict) and pc.get("name"):
                     name = str(pc["name"])
+                    if name in _seen_names:  # [V70] 명시적 프로필 우선
+                        continue
                     traits = str(pc.get("traits", ""))
                     motivation = str(pc.get("motivation", ""))
                     # 성격에서 말투 추론
@@ -1550,12 +1589,12 @@ class StateTrackerNPC:
                     "name": name, "joined_arc": arc_no,
                     "joined_episode": episode, "reason": reason
                 })
-                print(f"      [V66.1] 동행자 합류: {name} (Arc {arc_no})")
+                logging.info(f"[V66.1] 동행자 합류: {name} (Arc {arc_no})")
         elif action == "leave":
             self.tracker.current_companions = [
                 c for c in companions if c.get("name") != name
             ]
-            print(f"      [V66.1] 동행자 이탈: {name} (Arc {arc_no}, 사유: {reason})")
+            logging.info(f"[V66.1] 동행자 이탈: {name} (Arc {arc_no}, 사유: {reason})")
 
     def _regex_extract_companion_changes(self, tactical_doc: str) -> List[Dict]:
         """
@@ -1646,7 +1685,7 @@ class StateTrackerNPC:
             "arc_no": arc_no,
             "episode": episode,
         }
-        print(f"      [V66.1] 주인공 감정 갱신: {emotion} (사유: {trigger}, Arc {arc_no} Ep{episode})")
+        logging.info(f"[V66.1] 주인공 감정 갱신: {emotion} (사유: {trigger}, Arc {arc_no} Ep{episode})")
 
     def extract_protagonist_emotion_from_arc(self, arc_data: dict) -> Optional[Dict]:
         """
@@ -1665,6 +1704,8 @@ class StateTrackerNPC:
         state_changes = arc_data.get("state_changes", {})
         if isinstance(state_changes, dict):
             pe = state_changes.get("protagonist_emotion", {})
+            if isinstance(pe, list) and pe:  # [V70] list 타입 대응 (CLAUDE.md 스키마)
+                pe = pe[0] if isinstance(pe[0], dict) else {}
             if isinstance(pe, dict) and pe.get("emotion"):
                 emotion = str(pe["emotion"])
                 trigger = str(pe.get("trigger", ""))
@@ -1795,3 +1836,88 @@ class StateTrackerNPC:
             lines.append(f"  - {skill_name} (Arc {arc_no})")
         header = f"[V66.2] 주인공 {label} 목록 (미습득 무공 사용 금지):"
         return header + "\n" + "\n".join(lines)
+
+    # ═══════════════════════════════════════════════════════════════
+    # [V69] NPC 레지스트리 LLM 정리
+    # ═══════════════════════════════════════════════════════════════
+
+    def cleanup_npc_registry_with_llm(self, arc_no: int) -> List[str]:
+        """[V69] 5 Arc마다 npc_registry에서 일반명사 오탐을 LLM으로 정리.
+        flash 모델 1회 호출. 실패 시 비차단.
+
+        Args:
+            arc_no: 현재 Arc 번호
+
+        Returns:
+            삭제된 이름 목록 (실패 시 빈 리스트)
+        """
+        try:
+            # alive 상태인 NPC 이름 목록 추출 (dead는 건드리지 않음)
+            alive_names = [
+                name for name, info in self.tracker.npc_registry.items()
+                if info.get("status") == "alive"
+            ]
+
+            # 이름이 5개 미만이면 스킵 (정리 불필요)
+            if len(alive_names) < 5:
+                return []
+
+            # LLM 클라이언트 확인
+            if not self.tracker._llm_client:
+                return []
+
+            from google.genai import types as _types
+
+            prompt = (
+                f"다음은 소설의 NPC 레지스트리에서 '생존(alive)' 상태로 등록된 이름 목록입니다.\n"
+                f"이름 목록: {json.dumps(alive_names, ensure_ascii=False)}\n\n"
+                f"위 목록에서 실제 소설 등장인물 이름(고유명사)이 아닌 "
+                f"일반 명사/단어를 골라주세요.\n"
+                f"예: '선언', '미래', '저택', '사태', '세력', '후원자' 등은 일반 명사이므로 제거 대상입니다.\n"
+                f"해당하는 단어가 없으면 빈 배열을 반환하세요.\n"
+                f'JSON 형식: {{"remove": ["일반명사1", "일반명사2"]}}'
+            )
+
+            time.sleep(0.1)
+            response = self.tracker._llm_client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config=_types.GenerateContentConfig(
+                    temperature=0.0,
+                    max_output_tokens=512,
+                    response_mime_type="application/json",
+                ),
+            )
+
+            try:  # [V70] response.text ValueError 방어
+                _resp_text = response.text
+            except (ValueError, AttributeError):
+                _resp_text = None
+            if not _resp_text:
+                logging.info(f"⚠️ [V69] NPC 정리 LLM 응답 비어있음, 건너뜀")
+                return
+            result = json.loads(_resp_text)
+            remove_list = []
+            if isinstance(result, dict):
+                remove_list = result.get("remove", [])
+            elif isinstance(result, list):
+                remove_list = result
+
+            # remove 목록에 있는 이름을 npc_registry에서 삭제
+            removed = []
+            for name in remove_list:
+                if isinstance(name, str) and name in self.tracker.npc_registry:
+                    # alive 상태인 것만 삭제 (이중 확인)
+                    if self.tracker.npc_registry[name].get("status") == "alive":
+                        del self.tracker.npc_registry[name]
+                        removed.append(name)
+
+            if removed:
+                print(f"      \U0001f9f9 [V69] NPC 레지스트리 LLM 정리 (Arc {arc_no}): "
+                      f"{len(removed)}개 오탐 제거 - {removed}")
+
+            return removed
+
+        except Exception as e:
+            logging.warning(f"\u26a0\ufe0f [V69] NPC 레지스트리 LLM 정리 실패 (비차단): {str(e)[:80]}")
+            return []

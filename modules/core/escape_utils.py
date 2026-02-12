@@ -20,9 +20,6 @@ class EscapeUtils:
     - 배치 에스케이프 지원
     """
 
-    # 에스케이프 마커 (이미 에스케이프된 데이터 감지용)
-    ESCAPE_MARKER = "{{{"  # 이중 에스케이프 감지 패턴
-
     @staticmethod
     def needs_escape(text: str) -> bool:
         """
@@ -37,10 +34,7 @@ class EscapeUtils:
         if not isinstance(text, str):
             return False
 
-        # 이미 에스케이프된 경우 스킵
-        if EscapeUtils.ESCAPE_MARKER in text:
-            return False
-
+        # [V70] ESCAPE_MARKER 제거 — escape_braces()가 생성하지 않는 패턴이므로 무의미
         # 단일 중괄호가 있는지 확인 (이중 중괄호는 이미 에스케이프됨)
         return '{' in text or '}' in text
 
@@ -58,12 +52,15 @@ class EscapeUtils:
         if not isinstance(text, str):
             return False
 
-        # 이중 중괄호 패턴 감지
+        # [V70] 이중 중괄호 패턴 감지 (여는/닫는 모두 검사)
         has_double_open = '{{' in text
         has_single_open = '{' in text.replace('{{', '')
+        has_double_close = '}}' in text
+        has_single_close = '}' in text.replace('}}', '')
 
         # 이중 중괄호만 있고 단일 중괄호가 없으면 이미 에스케이프됨
-        return has_double_open and not has_single_open
+        return (has_double_open and not has_single_open and
+                has_double_close and not has_single_close)
 
     @staticmethod
     def escape_braces(text: Any, force: bool = False) -> str:

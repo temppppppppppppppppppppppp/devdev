@@ -18,6 +18,7 @@
 """
 
 from dataclasses import dataclass, field
+import logging
 from typing import List, Dict, Any, Optional, Set
 from enum import Enum
 from datetime import datetime
@@ -67,7 +68,7 @@ class Foreshadow:
     def is_overdue(self, current_ep: int) -> bool:
         """기한 초과 여부"""
         return (
-            self.status == ForeshadowStatus.PLANTED and
+            self.status in (ForeshadowStatus.PLANTED, ForeshadowStatus.HINTED, ForeshadowStatus.OVERDUE) and  # [V70] OVERDUE 재감지 허용
             current_ep > self.deadline_ep
         )
 
@@ -424,7 +425,7 @@ class ForeshadowTracker:
             with open(filepath, 'r', encoding='utf-8') as file:
                 data = json.load(file)
 
-            self.hooks = {}
+            _loaded_hooks = {}  # [V70] 기존 hooks를 로드 완료 전까지 유지
             for key, f_data in data.get("hooks", {}).items():
                 try:
                     category = ForeshadowCategory(f_data.get("category", "other"))
@@ -436,11 +437,11 @@ class ForeshadowTracker:
                 except ValueError:
                     status = ForeshadowStatus.PLANTED
 
-                self.hooks[key] = Foreshadow(
-                    hook=f_data["hook"],
+                _loaded_hooks[key] = Foreshadow(
+                    hook=f_data.get("hook", ""),  # [V70] KeyError 방어
                     category=category,
-                    planted_ep=f_data["planted_ep"],
-                    deadline_ep=f_data["deadline_ep"],
+                    planted_ep=f_data.get("planted_ep", 0),  # [V70]
+                    deadline_ep=f_data.get("deadline_ep", 999),  # [V70]
                     status=status,
                     hint_episodes=f_data.get("hint_episodes", []),
                     payoff_ep=f_data.get("payoff_ep"),
@@ -450,6 +451,7 @@ class ForeshadowTracker:
                     updated_at=f_data.get("updated_at", "")
                 )
 
+            self.hooks = _loaded_hooks  # [V70] 로드 성공 후에만 교체
             self.episode_plants = {
                 int(k): v for k, v in data.get("episode_plants", {}).items()
             }
@@ -460,9 +462,9 @@ class ForeshadowTracker:
         except FileNotFoundError:
             pass
         except Exception as e:
-            print(f"[ForeshadowTracker] Load error: {e}")
+            logging.info(f"[ForeshadowTracker] Load error: {e}")
 
-    def clear(self):
+    def clear(self) -> None:
         """초기화"""
         self.hooks = {}
         self.episode_plants = {}

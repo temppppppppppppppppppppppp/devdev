@@ -25,6 +25,7 @@
 """
 
 import re
+import logging
 from typing import Dict, List, Any, Optional, Set, Tuple
 from .base_agent import BaseAgent
 
@@ -61,7 +62,7 @@ class ContinuityInspector(BaseAgent):
     - entity_consistency 출력 필드 추가
     """
 
-    def __init__(self, context, client, model_tier="gemini-2.5-pro"):
+    def __init__(self, context, client, model_tier="gemini-2.5-pro") -> None:
         """
         [V62.5] gemini-2.5-pro로 다운그레이드 (검증 작업 - 3-pro 쿼터 절감)
         Args:
@@ -256,10 +257,10 @@ class ContinuityInspector(BaseAgent):
         item2_normalized = ''.join(item2_clean.lower().split())
 
         if item1_normalized == item2_normalized:
-            print(f"      🔍 [_is_same_item] 정확 매칭: '{item1_clean}' == '{item2_clean}'")
+            logging.info(f"🔍 [_is_same_item] 정확 매칭: '{item1_clean}' == '{item2_clean}'")
             return True
 
-        print(f"      ⏭️ [_is_same_item] 다른 아이템: '{item1_clean}' != '{item2_clean}'")
+        logging.info(f"⏭️ [_is_same_item] 다른 아이템: '{item1_clean}' != '{item2_clean}'")
         return False
 
     def _is_distributed_item(self, item: str, context: str) -> bool:
@@ -482,7 +483,7 @@ class ContinuityInspector(BaseAgent):
     # [V64.P3] 위임 스텁 — V49.7 트래커
     # =================================================================
 
-    def _init_v49_7_trackers(self):
+    def _init_v49_7_trackers(self) -> None:
         """[V49.7] 트래커 초기화 → ContinuityTrackerIntegration에 위임"""
         self._tracker.init_trackers()
 

@@ -1,8 +1,8 @@
 import json
 
 class Bible:
-    def __init__(self, project_name, genre="WUXIA", world=None, characters=None, 
-                 inventory=None, plot_threads=None, episode_history=None, **kwargs):
+    def __init__(self, project_name: str, genre: str = "WUXIA", world: dict = None, characters: dict = None, 
+                 inventory: list = None, plot_threads: list = None, episode_history: list = None, **kwargs) -> None:
         self.project_name = project_name
         self.genre = genre
         self.world = world if world is not None else {"current_location": "미정", "sect_relations": {}}
@@ -22,7 +22,7 @@ class Bible:
             setattr(self, key, value)
 
     @property
-    def summary(self):
+    def summary(self) -> dict:
         """설계자(Architect)와 작가(Writer)를 위한 고밀도 강호 브리핑"""
         mc = self.characters.get('main', {})
         
@@ -39,7 +39,7 @@ class Bible:
             "주인공의 엣지(Edge)": self.edge
         }
 
-    def update_martial_status(self, realm=None, energy_gain=0):
+    def update_martial_status(self, realm: str = None, energy_gain: int = 0) -> None:
         """주인공의 무학적 성장을 데이터에 영구 기록"""
         if realm: self.realm = realm
         self.internal_energy += energy_gain
@@ -47,5 +47,5 @@ class Bible:
             self.characters['main']['realm'] = self.realm
             self.characters['main']['internal_energy'] = self.internal_energy
 
-    def model_dump_json(self, indent=2):
+    def model_dump_json(self, indent: int = 2) -> str:
         return json.dumps(self.__dict__, ensure_ascii=False, indent=indent)

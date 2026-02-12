@@ -262,6 +262,8 @@ class ExpertMixture:
                 ))
             return analyses
 
+        if not isinstance(scene_breakdown, dict):  # [V70] list 타입 방어
+            return analyses
         for scene_id, scene_data in scene_breakdown.items():
             if isinstance(scene_data, dict):
                 description = scene_data.get('description', scene_data.get('content', ''))

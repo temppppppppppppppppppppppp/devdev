@@ -6,6 +6,7 @@ Entity 일관성, 원고 역사 충돌 검사, Blueprint/Manuscript 연속성 �
 """
 
 import json
+import logging
 
 # [V64.P4] 프롬프트 외부화 — director_prompts.py에서 import
 from .director_prompts import MANUSCRIPT_HISTORY_CONFLICT_PROMPT
@@ -25,7 +26,7 @@ class DirectorContinuityValidator:
     - check_manuscript_continuity_with_cache(): Manuscript 연속성 검증 (LLM + 캐싱)
     """
 
-    def __init__(self, director):
+    def __init__(self, director) -> None:
         """
         Args:
             director: Director 인스턴스 (BaseAgent 메서드 접근용)
@@ -121,14 +122,14 @@ class DirectorContinuityValidator:
             mismatches = result.get('mismatches', [])
             if mismatches:
                 decision = result.get('decision', 'WARNING')
-                print(f"      ⚠️ [V61] Entity 일관성 검증: {decision} ({len(mismatches)}개 불일치)")
+                logging.info(f"⚠️ [V61] Entity 일관성 검증: {decision} ({len(mismatches)}개 불일치)")
                 for m in mismatches[:3]:
-                    print(f"         - [{m.get('category', '?')}] {m.get('registered_name', '?')} → {m.get('found_variant', '?')}")
+                    logging.info(f"- [{m.get('category', '?')}] {m.get('registered_name', '?')} → {m.get('found_variant', '?')}")
 
             return result
 
         except Exception as e:
-            print(f"      ⚠️ [V61] Entity 일관성 검증 실패: {e}")
+            logging.warning(f"⚠️ [V61] Entity 일관성 검증 실패: {e}")
             return {"decision": "PASS", "mismatches": [], "fix_instructions": "", "error": str(e)}
 
     def _format_entity_registry_for_director(self, entity_registry: dict) -> str:
@@ -330,10 +331,11 @@ class DirectorContinuityValidator:
         ep_num: int,
         current_manuscript: str,
         manuscript_history: list,
-        use_summary: bool = True
+        use_summary: bool = True,
+        story_context: str = ""
     ) -> dict:
         """
-        [V60.87] 현재 원고가 이전 원고들과 충돌하는지 검사
+        [V67.1] 현재 원고가 이전 원고들과 충돌하는지 검사 (story_context 추가)
 
         Args:
             ep_num: 현재 회차 번호
@@ -354,31 +356,30 @@ class DirectorContinuityValidator:
         if not manuscript_history:
             return {"decision": "PASS", "conflicts": [], "summary": "이전 원고 없음"}
 
-        # 최근 N화만 참조 (토큰 절약)
-        recent_history = manuscript_history[-self._d.history_check_max_episodes:]
+        # [V67] 최근 30화 참조 (Gemini 대용량 컨텍스트 활용)
+        recent_history = manuscript_history[-30:]
 
-        # 역사 텍스트 구성
+        # [V67] 역사 텍스트 구성 — 전문 사용 (요약 대신)
         history_parts = []
         for h in recent_history:
             h_ep = h.get('ep_num', '?')
-            if use_summary and h.get('summary'):
-                h_text = h.get('summary', '')[:1000]  # 요약본 1000자 제한
-                history_parts.append(f"[제{h_ep}화 요약] {h_text}")
-            else:
-                h_text = h.get('text', '')[:2000]  # 전문 2000자 제한
-                history_parts.append(f"[제{h_ep}화] {h_text}")
+            # 전문 사용 (Gemini 컨텍스트 윈도우가 크므로 전문 전달)
+            h_text = h.get('text', '') or h.get('summary', '')
+            if h_text:
+                history_parts.append(f"[제{h_ep}화]\n{h_text}")
 
-        history_text = "\n\n".join(history_parts)
+        history_text = "\n\n---\n\n".join(history_parts)
 
-        # 토큰 초과 방지: 역사가 너무 길면 축약
-        if len(history_text) > 15000:
-            history_text = history_text[:15000] + "\n... (이하 생략)"
+        # [V67] 200K자까지 허용 (Gemini 컨텍스트 윈도우 활용)
+        if len(history_text) > 200000:
+            history_text = history_text[:200000] + "\n... (이하 생략)"
 
-        # 프롬프트 구성
+        # [V67.1] 프롬프트 구성 (story_context 추가)
         prompt = MANUSCRIPT_HISTORY_CONFLICT_PROMPT.format(
             ep_num=ep_num,
             manuscript_history=self._d._escape_braces(history_text),
-            current_manuscript=self._d._escape_braces(current_manuscript[:8000])
+            current_manuscript=self._d._escape_braces(current_manuscript[:12000]),
+            story_context=self._d._escape_braces(story_context) if story_context else "(작품 설정 정보 없음)"
         )
 
         try:
@@ -487,7 +488,20 @@ class DirectorContinuityValidator:
                 )
             )
 
-            result = self._d._extract_json_robust(response.text)
+            # [V70] response.text가 ValueError 발생 가능 (safety filter, 빈 응답)
+            try:
+                _resp_text = response.text
+            except (ValueError, AttributeError):
+                _resp_text = None
+            if not _resp_text:
+                return {
+                    "decision": "PASS",
+                    "conflicts": [],
+                    "summary": "캐시 검사 응답 비어있음 - 비차단 통과",
+                    "parsing_error": True
+                }
+
+            result = self._d._extract_json_robust(_resp_text)
 
             if not result or result.get('parsing_error'):
                 return {
@@ -520,7 +534,7 @@ class DirectorContinuityValidator:
 
         except Exception as e:
             # [V63.4 P0] 캐시 실패 시 폴백 트리거 보장
-            print(f"      ⚠️ [V60.88] 캐시 검사 오류 → 폴백 경로 전환: {e}")
+            logging.warning(f"⚠️ [V60.88] 캐시 검사 오류 → 폴백 경로 전환: {e}")
             return {
                 "decision": "SKIP",
                 "conflicts": [],
@@ -534,7 +548,7 @@ class DirectorContinuityValidator:
         new_blueprint: dict,
         ep_num: int,
         db=None,
-        limit: int = 10
+        limit: int = 30
     ) -> dict:
         """
         [V61.5] 이전 Blueprint 컨텍스트 캐싱 기반 연속성 검증
@@ -575,11 +589,11 @@ class DirectorContinuityValidator:
                 )
                 self._cached_blueprint_ep = ep_num
                 self._cached_recent_blueprints = recent_blueprints
-                print(f"      📦 [V61.5] Blueprint 캐시 갱신 (ep={ep_num})")
+                logging.info(f"📦 [V61.5] Blueprint 캐시 갱신 (ep={ep_num})")
             else:
                 recent_blueprints = getattr(self, '_cached_recent_blueprints', [])
                 cache_result = {"cached": True}
-                print(f"      ♻️ [V61.5] Blueprint 캐시 재사용 (ep={ep_num})")
+                logging.info(f"♻️ [V61.5] Blueprint 캐시 재사용 (ep={ep_num})")
 
             # 직전 Blueprint 정보 추출
             prev_bp = recent_blueprints[-1] if recent_blueprints else {}
@@ -641,7 +655,7 @@ class DirectorContinuityValidator:
             }
 
         except Exception as e:
-            print(f"      ⚠️ [V61.5] Blueprint 연속성 검증 오류: {str(e)[:50]}")
+            logging.warning(f"⚠️ [V61.5] Blueprint 연속성 검증 오류: {str(e)[:50]}")
             return {"decision": "PASS", "issues": [], "feedback": "", "error": str(e)}
 
     def check_manuscript_continuity_with_cache(
@@ -649,7 +663,7 @@ class DirectorContinuityValidator:
         new_manuscript: str,
         ep_num: int,
         db=None,
-        limit: int = 10
+        limit: int = 30
     ) -> dict:
         """
         [V61.5] 이전 Manuscript 컨텍스트 캐싱 기반 연속성 검증
@@ -690,17 +704,19 @@ class DirectorContinuityValidator:
                 )
                 self._cached_manuscript_ep = ep_num
                 self._cached_context_text_manuscript = context_text
-                print(f"      📦 [V61.5] Manuscript 캐시 갱신 (ep={ep_num})")
+                logging.info(f"📦 [V61.5] Manuscript 캐시 갱신 (ep={ep_num})")
             else:
                 context_text = getattr(self, '_cached_context_text_manuscript', '')
                 cache_result = {"cached": True, "cache_name": getattr(self, '_manuscript_cache_name', None)}
-                print(f"      ♻️ [V61.5] Manuscript 캐시 재사용 (ep={ep_num})")
+                logging.info(f"♻️ [V61.5] Manuscript 캐시 재사용 (ep={ep_num})")
 
             # 캐시가 있으면 캐시 기반 질의, 없으면 일반 질의
+            # [V67.1] story_context 추가 (캐시 경로에서는 빈 값 전달)
             prompt = MANUSCRIPT_HISTORY_CONFLICT_PROMPT.format(
                 ep_num=ep_num,
-                manuscript_history="(캐시된 컨텍스트 참조)" if cache_result.get("cache_name") else context_text[:15000],
-                current_manuscript=new_manuscript[:8000]
+                manuscript_history="(캐시된 컨텍스트 참조)" if cache_result.get("cache_name") else self._d._escape_braces(context_text[:200000]),
+                current_manuscript=self._d._escape_braces(new_manuscript[:12000]),  # [V70] 중괄호 이스케이프
+                story_context="(캐시 경로 — 설정 정보 미전달)"
             )
 
             if cache_result.get("cache_name"):
@@ -724,5 +740,5 @@ class DirectorContinuityValidator:
             }
 
         except Exception as e:
-            print(f"      ⚠️ [V61.5] Manuscript 연속성 검증 오류: {str(e)[:50]}")
+            logging.warning(f"⚠️ [V61.5] Manuscript 연속성 검증 오류: {str(e)[:50]}")
             return {"decision": "PASS", "conflicts": [], "summary": "", "error": str(e)}

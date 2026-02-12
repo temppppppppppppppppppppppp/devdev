@@ -21,6 +21,7 @@
 """
 
 import json
+import logging
 import time
 from enum import Enum
 from typing import Dict, List, Optional, Any, Tuple
@@ -80,7 +81,7 @@ class Seed:
     created_at: str = ""              # 생성 시각
     updated_at: str = ""              # 수정 시각
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.created_at:
             self.created_at = datetime.now().isoformat()
         self.updated_at = datetime.now().isoformat()
@@ -184,7 +185,7 @@ class SeedTracker:
         # DB에서 기존 데이터 로드
         self._load_from_db()
 
-    def _load_from_db(self):
+    def _load_from_db(self) -> None:
         """DB에서 복선 데이터 로드"""
         if self.db is None:
             return
@@ -196,11 +197,11 @@ class SeedTracker:
                 for seed_data in data.get("seeds", []):
                     seed = Seed.from_dict(seed_data)
                     self.seeds[seed.seed_id] = seed
-                print(f"      [SeedTracker] {len(self.seeds)}개 복선 로드 완료")
+                logging.info(f"[SeedTracker] {len(self.seeds)}개 복선 로드 완료")
         except Exception as e:
-            print(f"      [SeedTracker] 로드 실패: {e}")
+            logging.warning(f"[SeedTracker] 로드 실패: {e}")
 
-    def _save_to_db(self):
+    def _save_to_db(self) -> None:
         """DB에 복선 데이터 저장"""
         if self.db is None:
             return
@@ -213,7 +214,7 @@ class SeedTracker:
             }
             self.db.save_anchor("seed_tracker", data)
         except Exception as e:
-            print(f"      [SeedTracker] 저장 실패: {e}")
+            logging.warning(f"[SeedTracker] 저장 실패: {e}")
 
     def _generate_seed_id(self) -> str:
         """고유 Seed ID 생성"""
@@ -269,7 +270,7 @@ class SeedTracker:
         self.seeds[seed_id] = seed
         self._save_to_db()
 
-        print(f"      [SeedTracker] 복선 심기: {seed_id} ({seed_type}) @ EP{planted_ep}/Arc{planted_arc}")
+        logging.info(f"[SeedTracker] 복선 심기: {seed_id} ({seed_type}) @ EP{planted_ep}/Arc{planted_arc}")
         return seed_id
 
     def water_seed(self, seed_id: str, ep_num: int, note: str = "") -> bool:
@@ -285,13 +286,13 @@ class SeedTracker:
             성공 여부
         """
         if seed_id not in self.seeds:
-            print(f"      [SeedTracker] 복선 없음: {seed_id}")
+            logging.info(f"[SeedTracker] 복선 없음: {seed_id}")
             return False
 
         seed = self.seeds[seed_id]
 
         if seed.status not in [SeedStatus.PLANTED.value, SeedStatus.WATERED.value]:
-            print(f"      [SeedTracker] 강화 불가 상태: {seed.status}")
+            logging.info(f"[SeedTracker] 강화 불가 상태: {seed.status}")
             return False
 
         seed.watered_eps.append(ep_num)
@@ -302,7 +303,7 @@ class SeedTracker:
             seed.notes += f"\n[EP{ep_num}] {note}"
 
         self._save_to_db()
-        print(f"      [SeedTracker] 복선 강화: {seed_id} @ EP{ep_num}")
+        logging.info(f"[SeedTracker] 복선 강화: {seed_id} @ EP{ep_num}")
         return True
 
     def harvest_seed(self, seed_id: str, ep_num: int, arc_num: int, note: str = "") -> bool:
@@ -319,13 +320,13 @@ class SeedTracker:
             성공 여부
         """
         if seed_id not in self.seeds:
-            print(f"      [SeedTracker] 복선 없음: {seed_id}")
+            logging.info(f"[SeedTracker] 복선 없음: {seed_id}")
             return False
 
         seed = self.seeds[seed_id]
 
         if seed.status == SeedStatus.HARVESTED.value:
-            print(f"      [SeedTracker] 이미 회수됨: {seed_id}")
+            logging.info(f"[SeedTracker] 이미 회수됨: {seed_id}")
             return False
 
         seed.status = SeedStatus.HARVESTED.value
@@ -337,7 +338,7 @@ class SeedTracker:
             seed.notes += f"\n[HARVEST EP{ep_num}] {note}"
 
         self._save_to_db()
-        print(f"      [SeedTracker] 복선 회수: {seed_id} @ EP{ep_num}/Arc{arc_num}")
+        logging.info(f"[SeedTracker] 복선 회수: {seed_id} @ EP{ep_num}/Arc{arc_num}")
         return True
 
     def abandon_seed(self, seed_id: str, reason: str = "") -> bool:
@@ -360,7 +361,7 @@ class SeedTracker:
         seed.notes += f"\n[ABANDONED] {reason}"
 
         self._save_to_db()
-        print(f"      [SeedTracker] 복선 폐기: {seed_id} - {reason}")
+        logging.info(f"[SeedTracker] 복선 폐기: {seed_id} - {reason}")
         return True
 
     def check_overdue_seeds(self, current_ep: int, current_arc: int) -> List[Dict]:

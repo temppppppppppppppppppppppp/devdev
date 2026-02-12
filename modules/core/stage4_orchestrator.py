@@ -22,7 +22,7 @@ class Stage4Orchestrator:
     패턴: self.app = SovereignApp 인스턴스
     """
 
-    def __init__(self, app):
+    def __init__(self, app) -> None:
         """
         Args:
             app: SovereignApp 인스턴스 (모든 속성 접근용)
@@ -249,9 +249,9 @@ JSON으로 출력:
                 if _core_traits:
                     _sc_parts.append(f"- 핵심 특성: {_core_traits}")
             _story_context = "\n".join(_sc_parts)
-            print(f"   📋 [V67.1] story_context 조립 완료 ({len(_story_context)}자)")
+            logging.info(f"📋 [V67.1] story_context 조립 완료 ({len(_story_context)}자)")
         except Exception as _sc_err:
-            print(f"   ⚠️ [V67.1] story_context 조립 실패 (비차단): {str(_sc_err)[:50]}")
+            logging.warning(f"⚠️ [V67.1] story_context 조립 실패 (비차단): {str(_sc_err)[:50]}")
             _story_context = f"- 장르: {_s4_genre_type}"
 
         self.app.ui.log(f"🎬 [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처 가동")
@@ -349,6 +349,7 @@ JSON으로 출력:
                     break
 
                 next_ep = self.app.current_project.get_latest_episode_number()
+                self._time_consistency_warnings = []  # [V70] 에피소드마다 리셋 (누적 방지)
                 if target_ep and next_ep > target_ep:
                     self.app.ui.log(f"🏁 목표 회차({target_ep}화) 도달. 종료합니다.")
                     break
@@ -372,10 +373,13 @@ JSON으로 출력:
                 arc_pos = next_ep - arc_data.get('ep_start', next_ep) + 1
                 total_ep_in_arc = arc_data.get('ep_count', 5)
                 arc_tactical = arc_data.get('tactical_doc', '')
+                if isinstance(arc_tactical, dict):  # [V70] dict 타입 방어
+                    arc_tactical = json.dumps(arc_tactical, ensure_ascii=False)
+                arc_tactical = str(arc_tactical) if arc_tactical else ''
 
                 # 직전 화 원고
                 prev_ms_data = self.app.current_project.db.get_manuscript(next_ep - 1)
-                prev_text = prev_ms_data.get('content', '') if prev_ms_data else ""
+                prev_text = (prev_ms_data.get('content') or '') if prev_ms_data else ""  # [V70] NULL content 방어
                 prev_ending = prev_text[-500:] if prev_text else ""
 
                 # [V67] 이전 30화 원고 전문 로드 — Director + ChiefWriter 공유
@@ -391,7 +395,7 @@ JSON으로 출력:
                         pass
                 _prev_manuscripts_text = "\n\n---\n\n".join(_prev_manuscripts_parts) if _prev_manuscripts_parts else ""
                 if _prev_manuscripts_parts:
-                    print(f"      📚 [V67] 이전 {len(_prev_manuscripts_parts)}화 원고 전문 로드 완료 ({len(_prev_manuscripts_text):,}자)")
+                    logging.info(f"📚 [V67] 이전 {len(_prev_manuscripts_parts)}화 원고 전문 로드 완료 ({len(_prev_manuscripts_text):,}자)")
 
                 # [V62.6] 에피소드 상태 다이제스트
                 _episode_digest = ""
@@ -416,7 +420,7 @@ JSON으로 출력:
                 # [V68] 직전 화 연결고리 로드
                 _chain_link_section = self._load_chain_link_section(next_ep)
                 if _chain_link_section:
-                    print(f"      [V68] 직전 화 연결고리 로드 완료 ({len(_chain_link_section)}자)")
+                    logging.info(f"[V68] 직전 화 연결고리 로드 완료 ({len(_chain_link_section)}자)")
 
                 # [V68] 세계 상태 요약 로드 (ChiefWriter 프롬프트 주입용)
                 _world_state_summary = ""
@@ -433,7 +437,7 @@ JSON으로 출력:
                 anti_trope_prompt = ""
                 justification_prompt = ""
                 reflexion_prompt = ""
-                genre_name = getattr(self.app.current_project, 'genre', {}).get('name', '무협')
+                genre_name = (getattr(self.app.current_project, 'genre', None) or {}).get('name', '무협')  # [V70] None 방어
 
                 # [V60.85] 장르 Guard에서 Purism Prompt 추출
                 purism_prompt = ""
@@ -485,9 +489,9 @@ JSON으로 출력:
                             _ws_summary = self.app.world_state.get_summary(max_chars=5000)
                             if _ws_summary:
                                 _mc_parts.insert(0, _ws_summary)
-                                print(f"      🌍 [V68] 세계 상태 문서 주입 ({len(_ws_summary)}자)")
+                                logging.info(f"🌍 [V68] 세계 상태 문서 주입 ({len(_ws_summary)}자)")
                         except Exception as _ws_err:
-                            print(f"      ⚠️ [V68] 세계 상태 문서 주입 실패 (비차단): {str(_ws_err)[:50]}")
+                            logging.warning(f"⚠️ [V68] 세계 상태 문서 주입 실패 (비차단): {str(_ws_err)[:50]}")
 
                     # [V68] Priority 0.5: 계층적 요약 피라미드 (시리즈 + 볼륨 요약)
                     try:
@@ -520,9 +524,9 @@ JSON으로 출력:
                             _fl_summary = self.app.fact_ledger.to_summary(max_chars=15000)
                             if _fl_summary:
                                 _mc_parts.insert(0, _fl_summary)
-                                print(f"      📋 [V68] 팩트 원장 주입 ({len(_fl_summary)}자)")
+                                logging.info(f"📋 [V68] 팩트 원장 주입 ({len(_fl_summary)}자)")
                         except Exception as _fl_mc_err:
-                            print(f"      ⚠️ [V68] 팩트 원장 주입 실패 (비차단): {str(_fl_mc_err)[:50]}")
+                            logging.warning(f"⚠️ [V68] 팩트 원장 주입 실패 (비차단): {str(_fl_mc_err)[:50]}")
 
                     # Priority 1: 파괴된 조직/장소 (BLOCKING level)
                     if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
@@ -809,7 +813,7 @@ JSON으로 출력:
                             _removed_chars += len(_removed_section)
                         mandatory_context = "\n".join(_sections)
                         if _removed_count > 0:
-                            print(f"  [V66.1] mandatory_context {_removed_count}개 섹션 제거 ({_removed_chars}자)")
+                            logging.info(f"[V66.1] mandatory_context {_removed_count}개 섹션 제거 ({_removed_chars}자)")
                             self.app.ui.log(f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → {len(mandatory_context)}자 (섹션 {_removed_count}개 제거)")
                     else:
                         # 섹션 분리 불가 시 기존 방식 폴백
@@ -1037,7 +1041,7 @@ JSON으로 출력:
                                             validation_results[ci]['warnings'].append(f"[V66.2] 파괴된 엔티티 등장: {_dw_msg}")
                                         validation_results[ci]['warning_count'] = len(validation_results[ci]['warnings'])
                     except (KeyError, ValueError, TypeError) as _de_err:
-                        print(f"      ⚠️ [V66.2] 파괴 엔티티 검사 오류: {_de_err}")
+                        logging.warning(f"⚠️ [V66.2] 파괴 엔티티 검사 오류: {_de_err}")
 
                     # [V61.5] 캐시 기반 연속성 검사
                     if interview_round == 0 and next_ep > 1 and candidates:
@@ -1083,7 +1087,7 @@ JSON으로 출력:
                                         self.app.ui.log(f"   ⚠️ [V67] 원고 역사 충돌: {_conflict_summary[:80]}")
                                         director_feedback += f"\n[V67 원고 역사 충돌]\n{_conflict_summary}"
                                 except Exception as _hc_err:
-                                    print(f"      ⚠️ [V67] 원고 역사 충돌 검사 실패 (비차단): {str(_hc_err)[:50]}")
+                                    logging.warning(f"⚠️ [V67] 원고 역사 충돌 검사 실패 (비차단): {str(_hc_err)[:50]}")
 
                     # Phase 4: Director 면담
                     stage4_spinner.update_detail(f"제{next_ep}화 · {interview_round + 1}차 면담 · Director 심사")
@@ -1162,7 +1166,7 @@ JSON으로 출력:
                                         self._time_consistency_warnings = []
                                     self._time_consistency_warnings.extend(_time_warnings)
                             except (KeyError, ValueError, TypeError) as _tc_err:
-                                print(f"      ⚠️ [V66.1] 시간선 검사 오류: {_tc_err}")
+                                logging.warning(f"⚠️ [V66.1] 시간선 검사 오류: {_tc_err}")
 
                         self.app.ui.log(f"   ✅ {interview_round + 1}차 면담 PASS!")
                         break
@@ -1368,6 +1372,7 @@ JSON으로 출력:
                         self.app.ui.log(f"   ⚠️ 로그 저장 실패: {log_err}")
 
                     # ===== [V60.82] Episode Bible 저장 =====
+                    bible_delta = None  # [V70] NameError 방지 사전 초기화
                     try:
                         self.app.ui.log(f"   📖 [V60.82] Manager 정산 시작...")
 
@@ -1572,11 +1577,11 @@ JSON으로 출력:
                                 self.app.fact_ledger.update_from_state_changes(next_ep, _fl_sc)
 
                             # 2) bible_delta에서 추가 갱신 (new_npcs, new_items, lost_items 등)
-                            try:
-                                if bible_delta:
+                            if bible_delta:
+                                try:
                                     self.app.fact_ledger.update_from_bible_delta(next_ep, bible_delta)
-                            except NameError:
-                                pass  # bible_delta가 정의되지 않은 경우 (Episode Bible 저장 실패 시)
+                                except Exception as _bd_err:
+                                    pass  # [V70] bible_delta 갱신 실패 시 비차단
 
                             # 3) DB 저장
                             self.app.fact_ledger.save()

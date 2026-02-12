@@ -16,6 +16,7 @@
 """
 
 import re
+import logging
 from typing import Dict, List, Any, Optional, Set
 
 
@@ -27,7 +28,7 @@ class ContinuityValidator:
     직전 에피소드 상태와 현재 원고/블루프린트 간 모순 감지.
     """
     
-    def __init__(self, context=None):
+    def __init__(self, context=None) -> None:
         """
         Args:
             context: ProjectContext 객체 (직전 에피소드 데이터 조회용)
@@ -158,8 +159,13 @@ class ContinuityValidator:
         personality_check = self._check_personality_continuity(
             manuscript, validation_context
         )
-        # 성격 위반은 MAJOR WARNING (violations가 아닌 warnings에 추가)
-        warnings.extend(personality_check.get('violations', []))
+        # [V66.2] C-2: 성격 모순 감지 결과를 명확한 경고로 전달
+        _personality_violations = personality_check.get('violations', [])
+        for _pv in _personality_violations:
+            if isinstance(_pv, dict):
+                warnings.append(f"[V66.2] 성격 모순 경고: {_pv.get('description', _pv.get('reason', str(_pv)))}")
+            else:
+                warnings.append(f"[V66.2] 성격 모순 경고: {_pv}")
 
         # ═══════════════════════════════════════════════════════════════
         # 검증 6: [V66.1] 시간 일관성 (BLOCKING if severe)
@@ -207,7 +213,7 @@ class ContinuityValidator:
                             return json.loads(hud_snapshot)
                         return hud_snapshot
             except Exception as e:
-                print(f"      ⚠️ [CONTINUITY] 직전 HUD 조회 실패: {e}")
+                logging.warning(f"⚠️ [CONTINUITY] 직전 HUD 조회 실패: {e}")
         
         # 3. martial_hud에서 이전 상태 추론 (fallback)
         martial_hud = validation_context.get('martial_hud', {})
@@ -237,9 +243,9 @@ class ContinuityValidator:
                 prev_ep = current_ep - 1
                 manuscript_data = self.context.db.get_manuscript(prev_ep)
                 if manuscript_data:
-                    return manuscript_data.get('text', '')
+                    return manuscript_data.get('content', '')
             except Exception as e:
-                print(f"      ⚠️ [CONTINUITY] 직전 원고 조회 실패: {e}")
+                logging.warning(f"⚠️ [CONTINUITY] 직전 원고 조회 실패: {e}")
         
         return None
     
@@ -394,6 +400,8 @@ class ContinuityValidator:
         warnings = []
 
         # 직전 HUD에서 부상 상태 확인
+        if not isinstance(prev_hud, dict):  # [V70] str/None 타입 방어
+            prev_hud = {}
         actual_truth = prev_hud.get('actual_truth', {})
         condition = actual_truth.get('condition', prev_hud.get('condition', ''))
         condition_str = str(condition)
@@ -517,6 +525,8 @@ class ContinuityValidator:
         warnings = []
 
         # HUD에서 위치 정보 추출 (가장 신뢰할 수 있는 소스)
+        if not isinstance(prev_hud, dict):  # [V70] str/None 타입 방어
+            prev_hud = {}
         actual_truth = prev_hud.get('actual_truth', {})
         prev_hud_location = actual_truth.get('location', prev_hud.get('location', ''))
 
@@ -793,8 +803,13 @@ class ContinuityValidator:
 
         severe_keywords = ['중상', '급속', '불가능']
 
-        for warning_msg in time_warnings:
-            if not isinstance(warning_msg, str):
+        for warning_item in time_warnings:
+            # [V66.2] C-3: time_warnings dict/str 양쪽 처리
+            if isinstance(warning_item, dict):
+                warning_msg = warning_item.get('description', warning_item.get('message', str(warning_item)))
+            elif isinstance(warning_item, str):
+                warning_msg = warning_item
+            else:
                 continue
 
             is_severe = any(kw in warning_msg for kw in severe_keywords)

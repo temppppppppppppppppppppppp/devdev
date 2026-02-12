@@ -156,7 +156,7 @@ class QualityAmplifier:
         "배신": ["적대"],
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.failure_history: List[FailureRecord] = []
         self.custom_constraints: Dict[int, List[Constraint]] = {2: [], 3: [], 4: []}
 
@@ -189,17 +189,21 @@ class QualityAmplifier:
 
     def get_constraints(self, stage: int) -> List[Constraint]:
         """스테이지별 제약 조건 반환 (기본 + 커스텀)"""
+        import copy as _copy
         base = self.DEFAULT_CONSTRAINTS.get(stage, [])
         custom = self.custom_constraints.get(stage, [])
 
+        # [V70] 클래스 공유 Constraint 객체를 복사 후 변형 (priority 누적 방지)
+        all_constraints = [_copy.copy(c) for c in base + custom]
+
         # 빈도 높은 실패 유형의 제약 우선순위 상향
         frequent = self.get_frequent_failures(stage)
-        for c in base + custom:
+        for c in all_constraints:
             if c.failure_type in frequent:
                 c.priority = min(10, c.priority + 2)
 
         # 우선순위 순 정렬
-        return sorted(base + custom, key=lambda x: -x.priority)
+        return sorted(all_constraints, key=lambda x: -x.priority)
 
     def generate_writer_constraints(
         self,

@@ -8,6 +8,7 @@ inspector reference를 통해 BaseAgent 메서드(ask, _extract_json_robust 등)
 """
 
 import json
+import logging
 import re
 from typing import Dict, List, Any, Optional
 
@@ -214,7 +215,7 @@ class ContinuityArcValidator:
     - _format_prev_arcs(): 이전 Arc들 포맷팅
     """
 
-    def __init__(self, inspector):
+    def __init__(self, inspector) -> None:
         """
         Args:
             inspector: ContinuityInspector 인스턴스 (BaseAgent 상속, 공유 상태 접근용)
@@ -275,9 +276,9 @@ class ContinuityArcValidator:
         # [V60.56] Python 검사 결과를 advisory로 변환
         python_advisory = python_check.get('critical_violations', [])
         if python_advisory:
-            print(f"      📋 [V60.56] Python advisory 발견 {len(python_advisory)}건 - LLM에게 전달")
+            logging.info(f"📋 [V60.56] Python advisory 발견 {len(python_advisory)}건 - LLM에게 전달")
             for adv in python_advisory[:3]:
-                print(f"         - [{adv.get('type', '?')}] {adv.get('item_or_subject', adv.get('description', '?'))[:50]}")
+                logging.info(f"- [{adv.get('type', '?')}] {adv.get('item_or_subject', adv.get('description', '?'))[:50]}")
 
         # ═══════════════════════════════════════════════════════════════
         # Phase 1.5: Joint Docs Auto-Correction [V49.2 NEW]
@@ -293,7 +294,7 @@ class ContinuityArcValidator:
         if corrected_joint_docs and corrected_joint_docs != joint_docs:
             joint_docs = corrected_joint_docs
             joint_docs_corrected = True
-            print(f"         🔧 [V49.2] Joint Docs 자동 수정 완료")
+            logging.info(f"🔧 [V49.2] Joint Docs 자동 수정 완료")
 
         # ═══════════════════════════════════════════════════════════════
         # Phase 1.6: Arc Start State Auto-Correction [V60.13 NEW]
@@ -313,7 +314,7 @@ class ContinuityArcValidator:
                     loss = int(re.search(r'(\d+)', str(loss_str)).group(1))
                     correct_energy = max(0, 100 - loss)
                 except (ValueError, AttributeError, TypeError):  # [V64.P4] energy parse failure
-                    print(f"      ⚠️ [V60.73] internal_energy_loss 파싱 실패: '{loss_str}' → 50% 가정")
+                    logging.warning(f"⚠️ [V60.73] internal_energy_loss 파싱 실패: '{loss_str}' → 50% 가정")
                     correct_energy = 50
 
             correct_injuries = prev_end.get('injuries') or prev_shadow.get('expected_injuries', '없음')
@@ -339,7 +340,7 @@ class ContinuityArcValidator:
                 curr_state['arc_start_state'] = corrected_start
                 current_arc['state_constraints'] = curr_state
                 start_state_corrected = True
-                print(f"         🔧 [V60.13] Arc Start State 자동 수정 완료 (내공: {correct_energy}%, 부상: {correct_injuries})")
+                logging.info(f"🔧 [V60.13] Arc Start State 자동 수정 완료 (내공: {correct_energy}%, 부상: {correct_injuries})")
 
         # ═══════════════════════════════════════════════════════════════
         # Phase 2: LLM 기반 정밀 검증
@@ -366,7 +367,7 @@ class ContinuityArcValidator:
             result = self._ci._extract_json_robust(response)
 
             if not isinstance(result, dict):
-                print(f"      ⚠️ [V60.74] JSON 파싱 실패 - 수동 검수 권장")
+                logging.warning(f"⚠️ [V60.74] JSON 파싱 실패 - 수동 검수 권장")
                 result = {
                     "decision": "PASS",
                     "severity": "NONE",
@@ -380,6 +381,13 @@ class ContinuityArcValidator:
             if python_check.get('warnings'):
                 result.setdefault('warnings', [])
                 result['warnings'].extend(python_check['warnings'])
+
+            # [V70] critical_violations도 warnings로 병합 (Python은 REJECT 권한 없음, advisory만)
+            if python_check.get('critical_violations'):
+                result.setdefault('warnings', [])
+                for _cv in python_check['critical_violations']:
+                    _cv_desc = _cv.get('description', _cv.get('item_or_subject', '알 수 없음')) if isinstance(_cv, dict) else str(_cv)
+                    result['warnings'].append(f"[Python advisory] {_cv_desc}")
 
             # [V49.2] Joint Docs 자동 수정 정보 포함
             if joint_docs_corrected:
@@ -415,12 +423,12 @@ class ContinuityArcValidator:
                     for v in violations:
                         result['warnings'].append(f"[완화됨] {v.get('type')}: {v.get('description', '')[:100]}")
                     result['violations'] = []
-                    print(f"         ⚠️ [V60.13] intra-arc 오류 완화 → PASS (cross-arc 정상)")
+                    logging.warning(f"⚠️ [V60.13] intra-arc 오류 완화 → PASS (cross-arc 정상)")
 
             return result
 
         except Exception as e:
-            print(f"      🚨 [ContinuityInspector] Arc LLM 검증 실패: {e}")
+            logging.warning(f"🚨 [ContinuityInspector] Arc LLM 검증 실패: {e}")
             if python_check.get('warnings'):
                 return {
                     "decision": "PASS",
@@ -538,7 +546,7 @@ class ContinuityArcValidator:
             }
 
         except Exception as e:
-            print(f"         ⚠️ [V49.2] Joint Docs 추출 실패: {e}")
+            logging.warning(f"⚠️ [V49.2] Joint Docs 추출 실패: {e}")
             return original_joint_docs
 
     def _extract_last_episode_content(self, tactical_doc: str, ep_end: int) -> str:
@@ -597,10 +605,10 @@ class ContinuityArcValidator:
                 )
                 for item in filtered_items:
                     acquired_items[item] = arc_no
-                    print(f"      📝 [V60.54 DEBUG] Arc {arc_no} 획득 기록: '{item}'")
+                    logging.info(f"📝 [V60.54 DEBUG] Arc {arc_no} 획득 기록: '{item}'")
 
             if not items_from_constraints:
-                print(f"      ⚠️ [V60.54 DEBUG] Arc {arc_no} state_constraints에 획득 아이템 없음")
+                logging.info(f"⚠️ [V60.54 DEBUG] Arc {arc_no} state_constraints에 획득 아이템 없음")
                 pass
 
             for pattern in self._ci.grant_patterns:
@@ -641,7 +649,7 @@ class ContinuityArcValidator:
             items_from_current = current_state_constraints.get('items_acquired', [])
 
         if items_from_current:
-            print(f"      📥 [V60.54 DEBUG] state_constraints 획득 아이템: {items_from_current}")
+            logging.info(f"📥 [V60.54 DEBUG] state_constraints 획득 아이템: {items_from_current}")
 
         if isinstance(items_from_current, list):
             for item in items_from_current:
@@ -649,7 +657,7 @@ class ContinuityArcValidator:
                     current_acquisitions.append(item)
 
         if not current_acquisitions:
-            print(f"      ⚠️ [V60.54 DEBUG] state_constraints에 획득 아이템 없음 - 패턴 검색 스킵")
+            logging.info(f"⚠️ [V60.54 DEBUG] state_constraints에 획득 아이템 없음 - 패턴 검색 스킵")
             pass
 
         # ═══════════════════════════════════════════════════════════════
@@ -682,38 +690,38 @@ class ContinuityArcValidator:
                     usage_items.add(item)
 
         if usage_items:
-            print(f"      📦 [V60.54 DEBUG] 사용 패턴 감지: {list(usage_items)[:5]}")
+            logging.info(f"📦 [V60.54 DEBUG] 사용 패턴 감지: {list(usage_items)[:5]}")
 
         all_existing_items = prev_inventory_items + current_inventory_items + list(usage_items)
 
-        print(f"      📦 [V60.54 DEBUG] Arc {current_arc_no} 중복 검사 시작")
-        print(f"         - 현재 획득 후보: {current_acquisitions[:5] if current_acquisitions else '없음'}")
-        print(f"         - 이전 소지품: {prev_inventory_items[:3] if prev_inventory_items else '없음'}")
-        print(f"         - 현재 소지품: {current_inventory_items[:3] if current_inventory_items else '없음'}")
-        print(f"         - 이전 Arc 획득 기록: {list(acquired_items.keys())[:5] if acquired_items else '없음'}")
+        logging.info(f"📦 [V60.54 DEBUG] Arc {current_arc_no} 중복 검사 시작")
+        logging.info(f"- 현재 획득 후보: {current_acquisitions[:5] if current_acquisitions else '없음'}")
+        logging.info(f"- 이전 소지품: {prev_inventory_items[:3] if prev_inventory_items else '없음'}")
+        logging.info(f"- 현재 소지품: {current_inventory_items[:3] if current_inventory_items else '없음'}")
+        logging.info(f"- 이전 Arc 획득 기록: {list(acquired_items.keys())[:5] if acquired_items else '없음'}")
 
         filtered_current_acquisitions = []
         for curr_item in current_acquisitions:
             is_already_owned = False
             for owned_item in all_existing_items:
                 if self._ci._is_same_item(curr_item, owned_item):
-                    print(f"         ⏭️ 필터링: '{curr_item}' (이미 소지: '{owned_item}')")
+                    logging.info(f"⏭️ 필터링: '{curr_item}' (이미 소지: '{owned_item}')")
                     is_already_owned = True
                     break
             if not is_already_owned:
                 filtered_current_acquisitions.append(curr_item)
 
         current_acquisitions = filtered_current_acquisitions
-        print(f"         - 필터링 후 획득 후보: {current_acquisitions if current_acquisitions else '없음'}")
+        logging.info(f"- 필터링 후 획득 후보: {current_acquisitions if current_acquisitions else '없음'}")
 
         # 검증 1: 중복 획득
         for curr_item in current_acquisitions:
             for prev_item, prev_arc in acquired_items.items():
                 is_same = self._ci._is_same_item(curr_item, prev_item)
                 if is_same:
-                    print(f"      🚨 [V60.54] 중복 획득 감지!")
-                    print(f"         - 현재 Arc: {current_arc_no}, 아이템: '{curr_item}'")
-                    print(f"         - 이전 Arc: {prev_arc}, 아이템: '{prev_item}'")
+                    logging.warning(f"🚨 [V60.54] 중복 획득 감지!")
+                    logging.info(f"- 현재 Arc: {current_arc_no}, 아이템: '{curr_item}'")
+                    logging.info(f"- 이전 Arc: {prev_arc}, 아이템: '{prev_item}'")
                     critical_violations.append({
                         "type": "duplicate_acquisition",
                         "severity": "CRITICAL",
@@ -727,7 +735,7 @@ class ContinuityArcValidator:
                     break
 
         if not critical_violations:
-            print(f"      ✅ [V60.54] Arc {current_arc_no} 중복 획득 없음")
+            logging.info(f"✅ [V60.54] Arc {current_arc_no} 중복 획득 없음")
 
         # 검증 2: 단일 Arc 내 모순
         intra_violations = self._check_intra_arc_consistency(current_arc)

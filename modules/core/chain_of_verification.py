@@ -22,6 +22,7 @@
 """
 
 from typing import Dict, Any, List, Optional, Tuple
+import logging
 from dataclasses import dataclass
 from enum import Enum
 import json
@@ -135,9 +136,9 @@ JSON 형식으로 응답:
                     "max_output_tokens": 2048
                 }
             )
-            return response.text
+            return response.text or ""  # [V70] None 방어
         except Exception as e:
-            print(f"[ChainOfVerification] LLM 호출 실패: {e}")
+            logging.warning(f"[ChainOfVerification] LLM 호출 실패: {e}")
             return ""
 
     def _parse_result(self, response_text: str) -> Dict[str, Any]:
@@ -231,8 +232,8 @@ JSON 형식으로 응답:
 
         prompt = self.VERIFICATION_PROMPT.format(
             content_type=content_type,
-            generated_content=generated_content[:6000],
-            context=context_str[:3000]
+            generated_content=generated_content[:6000].replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
+            context=context_str[:3000].replace("{", "{{").replace("}", "}}")  # [V70] brace escape
         )
 
         response = self._call_llm(prompt)

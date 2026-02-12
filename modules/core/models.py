@@ -1,6 +1,6 @@
 class Bible:
-    def __init__(self, project_name, genre, world=None, characters=None, 
-                 inventory=None, plot_threads=None, episode_history=None, **kwargs):
+    def __init__(self, project_name: str, genre: str, world: dict = None, characters: dict = None, 
+                 inventory: list = None, plot_threads: list = None, episode_history: list = None, **kwargs) -> None:
         self.project_name = project_name
         self.genre = genre
         self.world = world if world is not None else {}
@@ -14,7 +14,7 @@ class Bible:
             setattr(self, key, value)
 
     @property
-    def summary(self):
+    def summary(self) -> dict:
         """설계자(Architect)가 이해하기 쉬운 요약본 생성"""
         mc = self.characters.get('main', {})
         return {
@@ -25,7 +25,7 @@ class Bible:
             "활성복선": self.plot_threads[:3] if self.plot_threads else []
         }
 
-    def model_dump_json(self, indent=2):
+    def model_dump_json(self, indent: int = 2) -> str:
         """저장을 위한 딕셔너리 변환 (json.dumps용)"""
         import json
         return json.dumps(self.__dict__, ensure_ascii=False, indent=indent)

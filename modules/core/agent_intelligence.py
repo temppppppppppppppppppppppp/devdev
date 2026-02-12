@@ -57,7 +57,7 @@ class AgentIntelligence:
     # 1. FEW-SHOT EXEMPLAR LIBRARY
     # ================================================================
 
-    def _init_exemplars(self):
+    def _init_exemplars(self) -> None:
         """우수 예시 라이브러리 초기화"""
 
         # Analyst 예시 (Arc 설계)
@@ -250,7 +250,7 @@ Scene 5: 최종 성공, 스승의 인정, 다음 단계 암시 (클리프행어)
     # 2. ANTI-PATTERN INJECTION
     # ================================================================
 
-    def _init_anti_patterns(self):
+    def _init_anti_patterns(self) -> None:
         """안티패턴 라이브러리 초기화"""
 
         self.anti_patterns = {
@@ -316,7 +316,7 @@ Scene 5: 최종 성공, 스승의 인정, 다음 단계 암시 (클리프행어)
     # 3. SELF-CRITIQUE CHAIN
     # ================================================================
 
-    def _init_critique_templates(self):
+    def _init_critique_templates(self) -> None:
         """자가 검토 템플릿 초기화"""
 
         self.critique_templates = {

@@ -8,6 +8,7 @@ world_origin == '원시인' + 장르별 적용
 """
 
 import json
+import logging
 import re
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
@@ -24,18 +25,18 @@ class PrimitiveGuard:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         if PrimitiveGuard._data is None:
             self._load_data()
 
-    def _load_data(self):
+    def _load_data(self) -> None:
         """JSON 파일에서 금지어 데이터 로드"""
         json_path = Path(__file__).parent / "laws" / "primitive_forbidden.json"
         try:
             with open(json_path, 'r', encoding='utf-8') as f:
                 PrimitiveGuard._data = json.load(f)
         except Exception as e:
-            print(f"[PrimitiveGuard] JSON 로드 실패: {e}")
+            logging.warning(f"[PrimitiveGuard] JSON 로드 실패: {e}")
             PrimitiveGuard._data = {
                 "genre_rules": {},
                 "categories": {},

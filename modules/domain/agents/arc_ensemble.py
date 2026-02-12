@@ -12,6 +12,7 @@ Cost: ~3x single generation (but higher pass rate)
 """
 
 import json
+import logging
 import re
 from typing import Dict, List, Any, Optional, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FutureTimeoutError
@@ -118,7 +119,7 @@ class ArcEnsembleGenerator(BaseAgent):
                 if bible:
                     genre = bible.get('_genre', 'wuxia')
         except Exception as e:
-            print(f"      ⚠️ [V61.3] genre 사전 로드 실패: {str(e)[:50]}")
+            logging.warning(f"⚠️ [V61.3] genre 사전 로드 실패: {str(e)[:50]}")
 
         # [V61.3] 전체 병렬 처리 블록을 try-except로 감싸서 급사 방지
         try:
@@ -156,15 +157,15 @@ class ArcEnsembleGenerator(BaseAgent):
                                 result["_strategy"] = strategy_name
                                 candidates.append(result)
                         except FutureTimeoutError:
-                            print(f"      ⏰ [V61.3] {strategy_name} 전략 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
+                            logging.info(f"⏰ [V61.3] {strategy_name} 전략 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
                         except Exception as e:
-                            print(f"      ⚠️ [Ensemble] {strategy_name} 전략 실패: {str(e)[:50]}")
+                            logging.warning(f"⚠️ [Ensemble] {strategy_name} 전략 실패: {str(e)[:50]}")
                 except FutureTimeoutError:
                     # 전체 앙상블 타임아웃 - 완료된 후보만 사용
-                    print(f"      ⏰ [V61.3] 앙상블 전체 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용")
+                    logging.info(f"⏰ [V61.3] 앙상블 전체 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용")
                 except Exception as e:
                     # [V61.3] as_completed 자체 예외 처리
-                    print(f"      ⚠️ [V61.3] 앙상블 루프 예외: {str(e)[:80]}")
+                    logging.info(f"⚠️ [V61.3] 앙상블 루프 예외: {str(e)[:80]}")
         except Exception as e:
             # [V61.3] ThreadPoolExecutor 전체 예외 처리 - 급사 방지
             # stderr로 출력 (Rich 스피너가 stdout 가림)
@@ -189,7 +190,7 @@ class ArcEnsembleGenerator(BaseAgent):
             if tactical_len >= min_tactical_length:
                 valid_candidates.append(candidate)
             else:
-                print(f"      ⚠️ [Ensemble] {candidate.get('_strategy', '?')} 제외: tactical_doc {tactical_len}자 < {min_tactical_length}자 (ep_count={ep_count})")
+                logging.info(f"⚠️ [Ensemble] {candidate.get('_strategy', '?')} 제외: tactical_doc {tactical_len}자 < {min_tactical_length}자 (ep_count={ep_count})")
 
         # [V60.74] 유효한 후보가 없으면 최장 후보 선택 + 경고 레벨 판단
         if not valid_candidates:
@@ -204,10 +205,10 @@ class ArcEnsembleGenerator(BaseAgent):
 
             # 권장값의 60% 미만이면 경고 레벨 높임
             if longest_len < min_required * 0.6:
-                print(f"      🚨 [Ensemble] 모든 후보 심각한 분량 부족: {longest_len}자 < {int(min_required * 0.6)}자 (권장의 60%)")
-                print(f"         → Critic/Consensus에서 REJECT 가능성 높음")
+                logging.warning(f"🚨 [Ensemble] 모든 후보 심각한 분량 부족: {longest_len}자 < {int(min_required * 0.6)}자 (권장의 60%)")
+                logging.warning(f"→ Critic/Consensus에서 REJECT 가능성 높음")
             else:
-                print(f"      ⚠️ [Ensemble] 모든 후보 분량 미달, 최대 분량 후보 선택: {longest_len}자")
+                logging.info(f"⚠️ [Ensemble] 모든 후보 분량 미달, 최대 분량 후보 선택: {longest_len}자")
 
             valid_candidates = candidates[:1]
 
@@ -228,15 +229,15 @@ class ArcEnsembleGenerator(BaseAgent):
         tactical_len = len(best_tactical) if isinstance(best_tactical, str) else len(str(best_tactical)) if best_tactical else 0
 
         # [V61.3] 후보별 점수 비교 출력
-        print(f"      🏆 [Ensemble] 후보 비교:")
+        logging.info(f"🏆 [Ensemble] 후보 비교:")
         for c in scored_candidates:
             strategy = c.get("_strategy", "?")
             score = c.get("_score", 0)
             issues = c.get("_issues", [])
             issue_summary = f" - {issues[0][:40]}..." if issues else ""
             marker = "→" if c is best else " "
-            print(f"         {marker} {strategy}: {score}점{issue_summary}")
-        print(f"      → {best.get('_strategy')} 선택 (tactical: {tactical_len}자)")
+            logging.info(f"{marker} {strategy}: {score}점{issue_summary}")
+        logging.info(f"→ {best.get('_strategy')} 선택 (tactical: {tactical_len}자)")
 
         # [V60.74] 메타데이터 보존 (디버깅용) - _ensemble_meta에 저장
         ensemble_meta = {
@@ -322,9 +323,9 @@ class ArcEnsembleGenerator(BaseAgent):
                 strategy_name=strategy["name"].upper(),
                 strategy_focus=strategy["focus"],
                 strategy_style=strategy["style"],
-                prohibition_summary=prohibition_summary,
-                protagonist_name=protagonist_name,  # [V60.18]
-                protagonist_instructions=protagonist_instructions,  # [V60.88]
+                prohibition_summary=self._escape_braces(prohibition_summary),  # [V70]
+                protagonist_name=self._escape_braces(protagonist_name),  # [V70]
+                protagonist_instructions=self._escape_braces(protagonist_instructions),  # [V70]
                 constraint_block=self._escape_braces(constraint_block or "(없음)"),
                 prev_arc_context=self._escape_braces(prev_arc_context or "시작점"),
                 curr_block=self._escape_braces(json.dumps(curr_block, ensure_ascii=False) if curr_block else "{}"),
@@ -345,6 +346,9 @@ class ArcEnsembleGenerator(BaseAgent):
 
             if isinstance(result, str):
                 result = self._extract_json_robust(result)
+            # [V70] list/파싱에러 방어
+            if not isinstance(result, dict) or result.get("parsing_error"):
+                return None
 
             # 필수 필드 보장
             result = self._ensure_required_fields(result, arc_no, ep_start, ep_end)
@@ -397,8 +401,10 @@ class ArcEnsembleGenerator(BaseAgent):
 
             # 금지 아이템 패턴 추출
             forbidden_items = re.findall(r'❌\s*([가-힣\w]+)', constraint_block)
+            # [V70] items_acquired를 str 리스트로 변환 (substring 오탐 방지)
+            _acq_strs = [str(i).strip() for i in items_acquired] if isinstance(items_acquired, list) else []
             for item in forbidden_items:
-                if item in str(items_acquired) or f"획득" in tactical and item in tactical:
+                if item in _acq_strs or ("획득" in tactical and item in tactical):
                     score -= 15
                     issues.append(f"금지 아이템 획득 시도: {item}")
 
