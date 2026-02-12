@@ -83,7 +83,7 @@ class SemanticItemRegistry:
         "패/인장": ['패', '인', '장', '령', '표', '첩']
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.items: Dict[str, ItemEntry] = {}
         self._alias_map: Dict[str, str] = {}  # alias -> canonical_name
         self._arc_acquisitions: Dict[int, List[str]] = {}  # arc_no -> [item names]
@@ -663,12 +663,12 @@ class SemanticItemRegistry:
             if not arc_no:
                 continue
 
-            state_constraints = arc.get('state_constraints', {})
+            state_constraints = arc.get('state_constraints') or {}  # [V70] None 방어
 
             # [V49.6] protagonist_items 우선, items_acquired 하위 호환
-            protagonist_items = state_constraints.get('protagonist_items', [])
+            protagonist_items = state_constraints.get('protagonist_items') or []  # [V70] None 방어
             if not protagonist_items:
-                protagonist_items = state_constraints.get('items_acquired', [])
+                protagonist_items = state_constraints.get('items_acquired') or []  # [V70] None 방어
 
             if isinstance(protagonist_items, list):
                 for item in protagonist_items:
@@ -681,7 +681,7 @@ class SemanticItemRegistry:
                         count += 1
 
             # [V49.6] distributed_items 처리
-            distributed_items = state_constraints.get('distributed_items', [])
+            distributed_items = state_constraints.get('distributed_items') or []  # [V70] None 방어
             if isinstance(distributed_items, list):
                 for item in distributed_items:
                     if item:
@@ -698,15 +698,15 @@ class SemanticItemRegistry:
                         count += 1
 
             # 소모 아이템 처리
-            items_consumed = state_constraints.get('items_consumed', [])
+            items_consumed = state_constraints.get('items_consumed') or []  # [V70] None 방어
             if isinstance(items_consumed, list):
                 for item in items_consumed:
                     if item:
                         self.mark_consumed(item, arc_no)
 
             # equipment에서도 추출 (주인공 소지품)
-            arc_end_state = state_constraints.get('arc_end_state', {})
-            equipment = arc_end_state.get('equipment', [])
+            arc_end_state = state_constraints.get('arc_end_state') or {}  # [V70] None 방어
+            equipment = arc_end_state.get('equipment') or []  # [V70] None 방어
             if isinstance(equipment, list):
                 for item in equipment:
                     if item and item not in protagonist_items:

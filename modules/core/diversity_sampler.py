@@ -9,6 +9,7 @@
 """
 
 import re
+import logging
 import json
 from collections import Counter
 from typing import List, Dict, Tuple, Callable, Optional
@@ -67,32 +68,31 @@ class DiversitySampler:
         samples = []
         sample_scores = []
 
-        print(f"      [DiversitySampler] {n_samples}개 샘플 생성 중...")
+        logging.info(f"[DiversitySampler] {n_samples}개 샘플 생성 중...")
 
         for i in range(n_samples):
             try:
                 sample = generator_fn()
                 if sample and isinstance(sample, str):
-                    samples.append(sample)
-
-                    # 다양성 점수 계산
+                    # [V70] 점수 계산 성공 후 append (desync 방지)
                     score = self._calculate_diversity_score(sample)
+                    samples.append(sample)
                     sample_scores.append(score)
-                    print(f"        - 샘플 {i+1}: 다양성 점수 {score['total']:.2f}")
+                    logging.info(f"- 샘플 {i+1}: 다양성 점수 {score['total']:.2f}")
 
             except Exception as e:
-                print(f"        - 샘플 {i+1} 생성 실패: {e}")
+                logging.warning(f"- 샘플 {i+1} 생성 실패: {e}")
                 continue
 
         if not samples:
-            return None, {'error': 'no_samples_generated'}
+            return "", {'error': 'no_samples_generated'}  # [V70] None → "" (callers expect str)
 
         # 최고 다양성 점수 선택
         best_idx = max(range(len(sample_scores)), key=lambda i: sample_scores[i]['total'])
         selected = samples[best_idx]
         selected_score = sample_scores[best_idx]
 
-        print(f"      [DiversitySampler] 샘플 {best_idx+1} 선택 (점수: {selected_score['total']:.2f})")
+        logging.info(f"[DiversitySampler] 샘플 {best_idx+1} 선택 (점수: {selected_score['total']:.2f})")
 
         return selected, {
             'selected_index': best_idx,
@@ -119,32 +119,31 @@ class DiversitySampler:
         samples = []
         sample_scores = []
 
-        print(f"      [DiversitySampler] 블루프린트 {n_samples}개 샘플 생성 중...")
+        logging.info(f"[DiversitySampler] 블루프린트 {n_samples}개 샘플 생성 중...")
 
         for i in range(n_samples):
             try:
                 sample = generator_fn()
                 if sample and isinstance(sample, dict):
-                    samples.append(sample)
-
-                    # 블루프린트 다양성 점수 계산
+                    # [V70] 점수 계산 성공 후 append (desync 방지)
                     score = self._calculate_blueprint_diversity(sample)
+                    samples.append(sample)
                     sample_scores.append(score)
-                    print(f"        - 블루프린트 {i+1}: 다양성 점수 {score['total']:.2f}")
+                    logging.info(f"- 블루프린트 {i+1}: 다양성 점수 {score['total']:.2f}")
 
             except Exception as e:
-                print(f"        - 블루프린트 {i+1} 생성 실패: {e}")
+                logging.warning(f"- 블루프린트 {i+1} 생성 실패: {e}")
                 continue
 
         if not samples:
-            return None, {'error': 'no_blueprints_generated'}
+            return {}, {'error': 'no_blueprints_generated'}  # [V70] None → {} (callers expect dict)
 
         # 최고 다양성 점수 선택
         best_idx = max(range(len(sample_scores)), key=lambda i: sample_scores[i]['total'])
         selected = samples[best_idx]
         selected_score = sample_scores[best_idx]
 
-        print(f"      [DiversitySampler] 블루프린트 {best_idx+1} 선택 (점수: {selected_score['total']:.2f})")
+        logging.info(f"[DiversitySampler] 블루프린트 {best_idx+1} 선택 (점수: {selected_score['total']:.2f})")
 
         return selected, {
             'selected_index': best_idx,
@@ -472,15 +471,15 @@ class ConditionalDiversitySampler:
             # [V57] 동적 샘플 수 계산
             if use_dynamic_samples:
                 actual_samples, severity_desc = self._calculate_dynamic_samples(n_samples)
-                print(f"      [ConditionalSampler] Diversity Sampling 활성화: {reason}")
-                print(f"      [V57] 동적 샘플 수: {actual_samples}개 ({severity_desc})")
+                logging.info(f"[ConditionalSampler] Diversity Sampling 활성화: {reason}")
+                logging.info(f"[V57] 동적 샘플 수: {actual_samples}개 ({severity_desc})")
             else:
                 actual_samples = n_samples
-                print(f"      [ConditionalSampler] Diversity Sampling 활성화: {reason}")
+                logging.info(f"[ConditionalSampler] Diversity Sampling 활성화: {reason}")
 
             return self.sampler.sample_and_select(generator_fn, actual_samples)
         else:
-            print(f"      [ConditionalSampler] 단일 생성 모드: {reason}")
+            logging.info(f"[ConditionalSampler] 단일 생성 모드: {reason}")
             result = generator_fn()
             return result, {'mode': 'single', 'reason': reason}
 
@@ -505,14 +504,14 @@ class ConditionalDiversitySampler:
             severity_desc = "고정"
 
         if force:
-            print(f"      [ConditionalSampler] Blueprint Diversity Sampling (Stage 3 기본)")
-            print(f"      [V57] 동적 샘플 수: {actual_samples}개 ({severity_desc})")
+            logging.info(f"[ConditionalSampler] Blueprint Diversity Sampling (Stage 3 기본)")
+            logging.info(f"[V57] 동적 샘플 수: {actual_samples}개 ({severity_desc})")
             return self.sampler.sample_blueprints(generator_fn, actual_samples)
         else:
             should_sample, reason = self.should_sample()
             if should_sample:
-                print(f"      [ConditionalSampler] Blueprint Diversity Sampling 활성화: {reason}")
-                print(f"      [V57] 동적 샘플 수: {actual_samples}개 ({severity_desc})")
+                logging.info(f"[ConditionalSampler] Blueprint Diversity Sampling 활성화: {reason}")
+                logging.info(f"[V57] 동적 샘플 수: {actual_samples}개 ({severity_desc})")
                 return self.sampler.sample_blueprints(generator_fn, actual_samples)
             else:
                 result = generator_fn()

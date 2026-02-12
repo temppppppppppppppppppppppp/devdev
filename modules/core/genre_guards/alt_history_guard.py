@@ -11,7 +11,7 @@ from .base_guard import BaseGuard
 class AltHistoryGuard(BaseGuard):
     """[대체역사물] 조선 시대 시대고증 + 궁중 정치 전문성 보호자 + V57 완전 구현"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         # 대체역사물에서 금지되는 용어 (근현대 문물)
@@ -102,18 +102,18 @@ class AltHistoryGuard(BaseGuard):
             '외교 사절': {'court_rank': '정3품', 'royal_mandate': True},
         }
 
-    def get_genre_name(self):
+    def get_genre_name(self) -> str:
         return "대체역사물(ALT_HISTORY)"
 
-    def _should_check_english(self):
+    def _should_check_english(self) -> bool:
         """대체역사물은 사극 배경이므로 영어 엄격 제한"""
         return True
 
-    def _should_check_numbers(self):
+    def _should_check_numbers(self) -> bool:
         """대체역사물은 아라비아 숫자보다 한자 수 표현 권장"""
         return True
 
-    def get_v20_purism_prompt(self):
+    def get_v20_purism_prompt(self) -> str:
         """대체역사물 장르 전문성 지침"""
         return f"""
 [📜 V61.9 대체역사물(조선) 장르 가이드라인 (Alt History Genre Authenticity)]
@@ -345,18 +345,7 @@ class AltHistoryGuard(BaseGuard):
         """[V66] 대체역사물 심층 검증."""
         result = super().run_deep_validation(manuscript, current_state or {})
 
-        # 대체역사물 추가 검증: 신분/관직/상태 기반 불가 행동 체크
-        if current_state:
-            impossible = self.get_impossible_actions(current_state)
-            import re
-            for action in impossible:
-                pattern = action.get('pattern', '')
-                if pattern and re.search(pattern, manuscript):
-                    result["violations"].append({
-                        "type": "impossible_action",
-                        "severity": action.get('severity', 'HIGH'),
-                        "message": f"불가 행동 감지: {action.get('reason', '')}"
-                    })
+        # [V70] get_impossible_actions 중복 제거 (super()가 이미 check_state_action_consistency에서 호출)
 
         result["has_critical"] = any(v.get("severity") == "HIGH" for v in result["violations"])
         if result["violations"]:

@@ -10,6 +10,7 @@
 """
 
 import re
+import logging
 from typing import Dict, List, Any, Optional
 
 
@@ -60,13 +61,13 @@ class ConsistencyValidator:
                     from modules.core.genre_guards.investment_guard import InvestmentGuard
                     return InvestmentGuard()
                 except ImportError:
-                    print(f"[WARNING] InvestmentGuard 없음 - 기본 검증만 수행")
+                    logging.warning(f"[WARNING] InvestmentGuard 없음 - 기본 검증만 수행")
                     return None
             else:
-                print(f"[WARNING] 미지원 장르 '{genre}' - 기본 검증만 수행")
+                logging.warning(f"[WARNING] 미지원 장르 '{genre}' - 기본 검증만 수행")
                 return None
         except Exception as e:
-            print(f"[ERROR] Guard 로드 실패 ({genre}): {e}")
+            logging.warning(f"[ERROR] Guard 로드 실패 ({genre}): {e}")
             return None
 
     def validate(self, manuscript: str, validation_context: dict) -> dict:
@@ -114,7 +115,7 @@ class ConsistencyValidator:
                 if v.get('has_justification', False):
                     justifiable.append({**v, 'category': 'state_action'})
                 else:
-                    justifiable.append({**v, 'category': 'state_action'})  # 정당화 가능
+                    unjustifiable.append({**v, 'category': 'state_action'})  # [V70] FIX: 정당화 불가 → unjustifiable
                 violations.append({**v, 'category': 'state_action'})
 
         # ═══════════════════════════════════════════════════════════════
@@ -172,7 +173,7 @@ class ConsistencyValidator:
                     if authority_check.get('has_justification', False):
                         justifiable.append({**v, 'category': 'authority_delegation'})
                     else:
-                        justifiable.append({**v, 'category': 'authority_delegation'})
+                        unjustifiable.append({**v, 'category': 'authority_delegation'})  # [V70] FIX: 정당화 불가 → unjustifiable
                     violations.append({**v, 'category': 'authority_delegation'})
 
         # ═══════════════════════════════════════════════════════════════

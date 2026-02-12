@@ -15,6 +15,7 @@ Arc에서 해당 화의 제약 조건을 구조화된 블록으로 컴파일
 """
 
 import re
+import logging
 import json
 from typing import Dict, List, Any, Optional, Tuple
 
@@ -26,7 +27,7 @@ class BlueprintConstraintCompiler:
     Arc tactical_doc에서 에피소드별 제약을 추출하고 구조화
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def compile(
@@ -71,7 +72,7 @@ class BlueprintConstraintCompiler:
         # 5. [V63] Arc에서 전달된 constraint_summary (Stage 2 → Stage 3)
         arc_constraint_summary = arc_data.get("constraint_summary", "")
         if not arc_constraint_summary:
-            print(f"      ⚠️ [V63.4 P1] Arc {arc_no}에 constraint_summary 필드 없음 → Stage 2 제약 전달 누락 가능")
+            logging.info(f"⚠️ [V63.4 P1] Arc {arc_no}에 constraint_summary 필드 없음 → Stage 2 제약 전달 누락 가능")
 
         # 6. [V63.2] Arc state_changes 요약 (Stage 2 → Stage 3 직접 전달)
         state_changes_summary = self._summarize_state_changes(arc_data.get("state_changes", {}))
@@ -283,7 +284,7 @@ class BlueprintConstraintCompiler:
 
         # scene_breakdown에서 마지막 씬 정보
         scenes = prev_blueprint.get("scene_breakdown", {})
-        if scenes:
+        if scenes and isinstance(scenes, dict):  # [V70] list 타입 방어
             # 마지막 씬 키 찾기
             scene_keys = sorted(scenes.keys(), key=lambda x: int(re.search(r'\d+', x).group()) if re.search(r'\d+', x) else 0)
             if scene_keys:
@@ -436,7 +437,7 @@ class BlueprintConstraintCompiler:
             for inj in injuries[:3]:
                 if isinstance(inj, dict):
                     lines.append(
-                        f"🩹 부상: {inj.get('npc', '?')} - {inj.get('injury', '?')}"
+                        f"🩹 부상: {inj.get('name', inj.get('npc', '?'))} - {inj.get('injury', '?')}"  # [V70] 스키마 키 'name' 우선 ('npc' 폴백)
                     )
 
         # NPC 이동
@@ -445,7 +446,7 @@ class BlueprintConstraintCompiler:
             for mv in movements[:3]:
                 if isinstance(mv, dict):
                     lines.append(
-                        f"📍 이동: {mv.get('npc', '?')} → {mv.get('to', '?')}"
+                        f"📍 이동: {mv.get('name', mv.get('npc', '?'))} → {mv.get('to', '?')}"  # [V70] 스키마 키 'name' 우선 ('npc' 폴백)
                     )
 
         # [V66] 완결된 플롯

@@ -6,6 +6,7 @@ Director God Object 분해의 첫 번째 단계.
 """
 
 from .base_agent import BaseAgent
+import logging
 
 
 class DirectorCachingManager:
@@ -18,7 +19,7 @@ class DirectorCachingManager:
     - get_protagonist_config(): protagonist_config 캐싱 조회
     """
 
-    def __init__(self, client, primary_model, context=None):
+    def __init__(self, client, primary_model, context=None) -> None:
         """
         Args:
             client: Google GenAI 클라이언트 (BaseAgent.client)
@@ -52,14 +53,14 @@ class DirectorCachingManager:
         try:
             for prev_ep in range(1, ep_num):
                 ms_data = db_manager.get_manuscript(prev_ep)
-                if ms_data and ms_data.get('text'):
+                if ms_data and ms_data.get('content'):
                     history.append({
                         "ep_num": prev_ep,
-                        "text": ms_data.get('text', ''),
+                        "text": ms_data.get('content', ''),
                         "summary": ms_data.get('summary', '')
                     })
         except Exception as e:
-            print(f"      ⚠️ [V60.87] 원고 역사 로드 실패: {e}")
+            logging.warning(f"⚠️ [V60.87] 원고 역사 로드 실패: {e}")
 
         return history
 
@@ -81,7 +82,7 @@ class DirectorCachingManager:
             캐시 이름 (성공 시) 또는 None (실패 시)
         """
         if not self.manuscript_cache_enabled:
-            print("      ⏭️ [V60.88] 원고 캐싱 비활성화됨")
+            logging.info("⏭️ [V60.88] 원고 캐싱 비활성화됨")
             return None
 
         try:
@@ -93,15 +94,15 @@ class DirectorCachingManager:
 
             for ep_num in range(1, current_ep):
                 ms_data = db_manager.get_manuscript(ep_num)
-                if ms_data and ms_data.get('text'):
-                    ep_text = ms_data.get('text', '')
+                if ms_data and ms_data.get('content'):
+                    ep_text = ms_data.get('content', '')
                     ep_title = ms_data.get('title', f'제{ep_num}화')
                     formatted = f"\n{'='*60}\n# 제{ep_num}화. {ep_title}\n{'='*60}\n{ep_text}\n"
                     manuscripts_compiled.append(formatted)
                     total_chars += len(formatted)
 
             if not manuscripts_compiled:
-                print("      ⚠️ [V60.88] 캐싱할 이전 원고가 없습니다.")
+                logging.info("⚠️ [V60.88] 캐싱할 이전 원고가 없습니다.")
                 return None
 
             # 2. 합본 텍스트 구성
@@ -121,16 +122,16 @@ class DirectorCachingManager:
 
             # 3. 캐시 최소 크기 체크 (1024 토큰 ≈ 1500자)
             if total_chars < 1500:
-                print(f"      ⚠️ [V60.88] 원고 분량 부족 ({total_chars}자) - 캐싱 스킵")
+                logging.info(f"⚠️ [V60.88] 원고 분량 부족 ({total_chars}자) - 캐싱 스킵")
                 return None
 
             # 4. 기존 캐시가 유효하고 원고 수가 동일하면 재사용
             if self.manuscript_cache_name and self._cached_manuscript_count == len(manuscripts_compiled):
-                print(f"      ⚡ [V60.88] 기존 캐시 재사용 ({self._cached_manuscript_count}화)")
+                logging.info(f"⚡ [V60.88] 기존 캐시 재사용 ({self._cached_manuscript_count}화)")
                 return self.manuscript_cache_name
 
             # 5. 새 캐시 생성
-            print(f"      ⚡ [V60.88] 원고 캐시 생성 중... ({len(manuscripts_compiled)}화, {total_chars:,}자)")
+            logging.info(f"⚡ [V60.88] 원고 캐시 생성 중... ({len(manuscripts_compiled)}화, {total_chars:,}자)")
 
             cache = self.client.caches.create(
                 model=self.primary_model,
@@ -145,8 +146,8 @@ class DirectorCachingManager:
             self.manuscript_cache_name = cache.name
             self._cached_manuscript_count = len(manuscripts_compiled)
 
-            print(f"      ✅ [V60.88] 원고 캐시 생성 완료: {cache.name}")
-            print(f"         - 총 {len(manuscripts_compiled)}화 / {total_chars:,}자 캐싱됨")
+            logging.info(f"✅ [V60.88] 원고 캐시 생성 완료: {cache.name}")
+            logging.info(f"- 총 {len(manuscripts_compiled)}화 / {total_chars:,}자 캐싱됨")
 
             return cache.name
 
@@ -154,11 +155,11 @@ class DirectorCachingManager:
             # [V61.9] 캐싱 중 429/quota → 키 전환 예약
             error_str = str(e).lower()
             if "429" in error_str or "resource_exhausted" in error_str or "quota" in error_str:
-                print(f"      ⚠️ [V61.9] 원고 캐시 생성 중 API 제한 → 키 전환 예약")
+                logging.info(f"⚠️ [V61.9] 원고 캐시 생성 중 API 제한 → 키 전환 예약")
                 with BaseAgent._rotation_lock:
                     BaseAgent._key_rotation_pending = True
             else:
-                print(f"      ❌ [V60.88] 원고 캐시 생성 실패: {e}")
+                logging.warning(f"❌ [V60.88] 원고 캐시 생성 실패: {e}")
             self.manuscript_cache_name = None
             return None
 

@@ -11,7 +11,7 @@ from .base_guard import BaseGuard
 class InvestmentGuard(BaseGuard):
     """[투자물] 장르 전문성 보호자 + V57 완전 구현"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         # 투자물에서 금지되는 용어 (무협/판타지 용어)
@@ -103,18 +103,18 @@ class InvestmentGuard(BaseGuard):
             '자금경색': [r'대규모.*투자', r'추가.*매수', r'인수'],
         }
     
-    def get_genre_name(self):
+    def get_genre_name(self) -> str:
         return "투자물(INVESTMENT)"
     
-    def _should_check_english(self):
+    def _should_check_english(self) -> bool:
         """투자물은 현대 배경이므로 영어 완화 (금융 용어에 영어 많음)"""
         return False
     
-    def _should_check_numbers(self):
+    def _should_check_numbers(self) -> bool:
         """투자물은 정확한 수치가 중요하므로 아라비아 숫자 필수"""
         return False
     
-    def get_v20_purism_prompt(self):
+    def get_v20_purism_prompt(self) -> str:
         """투자물 장르 전문성 지침"""
         return f"""
 [💼 V40 투자물 장르 가이드라인 (Investment Genre Professionalism)]
@@ -537,10 +537,14 @@ class InvestmentGuard(BaseGuard):
         result = super().run_deep_validation(manuscript, current_state or {})
 
         # 투자 규모 검증
-        amount_patterns = re.findall(r'(\d+(?:,\d{3})*)\s*(?:억|만)\s*(?:원|달러|불)', manuscript)
-        for amount_str in amount_patterns:
+        amount_patterns = re.findall(r'(\d+(?:,\d{3})*)\s*(억|만)\s*(?:원|달러|불)', manuscript)  # [V70] 단위 캡처 추가
+        for amount_str, unit in amount_patterns:
             try:
                 amount = int(amount_str.replace(',', ''))
+                if unit == '억':  # [V70] 단위 승수 적용
+                    amount *= 100_000_000
+                elif unit == '만':
+                    amount *= 10_000
                 _wealth = float((current_state or {}).get('total_assets', 0) or 0)
                 valid, msg = self.validate_investment_scale('stock', amount, _wealth)
                 if not valid:

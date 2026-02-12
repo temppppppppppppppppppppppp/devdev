@@ -143,7 +143,7 @@ class DynamicPromptWeighter:
         }
     }
 
-    def __init__(self, failure_learner=None):
+    def __init__(self, failure_learner=None) -> None:
         """
         Args:
             failure_learner: FailureLearner 인스턴스 (없으면 기본 가중치 사용)
@@ -171,7 +171,7 @@ class DynamicPromptWeighter:
         category_counts = Counter()
 
         for failure in recent_failures:
-            reason = failure.get('reason', '')
+            reason = getattr(failure, 'reason', '') if not isinstance(failure, dict) else failure.get('reason', '')  # [V70] FailureRecord dataclass 대응
             detected_cats = self._detect_categories(reason)
             for cat in detected_cats:
                 category_counts[cat] += 1

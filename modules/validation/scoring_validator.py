@@ -5,6 +5,7 @@ LLM 기반 점수 평가 (가중치 합산)
 [V59] 장르별 가중치 / 세분화된 피드백 고도화
 """
 import statistics
+import logging
 import re
 from typing import Dict, List, Any
 from collections import Counter
@@ -61,7 +62,7 @@ class ScoringValidator:
             else:
                 return None
         except Exception as e:
-            print(f"[WARNING] Guard 로드 실패 ({genre}): {e}")
+            logging.warning(f"[WARNING] Guard 로드 실패 ({genre}): {e}")
             return None
 
     def _sanitize_manuscript(self, text: str) -> str:
@@ -109,7 +110,11 @@ class ScoringValidator:
         # 통합
         all_scores = {**python_scores, **llm_scores}
 
-        total_score = sum(score['score'] for score in all_scores.values())
+        # [V69] 값 타입 방어 — LLM이 비정상 구조 반환 시 안전 합산
+        total_score = sum(
+            v.get('score', 0) if isinstance(v, dict) else 0
+            for v in all_scores.values()
+        )
         max_score = 100
         passed = total_score >= self.pass_threshold
 
@@ -140,8 +145,8 @@ class ScoringValidator:
         """LLM으로 평가해야 하는 점수"""
         if not self.client:
             # LLM 없으면 경고 후 fallback (검증 품질 저하)
-            print("[WARNING] LLM client가 없어 Python 기반 fallback 사용 - 검증 정확도 저하")
-            print("[WARNING] Constitutional AI 평가 불가 - 중간 점수로 대체")
+            logging.warning("[WARNING] LLM client가 없어 Python 기반 fallback 사용 - 검증 정확도 저하")
+            logging.warning("[WARNING] Constitutional AI 평가 불가 - 중간 점수로 대체")
             return self._fallback_llm_scores(manuscript, context)
 
         # 🔒 Prompt Injection 방지 - 원고 텍스트 sanitization
@@ -217,11 +222,38 @@ Step 5: Article 6 (패턴 다양성) 분석
 
             import json
             result = json.loads(response.text)
+
+            # [V69] LLM이 list로 감싸서 반환하는 경우 방어
+            if isinstance(result, list):
+                if len(result) == 1 and isinstance(result[0], dict):
+                    result = result[0]
+                else:
+                    # list 내 dict 찾기
+                    for item in result:
+                        if isinstance(item, dict) and 'character_consistency' in item:
+                            result = item
+                            break
+                    else:
+                        logging.warning(f"[WARNING] LLM이 예상치 못한 list 반환 - Fallback 전환")
+                        return self._fallback_llm_scores(manuscript, context)
+
+            if not isinstance(result, dict):
+                logging.warning(f"[WARNING] LLM 응답이 dict가 아님 ({type(result).__name__}) - Fallback 전환")
+                return self._fallback_llm_scores(manuscript, context)
+
+            # [V70] LLM 점수 클램핑: score가 max를 초과하지 않도록 방어
+            for _cat, _val in result.items():
+                if isinstance(_val, dict) and 'score' in _val and 'max' in _val:
+                    try:
+                        _val['score'] = min(int(_val['score']), int(_val['max']))
+                    except (ValueError, TypeError):
+                        pass
+
             return result
 
         except Exception as e:
-            print(f"[ERROR] LLM 평가 실패: {e}")
-            print(f"[WARNING] Fallback으로 전환 - Constitutional AI 평가 불가")
+            logging.warning(f"[ERROR] LLM 평가 실패: {e}")
+            logging.warning(f"[WARNING] Fallback으로 전환 - Constitutional AI 평가 불가")
             return self._fallback_llm_scores(manuscript, context)
 
     def _fallback_llm_scores(self, manuscript: str, context: dict) -> dict:

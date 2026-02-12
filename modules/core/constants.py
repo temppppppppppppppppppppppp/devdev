@@ -1,3 +1,4 @@
+import logging
 """
 [V40 Enhanced] 시스템 전역 상수 정의
 모든 매직 넘버와 설정값을 중앙에서 관리
@@ -21,7 +22,7 @@ class GenreTypes:
     MEDICAL = 'medical'
 
     @classmethod
-    def all(cls):
+    def all(cls) -> list:
         return [cls.WUXIA, cls.HUNTER, cls.INVESTMENT, cls.FANTASY, cls.COMPOSER, cls.COOKING, cls.ALT_HISTORY, cls.ACTOR, cls.SPORTS, cls.MEDICAL]
 
     @classmethod
@@ -314,7 +315,7 @@ class HUDKeys:
         # [V61.10] 교차검증: HUD name이 역할명이면 CoreIdentity 우선
         if hud_name and hud_name in cls._ROLE_NAME_BLACKLIST:
             if core_name and core_name not in cls._ROLE_NAME_BLACKLIST:
-                print(f"      ⚠️ [V61.10] HUD name '{hud_name}'은 역할명 → CoreIdentity '{core_name}' 사용")
+                logging.info(f"⚠️ [V61.10] HUD name '{hud_name}'은 역할명 → CoreIdentity '{core_name}' 사용")
                 return core_name
         # HUD name이 정상이면 그대로 사용
         if hud_name and hud_name not in cls._ROLE_NAME_BLACKLIST:
@@ -583,7 +584,7 @@ class V40PremiumThresholds:
     ANCHOR_RECENCY_BONUS_THRESHOLD = 5      # 최신성 보너스 적용 범위 (N화 이내)
     ANCHOR_RECENCY_BONUS_SCORE = 10         # 최신성 보너스 점수
     ANCHOR_EXTRACTION_LIMIT = 5             # 에피소드당 추출할 앵커 수 (3~5개)
-    ANCHOR_MAX_STORAGE = 100                # DB에 저장할 최대 앵커 수
+    ANCHOR_MAX_STORAGE = 1000               # [V66.2] reference_anchor.py MAX_ANCHORS와 동기화
     ANCHOR_COMPRESSION_THRESHOLD = 5000     # 원고 압축 기준 (문자 수)
     ANCHOR_COMPRESSED_PART_SIZE = 2000      # 압축 시 추출 부분 크기
 
@@ -611,7 +612,7 @@ class V40PremiumAnchorTypes:
     DECISION = 'decision'                   # 중요 결정
 
     @classmethod
-    def all(cls):
+    def all(cls) -> list:
         """모든 앵커 타입 반환"""
         return [
             cls.COMBAT, cls.ITEM, cls.RELATIONSHIP, cls.LOCATION,
@@ -619,7 +620,7 @@ class V40PremiumAnchorTypes:
         ]
 
     @classmethod
-    def critical_types(cls):
+    def critical_types(cls) -> list:
         """필수 참조 앵커 타입 (설정 충돌 방지용)"""
         return [cls.ITEM, cls.INJURY, cls.POWER, cls.LOCATION]
 
@@ -633,7 +634,7 @@ class V40PremiumEmotionStates:
     TRIUMPH = 'triumph'                     # 승리
 
     @classmethod
-    def all(cls):
+    def all(cls) -> list:
         """모든 감정 상태 반환"""
         return [cls.DESPAIR, cls.FRUSTRATION, cls.NEUTRAL, cls.HOPE, cls.TRIUMPH]
 

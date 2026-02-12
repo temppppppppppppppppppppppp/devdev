@@ -145,7 +145,7 @@ class ModelCascade:
             "cost_saved": cost_saved
         }
 
-    def reset(self):
+    def reset(self) -> None:
         """캐스케이드 초기화"""
         self.current_tier = 0
         self.attempt_history = []

@@ -7,6 +7,7 @@ App-dependent 메서드(벡터 검색, DB 조회 등)는 self._app으로 접근.
 """
 
 import json
+import logging
 import re
 
 # [V60.10] 수여물 패턴 (main_a.py에서 이관)
@@ -30,7 +31,7 @@ class PromptBuilder:
     - 아이템 타임라인 (1개): build_item_acquisition_timeline
     """
 
-    def __init__(self, app=None):
+    def __init__(self, app=None) -> None:
         """
         Args:
             app: SovereignApp 인스턴스 (DB/모듈 접근용).
@@ -798,7 +799,14 @@ class PromptBuilder:
 
                 lost_items = ep_bible.get('lost_items', [])
                 if lost_items:
-                    lost_str = ", ".join(lost_items) if isinstance(lost_items, list) else str(lost_items)
+                    # [V70] dict 타입 방어 (new_items 처리와 동일 패턴)
+                    if isinstance(lost_items, list):
+                        lost_str = ", ".join(
+                            item.get('name', str(item)) if isinstance(item, dict) else str(item)
+                            for item in lost_items
+                        )
+                    else:
+                        lost_str = str(lost_items)
                     timeline_lines.append(f"제{ep}화: {lost_str} 분실/파괴")
 
             # 캐시 저장
@@ -877,7 +885,14 @@ class PromptBuilder:
                 pass
 
         except Exception as e:
-            app.ui.log(f"⚠️ [Validation Context] 구성 중 오류 (비치명적): {e}")
+            # [V70] app이 None일 수 있으므로 안전하게 로깅
+            try:
+                if app and hasattr(app, 'ui') and app.ui:
+                    app.ui.log(f"⚠️ [Validation Context] 구성 중 오류 (비치명적): {e}")
+                else:
+                    logging.warning(f"⚠️ [Validation Context] 구성 중 오류 (비치명적): {e}")
+            except Exception:
+                pass
 
         return context
 

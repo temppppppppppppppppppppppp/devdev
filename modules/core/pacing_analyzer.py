@@ -104,7 +104,7 @@ class PacingAnalyzer:
     IDEAL_SHORT_RATIO = (0.15, 0.35)      # 15-35%
     IDEAL_LONG_RATIO = (0.05, 0.20)       # 5-20%
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.history: List[PacingAnalysis] = []
 
     def analyze(self, manuscript: str) -> PacingAnalysis:
@@ -409,8 +409,14 @@ class PacingAnalyzer:
         dialogue_ratios = [a.dialogue_ratio for a in analyses]
         avg_lengths = [a.avg_sentence_length for a in analyses]
 
+        # [V70] 단일 요소면 비교 불가 → 'stable'
+        if len(analyses) < 2:
+            trend = 'stable'
+        else:
+            trend = 'improving' if scores[-1] > scores[0] else ('stable' if scores[-1] == scores[0] else 'declining')
+
         return {
-            'score_trend': 'improving' if scores[-1] > scores[0] else 'declining',
+            'score_trend': trend,
             'avg_score': sum(scores) / len(scores),
             'score_range': (min(scores), max(scores)),
             'dialogue_consistency': max(dialogue_ratios) - min(dialogue_ratios) < 0.15,

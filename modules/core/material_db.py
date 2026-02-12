@@ -4,6 +4,7 @@
 - laws/{genre}.json의 seed pools와 연동 가능
 """
 import json
+import logging
 import random
 from pathlib import Path
 
@@ -71,7 +72,7 @@ class MaterialDB:
                     cls._loaded_laws[genre] = data
                     return data
         except Exception as e:
-            print(f"[MaterialDB] laws 로드 실패 ({genre}): {e}")
+            logging.warning(f"[MaterialDB] laws 로드 실패 ({genre}): {e}")
 
         return {}
 

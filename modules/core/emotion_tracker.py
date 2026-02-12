@@ -27,7 +27,7 @@ class EmotionArcTracker:
         'triumph': 2        # 승리
     }
 
-    def __init__(self, project_context):
+    def __init__(self, project_context) -> None:
         """
         Args:
             project_context: ProjectContext 인스턴스
@@ -35,7 +35,7 @@ class EmotionArcTracker:
         self.context = project_context
         self.history = []  # [(ep_num, emotion_state, intensity)]
 
-    def analyze_manuscript_emotion(self, manuscript_content):
+    def analyze_manuscript_emotion(self, manuscript_content: str) -> tuple:
         """
         원고에서 감정 상태 자동 추출
 
@@ -90,7 +90,7 @@ class EmotionArcTracker:
 
         return (dominant_emotion, intensity)
 
-    def check_monotony(self, last_n_episodes=5):
+    def check_monotony(self, last_n_episodes: int = 5) -> tuple:
         """
         최근 N화의 감정선이 단조로운지 검사
 
@@ -124,7 +124,7 @@ class EmotionArcTracker:
 
         return (False, "")
 
-    def _generate_recommendation(self, current_state, n_episodes):
+    def _generate_recommendation(self, current_state: str, n_episodes: int) -> str:
         """
         현재 감정 상태에 따른 추천 생성 (웹소설 특화)
 
@@ -219,7 +219,7 @@ class EmotionArcTracker:
 
         return recommendation
 
-    def get_recommended_emotion_for_next(self):
+    def get_recommended_emotion_for_next(self) -> tuple:
         """
         다음 에피소드에 권장되는 감정 상태
 
@@ -231,7 +231,9 @@ class EmotionArcTracker:
 
         # 최근 3화 분석
         recent_3 = self.history[-3:] if len(self.history) >= 3 else self.history
-        states_numeric = [self.EMOTION_STATES[ep[1]] for ep in recent_3]
+        states_numeric = [self.EMOTION_STATES[ep[1]] for ep in recent_3 if ep[1] in self.EMOTION_STATES]  # [V70] KeyError 방어
+        if not states_numeric:  # [V70] 유효한 감정 상태 없으면 중립 반환
+            return ('neutral', "유효한 감정 이력 없음")
         avg_emotion = sum(states_numeric) / len(states_numeric)
 
         # 🔥 웹소설 특화: 부정 감정 과다 → 희망 강제
@@ -252,7 +254,7 @@ class EmotionArcTracker:
 
         return ('neutral', "현재 감정선 적정 수준")
 
-    def add_episode_emotion(self, ep_num, emotion_state, intensity):
+    def add_episode_emotion(self, ep_num: int, emotion_state: str, intensity: float) -> None:
         """
         에피소드 감정 이력에 추가
 
@@ -267,7 +269,7 @@ class EmotionArcTracker:
         if len(self.history) > 50:
             self.history = self.history[-50:]
 
-    def get_emotion_report(self):
+    def get_emotion_report(self) -> dict:
         """
         현재 감정선 리포트 생성
 
@@ -294,7 +296,7 @@ class EmotionArcTracker:
             "monotony_detected": self.check_monotony()[0]
         }
 
-    def save_to_db(self, db_manager):
+    def save_to_db(self, db_manager) -> None:
         """
         감정 이력을 DB에 저장
 
@@ -304,18 +306,20 @@ class EmotionArcTracker:
         history_data = [
             {"ep_num": ep[0], "emotion": ep[1], "intensity": ep[2]}
             for ep in self.history
+            if isinstance(ep, (tuple, list)) and len(ep) >= 3  # [V70] 비정상 튜플 방어
         ]
         db_manager.save_anchor('emotion_history', history_data)
 
-    def load_from_db(self, db_manager):
+    def load_from_db(self, db_manager) -> None:
         """
         DB에서 감정 이력 로드
 
         Args:
             db_manager: DBManager 인스턴스
         """
-        history_data = db_manager.load_anchor('emotion_history', default=[])
+        history_data = db_manager.load_anchor('emotion_history', default=[]) or []  # [V70] None 방어
         self.history = [
             (ep['ep_num'], ep['emotion'], ep['intensity'])
             for ep in history_data
+            if isinstance(ep, dict) and all(k in ep for k in ('ep_num', 'emotion', 'intensity'))  # [V70] 3개 키 전부 확인
         ]

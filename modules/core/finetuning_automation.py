@@ -5,6 +5,7 @@ Gemini Fine-tuning API 자동화
 데이터 수집 → 전처리 → 학습 → 배포 전체 파이프라인
 """
 import json
+import logging
 import os
 from typing import List, Dict, Any, Optional
 from datetime import datetime
@@ -112,11 +113,11 @@ class FineTuningManager:
                     out.write(json.dumps(training_example, ensure_ascii=False) + '\n')
 
                 except Exception as e:
-                    print(f"Error processing {file.name}: {e}")
+                    logging.info(f"Error processing {file.name}: {e}")
                     continue
 
-        print(f"✅ Training data prepared: {output_file}")
-        print(f"Total samples: {len(approved_files)}")
+        logging.info(f"✅ Training data prepared: {output_file}")
+        logging.info(f"Total samples: {len(approved_files)}")
 
         return output_file
 
@@ -198,19 +199,19 @@ class FineTuningManager:
 
         self.training_jobs.append(job_info)
 
-        print(f"🚀 Fine-tuning job created: {job_info['job_id']}")
-        print(f"Base model: {self.base_model}")
-        print(f"Tuned model: {tuned_model_name}")
-        print(f"Training file: {training_file}")
-        print("")
-        print("⚠️ IMPORTANT: Gemini Fine-tuning requires API access.")
-        print("To start actual training, use Google AI Studio:")
-        print("https://aistudio.google.com/app/tuned_models")
-        print("")
-        print("Upload the training file and configure:")
-        print(f"- Base model: {self.base_model}")
-        print(f"- Learning rate: {learning_rate}")
-        print(f"- Epochs: {epochs}")
+        logging.info(f"🚀 Fine-tuning job created: {job_info['job_id']}")
+        logging.info(f"Base model: {self.base_model}")
+        logging.info(f"Tuned model: {tuned_model_name}")
+        logging.info(f"Training file: {training_file}")
+        logging.info("")
+        logging.info("⚠️ IMPORTANT: Gemini Fine-tuning requires API access.")
+        logging.info("To start actual training, use Google AI Studio:")
+        logging.info("https://aistudio.google.com/app/tuned_models")
+        logging.info("")
+        logging.info("Upload the training file and configure:")
+        logging.info(f"- Base model: {self.base_model}")
+        logging.info(f"- Learning rate: {learning_rate}")
+        logging.info(f"- Epochs: {epochs}")
 
         return job_info
 
@@ -462,5 +463,5 @@ def quick_finetuning_check(
     """
     manager = FineTuningManager(project_name)
     report = manager.generate_fine_tuning_report(data_dir)
-    print(report)
+    logging.info(report)
     return report

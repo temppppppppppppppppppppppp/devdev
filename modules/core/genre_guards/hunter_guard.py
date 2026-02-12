@@ -13,7 +13,7 @@ from .base_guard import BaseGuard
 class HunterGuard(BaseGuard):
     """[헌터물] 장르 일관성 보호자 + V46 일관성 검증 + V57 확장"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         # 헌터물에서 금지되는 용어 (주로 무협 용어)
@@ -120,18 +120,18 @@ class HunterGuard(BaseGuard):
             '유니크 스킬': 86400,  # 24시간
         }
 
-    def get_genre_name(self):
+    def get_genre_name(self) -> str:
         return "헌터물(HUNTER)"
 
-    def _should_check_english(self):
+    def _should_check_english(self) -> bool:
         """헌터물은 현대 배경이므로 영어 완화"""
         return False
 
-    def _should_check_numbers(self):
+    def _should_check_numbers(self) -> bool:
         """헌터물은 수치 표현이 중요하므로 아라비아 숫자 허용"""
         return False
 
-    def get_v20_purism_prompt(self):
+    def get_v20_purism_prompt(self) -> str:
         """헌터물 장르 일관성 지침"""
         return f"""
 [🎮 V40 헌터물 장르 가이드라인 (Hunter Genre Consistency)]
@@ -581,9 +581,11 @@ class HunterGuard(BaseGuard):
         r1 = rank1.upper().replace('급', '')
         r2 = rank2.upper().replace('급', '')
 
+        # [V70] 한글 항목도 '급' 제거하여 비교 (국가급→국가, 세계급→세계)
+        _normalized = [r.replace('급', '') for r in self._rank_hierarchy]
         try:
-            idx1 = self._rank_hierarchy.index(r1)
-            idx2 = self._rank_hierarchy.index(r2)
+            idx1 = _normalized.index(r1)
+            idx2 = _normalized.index(r2)
             return idx1 - idx2
         except ValueError:
             return 0
@@ -765,7 +767,7 @@ class HunterGuard(BaseGuard):
         dungeon_patterns = re.findall(r'(\w+)\s*(?:등급|랭크|급)\s*던전', manuscript)
         hunter_rank = str((current_state or {}).get('realm', 'E'))
         for dungeon_rank in dungeon_patterns:
-            valid, msg = self.validate_dungeon_entry(dungeon_rank, hunter_rank)
+            valid, msg = self.validate_dungeon_entry(f"{dungeon_rank}급", hunter_rank)  # [V70] "S" → "S급" (dict 키 매칭)
             if not valid:
                 result["violations"].append({
                     "type": "dungeon_entry",

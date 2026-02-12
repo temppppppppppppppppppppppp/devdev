@@ -23,6 +23,7 @@ Analyst + Architect + Writer 3자 토론 시스템
 """
 
 from typing import Dict, Any, List, Optional, Tuple
+import logging
 from dataclasses import dataclass
 from enum import Enum
 import json
@@ -197,9 +198,9 @@ JSON 형식:
                     "max_output_tokens": 8192
                 }
             )
-            return response.text
+            return response.text or ""  # [V70] None 방어
         except Exception as e:
-            print(f"[MultiAgentDeliberation] LLM 호출 실패: {e}")
+            logging.warning(f"[MultiAgentDeliberation] LLM 호출 실패: {e}")
             return ""
 
     def _parse_json(self, text: str) -> Dict[str, Any]:
@@ -222,8 +223,8 @@ JSON 형식:
         context_str = json.dumps(context, ensure_ascii=False, default=str)[:2000]
 
         prompt = self.AGENT_PROMPTS[role].format(
-            content=content[:5000],
-            context=context_str
+            content=content[:5000].replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
+            context=context_str.replace("{", "{{").replace("}", "}}")  # [V70] brace escape
         )
 
         response = self._call_llm(prompt, temperature=0.3)
@@ -260,7 +261,7 @@ JSON 형식:
         writer = next((o for o in opinions if o.role == AgentRole.WRITER), None)
 
         prompt = self.CONSENSUS_PROMPT.format(
-            content=content[:6000],
+            content=content[:6000].replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
             analyst_score=analyst.score if analyst else 70,
             analyst_strengths=", ".join(analyst.strengths[:3]) if analyst else "없음",
             analyst_concerns=", ".join(analyst.concerns[:3]) if analyst else "없음",

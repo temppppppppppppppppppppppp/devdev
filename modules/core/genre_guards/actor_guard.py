@@ -11,7 +11,7 @@ from .base_guard import BaseGuard
 class ActorGuard(BaseGuard):
     """[배우물] 연예계 전문성 보호자 + V57 완전 구현"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         # 배우물에서 금지되는 용어 (무협/판타지/헌터 용어)
@@ -82,18 +82,18 @@ class ActorGuard(BaseGuard):
             '할리우드 진출': {'fame': '톱스타'},
         }
 
-    def get_genre_name(self):
+    def get_genre_name(self) -> str:
         return "배우물(ACTOR)"
 
-    def _should_check_english(self):
+    def _should_check_english(self) -> bool:
         """배우물은 현대 배경이므로 영어 완화"""
         return False
 
-    def _should_check_numbers(self):
+    def _should_check_numbers(self) -> bool:
         """배우물은 시청률/관객수 등 정확한 수치가 중요"""
         return False
 
-    def get_v20_purism_prompt(self):
+    def get_v20_purism_prompt(self) -> str:
         """배우물 장르 전문성 지침"""
         return f"""
 [🎬 V62 배우물 장르 가이드라인 (Actor Genre Professionalism)]
@@ -315,18 +315,7 @@ class ActorGuard(BaseGuard):
         """[V66] 배우물 심층 검증."""
         result = super().run_deep_validation(manuscript, current_state or {})
 
-        # 배우물 추가 검증: 인지도/상태 기반 불가 행동 체크
-        if current_state:
-            impossible = self.get_impossible_actions(current_state)
-            import re
-            for action in impossible:
-                pattern = action.get('pattern', '')
-                if pattern and re.search(pattern, manuscript):
-                    result["violations"].append({
-                        "type": "impossible_action",
-                        "severity": action.get('severity', 'HIGH'),
-                        "message": f"불가 행동 감지: {action.get('reason', '')}"
-                    })
+        # [V70] get_impossible_actions 중복 제거 (super()가 이미 check_state_action_consistency에서 호출)
 
         result["has_critical"] = any(v.get("severity") == "HIGH" for v in result["violations"])
         if result["violations"]:

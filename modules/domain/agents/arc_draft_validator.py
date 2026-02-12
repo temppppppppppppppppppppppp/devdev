@@ -19,6 +19,7 @@ Python 사전 검증 → LLM에게 정보 제공용 (REJECT 권한 없음)
 """
 
 import re
+import logging
 from typing import Dict, List, Any, Tuple, Set
 from modules.core.constants import Stage2Limits
 
@@ -31,7 +32,7 @@ class ArcDraftValidator:
     비용: 0원 (LLM 미사용)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         # 아이템 획득 패턴
         self.acquire_patterns = [
             r'([가-힣]{2,15}(?:도|검|창|봉|환|단|경|비급|서|책))[를을]?\s*(?:획득|얻|받|손에\s*넣|입수)',
@@ -98,7 +99,7 @@ class ArcDraftValidator:
 
         # [V60.74] Arc 1 처리 명시적 로그
         if not prev_arcs:
-            print(f"      ⏭️ [ArcDraftValidator] Arc 1 - 연속성 검증 스킵, 구조만 검증")
+            logging.info(f"⏭️ [ArcDraftValidator] Arc 1 - 연속성 검증 스킵, 구조만 검증")
 
         # [V60.94] 0. 죽은 NPC 등장 검증 - 유일한 REJECT 사유
         if state_tracker and prev_arcs:
@@ -611,7 +612,7 @@ class ArcDraftValidator:
         for i, (ep_no, start, end) in enumerate(ep_positions):
             # 다음 화 시작점까지 또는 문서 끝까지
             if i + 1 < len(ep_positions):
-                next_start = ep_positions[i + 1][0]  # 다음 화의 시작 위치
+                next_start = ep_positions[i + 1][1]  # [V70] 다음 화의 시작 위치 (index 1=start, 0=ep_no)
                 raw_content = tactical[end:next_start]
             else:
                 raw_content = tactical[end:]
@@ -782,7 +783,7 @@ class ArcDraftValidator:
             critical.append(f"🚨 [V60.94] {reason}")
             penalty += 100  # 즉시 REJECT 수준
 
-            print(f"      💀 [V60.94] REJECT: Arc {death_arc}에서 사망한 '{npc_name}'이 Arc {arc_no}에서 등장!")
+            logging.warning(f"💀 [V60.94] REJECT: Arc {death_arc}에서 사망한 '{npc_name}'이 Arc {arc_no}에서 등장!")
 
         return {"penalty": penalty, "critical": critical}
 

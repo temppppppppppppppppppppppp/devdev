@@ -17,6 +17,7 @@ REJECT 사유 자동 수집 → 패턴 분석 → 동적 제약 생성
 """
 
 from dataclasses import dataclass, field
+import logging
 from typing import List, Dict, Any, Optional, Set, Tuple
 from enum import Enum
 from collections import defaultdict
@@ -238,10 +239,10 @@ class FailureLearner:
         # 기록 추가
         self.records.append(record)
         self.category_counts[category] += 1
-        self.stage_counts[stage][category] += 1
+        self.stage_counts.setdefault(stage, defaultdict(int))[category] += 1  # [V70] stage KeyError 방어
 
         # 최근 실패 목록 업데이트
-        self.recent_failures[stage].append(record)
+        self.recent_failures.setdefault(stage, []).append(record)  # [V70] stage KeyError 방어
         if len(self.recent_failures[stage]) > 10:
             self.recent_failures[stage].pop(0)
 
@@ -249,7 +250,8 @@ class FailureLearner:
         if len(self.records) > self.max_records:
             oldest = self.records.pop(0)
             self.category_counts[oldest.category] -= 1
-            self.stage_counts[oldest.stage][oldest.category] -= 1
+            if oldest.stage in self.stage_counts:  # [V70] stage KeyError 방어
+                self.stage_counts[oldest.stage][oldest.category] -= 1
 
         return record
 
@@ -420,28 +422,34 @@ class FailureLearner:
             self.records = []
             self.category_counts = defaultdict(int)
             self.stage_counts = {2: defaultdict(int), 3: defaultdict(int), 4: defaultdict(int)}
+            self.recent_failures = {2: [], 3: [], 4: []}  # [V70] recent_failures도 초기화
 
             for r in data.get("records", []):
                 category = FailureCategory(r.get("category", "unknown"))
+                stage = r.get("stage", 4)  # [V70] KeyError 방어
                 record = FailureRecord(
                     category=category,
-                    stage=r["stage"],
-                    episode=r["episode"],
+                    stage=stage,
+                    episode=r.get("episode", 0),  # [V70] KeyError 방어
                     arc=r.get("arc", 0),
-                    reason=r["reason"],
+                    reason=r.get("reason", ""),  # [V70] KeyError 방어
                     details=r.get("details", {}),
                     timestamp=r.get("timestamp", "")
                 )
                 self.records.append(record)
                 self.category_counts[category] += 1
-                self.stage_counts[record.stage][category] += 1
+                self.stage_counts.setdefault(stage, defaultdict(int))[category] += 1
+                # [V70] recent_failures 재구축 (스테이지별 최근 10개)
+                self.recent_failures.setdefault(stage, []).append(record)
+                if len(self.recent_failures[stage]) > 10:
+                    self.recent_failures[stage].pop(0)
 
         except FileNotFoundError:
             pass  # 파일 없으면 빈 상태 유지
         except Exception as e:
-            print(f"[FailureLearner] Load error: {e}")
+            logging.info(f"[FailureLearner] Load error: {e}")
 
-    def clear(self):
+    def clear(self) -> None:
         """모든 기록 초기화"""
         self.records = []
         self.category_counts = defaultdict(int)

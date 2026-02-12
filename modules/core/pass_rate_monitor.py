@@ -19,6 +19,7 @@
 """
 
 from typing import Dict, Any, List, Optional
+import logging
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
 from pathlib import Path
@@ -73,7 +74,7 @@ class PassRateMonitor:
         # 기존 기록 로드
         self._load_records()
 
-    def _load_records(self):
+    def _load_records(self) -> None:
         """기존 기록 로드"""
         if self.log_path.exists():
             try:
@@ -83,10 +84,10 @@ class PassRateMonitor:
                         AttemptRecord(**r) for r in data.get('records', [])
                     ]
             except Exception as e:
-                print(f"⚠️ [PassRateMonitor] 기록 로드 실패: {e}")
+                logging.warning(f"⚠️ [PassRateMonitor] 기록 로드 실패: {e}")
                 self.records = []
 
-    def _save_records(self):
+    def _save_records(self) -> None:
         """기록 저장"""
         try:
             self.log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -98,7 +99,7 @@ class PassRateMonitor:
                     'records': [asdict(r) for r in self.records[-1000:]]  # 최근 1000개만
                 }, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            print(f"⚠️ [PassRateMonitor] 기록 저장 실패: {e}")
+            logging.warning(f"⚠️ [PassRateMonitor] 기록 저장 실패: {e}")
 
     def record_attempt(
         self,
@@ -396,7 +397,7 @@ class PassRateMonitor:
 
         return alerts
 
-    def save(self):
+    def save(self) -> None:
         """명시적 저장"""
         self._save_records()
 
@@ -418,11 +419,20 @@ class PassRateMonitor:
 
 # 싱글톤 인스턴스
 _monitor_instance: Optional[PassRateMonitor] = None
+_monitor_project_path: Optional[str] = None  # [V70] 프로젝트 경로 추적
 
 
 def get_monitor(project_path: str = None) -> PassRateMonitor:
-    """싱글톤 모니터 인스턴스 반환"""
-    global _monitor_instance
-    if _monitor_instance is None:
+    """싱글톤 모니터 인스턴스 반환 [V70] 프로젝트 변경 시 재생성"""
+    global _monitor_instance, _monitor_project_path
+    if _monitor_instance is None or (project_path and project_path != _monitor_project_path):
         _monitor_instance = PassRateMonitor(project_path)
+        _monitor_project_path = project_path
     return _monitor_instance
+
+
+def reset_monitor() -> None:
+    """[V70] 싱글톤 리셋"""
+    global _monitor_instance, _monitor_project_path
+    _monitor_instance = None
+    _monitor_project_path = None

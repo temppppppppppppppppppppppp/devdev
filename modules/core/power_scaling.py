@@ -130,7 +130,7 @@ class PowerScalingTracker:
         "기본": 5
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.characters: Dict[str, List[PowerRecord]] = {}
 
     def set_power(
@@ -413,7 +413,7 @@ class PowerScalingTracker:
         arc_count = history[-1].arc - history[0].arc
 
         if arc_count <= 0:
-            return total_growth
+            return 0.0  # [V70] 같은 Arc 내 기록 → 의미있는 Arc당 비율 없음
 
         return total_growth / arc_count
 

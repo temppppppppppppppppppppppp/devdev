@@ -7,16 +7,16 @@ from rich.prompt import Prompt
 from rich import box
 
 class ConsoleInterface:
-    def __init__(self, studio_system):
+    def __init__(self, studio_system) -> None:
         self.system = studio_system
         self.console = Console()
         self.project_name = studio_system.project_name
 
-    def clear(self):
+    def clear(self) -> None:
         """터미널 화면을 깨끗하게 지웁니다."""
         os.system('cls' if os.name == 'nt' else 'clear')
 
-    def show_dashboard(self):
+    def show_dashboard(self) -> None:
         """[FIX] 누락되었던 메인 대시보드를 출력합니다."""
         self.clear()
         self.console.print(Panel(
@@ -27,11 +27,11 @@ class ConsoleInterface:
         ))
         self.console.print("\n[bold green]Welcome, CEO! Your AI Novel Factory is ready to produce.[/]\n")
 
-    def ask_choice(self, question, choices):
+    def ask_choice(self, question: str, choices: list) -> str:
         """사용자에게 선택지를 물어보고 입력을 받습니다."""
         return Prompt.ask(f"[bold yellow]{question}[/]", choices=choices, default=choices[0])
 
-    def select_treatment(self, genre_name):
+    def select_treatment(self, genre_name: str):
         """장르 폴더 내의 뼈대(Treatment) 리스트를 보여주고 선택받습니다."""
         path = Path("config") / "treatments" / genre_name.lower()
         if not path.exists():
@@ -54,6 +54,6 @@ class ConsoleInterface:
         sel = Prompt.ask("Select Module Number", choices=[str(i+1) for i in range(len(files))], default="1")
         return files[int(sel)-1]
 
-    def print_success(self, msg): self.console.print(f"✅ [bold green]{msg}[/]")
-    def print_info(self, msg): self.console.print(f"ℹ️  [bold blue]{msg}[/]")
-    def print_error(self, msg): self.console.print(f"❌ [bold red]{msg}[/]")
+    def print_success(self, msg: str) -> None: self.console.print(f"✅ [bold green]{msg}[/]")
+    def print_info(self, msg: str) -> None: self.console.print(f"ℹ️  [bold blue]{msg}[/]")
+    def print_error(self, msg: str) -> None: self.console.print(f"❌ [bold red]{msg}[/]")

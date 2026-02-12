@@ -8,6 +8,7 @@ LLM 호출 없이 Python으로 빠르게 경고 포인트를 생성.
 """
 
 import json
+import logging
 import re
 import time
 from typing import Dict, List, Optional
@@ -54,6 +55,18 @@ class ManuscriptValidator:
         self._genre_type = genre_type  # [V63.1] 장르 타입 (투자물 전용 체크 분기용)
         self._llm_client = llm_client  # [V63.1.1] LLM 검증용 (Optional)
         self._dead_npcs = set()  # 죽은 NPC 캐시
+        # [V67.1] incarnation_type 캐시 — 오탐 방지용
+        self._incarnation_type = self._extract_incarnation_type()
+
+    def _extract_incarnation_type(self) -> str:
+        """[V67.1] master_bible에서 incarnation_type 추출 (graceful fallback)"""
+        try:
+            if self.context and hasattr(self.context, 'master_bible') and self.context.master_bible:
+                _bible_root = self.context.master_bible.get('MasterBible', self.context.master_bible)
+                return _bible_root.get('protagonist_config', {}).get('incarnation_type', '')
+        except Exception:
+            pass
+        return ''
 
     def validate_candidate(
         self,
@@ -366,6 +379,9 @@ class ManuscriptValidator:
 
         # 2. HUD 상태 불일치 체크
         if hud_report:
+            # [V67.1] 회귀자 맥락 접미사
+            _regressor_ctx = " [회귀자 — 전생 경험으로 가능할 수 있음]" if self._incarnation_type == '회귀자' else ""
+
             # 부상 상태 체크
             if "중상" in hud_report or "내상" in hud_report:
                 # 중상인데 전력 질주/격렬한 전투 묘사
@@ -376,7 +392,7 @@ class ManuscriptValidator:
                 ]
                 for pattern in intense_patterns:
                     if re.search(pattern, manuscript):
-                        warnings.append("⚠️ 중상 상태에서 격렬한 활동 묘사")
+                        warnings.append(f"⚠️ 중상 상태에서 격렬한 활동 묘사{_regressor_ctx}")
                         focus_points.append("연속성: 부상 상태 불일치 의심")
                         issue_count += 1
                         break
@@ -390,7 +406,7 @@ class ManuscriptValidator:
                 ]
                 for pattern in qi_patterns:
                     if re.search(pattern, manuscript):
-                        warnings.append("⚠️ 내공 고갈 상태에서 내공 사용 묘사")
+                        warnings.append(f"⚠️ 내공 고갈 상태에서 내공 사용 묘사{_regressor_ctx}")
                         focus_points.append("연속성: 내공 상태 불일치 의심")
                         issue_count += 1
                         break
@@ -475,12 +491,16 @@ class ManuscriptValidator:
         - 부상당한 부위를 치료 없이 멀쩡히 사용
 
         REJECT 권한 없음 - 경고만 생성하여 Director에게 전달
+
+        [V67.1] 회귀자 incarnation_type 인식: 모순 경고에 전생 지식 맥락 추가
         """
         if not manuscript or len(manuscript) < 500:
             return {"warnings": [], "focus_points": []}
 
         warnings = []
         flagged = set()  # 중복 경고 방지
+        # [V67.1] 회귀자 맥락 접미사
+        _regressor_suffix = " [회귀자 설정 — 전생 지식으로 설명 가능할 수 있음]" if self._incarnation_type == '회귀자' else ""
 
         # --- 1. 아이템 상태 모순 --- [V63.3] 클래스 레벨 상수 참조
         item_loss_patterns = self._ITEM_LOSS_PATTERNS
@@ -509,7 +529,7 @@ class ManuscriptValidator:
                         rec_pos = recovered_items.get(name, -1)
                         if not (loss_pos < rec_pos < use_pos):
                             warnings.append(
-                                f"⚠️ 내부 모순: '{name}'을(를) 잃었으나 이후 다시 사용"
+                                f"⚠️ 내부 모순: '{name}'을(를) 잃었으나 이후 다시 사용{_regressor_suffix}"
                             )
                             flagged.add(name)
 
@@ -555,7 +575,7 @@ class ManuscriptValidator:
                         rec_pos = recovered_npcs.get(name, -1)
                         if not (down_pos < rec_pos < active_pos):
                             warnings.append(
-                                f"⚠️ 내부 모순: '{name}'이(가) 쓰러졌으나 이후 활동"
+                                f"⚠️ 내부 모순: '{name}'이(가) 쓰러졌으나 이후 활동{_regressor_suffix}"
                             )
                             flagged.add(name)
 
@@ -600,7 +620,7 @@ class ManuscriptValidator:
                     healed = any(injury_pos < hp < m.start() for hp in heal_positions)
                     if not healed:
                         warnings.append(
-                            f"⚠️ 내부 모순: '{part}' 부상 후 치료 없이 사용"
+                            f"⚠️ 내부 모순: '{part}' 부상 후 치료 없이 사용{_regressor_suffix}"
                         )
                         flagged.add(part_key)
                         break
@@ -681,12 +701,12 @@ class ManuscriptValidator:
 
                 filtered_count = len(warnings) - len(verified)
                 if filtered_count > 0:
-                    print(f"      🔍 [V63.1.1] 경고 오탐 필터링: {filtered_count}/{len(warnings)}건 제거 (LLM 검증)")
+                    logging.info(f"🔍 [V63.1.1] 경고 오탐 필터링: {filtered_count}/{len(warnings)}건 제거 (LLM 검증)")
 
                 return verified
 
         except Exception as e:
-            print(f"      ⚠️ [V63.1.1] LLM 경고 검증 실패, Python 결과 그대로 사용: {str(e)[:60]}")
+            logging.warning(f"⚠️ [V63.1.1] LLM 경고 검증 실패, Python 결과 그대로 사용: {str(e)[:60]}")
 
         return warnings  # 실패 시 원본 그대로 반환
 

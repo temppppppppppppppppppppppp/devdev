@@ -352,7 +352,7 @@ class MetaLearner:
     최적의 프롬프트 패턴을 발견
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize meta-learner"""
         self.prompt_variants = []
         self.performance_data = []

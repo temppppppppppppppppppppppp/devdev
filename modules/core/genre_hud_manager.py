@@ -4,42 +4,43 @@
 """
 
 from abc import ABC, abstractmethod
+import logging
 
 class GenreHUDManager(ABC):
     """장르 독립적 HUD 추상 인터페이스"""
     
-    def __init__(self, context):
+    def __init__(self, context) -> None:
         self.context = context
         self.canonical_map = {}  # 각 장르별로 오버라이드
     
     @property
     @abstractmethod
-    def pro_root(self):
+    def pro_root(self) -> dict:
         """주인공 데이터 루트"""
         pass
     
     @property
     @abstractmethod
-    def pro_data(self):
+    def pro_data(self) -> dict:
         """실제 물리적 수치 데이터"""
         pass
     
     @abstractmethod
-    def get_v20_hud_report(self):
+    def get_v20_hud_report(self) -> str:
         """HUD 보고서 생성 (장르별 구현)"""
         pass
     
     @abstractmethod
-    def update_physical_status(self, full_state_data):
+    def update_physical_status(self, full_state_data: dict) -> None:
         """상태 업데이트 (장르별 구현)"""
         pass
     
     @abstractmethod
-    def get_critical_keys(self):
+    def get_critical_keys(self) -> list:
         """장르별 필수 추적 키 반환"""
         pass
     
-    def _get_normalized_val(self, canonical_key, default="기록 없음"):
+    def _get_normalized_val(self, canonical_key: str, default="기록 없음") -> str:
         """변칙 키 정규화 (공통 로직)"""
         fallbacks = self.canonical_map.get(canonical_key, [canonical_key])
         for key in fallbacks:
@@ -52,7 +53,7 @@ class GenreHUDManager(ABC):
 class HunterHUDManager(GenreHUDManager):
     """[헌터물] 각성자/헌터 전용 HUD 시스템"""
     
-    def __init__(self, context):
+    def __init__(self, context) -> None:
         super().__init__(context)
         self.canonical_map = {
             'awakening_rank': ['rank', 'hunter_rank', 'awakening_rank', '랭크', '등급', '각성등급'],
@@ -71,7 +72,7 @@ class HunterHUDManager(GenreHUDManager):
         }
     
     @property
-    def pro_root(self):
+    def pro_root(self) -> dict:
         bible = self.context.master_bible.get('MasterBible', self.context.master_bible)
         hud_data = bible.get('HunterHUD', bible.get('hunter_hud', {}))
         
@@ -108,14 +109,14 @@ class HunterHUDManager(GenreHUDManager):
         return hud_data.get('Protagonist', hud_data)
     
     @property
-    def pro_data(self):
+    def pro_data(self) -> dict:
         return self.pro_root.get('actual_truth', self.pro_root)
     
-    def get_critical_keys(self):
+    def get_critical_keys(self) -> list:
         """헌터물 필수 추적 키"""
         return ['awakening_rank', 'mana', 'skills', 'wealth', 'reputation', 'injuries', 'guild', 'level']
     
-    def get_v20_hud_report(self):
+    def get_v20_hud_report(self) -> str:
         """헌터 HUD 보고서"""
         return f"""
 [🎮 HUNTER STATUS HUD]
@@ -135,7 +136,7 @@ class HunterHUDManager(GenreHUDManager):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
     
-    def update_physical_status(self, full_state_data):
+    def update_physical_status(self, full_state_data: dict):
         """[V40.1 Fix] 헌터 상태 업데이트 - MartialManager 패턴 적용"""
         if not full_state_data:
             return []
@@ -170,7 +171,7 @@ class HunterHUDManager(GenreHUDManager):
 class FinanceHUDManager(GenreHUDManager):
     """[투자물] 금융/투자 전용 HUD 시스템"""
     
-    def __init__(self, context):
+    def __init__(self, context) -> None:
         super().__init__(context)
         self.canonical_map = {
             'capital': ['capital', 'cash', 'liquid_assets', '자본', '현금', '유동자산'],
@@ -189,7 +190,7 @@ class FinanceHUDManager(GenreHUDManager):
         }
     
     @property
-    def pro_root(self):
+    def pro_root(self) -> dict:
         bible = self.context.master_bible.get('MasterBible', self.context.master_bible)
         hud_data = bible.get('FinanceHUD', bible.get('finance_hud', {}))
         
@@ -227,14 +228,14 @@ class FinanceHUDManager(GenreHUDManager):
         return hud_data.get('Protagonist', hud_data)
     
     @property
-    def pro_data(self):
+    def pro_data(self) -> dict:
         return self.pro_root.get('actual_truth', self.pro_root)
     
-    def get_critical_keys(self):
+    def get_critical_keys(self) -> list:
         """투자물 필수 추적 키"""
         return ['capital', 'total_assets', 'stocks', 'reputation', 'connections', 'market_insight', 'status']
     
-    def get_v20_hud_report(self):
+    def get_v20_hud_report(self) -> str:
         """투자 HUD 보고서"""
         return f"""
 [💼 FINANCE STATUS HUD]
@@ -255,7 +256,7 @@ class FinanceHUDManager(GenreHUDManager):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
     
-    def update_physical_status(self, full_state_data):
+    def update_physical_status(self, full_state_data: dict):
         """[V40.1 Fix] 투자 상태 업데이트 - MartialManager 패턴 적용"""
         if not full_state_data:
             return []
@@ -290,7 +291,7 @@ class FinanceHUDManager(GenreHUDManager):
 class ComposerHUDManager(GenreHUDManager):
     """[작곡가물] 음악 + 산업 전용 HUD 시스템"""
 
-    def __init__(self, context):
+    def __init__(self, context) -> None:
         super().__init__(context)
         self.canonical_map = {
             # 음악 능력
@@ -312,7 +313,7 @@ class ComposerHUDManager(GenreHUDManager):
         }
 
     @property
-    def pro_root(self):
+    def pro_root(self) -> dict:
         bible = self.context.master_bible.get('MasterBible', self.context.master_bible)
         hud_data = bible.get('ComposerHUD', bible.get('composer_hud', {}))
 
@@ -351,14 +352,14 @@ class ComposerHUDManager(GenreHUDManager):
         return hud_data.get('Protagonist', hud_data)
 
     @property
-    def pro_data(self):
+    def pro_data(self) -> dict:
         return self.pro_root.get('actual_truth', self.pro_root)
 
-    def get_critical_keys(self):
+    def get_critical_keys(self) -> list:
         """작곡가물 필수 추적 키"""
         return ['composition', 'arrangement', 'production', 'reputation', 'wealth', 'mental_state', 'current_objective']
 
-    def get_v20_hud_report(self):
+    def get_v20_hud_report(self) -> str:
         """작곡가 HUD 보고서"""
         return f"""
 [🎵 COMPOSER STATUS HUD]
@@ -381,7 +382,7 @@ class ComposerHUDManager(GenreHUDManager):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 
-    def update_physical_status(self, full_state_data):
+    def update_physical_status(self, full_state_data: dict):
         """작곡가 상태 업데이트"""
         if not full_state_data:
             return []
@@ -414,7 +415,7 @@ class ComposerHUDManager(GenreHUDManager):
 class CookingHUDManager(GenreHUDManager):
     """[요리물] 셰프 등급 + 식당 경영 전용 HUD 시스템"""
 
-    def __init__(self, context):
+    def __init__(self, context) -> None:
         super().__init__(context)
         self.canonical_map = {
             # 셰프 성장축
@@ -436,7 +437,7 @@ class CookingHUDManager(GenreHUDManager):
         }
 
     @property
-    def pro_root(self):
+    def pro_root(self) -> dict:
         bible = self.context.master_bible.get('MasterBible', self.context.master_bible)
         hud_data = bible.get('CookingHUD', bible.get('cooking_hud', {}))
 
@@ -476,14 +477,14 @@ class CookingHUDManager(GenreHUDManager):
         return hud_data.get('Protagonist', hud_data)
 
     @property
-    def pro_data(self):
+    def pro_data(self) -> dict:
         return self.pro_root.get('actual_truth', self.pro_root)
 
-    def get_critical_keys(self):
+    def get_critical_keys(self) -> list:
         """요리물 필수 추적 키"""
         return ['chef_rank', 'signature_dish', 'culinary_techniques', 'restaurant_tier', 'reputation_score', 'capital', 'current_objective']
 
-    def get_v20_hud_report(self):
+    def get_v20_hud_report(self) -> str:
         """요리물 HUD 보고서"""
         return f"""
 [🍳 COOKING STATUS HUD]
@@ -506,7 +507,7 @@ class CookingHUDManager(GenreHUDManager):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 
-    def update_physical_status(self, full_state_data):
+    def update_physical_status(self, full_state_data: dict):
         """요리물 상태 업데이트"""
         if not full_state_data:
             return []
@@ -539,7 +540,7 @@ class CookingHUDManager(GenreHUDManager):
 class JoseonHUDManager(GenreHUDManager):
     """[대체역사물] 조선 시대 관직/당파/신분 전용 HUD 시스템"""
 
-    def __init__(self, context):
+    def __init__(self, context) -> None:
         super().__init__(context)
         self.canonical_map = {
             # 신분/관직
@@ -560,7 +561,7 @@ class JoseonHUDManager(GenreHUDManager):
         }
 
     @property
-    def pro_root(self):
+    def pro_root(self) -> dict:
         bible = self.context.master_bible.get('MasterBible', self.context.master_bible)
         hud_data = bible.get('JoseonHUD', bible.get('joseon_hud', {}))
 
@@ -598,14 +599,14 @@ class JoseonHUDManager(GenreHUDManager):
         return hud_data.get('Protagonist', hud_data)
 
     @property
-    def pro_data(self):
+    def pro_data(self) -> dict:
         return self.pro_root.get('actual_truth', self.pro_root)
 
-    def get_critical_keys(self):
+    def get_critical_keys(self) -> list:
         """대체역사물 필수 추적 키"""
         return ['social_class', 'court_rank', 'position', 'faction', 'political_influence', 'wealth', 'public_trust', 'current_objective']
 
-    def get_v20_hud_report(self):
+    def get_v20_hud_report(self) -> str:
         """대체역사 HUD 보고서"""
         return f"""
 [📜 JOSEON STATUS HUD]
@@ -627,7 +628,7 @@ class JoseonHUDManager(GenreHUDManager):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 
-    def update_physical_status(self, full_state_data):
+    def update_physical_status(self, full_state_data: dict):
         """대체역사 상태 업데이트"""
         if not full_state_data:
             return []
@@ -660,7 +661,7 @@ class JoseonHUDManager(GenreHUDManager):
 class ActorHUDManager(GenreHUDManager):
     """[배우물] 연예계 경력 + 인지도 전용 HUD 시스템"""
 
-    def __init__(self, context):
+    def __init__(self, context) -> None:
         super().__init__(context)
         self.canonical_map = {
             # 배우 능력
@@ -682,7 +683,7 @@ class ActorHUDManager(GenreHUDManager):
         }
 
     @property
-    def pro_root(self):
+    def pro_root(self) -> dict:
         bible = self.context.master_bible.get('MasterBible', self.context.master_bible)
         hud_data = bible.get('ActorHUD', bible.get('actor_hud', {}))
 
@@ -721,14 +722,14 @@ class ActorHUDManager(GenreHUDManager):
         return hud_data.get('Protagonist', hud_data)
 
     @property
-    def pro_data(self):
+    def pro_data(self) -> dict:
         return self.pro_root.get('actual_truth', self.pro_root)
 
-    def get_critical_keys(self):
+    def get_critical_keys(self) -> list:
         """배우물 필수 추적 키"""
         return ['acting_skill', 'fame', 'filmography', 'agency', 'fandom', 'scandal_index', 'box_office', 'current_objective']
 
-    def get_v20_hud_report(self):
+    def get_v20_hud_report(self) -> str:
         """배우물 HUD 보고서"""
         return f"""
 [🎬 ACTOR STATUS HUD]
@@ -751,7 +752,7 @@ class ActorHUDManager(GenreHUDManager):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 
-    def update_physical_status(self, full_state_data):
+    def update_physical_status(self, full_state_data: dict):
         """배우물 상태 업데이트"""
         if not full_state_data:
             return []
@@ -784,7 +785,7 @@ class ActorHUDManager(GenreHUDManager):
 class SportsHUDManager(GenreHUDManager):
     """[스포츠물] 선수 성장 + 팀 스포츠 전용 HUD 시스템"""
 
-    def __init__(self, context):
+    def __init__(self, context) -> None:
         super().__init__(context)
         self.canonical_map = {
             'athlete_tier': ['athlete_tier', 'tier', 'rank', '선수등급', '등급'],
@@ -805,7 +806,7 @@ class SportsHUDManager(GenreHUDManager):
         }
 
     @property
-    def pro_root(self):
+    def pro_root(self) -> dict:
         bible = self.context.master_bible.get('MasterBible', self.context.master_bible)
         hud_data = bible.get('SportsHUD', bible.get('sports_hud', {}))
 
@@ -846,14 +847,14 @@ class SportsHUDManager(GenreHUDManager):
         return hud_data.get('Protagonist', hud_data)
 
     @property
-    def pro_data(self):
+    def pro_data(self) -> dict:
         return self.pro_root.get('actual_truth', self.pro_root)
 
-    def get_critical_keys(self):
+    def get_critical_keys(self) -> list:
         """스포츠물 필수 추적 키"""
         return ['athlete_tier', 'sport_type', 'physical_stats', 'record', 'team', 'ranking', 'reputation', 'current_objective']
 
-    def get_v20_hud_report(self):
+    def get_v20_hud_report(self) -> str:
         """스포츠물 HUD 보고서"""
         return f"""
 [🏆 SPORTS STATUS HUD]
@@ -877,7 +878,7 @@ class SportsHUDManager(GenreHUDManager):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 
-    def update_physical_status(self, full_state_data):
+    def update_physical_status(self, full_state_data: dict):
         """스포츠물 상태 업데이트"""
         if not full_state_data:
             return []
@@ -910,7 +911,7 @@ class SportsHUDManager(GenreHUDManager):
 class MedicalHUDManager(GenreHUDManager):
     """[의학물] 의사 직급 + 병원 시스템 전용 HUD 시스템"""
 
-    def __init__(self, context):
+    def __init__(self, context) -> None:
         super().__init__(context)
         self.canonical_map = {
             'doctor_rank': ['doctor_rank', 'position', 'rank', '직급', '직위'],
@@ -930,7 +931,7 @@ class MedicalHUDManager(GenreHUDManager):
         }
 
     @property
-    def pro_root(self):
+    def pro_root(self) -> dict:
         bible = self.context.master_bible.get('MasterBible', self.context.master_bible)
         hud_data = bible.get('MedicalHUD', bible.get('medical_hud', {}))
 
@@ -970,14 +971,14 @@ class MedicalHUDManager(GenreHUDManager):
         return hud_data.get('Protagonist', hud_data)
 
     @property
-    def pro_data(self):
+    def pro_data(self) -> dict:
         return self.pro_root.get('actual_truth', self.pro_root)
 
-    def get_critical_keys(self):
+    def get_critical_keys(self) -> list:
         """의학물 필수 추적 키"""
         return ['doctor_rank', 'specialty', 'hospital', 'surgery_count', 'success_rate', 'reputation', 'current_objective']
 
-    def get_v20_hud_report(self):
+    def get_v20_hud_report(self) -> str:
         """의학물 HUD 보고서"""
         return f"""
 [🏥 MEDICAL STATUS HUD]
@@ -1000,7 +1001,7 @@ class MedicalHUDManager(GenreHUDManager):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 
-    def update_physical_status(self, full_state_data):
+    def update_physical_status(self, full_state_data: dict):
         """의학물 상태 업데이트"""
         if not full_state_data:
             return []
@@ -1033,7 +1034,7 @@ class MedicalHUDManager(GenreHUDManager):
 class FantasyHUDManager(GenreHUDManager):
     """[V66] 판타지(이세계) 전용 HUD 시스템"""
 
-    def __init__(self, context):
+    def __init__(self, context) -> None:
         super().__init__(context)
         self.canonical_map = {
             'magic_tier': ['magic_tier', 'realm', 'magic_level', '마법등급', '마법티어'],
@@ -1052,7 +1053,7 @@ class FantasyHUDManager(GenreHUDManager):
         }
 
     @property
-    def pro_root(self):
+    def pro_root(self) -> dict:
         bible = self.context.master_bible.get('MasterBible', self.context.master_bible)
         hud_data = bible.get('FantasyHUD', bible.get('fantasy_hud', bible.get('MartialHUD', {})))
 
@@ -1091,22 +1092,64 @@ class FantasyHUDManager(GenreHUDManager):
         return hud_data.get('Protagonist', hud_data)
 
     @property
-    def pro_data(self):
+    def pro_data(self) -> dict:
         root = self.pro_root
         return root.get('actual_truth', root)
 
-    def snapshot(self):
+    def get_critical_keys(self) -> list:
+        """[V70] 판타지 필수 추적 키"""
+        return ['magic_tier', 'mana', 'spells', 'race', 'level', 'equipment', 'wealth', 'injuries', 'reputation', 'current_objective']
+
+    def get_v20_hud_report(self) -> str:
+        """[V70] 판타지 HUD 보고서"""
+        return f"""
+[🧙 FANTASY STATUS HUD]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👤 Name: {self.pro_data.get('name', '모험자')}
+⭐ Magic Tier: {self._get_normalized_val('magic_tier', '견습')}
+🔮 Mana: {self._get_normalized_val('mana', '100')}
+📊 Level: {self._get_normalized_val('level', '1')}
+🧬 Race: {self._get_normalized_val('race', '인간')}
+
+📜 Spells: {self._get_normalized_val('spells', '없음')}
+✨ Blessings: {self._get_normalized_val('blessings', '없음')}
+💀 Curses: {self._get_normalized_val('curses', '없음')}
+🛡️ Equipment: {self._get_normalized_val('equipment', '없음')}
+
+🏢 Guild: {self._get_normalized_val('guild', '무소속')}
+💰 Wealth: {self._get_normalized_val('wealth', '0골드')}
+🏆 Reputation: {self._get_normalized_val('reputation', '무명')}
+❤️ Status: {self._get_normalized_val('injuries', '정상')}
+
+🎯 Current Quest: {self._get_normalized_val('current_objective', '생존')}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"""
+
+    def snapshot(self) -> dict:
         return dict(self.pro_data)
 
-    def update_physical_status(self, updates):
-        data = self.pro_data
+    def update_physical_status(self, full_state_data: dict):
+        """[V70] 판타지 상태 업데이트 — canonical_map 패턴 적용"""
+        if not full_state_data:
+            return []
+
+        bible = self.context.master_bible.get('MasterBible', self.context.master_bible)
+        pro = bible.setdefault('FantasyHUD', {}).setdefault('Protagonist', {})
+        actual = pro.setdefault('actual_truth', {})
+        actual_in = full_state_data.get('actual_truth', full_state_data)
+
         changes = []
-        for key, val in updates.items():
-            canonical_key = self._resolve_key(key)
-            if canonical_key and canonical_key in data:
-                old_val = data[canonical_key]
+        for canonical_key, fallback_keys in self.canonical_map.items():
+            val = None
+            for incoming_key in fallback_keys:
+                if incoming_key in actual_in:
+                    val = actual_in[incoming_key]
+                    break
+
+            if val is not None:
+                old_val = actual.get(canonical_key, "기록 없음")
                 if str(old_val) != str(val):
-                    data[canonical_key] = val
+                    actual[canonical_key] = val
                     changes.append(f"{canonical_key}: {old_val} → {val}")
 
         if changes:
@@ -1149,7 +1192,9 @@ def create_hud_manager(genre_type, context):
     elif genre_type == 'fantasy':
         return FantasyHUDManager(context)  # [V66]
     else:
-        raise ValueError(f"Unknown genre type: {genre_type}")
+        # [V70] 미매핑 장르 (romance, politics, military 등) → MartialManager 폴백
+        logging.info(f"⚠️ [V70] 미매핑 장르 '{genre_type}' → MartialManager 폴백")
+        return MartialManager(context)  # [V70] WuxiaHUDManager → MartialManager (NameError 수정)
 
 
 def validate_hud_compatibility(hud_manager, required_attrs: list = None) -> dict:
@@ -1211,7 +1256,7 @@ def validate_hud_compatibility(hud_manager, required_attrs: list = None) -> dict
     return result
 
 
-def log_hud_compatibility_report(hud_manager, logger=None):
+def log_hud_compatibility_report(hud_manager, logger=None) -> None:
     """
     [V61.3] HUD 호환성 보고서 출력
 

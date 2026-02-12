@@ -22,6 +22,7 @@
 """
 
 from typing import Dict, Any, Optional, Callable
+import logging
 from dataclasses import dataclass
 from enum import Enum
 import json
@@ -69,14 +70,14 @@ class SelfReflector:
 
 JSON 형식으로 응답:
 ```json
-{
+{{
     "issues": [
-        {"type": "연속성", "location": "3번째 문단", "problem": "...", "fix": "..."},
+        {{"type": "연속성", "location": "3번째 문단", "problem": "...", "fix": "..."}},
         ...
     ],
     "severity": "high|medium|low|none",
     "overall_quality": 1-10
-}
+}}
 ```""",
 
         ReflectionTarget.ARCHITECT: """당신은 방금 작성한 블루프린트를 검토하는 수석 설계자입니다.
@@ -97,14 +98,14 @@ JSON 형식으로 응답:
 
 JSON 형식으로 응답:
 ```json
-{
+{{
     "issues": [
-        {"type": "범위초과", "location": "scene_4", "problem": "...", "fix": "..."},
+        {{"type": "범위초과", "location": "scene_4", "problem": "...", "fix": "..."}},
         ...
     ],
     "severity": "high|medium|low|none",
     "overall_quality": 1-10
-}
+}}
 ```""",
 
         ReflectionTarget.ANALYST: """당신은 방금 작성한 아크 설계를 검토하는 전략 고문입니다.
@@ -125,14 +126,14 @@ JSON 형식으로 응답:
 
 JSON 형식으로 응답:
 ```json
-{
+{{
     "issues": [
-        {"type": "중복획득", "item": "대도", "problem": "...", "fix": "..."},
+        {{"type": "중복획득", "item": "대도", "problem": "...", "fix": "..."}},
         ...
     ],
     "severity": "high|medium|low|none",
     "overall_quality": 1-10
-}
+}}
 ```"""
     }
 
@@ -173,9 +174,9 @@ JSON 형식으로 응답:
                     "max_output_tokens": 8192
                 }
             )
-            return response.text
+            return response.text if response.text else ""  # [V70] None 방어
         except Exception as e:
-            print(f"[SelfReflector] LLM 호출 실패: {e}")
+            logging.warning(f"[SelfReflector] LLM 호출 실패: {e}")
             return ""
 
     def _parse_critique(self, critique_text: str) -> Dict[str, Any]:
@@ -220,7 +221,10 @@ JSON 형식으로 응답:
         if not prompt_template:
             return {"issues": [], "severity": "none", "overall_quality": 7}
 
-        prompt = prompt_template.format(output=output[:8000], context=context[:3000])
+        # [V70] 사용자 콘텐츠 내 {}는 .format()에서 KeyError 유발 → 이스케이프
+        _safe_output = output[:8000].replace("{", "{{").replace("}", "}}")
+        _safe_context = context[:3000].replace("{", "{{").replace("}", "}}")
+        prompt = prompt_template.format(output=_safe_output, context=_safe_context)
         critique_text = self._call_llm(prompt, temperature=0.2)
 
         return self._parse_critique(critique_text)
@@ -254,9 +258,12 @@ JSON 형식으로 응답:
             return original
 
         critique_summary = json.dumps(critique, ensure_ascii=False, indent=2)
+        # [V70] 사용자 콘텐츠 내 {}는 .format()에서 KeyError 유발 → 이스케이프
+        _safe_original = original[:12000].replace("{", "{{").replace("}", "}}")
+        _safe_critique = critique_summary.replace("{", "{{").replace("}", "}}")
         prompt = self.IMPROVEMENT_PROMPT.format(
-            original=original[:12000],
-            critique=critique_summary
+            original=_safe_original,
+            critique=_safe_critique
         )
 
         improved = self._call_llm(prompt, temperature=0.4)

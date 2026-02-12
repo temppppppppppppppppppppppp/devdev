@@ -114,7 +114,7 @@ class PreDirectorChecklist:
         "paragraphs": (5, "문단이 최소 5개 이상 있어야 함"),
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.enabled = True
 
     def check(
@@ -1293,7 +1293,7 @@ class PreDirectorChecklist:
                 npc_name = npc if isinstance(npc, str) else npc.get('name', '')
                 if npc_name and len(npc_name) >= 2:
                     # 대화나 행동하는 패턴 체크 (단순 언급은 OK)
-                    action_pattern = rf'{npc_name}[이가은는]\s*[\w]+[했다|말했|대답|웃|소리]'
+                    action_pattern = rf'{re.escape(npc_name)}[이가은는]\s*[\w]+(?:했다|말했|대답|웃|소리)'  # [V70] [] → (?:) 교체 + re.escape
                     if re.search(action_pattern, manuscript):
                         items.append(CheckItem(
                             category=CheckCategory.SETTING_KEYWORDS,

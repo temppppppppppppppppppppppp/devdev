@@ -185,7 +185,7 @@ class ConfidenceCalibrator:
             concerns.append("대화/묘사 비율 불균형")
 
         # 끝부분 존재
-        if manuscript.strip()[-1] in '.!?"」':
+        if manuscript.strip() and manuscript.strip()[-1] in '.!?"」':  # [V70] 빈 문자열 방어
             structure_score += 5
 
         factors["structure_quality"] = structure_score
@@ -247,7 +247,7 @@ class ConfidenceCalibrator:
         blueprint = context.get("blueprint", {})
         if blueprint and isinstance(blueprint, dict):
             scene_breakdown = blueprint.get("scene_breakdown", {})
-            if scene_breakdown:
+            if scene_breakdown and isinstance(scene_breakdown, dict):  # [V70] list 타입 방어
                 scene_keywords = []
                 for scene_data in scene_breakdown.values():
                     if isinstance(scene_data, dict):
@@ -381,7 +381,7 @@ class ConfidenceCalibrator:
 
         # 5. 씬 상세도 (15점)
         detail_score = 0
-        if scene_breakdown:
+        if scene_breakdown and isinstance(scene_breakdown, dict):  # [V70] list 타입 방어
             detailed_count = 0
             for scene_data in scene_breakdown.values():
                 if isinstance(scene_data, dict):

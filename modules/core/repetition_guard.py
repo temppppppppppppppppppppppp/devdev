@@ -21,7 +21,7 @@ class RepetitionGuard:
         banned_phrases: 금지 구문 집합
     """
 
-    def __init__(self, window_size=5, threshold=3):
+    def __init__(self, window_size: int = 5, threshold: int = 3) -> None:
         """
         Args:
             window_size: 분석할 이전 에피소드 수
@@ -31,7 +31,7 @@ class RepetitionGuard:
         self.threshold = threshold
         self.banned_phrases = set()
 
-    def build_banned_list(self, previous_manuscripts):
+    def build_banned_list(self, previous_manuscripts: list) -> set:
         """
         이전 원고들에서 과다 반복 구문 추출
 
@@ -75,7 +75,7 @@ class RepetitionGuard:
 
         return self.banned_phrases
 
-    def scan_manuscript(self, new_manuscript):
+    def scan_manuscript(self, new_manuscript: str) -> tuple:
         """
         새 원고에서 금지 구문 스캔
 
@@ -127,7 +127,7 @@ class RepetitionGuard:
 
         return (violations, clean_score)
 
-    def generate_correction_prompt(self, violations):
+    def generate_correction_prompt(self, violations: list) -> str:
         """
         Director에게 전달할 교정 프롬프트 생성
 
@@ -169,7 +169,7 @@ class RepetitionGuard:
 
         return prompt
 
-    def get_statistics(self):
+    def get_statistics(self) -> dict:
         """
         현재 금지 구문 통계 반환
 

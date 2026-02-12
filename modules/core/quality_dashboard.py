@@ -11,6 +11,7 @@ Usage:
 """
 
 import json
+import logging
 from datetime import datetime
 from pathlib import Path
 from collections import defaultdict
@@ -43,16 +44,19 @@ class QualityDashboard:
         if self.metrics_file and self.metrics_file.exists():
             self._load_metrics()
 
-    def _load_metrics(self):
+    def _load_metrics(self) -> None:
         """파일에서 메트릭 로드"""
         try:
             with open(self.metrics_file, 'r', encoding='utf-8') as f:
-                for line in f:
+                for line_no, line in enumerate(f, 1):
                     if line.strip():
-                        record = json.loads(line)
-                        self._process_record(record)
+                        try:
+                            record = json.loads(line)
+                            self._process_record(record)
+                        except (json.JSONDecodeError, Exception) as e:  # [V70] 한 줄 오류가 전체 로딩 중단 방지
+                            logging.info(f"[QualityDashboard] 메트릭 라인 {line_no} 스킵: {e}")
         except Exception as e:
-            print(f"[QualityDashboard] 메트릭 로드 실패: {e}")
+            logging.warning(f"[QualityDashboard] 메트릭 파일 로드 실패: {e}")
 
     def _process_record(self, record: Dict):
         """레코드 처리 및 통계 업데이트"""
@@ -94,7 +98,7 @@ class QualityDashboard:
             'stage': stage,
             'decision': result.get('decision', 'UNKNOWN'),
             'score': result.get('score', 0),
-            'violations': [v.get('type') for v in result.get('violations', [])],
+            'violations': [v.get('type') if isinstance(v, dict) else str(v) for v in result.get('violations', [])],  # [V70] str 타입 방어
             'warnings': len(result.get('warnings', []))
         }
 
@@ -158,7 +162,7 @@ class QualityDashboard:
             with open(self.metrics_file, 'a', encoding='utf-8') as f:
                 f.write(json.dumps(record, ensure_ascii=False) + '\n')
         except Exception as e:
-            print(f"[QualityDashboard] 레코드 저장 실패: {e}")
+            logging.warning(f"[QualityDashboard] 레코드 저장 실패: {e}")
 
     def get_summary(self) -> Dict:
         """
@@ -285,6 +289,7 @@ class QualityDashboard:
                     patterns['by_type'][v] += 1
 
                 # 에피소드 범위별 집계
+                ep_num = max(1, ep_num)  # [V70] ep_num=0이면 음수 범위키 방지
                 range_key = f"{(ep_num - 1) // 10 * 10 + 1}-{(ep_num - 1) // 10 * 10 + 10}"
                 patterns['by_episode_range'][range_key] += 1
 
@@ -371,29 +376,29 @@ class QualityDashboard:
 
         return "\n".join(lines)
 
-    def print_console_summary(self):
+    def print_console_summary(self) -> None:
         """콘솔에 요약 출력"""
         summary = self.get_summary()
 
-        print("\n" + "=" * 60)
-        print(" [V60] Quality Dashboard Summary")
-        print("=" * 60)
+        logging.info("\n" + "=" * 60)
+        logging.info(" [V60] Quality Dashboard Summary")
+        logging.info("=" * 60)
 
-        print(f"\n📊 총 검증 횟수: {summary['total_validations']}")
+        logging.info(f"\n📊 총 검증 횟수: {summary['total_validations']}")
 
-        print("\n📈 Stage별 통계:")
+        logging.info("\n📈 Stage별 통계:")
         for stage, stats in sorted(summary['stage_stats'].items()):
-            print(f"   Stage {stage}: PASS {stats['pass_rate']}% | 평균 점수 {stats['avg_score']} | 총 {stats['total']}회")
+            logging.info(f"Stage {stage}: PASS {stats['pass_rate']}% | 평균 점수 {stats['avg_score']} | 총 {stats['total']}회")
 
-        print(f"\n⚠️ HUD 급변 비율: {summary['hud_anomaly_rate']}%")
-        print(f"📋 평균 Blueprint 커버리지: {summary['avg_blueprint_coverage']}%")
+        logging.info(f"\n⚠️ HUD 급변 비율: {summary['hud_anomaly_rate']}%")
+        logging.info(f"📋 평균 Blueprint 커버리지: {summary['avg_blueprint_coverage']}%")
 
         if summary['common_violations']:
-            print("\n❌ 빈번한 위반 유형:")
+            logging.warning("\n❌ 빈번한 위반 유형:")
             for violation, count in summary['common_violations']:
-                print(f"   - {violation}: {count}회")
+                logging.info(f"- {violation}: {count}회")
 
-        print("\n" + "=" * 60)
+        logging.info("\n" + "=" * 60)
 
     def export_for_streamlit(self) -> Dict:
         """
@@ -782,7 +787,7 @@ def get_dashboard(project_path: Optional[Path] = None) -> QualityDashboard:
     return _dashboard_instance
 
 
-def reset_dashboard():
+def reset_dashboard() -> None:
     """대시보드 인스턴스 리셋"""
     global _dashboard_instance
     _dashboard_instance = None

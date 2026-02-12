@@ -15,7 +15,7 @@ try:
     JUSTIFICATION_AVAILABLE = True
 except ImportError:
     JUSTIFICATION_AVAILABLE = False
-    print("⚠️ [BlockingValidator] justification_patterns 모듈 로드 실패 - 제안 기능 비활성화")
+    logging.warning("⚠️ [BlockingValidator] justification_patterns 모듈 로드 실패 - 제안 기능 비활성화")
 
 
 class BlockingValidator:
@@ -26,7 +26,7 @@ class BlockingValidator:
     최소한의 항목만 포함하여 통과율 유지
     """
 
-    def __init__(self, context=None, enable_justification_checks=True):
+    def __init__(self, context=None, enable_justification_checks=True) -> None:
         """
         Args:
             context: ProjectContext 객체 (정보 일관성 체크용)
@@ -205,13 +205,13 @@ class BlockingValidator:
                     ]
                 else:
                     # 예상치 못한 타입
-                    print(f"[WARNING] Unexpected equipment type: {type(equipment).__name__}")
-                    print(f"[WARNING] Equipment value: {repr(equipment)[:100]}")
+                    logging.warning(f"[WARNING] Unexpected equipment type: {type(equipment).__name__}")
+                    logging.warning(f"[WARNING] Equipment value: {repr(equipment)[:100]}")
                     owned_items = []
 
         # 최종 안전성 확인 (강화)
         if not isinstance(owned_items, list):
-            print(f"[ERROR] owned_items is not a list after processing: {type(owned_items).__name__}")
+            logging.warning(f"[ERROR] owned_items is not a list after processing: {type(owned_items).__name__}")
             owned_items = []
 
         # 각 원소가 문자열이고 비어있지 않은지 확인
@@ -588,7 +588,9 @@ class BlockingValidator:
         for scene_name, scene_desc in scene_breakdown.items():
             # Scene 설명에서 핵심 키워드 추출 (간단한 휴리스틱)
             # 예: "주인공이 객잔에 도착" → ["객잔", "도착"]
-            keywords = self._extract_keywords(scene_desc)
+            if isinstance(scene_desc, dict):  # [V70] dict 타입 방어
+                scene_desc = scene_desc.get('description', scene_desc.get('content', str(scene_desc)))
+            keywords = self._extract_keywords(str(scene_desc))
 
             # 키워드 중 하나라도 원고에 있으면 Scene 반영됨
             if any(kw in manuscript for kw in keywords if kw):
@@ -698,12 +700,16 @@ class BlockingValidator:
 
         나약한 신체 상태에서 강력한 행동을 수행하는 경우 감지
         정당화 패턴 제안 포함
+
+        [V67.1] 회귀자 incarnation_type 인식: 전생 경험으로 설명 가능한 경우 메시지 완화
         """
         if not JUSTIFICATION_AVAILABLE:
             return {"check": "physical_capability", "passed": True}
 
         martial_hud = context.get('martial_hud', {})
         genre = context.get('genre', 'wuxia')
+        # [V67.1] incarnation_type 추출
+        incarnation_type = context.get('incarnation_type', '')
 
         # HUD에서 신체 상태 태그 추출
         actual_truth = martial_hud.get('actual_truth', {})
@@ -761,10 +767,15 @@ class BlockingValidator:
                     pattern_desc = get_pattern_description(genre, 'weak_body_strong_action')
                     justification_guide = get_justification_guide(genre, 'weak_body_strong_action')
 
+                    # [V67.1] 회귀자 맥락 메시지 완화
+                    _reason_suffix = ""
+                    if incarnation_type == '회귀자':
+                        _reason_suffix = " [회귀자 — 전생 경험으로 가능할 수 있음]"
+
                     return {
                         "check": "physical_capability",
                         "passed": False,
-                        "reason": f"나약한 신체 상태({', '.join([t for t in physical_tags if t in weak_tags])})에서 강력한 행동 수행",
+                        "reason": f"나약한 신체 상태({', '.join([t for t in physical_tags if t in weak_tags])})에서 강력한 행동 수행{_reason_suffix}",
                         "severity": "MEDIUM",
                         "location": violation_location,
                         "context": violation_context,
@@ -786,17 +797,25 @@ class BlockingValidator:
 
         낮은 지위에서 높은 권위를 행사하는 경우 감지
         정당화 패턴 제안 포함
+
+        [V67.1] 회귀자 incarnation_type 인식: 전생 경험에서 나오는 권위감 고려
         """
         if not JUSTIFICATION_AVAILABLE:
             return {"check": "authority_exercise", "passed": True}
 
         martial_hud = context.get('martial_hud', {})
         genre = context.get('genre', 'wuxia')
+        # [V67.1] incarnation_type 추출
+        incarnation_type = context.get('incarnation_type', '')
 
         # HUD에서 권위 관련 데이터 추출
         actual_truth = martial_hud.get('actual_truth', {})
         status_tags = actual_truth.get('status_tags', [])
         reputation = actual_truth.get('reputation', 0)
+        try:  # [V70] DB TEXT 타입 방어
+            reputation = int(reputation) if not isinstance(reputation, (int, float)) else reputation
+        except (ValueError, TypeError):
+            reputation = 0
 
         if not isinstance(status_tags, list):
             status_tags = []
@@ -844,10 +863,15 @@ class BlockingValidator:
                     pattern_desc = get_pattern_description(genre, 'low_status_high_authority')
                     justification_guide = get_justification_guide(genre, 'low_status_high_authority')
 
+                    # [V67.1] 회귀자 맥락 메시지 완화
+                    _reason_suffix = ""
+                    if incarnation_type == '회귀자':
+                        _reason_suffix = " [회귀자 — 전생 경험에서 나오는 권위감으로 가능할 수 있음]"
+
                     return {
                         "check": "authority_exercise",
                         "passed": False,
-                        "reason": f"낮은 지위(reputation: {reputation}, tags: {status_tags})에서 명령/지시 행위",
+                        "reason": f"낮은 지위(reputation: {reputation}, tags: {status_tags})에서 명령/지시 행위{_reason_suffix}",
                         "severity": "MEDIUM",
                         "location": violation_location,
                         "context": violation_context,
@@ -864,7 +888,11 @@ class BlockingValidator:
         return {"check": "authority_exercise", "passed": True}
 
     def _check_relationship_consistency(self, manuscript: str, context: dict) -> dict:
-        """[Phase 2.1] 관계 일관성 체크 (관계 역행 방지)"""
+        """
+        [Phase 2.1] 관계 일관성 체크 (관계 역행 방지)
+
+        [V67.1] 회귀자 incarnation_type 인식: 전생 관계 재연으로 급변 설명 가능
+        """
         try:
             from modules.core.relationship_tracker import RelationshipTracker
 
@@ -872,6 +900,8 @@ class BlockingValidator:
             encyclopedia = context.get('encyclopedia', {})
             npcs = encyclopedia.get('npcs', [])
             current_ep = context.get('ep_num', 0)
+            # [V67.1] incarnation_type 추출
+            incarnation_type = context.get('incarnation_type', '')
 
             for npc in npcs:
                 if not isinstance(npc, dict):
@@ -892,10 +922,14 @@ class BlockingValidator:
                     validation = tracker.validate_transition(name, prev_relationship, current_relationship)
 
                     if not validation['valid']:
+                        # [V67.1] 회귀자 맥락 메시지 완화
+                        _rel_reason = validation['reason']
+                        if incarnation_type == '회귀자':
+                            _rel_reason += " [회귀자 — 전생 관계 재연으로 급변 가능]"
                         return {
                             "check": "relationship_consistency",
                             "passed": False,
-                            "reason": validation['reason'],
+                            "reason": _rel_reason,
                             "severity": "HIGH",
                             "npc": name,
                             "transition": f"{prev_relationship} → {current_relationship}",
@@ -904,7 +938,7 @@ class BlockingValidator:
                         }
         except Exception as e:
             # 모듈 로드 실패 등의 경우 조용히 통과
-            print(f"      ⚠️ [Blocking] 관계 일관성 체크 실패: {e}")
+            logging.warning(f"⚠️ [Blocking] 관계 일관성 체크 실패: {e}")
 
         return {"check": "relationship_consistency", "passed": True}
 
@@ -980,7 +1014,7 @@ class BlockingValidator:
                                     }
         except Exception as e:
             # 모듈 로드 실패 등의 경우 조용히 통과
-            print(f"      ⚠️ [Blocking] 정보 일관성 체크 실패: {e}")
+            logging.warning(f"⚠️ [Blocking] 정보 일관성 체크 실패: {e}")
 
         return {"check": "information_consistency", "passed": True}
 
@@ -1008,7 +1042,9 @@ class BlockingValidator:
         min_scene_length = 300  # 씬당 최소 300자
 
         for scene_name, scene_desc in scene_breakdown.items():
-            keywords = self._extract_keywords(scene_desc, max_keywords=5)
+            if isinstance(scene_desc, dict):  # [V70] dict 타입 방어
+                scene_desc = scene_desc.get('description', scene_desc.get('content', str(scene_desc)))
+            keywords = self._extract_keywords(str(scene_desc), max_keywords=5)
 
             # 키워드 주변 텍스트 분량 측정
             found_length = 0

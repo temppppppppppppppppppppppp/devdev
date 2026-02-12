@@ -5,6 +5,7 @@ Gemini API의 response_schema를 사용한 구조화된 출력 강제
 JSON 파싱 실패율 90% 감소
 """
 from google.genai import types
+import logging
 
 
 # =================================================================
@@ -448,15 +449,15 @@ def validate_response_against_schema(response: dict, schema: types.Schema) -> bo
         True if basic structure is valid, False otherwise
     """
     if not isinstance(response, dict):
-        print(f"[WARNING] Response is not a dict: {type(response)}")
+        logging.warning(f"[WARNING] Response is not a dict: {type(response)}")
         return False
 
-    # required 필드 존재 여부만 체크 (타입은 Gemini가 보장)
-    if hasattr(schema, 'properties'):
-        required_props = schema.properties.keys()
+    # [V70] required 필드만 체크 (optional 필드는 누락 허용)
+    required_props = getattr(schema, 'required', None)
+    if required_props:
         missing = [p for p in required_props if p not in response]
         if missing:
-            print(f"[WARNING] Missing required fields: {missing}")
+            logging.warning(f"[WARNING] Missing required fields: {missing}")
             return False
 
     return True

@@ -1,6 +1,7 @@
 # modules/domain/agents/weaver.py (V37 Desire Engine Standard)
 
 import json
+import logging
 from .base_agent import BaseAgent
 
 class Weaver(BaseAgent):
@@ -11,11 +12,11 @@ class Weaver(BaseAgent):
     - 피로도 가드: 아크별 긴장도 예산(Tension Budget) 책정
     """
 
-    def __init__(self, context, client, model_tier="gemini-1.5-pro"):
+    def __init__(self, context, client, model_tier: str = "gemini-1.5-pro") -> None:
         super().__init__(context, client, model_tier)
         self.cache_name = None  # main_a.py에서 주입됨
 
-    def generate_arc_drive(self, current_arc_dna, analyst_lack_report, grand_objective):
+    def generate_arc_drive(self, current_arc_dna: dict, analyst_lack_report: dict, grand_objective: str) -> dict:
         """[Phase 2 핵심] 이번 아크의 주인공 욕망(Drive)과 전술적 목적 결정"""
         from google.genai import types
 
@@ -71,11 +72,11 @@ class Weaver(BaseAgent):
                 drive_data['status'] = "LOCKED"
                 # [V47] 필수 필드 검증
                 if not drive_data.get('short_term_objective'):
-                    print("⚠️ [Weaver] short_term_objective 누락 - 보완 필요")
+                    logging.info("⚠️ [Weaver] short_term_objective 누락 - 보완 필요")
                     drive_data['short_term_objective'] = "서사적 긴장감 고조"
                 return drive_data
             else:
-                print("⚠️ [Weaver] 유효한 욕망 데이터를 생성하지 못했습니다. 기본값 사용.")
+                logging.info("⚠️ [Weaver] 유효한 욕망 데이터를 생성하지 못했습니다. 기본값 사용.")
                 # [V47 Fix] 더 구체적인 기본값 + 명확한 상태 표시
                 return {
                     "short_term_objective": "서사적 긴장감 고조 및 갈등 심화",
@@ -85,10 +86,10 @@ class Weaver(BaseAgent):
                 }
 
         except Exception as e:
-            print(f"      🚨 [Weaver Critical] 욕망 생성 실패: {e}. Fallback 시도.")
+            logging.warning(f"🚨 [Weaver Critical] 욕망 생성 실패: {e}. Fallback 시도.")
             return self._fallback_full_request(dynamic_prompt)
 
-    def _fallback_full_request(self, dynamic_prompt):
+    def _fallback_full_request(self, dynamic_prompt: str) -> dict:
         """[V40 Fix] 캐시가 없을 때 weaver_rules.json을 읽어 전체 프롬프트 구성"""
         try:
             rules_path = self.context.paths.config / "prompts" / "weaver_rules.json"
@@ -128,7 +129,7 @@ Selection Logic Fallback:
                 }
 
         except Exception as e:
-            print(f"      ❌ [Weaver] Fallback 구성 실패: {e}")
+            logging.warning(f"❌ [Weaver] Fallback 구성 실패: {e}")
             # [V47 Fix] 에러 상태 명확히 표시
             return {
                 "short_term_objective": "서사적 긴장감 고조 및 갈등 심화",
@@ -138,6 +139,6 @@ Selection Logic Fallback:
             }
 
     # [Deprecated] 기존 Seed 로직은 하위 호환성을 위해 유지하거나 제거 가능
-    def assign_seeds_to_arcs(self, arcs_data, seeds_library):
+    def assign_seeds_to_arcs(self, arcs_data: dict, seeds_library: dict) -> None:
         """V37 체제에서는 더 이상 사용하지 않음 (Drive 로직으로 대체됨)"""
         pass

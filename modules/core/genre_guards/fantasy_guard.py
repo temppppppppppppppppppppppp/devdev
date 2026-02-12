@@ -39,7 +39,7 @@ class FantasyGuard(BaseGuard):
         '금지 마법', '금제 마법', '영혼 소멸', '대멸', '천지개벽',
     ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         # 허용 용어 (게임/판타지 표준)
@@ -66,18 +66,18 @@ class FantasyGuard(BaseGuard):
             '마법', '마나', '주문', '마력',
         ]
 
-    def get_genre_name(self):
+    def get_genre_name(self) -> str:
         return '판타지'
 
-    def _should_check_english(self):
+    def _should_check_english(self) -> bool:
         """판타지는 영어 일부 허용 (게임 용어)."""
         return False
 
-    def _should_check_numbers(self):
+    def _should_check_numbers(self) -> bool:
         """판타지는 숫자 허용 (레벨, 스탯 등)."""
         return False
 
-    def get_v20_purism_prompt(self):
+    def get_v20_purism_prompt(self) -> str:
         """판타지 장르 순혈주의 프롬프트."""
         return """[판타지 장르 순혈주의 가이드라인]
 
@@ -113,10 +113,13 @@ class FantasyGuard(BaseGuard):
 
         mana = current_state.get('mana', current_state.get('magic_power', 100))
         if isinstance(mana, str):
-            try:
-                mana = float(re.search(r'(\d+)', str(mana)).group(1))
-            except (AttributeError, ValueError):
-                mana = 100
+            if mana.strip() in ('고갈', '없음', '소멸', '전무', '0'):  # [V70] 고갈 상태 → 0
+                mana = 0
+            else:
+                try:
+                    mana = float(re.search(r'(\d+)', str(mana)).group(1))
+                except (AttributeError, ValueError):
+                    mana = 100
 
         tier = str(current_state.get('magic_tier', current_state.get('realm', ''))).strip()
 
@@ -223,7 +226,7 @@ class FantasyGuard(BaseGuard):
     # 원고 검증 커스터마이징
     # ═══════════════════════════════════════════════════════════════
 
-    def validate_v20_manuscript(self, content):
+    def validate_v20_manuscript(self, content) -> dict:
         """판타지 원고 검증 — 숫자/영어 허용, 무협 용어만 금지."""
         issues = []
 

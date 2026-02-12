@@ -9,6 +9,7 @@ inspector reference를 통해 BaseAgent 메서드(ask, _extract_json_robust 등)
 """
 
 import re
+import logging
 from typing import Dict, List, Any, Set
 
 
@@ -171,12 +172,26 @@ class ContinuityManuscriptValidator:
     - _track_relationship_history(): V59 관계 히스토리
     """
 
-    def __init__(self, inspector):
+    def __init__(self, inspector) -> None:
         """
         Args:
             inspector: ContinuityInspector 인스턴스 (BaseAgent 상속, 공유 상태 접근용)
         """
         self._ci = inspector
+        # [V67.1] incarnation_type 캐시 — 회귀자 오탐 방지
+        self._incarnation_type = self._extract_incarnation_type()
+
+    def _extract_incarnation_type(self) -> str:
+        """[V67.1] master_bible에서 incarnation_type 추출 (graceful fallback)"""
+        try:
+            if hasattr(self._ci, 'context') and self._ci.context:
+                _bible = getattr(self._ci.context, 'master_bible', None)
+                if _bible:
+                    _bible_root = _bible.get('MasterBible', _bible)
+                    return _bible_root.get('protagonist_config', {}).get('incarnation_type', '')
+        except Exception:
+            pass
+        return ''
 
     # =================================================================
     # 원고 Python 사전 검증에서 사용하는 패턴 (인스턴스에서 복사)
@@ -220,6 +235,7 @@ class ContinuityManuscriptValidator:
                 "decision": "REJECT",
                 "severity": "CRITICAL",
                 "continuity_analysis": {},
+                "entity_consistency": {},
                 "blueprint_alignment": {},
                 "violations": [{
                     "type": "empty_manuscript",
@@ -239,7 +255,7 @@ class ContinuityManuscriptValidator:
 
         python_advisory = python_check.get('critical_violations', [])
         if python_advisory:
-            print(f"      📋 [V60.56] Python advisory 발견 {len(python_advisory)}건 - LLM에게 전달")
+            logging.info(f"📋 [V60.56] Python advisory 발견 {len(python_advisory)}건 - LLM에게 전달")
 
         # ═══════════════════════════════════════════════════════════════
         # Phase 2: LLM 기반 정밀 검증
@@ -268,11 +284,12 @@ class ContinuityManuscriptValidator:
             result = self._ci._extract_json_robust(response)
 
             if not isinstance(result, dict):
-                print(f"      ⚠️ [V60.74] JSON 파싱 실패 - 수동 검수 권장")
+                logging.warning(f"⚠️ [V60.74] JSON 파싱 실패 - 수동 검수 권장")
                 result = {
                     "decision": "PASS",
                     "severity": "NONE",
                     "continuity_analysis": {},
+                    "entity_consistency": {},
                     "blueprint_alignment": {},
                     "violations": [],
                     "warnings": ["[V60.74] LLM 응답 파싱 실패 - 수동 검수 필요"],
@@ -287,12 +304,13 @@ class ContinuityManuscriptValidator:
             return result
 
         except Exception as e:
-            print(f"      🚨 [ContinuityInspector] 원고 LLM 검증 실패: {e}")
+            logging.warning(f"🚨 [ContinuityInspector] 원고 LLM 검증 실패: {e}")
             if python_check.get('warnings'):
                 return {
                     "decision": "PASS",
                     "severity": "MINOR",
                     "continuity_analysis": python_check.get('timeline', {}),
+                    "entity_consistency": {},
                     "blueprint_alignment": {},
                     "violations": [],
                     "warnings": python_check['warnings'],
@@ -302,6 +320,7 @@ class ContinuityManuscriptValidator:
                 "decision": "PASS",
                 "severity": "NONE",
                 "continuity_analysis": {},
+                "entity_consistency": {},
                 "blueprint_alignment": {},
                 "violations": [],
                 "warnings": ["LLM 검증 실패 - 수동 확인 권장"],
@@ -327,7 +346,7 @@ class ContinuityManuscriptValidator:
                         'title': ms.get('title', '')
                     })
             except Exception as e:
-                print(f"      ⚠️ [ContinuityInspector] 제{ep}화 원고 조회 실패: {e}")
+                logging.warning(f"⚠️ [ContinuityInspector] 제{ep}화 원고 조회 실패: {e}")
 
         return prev_manuscripts
 
@@ -455,8 +474,14 @@ class ContinuityManuscriptValidator:
         return False
 
     def _check_relationship_jump(self, prev_manuscripts: List[dict], manuscript: str) -> List[dict]:
-        """[V49.5] 관계 급변 탐지"""
+        """
+        [V49.5] 관계 급변 탐지
+
+        [V67.1] 회귀자 incarnation_type 인식: 전생 관계 재연으로 급변 설명 가능
+        """
         warnings = []
+        # [V67.1] 회귀자 맥락 접미사
+        _regressor_suffix = " [회귀자 — 전생 관계 재연 가능]" if self._incarnation_type == '회귀자' else ""
 
         RELATIONSHIP_KEYWORDS = {
             "멸시": ["멸시", "비웃", "하찮", "하인 취급", "깔보", "경멸", "조롱", "무시당"],
@@ -513,7 +538,7 @@ class ContinuityManuscriptValidator:
                             'severity': severity,
                             'description': f"'{group}'의 관계가 '{prev_state}'→'{current_state}'로 급변함 (점프 거리: {jump_distance}단계). "
                                           f"'{prev_state}'에서 허용된 전환: {allowed}. "
-                                          f"중간 단계(예: 경외)를 거치는 묘사 필요."
+                                          f"중간 단계(예: 경외)를 거치는 묘사 필요.{_regressor_suffix}"
                         })
 
         return warnings
@@ -629,8 +654,14 @@ class ContinuityManuscriptValidator:
         return warnings
 
     def _check_reader_immersion(self, prev_manuscripts: List[dict], manuscript: str, current_ep: int) -> List[dict]:
-        """[V49.5] 독자 몰입도 예측"""
+        """
+        [V49.5] 독자 몰입도 예측
+
+        [V67.1] 회귀자 incarnation_type 인식: 전생 지식 기반 빠른 성장/능력 사용 맥락 추가
+        """
         warnings = []
+        # [V67.1] 회귀자 맥락 접미사
+        _regressor_suffix = " [회귀자 — 전생 지식으로 설명 가능할 수 있음]" if self._incarnation_type == '회귀자' else ""
 
         # 1. 공짜 파워업 감지
         POWERUP_KEYWORDS = ["경지 상승", "돌파", "각성", "깨달음", "내공 증가", "실력 향상", "한 수 위"]
@@ -643,8 +674,8 @@ class ContinuityManuscriptValidator:
             warnings.append({
                 'type': 'free_powerup',
                 'severity': 'MINOR',
-                'description': "파워업/성장이 묘사되었으나 대가/고통 묘사 없음. "
-                              "'공짜 파워업' 느낌 방지를 위해 대가 묘사 권장."
+                'description': f"파워업/성장이 묘사되었으나 대가/고통 묘사 없음. "
+                              f"'공짜 파워업' 느낌 방지를 위해 대가 묘사 권장.{_regressor_suffix}"
             })
 
         # 2. 갑작스러운 능력 사용
@@ -660,7 +691,7 @@ class ContinuityManuscriptValidator:
                     'type': 'sudden_ability',
                     'severity': 'MINOR',
                     'description': f"이전에 언급 없던 능력 갑자기 등장: {new_abilities}. "
-                                  f"복선이나 기연 묘사 없이 등장하면 '설정 추가' 느낌."
+                                  f"복선이나 기연 묘사 없이 등장하면 '설정 추가' 느낌.{_regressor_suffix}"
                 })
 
         # 3. 주인공 무쌍 과다
@@ -732,6 +763,7 @@ class ContinuityManuscriptValidator:
                 "decision": "PASS",
                 "severity": "NONE",
                 "continuity_analysis": {},
+                "entity_consistency": {},
                 "blueprint_alignment": {"note": "Blueprint 없음"},
                 "violations": [],
                 "warnings": [],
@@ -762,6 +794,7 @@ class ContinuityManuscriptValidator:
             "decision": decision,
             "severity": severity,
             "continuity_analysis": {},
+            "entity_consistency": {},
             "blueprint_alignment": {
                 "scenes_reflected": reflected,
                 "total_scenes": total_scenes,
@@ -915,10 +948,16 @@ class ContinuityManuscriptValidator:
     def _track_relationship_history(
         self, current_ep: int, manuscript: str, prev_manuscripts: List[dict]
     ) -> dict:
-        """[V59] 관계 변화 히스토리 추적 강화"""
+        """
+        [V59] 관계 변화 히스토리 추적 강화
+
+        [V67.1] 회귀자 incarnation_type 인식: 전생 관계 재연으로 급변 설명 가능
+        """
         violations = []
         warnings = []
         relationship_history = {}
+        # [V67.1] 회귀자 맥락 접미사
+        _regressor_suffix = " [회귀자 — 전생 관계 재연 가능]" if self._incarnation_type == '회귀자' else ""
 
         STATE_KEYWORDS = {
             "사망": ["죽었", "숨이 끊", "사망", "절명", "목숨을 잃", "숨을 거두"],
@@ -995,7 +1034,7 @@ class ContinuityManuscriptValidator:
                         'jump_distance': jump_distance,
                         'description': f"'{npc}'의 관계가 제{prev_ep}화 '{prev_state}'에서 "
                                       f"제{curr_ep}화 '{curr_state}'로 {jump_distance}단계 급변. "
-                                      f"중간 단계(예: {STATE_ORDER[prev_idx + 1] if prev_idx < len(STATE_ORDER) - 1 else prev_state})를 거치는 묘사 필요."
+                                      f"중간 단계(예: {STATE_ORDER[prev_idx + 1] if prev_idx < len(STATE_ORDER) - 1 else prev_state})를 거치는 묘사 필요.{_regressor_suffix}"
                     })
                 elif jump_distance == 1:
                     warnings.append({

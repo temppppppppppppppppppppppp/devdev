@@ -191,7 +191,7 @@ class RelationshipTracker:
         }
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         """[V49.7] 초기화, [V59] 파벌 추적 추가"""
         self.npc_states: Dict[str, str] = {}  # {npc_name: current_state}
         self.transition_history: List[RelationshipEvent] = []
@@ -875,7 +875,7 @@ class RelationshipTracker:
 
         # 두 세력이 함께 언급된 문맥 추출
         contexts = []
-        for match in re.finditer(f"({faction_a}|{faction_b})", manuscript):
+        for match in re.finditer(f"({re.escape(faction_a)}|{re.escape(faction_b)})", manuscript):  # [V70] regex 메타문자 방어
             start = max(0, match.start() - 300)
             end = min(len(manuscript), match.end() + 300)
             context = manuscript[start:end]

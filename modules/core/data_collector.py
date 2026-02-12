@@ -5,6 +5,7 @@ Fine-tuning 및 RLHF를 위한 데이터 수집
 고품질 원고와 검증 결과를 체계적으로 저장
 """
 import json
+import logging
 import os
 import re
 from datetime import datetime
@@ -136,13 +137,13 @@ class DataCollector:
                 os.rename(temp_filepath, filepath)
 
             except (IOError, OSError) as e:
-                print(f"[ERROR] 파일 저장 실패 ({filepath}): {e}")
+                logging.warning(f"[ERROR] 파일 저장 실패 ({filepath}): {e}")
                 # 임시 파일 정리
                 if os.path.exists(temp_filepath):
                     try:
                         os.remove(temp_filepath)
                     except OSError as cleanup_err:
-                        print(f"[DEBUG] 임시 파일 정리 실패: {cleanup_err}")
+                        logging.warning(f"[DEBUG] 임시 파일 정리 실패: {cleanup_err}")
                 raise
 
     def _save_rejected(self, ep_num: int, data: dict):
@@ -175,13 +176,13 @@ class DataCollector:
                 os.rename(temp_filepath, filepath)
 
             except (IOError, OSError) as e:
-                print(f"[ERROR] 파일 저장 실패 ({filepath}): {e}")
+                logging.warning(f"[ERROR] 파일 저장 실패 ({filepath}): {e}")
                 # 임시 파일 정리
                 if os.path.exists(temp_filepath):
                     try:
                         os.remove(temp_filepath)
                     except OSError as cleanup_err:
-                        print(f"[DEBUG] 임시 파일 정리 실패: {cleanup_err}")
+                        logging.warning(f"[DEBUG] 임시 파일 정리 실패: {cleanup_err}")
                 raise
 
     def create_training_pair(

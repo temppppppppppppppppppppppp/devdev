@@ -5,6 +5,7 @@ V0128 vs Legacy 시스템 성능 비교
 데이터 기반 의사결정 지원
 """
 import json
+import logging
 import time
 from typing import Dict, List, Any, Tuple
 from datetime import datetime
@@ -423,7 +424,7 @@ class ABTestingFramework:
         with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
 
-    def reset(self):
+    def reset(self) -> None:
         """테스트 데이터 초기화"""
         self.variant_a_results = []
         self.variant_b_results = []
@@ -463,6 +464,6 @@ def quick_ab_test(
         )
 
     report = framework.generate_report()
-    print(report)
+    logging.info(report)
 
     return report

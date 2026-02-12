@@ -16,6 +16,7 @@
 """
 
 import json
+import logging
 import time
 import traceback
 from typing import Dict, Any, Optional, Callable, List, Tuple
@@ -218,13 +219,13 @@ class GracefulDegradation:
                     context=context
                 )
 
-                print(f"      ⚠️ [{agent_name}] {error_type}: {error_message[:100]}")
+                logging.info(f"⚠️ [{agent_name}] {error_type}: {error_message[:100]}")
 
                 # 재시도 전략인 경우
                 if strategy == RecoveryStrategy.RETRY:
                     retry_count += 1
                     if retry_count < self.max_retries:
-                        print(f"      🔄 재시도 {retry_count}/{self.max_retries}...")
+                        logging.info(f"🔄 재시도 {retry_count}/{self.max_retries}...")
                         time.sleep(self.retry_delay * retry_count)  # 점진적 대기
                         continue
                     else:
@@ -239,7 +240,7 @@ class GracefulDegradation:
 
                 # SKIP 전략
                 if strategy == RecoveryStrategy.SKIP:
-                    print(f"      ⏭️ [{agent_name}] 건너뛰기")
+                    logging.info(f"⏭️ [{agent_name}] 건너뛰기")
                     metadata['final_status'] = 'skipped'
                     metadata['degraded'] = True
                     self.recovery_stats['degraded'] += 1
@@ -254,7 +255,7 @@ class GracefulDegradation:
         self.recovery_stats['aborted'] += 1
         self.recovery_stats['total_failures'] += 1
 
-        print(f"      🚨 [{agent_name}] 모든 복구 전략 실패 - 중단")
+        logging.warning(f"🚨 [{agent_name}] 모든 복구 전략 실패 - 중단")
         return fallback_result, metadata
 
     def _apply_strategy(
@@ -272,7 +273,7 @@ class GracefulDegradation:
             if fallback:
                 modified['model'] = fallback
                 modified['_fallback_applied'] = True
-                print(f"      🔀 백업 모델로 전환: {current_model} → {fallback}")
+                logging.info(f"🔀 백업 모델로 전환: {current_model} → {fallback}")
 
         elif strategy == RecoveryStrategy.REDUCE_COMPLEXITY:
             # 온도 낮추기
@@ -281,17 +282,17 @@ class GracefulDegradation:
             modified['max_tokens'] = int(context.get('max_tokens', 8192) * 0.7)
             # 프롬프트 단순화 플래그
             modified['_simplified'] = True
-            print(f"      📉 복잡도 감소: temp={modified['temperature']}, tokens={modified['max_tokens']}")
+            logging.info(f"📉 복잡도 감소: temp={modified['temperature']}, tokens={modified['max_tokens']}")
             metadata['degraded'] = True
 
         elif strategy == RecoveryStrategy.USE_CACHE:
             modified['_use_cache'] = True
-            print(f"      💾 캐시 사용 시도")
+            logging.info(f"💾 캐시 사용 시도")
 
         elif strategy == RecoveryStrategy.PARTIAL_RESULT:
             modified['_accept_partial'] = True
             metadata['degraded'] = True
-            print(f"      📄 부분 결과 허용")
+            logging.info(f"📄 부분 결과 허용")
 
         return modified
 
@@ -378,7 +379,7 @@ class ValidationRecovery:
     REJECT된 원고/블루프린트 자동 수정 시도
     """
 
-    def __init__(self, client=None):
+    def __init__(self, client=None) -> None:
         """
         Args:
             client: Gemini API 클라이언트 (자동 수정 시 필요)
@@ -525,7 +526,7 @@ class ValidationRecovery:
             return response.text
 
         except Exception as e:
-            print(f"      ⚠️ [AutoFix] LLM 수정 실패: {e}")
+            logging.warning(f"⚠️ [AutoFix] LLM 수정 실패: {e}")
             return None
 
 

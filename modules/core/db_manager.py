@@ -1,4 +1,5 @@
 import sqlite3
+import logging
 import json
 from pathlib import Path
 import time
@@ -18,7 +19,7 @@ class DBErrorSeverity:
 # [V44] 커스텀 DB 예외 클래스
 class DBError(Exception):
     """DB 작업 중 발생하는 기본 예외"""
-    def __init__(self, message, severity=DBErrorSeverity.HIGH, original_error=None):
+    def __init__(self, message, severity=DBErrorSeverity.HIGH, original_error=None) -> None:
         super().__init__(message)
         self.severity = severity
         self.original_error = original_error
@@ -52,7 +53,7 @@ class DBManager:
         self._cumulative_bible_cache: dict = {}
         self._boot_db()
 
-    def _boot_db(self):
+    def _boot_db(self) -> None:
         """DB 연결 및 10대 핵심 테이블 초기화"""
         # [V45] check_same_thread=False 사용 시 RLock으로 보호
         self.conn = sqlite3.connect(self.db_path, check_same_thread=False, timeout=30.0)
@@ -118,10 +119,11 @@ class DBManager:
         except sqlite3.OperationalError as e:
             # 테이블 자체가 없는 경우 (CREATE TABLE IF NOT EXISTS에서 처리됨)
             if "no such table" not in str(e).lower():
-                print(f"[WARNING] state_logs 마이그레이션 실패: {e}")
+                logging.warning(f"[WARNING] state_logs 마이그레이션 실패: {e}")
                 try:
                     self.conn.rollback()  # [V45] 실패 시 롤백
-                except Exception:
+                except Exception as e:
+                    logging.debug(f"[SILENT] state_logs rollback: {e}")
                     pass
 
         # 4. 인과 그래프 (Causal Graph)
@@ -177,7 +179,7 @@ class DBManager:
         validated_metrics = [k for k in MARTIAL_METRICS if safe_column_pattern.match(k)]
         if len(validated_metrics) != len(MARTIAL_METRICS):
             invalid = set(MARTIAL_METRICS) - set(validated_metrics)
-            print(f"[WARNING] 잘못된 컬럼명 무시됨: {invalid}")
+            logging.warning(f"[WARNING] 잘못된 컬럼명 무시됨: {invalid}")
         columns_def = ", ".join([f"{k} TEXT" for k in validated_metrics])
         self.cursor.execute(f"CREATE TABLE IF NOT EXISTS martial_tracker (ep_num INTEGER PRIMARY KEY, {columns_def})")
         
@@ -190,27 +192,27 @@ class DBManager:
             # MARTIAL_METRICS 순회하며 누락된 컬럼 추가
             for metric in MARTIAL_METRICS:
                 if metric not in existing_columns:
-                    print(f"      🔧 [DB Migration] 새로운 지표 '{metric}' 발견. 테이블에 컬럼을 추가합니다.")
+                    logging.info(f"🔧 [DB Migration] 새로운 지표 '{metric}' 발견. 테이블에 컬럼을 추가합니다.")
                     self.cursor.execute(f"ALTER TABLE martial_tracker ADD COLUMN {metric} TEXT")
             
             self.conn.commit()
             
         except sqlite3.IntegrityError as e:
             # 무결성 오류: 컬럼 이름 충돌 등
-            print(f"      🚨 [{DBErrorSeverity.HIGH}] 마이그레이션 무결성 오류: {e}")
+            logging.warning(f"🚨 [{DBErrorSeverity.HIGH}] 마이그레이션 무결성 오류: {e}")
             # 기존 테이블 구조 유지, 계속 진행
         except sqlite3.OperationalError as e:
             # 운영 오류: 테이블 잠금, 디스크 오류 등
             error_str = str(e).lower()
             if "locked" in error_str:
-                print(f"      🚨 [{DBErrorSeverity.HIGH}] DB 잠금 상태. 다른 프로세스 확인 필요: {e}")
+                logging.warning(f"🚨 [{DBErrorSeverity.HIGH}] DB 잠금 상태. 다른 프로세스 확인 필요: {e}")
             elif "disk" in error_str or "i/o" in error_str:
-                print(f"      🚨 [{DBErrorSeverity.CRITICAL}] 디스크 I/O 오류: {e}")
+                logging.warning(f"🚨 [{DBErrorSeverity.CRITICAL}] 디스크 I/O 오류: {e}")
             else:
-                print(f"      🚨 [{DBErrorSeverity.HIGH}] 마이그레이션 운영 오류: {e}")
+                logging.warning(f"🚨 [{DBErrorSeverity.HIGH}] 마이그레이션 운영 오류: {e}")
         except Exception as e:
-            print(f"      🚨 [{DBErrorSeverity.WARN}] 마이그레이션 기타 오류: {e}")
-            print(f"         → 상세: {traceback.format_exc()[:200]}")
+            logging.warning(f"🚨 [{DBErrorSeverity.WARN}] 마이그레이션 기타 오류: {e}")
+            logging.info(f"→ 상세: {traceback.format_exc()[:200]}")
         # 8. 복선 전용 관리 (Seeds)
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS seeds (
@@ -260,14 +262,17 @@ class DBManager:
         try:
             self.cursor.execute("ALTER TABLE episode_bibles ADD COLUMN causal_links TEXT")
         except sqlite3.OperationalError:
+            logging.debug("[SILENT] ALTER TABLE causal_links: column already exists")
             pass  # 이미 존재
         try:
             self.cursor.execute("ALTER TABLE episode_bibles ADD COLUMN karma_matrix TEXT")
         except sqlite3.OperationalError:
+            logging.debug("[SILENT] ALTER TABLE karma_matrix: column already exists")
             pass  # 이미 존재
         try:
             self.cursor.execute("ALTER TABLE episode_bibles ADD COLUMN knowledge_map TEXT")
         except sqlite3.OperationalError:
+            logging.debug("[SILENT] ALTER TABLE knowledge_map: column already exists")
             pass  # 이미 존재
 
         # 11. Reflexion 메모리 테이블
@@ -304,7 +309,7 @@ class DBManager:
             self.cursor.execute(sql, params)
 
     # --- [Section 1: 원고 및 지표] ---
-    def save_manuscript(self, ep_num, title, content):
+    def save_manuscript(self, ep_num, title, content) -> None:
         self.cursor.execute("INSERT OR REPLACE INTO manuscripts (ep_num, title, content) VALUES (?, ?, ?)", (ep_num, title, content))
         if not self.conn.in_transaction: self.conn.commit()
 
@@ -323,12 +328,12 @@ class DBManager:
             return None
         try:
             return json.loads(row['data'])
-        except json.JSONDecodeError as e:
-            print(f"🚨 [DB] Blueprint JSON 파싱 실패 (ep_num={ep_num}): {e}")
+        except (json.JSONDecodeError, TypeError) as e:  # [V70] NULL data → TypeError 방어
+            logging.warning(f"🚨 [DB] Blueprint JSON 파싱 실패 (ep_num={ep_num}): {e}")
             return None
     
     
-    def update_martial_tracker(self, ep_num, martial_data):
+    def update_martial_tracker(self, ep_num, martial_data) -> None:
         """[V26.6 S-Grade] DB 스키마에 존재하는 컬럼만 선별하여 저장 (Mismatched Key Guard)"""
         # 1. 약속된 15대 지표(MARTIAL_METRICS)만 필터링 (스키마 가드)
         sanitized_data = {k: martial_data[k] for k in MARTIAL_METRICS if k in martial_data}
@@ -544,12 +549,16 @@ class DBManager:
         )
         if not self.conn.in_transaction:
             self.conn.commit()
+        # [V70] 누적 Bible 캐시 무효화 (save_episode_bible과 동일 패턴)
+        invalidate_eps = [k for k in self._cumulative_bible_cache if k > ep_num]
+        for k in invalidate_eps:
+            del self._cumulative_bible_cache[k]
         return self.cursor.rowcount
 
     # --- [Section 2: 복선 및 로어] ---
 # modules/core/db_manager.py
 # [V35.5] 수술 기록 박제 메서드 추가
-    def save_surgery_log(self, ep_num, category, failed_logic, result):
+    def save_surgery_log(self, ep_num, category, failed_logic, result) -> None:
         self.cursor.execute('''
             INSERT INTO surgery_logs (ep_num, error_category, failed_logic, surgery_result)
             VALUES (?, ?, ?, ?)
@@ -560,7 +569,7 @@ class DBManager:
 
 
 
-    def sync_seeds(self, seeds_list):
+    def sync_seeds(self, seeds_list) -> None:
         """[V24 Precise Mode] 데이터 누락 시 기본값 할당으로 시스템 중단 방지"""
         for s in seeds_list:
             # 1. 필수 데이터 인출 (KeyError 방지를 위해 .get() 사용)
@@ -578,11 +587,11 @@ class DBManager:
         
         if not self.conn.in_transaction: 
             self.conn.commit()
-    def archive_seed(self, seed_id, ep_num):
+    def archive_seed(self, seed_id, ep_num) -> None:
         self.cursor.execute("UPDATE seeds SET status = 'archived', recovered_ep = ? WHERE seed_id = ?", (ep_num, seed_id))
         if not self.conn.in_transaction: self.conn.commit()
 
-    def update_lore_item(self, category, item, description):
+    def update_lore_item(self, category, item, description) -> None:
         """[PATCHED] 카테고리+이름 복합 키 기준 저장"""
         self.cursor.execute('''
             INSERT INTO encyclopedia (category, item, description)
@@ -594,7 +603,7 @@ class DBManager:
         ''', (category, item, description))
         if not self.conn.in_transaction: self.conn.commit()
 
-    def update_lore_items_batch(self, lore_items_list):
+    def update_lore_items_batch(self, lore_items_list) -> None:
         """[PATCHED] 일괄 업데이트 트랜잭션"""
         if not lore_items_list: return
         nested = self.conn.in_transaction
@@ -616,8 +625,8 @@ class DBManager:
             # 중복 키 등 무결성 오류 - 개별 항목으로 재시도 가능
             if not nested:
                 self.rollback()
-            print(f"🚨 [{DBErrorSeverity.HIGH}] 로어 일괄 저장 무결성 오류: {e}")
-            print(f"   → 해결책: 중복 항목 확인 후 개별 저장 시도")
+            logging.warning(f"🚨 [{DBErrorSeverity.HIGH}] 로어 일괄 저장 무결성 오류: {e}")
+            logging.info(f"→ 해결책: 중복 항목 확인 후 개별 저장 시도")
             if nested:
                 raise DBIntegrityError(f"로어 저장 무결성 오류: {e}", original_error=e) from e
         except sqlite3.OperationalError as e:
@@ -625,17 +634,17 @@ class DBManager:
                 self.rollback()
             error_str = str(e).lower()
             if "locked" in error_str:
-                print(f"🚨 [{DBErrorSeverity.CRITICAL}] DB 잠금 상태: {e}")
-                print(f"   → 해결책: 다른 프로세스/연결 종료 후 재시도")
+                logging.warning(f"🚨 [{DBErrorSeverity.CRITICAL}] DB 잠금 상태: {e}")
+                logging.info(f"→ 해결책: 다른 프로세스/연결 종료 후 재시도")
             else:
-                print(f"🚨 [{DBErrorSeverity.HIGH}] 로어 저장 운영 오류: {e}")
+                logging.warning(f"🚨 [{DBErrorSeverity.HIGH}] 로어 저장 운영 오류: {e}")
             if nested:
                 raise DBTransactionError(f"로어 저장 트랜잭션 오류: {e}", original_error=e) from e
         except Exception as e:
             if not nested:
                 self.rollback()
-            print(f"🚨 [{DBErrorSeverity.HIGH}] 로어 일괄 저장 실패: {e}")
-            print(f"   → 상세: {traceback.format_exc()[:300]}")
+            logging.warning(f"🚨 [{DBErrorSeverity.HIGH}] 로어 일괄 저장 실패: {e}")
+            logging.info(f"→ 상세: {traceback.format_exc()[:300]}")
             if nested:
                 raise DBError(f"로어 저장 기타 오류: {e}", original_error=e) from e
 
@@ -656,7 +665,7 @@ class DBManager:
 
 
 
-    def save_anchor(self, key, data):
+    def save_anchor(self, key, data) -> bool:
         """S등급 데이터를 박제하고 타임스탬프를 강제 갱신함"""
         try:
             json_data = json.dumps(data, ensure_ascii=False)
@@ -670,7 +679,7 @@ class DBManager:
                 self.conn.commit()
             return True
         except Exception as e:
-            print(f"❌ [DB Error] Anchor 저장 실패: {e}")
+            logging.warning(f"❌ [DB Error] Anchor 저장 실패: {e}")
             return False
 
 
@@ -682,8 +691,8 @@ class DBManager:
             return default if default is not None else {}
         try:
             return json.loads(row['data'])
-        except json.JSONDecodeError as e:
-            print(f"🚨 [DB] Anchor JSON 파싱 실패 (key={key}): {e}")
+        except (json.JSONDecodeError, TypeError) as e:  # [V70] row['data']가 None일 때 TypeError 방어
+            logging.warning(f"🚨 [DB] Anchor JSON 파싱 실패 (key={key}): {e}")
             return default if default is not None else {}
         
     def load_all_anchors(self):
@@ -693,12 +702,12 @@ class DBManager:
             try:
                 result[row['key']] = json.loads(row['data'])
             except json.JSONDecodeError as e:
-                print(f"🚨 [DB] Anchor JSON 파싱 실패 (key={row['key']}): {e}")
+                logging.warning(f"🚨 [DB] Anchor JSON 파싱 실패 (key={row['key']}): {e}")
                 result[row['key']] = {}
         return result
 
     # --- [Section 4: 설계도 및 로그] ---
-    def save_blueprint(self, ep_num, data_dict):
+    def save_blueprint(self, ep_num, data_dict) -> None:
         serialized = json.dumps(data_dict, ensure_ascii=False)
         self.cursor.execute("INSERT OR REPLACE INTO blueprints (ep_num, data) VALUES (?, ?)", (ep_num, serialized))
         # [수정] 트랜잭션 안전성 확보
@@ -711,21 +720,21 @@ class DBManager:
             return None
         try:
             return json.loads(row['data'])
-        except json.JSONDecodeError as e:
-            print(f"🚨 [DB] Blueprint JSON 파싱 실패 (ep_num={current_ep - 1}): {e}")
+        except (json.JSONDecodeError, TypeError) as e:  # [V70] NULL data → TypeError 방어
+            logging.warning(f"🚨 [DB] Blueprint JSON 파싱 실패 (ep_num={current_ep - 1}): {e}")
             return None
 
-    def save_state_log(self, ep_num, data_dict):
+    def save_state_log(self, ep_num, data_dict) -> None:
         """기존 메서드 호환성 유지"""
         self.save_state_log_with_summary(ep_num, data_dict, "")
 
-    def save_state_log_with_summary(self, ep_num, data_dict, summary):
+    def save_state_log_with_summary(self, ep_num, data_dict, summary) -> None:
         """[NEW] 요약 포함 로그 저장"""
         serialized = json.dumps(data_dict, ensure_ascii=False)
         self.cursor.execute("INSERT OR REPLACE INTO state_logs (ep_num, data, summary) VALUES (?, ?, ?)", (ep_num, serialized, summary))
         if not self.conn.in_transaction: self.conn.commit()
 
-    def get_latest_state(self):
+    def get_latest_state(self) -> dict:
         cur = self.cursor.execute("SELECT data FROM state_logs ORDER BY ep_num DESC LIMIT 1")
         row = cur.fetchone()
         if not row:
@@ -733,7 +742,7 @@ class DBManager:
         try:
             return json.loads(row['data'])
         except json.JSONDecodeError as e:
-            print(f"🚨 [DB] State log JSON 파싱 실패: {e}")
+            logging.warning(f"🚨 [DB] State log JSON 파싱 실패: {e}")
             return {}
 
     def load_state_log(self, ep_num: int) -> dict:
@@ -752,7 +761,7 @@ class DBManager:
                 result['data'] = {}
             return result
         except Exception as e:
-            print(f"🚨 [DB] State log 조회 실패 (ep {ep_num}): {e}")
+            logging.warning(f"🚨 [DB] State log 조회 실패 (ep {ep_num}): {e}")
             return None
 
     def get_causal_summary_chain(self, limit=5):
@@ -761,7 +770,7 @@ class DBManager:
         return "\n".join([f"- [제 {r['ep_num']} 화]: {r['summary']}" for r in reversed(cur.fetchall())])
 
     # --- [Section 5: 관계 및 인과] ---
-    def update_karma(self, npc_name, mis_val, obs_val, ep_num):
+    def update_karma(self, npc_name, mis_val, obs_val, ep_num) -> None:
         self.cursor.execute('''
             INSERT INTO karma_status (npc_name, misunderstanding, obsession, last_updated_ep)
             VALUES (?, ?, ?, ?)
@@ -776,7 +785,7 @@ class DBManager:
         cur = self.cursor.execute("SELECT * FROM karma_status")
         return {row['npc_name']: dict(row) for row in cur.fetchall()}
 
-    def save_causal_links(self, new_links, current_ep):
+    def save_causal_links(self, new_links, current_ep) -> None:
         if not new_links: return
         data_to_insert = []
         for link in new_links:
@@ -787,7 +796,7 @@ class DBManager:
         if not self.conn.in_transaction: self.conn.commit()
 
     # --- [Sovereign Unified Transaction: 최종 박제] ---
-    def commit_episode_factory(self, ep_num, manuscript_data, martial_data, state_data, causal_links, karma_data, lore_data, recovered_seeds=None):
+    def commit_episode_factory(self, ep_num, manuscript_data, martial_data, state_data, causal_links, karma_data, lore_data, recovered_seeds=None) -> bool:
         """
         [V27.0 S-Grade] 하위 항목 문자열화 현상까지 완벽 차단하는 무결성 엔진
         - 원자적 트랜잭션 보장
@@ -878,7 +887,7 @@ class DBManager:
             # 9. 트랜잭션 커밋 (최상위 트랜잭션일 때만)
             if not nested_transaction:
                 self.commit() 
-                print(f"      🎬 [DB Transaction] 제 {ep_num}화 데이터 안전 박제 완료.")
+                logging.info(f"🎬 [DB Transaction] 제 {ep_num}화 데이터 안전 박제 완료.")
             
             return True
 
@@ -886,11 +895,11 @@ class DBManager:
             # 무결성 오류: 중복 키, 제약 조건 위반 등
             if not nested_transaction:
                 self.rollback()
-                print(f"      🚨 [{DBErrorSeverity.HIGH}] 데이터 무결성 오류(롤백 완료): {e}")
-                print(f"         → 해결책: 중복 에피소드 번호 또는 키 확인")
+                logging.warning(f"🚨 [{DBErrorSeverity.HIGH}] 데이터 무결성 오류(롤백 완료): {e}")
+                logging.info(f"→ 해결책: 중복 에피소드 번호 또는 키 확인")
                 return False
             else:
-                print(f"      ⚠️ [{DBErrorSeverity.HIGH}] 내부 무결성 오류 (상위 롤백 유도): {e}")
+                logging.warning(f"⚠️ [{DBErrorSeverity.HIGH}] 내부 무결성 오류 (상위 롤백 유도): {e}")
                 raise DBIntegrityError(f"에피소드 {ep_num} 저장 무결성 오류",
                                        severity=DBErrorSeverity.HIGH, original_error=e) from e
 
@@ -901,13 +910,13 @@ class DBManager:
                 self.rollback()
 
             if "locked" in error_str:
-                print(f"      🚨 [{DBErrorSeverity.CRITICAL}] DB 잠금 상태(롤백 완료): {e}")
-                print(f"         → 해결책: ChromaDB LOCK 파일 삭제 또는 프로세스 재시작")
+                logging.warning(f"🚨 [{DBErrorSeverity.CRITICAL}] DB 잠금 상태(롤백 완료): {e}")
+                logging.info(f"→ 해결책: ChromaDB LOCK 파일 삭제 또는 프로세스 재시작")
             elif "disk" in error_str or "i/o" in error_str:
-                print(f"      🚨 [{DBErrorSeverity.CRITICAL}] 디스크 I/O 오류(롤백 완료): {e}")
-                print(f"         → 해결책: 디스크 공간 및 권한 확인")
+                logging.warning(f"🚨 [{DBErrorSeverity.CRITICAL}] 디스크 I/O 오류(롤백 완료): {e}")
+                logging.info(f"→ 해결책: 디스크 공간 및 권한 확인")
             else:
-                print(f"      🚨 [{DBErrorSeverity.HIGH}] DB 운영 오류(롤백 완료): {e}")
+                logging.warning(f"🚨 [{DBErrorSeverity.HIGH}] DB 운영 오류(롤백 완료): {e}")
 
             if not nested_transaction:
                 return False
@@ -919,7 +928,7 @@ class DBManager:
             # 커스텀 DB 예외 (하위 메서드에서 발생)
             if not nested_transaction:
                 self.rollback()
-                print(f"      🚨 [{e.severity}] 하위 저장 오류(롤백 완료): {e}")
+                logging.warning(f"🚨 [{e.severity}] 하위 저장 오류(롤백 완료): {e}")
                 return False
             else:
                 raise  # 상위로 전파
@@ -928,11 +937,11 @@ class DBManager:
             # 🛡️ [핵심] 기타 예외 - 롤백 및 전파 전략
             if not nested_transaction:
                 self.rollback()
-                print(f"      🚨 [{DBErrorSeverity.HIGH}] 트랜잭션 실패(롤백 완료): {e}")
-                print(f"         → 상세: {traceback.format_exc()[:400]}")
+                logging.warning(f"🚨 [{DBErrorSeverity.HIGH}] 트랜잭션 실패(롤백 완료): {e}")
+                logging.info(f"→ 상세: {traceback.format_exc()[:400]}")
                 return False
             else:
-                print(f"      ⚠️ [{DBErrorSeverity.HIGH}] 내부 저장 실패 (상위 롤백 유도): {e}")
+                logging.warning(f"⚠️ [{DBErrorSeverity.HIGH}] 내부 저장 실패 (상위 롤백 유도): {e}")
                 raise DBError(f"에피소드 {ep_num} 저장 기타 오류", original_error=e) from e
         finally:
             # [FIX] RLock 해제 보장
@@ -940,7 +949,7 @@ class DBManager:
 
 
     @contextmanager
-    def transaction(self):
+    def transaction(self) -> None:
         """[V44] 원자적 트랜잭션 보장 가드. 에러 타입별 롤백 및 세션 보호"""
         nested = self.conn.in_transaction
         try:
@@ -952,22 +961,22 @@ class DBManager:
         except sqlite3.IntegrityError as e:
             if not nested:
                 self.conn.rollback()
-            print(f"🚨 [{DBErrorSeverity.HIGH}] 트랜잭션 무결성 오류 - 롤백 수행: {e}")
+            logging.warning(f"🚨 [{DBErrorSeverity.HIGH}] 트랜잭션 무결성 오류 - 롤백 수행: {e}")
             raise DBIntegrityError(str(e), original_error=e) from e
         except sqlite3.OperationalError as e:
             if not nested:
                 self.conn.rollback()
             error_str = str(e).lower()
             severity = DBErrorSeverity.CRITICAL if "locked" in error_str or "disk" in error_str else DBErrorSeverity.HIGH
-            print(f"🚨 [{severity}] 트랜잭션 운영 오류 - 롤백 수행: {e}")
+            logging.warning(f"🚨 [{severity}] 트랜잭션 운영 오류 - 롤백 수행: {e}")
             if "locked" in error_str:
-                print(f"   → 해결책: DB 잠금 해제 후 재시도")
+                logging.info(f"→ 해결책: DB 잠금 해제 후 재시도")
             raise DBTransactionError(str(e), severity=severity, original_error=e) from e
         except Exception as e:
             if not nested:
                 self.conn.rollback()
-            print(f"🚨 [{DBErrorSeverity.HIGH}] 트랜잭션 오류 - 롤백 수행: {e}")
-            print(f"   → 상세: {traceback.format_exc()[:300]}")
+            logging.warning(f"🚨 [{DBErrorSeverity.HIGH}] 트랜잭션 오류 - 롤백 수행: {e}")
+            logging.info(f"→ 상세: {traceback.format_exc()[:300]}")
             raise DBError(str(e), original_error=e) from e
 
 
@@ -989,12 +998,18 @@ class DBManager:
         cur = self.cursor.execute("SELECT ep_num, title, content FROM manuscripts WHERE ep_num < ? ORDER BY ep_num DESC LIMIT ?", (current_ep, limit))
         return [dict(row) for row in cur.fetchall()]
 
-    def reset_after(self, target_ep):
+    def reset_after(self, target_ep) -> None:
         """전체 테이블 리셋 및 롤백"""
         tables = ["blueprints", "state_logs", "causal_graph", "manuscripts", "martial_tracker"]
         for tbl in tables: self.cursor.execute(f"DELETE FROM {tbl} WHERE ep_num >= ?", (target_ep,))
+        self.cursor.execute("DELETE FROM episode_bibles WHERE ep_num >= ?", (target_ep,))  # [V70] 누락 수정
+        self.cursor.execute("DELETE FROM sync_status WHERE ep_num >= ?", (target_ep,))  # [V70] 동기화 상태도 리셋
         self.cursor.execute("DELETE FROM karma_status WHERE last_updated_ep >= ?", (target_ep,))
         self.cursor.execute("DELETE FROM seeds WHERE planted_ep >= ?", (target_ep,))
+        # [V70] 누적 Bible 캐시 무효화
+        invalidate_eps = [k for k in self._cumulative_bible_cache if k >= target_ep]
+        for k in invalidate_eps:
+            del self._cumulative_bible_cache[k]
         # 로어는 시간 개념이 모호하므로 유지하거나 별도 정책 필요 (여기선 유지)
         self.conn.commit()
         self.cursor.execute("VACUUM")
@@ -1006,7 +1021,7 @@ class DBManager:
         row = cur.fetchone()
         return row['vector_synced'] if row else None
 
-    def update_sync_status(self, ep_num, status):
+    def update_sync_status(self, ep_num, status) -> None:
         """벡터 DB 동기화 상태 업데이트 (0: 미완료, 1: 완료)"""
         self.cursor.execute('''
             INSERT OR REPLACE INTO sync_status (ep_num, vector_synced, updated_at)

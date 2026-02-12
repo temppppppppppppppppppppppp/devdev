@@ -12,6 +12,7 @@
 """
 
 import json
+import logging
 import re
 from typing import Dict, List, Tuple, Optional
 from google import genai
@@ -142,7 +143,9 @@ class NarrativeStructureAnalyzer:
         """LLM으로 서사 요소 추출"""
         beats_text = "\n".join([f"[Beat {i+1}] {beat}" for i, beat in enumerate(beats[:5])])
 
-        prompt = NARRATIVE_EXTRACTION_PROMPT.format(beats_text=beats_text)
+        # [V70] 사용자 콘텐츠 내 {}는 .format()에서 KeyError 유발 → 이스케이프
+        safe_beats_text = beats_text.replace("{", "{{").replace("}", "}}")
+        prompt = NARRATIVE_EXTRACTION_PROMPT.format(beats_text=safe_beats_text)
 
         try:
             config = types.GenerateContentConfig(
@@ -157,12 +160,16 @@ class NarrativeStructureAnalyzer:
                 config=config
             )
 
-            # [V60.15 FIX] None 체크
-            if not response.text:
-                print(f"      ⚠️ [NarrativeAnalyzer] 빈 응답")
+            # [V60.15 FIX] None 체크 + [V70] ValueError 방어
+            try:
+                _text = response.text
+            except (ValueError, AttributeError):
+                _text = None
+            if not _text:
+                logging.info(f"⚠️ [NarrativeAnalyzer] 빈 응답")
                 return None
 
-            result = response.text.strip()
+            result = _text.strip()
 
             # [V60.16] JSON 파싱 강화 - 여러 방법 시도
             try:
@@ -189,7 +196,7 @@ class NarrativeStructureAnalyzer:
                 return None
 
         except Exception as e:
-            print(f"      ⚠️ [NarrativeAnalyzer] 추출 오류: {e}")
+            logging.warning(f"⚠️ [NarrativeAnalyzer] 추출 오류: {e}")
             return None
 
     def _detect_stagnation(self, episodes: List[Dict]) -> Dict:

@@ -1,4 +1,5 @@
 import re
+import logging
 import math
 from .constants import MARTIAL_METRICS # 👈 상수 임포트
 
@@ -6,7 +7,7 @@ from .constants import MARTIAL_METRICS # 👈 상수 임포트
 class MartialManager:
     """[V44] DB 스키마와 성경 데이터 간의 1:1 무결성을 보장하는 최종 엔진 (타입 안전성 강화)"""
 
-    def __init__(self, context):
+    def __init__(self, context) -> None:
         self.context = context
         self._initialization_valid = False
         self._validate_initialization()
@@ -30,7 +31,7 @@ class MartialManager:
             'obsession': ['obsession', '집착', '집착지수']
         }
 
-    def _validate_initialization(self):
+    def _validate_initialization(self) -> None:
         """[V44] 초기화 시점에 필수 의존성 검증"""
         issues = []
 
@@ -62,7 +63,7 @@ class MartialManager:
         if hasattr(self.context, 'ui') and self.context.ui:
             self.context.ui.log(f"⚠️ [MartialManager] {msg}")
         else:
-            print(f"⚠️ [MartialManager] {msg}")
+            logging.info(f"⚠️ [MartialManager] {msg}")
 
     def _safe_get_bible(self) -> dict:
         """[V44] 안전한 bible 접근"""
@@ -261,16 +262,19 @@ class MartialManager:
     @property
     def inventory(self): return self.pro_data.get('inventory', [])
     @property
-    def techniques(self):
+    def techniques(self) -> list:
         techs = self.pro_data.get('martial_arts', self.pro_data.get('SignatureMove', []))
+        if techs is None:
+            return []
         return [t.strip() for t in techs.split(',')] if isinstance(techs, str) else techs
 
     # --- [핵심 업데이트부: 데이터 정규화 가드] ---
-    def update_physical_status(self, full_state_data):
+    def update_physical_status(self, full_state_data) -> list:
         """[🛡️ Guard Logic] 에이전트의 변칙 키를 표준 키로 강제 치환하여 성경에 박제"""
         if not full_state_data: return [] # 변경 사항 리스트 반환으로 변경
 
-        bible = self.context.master_bible.get('MasterBible', self.context.master_bible)
+        _mb = self.context.master_bible if hasattr(self.context, 'master_bible') and self.context.master_bible else {}  # [V70] None 방어
+        bible = _mb.get('MasterBible', _mb)
         pro = bible.setdefault('MartialHUD', {}).setdefault('Protagonist', {})
         actual = pro.setdefault('actual_truth', {})
         actual_in = full_state_data.get('actual_truth', full_state_data)
@@ -299,7 +303,7 @@ class MartialManager:
                             current_val = None
 
                     # [V40.1 Critical Fix] guard가 None일 경우 대비
-                    if self.context.guard is None:
+                    if not hasattr(self.context, 'guard') or self.context.guard is None:  # [V70] hasattr 가드
                         # guard 없이 직접 변환 시도
                         try:
                             # [V60.22] 델타값 처리
@@ -374,11 +378,11 @@ class MartialManager:
 
         return update_logs  # 👈 변경된 리스트를 메인으로 던져줌
 
-    def get_critical_keys(self):
+    def get_critical_keys(self) -> list:
         """[V40] 무협 장르 필수 추적 키"""
         return ['realm', 'internal_energy', 'mental_method', 'wealth', 'current_objective', 'causal_injuries', 'reputation']
     
-    def get_structured_hud(self):
+    def get_structured_hud(self) -> dict:
         """
         [V45 Fix] 구조화된 HUD 데이터를 딕셔너리로 반환 (Architect/Writer용)
 
@@ -420,7 +424,7 @@ class MartialManager:
             }
         }
 
-    def get_v20_hud_report(self):
+    def get_v20_hud_report(self) -> str:
         """[V25 High-Res] 정규화된 데이터 기반의 무결성 리포트 출력 (None 값 방어 처리 추가)"""
         rep = self.pro_root.get('public_reputation', {})
 

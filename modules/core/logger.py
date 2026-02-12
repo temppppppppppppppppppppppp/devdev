@@ -191,7 +191,7 @@ class StudioLogger:
         """파일 출력 레벨 변경"""
         self.file_handler.setLevel(level)
 
-    def close(self):
+    def close(self) -> None:
         """로거 종료 및 리소스 정리"""
         for handler in self.root_logger.handlers[:]:
             handler.close()

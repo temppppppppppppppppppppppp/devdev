@@ -13,6 +13,7 @@
 """
 
 import json
+import logging
 import re
 from typing import Dict, List, Any, Optional, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FutureTimeoutError
@@ -160,10 +161,10 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 if bible:
                     genre = bible.get('_genre', 'wuxia')
         except Exception as e:
-            print(f"      ⚠️ [V61.3] genre 사전 로드 실패: {str(e)[:50]}")
+            logging.warning(f"⚠️ [V61.3] genre 사전 로드 실패: {str(e)[:50]}")
 
         # 병렬 생성
-        print(f"      🎲 [BPEnsemble] 3개 후보 병렬 생성 중... (주인공: {protagonist_name})")
+        logging.info(f"🎲 [BPEnsemble] 3개 후보 병렬 생성 중... (주인공: {protagonist_name})")
 
         # [V61.3] 전체 병렬 처리 블록을 try-except로 감싸서 급사 방지
         try:
@@ -195,17 +196,17 @@ class BlueprintEnsembleGenerator(BaseAgent):
                             if result and isinstance(result, dict):
                                 result["_strategy"] = strategy_name
                                 candidates.append(result)
-                                print(f"         ✓ {strategy_name} 생성 완료")
+                                logging.info(f"✓ {strategy_name} 생성 완료")
                         except FutureTimeoutError:
-                            print(f"         ⏰ [V61.3] {strategy_name} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
+                            logging.info(f"⏰ [V61.3] {strategy_name} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
                         except Exception as e:
-                            print(f"         ✗ {strategy_name} 실패: {str(e)[:50]}")
+                            logging.warning(f"✗ {strategy_name} 실패: {str(e)[:50]}")
                 except FutureTimeoutError:
                     # 전체 앙상블 타임아웃 - 완료된 후보만 사용
-                    print(f"      ⏰ [V61.3] 블루프린트 앙상블 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용")
+                    logging.info(f"⏰ [V61.3] 블루프린트 앙상블 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용")
                 except Exception as e:
                     # [V61.3] as_completed 자체 예외 처리
-                    print(f"      ⚠️ [V61.3] 앙상블 루프 예외: {str(e)[:80]}")
+                    logging.info(f"⚠️ [V61.3] 앙상블 루프 예외: {str(e)[:80]}")
         except Exception as e:
             # [V61.3] ThreadPoolExecutor 전체 예외 처리 - 급사 방지
             # stderr로 출력 (Rich 스피너가 stdout 가림)
@@ -216,7 +217,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
             sys.stderr.flush()
 
         if not candidates:
-            print(f"      ❌ [BPEnsemble] 모든 후보 생성 실패")
+            logging.warning(f"❌ [BPEnsemble] 모든 후보 생성 실패")
             return None, []
 
         # [V60.85] Python 최소 기준 필터링 - 씬 4개 이상만 통과
@@ -237,18 +238,18 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 candidate["_scene_count"] = scene_count
                 candidate["_length"] = integrated_len
                 qualified_candidates.append(candidate)
-                print(f"         ✓ {strategy_name}: 통과 (씬 {scene_count}개, {integrated_len}자)")
+                logging.info(f"✓ {strategy_name}: 통과 (씬 {scene_count}개, {integrated_len}자)")
             else:
                 disqualified.append((strategy_name, scene_count, integrated_len))
-                print(f"         ✗ {strategy_name}: 탈락 (씬 {scene_count}개, {integrated_len}자)")
+                logging.info(f"✗ {strategy_name}: 탈락 (씬 {scene_count}개, {integrated_len}자)")
 
         if not qualified_candidates:
-            print(f"      ❌ [BPEnsemble] 모든 후보 최소 기준 미달")
+            logging.warning(f"❌ [BPEnsemble] 모든 후보 최소 기준 미달")
             return None, candidates  # 원본 반환 (디버깅용)
 
         # [V60.85] Director가 선택할 수 있도록 후보 목록 반환
         # Python은 선택하지 않음 - Director에게 전체 전달
-        print(f"      📋 [BPEnsemble] {len(qualified_candidates)}개 후보 → Director 선택 대기")
+        logging.info(f"📋 [BPEnsemble] {len(qualified_candidates)}개 후보 → Director 선택 대기")
 
         # 메타데이터 저장 (Director 비교용)
         for idx, candidate in enumerate(qualified_candidates):
@@ -321,11 +322,11 @@ class BlueprintEnsembleGenerator(BaseAgent):
             prompt = BLUEPRINT_GENERATION_PROMPT.format(
                 strategy_display=strategy["display"],
                 ep_num=ep_num,
-                protagonist_name=protagonist_name,  # [V61] 주인공 이름 주입
-                protagonist_instructions=protagonist_instructions,  # [V60.90] 주인공 설정 지시
+                protagonist_name=self._escape_braces(protagonist_name),  # [V70] 주인공 이름 주입
+                protagonist_instructions=self._escape_braces(protagonist_instructions),  # [V70] 주인공 설정 지시
                 arc_focus=self._escape_braces(arc_focus),
                 constraints=self._escape_braces(constraints_str),
-                strategy_directive=strategy["directive"] + extra_directive,
+                strategy_directive=self._escape_braces(strategy["directive"] + extra_directive),  # [V70] Director feedback 내 {} 방어
                 prev_info=self._escape_braces(prev_info),
                 hud_context=self._escape_braces(hud_context) if hud_context else "(상태 정보 없음)",  # [V60.95]
                 pov_constraint=_pov_constraint  # [V70]
@@ -374,7 +375,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         if scene_count <= 3:
             # 당선 불가 수준의 대형 감점 (-100000)
             score -= 100000
-            print(f"         ⚠️ 씬 {scene_count}개 (≤3) → 당선 불가")
+            logging.info(f"⚠️ 씬 {scene_count}개 (≤3) → 당선 불가")
 
         return score
 
@@ -400,7 +401,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         # 2. 씬 개수 경고
         scenes = candidate.get("scene_breakdown", {})
-        scene_count = len(scenes) if isinstance(scenes, dict) else 0
+        scene_count = len(scenes) if isinstance(scenes, (dict, list)) else 0
         if scene_count < 3:
             warnings.append({
                 "type": "scene_count",
@@ -603,12 +604,20 @@ class BlueprintEnsembleGenerator(BaseAgent):
                     bp_lines.append(f"[엔딩훅] {bp_hook}")
                 # 씬 구성 요약
                 scenes = bp.get("scene_breakdown", {})
+                # [V70] list 타입 대응 (LLM이 list로 반환하는 경우)
+                if isinstance(scenes, list):
+                    scenes = {f"scene_{i+1}": s for i, s in enumerate(scenes) if isinstance(s, dict)}
                 if isinstance(scenes, dict):
                     for sk, sv in scenes.items():
                         if isinstance(sv, dict):
                             s_title = sv.get("title", "")
                             s_chars = sv.get("characters", [])
                             s_events = sv.get("key_events", [])
+                            # [V70] 타입 방어 (str → list 변환)
+                            if isinstance(s_chars, str):
+                                s_chars = [s_chars]
+                            if isinstance(s_events, str):
+                                s_events = [s_events]
                             chars_str = ", ".join(s_chars[:5]) if s_chars else ""
                             events_str = "; ".join(s_events[:3]) if s_events else ""
                             bp_lines.append(f"  [{sk}] {s_title} | 등장: {chars_str} | 이벤트: {events_str}")

@@ -11,6 +11,7 @@
 """
 
 import json
+import logging
 import re
 from typing import Dict, List, Any, Optional, Tuple
 from .base_agent import BaseAgent
@@ -216,7 +217,7 @@ class StateLockedArcGenerator(BaseAgent):
             "name": "State Lock",
             "result": start_state
         })
-        print(f"      🔒 [Phase A] 시작 상태 잠금: 내공 {start_state['energy']}%, 부상: {start_state['injuries']}")
+        logging.info(f"🔒 [Phase A] 시작 상태 잠금: 내공 {start_state['energy']}%, 부상: {start_state['injuries']}")
 
         # ═══════════════════════════════════════════════════════════════
         # Phase B: 점진적 에피소드 생성 (1화씩)
@@ -226,7 +227,7 @@ class StateLockedArcGenerator(BaseAgent):
 
         for i, beat in enumerate(episode_beats[:5]):  # 최대 5화
             ep_num = ep_start + i
-            print(f"      📝 [Phase B] 제 {ep_num}화 생성 중...")
+            logging.info(f"📝 [Phase B] 제 {ep_num}화 생성 중...")
 
             # 에피소드 생성
             episode = self._generate_episode(
@@ -266,7 +267,7 @@ class StateLockedArcGenerator(BaseAgent):
                 if item in current_state["equipment"]:
                     current_state["equipment"].remove(item)
 
-            print(f"      ✅ [Phase B] 제 {ep_num}화 완료: 내공 {current_state['energy']}%")
+            logging.info(f"✅ [Phase B] 제 {ep_num}화 완료: 내공 {current_state['energy']}%")
 
         log["phases"].append({
             "phase": "B",
@@ -277,7 +278,7 @@ class StateLockedArcGenerator(BaseAgent):
         # ═══════════════════════════════════════════════════════════════
         # Phase C: Arc 통합 + 최종 상태 확정
         # ═══════════════════════════════════════════════════════════════
-        print(f"      🔧 [Phase C] Arc 통합 중...")
+        logging.info(f"🔧 [Phase C] Arc 통합 중...")
 
         final_arc = self._synthesize_arc(
             arc_no=arc_no,
@@ -310,10 +311,10 @@ class StateLockedArcGenerator(BaseAgent):
                     "mismatch": mismatch,
                     "action": "Would fix prev_arc"
                 })
-                print(f"      ⚠️ [Phase D] 역방향 불일치 감지: {mismatch}")
+                logging.info(f"⚠️ [Phase D] 역방향 불일치 감지: {mismatch}")
 
         log["success"] = True
-        print(f"      ✅ [V60.14] Arc {arc_no} 생성 완료!")
+        logging.info(f"✅ [V60.14] Arc {arc_no} 생성 완료!")
 
         return final_arc, log
 
@@ -346,7 +347,7 @@ class StateLockedArcGenerator(BaseAgent):
                 energy = max(0, 100 - loss)
             except (ValueError, AttributeError, TypeError):  # [V64.P4] energy parse failure
                 # [V60.73] 보수적 기본값 50 (파싱 실패 시 만땅 가정 위험)
-                print(f"      ⚠️ [V60.73] internal_energy_loss 파싱 실패: '{loss_str}' → 50% 가정")
+                logging.warning(f"⚠️ [V60.73] internal_energy_loss 파싱 실패: '{loss_str}' → 50% 가정")
                 energy = 50
 
         # 부상
@@ -408,40 +409,41 @@ class StateLockedArcGenerator(BaseAgent):
             if self.use_speculative:
                 # 1단계: Flash로 빠른 초안 생성
                 old_model = self.primary_model
-                self.primary_model = self.draft_model
+                try:  # [V70] try/finally로 모델 복원 보장
+                    self.primary_model = self.draft_model
 
-                draft_response = self.ask(prompt, temperature=0.8)
+                    draft_response = self.ask(prompt, temperature=0.8)
 
-                if isinstance(draft_response, dict):
-                    draft = draft_response.get("text", str(draft_response))
-                else:
-                    draft = str(draft_response)
-
-                # 2단계: Pro로 정제 (초안이 충분하면)
-                if len(draft) >= 400:
-                    self.primary_model = self.refine_model
-
-                    refine_prompt = SPECULATIVE_REFINE_PROMPT.format(
-                        protagonist_name=protag_name,
-                        draft=self._escape_braces(draft)
-                    )
-
-                    # [V60.25] Thinking Level 활용 - 정제 단계에서 medium 사용
-                    refined_response = self.ask(refine_prompt, temperature=0.5, thinking_level="medium")
-
-                    if isinstance(refined_response, dict):
-                        text = refined_response.get("text", str(refined_response))
+                    if isinstance(draft_response, dict):
+                        draft = draft_response.get("text", str(draft_response))
                     else:
-                        text = str(refined_response)
+                        draft = str(draft_response)
 
-                    # 정제 실패 시 초안 사용
-                    if len(text) < len(draft) * 0.5:
+                    # 2단계: Pro로 정제 (초안이 충분하면)
+                    if len(draft) >= 400:
+                        self.primary_model = self.refine_model
+
+                        refine_prompt = SPECULATIVE_REFINE_PROMPT.format(
+                            protagonist_name=protag_name,
+                            draft=self._escape_braces(draft)
+                        )
+
+                        # [V60.25] Thinking Level 활용 - 정제 단계에서 medium 사용
+                        refined_response = self.ask(refine_prompt, temperature=0.5, thinking_level="medium")
+
+                        if isinstance(refined_response, dict):
+                            text = refined_response.get("text", str(refined_response))
+                        else:
+                            text = str(refined_response)
+
+                        # 정제 실패 시 초안 사용
+                        if len(text) < len(draft) * 0.5:
+                            text = draft
+                    else:
+                        # 초안 부족 시 그대로 사용
                         text = draft
-                else:
-                    # 초안 부족 시 그대로 사용
-                    text = draft
-
-                self.primary_model = old_model
+                finally:
+                    self.primary_model = old_model  # [V70] 예외 시에도 모델 복원
             else:
                 # 기존 방식: 고급 모델로 직접 생성
                 # [V60.25] Thinking Level 활용 - medium으로 추론 품질 향상
@@ -458,7 +460,7 @@ class StateLockedArcGenerator(BaseAgent):
             }
 
         except Exception as e:
-            print(f"      ❌ [Episode] 생성 실패: {e}")
+            logging.warning(f"❌ [Episode] 생성 실패: {e}")
             return None
 
     def _extract_state(self, episode_text: str, start_state: Dict) -> Dict:
@@ -474,12 +476,14 @@ class StateLockedArcGenerator(BaseAgent):
         try:
             # 추출은 저렴한 모델 (BaseAgent는 primary_model 사용)
             old_model = self.primary_model
-            self.primary_model = self.extraction_model
-            response = self.ask(prompt, temperature=0.1)
-            self.primary_model = old_model
+            try:  # [V70] 예외 시 primary_model 복원 보장
+                self.primary_model = self.extraction_model
+                response = self.ask(prompt, temperature=0.1)
+            finally:
+                self.primary_model = old_model
 
             if isinstance(response, str):
-                response = json.loads(response)
+                response = self._extract_json_robust(response)  # [V70] json.loads → robust
 
             return {
                 "location": response.get("end_location", start_state["location"]),
@@ -491,7 +495,7 @@ class StateLockedArcGenerator(BaseAgent):
             }
 
         except Exception as e:
-            print(f"      ⚠️ [Extract] 추출 실패, 시작 상태 유지: {e}")
+            logging.warning(f"⚠️ [Extract] 추출 실패, 시작 상태 유지: {e}")
             return {
                 "location": start_state["location"],
                 "energy": start_state["energy"],

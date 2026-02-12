@@ -159,17 +159,17 @@ class StateDeltaTracker:
         """사유에 따른 최대 회복량 반환"""
         reason_lower = reason.lower()
 
-        if "영약" in reason or "단약" in reason or "환" in reason:
+        if "영약" in reason_lower or "단약" in reason_lower or "환" in reason_lower:  # [V70] reason_lower 사용
             return self.RECOVERY_LIMITS["영약"]
-        if "운기조식" in reason or "운기" in reason:
+        if "운기조식" in reason_lower or "운기" in reason_lower:
             return self.RECOVERY_LIMITS["운기조식"]
-        if "삼일" in reason or "3일" in reason or "사흘" in reason:
+        if "삼일" in reason_lower or "3일" in reason_lower or "사흘" in reason_lower:
             return self.RECOVERY_LIMITS["휴식_삼일"]
-        if "하루" in reason or "1일" in reason or "밤새" in reason:
+        if "하루" in reason_lower or "1일" in reason_lower or "밤새" in reason_lower:
             return self.RECOVERY_LIMITS["휴식_하루"]
-        if "반나절" in reason or "반일" in reason or "반" in reason:
+        if "반나절" in reason_lower or "반일" in reason_lower:  # [V70] 단독 "반" 제거 (반격/반란 오탐 방지)
             return self.RECOVERY_LIMITS["휴식_반나절"]
-        if "비급" in reason or "수련" in reason:
+        if "비급" in reason_lower or "수련" in reason_lower:
             return self.RECOVERY_LIMITS["비급_수련"]
 
         return self.RECOVERY_LIMITS["기본_회복"]

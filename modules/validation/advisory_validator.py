@@ -3,6 +3,7 @@
 개선 제안 (통과에 무영향)
 """
 from typing import Dict, List, Any
+import logging
 
 
 class AdvisoryValidator:
@@ -21,7 +22,7 @@ class AdvisoryValidator:
         "전개": ["기절했다 깨보니", "위기의 순간 각성", "숨겨진 혈통"]
     }
 
-    def __init__(self, client=None, model="gemini-2.5-flash"):
+    def __init__(self, client=None, model="gemini-2.5-flash") -> None:
         self.client = client
         self.model = model
 
@@ -138,6 +139,12 @@ JSON 형식으로 답하십시오:
             import json
             suggestions_raw = json.loads(response.text)
 
+            # [V70] LLM 응답 타입 방어: list가 아닌 경우 처리
+            if isinstance(suggestions_raw, dict):
+                suggestions_raw = suggestions_raw.get('suggestions', [suggestions_raw])
+            if not isinstance(suggestions_raw, list):
+                suggestions_raw = []
+
             return [
                 {
                     "type": "expression_enhancement",
@@ -147,10 +154,11 @@ JSON 형식으로 답하십시오:
                     "severity": "low"
                 }
                 for s in suggestions_raw[:3]
+                if isinstance(s, dict)  # [V70] non-dict 엔트리 스킵
             ]
 
         except Exception as e:
-            print(f"[ADVISORY] 표현 개선 제안 실패: {e}")
+            logging.warning(f"[ADVISORY] 표현 개선 제안 실패: {e}")
             return []
 
     def _suggest_foreshadowing_opportunities(self, manuscript: str) -> List[dict]:

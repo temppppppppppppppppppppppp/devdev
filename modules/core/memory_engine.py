@@ -1,4 +1,5 @@
 import os
+import logging
 import time
 import json
 import sqlite3
@@ -11,7 +12,7 @@ import numpy as np  # 👈 [Patch 3.1] 임포트를 최상단으로 이동하여
 
 class GoogleEmbeddingFunction(EmbeddingFunction):
     """[V25 Sovereign] 고정밀 임베딩 함수 (지수 백오프 적용)"""
-    def __init__(self, api_key):
+    def __init__(self, api_key) -> None:
         self.client = genai.Client(api_key=api_key)
 
     def __call__(self, input: Documents) -> Embeddings:
@@ -62,11 +63,11 @@ class GoogleEmbeddingFunction(EmbeddingFunction):
                     if any(code in str(e) for code in ["429", "503", "504"]) and attempt < max_retries - 1:
                         # [V44] 최대 60초로 백오프 제한
                         wait_time = min(retry_delay * (2 ** attempt), 60)
-                        print(f"⚠️ [Memory Quota] {wait_time}초 후 재시도... ({attempt + 1}/{max_retries})")
+                        logging.info(f"⚠️ [Memory Quota] {wait_time}초 후 재시도... ({attempt + 1}/{max_retries})")
                         time.sleep(wait_time)
                         continue
                     # 기타 치명적 에러 발생 시 해당 텍스트 처리 중단
-                    print(f"🚨 [Embedding Error] 치명적 오류: {e}")
+                    logging.warning(f"🚨 [Embedding Error] 치명적 오류: {e}")
                     break
 
             if not success:
@@ -79,7 +80,7 @@ class GoogleEmbeddingFunction(EmbeddingFunction):
 class LongTermMemory:
     """[V44] JSON 무결성 및 시스템 동기화 통합 기억 엔진 (안전성 강화)"""
 
-    def __init__(self, project_context):
+    def __init__(self, project_context) -> None:
         self.context = project_context
         self.db_path = self.context.paths.memory / "long_term_anchor.db"
         api_key = os.getenv("GOOGLE_API_KEY")
@@ -109,61 +110,15 @@ class LongTermMemory:
             self.conn = None
             self.cursor = None
 
-        # 2. ChromaDB 초기화 (벡터 검색용)
-        # [V45] 임시 변수로 초기화하여 실패 시 정리 용이하게
-        temp_client = None
-        temp_collection = None
-        embedding_func = None
-        try:
-            vector_db_path = self.db_path.parent / "vector_db"
-            # [V61.6] ChromaDB 스키마 마이그레이션 - topic 컬럼 누락 시 추가
-            chroma_sqlite_path = vector_db_path / "chroma.sqlite3"
-            if chroma_sqlite_path.exists():
-                try:
-                    _conn = sqlite3.connect(str(chroma_sqlite_path))
-                    for _tbl in ("collections", "segments"):
-                        _cur = _conn.execute(f"PRAGMA table_info({_tbl})")
-                        _cols = [row[1] for row in _cur.fetchall()]
-                        if _cols and "topic" not in _cols:
-                            _conn.execute(f"ALTER TABLE {_tbl} ADD COLUMN topic TEXT")
-                    _conn.commit()
-                    _conn.close()
-                except Exception:
-                    pass
-            temp_client = chromadb.PersistentClient(path=str(vector_db_path))
-            embedding_func = GoogleEmbeddingFunction(api_key)
-            temp_collection = temp_client.get_or_create_collection(
-                name="v20_sovereign_memory",
-                embedding_function=embedding_func
-            )
-            # 성공 시에만 인스턴스 변수에 할당
-            self.client = temp_client
-            self.collection = temp_collection
-            self.has_valid_memory = True
-            self.ui_log("[Memory] ChromaDB 초기화 성공")
-        except Exception as e:
-            self.initialization_error = str(e)
-            error_str = str(e).lower()
-
-            # [V44] 에러 타입별 해결책 제시
-            if "lock" in error_str:
-                self.ui_log(f"[Memory] ChromaDB 잠금 오류: {e}")
-                self.ui_log(f"   -> 해결책: LOCK 파일 삭제 후 재시작")
-                self.ui_log(f"   -> 위치: {self.db_path.parent / 'vector_db'}")
-            elif "permission" in error_str or "access" in error_str:
-                self.ui_log(f"[Memory] ChromaDB 권한 오류: {e}")
-                self.ui_log(f"   -> 해결책: 폴더 권한 확인")
-            elif "corrupt" in error_str or "invalid" in error_str:
-                self.ui_log(f"[Memory] ChromaDB 손상 감지: {e}")
-                self.ui_log(f"   -> 해결책: vector_db 폴더 삭제 후 재동기화")
-            else:
-                self.ui_log(f"[Memory] ChromaDB 연결 실패: {e}")
-                self.ui_log(f"   -> 벡터 검색 없이 계속 진행합니다")
-
-            # [V44] 실패 시 client 정리
-            self.client = None
-            self.collection = None
-            self.has_valid_memory = False
+        # 2. ChromaDB 비활성화 — Windows Rust binding segfault 회피
+        # [V66.3] chromadb 1.4.1 RustBindingsAPI가 Windows에서 access violation 발생
+        # Python except로 C-level segfault 방어 불가 → 초기화 자체를 스킵
+        # 향후 ChromaDB 업그레이드 시 이 블록을 원래 초기화 코드로 복원
+        self.client = None
+        self.collection = None
+        self.has_valid_memory = False
+        self.initialization_error = "ChromaDB disabled (Windows Rust segfault)"
+        self.ui_log("[Memory] ChromaDB 비활성화 — 벡터 검색 없이 진행합니다")
 
     def _clear_chromadb_locks(self) -> bool:
         """[V44] ChromaDB 락 파일 정리"""
@@ -197,55 +152,14 @@ class LongTermMemory:
         return lock_cleared
 
     def _ensure_collection(self) -> bool:
-        """[V44] 컬렉션 접근 전 유효성 확인 (락 복구 재시도 포함)"""
+        """[V44] 컬렉션 접근 전 유효성 확인
+        [V66.3] ChromaDB 비활성화 상태에서는 항상 False 반환"""
         if self.collection is not None:
             return True
-
-        # [V44 Fix] 락 관련 에러였다면 락 정리 후 재시도
-        if self.initialization_error:
-            error_lower = self.initialization_error.lower()
-            if "lock" in error_lower:
-                self.ui_log("🔄 [Memory] ChromaDB 락 오류 감지 - 락 정리 후 재시도...")
-                if self._clear_chromadb_locks():
-                    # 락 정리 성공 시 에러 플래그 리셋하고 재시도
-                    self.initialization_error = None
-                    time.sleep(1)  # 잠시 대기
-                else:
-                    # 락 정리 실패 시 포기
-                    return False
-            else:
-                # 락 외 다른 에러는 재시도하지 않음
-                return False
-
-        # 재초기화 시도
-        max_retries = 2
-        for attempt in range(max_retries):
-            try:
-                api_key = os.getenv("GOOGLE_API_KEY")
-                vector_db_path = self.db_path.parent / "vector_db"
-                self.client = chromadb.PersistentClient(path=str(vector_db_path))
-                self.collection = self.client.get_or_create_collection(
-                    name="v20_sovereign_memory",
-                    embedding_function=GoogleEmbeddingFunction(api_key)
-                )
-                self.has_valid_memory = True
-                self.ui_log("✅ [Memory] ChromaDB 재초기화 성공")
-                return True
-            except Exception as e:
-                error_str = str(e).lower()
-                if "lock" in error_str and attempt < max_retries - 1:
-                    self.ui_log(f"   ⚠️ [Memory] 재시도 {attempt + 1}/{max_retries}: 락 오류 - 정리 시도...")
-                    self._clear_chromadb_locks()
-                    time.sleep(2)
-                    continue
-                else:
-                    self.initialization_error = str(e)
-                    self.ui_log(f"⚠️ [Memory] ChromaDB 재초기화 실패: {e}")
-                    return False
-
+        # [V66.3] ChromaDB 전면 비활성화 — 재초기화 시도하지 않음
         return False
 
-    def _prepare_sql_table(self):
+    def _prepare_sql_table(self) -> None:
         """V25 앵커 테이블 생성"""
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS anchors (
@@ -256,8 +170,10 @@ class LongTermMemory:
         """)
         self.conn.commit()
 
-    def save_v20_anchor(self, key, data):
+    def save_v20_anchor(self, key, data) -> bool:
         """[V25] JSON 직렬화 저장"""
+        if not self.cursor:  # [V70] SQLite init 실패 방어
+            return False
         try:
             serialized_data = json.dumps(data, ensure_ascii=False) if isinstance(data, (dict, list)) else str(data)
             self.cursor.execute(
@@ -272,6 +188,8 @@ class LongTermMemory:
 
     def load_v20_anchor(self, key):
         """[V25] JSON 역직렬화 복원"""
+        if not self.cursor:  # [V70] SQLite init 실패 방어
+            return None
         try:
             row = self.cursor.execute("SELECT value FROM anchors WHERE key = ?", (key,)).fetchone()
             if row:
@@ -282,7 +200,7 @@ class LongTermMemory:
             self.ui_log(f"❌ [DB Load Error] {key}: {e}")
             return None
 
-    def retrieve_high_res_context(self, query, current_ep, n_results=3):
+    def retrieve_high_res_context(self, query, current_ep, n_results=3) -> str:
         """[V44] JSON 쿼리 대응 고해상도 벡터 검색 및 맥락 인출 (안전 접근)"""
         # 1. [V44] 컬렉션 안전 접근 확인
         if not self._ensure_collection():
@@ -400,7 +318,7 @@ class LongTermMemory:
         return "\n\n".join(context_blocks)
 
     def memorize_v20_episode(self, ep_num, text, summary, causal_links,
-                             arc_no=None, event_types=None, entity_names=None):
+                             arc_no=None, event_types=None, entity_names=None) -> bool:
         """[V44] 에피소드 박제 및 시스템 상태 동기화 (안전 접근)
         [V63.3] arc_no, event_types, entity_names 메타데이터 추가
         """
@@ -429,7 +347,7 @@ class LongTermMemory:
             self.ui_log(f"🚨 [Memory Error] 제 {ep_num} 화 주입 실패: {e}")
             return False
 
-    def sync_v20_drafts(self, force_repair=False):
+    def sync_v20_drafts(self, force_repair=False) -> None:
         """[V44] 청크 기반 지연을 포함한 대량 동기화 안정화 로직 (안전 접근)"""
         if not self._ensure_collection():
             self.ui_log("⚠️ [Memory] 컬렉션 없음 - 원고 동기화 건너뜀")
@@ -475,7 +393,7 @@ class LongTermMemory:
                 except Exception as e:
                     self.ui_log(f"⚠️ [Sync Failed] 제 {ep_num} 화: {e}")
 
-    def ui_log(self, msg):
+    def ui_log(self, msg) -> None:
         ui = getattr(self.context, 'ui', None)
         if ui and hasattr(ui, 'log'): ui.log(msg)
         else: print(f"[Memory] {msg}")
@@ -503,7 +421,7 @@ class LongTermMemory:
         """[V44] 메모리 엔진이 작동 가능한지 확인"""
         return self.has_valid_memory and self.collection is not None
 
-    def close(self):
+    def close(self) -> None:
         """[V44] 리소스 정리 및 연결 종료"""
         # SQLite 연결 종료
         if self.conn:
@@ -519,6 +437,6 @@ class LongTermMemory:
         self.collection = None
         self.has_valid_memory = False
 
-    def __del__(self):
+    def __del__(self) -> None:
         """[V44] 소멸자에서 리소스 정리"""
         self.close()

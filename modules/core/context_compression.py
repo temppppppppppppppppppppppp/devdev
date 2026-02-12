@@ -278,6 +278,8 @@ class ContextCompressor:
         """씬 요약 추출"""
         scenes = blueprint.get("scene_breakdown", {})
         summaries = []
+        if not isinstance(scenes, dict):  # [V70] list 타입 방어
+            return summaries
 
         for scene_id, scene_data in scenes.items():
             if isinstance(scene_data, dict):

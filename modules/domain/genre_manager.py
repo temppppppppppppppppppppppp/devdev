@@ -1,4 +1,5 @@
 from .strategies.wuxia_strategy import WuxiaStrategy
+import logging
 from .strategies.hunter_strategy import HunterStrategy
 from .strategies.investment_strategy import InvestmentStrategy
 from .strategies.composer_strategy import ComposerStrategy
@@ -7,7 +8,7 @@ from .strategies.sports_strategy import SportsStrategy
 from .strategies.medical_strategy import MedicalStrategy
 
 class GenreManager:
-    def __init__(self, studio_system):
+    def __init__(self, studio_system) -> None:
         self.studio = studio_system
 
     def get_strategy(self):
@@ -41,5 +42,5 @@ class GenreManager:
             return MedicalStrategy(self.studio)
         else:
             # 알 수 없는 장르는 무협으로 폴백
-            print(f"⚠️ [GenreManager] 알 수 없는 장르: {genre_type}, 무협으로 대체합니다.")
+            logging.info(f"⚠️ [GenreManager] 알 수 없는 장르: {genre_type}, 무협으로 대체합니다.")
             return WuxiaStrategy(self.studio)

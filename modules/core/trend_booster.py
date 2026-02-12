@@ -6,7 +6,7 @@ class TrendBooster:
     """
     
     @staticmethod
-    def get_trend_prompt():
+    def get_trend_prompt() -> str:
         return """
         [💎 V24 SOVEREIGN ESSENCE: 상업적 절대 강령]
         이 소설의 목적은 오직 하나, '주인공의 이득을 통한 독자의 대리만족'이다.

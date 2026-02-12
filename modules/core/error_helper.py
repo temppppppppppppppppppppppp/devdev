@@ -5,6 +5,7 @@
 """
 
 from enum import Enum
+import logging
 from typing import Optional, Dict, Any
 from dataclasses import dataclass
 
@@ -281,7 +282,7 @@ class ErrorHelper:
         if ui and hasattr(ui, 'log'):
             ui.log(full_message)
         else:
-            print(full_message)
+            logging.info(full_message)
 
     @staticmethod
     def classify_exception(exception: Exception) -> str:

@@ -23,6 +23,7 @@ V55.7: Dialogue Beat Injector (대화 비트 삽입기)
 """
 
 import re
+import logging
 from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
@@ -128,7 +129,7 @@ class ForeshadowBalancer:
         "major": 50  # Arc 단위로 관리
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.foreshadows: List[Foreshadow] = []
 
     def add_foreshadow(self, name: str, ep: int, importance: str = "minor"):
@@ -644,7 +645,7 @@ class ManuscriptEnhancer:
     사용:
         enhancer = ManuscriptEnhancer()
         result = enhancer.analyze(manuscript)
-        print(result.total_feedback)
+        logging.info(result.total_feedback)
     """
 
     def __init__(self, genre: str = "wuxia"):

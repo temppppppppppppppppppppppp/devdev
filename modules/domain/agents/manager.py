@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 from .base_agent import BaseAgent
 
@@ -113,17 +114,19 @@ UPDATE_STATE_PROMPT_V25 = """
 
 class Manager(BaseAgent):
   
-  def update_state_and_lore_v20(self, ep_num, manuscript, current_state, lore_list, active_seeds, causal_history=""):
+  def update_state_and_lore_v20(self, ep_num: int, manuscript: str, current_state: dict, lore_list: list, active_seeds: list, causal_history: str = "") -> dict:
         """
         [V35.9 S-Grade] 정산 데이터 파싱 및 안전 전달 엔진
         - 무리한 내부 보정을 제거하여 main_a.py와의 충돌 방지
         """
-        # 1. 모든 입력 데이터 안전하게 이스케이프 (중괄호 충돌 방지)
-        safe_ms = self._escape_braces(manuscript)
-        safe_state = self._escape_braces(json.dumps(current_state.get('actual_truth', current_state), ensure_ascii=False))
-        safe_lore = self._escape_braces(json.dumps(lore_list, ensure_ascii=False))
-        safe_seeds = self._escape_braces(json.dumps(active_seeds, ensure_ascii=False))
-        safe_history = self._escape_braces(causal_history if causal_history else "기록 없음")
+        # 1. [V70] .replace() 치환에는 _escape_braces 불필요 (이중 이스케이프 제거)
+        safe_ms = manuscript
+        if not current_state:  # [V70] None/빈 dict 방어
+            current_state = {}
+        safe_state = json.dumps(current_state.get('actual_truth', current_state), ensure_ascii=False)
+        safe_lore = json.dumps(lore_list, ensure_ascii=False)
+        safe_seeds = json.dumps(active_seeds, ensure_ascii=False)
+        safe_history = causal_history if causal_history else "기록 없음"
 
         # 2. 템플릿의 중괄호 충돌을 피하기 위해 직접 치환 방식 사용
         full_prompt = UPDATE_STATE_PROMPT_V25.replace("{ep_num}", str(ep_num)) \
@@ -142,10 +145,10 @@ class Manager(BaseAgent):
             # 가장 강력한 파싱 엔진의 결과물만 그대로 main_a.py의 방탄 로직으로 넘깁니다.
             return self._extract_json_robust(response)
         except Exception as e:
-            print(f"      🚨 [Manager Parsing Error] {e}")
+            logging.warning(f"🚨 [Manager Parsing Error] {e}")
             return {"parsing_error": True, "raw_response": response}
 
-  def audit_for_consistency(self, manuscript, master_bible):
+  def audit_for_consistency(self, manuscript: str, master_bible: dict) -> dict:
         """[Extra] 설정 충돌 검사 - 안전 패치 완료"""
         # 1. 중괄호 이스케이프로 파이썬 format 에러 방지
         safe_ms = self._escape_braces(manuscript)

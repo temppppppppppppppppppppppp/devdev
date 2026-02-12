@@ -5,6 +5,7 @@ Rich 기반 진행 표시 및 상태 시각화
 """
 
 import time
+import logging
 from typing import Optional, Dict, Any, List
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -198,9 +199,9 @@ class ProgressManager:
     def _print_stage_header(self, stage: StageInfo):
         """스테이지 시작 헤더 출력"""
         if not RICH_AVAILABLE or not self.console:
-            print(f"\n{'='*60}")
-            print(f"  {stage.name}: {stage.description}")
-            print(f"{'='*60}\n")
+            logging.info(f"\n{'='*60}")
+            logging.info(f"{stage.name}: {stage.description}")
+            logging.info(f"{'='*60}\n")
             return
 
         header = Panel(
@@ -220,7 +221,7 @@ class ProgressManager:
         status_icon = "[OK]" if success else "[FAIL]"
 
         if not RICH_AVAILABLE or not self.console:
-            print(f"\n{status_icon} {stage.name} 완료{duration}")
+            logging.info(f"\n{status_icon} {stage.name} 완료{duration}")
             return
 
         color = "green" if success else "red"
@@ -240,9 +241,9 @@ class ProgressManager:
             bar_width = 40
             filled = int(bar_width * stage.completed_items / stage.total_items)
             bar = '#' * filled + '-' * (bar_width - filled)
-            print(f"\r[{bar}] {percent:.1f}% ({stage.completed_items}/{stage.total_items})", end="")
+            logging.info(f"\r[{bar}] {percent:.1f}% ({stage.completed_items}/{stage.total_items})", end="")
             if stage.completed_items >= stage.total_items:
-                print()  # 줄바꿈
+                logging.info()
             return
 
         # Rich 진행률 표시는 Live context에서 사용하는 것이 좋음
@@ -266,7 +267,7 @@ class ProgressManager:
         else:
             return f"{seconds}초"
 
-    def print_summary(self):
+    def print_summary(self) -> None:
         """전체 진행 요약 출력"""
         if not RICH_AVAILABLE or not self.console:
             self._print_summary_text()
@@ -274,11 +275,11 @@ class ProgressManager:
 
         self._print_summary_rich()
 
-    def _print_summary_text(self):
+    def _print_summary_text(self) -> None:
         """텍스트 기반 요약 출력"""
-        print("\n" + "=" * 60)
-        print("  진행 요약")
-        print("=" * 60)
+        logging.info("\n" + "=" * 60)
+        logging.info("진행 요약")
+        logging.info("=" * 60)
 
         for key, stage in self.stages.items():
             status_icon = {
@@ -293,11 +294,11 @@ class ProgressManager:
                 delta = stage.end_time - stage.start_time
                 duration = f" - {self._format_duration(delta)}"
 
-            print(f"  {status_icon} {stage.name}: {stage.description}{duration}")
+            logging.info(f"{status_icon} {stage.name}: {stage.description}{duration}")
 
-        print("=" * 60)
+        logging.info("=" * 60)
 
-    def _print_summary_rich(self):
+    def _print_summary_rich(self) -> None:
         """Rich 기반 요약 출력"""
         table = Table(title="진행 요약", show_header=True)
         table.add_column("스테이지", style="cyan")
@@ -371,6 +372,6 @@ def complete_stage(stage_key: str, success: bool = True):
     get_progress_manager().complete_stage(stage_key, success)
 
 
-def print_summary():
+def print_summary() -> None:
     """요약 출력 (단축형)"""
     get_progress_manager().print_summary()

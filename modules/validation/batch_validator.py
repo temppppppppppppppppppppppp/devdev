@@ -5,6 +5,7 @@
 asyncio 기반 병렬 처리
 """
 import asyncio
+import logging
 from typing import List, Dict, Any
 from concurrent.futures import ThreadPoolExecutor
 import time
@@ -60,7 +61,7 @@ class BatchValidator:
         # Semaphore로 동시 실행 제한 (API rate limit 보호)
         semaphore = asyncio.Semaphore(self.max_concurrent)
 
-        async def validate_one(ms_data):
+        async def validate_one(ms_data) -> dict:
             async with semaphore:
                 try:
                     # ThreadPoolExecutor로 동기 함수를 비동기로 실행
@@ -114,7 +115,7 @@ class BatchValidator:
         start_time = time.time()
         self.stats['total_manuscripts'] = len(manuscripts)
 
-        def validate_one(ms_data):
+        def validate_one(ms_data) -> dict:
             try:
                 result = self.orchestrator.validate(
                     ms_data['ep_num'],
@@ -167,20 +168,20 @@ class BatchValidator:
 
         return stats
 
-    def print_report(self):
+    def print_report(self) -> None:
         """배치 처리 결과 출력"""
         stats = self.get_statistics()
 
-        print("\n" + "=" * 60)
-        print("BATCH VALIDATION REPORT")
-        print("=" * 60)
-        print(f"Total manuscripts: {stats['total_manuscripts']}")
-        print(f"Completed: {stats['completed']}")
-        print(f"Failed: {stats['failed']}")
-        print(f"Total time: {stats['total_time']:.2f}s")
-        print(f"Average time: {stats['average_time']:.2f}s per manuscript")
-        print(f"Throughput: {stats['throughput']:.2f} manuscripts/second")
-        print("=" * 60)
+        logging.info("\n" + "=" * 60)
+        logging.info("BATCH VALIDATION REPORT")
+        logging.info("=" * 60)
+        logging.info(f"Total manuscripts: {stats['total_manuscripts']}")
+        logging.info(f"Completed: {stats['completed']}")
+        logging.info(f"Failed: {stats['failed']}")
+        logging.info(f"Total time: {stats['total_time']:.2f}s")
+        logging.info(f"Average time: {stats['average_time']:.2f}s per manuscript")
+        logging.info(f"Throughput: {stats['throughput']:.2f} manuscripts/second")
+        logging.info("=" * 60)
 
 
 class BatchOptimizer:
@@ -272,7 +273,7 @@ def validate_manuscripts_in_batch(
         if is_notebook or is_streamlit:
             # Jupyter/Streamlit 환경: 항상 ThreadPool 사용
             env_name = "Jupyter" if is_notebook else "Streamlit"
-            print(f"[INFO] {env_name} 환경 감지 - ThreadPool 모드 사용")
+            logging.info(f"[INFO] {env_name} 환경 감지 - ThreadPool 모드 사용")
             results = validator.validate_batch_sync(manuscripts)
         else:
             # 일반 환경: asyncio 시도
@@ -282,8 +283,8 @@ def validate_manuscripts_in_batch(
                 try:
                     running_loop = asyncio.get_running_loop()
                     # Loop가 있으면 동기 모드로 fallback (nested loop 방지)
-                    print("[WARNING] 실행 중인 event loop 감지 - ThreadPool 동기 모드로 전환")
-                    print("[INFO] (Nested event loop execution을 방지하기 위한 안전 조치)")
+                    logging.warning("[WARNING] 실행 중인 event loop 감지 - ThreadPool 동기 모드로 전환")
+                    logging.info("[INFO] (Nested event loop execution을 방지하기 위한 안전 조치)")
                     results = validator.validate_batch_sync(manuscripts)
                 except RuntimeError:
                     # Loop 없음 - asyncio.run() 사용 시도
@@ -291,12 +292,12 @@ def validate_manuscripts_in_batch(
                         results = asyncio.run(validator.validate_batch_async(manuscripts))
                     except RuntimeError as run_err:
                         # [FIX] asyncio.run() 실패 시 (다른 스레드에서 loop 충돌)
-                        print(f"[WARNING] asyncio.run() 실패: {run_err} - ThreadPool 모드로 재시도")
+                        logging.warning(f"[WARNING] asyncio.run() 실패: {run_err} - ThreadPool 모드로 재시도")
                         results = validator.validate_batch_sync(manuscripts)
             except Exception as e:
                 # 예기치 못한 오류 시 동기 모드로 fallback
-                print(f"[ERROR] Async 실행 실패: {e}")
-                print(f"[INFO] ThreadPool 동기 모드로 전환")
+                logging.warning(f"[ERROR] Async 실행 실패: {e}")
+                logging.info(f"[INFO] ThreadPool 동기 모드로 전환")
                 results = validator.validate_batch_sync(manuscripts)
     else:
         # ThreadPoolExecutor 사용

@@ -6,6 +6,7 @@ Arc/Blueprint는 스킵, 원고 직접 참조 방식
 """
 
 import json
+import logging
 import re
 import os
 from pathlib import Path
@@ -26,7 +27,7 @@ except ImportError:
 class ReverseExpander:
     """역설계 - 기존 원고에서 설정 추출"""
 
-    def __init__(self, project_context=None, llm_client=None):
+    def __init__(self, project_context=None, llm_client=None) -> None:
         self.project = project_context
         self.client = llm_client
         self.preset_registry: Optional[PresetRegistry] = None
@@ -36,7 +37,7 @@ class ReverseExpander:
         self.bible: Dict[str, Any] = {}
         self.episode_bibles: List[Dict[str, Any]] = []  # 회차별 상태
 
-    def _init_llm(self):
+    def _init_llm(self) -> None:
         """LLM 클라이언트 초기화"""
         if self.client:
             return
@@ -65,7 +66,7 @@ class ReverseExpander:
             )
             return response.text
         except Exception as e:
-            print(f"[X] LLM 오류: {e}")
+            logging.warning(f"[X] LLM 오류: {e}")
             return ""
 
     def _parse_json(self, text: str) -> Any:
@@ -126,7 +127,7 @@ class ReverseExpander:
                 # 하위 폴더에 txt 파일이 있으면 그 폴더 사용
                 if list(sub_path.glob("*.txt")):
                     folder = sub_path
-                    print(f"      📂 자동 감지: {subdir}/ 폴더 사용")
+                    logging.info(f"📂 자동 감지: {subdir}/ 폴더 사용")
                     break
 
         # 모든 txt 파일 수집
@@ -304,7 +305,7 @@ JSON:
         schema = self.preset_registry.get_schema_for_prompt() if self.preset_registry else ""
 
         for i, draft in enumerate(self.raw_drafts):
-            print(f"  회차 {draft['ep_num']} 상태 추출...")
+            logging.info(f"회차 {draft['ep_num']} 상태 추출...")
 
             prev_state = self.episode_bibles[-1] if self.episode_bibles else {}
 
@@ -385,13 +386,13 @@ JSON:
             with open(out / "preset_state.json", 'w', encoding='utf-8') as f:
                 f.write(self.preset_registry.to_json())
 
-        print(f"[v] 저장 완료: {out}")
+        logging.info(f"[v] 저장 완료: {out}")
 
     # ============================================
     # Phase 7: ChromaDB 벡터화 저장
     # ============================================
 
-    def persist_to_chromadb(self, project_context=None):
+    def persist_to_chromadb(self, project_context=None) -> int:
         """
         [V60.95] 원고를 ChromaDB 벡터 DB에 저장
 
@@ -405,12 +406,12 @@ JSON:
             int: 저장 성공한 에피소드 수
         """
         if not self.raw_drafts:
-            print("[!] 저장할 원고가 없습니다. load_drafts_*를 먼저 호출하세요.")
+            logging.info("[!] 저장할 원고가 없습니다. load_drafts_*를 먼저 호출하세요.")
             return 0
 
         ctx = project_context or self.project
         if not ctx:
-            print("[!] project_context가 필요합니다.")
+            logging.info("[!] project_context가 필요합니다.")
             return 0
 
         try:
@@ -418,16 +419,16 @@ JSON:
             memory = LongTermMemory(ctx)
 
             if not memory.is_operational():
-                print("[!] LongTermMemory가 비활성 상태입니다.")
+                logging.info("[!] LongTermMemory가 비활성 상태입니다.")
                 return 0
         except ImportError as e:
-            print(f"[!] LongTermMemory 임포트 실패: {e}")
+            logging.warning(f"[!] LongTermMemory 임포트 실패: {e}")
             return 0
 
         success_count = 0
         total = len(self.raw_drafts)
 
-        print(f"[*] ChromaDB 벡터화 시작 ({total}개 에피소드)...")
+        logging.info(f"[*] ChromaDB 벡터화 시작 ({total}개 에피소드)...")
 
         for i, draft in enumerate(self.raw_drafts):
             ep_num = draft.get("ep_num", i + 1)
@@ -435,7 +436,7 @@ JSON:
             content = draft.get("content", "")
 
             if not content:
-                print(f"   [skip] 제{ep_num}화: 내용 없음")
+                logging.info(f"[skip] 제{ep_num}화: 내용 없음")
                 continue
 
             # 메타데이터 구성 (episode_bibles에서 추가 정보)
@@ -446,7 +447,7 @@ JSON:
             }
 
             # episode_bibles에서 추가 정보 (있으면)
-            if self.episode_bibles and ep_num - 1 < len(self.episode_bibles):
+            if self.episode_bibles and 0 <= ep_num - 1 < len(self.episode_bibles):  # [V70] 음수 인덱스 방어
                 ep_bible = self.episode_bibles[ep_num - 1]
                 if ep_bible:
                     causal_links["new_npcs"] = ep_bible.get("new_npcs", [])
@@ -464,11 +465,11 @@ JSON:
                 if result:
                     success_count += 1
                     if (i + 1) % 10 == 0 or (i + 1) == total:
-                        print(f"   [{i + 1}/{total}] 벡터화 진행 중...")
+                        logging.info(f"[{i + 1}/{total}] 벡터화 진행 중...")
             except Exception as e:
-                print(f"   [X] 제{ep_num}화 벡터화 실패: {str(e)[:50]}")
+                logging.warning(f"[X] 제{ep_num}화 벡터화 실패: {str(e)[:50]}")
 
-        print(f"[v] ChromaDB 벡터화 완료: {success_count}/{total}개")
+        logging.info(f"[v] ChromaDB 벡터화 완료: {success_count}/{total}개")
         return success_count
 
     # ============================================
@@ -517,41 +518,42 @@ JSON:
             print_header("역설계 완료!", style="simple")
         else:
             # 스피너 없는 폴백
-            print("\n[*] 역설계 시작")
+            logging.info("\n[*] 역설계 시작")
 
             path = Path(input_path)
             if path.is_file():
                 count = self.load_drafts_from_file(str(path))
             else:
                 count = self.load_drafts_from_folder(str(path))
-            print(f"[v] {count}개 에피소드 로드")
+            logging.info(f"[v] {count}개 에피소드 로드")
 
             if not genre:
                 genre = self.detect_genre()
-            print(f"[v] 장르: {genre}")
+            logging.info(f"[v] 장르: {genre}")
             self.init_preset(genre)
 
-            print("[*] Bible 추출...")
+            logging.info("[*] Bible 추출...")
             self.extract_bible()
 
-            print("[*] 회차별 상태 추출...")
+            logging.info("[*] 회차별 상태 추출...")
             self.extract_episode_bibles()
 
-            print("[*] 스타일 가이드 추출...")
+            logging.info("[*] 스타일 가이드 추출...")
             self.extract_style_guide()
 
             self.save_all(output_dir)
 
-            print("\n[v] 역설계 완료!")
+            logging.info("\n[v] 역설계 완료!")
 
         return self.bible, self.episode_bibles, self.style_guide
 
-    def _extract_episode_bibles_with_progress(self):
+    def _extract_episode_bibles_with_progress(self) -> None:
         """스피너와 함께 회차별 상태 추출"""
         self.episode_bibles = []
         schema = self.preset_registry.get_schema_for_prompt() if self.preset_registry else ""
 
         progress = ProgressBar(len(self.raw_drafts), "회차별 상태 추출")
+        progress.start()  # [V70] Rich 프로그레스바 시작 누락 수정
 
         for i, draft in enumerate(self.raw_drafts):
             progress.update(message=f"제{draft['ep_num']}화 처리 중")
@@ -615,7 +617,7 @@ JSON:
         """
         ctx = project_context or self.project
         if not ctx:
-            print("[!] project_context가 필요합니다.")
+            logging.info("[!] project_context가 필요합니다.")
             return {"manuscripts": 0, "blueprints": 0, "arcs": 0}
 
         result = {
@@ -630,7 +632,7 @@ JSON:
         enriched = self._enrich_arc_stubs_from_episode_bibles(ctx)
         result["arc_enriched"] = enriched
 
-        print(f"[v] DB 저장 완료: {result}")
+        logging.info(f"[v] DB 저장 완료: {result}")
         return result
 
     def _save_manuscripts_to_db(self, ctx) -> int:
@@ -652,13 +654,13 @@ JSON:
                 ctx.db.save_manuscript(ep_num, title, content)
                 count += 1
             except Exception as e:
-                print(f"   [!] 원고 저장 실패 (ep_{ep_num}): {e}")
+                logging.warning(f"[!] 원고 저장 실패 (ep_{ep_num}): {e}")
 
         # 커밋 [V61.5] 실패 시 경고 + count 보정
         try:
             ctx.db.conn.commit()
         except Exception as e:
-            print(f"   [!] 원고 커밋 실패: {e}")
+            logging.warning(f"[!] 원고 커밋 실패: {e}")
             count = 0
 
         return count
@@ -699,12 +701,12 @@ JSON:
                 ctx.db.save_state_log_with_summary(ep_num, state_data, summary)
                 count += 1
             except Exception as e:
-                print(f"   [!] State Log 저장 실패 (ep_{ep_num}): {e}")
+                logging.warning(f"[!] State Log 저장 실패 (ep_{ep_num}): {e}")
 
         try:
             ctx.db.conn.commit()
         except Exception as e:
-            print(f"   [!] State Log 커밋 실패: {e}")
+            logging.warning(f"[!] State Log 커밋 실패: {e}")
             count = 0
 
         return count
@@ -786,12 +788,12 @@ JSON:
                 ctx.db.save_episode_bible(ep_num, bible_delta)
                 count += 1
             except Exception as e:
-                print(f"   [!] Episode Bible DB 저장 실패 (ep_{ep_num}): {e}")
+                logging.warning(f"[!] Episode Bible DB 저장 실패 (ep_{ep_num}): {e}")
 
         try:
             ctx.db.conn.commit()
         except Exception as e:
-            print(f"   [!] Episode Bible 커밋 실패: {e}")
+            logging.warning(f"[!] Episode Bible 커밋 실패: {e}")
             count = 0
 
         return count
@@ -829,12 +831,12 @@ JSON:
                 ctx.db.save_blueprint(ep_num, stub)
                 count += 1
             except Exception as e:
-                print(f"   [!] Blueprint stub 저장 실패 (ep_{ep_num}): {e}")
+                logging.warning(f"[!] Blueprint stub 저장 실패 (ep_{ep_num}): {e}")
 
         try:
             ctx.db.conn.commit()
         except Exception as e:
-            print(f"   [!] Blueprint stub 커밋 실패: {e}")
+            logging.warning(f"[!] Blueprint stub 커밋 실패: {e}")
             count = 0
 
         return count
@@ -861,10 +863,10 @@ JSON:
 
             # Arc 내 key_events 수집
             arc_events = []
+            _eb_map = {eb.get("ep_num"): eb for eb in self.episode_bibles} if self.episode_bibles else {}
             for ep in arc_episodes:
-                idx = ep["ep_num"] - 1
-                if self.episode_bibles and idx < len(self.episode_bibles):
-                    arc_events.extend(self.episode_bibles[idx].get("key_events", []))
+                _ep_bible = _eb_map.get(ep["ep_num"], {})
+                arc_events.extend(_ep_bible.get("key_events", []))
 
             stub = {
                 "_stub": True,
@@ -900,7 +902,7 @@ JSON:
 
             return len(arc_stubs)
         except Exception as e:
-            print(f"   [!] Arc stub 저장 실패: {e}")
+            logging.warning(f"[!] Arc stub 저장 실패: {e}")
             return 0
 
     def _enrich_arc_stubs_from_episode_bibles(self, ctx) -> int:
@@ -1034,7 +1036,7 @@ JSON:
                 arc['introduced_npcs'] = agg_npcs[:20]
 
                 enriched_count += 1
-                print(f"   [v] Arc {arc_no} 보강: rels={len(agg_relationships[:10])}, npcs={len(agg_npcs[:20])}")
+                logging.info(f"[v] Arc {arc_no} 보강: rels={len(agg_relationships[:10])}, npcs={len(agg_npcs[:20])}")
 
             # 저장
             ctx.db.save_anchor('arcs', arcs)
@@ -1043,7 +1045,7 @@ JSON:
             return enriched_count
 
         except Exception as e:
-            print(f"   [!] Arc stub 보강 실패: {e}")
+            logging.warning(f"[!] Arc stub 보강 실패: {e}")
             return 0
 
     def get_stub_summary(self) -> Dict[str, Any]:

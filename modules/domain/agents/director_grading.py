@@ -24,7 +24,7 @@ class DirectorGradingSystem:
     - on_approve_workflow(): 상태 업데이트 검증 및 승인 [V65 C-5]
     """
 
-    def __init__(self, director=None):
+    def __init__(self, director=None) -> None:
         """
         Args:
             director: Director 인스턴스 (적응형 기준선 접근용, 선택적)
@@ -576,7 +576,7 @@ class DirectorGradingSystem:
             'reason': threshold_info['reason']
         }
 
-    def on_approve_workflow(self, ep_num, state_updates, current_hud, martial_manager=None):
+    def on_approve_workflow(self, ep_num, state_updates, current_hud, martial_manager=None) -> dict:
         """
         [V65 C-5] 상태 업데이트 검증 및 적용
 

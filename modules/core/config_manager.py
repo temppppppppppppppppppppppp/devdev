@@ -1,11 +1,12 @@
 
 import os
+import logging
 from pathlib import Path
 
 class ConfigManager:
     """[V20 Sovereign Config] 모델 티어 배정 및 프로젝트 경로 체계를 총괄 관리"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.root = Path.cwd()
         
         # 1. 프로젝트 폴더 생성
@@ -16,7 +17,7 @@ class ConfigManager:
         self.logs_dir = self.root / "logs" 
         self.logs_dir.mkdir(parents=True, exist_ok=True)
         
-        print(f"📁 [System] 필수 경로 점검 완료: {self.logs_dir}")
+        logging.info(f"📁 [System] 필수 경로 점검 완료: {self.logs_dir}")
         
         # [V60.24] 모든 모델을 Gemini 3로 통일
         # Stage 1~4: 모든 단계에서 Gemini 3 Pro 사용
@@ -36,7 +37,7 @@ class ConfigManager:
             }
         }
 
-    def get_v20_project_paths(self, project_name):
+    def get_v20_project_paths(self, project_name: str) -> dict:
         """V20 표준 폴더 구조 정의"""
         base = self.projects_dir / project_name
         return {
@@ -49,7 +50,7 @@ class ConfigManager:
             'memory': base / "chroma_db"
         }
 
-    def get_model_for_agent(self, agent_role):
+    def get_model_for_agent(self, agent_role: str) -> str:
         return self.settings["models"].get(agent_role, "gemini-2.5-flash")
 
-    def __getitem__(self, key): return self.settings[key]
+    def __getitem__(self, key: str) -> dict: return self.settings[key]

@@ -6,6 +6,7 @@
 """
 
 import json
+import logging
 import re
 from typing import List, Dict, Any
 
@@ -29,7 +30,7 @@ class ReferenceAnchor:
         'decision': '중요 결정'
     }
 
-    def __init__(self, project_context):
+    def __init__(self, project_context) -> None:
         """
         Args:
             project_context: ProjectContext 인스턴스
@@ -38,7 +39,7 @@ class ReferenceAnchor:
         # [V66.1] B-2: DB 로드 결과 캐시 (get_relevant/critical_anchors에서 재사용)
         self._all_anchors_cache = None
 
-    def extract_anchors_from_manuscript(self, ep_num, manuscript_content):
+    def extract_anchors_from_manuscript(self, ep_num: int, manuscript_content: str) -> list:
         """
         원고에서 주요 앵커 추출 (AI 보조)
 
@@ -103,7 +104,7 @@ class ReferenceAnchor:
 
             # API client 존재 여부 검증
             if not hasattr(self.context, 'sys') or not hasattr(self.context.sys, 'api_client'):
-                print(f"      ⚠️ [ReferenceAnchor] API client unavailable (ep {ep_num})")
+                logging.info(f"⚠️ [ReferenceAnchor] API client unavailable (ep {ep_num})")
                 return []
 
             # 임시 에이전트 생성
@@ -121,11 +122,11 @@ class ReferenceAnchor:
             return anchors
 
         except Exception as e:
-            print(f"      ⚠️ [ReferenceAnchor] 앵커 추출 실패 (제 {ep_num}화): {e}")
+            logging.warning(f"⚠️ [ReferenceAnchor] 앵커 추출 실패 (제 {ep_num}화): {e}")
             # 실패 시 빈 리스트 반환 (치명적 오류 아님)
             return []
 
-    def _load_all_anchors(self):
+    def _load_all_anchors(self) -> list:
         """
         [V66.1] B-2: 앵커 DB 로드 결과 캐시. 동일 인스턴스에서 여러 메서드가
         호출될 때 중복 DB 조회를 방지 (~100ms/ep 절감).
@@ -134,11 +135,11 @@ class ReferenceAnchor:
             self._all_anchors_cache = self.context.db.load_anchor('reference_anchors', default=[])
         return self._all_anchors_cache
 
-    def invalidate_cache(self):
+    def invalidate_cache(self) -> None:
         """[V66.1] B-2: 앵커 저장 후 캐시 무효화."""
         self._all_anchors_cache = None
 
-    def get_relevant_anchors(self, current_ep_num, arc_context, n_anchors=5):
+    def get_relevant_anchors(self, current_ep_num: int, arc_context: str, n_anchors: int = 5) -> list:
         """
         현재 에피소드에 관련된 앵커 추출
 
@@ -207,7 +208,7 @@ class ReferenceAnchor:
 
         return formatted_anchors
 
-    def get_critical_anchors(self, current_ep_num, anchor_types=None):
+    def get_critical_anchors(self, current_ep_num: int, anchor_types=None) -> list:
         """
         특정 타입의 최신 앵커만 추출 (강제 참조용)
 
@@ -251,7 +252,7 @@ class ReferenceAnchor:
 
         return critical_list
 
-    def save_anchors(self, new_anchors):
+    def save_anchors(self, new_anchors: list) -> None:
         """
         새로운 앵커를 DB에 저장
 
@@ -283,7 +284,7 @@ class ReferenceAnchor:
         # [V66.1] B-2: 저장 후 캐시 무효화
         self.invalidate_cache()
 
-    def generate_reference_prompt(self, relevant_anchors, critical_anchors=None):
+    def generate_reference_prompt(self, relevant_anchors: list, critical_anchors: list = None) -> str:
         """
         Writer/Architect에게 전달할 참조 프롬프트 생성
 
@@ -320,7 +321,7 @@ class ReferenceAnchor:
 
         return prompt
 
-    def get_statistics(self):
+    def get_statistics(self) -> dict:
         """
         현재 앵커 통계 반환
 

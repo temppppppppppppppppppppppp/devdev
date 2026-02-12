@@ -5,6 +5,7 @@ Pattern Tracking + Diversity Sampling + Contrastive CoT 통합 관리
 
 사용법:
     from modules.core.narrative_diversity import NarrativeDiversityEngine
+import logging
 
     engine = NarrativeDiversityEngine(context, genre='wuxia')
     engine.analyze_recent_episodes(10)  # 최근 10화 분석
@@ -373,7 +374,7 @@ D: 오해 → 갈등 → 진실 발견 → 관계 심화
                     blueprints.append(bp_data)
 
         except Exception as e:
-            print(f"      [NarrativeDiversity] 에피소드 로드 실패: {e}")
+            logging.warning(f"[NarrativeDiversity] 에피소드 로드 실패: {e}")
 
         self._recent_manuscripts = manuscripts
 
@@ -390,11 +391,11 @@ D: 오해 → 갈등 → 진실 발견 → 관계 심화
             reference_texts=manuscripts
         )
 
-        print(f"      [NarrativeDiversity] {len(manuscripts)}화 분석 완료")
+        logging.info(f"[NarrativeDiversity] {len(manuscripts)}화 분석 완료")
         if self._analysis_report:
             high_count = self._analysis_report.get('high_severity_count', 0)
             if high_count > 0:
-                print(f"      [NarrativeDiversity] HIGH 경고 {high_count}개 감지!")
+                logging.info(f"[NarrativeDiversity] HIGH 경고 {high_count}개 감지!")
 
         return self._analysis_report
 
@@ -415,7 +416,7 @@ D: 오해 → 갈등 → 진실 발견 → 관계 심화
         """
         if self.diversity_sampler is None:
             # 분석 안 됐으면 단일 생성
-            print("      [NarrativeDiversity] 분석 미완료 - 단일 블루프린트 생성")
+            logging.info("[NarrativeDiversity] 분석 미완료 - 단일 블루프린트 생성")
             return generator_fn(), {'mode': 'single', 'reason': 'no_analysis'}
 
         return self.diversity_sampler.sample_blueprints(generator_fn, n_samples)
@@ -439,7 +440,7 @@ D: 오해 → 갈등 → 진실 발견 → 관계 심화
         """
         if self.conditional_sampler is None:
             # 분석 안 됐으면 단일 생성
-            print("      [NarrativeDiversity] 분석 미완료 - 단일 원고 생성")
+            logging.info("[NarrativeDiversity] 분석 미완료 - 단일 원고 생성")
             return generator_fn(), {'mode': 'single', 'reason': 'no_analysis'}
 
         return self.conditional_sampler.sample_or_single(generator_fn, n_samples, force)

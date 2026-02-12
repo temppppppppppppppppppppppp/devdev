@@ -8,6 +8,7 @@ Style Extractor V2 - 문체 DNA 추출기
 """
 
 import json
+import logging
 import re
 import os
 import time
@@ -51,7 +52,7 @@ class StyleGuide:
     analysis_version: str = "v2"
     reference_works: List[str] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         for f in fields(self):
             if f.type == List[str] and getattr(self, f.name) is None:
                 setattr(self, f.name, [])
@@ -186,7 +187,7 @@ class StyleExtractor:
 
     API_DELAY = 0.5  # LLM 호출 간격
 
-    def __init__(self, llm_client=None):
+    def __init__(self, llm_client=None) -> None:
         self.client = llm_client
 
     # ═══════════════════════════════════════════════════════════════
@@ -211,33 +212,33 @@ class StyleExtractor:
         total_chars = len(all_text)
         total_episodes = len(drafts)
 
-        print(f"      [V2] 문체 분석 시작: {total_episodes}화, {total_chars:,}자")
+        logging.info(f"[V2] 문체 분석 시작: {total_episodes}화, {total_chars:,}자")
 
         # Phase 1: Python 통계 분석 (전체 원고)
-        print(f"         [1/5] 통계 분석...")
+        logging.info(f"[1/5] 통계 분석...")
         stats = self._analyze_statistics_v2(drafts)
 
         # Phase 2: 샘플 큐레이션
-        print(f"         [2/5] 샘플 큐레이션...")
+        logging.info(f"[2/5] 샘플 큐레이션...")
         curated = self._curate_samples(drafts)
 
         # Phase 3: 리듬 분석
-        print(f"         [3/5] 리듬 분석...")
+        logging.info(f"[3/5] 리듬 분석...")
         rhythm = self._analyze_rhythm(drafts)
 
         # Phase 4: LLM 심층 분석
         qualitative = {}
         if self.client or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY"):
-            print(f"         [4/5] LLM 심층 분석...")
+            logging.info(f"[4/5] LLM 심층 분석...")
             qualitative = self._deep_llm_analysis(drafts)
 
             # Phase 5: Anti-AI 패턴 생성
-            print(f"         [5/5] Anti-AI 패턴 생성...")
+            logging.info(f"[5/5] Anti-AI 패턴 생성...")
             anti = self._generate_anti_patterns(drafts, curated.get("exemplary_passages", []))
             qualitative.update(anti)
         else:
-            print(f"         [4/5] LLM 없음 - 통계 분석만 사용")
-            print(f"         [5/5] 스킵")
+            logging.info(f"[4/5] LLM 없음 - 통계 분석만 사용")
+            logging.info(f"[5/5] 스킵")
 
         # 병합
         merged = {**stats, **curated, **rhythm, **qualitative}
@@ -248,7 +249,7 @@ class StyleExtractor:
             merged["reference_works"] = [reference_name]
 
         guide = StyleGuide(**{k: v for k, v in merged.items() if k in {f.name for f in fields(StyleGuide)}})
-        print(f"      [OK] 문체 DNA 추출 완료 (v2, {total_episodes}화 분석)")
+        logging.info(f"[OK] 문체 DNA 추출 완료 (v2, {total_episodes}화 분석)")
         return guide
 
     # ═══════════════════════════════════════════════════════════════
@@ -495,7 +496,7 @@ JSON만 출력하세요.
             result = self._llm_call(prompt)
             return result
         except Exception as e:
-            print(f"         [!] LLM 심층 분석 실패: {e}")
+            logging.warning(f"[!] LLM 심층 분석 실패: {e}")
             return {}
 
     # ═══════════════════════════════════════════════════════════════
@@ -535,7 +536,7 @@ JSON만 출력하세요.
             result = self._llm_call(prompt)
             return result
         except Exception as e:
-            print(f"         [!] Anti-AI 패턴 생성 실패: {e}")
+            logging.warning(f"[!] Anti-AI 패턴 생성 실패: {e}")
             return {}
 
     # ═══════════════════════════════════════════════════════════════
@@ -555,7 +556,7 @@ JSON만 출력하세요.
         """
         base_path = Path("config/style_references") / genre
         if not base_path.exists():
-            print(f"      [!] 레퍼런스 폴더 없음: {base_path}")
+            logging.info(f"[!] 레퍼런스 폴더 없음: {base_path}")
             return {}
 
         works = {}
@@ -569,10 +570,10 @@ JSON만 출력하세요.
                     if text.strip():
                         episodes.append(text)
                 except Exception as e:
-                    print(f"      [!] 파일 로드 실패: {txt_file.name}: {e}")
+                    logging.warning(f"[!] 파일 로드 실패: {txt_file.name}: {e}")
             if episodes:
                 works[work_dir.name] = episodes
-                print(f"      [+] {work_dir.name}: {len(episodes)}화 로드")
+                logging.info(f"[+] {work_dir.name}: {len(episodes)}화 로드")
 
         return works
 
@@ -597,7 +598,7 @@ JSON만 출력하세요.
             all_drafts.extend(episodes)
             work_names.append(f"{name}({len(episodes)}화)")
 
-        print(f"      [*] 총 {len(all_drafts)}화, 작품 {len(works)}개 분석")
+        logging.info(f"[*] 총 {len(all_drafts)}화, 작품 {len(works)}개 분석")
 
         guide = self.extract_from_drafts(all_drafts, reference_name=", ".join(work_names))
         guide.reference_works = list(works.keys())
@@ -626,7 +627,7 @@ JSON만 출력하세요.
             samples.append(drafts[idx][:batch_size])
         return samples
 
-    def _ensure_client(self):
+    def _ensure_client(self) -> None:
         """LLM 클라이언트 자동 초기화"""
         if self.client:
             return
@@ -659,7 +660,7 @@ JSON만 출력하세요.
                 return self._parse_json(response.text)
             except Exception as e:
                 last_err = e
-                print(f"         [!] {model_name} 실패, 다음 모델 시도...")
+                logging.warning(f"[!] {model_name} 실패, 다음 모델 시도...")
                 time.sleep(1)
         raise last_err if last_err else RuntimeError("All models failed")
 

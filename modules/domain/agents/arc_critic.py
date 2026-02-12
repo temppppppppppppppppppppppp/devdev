@@ -11,6 +11,7 @@
 """
 
 import json
+import logging
 import re
 from typing import Dict, List, Any, Optional, Tuple
 from .base_agent import BaseAgent
@@ -163,7 +164,7 @@ class ArcCritic(BaseAgent):
             result = self.ask(prompt, temperature=0.2, thinking_level="medium")
 
             if isinstance(result, str):
-                result = json.loads(result)
+                result = self._extract_json_robust(result)  # [V70] bare json.loads → robust 파서
 
             # 필수 필드 보장
             result = self._ensure_critique_fields(result)
@@ -174,7 +175,7 @@ class ArcCritic(BaseAgent):
             return result, fixed_arc
 
         except Exception as e:
-            print(f"      ⚠️ [Critic] 비평 오류: {str(e)[:50]}")
+            logging.warning(f"⚠️ [Critic] 비평 오류: {str(e)[:50]}")
             # 폴백: Python 기반 간단 검증
             return self._python_critique_fallback(generated_arc, prev_arcs), generated_arc
 
@@ -236,7 +237,7 @@ class ArcCritic(BaseAgent):
             for key, value in auto_fixes["state_constraints"].items():
                 old_value = fixed["state_constraints"].get(key)
                 if old_value != value:
-                    print(f"      ⚠️ [V60.73] state_constraints 자동 수정: {key}: {old_value} → {value} (tactical_doc 불일치 주의)")
+                    logging.info(f"⚠️ [V60.73] state_constraints 자동 수정: {key}: {old_value} → {value} (tactical_doc 불일치 주의)")
                 fixed["state_constraints"][key] = value
 
         # items_acquired 수정 (중복 제거)

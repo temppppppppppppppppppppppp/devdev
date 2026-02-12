@@ -5,6 +5,7 @@ Rich 라이브러리 기반 파도치는 색상 + 덮어쓰기 방지
 """
 
 import sys
+import logging
 import time
 import threading
 from itertools import cycle
@@ -197,7 +198,7 @@ class Spinner:
 
         return result
 
-    def _animate_rich(self):
+    def _animate_rich(self) -> None:
         """Rich Live를 사용한 애니메이션"""
         spinner = cycle(self.frames)
 
@@ -217,7 +218,7 @@ class Spinner:
                 self.wave_offset += 1
                 time.sleep(0.08)
 
-    def _animate_fallback(self):
+    def _animate_fallback(self) -> None:
         """폴백 애니메이션 (Rich 없을 때)"""
         spinner = cycle(self.frames)
         while self.running:
@@ -228,7 +229,7 @@ class Spinner:
             sys.stdout.flush()
             time.sleep(0.1)
 
-    def start(self):
+    def start(self) -> None:
         """스피너 시작"""
         self.running = True
         self.start_time = time.time()
@@ -258,7 +259,7 @@ class Spinner:
             console.print(f" [dim]({elapsed:.1f}s)[/]")
         elif final_message:
             sys.stdout.write("\r" + " " * 80 + "\r")
-            print(f"\033[32m✓\033[0m {final_message} \033[90m({elapsed:.1f}s)\033[0m")
+            logging.info(f"\033[32m✓\033[0m {final_message} \033[90m({elapsed:.1f}s)\033[0m")
 
         sys.stdout.flush()
 
@@ -270,7 +271,7 @@ class Spinner:
         self.start()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         if exc_type is None:
             self.stop(f"{self.message} 완료")
         else:
@@ -306,7 +307,7 @@ class ProgressBar:
             )
             self.task_id = None
 
-    def start(self):
+    def start(self) -> None:
         """프로그레스 시작"""
         if RICH_AVAILABLE:
             self.progress.start()
@@ -346,13 +347,13 @@ class ProgressBar:
             console.print(f" [dim]({elapsed:.1f}s)[/]")
         else:
             sys.stdout.write("\r" + " " * 100 + "\r")
-            print(f"\033[32m✓\033[0m {message} \033[90m({elapsed:.1f}s)\033[0m")
+            logging.info(f"\033[32m✓\033[0m {message} \033[90m({elapsed:.1f}s)\033[0m")
 
     def __enter__(self):
         self.start()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         if exc_type is None:
             self.finish()
         elif RICH_AVAILABLE:
@@ -372,7 +373,7 @@ class PhaseIndicator:
         self.colors = Spinner.COLOR_THEMES.get(color_theme, WAVE_COLORS)
         self.wave_offset = 0
 
-    def show(self):
+    def show(self) -> None:
         """전체 단계 표시"""
         if RICH_AVAILABLE:
             console.print()
@@ -393,21 +394,21 @@ class PhaseIndicator:
             print()
             for i, phase in enumerate(self.phases):
                 if i < self.current_phase:
-                    print(f"  \033[32m✓\033[0m {phase}")
+                    logging.info(f"\033[32m✓\033[0m {phase}")
                 elif i == self.current_phase:
-                    print(f"  \033[36m➤\033[0m \033[1m{phase}\033[0m")
+                    logging.info(f"\033[36m➤\033[0m \033[1m{phase}\033[0m")
                 else:
-                    print(f"  \033[90m○ {phase}\033[0m")
+                    logging.info(f"\033[90m○ {phase}\033[0m")
             print()
 
         self.wave_offset += 1
 
-    def next(self):
+    def next(self) -> bool:
         """다음 단계로"""
         self.current_phase += 1
         return self.current_phase < len(self.phases)
 
-    def complete(self):
+    def complete(self) -> None:
         """모든 단계 완료"""
         self.current_phase = len(self.phases)
 
@@ -463,9 +464,9 @@ def print_header(title: str, style: str = "double", color_theme: str = "wave"):
     else:
         width = 60
         border = "═" * width
-        print(f"\n+{border}+")
-        print(f"| {title:^{width-2}} |")
-        print(f"+{border}+")
+        logging.info(f"\n+{border}+")
+        logging.info(f"| {title:^{width-2}} |")
+        logging.info(f"+{border}+")
 
 
 def print_success(message: str):
@@ -475,7 +476,7 @@ def print_success(message: str):
         console.print(f"[bold green]✓[/] ", end="")
         console.print(text)
     else:
-        print(f"\033[32m✓\033[0m {message}")
+        logging.info(f"\033[32m✓\033[0m {message}")
 
 
 def print_error(message: str):
@@ -483,7 +484,7 @@ def print_error(message: str):
     if RICH_AVAILABLE:
         console.print(f"[bold red]✗[/] [red]{message}[/]")
     else:
-        print(f"\033[31m✗\033[0m {message}")
+        logging.info(f"\033[31m✗\033[0m {message}")
 
 
 def print_warning(message: str):
@@ -493,7 +494,7 @@ def print_warning(message: str):
         console.print(f"[bold yellow]![/] ", end="")
         console.print(text)
     else:
-        print(f"\033[33m!\033[0m {message}")
+        logging.info(f"\033[33m!\033[0m {message}")
 
 
 def print_info(message: str):
@@ -503,7 +504,7 @@ def print_info(message: str):
         console.print(f"[bold cyan]→[/] ", end="")
         console.print(text)
     else:
-        print(f"\033[36m→\033[0m {message}")
+        logging.info(f"\033[36m→\033[0m {message}")
 
 
 def print_tip(message: str):
@@ -513,7 +514,7 @@ def print_tip(message: str):
         console.print(f"[bold magenta]💡[/] ", end="")
         console.print(text)
     else:
-        print(f"\033[35m💡\033[0m {message}")
+        logging.info(f"\033[35m💡\033[0m {message}")
 
 
 def print_stage(stage_num: int, stage_name: str, status: str = "running"):
@@ -533,9 +534,9 @@ def print_stage(stage_num: int, stage_name: str, status: str = "running"):
                 box=box.HEAVY
             ))
     else:
-        print(f"\n{'=' * 60}")
-        print(f"  Stage {stage_num}: {stage_name}")
-        print(f"{'=' * 60}")
+        logging.info(f"\n{'=' * 60}")
+        logging.info(f"Stage {stage_num}: {stage_name}")
+        logging.info(f"{'=' * 60}")
 
 
 def print_table(headers: list, rows: list):
@@ -562,12 +563,12 @@ def print_table(headers: list, rows: list):
         header_line = " │ ".join(h.ljust(widths[i]) for i, h in enumerate(headers))
         separator = "─┼─".join("─" * w for w in widths)
 
-        print(f"\033[1m{header_line}\033[0m")
-        print(f"\033[90m{separator}\033[0m")
+        logging.info(f"\033[1m{header_line}\033[0m")
+        logging.info(f"\033[90m{separator}\033[0m")
 
         for row in rows:
             row_line = " │ ".join(str(cell).ljust(widths[i]) for i, cell in enumerate(row))
-            print(row_line)
+            logging.info(row_line)
 
 
 # ============================================
@@ -597,7 +598,7 @@ def with_spinner(message: str = "처리 중", style: str = "dots", color_theme: 
 # ============================================
 
 if __name__ == "__main__":
-    print("\n")
+    logging.info("\n")
     print_header("Spinner & Progress Test", style="wave")
 
     # 스피너 테스트

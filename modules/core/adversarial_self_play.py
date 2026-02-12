@@ -23,6 +23,7 @@ Writer 생성 → 가상 Director 비판 → Writer 수정 루프
 """
 
 from typing import Dict, Any, List, Optional, Callable, Tuple
+import logging
 from dataclasses import dataclass
 from enum import Enum
 import json
@@ -149,9 +150,9 @@ JSON 형식으로 냉정하게:
                     "max_output_tokens": 8192
                 }
             )
-            return response.text
+            return response.text or ""  # [V70] None 방어
         except Exception as e:
-            print(f"[AdversarialSelfPlay] LLM 호출 실패: {e}")
+            logging.warning(f"[AdversarialSelfPlay] LLM 호출 실패: {e}")
             return ""
 
     def _parse_json(self, text: str) -> Dict[str, Any]:
@@ -175,8 +176,8 @@ JSON 형식으로 냉정하게:
 
         prompt = self.ADVERSARY_PROMPT.format(
             content_type=content_type,
-            content=content[:6000],
-            context=context_str
+            content=content[:6000].replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
+            context=context_str.replace("{", "{{").replace("}", "}}")  # [V70] brace escape
         )
 
         response = self._call_llm(prompt, temperature=0.3)
@@ -214,11 +215,11 @@ JSON 형식으로 냉정하게:
 
         prompt = self.REVISION_PROMPT.format(
             content_type=content_type,
-            original=original[:8000],
+            original=original[:8000].replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
             score=feedback.score,
             decision=feedback.decision,
-            issues=issues_text if issues_text else "없음",
-            revision_guide=feedback.revision_guide if feedback.revision_guide else "원본 유지"
+            issues=(issues_text if issues_text else "없음").replace("{", "{{").replace("}", "}}"),  # [V70]
+            revision_guide=(feedback.revision_guide if feedback.revision_guide else "원본 유지").replace("{", "{{").replace("}", "}}")  # [V70]
         )
 
         revised = self._call_llm(prompt, temperature=0.5)

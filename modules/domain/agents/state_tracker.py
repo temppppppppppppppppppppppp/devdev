@@ -15,6 +15,7 @@ DAG(Directed Acyclic Graph) 형태로 타임라인을 구성하여 검증합니�
 """
 
 import re
+import logging
 import copy
 from typing import Dict, List, Optional, Tuple, Set, Any
 from dataclasses import dataclass, field
@@ -110,7 +111,7 @@ class StateTracker:
         issues = tracker.validate_timeline()
     """
 
-    def __init__(self, preset_registry=None, llm_client=None):
+    def __init__(self, preset_registry=None, llm_client=None) -> None:
         self.states: Dict[int, EpisodeState] = {}  # ep_num -> state
         self.transitions: List[StateTransition] = []
         self.global_items: Set[str] = set()  # 전체 소지 아이템 추적
@@ -173,7 +174,7 @@ class StateTracker:
         self._financial = StateTrackerFinancial(self)
         self._plots = StateTrackerPlots(self)
 
-    def _init_tracking_fields(self):
+    def _init_tracking_fields(self) -> None:
         """[V60.95] 프리셋 기반 추적 필드 초기화"""
         self.tracking_fields: Dict[str, Any] = {}
 
@@ -236,12 +237,12 @@ class StateTracker:
             if activated:
                 # 추적 필드 갱신
                 self.refresh_tracking_fields()
-                print(f"      \U0001f3ad [V61.3] 새 장르 감지: {new_genre} → 프리셋 활성화, 추적 필드 확장")
+                logging.info(f"\U0001f3ad [V61.3] 새 장르 감지: {new_genre} → 프리셋 활성화, 추적 필드 확장")
                 return new_genre
 
         return None
 
-    def refresh_tracking_fields(self):
+    def refresh_tracking_fields(self) -> None:
         """
         [V61.3] 프리셋 변경 후 추적 필드 갱신
 
@@ -456,7 +457,7 @@ class StateTracker:
             return True
 
         except Exception as e:
-            print(f"      \u26a0\ufe0f [StateTracker] Arc 설계 로드 실패: {e}")
+            logging.warning(f"\u26a0\ufe0f [StateTracker] Arc 설계 로드 실패: {e}")
             return False
 
     def _parse_episode_state(self, ep_num: int, ep_data: dict, checkpoints: list):
@@ -570,7 +571,7 @@ class StateTracker:
                     return base_ep + int(match.group(1)) - 1
         return base_ep + 4  # 기본값: Arc 종료
 
-    def _build_transitions(self):
+    def _build_transitions(self) -> None:
         """상태 전이 DAG 구성"""
         self.transitions.clear()
 
@@ -876,14 +877,17 @@ class StateTracker:
     def register_npc_death(self, npc_name: str, death_arc: int, death_context: str = ""):
         return self._npc.register_npc_death(npc_name, death_arc, death_context)
 
-    def register_npc_info(self, npc_name: str, arc_no: int, weapon: str = None, level: str = None):
-        return self._npc.register_npc_info(npc_name, arc_no, weapon, level)
+    def register_npc_info(self, npc_name: str, arc_no: int, weapon: str = None, level: str = None,
+                          personality_traits: str = None, primary_motivation: str = None):
+        return self._npc.register_npc_info(npc_name, arc_no, weapon, level,
+                                           personality_traits=personality_traits,
+                                           primary_motivation=primary_motivation)
 
     def check_npc_changes(self, content: str, arc_no: int) -> List[dict]:
         return self._npc.check_npc_changes(content, arc_no)
 
-    def extract_npc_info_from_arc(self, arc: dict) -> List[dict]:
-        return self._npc.extract_npc_info_from_arc(arc)
+    def extract_npc_info_from_arc(self, arc: dict, genre: str = "") -> List[dict]:
+        return self._npc.extract_npc_info_from_arc(arc, genre=genre)
 
     def _is_standalone_name(self, name: str, text: str) -> bool:
         return self._npc._is_standalone_name(name, text)
@@ -926,6 +930,10 @@ class StateTracker:
 
     def get_dead_npc_summary(self) -> str:
         return self._npc.get_dead_npc_summary()
+
+    def cleanup_npc_registry_with_llm(self, arc_no: int) -> List[str]:
+        """[V69] 5 Arc마다 NPC 레지스트리 일반명사 오탐 LLM 정리 위임."""
+        return self._npc.cleanup_npc_registry_with_llm(arc_no)
 
     # ═══════════════════════════════════════════════════════════════
     # [V64.P3] Financial 서브모듈 위임 스텁
@@ -1117,7 +1125,10 @@ class StateTracker:
     # ═══════════════════════════════════════════════════════════════
 
     def generate_arc_summary(self, arc_no: int, arc: dict = None) -> Dict:
-        """[V66] Arc 완료 시 자동 요약 생성 -- NPC 관계/세계 상태/플롯 현황."""
+        """[V66] Arc 완료 시 자동 요약 생성 -- NPC 관계/세계 상태/플롯 현황.
+        [V66.2] F-2: arc dict가 주어지면 state_changes에서 NPC를 우선 추출하여
+                     registry 오염에 의존하지 않는 정확한 스냅샷 생성.
+        """
         summary = {
             "arc_no": arc_no,
             "npc_status": {},
@@ -1128,7 +1139,46 @@ class StateTracker:
         }
         # NPC 상태 스냅샷 (최근 10명)
         recent_npcs = {}
+        seen_names: set = set()
+
+        # [V66.2] F-2: arc['state_changes']에서 NPC 이름 우선 추출
+        if arc and isinstance(arc, dict):
+            sc = arc.get("state_changes", {})
+            if isinstance(sc, dict):
+                # state_changes 내 NPC 이름 수집
+                sc_npc_names = []
+                for entry in sc.get("relationship_changes", []):
+                    if isinstance(entry, dict) and entry.get("npc"):
+                        sc_npc_names.append(entry["npc"])
+                for entry in sc.get("npc_deaths", []):
+                    if isinstance(entry, dict) and entry.get("name"):
+                        sc_npc_names.append(entry["name"])
+                for entry in sc.get("companion_changes", []):
+                    if isinstance(entry, dict) and entry.get("name"):
+                        sc_npc_names.append(entry["name"])
+                for entry in sc.get("npc_personality_changes", []):
+                    if isinstance(entry, dict) and entry.get("name"):
+                        sc_npc_names.append(entry["name"])
+
+                # 중복 제거 후 registry 정보로 보강
+                for npc_name in dict.fromkeys(sc_npc_names):  # 순서 유지 중복 제거
+                    if len(recent_npcs) >= 10:
+                        break
+                    reg_info = self.npc_registry.get(npc_name, {})
+                    recent_npcs[npc_name] = {
+                        "status": reg_info.get("status", "alive"),
+                        "relation": reg_info.get("relation_to_protag", ""),
+                        "personality": reg_info.get("personality_traits", ""),
+                        "location": reg_info.get("location", ""),
+                    }
+                    seen_names.add(npc_name)
+
+        # 기존 npc_registry 루프 (state_changes에서 이미 추가된 이름은 스킵)
         for name, info in self.npc_registry.items():
+            if len(recent_npcs) >= 10:
+                break
+            if name in seen_names:
+                continue
             if info.get("last_arc", 0) >= max(1, arc_no - 2):
                 recent_npcs[name] = {
                     "status": info.get("status", "alive"),
@@ -1136,8 +1186,6 @@ class StateTracker:
                     "personality": info.get("personality_traits", ""),
                     "location": info.get("location", ""),
                 }
-                if len(recent_npcs) >= 10:
-                    break
         summary["npc_status"] = recent_npcs
 
         # 완결 플롯 (현재 arc)
@@ -1239,7 +1287,7 @@ class StateTracker:
             "npc_deaths": self.extract_npc_deaths_from_arc(arc),
             "skill_acquisitions": self.extract_skill_acquisitions_from_arc(arc),
             "relationship_changes": self.extract_relationship_changes_from_arc(arc),
-            "major_items": arc.get("state_changes", {}).get("major_items", []),
+            "major_items": (arc.get("state_changes") or {}).get("major_items", []),  # [V70] None 방어
             "resolved_plots": self.extract_resolved_plots_from_arc(arc),
             "npc_injuries": self.extract_npc_injuries_from_arc(arc),
             "npc_movements": self.extract_npc_movements_from_arc(arc),

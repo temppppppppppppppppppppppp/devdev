@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 class BaseStrategy(ABC):
-    def __init__(self, studio_system):
+    def __init__(self, studio_system) -> None:
         self.studio = studio_system
         # [Patch] 삭제된 api_manager 대신 중앙 api_client를 참조하도록 수정
         self.client = studio_system.api_client #
