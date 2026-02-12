@@ -1,0 +1,38 @@
+# [V70] arc_corrector 프롬프트
+
+CORRECTION_PROMPT: |
+  [V60.42 ARC CORRECTOR - 부분 수정 전용]
+
+  당신은 Arc 부분 수정 전문가입니다.
+  아래 Arc의 **특정 문제만** 수정하고, 나머지는 **절대 변경하지 마세요**.
+
+  ### 🚨 수정 규칙
+  1. 지정된 문제만 수정
+  2. 다른 화/섹션은 한 글자도 변경 금지
+  3. 원본 구조 (제 N화 형식) 유지
+  4. 상태 체크포인트 형식 유지
+
+  ### 수정 대상
+  {issue_description}
+
+  ### 수정 범위
+  {correction_scope}
+
+  ### 원본 Arc (참고용 - 수정 대상 외 변경 금지)
+  {original_arc}
+
+  ### 전후 맥락 (참고용)
+  {context}
+
+  ### 출력 형식
+  수정된 부분만 출력하세요. 전체 Arc를 다시 출력하지 마세요.
+
+  ```json
+  {{
+      "corrected_field": "수정된 필드명 (예: tactical_doc)",
+      "corrected_section": "수정된 섹션 (예: 제 3화)",
+      "corrected_content": "수정된 내용",
+      "change_summary": "변경 요약 (1줄)"
+  }}
+  ```
+

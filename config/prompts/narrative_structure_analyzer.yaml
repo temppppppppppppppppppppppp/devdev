@@ -1,0 +1,38 @@
+# [V70] narrative_structure_analyzer 프롬프트
+
+NARRATIVE_EXTRACTION_PROMPT: |
+  [서사 구조 분석기]
+
+  아래 5개 에피소드 비트에서 핵심 서사 요소를 추출하세요.
+
+  ### 비트 목록
+  {beats_text}
+
+  ### 추출 규칙
+  1. **핵심 행위**: 주인공의 주요 행동 (1단어)
+     - 예: 전투, 수련, 이동, 협상, 탐색, 도주, 잠입, 구출, 복수, 각성
+
+  2. **장소 유형**: 사건이 벌어지는 공간 유형 (1단어)
+     - 예: 산장, 도시, 황궁, 야외, 동굴, 저택, 주막, 시장, 전장, 비밀기지
+
+  3. **결과/변화**: 에피소드 끝의 상황 변화 (1단어)
+     - 예: 승리, 패배, 무승부, 성장, 획득, 상실, 동맹, 적대, 발각, 은신
+
+  ### 출력 (JSON)
+  {{
+      "episodes": [
+          {{"action": "전투", "location": "산장", "outcome": "승리"}},
+          {{"action": "이동", "location": "도시", "outcome": "동맹"}},
+          {{"action": "수련", "location": "동굴", "outcome": "성장"}},
+          {{"action": "탐색", "location": "저택", "outcome": "발각"}},
+          {{"action": "도주", "location": "야외", "outcome": "은신"}}
+      ],
+      "pattern_detected": false,
+      "pattern_description": null
+  }}
+
+  ### 중요
+  - 각 필드는 반드시 1단어로
+  - 비트 내용을 정확히 반영
+  - 억지로 다르게 만들지 말고 실제로 비슷하면 비슷하게 추출
+

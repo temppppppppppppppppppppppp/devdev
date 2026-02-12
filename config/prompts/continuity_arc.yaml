@@ -1,0 +1,181 @@
+# [V70] Continuity Arc 프롬프트
+
+ARC_CONTINUITY_INSPECTION_PROMPT: |
+  [Role] Arc 수준 연속성 검증 전문가 (Arc Continuity Inspector)
+  [Task] 현재 Arc의 전술 설계가 이전 Arc들과 논리적으로 연결되는지, 그리고 단일 Arc 내에서 모순이 없는지 정밀 검증
+
+  ### 📋 검증 대상: Arc {current_arc_no}
+  - 설정 화수: {ep_count}화 (제 {ep_start}화 ~ 제 {ep_end}화)
+  - 전술 설계서:
+  {tactical_doc}
+
+  - Joint Docs (Arc 종료 시점 상태):
+  {joint_docs}
+
+  - Status Shadow (예상 손실):
+  {status_shadow}
+
+  ### 📜 이전 Arc 타임라인 (Arc 1 ~ Arc {prev_arc_count})
+  {prev_arcs_summary}
+
+  ### 🎯 핵심 검증 항목
+
+  #### 1. Arc 간 아이템/무기 연속성 (Cross-Arc Item Timeline)
+  - 이전 Arc들에서 획득한 아이템이 현재 Arc에서 중복 획득되지 않는가?
+  - 이전 Arc의 joint_docs.physical_inventory에 명시된 아이템이 현재 Arc에서 연속적으로 소지되는가?
+  - 현재 Arc에서 새로 획득하려는 아이템이 이전에 이미 획득한 것과 동일하지 않은가?
+
+  #### 2. Arc 간 수여물/위상 연속성 (Cross-Arc Grant Timeline)
+  - 이전 Arc에서 수여받은 권한/패/직위가 현재 Arc에서 유지되는가?
+  - 이전 Arc에서 "복권"이나 "인정"을 받았다면, 현재 Arc에서 여전히 무시당하는 설정이 있는가?
+  - 정보 전파 시간을 고려해도 모순인 반응이 있는가?
+
+  #### 3. Arc 간 상태 연속성 (Cross-Arc State Timeline)
+  - 이전 Arc의 status_shadow(부상, 내공 소모)가 현재 Arc 도입부에 반영되는가?
+  - 부상 상태에서 갑자기 완전 회복된 것처럼 행동하지 않는가?
+  - 경지/무공 수준이 급격히 변화하지 않았는가?
+
+  #### 4. 단일 Arc 내 모순 (Intra-Arc Consistency) [V49 신규]
+  - 현재 Arc의 tactical_doc 내에서 앞뒤 화 사이에 모순이 없는가?
+  - 예: 제N화에서 획득한 아이템을 제N+2화에서 다시 획득하러 가는 설정
+  - 예: 제N화에서 부상을 입었는데 제N+1화에서 멀쩡하게 전투하는 설정
+  - 예: 제N화에서 설정된 무기 두께/특성이 제N+3화에서 모순되는 설정
+
+  #### 5. 설정 일관성 (Setting Consistency) [V49 신규]
+  - 아이템/무기의 물리적 특성(무게, 두께, 재질)이 Arc 내에서 일관되는가?
+  - 인물의 호칭/별호가 일관되게 사용되는가?
+  - 장소 이동이 물리적으로 가능한가?
+
+  ### 🚨 판정 기준
+  - CRITICAL: 명백한 타임라인 오류 (중복 획득, 수여 전 소지) → 즉시 REJECT
+  - MAJOR: 심각한 연속성 오류 (상태 급변, 설정 충돌) → REJECT
+  - MINOR: 경미한 불일치 (반응 속도, 정보 전파) → WARNING으로 PASS 가능
+  - NONE: 연속성 문제 없음 → PASS
+
+  ### [Chain-of-Thought Analysis]
+  다음 순서로 분석하십시오:
+
+  Step 1: 아이템/무기 타임라인 검증
+  - 이전 Arc들의 joint_docs에서 획득/소지 아이템 목록 추출
+  - 현재 Arc의 tactical_doc에서 획득하려는 아이템 추출
+  - 중복 획득 여부 판정
+
+  Step 2: 수여물/위상 타임라인 검증
+  - 이전 Arc들에서 수여/인정받은 것들 목록
+  - 현재 Arc에서의 NPC 반응이 일관적인지 확인
+  - 타임라인 모순 여부 판정
+
+  Step 3: 상태 연속성 검증
+  - 직전 Arc의 status_shadow 확인
+  - 현재 Arc 도입부의 상태 확인
+  - 급격한 변화 여부 판정
+
+  Step 4: 단일 Arc 내 모순 검증
+  - 현재 Arc의 각 화별 설정 추출
+  - 화 사이의 인과적 연결 확인
+  - 내부 모순 여부 판정
+
+  Step 5: 설정 일관성 검증
+  - 무기/아이템의 물리적 특성 일관성
+  - 인물 호칭/별호 일관성
+  - 장소 이동의 물리적 타당성
+
+  Step 6: [V61 NEW] Entity 명칭 일관성 검증
+  - Entity Registry가 제공된 경우, 등록된 정식 명칭과 현재 Arc의 명칭 비교
+  - 캐릭터: 이전 Arc에서 '팽무진'으로 확립되었는데 현재 '무진' 또는 '주인공'으로 표기되면 WARNING
+  - 조직/문파: '철혈문' vs '철혈파' 같은 미묘한 명칭 차이 탐지
+  - 장소: '무기고' vs '병기고' 같은 동일 장소의 다른 명칭 탐지
+  - 물품: '백근도' vs '거구도' 같은 동일 무기의 다른 명칭 탐지
+  - 기술/무공: '이화접목' vs '중검무봉' 같은 기술명 불일치 탐지
+  - Entity Registry:
+  {entity_registry}
+
+  Step 7: 최종 판정
+  - 위 6단계를 종합하여 PASS/REJECT 결정
+  - 위반 사항 목록 작성
+  - 수정 지시 작성
+
+  [Output Format] JSON Only
+  {{
+      "decision": "PASS" 또는 "REJECT",
+      "severity": "NONE" 또는 "MINOR" 또는 "MAJOR" 또는 "CRITICAL",
+      "cross_arc_analysis": {{
+          "items_acquired_before": ["이전 Arc들에서 획득한 아이템"],
+          "items_in_current_arc": ["현재 Arc에서 획득/사용하려는 아이템"],
+          "grants_received_before": ["이전 Arc들에서 수여받은 것들"],
+          "status_from_prev_arc": "직전 Arc 종료 시 상태"
+      }},
+      "intra_arc_analysis": {{
+          "internal_timeline": ["Arc 내 각 화별 핵심 사건"],
+          "internal_contradictions": ["Arc 내부에서 발견된 모순"]
+      }},
+      "entity_consistency": {{
+          "registered_entities": {{"characters": [], "organizations": [], "locations": [], "objects": [], "concepts": []}},
+          "current_entities": {{"characters": [], "organizations": [], "locations": [], "objects": [], "concepts": []}},
+          "mismatches": [
+              {{
+                  "category": "character | organization | location | object | concept",
+                  "registered_name": "등록된 정식 명칭",
+                  "current_name": "현재 사용된 명칭",
+                  "severity": "CRITICAL | MAJOR | MINOR",
+                  "recommendation": "수정 권고"
+              }}
+          ]
+      }},
+      "violations": [
+          {{
+              "type": "duplicate_acquisition | premature_possession | state_discontinuity | intra_arc_contradiction | setting_inconsistency | entity_name_mismatch",
+              "severity": "CRITICAL | MAJOR | MINOR",
+              "item_or_subject": "문제 대상",
+              "prev_arc": "이전 발생 Arc 번호 (Arc 간 모순인 경우)",
+              "prev_ep": "이전 발생 화수 (Arc 내 모순인 경우)",
+              "curr_ep": "현재 문제 화수",
+              "description": "모순 설명",
+              "evidence_prev": "이전 근거 텍스트",
+              "evidence_curr": "현재 근거 텍스트"
+          }}
+      ],
+      "warnings": ["MINOR 수준의 경고 목록"],
+      "fix_instructions": "수정 지시 (REJECT 시 필수, PASS 시 권고사항)"
+  }}
+
+JOINT_DOCS_EXTRACTION_PROMPT: |
+  [Role] Arc 종료 상태 추출기 (Joint Docs Extractor)
+  [Task] Arc의 마지막 화(제 {last_ep}화) 내용을 분석하여 정확한 종료 상태를 추출하라.
+
+  ### 📋 Arc {arc_no} 전술 설계서 (마지막 화 중심)
+  {last_ep_content}
+
+  ### 🎯 추출 항목
+
+  #### 1. final_location (종료 시점 위치)
+  - 마지막 화가 끝나는 시점에 주인공이 위치한 **구체적인 장소**
+  - 예: "팽가 연무장", "무기고 앞", "가주 집무실"
+  - 단순히 "팽가"가 아닌 **세부 장소**까지 명시
+
+  #### 2. physical_inventory (물리적 소지품) [⚠️ 매우 중요]
+  - 마지막 화 종료 시점에 주인공이 **소지 중인 모든 핵심 물품**
+  - **🚨 핵심 원칙**: 무기, 패, 문서 등은 **명시적으로 버리거나 잃어버리지 않는 한 계속 소지 중**
+  - 예: 주인공이 제5화에서 "백근 대도"를 획득했고, 제8화까지 버린 언급이 없다면 → "백근 대도"는 여전히 소지 중
+  - 예시 목록: ["백근 대도", "철혈사자패", "비급서", "양피지 문서"]
+  - 소모품(영약 등)만 소모 처리, **무기/패/문서는 버리지 않으면 항상 포함**
+  - ❌ 빈 배열 `[]` 반환 금지 - 최소한 주무기와 핵심 아이템은 항상 포함
+
+  #### 3. world_joint (환경적 변화)
+  - 이 Arc가 끝나면서 **다음 Arc가 즉시 계승해야 할** 세계 상태
+  - 예: "팽가의 권력 구도가 뒤집힘", "청사가 가문 감옥에 수감됨"
+
+  ### 🚨 추출 원칙
+  1. 추론하지 말고 **문서에 명시된 내용만** 추출하라
+  2. 획득 vs 소지 구분: 새로 획득한 것만이 아닌, 현재 소지 중인 모든 핵심 아이템
+  3. 마지막 화의 "(4) 연속성 체크포인트" 섹션이 있다면 우선 참조
+
+  [Output Format] JSON Only
+  {{
+      "final_location": "종료 시점의 구체적 장소",
+      "physical_inventory": ["소지품 1", "소지품 2", ...],
+      "world_joint": "다음 Arc가 계승할 환경 변화",
+      "extraction_confidence": "HIGH | MEDIUM | LOW",
+      "extraction_notes": "추출 시 참고한 문서 내 근거 (선택)"
+  }}
+
