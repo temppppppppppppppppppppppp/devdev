@@ -1,0 +1,41 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# === 환경 ===
+.env
+.env.local
+.venv/
+venv/
+env/
+
+# === IDE ===
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# === OS ===
+.DS_Store
+Thumbs.db
+Desktop.ini
+nul
+
+# === 프로젝트 임시 파일 ===
+_*.py
+_*.txt
+*.log
+
+# === DB/캐시 ===
+*.db-journal
+chroma_data/
+
+# === Gemini 관련 ===
+.gemini/
