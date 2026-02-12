@@ -1,0 +1,44 @@
+# [V70] style_extractor 프롬프트 (인라인)
+
+
+DEEP_LLM_ANALYSIS__PROMPT: |
+  당신은 한국 웹소설 문체 분석 전문가입니다.
+  아래 원고 샘플 3개(초반/중반/후반)를 분석하세요.
+
+  ## 원고 샘플
+  {combined_sample}
+
+  ## 분석 항목 (JSON으로 출력)
+  ```json
+  {{
+    "tone": "이 작품의 전반적 톤 (예: 냉소적, 유머, 진지, 어두움, 가벼움)",
+    "description_style": "간결/균형/묘사적 중 하나",
+    "vocabulary_level": "easy/medium/hard 중 하나",
+    "action_style": "static/dynamic/cinematic 중 하나",
+    "emotion_rendering": "이 작가의 감정 표현 방식을 2-3문장으로 설명 (예: 직접 감정어 대신 신체 반응과 행동으로 간접 표현, 내면 독백 최소화)",
+    "dialogue_narration_pattern": "대화와 서술이 어떻게 연결되는지 2-3문장 (예: 대화 전 1줄 행동묘사, 대화 후 짧은 반응, 지문 최소화)",
+    "signature_expressions": ["이 작가가 자주 쓰는 특징적 표현 10개"],
+    "forbidden_expressions": ["이 작가가 절대 안 쓰는 표현 5개"]
+  }}
+  ```
+  JSON만 출력하세요.
+
+GENERATE_ANTI_PATTERNS__PROMPT: |
+  당신은 한국 웹소설 AI 탐지 전문가입니다.
+  아래 인간 작가의 원고 샘플을 분석하고, AI가 글을 쓸 때 반드시 피해야 할 패턴을 추출하세요.
+
+  ## 인간 작가 원고 샘플
+  {sample[:8000]}
+
+  ## 추출 항목 (JSON)
+  이 작가의 문체를 모방할 때, AI가 빠지기 쉬운 함정과 금지 패턴을 구체적으로 나열하세요.
+  ```json
+  {{
+    "anti_ai_patterns": [
+      "구체적 금지 패턴 1 (예: '그는 깊은 슬픔을 느꼈다' 같은 감정 직접 서술 금지)",
+      "구체적 금지 패턴 2",
+      "...(총 10개)"
+    ]
+  }}
+  ```
+  각 패턴은 구체적 예시와 함께 작성하세요. JSON만 출력.

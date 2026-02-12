@@ -1,0 +1,56 @@
+# [V70] writer 프롬프트 (인라인)
+
+
+WRITE_V20_MANUSCRIPT__DYNAMIC_PROMPT: |
+  [주인공 이름: {protagonist_name}]
+          {mandatory_context}
+          {feedback_section}
+          {reference_anchor_prompt}
+          {anti_trope}
+          {genre_rules_prompt}
+          {justification_guidance}
+
+          [WRITER'S FOCUS MISSION]
+          1. {focus_tag}의 내용을 바탕으로 소설 원고를 집필.
+          2. 미래 사건을 미리 노출하지 마라.
+          3. Blueprint에 명시된 장면을 하나하나 늘려 써라.
+          4. 에피소드 마지막은 절벽걸기로 끝내라.
+
+          [CURRENT MISSION: Ep {ep_num}]
+          - 스타일: {style_mode}
+          - 전개 모드: {dna_instruction}
+          {purism_prompt}
+
+          - 주인공 동력: {safe_desire}
+          - 가용 자산: {safe_assets}
+          - NPC 장비: {safe_npc_equipment}
+          - Entity Registry: {safe_entity_registry}
+          - 주인공 설정: {world_origin} / {incarnation_type}
+          {protagonist_instructions_text}
+
+          씬 설계도: {self._escape_braces(breakdown_doc)}
+          실시간 상태: {self._escape_braces(hud_report)}
+          HUD 추세: {self._get_hud_trend_safe(ep_num)}
+          NPC 빈도: {self._get_npc_frequency_warning(ep_num)}
+          직전 원고 엔딩: ...{self._escape_braces(prev_full_manuscript)[-1500:]}
+          아크 전술: {self._escape_braces(arc_doc)}
+          {self._escape_braces(tactical_references)}
+          주 패턴: {self._escape_braces(str(pattern_primary))}
+          부 패턴: {self._escape_braces(str(pattern_secondary))}
+          조합 논리: {self._escape_braces(str(pattern_logic))}
+
+          출력 형식 (Strict JSON):
+          {{
+              "title": "에피소드 제목",
+              "content": "5,000자 이상의 소설 본문 (줄바꿈은 \\n)",
+              "state_updates": {{
+                  "internal_energy": "70%",
+                  "realm": "경지명",
+                  "causal_injuries": "부상 상태",
+                  "wealth": "은자 500냥",
+                  "misunderstanding": 30,
+                  "obsession": 20,
+                  "equipment": ["소지 아이템"],
+                  "martial_arts": ["습득 무공"]
+              }}
+          }}
