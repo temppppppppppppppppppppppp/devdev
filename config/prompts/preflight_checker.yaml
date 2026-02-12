@@ -1,0 +1,93 @@
+# [V70] preflight_checker 프롬프트
+
+PREFLIGHT_ANALYSIS_PROMPT: |
+  [V60.12 PREFLIGHT CHECKER - 생성 전 완벽 분석]
+
+  당신은 Arc 생성 전 모든 제약 조건을 분석하는 전문가입니다.
+  다음 Arc를 설계하기 위해 이전 Arc들을 철저히 분석하세요.
+
+  ### 분석 대상: Arc 1 ~ Arc {prev_arc_count}
+
+  {prev_arcs_data}
+
+  ### 분석 지시
+
+  1. **아이템 타임라인 완전 분석**
+     - 각 Arc에서 획득한 모든 아이템 (언제, 어디서, 어떻게)
+     - 현재 주인공이 소지 중인 아이템 전체 목록
+     - 소모/분실된 아이템과 그 시점
+
+  2. **수여물/권한 타임라인**
+     - 누구에게 무엇을 수여받았는지
+     - 수여 후 위상 변화
+     - 현재 보유 중인 모든 수여물
+
+  3. **관계 상태 맵**
+     - 주요 NPC별 현재 관계 상태
+     - 관계 변화 이력 (언제, 왜 변했는지)
+
+  4. **세계 상태**
+     - 현재 위치
+     - 알려진 정보
+     - 진행 중인 갈등/사건 (아직 해결되지 않은 것만)
+     - 완결된 갈등/사건 (이미 해결되어 재생성하면 안 되는 것)
+
+  5. **다음 Arc 절대 금지 사항**
+     - 이미 획득한 아이템 재획득 시도
+     - 이미 수여받은 것 재수여
+     - 위치 순간이동
+     - 이미 완결된 갈등/사건의 동일 반복
+     - 부상 무시
+
+  ### 출력 형식 (JSON)
+
+  {{
+      "timeline_analysis": {{
+          "items": [
+              {{"arc": 1, "episode": 2, "item": "대도", "action": "획득", "context": "장로에게서 하사"}}
+          ],
+          "grants": [
+              {{"arc": 2, "episode": 4, "grant": "철혈사자패", "grantor": "단주", "significance": "정식 단원 인정"}}
+          ],
+          "current_inventory": ["대도", "철혈사자패", "금창약"],
+          "consumed_items": []
+      }},
+      "relationship_map": {{
+          "단주": {{"current_state": "경외", "history": ["Arc1: 무시 → Arc2: 인정"]}},
+          "장로": {{"current_state": "신뢰", "history": ["Arc1: 의심 → 신뢰"]}}
+      }},
+      "world_state": {{
+          "current_location": "철혈단 본거지",
+          "known_information": ["적대 세력의 침입 계획"],
+          "ongoing_conflicts": ["현재 진행 중인 갈등만"],
+          "resolved_conflicts": ["이미 완결된 갈등 (재생성 금지)"],
+          "resolved_plots_from_tracker": ["이전에 완결된 플롯 라인 (절대 반복 금지)"],
+          "protagonist_status": {{
+              "injuries": "왼팔 경상 (Arc 2에서 부상)",
+              "internal_energy": 85,
+              "martial_level": "일류 초입"
+          }}
+      }},
+      "absolute_prohibitions": {{
+          "items_cannot_acquire": [
+              {{"item": "대도", "reason": "Arc 1 제2화에서 이미 획득", "violation_type": "DUPLICATE_ACQUISITION"}}
+          ],
+          "grants_cannot_receive": [
+              {{"grant": "철혈사자패", "reason": "Arc 2 제4화에서 이미 수여받음", "violation_type": "DUPLICATE_GRANT"}}
+          ],
+          "state_constraints": [
+              {{"constraint": "Arc 시작 위치는 '철혈단 본거지'여야 함", "reason": "Arc 2 종료 위치"}},
+              {{"constraint": "왼팔 경상 상태로 시작", "reason": "Arc 2 종료 시 부상 상태"}}
+          ]
+      }},
+      "next_arc_guidance": {{
+          "must_start_with": "철혈단 본거지에서 왼팔 경상 상태로",
+          "recommended_focus": "흑풍문과의 갈등 심화 또는 내부 음모",
+          "available_resources": ["대도", "철혈사자패", "금창약"],
+          "potential_new_acquisitions": ["새로운 무공 비급", "정보", "동료"],
+          "warning": "절대로 이미 가진 것을 다시 획득하지 마세요"
+      }}
+  }}
+
+  반드시 유효한 JSON만 출력하세요.
+

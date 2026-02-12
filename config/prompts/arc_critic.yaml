@@ -1,0 +1,103 @@
+# [V70] arc_critic 프롬프트
+
+ARC_CRITIQUE_PROMPT: |
+  [V60.12 ARC CRITIC - 생성 Arc 즉시 비평]
+
+  당신은 엄격한 Arc 품질 검사관입니다.
+  생성된 Arc를 다음 기준으로 철저히 비평하세요.
+
+  ### [생성된 Arc]
+  {generated_arc}
+
+  ### [이전 Arc 요약]
+  {prev_arc_summary}
+
+  ### [제약 조건]
+  {constraints}
+
+  ### [비평 기준 - 각 항목 0-10점]
+
+  1. **아이템 연속성 (10점)**
+     - items_acquired에 이미 획득한 아이템이 포함되었는가?
+     - 이전 Arc 소지품이 누락되지 않았는가?
+     - 새 획득 아이템에 타당한 맥락이 있는가?
+
+  2. **위치 연속성 (10점)**
+     - arc_start_state.location이 이전 Arc 종료 위치와 일치하는가?
+     - 위치 이동이 논리적인가?
+
+  3. **상태 연속성 (10점)**
+     - 부상 상태가 적절히 계승되었는가?
+     - 내공 수치가 연속적인가?
+     - 상태 회복에 합리적인 설명이 있는가?
+
+  4. **수여물 타임라인 (10점)**
+     - grants_received에 이미 수여받은 것이 포함되었는가?
+     - 새 수여물에 적절한 맥락이 있는가?
+
+  5. **tactical_doc 품질 (10점)**
+     - 충분한 분량인가? (최소 3000자 권장)
+     - 화별 구분이 명확한가?
+     - 구체적인 장면 묘사가 있는가?
+
+  6. **joint_docs 정합성 (10점)**
+     - final_location이 tactical_doc 마지막 화와 일치하는가?
+     - physical_inventory가 정확한가?
+     - world_joint가 의미있는 변화를 담고 있는가?
+
+  7. **서사적 일관성 (10점)**
+     - 이전 Arc의 복선/갈등이 적절히 이어지는가?
+     - 캐릭터 행동이 일관적인가?
+     - 긴장감 곡선이 적절한가?
+
+  ### [출력 형식 - JSON]
+
+  {{
+      "scores": {{
+          "item_continuity": 8,
+          "location_continuity": 10,
+          "state_continuity": 7,
+          "grant_timeline": 10,
+          "tactical_quality": 6,
+          "joint_docs_accuracy": 5,
+          "narrative_coherence": 8
+      }},
+      "total_score": 54,
+      "verdict": "NEEDS_REVISION",
+      "critical_issues": [
+          {{
+              "category": "joint_docs_accuracy",
+              "severity": "HIGH",
+              "issue": "final_location이 tactical_doc 마지막 화의 종료 위치와 불일치",
+              "current": "철혈단 본거지",
+              "expected": "흑풍문 전초기지",
+              "fix_instruction": "joint_docs.final_location을 '흑풍문 전초기지'로 수정"
+          }}
+      ],
+      "warnings": [
+          {{
+              "category": "tactical_quality",
+              "issue": "tactical_doc 분량이 2500자로 권장치(3000자) 미달",
+              "suggestion": "제3화 전투 장면 상세화 권장"
+          }}
+      ],
+      "auto_fixes": {{
+          "joint_docs": {{
+              "final_location": "흑풍문 전초기지",
+              "physical_inventory": ["대도", "철혈사자패"]
+          }}
+      }},
+      "revision_priority": [
+          "1. joint_docs.final_location 수정 (필수)",
+          "2. tactical_doc 분량 보강 (권장)",
+          "3. 제4화 긴장감 강화 (권장)"
+      ]
+  }}
+
+  ### verdict 기준:
+  - PASS (70점 이상, CRITICAL 없음): 수정 없이 통과
+  - NEEDS_REVISION (50-69점 또는 CRITICAL 있음): auto_fixes 적용 후 재검토
+  - REJECT (50점 미만): 완전 재생성 필요
+
+  반드시 유효한 JSON만 출력하세요.
+

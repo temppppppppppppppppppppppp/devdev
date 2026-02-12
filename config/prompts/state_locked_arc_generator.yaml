@@ -1,0 +1,132 @@
+# [V70] state_locked_arc_generator 프롬프트
+
+EPISODE_TEMPLATE: |
+  [V60.34 STATE-LOCKED EPISODE GENERATOR]
+
+  🔒 주인공: {protagonist_name} (반드시 이 이름 사용!)
+  🔒 시작 상태: 위치={start_location}, 내공={start_energy}%, 부상={start_injuries}, 소지품={start_equipment}
+
+  ### 임무
+  제 {ep_num}화의 전술 문서를 작성하세요.
+
+  ### Arc 전체 방향 (Treatment Block 원문)
+  {arc_direction}
+
+  ### 이번 화 핵심 비트
+  {episode_beat}
+
+  ### 이전 화 요약
+  {prev_episode_summary}
+
+  ### 출력 형식 (반드시 준수!)
+  아래 형식으로 600자 이상 작성하세요:
+
+  ## 제 {ep_num}화: [제목]
+
+  {protagonist_name}은(는) {start_location}에서 [상황 묘사로 시작].
+
+  (핵심 비트에 맞는 상세한 전개. 600자 이상.)
+  - 갈등/위기 상황 묘사
+  - 주인공의 대응과 행동
+  - 결과와 상태 변화
+
+  【화 종료 상태】
+  - 위치: [종료 시 위치]
+  - 내공: [소모 후 %]
+  - 부상: [부상 상태]
+  - 획득: [새 아이템 또는 "없음"]
+  - 소모: [사용 아이템 또는 "없음"]
+
+  ⚠️ 반드시 "## 제 {ep_num}화:" 형식으로 시작하세요!
+  ⚠️ 본문 600자 이상 필수!
+
+STATE_EXTRACTION_PROMPT: |
+  [V60.14 STATE EXTRACTOR]
+
+  아래 에피소드 본문에서 종료 상태를 추출하세요.
+
+  ### 에피소드 본문
+  {episode_text}
+
+  ### 시작 상태 (참고용)
+  - 내공: {start_energy}%
+  - 부상: {start_injuries}
+
+  ### 출력 (JSON)
+  {{
+      "end_location": "종료 위치",
+      "end_energy": 숫자(0-100),
+      "end_injuries": "부상 상태 또는 '없음'",
+      "items_acquired": ["획득 아이템"],
+      "items_consumed": ["소모 아이템"],
+      "key_events": ["핵심 사건 1줄 요약"]
+  }}
+
+  숫자는 반드시 정수로. 내공 소모가 명시되지 않으면 시작 상태 유지.
+
+ARC_SYNTHESIS_PROMPT: |
+  [V60.14 ARC SYNTHESIZER]
+
+  5개 에피소드를 하나의 Arc로 통합하세요.
+
+  ### 에피소드들
+  {episodes}
+
+  ### Arc 정보
+  - Arc 번호: {arc_no}
+  - 에피소드 범위: {ep_start} ~ {ep_end}
+
+  ### 시작 상태 (Arc 전체)
+  {arc_start_state}
+
+  ### 종료 상태 (마지막 에피소드 기준)
+  {arc_end_state}
+
+  ### 출력 (JSON)
+  {{
+      "arc_no": {arc_no},
+      "ep_count": 5,
+      "ep_start": {ep_start},
+      "ep_end": {ep_end},
+      "title": "Arc 제목",
+      "tactical_doc": "5개 에피소드 본문 통합 (제 N화: 형식 유지)",
+      "beat_sequence": ["제 N화: 핵심 비트", ...],
+      "state_constraints": {{
+          "arc_start_state": {arc_start_state},
+          "arc_end_state": {arc_end_state},
+          "items_acquired": ["Arc 전체에서 획득한 아이템"],
+          "items_consumed": ["Arc 전체에서 소모한 아이템"]
+      }},
+      "joint_docs": {{
+          "final_location": "Arc 종료 위치",
+          "physical_inventory": ["종료 시 전체 소지품"],
+          "world_joint": "세계 변화 요약"
+      }},
+      "status_shadow": {{
+          "internal_energy_loss": "총 소모량%",
+          "expected_injuries": "최종 부상 상태",
+          "item_consumption": ["소모 아이템"]
+      }}
+  }}
+
+SPECULATIVE_REFINE_PROMPT: |
+  [V60.17 SPECULATIVE REFINER]
+
+  아래 초안을 고품질로 정제하세요.
+
+  ### 주인공
+  {protagonist_name}
+
+  ### 초안
+  {draft}
+
+  ### 정제 지침
+  1. 문장을 더 유려하고 생동감 있게 다듬으세요
+  2. 감각적 묘사(시각, 청각, 촉각)를 보강하세요
+  3. 주인공 '{protagonist_name}'의 심리/감정을 깊이 있게 표현하세요
+  4. 대사를 더 자연스럽고 캐릭터에 맞게 수정하세요
+  5. [시작 상태]와 [종료 상태]는 그대로 유지하세요
+
+  ### 출력
+  정제된 전체 에피소드 (원본 형식 유지)
+
