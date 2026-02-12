@@ -1,0 +1,85 @@
+# [V70] reverse_expander 프롬프트 (인라인)
+
+
+DETECT_GENRE__PROMPT: |
+  다음 원고의 장르를 판별하세요.
+
+  ## 원고 샘플
+  {sample[:3000]}
+
+  ## 가능한 장르
+  - investment: 투자물, 재벌물, 금융
+  - wuxia: 무협, 강호, 무림
+  - hunter: 헌터물, 던전물, 각성물
+  - fantasy: 판타지, 마법, 이세계
+  - romance: 로맨스, 연애
+  - composer: 작곡가물, 음악, 프로듀싱
+  - cooking: 요리물, 셰프, 미식
+  - alt_history: 대체역사, 조선, 궁중
+  - actor: 배우물, 연기, 연예계
+  - sports: 스포츠물, 선수, 경기, 팀
+  - medical: 의학물, 의사, 수술, 병원
+
+  ## 출력 (JSON)
+  ```json
+  {{"genre": "장르", "confidence": 0.0-1.0}}
+  ```
+
+EXTRACT_PROTAGONIST__PROMPT: |
+  다음 원고에서 주인공 정보를 추출하세요.
+
+  {sample[:4000]}
+
+  JSON:
+  ```json
+  {{
+    "name": "이름",
+    "age": 나이,
+    "core": {{"protagonist": "이름", "edge": "강점", "desire": "욕망", "crisis": "위기"}},
+    "config": {{"world_origin": "현대인/원시인", "incarnation_type": "회귀자/빙의자/일반"}}
+  }}
+  ```
+
+EXTRACT_EPISODE_BIBLES__PROMPT: |
+  이 에피소드 끝 시점의 주인공 상태를 추출하세요.
+
+  ## 에피소드 {draft['ep_num']}화
+  {draft['content'][:3000]}
+
+  ## 이전 상태
+  {json.dumps(prev_state.get('hud_snapshot', {}), ensure_ascii=False)[:1000]}
+
+  {schema}
+
+  JSON:
+  ```json
+  {{
+    "ep_num": {draft['ep_num']},
+    "hud_snapshot": {{필드들}},
+    "changes": ["이번 화에서 변한 것들"],
+    "new_npcs": ["새로 등장한 인물"],
+    "key_events": ["핵심 사건"]
+  }}
+  ```
+
+EXTRACT_EPISODE_BIBLES_WITH_PROGRESS__PROMPT: |
+  이 에피소드 끝 시점의 주인공 상태를 추출하세요.
+
+  ## 에피소드 {draft['ep_num']}화
+  {draft['content'][:3000]}
+
+  ## 이전 상태
+  {json.dumps(prev_state.get('hud_snapshot', {}), ensure_ascii=False)[:1000]}
+
+  {schema}
+
+  JSON:
+  ```json
+  {{
+    "ep_num": {draft['ep_num']},
+    "hud_snapshot": {{필드들}},
+    "changes": ["이번 화에서 변한 것들"],
+    "new_npcs": ["새로 등장한 인물"],
+    "key_events": ["핵심 사건"]
+  }}
+  ```

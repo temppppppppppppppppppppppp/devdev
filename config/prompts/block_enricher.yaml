@@ -166,3 +166,62 @@ DIRECTOR_BLOCK_AUDIT_PROMPT: |
       "feedback": "수정 지시 (REJECT 시)"
   }}
 
+
+CHECK_CAUSAL_ERRORS__PROMPT: |
+  [Role] 인과 연속성 검증관
+  [Task] 아래 Block들의 인과 연결을 검증하고, 문제가 있는 Block을 찾아라.
+
+  ### [Block 요약]
+  {json.dumps(block_summaries, ensure_ascii=False, indent=2)}
+
+  ### [검증 항목]
+  1. Block N의 reward에서 획득한 것이 Block N+1의 context에 언급/반영되는가?
+  2. 시간 흐름이 자연스러운가? (역행 없음)
+  3. 상태 계승이 되는가? (부상, 소지품 등)
+
+  ### [Output Format - JSON Only]
+  {{
+      "has_issues": true/false,
+      "issues": [
+          {{"block_index": N, "issue": "문제 설명"}},
+          ...
+      ]
+  }}
+
+  인과 에러가 없으면 "issues": []로 반환.
+
+RE_ENRICH_WITH_CAUSAL_FIX__PROMPT: |
+  [Role] 인과 수정 전문가
+  [Task] 아래 Block을 재농축하되, 이전 Block과의 인과 연결을 반드시 보장하라.
+
+  ### [🚨 인과 에러 수정 필수]
+  발견된 문제: {causal_issue}
+
+  ### [🔗 이전 Block의 결과 - 반드시 계승]
+  {prev_reward}
+
+  ### [📐 품질 기준]
+  {json.dumps(reference_block, ensure_ascii=False)[:500]}
+
+  ### [🎯 재농축 대상]
+  {json.dumps(current_block, ensure_ascii=False, indent=2)}
+
+  ### [📚 다음 Block] (미래 오염 금지)
+  {json.dumps(next_block, ensure_ascii=False)[:300] if next_block else "없음"}
+
+  ### [🔧 필수 수정사항]
+  1. context 시작부에 이전 Block의 결과(획득물, 상태변화)를 자연스럽게 언급
+  2. 시간 흐름 명시 (예: "3일 후", "다음 날 아침")
+  3. 상태 계승 (부상, 내공, 소지품)
+
+  ### [Output Format - JSON Only]
+  {{
+      "block_id": "{current_block.get('block_id', 'Unknown')}",
+      "title": "제목",
+      "content": {{
+          "context": "인과 연결된 context",
+          "event_villain": "...",
+          "solution": "...",
+          "reward": "..."
+      }}
+  }}

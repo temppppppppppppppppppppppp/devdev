@@ -1,0 +1,18 @@
+# [V70] stage4_orchestrator 프롬프트 (인라인)
+
+
+EXTRACT_CHAIN_LINK__PROMPT: |
+  아래 원고의 마지막 상황을 분석하여 다음 화에서 반드시 이어받아야 할 요소를 추출하세요.
+
+  원고 (제{ep_num}화, 마지막 3000자):
+  {_escaped_tail}
+
+  JSON으로 출력:
+  {{
+      "cliffhanger": "현재 진행 중인 상황/위기/긴장 (없으면 빈 문자열)",
+      "pending_actions": ["다음 화에서 해야 할 행동 목록 (최대 5개)"],
+      "emotional_state": "주인공의 현재 감정 상태 (한 줄)",
+      "physical_state": "부상/피로/상태 (정상이면 '정상')",
+      "location": "현재 위치 (구체적으로)",
+      "time_marker": "작중 시간대 (알 수 있으면, 모르면 빈 문자열)"
+  }}
