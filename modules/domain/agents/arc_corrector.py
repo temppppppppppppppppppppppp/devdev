@@ -86,7 +86,7 @@ class ArcCorrector(BaseAgent):
     MAJOR 이슈만 부분 수정, CRITICAL은 거부
     """
 
-    def __init__(self, context, client, model_tier: str = "gemini-2.5-flash"):
+    def __init__(self, context, client, model_tier: str = None):
         # Flash 모델 사용 (빠른 수정)
         super().__init__(context, client, model_tier)
         self.max_corrections = 2  # 최대 수정 횟수

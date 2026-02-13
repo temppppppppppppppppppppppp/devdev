@@ -24,6 +24,8 @@ import logging
 import re
 from typing import Dict, List, Any, Optional, Tuple
 
+from .base_agent import _get_agent_default_model
+
 
 # Blueprint 검증용 최소 분량
 BLUEPRINT_MIN_CHARS = 800  # integrated_scenario 최소 길이
@@ -38,10 +40,10 @@ class UnifiedBlueprintValidator:
     2. Director 호출 중개 (최종 판정)
     """
 
-    def __init__(self, context, client, model_tier: str = "gemini-2.5-flash"):
+    def __init__(self, context, client, model_tier: str = None):
         self.context = context
         self.client = client
-        self.model_tier = model_tier
+        self.model_tier = model_tier or _get_agent_default_model("unified_blueprint_validator") or "gemini-2.5-flash"
         self.min_chars = BLUEPRINT_MIN_CHARS
 
     def validate(

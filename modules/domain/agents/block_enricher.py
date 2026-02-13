@@ -200,7 +200,7 @@ class BlockEnricher(BaseAgent):
     - 자동 검증으로 품질 보장
     """
 
-    def __init__(self, context, client, model_tier: str = "gemini-3-flash-preview"):
+    def __init__(self, context, client, model_tier: str = None):
         """
         BlockEnricher 초기화
 

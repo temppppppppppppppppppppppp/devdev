@@ -152,7 +152,7 @@ class ConsensusValidator(BaseAgent):
     ENSEMBLE_TIMEOUT = 120       # 전체 합의 타임아웃 (초) - 2분
     SINGLE_VOTE_TIMEOUT = 90     # 개별 투표 타임아웃 (초) - 1.5분
 
-    def __init__(self, context, client, model_tier: str = "gemini-2.5-flash"):
+    def __init__(self, context, client, model_tier: str = None):
         # [V60.53] Flash로 변경 - 단순 투표 로직, Pro 불필요
         super().__init__(context, client, model_tier)
         # [V60.37] 스마트 폴백 (BaseAgent에서 자동 설정)

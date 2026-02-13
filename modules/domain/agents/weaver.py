@@ -12,7 +12,7 @@ class Weaver(BaseAgent):
     - 피로도 가드: 아크별 긴장도 예산(Tension Budget) 책정
     """
 
-    def __init__(self, context, client, model_tier: str = "gemini-1.5-pro") -> None:
+    def __init__(self, context, client, model_tier: str = None) -> None:
         super().__init__(context, client, model_tier)
         self.cache_name = None  # main_a.py에서 주입됨
 

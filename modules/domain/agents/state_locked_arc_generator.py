@@ -166,12 +166,12 @@ class StateLockedArcGenerator(BaseAgent):
     구조적으로 상태 모순이 불가능한 설계
     """
 
-    def __init__(self, context, client, model_tier: str = "gemini-3-pro-preview"):
+    def __init__(self, context, client, model_tier: str = None):
         super().__init__(context, client, model_tier)
         # [V60.24] 모든 모델을 Gemini 3로 통일
         self.extraction_model = "gemini-3-pro-preview"  # 추출도 Gemini 3
         self.draft_model = "gemini-3-pro-preview"  # [V60.17] Speculative: 초안용 모델
-        self.refine_model = model_tier  # [V60.17] Speculative: 정제용 고급 모델
+        self.refine_model = self.primary_model  # [V60.17] Speculative: 정제용 고급 모델
         self.use_speculative = True  # [V60.17] Speculative Generation 활성화
 
     def generate(

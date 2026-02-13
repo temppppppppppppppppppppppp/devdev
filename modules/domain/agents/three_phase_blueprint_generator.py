@@ -21,7 +21,7 @@ import json
 import logging
 from typing import Dict, List, Any, Optional, Tuple
 
-from .base_agent import BaseAgent
+from .base_agent import BaseAgent, _get_sub_component_models
 from .blueprint_constraint_compiler import BlueprintConstraintCompiler
 from .blueprint_ensemble import BlueprintEnsembleGenerator
 from .unified_blueprint_validator import UnifiedBlueprintValidator
@@ -34,13 +34,18 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
     3단계 파이프라인: 제약수집 → 생성 → 검증 (Director 최종 판정)
     """
 
-    def __init__(self, context, client, model_tier: str = "gemini-3-pro-preview"):
+    def __init__(self, context, client, model_tier: str = None):
         super().__init__(context, client, model_tier)
 
         # 서브 모듈
         self.constraint_compiler = BlueprintConstraintCompiler()
-        self.ensemble = BlueprintEnsembleGenerator(context, client, "gemini-3-pro-preview")
-        self.validator = UnifiedBlueprintValidator(context, client, "gemini-2.5-flash")
+        sub_models = _get_sub_component_models("three_phase_blueprint_generator")
+        self.ensemble = BlueprintEnsembleGenerator(
+            context, client, sub_models.get("ensemble", "gemini-3-pro-preview")
+        )
+        self.validator = UnifiedBlueprintValidator(
+            context, client, sub_models.get("validator", "gemini-2.5-flash")
+        )
 
         # 통계
         self.stats = {

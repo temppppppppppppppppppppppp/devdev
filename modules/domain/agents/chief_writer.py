@@ -104,7 +104,7 @@ class ChiefWriter(BaseAgent):
     # [V64.P4] 프롬프트 외부화
     PROMPT_TEMPLATE_OUTPUT = get_prompt_template_output()
 
-    def __init__(self, context, client, model_tier="gemini-3-pro-preview") -> None:
+    def __init__(self, context, client, model_tier=None) -> None:
         super().__init__(context, client, model_tier)
         self._agent_name = "ChiefWriter"
         # [V60.82] 배치 캐시 - DB 쿼리 최적화
