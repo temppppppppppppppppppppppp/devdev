@@ -875,7 +875,9 @@ class PromptBuilder:
             # 5. [V70] POV 추출
             try:
                 _bible_root = app.current_project.master_bible.get("MasterBible", {})
-                context["pov"] = _bible_root.get("protagonist_config", {}).get("pov", "")
+                _pov = _bible_root.get("protagonist_config", {}).get("pov", "")
+                if _pov:
+                    context["pov"] = _pov
             except Exception:
                 pass
 

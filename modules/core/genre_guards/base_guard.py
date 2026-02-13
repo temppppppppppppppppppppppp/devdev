@@ -2,14 +2,22 @@
 [V40 Multi-Genre] 장르별 Guard의 공통 기능을 제공하는 추상 클래스
 [V46] 일관성 검증 인터페이스 추가 - 상태 vs 행동, 정당화 패턴, 위계 규칙
 [V46.1] 권위 위임, 미해결 갈등, 빌런 반응 검증 인터페이스 추가
+[V70] YAML 외부화: config/genres/{genre}.yaml에서 설정 로드
 """
 
 import re
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any
+from pathlib import Path
+from typing import Any
+
+import yaml
+
 
 class BaseGuard(ABC):
     """장르 독립적 Guard 추상 인터페이스"""
+
+    # config/genres/ 디렉토리 캐시 (클래스 레벨)
+    _CONFIG_DIR = Path(__file__).resolve().parents[3] / "config" / "genres"
 
     def __init__(self) -> None:
         self.FORBIDDEN_TERMS = []
@@ -20,12 +28,28 @@ class BaseGuard(ABC):
         self._impossible_action_rules = []
         self._justification_patterns = []
         self._hierarchy_rules = {}
-    
+
+    # ── YAML 로딩 헬퍼 ──────────────────────────────────────────
+
+    def _load_genre_yaml(self, genre_key: str) -> dict:
+        """
+        config/genres/{genre_key}.yaml 로드.
+        파일이 없거나 파싱 실패 시 빈 dict 반환 (하드코딩 폴백).
+        """
+        yaml_path = self._CONFIG_DIR / f"{genre_key}.yaml"
+        if yaml_path.exists():
+            try:
+                with open(yaml_path, encoding="utf-8") as f:
+                    return yaml.safe_load(f) or {}
+            except Exception:
+                return {}
+        return {}
+
     @abstractmethod
     def get_genre_name(self) -> None:
         """장르 이름 반환"""
         pass
-    
+
     def convert_to_numeric(self, text, current_value: float = None):
         """
         [V60.22] 한글/한자 수사를 숫자로 변환 + 델타값 처리
@@ -37,10 +61,11 @@ class BaseGuard(ABC):
         Returns:
             float: 변환된 숫자값
         """
-        if not text or not isinstance(text, (str, int, float)):
+        if not text or not isinstance(text, str | int | float):
             # [V60.22] None이면 현재 값 유지
             return current_value if current_value is not None else 0.0
-        if isinstance(text, (int, float)): return float(text)
+        if isinstance(text, int | float):
+            return float(text)
 
         clean_text = str(text).replace(" ", "").strip()
 
@@ -49,9 +74,9 @@ class BaseGuard(ABC):
             return current_value if current_value is not None else 0.0
 
         # [V60.22] 델타값 처리 ("+50", "-20" 등)
-        delta_match = re.match(r'^([+-])(\d+(?:\.\d+)?)%?$', clean_text)
+        delta_match = re.match(r"^([+-])(\d+(?:\.\d+)?)%?$", clean_text)
         if delta_match and current_value is not None:
-            sign = 1 if delta_match.group(1) == '+' else -1
+            sign = 1 if delta_match.group(1) == "+" else -1
             delta = float(delta_match.group(2))
             return max(0, min(100, current_value + sign * delta))
 
@@ -71,26 +96,28 @@ class BaseGuard(ABC):
         unit_multiplier = 1.0
         if "갑자" in clean_text:
             unit_multiplier = 60.0
-        
+
         # 3. 아라비아 숫자 우선 처리
-        digit_match = re.search(r'([0-9\.]+)', clean_text)
+        digit_match = re.search(r"([0-9\.]+)", clean_text)
         if digit_match:
             try:
                 val = float(digit_match.group(1)) * unit_multiplier
-                if '반' in clean_text: val += (30.0 if "갑자" in clean_text else 0.5)
+                if "반" in clean_text:
+                    val += 30.0 if "갑자" in clean_text else 0.5
                 return val
-            except (ValueError, TypeError): pass
+            except (ValueError, TypeError):
+                pass
 
         # 4. 한글 수사 정밀 파싱
-        num_map = {'일': 1, '이': 2, '삼': 3, '사': 4, '오': 5, '육': 6, '칠': 7, '팔': 8, '구': 9}
+        num_map = {"일": 1, "이": 2, "삼": 3, "사": 4, "오": 5, "육": 6, "칠": 7, "팔": 8, "구": 9}
         total = 0.0
-        
-        if '십' in clean_text:
-            idx = clean_text.find('십')
-            prefix = clean_text[idx-1] if idx > 0 else None
-            total += (num_map.get(prefix, 1) * 10)
+
+        if "십" in clean_text:
+            idx = clean_text.find("십")
+            prefix = clean_text[idx - 1] if idx > 0 else None
+            total += num_map.get(prefix, 1) * 10
             if idx + 1 < len(clean_text):
-                suffix = clean_text[idx+1]
+                suffix = clean_text[idx + 1]
                 total += num_map.get(suffix, 0)
         else:
             for char, val in num_map.items():
@@ -99,27 +126,27 @@ class BaseGuard(ABC):
                     break
 
         # 5. '반' 처리
-        if '반' in clean_text:
+        if "반" in clean_text:
             total += 0.5
 
         # 6. 최종 산출
         final_val = (total if total > 0 else 1.0) * unit_multiplier
         return float(final_val)
-    
+
     def validate_v20_manuscript(self, content) -> dict:
         """원고 검증 (장르별 커스터마이징 가능)"""
         issues = []
-        
+
         # 1. 괄호 검출 (한자 예외 처리)
-        parentheses_matches = re.findall(r'\((.*?)\)', content)
+        parentheses_matches = re.findall(r"\((.*?)\)", content)
         for inside in parentheses_matches:
-            if re.search(r'[^\u4e00-\u9fff]', inside):
+            if re.search(r"[^\u4e00-\u9fff]", inside):
                 issues.append(f"장르 부적격 괄호 설명 발견: ({inside})")
 
         # 2. 알파벳(영어) 노출 절대 금지 (장르에 따라 완화 가능)
         if self._should_check_english():
-            if re.search(r'[a-zA-Z]', content):
-                english_words = re.findall(r'[a-zA-Z]+', content)
+            if re.search(r"[a-zA-Z]", content):
+                english_words = re.findall(r"[a-zA-Z]+", content)
                 issues.append(f"외국어(영어) 노출: {', '.join(english_words[:3])}...")
 
         # 3. 금기어 검사
@@ -129,20 +156,17 @@ class BaseGuard(ABC):
 
         # 4. 숫자(아라비아 숫자) 미변환 검사 (장르에 따라 완화 가능)
         if self._should_check_numbers():
-            if re.search(r'\d+', content):
-                numbers = re.findall(r'\d+', content)
+            if re.search(r"\d+", content):
+                numbers = re.findall(r"\d+", content)
                 issues.append(f"미변환 숫자 발견: {', '.join(numbers[:5])}...")
 
-        return {
-            "is_pure": len(issues) == 0,
-            "issues": issues
-        }
-    
+        return {"is_pure": len(issues) == 0, "issues": issues}
+
     @abstractmethod
     def get_v20_purism_prompt(self) -> None:
         """장르별 순혈주의 프롬프트 생성"""
         pass
-    
+
     def _should_check_english(self) -> bool:
         """영어 검증 여부 (장르별 오버라이드 가능)"""
         return True
@@ -155,7 +179,7 @@ class BaseGuard(ABC):
     # [V66] 통합 심층 검증 (다형성 진입점)
     # ========================================================================
 
-    def run_deep_validation(self, manuscript: str, current_state: Dict[str, Any] = None) -> Dict[str, Any]:
+    def run_deep_validation(self, manuscript: str, current_state: dict[str, Any] = None) -> dict[str, Any]:
         """
         [V66] Guard 다형성 심층 검증.
         Director가 장르별 if/elif 없이 단일 호출로 검증 가능.
@@ -181,21 +205,25 @@ class BaseGuard(ABC):
         # 1. 금기어 검사
         for term in self.FORBIDDEN_TERMS:
             if term in manuscript:
-                all_violations.append({
-                    "type": "forbidden_term",
-                    "term": term,
-                    "severity": "HIGH",
-                    "message": f"장르 금기어 '{term}' 발견"
-                })
+                all_violations.append(
+                    {
+                        "type": "forbidden_term",
+                        "term": term,
+                        "severity": "HIGH",
+                        "message": f"장르 금기어 '{term}' 발견",
+                    }
+                )
 
         # 2. 상태-행동 일관성
         consistency = self.check_state_action_consistency(manuscript, current_state)
         for v in consistency.get("violations", []):
-            all_violations.append({
-                "type": "state_action_inconsistency",
-                "severity": v.get("severity", "MEDIUM"),
-                "message": f"{v.get('reason', '')}: {v.get('action', '')}"
-            })
+            all_violations.append(
+                {
+                    "type": "state_action_inconsistency",
+                    "severity": v.get("severity", "MEDIUM"),
+                    "message": f"{v.get('reason', '')}: {v.get('action', '')}",
+                }
+            )
 
         has_critical = any(v.get("severity") == "HIGH" for v in all_violations)
         summary_parts = [v.get("message", "") for v in all_violations[:5]]
@@ -216,7 +244,7 @@ class BaseGuard(ABC):
     # [V46] 일관성 검증 인터페이스 (Consistency Validation Interface)
     # ========================================================================
 
-    def get_impossible_actions(self, current_state: Dict[str, Any]) -> List[Dict[str, str]]:
+    def get_impossible_actions(self, current_state: dict[str, Any]) -> list[dict[str, str]]:
         """
         [V46] 현재 상태에서 불가능한 행동 패턴 반환
 
@@ -236,7 +264,7 @@ class BaseGuard(ABC):
         """
         return []  # 기본값: 제한 없음
 
-    def get_justification_patterns(self) -> List[str]:
+    def get_justification_patterns(self) -> list[str]:
         """
         [V46] 정당화로 인정되는 표현 패턴 반환
 
@@ -251,7 +279,7 @@ class BaseGuard(ABC):
         """
         return []  # 기본값: 정당화 패턴 없음
 
-    def get_hierarchy_rules(self) -> Dict[str, Any]:
+    def get_hierarchy_rules(self) -> dict[str, Any]:
         """
         [V46] 직위/호칭 위계 규칙 반환
 
@@ -267,7 +295,7 @@ class BaseGuard(ABC):
         """
         return {}  # 기본값: 위계 규칙 없음
 
-    def check_state_action_consistency(self, manuscript: str, current_state: Dict[str, Any]) -> Dict[str, Any]:
+    def check_state_action_consistency(self, manuscript: str, current_state: dict[str, Any]) -> dict[str, Any]:
         """
         [V46] 상태 vs 행동 일관성 검증 (범용 로직)
 
@@ -287,8 +315,8 @@ class BaseGuard(ABC):
         justifications = self.get_justification_patterns()
 
         for action in impossible_actions:
-            pattern = action.get('pattern', '')
-            reason = action.get('reason', '불명')
+            pattern = action.get("pattern", "")
+            reason = action.get("reason", "불명")
 
             if not pattern:
                 continue
@@ -297,36 +325,36 @@ class BaseGuard(ABC):
             matches = re.findall(pattern, manuscript)
             if matches:
                 # 정당화 패턴 존재 여부 확인
-                has_justification = any(
-                    re.search(jp, manuscript) for jp in justifications
-                )
+                has_justification = any(re.search(jp, manuscript) for jp in justifications)
 
                 if not has_justification:
-                    violations.append({
-                        'action': matches[0] if matches else pattern,
-                        'reason': reason,
-                        'has_justification': False,
-                        'severity': action.get('severity', 'MEDIUM')
-                    })
+                    violations.append(
+                        {
+                            "action": matches[0] if matches else pattern,
+                            "reason": reason,
+                            "has_justification": False,
+                            "severity": action.get("severity", "MEDIUM"),
+                        }
+                    )
                 # 정당화 있으면 violations에 추가하지 않음 (PASS)
 
         # 점수 감점 계산
         score_penalty = 0
         for v in violations:
-            if v['severity'] == 'HIGH':
+            if v["severity"] == "HIGH":
                 score_penalty -= 5
-            elif v['severity'] == 'MEDIUM':
+            elif v["severity"] == "MEDIUM":
                 score_penalty -= 3
             else:
                 score_penalty -= 1
 
         return {
-            'passed': len(violations) == 0,
-            'violations': violations,
-            'score_penalty': max(-15, score_penalty)  # 최대 -15점
+            "passed": len(violations) == 0,
+            "violations": violations,
+            "score_penalty": max(-15, score_penalty),  # 최대 -15점
         }
 
-    def check_hierarchy_consistency(self, manuscript: str, character_rank: str) -> Dict[str, Any]:
+    def check_hierarchy_consistency(self, manuscript: str, character_rank: str) -> dict[str, Any]:
         """
         [V46] 직위/호칭 일관성 검증
 
@@ -342,10 +370,10 @@ class BaseGuard(ABC):
         """
         hierarchy = self.get_hierarchy_rules()
         if not hierarchy:
-            return {'passed': True, 'violations': []}
+            return {"passed": True, "violations": []}
 
         violations = []
-        titles = hierarchy.get('titles', {})
+        titles = hierarchy.get("titles", {})
         allowed_titles = titles.get(character_rank, [])
 
         # 직위별 금지된 호칭 검사
@@ -355,31 +383,26 @@ class BaseGuard(ABC):
 
             for title in rank_titles:
                 # 주인공이 자신을 부르는 패턴 검색
-                self_address_patterns = [
-                    f'나는.*{title}',
-                    f'본좌.*{title}',
-                    f'소생.*{title}'
-                ]
+                self_address_patterns = [f"나는.*{title}", f"본좌.*{title}", f"소생.*{title}"]
 
                 for pattern in self_address_patterns:
                     if re.search(pattern, manuscript):
                         if title not in allowed_titles:
-                            violations.append({
-                                'found': title,
-                                'expected': ', '.join(allowed_titles) if allowed_titles else '해당 없음',
-                                'reason': f"직위 '{character_rank}'에서 '{title}' 자칭 불가"
-                            })
+                            violations.append(
+                                {
+                                    "found": title,
+                                    "expected": ", ".join(allowed_titles) if allowed_titles else "해당 없음",
+                                    "reason": f"직위 '{character_rank}'에서 '{title}' 자칭 불가",
+                                }
+                            )
 
-        return {
-            'passed': len(violations) == 0,
-            'violations': violations
-        }
+        return {"passed": len(violations) == 0, "violations": violations}
 
     # ========================================================================
     # [V46.1] 권위 위임 검증 인터페이스 (Authority Delegation)
     # ========================================================================
 
-    def get_authority_hierarchy(self) -> Dict[str, Any]:
+    def get_authority_hierarchy(self) -> dict[str, Any]:
         """
         [V46.1] 권위/직위 위계 구조 반환
 
@@ -397,7 +420,7 @@ class BaseGuard(ABC):
         """
         return {}  # 기본값: 권위 구조 없음
 
-    def get_delegation_patterns(self) -> List[str]:
+    def get_delegation_patterns(self) -> list[str]:
         """
         [V46.1] 권위 위임을 정당화하는 표현 패턴
 
@@ -406,7 +429,7 @@ class BaseGuard(ABC):
         """
         return []  # 기본값: 위임 패턴 없음
 
-    def check_authority_delegation(self, manuscript: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    def check_authority_delegation(self, manuscript: str, context: dict[str, Any]) -> dict[str, Any]:
         """
         [V46.1] 권위 위임 일관성 검증
 
@@ -434,20 +457,20 @@ class BaseGuard(ABC):
         delegation_patterns = self.get_delegation_patterns()
 
         if not hierarchy:
-            return {'passed': True, 'violations': [], 'has_justification': False}
+            return {"passed": True, "violations": [], "has_justification": False}
 
-        protagonist_pos = context.get('protagonist_position', '')
-        superior_alive = context.get('superior_alive', True)
-        superior_name = context.get('superior_name', '')
-        superior_position = context.get('superior_position', '')
+        protagonist_pos = context.get("protagonist_position", "")
+        superior_alive = context.get("superior_alive", True)
+        superior_name = context.get("superior_name", "")
+        superior_position = context.get("superior_position", "")
 
         # 상위자가 생존해 있는 경우만 검증
         if not superior_alive:
-            return {'passed': True, 'violations': [], 'has_justification': False}
+            return {"passed": True, "violations": [], "has_justification": False}
 
         # 위임이 필요한 직위 목록
-        delegation_required = hierarchy.get('delegation_required', [])
-        position_titles = hierarchy.get('position_titles', {})
+        delegation_required = hierarchy.get("delegation_required", [])
+        position_titles = hierarchy.get("position_titles", {})
 
         # 주인공이 상위 직위를 자칭하는지 검사
         for pos, titles in position_titles.items():
@@ -455,7 +478,7 @@ class BaseGuard(ABC):
                 continue  # 자신의 직위는 스킵
 
             # 상위 직위인지 확인
-            positions = hierarchy.get('positions', [])
+            positions = hierarchy.get("positions", [])
             if pos in positions and protagonist_pos in positions:
                 pos_idx = positions.index(pos)
                 prot_idx = positions.index(protagonist_pos)
@@ -465,65 +488,61 @@ class BaseGuard(ABC):
             for title in titles:
                 # 자칭 패턴 검색
                 self_claim_patterns = [
-                    f'나는.*{title}',
-                    f'본.*{title}',
-                    f'{title}인 내가',
-                    f'{title}로서',
-                    f'{title} 대행',
+                    f"나는.*{title}",
+                    f"본.*{title}",
+                    f"{title}인 내가",
+                    f"{title}로서",
+                    f"{title} 대행",
                 ]
 
                 for pattern in self_claim_patterns:
                     if re.search(pattern, manuscript):
                         # 명분/위임 표현 확인
-                        has_delegation = any(
-                            re.search(dp, manuscript) for dp in delegation_patterns
-                        )
+                        has_delegation = any(re.search(dp, manuscript) for dp in delegation_patterns)
 
                         # 상위자 이름으로 명분 빌리는지 확인
                         if superior_name:
                             superior_delegation = [
-                                f'{superior_name}.*명',
-                                f'{superior_name}.*위임',
-                                f'{superior_name}.*허락',
-                                f'{superior_name}.*뜻',
+                                f"{superior_name}.*명",
+                                f"{superior_name}.*위임",
+                                f"{superior_name}.*허락",
+                                f"{superior_name}.*뜻",
                             ]
                             has_delegation = has_delegation or any(
                                 re.search(sp, manuscript) for sp in superior_delegation
                             )
 
                         if not has_delegation:
-                            violations.append({
-                                'claimed_position': title,
-                                'actual_position': protagonist_pos,
-                                'superior': f"{superior_name}({superior_position})" if superior_name else superior_position,
-                                'reason': f"상위자 '{superior_position}' 생존 시 '{title}' 자칭은 명분 필요",
-                                'severity': 'HIGH'
-                            })
+                            violations.append(
+                                {
+                                    "claimed_position": title,
+                                    "actual_position": protagonist_pos,
+                                    "superior": f"{superior_name}({superior_position})"
+                                    if superior_name
+                                    else superior_position,
+                                    "reason": f"상위자 '{superior_position}' 생존 시 '{title}' 자칭은 명분 필요",
+                                    "severity": "HIGH",
+                                }
+                            )
 
-        has_justification = len(violations) == 0 or any(
-            re.search(dp, manuscript) for dp in delegation_patterns
-        )
+        has_justification = len(violations) == 0 or any(re.search(dp, manuscript) for dp in delegation_patterns)
 
-        return {
-            'passed': len(violations) == 0,
-            'violations': violations,
-            'has_justification': has_justification
-        }
+        return {"passed": len(violations) == 0, "violations": violations, "has_justification": has_justification}
 
     # ========================================================================
     # [V46.1] 미해결 갈등 검증 인터페이스 (Unresolved Conflict / 고구마 감지)
     # ========================================================================
 
-    def get_hostile_action_types(self) -> List[str]:
+    def get_hostile_action_types(self) -> list[str]:
         """
         [V46.1] 적대적 행동 유형 반환 (고구마 요소 판단 기준)
 
         Returns:
             list: ['구타', '모욕', '배신', '암살시도', ...]
         """
-        return ['구타', '모욕', '배신', '암살', '독살', '협박', '멸시', '학대']
+        return ["구타", "모욕", "배신", "암살", "독살", "협박", "멸시", "학대"]
 
-    def get_resolution_patterns(self) -> List[str]:
+    def get_resolution_patterns(self) -> list[str]:
         """
         [V46.1] 갈등 해소를 나타내는 패턴
 
@@ -531,20 +550,19 @@ class BaseGuard(ABC):
             list: [r'용서', r'복수', r'응징', ...]
         """
         return [
-            r'용서',
-            r'복수',
-            r'응징',
-            r'처단',
-            r'굴복',
-            r'사과.*받',
-            r'무릎.*꿇',
-            r'공포.*질',
-            r'벌.*받',
-            r'대가.*치르',
+            r"용서",
+            r"복수",
+            r"응징",
+            r"처단",
+            r"굴복",
+            r"사과.*받",
+            r"무릎.*꿇",
+            r"공포.*질",
+            r"벌.*받",
+            r"대가.*치르",
         ]
 
-    def check_unresolved_conflict(self, manuscript: str, karma_matrix: Dict[str, Any],
-                                   ep_num: int) -> Dict[str, Any]:
+    def check_unresolved_conflict(self, manuscript: str, karma_matrix: dict[str, Any], ep_num: int) -> dict[str, Any]:
         """
         [V46.1] 미해결 갈등 검증 (고구마 감지)
 
@@ -566,7 +584,7 @@ class BaseGuard(ABC):
         goguma_score = 0
 
         if not karma_matrix or not isinstance(karma_matrix, dict):
-            return {'passed': True, 'violations': [], 'goguma_score': 0}
+            return {"passed": True, "violations": [], "goguma_score": 0}
 
         hostile_actions = self.get_hostile_action_types()
         resolution_patterns = self.get_resolution_patterns()
@@ -575,14 +593,14 @@ class BaseGuard(ABC):
             if not isinstance(npc_data, dict):
                 continue
 
-            events = npc_data.get('events', [])
-            current_relation = npc_data.get('relation_type', '')
+            events = npc_data.get("events", [])
+            current_relation = npc_data.get("relation_type", "")
 
             # 적대적 이벤트가 있었는지 확인
             hostile_event = None
             for event in events:
                 if isinstance(event, dict):
-                    event_type = event.get('type', '')
+                    event_type = event.get("type", "")
                     if any(ha in str(event_type) for ha in hostile_actions):
                         hostile_event = event
                         break
@@ -594,28 +612,26 @@ class BaseGuard(ABC):
             resolved = False
             for event in events:
                 if isinstance(event, dict):
-                    event_type = event.get('type', '')
-                    if any(rp in str(event_type) for rp in ['용서', '복수', '응징', '처단', '굴복']):
+                    event_type = event.get("type", "")
+                    if any(rp in str(event_type) for rp in ["용서", "복수", "응징", "처단", "굴복"]):
                         resolved = True
                         break
 
             # 현재 원고에서 해결 패턴이 있는지 확인
-            has_resolution_in_manuscript = any(
-                re.search(rp, manuscript) for rp in resolution_patterns
-            )
+            has_resolution_in_manuscript = any(re.search(rp, manuscript) for rp in resolution_patterns)
 
             if resolved or has_resolution_in_manuscript:
                 continue
 
             # 동행/협력 패턴 검색
             companion_patterns = [
-                f'{npc_name}.*함께',
-                f'{npc_name}.*동행',
-                f'{npc_name}.*따라',
-                f'{npc_name}.*수행',
-                f'{npc_name}.*옆에',
-                f'{npc_name}이 말했다',
-                f'{npc_name}가 말했다',
+                f"{npc_name}.*함께",
+                f"{npc_name}.*동행",
+                f"{npc_name}.*따라",
+                f"{npc_name}.*수행",
+                f"{npc_name}.*옆에",
+                f"{npc_name}이 말했다",
+                f"{npc_name}가 말했다",
             ]
 
             is_companion = any(re.search(cp, manuscript) for cp in companion_patterns)
@@ -623,40 +639,38 @@ class BaseGuard(ABC):
             if is_companion:
                 # 공포/굴복 묘사가 있는지 확인 (정당화)
                 fear_patterns = [
-                    f'{npc_name}.*공포',
-                    f'{npc_name}.*두려',
-                    f'{npc_name}.*벌벌',
-                    f'{npc_name}.*고개.*숙',
-                    f'{npc_name}.*감히',
-                    f'{npc_name}.*말도.*못',
+                    f"{npc_name}.*공포",
+                    f"{npc_name}.*두려",
+                    f"{npc_name}.*벌벌",
+                    f"{npc_name}.*고개.*숙",
+                    f"{npc_name}.*감히",
+                    f"{npc_name}.*말도.*못",
                 ]
                 has_fear = any(re.search(fp, manuscript) for fp in fear_patterns)
 
                 if not has_fear:
-                    hostile_type = hostile_event.get('type', '적대 행동')
-                    violations.append({
-                        'npc': npc_name,
-                        'hostile_action': hostile_type,
-                        'current_status': '동행/협력',
-                        'reason': f"'{npc_name}'이(가) 과거 '{hostile_type}' 후 응징/변화 없이 동행 중 (고구마)",
-                        'severity': 'MEDIUM'
-                    })
+                    hostile_type = hostile_event.get("type", "적대 행동")
+                    violations.append(
+                        {
+                            "npc": npc_name,
+                            "hostile_action": hostile_type,
+                            "current_status": "동행/협력",
+                            "reason": f"'{npc_name}'이(가) 과거 '{hostile_type}' 후 응징/변화 없이 동행 중 (고구마)",
+                            "severity": "MEDIUM",
+                        }
+                    )
                     goguma_score += 3
 
         # 고구마 점수 상한
         goguma_score = min(10, goguma_score)
 
-        return {
-            'passed': len(violations) == 0,
-            'violations': violations,
-            'goguma_score': goguma_score
-        }
+        return {"passed": len(violations) == 0, "violations": violations, "goguma_score": goguma_score}
 
     # ========================================================================
     # [V46.1] 빌런 반응 검증 인터페이스 (Villain Response Check)
     # ========================================================================
 
-    def get_protagonist_victory_patterns(self) -> List[str]:
+    def get_protagonist_victory_patterns(self) -> list[str]:
         """
         [V46.1] 주인공 대역전/승리 패턴
 
@@ -664,18 +678,18 @@ class BaseGuard(ABC):
             list: [r'역전', r'승리', r'각성', ...]
         """
         return [
-            r'역전',
-            r'승리.*거두',
-            r'이겼다',
-            r'쓰러뜨',
-            r'제압',
-            r'각성',
-            r'돌파',
-            r'비밀.*밝혀',
-            r'음모.*파훼',
+            r"역전",
+            r"승리.*거두",
+            r"이겼다",
+            r"쓰러뜨",
+            r"제압",
+            r"각성",
+            r"돌파",
+            r"비밀.*밝혀",
+            r"음모.*파훼",
         ]
 
-    def get_villain_response_patterns(self) -> List[str]:
+    def get_villain_response_patterns(self) -> list[str]:
         """
         [V46.1] 빌런의 적절한 대응 패턴
 
@@ -683,23 +697,24 @@ class BaseGuard(ABC):
             list: [r'당황', r'분노', r'계획 변경', ...]
         """
         return [
-            r'당황',
-            r'경악',
-            r'분노',
-            r'이를.*갈',
-            r'계획.*변경',
-            r'후퇴',
-            r'숨.*죽',
-            r'다음.*기회',
-            r'복수.*다짐',
-            r'자리.*비워',  # 지능적 제약 (마교 밀약 등)
-            r'급한.*일',
-            r'소환',
-            r'떠나',
+            r"당황",
+            r"경악",
+            r"분노",
+            r"이를.*갈",
+            r"계획.*변경",
+            r"후퇴",
+            r"숨.*죽",
+            r"다음.*기회",
+            r"복수.*다짐",
+            r"자리.*비워",  # 지능적 제약 (마교 밀약 등)
+            r"급한.*일",
+            r"소환",
+            r"떠나",
         ]
 
-    def check_villain_response(self, manuscript: str, villain_context: Dict[str, Any],
-                                recent_events: List[Dict]) -> Dict[str, Any]:
+    def check_villain_response(
+        self, manuscript: str, villain_context: dict[str, Any], recent_events: list[dict]
+    ) -> dict[str, Any]:
         """
         [V46.1] 빌런 반응 검증
 
@@ -723,12 +738,12 @@ class BaseGuard(ABC):
         """
         violations = []
 
-        villain_name = villain_context.get('villain_name', '')
-        villain_role = villain_context.get('villain_role', '')
-        is_aware = villain_context.get('is_aware', True)
+        villain_name = villain_context.get("villain_name", "")
+        villain_role = villain_context.get("villain_role", "")
+        is_aware = villain_context.get("is_aware", True)
 
         if not villain_name or not is_aware:
-            return {'passed': True, 'violations': [], 'incompetent_villain_risk': False}
+            return {"passed": True, "violations": [], "incompetent_villain_risk": False}
 
         victory_patterns = self.get_protagonist_victory_patterns()
         response_patterns = self.get_villain_response_patterns()
@@ -737,29 +752,27 @@ class BaseGuard(ABC):
         has_protagonist_victory = False
         for event in recent_events:
             if isinstance(event, dict):
-                event_type = event.get('type', '')
-                if any(vp in str(event_type) for vp in ['역전', '승리', '각성', '돌파']):
+                event_type = event.get("type", "")
+                if any(vp in str(event_type) for vp in ["역전", "승리", "각성", "돌파"]):
                     has_protagonist_victory = True
                     break
 
         # 현재 원고에서도 확인
         if not has_protagonist_victory:
-            has_protagonist_victory = any(
-                re.search(vp, manuscript) for vp in victory_patterns
-            )
+            has_protagonist_victory = any(re.search(vp, manuscript) for vp in victory_patterns)
 
         if not has_protagonist_victory:
-            return {'passed': True, 'violations': [], 'incompetent_villain_risk': False}
+            return {"passed": True, "violations": [], "incompetent_villain_risk": False}
 
         # 빌런의 대응 확인
         villain_specific_response = [
-            f'{villain_name}.*당황',
-            f'{villain_name}.*경악',
-            f'{villain_name}.*분노',
-            f'{villain_name}.*이를',
-            f'{villain_name}.*계획',
-            f'{villain_name}.*떠나',
-            f'{villain_name}.*자리.*비',
+            f"{villain_name}.*당황",
+            f"{villain_name}.*경악",
+            f"{villain_name}.*분노",
+            f"{villain_name}.*이를",
+            f"{villain_name}.*계획",
+            f"{villain_name}.*떠나",
+            f"{villain_name}.*자리.*비",
         ]
 
         has_response = any(re.search(rp, manuscript) for rp in villain_specific_response)
@@ -772,16 +785,18 @@ class BaseGuard(ABC):
         villain_mentioned = villain_name in manuscript
 
         if villain_mentioned and not has_response:
-            violations.append({
-                'villain': villain_name,
-                'role': villain_role,
-                'reason': f"주인공 대역전 후 빌런 '{villain_name}'의 대응이 없음 (무능한 빌런 위험)",
-                'severity': 'MEDIUM',
-                'suggestion': f"'{villain_name}'이(가) 당황/분노하거나, 자리를 비워야 하는 이유(급한 일, 밀약 등)를 설정하세요."
-            })
+            violations.append(
+                {
+                    "villain": villain_name,
+                    "role": villain_role,
+                    "reason": f"주인공 대역전 후 빌런 '{villain_name}'의 대응이 없음 (무능한 빌런 위험)",
+                    "severity": "MEDIUM",
+                    "suggestion": f"'{villain_name}'이(가) 당황/분노하거나, 자리를 비워야 하는 이유(급한 일, 밀약 등)를 설정하세요.",
+                }
+            )
 
         return {
-            'passed': len(violations) == 0,
-            'violations': violations,
-            'incompetent_villain_risk': len(violations) > 0
+            "passed": len(violations) == 0,
+            "violations": violations,
+            "incompetent_villain_risk": len(violations) > 0,
         }
