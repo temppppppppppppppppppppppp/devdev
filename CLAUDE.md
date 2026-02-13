@@ -63,7 +63,7 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 |-------|------|------|
 | 6-C | pre-commit + ruff 설정 | ✅ 완료 |
 | 6-A | pytest 테스트 (GenreGuard, RepetitionGuard, PromptLoader — 63개) | ✅ 완료 |
-| 5-A' | PromptLoader import 전환 (40+파일, 함수형 프롬프트 포함) | 미착수 — 별도 세션 권장 |
+| 5-A' | PromptLoader import 전환 (7파일 완료) | ✅ 완료 (2026-02-13) |
 | 5-B | Settings YAML 통합 + 장르/작품 가드 외부화 | 미착수 |
 
 ## RISKY 작업 (순서 지킬 것)
