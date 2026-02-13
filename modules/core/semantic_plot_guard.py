@@ -10,19 +10,20 @@ Usage:
     warnings = guard.check_new_arc(tactical_doc, new_plot_names)
 """
 
-import time
 import logging
 import os
-from typing import List, Dict, Optional
+import time
 
 try:
     import numpy as np
+
     _NP_AVAILABLE = True
 except ImportError:
     _NP_AVAILABLE = False
 
 try:
     from google import genai
+
     _GENAI_AVAILABLE = True
 except ImportError:
     _GENAI_AVAILABLE = False
@@ -38,8 +39,8 @@ def _cosine_similarity(a: list, b: list) -> float:
         return float(dot / norm) if norm > 0 else 0.0
     else:
         dot = sum(x * y for x, y in zip(a, b))
-        norm_a = sum(x ** 2 for x in a) ** 0.5
-        norm_b = sum(x ** 2 for x in b) ** 0.5
+        norm_a = sum(x**2 for x in a) ** 0.5
+        norm_b = sum(x**2 for x in b) ** 0.5
         return dot / (norm_a * norm_b) if (norm_a * norm_b) > 0 else 0.0
 
 
@@ -57,35 +58,46 @@ class SemanticPlotGuard:
     def __init__(self, api_key: str = ""):
         self._api_key = api_key or os.getenv("GOOGLE_API_KEY", "")
         self._client = None
-        self._resolved_embeddings: List[Dict] = []  # [{"plot": str, "embedding": list}]
+        self._resolved_embeddings: list[dict] = []  # [{"plot": str, "embedding": list}]
+        self._init_attempted = False  # [V64.P4-fix] lazy init 플래그
 
-        if _GENAI_AVAILABLE and self._api_key:
-            try:
-                self._client = genai.Client(api_key=self._api_key)
-            except Exception:
-                self._client = None
+        self._try_init_client()
 
-    def _embed_text(self, text: str) -> Optional[list]:
+    def _try_init_client(self) -> None:
+        """[V64.P4-fix] Client 초기화 시도 (실패해도 다음 사용 시 재시도)"""
+        if self._client or not _GENAI_AVAILABLE or not self._api_key:
+            return
+        try:
+            self._client = genai.Client(api_key=self._api_key)
+            self._init_attempted = True
+        except Exception as e:
+            logging.warning(f"⚠️ [V63] SemanticPlotGuard 초기화 실패 (다음 사용 시 재시도): {str(e)[:80]}")
+            self._client = None
+            self._init_attempted = True
+
+    def _embed_text(self, text: str) -> list | None:
         """단일 텍스트를 임베딩 벡터로 변환"""
+        # [V64.P4-fix] lazy init: client가 없으면 한 번 더 시도
+        if not self._client and self._init_attempted:
+            self._init_attempted = False  # 재시도 1회 허용
+            self._try_init_client()
+
         if not self._client or not text:
             return None
         try:
             clean = text.replace("\n", " ").strip()[:2000]
-            res = self._client.models.embed_content(
-                model=self.EMBED_MODEL,
-                contents=clean
-            )
+            res = self._client.models.embed_content(model=self.EMBED_MODEL, contents=clean)
             time.sleep(0.5)
 
-            if hasattr(res, 'embeddings') and res.embeddings:
+            if hasattr(res, "embeddings") and res.embeddings:
                 return res.embeddings[0].values
-            elif hasattr(res, 'embedding'):
+            elif hasattr(res, "embedding"):
                 return res.embedding.values
         except Exception as e:
             logging.warning(f"⚠️ [V63] SemanticPlotGuard 임베딩 실패: {str(e)[:80]}")
         return None
 
-    def index_resolved_plots(self, resolved_plots: List[Dict]) -> int:
+    def index_resolved_plots(self, resolved_plots: list[dict]) -> int:
         """
         완결된 플롯들을 임베딩하여 인덱스에 저장.
 
@@ -113,18 +125,16 @@ class SemanticPlotGuard:
 
             emb = self._embed_text(text)
             if emb:
-                self._resolved_embeddings.append({
-                    "plot": plot_name,
-                    "resolution": resolution,
-                    "embedding": emb
-                })
+                self._resolved_embeddings.append({"plot": plot_name, "resolution": resolution, "embedding": emb})
                 indexed += 1
 
         if indexed > 0:
-            logging.info(f"📊 [V63] SemanticPlotGuard: {indexed}개 플롯 인덱싱 완료 (총 {len(self._resolved_embeddings)}개)")
+            logging.info(
+                f"📊 [V63] SemanticPlotGuard: {indexed}개 플롯 인덱싱 완료 (총 {len(self._resolved_embeddings)}개)"
+            )
         return indexed
 
-    def check_new_arc(self, tactical_doc: str = "", new_plot_names: List[str] = None) -> List[Dict]:
+    def check_new_arc(self, tactical_doc: str = "", new_plot_names: list[str] = None) -> list[dict]:
         """
         새 Arc의 내용이 기존 resolved_plots와 시맨틱 중복인지 검사.
 
@@ -164,15 +174,13 @@ class SemanticPlotGuard:
             for resolved in self._resolved_embeddings:
                 sim = _cosine_similarity(emb, resolved["embedding"])
                 if sim >= self.SIMILARITY_THRESHOLD:
-                    warnings.append({
-                        "new_plot": display_text,
-                        "similar_to": resolved["plot"],
-                        "similarity": round(sim, 3)
-                    })
+                    warnings.append(
+                        {"new_plot": display_text, "similar_to": resolved["plot"], "similarity": round(sim, 3)}
+                    )
 
         return warnings
 
-    def format_warnings(self, warnings: List[Dict]) -> str:
+    def format_warnings(self, warnings: list[dict]) -> str:
         """경고를 프롬프트 주입 가능한 문자열로 포맷팅"""
         if not warnings:
             return ""
@@ -180,7 +188,6 @@ class SemanticPlotGuard:
         lines = ["[V63] ⚠️ 시맨틱 플롯 중복 경고:"]
         for w in warnings:
             lines.append(
-                f"  - \"{w['new_plot']}\" ↔ 완결된 \"{w['similar_to']}\" "
-                f"(유사도 {w['similarity']:.1%}) → 차별화 필요"
+                f'  - "{w["new_plot"]}" ↔ 완결된 "{w["similar_to"]}" (유사도 {w["similarity"]:.1%}) → 차별화 필요'
             )
         return "\n".join(lines)

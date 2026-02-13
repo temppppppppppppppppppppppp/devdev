@@ -1,0 +1,78 @@
+{
+  "session_id": "20260211_133841",
+  "start_time": "2026-02-11T13:38:41.910529",
+  "end_time": "2026-02-11T13:46:39.085146",
+  "total_calls": 17,
+  "successful_calls": 17,
+  "failed_calls": 0,
+  "total_retries": 0,
+  "total_tokens": 114611,
+  "total_cost_usd": 0.4261,
+  "agent_stats": {
+    "StateExtractor": {
+      "agent_name": "StateExtractor",
+      "total_calls": 2,
+      "successful_calls": 2,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 17789.992332458496,
+        "min_ms": 17560.965538024902,
+        "max_ms": 18019.01912689209,
+        "p50_ms": 17789.992332458496,
+        "p90_ms": 17973.21376800537,
+        "p99_ms": 18014.438591003418
+      }
+    },
+    "BlueprintEnsembleGenerator": {
+      "agent_name": "BlueprintEnsembleGenerator",
+      "total_calls": 12,
+      "successful_calls": 12,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 53439.779222011566,
+        "min_ms": 46981.42123222351,
+        "max_ms": 61911.86571121216,
+        "p50_ms": 53895.4701423645,
+        "p90_ms": 60232.809138298035,
+        "p99_ms": 61734.57159757614
+      }
+    },
+    "Director": {
+      "agent_name": "Director",
+      "total_calls": 3,
+      "successful_calls": 3,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 37813.70862325033,
+        "min_ms": 25783.799648284912,
+        "max_ms": 57952.49819755554,
+        "p50_ms": 29704.828023910522,
+        "p90_ms": 52302.96416282654,
+        "p99_ms": 57387.54479408264
+      }
+    }
+  },
+  "model_stats": {
+    "gemini-3-flash-preview": {
+      "input_tokens": 6477,
+      "output_tokens": 2362,
+      "total_tokens": 8839,
+      "cost_usd": 0.008
+    },
+    "gemini-3-pro-preview": {
+      "input_tokens": 85273,
+      "output_tokens": 20499,
+      "total_tokens": 105772,
+      "cost_usd": 0.4182
+    }
+  }
+}

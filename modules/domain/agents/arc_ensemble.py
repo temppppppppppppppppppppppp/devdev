@@ -14,15 +14,18 @@ Cost: ~3x single generation (but higher pass rate)
 import json
 import logging
 import re
-from typing import Dict, List, Any, Optional, Tuple
-from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FutureTimeoutError
-from .base_agent import BaseAgent
-from .ensemble_prompts import ENSEMBLE_ARC_PROMPT  # [V64.P4] 프롬프트 외부화
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import TimeoutError as FutureTimeoutError
+
 from modules.core.constants import Stage2Limits
+from modules.core.prompt_loader import PromptLoader
+
+from .base_agent import BaseAgent
 
 # [V60.95] 원시인 모드 금지어 Guard (JSON 기반)
 try:
     from modules.core.primitive_guard import get_primitive_constraint_section
+
     PRIMITIVE_GUARD_AVAILABLE = True
 except ImportError:
     PRIMITIVE_GUARD_AVAILABLE = False
@@ -34,20 +37,20 @@ GENERATION_STRATEGIES = [
         "name": "conservative",
         "temperature": 0.3,
         "focus": "안정성과 연속성 우선. 이전 Arc 상태를 정확히 계승하고, 새로운 요소는 최소화.",
-        "style": "기존 설정 활용 중심"
+        "style": "기존 설정 활용 중심",
     },
     {
         "name": "balanced",
         "temperature": 0.5,
         "focus": "연속성과 새로움의 균형. 이전 상태를 계승하면서 적절한 새 갈등 도입.",
-        "style": "균형 잡힌 전개"
+        "style": "균형 잡힌 전개",
     },
     {
         "name": "creative",
         "temperature": 0.7,
         "focus": "서사적 흥미 우선. 연속성을 유지하면서 예상치 못한 전개 시도.",
-        "style": "창의적 전개"
-    }
+        "style": "창의적 전개",
+    },
 ]
 
 
@@ -59,13 +62,14 @@ class ArcEnsembleGenerator(BaseAgent):
     """
 
     # [V61.3] 앙상블 타임아웃 설정 (야간 무인 운영 - 무한 대기 방지)
-    ENSEMBLE_TIMEOUT = 300       # 전체 앙상블 타임아웃 (초) - 5분 (thinking 오버헤드 반영)
+    ENSEMBLE_TIMEOUT = 300  # 전체 앙상블 타임아웃 (초) - 5분 (thinking 오버헤드 반영)
     SINGLE_CANDIDATE_TIMEOUT = 240  # 개별 후보 타임아웃 (초) - 4분
 
     def __init__(self, context, client, model_tier: str = "gemini-2.5-pro"):
         # [V62.4] gemini-2.5-pro로 변경 - 3-pro 쿼터 소진 문제 방지
         super().__init__(context, client, model_tier)
         # [V60.37] 스마트 폴백 (BaseAgent에서 자동 설정: gemini-3 → gemini-2.5-pro)
+        self._prompt_loader = PromptLoader()
         self.strategies = GENERATION_STRATEGIES
         self.max_workers = 3
 
@@ -74,17 +78,17 @@ class ArcEnsembleGenerator(BaseAgent):
         arc_no: int,
         ep_start: int,
         vol_strategy: str,
-        curr_block: Dict,
+        curr_block: dict,
         prev_arc_context: str,
         constraint_block: str,
-        assets: Dict = None,
+        assets: dict = None,
         feedback: str = "",
         protagonist_name: str = "주인공",  # [V60.18] 주인공 이름 (필수!)
-        protagonist_config: Dict = None,  # [V60.88] 주인공 설정 (world_origin, incarnation_type)
-        entity_registry: Dict = None,  # [V60.92] Entity Registry (NPC 명칭 일관성)
+        protagonist_config: dict = None,  # [V60.88] 주인공 설정 (world_origin, incarnation_type)
+        entity_registry: dict = None,  # [V60.92] Entity Registry (NPC 명칭 일관성)
         ep_count: int = None,  # [V61.1] 가변 페이싱 - 상위에서 결정된 ep_count
-        retry: int = 0  # [V61.5] 재시도 횟수 (>0이면 thinking "medium"으로 다운그레이드)
-    ) -> Tuple[Optional[Dict], List[Dict]]:
+        retry: int = 0,  # [V61.5] 재시도 횟수 (>0이면 thinking "medium"으로 다운그레이드)
+    ) -> tuple[dict | None, list[dict]]:
         """
         앙상블 Arc 생성
 
@@ -114,10 +118,10 @@ class ArcEnsembleGenerator(BaseAgent):
         # [V61.3] 병렬 실행 전에 genre 미리 로드 (SQLite thread-safety 문제 방지)
         genre = "wuxia"
         try:
-            if hasattr(self, 'context') and hasattr(self.context, 'db'):
-                bible = self.context.db.load_anchor('bible')
+            if hasattr(self, "context") and hasattr(self.context, "db"):
+                bible = self.context.db.load_anchor("bible")
                 if bible:
-                    genre = bible.get('_genre', 'wuxia')
+                    genre = bible.get("_genre", "wuxia")
         except Exception as e:
             logging.warning(f"⚠️ [V61.3] genre 사전 로드 실패: {str(e)[:50]}")
 
@@ -142,7 +146,7 @@ class ArcEnsembleGenerator(BaseAgent):
                         protagonist_config=protagonist_config,  # [V60.88]
                         entity_registry=entity_registry,  # [V60.92]
                         genre=genre,  # [V61.3] 미리 로드한 genre 전달 (thread-safety)
-                        retry=retry  # [V61.5] 재시도 횟수 전달
+                        retry=retry,  # [V61.5] 재시도 횟수 전달
                     )
                     futures[future] = strategy["name"]
 
@@ -157,12 +161,16 @@ class ArcEnsembleGenerator(BaseAgent):
                                 result["_strategy"] = strategy_name
                                 candidates.append(result)
                         except FutureTimeoutError:
-                            logging.info(f"⏰ [V61.3] {strategy_name} 전략 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
+                            logging.info(
+                                f"⏰ [V61.3] {strategy_name} 전략 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)"
+                            )
                         except Exception as e:
                             logging.warning(f"⚠️ [Ensemble] {strategy_name} 전략 실패: {str(e)[:50]}")
                 except FutureTimeoutError:
                     # 전체 앙상블 타임아웃 - 완료된 후보만 사용
-                    logging.info(f"⏰ [V61.3] 앙상블 전체 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용")
+                    logging.info(
+                        f"⏰ [V61.3] 앙상블 전체 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용"
+                    )
                 except Exception as e:
                     # [V61.3] as_completed 자체 예외 처리
                     logging.info(f"⚠️ [V61.3] 앙상블 루프 예외: {str(e)[:80]}")
@@ -171,6 +179,7 @@ class ArcEnsembleGenerator(BaseAgent):
             # stderr로 출력 (Rich 스피너가 stdout 가림)
             import sys
             import traceback
+
             print(f"      🚨 [V61.3] Arc 병렬 처리 크래시 방지: {str(e)[:100]}", file=sys.stderr)
             traceback.print_exc(file=sys.stderr)
             sys.stderr.flush()
@@ -190,10 +199,13 @@ class ArcEnsembleGenerator(BaseAgent):
             if tactical_len >= min_tactical_length:
                 valid_candidates.append(candidate)
             else:
-                logging.info(f"⚠️ [Ensemble] {candidate.get('_strategy', '?')} 제외: tactical_doc {tactical_len}자 < {min_tactical_length}자 (ep_count={ep_count})")
+                logging.info(
+                    f"⚠️ [Ensemble] {candidate.get('_strategy', '?')} 제외: tactical_doc {tactical_len}자 < {min_tactical_length}자 (ep_count={ep_count})"
+                )
 
         # [V60.74] 유효한 후보가 없으면 최장 후보 선택 + 경고 레벨 판단
         if not valid_candidates:
+
             def safe_tactical_len(x):
                 t = x.get("tactical_doc", "")
                 return len(t) if isinstance(t, str) else len(str(t)) if t else 0
@@ -205,8 +217,10 @@ class ArcEnsembleGenerator(BaseAgent):
 
             # 권장값의 60% 미만이면 경고 레벨 높임
             if longest_len < min_required * 0.6:
-                logging.warning(f"🚨 [Ensemble] 모든 후보 심각한 분량 부족: {longest_len}자 < {int(min_required * 0.6)}자 (권장의 60%)")
-                logging.warning(f"→ Critic/Consensus에서 REJECT 가능성 높음")
+                logging.warning(
+                    f"🚨 [Ensemble] 모든 후보 심각한 분량 부족: {longest_len}자 < {int(min_required * 0.6)}자 (권장의 60%)"
+                )
+                logging.warning("→ Critic/Consensus에서 REJECT 가능성 높음")
             else:
                 logging.info(f"⚠️ [Ensemble] 모든 후보 분량 미달, 최대 분량 후보 선택: {longest_len}자")
 
@@ -226,10 +240,12 @@ class ArcEnsembleGenerator(BaseAgent):
         best = scored_candidates[0]
         # [V60.37] 타입 안전성
         best_tactical = best.get("tactical_doc", "")
-        tactical_len = len(best_tactical) if isinstance(best_tactical, str) else len(str(best_tactical)) if best_tactical else 0
+        tactical_len = (
+            len(best_tactical) if isinstance(best_tactical, str) else len(str(best_tactical)) if best_tactical else 0
+        )
 
         # [V61.3] 후보별 점수 비교 출력
-        logging.info(f"🏆 [Ensemble] 후보 비교:")
+        logging.info("🏆 [Ensemble] 후보 비교:")
         for c in scored_candidates:
             strategy = c.get("_strategy", "?")
             score = c.get("_score", 0)
@@ -244,7 +260,7 @@ class ArcEnsembleGenerator(BaseAgent):
             "best_strategy": best.get("_strategy", "unknown"),
             "best_score": best.get("_score", 0),
             "all_scores": [(c.get("_strategy", "?"), c.get("_score", 0)) for c in scored_candidates],
-            "total_candidates": len(scored_candidates)
+            "total_candidates": len(scored_candidates),
         }
         best["_ensemble_meta"] = ensemble_meta
 
@@ -262,18 +278,18 @@ class ArcEnsembleGenerator(BaseAgent):
         ep_start: int,
         ep_end: int,
         vol_strategy: str,
-        curr_block: Dict,
+        curr_block: dict,
         prev_arc_context: str,
         constraint_block: str,
-        assets: Dict,
+        assets: dict,
         feedback: str,
-        strategy: Dict,
+        strategy: dict,
         protagonist_name: str = "주인공",  # [V60.18]
-        protagonist_config: Dict = None,  # [V60.88]
-        entity_registry: Dict = None,  # [V60.92]
+        protagonist_config: dict = None,  # [V60.88]
+        entity_registry: dict = None,  # [V60.92]
         genre: str = "wuxia",  # [V61.3] 미리 로드한 genre (thread-safety)
-        retry: int = 0  # [V61.5] 재시도 횟수
-    ) -> Optional[Dict]:
+        retry: int = 0,  # [V61.5] 재시도 횟수
+    ) -> dict | None:
         """단일 전략으로 Arc 생성"""
         try:
             # [V60.13] 최우선 금지 요약 생성 - 프롬프트 최상단에 배치
@@ -282,14 +298,14 @@ class ArcEnsembleGenerator(BaseAgent):
             # [V60.88] 주인공 설정 기반 지침 생성
             protagonist_instructions = ""
             if protagonist_config:
-                world_origin = protagonist_config.get('world_origin', '원시인')
-                incarnation_type = protagonist_config.get('incarnation_type', '회귀자')
+                world_origin = protagonist_config.get("world_origin", "원시인")
+                incarnation_type = protagonist_config.get("incarnation_type", "회귀자")
                 lines = [f"- 세계 출신: {world_origin}", f"- 환생 유형: {incarnation_type}"]
 
                 # [V61.3] genre는 이제 파라미터로 전달받음 (DB 접근 제거 - thread-safety)
 
                 # [V60.96] 원시인 모드: 장르별 JSON 기반 PrimitiveGuard 사용
-                if world_origin == '원시인':
+                if world_origin == "원시인":
                     if PRIMITIVE_GUARD_AVAILABLE:
                         lines.append(get_primitive_constraint_section(protagonist_config, genre=genre, length="medium"))
                     else:
@@ -297,11 +313,11 @@ class ArcEnsembleGenerator(BaseAgent):
                 else:
                     lines.append("📝 주인공은 현대 사회를 알고 있음")
 
-                if incarnation_type == '회귀자':
+                if incarnation_type == "회귀자":
                     lines.append("🔄 미래를 알고 있음 (합리적 이유 없이는 내면 독백으로 처리)")
-                elif incarnation_type == '빙의자':
+                elif incarnation_type == "빙의자":
                     lines.append("👤 원래 인물의 기억/관계를 의식")
-                elif incarnation_type == '환생자':
+                elif incarnation_type == "환생자":
                     lines.append("👶 전생의 기억이 있음")
                 protagonist_instructions = "\n[🌍 주인공 설정]\n" + "\n".join(lines)
 
@@ -313,13 +329,17 @@ class ArcEnsembleGenerator(BaseAgent):
             if isinstance(curr_block, dict):
                 ge = curr_block.get("genre_ext") or (curr_block.get("raw_data") or {}).get("genre_ext")
                 if ge and isinstance(ge, dict):
-                    lines = ["### [장르 특화 정보 - genre_ext]",
-                             "이 블록의 장르 고유 데이터입니다. Arc 설계 시 반드시 반영하세요:"]
+                    lines = [
+                        "### [장르 특화 정보 - genre_ext]",
+                        "이 블록의 장르 고유 데이터입니다. Arc 설계 시 반드시 반영하세요:",
+                    ]
                     for k, v in ge.items():
                         lines.append(f"- **{k}**: {v}")
                     genre_ext_guide = "\n".join(lines)
 
-            prompt = ENSEMBLE_ARC_PROMPT.format(
+            prompt = self._prompt_loader.load(
+                "ensemble",
+                "ENSEMBLE_ARC_PROMPT",
                 strategy_name=strategy["name"].upper(),
                 strategy_focus=strategy["focus"],
                 strategy_style=strategy["style"],
@@ -336,8 +356,11 @@ class ArcEnsembleGenerator(BaseAgent):
                 entity_registry_section=self._escape_braces(entity_registry_section),  # [V60.92]
                 arc_no=arc_no,
                 ep_start=ep_start,
-                ep_end=ep_end
+                ep_end=ep_end,
             )
+            if not prompt:
+                logging.warning("[ArcEnsemble] ENSEMBLE_ARC_PROMPT not found in prompt loader")
+                return None
 
             # [V60.27] Thinking Level 적용 - Arc 생성 품질 향상
             # [V61.5] 재시도 시 "medium"으로 다운그레이드 (피드백이 사고를 보조)
@@ -359,17 +382,15 @@ class ArcEnsembleGenerator(BaseAgent):
             # [V61.3] stderr로 출력 (Rich 스피너가 stdout 가림)
             import sys
             import traceback
+
             print(f"      🚨 [V61.3] ArcEnsemble _generate_single 크래시: {str(e)[:80]}", file=sys.stderr)
             traceback.print_exc(file=sys.stderr)
             sys.stderr.flush()
             return None
 
     def _evaluate_candidate(
-        self,
-        candidate: Dict,
-        prev_arc_context: str,
-        constraint_block: str
-    ) -> Tuple[int, List[str]]:
+        self, candidate: dict, prev_arc_context: str, constraint_block: str
+    ) -> tuple[int, list[str]]:
         """
         후보 평가 (100점 만점)
 
@@ -400,7 +421,7 @@ class ArcEnsembleGenerator(BaseAgent):
                 tactical = str(tactical) if tactical else ""
 
             # 금지 아이템 패턴 추출
-            forbidden_items = re.findall(r'❌\s*([가-힣\w]+)', constraint_block)
+            forbidden_items = re.findall(r"❌\s*([가-힣\w]+)", constraint_block)
             # [V70] items_acquired를 str 리스트로 변환 (substring 오탐 방지)
             _acq_strs = [str(i).strip() for i in items_acquired] if isinstance(items_acquired, list) else []
             for item in forbidden_items:
@@ -413,7 +434,7 @@ class ArcEnsembleGenerator(BaseAgent):
             # 시작 위치 검사
             start_state = candidate.get("state_constraints", {}).get("arc_start_state", {})
             if "위치" in prev_arc_context:
-                prev_loc_match = re.search(r'위치[:\]]\s*([가-힣\w\s]+)', prev_arc_context)
+                prev_loc_match = re.search(r"위치[:\]]\s*([가-힣\w\s]+)", prev_arc_context)
                 if prev_loc_match:
                     prev_loc = prev_loc_match.group(1).strip()[:20]
                     curr_loc = start_state.get("location", "")
@@ -423,12 +444,12 @@ class ArcEnsembleGenerator(BaseAgent):
 
             # 소지품 계승 검사
             if "소지품" in prev_arc_context:
-                prev_inv_match = re.search(r'소지품[:\]]\s*([^\n]+)', prev_arc_context)
+                prev_inv_match = re.search(r"소지품[:\]]\s*([^\n]+)", prev_arc_context)
                 if prev_inv_match:
                     prev_inv = prev_inv_match.group(1).strip()
                     curr_equip = start_state.get("equipment", [])
                     # 주요 아이템이 계승되었는지 간단히 체크
-                    key_items = re.findall(r'([가-힣]+(?:도|검|창|궁|패|인장))', prev_inv)
+                    key_items = re.findall(r"([가-힣]+(?:도|검|창|궁|패|인장))", prev_inv)
                     for item in key_items[:3]:  # 최대 3개만 검사
                         if item not in str(curr_equip):
                             score -= 5
@@ -444,7 +465,9 @@ class ArcEnsembleGenerator(BaseAgent):
         recommended_length = ep_count * 600  # 권장: 화당 600자
         if len(tactical) < min_length:
             score -= 40  # 최소 기준 미달은 사실상 실격
-            issues.append(f"[CRITICAL] tactical_doc 분량 심각 부족: {len(tactical)}자 (최소 {min_length}자, ep_count={ep_count})")
+            issues.append(
+                f"[CRITICAL] tactical_doc 분량 심각 부족: {len(tactical)}자 (최소 {min_length}자, ep_count={ep_count})"
+            )
         elif len(tactical) < recommended_length:
             score -= 10
             issues.append(f"tactical_doc 분량 미흡: {len(tactical)}자 (권장 {recommended_length}자)")
@@ -454,14 +477,14 @@ class ArcEnsembleGenerator(BaseAgent):
 
         # 화수별 구분 검사
         ep_count = candidate.get("ep_count", 5)
-        ep_mentions = len(re.findall(r'제\s*\d+\s*화', tactical))
+        ep_mentions = len(re.findall(r"제\s*\d+\s*화", tactical))
         if ep_mentions < ep_count:
             score -= 5
             issues.append(f"화수 구분 부족: {ep_mentions}/{ep_count}")
 
         return max(0, score), issues
 
-    def _ensure_required_fields(self, result: Dict, arc_no: int, ep_start: int, ep_end: int) -> Dict:
+    def _ensure_required_fields(self, result: dict, arc_no: int, ep_start: int, ep_end: int) -> dict:
         """필수 필드 보장"""
         if "arc_no" not in result:
             result["arc_no"] = arc_no
@@ -477,21 +500,17 @@ class ArcEnsembleGenerator(BaseAgent):
                 "arc_start_state": {"location": "이전 Arc 종료 위치", "equipment": []},
                 "arc_end_state": {"location": "알 수 없음", "equipment": []},
                 "items_acquired": [],
-                "items_consumed": []
+                "items_consumed": [],
             }
 
         if "joint_docs" not in result:
-            result["joint_docs"] = {
-                "final_location": "알 수 없음",
-                "physical_inventory": [],
-                "world_joint": ""
-            }
+            result["joint_docs"] = {"final_location": "알 수 없음", "physical_inventory": [], "world_joint": ""}
 
         if "status_shadow" not in result:
             result["status_shadow"] = {
                 "internal_energy_loss": "0%",
                 "expected_injuries": "없음",
-                "item_consumption": []
+                "item_consumption": [],
             }
 
         # [V61] state_changes 필드 보장
@@ -502,7 +521,7 @@ class ArcEnsembleGenerator(BaseAgent):
                 "skill_acquisitions": [],
                 "relationship_changes": [],
                 "major_items": [],
-                "resolved_plots": []
+                "resolved_plots": [],
             }
         else:
             # 하위 필드 보장
@@ -568,16 +587,17 @@ class ArcEnsembleGenerator(BaseAgent):
         if prev_arc_context:
             # 내공 추출
             import re
-            energy_match = re.search(r'내공[:\s]*(\d+)%', prev_arc_context)
+
+            energy_match = re.search(r"내공[:\s]*(\d+)%", prev_arc_context)
             if energy_match:
                 lines.append(f"✅ 시작 내공: {energy_match.group(1)}% (이 수치로 시작해야 함!)")
 
             # 부상 추출
-            injury_patterns = ['완치', '없음', '중상', '경상', '부상']
+            injury_patterns = ["완치", "없음", "중상", "경상", "부상"]
             for pattern in injury_patterns:
                 if pattern in prev_arc_context:
-                    if pattern in ['완치', '없음']:
-                        lines.append(f"✅ 시작 부상: 없음 (건강한 상태로 시작!)")
+                    if pattern in ["완치", "없음"]:
+                        lines.append("✅ 시작 부상: 없음 (건강한 상태로 시작!)")
                     else:
                         lines.append(f"✅ 시작 부상: {pattern} (이 상태로 시작!)")
                     break
@@ -585,7 +605,7 @@ class ArcEnsembleGenerator(BaseAgent):
         # 2. 금지 아이템 추출 (constraint_block에서)
         if constraint_block:
             # ❌ 패턴 추출
-            forbidden = re.findall(r'❌\s*([^\n❌]+)', constraint_block)
+            forbidden = re.findall(r"❌\s*([^\n❌]+)", constraint_block)
             if forbidden:
                 lines.append("")
                 lines.append("🚫 절대 다시 획득/수여 금지:")
@@ -602,7 +622,7 @@ class ArcEnsembleGenerator(BaseAgent):
 
     # [V61.5] _escape_braces 오버라이드 제거 → BaseAgent의 이중 이스케이프 방지 로직 사용
 
-    def _format_entity_registry(self, entity_registry: Dict) -> str:
+    def _format_entity_registry(self, entity_registry: dict) -> str:
         """
         [V60.92] Entity Registry를 프롬프트용 문자열로 변환
         NPC 명칭 일관성을 위해 등록된 이름만 사용하도록 안내
@@ -614,15 +634,15 @@ class ArcEnsembleGenerator(BaseAgent):
             "### [V60.92] 🏷️ Entity Registry - 명칭 일관성 필수!",
             "╔══════════════════════════════════════════════════════════════════╗",
             "║ ⚠️ 아래 등록된 이름만 사용하세요! 다른 명칭/별명 사용 금지!      ║",
-            "╚══════════════════════════════════════════════════════════════════╝"
+            "╚══════════════════════════════════════════════════════════════════╝",
         ]
 
         categories = [
-            ('characters', '👤 캐릭터'),
-            ('organizations', '🏛️ 조직/문파'),
-            ('locations', '📍 장소'),
-            ('objects', '🗡️ 아이템/물건'),
-            ('concepts', '📜 개념/기술')
+            ("characters", "👤 캐릭터"),
+            ("organizations", "🏛️ 조직/문파"),
+            ("locations", "📍 장소"),
+            ("objects", "🗡️ 아이템/물건"),
+            ("concepts", "📜 개념/기술"),
         ]
 
         has_content = False
@@ -633,8 +653,8 @@ class ArcEnsembleGenerator(BaseAgent):
                 lines.append(f"\n{label}:")
                 for item in items[:20]:  # 최대 20개
                     if isinstance(item, dict):
-                        name = item.get('name', item.get('이름', str(item)))
-                        alias = item.get('alias', item.get('별칭', ''))
+                        name = item.get("name", item.get("이름", str(item)))
+                        alias = item.get("alias", item.get("별칭", ""))
                         if alias:
                             lines.append(f"  • {name} (={alias})")
                         else:

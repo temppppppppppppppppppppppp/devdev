@@ -1,0 +1,301 @@
+{
+  "_schema_version": "2.0",
+  "_project_codename": "골든루트",
+  "_last_updated": "2026-02-06",
+
+  "work_name": "골든 루트 (가제)",
+  "genre": "investment",
+  "block_range": "11-20",
+
+  "treatments": [
+    {
+      "block_id": "Block 11",
+      "title": "베어스턴스의 종말",
+      "period": "2008년 1월~3월",
+      "assets_start": "150억",
+      "assets_end": "250억",
+
+      "content": {
+        "context": "2008년 시작. 서브프라임 위기 본격화. 1월, 월드컴 이후 최대 규모 은행 손실 발표. 시장은 '최악은 지났다'고 자위한다.",
+        "event_trigger": "3월, 베어스턴스 유동성 위기. 고객들 뱅크런. 주가 57달러에서 2달러로 폭락. JP모건이 주당 2달러에 헐값 인수.",
+        "climax": "주인공의 베어스턴스 CDS 폭발. 스프레드 400bp → 2000bp. 첫 빅 히트.",
+        "aftermath": "'이건 시작이야. 리먼은 구제 못 해.' 주인공은 리먼 CDS를 추가 매수한다."
+      },
+
+      "genre_ext": {
+        "capital_before": "150억",
+        "capital_after": "250억",
+        "capital_delta": "+100억",
+        "investment_type": "CDS",
+        "instruments": ["베어스턴스 CDS 익절"],
+        "historical_event": "베어스턴스 붕괴, JP모건 인수"
+      },
+
+      "foreshadow": ["리먼 CDS 추가 매수 - 본게임 복선"]
+    },
+
+    {
+      "block_id": "Block 12",
+      "title": "폭풍 전야",
+      "period": "2008년 4월~8월",
+      "assets_start": "250억",
+      "assets_end": "300억",
+
+      "content": {
+        "context": "시장은 '베어스턴스가 마지막'이라며 안도한다. 유가 100달러 돌파, 147달러까지 치솟는다. '원유 200달러 간다'는 광기.",
+        "event_villain": "월가 딜러가 전화한다. '한, 리먼 CDS 더 산다고? 미쳤어? 베어스턴스가 끝이야. 대마불사라고.' 주인공은 끊는다.",
+        "solution": "유가 고점 근처에서 원유 숏 진입. 리먼, 메릴린치, AIG CDS 추가 매수. 전 재산의 70%를 숏 포지션에.",
+        "tension": "8월, 리먼 주가 하락 시작. 주인공의 CDS 수익 전환. 하지만 아직 익절하지 않는다. '더 간다.'"
+      },
+
+      "genre_ext": {
+        "capital_before": "250억",
+        "capital_after": "300억",
+        "capital_delta": "+50억 (미실현 포함)",
+        "investment_type": "CDS, 원유 숏",
+        "instruments": ["리먼 CDS", "메릴린치 CDS", "AIG CDS", "WTI 숏"],
+        "historical_event": "유가 147달러 고점"
+      },
+
+      "foreshadow": ["리먼 주가 하락 - D-Day 복선"]
+    },
+
+    {
+      "block_id": "Block 13",
+      "title": "D-Day",
+      "period": "2008년 9월 15일",
+      "assets_start": "300억",
+      "assets_end": "500억",
+
+      "content": {
+        "context": "9월 15일 월요일. 리먼 브라더스 파산 신청. 158년 역사의 종말. 전 세계가 얼어붙는다.",
+        "market_reaction": "다우 -504포인트. 역대 최대 낙폭. VIX 급등. 신용시장 동결. 은행간 대출 중단.",
+        "profit": "주인공의 리먼 CDS, 가치 폭등. 풋옵션, 수익률 500%. 원유 숏, 147→100달러. 하루 만에 200억 수익.",
+        "protagonist_reaction": "주인공은 뉴욕 호텔 창가에서 맨해튼을 내려다본다. 짐 싸서 나가는 리먼 직원들. '이게 월가의 끝이야.' 표정 없이 와인을 마신다."
+      },
+
+      "genre_ext": {
+        "capital_before": "300억",
+        "capital_after": "500억",
+        "capital_delta": "+200억",
+        "investment_type": "CDS, 풋옵션, 원유 숏",
+        "instruments": ["리먼 CDS 폭발", "S&P500 풋옵션", "WTI 숏"],
+        "historical_event": "리먼 브라더스 파산"
+      },
+
+      "foreshadow": ["AIG 구제금융 - 다음 수확 복선"]
+    },
+
+    {
+      "block_id": "Block 14",
+      "title": "공포의 10월",
+      "period": "2008년 9월 말~10월",
+      "assets_start": "500억",
+      "assets_end": "700억",
+
+      "content": {
+        "context": "AIG 850억 달러 구제금융. 메릴린치 BOA에 매각. 워싱턴 뮤추얼 파산. 공포가 전 세계를 집어삼킨다.",
+        "market_chaos": "10월 6일, 다우 -800포인트. VIX 80 돌파. 서킷브레이커 발동. 한국 코스피 -10% 폭락.",
+        "profit": "AIG CDS 익절. VIX 콜옵션 폭발. 원유 숏 추가 수익. 주인공의 포트폴리오, 한 달 만에 200억 추가.",
+        "decision": "주인공은 숏 포지션 절반을 정리한다. '바닥은 내년이야. 하지만 지금 먹을 건 먹어야지.'"
+      },
+
+      "genre_ext": {
+        "capital_before": "500억",
+        "capital_after": "700억",
+        "capital_delta": "+200억",
+        "investment_type": "CDS, VIX 콜, 원유 숏",
+        "instruments": ["AIG CDS 익절", "VIX 콜옵션", "WTI 숏 부분 정리"],
+        "historical_event": "VIX 80, 글로벌 패닉"
+      },
+
+      "foreshadow": ["'바닥은 내년' - 저점 매수 복선"]
+    },
+
+    {
+      "block_id": "Block 15",
+      "title": "수확의 겨울",
+      "period": "2008년 11월~12월",
+      "assets_start": "700억",
+      "assets_end": "800억",
+
+      "content": {
+        "context": "오바마 당선. 구제금융 법안 통과. 시장은 안도 랠리. 하지만 실물경제는 계속 악화. 실업률 급등.",
+        "protagonist_action": "주인공은 남은 숏 포지션을 정리한다. 현금 비중 80%로. '이제 살 차례야.'",
+        "reflection": "연말 결산. 150억에서 800억. 1년 만에 5배. 리먼 쇼크로 번 돈. 주인공은 담담하다. '다음은 저점 매수다.'",
+        "setup_next": "S&P500 저점을 기다린다. 목표가 700. 애플, 아마존, 삼성전자 리스트업."
+      },
+
+      "genre_ext": {
+        "capital_before": "700억",
+        "capital_after": "800억",
+        "capital_delta": "+100억",
+        "investment_type": "포지션 정리, 현금화",
+        "yearly_return": "+433% (150억→800억)",
+        "historical_event": "오바마 당선, 구제금융"
+      },
+
+      "foreshadow": ["S&P500 700 - 저점 매수 복선", "애플/아마존 - 다음 타겟 복선"]
+    },
+
+    {
+      "block_id": "Block 16",
+      "title": "바닥을 향해",
+      "period": "2009년 1월~2월",
+      "assets_start": "800억",
+      "assets_end": "800억",
+
+      "content": {
+        "context": "새해가 밝았지만 시장은 계속 하락. 기업 실적 쇼크. 실업률 8% 돌파. 대공황 이후 최악.",
+        "market_state": "S&P500 800대. 코스피 1000 붕괴. 모두가 '더 떨어진다'고 공포에 질려 있다.",
+        "protagonist_action": "주인공은 기다린다. '아직이야. 666까지 간다.' 현금만 쥐고 관망.",
+        "preparation": "매수 리스트 최종 점검. 삼성전자, 현대차, 애플, 아마존, 구글. 각 종목별 목표가와 비중 확정."
+      },
+
+      "genre_ext": {
+        "capital_before": "800억",
+        "capital_after": "800억",
+        "capital_delta": "0 (대기)",
+        "investment_type": "현금 대기",
+        "watchlist": ["삼성전자", "현대차", "애플", "아마존", "구글"]
+      },
+
+      "foreshadow": ["S&P500 666 - 역사적 저점 복선"]
+    },
+
+    {
+      "block_id": "Block 17",
+      "title": "666",
+      "period": "2009년 3월",
+      "assets_start": "800억",
+      "assets_end": "800억 (전액 투입)",
+
+      "content": {
+        "context": "3월 9일. S&P500 666.79. 악마의 숫자. 공포의 절정. 모두가 도망칠 때.",
+        "decision": "주인공은 진입한다. '지금이야.' 삼성전자 200억, 현대차 100억, 애플 150억, 아마존 100억, 구글 50억. 800억 전액 투입.",
+        "reaction": "댄 킴이 떤다. '미쳤어요? 지금 들어가면 다 날려요!' 주인공은 웃는다. '10년 뒤 다시 보자.'",
+        "market_turn": "3월 중순, 시장이 반등하기 시작한다. 주인공의 포지션, 수익 전환."
+      },
+
+      "genre_ext": {
+        "capital_before": "800억",
+        "capital_after": "800억 (전액 투입)",
+        "investment_type": "주식 롱",
+        "allocation": {
+          "삼성전자": "200억",
+          "현대차": "100억",
+          "애플": "150억",
+          "아마존": "100억",
+          "구글": "50억",
+          "비트코인_시드": "200억 (예비)"
+        },
+        "historical_event": "S&P500 666 역사적 저점"
+      },
+
+      "foreshadow": ["시장 반등 시작 - V자 회복 복선"]
+    },
+
+    {
+      "block_id": "Block 18",
+      "title": "양적완화",
+      "period": "2009년 4월~9월",
+      "assets_start": "800억",
+      "assets_end": "1200억",
+
+      "content": {
+        "context": "연준 QE1 가동. 1조 달러 이상 자산 매입. 달러 찍어내기 시작. 시장은 유동성의 바다.",
+        "market_rally": "S&P500 반등. 666에서 1000 돌파. 6개월 만에 50% 상승. 역사적 V자 회복.",
+        "profit": "삼성전자 +40%, 현대차 +60%, 애플 +80%, 아마존 +100%. 주인공의 포트폴리오 1200억 돌파.",
+        "strategy": "일부 익절하지 않는다. '이건 시작이야. 10년 홀딩이다.' 대신 새로운 먹잇감을 찾는다."
+      },
+
+      "genre_ext": {
+        "capital_before": "800억",
+        "capital_after": "1200억",
+        "capital_delta": "+400억 (미실현)",
+        "investment_type": "주식 롱 홀딩",
+        "historical_event": "QE1, V자 반등"
+      },
+
+      "foreshadow": ["'새로운 먹잇감' - 비트코인 복선"]
+    },
+
+    {
+      "block_id": "Block 19",
+      "title": "사토시의 선물",
+      "period": "2009년 10월~2010년 6월",
+      "assets_start": "1200억",
+      "assets_end": "1500억",
+
+      "content": {
+        "context": "2009년 1월, 비트코인 탄생. 사토시 나카모토의 백서. 누구도 관심 없다. 가격? 0.0008달러.",
+        "discovery": "주인공은 암호학 포럼을 뒤진다. 비트코인 발견. '이건... 미친 짓인데.' 하지만 미래를 안다.",
+        "decision": "OTC 딜러를 통해 비트코인 매수 시작. 50억 원어치. 당시 가격 0.05달러. 수백만 개 확보.",
+        "reaction": "댄 킴이 경악한다. '이게 뭡니까? 인터넷 가짜 돈에 50억을?' 주인공은 말한다. '10년 뒤 이게 금이야.'"
+      },
+
+      "genre_ext": {
+        "capital_before": "1200억",
+        "capital_after": "1500억",
+        "capital_delta": "+300억 (주식 + BTC)",
+        "investment_type": "주식 홀딩 + 비트코인",
+        "btc_allocation": "50억 (수백만 개)",
+        "btc_price": "$0.05",
+        "historical_event": "비트코인 탄생 초기"
+      },
+
+      "foreshadow": ["비트코인 홀딩 - 2017년 광풍 복선", "사토시 나카모토 언급"]
+    },
+
+    {
+      "block_id": "Block 20",
+      "title": "새로운 10년",
+      "period": "2010년 7월~12월",
+      "assets_start": "1500억",
+      "assets_end": "2000억",
+
+      "content": {
+        "context": "2010년. 글로벌 경제 회복 본격화. 아이폰4 출시. 스마트폰 혁명 시작. 새로운 시대.",
+        "portfolio_status": "애플 +150%, 삼성전자 +80%, 아마존 +200%. 비트코인은 1달러 터치. 주인공의 포트폴리오 2000억 돌파.",
+        "reflection": "2008년 리먼 쇼크로 800억. 저점 매수로 2배. 4년 만에 20억에서 2000억. 100배. 하지만 갈 길이 멀다.",
+        "setup_next": "2011년. 스마트폰 혁명이 본격화된다. 카카오, K-POP, 콘텐츠. 한국에도 기회가 있다."
+      },
+
+      "genre_ext": {
+        "capital_before": "1500억",
+        "capital_after": "2000억",
+        "capital_delta": "+500억",
+        "investment_type": "주식 + 비트코인 홀딩",
+        "btc_status": "50억 → 100억+ (가치 상승)",
+        "4year_return": "+9900% (20억→2000억)"
+      },
+
+      "foreshadow": ["스마트폰 혁명 - Block 21~25 복선", "카카오/K-POP 언급 - 한국 투자 복선"]
+    }
+  ],
+
+  "block_summary": {
+    "period": "2008년 1월 ~ 2010년 12월 (3년)",
+    "assets_growth": "150억 → 2000억 (13.3배)",
+    "key_investments": [
+      "베어스턴스 CDS (3월 폭발)",
+      "리먼 브라더스 CDS (9월 폭발)",
+      "AIG CDS",
+      "S&P500 풋옵션",
+      "VIX 콜옵션",
+      "WTI 원유 숏 (147→30달러)",
+      "저점 매수: 삼성전자, 현대차, 애플, 아마존, 구글",
+      "비트코인 초기 매수 ($0.05)"
+    ],
+    "historical_events_used": [
+      "베어스턴스 붕괴 (2008.03)",
+      "리먼 브라더스 파산 (2008.09.15)",
+      "AIG 구제금융",
+      "VIX 80 공포",
+      "S&P500 666 역사적 저점 (2009.03.09)",
+      "QE1 양적완화",
+      "비트코인 탄생 (2009.01)"
+    ],
+    "protagonist_arc": "숏 포지션으로 폭락장 수확 → 저점 매수로 반등장 수확 → 비트코인 시드 심기"
+  }
+}

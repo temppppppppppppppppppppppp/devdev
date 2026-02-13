@@ -1,0 +1,361 @@
+{
+  "_schema_version": "2.0",
+  "_schema_description": "배우물(Actor) 장르 Bible 샘플 - 범용 템플릿",
+  "_last_updated": "2026-02-07",
+
+  "MasterBible": {
+    "ProjectData": {
+      "MetaInfo": {
+        "title": "배우물 샘플 프로젝트",
+        "grand_objective": "대한민국 최고의 배우, 나아가 세계적 배우로 우뚝 서는 것",
+        "genre_archetype": "actor + 회귀물 + 성장물",
+        "logline": "대상 수상 직전 교통사고로 죽은 배우 강서진이 무명 시절인 2015년으로 회귀한다. 미래의 히트작 지식과 전생의 연기 경험으로 캐스팅 전쟁을 뚫고, 라이벌을 넘어, 한국 연예계의 정상에 오른다.",
+        "total_episodes": 200,
+        "episodes_per_arc": 5,
+        "arcs_per_volume": 5
+      },
+      "CoreIdentity": {
+        "protagonist": "강서진",
+        "protagonist_faction": "무소속 (초기) → 한별엔터테인먼트 (중기) → 서진필름 (후기)",
+        "edge": "2024년까지의 드라마·영화 흥행 데이터 + 전생에서 쌓은 연기력 + 감독·PD들의 성향 파악",
+        "desire": "전생에서 받지 못한 대상을 받고, 자신을 무시했던 업계에 실력으로 증명하는 것",
+        "crisis": "회귀 시점에 무명 엑스트라, 소속사도 없고 인맥도 제로"
+      },
+      "CommercialCode": {
+        "cider_point": "미래 지식으로 폭망할 작품을 피하고 대박 작품을 선점하는 통쾌함 + 무시했던 자들이 캐스팅을 제안하며 굽신거리는 장면",
+        "success_device": "시청률 대박, 연기대상 수상, 천만 영화 주연, 라이벌의 패배",
+        "attitude": "능동적 개척자 - 주어지는 역할을 기다리지 않고 직접 찾아간다"
+      }
+    },
+
+    "protagonist_config": {
+      "world_origin": "현대인",
+      "incarnation_type": "회귀자",
+      "regression_point": {
+        "death_year": 2024,
+        "death_cause": "시상식 직전 교통사고",
+        "return_year": 2015,
+        "return_month": "2015년 3월"
+      }
+    },
+
+    "ActorHUD": {
+      "_description": "배우물 전용 HUD - 명성/연기력/필모그래피/팬덤/스캔들 상태 추적",
+      "Protagonist": {
+        "actual_truth": {
+          "name": "강서진",
+          "alias": "없음 (초기) → '연기 괴물' (중기) → '국민배우' (후기)",
+          "age": 24,
+          "fame": "무명",
+
+          "acting_skill": {
+            "overall": 85,
+            "emotional_range": 90,
+            "action": 60,
+            "comedy": 70,
+            "romance": 75,
+            "method_acting": 95,
+            "note": "전생의 연기력이 몸에 남아 있음. 무명이지만 실력은 이미 톱급"
+          },
+
+          "agency": "없음 (무소속)",
+
+          "filmography": [],
+
+          "fandom": 0,
+          "scandal_index": 0,
+
+          "box_office": {
+            "total_revenue": 0,
+            "hit_count": 0,
+            "flop_count": 0
+          },
+
+          "wealth": "월세 원룸 보증금 500만원, 통장 잔고 120만원",
+
+          "network": {
+            "directors": [],
+            "actors": [],
+            "producers": [],
+            "agencies": []
+          },
+
+          "awards": [],
+
+          "mental_state": "전생의 한(恨)과 회귀의 기회에 대한 절박함이 공존",
+
+          "current_objective": "첫 번째 단역 배역을 따내는 것",
+          "mid_term_goal": "2017년까지 주연급 배우로 도약",
+          "final_goal": "대상 수상 및 한류 톱스타 등극",
+
+          "causal_injuries": "전생에서 대상 직전에 죽은 트라우마. 무명 시절의 굶주림과 무시에 대한 분노"
+        },
+
+        "public_reputation": {
+          "identity": "이름 없는 엑스트라 출신 무명 배우",
+          "wealth_level": "빈곤층",
+          "perceived_influence": "없음",
+          "industry_evaluation": "존재감 없음"
+        }
+      }
+    },
+
+    "WorldState": {
+      "CurrentEra": "2015년 3월",
+      "CurrentLocation": "서울 관악구 원룸",
+      "entertainment_context": {
+        "drama_trend": "로맨스·판타지 전성기, 웹소설 원작 드라마 태동기",
+        "film_trend": "범죄·스릴러 강세, 천만 영화 시대",
+        "streaming": "넷플릭스 한국 진출 초기, 아직 오리지널 없음",
+        "upcoming_events": [
+          {"year": 2016, "event": "tvN '도깨비' 대박", "impact": "판타지 드라마 붐"},
+          {"year": 2017, "event": "넷플릭스 한국 오리지널 확대", "impact": "OTT 시대 개막"},
+          {"year": 2019, "event": "'기생충' 아카데미 수상", "impact": "한국 영화 세계적 주목"},
+          {"year": 2020, "event": "코로나 팬데믹", "impact": "OTT 폭발적 성장, 촬영 중단 위기"},
+          {"year": 2021, "event": "'오징어 게임' 글로벌 대박", "impact": "K-콘텐츠 세계 1위"}
+        ]
+      },
+      "KarmaMatrix": {
+        "유태민": {
+          "relation_score": -100,
+          "status": "적대",
+          "note": "전생에서 대상을 가로챈 라이벌 배우. 금수저 출신으로 업계 인맥 장악"
+        },
+        "한소율": {
+          "relation_score": 20,
+          "status": "중립",
+          "note": "무명 시절 같이 고생한 동기 여배우. 전생에서도 서로 의지했던 관계"
+        },
+        "오감독": {
+          "relation_score": 0,
+          "status": "중립",
+          "note": "전생에서 서진을 처음 알아봐준 독립영화 감독. 아직 만나지 못함"
+        },
+        "정PD": {
+          "relation_score": -30,
+          "status": "경계",
+          "note": "tvN 간판 PD. 전생에서 서진을 무시했다가 나중에 캐스팅 제안"
+        },
+        "차민호 대표": {
+          "relation_score": -50,
+          "status": "적대",
+          "note": "업계 최대 기획사 스타덤엔터 대표. 유태민의 든든한 백"
+        }
+      }
+    },
+
+    "AssetLibrary": {
+      "KeyNPCs": [
+        {
+          "name": "유태민",
+          "role": "메인 라이벌/빌런",
+          "desc": "재벌가 출신의 잘생긴 배우. 연기력은 평범하지만 집안 인맥과 기획사 파워로 주연을 독점한다. 전생에서 강서진이 받을 대상을 가로채간 원수. 겉으로는 젠틀하지만 뒤에서 경쟁자를 짓밟는다.",
+          "NPC_Entertainment_HUD": {
+            "fame_level": "주연급",
+            "agency": "스타덤엔터테인먼트 (업계 1위)",
+            "filmography": ["미니시리즈 '불꽃' 주연", "영화 '그날의 약속' 주연"],
+            "scandal_index": 15,
+            "award_history": ["신인상 (2014)"],
+            "current_status": "활동중"
+          }
+        },
+        {
+          "name": "한소율",
+          "role": "조력자/히로인 후보",
+          "desc": "서진과 같은 무명 배우. 성실하고 재능 있지만 기회를 잡지 못하고 있다. 전생에서 서진이 성공한 뒤에도 변함없이 대해준 유일한 사람.",
+          "NPC_Entertainment_HUD": {
+            "fame_level": "엑스트라",
+            "agency": "없음 (프리랜서)",
+            "filmography": ["보조출연 다수"],
+            "scandal_index": 0,
+            "award_history": [],
+            "current_status": "활동중"
+          }
+        },
+        {
+          "name": "오감독 (오재혁)",
+          "role": "멘토/조력자",
+          "desc": "독립영화계의 숨은 거장. 상업 영화를 거부하고 예술성을 추구한다. 전생에서 서진의 재능을 처음 알아봐준 은인이나, 무명 시절에는 만나지 못했다.",
+          "NPC_Entertainment_HUD": {
+            "fame_level": "독립영화계 인정",
+            "agency": "없음 (독립)",
+            "filmography": ["독립영화 '잔상' (칸 비평가 주목)", "독립영화 '회색 도시'"],
+            "scandal_index": 0,
+            "award_history": ["부산국제영화제 신인감독상"],
+            "current_status": "활동중"
+          }
+        },
+        {
+          "name": "정PD (정해준)",
+          "role": "기회 제공자/장벽",
+          "desc": "tvN 간판 PD로 히트작 제조기. 캐스팅에 까다롭기로 유명하며, 무명 배우에게는 눈길도 주지 않는다. 하지만 연기력을 알아보는 눈은 확실하다.",
+          "NPC_Entertainment_HUD": {
+            "fame_level": "업계 톱 PD",
+            "agency": "CJ ENM 소속",
+            "filmography": ["드라마 '밤의 여왕' (최고 시청률 18%)", "드라마 '숨바꼭질' (최고 시청률 15%)"],
+            "scandal_index": 5,
+            "award_history": ["백상예술대상 TV부문 연출상"],
+            "current_status": "활동중"
+          }
+        },
+        {
+          "name": "차민호 대표",
+          "role": "초중반 빌런",
+          "desc": "스타덤엔터 대표. 연예계의 킹메이커로 그가 미는 배우는 반드시 뜬다. 유태민의 후견인이자, 서진 같은 비주류를 철저히 배제하는 인물.",
+          "NPC_Entertainment_HUD": {
+            "fame_level": "업계 실세",
+            "agency": "스타덤엔터테인먼트 대표",
+            "filmography": [],
+            "scandal_index": 40,
+            "award_history": [],
+            "current_status": "활동중"
+          }
+        }
+      ],
+
+      "KeyItems": [
+        {
+          "item": "미래 히트작 메모장",
+          "desc": "전생의 기억을 정리한 노트. 2015~2024년 드라마·영화 흥행 데이터, 캐스팅 정보, 시상식 결과가 기록되어 있다. 서진의 가장 중요한 무기."
+        },
+        {
+          "item": "전생의 대본 노트",
+          "desc": "전생에서 연기하며 쌓은 캐릭터 분석 노트. 어떤 배역이든 빠르게 파고들 수 있는 연기론이 담겨 있다."
+        },
+        {
+          "item": "첫 출연료 봉투",
+          "desc": "엑스트라로 받은 첫 출연료 5만원이 든 봉투. 초심을 상징."
+        }
+      ],
+
+      "KeyLocations": [
+        {
+          "name": "여의도 방송국가",
+          "desc": "지상파 3사가 밀집한 방송의 심장. 드라마 캐스팅의 전장."
+        },
+        {
+          "name": "충무로",
+          "desc": "한국 영화의 메카. 영화 캐스팅과 제작사가 모여 있다."
+        },
+        {
+          "name": "홍대 소극장",
+          "desc": "무명 배우들의 무대. 서진이 연기력을 갈고닦는 훈련장."
+        }
+      ],
+
+      "Persona": "겉으로는 겸손한 무명 배우이지만, 속으로는 전생의 경험에서 오는 자신감과 복수심이 타오르는 인물. 연기에 대한 광기에 가까운 집착.",
+      "SpeechStyle": {
+        "tone": "겸손하되 눈빛은 강렬한",
+        "vocabulary": "연예계 용어 + 연기론 + 현대 구어체",
+        "inner_monologue": "전생 회상 + 미래 흥행 예측 + 연기에 대한 집착적 독백"
+      }
+    },
+
+    "Seeds": [
+      {
+        "id": "S-001",
+        "category": "인물",
+        "description": "오감독의 존재 - 독립영화계에 숨은 거장이 있다는 언급",
+        "status": "active",
+        "planted_ep": 2,
+        "target_harvest_ep": 20,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-002",
+        "category": "사건",
+        "description": "2016년 판타지 드라마 대박 - 서진이 선점해야 할 작품이 있다는 암시",
+        "status": "active",
+        "planted_ep": 1,
+        "target_harvest_ep": 40,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-003",
+        "category": "인물",
+        "description": "유태민의 스캔들 - 라이벌의 사생활에 비밀이 있다는 복선",
+        "status": "active",
+        "planted_ep": 5,
+        "target_harvest_ep": 60,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-004",
+        "category": "아이템",
+        "description": "미래 히트작 메모장의 위험 - 누군가 메모장을 보게 될 위기",
+        "status": "active",
+        "planted_ep": 3,
+        "target_harvest_ep": 35,
+        "echo_count": 0,
+        "harvested_ep": null
+      }
+    ],
+
+    "IndustryEvents": {
+      "_description": "배우물에서 활용 가능한 연예계 이벤트 DB",
+      "events": [
+        {
+          "month": "2015-06",
+          "event": "상반기 드라마 캐스팅 시즌",
+          "impact": "하반기 방영작 오디션 집중"
+        },
+        {
+          "month": "2016-01",
+          "event": "판타지 드라마 트렌드 시작",
+          "impact": "판타지 장르 배우 수요 폭증"
+        },
+        {
+          "month": "2017-06",
+          "event": "넷플릭스 한국 오리지널 제작 시작",
+          "impact": "OTT 전용 배우 캐스팅 새 시장"
+        },
+        {
+          "month": "2019-05",
+          "event": "'기생충' 칸 황금종려상",
+          "impact": "한국 배우 세계적 주목"
+        },
+        {
+          "month": "2020-03",
+          "event": "코로나 팬데믹 시작",
+          "impact": "촬영 중단, OTT 폭발 성장"
+        },
+        {
+          "month": "2021-09",
+          "event": "'오징어 게임' 넷플릭스 공개",
+          "impact": "K-드라마 글로벌 최정상"
+        },
+        {
+          "month": "2023-12",
+          "event": "연말 시상식 시즌",
+          "impact": "대상 경쟁 최고조"
+        }
+      ]
+    },
+
+    "GenreRules": {
+      "_description": "배우물 장르 규칙 및 제약",
+      "must_include": [
+        "연기 과정이 구체적으로 묘사되어야 함 (대사 연습, 캐릭터 분석, 현장 촬영)",
+        "시청률과 흥행은 개연성 있어야 함 (첫 작품에서 40% 불가)",
+        "캐스팅 과정이 현실적이어야 함 (무명이 갑자기 대작 주연 불가)",
+        "연예계 권력 구조 반영 (기획사, PD, 감독의 영향력)",
+        "스캔들 지수 80 이상 시 광고 계약 불가, 90 이상 시 캐스팅 제외"
+      ],
+      "forbidden": [
+        "말도 안 되는 시청률 (무명 배우 첫 드라마 30% 등)",
+        "연기 과정 없이 결과만 나오는 전개",
+        "현실과 동떨어진 연예계 묘사 (모두가 착한 사람)",
+        "스캔들의 영향 무시"
+      ],
+      "tension_devices": [
+        "캐스팅 경쟁 (라이벌과 같은 배역을 놓고 대결)",
+        "스캔들 위기 (루머, 열애설, 과거 폭로)",
+        "미래 지식이 틀릴 뻔한 순간 (원작과 다른 전개)",
+        "기획사 압력 (블랙리스트, 캐스팅 방해)"
+      ]
+    }
+  }
+}

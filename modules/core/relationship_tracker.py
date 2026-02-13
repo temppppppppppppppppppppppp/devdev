@@ -6,14 +6,16 @@ NPC-주인공 관계의 상태 전환 추적 및 검증
 [V59] 집단/세력 관계 및 파벌 역학 추가
 """
 
-from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional, Tuple
+import logging
 import re
+from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass
 class RelationshipEvent:
     """[V49.7] 관계 전이 이벤트 기록"""
+
     arc: int
     episode: int
     npc_name: str
@@ -27,6 +29,7 @@ class RelationshipEvent:
 @dataclass
 class FactionRelationshipEvent:
     """[V59] 세력 간 관계 전이 이벤트 기록"""
+
     arc: int
     episode: int
     faction_a: str  # 세력 A
@@ -42,12 +45,13 @@ class FactionRelationshipEvent:
 @dataclass
 class FactionInfo:
     """[V59] 세력 정보"""
+
     name: str
     power_level: float = 50.0  # 0-100 스케일
-    members: List[str] = field(default_factory=list)
-    territory: List[str] = field(default_factory=list)
-    allies: List[str] = field(default_factory=list)
-    enemies: List[str] = field(default_factory=list)
+    members: list[str] = field(default_factory=list)
+    territory: list[str] = field(default_factory=list)
+    allies: list[str] = field(default_factory=list)
+    enemies: list[str] = field(default_factory=list)
     stance: str = "중립"  # 주인공에 대한 기본 태도
 
 
@@ -66,7 +70,7 @@ class RelationshipTracker:
         "배신": {"can_transition_to": ["사망", "추방", "굴복"]},
         "사망": {"can_transition_to": []},  # 최종 상태
         "추방": {"can_transition_to": []},  # 최종 상태
-        "희생": {"can_transition_to": []}   # 최종 상태
+        "희생": {"can_transition_to": []},  # 최종 상태
     }
 
     # [V55.5] 위험한 전환 (허용은 되지만 강한 정당화 필요)
@@ -89,7 +93,7 @@ class RelationshipTracker:
         "배신": ["배신", "뒤통수", "배반", "거짓", "등을 돌"],
         "추방": ["추방", "쫓겨", "내쫓", "떠나라", "출입 금지"],
         "의심": ["의심", "수상", "이상하", "믿을 수 없", "의구심"],
-        "중립": ["중립", "무관심", "평범", "별다른", "무덤덤"]
+        "중립": ["중립", "무관심", "평범", "별다른", "무덤덤"],
     }
 
     # [V49.7] 전이에 필요한 최소 justification 예시
@@ -102,7 +106,6 @@ class RelationshipTracker:
         ("적대", "충성"): "불가능 - 굴복과 경외 단계를 거쳐야 함",
         ("중립", "경외"): "불가능 - 의심 단계를 거쳐야 함 (중립→의심→경외)",
         ("중립", "충성"): "불가능 - 의심과 경외 단계를 거쳐야 함",
-
         # 가능하지만 정당화 필요한 전환
         ("의심", "경외"): "압도적 무력 시현 또는 정체 확인 필요 (예: 전설적 무공 시전)",
         ("경외", "충성"): "지속적인 존경 + 결정적 은혜 필요 (예: 목숨을 구해줌)",
@@ -130,7 +133,7 @@ class RelationshipTracker:
         "독립": {"can_transition_to": ["중립", "경계", "우호"]},  # 독립 획득
         "와해": {"can_transition_to": []},  # 최종 상태: 세력 해체
         "멸망": {"can_transition_to": []},  # 최종 상태: 세력 소멸
-        "흡수": {"can_transition_to": []}   # 최종 상태: 다른 세력에 흡수
+        "흡수": {"can_transition_to": []},  # 최종 상태: 다른 세력에 흡수
     }
 
     # [V59] 세력 관계 전환 요구사항
@@ -139,13 +142,11 @@ class RelationshipTracker:
         ("중립", "우호"): "공통의 적 대응 또는 상호 이익 합의 필요",
         ("우호", "동맹"): "정식 동맹 선언 또는 대규모 협력 사업 필요",
         ("경계", "우호"): "오해 해소 + 신뢰 구축 사건 필요",
-
         # 부정적 관계 발전
         ("경계", "적대"): "직접적 충돌 또는 이권 다툼 필요",
         ("적대", "전쟁"): "대규모 무력 충돌 발생 필요",
         ("전쟁", "굴복"): "결정적 패배 또는 지도자 사망/포획",
         ("굴복", "예속"): "항복 조건 수락 및 종속 조약 체결",
-
         # 급격한 변화 (강한 정당화 필요)
         ("동맹", "적대"): "불가능 - 우호→경계 단계 거쳐야 함",
         ("예속", "독립"): "내부 혼란 + 외부 지원 또는 반란 성공 필요",
@@ -166,7 +167,7 @@ class RelationshipTracker:
         "반란": ["반란", "봉기", "반기", "거병"],
         "와해": ["와해", "해체", "분열", "붕괴"],
         "멸망": ["멸망", "전멸", "소멸", "궤멸"],
-        "흡수": ["흡수", "합병", "편입", "통합"]
+        "흡수": ["흡수", "합병", "편입", "통합"],
     }
 
     # [V59] 장르별 파벌 역학 패턴
@@ -175,32 +176,32 @@ class RelationshipTracker:
             "power_sources": ["무력", "문파 규모", "비급/보물", "강호 평판", "역사"],
             "typical_factions": ["무림맹", "사파", "마교", "문파", "가문", "방파"],
             "alliance_triggers": ["공동의 적", "혼인 동맹", "의형제", "사제 관계"],
-            "conflict_triggers": ["영역 다툼", "보물 쟁탈", "복수", "명예 훼손", "이념 충돌"]
+            "conflict_triggers": ["영역 다툼", "보물 쟁탈", "복수", "명예 훼손", "이념 충돌"],
         },
         "hunter": {
             "power_sources": ["헌터 수", "고레벨 헌터", "던전 권리", "자금력", "기술력"],
             "typical_factions": ["대형 길드", "중소 길드", "헌터 협회", "정부 기관", "재벌"],
             "alliance_triggers": ["레이드 협력", "독점 계약", "인수합병", "공동 방어"],
-            "conflict_triggers": ["던전 권리", "스카우트 전쟁", "영역 다툼", "배신", "이권 충돌"]
+            "conflict_triggers": ["던전 권리", "스카우트 전쟁", "영역 다툼", "배신", "이권 충돌"],
         },
         "investment": {
             "power_sources": ["자본", "정보력", "인맥", "기술력", "시장 점유율"],
             "typical_factions": ["대기업", "펀드", "은행", "벤처", "재벌가", "국가 기관"],
             "alliance_triggers": ["합작 투자", "M&A", "전략적 제휴", "컨소시엄"],
-            "conflict_triggers": ["시장 쟁탈", "적대적 M&A", "특허 분쟁", "내부자 거래 폭로"]
-        }
+            "conflict_triggers": ["시장 쟁탈", "적대적 M&A", "특허 분쟁", "내부자 거래 폭로"],
+        },
     }
 
     def __init__(self) -> None:
         """[V49.7] 초기화, [V59] 파벌 추적 추가"""
-        self.npc_states: Dict[str, str] = {}  # {npc_name: current_state}
-        self.transition_history: List[RelationshipEvent] = []
+        self.npc_states: dict[str, str] = {}  # {npc_name: current_state}
+        self.transition_history: list[RelationshipEvent] = []
 
         # [V59] 세력/파벌 관계 추적
-        self.factions: Dict[str, FactionInfo] = {}  # {faction_name: FactionInfo}
-        self.faction_relations: Dict[Tuple[str, str], str] = {}  # {(faction_a, faction_b): state}
-        self.faction_transition_history: List[FactionRelationshipEvent] = []
-        self.protagonist_faction: Optional[str] = None  # 주인공 소속 세력
+        self.factions: dict[str, FactionInfo] = {}  # {faction_name: FactionInfo}
+        self.faction_relations: dict[tuple[str, str], str] = {}  # {(faction_a, faction_b): state}
+        self.faction_transition_history: list[FactionRelationshipEvent] = []
+        self.protagonist_faction: str | None = None  # 주인공 소속 세력
 
     def validate_transition(self, npc_name: str, old_state: str, new_state: str) -> dict:
         """
@@ -243,7 +244,7 @@ class RelationshipTracker:
                 "allowed_transitions": allowed,
                 "required": f"'{old_state}'에서 '{new_state}'로 가려면 중간 단계 필요",
                 "suggested_path": suggested_path,
-                "risky": False
+                "risky": False,
             }
 
         # [V55.5] 위험한 전환 체크
@@ -253,7 +254,7 @@ class RelationshipTracker:
                 "valid": True,
                 "risky": True,
                 "risk_warning": self.RISKY_TRANSITIONS[transition_key],
-                "reason": f"위험한 전환: '{old_state}' → '{new_state}'는 강한 정당화 필요"
+                "reason": f"위험한 전환: '{old_state}' → '{new_state}'는 강한 정당화 필요",
             }
 
         return {"valid": True, "risky": False}
@@ -280,7 +281,7 @@ class RelationshipTracker:
                 from_idx = positive_path.index(from_state)
                 to_idx = positive_path.index(to_state)
                 if to_idx > from_idx:
-                    path = positive_path[from_idx:to_idx + 1]
+                    path = positive_path[from_idx : to_idx + 1]
                     return " → ".join(path)
         except ValueError:
             pass
@@ -319,11 +320,17 @@ class RelationshipTracker:
 
         # 키워드 매칭 (우선순위: 최종 상태 > 강한 감정 > 중립)
         priority_order = [
-            "사망", "추방", "희생",  # 최종 상태
-            "배신", "적대", "굴복",  # 강한 감정
-            "경외", "충성",          # 긍정적 강한 관계
-            "무시", "의심",          # 부정적 약한 관계
-            "중립"                   # 기본
+            "사망",
+            "추방",
+            "희생",  # 최종 상태
+            "배신",
+            "적대",
+            "굴복",  # 강한 감정
+            "경외",
+            "충성",  # 긍정적 강한 관계
+            "무시",
+            "의심",  # 부정적 약한 관계
+            "중립",  # 기본
         ]
 
         for state in priority_order:
@@ -353,16 +360,13 @@ class RelationshipTracker:
                 log_data = context.db.load_state_log(ep)
 
                 if log_data and isinstance(log_data, dict):
-                    data = log_data.get('data', {})
+                    data = log_data.get("data", {})
                     if isinstance(data, dict):
-                        npc_states = data.get('npc_relationships', {})
+                        npc_states = data.get("npc_relationships", {})
                         if npc_name in npc_states:
-                            history.append({
-                                'ep_num': ep,
-                                'state': npc_states[npc_name]
-                            })
-        except Exception:
-            pass  # 조용히 실패
+                            history.append({"ep_num": ep, "state": npc_states[npc_name]})
+        except (KeyError, AttributeError, TypeError) as e:
+            logging.warning(f"⚠️ [V64.P4-fix] NPC '{npc_name}' 이력 조회 실패 (ep ~{current_ep}): {e}")
 
         return history
 
@@ -371,15 +375,8 @@ class RelationshipTracker:
     # ═══════════════════════════════════════════════════════════════
 
     def record_transition(
-        self,
-        npc_name: str,
-        from_state: str,
-        to_state: str,
-        arc: int,
-        episode: int,
-        trigger: str,
-        justification: str
-    ) -> Dict[str, Any]:
+        self, npc_name: str, from_state: str, to_state: str, arc: int, episode: int, trigger: str, justification: str
+    ) -> dict[str, Any]:
         """
         관계 전이 기록 (사유 필수)
 
@@ -404,24 +401,20 @@ class RelationshipTracker:
             return {
                 "valid": False,
                 "event": None,
-                "error": f"[V49.7] trigger 누락: '{from_state}' → '{to_state}' 전이에 구체적 사건 필요"
+                "error": f"[V49.7] trigger 누락: '{from_state}' → '{to_state}' 전이에 구체적 사건 필요",
             }
 
         if not justification or len(justification.strip()) < 10:
             return {
                 "valid": False,
                 "event": None,
-                "error": f"[V49.7] justification 누락: '{from_state}' → '{to_state}' 전이에 서사적 근거 필요"
+                "error": f"[V49.7] justification 누락: '{from_state}' → '{to_state}' 전이에 서사적 근거 필요",
             }
 
         # 전이 가능 여부 검증
         validation = self.validate_transition(npc_name, from_state, to_state)
         if not validation.get("valid", True):
-            return {
-                "valid": False,
-                "event": None,
-                "error": validation.get("reason", "전이 불가")
-            }
+            return {"valid": False, "event": None, "error": validation.get("reason", "전이 불가")}
 
         # 이벤트 기록
         event = RelationshipEvent(
@@ -432,26 +425,17 @@ class RelationshipTracker:
             to_state=to_state,
             trigger=trigger,
             justification=justification,
-            is_valid=True
+            is_valid=True,
         )
 
         self.transition_history.append(event)
         self.npc_states[npc_name] = to_state
 
-        return {
-            "valid": True,
-            "event": event,
-            "error": None
-        }
+        return {"valid": True, "event": event, "error": None}
 
     def validate_transition_with_justification(
-        self,
-        npc_name: str,
-        from_state: str,
-        to_state: str,
-        trigger: str = "",
-        justification: str = ""
-    ) -> Dict[str, Any]:
+        self, npc_name: str, from_state: str, to_state: str, trigger: str = "", justification: str = ""
+    ) -> dict[str, Any]:
         """
         전이 유효성 + 사유 충분성 검증
 
@@ -470,7 +454,7 @@ class RelationshipTracker:
                 "valid": False,
                 "severity": "CRITICAL",
                 "message": base_validation.get("reason", "전이 불가"),
-                "suggestion": base_validation.get("required", "")
+                "suggestion": base_validation.get("required", ""),
             }
 
         # 급격한 변화 감지 (2단계 이상 점프)
@@ -484,15 +468,12 @@ class RelationshipTracker:
                 if jump >= 2:
                     # 2단계 이상 점프는 강한 사유 필요
                     if not justification or len(justification) < 20:
-                        req = self.TRANSITION_REQUIREMENTS.get(
-                            (from_state, to_state),
-                            "충분한 서사적 근거 필요"
-                        )
+                        req = self.TRANSITION_REQUIREMENTS.get((from_state, to_state), "충분한 서사적 근거 필요")
                         return {
                             "valid": False,
                             "severity": "CRITICAL",
                             "message": f"급격한 관계 변화: '{from_state}' → '{to_state}' ({jump}단계 점프)",
-                            "suggestion": req
+                            "suggestion": req,
                         }
         except ValueError:
             pass  # 특수 상태는 순서 계산 생략
@@ -503,21 +484,16 @@ class RelationshipTracker:
                 "valid": False,
                 "severity": "WARNING",
                 "message": "trigger(전이 유발 사건) 누락",
-                "suggestion": "어떤 사건이 관계 변화를 유발했는지 명시하세요"
+                "suggestion": "어떤 사건이 관계 변화를 유발했는지 명시하세요",
             }
 
-        return {
-            "valid": True,
-            "severity": "OK",
-            "message": "전이 유효",
-            "suggestion": ""
-        }
+        return {"valid": True, "severity": "OK", "message": "전이 유효", "suggestion": ""}
 
     def get_npc_current_state(self, npc_name: str) -> str:
         """NPC의 현재 관계 상태 조회"""
         return self.npc_states.get(npc_name, "알 수 없음")
 
-    def get_transition_history(self, npc_name: str = None) -> List[Dict]:
+    def get_transition_history(self, npc_name: str = None) -> list[dict]:
         """
         전이 이력 조회
 
@@ -539,7 +515,7 @@ class RelationshipTracker:
                 "from": e.from_state,
                 "to": e.to_state,
                 "trigger": e.trigger,
-                "justification": e.justification
+                "justification": e.justification,
             }
             for e in events
         ]
@@ -555,10 +531,7 @@ class RelationshipTracker:
         Returns:
             프롬프트 가이드 텍스트
         """
-        req = self.TRANSITION_REQUIREMENTS.get(
-            (from_state, to_state),
-            None
-        )
+        req = self.TRANSITION_REQUIREMENTS.get((from_state, to_state), None)
 
         if req:
             return f"""
@@ -579,9 +552,9 @@ class RelationshipTracker:
         self,
         name: str,
         power_level: float = 50.0,
-        members: List[str] = None,
-        territory: List[str] = None,
-        stance: str = "중립"
+        members: list[str] = None,
+        territory: list[str] = None,
+        stance: str = "중립",
     ) -> FactionInfo:
         """
         [V59] 새로운 세력 등록
@@ -601,17 +574,12 @@ class RelationshipTracker:
             power_level=max(0, min(100, power_level)),
             members=members or [],
             territory=territory or [],
-            stance=stance
+            stance=stance,
         )
         self.factions[name] = faction
         return faction
 
-    def set_faction_relation_v59(
-        self,
-        faction_a: str,
-        faction_b: str,
-        state: str
-    ) -> bool:
+    def set_faction_relation_v59(self, faction_a: str, faction_b: str, state: str) -> bool:
         """
         [V59] 두 세력 간 관계 설정
 
@@ -662,12 +630,8 @@ class RelationshipTracker:
         return True
 
     def validate_faction_transition_v59(
-        self,
-        faction_a: str,
-        faction_b: str,
-        old_state: str,
-        new_state: str
-    ) -> Dict[str, Any]:
+        self, faction_a: str, faction_b: str, old_state: str, new_state: str
+    ) -> dict[str, Any]:
         """
         [V59] 세력 간 관계 전환 가능 여부 검증
 
@@ -696,16 +660,10 @@ class RelationshipTracker:
 
         # 상태 존재 여부 확인
         if old_state not in self.FACTION_STATES:
-            return {
-                "valid": False,
-                "reason": f"알 수 없는 세력 관계 상태: '{old_state}'"
-            }
+            return {"valid": False, "reason": f"알 수 없는 세력 관계 상태: '{old_state}'"}
 
         if new_state not in self.FACTION_STATES:
-            return {
-                "valid": False,
-                "reason": f"알 수 없는 세력 관계 상태: '{new_state}'"
-            }
+            return {"valid": False, "reason": f"알 수 없는 세력 관계 상태: '{new_state}'"}
 
         # 허용된 전환인지 확인
         allowed = self.FACTION_STATES.get(old_state, {}).get("can_transition_to", [])
@@ -717,18 +675,14 @@ class RelationshipTracker:
                 "reason": f"'{faction_a}'-'{faction_b}' 관계: '{old_state}' → '{new_state}' 전환 불가능",
                 "allowed_transitions": allowed,
                 "required": f"'{old_state}'에서 '{new_state}'로 가려면 중간 단계 필요",
-                "suggested_path": suggested
+                "suggested_path": suggested,
             }
 
         # 전환 요구사항 확인
         req_key = (old_state, new_state)
         requirement = self.FACTION_TRANSITION_REQUIREMENTS.get(req_key)
 
-        return {
-            "valid": True,
-            "allowed_transitions": allowed,
-            "requirement": requirement
-        }
+        return {"valid": True, "allowed_transitions": allowed, "requirement": requirement}
 
     def _suggest_faction_transition_path(self, from_state: str, to_state: str) -> str:
         """
@@ -761,8 +715,8 @@ class RelationshipTracker:
         episode: int,
         trigger: str,
         justification: str,
-        power_shift: float = 0.0
-    ) -> Dict[str, Any]:
+        power_shift: float = 0.0,
+    ) -> dict[str, Any]:
         """
         [V59] 세력 관계 전이 기록
 
@@ -789,26 +743,20 @@ class RelationshipTracker:
             return {
                 "valid": False,
                 "event": None,
-                "error": f"[V59] trigger 누락: '{from_state}' → '{to_state}' 전이에 구체적 사건 필요"
+                "error": f"[V59] trigger 누락: '{from_state}' → '{to_state}' 전이에 구체적 사건 필요",
             }
 
         if not justification or len(justification.strip()) < 10:
             return {
                 "valid": False,
                 "event": None,
-                "error": f"[V59] justification 누락: '{from_state}' → '{to_state}' 전이에 서사적 근거 필요"
+                "error": f"[V59] justification 누락: '{from_state}' → '{to_state}' 전이에 서사적 근거 필요",
             }
 
         # 전이 가능 여부 검증
-        validation = self.validate_faction_transition_v59(
-            faction_a, faction_b, from_state, to_state
-        )
+        validation = self.validate_faction_transition_v59(faction_a, faction_b, from_state, to_state)
         if not validation.get("valid", True):
-            return {
-                "valid": False,
-                "event": None,
-                "error": validation.get("reason", "전이 불가")
-            }
+            return {"valid": False, "event": None, "error": validation.get("reason", "전이 불가")}
 
         # 이벤트 기록
         event = FactionRelationshipEvent(
@@ -821,7 +769,7 @@ class RelationshipTracker:
             trigger=trigger,
             justification=justification,
             power_shift=max(-1.0, min(1.0, power_shift)),
-            is_valid=True
+            is_valid=True,
         )
 
         self.faction_transition_history.append(event)
@@ -830,16 +778,10 @@ class RelationshipTracker:
         # 파워 밸런스 업데이트
         if power_shift != 0 and faction_a in self.factions and faction_b in self.factions:
             shift_amount = power_shift * 10  # 최대 ±10 포인트
-            self.factions[faction_a].power_level = max(0, min(100,
-                self.factions[faction_a].power_level + shift_amount))
-            self.factions[faction_b].power_level = max(0, min(100,
-                self.factions[faction_b].power_level - shift_amount))
+            self.factions[faction_a].power_level = max(0, min(100, self.factions[faction_a].power_level + shift_amount))
+            self.factions[faction_b].power_level = max(0, min(100, self.factions[faction_b].power_level - shift_amount))
 
-        return {
-            "valid": True,
-            "event": event,
-            "error": None
-        }
+        return {"valid": True, "event": event, "error": None}
 
     def get_faction_relation_v59(self, faction_a: str, faction_b: str) -> str:
         """
@@ -852,12 +794,7 @@ class RelationshipTracker:
         key2 = (faction_b, faction_a)
         return self.faction_relations.get(key1, self.faction_relations.get(key2, "알 수 없음"))
 
-    def infer_faction_state_from_manuscript_v59(
-        self,
-        faction_a: str,
-        faction_b: str,
-        manuscript: str
-    ) -> str:
+    def infer_faction_state_from_manuscript_v59(self, faction_a: str, faction_b: str, manuscript: str) -> str:
         """
         [V59] 원고에서 세력 간 관계 상태 추론
 
@@ -875,7 +812,9 @@ class RelationshipTracker:
 
         # 두 세력이 함께 언급된 문맥 추출
         contexts = []
-        for match in re.finditer(f"({re.escape(faction_a)}|{re.escape(faction_b)})", manuscript):  # [V70] regex 메타문자 방어
+        for match in re.finditer(
+            f"({re.escape(faction_a)}|{re.escape(faction_b)})", manuscript
+        ):  # [V70] regex 메타문자 방어
             start = max(0, match.start() - 300)
             end = min(len(manuscript), match.end() + 300)
             context = manuscript[start:end]
@@ -890,13 +829,20 @@ class RelationshipTracker:
 
         # 우선순위 순서대로 키워드 매칭
         priority_order = [
-            "멸망", "와해", "흡수",  # 최종 상태
-            "전쟁", "반란",  # 극단적 충돌
-            "동맹", "예속",  # 강한 관계
-            "적대", "굴복",  # 부정적 관계
-            "우호", "독립",  # 긍정적 관계
-            "경계", "무관심",  # 약한 관계
-            "중립"  # 기본
+            "멸망",
+            "와해",
+            "흡수",  # 최종 상태
+            "전쟁",
+            "반란",  # 극단적 충돌
+            "동맹",
+            "예속",  # 강한 관계
+            "적대",
+            "굴복",  # 부정적 관계
+            "우호",
+            "독립",  # 긍정적 관계
+            "경계",
+            "무관심",  # 약한 관계
+            "중립",  # 기본
         ]
 
         for state in priority_order:
@@ -906,11 +852,7 @@ class RelationshipTracker:
 
         return "중립"
 
-    def track_faction_dynamics_v59(
-        self,
-        manuscripts: List[str],
-        genre: str = "wuxia"
-    ) -> Dict[str, Any]:
+    def track_faction_dynamics_v59(self, manuscripts: list[str], genre: str = "wuxia") -> dict[str, Any]:
         """
         [V59] 파벌 역학 추적 - 복수의 원고에서 세력 간 역학 분석
 
@@ -931,7 +873,7 @@ class RelationshipTracker:
         genre_patterns = self.GENRE_FACTION_PATTERNS.get(genre, self.GENRE_FACTION_PATTERNS["wuxia"])
 
         # 원고별 세력 언급 빈도 추적
-        faction_mentions: Dict[str, List[int]] = {}  # {faction: [count_per_episode]}
+        faction_mentions: dict[str, list[int]] = {}  # {faction: [count_per_episode]}
         for faction_name in self.factions:
             faction_mentions[faction_name] = []
 
@@ -965,12 +907,14 @@ class RelationshipTracker:
             else:
                 trend = 0.0
 
-            power_rankings.append({
-                "faction": faction_name,
-                "power": faction.power_level,
-                "trend": round(trend, 2),
-                "trend_label": "상승" if trend > 0.2 else ("하락" if trend < -0.2 else "유지")
-            })
+            power_rankings.append(
+                {
+                    "faction": faction_name,
+                    "power": faction.power_level,
+                    "trend": round(trend, 2),
+                    "trend_label": "상승" if trend > 0.2 else ("하락" if trend < -0.2 else "유지"),
+                }
+            )
 
             if trend > 0.3:
                 rising_factions.append(faction_name)
@@ -992,12 +936,9 @@ class RelationshipTracker:
                 tension_level = {"경계": 3, "적대": 7, "전쟁": 10}.get(state, 5)
                 # 중복 방지
                 if not any(cz["faction_a"] == fb and cz["faction_b"] == fa for cz in conflict_zones):
-                    conflict_zones.append({
-                        "faction_a": fa,
-                        "faction_b": fb,
-                        "state": state,
-                        "tension_level": tension_level
-                    })
+                    conflict_zones.append(
+                        {"faction_a": fa, "faction_b": fb, "state": state, "tension_level": tension_level}
+                    )
 
         # 예측 생성
         predictions = []
@@ -1007,22 +948,26 @@ class RelationshipTracker:
             if cz["tension_level"] >= 7:
                 for rising in rising_factions:
                     if rising in [cz["faction_a"], cz["faction_b"]]:
-                        predictions.append({
-                            "type": "war_escalation",
-                            "factions": [cz["faction_a"], cz["faction_b"]],
-                            "probability": "high",
-                            "description": f"{rising}의 세력 확장으로 {cz['faction_a']}-{cz['faction_b']} 간 전쟁 가능성"
-                        })
+                        predictions.append(
+                            {
+                                "type": "war_escalation",
+                                "factions": [cz["faction_a"], cz["faction_b"]],
+                                "probability": "high",
+                                "description": f"{rising}의 세력 확장으로 {cz['faction_a']}-{cz['faction_b']} 간 전쟁 가능성",
+                            }
+                        )
 
         # 급하락 세력 = 흡수/와해 가능성
         for declining in declining_factions:
             if self.factions.get(declining, FactionInfo(declining)).power_level < 30:
-                predictions.append({
-                    "type": "faction_collapse",
-                    "faction": declining,
-                    "probability": "medium",
-                    "description": f"{declining} 세력 약화로 와해 또는 흡수 가능성"
-                })
+                predictions.append(
+                    {
+                        "type": "faction_collapse",
+                        "faction": declining,
+                        "probability": "medium",
+                        "description": f"{declining} 세력 약화로 와해 또는 흡수 가능성",
+                    }
+                )
 
         return {
             "power_rankings": power_rankings,
@@ -1031,10 +976,10 @@ class RelationshipTracker:
             "rising_factions": rising_factions,
             "declining_factions": declining_factions,
             "predictions": predictions,
-            "genre_context": genre_patterns
+            "genre_context": genre_patterns,
         }
 
-    def get_faction_power_balance_v59(self) -> Dict[str, Any]:
+    def get_faction_power_balance_v59(self) -> dict[str, Any]:
         """
         [V59] 현재 세력 간 파워 밸런스 분석
 
@@ -1051,7 +996,7 @@ class RelationshipTracker:
                 "dominant_faction": None,
                 "power_distribution": {},
                 "balance_type": "fragmented",
-                "stability_score": 50.0
+                "stability_score": 50.0,
             }
 
         # 파워 분포 계산
@@ -1059,17 +1004,10 @@ class RelationshipTracker:
         if total_power == 0:
             total_power = 1  # 0으로 나누기 방지
 
-        power_distribution = {
-            name: round((f.power_level / total_power) * 100, 1)
-            for name, f in self.factions.items()
-        }
+        power_distribution = {name: round((f.power_level / total_power) * 100, 1) for name, f in self.factions.items()}
 
         # 최강 세력 찾기
-        sorted_factions = sorted(
-            self.factions.items(),
-            key=lambda x: x[1].power_level,
-            reverse=True
-        )
+        sorted_factions = sorted(self.factions.items(), key=lambda x: x[1].power_level, reverse=True)
         dominant = sorted_factions[0][0] if sorted_factions else None
         dominant_share = power_distribution.get(dominant, 0)
 
@@ -1095,13 +1033,10 @@ class RelationshipTracker:
             "dominant_faction": dominant,
             "power_distribution": power_distribution,
             "balance_type": balance_type,
-            "stability_score": round(stability_score, 1)
+            "stability_score": round(stability_score, 1),
         }
 
-    def generate_faction_dynamics_prompt_v59(
-        self,
-        genre: str = "wuxia"
-    ) -> str:
+    def generate_faction_dynamics_prompt_v59(self, genre: str = "wuxia") -> str:
         """
         [V59] 파벌 역학 정보를 프롬프트에 주입할 형태로 생성
 
@@ -1120,7 +1055,7 @@ class RelationshipTracker:
             "\n[세력 역학 현황]",
             f"체제 유형: {power_balance['balance_type']}",
             f"안정성: {power_balance['stability_score']}점",
-            ""
+            "",
         ]
 
         # 세력 목록
@@ -1154,10 +1089,7 @@ class RelationshipTracker:
 
         return "\n".join(lines)
 
-    def get_faction_transition_history_v59(
-        self,
-        faction_name: str = None
-    ) -> List[Dict]:
+    def get_faction_transition_history_v59(self, faction_name: str = None) -> list[dict]:
         """
         [V59] 세력 관계 전이 이력 조회
 
@@ -1181,12 +1113,12 @@ class RelationshipTracker:
                 "to": e.to_state,
                 "trigger": e.trigger,
                 "justification": e.justification,
-                "power_shift": e.power_shift
+                "power_shift": e.power_shift,
             }
             for e in events
         ]
 
-    def analyze_protagonist_faction_position_v59(self) -> Dict[str, Any]:
+    def analyze_protagonist_faction_position_v59(self) -> dict[str, Any]:
         """
         [V59] 주인공 소속 세력의 위치 분석
 
@@ -1202,13 +1134,7 @@ class RelationshipTracker:
             }
         """
         if not self.protagonist_faction or self.protagonist_faction not in self.factions:
-            return {
-                "faction": None,
-                "power_rank": 0,
-                "threat_level": "unknown",
-                "opportunities": [],
-                "threats": []
-            }
+            return {"faction": None, "power_rank": 0, "threat_level": "unknown", "opportunities": [], "threats": []}
 
         pf = self.factions[self.protagonist_faction]
         power_balance = self.get_faction_power_balance_v59()
@@ -1218,14 +1144,8 @@ class RelationshipTracker:
         power_rank = next((i + 1 for i, f in enumerate(sorted_power) if f.name == self.protagonist_faction), 0)
 
         # 위협 수준 평가
-        enemies_power = sum(
-            self.factions.get(e, FactionInfo(e)).power_level
-            for e in pf.enemies if e in self.factions
-        )
-        allies_power = sum(
-            self.factions.get(a, FactionInfo(a)).power_level
-            for a in pf.allies if a in self.factions
-        )
+        enemies_power = sum(self.factions.get(e, FactionInfo(e)).power_level for e in pf.enemies if e in self.factions)
+        allies_power = sum(self.factions.get(a, FactionInfo(a)).power_level for a in pf.allies if a in self.factions)
 
         combined_power = pf.power_level + allies_power
 
@@ -1277,7 +1197,7 @@ class RelationshipTracker:
             "enemies_count": len(pf.enemies),
             "threat_level": threat_level,
             "opportunities": opportunities[:3],  # 최대 3개
-            "threats": threats[:3]  # 최대 3개
+            "threats": threats[:3],  # 최대 3개
         }
 
     def generate_faction_report_v59(self, genre: str = "wuxia") -> str:
@@ -1287,16 +1207,11 @@ class RelationshipTracker:
         Returns:
             사람이 읽기 좋은 형태의 리포트 문자열
         """
-        lines = [
-            "═" * 50,
-            "         [V59] 세력 역학 분석 리포트",
-            "═" * 50,
-            ""
-        ]
+        lines = ["═" * 50, "         [V59] 세력 역학 분석 리포트", "═" * 50, ""]
 
         # 파워 밸런스
         balance = self.get_faction_power_balance_v59()
-        lines.append(f"【체제 분석】")
+        lines.append("【체제 분석】")
         lines.append(f"  유형: {balance['balance_type']}")
         lines.append(f"  지배 세력: {balance['dominant_faction'] or '없음'}")
         lines.append(f"  안정성: {balance['stability_score']:.0f}점")
@@ -1304,7 +1219,7 @@ class RelationshipTracker:
 
         # 파워 분포
         lines.append("【세력 파워 분포】")
-        for name, share in sorted(balance['power_distribution'].items(), key=lambda x: -x[1]):
+        for name, share in sorted(balance["power_distribution"].items(), key=lambda x: -x[1]):
             bar_len = int(share / 5)  # 20칸 스케일
             bar = "█" * bar_len + "░" * (20 - bar_len)
             lines.append(f"  {name:12s} [{bar}] {share:5.1f}%")
@@ -1332,14 +1247,14 @@ class RelationshipTracker:
             lines.append(f"  위협 수준: {pf_analysis['threat_level']}")
             lines.append(f"  동맹: {pf_analysis['allies_count']}개 | 적대: {pf_analysis['enemies_count']}개")
 
-            if pf_analysis['opportunities']:
+            if pf_analysis["opportunities"]:
                 lines.append("  기회:")
-                for opp in pf_analysis['opportunities']:
+                for opp in pf_analysis["opportunities"]:
                     lines.append(f"    ✓ {opp}")
 
-            if pf_analysis['threats']:
+            if pf_analysis["threats"]:
                 lines.append("  위협:")
-                for threat in pf_analysis['threats']:
+                for threat in pf_analysis["threats"]:
                     lines.append(f"    ✗ {threat}")
             lines.append("")
 
@@ -1348,9 +1263,11 @@ class RelationshipTracker:
         if recent_events:
             lines.append("【최근 세력 관계 변화】")
             for event in reversed(recent_events):
-                lines.append(f"  Arc{event.arc}Ep{event.episode}: "
-                           f"{event.faction_a} vs {event.faction_b} "
-                           f"'{event.from_state}' → '{event.to_state}'")
+                lines.append(
+                    f"  Arc{event.arc}Ep{event.episode}: "
+                    f"{event.faction_a} vs {event.faction_b} "
+                    f"'{event.from_state}' → '{event.to_state}'"
+                )
                 lines.append(f"    사유: {event.trigger[:30]}...")
             lines.append("")
 

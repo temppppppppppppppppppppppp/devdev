@@ -1,4 +1,4 @@
-# 글도비 — 후임 에이전트 인수인계
+﻿# 글도비 — 후임 에이전트 인수인계
 
 > AI 웹소설 자동 생성 시스템. Python + Gemini API.
 > 상세 참고: `참고자료.md` (2000줄+ 종합 자료)
@@ -25,11 +25,11 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 
 ---
 
-## 현재 상태 (2026-02-12)
+## 현재 상태 (2026-02-13)
 
 - **작동함**: Stage 0→2→4 정상 동작
-- **완료된 것**: Phase 1(logging), 1.5(에러핸들링), 2-B(type hints 95.5%), 5-A(프롬프트 외부화 43개), 5-C(의존성 정리)
-- **약점**: NPC 연속성 추적 약함 (시나리오 24개 — 참고자료 3-C), 플롯 중복 감지 불안정 (Chain 1)
+- **완료된 것**: Phase 1(logging), 1.5(에러핸들링), 2-B(type hints 95.5%), 5-A(프롬프트 외부화 43개), 5-C(의존성 정리), 6-C(pre-commit+ruff), 6-A(pytest 63개 신규)
+- **약점**: NPC 연속성 추적 약함 (시나리오 24개 — 참고자료 3-C), 플롯 중복 감지 불안정 (Chain 1, lazy init + 재시도 1회 적용 완료)
 
 ---
 
@@ -37,8 +37,8 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 
 | 파일 | 역할 | 비고 |
 |------|------|------|
-| `modules/core/stage2_orchestrator.py` | Arc 오케스트레이터 (2134줄) | God Object (`self.app` 332건) |
-| `modules/core/stage4_orchestrator.py` | 원고 오케스트레이터 (1633줄) | 1354줄 단일 try-except |
+| `modules/core/stage2_orchestrator.py` | Arc 오케스트레이터 (2134줄) | God Object (`self.app` 341건) |
+| `modules/core/stage4_orchestrator.py` | 원고 오케스트레이터 (1633줄) | God Object (`self.app` 312건) |
 | `modules/core/db_manager.py` | SQLite DB 매니저 | 모범 패턴 |
 | `modules/core/prompt_loader.py` | YAML 프롬프트 로더 (싱글톤) | |
 | `config/prompts/*.yaml` | 외부화된 프롬프트 43개 | |
@@ -57,14 +57,14 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 
 ---
 
-## SAFE 작업 (바로 가능)
+## SAFE 작업
 
-| 순서 | Phase | 작업 |
-|------|-------|------|
-| 1 | 5-A' | PromptLoader import 전환 (40+파일) |
-| 2 | 5-B | Settings YAML 통합 + 장르/작품 가드 외부화 |
-| 3 | 6-A | pytest 테스트 도입 |
-| 4 | 6-C | pre-commit + ruff 설정 |
+| Phase | 작업 | 상태 |
+|-------|------|------|
+| 6-C | pre-commit + ruff 설정 | ✅ 완료 |
+| 6-A | pytest 테스트 (GenreGuard, RepetitionGuard, PromptLoader — 63개) | ✅ 완료 |
+| 5-A' | PromptLoader import 전환 (40+파일, 함수형 프롬프트 포함) | 미착수 — 별도 세션 권장 |
+| 5-B | Settings YAML 통합 + 장르/작품 가드 외부화 | 미착수 |
 
 ## RISKY 작업 (순서 지킬 것)
 
@@ -100,3 +100,4 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 - 개선 아이디어 27개 + 대조표 (3-E)
 - 독자 대리만족 프레임워크 (3-F)
 - 리팩토링 Phase 1~6 로드맵
+

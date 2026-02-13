@@ -9,7 +9,7 @@ Usage:
     hud_str = build_hud_context(state_tracker, ep_num, variant="writer")
 """
 
-from typing import Optional
+import logging
 
 
 def build_hud_context(
@@ -48,11 +48,11 @@ def build_hud_context(
     # ── 1. 주인공 상태 (고밀도 필드) ──
     try:
         prev_state = None
-        if ep_num > 1 and hasattr(state_tracker, 'states'):
+        if ep_num > 1 and hasattr(state_tracker, "states"):
             prev_state = state_tracker.states.get(ep_num - 1)
 
         if prev_state:
-            state_dict = prev_state.to_dict() if hasattr(prev_state, 'to_dict') else {}
+            state_dict = prev_state.to_dict() if hasattr(prev_state, "to_dict") else {}
 
             if variant == "director":
                 _build_director_protagonist(lines, state_dict)
@@ -69,13 +69,13 @@ def build_hud_context(
 
     # ── 2. NPC 레지스트리 ──
     try:
-        if hasattr(state_tracker, 'npc_registry') and state_tracker.npc_registry:
+        if hasattr(state_tracker, "npc_registry") and state_tracker.npc_registry:
             if variant == "director":
                 _build_director_npcs(lines, state_tracker.npc_registry)
             else:
                 _build_writer_npcs(lines, state_tracker.npc_registry)
-    except Exception:
-        pass  # NPC 로드 실패 시 무시
+    except Exception as e:
+        logging.warning(f"⚠️ [V64.P4-fix] NPC 레지스트리 로드 실패: {e}")
 
     # ── 결과 반환 ──
     if lines:
@@ -93,17 +93,18 @@ def build_hud_context(
 # 내부 빌더 함수
 # ═══════════════════════════════════════════════════════════════════════
 
+
 def _build_director_protagonist(lines: list, state_dict: dict):
     """Director variant: core_fields + extra_fields dict + items(10) + relationships(5, 줄단위)"""
     lines.append("[주인공 현재 상태 - 고밀도]")
 
-    core_fields = ['name', 'location', 'hp', 'mp', 'martial_level', 'inner_power', 'status']
+    core_fields = ["name", "location", "hp", "mp", "martial_level", "inner_power", "status"]
     for field in core_fields:
         if field in state_dict and state_dict[field]:
             lines.append(f"  {field}: {state_dict[field]}")
 
     # Extended fields (extra_fields dict)
-    extra = state_dict.get('extra_fields', {})
+    extra = state_dict.get("extra_fields", {})
     if extra:
         lines.append("  [확장 상태]")
         for k, v in extra.items():
@@ -111,12 +112,12 @@ def _build_director_protagonist(lines: list, state_dict: dict):
                 lines.append(f"    {k}: {v}")
 
     # Items
-    items = state_dict.get('items', [])
+    items = state_dict.get("items", [])
     if items:
         lines.append(f"  보유 아이템: {', '.join(items[:10])}")
 
     # Relationships (줄 단위)
-    relationships = state_dict.get('relationships', {})
+    relationships = state_dict.get("relationships", {})
     if relationships and isinstance(relationships, dict):  # [V70] str/list 타입 방어
         lines.append("  관계:")
         for name, rel in list(relationships.items())[:5]:
@@ -128,18 +129,26 @@ def _build_writer_protagonist(lines: list, state_dict: dict, header: str):
     lines.append(header)
 
     # 핵심 필드 (항상 표시)
-    core_fields = ['location', 'internal_energy', 'injuries']
+    core_fields = ["location", "internal_energy", "injuries"]
     for field in core_fields:
         if field in state_dict:
             lines.append(f"  - {field}: {state_dict[field]}")
 
     # 확장 필드 (있으면 표시)
     extended_fields = [
-        ('realm', '경지'), ('reputation', '평판'), ('mental_state', '정신상태'),
-        ('faction', '소속'), ('rank', '지위'), ('gold', '재화'),
-        ('awakening_grade', '각성등급'), ('gate_clearance', '클리어 게이트'),
-        ('net_worth', '자산'), ('market_reputation', '시장평판'),
-        ('mana', '마나'), ('skills', '스킬'), ('titles', '칭호')
+        ("realm", "경지"),
+        ("reputation", "평판"),
+        ("mental_state", "정신상태"),
+        ("faction", "소속"),
+        ("rank", "지위"),
+        ("gold", "재화"),
+        ("awakening_grade", "각성등급"),
+        ("gate_clearance", "클리어 게이트"),
+        ("net_worth", "자산"),
+        ("market_reputation", "시장평판"),
+        ("mana", "마나"),
+        ("skills", "스킬"),
+        ("titles", "칭호"),
     ]
 
     for field, display in extended_fields:
@@ -147,40 +156,36 @@ def _build_writer_protagonist(lines: list, state_dict: dict, header: str):
             value = state_dict[field]
             # 리스트는 쉼표로 연결
             if isinstance(value, list):
-                value = ', '.join(str(v) for v in value[:5])  # 최대 5개
+                value = ", ".join(str(v) for v in value[:5])  # 최대 5개
             lines.append(f"  - {display}: {value}")
 
     # 소지품 (weapons + items)
-    items = state_dict.get('items', [])
-    weapons = state_dict.get('weapons', [])
+    items = state_dict.get("items", [])
+    weapons = state_dict.get("weapons", [])
     if items or weapons:
         all_items = weapons + items
         lines.append(f"  - 소지품: {', '.join(str(i) for i in all_items[:8])}")
 
     # 관계 (inline)
-    relationships = state_dict.get('relationships', {})
+    relationships = state_dict.get("relationships", {})
     if relationships and isinstance(relationships, dict):  # [V70] str/list 타입 방어
-        rel_str = ', '.join(f"{k}:{v}" for k, v in list(relationships.items())[:5])
+        rel_str = ", ".join(f"{k}:{v}" for k, v in list(relationships.items())[:5])
         lines.append(f"  - 관계: {rel_str}")
 
 
 def _build_director_npcs(lines: list, npc_registry: dict):
     """Director variant: alive(8명) role/location, dead(전체) death_arc"""
     alive_npcs = [
-        name for name, data in npc_registry.items()
-        if isinstance(data, dict) and data.get('status') != 'dead'
+        name for name, data in npc_registry.items() if isinstance(data, dict) and data.get("status") != "dead"
     ]
-    dead_npcs = [
-        name for name, data in npc_registry.items()
-        if isinstance(data, dict) and data.get('status') == 'dead'
-    ]
+    dead_npcs = [name for name, data in npc_registry.items() if isinstance(data, dict) and data.get("status") == "dead"]
 
     if alive_npcs:
         lines.append(f"\n[활성 NPC ({len(alive_npcs)}명)]")
         for name in alive_npcs[:8]:
             npc_data = npc_registry.get(name, {})
-            role = npc_data.get('role', '?')
-            location = npc_data.get('location', '?')
+            role = npc_data.get("role", "?")
+            location = npc_data.get("location", "?")
             lines.append(f"  - {name} ({role}) @ {location}")
 
     if dead_npcs:
@@ -188,24 +193,23 @@ def _build_director_npcs(lines: list, npc_registry: dict):
         lines.append(f"\n[사망 NPC ({len(dead_npcs)}명) - 등장 금지!]")
         for name in dead_npcs:
             npc_data = npc_registry.get(name, {})
-            death_arc = npc_data.get('death_arc', '?')
+            death_arc = npc_data.get("death_arc", "?")
             lines.append(f"  - {name}: Arc {death_arc}에서 사망")
 
 
 def _build_writer_npcs(lines: list, npc_registry: dict):
     """Writer/Blueprint variant: alive(10명) role/faction/relationship, dead inline"""
     alive_npcs = [
-        (name, info) for name, info in npc_registry.items()
-        if isinstance(info, dict) and info.get('status') != 'dead'
+        (name, info) for name, info in npc_registry.items() if isinstance(info, dict) and info.get("status") != "dead"
     ][:10]  # 최대 10명
 
     if alive_npcs:
         lines.append("")
         lines.append("[등장 가능 NPC]")
         for name, info in alive_npcs:
-            role = info.get('role', '')
-            relationship = info.get('relationship', '')
-            faction = info.get('faction', '')
+            role = info.get("role", "")
+            relationship = info.get("relationship", "")
+            faction = info.get("faction", "")
 
             npc_desc = f"  - {name}"
             details = []
@@ -221,8 +225,9 @@ def _build_writer_npcs(lines: list, npc_registry: dict):
 
     # 사망 NPC 경고
     dead_npcs = [
-        name for name, info in npc_registry.items()
-        if isinstance(info, dict) and info.get('status') == 'dead'  # [V70] isinstance 방어
+        name
+        for name, info in npc_registry.items()
+        if isinstance(info, dict) and info.get("status") == "dead"  # [V70] isinstance 방어
     ]
     if dead_npcs:
         lines.append("")
@@ -233,6 +238,7 @@ def _build_writer_npcs(lines: list, npc_registry: dict):
 # ═══════════════════════════════════════════════════════════════════════
 # [V64.P4] HUD Trend 안전 호출 — 3중 복사 통합
 # ═══════════════════════════════════════════════════════════════════════
+
 
 def get_hud_trend_safe(context, ep_num: int) -> str:
     """
@@ -249,9 +255,9 @@ def get_hud_trend_safe(context, ep_num: int) -> str:
         str: HUD 추세 문자열 또는 폴백 메시지
     """
     try:
-        if hasattr(context, 'sys') and hasattr(context.sys, 'hud'):
+        if hasattr(context, "sys") and hasattr(context.sys, "hud"):
             return context.sys.hud.get_hud_trend(ep_num, window=5)
-        elif hasattr(context, 'martial'):
+        elif hasattr(context, "martial"):
             return context.martial.get_hud_trend(ep_num, window=5)
         else:
             return "HUD 추세 정보 없음"

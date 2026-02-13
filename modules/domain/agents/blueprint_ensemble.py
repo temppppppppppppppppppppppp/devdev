@@ -14,16 +14,18 @@
 
 import json
 import logging
-import re
-from typing import Dict, List, Any, Optional, Tuple
-from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FutureTimeoutError
-from .base_agent import BaseAgent
-from .ensemble_prompts import BLUEPRINT_GENERATION_PROMPT  # [V64.P4] 프롬프트 외부화
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import TimeoutError as FutureTimeoutError
+
 from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
+from modules.core.prompt_loader import PromptLoader
+
+from .base_agent import BaseAgent
 
 # [V60.95] 원시인 모드 금지어 Guard (JSON 기반)
 try:
     from modules.core.primitive_guard import get_primitive_constraint_section
+
     PRIMITIVE_GUARD_AVAILABLE = True
 except ImportError:
     PRIMITIVE_GUARD_AVAILABLE = False
@@ -41,7 +43,7 @@ BLUEPRINT_STRATEGIES = [
 - 빠른 템포와 역동적인 전개를 강조하세요
 - 감정 묘사는 최소화하고 행동으로 보여주세요
 """,
-        "tension_range": (7, 9)
+        "tension_range": (7, 9),
     },
     {
         "name": "emotion_focused",
@@ -53,7 +55,7 @@ BLUEPRINT_STRATEGIES = [
 - 대화 속 감정의 미묘한 변화를 묘사하세요
 - 긴장도는 중간 수준으로 유지하세요 (4-6/10)
 """,
-        "tension_range": (4, 6)
+        "tension_range": (4, 6),
     },
     {
         "name": "dialogue_focused",
@@ -65,8 +67,8 @@ BLUEPRINT_STRATEGIES = [
 - 대사를 통해 캐릭터 성격과 관계를 드러내세요
 - 서브텍스트(말 속에 숨겨진 의미)를 활용하세요
 """,
-        "tension_range": (3, 7)
-    }
+        "tension_range": (3, 7),
+    },
 ]
 
 
@@ -83,8 +85,9 @@ SCENE_PRESETS = {
     "flashback": "과거 회상. 몽환적 전환, 과거 시제.",
     "omniscient_hint": "★전지적 시점★ 복선/떡밥 암시. '그는 아직 몰랐다...'",
     "cliffhanger": "화 끝 훅. 급박한 전개, 긴장 최고조에서 끊기.",
-    "resolution": "갈등 해소, 정리. 여운 있는 마무리."
+    "resolution": "갈등 해소, 정리. 여운 있는 마무리.",
 }
+
 
 class BlueprintEnsembleGenerator(BaseAgent):
     """
@@ -94,27 +97,28 @@ class BlueprintEnsembleGenerator(BaseAgent):
     """
 
     # [V61.3] 앙상블 타임아웃 설정 (야간 무인 운영 - 무한 대기 방지)
-    ENSEMBLE_TIMEOUT = 300       # 전체 앙상블 타임아웃 (초) - 5분 (thinking 오버헤드 반영)
+    ENSEMBLE_TIMEOUT = 300  # 전체 앙상블 타임아웃 (초) - 5분 (thinking 오버헤드 반영)
     SINGLE_CANDIDATE_TIMEOUT = 240  # 개별 후보 타임아웃 (초) - 4분
 
     def __init__(self, context, client, model_tier: str = "gemini-3-pro-preview"):
         super().__init__(context, client, model_tier)
+        self._prompt_loader = PromptLoader()
         self.strategies = BLUEPRINT_STRATEGIES
         self.max_workers = 3
 
     def generate_ensemble(
         self,
         ep_num: int,
-        arc_data: Dict,
-        constraint_block: Dict,
-        prev_blueprint: Optional[Dict] = None,
+        arc_data: dict,
+        constraint_block: dict,
+        prev_blueprint: dict | None = None,
         feedback: str = "",
         protagonist_name: str = "주인공",  # [V61] 주인공 이름 (필수!)
-        protagonist_config: Dict = None,  # [V60.90] 주인공 설정 (world_origin, incarnation_type)
+        protagonist_config: dict = None,  # [V60.90] 주인공 설정 (world_origin, incarnation_type)
         state_tracker=None,  # [V60.95] StateTracker (고밀도 HUD 전달)
-        prev_blueprints: Optional[List[Dict]] = None,  # [V67] 이전 Blueprint 리스트
-        prev_manuscripts_text: str = ""  # [V67] 이전 원고 전문 (모순 방지)
-    ) -> Tuple[Optional[Dict], List[Dict]]:
+        prev_blueprints: list[dict] | None = None,  # [V67] 이전 Blueprint 리스트
+        prev_manuscripts_text: str = "",  # [V67] 이전 원고 전문 (모순 방지)
+    ) -> tuple[dict | None, list[dict]]:
         """
         앙상블 Blueprint 생성
 
@@ -156,10 +160,10 @@ class BlueprintEnsembleGenerator(BaseAgent):
         # [V61.3] 병렬 실행 전에 genre 미리 로드 (SQLite thread-safety 문제 방지)
         genre = "wuxia"
         try:
-            if hasattr(self, 'context') and hasattr(self.context, 'db'):
-                bible = self.context.db.load_anchor('bible')
+            if hasattr(self, "context") and hasattr(self.context, "db"):
+                bible = self.context.db.load_anchor("bible")
                 if bible:
-                    genre = bible.get('_genre', 'wuxia')
+                    genre = bible.get("_genre", "wuxia")
         except Exception as e:
             logging.warning(f"⚠️ [V61.3] genre 사전 로드 실패: {str(e)[:50]}")
 
@@ -182,7 +186,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                         protagonist_name=protagonist_name,  # [V61] 주인공 이름 전달
                         protagonist_config=protagonist_config,  # [V60.90] 주인공 설정 전달
                         hud_context=hud_context,  # [V60.95] 고밀도 HUD 주입
-                        genre=genre  # [V61.3] 미리 로드한 genre 전달 (thread-safety)
+                        genre=genre,  # [V61.3] 미리 로드한 genre 전달 (thread-safety)
                     )
                     futures[future] = strategy["name"]
 
@@ -203,7 +207,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
                             logging.warning(f"✗ {strategy_name} 실패: {str(e)[:50]}")
                 except FutureTimeoutError:
                     # 전체 앙상블 타임아웃 - 완료된 후보만 사용
-                    logging.info(f"⏰ [V61.3] 블루프린트 앙상블 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용")
+                    logging.info(
+                        f"⏰ [V61.3] 블루프린트 앙상블 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용"
+                    )
                 except Exception as e:
                     # [V61.3] as_completed 자체 예외 처리
                     logging.info(f"⚠️ [V61.3] 앙상블 루프 예외: {str(e)[:80]}")
@@ -212,12 +218,13 @@ class BlueprintEnsembleGenerator(BaseAgent):
             # stderr로 출력 (Rich 스피너가 stdout 가림)
             import sys
             import traceback
+
             print(f"      🚨 [V61.3] 병렬 처리 크래시 방지: {str(e)[:100]}", file=sys.stderr)
             traceback.print_exc(file=sys.stderr)
             sys.stderr.flush()
 
         if not candidates:
-            logging.warning(f"❌ [BPEnsemble] 모든 후보 생성 실패")
+            logging.warning("❌ [BPEnsemble] 모든 후보 생성 실패")
             return None, []
 
         # [V60.85] Python 최소 기준 필터링 - 씬 4개 이상만 통과
@@ -244,7 +251,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 logging.info(f"✗ {strategy_name}: 탈락 (씬 {scene_count}개, {integrated_len}자)")
 
         if not qualified_candidates:
-            logging.warning(f"❌ [BPEnsemble] 모든 후보 최소 기준 미달")
+            logging.warning("❌ [BPEnsemble] 모든 후보 최소 기준 미달")
             return None, candidates  # 원본 반환 (디버깅용)
 
         # [V60.85] Director가 선택할 수 있도록 후보 목록 반환
@@ -260,7 +267,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 "scene_count": candidate.get("_scene_count", 0),
                 "length": candidate.get("_length", 0),
                 "total_candidates": len(qualified_candidates),
-                "disqualified": disqualified
+                "disqualified": disqualified,
             }
             # 임시 필드 정리
             candidate.pop("_strategy", None)
@@ -278,13 +285,13 @@ class BlueprintEnsembleGenerator(BaseAgent):
         arc_focus: str,
         constraints_str: str,
         prev_info: str,
-        strategy: Dict,
+        strategy: dict,
         feedback: str = "",
         protagonist_name: str = "주인공",  # [V61] 주인공 이름
-        protagonist_config: Dict = None,  # [V60.90] 주인공 설정
+        protagonist_config: dict = None,  # [V60.90] 주인공 설정
         hud_context: str = "",  # [V60.95] 고밀도 HUD 컨텍스트
-        genre: str = "wuxia"  # [V61.3] 미리 로드한 genre (thread-safety)
-    ) -> Optional[Dict]:
+        genre: str = "wuxia",  # [V61.3] 미리 로드한 genre (thread-safety)
+    ) -> dict | None:
         """단일 Blueprint 생성"""
         # [V61.3] 전체 메서드를 try-except로 감싸서 worker thread 크래시 방지
         try:
@@ -306,7 +313,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
             protagonist_instructions = self._build_protagonist_instructions(protagonist_config, genre=genre)
 
             # [V70] POV 제약 생성
-            _pov = protagonist_config.get('pov', '') if isinstance(protagonist_config, dict) else ''
+            _pov = protagonist_config.get("pov", "") if isinstance(protagonist_config, dict) else ""
             _pov_constraint = ""
             if _pov == "1인칭":
                 _pov_constraint = """### 🎯 [V70] 시점 제약: 1인칭
@@ -319,18 +326,25 @@ class BlueprintEnsembleGenerator(BaseAgent):
 - villain_scheme, side_glimpse는 씬 전환(***) 후 짧게만 사용 (1-2문단)
 - omniscient_hint는 화당 1회 이내로 제한"""
 
-            prompt = BLUEPRINT_GENERATION_PROMPT.format(
+            prompt = self._prompt_loader.load(
+                "ensemble",
+                "BLUEPRINT_GENERATION_PROMPT",
                 strategy_display=strategy["display"],
                 ep_num=ep_num,
                 protagonist_name=self._escape_braces(protagonist_name),  # [V70] 주인공 이름 주입
                 protagonist_instructions=self._escape_braces(protagonist_instructions),  # [V70] 주인공 설정 지시
                 arc_focus=self._escape_braces(arc_focus),
                 constraints=self._escape_braces(constraints_str),
-                strategy_directive=self._escape_braces(strategy["directive"] + extra_directive),  # [V70] Director feedback 내 {} 방어
+                strategy_directive=self._escape_braces(
+                    strategy["directive"] + extra_directive
+                ),  # [V70] Director feedback 내 {} 방어
                 prev_info=self._escape_braces(prev_info),
                 hud_context=self._escape_braces(hud_context) if hud_context else "(상태 정보 없음)",  # [V60.95]
-                pov_constraint=_pov_constraint  # [V70]
+                pov_constraint=_pov_constraint,  # [V70]
             )
+            if not prompt:
+                logging.warning("[BPEnsemble] BLUEPRINT_GENERATION_PROMPT not found in prompt loader")
+                return None
 
             response = self.ask(prompt, temperature=0.7, thinking_level="medium")  # [V61.6] thinking 활성화
             result = self._extract_json_robust(response)
@@ -348,12 +362,13 @@ class BlueprintEnsembleGenerator(BaseAgent):
             # [V61.3] stderr로 출력 (Rich 스피너가 stdout 가림)
             import sys
             import traceback
+
             print(f"         🚨 [V61.3] BPEnsemble _generate_single 크래시: {str(e)[:80]}", file=sys.stderr)
             traceback.print_exc(file=sys.stderr)
             sys.stderr.flush()
             return None
 
-    def _evaluate_candidate(self, candidate: Dict, constraint_block: Dict) -> int:
+    def _evaluate_candidate(self, candidate: dict, constraint_block: dict) -> int:
         """
         [V60.80] 후보 Blueprint 선택 - Python 영향 최소화
 
@@ -379,7 +394,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         return score
 
-    def collect_warnings(self, candidate: Dict, constraint_block: Dict) -> List[Dict]:
+    def collect_warnings(self, candidate: dict, constraint_block: dict) -> list[dict]:
         """
         [V60.80] Python 경고 수집 - Director 주의 포인트용
 
@@ -393,21 +408,25 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         # 1. 분량 경고
         if len(integrated) < 800:
-            warnings.append({
-                "type": "length",
-                "message": f"분량이 짧음 ({len(integrated)}자 < 800자)",
-                "focus": "서사 밀도와 씬 전개 충분성 확인 필요"
-            })
+            warnings.append(
+                {
+                    "type": "length",
+                    "message": f"분량이 짧음 ({len(integrated)}자 < 800자)",
+                    "focus": "서사 밀도와 씬 전개 충분성 확인 필요",
+                }
+            )
 
         # 2. 씬 개수 경고
         scenes = candidate.get("scene_breakdown", {})
         scene_count = len(scenes) if isinstance(scenes, (dict, list)) else 0
         if scene_count < 3:
-            warnings.append({
-                "type": "scene_count",
-                "message": f"씬 개수 적음 ({scene_count}개)",
-                "focus": "에피소드 구조의 완결성 확인 필요"
-            })
+            warnings.append(
+                {
+                    "type": "scene_count",
+                    "message": f"씬 개수 적음 ({scene_count}개)",
+                    "focus": "에피소드 구조의 완결성 확인 필요",
+                }
+            )
 
         # 3. 정지선 위반 의심
         stop_line = constraint_block.get("stop_line", {})
@@ -415,11 +434,13 @@ class BlueprintEnsembleGenerator(BaseAgent):
         if stop_content and len(stop_content) > 10:
             stop_keywords = stop_content[:50]
             if stop_keywords in integrated:
-                warnings.append({
-                    "type": "stop_line",
-                    "message": "정지선 위반 가능성",
-                    "focus": f"다음 화 내용 침범 여부 확인: '{stop_keywords[:30]}...'"
-                })
+                warnings.append(
+                    {
+                        "type": "stop_line",
+                        "message": "정지선 위반 가능성",
+                        "focus": f"다음 화 내용 침범 여부 확인: '{stop_keywords[:30]}...'",
+                    }
+                )
 
         # 4. 연속성 경고
         continuity = constraint_block.get("continuity", {})
@@ -427,15 +448,17 @@ class BlueprintEnsembleGenerator(BaseAgent):
         start_location = candidate.get("start_location", "")
         if expected_location and start_location:
             if expected_location not in start_location and start_location not in expected_location:
-                warnings.append({
-                    "type": "continuity",
-                    "message": f"위치 연속성 의심: {expected_location} → {start_location}",
-                    "focus": "이전 화 종료 위치와의 연결 확인 필요"
-                })
+                warnings.append(
+                    {
+                        "type": "continuity",
+                        "message": f"위치 연속성 의심: {expected_location} → {start_location}",
+                        "focus": "이전 화 종료 위치와의 연결 확인 필요",
+                    }
+                )
 
         return warnings
 
-    def _build_protagonist_instructions(self, protagonist_config: Dict, genre: str = "wuxia") -> str:
+    def _build_protagonist_instructions(self, protagonist_config: dict, genre: str = "wuxia") -> str:
         """
         [V60.90] protagonist_config 기반 프롬프트 지시사항 생성
 
@@ -450,13 +473,13 @@ class BlueprintEnsembleGenerator(BaseAgent):
             return "║ (주인공 설정 정보 없음)"
 
         lines = []
-        world_origin = protagonist_config.get('world_origin', '원시인')
-        incarnation_type = protagonist_config.get('incarnation_type', '회귀자')
+        world_origin = protagonist_config.get("world_origin", "원시인")
+        incarnation_type = protagonist_config.get("incarnation_type", "회귀자")
 
         # [V61.3] genre는 이제 파라미터로 전달받음 (DB 접근 제거 - thread-safety)
 
         # [V60.96] world_origin 기반 지시 (장르별 JSON 기반 PrimitiveGuard)
-        if world_origin == '원시인':
+        if world_origin == "원시인":
             if PRIMITIVE_GUARD_AVAILABLE:
                 prim_section = get_primitive_constraint_section(protagonist_config, genre=genre, length="short")
                 lines.append(f"║ {prim_section}")
@@ -466,16 +489,16 @@ class BlueprintEnsembleGenerator(BaseAgent):
             lines.append("║ 📝 [현대인 모드] 주인공은 현대 사회를 알고 있음")
 
         # incarnation_type 기반 지시
-        if incarnation_type == '회귀자':
+        if incarnation_type == "회귀자":
             lines.append("║ 🔄 [회귀자] 미래를 알고 있음 (합리적 이유 없이는 내면 독백으로 처리)")
-        elif incarnation_type == '빙의자':
+        elif incarnation_type == "빙의자":
             lines.append("║ 👤 [빙의자] 원래 인물의 기억/관계를 의식")
-        elif incarnation_type == '환생자':
+        elif incarnation_type == "환생자":
             lines.append("║ 👶 [환생자] 전생의 기억이 있음")
 
         return "\n".join(lines) if lines else "║ (주인공 설정 정보 없음)"
 
-    def _format_constraints(self, constraint_block: Dict) -> str:
+    def _format_constraints(self, constraint_block: dict) -> str:
         """제약 조건 포맷팅"""
         lines = []
 
@@ -489,16 +512,16 @@ class BlueprintEnsembleGenerator(BaseAgent):
         # Stop Line
         stop_line = constraint_block.get("stop_line", {})
         if stop_line.get("content"):
-            lines.append(f"\n🚨 [정지선 - 절대 침범 금지]")
+            lines.append("\n🚨 [정지선 - 절대 침범 금지]")
             lines.append(f"다음 화 내용: {stop_line['content'][:150]}")
             lines.append("→ 위 내용을 이번 화에서 다루면 REJECT")
 
         # Continuity
         continuity = constraint_block.get("continuity", {})
         if continuity.get("location"):
-            lines.append(f"\n[연속성]")
+            lines.append("\n[연속성]")
             lines.append(f"  이전 화 종료 위치: {continuity['location']}")
-            lines.append(f"  → 이 위치에서 시작해야 함")
+            lines.append("  → 이 위치에서 시작해야 함")
 
         # Inherited State
         inherited = constraint_block.get("inherited_state", {})
@@ -506,7 +529,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
             equip = inherited["equipment"]
             if isinstance(equip, list):
                 equip = ", ".join(equip[:5])
-            lines.append(f"\n[소지품]")
+            lines.append("\n[소지품]")
             lines.append(f"  {equip}")
 
         return "\n".join(lines) if lines else "(제약 없음)"
@@ -515,7 +538,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         """[V64 P2-7] 위임 → modules.core.hud_utils.build_hud_context (blueprint variant)"""
         return _build_hud_context_shared(state_tracker, ep_num, variant="blueprint")
 
-    def _format_prev_info(self, prev_blueprint: Optional[Dict]) -> str:
+    def _format_prev_info(self, prev_blueprint: dict | None) -> str:
         """이전 Blueprint 정보 포맷팅 (레거시 - 단일 Blueprint)"""
         if not prev_blueprint:
             return "(첫 에피소드 - 이전 화 없음)"
@@ -572,10 +595,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         return "\n".join(lines) if len(lines) > 3 else "(이전 화 정보 없음)"
 
     def _format_prev_info_expanded(
-        self,
-        prev_blueprint: Optional[Dict],
-        prev_blueprints: Optional[List[Dict]] = None,
-        prev_manuscripts_text: str = ""
+        self, prev_blueprint: dict | None, prev_blueprints: list[dict] | None = None, prev_manuscripts_text: str = ""
     ) -> str:
         """[V67] 이전 Blueprint/원고 확장 정보 포맷팅 (Gemini 대용량 컨텍스트 활용)"""
         sections = []
@@ -606,7 +626,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 scenes = bp.get("scene_breakdown", {})
                 # [V70] list 타입 대응 (LLM이 list로 반환하는 경우)
                 if isinstance(scenes, list):
-                    scenes = {f"scene_{i+1}": s for i, s in enumerate(scenes) if isinstance(s, dict)}
+                    scenes = {f"scene_{i + 1}": s for i, s in enumerate(scenes) if isinstance(s, dict)}
                 if isinstance(scenes, dict):
                     for sk, sv in scenes.items():
                         if isinstance(sv, dict):
