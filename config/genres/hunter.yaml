@@ -1,0 +1,122 @@
+# ═══════════════════════════════════════════════════════════
+# 헌터물(HUNTER) 장르 가드 설정
+# ═══════════════════════════════════════════════════════════
+
+genre_name: "헌터물(HUNTER)"
+check_english: false   # 현대 배경이므로 영어 완화
+check_numbers: false   # 수치 표현 중요하므로 아라비아 숫자 허용
+# ── 금기어 (주로 무협 용어) ──
+forbidden_terms:
+  - "내공"
+  - "진기"
+  - "검기"
+  - "검강"
+  - "초식"
+  - "보법"
+  - "무림"
+  - "강호"
+  - "문파"
+  - "장로"
+  - "태상장로"
+  - "가주"
+  - "문주"
+  - "비급"
+  - "진전"
+  - "절학"
+  - "신공"
+  - "마공"
+  - "사파"
+  - "정파"
+  - "마교"
+  - "화경"
+  - "현경"
+  - "무극"
+  - "천인합일"
+  - "경맥"
+  - "혈도"
+  - "기해"
+  - "단전"
+  - "임독이맥"
+  - "기경팔맥"
+  - "경공"
+  - "권법"
+  - "장법"
+  - "도법"
+
+# ── 헌터물 전문 용어 (허용/권장) ──
+allowed_terms:
+  - "게이트"
+  - "던전"
+  - "레이드"
+  - "각성"
+  - "스킬"
+  - "마나"
+  - "마정석"
+  - "랭크"
+  - "길드"
+  - "파티"
+  - "솔로"
+  - "버프"
+  - "디버프"
+  - "쿨다운"
+  - "어그로"
+
+mandatory_concepts:
+  - "각성과 헌터 등급의 체계적 설정"
+  - "던전/게이트 탐사의 전략적 묘사"
+  - "헌터 사회와 경제 시스템의 일관성"
+  - "전투 중 스킬/마나 자원 관리"
+
+# ── 헌터 등급 위계 ──
+rank_hierarchy: ["E", "D", "C", "B", "A", "S", "SS", "SSS", "국보급"]
+
+# ── 등급별 불가 기술/행동 ──
+rank_technique_limits:
+  E: ["S급 던전", "레이드 보스 솔로", "국가급 임무"]
+  D: ["A급 이상 던전 솔로", "레이드 보스 솔로"]
+  C: ["S급 던전 솔로", "국보급 장비 사용"]
+  B: ["SS급 이상 존재 대적"]
+
+# ── 각성 단계 ──
+awakening_stages:
+  - name: "초기 각성"
+    max_skills: 1
+    stat_multiplier: 1.5
+    can_see_system: true
+  - name: "1차 각성"
+    max_skills: 3
+    stat_multiplier: 2.0
+    can_see_system: true
+  - name: "2차 각성"
+    max_skills: 5
+    stat_multiplier: 3.0
+    can_see_system: true
+  - name: "3차 각성"
+    max_skills: 8
+    stat_multiplier: 5.0
+    can_see_system: true
+  - name: "초월"
+    max_skills: -1  # 무제한
+    stat_multiplier: 10.0
+    can_see_system: true
+
+# ── 던전 등급별 최소 파티 인원 ──
+dungeon_requirements:
+  C급: {min_rank: "D", min_party: 3}
+  B급: {min_rank: "C", min_party: 4}
+  A급: {min_rank: "B", min_party: 5}
+  S급: {min_rank: "A", min_party: 6}
+
+# ── 상태별 불가 행동 ──
+status_action_limits:
+  마나 고갈:
+    - '스킬.*발동'
+    - '마나.*충전.*없이.*전투'
+    - '연속.*스킬'
+  중상:
+    - '전력.*전투'
+    - '던전.*입장'
+    - '레이드.*참가'
+  각성 부작용:
+    - '스킬.*남용'
+    - '능력.*폭주'

@@ -1,17 +1,17 @@
 """
 [V70] GenreGuard 단위 테스트
 
-modules/core/genre_guard.py의 모든 공개 메서드를 검증합니다.
+WuxiaGuard(BaseGuard)의 공용 메서드를 검증합니다.
 """
 
 import pytest
 
-from modules.core.genre_guard import GenreGuard
+from modules.core.genre_guards.wuxia_guard import WuxiaGuard
 
 
 @pytest.fixture
 def guard():
-    return GenreGuard()
+    return WuxiaGuard()
 
 
 # ============================================================
@@ -35,16 +35,15 @@ class TestConvertToNumeric:
         assert guard.convert_to_numeric(3.14) == 3.14
 
     def test_arabic_digit_string(self, guard):
-        # NOTE: "100" contains "0" which triggers zero guard — known behavior
-        assert guard.convert_to_numeric("100") == 0.0
-        # Non-zero arabic strings work fine
+        # 아라비아 숫자는 숫자값으로 정상 파싱되어야 한다.
+        assert guard.convert_to_numeric("100") == 100.0
         assert guard.convert_to_numeric("1.5") == 1.5
 
     def test_arabic_float_string(self, guard):
         assert guard.convert_to_numeric("1.5") == 1.5
 
     def test_zero_keywords(self, guard):
-        for word in ["영", "무", "없", "소멸", "0"]:
+        for word in ["영", "무", "없음", "소멸", "0"]:
             assert guard.convert_to_numeric(word) == 0.0
 
     # 한글 수사 변환
