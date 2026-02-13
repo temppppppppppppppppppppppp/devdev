@@ -23,12 +23,13 @@ from concurrent.futures import TimeoutError as FutureTimeoutError
 
 from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
 from modules.core.hud_utils import get_hud_trend_safe as _get_hud_trend_safe_shared
+from modules.models.manuscript import validate_manuscript_candidate
 
 from .base_agent import BaseAgent
 
 # [V60.95] 원시인 모드 금지어 Guard (JSON 기반)
 try:
-    from modules.core.primitive_guard import get_primitive_constraint_section, get_primitive_guard
+    from modules.core.primitive_guard import get_primitive_constraint_section
 
     PRIMITIVE_GUARD_AVAILABLE = True
 except ImportError:
@@ -341,6 +342,8 @@ class ChiefWriter(BaseAgent):
                 }
             ]
 
+        # [Step2] Pydantic ingress+egress — 각 후보 검증
+        candidates = [validate_manuscript_candidate(c) for c in candidates]
         return candidates
 
     def _generate_single_candidate(

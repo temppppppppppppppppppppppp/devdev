@@ -25,6 +25,9 @@ beautifulsoup4>=4.12             # HTML 파싱
 # pandas>=2.1                    # 데이터 분석
 # plotly>=5.18                   # 차트
 
+# === Data Validation ===
+pydantic>=2.0                    # 데이터 모델 검증 (Step 2)
+
 # === Dev ===
 pytest>=8.0                      # 테스트 프레임워크
 nest-asyncio>=1.5                # 중첩 asyncio 루프 허용

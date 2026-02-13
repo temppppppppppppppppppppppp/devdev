@@ -19,6 +19,8 @@ import logging
 import re
 import time
 
+from modules.models.arc import validate_arc
+
 _perf_logger = logging.getLogger(__name__)  # [V65] PerfTimer 로깅
 
 
@@ -1759,10 +1761,13 @@ class Stage2Orchestrator:
                         if constraint_block:
                             _constraint_lines = constraint_block.strip().split("\n")
                             _must_not = [
-                                l.strip() for l in _constraint_lines if "금지" in l or "MUST NOT" in l or "절대" in l
+                                ln.strip()
+                                for ln in _constraint_lines
+                                if "금지" in ln or "MUST NOT" in ln or "절대" in ln
                             ]
                             refined_arc["constraint_summary"] = "\n".join(_must_not[:10]) if _must_not else ""
 
+                        refined_arc = validate_arc(refined_arc)  # [Step2] Pydantic ingress+egress
                         all_refined_arcs.append(refined_arc)
                         _st_snapshot = None  # [V70] Director PASS 확정 — 스냅샷 불필요
                         self.app._cumulative_state_cache = None
