@@ -42,6 +42,7 @@ from modules.core.metrics_collector import get_metrics_collector  # [V49.3] 비�
 from modules.core.narrative_diversity import NarrativeDiversityEngine  # [V48] 서사 다양성 엔진
 from modules.core.perf_timer import PerfTimer  # [V65] 파이프라인 성능 프로파일링
 from modules.core.prompt_builder import PromptBuilder  # [V64 P2-2]
+from modules.core.services.audit_service import AuditService  # [Phase 4B-1]
 from modules.core.slack_bot import notifier  # [V40] Slack 알림 추가
 from modules.core.spinners import FancySpinner, StageSpinner, rich_console  # noqa: F401
 from modules.core.stage2_orchestrator import Stage2Orchestrator  # [V64.P3]
@@ -185,8 +186,13 @@ class SovereignApp:
         # [V66.1] B-1: narrative_summaries 캐시 (99회 DB 조회 → 1회)
         self._narrative_summaries_cache: str | None = None
 
-        # [V66.1] B-3: audit_event 배치 버퍼 (매회 파일 open → 배치 기록)
-        self._audit_buffer: list = []
+        # [Phase 4B-1] AuditService 추출 — 버퍼/기록 위임
+        self._audit_service = AuditService(
+            runtime_audit=self.runtime_audit,
+            project_paths_fn=lambda: self.current_project.paths if self.current_project else None,
+            ui_log_fn=self.ui.log,
+        )
+        self._audit_buffer = self._audit_service.buffer  # 하위 호환 참조
         atexit.register(self._flush_audit_buffer)  # [V66.1] B-3: 프로세스 종료 시 flush 보장
 
         # [V64.P4] 동적 주입 속성 선언 (monkey-patching 제거)
@@ -2990,58 +2996,16 @@ class SovereignApp:
         return self._feedback_system.classify_rejection_feedback(reason, feedback, blueprint)
 
     def _audit_event(self, event_type, message, data=None):
-        """
-        [V66.1] B-3: 배치 버퍼 방식으로 변경 — 매회 파일 open 대신 버퍼에 append,
-        스테이지/에피소드 완료 시점에 _flush_audit_buffer()로 일괄 기록 (~500ms/세션 절감)
-        """
-        event = {
-            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-            "type": event_type,
-            "message": message,
-            "data": data or {},
-        }
-        self.runtime_audit.append(event)
-        # [V66.1] B-3: 버퍼에 append만 수행 (파일 I/O 지연)
-        self._audit_buffer.append(event)
+        """[V66.1→4B-1] Facade → AuditService"""
+        return self._audit_service.audit_event(event_type, message, data)
 
     def _flush_audit_buffer(self):
-        """
-        [V66.1] B-3: 버퍼에 쌓인 audit 이벤트를 한 번에 파일 기록.
-        스테이지 완료, 에피소드 완료, 프로세스 종료 시 호출.
-        """
-        if not self._audit_buffer or not self.current_project:
-            return
-        try:
-            log_dir = self.current_project.paths.root / "logs"
-            log_dir.mkdir(parents=True, exist_ok=True)
-            log_path = log_dir / "runtime_audit.jsonl"
-            with log_path.open("a", encoding="utf-8") as f:
-                for event in self._audit_buffer:
-                    f.write(json.dumps(event, ensure_ascii=False) + "\n")
-            self._audit_buffer.clear()
-        except Exception as e:
-            self.ui.log(f"⚠️ [Audit] 로그 기록 실패: {e}")
+        """[V66.1→4B-1] Facade → AuditService"""
+        return self._audit_service.flush_audit_buffer()
 
     def _write_audit_summary(self, tag="snapshot"):
-        # [V66.1] B-3: 요약 기록 전 버퍼 flush
-        self._flush_audit_buffer()
-        if not self.current_project:
-            return
-        try:
-            summary = {
-                "tag": tag,
-                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-                "total_events": len(self.runtime_audit),
-                "counts": {},
-            }
-            for evt in self.runtime_audit[-200:]:
-                summary["counts"][evt["type"]] = summary["counts"].get(evt["type"], 0) + 1
-            log_dir = self.current_project.paths.root / "logs"
-            log_dir.mkdir(parents=True, exist_ok=True)
-            summary_path = log_dir / "runtime_audit_summary.json"
-            summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
-        except Exception as e:
-            self.ui.log(f"⚠️ [Audit] 요약 기록 실패: {e}")
+        """[V66.1→4B-1] Facade → AuditService"""
+        return self._audit_service.write_audit_summary(tag)
 
     def _get_arc_context_for_episode(self, ep_num: int) -> tuple[int | None, dict | None]:
         """
