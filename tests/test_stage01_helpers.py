@@ -245,3 +245,165 @@ class TestExtendBlocks:
             result = helpers.extend_blocks(stage0_mgr)
         assert len(result) == 1
         assert result[0]["block_id"] == "B1"
+
+
+# ── stage_0_extended ─────────────────────────────────────────
+
+
+class TestStage0Extended:
+    def test_stage0_unavailable_returns_early(self, helpers, app_mock):
+        """STAGE0_AVAILABLE=False → 즉시 반환"""
+        with redirect_stdout(StringIO()), \
+             patch("main_a.STAGE0_AVAILABLE", False):
+            helpers.stage_0_extended(mode=1)
+        # StageZeroManager 초기화 안 함 (아무 project 접근 없음)
+        app_mock.current_project.save_v20_anchor.assert_not_called()
+
+    def test_mode_1_calls_new_project_flow(self, helpers, app_mock):
+        """mode=1 → run_new_project_flow 호출"""
+        mock_mgr = MagicMock()
+        mock_mgr.run_new_project_flow.return_value = ({"MasterBible": {}}, [], None)
+        mock_mgr.preset_registry = None
+        mock_mgr.style_guide = None
+        with redirect_stdout(StringIO()), \
+             patch("main_a.STAGE0_AVAILABLE", True), \
+             patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr), \
+             patch("modules.core.stage0.PresetRegistry"), \
+             patch("builtins.input", return_value=""):
+            helpers.stage_0_extended(mode=1)
+        mock_mgr.run_new_project_flow.assert_called_once()
+
+    def test_mode_3_calls_import_bible(self, helpers, app_mock):
+        """mode=3 → import_bible 호출"""
+        mock_mgr = MagicMock()
+        mock_mgr.import_bible.return_value = {"MasterBible": {"protagonist_config": {}}}
+        mock_mgr.preset_registry = None
+        mock_mgr.style_guide = None
+        with redirect_stdout(StringIO()), \
+             patch("main_a.STAGE0_AVAILABLE", True), \
+             patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr), \
+             patch("modules.core.stage0.PresetRegistry"), \
+             patch("builtins.input", return_value=""):
+            helpers.stage_0_extended(mode=3)
+        mock_mgr.import_bible.assert_called_once()
+
+    def test_mode_4_calls_extend_blocks(self, helpers, app_mock):
+        """mode=4 → app._extend_blocks 호출"""
+        mock_mgr = MagicMock()
+        app_mock._extend_blocks.return_value = []
+        with redirect_stdout(StringIO()), \
+             patch("main_a.STAGE0_AVAILABLE", True), \
+             patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr), \
+             patch("modules.core.stage0.PresetRegistry"), \
+             patch("builtins.input", return_value=""):
+            helpers.stage_0_extended(mode=4)
+        app_mock._extend_blocks.assert_called_once_with(mock_mgr)
+
+    def test_mode_5_calls_reference_analysis(self, helpers, app_mock):
+        """mode=5 → run_reference_analysis 호출"""
+        mock_mgr = MagicMock()
+        mock_mgr.run_reference_analysis.return_value = None
+        with redirect_stdout(StringIO()), \
+             patch("main_a.STAGE0_AVAILABLE", True), \
+             patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr), \
+             patch("modules.core.stage0.PresetRegistry"), \
+             patch("builtins.input", return_value=""):
+            helpers.stage_0_extended(mode=5)
+        mock_mgr.run_reference_analysis.assert_called_once()
+
+    def test_invalid_choice_cancels(self, helpers, app_mock):
+        """유효하지 않은 choice → 취소"""
+        mock_mgr = MagicMock()
+        mock_mgr.show_menu.return_value = 99  # 없는 선택
+        with redirect_stdout(StringIO()), \
+             patch("main_a.STAGE0_AVAILABLE", True), \
+             patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr), \
+             patch("modules.core.stage0.PresetRegistry"):
+            helpers.stage_0_extended(mode=0)
+        app_mock.current_project.save_v20_anchor.assert_not_called()
+
+    def test_bible_saved_on_success(self, helpers, app_mock):
+        """Bible 생성 성공 시 DB 저장"""
+        mock_mgr = MagicMock()
+        bible = {"MasterBible": {"protagonist_config": {"type": "회귀자"}}}
+        mock_mgr.run_new_project_flow.return_value = (bible, None, None)
+        mock_mgr.preset_registry = None
+        mock_mgr.style_guide = None
+        with redirect_stdout(StringIO()), \
+             patch("main_a.STAGE0_AVAILABLE", True), \
+             patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr), \
+             patch("modules.core.stage0.PresetRegistry"), \
+             patch("builtins.input", return_value=""):
+            helpers.stage_0_extended(mode=1)
+        app_mock.current_project.save_v20_anchor.assert_any_call("bible", bible)
+        app_mock.current_project._load_from_db.assert_called_once()
+
+
+# ── stage_1_volumes ──────────────────────────────────────────
+
+
+class TestStage1Volumes:
+    def test_skip_choice_returns_early(self, helpers, app_mock):
+        """스킵 선택(2) → 즉시 반환"""
+        with patch("builtins.input", side_effect=["2", ""]):
+            helpers.stage_1_volumes()
+        app_mock._safe_commit.assert_not_called()
+
+    def test_no_project_returns_early(self, helpers, app_mock):
+        """프로젝트 없으면 반환"""
+        app_mock.current_project = None
+        with patch("builtins.input", side_effect=["1", ""]):
+            helpers.stage_1_volumes()
+        # _safe_commit은 호출되지만 project 접근에서 반환
+        app_mock._safe_commit.assert_called_once()
+
+    def test_no_roadmap_returns_early(self, helpers, app_mock):
+        """plot_roadmap 없으면 반환"""
+        app_mock.current_project.master_bible = {"MasterBible": {}}
+        app_mock.current_project._load_from_db = MagicMock()  # recovery도 실패
+        with patch("builtins.input", side_effect=["1", ""]):
+            helpers.stage_1_volumes()
+        app_mock.ui.log.assert_called()
+
+    def test_successful_volume_design(self, helpers, app_mock):
+        """1권 설계 성공 플로우"""
+        # 5개 아크 → 1권
+        app_mock.current_project.master_bible = {
+            "MasterBible": {
+                "plot_roadmap": [{"arc": i} for i in range(5)],
+                "ProjectData": {"MetaInfo": {}},
+            }
+        }
+        app_mock._get_protagonist_name.return_value = "주인공"
+        app_mock._validate_volume_boundaries.return_value = {"status": "PASS"}
+        app_mock.agents = {"analyst": MagicMock()}
+        app_mock.agents["analyst"].plan_single_volume_v20.return_value = {
+            "strategy_doc": "x" * 2500,
+        }
+
+        with patch("builtins.input", side_effect=["1", ""]), \
+             patch("modules.core.spinners.StageSpinner"), \
+             patch("modules.core.adaptive_retry.retry_with_feedback") as mock_retry:
+            # retry_with_feedback returns (result, attempts, passed)
+            mock_retry.return_value = ({"strategy_doc": "x" * 2500}, 1, True)
+            helpers.stage_1_volumes()
+
+        app_mock.current_project.save_v20_anchor.assert_called_once_with("volumes", [{"strategy_doc": "x" * 2500}])
+
+    def test_quality_fail_stops(self, helpers, app_mock):
+        """품질 미달 시 공정 중단"""
+        app_mock.current_project.master_bible = {
+            "MasterBible": {
+                "plot_roadmap": [{"arc": i} for i in range(5)],
+                "ProjectData": {"MetaInfo": {}},
+            }
+        }
+
+        with patch("builtins.input", side_effect=["1"]), \
+             patch("modules.core.spinners.StageSpinner"), \
+             patch("modules.core.adaptive_retry.retry_with_feedback") as mock_retry:
+            mock_retry.return_value = (None, 3, False)
+            helpers.stage_1_volumes()
+
+        # 실패 시 save_v20_anchor 호출 안 함
+        app_mock.current_project.save_v20_anchor.assert_not_called()
