@@ -25,6 +25,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+import yaml
 from dotenv import load_dotenv
 
 load_dotenv(override=True)  # Slack 알림용 환경변수 먼저 로드
@@ -884,6 +885,34 @@ class SovereignApp:
 
         self._run_main_process()
 
+    def _load_models_yaml(self) -> dict:
+        """Load models config from project config first, then root config."""
+        candidates = []
+        if self.current_project and hasattr(self.current_project, "paths"):
+            candidates.append(self.current_project.paths.config / "models.yaml")
+        candidates.append(Path("config/models.yaml"))
+
+        for model_path in candidates:
+            try:
+                if model_path.exists():
+                    with open(model_path, encoding="utf-8") as f:
+                        config = yaml.safe_load(f) or {}
+                    if isinstance(config, dict):
+                        return config
+            except Exception as e:
+                self.ui.log(f"{Emojis.WARNING} [Config] models.yaml load failed: {e}")
+        return {}
+
+    def _get_agent_model_map(self) -> dict:
+        config = self._load_models_yaml()
+        agents = config.get("agents", {})
+        if isinstance(agents, dict) and agents:
+            return agents
+
+        # Legacy fallback for compatibility if models.yaml is absent.
+        legacy = self.sys.get_v20_orchestrator_config().get("models", {})
+        return legacy if isinstance(legacy, dict) else {}
+
     def _ignite_quad_cache_system(self):
         """[V31] 4중 캐시 시스템 (Writer, Architect, Analyst, Weaver)"""
         import json
@@ -891,7 +920,7 @@ class SovereignApp:
         self.ui.log("🧬 [System] V31 3중 캐싱 시스템(Triple-Cache) 동기화 중...")
 
         # 0. 설정된 모델명 확보 (ConfigManager 기반)
-        config = self.sys.get_v20_orchestrator_config()["models"]
+        config = self._get_agent_model_map()
 
         # API 호출을 위해 'models/' 접두사 확인
         def fix_model_id(mid):
@@ -936,7 +965,7 @@ class SovereignApp:
                 self.ui.log("   ⚡ [Writer] 신규 캐시 생성 중...")
                 try:
                     w_cache = self.sys.api_client.caches.create(
-                        model=fix_model_id(config["writer"]),
+                        model=fix_model_id(config.get("writer", AIModels.STAGE2_MAIN_MODEL)),
                         config=types.CreateCachedContentConfig(
                             display_name="WRITER_V31",
                             system_instruction="소설가",
@@ -961,7 +990,7 @@ class SovereignApp:
                 self.ui.log("   ⚡ [Analyst] 신규 캐시 생성 중...")
                 try:
                     ana_cache = self.sys.api_client.caches.create(
-                        model=fix_model_id(config["analyst"]),
+                        model=fix_model_id(config.get("analyst", AIModels.STAGE2_MAIN_MODEL)),
                         config=types.CreateCachedContentConfig(
                             display_name="ANALYST_V31",
                             system_instruction="전략가",
@@ -1305,8 +1334,7 @@ class SovereignApp:
             bool: 초기화 성공 여부
         """
         try:
-            config = self.sys.get_v20_orchestrator_config()
-            models = config.get("models", {})
+            models = self._get_agent_model_map()
 
             if not models:
                 self.ui.log("🚨 [Critical] 모델 설정을 불러올 수 없습니다.")

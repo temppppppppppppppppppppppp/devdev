@@ -62,7 +62,7 @@ class ContinuityInspector(BaseAgent):
     - entity_consistency 출력 필드 추가
     """
 
-    def __init__(self, context, client, model_tier="gemini-2.5-pro") -> None:
+    def __init__(self, context, client, model_tier=None) -> None:
         """
         [V62.5] gemini-2.5-pro로 다운그레이드 (검증 작업 - 3-pro 쿼터 절감)
         Args:

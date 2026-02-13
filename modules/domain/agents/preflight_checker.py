@@ -117,7 +117,7 @@ class PreflightChecker(BaseAgent):
     생성 전 모든 이전 Arc를 분석하여 완벽한 제약 맵 구축
     """
 
-    def __init__(self, context, client, model_tier: str = "gemini-3-flash-preview"):
+    def __init__(self, context, client, model_tier: str = None):
         # [V60.24] Flash로 변경 (분석용)
         super().__init__(context, client, model_tier)
         # [V60.37] 스마트 폴백 (BaseAgent에서 자동 설정: gemini-3-flash → gemini-2.5-flash)

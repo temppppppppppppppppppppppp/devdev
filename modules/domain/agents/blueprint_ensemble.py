@@ -100,7 +100,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
     ENSEMBLE_TIMEOUT = 300  # 전체 앙상블 타임아웃 (초) - 5분 (thinking 오버헤드 반영)
     SINGLE_CANDIDATE_TIMEOUT = 240  # 개별 후보 타임아웃 (초) - 4분
 
-    def __init__(self, context, client, model_tier: str = "gemini-3-pro-preview"):
+    def __init__(self, context, client, model_tier: str = None):
         super().__init__(context, client, model_tier)
         self._prompt_loader = PromptLoader()
         self.strategies = BLUEPRINT_STRATEGIES

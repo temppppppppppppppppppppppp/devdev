@@ -20,7 +20,7 @@ import logging
 import re
 from typing import Dict, List, Any, Optional, Tuple
 
-from .base_agent import BaseAgent
+from .base_agent import BaseAgent, _get_sub_component_models
 from .preflight_checker import PreflightChecker
 from .arc_ensemble import ArcEnsembleGenerator
 from .unified_arc_validator import UnifiedArcValidator
@@ -37,13 +37,20 @@ class FourPhaseArcGenerator(BaseAgent):
     (클래스명은 호환성을 위해 유지)
     """
 
-    def __init__(self, context, client, model_tier: str = "gemini-2.5-pro"):
+    def __init__(self, context, client, model_tier: str = None):
         super().__init__(context, client, model_tier)
 
         # 서브 모듈
-        self.preflight = PreflightChecker(context, client, "gemini-3-flash-preview")
-        self.ensemble = ArcEnsembleGenerator(context, client, "gemini-2.5-pro")
-        self.validator = UnifiedArcValidator(context, client, "gemini-2.5-flash")
+        sub_models = _get_sub_component_models("four_phase_arc_generator")
+        self.preflight = PreflightChecker(
+            context, client, sub_models.get("preflight", "gemini-3-flash-preview")
+        )
+        self.ensemble = ArcEnsembleGenerator(
+            context, client, sub_models.get("ensemble", "gemini-2.5-pro")
+        )
+        self.validator = UnifiedArcValidator(
+            context, client, sub_models.get("validator", "gemini-2.5-flash")
+        )
         self.compiler = ConstraintCompiler()
         self.negative_injector = NegativeExampleInjector("wuxia")
 

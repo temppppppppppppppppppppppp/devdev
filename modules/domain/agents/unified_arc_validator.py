@@ -102,7 +102,7 @@ class UnifiedArcValidator(BaseAgent):
     Python + LLM 단일 검증으로 Stage 2 검증 단순화
     """
 
-    def __init__(self, context, client, model_tier: str = "gemini-2.5-flash"):
+    def __init__(self, context, client, model_tier: str = None):
         super().__init__(context, client, model_tier)
         self.min_chars_per_ep = Stage2Limits.MIN_CHARS_PER_EPISODE
 

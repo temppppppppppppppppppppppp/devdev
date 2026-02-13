@@ -30,7 +30,7 @@ class Critic(BaseAgent):
             # 재작성 필요
     """
 
-    def __init__(self, context, client, model_tier="gemini-2.0-flash") -> None:
+    def __init__(self, context, client, model_tier=None) -> None:
         super().__init__(context, client, model_tier)
         self._agent_name = "Critic"
 

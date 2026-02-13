@@ -5,9 +5,11 @@ import os
 import re
 import threading
 import time
+from pathlib import Path
 
 from google import genai
 from google.genai import types
+import yaml
 
 # [V44] 에스케이프 유틸리티 임포트
 try:
@@ -38,18 +40,77 @@ class AgentErrorType:
     UNKNOWN = "unknown"
 
 
+DEFAULT_MODEL_TIER = "gemini-2.5-flash"
+DEFAULT_MODEL_FALLBACK_CHAIN = {
+    "gemini-3-pro-preview": "gemini-2.5-pro",
+    "gemini-3-flash-preview": "gemini-2.5-flash",
+    "gemini-2.0-flash": "gemini-2.5-flash",
+}
+
+
+def _resolve_models_config_path() -> Path:
+    """Return config/models.yaml path from project root."""
+    return Path(__file__).resolve().parents[3] / "config" / "models.yaml"
+
+
+def _load_model_config() -> dict:
+    """Load config/models.yaml. Return empty dict on failure."""
+    config_path = _resolve_models_config_path()
+    try:
+        if config_path.exists():
+            with open(config_path, encoding="utf-8") as f:
+                data = yaml.safe_load(f) or {}
+                if isinstance(data, dict):
+                    return data
+    except Exception:
+        logging.warning("models.yaml load failed. Falling back to hard-coded defaults.")
+    return {}
+
+
+def _to_snake_case(name: str) -> str:
+    s1 = re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", name)
+    return re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+
+
+def _get_agent_default_model(agent_key: str) -> str | None:
+    config = _load_model_config()
+    agents = config.get("agents", {})
+    if not isinstance(agents, dict):
+        return None
+    model = agents.get(agent_key)
+    if isinstance(model, str) and model.strip():
+        return model.strip()
+    return None
+
+
+def _get_sub_component_models(agent_key: str) -> dict:
+    config = _load_model_config()
+    sub_components = config.get("sub_components", {})
+    if not isinstance(sub_components, dict):
+        return {}
+    entry = sub_components.get(agent_key, {})
+    if not isinstance(entry, dict):
+        return {}
+    return {k: v for k, v in entry.items() if isinstance(k, str) and isinstance(v, str)}
+
+
+def _get_model_fallback_chain() -> dict:
+    config = _load_model_config()
+    chain = config.get("fallback_chain", {})
+    if isinstance(chain, dict):
+        normalized = {k: v for k, v in chain.items() if isinstance(k, str) and isinstance(v, str)}
+        if normalized:
+            return normalized
+    return DEFAULT_MODEL_FALLBACK_CHAIN.copy()
+
+
 class BaseAgent:
     # [V60.27] Thinking Level → Budget 변환 맵 (Gemini 3 API)
     THINKING_BUDGET_MAP = {"minimal": 1024, "low": 4096, "medium": 8192, "high": 16384, "maximum": 24576}
 
     # [V60.37] 모델별 폴백 체인 정의 (할당량 초과 시)
     # [V62.1] 2.5-pro가 최종 폴백 (2.5-flash 폴백 제거 - 품질 하한선 보장)
-    MODEL_FALLBACK_CHAIN = {
-        "gemini-3-pro-preview": "gemini-2.5-pro",  # 3 Pro → 2.5 Pro (최종)
-        "gemini-3-flash-preview": "gemini-2.5-flash",  # 3 Flash → 2.5 Flash (Flash 계열은 유지)
-        "gemini-2.0-flash": "gemini-2.5-flash",  # V50 모듈용 폴백
-        # "gemini-2.5-pro": ... 제거 — 2.5-pro가 최종 방어선
-    }
+    MODEL_FALLBACK_CHAIN = _get_model_fallback_chain()
 
     # [V60.68] 쿼터 소진 모델 캐싱 (클래스 변수 - 세션 전체 공유)
     _quota_exhausted_models = {}  # {model_name: exhausted_until_timestamp}
@@ -126,13 +187,17 @@ class BaseAgent:
     NETWORK_RETRY_DELAY_MAX = 30  # 최대 대기 시간 (초) - 백오프 상한
     MAX_NETWORK_RETRIES = 22  # 최대 재시도 (22회 = ~10분 커버) - 이거 넘으면 진짜 문제
 
-    def __init__(self, context, client, model_tier="gemini-2.5-flash", enable_cascade=False) -> None:
+    def __init__(self, context, client, model_tier=None, enable_cascade=False) -> None:
         self.context = context
         self.client = client
-        self.primary_model = model_tier
+        resolved_model = model_tier
+        if resolved_model is None:
+            agent_key = _to_snake_case(self.__class__.__name__)
+            resolved_model = _get_agent_default_model(agent_key)
+        self.primary_model = resolved_model or DEFAULT_MODEL_TIER
         # [V60.37] 스마트 폴백: 모델 티어에 따라 자동 백업 모델 설정
         # [V60.78] 기본 폴백을 2.5-flash로 변경 (2.0 이하 미사용 정책)
-        self.backup_model = self.MODEL_FALLBACK_CHAIN.get(model_tier, "gemini-2.5-flash")
+        self.backup_model = self.MODEL_FALLBACK_CHAIN.get(self.primary_model, DEFAULT_MODEL_TIER)
         self.cache_name = None
         self.enable_cascade = enable_cascade
         self.cascade = None  # ModelCascade instance (lazy init)

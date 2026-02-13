@@ -145,7 +145,7 @@ class StateExtractor(BaseAgent):
     다음 Arc 설계 시 명확한 제약으로 활용
     """
 
-    def __init__(self, context, client, model_tier: str = "gemini-3-flash-preview"):
+    def __init__(self, context, client, model_tier: str = None):
         """
         [V60.24] StateExtractor 초기화 - Gemini 3 Flash (추출용)
 
