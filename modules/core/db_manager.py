@@ -296,6 +296,22 @@ class DBManager:
     def commit(self): self.conn.commit()
     def rollback(self): self.conn.rollback()
 
+    def close(self) -> None:
+        """[Phase 4A] DB 연결 안전 종료"""
+        if self.conn:
+            try:
+                if self.conn.in_transaction:
+                    self.conn.commit()
+                self.conn.close()
+            finally:
+                self.conn = None
+                self.cursor = None
+
+    @property
+    def in_transaction(self) -> bool:
+        """[Phase 4A] 현재 트랜잭션 진행 여부"""
+        return bool(self.conn and self.conn.in_transaction)
+
     # --- [범용 쿼리] ---
     def execute_query(self, sql: str, params: tuple = ()) -> list:
         """SELECT 쿼리 실행 후 결과 리스트 반환"""
