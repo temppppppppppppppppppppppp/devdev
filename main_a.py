@@ -44,6 +44,8 @@ from modules.core.perf_timer import PerfTimer  # [V65] 파이프라인 성능 �
 from modules.core.prompt_builder import PromptBuilder  # [V64 P2-2]
 from modules.core.services.audit_service import AuditService  # [Phase 4B-1]
 from modules.core.services.ui_service import UIService  # [Phase 4B-2]
+from modules.core.services.project_service import ProjectService  # [Phase 4B-3]
+from modules.core.services.state_service import StateService  # [Phase 4B-3]
 from modules.core.slack_bot import notifier  # [V40] Slack 알림 추가
 from modules.core.spinners import FancySpinner, StageSpinner, rich_console  # noqa: F401
 from modules.core.stage2_orchestrator import Stage2Orchestrator  # [V64.P3]
@@ -200,6 +202,24 @@ class SovereignApp:
         self._ui_service = UIService(
             ui=self.ui,
             project_fn=lambda: self.current_project,
+        )
+
+        # [Phase 4B-3] StateService 추출 — 검증/패턴/아키타입 위임
+        self._state_service = StateService(
+            ui=self.ui,
+            audit_event_fn=self._audit_event,
+            genre_fn=lambda: self.selected_genre,
+            prompt_builder=self._prompt_builder,
+            feedback_system=self._feedback_system,
+        )
+
+        # [Phase 4B-3] ProjectService 추출 — 리셋/되감기/롤백/소거 위임
+        self._project_service = ProjectService(
+            project_fn=lambda: self.current_project,
+            ui=self.ui,
+            safe_commit_fn=self._safe_commit,
+            genre_fn=lambda: self.selected_genre,
+            memory_fn=lambda: self.memory,
         )
 
         # [V64.P4] 동적 주입 속성 선언 (monkey-patching 제거)
@@ -2705,94 +2725,17 @@ class SovereignApp:
         return self._ui_service.get_int_input(prompt, default, min_val, max_val, attempts)
 
     def _extract_block_index(self, block_id: Any) -> int | None:
-        """
-        블록 ID 문자열에서 인덱스 번호 추출
-
-        Args:
-            block_id: "Block N" 형식의 블록 ID 문자열
-
-        Returns:
-            Optional[int]: 추출된 인덱스 번호 (실패 시 None)
-        """
-        if not isinstance(block_id, str):
-            return None
-        match = re.search(r"Block\s+(\d+)", block_id)
-        if not match:
-            return None
-        try:
-            return int(match.group(1))
-        except ValueError:
-            return None
+        """블록 ID 문자열에서 인덱스 번호 추출"""
+        return self._state_service.extract_block_index(block_id)  # [Phase 4B-3] thin delegate
 
     def _validate_arc_mapping(self, refined_arc, enriched_block, expected_arc_no, expected_ep_start):
-        if not refined_arc or not isinstance(refined_arc, dict):
-            return refined_arc
-
-        # 1) arc_no 보정
-        if refined_arc.get("arc_no") != expected_arc_no:
-            self.ui.log(f"⚠️ [Mapping] arc_no 불일치: {refined_arc.get('arc_no')} -> {expected_arc_no} (보정)")
-            self._audit_event(
-                "mapping_fix", "arc_no mismatch", {"original": refined_arc.get("arc_no"), "expected": expected_arc_no}
-            )
-            refined_arc["arc_no"] = expected_arc_no
-
-        # 2) ep_start/ep_end 보정
-        # [FIX] 안전한 정수 변환 (dict/list/None 등 타입 오류 방지)
-        ep_count = refined_arc.get("ep_count") or refined_arc.get("ep_end")
-        if not isinstance(ep_count, int):
-            try:
-                ep_count = int(ep_count) if ep_count and not isinstance(ep_count, (dict, list)) else 5
-            except (ValueError, TypeError):
-                ep_count = 5
-        if refined_arc.get("ep_start") != expected_ep_start:
-            self.ui.log(f"⚠️ [Mapping] ep_start 불일치: {refined_arc.get('ep_start')} -> {expected_ep_start} (보정)")
-            self._audit_event(
-                "mapping_fix",
-                "ep_start mismatch",
-                {"original": refined_arc.get("ep_start"), "expected": expected_ep_start},
-            )
-            refined_arc["ep_start"] = expected_ep_start
-        refined_arc["ep_end"] = expected_ep_start + int(ep_count) - 1
-
-        # 3) plot_roadmap 블록 인덱스 매칭
-        block_id = None
-        if isinstance(enriched_block, dict):
-            block_id = enriched_block.get("block_id") or enriched_block.get("id")
-        block_index = self._extract_block_index(block_id)
-        if block_index is not None and block_index != expected_arc_no:
-            self.ui.log(f"⚠️ [Mapping] 블록 인덱스 불일치: {block_id} (arc {expected_arc_no})")
-            refined_arc["mapping_warning"] = f"block_id={block_id} vs arc_no={expected_arc_no}"
-            self._audit_event("mapping_warning", "block_id mismatch", {"block_id": block_id, "arc_no": expected_arc_no})
-
-        return refined_arc
+        return self._state_service.validate_arc_mapping(refined_arc, enriched_block, expected_arc_no, expected_ep_start)  # [Phase 4B-3] thin delegate
 
     def _extract_pattern_keywords(self, pattern_profile):
-        if not isinstance(pattern_profile, dict):
-            return []
-        keywords = []
-        primary = pattern_profile.get("primary", "")
-        secondary = pattern_profile.get("secondary", [])
-        raw_items = []
-        if isinstance(primary, str) and primary.strip():
-            raw_items.append(primary)
-        if isinstance(secondary, list):
-            raw_items.extend([s for s in secondary if isinstance(s, str)])
-        # 괄호/영문 보조 표기를 제거하고 핵심 한글 키워드만 추출
-        for item in raw_items:
-            core = re.sub(r"\([^)]*\)", "", item).strip()
-            parts = re.split(r"[\s/]+", core)
-            keywords.extend([p for p in parts if len(p) >= 2])
-        # 중복 제거
-        return list(dict.fromkeys(keywords))
+        return self._state_service.extract_pattern_keywords(pattern_profile)  # [Phase 4B-3] thin delegate
 
     def _pattern_presence_check(self, text, pattern_profile, min_hits=1):  # [V40.3 패치] 2 → 1 (완화)
-        if not isinstance(text, str) or not text.strip():
-            return False
-        keywords = self._extract_pattern_keywords(pattern_profile)
-        if not keywords:
-            return True
-        hits = sum(1 for k in keywords if k in text)
-        return hits >= min_hits
+        return self._state_service.pattern_presence_check(text, pattern_profile, min_hits)  # [Phase 4B-3] thin delegate
 
     # =================================================================
     # [V45] Validation Context 구성 헬퍼
@@ -2801,114 +2744,32 @@ class SovereignApp:
     def _build_validation_context(
         self, ep_num: int, blueprint: dict = None, mode: str = "MANUSCRIPT", blueprint_text: str = ""
     ) -> dict:
-        """[V64 P2-2] -> PromptBuilder"""
-        return self._prompt_builder.build_validation_context(ep_num, blueprint, mode, blueprint_text)
+        """[V64 P2-2] -> StateService -> PromptBuilder"""
+        return self._state_service.build_validation_context(ep_num, blueprint, mode, blueprint_text)  # [Phase 4B-3] thin delegate
 
     # =================================================================
     # [V41] Director Sovereignty 헬퍼 메서드
     # =================================================================
 
     def _extract_npc_profiles(self, arc_data: dict) -> dict:
-        """[V64 P2-2] -> PromptBuilder"""
-        return self._prompt_builder.extract_npc_profiles(arc_data)
+        """[V64 P2-2] -> StateService -> PromptBuilder"""
+        return self._state_service.extract_npc_profiles(arc_data)  # [Phase 4B-3] thin delegate
 
     def _get_character_traits(self) -> dict:
-        """[V64 P2-2] -> PromptBuilder"""
-        return self._prompt_builder.get_character_traits()
+        """[V64 P2-2] -> StateService -> PromptBuilder"""
+        return self._state_service.get_character_traits()  # [Phase 4B-3] thin delegate
 
     def _load_character_archetypes(self, genre: str = "wuxia") -> dict:
         """[V41] 장르별 캐릭터 아키타입 JSON 로드"""
-        archetypes = {}
-        try:
-            archetype_path = Path("modules/core/laws/archetypes") / f"{genre}.json"
-            if archetype_path.exists():
-                archetypes = json.loads(archetype_path.read_text(encoding="utf-8"))
-        except Exception as e:
-            print(f"      ⚠️ [Archetype] 아키타입 로드 실패: {e}")
-        return archetypes
+        return self._state_service.load_character_archetypes(genre)  # [Phase 4B-3] thin delegate
 
     def _get_archetype_reference_for_npcs(self, npc_profiles: dict, genre: str = "wuxia") -> str:
         """[V41] NPC 프로필에 맞는 아키타입 참고 자료 생성"""
-        if not npc_profiles:
-            return ""
-
-        archetypes = self._load_character_archetypes(genre)
-        if not archetypes:
-            return ""
-
-        reference_lines = [
-            "[📚 캐릭터 아키타입 참고 자료]",
-            "등장 NPC들의 유형입니다. 참고하되 변주는 자유롭게 하십시오.",
-            "",
-        ]
-
-        for npc_name, npc_data in npc_profiles.items():
-            npc_role = npc_data.get("role", "") or npc_data.get("Role", "")
-            npc_archetype = npc_data.get("archetype", "")  # NPC에 지정된 아키타입
-
-            # NPC 역할에서 아키타입 카테고리 추론
-            role_lower = npc_role.lower() if npc_role else ""
-            archetype_info = None
-
-            # 역할 기반 매칭
-            if "히로인" in role_lower or "heroine" in role_lower or "여주" in role_lower:
-                category = "supporter"
-                subcategory = "heroine"
-            elif "스승" in role_lower or "mentor" in role_lower or "사부" in role_lower:
-                category = "mentor"
-                subcategory = "master"
-            elif "적" in role_lower or "악당" in role_lower or "antagonist" in role_lower:
-                category = "antagonist"
-                subcategory = "rival"
-            elif "제자" in role_lower or "수혜" in role_lower:
-                category = "beneficiary"
-                subcategory = "disciple"
-            elif "장로" in role_lower or "검증" in role_lower:
-                category = "validator"
-                subcategory = "authority"
-            else:
-                category = None
-                subcategory = None
-
-            # 아키타입 정보 추출
-            if category and subcategory:
-                cat_data = archetypes.get(category, {})
-                subcat_data = cat_data.get(subcategory, {})
-
-                # 첫 번째 아키타입 사용 (또는 지정된 아키타입)
-                if npc_archetype and npc_archetype in subcat_data:
-                    archetype_info = subcat_data[npc_archetype]
-                    archetype_name = npc_archetype
-                elif subcat_data:
-                    # 내부 필드 제외하고 첫 번째 아키타입 선택
-                    for key, val in subcat_data.items():
-                        if not key.startswith("_") and isinstance(val, dict):
-                            archetype_info = val
-                            archetype_name = key
-                            break
-
-            if archetype_info:
-                traits = archetype_info.get("core_traits", [])
-                speech = archetype_info.get("speech", "")
-                forbidden = archetype_info.get("forbidden", [])
-
-                reference_lines.append(f"- **{npc_name}**: '{archetype_name}' 유형")
-                if traits:
-                    reference_lines.append(f"  - 핵심 특성: {', '.join(traits[:4])}")
-                if speech:
-                    reference_lines.append(f"  - 말투: {speech[:50]}...")
-                if forbidden:
-                    reference_lines.append(f"  - 금기: {', '.join(forbidden[:3])}")
-                reference_lines.append("")
-
-        if len(reference_lines) <= 3:
-            return ""  # 매칭된 NPC가 없으면 빈 문자열
-
-        return "\n".join(reference_lines)
+        return self._state_service.get_archetype_reference_for_npcs(npc_profiles, genre)  # [Phase 4B-3] thin delegate
 
     def _classify_rejection_feedback(self, reason: str, feedback: str, blueprint: dict = None) -> str:
-        """[V64 P2-3] -> FeedbackSystem"""
-        return self._feedback_system.classify_rejection_feedback(reason, feedback, blueprint)
+        """[V64 P2-3] -> StateService -> FeedbackSystem"""
+        return self._state_service.classify_rejection_feedback(reason, feedback, blueprint)  # [Phase 4B-3] thin delegate
 
     def _audit_event(self, event_type, message, data=None):
         """[V66.1→4B-1] Facade → AuditService"""
@@ -2972,164 +2833,20 @@ class SovereignApp:
         return arc_idx, arc_data
 
     def _validate_arc_data_fields(self, arc_data: dict, arc_idx: int) -> dict | None:
-        """
-        [V43] arc_data 필수 필드 검증 및 자동 복구
-
-        Args:
-            arc_data: 검증할 아크 데이터
-            arc_idx: 아크 인덱스 (로깅용)
-
-        Returns:
-            Optional[Dict]: 검증/복구된 데이터, 복구 불가 시 None
-        """
-        if not isinstance(arc_data, dict):
-            self.ui.log(f"🚨 [V43] arc_data가 딕셔너리가 아닙니다: {type(arc_data)}")
-            return None
-
-        # 필수 필드 기본값 정의
-        required_defaults = {
-            "tactical_doc": "",
-            "beat_sequence": [],
-            "joint_docs": {},
-            "status_shadow": {},
-            "arc_drive": {},
-            "hybrid_composition": {"primary": "standard", "secondary": [], "mixing_logic": "기본"},
-            # [V44 Fix] ep_count와 ep_end 계산 시 실제 arc 데이터 우선 사용
-            "ep_count": arc_data.get("ep_count", VolumeSettings.EPISODES_PER_ARC),
-            "ep_end": arc_data.get("ep_start", 1) + arc_data.get("ep_count", VolumeSettings.EPISODES_PER_ARC) - 1,
-        }
-
-        repaired = False
-        for field, default_val in required_defaults.items():
-            current_val = arc_data.get(field)
-
-            # None이거나 타입이 맞지 않는 경우 기본값으로 복구
-            if current_val is None:
-                arc_data[field] = default_val
-                self.ui.log(f"   ⚠️ [V43] Arc {arc_idx}: {field} 누락 → 기본값 주입")
-                self._audit_event("field_repair", f"{field} missing", {"arc_idx": arc_idx})
-                repaired = True
-            elif isinstance(default_val, dict) and not isinstance(current_val, dict):
-                arc_data[field] = default_val
-                self.ui.log(f"   ⚠️ [V43] Arc {arc_idx}: {field} 타입 오류 → dict로 복구")
-                repaired = True
-            elif isinstance(default_val, list) and not isinstance(current_val, list):
-                arc_data[field] = default_val
-                self.ui.log(f"   ⚠️ [V43] Arc {arc_idx}: {field} 타입 오류 → list로 복구")
-                repaired = True
-            elif isinstance(default_val, str) and not isinstance(current_val, str):
-                arc_data[field] = str(current_val) if current_val else default_val
-                self.ui.log(f"   ⚠️ [V43] Arc {arc_idx}: {field} 타입 오류 → str로 변환")
-                repaired = True
-
-        if repaired:
-            self.ui.log(f"   🔧 [V43] Arc {arc_idx} 데이터 복구 완료")
-
-        return arc_data
+        """[V43] arc_data 필수 필드 검증 및 자동 복구"""
+        return self._state_service.validate_arc_data_fields(arc_data, arc_idx)  # [Phase 4B-3] thin delegate
 
     def _load_genre_references(self) -> tuple[list, list]:
-        """
-        [V40.1 Medium Fix] 장르별 레퍼런스 데이터 로드 (공통 메서드)
-
-        Stage 3, Stage 4에서 중복 사용되던 장르별 레퍼런스 로딩 로직을 통합합니다.
-        장르별 전용 파일이 없으면 기본 파일을 사용합니다.
-
-        Returns:
-            Tuple[List, List]: (cliche_data, location_data) 튜플
-                - cliche_data: 클리셰/패턴 풀 데이터
-                - location_data: 장소/배경 풀 데이터
-
-        Raises:
-            Exception: 파일 로드 실패 시 빈 리스트 반환
-        """
-        seeds_path = Path("modules/core/laws/seeds")
-        genre_type = self.selected_genre.get("type", GenreTypes.WUXIA) if self.selected_genre else GenreTypes.WUXIA
-
-        cliche_data = []
-        location_data = []
-
-        try:
-            # 장르별 파일 우선 시도, 없으면 기본 파일 사용
-            cliche_file = seeds_path / f"cliche_pool_{genre_type}.json"
-            if not cliche_file.exists():
-                cliche_file = seeds_path / "cliche_pool.json"
-
-            location_file = seeds_path / f"location_pool_{genre_type}.json"
-            if not location_file.exists():
-                location_file = seeds_path / "location_pool.json"
-
-            if cliche_file.exists():
-                cliche_data = json.loads(cliche_file.read_text(encoding="utf-8"))
-            if location_file.exists():
-                location_data = json.loads(location_file.read_text(encoding="utf-8"))
-
-            self.ui.log(f"{Emojis.CHECK} [{genre_type}] 장르 전용 레퍼런스 데이터 로드 완료")
-            self._audit_event(
-                "reference_loaded",
-                f"genre references loaded for {genre_type}",
-                {"cliche_count": len(cliche_data), "location_count": len(location_data)},
-            )
-        except Exception as e:
-            self.ui.log(f"{Emojis.ERROR} 레퍼런스 파일 로드 실패: {e}")
-            self._audit_event("reference_load_error", "failed to load genre references", {"error": str(e)})
-
-        return cliche_data, location_data
+        """[V40.1 Medium Fix] 장르별 레퍼런스 데이터 로드"""
+        return self._state_service.load_genre_references()  # [Phase 4B-3] thin delegate
 
     def _validate_arc_integrity(self, arc_data: dict[str, Any]) -> bool:
-        """
-        아크 데이터의 무결성 검증
-
-        필수 키 존재 여부, beat_sequence 형식, tactical_doc 분량을 검사합니다.
-
-        Args:
-            arc_data: 검증할 아크 데이터 딕셔너리
-
-        Returns:
-            bool: 검증 통과 여부
-        """
-        required_keys = ["arc_no", "ep_start", "ep_end", "ep_count", "tactical_doc", "beat_sequence"]
-        missing = [k for k in required_keys if not arc_data.get(k)]
-        if missing:
-            self.ui.log(f"🚨 [Integrity] Arc 필수 키 누락: {missing}")
-            self._audit_event(
-                "integrity_fail", "arc missing keys", {"missing": missing, "arc_no": arc_data.get("arc_no")}
-            )
-            return False
-        if not isinstance(arc_data.get("beat_sequence"), list) or len(arc_data.get("beat_sequence")) < 1:
-            self.ui.log("🚨 [Integrity] beat_sequence 형식 오류")
-            self._audit_event("integrity_fail", "beat_sequence invalid", {"arc_no": arc_data.get("arc_no")})
-            return False
-        if not isinstance(arc_data.get("tactical_doc"), str) or len(arc_data.get("tactical_doc", "")) < 500:
-            self.ui.log("🚨 [Integrity] tactical_doc 분량 부족")
-            self._audit_event("integrity_fail", "tactical_doc too short", {"arc_no": arc_data.get("arc_no")})
-            return False
-        return True
+        """아크 데이터의 무결성 검증"""
+        return self._state_service.validate_arc_integrity(arc_data)  # [Phase 4B-3] thin delegate
 
     def _validate_blueprint_integrity(self, blueprint: Any) -> bool:
-        """
-        블루프린트 데이터의 무결성 검증
-
-        딕셔너리 타입, integrated_scenario, scene_breakdown 존재 여부를 검사합니다.
-
-        Args:
-            blueprint: 검증할 블루프린트 데이터
-
-        Returns:
-            bool: 검증 통과 여부
-        """
-        if not isinstance(blueprint, dict):
-            self.ui.log(f"{Emojis.ERROR} [Integrity] Blueprint 형식 오류")
-            self._audit_event("integrity_fail", "blueprint invalid type")
-            return False
-        if "integrated_scenario" not in blueprint or not isinstance(blueprint.get("integrated_scenario"), str):
-            self.ui.log(f"{Emojis.ERROR} [Integrity] integrated_scenario 누락")
-            self._audit_event("integrity_fail", "integrated_scenario missing")
-            return False
-        if "scene_breakdown" not in blueprint or not isinstance(blueprint.get("scene_breakdown"), dict):
-            self.ui.log(f"{Emojis.ERROR} [Integrity] scene_breakdown 누락")
-            self._audit_event("integrity_fail", "scene_breakdown missing")
-            return False
-        return True
+        """블루프린트 데이터의 무결성 검증"""
+        return self._state_service.validate_blueprint_integrity(blueprint)  # [Phase 4B-3] thin delegate
 
     def _show_volume_table(self, volumes: list[dict[str, Any]]) -> None:
         """[4B-2] Facade → UIService"""
@@ -3764,254 +3481,19 @@ class SovereignApp:
 
     def _reset_stage_2(self):
         """[V20] Stage 2(Arcs)만 SQL DB에서 삭제하여 1번 완료 상태로 회귀"""
-        confirm = input("\n🚨 정말로 Stage 2(Arcs) 설계 데이터를 삭제하시겠습니까? (y/n): ").strip().lower()
-        if confirm == "y":
-            # SQL DB에서 'arcs' 앵커만 삭제합니다.
-            self.current_project.db.cursor.execute("DELETE FROM anchors WHERE key = 'arcs'")
-            self._safe_commit()
-
-            # 메모리에서도 아크 데이터를 비웁니다.
-            self.current_project.arcs = []
-
-            self.ui.log("✅ Stage 2 데이터가 삭제되었습니다. 이제 메뉴에서 2번 [❌] 상태로 보일 것입니다.")
-            input("\n[Enter] 메뉴로 돌아가기")
+        self._project_service.reset_stage_2()  # [Phase 4B-3] thin delegate
 
     def _rewind_stage_2(self):
         """[V20] 특정 아크 번호부터 그 이후를 전부 삭제 (정밀 되감기)"""
-        if not hasattr(self.current_project, "arcs") or not self.current_project.arcs:
-            self.ui.log("❌ 삭제할 아크 데이터가 없습니다.")
-            return
-
-        total_arcs = len(self.current_project.arcs)
-        self.ui.log(f"📊 현재 총 {total_arcs}개의 아크가 설계되어 있습니다.")
-
-        target_input = input(
-            f"\n👉 몇 번 아크부터 새로 시작하시겠습니까? (1~{total_arcs} 입력) [한 번에 5개까지만 해라 웬만하면]: "
-        ).strip()
-
-        if not target_input.isdigit():
-            self.ui.log("❌ 숫자만 입력 가능합니다.")
-            return
-
-        target_no = int(target_input)
-
-        # 입력한 번호 직전까지만 남깁니다. (예: 7 입력 시 1~6번까지만 유지)
-        updated_arcs = [
-            a for a in self.current_project.arcs if isinstance(a, dict) and a.get("arc_no", 0) < target_no
-        ]  # [V70] .get() 방어
-
-        confirm = input(f"⚠️ Arc {target_no}번부터 {total_arcs}번까지 삭제합니다. 계속할까요? (y/n): ").strip().lower()
-        if confirm == "y":
-            # 1. SQL DB 업데이트 (덮어쓰기 방식)
-            self.current_project.save_v20_anchor("arcs", updated_arcs)
-
-            # 2. 실시간 메모리 동기화
-            self.current_project.arcs = updated_arcs
-
-            self.ui.log(f"✨ Arc {target_no}번 이후 데이터가 삭제되었습니다.")
-            self.ui.log(f"🔄 이제 2번 메뉴를 실행하면 {target_no}번부터 다시 설계를 시작합니다.")
-            input("\n[Enter] 메뉴로 돌아가기")
+        self._project_service.rewind_stage_2()  # [Phase 4B-3] thin delegate
 
     def _rollback_episode(self):
         """[V40.1 Rollback] 특정 회차로 되감기 (HUD, DB, Vector DB, 파일 모두 롤백)"""
-        latest_ep = (
-            self.current_project.get_latest_episode_number() - 1
-        )  # [V70] get_latest는 '다음' 번호를 반환하므로 -1
-
-        if latest_ep <= 0:
-            self.ui.log("❌ 롤백할 에피소드가 없습니다.")
-            return
-
-        self.ui.log(f"📊 현재 최신 에피소드: {latest_ep}화")
-        target_input = input(f"\n👉 몇 화로 되감기하시겠습니까? (1~{latest_ep} 입력, 1 입력 시 전체 삭제): ").strip()
-
-        if not target_input.isdigit():
-            self.ui.log("❌ 숫자만 입력 가능합니다.")
-            return
-
-        target_ep = int(target_input)
-
-        if target_ep < 1 or target_ep > latest_ep:
-            self.ui.log(f"❌ 1~{latest_ep} 범위 내에서 입력해주세요.")
-            return
-
-        confirm = (
-            input(
-                f"\n⚠️ [{target_ep}화 이후 삭제] 모든 데이터가 {target_ep}화 직전 상태로 되돌아갑니다. 계속할까요? (y/n): "
-            )
-            .strip()
-            .lower()
-        )
-        if confirm != "y":
-            self.ui.log("❌ 취소되었습니다.")
-            return
-
-        try:
-            import json
-
-            # 1. 📉 HUD 롤백 (state_logs에서 이전 화의 HUD 복구)
-            if target_ep > 1:
-                self.current_project.db.cursor.execute("SELECT data FROM state_logs WHERE ep_num = ?", (target_ep - 1,))
-                row = self.current_project.db.cursor.fetchone()
-                if row:
-                    past_data = json.loads(row["data"])
-                    past_actual = past_data.get("state_updates", {}).get("actual_truth")
-
-                    if past_actual:
-                        # Bible의 HUD를 롤백
-                        self.current_project.db.cursor.execute("SELECT data FROM anchors WHERE key = 'bible'")
-                        bible_row = self.current_project.db.cursor.fetchone()
-                        if bible_row:
-                            bible_data = json.loads(bible_row["data"])
-                            if "MasterBible" in bible_data:
-                                # [V61.2 Fix] 장르별 HUD 탐색
-                                genre = self.selected_genre.get("type", "") if self.selected_genre else ""
-                                hud_key = HUDKeys.get_hud_root(genre)
-                                # 존재하는 HUD 키를 우선 탐색
-                                for hk in [hud_key, "MartialHUD", "FinanceHUD", "HunterHUD"]:
-                                    if hk in bible_data["MasterBible"]:
-                                        hud_key = hk
-                                        break
-                                if hud_key in bible_data["MasterBible"]:
-                                    bible_data["MasterBible"][hud_key].setdefault("Protagonist", {})["actual_truth"] = (
-                                        past_actual
-                                    )
-                                self.current_project.db.cursor.execute(
-                                    "UPDATE anchors SET data = ? WHERE key = 'bible'",
-                                    (json.dumps(bible_data, ensure_ascii=False),),
-                                )
-                                self.ui.log(f"   📉 [Rollback] HUD를 {target_ep - 1}화 시점으로 복구했습니다.")
-                                # 메모리에도 반영
-                                self.current_project.master_bible = bible_data
-
-            # 2. ✂️ SQL DB 데이터 삭제
-            # [FIX] SQL Injection 방지: 화이트리스트로 테이블명 검증
-            ALLOWED_EP_TABLES = frozenset(
-                ["manuscripts", "blueprints", "state_logs", "martial_tracker", "sync_status", "causal_graph"]
-            )
-            ep_tables = ["manuscripts", "blueprints", "state_logs", "martial_tracker", "sync_status", "causal_graph"]
-
-            for t in ep_tables:
-                if t not in ALLOWED_EP_TABLES:
-                    self.ui.log(f"🚨 [Security] 허용되지 않은 테이블: {t}")
-                    continue
-                self.current_project.db.cursor.execute(f"DELETE FROM {t} WHERE ep_num >= ?", (target_ep,))
-                self.ui.log(f"   ✂️  '{t}' 테이블: {target_ep}화 이후 삭제 완료")
-
-            # 3. 로어, 카르마, 씨드 처리
-            self.current_project.db.cursor.execute("DELETE FROM encyclopedia")  # 인과 꼬임 방지
-            self.current_project.db.cursor.execute("DELETE FROM karma_status WHERE last_updated_ep >= ?", (target_ep,))
-            self.current_project.db.cursor.execute(
-                "UPDATE seeds SET status = 'active', recovered_ep = NULL WHERE recovered_ep >= ?", (target_ep,)
-            )
-            self.ui.log("   📚 [Lore/Seeds] 인과 관계 초기화 완료")
-
-            # 3.5 [V61] Episode Bibles 롤백 (에피소드별 설정 변화 - 아이템, NPC, 관계 등)
-            deleted_bibles = self.current_project.db.delete_episode_bibles_after(target_ep - 1)
-            self.ui.log(f"   📖 [Episode Bibles] {deleted_bibles}개 에피소드 설정 변화 삭제 완료")
-
-            # 4. 🔢 ID 카운터 초기화 (sqlite_sequence)
-            seq_targets = (
-                "('manuscripts', 'blueprints', 'state_logs', 'martial_tracker', 'causal_graph', 'sync_status')"
-            )
-            self.current_project.db.cursor.execute(f"DELETE FROM sqlite_sequence WHERE name IN {seq_targets}")
-            self.ui.log("   🔢 [Sequence] 테이블 ID 카운터 초기화 완료")
-
-            # 커밋
-            self._safe_commit()
-
-            # 5. 📝 물리 파일 삭제
-            import re as _re_rollback
-
-            for f in self.current_project.paths.drafts.glob("*.txt"):
-                try:
-                    # [V70] ep_NNNN.txt 패턴 매칭 (기존 NNNN.txt도 호환)
-                    _m = _re_rollback.match(r"(?:ep_)?(\d{1,5})\.txt", f.name)
-                    if _m and int(_m.group(1)) >= target_ep:
-                        f.unlink()
-                except (OSError, ValueError, IndexError):
-                    pass
-            self.ui.log("   📂 원고 파일 삭제 완료")
-
-            # 6. 🌌 벡터 DB 소거
-            try:
-                if self.memory and hasattr(self.memory, "collection"):
-                    self.memory.collection.delete(where={"episode": {"$gte": target_ep}})
-                    self.ui.log("   🌌 벡터 메모리 소거 완료")
-                else:
-                    self.ui.log("   ⚠️ [VectorDB] 메모리 미초기화로 벡터 소거 생략")
-            except Exception as e:
-                self.ui.log(f"   ⚠️ [VectorDB] 소거 실패: {e}")
-
-            # 7. 데이터 리로드
-            self.current_project._load_from_db()
-
-            self.ui.log(f"\n✅ [Success] {target_ep}화 직전 상태로 롤백 완료!")
-            self.ui.log(f"👉 이제 Stage 4를 실행하면 {target_ep}화부터 새로 집필합니다.")
-            input("\n[Enter] 메뉴로 돌아가기")
-
-        except Exception as e:
-            self.ui.log(f"❌ 롤백 실패: {e}")
-            import traceback
-
-            traceback.print_exc()
+        self._project_service.rollback_episode()  # [Phase 4B-3] thin delegate
 
     def _wipe_production_data(self):
         """[V27.1 Wipe] 설계도는 유지하고 실제 집필 기록(Manuscripts/Blueprints)만 소거"""
-        confirm = input("\n🚨 [WIPE] 설계도는 남기고 '실제 원고' 기록만 모두 삭제할까요? (y/n): ").strip().lower()
-        if confirm != "y":
-            return
-
-        try:
-            # 1. 생산 데이터 테이블만 정밀 타격 (설계도 앵커는 건드리지 않음)
-            # [FIX] SQL Injection 방지: 화이트리스트로 테이블명 검증
-            ALLOWED_TABLES = frozenset(
-                [
-                    "manuscripts",
-                    "blueprints",
-                    "state_logs",
-                    "martial_tracker",
-                    "causal_graph",
-                    "sync_status",
-                    "karma_status",
-                ]
-            )
-            production_tables = [
-                "manuscripts",
-                "blueprints",
-                "state_logs",
-                "martial_tracker",
-                "causal_graph",
-                "sync_status",
-                "karma_status",
-            ]
-
-            for t in production_tables:
-                if t not in ALLOWED_TABLES:
-                    self.ui.log(f"🚨 [Security] 허용되지 않은 테이블: {t}")
-                    continue
-                self.current_project.db.cursor.execute(f"DELETE FROM {t}")
-
-            # 2. 복선 상태 복구
-            self.current_project.db.cursor.execute("UPDATE seeds SET status = 'active', recovered_ep = NULL")
-            self.current_project.db.conn.commit()
-
-            # 3. 물리 파일 및 벡터 메모리 삭제
-            for f in self.current_project.paths.drafts.glob("*.txt"):
-                f.unlink()
-
-            # 벡터 DB 컬렉션 초기화
-            # [V66.3] ChromaDB 비활성화 시 스킵
-            try:
-                if self.memory and hasattr(self.memory, "collection") and self.memory.collection:
-                    self.memory.collection.delete(where={"episode": {"$gt": 0}})
-            except Exception as e:
-                self.ui.log(f"⚠️ [VectorDB] 컬렉션 초기화 실패: {e}")
-
-            self.ui.log("✅ [Wipe] 원고 기록이 청소되었습니다. 이제 1화부터 다시 생산 가능합니다.")
-            input("\n[Enter] 메뉴로 돌아가기")
-        except Exception as e:
-            self.ui.log(f"❌ 리셋 실패: {e}")
+        self._project_service.wipe_production_data()  # [Phase 4B-3] thin delegate
 
     # =================================================================
     # [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처
