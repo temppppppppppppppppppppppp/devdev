@@ -1,0 +1,28 @@
+# ═══════════════════════════════════════════════════════════
+# BaseAgent 운영 파라미터 (config/system.yaml)
+# 이 파일이 없거나 파싱 실패 시 base_agent.py 하드코딩 폴백 사용
+# ═══════════════════════════════════════════════════════════
+
+# Gemini Thinking Level → Budget 토큰 변환
+thinking_budget_map:
+  minimal: 1024
+  low: 4096
+  medium: 8192
+  high: 16384
+  maximum: 24576
+
+# API 호출 설정
+api:
+  delay: 0.1                 # 호출 간 딜레이 (초)
+  timeout: 90                # 호출 타임아웃 (초)
+  quota_cache_duration: 3600 # 쿼터 소진 캐시 유효시간 (초, 1시간)
+
+# 네트워크 재시도 설정 (야간 무인 운영 대응)
+network_retry:
+  delay_base: 10             # 기본 대기 (초)
+  delay_max: 30              # 최대 대기 (초, 백오프 상한)
+  max_retries: 22            # 최대 재시도 (22회 ≈ ~10분)
+
+# API 키 순환 설정
+key_rotation:
+  min_interval: 10           # 최소 순환 간격 (초)
