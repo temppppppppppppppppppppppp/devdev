@@ -2739,6 +2739,16 @@ class SovereignApp:
                 self.ui.log(f"      ⚠️ [V69.1] 팩트 원장 초기화 실패 (비차단): {str(_fl_err)[:60]}")
                 self.fact_ledger = None
 
+        # [Phase 4C-2a] DI 파일럿 컨텍스트 주입 (lazy init 후)
+        from modules.core.stage4_context import Stage4Context
+        self._stage4_orch.ctx = Stage4Context(
+            ui=self.ui,
+            current_project=self.current_project,
+            agents=self.agents,
+            sys=self.sys,
+            state_tracker=self.state_tracker,
+        )
+
         return self._stage4_orch.stage_4_v2_chief_writer(limit_mode=limit_mode)
 
 
