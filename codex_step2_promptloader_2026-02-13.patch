@@ -1,0 +1,247 @@
+﻿diff --git a/modules/domain/agents/analyst.py b/modules/domain/agents/analyst.py
+index 77d0a81..aebde6b 100644
+--- a/modules/domain/agents/analyst.py
++++ b/modules/domain/agents/analyst.py
+@@ -23,16 +23,16 @@ from modules.core.constants import HUDKeys
+ import asyncio
+ 
+ # [V65] 프롬프트 외부화
+-from .analyst_prompts import (
+-    POST_STITCH_REPAIR_PROMPT,
+-    ENRICH_BLOCK_PROMPT_V30,
+-    PLAN_VOLUME_PROMPT_V25,
+-    PLAN_ARC_PROMPT_V25,
+-    ANALYST_SELF_CRITIC_PROMPT,
++from .analyst_prompt_api import (
++    get_analyst_self_critic_prompt,
++    get_calibration_prompt,
++    get_enrich_block_prompt_v30,
++    get_plan_arc_prompt_v25,
++    get_plan_volume_prompt_v25,
++    get_post_stitch_repair_prompt,
+     get_recovery_prompt,
+-    get_volume_strategy_prompt,
+     get_surgery_prompt,
+-    get_calibration_prompt,
++    get_volume_strategy_prompt,
+ )
+ 
+ # [V49.4] Structured Output Schema
+@@ -43,7 +43,7 @@ except ImportError:
+     SCHEMA_ENABLED = False
+     ARC_DESIGN_SCHEMA = None
+ 
+-# [V65] 모듈-레벨 프롬프트 상수 5개는 analyst_prompts.py로 이동됨
++# [V65] 모듈-레벨 프롬프트 상수 5개는 프롬프트 모듈로 이동됨
+ 
+ 
+ class Analyst(BaseAgent):
+@@ -104,7 +104,7 @@ class Analyst(BaseAgent):
+         target_blocks_str = json.dumps(target_blocks, ensure_ascii=False, indent=2)
+ 
+         # 2. 프롬프트 데이터 안전화 및 주입
+-        prompt = PLAN_VOLUME_PROMPT_V25.format(
++        prompt = get_plan_volume_prompt_v25(
+             vol_no=vol_no,
+             genre_prompt=self.context.guard.get_v20_purism_prompt(),
+             structured_context=self._escape_braces(structured_context),
+@@ -682,7 +682,7 @@ class Analyst(BaseAgent):
+             """[V65] 단일 시도 로직 — retry_with_feedback에 전달"""
+             current_feedback = retry_feedback if retry_feedback else initial_feedback
+             # [V60.31] 템플릿의 ep_count_suggestion 변수를 동적으로 치환
+-            adjusted_prompt_tpl = PLAN_ARC_PROMPT_V25.replace("{ep_count_suggestion}", str(target_ep_count))
++            adjusted_prompt_tpl = get_plan_arc_prompt_v25(ep_count_suggestion=str(target_ep_count))
+ 
+             # 6. [API 호출 분기 로직]
+             try:
+@@ -788,7 +788,7 @@ class Analyst(BaseAgent):
+             _arc_loop_state["actual_ep_count"] = actual_ep_count
+ 
+             # 자기 비판 감사 (Self-Critic) 호출
+-            critic_input = f"{ANALYST_SELF_CRITIC_PROMPT}\n[Draft to Review]: {json.dumps(draft_result, ensure_ascii=False)}"
++            critic_input = f"{get_analyst_self_critic_prompt()}\n[Draft to Review]: {json.dumps(draft_result, ensure_ascii=False)}"
+             audit_result = self._extract_json_robust(self.ask(critic_input, temperature=0.2))
+             return audit_result
+ 
+@@ -1033,7 +1033,7 @@ class Analyst(BaseAgent):
+ 
+     def plan_batch_arcs_v25(self, batch_no, vol_strategy, blueprint_str, prev_context, assets):
+         """[V25 Patch] 배치 설계용 파라미터 강제 보정"""
+-        # 이 메서드는 구형 규격이므로, PLAN_ARC_PROMPT_V25 대신 내부 간이 프롬프트 사용 권장
++        # 이 메서드는 구형 규격이므로, PLAN_ARC_PROMPT_V25 직접 사용 대신 내부 간이 프롬프트 사용 권장
+         # 혹은 필요한 모든 더미 데이터를 생성하여 V25 프롬프트에 주입
+         return self.plan_single_arc_v20(
+             arc_no=batch_no, 
+@@ -1069,7 +1069,7 @@ class Analyst(BaseAgent):
+ 
+         # 3. 프롬프트 조립
+         # ENRICH_BLOCK_PROMPT_V30의 {prev_context} 자리에 effective_prev를 주입합니다.
+-        prompt = ENRICH_BLOCK_PROMPT_V30.format(
++        prompt = get_enrich_block_prompt_v30(
+             genre_prompt=self.context.guard.get_v20_purism_prompt(),
+             curr_block=safe_curr,
+             prev_context=effective_prev, # 👈 safe_prev의 진화형
+@@ -1212,9 +1212,9 @@ class Analyst(BaseAgent):
+ 
+     def stitch_joints(self, joint_a, joint_b, context_b):
+         """[V35.5 Phase 3] 두 아크 사이의 물리적 마디를 검사하고 용접함"""
+-        prompt = POST_STITCH_REPAIR_PROMPT.format(
++        prompt = get_post_stitch_repair_prompt(
+             arc_a_joint=json.dumps(joint_a, ensure_ascii=False),
+-            arc_b_joint=json.dumps(joint_b, ensure_ascii=False)
++            arc_b_joint=json.dumps(joint_b, ensure_ascii=False),
+         )
+         
+         # 용접은 정밀도가 중요하므로 온도를 0.1로 고정
+@@ -1398,4 +1398,4 @@ class Analyst(BaseAgent):
+ 
+         except Exception as e:
+             logging.warning(f"⚠️ [Analyst] 상태 제약 프롬프트 생성 실패: {e}")
+-            return ""
+\ No newline at end of file
++            return ""
+diff --git a/modules/domain/agents/chief_writer.py b/modules/domain/agents/chief_writer.py
+index 7ceca88..f89a3c0 100644
+--- a/modules/domain/agents/chief_writer.py
++++ b/modules/domain/agents/chief_writer.py
+@@ -31,16 +31,15 @@ except ImportError:
+     PRIMITIVE_GUARD_AVAILABLE = False
+ 
+ from modules.core.constants import ManuscriptLimits  # [V64.P4]
+-from .chief_writer_prompts import (  # [V64.P4→V65] 프롬프트 외부화
+-    PROMPT_TEMPLATE_OUTPUT as _PROMPT_TEMPLATE_OUTPUT,
+-    COMMON_RULES_SECTION,
+-    WRITING_GUIDELINES_SECTION,
+-    # [V65] C-4 Part 2: 잔존 프롬프트 외부화
+-    PRIMITIVE_CONSTRAINT_FALLBACK,
+-    MODERN_ORIGIN_SECTION,
++from .chief_writer_prompts import (
+     build_chief_writer_main_prompt,
+-    get_fix_issues_prompt,
+     get_anti_trope_instructions,
++    get_common_rules_section,
++    get_fix_issues_prompt,
++    get_modern_origin_section,
++    get_primitive_constraint_fallback,
++    get_prompt_template_output,
++    get_writing_guidelines_section,
+ )
+ 
+ 
+@@ -99,8 +98,8 @@ class ChiefWriter(BaseAgent):
+         }
+     }
+ 
+-    # [V64.P4] 프롬프트 외부화 → chief_writer_prompts.py
+-    PROMPT_TEMPLATE_OUTPUT = _PROMPT_TEMPLATE_OUTPUT
++    # [V64.P4] 프롬프트 외부화
++    PROMPT_TEMPLATE_OUTPUT = get_prompt_template_output()
+ 
+     def __init__(self, context, client, model_tier="gemini-3-pro-preview") -> None:
+         super().__init__(context, client, model_tier)
+@@ -574,10 +573,10 @@ class ChiefWriter(BaseAgent):
+                     protagonist_config, genre=genre_code, length="build"
+                 )
+             else:
+-                # [V65] 폴백: 최소한의 경고 → chief_writer_prompts.py
+-                world_origin_constraint_section = PRIMITIVE_CONSTRAINT_FALLBACK
++                # [V65] 폴백: 최소한의 경고
++                world_origin_constraint_section = get_primitive_constraint_fallback()
+         elif world_origin == '현대인':
+-            world_origin_constraint_section = MODERN_ORIGIN_SECTION  # [V65]
++            world_origin_constraint_section = get_modern_origin_section()  # [V65]
+ 
+         # [V62.6→V63.2] 직전 원고: 구조화 다이제스트 + 엔딩 2500자 (800→2500 확대)
+         prev_ending = prev_manuscript[-2500:] if prev_manuscript else ""
+@@ -710,7 +709,7 @@ class ChiefWriter(BaseAgent):
+ {self._escape_braces(prev_manuscripts_text[:200000])}
+ """
+ 
+-        # [V65] 메인 프롬프트 → chief_writer_prompts.build_chief_writer_main_prompt()
++        # [V65] 메인 프롬프트 함수 래핑 호출
+         return build_chief_writer_main_prompt(
+             ep_num=ep_num,
+             dna_instruction=dna_instruction,
+@@ -733,8 +732,8 @@ class ChiefWriter(BaseAgent):
+             arc_doc=self._escape_braces(arc_doc) if arc_doc else "특이사항 없음",
+             core_identity_desire=self._escape_braces(str(core_identity.get('desire', ''))),
+             style_guide=self._escape_braces(style_guide) if style_guide else "기본 웹소설 문체",
+-            common_rules=COMMON_RULES_SECTION,
+-            writing_guidelines=WRITING_GUIDELINES_SECTION,
++            common_rules=get_common_rules_section(),
++            writing_guidelines=get_writing_guidelines_section(),
+             prev_manuscripts_section=prev_manuscripts_section,  # [V67]
+             incarnation_context_section=incarnation_context_section,  # [V67.1]
+             chain_link_section=self._escape_braces(chain_link_section) if chain_link_section else "",  # [V68]
+@@ -1518,7 +1517,7 @@ class ChiefWriter(BaseAgent):
+         for issue in issues[:3]:  # 최대 3개만 수정
+             fix_instructions.append(f"- {issue['type']}: {issue['description']}")
+ 
+-        # [V65] 교정 프롬프트 → chief_writer_prompts.get_fix_issues_prompt()
++        # [V65] 교정 프롬프트 함수 래핑 호출
+         prompt = get_fix_issues_prompt(
+             fix_instructions_text=chr(10).join(fix_instructions),
+             hud_report_escaped=self._escape_braces(hud_report[:500]),
+@@ -1950,7 +1949,7 @@ class ChiefWriter(BaseAgent):
+         [V60.81] 반클리셰 명령 생성
+ 
+         ChiefWriter가 독립적으로 동작할 수 있도록 내장
+-        [V65] 프롬프트 본문 → chief_writer_prompts.get_anti_trope_instructions()
++        [V65] 프롬프트 본문 함수 래핑 호출
+         """
+         return get_anti_trope_instructions(genre_name=genre_name)
+ 
+@@ -2114,3 +2113,4 @@ class ChiefWriter(BaseAgent):
+     # auto_map_emotions_to_manuscript/get_emotion_skeleton_lazy (-320줄),
+     # quick_self_check/self_review_and_refine (-197줄)
+ 
++
+diff --git a/modules/domain/agents/chief_writer_prompts.py b/modules/domain/agents/chief_writer_prompts.py
+index e3703e1..4660e90 100644
+--- a/modules/domain/agents/chief_writer_prompts.py
++++ b/modules/domain/agents/chief_writer_prompts.py
+@@ -4,6 +4,9 @@ ChiefWriter의 대형 프롬프트 문자열을 코드 로직에서 분리.
+ [V65] C-4 Part 2: 잔존 프롬프트 4개 추가 외부화.
+ """
+ 
++from modules.core.prompt_loader import PromptLoader
++
++
+ # -- ChiefWriter Output Format Template --  [V64.P4]
+ 
+ # [V60.82] 프롬프트 템플릿 상수 (프리컴파일)
+@@ -73,6 +76,34 @@ MODERN_ORIGIN_SECTION = """
+ """
+ 
+ 
++_PROMPT_LOADER = PromptLoader()
++
++
++def _load_prompt(key: str, fallback: str) -> str:
++    loaded = _PROMPT_LOADER.load("chief_writer", key)
++    return loaded if loaded is not None else fallback
++
++
++def get_prompt_template_output() -> str:
++    return _load_prompt("PROMPT_TEMPLATE_OUTPUT", PROMPT_TEMPLATE_OUTPUT)
++
++
++def get_common_rules_section() -> str:
++    return _load_prompt("COMMON_RULES_SECTION", COMMON_RULES_SECTION)
++
++
++def get_writing_guidelines_section() -> str:
++    return _load_prompt("WRITING_GUIDELINES_SECTION", WRITING_GUIDELINES_SECTION)
++
++
++def get_primitive_constraint_fallback() -> str:
++    return _load_prompt("PRIMITIVE_CONSTRAINT_FALLBACK", PRIMITIVE_CONSTRAINT_FALLBACK)
++
++
++def get_modern_origin_section() -> str:
++    return _load_prompt("MODERN_ORIGIN_SECTION", MODERN_ORIGIN_SECTION)
++
++
+ def build_chief_writer_main_prompt(
+     *,
+     ep_num: int,

@@ -8,10 +8,9 @@ Director reference를 통해 BaseAgent 메서드(ask, _extract_json_robust 등) 
 
 import json
 import logging
-from modules.core.constants import ManuscriptLimits  # [V64.P4]
 
-# [V64.P4] 프롬프트 외부화 — director_prompts.py에서 import
-from .director_prompts import ENSEMBLE_SELECTION_PROMPT
+from modules.core.constants import ManuscriptLimits  # [V64.P4]
+from modules.core.prompt_loader import PromptLoader
 
 
 class DirectorEnsembleSelector:
@@ -30,6 +29,7 @@ class DirectorEnsembleSelector:
             director: Director 인스턴스 (BaseAgent 상속, ask/extract/escape 접근용)
         """
         self._d = director
+        self._prompt_loader = PromptLoader()
 
     def compare_and_select_blueprint(
         self,
@@ -38,7 +38,7 @@ class DirectorEnsembleSelector:
         ep_num: int,
         prev_blueprint: dict = None,
         entity_registry: dict = None,
-        state_tracker=None
+        state_tracker=None,
     ) -> dict:
         """[V60.85] 여러 Blueprint 후보 중 최적 선택 + PASS/REJECT 판정"""
         if not candidates:
@@ -49,7 +49,7 @@ class DirectorEnsembleSelector:
                 "score": 0,
                 "reason": "후보 없음",
                 "feedback": "Blueprint 후보가 없습니다.",
-                "comparison_notes": ""
+                "comparison_notes": "",
             }
 
         if len(candidates) == 1:
@@ -77,7 +77,7 @@ class DirectorEnsembleSelector:
         candidate_summaries = []
         for idx, bp in enumerate(candidates):
             meta = bp.get("_ensemble_meta", {})
-            strategy = meta.get("strategy", f"후보{idx+1}")
+            strategy = meta.get("strategy", f"후보{idx + 1}")
             scene_count = meta.get("scene_count", len(bp.get("scene_breakdown", {})))
             length = meta.get("length", len(bp.get("integrated_scenario", "")))
 
@@ -86,13 +86,13 @@ class DirectorEnsembleSelector:
                 integrated = str(integrated) if integrated else ""
 
             summary = f"""
-[후보 {idx+1}: {strategy}]
+[후보 {idx + 1}: {strategy}]
 - 씬 개수: {scene_count}개
 - 분량: {length}자
-- 시작 위치: {bp.get('start_location', '?')}
-- 종료 위치: {bp.get('end_location', '?')}
-- 시간 흐름: {bp.get('time_flow', '?')}
-- 엔딩 훅: {(bp.get('ending_hook') or '?')[:100]}
+- 시작 위치: {bp.get("start_location", "?")}
+- 종료 위치: {bp.get("end_location", "?")}
+- 시간 흐름: {bp.get("time_flow", "?")}
+- 엔딩 훅: {(bp.get("ending_hook") or "?")[:100]}
 
 [시나리오 요약]
 {integrated[:1500]}...
@@ -111,7 +111,7 @@ class DirectorEnsembleSelector:
 {prev_ending if prev_ending else "(1화 또는 이전 정보 없음)"}
 
 ### 후보 목록
-{''.join(candidate_summaries)}
+{"".join(candidate_summaries)}
 
 ### 평가 기준
 1. **Arc 준수**: 전술서의 이번 화 내용을 충실히 반영하는가?
@@ -137,8 +137,10 @@ class DirectorEnsembleSelector:
             result = self._d._extract_json_robust(response)
 
             if not isinstance(result, dict):
-                logging.warning(f"⚠️ [Director] 비교 응답 파싱 실패")
-                return self._fallback_first_candidate(candidates, arc_data, ep_num, prev_blueprint, entity_registry, state_tracker)
+                logging.warning("⚠️ [Director] 비교 응답 파싱 실패")
+                return self._fallback_first_candidate(
+                    candidates, arc_data, ep_num, prev_blueprint, entity_registry, state_tracker
+                )
 
             selected_idx = result.get("selected_index", 0)
             if selected_idx < 0 or selected_idx >= len(candidates):
@@ -149,7 +151,7 @@ class DirectorEnsembleSelector:
             comparison_notes = result.get("comparison_notes", "")
             reason = result.get("reason", "")
 
-            logging.info(f"🎯 [Director] 후보 {selected_idx+1} 선택 ({decision}, 점수: {score})")
+            logging.info(f"🎯 [Director] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")
             if comparison_notes:
                 logging.info(f"📝 비교: {comparison_notes[:150]}{'...' if len(comparison_notes) > 150 else ''}")
             if reason:
@@ -162,21 +164,17 @@ class DirectorEnsembleSelector:
                 "score": score,
                 "reason": result.get("reason", ""),
                 "feedback": result.get("feedback", "") if decision == "REJECT" else "",
-                "comparison_notes": result.get("comparison_notes", "")
+                "comparison_notes": result.get("comparison_notes", ""),
             }
 
         except Exception as e:
             logging.warning(f"⚠️ [Director] 비교 오류: {str(e)[:50]}")
-            return self._fallback_first_candidate(candidates, arc_data, ep_num, prev_blueprint, entity_registry, state_tracker)
+            return self._fallback_first_candidate(
+                candidates, arc_data, ep_num, prev_blueprint, entity_registry, state_tracker
+            )
 
     def _evaluate_single_blueprint(
-        self,
-        blueprint: dict,
-        arc_data: dict,
-        ep_num: int,
-        prev_blueprint: dict,
-        entity_registry: dict,
-        state_tracker
+        self, blueprint: dict, arc_data: dict, ep_num: int, prev_blueprint: dict, entity_registry: dict, state_tracker
     ) -> dict:
         """단일 Blueprint 평가 (기존 audit_manuscript 간소화 버전)"""
         integrated = blueprint.get("integrated_scenario", "")
@@ -199,7 +197,7 @@ class DirectorEnsembleSelector:
                     "decision": "REJECT",
                     "score": 20,
                     "reason": f"죽은 NPC 등장: {', '.join(names)}",
-                    "feedback": f"사망한 NPC가 등장합니다: {', '.join(names)}. 회상/언급만 허용됩니다."
+                    "feedback": f"사망한 NPC가 등장합니다: {', '.join(names)}. 회상/언급만 허용됩니다.",
                 }
 
         scene_count = len(blueprint.get("scene_breakdown", {}))
@@ -208,7 +206,7 @@ class DirectorEnsembleSelector:
                 "decision": "REJECT",
                 "score": 30,
                 "reason": f"씬 개수 부족: {scene_count}개",
-                "feedback": "최소 4개 이상의 씬이 필요합니다."
+                "feedback": "최소 4개 이상의 씬이 필요합니다.",
             }
 
         if len(integrated) < 800:
@@ -216,27 +214,16 @@ class DirectorEnsembleSelector:
                 "decision": "REJECT",
                 "score": 40,
                 "reason": f"분량 부족: {len(integrated)}자",
-                "feedback": "시나리오가 800자 이상이어야 합니다."
+                "feedback": "시나리오가 800자 이상이어야 합니다.",
             }
 
-        return {
-            "decision": "PASS",
-            "score": 75,
-            "reason": "기본 기준 충족",
-            "feedback": ""
-        }
+        return {"decision": "PASS", "score": 75, "reason": "기본 기준 충족", "feedback": ""}
 
     def _fallback_first_candidate(
-        self,
-        candidates: list,
-        arc_data: dict,
-        ep_num: int,
-        prev_blueprint: dict,
-        entity_registry: dict,
-        state_tracker
+        self, candidates: list, arc_data: dict, ep_num: int, prev_blueprint: dict, entity_registry: dict, state_tracker
     ) -> dict:
         """폴백: 첫 번째 후보 선택 (비교 실패 시)"""
-        logging.info(f"⚠️ [Director] 폴백 - 첫 번째 후보 평가")
+        logging.info("⚠️ [Director] 폴백 - 첫 번째 후보 평가")
         result = self._evaluate_single_blueprint(
             candidates[0], arc_data, ep_num, prev_blueprint, entity_registry, state_tracker
         )
@@ -258,23 +245,22 @@ class DirectorEnsembleSelector:
         episode_digest: str = "",
         mandatory_context: str = "",
         prev_manuscripts_text: str = "",
-        story_context: str = ""
+        story_context: str = "",
     ) -> dict:
         """[V60.80] 3개 후보 중 최선 선택 + PASS/REJECT 판정"""
         while len(candidates) < 3:
-            candidates.append({
-                "strategy": f"fallback_{len(candidates)}",
-                "strategy_name": "폴백",
-                "manuscript": "",
-                "title": "",
-                "state_updates": {}
-            })
+            candidates.append(
+                {
+                    "strategy": f"fallback_{len(candidates)}",
+                    "strategy_name": "폴백",
+                    "manuscript": "",
+                    "title": "",
+                    "state_updates": {},
+                }
+            )
 
         while len(validation_results) < 3:
-            validation_results.append({
-                "warnings": ["후보 없음"],
-                "focus_points": ["빈 후보"]
-            })
+            validation_results.append({"warnings": ["후보 없음"], "focus_points": ["빈 후보"]})
 
         MIN_MANUSCRIPT_LENGTH = ManuscriptLimits.MIN_LENGTH  # [V64.P4]
         qualified_indices = []
@@ -294,24 +280,28 @@ class DirectorEnsembleSelector:
                 "score": 30,
                 "feedback": {
                     "issues": [f"모든 후보 분량 미달: {lengths}자 (최소 {MIN_MANUSCRIPT_LENGTH}자 필요)"],
-                    "action_items": ["분량을 5,000자 이상으로 확장하세요", "장면 묘사와 대사를 더 풍부하게"]
+                    "action_items": ["분량을 5,000자 이상으로 확장하세요", "장면 묘사와 대사를 더 풍부하게"],
                 },
                 "state_updates": {},
                 "action_items": ["분량 확장 필요 - 최소 5,000자"],
-                "length_violation": True
+                "length_violation": True,
             }
 
-        logging.info(f"✅ [V60.97] 분량 통과 후보: {len(qualified_indices)}개 ({[['A','B','C'][i] for i in qualified_indices]})")
+        logging.info(
+            f"✅ [V60.97] 분량 통과 후보: {len(qualified_indices)}개 ({[['A', 'B', 'C'][i] for i in qualified_indices]})"
+        )
 
-        blueprint_str = json.dumps(blueprint, ensure_ascii=False, indent=2) if isinstance(blueprint, dict) else str(blueprint)
+        blueprint_str = (
+            json.dumps(blueprint, ensure_ascii=False, indent=2) if isinstance(blueprint, dict) else str(blueprint)
+        )
 
         def get_candidate_info(idx) -> dict:
             c = candidates[idx] if idx < len(candidates) else {}
             v = validation_results[idx] if idx < len(validation_results) else {}
             return {
-                "strategy": c.get("strategy_name", c.get("strategy", f"후보{idx+1}")),
+                "strategy": c.get("strategy_name", c.get("strategy", f"후보{idx + 1}")),
                 "manuscript": c.get("manuscript", "")[:12000],
-                "warnings": "\n".join(v.get("warnings", [])) or "(경고 없음)"
+                "warnings": "\n".join(v.get("warnings", [])) or "(경고 없음)",
             }
 
         info_a = get_candidate_info(0)
@@ -324,7 +314,9 @@ class DirectorEnsembleSelector:
         if len(_prev_ms_for_director) > 200000:
             _prev_ms_for_director = _prev_ms_for_director[:200000] + "\n...(이하 생략)"
 
-        prompt = ENSEMBLE_SELECTION_PROMPT.format(
+        prompt = self._prompt_loader.load(
+            "director",
+            "ENSEMBLE_SELECTION_PROMPT",
             blueprint=self._d._escape_braces(blueprint_str[:5000]),
             episode_digest=self._d._escape_braces(episode_digest) if episode_digest else "(다이제스트 없음)",
             previous_ending=self._d._escape_braces(previous_ending if previous_ending else ""),
@@ -338,8 +330,20 @@ class DirectorEnsembleSelector:
             warnings_b=self._d._escape_braces(info_b["warnings"]),
             strategy_c=info_c["strategy"],
             manuscript_c=self._d._escape_braces(info_c["manuscript"]),
-            warnings_c=self._d._escape_braces(info_c["warnings"])
+            warnings_c=self._d._escape_braces(info_c["warnings"]),
         )
+        if not prompt:
+            logging.warning("[Director] ENSEMBLE_SELECTION_PROMPT not found in prompt loader")
+            return {
+                "selected": "A",
+                "selected_candidate": candidates[0] if candidates else {},
+                "verdict": "REJECT",
+                "score": 50,
+                "feedback": {"issues": ["Prompt loading failed: ENSEMBLE_SELECTION_PROMPT"]},
+                "state_updates": candidates[0].get("state_updates", {}) if candidates else {},
+                "action_items": ["프롬프트 로더 설정 확인 필요"],
+                "prompt_error": True,
+            }
 
         # [V67] mandatory_context 확장 — 25,000자 상한 (기존 8,000자)
         if mandatory_context:
@@ -369,7 +373,7 @@ class DirectorEnsembleSelector:
                 "feedback": {"issues": ["Director 판정 파싱 실패"]},
                 "state_updates": candidates[0].get("state_updates", {}) if candidates else {},
                 "action_items": ["재생성 필요"],
-                "parsing_error": True
+                "parsing_error": True,
             }
 
         selected_letter = result.get("selected", "A").upper()
@@ -397,7 +401,7 @@ class DirectorEnsembleSelector:
             original_decision=original_verdict,
             arc_pos=arc_pos,
             total_eps=total_eps,
-            retry_count=retry_count
+            retry_count=retry_count,
         )
 
         final_verdict = adaptive_result["decision"]
@@ -429,24 +433,15 @@ class DirectorEnsembleSelector:
             "action_items": feedback.get("action_items", []) if isinstance(feedback, dict) else [],
             "other_candidates_notes": result.get("other_candidates_notes", {}),
             "adaptive_threshold": adaptive_result.get("threshold_used", 65),
-            "adaptive_reason": adaptive_result.get("reason", "")
+            "adaptive_reason": adaptive_result.get("reason", ""),
         }
 
     def quick_judge_single(
-        self,
-        ep_num: int,
-        manuscript: str,
-        blueprint: dict,
-        previous_ending: str,
-        retry_count: int = 0
+        self, ep_num: int, manuscript: str, blueprint: dict, previous_ending: str, retry_count: int = 0
     ) -> dict:
         """[V60.80] 냉동인간 Writer용 간소 검토"""
         if len(manuscript) < 3500:
-            return {
-                "verdict": "REJECT",
-                "score": 20,
-                "reason": f"분량 심각 부족: {len(manuscript)}자 (최소 3,500자)"
-            }
+            return {"verdict": "REJECT", "score": 20, "reason": f"분량 심각 부족: {len(manuscript)}자 (최소 3,500자)"}
 
         prompt = f"""
 [Role] 편집장 (Emergency Review)
@@ -481,17 +476,13 @@ class DirectorEnsembleSelector:
                     "verdict": "REJECT",
                     "score": 45,
                     "reason": "간소 검토 파싱 실패 - 분량 충족이나 품질 검증 불가로 REJECT",
-                    "forced": True
+                    "forced": True,
                 }
-            return {
-                "verdict": "REJECT",
-                "score": 30,
-                "reason": "간소 검토 파싱 실패 + 분량 미달"
-            }
+            return {"verdict": "REJECT", "score": 30, "reason": "간소 검토 파싱 실패 + 분량 미달"}
 
         return {
             "verdict": result.get("verdict", "REJECT"),
             "score": result.get("score", 50),
             "reason": result.get("reason", ""),
-            "critical_issues": result.get("critical_issues", [])
+            "critical_issues": result.get("critical_issues", []),
         }

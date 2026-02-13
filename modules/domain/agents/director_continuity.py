@@ -8,8 +8,7 @@ Entity 일관성, 원고 역사 충돌 검사, Blueprint/Manuscript 연속성 �
 import json
 import logging
 
-# [V64.P4] 프롬프트 외부화 — director_prompts.py에서 import
-from .director_prompts import MANUSCRIPT_HISTORY_CONFLICT_PROMPT
+from modules.core.prompt_loader import PromptLoader
 
 
 class DirectorContinuityValidator:
@@ -32,13 +31,15 @@ class DirectorContinuityValidator:
             director: Director 인스턴스 (BaseAgent 메서드 접근용)
         """
         self._d = director
+        self._prompt_loader = PromptLoader()
 
         # [V61.5] 캐시 연속성 검사 — ep_num 기반 갱신
         self._cached_blueprint_ep = None
         self._cached_manuscript_ep = None
 
-    def validate_entity_consistency(self, content: str, entity_registry: dict,
-                                     content_type: str = "manuscript") -> dict:
+    def validate_entity_consistency(
+        self, content: str, entity_registry: dict, content_type: str = "manuscript"
+    ) -> dict:
         """
         [V61] Entity 명칭 일관성 검증 - Director의 최종 방어선
 
@@ -119,12 +120,14 @@ class DirectorContinuityValidator:
                 return {"decision": "PASS", "mismatches": [], "fix_instructions": "", "parsing_error": True}
 
             # 결과 로깅
-            mismatches = result.get('mismatches', [])
+            mismatches = result.get("mismatches", [])
             if mismatches:
-                decision = result.get('decision', 'WARNING')
+                decision = result.get("decision", "WARNING")
                 logging.info(f"⚠️ [V61] Entity 일관성 검증: {decision} ({len(mismatches)}개 불일치)")
                 for m in mismatches[:3]:
-                    logging.info(f"- [{m.get('category', '?')}] {m.get('registered_name', '?')} → {m.get('found_variant', '?')}")
+                    logging.info(
+                        f"- [{m.get('category', '?')}] {m.get('registered_name', '?')} → {m.get('found_variant', '?')}"
+                    )
 
             return result
 
@@ -139,11 +142,11 @@ class DirectorContinuityValidator:
 
         lines = []
         categories = [
-            ('characters', '캐릭터'),
-            ('organizations', '조직/문파'),
-            ('locations', '장소'),
-            ('objects', '물품/아이템'),
-            ('concepts', '기술/개념')
+            ("characters", "캐릭터"),
+            ("organizations", "조직/문파"),
+            ("locations", "장소"),
+            ("objects", "물품/아이템"),
+            ("concepts", "기술/개념"),
         ]
 
         has_any = False
@@ -154,8 +157,8 @@ class DirectorContinuityValidator:
                 formatted_items = []
                 for item in items:
                     if isinstance(item, dict):
-                        name = item.get('name', item.get('canonical_name', str(item)))
-                        aliases = item.get('aliases', [])
+                        name = item.get("name", item.get("canonical_name", str(item)))
+                        aliases = item.get("aliases", [])
                         if aliases:
                             formatted_items.append(f"{name} (별칭: {', '.join(aliases)})")
                         else:
@@ -202,45 +205,49 @@ class DirectorContinuityValidator:
                 "warnings": [],
                 "reason": "",
                 "feedback": "",
-                "score": 100
+                "score": 100,
             }
 
         warnings = []
         missing_scenes = []
 
         # 1. Blueprint에서 씬 정보 추출
-        scene_breakdown = blueprint.get('scene_breakdown', {})
-        integrated_scenario = blueprint.get('integrated_scenario', '')
+        scene_breakdown = blueprint.get("scene_breakdown", {})
+        integrated_scenario = blueprint.get("integrated_scenario", "")
 
         # scene_breakdown이 dict인 경우 씬 개수 계산
         if isinstance(scene_breakdown, dict):
-            scene_keys = [k for k in scene_breakdown.keys() if k.startswith('scene') or k.startswith('Scene')]
+            scene_keys = [k for k in scene_breakdown.keys() if k.startswith("scene") or k.startswith("Scene")]
             expected_scenes = len(scene_keys)
 
             # 각 씬의 핵심 키워드 추출
             scene_keywords = {}
             for scene_key in scene_keys:
-                scene_content = scene_breakdown.get(scene_key, '')
+                scene_content = scene_breakdown.get(scene_key, "")
                 if isinstance(scene_content, str):
                     # 씬 타입 추출 ([Core], [Buffer], [Cliffhanger] 등)
-                    type_match = re.search(r'\[(Core|Buffer|Cliffhanger|Climax)\]', scene_content, re.IGNORECASE)
-                    scene_type = type_match.group(1) if type_match else 'Unknown'
+                    type_match = re.search(r"\[(Core|Buffer|Cliffhanger|Climax)\]", scene_content, re.IGNORECASE)
+                    scene_type = type_match.group(1) if type_match else "Unknown"
 
                     # 핵심 키워드 추출 (명사/동사 중심)
-                    keywords = re.findall(r'[가-힣]{2,5}(?:하다|되다|이다)?', scene_content)
+                    keywords = re.findall(r"[가-힣]{2,5}(?:하다|되다|이다)?", scene_content)
                     # 상위 5개 키워드만 사용
                     scene_keywords[scene_key] = {
-                        'type': scene_type,
-                        'keywords': keywords[:5] if keywords else [],
-                        'content_sample': scene_content[:100]
+                        "type": scene_type,
+                        "keywords": keywords[:5] if keywords else [],
+                        "content_sample": scene_content[:100],
                     }
         elif isinstance(scene_breakdown, list):
             expected_scenes = len(scene_breakdown)
-            scene_keywords = {f'scene_{i+1}': {'type': 'Unknown', 'keywords': [], 'content_sample': str(item)[:100]}
-                           for i, item in enumerate(scene_breakdown)}
+            scene_keywords = {
+                f"scene_{i + 1}": {"type": "Unknown", "keywords": [], "content_sample": str(item)[:100]}
+                for i, item in enumerate(scene_breakdown)
+            }
         else:
             # scene_breakdown이 없으면 integrated_scenario에서 추정
-            scene_markers = re.findall(r'\[(?:Core|Buffer|Cliffhanger|Scene)\s*\d*\]', integrated_scenario, re.IGNORECASE)
+            scene_markers = re.findall(
+                r"\[(?:Core|Buffer|Cliffhanger|Scene)\s*\d*\]", integrated_scenario, re.IGNORECASE
+            )
             expected_scenes = len(scene_markers) if scene_markers else 6  # 기본 6개
             scene_keywords = {}
 
@@ -251,8 +258,8 @@ class DirectorContinuityValidator:
         reflected_count = 0
 
         for scene_key, scene_info in scene_keywords.items():
-            keywords = scene_info.get('keywords', [])
-            scene_type = scene_info.get('type', 'Unknown')
+            keywords = scene_info.get("keywords", [])
+            scene_type = scene_info.get("type", "Unknown")
 
             # 키워드 매칭
             matched_keywords = 0
@@ -264,12 +271,14 @@ class DirectorContinuityValidator:
             if len(keywords) == 0 or matched_keywords >= len(keywords) * 0.5:
                 reflected_count += 1
             else:
-                missing_scenes.append({
-                    'scene': scene_key,
-                    'type': scene_type,
-                    'missing_keywords': [k for k in keywords if k not in manuscript][:3],
-                    'sample': scene_info.get('content_sample', '')[:50]
-                })
+                missing_scenes.append(
+                    {
+                        "scene": scene_key,
+                        "type": scene_type,
+                        "missing_keywords": [k for k in keywords if k not in manuscript][:3],
+                        "sample": scene_info.get("content_sample", "")[:50],
+                    }
+                )
 
         # 키워드가 없는 경우 길이 기반 추정
         if not scene_keywords:
@@ -294,7 +303,7 @@ class DirectorContinuityValidator:
                 "warnings": warnings,
                 "reason": f"Blueprint 반영률 부족: {reflected_count}/{expected_scenes} 씬 ({scene_coverage:.1f}%)",
                 "feedback": f"설계된 {expected_scenes}개 씬 중 {reflected_count}개만 반영됨. 누락된 씬을 추가하세요: {[m['scene'] for m in missing_scenes[:3]]}",
-                "score": int(scene_coverage * 0.5)
+                "score": int(scene_coverage * 0.5),
             }
 
         # [V60.24] 75% 미만이면 경고 (80→75)
@@ -303,13 +312,12 @@ class DirectorContinuityValidator:
 
         # Cliffhanger 씬 검증
         has_cliffhanger = any(
-            'cliffhanger' in str(scene_info.get('type', '')).lower()
-            for scene_info in scene_keywords.values()
+            "cliffhanger" in str(scene_info.get("type", "")).lower() for scene_info in scene_keywords.values()
         )
         if has_cliffhanger:
             # 원고 마지막 500자에서 긴장감 키워드 확인
             ending = manuscript[-500:] if len(manuscript) >= 500 else manuscript
-            tension_keywords = ['그때', '순간', '갑자기', '돌연', '하지만', '그러나', '예상치 못한', '충격', '긴장']
+            tension_keywords = ["그때", "순간", "갑자기", "돌연", "하지만", "그러나", "예상치 못한", "충격", "긴장"]
             has_tension = any(kw in ending for kw in tension_keywords)
             if not has_tension:
                 warnings.append("Cliffhanger 엔딩 긴장감 부족 - 마지막 장면에 서스펜스 요소 추가 권장")
@@ -323,7 +331,7 @@ class DirectorContinuityValidator:
             "warnings": warnings,
             "reason": "",
             "feedback": "",
-            "score": 100 - len(warnings) * 5
+            "score": 100 - len(warnings) * 5,
         }
 
     def check_manuscript_history_conflicts(
@@ -332,7 +340,7 @@ class DirectorContinuityValidator:
         current_manuscript: str,
         manuscript_history: list,
         use_summary: bool = True,
-        story_context: str = ""
+        story_context: str = "",
     ) -> dict:
         """
         [V67.1] 현재 원고가 이전 원고들과 충돌하는지 검사 (story_context 추가)
@@ -362,9 +370,9 @@ class DirectorContinuityValidator:
         # [V67] 역사 텍스트 구성 — 전문 사용 (요약 대신)
         history_parts = []
         for h in recent_history:
-            h_ep = h.get('ep_num', '?')
+            h_ep = h.get("ep_num", "?")
             # 전문 사용 (Gemini 컨텍스트 윈도우가 크므로 전문 전달)
-            h_text = h.get('text', '') or h.get('summary', '')
+            h_text = h.get("text", "") or h.get("summary", "")
             if h_text:
                 history_parts.append(f"[제{h_ep}화]\n{h_text}")
 
@@ -375,45 +383,54 @@ class DirectorContinuityValidator:
             history_text = history_text[:200000] + "\n... (이하 생략)"
 
         # [V67.1] 프롬프트 구성 (story_context 추가)
-        prompt = MANUSCRIPT_HISTORY_CONFLICT_PROMPT.format(
+        prompt = self._prompt_loader.load(
+            "director",
+            "MANUSCRIPT_HISTORY_CONFLICT_PROMPT",
             ep_num=ep_num,
             manuscript_history=self._d._escape_braces(history_text),
             current_manuscript=self._d._escape_braces(current_manuscript[:12000]),
-            story_context=self._d._escape_braces(story_context) if story_context else "(작품 설정 정보 없음)"
+            story_context=self._d._escape_braces(story_context) if story_context else "(작품 설정 정보 없음)",
         )
+        if not prompt:
+            return {
+                "decision": "PASS",
+                "conflicts": [],
+                "summary": "Prompt loading failed: MANUSCRIPT_HISTORY_CONFLICT_PROMPT",
+                "prompt_error": True,
+            }
 
         try:
             response = self._d.ask(prompt, temperature=0.1, thinking_level="medium")
             result = self._d._extract_json_robust(response)
 
-            if not result or result.get('parsing_error'):
+            if not result or result.get("parsing_error"):
                 return {
                     "decision": "PASS",
                     "conflicts": [],
                     "summary": "충돌 검사 응답 파싱 실패 - 비차단 통과",
-                    "parsing_error": True
+                    "parsing_error": True,
                 }
 
-            decision = result.get('decision', 'PASS')
-            conflicts = result.get('conflicts', [])
+            decision = result.get("decision", "PASS")
+            conflicts = result.get("conflicts", [])
 
             # CRITICAL 충돌이 있으면 CONFLICT, 아니면 경고만
-            critical_count = sum(1 for c in conflicts if c.get('severity') == 'CRITICAL')
+            critical_count = sum(1 for c in conflicts if c.get("severity") == "CRITICAL")
 
-            if decision == 'CONFLICT' and critical_count > 0:
+            if decision == "CONFLICT" and critical_count > 0:
                 return {
                     "decision": "CONFLICT",
                     "conflicts": conflicts,
-                    "summary": result.get('summary', ''),
-                    "critical_count": critical_count
+                    "summary": result.get("summary", ""),
+                    "critical_count": critical_count,
                 }
             else:
                 # MAJOR/MINOR는 경고만 (비차단)
                 return {
                     "decision": "PASS",
                     "conflicts": conflicts,
-                    "summary": result.get('summary', ''),
-                    "warnings_only": True
+                    "summary": result.get("summary", ""),
+                    "warnings_only": True,
                 }
 
         except Exception as e:
@@ -421,14 +438,10 @@ class DirectorContinuityValidator:
                 "decision": "PASS",
                 "conflicts": [],
                 "summary": f"충돌 검사 중 오류 발생 (비차단): {str(e)}",
-                "error": str(e)
+                "error": str(e),
             }
 
-    def check_manuscript_history_with_cache(
-        self,
-        ep_num: int,
-        current_manuscript: str
-    ) -> dict:
+    def check_manuscript_history_with_cache(self, ep_num: int, current_manuscript: str) -> dict:
         """
         [V60.88] 캐시된 원고를 활용한 충돌 검사
 
@@ -459,7 +472,7 @@ class DirectorContinuityValidator:
 {self._d._escape_braces(current_manuscript[:12000])}
 
 ### 🔍 검사 지시
-위 신규 원고가 캐시에 저장된 이전 원고들 (제1화~제{ep_num-1}화)과 충돌하는지 검사하세요.
+위 신규 원고가 캐시에 저장된 이전 원고들 (제1화~제{ep_num - 1}화)과 충돌하는지 검사하세요.
 
 [Output Format] JSON Only
 {{
@@ -484,8 +497,8 @@ class DirectorContinuityValidator:
                     cached_content=self._d._caching.manuscript_cache_name,
                     temperature=0.1,
                     max_output_tokens=4096,
-                    response_mime_type="application/json"
-                )
+                    response_mime_type="application/json",
+                ),
             )
 
             # [V70] response.text가 ValueError 발생 가능 (safety filter, 빈 응답)
@@ -498,38 +511,38 @@ class DirectorContinuityValidator:
                     "decision": "PASS",
                     "conflicts": [],
                     "summary": "캐시 검사 응답 비어있음 - 비차단 통과",
-                    "parsing_error": True
+                    "parsing_error": True,
                 }
 
             result = self._d._extract_json_robust(_resp_text)
 
-            if not result or result.get('parsing_error'):
+            if not result or result.get("parsing_error"):
                 return {
                     "decision": "PASS",
                     "conflicts": [],
                     "summary": "캐시 검사 응답 파싱 실패 - 비차단 통과",
-                    "parsing_error": True
+                    "parsing_error": True,
                 }
 
-            decision = result.get('decision', 'PASS')
-            conflicts = result.get('conflicts', [])
-            critical_count = sum(1 for c in conflicts if c.get('severity') == 'CRITICAL')
+            decision = result.get("decision", "PASS")
+            conflicts = result.get("conflicts", [])
+            critical_count = sum(1 for c in conflicts if c.get("severity") == "CRITICAL")
 
-            if decision == 'CONFLICT' and critical_count > 0:
+            if decision == "CONFLICT" and critical_count > 0:
                 return {
                     "decision": "CONFLICT",
                     "conflicts": conflicts,
-                    "summary": result.get('summary', ''),
+                    "summary": result.get("summary", ""),
                     "critical_count": critical_count,
-                    "cache_used": True
+                    "cache_used": True,
                 }
             else:
                 return {
                     "decision": "PASS",
                     "conflicts": conflicts,
-                    "summary": result.get('summary', ''),
+                    "summary": result.get("summary", ""),
                     "warnings_only": True,
-                    "cache_used": True
+                    "cache_used": True,
                 }
 
         except Exception as e:
@@ -540,16 +553,10 @@ class DirectorContinuityValidator:
                 "conflicts": [],
                 "summary": f"캐시 검사 실패 → 기존 방식 폴백 필요: {str(e)}",
                 "error": str(e),
-                "needs_fallback": True
+                "needs_fallback": True,
             }
 
-    def check_blueprint_continuity_with_cache(
-        self,
-        new_blueprint: dict,
-        ep_num: int,
-        db=None,
-        limit: int = 30
-    ) -> dict:
+    def check_blueprint_continuity_with_cache(self, new_blueprint: dict, ep_num: int, db=None, limit: int = 30) -> dict:
         """
         [V61.5] 이전 Blueprint 컨텍스트 캐싱 기반 연속성 검증
 
@@ -573,7 +580,7 @@ class DirectorContinuityValidator:
             return {"decision": "PASS", "issues": [], "feedback": ""}
 
         try:
-            project_name = getattr(self._d.context, 'project_name', '') if hasattr(self._d, 'context') else ''
+            project_name = getattr(self._d.context, "project_name", "") if hasattr(self._d, "context") else ""
 
             if self._cached_blueprint_ep != ep_num:
                 recent_blueprints = db.get_recent_blueprints(ep_num, limit=limit)
@@ -582,16 +589,13 @@ class DirectorContinuityValidator:
 
                 context_text = self._d.merge_contexts_for_caching(recent_blueprints, item_type="blueprint")
                 cache_result = self._d._get_or_create_context_cache(
-                    cache_type="blueprint",
-                    content=context_text,
-                    ttl_seconds=1800,
-                    project_name=project_name
+                    cache_type="blueprint", content=context_text, ttl_seconds=1800, project_name=project_name
                 )
                 self._cached_blueprint_ep = ep_num
                 self._cached_recent_blueprints = recent_blueprints
                 logging.info(f"📦 [V61.5] Blueprint 캐시 갱신 (ep={ep_num})")
             else:
-                recent_blueprints = getattr(self, '_cached_recent_blueprints', [])
+                recent_blueprints = getattr(self, "_cached_recent_blueprints", [])
                 cache_result = {"cached": True}
                 logging.info(f"♻️ [V61.5] Blueprint 캐시 재사용 (ep={ep_num})")
 
@@ -618,13 +622,15 @@ class DirectorContinuityValidator:
             # 위치 불연속 체크
             if prev_end_location and new_start_location:
                 if prev_end_location not in new_start_location and new_start_location not in prev_end_location:
-                    issues.append({
-                        "type": "location_discontinuity",
-                        "severity": "MAJOR",
-                        "message": f"위치 불연속: 이전 종료 '{prev_end_location}' → 현재 시작 '{new_start_location}'",
-                        "prev_value": prev_end_location,
-                        "new_value": new_start_location
-                    })
+                    issues.append(
+                        {
+                            "type": "location_discontinuity",
+                            "severity": "MAJOR",
+                            "message": f"위치 불연속: 이전 종료 '{prev_end_location}' → 현재 시작 '{new_start_location}'",
+                            "prev_value": prev_end_location,
+                            "new_value": new_start_location,
+                        }
+                    )
 
             # 시점 체크 (있으면)
             if prev_ending_state.get("timeline") and new_blueprint.get("ending_state", {}).get("timeline"):
@@ -651,7 +657,7 @@ class DirectorContinuityValidator:
                 "decision": decision,
                 "issues": issues,
                 "feedback": feedback,
-                "cache_used": cache_result.get("cached", False)
+                "cache_used": cache_result.get("cached", False),
             }
 
         except Exception as e:
@@ -659,11 +665,7 @@ class DirectorContinuityValidator:
             return {"decision": "PASS", "issues": [], "feedback": "", "error": str(e)}
 
     def check_manuscript_continuity_with_cache(
-        self,
-        new_manuscript: str,
-        ep_num: int,
-        db=None,
-        limit: int = 30
+        self, new_manuscript: str, ep_num: int, db=None, limit: int = 30
     ) -> dict:
         """
         [V61.5] 이전 Manuscript 컨텍스트 캐싱 기반 연속성 검증
@@ -688,7 +690,7 @@ class DirectorContinuityValidator:
             return {"decision": "PASS", "conflicts": [], "summary": ""}
 
         try:
-            project_name = getattr(self._d.context, 'project_name', '') if hasattr(self._d, 'context') else ''
+            project_name = getattr(self._d.context, "project_name", "") if hasattr(self._d, "context") else ""
 
             if self._cached_manuscript_ep != ep_num:
                 recent_manuscripts = db.get_recent_manuscripts(ep_num, limit=limit)
@@ -697,34 +699,38 @@ class DirectorContinuityValidator:
 
                 context_text = self._d.merge_contexts_for_caching(recent_manuscripts, item_type="manuscript")
                 cache_result = self._d._get_or_create_context_cache(
-                    cache_type="manuscript",
-                    content=context_text,
-                    ttl_seconds=1800,
-                    project_name=project_name
+                    cache_type="manuscript", content=context_text, ttl_seconds=1800, project_name=project_name
                 )
                 self._cached_manuscript_ep = ep_num
                 self._cached_context_text_manuscript = context_text
                 logging.info(f"📦 [V61.5] Manuscript 캐시 갱신 (ep={ep_num})")
             else:
-                context_text = getattr(self, '_cached_context_text_manuscript', '')
-                cache_result = {"cached": True, "cache_name": getattr(self, '_manuscript_cache_name', None)}
+                context_text = getattr(self, "_cached_context_text_manuscript", "")
+                cache_result = {"cached": True, "cache_name": getattr(self, "_manuscript_cache_name", None)}
                 logging.info(f"♻️ [V61.5] Manuscript 캐시 재사용 (ep={ep_num})")
 
             # 캐시가 있으면 캐시 기반 질의, 없으면 일반 질의
             # [V67.1] story_context 추가 (캐시 경로에서는 빈 값 전달)
-            prompt = MANUSCRIPT_HISTORY_CONFLICT_PROMPT.format(
+            prompt = self._prompt_loader.load(
+                "director",
+                "MANUSCRIPT_HISTORY_CONFLICT_PROMPT",
                 ep_num=ep_num,
-                manuscript_history="(캐시된 컨텍스트 참조)" if cache_result.get("cache_name") else self._d._escape_braces(context_text[:200000]),
+                manuscript_history="(캐시된 컨텍스트 참조)"
+                if cache_result.get("cache_name")
+                else self._d._escape_braces(context_text[:200000]),
                 current_manuscript=self._d._escape_braces(new_manuscript[:12000]),  # [V70] 중괄호 이스케이프
-                story_context="(캐시 경로 — 설정 정보 미전달)"
+                story_context="(캐시 경로 — 설정 정보 미전달)",
             )
+            if not prompt:
+                return {
+                    "decision": "PASS",
+                    "conflicts": [],
+                    "summary": "Prompt loading failed: MANUSCRIPT_HISTORY_CONFLICT_PROMPT",
+                    "prompt_error": True,
+                }
 
             if cache_result.get("cache_name"):
-                response = self._d._ask_with_cached_context(
-                    cache_result["cache_name"],
-                    prompt,
-                    temperature=0.1
-                )
+                response = self._d._ask_with_cached_context(cache_result["cache_name"], prompt, temperature=0.1)
             else:
                 response = self._d.ask(prompt, temperature=0.1, thinking_level="low")
 
@@ -736,7 +742,7 @@ class DirectorContinuityValidator:
                 "decision": result.get("decision", "PASS"),
                 "conflicts": result.get("conflicts", []),
                 "summary": result.get("summary", ""),
-                "cache_used": cache_result.get("cached", False)
+                "cache_used": cache_result.get("cached", False),
             }
 
         except Exception as e:

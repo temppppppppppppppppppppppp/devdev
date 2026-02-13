@@ -1,0 +1,41 @@
+{"timestamp": "2026-02-11 13:00:46", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-11 13:01:08", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "items_tracked": 4}}
+{"timestamp": "2026-02-11 13:05:20", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["시작 위치 수정: '서울 테헤란로, SW인베스트먼트 오피스텔' → '서울 테헤란로, 임대 계약을 마친 10평 남짓한 오피스텔'"]}}
+{"timestamp": "2026-02-11 13:06:51", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-11 13:07:07", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "items_tracked": 6}}
+{"timestamp": "2026-02-11 13:10:01", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["시작 위치 수정: '서울 테헤란로, SW인베스트먼트 오피스텔' → '서울 강남구 오피스텔 (임시 거처) / HTS 모니터 앞'"]}}
+{"timestamp": "2026-02-11 13:11:22", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-11 13:11:39", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "items_tracked": 6}}
+{"timestamp": "2026-02-11 13:14:02", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-11 13:14:02", "type": "blueprint_success", "message": "ep_1_blueprint_generated", "data": {"ep_num": 1, "arc_no": 1, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-11 13:15:21", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-11 13:15:21", "type": "blueprint_success", "message": "ep_2_blueprint_generated", "data": {"ep_num": 2, "arc_no": 1, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-11 13:16:37", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-11 13:16:37", "type": "blueprint_success", "message": "ep_3_blueprint_generated", "data": {"ep_num": 3, "arc_no": 1, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-11 13:17:38", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-11 13:17:38", "type": "blueprint_success", "message": "ep_4_blueprint_generated", "data": {"ep_num": 4, "arc_no": 1, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-11 13:18:51", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-11 13:18:51", "type": "blueprint_success", "message": "ep_5_blueprint_generated", "data": {"ep_num": 5, "arc_no": 1, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-11 13:51:53", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-11 13:51:53", "type": "blueprint_success", "message": "ep_6_blueprint_generated", "data": {"ep_num": 6, "arc_no": 2, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-11 13:53:03", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-11 13:53:03", "type": "blueprint_success", "message": "ep_7_blueprint_generated", "data": {"ep_num": 7, "arc_no": 2, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-11 13:54:04", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-11 13:54:04", "type": "blueprint_success", "message": "ep_8_blueprint_generated", "data": {"ep_num": 8, "arc_no": 2, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-11 13:58:27", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-11 13:58:27", "type": "blueprint_success", "message": "ep_9_blueprint_generated", "data": {"ep_num": 9, "arc_no": 2, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-11 14:00:42", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-11 14:00:42", "type": "blueprint_success", "message": "ep_10_blueprint_generated", "data": {"ep_num": 10, "arc_no": 2, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-11 14:01:51", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-11 14:01:51", "type": "blueprint_success", "message": "ep_11_blueprint_generated", "data": {"ep_num": 11, "arc_no": 2, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-11 14:04:21", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-11 14:04:21", "type": "blueprint_success", "message": "ep_12_blueprint_generated", "data": {"ep_num": 12, "arc_no": 3, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-11 14:06:49", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-11 14:06:49", "type": "blueprint_success", "message": "ep_13_blueprint_generated", "data": {"ep_num": 13, "arc_no": 3, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-11 14:07:58", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-11 14:07:58", "type": "blueprint_success", "message": "ep_14_blueprint_generated", "data": {"ep_num": 14, "arc_no": 3, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-11 14:09:22", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-11 14:09:22", "type": "blueprint_success", "message": "ep_15_blueprint_generated", "data": {"ep_num": 15, "arc_no": 3, "strategy": "unknown", "score": 0}}
+{"timestamp": "2026-02-11 14:57:05", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-11 15:47:31", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-11 17:03:56", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}

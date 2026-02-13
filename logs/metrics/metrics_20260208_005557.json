@@ -1,0 +1,13 @@
+{
+  "session_id": "20260208_005557",
+  "start_time": "2026-02-08T00:55:57.074814",
+  "end_time": "2026-02-08T00:55:57.075830",
+  "total_calls": 0,
+  "successful_calls": 0,
+  "failed_calls": 0,
+  "total_retries": 0,
+  "total_tokens": 0,
+  "total_cost_usd": 0.0,
+  "agent_stats": {},
+  "model_stats": {}
+}

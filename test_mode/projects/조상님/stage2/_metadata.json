@@ -1,0 +1,302 @@
+{
+  "arc_001.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T17:48:54",
+    "length": 1804
+  },
+  "arc_002.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T17:50:19",
+    "length": 1865
+  },
+  "arc_003.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T17:51:34",
+    "length": 1714
+  },
+  "arc_004.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T17:52:50",
+    "length": 1670
+  },
+  "arc_005.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T17:54:05",
+    "length": 1626
+  },
+  "arc_006.txt": {
+    "model": "Pro",
+    "score": 85,
+    "timestamp": "2026-02-11T18:04:50",
+    "length": 1559
+  },
+  "arc_007.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T18:06:21",
+    "length": 2031
+  },
+  "arc_008.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T18:07:31",
+    "length": 1753
+  },
+  "arc_009.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T18:09:15",
+    "length": 1947
+  },
+  "arc_010.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T18:10:24",
+    "length": 1875
+  },
+  "arc_011.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T18:11:46",
+    "length": 1825
+  },
+  "arc_012.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T18:13:09",
+    "length": 1764
+  },
+  "arc_013.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T18:14:50",
+    "length": 1907
+  },
+  "arc_014.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T18:16:10",
+    "length": 1809
+  },
+  "arc_016.txt": {
+    "model": "Pro",
+    "score": 98,
+    "timestamp": "2026-02-11T19:32:05",
+    "length": 3129
+  },
+  "arc_017.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T19:57:14",
+    "length": 1826
+  },
+  "arc_018.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T19:58:59",
+    "length": 1828
+  },
+  "arc_019.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:00:32",
+    "length": 1741
+  },
+  "arc_020.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:02:02",
+    "length": 1803
+  },
+  "arc_021.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:03:36",
+    "length": 1658
+  },
+  "arc_022.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:04:51",
+    "length": 1761
+  },
+  "arc_023.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:06:15",
+    "length": 1673
+  },
+  "arc_024.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:07:31",
+    "length": 1573
+  },
+  "arc_025.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:12:21",
+    "length": 1710
+  },
+  "arc_026.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:14:22",
+    "length": 1903
+  },
+  "arc_027.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:16:03",
+    "length": 1800
+  },
+  "arc_028.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:17:09",
+    "length": 1790
+  },
+  "arc_029.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:18:20",
+    "length": 1661
+  },
+  "arc_030.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:26:42",
+    "length": 1824
+  },
+  "arc_031.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:28:32",
+    "length": 2100
+  },
+  "arc_032.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:30:16",
+    "length": 1839
+  },
+  "arc_033.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:31:56",
+    "length": 1883
+  },
+  "arc_034.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:33:24",
+    "length": 1741
+  },
+  "arc_035.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:34:32",
+    "length": 1780
+  },
+  "arc_036.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:35:45",
+    "length": 1801
+  },
+  "arc_037.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:37:02",
+    "length": 1698
+  },
+  "arc_038.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:38:16",
+    "length": 1784
+  },
+  "arc_039.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:39:26",
+    "length": 1641
+  },
+  "arc_040.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:40:55",
+    "length": 1792
+  },
+  "arc_041.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:42:18",
+    "length": 1828
+  },
+  "arc_042.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:43:35",
+    "length": 1745
+  },
+  "arc_043.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:44:54",
+    "length": 1696
+  },
+  "arc_044.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:46:11",
+    "length": 1676
+  },
+  "arc_045.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:47:21",
+    "length": 1643
+  },
+  "arc_046.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:48:41",
+    "length": 1674
+  },
+  "arc_047.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:50:00",
+    "length": 1699
+  },
+  "arc_048.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:51:20",
+    "length": 1650
+  },
+  "arc_049.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-11T20:54:13",
+    "length": 2406
+  },
+  "arc_050.txt": {
+    "model": "Pro",
+    "score": 100,
+    "timestamp": "2026-02-12T10:10:06",
+    "length": 2085
+  },
+  "arc_015.txt": {
+    "model": "Pro",
+    "score": 98,
+    "timestamp": "2026-02-12T10:22:43",
+    "length": 1845
+  }
+}

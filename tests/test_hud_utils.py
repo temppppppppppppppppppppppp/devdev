@@ -6,10 +6,11 @@ build_hud_context 함수의 3가지 variant(director, writer, blueprint) 테스�
 _build_director_npcs, _build_writer_npcs)도 간접 테스트.
 """
 
-import pytest
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock
+
+import pytest
 
 # 프로젝트 루트를 path에 추가
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -17,13 +18,14 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from modules.core.hud_utils import build_hud_context
 
-
 # ══════════════════════════════════════════════════════════════
 # Mock StateTracker & EpisodeState
 # ══════════════════════════════════════════════════════════════
 
+
 class MockEpisodeState:
     """테스트용 EpisodeState"""
+
     def __init__(self, state_dict):
         self._state_dict = state_dict
 
@@ -34,7 +36,7 @@ class MockEpisodeState:
 def make_state_tracker(episode_states=None, npc_registry=None):
     """테스트용 StateTracker-like 객체 생성"""
     tracker = MagicMock()
-    tracker.episode_states = episode_states or {}
+    tracker.states = episode_states or {}
     tracker.npc_registry = npc_registry or {}
     return tracker
 
@@ -42,6 +44,7 @@ def make_state_tracker(episode_states=None, npc_registry=None):
 # ══════════════════════════════════════════════════════════════
 # Fixtures
 # ══════════════════════════════════════════════════════════════
+
 
 @pytest.fixture
 def protagonist_state():
@@ -56,17 +59,10 @@ def protagonist_state():
         "status": "경상",
         "internal_energy": 70,
         "injuries": "왼팔 타박상",
-        "extra_fields": {
-            "reputation": "좋음",
-            "faction": "무림맹"
-        },
+        "extra_fields": {"reputation": "좋음", "faction": "무림맹"},
         "items": ["청풍검", "해독약", "경공화"],
         "weapons": ["파천검"],
-        "relationships": {
-            "노사부": "존경",
-            "철무련주": "적대",
-            "소녀": "호감"
-        },
+        "relationships": {"노사부": "존경", "철무련주": "적대", "소녀": "호감"},
         "realm": "후천경",
         "gold": 5000,
         "awakening_grade": "",
@@ -78,7 +74,13 @@ def protagonist_state():
 def npc_registry():
     """NPC 레지스트리"""
     return {
-        "노사부": {"status": "alive", "role": "스승", "location": "청풍산장", "faction": "무파", "relationship": "존경"},
+        "노사부": {
+            "status": "alive",
+            "role": "스승",
+            "location": "청풍산장",
+            "faction": "무파",
+            "relationship": "존경",
+        },
         "철무련주": {"status": "dead", "death_arc": 3, "role": "적"},
         "소녀": {"status": "alive", "role": "동료", "location": "무림맹", "faction": "무림맹", "relationship": "호감"},
         "혈마": {"status": "dead", "death_arc": 5, "role": "마교 교주"},
@@ -88,15 +90,14 @@ def npc_registry():
 @pytest.fixture
 def tracker_with_state(protagonist_state, npc_registry):
     """주인공 상태 + NPC 레지스트리가 있는 tracker"""
-    ep_states = {
-        4: MockEpisodeState(protagonist_state)
-    }
+    ep_states = {4: MockEpisodeState(protagonist_state)}
     return make_state_tracker(episode_states=ep_states, npc_registry=npc_registry)
 
 
 # ══════════════════════════════════════════════════════════════
 # Test 1: None StateTracker
 # ══════════════════════════════════════════════════════════════
+
 
 class TestNoneStateTracker:
     def test_director_none(self):
@@ -118,6 +119,7 @@ class TestNoneStateTracker:
 # ══════════════════════════════════════════════════════════════
 # Test 2: Director variant
 # ══════════════════════════════════════════════════════════════
+
 
 class TestDirectorVariant:
     def test_protagonist_fields(self, tracker_with_state):
@@ -162,6 +164,7 @@ class TestDirectorVariant:
 # Test 3: Writer variant
 # ══════════════════════════════════════════════════════════════
 
+
 class TestWriterVariant:
     def test_protagonist_core_fields(self, tracker_with_state):
         """Writer: 핵심 필드 포함"""
@@ -201,6 +204,7 @@ class TestWriterVariant:
 # Test 4: Blueprint variant
 # ══════════════════════════════════════════════════════════════
 
+
 class TestBlueprintVariant:
     def test_header_difference(self, tracker_with_state):
         """Blueprint: writer와 다른 헤더"""
@@ -213,6 +217,7 @@ class TestBlueprintVariant:
 # ══════════════════════════════════════════════════════════════
 # Test 5: Edge Cases
 # ══════════════════════════════════════════════════════════════
+
 
 class TestEdgeCases:
     def test_ep1_no_prev_state(self):

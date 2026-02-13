@@ -12,10 +12,10 @@ import re
 
 # [V60.10] 수여물 패턴 (main_a.py에서 이관)
 GRANT_PATTERNS_COMPILED = [
-    (re.compile(r'([가-힣]+패)[를을]?\s*(?:하사|수여|받|얻)'), '패'),
-    (re.compile(r'([가-힣]+권)[를을]?\s*(?:위임|부여|받|얻|하사)'), '권'),
-    (re.compile(r'([가-힣]+직|[가-힣]+장)[에으로]?\s*(?:임명|취임|올|받)'), '직위'),
-    (re.compile(r'((?:[가-힣]+\s*)?인장)[를을]?\s*(?:받|하사|수여)'), '인장'),
+    (re.compile(r"([가-힣]+패)[를을]?\s*(?:하사|수여|받|얻)"), "패"),
+    (re.compile(r"([가-힣]+권)[를을]?\s*(?:위임|부여|받|얻|하사)"), "권"),
+    (re.compile(r"([가-힣]+직|[가-힣]+장)[에으로]?\s*(?:임명|취임|올|받)"), "직위"),
+    (re.compile(r"((?:[가-힣]+\s*)?인장)[를을]?\s*(?:받|하사|수여)"), "인장"),
 ]
 
 
@@ -62,7 +62,7 @@ class PromptBuilder:
         lines = ["[V60.5 아크 위치 기반 가이드]"]
 
         if arc_pos == 1:
-            lines.append(f"📍 현재 위치: 아크 제1화 (도입부)")
+            lines.append("📍 현재 위치: 아크 제1화 (도입부)")
             lines.append("")
             lines.append("🎯 이 화의 역할:")
             lines.append("  - 새로운 사건/갈등의 시작점 설정")
@@ -92,7 +92,7 @@ class PromptBuilder:
             lines.append("💡 서사 밀도가 가장 높아야 하는 구간. 사건을 풍부하게 전개하라.")
 
         elif arc_pos == total_eps:
-            lines.append(f"📍 현재 위치: 아크 마지막 화 (절정/결말)")
+            lines.append("📍 현재 위치: 아크 마지막 화 (절정/결말)")
             lines.append("")
             lines.append("🎯 이 화의 역할:")
             lines.append("  - 이 아크의 핵심 갈등 해결")
@@ -122,7 +122,7 @@ class PromptBuilder:
         if not blueprint or not isinstance(blueprint, dict):
             return ""
 
-        scene_breakdown = blueprint.get('scene_breakdown', {})
+        scene_breakdown = blueprint.get("scene_breakdown", {})
         if not scene_breakdown:
             return ""
 
@@ -155,7 +155,7 @@ class PromptBuilder:
 
         for scene_key in front_scenes:
             scene_data = scene_breakdown.get(scene_key, {})
-            scene_title = scene_data.get('title', scene_key) if isinstance(scene_data, dict) else scene_key
+            scene_title = scene_data.get("title", scene_key) if isinstance(scene_data, dict) else scene_key
             lines.append(f"  - {scene_key}: 약 {front_per_scene}자 ('{scene_title[:20]}...')")
 
         lines.append("")
@@ -163,15 +163,10 @@ class PromptBuilder:
 
         for scene_key in back_scenes:
             scene_data = scene_breakdown.get(scene_key, {})
-            scene_title = scene_data.get('title', scene_key) if isinstance(scene_data, dict) else scene_key
+            scene_title = scene_data.get("title", scene_key) if isinstance(scene_data, dict) else scene_key
             lines.append(f"  - {scene_key}: 최소 {back_per_scene}자 이상 ('{scene_title[:20]}...')")
 
-        lines.extend([
-            "",
-            "⚠️ 경고: 후반부가 전반부보다 요약되면 REJECT됩니다!",
-            "=" * 50,
-            ""
-        ])
+        lines.extend(["", "⚠️ 경고: 후반부가 전반부보다 요약되면 REJECT됩니다!", "=" * 50, ""])
 
         return "\n".join(lines)
 
@@ -180,13 +175,22 @@ class PromptBuilder:
         if not blueprint or not isinstance(blueprint, dict):
             return ""
 
-        relationship_changes = blueprint.get('relationship_changes', [])
+        relationship_changes = blueprint.get("relationship_changes", [])
         if not relationship_changes:
             return ""
 
         STATE_PRIORITY = {
-            "멸시": 0, "적대": 1, "무시": 2, "의심": 3, "경계": 4,
-            "중립": 5, "호기심": 6, "경외": 7, "호감": 8, "충성": 9, "추종": 10
+            "멸시": 0,
+            "적대": 1,
+            "무시": 2,
+            "의심": 3,
+            "경계": 4,
+            "중립": 5,
+            "호기심": 6,
+            "경외": 7,
+            "호감": 8,
+            "충성": 9,
+            "추종": 10,
         }
 
         JUSTIFICATION_PATTERNS = {
@@ -204,9 +208,9 @@ class PromptBuilder:
             if not isinstance(change, dict):
                 continue
 
-            target = change.get('target', '알수없음')
-            from_state = change.get('from', '')
-            to_state = change.get('to', '')
+            target = change.get("target", "알수없음")
+            from_state = change.get("from", "")
+            to_state = change.get("to", "")
 
             from_priority = STATE_PRIORITY.get(from_state, 5)
             to_priority = STATE_PRIORITY.get(to_state, 5)
@@ -222,21 +226,23 @@ class PromptBuilder:
                 justifications = JUSTIFICATION_PATTERNS.get(key, ["강력한 서사적 근거 필요"])
 
                 guide = [
-                    f"",
+                    "",
                     f"📌 '{target}' 관계 전환: {from_state} → {to_state} ({jump_size}단계 점프)",
-                    f"   ⚠️ 급격한 전환은 REJECT 사유입니다!",
-                    f"",
-                    f"   권장 단계적 전환:",
+                    "   ⚠️ 급격한 전환은 REJECT 사유입니다!",
+                    "",
+                    "   권장 단계적 전환:",
                 ]
 
                 if intermediate_states:
                     for i, state in enumerate(intermediate_states[:2]):
-                        guide.append(f"     {i+1}. {from_state} → {state}: [정당화 이유 작성]")
-                    guide.append(f"     {len(intermediate_states[:2])+1}. {intermediate_states[-1] if intermediate_states else from_state} → {to_state}: [정당화 이유 작성]")
+                        guide.append(f"     {i + 1}. {from_state} → {state}: [정당화 이유 작성]")
+                    guide.append(
+                        f"     {len(intermediate_states[:2]) + 1}. {intermediate_states[-1] if intermediate_states else from_state} → {to_state}: [정당화 이유 작성]"
+                    )
                 else:
                     guide.append(f"     1. {from_state} → {to_state}: [강력한 정당화 필요]")
 
-                guide.append(f"")
+                guide.append("")
                 guide.append(f"   정당화 예시: {', '.join(justifications)}")
 
                 jump_guides.append("\n".join(guide))
@@ -251,11 +257,7 @@ class PromptBuilder:
             "=" * 50,
         ]
 
-        footer = [
-            "",
-            "=" * 50,
-            ""
-        ]
+        footer = ["", "=" * 50, ""]
 
         return "\n".join(header + jump_guides + footer)
 
@@ -267,10 +269,10 @@ class PromptBuilder:
         current_skills = []
 
         if blueprint and isinstance(blueprint, dict):
-            protagonist_state = blueprint.get('protagonist_state', {})
+            protagonist_state = blueprint.get("protagonist_state", {})
             if isinstance(protagonist_state, dict):
-                current_inventory = protagonist_state.get('inventory', [])
-                current_skills = protagonist_state.get('skills', []) or protagonist_state.get('martial_arts', [])
+                current_inventory = protagonist_state.get("inventory", [])
+                current_skills = protagonist_state.get("skills", []) or protagonist_state.get("martial_arts", [])
 
         item_timeline = {}
         skill_timeline = {}
@@ -279,11 +281,11 @@ class PromptBuilder:
             for eb in episode_bibles:
                 if not isinstance(eb, dict):
                     continue
-                ep_num = eb.get('ep_num', 0)
-                new_items = eb.get('new_items', [])
+                ep_num = eb.get("ep_num", 0)
+                new_items = eb.get("new_items", [])
                 if isinstance(new_items, list):
                     for item in new_items:
-                        item_name = item.get('name', item) if isinstance(item, dict) else str(item)
+                        item_name = item.get("name", item) if isinstance(item, dict) else str(item)
                         if item_name and item_name not in item_timeline:
                             item_timeline[item_name] = ep_num
 
@@ -301,7 +303,7 @@ class PromptBuilder:
             lines.append("")
             lines.append("📦 현재 소지 아이템:")
             for item in current_inventory[:10]:
-                item_name = item.get('name', item) if isinstance(item, dict) else str(item)
+                item_name = item.get("name", item) if isinstance(item, dict) else str(item)
                 acquired_ep = item_timeline.get(item_name, "?")
                 lines.append(f"  - {item_name} (제{acquired_ep}화 획득)")
             lines.append("")
@@ -311,17 +313,13 @@ class PromptBuilder:
             lines.append("")
             lines.append("⚔️ 습득 무공:")
             for skill in current_skills[:10]:
-                skill_name = skill.get('name', skill) if isinstance(skill, dict) else str(skill)
+                skill_name = skill.get("name", skill) if isinstance(skill, dict) else str(skill)
                 acquired_ep = skill_timeline.get(skill_name, "기본")
                 lines.append(f"  - {skill_name} (제{acquired_ep}화 습득)")
             lines.append("")
             lines.append("⚠️ 미습득 무공/비급 사용은 REJECT됩니다!")
 
-        lines.extend([
-            "",
-            "=" * 50,
-            ""
-        ])
+        lines.extend(["", "=" * 50, ""])
 
         return "\n".join(lines)
 
@@ -333,16 +331,16 @@ class PromptBuilder:
         start_location = ""
 
         if blueprint and isinstance(blueprint, dict):
-            time_flow = blueprint.get('time_flow', '')
-            start_location = blueprint.get('start_location', '') or blueprint.get('location', '')
+            time_flow = blueprint.get("time_flow", "")
+            start_location = blueprint.get("start_location", "") or blueprint.get("location", "")
 
         prev_time = ""
         prev_location = ""
 
         if prev_manuscript:
             time_patterns = [
-                r'(다음\s*날|그날\s*밤|새벽|아침|정오|저녁|밤|자정|해질\s*무렵)',
-                r'(\d+일\s*후|\d+일\s*뒤|며칠\s*후|한\s*달\s*후)',
+                r"(다음\s*날|그날\s*밤|새벽|아침|정오|저녁|밤|자정|해질\s*무렵)",
+                r"(\d+일\s*후|\d+일\s*뒤|며칠\s*후|한\s*달\s*후)",
             ]
             for pattern in time_patterns:
                 matches = re.findall(pattern, prev_manuscript[-2000:])
@@ -351,7 +349,7 @@ class PromptBuilder:
                     break
 
             location_patterns = [
-                r'(객잔|주막|산장|동굴|광장|저택|성문|시장|숲|산|강가|절벽|무림맹|사파)',
+                r"(객잔|주막|산장|동굴|광장|저택|성문|시장|숲|산|강가|절벽|무림맹|사파)",
             ]
             for pattern in location_patterns:
                 matches = re.findall(pattern, prev_manuscript[-2000:])
@@ -385,16 +383,18 @@ class PromptBuilder:
             if start_location:
                 lines.append(f"  - 시작 장소: {start_location}")
 
-        lines.extend([
-            "",
-            "⚠️ 시간/공간 연속성 주의사항:",
-            "  - 순간이동 금지 (장소 이동 시 이동 과정 묘사)",
-            "  - 시간 역행 금지 (이전 화보다 과거 시점 불가)",
-            "  - 같은 날 과다 이벤트 주의 (하루에 대형 사건 2개 이상 지양)",
-            "",
-            "=" * 50,
-            ""
-        ])
+        lines.extend(
+            [
+                "",
+                "⚠️ 시간/공간 연속성 주의사항:",
+                "  - 순간이동 금지 (장소 이동 시 이동 과정 묘사)",
+                "  - 시간 역행 금지 (이전 화보다 과거 시점 불가)",
+                "  - 같은 날 과다 이벤트 주의 (하루에 대형 사건 2개 이상 지양)",
+                "",
+                "=" * 50,
+                "",
+            ]
+        )
 
         return "\n".join(lines)
 
@@ -418,22 +418,24 @@ class PromptBuilder:
             "=" * 50,
             "",
             "🚫 과다 사용 금지 표현 (1000자당 3회 미만 유지):",
-            ""
+            "",
         ]
 
         for cliche, alternatives in list(CLICHE_ALTERNATIVES.items())[:8]:
             lines.append(f"  '{cliche}' → {', '.join(alternatives[:2])}")
 
-        lines.extend([
-            "",
-            "💡 클리셰 회피 원칙:",
-            "  1. 감정을 직접 서술하지 말고 행동/반응으로 보여주기",
-            "  2. 동일 표현 연속 사용 금지 (최소 500자 간격)",
-            "  3. 신체 반응 묘사 다양화 (심장/눈/피 외에 다른 부위)",
-            "",
-            "=" * 50,
-            ""
-        ])
+        lines.extend(
+            [
+                "",
+                "💡 클리셰 회피 원칙:",
+                "  1. 감정을 직접 서술하지 말고 행동/반응으로 보여주기",
+                "  2. 동일 표현 연속 사용 금지 (최소 500자 간격)",
+                "  3. 신체 반응 묘사 다양화 (심장/눈/피 외에 다른 부위)",
+                "",
+                "=" * 50,
+                "",
+            ]
+        )
 
         return "\n".join(lines)
 
@@ -443,7 +445,7 @@ class PromptBuilder:
         prev_manuscript: str = "",
         episode_bibles: list = None,
         cliche_check_result: dict = None,
-        target_len: int = 5000
+        target_len: int = 5000,
     ) -> str:
         """
         [V60.8] Writer 사전 가이드 통합 생성
@@ -479,22 +481,18 @@ class PromptBuilder:
 
     def generate_self_diagnosis_checklist(self, blueprint: dict) -> str:
         """[V60.5] Writer 자가 진단 체크리스트 생성"""
-        lines = [
-            "[V60.5 자가 진단 체크리스트 - 제출 전 필수 확인]",
-            "원고 제출 전 아래 항목을 스스로 점검하라:",
-            ""
-        ]
+        lines = ["[V60.5 자가 진단 체크리스트 - 제출 전 필수 확인]", "원고 제출 전 아래 항목을 스스로 점검하라:", ""]
 
         scene_count = 6
         if blueprint and isinstance(blueprint, dict):
-            scene_breakdown = blueprint.get('scene_breakdown', {})
+            scene_breakdown = blueprint.get("scene_breakdown", {})
             scene_count = len(scene_breakdown) if scene_breakdown else 6
 
-        lines.append(f"📏 분량: 4,500자 이상 목표 (4,000자 미만 = 즉시 REJECT)")
+        lines.append("📏 분량: 4,500자 이상 목표 (4,000자 미만 = 즉시 REJECT)")
         lines.append(f"🎬 장면: {scene_count}개 씬 모두 균등 반영 (앞만 상세하고 뒤 요약 금지)")
-        lines.append(f"🔄 흐름: 서사 폭주(1~2장면에 해결) 또는 정체(3장면+ 반복) 금지")
-        lines.append(f"⚙️ 설정: 미습득 무공 사용 금지, 핵심 인물 이름 유지")
-        lines.append(f"✍️ 문체: 대화 4개+, 감각 묘사 포함, 시점 전환 활용")
+        lines.append("🔄 흐름: 서사 폭주(1~2장면에 해결) 또는 정체(3장면+ 반복) 금지")
+        lines.append("⚙️ 설정: 미습득 무공 사용 금지, 핵심 인물 이름 유지")
+        lines.append("✍️ 문체: 대화 4개+, 감각 묘사 포함, 시점 전환 활용")
         lines.append("")
         lines.append("⚠️ 3개 이상 미충족 시 REJECT 확률 80%")
 
@@ -504,11 +502,7 @@ class PromptBuilder:
     # [V60.10] Arc 컨텍스트 — App-dependent (StateExtractor, 캐시)
     # ═══════════════════════════════════════════════════════════════════════
 
-    def generate_arc_context_v60(
-        self,
-        all_refined_arcs: list,
-        current_arc_no: int = None
-    ) -> str:
+    def generate_arc_context_v60(self, all_refined_arcs: list, current_arc_no: int = None) -> str:
         """
         [V60.10] StateExtractor를 활용한 Arc 컨텍스트 생성
 
@@ -519,11 +513,10 @@ class PromptBuilder:
             return "서사 시작점"
 
         try:
-            state_extractor = self._app.agents.get('state_extractor')
+            state_extractor = self._app.agents.get("state_extractor")
             if state_extractor:
                 arc_count = len(all_refined_arcs)
-                if (self._app._cumulative_state_cache is not None and
-                        self._app._cumulative_state_cache_key == arc_count):
+                if self._app._cumulative_state_cache is not None and self._app._cumulative_state_cache_key == arc_count:
                     cumulative_state = self._app._cumulative_state_cache
                 else:
                     cumulative_state = state_extractor.extract_cumulative_state(all_refined_arcs)
@@ -532,17 +525,21 @@ class PromptBuilder:
 
                 constraint_prompt = state_extractor.generate_constraint_prompt(cumulative_state)
 
-                self._app._audit_event("v60_10_state_extracted", "StateExtractor generated context", {
-                    "arc_count": arc_count,
-                    "items_tracked": len(cumulative_state.get('inventory', {}).get('current_items', []))
-                })
+                self._app._audit_event(
+                    "v60_10_state_extracted",
+                    "StateExtractor generated context",
+                    {
+                        "arc_count": arc_count,
+                        "items_tracked": len(cumulative_state.get("inventory", {}).get("current_items", [])),
+                    },
+                )
 
                 return constraint_prompt
 
         except Exception as se_err:
-            self._app._audit_event("v60_10_state_extractor_error", "StateExtractor failed, using fallback", {
-                "error": str(se_err)[:100]
-            })
+            self._app._audit_event(
+                "v60_10_state_extractor_error", "StateExtractor failed, using fallback", {"error": str(se_err)[:100]}
+            )
             self._app.ui.log(f"      ⚠️ [V60.10] StateExtractor 실패, Python 폴백 사용: {str(se_err)[:50]}")
 
         return self.generate_arc_context_fallback(all_refined_arcs)
@@ -550,10 +547,10 @@ class PromptBuilder:
     def generate_arc_context_fallback(self, all_refined_arcs: list) -> str:
         """[V60.10] StateExtractor 실패 시 Python 기반 폴백"""
         last_arc = all_refined_arcs[-1]
-        joint_docs = last_arc.get('joint_docs', {})
-        status_shadow = last_arc.get('status_shadow', {})
-        state_constraints = last_arc.get('state_constraints', {})
-        arc_end_state = state_constraints.get('arc_end_state', {})
+        joint_docs = last_arc.get("joint_docs", {})
+        status_shadow = last_arc.get("status_shadow", {})
+        state_constraints = last_arc.get("state_constraints", {})
+        arc_end_state = state_constraints.get("arc_end_state", {})
 
         all_acquired_items = []
         _seen_item_names = set()
@@ -561,18 +558,18 @@ class PromptBuilder:
         _seen_grant_names = set()
 
         for prev_arc in all_refined_arcs:
-            arc_label = prev_arc.get('arc_no', '?')
+            arc_label = prev_arc.get("arc_no", "?")
 
-            state_constraints = prev_arc.get('state_constraints', {})
-            items_acquired = state_constraints.get('items_acquired', [])
+            state_constraints = prev_arc.get("state_constraints", {})
+            items_acquired = state_constraints.get("items_acquired", [])
             if items_acquired:
                 for item in items_acquired:
                     if item and item not in _seen_item_names:
                         _seen_item_names.add(item)
                         all_acquired_items.append(f"Arc{arc_label}: {item}")
 
-            prev_joint = prev_arc.get('joint_docs', {})
-            prev_inventory = prev_joint.get('physical_inventory', [])
+            prev_joint = prev_arc.get("joint_docs", {})
+            prev_inventory = prev_joint.get("physical_inventory", [])
             if isinstance(prev_inventory, list):
                 for item in prev_inventory:
                     if item and item not in _seen_item_names:
@@ -583,7 +580,7 @@ class PromptBuilder:
                     _seen_item_names.add(prev_inventory)
                     all_acquired_items.append(f"Arc{arc_label}: {prev_inventory}")
 
-            tactical = prev_arc.get('tactical_doc', '')
+            tactical = prev_arc.get("tactical_doc", "")
             for pattern_compiled, suffix in GRANT_PATTERNS_COMPILED:
                 matches = pattern_compiled.findall(tactical)
                 for match in matches:
@@ -592,17 +589,17 @@ class PromptBuilder:
                         _seen_grant_names.add(grant_item)
                         all_grants_received.append(f"Arc{arc_label}: {grant_item}")
 
-        korean_hal = {'일': 10, '이': 20, '삼': 30, '사': 40, '오': 50, '육': 60, '칠': 70, '팔': 80, '구': 90}
-        korean_pun = {'일': 1, '이': 2, '삼': 3, '사': 4, '오': 5, '육': 6, '칠': 7, '팔': 8, '구': 9}
+        korean_hal = {"일": 10, "이": 20, "삼": 30, "사": 40, "오": 50, "육": 60, "칠": 70, "팔": 80, "구": 90}
+        korean_pun = {"일": 1, "이": 2, "삼": 3, "사": 4, "오": 5, "육": 6, "칠": 7, "팔": 8, "구": 9}
 
         total_energy_consumed = 0
         energy_history = []
 
         for prev_arc in all_refined_arcs:
-            prev_status = prev_arc.get('status_shadow', {})
-            energy_loss_str = str(prev_status.get('internal_energy_loss', '0%'))
+            prev_status = prev_arc.get("status_shadow", {})
+            energy_loss_str = str(prev_status.get("internal_energy_loss", "0%"))
 
-            match = re.search(r'(\d+)%', energy_loss_str)
+            match = re.search(r"(\d+)%", energy_loss_str)
             if match:
                 loss = int(match.group(1))
                 total_energy_consumed += loss
@@ -610,32 +607,32 @@ class PromptBuilder:
             else:
                 loss = 0
                 for k, v in korean_hal.items():
-                    if f'{k}할' in energy_loss_str or f'{k} 할' in energy_loss_str:
+                    if f"{k}할" in energy_loss_str or f"{k} 할" in energy_loss_str:
                         loss += v
                         break
                 for k, v in korean_pun.items():
-                    if f'{k}푼' in energy_loss_str or f'{k} 푼' in energy_loss_str:
+                    if f"{k}푼" in energy_loss_str or f"{k} 푼" in energy_loss_str:
                         loss += v
                         break
                 if loss > 0:
                     total_energy_consumed += loss
                     energy_history.append(f"Arc{prev_arc.get('arc_no')}: -{loss}%")
 
-        final_energy = arc_end_state.get('internal_energy')
+        final_energy = arc_end_state.get("internal_energy")
         if final_energy is None:
             final_energy = max(0, 100 - total_energy_consumed)
 
         try:
-            final_energy = int(str(final_energy).replace('%', '').strip())
+            final_energy = int(str(final_energy).replace("%", "").strip())
         except (ValueError, TypeError):
             final_energy = 50
 
         if final_energy < 10:
             final_energy = max(10, final_energy)
 
-        final_injuries = arc_end_state.get('injuries') or status_shadow.get('expected_injuries', '없음')
-        final_location = arc_end_state.get('location') or joint_docs.get('final_location', '알 수 없음')
-        final_equipment = arc_end_state.get('equipment') or joint_docs.get('physical_inventory', '알 수 없음')
+        final_injuries = arc_end_state.get("injuries") or status_shadow.get("expected_injuries", "없음")
+        final_location = arc_end_state.get("location") or joint_docs.get("final_location", "알 수 없음")
+        final_equipment = arc_end_state.get("equipment") or joint_docs.get("physical_inventory", "알 수 없음")
 
         acquired_items_str = "\n   ".join(all_acquired_items) if all_acquired_items else "없음"
         grants_str = "\n   ".join(all_grants_received) if all_grants_received else "없음"
@@ -687,52 +684,52 @@ class PromptBuilder:
         # [V65] V50.1 tension_manager, V50.2 dialogue_engine, V50.3 subplot_weaver 삭제 (Dead Code)
 
         # V51.1: 호흡 가이드
-        pacing_analyzer = getattr(app, 'pacing_analyzer', None)
-        if pacing_analyzer and getattr(pacing_analyzer, 'history', None):
+        pacing_analyzer = getattr(app, "pacing_analyzer", None)
+        if pacing_analyzer and getattr(pacing_analyzer, "history", None):
             try:
                 pacing_prompt = pacing_analyzer.generate_pacing_prompt()
                 if pacing_prompt:
                     prompts.append(pacing_prompt)
-            except Exception:
-                pass
+            except Exception as e:
+                logging.warning(f"⚠️ [V64.P4-fix] pacing_analyzer 프롬프트 생성 실패: {e}")
 
         # V51.5: 캐릭터 음성 가이드
-        character_voice = getattr(app, 'character_voice', None)
-        if character_voice and getattr(character_voice, 'profiles', None):
+        character_voice = getattr(app, "character_voice", None)
+        if character_voice and getattr(character_voice, "profiles", None):
             try:
                 voice_prompt = character_voice.get_writer_injection()
                 if voice_prompt:
                     prompts.append(voice_prompt)
-            except Exception:
-                pass
+            except Exception as e:
+                logging.warning(f"⚠️ [V64.P4-fix] character_voice 프롬프트 생성 실패: {e}")
 
         # V51.6: 복선 관리 가이드
-        foreshadow_tracker = getattr(app, 'foreshadow_tracker', None)
+        foreshadow_tracker = getattr(app, "foreshadow_tracker", None)
         if foreshadow_tracker:
             try:
                 foreshadow_prompt = foreshadow_tracker.generate_writer_prompt(ep_num)
                 if foreshadow_prompt:
                     prompts.append(foreshadow_prompt)
-            except Exception:
-                pass
+            except Exception as e:
+                logging.warning(f"⚠️ [V64.P4-fix] foreshadow_tracker 프롬프트 생성 실패: {e}")
 
         # V52.3: 씬별 전문가 가이드
-        expert_mixture = getattr(app, 'expert_mixture', None)
+        expert_mixture = getattr(app, "expert_mixture", None)
         if expert_mixture and blueprint:
             try:
                 expert_prompt = expert_mixture.generate_writer_injection(blueprint)
                 if expert_prompt:
                     prompts.append(expert_prompt)
-            except Exception:
-                pass
+            except Exception as e:
+                logging.warning(f"⚠️ [V64.P4-fix] expert_mixture 프롬프트 생성 실패: {e}")
 
         # [V60.5] 자가 진단 체크리스트
         try:
             self_diagnosis = self.generate_self_diagnosis_checklist(blueprint)
             if self_diagnosis:
                 prompts.append(self_diagnosis)
-        except Exception:
-            pass
+        except Exception as e:
+            logging.warning(f"⚠️ [V64.P4-fix] self_diagnosis 프롬프트 생성 실패: {e}")
 
         if prompts:
             return "\n\n".join(prompts)
@@ -780,15 +777,15 @@ class PromptBuilder:
                 if not ep_bible:
                     continue
 
-                new_items = ep_bible.get('new_items', [])
+                new_items = ep_bible.get("new_items", [])
                 if new_items:
                     # [V66] dict/str 양쪽 호환 처리
                     if isinstance(new_items, list):
                         item_parts = []
                         for item in new_items:
                             if isinstance(item, dict):
-                                name = item.get('name', str(item))
-                                desc = item.get('description', '')
+                                name = item.get("name", str(item))
+                                desc = item.get("description", "")
                                 item_parts.append(f"{name}({desc})" if desc else name)
                             else:
                                 item_parts.append(str(item))
@@ -797,13 +794,12 @@ class PromptBuilder:
                         items_str = str(new_items)
                     timeline_lines.append(f"제{ep}화: {items_str} 획득")
 
-                lost_items = ep_bible.get('lost_items', [])
+                lost_items = ep_bible.get("lost_items", [])
                 if lost_items:
                     # [V70] dict 타입 방어 (new_items 처리와 동일 패턴)
                     if isinstance(lost_items, list):
                         lost_str = ", ".join(
-                            item.get('name', str(item)) if isinstance(item, dict) else str(item)
-                            for item in lost_items
+                            item.get("name", str(item)) if isinstance(item, dict) else str(item) for item in lost_items
                         )
                     else:
                         lost_str = str(lost_items)
@@ -831,63 +827,62 @@ class PromptBuilder:
     # [V45] 검증 컨텍스트 / NPC 헬퍼 — App-dependent (DB/Bible)
     # ═══════════════════════════════════════════════════════════════════════
 
-    def build_validation_context(self, ep_num: int, blueprint: dict = None,
-                                  mode: str = 'MANUSCRIPT', blueprint_text: str = '') -> dict:
+    def build_validation_context(
+        self, ep_num: int, blueprint: dict = None, mode: str = "MANUSCRIPT", blueprint_text: str = ""
+    ) -> dict:
         """
         [V45] BlockingValidator용 validation_context 구성
         """
         context = {
-            'mode': mode,
-            'encyclopedia': {},
-            'martial_hud': {},
-            'blueprint': blueprint or {},
-            'blueprint_text': blueprint_text,
-            'history': [],
-            'npc_profiles': {},
-            'pov': ''  # [V70] 시점 정보
+            "mode": mode,
+            "encyclopedia": {},
+            "martial_hud": {},
+            "blueprint": blueprint or {},
+            "blueprint_text": blueprint_text,
+            "history": [],
+            "npc_profiles": {},
+            "pov": "",  # [V70] 시점 정보
         }
 
         try:
             app = self._app
 
             # 1. Encyclopedia 구성
-            if hasattr(app.sys, 'lore') and app.sys.lore:
-                context['encyclopedia'] = app.sys.lore.build_validation_encyclopedia()
+            if hasattr(app.sys, "lore") and app.sys.lore:
+                context["encyclopedia"] = app.sys.lore.build_validation_encyclopedia()
 
             # 2. Martial HUD 구성
-            if hasattr(app.sys, 'hud') and app.sys.hud:
+            if hasattr(app.sys, "hud") and app.sys.hud:
                 hud_data = app.sys.hud.pro_root
-                context['martial_hud'] = {
-                    'actual_truth': app.sys.hud.pro_data
-                }
+                context["martial_hud"] = {"actual_truth": app.sys.hud.pro_data}
 
             # 3. 최근 히스토리 추출
             if app.current_project:
                 causal_summary = app.current_project.get_causal_history_summary()
                 if causal_summary:
-                    context['history'] = [{'summary': causal_summary}]
+                    context["history"] = [{"summary": causal_summary}]
 
             # 4. NPC 프로필 추출
             if app.current_project:
-                bible = app.current_project.master_bible.get('MasterBible', {})
-                asset_lib = bible.get('AssetLibrary', {})
-                npc_lib = asset_lib.get('KeyNPCs', []) or asset_lib.get('Key_NPCs', [])
+                bible = app.current_project.master_bible.get("MasterBible", {})
+                asset_lib = bible.get("AssetLibrary", {})
+                npc_lib = asset_lib.get("KeyNPCs", []) or asset_lib.get("Key_NPCs", [])
                 for npc in npc_lib:
-                    npc_name = npc.get('name', '') or npc.get('Name', '')
+                    npc_name = npc.get("name", "") or npc.get("Name", "")
                     if npc_name:
-                        context['npc_profiles'][npc_name] = npc
+                        context["npc_profiles"][npc_name] = npc
 
             # 5. [V70] POV 추출
             try:
-                _bible_root = app.current_project.master_bible.get('MasterBible', {})
-                context['pov'] = _bible_root.get('protagonist_config', {}).get('pov', '')
+                _bible_root = app.current_project.master_bible.get("MasterBible", {})
+                context["pov"] = _bible_root.get("protagonist_config", {}).get("pov", "")
             except Exception:
                 pass
 
         except Exception as e:
             # [V70] app이 None일 수 있으므로 안전하게 로깅
             try:
-                if app and hasattr(app, 'ui') and app.ui:
+                if app and hasattr(app, "ui") and app.ui:
                     app.ui.log(f"⚠️ [Validation Context] 구성 중 오류 (비치명적): {e}")
                 else:
                     logging.warning(f"⚠️ [Validation Context] 구성 중 오류 (비치명적): {e}")
@@ -902,12 +897,12 @@ class PromptBuilder:
         if not self._app.current_project:
             return npcs
 
-        bible = self._app.current_project.master_bible.get('MasterBible', {})
-        npc_lib = bible.get('AssetLibrary', {}).get('Key_NPCs', [])
+        bible = self._app.current_project.master_bible.get("MasterBible", {})
+        npc_lib = bible.get("AssetLibrary", {}).get("Key_NPCs", [])
 
         arc_text = json.dumps(arc_data, ensure_ascii=False) if arc_data else ""
         for npc in npc_lib:
-            npc_name = npc.get('name', '') or npc.get('Name', '')
+            npc_name = npc.get("name", "") or npc.get("Name", "")
             if npc_name and npc_name in arc_text:
                 npcs[npc_name] = npc
 
@@ -919,17 +914,17 @@ class PromptBuilder:
         if not self._app.current_project:
             return traits
 
-        bible = self._app.current_project.master_bible.get('MasterBible', {})
+        bible = self._app.current_project.master_bible.get("MasterBible", {})
 
-        for npc in bible.get('AssetLibrary', {}).get('Key_NPCs', []):
-            npc_name = npc.get('name', '') or npc.get('Name', '')
+        for npc in bible.get("AssetLibrary", {}).get("Key_NPCs", []):
+            npc_name = npc.get("name", "") or npc.get("Name", "")
             if npc_name:
                 traits[npc_name] = {
-                    'personality': npc.get('personality', npc.get('Personality', '')),
-                    'intelligence': npc.get('intelligence', 'normal'),
-                    'martial_level': npc.get('NPC_Martial_HUD', {}).get('realm', '알 수 없음'),
-                    'faction': npc.get('faction', npc.get('Faction', '')),
-                    'role': npc.get('role', npc.get('Role', ''))
+                    "personality": npc.get("personality", npc.get("Personality", "")),
+                    "intelligence": npc.get("intelligence", "normal"),
+                    "martial_level": npc.get("NPC_Martial_HUD", {}).get("realm", "알 수 없음"),
+                    "faction": npc.get("faction", npc.get("Faction", "")),
+                    "role": npc.get("role", npc.get("Role", "")),
                 }
 
         return traits

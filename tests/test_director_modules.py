@@ -8,11 +8,11 @@ Comprehensive unit tests for the Director facade and its 5 sub-modules:
 - DirectorQualityAuditor (director_auditor.py)
 """
 
-import pytest
-import json
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -22,18 +22,14 @@ sys.path.insert(0, str(PROJECT_ROOT))
 # Fixtures
 # ═══════════════════════════════════════════════════════════════
 
+
 @pytest.fixture
 def mock_context():
     """Minimal ProjectContext mock."""
     context = MagicMock()
     context.author_directives = ""
     context.master_bible = {
-        "MasterBible": {
-            "protagonist_config": {
-                "world_origin": "현대인",
-                "incarnation_type": "기타"
-            }
-        }
+        "MasterBible": {"protagonist_config": {"world_origin": "현대인", "incarnation_type": "기타"}}
     }
     context.project_name = "test_project"
     # DB mock
@@ -55,6 +51,7 @@ def director(mock_context, mock_client):
     """Create Director instance with mocked dependencies."""
     with patch.dict("os.environ", {"GOOGLE_API_KEY": "test-key-123"}):
         from modules.domain.agents.director import Director
+
         d = Director(context=mock_context, client=mock_client, model_tier="gemini-2.5-flash")
         return d
 
@@ -63,6 +60,7 @@ def director(mock_context, mock_client):
 def grading_system():
     """Standalone DirectorGradingSystem instance."""
     from modules.domain.agents.director_grading import DirectorGradingSystem
+
     return DirectorGradingSystem()
 
 
@@ -70,16 +68,14 @@ def grading_system():
 def caching_manager(mock_client, mock_context):
     """Standalone DirectorCachingManager instance."""
     from modules.domain.agents.director_caching import DirectorCachingManager
-    return DirectorCachingManager(
-        client=mock_client,
-        primary_model="gemini-2.5-flash",
-        context=mock_context
-    )
+
+    return DirectorCachingManager(client=mock_client, primary_model="gemini-2.5-flash", context=mock_context)
 
 
 # ═══════════════════════════════════════════════════════════════
 # 1. DirectorCaching Tests
 # ═══════════════════════════════════════════════════════════════
+
 
 class TestDirectorCaching:
     """Tests for DirectorCachingManager."""
@@ -100,10 +96,11 @@ class TestDirectorCaching:
     def test_build_manuscript_history_with_data(self, caching_manager):
         """3. build_manuscript_history_for_check returns structured history from DB."""
         db = MagicMock()
-        db.get_manuscript = MagicMock(side_effect=lambda ep: {
-            "text": f"Episode {ep} content",
-            "summary": f"Summary of ep {ep}"
-        } if ep < 3 else None)
+        db.get_manuscript = MagicMock(
+            side_effect=lambda ep: {"content": f"Episode {ep} content", "summary": f"Summary of ep {ep}"}
+            if ep < 3
+            else None
+        )
 
         history = caching_manager.build_manuscript_history_for_check(db, ep_num=3)
         assert len(history) == 2
@@ -125,6 +122,7 @@ class TestDirectorCaching:
     def test_get_protagonist_config_empty_bible(self, mock_client):
         """5. get_protagonist_config returns empty dict when no bible."""
         from modules.domain.agents.director_caching import DirectorCachingManager
+
         context = MagicMock()
         context.master_bible = {}
         cm = DirectorCachingManager(client=mock_client, primary_model="test", context=context)
@@ -149,6 +147,7 @@ class TestDirectorCaching:
 # 2. DirectorGrading Tests
 # ═══════════════════════════════════════════════════════════════
 
+
 class TestDirectorGrading:
     """Tests for DirectorGradingSystem."""
 
@@ -160,10 +159,10 @@ class TestDirectorGrading:
     def test_quality_grades_ordering(self, grading_system):
         """9. Grade thresholds are in descending order (A > B > C > D)."""
         grades = grading_system.QUALITY_GRADES
-        assert grades['A']['min_score'] > grades['B']['min_score']
-        assert grades['B']['min_score'] > grades['C']['min_score']
-        assert grades['C']['min_score'] > grades['D']['min_score']
-        assert grades['D']['min_score'] == 0
+        assert grades["A"]["min_score"] > grades["B"]["min_score"]
+        assert grades["B"]["min_score"] > grades["C"]["min_score"]
+        assert grades["C"]["min_score"] > grades["D"]["min_score"]
+        assert grades["D"]["min_score"] == 0
 
     def test_grade_manuscript_high_score(self, grading_system):
         """10. grade_manuscript_v59 assigns grade A for high total_score."""
@@ -175,7 +174,7 @@ class TestDirectorGrading:
                 "character_consistency": {"score": 9, "max": 10},
                 "emotion_arc": {"score": 9, "max": 10},
                 "commercial_appeal": {"score": 9, "max": 10},
-            }
+            },
         }
         result = grading_system.grade_manuscript_v59(1, "dummy manuscript", validation_result)
         assert result["grade"] == "A"
@@ -192,7 +191,7 @@ class TestDirectorGrading:
                 "character_consistency": {"score": 2, "max": 10},
                 "emotion_arc": {"score": 2, "max": 10},
                 "commercial_appeal": {"score": 2, "max": 10},
-            }
+            },
         }
         result = grading_system.grade_manuscript_v59(1, "weak manuscript", validation_result)
         assert result["grade"] == "D"
@@ -234,8 +233,8 @@ class TestDirectorGrading:
                 "priority": "MEDIUM",
                 "estimated_effort": "30분-1시간 소요 예상",
                 "tasks": [{"type": "minor_revision", "description": "경미한 수정"}],
-                "examples": []
-            }
+                "examples": [],
+            },
         }
         report = grading_system.format_revision_report_v59(grade_result)
         assert "제5화" in report
@@ -255,6 +254,7 @@ class TestDirectorGrading:
 # 3. DirectorEnsemble Tests
 # ═══════════════════════════════════════════════════════════════
 
+
 class TestDirectorEnsemble:
     """Tests for DirectorEnsembleSelector."""
 
@@ -265,9 +265,7 @@ class TestDirectorEnsemble:
 
     def test_compare_and_select_blueprint_no_candidates(self, director):
         """18. compare_and_select_blueprint returns REJECT with empty candidates."""
-        result = director.compare_and_select_blueprint(
-            candidates=[], arc_data={}, ep_num=1
-        )
+        result = director.compare_and_select_blueprint(candidates=[], arc_data={}, ep_num=1)
         assert result["decision"] == "REJECT"
         assert result["selected_index"] == -1
         assert result["selected_blueprint"] is None
@@ -279,12 +277,10 @@ class TestDirectorEnsemble:
             "scene_breakdown": {"scene1": "x", "scene2": "y", "scene3": "z", "scene4": "w"},
             "start_location": "서울",
             "end_location": "부산",
-            "ending_hook": "다음에 계속"
+            "ending_hook": "다음에 계속",
         }
         result = director.compare_and_select_blueprint(
-            candidates=[candidate],
-            arc_data={"tactical_doc": "전술서 내용"},
-            ep_num=1
+            candidates=[candidate], arc_data={"tactical_doc": "전술서 내용"}, ep_num=1
         )
         assert result["decision"] == "PASS"
         assert result["selected_index"] == 0
@@ -297,9 +293,7 @@ class TestDirectorEnsemble:
             "scene_breakdown": {"scene1": "x", "scene2": "y", "scene3": "z", "scene4": "w"},
         }
         result = director.compare_and_select_blueprint(
-            candidates=[candidate],
-            arc_data={"tactical_doc": "전술서"},
-            ep_num=1
+            candidates=[candidate], arc_data={"tactical_doc": "전술서"}, ep_num=1
         )
         assert result["decision"] == "REJECT"
         assert "분량 부족" in result["reason"]
@@ -311,9 +305,7 @@ class TestDirectorEnsemble:
             "scene_breakdown": {"scene1": "x", "scene2": "y"},
         }
         result = director.compare_and_select_blueprint(
-            candidates=[candidate],
-            arc_data={"tactical_doc": "전술서"},
-            ep_num=1
+            candidates=[candidate], arc_data={"tactical_doc": "전술서"}, ep_num=1
         )
         assert result["decision"] == "REJECT"
         assert "씬 개수 부족" in result["reason"]
@@ -330,7 +322,7 @@ class TestDirectorEnsemble:
             candidates=candidates,
             validation_results=[{}, {}, {}],
             blueprint={"scenes": []},
-            previous_ending="이전 화 끝"
+            previous_ending="이전 화 끝",
         )
         assert result["verdict"] == "REJECT"
         assert result.get("length_violation") is True
@@ -338,10 +330,7 @@ class TestDirectorEnsemble:
     def test_quick_judge_single_short_manuscript(self, director):
         """23. quick_judge_single returns REJECT for very short manuscript."""
         result = director.quick_judge_single(
-            ep_num=1,
-            manuscript="너무 짧은 원고",
-            blueprint={"scenes": []},
-            previous_ending=""
+            ep_num=1, manuscript="너무 짧은 원고", blueprint={"scenes": []}, previous_ending=""
         )
         assert result["verdict"] == "REJECT"
         assert result["score"] == 20
@@ -351,22 +340,19 @@ class TestDirectorEnsemble:
 # 4. DirectorContinuity Tests
 # ═══════════════════════════════════════════════════════════════
 
+
 class TestDirectorContinuity:
     """Tests for DirectorContinuityValidator."""
 
     def test_validate_entity_consistency_disabled(self, director):
         """24. validate_entity_consistency returns PASS when disabled."""
         director.entity_consistency_enabled = False
-        result = director.validate_entity_consistency(
-            content="some text", entity_registry={"characters": []}
-        )
+        result = director.validate_entity_consistency(content="some text", entity_registry={"characters": []})
         assert result["decision"] == "PASS"
 
     def test_validate_entity_consistency_empty_registry(self, director):
         """25. validate_entity_consistency returns PASS for empty registry."""
-        result = director.validate_entity_consistency(
-            content="some text", entity_registry={}
-        )
+        result = director.validate_entity_consistency(content="some text", entity_registry={})
         assert result["decision"] == "PASS"
 
     def test_format_entity_registry_empty(self, director):
@@ -377,11 +363,8 @@ class TestDirectorContinuity:
     def test_format_entity_registry_with_characters(self, director):
         """27. _format_entity_registry_for_director formats characters correctly."""
         registry = {
-            "characters": [
-                {"name": "팽무진", "aliases": ["무진"]},
-                {"name": "흑도"}
-            ],
-            "organizations": [{"name": "철혈문"}]
+            "characters": [{"name": "팽무진", "aliases": ["무진"]}, {"name": "흑도"}],
+            "organizations": [{"name": "철혈문"}],
         }
         result = director._format_entity_registry_for_director(registry)
         assert "팽무진" in result
@@ -406,7 +389,7 @@ class TestDirectorContinuity:
                 "scene3": "[Core] 주인공이 적과 전투한다",
                 "scene4": "[Cliffhanger] 갑자기 새로운 적이 나타난다",
             },
-            "integrated_scenario": "..."
+            "integrated_scenario": "...",
         }
         manuscript = "주인공이 시장에서 무기를 구매하고, 여관에서 쉬다가, 적과 전투하고, 갑자기 새로운 적이 나타났다."
         result = director._validate_blueprint_completeness_v60(manuscript, blueprint)
@@ -417,37 +400,27 @@ class TestDirectorContinuity:
         """30. check_manuscript_history_conflicts returns PASS when disabled."""
         director.manuscript_history_check_enabled = False
         result = director.check_manuscript_history_conflicts(
-            ep_num=5,
-            current_manuscript="새 원고",
-            manuscript_history=[{"ep_num": 1, "text": "이전 원고"}]
+            ep_num=5, current_manuscript="새 원고", manuscript_history=[{"ep_num": 1, "text": "이전 원고"}]
         )
         assert result["decision"] == "PASS"
 
     def test_check_manuscript_history_conflicts_no_history(self, director):
         """31. check_manuscript_history_conflicts returns PASS with empty history."""
         result = director.check_manuscript_history_conflicts(
-            ep_num=1,
-            current_manuscript="새 원고",
-            manuscript_history=[]
+            ep_num=1, current_manuscript="새 원고", manuscript_history=[]
         )
         assert result["decision"] == "PASS"
 
     def test_check_blueprint_continuity_ep1(self, director):
         """32. check_blueprint_continuity_with_cache returns PASS for ep 1."""
         result = director.check_blueprint_continuity_with_cache(
-            new_blueprint={"start_location": "서울"},
-            ep_num=1,
-            db=MagicMock()
+            new_blueprint={"start_location": "서울"}, ep_num=1, db=MagicMock()
         )
         assert result["decision"] == "PASS"
 
     def test_check_manuscript_continuity_ep1(self, director):
         """33. check_manuscript_continuity_with_cache returns PASS for ep 1."""
-        result = director.check_manuscript_continuity_with_cache(
-            new_manuscript="원고 내용",
-            ep_num=1,
-            db=MagicMock()
-        )
+        result = director.check_manuscript_continuity_with_cache(new_manuscript="원고 내용", ep_num=1, db=MagicMock())
         assert result["decision"] == "PASS"
 
     def test_check_manuscript_history_with_cache_no_cache(self, director):
@@ -461,6 +434,7 @@ class TestDirectorContinuity:
 # ═══════════════════════════════════════════════════════════════
 # 5. DirectorAuditor Tests
 # ═══════════════════════════════════════════════════════════════
+
 
 class TestDirectorAuditor:
     """Tests for DirectorQualityAuditor."""
@@ -480,45 +454,33 @@ class TestDirectorAuditor:
     def test_assess_character_logic_no_profiles(self, director):
         """37. [V66.1] assess_character_logic proceeds even with empty profiles (no auto-PASS)."""
         # [V66.1] F-5: 빈 프로필이어도 LLM 검증 진행 (auto-PASS 제거)
-        with patch.object(director, 'ask', return_value='{"decision":"PASS","score":90,"violations":[],"severity":"NONE","feedback":""}'):
+        with patch.object(
+            director,
+            "ask",
+            return_value='{"decision":"PASS","score":90,"violations":[],"severity":"NONE","feedback":""}',
+        ):
             result = director._auditor.assess_character_logic(
-                ep_num=1,
-                manuscript="원고 내용",
-                npc_profiles={},
-                character_traits={}
+                ep_num=1, manuscript="원고 내용", npc_profiles={}, character_traits={}
             )
             assert result["decision"] == "PASS"
 
     def test_audit_with_v0128_delegation(self, director):
         """38. _audit_with_v0128 sets mode and delegates to audit_manuscript_v0128."""
-        mock_result = {
-            "final_decision": "PASS",
-            "total_score": 80,
-            "feedback": "good",
-            "detailed_feedback": "all good"
-        }
+        mock_result = {"final_decision": "PASS", "total_score": 80, "feedback": "good", "detailed_feedback": "all good"}
         director._auditor.v0128_orchestrator = MagicMock()
         director._auditor.v0128_orchestrator.validate = MagicMock(return_value=mock_result)
 
         result = director._auditor._audit_with_v0128(
-            ep_num=1,
-            manuscript="A" * 5000,
-            validation_context={"test": True},
-            target_len=5000
+            ep_num=1, manuscript="A" * 5000, validation_context={"test": True}, target_len=5000
         )
         assert result["decision"] == "PASS"
 
     def test_audit_manuscript_v0128_error_handling(self, director):
         """39. audit_manuscript_v0128 returns REJECT on orchestrator error."""
         director._auditor.v0128_orchestrator = MagicMock()
-        director._auditor.v0128_orchestrator.validate = MagicMock(
-            side_effect=Exception("API error")
-        )
+        director._auditor.v0128_orchestrator.validate = MagicMock(side_effect=Exception("API error"))
         result = director._auditor.audit_manuscript_v0128(
-            ep_num=1,
-            manuscript="원고",
-            validation_context={},
-            genre="wuxia"
+            ep_num=1, manuscript="원고", validation_context={}, genre="wuxia"
         )
         assert result["decision"] == "REJECT"
         assert "오류" in result["reason"]
@@ -527,6 +489,7 @@ class TestDirectorAuditor:
 # ═══════════════════════════════════════════════════════════════
 # 6. Director Facade Delegation Tests
 # ═══════════════════════════════════════════════════════════════
+
 
 class TestDirectorFacade:
     """Tests that Director facade correctly delegates to sub-modules."""
@@ -552,8 +515,7 @@ class TestDirectorFacade:
         mock_result = {"selected": "A", "verdict": "PASS", "score": 80}
         director._ensemble.select_and_judge_ensemble = MagicMock(return_value=mock_result)
         result = director.select_and_judge_ensemble(
-            ep_num=1, candidates=[], validation_results=[],
-            blueprint={}, previous_ending=""
+            ep_num=1, candidates=[], validation_results=[], blueprint={}, previous_ending=""
         )
         director._ensemble.select_and_judge_ensemble.assert_called_once()
         assert result == mock_result
@@ -562,9 +524,7 @@ class TestDirectorFacade:
         """43. check_manuscript_history_conflicts delegates to _continuity."""
         mock_result = {"decision": "PASS", "conflicts": []}
         director._continuity.check_manuscript_history_conflicts = MagicMock(return_value=mock_result)
-        result = director.check_manuscript_history_conflicts(
-            ep_num=5, current_manuscript="ms", manuscript_history=[]
-        )
+        result = director.check_manuscript_history_conflicts(ep_num=5, current_manuscript="ms", manuscript_history=[])
         director._continuity.check_manuscript_history_conflicts.assert_called_once()
         assert result == mock_result
 
@@ -572,9 +532,7 @@ class TestDirectorFacade:
         """44. quick_judge_single delegates to _ensemble sub-module."""
         mock_result = {"verdict": "PASS", "score": 70}
         director._ensemble.quick_judge_single = MagicMock(return_value=mock_result)
-        result = director.quick_judge_single(
-            ep_num=1, manuscript="ms", blueprint={}, previous_ending=""
-        )
+        result = director.quick_judge_single(ep_num=1, manuscript="ms", blueprint={}, previous_ending="")
         director._ensemble.quick_judge_single.assert_called_once()
         assert result == mock_result
 
@@ -596,6 +554,7 @@ class TestDirectorFacade:
 # ═══════════════════════════════════════════════════════════════
 # 7. Director Core Logic Tests
 # ═══════════════════════════════════════════════════════════════
+
 
 class TestDirectorCoreMethods:
     """Tests for Director's own methods (not delegated)."""
@@ -660,8 +619,7 @@ class TestDirectorCoreMethods:
     def test_apply_adaptive_decision_pass_above_threshold(self, director):
         """55. apply_adaptive_decision keeps PASS when score >= threshold."""
         result = director.apply_adaptive_decision(
-            score=80, original_decision="PASS",
-            arc_pos=3, total_eps=5, retry_count=0
+            score=80, original_decision="PASS", arc_pos=3, total_eps=5, retry_count=0
         )
         assert result["decision"] == "PASS"
         assert result["adjusted"] is False
@@ -669,8 +627,7 @@ class TestDirectorCoreMethods:
     def test_apply_adaptive_decision_reject_overridden(self, director):
         """56. apply_adaptive_decision upgrades REJECT to CONDITIONAL_PASS when score >= threshold."""
         result = director.apply_adaptive_decision(
-            score=80, original_decision="REJECT",
-            arc_pos=3, total_eps=5, retry_count=0
+            score=80, original_decision="REJECT", arc_pos=3, total_eps=5, retry_count=0
         )
         assert result["decision"] == "CONDITIONAL_PASS"
         assert result["adjusted"] is True
@@ -678,8 +635,7 @@ class TestDirectorCoreMethods:
     def test_apply_adaptive_decision_pass_below_threshold(self, director):
         """57. apply_adaptive_decision downgrades PASS to CONDITIONAL_PASS when score < threshold."""
         result = director.apply_adaptive_decision(
-            score=30, original_decision="PASS",
-            arc_pos=3, total_eps=5, retry_count=0
+            score=30, original_decision="PASS", arc_pos=3, total_eps=5, retry_count=0
         )
         assert result["decision"] == "CONDITIONAL_PASS"
         assert result["adjusted"] is True
@@ -693,9 +649,7 @@ class TestDirectorCoreMethods:
     def test_on_approve_workflow_valid_updates(self, director):
         """59. on_approve_workflow accepts valid state changes."""
         result = director.on_approve_workflow(
-            ep_num=1,
-            state_updates={"realm": "화경", "wealth": "+500"},
-            current_hud={"realm": "통천경"}
+            ep_num=1, state_updates={"realm": "화경", "wealth": "+500"}, current_hud={"realm": "통천경"}
         )
         assert result["approved"] is True
         assert "realm" in result["applied_updates"]
@@ -703,11 +657,7 @@ class TestDirectorCoreMethods:
 
     def test_on_approve_workflow_rejects_excessive_increase(self, director):
         """60. on_approve_workflow rejects internal_energy increase beyond max."""
-        result = director.on_approve_workflow(
-            ep_num=1,
-            state_updates={"internal_energy": "+999"},
-            current_hud={}
-        )
+        result = director.on_approve_workflow(ep_num=1, state_updates={"internal_energy": "+999"}, current_hud={})
         assert "internal_energy" in result["rejected_updates"]
 
     def test_audit_manuscript_too_short(self, director):
@@ -720,7 +670,7 @@ class TestDirectorCoreMethods:
             prev_full_text="",
             arc_pos=1,
             total_eps=5,
-            target_len=5000
+            target_len=5000,
         )
         assert result["decision"] == "REJECT"
         assert "분량" in result.get("reason", "") or "미달" in result.get("diagnostic_report", "")
@@ -728,18 +678,14 @@ class TestDirectorCoreMethods:
     def test_validate_protagonist_config_modern_origin_pass(self, director):
         """62. Protagonist config check passes for 현대인 origin."""
         result = director.validate_protagonist_config_compliance(
-            manuscript="헬스장에서 바벨을 들었다. 시스템을 확인했다.",
-            ep_num=1
+            manuscript="헬스장에서 바벨을 들었다. 시스템을 확인했다.", ep_num=1
         )
         assert result["decision"] == "PASS"
 
     def test_protagonist_config_disabled(self, director):
         """63. Protagonist config check returns PASS when disabled."""
         director.protagonist_config_check_enabled = False
-        result = director.validate_protagonist_config_compliance(
-            manuscript="anything",
-            ep_num=1
-        )
+        result = director.validate_protagonist_config_compliance(manuscript="anything", ep_num=1)
         assert result["decision"] == "PASS"
 
     def test_quality_grades_constant_accessible(self, director):

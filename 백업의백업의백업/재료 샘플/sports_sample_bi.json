@@ -1,0 +1,369 @@
+{
+  "_schema_version": "2.0",
+  "_schema_description": "스포츠물(Sports) 장르 Bible 샘플 - 범용 템플릿",
+  "_last_updated": "2026-02-07",
+
+  "MasterBible": {
+    "ProjectData": {
+      "MetaInfo": {
+        "title": "스포츠물 샘플 프로젝트",
+        "grand_objective": "월드컵 본선 무대에서 세계 최고의 선수로 우뚝 서는 것",
+        "genre_archetype": "sports + 회귀물 + 성장극",
+        "logline": "프로 축구 선수로서 정점을 찍지 못한 채 은퇴 직후 교통사고로 사망한 주인공이 고교 1학년으로 회귀, 미래의 전술 지식과 훈련법을 활용해 월드클래스 선수로 성장한다.",
+        "total_episodes": 200,
+        "episodes_per_arc": 5,
+        "arcs_per_volume": 5
+      },
+      "CoreIdentity": {
+        "protagonist": "이도현",
+        "protagonist_faction": "한양고 축구부 (초기) → FC서울 유스 (중기) → 분데스리가/프리미어리그 (후기)",
+        "edge": "2024년까지의 축구 전술사 지식 + 30년 경력 프로의 경기 운영 감각 + 과학적 훈련법",
+        "desire": "전생에서 이루지 못한 월드클래스 - 부상과 잘못된 선택으로 묻힌 재능을 이번에는 완성",
+        "crisis": "고교 1학년, 2군 보결 멤버. 피지컬은 미성년 수준, 기술은 있으나 몸이 안 따라줌"
+      },
+      "CommercialCode": {
+        "cider_point": "모두가 무시하던 2군 보결이 경기에 투입되자마자 판을 뒤집는 통쾌함 + 엘리트 코스 출신들이 경악하는 장면",
+        "success_device": "대회 우승, 스카우트 제의, 라이벌의 인정, 국가대표 발탁",
+        "attitude": "능동적 설계자 - 미래의 훈련법과 전술로 자신의 몸을 처음부터 다시 만든다"
+      }
+    },
+
+    "protagonist_config": {
+      "world_origin": "현대인",
+      "incarnation_type": "회귀자",
+      "regression_point": {
+        "death_year": 2024,
+        "death_cause": "은퇴 직후 교통사고 사망",
+        "return_year": 2008,
+        "return_month": "2008년 3월"
+      }
+    },
+
+    "SportsHUD": {
+      "_description": "스포츠물 전용 HUD - 선수 능력치/기록/팀/부상 상태 추적",
+      "Protagonist": {
+        "actual_truth": {
+          "name": "이도현",
+          "alias": "없음 (초기) → '유령 드리블러' (중기) → '아시아의 메시' (후기)",
+          "age": 17,
+          "athlete_tier": "동호회",
+
+          "sport_type": "축구",
+          "position": "공격형 미드필더 (CAM)",
+
+          "physical_stats": {
+            "strength": 28,
+            "speed": 45,
+            "stamina": 35,
+            "technique": 72,
+            "mental": 95
+          },
+
+          "record": {
+            "wins": 0,
+            "losses": 0,
+            "draws": 0
+          },
+
+          "skills": [
+            "전술 판독 (전생 경험)",
+            "양발 드리블 (기억은 있으나 몸이 미숙)"
+          ],
+
+          "team": "한양고 축구부 2군",
+          "ranking": "교내 2군 보결",
+
+          "sponsorship": [],
+
+          "wealth": "용돈 수준 (월 10만원)",
+
+          "injury_history": [],
+
+          "mental_state": "전생 은퇴의 한과 새 기회에 대한 의지가 공존",
+          "coach": "박성호 (한양고 축구부 감독, 엘리트 선수 위주 기용)"
+        },
+
+        "public_reputation": {
+          "identity": "축구부 2군 보결, 존재감 없는 학생",
+          "wealth_level": "일반 가정",
+          "perceived_influence": "없음",
+          "athletic_rating": "C등급 (학교 내부 평가)"
+        }
+      }
+    },
+
+    "WorldState": {
+      "CurrentEra": "2008년 3월",
+      "CurrentLocation": "서울 한양고등학교",
+      "sports_context": {
+        "k_league_season": "2008 K리그 개막 전",
+        "national_team_status": "2010 남아공 월드컵 예선 진행 중",
+        "youth_system": "엘리트 체육 중심, 대학 추천입학이 주요 루트",
+        "upcoming_events": [
+          {"year": 2008, "event": "전국 고교 축구 대회 (금강대기)", "impact": "고교 최강전, 스카우트 기회"},
+          {"year": 2009, "event": "AFC U-19 예선", "impact": "국가대표 유스 선발"},
+          {"year": 2010, "event": "남아공 월드컵", "impact": "세계 무대 첫 등장 가능"},
+          {"year": 2011, "event": "K리그 드래프트", "impact": "프로 입단"},
+          {"year": 2013, "event": "유럽 이적 시장", "impact": "해외 진출 기회"}
+        ]
+      },
+      "KarmaMatrix": {
+        "강지훈": {
+          "relation_score": -60,
+          "status": "라이벌",
+          "note": "한양고 1군 에이스, 주인공을 무시. 전생에서 주인공 대신 국대 발탁"
+        },
+        "오세진": {
+          "relation_score": 40,
+          "status": "우호",
+          "note": "같은 2군, 주인공의 유일한 친구. 성실하지만 재능이 부족"
+        },
+        "박성호 감독": {
+          "relation_score": -20,
+          "status": "경계",
+          "note": "실적주의 감독, 엘리트 선수만 기용. 2군은 안중에 없음"
+        },
+        "하정민": {
+          "relation_score": 0,
+          "status": "중립",
+          "note": "FC서울 유스 스카우트. 전생에서 주인공이 만나지 못한 인물"
+        },
+        "윤태식": {
+          "relation_score": -80,
+          "status": "적대",
+          "note": "전생에서 주인공의 커리어를 망친 에이전트. 현재는 유소년 브로커"
+        }
+      }
+    },
+
+    "AssetLibrary": {
+      "KeyNPCs": [
+        {
+          "name": "강지훈",
+          "role": "메인 라이벌",
+          "desc": "한양고 1군 에이스 스트라이커. 천재적 재능과 엘리트 코스를 밟아온 자부심. 2군 출신 주인공이 올라오는 것을 용납하지 못한다. 전생에서 주인공 대신 국가대표에 발탁되었으나, 유럽에서 적응 실패 후 K리그로 돌아왔다.",
+          "NPC_Athlete_HUD": {
+            "athlete_tier": "세미프로",
+            "sport_type": "축구",
+            "position": "스트라이커 (ST)",
+            "team": "한양고 축구부 1군",
+            "record": {"wins": 12, "losses": 3, "draws": 2},
+            "skills": ["폭발적 스프린트", "헤딩", "위치선정"],
+            "current_status": "활동중"
+          }
+        },
+        {
+          "name": "오세진",
+          "role": "조력자/팀메이트",
+          "desc": "2군 수비수. 성실하고 충직하지만 재능이 부족해 1군 승격이 어렵다. 주인공의 유일한 친구이자 동맹. 주인공의 훈련법을 따라하며 함께 성장한다.",
+          "NPC_Athlete_HUD": {
+            "athlete_tier": "동호회",
+            "sport_type": "축구",
+            "position": "센터백 (CB)",
+            "team": "한양고 축구부 2군",
+            "record": {"wins": 1, "losses": 5, "draws": 1},
+            "skills": ["강한 체력", "헌신적 수비"],
+            "current_status": "활동중"
+          }
+        },
+        {
+          "name": "박성호",
+          "role": "감독/장벽",
+          "desc": "한양고 축구부 감독. 전국 대회 우승 경험이 있는 유능한 지도자이나, 철저한 실적주의로 2군 선수에게는 기회를 주지 않는다. 전생에서도 주인공은 끝내 그의 인정을 받지 못했다.",
+          "NPC_Athlete_HUD": {
+            "athlete_tier": "프로정규",
+            "sport_type": "축구",
+            "position": "감독 (전 미드필더)",
+            "team": "한양고 축구부",
+            "record": {"wins": 45, "losses": 20, "draws": 10},
+            "skills": ["전술 분석", "선수 육성", "경기 운영"],
+            "current_status": "활동중"
+          }
+        },
+        {
+          "name": "하정민",
+          "role": "멘토/스카우트",
+          "desc": "FC서울 유스팀 스카우트. 원석형 선수를 발굴하는 눈이 뛰어나다. 전생에서 주인공이 만나지 못해 후회했던 인물. 이번 생에서는 반드시 그의 눈에 띄어야 한다.",
+          "NPC_Athlete_HUD": {
+            "athlete_tier": "프로정규",
+            "sport_type": "축구",
+            "position": "스카우트 (전 수비형 미드필더)",
+            "team": "FC서울",
+            "record": {"wins": 0, "losses": 0, "draws": 0},
+            "skills": ["선수 발굴", "잠재력 분석", "유스 네트워크"],
+            "current_status": "활동중"
+          }
+        },
+        {
+          "name": "윤태식",
+          "role": "메인 빌런",
+          "desc": "유소년 에이전트/브로커. 유망주들에게 접근해 불리한 계약을 체결하고 수수료를 착취한다. 전생에서 주인공의 유럽 이적을 방해하고 커리어를 망친 원흉. 현재는 강지훈에게 접근 중이다.",
+          "NPC_Athlete_HUD": {
+            "athlete_tier": "프로신인",
+            "sport_type": "축구",
+            "position": "에이전트 (전 유소년 선수 출신)",
+            "team": "독립 에이전시",
+            "record": {"wins": 0, "losses": 0, "draws": 0},
+            "skills": ["화술", "인맥 동원", "계약 조작"],
+            "current_status": "활동중"
+          }
+        }
+      ],
+
+      "KeyItems": [
+        {
+          "item": "전술 노트",
+          "desc": "전생에서 연구했던 전술 분석을 기억나는 대로 적은 노트. 2024년까지의 현대 축구 전술(포지셔널 플레이, 게겐프레싱 등)이 기록되어 있다. 주인공의 가장 중요한 무기."
+        },
+        {
+          "item": "아버지의 낡은 축구화",
+          "desc": "돌아가신 아버지가 아마추어 선수 시절 신었던 축구화. 주인공이 축구를 시작한 계기이자 정신적 지주."
+        },
+        {
+          "item": "체력 훈련 프로그램",
+          "desc": "전생에서 유럽 클럽에서 배운 과학적 체력 훈련법. 2008년 한국 고교 축구에는 없는 선진 방법론."
+        }
+      ],
+
+      "KeyLocations": [
+        {
+          "name": "한양고 축구장",
+          "desc": "모든 것이 시작되는 곳. 2군 훈련장은 1군과 분리된 후미진 보조 구장."
+        },
+        {
+          "name": "서울월드컵경기장",
+          "desc": "고교 전국대회 결승전이 열리는 꿈의 무대. 프로 스카우트들이 모인다."
+        },
+        {
+          "name": "FC서울 유스 트레이닝 센터",
+          "desc": "프로 입문의 관문. 하정민 스카우트의 근거지."
+        }
+      ],
+
+      "Persona": "겉으로는 과묵하고 성실한 고교생이지만, 내면에는 30년 프로의 경험과 한이 서린 복합적 인물. 경기장에서는 냉철한 전술가.",
+      "SpeechStyle": {
+        "tone": "과묵하나 핵심을 찌르는 말투",
+        "vocabulary": "축구 전술 용어 + 고교생 구어체 (일부러 맞춤)",
+        "inner_monologue": "전생 경기 회상 + 전술 분석 + 신체 한계에 대한 답답함"
+      }
+    },
+
+    "Seeds": [
+      {
+        "id": "S-001",
+        "category": "인물",
+        "description": "하정민 스카우트의 존재 - FC서울 유스 스카우트가 지역 고교 대회를 순회하고 있다는 언급",
+        "status": "active",
+        "planted_ep": 1,
+        "target_harvest_ep": 25,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-002",
+        "category": "사건",
+        "description": "금강대기 전국 고교 축구 대회 - 전국 무대에서 실력을 증명할 기회가 온다는 암시",
+        "status": "active",
+        "planted_ep": 3,
+        "target_harvest_ep": 40,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-003",
+        "category": "인물",
+        "description": "윤태식의 접근 - 강지훈 주변에 수상한 에이전트가 접근하고 있다는 복선",
+        "status": "active",
+        "planted_ep": 5,
+        "target_harvest_ep": 30,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-004",
+        "category": "부상",
+        "description": "주인공의 오른쪽 무릎 - 전생에서 커리어를 끝낸 부위가 성장기에 미세한 통증을 보임",
+        "status": "active",
+        "planted_ep": 8,
+        "target_harvest_ep": 60,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-005",
+        "category": "이적",
+        "description": "분데스리가 스카우트 - 독일 클럽이 아시아 유망주에 관심을 보이기 시작했다는 뉴스",
+        "status": "active",
+        "planted_ep": 15,
+        "target_harvest_ep": 80,
+        "echo_count": 0,
+        "harvested_ep": null
+      }
+    ],
+
+    "SportsMilestones": {
+      "_description": "스포츠물에서 활용 가능한 주요 대회/이벤트 DB",
+      "events": [
+        {
+          "month": "2008-06",
+          "event": "전국 고교 축구 대회 (금강대기) 지역 예선",
+          "impact": "첫 공식 대회 출전 기회"
+        },
+        {
+          "month": "2008-10",
+          "event": "금강대기 본선",
+          "impact": "전국 무대, 스카우트 집결"
+        },
+        {
+          "month": "2009-03",
+          "event": "FC서울 유스 입단 테스트",
+          "impact": "프로 유스 진입"
+        },
+        {
+          "month": "2009-08",
+          "event": "AFC U-19 아시아 예선",
+          "impact": "국가대표 유스 발탁"
+        },
+        {
+          "month": "2010-06",
+          "event": "남아공 월드컵",
+          "impact": "세계 무대 데뷔 가능"
+        },
+        {
+          "month": "2011-01",
+          "event": "K리그 드래프트",
+          "impact": "프로 정식 입단"
+        },
+        {
+          "month": "2013-07",
+          "event": "유럽 이적 시장",
+          "impact": "분데스리가/프리미어리그 이적"
+        }
+      ]
+    },
+
+    "GenreRules": {
+      "_description": "스포츠물 장르 규칙 및 제약",
+      "must_include": [
+        "경기 장면은 동적이고 생생하게 묘사해야 함 (관중, 소리, 촉감, 호흡)",
+        "신체 능력 변화가 훈련량과 시간에 비례해야 함 (갑자기 강해지면 안 됨)",
+        "팀 스포츠의 역학 반영 - 개인 능력만으로 이길 수 없음",
+        "중상(인대 파열 등) 시 경기 출전 불가, 재활 기간 필요",
+        "라이벌과의 성장 대비가 명확해야 함"
+      ],
+      "forbidden": [
+        "현실 물리법칙을 무시하는 초인적 플레이 (공이 불타거나 벽을 뚫는 슛 등)",
+        "부상 무시하고 뛰는 무리한 전개 (현실 스포츠 기반)",
+        "상대팀을 일방적으로 압도하는 전개 (긴장감 소멸)",
+        "전술/규칙 오류 (오프사이드, 교체 규칙 등 실제 룰 준수)"
+      ],
+      "tension_devices": [
+        "결정적 순간의 부상 위기",
+        "미래 전술 지식이 통하지 않는 상대",
+        "팀 내 갈등과 포지션 경쟁",
+        "에이전트/브로커의 방해",
+        "전생 기억과 달라진 경기 결과 (나비효과)"
+      ]
+    }
+  }
+}

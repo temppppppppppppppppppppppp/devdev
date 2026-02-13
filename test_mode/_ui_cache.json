@@ -1,0 +1,13 @@
+{
+  "selectors": {
+    "upload_menu_btn": "button[aria-label*='파일 업로드']",
+    "send_btn": "button.send-button",
+    "input_box": "div[contenteditable='true']",
+    "model_picker": ".model-picker-container",
+    "stop_btn": "button[aria-label*='중지']",
+    "more_options_btn": "button[aria-label*='더보기']",
+    "response_container": "model-response .markdown"
+  },
+  "updated": "2026-02-12T11:38:31.814437",
+  "page_hash": ""
+}

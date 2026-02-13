@@ -7,10 +7,9 @@ SovereignApp에서 분리된 Stage 4 관련 메서드:
 모든 SovereignApp 속성은 self.app를 통해 접근.
 """
 
-import os
 import json
 import logging
-from typing import Optional
+import os
 
 _perf_logger = logging.getLogger(__name__)  # [V65] PerfTimer 로깅
 
@@ -52,7 +51,7 @@ class Stage4Orchestrator:
             return {}
 
         try:
-            _escaped_tail = self.app.agents['director']._escape_braces(manuscript[-3000:])
+            _escaped_tail = self.app.agents["director"]._escape_braces(manuscript[-3000:])
             prompt = f"""아래 원고의 마지막 상황을 분석하여 다음 화에서 반드시 이어받아야 할 요소를 추출하세요.
 
 원고 (제{ep_num}화, 마지막 3000자):
@@ -68,16 +67,16 @@ JSON으로 출력:
     "time_marker": "작중 시간대 (알 수 있으면, 모르면 빈 문자열)"
 }}"""
 
-            result = self.app.agents['director'].ask(prompt, temperature=0.1)
-            chain_link = self.app.agents['director']._extract_json_robust(result)
+            result = self.app.agents["director"].ask(prompt, temperature=0.1)
+            chain_link = self.app.agents["director"]._extract_json_robust(result)
 
             if chain_link and isinstance(chain_link, dict):
-                chain_link.setdefault('cliffhanger', '')
-                chain_link.setdefault('pending_actions', [])
-                chain_link.setdefault('emotional_state', '')
-                chain_link.setdefault('physical_state', '정상')
-                chain_link.setdefault('location', '')
-                chain_link.setdefault('time_marker', '')
+                chain_link.setdefault("cliffhanger", "")
+                chain_link.setdefault("pending_actions", [])
+                chain_link.setdefault("emotional_state", "")
+                chain_link.setdefault("physical_state", "정상")
+                chain_link.setdefault("location", "")
+                chain_link.setdefault("time_marker", "")
                 return chain_link
             return {}
         except Exception as e:
@@ -93,26 +92,26 @@ JSON으로 출력:
         if next_ep <= 1:
             return ""
         try:
-            _cl_raw = self.app.current_project.db.load_anchor(f'chain_link_{next_ep - 1}')
+            _cl_raw = self.app.current_project.db.load_anchor(f"chain_link_{next_ep - 1}")
             if not _cl_raw or not isinstance(_cl_raw, dict):
                 return ""
             _cl_data = _cl_raw
             _cl_parts = ["### [V68] 직전 화 연결고리 - 반드시 이어받을 것"]
-            if _cl_data.get('cliffhanger'):
+            if _cl_data.get("cliffhanger"):
                 _cl_parts.append(f"- 진행 중 상황: {_cl_data['cliffhanger']}")
-            if _cl_data.get('pending_actions'):
-                actions = _cl_data['pending_actions']
+            if _cl_data.get("pending_actions"):
+                actions = _cl_data["pending_actions"]
                 if isinstance(actions, list):
                     _cl_parts.append(f"- 해야 할 행동: {', '.join(str(a) for a in actions)}")
                 else:
                     _cl_parts.append(f"- 해야 할 행동: {actions}")
-            if _cl_data.get('emotional_state'):
+            if _cl_data.get("emotional_state"):
                 _cl_parts.append(f"- 감정 상태: {_cl_data['emotional_state']}")
-            if _cl_data.get('physical_state') and _cl_data['physical_state'] != '정상':
+            if _cl_data.get("physical_state") and _cl_data["physical_state"] != "정상":
                 _cl_parts.append(f"- 신체 상태: {_cl_data['physical_state']}")
-            if _cl_data.get('location'):
+            if _cl_data.get("location"):
                 _cl_parts.append(f"- 현재 위치: {_cl_data['location']}")
-            if _cl_data.get('time_marker'):
+            if _cl_data.get("time_marker"):
                 _cl_parts.append(f"- 작중 시간: {_cl_data['time_marker']}")
             if len(_cl_parts) > 1:
                 return "\n".join(_cl_parts)
@@ -134,6 +133,7 @@ JSON으로 출력:
         첫 200자만 사용하므로 DB에서 200자만 가져옴.
         """
         import re
+
         if next_ep <= 3:
             return ""
         try:
@@ -158,7 +158,7 @@ JSON으로 출력:
                 # 첫 문단 또는 첫 150자에서 핵심 요약 추출
                 first_para = content.split("\n\n")[0] if "\n\n" in content else content[:150]
                 # 줄바꿈 정리
-                first_para = re.sub(r'\s+', ' ', first_para).strip()
+                first_para = re.sub(r"\s+", " ", first_para).strip()
                 if len(first_para) > 150:
                     first_para = first_para[:147] + "..."
                 lines.append(f"[제{ep_num}화] {first_para}")
@@ -192,15 +192,15 @@ JSON으로 출력:
         - 인간 개입: 냉동인간도 실패 시 중단
         """
         # [V64.P3] lazy imports
-        from modules.domain.agents.chief_writer import ChiefWriter
-        from modules.domain.agents.manuscript_validator import ManuscriptValidator
-        from modules.validation.consistency_validator import ConsistencyValidator  # [V63.2]
-        from modules.validation.blocking_validator import BlockingValidator  # [V66.1]
-        from modules.validation.continuity_validator import ContinuityValidator  # [V66.1]
-        from modules.core.constants import AIModels, RetryLimits, WritingLimits, Emojis
+        from modules.core.constants import AIModels, Emojis
 
         # [V65] 스피너 & 전역 상수 → spinners 모듈에서 직접 import (순환 참조 해소)
-        from modules.core.spinners import StageSpinner, V50_MODULES_AVAILABLE, STAGE0_AVAILABLE
+        from modules.core.spinners import STAGE0_AVAILABLE, V50_MODULES_AVAILABLE, StageSpinner
+        from modules.domain.agents.chief_writer import ChiefWriter
+        from modules.domain.agents.manuscript_validator import ManuscriptValidator
+        from modules.validation.blocking_validator import BlockingValidator  # [V66.1]
+        from modules.validation.consistency_validator import ConsistencyValidator  # [V63.2]
+        from modules.validation.continuity_validator import ContinuityValidator  # [V66.1]
 
         # 1. 기초 데이터 점검
         if not self.app.current_project.master_bible or not self.app.current_project.arcs:
@@ -211,18 +211,13 @@ JSON으로 출력:
         chief_writer = ChiefWriter(
             context=self.app.current_project,
             client=self.app.sys.api_client,
-            model_tier=AIModels.STAGE4_FIXED_WRITER_MODEL
+            model_tier=AIModels.STAGE4_FIXED_WRITER_MODEL,
         )
-        _s4_genre_type = self.app.selected_genre.get('type', 'wuxia') if self.app.selected_genre else 'wuxia'
+        _s4_genre_type = self.app.selected_genre.get("type", "wuxia") if self.app.selected_genre else "wuxia"
         manuscript_validator = ManuscriptValidator(
-            context=self.app.current_project,
-            genre_type=_s4_genre_type,
-            llm_client=self.app.sys.api_client
+            context=self.app.current_project, genre_type=_s4_genre_type, llm_client=self.app.sys.api_client
         )
-        consistency_validator = ConsistencyValidator(
-            guard=getattr(self.app.sys, 'guard', None),
-            genre=_s4_genre_type
-        )
+        consistency_validator = ConsistencyValidator(guard=getattr(self.app.sys, "guard", None), genre=_s4_genre_type)
         # [V66.1] BlockingValidator/ContinuityValidator — item_states, npc_personalities, time_warnings 라우팅
         blocking_validator = BlockingValidator(context=self.app.current_project)
         continuity_validator = ContinuityValidator(context=self.app.current_project)
@@ -230,22 +225,30 @@ JSON으로 출력:
         # [V67.1] story_context 조립 — Director에게 작품 설정 전달
         _story_context = ""
         try:
-            _bible_root = self.app.current_project.master_bible.get('MasterBible', self.app.current_project.master_bible)
-            _prot_config = _bible_root.get('protagonist_config', {})
+            _bible_root = self.app.current_project.master_bible.get(
+                "MasterBible", self.app.current_project.master_bible
+            )
+            _prot_config = _bible_root.get("protagonist_config", {})
             _sc_parts = []
             _sc_parts.append(f"- 장르: {_s4_genre_type}")
             if _prot_config:
                 _sc_parts.append(f"- 주인공 이름: {_prot_config.get('name', '미상')}")
                 _sc_parts.append(f"- 세계 출신: {_prot_config.get('world_origin', '미상')}")
-                _incarnation = _prot_config.get('incarnation_type', '미상')
+                _incarnation = _prot_config.get("incarnation_type", "미상")
                 _sc_parts.append(f"- 환생 유형: {_incarnation}")
-                if _incarnation == '회귀자':
-                    _sc_parts.append("→ 주인공은 미래에서 되돌아온 회귀자입니다. 미래의 사건, 주가, 인물 등을 미리 알고 있으며, 이 지식을 활용해 현재 역사를 의도적으로 변경하려 합니다. 이것은 모순이 아닙니다.")
-                elif _incarnation == '빙의자':
-                    _sc_parts.append("→ 주인공은 다른 인물의 몸에 빙의한 존재입니다. 원래 인물의 기억/관계와 현재 인격이 다를 수 있습니다.")
-                elif _incarnation == '환생자':
-                    _sc_parts.append("→ 주인공은 전생의 기억을 가진 환생자입니다. 전생의 지식이 단편적으로 나타날 수 있습니다.")
-                _core_traits = _prot_config.get('core_traits', '')
+                if _incarnation == "회귀자":
+                    _sc_parts.append(
+                        "→ 주인공은 미래에서 되돌아온 회귀자입니다. 미래의 사건, 주가, 인물 등을 미리 알고 있으며, 이 지식을 활용해 현재 역사를 의도적으로 변경하려 합니다. 이것은 모순이 아닙니다."
+                    )
+                elif _incarnation == "빙의자":
+                    _sc_parts.append(
+                        "→ 주인공은 다른 인물의 몸에 빙의한 존재입니다. 원래 인물의 기억/관계와 현재 인격이 다를 수 있습니다."
+                    )
+                elif _incarnation == "환생자":
+                    _sc_parts.append(
+                        "→ 주인공은 전생의 기억을 가진 환생자입니다. 전생의 지식이 단편적으로 나타날 수 있습니다."
+                    )
+                _core_traits = _prot_config.get("core_traits", "")
                 if _core_traits:
                     _sc_parts.append(f"- 핵심 특성: {_core_traits}")
             _story_context = "\n".join(_sc_parts)
@@ -254,11 +257,11 @@ JSON으로 출력:
             logging.warning(f"⚠️ [V67.1] story_context 조립 실패 (비차단): {str(_sc_err)[:50]}")
             _story_context = f"- 장르: {_s4_genre_type}"
 
-        self.app.ui.log(f"🎬 [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처 가동")
+        self.app.ui.log("🎬 [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처 가동")
         self.app.ui.log(f"   • Chief Writer 모델: {AIModels.STAGE4_FIXED_WRITER_MODEL}")
-        self.app.ui.log(f"   • 앙상블: 3개 병렬 생성")
-        self.app.ui.log(f"   • Director 면담: 3번 기회")
-        self.app.ui.log(f"   • 냉동인간: 기존 Writer (최후의 수단)")
+        self.app.ui.log("   • 앙상블: 3개 병렬 생성")
+        self.app.ui.log("   • Director 면담: 3번 기회")
+        self.app.ui.log("   • 냉동인간: 기존 Writer (최후의 수단)")
 
         # 3. 환경 설정
         output_dir = self.app.current_project.paths.drafts
@@ -271,7 +274,9 @@ JSON으로 출력:
             if limit_mode:
                 target_ep = self.app._get_int_input(
                     f"\n👉 몇 화까지 집필하시겠습니까? (최대 {total_planned_ep}화): ",
-                    default=None, min_val=1, max_val=total_planned_ep
+                    default=None,
+                    min_val=1,
+                    max_val=total_planned_ep,
                 )
 
             self.app.ui.console.clear()
@@ -279,22 +284,25 @@ JSON으로 출력:
 
             # [V60.95] 스타일 가이드 로드
             style_guide = ""
-            saved_style = self.app.current_project.load_v20_anchor('style_guide')
+            saved_style = self.app.current_project.load_v20_anchor("style_guide")
             if saved_style and STAGE0_AVAILABLE:
                 try:
                     from modules.core.stage0 import StyleGuide
+
                     loaded_sg = StyleGuide.from_dict(saved_style)
                     # [V70] Bible의 protagonist_config.pov로 오버라이드
                     try:
                         _bible = self.app.current_project.master_bible or {}
-                        _bible_root = _bible.get('MasterBible', _bible)
-                        _bible_pov = _bible_root.get('protagonist_config', {}).get('pov', '')
+                        _bible_root = _bible.get("MasterBible", _bible)
+                        _bible_pov = _bible_root.get("protagonist_config", {}).get("pov", "")
                         if _bible_pov:
                             loaded_sg.pov = _bible_pov
                     except Exception:
                         pass
                     style_guide = loaded_sg.to_prompt()
-                    self.app.ui.log(f"🎨 [V60.95] 저장된 스타일 가이드 로드됨 (톤: {loaded_sg.tone}, 시점: {loaded_sg.pov})")
+                    self.app.ui.log(
+                        f"🎨 [V60.95] 저장된 스타일 가이드 로드됨 (톤: {loaded_sg.tone}, 시점: {loaded_sg.pov})"
+                    )
                 except Exception as e:
                     self.app.ui.log(f"⚠️ 스타일 가이드 로드 실패: {e}")
                     saved_style = None
@@ -303,9 +311,10 @@ JSON으로 출력:
             if not style_guide and STAGE0_AVAILABLE:
                 try:
                     from modules.core.stage0 import StyleGuide as _SG
+
                     _bible = self.app.current_project.master_bible or {}
-                    _bible_root = _bible.get('MasterBible', _bible)
-                    _bible_pov = _bible_root.get('protagonist_config', {}).get('pov', '')
+                    _bible_root = _bible.get("MasterBible", _bible)
+                    _bible_pov = _bible_root.get("protagonist_config", {}).get("pov", "")
                     if _bible_pov:
                         _min_sg = _SG(pov=_bible_pov)
                         style_guide = _min_sg.to_prompt()
@@ -315,13 +324,12 @@ JSON으로 출력:
 
             if not style_guide:
                 style_choice = self.app._get_int_input(
-                    "\n👉 스타일 선택 (1.카카오 / 2.네이버): ",
-                    default=1, min_val=1, max_val=2
+                    "\n👉 스타일 선택 (1.카카오 / 2.네이버): ", default=1, min_val=1, max_val=2
                 )
                 style_guide = (
                     "네이버: 심리 묘사 강조, 3-4문장 단위 줄바꿈, 여백 극대화"
-                    if style_choice == 2 else
-                    "카카오: 사이다 전개, 절벽걸기, 4K 해상도 묘사"
+                    if style_choice == 2
+                    else "카카오: 사이다 전개, 절벽걸기, 4K 해상도 묘사"
                 )
 
             # [V62.5] 캐릭터 보이스 가이드 주입
@@ -330,15 +338,20 @@ JSON으로 출력:
                     voice_prompt = self.app.character_voice.get_writer_injection()
                     if voice_prompt:
                         style_guide += f"\n\n{voice_prompt}"
-                        self.app.ui.log(f"🎤 [V62.5] 캐릭터 보이스 가이드 주입됨 ({len(self.app.character_voice.profiles)}명)")
+                        self.app.ui.log(
+                            f"🎤 [V62.5] 캐릭터 보이스 가이드 주입됨 ({len(self.app.character_voice.profiles)}명)"
+                        )
                 except Exception as voice_err:
                     self.app.ui.log(f"   ⚠️ 캐릭터 보이스 주입 실패 (비차단): {voice_err}")
 
             loop_guard = 0
-            max_loops = min((target_ep or total_planned_ep) - self.app.current_project.get_latest_episode_number() + 5, 100)
+            max_loops = min(
+                (target_ep or total_planned_ep) - self.app.current_project.get_latest_episode_number() + 5, 100
+            )
 
             # [V66.1] B-2: ReferenceAnchor 루프 밖 1회 생성 (내부 캐시로 DB 중복 조회 방지)
             from modules.core.reference_anchor import ReferenceAnchor
+
             _anchor_sys = ReferenceAnchor(self.app.current_project)
 
             # 5. 원고 생산 메인 루프
@@ -362,24 +375,27 @@ JSON으로 출력:
 
                 # Arc 데이터 검색
                 arc_data = next(
-                    (a for a in self.app.current_project.arcs
-                     if isinstance(a, dict) and a.get('ep_start', 0) <= next_ep <= a.get('ep_end', 0)),
-                    None
+                    (
+                        a
+                        for a in self.app.current_project.arcs
+                        if isinstance(a, dict) and a.get("ep_start", 0) <= next_ep <= a.get("ep_end", 0)
+                    ),
+                    None,
                 )
                 if not arc_data:
                     self.app.ui.log(f"⚠️ 제{next_ep}화 Arc 데이터 없음.")
                     break
 
-                arc_pos = next_ep - arc_data.get('ep_start', next_ep) + 1
-                total_ep_in_arc = arc_data.get('ep_count', 5)
-                arc_tactical = arc_data.get('tactical_doc', '')
+                arc_pos = next_ep - arc_data.get("ep_start", next_ep) + 1
+                total_ep_in_arc = arc_data.get("ep_count", 5)
+                arc_tactical = arc_data.get("tactical_doc", "")
                 if isinstance(arc_tactical, dict):  # [V70] dict 타입 방어
                     arc_tactical = json.dumps(arc_tactical, ensure_ascii=False)
-                arc_tactical = str(arc_tactical) if arc_tactical else ''
+                arc_tactical = str(arc_tactical) if arc_tactical else ""
 
                 # 직전 화 원고
                 prev_ms_data = self.app.current_project.db.get_manuscript(next_ep - 1)
-                prev_text = (prev_ms_data.get('content') or '') if prev_ms_data else ""  # [V70] NULL content 방어
+                prev_text = (prev_ms_data.get("content") or "") if prev_ms_data else ""  # [V70] NULL content 방어
                 prev_ending = prev_text[-500:] if prev_text else ""
 
                 # [V67] 이전 30화 원고 전문 로드 — Director + ChiefWriter 공유
@@ -388,32 +404,46 @@ JSON으로 출력:
                     try:
                         _prev_ms_data = self.app.current_project.db.get_manuscript(_prev_ep)
                         if _prev_ms_data:
-                            _prev_content = _prev_ms_data.get('content', '') if isinstance(_prev_ms_data, dict) else str(_prev_ms_data)
+                            _prev_content = (
+                                _prev_ms_data.get("content", "")
+                                if isinstance(_prev_ms_data, dict)
+                                else str(_prev_ms_data)
+                            )
                             if _prev_content and len(_prev_content) > 100:
                                 _prev_manuscripts_parts.append(f"[제{_prev_ep}화]\n{_prev_content}")
                     except Exception:
                         pass
                 _prev_manuscripts_text = "\n\n---\n\n".join(_prev_manuscripts_parts) if _prev_manuscripts_parts else ""
                 if _prev_manuscripts_parts:
-                    logging.info(f"📚 [V67] 이전 {len(_prev_manuscripts_parts)}화 원고 전문 로드 완료 ({len(_prev_manuscripts_text):,}자)")
+                    logging.info(
+                        f"📚 [V67] 이전 {len(_prev_manuscripts_parts)}화 원고 전문 로드 완료 ({len(_prev_manuscripts_text):,}자)"
+                    )
 
                 # [V62.6] 에피소드 상태 다이제스트
                 _episode_digest = ""
-                if prev_text and hasattr(chief_writer, '_generate_episode_digest'):
+                if prev_text and hasattr(chief_writer, "_generate_episode_digest"):
                     _episode_digest = chief_writer._generate_episode_digest(prev_text, next_ep - 1)
 
                 # HUD 리포트
-                hud_report = self.app.sys.hud.get_v20_hud_report() if hasattr(self.app.sys, 'hud') else ""
+                hud_report = self.app.sys.hud.get_v20_hud_report() if hasattr(self.app.sys, "hud") else ""
 
                 # ===== [V60.80 FIX] 미래 침범 방지 데이터 추출 =====
                 current_inventory = []
                 current_martial_arts = []
-                if hasattr(self.app.sys, 'hud') and self.app.sys.hud:
-                    current_inventory = list(self.app.sys.hud.inventory) if hasattr(self.app.sys.hud, 'inventory') and self.app.sys.hud.inventory else []
-                    current_martial_arts = list(self.app.sys.hud.techniques) if hasattr(self.app.sys.hud, 'techniques') and self.app.sys.hud.techniques else []
+                if hasattr(self.app.sys, "hud") and self.app.sys.hud:
+                    current_inventory = (
+                        list(self.app.sys.hud.inventory)
+                        if hasattr(self.app.sys.hud, "inventory") and self.app.sys.hud.inventory
+                        else []
+                    )
+                    current_martial_arts = (
+                        list(self.app.sys.hud.techniques)
+                        if hasattr(self.app.sys.hud, "techniques") and self.app.sys.hud.techniques
+                        else []
+                    )
 
                 cumulative_bible = self.app.current_project.db.get_cumulative_bible(next_ep - 1)
-                dead_npcs = cumulative_bible.get('dead_npcs', []) if cumulative_bible else []
+                dead_npcs = cumulative_bible.get("dead_npcs", []) if cumulative_bible else []
 
                 item_acquisition_timeline = self.app._build_item_acquisition_timeline(next_ep - 1)
 
@@ -424,7 +454,7 @@ JSON으로 출력:
 
                 # [V68] 세계 상태 요약 로드 (ChiefWriter 프롬프트 주입용)
                 _world_state_summary = ""
-                if hasattr(self.app, 'world_state') and self.app.world_state:
+                if hasattr(self.app, "world_state") and self.app.world_state:
                     try:
                         _world_state_summary = self.app.world_state.get_summary(max_chars=5000)
                     except Exception:
@@ -437,34 +467,32 @@ JSON으로 출력:
                 anti_trope_prompt = ""
                 justification_prompt = ""
                 reflexion_prompt = ""
-                genre_name = (getattr(self.app.current_project, 'genre', None) or {}).get('name', '무협')  # [V70] None 방어
+                genre_name = (getattr(self.app.current_project, "genre", None) or {}).get(
+                    "name", "무협"
+                )  # [V70] None 방어
 
                 # [V60.85] 장르 Guard에서 Purism Prompt 추출
                 purism_prompt = ""
-                if hasattr(self.app.sys, 'guard') and self.app.sys.guard:
+                if hasattr(self.app.sys, "guard") and self.app.sys.guard:
                     try:
                         purism_prompt = self.app.sys.guard.get_v20_purism_prompt()
                     except Exception as e:
                         self.app.ui.log(f"   ⚠️ Guard Purism Prompt 추출 실패 (비차단): {e}")
 
                 # 기존 Writer 인스턴스에서 핵심 기능 프롬프트 추출
-                if 'writer' in self.app.agents:
-                    writer_agent = self.app.agents['writer']
+                if "writer" in self.app.agents:
+                    writer_agent = self.app.agents["writer"]
                     try:
                         # [V66.1] B-2: 루프 밖에서 생성된 _anchor_sys 재사용 (내부 캐시로 DB 1회 로드)
                         relevant_anchors = _anchor_sys.get_relevant_anchors(
-                            current_ep_num=next_ep,
-                            arc_context=arc_tactical or "",
-                            n_anchors=5
+                            current_ep_num=next_ep, arc_context=arc_tactical or "", n_anchors=5
                         )
                         critical_anchors = _anchor_sys.get_critical_anchors(
-                            current_ep_num=next_ep,
-                            anchor_types=['item', 'injury', 'power', 'location']
+                            current_ep_num=next_ep, anchor_types=["item", "injury", "power", "location"]
                         )
                         if relevant_anchors or critical_anchors:
                             reference_anchor_prompt = _anchor_sys.generate_reference_prompt(
-                                relevant_anchors=relevant_anchors,
-                                critical_anchors=critical_anchors
+                                relevant_anchors=relevant_anchors, critical_anchors=critical_anchors
                             )
                     except Exception as e:
                         self.app.ui.log(f"   ⚠️ ReferenceAnchor 로드 실패 (비차단): {e}")
@@ -477,14 +505,14 @@ JSON으로 출력:
                     # [V66.1] mandatory_context를 list로 조립 후 마지막에 join (O(n^2) → O(n) GC 경감)
                     _mc_parts = [mandatory_context] if mandatory_context else []  # [V66.1] C-1
 
-                # [V63] Arc 제약 요약을 mandatory_context에 주입
+                    # [V63] Arc 제약 요약을 mandatory_context에 주입
                     _arc_cs = arc_data.get("constraint_summary", "") if arc_data else ""
                     if _arc_cs:
                         _mc_parts.append(f"[Arc 제약 - MUST NOT DO]\n{_arc_cs}")
 
                     # [V67] F-6: mandatory_context 우선순위 재배치 — 중요도 순 (50K truncation 시 상위가 생존)
                     # [V68] Priority 0: 세계 상태 문서 (World State Document) — 최우선
-                    if hasattr(self.app, 'world_state') and self.app.world_state:
+                    if hasattr(self.app, "world_state") and self.app.world_state:
                         try:
                             _ws_summary = self.app.world_state.get_summary(max_chars=5000)
                             if _ws_summary:
@@ -495,22 +523,22 @@ JSON으로 출력:
 
                     # [V68] Priority 0.5: 계층적 요약 피라미드 (시리즈 + 볼륨 요약)
                     try:
-                        _series_summary = self.app.current_project.load_v20_anchor('series_summary')
+                        _series_summary = self.app.current_project.load_v20_anchor("series_summary")
                         if _series_summary:
                             if isinstance(_series_summary, dict):
-                                _series_summary = _series_summary.get('summary', '') or str(_series_summary)
+                                _series_summary = _series_summary.get("summary", "") or str(_series_summary)
                             if _series_summary and len(str(_series_summary)) > 10:
                                 _mc_parts.append(f"[V68 시리즈 전체 요약]\n{_series_summary}")
 
                         # 볼륨 요약: 최근 3개 볼륨
-                        _current_arc_no = arc_data.get('arc_no', 1) if arc_data else 1
+                        _current_arc_no = arc_data.get("arc_no", 1) if arc_data else 1
                         _current_vol = max(1, (_current_arc_no - 1) // 10 + 1)
                         _volume_summaries = []
                         for _vi in range(max(1, _current_vol - 2), _current_vol + 1):
-                            _vs = self.app.current_project.load_v20_anchor(f'volume_summary_{_vi}')
+                            _vs = self.app.current_project.load_v20_anchor(f"volume_summary_{_vi}")
                             if _vs:
                                 if isinstance(_vs, dict):
-                                    _vs = _vs.get('summary', '') or str(_vs)
+                                    _vs = _vs.get("summary", "") or str(_vs)
                                 if _vs and len(str(_vs)) > 10:
                                     _volume_summaries.append(f"[볼륨 {_vi}] {_vs}")
                         if _volume_summaries:
@@ -519,7 +547,7 @@ JSON으로 출력:
                         self.app.ui.log(f"   ⚠️ [V68] 계층적 요약 로드 실패 (비차단): {str(_hier_err)[:60]}")
 
                     # [V68] Priority 0.8: 팩트 원장 (Cumulative Fact Ledger) — 장기 사실 보존
-                    if hasattr(self.app, 'fact_ledger') and self.app.fact_ledger:
+                    if hasattr(self.app, "fact_ledger") and self.app.fact_ledger:
                         try:
                             _fl_summary = self.app.fact_ledger.to_summary(max_chars=15000)
                             if _fl_summary:
@@ -529,97 +557,97 @@ JSON으로 출력:
                             logging.warning(f"⚠️ [V68] 팩트 원장 주입 실패 (비차단): {str(_fl_mc_err)[:50]}")
 
                     # Priority 1: 파괴된 조직/장소 (BLOCKING level)
-                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                    if hasattr(self.app, "state_tracker") and self.app.state_tracker:
                         _destroyed = self.app.state_tracker.get_entity_destruction_summary()
                         if _destroyed:
                             _mc_parts.append(_destroyed)
 
                     # Priority 2: 완결 플롯 (재발생 방지)
-                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                    if hasattr(self.app, "state_tracker") and self.app.state_tracker:
                         _resolved = self.app.state_tracker.get_resolved_plots_summary()
                         if _resolved:
                             _mc_parts.append(_resolved)
 
                     # Priority 3: NPC 성격/동기 (성격 이탈 방지)
-                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                    if hasattr(self.app, "state_tracker") and self.app.state_tracker:
                         _personality = self.app.state_tracker.get_npc_personality_summary()
                         if _personality:
                             _mc_parts.append(_personality)
 
                     # Priority 4: NPC-NPC 관계 (관계 모순 방지)
-                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                    if hasattr(self.app, "state_tracker") and self.app.state_tracker:
                         _npc_rel = self.app.state_tracker.get_npc_npc_relationship_summary()
                         if _npc_rel:
                             _mc_parts.append(_npc_rel)
 
                     # [V66.1] Priority 5: NPC 신체 변화 (신체 일관성 — F-8)
-                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                    if hasattr(self.app, "state_tracker") and self.app.state_tracker:
                         _perm_inj = self.app.state_tracker.get_permanent_injury_summary()
                         if _perm_inj:
                             _mc_parts.append(_perm_inj)
 
                     # [V66.1] Priority 6: 시간선 요약 (시간 모순 방지 — F-1)
-                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                    if hasattr(self.app, "state_tracker") and self.app.state_tracker:
                         _timeline = self.app.state_tracker.get_time_timeline_summary()
                         if _timeline:
                             _mc_parts.append(_timeline)
 
                     # [V66.1] Priority 7: 동행자 현황 (동행 모순 방지)
-                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                    if hasattr(self.app, "state_tracker") and self.app.state_tracker:
                         _companions = self.app.state_tracker.get_companion_summary()
                         if _companions:
                             _mc_parts.append(_companions)
 
                     # [V66.1] Priority 8: 미이행 약속/맹세 (서사 약속 추적)
-                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                    if hasattr(self.app, "state_tracker") and self.app.state_tracker:
                         _commitments = self.app.state_tracker.get_commitment_summary()
                         if _commitments:
                             _mc_parts.append(_commitments)
 
                     # [V66.1] Priority 9: 주인공 감정 상태 (감정 일관성)
-                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                    if hasattr(self.app, "state_tracker") and self.app.state_tracker:
                         _emotion = self.app.state_tracker.get_protagonist_emotion_summary()
                         if _emotion:
                             _mc_parts.append(_emotion)
 
                     # Priority 10: 아이템 상태 (아이템 모순 방지)
-                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                    if hasattr(self.app, "state_tracker") and self.app.state_tracker:
                         _item_state = self.app.state_tracker.get_item_state_summary()
                         if _item_state:
                             _mc_parts.append(_item_state)
 
                     # Priority 11: 플롯 서스펜션 (플롯 관리)
-                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
-                        _plot_suspension = self.app.state_tracker.get_plot_suspension_summary(arc_data.get('arc_no', 0))
+                    if hasattr(self.app, "state_tracker") and self.app.state_tracker:
+                        _plot_suspension = self.app.state_tracker.get_plot_suspension_summary(arc_data.get("arc_no", 0))
                         if _plot_suspension:
                             _mc_parts.append(_plot_suspension)
 
                     # Priority 12: NPC 대화 스타일 (캐릭터 보이스)
-                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                    if hasattr(self.app, "state_tracker") and self.app.state_tracker:
                         _dialogue_style = self.app.state_tracker.get_npc_dialogue_style_summary()
                         if _dialogue_style:
                             _mc_parts.append(_dialogue_style)
 
                     # [V66.2] Priority 12-A: NPC-주인공 관계 현황 (D-1)
-                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                    if hasattr(self.app, "state_tracker") and self.app.state_tracker:
                         _rel_summary = self.app.state_tracker.get_relationship_changes_summary()
                         if _rel_summary:
                             _mc_parts.append(_rel_summary)
 
                     # [V66.2] Priority 12-B: NPC 부상 현황 (D-2)
-                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                    if hasattr(self.app, "state_tracker") and self.app.state_tracker:
                         _injury_summary = self.app.state_tracker.get_npc_injury_summary()
                         if _injury_summary:
                             _mc_parts.append(_injury_summary)
 
                     # [V66.2] Priority 12-C: NPC 위치 현황 (D-3)
-                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                    if hasattr(self.app, "state_tracker") and self.app.state_tracker:
                         _movement_summary = self.app.state_tracker.get_npc_movement_summary()
                         if _movement_summary:
                             _mc_parts.append(_movement_summary)
 
                     # [V66.2] Priority 12-D: 주인공 습득 무공/스킬 (C-2)
-                    if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                    if hasattr(self.app, "state_tracker") and self.app.state_tracker:
                         _skills_summary = self.app.state_tracker.get_protagonist_skills_summary()
                         if _skills_summary:
                             _mc_parts.append(_skills_summary)
@@ -627,12 +655,12 @@ JSON으로 출력:
                     # Priority 13: 멀티-Arc 요약 (직전 3개 Arc)
                     try:
                         arc_summaries = []
-                        current_arc_no = arc_data.get('arc_no', 1) if arc_data else 1
+                        current_arc_no = arc_data.get("arc_no", 1) if arc_data else 1
                         for prev_arc in range(max(1, current_arc_no - 3), current_arc_no):
                             arc_sum = self.app.current_project.load_v20_anchor(f"arc_summary_{prev_arc}")
                             if arc_sum and isinstance(arc_sum, dict):
                                 arc_summaries.append(arc_sum)
-                        if arc_summaries and hasattr(self.app, 'state_tracker') and self.app.state_tracker:
+                        if arc_summaries and hasattr(self.app, "state_tracker") and self.app.state_tracker:
                             _arc_summary_text = self.app.state_tracker.format_arc_summary_for_prompt(arc_summaries)
                             if _arc_summary_text:
                                 _mc_parts.append(_arc_summary_text)
@@ -640,20 +668,20 @@ JSON으로 출력:
                         self.app.ui.log(f"   \u26a0\ufe0f [V66] Arc 요약 주입 실패 (비차단): {e}")
 
                     # Priority 14: 금융 상태 레지스트리 (투자물 전용)
-                    if _s4_genre_type == 'investment' and hasattr(self.app, 'state_tracker'):
+                    if _s4_genre_type == "investment" and hasattr(self.app, "state_tracker"):
                         _fin_summary = self.app.state_tracker.get_financial_state_summary()
                         if _fin_summary:
                             _mc_parts.append(_fin_summary)
 
                     # Priority 15: ChromaDB 멀티쿼리 시맨틱 검색
                     try:
-                        if hasattr(self.app, 'memory') and self.app.memory and prev_ending:
+                        if hasattr(self.app, "memory") and self.app.memory and prev_ending:
                             _mq_queries = [prev_ending]
                             if arc_data and arc_data.get("state_changes"):
                                 _sc = arc_data["state_changes"]
                                 _npc_names = []
                                 for _field in ["npc_deaths", "relationship_changes", "npc_injuries"]:
-                                    for _entry in (_sc.get(_field) or []):
+                                    for _entry in _sc.get(_field) or []:
                                         _n = _entry.get("name") or _entry.get("npc", "")
                                         if _n:
                                             _npc_names.append(_n)
@@ -663,17 +691,14 @@ JSON으로 출력:
                                 _mq_queries.append(arc_tactical[:300])
                             # [V66] 장르별 추가 쿼리
                             _genre_queries = {
-                                'hunter': ['던전 클리어 각성 스킬 랭크'],
-                                'investment': ['포트폴리오 거래 수익률 투자'],
-                                'fantasy': ['마법 축복 주문 마나 정령'],
+                                "hunter": ["던전 클리어 각성 스킬 랭크"],
+                                "investment": ["포트폴리오 거래 수익률 투자"],
+                                "fantasy": ["마법 축복 주문 마나 정령"],
                             }
                             if _s4_genre_type in _genre_queries:
                                 _mq_queries.extend(_genre_queries[_s4_genre_type])
                             _vector_memory = self.app.memory.retrieve_multi_query_context(
-                                queries=_mq_queries,
-                                current_ep=next_ep,
-                                n_per_query=3,
-                                max_results=5
+                                queries=_mq_queries, current_ep=next_ep, n_per_query=3, max_results=5
                             )
                             if _vector_memory:
                                 _mc_parts.append(f"[과거 유사 맥락 (벡터 검색)]\n{_vector_memory}")
@@ -698,9 +723,9 @@ JSON으로 출력:
                         self.app.ui.log(f"   ⚠️ ForeshadowTracker 프롬프트 실패 (비차단): {e}")
 
                     # Priority 18: SemanticPlotGuard 경고 주입
-                    if getattr(self.app, 'semantic_plot_guard', None):
+                    if getattr(self.app, "semantic_plot_guard", None):
                         try:
-                            tactical_text = arc_data.get('tactical_doc', '') if arc_data else ''
+                            tactical_text = arc_data.get("tactical_doc", "") if arc_data else ""
                             if isinstance(tactical_text, dict):
                                 tactical_text = str(tactical_text)
                             _spg_warnings = self.app.semantic_plot_guard.check_new_arc(tactical_doc=tactical_text)
@@ -712,7 +737,7 @@ JSON으로 출력:
                             pass
 
                     # Priority 19: 호흡 분석기 (코스메틱 — truncation 우선 대상)
-                    _pacing_analyzer = getattr(self.app, 'pacing_analyzer', None)
+                    _pacing_analyzer = getattr(self.app, "pacing_analyzer", None)
                     if _pacing_analyzer and prev_text and len(prev_text) >= 100:
                         try:
                             _pacing_result = _pacing_analyzer.analyze(prev_text)
@@ -746,6 +771,7 @@ JSON으로 출력:
                     try:
                         if next_ep >= 20:
                             from modules.core.reflexion_manager import ReflexionManager
+
                             reflexion = ReflexionManager(self.app.current_project)
                             reflexion_prompt = reflexion.get_prompt_injection(min_frequency=2)
                     except Exception as e:
@@ -754,19 +780,23 @@ JSON으로 출력:
                 # [V60.81] NPC 장비 현황 추출
                 npc_equipment_summary = ""
                 try:
-                    bible_root = self.app.current_project.master_bible.get('MasterBible', self.app.current_project.master_bible)
-                    assets = bible_root.get('AssetLibrary', {})
-                    key_npcs = assets.get('KeyNPCs', []) or assets.get('Key_NPCs', [])
+                    bible_root = self.app.current_project.master_bible.get(
+                        "MasterBible", self.app.current_project.master_bible
+                    )
+                    assets = bible_root.get("AssetLibrary", {})
+                    key_npcs = assets.get("KeyNPCs", []) or assets.get("Key_NPCs", [])
                     npc_equipment_lines = []
                     for npc in key_npcs:
                         if isinstance(npc, dict):
-                            npc_name = npc.get('name') or npc.get('Name', '알 수 없음')
-                            npc_hud = npc.get('NPC_Martial_HUD', {})
+                            npc_name = npc.get("name") or npc.get("Name", "알 수 없음")
+                            npc_hud = npc.get("NPC_Martial_HUD", {})
                             if isinstance(npc_hud, dict):
-                                equip = npc_hud.get('equipment', [])
+                                equip = npc_hud.get("equipment", [])
                                 if equip:
                                     npc_equipment_lines.append(f"- {npc_name}: {equip}")
-                    npc_equipment_summary = "\n".join(npc_equipment_lines) if npc_equipment_lines else "NPC 장비 정보 없음"
+                    npc_equipment_summary = (
+                        "\n".join(npc_equipment_lines) if npc_equipment_lines else "NPC 장비 정보 없음"
+                    )
                 except Exception as e:
                     self.app.ui.log(f"   ⚠️ NPC 장비 현황 추출 실패 (비차단): {e}")
                     npc_equipment_summary = ""
@@ -783,9 +813,11 @@ JSON으로 출력:
 
                 intro_dna = "CYNICAL"
 
-                self.app.ui.log(f"\n{'='*60}")
-                self.app.ui.log(f"📝 제{next_ep}화 집필 시작 (Arc {arc_data.get('arc_no', '?')}, 위치 {arc_pos}/{total_ep_in_arc})")
-                self.app.ui.log(f"{'='*60}")
+                self.app.ui.log(f"\n{'=' * 60}")
+                self.app.ui.log(
+                    f"📝 제{next_ep}화 집필 시작 (Arc {arc_data.get('arc_no', '?')}, 위치 {arc_pos}/{total_ep_in_arc})"
+                )
+                self.app.ui.log(f"{'=' * 60}")
 
                 # ===== Phase 4: Director 면담 (3번 기회) =====
                 final_manuscript = None
@@ -799,7 +831,8 @@ JSON으로 출력:
                     _original_len = len(mandatory_context)
                     # 섹션 분리: "\n[" 또는 "\n\n[" 마커 기준으로 분할
                     import re as _re_trunc
-                    _section_pattern = _re_trunc.compile(r'\n(?=\[)')
+
+                    _section_pattern = _re_trunc.compile(r"\n(?=\[)")
                     _sections = _section_pattern.split(mandatory_context)
                     # 빈 섹션 제거
                     _sections = [s for s in _sections if s.strip()]
@@ -814,382 +847,453 @@ JSON으로 출력:
                         mandatory_context = "\n".join(_sections)
                         if _removed_count > 0:
                             logging.info(f"[V66.1] mandatory_context {_removed_count}개 섹션 제거 ({_removed_chars}자)")
-                            self.app.ui.log(f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → {len(mandatory_context)}자 (섹션 {_removed_count}개 제거)")
+                            self.app.ui.log(
+                                f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → {len(mandatory_context)}자 (섹션 {_removed_count}개 제거)"
+                            )
                     else:
                         # 섹션 분리 불가 시 기존 방식 폴백
                         mandatory_context = mandatory_context[:49950] + "\n\n...(컨텍스트 크기 초과로 일부 생략)"
-                        self.app.ui.log(f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → 50,000자로 truncate (폴백)")
+                        self.app.ui.log(
+                            f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → 50,000자로 truncate (폴백)"
+                        )
 
                 # [V61.6] 전체 면담 루프를 스피너로 감싸기
                 with StageSpinner(4, f"제{next_ep}화 · 앙상블 준비") as stage4_spinner:
-                  for interview_round in range(3):
-                    stage4_spinner.update_detail(f"제{next_ep}화 · {interview_round + 1}차 면담 · 앙상블 생성")
-                    self.app.ui.log(f"\n🎬 [{interview_round + 1}차 면담] Chief Writer 앙상블 생성 중...")
+                    for interview_round in range(3):
+                        stage4_spinner.update_detail(f"제{next_ep}화 · {interview_round + 1}차 면담 · 앙상블 생성")
+                        self.app.ui.log(f"\n🎬 [{interview_round + 1}차 면담] Chief Writer 앙상블 생성 중...")
 
-                    # Phase 2: Chief Writer 앙상블 생성
-                    # [V65] PerfTimer: 원고 생성 측정
-                    try:
-                        self.app.perf_timer.start(f"s4_ep{next_ep}_generate_r{interview_round}")
-                    except Exception:
-                        pass
-                    if interview_round == 0:
-                        candidates = chief_writer.generate_ensemble(
-                            ep_num=next_ep,
-                            blueprint=blueprint,
-                            prev_manuscript=prev_text,
-                            hud_report=hud_report,
-                            arc_doc=arc_tactical,
-                            master_bible=self.app.current_project.master_bible,
-                            style_guide=style_guide,
-                            current_inventory=current_inventory,
-                            current_martial_arts=current_martial_arts,
-                            dead_npcs=dead_npcs,
-                            item_acquisition_timeline=item_acquisition_timeline,
-                            reference_anchor_prompt=reference_anchor_prompt,
-                            mandatory_context=mandatory_context,
-                            anti_trope_prompt=_effective_anti_trope,
-                            justification_prompt=justification_prompt,
-                            reflexion_prompt=reflexion_prompt,
-                            genre_name=genre_name,
-                            npc_equipment_summary=npc_equipment_summary,
-                            intro_dna=intro_dna,
-                            purism_prompt=purism_prompt,
-                            state_tracker=getattr(self.app, 'state_tracker', None),
-                            prev_manuscripts_text=_prev_manuscripts_text,  # [V67]
-                            world_state_summary=_world_state_summary,  # [V68]
-                            chain_link_section=_chain_link_section  # [V68]
-                        )
-                    else:
-                        candidates = chief_writer.regenerate_with_feedback(
-                            ep_num=next_ep,
-                            blueprint=blueprint,
-                            prev_manuscript=prev_text,
-                            hud_report=hud_report,
-                            arc_doc=arc_tactical,
-                            master_bible=self.app.current_project.master_bible,
-                            style_guide=style_guide,
-                            director_feedback=director_feedback,
-                            previous_attempt=previous_attempt,
-                            attempt_number=interview_round + 1,
-                            current_inventory=current_inventory,
-                            current_martial_arts=current_martial_arts,
-                            dead_npcs=dead_npcs,
-                            item_acquisition_timeline=item_acquisition_timeline,
-                            reference_anchor_prompt=reference_anchor_prompt,
-                            mandatory_context=mandatory_context,
-                            anti_trope_prompt=_effective_anti_trope,
-                            justification_prompt=justification_prompt,
-                            reflexion_prompt=reflexion_prompt,
-                            genre_name=genre_name,
-                            npc_equipment_summary=npc_equipment_summary,
-                            intro_dna=intro_dna,
-                            purism_prompt=purism_prompt,
-                            state_tracker=getattr(self.app, 'state_tracker', None),
-                            prev_manuscripts_text=_prev_manuscripts_text,  # [V67]
-                            world_state_summary=_world_state_summary,  # [V68]
-                            chain_link_section=_chain_link_section  # [V68]
-                        )
-
-                    # [V65] PerfTimer: 원고 생성 종료
-                    try:
-                        self.app.perf_timer.stop(f"s4_ep{next_ep}_generate_r{interview_round}")
-                    except Exception:
-                        pass
-
-                    # [V66.3] C-3: 빈 candidates 방어 — 모든 후보 생성 실패 시 다음 면담으로 스킵
-                    if not candidates:
-                        logging.error(f"[Stage4] 제{next_ep}화 {interview_round + 1}차 면담: candidates 빈 배열 — 모든 후보 생성 실패")
-                        self.app.ui.log(f"   🚨 [V66.3] 모든 후보 생성 실패 — {'냉동인간 소환' if interview_round >= 2 else '다음 면담으로 진행'}")
-                        director_feedback += "\n[시스템] 모든 후보 생성 실패. 재시도 필요."
-                        previous_attempt = {"strategy": "none", "rejection_reason": "모든 후보 생성 실패", "action_items": [], "score": 0}
-                        continue
-
-                    # Phase 3: Python 사전 검증
-                    stage4_spinner.update_detail(f"제{next_ep}화 · {interview_round + 1}차 면담 · Python 검증")
-                    self.app.ui.log(f"   🔍 Python 사전 검증 중...")
-                    _recent_ms = []
-                    try:
-                        _recent_ms = self.app.current_project.db.get_recent_manuscripts(before_ep=next_ep, limit=5)
-                    except (AttributeError, Exception) as e:  # [V64.P4] IMPORTANT: recent manuscripts for cross-ep validation
-                        self.app.ui.log(f"   ⚠️ [V64.P4] 최근 원고 로드 실패 (교차검증 약화): {str(e)[:60]}")
-                    validation_results = manuscript_validator.validate_all_candidates(
-                        candidates=candidates,
-                        blueprint=blueprint,
-                        prev_manuscript=prev_text,
-                        hud_report=hud_report,
-                        recent_manuscripts=_recent_ms
-                    )
-
-                    for i, vr in enumerate(validation_results):
-                        strategy = candidates[i].get('strategy_name', f'후보{i+1}') if i < len(candidates) else f'후보{i+1}'
-                        self.app.ui.log(f"      • {strategy}: 경고 {vr.get('warning_count', 0)}개, 분량 {vr.get('metrics', {}).get('length', 0)}자")
-
-                    # [V63.2] ConsistencyValidator
-                    try:
-                        _cv_context = {
-                            'martial_hud': {},
-                            'karma_matrix': {},
-                            'asset_library': {},
-                            'npc_profiles': {},
-                            'prev_episode_events': [],
-                            'ep_num': next_ep,
-                        }
-                        # [V67.1] incarnation_type 주입 — Validator 오탐 방지
-                        _incarnation_type = ''
+                        # Phase 2: Chief Writer 앙상블 생성
+                        # [V65] PerfTimer: 원고 생성 측정
                         try:
-                            _bible_root = self.app.current_project.master_bible.get('MasterBible', self.app.current_project.master_bible)
-                            _incarnation_type = _bible_root.get('protagonist_config', {}).get('incarnation_type', '')
+                            self.app.perf_timer.start(f"s4_ep{next_ep}_generate_r{interview_round}")
                         except Exception:
                             pass
-                        _cv_context['incarnation_type'] = _incarnation_type
-                        # [V66.2] C-1: BlockingValidator dead NPC 감지 활성화
-                        _encyclopedia_npcs = []
-                        if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
-                            for _npc_name, _npc_info in getattr(self.app.state_tracker, 'npc_registry', {}).items():
-                                _encyclopedia_npcs.append({
-                                    "name": _npc_name,
-                                    "status": _npc_info.get("status", "alive"),
-                                    "death_arc": _npc_info.get("death_arc"),
-                                    "aliases": _npc_info.get("aliases", []),
-                                })
-                        _cv_context["encyclopedia"] = {"npcs": _encyclopedia_npcs}
-                        # [V66.1] 시간선 경고를 검증 컨텍스트에 주입
-                        _cv_context["time_warnings"] = getattr(self, '_time_consistency_warnings', [])
-                        # [V66.1] BlockingValidator/ContinuityValidator에 추적 데이터 전달
-                        if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
-                            _cv_context["item_states"] = {
-                                name: info.get("condition", "정상")
-                                for name, info in self.app.state_tracker.item_state_registry.items()
-                            } if hasattr(self.app.state_tracker, 'item_state_registry') else {}
-                            _cv_context["npc_personalities"] = {
-                                name: {"traits": info.get("personality_traits", ""), "motivation": info.get("primary_motivation", "")}
-                                for name, info in self.app.state_tracker.npc_registry.items()
-                                if info.get("personality_traits")
-                            } if hasattr(self.app.state_tracker, 'npc_registry') else {}
-                        for ci, cand in enumerate(candidates):
-                            _cv_ms = cand.get('manuscript', '')
-                            if _cv_ms and ci < len(validation_results):
-                                cv_result = consistency_validator.validate(_cv_ms, _cv_context)
-                                cv_violations = cv_result.get('violations', [])
-                                cv_penalty = cv_result.get('score_penalty', 0)
-                                if cv_violations:
-                                    for v in cv_violations:
-                                        reason = v.get('reason', str(v))
-                                        validation_results[ci]['warnings'].append(f"[V63.2] 일관성: {reason}")
-                                    validation_results[ci]['warning_count'] = len(validation_results[ci]['warnings'])
-                                    validation_results[ci]['focus_points'].append(
-                                        f"일관성 위반 {len(cv_violations)}건 (감점 {cv_penalty})"
-                                    )
-                                    self.app.ui.log(f"      ⚠️ 후보{ci+1} 일관성 위반 {len(cv_violations)}건")
-                    except Exception as _cv_err:
-                        self.app.ui.log(f"      ⚠️ [V63.2] ConsistencyValidator 실행 실패: {str(_cv_err)[:60]}")
+                        if interview_round == 0:
+                            candidates = chief_writer.generate_ensemble(
+                                ep_num=next_ep,
+                                blueprint=blueprint,
+                                prev_manuscript=prev_text,
+                                hud_report=hud_report,
+                                arc_doc=arc_tactical,
+                                master_bible=self.app.current_project.master_bible,
+                                style_guide=style_guide,
+                                current_inventory=current_inventory,
+                                current_martial_arts=current_martial_arts,
+                                dead_npcs=dead_npcs,
+                                item_acquisition_timeline=item_acquisition_timeline,
+                                reference_anchor_prompt=reference_anchor_prompt,
+                                mandatory_context=mandatory_context,
+                                anti_trope_prompt=_effective_anti_trope,
+                                justification_prompt=justification_prompt,
+                                reflexion_prompt=reflexion_prompt,
+                                genre_name=genre_name,
+                                npc_equipment_summary=npc_equipment_summary,
+                                intro_dna=intro_dna,
+                                purism_prompt=purism_prompt,
+                                state_tracker=getattr(self.app, "state_tracker", None),
+                                prev_manuscripts_text=_prev_manuscripts_text,  # [V67]
+                                world_state_summary=_world_state_summary,  # [V68]
+                                chain_link_section=_chain_link_section,  # [V68]
+                            )
+                        else:
+                            candidates = chief_writer.regenerate_with_feedback(
+                                ep_num=next_ep,
+                                blueprint=blueprint,
+                                prev_manuscript=prev_text,
+                                hud_report=hud_report,
+                                arc_doc=arc_tactical,
+                                master_bible=self.app.current_project.master_bible,
+                                style_guide=style_guide,
+                                director_feedback=director_feedback,
+                                previous_attempt=previous_attempt,
+                                attempt_number=interview_round + 1,
+                                current_inventory=current_inventory,
+                                current_martial_arts=current_martial_arts,
+                                dead_npcs=dead_npcs,
+                                item_acquisition_timeline=item_acquisition_timeline,
+                                reference_anchor_prompt=reference_anchor_prompt,
+                                mandatory_context=mandatory_context,
+                                anti_trope_prompt=_effective_anti_trope,
+                                justification_prompt=justification_prompt,
+                                reflexion_prompt=reflexion_prompt,
+                                genre_name=genre_name,
+                                npc_equipment_summary=npc_equipment_summary,
+                                intro_dna=intro_dna,
+                                purism_prompt=purism_prompt,
+                                state_tracker=getattr(self.app, "state_tracker", None),
+                                prev_manuscripts_text=_prev_manuscripts_text,  # [V67]
+                                world_state_summary=_world_state_summary,  # [V68]
+                                chain_link_section=_chain_link_section,  # [V68]
+                            )
 
-                    # [V66.1] BlockingValidator — item_states 기반 파손 아이템 사용 체크
-                    try:
-                        for ci, cand in enumerate(candidates):
-                            _bv_ms = cand.get('manuscript', '')
-                            if _bv_ms and ci < len(validation_results):
-                                bv_result = blocking_validator.validate(_bv_ms, _cv_context)
-                                bv_failures = bv_result.get('failures', [])
-                                if bv_failures:
-                                    for f in bv_failures:
-                                        reason = f.get('reason', str(f))
-                                        validation_results[ci]['warnings'].append(f"[V66.1] BLOCKING: {reason}")
-                                    validation_results[ci]['warning_count'] = len(validation_results[ci]['warnings'])
-                                    validation_results[ci]['focus_points'].append(
-                                        f"BLOCKING 위반 {len(bv_failures)}건"
-                                    )
-                                    self.app.ui.log(f"      ⚠️ 후보{ci+1} BLOCKING 위반 {len(bv_failures)}건")
-                    except Exception as _bv_err:
-                        self.app.ui.log(f"      ⚠️ [V66.1] BlockingValidator 실행 실패: {str(_bv_err)[:60]}")
+                        # [V65] PerfTimer: 원고 생성 종료
+                        try:
+                            self.app.perf_timer.stop(f"s4_ep{next_ep}_generate_r{interview_round}")
+                        except Exception:
+                            pass
 
-                    # [V66.1] ContinuityValidator — npc_personalities, time_warnings 라우팅
-                    try:
-                        for ci, cand in enumerate(candidates):
-                            _ct_ms = cand.get('manuscript', '')
-                            if _ct_ms and ci < len(validation_results):
-                                ct_result = continuity_validator.validate(next_ep, _ct_ms, _cv_context)
-                                ct_violations = ct_result.get('violations', [])
-                                ct_warnings = ct_result.get('warnings', [])
-                                if ct_violations:
-                                    for v in ct_violations:
-                                        reason = v.get('reason', str(v))
-                                        validation_results[ci]['warnings'].append(f"[V66.1] 연속성: {reason}")
-                                    validation_results[ci]['warning_count'] = len(validation_results[ci]['warnings'])
-                                    validation_results[ci]['focus_points'].append(
-                                        f"연속성 위반 {len(ct_violations)}건"
-                                    )
-                                    self.app.ui.log(f"      ⚠️ 후보{ci+1} 연속성 위반 {len(ct_violations)}건")
-                                if ct_warnings:
-                                    for w in ct_warnings:
-                                        w_msg = w.get('reason', str(w)) if isinstance(w, dict) else str(w)
-                                        validation_results[ci]['warnings'].append(f"[V66.1] 연속성 경고: {w_msg}")
-                                    validation_results[ci]['warning_count'] = len(validation_results[ci]['warnings'])
-                    except Exception as _ct_err:
-                        self.app.ui.log(f"      ⚠️ [V66.1] ContinuityValidator 실행 실패: {str(_ct_err)[:60]}")
+                        # [V66.3] C-3: 빈 candidates 방어 — 모든 후보 생성 실패 시 다음 면담으로 스킵
+                        if not candidates:
+                            logging.error(
+                                f"[Stage4] 제{next_ep}화 {interview_round + 1}차 면담: candidates 빈 배열 — 모든 후보 생성 실패"
+                            )
+                            self.app.ui.log(
+                                f"   🚨 [V66.3] 모든 후보 생성 실패 — {'냉동인간 소환' if interview_round >= 2 else '다음 면담으로 진행'}"
+                            )
+                            director_feedback += "\n[시스템] 모든 후보 생성 실패. 재시도 필요."
+                            previous_attempt = {
+                                "strategy": "none",
+                                "rejection_reason": "모든 후보 생성 실패",
+                                "action_items": [],
+                                "score": 0,
+                            }
+                            continue
 
-                    # [V66.2] C-4: 파괴 엔티티 감지 → Director에 경고 전달
-                    try:
-                        if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
-                            for ci, cand in enumerate(candidates):
-                                _de_ms = cand.get('manuscript', '')
-                                if _de_ms and ci < len(validation_results):
-                                    _de_warnings = self.app.state_tracker.check_destroyed_entity_in_manuscript(_de_ms)
-                                    if _de_warnings:
-                                        for _dw in _de_warnings:
-                                            _dw_msg = _dw.get('message', str(_dw)) if isinstance(_dw, dict) else str(_dw)
-                                            validation_results[ci]['warnings'].append(f"[V66.2] 파괴된 엔티티 등장: {_dw_msg}")
-                                        validation_results[ci]['warning_count'] = len(validation_results[ci]['warnings'])
-                    except (KeyError, ValueError, TypeError) as _de_err:
-                        logging.warning(f"⚠️ [V66.2] 파괴 엔티티 검사 오류: {_de_err}")
-
-                    # [V61.5] 캐시 기반 연속성 검사
-                    if interview_round == 0 and next_ep > 1 and candidates:
-                        stage4_spinner.update_detail(f"제{next_ep}화 · 연속성 검사")
-                        first_manuscript = candidates[0].get('manuscript', '')
-                        continuity_check = self.app.agents['director'].check_manuscript_continuity_with_cache(
-                            new_manuscript=first_manuscript,
-                            ep_num=next_ep,
-                            db=self.app.current_project.db,
-                            limit=10
+                        # Phase 3: Python 사전 검증
+                        stage4_spinner.update_detail(f"제{next_ep}화 · {interview_round + 1}차 면담 · Python 검증")
+                        self.app.ui.log("   🔍 Python 사전 검증 중...")
+                        _recent_ms = []
+                        try:
+                            _recent_ms = self.app.current_project.db.get_recent_manuscripts(before_ep=next_ep, limit=5)
+                        except (
+                            AttributeError,
+                            Exception,
+                        ) as e:  # [V64.P4] IMPORTANT: recent manuscripts for cross-ep validation
+                            self.app.ui.log(f"   ⚠️ [V64.P4] 최근 원고 로드 실패 (교차검증 약화): {str(e)[:60]}")
+                        validation_results = manuscript_validator.validate_all_candidates(
+                            candidates=candidates,
+                            blueprint=blueprint,
+                            prev_manuscript=prev_text,
+                            hud_report=hud_report,
+                            recent_manuscripts=_recent_ms,
                         )
-                        if continuity_check.get("decision") == "CONFLICT":
-                            conflict_summary = continuity_check.get("summary", "연속성 충돌 감지")
-                            self.app.ui.log(f"   ⚠️ [V61.5] 연속성 검사: {conflict_summary[:50]}...")
-                            director_feedback += f"\n[연속성 충돌]\n{conflict_summary}"
 
-                    # [V67] 명시적 모순 검사 — 이전 원고와 비교
-                    if _prev_manuscripts_parts and hasattr(self.app.agents.get('director', None), 'check_manuscript_history_conflicts'):
-                        _ms_history_for_check = []
-                        for _prev_ep in range(max(1, next_ep - 30), next_ep):
+                        for i, vr in enumerate(validation_results):
+                            strategy = (
+                                candidates[i].get("strategy_name", f"후보{i + 1}")
+                                if i < len(candidates)
+                                else f"후보{i + 1}"
+                            )
+                            self.app.ui.log(
+                                f"      • {strategy}: 경고 {vr.get('warning_count', 0)}개, 분량 {vr.get('metrics', {}).get('length', 0)}자"
+                            )
+
+                        # [V63.2] ConsistencyValidator
+                        try:
+                            _cv_context = {
+                                "martial_hud": {},
+                                "karma_matrix": {},
+                                "asset_library": {},
+                                "npc_profiles": {},
+                                "prev_episode_events": [],
+                                "ep_num": next_ep,
+                            }
+                            # [V67.1] incarnation_type 주입 — Validator 오탐 방지
+                            _incarnation_type = ""
                             try:
-                                _prev_ms_data = self.app.current_project.db.get_manuscript(_prev_ep)
-                                if _prev_ms_data:
-                                    _content = _prev_ms_data.get('content', '') if isinstance(_prev_ms_data, dict) else str(_prev_ms_data)
-                                    _ms_history_for_check.append({"ep_num": _prev_ep, "text": _content})
+                                _bible_root = self.app.current_project.master_bible.get(
+                                    "MasterBible", self.app.current_project.master_bible
+                                )
+                                _incarnation_type = _bible_root.get("protagonist_config", {}).get(
+                                    "incarnation_type", ""
+                                )
                             except Exception:
                                 pass
-
-                        # [V67.1] story_context 포함하여 모순 검사 호출
-                        if _ms_history_for_check and candidates:
-                            _first_ms = candidates[0].get('manuscript', '')
-                            if _first_ms:
-                                try:
-                                    _conflict_result = self.app.agents['director'].check_manuscript_history_conflicts(
-                                        ep_num=next_ep,
-                                        current_manuscript=_first_ms,
-                                        manuscript_history=_ms_history_for_check,
-                                        use_summary=False,
-                                        story_context=_story_context
+                            _cv_context["incarnation_type"] = _incarnation_type
+                            # [V66.2] C-1: BlockingValidator dead NPC 감지 활성화
+                            _encyclopedia_npcs = []
+                            if hasattr(self.app, "state_tracker") and self.app.state_tracker:
+                                for _npc_name, _npc_info in getattr(self.app.state_tracker, "npc_registry", {}).items():
+                                    _encyclopedia_npcs.append(
+                                        {
+                                            "name": _npc_name,
+                                            "status": _npc_info.get("status", "alive"),
+                                            "death_arc": _npc_info.get("death_arc"),
+                                            "aliases": _npc_info.get("aliases", []),
+                                        }
                                     )
-                                    if _conflict_result.get('decision') == 'CONFLICT':
-                                        _conflict_summary = _conflict_result.get('summary', '모순 감지')
-                                        self.app.ui.log(f"   ⚠️ [V67] 원고 역사 충돌: {_conflict_summary[:80]}")
-                                        director_feedback += f"\n[V67 원고 역사 충돌]\n{_conflict_summary}"
-                                except Exception as _hc_err:
-                                    logging.warning(f"⚠️ [V67] 원고 역사 충돌 검사 실패 (비차단): {str(_hc_err)[:50]}")
+                            _cv_context["encyclopedia"] = {"npcs": _encyclopedia_npcs}
+                            # [V66.1] 시간선 경고를 검증 컨텍스트에 주입
+                            _cv_context["time_warnings"] = getattr(self, "_time_consistency_warnings", [])
+                            # [V66.1] BlockingValidator/ContinuityValidator에 추적 데이터 전달
+                            if hasattr(self.app, "state_tracker") and self.app.state_tracker:
+                                _cv_context["item_states"] = (
+                                    {
+                                        name: info.get("condition", "정상")
+                                        for name, info in self.app.state_tracker.item_state_registry.items()
+                                    }
+                                    if hasattr(self.app.state_tracker, "item_state_registry")
+                                    else {}
+                                )
+                                _cv_context["npc_personalities"] = (
+                                    {
+                                        name: {
+                                            "traits": info.get("personality_traits", ""),
+                                            "motivation": info.get("primary_motivation", ""),
+                                        }
+                                        for name, info in self.app.state_tracker.npc_registry.items()
+                                        if info.get("personality_traits")
+                                    }
+                                    if hasattr(self.app.state_tracker, "npc_registry")
+                                    else {}
+                                )
+                            for ci, cand in enumerate(candidates):
+                                _cv_ms = cand.get("manuscript", "")
+                                if _cv_ms and ci < len(validation_results):
+                                    cv_result = consistency_validator.validate(_cv_ms, _cv_context)
+                                    cv_violations = cv_result.get("violations", [])
+                                    cv_penalty = cv_result.get("score_penalty", 0)
+                                    if cv_violations:
+                                        for v in cv_violations:
+                                            reason = v.get("reason", str(v))
+                                            validation_results[ci]["warnings"].append(f"[V63.2] 일관성: {reason}")
+                                        validation_results[ci]["warning_count"] = len(
+                                            validation_results[ci]["warnings"]
+                                        )
+                                        validation_results[ci]["focus_points"].append(
+                                            f"일관성 위반 {len(cv_violations)}건 (감점 {cv_penalty})"
+                                        )
+                                        self.app.ui.log(f"      ⚠️ 후보{ci + 1} 일관성 위반 {len(cv_violations)}건")
+                        except Exception as _cv_err:
+                            self.app.ui.log(f"      ⚠️ [V63.2] ConsistencyValidator 실행 실패: {str(_cv_err)[:60]}")
 
-                    # Phase 4: Director 면담
-                    stage4_spinner.update_detail(f"제{next_ep}화 · {interview_round + 1}차 면담 · Director 심사")
-                    self.app.ui.log(f"   🎬 Director 면담 중...")
-                    # [V65] PerfTimer: Director 대면 측정
-                    try:
-                        self.app.perf_timer.start(f"s4_ep{next_ep}_director_r{interview_round}")
-                    except Exception:
-                        pass
-                    # [V66.3] C-1: mandatory_context + Python 검증 경고를 Director에 전달
-                    # validation_results에서 경고를 추출하여 mandatory_context에 병합
-                    _director_mc_parts = [mandatory_context] if mandatory_context else []
-                    _vr_warnings_for_director = []
-                    for _vr_idx, _vr in enumerate(validation_results):
-                        _vr_warns = _vr.get('warnings', [])
-                        if _vr_warns:
-                            _label = ['A', 'B', 'C'][_vr_idx] if _vr_idx < 3 else f'{_vr_idx+1}'
-                            _vr_warnings_for_director.append(
-                                f"[후보 {_label} Python 감지 경고]\n" + "\n".join(_vr_warns[:10])
+                        # [V66.1] BlockingValidator — item_states 기반 파손 아이템 사용 체크
+                        try:
+                            for ci, cand in enumerate(candidates):
+                                _bv_ms = cand.get("manuscript", "")
+                                if _bv_ms and ci < len(validation_results):
+                                    bv_result = blocking_validator.validate(_bv_ms, _cv_context)
+                                    bv_failures = bv_result.get("failures", [])
+                                    if bv_failures:
+                                        for f in bv_failures:
+                                            reason = f.get("reason", str(f))
+                                            validation_results[ci]["warnings"].append(f"[V66.1] BLOCKING: {reason}")
+                                        validation_results[ci]["warning_count"] = len(
+                                            validation_results[ci]["warnings"]
+                                        )
+                                        validation_results[ci]["focus_points"].append(
+                                            f"BLOCKING 위반 {len(bv_failures)}건"
+                                        )
+                                        self.app.ui.log(f"      ⚠️ 후보{ci + 1} BLOCKING 위반 {len(bv_failures)}건")
+                        except Exception as _bv_err:
+                            self.app.ui.log(f"      ⚠️ [V66.1] BlockingValidator 실행 실패: {str(_bv_err)[:60]}")
+
+                        # [V66.1] ContinuityValidator — npc_personalities, time_warnings 라우팅
+                        try:
+                            for ci, cand in enumerate(candidates):
+                                _ct_ms = cand.get("manuscript", "")
+                                if _ct_ms and ci < len(validation_results):
+                                    ct_result = continuity_validator.validate(next_ep, _ct_ms, _cv_context)
+                                    ct_violations = ct_result.get("violations", [])
+                                    ct_warnings = ct_result.get("warnings", [])
+                                    if ct_violations:
+                                        for v in ct_violations:
+                                            reason = v.get("reason", str(v))
+                                            validation_results[ci]["warnings"].append(f"[V66.1] 연속성: {reason}")
+                                        validation_results[ci]["warning_count"] = len(
+                                            validation_results[ci]["warnings"]
+                                        )
+                                        validation_results[ci]["focus_points"].append(
+                                            f"연속성 위반 {len(ct_violations)}건"
+                                        )
+                                        self.app.ui.log(f"      ⚠️ 후보{ci + 1} 연속성 위반 {len(ct_violations)}건")
+                                    if ct_warnings:
+                                        for w in ct_warnings:
+                                            w_msg = w.get("reason", str(w)) if isinstance(w, dict) else str(w)
+                                            validation_results[ci]["warnings"].append(f"[V66.1] 연속성 경고: {w_msg}")
+                                        validation_results[ci]["warning_count"] = len(
+                                            validation_results[ci]["warnings"]
+                                        )
+                        except Exception as _ct_err:
+                            self.app.ui.log(f"      ⚠️ [V66.1] ContinuityValidator 실행 실패: {str(_ct_err)[:60]}")
+
+                        # [V66.2] C-4: 파괴 엔티티 감지 → Director에 경고 전달
+                        try:
+                            if hasattr(self.app, "state_tracker") and self.app.state_tracker:
+                                for ci, cand in enumerate(candidates):
+                                    _de_ms = cand.get("manuscript", "")
+                                    if _de_ms and ci < len(validation_results):
+                                        _de_warnings = self.app.state_tracker.check_destroyed_entity_in_manuscript(
+                                            _de_ms
+                                        )
+                                        if _de_warnings:
+                                            for _dw in _de_warnings:
+                                                _dw_msg = (
+                                                    _dw.get("message", str(_dw)) if isinstance(_dw, dict) else str(_dw)
+                                                )
+                                                validation_results[ci]["warnings"].append(
+                                                    f"[V66.2] 파괴된 엔티티 등장: {_dw_msg}"
+                                                )
+                                            validation_results[ci]["warning_count"] = len(
+                                                validation_results[ci]["warnings"]
+                                            )
+                        except (KeyError, ValueError, TypeError) as _de_err:
+                            logging.warning(f"⚠️ [V66.2] 파괴 엔티티 검사 오류: {_de_err}")
+
+                        # [V61.5] 캐시 기반 연속성 검사
+                        if interview_round == 0 and next_ep > 1 and candidates:
+                            stage4_spinner.update_detail(f"제{next_ep}화 · 연속성 검사")
+                            first_manuscript = candidates[0].get("manuscript", "")
+                            continuity_check = self.app.agents["director"].check_manuscript_continuity_with_cache(
+                                new_manuscript=first_manuscript,
+                                ep_num=next_ep,
+                                db=self.app.current_project.db,
+                                limit=10,
                             )
-                    if _vr_warnings_for_director:
-                        _director_mc_parts.append(
-                            "[V66.3] Python 사전 검증 결과 (Director 참고용)\n" +
-                            "\n\n".join(_vr_warnings_for_director)
+                            if continuity_check.get("decision") == "CONFLICT":
+                                conflict_summary = continuity_check.get("summary", "연속성 충돌 감지")
+                                self.app.ui.log(f"   ⚠️ [V61.5] 연속성 검사: {conflict_summary[:50]}...")
+                                director_feedback += f"\n[연속성 충돌]\n{conflict_summary}"
+
+                        # [V67] 명시적 모순 검사 — 이전 원고와 비교
+                        if _prev_manuscripts_parts and hasattr(
+                            self.app.agents.get("director", None), "check_manuscript_history_conflicts"
+                        ):
+                            _ms_history_for_check = []
+                            for _prev_ep in range(max(1, next_ep - 30), next_ep):
+                                try:
+                                    _prev_ms_data = self.app.current_project.db.get_manuscript(_prev_ep)
+                                    if _prev_ms_data:
+                                        _content = (
+                                            _prev_ms_data.get("content", "")
+                                            if isinstance(_prev_ms_data, dict)
+                                            else str(_prev_ms_data)
+                                        )
+                                        _ms_history_for_check.append({"ep_num": _prev_ep, "text": _content})
+                                except Exception:
+                                    pass
+
+                            # [V67.1] story_context 포함하여 모순 검사 호출
+                            if _ms_history_for_check and candidates:
+                                _first_ms = candidates[0].get("manuscript", "")
+                                if _first_ms:
+                                    try:
+                                        _conflict_result = self.app.agents[
+                                            "director"
+                                        ].check_manuscript_history_conflicts(
+                                            ep_num=next_ep,
+                                            current_manuscript=_first_ms,
+                                            manuscript_history=_ms_history_for_check,
+                                            use_summary=False,
+                                            story_context=_story_context,
+                                        )
+                                        if _conflict_result.get("decision") == "CONFLICT":
+                                            _conflict_summary = _conflict_result.get("summary", "모순 감지")
+                                            self.app.ui.log(f"   ⚠️ [V67] 원고 역사 충돌: {_conflict_summary[:80]}")
+                                            director_feedback += f"\n[V67 원고 역사 충돌]\n{_conflict_summary}"
+                                    except Exception as _hc_err:
+                                        logging.warning(
+                                            f"⚠️ [V67] 원고 역사 충돌 검사 실패 (비차단): {str(_hc_err)[:50]}"
+                                        )
+
+                        # Phase 4: Director 면담
+                        stage4_spinner.update_detail(f"제{next_ep}화 · {interview_round + 1}차 면담 · Director 심사")
+                        self.app.ui.log("   🎬 Director 면담 중...")
+                        # [V65] PerfTimer: Director 대면 측정
+                        try:
+                            self.app.perf_timer.start(f"s4_ep{next_ep}_director_r{interview_round}")
+                        except Exception:
+                            pass
+                        # [V66.3] C-1: mandatory_context + Python 검증 경고를 Director에 전달
+                        # validation_results에서 경고를 추출하여 mandatory_context에 병합
+                        _director_mc_parts = [mandatory_context] if mandatory_context else []
+                        _vr_warnings_for_director = []
+                        for _vr_idx, _vr in enumerate(validation_results):
+                            _vr_warns = _vr.get("warnings", [])
+                            if _vr_warns:
+                                _label = ["A", "B", "C"][_vr_idx] if _vr_idx < 3 else f"{_vr_idx + 1}"
+                                _vr_warnings_for_director.append(
+                                    f"[후보 {_label} Python 감지 경고]\n" + "\n".join(_vr_warns[:10])
+                                )
+                        if _vr_warnings_for_director:
+                            _director_mc_parts.append(
+                                "[V66.3] Python 사전 검증 결과 (Director 참고용)\n"
+                                + "\n\n".join(_vr_warnings_for_director)
+                            )
+                        # [V69.1] V67 원고 역사 충돌 + 연속성 충돌 경고를 Director에 전달
+                        if director_feedback and director_feedback.strip():
+                            _director_mc_parts.append(
+                                "🚨 [V69.1] Python 감지된 원고 충돌 경고 (반드시 반영하세요)\n"
+                                + director_feedback.strip()
+                            )
+                        _director_mandatory_context = "\n\n".join(_director_mc_parts)
+
+                        director_result = self.app.agents["director"].select_and_judge_ensemble(
+                            ep_num=next_ep,
+                            candidates=candidates,
+                            validation_results=validation_results,
+                            blueprint=blueprint,
+                            previous_ending=prev_ending,
+                            arc_pos=arc_pos,
+                            total_eps=total_ep_in_arc,
+                            retry_count=interview_round,
+                            episode_digest=_episode_digest,
+                            mandatory_context=_director_mandatory_context,
+                            prev_manuscripts_text=_prev_manuscripts_text,  # [V67]
+                            story_context=_story_context,  # [V67.1]
                         )
-                    # [V69.1] V67 원고 역사 충돌 + 연속성 충돌 경고를 Director에 전달
-                    if director_feedback and director_feedback.strip():
-                        _director_mc_parts.append(
-                            "🚨 [V69.1] Python 감지된 원고 충돌 경고 (반드시 반영하세요)\n" +
-                            director_feedback.strip()
-                        )
-                    _director_mandatory_context = "\n\n".join(_director_mc_parts)
+                        try:
+                            self.app.perf_timer.stop(f"s4_ep{next_ep}_director_r{interview_round}")
+                        except Exception:
+                            pass
 
-                    director_result = self.app.agents['director'].select_and_judge_ensemble(
-                        ep_num=next_ep,
-                        candidates=candidates,
-                        validation_results=validation_results,
-                        blueprint=blueprint,
-                        previous_ending=prev_ending,
-                        arc_pos=arc_pos,
-                        total_eps=total_ep_in_arc,
-                        retry_count=interview_round,
-                        episode_digest=_episode_digest,
-                        mandatory_context=_director_mandatory_context,
-                        prev_manuscripts_text=_prev_manuscripts_text,  # [V67]
-                        story_context=_story_context  # [V67.1]
-                    )
-                    try:
-                        self.app.perf_timer.stop(f"s4_ep{next_ep}_director_r{interview_round}")
-                    except Exception:
-                        pass
+                        selected = director_result.get("selected", "A")
+                        verdict = director_result.get("verdict", "REJECT")
+                        score = director_result.get("score", 0)
+                        reason = director_result.get("selection_reason", "")
 
-                    selected = director_result.get('selected', 'A')
-                    verdict = director_result.get('verdict', 'REJECT')
-                    score = director_result.get('score', 0)
-                    reason = director_result.get('selection_reason', '')
+                        self.app.ui.log(f"   📊 Director 판정: {verdict} (점수: {score}, 선택: 후보 {selected})")
+                        self.app.ui.log(f"      └─ 사유: {reason[:80]}...")
 
-                    self.app.ui.log(f"   📊 Director 판정: {verdict} (점수: {score}, 선택: 후보 {selected})")
-                    self.app.ui.log(f"      └─ 사유: {reason[:80]}...")
+                        if verdict == "PASS":
+                            selected_candidate = director_result.get("selected_candidate", {})
+                            final_manuscript = selected_candidate.get("manuscript", "")
+                            final_title = selected_candidate.get("title", f"제{next_ep}화")
+                            final_state_updates = director_result.get("state_updates", {})
 
-                    if verdict == "PASS":
-                        selected_candidate = director_result.get('selected_candidate', {})
-                        final_manuscript = selected_candidate.get('manuscript', '')
-                        final_title = selected_candidate.get('title', f'제{next_ep}화')
-                        final_state_updates = director_result.get('state_updates', {})
+                            # [V66.1] F-1: 시간선 일관성 체크 → 검증 파이프라인에 경고 전달
+                            if hasattr(self.app, "state_tracker") and self.app.state_tracker:
+                                try:
+                                    _time_warnings = self.app.state_tracker.check_time_consistency(
+                                        final_manuscript, self.app.state_tracker.in_world_timeline
+                                    )
+                                    if _time_warnings:
+                                        for tw in _time_warnings:
+                                            self.app.ui.log(f"   ⏰ [V66.1] 시간선 경고: {tw}")
+                                        # [V66.1] 검증 파이프라인용 경고 저장
+                                        if not hasattr(self, "_time_consistency_warnings"):
+                                            self._time_consistency_warnings = []
+                                        self._time_consistency_warnings.extend(_time_warnings)
+                                except (KeyError, ValueError, TypeError) as _tc_err:
+                                    logging.warning(f"⚠️ [V66.1] 시간선 검사 오류: {_tc_err}")
 
-                        # [V66.1] F-1: 시간선 일관성 체크 → 검증 파이프라인에 경고 전달
-                        if hasattr(self.app, 'state_tracker') and self.app.state_tracker:
-                            try:
-                                _time_warnings = self.app.state_tracker.check_time_consistency(final_manuscript, self.app.state_tracker.in_world_timeline)
-                                if _time_warnings:
-                                    for tw in _time_warnings:
-                                        self.app.ui.log(f"   ⏰ [V66.1] 시간선 경고: {tw}")
-                                    # [V66.1] 검증 파이프라인용 경고 저장
-                                    if not hasattr(self, '_time_consistency_warnings'):
-                                        self._time_consistency_warnings = []
-                                    self._time_consistency_warnings.extend(_time_warnings)
-                            except (KeyError, ValueError, TypeError) as _tc_err:
-                                logging.warning(f"⚠️ [V66.1] 시간선 검사 오류: {_tc_err}")
-
-                        self.app.ui.log(f"   ✅ {interview_round + 1}차 면담 PASS!")
-                        break
-                    else:
-                        feedback = director_result.get('feedback', {})
-                        action_items = director_result.get('action_items', [])
-                        director_feedback = "\n".join(action_items) if action_items else str(feedback.get('issues', []))
-                        previous_attempt = {
-                            'strategy': selected,
-                            'rejection_reason': director_feedback,
-                            'action_items': action_items,
-                            'score': score
-                        }
-                        self.app.ui.log(f"   ❌ {interview_round + 1}차 면담 REJECT. 피드백: {director_feedback[:100]}...")
+                            self.app.ui.log(f"   ✅ {interview_round + 1}차 면담 PASS!")
+                            break
+                        else:
+                            feedback = director_result.get("feedback", {})
+                            action_items = director_result.get("action_items", [])
+                            director_feedback = (
+                                "\n".join(action_items) if action_items else str(feedback.get("issues", []))
+                            )
+                            previous_attempt = {
+                                "strategy": selected,
+                                "rejection_reason": director_feedback,
+                                "action_items": action_items,
+                                "score": score,
+                            }
+                            self.app.ui.log(
+                                f"   ❌ {interview_round + 1}차 면담 REJECT. 피드백: {director_feedback[:100]}..."
+                            )
 
                 # ===== 3번 모두 실패: 냉동인간 소환 =====
                 if not final_manuscript:
-                    self.app.ui.log(f"\n🧊 [냉동인간 소환] 3번 면담 모두 실패. 기존 Writer로 최종 시도...")
+                    self.app.ui.log("\n🧊 [냉동인간 소환] 3번 면담 모두 실패. 기존 Writer로 최종 시도...")
 
                     try:
-                        frozen_result = self.app.agents['writer'].write_v20_manuscript(
+                        frozen_result = self.app.agents["writer"].write_v20_manuscript(
                             ep_num=next_ep,
-                            breakdown_doc=blueprint.get('integrated_scenario', ''),
+                            breakdown_doc=blueprint.get("integrated_scenario", ""),
                             master_bible=self.app.current_project.master_bible,
                             hud_report=hud_report,
                             purism_prompt=purism_prompt,
@@ -1197,45 +1301,57 @@ JSON으로 출력:
                             feedback=director_feedback,
                             prev_full_manuscript=prev_text,
                             arc_doc=arc_tactical,
-                            protagonist_name=self.app._get_protagonist_name()
+                            protagonist_name=self.app._get_protagonist_name(),
                         )
 
-                        frozen_manuscript = frozen_result.get('content', '') if isinstance(frozen_result, dict) else str(frozen_result)
-                        frozen_title = frozen_result.get('title', f'제{next_ep}화') if isinstance(frozen_result, dict) else f'제{next_ep}화'
+                        frozen_manuscript = (
+                            frozen_result.get("content", "") if isinstance(frozen_result, dict) else str(frozen_result)
+                        )
+                        frozen_title = (
+                            frozen_result.get("title", f"제{next_ep}화")
+                            if isinstance(frozen_result, dict)
+                            else f"제{next_ep}화"
+                        )
 
-                        frozen_judge = self.app.agents['director'].quick_judge_single(
+                        frozen_judge = self.app.agents["director"].quick_judge_single(
                             ep_num=next_ep,
                             manuscript=frozen_manuscript,
                             blueprint=blueprint,
                             previous_ending=prev_ending,
-                            retry_count=3
+                            retry_count=3,
                         )
 
-                        if frozen_judge.get('verdict') == 'PASS':
+                        if frozen_judge.get("verdict") == "PASS":
                             final_manuscript = frozen_manuscript
                             final_title = frozen_title
-                            final_state_updates = frozen_result.get('state_updates', {}) if isinstance(frozen_result, dict) else {}
+                            final_state_updates = (
+                                frozen_result.get("state_updates", {}) if isinstance(frozen_result, dict) else {}
+                            )
                             self.app.ui.log(f"   ✅ 냉동인간 PASS (점수: {frozen_judge.get('score', 0)})")
-                            self.app.ui.log(f"   ⚠️ [경고] 냉동인간 통과 - 품질 재검토 권장")
+                            self.app.ui.log("   ⚠️ [경고] 냉동인간 통과 - 품질 재검토 권장")
                         else:
-                            self.app.ui.log(f"   ❌ 냉동인간도 REJECT. 인간 개입 필요!")
+                            self.app.ui.log("   ❌ 냉동인간도 REJECT. 인간 개입 필요!")
                             self.app.ui.log(f"      사유: {frozen_judge.get('reason', '알 수 없음')}")
                             self.app.ui.log(f"\n⛔ [EP {next_ep}] 자동 생산 실패. 인간 검토 필요.")
-                            self.app.ui.log(f"   다음 옵션:")
-                            self.app.ui.log(f"   1. Blueprint 수정 후 재시도")
-                            self.app.ui.log(f"   2. 수동 원고 작성")
-                            self.app.ui.log(f"   3. 이 에피소드 건너뛰기")
+                            self.app.ui.log("   다음 옵션:")
+                            self.app.ui.log("   1. Blueprint 수정 후 재시도")
+                            self.app.ui.log("   2. 수동 원고 작성")
+                            self.app.ui.log("   3. 이 에피소드 건너뛰기")
 
                             choice = self.app._get_int_input(
                                 "\n👉 선택 (1.Blueprint수정 / 2.수동작성 / 3.건너뛰기 / 4.강제진행): ",
-                                default=4, min_val=1, max_val=4
+                                default=4,
+                                min_val=1,
+                                max_val=4,
                             )
 
                             if choice == 4:
                                 final_manuscript = frozen_manuscript
                                 final_title = f"[⚠️ 강제 통과] {frozen_title}"
-                                final_state_updates = frozen_result.get('state_updates', {}) if isinstance(frozen_result, dict) else {}
-                                self.app.ui.log(f"   ⚠️ 강제 진행 선택됨. 품질 보장 불가.")
+                                final_state_updates = (
+                                    frozen_result.get("state_updates", {}) if isinstance(frozen_result, dict) else {}
+                                )
+                                self.app.ui.log("   ⚠️ 강제 진행 선택됨. 품질 보장 불가.")
                             else:
                                 self.app.ui.log(f"   🛑 제{next_ep}화 생산 중단. 메뉴로 돌아갑니다.")
                                 return
@@ -1250,29 +1366,29 @@ JSON으로 출력:
                     self.app.ui.log(f"\n📦 제{next_ep}화 데이터 정산 중...")
 
                     # HUD 업데이트
-                    if final_state_updates and hasattr(self.app.sys, 'hud'):
+                    if final_state_updates and hasattr(self.app.sys, "hud"):
                         try:
-                            approved = self.app.agents['director'].on_approve_workflow(
+                            approved = self.app.agents["director"].on_approve_workflow(
                                 ep_num=next_ep,
                                 state_updates=final_state_updates,
-                                current_hud=self.app.sys.hud.snapshot() if hasattr(self.app.sys.hud, 'snapshot') else {}
+                                current_hud=self.app.sys.hud.snapshot()
+                                if hasattr(self.app.sys.hud, "snapshot")
+                                else {},
                             )
-                            if approved.get('applied_updates'):
-                                if hasattr(self.app.sys.hud, 'bulk_update'):
-                                    self.app.sys.hud.bulk_update(approved['applied_updates'])
-                                    self.app.ui.log(f"   ✅ HUD 업데이트 완료")
+                            if approved.get("applied_updates"):
+                                if hasattr(self.app.sys.hud, "bulk_update"):
+                                    self.app.sys.hud.bulk_update(approved["applied_updates"])
+                                    self.app.ui.log("   ✅ HUD 업데이트 완료")
                                 else:
-                                    self.app.sys.hud.update_physical_status(approved['applied_updates'])
-                                    self.app.ui.log(f"   ✅ HUD 업데이트 완료 (fallback)")
+                                    self.app.sys.hud.update_physical_status(approved["applied_updates"])
+                                    self.app.ui.log("   ✅ HUD 업데이트 완료 (fallback)")
                         except Exception as hud_err:
                             self.app.ui.log(f"   ⚠️ HUD 업데이트 실패: {hud_err}")
 
                     # DB 저장
                     try:
                         self.app.current_project.db.save_manuscript(
-                            ep_num=next_ep,
-                            title=final_title,
-                            content=final_manuscript
+                            ep_num=next_ep, title=final_title, content=final_manuscript
                         )
 
                         if final_state_updates:
@@ -1280,7 +1396,7 @@ JSON으로 출력:
                             self.app.ui.log(f"      📊 제 {next_ep}화 15대 지표 트래커 저장 완료")
 
                         self.app.current_project.db.conn.commit()
-                        self.app.ui.log(f"   ✅ DB 저장 완료")
+                        self.app.ui.log("   ✅ DB 저장 완료")
                     except Exception as db_err:
                         self.app.ui.log(f"   🚨 DB 저장 실패: {db_err}")
                         continue
@@ -1288,7 +1404,7 @@ JSON으로 출력:
                     # 파일 저장
                     try:
                         file_path = output_dir / f"ep_{next_ep:04d}.txt"
-                        file_path.write_text(f"# {final_title}\n\n{final_manuscript}", encoding='utf-8')
+                        file_path.write_text(f"# {final_title}\n\n{final_manuscript}", encoding="utf-8")
                         self.app.ui.log(f"   ✅ 파일 저장: {file_path.name}")
                     except Exception as file_err:
                         self.app.ui.log(f"   ⚠️ 파일 저장 실패: {file_err}")
@@ -1331,7 +1447,7 @@ JSON으로 출력:
                                 causal_links=[],
                                 arc_no=_mem_arc_no,
                                 event_types=list(_mem_event_types),
-                                entity_names=list(_mem_entity_names)
+                                entity_names=list(_mem_entity_names),
                             )
                             self.app.ui.log(f"   ✅ 벡터 메모리 저장 (arc={_mem_arc_no}, events={_mem_event_types})")
                     except Exception as _mem_err:
@@ -1355,116 +1471,140 @@ JSON으로 출력:
                         if V50_MODULES_AVAILABLE and self.app.character_voice:
                             try:
                                 self.app.character_voice.analyze_manuscript(next_ep, final_manuscript)
-                            except Exception:  # [V64.P4] OPTIONAL: voice analysis
-                                pass
-                            self.app.character_voice.save_to_json(os.path.join(logs_dir, "character_voice.json"))
+                                self.app.character_voice.save_to_json(os.path.join(logs_dir, "character_voice.json"))
+                            except Exception as e:
+                                logging.warning(f"⚠️ [V64.P4-fix] character_voice 분석/저장 실패: {e}")
 
                         if V50_MODULES_AVAILABLE and self.app.foreshadow_tracker:
                             # [V66] 원고에서 복선 자동 감지
                             try:
                                 self.app.foreshadow_tracker.auto_detect_from_manuscript(next_ep, final_manuscript)
-                            except Exception:  # [V66] OPTIONAL: foreshadow auto-detect
-                                pass
-                            self.app.foreshadow_tracker.save_to_json(os.path.join(logs_dir, "foreshadow.json"))
+                                self.app.foreshadow_tracker.save_to_json(os.path.join(logs_dir, "foreshadow.json"))
+                            except Exception as e:
+                                logging.warning(f"⚠️ [V66-fix] foreshadow 감지/저장 실패: {e}")
 
-                        self.app.ui.log(f"   💾 [V60.87] 로그 파일 저장 완료")
+                        self.app.ui.log("   💾 [V60.87] 로그 파일 저장 완료")
                     except Exception as log_err:
                         self.app.ui.log(f"   ⚠️ 로그 저장 실패: {log_err}")
 
                     # ===== [V60.82] Episode Bible 저장 =====
                     bible_delta = None  # [V70] NameError 방지 사전 초기화
                     try:
-                        self.app.ui.log(f"   📖 [V60.82] Manager 정산 시작...")
+                        self.app.ui.log("   📖 [V60.82] Manager 정산 시작...")
 
                         audit = {}
                         try:
-                            current_state = self.app.current_project.latest_state if hasattr(self.app.current_project, 'latest_state') else {}
-                            if not current_state and hasattr(self.app.sys, 'hud') and self.app.sys.hud:
-                                current_state = {'actual_truth': self.app.sys.hud.pro_data}
+                            current_state = (
+                                self.app.current_project.latest_state
+                                if hasattr(self.app.current_project, "latest_state")
+                                else {}
+                            )
+                            if not current_state and hasattr(self.app.sys, "hud") and self.app.sys.hud:
+                                current_state = {"actual_truth": self.app.sys.hud.pro_data}
 
                             lore_list = []
                             active_seeds = []
                             causal_history = ""
 
-                            if hasattr(self.app.current_project, 'master_bible'):
-                                bible_root = self.app.current_project.master_bible.get('MasterBible', self.app.current_project.master_bible)
-                                assets = bible_root.get('AssetLibrary', {})
-                                lore_list = assets.get('KeyNPCs', []) or assets.get('Key_NPCs', [])
+                            if hasattr(self.app.current_project, "master_bible"):
+                                bible_root = self.app.current_project.master_bible.get(
+                                    "MasterBible", self.app.current_project.master_bible
+                                )
+                                assets = bible_root.get("AssetLibrary", {})
+                                lore_list = assets.get("KeyNPCs", []) or assets.get("Key_NPCs", [])
 
-                            if hasattr(self.app.current_project, 'db'):
+                            if hasattr(self.app.current_project, "db"):
                                 try:
-                                    seeds_data = self.app.current_project.db.load_anchor('active_seeds')
+                                    seeds_data = self.app.current_project.db.load_anchor("active_seeds")
                                     if seeds_data:
                                         active_seeds = seeds_data if isinstance(seeds_data, list) else []
                                 except (ValueError, TypeError, json.JSONDecodeError) as e:
                                     logging.warning(f"[V66.3] active_seeds 로드 실패: {e}")
 
-                            raw_audit = self.app.agents['manager'].update_state_and_lore_v20(
+                            raw_audit = self.app.agents["manager"].update_state_and_lore_v20(
                                 ep_num=next_ep,
                                 manuscript=final_manuscript,
                                 current_state=current_state,
                                 lore_list=lore_list,
                                 active_seeds=active_seeds,
-                                causal_history=causal_history
+                                causal_history=causal_history,
                             )
 
-                            if raw_audit and not raw_audit.get('parsing_error'):
+                            if raw_audit and not raw_audit.get("parsing_error"):
                                 audit = raw_audit
-                                self.app.ui.log(f"      ✅ Manager 정산 완료")
+                                self.app.ui.log("      ✅ Manager 정산 완료")
                             else:
-                                self.app.ui.log(f"      ⚠️ Manager 파싱 실패, 기본 추출 사용")
+                                self.app.ui.log("      ⚠️ Manager 파싱 실패, 기본 추출 사용")
                         except Exception as mgr_err:
                             self.app.ui.log(f"      ⚠️ Manager 호출 실패: {str(mgr_err)[:50]}")
 
-                        new_lore = audit.get('new_lore', {}) if isinstance(audit, dict) else {}
-                        knowledge_map = audit.get('knowledge_map_updates', {}) if isinstance(audit, dict) else {}
-                        recovered = audit.get('recovered_seeds', []) if isinstance(audit, dict) else []
-                        state_updates_from_audit = audit.get('state_updates', {}) if isinstance(audit, dict) else {}
-                        causal_links = audit.get('causal_links', []) if isinstance(audit, dict) else []
+                        new_lore = audit.get("new_lore", {}) if isinstance(audit, dict) else {}
+                        knowledge_map = audit.get("knowledge_map_updates", {}) if isinstance(audit, dict) else {}
+                        recovered = audit.get("recovered_seeds", []) if isinstance(audit, dict) else []
+                        state_updates_from_audit = audit.get("state_updates", {}) if isinstance(audit, dict) else {}
+                        causal_links = audit.get("causal_links", []) if isinstance(audit, dict) else []
 
-                        actual_truth = state_updates_from_audit.get('actual_truth', {}) if isinstance(state_updates_from_audit, dict) else {}
+                        actual_truth = (
+                            state_updates_from_audit.get("actual_truth", {})
+                            if isinstance(state_updates_from_audit, dict)
+                            else {}
+                        )
 
                         prev_actual = {}
-                        if hasattr(self.app.current_project, 'latest_state'):
-                            prev_actual = self.app.current_project.latest_state.get('actual_truth', {})
+                        if hasattr(self.app.current_project, "latest_state"):
+                            prev_actual = self.app.current_project.latest_state.get("actual_truth", {})
 
-                        prev_equipment = set(prev_actual.get('equipment', []) if isinstance(prev_actual.get('equipment'), list) else [])
-                        curr_equipment = set(actual_truth.get('equipment', []) if isinstance(actual_truth.get('equipment'), list) else [])
-                        prev_martial = set(prev_actual.get('martial_arts', []) if isinstance(prev_actual.get('martial_arts'), list) else [])
-                        curr_martial = set(actual_truth.get('martial_arts', []) if isinstance(actual_truth.get('martial_arts'), list) else [])
+                        prev_equipment = set(
+                            prev_actual.get("equipment", []) if isinstance(prev_actual.get("equipment"), list) else []
+                        )
+                        curr_equipment = set(
+                            actual_truth.get("equipment", []) if isinstance(actual_truth.get("equipment"), list) else []
+                        )
+                        prev_martial = set(
+                            prev_actual.get("martial_arts", [])
+                            if isinstance(prev_actual.get("martial_arts"), list)
+                            else []
+                        )
+                        curr_martial = set(
+                            actual_truth.get("martial_arts", [])
+                            if isinstance(actual_truth.get("martial_arts"), list)
+                            else []
+                        )
 
                         new_items_from_equip = list(curr_equipment - prev_equipment)
                         lost_items_from_equip = list(prev_equipment - curr_equipment)
                         new_martial_arts = list(curr_martial - prev_martial)
 
-                        key_items = new_lore.get('Key_Items', []) if isinstance(new_lore.get('Key_Items'), list) else []
-                        key_item_names = [i.get('name', str(i)) if isinstance(i, dict) else str(i) for i in key_items]
+                        key_items = new_lore.get("Key_Items", []) if isinstance(new_lore.get("Key_Items"), list) else []
+                        key_item_names = [i.get("name", str(i)) if isinstance(i, dict) else str(i) for i in key_items]
 
-                        key_npcs = new_lore.get('Key_NPCs', []) if isinstance(new_lore.get('Key_NPCs'), list) else []
-                        new_npc_names = [npc.get('name', str(npc)) if isinstance(npc, dict) else str(npc) for npc in key_npcs]
+                        key_npcs = new_lore.get("Key_NPCs", []) if isinstance(new_lore.get("Key_NPCs"), list) else []
+                        new_npc_names = [
+                            npc.get("name", str(npc)) if isinstance(npc, dict) else str(npc) for npc in key_npcs
+                        ]
 
                         npc_deaths = []
                         for npc in key_npcs:
                             if isinstance(npc, dict):
-                                status = npc.get('NPC_Martial_HUD', {}).get('current_status', '')
-                                if '사망' in str(status) or '죽' in str(status) or '절명' in str(status):
-                                    npc_deaths.append(npc.get('name', ''))
+                                status = npc.get("NPC_Martial_HUD", {}).get("current_status", "")
+                                if "사망" in str(status) or "죽" in str(status) or "절명" in str(status):
+                                    npc_deaths.append(npc.get("name", ""))
 
                         relationship_changes = []
                         if isinstance(knowledge_map, dict):
-                            witnesses = knowledge_map.get('new_witnesses', [])
-                            misled = knowledge_map.get('new_misled', [])
+                            witnesses = knowledge_map.get("new_witnesses", [])
+                            misled = knowledge_map.get("new_misled", [])
                             if witnesses:
                                 relationship_changes.extend([f"목격: {w}" for w in witnesses if w])
                             if misled:
                                 relationship_changes.extend([f"오해: {m}" for m in misled if m])
 
-                        karma_matrix = state_updates_from_audit.get('karma_matrix', [])
+                        karma_matrix = state_updates_from_audit.get("karma_matrix", [])
                         if isinstance(karma_matrix, list):
                             for karma in karma_matrix:
-                                if isinstance(karma, dict) and karma.get('target'):
-                                    obs = karma.get('obsession', 0)
-                                    val = karma.get('value', 0)
+                                if isinstance(karma, dict) and karma.get("target"):
+                                    obs = karma.get("obsession", 0)
+                                    val = karma.get("value", 0)
                                     if obs > 50 or val > 50:
                                         relationship_changes.append(f"{karma['target']}: 집착{obs}/오해{val}")
 
@@ -1472,42 +1612,51 @@ JSON으로 출력:
                         if isinstance(recovered, list):
                             for seed in recovered:
                                 if isinstance(seed, dict):
-                                    reveal_list.append(seed.get('seed_id', seed.get('description', str(seed))))
+                                    reveal_list.append(seed.get("seed_id", seed.get("description", str(seed))))
                                 else:
                                     reveal_list.append(str(seed))
 
                         all_new_items = list(set(new_items_from_equip + key_item_names + new_martial_arts))
 
                         bible_delta = {
-                            'new_items': all_new_items,
-                            'lost_items': lost_items_from_equip,
-                            'new_npcs': new_npc_names,
-                            'npc_deaths': npc_deaths,
-                            'relationship_changes': relationship_changes,
-                            'state_changes': actual_truth if actual_truth else final_state_updates,
-                            'time_passed': state_updates_from_audit.get('location', ''),
-                            'reveals': reveal_list,
-                            'causal_links': causal_links,
-                            'karma_matrix': karma_matrix,
-                            'knowledge_map': knowledge_map
+                            "new_items": all_new_items,
+                            "lost_items": lost_items_from_equip,
+                            "new_npcs": new_npc_names,
+                            "npc_deaths": npc_deaths,
+                            "relationship_changes": relationship_changes,
+                            "state_changes": actual_truth if actual_truth else final_state_updates,
+                            "time_passed": state_updates_from_audit.get("location", ""),
+                            "reveals": reveal_list,
+                            "causal_links": causal_links,
+                            "karma_matrix": karma_matrix,
+                            "knowledge_map": knowledge_map,
                         }
 
                         self.app.current_project.db.save_episode_bible(next_ep, bible_delta)
 
                         if actual_truth or state_updates_from_audit:
                             state_log_data = {
-                                'actual_truth': actual_truth if actual_truth else final_state_updates,
-                                'karma_matrix': karma_matrix,
-                                'knowledge_map': knowledge_map,
-                                'public_reputation': state_updates_from_audit.get('public_reputation', {})
+                                "actual_truth": actual_truth if actual_truth else final_state_updates,
+                                "karma_matrix": karma_matrix,
+                                "knowledge_map": knowledge_map,
+                                "public_reputation": state_updates_from_audit.get("public_reputation", {}),
                             }
                             try:
                                 summary = f"제{next_ep}화 정산: {', '.join(all_new_items[:3]) if all_new_items else '변화없음'}"
-                                self.app.current_project.db.save_state_log_with_summary(next_ep, state_log_data, summary)
+                                self.app.current_project.db.save_state_log_with_summary(
+                                    next_ep, state_log_data, summary
+                                )
                             except Exception as state_err:
                                 self.app.ui.log(f"      ⚠️ state_logs 저장 실패: {str(state_err)[:30]}")
 
-                        changes_count = len(all_new_items) + len(lost_items_from_equip) + len(new_npc_names) + len(npc_deaths) + len(relationship_changes) + len(reveal_list)
+                        changes_count = (
+                            len(all_new_items)
+                            + len(lost_items_from_equip)
+                            + len(new_npc_names)
+                            + len(npc_deaths)
+                            + len(relationship_changes)
+                            + len(reveal_list)
+                        )
                         if changes_count > 0:
                             self.app.ui.log(f"   📖 Episode Bible 저장: {changes_count}개 변화 기록")
                             if all_new_items:
@@ -1519,42 +1668,43 @@ JSON으로 출력:
                             if reveal_list:
                                 self.app.ui.log(f"      • 복선 회수: {', '.join(reveal_list[:3])}")
                         else:
-                            self.app.ui.log(f"   📖 Episode Bible 저장 완료 (변화 없음)")
+                            self.app.ui.log("   📖 Episode Bible 저장 완료 (변화 없음)")
 
                     except Exception as bible_err:
                         self.app.ui.log(f"   ⚠️ Episode Bible 저장 실패 (비차단): {str(bible_err)[:50]}")
                         import traceback
+
                         traceback.print_exc()
 
                     # ===== [V68] 에피소드 연결고리 추출 및 저장 =====
                     try:
                         _chain_link = self._extract_chain_link(next_ep, final_manuscript, blueprint)
                         if _chain_link:
-                            self.app.current_project.db.save_anchor(
-                                f'chain_link_{next_ep}',
-                                _chain_link
+                            self.app.current_project.db.save_anchor(f"chain_link_{next_ep}", _chain_link)
+                            _cl_cliff = _chain_link.get("cliffhanger", "")
+                            self.app.ui.log(
+                                f"   [V68] 연결고리 저장 완료 (cliffhanger: {_cl_cliff[:50]}{'...' if len(_cl_cliff) > 50 else ''})"
                             )
-                            _cl_cliff = _chain_link.get('cliffhanger', '')
-                            self.app.ui.log(f"   [V68] 연결고리 저장 완료 (cliffhanger: {_cl_cliff[:50]}{'...' if len(_cl_cliff) > 50 else ''})")
                         else:
-                            self.app.ui.log(f"   [V68] 연결고리 추출 결과 없음 (비차단)")
+                            self.app.ui.log("   [V68] 연결고리 추출 결과 없음 (비차단)")
                     except Exception as _cl_err:
                         self.app.ui.log(f"   [V68] 연결고리 저장 실패 (비차단): {str(_cl_err)[:50]}")
 
                     # ===== [V68] WorldState 갱신 =====
-                    if hasattr(self.app, 'world_state') and self.app.world_state:
+                    if hasattr(self.app, "world_state") and self.app.world_state:
                         try:
                             # state_changes 추출 (arc_data에서)
-                            _ws_sc = arc_data.get('state_changes', {}) if arc_data else {}
+                            _ws_sc = arc_data.get("state_changes", {}) if arc_data else {}
                             if _ws_sc:
                                 self.app.world_state.update_from_state_changes(next_ep, _ws_sc)
 
                             # 주인공 이름 갱신
-                            _ws_prot_name = ''
+                            _ws_prot_name = ""
                             try:
                                 _ws_bible_root = self.app.current_project.master_bible.get(
-                                    'MasterBible', self.app.current_project.master_bible)
-                                _ws_prot_name = _ws_bible_root.get('protagonist_config', {}).get('name', '')
+                                    "MasterBible", self.app.current_project.master_bible
+                                )
+                                _ws_prot_name = _ws_bible_root.get("protagonist_config", {}).get("name", "")
                             except Exception:
                                 pass
                             self.app.world_state.update_protagonist_state(
@@ -1569,10 +1719,10 @@ JSON으로 출력:
                             self.app.ui.log(f"   ⚠️ [V68] 세계 상태 갱신 실패 (비차단): {str(_ws_upd_err)[:60]}")
 
                     # ===== [V68] 팩트 원장 갱신 =====
-                    if hasattr(self.app, 'fact_ledger') and self.app.fact_ledger:
+                    if hasattr(self.app, "fact_ledger") and self.app.fact_ledger:
                         try:
                             # 1) Arc state_changes에서 갱신
-                            _fl_sc = arc_data.get('state_changes', {}) if arc_data else {}
+                            _fl_sc = arc_data.get("state_changes", {}) if arc_data else {}
                             if _fl_sc:
                                 self.app.fact_ledger.update_from_state_changes(next_ep, _fl_sc)
 
@@ -1586,7 +1736,9 @@ JSON으로 출력:
                             # 3) DB 저장
                             self.app.fact_ledger.save()
                             _fl_stats = self.app.fact_ledger.get_stats()
-                            self.app.ui.log(f"   📋 [V68] 팩트 원장 갱신 완료 (인물 {_fl_stats.get('characters', 0)}명, 아이템 {_fl_stats.get('items', 0)}개)")
+                            self.app.ui.log(
+                                f"   📋 [V68] 팩트 원장 갱신 완료 (인물 {_fl_stats.get('characters', 0)}명, 아이템 {_fl_stats.get('items', 0)}개)"
+                            )
                         except Exception as _fl_err:
                             self.app.ui.log(f"   ⚠️ [V68] 팩트 원장 갱신 실패 (비차단): {str(_fl_err)[:50]}")
 
@@ -1603,8 +1755,8 @@ JSON으로 출력:
                         pass
 
             # [V62.3] Stage 4 루프 종료
-            self.app.ui.log(f"\n{'='*50}")
-            self.app.ui.log(f"📋 Stage 4 집필 세션 종료.")
+            self.app.ui.log(f"\n{'=' * 50}")
+            self.app.ui.log("📋 Stage 4 집필 세션 종료.")
             try:
                 input("   ⏎ Enter를 누르면 메뉴로 돌아갑니다...")
             except EOFError:
@@ -1614,9 +1766,9 @@ JSON으로 출력:
             # [V66.3] ChromaDB 비활성화 시 스킵
             if self.app.memory and self.app.memory.is_operational():
                 try:
-                    self.app.ui.log(f"   🔄 벡터 메모리 일괄 동기화 중...")
+                    self.app.ui.log("   🔄 벡터 메모리 일괄 동기화 중...")
                     self.app.memory.sync_v20_drafts()
-                    self.app.ui.log(f"   ✅ 벡터 메모리 동기화 완료")
+                    self.app.ui.log("   ✅ 벡터 메모리 동기화 완료")
                 except Exception as vec_err:
                     self.app.ui.log(f"   ⚠️ 벡터 메모리 동기화 실패 (비차단): {vec_err}")
 
@@ -1627,6 +1779,7 @@ JSON으로 출력:
         except Exception as e:
             self.app.ui.log(f"\n🚨 Stage 4 V2 오류: {e}")
             import traceback
+
             traceback.print_exc()
             self.app._flush_audit_buffer()  # [V66.1] B-3
             self.app._safe_commit()

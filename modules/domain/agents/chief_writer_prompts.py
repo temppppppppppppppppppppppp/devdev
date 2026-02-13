@@ -4,6 +4,8 @@ ChiefWriter의 대형 프롬프트 문자열을 코드 로직에서 분리.
 [V65] C-4 Part 2: 잔존 프롬프트 4개 추가 외부화.
 """
 
+from modules.core.prompt_loader import PromptLoader
+
 # -- ChiefWriter Output Format Template --  [V64.P4]
 
 # [V60.82] 프롬프트 템플릿 상수 (프리컴파일)
@@ -71,6 +73,34 @@ MODERN_ORIGIN_SECTION = """
 주인공은 현대 세계 출신으로 현대 지식을 내적 독백에서 활용 가능합니다.
 단, 대화에서 현대 용어 남발은 자제하고 세계관에 맞게 표현하세요.
 """
+
+
+_PROMPT_LOADER = PromptLoader()
+
+
+def _load_prompt(key: str, fallback: str) -> str:
+    loaded = _PROMPT_LOADER.load("chief_writer", key)
+    return loaded if loaded is not None else fallback
+
+
+def get_prompt_template_output() -> str:
+    return _load_prompt("PROMPT_TEMPLATE_OUTPUT", PROMPT_TEMPLATE_OUTPUT)
+
+
+def get_common_rules_section() -> str:
+    return _load_prompt("COMMON_RULES_SECTION", COMMON_RULES_SECTION)
+
+
+def get_writing_guidelines_section() -> str:
+    return _load_prompt("WRITING_GUIDELINES_SECTION", WRITING_GUIDELINES_SECTION)
+
+
+def get_primitive_constraint_fallback() -> str:
+    return _load_prompt("PRIMITIVE_CONSTRAINT_FALLBACK", PRIMITIVE_CONSTRAINT_FALLBACK)
+
+
+def get_modern_origin_section() -> str:
+    return _load_prompt("MODERN_ORIGIN_SECTION", MODERN_ORIGIN_SECTION)
 
 
 def build_chief_writer_main_prompt(

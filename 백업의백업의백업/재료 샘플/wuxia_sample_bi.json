@@ -1,0 +1,327 @@
+{
+  "_schema_version": "2.0",
+  "_schema_description": "무협(Wuxia) 장르 Bible 샘플 - 범용 템플릿",
+  "_last_updated": "2026-02-07",
+
+  "MasterBible": {
+    "ProjectData": {
+      "MetaInfo": {
+        "title": "무협 샘플 프로젝트",
+        "grand_objective": "몰락한 가문의 비급을 되찾고 가문을 재건하며 무림맹주의 자리에 오르는 것",
+        "genre_archetype": "wuxia + 환생물 + 복수극",
+        "logline": "현대에서 무협 소설 작가로 살다 죽은 주인공이 몰락한 검문세가의 적장자로 환생, 전생의 지식과 숨겨진 비급을 바탕으로 가문을 재건하고 무림의 정점에 선다.",
+        "total_episodes": 200,
+        "episodes_per_arc": 5,
+        "arcs_per_volume": 5
+      },
+      "CoreIdentity": {
+        "protagonist": "진무현",
+        "protagonist_faction": "진가장 (몰락) → 진가검문 (재건) → 무림맹 (후기)",
+        "edge": "현대인의 논리적 사고 + 무협 소설 수천 편의 지식 + 환생 전 기억으로 함정 회피",
+        "desire": "가문 재건과 복수 - 가문을 멸문시킨 흑풍채를 멸하고 진가검문의 영광을 되찾는 것",
+        "crisis": "환생 시점에 가문은 이미 몰락, 내공은 말류 수준, 적은 강대"
+      },
+      "CommercialCode": {
+        "cider_point": "무림인들이 무시하던 진가의 후예가 잃어버린 비급으로 압도적 실력을 보여주는 통쾌함 + 가문을 멸한 원수들이 무릎 꿇는 장면",
+        "success_device": "비급 습득 후 비약적 성장, 강적 격파, 은원 청산",
+        "attitude": "겸손한 듯하지만 속으로는 냉철하게 계산하는 복수자"
+      }
+    },
+
+    "protagonist_config": {
+      "world_origin": "현대인",
+      "incarnation_type": "환생자",
+      "regression_point": {
+        "death_year": 2024,
+        "death_cause": "교통사고",
+        "return_year": null,
+        "return_context": "무협 세계 진가장의 적장자(15세)로 환생"
+      }
+    },
+
+    "MartialHUD": {
+      "_description": "무협 전용 HUD - 내공/경지/무공/은원 상태 추적",
+      "Protagonist": {
+        "actual_truth": {
+          "name": "진무현",
+          "alias": "없음 (초기) → '검귀(劍鬼)' (중기) → '천하제일검(天下第一劍)' (후기)",
+          "age": 15,
+          "rank": "말류",
+
+          "internal_energy": 5,
+          "martial_arts": [
+            {
+              "name": "진가기본검법",
+              "grade": "하급",
+              "mastery": "성"
+            }
+          ],
+
+          "faction": "진가장 (몰락)",
+          "faction_standing": {
+            "position": "적장자",
+            "reputation": "몰락 가문의 무능한 후예",
+            "authority": "없음"
+          },
+
+          "karma": {
+            "righteous": 50,
+            "evil": 0
+          },
+
+          "equipment": {
+            "weapon": "녹슨 철검",
+            "armor": "없음",
+            "accessories": []
+          },
+
+          "causal_injuries": "환생 시 원래 육체의 기경팔맥이 막혀 있음, 내상 잔존",
+
+          "current_objective": "기경팔맥을 뚫고 말류에서 삼류로 돌파",
+          "mid_term_goal": "진가검법 비급을 찾아 일류 경지 달성",
+          "final_goal": "가문 재건 및 무림맹주 등극"
+        },
+
+        "public_reputation": {
+          "identity": "몰락한 진가장의 무능한 적장자",
+          "martial_level": "말류 (무시 대상)",
+          "perceived_influence": "없음",
+          "jianghu_standing": "없음"
+        }
+      }
+    },
+
+    "WorldState": {
+      "CurrentEra": "중원 대륙, 천무력 32년",
+      "CurrentLocation": "하북성 진가장 폐가",
+      "jianghu_context": {
+        "dominant_factions": [
+          {"name": "무림맹", "power": "정파 최강", "leader": "맹주 풍천웅"},
+          {"name": "마교(천마신교)", "power": "사파 최강", "leader": "교주 혈무극"},
+          {"name": "흑풍채", "power": "하북 일대 장악", "leader": "채주 곽도성"}
+        ],
+        "current_situation": "정사대전 후 10년간의 불안한 휴전. 무림맹은 내분, 마교는 재건 중. 흑풍채가 권력 공백을 틈타 세력 확장 중.",
+        "upcoming_events": [
+          {"time": "3개월 후", "event": "비무대회", "impact": "신예 무인 등용문"},
+          {"time": "1년 후", "event": "무림맹주 교체", "impact": "정파 권력 재편"},
+          {"time": "2년 후", "event": "마교 침공", "impact": "정사 재충돌"},
+          {"time": "5년 후", "event": "천하제일비무", "impact": "무림 패권 결정"}
+        ]
+      },
+      "KarmaMatrix": {
+        "곽도성": {
+          "relation_score": -100,
+          "status": "불구대천의 원수",
+          "note": "진가장을 멸문시킨 흑풍채 채주"
+        },
+        "소연화": {
+          "relation_score": 30,
+          "status": "호감",
+          "note": "이웃 소가장의 영애, 어린 시절 약혼 관계"
+        },
+        "백무영": {
+          "relation_score": 10,
+          "status": "중립",
+          "note": "무림맹 소속 유랑 검객, 진가검법에 관심"
+        },
+        "독고진": {
+          "relation_score": -30,
+          "status": "경계",
+          "note": "흑풍채 소채주, 곽도성의 아들, 소연화를 탐함"
+        },
+        "현공 대사": {
+          "relation_score": 50,
+          "status": "호의",
+          "note": "소림사 장로, 진무현의 부친과 교분이 있었음"
+        }
+      }
+    },
+
+    "AssetLibrary": {
+      "KeyNPCs": [
+        {
+          "name": "곽도성",
+          "role": "메인 빌런",
+          "desc": "흑풍채 채주. 20년 전 진가장을 습격하여 멸문시킨 원수. 진가의 보물인 '천잔검보(天殘劍譜)'를 탈취했으나 해독하지 못하고 있다. 화경 고수로 하북 일대를 공포로 지배한다.",
+          "NPC_Martial_HUD": {
+            "realm": "화경 초입",
+            "internal_energy": 85,
+            "causal_injuries": "왼쪽 어깨에 진무현 부친이 남긴 검상",
+            "weapon": "흑풍대도",
+            "martial_skills": ["흑풍십팔도법", "철의공", "암기술"],
+            "current_status": "활동중"
+          }
+        },
+        {
+          "name": "소연화",
+          "role": "히로인/조력자",
+          "desc": "이웃 소가장의 영애로 진무현과 어린 시절 약혼한 사이. 총명하고 의협심이 강하다. 진가가 몰락하자 가문의 반대에도 진무현을 걱정하고 있다. 소가 매화검법의 전수자.",
+          "NPC_Martial_HUD": {
+            "realm": "삼류 상위",
+            "internal_energy": 30,
+            "causal_injuries": "없음",
+            "weapon": "매화검",
+            "martial_skills": ["소가매화검법", "경공 기초"],
+            "current_status": "활동중"
+          }
+        },
+        {
+          "name": "백무영",
+          "role": "라이벌/잠재적 조력자",
+          "desc": "무림맹 산하 유랑 검객. 검술 천재로 이름 높으며, 진가검법의 소문을 듣고 잔존 전수자를 찾고 있다. 냉정하지만 의리 있는 인물.",
+          "NPC_Martial_HUD": {
+            "realm": "일류",
+            "internal_energy": 60,
+            "causal_injuries": "없음",
+            "weapon": "청강검",
+            "martial_skills": ["무림맹 기본검법", "창풍검법", "경공 고급"],
+            "current_status": "활동중"
+          }
+        },
+        {
+          "name": "독고진",
+          "role": "중간 빌런",
+          "desc": "흑풍채 소채주이자 곽도성의 아들. 오만하고 잔인하며 소연화를 탐한다. 진무현을 '몰락 가문의 찌꺼기'로 멸시한다. 아버지보다 재능은 떨어지지만 잔꾀가 많다.",
+          "NPC_Martial_HUD": {
+            "realm": "이류 상위",
+            "internal_energy": 45,
+            "causal_injuries": "없음",
+            "weapon": "독사편",
+            "martial_skills": ["흑풍도법 변형", "독공", "암기술"],
+            "current_status": "활동중"
+          }
+        },
+        {
+          "name": "현공 대사",
+          "role": "멘토",
+          "desc": "소림사 장로. 진무현의 부친 진천호와 사교(莫逆之交)였다. 진가 멸문 소식에 슬퍼했으나 무림맹 정치에 묶여 나서지 못했다. 진무현에게 기연을 줄 수 있는 인물.",
+          "NPC_Martial_HUD": {
+            "realm": "화경 중기",
+            "internal_energy": 90,
+            "causal_injuries": "노령으로 인한 내력 감퇴",
+            "weapon": "없음 (권법)",
+            "martial_skills": ["소림나한권", "금강불괴공", "달마심경 일부"],
+            "current_status": "소림사 은거"
+          }
+        }
+      ],
+
+      "KeyItems": [
+        {
+          "item": "천잔검보(天殘劍譜)",
+          "desc": "진가의 가보이자 절세 검법 비급. 곽도성이 탈취했으나 해독 불가. 실은 반쪽짜리이며, 나머지 반은 진가장 지하 비밀 석실에 봉인되어 있다."
+        },
+        {
+          "item": "파천검결(破天劍訣)",
+          "desc": "진가장 지하 석실에 봉인된 천잔검보의 나머지 반. 이것이 없으면 천잔검보를 완성할 수 없다. 진무현만이 석실 입구를 알고 있다."
+        },
+        {
+          "item": "부친의 유서",
+          "desc": "진천호가 멸문 직전에 남긴 유서. 석실의 위치와 비급의 수련 조건이 적혀 있다. 진무현의 침상 밑 비밀 칸에 숨겨져 있다."
+        }
+      ],
+
+      "KeyLocations": [
+        {
+          "name": "진가장 폐가",
+          "desc": "한때 하북 제일 검문이었으나 흑풍채 습격 후 폐허. 지하에 비밀 석실이 존재한다."
+        },
+        {
+          "name": "흑풍채 산채",
+          "desc": "흑풍산 깊숙이 자리한 산적 소굴. 곽도성의 근거지이자 최종 복수의 무대."
+        },
+        {
+          "name": "낙양 무림맹 총단",
+          "desc": "정파 무림의 중심지. 무림맹주가 거처하며, 비무대회가 열리는 곳."
+        }
+      ],
+
+      "Persona": "겉으로는 겸손하고 평범해 보이지만, 속으로는 냉철하게 계산하는 복수자. 현대인의 합리적 사고와 무협 세계의 의리가 공존.",
+      "SpeechStyle": {
+        "tone": "점잖고 예의 바르나 핵심을 찌르는 말투",
+        "vocabulary": "고전 무협체 + 간혹 현대적 사고의 내면 독백",
+        "inner_monologue": "전생 회상 + 무협 소설 지식 인용 + 전략적 분석"
+      }
+    },
+
+    "Seeds": [
+      {
+        "id": "S-001",
+        "category": "아이템",
+        "description": "파천검결의 존재 - 지하 석실에 숨겨진 비급의 나머지 반",
+        "status": "active",
+        "planted_ep": 1,
+        "target_harvest_ep": 30,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-002",
+        "category": "인물",
+        "description": "현공 대사와의 인연 - 부친의 옛 벗이 소림사에 있다는 언급",
+        "status": "active",
+        "planted_ep": 3,
+        "target_harvest_ep": 40,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-003",
+        "category": "사건",
+        "description": "마교 침공 복선 - 강호에 마교 첩자 출몰 소문",
+        "status": "active",
+        "planted_ep": 10,
+        "target_harvest_ep": 100,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-004",
+        "category": "인물",
+        "description": "곽도성의 검상 - 왼쪽 어깨에 진무현 부친이 남긴 상처가 약점이 될 복선",
+        "status": "active",
+        "planted_ep": 5,
+        "target_harvest_ep": 150,
+        "echo_count": 0,
+        "harvested_ep": null
+      }
+    ],
+
+    "MartialArtsSystem": {
+      "_description": "무협 세계의 경지 체계 및 무공 분류",
+      "realm_hierarchy": [
+        {"rank": 1, "name": "말류", "desc": "기초 무예만 익힌 수준, 일반 무사"},
+        {"rank": 2, "name": "삼류", "desc": "내공 기초 형성, 하급 무공 구사"},
+        {"rank": 3, "name": "이류", "desc": "내공 안정, 중급 무공 구사, 일반 문파 주력"},
+        {"rank": 4, "name": "일류", "desc": "심후한 내공, 상급 무공 구사, 장문인급"},
+        {"rank": 5, "name": "절정", "desc": "내공 극성, 절기 보유, 각 파 최강자"},
+        {"rank": 6, "name": "화경", "desc": "무공이 자연과 합일, 초절정, 무림 전설"},
+        {"rank": 7, "name": "현경", "desc": "도의 영역, 역사에 남는 전설"},
+        {"rank": 8, "name": "신경", "desc": "신의 경지, 전설 속 존재"}
+      ],
+      "martial_arts_grades": ["하급", "중급", "상급", "절급", "신급"]
+    },
+
+    "GenreRules": {
+      "_description": "무협 장르 규칙 및 제약",
+      "must_include": [
+        "내공 성장이 단계적이어야 함 (한 번에 3단계 이상 도약 금지)",
+        "무공 습득에 합당한 기연이 필요 (우연히 주워서 바로 절정 금지)",
+        "은원 관계가 명확해야 함 (원수에게 이유 없이 관대 금지)",
+        "경지 돌파에 고비와 위기가 동반되어야 함"
+      ],
+      "forbidden": [
+        "현대 용어/개념 직접 사용 (내면 독백 제외)",
+        "논리 없는 파워업 (갑자기 절정 도달 등)",
+        "무림 상식에 어긋나는 행동 (정파가 이유 없이 사파 용서 등)",
+        "죽은 NPC의 부활 (환혼단 등 사전 복선 없이)"
+      ],
+      "tension_devices": [
+        "경지 돌파 실패/주화입마 위기",
+        "복수 대상이 예상보다 강함",
+        "숨겨진 비급의 부작용 발견",
+        "정체 노출 위기 (현대인 사고 들킴)"
+      ]
+    }
+  }
+}

@@ -1,0 +1,299 @@
+{
+  "_schema_version": "2.0",
+  "_project_codename": "골든루트",
+  "_last_updated": "2026-02-06",
+
+  "work_name": "골든 루트 (가제)",
+  "genre": "investment",
+  "block_range": "21-30",
+
+  "treatments": [
+    {
+      "block_id": "Block 21",
+      "title": "손안의 혁명",
+      "period": "2011년 1월~6월",
+      "assets_start": "2000억",
+      "assets_end": "2300억",
+
+      "content": {
+        "context": "2011년. 스마트폰이 세상을 바꾸고 있다. 아이폰4 열풍. 안드로이드 급성장. 모바일 생태계 폭발.",
+        "observation": "주인공은 한국을 본다. 삼성전자 갤럭시. 그리고 작은 스타트업 하나. 카카오톡. 5000만 가입자 돌파.",
+        "decision": "카카오 초기 투자 루트 확보. VC 라운드에 참여. 100억 투자. 지분 5% 확보.",
+        "side_bet": "애플 추가 매수. 아이폰5 전에 더 쌓는다. 200억 추가 투입."
+      },
+
+      "genre_ext": {
+        "capital_before": "2000억",
+        "capital_after": "2300억",
+        "capital_delta": "+300억 (주식 상승)",
+        "investment_type": "VC 투자 + 주식",
+        "new_positions": ["카카오 지분 5% (100억)", "애플 추가 200억"],
+        "historical_event": "스마트폰 혁명, 카카오톡 5000만"
+      },
+
+      "foreshadow": ["카카오 상장 - 먼 미래 복선"]
+    },
+
+    {
+      "block_id": "Block 22",
+      "title": "강남스타일",
+      "period": "2011년 7월~2012년 8월",
+      "assets_start": "2300억",
+      "assets_end": "2800억",
+
+      "content": {
+        "context": "K-POP이 글로벌로 뻗어나간다. YG, JYP, SM. 주인공은 엔터 산업의 가능성을 본다.",
+        "event": "2012년 7월, 싸이의 '강남스타일' 발매. 유튜브 조회수 폭발. K-POP 글로벌 열풍.",
+        "profit": "YG 지분 확보 (50억 투자, 이미 2배). 아이폰5 출시로 애플 추가 상승. 포트폴리오 2800억.",
+        "observation": "'콘텐츠가 돈이야. K-POP, 웹툰, 게임. 한국이 수출할 수 있는 건 반도체만이 아니다.'"
+      },
+
+      "genre_ext": {
+        "capital_before": "2300억",
+        "capital_after": "2800억",
+        "capital_delta": "+500억",
+        "investment_type": "엔터 + 테크",
+        "positions": ["YG 50억 → 100억", "애플 계속 상승"],
+        "historical_event": "강남스타일, K-POP 글로벌"
+      },
+
+      "foreshadow": ["웹툰/게임 언급 - 콘텐츠 투자 복선"]
+    },
+
+    {
+      "block_id": "Block 23",
+      "title": "알리바바의 잭",
+      "period": "2012년 9월~2013년 6월",
+      "assets_start": "2800억",
+      "assets_end": "3200억",
+
+      "content": {
+        "context": "중국 이커머스 폭발. 알리바바, 세계 최대 쇼핑몰로 성장 중. 아직 미상장. 기회다.",
+        "decision": "알리바바 프리IPO 라운드에 접근. 홍콩 네트워크 활용. 200억 투자, 지분 0.1% 확보.",
+        "side_story": "잭 마 만남. '당신 눈이 미래를 보는군요.' 주인공은 대답 없이 미소 짓는다.",
+        "portfolio": "삼성전자, 애플 계속 홀딩. 비트코인 100달러 돌파. 초기 50억이 300억으로."
+      },
+
+      "genre_ext": {
+        "capital_before": "2800억",
+        "capital_after": "3200억",
+        "capital_delta": "+400억",
+        "investment_type": "프리IPO + 홀딩",
+        "new_positions": ["알리바바 프리IPO 200억"],
+        "btc_status": "50억 → 300억 (가치 상승)",
+        "historical_event": "알리바바 성장, BTC 100달러"
+      },
+
+      "foreshadow": ["알리바바 IPO - 2014년 복선"]
+    },
+
+    {
+      "block_id": "Block 24",
+      "title": "게임의 시대",
+      "period": "2013년 7월~12월",
+      "assets_start": "3200억",
+      "assets_end": "3800억",
+
+      "content": {
+        "context": "모바일 게임 시대 개막. 넷마블 '모두의마블' 대박. 슈퍼셀 '클래시 오브 클랜' 글로벌 1위.",
+        "decision": "넷마블 상장 전 지분 확보. 텐센트와의 경쟁. 150억 투자.",
+        "profit": "카카오 가치 상승. 100억이 400억으로. 카카오게임 플랫폼 성공.",
+        "year_end": "2013년 종료. 7년차. 20억에서 3800억. 190배. 하지만 진짜 광기는 내년부터다."
+      },
+
+      "genre_ext": {
+        "capital_before": "3200억",
+        "capital_after": "3800억",
+        "capital_delta": "+600억",
+        "investment_type": "게임 + 플랫폼",
+        "positions": ["넷마블 150억", "카카오 100억→400억"],
+        "7year_return": "+18900% (20억→3800억)"
+      },
+
+      "foreshadow": ["비트코인 광풍 - 2014년 복선"]
+    },
+
+    {
+      "block_id": "Block 25",
+      "title": "마운트곡스",
+      "period": "2014년 1월~6월",
+      "assets_start": "3800억",
+      "assets_end": "5000억",
+
+      "content": {
+        "context": "2013년 말, 비트코인 1000달러 돌파. 광기의 시작. 2014년 2월, 마운트곡스 해킹으로 85만 BTC 증발. 거래소 파산.",
+        "event_chaos": "비트코인 1000달러에서 400달러로 폭락. 시장 패닉. '비트코인은 사기다' 여론 폭발.",
+        "protagonist_action": "주인공은 웃는다. '바보들. 비트코인은 안 죽어.' 폭락장에서 추가 매수. 500억 투입. 저가 줍줍.",
+        "side_profit": "알리바바 IPO 임박. 9월 예정. 200억이 1000억 이상으로 예상."
+      },
+
+      "genre_ext": {
+        "capital_before": "3800억",
+        "capital_after": "5000억",
+        "capital_delta": "+1200억",
+        "investment_type": "비트코인 추매 + 알리바바 평가이익",
+        "btc_action": "추가 500억 매수 ($400대)",
+        "historical_event": "마운트곡스 해킹, BTC 폭락"
+      },
+
+      "foreshadow": ["알리바바 IPO - 다음 블록 복선", "비트코인 반감기 - 2016년 복선"]
+    },
+
+    {
+      "block_id": "Block 26",
+      "title": "사상 최대 IPO",
+      "period": "2014년 7월~12월",
+      "assets_start": "5000억",
+      "assets_end": "7000억",
+
+      "content": {
+        "context": "9월 19일. 알리바바 뉴욕증시 상장. 공모가 68달러. 사상 최대 IPO. 시가총액 2300억 달러.",
+        "profit": "주인공의 알리바바 지분, 상장 첫날 92달러. 200억이 1500억으로. 일부 익절. 500억 확정.",
+        "btc_status": "비트코인 횡보. 400~500달러 구간. 주인공은 무시. '2016년 반감기까지 홀딩.'",
+        "year_end": "2014년 종료. 8년차. 7000억. 카카오, 넷마블, 알리바바. 스마트폰 혁명의 승자들."
+      },
+
+      "genre_ext": {
+        "capital_before": "5000억",
+        "capital_after": "7000억",
+        "capital_delta": "+2000억",
+        "investment_type": "IPO 수확",
+        "alibaba": "200억 → 1500억 (일부 익절 500억)",
+        "historical_event": "알리바바 IPO $68→$92"
+      },
+
+      "foreshadow": ["비트코인 반감기 2016 언급"]
+    },
+
+    {
+      "block_id": "Block 27",
+      "title": "이더리움",
+      "period": "2015년 1월~7월",
+      "assets_start": "7000억",
+      "assets_end": "7500억",
+
+      "content": {
+        "context": "비탈릭 부테린. 20살 천재. 이더리움 프로젝트 발표. 스마트 컨트랙트. 비트코인의 다음 단계.",
+        "discovery": "주인공은 이더리움 백서를 읽는다. '이건... 비트코인보다 클 수 있어.'",
+        "decision": "이더리움 ICO 참여. 2014년 판매분 OTC 매수. 100억 투입. ETH 단가 0.3달러.",
+        "patience": "비트코인 횡보 중. 시장은 지루해한다. 주인공은 기다린다. '2016년이 온다.'"
+      },
+
+      "genre_ext": {
+        "capital_before": "7000억",
+        "capital_after": "7500억",
+        "capital_delta": "+500억 (주식 상승)",
+        "investment_type": "이더리움 + 홀딩",
+        "eth_position": "100억 투입 ($0.3)",
+        "historical_event": "이더리움 런칭"
+      },
+
+      "foreshadow": ["이더리움 스마트 컨트랙트 - ICO 버블 복선"]
+    },
+
+    {
+      "block_id": "Block 28",
+      "title": "반감기",
+      "period": "2015년 8월~2016년 7월",
+      "assets_start": "7500억",
+      "assets_end": "1조",
+
+      "content": {
+        "context": "2016년 7월, 비트코인 두 번째 반감기. 블록 보상 25 BTC → 12.5 BTC. 공급 감소.",
+        "market_reaction": "반감기 전후로 비트코인 400달러 → 650달러. 상승 시작. 주인공은 알고 있다. 이건 시작이다.",
+        "profit": "비트코인 포지션 가치 상승. 초기 50억 + 추가 500억 = 550억이 2000억으로.",
+        "portfolio": "총 자산 1조 돌파. 주인공은 담담하다. '2017년에 2만 달러 간다. 그때 익절.'"
+      },
+
+      "genre_ext": {
+        "capital_before": "7500억",
+        "capital_after": "1조",
+        "capital_delta": "+2500억",
+        "investment_type": "비트코인 홀딩",
+        "btc_status": "550억 → 2000억",
+        "historical_event": "비트코인 2차 반감기"
+      },
+
+      "foreshadow": ["2만 달러 언급 - 2017년 광풍 복선"]
+    },
+
+    {
+      "block_id": "Block 29",
+      "title": "ICO 광풍",
+      "period": "2016년 8월~2017년 6월",
+      "assets_start": "1조",
+      "assets_end": "2조",
+
+      "content": {
+        "context": "ICO 시대 개막. 이더리움 기반 토큰 발행 폭발. 돈이 쏟아진다. EOS, 테조스, 파일코인.",
+        "profit": "이더리움 0.3달러 → 300달러. 100억이 10만 배... 아니, 1000배. 1조로. 주인공조차 놀란다.",
+        "strategy": "ICO에 직접 투자하지 않는다. '90%는 스캠이야. 이더리움만 잡으면 된다.' ETH 일부 익절. 3000억 확정.",
+        "btc_update": "비트코인 3000달러 돌파. 비트코인 포지션 5000억으로."
+      },
+
+      "genre_ext": {
+        "capital_before": "1조",
+        "capital_after": "2조",
+        "capital_delta": "+1조",
+        "investment_type": "ETH + BTC",
+        "eth_status": "100억 → 1조 (일부 익절 3000억)",
+        "btc_status": "2000억 → 5000억",
+        "historical_event": "ICO 버블, ETH 300달러"
+      },
+
+      "foreshadow": ["비트코인 고점 익절 - Block 30 복선"]
+    },
+
+    {
+      "block_id": "Block 30",
+      "title": "정점",
+      "period": "2017년 7월~12월",
+      "assets_start": "2조",
+      "assets_end": "3조",
+
+      "content": {
+        "context": "2017년 12월. 비트코인 2만 달러 터치. 전 세계가 미쳐 있다. '100만 달러 간다!' 광기.",
+        "decision": "주인공은 비트코인 90% 익절. '2만 달러가 고점이야. 다음은 80% 폭락이다.'",
+        "execution": "비트코인 5000억 중 4500억 익절. 이더리움 잔여분 익절. 현금 확보 1조.",
+        "year_end": "2017년 종료. 11년차. 20억에서 3조. 1500배. 다음 해, 크립토 윈터가 온다."
+      },
+
+      "genre_ext": {
+        "capital_before": "2조",
+        "capital_after": "3조",
+        "capital_delta": "+1조 (익절 확정)",
+        "investment_type": "비트코인/이더리움 익절",
+        "btc_action": "90% 익절 @ $20,000",
+        "cash_position": "1조+",
+        "11year_return": "+149900% (20억→3조)"
+      },
+
+      "foreshadow": ["80% 폭락 언급 - 크립토 윈터 복선", "테슬라/엔비디아 - Block 31~35 복선"]
+    }
+  ],
+
+  "block_summary": {
+    "period": "2011년 1월 ~ 2017년 12월 (7년)",
+    "assets_growth": "2000억 → 3조 (15배)",
+    "key_investments": [
+      "카카오 VC 투자 (5% 지분)",
+      "YG 엔터테인먼트",
+      "알리바바 프리IPO → 뉴욕 IPO",
+      "넷마블 상장 전 지분",
+      "비트코인 홀딩 + 추가 매수",
+      "이더리움 ICO 참여 (0.3달러)",
+      "2017년 고점 익절"
+    ],
+    "historical_events_used": [
+      "스마트폰 혁명 (2011-2013)",
+      "강남스타일 / K-POP 글로벌 (2012)",
+      "알리바바 IPO (2014.09)",
+      "마운트곡스 해킹 (2014.02)",
+      "이더리움 런칭 (2015)",
+      "비트코인 2차 반감기 (2016.07)",
+      "ICO 버블 (2017)",
+      "비트코인 2만 달러 (2017.12)"
+    ],
+    "protagonist_arc": "스마트폰 혁명 수확 → 크립토 초기 진입 → 고점 익절 성공"
+  }
+}

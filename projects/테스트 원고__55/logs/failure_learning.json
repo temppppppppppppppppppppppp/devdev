@@ -1,0 +1,13 @@
+{
+  "records": [],
+  "stats": {
+    "total_failures": 0,
+    "by_category": {},
+    "by_stage": {
+      "2": {},
+      "3": {},
+      "4": {}
+    },
+    "top_5": []
+  }
+}

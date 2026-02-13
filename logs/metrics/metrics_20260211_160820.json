@@ -1,0 +1,78 @@
+{
+  "session_id": "20260211_160820",
+  "start_time": "2026-02-11T16:08:20.846634",
+  "end_time": "2026-02-11T17:04:02.140714",
+  "total_calls": 79,
+  "successful_calls": 79,
+  "failed_calls": 0,
+  "total_retries": 0,
+  "total_tokens": 1037788,
+  "total_cost_usd": 2.8804,
+  "agent_stats": {
+    "ChiefWriter": {
+      "agent_name": "ChiefWriter",
+      "total_calls": 53,
+      "successful_calls": 53,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 84817.01895425904,
+        "min_ms": 19811.797857284546,
+        "max_ms": 177681.26773834229,
+        "p50_ms": 70116.74451828003,
+        "p90_ms": 138027.10099220273,
+        "p99_ms": 173922.81315803528
+      }
+    },
+    "Director": {
+      "agent_name": "Director",
+      "total_calls": 21,
+      "successful_calls": 21,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 36815.46684673854,
+        "min_ms": 16405.04503250122,
+        "max_ms": 86160.64167022705,
+        "p50_ms": 28504.292011260986,
+        "p90_ms": 60381.561040878296,
+        "p99_ms": 81682.64203071596
+      }
+    },
+    "Manager": {
+      "agent_name": "Manager",
+      "total_calls": 5,
+      "successful_calls": 5,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 47080.625677108765,
+        "min_ms": 37073.299169540405,
+        "max_ms": 60041.8426990509,
+        "p50_ms": 44141.63684844971,
+        "p90_ms": 56210.13159751892,
+        "p99_ms": 59658.671588897705
+      }
+    }
+  },
+  "model_stats": {
+    "gemini-3-pro-preview": {
+      "input_tokens": 490349,
+      "output_tokens": 93285,
+      "total_tokens": 583634,
+      "cost_usd": 2.1587
+    },
+    "gemini-2.5-pro": {
+      "input_tokens": 413084,
+      "output_tokens": 41070,
+      "total_tokens": 454154,
+      "cost_usd": 0.7217
+    }
+  }
+}

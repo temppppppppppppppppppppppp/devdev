@@ -1,0 +1,38 @@
+{
+  "session_id": "20260206_110030",
+  "start_time": "2026-02-06T11:00:30.514320",
+  "end_time": "2026-02-06T11:08:13.816779",
+  "total_calls": 11,
+  "successful_calls": 11,
+  "failed_calls": 0,
+  "total_retries": 0,
+  "total_tokens": 77564,
+  "total_cost_usd": 0.4432,
+  "agent_stats": {
+    "ChiefWriter": {
+      "agent_name": "ChiefWriter",
+      "total_calls": 11,
+      "successful_calls": 11,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 87338.45396475359,
+        "min_ms": 56678.69210243225,
+        "max_ms": 131869.53210830688,
+        "p50_ms": 71253.18694114685,
+        "p90_ms": 129680.8340549469,
+        "p99_ms": 131650.6623029709
+      }
+    }
+  },
+  "model_stats": {
+    "gemini-3-pro-preview": {
+      "input_tokens": 44319,
+      "output_tokens": 33245,
+      "total_tokens": 77564,
+      "cost_usd": 0.4432
+    }
+  }
+}
