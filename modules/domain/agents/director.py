@@ -1,12 +1,16 @@
 from .base_agent import BaseAgent
 from .director_caching import DirectorCachingManager
 from .director_grading import DirectorGradingSystem
-from .director_ensemble import DirectorEnsembleSelector, ENSEMBLE_SELECTION_PROMPT as _ENSEMBLE_PROMPT
-from .director_continuity import DirectorContinuityValidator, MANUSCRIPT_HISTORY_CONFLICT_PROMPT as _HISTORY_CONFLICT_PROMPT
+from .director_ensemble import DirectorEnsembleSelector
+from .director_continuity import DirectorContinuityValidator
 from .director_auditor import DirectorQualityAuditor
+from .director_prompts import ENSEMBLE_SELECTION_PROMPT as _ENSEMBLE_PROMPT
+from .director_prompts import MANUSCRIPT_HISTORY_CONFLICT_PROMPT as _HISTORY_CONFLICT_PROMPT
 from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
 
-# [V64 P2-1] MANUSCRIPT_HISTORY_CONFLICT_PROMPT → director_continuity.py → director_prompts.py 이관
+# [V64 P2-1] ENSEMBLE_SELECTION_PROMPT → director_prompts.py에서 import
+ENSEMBLE_SELECTION_PROMPT = _ENSEMBLE_PROMPT
+# [V64 P2-1] MANUSCRIPT_HISTORY_CONFLICT_PROMPT → director_prompts.py에서 import
 MANUSCRIPT_HISTORY_CONFLICT_PROMPT = _HISTORY_CONFLICT_PROMPT
 
 
