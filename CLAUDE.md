@@ -53,7 +53,7 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 - `writer.py` — 레거시이나 유틸리티 3개가 stage4에서 직접 호출됨. Phase 2에서 이전 후 삭제.
 - `memory_engine.py` — ChromaDB 비활성화 상태. import하면 에러남.
 - NPC 속성 변경 — DB 덮어쓰기 방식. 이력 없음. Phase 3에서 개선 예정.
-- `base_agent.py`의 `_context_caches` — Gemini Context Caching 필드가 있지만 미활성. 활성화하면 토큰 절감.
+- `base_agent.py`의 Context Caching — 구현 완료 (`_get_or_create_context_cache` L920, `_ask_with_cached_context` L1003). `chief_writer`·`director_continuity`에서 사용 중.
 
 ---
 
@@ -86,7 +86,7 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 | A/B 테스트 | `ab_testing.py` | ⚠️ `quick_ab_test()` 존재, 확장 필요 |
 | 에피소드 롤백 | `project_manager.py` | ⚠️ `auto_backtrack_v35()`, NPC 되감기 추가 필요 |
 | 문체 분석 | `stage0/style_extractor.py` | ⚠️ 있음, 가드 자동생성 연동 필요 |
-| Context Caching | `base_agent.py` | ⚠️ 필드만 존재, 활성화 필요 |
+| Context Caching | `base_agent.py` | ✅ 구현 완료 (`chief_writer`·`director_continuity`에서 사용 중) |
 
 ---
 
