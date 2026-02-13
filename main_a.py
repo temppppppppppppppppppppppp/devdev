@@ -43,6 +43,7 @@ from modules.core.narrative_diversity import NarrativeDiversityEngine  # [V48] �
 from modules.core.perf_timer import PerfTimer  # [V65] 파이프라인 성능 프로파일링
 from modules.core.prompt_builder import PromptBuilder  # [V64 P2-2]
 from modules.core.services.audit_service import AuditService  # [Phase 4B-1]
+from modules.core.services.ui_service import UIService  # [Phase 4B-2]
 from modules.core.slack_bot import notifier  # [V40] Slack 알림 추가
 from modules.core.spinners import FancySpinner, StageSpinner, rich_console  # noqa: F401
 from modules.core.stage2_orchestrator import Stage2Orchestrator  # [V64.P3]
@@ -194,6 +195,12 @@ class SovereignApp:
         )
         self._audit_buffer = self._audit_service.buffer  # 하위 호환 참조
         atexit.register(self._flush_audit_buffer)  # [V66.1] B-3: 프로세스 종료 시 flush 보장
+
+        # [Phase 4B-2] UIService 추출 — UI 선택/입력/표시 위임
+        self._ui_service = UIService(
+            ui=self.ui,
+            project_fn=lambda: self.current_project,
+        )
 
         # [V64.P4] 동적 주입 속성 선언 (monkey-patching 제거)
         self._entity_cache_arc_idx = -1  # Entity Registry 캐시 arc 인덱스
@@ -1115,75 +1122,12 @@ class SovereignApp:
         return True
 
     def _ui_select_bible(self) -> str | None:
-        """
-        bible 폴더에서 성경(Lore) JSON 파일 선택
-
-        사용자에게 bible 폴더 내 JSON 파일 목록을 보여주고 선택을 받습니다.
-
-        Returns:
-            Optional[str]: 선택된 파일명 (없으면 None)
-        """
-        bible_dir = Path("bible")
-        files = sorted(list(bible_dir.glob("*.json")))
-        if not files:
-            print("❌ bible 폴더에 JSON 파일이 없습니다.")
-            return None
-
-        print("\n📚 [Bible Selection] 사용할 성경(Lore)을 선택하십시오:")
-        for i, f in enumerate(files, 1):
-            print(f"   {i}. {f.name}")
-
-        idx = (
-            self._get_int_input(f"\n👉 Choice (1-{len(files)}): ", default=1, min_val=1, max_val=len(files)) or 1
-        ) - 1
-        return files[idx].name if 0 <= idx < len(files) else files[0].name
+        """[4B-2] Facade → UIService"""
+        return self._ui_service.select_bible()
 
     def _ui_select_treatment(self) -> str | None:
-        """
-        [V27 Standard] treatments 폴더에서 설계도 JSON 선택 및 시스템 등록
-
-        사용자에게 treatments 폴더 내 JSON 파일 목록을 보여주고 선택을 받습니다.
-        선택된 파일은 프로젝트의 treatment_path 속성에 등록됩니다.
-
-        Returns:
-            Optional[str]: 선택된 파일명 (없으면 None)
-        """
-        treat_dir = Path("treatments")
-        if not treat_dir.exists():
-            treat_dir.mkdir(parents=True, exist_ok=True)
-
-        files = sorted(list(treat_dir.glob("*.json")))
-        if not files:
-            self.ui.log("❌ treatments 폴더에 JSON 파일이 없습니다.")
-            return None
-
-        print("\n🧬 [Roadmap Selection] V25 상세 설계도(JSON)를 선택하십시오:")
-        for i, f in enumerate(files, 1):
-            # 현재 로드된 파일인지 시각적으로 표시
-            is_current = self.current_project.treatment_path == f  # [V64.P4] __init__에서 선언됨
-            print(f"   {i}. {f.name} {'⭐ (Current)' if is_current else ''}")
-
-        try:
-            idx = (
-                self._get_int_input(
-                    f"\n👉 Choice (1-{len(files)}, 미입력 시 1번): ", default=1, min_val=1, max_val=len(files)
-                )
-                or 1
-            ) - 1
-
-            if 0 <= idx < len(files):
-                selected_file = files[idx]
-                # [무결성 포인트] 선택과 동시에 프로젝트 경로 속성 업데이트
-                self.current_project.treatment_path = selected_file
-                self.ui.log(f"✅ 로드맵 선택 완료: {selected_file.name}")
-                return selected_file.name  # 파일명 문자열만 반환 (Phase 0 규격 준수)
-            else:
-                # [V44] 빈 리스트 안전 체크
-                return files[0].name if files else None
-
-        except Exception as e:
-            self.ui.log(f"⚠️ 선택 중 오류 발생: {e}")
-            return files[0].name if files else None
+        """[4B-2] Facade → UIService"""
+        return self._ui_service.select_treatment()
 
     def _enrich_treatment_blocks(self, treatment_file: str) -> str:
         """
@@ -2757,37 +2701,8 @@ class SovereignApp:
         max_val: int | None = None,
         attempts: int = RetryLimits.USER_INPUT_ATTEMPTS,
     ) -> int | None:
-        """
-        사용자로부터 정수 입력을 받는 유틸리티 메서드
-
-        범위 검증과 재시도 로직을 포함합니다.
-
-        Args:
-            prompt: 입력 프롬프트 문자열
-            default: 빈 입력 시 반환할 기본값
-            min_val: 허용 최소값 (None이면 검증 안 함)
-            max_val: 허용 최대값 (None이면 검증 안 함)
-            attempts: 최대 재시도 횟수
-
-        Returns:
-            Optional[int]: 입력된 정수 또는 기본값
-        """
-        for _ in range(attempts):
-            raw = input(prompt).strip()
-            if raw == "":
-                return default
-            if not raw.isdigit():
-                self.ui.log("⚠️ 숫자만 입력 가능합니다.")
-                continue
-            value = int(raw)
-            if min_val is not None and value < min_val:
-                self.ui.log(f"⚠️ 최소값은 {min_val}입니다.")
-                continue
-            if max_val is not None and value > max_val:
-                self.ui.log(f"⚠️ 최대값은 {max_val}입니다.")
-                continue
-            return value
-        return default
+        """[4B-2] Facade → UIService"""
+        return self._ui_service.get_int_input(prompt, default, min_val, max_val, attempts)
 
     def _extract_block_index(self, block_id: Any) -> int | None:
         """
@@ -3217,29 +3132,8 @@ class SovereignApp:
         return True
 
     def _show_volume_table(self, volumes: list[dict[str, Any]]) -> None:
-        """
-        권별 전략 설계 테이블 출력
-
-        Rich 라이브러리를 사용하여 권별 전략과 사이다 점수를 테이블로 표시합니다.
-
-        Args:
-            volumes: 권 데이터 딕셔너리 리스트
-        """
-        from rich import box
-        from rich.table import Table
-
-        table = Table(title="📊 [V20] 10권 전략 설계 상업성 성적표", box=box.ROUNDED)
-        table.add_column("Vol", justify="center", style="cyan")
-        table.add_column("Strategy Title", style="white")
-        table.add_column("Cider Score", justify="right", style="bold yellow")
-        for v in volumes:
-            raw_doc = v.get("strategy_doc", "")  # [V70] dict 타입 방어
-            if isinstance(raw_doc, dict):
-                raw_doc = str(raw_doc.get("title", raw_doc.get("summary", str(raw_doc))))
-            title = str(raw_doc).split("\n")[0].replace("### ", "")
-            cider = v.get("cider_score", "N/A")  # 키가 없으면 'N/A' 출력
-            table.add_row(f"제 {v.get('vol_no', '?')} 권", title, str(cider))
-        self.ui.console.print(table)
+        """[4B-2] Facade → UIService"""
+        return self._ui_service.show_volume_table(volumes)
 
     def _stage_3_batch_blueprinting(self) -> None:
         """
