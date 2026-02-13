@@ -104,9 +104,27 @@ def _get_model_fallback_chain() -> dict:
     return DEFAULT_MODEL_FALLBACK_CHAIN.copy()
 
 
+def _load_system_config() -> dict:
+    """Load config/system.yaml. Return empty dict on failure."""
+    config_path = _resolve_models_config_path().parent / "system.yaml"
+    try:
+        if config_path.exists():
+            with open(config_path, encoding="utf-8") as f:
+                data = yaml.safe_load(f) or {}
+                if isinstance(data, dict):
+                    return data
+    except Exception:
+        logging.warning("system.yaml load failed. Using hard-coded defaults.")
+    return {}
+
+
+_SYSTEM_CFG = _load_system_config()
+
+
 class BaseAgent:
     # [V60.27] Thinking Level → Budget 변환 맵 (Gemini 3 API)
-    THINKING_BUDGET_MAP = {"minimal": 1024, "low": 4096, "medium": 8192, "high": 16384, "maximum": 24576}
+    THINKING_BUDGET_MAP = _SYSTEM_CFG.get("thinking_budget_map",
+        {"minimal": 1024, "low": 4096, "medium": 8192, "high": 16384, "maximum": 24576})
 
     # [V60.37] 모델별 폴백 체인 정의 (할당량 초과 시)
     # [V62.1] 2.5-pro가 최종 폴백 (2.5-flash 폴백 제거 - 품질 하한선 보장)
@@ -114,10 +132,10 @@ class BaseAgent:
 
     # [V60.68] 쿼터 소진 모델 캐싱 (클래스 변수 - 세션 전체 공유)
     _quota_exhausted_models = {}  # {model_name: exhausted_until_timestamp}
-    _QUOTA_CACHE_DURATION = 3600  # [V62.3] 1시간 (3-pro는 몇 시간 단위로 막힘)
+    _QUOTA_CACHE_DURATION = _SYSTEM_CFG.get("api", {}).get("quota_cache_duration", 3600)
 
     # [V60.99] API Rate Limit 예방 딜레이 (초)
-    API_DELAY = 0.1  # [V63.3] 0.3→0.1 (Gemini RPM 충분, 런타임 절감)
+    API_DELAY = _SYSTEM_CFG.get("api", {}).get("delay", 0.1)
 
     # [V61.5] API 키 순환 (429 방어)
     _api_keys = []
@@ -125,7 +143,7 @@ class BaseAgent:
     _keys_initialized = False
     _key_rotation_pending = False
     _last_rotation_time = 0
-    _MIN_ROTATION_INTERVAL = 10  # 최소 순환 간격 (초)
+    _MIN_ROTATION_INTERVAL = _SYSTEM_CFG.get("key_rotation", {}).get("min_interval", 10)
     _rotation_lock = threading.Lock()  # [V61.7] 병렬 앙상블 시 race condition 방지
     _rotation_count = 0  # [V62.3] 연속 키 순환 횟수 (전체 키 수 도달 시 순환 중단)
 
@@ -182,10 +200,10 @@ class BaseAgent:
         return new_client
 
     # [V61.2] 네트워크 복원력 설정 (야간 무인 운영 대응)
-    API_TIMEOUT = 90  # API 호출 타임아웃 (초)
-    NETWORK_RETRY_DELAY_BASE = 10  # 기본 대기 시간 (초)
-    NETWORK_RETRY_DELAY_MAX = 30  # 최대 대기 시간 (초) - 백오프 상한
-    MAX_NETWORK_RETRIES = 22  # 최대 재시도 (22회 = ~10분 커버) - 이거 넘으면 진짜 문제
+    API_TIMEOUT = _SYSTEM_CFG.get("api", {}).get("timeout", 90)
+    NETWORK_RETRY_DELAY_BASE = _SYSTEM_CFG.get("network_retry", {}).get("delay_base", 10)
+    NETWORK_RETRY_DELAY_MAX = _SYSTEM_CFG.get("network_retry", {}).get("delay_max", 30)
+    MAX_NETWORK_RETRIES = _SYSTEM_CFG.get("network_retry", {}).get("max_retries", 22)
 
     def __init__(self, context, client, model_tier=None, enable_cascade=False) -> None:
         self.context = context
