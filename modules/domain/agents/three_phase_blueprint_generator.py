@@ -67,7 +67,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         protagonist_config: dict | None = None,  # [V60.90] 주인공 설정 {world_origin, incarnation_type}
         state_tracker=None,  # [V60.96] StateTracker (죽은 NPC 검증용)
         db=None,  # [V61.5] DBManager (캐시 연속성 검사용)
-        semantic_context: str = "",  # [V63.3] BlueprintMemory 시맨틱 검색 결과
+        semantic_context: str = "",  # [V63.3] 벡터 시맨틱 검색 결과
         prev_manuscripts_text: str = "",  # [V67] 이전 원고 전문 (모순 방지)
     ) -> tuple[dict | None, dict]:
         """

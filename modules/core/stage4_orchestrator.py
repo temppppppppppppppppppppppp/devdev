@@ -688,7 +688,7 @@ JSON으로 출력:
                         if _fin_summary:
                             _mc_parts.append(_fin_summary)
 
-                    # Priority 15: ChromaDB 멀티쿼리 시맨틱 검색
+                    # Priority 15: 벡터 멀티쿼리 시맨틱 검색
                     try:
                         if self.ctx.memory and prev_ending:
                             _mq_queries = [prev_ending]
@@ -718,7 +718,7 @@ JSON으로 출력:
                             if _vector_memory:
                                 _mc_parts.append(f"[과거 유사 맥락 (벡터 검색)]\n{_vector_memory}")
                     except Exception as e:
-                        self.ctx.ui.log(f"   ⚠️ ChromaDB 시맨틱 검색 실패 (비차단): {e}")
+                        self.ctx.ui.log(f"   ⚠️ 벡터 시맨틱 검색 실패 (비차단): {e}")
 
                     # Priority 16: 확장 Lookback (직전 4~10화 요약)
                     try:
@@ -1778,7 +1778,7 @@ JSON으로 출력:
                 pass
 
             # [V62.3] 벡터 메모리 일괄 동기화
-            # [V66.3] ChromaDB 비활성화 시 스킵
+            # [V66.3] 벡터 메모리 비활성화 시 스킵
             if self.ctx.memory and self.ctx.memory.is_operational():
                 try:
                     self.ctx.ui.log("   🔄 벡터 메모리 일괄 동기화 중...")

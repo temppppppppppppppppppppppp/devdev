@@ -28,7 +28,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["F401"]  # __init__.py의 미사용 import는 의도적
+"__init__.py" = ["F401", "UP035"]  # __init__.py의 미사용 import는 의도적
 "main_a.py" = ["E402", "F401"]  # 레거시 import 순서 + try/except 내 미사용 import
 "test_batch_1_to_10.py" = ["E402"]
 "test_episode_1.py" = ["E402"]
@@ -52,6 +52,7 @@ ignore = [
 "modules/core/stage0/style_extractor.py" = ["E741"]
 "modules/domain/agents/base_agent.py" = ["F401"]
 "modules/domain/agents/director_auditor.py" = ["F401"]
+"modules/domain/agents/four_phase_arc_generator.py" = ["UP038"]  # 레거시 isinstance 패턴
 "modules/domain/agents/preflight_checker.py" = ["E741"]
 "modules/domain/agents/state_extractor.py" = ["E741"]
 "modules/domain/agents/state_tracker.py" = ["F402"]

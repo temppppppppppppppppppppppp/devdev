@@ -17,16 +17,15 @@
 
 import json
 import logging
-import re
-from typing import Dict, List, Any, Optional, Tuple
 
-from .base_agent import BaseAgent, _get_sub_component_models
-from .preflight_checker import PreflightChecker
+from modules.core.constants import Stage2Limits
+
 from .arc_ensemble import ArcEnsembleGenerator
-from .unified_arc_validator import UnifiedArcValidator
+from .base_agent import BaseAgent, _get_sub_component_models
 from .constraint_compiler import ConstraintCompiler
 from .negative_example_injector import NegativeExampleInjector
-from modules.core.constants import Stage2Limits
+from .preflight_checker import PreflightChecker
+from .unified_arc_validator import UnifiedArcValidator
 
 
 class FourPhaseArcGenerator(BaseAgent):
@@ -42,15 +41,9 @@ class FourPhaseArcGenerator(BaseAgent):
 
         # 서브 모듈
         sub_models = _get_sub_component_models("four_phase_arc_generator")
-        self.preflight = PreflightChecker(
-            context, client, sub_models.get("preflight", "gemini-3-flash-preview")
-        )
-        self.ensemble = ArcEnsembleGenerator(
-            context, client, sub_models.get("ensemble", "gemini-2.5-pro")
-        )
-        self.validator = UnifiedArcValidator(
-            context, client, sub_models.get("validator", "gemini-2.5-flash")
-        )
+        self.preflight = PreflightChecker(context, client, sub_models.get("preflight", "gemini-3-flash-preview"))
+        self.ensemble = ArcEnsembleGenerator(context, client, sub_models.get("ensemble", "gemini-2.5-pro"))
+        self.validator = UnifiedArcValidator(context, client, sub_models.get("validator", "gemini-2.5-flash"))
         self.compiler = ConstraintCompiler()
         self.negative_injector = NegativeExampleInjector("wuxia")
 
@@ -60,10 +53,10 @@ class FourPhaseArcGenerator(BaseAgent):
             "phase1_complete": 0,
             "phase2_complete": 0,
             "phase3_pass": 0,
-            "phase3_reject": 0
+            "phase3_reject": 0,
         }
 
-    def _determine_ep_count(self, curr_block: Dict, arc_no: int, prev_arcs: List[Dict]) -> Tuple[int, str]:
+    def _determine_ep_count(self, curr_block: dict, arc_no: int, prev_arcs: list[dict]) -> tuple[int, str]:
         """
         [V66.1] Python 휴리스틱 기반 가변 페이싱 - ep_count 동적 결정 (정보량 기반)
 
@@ -81,8 +74,8 @@ class FourPhaseArcGenerator(BaseAgent):
         # 블록 내용 추출
         block_content = ""
         if isinstance(curr_block, dict):
-            for key in ['context', 'event_villain', 'solution', 'reward', 'content']:
-                val = curr_block.get(key, '')
+            for key in ["context", "event_villain", "solution", "reward", "content"]:
+                val = curr_block.get(key, "")
                 if isinstance(val, str):
                     block_content += val + " "
                 elif isinstance(val, dict):
@@ -100,7 +93,8 @@ class FourPhaseArcGenerator(BaseAgent):
         else:
             # 500~1500자 구간: 문장 수 비례로 4~6화 결정
             import re
-            sentence_count = len(re.split(r'[.。!?!\?\n]+', block_content))
+
+            sentence_count = len(re.split(r"[.。!?!\?\n]+", block_content))
             if sentence_count <= 8:
                 ep_count = 4
                 reasoning = f"보통 정보량 ({content_len}자, {sentence_count}문장) → 4화"
@@ -121,16 +115,16 @@ class FourPhaseArcGenerator(BaseAgent):
         arc_no: int,
         ep_start: int,
         vol_strategy: str,
-        curr_block: Dict,
-        prev_arcs: List[Dict],
-        assets: Dict = None,
+        curr_block: dict,
+        prev_arcs: list[dict],
+        assets: dict = None,
         max_internal_retries: int = 2,
         protagonist_name: str = "주인공",
         director_feedback: str = "",
-        entity_registry: Dict = None,  # [V60.92] Entity Registry (NPC 명칭 일관성)
+        entity_registry: dict = None,  # [V60.92] Entity Registry (NPC 명칭 일관성)
         state_tracker=None,  # [V60.94] StateTracker (죽은 NPC 검증용)
-        vector_context: str = ""  # [V63.3] ChromaDB 벡터 검색 결과
-    ) -> Tuple[Optional[Dict], Dict]:
+        vector_context: str = "",  # [V63.3] 벡터 검색 결과
+    ) -> tuple[dict | None, dict]:
         """
         3단계 Arc 생성
 
@@ -146,7 +140,7 @@ class FourPhaseArcGenerator(BaseAgent):
             director_feedback: [V60.77] Director REJECT 피드백 (재시도 시 반영)
             entity_registry: [V60.92] Entity Registry (NPC 명칭 일관성)
             state_tracker: [V60.94] StateTracker (죽은 NPC 검증용)
-            vector_context: [V63.3] ChromaDB 벡터 검색 결과 (과거 유사 맥락)
+            vector_context: [V63.3] 벡터 검색 결과 (과거 유사 맥락)
 
         Returns:
             (generated_arc, pipeline_result)
@@ -156,10 +150,10 @@ class FourPhaseArcGenerator(BaseAgent):
         # [V60.88] protagonist_config 추출 (context에서 직접 로드)
         protagonist_config = {}
         try:
-            master_bible = getattr(self.context, 'master_bible', {})
+            master_bible = getattr(self.context, "master_bible", {})
             if master_bible:
-                bible_root = master_bible.get('MasterBible', master_bible)
-                protagonist_config = bible_root.get('protagonist_config', {})
+                bible_root = master_bible.get("MasterBible", master_bible)
+                protagonist_config = bible_root.get("protagonist_config", {})
         except Exception:
             pass
 
@@ -169,12 +163,7 @@ class FourPhaseArcGenerator(BaseAgent):
 
         ep_end = ep_start + ep_count - 1
 
-        pipeline_result = {
-            "arc_no": arc_no,
-            "phases": {},
-            "final_verdict": None,
-            "retries": 0
-        }
+        pipeline_result = {"arc_no": arc_no, "phases": {}, "final_verdict": None, "retries": 0}
 
         # [V62.5] 이전 Arc 아이템/수여물 사전 수집 (UnifiedArcValidator 중복 스캔 방지)
         _pre_items = set()
@@ -203,7 +192,7 @@ class FourPhaseArcGenerator(BaseAgent):
             # PHASE 1: CONSTRAINT - 제약 수집
             # ═══════════════════════════════════════════════════════════════
             if cached_constraint_block and retry > 0:
-                logging.info(f"📋 [Phase 1] 제약 캐시 사용")
+                logging.info("📋 [Phase 1] 제약 캐시 사용")
                 full_constraint_block = cached_constraint_block
                 preflight_result = cached_preflight
             else:
@@ -215,26 +204,23 @@ class FourPhaseArcGenerator(BaseAgent):
                 negative_examples = self.negative_injector.generate_injection()
                 self_check = self.negative_injector.generate_self_check_prompt()
 
-                full_constraint_block = "\n".join([
-                    preflight_injection,
-                    compiled_constraints,
-                    negative_examples,
-                    self_check
-                ])
+                full_constraint_block = "\n".join(
+                    [preflight_injection, compiled_constraints, negative_examples, self_check]
+                )
 
                 cached_preflight = preflight_result
                 cached_constraint_block = full_constraint_block
 
             pipeline_result["phases"]["constraint"] = {
                 "status": "complete" if retry == 0 else "cached",
-                "constraint_block_length": len(full_constraint_block)
+                "constraint_block_length": len(full_constraint_block),
             }
             self.stats["phase1_complete"] += 1
 
             # ═══════════════════════════════════════════════════════════════
             # PHASE 2: GENERATE - Ensemble 생성
             # ═══════════════════════════════════════════════════════════════
-            logging.info(f"🎲 [Phase 2] Ensemble 생성 중 (3개 후보)...")
+            logging.info("🎲 [Phase 2] Ensemble 생성 중 (3개 후보)...")
 
             prev_arc_context = self._generate_prev_context(prev_arcs, preflight_result)
             # [V63.3] 벡터 메모리 컨텍스트 주입
@@ -254,11 +240,11 @@ class FourPhaseArcGenerator(BaseAgent):
                 protagonist_config=protagonist_config,  # [V60.88]
                 entity_registry=entity_registry,  # [V60.92] Entity Registry
                 ep_count=ep_count,  # [V61.1] 가변 페이싱
-                retry=retry  # [V61.5] 재시도 시 thinking 다운그레이드
+                retry=retry,  # [V61.5] 재시도 시 thinking 다운그레이드
             )
 
             if not best_arc:
-                logging.warning(f"❌ [Phase 2] Ensemble 생성 실패")
+                logging.warning("❌ [Phase 2] Ensemble 생성 실패")
                 pipeline_result["phases"]["generate"] = {"status": "failed"}
                 feedback = "Ensemble 생성 실패. 다시 시도하세요."
                 continue
@@ -266,7 +252,7 @@ class FourPhaseArcGenerator(BaseAgent):
             pipeline_result["phases"]["generate"] = {
                 "status": "complete",
                 "candidates_count": len(all_candidates),
-                "selected_strategy": best_arc.get("_ensemble_meta", {}).get("best_strategy", "unknown")
+                "selected_strategy": best_arc.get("_ensemble_meta", {}).get("best_strategy", "unknown"),
             }
             self.stats["phase2_complete"] += 1
 
@@ -278,7 +264,7 @@ class FourPhaseArcGenerator(BaseAgent):
             # ═══════════════════════════════════════════════════════════════
             # PHASE 3: VALIDATE - 통합 검증
             # ═══════════════════════════════════════════════════════════════
-            logging.info(f"🔍 [Phase 3] 통합 검증 중...")
+            logging.info("🔍 [Phase 3] 통합 검증 중...")
 
             verdict, validation_result = self.validator.validate(
                 arc=best_arc,
@@ -286,14 +272,14 @@ class FourPhaseArcGenerator(BaseAgent):
                 constraints=full_constraint_block,
                 state_tracker=state_tracker,  # [V60.94] 죽은 NPC 검증용
                 pre_collected_items=_pre_items,  # [V62.5] 중복 스캔 방지
-                pre_collected_grants=_pre_grants  # [V62.5] 중복 스캔 방지
+                pre_collected_grants=_pre_grants,  # [V62.5] 중복 스캔 방지
             )
 
             pipeline_result["phases"]["validate"] = {
                 "status": "complete",
                 "verdict": verdict,
                 "issues_count": len(validation_result.get("issues", [])),
-                "confidence": validation_result.get("confidence", 0)
+                "confidence": validation_result.get("confidence", 0),
             }
 
             if verdict == "PASS":
@@ -310,13 +296,11 @@ class FourPhaseArcGenerator(BaseAgent):
                 if issues:
                     first_issue = issues[0]
                     self.negative_injector.record_rejection(
-                        best_arc,
-                        first_issue.get("issue", "알 수 없음"),
-                        first_issue.get("category", "unknown")
+                        best_arc, first_issue.get("issue", "알 수 없음"), first_issue.get("category", "unknown")
                     )
 
                     # 이슈 출력
-                    logging.warning(f"🚨 [Phase 3] REJECT - 주요 이슈:")
+                    logging.warning("🚨 [Phase 3] REJECT - 주요 이슈:")
                     for issue in issues[:3]:
                         sev = issue.get("severity", "?")
                         cat = issue.get("category", "?")
@@ -332,7 +316,7 @@ class FourPhaseArcGenerator(BaseAgent):
             logging.info(f"마지막 피드백: {feedback[:200]}...")
         return None, pipeline_result
 
-    def _generate_prev_context(self, prev_arcs: List[Dict], preflight_result: Dict) -> str:
+    def _generate_prev_context(self, prev_arcs: list[dict], preflight_result: dict) -> str:
         """[V67] 이전 Arc 컨텍스트 생성 - 전문 확장 (Gemini 대용량 컨텍스트 활용)"""
         if not prev_arcs:
             return "서사 시작점 (첫 Arc)"
@@ -352,7 +336,8 @@ class FourPhaseArcGenerator(BaseAgent):
             loss_str = shadow.get("internal_energy_loss", "0%")
             try:
                 import re
-                _m = re.search(r'(\d+)', str(loss_str))  # [V70] None 방어
+
+                _m = re.search(r"(\d+)", str(loss_str))  # [V70] None 방어
                 loss = int(_m.group(1)) if _m else 0
                 raw_energy = max(0, 100 - loss)
             except Exception:
@@ -407,11 +392,10 @@ class FourPhaseArcGenerator(BaseAgent):
             _pa_td = _pa.get("tactical_doc", "")
             if isinstance(_pa_td, dict):
                 import json
+
                 _pa_td = json.dumps(_pa_td, ensure_ascii=False)
             if _pa_td:
-                _arc_history_lines.append(
-                    f"━━━ Arc {_pa_no} (제{_pa_ep_s}화~제{_pa_ep_e}화) ━━━\n{_pa_td}"
-                )
+                _arc_history_lines.append(f"━━━ Arc {_pa_no} (제{_pa_ep_s}화~제{_pa_ep_e}화) ━━━\n{_pa_td}")
         if _arc_history_lines:
             _full_history = "\n\n".join(_arc_history_lines)
             # 200K자 상한
@@ -420,7 +404,9 @@ class FourPhaseArcGenerator(BaseAgent):
             lines.append("")
             lines.append(f"[V67] ═══ 이전 Arc 전술서 전문 ({len(_arc_history_lines)}개) ═══")
             lines.append(_full_history)
-            logging.info(f"📚 [V67] FourPhase prev_context 확장: {len(_arc_history_lines)}개 Arc 전술서 ({len(_full_history):,}자)")
+            logging.info(
+                f"📚 [V67] FourPhase prev_context 확장: {len(_arc_history_lines)}개 Arc 전술서 ({len(_full_history):,}자)"
+            )
 
         return "\n".join(lines)
 
@@ -429,9 +415,23 @@ class FourPhaseArcGenerator(BaseAgent):
     # 부상 자기강화 루프 차단: 만성질환/에스컬레이션 필터
     # ──────────────────────────────────────────────
     CHRONIC_INJURY_KEYWORDS = [
-        "성대 결절", "성대결절", "실명", "마비", "불구", "절단",
-        "암", "종양", "만성", "대화 불가", "말 못함", "목소리 상실",
-        "청력 상실", "시력 상실", "반신불수", "전신 탈진", "코피",
+        "성대 결절",
+        "성대결절",
+        "실명",
+        "마비",
+        "불구",
+        "절단",
+        "암",
+        "종양",
+        "만성",
+        "대화 불가",
+        "말 못함",
+        "목소리 상실",
+        "청력 상실",
+        "시력 상실",
+        "반신불수",
+        "전신 탈진",
+        "코피",
     ]
 
     def _sanitize_injuries(self, raw: str) -> str:
@@ -443,7 +443,7 @@ class FourPhaseArcGenerator(BaseAgent):
         logging.info(f"🩹 [V62.2] 자연 치유: '{raw[:50]}' → '없음' (아크 간 회복)")
         return "없음"
 
-    def _auto_sanitize_injuries(self, arc: Dict) -> Dict:
+    def _auto_sanitize_injuries(self, arc: dict) -> dict:
         """[V62.2] 생성된 Arc 종료 시 자연 회복 적용.
         - 부상: arc_end → '없음'
         - 내공: arc_end → 100% 복원
@@ -482,16 +482,13 @@ class FourPhaseArcGenerator(BaseAgent):
 
         return arc
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> dict:
         """통계 반환"""
         total = self.stats["total_attempts"]
         if total == 0:
             return self.stats
 
-        return {
-            **self.stats,
-            "pass_rate": f"{(self.stats['phase3_pass'] / total * 100):.1f}%" if total > 0 else "N/A"
-        }
+        return {**self.stats, "pass_rate": f"{(self.stats['phase3_pass'] / total * 100):.1f}%" if total > 0 else "N/A"}
 
     def print_stats(self) -> None:
         """통계 출력"""

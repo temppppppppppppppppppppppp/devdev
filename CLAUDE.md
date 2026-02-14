@@ -25,11 +25,13 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 
 ---
 
-## 현재 상태 (2026-02-13)
+## 현재 상태 (2026-02-14)
 
 - **작동함**: Stage 0→2→4 정상 동작
-- **완료된 것**: Phase 1(logging), 1.5(에러핸들링), 2-B(type hints 95.5%), 5-A(프롬프트 외부화 43개), 5-C(의존성 정리), 6-C(pre-commit+ruff), 6-A(pytest 63개 신규)
+- **완료된 것**: Phase 1(logging), 1.5(에러핸들링), 2-B(type hints 95.5%), 5-A(프롬프트 외부화 43개), 5-C(의존성 정리), 6-C(pre-commit+ruff), 6-A(pytest 63개 신규), **Phase 4C(DI 전환)**
 - **약점**: NPC 연속성 추적 약함 (시나리오 24개 — 참고자료 3-C), 플롯 중복 감지 불안정 (Chain 1, lazy init + 재시도 1회 적용 완료)
+- **Phase 4C 결과**: `stage2/3/4_orchestrator.py`의 `self.app` 직접 참조 제거 완료 (`self.app` 651→0, `self.ctx` 전환)
+- **다음 우선순위**: **Phase 4D (기존 로드맵 2.5)** — sqlite-vec 기반 SSOT DB 통합 + 벡터 검색/저장 재연결
 
 ---
 
@@ -37,8 +39,9 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 
 | 파일 | 역할 | 비고 |
 |------|------|------|
-| `modules/core/stage2_orchestrator.py` | Arc 오케스트레이터 (2134줄) | God Object (`self.app` 341건) |
-| `modules/core/stage4_orchestrator.py` | 원고 오케스트레이터 (1633줄) | God Object (`self.app` 312건) |
+| `modules/core/stage2_orchestrator.py` | Arc 오케스트레이터 | DI 전환 완료 (`self.app` 0, `self.ctx` 사용) |
+| `modules/core/stage3_orchestrator.py` | Blueprint 오케스트레이터 | DI 전환 완료 (`self.app` 0, `self.ctx` 사용) |
+| `modules/core/stage4_orchestrator.py` | 원고 오케스트레이터 | DI 전환 완료 (`self.app` 0, `self.ctx` 사용) |
 | `modules/core/db_manager.py` | SQLite DB 매니저 | 모범 패턴 |
 | `modules/core/prompt_loader.py` | YAML 프롬프트 로더 (싱글톤) | |
 | `config/prompts/*.yaml` | 외부화된 프롬프트 43개 | |
@@ -51,7 +54,7 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 ## ⚠️ 주의
 
 - `writer.py` — 레거시이나 유틸리티 3개가 stage4에서 직접 호출됨. Phase 2에서 이전 후 삭제.
-- `memory_engine.py` — ChromaDB 비활성화 상태. import하면 에러남.
+- `memory_engine.py` — ChromaDB 비활성화 상태. **Phase 4D에서 sqlite-vec로 교체 + 벡터 경로 재연결 예정**.
 - NPC 속성 변경 — DB 덮어쓰기 방식. 이력 없음. Phase 3에서 개선 예정.
 - `base_agent.py`의 Context Caching — 구현 완료 (`_get_or_create_context_cache` L920, `_ask_with_cached_context` L1003). `chief_writer`·`director_continuity`에서 사용 중.
 
@@ -70,10 +73,9 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 
 | 순서 | Phase | 작업 | 전제 |
 |------|-------|------|------|
-| 1 | 2-A | Pydantic 모델 도입 | 2-B ✅ |
-| 2 | 2.5 | sqlite-vec (ChromaDB 교체) | 2-A |
-| 3 | 3 | NPC 이력 + 관계 그래프 + 수정 모드 + 대리만족 검증 | 2-A |
-| 4 | 4 | God Object 분해 + 파일 분할 | 3 |
+| 1 | 4D (기존 2.5) | sqlite-vec (ChromaDB 교체) + 벡터 경로 재연결 | 4C ✅ |
+| 2 | 3 | NPC 이력 + 관계 그래프 + 수정 모드 + 대리만족 검증 | 4D |
+| 3 | 4(잔여) | async 통일 + 대형 함수 분할 + 추가 모듈화 | 3 |
 
 ---
 

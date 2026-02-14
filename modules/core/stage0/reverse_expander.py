@@ -378,15 +378,15 @@ JSON:
         logging.info(f"[v] 저장 완료: {out}")
 
     # ============================================
-    # Phase 7: 벡터화 저장 (VecMemory / 레거시 ChromaDB 호환)
+    # Phase 7: 벡터화 저장 (VecMemory)
     # ============================================
 
-    def persist_to_chromadb(self, project_context=None, memory=None) -> int:
-        """[Phase 4D-3] 원고를 벡터 DB에 저장 (VecMemory 우선, LongTermMemory 폴백).
+    def persist_to_vectordb(self, project_context=None, memory=None) -> int:
+        """[Phase 4D-4] 원고를 벡터 DB에 저장 (VecMemory).
 
         Args:
             project_context: ProjectContext 인스턴스
-            memory: 외부 주입 VecMemory/LongTermMemory 인스턴스 (없으면 자체 생성)
+            memory: 외부 주입 VecMemory 인스턴스 (없으면 자체 생성)
 
         Returns:
             int: 저장 성공한 에피소드 수
@@ -400,7 +400,7 @@ JSON:
             logging.info("[!] project_context가 필요합니다.")
             return 0
 
-        # 메모리 엔진 결정: 외부 주입 → VecMemory 자체 생성 → LongTermMemory 폴백
+        # 메모리 엔진 결정: 외부 주입 → VecMemory 자체 생성
         if memory is None:
             try:
                 import os

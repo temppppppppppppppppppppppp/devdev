@@ -145,14 +145,14 @@ ERROR_DEFINITIONS: dict[str, ErrorInfo] = {
         severity="ERROR",
     ),
     # Memory/VecMemory Errors
-    "MEMORY_CHROMADB_LOCKED": ErrorInfo(
+    "MEMORY_VECDB_LOCKED": ErrorInfo(
         category=ErrorCategory.MEMORY,
         code="MEM001",
         message="벡터 DB가 잠겨 있습니다",
         solution="memory/vec_memory.db 파일의 잠금을 해제하거나 프로세스를 재시작하세요",
         docs_link="docs/troubleshooting.md#vecmemory-lock",
     ),
-    "MEMORY_CHROMADB_CORRUPT": ErrorInfo(
+    "MEMORY_VECDB_CORRUPT": ErrorInfo(
         category=ErrorCategory.MEMORY,
         code="MEM002",
         message="벡터 DB가 손상되었습니다",
@@ -296,11 +296,11 @@ class ErrorHelper:
             return "API_AUTH_FAILED"
         elif "lock" in error_str:
             if "chroma" in error_str or "vector" in error_str:
-                return "MEMORY_CHROMADB_LOCKED"
+                return "MEMORY_VECDB_LOCKED"
             return "DB_LOCKED"
         elif "corrupt" in error_str or "invalid" in error_str:
             if "chroma" in error_str:
-                return "MEMORY_CHROMADB_CORRUPT"
+                return "MEMORY_VECDB_CORRUPT"
             return "DB_INTEGRITY_ERROR"
         elif "permission" in error_str or "access" in error_str:
             return "FILE_PERMISSION_DENIED"

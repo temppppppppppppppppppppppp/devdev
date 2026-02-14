@@ -1,5 +1,5 @@
 """
-[V63] Semantic Plot Guard — ChromaDB 임베딩 기반 시맨틱 플롯 중복 감지
+[V63] Semantic Plot Guard — 임베딩 기반 시맨틱 플롯 중복 감지
 
 resolved_plots 임베딩 vs 새 tactical_doc 플롯명 임베딩 비교.
 cosine similarity > 0.85 → WARNING 생성.

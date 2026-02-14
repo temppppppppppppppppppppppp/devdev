@@ -100,7 +100,7 @@ try:
     from modules.core.agent_intelligence import AgentIntelligence  # [V51.3] 에이전트 지능 향상
 
     # [V65] TwoPhaseGenerator 삭제 (Dead Code — Stage 4 V2 전환으로 미사용)
-    from modules.core.blueprint_memory import SuccessPatternMemory  # [V54.5] 성공 패턴 메모리
+    # [Phase 4D-4] SuccessPatternMemory 삭제 (blueprint_memory.py → ChromaDB 레거시 제거)
     from modules.core.chain_of_verification import ChainOfVerification  # [V53.2] 사실 검증 체인
     from modules.core.character_voice import CharacterVoiceTracker  # [V51.5] 캐릭터 음성 추적
     from modules.core.character_voice_profiler import CharacterVoiceProfiler  # [V60.26] 캐릭터 음성 프로파일러 (V58)
@@ -259,7 +259,7 @@ class SovereignApp:
         self.context_compressor = None  # [V54.2] 컨텍스트 압축
         self.adaptive_manager = None  # [V54.3] 적응형 재시도 관리자
         # [V65] two_phase_ms/bp/arc 삭제 (Dead Code — TwoPhaseGenerator 제거)
-        self.success_patterns = None  # [V54.5] 성공 패턴 메모리
+        # [Phase 4D-4] success_patterns 삭제 (ChromaDB 레거시 제거)
         self.manuscript_enhancer = None  # [V55] 원고 품질/분량 향상
         self.constitutional_checker = None  # [V55.2] 헌법적 자기검증
         self.writer_template = None  # [V55.3] 원고 템플릿
@@ -1108,7 +1108,7 @@ class SovereignApp:
             return False
 
     def _check_vector_db_lock(self, project_name: str) -> bool:
-        """[Phase 4D-2] 벡터 DB 무결성 점검 (sqlite-vec + 레거시 ChromaDB 호환).
+        """[Phase 4D] 벡터 DB 무결성 점검 (sqlite-vec).
 
         Args:
             project_name: 프로젝트 이름
@@ -1124,18 +1124,6 @@ class SovereignApp:
             self.ui.log(f"🚨 [Critical] 벡터 DB 파일({vec_db.name}) 손상 감지 (0KB).")
             self.ui.log("👉 [해결] 파일 삭제 후 Stage 0을 재실행하십시오.")
             return False
-
-        # 2. 레거시 ChromaDB 잔류 잠금 파일 정리 (마이그레이션 호환)
-        chroma_path = Path(f"projects/{project_name}/chroma_db")
-        if chroma_path.exists():
-            for lock_name in ("LOCK", "chroma.sqlite3-shm"):
-                f = chroma_path / lock_name
-                if f.exists():
-                    try:
-                        os.remove(f)
-                        self.ui.log(f"🧹 [System] 레거시 잠금 파일({lock_name}) 제거")
-                    except Exception:
-                        pass
 
         self.ui.log("✅ [System] 벡터 DB 엔진 무결성 점검 완료.")
         return True
@@ -1661,9 +1649,7 @@ class SovereignApp:
 
                     # [V65] TwoPhaseGenerator 삭제 (two_phase_ms/bp/arc — Dead Code)
 
-                    # V54.5 성공 패턴 메모리
-                    self.success_patterns = SuccessPatternMemory(project_context=self.current_project, max_patterns=100)
-                    self.ui.log("   🏆 [V54.5] Success Pattern Memory 활성화")
+                    # [Phase 4D-4] SuccessPatternMemory 삭제 (ChromaDB 레거시 제거)
 
                     # V55 원고 품질/분량 향상
                     self.manuscript_enhancer = ManuscriptEnhancer(genre=genre_type)

@@ -460,7 +460,7 @@ class ProjectContext:
         karma_data,
         lore_data,
         recovered_seeds,
-        memory_engine,
+        memory,
     ) -> bool:
         """
         [V35 Alpha] 트랜잭션 원자성 강화 + NPC HUD 실시간 동기화 통합 버전
@@ -549,13 +549,13 @@ class ProjectContext:
             if not db_success:
                 raise Exception("SQLite Episode Factory 저장 실패")
 
-            # --- [Part 4: 벡터 동기화 (VecMemory/ChromaDB)] ---
+            # --- [Part 4: 벡터 동기화 (VecMemory)] ---
             try:
                 # 벡터 기억 주입
                 summary = state_data.get("context_audit", {}).get("summary", "요약 없음")
                 content_text = manuscript_data["content"] if isinstance(manuscript_data, dict) else str(manuscript_data)
 
-                vector_success = memory_engine.memorize_v20_episode(ep_num, content_text, summary, causal_links)
+                vector_success = memory.memorize_v20_episode(ep_num, content_text, summary, causal_links)
 
                 if vector_success:
                     # 모든 공정 성공 시에만 최종 동기화 완료 마킹
@@ -773,7 +773,7 @@ class ProjectContext:
         """DB에서 해당 회차의 설계도를 가져옴"""
         return self.db.get_blueprint(ep_num)
 
-    def sync_existing_manuscripts(self, memory_engine) -> bool:
+    def sync_existing_manuscripts(self, memory) -> bool:
         """
         [Phase 0] 기존 원고를 AI 요약 없이 DB에 직접 박제
         """
@@ -820,7 +820,7 @@ class ProjectContext:
             # NPC 이름 패턴 (한글 2-4자 + "은/는/이/가/을/를")
             for _m in _re.finditer(r"([가-힣]{2,4})(?:은|는|이|가|을|를)\s", content[:3000]):
                 _bulk_entities.add(_m.group(1))
-            memory_engine.memorize_v20_episode(
+            memory.memorize_v20_episode(
                 ep_num,
                 content,
                 summary,
@@ -840,7 +840,7 @@ class ProjectContext:
 
     # --- [V35.5 Pro Candidate: 자율 수술실 로직] ---
 
-    def auto_backtrack_v35(self, error_report, memory_engine):
+    def auto_backtrack_v35(self, error_report, memory):
         """
         [V35.5] 논리 모순이 발생한 '인과의 기점'을 찾아 자동 되감기(Rewind) 수행
         - Analyst의 진단 보고서를 바탕으로 물리적 DB와 파일 소거 실행
@@ -862,13 +862,10 @@ class ProjectContext:
             # self.reset_project는 이미 구현되어 있음
             self.reset_project(target_ep)
 
-            # 3. 벡터 DB 기억 소거 (VecMemory 호환)
-            if memory_engine and hasattr(memory_engine, "delete_episodes_from"):
-                deleted = memory_engine.delete_episodes_from(target_ep)
+            # 3. 벡터 DB 기억 소거
+            if memory and hasattr(memory, "delete_episodes_from"):
+                deleted = memory.delete_episodes_from(target_ep)
                 logging.info(f"🌌 [Memory] 제 {target_ep}화 이후 벡터 기억 {deleted}건 소거")
-            elif memory_engine and getattr(memory_engine, "collection", None):
-                memory_engine.collection.delete(where={"episode": {"$gte": target_ep}})
-                logging.info(f"🌌 [Memory] 제 {target_ep}화 이후의 벡터 기억을 소거했습니다.")
 
             return target_ep
         except Exception as e:

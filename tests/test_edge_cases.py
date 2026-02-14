@@ -1,20 +1,15 @@
 """
 [V44] 엣지 케이스 테스트
 
-극단값, DB 손상, ChromaDB lock, Stage 스킵, 네트워크 오류 시나리오
+극단값, DB 손상, VectorDB lock, Stage 스킵, 네트워크 오류 시나리오
 """
 
-import pytest
 import json
-import sqlite3
-import tempfile
-import os
-import time
+import sys
 import threading
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
@@ -75,7 +70,7 @@ class TestExtremeValues:
             "korean": "이청풍 무림",
             "symbols": "「」『』〈〉《》【】",
             "emoji": "⚔️🗡️🏯",
-            "mixed": "이청풍(李靑風)이 「청풍검법」을 펼쳤다!"
+            "mixed": "이청풍(李靑風)이 「청풍검법」을 펼쳤다!",
         }
 
         db.save_anchor("special", special_chars)
@@ -92,15 +87,7 @@ class TestExtremeValues:
 
         db = DBManager(temp_dir / "test.db")
 
-        data_with_nulls = {
-            "field1": None,
-            "field2": "value",
-            "field3": None,
-            "nested": {
-                "inner": None,
-                "value": 123
-            }
-        }
+        data_with_nulls = {"field1": None, "field2": "value", "field3": None, "nested": {"inner": None, "value": 123}}
 
         db.save_anchor("nulls", data_with_nulls)
         loaded = db.load_anchor("nulls")
@@ -119,7 +106,7 @@ class TestExtremeValues:
         data = {
             "negative_int": -100,
             "negative_float": -3.14,
-            "relationship": -50  # 적대 관계
+            "relationship": -50,  # 적대 관계
         }
 
         db.save_anchor("negatives", data)
@@ -137,8 +124,15 @@ class TestExtremeValues:
         db = DBManager(temp_dir / "test.db")
 
         # 10단계 중첩
-        deep_data = {"level0": {"level1": {"level2": {"level3": {"level4":
-                     {"level5": {"level6": {"level7": {"level8": {"level9": "deep value"}}}}}}}}}}
+        deep_data = {
+            "level0": {
+                "level1": {
+                    "level2": {
+                        "level3": {"level4": {"level5": {"level6": {"level7": {"level8": {"level9": "deep value"}}}}}}
+                    }
+                }
+            }
+        }
 
         db.save_anchor("deep", deep_data)
         loaded = db.load_anchor("deep")
@@ -183,8 +177,7 @@ class TestDBCorruptionRecovery:
 
         # 직접 손상된 JSON 삽입
         db.cursor.execute(
-            "INSERT OR REPLACE INTO anchors (key, value) VALUES (?, ?)",
-            ("corrupted", "{invalid json{{{}}")
+            "INSERT OR REPLACE INTO anchors (key, value) VALUES (?, ?)", ("corrupted", "{invalid json{{{}}")
         )
         db.conn.commit()
 
@@ -239,35 +232,32 @@ class TestDBCorruptionRecovery:
         pass
 
 
-class TestChromaDBLock:
-    """ChromaDB 잠금 테스트"""
+class TestVectorDBLock:
+    """벡터 DB 잠금 테스트"""
 
-    def test_chromadb_lock_detection(self, temp_dir):
-        """ChromaDB 잠금 감지 테스트"""
-        # LOCK 파일 생성으로 시뮬레이션
-        vector_db_path = temp_dir / "vector_db"
-        vector_db_path.mkdir()
+    def test_vectordb_lock_detection(self, temp_dir):
+        """벡터 DB 잠금 감지 테스트"""
+        # 0KB 파일 생성으로 손상 시뮬레이션
+        memory_path = temp_dir / "memory"
+        memory_path.mkdir()
 
-        lock_file = vector_db_path / "LOCK"
-        lock_file.write_text("locked")
+        vec_db = memory_path / "vec_memory.db"
+        vec_db.write_text("")
 
-        # 잠금 감지 로직 테스트
-        assert lock_file.exists()
+        # 손상 감지 로직 테스트
+        assert vec_db.exists()
+        assert vec_db.stat().st_size == 0
 
-    def test_chromadb_lock_recovery_hint(self, temp_dir):
-        """ChromaDB 잠금 복구 힌트 테스트"""
-        # MemoryEngine 초기화 시 잠금 에러 처리 확인
-        # (실제 ChromaDB 없이 에러 메시지 검증)
-
+    def test_vectordb_lock_recovery_hint(self, temp_dir):
+        """벡터 DB 잠금 복구 힌트 테스트"""
         error_message = "Database is locked"
         expected_hints = ["LOCK", "삭제", "재시작"]
 
         # 에러 메시지에 힌트 포함 여부 (구현에 따라)
 
-    def test_concurrent_chromadb_access(self, temp_dir):
-        """ChromaDB 동시 접근 테스트"""
+    def test_concurrent_vectordb_access(self, temp_dir):
+        """벡터 DB 동시 접근 테스트"""
         # 동시 접근 시뮬레이션
-        # 실제 ChromaDB 사용 시 테스트
         pass
 
 
@@ -299,8 +289,7 @@ class TestStageSkipCompatibility:
         db = DBManager(temp_dir / "test.db")
 
         # Stage 1 결과 (스킵 시 기존 데이터 사용)
-        volumes = [{"volume": i, "title": f"Vol{i}", "episodes": f"{(i-1)*50+1}-{i*50}"}
-                   for i in range(1, 11)]
+        volumes = [{"volume": i, "title": f"Vol{i}", "episodes": f"{(i - 1) * 50 + 1}-{i * 50}"} for i in range(1, 11)]
         db.save_anchor("volumes", volumes)
 
         # Stage 2에서 볼륨 데이터 접근
@@ -337,23 +326,18 @@ class TestNetworkTimeout:
 
     def test_api_timeout_handling(self):
         """API 타임아웃 처리 테스트"""
-        from modules.domain.agents.base_agent import BaseAgent, AgentErrorType
+        from modules.domain.agents.base_agent import AgentErrorType, BaseAgent
 
         # Mock 설정
-        config = {
-            "api_client": MagicMock(),
-            "project": MagicMock(),
-            "models": {"primary": "test", "backup": "test2"}
-        }
+        config = {"api_client": MagicMock(), "project": MagicMock(), "models": {"primary": "test", "backup": "test2"}}
 
         # 타임아웃 예외 시뮬레이션
-        config["api_client"].models.generate_content.side_effect = \
-            Exception("Request timed out after 120 seconds")
+        config["api_client"].models.generate_content.side_effect = Exception("Request timed out after 120 seconds")
 
         agent = BaseAgent(config)
 
         # 에러 분류 확인
-        if hasattr(agent, '_classify_error'):
+        if hasattr(agent, "_classify_error"):
             error = Exception("Request timed out")
             error_type = agent._classify_error(error)
             assert error_type == AgentErrorType.TIMEOUT
@@ -365,25 +349,21 @@ class TestNetworkTimeout:
         base_delay = 1
 
         for attempt in range(max_retries):
-            delay = base_delay * (2 ** attempt)  # 지수 백오프
+            delay = base_delay * (2**attempt)  # 지수 백오프
             retry_delays.append(delay)
 
         assert retry_delays == [1, 2, 4]
 
     def test_quota_exceeded_handling(self):
         """할당량 초과 처리 테스트"""
-        from modules.domain.agents.base_agent import BaseAgent, AgentErrorType
+        from modules.domain.agents.base_agent import AgentErrorType, BaseAgent
 
-        config = {
-            "api_client": MagicMock(),
-            "project": MagicMock(),
-            "models": {"primary": "test", "backup": "test2"}
-        }
+        config = {"api_client": MagicMock(), "project": MagicMock(), "models": {"primary": "test", "backup": "test2"}}
 
         agent = BaseAgent(config)
 
         # 429 에러 분류
-        if hasattr(agent, '_classify_error'):
+        if hasattr(agent, "_classify_error"):
             error = Exception("429 Resource exhausted: quota exceeded")
             error_type = agent._classify_error(error)
             assert error_type == AgentErrorType.QUOTA_EXCEEDED
@@ -451,8 +431,7 @@ class TestBoundaryConditions:
         """점수 경계 테스트"""
         # 점수 범위: 0-100
         boundary_scores = [0, 69, 70, 84, 85, 100]
-        expected_statuses = ["REJECT", "REJECT", "CONDITIONAL_PASS",
-                            "CONDITIONAL_PASS", "PASS", "PASS"]
+        expected_statuses = ["REJECT", "REJECT", "CONDITIONAL_PASS", "CONDITIONAL_PASS", "PASS", "PASS"]
 
         for score, expected in zip(boundary_scores, expected_statuses):
             if score >= 85:
@@ -521,7 +500,6 @@ class TestMemoryAndPerformance:
     def test_concurrent_read_write(self, temp_dir):
         """동시 읽기/쓰기 테스트"""
         from modules.core.db_manager import DBManager
-        import threading
 
         db_path = temp_dir / "concurrent.db"
         errors = []
@@ -548,10 +526,7 @@ class TestMemoryAndPerformance:
                 errors.append(("reader", e))
 
         # 동시 실행
-        threads = [
-            threading.Thread(target=writer),
-            threading.Thread(target=reader)
-        ]
+        threads = [threading.Thread(target=writer), threading.Thread(target=reader)]
 
         for t in threads:
             t.start()
