@@ -1,4 +1,4 @@
-"""[Phase 4C-2a] Stage4Context + Stage4Orchestrator DI 파일럿 테스트"""
+"""[Phase 4C-2a/2b/2c] Stage4Context + Stage4Orchestrator DI 테스트"""
 
 from unittest.mock import MagicMock, PropertyMock
 
@@ -81,6 +81,59 @@ class TestStage4Context:
         with pytest.raises(TypeError):
             Stage4Context(1, 2, 3, 4, 5)
 
+    def test_callbacks_default_none(self, ctx):
+        """[4C-2c] 콜백 7종 기본값 None"""
+        assert ctx.get_int_input is None
+        assert ctx.build_item_acquisition_timeline is None
+        assert ctx.load_narrative_summaries is None
+        assert ctx.get_protagonist_name is None
+        assert ctx.generate_narrative_summary is None
+        assert ctx.flush_audit_buffer is None
+        assert ctx.safe_commit is None
+
+    def test_callbacks_stored(self, mock_deps):
+        """[4C-2c] 콜백 전달 시 정확히 저장"""
+        cb_flush = MagicMock()
+        cb_commit = MagicMock()
+        ctx = Stage4Context(
+            **mock_deps,
+            flush_audit_buffer=cb_flush,
+            safe_commit=cb_commit,
+        )
+        assert ctx.flush_audit_buffer is cb_flush
+        assert ctx.safe_commit is cb_commit
+
+    def test_from_app_extracts_callbacks(self, app_mock):
+        """[4C-2c] from_app가 콜백 7종을 바운드 메서드로 채움"""
+        app_mock._get_int_input = MagicMock()
+        app_mock._build_item_acquisition_timeline = MagicMock()
+        app_mock._load_narrative_summaries = MagicMock()
+        app_mock._get_protagonist_name = MagicMock()
+        app_mock._generate_narrative_summary = MagicMock()
+        app_mock._flush_audit_buffer = MagicMock()
+        app_mock._safe_commit = MagicMock()
+
+        ctx = Stage4Context.from_app(app_mock)
+        assert ctx.get_int_input is app_mock._get_int_input
+        assert ctx.build_item_acquisition_timeline is app_mock._build_item_acquisition_timeline
+        assert ctx.load_narrative_summaries is app_mock._load_narrative_summaries
+        assert ctx.get_protagonist_name is app_mock._get_protagonist_name
+        assert ctx.generate_narrative_summary is app_mock._generate_narrative_summary
+        assert ctx.flush_audit_buffer is app_mock._flush_audit_buffer
+        assert ctx.safe_commit is app_mock._safe_commit
+
+    def test_from_app_missing_callbacks_none(self):
+        """[4C-2c] 콜백 미구현 app에서도 from_app 정상 (None)"""
+        app = MagicMock(spec=[])
+        app.ui = MagicMock()
+        app.current_project = MagicMock()
+        app.agents = {}
+        app.sys = MagicMock()
+        ctx = Stage4Context.from_app(app)
+        assert ctx.get_int_input is None
+        assert ctx.flush_audit_buffer is None
+        assert ctx.safe_commit is None
+
 
 # ── Stage4Orchestrator ctx 테스트 ────────────────────────────
 
@@ -147,10 +200,32 @@ class TestStage4OrchestratorCtx:
         result = orch._load_chain_link_section(1)
         assert result == ""
 
+    def test_callback_flush_via_ctx(self, app_mock, mock_deps):
+        """[4C-2c] flush_audit_buffer 콜백이 ctx 경유 호출"""
+        cb_flush = MagicMock()
+        ctx = Stage4Context(**mock_deps, flush_audit_buffer=cb_flush)
+        orch = Stage4Orchestrator(app=app_mock, context=ctx)
+        orch.ctx.flush_audit_buffer()
+        cb_flush.assert_called_once()
+
+    def test_callback_safe_commit_via_ctx(self, app_mock, mock_deps):
+        """[4C-2c] safe_commit 콜백이 ctx 경유 호출"""
+        cb_commit = MagicMock()
+        ctx = Stage4Context(**mock_deps, safe_commit=cb_commit)
+        orch = Stage4Orchestrator(app=app_mock, context=ctx)
+        orch.ctx.safe_commit()
+        cb_commit.assert_called_once()
+
+    def test_callback_get_int_input_via_ctx(self, app_mock, mock_deps):
+        """[4C-2c] get_int_input 콜백이 ctx 경유 호출 및 반환값"""
+        cb_input = MagicMock(return_value=3)
+        ctx = Stage4Context(**mock_deps, get_int_input=cb_input)
+        orch = Stage4Orchestrator(app=app_mock, context=ctx)
+        result = orch.ctx.get_int_input("prompt", default=1, min_val=1, max_val=5)
+        cb_input.assert_called_once_with("prompt", default=1, min_val=1, max_val=5)
+        assert result == 3
+
     def test_backward_compat_app_still_works(self, app_mock):
-        """self.app 비파일럿 속성 접근 유지"""
-        app_mock.world_state = MagicMock()
-        app_mock.fact_ledger = MagicMock()
+        """self.app 접근 유지 (레거시 호환)"""
         orch = Stage4Orchestrator(app=app_mock)
-        assert orch.app.world_state is app_mock.world_state
-        assert orch.app.fact_ledger is app_mock.fact_ledger
+        assert orch.app is app_mock

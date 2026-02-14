@@ -287,7 +287,7 @@ JSON으로 출력:
         try:
             # 4. 플랫폼 스타일 선택
             if limit_mode:
-                target_ep = self.app._get_int_input(
+                target_ep = self.ctx.get_int_input(
                     f"\n👉 몇 화까지 집필하시겠습니까? (최대 {total_planned_ep}화): ",
                     default=None,
                     min_val=1,
@@ -338,7 +338,7 @@ JSON으로 출력:
                     pass
 
             if not style_guide:
-                style_choice = self.app._get_int_input(
+                style_choice = self.ctx.get_int_input(
                     "\n👉 스타일 선택 (1.카카오 / 2.네이버): ", default=1, min_val=1, max_val=2
                 )
                 style_guide = (
@@ -460,7 +460,7 @@ JSON으로 출력:
                 cumulative_bible = self.ctx.current_project.db.get_cumulative_bible(next_ep - 1)
                 dead_npcs = cumulative_bible.get("dead_npcs", []) if cumulative_bible else []
 
-                item_acquisition_timeline = self.app._build_item_acquisition_timeline(next_ep - 1)
+                item_acquisition_timeline = self.ctx.build_item_acquisition_timeline(next_ep - 1)
 
                 # [V68] 직전 화 연결고리 로드
                 _chain_link_section = self._load_chain_link_section(next_ep)
@@ -764,7 +764,7 @@ JSON으로 출력:
 
                     # Priority 20: 장기 내러티브 요약 (Arc 요약 등으로 이미 커버 — 최하위)
                     try:
-                        _narrative_summaries = self.app._load_narrative_summaries()
+                        _narrative_summaries = self.ctx.load_narrative_summaries()
                         if _narrative_summaries:
                             _mc_parts.append(_narrative_summaries)
                     except Exception as e:  # [V64.P4] IMPORTANT: narrative summary load failure
@@ -1316,7 +1316,7 @@ JSON으로 출력:
                             feedback=director_feedback,
                             prev_full_manuscript=prev_text,
                             arc_doc=arc_tactical,
-                            protagonist_name=self.app._get_protagonist_name(),
+                            protagonist_name=self.ctx.get_protagonist_name(),
                         )
 
                         frozen_manuscript = (
@@ -1353,7 +1353,7 @@ JSON으로 출력:
                             self.ctx.ui.log("   2. 수동 원고 작성")
                             self.ctx.ui.log("   3. 이 에피소드 건너뛰기")
 
-                            choice = self.app._get_int_input(
+                            choice = self.ctx.get_int_input(
                                 "\n👉 선택 (1.Blueprint수정 / 2.수동작성 / 3.건너뛰기 / 4.강제진행): ",
                                 default=4,
                                 min_val=1,
@@ -1471,7 +1471,7 @@ JSON으로 출력:
                     # [V66] 5화 단위 내러티브 요약 생성 (V63.2 10→5 단축)
                     if next_ep % 5 == 0:
                         try:
-                            self.app._generate_narrative_summary(next_ep)
+                            self.ctx.generate_narrative_summary(next_ep)
                         except Exception as _ns_err:
                             self.ctx.ui.log(f"   ⚠️ [V63.2] 내러티브 요약 생성 실패: {str(_ns_err)[:60]}")
 
@@ -1760,7 +1760,7 @@ JSON으로 출력:
                     self.ctx.ui.log(f"\n✅ 제{next_ep}화 '{final_title}' 생산 완료! ({len(final_manuscript)}자)")
 
                     # [V66.1] B-3: 에피소드 완료 시 audit 버퍼 flush
-                    self.app._flush_audit_buffer()
+                    self.ctx.flush_audit_buffer()
 
                     # [V65] PerfTimer: 에피소드 완료 시 요약 로그
                     try:
@@ -1789,12 +1789,12 @@ JSON으로 출력:
 
         except KeyboardInterrupt:
             self.ctx.ui.log("\n⚠️ 사용자 중단 요청. 저장 후 종료합니다.")
-            self.app._flush_audit_buffer()  # [V66.1] B-3
-            self.app._safe_commit()
+            self.ctx.flush_audit_buffer()  # [V66.1] B-3
+            self.ctx.safe_commit()
         except Exception as e:
             self.ctx.ui.log(f"\n🚨 Stage 4 V2 오류: {e}")
             import traceback
 
             traceback.print_exc()
-            self.app._flush_audit_buffer()  # [V66.1] B-3
-            self.app._safe_commit()
+            self.ctx.flush_audit_buffer()  # [V66.1] B-3
+            self.ctx.safe_commit()
