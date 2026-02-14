@@ -280,7 +280,24 @@ class DBManager:
             logging.debug("[SILENT] ALTER TABLE knowledge_map: column already exists")
             pass  # 이미 존재
 
-        # 11. Reflexion 메모리 테이블
+        # 11. [Phase 3-5A] NPC 변경 이력 (append-only)
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS npc_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                npc_name TEXT NOT NULL,
+                episode_no INTEGER,
+                arc_no INTEGER,
+                field_name TEXT NOT NULL,
+                old_value TEXT,
+                new_value TEXT,
+                change_source TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_npc_history_name ON npc_history(npc_name)")
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_npc_history_arc ON npc_history(arc_no)")
+
+        # 12. Reflexion 메모리 테이블
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS reflexion_memory (
                 pattern_type TEXT PRIMARY KEY,
@@ -1201,3 +1218,47 @@ class DBManager:
                 data = {}
             results.append({"ep_num": row["ep_num"], "data": data})
         return results
+
+    # --- [Phase 3-5A] NPC 변경 이력 ---
+
+    def insert_npc_change(
+        self,
+        npc_name: str,
+        episode_no: int,
+        arc_no: int,
+        field_name: str,
+        old_value: str,
+        new_value: str,
+        change_source: str = "arc_extraction",
+    ) -> None:
+        """[Phase 3-5A] NPC 변경 이력 append-only 삽입"""
+        with self._lock:
+            self.cursor.execute(
+                "INSERT INTO npc_history (npc_name, episode_no, arc_no, field_name, old_value, new_value, change_source) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (npc_name, episode_no, arc_no, field_name, old_value, new_value, change_source),
+            )
+            if not self.conn.in_transaction:
+                self.conn.commit()
+
+    def get_npc_history(self, npc_name: str, limit: int = 50) -> list:
+        """[Phase 3-5A] NPC 변경 이력 조회 (최신순)"""
+        with self._lock:
+            cur = self.cursor.execute(
+                "SELECT id, npc_name, episode_no, arc_no, field_name, old_value, new_value, "
+                "change_source, created_at FROM npc_history WHERE npc_name = ? ORDER BY id DESC LIMIT ?",
+                (npc_name, limit),
+            )
+            return [dict(row) for row in cur.fetchall()]
+
+    def get_npc_latest_fields(self, npc_name: str) -> dict:
+        """[Phase 3-5A] NPC의 각 필드별 최신 값 조회"""
+        with self._lock:
+            cur = self.cursor.execute(
+                "SELECT field_name, new_value FROM npc_history "
+                "WHERE npc_name = ? AND id IN ("
+                "  SELECT MAX(id) FROM npc_history WHERE npc_name = ? GROUP BY field_name"
+                ")",
+                (npc_name, npc_name),
+            )
+            return {row["field_name"]: row["new_value"] for row in cur.fetchall()}
