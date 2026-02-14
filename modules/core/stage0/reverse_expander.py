@@ -7,18 +7,19 @@ Arc/Blueprint는 스킵, 원고 직접 참조 방식
 
 import json
 import logging
-import re
 import os
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
+import re
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 from .preset_registry import PresetRegistry
 from .style_extractor import StyleExtractor, StyleGuide
 
 # 스피너 import (실패해도 동작)
 try:
-    from .spinner import Spinner, ProgressBar, PhaseIndicator, print_header, print_success, print_error, print_info
+    from .spinner import PhaseIndicator, ProgressBar, Spinner, print_error, print_header, print_info, print_success
+
     SPINNER_AVAILABLE = True
 except ImportError:
     SPINNER_AVAILABLE = False
@@ -30,12 +31,12 @@ class ReverseExpander:
     def __init__(self, project_context=None, llm_client=None) -> None:
         self.project = project_context
         self.client = llm_client
-        self.preset_registry: Optional[PresetRegistry] = None
-        self.style_guide: Optional[StyleGuide] = None
+        self.preset_registry: PresetRegistry | None = None
+        self.style_guide: StyleGuide | None = None
 
-        self.raw_drafts: List[Dict[str, Any]] = []  # {ep_num, title, content}
-        self.bible: Dict[str, Any] = {}
-        self.episode_bibles: List[Dict[str, Any]] = []  # 회차별 상태
+        self.raw_drafts: list[dict[str, Any]] = []  # {ep_num, title, content}
+        self.bible: dict[str, Any] = {}
+        self.episode_bibles: list[dict[str, Any]] = []  # 회차별 상태
 
     def _init_llm(self) -> None:
         """LLM 클라이언트 초기화"""
@@ -43,6 +44,7 @@ class ReverseExpander:
             return
         try:
             from google import genai
+
             api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
             if api_key:
                 self.client = genai.Client(api_key=api_key)
@@ -56,13 +58,14 @@ class ReverseExpander:
             return ""
         try:
             from google.genai import types
+
             response = self.client.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     temperature=temperature,
                     max_output_tokens=max_tokens,
-                )
+                ),
             )
             return response.text
         except Exception as e:
@@ -90,11 +93,11 @@ class ReverseExpander:
     def load_drafts_from_file(self, file_path: str) -> int:
         """단일 파일에서 에피소드들 로드"""
         path = Path(file_path)
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, encoding="utf-8") as f:
             text = f.read()
 
         # ⓚ 제N화 패턴으로 분리
-        pattern = r'ⓚ\s*제(\d+)화[.\s]*([^\n]*)'
+        pattern = r"ⓚ\s*제(\d+)화[.\s]*([^\n]*)"
         matches = list(re.finditer(pattern, text))
 
         for i, match in enumerate(matches):
@@ -104,11 +107,7 @@ class ReverseExpander:
             end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
             content = text[start:end].strip()
 
-            self.raw_drafts.append({
-                "ep_num": ep_num,
-                "title": title,
-                "content": content
-            })
+            self.raw_drafts.append({"ep_num": ep_num, "title": title, "content": content})
 
         return len(self.raw_drafts)
 
@@ -137,7 +136,7 @@ class ReverseExpander:
         numbered_files = []
         for f in all_txt:
             # ep_0001, 0001, 1 등 다양한 패턴에서 숫자 추출
-            match = re.search(r'(\d+)', f.stem)  # 확장자 제외한 파일명에서 숫자 찾기
+            match = re.search(r"(\d+)", f.stem)  # 확장자 제외한 파일명에서 숫자 찾기
             if match:
                 ep_num = int(match.group(1))
                 numbered_files.append((ep_num, f))
@@ -146,13 +145,9 @@ class ReverseExpander:
         numbered_files.sort(key=lambda x: x[0])
 
         for ep_num, f in numbered_files:
-            with open(f, 'r', encoding='utf-8') as fp:
+            with open(f, encoding="utf-8") as fp:
                 content = fp.read()
-            self.raw_drafts.append({
-                "ep_num": ep_num,
-                "title": f"제{ep_num}화",
-                "content": content
-            })
+            self.raw_drafts.append({"ep_num": ep_num, "title": f"제{ep_num}화", "content": content})
 
         return len(self.raw_drafts)
 
@@ -198,12 +193,11 @@ class ReverseExpander:
     # Phase 3: Bible 추출
     # ============================================
 
-    def extract_bible(self) -> Dict[str, Any]:
+    def extract_bible(self) -> dict[str, Any]:
         """마스터 Bible 추출"""
-        sample_text = "\n\n---\n\n".join([
-            f"[{d['ep_num']}화: {d['title']}]\n{d['content'][:2000]}"
-            for d in self.raw_drafts[:3]
-        ])
+        sample_text = "\n\n---\n\n".join(
+            [f"[{d['ep_num']}화: {d['title']}]\n{d['content'][:2000]}" for d in self.raw_drafts[:3]]
+        )
 
         # 주인공 추출
         protagonist = self._extract_protagonist(sample_text)
@@ -223,7 +217,6 @@ class ReverseExpander:
             "_source": "reverse_expander",
             "_episode_count": len(self.raw_drafts),
             "_generated_at": datetime.now().isoformat(),
-
             "MasterBible": {
                 "ProjectData": {
                     "MetaInfo": {
@@ -238,7 +231,7 @@ class ReverseExpander:
                 "AssetLibrary": {
                     "KeyNPCs": npcs,
                 },
-            }
+            },
         }
 
         return self.bible
@@ -250,7 +243,7 @@ class ReverseExpander:
             return self.raw_drafts[0].get("title", "무제")
         return "무제"
 
-    def _extract_protagonist(self, sample: str) -> Dict[str, Any]:
+    def _extract_protagonist(self, sample: str) -> dict[str, Any]:
         """주인공 정보 추출"""
         prompt = f"""다음 원고에서 주인공 정보를 추출하세요.
 
@@ -268,7 +261,7 @@ JSON:
 """
         return self._parse_json(self._call_llm(prompt)) or {}
 
-    def _extract_npcs(self, sample: str) -> List[Dict[str, Any]]:
+    def _extract_npcs(self, sample: str) -> list[dict[str, Any]]:
         """NPC 추출"""
         prompt = f"""다음 원고에서 등장인물을 추출하세요.
 
@@ -281,7 +274,7 @@ JSON:
 """
         return self._parse_json(self._call_llm(prompt)) or []
 
-    def _extract_world_state(self, sample: str) -> Dict[str, Any]:
+    def _extract_world_state(self, sample: str) -> dict[str, Any]:
         """세계관 추출"""
         prompt = f"""다음 원고에서 세계관/배경을 추출하세요.
 
@@ -298,7 +291,7 @@ JSON:
     # Phase 4: 회차별 상태 추출
     # ============================================
 
-    def extract_episode_bibles(self) -> List[Dict[str, Any]]:
+    def extract_episode_bibles(self) -> list[dict[str, Any]]:
         """회차별 상태 변화 추출"""
         self.episode_bibles = []
 
@@ -311,18 +304,18 @@ JSON:
 
             prompt = f"""이 에피소드 끝 시점의 주인공 상태를 추출하세요.
 
-## 에피소드 {draft['ep_num']}화
-{draft['content'][:3000]}
+## 에피소드 {draft["ep_num"]}화
+{draft["content"][:3000]}
 
 ## 이전 상태
-{json.dumps(prev_state.get('hud_snapshot', {}), ensure_ascii=False)[:1000]}
+{json.dumps(prev_state.get("hud_snapshot", {}), ensure_ascii=False)[:1000]}
 
 {schema}
 
 JSON:
 ```json
 {{
-  "ep_num": {draft['ep_num']},
+  "ep_num": {draft["ep_num"]},
   "hud_snapshot": {{필드들}},
   "changes": ["이번 화에서 변한 것들"],
   "new_npcs": ["새로 등장한 인물"],
@@ -338,13 +331,9 @@ JSON:
                     result["hud_snapshot"] = self.preset_registry.normalize_hud(result["hud_snapshot"])
                 self.episode_bibles.append(result)
             else:
-                self.episode_bibles.append({
-                    "ep_num": draft["ep_num"],
-                    "hud_snapshot": {},
-                    "changes": [],
-                    "new_npcs": [],
-                    "key_events": []
-                })
+                self.episode_bibles.append(
+                    {"ep_num": draft["ep_num"], "hud_snapshot": {}, "changes": [], "new_npcs": [], "key_events": []}
+                )
 
         return self.episode_bibles
 
@@ -369,38 +358,35 @@ JSON:
         out.mkdir(parents=True, exist_ok=True)
 
         # Bible
-        with open(out / "bible.json", 'w', encoding='utf-8') as f:
+        with open(out / "bible.json", "w", encoding="utf-8") as f:
             json.dump(self.bible, f, ensure_ascii=False, indent=2)
 
         # Episode Bibles
-        with open(out / "episode_bibles.json", 'w', encoding='utf-8') as f:
+        with open(out / "episode_bibles.json", "w", encoding="utf-8") as f:
             json.dump(self.episode_bibles, f, ensure_ascii=False, indent=2)
 
         # Style Guide
         if self.style_guide:
-            with open(out / "style_guide.json", 'w', encoding='utf-8') as f:
+            with open(out / "style_guide.json", "w", encoding="utf-8") as f:
                 f.write(self.style_guide.to_json())
 
         # Preset Registry 상태
         if self.preset_registry:
-            with open(out / "preset_state.json", 'w', encoding='utf-8') as f:
+            with open(out / "preset_state.json", "w", encoding="utf-8") as f:
                 f.write(self.preset_registry.to_json())
 
         logging.info(f"[v] 저장 완료: {out}")
 
     # ============================================
-    # Phase 7: ChromaDB 벡터화 저장
+    # Phase 7: 벡터화 저장 (VecMemory / 레거시 ChromaDB 호환)
     # ============================================
 
-    def persist_to_chromadb(self, project_context=None) -> int:
-        """
-        [V60.95] 원고를 ChromaDB 벡터 DB에 저장
-
-        역설계로 로드한 원고를 LongTermMemory.memorize_v20_episode()로 벡터화.
-        이후 retrieve_high_res_context()로 시맨틱 검색 가능.
+    def persist_to_chromadb(self, project_context=None, memory=None) -> int:
+        """[Phase 4D-3] 원고를 벡터 DB에 저장 (VecMemory 우선, LongTermMemory 폴백).
 
         Args:
-            project_context: ProjectContext 인스턴스 (LongTermMemory 초기화용)
+            project_context: ProjectContext 인스턴스
+            memory: 외부 주입 VecMemory/LongTermMemory 인스턴스 (없으면 자체 생성)
 
         Returns:
             int: 저장 성공한 에피소드 수
@@ -414,21 +400,28 @@ JSON:
             logging.info("[!] project_context가 필요합니다.")
             return 0
 
-        try:
-            from modules.core.memory_engine import LongTermMemory
-            memory = LongTermMemory(ctx)
+        # 메모리 엔진 결정: 외부 주입 → VecMemory 자체 생성 → LongTermMemory 폴백
+        if memory is None:
+            try:
+                import os
 
-            if not memory.is_operational():
-                logging.info("[!] LongTermMemory가 비활성 상태입니다.")
+                from modules.core.vec_memory import VecMemory
+
+                vec_db_path = ctx.paths.memory / "vec_memory.db"
+                ctx.paths.memory.mkdir(parents=True, exist_ok=True)
+                memory = VecMemory(db_path=vec_db_path, api_key=os.getenv("GOOGLE_API_KEY", ""))
+            except Exception as e:
+                logging.warning(f"[!] VecMemory 초기화 실패: {e}")
                 return 0
-        except ImportError as e:
-            logging.warning(f"[!] LongTermMemory 임포트 실패: {e}")
+
+        if not memory.is_operational():
+            logging.info("[!] 벡터 메모리가 비활성 상태입니다.")
             return 0
 
         success_count = 0
         total = len(self.raw_drafts)
 
-        logging.info(f"[*] ChromaDB 벡터화 시작 ({total}개 에피소드)...")
+        logging.info(f"[*] 벡터화 시작 ({total}개 에피소드)...")
 
         for i, draft in enumerate(self.raw_drafts):
             ep_num = draft.get("ep_num", i + 1)
@@ -439,28 +432,25 @@ JSON:
                 logging.info(f"[skip] 제{ep_num}화: 내용 없음")
                 continue
 
-            # 메타데이터 구성 (episode_bibles에서 추가 정보)
             causal_links = {
                 "title": title,
                 "source": "reverse_expander",
-                "char_count": len(content)
+                "char_count": len(content),
             }
 
-            # episode_bibles에서 추가 정보 (있으면)
-            if self.episode_bibles and 0 <= ep_num - 1 < len(self.episode_bibles):  # [V70] 음수 인덱스 방어
+            if self.episode_bibles and 0 <= ep_num - 1 < len(self.episode_bibles):
                 ep_bible = self.episode_bibles[ep_num - 1]
                 if ep_bible:
                     causal_links["new_npcs"] = ep_bible.get("new_npcs", [])
                     causal_links["new_items"] = ep_bible.get("new_items", [])
                     causal_links["location_change"] = ep_bible.get("location_change", "")
 
-            # 벡터화 저장
             try:
                 result = memory.memorize_v20_episode(
                     ep_num=ep_num,
                     text=content,
                     summary=title[:500],
-                    causal_links=causal_links
+                    causal_links=causal_links,
                 )
                 if result:
                     success_count += 1
@@ -469,14 +459,14 @@ JSON:
             except Exception as e:
                 logging.warning(f"[X] 제{ep_num}화 벡터화 실패: {str(e)[:50]}")
 
-        logging.info(f"[v] ChromaDB 벡터화 완료: {success_count}/{total}개")
+        logging.info(f"[v] 벡터화 완료: {success_count}/{total}개")
         return success_count
 
     # ============================================
     # 통합 실행
     # ============================================
 
-    def run(self, input_path: str, output_dir: str, genre: str = None) -> Tuple[Dict, List, StyleGuide]:
+    def run(self, input_path: str, output_dir: str, genre: str = None) -> tuple[dict, list, StyleGuide]:
         """전체 역설계 파이프라인"""
         if SPINNER_AVAILABLE:
             print_header("Reverse Engineering", style="double")
@@ -562,18 +552,18 @@ JSON:
 
             prompt = f"""이 에피소드 끝 시점의 주인공 상태를 추출하세요.
 
-## 에피소드 {draft['ep_num']}화
-{draft['content'][:3000]}
+## 에피소드 {draft["ep_num"]}화
+{draft["content"][:3000]}
 
 ## 이전 상태
-{json.dumps(prev_state.get('hud_snapshot', {}), ensure_ascii=False)[:1000]}
+{json.dumps(prev_state.get("hud_snapshot", {}), ensure_ascii=False)[:1000]}
 
 {schema}
 
 JSON:
 ```json
 {{
-  "ep_num": {draft['ep_num']},
+  "ep_num": {draft["ep_num"]},
   "hud_snapshot": {{필드들}},
   "changes": ["이번 화에서 변한 것들"],
   "new_npcs": ["새로 등장한 인물"],
@@ -588,13 +578,9 @@ JSON:
                     result["hud_snapshot"] = self.preset_registry.normalize_hud(result["hud_snapshot"])
                 self.episode_bibles.append(result)
             else:
-                self.episode_bibles.append({
-                    "ep_num": draft["ep_num"],
-                    "hud_snapshot": {},
-                    "changes": [],
-                    "new_npcs": [],
-                    "key_events": []
-                })
+                self.episode_bibles.append(
+                    {"ep_num": draft["ep_num"], "hud_snapshot": {}, "changes": [], "new_npcs": [], "key_events": []}
+                )
 
         progress.finish(f"회차별 상태 추출 완료 ({len(self.episode_bibles)}개)")
 
@@ -602,7 +588,7 @@ JSON:
     # Phase 8: DB 저장 및 Stub 생성
     # ============================================
 
-    def persist_to_db(self, project_context=None) -> Dict[str, int]:
+    def persist_to_db(self, project_context=None) -> dict[str, int]:
         """
         [V61] 역설계 결과를 DB에 저장
         - manuscripts 테이블에 원고 저장
@@ -625,7 +611,7 @@ JSON:
             "state_logs": self._save_state_logs_to_db(ctx),  # hud_snapshot 저장
             "episode_bibles": self._save_episode_bibles_to_db(ctx),
             "blueprints": self._save_blueprint_stubs(ctx),
-            "arcs": self._save_arc_stubs(ctx)
+            "arcs": self._save_arc_stubs(ctx),
         }
 
         # [V61.1] Arc stub 보강 (episode_bibles 데이터로 state_changes, joint_docs 채우기)
@@ -686,7 +672,7 @@ JSON:
                 "hud_snapshot": hud_snapshot,
                 "actual_truth": hud_snapshot,  # Stage 4에서 actual_truth로 참조
                 "_source": "reverse_engineered",
-                "ep_num": ep_num
+                "ep_num": ep_num,
             }
 
             # 요약 생성
@@ -760,28 +746,24 @@ JSON:
             relationships = hud.get("relationships", {})
             if isinstance(relationships, dict):
                 for target, desc in relationships.items():
-                    relationship_changes.append({
-                        "target": target,
-                        "to": desc,
-                        "justification": "역설계 추출"
-                    })
+                    relationship_changes.append({"target": target, "to": desc, "justification": "역설계 추출"})
 
             # reveals: key_events를 reveals로 매핑
             reveals = key_events if isinstance(key_events, list) else []
 
             # DB 스키마에 맞는 bible_delta 구성
             bible_delta = {
-                'new_items': [],  # 역설계에서 아이템 추출 없음
-                'lost_items': [],
-                'new_npcs': new_npcs,
-                'npc_deaths': [],
-                'relationship_changes': relationship_changes,
-                'state_changes': state_changes,
-                'time_passed': '',
-                'reveals': reveals,
-                'causal_links': [],
-                'karma_matrix': [],
-                'knowledge_map': {}
+                "new_items": [],  # 역설계에서 아이템 추출 없음
+                "lost_items": [],
+                "new_npcs": new_npcs,
+                "npc_deaths": [],
+                "relationship_changes": relationship_changes,
+                "state_changes": state_changes,
+                "time_passed": "",
+                "reveals": reveals,
+                "causal_links": [],
+                "karma_matrix": [],
+                "knowledge_map": {},
             }
 
             try:
@@ -823,7 +805,7 @@ JSON:
                 "key_events": ep_bible.get("key_events", []),
                 "hud_snapshot": ep_bible.get("hud_snapshot", {}),
                 "new_npcs": ep_bible.get("new_npcs", []),
-                "changes": ep_bible.get("changes", [])
+                "changes": ep_bible.get("changes", []),
             }
 
             try:
@@ -878,13 +860,13 @@ JSON:
                 "tactical_doc": f"[역설계] Arc {arc_no}: 제{ep_start}화~제{ep_end}화 (원고 존재)",
                 "key_events": arc_events[:10],  # 최대 10개
                 "joint_docs": {},
-                "state_changes": {}
+                "state_changes": {},
             }
             arc_stubs.append(stub)
 
         # arcs anchor에 저장
         try:
-            existing_arcs = ctx.db.load_anchor('arcs') or []
+            existing_arcs = ctx.db.load_anchor("arcs") or []
             if isinstance(existing_arcs, dict):
                 existing_arcs = list(existing_arcs.values())
 
@@ -897,7 +879,7 @@ JSON:
             # arc_no 순으로 정렬
             existing_arcs.sort(key=lambda x: x.get("arc_no", 0))
 
-            ctx.db.save_anchor('arcs', existing_arcs)
+            ctx.db.save_anchor("arcs", existing_arcs)
             ctx.db.conn.commit()
 
             return len(arc_stubs)
@@ -926,7 +908,7 @@ JSON:
 
         try:
             # arcs anchor 로드
-            arcs = ctx.db.load_anchor('arcs') or []
+            arcs = ctx.db.load_anchor("arcs") or []
             if not arcs:
                 return 0
 
@@ -940,12 +922,12 @@ JSON:
             enriched_count = 0
 
             for arc in arcs:
-                if not arc.get('_stub'):
+                if not arc.get("_stub"):
                     continue
 
-                arc_no = arc.get('arc_no', 0)
-                ep_start = arc.get('ep_start', 1)
-                ep_end = arc.get('ep_end', 5)
+                arc_no = arc.get("arc_no", 0)
+                ep_start = arc.get("ep_start", 1)
+                ep_end = arc.get("ep_end", 5)
 
                 # 해당 Arc 범위의 episode_bibles 집계
                 agg_npcs = []
@@ -981,22 +963,24 @@ JSON:
                             # 기존 관계 덮어쓰기 (최신 상태 유지)
                             found = False
                             for i, existing in enumerate(agg_relationships):
-                                if existing.get('npc') == target:
+                                if existing.get("npc") == target:
                                     agg_relationships[i] = {
-                                        'npc': target,
-                                        'from': '?',
-                                        'to': desc[:100] if isinstance(desc, str) else str(desc)[:100],
-                                        'episode': ep
+                                        "npc": target,
+                                        "from": "?",
+                                        "to": desc[:100] if isinstance(desc, str) else str(desc)[:100],
+                                        "episode": ep,
                                     }
                                     found = True
                                     break
                             if not found and len(agg_relationships) < 15:
-                                agg_relationships.append({
-                                    'npc': target,
-                                    'from': '?',
-                                    'to': desc[:100] if isinstance(desc, str) else str(desc)[:100],
-                                    'episode': ep
-                                })
+                                agg_relationships.append(
+                                    {
+                                        "npc": target,
+                                        "from": "?",
+                                        "to": desc[:100] if isinstance(desc, str) else str(desc)[:100],
+                                        "episode": ep,
+                                    }
+                                )
 
                     # reveals/key_events 수집
                     for reveal in eb.get("key_events", []):
@@ -1008,38 +992,37 @@ JSON:
                         last_hud = hud
 
                 # Arc stub 업데이트
-                arc['state_changes'] = {
-                    'npc_deaths': [
-                        {'name': d, 'episode': ep_end, 'cause': '역설계 추출'}
-                        for d in agg_deaths
-                    ] if agg_deaths else [],
-                    'skill_acquisitions': [],  # 투자물 등 비무협 장르는 비워둠
-                    'relationship_changes': agg_relationships[:10],  # 상위 10개
-                    'major_items': []
+                arc["state_changes"] = {
+                    "npc_deaths": [{"name": d, "episode": ep_end, "cause": "역설계 추출"} for d in agg_deaths]
+                    if agg_deaths
+                    else [],
+                    "skill_acquisitions": [],  # 투자물 등 비무협 장르는 비워둠
+                    "relationship_changes": agg_relationships[:10],  # 상위 10개
+                    "major_items": [],
                 }
 
                 # joint_docs: 마지막 에피소드 상태
-                arc['joint_docs'] = {
-                    'location': last_hud.get('location', ''),
-                    'capital': last_hud.get('capital', ''),
-                    'portfolio': last_hud.get('portfolio', []),
-                    'current_objective': last_hud.get('current_objective', ''),
-                    'injuries': last_hud.get('injuries', '정상')
+                arc["joint_docs"] = {
+                    "location": last_hud.get("location", ""),
+                    "capital": last_hud.get("capital", ""),
+                    "portfolio": last_hud.get("portfolio", []),
+                    "current_objective": last_hud.get("current_objective", ""),
+                    "injuries": last_hud.get("injuries", "정상"),
                 }
 
                 # tactical_doc 보강 (reveals 기반)
                 if agg_reveals:
-                    reveals_summary = '; '.join(agg_reveals[:5])
-                    arc['tactical_doc'] = f'[역설계] Arc {arc_no} (ep {ep_start}~{ep_end}): {reveals_summary[:300]}'
+                    reveals_summary = "; ".join(agg_reveals[:5])
+                    arc["tactical_doc"] = f"[역설계] Arc {arc_no} (ep {ep_start}~{ep_end}): {reveals_summary[:300]}"
 
                 # 새 NPC 목록
-                arc['introduced_npcs'] = agg_npcs[:20]
+                arc["introduced_npcs"] = agg_npcs[:20]
 
                 enriched_count += 1
                 logging.info(f"[v] Arc {arc_no} 보강: rels={len(agg_relationships[:10])}, npcs={len(agg_npcs[:20])}")
 
             # 저장
-            ctx.db.save_anchor('arcs', arcs)
+            ctx.db.save_anchor("arcs", arcs)
             ctx.db.conn.commit()
 
             return enriched_count
@@ -1048,7 +1031,7 @@ JSON:
             logging.warning(f"[!] Arc stub 보강 실패: {e}")
             return 0
 
-    def get_stub_summary(self) -> Dict[str, Any]:
+    def get_stub_summary(self) -> dict[str, Any]:
         """stub 생성 요약 정보"""
         if not self.raw_drafts:
             return {}
@@ -1070,5 +1053,5 @@ JSON:
             "blueprint_stubs": len(self.raw_drafts),
             "next_episode": max_ep + 1,
             "next_blueprint": max_ep + 1,
-            "next_arc": arc_count + 1
+            "next_arc": arc_count + 1,
         }

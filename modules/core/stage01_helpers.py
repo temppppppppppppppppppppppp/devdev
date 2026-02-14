@@ -270,6 +270,7 @@ class Stage01Helpers:
         app = self.app
 
         from main_a import STAGE0_AVAILABLE
+
         if not STAGE0_AVAILABLE:
             print("❌ Stage 0 모듈이 로드되지 않았습니다.")
             return
@@ -319,14 +320,17 @@ class Stage01Helpers:
                 except Exception as _sg_err:
                     print(f"   ⚠️ StyleGuide DB 저장 실패: {_sg_err}")
 
-            # [V60.95] 원고 벡터화 (ChromaDB)
+            # [Phase 4D-3] 원고 벡터화 (VecMemory)
             try:
                 if hasattr(stage0_manager, "_reverse_expander") and stage0_manager._reverse_expander:
-                    vectorize_result = stage0_manager._reverse_expander.persist_to_chromadb(app.current_project)
+                    _mem = getattr(app, "memory", None)
+                    vectorize_result = stage0_manager._reverse_expander.persist_to_chromadb(
+                        app.current_project, memory=_mem
+                    )
                     if vectorize_result > 0:
-                        print(f"✅ [V60.95] ChromaDB 벡터화 완료: {vectorize_result}개 에피소드")
+                        print(f"✅ [Phase 4D] 벡터화 완료: {vectorize_result}개 에피소드")
             except Exception as ve:
-                print(f"⚠️ [V60.95] 벡터화 스킵: {str(ve)[:50]}")
+                print(f"⚠️ [Phase 4D] 벡터화 스킵: {str(ve)[:50]}")
 
             # [V61] SQLite DB 저장
             try:
@@ -398,6 +402,7 @@ class Stage01Helpers:
                 except Exception as pr_err:
                     print(f"❌ plot_roadmap 주입 실패: {pr_err}")
                     import traceback
+
                     traceback.print_exc()
 
             input("\n[Enter] 메뉴로 돌아가기")

@@ -1,11 +1,13 @@
 import json
 import logging
-from pathlib import Path
-from dataclasses import dataclass
-from dotenv import load_dotenv
-from .db_manager import DBManager, DBError
 import re
-from typing import Any, Optional
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+from dotenv import load_dotenv
+
+from .db_manager import DBError, DBManager
 
 
 def safe_nested_get(data: Any, *keys, default=None) -> Any:
@@ -38,23 +40,26 @@ class ProjectPaths:
     memory: Path
     db_file: Path
 
+
 class ProjectContext:
     """[V20 Data Anchor] SQLite S등급 엔진을 탑재한 데이터 주권 관리자"""
-    
+
     def __init__(self, project_name: str, root_dir: str = "projects"):
         load_dotenv(override=True)
-        
+
         self.name = project_name
         self.base_path = Path(root_dir) / self.name
-        self.db_path = self.base_path / "project_data.db" 
+        self.db_path = self.base_path / "project_data.db"
 
         self.selected_tone = {"name": "Sovereign Standard", "writer": "DB Mode"}
         self.author_directives = ""
-        
+
         self.paths = ProjectPaths(
-            root=self.base_path, config=self.base_path / "config",
-            drafts=self.base_path / "drafts", memory=self.base_path / "chroma_db",
-            db_file=self.db_path
+            root=self.base_path,
+            config=self.base_path / "config",
+            drafts=self.base_path / "drafts",
+            memory=self.base_path / "memory",
+            db_file=self.db_path,
         )
         self._initialize_structure()
 
@@ -68,9 +73,9 @@ class ProjectContext:
         self.karma_status = {}
 
         # [V64.P4] 동적 주입 속성 선언 (monkey-patching 제거)
-        self.genre = None              # main_a.py에서 selected_genre 주입
-        self.guard = None              # main_a.py에서 GenreGuard 인스턴스 주입
-        self.treatment_path = None     # main_a.py에서 트리트먼트 파일 경로 주입
+        self.genre = None  # main_a.py에서 selected_genre 주입
+        self.guard = None  # main_a.py에서 GenreGuard 인스턴스 주입
+        self.treatment_path = None  # main_a.py에서 트리트먼트 파일 경로 주입
 
         self._load_from_db()
         self._load_directives()
@@ -101,15 +106,15 @@ class ProjectContext:
                         f.write(default_seed)
                     logging.info(f"✨ [System] 스타일 시드 파일이 생성되었습니다: {seed_file.name}")
                     break
-                except (IOError, OSError, PermissionError) as e:
+                except (OSError, PermissionError) as e:
                     if attempt < max_retries - 1:
-                        logging.info(f"⚠️ [System] 스타일 시드 생성 재시도 ({attempt+1}/{max_retries}): {e}")
+                        logging.info(f"⚠️ [System] 스타일 시드 생성 재시도 ({attempt + 1}/{max_retries}): {e}")
                         import time
+
                         time.sleep(0.5)
                     else:
                         logging.warning(f"🚨 [System] 스타일 시드 생성 최종 실패: {e}")
                         self._style_seed_available = False  # [V45] 실패 플래그 설정
-
 
     def _load_directives(self) -> None:
         d_path = self.paths.config / "author_directives.txt"
@@ -125,7 +130,7 @@ class ProjectContext:
             anchors = self.db.load_all_anchors()
         except (DBError, Exception) as e:
             logging.warning(f"🚨 [ProjectContext] DB 앵커 로드 실패: {e}")
-            logging.info(f"→ 빈 상태로 초기화합니다")
+            logging.info("→ 빈 상태로 초기화합니다")
             anchors = {}
 
         # [V44] anchors 타입 검증
@@ -150,15 +155,18 @@ class ProjectContext:
         # [V44] safe_nested_get으로 중첩 접근
         success_device = safe_nested_get(
             self.master_bible,
-            'MasterBible', 'CommercialCode', 'SuccessDevice',
-            default=self.selected_tone.get("writer", "DB Mode")
+            "MasterBible",
+            "CommercialCode",
+            "SuccessDevice",
+            default=self.selected_tone.get("writer", "DB Mode"),
         )
         # 추가 fallback: MasterBible 래퍼 없이 직접 접근하는 경우
         if success_device == self.selected_tone.get("writer", "DB Mode"):
             success_device = safe_nested_get(
                 self.master_bible,
-                'CommercialCode', 'SuccessDevice',
-                default=self.selected_tone.get("writer", "DB Mode")
+                "CommercialCode",
+                "SuccessDevice",
+                default=self.selected_tone.get("writer", "DB Mode"),
             )
         self.selected_tone["writer"] = success_device
 
@@ -174,49 +182,52 @@ class ProjectContext:
             data = data.get(stage, [data]) if isinstance(data.get(stage), list) else [data]
 
         # 2. 스테이지별 메모리 동기화 및 하위 테이블 트리거
-        if stage == "bible": 
+        if stage == "bible":
             self.master_bible = data
-            bible_root = data.get('MasterBible', data)
-            
+            bible_root = data.get("MasterBible", data)
+
             # [A] 복선(Seeds) 테이블 동기화
-            seeds = bible_root.get('Seeds', [])
-            if seeds: self.db.sync_seeds(seeds)
-            
+            seeds = bible_root.get("Seeds", [])
+            if seeds:
+                self.db.sync_seeds(seeds)
+
             # [B] 로어(Encyclopedia) 일괄 동기화 (Type Safety Logic)
             lore_batch = []
-            assets = bible_root.get('AssetLibrary', {})
-            
+            assets = bible_root.get("AssetLibrary", {})
+
             for cat, items in assets.items():
-                if isinstance(items, list): # KeyNPCs, KeyItems 등
+                if isinstance(items, list):  # KeyNPCs, KeyItems 등
                     for item in items:
                         # [V44] item이 dict인 경우에만 .get() 사용
                         if isinstance(item, dict):
-                            name = item.get('Item') or item.get('name')
-                            desc = item.get('Description') or item.get('desc')
+                            name = item.get("Item") or item.get("name")
+                            desc = item.get("Description") or item.get("desc")
                             if name and desc:
-                                if isinstance(desc, (list, dict)): desc = json.dumps(desc, ensure_ascii=False)
+                                if isinstance(desc, (list, dict)):
+                                    desc = json.dumps(desc, ensure_ascii=False)
                                 lore_batch.append((cat, name, desc))
                         elif isinstance(item, str) and item.strip():
                             # 문자열 아이템인 경우 이름과 설명을 동일하게 처리
                             lore_batch.append((cat, item, item))
-                            
-                elif isinstance(items, dict): # SpeechStyle 등
+
+                elif isinstance(items, dict):  # SpeechStyle 등
                     for name, desc in items.items():
-                        if isinstance(desc, (list, dict)): desc = json.dumps(desc, ensure_ascii=False)
+                        if isinstance(desc, (list, dict)):
+                            desc = json.dumps(desc, ensure_ascii=False)
                         lore_batch.append((cat, name, desc))
-                
+
                 # 🚨 [Final Patch] Persona 같은 단일 문자열 데이터까지 완벽 포획
-                elif isinstance(items, str): 
+                elif isinstance(items, str):
                     lore_batch.append((cat, cat, items))
 
-            if lore_batch: 
+            if lore_batch:
                 self.db.update_lore_items_batch(lore_batch)
-            
+
             # [C] Martial Tracker(HUD) 강제 동기화
             # [V49 FIX] ep_num=0 하드코딩 제거 - 실제 에피소드 저장은 commit_full_episode_data에서 수행
             # bible 저장 시에는 HUD 동기화를 하지 않음 (잘못된 ep_num으로 덮어쓰기 방지)
-            protagonist = bible_root.get('MartialHUD', {}).get('Protagonist', {})
-            actual_data = protagonist.get('actual_truth', {})
+            protagonist = bible_root.get("MartialHUD", {}).get("Protagonist", {})
+            actual_data = protagonist.get("actual_truth", {})
             if actual_data:
                 # 현재 최신 에피소드 번호 조회
                 # [V70] get_latest_episode_number()는 NEXT ep 반환 → -1로 현재 ep 계산
@@ -227,14 +238,16 @@ class ProjectContext:
                 else:
                     # 에피소드가 없으면 ep_num=0으로 초기 상태 저장
                     self.record_martial_stats(0, actual_data)
-                    logging.info(f"🛡️ [Sync] 초기 HUD 상태 저장 (ep 0).")
+                    logging.info("🛡️ [Sync] 초기 HUD 상태 저장 (ep 0).")
 
-        elif stage == "volumes": self.volumes = data
+        elif stage == "volumes":
+            self.volumes = data
         elif stage == "arcs":
             self.arcs = data
             # [V40.1] Arc txt 파일 저장
             self._save_arcs_to_txt(data)
-        elif stage == "karma": self.karma_status = data
+        elif stage == "karma":
+            self.karma_status = data
 
         # 3. Anchor(JSON) 최종 박제
         result = self.db.save_anchor(stage, data)
@@ -270,14 +283,14 @@ class ProjectContext:
 
         try:
             # [V40.1 Safety] 폴더가 없으면 생성
-            if not hasattr(self.paths, 'plans_arcs'):
+            if not hasattr(self.paths, "plans_arcs"):
                 self.paths.plans_arcs = self.paths.root / "plans" / "arcs"
             self.paths.plans_arcs.mkdir(parents=True, exist_ok=True)
             for arc in arcs_data:
                 if not isinstance(arc, dict):
                     continue
 
-                arc_no = arc.get('arc_no', arc.get('global_arc_no', 0))
+                arc_no = arc.get("arc_no", arc.get("global_arc_no", 0))
                 if not arc_no:
                     continue
 
@@ -287,24 +300,24 @@ class ProjectContext:
 
                 # Arc 내용 포맷팅
                 lines = [
-                    f"{'='*60}",
+                    f"{'=' * 60}",
                     f"ARC {arc_no}",
-                    f"{'='*60}",
-                    f"",
-                    f"[기본 정보]",
+                    f"{'=' * 60}",
+                    "",
+                    "[기본 정보]",
                     f"- 볼륨: {arc.get('volume_no', 'N/A')}",
                     f"- 에피소드 범위: {arc.get('ep_start', 'N/A')} ~ {arc.get('ep_end', 'N/A')}",
                     f"- 에피소드 수: {arc.get('ep_count', 'N/A')}",
-                    f"",
-                    f"[전술 문서 (Tactical Doc)]",
-                    f"{'-'*40}",
+                    "",
+                    "[전술 문서 (Tactical Doc)]",
+                    f"{'-' * 40}",
                     f"{arc.get('tactical_doc', '내용 없음')}",
-                    f"",
-                    f"[비트 시퀀스 (Beat Sequence)]",
-                    f"{'-'*40}",
+                    "",
+                    "[비트 시퀀스 (Beat Sequence)]",
+                    f"{'-' * 40}",
                 ]
 
-                beat_seq = arc.get('beat_sequence', [])
+                beat_seq = arc.get("beat_sequence", [])
                 if isinstance(beat_seq, list):
                     for i, beat in enumerate(beat_seq, 1):
                         if isinstance(beat, dict):
@@ -315,19 +328,21 @@ class ProjectContext:
                     lines.append(beat_seq)
 
                 # 복선 정보
-                seeds = arc.get('seed_injection', arc.get('seeds', []))
+                seeds = arc.get("seed_injection", arc.get("seeds", []))
                 if seeds:
-                    lines.append(f"")
-                    lines.append(f"[복선 (Seeds)]")
-                    lines.append(f"{'-'*40}")
+                    lines.append("")
+                    lines.append("[복선 (Seeds)]")
+                    lines.append(f"{'-' * 40}")
                     if isinstance(seeds, list):
                         for seed in seeds:
                             if isinstance(seed, dict):
-                                lines.append(f"- {seed.get('id', seed.get('seed_id', 'N/A'))}: {seed.get('hint', seed.get('description', ''))}")
+                                lines.append(
+                                    f"- {seed.get('id', seed.get('seed_id', 'N/A'))}: {seed.get('hint', seed.get('description', ''))}"
+                                )
                             else:
                                 lines.append(f"- {seed}")
 
-                filepath.write_text('\n'.join(lines), encoding='utf-8')
+                filepath.write_text("\n".join(lines), encoding="utf-8")
 
             logging.info(f"📁 [Plans] Arc txt 파일 {len(arcs_data)}개 저장 완료")
         except Exception as e:
@@ -340,7 +355,7 @@ class ProjectContext:
 
         try:
             # [V40.1 Safety] 폴더가 없으면 생성
-            if not hasattr(self.paths, 'plans_blueprints'):
+            if not hasattr(self.paths, "plans_blueprints"):
                 self.paths.plans_blueprints = self.paths.root / "plans" / "blueprints"
             self.paths.plans_blueprints.mkdir(parents=True, exist_ok=True)
 
@@ -349,22 +364,22 @@ class ProjectContext:
             filepath = self.paths.plans_blueprints / filename
 
             lines = [
-                f"{'='*60}",
+                f"{'=' * 60}",
                 f"BLUEPRINT - Episode {ep_num}",
-                f"{'='*60}",
-                f"",
-                f"[통합 시나리오 (Integrated Scenario)]",
-                f"{'-'*40}",
+                f"{'=' * 60}",
+                "",
+                "[통합 시나리오 (Integrated Scenario)]",
+                f"{'-' * 40}",
                 f"{data.get('integrated_scenario', '내용 없음')}",
-                f"",
-                f"[씬 분해 (Scene Breakdown)]",
-                f"{'-'*40}",
+                "",
+                "[씬 분해 (Scene Breakdown)]",
+                f"{'-' * 40}",
             ]
 
-            scene_breakdown = data.get('scene_breakdown', {})
+            scene_breakdown = data.get("scene_breakdown", {})
             if isinstance(scene_breakdown, dict):
                 for scene_key, scene_data in scene_breakdown.items():
-                    lines.append(f"")
+                    lines.append("")
                     lines.append(f"## {scene_key}")
                     if isinstance(scene_data, dict):
                         for k, v in scene_data.items():
@@ -375,20 +390,20 @@ class ProjectContext:
                 lines.append(scene_breakdown)
 
             # 핵심 갈등/긴장
-            if 'core_tension' in data:
-                lines.append(f"")
-                lines.append(f"[핵심 긴장 (Core Tension)]")
-                lines.append(f"{'-'*40}")
+            if "core_tension" in data:
+                lines.append("")
+                lines.append("[핵심 긴장 (Core Tension)]")
+                lines.append(f"{'-' * 40}")
                 lines.append(f"{data['core_tension']}")
 
             # 예상 결말
-            if 'expected_ending' in data:
-                lines.append(f"")
-                lines.append(f"[예상 결말 (Expected Ending)]")
-                lines.append(f"{'-'*40}")
+            if "expected_ending" in data:
+                lines.append("")
+                lines.append("[예상 결말 (Expected Ending)]")
+                lines.append(f"{'-' * 40}")
                 lines.append(f"{data['expected_ending']}")
 
-            filepath.write_text('\n'.join(lines), encoding='utf-8')
+            filepath.write_text("\n".join(lines), encoding="utf-8")
             logging.info(f"📁 [Plans] Blueprint {ep_num}화 txt 저장 완료")
         except Exception as e:
             logging.warning(f"⚠️ [Plans] Blueprint txt 저장 실패: {e}")
@@ -396,51 +411,62 @@ class ProjectContext:
     def _normalize_seed_id(self, raw_id):
         """[V26 Integrity Filter] AI 오타 교정 및 성경 ID 매칭"""
         # 1. 성경 내 실제 ID 목록 확보
-        bible_seeds = self.master_bible.get('MasterBible', {}).get('Seeds', [])
-        valid_ids = {s.get('id'): s.get('id') for s in bible_seeds}
-        
+        bible_seeds = self.master_bible.get("MasterBible", {}).get("Seeds", [])
+        valid_ids = {s.get("id"): s.get("id") for s in bible_seeds}
+
         # 2. 완전 일치 여부 확인
-        if raw_id in valid_ids: return raw_id
-        
+        if raw_id in valid_ids:
+            return raw_id
+
         # 3. 퍼지 매칭 (특수문자 제거 후 대조)
-        clean_raw = re.sub(r'[^a-zA-Z0-9]', '', raw_id).upper()
+        clean_raw = re.sub(r"[^a-zA-Z0-9]", "", raw_id).upper()
         for vid in valid_ids:
-            clean_vid = re.sub(r'[^a-zA-Z0-9]', '', vid).upper()
+            clean_vid = re.sub(r"[^a-zA-Z0-9]", "", vid).upper()
             if clean_raw == clean_vid:
                 logging.info(f"🔧 [Normalized] Seed ID 교정: {raw_id} -> {vid}")
                 return vid
-                
-        return raw_id # 매칭 실패 시 원본 유지(데이터 보존)
 
+        return raw_id  # 매칭 실패 시 원본 유지(데이터 보존)
 
     def sync_and_cleanup_seeds(self) -> None:
         """[V27.5 S-Grade] 성경(Bible) 기반 복선 데이터 동기화 및 유령 ID 정화"""
-        bible_root = self.master_bible.get('MasterBible', self.master_bible)
-        bible_seeds = bible_root.get('Seeds', [])
-        
+        bible_root = self.master_bible.get("MasterBible", self.master_bible)
+        bible_seeds = bible_root.get("Seeds", [])
+
         if not bible_seeds:
             return
 
         # 1. 성경에 등록된 유효 ID 목록 확보
-        valid_ids = [s.get('id') for s in bible_seeds if s.get('id')]
-        
+        valid_ids = [s.get("id") for s in bible_seeds if s.get("id")]
+
         # 2. DB에는 존재하지만 성경에는 없는 '유령 복선' 삭제 (Orphaned Data Cleanup)
         if valid_ids:
-            placeholders = ', '.join(['?'] * len(valid_ids))
+            placeholders = ", ".join(["?"] * len(valid_ids))
             query = f"DELETE FROM seeds WHERE seed_id NOT IN ({placeholders})"
             self.db.cursor.execute(query, valid_ids)
-            
+
         # 3. 성경의 최신 내용을 DB에 강제 동기화 (Upsert)
         self.db.sync_seeds(bible_seeds)
         self.db.conn.commit()
         logging.info(f"🧹 [Cleanup] 복선 데이터 정화 완료 (유효 ID: {len(valid_ids)}건)")
 
-    def commit_full_episode_data(self, ep_num, manuscript_data, martial_data, state_data, causal_links, karma_data, lore_data, recovered_seeds, memory_engine) -> bool:
+    def commit_full_episode_data(
+        self,
+        ep_num,
+        manuscript_data,
+        martial_data,
+        state_data,
+        causal_links,
+        karma_data,
+        lore_data,
+        recovered_seeds,
+        memory_engine,
+    ) -> bool:
         """
         [V35 Alpha] 트랜잭션 원자성 강화 + NPC HUD 실시간 동기화 통합 버전
         """
         # 1. 먼저 '미동기화' 상태로 마킹 (Safety First)
-        self.db.update_sync_status(ep_num, 0) 
+        self.db.update_sync_status(ep_num, 0)
 
         try:
             # --- [Part 1: 데이터 및 복선 정규화] ---
@@ -448,42 +474,42 @@ class ProjectContext:
             if recovered_seeds and isinstance(recovered_seeds, list):
                 for rec in recovered_seeds:
                     if isinstance(rec, dict):
-                        raw_id = rec.get('seed_id') or rec.get('id')
-                        rec['seed_id'] = self._normalize_seed_id(raw_id) if raw_id else 'UNKNOWN'
+                        raw_id = rec.get("seed_id") or rec.get("id")
+                        rec["seed_id"] = self._normalize_seed_id(raw_id) if raw_id else "UNKNOWN"
                         normalized_seeds.append(rec)
             recovered_seeds = normalized_seeds
 
             # --- [Part 2: 🚨 NPC HUD 변화 추적 및 성경 반영] ---
             if lore_data and isinstance(lore_data, dict) and "Key_NPCs" in lore_data:
-                bible_root = self.master_bible.get('MasterBible', self.master_bible)
-                bible_npcs = bible_root.get('AssetLibrary', {}).get('KeyNPCs', [])
+                bible_root = self.master_bible.get("MasterBible", self.master_bible)
+                bible_npcs = bible_root.get("AssetLibrary", {}).get("KeyNPCs", [])
 
                 for new_npc in lore_data["Key_NPCs"]:
                     # [V45 Fix] new_npc 타입 검증
                     if not isinstance(new_npc, dict):
                         continue
-                    npc_name = new_npc.get('name') or new_npc.get('Name')
+                    npc_name = new_npc.get("name") or new_npc.get("Name")
                     for target in bible_npcs:
-                        if target.get('name') == npc_name:
-                            if 'NPC_Martial_HUD' in new_npc:
-                                new_hud = new_npc['NPC_Martial_HUD']
+                        if target.get("name") == npc_name:
+                            if "NPC_Martial_HUD" in new_npc:
+                                new_hud = new_npc["NPC_Martial_HUD"]
                                 # [V45 Fix] new_hud가 dict가 아니면 건너뜀 (AttributeError 방지)
                                 if not isinstance(new_hud, dict):
                                     continue
-                                old_hud = target.get('NPC_Martial_HUD', {})
+                                old_hud = target.get("NPC_Martial_HUD", {})
                                 # [V45 Fix] old_hud도 dict 보장
                                 if not isinstance(old_hud, dict):
                                     old_hud = {}
 
                                 # 변화량 추적 및 출력
                                 changes = []
-                                for key in ['achievement_rate', 'current_status', 'realm']:
+                                for key in ["achievement_rate", "current_status", "realm"]:
                                     if new_hud.get(key) and new_hud.get(key) != old_hud.get(key):
                                         changes.append(f"{key}: {old_hud.get(key, 'N/A')} -> {new_hud[key]}")
 
                                 # [V45] NPC equipment 변화 추적
-                                old_equip = old_hud.get('equipment', [])
-                                new_equip = new_hud.get('equipment', [])
+                                old_equip = old_hud.get("equipment", [])
+                                new_equip = new_hud.get("equipment", [])
                                 if new_equip and new_equip != old_equip:
                                     # 리스트 비교를 위한 정규화
                                     old_set = set(old_equip) if isinstance(old_equip, list) else set()
@@ -499,7 +525,7 @@ class ProjectContext:
                                     logging.info(f"🕸️ [NPC Trace] {npc_name} 변화 감지: {', '.join(changes)}")
 
                                 # 데이터 병합 (성경 메모리 동기화)
-                                target.setdefault('NPC_Martial_HUD', {}).update(new_hud)
+                                target.setdefault("NPC_Martial_HUD", {}).update(new_hud)
                             break
 
             # --- [Part 3: 원자적 저장 - Bible 먼저, DB 나중] ---
@@ -509,7 +535,7 @@ class ProjectContext:
 
             # 3-1. Bible 선행 저장 (NPC HUD 변화 포함)
             try:
-                self.save_v20_anchor('bible', self.master_bible)
+                self.save_v20_anchor("bible", self.master_bible)
                 self.sync_and_cleanup_seeds()
             except Exception as bible_err:
                 logging.warning(f"🚨 [Critical] Bible 선행 저장 실패: {bible_err}")
@@ -517,27 +543,26 @@ class ProjectContext:
 
             # 3-2. SQLite 핵심 트랜잭션 (원고, HUD, 로그, 카르마, 로어)
             db_success = self.db.commit_episode_factory(
-                ep_num, manuscript_data, martial_data, state_data,
-                causal_links, karma_data, lore_data, recovered_seeds
+                ep_num, manuscript_data, martial_data, state_data, causal_links, karma_data, lore_data, recovered_seeds
             )
 
             if not db_success:
                 raise Exception("SQLite Episode Factory 저장 실패")
 
-            # --- [Part 4: 벡터 동기화 (ChromaDB)] ---
+            # --- [Part 4: 벡터 동기화 (VecMemory/ChromaDB)] ---
             try:
                 # 벡터 기억 주입
-                summary = state_data.get('context_audit', {}).get('summary', "요약 없음")
-                content_text = manuscript_data['content'] if isinstance(manuscript_data, dict) else str(manuscript_data)
-                
+                summary = state_data.get("context_audit", {}).get("summary", "요약 없음")
+                content_text = manuscript_data["content"] if isinstance(manuscript_data, dict) else str(manuscript_data)
+
                 vector_success = memory_engine.memorize_v20_episode(ep_num, content_text, summary, causal_links)
-                
+
                 if vector_success:
                     # 모든 공정 성공 시에만 최종 동기화 완료 마킹
                     self.db.update_sync_status(ep_num, 1)
                 else:
                     logging.info(f"⚠️ [Sync Warning] 제 {ep_num}화 벡터 주입 지연 (플래그 0 유지)")
-                
+
                 return True
 
             except Exception as sub_e:
@@ -561,19 +586,19 @@ class ProjectContext:
     def latest_state(self):
         state = self.db.get_latest_state()
         if not state:
-            bible_root = self.master_bible.get('MasterBible', self.master_bible)
-            return bible_root.get('MartialHUD', bible_root.get('martial_hud', {}))
+            bible_root = self.master_bible.get("MasterBible", self.master_bible)
+            return bible_root.get("MartialHUD", bible_root.get("martial_hud", {}))
         return state
 
     def get_sequential_context(self, current_ep) -> tuple:
         """직전 원고 3화와 직전 설계도를 DB에서 인출 (에이전트 지능용)"""
-        manuscripts = self.db.get_context_manuscripts(current_ep, limit=3) #
-        prev_blueprint = self.db.get_previous_blueprint(current_ep) #
+        manuscripts = self.db.get_context_manuscripts(current_ep, limit=3)  #
+        prev_blueprint = self.db.get_previous_blueprint(current_ep)  #
         return manuscripts, prev_blueprint
 
     def get_causal_history_summary(self):
         """최근 5화의 인과 요약 체인 인출"""
-        return self.db.get_causal_summary_chain(limit=5) #
+        return self.db.get_causal_summary_chain(limit=5)  #
 
     def get_latest_episode_number(self) -> int:
         """
@@ -588,11 +613,12 @@ class ProjectContext:
         # 물리 파일에서도 확인 (sync 누락 방지)
         try:
             import re as _re
+
             draft_files = list(self.paths.drafts.glob("*.txt"))
             file_ep = 0
             for f in draft_files:
                 # [V70] ep_NNNN.txt 패턴 매칭 (기존 [:4].isdigit()는 "ep_0"이라 항상 False)
-                _m = _re.match(r'ep_(\d+)\.txt', f.name)
+                _m = _re.match(r"ep_(\d+)\.txt", f.name)
                 if _m:
                     file_ep = max(file_ep, int(_m.group(1)))
 
@@ -616,9 +642,21 @@ class ProjectContext:
         """에이전트의 데이터 키 누락이나 오타로부터 DB를 보호하며 기록"""
         # DB 테이블 컬럼과 일치하는 15대 지표 화이트리스트
         valid_keys = [
-            'alias', 'rank', 'realm', 'internal_energy', 'mental_method',
-            'reputation', 'public_image', 'equipment', 'wealth', 'token',
-            'misunderstanding', 'obsession', 'current_objective', 'qi_nature', 'causal_injuries'
+            "alias",
+            "rank",
+            "realm",
+            "internal_energy",
+            "mental_method",
+            "reputation",
+            "public_image",
+            "equipment",
+            "wealth",
+            "token",
+            "misunderstanding",
+            "obsession",
+            "current_objective",
+            "qi_nature",
+            "causal_injuries",
         ]
         # 규격에 맞는 데이터만 필터링 (누락 시 None 처리하여 DB 에러 방지)
         sanitized_data = {k: stats_data.get(k) for k in valid_keys}
@@ -632,16 +670,18 @@ class ProjectContext:
         # DBManager의 save_manuscript 기능을 호출함
         self.db.save_manuscript(ep_num, title, content)
         logging.info(f"📝 [Mirroring] 제 {ep_num}화 원고 DB 동기화 완료.")
+
     # --- [Utility: 리셋 및 동기화] ---
     def reset_project(self, target_ep) -> None:
         """DB와 물리 파일을 동시에 정화"""
-        self.db.reset_after(target_ep) #
-        
+        self.db.reset_after(target_ep)  #
+
         if self.paths.drafts.exists():
             import re as _re
+
             for f in self.paths.drafts.glob("*.txt"):
                 # [V70] ep_NNNN.txt 패턴 매칭
-                _m = _re.match(r'ep_(\d+)\.txt', f.name)
+                _m = _re.match(r"ep_(\d+)\.txt", f.name)
                 if _m and int(_m.group(1)) >= target_ep:
                     f.unlink()
         logging.info(f"🔥 [Reset] 제 {target_ep}화 이후의 모든 타임라인이 소거되었습니다.")
@@ -657,47 +697,50 @@ class ProjectContext:
         treatment_path = self.paths.root.parent.parent / "treatments" / treatment_file_name
 
         try:
-            with open(bible_path, 'r', encoding='utf-8') as f:
+            with open(bible_path, encoding="utf-8") as f:
                 bible_data = json.load(f)
 
-            with open(treatment_path, 'r', encoding='utf-8') as f:
+            with open(treatment_path, encoding="utf-8") as f:
                 treatment_data = json.load(f)
 
             # [V49.3] Phase 0 JSON 스키마 검증
             try:
                 from modules.core.response_schemas import validate_phase0_files
+
                 is_valid, report = validate_phase0_files(bible_data, treatment_data)
 
                 # 검증 결과 출력
-                logging.info(f"📋 [V49.3] Phase 0 파일 검증 결과:")
+                logging.info("📋 [V49.3] Phase 0 파일 검증 결과:")
                 logging.warning(f"Bible: {'✅ 유효' if report['bible']['valid'] else '❌ 오류'}")
-                if report['bible']['errors']:
-                    for err in report['bible']['errors']:
+                if report["bible"]["errors"]:
+                    for err in report["bible"]["errors"]:
                         logging.warning(f"❌ {err}")
-                if report['bible']['warnings']:
-                    for warn in report['bible']['warnings']:
+                if report["bible"]["warnings"]:
+                    for warn in report["bible"]["warnings"]:
                         logging.info(f"⚠️ {warn}")
 
-                logging.warning(f"Treatment: {'✅ 유효' if report['treatment']['valid'] else '❌ 오류'} ({report['treatment']['block_count']}개 블록)")
-                if report['treatment']['errors']:
-                    for err in report['treatment']['errors']:
+                logging.warning(
+                    f"Treatment: {'✅ 유효' if report['treatment']['valid'] else '❌ 오류'} ({report['treatment']['block_count']}개 블록)"
+                )
+                if report["treatment"]["errors"]:
+                    for err in report["treatment"]["errors"]:
                         logging.warning(f"❌ {err}")
-                if report['treatment']['warnings']:
-                    for warn in report['treatment']['warnings'][:5]:  # 최대 5개만 표시
+                if report["treatment"]["warnings"]:
+                    for warn in report["treatment"]["warnings"][:5]:  # 최대 5개만 표시
                         logging.info(f"⚠️ {warn}")
-                    if len(report['treatment']['warnings']) > 5:
-                        logging.info(f"⚠️ ... 외 {len(report['treatment']['warnings'])-5}개 경고")
+                    if len(report["treatment"]["warnings"]) > 5:
+                        logging.info(f"⚠️ ... 외 {len(report['treatment']['warnings']) - 5}개 경고")
 
                 if not is_valid:
-                    logging.warning(f"🚨 [V49.3] 파일 검증 실패. Phase 0을 중단합니다.")
-                    logging.info(f"→ Bible 또는 Treatment 파일 구조를 확인하세요.")
+                    logging.warning("🚨 [V49.3] 파일 검증 실패. Phase 0을 중단합니다.")
+                    logging.info("→ Bible 또는 Treatment 파일 구조를 확인하세요.")
                     return False
             except ImportError:
-                logging.warning(f"⚠️ [V49.3] 스키마 검증 모듈 로드 실패. 검증 없이 진행합니다.")
+                logging.warning("⚠️ [V49.3] 스키마 검증 모듈 로드 실패. 검증 없이 진행합니다.")
 
             # 2. MasterBible 루트 확보 (포장지가 있든 없든 대응)
             master_bible = bible_data.get("MasterBible", bible_data)
-            
+
             # 3. 트리트먼트 블록을 plot_roadmap 규격으로 변환하여 주입
             # [V62.2] flat 구조: block_no + 원본 필드 전체 (중복 래핑 제거)
             refined_roadmap = []
@@ -712,13 +755,15 @@ class ProjectContext:
 
             # 5. [핵심] SQLite DB에 'bible' 앵커로 전체 블록 강제 박제
             # 여기서 DBManager의 save_anchor를 호출함
-            success = self.save_v20_anchor('bible', self.master_bible)
+            success = self.save_v20_anchor("bible", self.master_bible)
 
             if success:
-                logging.info(f"✅ [S-Grade Success] {len(refined_roadmap)}개 블록이 포함된 '완전한 성경'이 DB에 안착되었습니다.")
+                logging.info(
+                    f"✅ [S-Grade Success] {len(refined_roadmap)}개 블록이 포함된 '완전한 성경'이 DB에 안착되었습니다."
+                )
                 logging.info(f"📊 로드맵 크기: {len(self.master_bible['MasterBible']['plot_roadmap'])} blocks")
                 return True
-        
+
         except Exception as e:
             logging.warning(f"🚨 [DNA Sync Error] 강제 주입 실패: {e}")
             return False
@@ -727,63 +772,69 @@ class ProjectContext:
     def get_blueprint(self, ep_num):
         """DB에서 해당 회차의 설계도를 가져옴"""
         return self.db.get_blueprint(ep_num)
-    
+
     def sync_existing_manuscripts(self, memory_engine) -> bool:
         """
         [Phase 0] 기존 원고를 AI 요약 없이 DB에 직접 박제
         """
         draft_files = sorted(list(self.paths.drafts.glob("*.txt")))
-        
+
         import re as _re_sync
+
         for f_path in draft_files:
             # [V70] ep_NNNN.txt + 레거시 NNNN.txt 양쪽 호환
-            _m = _re_sync.match(r'(?:ep_)?(\d{1,5})\.txt', f_path.name)
-            if not _m: continue
+            _m = _re_sync.match(r"(?:ep_)?(\d{1,5})\.txt", f_path.name)
+            if not _m:
+                continue
             ep_num = int(_m.group(1))
-            
-            # 중복 체크 (이미 DB에 있으면 패스)
-            if self.db.get_sync_status(ep_num) == 1: continue
 
-            content = f_path.read_text(encoding='utf-8')
+            # 중복 체크 (이미 DB에 있으면 패스)
+            if self.db.get_sync_status(ep_num) == 1:
+                continue
+
+            content = f_path.read_text(encoding="utf-8")
             # [V44] 빈 content 안전 처리
             if not content or not content.strip():
                 logging.info(f"⚠️ 제 {ep_num}화 파일이 비어있음. 건너뜀.")
                 continue
-            title = content.split('\n')[0].strip()[:50] if content else f"제{ep_num}화"
+            title = content.split("\n")[0].strip()[:50] if content else f"제{ep_num}화"
 
             # 1. SQLite 원고 테이블에 직접 저장
             self.save_manuscript_to_db(ep_num, title, content)
-            
+
             # 2. Vector DB 기억 주입 (AI 요약 대신 원고 앞부분 사용해서 토큰 절약)
-            summary = content[:300].replace('\n', ' ') + "..."
+            summary = content[:300].replace("\n", " ") + "..."
             # [V63.3] Python regex로 핵심 이벤트 추출 (LLM 비용 0)
             import re as _re
+
             _bulk_events = set()
             _bulk_entities = set()
-            if _re.search(r'사망|죽였|처단|숨을\s*거두', content):
+            if _re.search(r"사망|죽였|처단|숨을\s*거두", content):
                 _bulk_events.add("death")
-            if _re.search(r'습득|비급|전수|깨달', content):
+            if _re.search(r"습득|비급|전수|깨달", content):
                 _bulk_events.add("skill")
-            if _re.search(r'획득|발견|손에\s*넣', content):
+            if _re.search(r"획득|발견|손에\s*넣", content):
                 _bulk_events.add("item")
-            if _re.search(r'배신|동맹|화해|적대', content):
+            if _re.search(r"배신|동맹|화해|적대", content):
                 _bulk_events.add("relationship")
             # NPC 이름 패턴 (한글 2-4자 + "은/는/이/가/을/를")
-            for _m in _re.finditer(r'([가-힣]{2,4})(?:은|는|이|가|을|를)\s', content[:3000]):
+            for _m in _re.finditer(r"([가-힣]{2,4})(?:은|는|이|가|을|를)\s", content[:3000]):
                 _bulk_entities.add(_m.group(1))
             memory_engine.memorize_v20_episode(
-                ep_num, content, summary, causal_links=[],
+                ep_num,
+                content,
+                summary,
+                causal_links=[],
                 event_types=list(_bulk_events) if _bulk_events else None,
-                entity_names=list(_bulk_entities)[:10] if _bulk_entities else None
+                entity_names=list(_bulk_entities)[:10] if _bulk_entities else None,
             )
-            
+
             # 3. 동기화 상태 갱신
             self.db.update_sync_status(ep_num, 1)
             logging.info(f"⚓ 제 {ep_num}화 역사 박제 완료.")
 
         # [V60.60 Fix] 반환값 추가 - 동기화 성공 표시
         return True
-
 
     # modules/core/project_manager.py (ProjectContext 클래스 내부)
 
@@ -798,24 +849,27 @@ class ProjectContext:
         # 여기서는 보고서에 포함된 숫자나 텍스트를 분석하여 타겟 화수 결정
         try:
             # 에러 메시지 내의 화수 패턴 검색 (예: "제 12화부터 설정 오류")
-            match = re.search(r'(\d+)\s*화', error_report)
+            match = re.search(r"(\d+)\s*화", error_report)
             origin_ep = int(match.group(1)) if match else self.get_latest_episode_number()
-            
+
             # 너무 과거로 가는 것 방지 가드 (최대 3화 전까지만 자동 허용)
             current_ep = self.get_latest_episode_number()
             target_ep = max(origin_ep, current_ep - 3)
-            
+
             logging.info(f"🚑 [V35 Backtrack] 제 {target_ep}화로 인과율을 강제 되감기합니다.")
-            
+
             # 2. 기존 reset_project 함수명 존중하여 호출 (DB 및 물리 파일 삭제)
             # self.reset_project는 이미 구현되어 있음
             self.reset_project(target_ep)
-            
-            # 3. 벡터 DB(ChromaDB) 기억 소거
-            if memory_engine and memory_engine.collection:
+
+            # 3. 벡터 DB 기억 소거 (VecMemory 호환)
+            if memory_engine and hasattr(memory_engine, "delete_episodes_from"):
+                deleted = memory_engine.delete_episodes_from(target_ep)
+                logging.info(f"🌌 [Memory] 제 {target_ep}화 이후 벡터 기억 {deleted}건 소거")
+            elif memory_engine and getattr(memory_engine, "collection", None):
                 memory_engine.collection.delete(where={"episode": {"$gte": target_ep}})
                 logging.info(f"🌌 [Memory] 제 {target_ep}화 이후의 벡터 기억을 소거했습니다.")
-                
+
             return target_ep
         except Exception as e:
             logging.warning(f"🚨 [Backtrack Error] 자동 되감기 실패: {e}")
@@ -828,13 +882,13 @@ class ProjectContext:
     def get_surgery_intelligence(self, limit=3) -> str:
         """최근 수술 기록을 가져와 프롬프트에 주입할 '반성문' 형태로 반환"""
         cur = self.db.cursor.execute(
-            "SELECT ep_num, error_category, surgery_result FROM surgery_logs ORDER BY id DESC LIMIT ?", 
-            (limit,)
+            "SELECT ep_num, error_category, surgery_result FROM surgery_logs ORDER BY id DESC LIMIT ?", (limit,)
         )
         logs = cur.fetchall()
-        if not logs: return ""
-        
+        if not logs:
+            return ""
+
         intel = "\n[⚠️ 최근 발생한 설정 오류 및 교정 사례]\n"
         for log in logs:
             intel += f"- 제 {log['ep_num']}화 ({log['error_category']}): {log['surgery_result']}\n"
-        return intel            
+        return intel

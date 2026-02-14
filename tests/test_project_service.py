@@ -3,9 +3,7 @@
 추출 대상: reset_stage_2, rewind_stage_2, rollback_episode, wipe_production_data
 """
 
-import json
-from pathlib import Path
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -71,9 +69,7 @@ class TestResetStage2:
     def test_confirm_y_deletes_arcs(self, svc, project_mock, safe_commit_mock, ui_mock):
         with patch("builtins.input", side_effect=["y", ""]):
             svc.reset_stage_2()
-        project_mock.db.cursor.execute.assert_called_once_with(
-            "DELETE FROM anchors WHERE key = 'arcs'"
-        )
+        project_mock.db.cursor.execute.assert_called_once_with("DELETE FROM anchors WHERE key = 'arcs'")
         safe_commit_mock.assert_called_once()
         assert project_mock.arcs == []
 
@@ -178,8 +174,9 @@ class TestRollbackEpisode:
         with patch("builtins.input", side_effect=["2", "y", ""]):
             svc.rollback_episode()
         # Should still succeed despite no memory
-        assert any("벡터 소거 생략" in str(c) for c in ui_mock.log.call_args_list) or \
-               any("Success" in str(c) for c in ui_mock.log.call_args_list)
+        assert any("벡터 소거 생략" in str(c) for c in ui_mock.log.call_args_list) or any(
+            "Success" in str(c) for c in ui_mock.log.call_args_list
+        )
 
 
 # ── wipe_production_data ─────────────────────────────────────
@@ -215,7 +212,8 @@ class TestWipeProductionData:
         project = MagicMock()
         project.paths.drafts.glob.return_value = []
         memory = MagicMock()
-        memory.collection.delete.side_effect = RuntimeError("ChromaDB error")
+        # [Phase 4D-3] VecMemory API 우선 분기 → delete_all_episodes에서 실패
+        memory.delete_all_episodes.side_effect = RuntimeError("VecMemory error")
         svc = ProjectService(
             project_fn=lambda: project,
             ui=ui_mock,

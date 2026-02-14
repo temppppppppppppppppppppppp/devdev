@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import json
 import re as _re_rollback
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from modules.core.constants import HUDKeys
 
@@ -71,9 +72,7 @@ class ProjectService:
 
         target_no = int(target_input)
 
-        updated_arcs = [
-            a for a in project.arcs if isinstance(a, dict) and a.get("arc_no", 0) < target_no
-        ]
+        updated_arcs = [a for a in project.arcs if isinstance(a, dict) and a.get("arc_no", 0) < target_no]
 
         confirm = input(f"⚠️ Arc {target_no}번부터 {total_arcs}번까지 삭제합니다. 계속할까요? (y/n): ").strip().lower()
         if confirm == "y":
@@ -140,9 +139,9 @@ class ProjectService:
                                         hud_key = hk
                                         break
                                 if hud_key in bible_data["MasterBible"]:
-                                    bible_data["MasterBible"][hud_key].setdefault("Protagonist", {})[
-                                        "actual_truth"
-                                    ] = past_actual
+                                    bible_data["MasterBible"][hud_key].setdefault("Protagonist", {})["actual_truth"] = (
+                                        past_actual
+                                    )
                                 project.db.cursor.execute(
                                     "UPDATE anchors SET data = ? WHERE key = 'bible'",
                                     (json.dumps(bible_data, ensure_ascii=False),),
@@ -195,10 +194,13 @@ class ProjectService:
                     pass
             self._ui.log("   📂 원고 파일 삭제 완료")
 
-            # 6. 벡터 DB 소거
+            # 6. 벡터 DB 소거 (VecMemory 호환)
             memory = self._memory_fn()
             try:
-                if memory and hasattr(memory, "collection"):
+                if memory and hasattr(memory, "delete_episodes_from"):
+                    deleted = memory.delete_episodes_from(target_ep)
+                    self._ui.log(f"   🌌 벡터 메모리 소거 완료 ({deleted}건)")
+                elif memory and hasattr(memory, "collection") and memory.collection:
                     memory.collection.delete(where={"episode": {"$gte": target_ep}})
                     self._ui.log("   🌌 벡터 메모리 소거 완료")
                 else:
@@ -263,7 +265,9 @@ class ProjectService:
 
             memory = self._memory_fn()
             try:
-                if memory and hasattr(memory, "collection") and memory.collection:
+                if memory and hasattr(memory, "delete_all_episodes"):
+                    memory.delete_all_episodes()
+                elif memory and hasattr(memory, "collection") and memory.collection:
                     memory.collection.delete(where={"episode": {"$gt": 0}})
             except Exception as e:
                 self._ui.log(f"⚠️ [VectorDB] 컬렉션 초기화 실패: {e}")

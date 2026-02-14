@@ -443,6 +443,31 @@ class VecMemory:
         except Exception:
             return 0
 
+    # ── 삭제 ────────────────────────────────────────────────
+
+    def delete_episodes_from(self, target_ep: int) -> int:
+        """target_ep 이상의 에피소드 벡터+메타를 삭제. 삭제된 건수 반환."""
+        if not self._conn:
+            return 0
+        try:
+            cur = self._conn.cursor()
+            # 삭제 대상 rowid 조회
+            rows = cur.execute("SELECT ep_num FROM episode_meta WHERE ep_num >= ?", (target_ep,)).fetchall()
+            count = len(rows)
+            for (ep,) in rows:
+                cur.execute("DELETE FROM vec_episodes WHERE rowid = ?", (ep,))
+            cur.execute("DELETE FROM episode_meta WHERE ep_num >= ?", (target_ep,))
+            cur.execute("DELETE FROM sync_status WHERE ep_num >= ?", (target_ep,))
+            self._conn.commit()
+            return count
+        except Exception as e:
+            self._ui_log(f"[VecMemory] 에피소드 삭제 실패 (>={target_ep}): {e}")
+            return 0
+
+    def delete_all_episodes(self) -> int:
+        """모든 에피소드 벡터+메타 삭제. 삭제된 건수 반환."""
+        return self.delete_episodes_from(0)
+
     # ── 상태 조회 ───────────────────────────────────────────
 
     def is_operational(self) -> bool:
