@@ -1134,6 +1134,15 @@ JSON으로 출력:
                                     if hasattr(self.ctx.state_tracker, "npc_registry")
                                     else {}
                                 )
+                                # [Phase 3-5A-2] NPC 이력 데이터 검증 컨텍스트 주입
+                                if hasattr(self.ctx.state_tracker, "get_npc_change_history"):
+                                    _npc_history = {}
+                                    for _hn in self.ctx.state_tracker.npc_registry:
+                                        _hh = self.ctx.state_tracker.get_npc_change_history(_hn, limit=10)
+                                        if _hh:
+                                            _npc_history[_hn] = _hh
+                                    if _npc_history:
+                                        _cv_context["npc_history"] = _npc_history
                             for ci, cand in enumerate(candidates):
                                 _cv_ms = cand.get("manuscript", "")
                                 if _cv_ms and ci < len(validation_results):

@@ -1,10 +1,15 @@
-"""[Phase 3-5A-1] NPC append-only 이력 DB + StateTracker 기록 API 단위 테스트
+"""[Phase 3-5A] NPC append-only 이력 DB + StateTracker 기록 API + 검증 훅 테스트
 
-검증 대상:
+검증 대상 (3-5A-1):
 - DBManager.insert_npc_change / get_npc_history / get_npc_latest_fields
 - StateTrackerNPC._record_change (비차단)
 - register_npc_death / register_npc_info 이력 기록
 - StateTracker.bind_db / get_npc_change_history / get_npc_latest_fields
+
+검증 대상 (3-5A-2):
+- BlockingValidator._check_dead_npc_resurrection (회상 허용, 행동 CRITICAL)
+- ContinuityValidator._is_contradictory_trait_change + npc_history 성격 급변 감지
+- history 미주입/빈 이력 시 기존 동작 유지
 """
 
 import sys
@@ -17,6 +22,8 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from modules.core.db_manager import DBManager
 from modules.domain.agents.state_tracker import StateTracker
+from modules.validation.blocking_validator import BlockingValidator
+from modules.validation.continuity_validator import ContinuityValidator
 
 # ══════════════════════════════════════════════════════════════
 # Fixtures
@@ -195,3 +202,141 @@ class TestBindDB:
         tracker.register_npc_info("장무기", arc_no=3, weapon="의천검")
         latest = tracker.get_npc_latest_fields("장무기")
         assert latest["weapon"] == "의천검"
+
+
+# ══════════════════════════════════════════════════════════════
+# TestDeadNPCResurrection — blocking_validator 회상/행동 구분
+# ══════════════════════════════════════════════════════════════
+
+
+class TestDeadNPCResurrection:
+    """[Phase 3-5A-2] 사망 NPC 재등장 검증: 회상→PASS, 행동/대사→CRITICAL"""
+
+    def _make_context(self, dead_names):
+        """사망 NPC 컨텍스트 생성 헬퍼"""
+        return {"encyclopedia": {"npcs": [{"name": n, "status": "dead", "aliases": []} for n in dead_names]}}
+
+    def test_recall_pattern_passes(self):
+        """회상/과거 맥락에서 사망 NPC 언급 → 통과"""
+        bv = BlockingValidator()
+        manuscript = "장무기는 사현을 떠올리며 눈을 감았다. 과거 사현이 했던 말이 기억났다."
+        ctx = self._make_context(["사현"])
+        result = bv._check_dead_npc_resurrection(manuscript, ctx)
+        assert result["passed"] is True
+
+    def test_action_pattern_fails(self):
+        """사망 NPC가 행동/대사 → CRITICAL 실패"""
+        bv = BlockingValidator()
+        manuscript = "사현이 검을 뽑으며 말했다. '내가 상대하겠다.'"
+        ctx = self._make_context(["사현"])
+        result = bv._check_dead_npc_resurrection(manuscript, ctx)
+        assert result["passed"] is False
+        assert result["severity"] == "CRITICAL"
+
+    def test_no_dead_npc_passes(self):
+        """사망 NPC 없음 → 통과"""
+        bv = BlockingValidator()
+        ctx = {"encyclopedia": {"npcs": []}}
+        result = bv._check_dead_npc_resurrection("아무 원고", ctx)
+        assert result["passed"] is True
+
+    def test_dead_npc_not_in_manuscript_passes(self):
+        """사망 NPC가 원고에 없으면 통과"""
+        bv = BlockingValidator()
+        manuscript = "장무기가 산을 올랐다."
+        ctx = self._make_context(["사현"])
+        result = bv._check_dead_npc_resurrection(manuscript, ctx)
+        assert result["passed"] is True
+
+    def test_neither_recall_nor_action_passes(self):
+        """회상도 행동도 아닌 단순 언급 → 통과 (양쪽 매칭 없음)"""
+        bv = BlockingValidator()
+        manuscript = "그 무덤에는 사현의 이름이 새겨져 있었다."
+        ctx = self._make_context(["사현"])
+        result = bv._check_dead_npc_resurrection(manuscript, ctx)
+        assert result["passed"] is True
+
+    def test_mixed_recall_then_action_fails(self):
+        """회상 뒤 이어서 행동 패턴 → CRITICAL (별도 위치)"""
+        bv = BlockingValidator()
+        # 200자 이상 간격으로 회상 구간 → 행동 구간 분리
+        manuscript = "장무기는 사현을 떠올리며 과거를 회상했다." + "x" * 200 + "사현이 갑자기 나타나 공격했다."
+        ctx = self._make_context(["사현"])
+        result = bv._check_dead_npc_resurrection(manuscript, ctx)
+        assert result["passed"] is False
+
+
+# ══════════════════════════════════════════════════════════════
+# TestPersonalitySuddenChange — continuity_validator 성격 급변
+# ══════════════════════════════════════════════════════════════
+
+
+class TestPersonalitySuddenChange:
+    """[Phase 3-5A-2] NPC 이력 기반 성격 급변 감지 테스트"""
+
+    def test_contradictory_trait_detected(self):
+        """냉혹→온화 급변 → 위반 감지"""
+        cv = ContinuityValidator()
+        manuscript = "무량검주가 길을 걸었다."
+        ctx = {
+            "npc_personalities": {"무량검주": {"traits": "온화한"}},
+            "npc_history": {
+                "무량검주": [
+                    {"field_name": "personality_traits", "old_value": "", "new_value": "냉혹한"},
+                    {"field_name": "personality_traits", "old_value": "냉혹한", "new_value": "온화한"},
+                ]
+            },
+        }
+        result = cv._check_personality_continuity(manuscript, ctx)
+        sudden = [v for v in result["violations"] if v["type"] == "personality_sudden_change"]
+        assert len(sudden) >= 1
+        assert sudden[0]["npc"] == "무량검주"
+
+    def test_is_contradictory_trait_change_true(self):
+        """_is_contradictory_trait_change: 냉혹→온화 = True"""
+        assert ContinuityValidator._is_contradictory_trait_change("냉혹한", "온화한") is True
+
+    def test_is_contradictory_trait_change_false(self):
+        """_is_contradictory_trait_change: 냉혹→잔혹 = False (같은 그룹)"""
+        assert ContinuityValidator._is_contradictory_trait_change("냉혹한", "잔혹한") is False
+
+    def test_coward_to_brave_detected(self):
+        """겁쟁이→용감 급변도 감지"""
+        assert ContinuityValidator._is_contradictory_trait_change("소심한 겁쟁이", "대담한 전사") is True
+
+    def test_no_history_graceful(self):
+        """npc_history 미주입 → 기존 동작 유지 (급변 감지 스킵)"""
+        cv = ContinuityValidator()
+        manuscript = "무량검주가 길을 걸었다."
+        ctx = {"npc_personalities": {"무량검주": {"traits": "냉혹한"}}}
+        result = cv._check_personality_continuity(manuscript, ctx)
+        sudden = [v for v in result["violations"] if v["type"] == "personality_sudden_change"]
+        assert len(sudden) == 0
+
+    def test_empty_history_graceful(self):
+        """빈 npc_history → 기존 동작 유지"""
+        cv = ContinuityValidator()
+        manuscript = "무량검주가 길을 걸었다."
+        ctx = {
+            "npc_personalities": {"무량검주": {"traits": "냉혹한"}},
+            "npc_history": {},
+        }
+        result = cv._check_personality_continuity(manuscript, ctx)
+        sudden = [v for v in result["violations"] if v["type"] == "personality_sudden_change"]
+        assert len(sudden) == 0
+
+    def test_single_history_entry_no_detection(self):
+        """이력 1건만 → 급변 감지 불가 (비교 대상 없음)"""
+        cv = ContinuityValidator()
+        manuscript = "무량검주가 길을 걸었다."
+        ctx = {
+            "npc_personalities": {"무량검주": {"traits": "냉혹한"}},
+            "npc_history": {
+                "무량검주": [
+                    {"field_name": "personality_traits", "old_value": "", "new_value": "냉혹한"},
+                ]
+            },
+        }
+        result = cv._check_personality_continuity(manuscript, ctx)
+        sudden = [v for v in result["violations"] if v["type"] == "personality_sudden_change"]
+        assert len(sudden) == 0
