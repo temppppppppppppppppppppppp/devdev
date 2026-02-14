@@ -245,3 +245,58 @@ def test_threshold_type_mismatch_uses_default(tmp_path, monkeypatch):
 
     result = bv._threshold("scene.min_count", 4)
     assert result == 4  # str이므로 int default로 fallback
+
+
+# ══════════════════════════════════════════════════════════════
+# [Phase 5-B-2b] continuity/advisory _threshold() 통합 테스트
+# ══════════════════════════════════════════════════════════════
+
+
+def test_continuity_proximity_no_yaml_default(tmp_path, monkeypatch):
+    """YAML 없을 때 continuity proximity 기존값 150 유지"""
+    monkeypatch.chdir(tmp_path)
+
+    import modules.validation.continuity_validator as cv
+
+    if hasattr(cv._threshold, "_cfg"):
+        del cv._threshold._cfg
+
+    assert cv._threshold("continuity.personality_proximity", 150) == 150
+
+
+def test_continuity_proximity_yaml_override(tmp_path, monkeypatch):
+    """YAML로 personality_proximity override"""
+    monkeypatch.chdir(tmp_path)
+    _write_validation_yaml(tmp_path, "continuity:\n  personality_proximity: 200\n")
+
+    import modules.validation.continuity_validator as cv
+
+    if hasattr(cv._threshold, "_cfg"):
+        del cv._threshold._cfg
+
+    assert cv._threshold("continuity.personality_proximity", 150) == 200
+
+
+def test_advisory_max_suggestions_no_yaml_default(tmp_path, monkeypatch):
+    """YAML 없을 때 advisory max_suggestions 기존값 5 유지"""
+    monkeypatch.chdir(tmp_path)
+
+    import modules.validation.advisory_validator as av
+
+    if hasattr(av._threshold, "_cfg"):
+        del av._threshold._cfg
+
+    assert av._threshold("advisory.max_suggestions", 5) == 5
+
+
+def test_advisory_max_suggestions_yaml_override(tmp_path, monkeypatch):
+    """YAML로 advisory max_suggestions override"""
+    monkeypatch.chdir(tmp_path)
+    _write_validation_yaml(tmp_path, "advisory:\n  max_suggestions: 10\n")
+
+    import modules.validation.advisory_validator as av
+
+    if hasattr(av._threshold, "_cfg"):
+        del av._threshold._cfg
+
+    assert av._threshold("advisory.max_suggestions", 5) == 10
