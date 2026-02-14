@@ -217,7 +217,7 @@ pytest tests/e2e/ -v
 pytest tests/test_npc_history.py tests/test_config_manager.py tests/test_stage4_orchestrator.py -v
 
 # Gate 5: pre-commit
-pre-commit run --files tests/e2e/*.py
+pre-commit run --files tests/e2e/conftest.py tests/e2e/test_smoke_pipeline.py tests/e2e/test_npc_continuity_e2e.py tests/e2e/test_retry_recovery_e2e.py
 ```
 
 ---
