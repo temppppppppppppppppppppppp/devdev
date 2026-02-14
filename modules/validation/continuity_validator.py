@@ -15,70 +15,70 @@
 비용: $0 (LLM 호출 없음)
 """
 
-import re
 import logging
-from typing import Dict, List, Any, Optional, Set
+import re
 
 
 class ContinuityValidator:
     """
     TIER 0.5: 에피소드 간 연속성 검증
-    
+
     BLOCKING보다 먼저 실행되어야 함.
     직전 에피소드 상태와 현재 원고/블루프린트 간 모순 감지.
     """
-    
+
     def __init__(self, context=None) -> None:
         """
         Args:
             context: ProjectContext 객체 (직전 에피소드 데이터 조회용)
         """
         self.context = context
-        
+
         # 아이템 획득 패턴 (한국어)
         self.acquire_patterns = [
             r"(.+?)(?:을|를)\s*(?:집어\s*들|뽑아\s*들|획득|챙기|얻|주워\s*들)",
             r"(.+?)(?:을|를)\s*(?:손에\s*넣|가져가|챙겨\s*들)",
             r"(?:녹슨|묵직한|육중한)?\s*(.+?)(?:을|를)\s*(?:집어\s*들|뽑아\s*들)",
         ]
-        
+
         # 아이템 분실 패턴
         self.lose_patterns = [
             r"(.+?)(?:을|를)\s*(?:잃어버리|놓치|떨어뜨리|버리|내려놓)",
             r"(.+?)(?:이|가)\s*(?:부러지|파손되|사라지)",
         ]
-        
+
         # 부상 관련 패턴
         self.injury_patterns = [
             r"(?:부상|상처|골절|파열|출혈|중상|경상)",
             r"(?:어깨|팔|다리|등|가슴|복부).*?(?:다치|부상|파열)",
         ]
-        
+
         # 무리한 행동 패턴 (부상 시 불가능한 행동)
         self.strenuous_patterns = [
             r"(?:휘두르|내리치|베어|찌르|막아내)",
             r"(?:달리|뛰어|도약|점프)",
             r"(?:들어올리|메|짊어지)",
         ]
-        
+
         # 이동 패턴 (위치 변경 감지용)
         self.location_patterns = [
             r"(?:로|으로)\s*(?:향하|이동하|걸어가|달려가)",
             r"(?:에서|부터)\s*(?:나와|나서|떠나)",
             r"(?:에|로)\s*(?:도착|당도)",
         ]
-    
-    def validate(self, current_ep: int, manuscript: str, 
-                 validation_context: dict, prev_hud: Optional[dict] = None) -> dict:
+
+    def validate(
+        self, current_ep: int, manuscript: str, validation_context: dict, prev_hud: dict | None = None
+    ) -> dict:
         """
         연속성 검증 실행
-        
+
         Args:
             current_ep: 현재 에피소드 번호
             manuscript: 현재 원고/블루프린트
             validation_context: 검증 컨텍스트
             prev_hud: 직전 에피소드 HUD (없으면 context에서 조회)
-        
+
         Returns:
             {
                 "tier": "CONTINUITY",
@@ -90,7 +90,7 @@ class ContinuityValidator:
         """
         violations = []
         warnings = []
-        
+
         # 1화는 이전 에피소드가 없으므로 스킵
         if current_ep <= 1:
             return {
@@ -98,13 +98,13 @@ class ContinuityValidator:
                 "passed": True,
                 "violations": [],
                 "warnings": [],
-                "message": "첫 번째 에피소드 - 연속성 검증 스킵"
+                "message": "첫 번째 에피소드 - 연속성 검증 스킵",
             }
-        
+
         # 직전 에피소드 HUD 가져오기
         if prev_hud is None:
             prev_hud = self._get_prev_hud(current_ep, validation_context)
-        
+
         # [V66.1] prev_hud 의존 검증 (1~4)은 HUD가 있을 때만 실행
         # 검증 5~6 (성격/시간)은 prev_hud 없이도 실행 가능하므로 분리
         if not prev_hud:
@@ -116,51 +116,41 @@ class ContinuityValidator:
             # ═══════════════════════════════════════════════════════════════
             # 검증 1: 아이템 소지 연속성
             # ═══════════════════════════════════════════════════════════════
-            item_check = self._check_item_continuity(
-                current_ep, manuscript, prev_hud, prev_manuscript
-            )
-            if not item_check['passed']:
-                violations.extend(item_check['violations'])
-            warnings.extend(item_check.get('warnings', []))
+            item_check = self._check_item_continuity(current_ep, manuscript, prev_hud, prev_manuscript)
+            if not item_check["passed"]:
+                violations.extend(item_check["violations"])
+            warnings.extend(item_check.get("warnings", []))
 
             # ═══════════════════════════════════════════════════════════════
             # 검증 2: 무기 소지 연속성
             # ═══════════════════════════════════════════════════════════════
-            weapon_check = self._check_weapon_continuity(
-                current_ep, manuscript, prev_hud, prev_manuscript
-            )
-            if not weapon_check['passed']:
-                violations.extend(weapon_check['violations'])
-            warnings.extend(weapon_check.get('warnings', []))
+            weapon_check = self._check_weapon_continuity(current_ep, manuscript, prev_hud, prev_manuscript)
+            if not weapon_check["passed"]:
+                violations.extend(weapon_check["violations"])
+            warnings.extend(weapon_check.get("warnings", []))
 
             # ═══════════════════════════════════════════════════════════════
             # 검증 3: 부상 상태 연속성
             # ═══════════════════════════════════════════════════════════════
-            injury_check = self._check_injury_continuity(
-                current_ep, manuscript, prev_hud, prev_manuscript
-            )
-            if not injury_check['passed']:
-                violations.extend(injury_check['violations'])
-            warnings.extend(injury_check.get('warnings', []))
+            injury_check = self._check_injury_continuity(current_ep, manuscript, prev_hud, prev_manuscript)
+            if not injury_check["passed"]:
+                violations.extend(injury_check["violations"])
+            warnings.extend(injury_check.get("warnings", []))
 
             # ═══════════════════════════════════════════════════════════════
             # 검증 4: 위치 연속성 [V66.1] 불가능한 순간이동 BLOCKING 추가
             # ═══════════════════════════════════════════════════════════════
-            location_check = self._check_location_continuity(
-                current_ep, manuscript, prev_hud, prev_manuscript
-            )
-            if not location_check['passed']:
-                violations.extend(location_check['violations'])
-            warnings.extend(location_check.get('warnings', []))
-        
+            location_check = self._check_location_continuity(current_ep, manuscript, prev_hud, prev_manuscript)
+            if not location_check["passed"]:
+                violations.extend(location_check["violations"])
+            warnings.extend(location_check.get("warnings", []))
+
         # ═══════════════════════════════════════════════════════════════
         # 검증 5: [V66.1] NPC 성격 연속성 (MAJOR WARNING)
         # ═══════════════════════════════════════════════════════════════
-        personality_check = self._check_personality_continuity(
-            manuscript, validation_context
-        )
+        personality_check = self._check_personality_continuity(manuscript, validation_context)
         # [V66.2] C-2: 성격 모순 감지 결과를 명확한 경고로 전달
-        _personality_violations = personality_check.get('violations', [])
+        _personality_violations = personality_check.get("violations", [])
         for _pv in _personality_violations:
             if isinstance(_pv, dict):
                 warnings.append(f"[V66.2] 성격 모순 경고: {_pv.get('description', _pv.get('reason', str(_pv)))}")
@@ -171,9 +161,9 @@ class ContinuityValidator:
         # 검증 6: [V66.1] 시간 일관성 (BLOCKING if severe)
         # ═══════════════════════════════════════════════════════════════
         time_check = self._check_time_consistency(manuscript, validation_context)
-        if not time_check['passed']:
-            violations.extend(time_check.get('violations', []))
-        warnings.extend(time_check.get('warnings', []))
+        if not time_check["passed"]:
+            violations.extend(time_check.get("violations", []))
+        warnings.extend(time_check.get("warnings", []))
 
         # 결과 집계
         passed = len(violations) == 0
@@ -190,79 +180,80 @@ class ContinuityValidator:
             "warnings": warnings,
             "message": message,
             "violation_count": len(violations),
-            "warning_count": len(warnings)
+            "warning_count": len(warnings),
         }
-    
-    def _get_prev_hud(self, current_ep: int, validation_context: dict) -> Optional[dict]:
+
+    def _get_prev_hud(self, current_ep: int, validation_context: dict) -> dict | None:
         """직전 에피소드 HUD 가져오기"""
         # 1. validation_context에서 직접 제공된 경우
-        prev_hud = validation_context.get('prev_hud')
+        prev_hud = validation_context.get("prev_hud")
         if prev_hud:
             return prev_hud
-        
+
         # 2. context를 통해 DB에서 조회
-        if self.context and hasattr(self.context, 'db'):
+        if self.context and hasattr(self.context, "db"):
             try:
                 prev_ep = current_ep - 1
                 manuscript_data = self.context.db.get_manuscript(prev_ep)
                 if manuscript_data:
-                    hud_snapshot = manuscript_data.get('hud_snapshot')
+                    hud_snapshot = manuscript_data.get("hud_snapshot")
                     if hud_snapshot:
                         if isinstance(hud_snapshot, str):
                             import json
+
                             return json.loads(hud_snapshot)
                         return hud_snapshot
             except Exception as e:
                 logging.warning(f"⚠️ [CONTINUITY] 직전 HUD 조회 실패: {e}")
-        
+
         # 3. martial_hud에서 이전 상태 추론 (fallback)
-        martial_hud = validation_context.get('martial_hud', {})
+        martial_hud = validation_context.get("martial_hud", {})
         if martial_hud:
             return martial_hud  # 현재 HUD를 이전으로 가정 (제한적)
-        
+
         return None
-    
-    def _get_prev_manuscript(self, current_ep: int, validation_context: dict) -> Optional[str]:
+
+    def _get_prev_manuscript(self, current_ep: int, validation_context: dict) -> str | None:
         """직전 에피소드 원고 가져오기"""
         # 1. validation_context에서 제공된 경우
-        prev_text = validation_context.get('prev_full_text')
+        prev_text = validation_context.get("prev_full_text")
         if prev_text:
             return prev_text
-        
+
         # 2. history에서 가져오기
-        history = validation_context.get('history', [])
+        history = validation_context.get("history", [])
         if history and len(history) > 0:
             last_entry = history[-1]
             if isinstance(last_entry, dict):
-                return last_entry.get('text', '')
+                return last_entry.get("text", "")
             return str(last_entry)
-        
+
         # 3. context를 통해 DB에서 조회
-        if self.context and hasattr(self.context, 'db'):
+        if self.context and hasattr(self.context, "db"):
             try:
                 prev_ep = current_ep - 1
                 manuscript_data = self.context.db.get_manuscript(prev_ep)
                 if manuscript_data:
-                    return manuscript_data.get('content', '')
+                    return manuscript_data.get("content", "")
             except Exception as e:
                 logging.warning(f"⚠️ [CONTINUITY] 직전 원고 조회 실패: {e}")
-        
+
         return None
-    
-    def _extract_equipment(self, hud: dict) -> Set[str]:
+
+    def _extract_equipment(self, hud: dict) -> set[str]:
         """HUD에서 장비 목록 추출"""
         equipment = set()
-        
+
         # actual_truth.equipment 경로
-        actual_truth = hud.get('actual_truth', {})
-        eq_data = actual_truth.get('equipment', hud.get('equipment', []))
-        
+        actual_truth = hud.get("actual_truth", {})
+        eq_data = actual_truth.get("equipment", hud.get("equipment", []))
+
         if isinstance(eq_data, list):
             for item in eq_data:
                 if isinstance(item, str) and item.strip():
                     equipment.add(item.strip())
                 elif isinstance(item, dict):
-                    name = item.get('name', item.get('item', ''))
+                    name = item.get("name", item.get("item", ""))
                     if name:
                         equipment.add(name.strip())
         elif isinstance(eq_data, str):
@@ -273,24 +264,25 @@ class ContinuityValidator:
                     equipment.add(value.strip())
                 elif key and isinstance(key, str):
                     equipment.add(key.strip())
-        
+
         return equipment
-    
-    def _check_item_continuity(self, current_ep: int, manuscript: str,
-                               prev_hud: dict, prev_manuscript: Optional[str]) -> dict:
+
+    def _check_item_continuity(
+        self, current_ep: int, manuscript: str, prev_hud: dict, prev_manuscript: str | None
+    ) -> dict:
         """
         아이템 소지 연속성 검증
         - 이미 소유한 아이템을 다시 획득하러 가는 패턴 감지
         """
         violations = []
         warnings = []
-        
+
         # 직전 HUD에서 소유 아이템 추출
         prev_equipment = self._extract_equipment(prev_hud)
-        
+
         if not prev_equipment:
             return {"passed": True, "violations": [], "warnings": []}
-        
+
         # 현재 원고에서 획득 패턴 검색
         for pattern in self.acquire_patterns:
             matches = re.findall(pattern, manuscript)
@@ -298,50 +290,49 @@ class ContinuityValidator:
                 item_name = item_name.strip()
                 if not item_name:
                     continue
-                
+
                 # 이미 소유한 아이템인지 확인 (부분 매칭)
                 for owned_item in prev_equipment:
                     # 핵심 키워드 추출 (예: "녹슨 백근 대도" → "대도", "백근")
                     if self._is_same_item(item_name, owned_item):
-                        violations.append({
-                            "type": "duplicate_acquisition",
-                            "severity": "CRITICAL",
-                            "item": item_name,
-                            "owned_item": owned_item,
-                            "reason": f"이미 소유한 '{owned_item}'을(를) 다시 획득하려 함",
-                            "prev_ep": current_ep - 1,
-                            "fix_suggestion": f"'{owned_item}'는 이미 제{current_ep-1}화에서 획득함. "
-                                            f"현재 에피소드에서는 소지 상태로 시작해야 함."
-                        })
+                        violations.append(
+                            {
+                                "type": "duplicate_acquisition",
+                                "severity": "CRITICAL",
+                                "item": item_name,
+                                "owned_item": owned_item,
+                                "reason": f"이미 소유한 '{owned_item}'을(를) 다시 획득하려 함",
+                                "prev_ep": current_ep - 1,
+                                "fix_suggestion": f"'{owned_item}'는 이미 제{current_ep - 1}화에서 획득함. "
+                                f"현재 에피소드에서는 소지 상태로 시작해야 함.",
+                            }
+                        )
                         break
-        
-        return {
-            "passed": len(violations) == 0,
-            "violations": violations,
-            "warnings": warnings
-        }
-    
-    def _check_weapon_continuity(self, current_ep: int, manuscript: str,
-                                 prev_hud: dict, prev_manuscript: Optional[str]) -> dict:
+
+        return {"passed": len(violations) == 0, "violations": violations, "warnings": warnings}
+
+    def _check_weapon_continuity(
+        self, current_ep: int, manuscript: str, prev_hud: dict, prev_manuscript: str | None
+    ) -> dict:
         """
         무기 소지 연속성 검증
         - 직전 에피소드 끝에서 들고 있던 무기가 현재 에피소드에서 사라지는 문제
         """
         violations = []
         warnings = []
-        
+
         # 직전 원고 끝부분에서 무기 소지 상태 확인
         if prev_manuscript:
             # 마지막 500자에서 무기 관련 언급 찾기
             last_part = prev_manuscript[-500:] if len(prev_manuscript) > 500 else prev_manuscript
-            
+
             # 무기를 들고 있는 패턴
             holding_patterns = [
                 r"(.+?)(?:을|를)\s*(?:어깨에\s*메|손에\s*들|쥐)",
                 r"(.+?)(?:을|를)\s*(?:끌며|끌고)",
                 r"(?:메고|들고|쥐고)\s*(?:있는|있던)\s*(.+?)",
             ]
-            
+
             held_weapons = set()
             for pattern in holding_patterns:
                 matches = re.findall(pattern, last_part)
@@ -352,45 +343,41 @@ class ContinuityValidator:
                                 held_weapons.add(m.strip())
                     elif match.strip():
                         held_weapons.add(match.strip())
-            
+
             # 현재 원고 첫 500자에서 해당 무기 확인
             if held_weapons:
                 first_part = manuscript[:500] if len(manuscript) > 500 else manuscript
-                
+
                 for weapon in held_weapons:
                     # 무기 언급이 있는지 확인
                     if weapon not in first_part:
                         # 핵심 키워드로 재확인
                         keywords = self._extract_keywords(weapon)
                         mentioned = any(kw in first_part for kw in keywords if len(kw) > 1)
-                        
+
                         if not mentioned:
                             # 무기를 다시 획득하러 가는지 확인
-                            acquiring = any(
-                                re.search(pattern, first_part) 
-                                for pattern in self.acquire_patterns
-                            )
-                            
+                            acquiring = any(re.search(pattern, first_part) for pattern in self.acquire_patterns)
+
                             if acquiring:
-                                violations.append({
-                                    "type": "weapon_reset",
-                                    "severity": "CRITICAL",
-                                    "weapon": weapon,
-                                    "reason": f"직전 에피소드 끝에서 '{weapon}'을(를) 소지하고 있었으나, "
-                                            f"현재 에피소드에서 다시 획득하러 감",
-                                    "prev_ep": current_ep - 1,
-                                    "fix_suggestion": f"'{weapon}'는 이미 소지 중. "
-                                                    f"에피소드 시작 시 소지 상태로 묘사해야 함."
-                                })
-        
-        return {
-            "passed": len(violations) == 0,
-            "violations": violations,
-            "warnings": warnings
-        }
-    
-    def _check_injury_continuity(self, current_ep: int, manuscript: str,
-                                 prev_hud: dict, prev_manuscript: Optional[str]) -> dict:
+                                violations.append(
+                                    {
+                                        "type": "weapon_reset",
+                                        "severity": "CRITICAL",
+                                        "weapon": weapon,
+                                        "reason": f"직전 에피소드 끝에서 '{weapon}'을(를) 소지하고 있었으나, "
+                                        f"현재 에피소드에서 다시 획득하러 감",
+                                        "prev_ep": current_ep - 1,
+                                        "fix_suggestion": f"'{weapon}'는 이미 소지 중. "
+                                        f"에피소드 시작 시 소지 상태로 묘사해야 함.",
+                                    }
+                                )
+
+        return {"passed": len(violations) == 0, "violations": violations, "warnings": warnings}
+
+    def _check_injury_continuity(
+        self, current_ep: int, manuscript: str, prev_hud: dict, prev_manuscript: str | None
+    ) -> dict:
         """
         [V66.1] 부상 상태 연속성 검증 (강화)
         - SEVERE 부상(위독/빈사/중상/골절/파열)에서 회복 묘사 없이 정상 행동 → BLOCKING
@@ -402,16 +389,16 @@ class ContinuityValidator:
         # 직전 HUD에서 부상 상태 확인
         if not isinstance(prev_hud, dict):  # [V70] str/None 타입 방어
             prev_hud = {}
-        actual_truth = prev_hud.get('actual_truth', {})
-        condition = actual_truth.get('condition', prev_hud.get('condition', ''))
+        actual_truth = prev_hud.get("actual_truth", {})
+        condition = actual_truth.get("condition", prev_hud.get("condition", ""))
         condition_str = str(condition)
 
         # 부상 상태인지 확인
-        injury_keywords = ['부상', '상처', '파열', '골절', '중상', '경상', '출혈', '다친']
+        injury_keywords = ["부상", "상처", "파열", "골절", "중상", "경상", "출혈", "다친"]
         has_injury = any(kw in condition_str for kw in injury_keywords)
 
         # [V66.1] SEVERE 부상 키워드 (회복 없이 정상 행동 시 BLOCKING)
-        severe_keywords = ['위독', '빈사', '중상', '골절', '파열', '의식불명', '혼수']
+        severe_keywords = ["위독", "빈사", "중상", "골절", "파열", "의식불명", "혼수"]
         has_severe_injury = any(kw in condition_str for kw in severe_keywords)
 
         # 직전 원고에서 부상 언급 확인
@@ -424,8 +411,13 @@ class ContinuityValidator:
             # [V66.1] 직전 원고에서 SEVERE 부상 감지
             if not has_severe_injury:
                 severe_manuscript_patterns = [
-                    r'위독', r'빈사', r'의식을?\s*잃', r'혼수',
-                    r'골절', r'파열', r'피를\s*토하',
+                    r"위독",
+                    r"빈사",
+                    r"의식을?\s*잃",
+                    r"혼수",
+                    r"골절",
+                    r"파열",
+                    r"피를\s*토하",
                 ]
                 for sp in severe_manuscript_patterns:
                     if re.search(sp, last_part):
@@ -439,32 +431,51 @@ class ContinuityValidator:
             # [V66.1] SEVERE 부상: 회복 묘사 없이 정상 행동 → BLOCKING
             if has_severe_injury:
                 recovery_patterns = [
-                    r"치료", r"요양", r"회복", r"낫", r"치유",
-                    r"약을?\s*먹", r"금창약", r"영약", r"내상.*?회복",
-                    r"며칠.*?지나", r"시간이?\s*흘러", r"이튿날",
-                    r"의원", r"의술", r"침을?\s*놓",
+                    r"치료",
+                    r"요양",
+                    r"회복",
+                    r"낫",
+                    r"치유",
+                    r"약을?\s*먹",
+                    r"금창약",
+                    r"영약",
+                    r"내상.*?회복",
+                    r"며칠.*?지나",
+                    r"시간이?\s*흘러",
+                    r"이튿날",
+                    r"의원",
+                    r"의술",
+                    r"침을?\s*놓",
                 ]
                 first_500 = manuscript[:500] if len(manuscript) > 500 else manuscript
                 has_recovery = any(re.search(rp, first_500) for rp in recovery_patterns)
 
                 # 정상 행동 패턴 (SEVERE 부상과 양립 불가)
                 normal_action_patterns = [
-                    r"힘차게", r"거침없이", r"가볍게", r"자유롭게",
-                    r"아무런?\s*문제.*?없", r"멀쩡", r"성한",
-                    r"평소처럼", r"평소와?\s*다름없",
+                    r"힘차게",
+                    r"거침없이",
+                    r"가볍게",
+                    r"자유롭게",
+                    r"아무런?\s*문제.*?없",
+                    r"멀쩡",
+                    r"성한",
+                    r"평소처럼",
+                    r"평소와?\s*다름없",
                 ]
                 acts_normal = any(re.search(np, manuscript) for np in normal_action_patterns)
 
                 if not has_recovery and acts_normal:
-                    violations.append({
-                        "type": "severe_injury_ignored",
-                        "severity": "BLOCKING",
-                        "injury": injury_detail,
-                        "reason": f"SEVERE 부상({injury_detail})에서 회복 묘사 없이 정상 행동. "
-                                f"치료/요양/시간경과 장면 필수.",
-                        "fix_suggestion": "에피소드 초반에 치료/회복 장면을 추가하거나, "
-                                        "부상 상태를 반영한 행동으로 수정하세요."
-                    })
+                    violations.append(
+                        {
+                            "type": "severe_injury_ignored",
+                            "severity": "BLOCKING",
+                            "injury": injury_detail,
+                            "reason": f"SEVERE 부상({injury_detail})에서 회복 묘사 없이 정상 행동. "
+                            f"치료/요양/시간경과 장면 필수.",
+                            "fix_suggestion": "에피소드 초반에 치료/회복 장면을 추가하거나, "
+                            "부상 상태를 반영한 행동으로 수정하세요.",
+                        }
+                    )
 
             # 부상 부위와 관련된 무리한 행동 검색
             strenuous_actions = []
@@ -482,40 +493,51 @@ class ContinuityValidator:
                     r"이를\s*악물",
                 ]
 
-                has_justification = any(
-                    re.search(jp, manuscript) for jp in justification_patterns
-                )
+                has_justification = any(re.search(jp, manuscript) for jp in justification_patterns)
 
                 if not has_justification:
-                    warnings.append({
-                        "type": "injury_action_mismatch",
-                        "severity": "WARNING",
-                        "injury": injury_detail,
-                        "actions": strenuous_actions[:3],
-                        "reason": f"부상 상태({injury_detail})에서 무리한 행동 감지. "
-                                f"정당화 묘사 권장 (역근경, 내공 운용 등)",
-                        "fix_suggestion": "부상에도 불구하고 행동하는 이유를 내공/정신력 등으로 정당화"
-                    })
+                    warnings.append(
+                        {
+                            "type": "injury_action_mismatch",
+                            "severity": "WARNING",
+                            "injury": injury_detail,
+                            "actions": strenuous_actions[:3],
+                            "reason": f"부상 상태({injury_detail})에서 무리한 행동 감지. "
+                            f"정당화 묘사 권장 (역근경, 내공 운용 등)",
+                            "fix_suggestion": "부상에도 불구하고 행동하는 이유를 내공/정신력 등으로 정당화",
+                        }
+                    )
 
         return {
             "passed": len(violations) == 0,  # [V66.1] SEVERE 부상 무시 시 REJECT
             "violations": violations,
-            "warnings": warnings
+            "warnings": warnings,
         }
-    
+
     # [V66.1] 물리적으로 불가능한 순간이동 쌍 (시간 경과 없이 이동 불가)
     DISTANT_LOCATION_PAIRS = [
         # 무협: 대륙 반대편
-        ("하북", "사천"), ("하북", "강남"), ("산서", "강남"), ("산동", "사천"),
-        ("중원", "서역"), ("강북", "남해"), ("요동", "사천"), ("요동", "강남"),
+        ("하북", "사천"),
+        ("하북", "강남"),
+        ("산서", "강남"),
+        ("산동", "사천"),
+        ("중원", "서역"),
+        ("강북", "남해"),
+        ("요동", "사천"),
+        ("요동", "강남"),
         # 헌터: 대도시 간 (순간이동 게이트 없이)
-        ("서울", "부산"), ("서울", "제주"), ("경기", "제주"),
+        ("서울", "부산"),
+        ("서울", "제주"),
+        ("경기", "제주"),
         # 투자: 글로벌
-        ("서울", "뉴욕"), ("서울", "런던"), ("서울", "도쿄"),
+        ("서울", "뉴욕"),
+        ("서울", "런던"),
+        ("서울", "도쿄"),
     ]
 
-    def _check_location_continuity(self, current_ep: int, manuscript: str,
-                                   prev_hud: dict, prev_manuscript: Optional[str]) -> dict:
+    def _check_location_continuity(
+        self, current_ep: int, manuscript: str, prev_hud: dict, prev_manuscript: str | None
+    ) -> dict:
         """
         [V66.1] 위치 연속성 검증 (강화)
         - 불가능한 순간이동 (DISTANT_LOCATION_PAIRS) → BLOCKING
@@ -527,8 +549,8 @@ class ContinuityValidator:
         # HUD에서 위치 정보 추출 (가장 신뢰할 수 있는 소스)
         if not isinstance(prev_hud, dict):  # [V70] str/None 타입 방어
             prev_hud = {}
-        actual_truth = prev_hud.get('actual_truth', {})
-        prev_hud_location = actual_truth.get('location', prev_hud.get('location', ''))
+        actual_truth = prev_hud.get("actual_truth", {})
+        prev_hud_location = actual_truth.get("location", prev_hud.get("location", ""))
 
         # 직전 원고 끝부분에서 위치 확인
         if prev_manuscript:
@@ -557,8 +579,19 @@ class ContinuityValidator:
                 curr_locations.update(m.strip() for m in matches if m.strip())
 
             # 위치 연결 확인 (시간 경과 없이 급격한 위치 변화)
-            time_markers = ['이튿날', '다음날', '며칠 후', '시간이 지나', '해가 지고', '날이 밝',
-                            '몇 달', '수일', '한 달', '보름', '열흘']
+            time_markers = [
+                "이튿날",
+                "다음날",
+                "며칠 후",
+                "시간이 지나",
+                "해가 지고",
+                "날이 밝",
+                "몇 달",
+                "수일",
+                "한 달",
+                "보름",
+                "열흘",
+            ]
             has_time_skip = any(tm in first_part for tm in time_markers)
 
             if prev_locations and curr_locations and not has_time_skip:
@@ -566,18 +599,19 @@ class ContinuityValidator:
                 for prev_loc in prev_locations:
                     for curr_loc in curr_locations:
                         for loc_a, loc_b in self.DISTANT_LOCATION_PAIRS:
-                            if ((loc_a in prev_loc and loc_b in curr_loc) or
-                                    (loc_b in prev_loc and loc_a in curr_loc)):
-                                violations.append({
-                                    "type": "impossible_teleportation",
-                                    "severity": "BLOCKING",
-                                    "prev_location": prev_loc,
-                                    "curr_location": curr_loc,
-                                    "reason": f"불가능한 순간이동: '{prev_loc}' → '{curr_loc}' "
-                                            f"(시간 경과 묘사 없이 먼 거리 이동)",
-                                    "fix_suggestion": "이동 경위를 묘사하거나, "
-                                                    "시간 경과 표현(며칠 후, 이튿날 등)을 추가하세요."
-                                })
+                            if (loc_a in prev_loc and loc_b in curr_loc) or (loc_b in prev_loc and loc_a in curr_loc):
+                                violations.append(
+                                    {
+                                        "type": "impossible_teleportation",
+                                        "severity": "BLOCKING",
+                                        "prev_location": prev_loc,
+                                        "curr_location": curr_loc,
+                                        "reason": f"불가능한 순간이동: '{prev_loc}' → '{curr_loc}' "
+                                        f"(시간 경과 묘사 없이 먼 거리 이동)",
+                                        "fix_suggestion": "이동 경위를 묘사하거나, "
+                                        "시간 경과 표현(며칠 후, 이튿날 등)을 추가하세요.",
+                                    }
+                                )
                                 break  # 한 쌍만 감지하면 충분
                     if violations:
                         break
@@ -587,70 +621,72 @@ class ContinuityValidator:
                     # 위치가 완전히 다르면 경고 (기존)
                     overlap = prev_locations & curr_locations
                     if not overlap and len(prev_locations) > 0 and len(curr_locations) > 0:
-                        warnings.append({
-                            "type": "location_jump",
-                            "severity": "INFO",
-                            "prev_locations": list(prev_locations)[:3],
-                            "curr_locations": list(curr_locations)[:3],
-                            "reason": "위치 변화가 감지됨. 이동 경위 묘사 권장",
-                            "fix_suggestion": "이전 위치에서 현재 위치로 이동하는 과정을 간략히 묘사"
-                        })
+                        warnings.append(
+                            {
+                                "type": "location_jump",
+                                "severity": "INFO",
+                                "prev_locations": list(prev_locations)[:3],
+                                "curr_locations": list(curr_locations)[:3],
+                                "reason": "위치 변화가 감지됨. 이동 경위 묘사 권장",
+                                "fix_suggestion": "이전 위치에서 현재 위치로 이동하는 과정을 간략히 묘사",
+                            }
+                        )
 
         return {
             "passed": len(violations) == 0,  # [V66.1] 불가능한 순간이동 시 REJECT
             "violations": violations,
-            "warnings": warnings
+            "warnings": warnings,
         }
-    
+
     def _is_same_item(self, item1: str, item2: str) -> bool:
         """두 아이템이 같은 것인지 판단 (부분 매칭)"""
         # 정규화
         item1 = item1.strip().lower()
         item2 = item2.strip().lower()
-        
+
         # 완전 일치
         if item1 == item2:
             return True
-        
+
         # 한쪽이 다른 쪽을 포함
         if item1 in item2 or item2 in item1:
             return True
-        
+
         # 핵심 키워드 비교
         keywords1 = self._extract_keywords(item1)
         keywords2 = self._extract_keywords(item2)
-        
+
         # 2개 이상의 키워드가 일치하면 같은 아이템으로 판단
         common = keywords1 & keywords2
         if len(common) >= 2:
             return True
-        
+
         # 핵심 단어가 일치하면 같은 아이템
-        important_words = ['대도', '검', '창', '도끼', '활', '패', '옥', '환', '단']
+        important_words = ["대도", "검", "창", "도끼", "활", "패", "옥", "환", "단"]
         for word in important_words:
             if word in item1 and word in item2:
                 return True
-        
+
         return False
-    
-    def _extract_keywords(self, text: str) -> Set[str]:
+
+    def _extract_keywords(self, text: str) -> set[str]:
         """텍스트에서 핵심 키워드 추출"""
         # 한글 단어만 추출
-        words = re.findall(r'[가-힣]+', text)
+        words = re.findall(r"[가-힣]+", text)
         # 조사/접미사 제거
-        stopwords = {'을', '를', '이', '가', '에', '에서', '으로', '로', '의', '한', '된', '인'}
+        stopwords = {"을", "를", "이", "가", "에", "에서", "으로", "로", "의", "한", "된", "인"}
         keywords = {w for w in words if w not in stopwords and len(w) > 1}
         return keywords
-    
-    def _extract_injury_detail(self, condition: str, prev_manuscript: Optional[str]) -> str:
+
+    def _extract_injury_detail(self, condition: str, prev_manuscript: str | None) -> str:
         """부상 상세 정보 추출"""
-        if '어깨' in condition or (prev_manuscript and '어깨' in prev_manuscript[-500:]):
+        if "어깨" in condition or (prev_manuscript and "어깨" in prev_manuscript[-500:]):
             return "어깨 부상"
-        if '팔' in condition or (prev_manuscript and '팔' in prev_manuscript[-500:]):
+        if "팔" in condition or (prev_manuscript and "팔" in prev_manuscript[-500:]):
             return "팔 부상"
-        if '다리' in condition or (prev_manuscript and '다리' in prev_manuscript[-500:]):
+        if "다리" in condition or (prev_manuscript and "다리" in prev_manuscript[-500:]):
             return "다리 부상"
-        if '파열' in condition:
+        if "파열" in condition:
             return "근육 파열"
         return "부상 상태"
 
@@ -659,16 +695,36 @@ class ContinuityValidator:
     # ═══════════════════════════════════════════════════════════════════════
 
     # 냉혹/잔혹 성격에 모순되는 감정 표현 (NPC 이름 근처에서 검색)
-    _COLD_TRAITS = {'냉혹', '잔혹', '무자비', '냉정', '냉담', '비정', '살벌'}
-    _COLD_CONTRADICTIONS = {'눈물', '울며', '감동', '미소', '따뜻', '다정', '온화', '부드럽'}
+    _COLD_TRAITS = {"냉혹", "잔혹", "무자비", "냉정", "냉담", "비정", "살벌"}
+    _COLD_CONTRADICTIONS = {"눈물", "울며", "감동", "미소", "따뜻", "다정", "온화", "부드럽"}
 
     # 자비/온화 성격에 모순되는 표현
-    _KIND_TRAITS = {'자비', '온화', '인자', '자상', '다정', '따뜻', '온유'}
-    _KIND_CONTRADICTIONS = {'잔인', '학살', '무자비', '냉혹', '살육', '처형', '도살', '참수'}
+    _KIND_TRAITS = {"자비", "온화", "인자", "자상", "다정", "따뜻", "온유"}
+    _KIND_CONTRADICTIONS = {"잔인", "학살", "무자비", "냉혹", "살육", "처형", "도살", "참수"}
+
+    # [Phase 3-5A-2] 성격 급변 감지용 모순쌍
+    _CONTRADICTORY_TRAIT_PAIRS = [
+        ({"냉혹", "잔혹", "무자비", "냉정"}, {"온화", "자비", "인자", "따뜻"}),
+        ({"겁쟁이", "소심", "비겁"}, {"용감", "대담", "무모"}),
+        ({"충성", "헌신"}, {"배신", "배반"}),
+    ]
+
+    @staticmethod
+    def _is_contradictory_trait_change(old: str, new: str) -> bool:
+        """[Phase 3-5A-2] 냉혹↔온화, 겁쟁이↔용감 등 극단 반전 감지"""
+        for group_a, group_b in ContinuityValidator._CONTRADICTORY_TRAIT_PAIRS:
+            old_in_a = any(t in str(old) for t in group_a)
+            old_in_b = any(t in str(old) for t in group_b)
+            new_in_a = any(t in str(new) for t in group_a)
+            new_in_b = any(t in str(new) for t in group_b)
+            if (old_in_a and new_in_b) or (old_in_b and new_in_a):
+                return True
+        return False
 
     def _check_personality_continuity(self, manuscript: str, validation_context: dict) -> dict:
         """
         [V66.1] NPC 성격 모순 검증
+        [Phase 3-5A-2] NPC 이력 기반 성격 급변 감지 추가
 
         냉혹한 NPC가 따뜻한 감정을 보이거나, 자비로운 NPC가 잔인한 행동을
         하는 경우를 감지. severity: MAJOR (BLOCKING은 아니지만 강한 WARNING).
@@ -676,13 +732,14 @@ class ContinuityValidator:
         Args:
             manuscript: 현재 원고
             validation_context: {
-                'npc_personalities': {NPC이름: {"traits": "냉혹한", "motivation": "복수"}}
+                'npc_personalities': {NPC이름: {"traits": "냉혹한", "motivation": "복수"}},
+                'npc_history': {NPC이름: [{"field_name": ..., "old_value": ..., "new_value": ...}, ...]}
             }
 
         Returns:
             {"passed": True/False, "violations": [...]}
         """
-        npc_personalities = validation_context.get('npc_personalities', {})
+        npc_personalities = validation_context.get("npc_personalities", {})
 
         if not npc_personalities or not isinstance(npc_personalities, dict):
             return {"passed": True, "violations": []}
@@ -695,7 +752,7 @@ class ContinuityValidator:
             if not npc_name or not isinstance(personality_data, dict):
                 continue
 
-            traits_str = str(personality_data.get('traits', ''))
+            traits_str = str(personality_data.get("traits", ""))
             if not traits_str:
                 continue
 
@@ -723,21 +780,23 @@ class ContinuityValidator:
 
                     for contradiction in self._COLD_CONTRADICTIONS:
                         if contradiction in nearby_text:
-                            violations.append({
-                                "type": "personality_contradiction",
-                                "severity": "MAJOR",
-                                "npc": npc_name,
-                                "traits": traits_str,
-                                "contradiction": contradiction,
-                                "reason": f"냉혹한 NPC '{npc_name}'(성격: {traits_str}) 근처에서 "
-                                          f"모순 표현 '{contradiction}' 감지",
-                                "context": nearby_text[:200],
-                                "fix_suggestion": f"'{npc_name}'의 성격({traits_str})에 맞게 "
-                                                  f"'{contradiction}' 표현을 수정하거나, "
-                                                  f"성격 변화의 계기를 명시하세요."
-                            })
+                            violations.append(
+                                {
+                                    "type": "personality_contradiction",
+                                    "severity": "MAJOR",
+                                    "npc": npc_name,
+                                    "traits": traits_str,
+                                    "contradiction": contradiction,
+                                    "reason": f"냉혹한 NPC '{npc_name}'(성격: {traits_str}) 근처에서 "
+                                    f"모순 표현 '{contradiction}' 감지",
+                                    "context": nearby_text[:200],
+                                    "fix_suggestion": f"'{npc_name}'의 성격({traits_str})에 맞게 "
+                                    f"'{contradiction}' 표현을 수정하거나, "
+                                    f"성격 변화의 계기를 명시하세요.",
+                                }
+                            )
                             break  # 한 위치에서 하나만 감지
-                    if violations and violations[-1].get('npc') == npc_name:
+                    if violations and violations[-1].get("npc") == npc_name:
                         break  # NPC당 하나만 보고
 
             # 자비 계열 NPC → 잔인한 표현 모순 체크
@@ -750,27 +809,61 @@ class ContinuityValidator:
 
                     for contradiction in self._KIND_CONTRADICTIONS:
                         if contradiction in nearby_text:
-                            violations.append({
-                                "type": "personality_contradiction",
-                                "severity": "MAJOR",
-                                "npc": npc_name,
-                                "traits": traits_str,
-                                "contradiction": contradiction,
-                                "reason": f"온화한 NPC '{npc_name}'(성격: {traits_str}) 근처에서 "
-                                          f"모순 표현 '{contradiction}' 감지",
-                                "context": nearby_text[:200],
-                                "fix_suggestion": f"'{npc_name}'의 성격({traits_str})에 맞게 "
-                                                  f"'{contradiction}' 표현을 수정하거나, "
-                                                  f"성격 변화의 계기를 명시하세요."
-                            })
+                            violations.append(
+                                {
+                                    "type": "personality_contradiction",
+                                    "severity": "MAJOR",
+                                    "npc": npc_name,
+                                    "traits": traits_str,
+                                    "contradiction": contradiction,
+                                    "reason": f"온화한 NPC '{npc_name}'(성격: {traits_str}) 근처에서 "
+                                    f"모순 표현 '{contradiction}' 감지",
+                                    "context": nearby_text[:200],
+                                    "fix_suggestion": f"'{npc_name}'의 성격({traits_str})에 맞게 "
+                                    f"'{contradiction}' 표현을 수정하거나, "
+                                    f"성격 변화의 계기를 명시하세요.",
+                                }
+                            )
                             break
-                    if violations and violations[-1].get('npc') == npc_name:
+                    if violations and violations[-1].get("npc") == npc_name:
                         break
 
-        return {
-            "passed": len(violations) == 0,
-            "violations": violations
-        }
+        # [Phase 3-5A-2] NPC 이력 기반 성격 급변 감지
+        npc_history = validation_context.get("npc_history", {})
+        if npc_history and isinstance(npc_history, dict):
+            already_reported = {v.get("npc") for v in violations}
+            for npc_name, history_entries in npc_history.items():
+                if npc_name in already_reported:
+                    continue
+                if npc_name not in manuscript:
+                    continue
+                if not isinstance(history_entries, list):
+                    continue
+                # personality_traits 변경 이력 필터 (오래된 순)
+                personality_changes = [
+                    h
+                    for h in reversed(history_entries)
+                    if isinstance(h, dict) and h.get("field_name") == "personality_traits"
+                ]
+                if len(personality_changes) >= 2:
+                    prev = personality_changes[-2]
+                    curr = personality_changes[-1]
+                    old_val = prev.get("new_value", "")
+                    new_val = curr.get("new_value", "")
+                    if self._is_contradictory_trait_change(old_val, new_val):
+                        violations.append(
+                            {
+                                "type": "personality_sudden_change",
+                                "severity": "MAJOR",
+                                "npc": npc_name,
+                                "old_traits": old_val,
+                                "new_traits": new_val,
+                                "reason": f"NPC '{npc_name}' 성격 급변: {old_val} → {new_val}",
+                                "fix_suggestion": "성격 변화의 계기를 서사에 명시하세요.",
+                            }
+                        )
+
+        return {"passed": len(violations) == 0, "violations": violations}
 
     # ═══════════════════════════════════════════════════════════════════════
     # [V66.1] 시간 일관성 검증
@@ -793,7 +886,7 @@ class ContinuityValidator:
         Returns:
             {"passed": True/False, "violations": [...], "warnings": [...]}
         """
-        time_warnings = validation_context.get('time_warnings', [])
+        time_warnings = validation_context.get("time_warnings", [])
 
         if not time_warnings or not isinstance(time_warnings, list):
             return {"passed": True, "violations": [], "warnings": []}
@@ -801,12 +894,12 @@ class ContinuityValidator:
         violations = []
         warnings = []
 
-        severe_keywords = ['중상', '급속', '불가능']
+        severe_keywords = ["중상", "급속", "불가능"]
 
         for warning_item in time_warnings:
             # [V66.2] C-3: time_warnings dict/str 양쪽 처리
             if isinstance(warning_item, dict):
-                warning_msg = warning_item.get('description', warning_item.get('message', str(warning_item)))
+                warning_msg = warning_item.get("description", warning_item.get("message", str(warning_item)))
             elif isinstance(warning_item, str):
                 warning_msg = warning_item
             else:
@@ -815,23 +908,23 @@ class ContinuityValidator:
             is_severe = any(kw in warning_msg for kw in severe_keywords)
 
             if is_severe:
-                violations.append({
-                    "type": "time_inconsistency",
-                    "severity": "BLOCKING",
-                    "reason": f"시간 일관성 위반 (심각): {warning_msg}",
-                    "fix_suggestion": "시간 경과를 현실적으로 조정하거나, "
-                                      "회복/이동에 필요한 시간 묘사를 추가하세요."
-                })
+                violations.append(
+                    {
+                        "type": "time_inconsistency",
+                        "severity": "BLOCKING",
+                        "reason": f"시간 일관성 위반 (심각): {warning_msg}",
+                        "fix_suggestion": "시간 경과를 현실적으로 조정하거나, "
+                        "회복/이동에 필요한 시간 묘사를 추가하세요.",
+                    }
+                )
             else:
-                warnings.append({
-                    "type": "time_inconsistency",
-                    "severity": "WARNING",
-                    "reason": f"시간 일관성 경고: {warning_msg}",
-                    "fix_suggestion": "시간 경과 묘사를 보완하세요."
-                })
+                warnings.append(
+                    {
+                        "type": "time_inconsistency",
+                        "severity": "WARNING",
+                        "reason": f"시간 일관성 경고: {warning_msg}",
+                        "fix_suggestion": "시간 경과 묘사를 보완하세요.",
+                    }
+                )
 
-        return {
-            "passed": len(violations) == 0,
-            "violations": violations,
-            "warnings": warnings
-        }
+        return {"passed": len(violations) == 0, "violations": violations, "warnings": warnings}
