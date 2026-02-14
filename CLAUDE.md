@@ -12,6 +12,14 @@
 3. **디렉터 주권주의 (내각제)** — Director가 최종 품질 결정권. Chief Writer·Analyst 등은 초안 제출만, 합격/불합격/수정 지시는 Director가 내림. Director를 우회하면 안 됨.
 4. **사망 캐릭터는 회상/언급만 허용** — `deceased=True` NPC가 행동/대사로 등장하면 REJECT. 회상·과거 장면·타인 언급은 허용.
 
+### Phase 3-5B 정책 고정 (구현 기간 중 절대 변경 금지)
+
+1. **후보 수 3개 유지** — 패치 모드도 앙상블 3후보 생성
+2. **심사 루프(3라운드) / 판정 규칙(adaptive threshold) 불변**
+3. **Stage 2 로직 변경 금지** — 로깅 훅도 제외
+4. **허용 코드 파일**: `stage4_orchestrator.py`, `chief_writer.py`, `chief_writer.yaml`, `constants.py` 만
+5. **문서 승인 전 코드 구현 금지** — `docs/phase3_5b_blueprint.md` 참조
+
 ---
 
 ## 파이프라인
@@ -28,10 +36,11 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 ## 현재 상태 (2026-02-14)
 
 - **작동함**: Stage 0→2→4 정상 동작
-- **완료된 것**: Phase 1(logging), 1.5(에러핸들링), 2-B(type hints 95.5%), 5-A(프롬프트 외부화 43개), 5-C(의존성 정리), 6-C(pre-commit+ruff), 6-A(pytest 63개 신규), **Phase 4C(DI 전환)**
+- **완료된 것**: Phase 1(logging), 1.5(에러핸들링), 2-B(type hints 95.5%), 5-A(프롬프트 외부화 43개), 5-C(의존성 정리), 6-C(pre-commit+ruff), 6-A(pytest 63개 신규), **Phase 4C(DI 전환)**, **Phase 4D(sqlite-vec 완료, ChromaDB 레거시 제거)**
 - **약점**: NPC 연속성 추적 약함 (시나리오 24개 — 참고자료 3-C), 플롯 중복 감지 불안정 (Chain 1, lazy init + 재시도 1회 적용 완료)
-- **Phase 4C 결과**: `stage2/3/4_orchestrator.py`의 `self.app` 직접 참조 제거 완료 (`self.app` 651→0, `self.ctx` 전환)
-- **다음 우선순위**: **Phase 4D (기존 로드맵 2.5)** — sqlite-vec 기반 SSOT DB 통합 + 벡터 검색/저장 재연결
+- **Phase 4D 결과**: ChromaDB 레거시 완전 제거, VecMemory 단일 경로 확정, `memory_engine.py`/`blueprint_memory.py` 삭제
+- **현재 단계**: **Phase 3-5B 설계중** — 점수 기반 패치 모드 (Stage 4)
+- **다음 우선순위**: 5B(수정 모드) → 5A(NPC 이력) → 6B(E2E 테스트)
 
 ---
 
@@ -54,7 +63,7 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 ## ⚠️ 주의
 
 - `writer.py` — 레거시이나 유틸리티 3개가 stage4에서 직접 호출됨. Phase 2에서 이전 후 삭제.
-- `memory_engine.py` — ChromaDB 비활성화 상태. **Phase 4D에서 sqlite-vec로 교체 + 벡터 경로 재연결 예정**.
+- `memory_engine.py` — **삭제됨** (Phase 4D 완료). VecMemory(`vec_memory.py`)가 단일 벡터 경로.
 - NPC 속성 변경 — DB 덮어쓰기 방식. 이력 없음. Phase 3에서 개선 예정.
 - `base_agent.py`의 Context Caching — 구현 완료 (`_get_or_create_context_cache` L920, `_ask_with_cached_context` L1003). `chief_writer`·`director_continuity`에서 사용 중.
 
@@ -73,9 +82,11 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 
 | 순서 | Phase | 작업 | 전제 |
 |------|-------|------|------|
-| 1 | 4D (기존 2.5) | sqlite-vec (ChromaDB 교체) + 벡터 경로 재연결 | 4C ✅ |
-| 2 | 3 | NPC 이력 + 관계 그래프 + 수정 모드 + 대리만족 검증 | 4D |
-| 3 | 4(잔여) | async 통일 + 대형 함수 분할 + 추가 모듈화 | 3 |
+| ~~1~~ | ~~4D~~ | ~~sqlite-vec (ChromaDB 교체)~~ | ✅ **완료** |
+| 2 | **3-5B** | **수정 모드 — Stage 4 패치 모드** (`docs/phase3_5b_blueprint.md`) | 4D ✅ ← **현재** |
+| 3 | 3-5A | NPC 이력 + 관계 그래프 + 검증 강화 | 5B |
+| 4 | 6-B | E2E 테스트 | 5A |
+| 5 | 4(잔여) | async 통일 + 대형 함수 분할 + 추가 모듈화 | 6-B |
 
 ---
 
