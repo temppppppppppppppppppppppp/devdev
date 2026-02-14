@@ -37,7 +37,6 @@ from google import genai
 
 import modules.core.spinners as _spinners_mod  # [V65] 플래그 동기화용
 from modules.core.feedback_system import FeedbackSystem  # [V64 P2-3]
-from modules.core.memory_engine import LongTermMemory
 from modules.core.metrics_collector import get_metrics_collector  # [V49.3] 비용 추적 시스템
 from modules.core.narrative_diversity import NarrativeDiversityEngine  # [V48] 서사 다양성 엔진
 from modules.core.perf_timer import PerfTimer  # [V65] 파이프라인 성능 프로파일링
@@ -53,6 +52,7 @@ from modules.core.stage3_orchestrator import Stage3Orchestrator  # [Phase 4C-1a]
 from modules.core.stage4_orchestrator import Stage4Orchestrator  # [V64.P3]
 from modules.core.studio_visualizer import StudioVisualizer
 from modules.core.system import StudioSystem
+from modules.core.vec_memory import VecMemory  # [Phase 4D-2] ChromaDB → sqlite-vec
 from modules.domain.agents.analyst import Analyst
 from modules.domain.agents.arc_corrector import ArcCorrector  # [V60.42] Arc 부분 수정
 from modules.domain.agents.arc_critic import ArcCritic  # [V60.12] Arc 비평가
@@ -770,7 +770,8 @@ class SovereignApp:
                         self.ui.log(f"{Emojis.WARNING} [Shutdown] DB 종료 중 오류: {db_err}")
             if hasattr(self, "memory") and self.memory:
                 try:
-                    # ChromaDB 클라이언트 정리 (필요 시)
+                    # [Phase 4D-2] VecMemory 리소스 정리
+                    self.memory.close()
                     self.memory = None
                     self.ui.log("🔌 [Shutdown] 벡터 DB 연결 해제")
                 except Exception as mem_err:
@@ -898,20 +899,23 @@ class SovereignApp:
         self.current_project.guard = self.sys.guard  # 프로젝트 컨텍스트에 가드 주입
         self.ui.log(f"✅ [{self.selected_genre['name']}] Guard 시스템 초기화 완료")
 
-        # [V27.5 수정 적용] 반환값을 체크하여 부팅 여부 결정
+        # [V27.5] 벡터 DB 무결성 점검
         if not self._check_vector_db_lock(project_name):
             self.ui.log("🛑 [System] 치명적 데이터 결함으로 인해 기동을 중지합니다.")
-            return  # 또는 sys.exit()
+            return
 
-        self.memory = LongTermMemory(self.current_project)
-        # [V63.3] BlueprintMemory 초기화 (Stage 3 시맨틱 검색용)
-        self.blueprint_memory = None
-        try:
-            from modules.core.blueprint_memory import BlueprintMemory
-
-            self.blueprint_memory = BlueprintMemory(self.current_project)
-        except Exception as _bm_err:
-            self.ui.log(f"   ⚠️ [V63.3] BlueprintMemory 초기화 실패 (비차단): {str(_bm_err)[:60]}")
+        # [Phase 4D-2] sqlite-vec 벡터 메모리 초기화 (ChromaDB 대체)
+        vec_db_path = self.current_project.paths.memory / "vec_memory.db"
+        self.current_project.paths.memory.mkdir(parents=True, exist_ok=True)
+        self.memory = VecMemory(
+            db_path=vec_db_path,
+            api_key=os.getenv("GOOGLE_API_KEY", ""),
+            ui_log=self.ui.log,
+        )
+        if self.memory.is_operational():
+            self.ui.log("✅ [VecMemory] sqlite-vec 벡터 엔진 초기화 완료")
+        else:
+            self.ui.log(f"⚠️ [VecMemory] 벡터 엔진 비활성: {self.memory.initialization_error}")
 
         # [V38 패치] 에이전트 초기화 검증
         if not self._attach_agents():
@@ -1104,10 +1108,7 @@ class SovereignApp:
             return False
 
     def _check_vector_db_lock(self, project_name: str) -> bool:
-        """
-        [V35.6 S-Grade] 벡터 DB 안정화 (저널 보존형 LOCK 해제)
-
-        ChromaDB의 잔류 잠금 파일을 제거하고 데이터 무결성을 검증합니다.
+        """[Phase 4D-2] 벡터 DB 무결성 점검 (sqlite-vec + 레거시 ChromaDB 호환).
 
         Args:
             project_name: 프로젝트 이름
@@ -1115,30 +1116,26 @@ class SovereignApp:
         Returns:
             bool: 무결성 검증 통과 여부 (True=정상, False=손상 감지)
         """
-        memory_path = Path(f"projects/{project_name}/chroma_db")
-        if not memory_path.exists():
-            return True
+        memory_path = Path(f"projects/{project_name}/memory")
 
-        # 1. 단순 잠금 및 공유 메모리 찌꺼기만 선별 삭제
-        # wal 파일은 삭제 시 데이터 유실 위험이 있으므로, 본체 파일 검사로 대체합니다.
-        lock_files = ["LOCK", "chroma.sqlite3-shm"]
-        for lock_name in lock_files:
-            f = memory_path / lock_name
-            if f.exists():
-                try:
-                    os.remove(f)
-                    self.ui.log(f"🧹 [System] 잔류 잠금 파일({lock_name})을 제거했습니다.")
-                except Exception as e:
-                    self.ui.log(f"⚠️ [System] {lock_name} 제거 실패: {e}")
+        # 1. sqlite-vec DB 파일 점검
+        vec_db = memory_path / "vec_memory.db"
+        if vec_db.exists() and vec_db.stat().st_size == 0:
+            self.ui.log(f"🚨 [Critical] 벡터 DB 파일({vec_db.name}) 손상 감지 (0KB).")
+            self.ui.log("👉 [해결] 파일 삭제 후 Stage 0을 재실행하십시오.")
+            return False
 
-        # 2. 데이터 오염(0KB) 및 본체 무결성 점검
-        # .sqlite3 본체나 .wal 파일 중 하나라도 0KB라면 인과율이 깨진 것으로 간주합니다.
-        all_db_files = list(memory_path.rglob("*.sqlite3*"))
-        for db_f in all_db_files:
-            if db_f.exists() and db_f.stat().st_size == 0:
-                self.ui.log(f"🚨 [Critical] 벡터 데이터 파일({db_f.name}) 손상 감지.")
-                self.ui.log("👉 [해결] 'Phase 0'를 실행하여 성경과 원고를 재이식하십시오.")
-                return False
+        # 2. 레거시 ChromaDB 잔류 잠금 파일 정리 (마이그레이션 호환)
+        chroma_path = Path(f"projects/{project_name}/chroma_db")
+        if chroma_path.exists():
+            for lock_name in ("LOCK", "chroma.sqlite3-shm"):
+                f = chroma_path / lock_name
+                if f.exists():
+                    try:
+                        os.remove(f)
+                        self.ui.log(f"🧹 [System] 레거시 잠금 파일({lock_name}) 제거")
+                    except Exception:
+                        pass
 
         self.ui.log("✅ [System] 벡터 DB 엔진 무결성 점검 완료.")
         return True
