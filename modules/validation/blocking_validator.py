@@ -704,7 +704,7 @@ class BlockingValidator:
         manuscript_length = len(manuscript)
 
         # 씬당 최대 허용 글자 수 (충분히 여유있게 설정)
-        max_chars_per_scene = 1500  # 6개 씬 = 9000자 상한
+        max_chars_per_scene = _threshold("scope.chars_per_scene", 1500)
         max_allowed_length = scene_count * max_chars_per_scene
 
         # 3. 범위 초과 판정
@@ -712,7 +712,7 @@ class BlockingValidator:
             overflow_ratio = manuscript_length / max_allowed_length
 
             # [V55.5] 1.2배 초과 시 REJECT (예: 6개 씬에 10800자 이상)
-            if overflow_ratio > 1.2:
+            if overflow_ratio > _threshold("scope.overflow_ratio", 1.2):
                 return {
                     "check": "scope_overflow",
                     "passed": False,
@@ -1110,7 +1110,7 @@ class BlockingValidator:
 
         # 씬 키워드별로 원고 분할 시도
         scene_analysis = []
-        min_scene_length = 300  # 씬당 최소 300자
+        min_scene_length = _threshold("scene.min_scene_length", 300)
 
         for scene_name, scene_desc in scene_breakdown.items():
             if isinstance(scene_desc, dict):  # [V70] dict 타입 방어
