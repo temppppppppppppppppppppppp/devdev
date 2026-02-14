@@ -1,14 +1,14 @@
 # Phase 4B Scope: 배치 계획 + 포함/제외 메서드 + 롤백 단위
 
 > 작성일: 2026-02-13
-> SSOT: (1) 코드베이스 (커밋 `1b3de64`), (2) `docs/step4_blueprint.md`
+> SSOT: (1) 코드베이스 (커밋 `1b3de64`), (2) Phase 4B 문서군(`docs/phase4b_*.md`)
 > 원칙: 동작 보존 + Facade 위임 기반 점진 추출
 
 ---
 
 ## 충돌 보고서
 
-| # | 문서 (step4_blueprint.md) | 코드 (SSOT) | 판정 |
+| # | 문서 (기존 설계 기준) | 코드 (SSOT) | 판정 |
 |---|--------------------------|------------|------|
 | C1 | "DB 위반 6건" (A-4 섹션) | **34건** / 7파일 (`main_a.py`:19, `project_manager.py`:5, `reverse_expander.py`:6, `reflexion_manager.py`:2, `stage4_orchestrator.py`:1, `lore_manager.py`:1, `blueprint_memory.py`:1) | 코드 우선 — 34건이 정확 |
 | C2 | "7종 re-export" (C 섹션 #3) | **6종** (5 service + 1 DB) | 코드 우선 — 에이전트 어댑터 4B 이월로 6종 |

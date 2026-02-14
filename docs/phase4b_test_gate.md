@@ -1,7 +1,7 @@
 # Phase 4B Test Gate: 배치별 테스트 게이트 + 실행 명령
 
 > 작성일: 2026-02-13
-> SSOT: (1) 코드베이스 (커밋 `1b3de64`), (2) `docs/step4_blueprint.md`
+> SSOT: (1) 코드베이스 (커밋 `1b3de64`), (2) Phase 4B 문서군(`docs/phase4b_*.md`)
 > 테스트 환경: Windows 11 + Python 3.12 + pytest
 
 ---

@@ -1,7 +1,7 @@
 # Phase 4B Risk Register: 리스크 등록부
 
 > 작성일: 2026-02-13
-> SSOT: (1) 코드베이스 (커밋 `1b3de64`), (2) `docs/step4_blueprint.md`
+> SSOT: (1) 코드베이스 (커밋 `1b3de64`), (2) Phase 4B 문서군(`docs/phase4b_*.md`)
 > 심각도 기준: CRITICAL(시스템 불능) > HIGH(기능 장애) > MEDIUM(품질 저하) > LOW(불편)
 
 ---

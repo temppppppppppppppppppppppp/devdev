@@ -1,7 +1,7 @@
 # Phase 4B Compatibility Matrix: 구↔신 경로 매핑 + 시그니처 규칙
 
 > 작성일: 2026-02-13
-> SSOT: (1) 코드베이스 (커밋 `1b3de64`), (2) `docs/step4_blueprint.md`
+> SSOT: (1) 코드베이스 (커밋 `1b3de64`), (2) Phase 4B 문서군(`docs/phase4b_*.md`)
 > 원칙: **호출자 무변경** — stage2/stage4 오케스트레이터의 `self.app.xxx()` 호출 경로 100% 보존
 
 ---
