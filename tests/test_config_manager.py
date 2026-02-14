@@ -1,11 +1,16 @@
-"""[Phase 5-B-1] ConfigManager settings loader 단위 테스트
+"""[Phase 5-B] ConfigManager settings loader 단위 테스트
 
-검증 대상:
+검증 대상 (5-B-1):
 - validation.yaml 로드 성공 / 파싱 실패 방어
 - 점(.) 구분 키 탐색 (get_guard_threshold, get_validation_policy)
 - 누락 키 fallback / 타입 불일치 방어
 - 캐시 동작 (cache + invalidate + force_reload)
 - feature_flags 조회 / 기존 API 회귀
+
+검증 대상 (5-B-2a):
+- _threshold() 모듈 헬퍼를 통한 blocking/scoring 임계값 override 경로
+- YAML 없는 경우 기존 하드코드 값 유지
+- YAML 값 있는 경우 override 적용
 """
 
 from pathlib import Path
@@ -162,3 +167,81 @@ def test_missing_feature_flag_default(tmp_path, monkeypatch):
     cm = ConfigManager()
     assert cm.get_feature_flag("nonexistent", default=True) is True
     assert cm.get_feature_flag("nonexistent") is False
+
+
+# ══════════════════════════════════════════════════════════════
+# [Phase 5-B-2a] _threshold() 모듈 헬퍼 통합 테스트
+# ══════════════════════════════════════════════════════════════
+
+
+def test_blocking_threshold_no_yaml_uses_default(tmp_path, monkeypatch):
+    """YAML 없을 때 blocking _threshold()가 기존 하드코드값 반환"""
+    monkeypatch.chdir(tmp_path)
+    # _threshold 캐시 초기화
+    import modules.validation.blocking_validator as bv
+
+    if hasattr(bv._threshold, "_cfg"):
+        del bv._threshold._cfg
+
+    from modules.core.constants import ManuscriptLimits
+
+    result = bv._threshold("manuscript.min_length", ManuscriptLimits.MIN_LENGTH)
+    assert result == 4000
+
+
+def test_blocking_threshold_yaml_override(tmp_path, monkeypatch):
+    """YAML 값이 있으면 override 적용"""
+    monkeypatch.chdir(tmp_path)
+    _write_validation_yaml(tmp_path, "manuscript:\n  min_length: 3000\n")
+
+    import modules.validation.blocking_validator as bv
+
+    if hasattr(bv._threshold, "_cfg"):
+        del bv._threshold._cfg
+
+    result = bv._threshold("manuscript.min_length", 4000)
+    assert result == 3000
+
+
+def test_scoring_threshold_no_yaml_uses_default(tmp_path, monkeypatch):
+    """YAML 없을 때 scoring _threshold()가 기존 하드코드값 반환"""
+    monkeypatch.chdir(tmp_path)
+
+    import modules.validation.scoring_validator as sv
+
+    if hasattr(sv._threshold, "_cfg"):
+        del sv._threshold._cfg
+
+    result = sv._threshold("scoring.default_pass_threshold", 70)
+    assert result == 70
+
+
+def test_scoring_threshold_yaml_override(tmp_path, monkeypatch):
+    """YAML로 scoring 임계값 override"""
+    monkeypatch.chdir(tmp_path)
+    _write_validation_yaml(
+        tmp_path,
+        "scoring:\n  default_pass_threshold: 65\n  genre_thresholds:\n    wuxia: 60\n",
+    )
+
+    import modules.validation.scoring_validator as sv
+
+    if hasattr(sv._threshold, "_cfg"):
+        del sv._threshold._cfg
+
+    assert sv._threshold("scoring.default_pass_threshold", 70) == 65
+    assert sv._threshold("scoring.genre_thresholds.wuxia", 70) == 60
+
+
+def test_threshold_type_mismatch_uses_default(tmp_path, monkeypatch):
+    """YAML 타입 불일치 시 기존값 fallback"""
+    monkeypatch.chdir(tmp_path)
+    _write_validation_yaml(tmp_path, 'scene:\n  min_count: "four"\n')
+
+    import modules.validation.blocking_validator as bv
+
+    if hasattr(bv._threshold, "_cfg"):
+        del bv._threshold._cfg
+
+    result = bv._threshold("scene.min_count", 4)
+    assert result == 4  # str이므로 int default로 fallback
