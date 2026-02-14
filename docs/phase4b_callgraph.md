@@ -1,7 +1,7 @@
 # Phase 4B Call Graph: 메서드 수준 호출 그래프 + 부수효과
 
 > 작성일: 2026-02-13
-> SSOT: (1) 코드베이스 (커밋 `1b3de64`), (2) `docs/step4_blueprint.md`
+> SSOT: (1) 코드베이스 (커밋 `1b3de64`), (2) Phase 4B 문서군(`docs/phase4b_*.md`)
 > 표기법: `→` 호출, `[SE]` 부수효과, `[DB]` DB 위반, `[IO]` 파일 I/O, `[LLM]` API 호출
 
 ---
