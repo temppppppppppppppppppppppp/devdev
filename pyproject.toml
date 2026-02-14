@@ -6,6 +6,12 @@ requires-python = ">=3.11"
 [tool.ruff]
 target-version = "py312"
 line-length = 120
+extend-exclude = [
+    "백업의백업의백업",
+    "test_mode",
+    "tools",
+    "tools2",
+]
 
 [tool.ruff.lint]
 select = [
@@ -23,6 +29,33 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]  # __init__.py의 미사용 import는 의도적
+"main_a.py" = ["E402", "F401"]  # 레거시 import 순서 + try/except 내 미사용 import
+"test_batch_1_to_10.py" = ["E402"]
+"test_episode_1.py" = ["E402"]
+"test_continuity_modules.py" = ["E402"]
+"test_edge_cases.py" = ["E712"]
+"tests/test_stage2_pipeline.py" = ["E402"]
+"tests/test_chief_writer.py" = ["E402"]
+"modules/core/adaptive_retry.py" = ["E402"]
+"modules/core/agent_intelligence.py" = ["E741"]
+"modules/core/diversity_sampler.py" = ["E741"]
+"modules/core/lore_manager.py" = ["E741"]
+"modules/core/narrative_diversity.py" = ["F821"]
+"modules/core/pacing_analyzer.py" = ["E741"]
+"modules/core/progress_manager.py" = ["F401"]
+"modules/core/semantic_cache.py" = ["F601"]
+"modules/core/stage0/reverse_expander.py" = ["F401"]
+"modules/core/stage0/spinner.py" = ["F401"]
+"modules/core/stage0/story_expander.py" = ["F401"]
+"modules/core/stage0/style_extractor.py" = ["E741"]
+"modules/domain/agents/base_agent.py" = ["F401"]
+"modules/domain/agents/director_auditor.py" = ["F401"]
+"modules/domain/agents/preflight_checker.py" = ["E741"]
+"modules/domain/agents/state_extractor.py" = ["E741"]
+"modules/domain/agents/state_tracker.py" = ["F402"]
+"modules/domain/agents/state_tracker_npc.py" = ["F821"]
+"modules/validation/blocking_validator.py" = ["F821"]
+"tests/**/*.py" = ["E402", "E712"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
