@@ -1218,6 +1218,119 @@ class ChiefWriter(BaseAgent):
         )
 
     # =========================================================================
+    # [Phase 3-5B] 패치 모드 — 원본 보존 + 피드백 지적사항만 수정
+    # =========================================================================
+
+    def patch_with_feedback(
+        self,
+        ep_num: int,
+        blueprint: dict,
+        prev_manuscript: str,
+        hud_report: str,
+        arc_doc: str,
+        master_bible: dict,
+        style_guide: str,
+        original_manuscript: str,
+        director_feedback: str,
+        previous_attempt: dict,
+        attempt_number: int,
+        # 이하 generate_ensemble과 동일
+        current_inventory: list[str] = None,
+        current_martial_arts: list[str] = None,
+        dead_npcs: list[str] = None,
+        item_acquisition_timeline: str = "",
+        reference_anchor_prompt: str = "",
+        mandatory_context: str = "",
+        anti_trope_prompt: str = "",
+        justification_prompt: str = "",
+        reflexion_prompt: str = "",
+        genre_name: str = "무협",
+        npc_equipment_summary: str = "",
+        intro_dna: str = "CYNICAL",
+        purism_prompt: str = "",
+        state_tracker=None,
+        prev_manuscripts_text: str = "",
+        world_state_summary: str = "",
+        chain_link_section: str = "",
+    ) -> list[dict]:
+        """[Phase 3-5B] 원본 원고를 보존하며 피드백 지적사항만 수정. 3후보 반환.
+
+        패치 전용 프롬프트(PATCH_MODE_PROMPT)를 로드하여 원본 원고 + Director
+        피드백을 director_feedback 섹션으로 포맷한 뒤, generate_ensemble()을
+        호출하여 3후보를 생성한다.
+
+        실패 시 빈 리스트 반환 → 호출측에서 full rewrite 폴백.
+        """
+        try:
+            from modules.core.prompt_loader import PromptLoader
+
+            _patch_template = PromptLoader().load("chief_writer", "PATCH_MODE_PROMPT")
+        except Exception:
+            _patch_template = None
+
+        # 패치 프롬프트 포맷
+        if _patch_template:
+            _patch_section = _patch_template.format(
+                feedback_text=director_feedback,
+                original_manuscript=original_manuscript[:30000],
+            )
+        else:
+            # YAML 로드 실패 시 인라인 폴백
+            _patch_section = (
+                f"[패치 모드: 원본 보존 + 지적사항만 수정]\n\n"
+                f"## Director 피드백\n{director_feedback}\n\n"
+                f"## 원본 원고\n{original_manuscript[:30000]}\n\n"
+                f"전면 재작성하지 마세요. 지적된 부분만 고치세요."
+            )
+
+        enhanced_feedback = f"""
+[🔧 {attempt_number}차 수정 - 패치 모드: 원본 보존 + 지적사항만 수정]
+
+{_patch_section}
+
+⚠️ 원본 원고의 전체 구조, 문체, 장점을 보존하면서 피드백 지적사항만 수정하세요.
+⚠️ 수정하지 않는 부분은 원문을 그대로 유지하세요.
+"""
+
+        failure_constraints = ""
+        if previous_attempt.get("action_items"):
+            items = previous_attempt.get("action_items", [])
+            failure_constraints = "이전 REJECT 사유:\n" + "\n".join([f"- {item}" for item in items])
+
+        try:
+            return self.generate_ensemble(
+                ep_num=ep_num,
+                blueprint=blueprint,
+                prev_manuscript=prev_manuscript,
+                hud_report=hud_report,
+                arc_doc=arc_doc,
+                master_bible=master_bible,
+                style_guide=style_guide,
+                director_feedback=enhanced_feedback,
+                failure_constraints=failure_constraints,
+                current_inventory=current_inventory,
+                current_martial_arts=current_martial_arts,
+                dead_npcs=dead_npcs,
+                item_acquisition_timeline=item_acquisition_timeline,
+                reference_anchor_prompt=reference_anchor_prompt,
+                mandatory_context=mandatory_context,
+                anti_trope_prompt=anti_trope_prompt,
+                justification_prompt=justification_prompt,
+                reflexion_prompt=reflexion_prompt,
+                genre_name=genre_name,
+                npc_equipment_summary=npc_equipment_summary,
+                intro_dna=intro_dna,
+                purism_prompt=purism_prompt,
+                state_tracker=state_tracker,
+                prev_manuscripts_text=prev_manuscripts_text,
+                world_state_summary=world_state_summary,
+                chain_link_section=chain_link_section,
+            )
+        except Exception as e:
+            logging.warning(f"[Phase 3-5B] patch_with_feedback 실패, 빈 리스트 반환: {e}")
+            return []
+
+    # =========================================================================
     # [V60.81] Writer 핵심 기능 통합 - Self-Critique & Quality Assurance
     # =========================================================================
 
