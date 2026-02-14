@@ -100,8 +100,8 @@ class TestInitStateTrackerIfNeeded:
         # Should NOT import StateTracker
         app_mock.current_project.db.load_anchor.assert_not_called()
 
-    def test_creates_when_none(self, orch, app_mock):
-        """state_tracker가 None이면 초기화"""
+    def test_creates_when_none_stub(self, orch, app_mock):
+        """state_tracker가 None이면 초기화 (stub 호출 확인)"""
         app_mock.state_tracker = None
         with patch("modules.core.stage3_orchestrator.Stage3Orchestrator._init_state_tracker_if_needed") as mock_init:
             mock_init(orch)  # Just verifying it can be called
