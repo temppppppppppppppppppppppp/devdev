@@ -28,15 +28,30 @@ class Stage2Orchestrator:
     """
     [V64.P3] SovereignApp의 Stage 2 Arc 오케스트레이션 로직 캡슐화
 
-    패턴: self.app = SovereignApp 인스턴스
+    [Phase 4C-3] self.ctx = Stage2Context DI 컨텍스트
     """
 
-    def __init__(self, app) -> None:
+    def __init__(self, app, *, context=None) -> None:
         """
         Args:
-            app: SovereignApp 인스턴스 (모든 속성 접근용)
+            app: SovereignApp 인스턴스 (레거시 호환)
+            context: Stage2Context DI 컨텍스트 (미주입 시 자동 빌드)
         """
         self.app = app
+        self._ctx = context  # [Phase 4C-3] DI 컨텍스트
+
+    @property
+    def ctx(self):
+        """[Phase 4C-3] DI 컨텍스트 (미주입 시 app에서 자동 빌드)"""
+        if self._ctx is None:
+            from modules.core.stage2_context import Stage2Context
+
+            self._ctx = Stage2Context.from_app(self.app)
+        return self._ctx
+
+    @ctx.setter
+    def ctx(self, value):
+        self._ctx = value
 
     # ═══════════════════════════════════════════════════════════════════════
     # 메인 파이프라인
@@ -76,19 +91,19 @@ class Stage2Orchestrator:
                 pass
 
         ### [0124 핵심] 욕망 엔진 가동 로고 및 로그 출력
-        self.app.ui.log("🎯 [Stage 2] 0124 매니페스토: 욕망 엔진 및 인과율 용접 공정 기동...")
+        self.ctx.ui.log("🎯 [Stage 2] 0124 매니페스토: 욕망 엔진 및 인과율 용접 공정 기동...")
 
         # 1. 기초 데이터 확보 및 무결성 점검
-        if not self.app.current_project.master_bible:
-            self.app.current_project.master_bible = self.app.current_project.db.load_anchor("bible")
-        if not self.app.current_project.volumes:
-            self.app.current_project.volumes = self.app.current_project.db.load_anchor("volumes")
+        if not self.ctx.current_project.master_bible:
+            self.ctx.current_project.master_bible = self.ctx.current_project.db.load_anchor("bible")
+        if not self.ctx.current_project.volumes:
+            self.ctx.current_project.volumes = self.ctx.current_project.db.load_anchor("volumes")
 
-        bible_data = self.app.current_project.master_bible
+        bible_data = self.ctx.current_project.master_bible
         # [V41 Patch] Stage 1 스킵 시 빈 volumes 안전 처리
-        volumes_strategy = self.app.current_project.volumes or []
+        volumes_strategy = self.ctx.current_project.volumes or []
         if not volumes_strategy:
-            self.app.ui.log("⚠️ [Notice] Volume 전략이 없습니다. 기본값으로 Arc 설계를 진행합니다.")
+            self.ctx.ui.log("⚠️ [Notice] Volume 전략이 없습니다. 기본값으로 Arc 설계를 진행합니다.")
         bible_root = bible_data.get("MasterBible", bible_data)
         arcs_source = bible_root.get("plot_roadmap", [])
 
@@ -96,19 +111,19 @@ class Stage2Orchestrator:
         # [V61.2 Fix] 장르별 HUD 탐색으로 변경
         protagonist_name = None
         try:
-            genre = self.app.selected_genre.get("type", "") if self.app.selected_genre else ""
+            genre = self.ctx.selected_genre.get("type", "") if self.ctx.selected_genre else ""
             protagonist_name = HUDKeys.get_protagonist_name(bible_root, genre)
             if protagonist_name and protagonist_name != "주인공":
-                self.app.ui.log(f"🔒 [V42] 주인공 이름 락: {protagonist_name}")
+                self.ctx.ui.log(f"🔒 [V42] 주인공 이름 락: {protagonist_name}")
         except Exception as e:
-            self.app.ui.log(f"⚠️ [V42] 주인공 이름 추출 실패: {e}")
+            self.ctx.ui.log(f"⚠️ [V42] 주인공 이름 추출 실패: {e}")
 
         ### [V38 패치] 안전한 북극성 추출
         project_data = bible_root.get("ProjectData", {})
         meta_info = project_data.get("MetaInfo", {}) if isinstance(project_data, dict) else {}
         grand_obj = meta_info.get("grand_objective", "천하제일") if isinstance(meta_info, dict) else "천하제일"
 
-        all_refined_arcs = self.app.current_project.db.load_anchor("arcs") or []
+        all_refined_arcs = self.ctx.current_project.db.load_anchor("arcs") or []
         done_count = len(all_refined_arcs)
         total_count = len(arcs_source)
 
@@ -116,130 +131,129 @@ class Stage2Orchestrator:
         # [V62.5] 증분 업데이트: 기존 StateTracker가 있으면 재사용, 새 Arc만 추가
         existing_tracker_arcs = getattr(self.app, "_state_tracker_loaded_arcs", 0)
         if (
-            not hasattr(self.app, "state_tracker")
-            or self.app.state_tracker is None
+            self.ctx.state_tracker is None
             or existing_tracker_arcs == 0
             or existing_tracker_arcs > len(all_refined_arcs)
         ):  # [V62.5] Arc 삭제 감지 → 리셋
-            self.app.state_tracker = StateTracker(
-                preset_registry=self.app.preset_registry, llm_client=self.app.sys.api_client
+            self.ctx.state_tracker = StateTracker(
+                preset_registry=self.ctx.preset_registry, llm_client=self.ctx.sys.api_client
             )
             existing_tracker_arcs = 0
             # [V63.4 P0] DB에서 금융 레지스트리 복원 (투자물)
-            _saved_fin = self.app.current_project.load_v20_anchor("financial_registry", default=None)
+            _saved_fin = self.ctx.current_project.load_v20_anchor("financial_registry", default=None)
             if _saved_fin:
-                self.app.state_tracker.import_financial_registry(_saved_fin)
+                self.ctx.state_tracker.import_financial_registry(_saved_fin)
 
         new_arcs_to_load = all_refined_arcs[existing_tracker_arcs:]
-        _genre_for_tracker = self.app.selected_genre.get("type", "") if self.app.selected_genre else ""
+        _genre_for_tracker = self.ctx.selected_genre.get("type", "") if self.ctx.selected_genre else ""
         for prev_arc in new_arcs_to_load:
-            self.app.state_tracker.extract_npc_deaths_from_arc(prev_arc)
-            self.app.state_tracker.extract_skill_acquisitions_from_arc(prev_arc)
-            self.app.state_tracker.extract_npc_info_from_arc(
+            self.ctx.state_tracker.extract_npc_deaths_from_arc(prev_arc)
+            self.ctx.state_tracker.extract_skill_acquisitions_from_arc(prev_arc)
+            self.ctx.state_tracker.extract_npc_info_from_arc(
                 prev_arc, genre=_genre_for_tracker
             )  # [V60.95] NPC 무장/수준 정보 [V66.2] F-1 장르 가드
-            self.app.state_tracker.extract_resolved_plots_from_arc(prev_arc)  # [V62.7] 완결된 플롯
+            self.ctx.state_tracker.extract_resolved_plots_from_arc(prev_arc)  # [V62.7] 완결된 플롯
             # [V66.1] F-1: 시간선 마커 추출
             try:
-                self.app.state_tracker.extract_time_markers_from_arc(prev_arc)
+                self.ctx.state_tracker.extract_time_markers_from_arc(prev_arc)
             except Exception as e:
                 logging.warning(f"[V66.1] 시간선 추출 실패 (무시): {e}")
             # [V66.1] F-8: NPC 신체 변화 추출
             try:
-                self.app.state_tracker.extract_permanent_injuries_from_arc(prev_arc)
+                self.ctx.state_tracker.extract_permanent_injuries_from_arc(prev_arc)
             except Exception as e:
                 logging.warning(f"[V66.1] 신체 변화 추출 실패 (무시): {e}")
             # [V66.1] 동행자 변경 추출
             try:
-                self.app.state_tracker.update_companions_from_arc(prev_arc)
+                self.ctx.state_tracker.update_companions_from_arc(prev_arc)
             except Exception as e:
                 logging.warning(f"[V66.1] 동행자 추출 실패 (무시): {e}")
             # [V66.1] 약속/맹세 추출
             try:
-                self.app.state_tracker.extract_commitments_from_arc(prev_arc)
+                self.ctx.state_tracker.extract_commitments_from_arc(prev_arc)
             except Exception as e:
                 logging.warning(f"[V66.1] 약속 추출 실패 (무시): {e}")
             # [V66.1] 주인공 감정 추출
             try:
-                self.app.state_tracker.extract_protagonist_emotion_from_arc(prev_arc)
+                self.ctx.state_tracker.extract_protagonist_emotion_from_arc(prev_arc)
             except Exception as e:
                 logging.warning(f"[V66.1] 감정 추출 실패 (무시): {e}")
             # [V66.2] H-1~H-5: 재시작 시 V66 확장 데이터 복원
             try:
-                self.app.state_tracker.extract_item_states_from_arc(prev_arc)
+                self.ctx.state_tracker.extract_item_states_from_arc(prev_arc)
             except (KeyError, ValueError, TypeError) as e:
                 logging.warning(f"[V66.3] Init load 복원 실패 (major_items): {e}")
             try:
-                self.app.state_tracker.extract_entity_destructions_from_arc(prev_arc)
+                self.ctx.state_tracker.extract_entity_destructions_from_arc(prev_arc)
             except (KeyError, ValueError, TypeError) as e:
                 logging.warning(f"[V66.3] Init load 복원 실패 (entity_destructions): {e}")
             try:
-                self.app.state_tracker.extract_npc_personality_from_arc(prev_arc)
+                self.ctx.state_tracker.extract_npc_personality_from_arc(prev_arc)
             except (KeyError, ValueError, TypeError) as e:
                 logging.warning(f"[V66.3] Init load 복원 실패 (npc_personality): {e}")
             try:
-                self.app.state_tracker.extract_npc_npc_relationships_from_arc(prev_arc)
+                self.ctx.state_tracker.extract_npc_npc_relationships_from_arc(prev_arc)
             except (KeyError, ValueError, TypeError) as e:
                 logging.warning(f"[V66.3] Init load 복원 실패 (npc_npc_relationships): {e}")
             try:
-                self.app.state_tracker.extract_npc_dialogue_styles_from_arc(prev_arc)
+                self.ctx.state_tracker.extract_npc_dialogue_styles_from_arc(prev_arc)
             except (KeyError, ValueError, TypeError) as e:
                 logging.warning(f"[V66.3] Init load 복원 실패 (dialogue_profiles): {e}")
             # [V66.2] D-1,2,3: 관계/부상/이동 추출 연결
             try:
-                self.app.state_tracker.extract_relationship_changes_from_arc(prev_arc)
+                self.ctx.state_tracker.extract_relationship_changes_from_arc(prev_arc)
             except Exception as e:
                 logging.warning(f"[V66.2] 관계 변화 추출 실패 (무시): {e}")
             try:
-                self.app.state_tracker.extract_npc_injuries_from_arc(prev_arc)
+                self.ctx.state_tracker.extract_npc_injuries_from_arc(prev_arc)
             except Exception as e:
                 logging.warning(f"[V66.2] NPC 부상 추출 실패 (무시): {e}")
             try:
-                self.app.state_tracker.extract_npc_movements_from_arc(prev_arc)
+                self.ctx.state_tracker.extract_npc_movements_from_arc(prev_arc)
             except Exception as e:
                 logging.warning(f"[V66.2] NPC 이동 추출 실패 (무시): {e}")
             # [V63.1] 투자물: 금융 이벤트 추출
             if _genre_for_tracker == "investment":
-                self.app.state_tracker.extract_financial_events_from_arc(prev_arc)
-        self.app._state_tracker_loaded_arcs = len(all_refined_arcs)
+                self.ctx.state_tracker.extract_financial_events_from_arc(prev_arc)
+        self.ctx.state_tracker_loaded_arcs = len(all_refined_arcs)
 
         # [V63.4 P0] 금융 레지스트리 DB 영구 저장 (투자물)
-        if _genre_for_tracker == "investment" and self.app.state_tracker.financial_number_registry:
-            self.app.current_project.save_v20_anchor(
-                "financial_registry", self.app.state_tracker.export_financial_registry()
+        if _genre_for_tracker == "investment" and self.ctx.state_tracker.financial_number_registry:
+            self.ctx.current_project.save_v20_anchor(
+                "financial_registry", self.ctx.state_tracker.export_financial_registry()
             )
 
-        if self.app.state_tracker.npc_registry:
-            dead_count = sum(1 for info in self.app.state_tracker.npc_registry.values() if info.get("status") == "dead")
-            total_npcs = len(self.app.state_tracker.npc_registry)
+        if self.ctx.state_tracker.npc_registry:
+            dead_count = sum(1 for info in self.ctx.state_tracker.npc_registry.values() if info.get("status") == "dead")
+            total_npcs = len(self.ctx.state_tracker.npc_registry)
             loaded_msg = f"(신규 {len(new_arcs_to_load)}개)" if new_arcs_to_load else "(캐시 재사용)"
-            self.app.ui.log(
+            self.ctx.ui.log(
                 f"      👤 [V62.5] StateTracker: NPC {total_npcs}명 로드 (사망: {dead_count}명) {loaded_msg}"
             )
 
         # [V40.1 Smart Skip] 기존 원고가 있다면 해당 Arc까지 자동 건너뛰기
-        existing_ms_max_ep = self.app._get_max_episode_from_manuscripts()
+        existing_ms_max_ep = self.ctx.get_max_episode_from_manuscripts()
         if existing_ms_max_ep > 0:
-            skip_arc_no = self.app._calculate_arc_from_episode(existing_ms_max_ep)
+            skip_arc_no = self.ctx.calculate_arc_from_episode(existing_ms_max_ep)
             if skip_arc_no <= done_count:
                 pass
             elif skip_arc_no > done_count:
-                self.app.ui.log(f"📂 [Manuscript Detected] 기존 원고 {existing_ms_max_ep}화까지 발견")
-                self.app.ui.log(
+                self.ctx.ui.log(f"📂 [Manuscript Detected] 기존 원고 {existing_ms_max_ep}화까지 발견")
+                self.ctx.ui.log(
                     f"⚠️  [Warning] Arc {skip_arc_no}까지 필요하지만 Arc {done_count}까지만 DB에 존재합니다."
                 )
-                self.app.ui.log(f"💡 [Info] Arc {done_count + 1}부터 설계를 시작합니다. (원고와 Arc 동기화 필요)")
+                self.ctx.ui.log(f"💡 [Info] Arc {done_count + 1}부터 설계를 시작합니다. (원고와 Arc 동기화 필요)")
 
         if done_count >= total_count:
-            self.app.ui.log("✅ 모든 아크 설계가 이미 완료되었습니다.")
+            self.ctx.ui.log("✅ 모든 아크 설계가 이미 완료되었습니다.")
             return
 
         ### [UI 세이프티 가드 복구] 사용자 경험 및 인과율 안정성 확보
-        self.app.ui.log(f"📊 현재 설계 완료: {done_count} / {total_count} 아크")
-        self.app.ui.log("💡 Tip: 인과율 정밀 용접을 위해 1회 10개(2개 배치) 이내 진행을 권장합니다.")
+        self.ctx.ui.log(f"📊 현재 설계 완료: {done_count} / {total_count} 아크")
+        self.ctx.ui.log("💡 Tip: 인과율 정밀 용접을 위해 1회 10개(2개 배치) 이내 진행을 권장합니다.")
 
         default_limit = min(done_count + 5, total_count)
-        target_limit = self.app._get_int_input(
+        target_limit = self.ctx.get_int_input(
             f"👉 몇 번 아크까지 설계하시겠습니까? (현재 {done_count + 1} ~ 최대 {total_count}): ",
             default=default_limit,
             min_val=done_count + 1,
@@ -251,12 +265,12 @@ class Stage2Orchestrator:
         full_roadmap_str = json.dumps(arcs_source, ensure_ascii=False)
 
         # [V49.4] Pre-Generation Constraint DB 초기화
-        constraint_db = ConstraintDB(self.app.current_project)
-        self.app.ui.log(f"🔒 [V49.4] ConstraintDB 초기화 완료 (기존 Arc: {len(constraint_db.arc_states)}개)")
+        constraint_db = ConstraintDB(self.ctx.current_project)
+        self.ctx.ui.log(f"🔒 [V49.4] ConstraintDB 초기화 완료 (기존 Arc: {len(constraint_db.arc_states)}개)")
 
         # [V62.5] extract_cumulative_state 배치 캐시
-        self.app._cumulative_state_cache = None
-        self.app._cumulative_state_cache_key = 0
+        self.ctx.cumulative_state_cache = None
+        self.ctx.cumulative_state_cache_key = 0
 
         # 2. 배치(Batch) 처리 루프 시작
         for batch_start in range(done_count, target_limit, 5):
@@ -265,12 +279,12 @@ class Stage2Orchestrator:
 
             # [V61.2] 배치 전체를 스피너로 감싸기
             with StageSpinner(2, f"Batch {batch_start + 1}~{batch_end} 준비 및 농축"):
-                self.app.ui.log(f"📦 [Batch] {batch_start + 1}~{batch_end}번 구간 욕망 수혈 공정 가동...")
+                self.ctx.ui.log(f"📦 [Batch] {batch_start + 1}~{batch_end}번 구간 욕망 수혈 공정 가동...")
 
                 # [V60.10] 수혈 맥락 준비 - StateExtractor 활용
-                last_refined_context = self.app._generate_arc_context_v60(all_refined_arcs, batch_start + 1)
+                last_refined_context = self.ctx.generate_arc_context_v60(all_refined_arcs, batch_start + 1)
                 if all_refined_arcs:
-                    self.app.ui.log(f"      🧠 [V60.10] StateExtractor: {len(all_refined_arcs)}개 Arc 상태 추출 완료")
+                    self.ctx.ui.log(f"      🧠 [V60.10] StateExtractor: {len(all_refined_arcs)}개 Arc 상태 추출 완료")
 
                 # A. [병렬 농축 단계]
                 async def throttled_enrich(idx):
@@ -285,7 +299,7 @@ class Stage2Orchestrator:
                             if idx < total_count - 1
                             else {"title": "최종 블록"}
                         )
-                        return await self.app.agents["analyst"].enrich_raw_block_async(
+                        return await self.ctx.agents["analyst"].enrich_raw_block_async(
                             curr_b, prev_b, next_b_safe, [], transfused_history=last_refined_context
                         )
 
@@ -297,14 +311,14 @@ class Stage2Orchestrator:
             failed_indices = []
             for idx, item in enumerate(enriched_batch):
                 if isinstance(item, Exception):
-                    self.app.ui.log(f"⚠️ [Enrich] 병렬 농축 실패 (idx={batch_start + idx}): {item}")
-                    self.app._audit_event(
+                    self.ctx.ui.log(f"⚠️ [Enrich] 병렬 농축 실패 (idx={batch_start + idx}): {item}")
+                    self.ctx.audit_event(
                         "enrich_error", "batch enrich failed", {"error": str(item), "arc_idx": batch_start + idx}
                     )
                     failed_indices.append(batch_start + idx)
                     continue
                 if not isinstance(item, dict):
-                    self.app.ui.log(f"⚠️ [Enrich] 잘못된 데이터 타입 (idx={batch_start + idx}): {type(item)}")
+                    self.ctx.ui.log(f"⚠️ [Enrich] 잘못된 데이터 타입 (idx={batch_start + idx}): {type(item)}")
                     failed_indices.append(batch_start + idx)
                     continue
                 sanitized_batch.append(item)
@@ -313,7 +327,7 @@ class Stage2Orchestrator:
 
             # [V40.1 Critical Fix] 복구 시도
             if failed_indices and len(enriched_batch) < (batch_end - batch_start):
-                self.app.ui.log(f"🔄 [Recovery] {len(failed_indices)}개 항목 순차 재시도 중...")
+                self.ctx.ui.log(f"🔄 [Recovery] {len(failed_indices)}개 항목 순차 재시도 중...")
                 recovery_map = {}
 
                 for failed_idx in failed_indices[: RecoveryLimits.MAX_PARALLEL_RECOVERY]:
@@ -328,14 +342,14 @@ class Stage2Orchestrator:
                             if failed_idx < total_count - 1
                             else {"title": "최종 블록"}
                         )
-                        recovered_item = await self.app.agents["analyst"].enrich_raw_block_async(
+                        recovered_item = await self.ctx.agents["analyst"].enrich_raw_block_async(
                             curr_b, prev_b, next_b_safe, [], transfused_history=last_refined_context
                         )
                         if isinstance(recovered_item, dict):
                             recovery_map[failed_idx] = recovered_item
-                            self.app.ui.log(f"✅ [Recovery] idx={failed_idx} 복구 성공")
+                            self.ctx.ui.log(f"✅ [Recovery] idx={failed_idx} 복구 성공")
                     except Exception as retry_err:
-                        self.app.ui.log(f"🚨 [Recovery] idx={failed_idx} 복구 실패: {retry_err}")
+                        self.ctx.ui.log(f"🚨 [Recovery] idx={failed_idx} 복구 실패: {retry_err}")
 
                 # [V43 Fix] 원래 위치에 삽입하여 순서 보장
                 if recovery_map:
@@ -351,12 +365,12 @@ class Stage2Orchestrator:
                         if idx in original_batch_data:
                             enriched_batch.append(original_batch_data[idx])
                         else:
-                            self.app.ui.log(f"⚠️ [Recovery] idx={idx} 데이터 누락 - 해당 Arc 스킵")
-                            self.app._audit_event("data_missing", "arc data not recovered", {"arc_idx": idx})
+                            self.ctx.ui.log(f"⚠️ [Recovery] idx={idx} 데이터 누락 - 해당 Arc 스킵")
+                            self.ctx.audit_event("data_missing", "arc data not recovered", {"arc_idx": idx})
 
             if not enriched_batch:
-                self.app.ui.log("❌ [Critical] 농축 결과가 비어 있습니다. 공정을 중단합니다.")
-                self.app._audit_event("enrich_error", "empty batch after sanitize and recovery")
+                self.ctx.ui.log("❌ [Critical] 농축 결과가 비어 있습니다. 공정을 중단합니다.")
+                self.ctx.audit_event("enrich_error", "empty batch after sanitize and recovery")
                 return
 
             ### [B. 사후 용접 및 고유 명사 앵커링]
@@ -365,16 +379,16 @@ class Stage2Orchestrator:
                     arc_a = enriched_batch[i]
                     arc_b = enriched_batch[i + 1]
                     try:
-                        stitch_res = self.app.agents["analyst"].stitch_joints(
+                        stitch_res = self.ctx.agents["analyst"].stitch_joints(
                             arc_a.get("joint_docs", {}),
                             arc_b.get("joint_docs", {}),
                             arc_b.get("content", {}).get("context", ""),
                         )
                     except Exception as stitch_err:
-                        self.app.ui.log(
+                        self.ctx.ui.log(
                             f"⚠️ [Analyst] Arc {batch_start + i + 1}-{batch_start + i + 2} 용접 실패: {stitch_err}"
                         )
-                        self.app._audit_event(
+                        self.ctx.audit_event(
                             "analyst_error",
                             "stitch_joints failed",
                             {"arc_pair": f"{batch_start + i + 1}-{batch_start + i + 2}", "error": str(stitch_err)},
@@ -388,13 +402,13 @@ class Stage2Orchestrator:
                             )
                         if stitch_res.get("entity_anchors"):
                             try:
-                                self.app.sys.lore.update_v20_assets({"Temporary_Anchors": stitch_res["entity_anchors"]})
-                                self.app.ui.log(
+                                self.ctx.sys.lore.update_v20_assets({"Temporary_Anchors": stitch_res["entity_anchors"]})
+                                self.ctx.ui.log(
                                     f"      ⚓ Arc {batch_start + i + 1}-{batch_start + i + 2} 고유 명사 앵커링 완료."
                                 )
                             except Exception as lore_err:
-                                self.app.ui.log(f"⚠️ [Lore] 앵커링 실패: {lore_err}")
-                        self.app.ui.log(f"   🧶 Arc {batch_start + i + 1}-{batch_start + i + 2} 인과율 용접 완료.")
+                                self.ctx.ui.log(f"⚠️ [Lore] 앵커링 실패: {lore_err}")
+                        self.ctx.ui.log(f"   🧶 Arc {batch_start + i + 1}-{batch_start + i + 2} 인과율 용접 완료.")
 
             # C. [순차 설계 단계]
             current_ep_start = 1 if not all_refined_arcs else all_refined_arcs[-1].get("ep_end", 0) + 1
@@ -413,10 +427,10 @@ class Stage2Orchestrator:
 
                 ### [0124 핵심 1] Analyst: 결핍 리포트 생성 (순수 Python, 즉시 완료)
                 try:
-                    lack_report = self.app.agents["analyst"].get_lack_report(self.app.sys.hud.pro_root)
+                    lack_report = self.ctx.agents["analyst"].get_lack_report(self.ctx.sys.hud.pro_root)
                 except Exception as lack_err:
-                    self.app.ui.log(f"⚠️ [Analyst] 결핍 리포트 생성 실패: {lack_err}")
-                    self.app._audit_event(
+                    self.ctx.ui.log(f"⚠️ [Analyst] 결핍 리포트 생성 실패: {lack_err}")
+                    self.ctx.audit_event(
                         "analyst_error", "get_lack_report failed", {"arc_no": global_arc_no, "error": str(lack_err)}
                     )
                     lack_report = {"martial_deficit": "분석 실패", "status": "error"}
@@ -429,14 +443,14 @@ class Stage2Orchestrator:
                 def _compute_arc_drive() -> dict:
                     """Weaver 욕망 드라이브 생성 (LLM)"""
                     try:
-                        return self.app.agents["weaver"].generate_arc_drive(
+                        return self.ctx.agents["weaver"].generate_arc_drive(
                             current_arc_dna=arcs_source[batch_start + idx],
                             analyst_lack_report=lack_report,
                             grand_objective=grand_obj,
                         )
                     except Exception as weaver_err:
-                        self.app.ui.log(f"⚠️ [Weaver] 욕망 드라이브 생성 실패: {weaver_err}")
-                        self.app._audit_event(
+                        self.ctx.ui.log(f"⚠️ [Weaver] 욕망 드라이브 생성 실패: {weaver_err}")
+                        self.ctx.audit_event(
                             "weaver_error",
                             "generate_arc_drive failed",
                             {"arc_no": global_arc_no, "error": str(weaver_err)},
@@ -447,16 +461,16 @@ class Stage2Orchestrator:
                     """Preflight 분석 (LLM) — 결과를 attempt 루프에서 재사용"""
                     _pf_injection = ""
                     _pf_result = None
-                    if "preflight" in self.app.agents and all_refined_arcs:
+                    if "preflight" in self.ctx.agents and all_refined_arcs:
                         try:
                             _resolved_plots = ""
-                            if hasattr(self.app, "state_tracker"):
-                                _resolved_plots = self.app.state_tracker.get_resolved_plots_summary()
-                            _pf_result = self.app.agents["preflight"].analyze(
+                            if self.ctx.state_tracker:
+                                _resolved_plots = self.ctx.state_tracker.get_resolved_plots_summary()
+                            _pf_result = self.ctx.agents["preflight"].analyze(
                                 all_refined_arcs, resolved_plots_summary=_resolved_plots
                             )
                             if _pf_result:
-                                _pf_injection = self.app.agents["preflight"].generate_analyst_injection(_pf_result)
+                                _pf_injection = self.ctx.agents["preflight"].generate_analyst_injection(_pf_result)
                         except Exception as pf_err:
                             logging.info(f"⚠️ [Preflight] 스킵: {str(pf_err)[:50]}")
                     return _pf_injection, _pf_result
@@ -479,53 +493,51 @@ class Stage2Orchestrator:
                 # [V49.4] Pre-Generation Constraint 생성
                 constraint_block = constraint_db.generate_constraint_block(global_arc_no)
                 if constraint_block:
-                    self.app.ui.log(f"      🔒 [V49.4] Arc {global_arc_no} 제약 조건 주입됨")
+                    self.ctx.ui.log(f"      🔒 [V49.4] Arc {global_arc_no} 제약 조건 주입됨")
 
                 # [V60.11] ConstraintCompiler로 구조화된 체크리스트 생성
-                if hasattr(self.app, "constraint_compiler") and all_refined_arcs:
+                if self.ctx.constraint_compiler and all_refined_arcs:
                     try:
                         state_result = None
-                        if "state_extractor" in self.app.agents:
+                        if "state_extractor" in self.ctx.agents:
                             try:
                                 arc_count = len(all_refined_arcs)
                                 if (
-                                    self.app._cumulative_state_cache is not None
-                                    and self.app._cumulative_state_cache_key == arc_count
+                                    self.ctx.cumulative_state_cache is not None
+                                    and self.ctx.cumulative_state_cache_key == arc_count
                                 ):
-                                    state_result = self.app._cumulative_state_cache
+                                    state_result = self.ctx.cumulative_state_cache
                                 else:
-                                    state_result = self.app.agents["state_extractor"].extract_cumulative_state(
+                                    state_result = self.ctx.agents["state_extractor"].extract_cumulative_state(
                                         all_refined_arcs
                                     )
-                                    self.app._cumulative_state_cache = state_result
-                                    self.app._cumulative_state_cache_key = arc_count
+                                    self.ctx.cumulative_state_cache = state_result
+                                    self.ctx.cumulative_state_cache_key = arc_count
                             except (
                                 Exception
                             ) as e:  # [V64.P4] CRITICAL: state extraction failure → NPC validation disabled
-                                self.app.ui.log(
+                                self.ctx.ui.log(
                                     f"      ⚠️ [V64.P4] extract_cumulative_state 실패 (NPC 검증 약화): {str(e)[:80]}"
                                 )
-                                self.app._audit_event("critical_state_extraction_failed", str(e)[:200])
+                                self.ctx.audit_event("critical_state_extraction_failed", str(e)[:200])
 
                         _resolved = (
-                            getattr(self.app.state_tracker, "resolved_plots", [])
-                            if hasattr(self.app, "state_tracker")
-                            else []
+                            getattr(self.ctx.state_tracker, "resolved_plots", []) if self.ctx.state_tracker else []
                         )
-                        compiled_constraints = self.app.constraint_compiler.compile(
+                        compiled_constraints = self.ctx.constraint_compiler.compile(
                             all_refined_arcs, state_result, resolved_plots=_resolved
                         )
                         constraint_block = compiled_constraints + "\n\n" + (constraint_block or "")
-                        self.app.ui.log("      📋 [V60.11] ConstraintCompiler 체크리스트 생성 완료")
+                        self.ctx.ui.log("      📋 [V60.11] ConstraintCompiler 체크리스트 생성 완료")
 
                         # [V66] SemanticPlotGuard — 중앙 인스턴스 사용
                         if _resolved and len(_resolved) >= 2 and getattr(self.app, "semantic_plot_guard", None):
                             try:
-                                self.app.semantic_plot_guard.index_resolved_plots(_resolved)
+                                self.ctx.semantic_plot_guard.index_resolved_plots(_resolved)
                             except Exception as e:  # [V64.P4] SPG init — OPTIONAL
-                                self.app._audit_event("semantic_plot_guard_index_failed", str(e)[:100])
+                                self.ctx.audit_event("semantic_plot_guard_index_failed", str(e)[:100])
                     except Exception as cc_err:
-                        self.app._audit_event("v60_11_constraint_compiler_error", str(cc_err)[:100])
+                        self.ctx.audit_event("v60_11_constraint_compiler_error", str(cc_err)[:100])
 
                 # [V60.77] FourPhase-Director 대면 루프
                 attempt = 0
@@ -542,10 +554,10 @@ class Stage2Orchestrator:
 
                     if attempt == max_fourphase_attempts:
                         use_analyst_fallback = True
-                        self.app.ui.log(
+                        self.ctx.ui.log(
                             f"   ⏸️ [V60.77] FourPhase {max_fourphase_attempts}회 실패. Analyst 최후의 기회..."
                         )
-                        self.app._audit_event(
+                        self.ctx.audit_event(
                             "stage2_analyst_fallback",
                             f"FourPhase {max_fourphase_attempts} rejects, Analyst last chance",
                             {"arc_no": global_arc_no, "attempt": attempt},
@@ -554,19 +566,19 @@ class Stage2Orchestrator:
                         current_feedback = f"[🚨 최종 시도] FourPhase 3회 모두 Director REJECT. Analyst가 근본적 재설계 필요.\n{director_feedback_for_fourphase}"
 
                     # [V60.10] 이전 시도 REJECT 패턴 분석
-                    if attempt >= 1 and self.app.stage_rejection_history:
+                    if attempt >= 1 and self.ctx.stage_rejection_history:
                         arc_rejections = [
                             r
-                            for r in self.app.stage_rejection_history
+                            for r in self.ctx.stage_rejection_history
                             if r.get("stage") == 2 and r.get("arc_no") == global_arc_no
                         ]
                         if arc_rejections:
-                            pattern_analysis = self.app._analyze_rejection_pattern_v60(arc_rejections, global_arc_no)
+                            pattern_analysis = self.ctx.analyze_rejection_pattern_v60(arc_rejections, global_arc_no)
                             if pattern_analysis:
                                 current_feedback = pattern_analysis + "\n" + current_feedback
-                                self.app.ui.log(f"      🔍 [V60.10] REJECT 패턴 분석 주입 ({len(arc_rejections)}건)")
+                                self.ctx.ui.log(f"      🔍 [V60.10] REJECT 패턴 분석 주입 ({len(arc_rejections)}건)")
 
-                    self.app.ui.log(
+                    self.ctx.ui.log(
                         f"   {Emojis.BRAIN} [Arc {global_arc_no}] 전술 설계 중 (시도 {attempt + 1}/{RetryLimits.ANALYST_MAX_ATTEMPTS})..."
                     )
 
@@ -582,18 +594,18 @@ class Stage2Orchestrator:
                         enhanced_context = constraint_block + "\n" + last_refined_context
 
                     # [V60.25] Stage 2 Optimizer 주입
-                    if hasattr(self.app, "stage2_optimizer") and self.app.stage2_optimizer:
+                    if self.ctx.stage2_optimizer:
                         try:
-                            optimizer_prompt = self.app.stage2_optimizer.generate_optimized_prompt(
+                            optimizer_prompt = self.ctx.stage2_optimizer.generate_optimized_prompt(
                                 prev_arcs=all_refined_arcs,
                                 protagonist_name=protagonist_name or "주인공",
                                 include_examples=(attempt == 0),
                             )
                             enhanced_context = optimizer_prompt + "\n\n" + enhanced_context
                             if attempt == 0:
-                                self.app.ui.log("      ⚡ [V60.25] Stage 2 Optimizer 프롬프트 주입 완료")
+                                self.ctx.ui.log("      ⚡ [V60.25] Stage 2 Optimizer 프롬프트 주입 완료")
                         except Exception as opt_err:
-                            self.app._audit_event("v60_25_optimizer_error", str(opt_err)[:100])
+                            self.ctx.audit_event("v60_25_optimizer_error", str(opt_err)[:100])
 
                     # [V60.21] Focus Mode
                     is_retry = attempt > 0 and current_feedback
@@ -602,54 +614,54 @@ class Stage2Orchestrator:
                     v51_analyst_injection = ""
                     if V50_MODULES_AVAILABLE and not is_retry:
                         try:
-                            if self.app.quality_amplifier:
-                                analyst_constraints = self.app.quality_amplifier.generate_analyst_constraints(
+                            if self.ctx.quality_amplifier:
+                                analyst_constraints = self.ctx.quality_amplifier.generate_analyst_constraints(
                                     arc_num=global_arc_no, prev_arcs=all_refined_arcs
                                 )
                                 v51_analyst_injection += analyst_constraints + "\n\n"
 
-                            if self.app.agent_intelligence:
-                                intel_prompt = self.app.agent_intelligence.get_analyst_enhancement(
+                            if self.ctx.agent_intelligence:
+                                intel_prompt = self.ctx.agent_intelligence.get_analyst_enhancement(
                                     arc_num=global_arc_no, prev_arcs=all_refined_arcs
                                 )
                                 v51_analyst_injection += intel_prompt + "\n\n"
 
-                            if self.app.failure_learner:
-                                learned_constraints = self.app.failure_learner.generate_constraint_prompt(stage=2)
+                            if self.ctx.failure_learner:
+                                learned_constraints = self.ctx.failure_learner.generate_constraint_prompt(stage=2)
                                 if learned_constraints:
                                     v51_analyst_injection += learned_constraints
 
-                            if self.app.constitutional_checker:
-                                constitutional_prompt = self.app.constitutional_checker.get_full_injection(
+                            if self.ctx.constitutional_checker:
+                                constitutional_prompt = self.ctx.constitutional_checker.get_full_injection(
                                     stage=2, context={"prev_arcs": all_refined_arcs, "feedback": current_feedback}
                                 )
                                 v51_analyst_injection = constitutional_prompt + "\n\n" + v51_analyst_injection
 
                             if v51_analyst_injection:
                                 enhanced_context = v51_analyst_injection + "\n\n" + enhanced_context
-                                self.app.ui.log("      🧠 [V51+V55.2] Analyst 지능 향상 + Constitutional 주입 완료")
+                                self.ctx.ui.log("      🧠 [V51+V55.2] Analyst 지능 향상 + Constitutional 주입 완료")
                         except Exception as v51_err:
-                            self.app.ui.log(f"      ⚠️ [V51] Analyst 향상 실패: {v51_err}")
+                            self.ctx.ui.log(f"      ⚠️ [V51] Analyst 향상 실패: {v51_err}")
 
                     # [V60.21] Focus Mode: 재시도 시 컨텍스트 대폭 축소
                     if is_retry:
-                        minimal_prev_context = self.app._build_minimal_arc_context(
+                        minimal_prev_context = self.ctx.build_minimal_arc_context(
                             all_refined_arcs, protagonist_name or "주인공"
                         )
                         enhanced_context = f"{current_feedback}\n\n{minimal_prev_context}"
                         context_size = len(enhanced_context)
-                        self.app.ui.log(f"      📢 [V60.21] Focus Mode 활성화 - 컨텍스트 {context_size}자 (최소화)")
+                        self.ctx.ui.log(f"      📢 [V60.21] Focus Mode 활성화 - 컨텍스트 {context_size}자 (최소화)")
 
                     # [V60.9] Stage 3→2 역방향 피드백 주입
                     try:
-                        if self.app.stage_rejection_history:
+                        if self.ctx.stage_rejection_history:
                             arc_stage3_failures = [
                                 r
-                                for r in self.app.stage_rejection_history
+                                for r in self.ctx.stage_rejection_history
                                 if r.get("stage") == 3 and r.get("arc_no") == global_arc_no
                             ]
                             if len(arc_stage3_failures) >= 3:
-                                reverse_feedback_3to2 = self.app._generate_reverse_feedback_stage3_to_2(
+                                reverse_feedback_3to2 = self.ctx.generate_reverse_feedback_stage3_to_2(
                                     architect_failures=arc_stage3_failures, arc_no=global_arc_no
                                 )
                                 if reverse_feedback_3to2:
@@ -658,11 +670,11 @@ class Stage2Orchestrator:
                                     stage3_warning += "Arc 구조 자체에 문제가 있을 수 있습니다.\n\n"
                                     stage3_warning += f"[Blueprint 실패 패턴 분석]\n{reverse_feedback_3to2}\n"
                                     enhanced_context = stage3_warning + "\n" + enhanced_context
-                                    self.app.ui.log(
+                                    self.ctx.ui.log(
                                         f"      🔄 [V60.9] Stage 3→2 역방향 피드백 주입 ({len(arc_stage3_failures)}회 실패 기반)"
                                     )
                     except Exception as rf32_err:
-                        self.app._audit_event(
+                        self.ctx.audit_event(
                             "v60_9_stage3to2_error", "stage 3→2 reverse feedback failed", {"error": str(rf32_err)[:100]}
                         )
 
@@ -689,37 +701,35 @@ class Stage2Orchestrator:
                     # ─────────────────────────────────────────────────────────────
                     constraint_block = ""
                     entity_registry_for_director = None
-                    if hasattr(self.app, "constraint_compiler") and all_refined_arcs:
+                    if self.ctx.constraint_compiler and all_refined_arcs:
                         try:
                             logging.info("📋 [무기 #2] ConstraintCompiler 컴파일 중...")
                             state_result = None
-                            if "state_extractor" in self.app.agents:
+                            if "state_extractor" in self.ctx.agents:
                                 arc_count = len(all_refined_arcs)
                                 if (
-                                    self.app._cumulative_state_cache is not None
-                                    and self.app._cumulative_state_cache_key == arc_count
+                                    self.ctx.cumulative_state_cache is not None
+                                    and self.ctx.cumulative_state_cache_key == arc_count
                                 ):
-                                    state_result = self.app._cumulative_state_cache
+                                    state_result = self.ctx.cumulative_state_cache
                                 else:
-                                    state_result = self.app.agents["state_extractor"].extract_cumulative_state(
+                                    state_result = self.ctx.agents["state_extractor"].extract_cumulative_state(
                                         all_refined_arcs
                                     )
-                                    self.app._cumulative_state_cache = state_result
-                                    self.app._cumulative_state_cache_key = arc_count
+                                    self.ctx.cumulative_state_cache = state_result
+                                    self.ctx.cumulative_state_cache_key = arc_count
                                 entity_registry_for_director = (
                                     state_result.get("entity_registry") if state_result else None
                                 )
                                 if entity_registry_for_director:
-                                    entity_registry_for_director = self.app._fix_entity_registry_protagonist(
+                                    entity_registry_for_director = self.ctx.fix_entity_registry_protagonist(
                                         entity_registry_for_director, protagonist_name
                                     )
                                     logging.info("🏷️ [V61] Entity Registry 추출됨 (Director용)")
                             _resolved = (
-                                getattr(self.app.state_tracker, "resolved_plots", [])
-                                if hasattr(self.app, "state_tracker")
-                                else []
+                                getattr(self.ctx.state_tracker, "resolved_plots", []) if self.ctx.state_tracker else []
                             )
-                            constraint_block = self.app.constraint_compiler.compile(
+                            constraint_block = self.ctx.constraint_compiler.compile(
                                 all_refined_arcs, state_result, resolved_plots=_resolved
                             )
                             analyst_weapons["constraints"] = constraint_block
@@ -732,25 +742,25 @@ class Stage2Orchestrator:
                     # ─────────────────────────────────────────────────────────────
                     four_phase_passed = False
 
-                    if "four_phase" in self.app.agents and not use_analyst_fallback:
+                    if "four_phase" in self.ctx.agents and not use_analyst_fallback:
                         try:
-                            self.app.ui.log(f"      🎯 [V60.77] FourPhase-Director 대면 {attempt + 1}/3")
+                            self.ctx.ui.log(f"      🎯 [V60.77] FourPhase-Director 대면 {attempt + 1}/3")
                             with StageSpinner(2, f"Arc {global_arc_no}"):
                                 # [V63.3] Stage 2 벡터 검색
                                 _s2_vector_ctx = ""
                                 try:
-                                    if hasattr(self.app, "memory") and self.app.memory and current_ep_start > 1:
-                                        _s2_vector_ctx = self.app.memory.retrieve_high_res_context(
+                                    if self.ctx.memory and current_ep_start > 1:
+                                        _s2_vector_ctx = self.ctx.memory.retrieve_high_res_context(
                                             enriched_block.get("block_theme", ""), current_ep_start, n_results=2
                                         )
                                 except Exception as e:  # [V64.P4] OPTIONAL: vector search — non-blocking
-                                    self.app._audit_event("s2_vector_search_failed", str(e)[:100])
+                                    self.ctx.audit_event("s2_vector_search_failed", str(e)[:100])
                                 # [V65] PerfTimer: Arc 생성 측정
                                 try:
-                                    self.app.perf_timer.start(f"s2_arc_{global_arc_no}_generate")
+                                    self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_generate")
                                 except Exception:
                                     pass
-                                four_phase_arc, pipeline_result = self.app.agents["four_phase"].generate(
+                                four_phase_arc, pipeline_result = self.ctx.agents["four_phase"].generate(
                                     arc_no=global_arc_no,
                                     ep_start=current_ep_start,
                                     vol_strategy=current_vol_strategy.get("strategy_doc", ""),
@@ -761,11 +771,11 @@ class Stage2Orchestrator:
                                     protagonist_name=protagonist_name or "주인공",
                                     director_feedback=director_feedback_for_fourphase,
                                     entity_registry=entity_registry_for_director,
-                                    state_tracker=self.app.state_tracker,
+                                    state_tracker=self.ctx.state_tracker,
                                     vector_context=_s2_vector_ctx,
                                 )
                                 try:
-                                    self.app.perf_timer.stop(f"s2_arc_{global_arc_no}_generate")
+                                    self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_generate")
                                 except Exception:
                                     pass
 
@@ -786,7 +796,7 @@ class Stage2Orchestrator:
                                 # [V70] Director REJECT 시 롤백을 위한 StateTracker 핵심 레지스트리 스냅샷
                                 import copy as _copy
 
-                                _st = self.app.state_tracker
+                                _st = self.ctx.state_tracker
                                 _st_snapshot = {
                                     "npc_registry": _copy.deepcopy(_st.npc_registry),
                                     "resolved_plots": _copy.deepcopy(_st.resolved_plots),
@@ -809,43 +819,43 @@ class Stage2Orchestrator:
                                 }
 
                                 # [V60.94] NPC 사망/무공 습득 추출 및 StateTracker 업데이트
-                                dead_npcs = self.app.state_tracker.extract_npc_deaths_from_arc(refined_arc)
-                                learned_skills = self.app.state_tracker.extract_skill_acquisitions_from_arc(refined_arc)
-                                npc_info = self.app.state_tracker.extract_npc_info_from_arc(
+                                dead_npcs = self.ctx.state_tracker.extract_npc_deaths_from_arc(refined_arc)
+                                learned_skills = self.ctx.state_tracker.extract_skill_acquisitions_from_arc(refined_arc)
+                                npc_info = self.ctx.state_tracker.extract_npc_info_from_arc(
                                     refined_arc, genre=_genre_for_tracker
                                 )  # [V66.2] F-1 장르 가드
-                                self.app.state_tracker.extract_resolved_plots_from_arc(refined_arc)
+                                self.ctx.state_tracker.extract_resolved_plots_from_arc(refined_arc)
                                 # [V66] 조직/장소 파괴, NPC 성격, NPC-NPC 관계 추출
-                                self.app.state_tracker.extract_entity_destructions_from_arc(refined_arc)
-                                self.app.state_tracker.extract_npc_personality_from_arc(refined_arc)
-                                self.app.state_tracker.extract_npc_npc_relationships_from_arc(refined_arc)
+                                self.ctx.state_tracker.extract_entity_destructions_from_arc(refined_arc)
+                                self.ctx.state_tracker.extract_npc_personality_from_arc(refined_arc)
+                                self.ctx.state_tracker.extract_npc_npc_relationships_from_arc(refined_arc)
                                 # [V66] 아이템 상태 추출
-                                self.app.state_tracker.extract_item_states_from_arc(refined_arc)
+                                self.ctx.state_tracker.extract_item_states_from_arc(refined_arc)
                                 # [V66] 플롯 서스펜션 추적
-                                self.app.state_tracker.update_plot_mentions_from_arc(refined_arc)
-                                _suspended = self.app.state_tracker.check_suspended_plots(global_arc_no)
+                                self.ctx.state_tracker.update_plot_mentions_from_arc(refined_arc)
+                                _suspended = self.ctx.state_tracker.check_suspended_plots(global_arc_no)
                                 if _suspended:
                                     for sw in _suspended:
                                         logging.info(f"⚠️ [V66] {sw['message']}")
                                 # [V66] 장르별 레지스트리 업데이트
                                 try:
-                                    self.app.state_tracker._populate_genre_registries_from_arc(refined_arc)
+                                    self.ctx.state_tracker._populate_genre_registries_from_arc(refined_arc)
                                 except Exception:
                                     pass
                                 if _genre_for_tracker == "investment":
-                                    self.app.state_tracker.extract_financial_events_from_arc(refined_arc)
-                                    self.app.current_project.save_v20_anchor(
-                                        "financial_registry", self.app.state_tracker.export_financial_registry()
+                                    self.ctx.state_tracker.extract_financial_events_from_arc(refined_arc)
+                                    self.ctx.current_project.save_v20_anchor(
+                                        "financial_registry", self.ctx.state_tracker.export_financial_registry()
                                     )
 
                                 # [V66] SemanticPlotGuard 인덱싱
                                 if (
                                     getattr(self.app, "semantic_plot_guard", None)
-                                    and self.app.state_tracker.resolved_plots
+                                    and self.ctx.state_tracker.resolved_plots
                                 ):
                                     try:
-                                        indexed = self.app.semantic_plot_guard.index_resolved_plots(
-                                            self.app.state_tracker.resolved_plots
+                                        indexed = self.ctx.semantic_plot_guard.index_resolved_plots(
+                                            self.ctx.state_tracker.resolved_plots
                                         )
                                         if indexed > 0:
                                             logging.info(f"📊 [V66] SemanticPlotGuard: {indexed}개 플롯 인덱싱")
@@ -854,60 +864,60 @@ class Stage2Orchestrator:
 
                                 # [V66] NPC 대화 스타일 추출
                                 try:
-                                    self.app.state_tracker.extract_npc_dialogue_styles_from_arc(refined_arc)
+                                    self.ctx.state_tracker.extract_npc_dialogue_styles_from_arc(refined_arc)
                                 except Exception:
                                     pass  # [V66] OPTIONAL: 대화 스타일 추출 실패 비차단
 
                                 # [V66.1] F-1: 시간선 마커 추출
                                 try:
-                                    self.app.state_tracker.extract_time_markers_from_arc(refined_arc)
+                                    self.ctx.state_tracker.extract_time_markers_from_arc(refined_arc)
                                 except Exception as e:
                                     logging.warning(f"[V66.1] 시간선 추출 실패 (무시): {e}")
 
                                 # [V66.1] F-8: NPC 신체 변화 추출
                                 try:
-                                    self.app.state_tracker.extract_permanent_injuries_from_arc(refined_arc)
+                                    self.ctx.state_tracker.extract_permanent_injuries_from_arc(refined_arc)
                                 except Exception as e:
                                     logging.warning(f"[V66.1] 신체 변화 추출 실패 (무시): {e}")
 
                                 # [V66.1] 동행자 변경 추출
                                 try:
-                                    self.app.state_tracker.update_companions_from_arc(refined_arc)
+                                    self.ctx.state_tracker.update_companions_from_arc(refined_arc)
                                 except Exception as e:
                                     logging.warning(f"[V66.1] 동행자 추출 실패 (무시): {e}")
 
                                 # [V66.1] 약속/맹세 추출
                                 try:
-                                    self.app.state_tracker.extract_commitments_from_arc(refined_arc)
+                                    self.ctx.state_tracker.extract_commitments_from_arc(refined_arc)
                                 except Exception as e:
                                     logging.warning(f"[V66.1] 약속 추출 실패 (무시): {e}")
 
                                 # [V66.1] 주인공 감정 추출
                                 try:
-                                    self.app.state_tracker.extract_protagonist_emotion_from_arc(refined_arc)
+                                    self.ctx.state_tracker.extract_protagonist_emotion_from_arc(refined_arc)
                                 except Exception as e:
                                     logging.warning(f"[V66.1] 감정 추출 실패 (무시): {e}")
 
                                 # [V66.2] D-1,2,3: 관계/부상/이동 추출 연결
                                 try:
-                                    self.app.state_tracker.extract_relationship_changes_from_arc(refined_arc)
+                                    self.ctx.state_tracker.extract_relationship_changes_from_arc(refined_arc)
                                 except Exception as e:
                                     logging.warning(f"[V66.2] 관계 변화 추출 실패 (무시): {e}")
                                 try:
-                                    self.app.state_tracker.extract_npc_injuries_from_arc(refined_arc)
+                                    self.ctx.state_tracker.extract_npc_injuries_from_arc(refined_arc)
                                 except Exception as e:
                                     logging.warning(f"[V66.2] NPC 부상 추출 실패 (무시): {e}")
                                 try:
-                                    self.app.state_tracker.extract_npc_movements_from_arc(refined_arc)
+                                    self.ctx.state_tracker.extract_npc_movements_from_arc(refined_arc)
                                 except Exception as e:
                                     logging.warning(f"[V66.2] NPC 이동 추출 실패 (무시): {e}")
 
                                 # [V66] 멀티-Arc 요약 생성 및 저장
                                 try:
-                                    arc_summary = self.app.state_tracker.generate_arc_summary(
+                                    arc_summary = self.ctx.state_tracker.generate_arc_summary(
                                         global_arc_no, refined_arc
                                     )
-                                    self.app.current_project.save_v20_anchor(
+                                    self.ctx.current_project.save_v20_anchor(
                                         f"arc_summary_{global_arc_no}", arc_summary
                                     )
                                     logging.info(f"\U0001f4ca [V66] Arc {global_arc_no} 요약 저장 완료")
@@ -917,7 +927,7 @@ class Stage2Orchestrator:
                                 # [V69] 5 Arc마다 NPC 레지스트리 LLM 정리
                                 if global_arc_no > 0 and global_arc_no % 5 == 0:
                                     try:
-                                        removed = self.app.state_tracker.cleanup_npc_registry_with_llm(global_arc_no)
+                                        removed = self.ctx.state_tracker.cleanup_npc_registry_with_llm(global_arc_no)
                                         if removed:
                                             logging.info(
                                                 f"\U0001f9f9 [V69] NPC 레지스트리 정리: {len(removed)}개 오탐 제거 ({', '.join(removed[:5])})"
@@ -927,8 +937,8 @@ class Stage2Orchestrator:
 
                                 # [V61.3] 동적 장르 감지
                                 tactical_doc = refined_arc.get("tactical_doc", "")
-                                if tactical_doc and hasattr(self.app.state_tracker, "check_and_expand_genre"):
-                                    new_genre = self.app.state_tracker.check_and_expand_genre(tactical_doc)
+                                if tactical_doc and hasattr(self.ctx.state_tracker, "check_and_expand_genre"):
+                                    new_genre = self.ctx.state_tracker.check_and_expand_genre(tactical_doc)
                                     if new_genre:
                                         logging.info(f"- 🎭 새 장르 감지: {new_genre}")
 
@@ -951,14 +961,14 @@ class Stage2Orchestrator:
                                 director_feedback_for_fourphase = "FourPhase 내부 검증 실패. 구조적 문제 해결 필요."
                         except Exception as fp_err:
                             logging.warning(f"❌ [V60.77] FourPhase 오류: {str(fp_err)[:80]}")
-                            self.app._audit_event("four_phase_error", str(fp_err)[:100], {"arc_no": global_arc_no})
+                            self.ctx.audit_event("four_phase_error", str(fp_err)[:100], {"arc_no": global_arc_no})
                             director_feedback_for_fourphase = f"FourPhase 오류 발생: {str(fp_err)[:100]}"
 
                     # ─────────────────────────────────────────────────────────────
                     # [V60.77] FourPhase 실패 시 다음 대면으로
                     # ─────────────────────────────────────────────────────────────
                     if refined_arc is None and not use_analyst_fallback:
-                        self.app.ui.log(f"      🔄 [V60.77] FourPhase 실패 → Director 대면 {attempt + 2}/3 재시도")
+                        self.ctx.ui.log(f"      🔄 [V60.77] FourPhase 실패 → Director 대면 {attempt + 2}/3 재시도")
                         attempt += 1
                         continue
 
@@ -967,7 +977,7 @@ class Stage2Orchestrator:
                     # ─────────────────────────────────────────────────────────────
                     if refined_arc is None and use_analyst_fallback:
                         try:
-                            self.app.ui.log(f"      🆘 [V60.77] Analyst 최후의 기회! Arc {global_arc_no} 설계 시작...")
+                            self.ctx.ui.log(f"      🆘 [V60.77] Analyst 최후의 기회! Arc {global_arc_no} 설계 시작...")
 
                             enhanced_arc_context = enhanced_context
                             if preflight_injection:
@@ -981,7 +991,7 @@ class Stage2Orchestrator:
                             with rich_console.status(
                                 f"[bold cyan]🤖 Arc {global_arc_no} LLM 생성 중...[/]", spinner="dots"
                             ):
-                                refined_arc = self.app.agents["analyst"].plan_single_arc_v20(
+                                refined_arc = self.ctx.agents["analyst"].plan_single_arc_v20(
                                     arc_no=global_arc_no,
                                     vol_strategy=current_vol_strategy.get("strategy_doc", ""),
                                     prev_block=None,
@@ -1008,7 +1018,7 @@ class Stage2Orchestrator:
                                 )
                         except Exception as analyst_err:
                             logging.warning(f"❌ [Analyst] 에러: {str(analyst_err)[:100]}")
-                            self.app._audit_event(
+                            self.ctx.audit_event(
                                 "analyst_error",
                                 "plan_single_arc_v20 failed",
                                 {"arc_no": global_arc_no, "error": str(analyst_err)},
@@ -1023,15 +1033,10 @@ class Stage2Orchestrator:
                     # [무기 #3] DraftValidator - 정보 수집용
                     # ─────────────────────────────────────────────────────────────
                     python_advisory = []
-                    if (
-                        not four_phase_passed
-                        and refined_arc
-                        and hasattr(self.app, "arc_draft_validator")
-                        and self.app.arc_draft_validator
-                    ):
+                    if not four_phase_passed and refined_arc and self.ctx.arc_draft_validator:
                         try:
                             logging.info("🔬 [무기 #3] DraftValidator 사전 검증...")
-                            draft_result = self.app.arc_draft_validator.validate(
+                            draft_result = self.ctx.arc_draft_validator.validate(
                                 arc=refined_arc,
                                 prev_arcs=all_refined_arcs,
                                 state_tracker=getattr(self.app, "state_tracker", None),
@@ -1057,7 +1062,7 @@ class Stage2Orchestrator:
                     # ─────────────────────────────────────────────────────────────
                     if (
                         V50_MODULES_AVAILABLE
-                        and self.app.self_reflector
+                        and self.ctx.self_reflector
                         and refined_arc
                         and generation_method == "analyst"
                         and ReflectionTarget
@@ -1067,7 +1072,7 @@ class Stage2Orchestrator:
                             arc_str = json.dumps(refined_arc, ensure_ascii=False, indent=2)
                             context_str = f"Arc {global_arc_no} 설계. 피드백: {current_feedback or '없음'}"
 
-                            reflection_result = self.app.self_reflector.reflect_and_improve(
+                            reflection_result = self.ctx.self_reflector.reflect_and_improve(
                                 output=arc_str, context=context_str, target=ReflectionTarget.ANALYST, force=False
                             )
 
@@ -1088,11 +1093,11 @@ class Stage2Orchestrator:
                     # ─────────────────────────────────────────────────────────────
                     # [V60.36] Consensus 검증
                     # ─────────────────────────────────────────────────────────────
-                    if not four_phase_passed and refined_arc and "consensus" in self.app.agents:
+                    if not four_phase_passed and refined_arc and "consensus" in self.ctx.agents:
                         try:
                             logging.info("🗳️ [Consensus] 3-LLM 합의 검증 시작...")
                             with rich_console.status("[bold magenta]🗳️ Consensus 3-LLM 검증 중...[/]", spinner="dots"):
-                                consensus_verdict, consensus_result = self.app.agents[
+                                consensus_verdict, consensus_result = self.ctx.agents[
                                     "consensus"
                                 ].validate_with_consensus(
                                     arc=refined_arc,
@@ -1134,10 +1139,10 @@ class Stage2Orchestrator:
 
                     # [데이터 검증]
                     if not refined_arc or not isinstance(refined_arc, dict):
-                        self.app.ui.log(
+                        self.ctx.ui.log(
                             f"🚨 [Analyst Error] Arc {global_arc_no} 설계 결과가 유효하지 않음: {type(refined_arc)}"
                         )
-                        self.app._audit_event(
+                        self.ctx.audit_event(
                             "analyst_error",
                             "invalid response type",
                             {"arc_no": global_arc_no, "type": str(type(refined_arc))},
@@ -1147,35 +1152,35 @@ class Stage2Orchestrator:
                         continue
 
                     # 🧭 [Mapping Validation]
-                    refined_arc = self.app._validate_arc_mapping(
+                    refined_arc = self.ctx.validate_arc_mapping(
                         refined_arc, enriched_block, global_arc_no, current_ep_start
                     )
 
                     # ⚡ [V60.25] Auto-Corrector
-                    if hasattr(self.app, "stage2_optimizer") and self.app.stage2_optimizer:
+                    if self.ctx.stage2_optimizer:
                         try:
-                            refined_arc, corrections = self.app.stage2_optimizer.post_process_arc(
+                            refined_arc, corrections = self.ctx.stage2_optimizer.post_process_arc(
                                 arc=refined_arc, prev_arcs=all_refined_arcs
                             )
                             if corrections:
-                                self.app._audit_event(
+                                self.ctx.audit_event(
                                     "v60_25_auto_correct",
                                     "arc auto-corrected",
                                     {"arc_no": global_arc_no, "corrections": corrections[:5]},
                                 )
                         except Exception as ac_err:
-                            self.app._audit_event("v60_25_auto_correct_error", str(ac_err)[:100])
+                            self.ctx.audit_event("v60_25_auto_correct_error", str(ac_err)[:100])
 
                     # 🔒 [V49.4] Pre-Validation
                     suspected_duplicates = []
                     if not four_phase_passed:
                         pre_validation = constraint_db.validate_arc_design(refined_arc)
                         if not pre_validation["valid"]:
-                            self.app.ui.log("      🔍 [V60.76] 의심 아이템 감지 (Director LLM 재검증 예정)")
+                            self.ctx.ui.log("      🔍 [V60.76] 의심 아이템 감지 (Director LLM 재검증 예정)")
                             for v in pre_validation["violations"][:2]:
-                                self.app.ui.log(f"         {v}")
+                                self.ctx.ui.log(f"         {v}")
                             suspected_duplicates = pre_validation["violations"][:3]
-                            self.app._audit_event(
+                            self.ctx.audit_event(
                                 "constraint_suspected",
                                 "suspected duplicates for LLM review",
                                 {"arc_no": global_arc_no, "suspected": suspected_duplicates},
@@ -1183,13 +1188,13 @@ class Stage2Orchestrator:
 
                         if pre_validation.get("warnings"):
                             for w in pre_validation["warnings"][:2]:
-                                self.app.ui.log(f"      ⚠️ [V49.4 Warning] {w}")
+                                self.ctx.ui.log(f"      ⚠️ [V49.4 Warning] {w}")
 
                     # 🚨 [Stage2 Flow Guard]
                     flow_guard = self._stage2_flow_guard(refined_arc)
                     if flow_guard.get("status") == "REJECT":
-                        self.app.ui.log(f"   🚨 [Flow Guard] {flow_guard.get('reason')}")
-                        self.app._audit_event("flow_guard", flow_guard.get("reason"), {"arc_no": global_arc_no})
+                        self.ctx.ui.log(f"   🚨 [Flow Guard] {flow_guard.get('reason')}")
+                        self.ctx.audit_event("flow_guard", flow_guard.get("reason"), {"arc_no": global_arc_no})
                         current_feedback = flow_guard.get("feedback", "서사 폭주/정체 위험이 감지되었습니다.")
                         attempt += 1
                         continue
@@ -1198,8 +1203,8 @@ class Stage2Orchestrator:
                     if all_refined_arcs:
                         prev_tactical = all_refined_arcs[-1].get("tactical_doc", "")
                         if self._is_tactical_doc_duplicate(refined_arc.get("tactical_doc", ""), [prev_tactical]):
-                            self.app.ui.log("   🚨 [Duplicate Guard] 전술 설계가 직전 아크와 중복됩니다. 재생성합니다.")
-                            self.app._audit_event(
+                            self.ctx.ui.log("   🚨 [Duplicate Guard] 전술 설계가 직전 아크와 중복됩니다. 재생성합니다.")
+                            self.ctx.audit_event(
                                 "duplicate_guard",
                                 "arc tactical_doc duplicated",
                                 {"arc_no": global_arc_no, "prev_arc_no": all_refined_arcs[-1].get("arc_no")},
@@ -1213,15 +1218,15 @@ class Stage2Orchestrator:
 
                     # [안전성 패치] Director 호출 전 필수 데이터 검증
                     if not refined_arc or not isinstance(refined_arc, dict):
-                        self.app.ui.log("🚨 [Data Error] refined_arc가 유효하지 않습니다")
-                        self.app._audit_event("data_validation_error", "refined_arc invalid", {"arc_no": global_arc_no})
+                        self.ctx.ui.log("🚨 [Data Error] refined_arc가 유효하지 않습니다")
+                        self.ctx.audit_event("data_validation_error", "refined_arc invalid", {"arc_no": global_arc_no})
                         current_feedback = "설계 데이터 구조 오류. 전술 설계를 완전한 JSON으로 재작성하라."
                         attempt += 1
                         continue
 
                     if not enriched_block or not isinstance(enriched_block, dict):
-                        self.app.ui.log("🚨 [Data Error] enriched_block이 유효하지 않습니다")
-                        self.app._audit_event(
+                        self.ctx.ui.log("🚨 [Data Error] enriched_block이 유효하지 않습니다")
+                        self.ctx.audit_event(
                             "data_validation_error", "enriched_block invalid", {"arc_no": global_arc_no}
                         )
                         current_feedback = "농축 데이터 누락. 블록 정보를 포함하여 재설계하라."
@@ -1231,8 +1236,8 @@ class Stage2Orchestrator:
                     # ═══════════════════════════════════════════════════════════════
                     # [V60.56] Arc Draft 정보 수집
                     # ═══════════════════════════════════════════════════════════════
-                    if not four_phase_passed and hasattr(self.app, "arc_draft_validator"):
-                        draft_result = self.app.arc_draft_validator.validate(
+                    if not four_phase_passed and self.ctx.arc_draft_validator:
+                        draft_result = self.ctx.arc_draft_validator.validate(
                             arc=refined_arc,
                             prev_arcs=all_refined_arcs,
                             constraint_block=constraint_block or "",
@@ -1241,20 +1246,20 @@ class Stage2Orchestrator:
 
                         advisory_issues = draft_result.get("advisory_issues", [])
                         if advisory_issues:
-                            self.app.ui.log(
+                            self.ctx.ui.log(
                                 f"      📋 [V60.56 DraftValidator] Advisory {len(advisory_issues)}개 - LLM이 최종 판단"
                             )
                             for issue in advisory_issues[:3]:
-                                self.app.ui.log(f"         📝 {issue}")
+                                self.ctx.ui.log(f"         📝 {issue}")
 
                         if not draft_result["valid"]:
-                            self.app.ui.log(
+                            self.ctx.ui.log(
                                 f"      🚨 [V60.11 DraftValidator] 사전 검증 실패 (점수: {draft_result['score']})"
                             )
                             for issue in draft_result["critical_issues"][:3]:
-                                self.app.ui.log(f"         ❌ {issue}")
+                                self.ctx.ui.log(f"         ❌ {issue}")
 
-                            self.app._audit_event(
+                            self.ctx.audit_event(
                                 "draft_validation_reject",
                                 "draft validation failed",
                                 {
@@ -1271,20 +1276,20 @@ class Stage2Orchestrator:
                             if (
                                 not critical_only
                                 and major_only
-                                and hasattr(self.app, "arc_corrector")
-                                and self.app.use_arc_corrector
+                                and self.ctx.arc_corrector
+                                and self.ctx.use_arc_corrector
                             ):
-                                self.app.ui.log(
+                                self.ctx.ui.log(
                                     f"      🔧 [V60.42] CRITICAL 없음, MAJOR {len(major_only)}개 - ArcCorrector 부분 수정 시도"
                                 )
 
                                 try:
                                     can_correct, correctable_issues, uncorrectable_issues = (
-                                        self.app.arc_corrector.can_correct(major_only)
+                                        self.ctx.arc_corrector.can_correct(major_only)
                                     )
 
                                     if can_correct:
-                                        corrected_arc, correction_log = self.app.arc_corrector.correct(
+                                        corrected_arc, correction_log = self.ctx.arc_corrector.correct(
                                             arc=refined_arc, issues=major_only, prev_arcs=all_refined_arcs
                                         )
 
@@ -1292,14 +1297,14 @@ class Stage2Orchestrator:
                                             refined_arc = corrected_arc
                                             corrections_made = correction_log.get("corrections_made", [])
                                             corrections_failed = correction_log.get("corrections_failed", [])
-                                            self.app.ui.log(
+                                            self.ctx.ui.log(
                                                 f"      ✅ [V60.42] ArcCorrector 수정 완료 ({len(corrections_made)}개 수정)"
                                             )
                                             for fix in corrections_made[:3]:
                                                 fix_summary = fix.get("change_summary", fix.get("issue", "")[:50])
-                                                self.app.ui.log(f"         🔨 {fix_summary}")
+                                                self.ctx.ui.log(f"         🔨 {fix_summary}")
 
-                                            self.app._audit_event(
+                                            self.ctx.audit_event(
                                                 "arc_corrector_success",
                                                 "arc partially corrected",
                                                 {
@@ -1309,7 +1314,7 @@ class Stage2Orchestrator:
                                                 },
                                             )
 
-                                            revalidation = self.app.arc_draft_validator.validate(
+                                            revalidation = self.ctx.arc_draft_validator.validate(
                                                 arc=refined_arc,
                                                 prev_arcs=all_refined_arcs,
                                                 constraint_block=constraint_block or "",
@@ -1317,11 +1322,11 @@ class Stage2Orchestrator:
                                             )
 
                                             if revalidation["valid"]:
-                                                self.app.ui.log(
+                                                self.ctx.ui.log(
                                                     f"      ✅ [V60.42] 수정 후 재검증 통과 (점수: {revalidation['score']})"
                                                 )
                                             else:
-                                                self.app.ui.log("      ⚠️ [V60.42] 수정 후에도 검증 실패 - 재생성 필요")
+                                                self.ctx.ui.log("      ⚠️ [V60.42] 수정 후에도 검증 실패 - 재생성 필요")
                                                 issues_str = "\n".join(
                                                     [f"- {i}" for i in revalidation["critical_issues"][:3]]
                                                 )
@@ -1331,8 +1336,8 @@ class Stage2Orchestrator:
                                                 continue
                                         else:
                                             reason = correction_log.get("reason", "알 수 없음")
-                                            self.app.ui.log(f"      ⚠️ [V60.42] ArcCorrector 수정 실패: {reason}")
-                                            self.app._audit_event(
+                                            self.ctx.ui.log(f"      ⚠️ [V60.42] ArcCorrector 수정 실패: {reason}")
+                                            self.ctx.audit_event(
                                                 "arc_corrector_fail", reason, {"arc_no": global_arc_no}
                                             )
                                             issues_str = "\n".join(
@@ -1344,7 +1349,7 @@ class Stage2Orchestrator:
                                             continue
                                     else:
                                         uncorr_msgs = [i.get("message", "")[:30] for i in uncorrectable_issues[:2]]
-                                        self.app.ui.log(f"      ⚠️ [V60.42] 수정 불가: {', '.join(uncorr_msgs)}")
+                                        self.ctx.ui.log(f"      ⚠️ [V60.42] 수정 불가: {', '.join(uncorr_msgs)}")
                                         issues_str = "\n".join(
                                             [f"- {i.get('message', str(i))}" for i in major_only[:3]]
                                         )
@@ -1354,8 +1359,8 @@ class Stage2Orchestrator:
                                         continue
 
                                 except Exception as corr_err:
-                                    self.app.ui.log(f"      ⚠️ [V60.42] ArcCorrector 오류: {str(corr_err)[:50]}")
-                                    self.app._audit_event("arc_corrector_error", str(corr_err)[:100])
+                                    self.ctx.ui.log(f"      ⚠️ [V60.42] ArcCorrector 오류: {str(corr_err)[:50]}")
+                                    self.ctx.audit_event("arc_corrector_error", str(corr_err)[:100])
                                     issues_str = "\n".join([f"- {i}" for i in draft_result["critical_issues"][:5]])
                                     current_feedback = f"[V60.11 검증 실패 + Corrector 오류]\n{issues_str}"
                                     refined_arc = None
@@ -1373,18 +1378,18 @@ class Stage2Orchestrator:
                                 attempt += 1
                                 continue
                         else:
-                            self.app.ui.log(
+                            self.ctx.ui.log(
                                 f"      ✅ [V60.11 DraftValidator] 사전 검증 통과 (점수: {draft_result['score']})"
                             )
                             if draft_result["warnings"]:
                                 for w in draft_result["warnings"][:2]:
-                                    self.app.ui.log(f"         ⚠️ {w}")
+                                    self.ctx.ui.log(f"         ⚠️ {w}")
 
                     # ═══════════════════════════════════════════════════════════════
                     # [V49 NEW] Arc 수준 연속성 검증
                     # ═══════════════════════════════════════════════════════════════
-                    if not four_phase_passed and "continuity_inspector" in self.app.agents:
-                        self.app.ui.log(f"      🔍 [V49] Arc {global_arc_no} 연속성 검증 중...")
+                    if not four_phase_passed and "continuity_inspector" in self.ctx.agents:
+                        self.ctx.ui.log(f"      🔍 [V49] Arc {global_arc_no} 연속성 검증 중...")
 
                         refined_arc["joint_docs"] = enriched_block.get("joint_docs", {})
                         refined_arc["status_shadow"] = enriched_block.get("status_shadow", {})
@@ -1392,7 +1397,7 @@ class Stage2Orchestrator:
                         with rich_console.status(
                             f"[bold yellow]🔍 Arc {global_arc_no} 연속성 검증 중...[/]", spinner="dots"
                         ):
-                            continuity_result = self.app.agents["continuity_inspector"].inspect_arc(
+                            continuity_result = self.ctx.agents["continuity_inspector"].inspect_arc(
                                 current_arc=refined_arc,
                                 prev_arcs=all_refined_arcs,
                                 entity_registry=entity_registry_for_director,
@@ -1403,22 +1408,22 @@ class Stage2Orchestrator:
                             fix_instructions = continuity_result.get("fix_instructions", "")
                             violations = continuity_result.get("violations", [])
 
-                            self.app.ui.log(f"      🚨 [V49 REJECT] Arc 연속성 위반 감지 (심각도: {severity})")
+                            self.ctx.ui.log(f"      🚨 [V49 REJECT] Arc 연속성 위반 감지 (심각도: {severity})")
                             for v in violations[:3]:
-                                self.app.ui.log(
+                                self.ctx.ui.log(
                                     f"         - {v.get('type', 'unknown')}: {v.get('description', '')[:100]}"
                                 )
 
-                            self.app._audit_event(
+                            self.ctx.audit_event(
                                 "arc_continuity_reject",
                                 "continuity violation detected",
                                 {"arc_no": global_arc_no, "severity": severity, "violations_count": len(violations)},
                             )
 
                             # [V51.4] 실패 기록
-                            if V50_MODULES_AVAILABLE and self.app.failure_learner:
+                            if V50_MODULES_AVAILABLE and self.ctx.failure_learner:
                                 for v in violations[:3]:
-                                    self.app.failure_learner.record_failure(
+                                    self.ctx.failure_learner.record_failure(
                                         stage=2,
                                         episode=current_ep_start,
                                         arc=global_arc_no,
@@ -1427,9 +1432,9 @@ class Stage2Orchestrator:
                                     )
 
                             # [V60.2] PassRateMonitor
-                            if V50_MODULES_AVAILABLE and self.app.pass_rate_monitor:
+                            if V50_MODULES_AVAILABLE and self.ctx.pass_rate_monitor:
                                 try:
-                                    self.app.pass_rate_monitor.record_attempt(
+                                    self.ctx.pass_rate_monitor.record_attempt(
                                         stage=2,
                                         episode=global_arc_no,
                                         arc=global_arc_no,
@@ -1443,16 +1448,16 @@ class Stage2Orchestrator:
                                     pass  # PassRateMonitor failure is non-blocking
 
                             # [V60.25] Stage2Optimizer
-                            if hasattr(self.app, "stage2_optimizer") and self.app.stage2_optimizer:
+                            if self.ctx.stage2_optimizer:
                                 try:
                                     for v in violations[:3]:
-                                        self.app.stage2_optimizer.failure_memory.record_failure(
+                                        self.ctx.stage2_optimizer.failure_memory.record_failure(
                                             arc_no=global_arc_no,
                                             failure_type=v.get("type", "unknown"),
                                             details=v.get("description", "")[:200],
                                         )
                                 except Exception as e:
-                                    self.app.ui.log(f"      ⚠️ [V60.25] 실패 기록 오류 (무시): {str(e)[:50]}")
+                                    self.ctx.ui.log(f"      ⚠️ [V60.25] 실패 기록 오류 (무시): {str(e)[:50]}")
 
                             # [V49.6] 구체적 위반 내용을 피드백에 포함
                             violation_details = []
@@ -1496,20 +1501,20 @@ class Stage2Orchestrator:
                                     f"- 부상: {last_status.get('expected_injuries', '?')}"
                                 )
 
-                            structured_arc_feedback = self.app._generate_structured_arc_feedback(
+                            structured_arc_feedback = self.ctx.generate_structured_arc_feedback(
                                 continuity_result=continuity_result, prev_arcs=all_refined_arcs, arc_no=global_arc_no
                             )
 
-                            adaptive_intensity = self.app._get_adaptive_feedback_intensity(attempt, stage=2)
+                            adaptive_intensity = self.ctx.get_adaptive_feedback_intensity(attempt, stage=2)
                             intensity_guide = (
                                 f"\n\n[V60.9 재시도 가이드 ({attempt + 1}회차)]\n{adaptive_intensity['guidance']}"
                             )
 
-                            strong_kind_feedback = self.app._build_strong_kind_feedback(
+                            strong_kind_feedback = self.ctx.build_strong_kind_feedback(
                                 violations=violations, attempt=attempt, protagonist_name=protagonist_name or "주인공"
                             )
 
-                            focused_context = self.app._build_focused_context(
+                            focused_context = self.ctx.build_focused_context(
                                 violations=violations,
                                 prev_arcs=all_refined_arcs,
                                 protagonist_name=protagonist_name or "주인공",
@@ -1518,7 +1523,7 @@ class Stage2Orchestrator:
                             current_feedback = f"{strong_kind_feedback}\n\n{focused_context}"
 
                             feedback_size = len(current_feedback)
-                            self.app.ui.log(f"      📋 [V60.21] 집중 피드백 주입 ({feedback_size}자, 목표: <500자)")
+                            self.ctx.ui.log(f"      📋 [V60.21] 집중 피드백 주입 ({feedback_size}자, 목표: <500자)")
                             refined_arc = None
                             attempt += 1
                             continue
@@ -1527,25 +1532,25 @@ class Stage2Orchestrator:
                             if corrected_joint_docs:
                                 refined_arc["joint_docs"] = corrected_joint_docs
                                 enriched_block["joint_docs"] = corrected_joint_docs
-                                self.app.ui.log("      🔧 [V49.2] joint_docs 자동 수정 반영됨")
+                                self.ctx.ui.log("      🔧 [V49.2] joint_docs 자동 수정 반영됨")
 
                             corrected_state = continuity_result.get("corrected_state_constraints")
                             if corrected_state:
                                 refined_arc["state_constraints"] = corrected_state
-                                self.app.ui.log("      🔧 [V60.13] state_constraints 자동 수정 반영됨")
+                                self.ctx.ui.log("      🔧 [V60.13] state_constraints 자동 수정 반영됨")
 
                             warnings = continuity_result.get("warnings", [])
                             if warnings:
-                                self.app.ui.log(f"      ⚠️ [V49] Arc 연속성 경고 {len(warnings)}개 (PASS)")
+                                self.ctx.ui.log(f"      ⚠️ [V49] Arc 연속성 경고 {len(warnings)}개 (PASS)")
                             else:
-                                self.app.ui.log("      ✅ [V49] Arc 연속성 검증 통과")
+                                self.ctx.ui.log("      ✅ [V49] Arc 연속성 검증 통과")
 
-                            if hasattr(self.app, "stage2_optimizer") and self.app.stage2_optimizer:
+                            if self.ctx.stage2_optimizer:
                                 try:
-                                    self.app.stage2_optimizer.example_manager.add_successful_arc(
+                                    self.ctx.stage2_optimizer.example_manager.add_successful_arc(
                                         arc=refined_arc  # [V70] arc_no 불필요 kwarg 제거
                                     )
-                                    self.app.ui.log("      📚 [V60.25] 성공 Arc 예시 저장됨")
+                                    self.ctx.ui.log("      📚 [V60.25] 성공 Arc 예시 저장됨")
                                 except Exception as e:  # [V64.P4] OPTIONAL: success example storage
                                     logging.debug(f"[SILENT] success example storage: {e}")
                                     pass  # Stage2Optimizer example save failure is non-blocking
@@ -1556,9 +1561,9 @@ class Stage2Orchestrator:
                             tactical_text = refined_arc.get("tactical_doc", "")
                             if isinstance(tactical_text, dict):
                                 tactical_text = str(tactical_text)
-                            spg_warnings = self.app.semantic_plot_guard.check_new_arc(tactical_doc=tactical_text)
+                            spg_warnings = self.ctx.semantic_plot_guard.check_new_arc(tactical_doc=tactical_text)
                             if spg_warnings:
-                                spg_text = self.app.semantic_plot_guard.format_warnings(spg_warnings)
+                                spg_text = self.ctx.semantic_plot_guard.format_warnings(spg_warnings)
                                 logging.info(f"⚠️ [V66] {spg_text}")
                                 # Director 피드백에 추가
                                 if current_feedback:
@@ -1570,7 +1575,7 @@ class Stage2Orchestrator:
 
                     # [V65] PerfTimer: Director 대면 측정
                     try:
-                        self.app.perf_timer.start(f"s2_arc_{global_arc_no}_director")
+                        self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_director")
                     except Exception:
                         pass
 
@@ -1622,7 +1627,7 @@ class Stage2Orchestrator:
                     except Exception:
                         _story_context = ""
 
-                    audit = self.app.agents["director"].audit_strategic_plan(
+                    audit = self.ctx.agents["director"].audit_strategic_plan(
                         refined_arc,
                         _expanded_prev_context,
                         curr_block=enriched_block,
@@ -1632,7 +1637,7 @@ class Stage2Orchestrator:
                         story_context=_story_context,  # [V67.1]
                     )
                     try:
-                        self.app.perf_timer.stop(f"s2_arc_{global_arc_no}_director")
+                        self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_director")
                     except Exception:
                         pass
 
@@ -1648,15 +1653,15 @@ class Stage2Orchestrator:
                         is_quota_failure = all_default_50 or many_zeros
 
                         if is_quota_failure:
-                            self.app.ui.log(
+                            self.ctx.ui.log(
                                 f"      ⚠️ [V60.43] API 할당량 오류 감지 (score=0이 {zero_count}/{len(scores)}개)"
                             )
-                            self.app.ui.log("      ✅ [V60.43] DraftValidator + Consensus 통과로 PASS 오버라이드")
+                            self.ctx.ui.log("      ✅ [V60.43] DraftValidator + Consensus 통과로 PASS 오버라이드")
                             audit["decision"] = "PASS"
                             audit["v60_43_override"] = True
                             audit["original_decision"] = "REJECT"
                             audit["override_reason"] = "api_quota_exhausted_fallback"
-                            self.app._audit_event(
+                            self.ctx.audit_event(
                                 "v60_43_quota_override",
                                 "Arc accepted due to quota exhaustion",
                                 {"arc_no": global_arc_no, "scores": scores, "zero_count": zero_count},
@@ -1670,8 +1675,8 @@ class Stage2Orchestrator:
 
                         critical_missing = []
                         if not refined_arc.get("hybrid_composition"):
-                            self.app.ui.log(f"⚠️ [Arc {global_arc_no}] 패턴 구성(hybrid_composition) 누락 - 기본값 주입")
-                            self.app._audit_event(
+                            self.ctx.ui.log(f"⚠️ [Arc {global_arc_no}] 패턴 구성(hybrid_composition) 누락 - 기본값 주입")
+                            self.ctx.audit_event(
                                 "data_missing", "hybrid_composition missing", {"arc_no": global_arc_no}
                             )
                             refined_arc["hybrid_composition"] = {
@@ -1682,8 +1687,8 @@ class Stage2Orchestrator:
                             critical_missing.append("hybrid_composition")
 
                         if not refined_arc.get("joint_docs"):
-                            self.app.ui.log(f"⚠️ [Arc {global_arc_no}] joint_docs 누락 - 기본값 주입")
-                            self.app._audit_event("data_missing", "joint_docs missing", {"arc_no": global_arc_no})
+                            self.ctx.ui.log(f"⚠️ [Arc {global_arc_no}] joint_docs 누락 - 기본값 주입")
+                            self.ctx.audit_event("data_missing", "joint_docs missing", {"arc_no": global_arc_no})
                             refined_arc["joint_docs"] = {
                                 "final_location": "위치 미정",
                                 "physical_inventory": "물품 미정",
@@ -1711,13 +1716,13 @@ class Stage2Orchestrator:
                                         inherited = [item for item in prev_inventory if item not in consumed]
                                         inherited.extend(acquired)
                                         refined_arc["joint_docs"]["physical_inventory"] = inherited
-                                        self.app.ui.log(
+                                        self.ctx.ui.log(
                                             f"      🔄 [V49.6] physical_inventory 이전 Arc에서 계승: {inherited[:3]}{'...' if len(inherited) > 3 else ''}"
                                         )
 
                         if not refined_arc.get("status_shadow"):
-                            self.app.ui.log(f"⚠️ [Arc {global_arc_no}] status_shadow 누락 - 기본값 주입")
-                            self.app._audit_event("data_missing", "status_shadow missing", {"arc_no": global_arc_no})
+                            self.ctx.ui.log(f"⚠️ [Arc {global_arc_no}] status_shadow 누락 - 기본값 주입")
+                            self.ctx.audit_event("data_missing", "status_shadow missing", {"arc_no": global_arc_no})
                             refined_arc["status_shadow"] = {
                                 "internal_energy_loss": "0%",
                                 "expected_injuries": "없음",
@@ -1726,7 +1731,7 @@ class Stage2Orchestrator:
                             critical_missing.append("status_shadow")
 
                         if len(critical_missing) >= RecoveryLimits.CRITICAL_MISSING_THRESHOLD:
-                            self.app.ui.log(
+                            self.ctx.ui.log(
                                 f"🚨 [Arc {global_arc_no}] 핵심 데이터 과다 누락({len(critical_missing)}개)"
                             )
                             current_feedback = (
@@ -1736,7 +1741,7 @@ class Stage2Orchestrator:
                             attempt += 1
                             continue
 
-                        if not self.app._validate_arc_integrity(refined_arc):
+                        if not self.ctx.validate_arc_integrity(refined_arc):
                             current_feedback = (
                                 "필수 키가 누락된 전술 설계입니다. 형식을 완전한 JSON으로 다시 출력하십시오."
                             )
@@ -1752,10 +1757,10 @@ class Stage2Orchestrator:
                                 _spg_warnings = _spg.check_new_arc(tactical_doc=_new_tactical)
                                 if _spg_warnings:
                                     _warn_str = _spg.format_warnings(_spg_warnings)
-                                    self.app.ui.log(f"      {_warn_str}")
-                                    self.app._audit_event("v66_semantic_plot_warning", _warn_str[:300])
+                                    self.ctx.ui.log(f"      {_warn_str}")
+                                    self.ctx.audit_event("v66_semantic_plot_warning", _warn_str[:300])
                             except Exception as e:  # [V64.P4] IMPORTANT: plot dedup check — log but continue
-                                self.app._audit_event("semantic_plot_check_failed", str(e)[:100])
+                                self.ctx.audit_event("semantic_plot_check_failed", str(e)[:100])
 
                         # [V63] constraint_summary 저장
                         if constraint_block:
@@ -1770,16 +1775,16 @@ class Stage2Orchestrator:
                         refined_arc = validate_arc(refined_arc)  # [Step2] Pydantic ingress+egress
                         all_refined_arcs.append(refined_arc)
                         _st_snapshot = None  # [V70] Director PASS 확정 — 스냅샷 불필요
-                        self.app._cumulative_state_cache = None
-                        self.app._cumulative_state_cache_key = 0
+                        self.ctx.cumulative_state_cache = None
+                        self.ctx.cumulative_state_cache_key = 0
 
                         ### [0124 핵심 4] DB 원자적 커밋
                         try:
-                            self.app.current_project.save_v20_anchor("arcs", all_refined_arcs)
-                            await self.app._safe_commit_async()
+                            self.ctx.current_project.save_v20_anchor("arcs", all_refined_arcs)
+                            await self.ctx.safe_commit_async()
                         except Exception as commit_err:
-                            self.app.ui.log(f"🚨 [DB] Arc {global_arc_no} 저장 실패: {commit_err}")
-                            self.app._audit_event(
+                            self.ctx.ui.log(f"🚨 [DB] Arc {global_arc_no} 저장 실패: {commit_err}")
+                            self.ctx.audit_event(
                                 "db_commit_error",
                                 "arc save failed in async",
                                 {"arc_no": global_arc_no, "error": str(commit_err)},
@@ -1789,18 +1794,18 @@ class Stage2Orchestrator:
                             continue
 
                         constraint_db.update_arc_state(refined_arc)
-                        self.app.ui.log(
+                        self.ctx.ui.log(
                             f"      🔒 [V49.4] ConstraintDB 업데이트 완료 (총 {len(constraint_db.arc_states)}개 Arc)"
                         )
 
-                        last_refined_context = self.app._generate_arc_context_v60(all_refined_arcs, global_arc_no + 1)
+                        last_refined_context = self.ctx.generate_arc_context_v60(all_refined_arcs, global_arc_no + 1)
                         current_ep_start = refined_arc["ep_end"] + 1
                         passed = True
 
                         # [V55.3] PassRateMonitor: Stage 2 성공 기록
-                        if V50_MODULES_AVAILABLE and self.app.pass_rate_monitor:
+                        if V50_MODULES_AVAILABLE and self.ctx.pass_rate_monitor:
                             try:
-                                self.app.pass_rate_monitor.record_attempt(
+                                self.ctx.pass_rate_monitor.record_attempt(
                                     stage=2,
                                     episode=global_arc_no,
                                     arc=global_arc_no,
@@ -1812,9 +1817,9 @@ class Stage2Orchestrator:
                                 logging.debug(f"[SILENT] metrics (success): {e}")
                                 pass
 
-                        if V50_MODULES_AVAILABLE and self.app.quality_dashboard:
+                        if V50_MODULES_AVAILABLE and self.ctx.quality_dashboard:
                             try:
-                                self.app.quality_dashboard.record_validation(
+                                self.ctx.quality_dashboard.record_validation(
                                     ep_num=global_arc_no,
                                     result={
                                         "decision": "PASS",
@@ -1828,18 +1833,18 @@ class Stage2Orchestrator:
                                 logging.debug(f"[SILENT] dashboard metrics (PASS): {e}")
                                 pass
 
-                        if hasattr(self.app, "stage2_optimizer") and self.app.stage2_optimizer:
+                        if self.ctx.stage2_optimizer:
                             try:
-                                self.app.stage2_optimizer.failure_memory.clear_arc_failures(global_arc_no)
-                                self.app.ui.log(f"      ✨ [V60.25] Arc {global_arc_no} 최종 성공 - 실패 메모리 클리어")
+                                self.ctx.stage2_optimizer.failure_memory.clear_arc_failures(global_arc_no)
+                                self.ctx.ui.log(f"      ✨ [V60.25] Arc {global_arc_no} 최종 성공 - 실패 메모리 클리어")
                             except Exception as e:  # [V64.P4] OPTIONAL: optimizer memory clear
                                 logging.debug(f"[SILENT] optimizer memory clear: {e}")
                                 pass
 
                         # [V65] PerfTimer: Arc 완료 시 요약 로그
                         try:
-                            self.app.perf_timer.log_summary()
-                            self.app.perf_timer.reset()
+                            self.ctx.perf_timer.log_summary()
+                            self.ctx.perf_timer.reset()
                         except Exception:
                             pass
 
@@ -1849,7 +1854,7 @@ class Stage2Orchestrator:
                                 _vol_no = global_arc_no // 10
                                 _arc_summaries_for_vol = []
                                 for _ai in range(global_arc_no - 9, global_arc_no + 1):
-                                    _as = self.app.current_project.load_v20_anchor(f"arc_summary_{_ai}")
+                                    _as = self.ctx.current_project.load_v20_anchor(f"arc_summary_{_ai}")
                                     if _as:
                                         # arc_summary는 dict 또는 str일 수 있음
                                         if isinstance(_as, dict):
@@ -1899,9 +1904,9 @@ class Stage2Orchestrator:
                                         + "\n".join(_arc_summaries_for_vol)
                                         + f"\n\n볼륨 {_vol_no} 요약:"
                                     )
-                                    _vol_result = self.app.agents["director"].ask(_vol_prompt, temperature=0.2)
+                                    _vol_result = self.ctx.agents["director"].ask(_vol_prompt, temperature=0.2)
                                     if _vol_result and isinstance(_vol_result, str) and len(_vol_result) > 20:
-                                        self.app.current_project.save_v20_anchor(
+                                        self.ctx.current_project.save_v20_anchor(
                                             f"volume_summary_{_vol_no}", _vol_result
                                         )
                                         logging.info(f"📖 [V68] 볼륨 {_vol_no} 요약 저장 완료 ({len(_vol_result)}자)")
@@ -1909,7 +1914,7 @@ class Stage2Orchestrator:
                                         # [V68] 시리즈 요약 갱신 — 기존 + 새 볼륨 통합
                                         try:
                                             _existing_series = (
-                                                self.app.current_project.load_v20_anchor("series_summary") or ""
+                                                self.ctx.current_project.load_v20_anchor("series_summary") or ""
                                             )
                                             if isinstance(_existing_series, dict):
                                                 _existing_series = _existing_series.get("summary", "") or str(
@@ -1923,7 +1928,7 @@ class Stage2Orchestrator:
                                                 f"새 볼륨 {_vol_no} 요약:\n{_vol_result}\n\n"
                                                 "갱신된 시리즈 요약:"
                                             )
-                                            _series_result = self.app.agents["director"].ask(
+                                            _series_result = self.ctx.agents["director"].ask(
                                                 _series_prompt, temperature=0.2
                                             )
                                             if (
@@ -1931,7 +1936,7 @@ class Stage2Orchestrator:
                                                 and isinstance(_series_result, str)
                                                 and len(_series_result) > 20
                                             ):
-                                                self.app.current_project.save_v20_anchor(
+                                                self.ctx.current_project.save_v20_anchor(
                                                     "series_summary", _series_result
                                                 )
                                                 logging.info(
@@ -1950,18 +1955,18 @@ class Stage2Orchestrator:
                         base_feedback = audit.get("re_slice_instruction") or "밀도 보강 필요"
                         reject_reason = audit.get("reason") or "사유 미상"
 
-                        adaptive_intensity = self.app._get_adaptive_feedback_intensity(attempt, stage=2)
+                        adaptive_intensity = self.ctx.get_adaptive_feedback_intensity(attempt, stage=2)
                         intensity_guide = (
                             f"\n\n[V60.9 재시도 가이드 ({attempt + 1}회차)]\n{adaptive_intensity['guidance']}"
                         )
 
-                        self.app.ui.log(f"      🎬 [Director REJECT] {reject_reason[:100]}")
-                        self.app.ui.log(f"      📋 피드백: {base_feedback[:100]}")
+                        self.ctx.ui.log(f"      🎬 [Director REJECT] {reject_reason[:100]}")
+                        self.ctx.ui.log(f"      📋 피드백: {base_feedback[:100]}")
 
                         # [V70] StateTracker 롤백: FourPhase PASS → Director REJECT 시 팬텀 데이터 제거
                         if _st_snapshot and generation_method == "four_phase":
                             try:
-                                _st = self.app.state_tracker
+                                _st = self.ctx.state_tracker
                                 for _k, _v in _st_snapshot.items():
                                     setattr(_st, _k, _v)
                                 logging.warning("🔄 [V70] StateTracker 롤백 완료 (Director REJECT)")
@@ -1980,17 +1985,17 @@ class Stage2Orchestrator:
 {intensity_guide}
 """
                             refined_arc = None
-                            self.app.ui.log(f"      🔄 [V60.77] Director 피드백 → FourPhase 대면 {attempt + 2}/3")
+                            self.ctx.ui.log(f"      🔄 [V60.77] Director 피드백 → FourPhase 대면 {attempt + 2}/3")
                         else:
                             current_feedback = f"{base_feedback}{intensity_guide}"
                             refined_arc = None
-                            self.app.ui.log(
+                            self.ctx.ui.log(
                                 f"      ❌ [V60.77] Analyst 최후 기회도 REJECT → Arc {global_arc_no} 최종 실패"
                             )
 
-                        if V50_MODULES_AVAILABLE and self.app.pass_rate_monitor:
+                        if V50_MODULES_AVAILABLE and self.ctx.pass_rate_monitor:
                             try:
-                                self.app.pass_rate_monitor.record_attempt(
+                                self.ctx.pass_rate_monitor.record_attempt(
                                     stage=2,
                                     episode=global_arc_no,
                                     arc=global_arc_no,
@@ -2003,9 +2008,9 @@ class Stage2Orchestrator:
                                 logging.debug(f"[SILENT] metrics (reject): {e}")
                                 pass
 
-                        if V50_MODULES_AVAILABLE and self.app.quality_dashboard:
+                        if V50_MODULES_AVAILABLE and self.ctx.quality_dashboard:
                             try:
-                                self.app.quality_dashboard.record_validation(
+                                self.ctx.quality_dashboard.record_validation(
                                     ep_num=global_arc_no,
                                     result={
                                         "decision": "REJECT",
@@ -2024,7 +2029,7 @@ class Stage2Orchestrator:
                                 logging.debug(f"[SILENT] dashboard metrics (REJECT): {e}")
                                 pass
 
-                        self.app.stage_rejection_history.append(
+                        self.ctx.stage_rejection_history.append(
                             {
                                 "stage": 2,
                                 "arc_no": global_arc_no,
@@ -2033,9 +2038,9 @@ class Stage2Orchestrator:
                             }
                         )
 
-                        if hasattr(self.app, "stage2_optimizer") and self.app.stage2_optimizer:
+                        if self.ctx.stage2_optimizer:
                             try:
-                                self.app.stage2_optimizer.failure_memory.record_failure(
+                                self.ctx.stage2_optimizer.failure_memory.record_failure(
                                     arc_no=global_arc_no,
                                     failure_type="director_reject",
                                     details=str(audit.get("reason", ""))[:200],
@@ -2047,8 +2052,8 @@ class Stage2Orchestrator:
                     attempt += 1
 
                 if not passed:
-                    self.app.ui.log(f"🚨 [Critical] Arc {global_arc_no} 최종 설계 실패.")
-                    self.app._audit_event(
+                    self.ctx.ui.log(f"🚨 [Critical] Arc {global_arc_no} 최종 설계 실패.")
+                    self.ctx.audit_event(
                         "arc_design_failed",
                         "max retries exhausted",
                         {"arc_no": global_arc_no, "batch_start": batch_start, "batch_end": batch_end},
@@ -2056,13 +2061,13 @@ class Stage2Orchestrator:
 
                     # [V60.46] 실패 리포트 생성 및 출력
                     failure_report_path = (
-                        self.app.current_project.paths.root / "logs" / f"arc_{global_arc_no}_failure_report.txt"
+                        self.ctx.current_project.paths.root / "logs" / f"arc_{global_arc_no}_failure_report.txt"
                     )
                     failure_report_path.parent.mkdir(parents=True, exist_ok=True)
 
                     arc_rejects = [
                         r
-                        for r in self.app.stage_rejection_history
+                        for r in self.ctx.stage_rejection_history
                         if r.get("stage") == 2 and r.get("arc_no") == global_arc_no
                     ]
                     current_constraints = (
@@ -2129,7 +2134,7 @@ class Stage2Orchestrator:
                     logging.info(f"{'=' * 60}\n")
 
                     if all_refined_arcs:
-                        self.app.ui.log(f"💾 [Auto-Save] 현재까지 {len(all_refined_arcs)}개 Arc 저장 완료.")
+                        self.ctx.ui.log(f"💾 [Auto-Save] 현재까지 {len(all_refined_arcs)}개 Arc 저장 완료.")
 
                     # [V60.45] 다시 하기 옵션
                     while True:
@@ -2140,7 +2145,7 @@ class Stage2Orchestrator:
                         user_choice = input("   선택 (기본: 2): ").strip()
 
                         if user_choice == "1":
-                            self.app.ui.log(f"⏭️ Arc {global_arc_no}을 건너뛰고 계속합니다.")
+                            self.ctx.ui.log(f"⏭️ Arc {global_arc_no}을 건너뛰고 계속합니다.")
                             _skip_ep = (
                                 arcs_source[global_arc_no - 1].get("ep_count", 5)
                                 if global_arc_no <= len(arcs_source)
@@ -2149,7 +2154,7 @@ class Stage2Orchestrator:
                             current_ep_start += _skip_ep
                             break
                         elif user_choice == "3":
-                            self.app.ui.log(f"🔄 Arc {global_arc_no} 다시 시도합니다...")
+                            self.ctx.ui.log(f"🔄 Arc {global_arc_no} 다시 시도합니다...")
                             attempt = 0
                             passed = False
                             current_feedback = ""
@@ -2164,7 +2169,7 @@ class Stage2Orchestrator:
                                 .lower()
                             )
                             if manual_input == "skip":
-                                self.app.ui.log(f"⏭️ Arc {global_arc_no}을 건너뛰고 계속합니다.")
+                                self.ctx.ui.log(f"⏭️ Arc {global_arc_no}을 건너뛰고 계속합니다.")
                                 _skip_ep2 = (
                                     arcs_source[global_arc_no - 1].get("ep_count", 5)
                                     if global_arc_no <= len(arcs_source)
@@ -2173,17 +2178,17 @@ class Stage2Orchestrator:
                                 current_ep_start += _skip_ep2
                                 break
                             elif manual_input == "quit":
-                                self.app.ui.log("⏹️ 사용자 요청으로 공정을 중단합니다.")
+                                self.ctx.ui.log("⏹️ 사용자 요청으로 공정을 중단합니다.")
                                 return
                             else:
-                                self.app.ui.log(f"🔄 Arc {global_arc_no} 수동 확인 후 재시도...")
+                                self.ctx.ui.log(f"🔄 Arc {global_arc_no} 수동 확인 후 재시도...")
                                 attempt = 0
                                 passed = False
                                 current_feedback = f"[사용자 수동 확인 완료] 이전 Arc에서 획득한 아이템: {', '.join(prev_items[:5])} 등 {len(prev_items)}개. 이 아이템들은 절대 다시 획득하면 안 됩니다!"
                                 constraint_block = constraint_db.generate_constraint_block(global_arc_no)
                                 break
                         else:
-                            self.app.ui.log("⏹️ 사용자 요청으로 공정을 중단합니다.")
+                            self.ctx.ui.log("⏹️ 사용자 요청으로 공정을 중단합니다.")
                             return
 
                     if user_choice == "3":
@@ -2194,21 +2199,21 @@ class Stage2Orchestrator:
                 # [V60.45] 다음 Arc로
                 idx += 1
 
-            self.app.ui.log(f"✅ 배치({batch_start + 1}~{batch_end}) 욕망 엔진 이식 및 용접 완료.")
+            self.ctx.ui.log(f"✅ 배치({batch_start + 1}~{batch_end}) 욕망 엔진 이식 및 용접 완료.")
 
             # [V40] Slack 알림 전송
             try:
                 batch_results_count = len(all_refined_arcs) - batch_start_count
                 notifier.send_notification(
                     title=f"✅ [Arc] 제 {batch_start + 1}~{batch_end}번 아크 설계 완료",
-                    message=f"프로젝트: {self.app.current_project.name}\n설계된 아크 수: {batch_results_count}개",
+                    message=f"프로젝트: {self.ctx.current_project.name}\n설계된 아크 수: {batch_results_count}개",
                     key_metrics={"완료 구간": f"{batch_start + 1} ~ {batch_end} Arc", "생성 수": batch_results_count},
                 )
             except Exception as slack_err:
-                self.app.ui.log(f"⚠️ [Slack] 알림 전송 실패 (무시하고 계속): {slack_err}")
+                self.ctx.ui.log(f"⚠️ [Slack] 알림 전송 실패 (무시하고 계속): {slack_err}")
 
-        self.app.ui.log("✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.")
-        self.app._write_audit_summary("stage2_complete")
+        self.ctx.ui.log("✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.")
+        self.ctx.write_audit_summary("stage2_complete")
         input("\n[Enter] 메뉴로 돌아가기")
 
     # ═══════════════════════════════════════════════════════════════════════
@@ -2302,7 +2307,7 @@ class Stage2Orchestrator:
         try:
             from modules.core.narrative_structure_analyzer import NarrativeStructureAnalyzer
 
-            analyzer = NarrativeStructureAnalyzer(client=self.app.sys.api_client, model=_SUMMARY_MODEL)
+            analyzer = NarrativeStructureAnalyzer(client=self.ctx.sys.api_client, model=_SUMMARY_MODEL)
 
             result = analyzer.analyze(beats[:5])
 
