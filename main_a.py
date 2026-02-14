@@ -2743,7 +2743,7 @@ class SovereignApp:
                 self.ui.log(f"      ⚠️ [V69.1] 팩트 원장 초기화 실패 (비차단): {str(_fl_err)[:60]}")
                 self.fact_ledger = None
 
-        # [Phase 4C-2a/2b] DI 컨텍스트 주입 (lazy init 후)
+        # [Phase 4C-2a/2b/2c] DI 컨텍스트 주입 (lazy init 후)
         from modules.core.stage4_context import Stage4Context
 
         self._stage4_orch.ctx = Stage4Context(
@@ -2762,6 +2762,14 @@ class SovereignApp:
             diversity_engine=getattr(self, "diversity_engine", None),
             semantic_plot_guard=getattr(self, "semantic_plot_guard", None),
             selected_genre=getattr(self, "selected_genre", None),
+            # [4C-2c] 콜백 7종
+            get_int_input=self._get_int_input,
+            build_item_acquisition_timeline=self._build_item_acquisition_timeline,
+            load_narrative_summaries=self._load_narrative_summaries,
+            get_protagonist_name=self._get_protagonist_name,
+            generate_narrative_summary=self._generate_narrative_summary,
+            flush_audit_buffer=self._flush_audit_buffer,
+            safe_commit=self._safe_commit,
         )
 
         return self._stage4_orch.stage_4_v2_chief_writer(limit_mode=limit_mode)

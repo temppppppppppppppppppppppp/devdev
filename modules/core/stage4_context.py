@@ -1,4 +1,4 @@
-"""[Phase 4C-2a/2b] Stage4 DI 컨텍스트 — 속성 의존 주입"""
+"""[Phase 4C-2a/2b/2c] Stage4 DI 컨텍스트 — 속성·콜백 의존 주입"""
 
 
 class Stage4Context:
@@ -8,6 +8,9 @@ class Stage4Context:
     [4C-2b] 확장 10종: memory, world_state, fact_ledger, character_voice,
             perf_timer, foreshadow_tracker, failure_learner, diversity_engine,
             semantic_plot_guard, selected_genre
+    [4C-2c] 콜백 7종: get_int_input, build_item_acquisition_timeline,
+            load_narrative_summaries, get_protagonist_name,
+            generate_narrative_summary, flush_audit_buffer, safe_commit
     """
 
     __slots__ = (
@@ -28,6 +31,14 @@ class Stage4Context:
         "diversity_engine",
         "semantic_plot_guard",
         "selected_genre",
+        # [4C-2c] 콜백 7종
+        "get_int_input",
+        "build_item_acquisition_timeline",
+        "load_narrative_summaries",
+        "get_protagonist_name",
+        "generate_narrative_summary",
+        "flush_audit_buffer",
+        "safe_commit",
     )
 
     def __init__(
@@ -49,6 +60,14 @@ class Stage4Context:
         diversity_engine=None,
         semantic_plot_guard=None,
         selected_genre=None,
+        # [4C-2c] 콜백 — 모두 optional (None 허용)
+        get_int_input=None,
+        build_item_acquisition_timeline=None,
+        load_narrative_summaries=None,
+        get_protagonist_name=None,
+        generate_narrative_summary=None,
+        flush_audit_buffer=None,
+        safe_commit=None,
     ):
         self.ui = ui
         self.current_project = current_project
@@ -65,6 +84,13 @@ class Stage4Context:
         self.diversity_engine = diversity_engine
         self.semantic_plot_guard = semantic_plot_guard
         self.selected_genre = selected_genre
+        self.get_int_input = get_int_input
+        self.build_item_acquisition_timeline = build_item_acquisition_timeline
+        self.load_narrative_summaries = load_narrative_summaries
+        self.get_protagonist_name = get_protagonist_name
+        self.generate_narrative_summary = generate_narrative_summary
+        self.flush_audit_buffer = flush_audit_buffer
+        self.safe_commit = safe_commit
 
     @classmethod
     def from_app(cls, app):
@@ -85,4 +111,11 @@ class Stage4Context:
             diversity_engine=getattr(app, "diversity_engine", None),
             semantic_plot_guard=getattr(app, "semantic_plot_guard", None),
             selected_genre=getattr(app, "selected_genre", None),
+            get_int_input=getattr(app, "_get_int_input", None),
+            build_item_acquisition_timeline=getattr(app, "_build_item_acquisition_timeline", None),
+            load_narrative_summaries=getattr(app, "_load_narrative_summaries", None),
+            get_protagonist_name=getattr(app, "_get_protagonist_name", None),
+            generate_narrative_summary=getattr(app, "_generate_narrative_summary", None),
+            flush_audit_buffer=getattr(app, "_flush_audit_buffer", None),
+            safe_commit=getattr(app, "_safe_commit", None),
         )
