@@ -181,16 +181,17 @@ def e2e_stage4_ctx(e2e_db, e2e_bible, mock_llm_client):
 | 6 | `test_npc_history_in_validation_context` | 통합 | validation_context에 npc_history 존재 |
 | 7 | `test_threshold_override_via_yaml` | 5-B 통합 | YAML 값 → validator 반영 |
 
-### L2: 재시도/복구 — `test_retry_recovery_e2e.py` (6건)
+### L2: 재시도/복구 — `test_retry_recovery_e2e.py` (7건)
 
 | # | 테스트 | 시나리오 | 검증 |
 |---|--------|---------|------|
 | 1 | `test_round0_pass_saves_manuscript` | 1라운드 합격 | DB manuscripts 저장 |
 | 2 | `test_round0_reject_triggers_round1` | 불합격 | regenerate_with_feedback 호출 |
 | 3 | `test_patch_mode_entry_score_60` | score=60, round=1 | patch_with_feedback 호출 |
-| 4 | `test_low_score_full_rewrite` | score=30 | regenerate (패치 아님) |
-| 5 | `test_all_rounds_fail_frozen_human` | 3라운드 전패 | legacy Writer 호출 |
-| 6 | `test_chain_link_saved_after_pass` | 합격 후 | DB anchor chain_link_1 존재 |
+| 4 | `test_patch_mode_boundary_50` | score=50 경계값 | patch_with_feedback 호출 |
+| 5 | `test_low_score_full_rewrite` | score=30 | regenerate (패치 아님) |
+| 6 | `test_all_rounds_fail_frozen_human` | 3라운드 전패 | legacy Writer 호출 |
+| 7 | `test_chain_link_saved_after_pass` | 합격 후 | DB anchor chain_link_1 존재 |
 
 ---
 
@@ -236,9 +237,9 @@ pre-commit run --files tests/e2e/conftest.py tests/e2e/test_smoke_pipeline.py te
 
 ## 8. 산출물 요약
 
-- **tests/e2e/**: 4개 파일, ~850줄, 21개 테스트
+- **tests/e2e/**: 4개 파일, ~850줄, 22개 테스트
 - **L1 Smoke 8건**: DB 라운드트립, 검증 해피패스, V68 시스템 초기화
 - **L2 NPC 7건**: 사망NPC 차단/회상, 이력 기록, 성격급변, validation_context 통합
-- **L2 Recovery 6건**: 3라운드 재시도, 패치 분기, chain_link 후처리
+- **L2 Recovery 7건**: 3라운드 재시도, 패치 분기(경계값 포함), chain_link 후처리
 - **프로덕션 코드 변경 0건**
-- **DoD**: 21/21 PASS, 기존 테스트 회귀 없음, pre-commit 통과
+- **DoD**: 22/22 PASS, 기존 테스트 회귀 없음, pre-commit 통과
