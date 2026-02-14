@@ -2263,6 +2263,11 @@ class SovereignApp:
 
     def _stage_3_batch_blueprinting(self) -> None:
         """[V60.80] Stage 3 - Three Phase Blueprint Generator"""
+        # [Phase 4C-4] DI 컨텍스트 주입 (최신 속성 반영)
+        from modules.core.stage3_context import Stage3Context
+
+        self._stage3_orch.ctx = Stage3Context.from_app(self)
+
         self._stage3_orch.stage_3_batch_blueprinting()  # [Phase 4C-1a] thin delegate
 
     def _select_genre(self) -> dict[str, Any]:
