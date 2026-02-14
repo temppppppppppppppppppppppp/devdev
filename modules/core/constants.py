@@ -496,6 +496,17 @@ class AuditEvents:
     CACHE_REUSED = "cache_reused"
     DB_COMMIT = "db_commit"
     DB_ROLLBACK = "db_rollback"
+    # [Phase 3-5B] 패치 모드 이벤트
+    PATCH_MODE_SELECTED = "patch_mode_selected"
+    PATCH_MODE_RESULT = "patch_mode_result"
+    PATCH_MODE_FALLBACK = "patch_mode_fallback"
+
+
+class PatchModeThresholds:
+    """[Phase 3-5B] 점수 기반 수정 모드 분기 임계값"""
+
+    REWRITE = 50  # 미만: 전면 재작성 (기존 동작)
+    PATCH = 80  # 50~80: 부분 수정 (패치 모드). 80 이상은 Director PASS.
 
 
 # ============================================================================
