@@ -4,24 +4,35 @@ Stage 0 Module - 프로젝트 초기화 및 역설계
 main_a.py에서 분리된 Stage 0 전용 모듈
 """
 
-from .preset_registry import PresetRegistry, FieldDefinition
 import logging
-from .style_extractor import StyleExtractor, StyleGuide
-from .story_expander import StoryExpander
+
+from .preset_registry import FieldDefinition, PresetRegistry
 from .reverse_expander import ReverseExpander
+from .story_expander import StoryExpander
+from .style_extractor import StyleExtractor, StyleGuide
 
 # 스피너 유틸리티
 try:
-    from .spinner import Spinner, ProgressBar, PhaseIndicator, print_header, print_success, print_error, print_info, print_warning
+    from .spinner import (
+        PhaseIndicator,
+        ProgressBar,
+        Spinner,
+        print_error,
+        print_header,
+        print_info,
+        print_success,
+        print_warning,
+    )
+
     SPINNER_AVAILABLE = True
 except ImportError:
     SPINNER_AVAILABLE = False
 
 import json
 import os
-from pathlib import Path
-from typing import Dict, Any, Optional, Tuple, List
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 
 class StageZeroManager:
@@ -57,12 +68,12 @@ class StageZeroManager:
 
         # 결과물
         self.genre: str = ""
-        self.preset_registry: Optional[PresetRegistry] = None
-        self.bible: Dict[str, Any] = {}
-        self.treatment: List[Dict[str, Any]] = []
-        self.episode_bibles: List[Dict[str, Any]] = []
-        self.style_guide: Optional[StyleGuide] = None
-        self.protagonist_config: Dict[str, Any] = {}
+        self.preset_registry: PresetRegistry | None = None
+        self.bible: dict[str, Any] = {}
+        self.treatment: list[dict[str, Any]] = []
+        self.episode_bibles: list[dict[str, Any]] = []
+        self.style_guide: StyleGuide | None = None
+        self.protagonist_config: dict[str, Any] = {}
 
     # ============================================
     # 메뉴 시스템
@@ -103,7 +114,7 @@ class StageZeroManager:
         genres = list(self.SUPPORTED_GENRES.items())
         for i, (code, name) in enumerate(genres, 1):
             logging.info(f"[{i}] {name} ({code})")
-        logging.info(f"\n  [0] 자동 감지")
+        logging.info("\n  [0] 자동 감지")
 
         try:
             choice = input("\n  선택: ").strip()
@@ -116,7 +127,7 @@ class StageZeroManager:
             pass
         return ""
 
-    def show_protagonist_config_menu(self) -> Dict[str, str]:
+    def show_protagonist_config_menu(self) -> dict[str, str]:
         """주인공 설정 메뉴"""
         config = {}
 
@@ -156,7 +167,7 @@ class StageZeroManager:
     # 신규 프로젝트 플로우
     # ============================================
 
-    def run_new_project_flow(self) -> Tuple[Dict, List, Optional[StyleGuide]]:
+    def run_new_project_flow(self) -> tuple[dict, list, StyleGuide | None]:
         """신규 프로젝트 전체 플로우"""
         # 1. 장르 선택
         self.genre = self.show_genre_menu()
@@ -185,7 +196,7 @@ class StageZeroManager:
         # 4. 생성
         return self.generate_from_concept(concept)
 
-    def generate_from_concept(self, concept: str) -> Tuple[Dict, List, Optional[StyleGuide]]:
+    def generate_from_concept(self, concept: str) -> tuple[dict, list, StyleGuide | None]:
         """컨셉에서 Bible + Treatment 생성"""
         expander = StoryExpander(genre=self.genre, llm_client=self.client)
 
@@ -221,7 +232,7 @@ class StageZeroManager:
     # 역설계 플로우
     # ============================================
 
-    def run_reverse_engineering_flow(self, input_path: str = None) -> Tuple[Dict, List, StyleGuide]:
+    def run_reverse_engineering_flow(self, input_path: str = None) -> tuple[dict, list, StyleGuide]:
         """역설계 플로우"""
         # 입력 경로
         if not input_path:
@@ -240,15 +251,13 @@ class StageZeroManager:
         output_dir = str(Path(self.project_path) / "stage0_output") if self.project_path else None
 
         self.bible, self.episode_bibles, self.style_guide = expander.run(
-            input_path=input_path,
-            output_dir=output_dir or ".",
-            genre=genre if genre else None
+            input_path=input_path, output_dir=output_dir or ".", genre=genre if genre else None
         )
 
         self.genre = expander.preset_registry.base_genre if expander.preset_registry else ""
         self.preset_registry = expander.preset_registry
 
-        # [V60.95] ReverseExpander 보관 (ChromaDB 벡터화용)
+        # [V60.95] ReverseExpander 보관 (벡터화용)
         self._reverse_expander = expander
 
         return self.bible, self.episode_bibles, self.style_guide
@@ -257,7 +266,7 @@ class StageZeroManager:
     # Bible 임포트
     # ============================================
 
-    def import_bible(self, bible_path: str = None) -> Dict[str, Any]:
+    def import_bible(self, bible_path: str = None) -> dict[str, Any]:
         """기존 Bible JSON 임포트"""
         if not bible_path:
             print("\n  Bible JSON 경로 입력:")
@@ -269,7 +278,7 @@ class StageZeroManager:
             return {}
 
         try:
-            with open(path, 'r', encoding='utf-8') as f:
+            with open(path, encoding="utf-8") as f:
                 self.bible = json.load(f)
 
             # 장르 추출
@@ -304,8 +313,7 @@ class StageZeroManager:
             logging.info(f"\n  현재 활성: {list(self.preset_registry.active_presets)}")
             logging.info("\n  사용 가능한 프리셋:")
 
-            available = [g for g in PresetRegistry.GENRE_PRESETS.keys()
-                         if g not in self.preset_registry.active_presets]
+            available = [g for g in PresetRegistry.GENRE_PRESETS.keys() if g not in self.preset_registry.active_presets]
             for i, g in enumerate(available, 1):
                 logging.info(f"[{i}] + {g}")
 
@@ -336,7 +344,7 @@ class StageZeroManager:
     # 스타일 레퍼런스 분석
     # ============================================
 
-    def run_reference_analysis(self, genre: str = None) -> Optional[StyleGuide]:
+    def run_reference_analysis(self, genre: str = None) -> StyleGuide | None:
         """config/style_references/{genre}/ 폴더의 참조 원고를 분석하여 StyleGuide 생성"""
         # 장르 결정
         if not genre:
@@ -362,7 +370,7 @@ class StageZeroManager:
             logging.info(f"- {w}: {len(ref_data[w])}편")
 
         confirm = input("\n  분석을 시작하시겠습니까? (y/n): ").strip().lower()
-        if confirm != 'y':
+        if confirm != "y":
             return None
 
         # 분석 실행
@@ -373,7 +381,9 @@ class StageZeroManager:
 
         if self.style_guide:
             logging.info(f"\n  [v] 문체 DNA 추출 완료 (v{self.style_guide.analysis_version})")
-            logging.info(f"- 분석 원고: {self.style_guide.source_episode_count}편 / {self.style_guide.source_char_count:,}자")
+            logging.info(
+                f"- 분석 원고: {self.style_guide.source_episode_count}편 / {self.style_guide.source_char_count:,}자"
+            )
             logging.info(f"- 참조 작품: {', '.join(self.style_guide.reference_works or [])}")
             logging.info(f"- 모범 문단: {len(self.style_guide.exemplary_passages or [])}개")
             logging.info(f"- AI 금지 패턴: {len(self.style_guide.anti_ai_patterns or [])}개")
@@ -382,7 +392,7 @@ class StageZeroManager:
             if self.project_path:
                 output_dir = Path(self.project_path) / "stage0_output"
                 output_dir.mkdir(parents=True, exist_ok=True)
-                with open(output_dir / "style_guide.json", 'w', encoding='utf-8') as f:
+                with open(output_dir / "style_guide.json", "w", encoding="utf-8") as f:
                     f.write(self.style_guide.to_json())
                 logging.info(f"- 저장: {output_dir / 'style_guide.json'}")
 
@@ -415,27 +425,27 @@ class StageZeroManager:
             "protagonist_config": self.protagonist_config,
         }
 
-        with open(out / "stage0_state.json", 'w', encoding='utf-8') as f:
+        with open(out / "stage0_state.json", "w", encoding="utf-8") as f:
             json.dump(state, f, ensure_ascii=False, indent=2)
 
         if self.bible:
-            with open(out / "bible.json", 'w', encoding='utf-8') as f:
+            with open(out / "bible.json", "w", encoding="utf-8") as f:
                 json.dump(self.bible, f, ensure_ascii=False, indent=2)
 
         if self.treatment:
-            with open(out / "treatment.json", 'w', encoding='utf-8') as f:
+            with open(out / "treatment.json", "w", encoding="utf-8") as f:
                 json.dump(self.treatment, f, ensure_ascii=False, indent=2)
 
         if self.episode_bibles:
-            with open(out / "episode_bibles.json", 'w', encoding='utf-8') as f:
+            with open(out / "episode_bibles.json", "w", encoding="utf-8") as f:
                 json.dump(self.episode_bibles, f, ensure_ascii=False, indent=2)
 
         if self.preset_registry:
-            with open(out / "preset_state.json", 'w', encoding='utf-8') as f:
+            with open(out / "preset_state.json", "w", encoding="utf-8") as f:
                 f.write(self.preset_registry.to_json())
 
         if self.style_guide:
-            with open(out / "style_guide.json", 'w', encoding='utf-8') as f:
+            with open(out / "style_guide.json", "w", encoding="utf-8") as f:
                 f.write(self.style_guide.to_json())
 
         logging.info(f"[v] 상태 저장: {out}")
@@ -449,7 +459,7 @@ class StageZeroManager:
         # state 로드
         state_file = out / "stage0_state.json"
         if state_file.exists():
-            with open(state_file, 'r', encoding='utf-8') as f:
+            with open(state_file, encoding="utf-8") as f:
                 state = json.load(f)
             manager.genre = state.get("genre", "")
             manager.protagonist_config = state.get("protagonist_config", {})
@@ -457,25 +467,25 @@ class StageZeroManager:
         # bible 로드
         bible_file = out / "bible.json"
         if bible_file.exists():
-            with open(bible_file, 'r', encoding='utf-8') as f:
+            with open(bible_file, encoding="utf-8") as f:
                 manager.bible = json.load(f)
 
         # treatment 로드
         treatment_file = out / "treatment.json"
         if treatment_file.exists():
-            with open(treatment_file, 'r', encoding='utf-8') as f:
+            with open(treatment_file, encoding="utf-8") as f:
                 manager.treatment = json.load(f)
 
         # episode_bibles 로드
         ep_bibles_file = out / "episode_bibles.json"
         if ep_bibles_file.exists():
-            with open(ep_bibles_file, 'r', encoding='utf-8') as f:
+            with open(ep_bibles_file, encoding="utf-8") as f:
                 manager.episode_bibles = json.load(f)
 
         # preset 로드
         preset_file = out / "preset_state.json"
         if preset_file.exists():
-            with open(preset_file, 'r', encoding='utf-8') as f:
+            with open(preset_file, encoding="utf-8") as f:
                 manager.preset_registry = PresetRegistry.from_json(f.read())
         else:
             manager.preset_registry = PresetRegistry(base_genre=manager.genre)
@@ -483,7 +493,7 @@ class StageZeroManager:
         # style guide 로드
         style_file = out / "style_guide.json"
         if style_file.exists():
-            with open(style_file, 'r', encoding='utf-8') as f:
+            with open(style_file, encoding="utf-8") as f:
                 manager.style_guide = StyleGuide.from_dict(json.load(f))
 
         return manager

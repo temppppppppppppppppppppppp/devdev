@@ -135,19 +135,6 @@ def perform_selective_rewind(target_ep, db_path, vec_db_path, drafts_path):
             except Exception as vdb_err:
                 print(f"   ⚠️ 벡터 DB 소거 건너뜀: {vdb_err}")
 
-        # 6. 레거시 ChromaDB 소거 (마이그레이션 호환)
-        chroma_vdb = vec_db_path.parent.parent / "chroma_db" / "vector_db"
-        if chroma_vdb.exists():
-            try:
-                import chromadb
-
-                client = chromadb.PersistentClient(path=str(chroma_vdb))
-                collection = client.get_collection("v20_sovereign_memory")
-                collection.delete(where={"episode": {"$gte": target_ep}})
-                print("   🌌 레거시 ChromaDB 소거 완료.")
-            except Exception:
-                pass
-
         print(f"\n✅ [Success] {target_ep}화 시점으로 되감기 성공!")
         print("👉 DB 툴(DBeaver 등)에서 'Refresh(새로고침)'를 눌러 확인하세요.")
 

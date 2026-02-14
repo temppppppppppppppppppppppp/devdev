@@ -1,12 +1,12 @@
-"""[Phase 4D-1] sqlite-vec 기반 벡터 메모리 엔진
+"""[Phase 4D] sqlite-vec 기반 벡터 메모리 엔진
 
-LongTermMemory(ChromaDB) 대체 모듈.
 sqlite-vec 확장으로 KNN 벡터 검색을 수행하며,
 메타데이터는 일반 SQLite 테이블에 저장한다.
 
-인터페이스: LongTermMemory 호환 (retrieve_high_res_context,
-retrieve_multi_query_context, memorize_v20_episode, sync_v20_drafts,
-is_operational, save_v20_anchor, load_v20_anchor, get_status, close)
+공개 인터페이스: retrieve_high_res_context, retrieve_multi_query_context,
+memorize_v20_episode, sync_v20_drafts, is_operational,
+save_v20_anchor, load_v20_anchor, get_status, close,
+delete_episodes_from, delete_all_episodes
 """
 
 import json

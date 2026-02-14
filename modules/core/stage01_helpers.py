@@ -324,7 +324,7 @@ class Stage01Helpers:
             try:
                 if hasattr(stage0_manager, "_reverse_expander") and stage0_manager._reverse_expander:
                     _mem = getattr(app, "memory", None)
-                    vectorize_result = stage0_manager._reverse_expander.persist_to_chromadb(
+                    vectorize_result = stage0_manager._reverse_expander.persist_to_vectordb(
                         app.current_project, memory=_mem
                     )
                     if vectorize_result > 0:

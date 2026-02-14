@@ -194,15 +194,12 @@ class ProjectService:
                     pass
             self._ui.log("   📂 원고 파일 삭제 완료")
 
-            # 6. 벡터 DB 소거 (VecMemory 호환)
+            # 6. 벡터 DB 소거
             memory = self._memory_fn()
             try:
                 if memory and hasattr(memory, "delete_episodes_from"):
                     deleted = memory.delete_episodes_from(target_ep)
                     self._ui.log(f"   🌌 벡터 메모리 소거 완료 ({deleted}건)")
-                elif memory and hasattr(memory, "collection") and memory.collection:
-                    memory.collection.delete(where={"episode": {"$gte": target_ep}})
-                    self._ui.log("   🌌 벡터 메모리 소거 완료")
                 else:
                     self._ui.log("   ⚠️ [VectorDB] 메모리 미초기화로 벡터 소거 생략")
             except Exception as e:
@@ -267,8 +264,6 @@ class ProjectService:
             try:
                 if memory and hasattr(memory, "delete_all_episodes"):
                     memory.delete_all_episodes()
-                elif memory and hasattr(memory, "collection") and memory.collection:
-                    memory.collection.delete(where={"episode": {"$gt": 0}})
             except Exception as e:
                 self._ui.log(f"⚠️ [VectorDB] 컬렉션 초기화 실패: {e}")
 
