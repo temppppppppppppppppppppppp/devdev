@@ -12,9 +12,9 @@ numpy>=1.26                      # 벡터 연산 (cosine similarity 등)
 requests>=2.31                   # HTTP 요청 (Slack 알림 등)
 beautifulsoup4>=4.12             # HTML 파싱
 
-# === Optional: 벡터 DB (현재 비활성화) ===
-# chromadb>=0.4                  # ❌ Windows Rust segfault → 비활성화
-# sqlite-vec                     # 📌 Phase 2.5 교체 후보
+# === 벡터 DB ===
+# chromadb>=0.4                  # ❌ Windows Rust segfault → 비활성화 (Phase 4D에서 sqlite-vec으로 교체)
+sqlite-vec>=0.1.6                # ✅ Phase 4D: ChromaDB 대체 벡터 엔진 (Pure C, Windows 호환)
 
 # === Optional: 브라우저 자동화 ===
 # selenium>=4.15                 # Gemini UI 자동화 (선택)
