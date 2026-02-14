@@ -1,0 +1,121 @@
+# ============================================================================
+# [Phase 5-B-1] Validation & Guard Settings — Single Source of Truth (YAML)
+#
+# 이 파일의 값은 constants.py 하드코드와 동일한 기본값입니다.
+# ConfigManager.get_guard_threshold() / get_validation_policy()로 접근하며,
+# 키 누락 시 Python 기본값으로 안전 fallback합니다.
+#
+# 주의: 값 변경 시 기존 심사 품질에 영향을 줄 수 있습니다.
+# ============================================================================
+
+# ── 원고 분량 ────────────────────────────────────────────────
+manuscript:
+  min_length: 4000           # BLOCKING — 이 미만 자동 REJECT
+  warning_length: 4500       # SCORING 감점 시작
+  target_length: 5000        # 작가 지시 목표
+  max_length: 15000          # 절대 상한
+
+# ── 장면(Scene) 구성 ────────────────────────────────────────
+scene:
+  target_count: 6            # 목표 장면 수
+  min_count: 4               # 최소 장면 수 (blocking)
+  min_scene_length: 300      # 장면당 최소 글자
+
+# ── 스코프 검증 ──────────────────────────────────────────────
+scope:
+  chars_per_scene: 1500      # 장면당 기준 글자수
+  overflow_ratio: 1.2        # 초과 비율 임계값
+
+# ── SCORING 검증 ─────────────────────────────────────────────
+scoring:
+  default_pass_threshold: 70
+  genre_thresholds:
+    wuxia: 70
+    hunter: 68
+    investment: 72
+    fantasy: 70
+  breakdown:
+    character_consistency: 15
+    emotion_arc: 20
+    dialogue_quality: 15
+    commercial_appeal: 20
+    pattern_diversity: 10
+
+# ── ADVISORY 검증 ────────────────────────────────────────────
+advisory:
+  max_suggestions: 5
+
+# ── CONTINUITY 검증 ──────────────────────────────────────────
+continuity:
+  personality_proximity: 150  # NPC 이름 주변 탐색 글자수
+
+# ── 재시도 제한 ──────────────────────────────────────────────
+retry:
+  director_max_attempts: 5
+  analyst_max_attempts: 5
+  architect_max_attempts: 5
+  writer_max_attempts: 5
+  blueprint_max_attempts: 12
+  cache_ttl_seconds: 86400   # 24시간
+  api_timeout_seconds: 300   # 5분
+
+# ── 집필 제한 ────────────────────────────────────────────────
+writing:
+  max_retry_per_episode: 5
+  min_episode_loop_guard: 5
+  max_failure_streak: 3
+
+# ── 검증 임계값 ──────────────────────────────────────────────
+thresholds:
+  tactical_duplicate: 0.98
+  pattern_min_hits: 1
+  min_tactical_doc_length: 100
+  max_tactical_doc_length: 5000
+  min_blueprint_length: 500
+  max_blueprint_length: 8000
+  min_cache_content_length: 1500
+  hud_change: 0.1
+
+# ── 패치 모드 ────────────────────────────────────────────────
+patch_mode:
+  rewrite_below: 50          # 미만: 전면 재작성
+  patch_below: 80            # 50~80: 부분 수정
+
+# ── 권/아크 설정 ─────────────────────────────────────────────
+volume:
+  arcs_per_volume: 5
+  episodes_per_arc: 5
+  min_episodes_per_arc: 3
+  max_episodes_per_arc: 7
+
+# ── Premium 품질 시스템 ──────────────────────────────────────
+premium:
+  repetition:
+    window_size: 5
+    threshold: 3
+    min_phrase_length: 5
+    clean_score_min: 0.85
+  emotion:
+    variance_min: 0.5
+    history_window: 5
+    min_episodes_for_check: 3
+    negative_alert_avg: -1.0
+    positive_alert_avg: 1.0
+    max_history_size: 50
+  anchor:
+    recent_window: 10
+    recency_bonus_threshold: 5
+    recency_bonus_score: 10
+    extraction_limit: 5
+    max_storage: 1000
+    compression_threshold: 5000
+    compressed_part_size: 2000
+
+# ── 기능 플래그 ──────────────────────────────────────────────
+feature_flags:
+  enable_patch_mode: true
+  enable_npc_history: true
+  enable_world_state: true
+  enable_fact_ledger: true
+  enable_chain_links: true
+  enable_volume_summaries: true
