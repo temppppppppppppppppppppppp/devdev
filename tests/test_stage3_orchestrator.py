@@ -3,12 +3,12 @@
 추출 대상: _stage_3_batch_blueprinting (main_a.py → stage3_orchestrator.py)
 """
 
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
+from modules.core.stage3_context import Stage3Context
 from modules.core.stage3_orchestrator import Stage3Orchestrator
-
 
 # ── Fixtures ─────────────────────────────────────────────────
 
@@ -242,11 +242,13 @@ class TestProcessSingleEpisode:
 
     def test_continuity_block(self, orch, app_mock):
         """직전 화 Blueprint 없으면 중단"""
+
         # ep 1 exists, ep 2 does not
         def get_bp(ep):
             if ep == 1:
                 return None  # ep 1 missing (for ep=2 check)
             return None
+
         app_mock.current_project.get_blueprint.side_effect = get_bp
         result = orch._process_single_episode(2, 5, [], 0, 0)
         assert result.get("break") is True
@@ -316,3 +318,53 @@ class TestStage3BatchBlueprintingEntryPoint:
 
         app_mock._write_audit_summary.assert_called_once_with("stage3_complete")
         app_mock.current_project.save_episode_blueprint.assert_called_once()
+
+
+# ── [Phase 4C-4] Stage3Context DI 테스트 ─────────────────────
+
+
+class TestStage3ContextDI:
+    def test_ctx_none_by_default(self, app_mock):
+        """초기 _ctx=None"""
+        orch = Stage3Orchestrator(app=app_mock)
+        assert orch._ctx is None
+
+    def test_ctx_auto_builds_from_app(self, app_mock):
+        """property 접근 시 app에서 자동 빌드"""
+        orch = Stage3Orchestrator(app=app_mock)
+        ctx = orch.ctx
+        assert isinstance(ctx, Stage3Context)
+        assert ctx.ui is app_mock.ui
+        assert ctx.current_project is app_mock.current_project
+
+    def test_ctx_injected_at_init(self, app_mock):
+        """context= 키워드로 주입"""
+        ctx = Stage3Context(ui=app_mock.ui, current_project=app_mock.current_project)
+        orch = Stage3Orchestrator(app=app_mock, context=ctx)
+        assert orch.ctx is ctx
+
+    def test_ctx_setter_replaces_context(self, app_mock):
+        """ctx setter로 교체"""
+        ctx = Stage3Context(ui=app_mock.ui, current_project=app_mock.current_project)
+        orch = Stage3Orchestrator(app=app_mock)
+        orch.ctx = ctx
+        assert orch.ctx is ctx
+        assert orch._ctx is ctx
+
+    def test_get_protagonist_name_safe_uses_ctx(self, app_mock):
+        """_get_protagonist_name_safe가 ctx.get_protagonist_name 경유"""
+        cb = MagicMock(return_value="장무기")
+        ctx = Stage3Context(
+            ui=app_mock.ui,
+            current_project=app_mock.current_project,
+            get_protagonist_name=cb,
+        )
+        orch = Stage3Orchestrator(app=app_mock, context=ctx)
+        result = orch._get_protagonist_name_safe()
+        cb.assert_called_once()
+        assert result == "장무기"
+
+    def test_backward_compat_app_still_works(self, app_mock):
+        """self.app 접근 유지 (레거시 호환)"""
+        orch = Stage3Orchestrator(app=app_mock)
+        assert orch.app is app_mock

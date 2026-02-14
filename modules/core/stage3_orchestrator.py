@@ -25,15 +25,30 @@ class Stage3Orchestrator:
     패턴: self.app = SovereignApp 인스턴스
     """
 
-    def __init__(self, app) -> None:
+    def __init__(self, app, *, context=None) -> None:
         """
         Args:
-            app: SovereignApp 인스턴스 (모든 속성 접근용)
+            app: SovereignApp 인스턴스 (레거시 호환)
+            context: Stage3Context DI 컨텍스트 (미주입 시 자동 빌드)
         """
         self.app = app
+        self._ctx = context  # [Phase 4C-4] DI 컨텍스트
         # [V61.6] Entity Registry 캐시 (Arc 단위)
         self._entity_cache_arc_idx = -1
         self._cached_entity_registry = None
+
+    @property
+    def ctx(self):
+        """[Phase 4C-4] DI 컨텍스트 (미주입 시 app에서 자동 빌드)"""
+        if self._ctx is None:
+            from modules.core.stage3_context import Stage3Context
+
+            self._ctx = Stage3Context.from_app(self.app)
+        return self._ctx
+
+    @ctx.setter
+    def ctx(self, value):
+        self._ctx = value
 
     # ─────────────────────────────────────────────────────────────
     # Stage 3 메인 진입점
@@ -117,9 +132,7 @@ class Stage3Orchestrator:
         app.ui.log(f"{'═' * 60}\n")
 
         while working_ep <= target_ep:
-            result = self._process_single_episode(
-                working_ep, target_ep, prev_blueprints, success_count, fail_count
-            )
+            result = self._process_single_episode(working_ep, target_ep, prev_blueprints, success_count, fail_count)
             working_ep = result["next_ep"]
             success_count = result["success_count"]
             fail_count = result["fail_count"]
@@ -285,8 +298,14 @@ class Stage3Orchestrator:
             pass
 
         blueprint, pipeline_result = self._generate_blueprint(
-            working_ep, arc_data, arc_idx, prev_blueprint, prev_blueprints,
-            entity_registry_for_stage3, protagonist_name_for_stage3, _bp_protagonist_config,
+            working_ep,
+            arc_data,
+            arc_idx,
+            prev_blueprint,
+            prev_blueprints,
+            entity_registry_for_stage3,
+            protagonist_name_for_stage3,
+            _bp_protagonist_config,
         )
 
         # 결과 처리
@@ -310,9 +329,7 @@ class Stage3Orchestrator:
                 if "state_extractor" in app.agents and app.current_project.arcs:
                     all_arcs_for_entity = list(app.current_project.arcs)[: arc_idx + 1]
                     if all_arcs_for_entity:
-                        state_for_entity = app.agents["state_extractor"].extract_cumulative_state(
-                            all_arcs_for_entity
-                        )
+                        state_for_entity = app.agents["state_extractor"].extract_cumulative_state(all_arcs_for_entity)
                         self._cached_entity_registry = (
                             state_for_entity.get("entity_registry") if state_for_entity else None
                         )
@@ -343,24 +360,24 @@ class Stage3Orchestrator:
         """직전 Blueprint 로드 [V61.3 보호]"""
         prev_blueprint = None
         try:
-            prev_blueprint = self.app.current_project.get_blueprint(working_ep - 1) if working_ep > 1 else None
+            prev_blueprint = self.ctx.current_project.get_blueprint(working_ep - 1) if working_ep > 1 else None
         except Exception as prev_bp_err:
             print(f"🚨 [V61.3] prev_blueprint 로드 크래시: {str(prev_bp_err)[:100]}", file=_sys.stderr)
             _traceback.print_exc(file=_sys.stderr)
             _sys.stderr.flush()
-            self.app.ui.log("      ⚠️ 직전 Blueprint 로드 실패, None으로 진행")
+            self.ctx.ui.log("      ⚠️ 직전 Blueprint 로드 실패, None으로 진행")
         return prev_blueprint
 
     def _get_protagonist_name_safe(self) -> str:
         """주인공 이름 추출 [V61.3 보호]"""
         protagonist_name = "주인공"
         try:
-            protagonist_name = self.app._get_protagonist_name()
+            protagonist_name = self.ctx.get_protagonist_name()
         except Exception as protag_err:
             print(f"🚨 [V61.3] protagonist_name 추출 크래시: {str(protag_err)[:100]}", file=_sys.stderr)
             _traceback.print_exc(file=_sys.stderr)
             _sys.stderr.flush()
-            self.app.ui.log("      ⚠️ 주인공 이름 추출 실패, 기본값 사용")
+            self.ctx.ui.log("      ⚠️ 주인공 이름 추출 실패, 기본값 사용")
         return protagonist_name
 
     # ─────────────────────────────────────────────────────────────
@@ -368,8 +385,14 @@ class Stage3Orchestrator:
     # ─────────────────────────────────────────────────────────────
     def _generate_blueprint(
         self,
-        working_ep, arc_data, arc_idx, prev_blueprint, prev_blueprints,
-        entity_registry, protagonist_name, protagonist_config,
+        working_ep,
+        arc_data,
+        arc_idx,
+        prev_blueprint,
+        prev_blueprints,
+        entity_registry,
+        protagonist_name,
+        protagonist_config,
     ):
         """[V60.80] Three Phase Blueprint Generation — LLM 호출 + 스피너"""
         app = self.app
@@ -384,9 +407,7 @@ class Stage3Orchestrator:
                 for _ms_ep in range(max(1, working_ep - 30), working_ep):
                     _ms_data = app.current_project.db.get_manuscript(_ms_ep)
                     if _ms_data:
-                        _ms_text = (
-                            _ms_data.get("content", "") if isinstance(_ms_data, dict) else str(_ms_data)
-                        )
+                        _ms_text = _ms_data.get("content", "") if isinstance(_ms_data, dict) else str(_ms_data)
                         if _ms_text:
                             _prev_ms_for_bp.append(f"━━━ 제{_ms_ep}화 원고 ━━━\n{_ms_text}")
                 _prev_ms_text_for_bp = "\n\n".join(_prev_ms_for_bp) if _prev_ms_for_bp else ""
@@ -457,9 +478,7 @@ class Stage3Orchestrator:
             {
                 "ep_num": working_ep,
                 "arc_no": arc_no,
-                "strategy": pipeline_result.get("phases", {})
-                .get("generate", {})
-                .get("selected_strategy", "unknown"),
+                "strategy": pipeline_result.get("phases", {}).get("generate", {}).get("selected_strategy", "unknown"),
                 "score": pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 0),
             },
         )
@@ -482,6 +501,11 @@ class Stage3Orchestrator:
         # 연속 실패 3회 시 중단
         if new_fail_count >= 3:
             app.ui.log(f"🛑 [Safety] 연속 {new_fail_count}회 실패로 공정을 중단합니다.")
-            return {"next_ep": working_ep + 1, "success_count": success_count, "fail_count": new_fail_count, "break": True}
+            return {
+                "next_ep": working_ep + 1,
+                "success_count": success_count,
+                "fail_count": new_fail_count,
+                "break": True,
+            }
 
         return {"next_ep": working_ep + 1, "success_count": success_count, "fail_count": new_fail_count}
