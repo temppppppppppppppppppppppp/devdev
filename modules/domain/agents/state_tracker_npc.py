@@ -11,7 +11,6 @@ import json
 import logging
 import re
 import time
-from typing import Dict, List, Optional, Any
 
 # ═══════════════════════════════════════════════════════════════
 # [V66.1] C-2: Module-level compiled regex patterns
@@ -20,53 +19,51 @@ from typing import Dict, List, Optional, Any
 
 # --- _regex_extract_relationship_changes ---
 _RE_REL_ARROW = re.compile(
-    r'([가-힣]{2,10})[이가은는의]\s*(?:관계)?\s*(?:가\s*)?'
-    r'(적대?|중립|아군|동맹|호의|충성|적)[에서으로]*\s*[→에서]+\s*'
-    r'(적대?|중립|아군|동맹|호의|충성|적)'
+    r"([가-힣]{2,10})[이가은는의]\s*(?:관계)?\s*(?:가\s*)?"
+    r"(적대?|중립|아군|동맹|호의|충성|적)[에서으로]*\s*[→에서]+\s*"
+    r"(적대?|중립|아군|동맹|호의|충성|적)"
 )
-_RE_REL_RECONCILE = re.compile(r'([가-힣]{2,10})[와과]\s*(?:화해|동맹|협력)')
-_RE_REL_BETRAY = re.compile(r'([가-힣]{2,10})[이가에][게의]?\s*(?:배신|배반|뒤통수)')
+_RE_REL_RECONCILE = re.compile(r"([가-힣]{2,10})[와과]\s*(?:화해|동맹|협력)")
+_RE_REL_BETRAY = re.compile(r"([가-힣]{2,10})[이가에][게의]?\s*(?:배신|배반|뒤통수)")
 
 # --- _regex_extract_npc_injuries ---
-_RE_INJURY_DIRECT = re.compile(r'([가-힣]{2,10})[이가은는]\s*(중상|경상|위독|부상)[을를에]?\s*(?:입|당)')
-_RE_INJURY_BODY = re.compile(r'([가-힣]{2,10})[의]\s*(?:팔|다리|눈|몸)[이가]\s*(?:잘리|부러|찢어|관통)')
-_RE_INJURY_REVERSE = re.compile(r'(중상|위독)[을를에]?\s*(?:입[은힌]|당[한])\s*([가-힣]{2,10})')
+_RE_INJURY_DIRECT = re.compile(r"([가-힣]{2,10})[이가은는]\s*(중상|경상|위독|부상)[을를에]?\s*(?:입|당)")
+_RE_INJURY_BODY = re.compile(r"([가-힣]{2,10})[의]\s*(?:팔|다리|눈|몸)[이가]\s*(?:잘리|부러|찢어|관통)")
+_RE_INJURY_REVERSE = re.compile(r"(중상|위독)[을를에]?\s*(?:입[은힌]|당[한])\s*([가-힣]{2,10})")
 
 # --- _regex_extract_npc_movements ---
 _RE_MOVE_FROM_TO = re.compile(
-    r'([가-힣]{2,10})[이가은는]\s*([가-힣]{2,10})[에서을를]\s*'
-    r'(?:떠나|출발).{0,20}?([가-힣]{2,10})[으로에]\s*(?:이동|향|도착|떠나)'
+    r"([가-힣]{2,10})[이가은는]\s*([가-힣]{2,10})[에서을를]\s*"
+    r"(?:떠나|출발).{0,20}?([가-힣]{2,10})[으로에]\s*(?:이동|향|도착|떠나)"
 )
-_RE_MOVE_TO = re.compile(
-    r'([가-힣]{2,10})[이가은는]\s*([가-힣]{2,10})[으로에]\s*(?:이동|향|도착|떠나)'
-)
-_RE_MOVE_LEAVE = re.compile(
-    r'([가-힣]{2,10})[이가은는]\s*([가-힣]{2,10})[을를]\s*(?:떠나|탈출|벗어나)'
-)
+_RE_MOVE_TO = re.compile(r"([가-힣]{2,10})[이가은는]\s*([가-힣]{2,10})[으로에]\s*(?:이동|향|도착|떠나)")
+_RE_MOVE_LEAVE = re.compile(r"([가-힣]{2,10})[이가은는]\s*([가-힣]{2,10})[을를]\s*(?:떠나|탈출|벗어나)")
 
 # --- _regex_extract_companion_changes ---
 _RE_COMP_JOIN = [
-    re.compile(r'([가-힣]{2,10})[이가은는]\s*(?:합류|동행|일행에\s*가담|함께\s*(?:가|떠나|동행))'),
-    re.compile(r'([가-힣]{2,10})[와과]\s*(?:동행|합류|함께)'),
-    re.compile(r'([가-힣]{2,10})[을를]\s*(?:일행에\s*받아들|동료로\s*받아들|데리고)'),
+    re.compile(r"([가-힣]{2,10})[이가은는]\s*(?:합류|동행|일행에\s*가담|함께\s*(?:가|떠나|동행))"),
+    re.compile(r"([가-힣]{2,10})[와과]\s*(?:동행|합류|함께)"),
+    re.compile(r"([가-힣]{2,10})[을를]\s*(?:일행에\s*받아들|동료로\s*받아들|데리고)"),
 ]
 _RE_COMP_LEAVE = [
-    re.compile(r'([가-힣]{2,10})[이가은는]\s*(?:떠나|이탈|일행에서\s*빠지|헤어지|작별|결별)'),
-    re.compile(r'([가-힣]{2,10})[와과]\s*(?:헤어지|작별|이별)'),
-    re.compile(r'([가-힣]{2,10})[이가은는]\s*(?:홀로|혼자)\s*(?:떠나|길을\s*가)'),
+    re.compile(r"([가-힣]{2,10})[이가은는]\s*(?:떠나|이탈|일행에서\s*빠지|헤어지|작별|결별)"),
+    re.compile(r"([가-힣]{2,10})[와과]\s*(?:헤어지|작별|이별)"),
+    re.compile(r"([가-힣]{2,10})[이가은는]\s*(?:홀로|혼자)\s*(?:떠나|길을\s*가)"),
 ]
 
 # --- extract_permanent_injuries_from_arc ---
 _RE_PERM_AMPUTATION = [
-    re.compile(r'([가-힣]{2,10})[의]\s*(왼팔|오른팔|왼쪽\s*팔|오른쪽\s*팔|팔|왼다리|오른다리|다리)[이가을를]\s*(?:잘리|절단|끊어|잃)'),
-    re.compile(r'([가-힣]{2,10})[이가은는]\s*(팔|다리|손|손가락|발)[을를]?\s*(?:잃|잘리|절단)'),
+    re.compile(
+        r"([가-힣]{2,10})[의]\s*(왼팔|오른팔|왼쪽\s*팔|오른쪽\s*팔|팔|왼다리|오른다리|다리)[이가을를]\s*(?:잘리|절단|끊어|잃)"
+    ),
+    re.compile(r"([가-힣]{2,10})[이가은는]\s*(팔|다리|손|손가락|발)[을를]?\s*(?:잃|잘리|절단)"),
 ]
 _RE_PERM_BLINDNESS = [
-    re.compile(r'([가-힣]{2,10})[의]\s*(왼쪽\s*)?눈[이가을를]\s*(?:멀|잃|찔리|관통)'),
-    re.compile(r'([가-힣]{2,10})[이가은는]\s*(?:실명|눈을\s*잃)'),
+    re.compile(r"([가-힣]{2,10})[의]\s*(왼쪽\s*)?눈[이가을를]\s*(?:멀|잃|찔리|관통)"),
+    re.compile(r"([가-힣]{2,10})[이가은는]\s*(?:실명|눈을\s*잃)"),
 ]
 _RE_PERM_SCAR = [
-    re.compile(r'([가-힣]{2,10})[의에]\s*(?:얼굴|등|가슴|몸)[에]?\s*(?:큰\s*)?(?:흉터|상처자국|화상)'),
+    re.compile(r"([가-힣]{2,10})[의에]\s*(?:얼굴|등|가슴|몸)[에]?\s*(?:큰\s*)?(?:흉터|상처자국|화상)"),
 ]
 
 
@@ -75,18 +72,47 @@ class StateTrackerNPC:
 
     # [V61.7.1] 장르별 능력 습득 로그 표시
     _SKILL_LOG_LABEL = {
-        'wuxia': ('\U0001f94b', '무공 습득'),
-        'hunter': ('\u2694\ufe0f', '스킬 습득'),
-        'investment': ('\U0001f4c8', '핵심 지식 등록'),
-        'fantasy': ('\u2728', '마법 습득'),
-        'cooking': ('\U0001f468\u200d\U0001f373', '조리법 습득'),
-        'actor': ('\U0001f3ac', '연기 습득'),
-        'sports': ('\U0001f3c5', '기술 습득'),
-        'medical': ('\U0001f52c', '의술 습득'),
+        "wuxia": ("\U0001f94b", "무공 습득"),
+        "hunter": ("\u2694\ufe0f", "스킬 습득"),
+        "investment": ("\U0001f4c8", "핵심 지식 등록"),
+        "fantasy": ("\u2728", "마법 습득"),
+        "cooking": ("\U0001f468\u200d\U0001f373", "조리법 습득"),
+        "actor": ("\U0001f3ac", "연기 습득"),
+        "sports": ("\U0001f3c5", "기술 습득"),
+        "medical": ("\U0001f52c", "의술 습득"),
     }
 
     def __init__(self, tracker) -> None:
         self.tracker = tracker  # back-reference to main StateTracker
+
+    # ═══════════════════════════════════════════════════════════════
+    # [Phase 3-5A] NPC 변경 이력 기록 헬퍼
+    # ═══════════════════════════════════════════════════════════════
+
+    def _record_change(
+        self,
+        npc_name: str,
+        arc_no: int,
+        field_name: str,
+        old_value: str,
+        new_value: str,
+        source: str = "arc_extraction",
+    ) -> None:
+        """[Phase 3-5A] DB에 NPC 변경 이력 기록. 실패 시 비차단."""
+        try:
+            db = getattr(self.tracker, "_db", None)
+            if db and hasattr(db, "insert_npc_change"):
+                db.insert_npc_change(
+                    npc_name,
+                    0,
+                    arc_no,
+                    field_name,
+                    str(old_value or ""),
+                    str(new_value or ""),
+                    source,
+                )
+        except Exception as e:
+            logging.warning(f"[Phase 3-5A] NPC 이력 기록 실패 (비차단): {e}")
 
     # ═══════════════════════════════════════════════════════════════
     # NPC 등록/정보
@@ -101,18 +127,29 @@ class StateTrackerNPC:
             death_arc: 사망한 Arc 번호
             death_context: 사망 맥락 (선택)
         """
+        # [Phase 3-5A] 변경 전 상태 캡처
+        old_status = self.tracker.npc_registry.get(npc_name, {}).get("status", "alive")
+
         if npc_name not in self.tracker.npc_registry:
             self.tracker.npc_registry[npc_name] = {}
 
-        self.tracker.npc_registry[npc_name].update({
-            "status": "dead",
-            "death_arc": death_arc,
-            "death_context": death_context
-        })
+        self.tracker.npc_registry[npc_name].update(
+            {"status": "dead", "death_arc": death_arc, "death_context": death_context}
+        )
         logging.info(f"\U0001f480 [V60.94] NPC 사망 등록: {npc_name} (Arc {death_arc})")
 
-    def register_npc_info(self, npc_name: str, arc_no: int, weapon: str = None, level: str = None,
-                          personality_traits: str = None, primary_motivation: str = None):
+        # [Phase 3-5A] 이력 기록
+        self._record_change(npc_name, death_arc, "status", old_status, "dead")
+
+    def register_npc_info(
+        self,
+        npc_name: str,
+        arc_no: int,
+        weapon: str = None,
+        level: str = None,
+        personality_traits: str = None,
+        primary_motivation: str = None,
+    ):
         """
         [V60.94] NPC 정보 등록/업데이트
         [V66] personality_traits, primary_motivation 추가
@@ -131,16 +168,29 @@ class StateTrackerNPC:
         npc = self.tracker.npc_registry[npc_name]
         npc["last_arc"] = arc_no
 
+        # [Phase 3-5A] 각 필드 변경 시 이력 기록 (값이 다를 때만)
         if weapon:
+            old = npc.get("weapon", "")
+            if old != weapon:
+                self._record_change(npc_name, arc_no, "weapon", old, weapon)
             npc["weapon"] = weapon
         if level:
+            old = npc.get("level", "")
+            if old != level:
+                self._record_change(npc_name, arc_no, "level", old, level)
             npc["level"] = level
         if personality_traits:
+            old = npc.get("personality_traits", "")
+            if old != personality_traits:
+                self._record_change(npc_name, arc_no, "personality_traits", old, personality_traits)
             npc["personality_traits"] = personality_traits
         if primary_motivation:
+            old = npc.get("primary_motivation", "")
+            if old != primary_motivation:
+                self._record_change(npc_name, arc_no, "primary_motivation", old, primary_motivation)
             npc["primary_motivation"] = primary_motivation
 
-    def check_npc_changes(self, content: str, arc_no: int) -> List[dict]:
+    def check_npc_changes(self, content: str, arc_no: int) -> list[dict]:
         """
         [V60.95] NPC 무장/수준 변경 검사 - WARNING 대상 (정당화 사유 필요)
 
@@ -155,14 +205,14 @@ class StateTrackerNPC:
 
         # NPC 무장 패턴
         weapon_patterns = [
-            r'([가-힣]{2,10})[이가은는]\s*([가-힣]{2,10}(?:검|도|창|궁|봉|부|낫))[을를으로]?\s*(?:들|휘두르|뽑)',
-            r'([가-힣]{2,10})[의]\s*([가-힣]{2,10}(?:검|도|창|궁|봉|부|낫))',
+            r"([가-힣]{2,10})[이가은는]\s*([가-힣]{2,10}(?:검|도|창|궁|봉|부|낫))[을를으로]?\s*(?:들|휘두르|뽑)",
+            r"([가-힣]{2,10})[의]\s*([가-힣]{2,10}(?:검|도|창|궁|봉|부|낫))",
         ]
 
         # NPC 수준 패턴
         level_patterns = [
-            r'([가-힣]{2,10})[이가은는]\s*(절대고수|화경|현경|초절정|일류|이류|삼류)',
-            r'(절대고수|화경|현경|초절정|일류)[인의]\s*([가-힣]{2,10})',
+            r"([가-힣]{2,10})[이가은는]\s*(절대고수|화경|현경|초절정|일류|이류|삼류)",
+            r"(절대고수|화경|현경|초절정|일류)[인의]\s*([가-힣]{2,10})",
         ]
 
         # 무장 변경 검사
@@ -177,22 +227,24 @@ class StateTrackerNPC:
                     old_weapon = npc.get("weapon")
 
                     if old_weapon and old_weapon != weapon:
-                        warnings.append({
-                            "npc_name": npc_name,
-                            "change_type": "weapon",
-                            "old_value": old_weapon,
-                            "new_value": weapon,
-                            "arc_no": arc_no,
-                            "severity": "WARNING",
-                            "reason": f"Arc {npc.get('last_arc', '?')}에서 '{old_weapon}' 사용 → Arc {arc_no}에서 '{weapon}' 사용"
-                        })
+                        warnings.append(
+                            {
+                                "npc_name": npc_name,
+                                "change_type": "weapon",
+                                "old_value": old_weapon,
+                                "new_value": weapon,
+                                "arc_no": arc_no,
+                                "severity": "WARNING",
+                                "reason": f"Arc {npc.get('last_arc', '?')}에서 '{old_weapon}' 사용 → Arc {arc_no}에서 '{weapon}' 사용",
+                            }
+                        )
 
         # 수준 변경 검사
         for pattern in level_patterns:
             matches = re.findall(pattern, content)
             for match in matches:
                 # 패턴에 따라 순서가 다를 수 있음
-                if match[0] in ['절대고수', '화경', '현경', '초절정', '일류', '이류', '삼류']:
+                if match[0] in ["절대고수", "화경", "현경", "초절정", "일류", "이류", "삼류"]:
                     level, npc_name = match[0], match[1]
                 else:
                     npc_name, level = match[0], match[1]
@@ -202,19 +254,21 @@ class StateTrackerNPC:
                     old_level = npc.get("level")
 
                     if old_level and old_level != level:
-                        warnings.append({
-                            "npc_name": npc_name,
-                            "change_type": "level",
-                            "old_value": old_level,
-                            "new_value": level,
-                            "arc_no": arc_no,
-                            "severity": "WARNING",
-                            "reason": f"Arc {npc.get('last_arc', '?')}에서 '{old_level}' → Arc {arc_no}에서 '{level}'"
-                        })
+                        warnings.append(
+                            {
+                                "npc_name": npc_name,
+                                "change_type": "level",
+                                "old_value": old_level,
+                                "new_value": level,
+                                "arc_no": arc_no,
+                                "severity": "WARNING",
+                                "reason": f"Arc {npc.get('last_arc', '?')}에서 '{old_level}' → Arc {arc_no}에서 '{level}'",
+                            }
+                        )
 
         return warnings
 
-    def extract_npc_info_from_arc(self, arc: dict, genre: str = "") -> List[dict]:
+    def extract_npc_info_from_arc(self, arc: dict, genre: str = "") -> list[dict]:
         """
         [V60.95] Arc의 tactical_doc에서 NPC 정보(무장, 수준) 추출 및 등록
         [V66.2] F-1: 비무협 장르에서 weapon/level regex 오탐 방지 — genre 가드 추가
@@ -228,7 +282,7 @@ class StateTrackerNPC:
             추출된 NPC 정보 목록
         """
         # [V66.2] F-1: 비무협 장르에서는 무기/경지 regex가 일반 명사를 오탐하므로 스킵
-        if genre and genre != 'wuxia':
+        if genre and genre != "wuxia":
             return []
 
         arc_no = arc.get("arc_no", 0)
@@ -240,17 +294,17 @@ class StateTrackerNPC:
 
         # NPC 무장 패턴
         weapon_patterns = [
-            r'([가-힣]{2,10})[이가은는의]\s*([가-힣]{2,10}(?:검|도|창|궁|봉|부|낫))',
+            r"([가-힣]{2,10})[이가은는의]\s*([가-힣]{2,10}(?:검|도|창|궁|봉|부|낫))",
         ]
 
         # NPC 수준 패턴
         level_patterns = [
-            r'([가-힣]{2,10})[이가은는]\s*(절대고수|화경|현경|초절정|일류|이류|삼류)',
-            r'(절대고수|화경|현경|초절정|일류)[인의]\s*([가-힣]{2,10})',
+            r"([가-힣]{2,10})[이가은는]\s*(절대고수|화경|현경|초절정|일류|이류|삼류)",
+            r"(절대고수|화경|현경|초절정|일류)[인의]\s*([가-힣]{2,10})",
         ]
 
         # 제외할 일반 명사
-        exclude_words = ['주인공', '적', '상대', '자신', '그', '그녀', '적수', '상대방']
+        exclude_words = ["주인공", "적", "상대", "자신", "그", "그녀", "적수", "상대방"]
 
         for pattern in weapon_patterns:
             matches = re.findall(pattern, tactical)
@@ -263,7 +317,7 @@ class StateTrackerNPC:
         for pattern in level_patterns:
             matches = re.findall(pattern, tactical)
             for match in matches:
-                if match[0] in ['절대고수', '화경', '현경', '초절정', '일류', '이류', '삼류']:
+                if match[0] in ["절대고수", "화경", "현경", "초절정", "일류", "이류", "삼류"]:
                     level, npc_name = match[0], match[1]
                 else:
                     npc_name, level = match[0], match[1]
@@ -285,25 +339,25 @@ class StateTrackerNPC:
             pos = text.find(name, idx)
             if pos == -1:
                 return False
-            before = text[pos - 1] if pos > 0 else ''
+            before = text[pos - 1] if pos > 0 else ""
             after_pos = pos + len(name)
-            after = text[after_pos] if after_pos < len(text) else ''
+            after = text[after_pos] if after_pos < len(text) else ""
             # [V63.4 P0] 앞쪽 한글 경계 검사
-            if before and '\uAC00' <= before <= '\uD7A3':
+            if before and "\uac00" <= before <= "\ud7a3":
                 idx = pos + 1
                 continue  # 앞에 한글 붙어있으면 오탐
             # [V63.4 P0] 뒤쪽 한글 경계 검사 — "강철"이 "강철무"에 매칭 방지
-            if after and '\uAC00' <= after <= '\uD7A3':
+            if after and "\uac00" <= after <= "\ud7a3":
                 # 뒤에 조사/어미가 올 수 있으므로, 일반 한글 글자만 차단
                 # 조사 패턴: 이/가/은/는/을/를/의/와/과/에/도/로/라/며 등
-                ALLOWED_PARTICLES = set('이가은는을를의와과에도로서라며면고께한')
+                ALLOWED_PARTICLES = set("이가은는을를의와과에도로서라며면고께한")
                 if after not in ALLOWED_PARTICLES:
                     idx = pos + 1
                     continue  # 뒤에 일반 한글 붙어있으면 오탐
             return True  # 독립 매칭 확인
         return False
 
-    def check_dead_npc_appearance(self, content: str, arc_no: int) -> List[dict]:
+    def check_dead_npc_appearance(self, content: str, arc_no: int) -> list[dict]:
         """
         [V60.94] 죽은 NPC 등장 검사 - REJECT 대상
 
@@ -354,13 +408,15 @@ class StateTrackerNPC:
                         ]
 
                         if any(pattern in content for pattern in action_patterns):
-                            violations.append({
-                                "npc_name": npc_name,
-                                "death_arc": death_arc,
-                                "current_arc": arc_no,
-                                "severity": "CRITICAL",
-                                "reason": f"Arc {death_arc}에서 사망한 '{npc_name}'이 Arc {arc_no}에서 다시 등장"
-                            })
+                            violations.append(
+                                {
+                                    "npc_name": npc_name,
+                                    "death_arc": death_arc,
+                                    "current_arc": arc_no,
+                                    "severity": "CRITICAL",
+                                    "reason": f"Arc {death_arc}에서 사망한 '{npc_name}'이 Arc {arc_no}에서 다시 등장",
+                                }
+                            )
 
         return violations
 
@@ -379,11 +435,11 @@ class StateTrackerNPC:
         if skill_name not in self.tracker.protagonist_skills:
             self.tracker.protagonist_skills.add(skill_name)
             self.tracker.skill_acquisitions[skill_name] = arc_no
-            genre = getattr(self.tracker.preset_registry, 'base_genre', '') or ''
-            emoji, label = self._SKILL_LOG_LABEL.get(genre, ('\U0001f94b', '능력 습득'))
+            genre = getattr(self.tracker.preset_registry, "base_genre", "") or ""
+            emoji, label = self._SKILL_LOG_LABEL.get(genre, ("\U0001f94b", "능력 습득"))
             logging.info(f"{emoji} [V60.94] {label}: {skill_name} (Arc {arc_no})")
 
-    def check_unlearned_skill_usage(self, content: str, arc_no: int) -> List[dict]:
+    def check_unlearned_skill_usage(self, content: str, arc_no: int) -> list[dict]:
         """
         [V60.94] 미습득 무공 사용 검사 - 기록용 (REJECT 안 함)
 
@@ -398,8 +454,8 @@ class StateTrackerNPC:
 
         # 무공 사용 패턴
         skill_patterns = [
-            r'([가-힣]{2,10}(?:장|권|법|공|결|식|초))[을를]?\s*(?:시전|펼치|사용|발동)',
-            r'([가-힣]{2,10}(?:심법|내공|기공))[으로]?\s*(?:운기|조식)',
+            r"([가-힣]{2,10}(?:장|권|법|공|결|식|초))[을를]?\s*(?:시전|펼치|사용|발동)",
+            r"([가-힣]{2,10}(?:심법|내공|기공))[으로]?\s*(?:운기|조식)",
         ]
 
         for pattern in skill_patterns:
@@ -409,12 +465,14 @@ class StateTrackerNPC:
                     # 등록된 무공인지 확인
                     if skill not in self.tracker.protagonist_skills:
                         # 새로운 무공일 수도 있으므로 INFO 레벨
-                        suspicious.append({
-                            "skill_name": skill,
-                            "arc_no": arc_no,
-                            "severity": "INFO",
-                            "note": "습득 기록 없음 - 새 무공이거나 숨겨둔 패일 수 있음"
-                        })
+                        suspicious.append(
+                            {
+                                "skill_name": skill,
+                                "arc_no": arc_no,
+                                "severity": "INFO",
+                                "note": "습득 기록 없음 - 새 무공이거나 숨겨둔 패일 수 있음",
+                            }
+                        )
 
         return suspicious
 
@@ -435,17 +493,16 @@ class StateTrackerNPC:
 
         for name, info in self.tracker.npc_registry.items():
             if info.get("status") == "dead":
-                dead_npcs.append({
+                dead_npcs.append({"name": name, "death_arc": info.get("death_arc", 0)})
+            npc_info.append(
+                {
                     "name": name,
-                    "death_arc": info.get("death_arc", 0)
-                })
-            npc_info.append({
-                "name": name,
-                "weapon": info.get("weapon", ""),
-                "level": info.get("level", ""),
-                "status": info.get("status", "alive"),
-                "last_arc": info.get("last_arc", 0)
-            })
+                    "weapon": info.get("weapon", ""),
+                    "level": info.get("level", ""),
+                    "status": info.get("status", "alive"),
+                    "last_arc": info.get("last_arc", 0),
+                }
+            )
 
         # 최신 상태의 아이템 목록
         protagonist_items = []
@@ -458,10 +515,10 @@ class StateTrackerNPC:
             "dead_npcs": dead_npcs,
             "npc_info": npc_info,
             "protagonist_skills": list(self.tracker.protagonist_skills),
-            "protagonist_items": protagonist_items
+            "protagonist_items": protagonist_items,
         }
 
-    def merge_npc_registry(self, other: 'StateTracker'):
+    def merge_npc_registry(self, other: "StateTracker"):
         """[V60.94] 다른 StateTracker의 NPC 레지스트리 병합"""
         for name, info in other.npc_registry.items():
             if name not in self.tracker.npc_registry:
@@ -486,7 +543,7 @@ class StateTrackerNPC:
     # state_changes 추출 (NPC 사망, 무공, 관계, 부상, 이동)
     # ═══════════════════════════════════════════════════════════════
 
-    def extract_npc_deaths_from_arc(self, arc: dict) -> List[str]:
+    def extract_npc_deaths_from_arc(self, arc: dict) -> list[str]:
         """
         [V61] Arc에서 NPC 사망 추출 및 등록
         우선순위: state_changes 필드 > Regex 폴백
@@ -526,13 +583,13 @@ class StateTrackerNPC:
             tactical = "\n".join(str(v) for v in tactical.values() if v)
 
         death_patterns = [
-            r'([가-힣]{2,10})[이가을를]\s*(?:죽이|처단|살해|베어|제거|처형|사살)',
-            r'([가-힣]{2,10})[이가은는]\s*(?:죽|사망|전사|명을\s*다|숨을\s*거두|운명)',
-            r'([가-힣]{2,10})[의]\s*(?:죽음|최후|사망|전사)',
-            r'([가-힣]{2,10})[을를]\s*(?:끝장|마무리|처리)',
+            r"([가-힣]{2,10})[이가을를]\s*(?:죽이|처단|살해|베어|제거|처형|사살)",
+            r"([가-힣]{2,10})[이가은는]\s*(?:죽|사망|전사|명을\s*다|숨을\s*거두|운명)",
+            r"([가-힣]{2,10})[의]\s*(?:죽음|최후|사망|전사)",
+            r"([가-힣]{2,10})[을를]\s*(?:끝장|마무리|처리)",
         ]
 
-        exclude_words = ['주인공', '적', '상대', '자신', '목숨', '생명', '원수', '원한', '일격', '공격', '반격']
+        exclude_words = ["주인공", "적", "상대", "자신", "목숨", "생명", "원수", "원한", "일격", "공격", "반격"]
 
         regex_candidates = []
         for pattern in death_patterns:
@@ -551,7 +608,7 @@ class StateTrackerNPC:
 
         return list(set(dead_npcs))
 
-    def _verify_npc_names_llm(self, candidates: List[str], context: str, arc_no: int) -> List[str]:
+    def _verify_npc_names_llm(self, candidates: list[str], context: str, arc_no: int) -> list[str]:
         """
         [V62.5] LLM으로 regex 추출 NPC 이름 후보 검증
         일반 명사(데이터, 후원자, 시장 등) 오탐을 필터링한다.
@@ -562,6 +619,7 @@ class StateTrackerNPC:
 
         try:
             from google.genai import types as _types
+
             prompt = (
                 f"다음은 소설 텍스트에서 regex로 추출한 'NPC 사망 후보' 목록입니다.\n"
                 f"후보: {json.dumps(candidates, ensure_ascii=False)}\n\n"
@@ -600,7 +658,7 @@ class StateTrackerNPC:
 
         return candidates
 
-    def extract_skill_acquisitions_from_arc(self, arc: dict) -> List[str]:
+    def extract_skill_acquisitions_from_arc(self, arc: dict) -> list[str]:
         """
         [V61] Arc에서 무공/기술 습득 추출 및 등록
         우선순위: state_changes 필드 > Regex 폴백
@@ -639,8 +697,8 @@ class StateTrackerNPC:
             tactical = "\n".join(str(v) for v in tactical.values() if v)
 
         learn_patterns = [
-            r'([가-힣]{2,10}(?:장|권|법|공|결|식|초|심법))[을를]?\s*(?:습득|익히|배우|터득|깨우치|전수받)',
-            r'([가-힣]{2,10}(?:장|권|법|공|결|식|초|심법))[의]?\s*(?:오의|진수|비전)[을를]?\s*(?:깨달|얻)',
+            r"([가-힣]{2,10}(?:장|권|법|공|결|식|초|심법))[을를]?\s*(?:습득|익히|배우|터득|깨우치|전수받)",
+            r"([가-힣]{2,10}(?:장|권|법|공|결|식|초|심법))[의]?\s*(?:오의|진수|비전)[을를]?\s*(?:깨달|얻)",
         ]
 
         for pattern in learn_patterns:
@@ -652,7 +710,7 @@ class StateTrackerNPC:
 
         return list(set(learned_skills))
 
-    def extract_relationship_changes_from_arc(self, arc: dict) -> List[Dict]:
+    def extract_relationship_changes_from_arc(self, arc: dict) -> list[dict]:
         """
         [V61] Arc에서 관계 변화 추출
         [V66.1] F-3: state_changes가 비어있으면 regex 폴백 사용.
@@ -677,13 +735,9 @@ class StateTrackerNPC:
                         to_rel = change.get("to", "")
                         episode = change.get("episode", arc_no)
                         if npc and from_rel and to_rel:
-                            changes.append({
-                                "npc": npc,
-                                "from": from_rel,
-                                "to": to_rel,
-                                "episode": episode,
-                                "arc_no": arc_no
-                            })
+                            changes.append(
+                                {"npc": npc, "from": from_rel, "to": to_rel, "episode": episode, "arc_no": arc_no}
+                            )
                             # NPC registry에도 반영
                             if npc in self.tracker.npc_registry:
                                 self.tracker.npc_registry[npc]["relation_to_protag"] = to_rel
@@ -708,7 +762,7 @@ class StateTrackerNPC:
 
         return changes
 
-    def extract_npc_injuries_from_arc(self, arc: dict) -> List[Dict]:
+    def extract_npc_injuries_from_arc(self, arc: dict) -> list[dict]:
         """
         [V63] Arc에서 NPC 부상 상태 추출 및 레지스트리 반영.
         [V66.1] F-3: state_changes가 비어있으면 regex 폴백 사용.
@@ -724,13 +778,15 @@ class StateTrackerNPC:
                         npc_name = entry.get("name", "")
                         state = entry.get("state", "")
                         if npc_name and state:
-                            injuries.append({
-                                "name": npc_name,
-                                "episode": entry.get("episode", arc_no),
-                                "state": state,
-                                "cause": entry.get("cause", ""),
-                                "arc_no": arc_no
-                            })
+                            injuries.append(
+                                {
+                                    "name": npc_name,
+                                    "episode": entry.get("episode", arc_no),
+                                    "state": state,
+                                    "cause": entry.get("cause", ""),
+                                    "arc_no": arc_no,
+                                }
+                            )
                             # NPC registry 반영
                             if npc_name in self.tracker.npc_registry:
                                 self.tracker.npc_registry[npc_name]["injury"] = state
@@ -754,7 +810,7 @@ class StateTrackerNPC:
 
         return injuries
 
-    def extract_npc_movements_from_arc(self, arc: dict) -> List[Dict]:
+    def extract_npc_movements_from_arc(self, arc: dict) -> list[dict]:
         """
         [V63] Arc에서 NPC 이동 추출 및 레지스트리 반영.
         [V66.1] F-3: state_changes가 비어있으면 regex 폴백 사용.
@@ -770,13 +826,15 @@ class StateTrackerNPC:
                         npc_name = entry.get("name", "")
                         to_loc = entry.get("to", "")
                         if npc_name and to_loc:
-                            movements.append({
-                                "name": npc_name,
-                                "episode": entry.get("episode", arc_no),
-                                "from": entry.get("from", ""),
-                                "to": to_loc,
-                                "arc_no": arc_no
-                            })
+                            movements.append(
+                                {
+                                    "name": npc_name,
+                                    "episode": entry.get("episode", arc_no),
+                                    "from": entry.get("from", ""),
+                                    "to": to_loc,
+                                    "arc_no": arc_no,
+                                }
+                            )
                             # NPC registry 반영
                             if npc_name in self.tracker.npc_registry:
                                 self.tracker.npc_registry[npc_name]["location"] = to_loc
@@ -804,7 +862,7 @@ class StateTrackerNPC:
     # [V66.1] F-3: Regex 폴백 메서드 (relationship, injury, movement)
     # ═══════════════════════════════════════════════════════════════
 
-    def _regex_extract_relationship_changes(self, tactical_doc: str) -> List[Dict]:
+    def _regex_extract_relationship_changes(self, tactical_doc: str) -> list[dict]:
         """
         [V66.1] F-3: tactical_doc에서 관계 변화를 regex로 추출.
         state_changes.relationship_changes가 비어있을 때 폴백으로 사용.
@@ -816,7 +874,7 @@ class StateTrackerNPC:
 
         changes = []
         seen = set()
-        exclude_words = {'주인공', '적', '상대', '자신', '그', '그녀', '적수', '상대방'}
+        exclude_words = {"주인공", "적", "상대", "자신", "그", "그녀", "적수", "상대방"}
 
         # "NPC가 적→동맹" / "NPC의 관계가 적대에서 아군으로"
         # [V66.1] C-2: module-level compiled pattern
@@ -826,9 +884,7 @@ class StateTrackerNPC:
             to_rel = match.group(3).strip()
             if npc not in exclude_words and len(npc) >= 2 and npc not in seen:
                 seen.add(npc)
-                changes.append({
-                    "npc": npc, "from": from_rel, "to": to_rel, "episode": 0
-                })
+                changes.append({"npc": npc, "from": from_rel, "to": to_rel, "episode": 0})
 
         # "NPC와 화해", "NPC에게 배신당"
         # [V66.1] C-2: module-level compiled pattern
@@ -836,22 +892,18 @@ class StateTrackerNPC:
             npc = match.group(1).strip()
             if npc not in exclude_words and len(npc) >= 2 and npc not in seen:
                 seen.add(npc)
-                changes.append({
-                    "npc": npc, "from": "적대", "to": "동맹", "episode": 0
-                })
+                changes.append({"npc": npc, "from": "적대", "to": "동맹", "episode": 0})
 
         # [V66.1] C-2: module-level compiled pattern
         for match in _RE_REL_BETRAY.finditer(tactical_doc):
             npc = match.group(1).strip()
             if npc not in exclude_words and len(npc) >= 2 and npc not in seen:
                 seen.add(npc)
-                changes.append({
-                    "npc": npc, "from": "아군", "to": "적대", "episode": 0
-                })
+                changes.append({"npc": npc, "from": "아군", "to": "적대", "episode": 0})
 
         return changes
 
-    def _regex_extract_npc_injuries(self, tactical_doc: str) -> List[Dict]:
+    def _regex_extract_npc_injuries(self, tactical_doc: str) -> list[dict]:
         """
         [V66.1] F-3: tactical_doc에서 NPC 부상을 regex로 추출.
         state_changes.npc_injuries가 비어있을 때 폴백으로 사용.
@@ -863,7 +915,7 @@ class StateTrackerNPC:
 
         injuries = []
         seen = set()
-        exclude_words = {'주인공', '적', '상대', '자신', '그', '그녀', '적수', '상대방'}
+        exclude_words = {"주인공", "적", "상대", "자신", "그", "그녀", "적수", "상대방"}
 
         # [V66.1] C-2: module-level compiled patterns
         injury_patterns = [
@@ -877,7 +929,7 @@ class StateTrackerNPC:
                 groups = match.groups()
                 if len(groups) >= 2:
                     # 패턴에 따라 NPC 이름과 부상 상태 위치가 다름
-                    if groups[0] in ('중상', '경상', '위독', '부상'):
+                    if groups[0] in ("중상", "경상", "위독", "부상"):
                         state = groups[0]
                         npc_name = groups[1]
                     else:
@@ -888,19 +940,18 @@ class StateTrackerNPC:
 
                 npc_name = npc_name.strip()
                 # 부상→경상 변환
-                if state == '부상':
-                    state = '경상'
+                if state == "부상":
+                    state = "경상"
 
                 if npc_name not in exclude_words and len(npc_name) >= 2 and npc_name not in seen:
                     seen.add(npc_name)
-                    injuries.append({
-                        "name": npc_name, "episode": 0,
-                        "state": state, "cause": "tactical_doc regex 추출"
-                    })
+                    injuries.append(
+                        {"name": npc_name, "episode": 0, "state": state, "cause": "tactical_doc regex 추출"}
+                    )
 
         return injuries
 
-    def _regex_extract_npc_movements(self, tactical_doc: str) -> List[Dict]:
+    def _regex_extract_npc_movements(self, tactical_doc: str) -> list[dict]:
         """
         [V66.1] F-3: tactical_doc에서 NPC 이동을 regex로 추출.
         state_changes.npc_movements가 비어있을 때 폴백으로 사용.
@@ -912,7 +963,7 @@ class StateTrackerNPC:
 
         movements = []
         seen = set()
-        exclude_words = {'주인공', '적', '상대', '자신', '그', '그녀', '적수', '상대방'}
+        exclude_words = {"주인공", "적", "상대", "자신", "그", "그녀", "적수", "상대방"}
 
         # "NPC가 X에서 Y로 이동/향하다"
         # [V66.1] C-2: module-level compiled pattern
@@ -922,10 +973,7 @@ class StateTrackerNPC:
             to_loc = match.group(3).strip()
             if npc not in exclude_words and len(npc) >= 2 and npc not in seen:
                 seen.add(npc)
-                movements.append({
-                    "name": npc, "episode": 0,
-                    "from": from_loc, "to": to_loc
-                })
+                movements.append({"name": npc, "episode": 0, "from": from_loc, "to": to_loc})
 
         # "NPC가 X로 이동/향하다/도착"
         # [V66.1] C-2: module-level compiled pattern
@@ -934,10 +982,7 @@ class StateTrackerNPC:
             to_loc = match.group(2).strip()
             if npc not in exclude_words and len(npc) >= 2 and npc not in seen:
                 seen.add(npc)
-                movements.append({
-                    "name": npc, "episode": 0,
-                    "from": "", "to": to_loc
-                })
+                movements.append({"name": npc, "episode": 0, "from": "", "to": to_loc})
 
         # "NPC가 X를 떠나다"
         # [V66.1] C-2: module-level compiled pattern
@@ -946,10 +991,7 @@ class StateTrackerNPC:
             from_loc = match.group(2).strip()
             if npc not in exclude_words and len(npc) >= 2 and npc not in seen:
                 seen.add(npc)
-                movements.append({
-                    "name": npc, "episode": 0,
-                    "from": from_loc, "to": ""
-                })
+                movements.append({"name": npc, "episode": 0, "from": from_loc, "to": ""})
 
         return movements
 
@@ -957,8 +999,7 @@ class StateTrackerNPC:
     # [V66.1] F-8: NPC 영구 부상 (절단, 실명, 흉터 등) 추적
     # ═══════════════════════════════════════════════════════════════
 
-    def register_permanent_injury(self, name: str, injury_type: str,
-                                  description: str, arc_no: int):
+    def register_permanent_injury(self, name: str, injury_type: str, description: str, arc_no: int):
         """
         [V66.1] NPC 영구 부상 등록.
 
@@ -985,15 +1026,17 @@ class StateTrackerNPC:
             if existing.get("description") == description and existing.get("arc_no") == arc_no:
                 return
 
-        npc["permanent_injuries"].append({
-            "type": injury_type,
-            "description": description,
-            "arc_no": arc_no,
-        })
+        npc["permanent_injuries"].append(
+            {
+                "type": injury_type,
+                "description": description,
+                "arc_no": arc_no,
+            }
+        )
         npc["last_arc"] = arc_no
         logging.info(f"[V66.1] NPC 영구 부상 등록: {name} - {description} (Arc {arc_no})")
 
-    def extract_permanent_injuries_from_arc(self, arc_data: dict) -> List[Dict]:
+    def extract_permanent_injuries_from_arc(self, arc_data: dict) -> list[dict]:
         """
         [V66.1] Arc에서 영구 부상 추출 및 등록.
         우선순위: state_changes["permanent_injuries"] > regex 폴백.
@@ -1020,11 +1063,15 @@ class StateTrackerNPC:
                         episode = pi.get("episode", arc_no)
                         if name and len(name) >= 2 and desc:
                             self.register_permanent_injury(name, i_type, desc, arc_no)
-                            results.append({
-                                "name": name, "type": i_type,
-                                "description": desc, "episode": episode,
-                                "arc_no": arc_no
-                            })
+                            results.append(
+                                {
+                                    "name": name,
+                                    "type": i_type,
+                                    "description": desc,
+                                    "episode": episode,
+                                    "arc_no": arc_no,
+                                }
+                            )
                 if results:
                     return results
 
@@ -1036,7 +1083,7 @@ class StateTrackerNPC:
         if not tactical:
             return results
 
-        exclude_words = {'주인공', '적', '상대', '자신', '그', '그녀', '적수', '상대방'}
+        exclude_words = {"주인공", "적", "상대", "자신", "그", "그녀", "적수", "상대방"}
         seen = set()
 
         # [V66.1] C-2: module-level compiled patterns
@@ -1052,10 +1099,9 @@ class StateTrackerNPC:
                     seen.add(npc)
                     desc = f"{body_part} 절단"
                     self.register_permanent_injury(npc, "amputation", desc, arc_no)
-                    results.append({
-                        "name": npc, "type": "amputation",
-                        "description": desc, "episode": 0, "arc_no": arc_no
-                    })
+                    results.append(
+                        {"name": npc, "type": "amputation", "description": desc, "episode": 0, "arc_no": arc_no}
+                    )
 
         for pattern in blindness_patterns:
             for match in pattern.finditer(tactical):
@@ -1064,10 +1110,9 @@ class StateTrackerNPC:
                     seen.add(npc)
                     desc = "실명"
                     self.register_permanent_injury(npc, "blindness", desc, arc_no)
-                    results.append({
-                        "name": npc, "type": "blindness",
-                        "description": desc, "episode": 0, "arc_no": arc_no
-                    })
+                    results.append(
+                        {"name": npc, "type": "blindness", "description": desc, "episode": 0, "arc_no": arc_no}
+                    )
 
         for pattern in scar_patterns:
             for match in pattern.finditer(tactical):
@@ -1076,10 +1121,7 @@ class StateTrackerNPC:
                     seen.add(npc)
                     desc = "영구 흉터"
                     self.register_permanent_injury(npc, "scar", desc, arc_no)
-                    results.append({
-                        "name": npc, "type": "scar",
-                        "description": desc, "episode": 0, "arc_no": arc_no
-                    })
+                    results.append({"name": npc, "type": "scar", "description": desc, "episode": 0, "arc_no": arc_no})
 
         return results
 
@@ -1142,11 +1184,13 @@ class StateTrackerNPC:
         # 부활 이력 기록
         if "revive_history" not in npc:
             npc["revive_history"] = []
-        npc["revive_history"].append({
-            "reason": reason,
-            "previous_death_arc": old_death_arc,
-            "previous_death_context": old_death_context,
-        })
+        npc["revive_history"].append(
+            {
+                "reason": reason,
+                "previous_death_arc": old_death_arc,
+                "previous_death_context": old_death_context,
+            }
+        )
 
         logging.info(f"[V66.1] NPC 사망 취소: '{name}' (사유: {reason}, 이전 사망 Arc: {old_death_arc})")
         return True
@@ -1155,7 +1199,7 @@ class StateTrackerNPC:
     # Stage 3/4: Blueprint/Manuscript 내 죽은 NPC 검사
     # ═══════════════════════════════════════════════════════════════
 
-    def check_dead_npc_in_blueprint(self, blueprint: dict, ep_num: int, arc_no: int = 0) -> List[dict]:
+    def check_dead_npc_in_blueprint(self, blueprint: dict, ep_num: int, arc_no: int = 0) -> list[dict]:
         """
         [V60.96] Blueprint에서 죽은 NPC 등장 검사 - REJECT 대상
 
@@ -1211,34 +1255,50 @@ class StateTrackerNPC:
                 if self._is_standalone_name(npc_name, content):
                     # 회상/언급 패턴은 허용
                     flashback_patterns = [
-                        f"{npc_name}의 죽음", f"{npc_name}을 떠올", f"{npc_name}를 떠올",
-                        f"고인이 된 {npc_name}", f"죽은 {npc_name}", f"{npc_name}의 유언",
-                        f"{npc_name}의 무덤", f"{npc_name}의 원혼", f"{npc_name}의 유품",
-                        f"{npc_name}을 추모", f"{npc_name}의 복수"
+                        f"{npc_name}의 죽음",
+                        f"{npc_name}을 떠올",
+                        f"{npc_name}를 떠올",
+                        f"고인이 된 {npc_name}",
+                        f"죽은 {npc_name}",
+                        f"{npc_name}의 유언",
+                        f"{npc_name}의 무덤",
+                        f"{npc_name}의 원혼",
+                        f"{npc_name}의 유품",
+                        f"{npc_name}을 추모",
+                        f"{npc_name}의 복수",
                     ]
                     is_flashback = any(pattern in content for pattern in flashback_patterns)
 
                     if not is_flashback:
                         # 실제 등장 패턴 검사
                         action_patterns = [
-                            f"{npc_name}이 ", f"{npc_name}가 ", f"{npc_name}은 ", f"{npc_name}는 ",
-                            f'"{npc_name}', f"{npc_name}와 ", f"{npc_name}과 ",
-                            f"{npc_name}의 검", f"{npc_name}의 공격", f"{npc_name}에게"
+                            f"{npc_name}이 ",
+                            f"{npc_name}가 ",
+                            f"{npc_name}은 ",
+                            f"{npc_name}는 ",
+                            f'"{npc_name}',
+                            f"{npc_name}와 ",
+                            f"{npc_name}과 ",
+                            f"{npc_name}의 검",
+                            f"{npc_name}의 공격",
+                            f"{npc_name}에게",
                         ]
                         if any(pattern in content for pattern in action_patterns):
-                            violations.append({
-                                "npc_name": npc_name,
-                                "death_arc": death_arc,
-                                "current_ep": ep_num,
-                                "current_arc": arc_no,
-                                "severity": "CRITICAL",
-                                "context": "blueprint",
-                                "reason": f"Arc {death_arc}에서 사망한 '{npc_name}'이 제{ep_num}화(Arc {arc_no}) Blueprint에서 다시 등장"
-                            })
+                            violations.append(
+                                {
+                                    "npc_name": npc_name,
+                                    "death_arc": death_arc,
+                                    "current_ep": ep_num,
+                                    "current_arc": arc_no,
+                                    "severity": "CRITICAL",
+                                    "context": "blueprint",
+                                    "reason": f"Arc {death_arc}에서 사망한 '{npc_name}'이 제{ep_num}화(Arc {arc_no}) Blueprint에서 다시 등장",
+                                }
+                            )
 
         return violations
 
-    def check_dead_npc_in_manuscript(self, manuscript: str, ep_num: int, arc_no: int = 0) -> List[dict]:
+    def check_dead_npc_in_manuscript(self, manuscript: str, ep_num: int, arc_no: int = 0) -> list[dict]:
         """
         [V60.96] Manuscript에서 죽은 NPC 등장 검사 - REJECT 대상
 
@@ -1271,33 +1331,54 @@ class StateTrackerNPC:
                 if self._is_standalone_name(npc_name, manuscript):
                     # 회상/언급 패턴은 허용 (더 광범위)
                     flashback_patterns = [
-                        f"{npc_name}의 죽음", f"{npc_name}을 떠올", f"{npc_name}를 떠올",
-                        f"고인이 된 {npc_name}", f"죽은 {npc_name}", f"{npc_name}의 유언",
-                        f"{npc_name}의 무덤", f"{npc_name}의 원혼", f"{npc_name}의 유품",
-                        f"{npc_name}을 추모", f"{npc_name}의 복수", f"{npc_name}의 이름",
-                        f"{npc_name}처럼", f"{npc_name}같은", f"과거의 {npc_name}",
-                        f"{npc_name}의 기억", f"{npc_name}의 영혼"
+                        f"{npc_name}의 죽음",
+                        f"{npc_name}을 떠올",
+                        f"{npc_name}를 떠올",
+                        f"고인이 된 {npc_name}",
+                        f"죽은 {npc_name}",
+                        f"{npc_name}의 유언",
+                        f"{npc_name}의 무덤",
+                        f"{npc_name}의 원혼",
+                        f"{npc_name}의 유품",
+                        f"{npc_name}을 추모",
+                        f"{npc_name}의 복수",
+                        f"{npc_name}의 이름",
+                        f"{npc_name}처럼",
+                        f"{npc_name}같은",
+                        f"과거의 {npc_name}",
+                        f"{npc_name}의 기억",
+                        f"{npc_name}의 영혼",
                     ]
                     is_flashback = any(pattern in manuscript for pattern in flashback_patterns)
 
                     if not is_flashback:
                         # 실제 등장 패턴 (대화, 행동)
                         action_patterns = [
-                            f"{npc_name}이 말", f"{npc_name}가 말", f"{npc_name}이 대답",
-                            f"{npc_name}가 대답", f"{npc_name}은 고개", f"{npc_name}는 고개",
-                            f'"{npc_name}', f"{npc_name}이 검", f"{npc_name}가 검",
-                            f"{npc_name}의 손", f"{npc_name}이 다가", f"{npc_name}가 다가"
+                            f"{npc_name}이 말",
+                            f"{npc_name}가 말",
+                            f"{npc_name}이 대답",
+                            f"{npc_name}가 대답",
+                            f"{npc_name}은 고개",
+                            f"{npc_name}는 고개",
+                            f'"{npc_name}',
+                            f"{npc_name}이 검",
+                            f"{npc_name}가 검",
+                            f"{npc_name}의 손",
+                            f"{npc_name}이 다가",
+                            f"{npc_name}가 다가",
                         ]
                         if any(pattern in manuscript for pattern in action_patterns):
-                            violations.append({
-                                "npc_name": npc_name,
-                                "death_arc": death_arc,
-                                "current_ep": ep_num,
-                                "current_arc": arc_no,
-                                "severity": "CRITICAL",
-                                "context": "manuscript",
-                                "reason": f"Arc {death_arc}에서 사망한 '{npc_name}'이 제{ep_num}화(Arc {arc_no}) 원고에서 살아있는 것처럼 등장"
-                            })
+                            violations.append(
+                                {
+                                    "npc_name": npc_name,
+                                    "death_arc": death_arc,
+                                    "current_ep": ep_num,
+                                    "current_arc": arc_no,
+                                    "severity": "CRITICAL",
+                                    "context": "manuscript",
+                                    "reason": f"Arc {death_arc}에서 사망한 '{npc_name}'이 제{ep_num}화(Arc {arc_no}) 원고에서 살아있는 것처럼 등장",
+                                }
+                            )
 
         return violations
 
@@ -1317,18 +1398,14 @@ class StateTrackerNPC:
         if not dead_npcs:
             return ""
 
-        lines = [
-            "\U0001f6a8 [사망 NPC 목록 - 절대 살아있는 것처럼 등장시키지 말 것]",
-            *dead_npcs,
-            ""
-        ]
+        lines = ["\U0001f6a8 [사망 NPC 목록 - 절대 살아있는 것처럼 등장시키지 말 것]", *dead_npcs, ""]
         return "\n".join(lines)
 
     # ═══════════════════════════════════════════════════════════════
     # [V66] NPC 성격/동기 baseline
     # ═══════════════════════════════════════════════════════════════
 
-    def extract_npc_personality_from_arc(self, arc: dict) -> List[Dict]:
+    def extract_npc_personality_from_arc(self, arc: dict) -> list[dict]:
         """[V66] Arc에서 npc_personality_changes 추출 및 NPC 레지스트리 업데이트."""
         arc_no = arc.get("arc_no", 0)
         results = []
@@ -1342,15 +1419,8 @@ class StateTrackerNPC:
                         name = str(pc["name"])
                         traits = str(pc.get("traits", ""))
                         motivation = str(pc.get("motivation", ""))
-                        self.register_npc_info(
-                            name, arc_no,
-                            personality_traits=traits,
-                            primary_motivation=motivation
-                        )
-                        results.append({
-                            "name": name, "traits": traits,
-                            "motivation": motivation, "arc_no": arc_no
-                        })
+                        self.register_npc_info(name, arc_no, personality_traits=traits, primary_motivation=motivation)
+                        results.append({"name": name, "traits": traits, "motivation": motivation, "arc_no": arc_no})
         return results
 
     def get_npc_personality_summary(self) -> str:
@@ -1375,7 +1445,7 @@ class StateTrackerNPC:
     # [V66] NPC-NPC 관계 추적
     # ═══════════════════════════════════════════════════════════════
 
-    def extract_npc_npc_relationships_from_arc(self, arc: dict) -> List[Dict]:
+    def extract_npc_npc_relationships_from_arc(self, arc: dict) -> list[dict]:
         """[V66] Arc에서 npc_npc_relationships 추출 및 레지스트리 업데이트."""
         arc_no = arc.get("arc_no", 0)
         results = []
@@ -1390,20 +1460,14 @@ class StateTrackerNPC:
                         npc2 = str(r["npc2"])
                         relation = str(r.get("relation", ""))
                         self.register_npc_npc_relationship(npc1, npc2, relation, arc_no)
-                        results.append({
-                            "npc1": npc1, "npc2": npc2,
-                            "relation": relation, "arc_no": arc_no
-                        })
+                        results.append({"npc1": npc1, "npc2": npc2, "relation": relation, "arc_no": arc_no})
         return results
 
     def register_npc_npc_relationship(self, npc1: str, npc2: str, relation: str, arc_no: int):
         """[V66] NPC 간 관계 등록. key=정렬된 (name1, name2) 튜플. 이력 보존."""
         key = tuple(sorted([npc1, npc2]))
         existing = self.tracker.npc_npc_relationships.get(key)
-        new_entry = {
-            "npc1": key[0], "npc2": key[1],
-            "relation": relation, "arc_no": arc_no
-        }
+        new_entry = {"npc1": key[0], "npc2": key[1], "relation": relation, "arc_no": arc_no}
         # 이력 보존: prev_relation 필드로 이전 관계 기록
         if existing and existing.get("relation") != relation:
             new_entry["prev_relation"] = existing.get("relation", "")
@@ -1421,8 +1485,7 @@ class StateTrackerNPC:
         lines = ["[V66] NPC 간 관계 (변경 시 명시적 사유 필요):"]
         for info in self.tracker.npc_npc_relationships.values():
             lines.append(
-                f"  - {info['npc1']} ↔ {info['npc2']}: "
-                f"{info.get('relation', '?')} (Arc {info.get('arc_no', '?')})"
+                f"  - {info['npc1']} ↔ {info['npc2']}: {info.get('relation', '?')} (Arc {info.get('arc_no', '?')})"
             )
         return "\n".join(lines)
 
@@ -1430,9 +1493,9 @@ class StateTrackerNPC:
     # [V66] NPC 대화 스타일 레지스트리
     # ═══════════════════════════════════════════════════════════════
 
-    def register_npc_dialogue_style(self, npc_name: str, speech_level: str = "",
-                                     catchphrase: str = "", emotion_baseline: str = "",
-                                     arc_no: int = 0):
+    def register_npc_dialogue_style(
+        self, npc_name: str, speech_level: str = "", catchphrase: str = "", emotion_baseline: str = "", arc_no: int = 0
+    ):
         """[V66] NPC 대화 스타일 등록."""
         if not npc_name:
             return
@@ -1445,7 +1508,7 @@ class StateTrackerNPC:
         }
         self.tracker.npc_dialogue_profiles[npc_name] = entry
 
-    def extract_npc_dialogue_styles_from_arc(self, arc: dict) -> List[Dict]:
+    def extract_npc_dialogue_styles_from_arc(self, arc: dict) -> list[dict]:
         """[V66] Arc의 state_changes에서 npc_personality_changes 기반 대화 스타일 추출."""
         arc_no = arc.get("arc_no", 0)
         results = []
@@ -1498,8 +1561,10 @@ class StateTrackerNPC:
 
                     if speech or emotion:
                         self.register_npc_dialogue_style(
-                            name, speech_level=speech,
-                            emotion_baseline=emotion, arc_no=arc_no,
+                            name,
+                            speech_level=speech,
+                            emotion_baseline=emotion,
+                            arc_no=arc_no,
                         )
                         results.append({"name": name, "speech": speech, "emotion": emotion})
         return results
@@ -1516,7 +1581,7 @@ class StateTrackerNPC:
             if info.get("emotion_baseline"):
                 parts.append(f"감정={info['emotion_baseline']}")
             if info.get("catchphrase"):
-                parts.append(f"캐치프레이즈=\"{info['catchphrase']}\"")
+                parts.append(f'캐치프레이즈="{info["catchphrase"]}"')
             if len(parts) > 1:
                 lines.append(" ".join(parts))
         if len(lines) <= 1:
@@ -1527,7 +1592,7 @@ class StateTrackerNPC:
     # [V66.1] 동행자(Companion) 추적
     # ═══════════════════════════════════════════════════════════════
 
-    def update_companions_from_arc(self, arc_data: dict) -> List[Dict]:
+    def update_companions_from_arc(self, arc_data: dict) -> list[dict]:
         """
         [V66.1] Arc에서 동행자 변동 추출 및 current_companions 갱신.
         우선순위: state_changes["companion_changes"] > regex 폴백.
@@ -1554,11 +1619,9 @@ class StateTrackerNPC:
                         reason = str(cc.get("reason", ""))
                         if name and len(name) >= 2:
                             self._apply_companion_change(name, action, arc_no, episode, reason)
-                            results.append({
-                                "name": name, "action": action,
-                                "episode": episode, "reason": reason,
-                                "arc_no": arc_no
-                            })
+                            results.append(
+                                {"name": name, "action": action, "episode": episode, "reason": reason, "arc_no": arc_no}
+                            )
                 if results:
                     return results
 
@@ -1572,31 +1635,24 @@ class StateTrackerNPC:
             for rc in regex_changes:
                 rc["arc_no"] = arc_no
                 self._apply_companion_change(
-                    rc["name"], rc["action"], arc_no,
-                    rc.get("episode", 0), rc.get("reason", "tactical_doc regex 추출")
+                    rc["name"], rc["action"], arc_no, rc.get("episode", 0), rc.get("reason", "tactical_doc regex 추출")
                 )
                 results.append(rc)
 
         return results
 
-    def _apply_companion_change(self, name: str, action: str, arc_no: int,
-                                 episode: int = 0, reason: str = ""):
+    def _apply_companion_change(self, name: str, action: str, arc_no: int, episode: int = 0, reason: str = ""):
         """[V66.1] 동행자 상태 적용 (join/leave)."""
         companions = self.tracker.current_companions
         if action == "join":
             if not any(c.get("name") == name for c in companions):
-                companions.append({
-                    "name": name, "joined_arc": arc_no,
-                    "joined_episode": episode, "reason": reason
-                })
+                companions.append({"name": name, "joined_arc": arc_no, "joined_episode": episode, "reason": reason})
                 logging.info(f"[V66.1] 동행자 합류: {name} (Arc {arc_no})")
         elif action == "leave":
-            self.tracker.current_companions = [
-                c for c in companions if c.get("name") != name
-            ]
+            self.tracker.current_companions = [c for c in companions if c.get("name") != name]
             logging.info(f"[V66.1] 동행자 이탈: {name} (Arc {arc_no}, 사유: {reason})")
 
-    def _regex_extract_companion_changes(self, tactical_doc: str) -> List[Dict]:
+    def _regex_extract_companion_changes(self, tactical_doc: str) -> list[dict]:
         """
         [V66.1] tactical_doc에서 동행자 합류/이탈을 regex로 추출.
         state_changes.companion_changes가 비어있을 때 폴백으로 사용.
@@ -1609,7 +1665,7 @@ class StateTrackerNPC:
 
         changes = []
         seen = set()
-        exclude_words = {'주인공', '적', '상대', '자신', '그', '그녀', '적수', '상대방'}
+        exclude_words = {"주인공", "적", "상대", "자신", "그", "그녀", "적수", "상대방"}
 
         # [V66.1] C-2: module-level compiled patterns
         join_patterns = _RE_COMP_JOIN
@@ -1620,20 +1676,14 @@ class StateTrackerNPC:
                 npc = match.group(1).strip()
                 if npc not in exclude_words and len(npc) >= 2 and npc not in seen:
                     seen.add(npc)
-                    changes.append({
-                        "name": npc, "action": "join",
-                        "episode": 0, "reason": "tactical_doc regex 추출"
-                    })
+                    changes.append({"name": npc, "action": "join", "episode": 0, "reason": "tactical_doc regex 추출"})
 
         for pattern in leave_patterns:
             for match in pattern.finditer(tactical_doc):
                 npc = match.group(1).strip()
                 if npc not in exclude_words and len(npc) >= 2 and npc not in seen:
                     seen.add(npc)
-                    changes.append({
-                        "name": npc, "action": "leave",
-                        "episode": 0, "reason": "tactical_doc regex 추출"
-                    })
+                    changes.append({"name": npc, "action": "leave", "episode": 0, "reason": "tactical_doc regex 추출"})
 
         return changes
 
@@ -1666,8 +1716,7 @@ class StateTrackerNPC:
     # [V66.1] 주인공 감정 상태 추적
     # ═══════════════════════════════════════════════════════════════
 
-    def update_protagonist_emotion(self, arc_no: int, episode: int,
-                                    emotion: str, trigger: str):
+    def update_protagonist_emotion(self, arc_no: int, episode: int, emotion: str, trigger: str):
         """
         [V66.1] 주인공 감정 상태 갱신.
 
@@ -1687,7 +1736,7 @@ class StateTrackerNPC:
         }
         logging.info(f"[V66.1] 주인공 감정 갱신: {emotion} (사유: {trigger}, Arc {arc_no} Ep{episode})")
 
-    def extract_protagonist_emotion_from_arc(self, arc_data: dict) -> Optional[Dict]:
+    def extract_protagonist_emotion_from_arc(self, arc_data: dict) -> dict | None:
         """
         [V66.1] Arc에서 주인공 감정 상태 추출 및 갱신.
         우선순위: state_changes["protagonist_emotion"] > regex 폴백.
@@ -1711,10 +1760,7 @@ class StateTrackerNPC:
                 trigger = str(pe.get("trigger", ""))
                 episode = pe.get("episode", arc_no)
                 self.update_protagonist_emotion(arc_no, episode, emotion, trigger)
-                return {
-                    "emotion": emotion, "trigger": trigger,
-                    "episode": episode, "arc_no": arc_no
-                }
+                return {"emotion": emotion, "trigger": trigger, "episode": episode, "arc_no": arc_no}
 
         # 2순위: regex 폴백 (강한 감정 표현만)
         tactical = arc_data.get("tactical_doc", "")
@@ -1726,35 +1772,42 @@ class StateTrackerNPC:
 
         # 강한 감정 패턴: 주인공 + 감정 표현
         emotion_map = {
-            '분노': '분노', '격노': '분노', '격분': '분노',
-            '비통': '비통', '슬픔': '비통', '통곡': '비통', '비탄': '비통',
-            '절망': '절망', '좌절': '절망',
-            '환희': '환희', '기쁨': '환희', '감격': '환희', '환호': '환희',
-            '감동': '감동',
-            '공포': '공포', '두려움': '공포', '경악': '공포',
-            '결의': '결의', '각오': '결의', '결심': '결의',
+            "분노": "분노",
+            "격노": "분노",
+            "격분": "분노",
+            "비통": "비통",
+            "슬픔": "비통",
+            "통곡": "비통",
+            "비탄": "비통",
+            "절망": "절망",
+            "좌절": "절망",
+            "환희": "환희",
+            "기쁨": "환희",
+            "감격": "환희",
+            "환호": "환희",
+            "감동": "감동",
+            "공포": "공포",
+            "두려움": "공포",
+            "경악": "공포",
+            "결의": "결의",
+            "각오": "결의",
+            "결심": "결의",
         }
 
         # "주인공이 분노" / "비통에 잠기" / "격노하며" 패턴
         for keyword, normalized in emotion_map.items():
             # 주인공 관련 감정 패턴
             pattern = re.compile(
-                r'(?:주인공|{name})[이가은는의]?\s*.{{0,20}}?{kw}'.format(
-                    name=re.escape('주인공'), kw=re.escape(keyword)
+                r"(?:주인공|{name})[이가은는의]?\s*.{{0,20}}?{kw}".format(
+                    name=re.escape("주인공"), kw=re.escape(keyword)
                 )
             )
             if pattern.search(tactical):
                 # trigger 추출 시도: 감정 주변 컨텍스트
-                trigger_match = re.search(
-                    re.escape(keyword) + r'.{0,30}?(?:에|으로|때문|인해)',
-                    tactical
-                )
+                trigger_match = re.search(re.escape(keyword) + r".{0,30}?(?:에|으로|때문|인해)", tactical)
                 trigger_text = trigger_match.group(0)[:30] if trigger_match else ""
                 self.update_protagonist_emotion(arc_no, arc_no, normalized, trigger_text)
-                return {
-                    "emotion": normalized, "trigger": trigger_text,
-                    "episode": arc_no, "arc_no": arc_no
-                }
+                return {"emotion": normalized, "trigger": trigger_text, "episode": arc_no, "arc_no": arc_no}
 
         return None
 
@@ -1829,8 +1882,8 @@ class StateTrackerNPC:
         """
         if not self.tracker.skill_acquisitions:
             return ""
-        genre = getattr(self.tracker.preset_registry, 'base_genre', '') or ''
-        _, label = self._SKILL_LOG_LABEL.get(genre, ('\U0001f94b', '능력 습득'))
+        genre = getattr(self.tracker.preset_registry, "base_genre", "") or ""
+        _, label = self._SKILL_LOG_LABEL.get(genre, ("\U0001f94b", "능력 습득"))
         lines = []
         for skill_name, arc_no in self.tracker.skill_acquisitions.items():
             lines.append(f"  - {skill_name} (Arc {arc_no})")
@@ -1841,7 +1894,7 @@ class StateTrackerNPC:
     # [V69] NPC 레지스트리 LLM 정리
     # ═══════════════════════════════════════════════════════════════
 
-    def cleanup_npc_registry_with_llm(self, arc_no: int) -> List[str]:
+    def cleanup_npc_registry_with_llm(self, arc_no: int) -> list[str]:
         """[V69] 5 Arc마다 npc_registry에서 일반명사 오탐을 LLM으로 정리.
         flash 모델 1회 호출. 실패 시 비차단.
 
@@ -1853,10 +1906,7 @@ class StateTrackerNPC:
         """
         try:
             # alive 상태인 NPC 이름 목록 추출 (dead는 건드리지 않음)
-            alive_names = [
-                name for name, info in self.tracker.npc_registry.items()
-                if info.get("status") == "alive"
-            ]
+            alive_names = [name for name, info in self.tracker.npc_registry.items() if info.get("status") == "alive"]
 
             # 이름이 5개 미만이면 스킵 (정리 불필요)
             if len(alive_names) < 5:
@@ -1894,7 +1944,7 @@ class StateTrackerNPC:
             except (ValueError, AttributeError):
                 _resp_text = None
             if not _resp_text:
-                logging.info(f"⚠️ [V69] NPC 정리 LLM 응답 비어있음, 건너뜀")
+                logging.info("⚠️ [V69] NPC 정리 LLM 응답 비어있음, 건너뜀")
                 return
             result = json.loads(_resp_text)
             remove_list = []
@@ -1913,8 +1963,10 @@ class StateTrackerNPC:
                         removed.append(name)
 
             if removed:
-                print(f"      \U0001f9f9 [V69] NPC 레지스트리 LLM 정리 (Arc {arc_no}): "
-                      f"{len(removed)}개 오탐 제거 - {removed}")
+                print(
+                    f"      \U0001f9f9 [V69] NPC 레지스트리 LLM 정리 (Arc {arc_no}): "
+                    f"{len(removed)}개 오탐 제거 - {removed}"
+                )
 
             return removed
 
