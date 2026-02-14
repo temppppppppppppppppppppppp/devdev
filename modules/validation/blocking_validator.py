@@ -9,6 +9,7 @@ Python 기반 필수 검증 (LLM 호출 불필요)
 import re
 
 from modules.core.constants import ManuscriptLimits  # [V64.P4]
+from modules.validation.threshold_helper import _threshold  # [Phase 5-B-2c]
 
 # [Phase 4.2] Justification pattern 임포트
 try:

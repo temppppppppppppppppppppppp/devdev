@@ -2,7 +2,7 @@
 [V0128] TIER 3: ADVISORY Validator
 개선 제안 (통과에 무영향)
 """
-from typing import Dict, List, Any
+
 import logging
 
 
@@ -19,7 +19,7 @@ class AdvisoryValidator:
         "천재물": ["숨겨진 재능", "알고보니 천재", "각성"],
         "복수물": ["반드시 복수", "피의 대가", "잊지 않겠다"],
         "가문물": ["쫓겨난", "버림받은", "폐가문", "재건"],
-        "전개": ["기절했다 깨보니", "위기의 순간 각성", "숨겨진 혈통"]
+        "전개": ["기절했다 깨보니", "위기의 순간 각성", "숨겨진 혈통"],
     }
 
     def __init__(self, client=None, model="gemini-2.5-flash") -> None:
@@ -57,7 +57,7 @@ class AdvisoryValidator:
             "tier": "ADVISORY",
             "passed": True,  # 항상 PASS
             "suggestions": suggestions[:5],  # 상위 5개만
-            "message": f"{len(suggestions)}개 개선 제안"
+            "message": f"{len(suggestions)}개 개선 제안",
         }
 
     # [V44] 클리셰 확정을 위한 컨텍스트 키워드 (주변에 있어야 클리셰로 판정)
@@ -66,10 +66,10 @@ class AdvisoryValidator:
         "천재물": ["천재", "재능", "각성", "능력", "숨겨", "진정한"],
         "복수물": ["복수", "원수", "피", "죽", "갚", "대가"],
         "가문물": ["가문", "가", "집안", "버림", "쫓겨", "상속"],
-        "전개": ["각성", "위기", "혈통", "비밀", "정체"]
+        "전개": ["각성", "위기", "혈통", "비밀", "정체"],
     }
 
-    def _detect_cliches(self, manuscript: str) -> List[dict]:
+    def _detect_cliches(self, manuscript: str) -> list[dict]:
         """[V44] 클리셰 감지 - 컨텍스트 기반 오탐 방지"""
         detected = []
 
@@ -90,22 +90,24 @@ class AdvisoryValidator:
                 has_context = any(kw in context for kw in context_keywords)
 
                 if has_context:
-                    detected.append({
-                        "type": "cliche_detection",
-                        "category": category,
-                        "pattern": pattern,
-                        "suggestion": f"'{pattern}' 클리셰 감지. 더 신선한 전개 권장.",
-                        "location": location,
-                        "severity": "low",
-                        "context_matched": True
-                    })
+                    detected.append(
+                        {
+                            "type": "cliche_detection",
+                            "category": category,
+                            "pattern": pattern,
+                            "suggestion": f"'{pattern}' 클리셰 감지. 더 신선한 전개 권장.",
+                            "location": location,
+                            "severity": "low",
+                            "context_matched": True,
+                        }
+                    )
                 # 컨텍스트 없으면 낮은 확신도로 기록 (선택적)
                 # else:
                 #     detected.append({...severity: "very_low"...})
 
         return detected
 
-    def _suggest_expression_improvements(self, manuscript: str) -> List[dict]:
+    def _suggest_expression_improvements(self, manuscript: str) -> list[dict]:
         """표현 개선 제안 (LLM 기반)"""
         if not self.client:
             return []
@@ -125,33 +127,28 @@ JSON 형식으로 답하십시오:
 """
 
             from google.genai import types
-            config = types.GenerateContentConfig(
-                temperature=0.5,
-                response_mime_type="application/json"
-            )
 
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=prompt,
-                config=config
-            )
+            config = types.GenerateContentConfig(temperature=0.5, response_mime_type="application/json")
+
+            response = self.client.models.generate_content(model=self.model, contents=prompt, config=config)
 
             import json
+
             suggestions_raw = json.loads(response.text)
 
             # [V70] LLM 응답 타입 방어: list가 아닌 경우 처리
             if isinstance(suggestions_raw, dict):
-                suggestions_raw = suggestions_raw.get('suggestions', [suggestions_raw])
+                suggestions_raw = suggestions_raw.get("suggestions", [suggestions_raw])
             if not isinstance(suggestions_raw, list):
                 suggestions_raw = []
 
             return [
                 {
                     "type": "expression_enhancement",
-                    "suggestion": s.get('suggestion', ''),
-                    "location": s.get('location', ''),
-                    "reason": s.get('reason', ''),
-                    "severity": "low"
+                    "suggestion": s.get("suggestion", ""),
+                    "location": s.get("location", ""),
+                    "reason": s.get("reason", ""),
+                    "severity": "low",
                 }
                 for s in suggestions_raw[:3]
                 if isinstance(s, dict)  # [V70] non-dict 엔트리 스킵
@@ -161,25 +158,22 @@ JSON 형식으로 답하십시오:
             logging.warning(f"[ADVISORY] 표현 개선 제안 실패: {e}")
             return []
 
-    def _suggest_foreshadowing_opportunities(self, manuscript: str) -> List[dict]:
+    def _suggest_foreshadowing_opportunities(self, manuscript: str) -> list[dict]:
         """복선 기회 감지 (휴리스틱)"""
         suggestions = []
 
         # 간단한 휴리스틱: NPC 등장 시 복선 기회
-        npc_patterns = [
-            "노인이 나타나",
-            "검은 옷을 입은",
-            "눈빛이 예사롭지",
-            "의미심장한 미소"
-        ]
+        npc_patterns = ["노인이 나타나", "검은 옷을 입은", "눈빛이 예사롭지", "의미심장한 미소"]
 
         for pattern in npc_patterns:
             if pattern in manuscript:
-                suggestions.append({
-                    "type": "foreshadowing_opportunity",
-                    "suggestion": f"'{pattern}' 지점: 복선 심기 좋은 타이밍",
-                    "location": manuscript.find(pattern),
-                    "severity": "low"
-                })
+                suggestions.append(
+                    {
+                        "type": "foreshadowing_opportunity",
+                        "suggestion": f"'{pattern}' 지점: 복선 심기 좋은 타이밍",
+                        "location": manuscript.find(pattern),
+                        "severity": "low",
+                    }
+                )
 
         return suggestions[:2]  # 최대 2개
