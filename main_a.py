@@ -43,10 +43,9 @@ from modules.core.narrative_diversity import NarrativeDiversityEngine  # [V48] �
 from modules.core.perf_timer import PerfTimer  # [V65] 파이프라인 성능 프로파일링
 from modules.core.prompt_builder import PromptBuilder  # [V64 P2-2]
 from modules.core.services.audit_service import AuditService  # [Phase 4B-1]
-from modules.core.services.ui_service import UIService  # [Phase 4B-2]
 from modules.core.services.project_service import ProjectService  # [Phase 4B-3]
 from modules.core.services.state_service import StateService  # [Phase 4B-3]
-from modules.core.slack_bot import notifier  # [V40] Slack 알림 추가
+from modules.core.services.ui_service import UIService  # [Phase 4B-2]
 from modules.core.spinners import FancySpinner, StageSpinner, rich_console  # noqa: F401
 from modules.core.stage01_helpers import Stage01Helpers  # [Phase 4C-1b]
 from modules.core.stage2_orchestrator import Stage2Orchestrator  # [V64.P3]
@@ -155,7 +154,6 @@ from modules.core.constants import (
     HUDKeys,
     RetryLimits,
     SuccessMessages,
-    VolumeSettings,
 )
 
 # [V65] 모델명 상수 — constants.py AIModels SSOT
@@ -2129,7 +2127,9 @@ class SovereignApp:
         return self._state_service.extract_block_index(block_id)  # [Phase 4B-3] thin delegate
 
     def _validate_arc_mapping(self, refined_arc, enriched_block, expected_arc_no, expected_ep_start):
-        return self._state_service.validate_arc_mapping(refined_arc, enriched_block, expected_arc_no, expected_ep_start)  # [Phase 4B-3] thin delegate
+        return self._state_service.validate_arc_mapping(
+            refined_arc, enriched_block, expected_arc_no, expected_ep_start
+        )  # [Phase 4B-3] thin delegate
 
     def _extract_pattern_keywords(self, pattern_profile):
         return self._state_service.extract_pattern_keywords(pattern_profile)  # [Phase 4B-3] thin delegate
@@ -2145,7 +2145,9 @@ class SovereignApp:
         self, ep_num: int, blueprint: dict = None, mode: str = "MANUSCRIPT", blueprint_text: str = ""
     ) -> dict:
         """[V64 P2-2] -> StateService -> PromptBuilder"""
-        return self._state_service.build_validation_context(ep_num, blueprint, mode, blueprint_text)  # [Phase 4B-3] thin delegate
+        return self._state_service.build_validation_context(
+            ep_num, blueprint, mode, blueprint_text
+        )  # [Phase 4B-3] thin delegate
 
     # =================================================================
     # [V41] Director Sovereignty 헬퍼 메서드
@@ -2169,7 +2171,9 @@ class SovereignApp:
 
     def _classify_rejection_feedback(self, reason: str, feedback: str, blueprint: dict = None) -> str:
         """[V64 P2-3] -> StateService -> FeedbackSystem"""
-        return self._state_service.classify_rejection_feedback(reason, feedback, blueprint)  # [Phase 4B-3] thin delegate
+        return self._state_service.classify_rejection_feedback(
+            reason, feedback, blueprint
+        )  # [Phase 4B-3] thin delegate
 
     def _audit_event(self, event_type, message, data=None):
         """[V66.1→4B-1] Facade → AuditService"""
@@ -2739,14 +2743,25 @@ class SovereignApp:
                 self.ui.log(f"      ⚠️ [V69.1] 팩트 원장 초기화 실패 (비차단): {str(_fl_err)[:60]}")
                 self.fact_ledger = None
 
-        # [Phase 4C-2a] DI 파일럿 컨텍스트 주입 (lazy init 후)
+        # [Phase 4C-2a/2b] DI 컨텍스트 주입 (lazy init 후)
         from modules.core.stage4_context import Stage4Context
+
         self._stage4_orch.ctx = Stage4Context(
             ui=self.ui,
             current_project=self.current_project,
             agents=self.agents,
             sys=self.sys,
             state_tracker=self.state_tracker,
+            memory=getattr(self, "memory", None),
+            world_state=self.world_state,
+            fact_ledger=self.fact_ledger,
+            character_voice=getattr(self, "character_voice", None),
+            perf_timer=getattr(self, "perf_timer", None),
+            foreshadow_tracker=getattr(self, "foreshadow_tracker", None),
+            failure_learner=getattr(self, "failure_learner", None),
+            diversity_engine=getattr(self, "diversity_engine", None),
+            semantic_plot_guard=getattr(self, "semantic_plot_guard", None),
+            selected_genre=getattr(self, "selected_genre", None),
         )
 
         return self._stage4_orch.stage_4_v2_chief_writer(limit_mode=limit_mode)

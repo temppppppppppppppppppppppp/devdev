@@ -35,6 +35,7 @@ class Stage4Orchestrator:
         """[Phase 4C-2a] 파일럿 컨텍스트 (미주입 시 app에서 자동 빌드)"""
         if self._ctx is None:
             from modules.core.stage4_context import Stage4Context
+
             self._ctx = Stage4Context.from_app(self.app)
         return self._ctx
 
@@ -227,7 +228,7 @@ JSON으로 출력:
             client=self.ctx.sys.api_client,
             model_tier=AIModels.STAGE4_FIXED_WRITER_MODEL,
         )
-        _s4_genre_type = self.app.selected_genre.get("type", "wuxia") if self.app.selected_genre else "wuxia"
+        _s4_genre_type = self.ctx.selected_genre.get("type", "wuxia") if self.ctx.selected_genre else "wuxia"
         manuscript_validator = ManuscriptValidator(
             context=self.ctx.current_project, genre_type=_s4_genre_type, llm_client=self.ctx.sys.api_client
         )
@@ -347,13 +348,13 @@ JSON으로 출력:
                 )
 
             # [V62.5] 캐릭터 보이스 가이드 주입
-            if self.app.character_voice and self.app.character_voice.profiles:
+            if self.ctx.character_voice and self.ctx.character_voice.profiles:
                 try:
-                    voice_prompt = self.app.character_voice.get_writer_injection()
+                    voice_prompt = self.ctx.character_voice.get_writer_injection()
                     if voice_prompt:
                         style_guide += f"\n\n{voice_prompt}"
                         self.ctx.ui.log(
-                            f"🎤 [V62.5] 캐릭터 보이스 가이드 주입됨 ({len(self.app.character_voice.profiles)}명)"
+                            f"🎤 [V62.5] 캐릭터 보이스 가이드 주입됨 ({len(self.ctx.character_voice.profiles)}명)"
                         )
                 except Exception as voice_err:
                     self.ctx.ui.log(f"   ⚠️ 캐릭터 보이스 주입 실패 (비차단): {voice_err}")
@@ -468,9 +469,9 @@ JSON으로 출력:
 
                 # [V68] 세계 상태 요약 로드 (ChiefWriter 프롬프트 주입용)
                 _world_state_summary = ""
-                if hasattr(self.app, "world_state") and self.app.world_state:
+                if self.ctx.world_state:
                     try:
-                        _world_state_summary = self.app.world_state.get_summary(max_chars=5000)
+                        _world_state_summary = self.ctx.world_state.get_summary(max_chars=5000)
                     except Exception:
                         pass
 
@@ -526,9 +527,9 @@ JSON으로 출력:
 
                     # [V67] F-6: mandatory_context 우선순위 재배치 — 중요도 순 (50K truncation 시 상위가 생존)
                     # [V68] Priority 0: 세계 상태 문서 (World State Document) — 최우선
-                    if hasattr(self.app, "world_state") and self.app.world_state:
+                    if self.ctx.world_state:
                         try:
-                            _ws_summary = self.app.world_state.get_summary(max_chars=5000)
+                            _ws_summary = self.ctx.world_state.get_summary(max_chars=5000)
                             if _ws_summary:
                                 _mc_parts.insert(0, _ws_summary)
                                 logging.info(f"🌍 [V68] 세계 상태 문서 주입 ({len(_ws_summary)}자)")
@@ -561,9 +562,9 @@ JSON으로 출력:
                         self.ctx.ui.log(f"   ⚠️ [V68] 계층적 요약 로드 실패 (비차단): {str(_hier_err)[:60]}")
 
                     # [V68] Priority 0.8: 팩트 원장 (Cumulative Fact Ledger) — 장기 사실 보존
-                    if hasattr(self.app, "fact_ledger") and self.app.fact_ledger:
+                    if self.ctx.fact_ledger:
                         try:
-                            _fl_summary = self.app.fact_ledger.to_summary(max_chars=15000)
+                            _fl_summary = self.ctx.fact_ledger.to_summary(max_chars=15000)
                             if _fl_summary:
                                 _mc_parts.insert(0, _fl_summary)
                                 logging.info(f"📋 [V68] 팩트 원장 주입 ({len(_fl_summary)}자)")
@@ -689,7 +690,7 @@ JSON으로 출력:
 
                     # Priority 15: ChromaDB 멀티쿼리 시맨틱 검색
                     try:
-                        if hasattr(self.app, "memory") and self.app.memory and prev_ending:
+                        if self.ctx.memory and prev_ending:
                             _mq_queries = [prev_ending]
                             if arc_data and arc_data.get("state_changes"):
                                 _sc = arc_data["state_changes"]
@@ -711,7 +712,7 @@ JSON으로 출력:
                             }
                             if _s4_genre_type in _genre_queries:
                                 _mq_queries.extend(_genre_queries[_s4_genre_type])
-                            _vector_memory = self.app.memory.retrieve_multi_query_context(
+                            _vector_memory = self.ctx.memory.retrieve_multi_query_context(
                                 queries=_mq_queries, current_ep=next_ep, n_per_query=3, max_results=5
                             )
                             if _vector_memory:
@@ -729,8 +730,8 @@ JSON으로 출력:
 
                     # Priority 17: ForeshadowTracker 프롬프트 주입
                     try:
-                        if V50_MODULES_AVAILABLE and self.app.foreshadow_tracker:
-                            _foreshadow_prompt = self.app.foreshadow_tracker.generate_writer_prompt(next_ep)
+                        if V50_MODULES_AVAILABLE and self.ctx.foreshadow_tracker:
+                            _foreshadow_prompt = self.ctx.foreshadow_tracker.generate_writer_prompt(next_ep)
                             if _foreshadow_prompt:
                                 _mc_parts.append(_foreshadow_prompt)
                     except Exception as e:
@@ -742,9 +743,9 @@ JSON으로 출력:
                             tactical_text = arc_data.get("tactical_doc", "") if arc_data else ""
                             if isinstance(tactical_text, dict):
                                 tactical_text = str(tactical_text)
-                            _spg_warnings = self.app.semantic_plot_guard.check_new_arc(tactical_doc=tactical_text)
+                            _spg_warnings = self.ctx.semantic_plot_guard.check_new_arc(tactical_doc=tactical_text)
                             if _spg_warnings:
-                                _spg_text = self.app.semantic_plot_guard.format_warnings(_spg_warnings)
+                                _spg_text = self.ctx.semantic_plot_guard.format_warnings(_spg_warnings)
                                 if _spg_text:
                                     _mc_parts.append(_spg_text)
                         except Exception:
@@ -817,9 +818,9 @@ JSON으로 출력:
 
                 # [V63] Contrastive CoT
                 _effective_anti_trope = anti_trope_prompt
-                if self.app.diversity_engine:
+                if self.ctx.diversity_engine:
                     try:
-                        _diversity_cot = self.app.diversity_engine.get_writer_injection()
+                        _diversity_cot = self.ctx.diversity_engine.get_writer_injection()
                         if _diversity_cot:
                             _effective_anti_trope = f"{anti_trope_prompt}\n\n{_diversity_cot}"
                     except Exception:  # [V64.P4] OPTIONAL: diversity injection
@@ -880,7 +881,7 @@ JSON으로 출력:
                         # Phase 2: Chief Writer 앙상블 생성
                         # [V65] PerfTimer: 원고 생성 측정
                         try:
-                            self.app.perf_timer.start(f"s4_ep{next_ep}_generate_r{interview_round}")
+                            self.ctx.perf_timer.start(f"s4_ep{next_ep}_generate_r{interview_round}")
                         except Exception:
                             pass
                         if interview_round == 0:
@@ -943,7 +944,7 @@ JSON으로 출력:
 
                         # [V65] PerfTimer: 원고 생성 종료
                         try:
-                            self.app.perf_timer.stop(f"s4_ep{next_ep}_generate_r{interview_round}")
+                            self.ctx.perf_timer.stop(f"s4_ep{next_ep}_generate_r{interview_round}")
                         except Exception:
                             pass
 
@@ -1206,7 +1207,7 @@ JSON으로 출력:
                         self.ctx.ui.log("   🎬 Director 면담 중...")
                         # [V65] PerfTimer: Director 대면 측정
                         try:
-                            self.app.perf_timer.start(f"s4_ep{next_ep}_director_r{interview_round}")
+                            self.ctx.perf_timer.start(f"s4_ep{next_ep}_director_r{interview_round}")
                         except Exception:
                             pass
                         # [V66.3] C-1: mandatory_context + Python 검증 경고를 Director에 전달
@@ -1248,7 +1249,7 @@ JSON으로 출력:
                             story_context=_story_context,  # [V67.1]
                         )
                         try:
-                            self.app.perf_timer.stop(f"s4_ep{next_ep}_director_r{interview_round}")
+                            self.ctx.perf_timer.stop(f"s4_ep{next_ep}_director_r{interview_round}")
                         except Exception:
                             pass
 
@@ -1453,8 +1454,8 @@ JSON으로 출력:
                             if _sc.get("resolved_plots"):
                                 _mem_event_types.add("resolved_plot")
                         _mem_entity_names.discard("")
-                        if self.app.memory and self.app.memory.is_operational():
-                            self.app.memory.memorize_v20_episode(
+                        if self.ctx.memory and self.ctx.memory.is_operational():
+                            self.ctx.memory.memorize_v20_episode(
                                 ep_num=next_ep,
                                 text=final_manuscript,
                                 summary=final_title[:100] if final_title else f"제{next_ep}화",
@@ -1479,21 +1480,21 @@ JSON으로 출력:
                         logs_dir = os.path.join("projects", self.ctx.current_project.name, "logs")
                         os.makedirs(logs_dir, exist_ok=True)
 
-                        if V50_MODULES_AVAILABLE and self.app.failure_learner:
-                            self.app.failure_learner.save_to_json(os.path.join(logs_dir, "failure_learning.json"))
+                        if V50_MODULES_AVAILABLE and self.ctx.failure_learner:
+                            self.ctx.failure_learner.save_to_json(os.path.join(logs_dir, "failure_learning.json"))
 
-                        if V50_MODULES_AVAILABLE and self.app.character_voice:
+                        if V50_MODULES_AVAILABLE and self.ctx.character_voice:
                             try:
-                                self.app.character_voice.analyze_manuscript(next_ep, final_manuscript)
-                                self.app.character_voice.save_to_json(os.path.join(logs_dir, "character_voice.json"))
+                                self.ctx.character_voice.analyze_manuscript(next_ep, final_manuscript)
+                                self.ctx.character_voice.save_to_json(os.path.join(logs_dir, "character_voice.json"))
                             except Exception as e:
                                 logging.warning(f"⚠️ [V64.P4-fix] character_voice 분석/저장 실패: {e}")
 
-                        if V50_MODULES_AVAILABLE and self.app.foreshadow_tracker:
+                        if V50_MODULES_AVAILABLE and self.ctx.foreshadow_tracker:
                             # [V66] 원고에서 복선 자동 감지
                             try:
-                                self.app.foreshadow_tracker.auto_detect_from_manuscript(next_ep, final_manuscript)
-                                self.app.foreshadow_tracker.save_to_json(os.path.join(logs_dir, "foreshadow.json"))
+                                self.ctx.foreshadow_tracker.auto_detect_from_manuscript(next_ep, final_manuscript)
+                                self.ctx.foreshadow_tracker.save_to_json(os.path.join(logs_dir, "foreshadow.json"))
                             except Exception as e:
                                 logging.warning(f"⚠️ [V66-fix] foreshadow 감지/저장 실패: {e}")
 
@@ -1705,12 +1706,12 @@ JSON으로 출력:
                         self.ctx.ui.log(f"   [V68] 연결고리 저장 실패 (비차단): {str(_cl_err)[:50]}")
 
                     # ===== [V68] WorldState 갱신 =====
-                    if hasattr(self.app, "world_state") and self.app.world_state:
+                    if self.ctx.world_state:
                         try:
                             # state_changes 추출 (arc_data에서)
                             _ws_sc = arc_data.get("state_changes", {}) if arc_data else {}
                             if _ws_sc:
-                                self.app.world_state.update_from_state_changes(next_ep, _ws_sc)
+                                self.ctx.world_state.update_from_state_changes(next_ep, _ws_sc)
 
                             # 주인공 이름 갱신
                             _ws_prot_name = ""
@@ -1721,35 +1722,35 @@ JSON으로 출력:
                                 _ws_prot_name = _ws_bible_root.get("protagonist_config", {}).get("name", "")
                             except Exception:
                                 pass
-                            self.app.world_state.update_protagonist_state(
+                            self.ctx.world_state.update_protagonist_state(
                                 ep_num=next_ep,
                                 name=_ws_prot_name if _ws_prot_name else None,
                             )
 
                             # DB 저장
-                            self.app.world_state.save()
+                            self.ctx.world_state.save()
                             self.ctx.ui.log(f"   🌍 [V68] 세계 상태 갱신 완료 (제{next_ep}화)")
                         except Exception as _ws_upd_err:
                             self.ctx.ui.log(f"   ⚠️ [V68] 세계 상태 갱신 실패 (비차단): {str(_ws_upd_err)[:60]}")
 
                     # ===== [V68] 팩트 원장 갱신 =====
-                    if hasattr(self.app, "fact_ledger") and self.app.fact_ledger:
+                    if self.ctx.fact_ledger:
                         try:
                             # 1) Arc state_changes에서 갱신
                             _fl_sc = arc_data.get("state_changes", {}) if arc_data else {}
                             if _fl_sc:
-                                self.app.fact_ledger.update_from_state_changes(next_ep, _fl_sc)
+                                self.ctx.fact_ledger.update_from_state_changes(next_ep, _fl_sc)
 
                             # 2) bible_delta에서 추가 갱신 (new_npcs, new_items, lost_items 등)
                             if bible_delta:
                                 try:
-                                    self.app.fact_ledger.update_from_bible_delta(next_ep, bible_delta)
+                                    self.ctx.fact_ledger.update_from_bible_delta(next_ep, bible_delta)
                                 except Exception as _bd_err:
                                     pass  # [V70] bible_delta 갱신 실패 시 비차단
 
                             # 3) DB 저장
-                            self.app.fact_ledger.save()
-                            _fl_stats = self.app.fact_ledger.get_stats()
+                            self.ctx.fact_ledger.save()
+                            _fl_stats = self.ctx.fact_ledger.get_stats()
                             self.ctx.ui.log(
                                 f"   📋 [V68] 팩트 원장 갱신 완료 (인물 {_fl_stats.get('characters', 0)}명, 아이템 {_fl_stats.get('items', 0)}개)"
                             )
@@ -1763,8 +1764,8 @@ JSON으로 출력:
 
                     # [V65] PerfTimer: 에피소드 완료 시 요약 로그
                     try:
-                        self.app.perf_timer.log_summary()
-                        self.app.perf_timer.reset()
+                        self.ctx.perf_timer.log_summary()
+                        self.ctx.perf_timer.reset()
                     except Exception:
                         pass
 
@@ -1778,10 +1779,10 @@ JSON으로 출력:
 
             # [V62.3] 벡터 메모리 일괄 동기화
             # [V66.3] ChromaDB 비활성화 시 스킵
-            if self.app.memory and self.app.memory.is_operational():
+            if self.ctx.memory and self.ctx.memory.is_operational():
                 try:
                     self.ctx.ui.log("   🔄 벡터 메모리 일괄 동기화 중...")
-                    self.app.memory.sync_v20_drafts()
+                    self.ctx.memory.sync_v20_drafts()
                     self.ctx.ui.log("   ✅ 벡터 메모리 동기화 완료")
                 except Exception as vec_err:
                     self.ctx.ui.log(f"   ⚠️ 벡터 메모리 동기화 실패 (비차단): {vec_err}")
