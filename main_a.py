@@ -2038,6 +2038,11 @@ class SovereignApp:
 
     def _stage_2_arcs(self):
         """[V64.P3] Stage 2 Arc 설계 → Stage2Orchestrator 위임"""
+        # [Phase 4C-3] DI 컨텍스트 주입 (최신 속성 반영)
+        from modules.core.stage2_context import Stage2Context
+
+        self._stage2_orch.ctx = Stage2Context.from_app(self)
+
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
