@@ -5,6 +5,8 @@
 
 import logging
 
+from modules.validation.threshold_helper import _threshold  # [Phase 5-B-2c]
+
 
 class AdvisoryValidator:
     """
@@ -56,7 +58,7 @@ class AdvisoryValidator:
         return {
             "tier": "ADVISORY",
             "passed": True,  # 항상 PASS
-            "suggestions": suggestions[:5],  # 상위 5개만
+            "suggestions": suggestions[: _threshold("advisory.max_suggestions", 5)],
             "message": f"{len(suggestions)}개 개선 제안",
         }
 

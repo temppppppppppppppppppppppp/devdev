@@ -18,6 +18,8 @@
 import logging
 import re
 
+from modules.validation.threshold_helper import _threshold  # [Phase 5-B-2c]
+
 
 class ContinuityValidator:
     """
@@ -746,7 +748,7 @@ class ContinuityValidator:
 
         violations = []
         # NPC 이름 근처 탐색 범위 (앞뒤 N자)
-        proximity = 150
+        proximity = _threshold("continuity.personality_proximity", 150)
 
         for npc_name, personality_data in npc_personalities.items():
             if not npc_name or not isinstance(personality_data, dict):

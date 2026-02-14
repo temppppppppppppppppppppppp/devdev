@@ -10,6 +10,8 @@ import re
 import statistics
 from collections import Counter
 
+from modules.validation.threshold_helper import _threshold  # [Phase 5-B-2c]
+
 
 class ScoringValidator:
     """
@@ -42,12 +44,20 @@ class ScoringValidator:
         self.guard = self._load_guard_for_genre(genre)
 
         # [V44] 설정 가능한 PASS_THRESHOLD
+        default_threshold = _threshold(
+            "scoring.default_pass_threshold",
+            self.DEFAULT_PASS_THRESHOLD,
+        )
+        genre_thresholds = {
+            name: _threshold(f"scoring.genre_thresholds.{name}", value) for name, value in self.GENRE_THRESHOLDS.items()
+        }
+
         if pass_threshold is not None:
             self.pass_threshold = pass_threshold
-        elif genre and genre in self.GENRE_THRESHOLDS:
-            self.pass_threshold = self.GENRE_THRESHOLDS[genre]
+        elif genre and genre in genre_thresholds:
+            self.pass_threshold = genre_thresholds[genre]
         else:
-            self.pass_threshold = self.DEFAULT_PASS_THRESHOLD
+            self.pass_threshold = default_threshold
 
     def _load_guard_for_genre(self, genre: str):
         """[V46] 장르에 맞는 Guard 동적 로드"""
