@@ -11,7 +11,12 @@ import json
 import logging
 import os
 
+from modules.core.constants import PatchModeThresholds
+
 _perf_logger = logging.getLogger(__name__)  # [V65] PerfTimer 로깅
+
+# [Phase 3-5B] 패치 모드 임계값 (모듈 레벨 상수로 캐시)
+_PATCH_REWRITE_THRESHOLD = PatchModeThresholds.REWRITE
 
 
 class Stage4Orchestrator:
@@ -912,35 +917,111 @@ JSON으로 출력:
                                 chain_link_section=_chain_link_section,  # [V68]
                             )
                         else:
-                            candidates = chief_writer.regenerate_with_feedback(
-                                ep_num=next_ep,
-                                blueprint=blueprint,
-                                prev_manuscript=prev_text,
-                                hud_report=hud_report,
-                                arc_doc=arc_tactical,
-                                master_bible=self.ctx.current_project.master_bible,
-                                style_guide=style_guide,
-                                director_feedback=director_feedback,
-                                previous_attempt=previous_attempt,
-                                attempt_number=interview_round + 1,
-                                current_inventory=current_inventory,
-                                current_martial_arts=current_martial_arts,
-                                dead_npcs=dead_npcs,
-                                item_acquisition_timeline=item_acquisition_timeline,
-                                reference_anchor_prompt=reference_anchor_prompt,
-                                mandatory_context=mandatory_context,
-                                anti_trope_prompt=_effective_anti_trope,
-                                justification_prompt=justification_prompt,
-                                reflexion_prompt=reflexion_prompt,
-                                genre_name=genre_name,
-                                npc_equipment_summary=npc_equipment_summary,
-                                intro_dna=intro_dna,
-                                purism_prompt=purism_prompt,
-                                state_tracker=getattr(self.app, "state_tracker", None),
-                                prev_manuscripts_text=_prev_manuscripts_text,  # [V67]
-                                world_state_summary=_world_state_summary,  # [V68]
-                                chain_link_section=_chain_link_section,  # [V68]
+                            # [Phase 3-5B] 점수 기반 분기: 패치 모드 vs 전면 재작성
+                            _prev_score = previous_attempt.get("score", 0) if previous_attempt else 0
+                            _prev_manuscript = previous_attempt.get("best_manuscript", "") if previous_attempt else ""
+                            _use_patch = (
+                                _prev_score >= _PATCH_REWRITE_THRESHOLD and interview_round == 1 and _prev_manuscript
                             )
+
+                            if _use_patch:
+                                logging.info(
+                                    f"[Phase 3-5B] 패치 모드 진입 (score={_prev_score}, round={interview_round})"
+                                )
+                                self.ctx.ui.log(f"   🔧 [Phase 3-5B] 패치 모드: score={_prev_score}, 원본 보존 수정")
+                                candidates = chief_writer.patch_with_feedback(
+                                    ep_num=next_ep,
+                                    blueprint=blueprint,
+                                    prev_manuscript=prev_text,
+                                    hud_report=hud_report,
+                                    arc_doc=arc_tactical,
+                                    master_bible=self.ctx.current_project.master_bible,
+                                    style_guide=style_guide,
+                                    original_manuscript=_prev_manuscript,
+                                    director_feedback=director_feedback,
+                                    previous_attempt=previous_attempt,
+                                    attempt_number=interview_round + 1,
+                                    current_inventory=current_inventory,
+                                    current_martial_arts=current_martial_arts,
+                                    dead_npcs=dead_npcs,
+                                    item_acquisition_timeline=item_acquisition_timeline,
+                                    reference_anchor_prompt=reference_anchor_prompt,
+                                    mandatory_context=mandatory_context,
+                                    anti_trope_prompt=_effective_anti_trope,
+                                    justification_prompt=justification_prompt,
+                                    reflexion_prompt=reflexion_prompt,
+                                    genre_name=genre_name,
+                                    npc_equipment_summary=npc_equipment_summary,
+                                    intro_dna=intro_dna,
+                                    purism_prompt=purism_prompt,
+                                    state_tracker=getattr(self.app, "state_tracker", None),
+                                    prev_manuscripts_text=_prev_manuscripts_text,
+                                    world_state_summary=_world_state_summary,
+                                    chain_link_section=_chain_link_section,
+                                )
+                                if not candidates:
+                                    # [Phase 3-5B] 패치 실패 → full rewrite 폴백
+                                    logging.info("[Phase 3-5B] 패치 실패, full rewrite 폴백")
+                                    self.ctx.ui.log("   ⚠️ [Phase 3-5B] 패치 실패 → 전면 재작성 폴백")
+                                    candidates = chief_writer.regenerate_with_feedback(
+                                        ep_num=next_ep,
+                                        blueprint=blueprint,
+                                        prev_manuscript=prev_text,
+                                        hud_report=hud_report,
+                                        arc_doc=arc_tactical,
+                                        master_bible=self.ctx.current_project.master_bible,
+                                        style_guide=style_guide,
+                                        director_feedback=director_feedback,
+                                        previous_attempt=previous_attempt,
+                                        attempt_number=interview_round + 1,
+                                        current_inventory=current_inventory,
+                                        current_martial_arts=current_martial_arts,
+                                        dead_npcs=dead_npcs,
+                                        item_acquisition_timeline=item_acquisition_timeline,
+                                        reference_anchor_prompt=reference_anchor_prompt,
+                                        mandatory_context=mandatory_context,
+                                        anti_trope_prompt=_effective_anti_trope,
+                                        justification_prompt=justification_prompt,
+                                        reflexion_prompt=reflexion_prompt,
+                                        genre_name=genre_name,
+                                        npc_equipment_summary=npc_equipment_summary,
+                                        intro_dna=intro_dna,
+                                        purism_prompt=purism_prompt,
+                                        state_tracker=getattr(self.app, "state_tracker", None),
+                                        prev_manuscripts_text=_prev_manuscripts_text,
+                                        world_state_summary=_world_state_summary,
+                                        chain_link_section=_chain_link_section,
+                                    )
+                            else:
+                                candidates = chief_writer.regenerate_with_feedback(
+                                    ep_num=next_ep,
+                                    blueprint=blueprint,
+                                    prev_manuscript=prev_text,
+                                    hud_report=hud_report,
+                                    arc_doc=arc_tactical,
+                                    master_bible=self.ctx.current_project.master_bible,
+                                    style_guide=style_guide,
+                                    director_feedback=director_feedback,
+                                    previous_attempt=previous_attempt,
+                                    attempt_number=interview_round + 1,
+                                    current_inventory=current_inventory,
+                                    current_martial_arts=current_martial_arts,
+                                    dead_npcs=dead_npcs,
+                                    item_acquisition_timeline=item_acquisition_timeline,
+                                    reference_anchor_prompt=reference_anchor_prompt,
+                                    mandatory_context=mandatory_context,
+                                    anti_trope_prompt=_effective_anti_trope,
+                                    justification_prompt=justification_prompt,
+                                    reflexion_prompt=reflexion_prompt,
+                                    genre_name=genre_name,
+                                    npc_equipment_summary=npc_equipment_summary,
+                                    intro_dna=intro_dna,
+                                    purism_prompt=purism_prompt,
+                                    state_tracker=getattr(self.app, "state_tracker", None),
+                                    prev_manuscripts_text=_prev_manuscripts_text,
+                                    world_state_summary=_world_state_summary,
+                                    chain_link_section=_chain_link_section,
+                                )
 
                         # [V65] PerfTimer: 원고 생성 종료
                         try:
@@ -1296,6 +1377,8 @@ JSON으로 출력:
                                 "rejection_reason": director_feedback,
                                 "action_items": action_items,
                                 "score": score,
+                                # [Phase 3-5B] 패치 모드용 원본 원고 보존
+                                "best_manuscript": director_result.get("selected_candidate", {}).get("manuscript", ""),
                             }
                             self.ctx.ui.log(
                                 f"   ❌ {interview_round + 1}차 면담 REJECT. 피드백: {director_feedback[:100]}..."
