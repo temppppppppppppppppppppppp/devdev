@@ -14,6 +14,7 @@
 
 import json
 import logging
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FutureTimeoutError
 
@@ -170,6 +171,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
         # 병렬 생성
         logging.info(f"🎲 [BPEnsemble] 3개 후보 병렬 생성 중... (주인공: {protagonist_name})")
 
+        # [Phase 3-Obs] 에이전트 레벨 ThreadPoolExecutor 계측
+        _tp_t0 = time.monotonic()
+
         # [V61.3] 전체 병렬 처리 블록을 try-except로 감싸서 급사 방지
         try:
             with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
@@ -222,6 +226,12 @@ class BlueprintEnsembleGenerator(BaseAgent):
             print(f"      🚨 [V61.3] 병렬 처리 크래시 방지: {str(e)[:100]}", file=sys.stderr)
             traceback.print_exc(file=sys.stderr)
             sys.stderr.flush()
+
+        # [Phase 3-Obs] 병렬 구간 소요 시간 기록
+        try:
+            logging.info(f"[PerfTimer:BlueprintEnsemble] bp_ep{ep_num}_ensemble={time.monotonic() - _tp_t0:.2f}s")
+        except Exception:
+            pass
 
         if not candidates:
             logging.warning("❌ [BPEnsemble] 모든 후보 생성 실패")

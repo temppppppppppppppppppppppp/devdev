@@ -51,6 +51,7 @@ ignore = [
 "modules/core/stage0/story_expander.py" = ["F401"]
 "modules/core/stage0/style_extractor.py" = ["E741"]
 "modules/domain/agents/base_agent.py" = ["F401"]
+"modules/domain/agents/blueprint_ensemble.py" = ["UP038"]  # 레거시 isinstance 패턴
 "modules/domain/agents/director_auditor.py" = ["F401"]
 "modules/domain/agents/four_phase_arc_generator.py" = ["UP038"]  # 레거시 isinstance 패턴
 "modules/domain/agents/preflight_checker.py" = ["E741"]

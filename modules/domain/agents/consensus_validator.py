@@ -12,12 +12,13 @@
 
 import json
 import logging
-import re
-from typing import Dict, List, Any, Tuple
-from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FutureTimeoutError
-from .base_agent import BaseAgent
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import TimeoutError as FutureTimeoutError
+
 from modules.core.arc_summary_utils import generate_prev_arc_summary  # [V64.P4]
 
+from .base_agent import BaseAgent
 
 # 3가지 검증 관점
 VALIDATION_PERSPECTIVES = [
@@ -41,7 +42,7 @@ VALIDATION_PERSPECTIVES = [
 
 중복 획득/수여만 CRITICAL로 처리하세요.
 """,
-        "temperature": 0.1
+        "temperature": 0.1,
     },
     {
         "name": "structure_focused",
@@ -64,7 +65,7 @@ tactical_doc, joint_docs, state_constraints의 구조와 정합성을 집중 검
 
 구조 문제는 CRITICAL이 아닌 MAJOR로 부여하세요.
 """,
-        "temperature": 0.1
+        "temperature": 0.1,
     },
     {
         "name": "narrative_focused",
@@ -91,8 +92,8 @@ tactical_doc, joint_docs, state_constraints의 구조와 정합성을 집중 검
 
 서사적 문제가 심각하면 REJECT하세요.
 """,
-        "temperature": 0.2
-    }
+        "temperature": 0.2,
+    },
 ]
 
 
@@ -149,8 +150,8 @@ class ConsensusValidator(BaseAgent):
     """
 
     # [V61.3] 앙상블 타임아웃 설정 (야간 무인 운영 - 무한 대기 방지)
-    ENSEMBLE_TIMEOUT = 120       # 전체 합의 타임아웃 (초) - 2분
-    SINGLE_VOTE_TIMEOUT = 90     # 개별 투표 타임아웃 (초) - 1.5분
+    ENSEMBLE_TIMEOUT = 120  # 전체 합의 타임아웃 (초) - 2분
+    SINGLE_VOTE_TIMEOUT = 90  # 개별 투표 타임아웃 (초) - 1.5분
 
     def __init__(self, context, client, model_tier: str = None):
         # [V60.53] Flash로 변경 - 단순 투표 로직, Pro 불필요
@@ -160,12 +161,8 @@ class ConsensusValidator(BaseAgent):
         self.max_workers = 3
 
     def validate_with_consensus(
-        self,
-        arc: Dict,
-        prev_arcs: List[Dict],
-        constraints: str = "",
-        python_advisory: List[Dict] = None
-    ) -> Tuple[str, Dict]:
+        self, arc: dict, prev_arcs: list[dict], constraints: str = "", python_advisory: list[dict] = None
+    ) -> tuple[str, dict]:
         """
         3개 LLM 합의 검증
 
@@ -195,12 +192,15 @@ class ConsensusValidator(BaseAgent):
         if python_advisory:
             advisory_lines = []
             for adv in python_advisory[:5]:  # 최대 5개만
-                adv_type = adv.get('type', '?')
-                adv_item = adv.get('item_or_subject', adv.get('description', '?'))
+                adv_type = adv.get("type", "?")
+                adv_item = adv.get("item_or_subject", adv.get("description", "?"))
                 advisory_lines.append(f"- [{adv_type}] {adv_item}")
             advisory_text = "\n".join(advisory_lines) if advisory_lines else "(없음)"
 
         results = []
+
+        # [Phase 3-Obs] 에이전트 레벨 ThreadPoolExecutor 계측
+        _tp_t0 = time.monotonic()
 
         # [V61.3] 전체 병렬 처리 블록을 try-except로 감싸서 급사 방지
         try:
@@ -213,7 +213,7 @@ class ConsensusValidator(BaseAgent):
                         prev_summary=prev_summary,
                         constraints=constraints,
                         perspective=perspective,
-                        python_advisory_text=advisory_text
+                        python_advisory_text=advisory_text,
                     )
                     futures[future] = perspective["name"]
 
@@ -229,26 +229,32 @@ class ConsensusValidator(BaseAgent):
                         except FutureTimeoutError:
                             logging.info(f"⏰ [V61.3] {perspective_name} 타임아웃 ({self.SINGLE_VOTE_TIMEOUT}초)")
                             # 타임아웃 시 보수적으로 PASS 처리
-                            results.append({
-                                "perspective": perspective_name,
-                                "verdict": "PASS",
-                                "confidence": 0.5,
-                                "issues_found": [],
-                                "error": "타임아웃"
-                            })
+                            results.append(
+                                {
+                                    "perspective": perspective_name,
+                                    "verdict": "PASS",
+                                    "confidence": 0.5,
+                                    "issues_found": [],
+                                    "error": "타임아웃",
+                                }
+                            )
                         except Exception as e:
                             logging.warning(f"⚠️ [Consensus] {perspective_name} 오류: {str(e)[:50]}")
                             # 오류 시 보수적으로 PASS 처리 (다른 검증기에 의존)
-                            results.append({
-                                "perspective": perspective_name,
-                                "verdict": "PASS",
-                                "confidence": 0.5,
-                                "issues_found": [],
-                                "error": str(e)[:100]
-                            })
+                            results.append(
+                                {
+                                    "perspective": perspective_name,
+                                    "verdict": "PASS",
+                                    "confidence": 0.5,
+                                    "issues_found": [],
+                                    "error": str(e)[:100],
+                                }
+                            )
                 except FutureTimeoutError:
                     # 전체 합의 타임아웃 - 완료된 결과만 사용
-                    logging.info(f"⏰ [V61.3] 합의 검증 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(results)}개 결과 사용")
+                    logging.info(
+                        f"⏰ [V61.3] 합의 검증 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(results)}개 결과 사용"
+                    )
                 except Exception as e:
                     # [V61.3] as_completed 자체 예외 처리
                     logging.info(f"⚠️ [V61.3] 합의 루프 예외: {str(e)[:80]}")
@@ -257,13 +263,20 @@ class ConsensusValidator(BaseAgent):
             # stderr로 출력 (Rich 스피너가 stdout 가림)
             import sys
             import traceback
+
             print(f"      🚨 [V61.3] 합의 검증 크래시 방지: {str(e)[:100]}", file=sys.stderr)
             traceback.print_exc(file=sys.stderr)
             sys.stderr.flush()
 
+        # [Phase 3-Obs] 병렬 구간 소요 시간 기록
+        try:
+            logging.info(f"[PerfTimer:Consensus] consensus_validation={time.monotonic() - _tp_t0:.2f}s")
+        except Exception:
+            pass
+
         # [V70] 빈 결과 방어: 모든 검증기 실패 시 보수적 PASS
         if not results:
-            logging.warning(f"⚠️ [Consensus] 모든 검증기 실패 — 보수적 PASS 처리")
+            logging.warning("⚠️ [Consensus] 모든 검증기 실패 — 보수적 PASS 처리")
             results.append({"verdict": "PASS", "confidence": 0.3, "issues_found": [], "error": "all_validators_failed"})
 
         # 합의 도출
@@ -276,9 +289,9 @@ class ConsensusValidator(BaseAgent):
         arc_data: str,
         prev_summary: str,
         constraints: str,
-        perspective: Dict,
-        python_advisory_text: str = "(없음)"
-    ) -> Dict:
+        perspective: dict,
+        python_advisory_text: str = "(없음)",
+    ) -> dict:
         """단일 관점 검증"""
         prompt = CONSENSUS_VALIDATION_PROMPT.format(
             role=perspective["role"],
@@ -287,7 +300,7 @@ class ConsensusValidator(BaseAgent):
             arc_data=self._escape_braces(arc_data),
             prev_summary=self._escape_braces(prev_summary),
             constraints=self._escape_braces(constraints[:2000] if constraints else "(없음)"),
-            python_advisory=self._escape_braces(python_advisory_text)
+            python_advisory=self._escape_braces(python_advisory_text),
         )
 
         result = self.ask(prompt, temperature=perspective["temperature"])
@@ -297,11 +310,11 @@ class ConsensusValidator(BaseAgent):
 
         return self._ensure_validation_fields(result)
 
-    def _generate_prev_summary(self, prev_arcs: List[Dict]) -> str:
+    def _generate_prev_summary(self, prev_arcs: list[dict]) -> str:
         """[V64.P4] 위임 → modules.core.arc_summary_utils.generate_prev_arc_summary"""
         return generate_prev_arc_summary(prev_arcs, include_energy=True)
 
-    def _ensure_validation_fields(self, result: Dict) -> Dict:
+    def _ensure_validation_fields(self, result: dict) -> dict:
         """검증 결과 필수 필드 보장"""
         if "verdict" not in result:
             result["verdict"] = "PASS"
@@ -315,7 +328,7 @@ class ConsensusValidator(BaseAgent):
             result["reasoning"] = ""
         return result
 
-    def _derive_consensus(self, results: List[Dict]) -> Tuple[str, Dict]:
+    def _derive_consensus(self, results: list[dict]) -> tuple[str, dict]:
         """합의 도출"""
         total_count = len(results)
         pass_count = sum(1 for r in results if r.get("verdict") == "PASS")
@@ -353,16 +366,13 @@ class ConsensusValidator(BaseAgent):
 
         consensus_result = {
             "final_verdict": final_verdict,
-            "vote_summary": {
-                "pass": pass_count,
-                "reject": reject_count
-            },
+            "vote_summary": {"pass": pass_count, "reject": reject_count},
             "consensus_reason": reason,
             "individual_results": results,
             "all_issues": all_issues,
             "critical_issues": critical_issues,
             "major_issues": major_issues,
-            "passed_checks": list(set(all_passed))
+            "passed_checks": list(set(all_passed)),
         }
 
         logging.warning(f"{'✅' if final_verdict == 'PASS' else '❌'} [Consensus] {reason}")
@@ -370,14 +380,16 @@ class ConsensusValidator(BaseAgent):
 
         # [V60.37] 상세 이슈 출력
         if final_verdict == "REJECT":
-            logging.warning(f"- 전체 이슈: {len(all_issues)}개 (CRITICAL: {len(critical_issues)}, MAJOR: {len(major_issues)}, MINOR: {len(minor_issues)})")
+            logging.warning(
+                f"- 전체 이슈: {len(all_issues)}개 (CRITICAL: {len(critical_issues)}, MAJOR: {len(major_issues)}, MINOR: {len(minor_issues)})"
+            )
 
             if critical_issues:
                 logging.warning(f"🚨 CRITICAL ({len(critical_issues)}개):")
                 for ci in critical_issues:
-                    cat = ci.get('category', '?')
-                    issue = ci.get('issue', '?')
-                    evidence = ci.get('evidence', '')[:80] if ci.get('evidence') else ''
+                    cat = ci.get("category", "?")
+                    issue = ci.get("issue", "?")
+                    evidence = ci.get("evidence", "")[:80] if ci.get("evidence") else ""
                     logging.info(f"- [{cat}] {issue}")
                     if evidence:
                         logging.info(f"└ 근거: {evidence}")
@@ -385,8 +397,8 @@ class ConsensusValidator(BaseAgent):
             if major_issues:
                 logging.info(f"⚠️ MAJOR ({len(major_issues)}개):")
                 for mi in major_issues[:3]:  # 최대 3개만
-                    cat = mi.get('category', '?')
-                    issue = mi.get('issue', '?')
+                    cat = mi.get("category", "?")
+                    issue = mi.get("issue", "?")
                     logging.info(f"- [{cat}] {issue}")
 
             if minor_issues and not critical_issues and not major_issues:
@@ -396,7 +408,7 @@ class ConsensusValidator(BaseAgent):
 
         return final_verdict, consensus_result
 
-    def get_rejection_feedback(self, consensus_result: Dict) -> str:
+    def get_rejection_feedback(self, consensus_result: dict) -> str:
         """REJECT 시 피드백 생성"""
         lines = ["[CONSENSUS VALIDATOR 피드백]", ""]
 
