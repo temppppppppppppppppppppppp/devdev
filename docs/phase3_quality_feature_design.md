@@ -1,6 +1,6 @@
 # Phase 3 잔여 품질 기능 — ROI 선정 + 구현 설계
 
-> 작성: 2026-02-15, checkpoint `3d45376`
+> 작성: 2026-02-15, checkpoint `c0de506`
 > 상태: 설계 승인 대기 (코드 변경 전)
 
 ---
@@ -9,7 +9,7 @@
 
 | 항목 | 값 |
 |------|-----|
-| checkpoint | `3d45376` (R3-i 완료) |
+| checkpoint | `c0de506` (phase3 설계 문서 포함) |
 | 테스트 합계 | 223 (unit 34 + pipeline 89 + E2E 22 + regression 78) |
 | ctx refs | stage2 348/43, stage4 321/22 (불변) |
 | R4-a | NO-GO (async 통일 보류, `docs/r4a_go_no_go_memo.md`) |
