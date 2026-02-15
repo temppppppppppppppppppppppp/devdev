@@ -7,6 +7,7 @@ SovereignApp에서 분리된 Stage 4 관련 메서드:
 모든 SovereignApp 속성은 self.app를 통해 접근.
 """
 
+import dataclasses
 import json
 import logging
 import os
@@ -17,6 +18,24 @@ _perf_logger = logging.getLogger(__name__)  # [V65] PerfTimer 로깅
 
 # [Phase 3-5B] 패치 모드 임계값 (모듈 레벨 상수로 캐시)
 _PATCH_REWRITE_THRESHOLD = PatchModeThresholds.REWRITE
+
+
+@dataclasses.dataclass(slots=True)
+class _SessionConfig:
+    """[4-R2-a] Session-level config for Stage 4 interview loop."""
+
+    chief_writer: object
+    manuscript_validator: object
+    consistency_validator: object
+    blocking_validator: object
+    continuity_validator: object
+    s4_genre_type: str
+    story_context: str
+    style_guide: str
+    target_ep: object  # int | None
+    output_dir: object  # Path
+    v50_modules_available: bool
+    total_planned_ep: int
 
 
 class Stage4Orchestrator:
@@ -1067,26 +1086,25 @@ JSON으로 출력:
             "reflexion_prompt": ctx_prompts["reflexion_prompt"],
         }
 
-    def _run_interview_loop(
-        self,
-        *,
-        chief_writer,
-        manuscript_validator,
-        consistency_validator,
-        blocking_validator,
-        continuity_validator,
-        s4_genre_type: str,
-        story_context: str,
-        style_guide: str,
-        target_ep,
-        output_dir,
-        v50_modules_available: bool,
-        total_planned_ep: int,
-    ) -> bool:
+    def _run_interview_loop(self, session: _SessionConfig) -> bool:
         """[4-R1-e-4] Run main episode production loop.
 
         Returns True if caller should return early.
         """
+        # [4-R2-a] Unpack session config
+        chief_writer = session.chief_writer
+        manuscript_validator = session.manuscript_validator
+        consistency_validator = session.consistency_validator
+        blocking_validator = session.blocking_validator
+        continuity_validator = session.continuity_validator
+        s4_genre_type = session.s4_genre_type
+        story_context = session.story_context
+        style_guide = session.style_guide
+        target_ep = session.target_ep
+        output_dir = session.output_dir
+        v50_modules_available = session.v50_modules_available
+        total_planned_ep = session.total_planned_ep
+
         loop_guard = 0
         max_loops = min((target_ep or total_planned_ep) - self.ctx.current_project.get_latest_episode_number() + 5, 100)
 
@@ -2100,20 +2118,20 @@ JSON으로 출력:
             except Exception as voice_err:
                 self.ctx.ui.log(f"   ⚠️ 캐릭터 보이스 주입 실패 (비차단): {voice_err}")
 
-        return {
-            "chief_writer": chief_writer,
-            "manuscript_validator": manuscript_validator,
-            "consistency_validator": consistency_validator,
-            "blocking_validator": blocking_validator,
-            "continuity_validator": continuity_validator,
-            "s4_genre_type": _s4_genre_type,
-            "story_context": _story_context,
-            "style_guide": style_guide,
-            "target_ep": target_ep,
-            "output_dir": output_dir,
-            "v50_modules_available": V50_MODULES_AVAILABLE,
-            "total_planned_ep": total_planned_ep,
-        }
+        return _SessionConfig(
+            chief_writer=chief_writer,
+            manuscript_validator=manuscript_validator,
+            consistency_validator=consistency_validator,
+            blocking_validator=blocking_validator,
+            continuity_validator=continuity_validator,
+            s4_genre_type=_s4_genre_type,
+            story_context=_story_context,
+            style_guide=style_guide,
+            target_ep=target_ep,
+            output_dir=output_dir,
+            v50_modules_available=V50_MODULES_AVAILABLE,
+            total_planned_ep=total_planned_ep,
+        )
 
     def stage_4_v2_chief_writer(self, limit_mode: bool = False) -> None:
         """
@@ -2134,7 +2152,7 @@ JSON으로 출력:
             if session is None:
                 return
             # 5. Episode production loop
-            if self._run_interview_loop(**session):
+            if self._run_interview_loop(session):
                 return
 
         except KeyboardInterrupt:
