@@ -740,3 +740,174 @@ class TestPreflightValidationRejectPaths:
         assert isinstance(result["draft_validator_passed"], bool)
         assert isinstance(result["consensus_passed"], bool)
         assert isinstance(result["suspected_duplicates"], list)
+
+    # ── [4-R3-i] ArcCorrector correct() 실패 → retry ──
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    @patch("modules.core.spinners.rich_console", MagicMock())
+    def test_arc_corrector_correct_fails_returns_retry(self, s2_orch, valid_refined_arc):
+        """can_correct=True이지만 correct() 실패 → retry + 수정 불가 피드백."""
+        s2_orch.ctx.arc_draft_validator = MagicMock()
+        s2_orch.ctx.arc_draft_validator.validate.return_value = {
+            "valid": False,
+            "score": 55,
+            "critical_issues": ["경미한 구조 문제"],
+            "issues": [{"severity": "MAJOR", "message": "인과 약함"}],
+            "advisory_issues": [],
+            "warnings": [],
+        }
+        corrector = MagicMock()
+        corrector.can_correct.return_value = (True, [{"message": "인과 약함"}], [])
+        corrector.correct.return_value = (None, {"success": False, "reason": "수정 실패"})
+        s2_orch.ctx.arc_corrector = corrector
+        s2_orch.ctx.use_arc_corrector = True
+        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        s2_orch.ctx.stage2_optimizer = None
+
+        kwargs = self._base_kwargs(valid_refined_arc)
+        result = s2_orch._preflight_validation(**kwargs)
+
+        assert result["action"] == "retry"
+        assert "수정 불가" in result["current_feedback"] or "V60.42" in result["current_feedback"]
+
+    # ── [4-R3-i] ArcCorrector 교정 후 revalidation 실패 → retry ──
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    @patch("modules.core.spinners.rich_console", MagicMock())
+    def test_arc_corrector_revalidation_fails_returns_retry(self, s2_orch, valid_refined_arc):
+        """correct() 성공이지만 revalidation 실패 → retry + 수정 후에도 실패 피드백."""
+        corrected_arc = dict(valid_refined_arc)
+        corrected_arc["tactical_doc"] = "수정된 내용 " * 100
+
+        validator = MagicMock()
+        # 1st call (L1458 advisory): passes — no interference
+        # 2nd call (L1639 V60.56): fails with MAJOR-only → triggers ArcCorrector
+        # 3rd call (L1707 revalidation): still fails → "수정 후에도 실패" retry
+        validator.validate.side_effect = [
+            {
+                "valid": True,
+                "score": 80,
+                "critical_issues": [],
+                "issues": [],
+                "advisory_issues": [],
+                "warnings": [],
+            },
+            {
+                "valid": False,
+                "score": 50,
+                "critical_issues": ["구조 개선 필요"],
+                "issues": [{"severity": "MAJOR", "message": "인과 약함"}],
+                "advisory_issues": [],
+                "warnings": [],
+            },
+            {
+                "valid": False,
+                "score": 60,
+                "critical_issues": ["여전히 부족"],
+                "issues": [],
+                "advisory_issues": [],
+                "warnings": [],
+            },
+        ]
+        s2_orch.ctx.arc_draft_validator = validator
+
+        corrector = MagicMock()
+        corrector.can_correct.return_value = (True, [{"message": "인과 약함"}], [])
+        corrector.correct.return_value = (
+            corrected_arc,
+            {"success": True, "corrections_made": [{"change_summary": "인과 보강"}], "corrections_failed": []},
+        )
+        s2_orch.ctx.arc_corrector = corrector
+        s2_orch.ctx.use_arc_corrector = True
+        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        s2_orch.ctx.stage2_optimizer = None
+
+        kwargs = self._base_kwargs(valid_refined_arc)
+        result = s2_orch._preflight_validation(**kwargs)
+
+        assert result["action"] == "retry"
+        assert "ArcCorrector" in result["current_feedback"] or "수정 후" in result["current_feedback"]
+
+    # ── [4-R3-i] SelfReflector가 arc를 변경 → 변경 arc로 진행 ──
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", True)
+    @patch("modules.core.spinners.rich_console", None)
+    def test_self_reflector_mutation_changes_arc(self, s2_orch, valid_refined_arc):
+        """SelfReflector가 arc JSON을 개선 → 변경된 arc로 proceed."""
+        import json
+
+        improved = dict(valid_refined_arc)
+        improved["tactical_doc"] = "개선된 전술 설계 " * 100
+        improved_json = json.dumps(improved, ensure_ascii=False)
+
+        reflection_result = MagicMock()
+        reflection_result.improved = improved_json
+        reflection_result.improvement_score = 15
+
+        reflector = MagicMock()
+        reflector.reflect_and_improve.return_value = reflection_result
+        s2_orch.ctx.self_reflector = reflector
+
+        s2_orch.ctx.arc_draft_validator = None
+        s2_orch.ctx.stage2_optimizer = None
+        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+
+        # SelfReflector needs: V50=True, generation_method="analyst", ReflectionTarget
+        # We mock ReflectionTarget via the import mechanism
+        with patch("modules.core.self_reflection.ReflectionTarget") as mock_rt:
+            mock_rt.ANALYST = "ANALYST"
+            kwargs = self._base_kwargs(valid_refined_arc)
+            kwargs["four_phase_passed"] = True
+            result = s2_orch._preflight_validation(**kwargs)
+
+        assert result["action"] == "proceed"
+        assert result["refined_arc"]["tactical_doc"].startswith("개선된")
+
+    # ── [4-R3-i] SelfReflector JSON 파싱 실패 → 원본 유지 ──
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", True)
+    @patch("modules.core.spinners.rich_console", None)
+    def test_self_reflector_json_error_keeps_original(self, s2_orch, valid_refined_arc):
+        """SelfReflector가 비정상 JSON 반환 → 원본 arc 유지, proceed."""
+        reflection_result = MagicMock()
+        reflection_result.improved = "NOT VALID JSON {{{}"
+
+        reflector = MagicMock()
+        reflector.reflect_and_improve.return_value = reflection_result
+        s2_orch.ctx.self_reflector = reflector
+
+        s2_orch.ctx.arc_draft_validator = None
+        s2_orch.ctx.stage2_optimizer = None
+        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+
+        with patch("modules.core.self_reflection.ReflectionTarget") as mock_rt:
+            mock_rt.ANALYST = "ANALYST"
+            kwargs = self._base_kwargs(valid_refined_arc)
+            kwargs["four_phase_passed"] = True
+            result = s2_orch._preflight_validation(**kwargs)
+
+        assert result["action"] == "proceed"
+        # 원본 arc가 그대로 유지됨
+        assert result["refined_arc"]["tactical_doc"] == valid_refined_arc["tactical_doc"]
+
+    # ── [4-R3-i] Consensus 예외 → 비전파, 다음 단계 진행 ──
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    @patch("modules.core.spinners.rich_console", MagicMock())
+    def test_consensus_exception_non_propagating(self, s2_orch, valid_refined_arc):
+        """Consensus 호출 중 예외 → 예외 비전파 + proceed."""
+        consensus_mock = MagicMock()
+        consensus_mock.validate_with_consensus.side_effect = RuntimeError("API timeout")
+        s2_orch.ctx.agents = {"consensus": consensus_mock}
+        s2_orch.ctx.arc_draft_validator = None
+        s2_orch.ctx.self_reflector = None
+        s2_orch.ctx.stage2_optimizer = None
+        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+
+        kwargs = self._base_kwargs(valid_refined_arc)
+        result = s2_orch._preflight_validation(**kwargs)
+
+        # 예외가 전파되지 않고 proceed로 진행
+        assert result["action"] == "proceed"
+        # consensus는 스킵되었으므로 consensus_passed=False
+        assert result["consensus_passed"] is False
