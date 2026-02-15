@@ -435,118 +435,28 @@ class Stage2Orchestrator:
                     )
                     lack_report = {"martial_deficit": "분석 실패", "status": "error"}
 
-                ### [V66.1] arc_drive + preflight 병렬 실행 (ThreadPoolExecutor)
-                # arc_drive: LLM 호출 (lack_report 의존, lack_report는 위에서 즉시 완료)
-                # preflight: LLM 호출 (독립적 — all_refined_arcs만 사용)
-                # 두 호출이 독립적이므로 병렬 실행하여 15-30s 절감
-
-                def _compute_arc_drive() -> dict:
-                    """Weaver 욕망 드라이브 생성 (LLM)"""
-                    try:
-                        return self.ctx.agents["weaver"].generate_arc_drive(
-                            current_arc_dna=arcs_source[batch_start + idx],
-                            analyst_lack_report=lack_report,
-                            grand_objective=grand_obj,
-                        )
-                    except Exception as weaver_err:
-                        self.ctx.ui.log(f"⚠️ [Weaver] 욕망 드라이브 생성 실패: {weaver_err}")
-                        self.ctx.audit_event(
-                            "weaver_error",
-                            "generate_arc_drive failed",
-                            {"arc_no": global_arc_no, "error": str(weaver_err)},
-                        )
-                        return {"desire_vector": "생성 실패", "status": "error"}
-
-                def _compute_preflight() -> tuple:
-                    """Preflight 분석 (LLM) — 결과를 attempt 루프에서 재사용"""
-                    _pf_injection = ""
-                    _pf_result = None
-                    if "preflight" in self.ctx.agents and all_refined_arcs:
-                        try:
-                            _resolved_plots = ""
-                            if self.ctx.state_tracker:
-                                _resolved_plots = self.ctx.state_tracker.get_resolved_plots_summary()
-                            _pf_result = self.ctx.agents["preflight"].analyze(
-                                all_refined_arcs, resolved_plots_summary=_resolved_plots
-                            )
-                            if _pf_result:
-                                _pf_injection = self.ctx.agents["preflight"].generate_analyst_injection(_pf_result)
-                        except Exception as pf_err:
-                            logging.info(f"⚠️ [Preflight] 스킵: {str(pf_err)[:50]}")
-                    return _pf_injection, _pf_result
-
-                with concurrent.futures.ThreadPoolExecutor(max_workers=2) as _parallel_exec:
-                    _fut_drive = _parallel_exec.submit(_compute_arc_drive)
-                    _fut_preflight = _parallel_exec.submit(_compute_preflight)
-                    arc_drive = _fut_drive.result()
-                    _cached_preflight_injection, _cached_preflight_result = _fut_preflight.result()
-
-                if _cached_preflight_result:
-                    logging.info("✅ [V66.1] arc_drive + preflight 병렬 완료")
-                    logging.info(f"- 아이템 타임라인: {len(_cached_preflight_result.get('item_timeline', []))}개")
-                    logging.info(f"- 금지 사항: {len(_cached_preflight_result.get('absolute_prohibitions', []))}개")
-                    logging.info(f"- 관계 맵: {len(_cached_preflight_result.get('relationship_map', {}))}명")
-
-                passed = False
-                current_feedback = ""
-
-                # [V49.4] Pre-Generation Constraint 생성
-                constraint_block = constraint_db.generate_constraint_block(global_arc_no)
-                if constraint_block:
-                    self.ctx.ui.log(f"      🔒 [V49.4] Arc {global_arc_no} 제약 조건 주입됨")
-
-                # [V60.11] ConstraintCompiler로 구조화된 체크리스트 생성
-                if self.ctx.constraint_compiler and all_refined_arcs:
-                    try:
-                        state_result = None
-                        if "state_extractor" in self.ctx.agents:
-                            try:
-                                arc_count = len(all_refined_arcs)
-                                if (
-                                    self.ctx.cumulative_state_cache is not None
-                                    and self.ctx.cumulative_state_cache_key == arc_count
-                                ):
-                                    state_result = self.ctx.cumulative_state_cache
-                                else:
-                                    state_result = self.ctx.agents["state_extractor"].extract_cumulative_state(
-                                        all_refined_arcs
-                                    )
-                                    self.ctx.cumulative_state_cache = state_result
-                                    self.ctx.cumulative_state_cache_key = arc_count
-                            except (
-                                Exception
-                            ) as e:  # [V64.P4] CRITICAL: state extraction failure → NPC validation disabled
-                                self.ctx.ui.log(
-                                    f"      ⚠️ [V64.P4] extract_cumulative_state 실패 (NPC 검증 약화): {str(e)[:80]}"
-                                )
-                                self.ctx.audit_event("critical_state_extraction_failed", str(e)[:200])
-
-                        _resolved = (
-                            getattr(self.ctx.state_tracker, "resolved_plots", []) if self.ctx.state_tracker else []
-                        )
-                        compiled_constraints = self.ctx.constraint_compiler.compile(
-                            all_refined_arcs, state_result, resolved_plots=_resolved
-                        )
-                        constraint_block = compiled_constraints + "\n\n" + (constraint_block or "")
-                        self.ctx.ui.log("      📋 [V60.11] ConstraintCompiler 체크리스트 생성 완료")
-
-                        # [V66] SemanticPlotGuard — 중앙 인스턴스 사용
-                        if _resolved and len(_resolved) >= 2 and getattr(self.app, "semantic_plot_guard", None):
-                            try:
-                                self.ctx.semantic_plot_guard.index_resolved_plots(_resolved)
-                            except Exception as e:  # [V64.P4] SPG init — OPTIONAL
-                                self.ctx.audit_event("semantic_plot_guard_index_failed", str(e)[:100])
-                    except Exception as cc_err:
-                        self.ctx.audit_event("v60_11_constraint_compiler_error", str(cc_err)[:100])
-
-                # [V60.77] FourPhase-Director 대면 루프
-                attempt = 0
-                max_fourphase_attempts = 5  # [V62.4]
-                max_attempts = max_fourphase_attempts + 1
-                director_feedback_for_fourphase = ""
-                use_analyst_fallback = False
-
-                _st_snapshot = None  # [V70] StateTracker 롤백용 스냅샷
+                ### [4-R3-a] Preflight 상태 초기화
+                _setup = self._preflight_state_setup(
+                    all_refined_arcs=all_refined_arcs,
+                    arcs_source=arcs_source,
+                    arc_idx=batch_start + idx,
+                    lack_report=lack_report,
+                    grand_obj=grand_obj,
+                    global_arc_no=global_arc_no,
+                    constraint_db=constraint_db,
+                )
+                arc_drive = _setup["arc_drive"]
+                _cached_preflight_injection = _setup["cached_preflight_injection"]
+                _cached_preflight_result = _setup["cached_preflight_result"]
+                passed = _setup["passed"]
+                current_feedback = _setup["current_feedback"]
+                constraint_block = _setup["constraint_block"]
+                attempt = _setup["attempt"]
+                max_fourphase_attempts = _setup["max_fourphase_attempts"]
+                max_attempts = _setup["max_attempts"]
+                director_feedback_for_fourphase = _setup["director_feedback_for_fourphase"]
+                use_analyst_fallback = _setup["use_analyst_fallback"]
+                _st_snapshot = _setup["st_snapshot"]
 
                 while attempt < max_attempts:
                     draft_validator_passed = False
@@ -2219,6 +2129,146 @@ class Stage2Orchestrator:
     # ═══════════════════════════════════════════════════════════════════════
     # Stage 2 헬퍼 메서드
     # ═══════════════════════════════════════════════════════════════════════
+
+    def _preflight_state_setup(
+        self,
+        *,
+        all_refined_arcs: list,
+        arcs_source: list,
+        arc_idx: int,
+        lack_report: dict,
+        grand_obj: str,
+        global_arc_no: int,
+        constraint_db,
+    ) -> dict:
+        """[4-R3-a] Pre-attempt-loop state initialization.
+
+        Computes arc_drive, preflight analysis (parallel), constraint block,
+        and initializes attempt loop variables.
+
+        Returns dict of computed values for the attempt loop.
+        """
+        ### [V66.1] arc_drive + preflight 병렬 실행 (ThreadPoolExecutor)
+        # arc_drive: LLM 호출 (lack_report 의존, lack_report는 위에서 즉시 완료)
+        # preflight: LLM 호출 (독립적 — all_refined_arcs만 사용)
+        # 두 호출이 독립적이므로 병렬 실행하여 15-30s 절감
+
+        def _compute_arc_drive() -> dict:
+            """Weaver 욕망 드라이브 생성 (LLM)"""
+            try:
+                return self.ctx.agents["weaver"].generate_arc_drive(
+                    current_arc_dna=arcs_source[arc_idx],
+                    analyst_lack_report=lack_report,
+                    grand_objective=grand_obj,
+                )
+            except Exception as weaver_err:
+                self.ctx.ui.log(f"⚠️ [Weaver] 욕망 드라이브 생성 실패: {weaver_err}")
+                self.ctx.audit_event(
+                    "weaver_error",
+                    "generate_arc_drive failed",
+                    {"arc_no": global_arc_no, "error": str(weaver_err)},
+                )
+                return {"desire_vector": "생성 실패", "status": "error"}
+
+        def _compute_preflight() -> tuple:
+            """Preflight 분석 (LLM) — 결과를 attempt 루프에서 재사용"""
+            _pf_injection = ""
+            _pf_result = None
+            if "preflight" in self.ctx.agents and all_refined_arcs:
+                try:
+                    _resolved_plots = ""
+                    if self.ctx.state_tracker:
+                        _resolved_plots = self.ctx.state_tracker.get_resolved_plots_summary()
+                    _pf_result = self.ctx.agents["preflight"].analyze(
+                        all_refined_arcs, resolved_plots_summary=_resolved_plots
+                    )
+                    if _pf_result:
+                        _pf_injection = self.ctx.agents["preflight"].generate_analyst_injection(_pf_result)
+                except Exception as pf_err:
+                    logging.info(f"⚠️ [Preflight] 스킵: {str(pf_err)[:50]}")
+            return _pf_injection, _pf_result
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as _parallel_exec:
+            _fut_drive = _parallel_exec.submit(_compute_arc_drive)
+            _fut_preflight = _parallel_exec.submit(_compute_preflight)
+            arc_drive = _fut_drive.result()
+            _cached_preflight_injection, _cached_preflight_result = _fut_preflight.result()
+
+        if _cached_preflight_result:
+            logging.info("✅ [V66.1] arc_drive + preflight 병렬 완료")
+            logging.info(f"- 아이템 타임라인: {len(_cached_preflight_result.get('item_timeline', []))}개")
+            logging.info(f"- 금지 사항: {len(_cached_preflight_result.get('absolute_prohibitions', []))}개")
+            logging.info(f"- 관계 맵: {len(_cached_preflight_result.get('relationship_map', {}))}명")
+
+        passed = False
+        current_feedback = ""
+
+        # [V49.4] Pre-Generation Constraint 생성
+        constraint_block = constraint_db.generate_constraint_block(global_arc_no)
+        if constraint_block:
+            self.ctx.ui.log(f"      🔒 [V49.4] Arc {global_arc_no} 제약 조건 주입됨")
+
+        # [V60.11] ConstraintCompiler로 구조화된 체크리스트 생성
+        if self.ctx.constraint_compiler and all_refined_arcs:
+            try:
+                state_result = None
+                if "state_extractor" in self.ctx.agents:
+                    try:
+                        arc_count = len(all_refined_arcs)
+                        if (
+                            self.ctx.cumulative_state_cache is not None
+                            and self.ctx.cumulative_state_cache_key == arc_count
+                        ):
+                            state_result = self.ctx.cumulative_state_cache
+                        else:
+                            state_result = self.ctx.agents["state_extractor"].extract_cumulative_state(all_refined_arcs)
+                            self.ctx.cumulative_state_cache = state_result
+                            self.ctx.cumulative_state_cache_key = arc_count
+                    except Exception as e:  # [V64.P4] CRITICAL: state extraction failure → NPC validation disabled
+                        self.ctx.ui.log(
+                            f"      ⚠️ [V64.P4] extract_cumulative_state 실패 (NPC 검증 약화): {str(e)[:80]}"
+                        )
+                        self.ctx.audit_event("critical_state_extraction_failed", str(e)[:200])
+
+                _resolved = getattr(self.ctx.state_tracker, "resolved_plots", []) if self.ctx.state_tracker else []
+                compiled_constraints = self.ctx.constraint_compiler.compile(
+                    all_refined_arcs, state_result, resolved_plots=_resolved
+                )
+                constraint_block = compiled_constraints + "\n\n" + (constraint_block or "")
+                self.ctx.ui.log("      📋 [V60.11] ConstraintCompiler 체크리스트 생성 완료")
+
+                # [V66] SemanticPlotGuard — 중앙 인스턴스 사용
+                if _resolved and len(_resolved) >= 2 and getattr(self.app, "semantic_plot_guard", None):
+                    try:
+                        self.ctx.semantic_plot_guard.index_resolved_plots(_resolved)
+                    except Exception as e:  # [V64.P4] SPG init — OPTIONAL
+                        self.ctx.audit_event("semantic_plot_guard_index_failed", str(e)[:100])
+            except Exception as cc_err:
+                self.ctx.audit_event("v60_11_constraint_compiler_error", str(cc_err)[:100])
+
+        # [V60.77] FourPhase-Director 대면 루프
+        attempt = 0
+        max_fourphase_attempts = 5  # [V62.4]
+        max_attempts = max_fourphase_attempts + 1
+        director_feedback_for_fourphase = ""
+        use_analyst_fallback = False
+
+        _st_snapshot = None  # [V70] StateTracker 롤백용 스냅샷
+
+        return {
+            "arc_drive": arc_drive,
+            "cached_preflight_injection": _cached_preflight_injection,
+            "cached_preflight_result": _cached_preflight_result,
+            "passed": passed,
+            "current_feedback": current_feedback,
+            "constraint_block": constraint_block,
+            "attempt": attempt,
+            "max_fourphase_attempts": max_fourphase_attempts,
+            "max_attempts": max_attempts,
+            "director_feedback_for_fourphase": director_feedback_for_fourphase,
+            "use_analyst_fallback": use_analyst_fallback,
+            "st_snapshot": _st_snapshot,
+        }
 
     def _normalize_tactical_text(self, text: str) -> str:
         """[V64.P3] 전술서 텍스트 정규화"""
