@@ -529,3 +529,214 @@ class TestPreflightEnrichmentDefaults:
         assert result["refined_arc"] is None
         assert result["generation_method"] == "analyst"
         assert "검증 실패" in result["director_feedback_for_fourphase"]
+
+
+# ══════════════════════════════════════════════════════════════
+# [4-R3-h] _preflight_validation — REJECT path coverage
+# ══════════════════════════════════════════════════════════════
+
+
+class TestPreflightValidationRejectPaths:
+    """_preflight_validation의 주요 REJECT 분기 단위테스트."""
+
+    RETRY_REQUIRED_KEYS = {"action", "current_feedback"}
+    PROCEED_REQUIRED_KEYS = {
+        "action",
+        "refined_arc",
+        "draft_validator_passed",
+        "consensus_passed",
+        "suspected_duplicates",
+    }
+
+    def _base_kwargs(self, valid_refined_arc):
+        return {
+            "refined_arc": valid_refined_arc,
+            "four_phase_passed": False,
+            "all_refined_arcs": [],
+            "entity_registry_for_director": None,
+            "global_arc_no": 1,
+            "current_ep_start": 1,
+            "current_feedback": "",
+            "generation_method": "analyst",
+            "constraint_block": "",
+            "enriched_block": {"block_theme": "test", "joint_docs": {}, "status_shadow": {}},
+            "draft_validator_passed": False,
+            "consensus_passed": False,
+            "attempt": 0,
+            "protagonist_name": "이청풍",
+            "constraint_db": MagicMock(
+                validate_arc_design=MagicMock(return_value={"valid": True, "violations": [], "warnings": []})
+            ),
+        }
+
+    # ── 1) DraftValidator REJECT (CRITICAL issues, no corrector) ──
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    @patch("modules.core.spinners.rich_console", MagicMock())
+    def test_draft_validator_reject_returns_retry(self, s2_orch, valid_refined_arc):
+        """DraftValidator valid=False + CRITICAL → retry + 피드백에 점수 포함."""
+        s2_orch.ctx.arc_draft_validator = MagicMock()
+        s2_orch.ctx.arc_draft_validator.validate.return_value = {
+            "valid": False,
+            "score": 35,
+            "critical_issues": ["구조 불일치", "인과 단절"],
+            "issues": [{"severity": "CRITICAL", "message": "구조 불일치"}],
+            "advisory_issues": [],
+            "warnings": [],
+        }
+        s2_orch.ctx.arc_corrector = None
+        s2_orch.ctx.use_arc_corrector = False
+        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        s2_orch.ctx.stage2_optimizer = None
+
+        kwargs = self._base_kwargs(valid_refined_arc)
+        result = s2_orch._preflight_validation(**kwargs)
+
+        assert result["action"] == "retry"
+        assert "35" in result["current_feedback"]
+        assert "구조 불일치" in result["current_feedback"]
+
+    # ── 2) Consensus REJECT ──
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", True)
+    @patch("modules.core.spinners.rich_console", MagicMock())
+    def test_consensus_reject_returns_retry(self, s2_orch, valid_refined_arc):
+        """Consensus REJECT → retry + 피드백에 카테고리 포함."""
+        consensus_mock = MagicMock()
+        consensus_mock.validate_with_consensus.return_value = (
+            "REJECT",
+            {
+                "vote_summary": {"pass": 1, "reject": 2},
+                "critical_issues": [
+                    {"category": "plot_hole", "issue": "인과가 연결되지 않음"},
+                ],
+                "all_issues": [{"category": "plot_hole", "issue": "인과가 연결되지 않음"}],
+            },
+        )
+        s2_orch.ctx.agents = {"consensus": consensus_mock}
+        s2_orch.ctx.arc_draft_validator = None
+        s2_orch.ctx.self_reflector = None
+        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        s2_orch.ctx.stage2_optimizer = None
+
+        kwargs = self._base_kwargs(valid_refined_arc)
+        result = s2_orch._preflight_validation(**kwargs)
+
+        assert result["action"] == "retry"
+        assert "Consensus" in result["current_feedback"]
+        assert "plot_hole" in result["current_feedback"]
+
+    # ── 3) Flow Guard REJECT ──
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    @patch("modules.core.spinners.rich_console", None)
+    def test_flow_guard_reject_returns_retry(self, s2_orch, valid_refined_arc):
+        """FlowGuard REJECT → retry + 피드백에 서사 폭주/정체 메시지."""
+        s2_orch._stage2_flow_guard = MagicMock(
+            return_value={
+                "status": "REJECT",
+                "reason": "서사 정체",
+                "feedback": "서사 폭주/정체 위험이 감지되었습니다.",
+            }
+        )
+        s2_orch.ctx.arc_draft_validator = None
+        s2_orch.ctx.stage2_optimizer = None
+
+        kwargs = self._base_kwargs(valid_refined_arc)
+        kwargs["four_phase_passed"] = True  # skip consensus/draft
+        result = s2_orch._preflight_validation(**kwargs)
+
+        assert result["action"] == "retry"
+        assert "서사" in result["current_feedback"]
+
+    # ── 4) Duplicate Guard REJECT ──
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    @patch("modules.core.spinners.rich_console", None)
+    def test_duplicate_guard_returns_retry(self, s2_orch, valid_refined_arc):
+        """직전 arc와 tactical_doc 중복 → retry."""
+        # _is_tactical_doc_duplicate이 True를 반환하도록 mock
+        s2_orch._is_tactical_doc_duplicate = MagicMock(return_value=True)
+        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        s2_orch.ctx.arc_draft_validator = None
+        s2_orch.ctx.stage2_optimizer = None
+
+        prev_arc = {"arc_no": 0, "tactical_doc": "이전 아크 내용"}
+        kwargs = self._base_kwargs(valid_refined_arc)
+        kwargs["four_phase_passed"] = True  # skip consensus/draft
+        kwargs["all_refined_arcs"] = [prev_arc]
+        result = s2_orch._preflight_validation(**kwargs)
+
+        assert result["action"] == "retry"
+        assert "중복" in result["current_feedback"] or "동일" in result["current_feedback"]
+
+    # ── 5) ContinuityInspector REJECT ──
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    @patch("modules.core.spinners.rich_console", MagicMock())
+    def test_continuity_reject_returns_retry(self, s2_orch, valid_refined_arc):
+        """ContinuityInspector REJECT → retry + current_feedback 유효 문자열."""
+        ci_mock = MagicMock()
+        ci_mock.inspect_arc.return_value = {
+            "decision": "REJECT",
+            "severity": "HIGH",
+            "fix_instructions": "NPC 상태를 수정하세요",
+            "violations": [
+                {"type": "npc_state", "description": "사망한 NPC가 활동 중"},
+            ],
+        }
+        s2_orch.ctx.agents = {"continuity_inspector": ci_mock}
+        s2_orch.ctx.failure_learner = None
+        s2_orch.ctx.pass_rate_monitor = None
+        s2_orch.ctx.stage2_optimizer = None
+        s2_orch.ctx.arc_draft_validator = None
+        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+
+        kwargs = self._base_kwargs(valid_refined_arc)
+        result = s2_orch._preflight_validation(**kwargs)
+
+        assert result["action"] == "retry"
+        assert isinstance(result["current_feedback"], str)
+        assert len(result["current_feedback"]) > 0
+        # ctx 콜백 호출 확인
+        s2_orch.ctx.build_strong_kind_feedback.assert_called_once()
+        s2_orch.ctx.build_focused_context.assert_called_once()
+
+    # ── 6) enriched_block 무효 → retry ──
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    @patch("modules.core.spinners.rich_console", None)
+    def test_invalid_enriched_block_returns_retry(self, s2_orch, valid_refined_arc):
+        """enriched_block=None → retry + 농축 데이터 누락 피드백."""
+        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        s2_orch.ctx.arc_draft_validator = None
+        s2_orch.ctx.stage2_optimizer = None
+
+        kwargs = self._base_kwargs(valid_refined_arc)
+        kwargs["four_phase_passed"] = True
+        kwargs["enriched_block"] = None
+        result = s2_orch._preflight_validation(**kwargs)
+
+        assert result["action"] == "retry"
+        assert "농축" in result["current_feedback"] or "데이터" in result["current_feedback"]
+
+    # ── 7) proceed 경로 필수 키 회귀 확인 (보강) ──
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    @patch("modules.core.spinners.rich_console", None)
+    def test_proceed_keys_with_all_validators_off(self, s2_orch, valid_refined_arc):
+        """모든 validator off + 유효 arc → proceed + 필수 5키 + 값 타입 검증."""
+        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        s2_orch.ctx.arc_draft_validator = None
+        s2_orch.ctx.stage2_optimizer = None
+
+        kwargs = self._base_kwargs(valid_refined_arc)
+        kwargs["four_phase_passed"] = True
+        result = s2_orch._preflight_validation(**kwargs)
+
+        assert result["action"] == "proceed"
+        assert self.PROCEED_REQUIRED_KEYS == set(result.keys())
+        assert isinstance(result["refined_arc"], dict)
+        assert isinstance(result["draft_validator_passed"], bool)
+        assert isinstance(result["consensus_passed"], bool)
+        assert isinstance(result["suspected_duplicates"], list)
