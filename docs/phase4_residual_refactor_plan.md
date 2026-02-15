@@ -3,7 +3,7 @@
 > Phase 6-B E2E 기준선 확보 후 착수.
 > 기준선: E2E 22 passed (1.09s), 회귀 78 passed, unit 22 passed, pipeline 89 passed
 > 기준 커밋: `1678550`
-> **현재 상태**: Phase 4-R1 완료, Phase 4-R2(a–e) 완료, **Phase 4-R3(a–h) 완료**, checkpoint `38a5ab5`
+> **현재 상태**: Phase 4-R1 완료, Phase 4-R2(a–e) 완료, **Phase 4-R3(a–i) 완료**, checkpoint `3d45376`
 
 ---
 
@@ -149,12 +149,14 @@
 | **4-R3-f** | `adcda5e` | PASS/REJECT 메트릭 헬퍼 추출 (7 try/except → 2 call) | +117/-100 |
 | **4-R3-g** | `882cd0a` | `_preflight_enrichment()` 안전 초기화 5개 + 테스트 4개 | +97/-0 |
 | **4-R3-h** | `38a5ab5` | `_preflight_validation()` REJECT-path 단위테스트 7건 | +211/-0 |
+| **4-R3-i** | `3d45376` | ArcCorrector nested + SelfReflector + Consensus exception 5건 | +171/-0 |
 
 **결과**: `_compute_preflight()` 1,763줄 → 100줄 (94% 축소), 7개 서브메서드 추출, ctx refs 348/43 불변
 **R3-g 보강**: FourPhase 미사용/예외/REJECT 경로에서 `NameError` 방지
 **R3-h 보강**: DraftValidator/Consensus/FlowGuard/DuplicateGuard/ContinuityInspector REJECT + enriched_block 무효 + proceed 키 회귀
-**테스트 기준선**: unit 29 + pipeline 89 + E2E 22 + regression 78 = **218 passed**
-**잔여 미커버**: ArcCorrector nested branch, SelfReflector mutation path, Consensus exception path
+**R3-i 보강**: ArcCorrector nested (correct 실패 + revalidation 실패), SelfReflector mutation/파싱실패, Consensus exception 비전파
+**테스트 기준선**: unit 34 + pipeline 89 + E2E 22 + regression 78 = **223 passed**
+**잔여 미커버**: 없음 (_preflight_validation 12/~12 분기 커버 완료)
 
 ### Phase 4-R4: async/sync 통일 (선택적)
 

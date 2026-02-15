@@ -31,10 +31,10 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 - **완료된 것**: Phase 1~2, 5-A/5-B/5-C, 6-A/6-B/6-C, 4C(DI), 4D(sqlite-vec), 3-5B(패치), 3-5A(NPC이력), **4-R1~R3(몬스터 분할)**, **R4-a(NO-GO 결정)**
 - **약점**: 플롯 중복 감지 불안정 (Chain 1)
 - **현재 단계**: Phase 4 구조 개선 완료 → Phase 3 잔여 품질 기능 또는 추가 테스트 커버리지
-- **다음 우선순위**: 잔여 테스트 커버리지 → Phase 3 품질 기능
-- **테스트 기준선**: unit 29 + pipeline 89 + E2E 22 + regression 78 = **218 passed**
+- **다음 우선순위**: Phase 3 잔여 품질 기능 설계 → 관측성 개선
+- **테스트 기준선**: unit 34 + pipeline 89 + E2E 22 + regression 78 = **223 passed**
 - **ctx refs**: stage2 348/43, stage4 321/22 (불변)
-- **checkpoint**: `a8f5bee`
+- **checkpoint**: `3d45376`
 - **실행 기준 문서(SSOT)**: `내일작업.md` (남은 작업만 관리)
 
 ---
