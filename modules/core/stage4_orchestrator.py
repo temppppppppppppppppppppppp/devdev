@@ -71,6 +71,61 @@ def _detect_npc_overexposure(
     }
 
 
+# ═══════════════════════════════════════════════════════════════
+# [Phase 3-B] 크로스 에피소드 문장 반복 감지 (advisory-only, pure function)
+# ═══════════════════════════════════════════════════════════════
+def _detect_cross_episode_repetition(
+    fingerprints,
+    repeated,
+    *,
+    warning_threshold: int = 3,
+    regression_threshold: int = 6,
+):
+    """크로스 에피소드 문장 반복 감지 (advisory-only).
+
+    Args:
+        fingerprints: 현재 에피소드 [(hash, preview), ...]
+        repeated: DB에서 조회된 [{"sentence_hash", "episode_number", "sentence_preview"}, ...]
+        warning_threshold: 이 이상 반복 문장 → severity="warning"
+        regression_threshold: 이 이상 → severity="regression"
+
+    Returns:
+        dict with detected/severity/overlap_count/overlap_ratio/top_repeated/warning
+        or None if below threshold.
+    """
+    if not fingerprints or not repeated:
+        return None
+    unique_hashes = {r["sentence_hash"] for r in repeated}
+    overlap_count = len(unique_hashes)
+    if overlap_count < warning_threshold:
+        return None
+    overlap_ratio = overlap_count / len(fingerprints) if fingerprints else 0
+    severity = "regression" if overlap_count >= regression_threshold else "warning"
+    # 반복 문장 상위 5개 (미리보기 포함)
+    seen = set()
+    top_repeated = []
+    for r in repeated:
+        if r["sentence_hash"] not in seen:
+            seen.add(r["sentence_hash"])
+            top_repeated.append(
+                {
+                    "preview": r.get("sentence_preview", "")[:40],
+                    "ep": r["episode_number"],
+                }
+            )
+            if len(top_repeated) >= 5:
+                break
+    summary_parts = [f"'{t['preview']}'(ep{t['ep']})" for t in top_repeated[:3]]
+    return {
+        "detected": True,
+        "severity": severity,
+        "overlap_count": overlap_count,
+        "overlap_ratio": round(overlap_ratio, 3),
+        "top_repeated": top_repeated,
+        "warning": f"크로스 에피소드 반복 {overlap_count}건: {', '.join(summary_parts)}",
+    }
+
+
 # [Phase 3-5B] 패치 모드 임계값 (모듈 레벨 상수로 캐시)
 _PATCH_REWRITE_THRESHOLD = PatchModeThresholds.REWRITE
 
@@ -1168,6 +1223,43 @@ JSON으로 출력:
                     self.ctx.ui.log(f"   ⚠️ {_overexposure['warning']}")
             except Exception as _npc_err:
                 logging.warning("[Phase 3-5C] NPC 과잉 등장 감지 실패 (비차단): %s", _npc_err)
+
+        # ===== [Phase 3-B] 크로스 에피소드 문장 반복 감지 (advisory-only) =====
+        try:
+            from modules.validation.threshold_helper import _threshold
+
+            _cr_enabled = _threshold("cross_episode_repetition.enabled", True)
+            if _cr_enabled:
+                from modules.core.repetition_guard import RepetitionGuard
+
+                _cr_lookback = _threshold("cross_episode_repetition.lookback_episodes", 5)
+                _cr_min_len = _threshold("cross_episode_repetition.min_sentence_length", 15)
+                _cr_warn = _threshold("cross_episode_repetition.overlap_warning", 3)
+                _cr_regr = _threshold("cross_episode_repetition.overlap_regression", 6)
+
+                _fps = RepetitionGuard.extract_sentence_fingerprints(final_manuscript, min_length=_cr_min_len)
+                _db = getattr(self.ctx.current_project, "db", None)
+                if _fps and _db:
+                    _repeated = _db.find_repeated_sentence_hashes(
+                        [h for h, _ in _fps], current_ep=next_ep, lookback=_cr_lookback
+                    )
+                    _cr_result = _detect_cross_episode_repetition(
+                        _fps,
+                        _repeated,
+                        warning_threshold=_cr_warn,
+                        regression_threshold=_cr_regr,
+                    )
+                    if _cr_result:
+                        logging.warning(
+                            "[Phase 3-B] 크로스 에피소드 반복 — 제%d화: %s",
+                            next_ep,
+                            _cr_result["warning"],
+                        )
+                        self.ctx.ui.log(f"   ⚠️ {_cr_result['warning']}")
+                    # 현재 에피소드 핑거프린트 저장 (감지 후 저장 → 자기 자신과 비교 방지)
+                    _db.store_sentence_hashes(next_ep, _fps)
+        except Exception as _cr_err:
+            logging.warning("[Phase 3-B] 크로스 에피소드 반복 감지 실패 (비차단): %s", _cr_err)
 
         self.ctx.ui.log(f"\n✅ 제{next_ep}화 '{final_title}' 생산 완료! ({len(final_manuscript)}자)")
 

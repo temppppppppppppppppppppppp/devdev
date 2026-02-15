@@ -762,3 +762,88 @@ class TestNpcOverexposureHook:
         orch.ctx.state_tracker.npc_registry.keys.side_effect = RuntimeError("crash")
         result = orch._process_pass_result(**self._make_kwargs(tmp_path))
         assert result is True  # 비전파: 정상 반환
+
+
+# ══════════════════════════════════════════════════════════════
+# [Phase 3-B] 크로스 에피소드 반복 감지 hook 테스트
+# ══════════════════════════════════════════════════════════════
+
+
+class TestCrossEpisodeRepetitionHook:
+    """Stage4 _process_pass_result 내 크로스 반복 감지 hook."""
+
+    @pytest.fixture
+    def s4_orch_with_db(self, mock_app, tmp_path):
+        from modules.core.db_manager import DBManager
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        orch = Stage4Orchestrator(mock_app)
+        db = DBManager(tmp_path / "test.db")
+        orch.ctx.current_project.db = db
+        orch.ctx.state_tracker = None
+        orch.ctx.quality_dashboard = None
+        orch.ctx.world_state = None
+        orch.ctx.fact_ledger = None
+        orch.ctx.memory = None
+        orch.ctx.flush_audit_buffer = MagicMock()
+        orch.ctx.perf_timer = MagicMock()
+        orch.ctx.character_voice = None
+        orch.ctx.foreshadow_tracker = None
+        orch.ctx.failure_learner = None
+        orch.ctx.get_protagonist_name = lambda: "이청풍"
+        yield orch
+        db.close()
+
+    def _make_kwargs(self, tmp_path, manuscript="테스트 원고", next_ep=3):
+        return {
+            "next_ep": next_ep,
+            "final_manuscript": manuscript,
+            "final_title": "시련의 날",
+            "final_state_updates": {},
+            "blueprint": {"ep_number": next_ep},
+            "arc_data": {"arc_no": 1, "state_changes": {}},
+            "output_dir": tmp_path,
+            "v50_modules_available": False,
+        }
+
+    def test_cross_repetition_warning_logged(self, s4_orch_with_db, tmp_path, caplog):
+        """이전 에피소드와 동일 문장 다수 → WARNING 로그."""
+        orch = s4_orch_with_db
+        shared = "이청풍은 검을 높이 들어 창공을 향해 검기를 뿜어냈다"
+        sentences = [f"{shared} 변형{i}번째 문장이다." for i in range(5)]
+        past_ms = ". ".join(sentences) + "."
+        # ep1 핑거프린트 사전 저장
+        from modules.core.repetition_guard import RepetitionGuard
+
+        fps = RepetitionGuard.extract_sentence_fingerprints(past_ms, min_length=10)
+        orch.ctx.current_project.db.store_sentence_hashes(1, fps)
+        # ep2에서 동일 원고 → 반복 감지
+        import logging
+
+        with caplog.at_level(logging.WARNING):
+            result = orch._process_pass_result(**self._make_kwargs(tmp_path, past_ms, next_ep=2))
+        assert result is True
+        assert any("크로스 에피소드 반복" in r.message for r in caplog.records)
+
+    def test_cross_repetition_no_warning_below_threshold(self, s4_orch_with_db, tmp_path, caplog):
+        """반복 문장이 임계값 미만이면 WARNING 없음."""
+        orch = s4_orch_with_db
+        # ep1: 고유 문장
+        orch.ctx.current_project.db.store_sentence_hashes(1, [("unique_hash_1", "고유 문장 1")])
+        # ep2: 완전히 다른 원고
+        ms = "완전히 새로운 문장으로 구성된 원고입니다. 이전 에피소드와 겹치는 부분이 없습니다."
+        import logging
+
+        with caplog.at_level(logging.WARNING):
+            result = orch._process_pass_result(**self._make_kwargs(tmp_path, ms, next_ep=2))
+        assert result is True
+        assert not any("크로스 에피소드 반복" in r.message for r in caplog.records)
+
+    def test_cross_repetition_db_exception_non_propagating(self, s4_orch_with_db, tmp_path):
+        """DB 예외 시 비전파."""
+        orch = s4_orch_with_db
+        mock_db = MagicMock()
+        mock_db.find_repeated_sentence_hashes.side_effect = RuntimeError("DB crash")
+        orch.ctx.current_project.db = mock_db
+        result = orch._process_pass_result(**self._make_kwargs(tmp_path, "정상 원고 내용입니다. " * 20, next_ep=2))
+        assert result is True

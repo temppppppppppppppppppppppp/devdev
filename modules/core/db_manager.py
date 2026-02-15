@@ -311,6 +311,20 @@ class DBManager:
             )
         """)
 
+        # 13. [Phase 3-B] 크로스 에피소드 문장 핑거프린트
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS episode_sentence_hashes (
+                episode_number INTEGER NOT NULL,
+                sentence_hash TEXT NOT NULL,
+                sentence_preview TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (episode_number, sentence_hash)
+            )
+        """)
+        self.cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_episode_sentence_hashes_hash ON episode_sentence_hashes(sentence_hash)"
+        )
+
         self.conn.commit()
 
     # --- [트랜잭션 제어] ---
@@ -1262,3 +1276,54 @@ class DBManager:
                 (npc_name, npc_name),
             )
             return {row["field_name"]: row["new_value"] for row in cur.fetchall()}
+
+    # --- [Phase 3-B] 크로스 에피소드 문장 핑거프린트 ---
+
+    def store_sentence_hashes(self, ep_num: int, hashes_with_preview: list) -> None:
+        """[Phase 3-B] 에피소드별 문장 해시 저장.
+
+        Args:
+            ep_num: 에피소드 번호
+            hashes_with_preview: [(sent_hash, preview), ...] 리스트
+        """
+        if not hashes_with_preview:
+            return
+        with self._lock:
+            self.cursor.executemany(
+                "INSERT OR IGNORE INTO episode_sentence_hashes "
+                "(episode_number, sentence_hash, sentence_preview) VALUES (?, ?, ?)",
+                [(ep_num, h, p) for h, p in hashes_with_preview],
+            )
+            if not self.conn.in_transaction:
+                self.conn.commit()
+
+    def find_repeated_sentence_hashes(self, target_hashes: list, current_ep: int, lookback: int = 5) -> list:
+        """[Phase 3-B] 현재 해시 중 최근 N화에 이미 존재하는 해시 조회.
+
+        Returns:
+            [{"sentence_hash": str, "episode_number": int, "sentence_preview": str}, ...]
+        """
+        if not target_hashes:
+            return []
+        min_ep = max(1, current_ep - lookback)
+        with self._lock:
+            placeholders = ",".join("?" for _ in target_hashes)
+            cur = self.cursor.execute(
+                f"SELECT sentence_hash, episode_number, sentence_preview "
+                f"FROM episode_sentence_hashes "
+                f"WHERE sentence_hash IN ({placeholders}) "
+                f"AND episode_number >= ? AND episode_number < ? "
+                f"ORDER BY episode_number ASC",
+                [*target_hashes, min_ep, current_ep],
+            )
+            return [dict(row) for row in cur.fetchall()]
+
+    def get_sentence_hashes(self, ep_num: int) -> list:
+        """[Phase 3-B] 특정 에피소드의 문장 해시 전량 조회 (테스트/디버그용)."""
+        with self._lock:
+            cur = self.cursor.execute(
+                "SELECT sentence_hash, sentence_preview FROM episode_sentence_hashes "
+                "WHERE episode_number = ? ORDER BY rowid",
+                (ep_num,),
+            )
+            return [dict(row) for row in cur.fetchall()]
