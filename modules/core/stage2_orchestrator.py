@@ -855,6 +855,10 @@ class Stage2Orchestrator:
         def _compute_arc_drive() -> dict:
             """Weaver 욕망 드라이브 생성 (LLM)"""
             try:
+                self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_arc_drive")
+            except Exception:
+                pass
+            try:
                 return self.ctx.agents["weaver"].generate_arc_drive(
                     current_arc_dna=arcs_source[arc_idx],
                     analyst_lack_report=lack_report,
@@ -868,30 +872,54 @@ class Stage2Orchestrator:
                     {"arc_no": global_arc_no, "error": str(weaver_err)},
                 )
                 return {"desire_vector": "생성 실패", "status": "error"}
+            finally:
+                try:
+                    self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_arc_drive")
+                except Exception:
+                    pass
 
         def _compute_preflight() -> tuple:
             """Preflight 분석 (LLM) — 결과를 attempt 루프에서 재사용"""
+            try:
+                self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_preflight_analysis")
+            except Exception:
+                pass
             _pf_injection = ""
             _pf_result = None
-            if "preflight" in self.ctx.agents and all_refined_arcs:
+            try:
+                if "preflight" in self.ctx.agents and all_refined_arcs:
+                    try:
+                        _resolved_plots = ""
+                        if self.ctx.state_tracker:
+                            _resolved_plots = self.ctx.state_tracker.get_resolved_plots_summary()
+                        _pf_result = self.ctx.agents["preflight"].analyze(
+                            all_refined_arcs, resolved_plots_summary=_resolved_plots
+                        )
+                        if _pf_result:
+                            _pf_injection = self.ctx.agents["preflight"].generate_analyst_injection(_pf_result)
+                    except Exception as pf_err:
+                        logging.info(f"⚠️ [Preflight] 스킵: {str(pf_err)[:50]}")
+                return _pf_injection, _pf_result
+            finally:
                 try:
-                    _resolved_plots = ""
-                    if self.ctx.state_tracker:
-                        _resolved_plots = self.ctx.state_tracker.get_resolved_plots_summary()
-                    _pf_result = self.ctx.agents["preflight"].analyze(
-                        all_refined_arcs, resolved_plots_summary=_resolved_plots
-                    )
-                    if _pf_result:
-                        _pf_injection = self.ctx.agents["preflight"].generate_analyst_injection(_pf_result)
-                except Exception as pf_err:
-                    logging.info(f"⚠️ [Preflight] 스킵: {str(pf_err)[:50]}")
-            return _pf_injection, _pf_result
+                    self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_preflight_analysis")
+                except Exception:
+                    pass
 
+        # [Phase 3-Obs] PerfTimer: preflight 병렬 구간 외곽 타이머
+        try:
+            self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_preflight_parallel")
+        except Exception:
+            pass
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as _parallel_exec:
             _fut_drive = _parallel_exec.submit(_compute_arc_drive)
             _fut_preflight = _parallel_exec.submit(_compute_preflight)
             arc_drive = _fut_drive.result()
             _cached_preflight_injection, _cached_preflight_result = _fut_preflight.result()
+        try:
+            self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_preflight_parallel")
+        except Exception:
+            pass
 
         if _cached_preflight_result:
             logging.info("✅ [V66.1] arc_drive + preflight 병렬 완료")

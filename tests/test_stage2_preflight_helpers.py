@@ -994,3 +994,96 @@ class TestQualityTrendInjection:
         assert "enhanced_context" in result
         # 크래시 없이 기존 컨텍스트만 반환
         assert "기존 컨텍스트" in result["enhanced_context"]
+
+
+# ══════════════════════════════════════════════════════════════
+# [Phase 3-Obs] Preflight parallel PerfTimer instrumentation
+# ══════════════════════════════════════════════════════════════
+
+
+class TestPreflightParallelTimer:
+    """ThreadPoolExecutor 병렬 구간 PerfTimer 계측 검증."""
+
+    def _make_setup_kwargs(self):
+        return {
+            "all_refined_arcs": [{"arc_no": 1, "tactical_doc": "test"}],
+            "arcs_source": [{"arc_no": 1}],
+            "arc_idx": 0,
+            "lack_report": {},
+            "grand_obj": "천하제일",
+            "global_arc_no": 3,
+            "constraint_db": MagicMock(generate_constraint_block=MagicMock(return_value="")),
+        }
+
+    def test_outer_timer_start_stop(self, s2_orch):
+        """외곽 타이머 s2_arc_{N}_preflight_parallel start/stop 호출 확인."""
+        s2_orch.ctx.agents = {
+            "weaver": MagicMock(generate_arc_drive=MagicMock(return_value={"desire_vector": "ok"})),
+        }
+        s2_orch._preflight_state_setup(**self._make_setup_kwargs())
+
+        start_calls = [c[0][0] for c in s2_orch.ctx.perf_timer.start.call_args_list]
+        stop_calls = [c[0][0] for c in s2_orch.ctx.perf_timer.stop.call_args_list]
+        assert "s2_arc_3_preflight_parallel" in start_calls
+        assert "s2_arc_3_preflight_parallel" in stop_calls
+
+    def test_inner_timers_arc_drive_and_preflight(self, s2_orch):
+        """개별 타이머 s2_arc_{N}_arc_drive, s2_arc_{N}_preflight_analysis 호출 확인."""
+        s2_orch.ctx.agents = {
+            "weaver": MagicMock(generate_arc_drive=MagicMock(return_value={"desire_vector": "ok"})),
+            "preflight": MagicMock(
+                analyze=MagicMock(return_value={"item_timeline": []}),
+                generate_analyst_injection=MagicMock(return_value="injection"),
+            ),
+        }
+        s2_orch._preflight_state_setup(**self._make_setup_kwargs())
+
+        start_calls = [c[0][0] for c in s2_orch.ctx.perf_timer.start.call_args_list]
+        stop_calls = [c[0][0] for c in s2_orch.ctx.perf_timer.stop.call_args_list]
+        assert "s2_arc_3_arc_drive" in start_calls
+        assert "s2_arc_3_arc_drive" in stop_calls
+        assert "s2_arc_3_preflight_analysis" in start_calls
+        assert "s2_arc_3_preflight_analysis" in stop_calls
+
+    def test_all_three_timers_recorded(self, s2_orch):
+        """3개 타이머(parallel + arc_drive + preflight_analysis) 모두 start/stop 호출."""
+        s2_orch.ctx.agents = {
+            "weaver": MagicMock(generate_arc_drive=MagicMock(return_value={"desire_vector": "ok"})),
+            "preflight": MagicMock(
+                analyze=MagicMock(return_value={"item_timeline": []}),
+                generate_analyst_injection=MagicMock(return_value="injection"),
+            ),
+        }
+        s2_orch._preflight_state_setup(**self._make_setup_kwargs())
+
+        start_calls = {c[0][0] for c in s2_orch.ctx.perf_timer.start.call_args_list}
+        stop_calls = {c[0][0] for c in s2_orch.ctx.perf_timer.stop.call_args_list}
+        expected = {
+            "s2_arc_3_preflight_parallel",
+            "s2_arc_3_arc_drive",
+            "s2_arc_3_preflight_analysis",
+        }
+        assert expected <= start_calls
+        assert expected <= stop_calls
+
+    def test_perf_timer_none_no_crash(self, s2_orch):
+        """perf_timer=None일 때 _preflight_state_setup() 정상 반환."""
+        s2_orch.ctx.perf_timer = None
+        s2_orch.ctx.agents = {
+            "weaver": MagicMock(generate_arc_drive=MagicMock(return_value={"desire_vector": "ok"})),
+        }
+        result = s2_orch._preflight_state_setup(**self._make_setup_kwargs())
+        assert "arc_drive" in result
+        assert result["arc_drive"]["desire_vector"] == "ok"
+
+    def test_perf_timer_exception_non_propagating(self, s2_orch):
+        """perf_timer.start/stop 예외 시 비전파, 파이프라인 정상 완료."""
+        s2_orch.ctx.perf_timer = MagicMock()
+        s2_orch.ctx.perf_timer.start.side_effect = RuntimeError("timer broken")
+        s2_orch.ctx.perf_timer.stop.side_effect = RuntimeError("timer broken")
+        s2_orch.ctx.agents = {
+            "weaver": MagicMock(generate_arc_drive=MagicMock(return_value={"desire_vector": "ok"})),
+        }
+        result = s2_orch._preflight_state_setup(**self._make_setup_kwargs())
+        assert "arc_drive" in result
+        assert result["arc_drive"]["desire_vector"] == "ok"
