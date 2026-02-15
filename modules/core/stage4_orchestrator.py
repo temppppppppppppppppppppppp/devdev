@@ -78,6 +78,18 @@ class _RoundContext:
 
 
 @dataclasses.dataclass(slots=True)
+class _InterviewRoundResult:
+    """[4-R2-e] Result of a single interview round."""
+
+    verdict: str  # "PASS" | "REJECT" | "EMPTY"
+    director_feedback: str
+    previous_attempt: dict
+    final_manuscript: object = None  # str | None, set only on PASS
+    final_title: object = None  # str | None, set only on PASS
+    final_state_updates: dict = dataclasses.field(default_factory=dict)  # set only on PASS
+
+
+@dataclasses.dataclass(slots=True)
 class _RoundOutcome:
     """[4-R2-d] Result of _handle_round_outcome."""
 
@@ -1389,13 +1401,13 @@ JSON으로 출력:
                     previous_attempt=previous_attempt,
                     round_ctx=round_ctx,
                 )
-                if _round_result["verdict"] == "PASS":
-                    final_manuscript = _round_result["final_manuscript"]
-                    final_title = _round_result["final_title"]
-                    final_state_updates = _round_result["final_state_updates"]
+                if _round_result.verdict == "PASS":
+                    final_manuscript = _round_result.final_manuscript
+                    final_title = _round_result.final_title
+                    final_state_updates = _round_result.final_state_updates
                     break
-                director_feedback = _round_result["director_feedback"]
-                previous_attempt = _round_result["previous_attempt"]
+                director_feedback = _round_result.director_feedback
+                previous_attempt = _round_result.previous_attempt
 
         # ===== 3번 모두 실패: 냉동인간 소환 =====
         if not final_manuscript:
@@ -1497,7 +1509,7 @@ JSON으로 출력:
         director_feedback: str,
         previous_attempt: dict,
         round_ctx: _RoundContext,
-    ) -> dict:
+    ) -> _InterviewRoundResult:
         """[4-R1-e-1] Single interview round: generation, validation, judgment."""
         # [4-R2-b] Unpack round context
         chief_writer = round_ctx.chief_writer
@@ -1692,7 +1704,11 @@ JSON으로 출력:
                 "action_items": [],
                 "score": 0,
             }
-            return {"verdict": "EMPTY", "director_feedback": director_feedback, "previous_attempt": previous_attempt}
+            return _InterviewRoundResult(
+                verdict="EMPTY",
+                director_feedback=director_feedback,
+                previous_attempt=previous_attempt,
+            )
 
         # Phase 3: Python 사전 검증
         stage4_spinner.update_detail(f"제{next_ep}화 · {round_num + 1}차 면담 · Python 검증")
@@ -1986,14 +2002,14 @@ JSON으로 출력:
                     logging.warning(f"⚠️ [V66.1] 시간선 검사 오류: {_tc_err}")
 
             self.ctx.ui.log(f"   ✅ {round_num + 1}차 면담 PASS!")
-            return {
-                "verdict": "PASS",
-                "final_manuscript": final_manuscript,
-                "final_title": final_title,
-                "final_state_updates": final_state_updates,
-                "director_feedback": director_feedback,
-                "previous_attempt": previous_attempt,
-            }
+            return _InterviewRoundResult(
+                verdict="PASS",
+                director_feedback=director_feedback,
+                previous_attempt=previous_attempt,
+                final_manuscript=final_manuscript,
+                final_title=final_title,
+                final_state_updates=final_state_updates,
+            )
         else:
             feedback = director_result.get("feedback", {})
             action_items = director_result.get("action_items", [])
@@ -2007,7 +2023,11 @@ JSON으로 출력:
                 "best_manuscript": director_result.get("selected_candidate", {}).get("manuscript", ""),
             }
             self.ctx.ui.log(f"   ❌ {round_num + 1}차 면담 REJECT. 피드백: {director_feedback[:100]}...")
-        return {"verdict": "REJECT", "director_feedback": director_feedback, "previous_attempt": previous_attempt}
+        return _InterviewRoundResult(
+            verdict="REJECT",
+            director_feedback=director_feedback,
+            previous_attempt=previous_attempt,
+        )
 
     def _prepare_stage4_session(self, *, limit_mode: bool = False) -> dict | None:
         """[4-R1-f] Prepare Stage 4 session: agents, context, style guide.

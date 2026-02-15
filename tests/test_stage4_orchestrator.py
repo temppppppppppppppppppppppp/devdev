@@ -362,16 +362,18 @@ class TestHandleRoundOutcomeErrorPaths:
         )
 
     def test_user_abort_returns_dict(self, orch_with_ctx, minimal_round_ctx, monkeypatch):
-        """user abort (메뉴 선택 != 4) → 4-key dict 반환, TypeError 없음"""
+        """user abort (메뉴 선택 != 4) → _RoundOutcome 반환, TypeError 없음"""
+        from modules.core.stage4_orchestrator import _InterviewRoundResult
+
         orch = orch_with_ctx
 
         # 3라운드 모두 REJECT
         orch._run_interview_round = MagicMock(
-            return_value={
-                "verdict": "REJECT",
-                "director_feedback": "피드백",
-                "previous_attempt": {"score": 30},
-            }
+            return_value=_InterviewRoundResult(
+                verdict="REJECT",
+                director_feedback="피드백",
+                previous_attempt={"score": 30},
+            )
         )
 
         # 냉동인간 원고 반환 + Director REJECT
@@ -403,16 +405,18 @@ class TestHandleRoundOutcomeErrorPaths:
         assert result.final_state_updates == {}
 
     def test_frozen_human_exception_returns_dict(self, orch_with_ctx, minimal_round_ctx, monkeypatch):
-        """frozen human 호출 실패 except → 4-key dict 반환, TypeError 없음"""
+        """frozen human 호출 실패 except → _RoundOutcome 반환, TypeError 없음"""
+        from modules.core.stage4_orchestrator import _InterviewRoundResult
+
         orch = orch_with_ctx
 
         # 3라운드 모두 REJECT
         orch._run_interview_round = MagicMock(
-            return_value={
-                "verdict": "REJECT",
-                "director_feedback": "피드백",
-                "previous_attempt": {"score": 30},
-            }
+            return_value=_InterviewRoundResult(
+                verdict="REJECT",
+                director_feedback="피드백",
+                previous_attempt={"score": 30},
+            )
         )
 
         # 냉동인간 호출 시 Exception 발생
