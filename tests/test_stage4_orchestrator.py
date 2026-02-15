@@ -462,3 +462,101 @@ class TestStage4OrchestratorImport:
 
         orch = Stage4Orchestrator(mock_app)
         assert orch.app is mock_app
+
+
+# ══════════════════════════════════════════════════════════════
+# Test: [Phase 3-QR] Quality Regression in _process_pass_result
+# ══════════════════════════════════════════════════════════════
+
+
+class TestQualityRegressionHook:
+    """_process_pass_result 내 품질 회귀 감지 advisory hook 테스트."""
+
+    @pytest.fixture
+    def s4_orch_with_dashboard(self, mock_app):
+        """Stage4Orchestrator with quality_dashboard in ctx."""
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        orch = Stage4Orchestrator(mock_app)
+        orch.ctx.quality_dashboard = MagicMock()
+        orch.ctx.world_state = None
+        orch.ctx.fact_ledger = None
+        orch.ctx.memory = None
+        orch.ctx.flush_audit_buffer = MagicMock()
+        orch.ctx.perf_timer = MagicMock()
+        orch.ctx.character_voice = None
+        orch.ctx.foreshadow_tracker = None
+        orch.ctx.failure_learner = None
+        return orch
+
+    @pytest.fixture
+    def pass_result_kwargs(self, tmp_path):
+        """_process_pass_result 호출용 기본 kwargs."""
+        return {
+            "next_ep": 5,
+            "final_manuscript": "테스트 원고입니다. " * 300,
+            "final_title": "테스트 에피소드",
+            "final_state_updates": {},
+            "blueprint": {"ep_number": 5},
+            "arc_data": {"arc_no": 1, "state_changes": {}},
+            "output_dir": tmp_path,
+            "v50_modules_available": False,
+        }
+
+    def test_regression_detected_logs_warning(self, s4_orch_with_dashboard, pass_result_kwargs):
+        """regression 감지 시 UI 경고 로그 출력."""
+        orch = s4_orch_with_dashboard
+        orch.ctx.quality_dashboard.detect_score_regression.return_value = {
+            "is_regression": True,
+            "severity": "regression",
+            "delta": 25,
+            "baseline_avg": 80.0,
+            "recent_avg": 55.0,
+            "reason": "직전 대비 25점 하락",
+        }
+        result = orch._process_pass_result(**pass_result_kwargs)
+        assert result is True
+        orch.ctx.quality_dashboard.detect_score_regression.assert_called_once_with(stage=2)
+        # UI에 경고 메시지 출력 확인
+        log_calls = [str(c) for c in orch.ctx.ui.log.call_args_list]
+        assert any("품질 회귀" in c for c in log_calls)
+
+    def test_warning_severity_logs_info(self, s4_orch_with_dashboard, pass_result_kwargs):
+        """warning severity 시 정보성 로그 출력."""
+        orch = s4_orch_with_dashboard
+        orch.ctx.quality_dashboard.detect_score_regression.return_value = {
+            "is_regression": False,
+            "severity": "warning",
+            "delta": 12,
+            "baseline_avg": 80.0,
+            "recent_avg": 68.0,
+            "reason": "직전 대비 12점 하락",
+        }
+        result = orch._process_pass_result(**pass_result_kwargs)
+        assert result is True
+        log_calls = [str(c) for c in orch.ctx.ui.log.call_args_list]
+        assert any("품질 경고" in c for c in log_calls)
+
+    def test_dashboard_exception_non_propagating(self, s4_orch_with_dashboard, pass_result_kwargs):
+        """dashboard 예외 시 비전파, _process_pass_result는 True 반환."""
+        orch = s4_orch_with_dashboard
+        orch.ctx.quality_dashboard.detect_score_regression.side_effect = RuntimeError("crash")
+        result = orch._process_pass_result(**pass_result_kwargs)
+        assert result is True  # 비전파: 정상 반환
+
+    def test_no_dashboard_skips_silently(self, mock_app, pass_result_kwargs, tmp_path):
+        """quality_dashboard=None이면 조용히 스킵."""
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        orch = Stage4Orchestrator(mock_app)
+        orch.ctx.quality_dashboard = None
+        orch.ctx.world_state = None
+        orch.ctx.fact_ledger = None
+        orch.ctx.memory = None
+        orch.ctx.flush_audit_buffer = MagicMock()
+        orch.ctx.perf_timer = MagicMock()
+        orch.ctx.character_voice = None
+        orch.ctx.foreshadow_tracker = None
+        orch.ctx.failure_learner = None
+        result = orch._process_pass_result(**pass_result_kwargs)
+        assert result is True  # 크래시 없이 정상 완료

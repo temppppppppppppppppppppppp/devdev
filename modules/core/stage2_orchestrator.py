@@ -1003,10 +1003,22 @@ class Stage2Orchestrator:
             if a.get("hybrid_composition", {}).get("primary")
         ]
 
+        # [Phase 3-QR] 품질 추세 요약 주입 (advisory)
+        _quality_trend_block = ""
+        if self.ctx.quality_dashboard:
+            try:
+                _trend = self.ctx.quality_dashboard.get_score_trend_summary(stage=2)
+                if _trend.get("trend") != "insufficient_data" and _trend.get("summary"):
+                    _quality_trend_block = f"\n[품질 추세 참고]\n{_trend['summary']}\n"
+            except Exception:
+                pass  # [Phase 3-QR] advisory, 실패 시 비차단
+
         # [V49.4] 제약 블록을 prev_arc_context에 주입
         enhanced_context = last_refined_context
+        if _quality_trend_block:
+            enhanced_context = _quality_trend_block + enhanced_context
         if constraint_block:
-            enhanced_context = constraint_block + "\n" + last_refined_context
+            enhanced_context = constraint_block + "\n" + enhanced_context
 
         # [V60.25] Stage 2 Optimizer 주입
         if self.ctx.stage2_optimizer:

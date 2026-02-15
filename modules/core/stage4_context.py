@@ -5,9 +5,9 @@ class Stage4Context:
     """Stage4Orchestrator의 DI 컨텍스트.
 
     [4C-2a] 필수 5종: ui, current_project, agents, sys, state_tracker
-    [4C-2b] 확장 10종: memory, world_state, fact_ledger, character_voice,
+    [4C-2b] 확장 11종: memory, world_state, fact_ledger, character_voice,
             perf_timer, foreshadow_tracker, failure_learner, diversity_engine,
-            semantic_plot_guard, selected_genre
+            semantic_plot_guard, selected_genre, quality_dashboard
     [4C-2c] 콜백 7종: get_int_input, build_item_acquisition_timeline,
             load_narrative_summaries, get_protagonist_name,
             generate_narrative_summary, flush_audit_buffer, safe_commit
@@ -20,7 +20,7 @@ class Stage4Context:
         "agents",
         "sys",
         "state_tracker",
-        # [4C-2b] 확장 10종
+        # [4C-2b] 확장 11종
         "memory",
         "world_state",
         "fact_ledger",
@@ -31,6 +31,7 @@ class Stage4Context:
         "diversity_engine",
         "semantic_plot_guard",
         "selected_genre",
+        "quality_dashboard",
         # [4C-2c] 콜백 7종
         "get_int_input",
         "build_item_acquisition_timeline",
@@ -60,6 +61,7 @@ class Stage4Context:
         diversity_engine=None,
         semantic_plot_guard=None,
         selected_genre=None,
+        quality_dashboard=None,
         # [4C-2c] 콜백 — 모두 optional (None 허용)
         get_int_input=None,
         build_item_acquisition_timeline=None,
@@ -84,6 +86,7 @@ class Stage4Context:
         self.diversity_engine = diversity_engine
         self.semantic_plot_guard = semantic_plot_guard
         self.selected_genre = selected_genre
+        self.quality_dashboard = quality_dashboard
         self.get_int_input = get_int_input
         self.build_item_acquisition_timeline = build_item_acquisition_timeline
         self.load_narrative_summaries = load_narrative_summaries
@@ -111,6 +114,7 @@ class Stage4Context:
             diversity_engine=getattr(app, "diversity_engine", None),
             semantic_plot_guard=getattr(app, "semantic_plot_guard", None),
             selected_genre=getattr(app, "selected_genre", None),
+            quality_dashboard=getattr(app, "quality_dashboard", None),
             get_int_input=getattr(app, "_get_int_input", None),
             build_item_acquisition_timeline=getattr(app, "_build_item_acquisition_timeline", None),
             load_narrative_summaries=getattr(app, "_load_narrative_summaries", None),

@@ -46,8 +46,8 @@ class TestStage4ContextCreation:
         assert ctx.get_int_input is None
         assert ctx.flush_audit_buffer is None
         assert ctx.safe_commit is None
-        # __slots__ 총 22개
-        assert len(Stage4Context.__slots__) == 22
+        # __slots__ 총 23개 ([Phase 3-QR] +quality_dashboard)
+        assert len(Stage4Context.__slots__) == 23
 
 
 # ══════════════════════════════════════════════════════════════
