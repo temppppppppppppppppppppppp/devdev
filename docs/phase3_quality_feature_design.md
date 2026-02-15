@@ -1,7 +1,7 @@
 # Phase 3 잔여 품질 기능 — ROI 선정 + 구현 설계
 
-> 작성: 2026-02-15, checkpoint `71e1eb6`
-> 상태: **Step 1 완료** (Step 2 대기)
+> 작성: 2026-02-15, checkpoint `4b6ad8e`
+> 상태: **전체 완료** (Step 1 + Step 2)
 
 ---
 
@@ -9,9 +9,9 @@
 
 | 항목 | 값 |
 |------|-----|
-| checkpoint | `71e1eb6` (Step 1 완료) |
-| 테스트 합계 | 238 (unit 34 + quality 15 + pipeline 89 + E2E 22 + regression 78) |
-| ctx refs | stage2 348/43, stage4 321/22 (불변) |
+| checkpoint | `4b6ad8e` (전체 완료) |
+| 테스트 합계 | 246 (unit 38 + quality 15 + pipeline 89 + E2E 22 + regression 82) |
+| ctx refs | stage2 350/43, stage4 325/23 |
 | R4-a | NO-GO (async 통일 보류, `docs/r4a_go_no_go_memo.md`) |
 | 구조 개선 | Phase 4-R1~R3 완료 — 몬스터 함수 2개 제거 (3,456줄 → 133줄) |
 
@@ -172,43 +172,27 @@ Stage 2: Arc 설계 시
 - 테스트 15/15 passed (regression 8 + trend 7)
 - 기존 223 회귀 없음 → 총 238 passed
 
-### Step 2: Integration — Stage 4 hook + Stage 2 context injection
+### Step 2: Integration — Stage 4 hook + Stage 2 context injection ✅ 완료
+
+**커밋**: `4b6ad8e`
 
 **수정 파일**:
-- `modules/core/stage4_orchestrator.py` — `_process_pass_result()` 내 regression check 호출 추가 (~10줄)
-- `modules/core/stage2_orchestrator.py` — `_preflight_enrichment()` 또는 arc context 구성에 trend summary 주입 (~10줄)
+- `modules/core/stage4_orchestrator.py` — `_process_pass_result()` 내 `detect_score_regression(stage=2)` advisory hook (+20줄)
+- `modules/core/stage2_orchestrator.py` — `_preflight_arc_analysis()` 내 `get_score_trend_summary(stage=2)` → `[품질 추세 참고]` 블록 주입 (+14줄)
+- `modules/core/stage4_context.py` — `quality_dashboard` 슬롯 추가 (22→23)
+- `tests/e2e/test_smoke_pipeline.py` — `__slots__` 수 22→23 보정 (+2/-2)
+- `tests/test_stage4_orchestrator.py` — `TestQualityRegressionHook` 4건 추가
+- `tests/test_stage2_preflight_helpers.py` — `TestQualityTrendInjection` 4건 추가
 
-**종료 조건**:
-- Stage 4에서 Director PASS 후 regression check 실행 → WARNING 로그
-- Stage 2 arc context에 `score_trend_summary` 키 존재
-- ctx refs 변동 허용 범위: stage2 +2 이내, stage4 +2 이내
+**결과**:
+- Stage4 PASS 후 regression/warning 로그 출력, 예외 비전파
+- Stage2 arc context에 품질 추세 1줄 요약 주입, insufficient_data 시 graceful skip
+- 테스트 8/8 passed, 기존 238 회귀 없음 → 총 246 passed
+- ctx refs: stage2 348→350 (+2), stage4 321→325 (+4, quality_dashboard 슬롯 추가분)
 
-**게이트**:
-```bash
-python -m py_compile modules/core/stage4_orchestrator.py modules/core/stage2_orchestrator.py
-python -c "from main_a import SovereignApp; print('OK')"
-set PYTHONIOENCODING=utf-8
-pytest tests/ -v --ignore=tests/stage4_v2_test --ignore=tests/test_validation.py
-pre-commit run --files modules/core/stage4_orchestrator.py modules/core/stage2_orchestrator.py
-```
+### Step 3: 문서 동기화 + 전체 검증 ✅ 완료
 
-### Step 3: 문서 동기화 + 전체 검증
-
-**수정 파일**:
-- `내일작업.md` — 테스트 기준선 갱신, 다음 우선순위 조정
-- `docs/프로젝트_현황_로드맵_2026-02-14.md` — 완료 항목 추가
-- `CLAUDE.md` — checkpoint, 테스트 수치 갱신
-
-**종료 조건**:
-- 전체 테스트 통과 (223 + 신규 6~8 = 229~231)
-- 문서 간 checkpoint/합계/용어 불일치 0건
-- pre-commit 전량 통과
-
-**게이트**:
-```bash
-git diff -- 내일작업.md docs/프로젝트_현황_로드맵_2026-02-14.md CLAUDE.md
-git status -sb
-```
+모든 문서 checkpoint `4b6ad8e`, 테스트 246, ctx refs 350/43 + 325/23 동기화 완료.
 
 ---
 
