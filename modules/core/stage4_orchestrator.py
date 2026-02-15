@@ -1067,6 +1067,229 @@ JSON으로 출력:
             "reflexion_prompt": ctx_prompts["reflexion_prompt"],
         }
 
+    def _run_interview_loop(
+        self,
+        *,
+        chief_writer,
+        manuscript_validator,
+        consistency_validator,
+        blocking_validator,
+        continuity_validator,
+        s4_genre_type: str,
+        story_context: str,
+        style_guide: str,
+        target_ep,
+        output_dir,
+        v50_modules_available: bool,
+        total_planned_ep: int,
+    ) -> bool:
+        """[4-R1-e-4] Run main episode production loop.
+
+        Returns True if caller should return early.
+        """
+        loop_guard = 0
+        max_loops = min((target_ep or total_planned_ep) - self.ctx.current_project.get_latest_episode_number() + 5, 100)
+
+        # [V66.1] B-2: ReferenceAnchor 루프 밖 1회 생성 (내부 캐시로 DB 중복 조회 방지)
+        from modules.core.reference_anchor import ReferenceAnchor
+
+        _anchor_sys = ReferenceAnchor(self.ctx.current_project)
+
+        # 5. 원고 생산 메인 루프
+        while True:
+            loop_guard += 1
+            if loop_guard > max_loops:
+                self.ctx.ui.log("🛑 [Safety] 루프 제한 도달. 중단합니다.")
+                break
+
+            next_ep = self.ctx.current_project.get_latest_episode_number()
+            self._time_consistency_warnings = []  # [V70] 에피소드마다 리셋 (누적 방지)
+            if target_ep and next_ep > target_ep:
+                self.ctx.ui.log(f"🏁 목표 회차({target_ep}화) 도달. 종료합니다.")
+                break
+
+            # Blueprint 로드
+            blueprint = self.ctx.current_project.get_blueprint(next_ep)
+            if not blueprint:
+                self.ctx.ui.log(f"⚠️ 제{next_ep}화 Blueprint 없음. Stage 3 먼저 실행하세요.")
+                break
+
+            # Arc 데이터 검색
+            arc_data = next(
+                (
+                    a
+                    for a in self.ctx.current_project.arcs
+                    if isinstance(a, dict) and a.get("ep_start", 0) <= next_ep <= a.get("ep_end", 0)
+                ),
+                None,
+            )
+            if not arc_data:
+                self.ctx.ui.log(f"⚠️ 제{next_ep}화 Arc 데이터 없음.")
+                break
+
+            # [4-R1-a] 에피소드 컨텍스트 수집 (Extract Method)
+            _ep_ctx = self._prepare_episode_context(next_ep, arc_data, chief_writer)
+            arc_pos = _ep_ctx["arc_pos"]
+            total_ep_in_arc = _ep_ctx["total_ep_in_arc"]
+            arc_tactical = _ep_ctx["arc_tactical"]
+            prev_text = _ep_ctx["prev_text"]
+            prev_ending = _ep_ctx["prev_ending"]
+            _prev_manuscripts_text = _ep_ctx["prev_manuscripts_text"]
+            _episode_digest = _ep_ctx["episode_digest"]
+            hud_report = _ep_ctx["hud_report"]
+            current_inventory = _ep_ctx["current_inventory"]
+            current_martial_arts = _ep_ctx["current_martial_arts"]
+            cumulative_bible = _ep_ctx["cumulative_bible"]
+            dead_npcs = _ep_ctx["dead_npcs"]
+            item_acquisition_timeline = _ep_ctx["item_acquisition_timeline"]
+            _chain_link_section = _ep_ctx["chain_link_section"]
+            _world_state_summary = _ep_ctx["world_state_summary"]
+            # ===== [V60.80+] 기존 Writer 전달 기능 추출 =====
+            # [V60.85] 장르 Guard에서 Purism Prompt 추출
+            purism_prompt = ""
+            if hasattr(self.ctx.sys, "guard") and self.ctx.sys.guard:
+                try:
+                    purism_prompt = self.ctx.sys.guard.get_v20_purism_prompt()
+                except Exception as e:
+                    self.ctx.ui.log(f"   ⚠️ Guard Purism Prompt 추출 실패 (비치명): {e}")
+
+            genre_name = (getattr(self.ctx.current_project, "genre", None) or {}).get("name", "무협")
+            writer_agent = self.ctx.agents.get("writer") if "writer" in self.ctx.agents else None
+            _ctx_prompts = self._build_mandatory_context(
+                next_ep=next_ep,
+                arc_data=arc_data,
+                arc_tactical=arc_tactical,
+                prev_text=prev_text,
+                prev_ending=prev_ending,
+                hud_report=hud_report,
+                writer_agent=writer_agent,
+                anchor_sys=_anchor_sys,
+                s4_genre_type=s4_genre_type,
+                v50_modules_available=v50_modules_available,
+            )
+            reference_anchor_prompt = _ctx_prompts["reference_anchor_prompt"]
+            mandatory_context = _ctx_prompts["mandatory_context"]
+            anti_trope_prompt = _ctx_prompts["anti_trope_prompt"]
+            justification_prompt = _ctx_prompts["justification_prompt"]
+            reflexion_prompt = _ctx_prompts["reflexion_prompt"]
+
+            # [V60.81] NPC equipment summary extraction
+            npc_equipment_summary = ""
+            try:
+                bible_root = self.ctx.current_project.master_bible.get(
+                    "MasterBible", self.ctx.current_project.master_bible
+                )
+                assets = bible_root.get("AssetLibrary", {})
+                key_npcs = assets.get("KeyNPCs", []) or assets.get("Key_NPCs", [])
+                npc_equipment_lines = []
+                for npc in key_npcs:
+                    if isinstance(npc, dict):
+                        npc_name = npc.get("name") or npc.get("Name", "알 수 없음")
+                        npc_hud = npc.get("NPC_Martial_HUD", {})
+                        if isinstance(npc_hud, dict):
+                            equip = npc_hud.get("equipment", [])
+                            if equip:
+                                npc_equipment_lines.append(f"- {npc_name}: {equip}")
+                npc_equipment_summary = "\n".join(npc_equipment_lines) if npc_equipment_lines else "NPC 장비 정보 없음"
+            except Exception as e:
+                self.ctx.ui.log(f"   ⚠️ NPC 장비 현황 추출 실패 (비차단): {e}")
+                npc_equipment_summary = ""
+
+            # [V63] Contrastive CoT
+            _effective_anti_trope = anti_trope_prompt
+            if self.ctx.diversity_engine:
+                try:
+                    _diversity_cot = self.ctx.diversity_engine.get_writer_injection()
+                    if _diversity_cot:
+                        _effective_anti_trope = f"{anti_trope_prompt}\n\n{_diversity_cot}"
+                except Exception:  # [V64.P4] OPTIONAL: diversity injection
+                    pass
+
+            intro_dna = "CYNICAL"
+
+            self.ctx.ui.log(f"\n{'=' * 60}")
+            self.ctx.ui.log(
+                f"📝 제{next_ep}화 집필 시작 (Arc {arc_data.get('arc_no', '?')}, 위치 {arc_pos}/{total_ep_in_arc})"
+            )
+            self.ctx.ui.log(f"{'=' * 60}")
+
+            # [V67] mandatory_context 우선순위 기반 스마트 트렁케이션 (50,000자 상한)
+            if len(mandatory_context) > 50000:
+                _original_len = len(mandatory_context)
+                # 섹션 분리: "\n[" 또는 "\n\n[" 마커 기준으로 분할
+                import re as _re_trunc
+
+                _section_pattern = _re_trunc.compile(r"\n(?=\[)")
+                _sections = _section_pattern.split(mandatory_context)
+                # 빈 섹션 제거
+                _sections = [s for s in _sections if s.strip()]
+                if len(_sections) > 1:
+                    # 뒤에서부터 (낮은 우선순위) 하나씩 제거
+                    _removed_count = 0
+                    _removed_chars = 0
+                    while len("\n".join(_sections)) > 50000 and len(_sections) > 1:
+                        _removed_section = _sections.pop()
+                        _removed_count += 1
+                        _removed_chars += len(_removed_section)
+                    mandatory_context = "\n".join(_sections)
+                    if _removed_count > 0:
+                        logging.info(f"[V66.1] mandatory_context {_removed_count}개 섹션 제거 ({_removed_chars}자)")
+                        self.ctx.ui.log(
+                            f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → {len(mandatory_context)}자 (섹션 {_removed_count}개 제거)"
+                        )
+                else:
+                    # 섹션 분리 불가 시 기존 방식 폴백
+                    mandatory_context = mandatory_context[:49950] + "\n\n...(컨텍스트 크기 초과로 일부 생략)"
+                    self.ctx.ui.log(f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → 50,000자로 truncate (폴백)")
+
+            # [V61.6] 전체 면담 루프를 스피너로 감싸기
+            _round_ctx = self._build_round_context(
+                ep_ctx=_ep_ctx,
+                ctx_prompts=_ctx_prompts,
+                chief_writer=chief_writer,
+                manuscript_validator=manuscript_validator,
+                consistency_validator=consistency_validator,
+                blocking_validator=blocking_validator,
+                continuity_validator=continuity_validator,
+                next_ep=next_ep,
+                blueprint=blueprint,
+                arc_data=arc_data,
+                purism_prompt=purism_prompt,
+                genre_name=genre_name,
+                npc_equipment_summary=npc_equipment_summary,
+                effective_anti_trope=_effective_anti_trope,
+                intro_dna=intro_dna,
+                story_context=story_context,
+                style_guide=style_guide,
+                mandatory_context=mandatory_context,
+            )
+            # ===== Phase 4: Director 면담 + 냉동인간 =====
+            _outcome = self._handle_round_outcome(round_ctx=_round_ctx)
+            if _outcome["should_return"]:
+                return True
+            final_manuscript = _outcome["final_manuscript"]
+            final_title = _outcome["final_title"]
+            final_state_updates = _outcome["final_state_updates"]
+
+            # ===== Phase 5: 데이터 정산 =====
+            if final_manuscript:
+                if not self._process_pass_result(
+                    next_ep=next_ep,
+                    final_manuscript=final_manuscript,
+                    final_title=final_title,
+                    final_state_updates=final_state_updates,
+                    blueprint=blueprint,
+                    arc_data=arc_data,
+                    output_dir=output_dir,
+                    v50_modules_available=v50_modules_available,
+                ):
+                    continue
+
+        # [V62.3] Stage 4 루프 종료
+        self._run_post_episode_tasks()
+
+        return False
+
     def _handle_round_outcome(self, *, round_ctx: dict) -> dict:
         """[4-R1-e-3] Run 3-round interview loop + frozen human fallback.
 
@@ -1887,212 +2110,22 @@ JSON으로 출력:
                 except Exception as voice_err:
                     self.ctx.ui.log(f"   ⚠️ 캐릭터 보이스 주입 실패 (비차단): {voice_err}")
 
-            loop_guard = 0
-            max_loops = min(
-                (target_ep or total_planned_ep) - self.ctx.current_project.get_latest_episode_number() + 5, 100
-            )
-
-            # [V66.1] B-2: ReferenceAnchor 루프 밖 1회 생성 (내부 캐시로 DB 중복 조회 방지)
-            from modules.core.reference_anchor import ReferenceAnchor
-
-            _anchor_sys = ReferenceAnchor(self.ctx.current_project)
-
-            # 5. 원고 생산 메인 루프
-            while True:
-                loop_guard += 1
-                if loop_guard > max_loops:
-                    self.ctx.ui.log("🛑 [Safety] 루프 제한 도달. 중단합니다.")
-                    break
-
-                next_ep = self.ctx.current_project.get_latest_episode_number()
-                self._time_consistency_warnings = []  # [V70] 에피소드마다 리셋 (누적 방지)
-                if target_ep and next_ep > target_ep:
-                    self.ctx.ui.log(f"🏁 목표 회차({target_ep}화) 도달. 종료합니다.")
-                    break
-
-                # Blueprint 로드
-                blueprint = self.ctx.current_project.get_blueprint(next_ep)
-                if not blueprint:
-                    self.ctx.ui.log(f"⚠️ 제{next_ep}화 Blueprint 없음. Stage 3 먼저 실행하세요.")
-                    break
-
-                # Arc 데이터 검색
-                arc_data = next(
-                    (
-                        a
-                        for a in self.ctx.current_project.arcs
-                        if isinstance(a, dict) and a.get("ep_start", 0) <= next_ep <= a.get("ep_end", 0)
-                    ),
-                    None,
-                )
-                if not arc_data:
-                    self.ctx.ui.log(f"⚠️ 제{next_ep}화 Arc 데이터 없음.")
-                    break
-
-                # [4-R1-a] 에피소드 컨텍스트 수집 (Extract Method)
-                _ep_ctx = self._prepare_episode_context(next_ep, arc_data, chief_writer)
-                arc_pos = _ep_ctx["arc_pos"]
-                total_ep_in_arc = _ep_ctx["total_ep_in_arc"]
-                arc_tactical = _ep_ctx["arc_tactical"]
-                prev_text = _ep_ctx["prev_text"]
-                prev_ending = _ep_ctx["prev_ending"]
-                _prev_manuscripts_text = _ep_ctx["prev_manuscripts_text"]
-                _episode_digest = _ep_ctx["episode_digest"]
-                hud_report = _ep_ctx["hud_report"]
-                current_inventory = _ep_ctx["current_inventory"]
-                current_martial_arts = _ep_ctx["current_martial_arts"]
-                cumulative_bible = _ep_ctx["cumulative_bible"]
-                dead_npcs = _ep_ctx["dead_npcs"]
-                item_acquisition_timeline = _ep_ctx["item_acquisition_timeline"]
-                _chain_link_section = _ep_ctx["chain_link_section"]
-                _world_state_summary = _ep_ctx["world_state_summary"]
-                # ===== [V60.80+] 기존 Writer 전달 기능 추출 =====
-                # [V60.85] 장르 Guard에서 Purism Prompt 추출
-                purism_prompt = ""
-                if hasattr(self.ctx.sys, "guard") and self.ctx.sys.guard:
-                    try:
-                        purism_prompt = self.ctx.sys.guard.get_v20_purism_prompt()
-                    except Exception as e:
-                        self.ctx.ui.log(f"   ⚠️ Guard Purism Prompt 추출 실패 (비치명): {e}")
-
-                genre_name = (getattr(self.ctx.current_project, "genre", None) or {}).get("name", "무협")
-                writer_agent = self.ctx.agents.get("writer") if "writer" in self.ctx.agents else None
-                _ctx_prompts = self._build_mandatory_context(
-                    next_ep=next_ep,
-                    arc_data=arc_data,
-                    arc_tactical=arc_tactical,
-                    prev_text=prev_text,
-                    prev_ending=prev_ending,
-                    hud_report=hud_report,
-                    writer_agent=writer_agent,
-                    anchor_sys=_anchor_sys,
-                    s4_genre_type=_s4_genre_type,
-                    v50_modules_available=V50_MODULES_AVAILABLE,
-                )
-                reference_anchor_prompt = _ctx_prompts["reference_anchor_prompt"]
-                mandatory_context = _ctx_prompts["mandatory_context"]
-                anti_trope_prompt = _ctx_prompts["anti_trope_prompt"]
-                justification_prompt = _ctx_prompts["justification_prompt"]
-                reflexion_prompt = _ctx_prompts["reflexion_prompt"]
-
-                # [V60.81] NPC equipment summary extraction
-                npc_equipment_summary = ""
-                try:
-                    bible_root = self.ctx.current_project.master_bible.get(
-                        "MasterBible", self.ctx.current_project.master_bible
-                    )
-                    assets = bible_root.get("AssetLibrary", {})
-                    key_npcs = assets.get("KeyNPCs", []) or assets.get("Key_NPCs", [])
-                    npc_equipment_lines = []
-                    for npc in key_npcs:
-                        if isinstance(npc, dict):
-                            npc_name = npc.get("name") or npc.get("Name", "알 수 없음")
-                            npc_hud = npc.get("NPC_Martial_HUD", {})
-                            if isinstance(npc_hud, dict):
-                                equip = npc_hud.get("equipment", [])
-                                if equip:
-                                    npc_equipment_lines.append(f"- {npc_name}: {equip}")
-                    npc_equipment_summary = (
-                        "\n".join(npc_equipment_lines) if npc_equipment_lines else "NPC 장비 정보 없음"
-                    )
-                except Exception as e:
-                    self.ctx.ui.log(f"   ⚠️ NPC 장비 현황 추출 실패 (비차단): {e}")
-                    npc_equipment_summary = ""
-
-                # [V63] Contrastive CoT
-                _effective_anti_trope = anti_trope_prompt
-                if self.ctx.diversity_engine:
-                    try:
-                        _diversity_cot = self.ctx.diversity_engine.get_writer_injection()
-                        if _diversity_cot:
-                            _effective_anti_trope = f"{anti_trope_prompt}\n\n{_diversity_cot}"
-                    except Exception:  # [V64.P4] OPTIONAL: diversity injection
-                        pass
-
-                intro_dna = "CYNICAL"
-
-                self.ctx.ui.log(f"\n{'=' * 60}")
-                self.ctx.ui.log(
-                    f"📝 제{next_ep}화 집필 시작 (Arc {arc_data.get('arc_no', '?')}, 위치 {arc_pos}/{total_ep_in_arc})"
-                )
-                self.ctx.ui.log(f"{'=' * 60}")
-
-                # [V67] mandatory_context 우선순위 기반 스마트 트렁케이션 (50,000자 상한)
-                if len(mandatory_context) > 50000:
-                    _original_len = len(mandatory_context)
-                    # 섹션 분리: "\n[" 또는 "\n\n[" 마커 기준으로 분할
-                    import re as _re_trunc
-
-                    _section_pattern = _re_trunc.compile(r"\n(?=\[)")
-                    _sections = _section_pattern.split(mandatory_context)
-                    # 빈 섹션 제거
-                    _sections = [s for s in _sections if s.strip()]
-                    if len(_sections) > 1:
-                        # 뒤에서부터 (낮은 우선순위) 하나씩 제거
-                        _removed_count = 0
-                        _removed_chars = 0
-                        while len("\n".join(_sections)) > 50000 and len(_sections) > 1:
-                            _removed_section = _sections.pop()
-                            _removed_count += 1
-                            _removed_chars += len(_removed_section)
-                        mandatory_context = "\n".join(_sections)
-                        if _removed_count > 0:
-                            logging.info(f"[V66.1] mandatory_context {_removed_count}개 섹션 제거 ({_removed_chars}자)")
-                            self.ctx.ui.log(
-                                f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → {len(mandatory_context)}자 (섹션 {_removed_count}개 제거)"
-                            )
-                    else:
-                        # 섹션 분리 불가 시 기존 방식 폴백
-                        mandatory_context = mandatory_context[:49950] + "\n\n...(컨텍스트 크기 초과로 일부 생략)"
-                        self.ctx.ui.log(
-                            f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → 50,000자로 truncate (폴백)"
-                        )
-
-                # [V61.6] 전체 면담 루프를 스피너로 감싸기
-                _round_ctx = self._build_round_context(
-                    ep_ctx=_ep_ctx,
-                    ctx_prompts=_ctx_prompts,
-                    chief_writer=chief_writer,
-                    manuscript_validator=manuscript_validator,
-                    consistency_validator=consistency_validator,
-                    blocking_validator=blocking_validator,
-                    continuity_validator=continuity_validator,
-                    next_ep=next_ep,
-                    blueprint=blueprint,
-                    arc_data=arc_data,
-                    purism_prompt=purism_prompt,
-                    genre_name=genre_name,
-                    npc_equipment_summary=npc_equipment_summary,
-                    effective_anti_trope=_effective_anti_trope,
-                    intro_dna=intro_dna,
-                    story_context=_story_context,
-                    style_guide=style_guide,
-                    mandatory_context=mandatory_context,
-                )
-                # ===== Phase 4: Director 면담 + 냉동인간 =====
-                _outcome = self._handle_round_outcome(round_ctx=_round_ctx)
-                if _outcome["should_return"]:
-                    return
-                final_manuscript = _outcome["final_manuscript"]
-                final_title = _outcome["final_title"]
-                final_state_updates = _outcome["final_state_updates"]
-
-                # ===== Phase 5: 데이터 정산 =====
-                if final_manuscript:
-                    if not self._process_pass_result(
-                        next_ep=next_ep,
-                        final_manuscript=final_manuscript,
-                        final_title=final_title,
-                        final_state_updates=final_state_updates,
-                        blueprint=blueprint,
-                        arc_data=arc_data,
-                        output_dir=output_dir,
-                        v50_modules_available=V50_MODULES_AVAILABLE,
-                    ):
-                        continue
-
-            # [V62.3] Stage 4 루프 종료
-            self._run_post_episode_tasks()
+            # 5. Episode production loop
+            if self._run_interview_loop(
+                chief_writer=chief_writer,
+                manuscript_validator=manuscript_validator,
+                consistency_validator=consistency_validator,
+                blocking_validator=blocking_validator,
+                continuity_validator=continuity_validator,
+                s4_genre_type=_s4_genre_type,
+                story_context=_story_context,
+                style_guide=style_guide,
+                target_ep=target_ep,
+                output_dir=output_dir,
+                v50_modules_available=V50_MODULES_AVAILABLE,
+                total_planned_ep=total_planned_ep,
+            ):
+                return
 
         except KeyboardInterrupt:
             self.ctx.ui.log("\n⚠️ 사용자 중단 요청. 저장 후 종료합니다.")
