@@ -506,232 +506,28 @@ class Stage2Orchestrator:
                     constraint_block = _analysis["constraint_block"]
                     entity_registry_for_director = _analysis["entity_registry_for_director"]
 
-                    # ─────────────────────────────────────────────────────────────
-                    # [V60.77] FourPhaseArcGenerator
-                    # ─────────────────────────────────────────────────────────────
-                    four_phase_passed = False
-
-                    if "four_phase" in self.ctx.agents and not use_analyst_fallback:
-                        try:
-                            self.ctx.ui.log(f"      🎯 [V60.77] FourPhase-Director 대면 {attempt + 1}/3")
-                            with StageSpinner(2, f"Arc {global_arc_no}"):
-                                # [V63.3] Stage 2 벡터 검색
-                                _s2_vector_ctx = ""
-                                try:
-                                    if self.ctx.memory and current_ep_start > 1:
-                                        _s2_vector_ctx = self.ctx.memory.retrieve_high_res_context(
-                                            enriched_block.get("block_theme", ""), current_ep_start, n_results=2
-                                        )
-                                except Exception as e:  # [V64.P4] OPTIONAL: vector search — non-blocking
-                                    self.ctx.audit_event("s2_vector_search_failed", str(e)[:100])
-                                # [V65] PerfTimer: Arc 생성 측정
-                                try:
-                                    self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_generate")
-                                except Exception:
-                                    pass
-                                four_phase_arc, pipeline_result = self.ctx.agents["four_phase"].generate(
-                                    arc_no=global_arc_no,
-                                    ep_start=current_ep_start,
-                                    vol_strategy=current_vol_strategy.get("strategy_doc", ""),
-                                    curr_block=enriched_block,
-                                    prev_arcs=all_refined_arcs,
-                                    assets=bible_root.get("AssetLibrary", {}),
-                                    max_internal_retries=4,
-                                    protagonist_name=protagonist_name or "주인공",
-                                    director_feedback=director_feedback_for_fourphase,
-                                    entity_registry=entity_registry_for_director,
-                                    state_tracker=self.ctx.state_tracker,
-                                    vector_context=_s2_vector_ctx,
-                                )
-                                try:
-                                    self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_generate")
-                                except Exception:
-                                    pass
-
-                            if four_phase_arc and pipeline_result.get("final_verdict") == "PASS":
-                                refined_arc = four_phase_arc
-                                generation_method = "four_phase"
-                                four_phase_passed = True
-                                draft_validator_passed = True
-                                consensus_passed = True
-
-                                refined_arc["joint_docs"] = enriched_block.get("joint_docs", {})
-                                refined_arc["status_shadow"] = enriched_block.get("status_shadow", {})
-
-                                logging.info(
-                                    f"✅ [V60.77] FourPhase 성공! (내부 재시도: {pipeline_result.get('retries', 0)}회)"
-                                )
-
-                                # [V70] Director REJECT 시 롤백을 위한 StateTracker 핵심 레지스트리 스냅샷
-                                import copy as _copy
-
-                                _st = self.ctx.state_tracker
-                                _st_snapshot = {
-                                    "npc_registry": _copy.deepcopy(_st.npc_registry),
-                                    "resolved_plots": _copy.deepcopy(_st.resolved_plots),
-                                    "entity_destructions": _copy.deepcopy(_st.entity_destructions),
-                                    "protagonist_skills": _copy.deepcopy(
-                                        _st.protagonist_skills
-                                    ),  # [V70] shallow→deep (set/list 내부 변형 방어)
-                                    "skill_acquisitions": _copy.deepcopy(
-                                        _st.skill_acquisitions
-                                    ),  # [V70] shallow→deep (list of dicts)
-                                    "npc_npc_relationships": _copy.deepcopy(_st.npc_npc_relationships),
-                                    "item_state_registry": _copy.deepcopy(_st.item_state_registry),
-                                    "active_plots": _copy.deepcopy(_st.active_plots),
-                                    # [V70] 누락 필드 추가 (lines 770-818에서 수정되는 필드들)
-                                    "npc_dialogue_profiles": _copy.deepcopy(_st.npc_dialogue_profiles),
-                                    "in_world_timeline": _copy.deepcopy(_st.in_world_timeline),
-                                    "current_companions": _copy.deepcopy(_st.current_companions),
-                                    "pending_commitments": _copy.deepcopy(_st.pending_commitments),
-                                    "protagonist_emotion": _copy.deepcopy(_st.protagonist_emotion),
-                                }
-
-                                # [V60.94] NPC 사망/무공 습득 추출 및 StateTracker 업데이트
-                                dead_npcs = self.ctx.state_tracker.extract_npc_deaths_from_arc(refined_arc)
-                                learned_skills = self.ctx.state_tracker.extract_skill_acquisitions_from_arc(refined_arc)
-                                npc_info = self.ctx.state_tracker.extract_npc_info_from_arc(
-                                    refined_arc, genre=_genre_for_tracker
-                                )  # [V66.2] F-1 장르 가드
-                                self.ctx.state_tracker.extract_resolved_plots_from_arc(refined_arc)
-                                # [V66] 조직/장소 파괴, NPC 성격, NPC-NPC 관계 추출
-                                self.ctx.state_tracker.extract_entity_destructions_from_arc(refined_arc)
-                                self.ctx.state_tracker.extract_npc_personality_from_arc(refined_arc)
-                                self.ctx.state_tracker.extract_npc_npc_relationships_from_arc(refined_arc)
-                                # [V66] 아이템 상태 추출
-                                self.ctx.state_tracker.extract_item_states_from_arc(refined_arc)
-                                # [V66] 플롯 서스펜션 추적
-                                self.ctx.state_tracker.update_plot_mentions_from_arc(refined_arc)
-                                _suspended = self.ctx.state_tracker.check_suspended_plots(global_arc_no)
-                                if _suspended:
-                                    for sw in _suspended:
-                                        logging.info(f"⚠️ [V66] {sw['message']}")
-                                # [V66] 장르별 레지스트리 업데이트
-                                try:
-                                    self.ctx.state_tracker._populate_genre_registries_from_arc(refined_arc)
-                                except Exception:
-                                    pass
-                                if _genre_for_tracker == "investment":
-                                    self.ctx.state_tracker.extract_financial_events_from_arc(refined_arc)
-                                    self.ctx.current_project.save_v20_anchor(
-                                        "financial_registry", self.ctx.state_tracker.export_financial_registry()
-                                    )
-
-                                # [V66] SemanticPlotGuard 인덱싱
-                                if (
-                                    getattr(self.app, "semantic_plot_guard", None)
-                                    and self.ctx.state_tracker.resolved_plots
-                                ):
-                                    try:
-                                        indexed = self.ctx.semantic_plot_guard.index_resolved_plots(
-                                            self.ctx.state_tracker.resolved_plots
-                                        )
-                                        if indexed > 0:
-                                            logging.info(f"📊 [V66] SemanticPlotGuard: {indexed}개 플롯 인덱싱")
-                                    except Exception:
-                                        pass
-
-                                # [V66] NPC 대화 스타일 추출
-                                try:
-                                    self.ctx.state_tracker.extract_npc_dialogue_styles_from_arc(refined_arc)
-                                except Exception:
-                                    pass  # [V66] OPTIONAL: 대화 스타일 추출 실패 비차단
-
-                                # [V66.1] F-1: 시간선 마커 추출
-                                try:
-                                    self.ctx.state_tracker.extract_time_markers_from_arc(refined_arc)
-                                except Exception as e:
-                                    logging.warning(f"[V66.1] 시간선 추출 실패 (무시): {e}")
-
-                                # [V66.1] F-8: NPC 신체 변화 추출
-                                try:
-                                    self.ctx.state_tracker.extract_permanent_injuries_from_arc(refined_arc)
-                                except Exception as e:
-                                    logging.warning(f"[V66.1] 신체 변화 추출 실패 (무시): {e}")
-
-                                # [V66.1] 동행자 변경 추출
-                                try:
-                                    self.ctx.state_tracker.update_companions_from_arc(refined_arc)
-                                except Exception as e:
-                                    logging.warning(f"[V66.1] 동행자 추출 실패 (무시): {e}")
-
-                                # [V66.1] 약속/맹세 추출
-                                try:
-                                    self.ctx.state_tracker.extract_commitments_from_arc(refined_arc)
-                                except Exception as e:
-                                    logging.warning(f"[V66.1] 약속 추출 실패 (무시): {e}")
-
-                                # [V66.1] 주인공 감정 추출
-                                try:
-                                    self.ctx.state_tracker.extract_protagonist_emotion_from_arc(refined_arc)
-                                except Exception as e:
-                                    logging.warning(f"[V66.1] 감정 추출 실패 (무시): {e}")
-
-                                # [V66.2] D-1,2,3: 관계/부상/이동 추출 연결
-                                try:
-                                    self.ctx.state_tracker.extract_relationship_changes_from_arc(refined_arc)
-                                except Exception as e:
-                                    logging.warning(f"[V66.2] 관계 변화 추출 실패 (무시): {e}")
-                                try:
-                                    self.ctx.state_tracker.extract_npc_injuries_from_arc(refined_arc)
-                                except Exception as e:
-                                    logging.warning(f"[V66.2] NPC 부상 추출 실패 (무시): {e}")
-                                try:
-                                    self.ctx.state_tracker.extract_npc_movements_from_arc(refined_arc)
-                                except Exception as e:
-                                    logging.warning(f"[V66.2] NPC 이동 추출 실패 (무시): {e}")
-
-                                # [V66] 멀티-Arc 요약 생성 및 저장
-                                try:
-                                    arc_summary = self.ctx.state_tracker.generate_arc_summary(
-                                        global_arc_no, refined_arc
-                                    )
-                                    self.ctx.current_project.save_v20_anchor(
-                                        f"arc_summary_{global_arc_no}", arc_summary
-                                    )
-                                    logging.info(f"\U0001f4ca [V66] Arc {global_arc_no} 요약 저장 완료")
-                                except Exception as e:
-                                    logging.warning(f"\u26a0\ufe0f [V66] Arc 요약 저장 실패 (비차단): {e}")
-
-                                # [V69] 5 Arc마다 NPC 레지스트리 LLM 정리
-                                if global_arc_no > 0 and global_arc_no % 5 == 0:
-                                    try:
-                                        removed = self.ctx.state_tracker.cleanup_npc_registry_with_llm(global_arc_no)
-                                        if removed:
-                                            logging.info(
-                                                f"\U0001f9f9 [V69] NPC 레지스트리 정리: {len(removed)}개 오탐 제거 ({', '.join(removed[:5])})"
-                                            )
-                                    except Exception as e:
-                                        logging.warning(f"\u26a0\ufe0f [V69] NPC 레지스트리 정리 실패 (비차단): {e}")
-
-                                # [V61.3] 동적 장르 감지
-                                tactical_doc = refined_arc.get("tactical_doc", "")
-                                if tactical_doc and hasattr(self.ctx.state_tracker, "check_and_expand_genre"):
-                                    new_genre = self.ctx.state_tracker.check_and_expand_genre(tactical_doc)
-                                    if new_genre:
-                                        logging.info(f"- 🎭 새 장르 감지: {new_genre}")
-
-                                if dead_npcs:
-                                    logging.info(f"- 💀 사망 NPC 기록: {', '.join(dead_npcs)}")
-                                if learned_skills:
-                                    logging.info(f"- 🥋 무공 습득 기록: {', '.join(learned_skills)}")
-                                if npc_info:
-                                    logging.info(f"- 👤 NPC 정보 기록: {len(npc_info)}건")
-
-                                phases = pipeline_result.get("phases", {})
-                                if phases.get("generate"):
-                                    logging.info(f"- 후보 수: {phases['generate'].get('candidates_count', '?')}개")
-                                    logging.info(f"- 선택 전략: {phases['generate'].get('selected_strategy', '?')}")
-                            else:
-                                logging.warning("⚠️ [V60.77] FourPhase 내부 검증 실패")
-                                if pipeline_result.get("phases", {}).get("validate"):
-                                    issues = pipeline_result["phases"]["validate"].get("issues_count", 0)
-                                    logging.info(f"- 검증 이슈: {issues}개")
-                                director_feedback_for_fourphase = "FourPhase 내부 검증 실패. 구조적 문제 해결 필요."
-                        except Exception as fp_err:
-                            logging.warning(f"❌ [V60.77] FourPhase 오류: {str(fp_err)[:80]}")
-                            self.ctx.audit_event("four_phase_error", str(fp_err)[:100], {"arc_no": global_arc_no})
-                            director_feedback_for_fourphase = f"FourPhase 오류 발생: {str(fp_err)[:100]}"
+                    ### [4-R3-c] FourPhase 생성 + 상태 보강
+                    _enrichment = self._preflight_enrichment(
+                        attempt=attempt,
+                        use_analyst_fallback=use_analyst_fallback,
+                        global_arc_no=global_arc_no,
+                        current_ep_start=current_ep_start,
+                        current_vol_strategy=current_vol_strategy,
+                        enriched_block=enriched_block,
+                        all_refined_arcs=all_refined_arcs,
+                        bible_root=bible_root,
+                        protagonist_name=protagonist_name,
+                        director_feedback_for_fourphase=director_feedback_for_fourphase,
+                        entity_registry_for_director=entity_registry_for_director,
+                        genre_for_tracker=_genre_for_tracker,
+                    )
+                    four_phase_passed = _enrichment["four_phase_passed"]
+                    refined_arc = _enrichment["refined_arc"]
+                    generation_method = _enrichment["generation_method"]
+                    draft_validator_passed = _enrichment["draft_validator_passed"]
+                    consensus_passed = _enrichment["consensus_passed"]
+                    _st_snapshot = _enrichment["st_snapshot"]
+                    director_feedback_for_fourphase = _enrichment["director_feedback_for_fourphase"]
 
                     # ─────────────────────────────────────────────────────────────
                     # [V60.77] FourPhase 실패 시 다음 대면으로
@@ -2309,6 +2105,259 @@ class Stage2Orchestrator:
             "preflight_injection": preflight_injection,
             "constraint_block": constraint_block,
             "entity_registry_for_director": entity_registry_for_director,
+        }
+
+    def _preflight_enrichment(
+        self,
+        *,
+        attempt: int,
+        use_analyst_fallback: bool,
+        global_arc_no: int,
+        current_ep_start: int,
+        current_vol_strategy: dict,
+        enriched_block: dict,
+        all_refined_arcs: list,
+        bible_root: dict,
+        protagonist_name: str,
+        director_feedback_for_fourphase: str,
+        entity_registry_for_director,
+        genre_for_tracker: str,
+    ) -> dict:
+        """[4-R3-c] FourPhase generation and state tracker enrichment.
+
+        Runs FourPhaseArcGenerator if available, and on PASS enriches
+        StateTracker with NPC deaths, skills, relationships, etc.
+
+        Returns dict of generation results for the attempt loop.
+        """
+        from modules.core.spinners import StageSpinner
+
+        # ─────────────────────────────────────────────────────────────
+        # [V60.77] FourPhaseArcGenerator
+        # ─────────────────────────────────────────────────────────────
+        four_phase_passed = False
+
+        if "four_phase" in self.ctx.agents and not use_analyst_fallback:
+            try:
+                self.ctx.ui.log(f"      🎯 [V60.77] FourPhase-Director 대면 {attempt + 1}/3")
+                with StageSpinner(2, f"Arc {global_arc_no}"):
+                    # [V63.3] Stage 2 벡터 검색
+                    _s2_vector_ctx = ""
+                    try:
+                        if self.ctx.memory and current_ep_start > 1:
+                            _s2_vector_ctx = self.ctx.memory.retrieve_high_res_context(
+                                enriched_block.get("block_theme", ""), current_ep_start, n_results=2
+                            )
+                    except Exception as e:  # [V64.P4] OPTIONAL: vector search — non-blocking
+                        self.ctx.audit_event("s2_vector_search_failed", str(e)[:100])
+                    # [V65] PerfTimer: Arc 생성 측정
+                    try:
+                        self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_generate")
+                    except Exception:
+                        pass
+                    four_phase_arc, pipeline_result = self.ctx.agents["four_phase"].generate(
+                        arc_no=global_arc_no,
+                        ep_start=current_ep_start,
+                        vol_strategy=current_vol_strategy.get("strategy_doc", ""),
+                        curr_block=enriched_block,
+                        prev_arcs=all_refined_arcs,
+                        assets=bible_root.get("AssetLibrary", {}),
+                        max_internal_retries=4,
+                        protagonist_name=protagonist_name or "주인공",
+                        director_feedback=director_feedback_for_fourphase,
+                        entity_registry=entity_registry_for_director,
+                        state_tracker=self.ctx.state_tracker,
+                        vector_context=_s2_vector_ctx,
+                    )
+                    try:
+                        self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_generate")
+                    except Exception:
+                        pass
+
+                if four_phase_arc and pipeline_result.get("final_verdict") == "PASS":
+                    refined_arc = four_phase_arc
+                    generation_method = "four_phase"
+                    four_phase_passed = True
+                    draft_validator_passed = True
+                    consensus_passed = True
+
+                    refined_arc["joint_docs"] = enriched_block.get("joint_docs", {})
+                    refined_arc["status_shadow"] = enriched_block.get("status_shadow", {})
+
+                    logging.info(f"✅ [V60.77] FourPhase 성공! (내부 재시도: {pipeline_result.get('retries', 0)}회)")
+
+                    # [V70] Director REJECT 시 롤백을 위한 StateTracker 핵심 레지스트리 스냅샷
+                    import copy as _copy
+
+                    _st = self.ctx.state_tracker
+                    _st_snapshot = {
+                        "npc_registry": _copy.deepcopy(_st.npc_registry),
+                        "resolved_plots": _copy.deepcopy(_st.resolved_plots),
+                        "entity_destructions": _copy.deepcopy(_st.entity_destructions),
+                        "protagonist_skills": _copy.deepcopy(
+                            _st.protagonist_skills
+                        ),  # [V70] shallow→deep (set/list 내부 변형 방어)
+                        "skill_acquisitions": _copy.deepcopy(
+                            _st.skill_acquisitions
+                        ),  # [V70] shallow→deep (list of dicts)
+                        "npc_npc_relationships": _copy.deepcopy(_st.npc_npc_relationships),
+                        "item_state_registry": _copy.deepcopy(_st.item_state_registry),
+                        "active_plots": _copy.deepcopy(_st.active_plots),
+                        # [V70] 누락 필드 추가 (lines 770-818에서 수정되는 필드들)
+                        "npc_dialogue_profiles": _copy.deepcopy(_st.npc_dialogue_profiles),
+                        "in_world_timeline": _copy.deepcopy(_st.in_world_timeline),
+                        "current_companions": _copy.deepcopy(_st.current_companions),
+                        "pending_commitments": _copy.deepcopy(_st.pending_commitments),
+                        "protagonist_emotion": _copy.deepcopy(_st.protagonist_emotion),
+                    }
+
+                    # [V60.94] NPC 사망/무공 습득 추출 및 StateTracker 업데이트
+                    dead_npcs = self.ctx.state_tracker.extract_npc_deaths_from_arc(refined_arc)
+                    learned_skills = self.ctx.state_tracker.extract_skill_acquisitions_from_arc(refined_arc)
+                    npc_info = self.ctx.state_tracker.extract_npc_info_from_arc(
+                        refined_arc, genre=genre_for_tracker
+                    )  # [V66.2] F-1 장르 가드
+                    self.ctx.state_tracker.extract_resolved_plots_from_arc(refined_arc)
+                    # [V66] 조직/장소 파괴, NPC 성격, NPC-NPC 관계 추출
+                    self.ctx.state_tracker.extract_entity_destructions_from_arc(refined_arc)
+                    self.ctx.state_tracker.extract_npc_personality_from_arc(refined_arc)
+                    self.ctx.state_tracker.extract_npc_npc_relationships_from_arc(refined_arc)
+                    # [V66] 아이템 상태 추출
+                    self.ctx.state_tracker.extract_item_states_from_arc(refined_arc)
+                    # [V66] 플롯 서스펜션 추적
+                    self.ctx.state_tracker.update_plot_mentions_from_arc(refined_arc)
+                    _suspended = self.ctx.state_tracker.check_suspended_plots(global_arc_no)
+                    if _suspended:
+                        for sw in _suspended:
+                            logging.info(f"⚠️ [V66] {sw['message']}")
+                    # [V66] 장르별 레지스트리 업데이트
+                    try:
+                        self.ctx.state_tracker._populate_genre_registries_from_arc(refined_arc)
+                    except Exception:
+                        pass
+                    if genre_for_tracker == "investment":
+                        self.ctx.state_tracker.extract_financial_events_from_arc(refined_arc)
+                        self.ctx.current_project.save_v20_anchor(
+                            "financial_registry", self.ctx.state_tracker.export_financial_registry()
+                        )
+
+                    # [V66] SemanticPlotGuard 인덱싱
+                    if getattr(self.app, "semantic_plot_guard", None) and self.ctx.state_tracker.resolved_plots:
+                        try:
+                            indexed = self.ctx.semantic_plot_guard.index_resolved_plots(
+                                self.ctx.state_tracker.resolved_plots
+                            )
+                            if indexed > 0:
+                                logging.info(f"📊 [V66] SemanticPlotGuard: {indexed}개 플롯 인덱싱")
+                        except Exception:
+                            pass
+
+                    # [V66] NPC 대화 스타일 추출
+                    try:
+                        self.ctx.state_tracker.extract_npc_dialogue_styles_from_arc(refined_arc)
+                    except Exception:
+                        pass  # [V66] OPTIONAL: 대화 스타일 추출 실패 비차단
+
+                    # [V66.1] F-1: 시간선 마커 추출
+                    try:
+                        self.ctx.state_tracker.extract_time_markers_from_arc(refined_arc)
+                    except Exception as e:
+                        logging.warning(f"[V66.1] 시간선 추출 실패 (무시): {e}")
+
+                    # [V66.1] F-8: NPC 신체 변화 추출
+                    try:
+                        self.ctx.state_tracker.extract_permanent_injuries_from_arc(refined_arc)
+                    except Exception as e:
+                        logging.warning(f"[V66.1] 신체 변화 추출 실패 (무시): {e}")
+
+                    # [V66.1] 동행자 변경 추출
+                    try:
+                        self.ctx.state_tracker.update_companions_from_arc(refined_arc)
+                    except Exception as e:
+                        logging.warning(f"[V66.1] 동행자 추출 실패 (무시): {e}")
+
+                    # [V66.1] 약속/맹세 추출
+                    try:
+                        self.ctx.state_tracker.extract_commitments_from_arc(refined_arc)
+                    except Exception as e:
+                        logging.warning(f"[V66.1] 약속 추출 실패 (무시): {e}")
+
+                    # [V66.1] 주인공 감정 추출
+                    try:
+                        self.ctx.state_tracker.extract_protagonist_emotion_from_arc(refined_arc)
+                    except Exception as e:
+                        logging.warning(f"[V66.1] 감정 추출 실패 (무시): {e}")
+
+                    # [V66.2] D-1,2,3: 관계/부상/이동 추출 연결
+                    try:
+                        self.ctx.state_tracker.extract_relationship_changes_from_arc(refined_arc)
+                    except Exception as e:
+                        logging.warning(f"[V66.2] 관계 변화 추출 실패 (무시): {e}")
+                    try:
+                        self.ctx.state_tracker.extract_npc_injuries_from_arc(refined_arc)
+                    except Exception as e:
+                        logging.warning(f"[V66.2] NPC 부상 추출 실패 (무시): {e}")
+                    try:
+                        self.ctx.state_tracker.extract_npc_movements_from_arc(refined_arc)
+                    except Exception as e:
+                        logging.warning(f"[V66.2] NPC 이동 추출 실패 (무시): {e}")
+
+                    # [V66] 멀티-Arc 요약 생성 및 저장
+                    try:
+                        arc_summary = self.ctx.state_tracker.generate_arc_summary(global_arc_no, refined_arc)
+                        self.ctx.current_project.save_v20_anchor(f"arc_summary_{global_arc_no}", arc_summary)
+                        logging.info(f"\U0001f4ca [V66] Arc {global_arc_no} 요약 저장 완료")
+                    except Exception as e:
+                        logging.warning(f"\u26a0\ufe0f [V66] Arc 요약 저장 실패 (비차단): {e}")
+
+                    # [V69] 5 Arc마다 NPC 레지스트리 LLM 정리
+                    if global_arc_no > 0 and global_arc_no % 5 == 0:
+                        try:
+                            removed = self.ctx.state_tracker.cleanup_npc_registry_with_llm(global_arc_no)
+                            if removed:
+                                logging.info(
+                                    f"\U0001f9f9 [V69] NPC 레지스트리 정리: {len(removed)}개 오탐 제거 ({', '.join(removed[:5])})"
+                                )
+                        except Exception as e:
+                            logging.warning(f"\u26a0\ufe0f [V69] NPC 레지스트리 정리 실패 (비차단): {e}")
+
+                    # [V61.3] 동적 장르 감지
+                    tactical_doc = refined_arc.get("tactical_doc", "")
+                    if tactical_doc and hasattr(self.ctx.state_tracker, "check_and_expand_genre"):
+                        new_genre = self.ctx.state_tracker.check_and_expand_genre(tactical_doc)
+                        if new_genre:
+                            logging.info(f"- 🎭 새 장르 감지: {new_genre}")
+
+                    if dead_npcs:
+                        logging.info(f"- 💀 사망 NPC 기록: {', '.join(dead_npcs)}")
+                    if learned_skills:
+                        logging.info(f"- 🥋 무공 습득 기록: {', '.join(learned_skills)}")
+                    if npc_info:
+                        logging.info(f"- 👤 NPC 정보 기록: {len(npc_info)}건")
+
+                    phases = pipeline_result.get("phases", {})
+                    if phases.get("generate"):
+                        logging.info(f"- 후보 수: {phases['generate'].get('candidates_count', '?')}개")
+                        logging.info(f"- 선택 전략: {phases['generate'].get('selected_strategy', '?')}")
+                else:
+                    logging.warning("⚠️ [V60.77] FourPhase 내부 검증 실패")
+                    if pipeline_result.get("phases", {}).get("validate"):
+                        issues = pipeline_result["phases"]["validate"].get("issues_count", 0)
+                        logging.info(f"- 검증 이슈: {issues}개")
+                    director_feedback_for_fourphase = "FourPhase 내부 검증 실패. 구조적 문제 해결 필요."
+            except Exception as fp_err:
+                logging.warning(f"❌ [V60.77] FourPhase 오류: {str(fp_err)[:80]}")
+                self.ctx.audit_event("four_phase_error", str(fp_err)[:100], {"arc_no": global_arc_no})
+                director_feedback_for_fourphase = f"FourPhase 오류 발생: {str(fp_err)[:100]}"
+
+        return {
+            "four_phase_passed": four_phase_passed,
+            "refined_arc": refined_arc,
+            "generation_method": generation_method,
+            "draft_validator_passed": draft_validator_passed,
+            "consensus_passed": consensus_passed,
+            "st_snapshot": _st_snapshot,
+            "director_feedback_for_fourphase": director_feedback_for_fourphase,
         }
 
     def _normalize_tactical_text(self, text: str) -> str:
