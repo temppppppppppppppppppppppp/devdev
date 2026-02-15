@@ -194,6 +194,102 @@ JSON으로 출력:
             return ""
 
     # ═══════════════════════════════════════════════════════════════════════
+    # [4-R1-a] 에피소드 컨텍스트 수집
+    # ═══════════════════════════════════════════════════════════════════════
+
+    def _prepare_episode_context(self, next_ep: int, arc_data: dict, chief_writer) -> dict:
+        """에피소드별 컨텍스트 데이터 수집 (Arc 메타 + 이전 원고 + HUD + 연결고리)."""
+        arc_pos = next_ep - arc_data.get("ep_start", next_ep) + 1
+        total_ep_in_arc = arc_data.get("ep_count", 5)
+        arc_tactical = arc_data.get("tactical_doc", "")
+        if isinstance(arc_tactical, dict):  # [V70] dict 타입 방어
+            arc_tactical = json.dumps(arc_tactical, ensure_ascii=False)
+        arc_tactical = str(arc_tactical) if arc_tactical else ""
+
+        # 직전 화 원고
+        prev_ms_data = self.ctx.current_project.db.get_manuscript(next_ep - 1)
+        prev_text = (prev_ms_data.get("content") or "") if prev_ms_data else ""  # [V70] NULL content 방어
+        prev_ending = prev_text[-500:] if prev_text else ""
+
+        # [V67] 이전 30화 원고 전문 로드 — Director + ChiefWriter 공유
+        _prev_manuscripts_parts = []
+        for _prev_ep in range(max(1, next_ep - 30), next_ep):
+            try:
+                _prev_ms_data = self.ctx.current_project.db.get_manuscript(_prev_ep)
+                if _prev_ms_data:
+                    _prev_content = (
+                        _prev_ms_data.get("content", "") if isinstance(_prev_ms_data, dict) else str(_prev_ms_data)
+                    )
+                    if _prev_content and len(_prev_content) > 100:
+                        _prev_manuscripts_parts.append(f"[제{_prev_ep}화]\n{_prev_content}")
+            except Exception:
+                pass
+        _prev_manuscripts_text = "\n\n---\n\n".join(_prev_manuscripts_parts) if _prev_manuscripts_parts else ""
+        if _prev_manuscripts_parts:
+            logging.info(
+                f"📚 [V67] 이전 {len(_prev_manuscripts_parts)}화 원고 전문 로드 완료 ({len(_prev_manuscripts_text):,}자)"
+            )
+
+        # [V62.6] 에피소드 상태 다이제스트
+        _episode_digest = ""
+        if prev_text and hasattr(chief_writer, "_generate_episode_digest"):
+            _episode_digest = chief_writer._generate_episode_digest(prev_text, next_ep - 1)
+
+        # HUD 리포트
+        hud_report = self.ctx.sys.hud.get_v20_hud_report() if hasattr(self.ctx.sys, "hud") else ""
+
+        # ===== [V60.80 FIX] 미래 침범 방지 데이터 추출 =====
+        current_inventory = []
+        current_martial_arts = []
+        if hasattr(self.ctx.sys, "hud") and self.ctx.sys.hud:
+            current_inventory = (
+                list(self.ctx.sys.hud.inventory)
+                if hasattr(self.ctx.sys.hud, "inventory") and self.ctx.sys.hud.inventory
+                else []
+            )
+            current_martial_arts = (
+                list(self.ctx.sys.hud.techniques)
+                if hasattr(self.ctx.sys.hud, "techniques") and self.ctx.sys.hud.techniques
+                else []
+            )
+
+        cumulative_bible = self.ctx.current_project.db.get_cumulative_bible(next_ep - 1)
+        dead_npcs = cumulative_bible.get("dead_npcs", []) if cumulative_bible else []
+
+        item_acquisition_timeline = self.ctx.build_item_acquisition_timeline(next_ep - 1)
+
+        # [V68] 직전 화 연결고리 로드
+        _chain_link_section = self._load_chain_link_section(next_ep)
+        if _chain_link_section:
+            logging.info(f"[V68] 직전 화 연결고리 로드 완료 ({len(_chain_link_section)}자)")
+
+        # [V68] 세계 상태 요약 로드 (ChiefWriter 프롬프트 주입용)
+        _world_state_summary = ""
+        if self.ctx.world_state:
+            try:
+                _world_state_summary = self.ctx.world_state.get_summary(max_chars=5000)
+            except Exception:
+                pass
+
+        return {
+            "arc_pos": arc_pos,
+            "total_ep_in_arc": total_ep_in_arc,
+            "arc_tactical": arc_tactical,
+            "prev_text": prev_text,
+            "prev_ending": prev_ending,
+            "prev_manuscripts_text": _prev_manuscripts_text,
+            "episode_digest": _episode_digest,
+            "hud_report": hud_report,
+            "current_inventory": current_inventory,
+            "current_martial_arts": current_martial_arts,
+            "cumulative_bible": cumulative_bible,
+            "dead_npcs": dead_npcs,
+            "item_acquisition_timeline": item_acquisition_timeline,
+            "chain_link_section": _chain_link_section,
+            "world_state_summary": _world_state_summary,
+        }
+
+    # ═══════════════════════════════════════════════════════════════════════
     # 메인 파이프라인
     # ═══════════════════════════════════════════════════════════════════════
 
@@ -406,79 +502,23 @@ JSON으로 출력:
                     self.ctx.ui.log(f"⚠️ 제{next_ep}화 Arc 데이터 없음.")
                     break
 
-                arc_pos = next_ep - arc_data.get("ep_start", next_ep) + 1
-                total_ep_in_arc = arc_data.get("ep_count", 5)
-                arc_tactical = arc_data.get("tactical_doc", "")
-                if isinstance(arc_tactical, dict):  # [V70] dict 타입 방어
-                    arc_tactical = json.dumps(arc_tactical, ensure_ascii=False)
-                arc_tactical = str(arc_tactical) if arc_tactical else ""
-
-                # 직전 화 원고
-                prev_ms_data = self.ctx.current_project.db.get_manuscript(next_ep - 1)
-                prev_text = (prev_ms_data.get("content") or "") if prev_ms_data else ""  # [V70] NULL content 방어
-                prev_ending = prev_text[-500:] if prev_text else ""
-
-                # [V67] 이전 30화 원고 전문 로드 — Director + ChiefWriter 공유
-                _prev_manuscripts_parts = []
-                for _prev_ep in range(max(1, next_ep - 30), next_ep):
-                    try:
-                        _prev_ms_data = self.ctx.current_project.db.get_manuscript(_prev_ep)
-                        if _prev_ms_data:
-                            _prev_content = (
-                                _prev_ms_data.get("content", "")
-                                if isinstance(_prev_ms_data, dict)
-                                else str(_prev_ms_data)
-                            )
-                            if _prev_content and len(_prev_content) > 100:
-                                _prev_manuscripts_parts.append(f"[제{_prev_ep}화]\n{_prev_content}")
-                    except Exception:
-                        pass
-                _prev_manuscripts_text = "\n\n---\n\n".join(_prev_manuscripts_parts) if _prev_manuscripts_parts else ""
-                if _prev_manuscripts_parts:
-                    logging.info(
-                        f"📚 [V67] 이전 {len(_prev_manuscripts_parts)}화 원고 전문 로드 완료 ({len(_prev_manuscripts_text):,}자)"
-                    )
-
-                # [V62.6] 에피소드 상태 다이제스트
-                _episode_digest = ""
-                if prev_text and hasattr(chief_writer, "_generate_episode_digest"):
-                    _episode_digest = chief_writer._generate_episode_digest(prev_text, next_ep - 1)
-
-                # HUD 리포트
-                hud_report = self.ctx.sys.hud.get_v20_hud_report() if hasattr(self.ctx.sys, "hud") else ""
-
-                # ===== [V60.80 FIX] 미래 침범 방지 데이터 추출 =====
-                current_inventory = []
-                current_martial_arts = []
-                if hasattr(self.ctx.sys, "hud") and self.ctx.sys.hud:
-                    current_inventory = (
-                        list(self.ctx.sys.hud.inventory)
-                        if hasattr(self.ctx.sys.hud, "inventory") and self.ctx.sys.hud.inventory
-                        else []
-                    )
-                    current_martial_arts = (
-                        list(self.ctx.sys.hud.techniques)
-                        if hasattr(self.ctx.sys.hud, "techniques") and self.ctx.sys.hud.techniques
-                        else []
-                    )
-
-                cumulative_bible = self.ctx.current_project.db.get_cumulative_bible(next_ep - 1)
-                dead_npcs = cumulative_bible.get("dead_npcs", []) if cumulative_bible else []
-
-                item_acquisition_timeline = self.ctx.build_item_acquisition_timeline(next_ep - 1)
-
-                # [V68] 직전 화 연결고리 로드
-                _chain_link_section = self._load_chain_link_section(next_ep)
-                if _chain_link_section:
-                    logging.info(f"[V68] 직전 화 연결고리 로드 완료 ({len(_chain_link_section)}자)")
-
-                # [V68] 세계 상태 요약 로드 (ChiefWriter 프롬프트 주입용)
-                _world_state_summary = ""
-                if self.ctx.world_state:
-                    try:
-                        _world_state_summary = self.ctx.world_state.get_summary(max_chars=5000)
-                    except Exception:
-                        pass
+                # [4-R1-a] 에피소드 컨텍스트 수집 (Extract Method)
+                _ep_ctx = self._prepare_episode_context(next_ep, arc_data, chief_writer)
+                arc_pos = _ep_ctx["arc_pos"]
+                total_ep_in_arc = _ep_ctx["total_ep_in_arc"]
+                arc_tactical = _ep_ctx["arc_tactical"]
+                prev_text = _ep_ctx["prev_text"]
+                prev_ending = _ep_ctx["prev_ending"]
+                _prev_manuscripts_text = _ep_ctx["prev_manuscripts_text"]
+                _episode_digest = _ep_ctx["episode_digest"]
+                hud_report = _ep_ctx["hud_report"]
+                current_inventory = _ep_ctx["current_inventory"]
+                current_martial_arts = _ep_ctx["current_martial_arts"]
+                cumulative_bible = _ep_ctx["cumulative_bible"]
+                dead_npcs = _ep_ctx["dead_npcs"]
+                item_acquisition_timeline = _ep_ctx["item_acquisition_timeline"]
+                _chain_link_section = _ep_ctx["chain_link_section"]
+                _world_state_summary = _ep_ctx["world_state_summary"]
 
                 # ===== [V60.80+] 기존 Writer 핵심 기능 추출 =====
                 reference_anchor_prompt = ""
@@ -1252,7 +1292,7 @@ JSON으로 출력:
                                 director_feedback += f"\n[연속성 충돌]\n{conflict_summary}"
 
                         # [V67] 명시적 모순 검사 — 이전 원고와 비교
-                        if _prev_manuscripts_parts and hasattr(
+                        if _prev_manuscripts_text and hasattr(
                             self.ctx.agents.get("director", None), "check_manuscript_history_conflicts"
                         ):
                             _ms_history_for_check = []
