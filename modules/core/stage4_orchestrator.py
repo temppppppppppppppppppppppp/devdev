@@ -292,6 +292,312 @@ JSON으로 출력:
     # ═══════════════════════════════════════════════════════════════════════
     # 메인 파이프라인
     # ═══════════════════════════════════════════════════════════════════════
+    def _build_mandatory_context(
+        self,
+        *,
+        next_ep: int,
+        arc_data: dict,
+        arc_tactical: str,
+        prev_text: str,
+        prev_ending: str,
+        hud_report: str,
+        writer_agent,
+        anchor_sys,
+        s4_genre_type: str,
+        v50_modules_available: bool,
+    ) -> dict:
+        """[4-R1-b] mandatory_context + writer prompt 조립을 분리 (동작 변화 없음)."""
+        reference_anchor_prompt = ""
+        mandatory_context = ""
+        anti_trope_prompt = ""
+        justification_prompt = ""
+        reflexion_prompt = ""
+        genre_name = (getattr(self.ctx.current_project, "genre", None) or {}).get("name", "무협")
+
+        if writer_agent is None:
+            return {
+                "reference_anchor_prompt": reference_anchor_prompt,
+                "mandatory_context": mandatory_context,
+                "anti_trope_prompt": anti_trope_prompt,
+                "justification_prompt": justification_prompt,
+                "reflexion_prompt": reflexion_prompt,
+            }
+
+        try:
+            relevant_anchors = anchor_sys.get_relevant_anchors(
+                current_ep_num=next_ep,
+                arc_context=arc_tactical or "",
+                n_anchors=5,
+            )
+            critical_anchors = anchor_sys.get_critical_anchors(
+                current_ep_num=next_ep,
+                anchor_types=["item", "injury", "power", "location"],
+            )
+            if relevant_anchors or critical_anchors:
+                reference_anchor_prompt = anchor_sys.generate_reference_prompt(
+                    relevant_anchors=relevant_anchors,
+                    critical_anchors=critical_anchors,
+                )
+        except Exception as e:
+            self.ctx.ui.log(f"   ⚠️ ReferenceAnchor 로드 실패 (비치명): {e}")
+
+        try:
+            mandatory_context = writer_agent._build_mandatory_context(next_ep)
+        except Exception as e:
+            self.ctx.ui.log(f"   ⚠️ Mandatory Context 실패 (비치명): {e}")
+
+        _mc_parts = [mandatory_context] if mandatory_context else []
+
+        _arc_cs = arc_data.get("constraint_summary", "") if arc_data else ""
+        if _arc_cs:
+            _mc_parts.append(f"[Arc 제약 - MUST NOT DO]\n{_arc_cs}")
+
+        if self.ctx.world_state:
+            try:
+                _ws_summary = self.ctx.world_state.get_summary(max_chars=5000)
+                if _ws_summary:
+                    _mc_parts.insert(0, _ws_summary)
+                    logging.info(f"🌍 [V68] 세계 상태 문서 주입 ({len(_ws_summary)}자)")
+            except Exception as _ws_err:
+                logging.warning(f"⚠️ [V68] 세계 상태 문서 주입 실패 (비치명): {str(_ws_err)[:50]}")
+
+        try:
+            _series_summary = self.ctx.current_project.load_v20_anchor("series_summary")
+            if _series_summary:
+                if isinstance(_series_summary, dict):
+                    _series_summary = _series_summary.get("summary", "") or str(_series_summary)
+                if _series_summary and len(str(_series_summary)) > 10:
+                    _mc_parts.append(f"[V68 시리즈 전체 요약]\n{_series_summary}")
+
+            _current_arc_no = arc_data.get("arc_no", 1) if arc_data else 1
+            _current_vol = max(1, (_current_arc_no - 1) // 10 + 1)
+            _volume_summaries = []
+            for _vi in range(max(1, _current_vol - 2), _current_vol + 1):
+                _vs = self.ctx.current_project.load_v20_anchor(f"volume_summary_{_vi}")
+                if _vs:
+                    if isinstance(_vs, dict):
+                        _vs = _vs.get("summary", "") or str(_vs)
+                    if _vs and len(str(_vs)) > 10:
+                        _volume_summaries.append(f"[볼륨 {_vi}] {_vs}")
+            if _volume_summaries:
+                _mc_parts.append("[V68 볼륨 요약]\n" + "\n".join(_volume_summaries))
+        except Exception as _hier_err:
+            self.ctx.ui.log(f"   ⚠️ [V68] 계층형 요약 로드 실패 (비치명): {str(_hier_err)[:60]}")
+
+        if self.ctx.fact_ledger:
+            try:
+                _fl_summary = self.ctx.fact_ledger.to_summary(max_chars=15000)
+                if _fl_summary:
+                    _mc_parts.insert(0, _fl_summary)
+                    logging.info(f"📋 [V68] 팩트 원장 주입 ({len(_fl_summary)}자)")
+            except Exception as _fl_mc_err:
+                logging.warning(f"⚠️ [V68] 팩트 원장 주입 실패 (비치명): {str(_fl_mc_err)[:50]}")
+
+        if self.ctx.state_tracker:
+            _destroyed = self.ctx.state_tracker.get_entity_destruction_summary()
+            if _destroyed:
+                _mc_parts.append(_destroyed)
+
+        if self.ctx.state_tracker:
+            _resolved = self.ctx.state_tracker.get_resolved_plots_summary()
+            if _resolved:
+                _mc_parts.append(_resolved)
+
+        if self.ctx.state_tracker:
+            _personality = self.ctx.state_tracker.get_npc_personality_summary()
+            if _personality:
+                _mc_parts.append(_personality)
+
+        if self.ctx.state_tracker:
+            _npc_rel = self.ctx.state_tracker.get_npc_npc_relationship_summary()
+            if _npc_rel:
+                _mc_parts.append(_npc_rel)
+
+        if self.ctx.state_tracker:
+            _perm_inj = self.ctx.state_tracker.get_permanent_injury_summary()
+            if _perm_inj:
+                _mc_parts.append(_perm_inj)
+
+        if self.ctx.state_tracker:
+            _timeline = self.ctx.state_tracker.get_time_timeline_summary()
+            if _timeline:
+                _mc_parts.append(_timeline)
+
+        if self.ctx.state_tracker:
+            _companions = self.ctx.state_tracker.get_companion_summary()
+            if _companions:
+                _mc_parts.append(_companions)
+
+        if self.ctx.state_tracker:
+            _commitments = self.ctx.state_tracker.get_commitment_summary()
+            if _commitments:
+                _mc_parts.append(_commitments)
+
+        if self.ctx.state_tracker:
+            _emotion = self.ctx.state_tracker.get_protagonist_emotion_summary()
+            if _emotion:
+                _mc_parts.append(_emotion)
+
+        if self.ctx.state_tracker:
+            _item_state = self.ctx.state_tracker.get_item_state_summary()
+            if _item_state:
+                _mc_parts.append(_item_state)
+
+        if self.ctx.state_tracker:
+            _plot_suspension = self.ctx.state_tracker.get_plot_suspension_summary(arc_data.get("arc_no", 0))
+            if _plot_suspension:
+                _mc_parts.append(_plot_suspension)
+
+        if self.ctx.state_tracker:
+            _dialogue_style = self.ctx.state_tracker.get_npc_dialogue_style_summary()
+            if _dialogue_style:
+                _mc_parts.append(_dialogue_style)
+
+        if self.ctx.state_tracker:
+            _rel_summary = self.ctx.state_tracker.get_relationship_changes_summary()
+            if _rel_summary:
+                _mc_parts.append(_rel_summary)
+
+        if self.ctx.state_tracker:
+            _injury_summary = self.ctx.state_tracker.get_npc_injury_summary()
+            if _injury_summary:
+                _mc_parts.append(_injury_summary)
+
+        if self.ctx.state_tracker:
+            _movement_summary = self.ctx.state_tracker.get_npc_movement_summary()
+            if _movement_summary:
+                _mc_parts.append(_movement_summary)
+
+        if self.ctx.state_tracker:
+            _skills_summary = self.ctx.state_tracker.get_protagonist_skills_summary()
+            if _skills_summary:
+                _mc_parts.append(_skills_summary)
+
+        try:
+            arc_summaries = []
+            current_arc_no = arc_data.get("arc_no", 1) if arc_data else 1
+            for prev_arc in range(max(1, current_arc_no - 3), current_arc_no):
+                arc_sum = self.ctx.current_project.load_v20_anchor(f"arc_summary_{prev_arc}")
+                if arc_sum and isinstance(arc_sum, dict):
+                    arc_summaries.append(arc_sum)
+            if arc_summaries and self.ctx.state_tracker:
+                _arc_summary_text = self.ctx.state_tracker.format_arc_summary_for_prompt(arc_summaries)
+                if _arc_summary_text:
+                    _mc_parts.append(_arc_summary_text)
+        except Exception as e:
+            self.ctx.ui.log(f"   ⚠️ [V66] Arc 요약 주입 실패 (비치명): {e}")
+
+        if s4_genre_type == "investment" and self.ctx.state_tracker is not None:
+            _fin_summary = self.ctx.state_tracker.get_financial_state_summary()
+            if _fin_summary:
+                _mc_parts.append(_fin_summary)
+
+        try:
+            if self.ctx.memory and prev_ending:
+                _mq_queries = [prev_ending]
+                if arc_data and arc_data.get("state_changes"):
+                    _sc = arc_data["state_changes"]
+                    _npc_names = []
+                    for _field in ["npc_deaths", "relationship_changes", "npc_injuries"]:
+                        for _entry in _sc.get(_field) or []:
+                            _n = _entry.get("name") or _entry.get("npc", "")
+                            if _n:
+                                _npc_names.append(_n)
+                    if _npc_names:
+                        _mq_queries.append(" ".join(_npc_names[:5]))
+                if arc_tactical and len(arc_tactical) > 50:
+                    _mq_queries.append(arc_tactical[:300])
+                _genre_queries = {
+                    "hunter": ["던전 클리어 각성 스킬 랭크"],
+                    "investment": ["포트폴리오 거래 수익률 투자"],
+                    "fantasy": ["마법 축복 주문 마나 정령"],
+                }
+                if s4_genre_type in _genre_queries:
+                    _mq_queries.extend(_genre_queries[s4_genre_type])
+                _vector_memory = self.ctx.memory.retrieve_multi_query_context(
+                    queries=_mq_queries,
+                    current_ep=next_ep,
+                    n_per_query=3,
+                    max_results=5,
+                )
+                if _vector_memory:
+                    _mc_parts.append(f"[과거 유사 맥락 (벡터 검색)]\n{_vector_memory}")
+        except Exception as e:
+            self.ctx.ui.log(f"   ⚠️ 벡터 검색 실패 (비치명): {e}")
+
+        try:
+            _ext_lookback = self._build_extended_lookback_digest(next_ep)
+            if _ext_lookback:
+                _mc_parts.append(_ext_lookback)
+        except Exception as e:
+            self.ctx.ui.log(f"   ⚠️ 확장 Lookback 실패 (비치명): {e}")
+
+        try:
+            if v50_modules_available and self.ctx.foreshadow_tracker:
+                _foreshadow_prompt = self.ctx.foreshadow_tracker.generate_writer_prompt(next_ep)
+                if _foreshadow_prompt:
+                    _mc_parts.append(_foreshadow_prompt)
+        except Exception as e:
+            self.ctx.ui.log(f"   ⚠️ ForeshadowTracker 프롬프트 실패 (비치명): {e}")
+
+        if getattr(self.app, "semantic_plot_guard", None):
+            try:
+                tactical_text = arc_data.get("tactical_doc", "") if arc_data else ""
+                if isinstance(tactical_text, dict):
+                    tactical_text = str(tactical_text)
+                _spg_warnings = self.ctx.semantic_plot_guard.check_new_arc(tactical_doc=tactical_text)
+                if _spg_warnings:
+                    _spg_text = self.ctx.semantic_plot_guard.format_warnings(_spg_warnings)
+                    if _spg_text:
+                        _mc_parts.append(_spg_text)
+            except Exception:
+                pass
+
+        _pacing_analyzer = getattr(self.app, "pacing_analyzer", None)
+        if _pacing_analyzer and prev_text and len(prev_text) >= 100:
+            try:
+                _pacing_result = _pacing_analyzer.analyze(prev_text)
+                _pacing_prompt = _pacing_analyzer.generate_pacing_prompt(_pacing_result)
+                if _pacing_prompt:
+                    _mc_parts.append(_pacing_prompt)
+            except Exception as _pace_err:
+                self.ctx.ui.log(f"   ⚠️ [V65] 페이싱 분석 실패 (비치명): {str(_pace_err)[:60]}")
+
+        try:
+            _narrative_summaries = self.ctx.load_narrative_summaries()
+            if _narrative_summaries:
+                _mc_parts.append(_narrative_summaries)
+        except Exception as e:
+            self.ctx.ui.log(f"   ⚠️ [V64.P4] 내러티브 요약 로드 실패 (비치명): {str(e)[:60]}")
+
+        mandatory_context = "\n\n".join(_mc_parts)
+
+        try:
+            anti_trope_prompt = writer_agent._build_anti_trope_instructions(genre_name)
+        except Exception as e:
+            self.ctx.ui.log(f"   ⚠️ Anti-Trope 실패 (비치명): {e}")
+
+        try:
+            justification_prompt = writer_agent._build_justification_guidance(hud_report, genre_name)
+        except Exception as e:
+            self.ctx.ui.log(f"   ⚠️ Justification 실패 (비치명): {e}")
+
+        try:
+            if next_ep >= 20:
+                from modules.core.reflexion_manager import ReflexionManager
+
+                reflexion = ReflexionManager(self.ctx.current_project)
+                reflexion_prompt = reflexion.get_prompt_injection(min_frequency=2)
+        except Exception as e:
+            self.ctx.ui.log(f"   ⚠️ Reflexion 실패 (비치명): {e}")
+
+        return {
+            "reference_anchor_prompt": reference_anchor_prompt,
+            "mandatory_context": mandatory_context,
+            "anti_trope_prompt": anti_trope_prompt,
+            "justification_prompt": justification_prompt,
+            "reflexion_prompt": reflexion_prompt,
+        }
 
     def stage_4_v2_chief_writer(self, limit_mode: bool = False) -> None:
         """
@@ -519,325 +825,36 @@ JSON으로 출력:
                 item_acquisition_timeline = _ep_ctx["item_acquisition_timeline"]
                 _chain_link_section = _ep_ctx["chain_link_section"]
                 _world_state_summary = _ep_ctx["world_state_summary"]
-
-                # ===== [V60.80+] 기존 Writer 핵심 기능 추출 =====
-                reference_anchor_prompt = ""
-                mandatory_context = ""
-
-                anti_trope_prompt = ""
-                justification_prompt = ""
-                reflexion_prompt = ""
-                genre_name = (getattr(self.ctx.current_project, "genre", None) or {}).get(
-                    "name", "무협"
-                )  # [V70] None 방어
-
+                # ===== [V60.80+] 기존 Writer 전달 기능 추출 =====
                 # [V60.85] 장르 Guard에서 Purism Prompt 추출
                 purism_prompt = ""
                 if hasattr(self.ctx.sys, "guard") and self.ctx.sys.guard:
                     try:
                         purism_prompt = self.ctx.sys.guard.get_v20_purism_prompt()
                     except Exception as e:
-                        self.ctx.ui.log(f"   ⚠️ Guard Purism Prompt 추출 실패 (비차단): {e}")
+                        self.ctx.ui.log(f"   ⚠️ Guard Purism Prompt 추출 실패 (비치명): {e}")
 
-                # 기존 Writer 인스턴스에서 핵심 기능 프롬프트 추출
-                if "writer" in self.ctx.agents:
-                    writer_agent = self.ctx.agents["writer"]
-                    try:
-                        # [V66.1] B-2: 루프 밖에서 생성된 _anchor_sys 재사용 (내부 캐시로 DB 1회 로드)
-                        relevant_anchors = _anchor_sys.get_relevant_anchors(
-                            current_ep_num=next_ep, arc_context=arc_tactical or "", n_anchors=5
-                        )
-                        critical_anchors = _anchor_sys.get_critical_anchors(
-                            current_ep_num=next_ep, anchor_types=["item", "injury", "power", "location"]
-                        )
-                        if relevant_anchors or critical_anchors:
-                            reference_anchor_prompt = _anchor_sys.generate_reference_prompt(
-                                relevant_anchors=relevant_anchors, critical_anchors=critical_anchors
-                            )
-                    except Exception as e:
-                        self.ctx.ui.log(f"   ⚠️ ReferenceAnchor 로드 실패 (비차단): {e}")
+                genre_name = (getattr(self.ctx.current_project, "genre", None) or {}).get("name", "무협")
+                writer_agent = self.ctx.agents.get("writer") if "writer" in self.ctx.agents else None
+                _ctx_prompts = self._build_mandatory_context(
+                    next_ep=next_ep,
+                    arc_data=arc_data,
+                    arc_tactical=arc_tactical,
+                    prev_text=prev_text,
+                    prev_ending=prev_ending,
+                    hud_report=hud_report,
+                    writer_agent=writer_agent,
+                    anchor_sys=_anchor_sys,
+                    s4_genre_type=_s4_genre_type,
+                    v50_modules_available=V50_MODULES_AVAILABLE,
+                )
+                reference_anchor_prompt = _ctx_prompts["reference_anchor_prompt"]
+                mandatory_context = _ctx_prompts["mandatory_context"]
+                anti_trope_prompt = _ctx_prompts["anti_trope_prompt"]
+                justification_prompt = _ctx_prompts["justification_prompt"]
+                reflexion_prompt = _ctx_prompts["reflexion_prompt"]
 
-                    try:
-                        mandatory_context = writer_agent._build_mandatory_context(next_ep)
-                    except Exception as e:
-                        self.ctx.ui.log(f"   ⚠️ Mandatory Context 실패 (비차단): {e}")
-
-                    # [V66.1] mandatory_context를 list로 조립 후 마지막에 join (O(n^2) → O(n) GC 경감)
-                    _mc_parts = [mandatory_context] if mandatory_context else []  # [V66.1] C-1
-
-                    # [V63] Arc 제약 요약을 mandatory_context에 주입
-                    _arc_cs = arc_data.get("constraint_summary", "") if arc_data else ""
-                    if _arc_cs:
-                        _mc_parts.append(f"[Arc 제약 - MUST NOT DO]\n{_arc_cs}")
-
-                    # [V67] F-6: mandatory_context 우선순위 재배치 — 중요도 순 (50K truncation 시 상위가 생존)
-                    # [V68] Priority 0: 세계 상태 문서 (World State Document) — 최우선
-                    if self.ctx.world_state:
-                        try:
-                            _ws_summary = self.ctx.world_state.get_summary(max_chars=5000)
-                            if _ws_summary:
-                                _mc_parts.insert(0, _ws_summary)
-                                logging.info(f"🌍 [V68] 세계 상태 문서 주입 ({len(_ws_summary)}자)")
-                        except Exception as _ws_err:
-                            logging.warning(f"⚠️ [V68] 세계 상태 문서 주입 실패 (비차단): {str(_ws_err)[:50]}")
-
-                    # [V68] Priority 0.5: 계층적 요약 피라미드 (시리즈 + 볼륨 요약)
-                    try:
-                        _series_summary = self.ctx.current_project.load_v20_anchor("series_summary")
-                        if _series_summary:
-                            if isinstance(_series_summary, dict):
-                                _series_summary = _series_summary.get("summary", "") or str(_series_summary)
-                            if _series_summary and len(str(_series_summary)) > 10:
-                                _mc_parts.append(f"[V68 시리즈 전체 요약]\n{_series_summary}")
-
-                        # 볼륨 요약: 최근 3개 볼륨
-                        _current_arc_no = arc_data.get("arc_no", 1) if arc_data else 1
-                        _current_vol = max(1, (_current_arc_no - 1) // 10 + 1)
-                        _volume_summaries = []
-                        for _vi in range(max(1, _current_vol - 2), _current_vol + 1):
-                            _vs = self.ctx.current_project.load_v20_anchor(f"volume_summary_{_vi}")
-                            if _vs:
-                                if isinstance(_vs, dict):
-                                    _vs = _vs.get("summary", "") or str(_vs)
-                                if _vs and len(str(_vs)) > 10:
-                                    _volume_summaries.append(f"[볼륨 {_vi}] {_vs}")
-                        if _volume_summaries:
-                            _mc_parts.append("[V68 볼륨 요약]\n" + "\n".join(_volume_summaries))
-                    except Exception as _hier_err:
-                        self.ctx.ui.log(f"   ⚠️ [V68] 계층적 요약 로드 실패 (비차단): {str(_hier_err)[:60]}")
-
-                    # [V68] Priority 0.8: 팩트 원장 (Cumulative Fact Ledger) — 장기 사실 보존
-                    if self.ctx.fact_ledger:
-                        try:
-                            _fl_summary = self.ctx.fact_ledger.to_summary(max_chars=15000)
-                            if _fl_summary:
-                                _mc_parts.insert(0, _fl_summary)
-                                logging.info(f"📋 [V68] 팩트 원장 주입 ({len(_fl_summary)}자)")
-                        except Exception as _fl_mc_err:
-                            logging.warning(f"⚠️ [V68] 팩트 원장 주입 실패 (비차단): {str(_fl_mc_err)[:50]}")
-
-                    # Priority 1: 파괴된 조직/장소 (BLOCKING level)
-                    if self.ctx.state_tracker:
-                        _destroyed = self.ctx.state_tracker.get_entity_destruction_summary()
-                        if _destroyed:
-                            _mc_parts.append(_destroyed)
-
-                    # Priority 2: 완결 플롯 (재발생 방지)
-                    if self.ctx.state_tracker:
-                        _resolved = self.ctx.state_tracker.get_resolved_plots_summary()
-                        if _resolved:
-                            _mc_parts.append(_resolved)
-
-                    # Priority 3: NPC 성격/동기 (성격 이탈 방지)
-                    if self.ctx.state_tracker:
-                        _personality = self.ctx.state_tracker.get_npc_personality_summary()
-                        if _personality:
-                            _mc_parts.append(_personality)
-
-                    # Priority 4: NPC-NPC 관계 (관계 모순 방지)
-                    if self.ctx.state_tracker:
-                        _npc_rel = self.ctx.state_tracker.get_npc_npc_relationship_summary()
-                        if _npc_rel:
-                            _mc_parts.append(_npc_rel)
-
-                    # [V66.1] Priority 5: NPC 신체 변화 (신체 일관성 — F-8)
-                    if self.ctx.state_tracker:
-                        _perm_inj = self.ctx.state_tracker.get_permanent_injury_summary()
-                        if _perm_inj:
-                            _mc_parts.append(_perm_inj)
-
-                    # [V66.1] Priority 6: 시간선 요약 (시간 모순 방지 — F-1)
-                    if self.ctx.state_tracker:
-                        _timeline = self.ctx.state_tracker.get_time_timeline_summary()
-                        if _timeline:
-                            _mc_parts.append(_timeline)
-
-                    # [V66.1] Priority 7: 동행자 현황 (동행 모순 방지)
-                    if self.ctx.state_tracker:
-                        _companions = self.ctx.state_tracker.get_companion_summary()
-                        if _companions:
-                            _mc_parts.append(_companions)
-
-                    # [V66.1] Priority 8: 미이행 약속/맹세 (서사 약속 추적)
-                    if self.ctx.state_tracker:
-                        _commitments = self.ctx.state_tracker.get_commitment_summary()
-                        if _commitments:
-                            _mc_parts.append(_commitments)
-
-                    # [V66.1] Priority 9: 주인공 감정 상태 (감정 일관성)
-                    if self.ctx.state_tracker:
-                        _emotion = self.ctx.state_tracker.get_protagonist_emotion_summary()
-                        if _emotion:
-                            _mc_parts.append(_emotion)
-
-                    # Priority 10: 아이템 상태 (아이템 모순 방지)
-                    if self.ctx.state_tracker:
-                        _item_state = self.ctx.state_tracker.get_item_state_summary()
-                        if _item_state:
-                            _mc_parts.append(_item_state)
-
-                    # Priority 11: 플롯 서스펜션 (플롯 관리)
-                    if self.ctx.state_tracker:
-                        _plot_suspension = self.ctx.state_tracker.get_plot_suspension_summary(arc_data.get("arc_no", 0))
-                        if _plot_suspension:
-                            _mc_parts.append(_plot_suspension)
-
-                    # Priority 12: NPC 대화 스타일 (캐릭터 보이스)
-                    if self.ctx.state_tracker:
-                        _dialogue_style = self.ctx.state_tracker.get_npc_dialogue_style_summary()
-                        if _dialogue_style:
-                            _mc_parts.append(_dialogue_style)
-
-                    # [V66.2] Priority 12-A: NPC-주인공 관계 현황 (D-1)
-                    if self.ctx.state_tracker:
-                        _rel_summary = self.ctx.state_tracker.get_relationship_changes_summary()
-                        if _rel_summary:
-                            _mc_parts.append(_rel_summary)
-
-                    # [V66.2] Priority 12-B: NPC 부상 현황 (D-2)
-                    if self.ctx.state_tracker:
-                        _injury_summary = self.ctx.state_tracker.get_npc_injury_summary()
-                        if _injury_summary:
-                            _mc_parts.append(_injury_summary)
-
-                    # [V66.2] Priority 12-C: NPC 위치 현황 (D-3)
-                    if self.ctx.state_tracker:
-                        _movement_summary = self.ctx.state_tracker.get_npc_movement_summary()
-                        if _movement_summary:
-                            _mc_parts.append(_movement_summary)
-
-                    # [V66.2] Priority 12-D: 주인공 습득 무공/스킬 (C-2)
-                    if self.ctx.state_tracker:
-                        _skills_summary = self.ctx.state_tracker.get_protagonist_skills_summary()
-                        if _skills_summary:
-                            _mc_parts.append(_skills_summary)
-
-                    # Priority 13: 멀티-Arc 요약 (직전 3개 Arc)
-                    try:
-                        arc_summaries = []
-                        current_arc_no = arc_data.get("arc_no", 1) if arc_data else 1
-                        for prev_arc in range(max(1, current_arc_no - 3), current_arc_no):
-                            arc_sum = self.ctx.current_project.load_v20_anchor(f"arc_summary_{prev_arc}")
-                            if arc_sum and isinstance(arc_sum, dict):
-                                arc_summaries.append(arc_sum)
-                        if arc_summaries and self.ctx.state_tracker:
-                            _arc_summary_text = self.ctx.state_tracker.format_arc_summary_for_prompt(arc_summaries)
-                            if _arc_summary_text:
-                                _mc_parts.append(_arc_summary_text)
-                    except Exception as e:
-                        self.ctx.ui.log(f"   \u26a0\ufe0f [V66] Arc 요약 주입 실패 (비차단): {e}")
-
-                    # Priority 14: 금융 상태 레지스트리 (투자물 전용)
-                    if _s4_genre_type == "investment" and self.ctx.state_tracker is not None:
-                        _fin_summary = self.ctx.state_tracker.get_financial_state_summary()
-                        if _fin_summary:
-                            _mc_parts.append(_fin_summary)
-
-                    # Priority 15: 벡터 멀티쿼리 시맨틱 검색
-                    try:
-                        if self.ctx.memory and prev_ending:
-                            _mq_queries = [prev_ending]
-                            if arc_data and arc_data.get("state_changes"):
-                                _sc = arc_data["state_changes"]
-                                _npc_names = []
-                                for _field in ["npc_deaths", "relationship_changes", "npc_injuries"]:
-                                    for _entry in _sc.get(_field) or []:
-                                        _n = _entry.get("name") or _entry.get("npc", "")
-                                        if _n:
-                                            _npc_names.append(_n)
-                                if _npc_names:
-                                    _mq_queries.append(" ".join(_npc_names[:5]))
-                            if arc_tactical and len(arc_tactical) > 50:
-                                _mq_queries.append(arc_tactical[:300])
-                            # [V66] 장르별 추가 쿼리
-                            _genre_queries = {
-                                "hunter": ["던전 클리어 각성 스킬 랭크"],
-                                "investment": ["포트폴리오 거래 수익률 투자"],
-                                "fantasy": ["마법 축복 주문 마나 정령"],
-                            }
-                            if _s4_genre_type in _genre_queries:
-                                _mq_queries.extend(_genre_queries[_s4_genre_type])
-                            _vector_memory = self.ctx.memory.retrieve_multi_query_context(
-                                queries=_mq_queries, current_ep=next_ep, n_per_query=3, max_results=5
-                            )
-                            if _vector_memory:
-                                _mc_parts.append(f"[과거 유사 맥락 (벡터 검색)]\n{_vector_memory}")
-                    except Exception as e:
-                        self.ctx.ui.log(f"   ⚠️ 벡터 시맨틱 검색 실패 (비차단): {e}")
-
-                    # Priority 16: 확장 Lookback (직전 4~10화 요약)
-                    try:
-                        _ext_lookback = self._build_extended_lookback_digest(next_ep)
-                        if _ext_lookback:
-                            _mc_parts.append(_ext_lookback)
-                    except Exception as e:
-                        self.ctx.ui.log(f"   ⚠️ 확장 Lookback 실패 (비차단): {e}")
-
-                    # Priority 17: ForeshadowTracker 프롬프트 주입
-                    try:
-                        if V50_MODULES_AVAILABLE and self.ctx.foreshadow_tracker:
-                            _foreshadow_prompt = self.ctx.foreshadow_tracker.generate_writer_prompt(next_ep)
-                            if _foreshadow_prompt:
-                                _mc_parts.append(_foreshadow_prompt)
-                    except Exception as e:
-                        self.ctx.ui.log(f"   ⚠️ ForeshadowTracker 프롬프트 실패 (비차단): {e}")
-
-                    # Priority 18: SemanticPlotGuard 경고 주입
-                    if getattr(self.app, "semantic_plot_guard", None):
-                        try:
-                            tactical_text = arc_data.get("tactical_doc", "") if arc_data else ""
-                            if isinstance(tactical_text, dict):
-                                tactical_text = str(tactical_text)
-                            _spg_warnings = self.ctx.semantic_plot_guard.check_new_arc(tactical_doc=tactical_text)
-                            if _spg_warnings:
-                                _spg_text = self.ctx.semantic_plot_guard.format_warnings(_spg_warnings)
-                                if _spg_text:
-                                    _mc_parts.append(_spg_text)
-                        except Exception:
-                            pass
-
-                    # Priority 19: 호흡 분석기 (코스메틱 — truncation 우선 대상)
-                    _pacing_analyzer = getattr(self.app, "pacing_analyzer", None)
-                    if _pacing_analyzer and prev_text and len(prev_text) >= 100:
-                        try:
-                            _pacing_result = _pacing_analyzer.analyze(prev_text)
-                            _pacing_prompt = _pacing_analyzer.generate_pacing_prompt(_pacing_result)
-                            if _pacing_prompt:
-                                _mc_parts.append(_pacing_prompt)
-                        except Exception as _pace_err:
-                            self.ctx.ui.log(f"   ⚠️ [V65] 호흡 분석 실패 (비차단): {str(_pace_err)[:60]}")
-
-                    # Priority 20: 장기 내러티브 요약 (Arc 요약 등으로 이미 커버 — 최하위)
-                    try:
-                        _narrative_summaries = self.ctx.load_narrative_summaries()
-                        if _narrative_summaries:
-                            _mc_parts.append(_narrative_summaries)
-                    except Exception as e:  # [V64.P4] IMPORTANT: narrative summary load failure
-                        self.ctx.ui.log(f"   ⚠️ [V64.P4] 내러티브 요약 로드 실패 (비차단): {str(e)[:60]}")
-
-                    # [V66.1] C-1: list → join (O(n) 단일 할당)
-                    mandatory_context = "\n\n".join(_mc_parts)
-
-                    try:
-                        anti_trope_prompt = writer_agent._build_anti_trope_instructions(genre_name)
-                    except Exception as e:
-                        self.ctx.ui.log(f"   ⚠️ Anti-Trope 실패 (비차단): {e}")
-
-                    try:
-                        justification_prompt = writer_agent._build_justification_guidance(hud_report, genre_name)
-                    except Exception as e:
-                        self.ctx.ui.log(f"   ⚠️ Justification 실패 (비차단): {e}")
-
-                    try:
-                        if next_ep >= 20:
-                            from modules.core.reflexion_manager import ReflexionManager
-
-                            reflexion = ReflexionManager(self.ctx.current_project)
-                            reflexion_prompt = reflexion.get_prompt_injection(min_frequency=2)
-                    except Exception as e:
-                        self.ctx.ui.log(f"   ⚠️ Reflexion 실패 (비차단): {e}")
-
-                # [V60.81] NPC 장비 현황 추출
+                # [V60.81] NPC equipment summary extraction
                 npc_equipment_summary = ""
                 try:
                     bible_root = self.ctx.current_project.master_bible.get(
