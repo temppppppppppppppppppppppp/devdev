@@ -1943,19 +1943,10 @@ JSON으로 출력:
             self.ctx.ui.log(f"   ❌ {round_num + 1}차 면담 REJECT. 피드백: {director_feedback[:100]}...")
         return {"verdict": "REJECT", "director_feedback": director_feedback, "previous_attempt": previous_attempt}
 
-    def stage_4_v2_chief_writer(self, limit_mode: bool = False) -> None:
-        """
-        [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처
+    def _prepare_stage4_session(self, *, limit_mode: bool = False) -> dict | None:
+        """[4-R1-f] Prepare Stage 4 session: agents, context, style guide.
 
-        핵심 철학: "Blueprint를 토대로 양질의 원고를 연속성 있게 생산한다"
-
-        구조:
-        - Phase 1: 프롬프트 조립 (필수만)
-        - Phase 2: Chief Writer 앙상블 (3개 병렬 생성)
-        - Phase 3: Python 사전 검증 (경고만, REJECT 권한 없음)
-        - Phase 4: Director 면담 (3번 기회)
-        - 냉동인간: 기존 Writer (3번 실패 시)
-        - 인간 개입: 냉동인간도 실패 시 중단
+        Returns session config dict for _run_interview_loop, or None if data missing.
         """
         # [V64.P3] lazy imports
         from modules.core.constants import AIModels, Emojis
@@ -1971,7 +1962,7 @@ JSON으로 출력:
         # 1. 기초 데이터 점검
         if not self.ctx.current_project.master_bible or not self.ctx.current_project.arcs:
             self.ctx.ui.log(f"{Emojis.ERROR} [System] Bible 또는 Arc 데이터가 없습니다. Stage 1-2를 먼저 실행하세요.")
-            return
+            return None
 
         # 2. Chief Writer 및 Validator 초기화
         chief_writer = ChiefWriter(
@@ -2035,96 +2026,115 @@ JSON으로 출력:
         total_planned_ep = self.ctx.current_project.db.get_latest_blueprint_number()
         target_ep = None
 
-        try:
-            # 4. 플랫폼 스타일 선택
-            if limit_mode:
-                target_ep = self.ctx.get_int_input(
-                    f"\n👉 몇 화까지 집필하시겠습니까? (최대 {total_planned_ep}화): ",
-                    default=None,
-                    min_val=1,
-                    max_val=total_planned_ep,
-                )
+        # 4. 플랫폼 스타일 선택
+        if limit_mode:
+            target_ep = self.ctx.get_int_input(
+                f"\n👉 몇 화까지 집필하시겠습니까? (최대 {total_planned_ep}화): ",
+                default=None,
+                min_val=1,
+                max_val=total_planned_ep,
+            )
 
-            self.ctx.ui.console.clear()
-            self.ctx.ui.title("V60.80 CHIEF WRITER", "Director 주권주의 아키텍처")
+        self.ctx.ui.console.clear()
+        self.ctx.ui.title("V60.80 CHIEF WRITER", "Director 주권주의 아키텍처")
 
-            # [V60.95] 스타일 가이드 로드
-            style_guide = ""
-            saved_style = self.ctx.current_project.load_v20_anchor("style_guide")
-            if saved_style and STAGE0_AVAILABLE:
+        # [V60.95] 스타일 가이드 로드
+        style_guide = ""
+        saved_style = self.ctx.current_project.load_v20_anchor("style_guide")
+        if saved_style and STAGE0_AVAILABLE:
+            try:
+                from modules.core.stage0 import StyleGuide
+
+                loaded_sg = StyleGuide.from_dict(saved_style)
+                # [V70] Bible의 protagonist_config.pov로 오버라이드
                 try:
-                    from modules.core.stage0 import StyleGuide
-
-                    loaded_sg = StyleGuide.from_dict(saved_style)
-                    # [V70] Bible의 protagonist_config.pov로 오버라이드
-                    try:
-                        _bible = self.ctx.current_project.master_bible or {}
-                        _bible_root = _bible.get("MasterBible", _bible)
-                        _bible_pov = _bible_root.get("protagonist_config", {}).get("pov", "")
-                        if _bible_pov:
-                            loaded_sg.pov = _bible_pov
-                    except Exception:
-                        pass
-                    style_guide = loaded_sg.to_prompt()
-                    self.ctx.ui.log(
-                        f"🎨 [V60.95] 저장된 스타일 가이드 로드됨 (톤: {loaded_sg.tone}, 시점: {loaded_sg.pov})"
-                    )
-                except Exception as e:
-                    self.ctx.ui.log(f"⚠️ 스타일 가이드 로드 실패: {e}")
-                    saved_style = None
-
-            # [V70] 스타일 가이드 없어도 Bible에 POV 설정이 있으면 최소 가이드 생성
-            if not style_guide and STAGE0_AVAILABLE:
-                try:
-                    from modules.core.stage0 import StyleGuide as _SG
-
                     _bible = self.ctx.current_project.master_bible or {}
                     _bible_root = _bible.get("MasterBible", _bible)
                     _bible_pov = _bible_root.get("protagonist_config", {}).get("pov", "")
                     if _bible_pov:
-                        _min_sg = _SG(pov=_bible_pov)
-                        style_guide = _min_sg.to_prompt()
-                        self.ctx.ui.log(f"📖 [V70] Bible POV 기반 최소 스타일 가이드 생성 (시점: {_bible_pov})")
+                        loaded_sg.pov = _bible_pov
                 except Exception:
                     pass
-
-            if not style_guide:
-                style_choice = self.ctx.get_int_input(
-                    "\n👉 스타일 선택 (1.카카오 / 2.네이버): ", default=1, min_val=1, max_val=2
+                style_guide = loaded_sg.to_prompt()
+                self.ctx.ui.log(
+                    f"🎨 [V60.95] 저장된 스타일 가이드 로드됨 (톤: {loaded_sg.tone}, 시점: {loaded_sg.pov})"
                 )
-                style_guide = (
-                    "네이버: 심리 묘사 강조, 3-4문장 단위 줄바꿈, 여백 극대화"
-                    if style_choice == 2
-                    else "카카오: 사이다 전개, 절벽걸기, 4K 해상도 묘사"
-                )
+            except Exception as e:
+                self.ctx.ui.log(f"⚠️ 스타일 가이드 로드 실패: {e}")
+                saved_style = None
 
-            # [V62.5] 캐릭터 보이스 가이드 주입
-            if self.ctx.character_voice and self.ctx.character_voice.profiles:
-                try:
-                    voice_prompt = self.ctx.character_voice.get_writer_injection()
-                    if voice_prompt:
-                        style_guide += f"\n\n{voice_prompt}"
-                        self.ctx.ui.log(
-                            f"🎤 [V62.5] 캐릭터 보이스 가이드 주입됨 ({len(self.ctx.character_voice.profiles)}명)"
-                        )
-                except Exception as voice_err:
-                    self.ctx.ui.log(f"   ⚠️ 캐릭터 보이스 주입 실패 (비차단): {voice_err}")
+        # [V70] 스타일 가이드 없어도 Bible에 POV 설정이 있으면 최소 가이드 생성
+        if not style_guide and STAGE0_AVAILABLE:
+            try:
+                from modules.core.stage0 import StyleGuide as _SG
 
+                _bible = self.ctx.current_project.master_bible or {}
+                _bible_root = _bible.get("MasterBible", _bible)
+                _bible_pov = _bible_root.get("protagonist_config", {}).get("pov", "")
+                if _bible_pov:
+                    _min_sg = _SG(pov=_bible_pov)
+                    style_guide = _min_sg.to_prompt()
+                    self.ctx.ui.log(f"📖 [V70] Bible POV 기반 최소 스타일 가이드 생성 (시점: {_bible_pov})")
+            except Exception:
+                pass
+
+        if not style_guide:
+            style_choice = self.ctx.get_int_input(
+                "\n👉 스타일 선택 (1.카카오 / 2.네이버): ", default=1, min_val=1, max_val=2
+            )
+            style_guide = (
+                "네이버: 심리 묘사 강조, 3-4문장 단위 줄바꿈, 여백 극대화"
+                if style_choice == 2
+                else "카카오: 사이다 전개, 절벽걸기, 4K 해상도 묘사"
+            )
+
+        # [V62.5] 캐릭터 보이스 가이드 주입
+        if self.ctx.character_voice and self.ctx.character_voice.profiles:
+            try:
+                voice_prompt = self.ctx.character_voice.get_writer_injection()
+                if voice_prompt:
+                    style_guide += f"\n\n{voice_prompt}"
+                    self.ctx.ui.log(
+                        f"🎤 [V62.5] 캐릭터 보이스 가이드 주입됨 ({len(self.ctx.character_voice.profiles)}명)"
+                    )
+            except Exception as voice_err:
+                self.ctx.ui.log(f"   ⚠️ 캐릭터 보이스 주입 실패 (비차단): {voice_err}")
+
+        return {
+            "chief_writer": chief_writer,
+            "manuscript_validator": manuscript_validator,
+            "consistency_validator": consistency_validator,
+            "blocking_validator": blocking_validator,
+            "continuity_validator": continuity_validator,
+            "s4_genre_type": _s4_genre_type,
+            "story_context": _story_context,
+            "style_guide": style_guide,
+            "target_ep": target_ep,
+            "output_dir": output_dir,
+            "v50_modules_available": V50_MODULES_AVAILABLE,
+            "total_planned_ep": total_planned_ep,
+        }
+
+    def stage_4_v2_chief_writer(self, limit_mode: bool = False) -> None:
+        """
+        [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처
+
+        핵심 철학: "Blueprint를 토대로 양질의 원고를 연속성 있게 생산한다"
+
+        구조:
+        - Phase 1: 프롬프트 조립 (필수만)
+        - Phase 2: Chief Writer 앙상블 (3개 병렬 생성)
+        - Phase 3: Python 사전 검증 (경고만, REJECT 권한 없음)
+        - Phase 4: Director 면담 (3번 기회)
+        - 냉동인간: 기존 Writer (3번 실패 시)
+        - 인간 개입: 냉동인간도 실패 시 중단
+        """
+        try:
+            session = self._prepare_stage4_session(limit_mode=limit_mode)
+            if session is None:
+                return
             # 5. Episode production loop
-            if self._run_interview_loop(
-                chief_writer=chief_writer,
-                manuscript_validator=manuscript_validator,
-                consistency_validator=consistency_validator,
-                blocking_validator=blocking_validator,
-                continuity_validator=continuity_validator,
-                s4_genre_type=_s4_genre_type,
-                story_context=_story_context,
-                style_guide=style_guide,
-                target_ep=target_ep,
-                output_dir=output_dir,
-                v50_modules_available=V50_MODULES_AVAILABLE,
-                total_planned_ep=total_planned_ep,
-            ):
+            if self._run_interview_loop(**session):
                 return
 
         except KeyboardInterrupt:
