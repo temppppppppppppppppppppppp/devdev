@@ -6,9 +6,9 @@ AI가 동일한 표현을 과도하게 반복하는 것을 방지합니다.
 새 원고에서 위반 사항을 검출합니다.
 """
 
-from collections import Counter
+import hashlib
 import re
-import json
+from collections import Counter
 
 
 class RepetitionGuard:
@@ -45,23 +45,20 @@ class RepetitionGuard:
             return set()
 
         # 전체 텍스트 병합 (None 및 비문자열 필터링)
-        filtered = [
-            ms for ms in previous_manuscripts[-self.window_size:]
-            if ms and isinstance(ms, str)
-        ]
-        combined = '\n'.join(filtered) if filtered else ""
+        filtered = [ms for ms in previous_manuscripts[-self.window_size :] if ms and isinstance(ms, str)]
+        combined = "\n".join(filtered) if filtered else ""
 
         # 필터링 후 데이터가 없으면 빈 set 반환
         if not combined:
             return set()
 
         # 3-gram 추출 (한글/영문 단어 기준)
-        words = re.findall(r'[\w가-힣]+', combined)
+        words = re.findall(r"[\w가-힣]+", combined)
 
         if len(words) < 3:
             return set()
 
-        trigrams = [' '.join(words[i:i+3]) for i in range(len(words)-2)]
+        trigrams = [" ".join(words[i : i + 3]) for i in range(len(words) - 2)]
 
         # 빈도 계산
         counter = Counter(trigrams)
@@ -69,8 +66,7 @@ class RepetitionGuard:
         # threshold 이상 반복된 것들을 금지 목록에 추가
         # 단, 5자 이상의 의미 있는 구문만 (조사 조합 제외)
         self.banned_phrases = {
-            phrase for phrase, count in counter.items()
-            if count >= self.threshold and len(phrase) > 5
+            phrase for phrase, count in counter.items() if count >= self.threshold and len(phrase) > 5
         }
 
         return self.banned_phrases
@@ -91,12 +87,12 @@ class RepetitionGuard:
             return ([], 1.0)
 
         # 원고에서 3-gram 추출
-        words = re.findall(r'[\w가-힣]+', new_manuscript)
+        words = re.findall(r"[\w가-힣]+", new_manuscript)
 
         if len(words) < 3:
             return ([], 1.0)
 
-        trigrams = [' '.join(words[i:i+3]) for i in range(len(words)-2)]
+        trigrams = [" ".join(words[i : i + 3]) for i in range(len(words) - 2)]
 
         violations = []
         seen_violations = set()  # 중복 보고 방지
@@ -104,16 +100,18 @@ class RepetitionGuard:
         for i, trigram in enumerate(trigrams):
             if trigram in self.banned_phrases and trigram not in seen_violations:
                 # 위반 문맥 추출 (앞뒤 5단어)
-                context_start = max(0, i-5)
-                context_end = min(len(words), i+8)
-                context = ' '.join(words[context_start:context_end])
+                context_start = max(0, i - 5)
+                context_end = min(len(words), i + 8)
+                context = " ".join(words[context_start:context_end])
 
-                violations.append({
-                    'phrase': trigram,
-                    'position': i,
-                    'context': f"...{context}...",
-                    'frequency': self.threshold  # 이전 화에서 몇 번 나왔는지
-                })
+                violations.append(
+                    {
+                        "phrase": trigram,
+                        "position": i,
+                        "context": f"...{context}...",
+                        "frequency": self.threshold,  # 이전 화에서 몇 번 나왔는지
+                    }
+                )
 
                 seen_violations.add(trigram)
 
@@ -143,10 +141,9 @@ class RepetitionGuard:
         # 상위 5개만 보고 (너무 많으면 프롬프트 길어짐)
         top_violations = violations[:5]
 
-        violation_report = "\n".join([
-            f"- \"{v['phrase']}\" (위치: {v['position']}, 문맥: {v['context']})"
-            for v in top_violations
-        ])
+        violation_report = "\n".join(
+            [f'- "{v["phrase"]}" (위치: {v["position"]}, 문맥: {v["context"]})' for v in top_violations]
+        )
 
         prompt = f"""
 [🚨 REPETITION ALERT - 반복 구문 과다 사용]
@@ -177,8 +174,49 @@ class RepetitionGuard:
             Dict with statistics
         """
         return {
-            'total_banned_phrases': len(self.banned_phrases),
-            'window_size': self.window_size,
-            'threshold': self.threshold,
-            'sample_phrases': list(self.banned_phrases)[:10] if self.banned_phrases else []
+            "total_banned_phrases": len(self.banned_phrases),
+            "window_size": self.window_size,
+            "threshold": self.threshold,
+            "sample_phrases": list(self.banned_phrases)[:10] if self.banned_phrases else [],
         }
+
+    # ── [Phase 3-B] 크로스 에피소드 문장 핑거프린팅 ──────────────
+
+    # 한국어 종결어미 + 문장부호 기반 분리 패턴
+    _SENTENCE_SPLIT_RE = re.compile(
+        r"(?<=[다요죠함임음됨었았겠습니까])[.!?]\s+"
+        r"|(?<=[.!?])\s+"
+        r"|\n+"
+    )
+
+    @staticmethod
+    def extract_sentence_fingerprints(
+        manuscript: str,
+        min_length: int = 15,
+    ) -> list:
+        """원고에서 정규화 문장 핑거프린트를 추출한다.
+
+        Args:
+            manuscript: 원고 전문
+            min_length: 이 미만 글자수 문장은 제외
+
+        Returns:
+            [(sha256_hex, preview_50chars), ...] — 중복 제거됨
+        """
+        if not manuscript or not isinstance(manuscript, str):
+            return []
+
+        raw_sentences = RepetitionGuard._SENTENCE_SPLIT_RE.split(manuscript)
+
+        seen_hashes = set()
+        results = []
+        for sent in raw_sentences:
+            normalized = re.sub(r"\s+", " ", sent).strip()
+            if len(normalized) < min_length:
+                continue
+            h = hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+            if h not in seen_hashes:
+                seen_hashes.add(h)
+                preview = normalized[:50]
+                results.append((h, preview))
+        return results

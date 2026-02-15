@@ -123,6 +123,14 @@ npc_exposure:
   max_mentions_per_episode: 15   # NPC 1명 기준 최대 언급 횟수 (초과 시 advisory WARNING)
   min_name_length: 2             # 이 미만 글자수 NPC 이름은 skip (1글자 오탐 방지)
 
+# ── 크로스 에피소드 반복 감지 ────────────────────────────────────
+cross_episode_repetition:
+  enabled: true
+  lookback_episodes: 5          # 최근 N화 대비 비교
+  min_sentence_length: 15       # 이 미만 글자 문장은 핑거프린트 제외
+  overlap_warning: 3            # N건 이상 반복 시 WARNING
+  overlap_regression: 6         # N건 이상 반복 시 강한 WARNING (regression)
+
 # ── 기능 플래그 ──────────────────────────────────────────────
 feature_flags:
   enable_patch_mode: true
