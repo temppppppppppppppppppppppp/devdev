@@ -38,6 +38,45 @@ class _SessionConfig:
     total_planned_ep: int
 
 
+@dataclasses.dataclass(slots=True)
+class _RoundContext:
+    """[4-R2-b] Round-level context for interview round execution."""
+
+    chief_writer: object
+    manuscript_validator: object
+    consistency_validator: object
+    blocking_validator: object
+    continuity_validator: object
+    next_ep: int
+    blueprint: dict
+    arc_data: dict
+    arc_pos: int
+    total_ep_in_arc: int
+    arc_tactical: str
+    prev_text: str
+    prev_ending: str
+    prev_manuscripts_text: str
+    episode_digest: str
+    hud_report: str
+    current_inventory: str
+    current_martial_arts: str
+    dead_npcs: list
+    item_acquisition_timeline: str
+    chain_link_section: str
+    world_state_summary: str
+    purism_prompt: str
+    genre_name: str
+    npc_equipment_summary: str
+    effective_anti_trope: str
+    intro_dna: str
+    story_context: str
+    style_guide: str
+    reference_anchor_prompt: str
+    mandatory_context: str
+    justification_prompt: str
+    reflexion_prompt: str
+
+
 class Stage4Orchestrator:
     """
     [V64.P3] SovereignApp의 Stage 4 원고 집필 오케스트레이션 로직 캡슐화
@@ -1048,43 +1087,43 @@ JSON으로 출력:
         story_context: str,
         style_guide: str,
         mandatory_context: str,
-    ) -> dict:
+    ) -> _RoundContext:
         """[4-R1-e-2] Build round context dict from episode context and prompts."""
-        return {
-            "chief_writer": chief_writer,
-            "manuscript_validator": manuscript_validator,
-            "consistency_validator": consistency_validator,
-            "blocking_validator": blocking_validator,
-            "continuity_validator": continuity_validator,
-            "next_ep": next_ep,
-            "blueprint": blueprint,
-            "arc_data": arc_data,
-            "arc_pos": ep_ctx["arc_pos"],
-            "total_ep_in_arc": ep_ctx["total_ep_in_arc"],
-            "arc_tactical": ep_ctx["arc_tactical"],
-            "prev_text": ep_ctx["prev_text"],
-            "prev_ending": ep_ctx["prev_ending"],
-            "_prev_manuscripts_text": ep_ctx["prev_manuscripts_text"],
-            "_episode_digest": ep_ctx["episode_digest"],
-            "hud_report": ep_ctx["hud_report"],
-            "current_inventory": ep_ctx["current_inventory"],
-            "current_martial_arts": ep_ctx["current_martial_arts"],
-            "dead_npcs": ep_ctx["dead_npcs"],
-            "item_acquisition_timeline": ep_ctx["item_acquisition_timeline"],
-            "_chain_link_section": ep_ctx["chain_link_section"],
-            "_world_state_summary": ep_ctx["world_state_summary"],
-            "purism_prompt": purism_prompt,
-            "genre_name": genre_name,
-            "npc_equipment_summary": npc_equipment_summary,
-            "_effective_anti_trope": effective_anti_trope,
-            "intro_dna": intro_dna,
-            "_story_context": story_context,
-            "style_guide": style_guide,
-            "reference_anchor_prompt": ctx_prompts["reference_anchor_prompt"],
-            "mandatory_context": mandatory_context,
-            "justification_prompt": ctx_prompts["justification_prompt"],
-            "reflexion_prompt": ctx_prompts["reflexion_prompt"],
-        }
+        return _RoundContext(
+            chief_writer=chief_writer,
+            manuscript_validator=manuscript_validator,
+            consistency_validator=consistency_validator,
+            blocking_validator=blocking_validator,
+            continuity_validator=continuity_validator,
+            next_ep=next_ep,
+            blueprint=blueprint,
+            arc_data=arc_data,
+            arc_pos=ep_ctx["arc_pos"],
+            total_ep_in_arc=ep_ctx["total_ep_in_arc"],
+            arc_tactical=ep_ctx["arc_tactical"],
+            prev_text=ep_ctx["prev_text"],
+            prev_ending=ep_ctx["prev_ending"],
+            prev_manuscripts_text=ep_ctx["prev_manuscripts_text"],
+            episode_digest=ep_ctx["episode_digest"],
+            hud_report=ep_ctx["hud_report"],
+            current_inventory=ep_ctx["current_inventory"],
+            current_martial_arts=ep_ctx["current_martial_arts"],
+            dead_npcs=ep_ctx["dead_npcs"],
+            item_acquisition_timeline=ep_ctx["item_acquisition_timeline"],
+            chain_link_section=ep_ctx["chain_link_section"],
+            world_state_summary=ep_ctx["world_state_summary"],
+            purism_prompt=purism_prompt,
+            genre_name=genre_name,
+            npc_equipment_summary=npc_equipment_summary,
+            effective_anti_trope=effective_anti_trope,
+            intro_dna=intro_dna,
+            story_context=story_context,
+            style_guide=style_guide,
+            reference_anchor_prompt=ctx_prompts["reference_anchor_prompt"],
+            mandatory_context=mandatory_context,
+            justification_prompt=ctx_prompts["justification_prompt"],
+            reflexion_prompt=ctx_prompts["reflexion_prompt"],
+        )
 
     def _run_interview_loop(self, session: _SessionConfig) -> bool:
         """[4-R1-e-4] Run main episode production loop.
@@ -1308,7 +1347,7 @@ JSON으로 출력:
 
         return False
 
-    def _handle_round_outcome(self, *, round_ctx: dict) -> dict:
+    def _handle_round_outcome(self, *, round_ctx: _RoundContext) -> dict:
         """[4-R1-e-3] Run 3-round interview loop + frozen human fallback.
 
         Returns dict: final_manuscript, final_title, final_state_updates, should_return
@@ -1316,14 +1355,14 @@ JSON으로 출력:
         from modules.core.spinners import StageSpinner
 
         # Unpack values needed by frozen human fallback
-        next_ep = round_ctx["next_ep"]
-        blueprint = round_ctx["blueprint"]
-        hud_report = round_ctx["hud_report"]
-        purism_prompt = round_ctx["purism_prompt"]
-        style_guide = round_ctx["style_guide"]
-        prev_text = round_ctx["prev_text"]
-        prev_ending = round_ctx["prev_ending"]
-        arc_tactical = round_ctx["arc_tactical"]
+        next_ep = round_ctx.next_ep
+        blueprint = round_ctx.blueprint
+        hud_report = round_ctx.hud_report
+        purism_prompt = round_ctx.purism_prompt
+        style_guide = round_ctx.style_guide
+        prev_text = round_ctx.prev_text
+        prev_ending = round_ctx.prev_ending
+        arc_tactical = round_ctx.arc_tactical
 
         final_manuscript = None
         final_title = None
@@ -1338,7 +1377,7 @@ JSON으로 출력:
                     stage4_spinner=stage4_spinner,
                     director_feedback=director_feedback,
                     previous_attempt=previous_attempt,
-                    **round_ctx,
+                    round_ctx=round_ctx,
                 )
                 if _round_result["verdict"] == "PASS":
                     final_manuscript = _round_result["final_manuscript"]
@@ -1451,41 +1490,44 @@ JSON으로 출력:
         stage4_spinner,
         director_feedback: str,
         previous_attempt: dict,
-        chief_writer,
-        manuscript_validator,
-        consistency_validator,
-        blocking_validator,
-        continuity_validator,
-        next_ep: int,
-        blueprint: dict,
-        arc_data: dict,
-        arc_pos: int,
-        total_ep_in_arc: int,
-        arc_tactical: str,
-        prev_text: str,
-        prev_ending: str,
-        _prev_manuscripts_text: str,
-        _episode_digest: str,
-        hud_report: str,
-        current_inventory: str,
-        current_martial_arts: str,
-        dead_npcs: list,
-        item_acquisition_timeline: str,
-        _chain_link_section: str,
-        _world_state_summary: str,
-        purism_prompt: str,
-        genre_name: str,
-        npc_equipment_summary: str,
-        _effective_anti_trope: str,
-        intro_dna: str,
-        _story_context: str,
-        style_guide: str,
-        reference_anchor_prompt: str,
-        mandatory_context: str,
-        justification_prompt: str,
-        reflexion_prompt: str,
+        round_ctx: _RoundContext,
     ) -> dict:
         """[4-R1-e-1] Single interview round: generation, validation, judgment."""
+        # [4-R2-b] Unpack round context
+        chief_writer = round_ctx.chief_writer
+        manuscript_validator = round_ctx.manuscript_validator
+        consistency_validator = round_ctx.consistency_validator
+        blocking_validator = round_ctx.blocking_validator
+        continuity_validator = round_ctx.continuity_validator
+        next_ep = round_ctx.next_ep
+        blueprint = round_ctx.blueprint
+        arc_data = round_ctx.arc_data
+        arc_pos = round_ctx.arc_pos
+        total_ep_in_arc = round_ctx.total_ep_in_arc
+        arc_tactical = round_ctx.arc_tactical
+        prev_text = round_ctx.prev_text
+        prev_ending = round_ctx.prev_ending
+        _prev_manuscripts_text = round_ctx.prev_manuscripts_text
+        _episode_digest = round_ctx.episode_digest
+        hud_report = round_ctx.hud_report
+        current_inventory = round_ctx.current_inventory
+        current_martial_arts = round_ctx.current_martial_arts
+        dead_npcs = round_ctx.dead_npcs
+        item_acquisition_timeline = round_ctx.item_acquisition_timeline
+        _chain_link_section = round_ctx.chain_link_section
+        _world_state_summary = round_ctx.world_state_summary
+        purism_prompt = round_ctx.purism_prompt
+        genre_name = round_ctx.genre_name
+        npc_equipment_summary = round_ctx.npc_equipment_summary
+        _effective_anti_trope = round_ctx.effective_anti_trope
+        intro_dna = round_ctx.intro_dna
+        _story_context = round_ctx.story_context
+        style_guide = round_ctx.style_guide
+        reference_anchor_prompt = round_ctx.reference_anchor_prompt
+        mandatory_context = round_ctx.mandatory_context
+        justification_prompt = round_ctx.justification_prompt
+        reflexion_prompt = round_ctx.reflexion_prompt
+
         stage4_spinner.update_detail(f"제{next_ep}화 · {round_num + 1}차 면담 · 앙상블 생성")
         self.ctx.ui.log(f"\n🎬 [{round_num + 1}차 면담] Chief Writer 앙상블 생성 중...")
 
