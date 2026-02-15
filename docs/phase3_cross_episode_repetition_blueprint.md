@@ -1,7 +1,7 @@
 # Phase 3 Feature B — 크로스 에피소드 반복 감지 청사진
 
-> 작성: 2026-02-15, checkpoint `b91e9bc`
-> 상태: **구현 전 청사진**
+> 작성: 2026-02-15, checkpoint `db07efd`
+> 상태: **Step 1 완료** (`db07efd`)
 
 ---
 
@@ -318,24 +318,23 @@ def e2e_db_with_hashes(tmp_path, multi_episode_manuscripts):
 
 ## 7) 실행 단계 계획
 
-### Step 1: Core — 핑거프린팅 + DB + 감지 로직
+### Step 1: Core — 핑거프린팅 + DB + 감지 로직 ✅ 완료
+
+**커밋**: `db07efd`
 
 **수정 파일**:
-- `modules/core/db_manager.py` — `episode_sentence_hashes` 테이블 생성 + 3 메서드 (~40줄)
-- `modules/core/repetition_guard.py` — `extract_sentence_fingerprints()` 정적 메서드 (~30줄)
-- `modules/core/stage4_orchestrator.py` — `_detect_cross_episode_repetition()` 순수 함수 + `_process_pass_result()` hook (~40줄)
-- `config/settings/validation.yaml` — `cross_episode_repetition` 섹션 (~6줄)
-- `tests/test_cross_episode_repetition.py` — 신규 (14건, ~200줄)
-- `tests/test_stage4_orchestrator.py` — hook 테스트 3건 추가 (~50줄)
+- `modules/core/db_manager.py` — `episode_sentence_hashes` 테이블 + 인덱스 + 3 메서드 (+62줄)
+- `modules/core/repetition_guard.py` — `extract_sentence_fingerprints()` 정적 메서드 (+43줄)
+- `modules/core/stage4_orchestrator.py` — `_detect_cross_episode_repetition()` + hook (+87줄)
+- `config/settings/validation.yaml` — `cross_episode_repetition` 섹션 (+8줄)
+- `tests/test_cross_episode_repetition.py` — 신규 (13건, 169줄)
+- `tests/test_stage4_orchestrator.py` — hook 테스트 3건 추가
 
-**종료 조건**:
-- `python -m py_compile` 수정 파일 전체 통과
-- `python -c "from main_a import SovereignApp; print('OK')"` 통과
-- 신규 테스트 17건 통과
-- 기존 263건 전량 통과
-- `pre-commit run --files` 수정 파일 통과
+**결과**:
+- 신규 16건 + 기존 263건 = 279건 전량 통과
+- pre-commit 통과
 
-### Step 2: 문서 동기화
+### Step 2: 문서 동기화 ✅ 완료
 
 **수정 파일**:
 - `내일작업.md` — 완료 행 추가, 테스트 기준선 갱신, 우선순위 갱신
