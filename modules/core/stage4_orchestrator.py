@@ -1456,24 +1456,20 @@ JSON으로 출력:
                     else:
                         self.ctx.ui.log(f"   🛑 제{next_ep}화 생산 중단. 메뉴로 돌아갑니다.")
                         return {
-                            {
-                                "final_manuscript": None,
-                                "final_title": None,
-                                "final_state_updates": {},
-                                "should_return": True,
-                            }
+                            "final_manuscript": None,
+                            "final_title": None,
+                            "final_state_updates": {},
+                            "should_return": True,
                         }
 
             except Exception as frozen_err:
                 self.ctx.ui.log(f"   🚨 냉동인간 호출 실패: {frozen_err}")
                 self.ctx.ui.log(f"\n⛔ [EP {next_ep}] 자동 생산 완전 실패. 인간 검토 필요.")
                 return {
-                    {
-                        "final_manuscript": None,
-                        "final_title": None,
-                        "final_state_updates": {},
-                        "should_return": True,
-                    }
+                    "final_manuscript": None,
+                    "final_title": None,
+                    "final_state_updates": {},
+                    "should_return": True,
                 }
 
         return {
