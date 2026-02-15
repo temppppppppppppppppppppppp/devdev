@@ -1961,7 +1961,6 @@ class Stage2Orchestrator:
         Returns dict with action='break'|'retry'|'next'.
         """
         from modules.core.constants import RecoveryLimits
-        from modules.core.spinners import V50_MODULES_AVAILABLE
 
         # [V66] SemanticPlotGuard 중복 검사
         if getattr(self.app, "semantic_plot_guard", None):
@@ -2191,51 +2190,13 @@ class Stage2Orchestrator:
             current_ep_start = refined_arc["ep_end"] + 1
             passed = True
 
-            # [V55.3] PassRateMonitor: Stage 2 성공 기록
-            if V50_MODULES_AVAILABLE and self.ctx.pass_rate_monitor:
-                try:
-                    self.ctx.pass_rate_monitor.record_attempt(
-                        stage=2,
-                        episode=global_arc_no,
-                        arc=global_arc_no,
-                        attempt_num=attempt + 1,
-                        success=True,
-                        generation_method=generation_method,
-                    )
-                except Exception as e:  # [V64.P4] OPTIONAL: metrics
-                    logging.debug(f"[SILENT] metrics (success): {e}")
-                    pass
-
-            if V50_MODULES_AVAILABLE and self.ctx.quality_dashboard:
-                try:
-                    self.ctx.quality_dashboard.record_validation(
-                        ep_num=global_arc_no,
-                        result={
-                            "decision": "PASS",
-                            "score": audit.get("score", 80),
-                            "violations": [],
-                            "warnings": [],
-                        },
-                        stage=2,
-                    )
-                except Exception as e:  # [V64.P4] OPTIONAL: dashboard metrics
-                    logging.debug(f"[SILENT] dashboard metrics (PASS): {e}")
-                    pass
-
-            if self.ctx.stage2_optimizer:
-                try:
-                    self.ctx.stage2_optimizer.failure_memory.clear_arc_failures(global_arc_no)
-                    self.ctx.ui.log(f"      ✨ [V60.25] Arc {global_arc_no} 최종 성공 - 실패 메모리 클리어")
-                except Exception as e:  # [V64.P4] OPTIONAL: optimizer memory clear
-                    logging.debug(f"[SILENT] optimizer memory clear: {e}")
-                    pass
-
-            # [V65] PerfTimer: Arc 완료 시 요약 로그
-            try:
-                self.ctx.perf_timer.log_summary()
-                self.ctx.perf_timer.reset()
-            except Exception:
-                pass
+            # [4-R3-f] PASS 메트릭 기록
+            self._record_s2_pass_metrics(
+                global_arc_no=global_arc_no,
+                attempt=attempt,
+                generation_method=generation_method,
+                audit=audit,
+            )
 
             # [V68] 계층적 요약 피라미드 — 볼륨 요약 (10 Arc마다)
             if global_arc_no > 0 and global_arc_no % 10 == 0:
@@ -2362,61 +2323,13 @@ class Stage2Orchestrator:
                 refined_arc = None
                 self.ctx.ui.log(f"      ❌ [V60.77] Analyst 최후 기회도 REJECT → Arc {global_arc_no} 최종 실패")
 
-            if V50_MODULES_AVAILABLE and self.ctx.pass_rate_monitor:
-                try:
-                    self.ctx.pass_rate_monitor.record_attempt(
-                        stage=2,
-                        episode=global_arc_no,
-                        arc=global_arc_no,
-                        attempt_num=attempt + 1,
-                        success=False,
-                        reject_reason=str(audit.get("reason", ""))[:100],
-                        generation_method=generation_method,
-                    )
-                except Exception as e:  # [V64.P4] OPTIONAL: metrics
-                    logging.debug(f"[SILENT] metrics (reject): {e}")
-                    pass
-
-            if V50_MODULES_AVAILABLE and self.ctx.quality_dashboard:
-                try:
-                    self.ctx.quality_dashboard.record_validation(
-                        ep_num=global_arc_no,
-                        result={
-                            "decision": "REJECT",
-                            "score": audit.get("score", 0),
-                            "violations": [
-                                {
-                                    "type": "director_reject",
-                                    "description": str(audit.get("reason", ""))[:200],
-                                }
-                            ],
-                            "warnings": [],
-                        },
-                        stage=2,
-                    )
-                except Exception as e:  # [V64.P4] OPTIONAL: dashboard metrics
-                    logging.debug(f"[SILENT] dashboard metrics (REJECT): {e}")
-                    pass
-
-            self.ctx.stage_rejection_history.append(
-                {
-                    "stage": 2,
-                    "arc_no": global_arc_no,
-                    "reason": str(audit.get("reason", ""))[:200],
-                    "attempt": attempt + 1,
-                }
+            # [4-R3-f] REJECT 메트릭 기록
+            self._record_s2_reject_metrics(
+                global_arc_no=global_arc_no,
+                attempt=attempt,
+                generation_method=generation_method,
+                audit=audit,
             )
-
-            if self.ctx.stage2_optimizer:
-                try:
-                    self.ctx.stage2_optimizer.failure_memory.record_failure(
-                        arc_no=global_arc_no,
-                        failure_type="director_reject",
-                        details=str(audit.get("reason", ""))[:200],
-                    )
-                except Exception as e:  # [V64.P4] OPTIONAL: optimizer failure recording
-                    logging.debug(f"[SILENT] optimizer failure recording: {e}")
-                    pass
 
         return {
             "action": "next",
@@ -2426,6 +2339,110 @@ class Stage2Orchestrator:
             "director_feedback_for_fourphase": director_feedback_for_fourphase,
             "st_snapshot": st_snapshot,
         }
+
+    def _record_s2_pass_metrics(self, *, global_arc_no: int, attempt: int, generation_method: str, audit: dict) -> None:
+        """[4-R3-f] Record Stage 2 PASS metrics (PassRateMonitor, Dashboard, Optimizer, PerfTimer)."""
+        from modules.core.spinners import V50_MODULES_AVAILABLE
+
+        if V50_MODULES_AVAILABLE and self.ctx.pass_rate_monitor:
+            try:
+                self.ctx.pass_rate_monitor.record_attempt(
+                    stage=2,
+                    episode=global_arc_no,
+                    arc=global_arc_no,
+                    attempt_num=attempt + 1,
+                    success=True,
+                    generation_method=generation_method,
+                )
+            except Exception as e:  # [V64.P4] OPTIONAL: metrics
+                logging.debug(f"[SILENT] metrics (success): {e}")
+
+        if V50_MODULES_AVAILABLE and self.ctx.quality_dashboard:
+            try:
+                self.ctx.quality_dashboard.record_validation(
+                    ep_num=global_arc_no,
+                    result={
+                        "decision": "PASS",
+                        "score": audit.get("score", 80),
+                        "violations": [],
+                        "warnings": [],
+                    },
+                    stage=2,
+                )
+            except Exception as e:  # [V64.P4] OPTIONAL: dashboard metrics
+                logging.debug(f"[SILENT] dashboard metrics (PASS): {e}")
+
+        if self.ctx.stage2_optimizer:
+            try:
+                self.ctx.stage2_optimizer.failure_memory.clear_arc_failures(global_arc_no)
+                self.ctx.ui.log(f"      ✨ [V60.25] Arc {global_arc_no} 최종 성공 - 실패 메모리 클리어")
+            except Exception as e:  # [V64.P4] OPTIONAL: optimizer memory clear
+                logging.debug(f"[SILENT] optimizer memory clear: {e}")
+
+        try:
+            self.ctx.perf_timer.log_summary()
+            self.ctx.perf_timer.reset()
+        except Exception:
+            pass
+
+    def _record_s2_reject_metrics(
+        self, *, global_arc_no: int, attempt: int, generation_method: str, audit: dict
+    ) -> None:
+        """[4-R3-f] Record Stage 2 REJECT metrics (PassRateMonitor, Dashboard, History, Optimizer)."""
+        from modules.core.spinners import V50_MODULES_AVAILABLE
+
+        if V50_MODULES_AVAILABLE and self.ctx.pass_rate_monitor:
+            try:
+                self.ctx.pass_rate_monitor.record_attempt(
+                    stage=2,
+                    episode=global_arc_no,
+                    arc=global_arc_no,
+                    attempt_num=attempt + 1,
+                    success=False,
+                    reject_reason=str(audit.get("reason", ""))[:100],
+                    generation_method=generation_method,
+                )
+            except Exception as e:  # [V64.P4] OPTIONAL: metrics
+                logging.debug(f"[SILENT] metrics (reject): {e}")
+
+        if V50_MODULES_AVAILABLE and self.ctx.quality_dashboard:
+            try:
+                self.ctx.quality_dashboard.record_validation(
+                    ep_num=global_arc_no,
+                    result={
+                        "decision": "REJECT",
+                        "score": audit.get("score", 0),
+                        "violations": [
+                            {
+                                "type": "director_reject",
+                                "description": str(audit.get("reason", ""))[:200],
+                            }
+                        ],
+                        "warnings": [],
+                    },
+                    stage=2,
+                )
+            except Exception as e:  # [V64.P4] OPTIONAL: dashboard metrics
+                logging.debug(f"[SILENT] dashboard metrics (REJECT): {e}")
+
+        self.ctx.stage_rejection_history.append(
+            {
+                "stage": 2,
+                "arc_no": global_arc_no,
+                "reason": str(audit.get("reason", ""))[:200],
+                "attempt": attempt + 1,
+            }
+        )
+
+        if self.ctx.stage2_optimizer:
+            try:
+                self.ctx.stage2_optimizer.failure_memory.record_failure(
+                    arc_no=global_arc_no,
+                    failure_type="director_reject",
+                    details=str(audit.get("reason", ""))[:200],
+                )
+            except Exception as e:  # [V64.P4] OPTIONAL: optimizer failure recording
+                logging.debug(f"[SILENT] optimizer failure recording: {e}")
 
     def _normalize_tactical_text(self, text: str) -> str:
         """[V64.P3] 전술서 텍스트 정규화"""
