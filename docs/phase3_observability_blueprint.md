@@ -1,7 +1,7 @@
 # Phase 3 관측성 개선 — ThreadPoolExecutor 병렬 구간 계측 청사진
 
-> 작성: 2026-02-15, checkpoint `b4eaa58`
-> 상태: **Step 1 완료** (Step 2 테스트 확장 + Step 3 문서 동기화 완료)
+> 작성: 2026-02-15, checkpoint `597fcae`
+> 상태: **Step 1 + Step 2 완료** (preflight 계측 + 에이전트 레벨 계측)
 
 ---
 
@@ -41,7 +41,7 @@
 - 재시도 로직 변경 (attempt loop, max_retries) — **불변**
 - async/sync 구조 변경 — **불변** (R4-a NO-GO 유지, 계측만)
 - 성능 최적화 자체 — **불변** (측정 데이터 수집만, 최적화는 후속)
-- Agent 내부 ThreadPoolExecutor 계측 (chief_writer, arc_ensemble 등 8곳) — **후속 확장**
+- ~~Agent 내부 ThreadPoolExecutor 계측~~ — **Step 2에서 완료** (`597fcae`, 5개 에이전트)
 - Stage4 ThreadPoolExecutor — **해당 없음** (Stage4는 미사용)
 
 ---
@@ -193,17 +193,21 @@ except Exception:
 
 ---
 
-## 7) 참고: 에이전트 레벨 확장 경로
+## 7) 에이전트 레벨 확장 — Step 2 ✅ 완료
 
-이번 범위는 Stage2 오케스트레이터만. 향후 확장 시:
+**커밋**: `597fcae`
 
-| 파일 | 메서드 | 병렬 작업 | 우선순위 |
-|------|--------|----------|---------|
-| `chief_writer.py` | `_generate_candidates()` | 3 원고 후보 앙상블 | 높음 (Stage4 핵심 병목) |
-| `blueprint_ensemble.py` | `generate()` | 3 블루프린트 전략 | 중간 |
-| `arc_ensemble.py` | `generate()` | 3 아크 전략 | 중간 |
-| `consensus_validator.py` | `_validate_perspectives()` | N 검증 관점 | 낮음 |
-| `director_auditor.py` | `_self_consistency_vote()` | 3 자기일관성 투표 | 낮음 |
+Step 1의 오케스트레이터 레벨 계측에 이어, 5개 에이전트 내부 ThreadPoolExecutor에 `time.monotonic()` 기반 타이머를 추가.
+
+| 파일 | 메서드 | 타이머 라벨 | 상태 |
+|------|--------|------------|------|
+| `chief_writer.py` | `generate_ensemble()` | `cw_ep{N}_ensemble` | ✅ 완료 |
+| `blueprint_ensemble.py` | `generate_ensemble()` | `bp_ep{N}_ensemble` | ✅ 완료 |
+| `arc_ensemble.py` | `generate_ensemble()` | `arc_{N}_ensemble` | ✅ 완료 |
+| `consensus_validator.py` | `validate_with_consensus()` | `consensus_validation` | ✅ 완료 |
+| `director_auditor.py` | `_strategic_audit_with_self_consistency()` | `director_sc_arc{N}_voting` | ✅ 완료 |
+
+**테스트**: `test_agent_perf_timer.py` — 7건 (5 타이머 로그 검증 + 1 예외 비전파 + 1 clock 안전성)
 
 ---
 
