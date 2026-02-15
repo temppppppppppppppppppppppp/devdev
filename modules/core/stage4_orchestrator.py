@@ -26,20 +26,38 @@ def _detect_npc_overexposure(
     protagonist_name: str = "",
     *,
     max_mentions: int = 15,
+    core_npc_names: frozenset = frozenset(),
+    min_name_length: int = 2,
 ):
-    """에피소드 원고에서 NPC별 언급 횟수를 세어 임계값 초과 시 경고 dict 반환.
+    """에피소드 원고에서 엑스트라 NPC별 언급 횟수를 세어 임계값 초과 시 경고 dict 반환.
 
-    주인공은 제외. 임계값 미만이면 None 반환.
+    주인공·핵심NPC(core_npc_names)·짧은 이름(min_name_length 미만)은 제외.
+    Longest-match-first 마스킹으로 부분일치 이중 카운트 방지.
     """
     if not manuscript or not npc_names:
         return None
-    overexposed = {}
+    # 후보 필터링: 주인공, 핵심NPC, 짧은 이름 제외
+    excluded = set()
+    candidates = []
     for name in npc_names:
-        if not name or name == protagonist_name:
+        if not name or len(name) < min_name_length:
             continue
-        count = manuscript.count(name)
+        if name == protagonist_name or name in core_npc_names:
+            excluded.add(name)
+            continue
+        candidates.append(name)
+    if not candidates:
+        return None
+    # Longest-match-first: 긴 이름 먼저 세고 마스킹 → 부분일치 방지
+    sorted_names = sorted(candidates, key=len, reverse=True)
+    temp = manuscript
+    overexposed = {}
+    for name in sorted_names:
+        count = temp.count(name)
         if count >= max_mentions:
             overexposed[name] = count
+        if count > 0:
+            temp = temp.replace(name, "\x00" * len(name))
     if not overexposed:
         return None
     top = sorted(overexposed.items(), key=lambda x: -x[1])
@@ -48,6 +66,7 @@ def _detect_npc_overexposure(
         "total": len(top),
         "max_npc": top[0][0],
         "max_count": top[0][1],
+        "excluded_core_npcs": sorted(excluded),
         "warning": f"NPC 과잉 등장: {', '.join(f'{n}({c}회)' for n, c in top[:5])}",
     }
 
@@ -1111,15 +1130,35 @@ JSON으로 출력:
             except Exception as _qr_err:
                 logging.warning("[Phase 3-QR] 품질 회귀 감지 실패 (비차단): %s", _qr_err)
 
-        # ===== [Phase 3-5C] NPC 과잉 등장 경고 (advisory-only) =====
+        # ===== [Phase 3-5C] NPC 과잉 등장 경고 (advisory-only, extras only) =====
         if self.ctx.state_tracker and getattr(self.ctx.state_tracker, "npc_registry", None):
             try:
                 from modules.validation.threshold_helper import _threshold
 
                 _max_m = _threshold("npc_exposure.max_mentions_per_episode", 15)
+                _min_len = _threshold("npc_exposure.min_name_length", 2)
                 _npc_names = list(self.ctx.state_tracker.npc_registry.keys())
                 _prot_name = self.ctx.get_protagonist_name() if self.ctx.get_protagonist_name else ""
-                _overexposure = _detect_npc_overexposure(final_manuscript, _npc_names, _prot_name, max_mentions=_max_m)
+                # Bible KeyNPCs → core set (핵심 NPC 제외 대상)
+                _core = set()
+                try:
+                    _bible_root = self.ctx.current_project.master_bible.get(
+                        "MasterBible", self.ctx.current_project.master_bible
+                    )
+                    _assets = _bible_root.get("AssetLibrary", {})
+                    for _npc in _assets.get("KeyNPCs", []) or _assets.get("Key_NPCs", []):
+                        if isinstance(_npc, dict) and _npc.get("name"):
+                            _core.add(_npc["name"])
+                except Exception:
+                    pass  # Bible 접근 실패 시 빈 set → 전수 검사
+                _overexposure = _detect_npc_overexposure(
+                    final_manuscript,
+                    _npc_names,
+                    _prot_name,
+                    max_mentions=_max_m,
+                    core_npc_names=frozenset(_core),
+                    min_name_length=_min_len,
+                )
                 if _overexposure:
                     logging.warning(
                         "[Phase 3-5C] NPC 과잉 등장 — 제%d화: %s",

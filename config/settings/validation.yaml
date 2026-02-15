@@ -121,6 +121,7 @@ quality_regression:
 # ── NPC 과잉 등장 경고 ────────────────────────────────────────
 npc_exposure:
   max_mentions_per_episode: 15   # NPC 1명 기준 최대 언급 횟수 (초과 시 advisory WARNING)
+  min_name_length: 2             # 이 미만 글자수 NPC 이름은 skip (1글자 오탐 방지)
 
 # ── 기능 플래그 ──────────────────────────────────────────────
 feature_flags:
