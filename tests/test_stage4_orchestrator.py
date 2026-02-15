@@ -571,7 +571,7 @@ class TestNpcOverexposureDetection:
     """_detect_npc_overexposure() 순수 함수 단위 테스트."""
 
     def test_overexposure_detected(self):
-        """임계값 초과 NPC → warning dict 반환."""
+        """임계값 초과 엑스트라 NPC → warning dict 반환."""
         from modules.core.stage4_orchestrator import _detect_npc_overexposure
 
         manuscript = "흑풍이 " * 20  # "흑풍" 20회
@@ -581,6 +581,7 @@ class TestNpcOverexposureDetection:
         assert result["max_count"] >= 20
         assert result["total"] >= 1
         assert "과잉 등장" in result["warning"]
+        assert "excluded_core_npcs" in result
 
     def test_below_threshold_returns_none(self):
         """임계값 미만이면 None."""
@@ -609,18 +610,102 @@ class TestNpcOverexposureDetection:
         result2 = _detect_npc_overexposure(manuscript_over, ["흑풍"])
         assert result2 is not None
 
+    # ── [정교화] core NPC 제외 + 이름 매칭 개선 ──
+
+    def test_core_npc_keynpcs_excluded(self):
+        """KeyNPCs에 포함된 핵심 NPC는 임계 초과여도 경고 제외."""
+        from modules.core.stage4_orchestrator import _detect_npc_overexposure
+
+        manuscript = "노사부가 " * 20 + "흑풍이 " * 20
+        result = _detect_npc_overexposure(
+            manuscript,
+            ["노사부", "흑풍", "무명소졸"],
+            core_npc_names=frozenset({"노사부", "흑풍"}),
+            max_mentions=5,
+        )
+        assert result is None  # 둘 다 core → 엑스트라 0명 → None
+
+    def test_core_npc_key_npcs_variant_excluded(self):
+        """Key_NPCs 변형 키로 전달된 핵심 NPC도 동일하게 제외."""
+        from modules.core.stage4_orchestrator import _detect_npc_overexposure
+
+        manuscript = "노사부가 " * 20 + "무명소졸이 " * 3
+        result = _detect_npc_overexposure(
+            manuscript,
+            ["노사부", "무명소졸"],
+            core_npc_names=frozenset({"노사부"}),
+            max_mentions=5,
+        )
+        # 노사부: core 제외, 무명소졸: 3회 < 5 → None
+        assert result is None
+        assert True  # core_npc_names에 노사부만 넣었으므로 흑풍은 candidate
+
+    def test_extra_npc_triggers_warning(self):
+        """core에 없는 엑스트라 NPC만 임계 초과 시 경고 발생."""
+        from modules.core.stage4_orchestrator import _detect_npc_overexposure
+
+        manuscript = "노사부가 " * 20 + "무명소졸이 " * 20
+        result = _detect_npc_overexposure(
+            manuscript,
+            ["노사부", "무명소졸"],
+            core_npc_names=frozenset({"노사부"}),
+            max_mentions=5,
+        )
+        assert result is not None
+        assert "무명소졸" in result["npcs"]
+        assert "노사부" not in result["npcs"]  # core → 제외
+        assert "노사부" in result["excluded_core_npcs"]
+
+    def test_substring_dedup_longest_first(self):
+        """'흑풍대인' 반복 시 '흑풍' 과다 카운트 방지 (longest-match-first 마스킹)."""
+        from modules.core.stage4_orchestrator import _detect_npc_overexposure
+
+        # "흑풍대인" 20회 + "흑풍" 단독 2회 → 흑풍 카운트는 2 (20이 아님)
+        manuscript = "흑풍대인이 " * 20 + "흑풍이 나타났다. 흑풍은 강했다."
+        result = _detect_npc_overexposure(
+            manuscript,
+            ["흑풍대인", "흑풍"],
+            max_mentions=5,
+        )
+        assert result is not None
+        # 흑풍대인: 20회 → 과잉
+        assert "흑풍대인" in result["npcs"]
+        # 흑풍: 마스킹 후 2회만 카운트 → 5 미만 → 경고 아님
+        assert "흑풍" not in result["npcs"]
+
+    def test_single_char_name_skipped(self):
+        """1글자 NPC 이름은 min_name_length=2 기본값으로 skip."""
+        from modules.core.stage4_orchestrator import _detect_npc_overexposure
+
+        manuscript = "풍 " * 100  # 1글자 "풍" 100회
+        result = _detect_npc_overexposure(manuscript, ["풍"], max_mentions=5)
+        assert result is None  # 1글자 → skip
+
+    def test_single_char_counted_when_min_length_1(self):
+        """min_name_length=1이면 1글자도 카운트."""
+        from modules.core.stage4_orchestrator import _detect_npc_overexposure
+
+        manuscript = "풍 " * 100
+        result = _detect_npc_overexposure(manuscript, ["풍"], max_mentions=5, min_name_length=1)
+        assert result is not None
+        assert "풍" in result["npcs"]
+
 
 class TestNpcOverexposureHook:
     """Stage4 파이프라인 내 NPC 과잉 등장 hook 통합 테스트."""
 
     @pytest.fixture
     def s4_orch_with_npc(self, mock_app):
-        """state_tracker.npc_registry가 있는 Stage4Orchestrator."""
+        """state_tracker.npc_registry + Bible KeyNPCs가 있는 Stage4Orchestrator."""
         from modules.core.stage4_orchestrator import Stage4Orchestrator
 
         orch = Stage4Orchestrator(mock_app)
         tracker = MagicMock()
-        tracker.npc_registry = {"흑풍": {"status": "alive"}, "노사부": {"status": "alive"}}
+        tracker.npc_registry = {
+            "흑풍": {"status": "alive"},
+            "노사부": {"status": "alive"},
+            "무명소졸": {"status": "alive"},
+        }
         orch.ctx.state_tracker = tracker
         orch.ctx.quality_dashboard = None
         orch.ctx.world_state = None
@@ -632,14 +717,23 @@ class TestNpcOverexposureHook:
         orch.ctx.foreshadow_tracker = None
         orch.ctx.failure_learner = None
         orch.ctx.get_protagonist_name = lambda: "이청풍"
+        # Bible에 KeyNPCs로 노사부, 흑풍이 핵심 NPC
+        orch.ctx.current_project.master_bible = {
+            "MasterBible": {
+                "AssetLibrary": {
+                    "KeyNPCs": [
+                        {"name": "노사부", "role": "조력자"},
+                        {"name": "흑풍", "role": "적대자"},
+                    ]
+                }
+            }
+        }
         return orch
 
-    def test_overexposure_hook_logs_warning(self, s4_orch_with_npc, tmp_path):
-        """과잉 등장 시 UI log에 경고 메시지 출력."""
-        orch = s4_orch_with_npc
-        kwargs = {
+    def _make_kwargs(self, tmp_path, manuscript="테스트 원고"):
+        return {
             "next_ep": 3,
-            "final_manuscript": "흑풍이 " * 20,
+            "final_manuscript": manuscript,
             "final_title": "시련의 날",
             "final_state_updates": {},
             "blueprint": {"ep_number": 3},
@@ -647,26 +741,24 @@ class TestNpcOverexposureHook:
             "output_dir": tmp_path,
             "v50_modules_available": False,
         }
-        result = orch._process_pass_result(**kwargs)
+
+    def test_overexposure_hook_logs_warning_extras_only(self, s4_orch_with_npc, tmp_path):
+        """핵심 NPC(노사부·흑풍) 제외, 엑스트라(무명소졸) 과잉만 경고."""
+        orch = s4_orch_with_npc
+        # 노사부 30회(core), 무명소졸 20회(extra)
+        ms = "노사부가 " * 30 + "무명소졸이 " * 20
+        result = orch._process_pass_result(**self._make_kwargs(tmp_path, ms))
         assert result is True
         log_calls = [str(c) for c in orch.ctx.ui.log.call_args_list]
-        assert any("과잉 등장" in c for c in log_calls)
+        assert any("과잉 등장" in c and "무명소졸" in c for c in log_calls)
+        # 노사부는 경고 텍스트에 없어야 함
+        warning_logs = [c for c in log_calls if "과잉 등장" in c]
+        assert all("노사부" not in c for c in warning_logs)
 
     def test_hook_exception_non_propagating(self, s4_orch_with_npc, tmp_path):
         """state_tracker 예외 시 비전파, _process_pass_result는 True 반환."""
         orch = s4_orch_with_npc
-        # npc_registry.keys()에서 예외 발생하도록 설정
         orch.ctx.state_tracker.npc_registry = MagicMock()
         orch.ctx.state_tracker.npc_registry.keys.side_effect = RuntimeError("crash")
-        kwargs = {
-            "next_ep": 3,
-            "final_manuscript": "테스트 원고",
-            "final_title": "시련의 날",
-            "final_state_updates": {},
-            "blueprint": {"ep_number": 3},
-            "arc_data": {"arc_no": 1, "state_changes": {}},
-            "output_dir": tmp_path,
-            "v50_modules_available": False,
-        }
-        result = orch._process_pass_result(**kwargs)
+        result = orch._process_pass_result(**self._make_kwargs(tmp_path))
         assert result is True  # 비전파: 정상 반환
