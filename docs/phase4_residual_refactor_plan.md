@@ -1,8 +1,9 @@
 # Phase 4 잔여 리팩토링 실행 계획
 
 > Phase 6-B E2E 기준선 확보 후 착수.
-> 기준선: E2E 22 passed (1.15s), 회귀 76 passed (2.88s)
+> 기준선: E2E 22 passed (1.15s), 회귀 76→78 passed
 > 기준 커밋: `1678550`
+> **현재 상태**: Phase 4-R1 완료, Phase 4-R2(a–e) 완료, checkpoint `210cb47`
 
 ---
 
@@ -10,18 +11,20 @@
 
 ### 1-A. 파일 규모
 
-| 파일 | 총 줄수 | 함수 수 | try/except | self.ctx 고유속성 | self.ctx 참조 |
-|------|---------|---------|------------|-------------------|---------------|
-| `stage2_orchestrator.py` | 2,368 | 10 | 73 | 43 | 348 |
-| `stage4_orchestrator.py` | 1,892 | 7 | 63 | 22 | 320 |
-| **합계** | **4,260** | **17** | **136** | **65** | **668** |
+| 파일 | 줄수 (시작) | 줄수 (현재) | 함수 수 | self.ctx 참조 |
+|------|------------|------------|---------|---------------|
+| `stage2_orchestrator.py` | 2,368 | 2,368 (미착수) | 10 | 348 |
+| `stage4_orchestrator.py` | 1,892 | **2,230** | **17** | 321 |
+| **합계** | **4,260** | **4,598** | **27** | **669** |
+
+> stage4 줄수 증가는 10개 서브메서드 시그니처 + 4개 dataclass 정의 (구조 개선 비용). 몬스터 함수 1,693줄 → 33줄.
 
 ### 1-B. 함수 길이 Top 10
 
 | # | 파일 | 함수명 | 범위 | 줄수 |
 |---|------|--------|------|------|
 | 1 | stage2 | `_compute_preflight` | L460–L2222 | **1,763** |
-| 2 | stage4 | `stage_4_v2_chief_writer` | L200–L1892 | **1,693** |
+| 2 | stage4 | `stage_4_v2_chief_writer` | L200–L1892 | ~~1,693~~ → **33** ✅ |
 | 3 | stage2 | `stage_2_arcs_async_logic` | L60–L289 | 230 |
 | 4 | stage2 | `throttled_enrich` | L290–L442 | 153 |
 | 5 | stage2 | `_stage2_flow_guard` | L2270–L2345 | 76 |
@@ -104,34 +107,52 @@
 
 ## 3. 무중단 리팩토링 순서 (커밋 단위)
 
-### Phase 4-R1: stage4 몬스터 분할
+### Phase 4-R1: stage4 몬스터 분할 ✅ 완료
+
+| 커밋 | 해시 | 작업 | 줄수 변화 |
+|------|------|------|-----------|
+| **4-R1-a** | `40b43b9` | `_prepare_episode_context()` 추출 — 컨텍스트 구성 | +136/-130 |
+| **4-R1-b** | `5761aa8` | `_build_mandatory_context()` 추출 — 필수 컨텍스트 조립 | +103/-89 |
+| **4-R1-c** | `35d6035` | `_process_pass_result()` 추출 — 합격 후처리 | +146/-136 |
+| **4-R1-d** | `f94822e` | `_run_post_episode_tasks()` 추출 — V68 시스템 갱신 | +93/-79 |
+| **4-R1-e-1** | `c5784de` | `_run_interview_round()` 추출 — 단일 라운드 실행 | +282/-273 |
+| **4-R1-e-2** | `fc0999a` | `_build_round_context()` 추출 — 라운드 컨텍스트 빌더 | +145/-123 |
+| **4-R1-e-3** | `2f30b9d` | `_handle_round_outcome()` 추출 — 3라운드+냉동인간 | +144/-99 |
+| **4-R1-e-4** | `cc54deb` | `_run_interview_loop()` 추출 — 에피소드 생산 루프 | +239/-206 |
+| **4-R1-f** | `6c5f292` | `_prepare_stage4_session()` 추출 — 세션 부트스트랩 | +99/-89 |
+
+**결과**: `stage_4_v2_chief_writer()` 1,693줄 → 33줄 (98% 축소), 10개 서브메서드 추출
+
+### Phase 4-R2: stage4 typed context carriers ✅ 완료
+
+| 커밋 | 해시 | 작업 | 줄수 변화 |
+|------|------|------|-----------|
+| **4-R2-a** | `df88aca` | `_SessionConfig` dataclass (12 fields) — 세션 파라미터 번들링 | +49/-31 |
+| **4-R2-b** | `611fefa` | `_RoundContext` dataclass (33 fields) — 라운드 kwargs 번들링 | +121/-79 |
+| **4-R2-b-hotfix** | `9ade2db` | `return {{...}}` set-literal 버그 수정 (2곳) | +8/-12 |
+| **4-R2-c-test** | `20b60d6` | 에러 경로 회귀 테스트 2건 추가 | +145/0 |
+| **4-R2-d** | `3530c00` | `_RoundOutcome` dataclass (4 fields) — 라운드 결과 타입화 | +52/-41 |
+| **4-R2-e** | `210cb47` | `_InterviewRoundResult` dataclass (6 fields) — 면담 결과 타입화 | +53/-29 |
+
+**결과**: 4개 typed context carrier, 37-param 시그니처 → 5-param, untyped dict 반환 전량 제거
+
+### Phase 4-R3: stage2 몬스터 분할 (미착수)
 
 | 커밋 | 작업 | 예상 줄수 변화 |
 |------|------|---------------|
-| **4-R1-a** | `_prepare_episode_context()` 추출 (L200~L470) — 컨텍스트 구성 블록 | ±0 (이동) |
-| **4-R1-b** | `_run_interview_loop()` 추출 (L470~L1200) — 3라운드 심사 루프 | ±0 |
-| **4-R1-c** | `_process_pass_result()` 추출 (L1200~L1600) — 합격 후처리 | ±0 |
-| **4-R1-d** | `_run_post_episode_tasks()` 추출 (L1600~L1892) — V68 시스템 갱신 | ±0 |
-| **4-R1-e** | 인터뷰 루프 내부 분할: `_execute_round()`, `_handle_reject()`, `_handle_pass()` | ±0 |
-| **4-R1-f** | try/except 정리 — stage4 내 63블록 → 헬퍼 `_safe_call()` 도입 | -50~80줄 |
+| **4-R3-a** | `_preflight_state_setup()` 추출 (L460~L750) — 상태 초기화 | ±0 |
+| **4-R3-b** | `_preflight_arc_analysis()` 추출 (L750~L1200) — Arc 분석 | ±0 |
+| **4-R3-c** | `_preflight_enrichment()` 추출 (L1200~L1600) — 보강 루프 | ±0 |
+| **4-R3-d** | `_preflight_validation()` 추출 (L1600~L2000) — 검증 체인 | ±0 |
+| **4-R3-e** | `_preflight_finalize()` 추출 (L2000~L2222) — 마무리/저장 | ±0 |
+| **4-R3-f** | try/except 정리 — stage2 내 73블록 | -60~100줄 |
 
-### Phase 4-R2: stage2 몬스터 분할
-
-| 커밋 | 작업 | 예상 줄수 변화 |
-|------|------|---------------|
-| **4-R2-a** | `_preflight_state_setup()` 추출 (L460~L750) — 상태 초기화 | ±0 |
-| **4-R2-b** | `_preflight_arc_analysis()` 추출 (L750~L1200) — Arc 분석 | ±0 |
-| **4-R2-c** | `_preflight_enrichment()` 추출 (L1200~L1600) — 보강 루프 | ±0 |
-| **4-R2-d** | `_preflight_validation()` 추출 (L1600~L2000) — 검증 체인 | ±0 |
-| **4-R2-e** | `_preflight_finalize()` 추출 (L2000~L2222) — 마무리/저장 | ±0 |
-| **4-R2-f** | try/except 정리 — stage2 내 73블록 | -60~100줄 |
-
-### Phase 4-R3: async/sync 통일 (선택적)
+### Phase 4-R4: async/sync 통일 (선택적)
 
 | 커밋 | 작업 |
 |------|------|
-| **4-R3-a** | `_compute_preflight` 내 ThreadPoolExecutor → `asyncio.to_thread` 전환 |
-| **4-R3-b** | stage2 진입점 async 호출 체인 정리 |
+| **4-R4-a** | `_compute_preflight` 내 ThreadPoolExecutor → `asyncio.to_thread` 전환 |
+| **4-R4-b** | stage2 진입점 async 호출 체인 정리 |
 
 ---
 
