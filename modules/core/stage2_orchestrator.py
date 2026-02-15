@@ -65,10 +65,8 @@ class Stage2Orchestrator:
         # [V64.P3] lazy imports (main_a.py 스코프 밖이므로)
         from modules.core.constants import (
             AIModels,
-            Emojis,
             HUDKeys,
             RecoveryLimits,
-            RetryLimits,
             VolumeSettings,
         )
         from modules.core.constraint_db import ConstraintDB
@@ -488,164 +486,25 @@ class Stage2Orchestrator:
                                 current_feedback = pattern_analysis + "\n" + current_feedback
                                 self.ctx.ui.log(f"      🔍 [V60.10] REJECT 패턴 분석 주입 ({len(arc_rejections)}건)")
 
-                    self.ctx.ui.log(
-                        f"   {Emojis.BRAIN} [Arc {global_arc_no}] 전술 설계 중 (시도 {attempt + 1}/{RetryLimits.ANALYST_MAX_ATTEMPTS})..."
+                    ### [4-R3-b] Arc 분석 + 무기 준비
+                    _analysis = self._preflight_arc_analysis(
+                        attempt=attempt,
+                        current_feedback=current_feedback,
+                        constraint_block=constraint_block,
+                        last_refined_context=last_refined_context,
+                        all_refined_arcs=all_refined_arcs,
+                        protagonist_name=protagonist_name,
+                        global_arc_no=global_arc_no,
+                        cached_preflight_injection=_cached_preflight_injection,
+                        cached_preflight_result=_cached_preflight_result,
                     )
-
-                    recent_patterns = [
-                        a.get("hybrid_composition", {}).get("primary")
-                        for a in all_refined_arcs
-                        if a.get("hybrid_composition", {}).get("primary")
-                    ]
-
-                    # [V49.4] 제약 블록을 prev_arc_context에 주입
-                    enhanced_context = last_refined_context
-                    if constraint_block:
-                        enhanced_context = constraint_block + "\n" + last_refined_context
-
-                    # [V60.25] Stage 2 Optimizer 주입
-                    if self.ctx.stage2_optimizer:
-                        try:
-                            optimizer_prompt = self.ctx.stage2_optimizer.generate_optimized_prompt(
-                                prev_arcs=all_refined_arcs,
-                                protagonist_name=protagonist_name or "주인공",
-                                include_examples=(attempt == 0),
-                            )
-                            enhanced_context = optimizer_prompt + "\n\n" + enhanced_context
-                            if attempt == 0:
-                                self.ctx.ui.log("      ⚡ [V60.25] Stage 2 Optimizer 프롬프트 주입 완료")
-                        except Exception as opt_err:
-                            self.ctx.audit_event("v60_25_optimizer_error", str(opt_err)[:100])
-
-                    # [V60.21] Focus Mode
-                    is_retry = attempt > 0 and current_feedback
-
-                    # [V51] Analyst 지능 향상 주입
-                    v51_analyst_injection = ""
-                    if V50_MODULES_AVAILABLE and not is_retry:
-                        try:
-                            if self.ctx.quality_amplifier:
-                                analyst_constraints = self.ctx.quality_amplifier.generate_analyst_constraints(
-                                    arc_num=global_arc_no, prev_arcs=all_refined_arcs
-                                )
-                                v51_analyst_injection += analyst_constraints + "\n\n"
-
-                            if self.ctx.agent_intelligence:
-                                intel_prompt = self.ctx.agent_intelligence.get_analyst_enhancement(
-                                    arc_num=global_arc_no, prev_arcs=all_refined_arcs
-                                )
-                                v51_analyst_injection += intel_prompt + "\n\n"
-
-                            if self.ctx.failure_learner:
-                                learned_constraints = self.ctx.failure_learner.generate_constraint_prompt(stage=2)
-                                if learned_constraints:
-                                    v51_analyst_injection += learned_constraints
-
-                            if self.ctx.constitutional_checker:
-                                constitutional_prompt = self.ctx.constitutional_checker.get_full_injection(
-                                    stage=2, context={"prev_arcs": all_refined_arcs, "feedback": current_feedback}
-                                )
-                                v51_analyst_injection = constitutional_prompt + "\n\n" + v51_analyst_injection
-
-                            if v51_analyst_injection:
-                                enhanced_context = v51_analyst_injection + "\n\n" + enhanced_context
-                                self.ctx.ui.log("      🧠 [V51+V55.2] Analyst 지능 향상 + Constitutional 주입 완료")
-                        except Exception as v51_err:
-                            self.ctx.ui.log(f"      ⚠️ [V51] Analyst 향상 실패: {v51_err}")
-
-                    # [V60.21] Focus Mode: 재시도 시 컨텍스트 대폭 축소
-                    if is_retry:
-                        minimal_prev_context = self.ctx.build_minimal_arc_context(
-                            all_refined_arcs, protagonist_name or "주인공"
-                        )
-                        enhanced_context = f"{current_feedback}\n\n{minimal_prev_context}"
-                        context_size = len(enhanced_context)
-                        self.ctx.ui.log(f"      📢 [V60.21] Focus Mode 활성화 - 컨텍스트 {context_size}자 (최소화)")
-
-                    # [V60.9] Stage 3→2 역방향 피드백 주입
-                    try:
-                        if self.ctx.stage_rejection_history:
-                            arc_stage3_failures = [
-                                r
-                                for r in self.ctx.stage_rejection_history
-                                if r.get("stage") == 3 and r.get("arc_no") == global_arc_no
-                            ]
-                            if len(arc_stage3_failures) >= 3:
-                                reverse_feedback_3to2 = self.ctx.generate_reverse_feedback_stage3_to_2(
-                                    architect_failures=arc_stage3_failures, arc_no=global_arc_no
-                                )
-                                if reverse_feedback_3to2:
-                                    stage3_warning = "\n\n🔄 [V60.9 Stage 3→2 역방향 피드백]\n"
-                                    stage3_warning += f"이 Arc(#{global_arc_no})에서 Blueprint 설계가 {len(arc_stage3_failures)}회 실패했습니다.\n"
-                                    stage3_warning += "Arc 구조 자체에 문제가 있을 수 있습니다.\n\n"
-                                    stage3_warning += f"[Blueprint 실패 패턴 분석]\n{reverse_feedback_3to2}\n"
-                                    enhanced_context = stage3_warning + "\n" + enhanced_context
-                                    self.ctx.ui.log(
-                                        f"      🔄 [V60.9] Stage 3→2 역방향 피드백 주입 ({len(arc_stage3_failures)}회 실패 기반)"
-                                    )
-                    except Exception as rf32_err:
-                        self.ctx.audit_event(
-                            "v60_9_stage3to2_error", "stage 3→2 reverse feedback failed", {"error": str(rf32_err)[:100]}
-                        )
-
-                    # ═══════════════════════════════════════════════════════════════
-                    # [V60.36] Analyst 강화 - Director 검수 통과를 위한 무장
-                    # ═══════════════════════════════════════════════════════════════
-                    refined_arc = None
-                    generation_method = "analyst"
-                    analyst_weapons = {}
-
-                    logging.info(f"\n      {'=' * 60}")
-                    logging.info(f"[V60.36] Arc {global_arc_no} 생성 시작 (attempt {attempt + 1})")
-                    logging.info(f"{'=' * 60}")
-
-                    # ─────────────────────────────────────────────────────────────
-                    # [무기 #1] Preflight 분석 — [V66.1] 병렬 실행 캐시 재사용
-                    # ─────────────────────────────────────────────────────────────
-                    preflight_injection = _cached_preflight_injection
-                    if _cached_preflight_result:
-                        analyst_weapons["preflight"] = _cached_preflight_result
-
-                    # ─────────────────────────────────────────────────────────────
-                    # [무기 #2] ConstraintCompiler
-                    # ─────────────────────────────────────────────────────────────
-                    constraint_block = ""
-                    entity_registry_for_director = None
-                    if self.ctx.constraint_compiler and all_refined_arcs:
-                        try:
-                            logging.info("📋 [무기 #2] ConstraintCompiler 컴파일 중...")
-                            state_result = None
-                            if "state_extractor" in self.ctx.agents:
-                                arc_count = len(all_refined_arcs)
-                                if (
-                                    self.ctx.cumulative_state_cache is not None
-                                    and self.ctx.cumulative_state_cache_key == arc_count
-                                ):
-                                    state_result = self.ctx.cumulative_state_cache
-                                else:
-                                    state_result = self.ctx.agents["state_extractor"].extract_cumulative_state(
-                                        all_refined_arcs
-                                    )
-                                    self.ctx.cumulative_state_cache = state_result
-                                    self.ctx.cumulative_state_cache_key = arc_count
-                                entity_registry_for_director = (
-                                    state_result.get("entity_registry") if state_result else None
-                                )
-                                if entity_registry_for_director:
-                                    entity_registry_for_director = self.ctx.fix_entity_registry_protagonist(
-                                        entity_registry_for_director, protagonist_name
-                                    )
-                                    logging.info("🏷️ [V61] Entity Registry 추출됨 (Director용)")
-                            _resolved = (
-                                getattr(self.ctx.state_tracker, "resolved_plots", []) if self.ctx.state_tracker else []
-                            )
-                            constraint_block = self.ctx.constraint_compiler.compile(
-                                all_refined_arcs, state_result, resolved_plots=_resolved
-                            )
-                            analyst_weapons["constraints"] = constraint_block
-                            logging.info(f"✅ [Constraints] 제약 블록 생성 완료 ({len(constraint_block)}자)")
-                        except Exception as cc_err:
-                            logging.info(f"⚠️ [Constraints] 스킵: {str(cc_err)[:50]}")
+                    enhanced_context = _analysis["enhanced_context"]
+                    recent_patterns = _analysis["recent_patterns"]
+                    refined_arc = _analysis["refined_arc"]
+                    generation_method = _analysis["generation_method"]
+                    preflight_injection = _analysis["preflight_injection"]
+                    constraint_block = _analysis["constraint_block"]
+                    entity_registry_for_director = _analysis["entity_registry_for_director"]
 
                     # ─────────────────────────────────────────────────────────────
                     # [V60.77] FourPhaseArcGenerator
@@ -2268,6 +2127,188 @@ class Stage2Orchestrator:
             "director_feedback_for_fourphase": director_feedback_for_fourphase,
             "use_analyst_fallback": use_analyst_fallback,
             "st_snapshot": _st_snapshot,
+        }
+
+    def _preflight_arc_analysis(
+        self,
+        *,
+        attempt: int,
+        current_feedback: str,
+        constraint_block: str,
+        last_refined_context: str,
+        all_refined_arcs: list,
+        protagonist_name: str,
+        global_arc_no: int,
+        cached_preflight_injection: str,
+        cached_preflight_result,
+    ) -> dict:
+        """[4-R3-b] Per-attempt context building and weapons preparation.
+
+        Builds enhanced_context (constraints, optimizer, V51, focus mode,
+        stage 3->2 feedback) and prepares analyst weapons (preflight cache,
+        constraint compiler, entity registry).
+
+        Returns dict of analysis results for the generation phase.
+        """
+        from modules.core.constants import Emojis, RetryLimits
+        from modules.core.spinners import V50_MODULES_AVAILABLE
+
+        self.ctx.ui.log(
+            f"   {Emojis.BRAIN} [Arc {global_arc_no}] 전술 설계 중 (시도 {attempt + 1}/{RetryLimits.ANALYST_MAX_ATTEMPTS})..."
+        )
+
+        recent_patterns = [
+            a.get("hybrid_composition", {}).get("primary")
+            for a in all_refined_arcs
+            if a.get("hybrid_composition", {}).get("primary")
+        ]
+
+        # [V49.4] 제약 블록을 prev_arc_context에 주입
+        enhanced_context = last_refined_context
+        if constraint_block:
+            enhanced_context = constraint_block + "\n" + last_refined_context
+
+        # [V60.25] Stage 2 Optimizer 주입
+        if self.ctx.stage2_optimizer:
+            try:
+                optimizer_prompt = self.ctx.stage2_optimizer.generate_optimized_prompt(
+                    prev_arcs=all_refined_arcs,
+                    protagonist_name=protagonist_name or "주인공",
+                    include_examples=(attempt == 0),
+                )
+                enhanced_context = optimizer_prompt + "\n\n" + enhanced_context
+                if attempt == 0:
+                    self.ctx.ui.log("      ⚡ [V60.25] Stage 2 Optimizer 프롬프트 주입 완료")
+            except Exception as opt_err:
+                self.ctx.audit_event("v60_25_optimizer_error", str(opt_err)[:100])
+
+        # [V60.21] Focus Mode
+        is_retry = attempt > 0 and current_feedback
+
+        # [V51] Analyst 지능 향상 주입
+        v51_analyst_injection = ""
+        if V50_MODULES_AVAILABLE and not is_retry:
+            try:
+                if self.ctx.quality_amplifier:
+                    analyst_constraints = self.ctx.quality_amplifier.generate_analyst_constraints(
+                        arc_num=global_arc_no, prev_arcs=all_refined_arcs
+                    )
+                    v51_analyst_injection += analyst_constraints + "\n\n"
+
+                if self.ctx.agent_intelligence:
+                    intel_prompt = self.ctx.agent_intelligence.get_analyst_enhancement(
+                        arc_num=global_arc_no, prev_arcs=all_refined_arcs
+                    )
+                    v51_analyst_injection += intel_prompt + "\n\n"
+
+                if self.ctx.failure_learner:
+                    learned_constraints = self.ctx.failure_learner.generate_constraint_prompt(stage=2)
+                    if learned_constraints:
+                        v51_analyst_injection += learned_constraints
+
+                if self.ctx.constitutional_checker:
+                    constitutional_prompt = self.ctx.constitutional_checker.get_full_injection(
+                        stage=2, context={"prev_arcs": all_refined_arcs, "feedback": current_feedback}
+                    )
+                    v51_analyst_injection = constitutional_prompt + "\n\n" + v51_analyst_injection
+
+                if v51_analyst_injection:
+                    enhanced_context = v51_analyst_injection + "\n\n" + enhanced_context
+                    self.ctx.ui.log("      🧠 [V51+V55.2] Analyst 지능 향상 + Constitutional 주입 완료")
+            except Exception as v51_err:
+                self.ctx.ui.log(f"      ⚠️ [V51] Analyst 향상 실패: {v51_err}")
+
+        # [V60.21] Focus Mode: 재시도 시 컨텍스트 대폭 축소
+        if is_retry:
+            minimal_prev_context = self.ctx.build_minimal_arc_context(all_refined_arcs, protagonist_name or "주인공")
+            enhanced_context = f"{current_feedback}\n\n{minimal_prev_context}"
+            context_size = len(enhanced_context)
+            self.ctx.ui.log(f"      📢 [V60.21] Focus Mode 활성화 - 컨텍스트 {context_size}자 (최소화)")
+
+        # [V60.9] Stage 3→2 역방향 피드백 주입
+        try:
+            if self.ctx.stage_rejection_history:
+                arc_stage3_failures = [
+                    r
+                    for r in self.ctx.stage_rejection_history
+                    if r.get("stage") == 3 and r.get("arc_no") == global_arc_no
+                ]
+                if len(arc_stage3_failures) >= 3:
+                    reverse_feedback_3to2 = self.ctx.generate_reverse_feedback_stage3_to_2(
+                        architect_failures=arc_stage3_failures, arc_no=global_arc_no
+                    )
+                    if reverse_feedback_3to2:
+                        stage3_warning = "\n\n🔄 [V60.9 Stage 3→2 역방향 피드백]\n"
+                        stage3_warning += f"이 Arc(#{global_arc_no})에서 Blueprint 설계가 {len(arc_stage3_failures)}회 실패했습니다.\n"
+                        stage3_warning += "Arc 구조 자체에 문제가 있을 수 있습니다.\n\n"
+                        stage3_warning += f"[Blueprint 실패 패턴 분석]\n{reverse_feedback_3to2}\n"
+                        enhanced_context = stage3_warning + "\n" + enhanced_context
+                        self.ctx.ui.log(
+                            f"      🔄 [V60.9] Stage 3→2 역방향 피드백 주입 ({len(arc_stage3_failures)}회 실패 기반)"
+                        )
+        except Exception as rf32_err:
+            self.ctx.audit_event(
+                "v60_9_stage3to2_error", "stage 3→2 reverse feedback failed", {"error": str(rf32_err)[:100]}
+            )
+
+        # ═══════════════════════════════════════════════════════════════
+        # [V60.36] Analyst 강화 - Director 검수 통과를 위한 무장
+        # ═══════════════════════════════════════════════════════════════
+        refined_arc = None
+        generation_method = "analyst"
+        analyst_weapons = {}
+
+        logging.info(f"\n      {'=' * 60}")
+        logging.info(f"[V60.36] Arc {global_arc_no} 생성 시작 (attempt {attempt + 1})")
+        logging.info(f"{'=' * 60}")
+
+        # ─────────────────────────────────────────────────────────────
+        # [무기 #1] Preflight 분석 — [V66.1] 병렬 실행 캐시 재사용
+        # ─────────────────────────────────────────────────────────────
+        preflight_injection = cached_preflight_injection
+        if cached_preflight_result:
+            analyst_weapons["preflight"] = cached_preflight_result
+
+        # ─────────────────────────────────────────────────────────────
+        # [무기 #2] ConstraintCompiler
+        # ─────────────────────────────────────────────────────────────
+        constraint_block = ""
+        entity_registry_for_director = None
+        if self.ctx.constraint_compiler and all_refined_arcs:
+            try:
+                logging.info("📋 [무기 #2] ConstraintCompiler 컴파일 중...")
+                state_result = None
+                if "state_extractor" in self.ctx.agents:
+                    arc_count = len(all_refined_arcs)
+                    if self.ctx.cumulative_state_cache is not None and self.ctx.cumulative_state_cache_key == arc_count:
+                        state_result = self.ctx.cumulative_state_cache
+                    else:
+                        state_result = self.ctx.agents["state_extractor"].extract_cumulative_state(all_refined_arcs)
+                        self.ctx.cumulative_state_cache = state_result
+                        self.ctx.cumulative_state_cache_key = arc_count
+                    entity_registry_for_director = state_result.get("entity_registry") if state_result else None
+                    if entity_registry_for_director:
+                        entity_registry_for_director = self.ctx.fix_entity_registry_protagonist(
+                            entity_registry_for_director, protagonist_name
+                        )
+                        logging.info("🏷️ [V61] Entity Registry 추출됨 (Director용)")
+                _resolved = getattr(self.ctx.state_tracker, "resolved_plots", []) if self.ctx.state_tracker else []
+                constraint_block = self.ctx.constraint_compiler.compile(
+                    all_refined_arcs, state_result, resolved_plots=_resolved
+                )
+                analyst_weapons["constraints"] = constraint_block
+                logging.info(f"✅ [Constraints] 제약 블록 생성 완료 ({len(constraint_block)}자)")
+            except Exception as cc_err:
+                logging.info(f"⚠️ [Constraints] 스킵: {str(cc_err)[:50]}")
+
+        return {
+            "enhanced_context": enhanced_context,
+            "recent_patterns": recent_patterns,
+            "refined_arc": refined_arc,
+            "generation_method": generation_method,
+            "preflight_injection": preflight_injection,
+            "constraint_block": constraint_block,
+            "entity_registry_for_director": entity_registry_for_director,
         }
 
     def _normalize_tactical_text(self, text: str) -> str:
