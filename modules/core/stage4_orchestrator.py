@@ -1055,6 +1055,26 @@ JSON으로 출력:
             except Exception as _fl_err:
                 self.ctx.ui.log(f"   ⚠️ [V68] 팩트 원장 갱신 실패 (비차단): {str(_fl_err)[:50]}")
 
+        # ===== [Phase 3-QR] 품질 회귀 감지 (advisory-only) =====
+        if self.ctx.quality_dashboard:
+            try:
+                _regression = self.ctx.quality_dashboard.detect_score_regression(stage=2)
+                if _regression.get("is_regression"):
+                    logging.warning(
+                        "[Phase 3-QR] 품질 회귀 감지 — 제%d화: delta=%s, severity=%s",
+                        next_ep,
+                        _regression.get("delta"),
+                        _regression.get("severity"),
+                    )
+                    self.ctx.ui.log(
+                        f"   ⚠️ [품질 회귀] 직전 Arc 대비 {_regression.get('delta')}점 하락 "
+                        f"(severity: {_regression.get('severity')})"
+                    )
+                elif _regression.get("severity") == "warning":
+                    self.ctx.ui.log(f"   📊 [품질 경고] 직전 Arc 대비 {_regression.get('delta')}점 하락")
+            except Exception as _qr_err:
+                logging.warning("[Phase 3-QR] 품질 회귀 감지 실패 (비차단): %s", _qr_err)
+
         self.ctx.ui.log(f"\n✅ 제{next_ep}화 '{final_title}' 생산 완료! ({len(final_manuscript)}자)")
 
         # [V66.1] B-3: 에피소드 완료 시 audit 버퍼 flush

@@ -911,3 +911,86 @@ class TestPreflightValidationRejectPaths:
         assert result["action"] == "proceed"
         # consensus는 스킵되었으므로 consensus_passed=False
         assert result["consensus_passed"] is False
+
+
+# ══════════════════════════════════════════════════════════════
+# Test: [Phase 3-QR] Quality Trend in _preflight_arc_analysis
+# ══════════════════════════════════════════════════════════════
+
+
+class TestQualityTrendInjection:
+    """_preflight_arc_analysis 내 품질 추세 주입 테스트."""
+
+    @staticmethod
+    def _base_kwargs():
+        """_preflight_arc_analysis 최소 호출 kwargs."""
+        return {
+            "attempt": 0,
+            "current_feedback": "",
+            "constraint_block": "",
+            "last_refined_context": "기존 컨텍스트",
+            "all_refined_arcs": [],
+            "protagonist_name": "이청풍",
+            "global_arc_no": 1,
+            "cached_preflight_injection": "",
+            "cached_preflight_result": None,
+        }
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_trend_summary_injected(self, s2_orch):
+        """quality_dashboard가 있고 추세 데이터 충분 시 enhanced_context에 주입."""
+        s2_orch.ctx.stage2_optimizer = None  # optimizer 비활성화하여 문자열 보존
+        s2_orch.ctx.quality_dashboard = MagicMock()
+        s2_orch.ctx.quality_dashboard.get_score_trend_summary.return_value = {
+            "trend": "down",
+            "summary": "최근 3화 평균 72점, 추세: 하락 (직전 대비 -8)",
+            "window_size": 5,
+            "avg": 72.0,
+            "min": 65,
+            "max": 80,
+            "delta": -8,
+            "samples": 3,
+        }
+        s2_orch.ctx.stage_rejection_history = []
+        result = s2_orch._preflight_arc_analysis(**self._base_kwargs())
+        assert "품질 추세 참고" in result["enhanced_context"]
+        assert "최근 3화 평균 72점" in result["enhanced_context"]
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_trend_insufficient_data_no_injection(self, s2_orch):
+        """데이터 부족 시 추세 블록 미주입."""
+        s2_orch.ctx.quality_dashboard = MagicMock()
+        s2_orch.ctx.quality_dashboard.get_score_trend_summary.return_value = {
+            "trend": "insufficient_data",
+            "summary": "데이터 부족 (1화)",
+            "window_size": 5,
+            "avg": 0,
+            "min": 0,
+            "max": 0,
+            "delta": 0,
+            "samples": 1,
+        }
+        s2_orch.ctx.stage_rejection_history = []
+        result = s2_orch._preflight_arc_analysis(**self._base_kwargs())
+        assert "품질 추세 참고" not in result["enhanced_context"]
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_dashboard_none_no_crash(self, s2_orch):
+        """quality_dashboard=None이면 크래시 없이 진행."""
+        s2_orch.ctx.quality_dashboard = None
+        s2_orch.ctx.stage_rejection_history = []
+        result = s2_orch._preflight_arc_analysis(**self._base_kwargs())
+        assert "enhanced_context" in result
+        assert "품질 추세 참고" not in result["enhanced_context"]
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_dashboard_exception_non_propagating(self, s2_orch):
+        """quality_dashboard 예외 시 비전파."""
+        s2_orch.ctx.stage2_optimizer = None  # optimizer 비활성화하여 문자열 보존
+        s2_orch.ctx.quality_dashboard = MagicMock()
+        s2_orch.ctx.quality_dashboard.get_score_trend_summary.side_effect = RuntimeError("crash")
+        s2_orch.ctx.stage_rejection_history = []
+        result = s2_orch._preflight_arc_analysis(**self._base_kwargs())
+        assert "enhanced_context" in result
+        # 크래시 없이 기존 컨텍스트만 반환
+        assert "기존 컨텍스트" in result["enhanced_context"]
