@@ -1,7 +1,7 @@
 # Phase 3 관측성 개선 — ThreadPoolExecutor 병렬 구간 계측 청사진
 
-> 작성: 2026-02-15, checkpoint `630dd98`
-> 상태: **구현 전 청사진**
+> 작성: 2026-02-15, checkpoint `b4eaa58`
+> 상태: **Step 1 완료** (Step 2 테스트 확장 + Step 3 문서 동기화 완료)
 
 ---
 
@@ -160,49 +160,36 @@ except Exception:
 
 ## 6) 실행 단계 계획
 
-### Step 1: 최소 삽입 — PerfTimer 훅 3개소
+### Step 1: 최소 삽입 — PerfTimer 훅 3개소 ✅ 완료
+
+**커밋**: `b4eaa58`
 
 **수정 파일**:
-- `modules/core/stage2_orchestrator.py` — `_preflight_state_setup()` 내 3개 timer 삽입 (~12줄)
+- `modules/core/stage2_orchestrator.py` — `_preflight_state_setup()` 내 3개 timer 삽입 (+18줄 net)
 
 **삽입 내용**:
-1. 외곽 타이머: L889 start, L895 stop (`s2_arc_{N}_preflight_parallel`)
-2. arc_drive 타이머: `_compute_arc_drive()` 내부 start/stop (`s2_arc_{N}_arc_drive`)
-3. preflight 타이머: `_compute_preflight()` 내부 start/stop (`s2_arc_{N}_preflight_analysis`)
+1. 외곽 타이머: L909 start, L919 stop (`s2_arc_{N}_preflight_parallel`)
+2. arc_drive 타이머: `_compute_arc_drive()` L857 start, L877 finally stop (`s2_arc_{N}_arc_drive`)
+3. preflight 타이머: `_compute_preflight()` L883 start, L905 finally stop (`s2_arc_{N}_preflight_analysis`)
 
-**종료 조건**:
-- `python -m py_compile modules/core/stage2_orchestrator.py` 통과
-- `python -c "from main_a import SovereignApp; print('OK')"` 통과
+### Step 2: 테스트 + 게이트 ✅ 완료
 
-### Step 2: 테스트 + 게이트
+**커밋**: `b4eaa58` (Step 1과 동시)
 
 **수정 파일**:
-- `tests/test_stage2_preflight_helpers.py` — `TestPreflightParallelTimer` 클래스 추가 (~50줄, 4~5 테스트)
+- `tests/test_stage2_preflight_helpers.py` — `TestPreflightParallelTimer` 클래스 추가 (5 테스트, +103줄)
 
-**게이트**:
-1. `py_compile` 수정 파일
-2. SovereignApp import
-3. `pytest tests/test_stage2_preflight_helpers.py -q`
-4. `pytest tests/test_stage2_pipeline.py tests/test_stage2_context.py -q`
-5. `pytest tests/e2e/ -q`
-6. `pytest tests/test_npc_history.py tests/test_config_manager.py tests/test_stage4_orchestrator.py -q`
-7. `pre-commit run --files` 수정 파일
-
-**종료 조건**:
-- 신규 테스트 4~5건 + 기존 258건 전량 통과
+**결과**:
+- 신규 5건 + 기존 258건 = 263건 전량 통과
 - pre-commit 통과
 
-### Step 3: 문서 동기화
+### Step 3: 문서 동기화 ✅ 완료
 
 **수정 파일**:
-- `내일작업.md` — 완료 행 추가, 테스트 기준선 갱신, 우선순위 갱신
+- `내일작업.md` — 완료 행 추가, 테스트 43/263, checkpoint→`b4eaa58`
 - `docs/프로젝트_현황_로드맵_2026-02-14.md` — checkpoint/테스트/완료 갱신
 - `CLAUDE.md` — checkpoint/테스트/완료/RISKY 갱신
-- 본 문서 상태 → "완료"
-
-**종료 조건**:
-- 4개 문서 checkpoint/테스트 수 일치
-- 커밋 + push
+- 본 문서 상태 → "Step 1 완료"
 
 ---
 
