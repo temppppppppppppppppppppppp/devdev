@@ -289,6 +289,151 @@ class TestRejectPathBestManuscript:
 
 
 # ══════════════════════════════════════════════════════════════
+# Test: _handle_round_outcome 에러 경로 반환 구조 (4-R2-b-hotfix)
+# ══════════════════════════════════════════════════════════════
+
+EXPECTED_ERROR_RETURN_KEYS = {"final_manuscript", "final_title", "final_state_updates", "should_return"}
+
+
+class TestHandleRoundOutcomeErrorPaths:
+    """_handle_round_outcome의 에러 경로에서 올바른 dict를 반환하는지 검증.
+
+    회귀 대상: 9ade2db 핫픽스 (return {{...}} → return {...})
+    """
+
+    @pytest.fixture
+    def orch_with_ctx(self, mock_app):
+        """Stage4Orchestrator + ctx mock 조립"""
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        orch = Stage4Orchestrator(mock_app)
+        # ctx mock 설정
+        orch._ctx = MagicMock()
+        orch._ctx.ui = MagicMock()
+        orch._ctx.ui.log = MagicMock()
+        orch._ctx.agents = {
+            "director": MagicMock(),
+            "writer": MagicMock(),
+        }
+        orch._ctx.current_project = MagicMock()
+        orch._ctx.current_project.master_bible = {"MasterBible": {}}
+        orch._ctx.get_protagonist_name = MagicMock(return_value="이청풍")
+        orch._ctx.get_int_input = MagicMock(return_value=1)  # abort (not 4)
+        return orch
+
+    @pytest.fixture
+    def minimal_round_ctx(self):
+        """_RoundContext 최소 구성"""
+        from modules.core.stage4_orchestrator import _RoundContext
+
+        return _RoundContext(
+            chief_writer=MagicMock(),
+            manuscript_validator=MagicMock(),
+            consistency_validator=MagicMock(),
+            blocking_validator=MagicMock(),
+            continuity_validator=MagicMock(),
+            next_ep=1,
+            blueprint={"integrated_scenario": "테스트 시나리오"},
+            arc_data={"arc_no": 1},
+            arc_pos=1,
+            total_ep_in_arc=10,
+            arc_tactical="전술 문서",
+            prev_text="이전 원고",
+            prev_ending="이전 결말",
+            prev_manuscripts_text="",
+            episode_digest="",
+            hud_report="HUD",
+            current_inventory="",
+            current_martial_arts="",
+            dead_npcs=[],
+            item_acquisition_timeline="",
+            chain_link_section="",
+            world_state_summary="",
+            purism_prompt="",
+            genre_name="무협",
+            npc_equipment_summary="",
+            effective_anti_trope="",
+            intro_dna="CYNICAL",
+            story_context="",
+            style_guide="표준",
+            reference_anchor_prompt="",
+            mandatory_context="",
+            justification_prompt="",
+            reflexion_prompt="",
+        )
+
+    def test_user_abort_returns_dict(self, orch_with_ctx, minimal_round_ctx, monkeypatch):
+        """user abort (메뉴 선택 != 4) → 4-key dict 반환, TypeError 없음"""
+        orch = orch_with_ctx
+
+        # 3라운드 모두 REJECT
+        orch._run_interview_round = MagicMock(
+            return_value={
+                "verdict": "REJECT",
+                "director_feedback": "피드백",
+                "previous_attempt": {"score": 30},
+            }
+        )
+
+        # 냉동인간 원고 반환 + Director REJECT
+        orch.ctx.agents["writer"].write_v20_manuscript.return_value = {
+            "content": "냉동 원고",
+            "title": "제1화",
+        }
+        orch.ctx.agents["director"].quick_judge_single.return_value = {
+            "verdict": "REJECT",
+            "reason": "품질 미달",
+        }
+        # get_int_input → 1 (abort, not 4)
+        orch.ctx.get_int_input.return_value = 1
+
+        # StageSpinner is locally imported inside _handle_round_outcome
+        import modules.core.spinners
+
+        monkeypatch.setattr(modules.core.spinners, "StageSpinner", MagicMock())
+
+        result = orch._handle_round_outcome(round_ctx=minimal_round_ctx)
+
+        # Core assertion: returns dict, not set
+        assert isinstance(result, dict), f"Expected dict, got {type(result).__name__}"
+        assert set(result.keys()) == EXPECTED_ERROR_RETURN_KEYS
+        assert result["should_return"] is True
+        assert result["final_manuscript"] is None
+        assert result["final_title"] is None
+        assert result["final_state_updates"] == {}
+
+    def test_frozen_human_exception_returns_dict(self, orch_with_ctx, minimal_round_ctx, monkeypatch):
+        """frozen human 호출 실패 except → 4-key dict 반환, TypeError 없음"""
+        orch = orch_with_ctx
+
+        # 3라운드 모두 REJECT
+        orch._run_interview_round = MagicMock(
+            return_value={
+                "verdict": "REJECT",
+                "director_feedback": "피드백",
+                "previous_attempt": {"score": 30},
+            }
+        )
+
+        # 냉동인간 호출 시 Exception 발생
+        orch.ctx.agents["writer"].write_v20_manuscript.side_effect = RuntimeError("API 실패")
+
+        import modules.core.spinners
+
+        monkeypatch.setattr(modules.core.spinners, "StageSpinner", MagicMock())
+
+        result = orch._handle_round_outcome(round_ctx=minimal_round_ctx)
+
+        # Core assertion: returns dict, not set
+        assert isinstance(result, dict), f"Expected dict, got {type(result).__name__}"
+        assert set(result.keys()) == EXPECTED_ERROR_RETURN_KEYS
+        assert result["should_return"] is True
+        assert result["final_manuscript"] is None
+        assert result["final_title"] is None
+        assert result["final_state_updates"] == {}
+
+
+# ══════════════════════════════════════════════════════════════
 # Test: Stage4Orchestrator 초기화 + import
 # ══════════════════════════════════════════════════════════════
 
