@@ -3,7 +3,7 @@
 > Phase 6-B E2E 기준선 확보 후 착수.
 > 기준선: E2E 22 passed (1.15s), 회귀 76→78 passed
 > 기준 커밋: `1678550`
-> **현재 상태**: Phase 4-R1 완료, Phase 4-R2(a–e) 완료, checkpoint `210cb47`
+> **현재 상태**: Phase 4-R1 완료, Phase 4-R2(a–e) 완료, **Phase 4-R3(a–f) 완료**, checkpoint `adcda5e`
 
 ---
 
@@ -13,17 +13,18 @@
 
 | 파일 | 줄수 (시작) | 줄수 (현재) | 함수 수 | self.ctx 참조 |
 |------|------------|------------|---------|---------------|
-| `stage2_orchestrator.py` | 2,368 | 2,368 (미착수) | 10 | 348 |
+| `stage2_orchestrator.py` | 2,368 | **2,592** | **16** | 348 |
 | `stage4_orchestrator.py` | 1,892 | **2,230** | **17** | 321 |
-| **합계** | **4,260** | **4,598** | **27** | **669** |
+| **합계** | **4,260** | **4,822** | **33** | **669** |
 
 > stage4 줄수 증가는 10개 서브메서드 시그니처 + 4개 dataclass 정의 (구조 개선 비용). 몬스터 함수 1,693줄 → 33줄.
+> stage2 줄수 증가는 7개 서브메서드 시그니처 + 메트릭 헬퍼 2종 (구조 개선 비용). 몬스터 함수 1,763줄 → 100줄.
 
 ### 1-B. 함수 길이 Top 10
 
 | # | 파일 | 함수명 | 범위 | 줄수 |
 |---|------|--------|------|------|
-| 1 | stage2 | `_compute_preflight` | L460–L2222 | **1,763** |
+| 1 | stage2 | `_compute_preflight` | L460–L2222 | ~~1,763~~ → **100** ✅ |
 | 2 | stage4 | `stage_4_v2_chief_writer` | L200–L1892 | ~~1,693~~ → **33** ✅ |
 | 3 | stage2 | `stage_2_arcs_async_logic` | L60–L289 | 230 |
 | 4 | stage2 | `throttled_enrich` | L290–L442 | 153 |
@@ -34,7 +35,7 @@
 | 9 | stage2 | `_is_tactical_doc_duplicate` | L2234–L2261 | 28 |
 | 10 | stage2 | `jaccard` | L2349–L2368 | 20 |
 
-**핵심 문제**: 2개 몬스터 함수(1,763 + 1,693 = 3,456줄)가 전체의 81%.
+**핵심 문제**: ~~2개 몬스터 함수(1,763 + 1,693 = 3,456줄)가 전체의 81%.~~ → **해결 완료** (1,763→100, 1,693→33).
 
 ### 1-C. try/except 분포
 
@@ -136,16 +137,18 @@
 
 **결과**: 4개 typed context carrier, 37-param 시그니처 → 5-param, untyped dict 반환 전량 제거
 
-### Phase 4-R3: stage2 몬스터 분할 (미착수)
+### Phase 4-R3: stage2 몬스터 분할 ✅ 완료
 
-| 커밋 | 작업 | 예상 줄수 변화 |
-|------|------|---------------|
-| **4-R3-a** | `_preflight_state_setup()` 추출 (L460~L750) — 상태 초기화 | ±0 |
-| **4-R3-b** | `_preflight_arc_analysis()` 추출 (L750~L1200) — Arc 분석 | ±0 |
-| **4-R3-c** | `_preflight_enrichment()` 추출 (L1200~L1600) — 보강 루프 | ±0 |
-| **4-R3-d** | `_preflight_validation()` 추출 (L1600~L2000) — 검증 체인 | ±0 |
-| **4-R3-e** | `_preflight_finalize()` 추출 (L2000~L2222) — 마무리/저장 | ±0 |
-| **4-R3-f** | try/except 정리 — stage2 내 73블록 | -60~100줄 |
+| 커밋 | 해시 | 작업 | 줄수 변화 |
+|------|------|------|-----------|
+| **4-R3-a** | `4288497` | `_preflight_state_setup()` 추출 — 상태 초기화 | +71/-58 |
+| **4-R3-b** | `0ed3ef7` | `_preflight_arc_analysis()` 추출 — Arc 분석 | +81/-60 |
+| **4-R3-c** | `5a1790d` | `_preflight_enrichment()` 추출 — FourPhase + 상태 보강 | +60/-39 |
+| **4-R3-d** | `c1e0575` | `_preflight_validation()` 추출 — 검증 체인 (12 continue→return) | +128/-65 |
+| **4-R3-e** | `afb5787` | `_preflight_finalize()` 추출 — Director 심사 + 후처리 (async) | +142/-55 |
+| **4-R3-f** | `adcda5e` | PASS/REJECT 메트릭 헬퍼 추출 (7 try/except → 2 call) | +117/-100 |
+
+**결과**: `_compute_preflight()` 1,763줄 → 100줄 (94% 축소), 7개 서브메서드 추출, ctx refs 348/43 불변
 
 ### Phase 4-R4: async/sync 통일 (선택적)
 
