@@ -988,6 +988,26 @@ JSON으로 출력:
             pass
         return True
 
+    def _run_post_episode_tasks(self) -> None:
+        """[4-R1-d] Session wrap-up: logs, vector sync."""
+        # [V62.3] Stage 4 루프 종료
+        self.ctx.ui.log(f"\n{'=' * 50}")
+        self.ctx.ui.log("📋 Stage 4 집필 세션 종료.")
+        try:
+            input("   ⏎ Enter를 누르면 메뉴로 돌아갑니다...")
+        except EOFError:
+            pass
+
+        # [V62.3] 벡터 메모리 일괄 동기화
+        # [V66.3] 벡터 메모리 비활성화 시 스킵
+        if self.ctx.memory and self.ctx.memory.is_operational():
+            try:
+                self.ctx.ui.log("   🔄 벡터 메모리 일괄 동기화 중...")
+                self.ctx.memory.sync_v20_drafts()
+                self.ctx.ui.log("   ✅ 벡터 메모리 동기화 완료")
+            except Exception as vec_err:
+                self.ctx.ui.log(f"   ⚠️ 벡터 메모리 동기화 실패 (비차단): {vec_err}")
+
     def stage_4_v2_chief_writer(self, limit_mode: bool = False) -> None:
         """
         [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처
@@ -1929,22 +1949,7 @@ JSON으로 출력:
                         continue
 
             # [V62.3] Stage 4 루프 종료
-            self.ctx.ui.log(f"\n{'=' * 50}")
-            self.ctx.ui.log("📋 Stage 4 집필 세션 종료.")
-            try:
-                input("   ⏎ Enter를 누르면 메뉴로 돌아갑니다...")
-            except EOFError:
-                pass
-
-            # [V62.3] 벡터 메모리 일괄 동기화
-            # [V66.3] 벡터 메모리 비활성화 시 스킵
-            if self.ctx.memory and self.ctx.memory.is_operational():
-                try:
-                    self.ctx.ui.log("   🔄 벡터 메모리 일괄 동기화 중...")
-                    self.ctx.memory.sync_v20_drafts()
-                    self.ctx.ui.log("   ✅ 벡터 메모리 동기화 완료")
-                except Exception as vec_err:
-                    self.ctx.ui.log(f"   ⚠️ 벡터 메모리 동기화 실패 (비차단): {vec_err}")
+            self._run_post_episode_tasks()
 
         except KeyboardInterrupt:
             self.ctx.ui.log("\n⚠️ 사용자 중단 요청. 저장 후 종료합니다.")
