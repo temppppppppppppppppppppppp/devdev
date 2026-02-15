@@ -77,6 +77,16 @@ class _RoundContext:
     reflexion_prompt: str
 
 
+@dataclasses.dataclass(slots=True)
+class _RoundOutcome:
+    """[4-R2-d] Result of _handle_round_outcome."""
+
+    final_manuscript: object  # str | None
+    final_title: object  # str | None
+    final_state_updates: dict
+    should_return: bool
+
+
 class Stage4Orchestrator:
     """
     [V64.P3] SovereignApp의 Stage 4 원고 집필 오케스트레이션 로직 캡슐화
@@ -1322,11 +1332,11 @@ JSON으로 출력:
             )
             # ===== Phase 4: Director 면담 + 냉동인간 =====
             _outcome = self._handle_round_outcome(round_ctx=_round_ctx)
-            if _outcome["should_return"]:
+            if _outcome.should_return:
                 return True
-            final_manuscript = _outcome["final_manuscript"]
-            final_title = _outcome["final_title"]
-            final_state_updates = _outcome["final_state_updates"]
+            final_manuscript = _outcome.final_manuscript
+            final_title = _outcome.final_title
+            final_state_updates = _outcome.final_state_updates
 
             # ===== Phase 5: 데이터 정산 =====
             if final_manuscript:
@@ -1347,10 +1357,10 @@ JSON으로 출력:
 
         return False
 
-    def _handle_round_outcome(self, *, round_ctx: _RoundContext) -> dict:
+    def _handle_round_outcome(self, *, round_ctx: _RoundContext) -> _RoundOutcome:
         """[4-R1-e-3] Run 3-round interview loop + frozen human fallback.
 
-        Returns dict: final_manuscript, final_title, final_state_updates, should_return
+        Returns _RoundOutcome: final_manuscript, final_title, final_state_updates, should_return
         """
         from modules.core.spinners import StageSpinner
 
@@ -1455,29 +1465,29 @@ JSON으로 출력:
                         self.ctx.ui.log("   ⚠️ 강제 진행 선택됨. 품질 보장 불가.")
                     else:
                         self.ctx.ui.log(f"   🛑 제{next_ep}화 생산 중단. 메뉴로 돌아갑니다.")
-                        return {
-                            "final_manuscript": None,
-                            "final_title": None,
-                            "final_state_updates": {},
-                            "should_return": True,
-                        }
+                        return _RoundOutcome(
+                            final_manuscript=None,
+                            final_title=None,
+                            final_state_updates={},
+                            should_return=True,
+                        )
 
             except Exception as frozen_err:
                 self.ctx.ui.log(f"   🚨 냉동인간 호출 실패: {frozen_err}")
                 self.ctx.ui.log(f"\n⛔ [EP {next_ep}] 자동 생산 완전 실패. 인간 검토 필요.")
-                return {
-                    "final_manuscript": None,
-                    "final_title": None,
-                    "final_state_updates": {},
-                    "should_return": True,
-                }
+                return _RoundOutcome(
+                    final_manuscript=None,
+                    final_title=None,
+                    final_state_updates={},
+                    should_return=True,
+                )
 
-        return {
-            "final_manuscript": final_manuscript,
-            "final_title": final_title,
-            "final_state_updates": final_state_updates,
-            "should_return": False,
-        }
+        return _RoundOutcome(
+            final_manuscript=final_manuscript,
+            final_title=final_title,
+            final_state_updates=final_state_updates,
+            should_return=False,
+        )
 
     def _run_interview_round(
         self,
