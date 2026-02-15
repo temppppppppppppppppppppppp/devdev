@@ -16,6 +16,42 @@ from modules.core.constants import PatchModeThresholds
 
 _perf_logger = logging.getLogger(__name__)  # [V65] PerfTimer 로깅
 
+
+# ═══════════════════════════════════════════════════════════════
+# [Phase 3-5C] NPC 과잉 등장 감지 (advisory-only, pure function)
+# ═══════════════════════════════════════════════════════════════
+def _detect_npc_overexposure(
+    manuscript: str,
+    npc_names,
+    protagonist_name: str = "",
+    *,
+    max_mentions: int = 15,
+):
+    """에피소드 원고에서 NPC별 언급 횟수를 세어 임계값 초과 시 경고 dict 반환.
+
+    주인공은 제외. 임계값 미만이면 None 반환.
+    """
+    if not manuscript or not npc_names:
+        return None
+    overexposed = {}
+    for name in npc_names:
+        if not name or name == protagonist_name:
+            continue
+        count = manuscript.count(name)
+        if count >= max_mentions:
+            overexposed[name] = count
+    if not overexposed:
+        return None
+    top = sorted(overexposed.items(), key=lambda x: -x[1])
+    return {
+        "npcs": dict(top),
+        "total": len(top),
+        "max_npc": top[0][0],
+        "max_count": top[0][1],
+        "warning": f"NPC 과잉 등장: {', '.join(f'{n}({c}회)' for n, c in top[:5])}",
+    }
+
+
 # [Phase 3-5B] 패치 모드 임계값 (모듈 레벨 상수로 캐시)
 _PATCH_REWRITE_THRESHOLD = PatchModeThresholds.REWRITE
 
@@ -1074,6 +1110,25 @@ JSON으로 출력:
                     self.ctx.ui.log(f"   📊 [품질 경고] 직전 Arc 대비 {_regression.get('delta')}점 하락")
             except Exception as _qr_err:
                 logging.warning("[Phase 3-QR] 품질 회귀 감지 실패 (비차단): %s", _qr_err)
+
+        # ===== [Phase 3-5C] NPC 과잉 등장 경고 (advisory-only) =====
+        if self.ctx.state_tracker and getattr(self.ctx.state_tracker, "npc_registry", None):
+            try:
+                from modules.validation.threshold_helper import _threshold
+
+                _max_m = _threshold("npc_exposure.max_mentions_per_episode", 15)
+                _npc_names = list(self.ctx.state_tracker.npc_registry.keys())
+                _prot_name = self.ctx.get_protagonist_name() if self.ctx.get_protagonist_name else ""
+                _overexposure = _detect_npc_overexposure(final_manuscript, _npc_names, _prot_name, max_mentions=_max_m)
+                if _overexposure:
+                    logging.warning(
+                        "[Phase 3-5C] NPC 과잉 등장 — 제%d화: %s",
+                        next_ep,
+                        _overexposure["warning"],
+                    )
+                    self.ctx.ui.log(f"   ⚠️ {_overexposure['warning']}")
+            except Exception as _npc_err:
+                logging.warning("[Phase 3-5C] NPC 과잉 등장 감지 실패 (비차단): %s", _npc_err)
 
         self.ctx.ui.log(f"\n✅ 제{next_ep}화 '{final_title}' 생산 완료! ({len(final_manuscript)}자)")
 
