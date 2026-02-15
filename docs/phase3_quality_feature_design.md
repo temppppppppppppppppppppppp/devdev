@@ -1,7 +1,7 @@
 # Phase 3 잔여 품질 기능 — ROI 선정 + 구현 설계
 
-> 작성: 2026-02-15, checkpoint `c0de506`
-> 상태: 설계 승인 대기 (코드 변경 전)
+> 작성: 2026-02-15, checkpoint `71e1eb6`
+> 상태: **Step 1 완료** (Step 2 대기)
 
 ---
 
@@ -9,8 +9,8 @@
 
 | 항목 | 값 |
 |------|-----|
-| checkpoint | `c0de506` (phase3 설계 문서 포함) |
-| 테스트 합계 | 223 (unit 34 + pipeline 89 + E2E 22 + regression 78) |
+| checkpoint | `71e1eb6` (Step 1 완료) |
+| 테스트 합계 | 238 (unit 34 + quality 15 + pipeline 89 + E2E 22 + regression 78) |
 | ctx refs | stage2 348/43, stage4 321/22 (불변) |
 | R4-a | NO-GO (async 통일 보류, `docs/r4a_go_no_go_memo.md`) |
 | 구조 개선 | Phase 4-R1~R3 완료 — 몬스터 함수 2개 제거 (3,456줄 → 133줄) |
@@ -142,7 +142,7 @@ Stage 2: Arc 설계 시
 
 | 레벨 | 파일 | 테스트 수 | 내용 |
 |------|------|----------|------|
-| **Unit** | `tests/test_quality_regression.py` (신규) | 6~8 | regression detection 로직, threshold 설정, 빈 상태, trend summary 포맷 |
+| **Unit** | `tests/test_quality_regression.py` (✅ 완료) | **15** | regression 8건 (감지/미감지/부족/빈/경계/경고/키/YAML) + trend 7건 (상승/하락/안정/부족/포맷/키/min-max) |
 | **Integration** | 기존 E2E에 추가 또는 별도 | 1~2 | Stage 4 mock → dashboard.record → regression check → 로그 출력 확인 |
 | **회귀** | 기존 4스위트 | 223 | 전량 불변 |
 
@@ -157,27 +157,20 @@ Stage 2: Arc 설계 시
 
 ## 6) 실행 계획 (3 step)
 
-### Step 1: Core — regression detection 메서드 + Unit 테스트
+### Step 1: Core — regression detection 메서드 + Unit 테스트 ✅ 완료
+
+**커밋**: `71e1eb6`
 
 **수정 파일**:
-- `modules/core/quality_dashboard.py` — `detect_score_regression()`, `get_score_trend_summary()` 추가 (~80줄)
-- `config/settings/validation.yaml` — `regression` 섹션 추가 (~5줄)
-- `tests/test_quality_regression.py` — 신규 (~150줄, 6~8 테스트)
+- `modules/core/quality_dashboard.py` — `detect_score_regression()`, `get_score_trend_summary()` 추가 (~160줄)
+- `config/settings/validation.yaml` — `quality_regression` 섹션 추가 (window, min_samples, drop_threshold, warning_threshold)
+- `tests/test_quality_regression.py` — 신규 (156줄, 15 테스트)
 
-**종료 조건**:
-- `detect_score_regression()`이 점수 하락 20+ 감지 → `{detected: True, delta: N}`
-- 빈 상태 / 첫 에피소드 → `{detected: False}` (크래시 없음)
-- `get_score_trend_summary(5)` → "최근 5화 평균 N점, 추세: 상승/하락/안정" 형태 문자열
-
-**게이트**:
-```bash
-python -m py_compile modules/core/quality_dashboard.py
-python -c "from main_a import SovereignApp; print('OK')"
-set PYTHONIOENCODING=utf-8
-pytest tests/test_quality_regression.py -v
-pytest tests/e2e/ tests/test_npc_history.py tests/test_config_manager.py tests/test_stage4_orchestrator.py tests/test_stage2_preflight_helpers.py tests/test_stage2_pipeline.py tests/test_stage2_context.py -v
-pre-commit run --files modules/core/quality_dashboard.py config/settings/validation.yaml tests/test_quality_regression.py
-```
+**결과**:
+- `detect_score_regression()`: drop≥20→regression, ≥10→warning, `{is_regression, severity, delta, baseline_avg, recent_avg, reason}`
+- `get_score_trend_summary()`: 최근 N화 추세 (up/down/flat/insufficient_data) + 한국어 1줄 요약
+- 테스트 15/15 passed (regression 8 + trend 7)
+- 기존 223 회귀 없음 → 총 238 passed
 
 ### Step 2: Integration — Stage 4 hook + Stage 2 context injection
 
