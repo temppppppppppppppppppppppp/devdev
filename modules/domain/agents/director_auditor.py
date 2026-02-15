@@ -12,6 +12,7 @@ import json
 import logging
 import re
 import statistics
+import time
 
 from modules.core.constants import ManuscriptLimits
 from modules.core.prompt_loader import PromptLoader
@@ -837,6 +838,9 @@ class DirectorQualityAuditor:
 
         vote_tasks = [(i, 0.1 + (i * 0.05)) for i in range(1, self._d.consistency_votes)]
 
+        # [Phase 3-Obs] 에이전트 레벨 ThreadPoolExecutor 계측
+        _tp_t0 = time.monotonic()
+
         with ThreadPoolExecutor(max_workers=min(3, len(vote_tasks))) as executor:
             futures = {executor.submit(_vote_task, idx, temp): idx for idx, temp in vote_tasks}
 
@@ -856,6 +860,12 @@ class DirectorQualityAuditor:
                         logging.warning(f"⚠️ Vote 오류: {str(e)[:50]}")
             except FutureTimeoutError:
                 logging.info(f"⏰ [V61.3] Self-Consistency 전체 타임아웃 - 완료된 {len(evaluations)}개 투표 사용")
+
+        # [Phase 3-Obs] 병렬 구간 소요 시간 기록
+        try:
+            logging.info(f"[PerfTimer:DirectorAuditor] director_sc_arc{arc_no}_voting={time.monotonic() - _tp_t0:.2f}s")
+        except Exception:
+            pass
 
         # 점수들의 중앙값
         scores = [e.get("score", 50) for e in evaluations if isinstance(e, dict)]

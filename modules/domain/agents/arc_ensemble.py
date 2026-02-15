@@ -14,6 +14,7 @@ Cost: ~3x single generation (but higher pass rate)
 import json
 import logging
 import re
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FutureTimeoutError
 
@@ -125,6 +126,9 @@ class ArcEnsembleGenerator(BaseAgent):
         except Exception as e:
             logging.warning(f"⚠️ [V61.3] genre 사전 로드 실패: {str(e)[:50]}")
 
+        # [Phase 3-Obs] 에이전트 레벨 ThreadPoolExecutor 계측
+        _tp_t0 = time.monotonic()
+
         # [V61.3] 전체 병렬 처리 블록을 try-except로 감싸서 급사 방지
         try:
             with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
@@ -183,6 +187,12 @@ class ArcEnsembleGenerator(BaseAgent):
             print(f"      🚨 [V61.3] Arc 병렬 처리 크래시 방지: {str(e)[:100]}", file=sys.stderr)
             traceback.print_exc(file=sys.stderr)
             sys.stderr.flush()
+
+        # [Phase 3-Obs] 병렬 구간 소요 시간 기록
+        try:
+            logging.info(f"[PerfTimer:ArcEnsemble] arc_{arc_no}_ensemble={time.monotonic() - _tp_t0:.2f}s")
+        except Exception:
+            pass
 
         if not candidates:
             return None, []

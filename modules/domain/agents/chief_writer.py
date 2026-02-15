@@ -18,6 +18,7 @@ Stage 4 "Director 주권주의" 아키텍처의 핵심 생성 에이전트.
 import json
 import logging
 import re
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FutureTimeoutError
 
@@ -238,6 +239,9 @@ class ChiefWriter(BaseAgent):
         candidates = []
         strategies = ["balanced", "narrative", "tension"]
 
+        # [Phase 3-Obs] 에이전트 레벨 ThreadPoolExecutor 계측
+        _tp_t0 = time.monotonic()
+
         # [V61.3] 전체 병렬 처리 블록을 try-except로 감싸서 급사 방지
         try:
             with ThreadPoolExecutor(max_workers=3) as executor:
@@ -309,6 +313,12 @@ class ChiefWriter(BaseAgent):
             print(f"      🚨 [V61.3] 원고 병렬 처리 크래시 방지: {str(e)[:100]}", file=sys.stderr)
             traceback.print_exc(file=sys.stderr)
             sys.stderr.flush()
+
+        # [Phase 3-Obs] 병렬 구간 소요 시간 기록
+        try:
+            logging.info(f"[PerfTimer:ChiefWriter] cw_ep{ep_num}_ensemble={time.monotonic() - _tp_t0:.2f}s")
+        except Exception:
+            pass
 
         # 최소 1개 후보 보장
         valid_candidates = [c for c in candidates if not c.get("error")]
