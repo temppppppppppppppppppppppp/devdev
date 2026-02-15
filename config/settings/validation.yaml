@@ -118,6 +118,10 @@ quality_regression:
   drop_threshold: 20           # 직전 대비 N점 이상 하락 시 regression
   warning_threshold: 10        # N점 이상 하락 시 경고 (regression 미만)
 
+# ── NPC 과잉 등장 경고 ────────────────────────────────────────
+npc_exposure:
+  max_mentions_per_episode: 15   # NPC 1명 기준 최대 언급 횟수 (초과 시 advisory WARNING)
+
 # ── 기능 플래그 ──────────────────────────────────────────────
 feature_flags:
   enable_patch_mode: true

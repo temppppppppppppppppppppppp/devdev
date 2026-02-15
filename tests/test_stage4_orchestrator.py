@@ -560,3 +560,113 @@ class TestQualityRegressionHook:
         orch.ctx.failure_learner = None
         result = orch._process_pass_result(**pass_result_kwargs)
         assert result is True  # 크래시 없이 정상 완료
+
+
+# ══════════════════════════════════════════════════════════════
+# [Phase 3-5C] NPC 과잉 등장 감지 테스트
+# ══════════════════════════════════════════════════════════════
+
+
+class TestNpcOverexposureDetection:
+    """_detect_npc_overexposure() 순수 함수 단위 테스트."""
+
+    def test_overexposure_detected(self):
+        """임계값 초과 NPC → warning dict 반환."""
+        from modules.core.stage4_orchestrator import _detect_npc_overexposure
+
+        manuscript = "흑풍이 " * 20  # "흑풍" 20회
+        result = _detect_npc_overexposure(manuscript, ["흑풍", "노사부"], max_mentions=15)
+        assert result is not None
+        assert "흑풍" in result["npcs"]
+        assert result["max_count"] >= 20
+        assert result["total"] >= 1
+        assert "과잉 등장" in result["warning"]
+
+    def test_below_threshold_returns_none(self):
+        """임계값 미만이면 None."""
+        from modules.core.stage4_orchestrator import _detect_npc_overexposure
+
+        manuscript = "흑풍이 등장했다. 노사부가 말했다."
+        result = _detect_npc_overexposure(manuscript, ["흑풍", "노사부"], max_mentions=15)
+        assert result is None
+
+    def test_protagonist_excluded(self):
+        """주인공 이름은 과잉 등장 대상에서 제외."""
+        from modules.core.stage4_orchestrator import _detect_npc_overexposure
+
+        manuscript = "이청풍이 " * 30  # 주인공 30회
+        result = _detect_npc_overexposure(manuscript, ["이청풍", "흑풍"], protagonist_name="이청풍", max_mentions=5)
+        assert result is None  # 주인공 제외 → 흑풍 0회 → None
+
+    def test_default_threshold_applied(self):
+        """max_mentions 미지정 시 기본값 15 적용."""
+        from modules.core.stage4_orchestrator import _detect_npc_overexposure
+
+        manuscript = "흑풍 " * 14  # 14회 → 기본 15 미만
+        result = _detect_npc_overexposure(manuscript, ["흑풍"])
+        assert result is None
+        manuscript_over = "흑풍 " * 16  # 16회 → 기본 15 이상
+        result2 = _detect_npc_overexposure(manuscript_over, ["흑풍"])
+        assert result2 is not None
+
+
+class TestNpcOverexposureHook:
+    """Stage4 파이프라인 내 NPC 과잉 등장 hook 통합 테스트."""
+
+    @pytest.fixture
+    def s4_orch_with_npc(self, mock_app):
+        """state_tracker.npc_registry가 있는 Stage4Orchestrator."""
+        from modules.core.stage4_orchestrator import Stage4Orchestrator
+
+        orch = Stage4Orchestrator(mock_app)
+        tracker = MagicMock()
+        tracker.npc_registry = {"흑풍": {"status": "alive"}, "노사부": {"status": "alive"}}
+        orch.ctx.state_tracker = tracker
+        orch.ctx.quality_dashboard = None
+        orch.ctx.world_state = None
+        orch.ctx.fact_ledger = None
+        orch.ctx.memory = None
+        orch.ctx.flush_audit_buffer = MagicMock()
+        orch.ctx.perf_timer = MagicMock()
+        orch.ctx.character_voice = None
+        orch.ctx.foreshadow_tracker = None
+        orch.ctx.failure_learner = None
+        orch.ctx.get_protagonist_name = lambda: "이청풍"
+        return orch
+
+    def test_overexposure_hook_logs_warning(self, s4_orch_with_npc, tmp_path):
+        """과잉 등장 시 UI log에 경고 메시지 출력."""
+        orch = s4_orch_with_npc
+        kwargs = {
+            "next_ep": 3,
+            "final_manuscript": "흑풍이 " * 20,
+            "final_title": "시련의 날",
+            "final_state_updates": {},
+            "blueprint": {"ep_number": 3},
+            "arc_data": {"arc_no": 1, "state_changes": {}},
+            "output_dir": tmp_path,
+            "v50_modules_available": False,
+        }
+        result = orch._process_pass_result(**kwargs)
+        assert result is True
+        log_calls = [str(c) for c in orch.ctx.ui.log.call_args_list]
+        assert any("과잉 등장" in c for c in log_calls)
+
+    def test_hook_exception_non_propagating(self, s4_orch_with_npc, tmp_path):
+        """state_tracker 예외 시 비전파, _process_pass_result는 True 반환."""
+        orch = s4_orch_with_npc
+        # npc_registry.keys()에서 예외 발생하도록 설정
+        orch.ctx.state_tracker.npc_registry = MagicMock()
+        orch.ctx.state_tracker.npc_registry.keys.side_effect = RuntimeError("crash")
+        kwargs = {
+            "next_ep": 3,
+            "final_manuscript": "테스트 원고",
+            "final_title": "시련의 날",
+            "final_state_updates": {},
+            "blueprint": {"ep_number": 3},
+            "arc_data": {"arc_no": 1, "state_changes": {}},
+            "output_dir": tmp_path,
+            "v50_modules_available": False,
+        }
+        result = orch._process_pass_result(**kwargs)
+        assert result is True  # 비전파: 정상 반환
