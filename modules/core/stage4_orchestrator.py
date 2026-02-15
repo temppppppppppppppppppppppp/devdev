@@ -1067,6 +1067,142 @@ JSON으로 출력:
             "reflexion_prompt": ctx_prompts["reflexion_prompt"],
         }
 
+    def _handle_round_outcome(self, *, round_ctx: dict) -> dict:
+        """[4-R1-e-3] Run 3-round interview loop + frozen human fallback.
+
+        Returns dict: final_manuscript, final_title, final_state_updates, should_return
+        """
+        from modules.core.spinners import StageSpinner
+
+        # Unpack values needed by frozen human fallback
+        next_ep = round_ctx["next_ep"]
+        blueprint = round_ctx["blueprint"]
+        hud_report = round_ctx["hud_report"]
+        purism_prompt = round_ctx["purism_prompt"]
+        style_guide = round_ctx["style_guide"]
+        prev_text = round_ctx["prev_text"]
+        prev_ending = round_ctx["prev_ending"]
+        arc_tactical = round_ctx["arc_tactical"]
+
+        final_manuscript = None
+        final_title = None
+        final_state_updates = {}
+        director_feedback = ""
+        previous_attempt = {}
+
+        with StageSpinner(4, f"제{next_ep}화 · 앙상블 준비") as stage4_spinner:
+            for interview_round in range(3):
+                _round_result = self._run_interview_round(
+                    round_num=interview_round,
+                    stage4_spinner=stage4_spinner,
+                    director_feedback=director_feedback,
+                    previous_attempt=previous_attempt,
+                    **round_ctx,
+                )
+                if _round_result["verdict"] == "PASS":
+                    final_manuscript = _round_result["final_manuscript"]
+                    final_title = _round_result["final_title"]
+                    final_state_updates = _round_result["final_state_updates"]
+                    break
+                director_feedback = _round_result["director_feedback"]
+                previous_attempt = _round_result["previous_attempt"]
+
+        # ===== 3번 모두 실패: 냉동인간 소환 =====
+        if not final_manuscript:
+            self.ctx.ui.log("\n🧊 [냉동인간 소환] 3번 면담 모두 실패. 기존 Writer로 최종 시도...")
+
+            try:
+                frozen_result = self.ctx.agents["writer"].write_v20_manuscript(
+                    ep_num=next_ep,
+                    breakdown_doc=blueprint.get("integrated_scenario", ""),
+                    master_bible=self.ctx.current_project.master_bible,
+                    hud_report=hud_report,
+                    purism_prompt=purism_prompt,
+                    style_mode=style_guide,
+                    feedback=director_feedback,
+                    prev_full_manuscript=prev_text,
+                    arc_doc=arc_tactical,
+                    protagonist_name=self.ctx.get_protagonist_name(),
+                )
+
+                frozen_manuscript = (
+                    frozen_result.get("content", "") if isinstance(frozen_result, dict) else str(frozen_result)
+                )
+                frozen_title = (
+                    frozen_result.get("title", f"제{next_ep}화")
+                    if isinstance(frozen_result, dict)
+                    else f"제{next_ep}화"
+                )
+
+                frozen_judge = self.ctx.agents["director"].quick_judge_single(
+                    ep_num=next_ep,
+                    manuscript=frozen_manuscript,
+                    blueprint=blueprint,
+                    previous_ending=prev_ending,
+                    retry_count=3,
+                )
+
+                if frozen_judge.get("verdict") == "PASS":
+                    final_manuscript = frozen_manuscript
+                    final_title = frozen_title
+                    final_state_updates = (
+                        frozen_result.get("state_updates", {}) if isinstance(frozen_result, dict) else {}
+                    )
+                    self.ctx.ui.log(f"   ✅ 냉동인간 PASS (점수: {frozen_judge.get('score', 0)})")
+                    self.ctx.ui.log("   ⚠️ [경고] 냉동인간 통과 - 품질 재검토 권장")
+                else:
+                    self.ctx.ui.log("   ❌ 냉동인간도 REJECT. 인간 개입 필요!")
+                    self.ctx.ui.log(f"      사유: {frozen_judge.get('reason', '알 수 없음')}")
+                    self.ctx.ui.log(f"\n⛔ [EP {next_ep}] 자동 생산 실패. 인간 검토 필요.")
+                    self.ctx.ui.log("   다음 옵션:")
+                    self.ctx.ui.log("   1. Blueprint 수정 후 재시도")
+                    self.ctx.ui.log("   2. 수동 원고 작성")
+                    self.ctx.ui.log("   3. 이 에피소드 건너뛰기")
+
+                    choice = self.ctx.get_int_input(
+                        "\n👉 선택 (1.Blueprint수정 / 2.수동작성 / 3.건너뛰기 / 4.강제진행): ",
+                        default=4,
+                        min_val=1,
+                        max_val=4,
+                    )
+
+                    if choice == 4:
+                        final_manuscript = frozen_manuscript
+                        final_title = f"[⚠️ 강제 통과] {frozen_title}"
+                        final_state_updates = (
+                            frozen_result.get("state_updates", {}) if isinstance(frozen_result, dict) else {}
+                        )
+                        self.ctx.ui.log("   ⚠️ 강제 진행 선택됨. 품질 보장 불가.")
+                    else:
+                        self.ctx.ui.log(f"   🛑 제{next_ep}화 생산 중단. 메뉴로 돌아갑니다.")
+                        return {
+                            {
+                                "final_manuscript": None,
+                                "final_title": None,
+                                "final_state_updates": {},
+                                "should_return": True,
+                            }
+                        }
+
+            except Exception as frozen_err:
+                self.ctx.ui.log(f"   🚨 냉동인간 호출 실패: {frozen_err}")
+                self.ctx.ui.log(f"\n⛔ [EP {next_ep}] 자동 생산 완전 실패. 인간 검토 필요.")
+                return {
+                    {
+                        "final_manuscript": None,
+                        "final_title": None,
+                        "final_state_updates": {},
+                        "should_return": True,
+                    }
+                }
+
+        return {
+            "final_manuscript": final_manuscript,
+            "final_title": final_title,
+            "final_state_updates": final_state_updates,
+            "should_return": False,
+        }
+
     def _run_interview_round(
         self,
         *,
@@ -1602,7 +1738,7 @@ JSON으로 출력:
         from modules.core.constants import AIModels, Emojis
 
         # [V65] 스피너 & 전역 상수 → spinners 모듈에서 직접 import (순환 참조 해소)
-        from modules.core.spinners import STAGE0_AVAILABLE, V50_MODULES_AVAILABLE, StageSpinner
+        from modules.core.spinners import STAGE0_AVAILABLE, V50_MODULES_AVAILABLE
         from modules.domain.agents.chief_writer import ChiefWriter
         from modules.domain.agents.manuscript_validator import ManuscriptValidator
         from modules.validation.blocking_validator import BlockingValidator  # [V66.1]
@@ -1881,13 +2017,6 @@ JSON으로 출력:
                 )
                 self.ctx.ui.log(f"{'=' * 60}")
 
-                # ===== Phase 4: Director 면담 (3번 기회) =====
-                final_manuscript = None
-                final_title = None
-                final_state_updates = {}
-                director_feedback = ""
-                previous_attempt = {}
-
                 # [V67] mandatory_context 우선순위 기반 스마트 트렁케이션 (50,000자 상한)
                 if len(mandatory_context) > 50000:
                     _original_len = len(mandatory_context)
@@ -1940,97 +2069,13 @@ JSON으로 출력:
                     style_guide=style_guide,
                     mandatory_context=mandatory_context,
                 )
-                with StageSpinner(4, f"제{next_ep}화 · 앙상블 준비") as stage4_spinner:
-                    for interview_round in range(3):
-                        _round_result = self._run_interview_round(
-                            round_num=interview_round,
-                            stage4_spinner=stage4_spinner,
-                            director_feedback=director_feedback,
-                            previous_attempt=previous_attempt,
-                            **_round_ctx,
-                        )
-                        if _round_result["verdict"] == "PASS":
-                            final_manuscript = _round_result["final_manuscript"]
-                            final_title = _round_result["final_title"]
-                            final_state_updates = _round_result["final_state_updates"]
-                            break
-                        director_feedback = _round_result["director_feedback"]
-                        previous_attempt = _round_result["previous_attempt"]
-
-                # ===== 3번 모두 실패: 냉동인간 소환 =====
-                if not final_manuscript:
-                    self.ctx.ui.log("\n🧊 [냉동인간 소환] 3번 면담 모두 실패. 기존 Writer로 최종 시도...")
-
-                    try:
-                        frozen_result = self.ctx.agents["writer"].write_v20_manuscript(
-                            ep_num=next_ep,
-                            breakdown_doc=blueprint.get("integrated_scenario", ""),
-                            master_bible=self.ctx.current_project.master_bible,
-                            hud_report=hud_report,
-                            purism_prompt=purism_prompt,
-                            style_mode=style_guide,
-                            feedback=director_feedback,
-                            prev_full_manuscript=prev_text,
-                            arc_doc=arc_tactical,
-                            protagonist_name=self.ctx.get_protagonist_name(),
-                        )
-
-                        frozen_manuscript = (
-                            frozen_result.get("content", "") if isinstance(frozen_result, dict) else str(frozen_result)
-                        )
-                        frozen_title = (
-                            frozen_result.get("title", f"제{next_ep}화")
-                            if isinstance(frozen_result, dict)
-                            else f"제{next_ep}화"
-                        )
-
-                        frozen_judge = self.ctx.agents["director"].quick_judge_single(
-                            ep_num=next_ep,
-                            manuscript=frozen_manuscript,
-                            blueprint=blueprint,
-                            previous_ending=prev_ending,
-                            retry_count=3,
-                        )
-
-                        if frozen_judge.get("verdict") == "PASS":
-                            final_manuscript = frozen_manuscript
-                            final_title = frozen_title
-                            final_state_updates = (
-                                frozen_result.get("state_updates", {}) if isinstance(frozen_result, dict) else {}
-                            )
-                            self.ctx.ui.log(f"   ✅ 냉동인간 PASS (점수: {frozen_judge.get('score', 0)})")
-                            self.ctx.ui.log("   ⚠️ [경고] 냉동인간 통과 - 품질 재검토 권장")
-                        else:
-                            self.ctx.ui.log("   ❌ 냉동인간도 REJECT. 인간 개입 필요!")
-                            self.ctx.ui.log(f"      사유: {frozen_judge.get('reason', '알 수 없음')}")
-                            self.ctx.ui.log(f"\n⛔ [EP {next_ep}] 자동 생산 실패. 인간 검토 필요.")
-                            self.ctx.ui.log("   다음 옵션:")
-                            self.ctx.ui.log("   1. Blueprint 수정 후 재시도")
-                            self.ctx.ui.log("   2. 수동 원고 작성")
-                            self.ctx.ui.log("   3. 이 에피소드 건너뛰기")
-
-                            choice = self.ctx.get_int_input(
-                                "\n👉 선택 (1.Blueprint수정 / 2.수동작성 / 3.건너뛰기 / 4.강제진행): ",
-                                default=4,
-                                min_val=1,
-                                max_val=4,
-                            )
-
-                            if choice == 4:
-                                final_manuscript = frozen_manuscript
-                                final_title = f"[⚠️ 강제 통과] {frozen_title}"
-                                final_state_updates = (
-                                    frozen_result.get("state_updates", {}) if isinstance(frozen_result, dict) else {}
-                                )
-                                self.ctx.ui.log("   ⚠️ 강제 진행 선택됨. 품질 보장 불가.")
-                            else:
-                                self.ctx.ui.log(f"   🛑 제{next_ep}화 생산 중단. 메뉴로 돌아갑니다.")
-                                return
-
-                    except Exception as frozen_err:
-                        self.ctx.ui.log(f"   🚨 냉동인간 호출 실패: {frozen_err}")
-                        self.ctx.ui.log(f"\n⛔ [EP {next_ep}] 자동 생산 완전 실패. 인간 검토 필요.")
-                        return
+                # ===== Phase 4: Director 면담 + 냉동인간 =====
+                _outcome = self._handle_round_outcome(round_ctx=_round_ctx)
+                if _outcome["should_return"]:
+                    return
+                final_manuscript = _outcome["final_manuscript"]
+                final_title = _outcome["final_title"]
+                final_state_updates = _outcome["final_state_updates"]
 
                 # ===== Phase 5: 데이터 정산 =====
                 if final_manuscript:
