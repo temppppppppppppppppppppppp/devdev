@@ -1,9 +1,9 @@
 # Phase 4 잔여 리팩토링 실행 계획
 
 > Phase 6-B E2E 기준선 확보 후 착수.
-> 기준선: E2E 22 passed (1.15s), 회귀 76→78 passed
+> 기준선: E2E 22 passed (1.09s), 회귀 78 passed, unit 22 passed, pipeline 89 passed
 > 기준 커밋: `1678550`
-> **현재 상태**: Phase 4-R1 완료, Phase 4-R2(a–e) 완료, **Phase 4-R3(a–f) 완료**, checkpoint `adcda5e`
+> **현재 상태**: Phase 4-R1 완료, Phase 4-R2(a–e) 완료, **Phase 4-R3(a–g) 완료**, checkpoint `882cd0a`
 
 ---
 
@@ -147,8 +147,11 @@
 | **4-R3-d** | `c1e0575` | `_preflight_validation()` 추출 — 검증 체인 (12 continue→return) | +128/-65 |
 | **4-R3-e** | `afb5787` | `_preflight_finalize()` 추출 — Director 심사 + 후처리 (async) | +142/-55 |
 | **4-R3-f** | `adcda5e` | PASS/REJECT 메트릭 헬퍼 추출 (7 try/except → 2 call) | +117/-100 |
+| **4-R3-g** | `882cd0a` | `_preflight_enrichment()` 안전 초기화 5개 + 테스트 4개 | +97/-0 |
 
 **결과**: `_compute_preflight()` 1,763줄 → 100줄 (94% 축소), 7개 서브메서드 추출, ctx refs 348/43 불변
+**R3-g 보강**: FourPhase 미사용/예외/REJECT 경로에서 `NameError` 방지 (refined_arc, generation_method, draft_validator_passed, consensus_passed, _st_snapshot 기본값)
+**테스트 기준선**: unit 22 + pipeline 89 + E2E 22 + regression 78 = **211 passed**
 
 ### Phase 4-R4: async/sync 통일 (선택적)
 
