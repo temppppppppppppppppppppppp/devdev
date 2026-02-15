@@ -1180,6 +1180,11 @@ class Stage2Orchestrator:
         # [V60.77] FourPhaseArcGenerator
         # ─────────────────────────────────────────────────────────────
         four_phase_passed = False
+        refined_arc = None
+        generation_method = "analyst"
+        draft_validator_passed = False
+        consensus_passed = False
+        _st_snapshot = None
 
         if "four_phase" in self.ctx.agents and not use_analyst_fallback:
             try:

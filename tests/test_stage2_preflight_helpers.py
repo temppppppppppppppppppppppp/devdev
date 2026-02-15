@@ -437,3 +437,95 @@ class TestPreflightFinalize:
         assert "director_feedback_for_fourphase" in result
         # director_feedback_for_fourphase should contain reject reason
         assert "구조적 문제" in result["director_feedback_for_fourphase"]
+
+
+# ══════════════════════════════════════════════════════════════
+# [4-R3-g] _preflight_enrichment — undefined-variable hardening
+# ══════════════════════════════════════════════════════════════
+
+
+class TestPreflightEnrichmentDefaults:
+    """FourPhase 미사용/실패 시 안전 기본값 반환 확인."""
+
+    REQUIRED_KEYS = {
+        "four_phase_passed",
+        "refined_arc",
+        "generation_method",
+        "draft_validator_passed",
+        "consensus_passed",
+        "st_snapshot",
+        "director_feedback_for_fourphase",
+    }
+
+    def _make_enrichment_kwargs(self):
+        return {
+            "attempt": 0,
+            "use_analyst_fallback": False,
+            "global_arc_no": 1,
+            "current_ep_start": 1,
+            "current_vol_strategy": {},
+            "enriched_block": {"block_theme": "test"},
+            "all_refined_arcs": [],
+            "bible_root": {},
+            "protagonist_name": "이청풍",
+            "director_feedback_for_fourphase": "",
+            "entity_registry_for_director": None,
+            "genre_for_tracker": "wuxia",
+        }
+
+    def test_no_fourphase_agent_returns_safe_defaults(self, s2_orch):
+        """FourPhase 에이전트가 없으면 모든 키가 안전 기본값으로 반환."""
+        s2_orch.ctx.agents = {}  # four_phase 없음
+        result = s2_orch._preflight_enrichment(**self._make_enrichment_kwargs())
+
+        assert self.REQUIRED_KEYS == set(result.keys())
+        assert result["four_phase_passed"] is False
+        assert result["refined_arc"] is None
+        assert result["generation_method"] == "analyst"
+        assert result["draft_validator_passed"] is False
+        assert result["consensus_passed"] is False
+        assert result["st_snapshot"] is None
+
+    def test_analyst_fallback_returns_safe_defaults(self, s2_orch):
+        """use_analyst_fallback=True이면 FourPhase 건너뛰고 안전 기본값 반환."""
+        s2_orch.ctx.agents = {"four_phase": MagicMock()}
+        kwargs = self._make_enrichment_kwargs()
+        kwargs["use_analyst_fallback"] = True
+        result = s2_orch._preflight_enrichment(**kwargs)
+
+        assert self.REQUIRED_KEYS == set(result.keys())
+        assert result["four_phase_passed"] is False
+        assert result["refined_arc"] is None
+        assert result["generation_method"] == "analyst"
+
+    def test_fourphase_exception_returns_safe_defaults(self, s2_orch):
+        """FourPhase가 예외를 던지면 안전 기본값 + 에러 피드백 반환."""
+        fp_mock = MagicMock()
+        fp_mock.generate.side_effect = RuntimeError("boom")
+        s2_orch.ctx.agents = {"four_phase": fp_mock}
+        s2_orch.ctx.memory = None
+
+        result = s2_orch._preflight_enrichment(**self._make_enrichment_kwargs())
+
+        assert self.REQUIRED_KEYS == set(result.keys())
+        assert result["four_phase_passed"] is False
+        assert result["refined_arc"] is None
+        assert result["generation_method"] == "analyst"
+        assert "boom" in result["director_feedback_for_fourphase"]
+
+    def test_fourphase_reject_returns_safe_defaults(self, s2_orch):
+        """FourPhase REJECT(내부 검증 실패) 시 안전 기본값 반환."""
+        fp_mock = MagicMock()
+        fp_mock.generate.return_value = (
+            None,  # four_phase_arc = None → REJECT path
+            {"final_verdict": "REJECT", "phases": {"validate": {"issues_count": 3}}},
+        )
+        s2_orch.ctx.agents = {"four_phase": fp_mock}
+        s2_orch.ctx.memory = None
+
+        result = s2_orch._preflight_enrichment(**self._make_enrichment_kwargs())
+
+        assert result["four_phase_passed"] is False
+        assert result["refined_arc"] is None
+        assert result["generation_method"] == "analyst"
+        assert "검증 실패" in result["director_feedback_for_fourphase"]
