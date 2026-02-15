@@ -292,13 +292,12 @@ class TestRejectPathBestManuscript:
 # Test: _handle_round_outcome 에러 경로 반환 구조 (4-R2-b-hotfix)
 # ══════════════════════════════════════════════════════════════
 
-EXPECTED_ERROR_RETURN_KEYS = {"final_manuscript", "final_title", "final_state_updates", "should_return"}
-
 
 class TestHandleRoundOutcomeErrorPaths:
-    """_handle_round_outcome의 에러 경로에서 올바른 dict를 반환하는지 검증.
+    """_handle_round_outcome의 에러 경로에서 올바른 _RoundOutcome을 반환하는지 검증.
 
     회귀 대상: 9ade2db 핫픽스 (return {{...}} → return {...})
+    + 4-R2-d: dict → _RoundOutcome dataclass 전환
     """
 
     @pytest.fixture
@@ -394,13 +393,14 @@ class TestHandleRoundOutcomeErrorPaths:
 
         result = orch._handle_round_outcome(round_ctx=minimal_round_ctx)
 
-        # Core assertion: returns dict, not set
-        assert isinstance(result, dict), f"Expected dict, got {type(result).__name__}"
-        assert set(result.keys()) == EXPECTED_ERROR_RETURN_KEYS
-        assert result["should_return"] is True
-        assert result["final_manuscript"] is None
-        assert result["final_title"] is None
-        assert result["final_state_updates"] == {}
+        # Core assertion: returns _RoundOutcome, not dict or set
+        from modules.core.stage4_orchestrator import _RoundOutcome
+
+        assert isinstance(result, _RoundOutcome), f"Expected _RoundOutcome, got {type(result).__name__}"
+        assert result.should_return is True
+        assert result.final_manuscript is None
+        assert result.final_title is None
+        assert result.final_state_updates == {}
 
     def test_frozen_human_exception_returns_dict(self, orch_with_ctx, minimal_round_ctx, monkeypatch):
         """frozen human 호출 실패 except → 4-key dict 반환, TypeError 없음"""
@@ -424,13 +424,14 @@ class TestHandleRoundOutcomeErrorPaths:
 
         result = orch._handle_round_outcome(round_ctx=minimal_round_ctx)
 
-        # Core assertion: returns dict, not set
-        assert isinstance(result, dict), f"Expected dict, got {type(result).__name__}"
-        assert set(result.keys()) == EXPECTED_ERROR_RETURN_KEYS
-        assert result["should_return"] is True
-        assert result["final_manuscript"] is None
-        assert result["final_title"] is None
-        assert result["final_state_updates"] == {}
+        # Core assertion: returns _RoundOutcome, not dict or set
+        from modules.core.stage4_orchestrator import _RoundOutcome
+
+        assert isinstance(result, _RoundOutcome), f"Expected _RoundOutcome, got {type(result).__name__}"
+        assert result.should_return is True
+        assert result.final_manuscript is None
+        assert result.final_title is None
+        assert result.final_state_updates == {}
 
 
 # ══════════════════════════════════════════════════════════════
