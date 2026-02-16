@@ -1121,6 +1121,10 @@ class DBManager:
         self.cursor.execute("DELETE FROM sync_status WHERE ep_num >= ?", (target_ep,))  # [V70] 동기화 상태도 리셋
         self.cursor.execute("DELETE FROM karma_status WHERE last_updated_ep >= ?", (target_ep,))
         self.cursor.execute("DELETE FROM seeds WHERE planted_ep >= ?", (target_ep,))
+        # [D-2] 롤백 누락 데이터 정리
+        self.cursor.execute("DELETE FROM npc_history WHERE episode_no >= ?", (target_ep,))
+        self.cursor.execute("DELETE FROM episode_sentence_hashes WHERE episode_number >= ?", (target_ep,))
+        self.cursor.execute("DELETE FROM episode_satisfaction_tags WHERE ep_num >= ?", (target_ep,))
         # [V70] 누적 Bible 캐시 무효화
         invalidate_eps = [k for k in self._cumulative_bible_cache if k >= target_ep]
         for k in invalidate_eps:
@@ -1128,6 +1132,31 @@ class DBManager:
         # 로어는 시간 개념이 모호하므로 유지하거나 별도 정책 필요 (여기선 유지)
         self.conn.commit()
         self.cursor.execute("VACUUM")
+
+    def get_rollback_impact(self, target_ep: int) -> dict:
+        """[D-2] 롤백 영향 범위 조회 — 삭제될 데이터 건수 미리보기."""
+        impact = {}
+        for tbl in ["blueprints", "state_logs", "causal_graph", "manuscripts", "martial_tracker"]:
+            cur = self.cursor.execute(f"SELECT COUNT(*) as cnt FROM {tbl} WHERE ep_num >= ?", (target_ep,))  # noqa: S608
+            impact[tbl] = cur.fetchone()["cnt"]
+
+        cur = self.cursor.execute("SELECT COUNT(*) as cnt FROM episode_bibles WHERE ep_num >= ?", (target_ep,))
+        impact["episode_bibles"] = cur.fetchone()["cnt"]
+
+        cur = self.cursor.execute("SELECT COUNT(*) as cnt FROM npc_history WHERE episode_no >= ?", (target_ep,))
+        impact["npc_history"] = cur.fetchone()["cnt"]
+
+        cur = self.cursor.execute(
+            "SELECT COUNT(*) as cnt FROM episode_sentence_hashes WHERE episode_number >= ?", (target_ep,)
+        )
+        impact["sentence_hashes"] = cur.fetchone()["cnt"]
+
+        cur = self.cursor.execute(
+            "SELECT COUNT(*) as cnt FROM episode_satisfaction_tags WHERE ep_num >= ?", (target_ep,)
+        )
+        impact["satisfaction_tags"] = cur.fetchone()["cnt"]
+
+        return impact
 
     # --- [Memory Sync 전용 메서드] ---
     def get_sync_status(self, ep_num):

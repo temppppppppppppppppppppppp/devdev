@@ -505,3 +505,13 @@ class FactLedger:
             "organizations": len(self._ledger.get("organizations", {})),
             "numbers": len(self._ledger.get("numbers", {})),
         }
+
+    def rollback_to(self, target_ep: int) -> None:
+        """[D-2] 특정 에피소드 이전 상태로 초기화 후 저장."""
+        _logger.warning(
+            "[D-2] FactLedger 롤백: ep %d 이후 데이터 초기화 (이전 last_updated_ep=%d)",
+            target_ep,
+            self._ledger.get("last_updated_ep", 0),
+        )
+        self._ledger = self._empty_ledger()
+        self.save()

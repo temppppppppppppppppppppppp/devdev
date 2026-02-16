@@ -840,32 +840,45 @@ class ProjectContext:
 
     # --- [V35.5 Pro Candidate: 자율 수술실 로직] ---
 
-    def auto_backtrack_v35(self, error_report, memory):
+    def auto_backtrack_v35(self, error_report, memory, *, world_state=None, fact_ledger=None):
         """
         [V35.5] 논리 모순이 발생한 '인과의 기점'을 찾아 자동 되감기(Rewind) 수행
         - Analyst의 진단 보고서를 바탕으로 물리적 DB와 파일 소거 실행
+
+        Args:
+            error_report: Analyst 진단 보고서
+            memory: VecMemory 인스턴스 (벡터 기억 소거용)
+            world_state: WorldStateManager 인스턴스 (선택, 있으면 롤백)
+            fact_ledger: FactLedger 인스턴스 (선택, 있으면 롤백)
         """
-        # 1. 에러 보고서에서 Origin EP(모순 시작점) 추출 (Analyst에게 판단 위임 가능)
-        # 여기서는 보고서에 포함된 숫자나 텍스트를 분석하여 타겟 화수 결정
         try:
-            # 에러 메시지 내의 화수 패턴 검색 (예: "제 12화부터 설정 오류")
             match = re.search(r"(\d+)\s*화", error_report)
             origin_ep = int(match.group(1)) if match else self.get_latest_episode_number()
 
-            # 너무 과거로 가는 것 방지 가드 (최대 3화 전까지만 자동 허용)
             current_ep = self.get_latest_episode_number()
             target_ep = max(origin_ep, current_ep - 3)
 
-            logging.info(f"🚑 [V35 Backtrack] 제 {target_ep}화로 인과율을 강제 되감기합니다.")
+            # [D-2] 롤백 영향 범위 미리보기
+            impact = self.db.get_rollback_impact(target_ep)
+            total = sum(impact.values())
+            logging.info(f"🚑 [V35 Backtrack] 제 {target_ep}화로 되감기 (삭제 대상: {total}건)")
+            for tbl, cnt in impact.items():
+                if cnt > 0:
+                    logging.info(f"  - {tbl}: {cnt}건")
 
-            # 2. 기존 reset_project 함수명 존중하여 호출 (DB 및 물리 파일 삭제)
-            # self.reset_project는 이미 구현되어 있음
             self.reset_project(target_ep)
 
-            # 3. 벡터 DB 기억 소거
             if memory and hasattr(memory, "delete_episodes_from"):
                 deleted = memory.delete_episodes_from(target_ep)
                 logging.info(f"🌌 [Memory] 제 {target_ep}화 이후 벡터 기억 {deleted}건 소거")
+
+            if world_state and hasattr(world_state, "rollback_to"):
+                world_state.rollback_to(target_ep)
+                logging.info("🌍 [WorldState] 세계 상태 초기화 완료")
+
+            if fact_ledger and hasattr(fact_ledger, "rollback_to"):
+                fact_ledger.rollback_to(target_ep)
+                logging.info("📒 [FactLedger] 팩트 원장 초기화 완료")
 
             return target_ep
         except Exception as e:

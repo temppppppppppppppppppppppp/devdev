@@ -393,3 +393,13 @@ class WorldStateManager:
     def get_state_dict(self) -> dict:
         """내부 상태 dict 반환 (디버깅/대시보드용)"""
         return self._state.copy()
+
+    def rollback_to(self, target_ep: int) -> None:
+        """[D-2] 특정 에피소드 이전 상태로 초기화 후 저장."""
+        _logger.warning(
+            "[D-2] WorldState 롤백: ep %d 이후 데이터 초기화 (이전 last_updated_ep=%d)",
+            target_ep,
+            self._state.get("last_updated_ep", 0),
+        )
+        self._state = json.loads(json.dumps(self._INIT_STATE))
+        self.save()
