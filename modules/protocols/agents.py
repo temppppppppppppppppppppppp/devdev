@@ -24,6 +24,14 @@
 │ ArtifactCritic      │ ArcCritic                                 │
 ├─────────────────────┼───────────────────────────────────────────┤
 │ Corrector           │ ArcCorrector                              │
+├─────────────────────┼───────────────────────────────────────────┤
+│ DraftValidator      │ ArcDraftValidator                         │
+│                     │ ManuscriptValidator (via validate alias)  │
+├─────────────────────┼───────────────────────────────────────────┤
+│ ConstraintCompiler  │ ConstraintCompiler                        │
+│   Protocol          │ BlueprintConstraintCompiler               │
+├─────────────────────┼───────────────────────────────────────────┤
+│ StateAggregator     │ StateTracker                              │
 └─────────────────────┴───────────────────────────────────────────┘
 
 미적합 에이전트 (메서드명 불일치 — 향후 어댑터 필요):
@@ -32,6 +40,13 @@
 - Critic: critique_manuscript() (critique 아님)
 - Director: audit_manuscript/audit_strategic_plan (validate 아님)
 - StateExtractor: extract_state/extract_cumulative_state (analyze 아님)
+
+B-2 해소된 미적합 (Protocol 추가로 적합화):
+- ArcDraftValidator: DraftValidator.validate() ✅
+- ManuscriptValidator: DraftValidator.validate() (validate_candidate → validate 위임)
+- ConstraintCompiler: ConstraintCompilerProtocol.compile() ✅
+- BlueprintConstraintCompiler: ConstraintCompilerProtocol.compile() ✅
+- StateTracker: StateAggregator (4개 핵심 메서드) ✅
 """
 
 from __future__ import annotations
@@ -115,3 +130,30 @@ class Corrector(Protocol):
     def can_correct(self, **kwargs: object) -> tuple[bool, list[dict], list[dict]]: ...
 
     def correct(self, **kwargs: object) -> tuple[dict | None, dict]: ...
+
+
+@runtime_checkable
+class DraftValidator(Protocol):
+    """Arc/원고 사전 검증자 (advisory warnings/score)."""
+
+    def validate(self, **kwargs: object) -> dict: ...
+
+
+@runtime_checkable
+class ConstraintCompilerProtocol(Protocol):
+    """제약 조건 컴파일러."""
+
+    def compile(self, **kwargs: object) -> str | dict: ...
+
+
+@runtime_checkable
+class StateAggregator(Protocol):
+    """다중 소스 상태 추적/검증 Facade."""
+
+    def load_arc_design(self, tactical_doc: dict, **kwargs: object) -> bool: ...
+
+    def validate_timeline(self, **kwargs: object) -> list[dict]: ...
+
+    def extract_all_state_changes(self, arc: dict, **kwargs: object) -> dict: ...
+
+    def generate_arc_summary(self, arc_no: int, **kwargs: object) -> dict: ...

@@ -11,9 +11,12 @@ Phase 4A: Service Protocol 5종 + DB Repository Protocol 1종
 from modules.protocols.agents import (
     ArtifactCritic,
     ArtifactValidator,
+    ConstraintCompilerProtocol,
     Corrector,
+    DraftValidator,
     EnsembleGenerator,
     PipelineGenerator,
+    StateAggregator,
 )
 from modules.protocols.app_services import (
     AuditServiceProtocol,
@@ -31,6 +34,10 @@ __all__ = [
     "ArtifactValidator",
     "ArtifactCritic",
     "Corrector",
+    # B-2 — Protocol adapters
+    "DraftValidator",
+    "ConstraintCompilerProtocol",
+    "StateAggregator",
     # Phase 4A — Service Protocol
     "UIServiceProtocol",
     "AuditServiceProtocol",
