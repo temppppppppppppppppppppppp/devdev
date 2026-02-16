@@ -61,6 +61,7 @@ class StageZeroManager:
     # 주인공 설정 옵션
     WORLD_ORIGIN_OPTIONS = ["현대인", "원시인"]
     INCARNATION_TYPES = ["회귀자", "빙의자", "환생자", "일반"]
+    POV_OPTIONS = ["1인칭", "3인칭", "전지적"]
 
     def __init__(self, project_path: str = None, llm_client=None):
         self.project_path = project_path
@@ -160,6 +161,19 @@ class StageZeroManager:
                 config["incarnation_type"] = "일반"
         except (ValueError, IndexError, EOFError):
             config["incarnation_type"] = "일반"
+
+        # [D-1] 시점(POV) 선택
+        logging.info("\n  [시점(POV)]")
+        for i, opt in enumerate(self.POV_OPTIONS, 1):
+            logging.info(f"[{i}] {opt}")
+        try:
+            choice = int(input("    선택: ").strip()) - 1
+            if 0 <= choice < len(self.POV_OPTIONS):
+                config["pov"] = self.POV_OPTIONS[choice]
+            else:
+                config["pov"] = "3인칭"
+        except (ValueError, IndexError, EOFError):
+            config["pov"] = "3인칭"
 
         return config
 
