@@ -1165,6 +1165,21 @@ JSON으로 출력:
             except Exception as _fl_err:
                 self.ctx.ui.log(f"   ⚠️ [V68] 팩트 원장 갱신 실패 (비차단): {str(_fl_err)[:50]}")
 
+        # ===== [D Step 3] 에피소드 만족도 태깅 (비차단) =====
+        try:
+            _sat_db = getattr(self.ctx.current_project, "db", None)
+            _sat_extractor = self.ctx.agents.get("state_extractor") if self.ctx.agents else None
+            if _sat_db and _sat_extractor:
+                _sat_tag = _sat_extractor.extract_satisfaction_tag(final_manuscript, next_ep)
+                if _sat_tag:
+                    _sat_db.save_satisfaction_tag(next_ep, _sat_tag)
+                    self.ctx.ui.log(
+                        f"   🏷️ 만족도 태그: {_sat_tag['primary_tag']} "
+                        f"({_sat_tag['satisfaction_score']}/10, {_sat_tag['protagonist_agency']})"
+                    )
+        except Exception as _sat_err:
+            logging.warning("[D Step 3] 만족도 태깅 실패 (비차단): %s", _sat_err)
+
         # ===== [Phase 3-QR] 품질 회귀 감지 (advisory-only) =====
         if self.ctx.quality_dashboard:
             try:
