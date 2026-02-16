@@ -132,6 +132,11 @@ cross_episode_repetition:
   overlap_warning: 3            # N건 이상 반복 시 WARNING
   overlap_regression: 6         # N건 이상 반복 시 강한 WARNING (regression)
 
+# ── 만족도 좌절-보상 타이머 ────────────────────────────────────
+satisfaction:
+  frustration_warning_streak: 3    # 좌절 N화 연속 시 WARNING (보상 에피소드 권장)
+  frustration_critical_streak: 5   # 좌절 N화 연속 시 강한 WARNING (대리만족 부재 심각)
+
 # ── 기능 플래그 ──────────────────────────────────────────────
 feature_flags:
   enable_patch_mode: true

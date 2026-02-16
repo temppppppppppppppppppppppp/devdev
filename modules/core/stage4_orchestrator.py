@@ -2080,6 +2080,19 @@ JSON으로 출력:
         except Exception as _ct_err:
             self.ctx.ui.log(f"      ⚠️ [V66.1] ContinuityValidator 실행 실패: {str(_ct_err)[:60]}")
 
+        # [D Step 4] 좌절-보상 타이머 — Director에 advisory 전달
+        try:
+            _frust_warnings = continuity_validator.check_frustration_streak(next_ep)
+            if _frust_warnings:
+                for ci in range(len(validation_results)):
+                    for _fw in _frust_warnings:
+                        validation_results[ci]["warnings"].append(f"[D Step 4] {_fw}")
+                    validation_results[ci]["warning_count"] = len(validation_results[ci]["warnings"])
+                for _fw in _frust_warnings:
+                    self.ctx.ui.log(f"      ⚠️ {_fw}")
+        except Exception as _frust_err:
+            logging.warning("[D Step 4] 좌절-보상 타이머 실패 (비차단): %s", _frust_err)
+
         # [V66.2] C-4: 파괴 엔티티 감지 → Director에 경고 전달
         try:
             if self.ctx.state_tracker:

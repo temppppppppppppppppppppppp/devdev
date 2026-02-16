@@ -930,3 +930,47 @@ class ContinuityValidator:
                 )
 
         return {"passed": len(violations) == 0, "violations": violations, "warnings": warnings}
+
+    # ── [D Step 4] 좌절-보상 타이머 (advisory) ──────────────────
+
+    def check_frustration_streak(self, ep_num: int) -> list[str]:
+        """최근 에피소드의 좌절 연속 화수를 검사한다.
+
+        Rules:
+        - 좌절 N화 연속 (default 3): WARNING "보상 에피소드 권장"
+        - 좌절 M화 연속 (default 5): WARNING "대리만족 부재 심각"
+
+        Returns:
+            경고 메시지 리스트 (빈 리스트 = 정상)
+        """
+        db = getattr(self.context, "db", None) if self.context else None
+        if not db or not hasattr(db, "get_recent_satisfaction_tags"):
+            return []
+
+        warn_threshold = _threshold("satisfaction.frustration_warning_streak", 3)
+        crit_threshold = _threshold("satisfaction.frustration_critical_streak", 5)
+
+        try:
+            tags = db.get_recent_satisfaction_tags(before_ep=ep_num, lookback=crit_threshold)
+        except Exception:
+            return []
+
+        if not tags:
+            return []
+
+        # 최신→과거 순으로 연속 좌절 카운트
+        streak = 0
+        for tag in reversed(tags):
+            if tag.get("frustration_flag"):
+                streak += 1
+            else:
+                break
+
+        warnings = []
+        if streak >= crit_threshold:
+            warnings.append(
+                f"[Satisfaction] 좌절 {streak}화 연속 — 대리만족 부재 심각. 다음 에피소드에 보상 장면 필수."
+            )
+        elif streak >= warn_threshold:
+            warnings.append(f"[Satisfaction] 좌절 {streak}화 연속 — 보상 에피소드 권장.")
+        return warnings
