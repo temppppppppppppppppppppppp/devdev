@@ -1,0 +1,223 @@
+"""[B-1-6] Unit tests for Stage2ValidationPipeline."""
+
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+from modules.core.stage2_orchestrator import Stage2Orchestrator
+from modules.core.stage2_validation_pipeline import Stage2ValidationPipeline
+
+
+@pytest.fixture
+def orchestrator_with_ctx():
+    app = MagicMock()
+    orchestrator = Stage2Orchestrator(app=app)
+
+    ctx = MagicMock()
+    ctx.ui = MagicMock()
+    ctx.ui.log = MagicMock()
+    ctx.audit_event = MagicMock()
+    ctx.state_tracker = None
+    ctx.arc_draft_validator = None
+    ctx.self_reflector = None
+    ctx.arc_corrector = None
+    ctx.continuity_inspector = None
+    ctx.semantic_plot_guard = None
+    ctx.failure_learner = None
+    ctx.pass_rate_monitor = None
+    ctx.stage2_optimizer = None
+    ctx.use_arc_corrector = False
+    ctx.agents = {}
+    ctx.validate_arc_mapping = MagicMock(side_effect=lambda arc, *a, **kw: arc)
+    ctx.build_strong_kind_feedback = MagicMock(return_value="strong")
+    ctx.build_focused_context = MagicMock(return_value="focused")
+
+    orchestrator._ctx = ctx
+    return orchestrator
+
+
+@pytest.fixture
+def pipeline(orchestrator_with_ctx):
+    return orchestrator_with_ctx.validation_pipeline
+
+
+@pytest.fixture
+def valid_refined_arc():
+    return {
+        "arc_no": 1,
+        "ep_start": 1,
+        "ep_end": 5,
+        "ep_count": 5,
+        "tactical_doc": "주인공이 천풍대전에서 단서를 확보하고 대치를 만든다. " * 50,
+        "beat_sequence": [
+            "첫 번째 비트에서 주인공은 단서를 얻고 다음 행동의 이유를 확인한다." * 2,
+            "두 번째 비트에서 조력자와 충돌하며 위험 신호를 탐지한다." * 2,
+            "세 번째 비트에서 반전이 드러나고 대립이 전진한다." * 2,
+            "네 번째 비트에서 손실과 대가를 확인하며 결정을 강행한다." * 2,
+            "다섯 번째 비트에서 목표를 향해 전투를 시작한다." * 2,
+        ],
+        "state_changes": {"npc_deaths": [], "relationship_changes": []},
+        "hybrid_composition": {"primary": "standard_progression", "secondary": [], "mixing_logic": "기본"},
+        "joint_docs": {"final_location": "천풍대전", "physical_inventory": ["천풍검"], "world_joint": "변화 없음"},
+        "status_shadow": {"internal_energy_loss": "10%", "expected_injuries": "없음", "item_consumption": []},
+    }
+
+
+class TestValidationPipelineStructure:
+    def test_init_requires_host(self, orchestrator_with_ctx):
+        pipe = Stage2ValidationPipeline(orchestrator_with_ctx)
+        assert pipe.host is orchestrator_with_ctx
+
+    def test_ctx_proxy(self, orchestrator_with_ctx):
+        pipe = Stage2ValidationPipeline(orchestrator_with_ctx)
+        assert pipe.ctx is orchestrator_with_ctx.ctx
+
+    def test_all_methods_exist(self, pipeline):
+        assert hasattr(pipeline, "run_validation")
+        assert hasattr(pipeline, "_normalize_tactical_text")
+        assert hasattr(pipeline, "_is_tactical_doc_duplicate")
+        assert hasattr(pipeline, "_normalize_flow_text")
+        assert hasattr(pipeline, "_stage2_flow_guard")
+        assert hasattr(pipeline, "_stage2_flow_guard_legacy")
+
+
+class TestTextUtils:
+    def test_normalize_tactical_basic(self, pipeline):
+        assert pipeline._normalize_tactical_text("전술   문서  내용") == "전술 문서 내용"
+
+    def test_normalize_tactical_none(self, pipeline):
+        assert pipeline._normalize_tactical_text(None) == ""
+        assert pipeline._normalize_tactical_text(123) == ""
+
+    def test_normalize_flow_basic(self, pipeline):
+        out = pipeline._normalize_flow_text("테스트!@#$% 문자")
+        assert "!" not in out
+        assert out == out.lower()
+
+    def test_is_duplicate_exact_match(self, pipeline):
+        text = "동일한 전술 문서"
+        assert pipeline._is_tactical_doc_duplicate(text, [text]) is True
+
+    def test_is_duplicate_empty(self, pipeline):
+        assert pipeline._is_tactical_doc_duplicate("", ["참조"]) is False
+        assert pipeline._is_tactical_doc_duplicate("텍스트", []) is False
+
+
+class TestFlowGuard:
+    def test_reject_insufficient_beats(self, pipeline):
+        arc = {"ep_count": 5, "beat_sequence": ["a", "b"]}
+        result = pipeline._stage2_flow_guard(arc)
+        assert result["status"] == "REJECT"
+
+    def test_reject_short_beats(self, pipeline):
+        arc = {"ep_count": 3, "beat_sequence": ["짧음", "짧음", "짧음"]}
+        result = pipeline._stage2_flow_guard(arc)
+        assert result["status"] == "REJECT"
+
+    def test_legacy_fallback_stagnation(self, pipeline):
+        normalized = [
+            "주인공 전투 개시",
+            "주인공 전투 개시",
+            "주인공 전투 개시",
+            "주인공 전투 개시",
+        ]
+        result = pipeline._stage2_flow_guard_legacy(normalized)
+        assert result["status"] == "REJECT"
+
+    def test_legacy_pass(self, pipeline):
+        normalized = [
+            "주인공이 정보원을 만난다",
+            "적대 세력의 함정을 발견한다",
+            "동료와 갈등을 조정한다",
+            "대치를 준비하며 이동한다",
+        ]
+        result = pipeline._stage2_flow_guard_legacy(normalized)
+        assert result["status"] == "PASS"
+
+
+class TestRunValidation:
+    @staticmethod
+    def _base_kwargs(valid_refined_arc):
+        return {
+            "refined_arc": valid_refined_arc,
+            "four_phase_passed": True,
+            "all_refined_arcs": [],
+            "entity_registry_for_director": None,
+            "global_arc_no": 1,
+            "current_ep_start": 1,
+            "current_feedback": "",
+            "generation_method": "analyst",
+            "constraint_block": "",
+            "enriched_block": {"block_theme": "test", "joint_docs": {}, "status_shadow": {}},
+            "draft_validator_passed": True,
+            "consensus_passed": True,
+            "attempt": 0,
+            "protagonist_name": "이청풍",
+            "constraint_db": MagicMock(
+                validate_arc_design=MagicMock(return_value={"valid": True, "violations": [], "warnings": []})
+            ),
+        }
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_invalid_arc_returns_retry(self, pipeline):
+        kwargs = self._base_kwargs(valid_refined_arc={})
+        kwargs["refined_arc"] = None
+        result = pipeline.run_validation(**kwargs)
+        assert result["action"] == "retry"
+        assert "current_feedback" in result
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_flow_guard_reject(self, pipeline, valid_refined_arc):
+        pipeline._stage2_flow_guard = MagicMock(
+            return_value={"status": "REJECT", "reason": "stagnation", "feedback": "flow retry"}
+        )
+        kwargs = self._base_kwargs(valid_refined_arc)
+        result = pipeline.run_validation(**kwargs)
+        assert result["action"] == "retry"
+        assert "flow" in result["current_feedback"].lower() or "retry" in result["current_feedback"].lower()
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_duplicate_guard_reject(self, pipeline, valid_refined_arc):
+        pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        pipeline._is_tactical_doc_duplicate = MagicMock(return_value=True)
+        kwargs = self._base_kwargs(valid_refined_arc)
+        kwargs["all_refined_arcs"] = [{"arc_no": 0, "tactical_doc": "이전 전술"}]
+        result = pipeline.run_validation(**kwargs)
+        assert result["action"] == "retry"
+        assert "current_feedback" in result
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_happy_path_no_four_phase(self, pipeline, valid_refined_arc):
+        pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        kwargs = self._base_kwargs(valid_refined_arc)
+        result = pipeline.run_validation(**kwargs)
+        assert result["action"] == "proceed"
+        assert isinstance(result["refined_arc"], dict)
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_consensus_reject(self, pipeline, valid_refined_arc):
+        consensus = MagicMock()
+        consensus.validate_with_consensus.return_value = (
+            "REJECT",
+            {
+                "vote_summary": {"pass": 1, "reject": 2},
+                "critical_issues": [{"category": "plot_hole", "issue": "연결 누락"}],
+                "all_issues": [{"category": "plot_hole", "issue": "연결 누락"}],
+            },
+        )
+        pipeline.ctx.agents = {"consensus": consensus}
+        pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        kwargs = self._base_kwargs(valid_refined_arc)
+        kwargs["four_phase_passed"] = False
+        kwargs["consensus_passed"] = False
+        result = pipeline.run_validation(**kwargs)
+        assert result["action"] == "retry"
+        assert "Consensus" in result["current_feedback"]
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_proceed_contains_required_keys(self, pipeline, valid_refined_arc):
+        pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        kwargs = self._base_kwargs(valid_refined_arc)
+        result = pipeline.run_validation(**kwargs)
+        required = {"action", "refined_arc", "draft_validator_passed", "consensus_passed", "suspected_duplicates"}
+        assert required == set(result.keys())

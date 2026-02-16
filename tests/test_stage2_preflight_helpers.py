@@ -282,7 +282,7 @@ class TestPreflightValidation:
     @patch("modules.core.spinners.rich_console", None)
     def test_proceed_with_valid_arc(self, s2_orch, valid_refined_arc):
         """유효한 arc + 모든 validator 비활성 → action=proceed"""
-        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        s2_orch.validation_pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
         s2_orch.ctx.stage2_optimizer = None
 
         constraint_db = MagicMock()
@@ -315,7 +315,7 @@ class TestPreflightValidation:
     @patch("modules.core.spinners.rich_console", None)
     def test_proceed_returns_required_keys(self, s2_orch, valid_refined_arc):
         """proceed 반환 dict에 필수 키 5개 존재"""
-        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        s2_orch.validation_pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
         s2_orch.ctx.stage2_optimizer = None
 
         constraint_db = MagicMock()
@@ -586,7 +586,7 @@ class TestPreflightValidationRejectPaths:
         }
         s2_orch.ctx.arc_corrector = None
         s2_orch.ctx.use_arc_corrector = False
-        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        s2_orch.validation_pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
         s2_orch.ctx.stage2_optimizer = None
 
         kwargs = self._base_kwargs(valid_refined_arc)
@@ -616,7 +616,7 @@ class TestPreflightValidationRejectPaths:
         s2_orch.ctx.agents = {"consensus": consensus_mock}
         s2_orch.ctx.arc_draft_validator = None
         s2_orch.ctx.self_reflector = None
-        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        s2_orch.validation_pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
         s2_orch.ctx.stage2_optimizer = None
 
         kwargs = self._base_kwargs(valid_refined_arc)
@@ -632,7 +632,7 @@ class TestPreflightValidationRejectPaths:
     @patch("modules.core.spinners.rich_console", None)
     def test_flow_guard_reject_returns_retry(self, s2_orch, valid_refined_arc):
         """FlowGuard REJECT → retry + 피드백에 서사 폭주/정체 메시지."""
-        s2_orch._stage2_flow_guard = MagicMock(
+        s2_orch.validation_pipeline._stage2_flow_guard = MagicMock(
             return_value={
                 "status": "REJECT",
                 "reason": "서사 정체",
@@ -656,8 +656,8 @@ class TestPreflightValidationRejectPaths:
     def test_duplicate_guard_returns_retry(self, s2_orch, valid_refined_arc):
         """직전 arc와 tactical_doc 중복 → retry."""
         # _is_tactical_doc_duplicate이 True를 반환하도록 mock
-        s2_orch._is_tactical_doc_duplicate = MagicMock(return_value=True)
-        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        s2_orch.validation_pipeline._is_tactical_doc_duplicate = MagicMock(return_value=True)
+        s2_orch.validation_pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
         s2_orch.ctx.arc_draft_validator = None
         s2_orch.ctx.stage2_optimizer = None
 
@@ -690,7 +690,7 @@ class TestPreflightValidationRejectPaths:
         s2_orch.ctx.pass_rate_monitor = None
         s2_orch.ctx.stage2_optimizer = None
         s2_orch.ctx.arc_draft_validator = None
-        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        s2_orch.validation_pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
 
         kwargs = self._base_kwargs(valid_refined_arc)
         result = s2_orch._preflight_validation(**kwargs)
@@ -708,7 +708,7 @@ class TestPreflightValidationRejectPaths:
     @patch("modules.core.spinners.rich_console", None)
     def test_invalid_enriched_block_returns_retry(self, s2_orch, valid_refined_arc):
         """enriched_block=None → retry + 농축 데이터 누락 피드백."""
-        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        s2_orch.validation_pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
         s2_orch.ctx.arc_draft_validator = None
         s2_orch.ctx.stage2_optimizer = None
 
@@ -726,7 +726,7 @@ class TestPreflightValidationRejectPaths:
     @patch("modules.core.spinners.rich_console", None)
     def test_proceed_keys_with_all_validators_off(self, s2_orch, valid_refined_arc):
         """모든 validator off + 유효 arc → proceed + 필수 5키 + 값 타입 검증."""
-        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        s2_orch.validation_pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
         s2_orch.ctx.arc_draft_validator = None
         s2_orch.ctx.stage2_optimizer = None
 
@@ -761,7 +761,7 @@ class TestPreflightValidationRejectPaths:
         corrector.correct.return_value = (None, {"success": False, "reason": "수정 실패"})
         s2_orch.ctx.arc_corrector = corrector
         s2_orch.ctx.use_arc_corrector = True
-        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        s2_orch.validation_pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
         s2_orch.ctx.stage2_optimizer = None
 
         kwargs = self._base_kwargs(valid_refined_arc)
@@ -819,7 +819,7 @@ class TestPreflightValidationRejectPaths:
         )
         s2_orch.ctx.arc_corrector = corrector
         s2_orch.ctx.use_arc_corrector = True
-        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        s2_orch.validation_pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
         s2_orch.ctx.stage2_optimizer = None
 
         kwargs = self._base_kwargs(valid_refined_arc)
@@ -850,7 +850,7 @@ class TestPreflightValidationRejectPaths:
 
         s2_orch.ctx.arc_draft_validator = None
         s2_orch.ctx.stage2_optimizer = None
-        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        s2_orch.validation_pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
 
         # SelfReflector needs: V50=True, generation_method="analyst", ReflectionTarget
         # We mock ReflectionTarget via the import mechanism
@@ -878,7 +878,7 @@ class TestPreflightValidationRejectPaths:
 
         s2_orch.ctx.arc_draft_validator = None
         s2_orch.ctx.stage2_optimizer = None
-        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        s2_orch.validation_pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
 
         with patch("modules.core.self_reflection.ReflectionTarget") as mock_rt:
             mock_rt.ANALYST = "ANALYST"
@@ -902,7 +902,7 @@ class TestPreflightValidationRejectPaths:
         s2_orch.ctx.arc_draft_validator = None
         s2_orch.ctx.self_reflector = None
         s2_orch.ctx.stage2_optimizer = None
-        s2_orch._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+        s2_orch.validation_pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
 
         kwargs = self._base_kwargs(valid_refined_arc)
         result = s2_orch._preflight_validation(**kwargs)
