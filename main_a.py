@@ -21,6 +21,7 @@ if sys.platform == "win32":
         pass
 
 import json
+import logging
 import time
 from pathlib import Path
 from typing import Any
@@ -1104,7 +1105,8 @@ class SovereignApp:
         try:
             self.sys.api_client.caches.get(name=cache_name)
             return True
-        except Exception:  # API 예외 종류가 다양하므로 Exception 유지
+        except Exception as e:  # API 예외 종류가 다양하므로 Exception 유지
+            logging.debug(f"[SilentPass:CacheCheck] 캐시 헬스체크 실패: {e!s:.100}")
             return False
 
     def _check_vector_db_lock(self, project_name: str) -> bool:
@@ -1875,8 +1877,8 @@ class SovereignApp:
             # 안전한 종료 시도
             try:
                 self._shutdown_app()
-            except Exception:  # 종료 시 모든 예외 무시
-                pass
+            except Exception as e:  # 종료 시 모든 예외 무시
+                logging.warning(f"[SilentPass:Shutdown] 앱 종료 중 예외: {e!s:.100}")
 
             sys.exit(1)
 

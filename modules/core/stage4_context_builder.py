@@ -56,7 +56,8 @@ class Stage4ContextBuilder:
             if len(_cl_parts) > 1:
                 return "\n".join(_cl_parts)
             return ""
-        except Exception:
+        except Exception as e:
+            logging.warning(f"[SilentPass:ContextBuilder] ChainLink 다이제스트 로드 실패: {e!s:.100}")
             return ""
 
     def build_extended_lookback_digest(self, next_ep: int) -> str:
@@ -104,7 +105,8 @@ class Stage4ContextBuilder:
             if len(digest) > 1500:
                 digest = digest[:1497] + "..."
             return f"[확장 Lookback: 직전 4~10화 요약]\n{digest}"
-        except Exception:
+        except Exception as e:
+            logging.warning(f"[SilentPass:ContextBuilder] 확장 lookback 다이제스트 실패: {e!s:.100}")
             return ""
 
     def prepare_episode_context(self, next_ep: int, arc_data: dict, chief_writer) -> dict:
@@ -132,8 +134,8 @@ class Stage4ContextBuilder:
                     )
                     if _prev_content and len(_prev_content) > 100:
                         _prev_manuscripts_parts.append(f"[제{_prev_ep}화]\n{_prev_content}")
-            except Exception:
-                pass
+            except Exception as e:
+                logging.warning(f"[SilentPass:ContextBuilder] 제{_prev_ep}화 원고 로드 실패: {e!s:.100}")
         _prev_manuscripts_text = "\n\n---\n\n".join(_prev_manuscripts_parts) if _prev_manuscripts_parts else ""
         if _prev_manuscripts_parts:
             logging.info(
@@ -178,8 +180,8 @@ class Stage4ContextBuilder:
         if self.ctx.world_state:
             try:
                 _world_state_summary = self.ctx.world_state.get_summary(max_chars=5000)
-            except Exception:
-                pass
+            except Exception as e:
+                logging.warning(f"[SilentPass:ContextBuilder] WorldState 요약 로드 실패: {e!s:.100}")
 
         return {
             "arc_pos": arc_pos,
@@ -460,8 +462,8 @@ class Stage4ContextBuilder:
                     _spg_text = self.ctx.semantic_plot_guard.format_warnings(_spg_warnings)
                     if _spg_text:
                         _mc_parts.append(_spg_text)
-            except Exception:
-                pass
+            except Exception as e:
+                logging.warning(f"[SilentPass:ContextBuilder] SemanticPlotGuard 경고 주입 실패: {e!s:.100}")
 
         if pacing_analyzer and prev_text and len(prev_text) >= 100:
             try:
