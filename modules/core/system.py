@@ -68,13 +68,13 @@ class StudioSystem:
         try:
             # [V70] DBManager safe API 사용 (직접 cursor 접근 제거)
             bible_data = self.project.db.load_anchor("bible")
-            status["Stage 0 (Bible)"] = bible_data is not None
+            status["Stage 0 (Bible)"] = bool(bible_data)
 
             vols_data = self.project.db.load_anchor("volumes")
-            status["Stage 1 (Volumes)"] = vols_data is not None
+            status["Stage 1 (Volumes)"] = bool(vols_data)
 
             arcs_data = self.project.db.load_anchor("arcs")
-            status["Stage 2 (Arcs)"] = arcs_data is not None
+            status["Stage 2 (Arcs)"] = bool(arcs_data)
 
         except Exception:
             # 테이블이 없거나 DB 연결 오류 시 False 유지
