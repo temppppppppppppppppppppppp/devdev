@@ -25,8 +25,8 @@
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional, Tuple
 from enum import Enum
+from typing import Any
 
 
 class AgentType(Enum):
@@ -38,16 +38,17 @@ class AgentType(Enum):
 @dataclass
 class Exemplar:
     """우수 예시"""
+
     title: str
     content: str
     why_good: str  # 왜 좋은지 설명
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
 
 class AgentIntelligence:
     """에이전트 지능 향상 모듈"""
 
-    def __init__(self, genre: str = 'wuxia'):
+    def __init__(self, genre: str = "wuxia"):
         self.genre = genre
         self._init_exemplars()
         self._init_anti_patterns()
@@ -62,7 +63,7 @@ class AgentIntelligence:
 
         # Analyst 예시 (Arc 설계)
         self.analyst_exemplars = {
-            'wuxia': [
+            "wuxia": [
                 Exemplar(
                     title="복수극 Arc 설계",
                     content="""
@@ -78,7 +79,7 @@ class AgentIntelligence:
 - 복선: 1화 은인 행동의 이상함 → 3화 회수
 """,
                     why_good="복수 클리셰를 비틀어 새로운 전개 창출. 감정선이 명확하고 복선-회수 구조 완비",
-                    tags=["복수", "반전", "감정선"]
+                    tags=["복수", "반전", "감정선"],
                 ),
                 Exemplar(
                     title="성장 Arc 설계",
@@ -94,10 +95,10 @@ class AgentIntelligence:
 - 성장 대가: 반드시 무언가를 잃어야 함 (공짜 파워업 금지)
 """,
                     why_good="성장에 반드시 대가 설정. 내면 갈등을 외면화하여 긴장감 유지",
-                    tags=["성장", "경지", "대가"]
+                    tags=["성장", "경지", "대가"],
                 ),
             ],
-            'hunter': [
+            "hunter": [
                 Exemplar(
                     title="던전 공략 Arc",
                     content="""
@@ -107,10 +108,10 @@ class AgentIntelligence:
 - 대가: 팀원 1명 각성 대신 수명 단축 (선택의 무게)
 """,
                     why_good="팀 역학과 개인 성장 균형. 선택에 대가 부여",
-                    tags=["던전", "팀", "선택"]
+                    tags=["던전", "팀", "선택"],
                 ),
             ],
-            'investment': [
+            "investment": [
                 Exemplar(
                     title="시장 위기 Arc",
                     content="""
@@ -120,14 +121,14 @@ class AgentIntelligence:
 - 교훈: 욕심이 판단을 흐리게 함 (주변 인물 몰락)
 """,
                     why_good="금융 리얼리즘 + 인간 드라마 결합",
-                    tags=["시장", "위기", "기회"]
+                    tags=["시장", "위기", "기회"],
                 ),
             ],
         }
 
         # Architect 예시 (Blueprint)
         self.architect_exemplars = {
-            'wuxia': [
+            "wuxia": [
                 Exemplar(
                     title="대결 장면 Blueprint",
                     content="""
@@ -145,7 +146,7 @@ Scene 6 (클리프행어): 새 기술 발동 직전 장면 정지, "과연 통�
 - 각 씬 800-1200자 목표
 """,
                     why_good="6단계 긴장 곡선 완비. 씬 전환 기법 명시. 클리프행어 강력",
-                    tags=["대결", "긴장", "클리프행어"]
+                    tags=["대결", "긴장", "클리프행어"],
                 ),
                 Exemplar(
                     title="일상/훈련 Blueprint",
@@ -162,14 +163,14 @@ Scene 5: 최종 성공, 스승의 인정, 다음 단계 암시 (클리프행어)
 - "천 번째 검을 휘두를 때 손바닥이 터졌다" (O)
 """,
                     why_good="훈련 장면에도 드라마 구조 적용. Show Don't Tell 예시 포함",
-                    tags=["훈련", "성장", "깨달음"]
+                    tags=["훈련", "성장", "깨달음"],
                 ),
             ],
         }
 
         # Writer 예시 (문장/문단)
         self.writer_exemplars = {
-            'wuxia': [
+            "wuxia": [
                 Exemplar(
                     title="전투 묘사",
                     content="""
@@ -184,7 +185,7 @@ Scene 5: 최종 성공, 스승의 인정, 다음 단계 암시 (클리프행어)
 숨이 거칠어진 건 피한 자가 아니라 휘두른 자였다.
 """,
                     why_good="짧은 문장으로 긴박감. 감각 디테일. 반전(공격자가 더 지침). 여운",
-                    tags=["전투", "긴장", "반전"]
+                    tags=["전투", "긴장", "반전"],
                 ),
                 Exemplar(
                     title="감정 묘사",
@@ -199,7 +200,7 @@ Scene 5: 최종 성공, 스승의 인정, 다음 단계 암시 (클리프행어)
 구름 한 점 없이 맑은 하늘이, 그래서 더 잔인하게 느껴졌다.
 """,
                     why_good="감정을 직접 명명하지 않고 신체 반응으로 표현. 환경과 감정 대비",
-                    tags=["감정", "신체", "환경"]
+                    tags=["감정", "신체", "환경"],
                 ),
                 Exemplar(
                     title="대화와 행동",
@@ -218,19 +219,19 @@ Scene 5: 최종 성공, 스승의 인정, 다음 단계 암시 (클리프행어)
 예전에는 차가웠다. 지금은—텅 비어 있었다.
 """,
                     why_good="대화에 행동 삽입. 감각 디테일. 시간 경과 암시. 눈빛으로 변화 표현",
-                    tags=["대화", "행동", "변화"]
+                    tags=["대화", "행동", "변화"],
                 ),
             ],
         }
 
-    def get_few_shot_prompt(self, agent_type: AgentType, context: Dict = None) -> str:
+    def get_few_shot_prompt(self, agent_type: AgentType, context: dict = None) -> str:
         """Few-Shot 예시 프롬프트 생성"""
         if agent_type == AgentType.ANALYST:
-            exemplars = self.analyst_exemplars.get(self.genre, self.analyst_exemplars.get('wuxia', []))
+            exemplars = self.analyst_exemplars.get(self.genre, self.analyst_exemplars.get("wuxia", []))
         elif agent_type == AgentType.ARCHITECT:
-            exemplars = self.architect_exemplars.get(self.genre, self.architect_exemplars.get('wuxia', []))
+            exemplars = self.architect_exemplars.get(self.genre, self.architect_exemplars.get("wuxia", []))
         else:  # WRITER
-            exemplars = self.writer_exemplars.get(self.genre, self.writer_exemplars.get('wuxia', []))
+            exemplars = self.writer_exemplars.get(self.genre, self.writer_exemplars.get("wuxia", []))
 
         if not exemplars:
             return ""
@@ -254,26 +255,26 @@ Scene 5: 최종 성공, 스승의 인정, 다음 단계 암시 (클리프행어)
         """안티패턴 라이브러리 초기화"""
 
         self.anti_patterns = {
-            'analyst': {
-                'wuxia': [
+            "analyst": {
+                "wuxia": [
                     ("매 Arc마다 비급 획득", "비급은 전체 작품에서 2-3회로 제한"),
                     ("모든 적이 주인공을 과소평가", "일부 적은 처음부터 경계해야 함"),
                     ("우연한 만남의 반복", "만남에 인과관계 부여 필요"),
                     ("매번 위기→기적적 탈출", "때로는 패배/후퇴 필요"),
                     ("Arc마다 새 여자 등장", "기존 인물 관계 심화 우선"),
                 ],
-                'hunter': [
+                "hunter": [
                     ("매 던전마다 레벨업", "성장 속도 조절 필요"),
                     ("항상 솔로 플레이", "팀워크 에피소드 배치"),
                     ("스킬 무한 습득", "스킬 개수 제한, 성장 방향 선택"),
                 ],
-                'investment': [
+                "investment": [
                     ("모든 투자 성공", "실패 경험으로 성장 표현"),
                     ("정보만으로 승리", "판단력과 실행력 강조"),
                 ],
             },
-            'architect': {
-                'wuxia': [
+            "architect": {
+                "wuxia": [
                     ("모든 씬이 비슷한 길이", "중요도에 따라 분량 차등"),
                     ("씬 전환 없이 시간 점프", "전환 기법 명시 필요"),
                     ("클리프행어 없이 종료", "반드시 다음 화 기대감 유발"),
@@ -281,8 +282,8 @@ Scene 5: 최종 성공, 스승의 인정, 다음 단계 암시 (클리프행어)
                     ("5개 씬 전부 액션", "완급 조절로 리듬감 부여"),
                 ],
             },
-            'writer': {
-                'wuxia': [
+            "writer": {
+                "wuxia": [
                     ("'매우', '정말', '굉장히' 남발", "구체적 묘사로 대체"),
                     ("감정 직접 명명 ('슬펐다', '화났다')", "신체 반응으로 표현"),
                     ("'그는 ~했다' 반복", "다양한 문장 구조 사용"),
@@ -320,7 +321,7 @@ Scene 5: 최종 성공, 스승의 인정, 다음 단계 암시 (클리프행어)
         """자가 검토 템플릿 초기화"""
 
         self.critique_templates = {
-            'analyst': """
+            "analyst": """
 [Arc 설계 자가 검토]
 생성한 Arc를 다음 기준으로 평가하세요:
 
@@ -341,7 +342,7 @@ Scene 5: 최종 성공, 스승의 인정, 다음 단계 암시 (클리프행어)
 [결과]
 총점 35점 이상이면 제출, 미만이면 수정 후 재생성
 """,
-            'architect': """
+            "architect": """
 [Blueprint 자가 검토]
 생성한 Blueprint를 다음 기준으로 평가하세요:
 
@@ -361,7 +362,7 @@ Scene 5: 최종 성공, 스승의 인정, 다음 단계 암시 (클리프행어)
 [결과]
 총점 25점 이상이면 제출, 미만이면 수정
 """,
-            'writer': """
+            "writer": """
 [원고 자가 검토]
 생성한 원고를 다음 기준으로 평가하세요:
 
@@ -417,11 +418,7 @@ JSON 형식으로 응답:
     # 통합 인터페이스
     # ================================================================
 
-    def get_analyst_enhancement(
-        self,
-        arc_num: int,
-        prev_arcs: List[Dict] = None
-    ) -> str:
+    def get_analyst_enhancement(self, arc_num: int, prev_arcs: list[dict] = None) -> str:
         """Analyst용 통합 지능 향상 프롬프트"""
         parts = []
 
@@ -439,7 +436,7 @@ JSON 형식으로 응답:
         if prev_arcs and len(prev_arcs) >= 2:
             recent_themes = []
             for arc in prev_arcs[-3:]:
-                theme = arc.get('theme', arc.get('핵심_갈등', ''))
+                theme = arc.get("theme", arc.get("핵심_갈등", ""))
                 if theme:
                     recent_themes.append(theme)
 
@@ -451,12 +448,7 @@ JSON 형식으로 응답:
 
         return "\n\n".join(parts)
 
-    def get_architect_enhancement(
-        self,
-        ep_num: int,
-        arc_data: Dict = None,
-        prev_blueprint: Dict = None
-    ) -> str:
+    def get_architect_enhancement(self, ep_num: int, arc_data: dict = None, prev_blueprint: dict = None) -> str:
         """Architect용 통합 지능 향상 프롬프트"""
         parts = []
 
@@ -472,8 +464,8 @@ JSON 형식으로 응답:
 
         # 3. 아크 내 위치 기반 가이드
         if arc_data:
-            ep_start = arc_data.get('ep_start', 1)
-            ep_end = arc_data.get('ep_end', 5)
+            ep_start = arc_data.get("ep_start", 1)
+            ep_end = arc_data.get("ep_end", 5)
             position = ep_num - ep_start + 1
             total = ep_end - ep_start + 1
 
@@ -493,12 +485,7 @@ JSON 형식으로 응답:
 
         return "\n\n".join(parts)
 
-    def get_writer_enhancement(
-        self,
-        ep_num: int,
-        blueprint: Dict = None,
-        prev_manuscript: str = ""
-    ) -> str:
+    def get_writer_enhancement(self, ep_num: int, blueprint: dict = None, prev_manuscript: str = "") -> str:
         """Writer용 통합 지능 향상 프롬프트"""
         parts = []
 
@@ -516,18 +503,19 @@ JSON 형식으로 응답:
         if prev_manuscript and len(prev_manuscript) > 500:
             # 간단한 패턴 감지
             import re
+
             warnings = []
 
             # 반복 표현 감지
-            very_count = len(re.findall(r'매우|정말|굉장히|너무', prev_manuscript))
+            very_count = len(re.findall(r"매우|정말|굉장히|너무", prev_manuscript))
             if very_count > 5:
                 warnings.append(f"'매우/정말/굉장히' {very_count}회 사용 → 구체적 묘사로 대체")
 
-            suddenly_count = len(re.findall(r'갑자기|순간|문득', prev_manuscript))
+            suddenly_count = len(re.findall(r"갑자기|순간|문득", prev_manuscript))
             if suddenly_count > 3:
                 warnings.append(f"'갑자기/순간' {suddenly_count}회 → 전조를 통한 자연스러운 전개로")
 
-            said_count = len(re.findall(r'말했다|대답했다|물었다', prev_manuscript))
+            said_count = len(re.findall(r"말했다|대답했다|물었다", prev_manuscript))
             if said_count > 10:
                 warnings.append(f"대화 태그 과다 ({said_count}회) → 행동/침묵으로 대체")
 
@@ -539,7 +527,7 @@ JSON 형식으로 응답:
 
         return "\n\n".join(parts)
 
-    def quick_quality_check(self, text: str, agent_type: AgentType) -> Dict[str, Any]:
+    def quick_quality_check(self, text: str, agent_type: AgentType) -> dict[str, Any]:
         """
         빠른 품질 체크 (LLM 없이 Python으로)
 
@@ -553,25 +541,25 @@ JSON 형식으로 응답:
 
         if agent_type == AgentType.WRITER:
             # 반복 표현
-            very_count = len(re.findall(r'매우|정말|굉장히|너무', text))
+            very_count = len(re.findall(r"매우|정말|굉장히|너무", text))
             if very_count > 5:
                 issues.append(f"과도한 강조어 ({very_count}회)")
                 score -= very_count * 2
 
             # 감정 직접 명명
-            emotion_count = len(re.findall(r'슬[펐펍]|화[났나]|기[뻤쁜]|행복', text))
+            emotion_count = len(re.findall(r"슬[펐펍]|화[났나]|기[뻤쁜]|행복", text))
             if emotion_count > 3:
                 issues.append(f"감정 직접 명명 ({emotion_count}회)")
                 score -= emotion_count * 3
 
             # 단조로운 문장
-            said_count = len(re.findall(r'말했다|대답했다', text))
+            said_count = len(re.findall(r"말했다|대답했다", text))
             if said_count > 10:
                 issues.append(f"대화 태그 반복 ({said_count}회)")
                 score -= said_count
 
             # 문장 다양성 (간단 체크)
-            sentences = re.split(r'[.!?]', text)
+            sentences = re.split(r"[.!?]", text)
             if sentences:
                 lengths = [len(s.strip()) for s in sentences if s.strip()]
                 if lengths:
@@ -583,7 +571,7 @@ JSON 형식으로 응답:
 
         elif agent_type == AgentType.ARCHITECT:
             # 씬 개수 체크
-            scene_count = len(re.findall(r'[Ss]cene|씬\s*\d|장면\s*\d', text))
+            scene_count = len(re.findall(r"[Ss]cene|씬\s*\d|장면\s*\d", text))
             if scene_count < 4:
                 issues.append(f"씬 부족 ({scene_count}개)")
                 score -= 15
@@ -592,25 +580,21 @@ JSON 형식으로 응답:
                 score -= 10
 
             # 클리프행어 체크
-            if not re.search(r'클리프|절벽|긴장|다음|계속', text[-500:]):
+            if not re.search(r"클리프|절벽|긴장|다음|계속", text[-500:]):
                 issues.append("클리프행어 약함")
                 score -= 15
 
         elif agent_type == AgentType.ANALYST:
             # 화별 구분 체크
-            episode_markers = len(re.findall(r'\d화|제\d|화별', text))
+            episode_markers = len(re.findall(r"\d화|제\d|화별", text))
             if episode_markers < 3:
                 issues.append("화별 전개 불명확")
                 score -= 10
 
             # 감정선 체크
-            if not re.search(r'감정|심리|내면|갈등', text):
+            if not re.search(r"감정|심리|내면|갈등", text):
                 issues.append("감정선 설계 부족")
                 score -= 10
 
         score = max(0, min(100, score))
-        return {
-            'score': score,
-            'issues': issues,
-            'pass': score >= 70 and len(issues) <= 2
-        }
+        return {"score": score, "issues": issues, "pass": score >= 70 and len(issues) <= 2}

@@ -14,16 +14,15 @@
     # → 프롬프트에 constraint_block 주입
 """
 
-import json
 import logging
 import re
-from typing import List, Dict, Set, Optional, Any
 from dataclasses import dataclass, field
-from pathlib import Path
+from typing import Any
 
 # [V49.4] Semantic Item Registry 통합
 try:
     from modules.core.semantic_item_registry import SemanticItemRegistry, create_item_registry
+
     SEMANTIC_REGISTRY_ENABLED = True
 except ImportError:
     SEMANTIC_REGISTRY_ENABLED = False
@@ -33,14 +32,15 @@ except ImportError:
 @dataclass
 class ArcState:
     """Arc 종료 시점의 상태 스냅샷"""
+
     arc_no: int
     location: str = ""
-    inventory: List[str] = field(default_factory=list)
+    inventory: list[str] = field(default_factory=list)
     injuries: str = "정상"
     internal_energy: int = 100
-    grants: List[str] = field(default_factory=list)  # 수여받은 권한/패
-    acquired_items: List[str] = field(default_factory=list)  # 이 Arc에서 새로 획득
-    consumed_items: List[str] = field(default_factory=list)  # 이 Arc에서 소모
+    grants: list[str] = field(default_factory=list)  # 수여받은 권한/패
+    acquired_items: list[str] = field(default_factory=list)  # 이 Arc에서 새로 획득
+    consumed_items: list[str] = field(default_factory=list)  # 이 Arc에서 소모
 
 
 class ConstraintDB:
@@ -57,7 +57,7 @@ class ConstraintDB:
             project_context: ProjectContext 객체 (DB 접근용)
         """
         self.context = project_context
-        self.arc_states: Dict[int, ArcState] = {}
+        self.arc_states: dict[int, ArcState] = {}
 
         # [V49.4] Semantic Item Registry 초기화
         self.item_registry = None
@@ -68,11 +68,11 @@ class ConstraintDB:
 
     def _load_from_db(self) -> None:
         """DB에서 기존 Arc 데이터 로드"""
-        if not self.context or not hasattr(self.context, 'db'):
+        if not self.context or not hasattr(self.context, "db"):
             return
 
         try:
-            arcs_data = self.context.db.load_anchor('arcs')
+            arcs_data = self.context.db.load_anchor("arcs")
             if not arcs_data:
                 return
 
@@ -92,30 +92,30 @@ class ConstraintDB:
 
     def _parse_arc_state(self, arc_data: dict):
         """Arc 데이터에서 상태 추출"""
-        arc_no = arc_data.get('arc_no')
+        arc_no = arc_data.get("arc_no")
         if not arc_no:
             return
 
         # state_constraints에서 상태 추출
-        state_constraints = arc_data.get('state_constraints') or {}  # [V70] null → {} 방어
-        arc_end_state = state_constraints.get('arc_end_state') or {}  # [V70]
+        state_constraints = arc_data.get("state_constraints") or {}  # [V70] null → {} 방어
+        arc_end_state = state_constraints.get("arc_end_state") or {}  # [V70]
 
         # joint_docs에서 추가 정보 추출
-        joint_docs = arc_data.get('joint_docs', {})
+        joint_docs = arc_data.get("joint_docs", {})
 
         # 소지품 추출 (여러 소스에서)
         inventory = []
-        tactical_doc_for_filter = arc_data.get('tactical_doc', '')
+        tactical_doc_for_filter = arc_data.get("tactical_doc", "")
 
         # 1. arc_end_state.equipment
-        equipment = arc_end_state.get('equipment', [])
+        equipment = arc_end_state.get("equipment", [])
         if isinstance(equipment, list):
             inventory.extend(equipment)
         elif isinstance(equipment, str):
             inventory.append(equipment)
 
         # 2. joint_docs.physical_inventory
-        phys_inv = joint_docs.get('physical_inventory', [])
+        phys_inv = joint_docs.get("physical_inventory", [])
         if isinstance(phys_inv, list):
             for item in phys_inv:
                 if item and item not in inventory:
@@ -128,18 +128,18 @@ class ConstraintDB:
         inventory = self._filter_distributed_items(inventory, tactical_doc_for_filter)
 
         # [V49.6] protagonist_items 우선, items_acquired 하위 호환
-        items_acquired = state_constraints.get('protagonist_items', [])
+        items_acquired = state_constraints.get("protagonist_items", [])
         if not items_acquired:
-            items_acquired = state_constraints.get('items_acquired', [])
+            items_acquired = state_constraints.get("items_acquired", [])
         if not isinstance(items_acquired, list):
             items_acquired = []
 
         # [V49.6] 분배된 아이템 필터링 적용 (이중 안전망)
-        tactical_doc = arc_data.get('tactical_doc', '')
+        tactical_doc = arc_data.get("tactical_doc", "")
         items_acquired = self._filter_distributed_items(items_acquired, tactical_doc)
 
         # 소모 아이템 추출
-        items_consumed = state_constraints.get('items_consumed', [])
+        items_consumed = state_constraints.get("items_consumed", [])
         if not isinstance(items_consumed, list):
             items_consumed = []
 
@@ -147,19 +147,17 @@ class ConstraintDB:
         grants = self._extract_grants_from_tactical(tactical_doc)
 
         # 내공 파싱
-        internal_energy = self._parse_internal_energy(
-            arc_end_state.get('internal_energy', 100)
-        )
+        internal_energy = self._parse_internal_energy(arc_end_state.get("internal_energy", 100))
 
         state = ArcState(
             arc_no=int(arc_no),
-            location=joint_docs.get('final_location', arc_end_state.get('location', '')),
+            location=joint_docs.get("final_location", arc_end_state.get("location", "")),
             inventory=inventory,
-            injuries=arc_end_state.get('injuries', '정상'),
+            injuries=arc_end_state.get("injuries", "정상"),
             internal_energy=internal_energy,
             grants=grants,
             acquired_items=items_acquired,
-            consumed_items=items_consumed
+            consumed_items=items_consumed,
         )
 
         self.arc_states[int(arc_no)] = state
@@ -173,17 +171,17 @@ class ConstraintDB:
                 if item:
                     self.item_registry.mark_consumed(item, int(arc_no))
 
-    def _extract_grants_from_tactical(self, tactical_doc: str) -> List[str]:
+    def _extract_grants_from_tactical(self, tactical_doc: str) -> list[str]:
         """tactical_doc에서 수여물 추출"""
         if not tactical_doc:
             return []
 
         grants = []
         grant_patterns = [
-            r'([가-힣]+패)[를을]?\s*(?:하사|수여|받|얻)',
-            r'([가-힣]+권)[를을]?\s*(?:위임|부여|받|얻|하사)',
-            r'([가-힣]+직|[가-힣]+장)[에으로]?\s*(?:임명|취임|올|받)',
-            r'((?:[가-힣]+\s*)?인장)[를을]?\s*(?:받|하사|수여)',
+            r"([가-힣]+패)[를을]?\s*(?:하사|수여|받|얻)",
+            r"([가-힣]+권)[를을]?\s*(?:위임|부여|받|얻|하사)",
+            r"([가-힣]+직|[가-힣]+장)[에으로]?\s*(?:임명|취임|올|받)",
+            r"((?:[가-힣]+\s*)?인장)[를을]?\s*(?:받|하사|수여)",
         ]
 
         for pattern in grant_patterns:
@@ -203,10 +201,10 @@ class ConstraintDB:
             return max(0, min(100, int(value)))
         if isinstance(value, str):
             # 숫자 추출 시도
-            clean = value.replace('%', '').strip()
+            clean = value.replace("%", "").strip()
             if clean.isdigit():
                 return max(0, min(100, int(clean)))
-            match = re.search(r'(\d+)', clean)
+            match = re.search(r"(\d+)", clean)
             if match:
                 return max(0, min(100, int(match.group(1))))
         return 50  # 기본값
@@ -236,11 +234,29 @@ class ConstraintDB:
 
         # 분배/지급 키워드 확인
         distribution_keywords = [
-            '지급', '분배', '나눠', '배분', '내려 보내', '하사하',
-            '수레', '마차', '도착', '배달', '전달',
-            '병사들', '무사들', '사병들', '부하들',
-            '병사에게', '무사에게', '사병에게', '부하에게',
-            '막사 앞', '연무장에', '도착한다', '실린',
+            "지급",
+            "분배",
+            "나눠",
+            "배분",
+            "내려 보내",
+            "하사하",
+            "수레",
+            "마차",
+            "도착",
+            "배달",
+            "전달",
+            "병사들",
+            "무사들",
+            "사병들",
+            "부하들",
+            "병사에게",
+            "무사에게",
+            "사병에게",
+            "부하에게",
+            "막사 앞",
+            "연무장에",
+            "도착한다",
+            "실린",
         ]
 
         for keyword in distribution_keywords:
@@ -249,7 +265,7 @@ class ConstraintDB:
 
         return False
 
-    def _filter_distributed_items(self, items: List[str], context: str) -> List[str]:
+    def _filter_distributed_items(self, items: list[str], context: str) -> list[str]:
         """
         [V49.6] 분배된 아이템을 필터링
 
@@ -270,7 +286,7 @@ class ConstraintDB:
 
         return filtered
 
-    def get_all_acquired_items(self, before_arc: int = None) -> Dict[int, List[str]]:
+    def get_all_acquired_items(self, before_arc: int = None) -> dict[int, list[str]]:
         """
         전체 획득 아이템 목록 조회
 
@@ -294,7 +310,7 @@ class ConstraintDB:
                     result.setdefault(arc_no, []).append(item)
         return result
 
-    def get_all_grants(self, before_arc: int = None) -> Dict[int, List[str]]:
+    def get_all_grants(self, before_arc: int = None) -> dict[int, list[str]]:
         """
         전체 수여물 목록 조회
 
@@ -312,7 +328,7 @@ class ConstraintDB:
                 result[arc_no] = state.grants.copy()
         return result
 
-    def get_current_inventory(self, at_arc: int) -> List[str]:
+    def get_current_inventory(self, at_arc: int) -> list[str]:
         """
         특정 Arc 시점의 소지품 목록
 
@@ -333,7 +349,7 @@ class ConstraintDB:
 
         return []
 
-    def get_current_state(self, at_arc: int) -> Optional[ArcState]:
+    def get_current_state(self, at_arc: int) -> ArcState | None:
         """
         특정 Arc의 종료 상태 조회
 
@@ -345,7 +361,7 @@ class ConstraintDB:
         """
         return self.arc_states.get(at_arc)
 
-    def get_forbidden_items(self, for_arc: int) -> List[str]:
+    def get_forbidden_items(self, for_arc: int) -> list[str]:
         """
         특정 Arc에서 획득 금지된 아이템 목록
         (이미 이전 Arc에서 획득한 아이템들)
@@ -411,7 +427,7 @@ class ConstraintDB:
             for item in forbidden[:10]:  # 최대 10개
                 lines.append(f"|      - {item[:52]:<52} |")
             if len(forbidden) > 10:
-                lines.append(f"|      ... 외 {len(forbidden)-10}개                                        |")
+                lines.append(f"|      ... 외 {len(forbidden) - 10}개                                        |")
         else:
             lines.append("|      (없음)                                                  |")
 
@@ -423,7 +439,7 @@ class ConstraintDB:
             for item in current_inventory[:8]:
                 lines.append(f"|      - {item[:52]:<52} |")
             if len(current_inventory) > 8:
-                lines.append(f"|      ... 외 {len(current_inventory)-8}개                                        |")
+                lines.append(f"|      ... 외 {len(current_inventory) - 8}개                                        |")
         else:
             lines.append("|      (없음)                                                  |")
 
@@ -495,7 +511,7 @@ class ConstraintDB:
         """
         self._parse_arc_state(arc_data)
 
-    def validate_arc_design(self, arc_data: dict) -> Dict[str, Any]:
+    def validate_arc_design(self, arc_data: dict) -> dict[str, Any]:
         """
         Arc 설계의 제약 조건 준수 여부 사전 검증
 
@@ -509,15 +525,15 @@ class ConstraintDB:
                 "warnings": [경고 목록]
             }
         """
-        arc_no = arc_data.get('arc_no', 0)
+        arc_no = arc_data.get("arc_no", 0)
         violations = []
         warnings = []
 
         # 획득 금지 아이템 검사
         forbidden = set(self.get_forbidden_items(arc_no))
 
-        state_constraints = arc_data.get('state_constraints') or {}  # [V70] null → {} 방어
-        new_acquired = state_constraints.get('items_acquired') or []  # [V70]
+        state_constraints = arc_data.get("state_constraints") or {}  # [V70] null → {} 방어
+        new_acquired = state_constraints.get("items_acquired") or []  # [V70]
 
         # [V49.4] Semantic Registry를 사용한 고급 중복 감지
         if self.item_registry and new_acquired:
@@ -534,20 +550,18 @@ class ConstraintDB:
                     violations.append(f"[CRITICAL] 중복 획득: '{item}'은 이미 이전 Arc에서 획득함")
                 # 부분 매칭 (경고)
                 elif any(item in f or f in item for f in forbidden):
-                    warnings.append(f"[WARNING] 유사 아이템 존재: '{item}' (기존: {[f for f in forbidden if item in f or f in item]})")
+                    warnings.append(
+                        f"[WARNING] 유사 아이템 존재: '{item}' (기존: {[f for f in forbidden if item in f or f in item]})"
+                    )
 
         # tactical_doc에서 획득 패턴 검사
-        tactical = arc_data.get('tactical_doc', '')
+        tactical = arc_data.get("tactical_doc", "")
         for f_item in forbidden:
             # "X를 획득" 패턴 검사
-            if re.search(rf'{re.escape(f_item)}[을를]?\s*(?:획득|얻|손에)', tactical):
+            if re.search(rf"{re.escape(f_item)}[을를]?\s*(?:획득|얻|손에)", tactical):
                 violations.append(f"[CRITICAL] tactical_doc에서 '{f_item}' 재획득 시도 감지")
 
-        return {
-            "valid": len(violations) == 0,
-            "violations": violations,
-            "warnings": warnings
-        }
+        return {"valid": len(violations) == 0, "violations": violations, "warnings": warnings}
 
 
 def create_constraint_db(project_context) -> ConstraintDB:

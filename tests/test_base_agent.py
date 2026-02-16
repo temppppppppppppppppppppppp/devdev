@@ -11,22 +11,23 @@ _get_recovery_hint (복구 힌트),
 MODEL_FALLBACK_CHAIN, THINKING_BUDGET_MAP.
 """
 
-import pytest
 import json
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
+
+import pytest
 
 # 프로젝트 루트를 path에 추가
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from modules.domain.agents.base_agent import BaseAgent, AgentErrorType
-
+from modules.domain.agents.base_agent import AgentErrorType, BaseAgent
 
 # ══════════════════════════════════════════════════════════════
 # Fixtures
 # ══════════════════════════════════════════════════════════════
+
 
 @pytest.fixture
 def agent():
@@ -40,6 +41,7 @@ def agent():
 # ══════════════════════════════════════════════════════════════
 # Test 1: _extract_json_robust - 정상 JSON
 # ══════════════════════════════════════════════════════════════
+
 
 class TestExtractJsonRobustNormal:
     def test_valid_json(self, agent):
@@ -58,13 +60,7 @@ class TestExtractJsonRobustNormal:
 
     def test_nested_json(self, agent):
         """중첩 JSON 평탄화"""
-        text = json.dumps({
-            "title": "테스트",
-            "state_updates": {
-                "location": "무림맹",
-                "energy": 70
-            }
-        })
+        text = json.dumps({"title": "테스트", "state_updates": {"location": "무림맹", "energy": 70}})
         result = agent._extract_json_robust(text)
         assert result.get("location") == "무림맹"
         assert result.get("energy") == 70
@@ -73,6 +69,7 @@ class TestExtractJsonRobustNormal:
 # ══════════════════════════════════════════════════════════════
 # Test 2: _extract_json_robust - 손상된 JSON
 # ══════════════════════════════════════════════════════════════
+
 
 class TestExtractJsonRobustDamaged:
     def test_unclosed_brace(self, agent):
@@ -123,6 +120,7 @@ class TestExtractJsonRobustDamaged:
 # Test 3: _escape_braces
 # ══════════════════════════════════════════════════════════════
 
+
 class TestEscapeBraces:
     def test_basic_escape(self, agent):
         """기본 중괄호 이스케이프"""
@@ -167,6 +165,7 @@ class TestEscapeBraces:
 # Test 4: _classify_error
 # ══════════════════════════════════════════════════════════════
 
+
 class TestClassifyError:
     def test_timeout_error(self, agent):
         """타임아웃 분류"""
@@ -202,6 +201,7 @@ class TestClassifyError:
 # ══════════════════════════════════════════════════════════════
 # Test 5: _validate_response
 # ══════════════════════════════════════════════════════════════
+
 
 class TestValidateResponse:
     def test_valid_response(self, agent):
@@ -245,6 +245,7 @@ class TestValidateResponse:
 # Test 6: _is_network_error
 # ══════════════════════════════════════════════════════════════
 
+
 class TestIsNetworkError:
     def test_timeout_is_network(self, agent):
         assert agent._is_network_error(Exception("Request timeout")) is True
@@ -266,6 +267,7 @@ class TestIsNetworkError:
 # Test 7: _create_error_response & _get_recovery_hint
 # ══════════════════════════════════════════════════════════════
 
+
 class TestErrorResponse:
     def test_create_error_response(self, agent):
         """에러 응답 생성"""
@@ -283,7 +285,7 @@ class TestErrorResponse:
             AgentErrorType.QUOTA_EXCEEDED,
             AgentErrorType.NETWORK_ERROR,
             AgentErrorType.MALFORMED_RESPONSE,
-            AgentErrorType.UNKNOWN
+            AgentErrorType.UNKNOWN,
         ]:
             hint = agent._get_recovery_hint(error_type)
             assert isinstance(hint, str)
@@ -293,6 +295,7 @@ class TestErrorResponse:
 # ══════════════════════════════════════════════════════════════
 # Test 8: MODEL_FALLBACK_CHAIN
 # ══════════════════════════════════════════════════════════════
+
 
 class TestModelFallbackChain:
     def test_gemini3_falls_to_25pro(self):
@@ -312,6 +315,7 @@ class TestModelFallbackChain:
 # Test 9: THINKING_BUDGET_MAP
 # ══════════════════════════════════════════════════════════════
 
+
 class TestThinkingBudgetMap:
     def test_minimal_budget(self):
         assert BaseAgent.THINKING_BUDGET_MAP["minimal"] == 1024
@@ -328,6 +332,7 @@ class TestThinkingBudgetMap:
 # ══════════════════════════════════════════════════════════════
 # Test 10: _parse_and_repair_hard
 # ══════════════════════════════════════════════════════════════
+
 
 class TestParseAndRepairHard:
     def test_missing_closing_brace(self, agent):
@@ -354,6 +359,7 @@ class TestParseAndRepairHard:
 # ══════════════════════════════════════════════════════════════
 # Test 11: merge_contexts_for_caching
 # ══════════════════════════════════════════════════════════════
+
 
 class TestMergeContextsForCaching:
     def test_blueprint_merge(self, agent):

@@ -22,17 +22,20 @@ Writer 생성 → 가상 Director 비판 → Writer 수정 루프
     improved = result.final_output
 """
 
-from typing import Dict, Any, List, Optional, Callable, Tuple
+import json
 import logging
+import re
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-import json
-import re
+from typing import Any
+
 from modules.core.constants import ManuscriptLimits  # [V64.P4]
 
 
 class ContentType(Enum):
     """콘텐츠 유형"""
+
     MANUSCRIPT = "manuscript"
     BLUEPRINT = "blueprint"
 
@@ -40,22 +43,24 @@ class ContentType(Enum):
 @dataclass
 class AdversaryFeedback:
     """가상 Director 피드백"""
-    decision: str           # "PASS", "REVISE", "REJECT"
-    score: int              # 0-100
-    issues: List[Dict[str, str]]  # [{type, description, severity}]
-    praise: List[str]       # 잘한 점
-    revision_guide: str     # 수정 가이드
+
+    decision: str  # "PASS", "REVISE", "REJECT"
+    score: int  # 0-100
+    issues: list[dict[str, str]]  # [{type, description, severity}]
+    praise: list[str]  # 잘한 점
+    revision_guide: str  # 수정 가이드
 
 
 @dataclass
 class ASPResult:
     """Adversarial Self-Play 결과"""
+
     initial_content: str
     adversary_feedback: AdversaryFeedback
     revised_content: str
     final_output: str
     improvement_delta: int  # 점수 향상폭
-    rounds: int             # 수행 라운드 수
+    rounds: int  # 수행 라운드 수
 
 
 class AdversarialSelfPlay:
@@ -143,41 +148,31 @@ JSON 형식으로 냉정하게:
         """LLM 호출"""
         try:
             response = self.client.models.generate_content(
-                model=self.model,
-                contents=prompt,
-                config={
-                    "temperature": temperature,
-                    "max_output_tokens": 8192
-                }
+                model=self.model, contents=prompt, config={"temperature": temperature, "max_output_tokens": 8192}
             )
             return response.text or ""  # [V70] None 방어
         except Exception as e:
             logging.warning(f"[AdversarialSelfPlay] LLM 호출 실패: {e}")
             return ""
 
-    def _parse_json(self, text: str) -> Dict[str, Any]:
+    def _parse_json(self, text: str) -> dict[str, Any]:
         """JSON 파싱"""
         try:
-            json_match = re.search(r'```json\s*(.*?)\s*```', text, re.DOTALL)
+            json_match = re.search(r"```json\s*(.*?)\s*```", text, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group(1))
             return json.loads(text)
         except (json.JSONDecodeError, ValueError):  # [V64.P4] JSON parse failure
             return {}
 
-    def _get_adversary_feedback(
-        self,
-        content: str,
-        content_type: str,
-        context: Dict[str, Any]
-    ) -> AdversaryFeedback:
+    def _get_adversary_feedback(self, content: str, content_type: str, context: dict[str, Any]) -> AdversaryFeedback:
         """가상 Director 피드백 생성"""
         context_str = json.dumps(context, ensure_ascii=False, default=str)[:2000]
 
         prompt = self.ADVERSARY_PROMPT.format(
             content_type=content_type,
             content=content[:6000].replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
-            context=context_str.replace("{", "{{").replace("}", "}}")  # [V70] brace escape
+            context=context_str.replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
         )
 
         response = self._call_llm(prompt, temperature=0.3)
@@ -186,11 +181,7 @@ JSON 형식으로 냉정하게:
         if not result:
             # 파싱 실패 시 기본값
             return AdversaryFeedback(
-                decision="PASS",
-                score=70,
-                issues=[],
-                praise=["파싱 실패로 기본 통과"],
-                revision_guide=""
+                decision="PASS", score=70, issues=[], praise=["파싱 실패로 기본 통과"], revision_guide=""
             )
 
         return AdversaryFeedback(
@@ -198,20 +189,17 @@ JSON 형식으로 냉정하게:
             score=result.get("score", 70),
             issues=result.get("issues", []),
             praise=result.get("praise", []),
-            revision_guide=result.get("revision_guide", "")
+            revision_guide=result.get("revision_guide", ""),
         )
 
-    def _revise_content(
-        self,
-        original: str,
-        feedback: AdversaryFeedback,
-        content_type: str
-    ) -> str:
+    def _revise_content(self, original: str, feedback: AdversaryFeedback, content_type: str) -> str:
         """피드백 기반 수정"""
-        issues_text = "\n".join([
-            f"- [{i.get('severity', 'minor')}] {i.get('type', '')}: {i.get('description', '')}"
-            for i in feedback.issues[:5]
-        ])
+        issues_text = "\n".join(
+            [
+                f"- [{i.get('severity', 'minor')}] {i.get('type', '')}: {i.get('description', '')}"
+                for i in feedback.issues[:5]
+            ]
+        )
 
         prompt = self.REVISION_PROMPT.format(
             content_type=content_type,
@@ -219,7 +207,9 @@ JSON 형식으로 냉정하게:
             score=feedback.score,
             decision=feedback.decision,
             issues=(issues_text if issues_text else "없음").replace("{", "{{").replace("}", "}}"),  # [V70]
-            revision_guide=(feedback.revision_guide if feedback.revision_guide else "원본 유지").replace("{", "{{").replace("}", "}}")  # [V70]
+            revision_guide=(feedback.revision_guide if feedback.revision_guide else "원본 유지")
+            .replace("{", "{{")
+            .replace("}", "}}"),  # [V70]
         )
 
         revised = self._call_llm(prompt, temperature=0.5)
@@ -234,8 +224,8 @@ JSON 형식으로 냉정하게:
         self,
         initial_content: str,
         content_type: str = "manuscript",
-        context: Dict[str, Any] = None,
-        generator_fn: Callable = None
+        context: dict[str, Any] = None,
+        generator_fn: Callable = None,
     ) -> ASPResult:
         """
         적대적 자기 대결로 콘텐츠 개선
@@ -258,7 +248,7 @@ JSON 형식으로 냉정하게:
                 revised_content=initial_content,
                 final_output=initial_content,
                 improvement_delta=0,
-                rounds=0
+                rounds=0,
             )
 
         context = context or {}
@@ -273,13 +263,16 @@ JSON 형식으로 냉정하게:
             return ASPResult(
                 initial_content="",
                 adversary_feedback=AdversaryFeedback(
-                    decision="REJECT", score=0, issues=[{"type": "empty", "description": "콘텐츠 없음"}],
-                    praise=[], revision_guide=""
+                    decision="REJECT",
+                    score=0,
+                    issues=[{"type": "empty", "description": "콘텐츠 없음"}],
+                    praise=[],
+                    revision_guide="",
                 ),
                 revised_content="",
                 final_output="",
                 improvement_delta=0,
-                rounds=0
+                rounds=0,
             )
 
         current_content = initial_content
@@ -316,20 +309,15 @@ JSON 형식으로 냉정하게:
 
         return ASPResult(
             initial_content=initial_content,
-            adversary_feedback=final_feedback or AdversaryFeedback(
-                decision="PASS", score=75, issues=[], praise=[], revision_guide=""
-            ),
+            adversary_feedback=final_feedback
+            or AdversaryFeedback(decision="PASS", score=75, issues=[], praise=[], revision_guide=""),
             revised_content=current_content,
             final_output=current_content,
             improvement_delta=improvement_delta,
-            rounds=rounds
+            rounds=rounds,
         )
 
-    def quick_adversary_check(
-        self,
-        content: str,
-        content_type: str = "manuscript"
-    ) -> Tuple[bool, str]:
+    def quick_adversary_check(self, content: str, content_type: str = "manuscript") -> tuple[bool, str]:
         """
         빠른 적대적 체크 (Python 휴리스틱, LLM 없음)
 
@@ -344,14 +332,14 @@ JSON 형식으로 냉정하게:
                 issues.append(f"길이 부족 ({len(content)}자)")
 
             # 대화 체크
-            dialogue_count = content.count('"') // 2 + content.count('「')
+            dialogue_count = content.count('"') // 2 + content.count("「")
             if dialogue_count < 3:
                 issues.append(f"대화 부족 ({dialogue_count}개)")
 
             # 갑작스러운 관계 변화 패턴
             sudden_patterns = [
-                r'갑자기.{0,30}(충성|복종)',
-                r'(적대|무시).{0,50}(신뢰|충성)',
+                r"갑자기.{0,30}(충성|복종)",
+                r"(적대|무시).{0,50}(신뢰|충성)",
             ]
             for pattern in sudden_patterns:
                 if re.search(pattern, content):
@@ -360,8 +348,8 @@ JSON 형식으로 냉정하게:
 
             # 악역 멍청 패턴
             villain_stupid = [
-                r'(놈|자식).{0,30}(바보|멍청)',
-                r'어리석.{0,20}(적|악역|상대)',
+                r"(놈|자식).{0,30}(바보|멍청)",
+                r"어리석.{0,20}(적|악역|상대)",
             ]
             for pattern in villain_stupid:
                 if re.search(pattern, content):
@@ -389,7 +377,9 @@ JSON 형식으로 냉정하게:
         """결과 요약"""
         lines = ["[V53.6 Adversarial Self-Play]"]
         lines.append(f"라운드: {result.rounds}")
-        lines.append(f"초기 → 최종: {result.adversary_feedback.score - result.improvement_delta} → {result.adversary_feedback.score}")
+        lines.append(
+            f"초기 → 최종: {result.adversary_feedback.score - result.improvement_delta} → {result.adversary_feedback.score}"
+        )
         lines.append(f"향상: +{result.improvement_delta}점")
         lines.append(f"결정: {result.adversary_feedback.decision}")
 

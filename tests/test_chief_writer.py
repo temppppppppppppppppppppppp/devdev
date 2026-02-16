@@ -9,23 +9,24 @@ Stage4Orchestrator (modules/core/stage4_orchestrator.py):
 - 초기화, PacingAnalyzer 주입, PerfTimer 호출, mandatory_context 조립 등
 """
 
-import pytest
 import json
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock
+
+import pytest
 
 # 프로젝트 루트를 path에 추가
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from modules.domain.agents.chief_writer import ChiefWriter
 from modules.core.stage4_orchestrator import Stage4Orchestrator
-
+from modules.domain.agents.chief_writer import ChiefWriter
 
 # ══════════════════════════════════════════════════════════════
 # Fixtures
 # ══════════════════════════════════════════════════════════════
+
 
 @pytest.fixture
 def mock_context():
@@ -37,20 +38,15 @@ def mock_context():
     ctx.db.load_state_log = MagicMock(return_value=None)
     ctx.master_bible = {
         "MasterBible": {
-            "ProjectData": {
-                "CoreIdentity": {"desire": "천하제일"}
-            },
+            "ProjectData": {"CoreIdentity": {"desire": "천하제일"}},
             "AssetLibrary": {
                 "KeyNPCs": [
                     {"name": "연홍", "relationship_state": "경외", "NPC_Martial_HUD": {"equipment": ["비연검"]}},
                     {"name": "철무련주", "relationship_state": "적대", "NPC_Martial_HUD": {"equipment": ["혈마도"]}},
                 ],
-                "Key_Items": []
+                "Key_Items": [],
             },
-            "protagonist_config": {
-                "world_origin": "현대인",
-                "incarnation_type": "회귀자"
-            }
+            "protagonist_config": {"world_origin": "현대인", "incarnation_type": "회귀자"},
         }
     }
     return ctx
@@ -80,7 +76,7 @@ def sample_blueprint():
             "scene_1": {"summary": "청풍산장에서 결투 준비", "content": "이청풍이 검을 준비한다"},
             "scene_2": {"summary": "철무련주와의 대결", "content": "치열한 검법 대결이 벌어진다"},
         },
-        "integrated_scenario": "청풍산장에서의 최후의 결투가 시작된다."
+        "integrated_scenario": "청풍산장에서의 최후의 결투가 시작된다.",
     }
 
 
@@ -94,10 +90,10 @@ def sample_master_bible():
                 "KeyNPCs": [
                     {"name": "연홍", "relationship_state": "경외", "NPC_Martial_HUD": {"equipment": ["비연검"]}},
                 ],
-                "Key_Items": []
+                "Key_Items": [],
             },
             "protagonist_config": {"world_origin": "현대인", "incarnation_type": "회귀자"},
-            "_genre": "wuxia"
+            "_genre": "wuxia",
         }
     }
 
@@ -132,7 +128,7 @@ def mock_app():
         "MasterBible": {
             "ProjectData": {"CoreIdentity": {"desire": "천하제일"}},
             "AssetLibrary": {"KeyNPCs": [], "Key_Items": []},
-            "protagonist_config": {"world_origin": "현대인", "incarnation_type": "회귀자"}
+            "protagonist_config": {"world_origin": "현대인", "incarnation_type": "회귀자"},
         }
     }
     app.current_project.arcs = []
@@ -155,12 +151,13 @@ def mock_app():
 # Test 1: ChiefWriter 초기화
 # ══════════════════════════════════════════════════════════════
 
+
 class TestChiefWriterInit:
     def test_attributes_exist(self, chief_writer):
         """초기화 시 필수 속성 존재 확인"""
         assert chief_writer._agent_name == "ChiefWriter"
-        assert hasattr(chief_writer, '_manuscript_cache')
-        assert hasattr(chief_writer, '_cache_ep_num')
+        assert hasattr(chief_writer, "_manuscript_cache")
+        assert hasattr(chief_writer, "_cache_ep_num")
         assert isinstance(chief_writer._manuscript_cache, dict)
         assert chief_writer._cache_ep_num == -1
 
@@ -177,9 +174,9 @@ class TestChiefWriterInit:
 
     def test_inherits_base_agent(self, chief_writer):
         """BaseAgent 상속 확인"""
-        assert hasattr(chief_writer, 'ask')
-        assert hasattr(chief_writer, '_extract_json_robust')
-        assert hasattr(chief_writer, '_escape_braces')
+        assert hasattr(chief_writer, "ask")
+        assert hasattr(chief_writer, "_extract_json_robust")
+        assert hasattr(chief_writer, "_escape_braces")
 
     def test_timeout_constants(self, chief_writer):
         """앙상블 타임아웃 상수 존재 확인"""
@@ -192,13 +189,20 @@ class TestChiefWriterInit:
 # Test 2: _build_common_context TIER1/2/3
 # ══════════════════════════════════════════════════════════════
 
+
 class TestBuildCommonContext:
     def test_contains_blueprint_info(self, chief_writer, sample_blueprint, sample_master_bible):
         """Blueprint 씬 정보가 컨텍스트에 포함되는지 확인"""
         result = chief_writer._build_common_context(
-            ep_num=10, blueprint=sample_blueprint, prev_manuscript="",
-            hud_report="내공: 50", arc_doc="아크 전술", master_bible=sample_master_bible,
-            style_guide="카카오 스타일", director_feedback="", failure_constraints=""
+            ep_num=10,
+            blueprint=sample_blueprint,
+            prev_manuscript="",
+            hud_report="내공: 50",
+            arc_doc="아크 전술",
+            master_bible=sample_master_bible,
+            style_guide="카카오 스타일",
+            director_feedback="",
+            failure_constraints="",
         )
         assert "scene_1" in result or "결투 준비" in result or "청풍산장" in result
         assert "통합 시나리오" in result or "최후의 결투" in result
@@ -207,9 +211,15 @@ class TestBuildCommonContext:
         """HUD 리포트 포함 확인"""
         hud = "내공: 75, 경지: 일류, 부상: 없음"
         result = chief_writer._build_common_context(
-            ep_num=10, blueprint=sample_blueprint, prev_manuscript="",
-            hud_report=hud, arc_doc="", master_bible=sample_master_bible,
-            style_guide="", director_feedback="", failure_constraints=""
+            ep_num=10,
+            blueprint=sample_blueprint,
+            prev_manuscript="",
+            hud_report=hud,
+            arc_doc="",
+            master_bible=sample_master_bible,
+            style_guide="",
+            director_feedback="",
+            failure_constraints="",
         )
         assert "일류" in result or "75" in result
 
@@ -217,18 +227,30 @@ class TestBuildCommonContext:
         """Arc 전술 문서 포함 확인"""
         arc = "이 아크에서 주인공은 절정 고수와 대결한다"
         result = chief_writer._build_common_context(
-            ep_num=10, blueprint=sample_blueprint, prev_manuscript="",
-            hud_report="", arc_doc=arc, master_bible=sample_master_bible,
-            style_guide="", director_feedback="", failure_constraints=""
+            ep_num=10,
+            blueprint=sample_blueprint,
+            prev_manuscript="",
+            hud_report="",
+            arc_doc=arc,
+            master_bible=sample_master_bible,
+            style_guide="",
+            director_feedback="",
+            failure_constraints="",
         )
         assert "절정 고수" in result
 
     def test_contains_common_rules(self, chief_writer, sample_blueprint, sample_master_bible):
         """Common Rules 섹션 포함 확인"""
         result = chief_writer._build_common_context(
-            ep_num=10, blueprint=sample_blueprint, prev_manuscript="",
-            hud_report="", arc_doc="", master_bible=sample_master_bible,
-            style_guide="", director_feedback="", failure_constraints=""
+            ep_num=10,
+            blueprint=sample_blueprint,
+            prev_manuscript="",
+            hud_report="",
+            arc_doc="",
+            master_bible=sample_master_bible,
+            style_guide="",
+            director_feedback="",
+            failure_constraints="",
         )
         assert "Common Rules" in result or "변환 원칙" in result
 
@@ -236,9 +258,15 @@ class TestBuildCommonContext:
         """Director 피드백 섹션이 포함되는지 확인"""
         feedback = "대화 비율이 너무 낮습니다. 30% 이상으로 높이세요."
         result = chief_writer._build_common_context(
-            ep_num=10, blueprint=sample_blueprint, prev_manuscript="",
-            hud_report="", arc_doc="", master_bible=sample_master_bible,
-            style_guide="", director_feedback=feedback, failure_constraints=""
+            ep_num=10,
+            blueprint=sample_blueprint,
+            prev_manuscript="",
+            hud_report="",
+            arc_doc="",
+            master_bible=sample_master_bible,
+            style_guide="",
+            director_feedback=feedback,
+            failure_constraints="",
         )
         assert "Director 피드백" in result
         assert "대화 비율" in result
@@ -248,13 +276,20 @@ class TestBuildCommonContext:
 # Test 3: _build_common_context — style_guide 없을 때 안전 처리
 # ══════════════════════════════════════════════════════════════
 
+
 class TestBuildCommonContextNoStyleGuide:
     def test_no_style_guide(self, chief_writer, sample_blueprint, sample_master_bible):
         """style_guide 빈 문자열 시 기본 문체 표시"""
         result = chief_writer._build_common_context(
-            ep_num=5, blueprint=sample_blueprint, prev_manuscript="",
-            hud_report="", arc_doc="", master_bible=sample_master_bible,
-            style_guide="", director_feedback="", failure_constraints=""
+            ep_num=5,
+            blueprint=sample_blueprint,
+            prev_manuscript="",
+            hud_report="",
+            arc_doc="",
+            master_bible=sample_master_bible,
+            style_guide="",
+            director_feedback="",
+            failure_constraints="",
         )
         # style_guide가 비면 "기본 웹소설 문체" 표시
         assert "기본 웹소설 문체" in result
@@ -262,10 +297,15 @@ class TestBuildCommonContextNoStyleGuide:
     def test_with_style_guide(self, chief_writer, sample_blueprint, sample_master_bible):
         """style_guide가 주어지면 해당 가이드가 포함"""
         result = chief_writer._build_common_context(
-            ep_num=5, blueprint=sample_blueprint, prev_manuscript="",
-            hud_report="", arc_doc="", master_bible=sample_master_bible,
+            ep_num=5,
+            blueprint=sample_blueprint,
+            prev_manuscript="",
+            hud_report="",
+            arc_doc="",
+            master_bible=sample_master_bible,
             style_guide="카카오: 사이다 전개, 절벽걸기, 4K 해상도 묘사",
-            director_feedback="", failure_constraints=""
+            director_feedback="",
+            failure_constraints="",
         )
         assert "카카오" in result
         assert "기본 웹소설 문체" not in result
@@ -275,13 +315,22 @@ class TestBuildCommonContextNoStyleGuide:
 # Test 4: _build_common_context — prev_text 있을 때 digest 생성
 # ══════════════════════════════════════════════════════════════
 
+
 class TestBuildCommonContextPrevText:
-    def test_prev_manuscript_generates_digest(self, chief_writer, sample_blueprint, sample_master_bible, wuxia_manuscript):
+    def test_prev_manuscript_generates_digest(
+        self, chief_writer, sample_blueprint, sample_master_bible, wuxia_manuscript
+    ):
         """직전 원고가 주어지면 digest가 생성되어 컨텍스트에 포함"""
         result = chief_writer._build_common_context(
-            ep_num=10, blueprint=sample_blueprint, prev_manuscript=wuxia_manuscript,
-            hud_report="", arc_doc="", master_bible=sample_master_bible,
-            style_guide="", director_feedback="", failure_constraints=""
+            ep_num=10,
+            blueprint=sample_blueprint,
+            prev_manuscript=wuxia_manuscript,
+            hud_report="",
+            arc_doc="",
+            master_bible=sample_master_bible,
+            style_guide="",
+            director_feedback="",
+            failure_constraints="",
         )
         # 다이제스트 또는 직전 화 엔딩이 포함되어야 함
         assert "직전 화" in result or "다이제스트" in result or "마지막 장면" in result
@@ -289,9 +338,15 @@ class TestBuildCommonContextPrevText:
     def test_no_prev_manuscript(self, chief_writer, sample_blueprint, sample_master_bible):
         """직전 원고가 없을 때 안전하게 처리"""
         result = chief_writer._build_common_context(
-            ep_num=1, blueprint=sample_blueprint, prev_manuscript="",
-            hud_report="", arc_doc="", master_bible=sample_master_bible,
-            style_guide="", director_feedback="", failure_constraints=""
+            ep_num=1,
+            blueprint=sample_blueprint,
+            prev_manuscript="",
+            hud_report="",
+            arc_doc="",
+            master_bible=sample_master_bible,
+            style_guide="",
+            director_feedback="",
+            failure_constraints="",
         )
         # 에러 없이 결과 반환
         assert isinstance(result, str)
@@ -301,6 +356,7 @@ class TestBuildCommonContextPrevText:
 # ══════════════════════════════════════════════════════════════
 # Test 5: _generate_episode_digest — 구조 확인
 # ══════════════════════════════════════════════════════════════
+
 
 class TestGenerateEpisodeDigest:
     def test_death_detection(self, chief_writer):
@@ -334,6 +390,7 @@ class TestGenerateEpisodeDigest:
 # Test 6: _generate_episode_digest — 빈 텍스트
 # ══════════════════════════════════════════════════════════════
 
+
 class TestGenerateEpisodeDigestEmpty:
     def test_empty_manuscript(self, chief_writer):
         """빈 원고 → 빈 다이제스트"""
@@ -356,6 +413,7 @@ class TestGenerateEpisodeDigestEmpty:
 # Test 7: _build_future_guard_section / _build_past_guard_section
 # ══════════════════════════════════════════════════════════════
 
+
 class TestBuildProhibitionPrompts:
     def test_future_guard_with_inventory(self, chief_writer):
         """소지품이 있을 때 미래 침범 방지 섹션 생성"""
@@ -363,7 +421,7 @@ class TestBuildProhibitionPrompts:
             current_inventory=["용린검", "회춘단"],
             current_martial_arts=["태극검법"],
             dead_npcs=["철무련주"],
-            item_acquisition_timeline=""
+            item_acquisition_timeline="",
         )
         assert "용린검" in result
         assert "태극검법" in result
@@ -373,25 +431,20 @@ class TestBuildProhibitionPrompts:
     def test_future_guard_empty(self, chief_writer):
         """소지품/무공/사망NPC 없을 때 기본 가드"""
         result = chief_writer._build_future_guard_section(
-            current_inventory=[], current_martial_arts=[],
-            dead_npcs=[], item_acquisition_timeline=""
+            current_inventory=[], current_martial_arts=[], dead_npcs=[], item_acquisition_timeline=""
         )
         assert "HARD CONSTRAINT" in result or "미래 침범 방지" in result
 
     def test_past_guard_with_deaths(self, chief_writer):
         """이전 원고에서 사망 NPC 발견 시 과거 침범 방지"""
         prev = "철무련주가 숨을 거두었다. 그의 시신은 차갑게 식어갔다."
-        result = chief_writer._build_past_guard_section(
-            prev_manuscript=prev, existing_dead_npcs=["흑도"]
-        )
+        result = chief_writer._build_past_guard_section(prev_manuscript=prev, existing_dead_npcs=["흑도"])
         assert "PAST CONSTRAINT" in result
         assert "흑도" in result or "철무련주" in result
 
     def test_past_guard_no_prev(self, chief_writer):
         """직전 원고가 없을 때 빈 문자열"""
-        result = chief_writer._build_past_guard_section(
-            prev_manuscript="", existing_dead_npcs=[]
-        )
+        result = chief_writer._build_past_guard_section(prev_manuscript="", existing_dead_npcs=[])
         assert result == ""
 
 
@@ -399,15 +452,18 @@ class TestBuildProhibitionPrompts:
 # Test 8: generate_ensemble — LLM mock으로 3개 후보 반환
 # ══════════════════════════════════════════════════════════════
 
+
 class TestGenerateEnsemble:
     def test_returns_candidates_list(self, chief_writer, sample_blueprint, sample_master_bible):
         """generate_ensemble이 리스트를 반환하는지 확인"""
-        mock_response = json.dumps({
-            "title": "테스트 에피소드",
-            "content": "A" * 5000,
-            "state_updates": {"realm": "일류"},
-            "key_scenes_covered": ["scene_1"]
-        })
+        mock_response = json.dumps(
+            {
+                "title": "테스트 에피소드",
+                "content": "A" * 5000,
+                "state_updates": {"realm": "일류"},
+                "key_scenes_covered": ["scene_1"],
+            }
+        )
         # LLM ask() 호출을 mock
         chief_writer.ask = MagicMock(return_value=mock_response)
         chief_writer._ask_with_cached_context = MagicMock(return_value=mock_response)
@@ -415,29 +471,40 @@ class TestGenerateEnsemble:
         chief_writer._evaluate_with_rubric = MagicMock(return_value=4.0)
 
         candidates = chief_writer.generate_ensemble(
-            ep_num=10, blueprint=sample_blueprint, prev_manuscript="직전 원고",
-            hud_report="내공: 50", arc_doc="아크 문서", master_bible=sample_master_bible,
-            style_guide="카카오", genre_name="무협"
+            ep_num=10,
+            blueprint=sample_blueprint,
+            prev_manuscript="직전 원고",
+            hud_report="내공: 50",
+            arc_doc="아크 문서",
+            master_bible=sample_master_bible,
+            style_guide="카카오",
+            genre_name="무협",
         )
         assert isinstance(candidates, list)
         assert len(candidates) >= 1
 
     def test_candidate_structure(self, chief_writer, sample_blueprint, sample_master_bible):
         """각 후보의 구조 확인"""
-        mock_response = json.dumps({
-            "title": "제10화",
-            "content": "B" * 5000,
-            "state_updates": {"realm": "절정"},
-            "key_scenes_covered": ["scene_1", "scene_2"]
-        })
+        mock_response = json.dumps(
+            {
+                "title": "제10화",
+                "content": "B" * 5000,
+                "state_updates": {"realm": "절정"},
+                "key_scenes_covered": ["scene_1", "scene_2"],
+            }
+        )
         chief_writer.ask = MagicMock(return_value=mock_response)
         chief_writer._ask_with_cached_context = MagicMock(return_value=mock_response)
         chief_writer._evaluate_with_rubric = MagicMock(return_value=4.0)
 
         candidates = chief_writer.generate_ensemble(
-            ep_num=10, blueprint=sample_blueprint, prev_manuscript="",
-            hud_report="", arc_doc="", master_bible=sample_master_bible,
-            genre_name="무협"
+            ep_num=10,
+            blueprint=sample_blueprint,
+            prev_manuscript="",
+            hud_report="",
+            arc_doc="",
+            master_bible=sample_master_bible,
+            genre_name="무협",
         )
         valid = [c for c in candidates if not c.get("error")]
         if valid:
@@ -453,15 +520,13 @@ class TestGenerateEnsemble:
 # Test 9: regenerate_with_feedback
 # ══════════════════════════════════════════════════════════════
 
+
 class TestRegenerateWithFeedback:
     def test_feedback_enhanced(self, chief_writer, sample_blueprint, sample_master_bible):
         """피드백이 강화되어 generate_ensemble에 전달되는지 확인"""
-        mock_response = json.dumps({
-            "title": "재시도 에피소드",
-            "content": "C" * 5000,
-            "state_updates": {},
-            "key_scenes_covered": []
-        })
+        mock_response = json.dumps(
+            {"title": "재시도 에피소드", "content": "C" * 5000, "state_updates": {}, "key_scenes_covered": []}
+        )
         chief_writer.ask = MagicMock(return_value=mock_response)
         chief_writer._ask_with_cached_context = MagicMock(return_value=mock_response)
         chief_writer._evaluate_with_rubric = MagicMock(return_value=4.0)
@@ -470,15 +535,21 @@ class TestRegenerateWithFeedback:
             "strategy": "balanced",
             "rejection_reason": "분량 부족",
             "action_items": ["분량을 5000자 이상으로 늘리시오"],
-            "score": 45
+            "score": 45,
         }
 
         candidates = chief_writer.regenerate_with_feedback(
-            ep_num=10, blueprint=sample_blueprint, prev_manuscript="",
-            hud_report="", arc_doc="", master_bible=sample_master_bible,
-            style_guide="", director_feedback="분량 부족. 5000자 이상 작성하라.",
-            previous_attempt=previous_attempt, attempt_number=2,
-            genre_name="무협"
+            ep_num=10,
+            blueprint=sample_blueprint,
+            prev_manuscript="",
+            hud_report="",
+            arc_doc="",
+            master_bible=sample_master_bible,
+            style_guide="",
+            director_feedback="분량 부족. 5000자 이상 작성하라.",
+            previous_attempt=previous_attempt,
+            attempt_number=2,
+            genre_name="무협",
         )
         assert isinstance(candidates, list)
         assert len(candidates) >= 1
@@ -488,15 +559,11 @@ class TestRegenerateWithFeedback:
 # Test 10: _sanitize_leakage
 # ══════════════════════════════════════════════════════════════
 
+
 class TestSanitizeLeakage:
     def test_removes_banned_keys(self, chief_writer):
         """금지 키가 제거되는지 확인"""
-        data = {
-            "title": "제목",
-            "content": "본문",
-            "next_episode": "다음 화 힌트",
-            "future_hint": "미래 스포일러"
-        }
+        data = {"title": "제목", "content": "본문", "next_episode": "다음 화 힌트", "future_hint": "미래 스포일러"}
         result = chief_writer._sanitize_leakage(json.dumps(data, ensure_ascii=False))
         parsed = json.loads(result)
         assert "next_episode" not in parsed
@@ -522,15 +589,18 @@ class TestSanitizeLeakage:
 # Test 11: _evaluate_with_rubric
 # ══════════════════════════════════════════════════════════════
 
+
 class TestEvaluateWithRubric:
     def test_returns_float(self, chief_writer):
         """float 점수 반환"""
-        manuscript = json.dumps({
-            "content": "그는 마른입술을 혀로 훑으며 펜을 톡톡 두드렸다. 소리가 울려퍼졌다. "
-                       "차가운 바람이 뺨을 때렸다. 악취가 진동했다. "
-                       '"너 대체 뭘 안다는 거냐?" '
-                       '"충분히 알고 있습니다." ' * 50
-        })
+        manuscript = json.dumps(
+            {
+                "content": "그는 마른입술을 혀로 훑으며 펜을 톡톡 두드렸다. 소리가 울려퍼졌다. "
+                "차가운 바람이 뺨을 때렸다. 악취가 진동했다. "
+                '"너 대체 뭘 안다는 거냐?" '
+                '"충분히 알고 있습니다." ' * 50
+            }
+        )
         score = chief_writer._evaluate_with_rubric(manuscript, "무협")
         assert isinstance(score, float)
         assert 1.0 <= score <= 4.0
@@ -549,6 +619,7 @@ class TestEvaluateWithRubric:
 # ══════════════════════════════════════════════════════════════
 # Test 12: _get_dna_instruction
 # ══════════════════════════════════════════════════════════════
+
 
 class TestGetDnaInstruction:
     def test_ep1_special_dna(self, chief_writer):
@@ -573,6 +644,7 @@ class TestGetDnaInstruction:
 # Test 13: _detect_deaths_from_manuscript
 # ══════════════════════════════════════════════════════════════
 
+
 class TestDetectDeaths:
     def test_death_detection(self, chief_writer):
         """사망 패턴 탐지"""
@@ -595,6 +667,7 @@ class TestDetectDeaths:
 # ══════════════════════════════════════════════════════════════
 # Test 14: _get_npc_equipment_summary
 # ══════════════════════════════════════════════════════════════
+
 
 class TestGetNpcEquipmentSummary:
     def test_extracts_equipment(self, chief_writer, sample_master_bible):
@@ -619,6 +692,7 @@ class TestGetNpcEquipmentSummary:
 # ══════════════════════════════════════════════════════════════
 # Test 15: _check_hud_consistency
 # ══════════════════════════════════════════════════════════════
+
 
 class TestCheckHudConsistency:
     def test_weak_with_strong_action_no_justification(self, chief_writer):
@@ -648,6 +722,7 @@ class TestCheckHudConsistency:
 # Test 16: Stage4Orchestrator 초기화
 # ══════════════════════════════════════════════════════════════
 
+
 class TestStage4OrchestratorInit:
     def test_init_with_app(self, mock_app):
         """SovereignApp 참조가 올바르게 저장"""
@@ -657,13 +732,14 @@ class TestStage4OrchestratorInit:
     def test_has_main_method(self, mock_app):
         """메인 파이프라인 메서드 존재 확인"""
         orch = Stage4Orchestrator(mock_app)
-        assert hasattr(orch, 'stage_4_v2_chief_writer')
+        assert hasattr(orch, "stage_4_v2_chief_writer")
         assert callable(orch.stage_4_v2_chief_writer)
 
 
 # ══════════════════════════════════════════════════════════════
 # Test 17: Stage4Orchestrator — early exit 조건
 # ══════════════════════════════════════════════════════════════
+
 
 class TestStage4OrchestratorEarlyExit:
     def test_no_bible_exits(self, mock_app):
@@ -689,27 +765,30 @@ class TestStage4OrchestratorEarlyExit:
 # Test 18: Stage4Orchestrator — PerfTimer 호출
 # ══════════════════════════════════════════════════════════════
 
+
 class TestStage4PerfTimer:
     def test_perf_timer_attribute_accessed(self, mock_app):
         """PerfTimer 속성이 접근 가능한지 확인"""
         orch = Stage4Orchestrator(mock_app)
         # PerfTimer는 orch.app.perf_timer로 접근
         assert orch.app.perf_timer is not None
-        assert hasattr(orch.app.perf_timer, 'start')
-        assert hasattr(orch.app.perf_timer, 'stop')
+        assert hasattr(orch.app.perf_timer, "start")
+        assert hasattr(orch.app.perf_timer, "stop")
 
 
 # ══════════════════════════════════════════════════════════════
 # Test 19: _build_future_guard_section — dead_npcs 제약
 # ══════════════════════════════════════════════════════════════
 
+
 class TestFutureGuardDeadNPCs:
     def test_dead_npcs_section(self, chief_writer):
         """사망 NPC 리스트가 미래 침범 방지에 포함"""
         result = chief_writer._build_future_guard_section(
-            current_inventory=[], current_martial_arts=[],
+            current_inventory=[],
+            current_martial_arts=[],
             dead_npcs=["철무련주", "흑도", "독왕"],
-            item_acquisition_timeline=""
+            item_acquisition_timeline="",
         )
         assert "철무련주" in result
         assert "흑도" in result
@@ -723,7 +802,7 @@ class TestFutureGuardDeadNPCs:
             current_inventory=["용린검", "회춘단"],
             current_martial_arts=[],
             dead_npcs=[],
-            item_acquisition_timeline=timeline
+            item_acquisition_timeline=timeline,
         )
         assert "타임라인" in result
         assert "용린검" in result
@@ -732,6 +811,7 @@ class TestFutureGuardDeadNPCs:
 # ══════════════════════════════════════════════════════════════
 # Test 20: _extract_numeric_value
 # ══════════════════════════════════════════════════════════════
+
 
 class TestExtractNumericValue:
     def test_int_value(self, chief_writer):
@@ -759,30 +839,38 @@ class TestExtractNumericValue:
 # Test 21: _check_hud_anomalies
 # ══════════════════════════════════════════════════════════════
 
+
 class TestCheckHudAnomalies:
     def test_ep1_no_anomalies(self, chief_writer):
         """1화에서는 비교 대상 없어 이상 없음"""
         result = chief_writer._check_hud_anomalies(1)
-        assert result['has_anomalies'] is False
+        assert result["has_anomalies"] is False
 
     def test_no_cache_no_anomalies(self, chief_writer):
         """캐시 없을 때 이상 없음"""
         result = chief_writer._check_hud_anomalies(10)
-        assert result['has_anomalies'] is False
+        assert result["has_anomalies"] is False
 
 
 # ══════════════════════════════════════════════════════════════
 # Test 22: world_origin constraint in _build_common_context
 # ══════════════════════════════════════════════════════════════
 
+
 class TestWorldOriginConstraint:
     def test_modern_person_context(self, chief_writer, sample_blueprint, sample_master_bible):
         """현대인 모드 → 현대인 모드 안내 포함"""
         # sample_master_bible은 world_origin=현대인
         result = chief_writer._build_common_context(
-            ep_num=5, blueprint=sample_blueprint, prev_manuscript="",
-            hud_report="", arc_doc="", master_bible=sample_master_bible,
-            style_guide="", director_feedback="", failure_constraints=""
+            ep_num=5,
+            blueprint=sample_blueprint,
+            prev_manuscript="",
+            hud_report="",
+            arc_doc="",
+            master_bible=sample_master_bible,
+            style_guide="",
+            director_feedback="",
+            failure_constraints="",
         )
         assert "현대인 모드" in result
 
@@ -793,13 +881,19 @@ class TestWorldOriginConstraint:
                 "ProjectData": {"CoreIdentity": {"desire": "복수"}},
                 "AssetLibrary": {"KeyNPCs": []},
                 "protagonist_config": {"world_origin": "원시인", "incarnation_type": "회귀자"},
-                "_genre": "wuxia"
+                "_genre": "wuxia",
             }
         }
         result = chief_writer._build_common_context(
-            ep_num=5, blueprint=sample_blueprint, prev_manuscript="",
-            hud_report="", arc_doc="", master_bible=primitive_bible,
-            style_guide="", director_feedback="", failure_constraints=""
+            ep_num=5,
+            blueprint=sample_blueprint,
+            prev_manuscript="",
+            hud_report="",
+            arc_doc="",
+            master_bible=primitive_bible,
+            style_guide="",
+            director_feedback="",
+            failure_constraints="",
         )
         assert "원시인" in result
 
@@ -808,16 +902,13 @@ class TestWorldOriginConstraint:
 # Test 23: _self_critique structure
 # ══════════════════════════════════════════════════════════════
 
+
 class TestSelfCritique:
     def test_returns_expected_structure(self, chief_writer):
         """self_critique 반환 구조 확인"""
         manuscript = json.dumps({"content": "평화로운 하루였다." * 100})
         result = chief_writer._self_critique(
-            manuscript=manuscript,
-            hud_report="상태: 정상",
-            encyclopedia={"npcs": []},
-            genre_name="무협",
-            ep_num=5
+            manuscript=manuscript, hud_report="상태: 정상", encyclopedia={"npcs": []}, genre_name="무협", ep_num=5
         )
         assert "has_issues" in result
         assert "issues" in result
@@ -837,6 +928,7 @@ class TestSelfCritique:
 # Test 24: _build_anti_trope_instructions
 # ══════════════════════════════════════════════════════════════
 
+
 class TestBuildAntiTropeInstructions:
     def test_contains_genre(self, chief_writer):
         """장르명이 반클리셰 지침에 포함"""
@@ -854,12 +946,13 @@ class TestBuildAntiTropeInstructions:
 # Test 25: _prefetch_manuscripts
 # ══════════════════════════════════════════════════════════════
 
+
 class TestPrefetchManuscripts:
     def test_cache_populated(self, chief_writer, mock_context):
         """프리페치 후 캐시가 채워지는지 확인"""
-        mock_context.db.get_manuscript = MagicMock(return_value={
-            "content": "테스트 원고", "hud_snapshot": {"realm": "일류"}
-        })
+        mock_context.db.get_manuscript = MagicMock(
+            return_value={"content": "테스트 원고", "hud_snapshot": {"realm": "일류"}}
+        )
         chief_writer._prefetch_manuscripts(ep_num=5, window=3)
         assert chief_writer._cache_ep_num == 5
         # 에피소드 2, 3, 4가 캐시되어야 함

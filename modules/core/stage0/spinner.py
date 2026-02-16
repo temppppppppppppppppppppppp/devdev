@@ -4,24 +4,25 @@ Spinner & Progress Utils - 화려한 로딩 애니메이션
 Rich 라이브러리 기반 파도치는 색상 + 덮어쓰기 방지
 """
 
-import sys
 import logging
-import time
+import sys
 import threading
+import time
 from itertools import cycle
-from typing import Optional, List
+from typing import List, Optional
 
 # Rich 라이브러리 임포트
 try:
+    from rich import box
+    from rich.color import Color
     from rich.console import Console
     from rich.live import Live
     from rich.panel import Panel
-    from rich.text import Text
-    from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn, TimeElapsedColumn
-    from rich.table import Table
+    from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn, TextColumn, TimeElapsedColumn
     from rich.style import Style
-    from rich.color import Color
-    from rich import box
+    from rich.table import Table
+    from rich.text import Text
+
     RICH_AVAILABLE = True
 except ImportError:
     RICH_AVAILABLE = False
@@ -93,12 +94,18 @@ PURPLE_WAVE = [
 ]
 
 RAINBOW_COLORS = [
-    "#FF6B6B", "#FF8E53", "#FFCD38", "#7BED9F",
-    "#70A1FF", "#5352ED", "#9B59B6", "#E056FD",
+    "#FF6B6B",
+    "#FF8E53",
+    "#FFCD38",
+    "#7BED9F",
+    "#70A1FF",
+    "#5352ED",
+    "#9B59B6",
+    "#E056FD",
 ]
 
 
-def create_wave_text(text: str, colors: List[str], offset: int = 0) -> Text:
+def create_wave_text(text: str, colors: list[str], offset: int = 0) -> Text:
     """파도치는 색상 텍스트 생성"""
     if not RICH_AVAILABLE:
         return text
@@ -136,6 +143,7 @@ def create_gradient_text(text: str, start_color: str = "#00D4FF", end_color: str
 # Rich 기반 화려한 스피너
 # ============================================
 
+
 class Spinner:
     """화려한 파도치는 스피너"""
 
@@ -169,8 +177,9 @@ class Spinner:
         "rainbow": RAINBOW_COLORS,
     }
 
-    def __init__(self, message: str = "처리 중", style: str = "dots",
-                 color_theme: str = "wave", use_panel: bool = False):
+    def __init__(
+        self, message: str = "처리 중", style: str = "dots", color_theme: str = "wave", use_panel: bool = False
+    ):
         self.message = message
         self.frames = self.STYLES.get(style, self.STYLES["dots"])
         self.colors = self.COLOR_THEMES.get(color_theme, WAVE_COLORS)
@@ -193,7 +202,7 @@ class Spinner:
         result = Text()
         result.append(f" {frame} ", style=Style(color=spinner_color, bold=True))
         result.append_text(wave_msg)
-        result.append(f" ", style="dim")
+        result.append(" ", style="dim")
         result.append(f"({elapsed:.1f}s)", style="dim cyan")
 
         return result
@@ -254,7 +263,7 @@ class Spinner:
         if RICH_AVAILABLE and final_message:
             # 성공 메시지 (그라데이션)
             success_text = create_gradient_text(final_message, "#00FF88", "#00D4FF")
-            console.print(f"[bold green]✓[/] ", end="")
+            console.print("[bold green]✓[/] ", end="")
             console.print(success_text, end="")
             console.print(f" [dim]({elapsed:.1f}s)[/]")
         elif final_message:
@@ -282,11 +291,11 @@ class Spinner:
 # 화려한 프로그레스 바
 # ============================================
 
+
 class ProgressBar:
     """파도치는 프로그레스 바"""
 
-    def __init__(self, total: int, message: str = "진행 중",
-                 color_theme: str = "wave", show_speed: bool = True):
+    def __init__(self, total: int, message: str = "진행 중", color_theme: str = "wave", show_speed: bool = True):
         self.total = total
         self.current = 0
         self.message = message
@@ -303,7 +312,7 @@ class ProgressBar:
                 TaskProgressColumn(),
                 TimeElapsedColumn(),
                 console=console,
-                transient=False
+                transient=False,
             )
             self.task_id = None
 
@@ -331,7 +340,7 @@ class ProgressBar:
             filled = int(30 * percent)
             bar = "█" * filled + "░" * (30 - filled)
             elapsed = time.time() - self.start_time
-            text = f"\r\033[36m{bar}\033[0m {percent*100:5.1f}% | {self.message} \033[90m({elapsed:.1f}s)\033[0m"
+            text = f"\r\033[36m{bar}\033[0m {percent * 100:5.1f}% | {self.message} \033[90m({elapsed:.1f}s)\033[0m"
             sys.stdout.write(text)
             sys.stdout.flush()
 
@@ -342,7 +351,7 @@ class ProgressBar:
         if RICH_AVAILABLE:
             self.progress.stop()
             success_text = create_gradient_text(message, "#00FF88", "#00D4FF")
-            console.print(f"[bold green]✓[/] ", end="")
+            console.print("[bold green]✓[/] ", end="")
             console.print(success_text, end="")
             console.print(f" [dim]({elapsed:.1f}s)[/]")
         else:
@@ -363,6 +372,7 @@ class ProgressBar:
 # ============================================
 # 단계 표시기 (파도치는 버전)
 # ============================================
+
 
 class PhaseIndicator:
     """화려한 단계 표시기"""
@@ -417,6 +427,7 @@ class PhaseIndicator:
 # 화려한 헤더/메시지 출력
 # ============================================
 
+
 def print_header(title: str, style: str = "double", color_theme: str = "wave"):
     """파도치는 화려한 헤더"""
     colors = Spinner.COLOR_THEMES.get(color_theme, WAVE_COLORS)
@@ -425,23 +436,13 @@ def print_header(title: str, style: str = "double", color_theme: str = "wave"):
         if style == "double":
             # 그라데이션 제목
             title_text = create_gradient_text(title, "#00D4FF", "#FF00FF")
-            panel = Panel(
-                title_text,
-                border_style="cyan",
-                box=box.DOUBLE,
-                padding=(0, 2)
-            )
+            panel = Panel(title_text, border_style="cyan", box=box.DOUBLE, padding=(0, 2))
             console.print()
             console.print(panel)
         elif style == "wave":
             # 파도치는 제목
             wave_text = create_wave_text(f"  {title}  ", colors, 0)
-            panel = Panel(
-                wave_text,
-                border_style="bright_cyan",
-                box=box.ROUNDED,
-                padding=(0, 1)
-            )
+            panel = Panel(wave_text, border_style="bright_cyan", box=box.ROUNDED, padding=(0, 1))
             console.print()
             console.print(panel)
         elif style == "fire":
@@ -465,7 +466,7 @@ def print_header(title: str, style: str = "double", color_theme: str = "wave"):
         width = 60
         border = "═" * width
         logging.info(f"\n+{border}+")
-        logging.info(f"| {title:^{width-2}} |")
+        logging.info(f"| {title:^{width - 2}} |")
         logging.info(f"+{border}+")
 
 
@@ -473,7 +474,7 @@ def print_success(message: str):
     """성공 메시지 (그라데이션)"""
     if RICH_AVAILABLE:
         text = create_gradient_text(message, "#00FF88", "#00D4FF")
-        console.print(f"[bold green]✓[/] ", end="")
+        console.print("[bold green]✓[/] ", end="")
         console.print(text)
     else:
         logging.info(f"\033[32m✓\033[0m {message}")
@@ -491,7 +492,7 @@ def print_warning(message: str):
     """경고 메시지"""
     if RICH_AVAILABLE:
         text = create_wave_text(message, FIRE_COLORS, 0)
-        console.print(f"[bold yellow]![/] ", end="")
+        console.print("[bold yellow]![/] ", end="")
         console.print(text)
     else:
         logging.info(f"\033[33m!\033[0m {message}")
@@ -501,7 +502,7 @@ def print_info(message: str):
     """정보 메시지 (파도)"""
     if RICH_AVAILABLE:
         text = create_wave_text(message, WAVE_COLORS, 0)
-        console.print(f"[bold cyan]→[/] ", end="")
+        console.print("[bold cyan]→[/] ", end="")
         console.print(text)
     else:
         logging.info(f"\033[36m→\033[0m {message}")
@@ -511,7 +512,7 @@ def print_tip(message: str):
     """팁 메시지"""
     if RICH_AVAILABLE:
         text = create_wave_text(message, PURPLE_WAVE, 0)
-        console.print(f"[bold magenta]💡[/] ", end="")
+        console.print("[bold magenta]💡[/] ", end="")
         console.print(text)
     else:
         logging.info(f"\033[35m💡\033[0m {message}")
@@ -528,11 +529,7 @@ def print_stage(stage_num: int, stage_name: str, status: str = "running"):
             title = create_gradient_text(f"Stage {stage_num}: {stage_name} ✓", "#00FF88", "#00D4FF")
             console.print(Panel(title, border_style="green", box=box.ROUNDED))
         elif status == "error":
-            console.print(Panel(
-                f"[bold red]Stage {stage_num}: {stage_name} ✗[/]",
-                border_style="red",
-                box=box.HEAVY
-            ))
+            console.print(Panel(f"[bold red]Stage {stage_num}: {stage_name} ✗[/]", border_style="red", box=box.HEAVY))
     else:
         logging.info(f"\n{'=' * 60}")
         logging.info(f"Stage {stage_num}: {stage_name}")
@@ -575,8 +572,10 @@ def print_table(headers: list, rows: list):
 # 데코레이터
 # ============================================
 
+
 def with_spinner(message: str = "처리 중", style: str = "dots", color_theme: str = "wave"):
     """스피너 데코레이터"""
+
     def decorator(func):
         def wrapper(*args, **kwargs):
             spinner = Spinner(message, style, color_theme)
@@ -589,7 +588,9 @@ def with_spinner(message: str = "처리 중", style: str = "dots", color_theme: 
                 spinner.stop()
                 print_error(f"{message} 실패: {e}")
                 raise
+
         return wrapper
+
     return decorator
 
 
@@ -618,7 +619,7 @@ if __name__ == "__main__":
     with ProgressBar(30, "블록 생성", color_theme="wave") as progress:
         for i in range(30):
             time.sleep(0.05)
-            progress.update(message=f"Block {i+1}/30 생성 중")
+            progress.update(message=f"Block {i + 1}/30 생성 중")
 
     # 단계 표시기 테스트
     print()
@@ -652,7 +653,7 @@ if __name__ == "__main__":
             ["팽조명", "주인공", "활성"],
             ["한영민", "빌런", "활성"],
             ["워렌 버핏", "멘토", "활성"],
-        ]
+        ],
     )
 
     # 스테이지 헤더 테스트

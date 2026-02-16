@@ -6,8 +6,6 @@ StateTracker에서 금융 관련 메서드만 분리.
 모든 공유 상태는 self.tracker를 통해 접근.
 """
 
-from typing import Dict, Optional, Any
-
 
 class StateTrackerFinancial:
     """[V64.P3] 금융 상태 추적 서브모듈 (투자물 전용)"""
@@ -19,7 +17,7 @@ class StateTrackerFinancial:
     # [V63.1] 금융 상태 추적
     # ═══════════════════════════════════════════════════════════════
 
-    def extract_financial_events_from_arc(self, arc: dict) -> Dict:
+    def extract_financial_events_from_arc(self, arc: dict) -> dict:
         """
         [V63.1] state_changes.financial_events에서 금융 이벤트 추출
 
@@ -48,7 +46,7 @@ class StateTrackerFinancial:
         self.tracker.financial_number_registry[arc_no] = entry
         return entry
 
-    def _get_latest_financial_value(self, field_name: str) -> Optional[Dict]:
+    def _get_latest_financial_value(self, field_name: str) -> dict | None:
         """
         [V63.1] financial_number_registry에서 특정 필드의 최신 값 반환
 
@@ -104,8 +102,7 @@ class StateTrackerFinancial:
             for txn in data.get("key_transactions", []):
                 if isinstance(txn, dict):
                     all_txns.append(
-                        f"  - Arc {arc_no}: {txn.get('type', '')} "
-                        f"{txn.get('target', '')} {txn.get('amount', '')}"
+                        f"  - Arc {arc_no}: {txn.get('type', '')} {txn.get('target', '')} {txn.get('amount', '')}"
                     )
         if all_txns:
             lines.append("  거래 내역:")
@@ -113,12 +110,12 @@ class StateTrackerFinancial:
 
         return "\n".join(lines)
 
-    def export_financial_registry(self) -> Dict:
+    def export_financial_registry(self) -> dict:
         """[V63.4 P0] 금융 레지스트리를 직렬화 (DB 저장용)"""
         # Dict[int, Dict] → Dict[str, Dict] (JSON 키는 문자열)
         return {str(k): v for k, v in self.tracker.financial_number_registry.items()}
 
-    def import_financial_registry(self, data: Dict):
+    def import_financial_registry(self, data: dict):
         """[V63.4 P0] DB에서 금융 레지스트리 로드"""
         if not data or not isinstance(data, dict):
             return

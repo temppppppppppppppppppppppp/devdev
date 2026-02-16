@@ -18,29 +18,32 @@
     result = verifier.verify_writer_compliance(manuscript, blueprint)
 """
 
-from typing import Dict, Any, List, Optional, Tuple
+import json
 import logging
+import re
 from dataclasses import dataclass
 from enum import Enum
-import json
-import re
+from typing import Any
+
 from modules.core.constants import ManuscriptLimits  # [V64.P4]
 
 
 class ComplianceLevel(Enum):
     """준수 수준"""
-    FULL = "full"           # 완전 준수
-    PARTIAL = "partial"     # 부분 준수 (경고)
-    VIOLATION = "violation" # 위반 (재생성 필요)
+
+    FULL = "full"  # 완전 준수
+    PARTIAL = "partial"  # 부분 준수 (경고)
+    VIOLATION = "violation"  # 위반 (재생성 필요)
 
 
 @dataclass
 class ComplianceResult:
     """검증 결과"""
+
     level: ComplianceLevel
     score: float  # 0-1
-    violations: List[Dict[str, str]]  # {"item": ..., "reason": ...}
-    warnings: List[Dict[str, str]]
+    violations: list[dict[str, str]]  # {"item": ..., "reason": ...}
+    warnings: list[dict[str, str]]
     details: str
     should_regenerate: bool
 
@@ -126,59 +129,44 @@ JSON 형식으로 응답:
         """LLM 호출"""
         try:
             response = self.client.models.generate_content(
-                model=self.model,
-                contents=prompt,
-                config={
-                    "temperature": temperature,
-                    "max_output_tokens": 2048
-                }
+                model=self.model, contents=prompt, config={"temperature": temperature, "max_output_tokens": 2048}
             )
             return response.text or ""  # [V70] None 방어
         except Exception as e:
             logging.warning(f"[CrossAgentVerifier] LLM 호출 실패: {e}")
             return ""
 
-    def _parse_result(self, response_text: str) -> Dict[str, Any]:
+    def _parse_result(self, response_text: str) -> dict[str, Any]:
         """응답 파싱"""
         try:
             # JSON 블록 추출
-            json_match = re.search(r'```json\s*(.*?)\s*```', response_text, re.DOTALL)
+            json_match = re.search(r"```json\s*(.*?)\s*```", response_text, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group(1))
             # 직접 JSON 시도
             return json.loads(response_text)
         except (json.JSONDecodeError, ValueError):  # [V64.P4] JSON parse failure
-            return {
-                "compliance_score": 0.7,
-                "violations": [],
-                "warnings": [],
-                "summary": "파싱 실패 - 기본값 반환"
-            }
+            return {"compliance_score": 0.7, "violations": [], "warnings": [], "summary": "파싱 실패 - 기본값 반환"}
 
-    def _python_precheck_architect(
-        self,
-        blueprint: Dict[str, Any],
-        arc_design: Dict[str, Any]
-    ) -> List[Dict[str, str]]:
+    def _python_precheck_architect(self, blueprint: dict[str, Any], arc_design: dict[str, Any]) -> list[dict[str, str]]:
         """
         Python 기반 빠른 Architect 준수 체크 (LLM 비용 0원)
         """
         violations = []
 
         # 1. 필수 씬 개수 체크
-        scene_breakdown = blueprint.get('scene_breakdown', {})
-        min_scenes = arc_design.get('min_scenes', 4)
+        scene_breakdown = blueprint.get("scene_breakdown", {})
+        min_scenes = arc_design.get("min_scenes", 4)
         if len(scene_breakdown) < min_scenes:
-            violations.append({
-                "item": "씬 개수 부족",
-                "reason": f"최소 {min_scenes}개 씬 필요, 현재 {len(scene_breakdown)}개"
-            })
+            violations.append(
+                {"item": "씬 개수 부족", "reason": f"최소 {min_scenes}개 씬 필요, 현재 {len(scene_breakdown)}개"}
+            )
 
         # 2. 핵심 키워드 반영 체크
-        arc_keywords = arc_design.get('core_keywords', [])
-        if not arc_keywords and 'tactical_doc' in arc_design:
+        arc_keywords = arc_design.get("core_keywords", [])
+        if not arc_keywords and "tactical_doc" in arc_design:
             # tactical_doc에서 키워드 추출 시도
-            doc = arc_design.get('tactical_doc', '')
+            doc = arc_design.get("tactical_doc", "")
             if isinstance(doc, str):
                 # 따옴표로 감싼 단어들 추출
                 arc_keywords = re.findall(r'[「『"\'](.*?)[」』"\']', doc)
@@ -190,26 +178,18 @@ JSON 형식으로 응답:
                 missing_keywords.append(kw)
 
         if missing_keywords:
-            violations.append({
-                "item": "핵심 키워드 누락",
-                "reason": f"Arc 설계 키워드 미반영: {', '.join(missing_keywords[:3])}"
-            })
+            violations.append(
+                {"item": "핵심 키워드 누락", "reason": f"Arc 설계 키워드 미반영: {', '.join(missing_keywords[:3])}"}
+            )
 
         # 3. 클리프행어 존재 체크
-        ending_hook = blueprint.get('ending_hook') or blueprint.get('cliffhanger')
+        ending_hook = blueprint.get("ending_hook") or blueprint.get("cliffhanger")
         if not ending_hook:
-            violations.append({
-                "item": "클리프행어 누락",
-                "reason": "ending_hook 또는 cliffhanger 필드가 비어있음"
-            })
+            violations.append({"item": "클리프행어 누락", "reason": "ending_hook 또는 cliffhanger 필드가 비어있음"})
 
         return violations
 
-    def _python_precheck_writer(
-        self,
-        manuscript: str,
-        blueprint: Dict[str, Any]
-    ) -> List[Dict[str, str]]:
+    def _python_precheck_writer(self, manuscript: str, blueprint: dict[str, Any]) -> list[dict[str, str]]:
         """
         Python 기반 빠른 Writer 준수 체크 (LLM 비용 0원)
         """
@@ -217,13 +197,12 @@ JSON 형식으로 응답:
 
         # 1. 최소 길이 체크
         if len(manuscript) < ManuscriptLimits.MIN_LENGTH:  # [V64.P4]
-            violations.append({
-                "item": "분량 부족",
-                "reason": f"최소 {ManuscriptLimits.MIN_LENGTH}자 필요, 현재 {len(manuscript)}자"
-            })
+            violations.append(
+                {"item": "분량 부족", "reason": f"최소 {ManuscriptLimits.MIN_LENGTH}자 필요, 현재 {len(manuscript)}자"}
+            )
 
         # 2. 씬 반영 체크 (휴리스틱)
-        scene_breakdown = blueprint.get('scene_breakdown', {})
+        scene_breakdown = blueprint.get("scene_breakdown", {})
         if scene_breakdown:
             # 각 씬의 핵심 키워드가 원고에 있는지 체크
             scene_count = len(scene_breakdown)
@@ -231,9 +210,9 @@ JSON 형식으로 응답:
 
             for scene_id, scene_data in scene_breakdown.items():
                 if isinstance(scene_data, dict):
-                    desc = scene_data.get('description', '')
+                    desc = scene_data.get("description", "")
                     # 씬 설명에서 핵심 단어 추출
-                    keywords = re.findall(r'[\w가-힣]+', desc)
+                    keywords = re.findall(r"[\w가-힣]+", desc)
                     significant_words = [w for w in keywords if len(w) >= 2][:3]
 
                     # 원고에 하나라도 있으면 반영된 것으로 간주
@@ -243,39 +222,36 @@ JSON 형식으로 응답:
             if scene_count > 0:
                 reflection_rate = reflected_count / scene_count
                 if reflection_rate < 0.5:
-                    violations.append({
-                        "item": "씬 반영 부족",
-                        "reason": f"{scene_count}개 씬 중 {reflected_count}개만 감지됨 ({reflection_rate:.0%})"
-                    })
+                    violations.append(
+                        {
+                            "item": "씬 반영 부족",
+                            "reason": f"{scene_count}개 씬 중 {reflected_count}개만 감지됨 ({reflection_rate:.0%})",
+                        }
+                    )
 
         # 3. 클리프행어 반영 체크
-        ending_hook = blueprint.get('ending_hook') or blueprint.get('cliffhanger', '')
+        ending_hook = blueprint.get("ending_hook") or blueprint.get("cliffhanger", "")
         if ending_hook and isinstance(ending_hook, str):
             # 원고 마지막 500자에서 훅 키워드 체크
             ending_part = manuscript[-500:] if len(manuscript) > 500 else manuscript
-            hook_keywords = re.findall(r'[\w가-힣]{2,}', ending_hook)[:3]
+            hook_keywords = re.findall(r"[\w가-힣]{2,}", ending_hook)[:3]
 
             if hook_keywords and not any(kw in ending_part for kw in hook_keywords):
-                violations.append({
-                    "item": "클리프행어 미반영",
-                    "reason": f"ending_hook '{ending_hook[:30]}...'이 원고 끝에 없음"
-                })
+                violations.append(
+                    {"item": "클리프행어 미반영", "reason": f"ending_hook '{ending_hook[:30]}...'이 원고 끝에 없음"}
+                )
 
         # 4. 범위 초과 체크
         max_expected_length = len(scene_breakdown) * 1500 * 1.5 if scene_breakdown else 12000
         if len(manuscript) > max_expected_length:
-            violations.append({
-                "item": "범위 초과 의심",
-                "reason": f"예상 최대 {max_expected_length}자, 현재 {len(manuscript)}자"
-            })
+            violations.append(
+                {"item": "범위 초과 의심", "reason": f"예상 최대 {max_expected_length}자, 현재 {len(manuscript)}자"}
+            )
 
         return violations
 
     def verify_architect_compliance(
-        self,
-        blueprint: Dict[str, Any],
-        arc_design: Dict[str, Any],
-        use_llm: bool = True
+        self, blueprint: dict[str, Any], arc_design: dict[str, Any], use_llm: bool = True
     ) -> ComplianceResult:
         """
         Architect가 Arc 설계를 준수했는지 검증
@@ -295,7 +271,7 @@ JSON 형식으로 응답:
                 violations=[],
                 warnings=[],
                 details="검증 비활성화",
-                should_regenerate=False
+                should_regenerate=False,
             )
 
         # Phase 1: Python Precheck (무료)
@@ -309,7 +285,7 @@ JSON 형식으로 응답:
                 violations=py_violations,
                 warnings=[],
                 details="Python precheck에서 다중 위반 감지",
-                should_regenerate=True
+                should_regenerate=True,
             )
 
         # Phase 2: LLM Deep Check (선택적)
@@ -318,16 +294,14 @@ JSON 형식으로 응답:
             bp_text = json.dumps(blueprint, ensure_ascii=False, indent=2)[:6000]
 
             # [V70] .format() → .replace() (템플릿 내 JSON 예시 브레이스 충돌 방지)
-            prompt = self.ARCHITECT_COMPLIANCE_PROMPT \
-                .replace("{arc_design}", arc_text) \
-                .replace("{blueprint}", bp_text)
+            prompt = self.ARCHITECT_COMPLIANCE_PROMPT.replace("{arc_design}", arc_text).replace("{blueprint}", bp_text)
 
             response = self._call_llm(prompt)
             result = self._parse_result(response)
 
-            violations = py_violations + result.get('violations', [])
-            warnings = result.get('warnings', [])
-            score = result.get('compliance_score', 0.7)
+            violations = py_violations + result.get("violations", [])
+            warnings = result.get("warnings", [])
+            score = result.get("compliance_score", 0.7)
 
             # Python 위반이 있으면 점수 감점
             if py_violations:
@@ -353,15 +327,12 @@ JSON 형식으로 응답:
             score=score,
             violations=violations,
             warnings=warnings,
-            details=result.get('summary', '') if use_llm else "Python-only 검증",
-            should_regenerate=should_regenerate
+            details=result.get("summary", "") if use_llm else "Python-only 검증",
+            should_regenerate=should_regenerate,
         )
 
     def verify_writer_compliance(
-        self,
-        manuscript: str,
-        blueprint: Dict[str, Any],
-        use_llm: bool = True
+        self, manuscript: str, blueprint: dict[str, Any], use_llm: bool = True
     ) -> ComplianceResult:
         """
         Writer가 Blueprint를 준수했는지 검증
@@ -381,7 +352,7 @@ JSON 형식으로 응답:
                 violations=[],
                 warnings=[],
                 details="검증 비활성화",
-                should_regenerate=False
+                should_regenerate=False,
             )
 
         # Phase 1: Python Precheck (무료)
@@ -395,7 +366,7 @@ JSON 형식으로 응답:
                 violations=py_violations,
                 warnings=[],
                 details="Python precheck에서 다중 위반 감지",
-                should_regenerate=True
+                should_regenerate=True,
             )
 
         # Phase 2: LLM Deep Check (선택적)
@@ -404,16 +375,14 @@ JSON 형식으로 응답:
             ms_text = manuscript[:8000]
 
             # [V70] .format() → .replace() (템플릿 내 JSON 예시 브레이스 충돌 방지)
-            prompt = self.WRITER_COMPLIANCE_PROMPT \
-                .replace("{blueprint}", bp_text) \
-                .replace("{manuscript}", ms_text)
+            prompt = self.WRITER_COMPLIANCE_PROMPT.replace("{blueprint}", bp_text).replace("{manuscript}", ms_text)
 
             response = self._call_llm(prompt)
             result = self._parse_result(response)
 
-            violations = py_violations + result.get('violations', [])
-            warnings = result.get('warnings', [])
-            score = result.get('compliance_score', 0.7)
+            violations = py_violations + result.get("violations", [])
+            warnings = result.get("warnings", [])
+            score = result.get("compliance_score", 0.7)
 
             if py_violations:
                 score = max(0.0, score - 0.2 * len(py_violations))
@@ -438,8 +407,8 @@ JSON 형식으로 응답:
             score=score,
             violations=violations,
             warnings=warnings,
-            details=result.get('summary', '') if use_llm else "Python-only 검증",
-            should_regenerate=should_regenerate
+            details=result.get("summary", "") if use_llm else "Python-only 검증",
+            should_regenerate=should_regenerate,
         )
 
     def generate_feedback(self, result: ComplianceResult, target: str = "general") -> str:
@@ -474,12 +443,7 @@ JSON 형식으로 응답:
 
         return "\n".join(feedback_parts)
 
-    def quick_check(
-        self,
-        content: str,
-        reference: Dict[str, Any],
-        check_type: str
-    ) -> Tuple[bool, List[str]]:
+    def quick_check(self, content: str, reference: dict[str, Any], check_type: str) -> tuple[bool, list[str]]:
         """
         빠른 준수 체크 (Python only, LLM 비용 0원)
 

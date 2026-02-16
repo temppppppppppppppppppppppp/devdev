@@ -6,8 +6,9 @@ Protocol: modules/protocols/app_services.py UIServiceProtocol (log/title은 Stud
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 
 class UIService:
@@ -39,9 +40,7 @@ class UIService:
         for i, f in enumerate(files, 1):
             print(f"   {i}. {f.name}")
 
-        idx = (
-            self.get_int_input(f"\n👉 Choice (1-{len(files)}): ", default=1, min_val=1, max_val=len(files)) or 1
-        ) - 1
+        idx = (self.get_int_input(f"\n👉 Choice (1-{len(files)}): ", default=1, min_val=1, max_val=len(files)) or 1) - 1
         return files[idx].name if 0 <= idx < len(files) else files[0].name
 
     # ── select_treatment ─────────────────────────────────────────

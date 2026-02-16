@@ -15,13 +15,14 @@
     current = tracker.get_current_energy()  # 90
 """
 
-from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional
+from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 
 class InjuryLevel(Enum):
     """부상 수준"""
+
     NORMAL = "정상"
     MINOR = "경상"
     MAJOR = "중상"
@@ -42,6 +43,7 @@ class InjuryLevel(Enum):
 @dataclass
 class EnergyDelta:
     """내공 변화 기록"""
+
     arc: int
     episode: int
     delta: int  # 양수=회복, 음수=소모
@@ -53,6 +55,7 @@ class EnergyDelta:
 @dataclass
 class InjuryEvent:
     """부상 이벤트 기록"""
+
     arc: int
     episode: int
     from_level: str
@@ -78,14 +81,14 @@ class StateDeltaTracker:
         "운기조식": 20,
         "영약": 40,
         "비급_수련": 30,
-        "기본_회복": 5  # 시간 경과만으로
+        "기본_회복": 5,  # 시간 경과만으로
     }
 
     # 부상 자연 회복 시간 (에피소드 단위)
     INJURY_RECOVERY_TIME = {
-        "경상": 1,   # 1 에피소드
-        "중상": 3,   # 3 에피소드
-        "위독": 5,   # 5 에피소드
+        "경상": 1,  # 1 에피소드
+        "중상": 3,  # 3 에피소드
+        "위독": 5,  # 5 에피소드
     }
 
     def __init__(self, initial_energy: int = 100, protagonist_name: str = "주인공"):
@@ -93,19 +96,13 @@ class StateDeltaTracker:
         self.initial_energy = initial_energy
         self.current_energy = initial_energy
 
-        self.energy_history: List[EnergyDelta] = []
-        self.injury_history: List[InjuryEvent] = []
+        self.energy_history: list[EnergyDelta] = []
+        self.injury_history: list[InjuryEvent] = []
 
-        self.current_injuries: Dict[str, InjuryEvent] = {}  # {부위: 이벤트}
+        self.current_injuries: dict[str, InjuryEvent] = {}  # {부위: 이벤트}
         self.current_injury_level = InjuryLevel.NORMAL
 
-    def apply_energy_delta(
-        self,
-        arc: int,
-        episode: int,
-        delta: int,
-        reason: str
-    ) -> Dict[str, Any]:
+    def apply_energy_delta(self, arc: int, episode: int, delta: int, reason: str) -> dict[str, Any]:
         """
         내공 변화 적용
 
@@ -136,24 +133,11 @@ class StateDeltaTracker:
                 warning = f"과도한 회복: {delta}% (최대 {max_recovery}%)"
 
         # 이벤트 기록
-        event = EnergyDelta(
-            arc=arc,
-            episode=episode,
-            delta=delta,
-            reason=reason,
-            before=before,
-            after=after
-        )
+        event = EnergyDelta(arc=arc, episode=episode, delta=delta, reason=reason, before=before, after=after)
         self.energy_history.append(event)
         self.current_energy = after
 
-        return {
-            "valid": True,
-            "before": before,
-            "after": after,
-            "delta": delta,
-            "warning": warning
-        }
+        return {"valid": True, "before": before, "after": after, "delta": delta, "warning": warning}
 
     def _get_max_recovery(self, reason: str) -> int:
         """사유에 따른 최대 회복량 반환"""
@@ -175,14 +159,8 @@ class StateDeltaTracker:
         return self.RECOVERY_LIMITS["기본_회복"]
 
     def apply_injury(
-        self,
-        arc: int,
-        episode: int,
-        level: str,
-        body_part: str,
-        cause: str,
-        recovery_required: str = ""
-    ) -> Dict[str, Any]:
+        self, arc: int, episode: int, level: str, body_part: str, cause: str, recovery_required: str = ""
+    ) -> dict[str, Any]:
         """
         부상 적용
 
@@ -224,7 +202,7 @@ class StateDeltaTracker:
             to_level=to_level,
             body_part=body_part,
             cause=cause,
-            recovery_required=recovery_required
+            recovery_required=recovery_required,
         )
         self.injury_history.append(event)
 
@@ -236,16 +214,10 @@ class StateDeltaTracker:
             "from_level": from_level,
             "to_level": to_level,
             "body_part": body_part,
-            "warning": warning
+            "warning": warning,
         }
 
-    def recover_injury(
-        self,
-        arc: int,
-        episode: int,
-        body_part: str,
-        recovery_method: str
-    ) -> Dict[str, Any]:
+    def recover_injury(self, arc: int, episode: int, body_part: str, recovery_method: str) -> dict[str, Any]:
         """
         부상 회복 처리
 
@@ -263,11 +235,7 @@ class StateDeltaTracker:
             }
         """
         if body_part not in self.current_injuries:
-            return {
-                "valid": True,
-                "recovered": False,
-                "warning": f"'{body_part}' 부위에 기록된 부상 없음"
-            }
+            return {"valid": True, "recovered": False, "warning": f"'{body_part}' 부위에 기록된 부상 없음"}
 
         injury = self.current_injuries[body_part]
         injury_ep = injury.episode
@@ -290,7 +258,7 @@ class StateDeltaTracker:
             to_level="정상",
             body_part=body_part,
             cause="회복",
-            recovery_required=recovery_method
+            recovery_required=recovery_method,
         )
         self.injury_history.append(recovery_event)
 
@@ -300,20 +268,11 @@ class StateDeltaTracker:
         if not self.current_injuries:
             self.current_injury_level = InjuryLevel.NORMAL
 
-        return {
-            "valid": True,
-            "recovered": True,
-            "elapsed_episodes": elapsed,
-            "warning": warning
-        }
+        return {"valid": True, "recovered": True, "elapsed_episodes": elapsed, "warning": warning}
 
     def validate_state_continuity(
-        self,
-        arc: int,
-        episode: int,
-        expected_energy: int,
-        expected_injury: str
-    ) -> Dict[str, Any]:
+        self, arc: int, episode: int, expected_energy: int, expected_injury: str
+    ) -> dict[str, Any]:
         """
         상태 연속성 검증
 
@@ -336,13 +295,15 @@ class StateDeltaTracker:
         # 내공 검증
         energy_diff = abs(expected_energy - self.current_energy)
         if energy_diff > 20:
-            violations.append({
-                "type": "energy_discontinuity",
-                "expected": expected_energy,
-                "actual": self.current_energy,
-                "diff": energy_diff,
-                "message": f"내공 불연속: 예상 {expected_energy}% vs 실제 {self.current_energy}%"
-            })
+            violations.append(
+                {
+                    "type": "energy_discontinuity",
+                    "expected": expected_energy,
+                    "actual": self.current_energy,
+                    "diff": energy_diff,
+                    "message": f"내공 불연속: 예상 {expected_energy}% vs 실제 {self.current_energy}%",
+                }
+            )
         elif energy_diff > 10:
             warnings.append(f"내공 차이 {energy_diff}%: 예상 {expected_energy}% vs 실제 {self.current_energy}%")
 
@@ -351,20 +312,18 @@ class StateDeltaTracker:
         if expected_level != self.current_injury_level:
             level_diff = abs(expected_level.severity_index() - self.current_injury_level.severity_index())
             if level_diff >= 2:
-                violations.append({
-                    "type": "injury_discontinuity",
-                    "expected": expected_injury,
-                    "actual": self.current_injury_level.value,
-                    "message": f"부상 불연속: 예상 '{expected_injury}' vs 실제 '{self.current_injury_level.value}'"
-                })
+                violations.append(
+                    {
+                        "type": "injury_discontinuity",
+                        "expected": expected_injury,
+                        "actual": self.current_injury_level.value,
+                        "message": f"부상 불연속: 예상 '{expected_injury}' vs 실제 '{self.current_injury_level.value}'",
+                    }
+                )
             else:
                 warnings.append(f"부상 차이: 예상 '{expected_injury}' vs 실제 '{self.current_injury_level.value}'")
 
-        return {
-            "valid": len(violations) == 0,
-            "violations": violations,
-            "warnings": warnings
-        }
+        return {"valid": len(violations) == 0, "violations": violations, "warnings": warnings}
 
     def get_current_energy(self) -> int:
         """현재 내공 반환"""
@@ -374,19 +333,14 @@ class StateDeltaTracker:
         """현재 부상 수준 반환"""
         return self.current_injury_level.value
 
-    def get_active_injuries(self) -> List[Dict]:
+    def get_active_injuries(self) -> list[dict]:
         """현재 활성 부상 목록"""
         return [
-            {
-                "body_part": part,
-                "level": event.to_level,
-                "cause": event.cause,
-                "since_episode": event.episode
-            }
+            {"body_part": part, "level": event.to_level, "cause": event.cause, "since_episode": event.episode}
             for part, event in self.current_injuries.items()
         ]
 
-    def get_energy_timeline(self) -> List[Dict]:
+    def get_energy_timeline(self) -> list[dict]:
         """내공 변화 타임라인"""
         return [
             {
@@ -395,7 +349,7 @@ class StateDeltaTracker:
                 "delta": e.delta,
                 "reason": e.reason,
                 "before": e.before,
-                "after": e.after
+                "after": e.after,
             }
             for e in self.energy_history
         ]
@@ -438,7 +392,7 @@ class StateDeltaTracker:
         lines.append("=" * 50)
         return "\n".join(lines)
 
-    def load_from_arc_state(self, state_constraints: Dict) -> None:
+    def load_from_arc_state(self, state_constraints: dict) -> None:
         """
         Arc state_constraints에서 상태 로드
 

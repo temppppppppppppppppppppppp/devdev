@@ -23,16 +23,16 @@
         # 추가 검증 수행
 """
 
-from typing import Dict, Any, List, Optional, Tuple
-from dataclasses import dataclass
-from enum import Enum
 import json
 import re
-import statistics
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any
 
 
 class ContentType(Enum):
     """콘텐츠 유형"""
+
     MANUSCRIPT = "manuscript"
     BLUEPRINT = "blueprint"
     ARC_DESIGN = "arc_design"
@@ -40,22 +40,24 @@ class ContentType(Enum):
 
 class ConfidenceLevel(Enum):
     """신뢰도 수준"""
-    VERY_HIGH = "very_high"   # 90-100: 빠른 통과
-    HIGH = "high"             # 75-89: 일반 검증
-    MEDIUM = "medium"         # 50-74: 주의 필요
-    LOW = "low"               # 25-49: 추가 검증 권장
-    VERY_LOW = "very_low"     # 0-24: 재생성 권장
+
+    VERY_HIGH = "very_high"  # 90-100: 빠른 통과
+    HIGH = "high"  # 75-89: 일반 검증
+    MEDIUM = "medium"  # 50-74: 주의 필요
+    LOW = "low"  # 25-49: 추가 검증 권장
+    VERY_LOW = "very_low"  # 0-24: 재생성 권장
 
 
 @dataclass
 class ConfidenceResult:
     """신뢰도 평가 결과"""
-    score: int                    # 0-100
+
+    score: int  # 0-100
     level: ConfidenceLevel
-    factors: Dict[str, int]       # 각 요소별 점수
-    concerns: List[str]           # 우려 사항
+    factors: dict[str, int]  # 각 요소별 점수
+    concerns: list[str]  # 우려 사항
     needs_extra_verification: bool
-    recommendation: str           # "pass", "verify", "regenerate"
+    recommendation: str  # "pass", "verify", "regenerate"
 
 
 class ConfidenceCalibrator:
@@ -63,20 +65,20 @@ class ConfidenceCalibrator:
 
     # 신뢰도 요소별 가중치
     FACTOR_WEIGHTS = {
-        "length_adequacy": 15,      # 적절한 길이
-        "structure_quality": 20,    # 구조적 완성도
-        "continuity_signals": 20,   # 연속성 신호
-        "dialogue_ratio": 10,       # 대화 비율
-        "sensory_detail": 10,       # 감각 묘사
-        "scene_coverage": 15,       # 씬 반영도
-        "ending_hook": 10,          # 클리프행어
+        "length_adequacy": 15,  # 적절한 길이
+        "structure_quality": 20,  # 구조적 완성도
+        "continuity_signals": 20,  # 연속성 신호
+        "dialogue_ratio": 10,  # 대화 비율
+        "sensory_detail": 10,  # 감각 묘사
+        "scene_coverage": 15,  # 씬 반영도
+        "ending_hook": 10,  # 클리프행어
     }
 
     # 임계값
     THRESHOLDS = {
-        "extra_verification": 50,   # 이 미만이면 추가 검증
-        "regenerate": 30,           # 이 미만이면 재생성 권장
-        "fast_pass": 85,            # 이 이상이면 빠른 통과
+        "extra_verification": 50,  # 이 미만이면 추가 검증
+        "regenerate": 30,  # 이 미만이면 재생성 권장
+        "fast_pass": 85,  # 이 이상이면 빠른 통과
     }
 
     def __init__(self, api_client=None, use_llm: bool = False):
@@ -104,10 +106,7 @@ class ConfidenceCalibrator:
             return ConfidenceLevel.VERY_LOW
 
     def assess(
-        self,
-        content: str,
-        content_type: str = "manuscript",
-        context: Dict[str, Any] = None
+        self, content: str, content_type: str = "manuscript", context: dict[str, Any] = None
     ) -> ConfidenceResult:
         """
         신뢰도 평가
@@ -127,7 +126,7 @@ class ConfidenceCalibrator:
                 factors={},
                 concerns=[],
                 needs_extra_verification=False,
-                recommendation="pass"
+                recommendation="pass",
             )
 
         context = context or {}
@@ -139,11 +138,7 @@ class ConfidenceCalibrator:
         else:
             return self._assess_generic(content, context)
 
-    def _assess_manuscript(
-        self,
-        manuscript: str,
-        context: Dict[str, Any]
-    ) -> ConfidenceResult:
+    def _assess_manuscript(self, manuscript: str, context: dict[str, Any]) -> ConfidenceResult:
         """원고 신뢰도 평가"""
         factors = {}
         concerns = []
@@ -170,14 +165,14 @@ class ConfidenceCalibrator:
             structure_score += 5
 
         # 문단 분리
-        paragraphs = manuscript.split('\n\n')
+        paragraphs = manuscript.split("\n\n")
         if 5 <= len(paragraphs) <= 50:
             structure_score += 5
         elif len(paragraphs) < 5:
             concerns.append("문단 분리 부족")
 
         # 대화와 묘사 혼합
-        dialogue_count = manuscript.count('"') + manuscript.count('「')
+        dialogue_count = manuscript.count('"') + manuscript.count("「")
         narration_ratio = (len(manuscript) - dialogue_count * 10) / max(len(manuscript), 1)
         if 0.3 <= narration_ratio <= 0.8:
             structure_score += 5
@@ -196,8 +191,8 @@ class ConfidenceCalibrator:
 
         if prev_ms:
             # 직전 화 키워드가 현재 화에 있는지
-            prev_keywords = set(re.findall(r'[\w가-힣]{3,}', prev_ms[-1000:]))
-            curr_keywords = set(re.findall(r'[\w가-힣]{3,}', manuscript[:2000]))
+            prev_keywords = set(re.findall(r"[\w가-힣]{3,}", prev_ms[-1000:]))
+            curr_keywords = set(re.findall(r"[\w가-힣]{3,}", manuscript[:2000]))
             overlap = len(prev_keywords & curr_keywords)
 
             if overlap >= 10:
@@ -216,7 +211,7 @@ class ConfidenceCalibrator:
         factors["continuity_signals"] = continuity_score
 
         # 4. 대화 비율 (10점)
-        total_dialogue = manuscript.count('"') + manuscript.count('「')
+        total_dialogue = manuscript.count('"') + manuscript.count("「")
         dialogue_ratio = total_dialogue / max(len(manuscript) / 100, 1)
 
         if 3 <= dialogue_ratio <= 15:
@@ -229,7 +224,7 @@ class ConfidenceCalibrator:
             concerns.append(f"대화 비율 문제 ({dialogue_ratio:.1f})")
 
         # 5. 감각 묘사 (10점)
-        sensory_words = ['보이', '들리', '느껴', '냄새', '맛', '차가', '따뜻', '뜨거', '부드', '거칠']
+        sensory_words = ["보이", "들리", "느껴", "냄새", "맛", "차가", "따뜻", "뜨거", "부드", "거칠"]
         sensory_count = sum(1 for w in sensory_words if w in manuscript)
 
         if sensory_count >= 10:
@@ -252,7 +247,7 @@ class ConfidenceCalibrator:
                 for scene_data in scene_breakdown.values():
                     if isinstance(scene_data, dict):
                         desc = scene_data.get("description", "")
-                        scene_keywords.extend(re.findall(r'[\w가-힣]{2,}', desc)[:3])
+                        scene_keywords.extend(re.findall(r"[\w가-힣]{2,}", desc)[:3])
 
                 matched = sum(1 for kw in scene_keywords if kw in manuscript)
                 ratio = matched / max(len(scene_keywords), 1)
@@ -274,7 +269,7 @@ class ConfidenceCalibrator:
 
         # 7. 클리프행어 (10점)
         ending = manuscript[-500:] if len(manuscript) > 500 else manuscript
-        hook_signals = ['...', '!', '?', '그때', '순간', '갑자기', '하지만', '그러나']
+        hook_signals = ["...", "!", "?", "그때", "순간", "갑자기", "하지만", "그러나"]
         hook_count = sum(1 for h in hook_signals if h in ending)
 
         if hook_count >= 3:
@@ -307,14 +302,10 @@ class ConfidenceCalibrator:
             factors=factors,
             concerns=concerns,
             needs_extra_verification=needs_extra,
-            recommendation=recommendation
+            recommendation=recommendation,
         )
 
-    def _assess_blueprint(
-        self,
-        content: str,
-        context: Dict[str, Any]
-    ) -> ConfidenceResult:
+    def _assess_blueprint(self, content: str, context: dict[str, Any]) -> ConfidenceResult:
         """블루프린트 신뢰도 평가"""
         factors = {}
         concerns = []
@@ -418,14 +409,10 @@ class ConfidenceCalibrator:
             factors=factors,
             concerns=concerns,
             needs_extra_verification=needs_extra,
-            recommendation=recommendation
+            recommendation=recommendation,
         )
 
-    def _assess_generic(
-        self,
-        content: str,
-        context: Dict[str, Any]
-    ) -> ConfidenceResult:
+    def _assess_generic(self, content: str, context: dict[str, Any]) -> ConfidenceResult:
         """일반 콘텐츠 신뢰도 평가"""
         # 길이 기반 기본 평가
         length = len(content)
@@ -445,7 +432,7 @@ class ConfidenceCalibrator:
             factors={"length": score},
             concerns=[] if score >= 50 else ["내용이 짧음"],
             needs_extra_verification=score < 50,
-            recommendation="pass" if score >= 70 else "verify"
+            recommendation="pass" if score >= 70 else "verify",
         )
 
     def get_summary(self, result: ConfidenceResult) -> str:

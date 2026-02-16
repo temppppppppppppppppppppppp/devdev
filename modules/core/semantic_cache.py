@@ -26,18 +26,17 @@
     cache.set(request_type, context_hash, result)
 """
 
-from typing import Dict, Any, List, Optional, Tuple
-from dataclasses import dataclass, field
-from collections import OrderedDict
 import hashlib
-import json
 import time
-import re
+from collections import OrderedDict
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
 class CacheEntry:
     """캐시 엔트리"""
+
     key: str
     value: Any
     context_signature: str
@@ -49,6 +48,7 @@ class CacheEntry:
 @dataclass
 class CacheStats:
     """캐시 통계"""
+
     total_requests: int = 0
     cache_hits: int = 0
     cache_misses: int = 0
@@ -66,25 +66,20 @@ class SemanticCache:
 
     # 캐시 가능한 요청 타입
     CACHEABLE_TYPES = {
-        "blueprint_structure",   # 블루프린트 구조 (씬 배치)
-        "scene_template",        # 씬 템플릿
-        "character_reaction",    # 캐릭터 반응 패턴
-        "dialogue_style",        # 대화 스타일
-        "description_pattern",   # 묘사 패턴
-        "transition_phrase",     # 전환 문구
-        "arc_tactical",          # [V60.26] Arc 전술 문서 (유사 상황 재활용)
-        "arc_constraint",        # [V60.26] Arc 제약 조건 (Preflight 결과)
+        "blueprint_structure",  # 블루프린트 구조 (씬 배치)
+        "scene_template",  # 씬 템플릿
+        "character_reaction",  # 캐릭터 반응 패턴
+        "dialogue_style",  # 대화 스타일
+        "description_pattern",  # 묘사 패턴
+        "transition_phrase",  # 전환 문구
+        "arc_tactical",  # [V60.26] Arc 전술 문서 (유사 상황 재활용)
+        "arc_constraint",  # [V60.26] Arc 제약 조건 (Preflight 결과)
     }
 
     # TTL (초)
     DEFAULT_TTL = 3600 * 24  # 24시간
 
-    def __init__(
-        self,
-        max_size: int = 500,
-        ttl: int = None,
-        similarity_threshold: float = 0.85
-    ):
+    def __init__(self, max_size: int = 500, ttl: int = None, similarity_threshold: float = 0.85):
         """
         Args:
             max_size: 최대 캐시 엔트리 수
@@ -99,14 +94,14 @@ class SemanticCache:
         self._cache: OrderedDict[str, CacheEntry] = OrderedDict()
 
         # 컨텍스트 시그니처 인덱스 (빠른 유사 검색용)
-        self._signature_index: Dict[str, List[str]] = {}
+        self._signature_index: dict[str, list[str]] = {}
 
         # 통계
         self.stats = CacheStats()
 
         self.enabled = True
 
-    def _generate_context_hash(self, context: Dict[str, Any]) -> str:
+    def _generate_context_hash(self, context: dict[str, Any]) -> str:
         """컨텍스트에서 해시 생성"""
         # 핵심 필드만 추출
         key_fields = [
@@ -123,7 +118,7 @@ class SemanticCache:
 
         return hashlib.md5(key_string.encode()).hexdigest()[:16]
 
-    def _generate_signature(self, context: Dict[str, Any]) -> str:
+    def _generate_signature(self, context: dict[str, Any]) -> str:
         """컨텍스트 시그니처 생성 (유사도 비교용)"""
         # 의미적으로 중요한 키워드 추출
         keywords = []
@@ -154,14 +149,26 @@ class SemanticCache:
     def _extract_location_type(self, location: str) -> str:
         """장소에서 유형 추출"""
         location_types = {
-            "객잔": "inn", "주막": "inn", "여관": "inn",
-            "산": "mountain", "봉": "mountain", "령": "mountain",
-            "강": "river", "호수": "river", "계곡": "river",
-            "성": "castle", "궁": "castle", "부": "castle",
-            "동굴": "cave", "굴": "cave",
-            "숲": "forest", "림": "forest",
-            "마을": "village", "촌": "village",
-            "도시": "city", "성": "city",
+            "객잔": "inn",
+            "주막": "inn",
+            "여관": "inn",
+            "산": "mountain",
+            "봉": "mountain",
+            "령": "mountain",
+            "강": "river",
+            "호수": "river",
+            "계곡": "river",
+            "성": "castle",
+            "궁": "castle",
+            "부": "castle",
+            "동굴": "cave",
+            "굴": "cave",
+            "숲": "forest",
+            "림": "forest",
+            "마을": "village",
+            "촌": "village",
+            "도시": "city",
+            "성": "city",
         }
 
         for keyword, loc_type in location_types.items():
@@ -186,12 +193,7 @@ class SemanticCache:
 
         return intersection / union if union > 0 else 0.0
 
-    def get(
-        self,
-        request_type: str,
-        context: Dict[str, Any],
-        exact_match: bool = False
-    ) -> Optional[Any]:
+    def get(self, request_type: str, context: dict[str, Any], exact_match: bool = False) -> Any | None:
         """
         캐시 조회
 
@@ -240,11 +242,7 @@ class SemanticCache:
         self.stats.cache_misses += 1
         return None
 
-    def _find_similar(
-        self,
-        request_type: str,
-        context: Dict[str, Any]
-    ) -> Optional[Any]:
+    def _find_similar(self, request_type: str, context: dict[str, Any]) -> Any | None:
         """유사한 캐시 엔트리 검색"""
         signature = self._generate_signature(context)
 
@@ -255,10 +253,7 @@ class SemanticCache:
         candidates = []
         for key, entry in self._cache.items():
             if key.startswith(f"{request_type}:"):
-                similarity = self._calculate_similarity(
-                    signature,
-                    entry.context_signature
-                )
+                similarity = self._calculate_similarity(signature, entry.context_signature)
                 if similarity >= self.similarity_threshold:
                     candidates.append((similarity, entry))
 
@@ -275,13 +270,7 @@ class SemanticCache:
 
         return best_entry.value
 
-    def set(
-        self,
-        request_type: str,
-        context: Dict[str, Any],
-        value: Any,
-        metadata: Dict[str, Any] = None
-    ) -> str:
+    def set(self, request_type: str, context: dict[str, Any], value: Any, metadata: dict[str, Any] = None) -> str:
         """
         캐시 저장
 
@@ -315,7 +304,7 @@ class SemanticCache:
             context_signature=signature,
             created_at=time.time(),
             hit_count=0,
-            last_hit=time.time()
+            last_hit=time.time(),
         )
 
         # [V70] 기존 엔트리가 있으면 시그니처 인덱스에서 먼저 제거
@@ -365,14 +354,11 @@ class SemanticCache:
             self._signature_index.clear()
         else:
             # 패턴 매칭하는 것들 제거
-            keys_to_remove = [
-                k for k in self._cache.keys()
-                if pattern in k
-            ]
+            keys_to_remove = [k for k in self._cache.keys() if pattern in k]
             for key in keys_to_remove:
                 self._evict(key)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """통계 반환"""
         return {
             "total_requests": self.stats.total_requests,
@@ -380,7 +366,7 @@ class SemanticCache:
             "cache_misses": self.stats.cache_misses,
             "hit_rate": f"{self.stats.hit_rate:.1%}",
             "cache_size": len(self._cache),
-            "max_size": self.max_size
+            "max_size": self.max_size,
         }
 
     def get_summary(self) -> str:
@@ -400,29 +386,14 @@ class BlueprintCache(SemanticCache):
     def __init__(self, max_size: int = 100):
         super().__init__(max_size=max_size, similarity_threshold=0.8)
 
-    def cache_scene_structure(
-        self,
-        scene_type: str,
-        emotion_arc: str,
-        structure: Dict[str, Any]
-    ) -> str:
+    def cache_scene_structure(self, scene_type: str, emotion_arc: str, structure: dict[str, Any]) -> str:
         """씬 구조 캐시"""
-        context = {
-            "scene_type": scene_type,
-            "emotion": emotion_arc
-        }
+        context = {"scene_type": scene_type, "emotion": emotion_arc}
         return self.set("scene_structure", context, structure)
 
-    def get_scene_structure(
-        self,
-        scene_type: str,
-        emotion_arc: str
-    ) -> Optional[Dict[str, Any]]:
+    def get_scene_structure(self, scene_type: str, emotion_arc: str) -> dict[str, Any] | None:
         """씬 구조 조회"""
-        context = {
-            "scene_type": scene_type,
-            "emotion": emotion_arc
-        }
+        context = {"scene_type": scene_type, "emotion": emotion_arc}
         return self.get("scene_structure", context)
 
 
@@ -432,28 +403,12 @@ class DescriptionCache(SemanticCache):
     def __init__(self, max_size: int = 200):
         super().__init__(max_size=max_size, similarity_threshold=0.75)
 
-    def cache_description(
-        self,
-        desc_type: str,
-        subject: str,
-        description: str
-    ) -> str:
+    def cache_description(self, desc_type: str, subject: str, description: str) -> str:
         """묘사 캐시"""
-        context = {
-            "action_type": desc_type,
-            "character": subject
-        }
+        context = {"action_type": desc_type, "character": subject}
         return self.set("description", context, description)
 
-    def get_similar_description(
-        self,
-        desc_type: str,
-        subject: str
-    ) -> Optional[str]:
+    def get_similar_description(self, desc_type: str, subject: str) -> str | None:
         """유사 묘사 조회"""
-        context = {
-            "action_type": desc_type,
-            "character": subject
-        }
+        context = {"action_type": desc_type, "character": subject}
         return self.get("description", context)
-

@@ -280,11 +280,11 @@ def get_constitution_for_genre(genre: str) -> str:
     """장르별 품질 헌법 반환"""
     base = QUALITY_CONSTITUTION
 
-    if genre == 'wuxia':
+    if genre == "wuxia":
         return base + "\n\n" + WUXIA_AMENDMENTS
-    elif genre == 'hunter':
+    elif genre == "hunter":
         return base + "\n\n" + HUNTER_AMENDMENTS
-    elif genre == 'investment':
+    elif genre == "investment":
         return base + "\n\n" + INVESTMENT_AMENDMENTS
     else:
         return base

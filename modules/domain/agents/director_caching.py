@@ -5,8 +5,9 @@ Director God Object 분해의 첫 번째 단계.
 원고 캐시 생성, 원고 역사 구성, protagonist_config 캐싱을 담당.
 """
 
-from .base_agent import BaseAgent
 import logging
+
+from .base_agent import BaseAgent
 
 
 class DirectorCachingManager:
@@ -53,23 +54,16 @@ class DirectorCachingManager:
         try:
             for prev_ep in range(1, ep_num):
                 ms_data = db_manager.get_manuscript(prev_ep)
-                if ms_data and ms_data.get('content'):
-                    history.append({
-                        "ep_num": prev_ep,
-                        "text": ms_data.get('content', ''),
-                        "summary": ms_data.get('summary', '')
-                    })
+                if ms_data and ms_data.get("content"):
+                    history.append(
+                        {"ep_num": prev_ep, "text": ms_data.get("content", ""), "summary": ms_data.get("summary", "")}
+                    )
         except Exception as e:
             logging.warning(f"⚠️ [V60.87] 원고 역사 로드 실패: {e}")
 
         return history
 
-    def create_manuscript_cache(
-        self,
-        db_manager,
-        current_ep: int,
-        ttl_seconds: int = 3600
-    ) -> str:
+    def create_manuscript_cache(self, db_manager, current_ep: int, ttl_seconds: int = 3600) -> str:
         """
         [V60.88] 전체 원고를 합본하여 Gemini 컨텍스트 캐시 생성
 
@@ -94,10 +88,10 @@ class DirectorCachingManager:
 
             for ep_num in range(1, current_ep):
                 ms_data = db_manager.get_manuscript(ep_num)
-                if ms_data and ms_data.get('content'):
-                    ep_text = ms_data.get('content', '')
-                    ep_title = ms_data.get('title', f'제{ep_num}화')
-                    formatted = f"\n{'='*60}\n# 제{ep_num}화. {ep_title}\n{'='*60}\n{ep_text}\n"
+                if ms_data and ms_data.get("content"):
+                    ep_text = ms_data.get("content", "")
+                    ep_title = ms_data.get("title", f"제{ep_num}화")
+                    formatted = f"\n{'=' * 60}\n# 제{ep_num}화. {ep_title}\n{'=' * 60}\n{ep_text}\n"
                     manuscripts_compiled.append(formatted)
                     total_chars += len(formatted)
 
@@ -117,7 +111,7 @@ class DirectorCachingManager:
 4. 타임라인 충돌: 시간 순서가 맞지 않으면 검토 필요
 5. 지리 충돌: 물리적으로 불가능한 이동이면 검토 필요
 
-{''.join(manuscripts_compiled)}
+{"".join(manuscripts_compiled)}
 """
 
             # 3. 캐시 최소 크기 체크 (1024 토큰 ≈ 1500자)
@@ -139,8 +133,8 @@ class DirectorCachingManager:
                     display_name=f"MANUSCRIPT_HISTORY_EP{current_ep}",
                     system_instruction="원고 연속성 전문가 (Manuscript Continuity Expert)",
                     contents=[compiled_text],
-                    ttl=f"{ttl_seconds}s"
-                )
+                    ttl=f"{ttl_seconds}s",
+                ),
             )
 
             self.manuscript_cache_name = cache.name
@@ -155,7 +149,7 @@ class DirectorCachingManager:
             # [V61.9] 캐싱 중 429/quota → 키 전환 예약
             error_str = str(e).lower()
             if "429" in error_str or "resource_exhausted" in error_str or "quota" in error_str:
-                logging.info(f"⚠️ [V61.9] 원고 캐시 생성 중 API 제한 → 키 전환 예약")
+                logging.info("⚠️ [V61.9] 원고 캐시 생성 중 API 제한 → 키 전환 예약")
                 with BaseAgent._rotation_lock:
                     BaseAgent._key_rotation_pending = True
             else:
@@ -169,10 +163,10 @@ class DirectorCachingManager:
             return self._protagonist_config
 
         try:
-            master_bible = getattr(self.context, 'master_bible', {})
+            master_bible = getattr(self.context, "master_bible", {})
             if master_bible:
-                bible_root = master_bible.get('MasterBible', master_bible)
-                self._protagonist_config = bible_root.get('protagonist_config', {})
+                bible_root = master_bible.get("MasterBible", master_bible)
+                self._protagonist_config = bible_root.get("protagonist_config", {})
             else:
                 self._protagonist_config = {}
         except Exception:

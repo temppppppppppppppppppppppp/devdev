@@ -17,29 +17,31 @@ LLM이 출력 전에 스스로 검증 기준을 확인하도록 유도
     # Analyst 프롬프트에 injection 추가
 """
 
-from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 
 class CheckType(Enum):
     """체크 타입"""
-    CONTINUITY = "continuity"      # 연속성
-    SCOPE = "scope"                # 범위 초과
+
+    CONTINUITY = "continuity"  # 연속성
+    SCOPE = "scope"  # 범위 초과
     RELATIONSHIP = "relationship"  # 관계 급변
-    ITEM = "item"                  # 아이템 오류
-    TIMELINE = "timeline"          # 타임라인 오류
-    QUALITY = "quality"            # 품질 기준
+    ITEM = "item"  # 아이템 오류
+    TIMELINE = "timeline"  # 타임라인 오류
+    QUALITY = "quality"  # 품질 기준
 
 
 @dataclass
 class ConstitutionArticle:
     """헌법 조항"""
+
     id: str
     check_type: CheckType
-    question: str           # YES/NO 질문 형태
-    reject_if_yes: bool     # YES면 REJECT
-    severity: str           # "CRITICAL" | "HIGH" | "MEDIUM"
+    question: str  # YES/NO 질문 형태
+    reject_if_yes: bool  # YES면 REJECT
+    severity: str  # "CRITICAL" | "HIGH" | "MEDIUM"
 
 
 class ConstitutionalChecker:
@@ -52,42 +54,42 @@ class ConstitutionalChecker:
             check_type=CheckType.ITEM,
             question="이전 Arc에서 이미 획득한 아이템을 다시 획득하는가?",
             reject_if_yes=True,
-            severity="CRITICAL"
+            severity="CRITICAL",
         ),
         ConstitutionArticle(
             id="A2",
             check_type=CheckType.ITEM,
             question="이전 Arc에서 수여받은 물건/직위를 다시 수여받는가?",
             reject_if_yes=True,
-            severity="CRITICAL"
+            severity="CRITICAL",
         ),
         ConstitutionArticle(
             id="A3",
             check_type=CheckType.CONTINUITY,
             question="직전 Arc의 joint_docs(위치/소지품)을 무시하는가?",
             reject_if_yes=True,
-            severity="CRITICAL"
+            severity="CRITICAL",
         ),
         ConstitutionArticle(
             id="A4",
             check_type=CheckType.RELATIONSHIP,
             question="NPC 관계가 2단계 이상 급변하는가? (예: 무시→충성)",
             reject_if_yes=True,
-            severity="HIGH"
+            severity="HIGH",
         ),
         ConstitutionArticle(
             id="A5",
             check_type=CheckType.TIMELINE,
             question="5화 구조를 초과하는 사건을 설계하는가?",
             reject_if_yes=True,
-            severity="HIGH"
+            severity="HIGH",
         ),
         ConstitutionArticle(
             id="A6",
             check_type=CheckType.QUALITY,
             question="tactical_doc이 500자 미만인가?",
             reject_if_yes=True,
-            severity="MEDIUM"
+            severity="MEDIUM",
         ),
     ]
 
@@ -98,35 +100,35 @@ class ConstitutionalChecker:
             check_type=CheckType.ITEM,
             question="Blueprint에서 미획득 아이템을 사용하는가?",
             reject_if_yes=True,
-            severity="CRITICAL"
+            severity="CRITICAL",
         ),
         ConstitutionArticle(
             id="B2",
             check_type=CheckType.CONTINUITY,
             question="직전 화 cliffhanger를 무시하고 시작하는가?",
             reject_if_yes=True,
-            severity="CRITICAL"
+            severity="CRITICAL",
         ),
         ConstitutionArticle(
             id="B3",
             check_type=CheckType.SCOPE,
             question="씬 개수가 7개를 초과하는가?",
             reject_if_yes=True,
-            severity="HIGH"
+            severity="HIGH",
         ),
         ConstitutionArticle(
             id="B4",
             check_type=CheckType.QUALITY,
             question="ending_hook이 없거나 5자 미만인가?",
             reject_if_yes=True,
-            severity="HIGH"
+            severity="HIGH",
         ),
         ConstitutionArticle(
             id="B5",
             check_type=CheckType.TIMELINE,
             question="Arc tactical_doc 범위를 초과하는 사건이 있는가?",
             reject_if_yes=True,
-            severity="HIGH"
+            severity="HIGH",
         ),
     ]
 
@@ -137,49 +139,49 @@ class ConstitutionalChecker:
             check_type=CheckType.ITEM,
             question="미획득 아이템을 사용하거나 언급하는가?",
             reject_if_yes=True,
-            severity="CRITICAL"
+            severity="CRITICAL",
         ),
         ConstitutionArticle(
             id="M2",
             check_type=CheckType.CONTINUITY,
             question="직전 화 상태(부상/위치/감정)를 무시하는가?",
             reject_if_yes=True,
-            severity="CRITICAL"
+            severity="CRITICAL",
         ),
         ConstitutionArticle(
             id="M3",
             check_type=CheckType.RELATIONSHIP,
             question="관계가 2단계 이상 급변하는가?",
             reject_if_yes=True,
-            severity="CRITICAL"
+            severity="CRITICAL",
         ),
         ConstitutionArticle(
             id="M4",
             check_type=CheckType.SCOPE,
             question="Blueprint의 핵심 씬을 누락하는가?",
             reject_if_yes=True,
-            severity="CRITICAL"
+            severity="CRITICAL",
         ),
         ConstitutionArticle(
             id="M5",
             check_type=CheckType.QUALITY,
             question="원고가 4000자 미만인가?",
             reject_if_yes=True,
-            severity="HIGH"
+            severity="HIGH",
         ),
         ConstitutionArticle(
             id="M6",
             check_type=CheckType.QUALITY,
             question="직접 감정 서술이 5회 이상인가? (Show don't Tell 위반)",
             reject_if_yes=True,
-            severity="MEDIUM"
+            severity="MEDIUM",
         ),
         ConstitutionArticle(
             id="M7",
             check_type=CheckType.QUALITY,
             question="클리셰 표현이 3회 이상인가?",
             reject_if_yes=True,
-            severity="MEDIUM"
+            severity="MEDIUM",
         ),
     ]
 
@@ -190,11 +192,7 @@ class ConstitutionalChecker:
         """
         self.genre = genre
 
-    def get_analyst_constitution(
-        self,
-        prev_arcs: List[Dict[str, Any]] = None,
-        additional_constraints: str = ""
-    ) -> str:
+    def get_analyst_constitution(self, prev_arcs: list[dict[str, Any]] = None, additional_constraints: str = "") -> str:
         """
         Stage 2 (Analyst/Arc) 헌법 프롬프트 생성
 
@@ -219,15 +217,15 @@ class ConstitutionalChecker:
             grants_received = []
 
             for arc in prev_arcs:
-                arc_no = arc.get('arc_no', '?')
-                state = arc.get('state_constraints', {})
+                arc_no = arc.get("arc_no", "?")
+                state = arc.get("state_constraints", {})
 
-                items = state.get('items_acquired', [])
+                items = state.get("items_acquired", [])
                 for item in items:
                     if item:
                         acquired_items.append(f"Arc{arc_no}: {item}")
 
-                grants = state.get('grants_received', [])
+                grants = state.get("grants_received", [])
                 for grant in grants:
                     if grant:
                         grants_received.append(f"Arc{arc_no}: {grant}")
@@ -258,10 +256,7 @@ class ConstitutionalChecker:
         return "\n".join(lines)
 
     def get_architect_constitution(
-        self,
-        prev_blueprint: Dict[str, Any] = None,
-        arc_data: Dict[str, Any] = None,
-        additional_constraints: str = ""
+        self, prev_blueprint: dict[str, Any] = None, arc_data: dict[str, Any] = None, additional_constraints: str = ""
     ) -> str:
         """
         Stage 3 (Architect/Blueprint) 헌법 프롬프트 생성
@@ -275,23 +270,23 @@ class ConstitutionalChecker:
 
         # 직전 화 정보
         if prev_blueprint:
-            ending = prev_blueprint.get('ending_hook') or prev_blueprint.get('cliffhanger', '')
+            ending = prev_blueprint.get("ending_hook") or prev_blueprint.get("cliffhanger", "")
             if ending:
-                lines.append(f"\n📌 [직전 화 ending_hook - 반드시 이어받을 것]")
+                lines.append("\n📌 [직전 화 ending_hook - 반드시 이어받을 것]")
                 lines.append(f'   "{ending[:150]}"')
 
         # Arc 범위
         if arc_data:
-            tactical = arc_data.get('tactical_doc', '')
+            tactical = arc_data.get("tactical_doc", "")
             if tactical:
-                lines.append(f"\n📌 [Arc tactical_doc 범위 - 초과 금지]")
+                lines.append("\n📌 [Arc tactical_doc 범위 - 초과 금지]")
                 lines.append(f"   {tactical[:200]}...")
 
         lines.append("\n📋 [자가 검증 체크리스트]")
         for article in self.BLUEPRINT_CONSTITUTION:
             severity_emoji = "🔴" if article.severity == "CRITICAL" else "🟡" if article.severity == "HIGH" else "🟢"
             lines.append(f"{severity_emoji} [{article.id}] {article.question}")
-            lines.append(f"       → YES면 즉시 수정")
+            lines.append("       → YES면 즉시 수정")
 
         if additional_constraints:
             lines.append(f"\n📌 [추가 제약]\n{additional_constraints}")
@@ -302,10 +297,10 @@ class ConstitutionalChecker:
 
     def get_writer_constitution(
         self,
-        blueprint: Dict[str, Any] = None,
+        blueprint: dict[str, Any] = None,
         prev_manuscript: str = "",
-        inventory: List[str] = None,
-        additional_constraints: str = ""
+        inventory: list[str] = None,
+        additional_constraints: str = "",
     ) -> str:
         """
         Stage 4 (Writer/Manuscript) 헌법 프롬프트 생성
@@ -319,24 +314,24 @@ class ConstitutionalChecker:
 
         # 현재 소지품
         if inventory:
-            lines.append(f"\n✅ [현재 소지 아이템 - 이것만 사용 가능]")
+            lines.append("\n✅ [현재 소지 아이템 - 이것만 사용 가능]")
             for item in inventory[:10]:
                 lines.append(f"   - {item}")
 
         # 직전 화 상태
         if prev_manuscript:
             ending_part = prev_manuscript[-500:] if len(prev_manuscript) > 500 else prev_manuscript
-            lines.append(f"\n📌 [직전 화 마지막 - 이 상태에서 시작]")
+            lines.append("\n📌 [직전 화 마지막 - 이 상태에서 시작]")
             lines.append(f"   ...{ending_part[-200:]}")
 
         # Blueprint 핵심 씬
         if blueprint:
-            scene_breakdown = blueprint.get('scene_breakdown', {})
+            scene_breakdown = blueprint.get("scene_breakdown", {})
             if scene_breakdown:
-                lines.append(f"\n📋 [Blueprint 필수 씬 - 모두 반영할 것]")
+                lines.append("\n📋 [Blueprint 필수 씬 - 모두 반영할 것]")
                 for i, (scene_id, scene_data) in enumerate(list(scene_breakdown.items())[:6], 1):
                     if isinstance(scene_data, dict):
-                        desc = scene_data.get('description', str(scene_data))[:50]
+                        desc = scene_data.get("description", str(scene_data))[:50]
                     else:
                         desc = str(scene_data)[:50]
                     lines.append(f"   {i}. {scene_id}: {desc}")
@@ -345,7 +340,7 @@ class ConstitutionalChecker:
         for article in self.MANUSCRIPT_CONSTITUTION:
             severity_emoji = "🔴" if article.severity == "CRITICAL" else "🟡" if article.severity == "HIGH" else "🟢"
             lines.append(f"{severity_emoji} [{article.id}] {article.question}")
-            lines.append(f"       → YES면 즉시 수정")
+            lines.append("       → YES면 즉시 수정")
 
         if additional_constraints:
             lines.append(f"\n📌 [추가 제약]\n{additional_constraints}")
@@ -543,11 +538,7 @@ class ConstitutionalChecker:
    "부상이 채 낫지 않아 한 손만으로 검을 쥐었다" (부상 연속성)
 """
 
-    def get_full_injection(
-        self,
-        stage: int,
-        context: Dict[str, Any] = None
-    ) -> str:
+    def get_full_injection(self, stage: int, context: dict[str, Any] = None) -> str:
         """
         전체 주입 프롬프트 생성 (Constitutional + REJECT Examples)
 
@@ -562,21 +553,20 @@ class ConstitutionalChecker:
 
         if stage == 2:
             constitution = self.get_analyst_constitution(
-                prev_arcs=context.get('prev_arcs', []),
-                additional_constraints=context.get('feedback', '')
+                prev_arcs=context.get("prev_arcs", []), additional_constraints=context.get("feedback", "")
             )
         elif stage == 3:
             constitution = self.get_architect_constitution(
-                prev_blueprint=context.get('prev_blueprint'),
-                arc_data=context.get('arc_data'),
-                additional_constraints=context.get('feedback', '')
+                prev_blueprint=context.get("prev_blueprint"),
+                arc_data=context.get("arc_data"),
+                additional_constraints=context.get("feedback", ""),
             )
         elif stage == 4:
             constitution = self.get_writer_constitution(
-                blueprint=context.get('blueprint'),
-                prev_manuscript=context.get('prev_manuscript', ''),
-                inventory=context.get('inventory', []),
-                additional_constraints=context.get('feedback', '')
+                blueprint=context.get("blueprint"),
+                prev_manuscript=context.get("prev_manuscript", ""),
+                inventory=context.get("inventory", []),
+                additional_constraints=context.get("feedback", ""),
             )
         else:
             return ""

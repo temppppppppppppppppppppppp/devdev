@@ -5,9 +5,10 @@ _check_meta_references, _check_honorific_consistency, _check_intra_contradiction
 _check_cross_episode_duplication, validate_candidate 에 대한 단위 테스트.
 """
 
-import pytest
 import sys
 from pathlib import Path
+
+import pytest
 
 # 프로젝트 루트를 path에 추가
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -15,10 +16,10 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from modules.domain.agents.manuscript_validator import ManuscriptValidator
 
-
 # ══════════════════════════════════════════════════════════════
 # Fixtures
 # ══════════════════════════════════════════════════════════════
+
 
 @pytest.fixture
 def validator():
@@ -55,21 +56,16 @@ def sample_blueprint():
         "ep_num": 10,
         "title": "결전의 날",
         "scene_breakdown": {
-            "scene_1": {
-                "summary": "청풍산장에서 결투 준비",
-                "content": "이청풍이 검을 준비한다"
-            },
-            "scene_2": {
-                "summary": "철무련주와의 대결",
-                "content": "치열한 검법 대결이 벌어진다"
-            }
-        }
+            "scene_1": {"summary": "청풍산장에서 결투 준비", "content": "이청풍이 검을 준비한다"},
+            "scene_2": {"summary": "철무련주와의 대결", "content": "치열한 검법 대결이 벌어진다"},
+        },
     }
 
 
 # ══════════════════════════════════════════════════════════════
 # Test 1: _check_meta_references
 # ══════════════════════════════════════════════════════════════
+
 
 class TestCheckMetaReferences:
     def test_episode_number_detected(self, validator):
@@ -88,7 +84,7 @@ class TestCheckMetaReferences:
     def test_dialogue_excluded(self, validator):
         """대사 안의 메타 참조는 제외 (따옴표 내부)"""
         # 앞뒤 50자 이내에 " 쌍이 있으면 대사로 간주
-        manuscript = 'a' * 100 + ' "다음 회에 만나자" 라고 그가 말했다.'
+        manuscript = "a" * 100 + ' "다음 회에 만나자" 라고 그가 말했다.'
         result = validator._check_meta_references(manuscript)
         # 대사 내부이므로 필터링
         assert len(result["warnings"]) == 0
@@ -109,12 +105,12 @@ class TestCheckMetaReferences:
 # Test 2: _check_honorific_consistency
 # ══════════════════════════════════════════════════════════════
 
+
 class TestCheckHonorificConsistency:
     def test_consistent_honorifics(self, validator):
         """일관된 호칭은 경고 없음"""
         manuscript = (
-            '"강형님, 어디로 가시는 겁니까?" 이청풍이 물었다. '
-            '"강형님, 조심하시오." 뒤에서 다시 말했다. '
+            '"강형님, 어디로 가시는 겁니까?" 이청풍이 물었다. "강형님, 조심하시오." 뒤에서 다시 말했다. '
         ) * 5 + "a" * 200  # 200자 이상
         result = validator._check_honorific_consistency(manuscript)
         # "강형님"만 사용 → 불일치 없음
@@ -130,6 +126,7 @@ class TestCheckHonorificConsistency:
 # Test 3: _check_intra_contradictions
 # ══════════════════════════════════════════════════════════════
 
+
 class TestCheckIntraContradictions:
     def test_lost_item_reuse(self, validator):
         """잃어버린 아이템을 다시 사용하면 경고"""
@@ -143,12 +140,7 @@ class TestCheckIntraContradictions:
 
     def test_recovered_item_ok(self, validator):
         """잃어버렸다가 되찾은 아이템 사용은 정상"""
-        manuscript = (
-            "이청풍은 청풍검을 잃어버렸다. "
-            "그러나 곧 청풍검을 되찾았다. "
-            "다시 청풍검을 뽑아들었다. "
-            "a" * 500
-        )
+        manuscript = "이청풍은 청풍검을 잃어버렸다. 그러나 곧 청풍검을 되찾았다. 다시 청풍검을 뽑아들었다. a" * 500
         result = validator._check_intra_contradictions(manuscript)
         # 되찾은 후 사용이므로 경고 없어야 함
         assert not any("청풍검" in w for w in result.get("warnings", []))
@@ -162,6 +154,7 @@ class TestCheckIntraContradictions:
 # ══════════════════════════════════════════════════════════════
 # Test 4: _check_cross_episode_duplication
 # ══════════════════════════════════════════════════════════════
+
 
 class TestCheckCrossEpisodeDuplication:
     def test_high_overlap_warning(self, validator):
@@ -188,9 +181,7 @@ class TestCheckCrossEpisodeDuplication:
 
     def test_short_manuscript_skip(self, validator):
         """짧은 원고는 스킵"""
-        result = validator._check_cross_episode_duplication(
-            "짧은 원고", [{"ep_num": 1, "content": "이전 원고 내용"}]
-        )
+        result = validator._check_cross_episode_duplication("짧은 원고", [{"ep_num": 1, "content": "이전 원고 내용"}])
         assert result == {"warnings": [], "focus_points": []}
 
 
@@ -198,15 +189,13 @@ class TestCheckCrossEpisodeDuplication:
 # Test 5: validate_candidate (통합 검증)
 # ══════════════════════════════════════════════════════════════
 
+
 class TestValidateCandidate:
     def test_short_manuscript_warning(self, validator, sample_blueprint):
         """짧은 원고는 분량 경고"""
         short_manuscript = "이청풍은 검을 들었다." * 50  # ~1000자
         result = validator.validate_candidate(
-            manuscript=short_manuscript,
-            blueprint=sample_blueprint,
-            prev_manuscript="",
-            hud_report=""
+            manuscript=short_manuscript, blueprint=sample_blueprint, prev_manuscript="", hud_report=""
         )
         # warnings에 분량 관련 경고가 있어야 함
         assert result is not None
@@ -218,10 +207,7 @@ class TestValidateCandidate:
     def test_adequate_manuscript(self, validator, long_manuscript, sample_blueprint):
         """충분한 분량의 원고는 분량 경고 없음"""
         result = validator.validate_candidate(
-            manuscript=long_manuscript,
-            blueprint=sample_blueprint,
-            prev_manuscript="",
-            hud_report=""
+            manuscript=long_manuscript, blueprint=sample_blueprint, prev_manuscript="", hud_report=""
         )
         assert result is not None
         assert "warnings" in result
@@ -232,10 +218,7 @@ class TestValidateCandidate:
     def test_returns_dict_with_expected_keys(self, validator, long_manuscript, sample_blueprint):
         """반환값에 필요한 키가 존재"""
         result = validator.validate_candidate(
-            manuscript=long_manuscript,
-            blueprint=sample_blueprint,
-            prev_manuscript="",
-            hud_report=""
+            manuscript=long_manuscript, blueprint=sample_blueprint, prev_manuscript="", hud_report=""
         )
         assert isinstance(result, dict)
         assert "warnings" in result
@@ -249,10 +232,7 @@ class TestValidateCandidate:
     def test_none_blueprint_graceful(self, validator, long_manuscript):
         """blueprint가 비어있어도 에러 없이 동작"""
         result = validator.validate_candidate(
-            manuscript=long_manuscript,
-            blueprint={},
-            prev_manuscript="",
-            hud_report=""
+            manuscript=long_manuscript, blueprint={}, prev_manuscript="", hud_report=""
         )
         assert result is not None
         assert "warnings" in result

@@ -7,15 +7,16 @@ Story Expander - 컨셉 → Bible + Treatment 생성
 import json
 import logging
 import os
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 from .preset_registry import PresetRegistry
 
 # 스피너 import (실패해도 동작)
 try:
-    from .spinner import Spinner, ProgressBar, PhaseIndicator, print_header, print_success, print_error
+    from .spinner import PhaseIndicator, ProgressBar, Spinner, print_error, print_header, print_success
+
     SPINNER_AVAILABLE = True
 except ImportError:
     SPINNER_AVAILABLE = False
@@ -27,12 +28,12 @@ class StoryExpander:
     def __init__(self, genre: str = None, llm_client=None):
         self.genre = genre
         self.client = llm_client
-        self.preset_registry: Optional[PresetRegistry] = None
+        self.preset_registry: PresetRegistry | None = None
 
         self.concept: str = ""
-        self.extracted: Dict[str, Any] = {}
-        self.bible: Dict[str, Any] = {}
-        self.treatment: List[Dict[str, Any]] = []
+        self.extracted: dict[str, Any] = {}
+        self.bible: dict[str, Any] = {}
+        self.treatment: list[dict[str, Any]] = []
 
     def _init_llm(self) -> None:
         """LLM 초기화"""
@@ -40,6 +41,7 @@ class StoryExpander:
             return
         try:
             from google import genai
+
             api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
             if api_key:
                 self.client = genai.Client(api_key=api_key)
@@ -53,13 +55,14 @@ class StoryExpander:
             return ""
         try:
             from google.genai import types
+
             response = self.client.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     temperature=temperature,
                     max_output_tokens=max_tokens,
-                )
+                ),
             )
             return response.text
         except Exception as e:
@@ -84,7 +87,7 @@ class StoryExpander:
     # Phase 1: 컨셉 분석
     # ============================================
 
-    def analyze_concept(self, concept: str) -> Dict[str, Any]:
+    def analyze_concept(self, concept: str) -> dict[str, Any]:
         """컨셉 분석 및 핵심 요소 추출"""
         self.concept = concept
 
@@ -128,7 +131,7 @@ class StoryExpander:
     # Phase 2: Bible 생성
     # ============================================
 
-    def generate_bible(self, protagonist_config: Dict[str, Any] = None) -> Dict[str, Any]:
+    def generate_bible(self, protagonist_config: dict[str, Any] = None) -> dict[str, Any]:
         """Bible 생성"""
         proto = self.extracted.get("protagonist", {})
 
@@ -143,7 +146,7 @@ class StoryExpander:
             "name": protagonist.get("name", "주인공"),
             "age": protagonist.get("age", 25),
             **(protagonist_config or {}),
-            **proto
+            **proto,
         }
         hud = self.preset_registry.build_initial_hud(hud_input)
 
@@ -152,7 +155,6 @@ class StoryExpander:
             "_genre": self.genre,
             "_source": "story_expander",
             "_generated_at": datetime.now().isoformat(),
-
             "MasterBible": {
                 "ProjectData": {
                     "MetaInfo": {
@@ -170,12 +172,12 @@ class StoryExpander:
                 "AssetLibrary": {
                     "KeyNPCs": npcs,
                 },
-            }
+            },
         }
 
         return self.bible
 
-    def _generate_protagonist_detail(self) -> Dict[str, Any]:
+    def _generate_protagonist_detail(self) -> dict[str, Any]:
         """주인공 상세"""
         proto = self.extracted.get("protagonist", {})
 
@@ -197,7 +199,7 @@ JSON:
 """
         return self._parse_json(self._call_llm(prompt)) or {}
 
-    def _generate_npcs(self) -> List[Dict[str, Any]]:
+    def _generate_npcs(self) -> list[dict[str, Any]]:
         """NPC 생성"""
         prompt = f"""다음 컨셉에 맞는 NPC 8명을 생성하세요.
 
@@ -214,7 +216,7 @@ JSON:
     # Phase 3: Treatment 생성
     # ============================================
 
-    def generate_treatment(self, block_count: int = 60) -> List[Dict[str, Any]]:
+    def generate_treatment(self, block_count: int = 60) -> list[dict[str, Any]]:
         """Treatment 생성"""
         # 스켈레톤 생성
         skeleton = self._generate_skeleton(block_count)
@@ -226,12 +228,12 @@ JSON:
 
     def extend_treatment(
         self,
-        existing_treatment: List[Dict[str, Any]],
+        existing_treatment: list[dict[str, Any]],
         extend_count: int = 10,
         direction_hint: str = "",
         batch_size: int = 10,
-        confirm_callback=None
-    ) -> List[Dict[str, Any]]:
+        confirm_callback=None,
+    ) -> list[dict[str, Any]]:
         """
         기존 Treatment 확장 (Block 연장)
 
@@ -250,10 +252,12 @@ JSON:
 
         # 최근 5개 블록 컨텍스트
         recent_blocks = existing_treatment[-5:] if len(existing_treatment) >= 5 else existing_treatment
-        recent_context = "\n".join([
-            f"- Block {b.get('block_id', i+1)}: {b.get('title', '')} - {(b.get('content', {}).get('context', '')[:100] if isinstance(b.get('content'), dict) else str(b.get('content', ''))[:100])}"  # [V70] content str 방어
-            for i, b in enumerate(recent_blocks)
-        ])
+        recent_context = "\n".join(
+            [
+                f"- Block {b.get('block_id', i + 1)}: {b.get('title', '')} - {(b.get('content', {}).get('context', '')[:100] if isinstance(b.get('content'), dict) else str(b.get('content', ''))[:100])}"  # [V70] content str 방어
+                for i, b in enumerate(recent_blocks)
+            ]
+        )
 
         extended = []
         remaining = extend_count
@@ -267,11 +271,11 @@ JSON:
                 start_block=current_block,
                 count=batch_count,
                 recent_context=recent_context,
-                direction_hint=direction_hint
+                direction_hint=direction_hint,
             )
 
             if not new_blocks:
-                logging.warning(f"[!] Block {current_block}~{current_block+batch_count-1} 생성 실패")
+                logging.warning(f"[!] Block {current_block}~{current_block + batch_count - 1} 생성 실패")
                 break
 
             # 확인 콜백
@@ -284,29 +288,29 @@ JSON:
             self.treatment.extend(new_blocks)
 
             # 다음 배치를 위한 컨텍스트 업데이트
-            recent_context = "\n".join([
-                f"- Block {b.get('block_id', '')}: {b.get('title', '')} - {(b.get('content', {}).get('context', '')[:100] if isinstance(b.get('content'), dict) else str(b.get('content', ''))[:100])}"  # [V70] content str 방어
-                for b in new_blocks[-5:]
-            ])
+            recent_context = "\n".join(
+                [
+                    f"- Block {b.get('block_id', '')}: {b.get('title', '')} - {(b.get('content', {}).get('context', '')[:100] if isinstance(b.get('content'), dict) else str(b.get('content', ''))[:100])}"  # [V70] content str 방어
+                    for b in new_blocks[-5:]
+                ]
+            )
 
             current_block += batch_count
             remaining -= batch_count
 
-            logging.info(f"[v] Block {current_block-batch_count}~{current_block-1} 생성 완료 ({len(extended)}/{extend_count})")
+            logging.info(
+                f"[v] Block {current_block - batch_count}~{current_block - 1} 생성 완료 ({len(extended)}/{extend_count})"
+            )
 
         return self.treatment
 
     def _generate_extension_batch(
-        self,
-        start_block: int,
-        count: int,
-        recent_context: str,
-        direction_hint: str
-    ) -> List[Dict[str, Any]]:
+        self, start_block: int, count: int, recent_context: str, direction_hint: str
+    ) -> list[dict[str, Any]]:
         """확장 배치 생성"""
         hint_section = f"\n## 방향 힌트\n{direction_hint}" if direction_hint else ""
 
-        prompt = f"""기존 스토리를 이어서 Block {start_block}~{start_block+count-1}을 생성하세요.
+        prompt = f"""기존 스토리를 이어서 Block {start_block}~{start_block + count - 1}을 생성하세요.
 
 ## 장르
 {self.genre}
@@ -349,7 +353,7 @@ JSON:
 
         return result
 
-    def _generate_skeleton(self, count: int) -> List[Dict[str, Any]]:
+    def _generate_skeleton(self, count: int) -> list[dict[str, Any]]:
         """블록 스켈레톤"""
         prompt = f"""웹소설 {count}개 블록의 뼈대를 생성하세요.
 
@@ -365,14 +369,16 @@ JSON:
 """
         return self._parse_json(self._call_llm(prompt, max_tokens=20000)) or []
 
-    def _generate_details(self, skeleton: List[Dict]) -> List[Dict[str, Any]]:
+    def _generate_details(self, skeleton: list[dict]) -> list[dict[str, Any]]:
         """블록 상세"""
         detailed = []
         batch_size = 10
 
         for i in range(0, len(skeleton), batch_size):
-            batch = skeleton[i:i + batch_size]
-            skeleton_text = "\n".join([f"- {b.get('block_id', f'block_{i+j}')}: {b.get('title', '제목 없음')}" for j, b in enumerate(batch)])  # [V70] 인덱스 수정 (i는 이미 배치 시작)
+            batch = skeleton[i : i + batch_size]
+            skeleton_text = "\n".join(
+                [f"- {b.get('block_id', f'block_{i + j}')}: {b.get('title', '제목 없음')}" for j, b in enumerate(batch)]
+            )  # [V70] 인덱스 수정 (i는 이미 배치 시작)
 
             prompt = f"""블록 상세:
 
@@ -406,26 +412,22 @@ JSON:
         out = Path(output_dir)
         out.mkdir(parents=True, exist_ok=True)
 
-        with open(out / "bible.json", 'w', encoding='utf-8') as f:
+        with open(out / "bible.json", "w", encoding="utf-8") as f:
             json.dump(self.bible, f, ensure_ascii=False, indent=2)
 
-        treatment_out = {
-            "_genre": self.genre,
-            "total_blocks": len(self.treatment),
-            "treatments": self.treatment
-        }
-        with open(out / "treatment.json", 'w', encoding='utf-8') as f:
+        treatment_out = {"_genre": self.genre, "total_blocks": len(self.treatment), "treatments": self.treatment}
+        with open(out / "treatment.json", "w", encoding="utf-8") as f:
             json.dump(treatment_out, f, ensure_ascii=False, indent=2)
 
         if self.preset_registry:
-            with open(out / "preset_state.json", 'w', encoding='utf-8') as f:
+            with open(out / "preset_state.json", "w", encoding="utf-8") as f:
                 f.write(self.preset_registry.to_json())
 
     # ============================================
     # 통합 실행
     # ============================================
 
-    def run(self, concept: str, output_dir: str, protagonist_config: Dict = None) -> Tuple[Dict, List]:
+    def run(self, concept: str, output_dir: str, protagonist_config: dict = None) -> tuple[dict, list]:
         """전체 파이프라인"""
         if SPINNER_AVAILABLE:
             print_header("Story Expander", style="double")

@@ -9,7 +9,6 @@
 5. raw_execute() 화이트리스트 동작
 """
 
-import sqlite3
 from pathlib import Path
 from unittest.mock import MagicMock, PropertyMock
 
@@ -17,10 +16,10 @@ import pytest
 
 from modules.core.db_adapter import DBAdapter
 
-
 # ──────────────────────────────────────────────────────────────
 # Fixtures
 # ──────────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def mock_db():
@@ -42,6 +41,7 @@ def adapter(mock_db):
 def real_adapter(tmp_path):
     """실제 SQLite DB로 테스트"""
     from modules.core.db_manager import DBManager
+
     db_path = tmp_path / "test.db"
     db_mgr = DBManager(db_path)
     return DBAdapter(db_mgr), db_mgr
@@ -50,6 +50,7 @@ def real_adapter(tmp_path):
 # ──────────────────────────────────────────────────────────────
 # 1. conn/cursor 차단
 # ──────────────────────────────────────────────────────────────
+
 
 class TestBlockedAccess:
     def test_conn_blocked(self, adapter):
@@ -68,6 +69,7 @@ class TestBlockedAccess:
 # ──────────────────────────────────────────────────────────────
 # 2. public 메서드 위임
 # ──────────────────────────────────────────────────────────────
+
 
 class TestDelegation:
     def test_save_anchor(self, adapter, mock_db):
@@ -111,6 +113,7 @@ class TestDelegation:
 # 3. close() 전달
 # ──────────────────────────────────────────────────────────────
 
+
 class TestClose:
     def test_close_delegates(self, adapter, mock_db):
         adapter.close()
@@ -127,6 +130,7 @@ class TestClose:
 # ──────────────────────────────────────────────────────────────
 # 4. in_transaction 프로퍼티
 # ──────────────────────────────────────────────────────────────
+
 
 class TestInTransaction:
     def test_false_by_default(self, adapter, mock_db):
@@ -149,6 +153,7 @@ class TestInTransaction:
 # ──────────────────────────────────────────────────────────────
 # 5. raw_execute()
 # ──────────────────────────────────────────────────────────────
+
 
 class TestRawExecute:
     def test_select_allowed(self, real_adapter):
@@ -178,6 +183,7 @@ class TestRawExecute:
 # ──────────────────────────────────────────────────────────────
 # 6. repr
 # ──────────────────────────────────────────────────────────────
+
 
 class TestRepr:
     def test_repr(self, adapter):

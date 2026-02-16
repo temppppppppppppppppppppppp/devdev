@@ -10,9 +10,10 @@ generate_reverse_feedback_stage3_to_2, get_adaptive_feedback_intensity,
 classify_rejection_feedback, simplify_prompt_for_retry.
 """
 
-import pytest
 import sys
 from pathlib import Path
+
+import pytest
 
 # 프로젝트 루트를 path에 추가
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -20,10 +21,10 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from modules.core.feedback_system import FeedbackSystem
 
-
 # ══════════════════════════════════════════════════════════════
 # Fixtures
 # ══════════════════════════════════════════════════════════════
+
 
 @pytest.fixture
 def fs():
@@ -52,18 +53,15 @@ def sample_prev_arcs():
                     "internal_energy": 70,
                     "injuries": "왼팔 부상",
                     "location": "무림맹 본부",
-                    "equipment": "청풍검, 해독약"
+                    "equipment": "청풍검, 해독약",
                 }
             },
             "joint_docs": {
                 "final_location": "무림맹 본부",
                 "physical_inventory": ["청풍검", "해독약"],
-                "world_joint": "무림맹 세력 약화"
+                "world_joint": "무림맹 세력 약화",
             },
-            "status_shadow": {
-                "internal_energy_loss": "30%",
-                "expected_injuries": "왼팔 부상"
-            }
+            "status_shadow": {"internal_energy_loss": "30%", "expected_injuries": "왼팔 부상"},
         }
     ]
 
@@ -72,14 +70,12 @@ def sample_prev_arcs():
 # Test 1: build_structured_feedback
 # ══════════════════════════════════════════════════════════════
 
+
 class TestBuildStructuredFeedback:
     def test_basic_structure(self, fs):
         """기본 구조화 피드백 생성"""
         result = fs.build_structured_feedback(
-            decision="REJECT",
-            reason="분량 부족",
-            violations=[{"type": "continuity"}],
-            severity="HIGH"
+            decision="REJECT", reason="분량 부족", violations=[{"type": "continuity"}], severity="HIGH"
         )
         assert result["decision"] == "REJECT"
         assert result["reason"] == "분량 부족"
@@ -95,9 +91,7 @@ class TestBuildStructuredFeedback:
     def test_fix_instructions_truncation(self, fs):
         """fix_instructions가 500자 초과 시 잘림"""
         long_fix = "b" * 700
-        result = fs.build_structured_feedback(
-            decision="REJECT", reason="test", fix_instructions=long_fix
-        )
+        result = fs.build_structured_feedback(decision="REJECT", reason="test", fix_instructions=long_fix)
         assert len(result["fix_instructions"]) <= 500
 
     def test_empty_violations(self, fs):
@@ -107,15 +101,14 @@ class TestBuildStructuredFeedback:
 
     def test_priority_order_included(self, fs, sample_violations):
         """priority_order가 포함됨"""
-        result = fs.build_structured_feedback(
-            decision="REJECT", reason="test", violations=sample_violations
-        )
+        result = fs.build_structured_feedback(decision="REJECT", reason="test", violations=sample_violations)
         assert isinstance(result["priority_order"], list)
 
 
 # ══════════════════════════════════════════════════════════════
 # Test 2: get_violation_priority
 # ══════════════════════════════════════════════════════════════
+
 
 class TestGetViolationPriority:
     def test_priority_ordering(self, fs, sample_violations):
@@ -144,6 +137,7 @@ class TestGetViolationPriority:
 # Test 3: format_feedback_for_prompt
 # ══════════════════════════════════════════════════════════════
 
+
 class TestFormatFeedbackForPrompt:
     def test_reject_formatting(self, fs):
         """REJECT 피드백 포맷팅"""
@@ -152,7 +146,7 @@ class TestFormatFeedbackForPrompt:
             "severity": "HIGH",
             "reason": "분량 부족",
             "priority_order": ["continuity", "timeline_error"],
-            "fix_instructions": "분량을 4500자 이상으로 작성하세요"
+            "fix_instructions": "분량을 4500자 이상으로 작성하세요",
         }
         result = fs.format_feedback_for_prompt(feedback)
         assert "REJECT" in result
@@ -175,12 +169,11 @@ class TestFormatFeedbackForPrompt:
 # Test 4: quantify_reject_feedback
 # ══════════════════════════════════════════════════════════════
 
+
 class TestQuantifyRejectFeedback:
     def test_short_content_quantification(self, fs):
         """짧은 분량에 대한 정량화"""
-        result = fs.quantify_reject_feedback(
-            reason="분량 부족", content_length=3000, audit_result={}
-        )
+        result = fs.quantify_reject_feedback(reason="분량 부족", content_length=3000, audit_result={})
         assert len(result) >= 1
         assert any(q["type"] == "QUANTIFIED" for q in result)
         # 2000자 부족 = 대화 + 묘사 + 액션 합산
@@ -189,30 +182,22 @@ class TestQuantifyRejectFeedback:
 
     def test_dialogue_quantification(self, fs):
         """대화 부족에 대한 정량화"""
-        result = fs.quantify_reject_feedback(
-            reason="대화 부족으로 건조함", content_length=5000, audit_result={}
-        )
+        result = fs.quantify_reject_feedback(reason="대화 부족으로 건조함", content_length=5000, audit_result={})
         assert any("대화" in q["description"] for q in result)
 
     def test_density_quantification(self, fs):
         """후반부 밀도 부족 정량화"""
-        result = fs.quantify_reject_feedback(
-            reason="후반부 밀도 부족", content_length=5000, audit_result={}
-        )
+        result = fs.quantify_reject_feedback(reason="후반부 밀도 부족", content_length=5000, audit_result={})
         assert any("후반부" in q["description"] for q in result)
 
     def test_scene_quantification(self, fs):
         """씬 누락 정량화"""
-        result = fs.quantify_reject_feedback(
-            reason="씬 누락", content_length=5000, audit_result={}
-        )
+        result = fs.quantify_reject_feedback(reason="씬 누락", content_length=5000, audit_result={})
         assert any("씬" in q["description"] for q in result)
 
     def test_no_issues(self, fs):
         """문제 없으면 빈 리스트"""
-        result = fs.quantify_reject_feedback(
-            reason="기타 문제", content_length=6000, audit_result={}
-        )
+        result = fs.quantify_reject_feedback(reason="기타 문제", content_length=6000, audit_result={})
         # "기타" 키워드는 어떤 조건에도 매칭 안 됨
         assert isinstance(result, list)
 
@@ -220,6 +205,7 @@ class TestQuantifyRejectFeedback:
 # ══════════════════════════════════════════════════════════════
 # Test 5: build_strong_kind_feedback
 # ══════════════════════════════════════════════════════════════
+
 
 class TestBuildStrongKindFeedback:
     def test_duplicate_acquisition(self, fs):
@@ -250,12 +236,11 @@ class TestBuildStrongKindFeedback:
 # Test 6: build_focused_context
 # ══════════════════════════════════════════════════════════════
 
+
 class TestBuildFocusedContext:
     def test_basic_context(self, fs, sample_prev_arcs):
         """기본 집중 컨텍스트"""
-        result = fs.build_focused_context(
-            violations=[], prev_arcs=sample_prev_arcs, protagonist_name="이청풍"
-        )
+        result = fs.build_focused_context(violations=[], prev_arcs=sample_prev_arcs, protagonist_name="이청풍")
         assert "70%" in result
         assert "왼팔 부상" in result or "부상" in result
 
@@ -266,13 +251,13 @@ class TestBuildFocusedContext:
 
     def test_inventory_list_truncated(self, fs):
         """인벤토리가 리스트이면 3개까지 표시"""
-        arcs = [{
-            "arc_no": 1,
-            "state_constraints": {"arc_end_state": {}},
-            "joint_docs": {
-                "physical_inventory": ["검A", "검B", "검C", "검D", "검E"]
+        arcs = [
+            {
+                "arc_no": 1,
+                "state_constraints": {"arc_end_state": {}},
+                "joint_docs": {"physical_inventory": ["검A", "검B", "검C", "검D", "검E"]},
             }
-        }]
+        ]
         result = fs.build_focused_context([], arcs, "이청풍")
         assert "검A" in result
         # 최대 3개이므로 검D는 없어야 함
@@ -282,6 +267,7 @@ class TestBuildFocusedContext:
 # ══════════════════════════════════════════════════════════════
 # Test 7: build_minimal_arc_context
 # ══════════════════════════════════════════════════════════════
+
 
 class TestBuildMinimalArcContext:
     def test_no_arcs(self, fs):
@@ -299,12 +285,14 @@ class TestBuildMinimalArcContext:
 
     def test_energy_calculation_from_loss(self, fs):
         """arc_end_state에 internal_energy 없으면 loss에서 계산"""
-        arcs = [{
-            "arc_no": 2,
-            "state_constraints": {"arc_end_state": {}},
-            "joint_docs": {},
-            "status_shadow": {"internal_energy_loss": "40%"}
-        }]
+        arcs = [
+            {
+                "arc_no": 2,
+                "state_constraints": {"arc_end_state": {}},
+                "joint_docs": {},
+                "status_shadow": {"internal_energy_loss": "40%"},
+            }
+        ]
         result = fs.build_minimal_arc_context(arcs, "이청풍")
         assert "60%" in result  # 100 - 40
 
@@ -312,6 +300,7 @@ class TestBuildMinimalArcContext:
 # ══════════════════════════════════════════════════════════════
 # Test 8: generate_structured_arc_feedback
 # ══════════════════════════════════════════════════════════════
+
 
 class TestGenerateStructuredArcFeedback:
     def test_item_violations(self, fs):
@@ -329,7 +318,12 @@ class TestGenerateStructuredArcFeedback:
         """NPC 위반 피드백"""
         result_dict = {
             "violations": [
-                {"type": "npc_dead_revival", "description": "사망 NPC 부활", "item_or_subject": "철무련주", "location": ""}
+                {
+                    "type": "npc_dead_revival",
+                    "description": "사망 NPC 부활",
+                    "item_or_subject": "철무련주",
+                    "location": "",
+                }
             ]
         }
         result = fs.generate_structured_arc_feedback(result_dict, arc_no=5)
@@ -349,6 +343,7 @@ class TestGenerateStructuredArcFeedback:
 # Test 9: generate_structured_blueprint_feedback
 # ══════════════════════════════════════════════════════════════
 
+
 class TestGenerateStructuredBlueprintFeedback:
     def test_low_scores_critical(self, fs):
         """낮은 점수는 CRITICAL"""
@@ -357,7 +352,7 @@ class TestGenerateStructuredBlueprintFeedback:
                 "setting_consistency": 10,
                 "scene_composition": 8,
                 "narrative_flow": 5,
-                "length_fulfillment": 3
+                "length_fulfillment": 3,
             }
         }
         result = fs.generate_structured_blueprint_feedback(result_dict)
@@ -370,7 +365,7 @@ class TestGenerateStructuredBlueprintFeedback:
                 "setting_consistency": 20,
                 "scene_composition": 20,
                 "narrative_flow": 20,
-                "length_fulfillment": 20
+                "length_fulfillment": 20,
             }
         }
         result = fs.generate_structured_blueprint_feedback(result_dict)
@@ -393,6 +388,7 @@ class TestGenerateStructuredBlueprintFeedback:
 # ══════════════════════════════════════════════════════════════
 # Test 10: generate_reverse_feedback_stage4_to_3
 # ══════════════════════════════════════════════════════════════
+
 
 class TestGenerateReverseFeedbackStage4To3:
     def test_density_issue(self, fs):
@@ -419,6 +415,7 @@ class TestGenerateReverseFeedbackStage4To3:
 # ══════════════════════════════════════════════════════════════
 # Test 11: generate_reverse_feedback_stage3_to_2
 # ══════════════════════════════════════════════════════════════
+
 
 class TestGenerateReverseFeedbackStage3To2:
     def test_repeated_failures(self, fs):
@@ -447,6 +444,7 @@ class TestGenerateReverseFeedbackStage3To2:
 # ══════════════════════════════════════════════════════════════
 # Test 12: get_adaptive_feedback_intensity
 # ══════════════════════════════════════════════════════════════
+
 
 class TestGetAdaptiveFeedbackIntensity:
     def test_stage2_first_try(self, fs):
@@ -481,6 +479,7 @@ class TestGetAdaptiveFeedbackIntensity:
 # ══════════════════════════════════════════════════════════════
 # Test 13: classify_rejection_feedback
 # ══════════════════════════════════════════════════════════════
+
 
 class TestClassifyRejectionFeedback:
     def test_length_classification(self, fs):
@@ -523,13 +522,12 @@ class TestClassifyRejectionFeedback:
 # Test 14: simplify_prompt_for_retry
 # ══════════════════════════════════════════════════════════════
 
+
 class TestSimplifyPromptForRetry:
     def test_basic_simplification(self, fs):
         """기본 간소화"""
         result = fs.simplify_prompt_for_retry(
-            enhanced_feedback="많은 피드백...",
-            core_feedback="분량 부족, 씬 누락",
-            attempt=2
+            enhanced_feedback="많은 피드백...", core_feedback="분량 부족, 씬 누락", attempt=2
         )
         assert "간소화" in result
         assert "분량" in result

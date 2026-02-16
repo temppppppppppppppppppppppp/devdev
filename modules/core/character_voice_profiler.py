@@ -14,32 +14,32 @@
 - 관계별 호칭 패턴
 """
 
-import re
 import logging
-import json
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, field, asdict, fields
+import re
 from collections import Counter
+from dataclasses import asdict, dataclass, field, fields
+from typing import Any
 
 
 @dataclass
 class VoiceProfile:
     """캐릭터 음성 프로파일"""
-    character_name: str
-    speech_level: str = "formal"          # formal/informal/archaic
-    personality: str = "neutral"          # aggressive/calm/humorous/cold/warm
-    speech_speed: str = "normal"          # fast/normal/slow (장문/단문 성향)
-    catchphrases: List[str] = field(default_factory=list)  # 입버릇
-    forbidden_words: List[str] = field(default_factory=list)  # 사용 안 하는 표현
-    address_patterns: Dict[str, str] = field(default_factory=dict)  # 대상별 호칭
-    sample_dialogues: List[str] = field(default_factory=list)  # 예시 대사
-    emotion_expressions: Dict[str, List[str]] = field(default_factory=dict)  # 감정별 표현
 
-    def to_dict(self) -> Dict:
+    character_name: str
+    speech_level: str = "formal"  # formal/informal/archaic
+    personality: str = "neutral"  # aggressive/calm/humorous/cold/warm
+    speech_speed: str = "normal"  # fast/normal/slow (장문/단문 성향)
+    catchphrases: list[str] = field(default_factory=list)  # 입버릇
+    forbidden_words: list[str] = field(default_factory=list)  # 사용 안 하는 표현
+    address_patterns: dict[str, str] = field(default_factory=dict)  # 대상별 호칭
+    sample_dialogues: list[str] = field(default_factory=list)  # 예시 대사
+    emotion_expressions: dict[str, list[str]] = field(default_factory=dict)  # 감정별 표현
+
+    def to_dict(self) -> dict:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: Dict) -> 'VoiceProfile':
+    def from_dict(cls, data: dict) -> "VoiceProfile":
         """[V61.5] 미지 키 무시"""
         valid_keys = {f.name for f in fields(cls)}
         return cls(**{k: v for k, v in data.items() if k in valid_keys})
@@ -58,46 +58,46 @@ class CharacterVoiceProfiler:
 
     # 말투 패턴
     SPEECH_LEVEL_PATTERNS = {
-        'formal': {
-            'markers': [r'습니다', r'입니까', r'십시오', r'하십시오'],
-            'endings': ['습니다', '입니다', '합니다', '됩니다'],
+        "formal": {
+            "markers": [r"습니다", r"입니까", r"십시오", r"하십시오"],
+            "endings": ["습니다", "입니다", "합니다", "됩니다"],
         },
-        'informal': {
-            'markers': [r'어\b', r'야\b', r'지\b', r'네\b', r'군\b'],
-            'endings': ['어', '야', '지', '네', '는데'],
+        "informal": {
+            "markers": [r"어\b", r"야\b", r"지\b", r"네\b", r"군\b"],
+            "endings": ["어", "야", "지", "네", "는데"],
         },
-        'archaic': {  # 무협 고어체
-            'markers': [r'하오', r'하시오', r'로다', r'이니라', r'하겠네'],
-            'endings': ['하오', '하시오', '로다', '이니라', '하겠네', '일세'],
+        "archaic": {  # 무협 고어체
+            "markers": [r"하오", r"하시오", r"로다", r"이니라", r"하겠네"],
+            "endings": ["하오", "하시오", "로다", "이니라", "하겠네", "일세"],
         },
     }
 
     # 성격별 표현 패턴
     PERSONALITY_PATTERNS = {
-        'aggressive': {
-            'keywords': ['죽여', '박살', '꺼져', '닥쳐', '빌어먹을'],
-            'punctuation': ['!', '!!'],
-            'sentence_length': 'short',
+        "aggressive": {
+            "keywords": ["죽여", "박살", "꺼져", "닥쳐", "빌어먹을"],
+            "punctuation": ["!", "!!"],
+            "sentence_length": "short",
         },
-        'calm': {
-            'keywords': ['그렇군', '알겠네', '생각해보면', '아마도'],
-            'punctuation': ['.', '...'],
-            'sentence_length': 'medium',
+        "calm": {
+            "keywords": ["그렇군", "알겠네", "생각해보면", "아마도"],
+            "punctuation": [".", "..."],
+            "sentence_length": "medium",
         },
-        'humorous': {
-            'keywords': ['하하', '농담', '재밌', '웃기'],
-            'punctuation': ['~', 'ㅋ', 'ㅎ'],
-            'sentence_length': 'varied',
+        "humorous": {
+            "keywords": ["하하", "농담", "재밌", "웃기"],
+            "punctuation": ["~", "ㅋ", "ㅎ"],
+            "sentence_length": "varied",
         },
-        'cold': {
-            'keywords': ['상관없', '필요없', '그만', '됐'],
-            'punctuation': ['.'],
-            'sentence_length': 'short',
+        "cold": {
+            "keywords": ["상관없", "필요없", "그만", "됐"],
+            "punctuation": ["."],
+            "sentence_length": "short",
         },
-        'warm': {
-            'keywords': ['걱정', '괜찮', '고마워', '미안'],
-            'punctuation': ['.', '...'],
-            'sentence_length': 'medium',
+        "warm": {
+            "keywords": ["걱정", "괜찮", "고마워", "미안"],
+            "punctuation": [".", "..."],
+            "sentence_length": "medium",
         },
     }
 
@@ -109,7 +109,7 @@ class CharacterVoiceProfiler:
         """
         self.db = db_manager
         self.genre = genre
-        self.profiles: Dict[str, VoiceProfile] = {}
+        self.profiles: dict[str, VoiceProfile] = {}
         self._load_from_db()
 
     def _load_from_db(self) -> None:
@@ -142,9 +142,9 @@ class CharacterVoiceProfiler:
         character_name: str,
         speech_level: str = "formal",
         personality: str = "neutral",
-        catchphrases: List[str] = None,
-        sample_dialogues: List[str] = None,
-        **kwargs
+        catchphrases: list[str] = None,
+        sample_dialogues: list[str] = None,
+        **kwargs,
     ) -> VoiceProfile:
         """
         캐릭터 프로파일 생성
@@ -166,7 +166,7 @@ class CharacterVoiceProfiler:
             personality=personality,
             catchphrases=catchphrases or [],
             sample_dialogues=sample_dialogues or [],
-            **kwargs
+            **kwargs,
         )
 
         self.profiles[character_name] = profile
@@ -175,12 +175,7 @@ class CharacterVoiceProfiler:
         logging.info(f"[VoiceProfiler] '{character_name}' 프로파일 생성 완료")
         return profile
 
-    def extract_profile_from_text(
-        self,
-        character_name: str,
-        text: str,
-        min_dialogues: int = 5
-    ) -> Optional[VoiceProfile]:
+    def extract_profile_from_text(self, character_name: str, text: str, min_dialogues: int = 5) -> VoiceProfile | None:
         """
         텍스트에서 캐릭터 프로파일 자동 추출
 
@@ -210,7 +205,7 @@ class CharacterVoiceProfiler:
 
         # 문장 길이 성향
         avg_length = sum(len(d) for d in dialogues) / len(dialogues)
-        speech_speed = 'fast' if avg_length < 20 else ('slow' if avg_length > 50 else 'normal')
+        speech_speed = "fast" if avg_length < 20 else ("slow" if avg_length > 50 else "normal")
 
         # 프로파일 생성
         profile = self.create_profile(
@@ -219,12 +214,12 @@ class CharacterVoiceProfiler:
             personality=personality,
             speech_speed=speech_speed,
             catchphrases=catchphrases,
-            sample_dialogues=dialogues[:5]
+            sample_dialogues=dialogues[:5],
         )
 
         return profile
 
-    def _extract_character_dialogues(self, character_name: str, text: str) -> List[str]:
+    def _extract_character_dialogues(self, character_name: str, text: str) -> list[str]:
         """텍스트에서 특정 캐릭터의 대사 추출"""
         dialogues = []
 
@@ -241,41 +236,41 @@ class CharacterVoiceProfiler:
 
         return list(set(dialogues))  # 중복 제거
 
-    def _analyze_speech_level(self, dialogues: List[str]) -> str:
+    def _analyze_speech_level(self, dialogues: list[str]) -> str:
         """대사에서 말투 레벨 분석"""
-        scores = {'formal': 0, 'informal': 0, 'archaic': 0}
+        scores = {"formal": 0, "informal": 0, "archaic": 0}
 
         for dialogue in dialogues:
             for level, patterns in self.SPEECH_LEVEL_PATTERNS.items():
-                for marker in patterns['markers']:
+                for marker in patterns["markers"]:
                     if re.search(marker, dialogue):
                         scores[level] += 1
 
         if sum(scores.values()) == 0:
-            return 'formal'  # 기본값
+            return "formal"  # 기본값
 
         return max(scores, key=scores.get)
 
-    def _analyze_personality(self, dialogues: List[str]) -> str:
+    def _analyze_personality(self, dialogues: list[str]) -> str:
         """대사에서 성격 분석"""
         scores = {p: 0 for p in self.PERSONALITY_PATTERNS}
 
-        combined = ' '.join(dialogues)
+        combined = " ".join(dialogues)
 
         for personality, patterns in self.PERSONALITY_PATTERNS.items():
-            for keyword in patterns.get('keywords', []):
+            for keyword in patterns.get("keywords", []):
                 if keyword in combined:
                     scores[personality] += 1
 
-            for punct in patterns.get('punctuation', []):
+            for punct in patterns.get("punctuation", []):
                 scores[personality] += combined.count(punct) * 0.5
 
         if sum(scores.values()) == 0:
-            return 'neutral'
+            return "neutral"
 
         return max(scores, key=scores.get)
 
-    def _extract_catchphrases(self, dialogues: List[str], min_freq: int = 2) -> List[str]:
+    def _extract_catchphrases(self, dialogues: list[str], min_freq: int = 2) -> list[str]:
         """반복되는 표현(입버릇) 추출"""
         # 2-gram, 3-gram 추출
         ngrams = Counter()
@@ -284,18 +279,14 @@ class CharacterVoiceProfiler:
             words = dialogue.split()
             for n in [2, 3]:
                 for i in range(len(words) - n + 1):
-                    ngram = ' '.join(words[i:i+n])
+                    ngram = " ".join(words[i : i + n])
                     if len(ngram) >= 4:  # 최소 길이
                         ngrams[ngram] += 1
 
         # 최소 빈도 이상인 것만 반환
         return [phrase for phrase, count in ngrams.items() if count >= min_freq][:5]
 
-    def validate_dialogue(
-        self,
-        character_name: str,
-        dialogue: str
-    ) -> Dict[str, Any]:
+    def validate_dialogue(self, character_name: str, dialogue: str) -> dict[str, Any]:
         """
         대사가 캐릭터 프로파일과 일치하는지 검증
 
@@ -306,54 +297,47 @@ class CharacterVoiceProfiler:
         Returns:
             {"consistent": bool, "issues": [...], "score": float}
         """
-        result = {'consistent': True, 'issues': [], 'score': 100.0}
+        result = {"consistent": True, "issues": [], "score": 100.0}
 
         profile = self.profiles.get(character_name)
         if not profile:
-            result['issues'].append({
-                'type': 'no_profile',
-                'message': f"'{character_name}' 프로파일 없음"
-            })
+            result["issues"].append({"type": "no_profile", "message": f"'{character_name}' 프로파일 없음"})
             return result
 
         # 1. 말투 일치 검증
         detected_level = self._analyze_speech_level([dialogue])
         if detected_level != profile.speech_level:
-            result['issues'].append({
-                'type': 'speech_level_mismatch',
-                'severity': 'WARNING',
-                'message': f"말투 불일치: 기대 '{profile.speech_level}', 감지 '{detected_level}'"
-            })
-            result['score'] -= 15
+            result["issues"].append(
+                {
+                    "type": "speech_level_mismatch",
+                    "severity": "WARNING",
+                    "message": f"말투 불일치: 기대 '{profile.speech_level}', 감지 '{detected_level}'",
+                }
+            )
+            result["score"] -= 15
 
         # 2. 금지 단어 체크
         for forbidden in profile.forbidden_words:
             if forbidden in dialogue:
-                result['issues'].append({
-                    'type': 'forbidden_word',
-                    'severity': 'WARNING',
-                    'message': f"금지 표현 사용: '{forbidden}'"
-                })
-                result['score'] -= 10
+                result["issues"].append(
+                    {"type": "forbidden_word", "severity": "WARNING", "message": f"금지 표현 사용: '{forbidden}'"}
+                )
+                result["score"] -= 10
 
         # 3. 문장 길이 성향 체크
-        if profile.speech_speed == 'fast' and len(dialogue) > 80:
-            result['issues'].append({
-                'type': 'length_mismatch',
-                'severity': 'INFO',
-                'message': f"성향과 다른 긴 대사 ({len(dialogue)}자)"
-            })
-            result['score'] -= 5
-        elif profile.speech_speed == 'slow' and len(dialogue) < 15:
-            result['issues'].append({
-                'type': 'length_mismatch',
-                'severity': 'INFO',
-                'message': f"성향과 다른 짧은 대사 ({len(dialogue)}자)"
-            })
-            result['score'] -= 5
+        if profile.speech_speed == "fast" and len(dialogue) > 80:
+            result["issues"].append(
+                {"type": "length_mismatch", "severity": "INFO", "message": f"성향과 다른 긴 대사 ({len(dialogue)}자)"}
+            )
+            result["score"] -= 5
+        elif profile.speech_speed == "slow" and len(dialogue) < 15:
+            result["issues"].append(
+                {"type": "length_mismatch", "severity": "INFO", "message": f"성향과 다른 짧은 대사 ({len(dialogue)}자)"}
+            )
+            result["score"] -= 5
 
-        result['consistent'] = len([i for i in result['issues'] if i.get('severity') == 'WARNING']) == 0
-        result['score'] = max(0, result['score'])
+        result["consistent"] = len([i for i in result["issues"] if i.get("severity") == "WARNING"]) == 0
+        result["score"] = max(0, result["score"])
 
         return result
 
@@ -375,25 +359,25 @@ class CharacterVoiceProfiler:
 
         # 말투
         level_desc = {
-            'formal': '존댓말 (습니다, 입니다)',
-            'informal': '반말 (어, 지, 네)',
-            'archaic': '고어체 (하오, 하시오, 로다)',
+            "formal": "존댓말 (습니다, 입니다)",
+            "informal": "반말 (어, 지, 네)",
+            "archaic": "고어체 (하오, 하시오, 로다)",
         }
         lines.append(f"  말투: {level_desc.get(profile.speech_level, profile.speech_level)}")
 
         # 성격
         personality_desc = {
-            'aggressive': '공격적/거친',
-            'calm': '차분한/사려깊은',
-            'humorous': '유머러스한',
-            'cold': '냉정한/무뚝뚝한',
-            'warm': '따뜻한/배려하는',
-            'neutral': '중립적',
+            "aggressive": "공격적/거친",
+            "calm": "차분한/사려깊은",
+            "humorous": "유머러스한",
+            "cold": "냉정한/무뚝뚝한",
+            "warm": "따뜻한/배려하는",
+            "neutral": "중립적",
         }
         lines.append(f"  성격: {personality_desc.get(profile.personality, profile.personality)}")
 
         # 대사 길이 성향
-        speed_desc = {'fast': '짧고 간결한 대사', 'normal': '보통 길이', 'slow': '길고 설명적인 대사'}
+        speed_desc = {"fast": "짧고 간결한 대사", "normal": "보통 길이", "slow": "길고 설명적인 대사"}
         lines.append(f"  성향: {speed_desc.get(profile.speech_speed, profile.speech_speed)}")
 
         # 입버릇
@@ -412,7 +396,7 @@ class CharacterVoiceProfiler:
 
         return "\n".join(lines)
 
-    def generate_all_profiles_prompt(self, character_names: List[str] = None) -> str:
+    def generate_all_profiles_prompt(self, character_names: list[str] = None) -> str:
         """
         여러 캐릭터의 프로파일 프롬프트 일괄 생성
 
@@ -435,15 +419,15 @@ class CharacterVoiceProfiler:
 
         return "\n\n".join(prompts)
 
-    def get_profile(self, character_name: str) -> Optional[VoiceProfile]:
+    def get_profile(self, character_name: str) -> VoiceProfile | None:
         """프로파일 조회"""
         return self.profiles.get(character_name)
 
-    def list_profiles(self) -> List[str]:
+    def list_profiles(self) -> list[str]:
         """등록된 프로파일 목록"""
         return list(self.profiles.keys())
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """프로파일 통계"""
         if not self.profiles:
             return {"total": 0}

@@ -5,8 +5,7 @@
 """
 
 import json
-from typing import Any, Dict, Union, Optional
-from functools import lru_cache
+from typing import Any
 
 
 class EscapeUtils:
@@ -36,7 +35,7 @@ class EscapeUtils:
 
         # [V70] ESCAPE_MARKER 제거 — escape_braces()가 생성하지 않는 패턴이므로 무의미
         # 단일 중괄호가 있는지 확인 (이중 중괄호는 이미 에스케이프됨)
-        return '{' in text or '}' in text
+        return "{" in text or "}" in text
 
     @staticmethod
     def is_already_escaped(text: str) -> bool:
@@ -53,14 +52,13 @@ class EscapeUtils:
             return False
 
         # [V70] 이중 중괄호 패턴 감지 (여는/닫는 모두 검사)
-        has_double_open = '{{' in text
-        has_single_open = '{' in text.replace('{{', '')
-        has_double_close = '}}' in text
-        has_single_close = '}' in text.replace('}}', '')
+        has_double_open = "{{" in text
+        has_single_open = "{" in text.replace("{{", "")
+        has_double_close = "}}" in text
+        has_single_close = "}" in text.replace("}}", "")
 
         # 이중 중괄호만 있고 단일 중괄호가 없으면 이미 에스케이프됨
-        return (has_double_open and not has_single_open and
-                has_double_close and not has_single_close)
+        return has_double_open and not has_single_open and has_double_close and not has_single_close
 
     @staticmethod
     def escape_braces(text: Any, force: bool = False) -> str:
@@ -109,7 +107,7 @@ class EscapeUtils:
             return EscapeUtils.escape_braces(str(data))
 
     @staticmethod
-    def escape_batch(data_dict: Dict[str, Any]) -> Dict[str, str]:
+    def escape_batch(data_dict: dict[str, Any]) -> dict[str, str]:
         """
         여러 필드를 한 번에 에스케이프
 
@@ -154,7 +152,7 @@ def escape_json(data: Any, ensure_ascii: bool = False) -> str:
     return EscapeUtils.escape_json_dump(data, ensure_ascii)
 
 
-def escape_batch(data_dict: Dict[str, Any]) -> Dict[str, str]:
+def escape_batch(data_dict: dict[str, Any]) -> dict[str, str]:
     """배치 에스케이프 (단축형)"""
     return EscapeUtils.escape_batch(data_dict)
 

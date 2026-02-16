@@ -23,15 +23,13 @@ V55.7: Dialogue Beat Injector (대화 비트 삽입기)
 """
 
 import re
-import logging
-from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass, field
-from enum import Enum
-
+from typing import Any
 
 # =============================================================================
 # V55.1: Cliché Breaker (클리셰 탈피기)
 # =============================================================================
+
 
 class ClicheBreaker:
     """
@@ -46,17 +44,14 @@ class ClicheBreaker:
         "눈이 번쩍": ["의식이 칼날처럼 날카로워졌다", "정신이 또렷해졌다", "온몸의 감각이 깨어났다"],
         "눈빛이 날카로워": ["시선에 서릿발이 섰다", "눈동자가 차갑게 가라앉았다", "응시에 압력이 실렸다"],
         "피가 끓어올": ["혈기가 들끓었다", "분노가 사지로 퍼졌다", "살기가 피어올랐다"],
-
         # 동작 클리셰
         "몸이 굳었다": ["사지가 얼어붙었다", "움직임이 멈췄다", "숨조차 쉴 수 없었다"],
         "주먹을 불끈": ["손에 힘이 들어갔다", "손톱이 손바닥을 파고들었다", "관절이 하얗게 질렸다"],
         "이를 악물": ["턱이 굳어졌다", "치아가 맞부딪쳤다", "입술을 깨물었다"],
-
         # 감정 클리셰
         "심장이 뛰었다": ["가슴이 요동쳤다", "맥박이 귀까지 울렸다", "심장이 목까지 치솟았다"],
         "숨이 막혔다": ["호흡이 멎었다", "폐가 조여들었다", "공기가 목에서 걸렸다"],
         "온몸에 전율": ["등줄기를 타고 한기가", "소름이 돋았다", "세포 하나하나가 떨렸다"],
-
         # 전투 클리셰
         "검이 번개처럼": ["검이 섬광을 그었다", "검이 허공을 갈랐다", "검기가 터져나왔다"],
         "바람을 가르며": ["공기를 찢으며", "허공에 선을 그으며", "기류를 일으키며"],
@@ -74,21 +69,23 @@ class ClicheBreaker:
         self.genre = genre
         self.cliches = self.WUXIA_CLICHES if genre == "wuxia" else self.HUNTER_CLICHES
 
-    def detect(self, text: str) -> List[Dict[str, Any]]:
+    def detect(self, text: str) -> list[dict[str, Any]]:
         """클리셰 탐지"""
         found = []
         for pattern, alternatives in self.cliches.items():
             matches = list(re.finditer(re.escape(pattern), text))
             for m in matches:
-                found.append({
-                    "pattern": pattern,
-                    "position": m.start(),
-                    "context": text[max(0, m.start()-20):m.end()+20],
-                    "alternatives": alternatives
-                })
+                found.append(
+                    {
+                        "pattern": pattern,
+                        "position": m.start(),
+                        "context": text[max(0, m.start() - 20) : m.end() + 20],
+                        "alternatives": alternatives,
+                    }
+                )
         return found
 
-    def generate_feedback(self, detections: List[Dict]) -> str:
+    def generate_feedback(self, detections: list[dict]) -> str:
         """피드백 생성"""
         if not detections:
             return ""
@@ -103,9 +100,11 @@ class ClicheBreaker:
 # V55.2: Foreshadow Balancer (복선 밸런서)
 # =============================================================================
 
+
 @dataclass
 class Foreshadow:
     """복선 정보"""
+
     name: str
     planted_ep: int
     importance: str  # "minor", "medium", "major"
@@ -126,19 +125,15 @@ class ForeshadowBalancer:
     DEADLINES = {
         "minor": 3,
         "medium": 10,
-        "major": 50  # Arc 단위로 관리
+        "major": 50,  # Arc 단위로 관리
     }
 
     def __init__(self) -> None:
-        self.foreshadows: List[Foreshadow] = []
+        self.foreshadows: list[Foreshadow] = []
 
     def add_foreshadow(self, name: str, ep: int, importance: str = "minor"):
         """복선 등록"""
-        self.foreshadows.append(Foreshadow(
-            name=name,
-            planted_ep=ep,
-            importance=importance
-        ))
+        self.foreshadows.append(Foreshadow(name=name, planted_ep=ep, importance=importance))
 
     def resolve_foreshadow(self, name: str, ep: int):
         """복선 회수 기록"""
@@ -148,7 +143,7 @@ class ForeshadowBalancer:
                 f.resolved_ep = ep
                 break
 
-    def check_overdue(self, current_ep: int) -> List[Dict]:
+    def check_overdue(self, current_ep: int) -> list[dict]:
         """기한 초과 복선 체크"""
         overdue = []
         for f in self.foreshadows:
@@ -156,12 +151,14 @@ class ForeshadowBalancer:
                 continue
             deadline = f.planted_ep + self.DEADLINES[f.importance]
             if current_ep > deadline:
-                overdue.append({
-                    "name": f.name,
-                    "planted_ep": f.planted_ep,
-                    "importance": f.importance,
-                    "overdue_by": current_ep - deadline
-                })
+                overdue.append(
+                    {
+                        "name": f.name,
+                        "planted_ep": f.planted_ep,
+                        "importance": f.importance,
+                        "overdue_by": current_ep - deadline,
+                    }
+                )
         return overdue
 
     def generate_feedback(self, current_ep: int) -> str:
@@ -180,6 +177,7 @@ class ForeshadowBalancer:
 # =============================================================================
 # V55.3: Subtext Expander (서브텍스트 확장기)
 # =============================================================================
+
 
 class SubtextExpander:
     """
@@ -203,27 +201,38 @@ class SubtextExpander:
 
     # 직접 감정 어휘
     DIRECT_EMOTION_WORDS = [
-        "화가 났", "슬펐", "기뻤", "두려웠", "놀랐", "분노했", "행복했", "불안했",
-        "무서웠", "짜증났", "우울했", "신났", "긴장했", "초조했", "편안했",
-        "느꼈다", "감정이", "마음이"
+        "화가 났",
+        "슬펐",
+        "기뻤",
+        "두려웠",
+        "놀랐",
+        "분노했",
+        "행복했",
+        "불안했",
+        "무서웠",
+        "짜증났",
+        "우울했",
+        "신났",
+        "긴장했",
+        "초조했",
+        "편안했",
+        "느꼈다",
+        "감정이",
+        "마음이",
     ]
 
-    def analyze(self, text: str) -> Dict[str, Any]:
+    def analyze(self, text: str) -> dict[str, Any]:
         """직접 서술 비율 분석"""
         direct_count = 0
-        total_sentences = len(re.findall(r'[.!?]', text))
+        total_sentences = len(re.findall(r"[.!?]", text))
 
         detections = []
         for word in self.DIRECT_EMOTION_WORDS:
             matches = list(re.finditer(word, text))
             direct_count += len(matches)
             for m in matches:
-                context = text[max(0, m.start()-30):m.end()+30]
-                detections.append({
-                    "word": word,
-                    "context": context,
-                    "position": m.start()
-                })
+                context = text[max(0, m.start() - 30) : m.end() + 30]
+                detections.append({"word": word, "context": context, "position": m.start()})
 
         ratio = direct_count / max(total_sentences, 1)
 
@@ -232,10 +241,10 @@ class SubtextExpander:
             "total_sentences": total_sentences,
             "ratio": ratio,
             "is_healthy": ratio < 0.3,
-            "detections": detections[:10]  # 상위 10개만
+            "detections": detections[:10],  # 상위 10개만
         }
 
-    def generate_feedback(self, analysis: Dict) -> str:
+    def generate_feedback(self, analysis: dict) -> str:
         """피드백 생성"""
         if analysis["is_healthy"]:
             return ""
@@ -254,6 +263,7 @@ class SubtextExpander:
 # V55.4: Page-Turner Scorer (페이지터너 점수)
 # =============================================================================
 
+
 class PageTurnerScorer:
     """
     각 문단 끝의 '다음 읽고 싶은 정도' 측정
@@ -267,26 +277,26 @@ class PageTurnerScorer:
 
     # 페이지터너 긍정 패턴
     HOOK_PATTERNS = [
-        r"그때[,.]",           # 전환점
-        r"그 순간",            # 긴장
-        r"하지만",             # 반전
-        r"그러나",             # 반전
-        r"문제는",             # 갈등
-        r"\?$",                # 질문 종결
-        r"\.\.\.+",            # 여운
-        r"이었다\.$",          # 강조 종결
-        r"아니었다\.$",        # 부정 강조
+        r"그때[,.]",  # 전환점
+        r"그 순간",  # 긴장
+        r"하지만",  # 반전
+        r"그러나",  # 반전
+        r"문제는",  # 갈등
+        r"\?$",  # 질문 종결
+        r"\.\.\.+",  # 여운
+        r"이었다\.$",  # 강조 종결
+        r"아니었다\.$",  # 부정 강조
     ]
 
     # 페이지터너 부정 패턴 (읽기 멈춤 유발)
     STOP_PATTERNS = [
-        r"그리하여.*완료되었다",    # 완결감
-        r"모든 것이.*끝났다",       # 종결감
-        r"평화로웠다\.$",           # 이완
-        r"아무 일도 없었다",        # 무사건
+        r"그리하여.*완료되었다",  # 완결감
+        r"모든 것이.*끝났다",  # 종결감
+        r"평화로웠다\.$",  # 이완
+        r"아무 일도 없었다",  # 무사건
     ]
 
-    def score_paragraph(self, paragraph: str) -> Dict[str, Any]:
+    def score_paragraph(self, paragraph: str) -> dict[str, Any]:
         """문단 페이지터너 점수"""
         score = 50  # 기본 점수
         hooks = []
@@ -308,15 +318,11 @@ class PageTurnerScorer:
         if len(paragraph) > 500:
             score -= 10
 
-        return {
-            "score": min(100, max(0, score)),
-            "hooks": hooks,
-            "stops": stops
-        }
+        return {"score": min(100, max(0, score)), "hooks": hooks, "stops": stops}
 
-    def analyze(self, text: str) -> Dict[str, Any]:
+    def analyze(self, text: str) -> dict[str, Any]:
         """전체 텍스트 분석"""
-        paragraphs = text.split('\n\n')
+        paragraphs = text.split("\n\n")
         scores = []
         low_score_positions = []
 
@@ -326,11 +332,7 @@ class PageTurnerScorer:
             result = self.score_paragraph(p)
             scores.append(result["score"])
             if result["score"] < 40:
-                low_score_positions.append({
-                    "index": i,
-                    "score": result["score"],
-                    "preview": p[:50] + "..."
-                })
+                low_score_positions.append({"index": i, "score": result["score"], "preview": p[:50] + "..."})
 
         avg_score = sum(scores) / len(scores) if scores else 0
 
@@ -338,10 +340,10 @@ class PageTurnerScorer:
             "average_score": avg_score,
             "paragraph_count": len(scores),
             "low_score_count": len(low_score_positions),
-            "low_score_positions": low_score_positions[:5]
+            "low_score_positions": low_score_positions[:5],
         }
 
-    def generate_feedback(self, analysis: Dict) -> str:
+    def generate_feedback(self, analysis: dict) -> str:
         """피드백 생성"""
         if analysis["average_score"] >= 60:
             return ""
@@ -350,7 +352,7 @@ class PageTurnerScorer:
         lines.append("다음 문단에 훅(hook) 추가 권장:")
 
         for pos in analysis["low_score_positions"][:3]:
-            lines.append(f"  - 문단 {pos['index']+1}: {pos['preview']}")
+            lines.append(f"  - 문단 {pos['index'] + 1}: {pos['preview']}")
 
         lines.append("\n훅 예시: 질문, 반전 암시, 긴장 유지, 미완결 상황")
         return "\n".join(lines)
@@ -359,6 +361,7 @@ class PageTurnerScorer:
 # =============================================================================
 # V55.5: Length Quality Gate (분량 품질 게이트)
 # =============================================================================
+
 
 class LengthQualityGate:
     """
@@ -376,15 +379,9 @@ class LengthQualityGate:
     - 긴장도 급락
     """
 
-    SCENE_MIN_LENGTH = {
-        "action": 800,
-        "dialogue": 600,
-        "emotional": 500,
-        "transition": 300,
-        "default": 500
-    }
+    SCENE_MIN_LENGTH = {"action": 800, "dialogue": 600, "emotional": 500, "transition": 300, "default": 500}
 
-    def check_length(self, scenes: List[Dict]) -> List[Dict]:
+    def check_length(self, scenes: list[dict]) -> list[dict]:
         """씬별 분량 체크"""
         issues = []
         for scene in scenes:
@@ -393,61 +390,65 @@ class LengthQualityGate:
             actual_len = len(scene.get("content", ""))
 
             if actual_len < min_len:
-                issues.append({
-                    "scene_id": scene.get("id"),
-                    "scene_type": scene_type,
-                    "actual": actual_len,
-                    "required": min_len,
-                    "deficit": min_len - actual_len
-                })
+                issues.append(
+                    {
+                        "scene_id": scene.get("id"),
+                        "scene_type": scene_type,
+                        "actual": actual_len,
+                        "required": min_len,
+                        "deficit": min_len - actual_len,
+                    }
+                )
         return issues
 
-    def detect_dropout_risk(self, text: str) -> List[Dict]:
+    def detect_dropout_risk(self, text: str) -> list[dict]:
         """이탈 위험 지점 탐지"""
         risks = []
 
         # 대화 없이 긴 서술
-        paragraphs = text.split('\n\n')
+        paragraphs = text.split("\n\n")
         consecutive_narration = 0
         narration_start = 0
 
         for i, p in enumerate(paragraphs):
-            has_dialogue = '"' in p or '"' in p or '「' in p
+            has_dialogue = '"' in p or '"' in p or "「" in p
             if not has_dialogue and len(p) > 200:
                 if consecutive_narration == 0:
                     narration_start = i
                 consecutive_narration += 1
             else:
                 if consecutive_narration >= 3:
-                    risks.append({
-                        "type": "consecutive_narration",
-                        "start_paragraph": narration_start,
-                        "count": consecutive_narration,
-                        "suggestion": "대화 또는 액션 삽입 권장"
-                    })
+                    risks.append(
+                        {
+                            "type": "consecutive_narration",
+                            "start_paragraph": narration_start,
+                            "count": consecutive_narration,
+                            "suggestion": "대화 또는 액션 삽입 권장",
+                        }
+                    )
                 consecutive_narration = 0
 
         # 긴 설명 블록
-        explanation_pattern = r'(?:이었다|였다|한다|이다)[.]\s*(?:그것은|이것은|그는|그녀는)'
+        explanation_pattern = r"(?:이었다|였다|한다|이다)[.]\s*(?:그것은|이것은|그는|그녀는)"
         matches = list(re.finditer(explanation_pattern, text))
         if len(matches) > 5:
-            risks.append({
-                "type": "excessive_explanation",
-                "count": len(matches),
-                "suggestion": "설명을 행동/대화로 전환 권장"
-            })
+            risks.append(
+                {"type": "excessive_explanation", "count": len(matches), "suggestion": "설명을 행동/대화로 전환 권장"}
+            )
 
         return risks
 
-    def generate_feedback(self, length_issues: List[Dict], dropout_risks: List[Dict]) -> str:
+    def generate_feedback(self, length_issues: list[dict], dropout_risks: list[dict]) -> str:
         """통합 피드백"""
         lines = []
 
         if length_issues:
             lines.append("[V55.5 분량 부족]")
             for issue in length_issues[:3]:
-                lines.append(f"  - 씬 {issue['scene_id']} ({issue['scene_type']}): "
-                           f"{issue['actual']}자 → {issue['required']}자 필요 (+{issue['deficit']})")
+                lines.append(
+                    f"  - 씬 {issue['scene_id']} ({issue['scene_type']}): "
+                    f"{issue['actual']}자 → {issue['required']}자 필요 (+{issue['deficit']})"
+                )
 
         if dropout_risks:
             lines.append("\n[V55.5 이탈 위험 지점]")
@@ -460,6 +461,7 @@ class LengthQualityGate:
 # =============================================================================
 # V55.6: Scene Density Enforcer (씬 밀도 강제기)
 # =============================================================================
+
 
 class SceneDensityEnforcer:
     """
@@ -474,8 +476,24 @@ class SceneDensityEnforcer:
 
     # 공간 묘사 키워드
     SPACE_KEYWORDS = [
-        "방", "전각", "객잔", "거리", "산", "숲", "강", "하늘", "벽", "문",
-        "바닥", "천장", "창", "탁자", "의자", "침대", "등불", "촛불"
+        "방",
+        "전각",
+        "객잔",
+        "거리",
+        "산",
+        "숲",
+        "강",
+        "하늘",
+        "벽",
+        "문",
+        "바닥",
+        "천장",
+        "창",
+        "탁자",
+        "의자",
+        "침대",
+        "등불",
+        "촛불",
     ]
 
     # 감각 키워드
@@ -484,10 +502,10 @@ class SceneDensityEnforcer:
         "auditory": ["소리", "들", "울", "고요", "시끄", "속삭"],
         "tactile": ["차갑", "뜨겁", "거칠", "부드", "딱딱", "촉감"],
         "olfactory": ["냄새", "향기", "악취", "향"],
-        "gustatory": ["맛", "달", "쓴", "짠", "신"]
+        "gustatory": ["맛", "달", "쓴", "짠", "신"],
     }
 
-    def analyze_scene(self, scene_text: str) -> Dict[str, Any]:
+    def analyze_scene(self, scene_text: str) -> dict[str, Any]:
         """씬 밀도 분석"""
         result = {
             "has_space_description": False,
@@ -495,7 +513,7 @@ class SceneDensityEnforcer:
             "sensory_count": 0,
             "sensory_types": [],
             "has_dialogue_beats": True,  # 기본값
-            "missing_elements": []
+            "missing_elements": [],
         }
 
         # 공간 묘사 체크
@@ -524,7 +542,7 @@ class SceneDensityEnforcer:
 
         return result
 
-    def generate_feedback(self, scene_id: str, analysis: Dict) -> str:
+    def generate_feedback(self, scene_id: str, analysis: dict) -> str:
         """피드백 생성"""
         if not analysis["missing_elements"]:
             return ""
@@ -539,13 +557,14 @@ class SceneDensityEnforcer:
 # V55.7: Dialogue Beat Injector (대화 비트 삽입기)
 # =============================================================================
 
+
 class DialogueBeatInjector:
     """
     연속 대화에 액션/리액션 비트 삽입 권장
     + 환경 앵커 체크
     """
 
-    def analyze_dialogues(self, text: str) -> Dict[str, Any]:
+    def analyze_dialogues(self, text: str) -> dict[str, Any]:
         """대화 연속성 분석"""
         # 대화 패턴 찾기
         dialogue_pattern = r'[""「].*?[""」]'
@@ -562,21 +581,19 @@ class DialogueBeatInjector:
                 consecutive_count += 1
             else:
                 if consecutive_count >= 3:
-                    issues.append({
-                        "position": i,
-                        "consecutive": consecutive_count,
-                        "suggestion": "대화 비트 삽입 (행동, 표정, 환경 반응)"
-                    })
+                    issues.append(
+                        {
+                            "position": i,
+                            "consecutive": consecutive_count,
+                            "suggestion": "대화 비트 삽입 (행동, 표정, 환경 반응)",
+                        }
+                    )
                 max_consecutive = max(max_consecutive, consecutive_count)
                 consecutive_count = 0
 
-        return {
-            "total_dialogues": len(dialogues),
-            "max_consecutive": max_consecutive,
-            "issues": issues
-        }
+        return {"total_dialogues": len(dialogues), "max_consecutive": max_consecutive, "issues": issues}
 
-    def check_environment_anchors(self, text: str) -> Dict[str, Any]:
+    def check_environment_anchors(self, text: str) -> dict[str, Any]:
         """환경 앵커 체크"""
         # 장소 전환 탐지
         location_keywords = ["로 들어", "에 도착", "로 향", "를 나서", "에서 나"]
@@ -585,23 +602,24 @@ class DialogueBeatInjector:
         for kw in location_keywords:
             for m in re.finditer(kw, text):
                 # 전환 후 100자 내에 환경 묘사가 있는지 체크
-                after_text = text[m.end():m.end()+150]
-                has_description = any(sk in after_text for sk in
-                    SceneDensityEnforcer.SPACE_KEYWORDS)
+                after_text = text[m.end() : m.end() + 150]
+                has_description = any(sk in after_text for sk in SceneDensityEnforcer.SPACE_KEYWORDS)
 
                 if not has_description:
-                    transitions.append({
-                        "position": m.start(),
-                        "context": text[m.start()-20:m.end()+30],
-                        "needs_description": True
-                    })
+                    transitions.append(
+                        {
+                            "position": m.start(),
+                            "context": text[m.start() - 20 : m.end() + 30],
+                            "needs_description": True,
+                        }
+                    )
 
         return {
             "transitions": len(transitions),
-            "missing_descriptions": [t for t in transitions if t["needs_description"]]
+            "missing_descriptions": [t for t in transitions if t["needs_description"]],
         }
 
-    def generate_feedback(self, dialogue_analysis: Dict, env_analysis: Dict) -> str:
+    def generate_feedback(self, dialogue_analysis: dict, env_analysis: dict) -> str:
         """통합 피드백"""
         lines = []
 
@@ -623,9 +641,11 @@ class DialogueBeatInjector:
 # 통합 Enhancer
 # =============================================================================
 
+
 @dataclass
 class EnhancementResult:
     """향상 분석 결과"""
+
     cliche_count: int = 0
     subtext_ratio: float = 0.0
     page_turner_score: float = 0.0
@@ -635,7 +655,7 @@ class EnhancementResult:
 
     total_feedback: str = ""
     estimated_length_increase: str = ""
-    priority_fixes: List[str] = field(default_factory=list)
+    priority_fixes: list[str] = field(default_factory=list)
 
 
 class ManuscriptEnhancer:
@@ -658,12 +678,7 @@ class ManuscriptEnhancer:
         self.density_enforcer = SceneDensityEnforcer()
         self.dialogue_injector = DialogueBeatInjector()
 
-    def analyze(
-        self,
-        manuscript: str,
-        scenes: List[Dict] = None,
-        current_ep: int = 1
-    ) -> EnhancementResult:
+    def analyze(self, manuscript: str, scenes: list[dict] = None, current_ep: int = 1) -> EnhancementResult:
         """종합 분석"""
         result = EnhancementResult()
         feedbacks = []
@@ -702,10 +717,7 @@ class ManuscriptEnhancer:
             result.length_issues = len(length_issues)
         dropout_risks = self.length_gate.detect_dropout_risk(manuscript)
         if scenes or dropout_risks:
-            fb = self.length_gate.generate_feedback(
-                length_issues if scenes else [],
-                dropout_risks
-            )
+            fb = self.length_gate.generate_feedback(length_issues if scenes else [], dropout_risks)
             if fb:
                 feedbacks.append(fb)
                 result.priority_fixes.append("분량 보강")
@@ -717,9 +729,7 @@ class ManuscriptEnhancer:
                 density = self.density_enforcer.analyze_scene(scene.get("content", ""))
                 if density["missing_elements"]:
                     result.density_issues += 1
-                    density_fb_list.append(
-                        self.density_enforcer.generate_feedback(scene.get("id", "?"), density)
-                    )
+                    density_fb_list.append(self.density_enforcer.generate_feedback(scene.get("id", "?"), density))
             if density_fb_list:
                 feedbacks.extend(density_fb_list[:2])
                 result.priority_fixes.append("씬 밀도 보강")

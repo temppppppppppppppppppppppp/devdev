@@ -10,11 +10,7 @@
 비용: $0 (프롬프트 주입만)
 """
 
-import json
-import re
 import threading
-from typing import Dict, List, Any, Optional
-
 
 # [V60.74] 스레드 안전성을 위한 Lock
 _rejection_lock = threading.Lock()
@@ -29,15 +25,15 @@ WUXIA_NEGATIVE_EXAMPLES = {
                 "context": "Arc 1에서 대도를 획득한 상태",
                 "mistake": "Arc 2의 items_acquired에 '대도' 포함",
                 "why_wrong": "대도는 Arc 1에서 이미 획득. 다시 획득할 수 없음.",
-                "correct": "items_acquired에서 '대도' 제외. 대신 '새로운 무공 비급' 등 새 아이템"
+                "correct": "items_acquired에서 '대도' 제외. 대신 '새로운 무공 비급' 등 새 아이템",
             },
             {
                 "context": "Arc 2에서 철혈사자패를 수여받은 상태",
                 "mistake": "Arc 3에서 다시 철혈사자패를 수여받는 장면",
                 "why_wrong": "이미 수여받은 것을 다시 수여받을 수 없음",
-                "correct": "기존 철혈사자패를 '활용'하는 장면으로 변경"
-            }
-        ]
+                "correct": "기존 철혈사자패를 '활용'하는 장면으로 변경",
+            },
+        ],
     },
     "location_teleport": {
         "description": "위치 순간이동",
@@ -46,9 +42,9 @@ WUXIA_NEGATIVE_EXAMPLES = {
                 "context": "Arc 1 종료 시 철혈단 본거지에 있음",
                 "mistake": "Arc 2 시작 위치가 '흑풍문 본거지'",
                 "why_wrong": "이전 Arc 종료 위치에서 시작해야 함",
-                "correct": "arc_start_state.location = '철혈단 본거지'로 시작, 이동 장면 포함"
+                "correct": "arc_start_state.location = '철혈단 본거지'로 시작, 이동 장면 포함",
             }
-        ]
+        ],
     },
     "state_discontinuity": {
         "description": "상태 불연속",
@@ -57,15 +53,15 @@ WUXIA_NEGATIVE_EXAMPLES = {
                 "context": "Arc 1 종료 시 왼팔 중상, 내공 60%",
                 "mistake": "Arc 2 시작에서 부상 언급 없이 정상 활동",
                 "why_wrong": "중상은 회복 과정 없이 사라지지 않음",
-                "correct": "Arc 2 초반에 치료 장면 포함 또는 부상 상태로 행동 제한"
+                "correct": "Arc 2 초반에 치료 장면 포함 또는 부상 상태로 행동 제한",
             },
             {
                 "context": "Arc 2에서 내공 30% 손실",
                 "mistake": "Arc 3 시작에서 내공 100%",
                 "why_wrong": "내공은 수련/회복 과정 없이 회복되지 않음",
-                "correct": "Arc 3 초반 내공 회복 수련 장면 포함"
-            }
-        ]
+                "correct": "Arc 3 초반 내공 회복 수련 장면 포함",
+            },
+        ],
     },
     "joint_docs_mismatch": {
         "description": "joint_docs와 tactical_doc 불일치",
@@ -74,15 +70,15 @@ WUXIA_NEGATIVE_EXAMPLES = {
                 "context": "tactical_doc 마지막 화에서 흑풍문 전초기지로 이동",
                 "mistake": "joint_docs.final_location이 여전히 '철혈단 본거지'",
                 "why_wrong": "joint_docs는 tactical_doc 마지막 상태를 정확히 반영해야 함",
-                "correct": "joint_docs.final_location = '흑풍문 전초기지'"
+                "correct": "joint_docs.final_location = '흑풍문 전초기지'",
             },
             {
                 "context": "tactical_doc에서 금창약 사용",
                 "mistake": "joint_docs.physical_inventory에 여전히 금창약 포함",
                 "why_wrong": "소모된 아이템은 소지품에서 제외",
-                "correct": "physical_inventory에서 금창약 제거, items_consumed에 추가"
-            }
-        ]
+                "correct": "physical_inventory에서 금창약 제거, items_consumed에 추가",
+            },
+        ],
     },
     "tactical_doc_quality": {
         "description": "tactical_doc 품질 문제",
@@ -91,15 +87,15 @@ WUXIA_NEGATIVE_EXAMPLES = {
                 "context": "Arc 3 tactical_doc 작성",
                 "mistake": "1500자 분량의 간략한 요약만 작성",
                 "why_wrong": "tactical_doc은 최소 3000자 이상의 상세 시나리오 필요",
-                "correct": "각 화별 800자 이상, 총 4000자 이상의 구체적 장면 묘사"
+                "correct": "각 화별 800자 이상, 총 4000자 이상의 구체적 장면 묘사",
             },
             {
                 "context": "5개 화 구성 Arc",
                 "mistake": "화 구분 없이 하나의 흐름으로 작성",
                 "why_wrong": "'제 N화' 형식으로 명확히 구분 필요",
-                "correct": "'제 1화: ...', '제 2화: ...' 형식으로 5개 화 명확 구분"
-            }
-        ]
+                "correct": "'제 1화: ...', '제 2화: ...' 형식으로 5개 화 명확 구분",
+            },
+        ],
     },
     "power_inflation": {
         "description": "파워 인플레이션",
@@ -108,10 +104,10 @@ WUXIA_NEGATIVE_EXAMPLES = {
                 "context": "주인공 삼류 수준에서 시작",
                 "mistake": "Arc 1에서 바로 일류 경지 도달",
                 "why_wrong": "한 Arc에서 2단계 이상 성장은 비현실적",
-                "correct": "Arc 1: 삼류→이류, Arc 2: 이류→일류 점진적 성장"
+                "correct": "Arc 1: 삼류→이류, Arc 2: 이류→일류 점진적 성장",
             }
-        ]
-    }
+        ],
+    },
 }
 
 
@@ -125,32 +121,34 @@ class NegativeExampleInjector:
     def __init__(self, genre: str = "wuxia"):
         self.genre = genre
         self.examples_library = self._load_examples_library(genre)
-        self.rejection_history: List[Dict] = []
+        self.rejection_history: list[dict] = []
 
-    def _load_examples_library(self, genre: str) -> Dict:
+    def _load_examples_library(self, genre: str) -> dict:
         """장르별 실패 사례 라이브러리 로드"""
         if genre == "wuxia":
             return WUXIA_NEGATIVE_EXAMPLES
         # 다른 장르는 기본 라이브러리 사용
         return WUXIA_NEGATIVE_EXAMPLES
 
-    def record_rejection(self, arc: Dict, rejection_reason: str, category: str):
+    def record_rejection(self, arc: dict, rejection_reason: str, category: str):
         """REJECT 사례 기록 - [V60.74] 스레드 안전"""
         with _rejection_lock:
-            self.rejection_history.append({
-                "arc_no": arc.get("arc_no", "?"),
-                "reason": rejection_reason,
-                "category": category,
-                "items_acquired": arc.get("state_constraints", {}).get("items_acquired", []),
-                "grants_received": arc.get("state_constraints", {}).get("grants_received", []),
-                "timestamp": "now"
-            })
+            self.rejection_history.append(
+                {
+                    "arc_no": arc.get("arc_no", "?"),
+                    "reason": rejection_reason,
+                    "category": category,
+                    "items_acquired": arc.get("state_constraints", {}).get("items_acquired", []),
+                    "grants_received": arc.get("state_constraints", {}).get("grants_received", []),
+                    "timestamp": "now",
+                }
+            )
 
             # 최근 20개만 유지
             if len(self.rejection_history) > 20:
                 self.rejection_history = self.rejection_history[-20:]
 
-    def generate_injection(self, context: Dict = None) -> str:
+    def generate_injection(self, context: dict = None) -> str:
         """Analyst 프롬프트에 주입할 실패 사례 텍스트 생성"""
         lines = [
             "",
@@ -160,7 +158,7 @@ class NegativeExampleInjector:
             "",
             "다음은 과거에 REJECT된 실패 사례입니다.",
             "동일한 실수를 반복하지 마세요!",
-            ""
+            "",
         ]
 
         # 최근 REJECT 히스토리 기반 사례
@@ -200,7 +198,7 @@ class NegativeExampleInjector:
 
         return "\n".join(lines)
 
-    def _select_relevant_categories(self, context: Dict = None) -> List[str]:
+    def _select_relevant_categories(self, context: dict = None) -> list[str]:
         """상황에 맞는 카테고리 선택"""
         # 기본 우선순위
         priority = [
@@ -209,7 +207,7 @@ class NegativeExampleInjector:
             "state_discontinuity",
             "joint_docs_mismatch",
             "tactical_doc_quality",
-            "power_inflation"
+            "power_inflation",
         ]
 
         # 최근 REJECT 히스토리 기반 우선순위 조정
@@ -266,7 +264,7 @@ Arc 시작 위치가 이전 Arc 종료 위치와 다릅니다!
 joint_docs가 tactical_doc 내용과 일치하지 않습니다!
 → final_location을 tactical_doc 마지막 화 종료 위치로 수정하세요.
 → physical_inventory를 정확히 업데이트하세요.
-"""
+""",
         }
         return warnings.get(issue_type, "⚠️ 제약 조건을 다시 확인하세요.")
 

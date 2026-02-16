@@ -15,17 +15,16 @@ Components:
 - Stage 2 소요 시간: -40~50%
 """
 
-import json
 import logging
 import re
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, field
 from collections import defaultdict
-
+from dataclasses import dataclass
+from typing import Any
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # 1. STATE SNAPSHOT INJECTOR
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 class StateSnapshotInjector:
     """
@@ -37,7 +36,7 @@ class StateSnapshotInjector:
     def __init__(self) -> None:
         self.last_snapshot = None
 
-    def extract_snapshot(self, prev_arc: Dict) -> Dict:
+    def extract_snapshot(self, prev_arc: dict) -> dict:
         """이전 Arc에서 종료 상태 스냅샷 추출"""
         if not prev_arc:
             return self._get_default_snapshot()
@@ -64,7 +63,7 @@ class StateSnapshotInjector:
         self.last_snapshot = snapshot
         return snapshot
 
-    def _collect_all_items(self, arc: Dict) -> List[str]:
+    def _collect_all_items(self, arc: dict) -> list[str]:
         """Arc에서 획득한 모든 아이템 수집"""
         items = []
         state = arc.get("state_constraints", {})
@@ -80,7 +79,7 @@ class StateSnapshotInjector:
 
         return list(set(items))
 
-    def _get_default_snapshot(self) -> Dict:
+    def _get_default_snapshot(self) -> dict:
         """첫 Arc용 기본 스냅샷"""
         return {
             "location": "서사 시작점",
@@ -91,7 +90,7 @@ class StateSnapshotInjector:
             "items_acquired_total": [],
         }
 
-    def generate_injection_prompt(self, prev_arcs: List[Dict], protagonist_name: str = "주인공") -> str:
+    def generate_injection_prompt(self, prev_arcs: list[dict], protagonist_name: str = "주인공") -> str:
         """Arc 생성 프롬프트에 주입할 상태 스냅샷 텍스트 생성"""
         if not prev_arcs:
             return self._generate_first_arc_prompt(protagonist_name)
@@ -113,14 +112,14 @@ class StateSnapshotInjector:
 ╠══════════════════════════════════════════════════════════════════════════════╣
 ║  주인공: {protagonist_name}
 ║  ───────────────────────────────────────────────────────────────────────────
-║  📍 시작 위치: {snapshot['location']}
-║  📦 소지품: {', '.join(snapshot['inventory']) if snapshot['inventory'] else '없음'}
-║  ⚡ 내공: {snapshot['internal_energy']}%
-║  💔 부상: {snapshot['injuries']}
-║  🏅 수여물: {', '.join(all_grants) if all_grants else '없음'}
+║  📍 시작 위치: {snapshot["location"]}
+║  📦 소지품: {", ".join(snapshot["inventory"]) if snapshot["inventory"] else "없음"}
+║  ⚡ 내공: {snapshot["internal_energy"]}%
+║  💔 부상: {snapshot["injuries"]}
+║  🏅 수여물: {", ".join(all_grants) if all_grants else "없음"}
 ╠══════════════════════════════════════════════════════════════════════════════╣
 ║  ❌ 이미 획득한 아이템 (재획득 불가):
-║     {', '.join(all_items) if all_items else '(없음)'}
+║     {", ".join(all_items) if all_items else "(없음)"}
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 ⚠️ arc_start_state는 반드시 위 값과 동일해야 합니다!
@@ -147,6 +146,7 @@ class StateSnapshotInjector:
 # 2. ARC AUTO-CORRECTOR
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 class ArcAutoCorrector:
     """
     [V60.25] 생성된 Arc 자동 수정
@@ -157,7 +157,7 @@ class ArcAutoCorrector:
     def __init__(self) -> None:
         self.corrections_made = []
 
-    def auto_correct(self, arc: Dict, prev_arcs: List[Dict]) -> Tuple[Dict, List[str]]:
+    def auto_correct(self, arc: dict, prev_arcs: list[dict]) -> tuple[dict, list[str]]:
         """
         Arc 자동 수정
 
@@ -189,7 +189,7 @@ class ArcAutoCorrector:
 
         return arc, self.corrections_made
 
-    def _remove_duplicate_items(self, arc: Dict, prev_arcs: List[Dict]) -> Dict:
+    def _remove_duplicate_items(self, arc: dict, prev_arcs: list[dict]) -> dict:
         """이전 Arc에서 이미 획득한 아이템 제거"""
         if not prev_arcs:
             return arc
@@ -237,7 +237,7 @@ class ArcAutoCorrector:
                         return True
         return False
 
-    def _fix_start_location(self, arc: Dict, prev_arcs: List[Dict]) -> Dict:
+    def _fix_start_location(self, arc: dict, prev_arcs: list[dict]) -> dict:
         """시작 위치를 이전 Arc 종료 위치로 수정"""
         if not prev_arcs:
             return arc
@@ -270,7 +270,7 @@ class ArcAutoCorrector:
 
         return arc
 
-    def _fix_start_state(self, arc: Dict, prev_arcs: List[Dict]) -> Dict:
+    def _fix_start_state(self, arc: dict, prev_arcs: list[dict]) -> dict:
         """시작 상태를 이전 Arc 종료 상태로 수정"""
         if not prev_arcs:
             return arc
@@ -311,7 +311,7 @@ class ArcAutoCorrector:
 
         return arc
 
-    def _fix_joint_docs(self, arc: Dict) -> Dict:
+    def _fix_joint_docs(self, arc: dict) -> dict:
         """tactical_doc에서 joint_docs 자동 추출/수정"""
         tactical = arc.get("tactical_doc", "")
         if not tactical:
@@ -336,7 +336,7 @@ class ArcAutoCorrector:
         arc["joint_docs"] = joint
         return arc
 
-    def _ensure_required_fields(self, arc: Dict) -> Dict:
+    def _ensure_required_fields(self, arc: dict) -> dict:
         """필수 필드 보장"""
         # state_constraints 구조 보장
         if "state_constraints" not in arc:
@@ -365,7 +365,7 @@ class ArcAutoCorrector:
 
         return arc
 
-    def _normalize_internal_energy(self, arc: Dict) -> Dict:
+    def _normalize_internal_energy(self, arc: dict) -> dict:
         """내공 범위 정규화 (0-100%)"""
         state = arc.get("state_constraints", {})
 
@@ -397,6 +397,7 @@ class ArcAutoCorrector:
 # 3. NEGATIVE CONSTRAINT AMPLIFIER
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 class NegativeConstraintAmplifier:
     """
     [V60.25] 금지 항목 강화
@@ -407,7 +408,7 @@ class NegativeConstraintAmplifier:
     def __init__(self) -> None:
         pass
 
-    def amplify_constraints(self, prev_arcs: List[Dict]) -> str:
+    def amplify_constraints(self, prev_arcs: list[dict]) -> str:
         """강화된 제약 조건 프롬프트 생성"""
         if not prev_arcs:
             return ""
@@ -432,8 +433,8 @@ class NegativeConstraintAmplifier:
             for item_info in item_history:
                 prompt += f"  ❌ {item_info['item']}\n"
                 prompt += f"     └─ Arc {item_info['arc']} 제{item_info['episode']}화에서 획득\n"
-                if item_info.get('context'):
-                    prompt += f"     └─ 상황: \"{item_info['context'][:50]}...\"\n"
+                if item_info.get("context"):
+                    prompt += f'     └─ 상황: "{item_info["context"][:50]}..."\n'
 
         if grant_history:
             prompt += "\n【수여물 재수여 금지】\n"
@@ -450,7 +451,7 @@ class NegativeConstraintAmplifier:
 """
         return prompt
 
-    def _build_item_history(self, prev_arcs: List[Dict]) -> List[Dict]:
+    def _build_item_history(self, prev_arcs: list[dict]) -> list[dict]:
         """아이템 획득 히스토리 구축"""
         history = []
 
@@ -476,16 +477,11 @@ class NegativeConstraintAmplifier:
                     if ep_match:
                         episode = ep_match.group(1)
 
-                history.append({
-                    "item": item,
-                    "arc": arc_no,
-                    "episode": episode,
-                    "context": context
-                })
+                history.append({"item": item, "arc": arc_no, "episode": episode, "context": context})
 
         return history
 
-    def _build_grant_history(self, prev_arcs: List[Dict]) -> List[Dict]:
+    def _build_grant_history(self, prev_arcs: list[dict]) -> list[dict]:
         """수여물 히스토리 구축"""
         history = []
 
@@ -495,15 +491,17 @@ class NegativeConstraintAmplifier:
             grants = state.get("grants_received", [])
 
             for grant in grants:
-                history.append({
-                    "grant": grant,
-                    "arc": arc_no,
-                    "from": "알 수 없음"  # TODO: tactical_doc에서 추출
-                })
+                history.append(
+                    {
+                        "grant": grant,
+                        "arc": arc_no,
+                        "from": "알 수 없음",  # TODO: tactical_doc에서 추출
+                    }
+                )
 
         return history
 
-    def _build_relationship_history(self, prev_arcs: List[Dict]) -> List[Dict]:
+    def _build_relationship_history(self, prev_arcs: list[dict]) -> list[dict]:
         """관계 변화 히스토리 구축"""
         # TODO: 구현
         return []
@@ -512,6 +510,7 @@ class NegativeConstraintAmplifier:
 # ═══════════════════════════════════════════════════════════════════════════════
 # 4. FOCUSED FEEDBACK GENERATOR
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 class FocusedFeedbackGenerator:
     """
@@ -523,7 +522,7 @@ class FocusedFeedbackGenerator:
     def __init__(self) -> None:
         pass
 
-    def generate_feedback(self, validation_result: Dict, arc: Dict, prev_arcs: List[Dict]) -> str:
+    def generate_feedback(self, validation_result: dict, arc: dict, prev_arcs: list[dict]) -> str:
         """구체적 피드백 생성"""
         issues = validation_result.get("issues", [])
         if not issues:
@@ -552,7 +551,7 @@ class FocusedFeedbackGenerator:
 
         return "\n".join(feedback_parts)
 
-    def _get_fix_guide(self, category: str, issue: Any, arc: Dict, prev_arcs: List[Dict]) -> str:
+    def _get_fix_guide(self, category: str, issue: Any, arc: dict, prev_arcs: list[dict]) -> str:
         """카테고리별 수정 가이드"""
 
         if "중복" in str(issue) or "duplicate" in category.lower():
@@ -566,7 +565,9 @@ class FocusedFeedbackGenerator:
 
         if "내공" in str(issue) or "energy" in category.lower():
             if prev_arcs:
-                prev_energy = prev_arcs[-1].get("state_constraints", {}).get("arc_end_state", {}).get("internal_energy", 100)
+                prev_energy = (
+                    prev_arcs[-1].get("state_constraints", {}).get("arc_end_state", {}).get("internal_energy", 100)
+                )
                 return f"arc_start_state.internal_energy를 {prev_energy}%로 수정"
             return "arc_start_state.internal_energy를 이전 Arc 종료 내공으로 수정"
 
@@ -586,9 +587,11 @@ class FocusedFeedbackGenerator:
 # 5. SESSION FAILURE MEMORY
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 @dataclass
 class FailureRecord:
     """실패 기록"""
+
     arc_no: int
     attempt: int
     reason: str
@@ -605,11 +608,18 @@ class SessionFailureMemory:
     """
 
     def __init__(self) -> None:
-        self.failures: List[FailureRecord] = []
-        self.pattern_counts: Dict[str, int] = defaultdict(int)
+        self.failures: list[FailureRecord] = []
+        self.pattern_counts: dict[str, int] = defaultdict(int)
 
-    def record_failure(self, arc_no: int, attempt: int = 0, reason: str = "",
-                       category: str = "unknown", details: str = "", failure_type: str = None):
+    def record_failure(
+        self,
+        arc_no: int,
+        attempt: int = 0,
+        reason: str = "",
+        category: str = "unknown",
+        details: str = "",
+        failure_type: str = None,
+    ):
         """실패 기록
 
         Args:
@@ -625,16 +635,12 @@ class SessionFailureMemory:
         actual_reason = reason if reason else details
 
         record = FailureRecord(
-            arc_no=arc_no,
-            attempt=attempt,
-            reason=actual_reason,
-            category=actual_category,
-            details=details
+            arc_no=arc_no, attempt=attempt, reason=actual_reason, category=actual_category, details=details
         )
         self.failures.append(record)
         self.pattern_counts[actual_category] += 1
 
-    def get_top_failure_patterns(self, n: int = 3) -> List[Tuple[str, int]]:
+    def get_top_failure_patterns(self, n: int = 3) -> list[tuple[str, int]]:
         """가장 빈번한 실패 패턴 반환"""
         sorted_patterns = sorted(self.pattern_counts.items(), key=lambda x: x[1], reverse=True)
         return sorted_patterns[:n]
@@ -688,6 +694,7 @@ class SessionFailureMemory:
 # 6. FEW-SHOT EXAMPLE MANAGER
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 class FewShotExampleManager:
     """
     [V60.25] 성공 예시 관리
@@ -696,10 +703,10 @@ class FewShotExampleManager:
     """
 
     def __init__(self, max_examples: int = 3):
-        self.examples: List[Dict] = []
+        self.examples: list[dict] = []
         self.max_examples = max_examples
 
-    def add_successful_arc(self, arc: Dict):
+    def add_successful_arc(self, arc: dict):
         """성공한 Arc 저장"""
         # 간소화된 버전만 저장
         simplified = {
@@ -731,9 +738,9 @@ class FewShotExampleManager:
 """
         for i, ex in enumerate(self.examples[-2:], 1):  # 최근 2개만
             prompt += f"""
-【성공 예시 {i}】 Arc {ex['arc_no']}
-  • tactical_doc 분량: {ex['tactical_doc_length']}자
-  • 신규 획득 아이템: {len(ex['items_acquired'])}개
+【성공 예시 {i}】 Arc {ex["arc_no"]}
+  • tactical_doc 분량: {ex["tactical_doc_length"]}자
+  • 신규 획득 아이템: {len(ex["items_acquired"])}개
   • state_constraints 구조: arc_start_state → arc_end_state 명확히 구분
   • joint_docs: final_location, physical_inventory 포함
 """
@@ -750,6 +757,7 @@ class FewShotExampleManager:
 # ═══════════════════════════════════════════════════════════════════════════════
 # 7. INTEGRATED OPTIMIZER
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 class Stage2Optimizer:
     """
@@ -775,10 +783,7 @@ class Stage2Optimizer:
         }
 
     def generate_optimized_prompt(
-        self,
-        prev_arcs: List[Dict],
-        protagonist_name: str = "주인공",
-        include_examples: bool = True
+        self, prev_arcs: list[dict], protagonist_name: str = "주인공", include_examples: bool = True
     ) -> str:
         """최적화된 프롬프트 생성"""
         parts = []
@@ -799,7 +804,7 @@ class Stage2Optimizer:
 
         return "\n".join(parts)
 
-    def post_process_arc(self, arc: Dict, prev_arcs: List[Dict]) -> Tuple[Dict, List[str]]:
+    def post_process_arc(self, arc: dict, prev_arcs: list[dict]) -> tuple[dict, list[str]]:
         """Arc 후처리 (자동 수정)"""
         self.stats["total_arcs"] += 1
 
@@ -813,7 +818,7 @@ class Stage2Optimizer:
 
         return corrected_arc, corrections
 
-    def record_result(self, arc_no: int, attempt: int, passed: bool, arc: Dict = None, validation_result: Dict = None):
+    def record_result(self, arc_no: int, attempt: int, passed: bool, arc: dict = None, validation_result: dict = None):
         """결과 기록"""
         if passed:
             if attempt == 0:
@@ -826,15 +831,19 @@ class Stage2Optimizer:
                 issues = validation_result.get("issues", []) or validation_result.get("critical_issues", [])
                 if issues:
                     first_issue = issues[0]
-                    reason = first_issue.get("issue", str(first_issue)) if isinstance(first_issue, dict) else str(first_issue)
+                    reason = (
+                        first_issue.get("issue", str(first_issue))
+                        if isinstance(first_issue, dict)
+                        else str(first_issue)
+                    )
                     category = first_issue.get("category", "unknown") if isinstance(first_issue, dict) else "unknown"
                     self.failure_memory.record_failure(arc_no, attempt, reason, category)
 
-    def generate_focused_feedback(self, validation_result: Dict, arc: Dict, prev_arcs: List[Dict]) -> str:
+    def generate_focused_feedback(self, validation_result: dict, arc: dict, prev_arcs: list[dict]) -> str:
         """구체적 피드백 생성"""
         return self.feedback_generator.generate_feedback(validation_result, arc, prev_arcs)
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> dict:
         """통계 반환"""
         total = self.stats["total_arcs"]
         if total == 0:
@@ -860,6 +869,7 @@ class Stage2Optimizer:
 # ═══════════════════════════════════════════════════════════════════════════════
 # FACTORY FUNCTION
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def create_stage2_optimizer() -> Stage2Optimizer:
     """Stage2Optimizer 생성 헬퍼"""

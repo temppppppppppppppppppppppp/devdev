@@ -14,9 +14,8 @@
 - INHERITED STATE (계승해야 할 상태)
 """
 
-import re
 import json
-from typing import Dict, List, Any, Set, Tuple
+import re
 
 
 class ConstraintCompiler:
@@ -29,21 +28,21 @@ class ConstraintCompiler:
     def __init__(self) -> None:
         # 아이템 획득 패턴
         self.acquire_patterns = [
-            r'([가-힣]{2,20}(?:도|검|창|봉|환|단|경|비급|서|책|패|인장|권))',
+            r"([가-힣]{2,20}(?:도|검|창|봉|환|단|경|비급|서|책|패|인장|권))",
         ]
 
         # 수여물 패턴
         self.grant_patterns = [
-            r'([가-힣]{2,20}패)',
-            r'([가-힣]{2,20}권)',
-            r'([가-힣]{2,20}인장)',
+            r"([가-힣]{2,20}패)",
+            r"([가-힣]{2,20}권)",
+            r"([가-힣]{2,20}인장)",
         ]
 
     def compile(
         self,
-        prev_arcs: List[Dict],
-        state_extractor_result: Dict = None,
-        resolved_plots: List[Dict] = None  # [V62.7]
+        prev_arcs: list[dict],
+        state_extractor_result: dict = None,
+        resolved_plots: list[dict] = None,  # [V62.7]
     ) -> str:
         """
         제약 조건 컴파일
@@ -74,13 +73,13 @@ class ConstraintCompiler:
             all_grants=all_grants,
             current_state=current_state,
             arc_count=len(prev_arcs),
-            resolved_plots=resolved_plots
+            resolved_plots=resolved_plots,
         )
 
     # [V62.3] 윈도잉: regex 스캔은 최근 N개만 (구조화 필드는 전체)
     REGEX_WINDOW = 3
 
-    def _collect_all_items(self, prev_arcs: List[Dict]) -> Dict[str, int]:
+    def _collect_all_items(self, prev_arcs: list[dict]) -> dict[str, int]:
         """모든 획득 아이템과 획득 시점 수집
         [V62.3] 구조화 필드(items_acquired, inventory)는 전체 Arc 스캔 (O(n), 가벼움)
                 regex 스캔(tactical_doc)은 최근 REGEX_WINDOW개만 (비용 절감)
@@ -121,12 +120,12 @@ class ConstraintCompiler:
                     for m in matches:
                         item = m.strip() if isinstance(m, str) else m[0].strip() if m else None
                         if item and 2 <= len(item) <= 20 and item not in items:
-                            if re.search(rf'{re.escape(item)}[를을]?\s*(?:획득|얻|받|손에)', tactical):
+                            if re.search(rf"{re.escape(item)}[를을]?\s*(?:획득|얻|받|손에)", tactical):
                                 items[item] = arc_no
 
         return items
 
-    def _collect_all_grants(self, prev_arcs: List[Dict]) -> Dict[str, Tuple[int, str]]:
+    def _collect_all_grants(self, prev_arcs: list[dict]) -> dict[str, tuple[int, str]]:
         """모든 수여물과 수여 시점/수여자 수집
         [V62.3] 구조화 필드는 전체, regex는 최근 REGEX_WINDOW개만
         """
@@ -154,14 +153,16 @@ class ConstraintCompiler:
                     for m in matches:
                         grant = m.strip() if isinstance(m, str) else m[0].strip() if m else None
                         if grant and 2 <= len(grant) <= 20 and grant not in grants:
-                            if re.search(rf'{re.escape(grant)}[를을]?\s*(?:하사|수여|받|얻)', tactical):
-                                grantor_match = re.search(rf'([가-힣]{{2,10}})[이가으로부터]?\s*{re.escape(grant)}', tactical)
+                            if re.search(rf"{re.escape(grant)}[를을]?\s*(?:하사|수여|받|얻)", tactical):
+                                grantor_match = re.search(
+                                    rf"([가-힣]{{2,10}})[이가으로부터]?\s*{re.escape(grant)}", tactical
+                                )
                                 grantor = grantor_match.group(1) if grantor_match else "알 수 없음"
                                 grants[grant] = (arc_no, grantor)
 
         return grants
 
-    def _extract_current_state(self, last_arc: Dict, state_extractor_result: Dict = None) -> Dict:
+    def _extract_current_state(self, last_arc: dict, state_extractor_result: dict = None) -> dict:
         """현재 상태 추출"""
         if state_extractor_result:
             protagonist = state_extractor_result.get("protagonist_state", {})
@@ -172,7 +173,7 @@ class ConstraintCompiler:
                 "injuries": protagonist.get("injuries", []),
                 "internal_energy": protagonist.get("internal_energy", {}).get("current_percent", 100),
                 "equipment": inventory.get("current_items", []),
-                "world_state": state_extractor_result.get("next_arc_constraints", {}).get("must_start_with", "")
+                "world_state": state_extractor_result.get("next_arc_constraints", {}).get("must_start_with", ""),
             }
 
         # [V60.13 FIX] 폴백: arc_end_state 우선 사용
@@ -194,16 +195,16 @@ class ConstraintCompiler:
             "injuries": [injuries] if injuries and injuries != "없음" else [],
             "internal_energy": internal_energy,
             "equipment": equipment,
-            "world_state": joint.get("world_joint", "")
+            "world_state": joint.get("world_joint", ""),
         }
 
     def _generate_constraint_checklist(
         self,
-        all_items: Dict[str, int],
-        all_grants: Dict[str, Tuple[int, str]],
-        current_state: Dict,
+        all_items: dict[str, int],
+        all_grants: dict[str, tuple[int, str]],
+        current_state: dict,
         arc_count: int,
-        resolved_plots: List[Dict] = None  # [V62.7]
+        resolved_plots: list[dict] = None,  # [V62.7]
     ) -> str:
         """구조화된 제약 체크리스트 생성"""
         lines = [
@@ -281,7 +282,7 @@ class ConstraintCompiler:
         if equipment:
             equip_str = ", ".join(str(e) for e in equipment[:5])
             if len(equipment) > 5:
-                equip_str += f" 외 {len(equipment)-5}개"
+                equip_str += f" 외 {len(equipment) - 5}개"
             lines.append(f"│ 📦 소지품: {equip_str[:55]}".ljust(71) + "│")
         else:
             lines.append("│ 📦 소지품: (목록 없음)".ljust(71) + "│")
@@ -297,7 +298,7 @@ class ConstraintCompiler:
         # [V60.75] 문자열/숫자 모두 처리
         try:
             if isinstance(energy_raw, str):
-                energy = int(''.join(filter(str.isdigit, energy_raw)) or '100')
+                energy = int("".join(filter(str.isdigit, energy_raw)) or "100")
             else:
                 energy = int(energy_raw)
         except (ValueError, TypeError):

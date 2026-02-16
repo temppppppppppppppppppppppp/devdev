@@ -1,12 +1,13 @@
+from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
+
 from .base_agent import BaseAgent
-from .director_caching import DirectorCachingManager
-from .director_grading import DirectorGradingSystem
-from .director_ensemble import DirectorEnsembleSelector
-from .director_continuity import DirectorContinuityValidator
 from .director_auditor import DirectorQualityAuditor
+from .director_caching import DirectorCachingManager
+from .director_continuity import DirectorContinuityValidator
+from .director_ensemble import DirectorEnsembleSelector
+from .director_grading import DirectorGradingSystem
 from .director_prompts import ENSEMBLE_SELECTION_PROMPT as _ENSEMBLE_PROMPT
 from .director_prompts import MANUSCRIPT_HISTORY_CONFLICT_PROMPT as _HISTORY_CONFLICT_PROMPT
-from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
 
 # [V64 P2-1] ENSEMBLE_SELECTION_PROMPT → director_prompts.py에서 import
 ENSEMBLE_SELECTION_PROMPT = _ENSEMBLE_PROMPT
@@ -30,10 +31,11 @@ class Director(BaseAgent):
     - check_manuscript_history_conflicts(): 전체 원고 역사 대비 충돌 검사
     - manuscript_history_check_enabled 플래그로 기능 활성화/비활성화
     """
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.v0128_orchestrator = None  # Lazy initialization
-        self.genre = 'wuxia'  # 기본값, set_genre()로 변경 가능
+        self.genre = "wuxia"  # 기본값, set_genre()로 변경 가능
         self.use_v0128 = False  # V0128 검증 시스템 사용 여부
 
         # [V49.3] Self-Consistency 설정 (Stage 1-3 감사에 적용)
@@ -75,11 +77,15 @@ class Director(BaseAgent):
         self.guard = None  # main_a.py에서 set_guard()로 설정
         self.genre_validation_enabled = True  # 장르별 특화 검증 활성화
 
-    def get_adaptive_threshold(self, arc_pos: int = 1, total_eps: int = 5, ep_type: str = "normal", retry_count: int = 0) -> dict:
+    def get_adaptive_threshold(
+        self, arc_pos: int = 1, total_eps: int = 5, ep_type: str = "normal", retry_count: int = 0
+    ) -> dict:
         """[V65 C-5] 위임 → DirectorGradingSystem"""
         return self._grading.get_adaptive_threshold(arc_pos, total_eps, ep_type, retry_count)
 
-    def apply_adaptive_decision(self, score: int, original_decision: str, arc_pos: int = 1, total_eps: int = 5, retry_count: int = 0) -> dict:
+    def apply_adaptive_decision(
+        self, score: int, original_decision: str, arc_pos: int = 1, total_eps: int = 5, retry_count: int = 0
+    ) -> dict:
         """[V65 C-5] 위임 → DirectorGradingSystem"""
         return self._grading.apply_adaptive_decision(score, original_decision, arc_pos, total_eps, retry_count)
 
@@ -105,8 +111,9 @@ class Director(BaseAgent):
         """V0128 검증 시스템 활성화/비활성화"""
         self.use_v0128 = enabled
 
-    def validate_entity_consistency(self, content: str, entity_registry: dict,
-                                     content_type: str = "manuscript") -> dict:
+    def validate_entity_consistency(
+        self, content: str, entity_registry: dict, content_type: str = "manuscript"
+    ) -> dict:
         """[V64] 위임 → DirectorContinuityValidator"""
         return self._continuity.validate_entity_consistency(content, entity_registry, content_type)
 
@@ -114,18 +121,67 @@ class Director(BaseAgent):
         """[V64] 위임 → DirectorContinuityValidator"""
         return self._continuity._format_entity_registry_for_director(entity_registry)
 
-    def compare_and_select_blueprint(self, candidates, arc_data, ep_num, prev_blueprint=None, entity_registry=None, state_tracker=None):
+    def compare_and_select_blueprint(
+        self, candidates, arc_data, ep_num, prev_blueprint=None, entity_registry=None, state_tracker=None
+    ):
         """[V64] 위임 → DirectorEnsembleSelector"""
-        return self._ensemble.compare_and_select_blueprint(candidates, arc_data, ep_num, prev_blueprint, entity_registry, state_tracker)
+        return self._ensemble.compare_and_select_blueprint(
+            candidates, arc_data, ep_num, prev_blueprint, entity_registry, state_tracker
+        )
 
-    def audit_manuscript(self, ep_num, manuscript, arc_doc, history_summary, prev_full_text, arc_pos, total_eps=None, target_len=4500, retry_count=0, validation_context=None, entity_registry=None, manuscript_history=None, state_tracker=None):
+    def audit_manuscript(
+        self,
+        ep_num,
+        manuscript,
+        arc_doc,
+        history_summary,
+        prev_full_text,
+        arc_pos,
+        total_eps=None,
+        target_len=4500,
+        retry_count=0,
+        validation_context=None,
+        entity_registry=None,
+        manuscript_history=None,
+        state_tracker=None,
+    ):
         """[V65 C-5] 위임 → DirectorQualityAuditor"""
-        return self._auditor.audit_manuscript(ep_num, manuscript, arc_doc, history_summary, prev_full_text, arc_pos, total_eps, target_len, retry_count, validation_context, entity_registry, manuscript_history, state_tracker)
+        return self._auditor.audit_manuscript(
+            ep_num,
+            manuscript,
+            arc_doc,
+            history_summary,
+            prev_full_text,
+            arc_pos,
+            total_eps,
+            target_len,
+            retry_count,
+            validation_context,
+            entity_registry,
+            manuscript_history,
+            state_tracker,
+        )
 
-
-    def audit_strategic_plan(self, arc_plan, prev_arc_context, curr_block=None, protagonist_name=None, suspected_duplicates=None, entity_registry=None, story_context=""):
+    def audit_strategic_plan(
+        self,
+        arc_plan,
+        prev_arc_context,
+        curr_block=None,
+        protagonist_name=None,
+        suspected_duplicates=None,
+        entity_registry=None,
+        story_context="",
+    ):
         """[V67.1] 위임 → DirectorQualityAuditor (story_context 추가)"""
-        return self._auditor.audit_strategic_plan(arc_plan, prev_arc_context, curr_block, protagonist_name, suspected_duplicates, entity_registry, story_context=story_context)
+        return self._auditor.audit_strategic_plan(
+            arc_plan,
+            prev_arc_context,
+            curr_block,
+            protagonist_name,
+            suspected_duplicates,
+            entity_registry,
+            story_context=story_context,
+        )
 
     # =================================================================
     # ═══════════════════════════════════════════════════════════════
@@ -143,10 +199,9 @@ class Director(BaseAgent):
         """[V64] 위임 → DirectorQualityAuditor"""
         return self._auditor._audit_with_v0128(ep_num, manuscript, validation_context, target_len)
 
-    def audit_manuscript_v0128(self, ep_num, manuscript, validation_context, config=None, genre='wuxia'):
+    def audit_manuscript_v0128(self, ep_num, manuscript, validation_context, config=None, genre="wuxia"):
         """[V64] 위임 → DirectorQualityAuditor"""
         return self._auditor.audit_manuscript_v0128(ep_num, manuscript, validation_context, config, genre)
-
 
     def assess_character_logic(self, ep_num, manuscript, npc_profiles, character_traits):
         """[V64] 위임 → DirectorQualityAuditor"""
@@ -168,8 +223,9 @@ class Director(BaseAgent):
         """[V64] 위임 → DirectorGradingSystem"""
         return self._grading.grade_manuscript_v59(ep_num, manuscript, validation_result)
 
-    def generate_revision_guide_v59(self, grade: str, item_scores: dict,
-                                     weaknesses: list, validation_result: dict) -> dict:
+    def generate_revision_guide_v59(
+        self, grade: str, item_scores: dict, weaknesses: list, validation_result: dict
+    ) -> dict:
         """[V64] 위임 → DirectorGradingSystem"""
         return self._grading.generate_revision_guide_v59(grade, item_scores, weaknesses, validation_result)
 
@@ -180,16 +236,35 @@ class Director(BaseAgent):
     # [V64 P2-1] EnsembleSelector 위임 — ENSEMBLE_SELECTION_PROMPT는 director_ensemble.py로 이관
     ENSEMBLE_SELECTION_PROMPT = _ENSEMBLE_PROMPT
 
-    def select_and_judge_ensemble(self, ep_num, candidates, validation_results, blueprint, previous_ending,
-                                   arc_pos=1, total_eps=5, retry_count=0, episode_digest="",
-                                   mandatory_context="", prev_manuscripts_text="", story_context=""):
+    def select_and_judge_ensemble(
+        self,
+        ep_num,
+        candidates,
+        validation_results,
+        blueprint,
+        previous_ending,
+        arc_pos=1,
+        total_eps=5,
+        retry_count=0,
+        episode_digest="",
+        mandatory_context="",
+        prev_manuscripts_text="",
+        story_context="",
+    ):
         """[V67.1] 위임 → DirectorEnsembleSelector (story_context 추가)"""
         return self._ensemble.select_and_judge_ensemble(
-            ep_num, candidates, validation_results, blueprint, previous_ending,
-            arc_pos, total_eps, retry_count, episode_digest,
+            ep_num,
+            candidates,
+            validation_results,
+            blueprint,
+            previous_ending,
+            arc_pos,
+            total_eps,
+            retry_count,
+            episode_digest,
             mandatory_context=mandatory_context,
             prev_manuscripts_text=prev_manuscripts_text,
-            story_context=story_context
+            story_context=story_context,
         )
 
     def quick_judge_single(self, ep_num, manuscript, blueprint, previous_ending, retry_count=0):
@@ -206,10 +281,12 @@ class Director(BaseAgent):
         current_manuscript: str,
         manuscript_history: list,
         use_summary: bool = True,
-        story_context: str = ""
+        story_context: str = "",
     ) -> dict:
         """[V67.1] 위임 → DirectorContinuityValidator (story_context 추가)"""
-        return self._continuity.check_manuscript_history_conflicts(ep_num, current_manuscript, manuscript_history, use_summary, story_context=story_context)
+        return self._continuity.check_manuscript_history_conflicts(
+            ep_num, current_manuscript, manuscript_history, use_summary, story_context=story_context
+        )
 
     def build_manuscript_history_for_check(self, db_manager, ep_num: int) -> list:
         """[V64] 위임 → DirectorCachingManager"""
@@ -223,11 +300,7 @@ class Director(BaseAgent):
         """[V64] 위임 → DirectorCachingManager"""
         return self._caching.create_manuscript_cache(db_manager, current_ep, ttl_seconds)
 
-    def check_manuscript_history_with_cache(
-        self,
-        ep_num: int,
-        current_manuscript: str
-    ) -> dict:
+    def check_manuscript_history_with_cache(self, ep_num: int, current_manuscript: str) -> dict:
         """[V64] 위임 → DirectorContinuityValidator"""
         return self._continuity.check_manuscript_history_with_cache(ep_num, current_manuscript)
 
@@ -243,23 +316,12 @@ class Director(BaseAgent):
         """[V65 C-5] 위임 → DirectorQualityAuditor"""
         return self._auditor.validate_protagonist_config_compliance(manuscript, ep_num)
 
-    def check_blueprint_continuity_with_cache(
-        self,
-        new_blueprint: dict,
-        ep_num: int,
-        db=None,
-        limit: int = 10
-    ) -> dict:
+    def check_blueprint_continuity_with_cache(self, new_blueprint: dict, ep_num: int, db=None, limit: int = 10) -> dict:
         """[V64] 위임 → DirectorContinuityValidator"""
         return self._continuity.check_blueprint_continuity_with_cache(new_blueprint, ep_num, db, limit)
 
     def check_manuscript_continuity_with_cache(
-        self,
-        new_manuscript: str,
-        ep_num: int,
-        db=None,
-        limit: int = 10
+        self, new_manuscript: str, ep_num: int, db=None, limit: int = 10
     ) -> dict:
         """[V64] 위임 → DirectorContinuityValidator"""
         return self._continuity.check_manuscript_continuity_with_cache(new_manuscript, ep_num, db, limit)
-

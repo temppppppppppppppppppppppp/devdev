@@ -10,12 +10,12 @@ Usage:
 """
 
 import re
-from typing import Dict, List
+
 from modules.core.constants import Stage2Limits
 
 
 def generate_prev_arc_summary(
-    prev_arcs: List[Dict],
+    prev_arcs: list[dict],
     include_energy: bool = True,
     max_recent: int = 3,
 ) -> str:
@@ -55,7 +55,7 @@ def generate_prev_arc_summary(
             if final_energy is None:
                 loss_str = shadow.get("internal_energy_loss", "0%")
                 try:
-                    match = re.search(r'(\d+)', str(loss_str))
+                    match = re.search(r"(\d+)", str(loss_str))
                     if match:
                         loss = int(match.group(1))
                         final_energy = max(0, 100 - loss)

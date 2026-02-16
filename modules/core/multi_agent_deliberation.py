@@ -22,41 +22,44 @@ Analyst + Architect + Writer 3자 토론 시스템
     final = result.consensus_output
 """
 
-from typing import Dict, Any, List, Optional, Tuple
+import json
 import logging
+import re
 from dataclasses import dataclass
 from enum import Enum
-import json
-import re
+from typing import Any
 
 
 class AgentRole(Enum):
     """에이전트 역할"""
-    ANALYST = "analyst"     # 전략적 관점 (아크, 볼륨 전체)
-    ARCHITECT = "architect" # 구조적 관점 (씬 구성, 페이싱)
-    WRITER = "writer"       # 문학적 관점 (묘사, 대사, 감정)
+
+    ANALYST = "analyst"  # 전략적 관점 (아크, 볼륨 전체)
+    ARCHITECT = "architect"  # 구조적 관점 (씬 구성, 페이싱)
+    WRITER = "writer"  # 문학적 관점 (묘사, 대사, 감정)
 
 
 @dataclass
 class AgentOpinion:
     """에이전트 의견"""
+
     role: AgentRole
-    score: int                      # 0-100
-    strengths: List[str]            # 장점
-    concerns: List[str]             # 우려 사항
-    suggestions: List[str]          # 개선 제안
-    critical_issues: List[str]      # 심각한 문제 (합의 불가)
+    score: int  # 0-100
+    strengths: list[str]  # 장점
+    concerns: list[str]  # 우려 사항
+    suggestions: list[str]  # 개선 제안
+    critical_issues: list[str]  # 심각한 문제 (합의 불가)
 
 
 @dataclass
 class DeliberationResult:
     """토론 결과"""
-    opinions: List[AgentOpinion]
+
+    opinions: list[AgentOpinion]
     consensus_reached: bool
-    consensus_score: int            # 합의 점수
-    consensus_output: str           # 합의된 최종본
-    debate_summary: str             # 토론 요약
-    action_items: List[str]         # 수정 필요 항목
+    consensus_score: int  # 합의 점수
+    consensus_output: str  # 합의된 최종본
+    debate_summary: str  # 토론 요약
+    action_items: list[str]  # 수정 필요 항목
 
 
 class MultiAgentDeliberation:
@@ -90,7 +93,6 @@ JSON 형식:
     "critical_issues": ["심각한 문제가 있다면"]
 }}
 ```""",
-
         AgentRole.ARCHITECT: """당신은 구조 설계자(Architect)입니다.
 당신의 역할은 콘텐츠의 **구조적 완성도**를 평가하는 것입니다.
 
@@ -117,7 +119,6 @@ JSON 형식:
     "critical_issues": ["심각한 문제가 있다면"]
 }}
 ```""",
-
         AgentRole.WRITER: """당신은 문학 작가(Writer)입니다.
 당신의 역할은 콘텐츠의 **문학적 품질**을 평가하는 것입니다.
 
@@ -143,7 +144,7 @@ JSON 형식:
     "suggestions": ["제안1", "제안2"],
     "critical_issues": ["심각한 문제가 있다면"]
 }}
-```"""
+```""",
     }
 
     # 합의 도출 프롬프트
@@ -191,40 +192,30 @@ JSON 형식:
         """LLM 호출"""
         try:
             response = self.client.models.generate_content(
-                model=self.model,
-                contents=prompt,
-                config={
-                    "temperature": temperature,
-                    "max_output_tokens": 8192
-                }
+                model=self.model, contents=prompt, config={"temperature": temperature, "max_output_tokens": 8192}
             )
             return response.text or ""  # [V70] None 방어
         except Exception as e:
             logging.warning(f"[MultiAgentDeliberation] LLM 호출 실패: {e}")
             return ""
 
-    def _parse_json(self, text: str) -> Dict[str, Any]:
+    def _parse_json(self, text: str) -> dict[str, Any]:
         """JSON 파싱"""
         try:
-            json_match = re.search(r'```json\s*(.*?)\s*```', text, re.DOTALL)
+            json_match = re.search(r"```json\s*(.*?)\s*```", text, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group(1))
             return json.loads(text)
         except (json.JSONDecodeError, ValueError):  # [V64.P4] JSON parse failure
             return {}
 
-    def _get_agent_opinion(
-        self,
-        role: AgentRole,
-        content: str,
-        context: Dict[str, Any]
-    ) -> AgentOpinion:
+    def _get_agent_opinion(self, role: AgentRole, content: str, context: dict[str, Any]) -> AgentOpinion:
         """에이전트 의견 수집"""
         context_str = json.dumps(context, ensure_ascii=False, default=str)[:2000]
 
         prompt = self.AGENT_PROMPTS[role].format(
             content=content[:5000].replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
-            context=context_str.replace("{", "{{").replace("}", "}}")  # [V70] brace escape
+            context=context_str.replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
         )
 
         response = self._call_llm(prompt, temperature=0.3)
@@ -232,12 +223,7 @@ JSON 형식:
 
         if not result:
             return AgentOpinion(
-                role=role,
-                score=70,
-                strengths=["파싱 실패"],
-                concerns=[],
-                suggestions=[],
-                critical_issues=[]
+                role=role, score=70, strengths=["파싱 실패"], concerns=[], suggestions=[], critical_issues=[]
             )
 
         return AgentOpinion(
@@ -246,14 +232,10 @@ JSON 형식:
             strengths=result.get("strengths", []),
             concerns=result.get("concerns", []),
             suggestions=result.get("suggestions", []),
-            critical_issues=result.get("critical_issues", [])
+            critical_issues=result.get("critical_issues", []),
         )
 
-    def _build_consensus(
-        self,
-        content: str,
-        opinions: List[AgentOpinion]
-    ) -> str:
+    def _build_consensus(self, content: str, opinions: list[AgentOpinion]) -> str:
         """합의안 도출"""
         # 역할별 의견 분리
         analyst = next((o for o in opinions if o.role == AgentRole.ANALYST), None)
@@ -279,10 +261,7 @@ JSON 형식:
         return self._call_llm(prompt, temperature=0.5)
 
     def deliberate(
-        self,
-        content: str,
-        content_type: str = "manuscript",
-        context: Dict[str, Any] = None
+        self, content: str, content_type: str = "manuscript", context: dict[str, Any] = None
     ) -> DeliberationResult:
         """
         다중 에이전트 토론 실행
@@ -302,7 +281,7 @@ JSON 형식:
                 consensus_score=75,
                 consensus_output=content,
                 debate_summary="토론 비활성화",
-                action_items=[]
+                action_items=[],
             )
 
         context = context or {}
@@ -365,14 +344,10 @@ JSON 형식:
             consensus_score=int(avg_score),
             consensus_output=consensus_output,
             debate_summary=debate_summary,
-            action_items=action_items
+            action_items=action_items,
         )
 
-    def _generate_summary(
-        self,
-        opinions: List[AgentOpinion],
-        consensus_reached: bool
-    ) -> str:
+    def _generate_summary(self, opinions: list[AgentOpinion], consensus_reached: bool) -> str:
         """토론 요약 생성"""
         lines = ["[V53.7 Multi-Agent Deliberation]"]
 
@@ -387,11 +362,7 @@ JSON 형식:
 
         return "\n".join(lines)
 
-    def quick_deliberate(
-        self,
-        content: str,
-        content_type: str = "manuscript"
-    ) -> Tuple[int, List[str]]:
+    def quick_deliberate(self, content: str, content_type: str = "manuscript") -> tuple[int, list[str]]:
         """
         빠른 토론 (Python 휴리스틱, LLM 없음)
 
@@ -408,19 +379,19 @@ JSON 형식:
                 score -= 10
 
             # Architect 관점
-            paragraphs = content.split('\n\n')
+            paragraphs = content.split("\n\n")
             if len(paragraphs) < 5:
                 concerns.append("[Architect] 씬 구분 부족")
                 score -= 5
 
             # Writer 관점
-            sensory_words = ['보이', '들리', '느껴', '냄새']
+            sensory_words = ["보이", "들리", "느껴", "냄새"]
             sensory_count = sum(1 for w in sensory_words if w in content)
             if sensory_count < 3:
                 concerns.append("[Writer] 감각 묘사 부족")
                 score -= 5
 
-            dialogue_count = content.count('"') // 2 + content.count('「')
+            dialogue_count = content.count('"') // 2 + content.count("「")
             if dialogue_count < 4:
                 concerns.append("[Writer] 대화 부족")
                 score -= 5

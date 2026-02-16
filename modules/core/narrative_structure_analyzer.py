@@ -14,10 +14,8 @@
 import json
 import logging
 import re
-from typing import Dict, List, Tuple, Optional
-from google import genai
-from google.genai import types
 
+from google.genai import types
 
 # 서사 요소 추출 프롬프트
 NARRATIVE_EXTRACTION_PROMPT = """
@@ -77,7 +75,7 @@ class NarrativeStructureAnalyzer:
         # "진짜 진도가 하나도 안 나가는" 극단적 경우만 잡음
         self.consecutive_threshold = 5  # 5개 전부 동일해야 정체
 
-    def analyze(self, beats: List[str]) -> Dict:
+    def analyze(self, beats: list[str]) -> dict:
         """
         비트 목록에서 서사 구조 분석
 
@@ -119,7 +117,7 @@ class NarrativeStructureAnalyzer:
                 "stagnation_type": stagnation["type"],
                 "pattern": stagnation["pattern"],
                 "recommendation": self._get_recommendation(stagnation["type"]),
-                "episodes": episodes
+                "episodes": episodes,
             }
 
         # 3. 부분적 반복 체크 (WARNING)
@@ -130,18 +128,14 @@ class NarrativeStructureAnalyzer:
                 "status": "WARNING",
                 "warning_type": partial["type"],
                 "pattern": partial["pattern"],
-                "episodes": episodes
+                "episodes": episodes,
             }
 
-        return {
-            "status": "PASS",
-            "episodes": episodes,
-            "diversity_score": self._calculate_diversity(episodes)
-        }
+        return {"status": "PASS", "episodes": episodes, "diversity_score": self._calculate_diversity(episodes)}
 
-    def _extract_narrative_elements(self, beats: List[str]) -> Optional[Dict]:
+    def _extract_narrative_elements(self, beats: list[str]) -> dict | None:
         """LLM으로 서사 요소 추출"""
-        beats_text = "\n".join([f"[Beat {i+1}] {beat}" for i, beat in enumerate(beats[:5])])
+        beats_text = "\n".join([f"[Beat {i + 1}] {beat}" for i, beat in enumerate(beats[:5])])
 
         # [V70] 사용자 콘텐츠 내 {}는 .format()에서 KeyError 유발 → 이스케이프
         safe_beats_text = beats_text.replace("{", "{{").replace("}", "}}")
@@ -151,14 +145,10 @@ class NarrativeStructureAnalyzer:
             config = types.GenerateContentConfig(
                 temperature=0.1,  # 일관된 추출을 위해 낮게
                 max_output_tokens=1024,
-                response_mime_type="application/json"
+                response_mime_type="application/json",
             )
 
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=prompt,
-                config=config
-            )
+            response = self.client.models.generate_content(model=self.model, contents=prompt, config=config)
 
             # [V60.15 FIX] None 체크 + [V70] ValueError 방어
             try:
@@ -166,7 +156,7 @@ class NarrativeStructureAnalyzer:
             except (ValueError, AttributeError):
                 _text = None
             if not _text:
-                logging.info(f"⚠️ [NarrativeAnalyzer] 빈 응답")
+                logging.info("⚠️ [NarrativeAnalyzer] 빈 응답")
                 return None
 
             result = _text.strip()
@@ -176,7 +166,7 @@ class NarrativeStructureAnalyzer:
                 return json.loads(result)
             except json.JSONDecodeError:
                 # 방법 1: 코드블록 제거
-                cleaned = re.sub(r'```json\s*|\s*```', '', result)
+                cleaned = re.sub(r"```json\s*|\s*```", "", result)
                 try:
                     return json.loads(cleaned)
                 except (json.JSONDecodeError, ValueError):  # [V64.P4] JSON parse fallback
@@ -186,7 +176,7 @@ class NarrativeStructureAnalyzer:
                 match = re.search(r'"episodes"\s*:\s*\[(.*?)\]', result, re.DOTALL)
                 if match:
                     try:
-                        episodes_str = '[' + match.group(1) + ']'
+                        episodes_str = "[" + match.group(1) + "]"
                         episodes = json.loads(episodes_str)
                         return {"episodes": episodes}
                     except (json.JSONDecodeError, ValueError):  # [V64.P4] JSON parse fallback
@@ -199,7 +189,7 @@ class NarrativeStructureAnalyzer:
             logging.warning(f"⚠️ [NarrativeAnalyzer] 추출 오류: {e}")
             return None
 
-    def _detect_stagnation(self, episodes: List[Dict]) -> Dict:
+    def _detect_stagnation(self, episodes: list[dict]) -> dict:
         """연속 반복 패턴 탐지"""
         if len(episodes) < self.consecutive_threshold:
             return {"detected": False}
@@ -220,7 +210,7 @@ class NarrativeStructureAnalyzer:
             best_start_idx = 0
 
             for i in range(1, len(elements)):
-                if elements[i] == elements[i-1] and elements[i]:
+                if elements[i] == elements[i - 1] and elements[i]:
                     current_consecutive += 1
                     if current_consecutive > max_consecutive:
                         max_consecutive = current_consecutive
@@ -232,18 +222,18 @@ class NarrativeStructureAnalyzer:
 
             if max_consecutive >= self.consecutive_threshold:
                 # [V60.15 FIX] 실제 연속 구간에서 패턴 추출
-                pattern = "→".join(elements[best_start_idx:best_start_idx + max_consecutive])
+                pattern = "→".join(elements[best_start_idx : best_start_idx + max_consecutive])
                 return {
                     "detected": True,
                     "type": element_type,
                     "value": consecutive_value,
                     "count": max_consecutive,
-                    "pattern": pattern
+                    "pattern": pattern,
                 }
 
         return {"detected": False}
 
-    def _detect_partial_repetition(self, episodes: List[Dict]) -> Dict:
+    def _detect_partial_repetition(self, episodes: list[dict]) -> dict:
         """
         [V60.15 UPDATE] 부분적 반복 (WARNING 수준) - 더 러프하게
 
@@ -256,6 +246,7 @@ class NarrativeStructureAnalyzer:
             elements = [ep.get(element_type, "").lower() for ep in episodes]
 
             from collections import Counter
+
             counts = Counter(e for e in elements if e)
 
             if counts:
@@ -273,12 +264,12 @@ class NarrativeStructureAnalyzer:
                 "detected": True,
                 "type": "multiple",
                 "count": dominated_count,
-                "pattern": f"{dominated_count}개 요소 반복"
+                "pattern": f"{dominated_count}개 요소 반복",
             }
 
         return {"detected": False}
 
-    def _calculate_diversity(self, episodes: List[Dict]) -> float:
+    def _calculate_diversity(self, episodes: list[dict]) -> float:
         """서사 다양성 점수 계산 (0-1)"""
         total_unique = 0
         total_elements = 0
@@ -304,7 +295,7 @@ class NarrativeStructureAnalyzer:
         recommendations = {
             "action": "연속된 동일 행위를 변주하세요. 예: 전투→협상→잠입→전투",
             "location": "공간 이동을 추가하세요. 예: 산장→도시→야외→동굴",
-            "outcome": "결과에 변화를 주세요. 예: 승리→발각→도주→성장"
+            "outcome": "결과에 변화를 주세요. 예: 승리→발각→도주→성장",
         }
         return recommendations.get(stagnation_type, "서사 요소에 변화를 주세요.")
 

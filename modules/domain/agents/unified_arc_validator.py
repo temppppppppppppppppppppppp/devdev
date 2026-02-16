@@ -24,11 +24,11 @@ Stage 2 통합 검증기 - Python + LLM 단일 검증
 import json
 import logging
 import re
-from typing import Dict, List, Any, Optional, Tuple
-from .base_agent import BaseAgent
-from modules.core.constants import Stage2Limits
-from modules.core.arc_summary_utils import generate_prev_arc_summary  # [V64.P4]
 
+from modules.core.arc_summary_utils import generate_prev_arc_summary  # [V64.P4]
+from modules.core.constants import Stage2Limits
+
+from .base_agent import BaseAgent
 
 # 통합 검증 프롬프트
 UNIFIED_VALIDATION_PROMPT = """
@@ -108,13 +108,13 @@ class UnifiedArcValidator(BaseAgent):
 
     def validate(
         self,
-        arc: Dict,
-        prev_arcs: List[Dict],
+        arc: dict,
+        prev_arcs: list[dict],
         constraints: str = "",
         state_tracker=None,  # [V60.94] StateTracker (죽은 NPC 검증용)
-        pre_collected_items: Optional[set] = None,  # [V62.5] ConstraintCompiler에서 수집된 아이템
-        pre_collected_grants: Optional[set] = None  # [V62.5] ConstraintCompiler에서 수집된 수여물
-    ) -> Tuple[str, Dict]:
+        pre_collected_items: set | None = None,  # [V62.5] ConstraintCompiler에서 수집된 아이템
+        pre_collected_grants: set | None = None,  # [V62.5] ConstraintCompiler에서 수집된 수여물
+    ) -> tuple[str, dict]:
         """
         Arc 통합 검증
 
@@ -132,17 +132,18 @@ class UnifiedArcValidator(BaseAgent):
         # ═══════════════════════════════════════════════════════════════
         # Phase A: Python 즉시 검증 (무료)
         # ═══════════════════════════════════════════════════════════════
-        python_result = self._python_validate(arc, prev_arcs, state_tracker,
-                                              pre_collected_items, pre_collected_grants)
+        python_result = self._python_validate(arc, prev_arcs, state_tracker, pre_collected_items, pre_collected_grants)
 
         # [V63.4] Python CRITICAL도 LLM에 전달 (Python은 정보 제공만, 최종 판단은 LLM)
         if python_result["has_critical"]:
-            logging.warning(f"⚠️ [V63.4] Python CRITICAL {len(python_result.get('critical_summary',''))}자 → LLM 검증으로 전달")
+            logging.warning(
+                f"⚠️ [V63.4] Python CRITICAL {len(python_result.get('critical_summary', ''))}자 → LLM 검증으로 전달"
+            )
 
         # ═══════════════════════════════════════════════════════════════
         # Phase B: LLM 문맥 검증 (유료)
         # ═══════════════════════════════════════════════════════════════
-        logging.info(f"🔍 [UnifiedValidator] LLM 검증 중...")
+        logging.info("🔍 [UnifiedValidator] LLM 검증 중...")
 
         llm_result = self._llm_validate(arc, prev_arcs, constraints, python_result)
 
@@ -170,7 +171,7 @@ class UnifiedArcValidator(BaseAgent):
             "confidence": llm_result.get("confidence", 0.5),
             "feedback": self._generate_feedback(all_issues),
             "python_issues": len(python_result["issues"]),
-            "llm_issues": len(llm_result.get("issues", []))
+            "llm_issues": len(llm_result.get("issues", [])),
         }
 
         status = "✅ PASS" if verdict == "PASS" else "❌ REJECT"
@@ -180,7 +181,7 @@ class UnifiedArcValidator(BaseAgent):
 
     # [V63.4 P1] _python_validate → 8개 독립 체크 메서드로 분할
 
-    def _check_dead_npc(self, arc: Dict, state_tracker, prev_arcs: List[Dict]) -> List[Dict]:
+    def _check_dead_npc(self, arc: dict, state_tracker, prev_arcs: list[dict]) -> list[dict]:
         """[#0] 죽은 NPC 등장 + NPC 변경 체크"""
         issues = []
         if not state_tracker or not prev_arcs:
@@ -193,28 +194,34 @@ class UnifiedArcValidator(BaseAgent):
 
         dead_npc_violations = state_tracker.check_dead_npc_appearance(tactical, arc_no)
         for v in dead_npc_violations:
-            issues.append({
-                "severity": "CRITICAL", "category": "npc_death",
-                "issue": f"💀 죽은 NPC 등장: '{v.get('npc_name', '?')}'",
-                "evidence": f"Arc {v.get('death_arc', '?')}에서 사망, Arc {arc_no}에서 다시 등장",
-                "fix_hint": f"'{v.get('npc_name', '?')}'을(를) 등장시키지 마세요 (사망 NPC)"
-            })
+            issues.append(
+                {
+                    "severity": "CRITICAL",
+                    "category": "npc_death",
+                    "issue": f"💀 죽은 NPC 등장: '{v.get('npc_name', '?')}'",
+                    "evidence": f"Arc {v.get('death_arc', '?')}에서 사망, Arc {arc_no}에서 다시 등장",
+                    "fix_hint": f"'{v.get('npc_name', '?')}'을(를) 등장시키지 마세요 (사망 NPC)",
+                }
+            )
             logging.warning(f"💀 [V60.94] REJECT: 죽은 NPC '{v.get('npc_name')}' 등장!")
 
         npc_changes = state_tracker.check_npc_changes(tactical, arc_no)
         for change in npc_changes:
             change_type = "무장" if change.get("change_type") == "weapon" else "수준"
-            issues.append({
-                "severity": "WARNING", "category": "npc_change",
-                "issue": f"⚠️ NPC {change_type} 변경: '{change.get('npc_name', '?')}'",
-                "evidence": change.get("reason", ""),
-                "fix_hint": f"'{change.get('npc_name', '?')}'의 {change_type} 변경에 대한 정당화 사유 필요 (습득, 성장 등)"
-            })
+            issues.append(
+                {
+                    "severity": "WARNING",
+                    "category": "npc_change",
+                    "issue": f"⚠️ NPC {change_type} 변경: '{change.get('npc_name', '?')}'",
+                    "evidence": change.get("reason", ""),
+                    "fix_hint": f"'{change.get('npc_name', '?')}'의 {change_type} 변경에 대한 정당화 사유 필요 (습득, 성장 등)",
+                }
+            )
             logging.warning(f"⚠️ [V60.95] WARNING: NPC '{change.get('npc_name')}' {change_type} 변경 감지")
 
         return issues
 
-    def _check_length(self, arc: Dict) -> List[Dict]:
+    def _check_length(self, arc: dict) -> list[dict]:
         """[#1] 분량 체크"""
         issues = []
         ep_count = arc.get("ep_count", 5)
@@ -224,89 +231,114 @@ class UnifiedArcValidator(BaseAgent):
 
         min_length = ep_count * self.min_chars_per_ep
         if len(tactical) < min_length:
-            issues.append({
-                "severity": "MAJOR", "category": "structure",
-                "issue": f"tactical_doc 분량 부족: {len(tactical)}자 < {min_length}자",
-                "evidence": f"ep_count={ep_count}, 필요={min_length}자",
-                "fix_hint": f"tactical_doc을 {min_length}자 이상으로 작성"
-            })
+            issues.append(
+                {
+                    "severity": "MAJOR",
+                    "category": "structure",
+                    "issue": f"tactical_doc 분량 부족: {len(tactical)}자 < {min_length}자",
+                    "evidence": f"ep_count={ep_count}, 필요={min_length}자",
+                    "fix_hint": f"tactical_doc을 {min_length}자 이상으로 작성",
+                }
+            )
 
-        ep_pattern = re.findall(r'제\s*\d+\s*화', tactical)
+        ep_pattern = re.findall(r"제\s*\d+\s*화", tactical)
         if len(ep_pattern) < ep_count:
-            issues.append({
-                "severity": "MAJOR", "category": "structure",
-                "issue": f"화 구분 부족: {len(ep_pattern)}개 < {ep_count}개",
-                "evidence": f"'제N화' 패턴 {len(ep_pattern)}개 발견",
-                "fix_hint": f"'제1화', '제2화' 등 {ep_count}개 섹션 명시"
-            })
+            issues.append(
+                {
+                    "severity": "MAJOR",
+                    "category": "structure",
+                    "issue": f"화 구분 부족: {len(ep_pattern)}개 < {ep_count}개",
+                    "evidence": f"'제N화' 패턴 {len(ep_pattern)}개 발견",
+                    "fix_hint": f"'제1화', '제2화' 등 {ep_count}개 섹션 명시",
+                }
+            )
         return issues
 
-    def _check_required_fields(self, arc: Dict) -> List[Dict]:
+    def _check_required_fields(self, arc: dict) -> list[dict]:
         """[#3] 필수 필드 + state_changes 형식 검증"""
         issues = []
         required_fields = ["arc_no", "ep_count", "tactical_doc", "state_constraints", "joint_docs", "state_changes"]
         for field in required_fields:
             if field not in arc or not arc[field]:
                 severity = "WARNING" if field == "state_changes" else "MAJOR"
-                issues.append({
-                    "severity": severity, "category": "structure",
-                    "issue": f"필수 필드 누락: {field}",
-                    "evidence": f"{field} 필드가 없거나 비어있음",
-                    "fix_hint": f"{field} 필드를 올바르게 작성"
-                })
+                issues.append(
+                    {
+                        "severity": severity,
+                        "category": "structure",
+                        "issue": f"필수 필드 누락: {field}",
+                        "evidence": f"{field} 필드가 없거나 비어있음",
+                        "fix_hint": f"{field} 필드를 올바르게 작성",
+                    }
+                )
 
         state_changes = arc.get("state_changes", {})
         if state_changes and isinstance(state_changes, dict):
             timeline = state_changes.get("timeline", {})
             if not timeline or not isinstance(timeline, dict):
-                issues.append({
-                    "severity": "WARNING", "category": "state_changes",
-                    "issue": "state_changes.timeline 필드 누락",
-                    "evidence": "timeline 필드가 없거나 형식이 잘못됨",
-                    "fix_hint": "timeline: {start: {...}, end: {...}} 형식으로 작성하세요"
-                })
+                issues.append(
+                    {
+                        "severity": "WARNING",
+                        "category": "state_changes",
+                        "issue": "state_changes.timeline 필드 누락",
+                        "evidence": "timeline 필드가 없거나 형식이 잘못됨",
+                        "fix_hint": "timeline: {start: {...}, end: {...}} 형식으로 작성하세요",
+                    }
+                )
             else:
                 start = timeline.get("start", {})
                 end = timeline.get("end", {})
                 if not start or not isinstance(start, dict):
-                    issues.append({
-                        "severity": "MINOR", "category": "state_changes",
-                        "issue": "timeline.start 필드 비어있음",
-                        "evidence": f"start: {start}",
-                        "fix_hint": "Arc 시작 시점을 명시하세요 (예: {year: 2000, month: 3})"
-                    })
+                    issues.append(
+                        {
+                            "severity": "MINOR",
+                            "category": "state_changes",
+                            "issue": "timeline.start 필드 비어있음",
+                            "evidence": f"start: {start}",
+                            "fix_hint": "Arc 시작 시점을 명시하세요 (예: {year: 2000, month: 3})",
+                        }
+                    )
                 if not end or not isinstance(end, dict):
-                    issues.append({
-                        "severity": "MINOR", "category": "state_changes",
-                        "issue": "timeline.end 필드 비어있음",
-                        "evidence": f"end: {end}",
-                        "fix_hint": "Arc 종료 시점을 명시하세요"
-                    })
+                    issues.append(
+                        {
+                            "severity": "MINOR",
+                            "category": "state_changes",
+                            "issue": "timeline.end 필드 비어있음",
+                            "evidence": f"end: {end}",
+                            "fix_hint": "Arc 종료 시점을 명시하세요",
+                        }
+                    )
 
             npc_deaths = state_changes.get("npc_deaths", [])
             if isinstance(npc_deaths, list):
                 for death in npc_deaths:
                     if isinstance(death, dict) and not death.get("name"):
-                        issues.append({
-                            "severity": "MINOR", "category": "state_changes",
-                            "issue": "npc_deaths에 name 필드 누락",
-                            "evidence": str(death)[:100],
-                            "fix_hint": "사망 NPC 이름을 명시하세요"
-                        })
+                        issues.append(
+                            {
+                                "severity": "MINOR",
+                                "category": "state_changes",
+                                "issue": "npc_deaths에 name 필드 누락",
+                                "evidence": str(death)[:100],
+                                "fix_hint": "사망 NPC 이름을 명시하세요",
+                            }
+                        )
             skill_acq = state_changes.get("skill_acquisitions", [])
             if isinstance(skill_acq, list):
                 for skill in skill_acq:
                     if isinstance(skill, dict) and not skill.get("name"):
-                        issues.append({
-                            "severity": "MINOR", "category": "state_changes",
-                            "issue": "skill_acquisitions에 name 필드 누락",
-                            "evidence": str(skill)[:100],
-                            "fix_hint": "습득 무공 이름을 명시하세요"
-                        })
+                        issues.append(
+                            {
+                                "severity": "MINOR",
+                                "category": "state_changes",
+                                "issue": "skill_acquisitions에 name 필드 누락",
+                                "evidence": str(skill)[:100],
+                                "fix_hint": "습득 무공 이름을 명시하세요",
+                            }
+                        )
         return issues
 
-    def _check_duplicate_items(self, arc: Dict, prev_arcs: List[Dict],
-                                pre_collected_items: Optional[set] = None) -> List[Dict]:
+    def _check_duplicate_items(
+        self, arc: dict, prev_arcs: list[dict], pre_collected_items: set | None = None
+    ) -> list[dict]:
         """[#4] 중복 아이템 획득 체크"""
         issues = []
         if not prev_arcs:
@@ -326,16 +358,20 @@ class UnifiedArcValidator(BaseAgent):
             for item in current_acquired:
                 item_str = item.strip() if isinstance(item, str) else str(item)
                 if item_str in prev_items:
-                    issues.append({
-                        "severity": "CRITICAL", "category": "continuity",
-                        "issue": f"중복 아이템 획득: '{item_str}'",
-                        "evidence": f"이전 Arc에서 이미 획득한 아이템",
-                        "fix_hint": f"items_acquired에서 '{item_str}' 제거"
-                    })
+                    issues.append(
+                        {
+                            "severity": "CRITICAL",
+                            "category": "continuity",
+                            "issue": f"중복 아이템 획득: '{item_str}'",
+                            "evidence": "이전 Arc에서 이미 획득한 아이템",
+                            "fix_hint": f"items_acquired에서 '{item_str}' 제거",
+                        }
+                    )
         return issues
 
-    def _check_duplicate_grants(self, arc: Dict, prev_arcs: List[Dict],
-                                 pre_collected_grants: Optional[set] = None) -> List[Dict]:
+    def _check_duplicate_grants(
+        self, arc: dict, prev_arcs: list[dict], pre_collected_grants: set | None = None
+    ) -> list[dict]:
         """[#5] 중복 수여물 체크"""
         issues = []
         if not prev_arcs:
@@ -355,21 +391,36 @@ class UnifiedArcValidator(BaseAgent):
             for grant in current_grants:
                 grant_str = grant.strip() if isinstance(grant, str) else str(grant)
                 if grant_str in prev_grants:
-                    issues.append({
-                        "severity": "CRITICAL", "category": "continuity",
-                        "issue": f"중복 수여물: '{grant_str}'",
-                        "evidence": f"이전 Arc에서 이미 수여받은 것",
-                        "fix_hint": f"grants_received에서 '{grant_str}' 제거"
-                    })
+                    issues.append(
+                        {
+                            "severity": "CRITICAL",
+                            "category": "continuity",
+                            "issue": f"중복 수여물: '{grant_str}'",
+                            "evidence": "이전 Arc에서 이미 수여받은 것",
+                            "fix_hint": f"grants_received에서 '{grant_str}' 제거",
+                        }
+                    )
         return issues
 
-    def _check_injury_escalation(self, arc: Dict) -> List[Dict]:
+    def _check_injury_escalation(self, arc: dict) -> list[dict]:
         """[#6] 부상 에스컬레이션 체크"""
         issues = []
         CHRONIC_KEYWORDS = [
-            "성대 결절", "성대결절", "실명", "마비", "불구", "절단",
-            "암", "종양", "만성", "대화 불가", "말 못함", "목소리 상실",
-            "청력 상실", "시력 상실", "반신불수",
+            "성대 결절",
+            "성대결절",
+            "실명",
+            "마비",
+            "불구",
+            "절단",
+            "암",
+            "종양",
+            "만성",
+            "대화 불가",
+            "말 못함",
+            "목소리 상실",
+            "청력 상실",
+            "시력 상실",
+            "반신불수",
         ]
         end_state = arc.get("state_constraints", {}).get("arc_end_state", {})
         end_injuries = str(end_state.get("injuries", "없음"))
@@ -378,19 +429,22 @@ class UnifiedArcValidator(BaseAgent):
         for inj_text in [end_injuries, shadow_injuries]:
             for kw in CHRONIC_KEYWORDS:
                 if kw in inj_text:
-                    issues.append({
-                        "severity": "ADVISORY", "category": "injury_escalation",
-                        "issue": f"부상 에스컬레이션 잔여: '{kw}' (자동 세정 대상)",
-                        "evidence": inj_text[:60],
-                        "fix_hint": "Phase 2.5 자동 세정에서 처리됨"
-                    })
+                    issues.append(
+                        {
+                            "severity": "ADVISORY",
+                            "category": "injury_escalation",
+                            "issue": f"부상 에스컬레이션 잔여: '{kw}' (자동 세정 대상)",
+                            "evidence": inj_text[:60],
+                            "fix_hint": "Phase 2.5 자동 세정에서 처리됨",
+                        }
+                    )
                     break
         return issues
 
-    def _check_resolved_plots(self, arc: Dict, state_tracker) -> List[Dict]:
+    def _check_resolved_plots(self, arc: dict, state_tracker) -> list[dict]:
         """[#7] 완결된 플롯 재생성 체크"""
         issues = []
-        if not state_tracker or not hasattr(state_tracker, 'resolved_plots') or not state_tracker.resolved_plots:
+        if not state_tracker or not hasattr(state_tracker, "resolved_plots") or not state_tracker.resolved_plots:
             return issues
         if not isinstance(state_tracker.resolved_plots, list):  # [V70] 타입 방어
             return issues
@@ -401,18 +455,21 @@ class UnifiedArcValidator(BaseAgent):
         for resolved in state_tracker.resolved_plots:
             plot_name = resolved.get("plot", "")
             if plot_name and len(plot_name) >= 5 and plot_name in tactical_str:  # [V63.4] 3→5자 (오탐 방지)
-                issues.append({
-                    "severity": "MAJOR", "category": "resolved_plot",
-                    "issue": f"완결된 플롯 재등장 의심: '{plot_name}'",
-                    "evidence": f"Arc {resolved.get('arc_no','?')}에서 완결: {resolved.get('resolution','')}",
-                    "fix_hint": f"'{plot_name}'은 이미 해결된 사건입니다. 새로운 갈등을 설계하세요."
-                })
+                issues.append(
+                    {
+                        "severity": "MAJOR",
+                        "category": "resolved_plot",
+                        "issue": f"완결된 플롯 재등장 의심: '{plot_name}'",
+                        "evidence": f"Arc {resolved.get('arc_no', '?')}에서 완결: {resolved.get('resolution', '')}",
+                        "fix_hint": f"'{plot_name}'은 이미 해결된 사건입니다. 새로운 갈등을 설계하세요.",
+                    }
+                )
         return issues
 
-    def _check_entity_consistency(self, arc: Dict, state_tracker) -> List[Dict]:
+    def _check_entity_consistency(self, arc: dict, state_tracker) -> list[dict]:
         """[#8] 비-NPC 엔티티 명칭 일관성 체크"""
         issues = []
-        if not state_tracker or not hasattr(state_tracker, 'check_entity_name_consistency'):
+        if not state_tracker or not hasattr(state_tracker, "check_entity_name_consistency"):
             return issues
 
         arc_no = arc.get("arc_no", 0)
@@ -421,17 +478,25 @@ class UnifiedArcValidator(BaseAgent):
             tactical_str = str(tactical_str) if tactical_str else ""
         entity_warnings = state_tracker.check_entity_name_consistency(tactical_str, arc_no)
         for ew in entity_warnings:
-            issues.append({
-                "severity": "WARNING", "category": "entity_consistency",
-                "issue": f"엔티티 명칭 불일치: '{ew.get('entity','')}' vs '{ew.get('variant','')}'",
-                "evidence": f"'{ew.get('entity','')}' (Arc {ew.get('first_arc','?')}에서 등록)과 유사",
-                "fix_hint": f"'{ew.get('entity','')}'로 통일하세요."
-            })
+            issues.append(
+                {
+                    "severity": "WARNING",
+                    "category": "entity_consistency",
+                    "issue": f"엔티티 명칭 불일치: '{ew.get('entity', '')}' vs '{ew.get('variant', '')}'",
+                    "evidence": f"'{ew.get('entity', '')}' (Arc {ew.get('first_arc', '?')}에서 등록)과 유사",
+                    "fix_hint": f"'{ew.get('entity', '')}'로 통일하세요.",
+                }
+            )
         return issues
 
-    def _python_validate(self, arc: Dict, prev_arcs: List[Dict], state_tracker=None,
-                         pre_collected_items: Optional[set] = None,
-                         pre_collected_grants: Optional[set] = None) -> Dict:
+    def _python_validate(
+        self,
+        arc: dict,
+        prev_arcs: list[dict],
+        state_tracker=None,
+        pre_collected_items: set | None = None,
+        pre_collected_grants: set | None = None,
+    ) -> dict:
         """[V63.4 P1] Python 즉시 검증 — 8개 독립 체크 조합"""
         issues = []
         issues.extend(self._check_dead_npc(arc, state_tracker, prev_arcs))
@@ -449,16 +514,10 @@ class UnifiedArcValidator(BaseAgent):
         return {
             "issues": issues,
             "has_critical": has_critical,
-            "critical_summary": "; ".join(critical_items) if critical_items else ""
+            "critical_summary": "; ".join(critical_items) if critical_items else "",
         }
 
-    def _llm_validate(
-        self,
-        arc: Dict,
-        prev_arcs: List[Dict],
-        constraints: str,
-        python_result: Dict
-    ) -> Dict:
+    def _llm_validate(self, arc: dict, prev_arcs: list[dict], constraints: str, python_result: dict) -> dict:
         """LLM 문맥 검증 (유료, 정확)"""
 
         # 이전 Arc 요약 생성
@@ -473,7 +532,7 @@ class UnifiedArcValidator(BaseAgent):
             prev_summary=self._escape_braces(prev_summary),
             constraints=self._escape_braces(constraints[:3000] if constraints else "(없음)"),
             python_result=self._escape_braces(python_text),
-            min_chars=self.min_chars_per_ep
+            min_chars=self.min_chars_per_ep,
         )
 
         try:
@@ -481,22 +540,48 @@ class UnifiedArcValidator(BaseAgent):
             result = self._extract_json_robust(response)
 
             if not isinstance(result, dict):
-                logging.warning(f"⚠️ [UnifiedValidator] JSON 파싱 실패 → REJECT")
+                logging.warning("⚠️ [UnifiedValidator] JSON 파싱 실패 → REJECT")
                 # [V61.5] fail-open → fail-closed: 파싱 실패 시 REJECT
-                return {"verdict": "REJECT", "issues": [{"severity": "CRITICAL", "category": "system", "issue": "LLM 응답 파싱 실패", "evidence": "JSON 파싱 불가", "fix_hint": "재시도"}], "summary": "LLM 응답 파싱 실패로 REJECT", "confidence": 0.0}
+                return {
+                    "verdict": "REJECT",
+                    "issues": [
+                        {
+                            "severity": "CRITICAL",
+                            "category": "system",
+                            "issue": "LLM 응답 파싱 실패",
+                            "evidence": "JSON 파싱 불가",
+                            "fix_hint": "재시도",
+                        }
+                    ],
+                    "summary": "LLM 응답 파싱 실패로 REJECT",
+                    "confidence": 0.0,
+                }
 
             return result
 
         except Exception as e:
             logging.warning(f"⚠️ [UnifiedValidator] LLM 오류: {str(e)[:50]} → REJECT")
             # [V61.5] fail-open → fail-closed: LLM 오류 시 REJECT
-            return {"verdict": "REJECT", "issues": [{"severity": "CRITICAL", "category": "system", "issue": f"LLM 오류: {str(e)[:50]}", "evidence": "API 호출 실패", "fix_hint": "재시도"}], "summary": f"LLM 오류로 REJECT: {str(e)[:50]}", "confidence": 0.0}
+            return {
+                "verdict": "REJECT",
+                "issues": [
+                    {
+                        "severity": "CRITICAL",
+                        "category": "system",
+                        "issue": f"LLM 오류: {str(e)[:50]}",
+                        "evidence": "API 호출 실패",
+                        "fix_hint": "재시도",
+                    }
+                ],
+                "summary": f"LLM 오류로 REJECT: {str(e)[:50]}",
+                "confidence": 0.0,
+            }
 
-    def _generate_prev_summary(self, prev_arcs: List[Dict]) -> str:
+    def _generate_prev_summary(self, prev_arcs: list[dict]) -> str:
         """[V64.P4] 위임 → modules.core.arc_summary_utils.generate_prev_arc_summary"""
         return generate_prev_arc_summary(prev_arcs, include_energy=True)
 
-    def _format_python_result(self, python_result: Dict) -> str:
+    def _format_python_result(self, python_result: dict) -> str:
         """Python 검증 결과 포맷팅"""
         issues = python_result.get("issues", [])
         if not issues:
@@ -510,7 +595,7 @@ class UnifiedArcValidator(BaseAgent):
 
         return "\n".join(lines)
 
-    def _generate_feedback(self, issues: List[Dict]) -> str:
+    def _generate_feedback(self, issues: list[dict]) -> str:
         """재생성용 피드백 생성"""
         if not issues:
             return ""

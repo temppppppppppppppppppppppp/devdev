@@ -10,9 +10,8 @@ Purpose:
 
 import json
 import re
-from typing import Optional
-from .base_agent import BaseAgent
 
+from .base_agent import BaseAgent
 
 # ═══════════════════════════════════════════════════════════════════════════
 # ENRICHMENT PROMPT
@@ -230,12 +229,14 @@ class BlockEnricher(BaseAgent):
             total_text = content
         else:
             # content가 dict인 경우
-            total_text = " ".join([
-                str(content.get("context", "")),
-                str(content.get("event_villain", "")),
-                str(content.get("solution", "")),
-                str(content.get("reward", ""))
-            ])
+            total_text = " ".join(
+                [
+                    str(content.get("context", "")),
+                    str(content.get("event_villain", "")),
+                    str(content.get("solution", "")),
+                    str(content.get("reward", "")),
+                ]
+            )
 
         word_count = len(total_text)
 
@@ -243,13 +244,13 @@ class BlockEnricher(BaseAgent):
         missing = []
 
         # 구체적 금액/수량 체크
-        if not re.search(r'[0-9천백만억]+\s*(냥|냥|개|명|벌|자루|알)', total_text):
+        if not re.search(r"[0-9천백만억]+\s*(냥|냥|개|명|벌|자루|알)", total_text):
             missing.append("specific_numbers")
 
         # 구체적 NPC 이름 체크 (따옴표로 감싸진 이름)
         if not re.search(r"['\"][\w가-힣]+['\"]|[\w가-힣]{2,4}(이|가|을|를|에게|의)", total_text):
             # 더 관대한 체크 - 한글 이름 패턴
-            npc_pattern = re.search(r'(심복|부하|수하|적|도박장주|두목|대장)\s*[\w가-힣]{2,4}', total_text)
+            npc_pattern = re.search(r"(심복|부하|수하|적|도박장주|두목|대장)\s*[\w가-힣]{2,4}", total_text)
             if not npc_pattern:
                 missing.append("npc_names")
 
@@ -258,11 +259,11 @@ class BlockEnricher(BaseAgent):
             missing.append("location_names")
 
         # 시간 정보 체크
-        if not re.search(r'\d+\s*(일|시간|각|경|달|년)|다음\s*날|그\s*날|며칠|사흘|이틀|하루', total_text):
+        if not re.search(r"\d+\s*(일|시간|각|경|달|년)|다음\s*날|그\s*날|며칠|사흘|이틀|하루", total_text):
             missing.append("time_info")
 
         # 상태 정보 체크
-        if not re.search(r'(내공|기력|부상|상처|회복).*(할|푼|%|퍼센트)', total_text):
+        if not re.search(r"(내공|기력|부상|상처|회복).*(할|푼|%|퍼센트)", total_text):
             missing.append("state_info")
 
         # 밀도 점수 계산
@@ -280,17 +281,17 @@ class BlockEnricher(BaseAgent):
                 "event_villain": len(str(content.get("event_villain", ""))) if isinstance(content, dict) else 0,
                 "solution": len(str(content.get("solution", ""))) if isinstance(content, dict) else 0,
                 "reward": len(str(content.get("reward", ""))) if isinstance(content, dict) else 0,
-            }
+            },
         }
 
     def enrich_block(
         self,
         current_block: dict,
         reference_block: dict,
-        prev_block: Optional[dict] = None,
-        next_block: Optional[dict] = None,
+        prev_block: dict | None = None,
+        next_block: dict | None = None,
         protagonist_name: str = "주인공",
-        genre: str = "wuxia"
+        genre: str = "wuxia",
     ) -> dict:
         """
         Block을 Reference Block 수준으로 농축
@@ -314,7 +315,7 @@ class BlockEnricher(BaseAgent):
                 "enriched": False,
                 "reason": "이미 충분한 정보량",
                 "density_score": density_analysis["density_score"],
-                "block": current_block
+                "block": current_block,
             }
 
         # 프롬프트 구성
@@ -325,7 +326,7 @@ class BlockEnricher(BaseAgent):
             next_block=json.dumps(next_block, ensure_ascii=False, indent=2) if next_block else "없음 (마지막 Block)",
             block_id=current_block.get("block_id", "Unknown"),
             protagonist_name=protagonist_name,
-            genre=genre
+            genre=genre,
         )
 
         # LLM 호출
@@ -337,32 +338,25 @@ class BlockEnricher(BaseAgent):
 
             # 검증
             validation = self._validate_enrichment(
-                original=current_block,
-                enriched=result,
-                prev_block=prev_block,
-                next_block=next_block
+                original=current_block, enriched=result, prev_block=prev_block, next_block=next_block
             )
 
             if validation.get("validation_result") == "FAIL":
                 # 1차 검증 실패 시 재시도
-                retry_prompt = prompt + f"\n\n[이전 시도 실패 피드백]\n{json.dumps(validation['issues'], ensure_ascii=False)}"
+                retry_prompt = (
+                    prompt + f"\n\n[이전 시도 실패 피드백]\n{json.dumps(validation['issues'], ensure_ascii=False)}"
+                )
                 result = self.ask(retry_prompt, temperature=0.5)
                 if isinstance(result, str):
                     result = self._extract_json_robust(result)  # [V70]
                 # 재검증
                 validation = self._validate_enrichment(
-                    original=current_block,
-                    enriched=result,
-                    prev_block=prev_block,
-                    next_block=next_block
+                    original=current_block, enriched=result, prev_block=prev_block, next_block=next_block
                 )
 
             # [V60.10] Director 품질 심사 (2차 검증)
             director_audit = self._director_audit_block(
-                original=current_block,
-                enriched=result,
-                prev_block=prev_block,
-                next_block=next_block
+                original=current_block, enriched=result, prev_block=prev_block, next_block=next_block
             )
 
             if director_audit.get("decision") == "REJECT":
@@ -370,25 +364,25 @@ class BlockEnricher(BaseAgent):
                 feedback = director_audit.get("feedback", "품질 미달")
                 critical_issues = director_audit.get("critical_issues", [])
 
-                retry_prompt = prompt + f"""
+                retry_prompt = (
+                    prompt
+                    + f"""
 
 [🚨 Director 심사 REJECT - 반드시 수정 필요]
-점수: {director_audit.get('total_score', 0)}/100
+점수: {director_audit.get("total_score", 0)}/100
 치명적 문제: {json.dumps(critical_issues, ensure_ascii=False)}
 수정 지시: {feedback}
 
 위 문제를 해결하여 다시 농축하라.
 """
+                )
                 result = self.ask(retry_prompt, temperature=0.4)
                 if isinstance(result, str):
                     result = self._extract_json_robust(result)  # [V70]
 
                 # 재심사
                 director_audit = self._director_audit_block(
-                    original=current_block,
-                    enriched=result,
-                    prev_block=prev_block,
-                    next_block=next_block
+                    original=current_block, enriched=result, prev_block=prev_block, next_block=next_block
                 )
 
             return {
@@ -397,22 +391,14 @@ class BlockEnricher(BaseAgent):
                 "missing_elements": density_analysis["missing_elements"],
                 "block": result,
                 "validation": validation,
-                "director_audit": director_audit
+                "director_audit": director_audit,
             }
 
         except Exception as e:
-            return {
-                "enriched": False,
-                "reason": f"농축 실패: {str(e)}",
-                "block": current_block
-            }
+            return {"enriched": False, "reason": f"농축 실패: {str(e)}", "block": current_block}
 
     def _validate_enrichment(
-        self,
-        original: dict,
-        enriched: dict,
-        prev_block: Optional[dict],
-        next_block: Optional[dict]
+        self, original: dict, enriched: dict, prev_block: dict | None, next_block: dict | None
     ) -> dict:
         """농축 결과 1차 검증 (Self-Check)"""
 
@@ -420,7 +406,7 @@ class BlockEnricher(BaseAgent):
             original_block=json.dumps(original, ensure_ascii=False, indent=2),
             enriched_block=json.dumps(enriched, ensure_ascii=False, indent=2),
             prev_block=json.dumps(prev_block, ensure_ascii=False, indent=2) if prev_block else "없음",
-            next_block=json.dumps(next_block, ensure_ascii=False, indent=2) if next_block else "없음"
+            next_block=json.dumps(next_block, ensure_ascii=False, indent=2) if next_block else "없음",
         )
 
         try:
@@ -441,15 +427,11 @@ class BlockEnricher(BaseAgent):
             return {
                 "validation_result": "PASS",  # 검증 실패 시 일단 통과
                 "issues": [f"검증 오류: {str(e)}"],
-                "confidence_score": 0.5
+                "confidence_score": 0.5,
             }
 
     def _director_audit_block(
-        self,
-        original: dict,
-        enriched: dict,
-        prev_block: Optional[dict],
-        next_block: Optional[dict]
+        self, original: dict, enriched: dict, prev_block: dict | None, next_block: dict | None
     ) -> dict:
         """
         [V60.10] Director 품질 심사
@@ -462,7 +444,7 @@ class BlockEnricher(BaseAgent):
             original_block=json.dumps(original, ensure_ascii=False, indent=2),
             enriched_block=json.dumps(enriched, ensure_ascii=False, indent=2),
             prev_block=json.dumps(prev_block, ensure_ascii=False, indent=2) if prev_block else "없음 (첫 번째 Block)",
-            next_block=json.dumps(next_block, ensure_ascii=False, indent=2) if next_block else "없음 (마지막 Block)"
+            next_block=json.dumps(next_block, ensure_ascii=False, indent=2) if next_block else "없음 (마지막 Block)",
         )
 
         try:
@@ -492,7 +474,7 @@ class BlockEnricher(BaseAgent):
                 "total_score": 70,
                 "error": str(e),
                 "critical_issues": [],
-                "warnings": [f"Director 심사 오류: {str(e)}"]
+                "warnings": [f"Director 심사 오류: {str(e)}"],
             }
 
     def enrich_all_blocks(
@@ -500,7 +482,7 @@ class BlockEnricher(BaseAgent):
         treatment_blocks: list,
         protagonist_name: str = "주인공",
         genre: str = "wuxia",
-        reference_block_index: int = 0
+        reference_block_index: int = 0,
     ) -> dict:
         """
         전체 Treatment를 일괄 농축
@@ -524,12 +506,7 @@ class BlockEnricher(BaseAgent):
         """
         reference_block = treatment_blocks[reference_block_index]
         enriched_blocks = []
-        stats = {
-            "total": len(treatment_blocks),
-            "enriched_count": 0,
-            "skipped_count": 0,
-            "failed_count": 0
-        }
+        stats = {"total": len(treatment_blocks), "enriched_count": 0, "skipped_count": 0, "failed_count": 0}
 
         for i, block in enumerate(treatment_blocks):
             # Reference block은 그대로 유지
@@ -547,7 +524,7 @@ class BlockEnricher(BaseAgent):
                 prev_block=prev_block,
                 next_block=next_block,
                 protagonist_name=protagonist_name,
-                genre=genre
+                genre=genre,
             )
 
             if result.get("enriched"):
@@ -560,10 +537,7 @@ class BlockEnricher(BaseAgent):
                 enriched_blocks.append(block)  # 실패 시 원본 유지
                 stats["failed_count"] += 1
 
-        return {
-            "enriched_blocks": enriched_blocks,
-            "statistics": stats
-        }
+        return {"enriched_blocks": enriched_blocks, "statistics": stats}
 
     # ═══════════════════════════════════════════════════════════════════════════
     # [V60.10] 병렬 농축 + 인과 검증
@@ -576,7 +550,7 @@ class BlockEnricher(BaseAgent):
         genre: str = "wuxia",
         reference_block_index: int = 0,
         batch_size: int = 5,
-        ui=None
+        ui=None,
     ) -> dict:
         """
         [V60.10] 병렬 농축 + 인과 검증 + 문제 Block 재농축
@@ -587,7 +561,6 @@ class BlockEnricher(BaseAgent):
         3. 문제 Block만 재농축 (농축된 prev_block 참조)
         """
         import concurrent.futures
-        import time
 
         reference_block = treatment_blocks[reference_block_index]
         enriched_blocks = [None] * len(treatment_blocks)
@@ -598,7 +571,7 @@ class BlockEnricher(BaseAgent):
             "enriched_count": 0,
             "skipped_count": 1,  # reference block
             "failed_count": 0,
-            "causal_fixes": 0
+            "causal_fixes": 0,
         }
 
         # 농축 대상 인덱스 수집
@@ -630,15 +603,15 @@ class BlockEnricher(BaseAgent):
                 prev_block=prev_block,
                 next_block=next_block,
                 protagonist_name=protagonist_name,
-                genre=genre
+                genre=genre,
             )
             return idx, result
 
         # 배치 단위로 병렬 처리
         for batch_start in range(0, len(enrich_targets), batch_size):
-            batch = enrich_targets[batch_start:batch_start + batch_size]
+            batch = enrich_targets[batch_start : batch_start + batch_size]
             if ui:
-                ui.log(f"   🔄 배치 {batch_start//batch_size + 1}: Block {batch[0]+1}~{batch[-1]+1} 처리 중...")
+                ui.log(f"   🔄 배치 {batch_start // batch_size + 1}: Block {batch[0] + 1}~{batch[-1] + 1} 처리 중...")
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=batch_size) as executor:
                 futures = {executor.submit(enrich_single, idx): idx for idx in batch}
@@ -656,7 +629,7 @@ class BlockEnricher(BaseAgent):
                         enriched_blocks[idx] = treatment_blocks[idx]
                         stats["failed_count"] += 1
                         if ui:
-                            ui.log(f"      ⚠️ Block {idx+1} 농축 실패: {str(e)[:30]}")
+                            ui.log(f"      ⚠️ Block {idx + 1} 농축 실패: {str(e)[:30]}")
 
             # [V66.1] Rate Limit 딜레이 제거 (BaseAgent.API_DELAY에서 이미 적용)
 
@@ -682,7 +655,7 @@ class BlockEnricher(BaseAgent):
 
                 issue_text = issue.get("issue", "인과 에러") if isinstance(issue, dict) else str(issue)
                 if ui:
-                    ui.log(f"      🔧 Block {idx+1} 재농축 (사유: {str(issue_text)[:30]}...)")
+                    ui.log(f"      🔧 Block {idx + 1} 재농축 (사유: {str(issue_text)[:30]}...)")
 
                 # 농축된 prev_block 참조 (None이면 원본 사용)
                 enriched_prev = enriched_blocks[idx - 1]
@@ -698,7 +671,7 @@ class BlockEnricher(BaseAgent):
                     reference_block=reference_block,
                     causal_issue=issue_text,
                     protagonist_name=protagonist_name,
-                    genre=genre
+                    genre=genre,
                 )
 
                 if result.get("enriched") and result.get("block"):
@@ -711,7 +684,7 @@ class BlockEnricher(BaseAgent):
         return {
             "enriched_blocks": enriched_blocks,
             "statistics": stats,
-            "causal_issues_found": len(causal_issues) if causal_issues else 0
+            "causal_issues_found": len(causal_issues) if causal_issues else 0,
         }
 
     def _check_causal_errors(self, enriched_blocks: list) -> list:
@@ -733,12 +706,14 @@ class BlockEnricher(BaseAgent):
             else:
                 reward = ""
                 context = str(content)[:100]
-            block_summaries.append({
-                "block_id": block.get("block_id", f"Block {i+1}"),
-                "index": i,
-                "context_snippet": context,
-                "reward_snippet": reward
-            })
+            block_summaries.append(
+                {
+                    "block_id": block.get("block_id", f"Block {i + 1}"),
+                    "index": i,
+                    "context_snippet": context,
+                    "reward_snippet": reward,
+                }
+            )
 
         prompt = f"""[Role] 인과 연속성 검증관
 [Task] 아래 Block들의 인과 연결을 검증하고, 문제가 있는 Block을 찾아라.
@@ -784,11 +759,11 @@ class BlockEnricher(BaseAgent):
         self,
         current_block: dict,
         enriched_prev_block: dict,
-        next_block: Optional[dict],
+        next_block: dict | None,
         reference_block: dict,
         causal_issue: str,
         protagonist_name: str,
-        genre: str
+        genre: str,
     ) -> dict:
         """
         [V60.10] 인과 에러 수정을 위한 재농축
@@ -830,7 +805,7 @@ class BlockEnricher(BaseAgent):
 
 ### [Output Format - JSON Only]
 {{
-    "block_id": "{current_block.get('block_id', 'Unknown')}",
+    "block_id": "{current_block.get("block_id", "Unknown")}",
     "title": "제목",
     "content": {{
         "context": "인과 연결된 context",
@@ -847,15 +822,7 @@ class BlockEnricher(BaseAgent):
             if isinstance(result, str):
                 result = self._extract_json_robust(result)  # [V70]
 
-            return {
-                "enriched": True,
-                "block": result,
-                "causal_fixed": True
-            }
+            return {"enriched": True, "block": result, "causal_fixed": True}
 
         except Exception as e:
-            return {
-                "enriched": False,
-                "reason": f"재농축 실패: {str(e)}",
-                "block": current_block
-            }
+            return {"enriched": False, "reason": f"재농축 실패: {str(e)}", "block": current_block}

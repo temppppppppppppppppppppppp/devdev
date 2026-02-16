@@ -7,10 +7,8 @@ inspector reference를 통해 BaseAgent 메서드(ask, _extract_json_robust 등)
 및 공유 유틸리티(패턴, _is_same_item 등) 접근.
 """
 
-import re
 import logging
-from typing import Dict, List, Any
-
+import re
 
 # =================================================================
 # Blueprint 연속성 검증 프롬프트 (기존 CONTINUITY_INSPECTION_PROMPT)
@@ -152,9 +150,14 @@ class ContinuityBlueprintValidator:
         """
         self._ci = inspector
 
-    def inspect(self, current_ep: int, current_blueprint: dict,
-                prev_blueprints: List[dict], hud_history: List[dict] = None,
-                entity_registry: dict = None) -> dict:
+    def inspect(
+        self,
+        current_ep: int,
+        current_blueprint: dict,
+        prev_blueprints: list[dict],
+        hud_history: list[dict] = None,
+        entity_registry: dict = None,
+    ) -> dict:
         """
         블루프린트 연속성 검증 실행
 
@@ -176,23 +179,25 @@ class ContinuityBlueprintValidator:
                 "timeline_analysis": {},
                 "violations": [],
                 "warnings": [],
-                "fix_instructions": ""
+                "fix_instructions": "",
             }
 
         # 현재 시나리오 추출
-        current_scenario = current_blueprint.get('integrated_scenario', '')
+        current_scenario = current_blueprint.get("integrated_scenario", "")
         if not current_scenario:
             return {
                 "decision": "REJECT",
                 "severity": "CRITICAL",
                 "timeline_analysis": {},
-                "violations": [{
-                    "type": "missing_scenario",
-                    "severity": "CRITICAL",
-                    "description": "블루프린트에 integrated_scenario가 없습니다."
-                }],
+                "violations": [
+                    {
+                        "type": "missing_scenario",
+                        "severity": "CRITICAL",
+                        "description": "블루프린트에 integrated_scenario가 없습니다.",
+                    }
+                ],
                 "warnings": [],
-                "fix_instructions": "integrated_scenario를 포함한 완전한 블루프린트를 생성하십시오."
+                "fix_instructions": "integrated_scenario를 포함한 완전한 블루프린트를 생성하십시오.",
             }
 
         # ═══════════════════════════════════════════════════════════════
@@ -200,7 +205,7 @@ class ContinuityBlueprintValidator:
         # ═══════════════════════════════════════════════════════════════
         python_check = self._python_precheck(current_ep, current_scenario, prev_blueprints)
 
-        python_advisory = python_check.get('critical_violations', [])
+        python_advisory = python_check.get("critical_violations", [])
         if python_advisory:
             logging.info(f"📋 [V60.56] Python advisory 발견 {len(python_advisory)}건 - LLM에게 전달")
 
@@ -216,7 +221,7 @@ class ContinuityBlueprintValidator:
             current_scenario=self._ci._escape_braces(current_scenario[:4000]),
             prev_count=len(prev_blueprints),
             prev_summaries=self._ci._escape_braces(prev_summaries),
-            entity_registry=self._ci._escape_braces(entity_registry_str)
+            entity_registry=self._ci._escape_braces(entity_registry_str),
         )
 
         try:
@@ -224,44 +229,43 @@ class ContinuityBlueprintValidator:
             result = self._ci._extract_json_robust(response)
 
             if not isinstance(result, dict):
-                logging.warning(f"⚠️ [V60.74] JSON 파싱 실패 - 수동 검수 권장")
+                logging.warning("⚠️ [V60.74] JSON 파싱 실패 - 수동 검수 권장")
                 result = {
                     "decision": "PASS",
                     "severity": "NONE",
                     "violations": [],
                     "warnings": ["[V60.74] LLM 응답 파싱 실패 - 수동 검수 필요"],
                     "confidence": 0.0,
-                    "parsing_error": True
+                    "parsing_error": True,
                 }
 
             # Python 검증 결과 병합
-            if python_check.get('warnings'):
-                result.setdefault('warnings', [])
-                result['warnings'].extend(python_check['warnings'])
+            if python_check.get("warnings"):
+                result.setdefault("warnings", [])
+                result["warnings"].extend(python_check["warnings"])
 
             return result
 
         except Exception as e:
             logging.warning(f"🚨 [ContinuityInspector] LLM 검증 실패: {e}")
-            if python_check.get('warnings'):
+            if python_check.get("warnings"):
                 return {
                     "decision": "PASS",
                     "severity": "MINOR",
-                    "timeline_analysis": python_check.get('timeline', {}),
+                    "timeline_analysis": python_check.get("timeline", {}),
                     "violations": [],
-                    "warnings": python_check['warnings'],
-                    "fix_instructions": "LLM 검증 실패 - Python 사전 검증만 수행됨"
+                    "warnings": python_check["warnings"],
+                    "fix_instructions": "LLM 검증 실패 - Python 사전 검증만 수행됨",
                 }
             return {
                 "decision": "PASS",
                 "severity": "NONE",
                 "violations": [],
                 "warnings": ["LLM 검증 실패 - 수동 확인 권장"],
-                "fix_instructions": ""
+                "fix_instructions": "",
             }
 
-    def _python_precheck(self, current_ep: int, current_scenario: str,
-                         prev_blueprints: List[dict]) -> dict:
+    def _python_precheck(self, current_ep: int, current_scenario: str, prev_blueprints: list[dict]) -> dict:
         """Python 기반 사전 검증 (빠른 필터링)"""
         critical_violations = []
         warnings = []
@@ -270,8 +274,8 @@ class ContinuityBlueprintValidator:
         granted_items = {}
 
         for bp in prev_blueprints:
-            ep_num = bp.get('ep_num', 0)
-            scenario = bp.get('integrated_scenario', '')
+            ep_num = bp.get("ep_num", 0)
+            scenario = bp.get("integrated_scenario", "")
 
             for pattern in self._ci.acquire_patterns:
                 matches = re.findall(pattern, scenario)
@@ -307,20 +311,22 @@ class ContinuityBlueprintValidator:
         for curr_item in current_acquisitions:
             for prev_item, prev_ep in acquired_items.items():
                 if self._ci._is_same_item(curr_item, prev_item):
-                    critical_violations.append({
-                        "type": "duplicate_acquisition",
-                        "severity": "CRITICAL",
-                        "item_or_subject": curr_item,
-                        "prev_ep": prev_ep,
-                        "description": f"'{prev_item}'은(는) 이미 제{prev_ep}화에서 획득했습니다. "
-                                      f"제{current_ep}화에서 다시 획득하려 합니다.",
-                        "evidence_prev": f"제{prev_ep}화에서 획득",
-                        "evidence_curr": f"현재 '{curr_item}' 획득 시도"
-                    })
+                    critical_violations.append(
+                        {
+                            "type": "duplicate_acquisition",
+                            "severity": "CRITICAL",
+                            "item_or_subject": curr_item,
+                            "prev_ep": prev_ep,
+                            "description": f"'{prev_item}'은(는) 이미 제{prev_ep}화에서 획득했습니다. "
+                            f"제{current_ep}화에서 다시 획득하려 합니다.",
+                            "evidence_prev": f"제{prev_ep}화에서 획득",
+                            "evidence_curr": f"현재 '{curr_item}' 획득 시도",
+                        }
+                    )
                     break
 
         # 검증 2: 미수여 소지
-        grant_keywords = ['패', '권', '인장', '직위', '자격', '서']
+        grant_keywords = ["패", "권", "인장", "직위", "자격", "서"]
 
         for possession in current_possessions:
             for keyword in grant_keywords:
@@ -334,32 +340,30 @@ class ContinuityBlueprintValidator:
                             break
 
                     if not was_granted:
-                        critical_violations.append({
-                            "type": "premature_possession",
-                            "severity": "CRITICAL",
-                            "item_or_subject": possession,
-                            "prev_ep": None,
-                            "description": f"'{possession}'을(를) 소지하고 있으나, "
-                                          f"이전 에피소드에서 수여받은 기록이 없습니다.",
-                            "evidence_prev": "수여 기록 없음",
-                            "evidence_curr": f"현재 '{possession}' 소지/사용"
-                        })
+                        critical_violations.append(
+                            {
+                                "type": "premature_possession",
+                                "severity": "CRITICAL",
+                                "item_or_subject": possession,
+                                "prev_ep": None,
+                                "description": f"'{possession}'을(를) 소지하고 있으나, "
+                                f"이전 에피소드에서 수여받은 기록이 없습니다.",
+                                "evidence_prev": "수여 기록 없음",
+                                "evidence_curr": f"현재 '{possession}' 소지/사용",
+                            }
+                        )
                     break
 
         timeline = {
             "items_acquired_before": list(acquired_items.keys()),
             "grants_received_before": list(granted_items.keys()),
             "items_acquired_now": current_acquisitions,
-            "items_possessed_now": current_possessions
+            "items_possessed_now": current_possessions,
         }
 
-        return {
-            "critical_violations": critical_violations,
-            "warnings": warnings,
-            "timeline": timeline
-        }
+        return {"critical_violations": critical_violations, "warnings": warnings, "timeline": timeline}
 
-    def _format_prev_blueprints(self, prev_blueprints: List[dict]) -> str:
+    def _format_prev_blueprints(self, prev_blueprints: list[dict]) -> str:
         """[V48.1] 전체 블루프린트를 LLM용 타임라인 형식으로 변환"""
         summaries = []
 
@@ -368,8 +372,8 @@ class ContinuityBlueprintValidator:
         all_status_changes = []
 
         for bp in prev_blueprints:
-            ep_num = bp.get('ep_num', '?')
-            scenario = bp.get('integrated_scenario', '')
+            ep_num = bp.get("ep_num", "?")
+            scenario = bp.get("integrated_scenario", "")
 
             items = self._ci._extract_acquisitions(scenario)
             grants = self._ci._extract_grants(scenario)
@@ -385,8 +389,8 @@ class ContinuityBlueprintValidator:
 [핵심 사건]
 {key_sentences[:2000]}
 
-[획득 아이템] {', '.join(items) if items else '없음'}
-[수여물] {', '.join(grants) if grants else '없음'}
+[획득 아이템] {", ".join(items) if items else "없음"}
+[수여물] {", ".join(grants) if grants else "없음"}
 """
             summaries.append(summary)
 
@@ -396,28 +400,28 @@ class ContinuityBlueprintValidator:
 ╚══════════════════════════════════════════════════════════════╝
 
 [📦 획득 아이템 타임라인]
-{self._format_timeline(all_acquisitions) if all_acquisitions else '- 없음'}
+{self._format_timeline(all_acquisitions) if all_acquisitions else "- 없음"}
 
 [🎖️ 수여물 타임라인]
-{self._format_timeline(all_grants) if all_grants else '- 없음'}
+{self._format_timeline(all_grants) if all_grants else "- 없음"}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 
         return timeline_header + "\n".join(summaries)
 
-    def _format_timeline(self, items: List[tuple]) -> str:
+    def _format_timeline(self, items: list[tuple]) -> str:
         """타임라인 항목을 포맷팅"""
         lines = []
         for ep, item in items:
             lines.append(f"- 제{ep}화: {item}")
         return "\n".join(lines)
 
-    def get_prev_blueprints(self, current_ep: int, window: int = None) -> List[dict]:
+    def get_prev_blueprints(self, current_ep: int, window: int = None) -> list[dict]:
         """DB에서 이전 블루프린트들을 조회하는 헬퍼 메서드"""
         prev_blueprints = []
 
-        if not hasattr(self._ci, 'context') or not self._ci.context:
+        if not hasattr(self._ci, "context") or not self._ci.context:
             return prev_blueprints
 
         start_ep = 1 if window is None else max(1, current_ep - window)
@@ -426,41 +430,43 @@ class ContinuityBlueprintValidator:
             try:
                 bp = self._ci.context.get_blueprint(ep)
                 if bp and isinstance(bp, dict):
-                    prev_blueprints.append({
-                        'ep_num': ep,
-                        'integrated_scenario': bp.get('integrated_scenario', ''),
-                        'scene_breakdown': bp.get('scene_breakdown', {})
-                    })
+                    prev_blueprints.append(
+                        {
+                            "ep_num": ep,
+                            "integrated_scenario": bp.get("integrated_scenario", ""),
+                            "scene_breakdown": bp.get("scene_breakdown", {}),
+                        }
+                    )
             except Exception as e:
                 logging.warning(f"⚠️ [ContinuityInspector] 제{ep}화 블루프린트 조회 실패: {e}")
 
         return prev_blueprints
 
-    def _generate_fix_instructions(self, violations: List[dict]) -> str:
+    def _generate_fix_instructions(self, violations: list[dict]) -> str:
         """위반 사항에 대한 수정 지시 생성"""
         instructions = []
 
         for v in violations:
-            v_type = v.get('type', '')
-            item = v.get('item_or_subject', '')
-            prev_ep = v.get('prev_ep')
+            v_type = v.get("type", "")
+            item = v.get("item_or_subject", "")
+            prev_ep = v.get("prev_ep")
 
-            if v_type == 'duplicate_acquisition':
+            if v_type == "duplicate_acquisition":
                 instructions.append(
                     f"[중복 획득 수정] '{item}'은(는) 이미 제{prev_ep}화에서 획득했습니다. "
                     f"현재 에피소드에서는 '이미 소지 중'인 상태로 시작해야 합니다. "
                     f"다시 획득하는 장면을 삭제하고, 기존에 가지고 있던 것을 사용하는 것으로 수정하세요."
                 )
-            elif v_type == 'premature_possession':
+            elif v_type == "premature_possession":
                 instructions.append(
                     f"[미수여 소지 수정] '{item}'은(는) 아직 수여받지 않았습니다. "
                     f"해당 수여물을 소지/사용하는 묘사를 삭제하거나, "
                     f"먼저 수여받는 장면이 있는 에피소드 이후로 이동시키세요."
                 )
-            elif v_type == 'state_discontinuity':
+            elif v_type == "state_discontinuity":
                 instructions.append(
-                    f"[상태 불연속 수정] 캐릭터 상태가 급격히 변화했습니다. "
-                    f"변화에 대한 서사적 근거를 추가하거나, 이전 상태를 유지하세요."
+                    "[상태 불연속 수정] 캐릭터 상태가 급격히 변화했습니다. "
+                    "변화에 대한 서사적 근거를 추가하거나, 이전 상태를 유지하세요."
                 )
 
         return "\n".join(instructions) if instructions else "위반 사항을 확인하고 수정하세요."

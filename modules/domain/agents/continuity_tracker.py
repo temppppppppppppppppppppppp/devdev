@@ -7,16 +7,16 @@ ForeshadowingTracker 등 V49.7 품질 향상 트래커 초기화 및 검증을 �
 inspector reference를 통해 BaseAgent 메서드 및 공유 상태 접근.
 """
 
-import re
-from typing import Dict, List, Any
+from typing import Any
 
 # [V49.7] 품질 향상 모듈 임포트
 try:
-    from modules.core.state_delta_tracker import StateDeltaTracker
-    from modules.core.relationship_tracker import RelationshipTracker
-    from modules.core.power_scaling import PowerScalingTracker
     from modules.core.foreshadow_tracker import ForeshadowTracker
     from modules.core.information_diffusion import InformationDiffusion
+    from modules.core.power_scaling import PowerScalingTracker
+    from modules.core.relationship_tracker import RelationshipTracker
+    from modules.core.state_delta_tracker import StateDeltaTracker
+
     V49_7_MODULES_AVAILABLE = True
 except ImportError:
     V49_7_MODULES_AVAILABLE = False
@@ -52,8 +52,7 @@ class ContinuityTrackerIntegration:
         """
         if V49_7_MODULES_AVAILABLE:
             self._ci.state_tracker = StateDeltaTracker(
-                initial_energy=100,
-                protagonist_name=self._get_protagonist_name()
+                initial_energy=100, protagonist_name=self._get_protagonist_name()
             )
             self._ci.relationship_tracker = RelationshipTracker()
             self._ci.power_tracker = PowerScalingTracker()
@@ -76,20 +75,16 @@ class ContinuityTrackerIntegration:
     def _get_protagonist_name(self) -> str:
         """프로젝트에서 주인공 이름 추출"""
         try:
-            bible = getattr(self._ci.context, 'master_bible', {})
-            bible_root = bible.get('MasterBible', bible)
-            proj_data = bible_root.get('ProjectData', {})
-            return proj_data.get('protagonist', '주인공')
+            bible = getattr(self._ci.context, "master_bible", {})
+            bible_root = bible.get("MasterBible", bible)
+            proj_data = bible_root.get("ProjectData", {})
+            return proj_data.get("protagonist", "주인공")
         except Exception:
-            return '주인공'
+            return "주인공"
 
     def validate_with_trackers(
-        self,
-        arc: int,
-        episode: int,
-        content: str,
-        content_type: str = "blueprint"
-    ) -> Dict[str, Any]:
+        self, arc: int, episode: int, content: str, content_type: str = "blueprint"
+    ) -> dict[str, Any]:
         """
         [V49.7] 트래커 기반 검증 실행
 
@@ -139,15 +134,9 @@ class ContinuityTrackerIntegration:
                 warnings.extend(state_result["warnings"])
             tracker_results["state_delta"] = state_result.get("details", {})
 
-        return {
-            "warnings": warnings,
-            "violations": violations,
-            "tracker_results": tracker_results
-        }
+        return {"warnings": warnings, "violations": violations, "tracker_results": tracker_results}
 
-    def _check_relationship_with_tracker(
-        self, arc: int, episode: int, content: str
-    ) -> Dict[str, Any]:
+    def _check_relationship_with_tracker(self, arc: int, episode: int, content: str) -> dict[str, Any]:
         """RelationshipTracker를 사용한 관계 전이 검증"""
         warnings = []
         violations = []
@@ -157,9 +146,7 @@ class ContinuityTrackerIntegration:
 
         for group in group_keywords:
             if group in content:
-                current_state = self._ci.relationship_tracker.infer_state_from_manuscript(
-                    group, content
-                )
+                current_state = self._ci.relationship_tracker.infer_state_from_manuscript(group, content)
 
                 if current_state:
                     prev_history = self._ci.relationship_tracker.get_transition_history(group)
@@ -173,35 +160,37 @@ class ContinuityTrackerIntegration:
                             to_state=current_state,
                             proposed_justification="",
                             arc=arc,
-                            episode=episode
+                            episode=episode,
                         )
 
                         if not validation.get("valid"):
                             severity = validation.get("severity", "MINOR")
                             if severity in ["CRITICAL", "MAJOR"]:
-                                violations.append({
-                                    "type": "relationship_violation",
-                                    "severity": severity,
-                                    "description": validation.get("message", "관계 전이 오류")
-                                })
+                                violations.append(
+                                    {
+                                        "type": "relationship_violation",
+                                        "severity": severity,
+                                        "description": validation.get("message", "관계 전이 오류"),
+                                    }
+                                )
                             else:
-                                warnings.append({
-                                    "type": "relationship_warning",
-                                    "severity": "MINOR",
-                                    "description": validation.get("message", "관계 전이 경고")
-                                })
+                                warnings.append(
+                                    {
+                                        "type": "relationship_warning",
+                                        "severity": "MINOR",
+                                        "description": validation.get("message", "관계 전이 경고"),
+                                    }
+                                )
 
                         details[group] = {
                             "from": prev_state,
                             "to": current_state,
-                            "valid": validation.get("valid", True)
+                            "valid": validation.get("valid", True),
                         }
 
         return {"warnings": warnings, "violations": violations, "details": details}
 
-    def _check_power_with_tracker(
-        self, arc: int, episode: int, content: str
-    ) -> Dict[str, Any]:
+    def _check_power_with_tracker(self, arc: int, episode: int, content: str) -> dict[str, Any]:
         """PowerScalingTracker를 사용한 파워 스케일링 검증"""
         warnings = []
         details = {}
@@ -232,24 +221,25 @@ class ContinuityTrackerIntegration:
             new_power = current_power + detected_growth
 
             validation = self._ci.power_tracker.validate_growth(
-                character=protagonist,
-                arc=arc,
-                new_power=new_power,
-                justification=growth_reason
+                character=protagonist, arc=arc, new_power=new_power, justification=growth_reason
             )
 
             if validation.get("severity") == "CRITICAL":
-                warnings.append({
-                    "type": "power_scaling_critical",
-                    "severity": "MAJOR",
-                    "description": validation.get("message", "급격한 파워업")
-                })
+                warnings.append(
+                    {
+                        "type": "power_scaling_critical",
+                        "severity": "MAJOR",
+                        "description": validation.get("message", "급격한 파워업"),
+                    }
+                )
             elif validation.get("severity") == "WARNING":
-                warnings.append({
-                    "type": "power_scaling_warning",
-                    "severity": "MINOR",
-                    "description": validation.get("suggestion", "성장 속도 조절 권장")
-                })
+                warnings.append(
+                    {
+                        "type": "power_scaling_warning",
+                        "severity": "MINOR",
+                        "description": validation.get("suggestion", "성장 속도 조절 권장"),
+                    }
+                )
 
             details["detected_growth"] = detected_growth
             details["reason"] = growth_reason
@@ -257,9 +247,7 @@ class ContinuityTrackerIntegration:
 
         return {"warnings": warnings, "details": details}
 
-    def _check_foreshadowing_with_tracker(
-        self, arc: int, episode: int, content: str
-    ) -> Dict[str, Any]:
+    def _check_foreshadowing_with_tracker(self, arc: int, episode: int, content: str) -> dict[str, Any]:
         """ForeshadowingTracker를 사용한 복선 상태 검증"""
         warnings = []
         details = {}
@@ -270,19 +258,23 @@ class ContinuityTrackerIntegration:
         warning_pending = [p for p in pending if p.get("severity") == "WARNING"]
 
         if critical_pending:
-            warnings.append({
-                "type": "foreshadowing_critical",
-                "severity": "MAJOR",
-                "description": f"미회수 복선 {len(critical_pending)}개가 10개 Arc 이상 방치됨: " +
-                              ", ".join([p["id"] for p in critical_pending[:3]])
-            })
+            warnings.append(
+                {
+                    "type": "foreshadowing_critical",
+                    "severity": "MAJOR",
+                    "description": f"미회수 복선 {len(critical_pending)}개가 10개 Arc 이상 방치됨: "
+                    + ", ".join([p["id"] for p in critical_pending[:3]]),
+                }
+            )
 
         if warning_pending:
-            warnings.append({
-                "type": "foreshadowing_warning",
-                "severity": "MINOR",
-                "description": f"미회수 복선 {len(warning_pending)}개가 5개 Arc 이상 방치됨"
-            })
+            warnings.append(
+                {
+                    "type": "foreshadowing_warning",
+                    "severity": "MINOR",
+                    "description": f"미회수 복선 {len(warning_pending)}개가 5개 Arc 이상 방치됨",
+                }
+            )
 
         foreshadow_keywords = ["암시", "복선", "떡밥", "비밀", "예언", "숨겨진"]
         detected_foreshadows = [kw for kw in foreshadow_keywords if kw in content]
@@ -293,9 +285,7 @@ class ContinuityTrackerIntegration:
 
         return {"warnings": warnings, "details": details}
 
-    def _check_state_with_tracker(
-        self, arc: int, episode: int, content: str
-    ) -> Dict[str, Any]:
+    def _check_state_with_tracker(self, arc: int, episode: int, content: str) -> dict[str, Any]:
         """StateDeltaTracker를 사용한 내공/부상 상태 검증"""
         warnings = []
         details = {}
@@ -318,33 +308,18 @@ class ContinuityTrackerIntegration:
 
         if energy_delta != 0:
             result = self._ci.state_tracker.apply_energy_delta(
-                arc=arc,
-                episode=episode,
-                delta=energy_delta,
-                reason="자동 탐지"
+                arc=arc, episode=episode, delta=energy_delta, reason="자동 탐지"
             )
             if result.get("warning"):
-                warnings.append({
-                    "type": "energy_warning",
-                    "severity": "MINOR",
-                    "description": result["warning"]
-                })
+                warnings.append({"type": "energy_warning", "severity": "MINOR", "description": result["warning"]})
             details["energy"] = result
 
         if injury_level != "정상":
             result = self._ci.state_tracker.apply_injury(
-                arc=arc,
-                episode=episode,
-                level=injury_level,
-                body_part="전신",
-                cause="자동 탐지"
+                arc=arc, episode=episode, level=injury_level, body_part="전신", cause="자동 탐지"
             )
             if result.get("warning"):
-                warnings.append({
-                    "type": "injury_warning",
-                    "severity": "MINOR",
-                    "description": result["warning"]
-                })
+                warnings.append({"type": "injury_warning", "severity": "MINOR", "description": result["warning"]})
             details["injury"] = result
 
         details["current_energy"] = self._ci.state_tracker.get_current_energy()
@@ -352,7 +327,7 @@ class ContinuityTrackerIntegration:
 
         return {"warnings": warnings, "details": details}
 
-    def load_trackers_from_db(self, arcs_data: List[Dict] = None) -> Dict[str, int]:
+    def load_trackers_from_db(self, arcs_data: list[dict] = None) -> dict[str, int]:
         """
         [V49.7] DB에서 트래커 상태 로드
 
@@ -365,11 +340,7 @@ class ContinuityTrackerIntegration:
         if not self._ci.v49_7_enabled:
             return {"error": "V49.7 modules not available"}
 
-        results = {
-            "foreshadowings": 0,
-            "relationships": 0,
-            "power_entries": 0
-        }
+        results = {"foreshadowings": 0, "relationships": 0, "power_entries": 0}
 
         if arcs_data is None:
             try:
@@ -392,10 +363,7 @@ class ContinuityTrackerIntegration:
                 arc_end = state_constraints.get("arc_end_state", {})
                 if "power_level" in arc_end:
                     self._ci.power_tracker.set_power(
-                        character=protagonist,
-                        arc=arc_no,
-                        power=arc_end.get("power_level", 30),
-                        reason="Arc 종료 상태"
+                        character=protagonist, arc=arc_no, power=arc_end.get("power_level", 30), reason="Arc 종료 상태"
                     )
                     results["power_entries"] += 1
 
@@ -410,7 +378,7 @@ class ContinuityTrackerIntegration:
                             from_state=change.get("from", "무시"),
                             to_state=change.get("to", "무시"),
                             trigger=change.get("trigger", ""),
-                            justification=change.get("justification", "")
+                            justification=change.get("justification", ""),
                         )
                         results["relationships"] += 1
 

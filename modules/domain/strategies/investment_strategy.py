@@ -1,30 +1,32 @@
 from .base_strategy import BaseStrategy
 
+
 class InvestmentStrategy(BaseStrategy):
     @property
-    def genre_name(self): return "INVESTMENT"
+    def genre_name(self):
+        return "INVESTMENT"
 
     def get_system_prompt(self) -> str:
-        genre_rules = self.law.get('investment', {})
-        
+        genre_rules = self.law.get("investment", {})
+
         # 1. 컨텍스트 및 선택된 톤(Tone) 인출
-        ctx = self.studio.project 
-        
-        selected_tone = getattr(ctx, 'selected_tone', {}) 
-        tone_name = selected_tone.get('name', '일반 투자물')
-        tone_guide = selected_tone.get('writer', '긴장감 넘치는 금융 전쟁의 문체') 
+        ctx = self.studio.project
+
+        selected_tone = getattr(ctx, "selected_tone", {})
+        tone_name = selected_tone.get("name", "일반 투자물")
+        tone_guide = selected_tone.get("writer", "긴장감 넘치는 금융 전쟁의 문체")
 
         # 2. 주인공 정보 인출
-        bible_root = ctx.master_bible.get('MasterBible', ctx.master_bible)
-        hud = bible_root.get('FinanceHUD', bible_root.get('finance_hud', {}))
-        protagonist = hud.get('Protagonist', hud.get('main', {}))
-        
-        mc_name = protagonist.get('Name', protagonist.get('name', '투자자'))
-        mc_desc = protagonist.get('description', '야심찬 투자자')
-        
+        bible_root = ctx.master_bible.get("MasterBible", ctx.master_bible)
+        hud = bible_root.get("FinanceHUD", bible_root.get("finance_hud", {}))
+        protagonist = hud.get("Protagonist", hud.get("main", {}))
+
+        mc_name = protagonist.get("Name", protagonist.get("name", "투자자"))
+        mc_desc = protagonist.get("description", "야심찬 투자자")
+
         return f"""
         [INVESTMENT GENRE GUIDELINE]
-        1. 장르 필수 요소: {', '.join(genre_rules.get('mandatory', []))}
+        1. 장르 필수 요소: {", ".join(genre_rules.get("mandatory", []))}
         2. 주인공: {mc_name} ({mc_desc})
         
         [📜 세부 집필 톤(Tone) 지침: {tone_name}]

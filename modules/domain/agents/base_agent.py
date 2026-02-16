@@ -7,9 +7,9 @@ import threading
 import time
 from pathlib import Path
 
+import yaml
 from google import genai
 from google.genai import types
-import yaml
 
 # [V44] 에스케이프 유틸리티 임포트
 try:
@@ -123,8 +123,9 @@ _SYSTEM_CFG = _load_system_config()
 
 class BaseAgent:
     # [V60.27] Thinking Level → Budget 변환 맵 (Gemini 3 API)
-    THINKING_BUDGET_MAP = _SYSTEM_CFG.get("thinking_budget_map",
-        {"minimal": 1024, "low": 4096, "medium": 8192, "high": 16384, "maximum": 24576})
+    THINKING_BUDGET_MAP = _SYSTEM_CFG.get(
+        "thinking_budget_map", {"minimal": 1024, "low": 4096, "medium": 8192, "high": 16384, "maximum": 24576}
+    )
 
     # [V60.37] 모델별 폴백 체인 정의 (할당량 초과 시)
     # [V62.1] 2.5-pro가 최종 폴백 (2.5-flash 폴백 제거 - 품질 하한선 보장)

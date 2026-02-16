@@ -12,11 +12,10 @@
 
 import json
 import logging
-import re
-from typing import Dict, List, Any, Optional, Tuple
-from .base_agent import BaseAgent
+
 from modules.core.arc_summary_utils import generate_prev_arc_summary  # [V64.P4]
 
+from .base_agent import BaseAgent
 
 ARC_CRITIQUE_PROMPT = """
 [V60.12 ARC CRITIC - 생성 Arc 즉시 비평]
@@ -133,12 +132,7 @@ class ArcCritic(BaseAgent):
         super().__init__(context, client, model_tier)
         # [V60.37] 스마트 폴백 (BaseAgent에서 자동 설정)
 
-    def critique(
-        self,
-        generated_arc: Dict,
-        prev_arcs: List[Dict],
-        constraints: str = ""
-    ) -> Tuple[Dict, Dict]:
+    def critique(self, generated_arc: dict, prev_arcs: list[dict], constraints: str = "") -> tuple[dict, dict]:
         """
         Arc 비평 및 자동 수정
 
@@ -156,7 +150,7 @@ class ArcCritic(BaseAgent):
         prompt = ARC_CRITIQUE_PROMPT.format(
             generated_arc=self._escape_braces(json.dumps(generated_arc, ensure_ascii=False, indent=2)[:6000]),
             prev_arc_summary=self._escape_braces(prev_summary),
-            constraints=self._escape_braces(constraints[:3000] if constraints else "(없음)")
+            constraints=self._escape_braces(constraints[:3000] if constraints else "(없음)"),
         )
 
         try:
@@ -179,11 +173,11 @@ class ArcCritic(BaseAgent):
             # 폴백: Python 기반 간단 검증
             return self._python_critique_fallback(generated_arc, prev_arcs), generated_arc
 
-    def _generate_prev_summary(self, prev_arcs: List[Dict]) -> str:
+    def _generate_prev_summary(self, prev_arcs: list[dict]) -> str:
         """[V64.P4] 위임 → modules.core.arc_summary_utils.generate_prev_arc_summary"""
         return generate_prev_arc_summary(prev_arcs, include_energy=False)
 
-    def _ensure_critique_fields(self, result: Dict) -> Dict:
+    def _ensure_critique_fields(self, result: dict) -> dict:
         """비평 결과 필수 필드 보장"""
         if "scores" not in result:
             result["scores"] = {}
@@ -216,7 +210,7 @@ class ArcCritic(BaseAgent):
 
         return result
 
-    def _apply_auto_fixes(self, arc: Dict, critique: Dict) -> Dict:
+    def _apply_auto_fixes(self, arc: dict, critique: dict) -> dict:
         """자동 수정 적용"""
         fixed = json.loads(json.dumps(arc))  # Deep copy
 
@@ -237,7 +231,9 @@ class ArcCritic(BaseAgent):
             for key, value in auto_fixes["state_constraints"].items():
                 old_value = fixed["state_constraints"].get(key)
                 if old_value != value:
-                    logging.info(f"⚠️ [V60.73] state_constraints 자동 수정: {key}: {old_value} → {value} (tactical_doc 불일치 주의)")
+                    logging.info(
+                        f"⚠️ [V60.73] state_constraints 자동 수정: {key}: {old_value} → {value} (tactical_doc 불일치 주의)"
+                    )
                 fixed["state_constraints"][key] = value
 
         # items_acquired 수정 (중복 제거)
@@ -249,7 +245,7 @@ class ArcCritic(BaseAgent):
 
         return fixed
 
-    def _python_critique_fallback(self, arc: Dict, prev_arcs: List[Dict]) -> Dict:
+    def _python_critique_fallback(self, arc: dict, prev_arcs: list[dict]) -> dict:
         """LLM 실패 시 Python 폴백 비평"""
         issues = []
         warnings = []
@@ -261,29 +257,26 @@ class ArcCritic(BaseAgent):
         if not isinstance(tactical, str):
             tactical = str(tactical) if tactical else ""
         if len(tactical) < 2000:
-            issues.append({
-                "category": "tactical_quality",
-                "severity": "HIGH",
-                "issue": f"tactical_doc 분량 부족: {len(tactical)}자",
-                "fix_instruction": "최소 2000자 이상 작성 필요"
-            })
+            issues.append(
+                {
+                    "category": "tactical_quality",
+                    "severity": "HIGH",
+                    "issue": f"tactical_doc 분량 부족: {len(tactical)}자",
+                    "fix_instruction": "최소 2000자 이상 작성 필요",
+                }
+            )
             score -= 15
         elif len(tactical) < 3000:
-            warnings.append({
-                "category": "tactical_quality",
-                "issue": f"tactical_doc 분량 미흡: {len(tactical)}자 (권장: 3000자)"
-            })
+            warnings.append(
+                {"category": "tactical_quality", "issue": f"tactical_doc 분량 미흡: {len(tactical)}자 (권장: 3000자)"}
+            )
             score -= 5
 
         # 2. 필수 필드 체크
         required = ["arc_no", "ep_count", "tactical_doc", "joint_docs", "state_constraints"]
         for field in required:
             if field not in arc or not arc[field]:
-                issues.append({
-                    "category": "structure",
-                    "severity": "HIGH",
-                    "issue": f"필수 필드 누락: {field}"
-                })
+                issues.append({"category": "structure", "severity": "HIGH", "issue": f"필수 필드 누락: {field}"})
                 score -= 10
 
         # 3. 중복 아이템 체크
@@ -298,14 +291,22 @@ class ArcCritic(BaseAgent):
             if isinstance(current_items, list):
                 duplicates = set(current_items) & all_prev_items
                 if duplicates:
-                    issues.append({
-                        "category": "item_continuity",
-                        "severity": "CRITICAL",
-                        "issue": f"중복 아이템 획득: {list(duplicates)}"
-                    })
+                    issues.append(
+                        {
+                            "category": "item_continuity",
+                            "severity": "CRITICAL",
+                            "issue": f"중복 아이템 획득: {list(duplicates)}",
+                        }
+                    )
                     score -= 20
 
-        verdict = "PASS" if score >= 70 and not any(i.get("severity") == "CRITICAL" for i in issues) else "NEEDS_REVISION" if score >= 50 else "REJECT"
+        verdict = (
+            "PASS"
+            if score >= 70 and not any(i.get("severity") == "CRITICAL" for i in issues)
+            else "NEEDS_REVISION"
+            if score >= 50
+            else "REJECT"
+        )
 
         return {
             "scores": {"overall": score},
@@ -314,18 +315,18 @@ class ArcCritic(BaseAgent):
             "critical_issues": issues,
             "warnings": warnings,
             "auto_fixes": {},
-            "revision_priority": []
+            "revision_priority": [],
         }
 
-    def should_regenerate(self, critique: Dict) -> bool:
+    def should_regenerate(self, critique: dict) -> bool:
         """재생성이 필요한지 판단"""
         return critique.get("verdict") == "REJECT"
 
-    def should_apply_fixes(self, critique: Dict) -> bool:
+    def should_apply_fixes(self, critique: dict) -> bool:
         """자동 수정 적용이 필요한지 판단"""
         return critique.get("verdict") == "NEEDS_REVISION" and bool(critique.get("auto_fixes"))
 
-    def get_revision_feedback(self, critique: Dict) -> str:
+    def get_revision_feedback(self, critique: dict) -> str:
         """재생성 시 피드백 생성"""
         lines = ["[ARC CRITIC 피드백 - 재생성 필요]", ""]
 

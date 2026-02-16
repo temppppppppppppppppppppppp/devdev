@@ -3,8 +3,8 @@
 
 전투 씬의 동선 명확성, 전투력 일관성, 긴장감 상승을 평가합니다.
 """
+
 import re
-from typing import Dict, List, Any, Tuple
 
 
 class ActionSceneEvaluator:
@@ -19,44 +19,109 @@ class ActionSceneEvaluator:
     # 장르별 액션 키워드
     ACTION_KEYWORDS = {
         "wuxia": [
-            "검", "도", "창", "권", "장", "각",
-            "초식", "내공", "기공", "검기", "도기", "장풍",
-            "공격", "방어", "피", "회피", "격돌", "충돌",
-            "일격", "연타", "반격", "카운터", "막"
+            "검",
+            "도",
+            "창",
+            "권",
+            "장",
+            "각",
+            "초식",
+            "내공",
+            "기공",
+            "검기",
+            "도기",
+            "장풍",
+            "공격",
+            "방어",
+            "피",
+            "회피",
+            "격돌",
+            "충돌",
+            "일격",
+            "연타",
+            "반격",
+            "카운터",
+            "막",
         ],
         "hunter": [
-            "스킬", "마나", "데미지", "HP", "MP",
-            "공격", "방어", "회피", "크리티컬", "버프", "디버프",
-            "소환", "시전", "캐스팅", "쿨타임"
+            "스킬",
+            "마나",
+            "데미지",
+            "HP",
+            "MP",
+            "공격",
+            "방어",
+            "회피",
+            "크리티컬",
+            "버프",
+            "디버프",
+            "소환",
+            "시전",
+            "캐스팅",
+            "쿨타임",
         ],
-        "investment": [
-            "협상", "거래", "계약", "인수", "매각",
-            "압박", "설득", "협박", "회유", "포위"
-        ]
+        "investment": ["협상", "거래", "계약", "인수", "매각", "압박", "설득", "협박", "회유", "포위"],
     }
 
     # 공간 인식 키워드
     SPATIAL_KEYWORDS = [
-        "앞", "뒤", "좌", "우", "위", "아래",
-        "옆", "가운데", "중앙", "구석", "모서리",
-        "거리", "간격", "보", "장", "척",
-        "다가", "물러", "뛰어", "날아", "구르"
+        "앞",
+        "뒤",
+        "좌",
+        "우",
+        "위",
+        "아래",
+        "옆",
+        "가운데",
+        "중앙",
+        "구석",
+        "모서리",
+        "거리",
+        "간격",
+        "보",
+        "장",
+        "척",
+        "다가",
+        "물러",
+        "뛰어",
+        "날아",
+        "구르",
     ]
 
     # 결과 명시 키워드
     OUTCOME_KEYWORDS = [
-        "맞", "피", "베", "찔", "관통", "스쳐",
-        "막", "피하", "회피", "튕겨", "흘려",
-        "쓰러", "무릎", "비틀", "휘청", "후퇴",
-        "상처", "피", "부상", "골절", "기절",
-        "격파", "파괴", "분쇄", "박살"
+        "맞",
+        "피",
+        "베",
+        "찔",
+        "관통",
+        "스쳐",
+        "막",
+        "피하",
+        "회피",
+        "튕겨",
+        "흘려",
+        "쓰러",
+        "무릎",
+        "비틀",
+        "휘청",
+        "후퇴",
+        "상처",
+        "피",
+        "부상",
+        "골절",
+        "기절",
+        "격파",
+        "파괴",
+        "분쇄",
+        "박살",
     ]
 
     # [V44] 장르별 액션 씬 감지 임계값 (100자당 키워드 수)
     ACTION_DENSITY_THRESHOLDS = {
-        "wuxia": 1.0,      # 무협: 물리적 액션이 밀집
-        "hunter": 0.8,     # 헌터: 스킬+액션 혼합
-        "investment": 0.5  # 투자: 심리전/협상은 밀도 낮음
+        "wuxia": 1.0,  # 무협: 물리적 액션이 밀집
+        "hunter": 0.8,  # 헌터: 스킬+액션 혼합
+        "investment": 0.5,  # 투자: 심리전/협상은 밀도 낮음
     }
 
     def __init__(self, genre: str = "wuxia"):
@@ -67,7 +132,7 @@ class ActionSceneEvaluator:
         self.genre = genre
         self.action_density_threshold = self.ACTION_DENSITY_THRESHOLDS.get(genre, 1.0)
 
-    def evaluate(self, manuscript: str, context: Dict = None) -> Dict:
+    def evaluate(self, manuscript: str, context: dict = None) -> dict:
         """
         액션 씬 종합 평가
 
@@ -97,7 +162,7 @@ class ActionSceneEvaluator:
                 "power_consistency": {"score": 10, "message": "액션 씬 없음"},
                 "stakes_escalation": {"score": 10, "message": "액션 씬 없음"},
                 "action_scene_count": 0,
-                "suggestions": []
+                "suggestions": [],
             }
 
         # 세부 평가
@@ -108,9 +173,9 @@ class ActionSceneEvaluator:
         # 종합 점수 (가중 평균)
         weights = {"choreography": 0.4, "power_consistency": 0.3, "stakes_escalation": 0.3}
         total_score = (
-            choreography["score"] * weights["choreography"] +
-            power_consistency["score"] * weights["power_consistency"] +
-            stakes_escalation["score"] * weights["stakes_escalation"]
+            choreography["score"] * weights["choreography"]
+            + power_consistency["score"] * weights["power_consistency"]
+            + stakes_escalation["score"] * weights["stakes_escalation"]
         )
 
         # 개선 제안 수집
@@ -129,10 +194,10 @@ class ActionSceneEvaluator:
             "power_consistency": power_consistency,
             "stakes_escalation": stakes_escalation,
             "action_scene_count": len(action_scenes),
-            "suggestions": suggestions
+            "suggestions": suggestions,
         }
 
-    def evaluate_choreography(self, action_scenes: List[str]) -> Dict:
+    def evaluate_choreography(self, action_scenes: list[str]) -> dict:
         """
         전투 동선 명확성 평가
 
@@ -156,19 +221,19 @@ class ActionSceneEvaluator:
             spatial_clarity = self._check_spatial_clarity(scene)
             spatial_scores.append(spatial_clarity)
             if spatial_clarity < 0.5:
-                issues.append(f"씬 {i+1}: 공간 배치 불명확")
+                issues.append(f"씬 {i + 1}: 공간 배치 불명확")
 
             # 2. 동작 연결성 체크
             continuity = self._check_action_continuity(scene)
             continuity_scores.append(continuity)
             if continuity < 0.5:
-                issues.append(f"씬 {i+1}: 동작 연결 부자연스러움")
+                issues.append(f"씬 {i + 1}: 동작 연결 부자연스러움")
 
             # 3. 결과 명시 체크
             outcome_clarity = self._check_outcome_clarity(scene)
             outcome_scores.append(outcome_clarity)
             if outcome_clarity < 0.5:
-                issues.append(f"씬 {i+1}: 공격 결과 불명확")
+                issues.append(f"씬 {i + 1}: 공격 결과 불명확")
 
         # 평균 점수 계산
         avg_spatial = sum(spatial_scores) / len(spatial_scores) if spatial_scores else 0.5
@@ -183,11 +248,11 @@ class ActionSceneEvaluator:
             "details": {
                 "spatial_clarity": round(avg_spatial, 2),
                 "action_continuity": round(avg_continuity, 2),
-                "outcome_clarity": round(avg_outcome, 2)
-            }
+                "outcome_clarity": round(avg_outcome, 2),
+            },
         }
 
-    def evaluate_power_consistency(self, manuscript: str, context: Dict) -> Dict:
+    def evaluate_power_consistency(self, manuscript: str, context: dict) -> dict:
         """
         전투력 일관성 평가
 
@@ -208,14 +273,10 @@ class ActionSceneEvaluator:
         techniques_used = self._extract_techniques(manuscript)
 
         if not techniques_used:
-            return {
-                "score": 10,
-                "inconsistencies": [],
-                "techniques_used": []
-            }
+            return {"score": 10, "inconsistencies": [], "techniques_used": []}
 
         inconsistencies = []
-        technique_effects = context.get('technique_effects', {})
+        technique_effects = context.get("technique_effects", {})
 
         for tech in techniques_used:
             historical_effect = technique_effects.get(tech)
@@ -223,21 +284,15 @@ class ActionSceneEvaluator:
                 current_effect = self._analyze_technique_effect(manuscript, tech)
 
                 if current_effect and self._effects_differ(historical_effect, current_effect):
-                    inconsistencies.append({
-                        "technique": tech,
-                        "historical": historical_effect,
-                        "current": current_effect
-                    })
+                    inconsistencies.append(
+                        {"technique": tech, "historical": historical_effect, "current": current_effect}
+                    )
 
         score = 10 - min(len(inconsistencies) * 2, 8)
 
-        return {
-            "score": max(2, score),
-            "inconsistencies": inconsistencies,
-            "techniques_used": list(techniques_used)
-        }
+        return {"score": max(2, score), "inconsistencies": inconsistencies, "techniques_used": list(techniques_used)}
 
-    def evaluate_stakes_escalation(self, action_scenes: List[str]) -> Dict:
+    def evaluate_stakes_escalation(self, action_scenes: list[str]) -> dict:
         """
         전투 긴장감 상승 평가
 
@@ -267,8 +322,7 @@ class ActionSceneEvaluator:
             overall_escalation = stakes_curve[-1] >= stakes_curve[0]
 
             # 중간에 급격히 떨어지는 구간이 있는지
-            drops = sum(1 for i in range(len(stakes_curve)-1)
-                       if stakes_curve[i+1] < stakes_curve[i] * 0.7)
+            drops = sum(1 for i in range(len(stakes_curve) - 1) if stakes_curve[i + 1] < stakes_curve[i] * 0.7)
 
             is_escalating = overall_escalation and drops <= 1
         else:
@@ -281,20 +335,20 @@ class ActionSceneEvaluator:
             "score": score,
             "stakes_curve": [round(s, 2) for s in stakes_curve],
             "is_escalating": is_escalating,
-            "suggestion": suggestion
+            "suggestion": suggestion,
         }
 
     # ========================================================================
     # Private Helper Methods
     # ========================================================================
 
-    def _extract_action_scenes(self, manuscript: str) -> List[str]:
+    def _extract_action_scenes(self, manuscript: str) -> list[str]:
         """원고에서 액션 씬 추출"""
         # 액션 키워드 밀도가 높은 구간 추출
         action_keywords = self.ACTION_KEYWORDS.get(self.genre, self.ACTION_KEYWORDS["wuxia"])
 
         # 문단 단위로 분리
-        paragraphs = manuscript.split('\n\n')
+        paragraphs = manuscript.split("\n\n")
 
         action_scenes = []
         for para in paragraphs:
@@ -325,7 +379,7 @@ class ActionSceneEvaluator:
         connector_count = sum(1 for c in connectors if c in scene)
 
         # 문장 전환 체크 (마침표 수)
-        sentence_count = scene.count('.') + scene.count('!') + scene.count('?')
+        sentence_count = scene.count(".") + scene.count("!") + scene.count("?")
 
         if sentence_count <= 1:
             return 0.5  # 문장이 하나면 연결성 판단 불가
@@ -344,7 +398,7 @@ class ActionSceneEvaluator:
     def _extract_techniques(self, manuscript: str) -> set:
         """사용된 기술명 추출"""
         # 한글 기술명 패턴 (XX공, XX법, XX술, XX검, XX도, XX권, XX장, XX각)
-        pattern = r'[가-힣]{2,6}(?:공|법|술|검|도|권|장|각|식|초)'
+        pattern = r"[가-힣]{2,6}(?:공|법|술|검|도|권|장|각|식|초)"
         techniques = set(re.findall(pattern, manuscript))
         return techniques
 
@@ -375,8 +429,9 @@ class ActionSceneEvaluator:
         current_power = [kw for kw in power_keywords if kw in current]
 
         # 극단적 차이 감지 (강력 vs 약한 등)
-        if ("강력" in historical_power and "약한" in current_power) or \
-           ("약한" in historical_power and "강력" in current_power):
+        if ("강력" in historical_power and "약한" in current_power) or (
+            "약한" in historical_power and "강력" in current_power
+        ):
             return True
 
         return False
@@ -393,7 +448,7 @@ class ActionSceneEvaluator:
         low_count = sum(1 for kw in low_stakes if kw in scene)
 
         # 가중 점수
-        score = (high_count * 1.0 + medium_count * 0.5 - low_count * 0.3)
+        score = high_count * 1.0 + medium_count * 0.5 - low_count * 0.3
 
         # 0~1 정규화
         normalized = max(0.0, min(1.0, (score + 2) / 5))

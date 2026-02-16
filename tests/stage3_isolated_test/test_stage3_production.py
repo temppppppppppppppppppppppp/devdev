@@ -1,18 +1,15 @@
-# -*- coding: utf-8 -*-
 """
 [V60.80] Stage 3 Production Test - 실전 동일 환경
 목표: 제1화~제10화 (Arc 1-2) Blueprint 생성
 """
 
-import os
-import sys
 import io
-
 import json
+import os
 import sqlite3
-from pathlib import Path
-from typing import Dict, Any, Optional, List
+import sys
 from datetime import datetime
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -68,14 +65,14 @@ class ProductionContext:
         conn.close()
 
         # MasterBible 추출
-        self.master_bible = self.bible.get('MasterBible', {})
-        self.martial_hud = self.master_bible.get('MartialHUD', {})
-        self.world_state = self.master_bible.get('WorldState', {})
-        self.asset_library = self.master_bible.get('AssetLibrary', {})
+        self.master_bible = self.bible.get("MasterBible", {})
+        self.martial_hud = self.master_bible.get("MartialHUD", {})
+        self.world_state = self.master_bible.get("WorldState", {})
+        self.asset_library = self.master_bible.get("AssetLibrary", {})
 
         # 주인공 정보
-        protagonist_data = self.martial_hud.get('Protagonist', {}).get('actual_truth', {})
-        self.protagonist_name = protagonist_data.get('name', '주인공')
+        protagonist_data = self.martial_hud.get("Protagonist", {}).get("actual_truth", {})
+        self.protagonist_name = protagonist_data.get("name", "주인공")
 
     def _load_configs(self):
         """Config JSON 로드"""
@@ -84,37 +81,37 @@ class ProductionContext:
         # settings.json
         settings_path = self.config_root / "settings.json"
         if settings_path.exists():
-            with open(settings_path, 'r', encoding='utf-8') as f:
-                self.configs['settings'] = json.load(f)
+            with open(settings_path, encoding="utf-8") as f:
+                self.configs["settings"] = json.load(f)
 
         # tone_presets.json
         tone_path = self.config_root / "tone_presets.json"
         if tone_path.exists():
-            with open(tone_path, 'r', encoding='utf-8') as f:
-                self.configs['tone_presets'] = json.load(f)
+            with open(tone_path, encoding="utf-8") as f:
+                self.configs["tone_presets"] = json.load(f)
 
         # writer_rules.json
         writer_rules_path = self.config_root / "prompts" / "writer_rules.json"
         if writer_rules_path.exists():
-            with open(writer_rules_path, 'r', encoding='utf-8') as f:
-                self.configs['writer_rules'] = json.load(f)
+            with open(writer_rules_path, encoding="utf-8") as f:
+                self.configs["writer_rules"] = json.load(f)
 
         # architect_rules.json
         arch_rules_path = self.config_root / "prompts" / "architect_rules.json"
         if arch_rules_path.exists():
-            with open(arch_rules_path, 'r', encoding='utf-8') as f:
-                self.configs['architect_rules'] = json.load(f)
+            with open(arch_rules_path, encoding="utf-8") as f:
+                self.configs["architect_rules"] = json.load(f)
 
         # style_seeds (카카오 문체)
         style_path = self.config_root / "cash" / "style_seeds_final.txt"
         if style_path.exists():
-            with open(style_path, 'r', encoding='utf-8') as f:
-                self.configs['style_seeds'] = f.read()
+            with open(style_path, encoding="utf-8") as f:
+                self.configs["style_seeds"] = f.read()
 
-    def get_blueprint(self, ep_num: int) -> Optional[Dict]:
+    def get_blueprint(self, ep_num: int) -> dict | None:
         return self._blueprints.get(ep_num)
 
-    def save_episode_blueprint(self, ep_num: int, blueprint: Dict):
+    def save_episode_blueprint(self, ep_num: int, blueprint: dict):
         self._blueprints[ep_num] = blueprint
 
     def get_causal_history_summary(self) -> str:
@@ -125,8 +122,8 @@ class ProductionContext:
         summaries = []
         for ep_num in sorted(self._blueprints.keys()):
             bp = self._blueprints[ep_num]
-            title = bp.get('title', f'제{ep_num}화')
-            ending = bp.get('ending_hook', '')[:100]
+            title = bp.get("title", f"제{ep_num}화")
+            ending = bp.get("ending_hook", "")[:100]
             summaries.append(f"제{ep_num}화 [{title}]: {ending}")
 
         return "\n".join(summaries[-5:])  # 최근 5개
@@ -134,8 +131,8 @@ class ProductionContext:
     def get_arc_for_episode(self, ep_num: int) -> tuple:
         """에피소드에 해당하는 Arc 찾기"""
         for idx, arc in enumerate(self.arcs):
-            ep_start = arc.get('ep_start', 0)
-            ep_end = arc.get('ep_end', 0)
+            ep_start = arc.get("ep_start", 0)
+            ep_end = arc.get("ep_end", 0)
             if ep_start <= ep_num <= ep_end:
                 return idx, arc
         return None, None
@@ -150,13 +147,13 @@ def setup_environment():
     env_path = SOURCE_PROJECT / ".env"
     if env_path.exists():
         load_dotenv(env_path)
-        print(f"  [OK] .env")
+        print("  [OK] .env")
 
     api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
         print("  [FAIL] GOOGLE_API_KEY 없음")
         return False
-    print(f"  [OK] API Key")
+    print("  [OK] API Key")
     return True
 
 
@@ -169,21 +166,22 @@ def print_context_summary(ctx: ProductionContext):
     print(f"  Encyclopedia: {len(ctx.encyclopedia)}개 항목")
     print(f"  주인공: {ctx.protagonist_name}")
     print(f"  Configs: {list(ctx.configs.keys())}")
-    if 'style_seeds' in ctx.configs:
+    if "style_seeds" in ctx.configs:
         print(f"  카카오 문체: {len(ctx.configs['style_seeds']):,} bytes")
     print("-" * 50)
 
 
-def run_production_test(ctx: ProductionContext, target_episodes: List[int]):
+def run_production_test(ctx: ProductionContext, target_episodes: list[int]):
     """실전 동일 테스트 실행"""
     print("\n" + "=" * 70)
-    print(f"[Test] Stage 3 Production Test")
+    print("[Test] Stage 3 Production Test")
     print(f"       목표: 제{target_episodes[0]}화 ~ 제{target_episodes[-1]}화 ({len(target_episodes)}개)")
     print("=" * 70)
 
     from google import genai
-    from modules.domain.agents.three_phase_blueprint_generator import ThreePhaseBlueprintGenerator
+
     from modules.domain.agents.director import Director
+    from modules.domain.agents.three_phase_blueprint_generator import ThreePhaseBlueprintGenerator
 
     # API 클라이언트
     client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
@@ -192,15 +190,15 @@ def run_production_test(ctx: ProductionContext, target_episodes: List[int]):
     three_phase = ThreePhaseBlueprintGenerator(ctx, client, model_tier="gemini-2.5-flash")
     director = Director(ctx, client, model_tier="gemini-2.5-flash")
 
-    print(f"\n  [OK] 에이전트 생성")
-    print(f"  [INFO] 모델: gemini-2.5-flash")
+    print("\n  [OK] 에이전트 생성")
+    print("  [INFO] 모델: gemini-2.5-flash")
 
     # 결과 추적
     results = {
         "start_time": datetime.now().isoformat(),
         "target_episodes": target_episodes,
         "results": {},
-        "summary": {"total": len(target_episodes), "pass": 0, "fail": 0}
+        "summary": {"total": len(target_episodes), "pass": 0, "fail": 0},
     }
 
     prev_blueprint = None
@@ -214,7 +212,7 @@ def run_production_test(ctx: ProductionContext, target_episodes: List[int]):
             results["results"][ep_num] = {"status": "SKIP", "reason": "No Arc"}
             continue
 
-        arc_no = arc_data.get('arc_no', arc_idx + 1)
+        arc_no = arc_data.get("arc_no", arc_idx + 1)
 
         print(f"\n{'─' * 60}")
         print(f"  제{ep_num}화 (Arc {arc_no}) 생성 중...")
@@ -228,7 +226,7 @@ def run_production_test(ctx: ProductionContext, target_episodes: List[int]):
                 prev_blueprints=prev_blueprints[-5:] if prev_blueprints else None,
                 max_retries=2,  # 총 3번 시도
                 director=director,
-                arc_idx=arc_idx
+                arc_idx=arc_idx,
             )
 
             if blueprint and pipeline_result.get("final_verdict") == "PASS":
@@ -238,12 +236,14 @@ def run_production_test(ctx: ProductionContext, target_episodes: List[int]):
                     "title": blueprint.get("title", "?"),
                     "scenes": len(blueprint.get("scene_breakdown", {})),
                     "length": len(blueprint.get("integrated_scenario", "")),
-                    "retries": pipeline_result.get("retries", 0)
+                    "retries": pipeline_result.get("retries", 0),
                 }
 
                 print(f"  [PASS] 제{ep_num}화 - {blueprint.get('title', '?')}")
-                print(f"         씬: {len(blueprint.get('scene_breakdown', {}))}개, "
-                      f"길이: {len(blueprint.get('integrated_scenario', ''))}자")
+                print(
+                    f"         씬: {len(blueprint.get('scene_breakdown', {}))}개, "
+                    f"길이: {len(blueprint.get('integrated_scenario', ''))}자"
+                )
 
                 # 다음 화를 위해 저장
                 ctx.save_episode_blueprint(ep_num, blueprint)
@@ -255,7 +255,7 @@ def run_production_test(ctx: ProductionContext, target_episodes: List[int]):
                 results["results"][ep_num] = {
                     "status": "FAIL",
                     "verdict": pipeline_result.get("final_verdict", "?"),
-                    "retries": pipeline_result.get("retries", 0)
+                    "retries": pipeline_result.get("retries", 0),
                 }
                 print(f"  [FAIL] 제{ep_num}화 - {pipeline_result.get('final_verdict', '?')}")
 
@@ -264,6 +264,7 @@ def run_production_test(ctx: ProductionContext, target_episodes: List[int]):
             results["results"][ep_num] = {"status": "ERROR", "error": str(e)[:200]}
             print(f"  [ERROR] 제{ep_num}화 - {str(e)[:100]}")
             import traceback
+
             traceback.print_exc()
 
     # 최종 요약
@@ -278,9 +279,9 @@ def run_production_test(ctx: ProductionContext, target_episodes: List[int]):
     print(f"  성공률: {results['summary']['pass'] / results['summary']['total'] * 100:.1f}%")
 
     # Generator 통계
-    if hasattr(three_phase, 'get_stats'):
+    if hasattr(three_phase, "get_stats"):
         stats = three_phase.get_stats()
-        print(f"\n  [Generator 통계]")
+        print("\n  [Generator 통계]")
         print(f"    Phase 1: {stats.get('phase1_complete', 0)}회")
         print(f"    Phase 2: {stats.get('phase2_complete', 0)}회")
         print(f"    Phase 3 PASS: {stats.get('phase3_pass', 0)}회")
@@ -300,10 +301,7 @@ def main():
         return
 
     # 2. 컨텍스트 로드 (DB만 사용!)
-    ctx = ProductionContext(
-        db_path=SOURCE_PROJECT / "project_data.db",
-        config_root=PROJECT_ROOT / "config"
-    )
+    ctx = ProductionContext(db_path=SOURCE_PROJECT / "project_data.db", config_root=PROJECT_ROOT / "config")
     print_context_summary(ctx)
 
     # 3. 테스트 실행 (제1화~제10화)
@@ -313,19 +311,19 @@ def main():
 
     # 4. 결과 저장
     result_file = TEST_DIR / f"production_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    with open(result_file, 'w', encoding='utf-8') as f:
+    with open(result_file, "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=2, default=str)
     print(f"\n  [OK] 결과 저장: {result_file.name}")
 
     # 5. 성공한 Blueprint 저장
     if ctx._blueprints:
         bp_file = TEST_DIR / f"blueprints_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        with open(bp_file, 'w', encoding='utf-8') as f:
+        with open(bp_file, "w", encoding="utf-8") as f:
             json.dump(ctx._blueprints, f, ensure_ascii=False, indent=2, default=str)
         print(f"  [OK] Blueprint 저장: {bp_file.name}")
 
     print("\n" + "=" * 70)
-    success_rate = results['summary']['pass'] / results['summary']['total'] * 100
+    success_rate = results["summary"]["pass"] / results["summary"]["total"] * 100
     status = "SUCCESS" if success_rate >= 80 else "PARTIAL" if success_rate >= 50 else "FAILED"
     print(f"  테스트 완료! [{status}] 성공률: {success_rate:.1f}%")
     print("=" * 70)
@@ -333,7 +331,7 @@ def main():
 
 if __name__ == "__main__":
     # Windows UTF-8 출력 설정 (pytest 수집 시 capture 파괴 방지)
-    if sys.platform == 'win32':
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+    if sys.platform == "win32":
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
     main()

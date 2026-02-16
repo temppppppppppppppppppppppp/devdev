@@ -16,22 +16,24 @@
 - 적응형 임계값: 에피소드 히스토리/패턴 기반 동적 임계값 조정
 - 장르별/아크별 임계값 프로파일
 """
-from typing import Dict, List, Any, Optional, Tuple
-import logging
+
 import asyncio
 import concurrent.futures
+import logging
 from functools import partial
-from .continuity_validator import ContinuityValidator
-from .blocking_validator import BlockingValidator
-from .consistency_validator import ConsistencyValidator
-from .scoring_validator import ScoringValidator
-from .advisory_validator import AdvisoryValidator
-from .catharsis_timer import CatharsisTimer
+
 from .action_scene_evaluator import ActionSceneEvaluator
+from .advisory_validator import AdvisoryValidator
+from .blocking_validator import BlockingValidator
+from .catharsis_timer import CatharsisTimer
+from .consistency_validator import ConsistencyValidator
+from .continuity_validator import ContinuityValidator
+from .scoring_validator import ScoringValidator
 
 # [V56] Pre-LLM Validator (Python 기반 사전검증)
 try:
     from .pre_llm_validator import PreLLMValidator
+
     PRE_LLM_AVAILABLE = True
 except ImportError:
     PRE_LLM_AVAILABLE = False
@@ -44,25 +46,28 @@ CONSTITUTION_AVAILABLE = False
 
 try:
     from .retrospective_validator import RetrospectiveValidator
+
     RETROSPECTIVE_AVAILABLE = True
 except ImportError:
     logging.info("⚠️ [V60.1] RetrospectiveValidator 미설치 - 회고적 검증 비활성화")
 
 try:
     from modules.core.reflexion_manager import ReflexionManager
+
     REFLEXION_AVAILABLE = True
 except ImportError:
     logging.info("⚠️ [V60.1] ReflexionManager 미설치 - Reflexion 기반 개선 비활성화")
 
 try:
     from modules.core.quality_constitution import get_constitution_for_genre
+
     CONSTITUTION_AVAILABLE = True
 except ImportError:
     logging.info("⚠️ [V60.1] QualityConstitution 미설치 - 품질 헌법 비활성화")
 
 
 # [V44] Constitution 캐시 (모듈 레벨에서 관리)
-_CONSTITUTION_CACHE: Dict[str, str] = {}
+_CONSTITUTION_CACHE: dict[str, str] = {}
 
 # ═══════════════════════════════════════════════════════════════
 # [V59] 적응형 임계값 상수
@@ -75,22 +80,22 @@ GENRE_THRESHOLD_PROFILES = {
         "action_weight": 1.2,  # 액션씬 중시
         "dialogue_weight": 1.0,
         "emotion_weight": 1.1,
-        "commercial_weight": 1.0
+        "commercial_weight": 1.0,
     },
     "hunter": {
         "base_threshold": 68,
         "action_weight": 1.3,  # 액션씬 더 중시
         "dialogue_weight": 0.9,
         "emotion_weight": 1.0,
-        "commercial_weight": 1.2  # 상업성 중시
+        "commercial_weight": 1.2,  # 상업성 중시
     },
     "investment": {
         "base_threshold": 72,
         "action_weight": 0.8,  # 액션씬 덜 중요
         "dialogue_weight": 1.2,  # 대화 중시
         "emotion_weight": 1.2,  # 감정선 중시
-        "commercial_weight": 1.1
-    }
+        "commercial_weight": 1.1,
+    },
 }
 
 # [V59] 에피소드 유형별 임계값 조정
@@ -99,7 +104,7 @@ EPISODE_TYPE_ADJUSTMENTS = {
     "climax": {"threshold_delta": +3, "episode_pattern": lambda ep: ep % 50 in [48, 49, 0]},  # 클라이막스
     "transition": {"threshold_delta": -3, "episode_pattern": lambda ep: ep % 10 in [4, 5]},  # 전환부
     "arc_finale": {"threshold_delta": +5, "episode_pattern": lambda ep: ep % 5 == 0},  # 아크 마무리
-    "volume_finale": {"threshold_delta": +7, "episode_pattern": lambda ep: ep % 50 == 0}  # 권 마무리
+    "volume_finale": {"threshold_delta": +7, "episode_pattern": lambda ep: ep % 50 == 0},  # 권 마무리
 }
 
 # [V59] 연속 통과/실패에 따른 동적 조정
@@ -128,7 +133,7 @@ class ValidationOrchestrator:
     Self-Consistency (다수결 투표) 적용 가능.
     """
 
-    def __init__(self, config: dict, client=None, genre='wuxia', context=None):
+    def __init__(self, config: dict, client=None, genre="wuxia", context=None):
         self.config = config
         self.client = client
         self.genre = genre
@@ -141,9 +146,9 @@ class ValidationOrchestrator:
         # [V70] pov 전달: context에서 추출
         _pov = ""
         if context and isinstance(context, dict):
-            _pov = context.get('pov', '')
+            _pov = context.get("pov", "")
         self.pre_llm = PreLLMValidator(genre=genre, pov=_pov) if PRE_LLM_AVAILABLE else None
-        self.use_pre_llm = config.get('use_pre_llm', True)  # 기본 활성화
+        self.use_pre_llm = config.get("use_pre_llm", True)  # 기본 활성화
 
         # [V47] TIER 0.5: CONTINUITY (에피소드 간 연속성)
         self.continuity = ContinuityValidator(context=context)
@@ -155,55 +160,46 @@ class ValidationOrchestrator:
         self.consistency = ConsistencyValidator(genre=genre)
 
         # TIER 2: SCORING
-        scoring_model = config.get('scoring_model', 'gemini-2.5-pro')
-        self.scoring = ScoringValidator(
-            client=client,
-            model=scoring_model,
-            constitution=self.constitution
-        )
-        self.scoring.pass_threshold = config.get('scoring_threshold', 70)
+        scoring_model = config.get("scoring_model", "gemini-2.5-pro")
+        self.scoring = ScoringValidator(client=client, model=scoring_model, constitution=self.constitution)
+        self.scoring.pass_threshold = config.get("scoring_threshold", 70)
 
         # TIER 3: ADVISORY
-        advisory_model = config.get('advisory_model', 'gemini-2.5-flash')
-        self.advisory = AdvisoryValidator(
-            client=client,
-            model=advisory_model
-        )
+        advisory_model = config.get("advisory_model", "gemini-2.5-flash")
+        self.advisory = AdvisoryValidator(client=client, model=advisory_model)
 
         # Self-Consistency 설정
-        self.use_self_consistency = config.get('use_self_consistency', True)
-        self.consistency_votes = config.get('consistency_votes', 3)
+        self.use_self_consistency = config.get("use_self_consistency", True)
+        self.consistency_votes = config.get("consistency_votes", 3)
 
         # [V43] 추가 품질 평가 모듈
-        catharsis_max_gap = config.get('catharsis_max_gap', 3)
+        catharsis_max_gap = config.get("catharsis_max_gap", 3)
         self.catharsis_timer = CatharsisTimer(max_frustration=catharsis_max_gap, genre=genre)
         self.action_evaluator = ActionSceneEvaluator(genre=genre)
 
         # [Phase 3] 장기 일관성 검증 (선택적)
-        self.use_retrospective = config.get('use_retrospective', False)
+        self.use_retrospective = config.get("use_retrospective", False)
         self.retrospective = None  # Lazy initialization
 
         # [Phase 5.2.2] Reflexion 시스템 (선택적)
-        self.use_reflexion = config.get('use_reflexion', True)  # 기본 활성화
+        self.use_reflexion = config.get("use_reflexion", True)  # 기본 활성화
         self.reflexion = None  # Lazy initialization
 
         # ═══════════════════════════════════════════════════════════════
         # [V59] 병렬 검증 + 적응형 임계값 설정
         # ═══════════════════════════════════════════════════════════════
-        self.use_parallel_validation = config.get('use_parallel_validation', True)
-        self.use_adaptive_threshold = config.get('use_adaptive_threshold', True)
-        self.max_parallel_workers = config.get('max_parallel_workers', 3)
+        self.use_parallel_validation = config.get("use_parallel_validation", True)
+        self.use_adaptive_threshold = config.get("use_adaptive_threshold", True)
+        self.max_parallel_workers = config.get("max_parallel_workers", 3)
 
         # 적응형 임계값 히스토리 추적
-        self.validation_history: List[Dict] = []  # [{ep_num, score, passed, timestamp}]
+        self.validation_history: list[dict] = []  # [{ep_num, score, passed, timestamp}]
         self.consecutive_passes = 0
         self.consecutive_fails = 0
-        self.current_threshold = config.get('scoring_threshold', 70)
+        self.current_threshold = config.get("scoring_threshold", 70)
 
         # 장르별 프로파일 로드
-        self.threshold_profile = GENRE_THRESHOLD_PROFILES.get(
-            genre, GENRE_THRESHOLD_PROFILES["wuxia"]
-        )
+        self.threshold_profile = GENRE_THRESHOLD_PROFILES.get(genre, GENRE_THRESHOLD_PROFILES["wuxia"])
 
     def validate(self, ep_num: int, manuscript: str, validation_context: dict) -> dict:
         """
@@ -238,84 +234,84 @@ class ValidationOrchestrator:
         # [V56] TIER 0.25: PRE-LLM (Python 기반 사전검증, 비용 0원)
         # ═══════════════════════════════════════════════════════════════
         if self.use_pre_llm and self.pre_llm:
-            logging.info(f"[V56] TIER 0.25: PRE-LLM 검증 중...")
+            logging.info("[V56] TIER 0.25: PRE-LLM 검증 중...")
             pre_llm_result = self.pre_llm.validate(manuscript, validation_context)
-            results['pre_llm_result'] = pre_llm_result
+            results["pre_llm_result"] = pre_llm_result
 
-            if not pre_llm_result['passed']:
+            if not pre_llm_result["passed"]:
                 # 명백한 오류 시 즉시 REJECT (LLM 비용 절약)
                 logging.warning(f"❌ PRE-LLM 실패: {len(pre_llm_result['critical_issues'])}개 이슈")
-                for issue in pre_llm_result['critical_issues'][:3]:
-                    desc = issue.get('description', issue.get('category', 'Unknown'))
+                for issue in pre_llm_result["critical_issues"][:3]:
+                    desc = issue.get("description", issue.get("category", "Unknown"))
                     logging.info(f"- {desc}")
 
                 return {
                     "final_decision": "REJECT",
                     "reason": "PRE-LLM 사전검증 실패 - 명백한 오류 감지",
                     "pre_llm_result": pre_llm_result,
-                    "critical_issues": pre_llm_result['critical_issues'],
+                    "critical_issues": pre_llm_result["critical_issues"],
                     "total_score": 0,
                     "feedback": self._generate_pre_llm_feedback(pre_llm_result),
                     "self_consistency_used": False,
-                    "llm_cost_saved": True  # LLM 비용 절약 표시
+                    "llm_cost_saved": True,  # LLM 비용 절약 표시
                 }
 
             # 경고만 있는 경우
-            warning_count = len(pre_llm_result.get('warnings', []))
+            warning_count = len(pre_llm_result.get("warnings", []))
             if warning_count > 0:
                 logging.info(f"⚠️ PRE-LLM 경고: {warning_count}개 (점수 -{pre_llm_result['score_deduction']}점)")
             else:
-                logging.info(f"✅ PRE-LLM 통과")
+                logging.info("✅ PRE-LLM 통과")
 
         # ═══════════════════════════════════════════════════════════════
         # [V47] TIER 0.5: CONTINUITY (에피소드 간 연속성)
         # ═══════════════════════════════════════════════════════════════
-        logging.info(f"[V47] TIER 0.5: CONTINUITY 검증 중...")
+        logging.info("[V47] TIER 0.5: CONTINUITY 검증 중...")
         continuity_result = self.continuity.validate(ep_num, manuscript, validation_context)
-        results['continuity_result'] = continuity_result
+        results["continuity_result"] = continuity_result
 
-        if not continuity_result['passed']:
+        if not continuity_result["passed"]:
             # 연속성 위반 시 즉시 REJECT
             logging.warning(f"❌ CONTINUITY 실패: {len(continuity_result['violations'])}개 위반")
-            self._record_failure_to_reflexion(ep_num, 'continuity', continuity_result['violations'])
+            self._record_failure_to_reflexion(ep_num, "continuity", continuity_result["violations"])
 
             return {
                 "final_decision": "REJECT",
                 "reason": "CONTINUITY 검증 실패 - 에피소드 간 연속성 위반",
-                "violations": continuity_result['violations'],
+                "violations": continuity_result["violations"],
                 "continuity_result": continuity_result,
                 "total_score": 0,
                 "feedback": self._generate_continuity_feedback(continuity_result),
-                "self_consistency_used": False
+                "self_consistency_used": False,
             }
 
         # 경고만 있는 경우 로그
-        warning_count = continuity_result.get('warning_count', 0)
+        warning_count = continuity_result.get("warning_count", 0)
         if warning_count > 0:
             logging.info(f"⚠️ CONTINUITY 경고: {warning_count}개 (계속 진행)")
         else:
-            logging.info(f"✅ CONTINUITY 통과")
+            logging.info("✅ CONTINUITY 통과")
 
         # ═══════════════════════════════════════════════════════════════
         # TIER 1: BLOCKING (필수 통과)
         # ═══════════════════════════════════════════════════════════════
-        logging.info(f"[V0128] TIER 1: BLOCKING 검증 중...")
+        logging.info("[V0128] TIER 1: BLOCKING 검증 중...")
         blocking_result = self.blocking.validate(manuscript, validation_context)
-        results['blocking_result'] = blocking_result
+        results["blocking_result"] = blocking_result
 
-        if not blocking_result['passed']:
+        if not blocking_result["passed"]:
             # [Phase 5.2.2] Reflexion: 실패 패턴 기록
-            self._record_failure_to_reflexion(ep_num, 'blocking', blocking_result['failures'])
+            self._record_failure_to_reflexion(ep_num, "blocking", blocking_result["failures"])
 
             return {
                 "final_decision": "REJECT",
                 "reason": "BLOCKING 검증 실패",
-                "failures": blocking_result['failures'],
+                "failures": blocking_result["failures"],
                 "blocking_result": blocking_result,
                 "continuity_result": continuity_result,
                 "total_score": 0,
                 "feedback": self._generate_blocking_feedback(blocking_result),
-                "self_consistency_used": False
+                "self_consistency_used": False,
             }
 
         logging.warning(f"✅ BLOCKING 통과 (0/{blocking_result.get('failure_count', 0)} 실패)")
@@ -323,12 +319,12 @@ class ValidationOrchestrator:
         # ═══════════════════════════════════════════════════════════════
         # [V46] TIER 1.5: CONSISTENCY (일관성 검증)
         # ═══════════════════════════════════════════════════════════════
-        logging.info(f"[V46] TIER 1.5: CONSISTENCY 검증 중...")
+        logging.info("[V46] TIER 1.5: CONSISTENCY 검증 중...")
         consistency_result = self.consistency.validate(manuscript, validation_context)
-        results['consistency_result'] = consistency_result
+        results["consistency_result"] = consistency_result
 
         # 정당화 불가 위반이 있으면 즉시 REJECT
-        unjustifiable = consistency_result.get('unjustifiable_violations', [])
+        unjustifiable = consistency_result.get("unjustifiable_violations", [])
         if unjustifiable:
             logging.warning(f"❌ CONSISTENCY 실패: {len(unjustifiable)}개 정당화 불가 위반")
             return {
@@ -338,39 +334,37 @@ class ValidationOrchestrator:
                 "consistency_result": consistency_result,
                 "blocking_result": blocking_result,
                 "total_score": 0,
-                "feedback": consistency_result.get('feedback', ''),
-                "detailed_feedback": consistency_result.get('feedback', ''),
-                "self_consistency_used": False
+                "feedback": consistency_result.get("feedback", ""),
+                "detailed_feedback": consistency_result.get("feedback", ""),
+                "self_consistency_used": False,
             }
 
         # 정당화 가능 위반은 점수 감점으로 처리
-        consistency_penalty = consistency_result.get('score_penalty', 0)
-        justifiable_count = len(consistency_result.get('justifiable_violations', []))
+        consistency_penalty = consistency_result.get("score_penalty", 0)
+        justifiable_count = len(consistency_result.get("justifiable_violations", []))
 
         if justifiable_count > 0:
             logging.info(f"⚠️ CONSISTENCY 경고: {justifiable_count}개 (감점: {consistency_penalty}점)")
         else:
-            logging.info(f"✅ CONSISTENCY 통과")
+            logging.info("✅ CONSISTENCY 통과")
 
         # ═══════════════════════════════════════════════════════════════
         # TIER 2: SCORING (점수 기반)
         # ═══════════════════════════════════════════════════════════════
-        logging.info(f"[V0128] TIER 2: SCORING 평가 중...")
+        logging.info("[V0128] TIER 2: SCORING 평가 중...")
 
         if self.use_self_consistency and self.client:
             # Self-Consistency: 다수결 투표
-            scoring_result = self._evaluate_with_self_consistency(
-                manuscript, validation_context
-            )
-            results['self_consistency_used'] = True
+            scoring_result = self._evaluate_with_self_consistency(manuscript, validation_context)
+            results["self_consistency_used"] = True
         else:
             # 단일 평가
             scoring_result = self.scoring.validate(manuscript, validation_context)
-            results['self_consistency_used'] = False
+            results["self_consistency_used"] = False
 
-        results['scoring_result'] = scoring_result
+        results["scoring_result"] = scoring_result
 
-        total_score = scoring_result['total_score']
+        total_score = scoring_result["total_score"]
         logging.info(f"📊 SCORING: {total_score}/100점 (임계값: {self.scoring.pass_threshold})")
 
         # ═══════════════════════════════════════════════════════════════
@@ -395,18 +389,18 @@ class ValidationOrchestrator:
 
         if refine_applied:
             logging.info(f"✨ [Self-Refine] 품질 정제 권장 ({refine_reason})")
-            results['refine_recommended'] = True
-            results['refine_reason'] = refine_reason
+            results["refine_recommended"] = True
+            results["refine_reason"] = refine_reason
             # [V49.3] Writer._self_refine()는 main_a.py:3461-3504에서 호출됨
         else:
-            results['refine_recommended'] = False
+            results["refine_recommended"] = False
 
         # ═══════════════════════════════════════════════════════════════
         # TIER 3: ADVISORY (권고)
         # ═══════════════════════════════════════════════════════════════
-        logging.info(f"[V0128] TIER 3: ADVISORY 생성 중...")
+        logging.info("[V0128] TIER 3: ADVISORY 생성 중...")
         advisory_result = self.advisory.validate(manuscript, validation_context)
-        results['advisory_result'] = advisory_result
+        results["advisory_result"] = advisory_result
 
         logging.info(f"💡 ADVISORY: {len(advisory_result.get('suggestions', []))}개 제안")
 
@@ -415,40 +409,38 @@ class ValidationOrchestrator:
         # ═══════════════════════════════════════════════════════════════
 
         # CatharsisTimer - 카타르시스 타이밍 체크
-        catharsis_history = validation_context.get('catharsis_history', [])
-        catharsis_result = self.catharsis_timer.check_catharsis_timing(
-            ep_num, manuscript, catharsis_history
-        )
-        results['catharsis_result'] = catharsis_result
+        catharsis_history = validation_context.get("catharsis_history", [])
+        catharsis_result = self.catharsis_timer.check_catharsis_timing(ep_num, manuscript, catharsis_history)
+        results["catharsis_result"] = catharsis_result
 
-        if catharsis_result.get('status') == 'warning':
+        if catharsis_result.get("status") == "warning":
             logging.info(f"⚠️ CATHARSIS: {catharsis_result.get('message')}")
-        elif catharsis_result.get('status') == 'critical':
+        elif catharsis_result.get("status") == "critical":
             logging.warning(f"🚨 CATHARSIS: {catharsis_result.get('message')}")
         else:
-            logging.info(f"✅ CATHARSIS: 적절한 타이밍")
+            logging.info("✅ CATHARSIS: 적절한 타이밍")
 
         # ActionSceneEvaluator - 전투/액션 씬 평가
         action_context = {
-            'technique_effects': validation_context.get('technique_effects', {}),
-            'martial_hud': validation_context.get('martial_hud', {})
+            "technique_effects": validation_context.get("technique_effects", {}),
+            "martial_hud": validation_context.get("martial_hud", {}),
         }
         action_result = self.action_evaluator.evaluate(manuscript, action_context)
-        results['action_result'] = action_result
+        results["action_result"] = action_result
 
-        if action_result.get('action_scene_count', 0) > 0:
+        if action_result.get("action_scene_count", 0) > 0:
             logging.info(f"⚔️ ACTION: {action_result['total_score']}/10점 ({action_result['action_scene_count']}개 씬)")
 
         # 추가 평가 결과를 총점에 반영 (보너스/감점)
         catharsis_adjustment = 0
-        if catharsis_result.get('status') == 'critical':
+        if catharsis_result.get("status") == "critical":
             catharsis_adjustment = -5  # 심각한 카타르시스 부족 시 감점
-        elif catharsis_result.get('status') == 'warning':
+        elif catharsis_result.get("status") == "warning":
             catharsis_adjustment = -2
 
         action_adjustment = 0
-        if action_result.get('action_scene_count', 0) > 0:
-            action_score = action_result.get('total_score', 10)
+        if action_result.get("action_scene_count", 0) > 0:
+            action_score = action_result.get("total_score", 10)
             if action_score < 5:
                 action_adjustment = -3  # 액션 씬 품질 낮음
             elif action_score >= 8:
@@ -461,7 +453,7 @@ class ValidationOrchestrator:
         adjusted_total = total_score + catharsis_adjustment + action_adjustment + consistency_adjustment
         adjusted_total = max(0, min(100, adjusted_total))  # 0~100 범위 제한
 
-        adjustments_made = (catharsis_adjustment != 0 or action_adjustment != 0 or consistency_adjustment != 0)
+        adjustments_made = catharsis_adjustment != 0 or action_adjustment != 0 or consistency_adjustment != 0
         if adjustments_made:
             adjustment_parts = []
             if consistency_adjustment != 0:
@@ -477,26 +469,24 @@ class ValidationOrchestrator:
         # [Phase 3] Retrospective Validator (장기 일관성 검증)
         # ═══════════════════════════════════════════════════════════════
         if self.use_retrospective and ep_num > 3 and RETROSPECTIVE_AVAILABLE:  # 3화 이상 + 모듈 가용
-            logging.info(f"[Phase 3] RETROSPECTIVE: 장기 일관성 검증 중...")
+            logging.info("[Phase 3] RETROSPECTIVE: 장기 일관성 검증 중...")
 
             # Lazy initialization (모듈은 이미 import됨)
             if self.retrospective is None:
                 # context는 validation_context에서 추출
-                context_obj = validation_context.get('_context')
+                context_obj = validation_context.get("_context")
                 if context_obj:
                     self.retrospective = RetrospectiveValidator(context_obj, lookback_episodes=5)
 
             if self.retrospective:
                 retrospective_result = self.retrospective.validate_long_term_consistency(
-                    current_ep=ep_num,
-                    manuscript=manuscript,
-                    validation_context=validation_context
+                    current_ep=ep_num, manuscript=manuscript, validation_context=validation_context
                 )
-                results['retrospective_result'] = retrospective_result
+                results["retrospective_result"] = retrospective_result
 
-                if not retrospective_result['passed']:
-                    severity = retrospective_result.get('severity_level', 'NONE')
-                    violation_count = retrospective_result.get('total_violations', 0)
+                if not retrospective_result["passed"]:
+                    severity = retrospective_result.get("severity_level", "NONE")
+                    violation_count = retrospective_result.get("total_violations", 0)
 
                     logging.info(f"⚠️ RETROSPECTIVE: {violation_count}개 장기 일관성 위반 ({severity})")
 
@@ -508,9 +498,9 @@ class ValidationOrchestrator:
                             "retrospective_result": retrospective_result,
                             "blocking_result": blocking_result,
                             "total_score": 0,
-                            "feedback": retrospective_result.get('message', ''),
+                            "feedback": retrospective_result.get("message", ""),
                             "detailed_feedback": self._format_retrospective_feedback(retrospective_result),
-                            "self_consistency_used": False
+                            "self_consistency_used": False,
                         }
 
                     # HIGH 이상이면 점수 감점
@@ -519,12 +509,12 @@ class ValidationOrchestrator:
                         total_score = max(0, total_score - penalty)
                         logging.info(f"📊 장기 일관성 감점: -{penalty}점 (새 총점: {total_score})")
                 else:
-                    logging.info(f"✅ RETROSPECTIVE: 장기 일관성 통과")
+                    logging.info("✅ RETROSPECTIVE: 장기 일관성 통과")
 
         # ═══════════════════════════════════════════════════════════════
         # 최종 판정
         # ═══════════════════════════════════════════════════════════════
-        results['total_score'] = total_score
+        results["total_score"] = total_score
 
         if total_score >= 85:
             final_decision = "PASS"
@@ -536,11 +526,11 @@ class ValidationOrchestrator:
             final_decision = "REJECT"
             feedback = f"품질 미달 ({total_score}점) - 재작성 필요"
 
-        results['final_decision'] = final_decision
-        results['feedback'] = feedback
+        results["final_decision"] = final_decision
+        results["feedback"] = feedback
 
         # 상세 피드백 생성
-        results['detailed_feedback'] = self._generate_detailed_feedback(results)
+        results["detailed_feedback"] = self._generate_detailed_feedback(results)
 
         return results
 
@@ -555,9 +545,9 @@ class ValidationOrchestrator:
         목적: 비용 60% 절감, 품질 유지
         """
         # 1차 평가
-        logging.info(f"🔄 Self-Consistency (Conditional): 1차 평가 중...")
+        logging.info("🔄 Self-Consistency (Conditional): 1차 평가 중...")
         first_eval = self.scoring.validate(manuscript, context)
-        first_score = first_eval['total_score']
+        first_score = first_eval["total_score"]
 
         logging.info(f"Vote 1: {first_score}점, {first_eval['message']}")
 
@@ -573,31 +563,32 @@ class ValidationOrchestrator:
             for i in range(1, self.consistency_votes):
                 result = self.scoring.validate(manuscript, context)
                 evaluations.append(result)
-                logging.info(f"Vote {i+1}: {result['total_score']}점, {result['message']}")
+                logging.info(f"Vote {i + 1}: {result['total_score']}점, {result['message']}")
 
             # 점수 중앙값
             import statistics
-            scores = [e['total_score'] for e in evaluations]
+
+            scores = [e["total_score"] for e in evaluations]
             median_score = statistics.median(scores)
 
             # PASS/REJECT 다수결
-            pass_votes = sum(1 for e in evaluations if e['passed'])
+            pass_votes = sum(1 for e in evaluations if e["passed"])
             final_passed = pass_votes > (self.consistency_votes // 2)
 
             # 대표 결과 (중앙값에 가장 가까운 것)
-            representative = min(evaluations, key=lambda e: abs(e['total_score'] - median_score))
+            representative = min(evaluations, key=lambda e: abs(e["total_score"] - median_score))
 
             # 결과 병합
             result = representative.copy()
-            result['total_score'] = median_score
-            result['passed'] = final_passed
-            result['self_consistency'] = {
-                'votes': self.consistency_votes,
-                'pass_votes': pass_votes,
-                'scores': scores,
-                'median_score': median_score,
-                'conditional': True,
-                'reason': f'ambiguous_score ({first_score})'
+            result["total_score"] = median_score
+            result["passed"] = final_passed
+            result["self_consistency"] = {
+                "votes": self.consistency_votes,
+                "pass_votes": pass_votes,
+                "scores": scores,
+                "median_score": median_score,
+                "conditional": True,
+                "reason": f"ambiguous_score ({first_score})",
             }
 
             logging.info(f"✅ Self-Consistency 완료: {median_score}점 (PASS {pass_votes}/{self.consistency_votes})")
@@ -607,30 +598,30 @@ class ValidationOrchestrator:
             logging.info(f"✓ 명확한 점수({first_score}) → 1-vote로 종료 (비용 절감)")
 
             result = first_eval.copy()
-            result['self_consistency'] = {
-                'votes': 1,
-                'pass_votes': 1 if first_eval['passed'] else 0,
-                'scores': [first_score],
-                'median_score': first_score,
-                'conditional': True,
-                'reason': f'clear_score ({first_score})',
-                'cost_saved': True
+            result["self_consistency"] = {
+                "votes": 1,
+                "pass_votes": 1 if first_eval["passed"] else 0,
+                "scores": [first_score],
+                "median_score": first_score,
+                "conditional": True,
+                "reason": f"clear_score ({first_score})",
+                "cost_saved": True,
             }
 
         return result
 
     def _generate_pre_llm_feedback(self, pre_llm_result: dict) -> str:
         """[V56] PRE-LLM 실패 시 피드백 생성"""
-        issues = pre_llm_result.get('critical_issues', [])
-        warnings = pre_llm_result.get('warnings', [])
+        issues = pre_llm_result.get("critical_issues", [])
+        warnings = pre_llm_result.get("warnings", [])
 
         feedback_parts = ["## PRE-LLM 사전검증 실패 (명백한 오류 감지)\n"]
         feedback_parts.append("LLM 호출 전 Python 기반 검증에서 문제가 발견되었습니다.\n")
 
         for issue in issues:
-            category = issue.get('category', 'unknown')
-            desc = issue.get('description', '')
-            severity = issue.get('severity', 'CRITICAL')
+            category = issue.get("category", "unknown")
+            desc = issue.get("description", "")
+            severity = issue.get("severity", "CRITICAL")
 
             feedback_parts.append(f"- [{severity}] {category}: {desc}")
 
@@ -638,7 +629,7 @@ class ValidationOrchestrator:
             if category == "대사_부족":
                 feedback_parts.append("  → 대화 장면을 추가하세요. 캐릭터 간 상호작용 필요.")
             elif category == "과다_반복_단어":
-                items = issue.get('items', [])
+                items = issue.get("items", [])
                 if items:
                     feedback_parts.append(f"  → '{items[0][0]}' 등의 단어를 동의어로 대체하세요.")
             elif category == "신체_물리학_오류":
@@ -647,23 +638,23 @@ class ValidationOrchestrator:
         if warnings:
             feedback_parts.append("\n### 추가 경고 (점수 감점):")
             for warning in warnings[:3]:
-                desc = warning.get('description', warning.get('category', ''))
+                desc = warning.get("description", warning.get("category", ""))
                 feedback_parts.append(f"- {desc}")
 
         return "\n".join(feedback_parts)
 
     def _generate_continuity_feedback(self, continuity_result: dict) -> str:
         """[V47] CONTINUITY 실패 시 피드백 생성"""
-        violations = continuity_result.get('violations', [])
-        warnings = continuity_result.get('warnings', [])
+        violations = continuity_result.get("violations", [])
+        warnings = continuity_result.get("warnings", [])
 
         feedback_parts = ["## CONTINUITY 검증 실패 (에피소드 간 연속성 위반)\n"]
 
         for violation in violations:
-            vtype = violation.get('type', 'unknown')
-            reason = violation.get('reason', '')
-            severity = violation.get('severity', 'CRITICAL')
-            fix = violation.get('fix_suggestion', '')
+            vtype = violation.get("type", "unknown")
+            reason = violation.get("reason", "")
+            severity = violation.get("severity", "CRITICAL")
+            fix = violation.get("fix_suggestion", "")
 
             feedback_parts.append(f"- [{severity}] {reason}")
             if fix:
@@ -684,14 +675,14 @@ class ValidationOrchestrator:
 
     def _generate_blocking_feedback(self, blocking_result: dict) -> str:
         """BLOCKING 실패 시 피드백 생성"""
-        failures = blocking_result.get('failures', [])
+        failures = blocking_result.get("failures", [])
 
         feedback_parts = ["## BLOCKING 검증 실패\n"]
 
         for failure in failures:
-            check = failure.get('check', 'unknown')
-            reason = failure.get('reason', '')
-            severity = failure.get('severity', 'UNKNOWN')
+            check = failure.get("check", "unknown")
+            reason = failure.get("reason", "")
+            severity = failure.get("severity", "UNKNOWN")
 
             feedback_parts.append(f"- [{severity}] {reason}")
 
@@ -704,14 +695,14 @@ class ValidationOrchestrator:
         feedback_parts = []
 
         # 점수 요약
-        total_score = results.get('total_score', 0)
+        total_score = results.get("total_score", 0)
         feedback_parts.append(f"## 총점: {total_score}/100")
 
         # SCORING 세부 점수
-        scoring_result = results.get('scoring_result', {})
+        scoring_result = results.get("scoring_result", {})
         if not isinstance(scoring_result, dict):
             scoring_result = {}
-        breakdown = scoring_result.get('breakdown', {})
+        breakdown = scoring_result.get("breakdown", {})
         if not isinstance(breakdown, dict):
             breakdown = {}
 
@@ -719,9 +710,9 @@ class ValidationOrchestrator:
             feedback_parts.append("\n### 세부 점수")
             for category, data in breakdown.items():
                 if isinstance(data, dict):
-                    score = data.get('score', 0)
-                    max_score = data.get('max', 0)
-                    reason = data.get('reason', '')
+                    score = data.get("score", 0)
+                    max_score = data.get("max", 0)
+                    reason = data.get("reason", "")
                     feedback_parts.append(f"- {category}: {score}/{max_score}점 - {reason}")
 
         # 강점
@@ -739,17 +730,17 @@ class ValidationOrchestrator:
                 feedback_parts.append(f"- {w}")
 
         # ADVISORY 제안
-        advisory_result = results.get('advisory_result', {})
-        suggestions = advisory_result.get('suggestions', [])
+        advisory_result = results.get("advisory_result", {})
+        suggestions = advisory_result.get("suggestions", [])
         if suggestions:
             feedback_parts.append("\n### 추가 제안 (ADVISORY)")
             for s in suggestions[:3]:
-                suggestion_text = s.get('suggestion', '')
+                suggestion_text = s.get("suggestion", "")
                 feedback_parts.append(f"- {suggestion_text}")
 
         return "\n".join(feedback_parts)
 
-    def _identify_strengths(self, breakdown: dict) -> List[str]:
+    def _identify_strengths(self, breakdown: dict) -> list[str]:
         """강점 식별 (높은 점수 항목)"""
         strengths = []
         if not isinstance(breakdown, dict):
@@ -757,17 +748,17 @@ class ValidationOrchestrator:
 
         for category, data in breakdown.items():
             if isinstance(data, dict):
-                score = data.get('score', 0)
-                max_score = data.get('max', 1)
+                score = data.get("score", 0)
+                max_score = data.get("max", 1)
                 percentage = (score / max_score) * 100 if max_score > 0 else 0
 
                 if percentage >= 80:
-                    reason = data.get('reason', category)
+                    reason = data.get("reason", category)
                     strengths.append(f"{category}: {reason}")
 
         return strengths
 
-    def _identify_weaknesses(self, breakdown: dict) -> List[str]:
+    def _identify_weaknesses(self, breakdown: dict) -> list[str]:
         """약점 식별 (낮은 점수 항목)"""
         weaknesses = []
         if not isinstance(breakdown, dict):
@@ -775,12 +766,12 @@ class ValidationOrchestrator:
 
         for category, data in breakdown.items():
             if isinstance(data, dict):
-                score = data.get('score', 0)
-                max_score = data.get('max', 1)
+                score = data.get("score", 0)
+                max_score = data.get("max", 1)
                 percentage = (score / max_score) * 100 if max_score > 0 else 0
 
                 if percentage < 60:
-                    reason = data.get('reason', category)
+                    reason = data.get("reason", category)
                     weaknesses.append(f"{category}: {reason}")
 
         return weaknesses
@@ -810,9 +801,9 @@ class ValidationOrchestrator:
             except Exception as e:
                 logging.warning(f"[ERROR] Constitution 로드 실패 ({genre}): {e}")
         else:
-            logging.warning(f"[WARNING] quality_constitution 모듈 미설치")
+            logging.warning("[WARNING] quality_constitution 모듈 미설치")
 
-        logging.warning(f"[WARNING] 기본 Constitution 사용 - 검증 품질 저하 가능")
+        logging.warning("[WARNING] 기본 Constitution 사용 - 검증 품질 저하 가능")
 
         # [V44] 장르별 fallback Constitution
         fallback = self._get_fallback_constitution(genre)
@@ -846,24 +837,24 @@ class ValidationOrchestrator:
 
         # 장르별 Amendment 추가
         genre_amendments = {
-            'wuxia': """
+            "wuxia": """
 ### Wuxia-Specific (Fallback)
 - 무공 위계 준수 (후천 → 선천 → 절정 → 화경)
 - 강호 예법 존중
 - 내공 운용 묘사 권장
 """,
-            'hunter': """
+            "hunter": """
 ### Hunter-Specific (Fallback)
 - 게이트 등급 준수 (E-D-C-B-A-S)
 - 미획득 스킬 사용 불가
 - 각성 전 능력 사용 불가
 """,
-            'investment': """
+            "investment": """
 ### Investment-Specific (Fallback)
 - 투자 수익률 현실성 (연 100% 이상은 근거 필요)
 - 자금 출처 명확
 - 정보 획득 경로 명시
-"""
+""",
         }
 
         amendment = genre_amendments.get(genre, "")
@@ -873,20 +864,20 @@ class ValidationOrchestrator:
         """[Phase 3] Retrospective 검증 결과를 피드백 형식으로 변환"""
         feedback_parts = ["## 장기 일관성 위반\n"]
 
-        violations = retrospective_result.get('violations', [])
-        severity = retrospective_result.get('severity_level', 'NONE')
+        violations = retrospective_result.get("violations", [])
+        severity = retrospective_result.get("severity_level", "NONE")
 
         feedback_parts.append(f"심각도: {severity}")
         feedback_parts.append(f"총 {len(violations)}개 위반 감지\n")
 
         for violation in violations:
-            vtype = violation.get('type', 'unknown')
-            reason = violation.get('reason', '')
-            severity = violation.get('severity', 'LOW')
+            vtype = violation.get("type", "unknown")
+            reason = violation.get("reason", "")
+            severity = violation.get("severity", "LOW")
 
             feedback_parts.append(f"- [{severity}] {reason}")
 
-            if 'required_fix' in violation:
+            if "required_fix" in violation:
                 feedback_parts.append(f"  수정 방법: {violation['required_fix']}")
 
         return "\n".join(feedback_parts)
@@ -909,21 +900,18 @@ class ValidationOrchestrator:
             if self.reflexion is None:
                 # context가 필요한데, ValidationOrchestrator에는 없을 수 있음
                 # 이 경우 기록 스킵
-                if not hasattr(self, 'context') or self.context is None:
+                if not hasattr(self, "context") or self.context is None:
                     return
 
                 self.reflexion = ReflexionManager(self.context)
 
             # 각 실패 항목 기록
             for failure in failures:
-                description = failure.get('reason', '알 수 없는 실패')
-                solution = failure.get('required_fix', '')
+                description = failure.get("reason", "알 수 없는 실패")
+                solution = failure.get("required_fix", "")
 
                 self.reflexion.record_failure(
-                    ep_num=ep_num,
-                    failure_type=failure_type,
-                    description=description,
-                    solution=solution
+                    ep_num=ep_num, failure_type=failure_type, description=description, solution=solution
                 )
 
         except Exception as e:
@@ -934,12 +922,7 @@ class ValidationOrchestrator:
     # [V59] 병렬 검증 메서드
     # ═══════════════════════════════════════════════════════════════
 
-    async def validate_parallel_v59(
-        self,
-        ep_num: int,
-        manuscript: str,
-        validation_context: dict
-    ) -> dict:
+    async def validate_parallel_v59(self, ep_num: int, manuscript: str, validation_context: dict) -> dict:
         """
         [V59] 병렬 검증 실행 - 독립적인 검증을 동시에 실행하여 시간 단축
 
@@ -966,80 +949,70 @@ class ValidationOrchestrator:
         if self.use_adaptive_threshold:
             adaptive_threshold = self.calculate_adaptive_threshold_v59(ep_num, validation_context)
             self.scoring.pass_threshold = adaptive_threshold
-            logging.info(f"[V59] 적응형 임계값: {adaptive_threshold}점 (기본: {self.threshold_profile['base_threshold']})")
+            logging.info(
+                f"[V59] 적응형 임계값: {adaptive_threshold}점 (기본: {self.threshold_profile['base_threshold']})"
+            )
         else:
             adaptive_threshold = self.current_threshold
 
         # PRE_LLM 검증
         if self.use_pre_llm and self.pre_llm:
-            logging.info(f"[V59-Parallel] TIER 0.25: PRE-LLM 검증 중...")
+            logging.info("[V59-Parallel] TIER 0.25: PRE-LLM 검증 중...")
             pre_llm_result = self.pre_llm.validate(manuscript, validation_context)
-            results['pre_llm_result'] = pre_llm_result
+            results["pre_llm_result"] = pre_llm_result
 
-            if not pre_llm_result['passed']:
+            if not pre_llm_result["passed"]:
                 return self._build_reject_result_v59(
-                    "PRE-LLM",
-                    pre_llm_result,
-                    self._generate_pre_llm_feedback(pre_llm_result)
+                    "PRE-LLM", pre_llm_result, self._generate_pre_llm_feedback(pre_llm_result)
                 )
 
         # CONTINUITY 검증
-        logging.info(f"[V59-Parallel] TIER 0.5: CONTINUITY 검증 중...")
+        logging.info("[V59-Parallel] TIER 0.5: CONTINUITY 검증 중...")
         continuity_result = self.continuity.validate(ep_num, manuscript, validation_context)
-        results['continuity_result'] = continuity_result
+        results["continuity_result"] = continuity_result
 
-        if not continuity_result['passed']:
-            self._record_failure_to_reflexion(ep_num, 'continuity', continuity_result['violations'])
+        if not continuity_result["passed"]:
+            self._record_failure_to_reflexion(ep_num, "continuity", continuity_result["violations"])
             return self._build_reject_result_v59(
-                "CONTINUITY",
-                continuity_result,
-                self._generate_continuity_feedback(continuity_result)
+                "CONTINUITY", continuity_result, self._generate_continuity_feedback(continuity_result)
             )
 
         # BLOCKING 검증
-        logging.info(f"[V59-Parallel] TIER 1: BLOCKING 검증 중...")
+        logging.info("[V59-Parallel] TIER 1: BLOCKING 검증 중...")
         blocking_result = self.blocking.validate(manuscript, validation_context)
-        results['blocking_result'] = blocking_result
+        results["blocking_result"] = blocking_result
 
-        if not blocking_result['passed']:
-            self._record_failure_to_reflexion(ep_num, 'blocking', blocking_result['failures'])
+        if not blocking_result["passed"]:
+            self._record_failure_to_reflexion(ep_num, "blocking", blocking_result["failures"])
             return self._build_reject_result_v59(
-                "BLOCKING",
-                blocking_result,
-                self._generate_blocking_feedback(blocking_result)
+                "BLOCKING", blocking_result, self._generate_blocking_feedback(blocking_result)
             )
 
-        logging.info(f"✅ Stage 1 통과 (PRE-LLM, CONTINUITY, BLOCKING)")
+        logging.info("✅ Stage 1 통과 (PRE-LLM, CONTINUITY, BLOCKING)")
 
         # ═══════════════════════════════════════════════════════════════
         # Stage 2: 병렬 실행 (독립적인 검증)
         # ═══════════════════════════════════════════════════════════════
-        logging.info(f"[V59-Parallel] Stage 2: 병렬 검증 시작...")
+        logging.info("[V59-Parallel] Stage 2: 병렬 검증 시작...")
 
         loop = asyncio.get_event_loop()
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.max_parallel_workers)
 
         # 병렬 실행할 검증 태스크들
         consistency_task = loop.run_in_executor(
-            executor,
-            partial(self.consistency.validate, manuscript, validation_context)
+            executor, partial(self.consistency.validate, manuscript, validation_context)
         )
 
         if self.use_self_consistency and self.client:
             scoring_task = loop.run_in_executor(
-                executor,
-                partial(self._evaluate_with_self_consistency, manuscript, validation_context)
+                executor, partial(self._evaluate_with_self_consistency, manuscript, validation_context)
             )
         else:
             scoring_task = loop.run_in_executor(
-                executor,
-                partial(self.scoring.validate, manuscript, validation_context)
+                executor, partial(self.scoring.validate, manuscript, validation_context)
             )
 
-        advisory_task = loop.run_in_executor(
-            executor,
-            partial(self.advisory.validate, manuscript, validation_context)
-        )
+        advisory_task = loop.run_in_executor(executor, partial(self.advisory.validate, manuscript, validation_context))
 
         # 모든 태스크 완료 대기
         consistency_result, scoring_result, advisory_result = await asyncio.gather(
@@ -1048,15 +1021,15 @@ class ValidationOrchestrator:
 
         executor.shutdown(wait=False)
 
-        results['consistency_result'] = consistency_result
-        results['scoring_result'] = scoring_result
-        results['advisory_result'] = advisory_result
-        results['self_consistency_used'] = self.use_self_consistency and self.client is not None
+        results["consistency_result"] = consistency_result
+        results["scoring_result"] = scoring_result
+        results["advisory_result"] = advisory_result
+        results["self_consistency_used"] = self.use_self_consistency and self.client is not None
 
-        logging.info(f"✅ Stage 2 완료 (병렬 검증)")
+        logging.info("✅ Stage 2 완료 (병렬 검증)")
 
         # CONSISTENCY 결과 처리
-        unjustifiable = consistency_result.get('unjustifiable_violations', [])
+        unjustifiable = consistency_result.get("unjustifiable_violations", [])
         if unjustifiable:
             logging.warning(f"❌ CONSISTENCY 실패: {len(unjustifiable)}개 정당화 불가 위반")
             return {
@@ -1065,37 +1038,39 @@ class ValidationOrchestrator:
                 "violations": unjustifiable,
                 **results,
                 "total_score": 0,
-                "feedback": consistency_result.get('feedback', ''),
+                "feedback": consistency_result.get("feedback", ""),
             }
 
-        consistency_penalty = consistency_result.get('score_penalty', 0)
+        consistency_penalty = consistency_result.get("score_penalty", 0)
 
         # ═══════════════════════════════════════════════════════════════
         # Stage 3: 추가 평가 (CatharsisTimer, ActionEvaluator)
         # ═══════════════════════════════════════════════════════════════
-        total_score = scoring_result['total_score']
+        total_score = scoring_result["total_score"]
 
         # CatharsisTimer
-        catharsis_history = validation_context.get('catharsis_history', [])
-        catharsis_result = self.catharsis_timer.check_catharsis_timing(
-            ep_num, manuscript, catharsis_history
-        )
-        results['catharsis_result'] = catharsis_result
+        catharsis_history = validation_context.get("catharsis_history", [])
+        catharsis_result = self.catharsis_timer.check_catharsis_timing(ep_num, manuscript, catharsis_history)
+        results["catharsis_result"] = catharsis_result
 
         # ActionSceneEvaluator
         action_context = {
-            'technique_effects': validation_context.get('technique_effects', {}),
-            'martial_hud': validation_context.get('martial_hud', {})
+            "technique_effects": validation_context.get("technique_effects", {}),
+            "martial_hud": validation_context.get("martial_hud", {}),
         }
         action_result = self.action_evaluator.evaluate(manuscript, action_context)
-        results['action_result'] = action_result
+        results["action_result"] = action_result
 
         # 점수 조정
-        catharsis_adjustment = -5 if catharsis_result.get('status') == 'critical' else (-2 if catharsis_result.get('status') == 'warning' else 0)
+        catharsis_adjustment = (
+            -5
+            if catharsis_result.get("status") == "critical"
+            else (-2 if catharsis_result.get("status") == "warning" else 0)
+        )
 
         action_adjustment = 0
-        if action_result.get('action_scene_count', 0) > 0:
-            action_score = action_result.get('total_score', 10)
+        if action_result.get("action_scene_count", 0) > 0:
+            action_score = action_result.get("total_score", 10)
             if action_score < 5:
                 action_adjustment = -3
             elif action_score >= 8:
@@ -1111,7 +1086,7 @@ class ValidationOrchestrator:
         # ═══════════════════════════════════════════════════════════════
         # 최종 판정 + 히스토리 기록
         # ═══════════════════════════════════════════════════════════════
-        results['total_score'] = total_score
+        results["total_score"] = total_score
 
         if total_score >= 85:
             final_decision = "PASS"
@@ -1126,22 +1101,17 @@ class ValidationOrchestrator:
             feedback = f"품질 미달 ({total_score}점) - 재작성 필요"
             passed = False
 
-        results['final_decision'] = final_decision
-        results['feedback'] = feedback
-        results['detailed_feedback'] = self._generate_detailed_feedback(results)
-        results['adaptive_threshold'] = adaptive_threshold
+        results["final_decision"] = final_decision
+        results["feedback"] = feedback
+        results["detailed_feedback"] = self._generate_detailed_feedback(results)
+        results["adaptive_threshold"] = adaptive_threshold
 
         # [V59] 히스토리 기록 + 연속 카운트 업데이트
         self._record_validation_history_v59(ep_num, total_score, passed)
 
         return results
 
-    def validate_parallel_sync_v59(
-        self,
-        ep_num: int,
-        manuscript: str,
-        validation_context: dict
-    ) -> dict:
+    def validate_parallel_sync_v59(self, ep_num: int, manuscript: str, validation_context: dict) -> dict:
         """
         [V59] 병렬 검증 동기 래퍼 - 기존 동기 코드에서 호출 가능
 
@@ -1161,10 +1131,9 @@ class ValidationOrchestrator:
                 # 이벤트 루프가 실행 중인 경우 (Jupyter, Streamlit 등)
                 try:
                     import nest_asyncio
+
                     nest_asyncio.apply()
-                    return loop.run_until_complete(
-                        self.validate_parallel_v59(ep_num, manuscript, validation_context)
-                    )
+                    return loop.run_until_complete(self.validate_parallel_v59(ep_num, manuscript, validation_context))
                 except ImportError:
                     # nest_asyncio 없으면 동기 버전으로 fallback
                     logging.info("⚠️ [V59] nest_asyncio 미설치 - 순차 검증으로 전환")
@@ -1183,12 +1152,7 @@ class ValidationOrchestrator:
             logging.warning(f"⚠️ [V59] 병렬 검증 실패: {e} - 순차 검증으로 전환")
             return self.validate(ep_num, manuscript, validation_context)
 
-    def _build_reject_result_v59(
-        self,
-        stage: str,
-        result: dict,
-        feedback: str
-    ) -> dict:
+    def _build_reject_result_v59(self, stage: str, result: dict, feedback: str) -> dict:
         """[V59] 조기 종료용 REJECT 결과 빌드"""
         return {
             "final_decision": "REJECT",
@@ -1197,18 +1161,14 @@ class ValidationOrchestrator:
             "total_score": 0,
             "feedback": feedback,
             "self_consistency_used": False,
-            "early_exit_stage": stage
+            "early_exit_stage": stage,
         }
 
     # ═══════════════════════════════════════════════════════════════
     # [V59] 적응형 임계값 메서드
     # ═══════════════════════════════════════════════════════════════
 
-    def calculate_adaptive_threshold_v59(
-        self,
-        ep_num: int,
-        validation_context: dict
-    ) -> int:
+    def calculate_adaptive_threshold_v59(self, ep_num: int, validation_context: dict) -> int:
         """
         [V59] 적응형 임계값 계산
 
@@ -1220,7 +1180,7 @@ class ValidationOrchestrator:
             계산된 임계값 (정수)
         """
         # 기본 임계값 (장르별)
-        base_threshold = self.threshold_profile['base_threshold']
+        base_threshold = self.threshold_profile["base_threshold"]
 
         # 1. 에피소드 유형별 조정
         episode_adjustment = self._get_episode_type_adjustment_v59(ep_num)
@@ -1247,25 +1207,25 @@ class ValidationOrchestrator:
         adjustment = 0
 
         for ep_type, config in EPISODE_TYPE_ADJUSTMENTS.items():
-            if 'episodes' in config:
-                if ep_num in config['episodes']:
-                    adjustment = max(adjustment, config['threshold_delta'])
-            elif 'episode_pattern' in config:
-                if config['episode_pattern'](ep_num):
-                    adjustment = max(adjustment, config['threshold_delta'])
+            if "episodes" in config:
+                if ep_num in config["episodes"]:
+                    adjustment = max(adjustment, config["threshold_delta"])
+            elif "episode_pattern" in config:
+                if config["episode_pattern"](ep_num):
+                    adjustment = max(adjustment, config["threshold_delta"])
 
         return adjustment
 
     def _get_streak_adjustment_v59(self) -> int:
         """[V59] 연속 통과/실패에 따른 임계값 조정"""
         if self.consecutive_fails >= 3:
-            return STREAK_ADJUSTMENTS['consecutive_fail_3']
+            return STREAK_ADJUSTMENTS["consecutive_fail_3"]
         elif self.consecutive_fails >= 2:
-            return STREAK_ADJUSTMENTS['consecutive_fail_2']
+            return STREAK_ADJUSTMENTS["consecutive_fail_2"]
         elif self.consecutive_passes >= 10:
-            return STREAK_ADJUSTMENTS['consecutive_pass_10']
+            return STREAK_ADJUSTMENTS["consecutive_pass_10"]
         elif self.consecutive_passes >= 5:
-            return STREAK_ADJUSTMENTS['consecutive_pass_5']
+            return STREAK_ADJUSTMENTS["consecutive_pass_5"]
         return 0
 
     def _get_pattern_adjustment_v59(self, validation_context: dict) -> int:
@@ -1273,29 +1233,29 @@ class ValidationOrchestrator:
         adjustment = 0
 
         # PatternTracker 결과 확인
-        pattern_analysis = validation_context.get('pattern_analysis', {})
+        pattern_analysis = validation_context.get("pattern_analysis", {})
 
         if pattern_analysis:
             # 높은 반복 패턴
-            repetition_score = pattern_analysis.get('repetition_score', 0)
+            repetition_score = pattern_analysis.get("repetition_score", 0)
             if repetition_score > 70:
-                adjustment += PATTERN_ADJUSTMENTS['high_repetition']
+                adjustment += PATTERN_ADJUSTMENTS["high_repetition"]
 
             # 낮은 다양성
-            diversity_score = pattern_analysis.get('diversity_score', 100)
+            diversity_score = pattern_analysis.get("diversity_score", 100)
             if diversity_score < 40:
-                adjustment += PATTERN_ADJUSTMENTS['low_diversity']
+                adjustment += PATTERN_ADJUSTMENTS["low_diversity"]
 
         # 최근 점수 트렌드 분석
         if len(self.validation_history) >= 5:
-            recent_scores = [h['score'] for h in self.validation_history[-5:]]
+            recent_scores = [h["score"] for h in self.validation_history[-5:]]
             if len(recent_scores) >= 3:
                 # 하락 추세 감지
                 if recent_scores[-1] < recent_scores[-3] - 5:
-                    adjustment += PATTERN_ADJUSTMENTS['declining_quality']
+                    adjustment += PATTERN_ADJUSTMENTS["declining_quality"]
                 # 상승 추세 감지
                 elif recent_scores[-1] > recent_scores[-3] + 5:
-                    adjustment += PATTERN_ADJUSTMENTS['improving_quality']
+                    adjustment += PATTERN_ADJUSTMENTS["improving_quality"]
 
         return adjustment
 
@@ -1311,21 +1271,11 @@ class ValidationOrchestrator:
             return -1  # 중간은 살짝 관대
         return 0
 
-    def _record_validation_history_v59(
-        self,
-        ep_num: int,
-        score: float,
-        passed: bool
-    ):
+    def _record_validation_history_v59(self, ep_num: int, score: float, passed: bool):
         """[V59] 검증 히스토리 기록 + 연속 카운트 업데이트"""
         import time
 
-        self.validation_history.append({
-            'ep_num': ep_num,
-            'score': score,
-            'passed': passed,
-            'timestamp': time.time()
-        })
+        self.validation_history.append({"ep_num": ep_num, "score": score, "passed": passed, "timestamp": time.time()})
 
         # 히스토리 크기 제한 (최근 50개)
         if len(self.validation_history) > 50:
@@ -1349,16 +1299,11 @@ class ValidationOrchestrator:
         if validation_context is None:
             validation_context = {}
 
-        lines = [
-            "═" * 50,
-            "      [V59] 적응형 임계값 리포트",
-            "═" * 50,
-            ""
-        ]
+        lines = ["═" * 50, "      [V59] 적응형 임계값 리포트", "═" * 50, ""]
 
         # 기본 정보
-        base = self.threshold_profile['base_threshold']
-        lines.append(f"【기본 설정】")
+        base = self.threshold_profile["base_threshold"]
+        lines.append("【기본 설정】")
         lines.append(f"  장르: {self.genre}")
         lines.append(f"  기본 임계값: {base}점")
         lines.append("")
@@ -1379,21 +1324,21 @@ class ValidationOrchestrator:
         lines.append("")
 
         # 연속 카운트
-        lines.append(f"【연속 기록】")
+        lines.append("【연속 기록】")
         lines.append(f"  연속 통과: {self.consecutive_passes}회")
         lines.append(f"  연속 실패: {self.consecutive_fails}회")
         lines.append("")
 
         # 최종 임계값
-        lines.append(f"【최종 임계값】")
+        lines.append("【최종 임계값】")
         lines.append(f"  {base} + ({ep_adj:+d}) + ({streak_adj:+d}) + ({pattern_adj:+d}) + ({arc_adj:+d}) = {final}점")
         lines.append("")
 
         # 최근 히스토리
         if self.validation_history:
-            lines.append(f"【최근 검증 히스토리】")
+            lines.append("【최근 검증 히스토리】")
             for h in self.validation_history[-5:]:
-                status = "PASS" if h['passed'] else "FAIL"
+                status = "PASS" if h["passed"] else "FAIL"
                 lines.append(f"  제{h['ep_num']}화: {h['score']:.0f}점 ({status})")
         else:
             lines.append("【히스토리 없음】")
@@ -1407,8 +1352,8 @@ class ValidationOrchestrator:
         self.validation_history = []
         self.consecutive_passes = 0
         self.consecutive_fails = 0
-        self.current_threshold = self.threshold_profile['base_threshold']
-        logging.info(f"[V59] 적응형 임계값 상태 초기화 완료")
+        self.current_threshold = self.threshold_profile["base_threshold"]
+        logging.info("[V59] 적응형 임계값 상태 초기화 완료")
 
     def set_manual_threshold_v59(self, threshold: int, duration_episodes: int = 0):
         """

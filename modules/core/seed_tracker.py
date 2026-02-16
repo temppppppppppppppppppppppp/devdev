@@ -20,78 +20,79 @@
 - investment: 정보, 인맥, 위기, 기회, 배신
 """
 
-import json
 import logging
-import time
-from enum import Enum
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass, field, asdict, fields
+from dataclasses import asdict, dataclass, field, fields
 from datetime import datetime
+from enum import Enum
+from typing import Any
 
 
 class SeedStatus(Enum):
     """복선 상태"""
-    PLANTED = "planted"       # 심어진 상태
-    WATERED = "watered"       # 중간 언급으로 강화
-    HARVESTED = "harvested"   # 회수 완료
-    WITHERED = "withered"     # 회수 실패 (너무 오래됨)
-    ABANDONED = "abandoned"   # 의도적 폐기
+
+    PLANTED = "planted"  # 심어진 상태
+    WATERED = "watered"  # 중간 언급으로 강화
+    HARVESTED = "harvested"  # 회수 완료
+    WITHERED = "withered"  # 회수 실패 (너무 오래됨)
+    ABANDONED = "abandoned"  # 의도적 폐기
 
 
 class SeedType(Enum):
     """복선 유형 (장르 공통)"""
+
     # 공통
-    SECRET = "secret"         # 비밀 (정체, 과거 등)
-    PROMISE = "promise"       # 약속/맹세
-    ENEMY = "enemy"           # 원수/복수 대상
-    TREASURE = "treasure"     # 보물/아이템
-    PROPHECY = "prophecy"     # 예언/암시
+    SECRET = "secret"  # 비밀 (정체, 과거 등)
+    PROMISE = "promise"  # 약속/맹세
+    ENEMY = "enemy"  # 원수/복수 대상
+    TREASURE = "treasure"  # 보물/아이템
+    PROPHECY = "prophecy"  # 예언/암시
 
     # 무협
-    TECHNIQUE = "technique"   # 비급/무공
+    TECHNIQUE = "technique"  # 비급/무공
     RELATIONSHIP = "relationship"  # 인연/관계
 
     # 헌터
-    DUNGEON = "dungeon"       # 던전/게이트
-    AWAKENING = "awakening"   # 각성/진화
-    SYSTEM = "system"         # 시스템 비밀
+    DUNGEON = "dungeon"  # 던전/게이트
+    AWAKENING = "awakening"  # 각성/진화
+    SYSTEM = "system"  # 시스템 비밀
 
     # 투자
     INFORMATION = "information"  # 미래 정보
-    CRISIS = "crisis"         # 위기/사건
+    CRISIS = "crisis"  # 위기/사건
     OPPORTUNITY = "opportunity"  # 기회
 
 
 @dataclass
 class Seed:
     """복선 데이터 클래스"""
-    seed_id: str                      # 고유 ID
-    seed_type: str                    # 복선 유형
-    content: str                      # 복선 내용
-    planted_ep: int                   # 심어진 화수
-    planted_arc: int                  # 심어진 Arc
-    target_harvest_ep: int = 0        # 목표 회수 화수 (0 = 미정)
-    target_harvest_arc: int = 0       # 목표 회수 Arc (0 = 미정)
+
+    seed_id: str  # 고유 ID
+    seed_type: str  # 복선 유형
+    content: str  # 복선 내용
+    planted_ep: int  # 심어진 화수
+    planted_arc: int  # 심어진 Arc
+    target_harvest_ep: int = 0  # 목표 회수 화수 (0 = 미정)
+    target_harvest_arc: int = 0  # 목표 회수 Arc (0 = 미정)
     status: str = SeedStatus.PLANTED.value
-    watered_eps: List[int] = field(default_factory=list)  # 중간 언급 화수
-    harvested_ep: int = 0             # 실제 회수 화수
-    harvested_arc: int = 0            # 실제 회수 Arc
-    importance: str = "medium"        # low/medium/high/critical
-    notes: str = ""                   # 추가 노트
-    created_at: str = ""              # 생성 시각
-    updated_at: str = ""              # 수정 시각
+    watered_eps: list[int] = field(default_factory=list)  # 중간 언급 화수
+    harvested_ep: int = 0  # 실제 회수 화수
+    harvested_arc: int = 0  # 실제 회수 Arc
+    importance: str = "medium"  # low/medium/high/critical
+    notes: str = ""  # 추가 노트
+    created_at: str = ""  # 생성 시각
+    updated_at: str = ""  # 수정 시각
 
     def __post_init__(self) -> None:
         if not self.created_at:
             self.created_at = datetime.now().isoformat()
         self.updated_at = datetime.now().isoformat()
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """딕셔너리 변환"""
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: Dict) -> 'Seed':
+    def from_dict(cls, data: dict) -> "Seed":
         """딕셔너리에서 생성 [V61.5] 미지 키 무시"""
         valid_keys = {f.name for f in fields(cls)}
         return cls(**{k: v for k, v in data.items() if k in valid_keys})
@@ -131,35 +132,20 @@ class SeedTracker:
     # 장르별 권장 회수 기간 (Arc 단위)
     HARVEST_WINDOW = {
         "wuxia": {
-            "low": 3,       # 경미한 복선: 3 Arc 내 회수
-            "medium": 2,    # 중요 복선: 2 Arc 내 회수
-            "high": 2,      # 핵심 복선: 2 Arc 내 회수
-            "critical": 1   # 필수 복선: 1 Arc 내 회수
+            "low": 3,  # 경미한 복선: 3 Arc 내 회수
+            "medium": 2,  # 중요 복선: 2 Arc 내 회수
+            "high": 2,  # 핵심 복선: 2 Arc 내 회수
+            "critical": 1,  # 필수 복선: 1 Arc 내 회수
         },
-        "hunter": {
-            "low": 4,
-            "medium": 3,
-            "high": 2,
-            "critical": 1
-        },
+        "hunter": {"low": 4, "medium": 3, "high": 2, "critical": 1},
         "investment": {
-            "low": 2,       # 투자물은 빠른 회수
+            "low": 2,  # 투자물은 빠른 회수
             "medium": 2,
             "high": 1,
-            "critical": 1
+            "critical": 1,
         },
-        "cooking": {
-            "low": 3,
-            "medium": 2,
-            "high": 2,
-            "critical": 1
-        },
-        "alt_history": {
-            "low": 3,
-            "medium": 2,
-            "high": 2,
-            "critical": 1
-        }
+        "cooking": {"low": 3, "medium": 2, "high": 2, "critical": 1},
+        "alt_history": {"low": 3, "medium": 2, "high": 2, "critical": 1},
     }
 
     # 장르별 권장 복선 유형
@@ -168,7 +154,7 @@ class SeedTracker:
         "hunter": ["dungeon", "awakening", "system", "secret", "enemy", "treasure"],
         "investment": ["information", "crisis", "opportunity", "secret", "promise"],
         "cooking": ["recipe", "ingredient", "secret", "rival", "customer", "promise"],
-        "alt_history": ["court_intrigue", "technology", "diplomacy", "secret", "rebellion", "promise"]
+        "alt_history": ["court_intrigue", "technology", "diplomacy", "secret", "rebellion", "promise"],
     }
 
     def __init__(self, genre: str = "wuxia", db_manager=None):
@@ -179,7 +165,7 @@ class SeedTracker:
         """
         self.genre = genre
         self.db = db_manager
-        self.seeds: Dict[str, Seed] = {}
+        self.seeds: dict[str, Seed] = {}
         self._seed_counter = 0
 
         # DB에서 기존 데이터 로드
@@ -210,7 +196,7 @@ class SeedTracker:
             data = {
                 "counter": self._seed_counter,
                 "seeds": [s.to_dict() for s in self.seeds.values()],
-                "updated_at": datetime.now().isoformat()
+                "updated_at": datetime.now().isoformat(),
             }
             self.db.save_anchor("seed_tracker", data)
         except Exception as e:
@@ -230,7 +216,7 @@ class SeedTracker:
         target_harvest_ep: int = 0,
         target_harvest_arc: int = 0,
         importance: str = "medium",
-        notes: str = ""
+        notes: str = "",
     ) -> str:
         """
         복선 심기
@@ -264,7 +250,7 @@ class SeedTracker:
             target_harvest_ep=target_harvest_ep,
             target_harvest_arc=target_harvest_arc,
             importance=importance,
-            notes=notes
+            notes=notes,
         )
 
         self.seeds[seed_id] = seed
@@ -364,7 +350,7 @@ class SeedTracker:
         logging.info(f"[SeedTracker] 복선 폐기: {seed_id} - {reason}")
         return True
 
-    def check_overdue_seeds(self, current_ep: int, current_arc: int) -> List[Dict]:
+    def check_overdue_seeds(self, current_ep: int, current_arc: int) -> list[dict]:
         """
         미회수 복선 경고
 
@@ -396,12 +382,7 @@ class SeedTracker:
                 else:
                     continue
 
-                warnings.append({
-                    "seed_id": seed_id,
-                    "severity": severity,
-                    "message": message,
-                    "seed": seed.to_dict()
-                })
+                warnings.append({"seed_id": seed_id, "severity": severity, "message": message, "seed": seed.to_dict()})
 
         # 중요도별 정렬 (critical > high > medium > low)
         importance_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
@@ -410,14 +391,11 @@ class SeedTracker:
         self._save_to_db()
         return warnings
 
-    def get_active_seeds(self) -> List[Seed]:
+    def get_active_seeds(self) -> list[Seed]:
         """활성 복선 목록 (PLANTED, WATERED)"""
-        return [
-            s for s in self.seeds.values()
-            if s.status in [SeedStatus.PLANTED.value, SeedStatus.WATERED.value]
-        ]
+        return [s for s in self.seeds.values() if s.status in [SeedStatus.PLANTED.value, SeedStatus.WATERED.value]]
 
-    def get_seeds_for_arc(self, arc_num: int) -> Dict[str, List[Seed]]:
+    def get_seeds_for_arc(self, arc_num: int) -> dict[str, list[Seed]]:
         """
         특정 Arc에서 처리해야 할 복선 분류
 
@@ -428,11 +406,7 @@ class SeedTracker:
                 "can_plant": [심을 수 있는 유형]
             }
         """
-        result = {
-            "should_harvest": [],
-            "should_water": [],
-            "can_plant": self.GENRE_SEED_TYPES.get(self.genre, [])
-        }
+        result = {"should_harvest": [], "should_water": [], "can_plant": self.GENRE_SEED_TYPES.get(self.genre, [])}
 
         for seed in self.get_active_seeds():
             if seed.target_harvest_arc == arc_num:
@@ -456,10 +430,7 @@ class SeedTracker:
         """
         arc_seeds = self.get_seeds_for_arc(current_arc)
 
-        prompt_parts = [
-            f"[V57 복선 관리 시스템 - Arc {current_arc} / EP {current_ep}]",
-            ""
-        ]
+        prompt_parts = [f"[V57 복선 관리 시스템 - Arc {current_arc} / EP {current_ep}]", ""]
 
         # 회수해야 할 복선
         if arc_seeds["should_harvest"]:
@@ -491,7 +462,7 @@ class SeedTracker:
             prompt_parts.append("")
 
         # 심을 수 있는 복선 유형
-        prompt_parts.append(f"### 이 장르에서 심을 수 있는 복선 유형:")
+        prompt_parts.append("### 이 장르에서 심을 수 있는 복선 유형:")
         prompt_parts.append(f"  {', '.join(arc_seeds['can_plant'])}")
 
         return "\n".join(prompt_parts)
@@ -501,13 +472,7 @@ class SeedTracker:
         lines = ["[V57 복선 타임라인]", ""]
 
         # 상태별 분류
-        by_status = {
-            "PLANTED": [],
-            "WATERED": [],
-            "HARVESTED": [],
-            "WITHERED": [],
-            "ABANDONED": []
-        }
+        by_status = {"PLANTED": [], "WATERED": [], "HARVESTED": [], "WITHERED": [], "ABANDONED": []}
 
         for seed in self.seeds.values():
             status_key = seed.status.upper()
@@ -519,15 +484,12 @@ class SeedTracker:
                 continue
             lines.append(f"### {status} ({len(seeds)}개):")
             for seed in seeds:
-                lines.append(
-                    f"  - [{seed.seed_id}] {seed.seed_type}: {seed.content[:40]}..."
-                    f" (Arc{seed.planted_arc}~)"
-                )
+                lines.append(f"  - [{seed.seed_id}] {seed.seed_type}: {seed.content[:40]}... (Arc{seed.planted_arc}~)")
             lines.append("")
 
         return "\n".join(lines)
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """복선 통계"""
         total = len(self.seeds)
         by_status = {}
@@ -550,7 +512,7 @@ class SeedTracker:
             "by_type": by_type,
             "by_importance": by_importance,
             "harvest_rate": round(harvest_rate, 1),
-            "active_count": len(self.get_active_seeds())
+            "active_count": len(self.get_active_seeds()),
         }
 
 

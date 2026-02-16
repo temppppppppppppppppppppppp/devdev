@@ -22,40 +22,43 @@
     best_output = result.best_path.output
 """
 
-from typing import Dict, Any, List, Optional, Callable, Tuple
+import json
 import logging
+import re
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-import json
-import re
-import random
+from typing import Any
 
 
 class ExplorationStrategy(Enum):
     """탐색 전략"""
-    BREADTH_FIRST = "breadth_first"   # 너비 우선: 모든 경로 동시 발전
-    BEST_FIRST = "best_first"         # 최선 우선: 높은 점수 경로만 발전
-    RANDOM_SAMPLE = "random_sample"   # 무작위 샘플링
+
+    BREADTH_FIRST = "breadth_first"  # 너비 우선: 모든 경로 동시 발전
+    BEST_FIRST = "best_first"  # 최선 우선: 높은 점수 경로만 발전
+    RANDOM_SAMPLE = "random_sample"  # 무작위 샘플링
 
 
 @dataclass
 class ThoughtPath:
     """사고 경로"""
+
     id: int
-    approach: str           # 접근 방식 설명
-    reasoning: str          # 추론 과정
-    output: str             # 최종 출력
-    score: float            # 평가 점수 (0-100)
-    strengths: List[str]    # 장점
-    weaknesses: List[str]   # 약점
+    approach: str  # 접근 방식 설명
+    reasoning: str  # 추론 과정
+    output: str  # 최종 출력
+    score: float  # 평가 점수 (0-100)
+    strengths: list[str]  # 장점
+    weaknesses: list[str]  # 약점
 
 
 @dataclass
 class ToTResult:
     """Tree of Thoughts 결과"""
-    paths: List[ThoughtPath]
+
+    paths: list[ThoughtPath]
     best_path: ThoughtPath
-    merged_output: Optional[str]  # 병합 출력 (있으면)
+    merged_output: str | None  # 병합 출력 (있으면)
     exploration_summary: str
 
 
@@ -158,22 +161,17 @@ JSON 형식으로:
         """LLM 호출"""
         try:
             response = self.client.models.generate_content(
-                model=self.model,
-                contents=prompt,
-                config={
-                    "temperature": temperature,
-                    "max_output_tokens": 4096
-                }
+                model=self.model, contents=prompt, config={"temperature": temperature, "max_output_tokens": 4096}
             )
             return response.text or ""  # [V70] None 방어
         except Exception as e:
             logging.warning(f"[TreeOfThoughts] LLM 호출 실패: {e}")
             return ""
 
-    def _parse_json(self, text: str) -> Dict[str, Any]:
+    def _parse_json(self, text: str) -> dict[str, Any]:
         """JSON 파싱"""
         try:
-            json_match = re.search(r'```json\s*(.*?)\s*```', text, re.DOTALL)
+            json_match = re.search(r"```json\s*(.*?)\s*```", text, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group(1))
             return json.loads(text)
@@ -183,10 +181,10 @@ JSON 형식으로:
     def explore(
         self,
         task: str,
-        context: Dict[str, Any],
+        context: dict[str, Any],
         n_branches: int = 3,
         strategy: ExplorationStrategy = ExplorationStrategy.BREADTH_FIRST,
-        custom_generator: Callable = None
+        custom_generator: Callable = None,
     ) -> ToTResult:
         """
         Tree of Thoughts 탐색 실행
@@ -220,15 +218,17 @@ JSON 형식으로:
             else:
                 output = self._develop_path(task, context, approach)
 
-            paths.append(ThoughtPath(
-                id=i + 1,
-                approach=approach.get("name", f"Approach {i+1}"),
-                reasoning=approach.get("description", ""),
-                output=output,
-                score=0,
-                strengths=[],
-                weaknesses=[]
-            ))
+            paths.append(
+                ThoughtPath(
+                    id=i + 1,
+                    approach=approach.get("name", f"Approach {i + 1}"),
+                    reasoning=approach.get("description", ""),
+                    output=output,
+                    score=0,
+                    strengths=[],
+                    weaknesses=[],
+                )
+            )
 
         # 3. 각 경로 평가
         for path in paths:
@@ -248,22 +248,17 @@ JSON 형식으로:
             paths=paths,
             best_path=best_path,
             merged_output=None,  # 단순 선택 (병합 옵션은 별도)
-            exploration_summary=summary
+            exploration_summary=summary,
         )
 
-    def _generate_approaches(
-        self,
-        task: str,
-        context: Dict[str, Any],
-        n_branches: int
-    ) -> List[Dict[str, str]]:
+    def _generate_approaches(self, task: str, context: dict[str, Any], n_branches: int) -> list[dict[str, str]]:
         """접근 방식 생성"""
         context_str = json.dumps(context, ensure_ascii=False, default=str)[:2000]
 
         prompt = self.BRANCH_GENERATION_PROMPT.format(
             n_branches=n_branches,
             task=task.replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
-            context=context_str.replace("{", "{{").replace("}", "}}")  # [V70] JSON brace escape
+            context=context_str.replace("{", "{{").replace("}", "}}"),  # [V70] JSON brace escape
         )
 
         response = self._call_llm(prompt, temperature=0.8)
@@ -283,12 +278,7 @@ JSON 형식으로:
 
         return approaches[:n_branches]
 
-    def _develop_path(
-        self,
-        task: str,
-        context: Dict[str, Any],
-        approach: Dict[str, str]
-    ) -> str:
+    def _develop_path(self, task: str, context: dict[str, Any], approach: dict[str, str]) -> str:
         """경로 발전"""
         context_str = json.dumps(context, ensure_ascii=False, default=str)[:2000]
 
@@ -296,16 +286,16 @@ JSON 형식으로:
             approach_name=approach.get("name", "전문가"),
             approach_description=approach.get("description", ""),
             task=task.replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
-            context=context_str.replace("{", "{{").replace("}", "}}")  # [V70] brace escape
+            context=context_str.replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
         )
 
         return self._call_llm(prompt, temperature=0.6)
 
-    def _evaluate_path(self, task: str, output: str) -> Dict[str, Any]:
+    def _evaluate_path(self, task: str, output: str) -> dict[str, Any]:
         """경로 평가"""
         prompt = self.PATH_EVALUATION_PROMPT.format(
             task=task.replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
-            output=output[:4000].replace("{", "{{").replace("}", "}}")  # [V70] brace escape
+            output=output[:4000].replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
         )
 
         response = self._call_llm(prompt, temperature=0.2)
@@ -313,15 +303,11 @@ JSON 형식으로:
 
         if not result:
             # 파싱 실패 시 기본값
-            return {
-                "total": 60,
-                "strengths": [],
-                "weaknesses": []
-            }
+            return {"total": 60, "strengths": [], "weaknesses": []}
 
         return result
 
-    def _generate_summary(self, paths: List[ThoughtPath]) -> str:
+    def _generate_summary(self, paths: list[ThoughtPath]) -> str:
         """탐색 요약 생성"""
         lines = ["[V53.5 Tree of Thoughts 탐색 결과]"]
         lines.append(f"탐색 경로: {len(paths)}개\n")
@@ -334,12 +320,7 @@ JSON 형식으로:
 
         return "\n".join(lines)
 
-    def _single_path_fallback(
-        self,
-        task: str,
-        context: Dict[str, Any],
-        custom_generator: Callable = None
-    ) -> ToTResult:
+    def _single_path_fallback(self, task: str, context: dict[str, Any], custom_generator: Callable = None) -> ToTResult:
         """단일 경로 폴백"""
         if custom_generator:
             output = custom_generator({"name": "기본", "description": ""})
@@ -355,23 +336,20 @@ JSON 형식으로:
             output=output,
             score=70,
             strengths=[],
-            weaknesses=[]
+            weaknesses=[],
         )
 
         return ToTResult(
-            paths=[path],
-            best_path=path,
-            merged_output=None,
-            exploration_summary="단일 경로 생성 (ToT 비활성화)"
+            paths=[path], best_path=path, merged_output=None, exploration_summary="단일 경로 생성 (ToT 비활성화)"
         )
 
     def explore_blueprint(
         self,
         ep_num: int,
-        arc_data: Dict[str, Any],
-        prev_blueprint: Dict[str, Any] = None,
+        arc_data: dict[str, Any],
+        prev_blueprint: dict[str, Any] = None,
         generator_fn: Callable = None,
-        n_branches: int = 3
+        n_branches: int = 3,
     ) -> ToTResult:
         """
         블루프린트 전용 ToT 탐색
@@ -391,31 +369,15 @@ JSON 형식으로:
             "ep_num": ep_num,
             "arc_tactical": arc_data.get("tactical_doc", "")[:1000] if arc_data else "",
             "arc_drive": arc_data.get("arc_drive", {}) if arc_data else {},
-            "prev_cliffhanger": prev_blueprint.get("ending_hook", "") if prev_blueprint else ""
+            "prev_cliffhanger": prev_blueprint.get("ending_hook", "") if prev_blueprint else "",
         }
 
         # 블루프린트 전용 접근 방식 (V55.2: 4분기)
         blueprint_approaches = [
-            {
-                "name": "긴장감 중심",
-                "description": "긴장-이완 곡선을 극대화하는 씬 배치",
-                "focus": "독자 몰입"
-            },
-            {
-                "name": "캐릭터 중심",
-                "description": "캐릭터 성장과 관계 변화에 집중",
-                "focus": "감정선"
-            },
-            {
-                "name": "플롯 중심",
-                "description": "사건 전개와 복선 회수에 집중",
-                "focus": "서사 추진"
-            },
-            {
-                "name": "연속성 중심",
-                "description": "직전 화 엔딩 계승 + 클리프행어 설계에 집중",
-                "focus": "서사 연결"
-            }
+            {"name": "긴장감 중심", "description": "긴장-이완 곡선을 극대화하는 씬 배치", "focus": "독자 몰입"},
+            {"name": "캐릭터 중심", "description": "캐릭터 성장과 관계 변화에 집중", "focus": "감정선"},
+            {"name": "플롯 중심", "description": "사건 전개와 복선 회수에 집중", "focus": "서사 추진"},
+            {"name": "연속성 중심", "description": "직전 화 엔딩 계승 + 클리프행어 설계에 집중", "focus": "서사 연결"},
         ]
 
         paths = []
@@ -426,15 +388,17 @@ JSON 형식으로:
             else:
                 output = self._develop_path(task, context, approach)
 
-            paths.append(ThoughtPath(
-                id=i + 1,
-                approach=approach["name"],
-                reasoning=approach["description"],
-                output=output if isinstance(output, str) else json.dumps(output, ensure_ascii=False),
-                score=0,
-                strengths=[],
-                weaknesses=[]
-            ))
+            paths.append(
+                ThoughtPath(
+                    id=i + 1,
+                    approach=approach["name"],
+                    reasoning=approach["description"],
+                    output=output if isinstance(output, str) else json.dumps(output, ensure_ascii=False),
+                    score=0,
+                    strengths=[],
+                    weaknesses=[],
+                )
+            )
 
         # 평가
         for path in paths:
@@ -446,13 +410,10 @@ JSON 형식으로:
         paths.sort(key=lambda x: x.score, reverse=True)
 
         return ToTResult(
-            paths=paths,
-            best_path=paths[0],
-            merged_output=None,
-            exploration_summary=self._generate_summary(paths)
+            paths=paths, best_path=paths[0], merged_output=None, exploration_summary=self._generate_summary(paths)
         )
 
-    def _evaluate_blueprint(self, output: str) -> Dict[str, Any]:
+    def _evaluate_blueprint(self, output: str) -> dict[str, Any]:
         """블루프린트 전용 평가 (Python 휴리스틱)"""
         score = 50  # 기본값
         strengths = []
@@ -491,11 +452,7 @@ JSON 형식으로:
             score += 10
             strengths.append("클리프행어 존재")
 
-        return {
-            "total": min(100, score),
-            "strengths": strengths,
-            "weaknesses": weaknesses
-        }
+        return {"total": min(100, score), "strengths": strengths, "weaknesses": weaknesses}
 
     # ═══════════════════════════════════════════════════════════════════════════════
     # [V55.1] Arc 전용 ToT 탐색 - Stage 2 필살기
@@ -505,14 +462,14 @@ JSON 형식으로:
         self,
         arc_no: int,
         vol_strategy: str,
-        curr_block: Dict[str, Any],
+        curr_block: dict[str, Any],
         prev_arc_context: str,
-        assets: Dict[str, Any] = None,
+        assets: dict[str, Any] = None,
         feedback: str = "",
         num_branches: int = 3,
         depth: int = 2,
-        protagonist_name: str = "주인공"  # [V60.18] 주인공 이름 (필수!)
-    ) -> Optional[Dict[str, Any]]:
+        protagonist_name: str = "주인공",  # [V60.18] 주인공 이름 (필수!)
+    ) -> dict[str, Any] | None:
         """
         [V55.1] Arc 전용 ToT 탐색 (Stage 2 필살기)
 
@@ -543,26 +500,26 @@ JSON 형식으로:
                 "name": "인과율 중심",
                 "description": "이전 Arc 결과를 철저히 계승하고 다음 Arc로 연결되는 인과 고리 구축",
                 "focus": "연속성",
-                "prompt_hint": "이전 Arc에서 획득한 아이템/수여물/상태를 정확히 계승. 새로운 획득은 기존 소지품과 중복 불가."
+                "prompt_hint": "이전 Arc에서 획득한 아이템/수여물/상태를 정확히 계승. 새로운 획득은 기존 소지품과 중복 불가.",
             },
             {
                 "name": "긴장감 중심",
                 "description": "5화 구조 내에서 긴장-이완 곡선을 최적화",
                 "focus": "몰입도",
-                "prompt_hint": "각 화마다 긴장 상승/하강을 명확히 구분. 클라이막스는 4-5화에 배치."
+                "prompt_hint": "각 화마다 긴장 상승/하강을 명확히 구분. 클라이막스는 4-5화에 배치.",
             },
             {
                 "name": "캐릭터 중심",
                 "description": "주인공과 NPC의 관계 변화, 성장에 집중",
                 "focus": "감정선",
-                "prompt_hint": "관계 변화는 점진적으로 (무시→의심→경외→충성). 급격한 변화 금지."
+                "prompt_hint": "관계 변화는 점진적으로 (무시→의심→경외→충성). 급격한 변화 금지.",
             },
             {
                 "name": "복선/회수 중심",
                 "description": "이전 Arc의 복선 회수 + 새로운 복선 설치의 균형",
                 "focus": "서사밀도",
-                "prompt_hint": "최소 1개 이상의 기존 복선 회수. 새로운 복선은 3화 이내 회수 가능한 것만 설치."
-            }
+                "prompt_hint": "최소 1개 이상의 기존 복선 회수. 새로운 복선은 3화 이내 회수 가능한 것만 설치.",
+            },
         ]
 
         # 각 접근 방식으로 Arc 생성
@@ -577,26 +534,30 @@ JSON 형식으로:
                     assets=assets,
                     feedback=feedback,
                     approach=approach,
-                    protagonist_name=protagonist_name  # [V60.18]
+                    protagonist_name=protagonist_name,  # [V60.18]
                 )
 
                 if arc_design:
                     evaluation = self._evaluate_arc(arc_design, approach["focus"])
-                    candidates.append({
-                        "approach": approach["name"],
-                        "design": arc_design,
-                        "score": evaluation["total"],
-                        "strengths": evaluation["strengths"],
-                        "weaknesses": evaluation["weaknesses"]
-                    })
-                    logging.info(f"✅ [ToT Arc] 분기 {i+1}/{num_branches} '{approach['name']}' 완료 (점수: {evaluation['total']})")
+                    candidates.append(
+                        {
+                            "approach": approach["name"],
+                            "design": arc_design,
+                            "score": evaluation["total"],
+                            "strengths": evaluation["strengths"],
+                            "weaknesses": evaluation["weaknesses"],
+                        }
+                    )
+                    logging.info(
+                        f"✅ [ToT Arc] 분기 {i + 1}/{num_branches} '{approach['name']}' 완료 (점수: {evaluation['total']})"
+                    )
 
             except Exception as e:
-                logging.warning(f"⚠️ [ToT Arc] 분기 {i+1} 실패: {e}")
+                logging.warning(f"⚠️ [ToT Arc] 분기 {i + 1} 실패: {e}")
                 continue
 
         if not candidates:
-            logging.warning(f"🚨 [ToT Arc] 모든 분기 실패")
+            logging.warning("🚨 [ToT Arc] 모든 분기 실패")
             return None
 
         # 최고 점수 선택
@@ -605,7 +566,7 @@ JSON 형식으로:
 
         logging.info(f"🏆 [ToT Arc] 최선 선택: '{best['approach']}' (점수: {best['score']})")
         logging.info(f"강점: {', '.join(best['strengths'][:2])}")
-        if best['weaknesses']:
+        if best["weaknesses"]:
             logging.info(f"약점: {', '.join(best['weaknesses'][:2])}")
 
         return best["design"]
@@ -614,17 +575,17 @@ JSON 형식으로:
         self,
         arc_no: int,
         vol_strategy: str,
-        curr_block: Dict[str, Any],
+        curr_block: dict[str, Any],
         prev_arc_context: str,
-        assets: Dict[str, Any],
+        assets: dict[str, Any],
         feedback: str,
-        approach: Dict[str, str],
-        protagonist_name: str = "주인공"  # [V60.18]
-    ) -> Optional[Dict[str, Any]]:
+        approach: dict[str, str],
+        protagonist_name: str = "주인공",  # [V60.18]
+    ) -> dict[str, Any] | None:
         """특정 접근 방식으로 Arc 생성"""
-        prompt = f"""[V55.1 ToT Arc Generator: {approach['name']} 접근]
+        prompt = f"""[V55.1 ToT Arc Generator: {approach["name"]} 접근]
 
-당신은 {approach['focus']} 전문가입니다.
+당신은 {approach["focus"]} 전문가입니다.
 
 ##############################################################
 # 🔒 [V60.18] 주인공 정보 - 반드시 이 이름을 사용!
@@ -635,8 +596,8 @@ JSON 형식으로:
 ##############################################################
 
 === 접근 방식 ===
-{approach['description']}
-힌트: {approach['prompt_hint']}
+{approach["description"]}
+힌트: {approach["prompt_hint"]}
 
 === 입력 정보 ===
 Arc 번호: {arc_no}
@@ -665,18 +626,14 @@ Volume 전략: {self._escape(vol_strategy[:2000] if vol_strategy else "(없음)"
     }}
 }}
 
-중요: {approach['prompt_hint']}
+중요: {approach["prompt_hint"]}
 반드시 JSON만 출력하세요."""
 
         try:
             response = self.client.models.generate_content(
                 model=self.model,
                 contents=prompt,
-                config={
-                    "temperature": 0.6,
-                    "max_output_tokens": 8192,
-                    "response_mime_type": "application/json"
-                }
+                config={"temperature": 0.6, "max_output_tokens": 8192, "response_mime_type": "application/json"},
             )
 
             try:  # [V70] response.text ValueError/None 방어
@@ -686,7 +643,8 @@ Volume 전략: {self._escape(vol_strategy[:2000] if vol_strategy else "(없음)"
             if not text:
                 return None
             import re
-            json_match = re.search(r'```json\s*(.*?)\s*```', text, re.DOTALL)
+
+            json_match = re.search(r"```json\s*(.*?)\s*```", text, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group(1))
             return json.loads(text)
@@ -695,7 +653,7 @@ Volume 전략: {self._escape(vol_strategy[:2000] if vol_strategy else "(없음)"
             logging.warning(f"⚠️ [ToT Arc] '{approach['name']}' 생성 오류: {e}")
             return None
 
-    def _evaluate_arc(self, arc: Dict[str, Any], focus: str) -> Dict[str, Any]:
+    def _evaluate_arc(self, arc: dict[str, Any], focus: str) -> dict[str, Any]:
         """Arc 평가 (Python 휴리스틱)"""
         score = 50  # 기본값
         strengths = []
@@ -755,11 +713,7 @@ Volume 전략: {self._escape(vol_strategy[:2000] if vol_strategy else "(없음)"
                 score += 5
                 strengths.append("캐릭터 성장")
 
-        return {
-            "total": min(100, max(0, score)),
-            "strengths": strengths,
-            "weaknesses": weaknesses
-        }
+        return {"total": min(100, max(0, score)), "strengths": strengths, "weaknesses": weaknesses}
 
     def _escape(self, text: str) -> str:
         """중괄호 이스케이프"""

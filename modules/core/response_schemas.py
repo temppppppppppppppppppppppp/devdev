@@ -4,9 +4,10 @@
 Gemini API의 response_schema를 사용한 구조화된 출력 강제
 JSON 파싱 실패율 90% 감소
 """
-from google.genai import types
+
 import logging
 
+from google.genai import types
 
 # =================================================================
 # V0128 Validation Schemas
@@ -25,14 +26,14 @@ BLOCKING_RESULT_SCHEMA = types.Schema(
                     "check": types.Schema(type=types.Type.STRING),
                     "passed": types.Schema(type=types.Type.BOOLEAN),
                     "reason": types.Schema(type=types.Type.STRING),
-                    "severity": types.Schema(type=types.Type.STRING)
-                }
-            )
+                    "severity": types.Schema(type=types.Type.STRING),
+                },
+            ),
         ),
         "message": types.Schema(type=types.Type.STRING),
-        "failure_count": types.Schema(type=types.Type.INTEGER)
+        "failure_count": types.Schema(type=types.Type.INTEGER),
     },
-    required=["tier", "passed", "failures", "message"]
+    required=["tier", "passed", "failures", "message"],
 )
 
 
@@ -41,11 +42,7 @@ SCORING_RESULT_SCHEMA = types.Schema(
     properties={
         "tier": types.Schema(type=types.Type.STRING),
         "passed": types.Schema(type=types.Type.BOOLEAN),
-        "total_score": types.Schema(
-            type=types.Type.INTEGER,
-            minimum=0,
-            maximum=100
-        ),
+        "total_score": types.Schema(type=types.Type.INTEGER, minimum=0, maximum=100),
         "max_score": types.Schema(type=types.Type.INTEGER),
         "percentage": types.Schema(type=types.Type.NUMBER),
         "threshold": types.Schema(type=types.Type.INTEGER),
@@ -57,46 +54,46 @@ SCORING_RESULT_SCHEMA = types.Schema(
                     properties={
                         "score": types.Schema(type=types.Type.INTEGER),
                         "max": types.Schema(type=types.Type.INTEGER),
-                        "reason": types.Schema(type=types.Type.STRING)
-                    }
+                        "reason": types.Schema(type=types.Type.STRING),
+                    },
                 ),
                 "emotion_arc": types.Schema(
                     type=types.Type.OBJECT,
                     properties={
                         "score": types.Schema(type=types.Type.INTEGER),
                         "max": types.Schema(type=types.Type.INTEGER),
-                        "reason": types.Schema(type=types.Type.STRING)
-                    }
+                        "reason": types.Schema(type=types.Type.STRING),
+                    },
                 ),
                 "dialogue_quality": types.Schema(
                     type=types.Type.OBJECT,
                     properties={
                         "score": types.Schema(type=types.Type.INTEGER),
                         "max": types.Schema(type=types.Type.INTEGER),
-                        "reason": types.Schema(type=types.Type.STRING)
-                    }
+                        "reason": types.Schema(type=types.Type.STRING),
+                    },
                 ),
                 "commercial_appeal": types.Schema(
                     type=types.Type.OBJECT,
                     properties={
                         "score": types.Schema(type=types.Type.INTEGER),
                         "max": types.Schema(type=types.Type.INTEGER),
-                        "reason": types.Schema(type=types.Type.STRING)
-                    }
+                        "reason": types.Schema(type=types.Type.STRING),
+                    },
                 ),
                 "pattern_diversity": types.Schema(
                     type=types.Type.OBJECT,
                     properties={
                         "score": types.Schema(type=types.Type.INTEGER),
                         "max": types.Schema(type=types.Type.INTEGER),
-                        "reason": types.Schema(type=types.Type.STRING)
-                    }
-                )
-            }
+                        "reason": types.Schema(type=types.Type.STRING),
+                    },
+                ),
+            },
         ),
-        "message": types.Schema(type=types.Type.STRING)
+        "message": types.Schema(type=types.Type.STRING),
     },
-    required=["tier", "passed", "total_score", "breakdown"]
+    required=["tier", "passed", "total_score", "breakdown"],
 )
 
 
@@ -112,13 +109,13 @@ ADVISORY_RESULT_SCHEMA = types.Schema(
                 properties={
                     "type": types.Schema(type=types.Type.STRING),
                     "suggestion": types.Schema(type=types.Type.STRING),
-                    "severity": types.Schema(type=types.Type.STRING)
-                }
-            )
+                    "severity": types.Schema(type=types.Type.STRING),
+                },
+            ),
         ),
-        "message": types.Schema(type=types.Type.STRING)
+        "message": types.Schema(type=types.Type.STRING),
     },
-    required=["tier", "passed", "suggestions"]
+    required=["tier", "passed", "suggestions"],
 )
 
 
@@ -129,60 +126,36 @@ ADVISORY_RESULT_SCHEMA = types.Schema(
 DIRECTOR_AUDIT_SCHEMA = types.Schema(
     type=types.Type.OBJECT,
     properties={
-        "decision": types.Schema(
-            type=types.Type.STRING,
-            enum=["PASS", "REJECT"]
-        ),
-        "score": types.Schema(
-            type=types.Type.INTEGER,
-            minimum=0,
-            maximum=100
-        ),
-        "error_category": types.Schema(
-            type=types.Type.STRING,
-            enum=["QUALITY_ISSUE", "LOGIC_ERROR"]
-        ),
+        "decision": types.Schema(type=types.Type.STRING, enum=["PASS", "REJECT"]),
+        "score": types.Schema(type=types.Type.INTEGER, minimum=0, maximum=100),
+        "error_category": types.Schema(type=types.Type.STRING, enum=["QUALITY_ISSUE", "LOGIC_ERROR"]),
         "diagnostic_report": types.Schema(type=types.Type.STRING),
         "current_beat_achieved": types.Schema(type=types.Type.BOOLEAN),
         "reason": types.Schema(type=types.Type.STRING),
-        "feedback": types.Schema(type=types.Type.STRING)
+        "feedback": types.Schema(type=types.Type.STRING),
     },
-    required=["decision", "score", "reason"]
+    required=["decision", "score", "reason"],
 )
 
 
 STRATEGIC_AUDIT_SCHEMA = types.Schema(
     type=types.Type.OBJECT,
     properties={
-        "decision": types.Schema(
-            type=types.Type.STRING,
-            enum=["PASS", "REJECT"]
-        ),
-        "score": types.Schema(
-            type=types.Type.INTEGER,
-            minimum=0,
-            maximum=100
-        ),
+        "decision": types.Schema(type=types.Type.STRING, enum=["PASS", "REJECT"]),
+        "score": types.Schema(type=types.Type.INTEGER, minimum=0, maximum=100),
         "loop_detected": types.Schema(type=types.Type.BOOLEAN),
         "reason": types.Schema(type=types.Type.STRING),
-        "re_slice_instruction": types.Schema(type=types.Type.STRING)
+        "re_slice_instruction": types.Schema(type=types.Type.STRING),
     },
-    required=["decision", "score", "loop_detected", "reason"]
+    required=["decision", "score", "loop_detected", "reason"],
 )
 
 
 CHARACTER_LOGIC_SCHEMA = types.Schema(
     type=types.Type.OBJECT,
     properties={
-        "decision": types.Schema(
-            type=types.Type.STRING,
-            enum=["PASS", "REJECT"]
-        ),
-        "score": types.Schema(
-            type=types.Type.INTEGER,
-            minimum=0,
-            maximum=100
-        ),
+        "decision": types.Schema(type=types.Type.STRING, enum=["PASS", "REJECT"]),
+        "score": types.Schema(type=types.Type.INTEGER, minimum=0, maximum=100),
         "violations": types.Schema(
             type=types.Type.ARRAY,
             items=types.Schema(
@@ -191,17 +164,14 @@ CHARACTER_LOGIC_SCHEMA = types.Schema(
                     "character": types.Schema(type=types.Type.STRING),
                     "trait": types.Schema(type=types.Type.STRING),
                     "action": types.Schema(type=types.Type.STRING),
-                    "reason": types.Schema(type=types.Type.STRING)
-                }
-            )
+                    "reason": types.Schema(type=types.Type.STRING),
+                },
+            ),
         ),
-        "severity": types.Schema(
-            type=types.Type.STRING,
-            enum=["NONE", "MINOR", "MAJOR", "CRITICAL"]
-        ),
-        "feedback": types.Schema(type=types.Type.STRING)
+        "severity": types.Schema(type=types.Type.STRING, enum=["NONE", "MINOR", "MAJOR", "CRITICAL"]),
+        "feedback": types.Schema(type=types.Type.STRING),
     },
-    required=["decision", "score", "violations", "severity"]
+    required=["decision", "score", "violations", "severity"],
 )
 
 
@@ -213,21 +183,11 @@ ARC_STATE_SCHEMA = types.Schema(
     type=types.Type.OBJECT,
     properties={
         "location": types.Schema(type=types.Type.STRING),
-        "equipment": types.Schema(
-            type=types.Type.ARRAY,
-            items=types.Schema(type=types.Type.STRING)
-        ),
-        "injuries": types.Schema(
-            type=types.Type.STRING,
-            enum=["정상", "경상", "중상", "위독"]
-        ),
-        "internal_energy": types.Schema(
-            type=types.Type.INTEGER,
-            minimum=0,
-            maximum=100
-        )
+        "equipment": types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
+        "injuries": types.Schema(type=types.Type.STRING, enum=["정상", "경상", "중상", "위독"]),
+        "internal_energy": types.Schema(type=types.Type.INTEGER, minimum=0, maximum=100),
     },
-    required=["location", "equipment", "injuries", "internal_energy"]
+    required=["location", "equipment", "injuries", "internal_energy"],
 )
 
 ARC_STATE_CONSTRAINTS_SCHEMA = types.Schema(
@@ -239,17 +199,17 @@ ARC_STATE_CONSTRAINTS_SCHEMA = types.Schema(
         "protagonist_items": types.Schema(
             type=types.Type.ARRAY,
             items=types.Schema(type=types.Type.STRING),
-            description="주인공이 직접 소지하게 되는 아이템만 기록. 타인에게 지급한 것은 제외."
+            description="주인공이 직접 소지하게 되는 아이템만 기록. 타인에게 지급한 것은 제외.",
         ),
         "distributed_items": types.Schema(
             type=types.Type.ARRAY,
             items=types.Schema(type=types.Type.STRING),
-            description="주인공이 구매/획득 후 타인(병사, NPC 등)에게 지급한 아이템"
+            description="주인공이 구매/획득 후 타인(병사, NPC 등)에게 지급한 아이템",
         ),
         "items_consumed": types.Schema(
             type=types.Type.ARRAY,
             items=types.Schema(type=types.Type.STRING),
-            description="이 Arc에서 소모/사용되어 사라진 아이템 (금전, 소모품 등)"
+            description="이 Arc에서 소모/사용되어 사라진 아이템 (금전, 소모품 등)",
         ),
         # [V49.7] 품질 추적 필드
         "relationship_changes": types.Schema(
@@ -261,20 +221,20 @@ ARC_STATE_CONSTRAINTS_SCHEMA = types.Schema(
                     "from": types.Schema(type=types.Type.STRING, description="이전 관계 상태"),
                     "to": types.Schema(type=types.Type.STRING, description="변경 후 상태"),
                     "trigger": types.Schema(type=types.Type.STRING, description="변화 계기"),
-                    "justification": types.Schema(type=types.Type.STRING, description="서사적 근거")
+                    "justification": types.Schema(type=types.Type.STRING, description="서사적 근거"),
                 },
-                required=["target", "from", "to", "trigger"]
+                required=["target", "from", "to", "trigger"],
             ),
-            description="이 Arc에서 발생하는 관계 변화 목록"
+            description="이 Arc에서 발생하는 관계 변화 목록",
         ),
         "power_changes": types.Schema(
             type=types.Type.OBJECT,
             properties={
                 "start_power": types.Schema(type=types.Type.INTEGER, description="Arc 시작 시 파워 (0-100)"),
                 "end_power": types.Schema(type=types.Type.INTEGER, description="Arc 종료 시 파워 (0-100)"),
-                "growth_justification": types.Schema(type=types.Type.STRING, description="성장 근거")
+                "growth_justification": types.Schema(type=types.Type.STRING, description="성장 근거"),
             },
-            description="주인공 파워 스케일링 정보"
+            description="주인공 파워 스케일링 정보",
         ),
         "foreshadowings": types.Schema(
             type=types.Type.ARRAY,
@@ -282,20 +242,19 @@ ARC_STATE_CONSTRAINTS_SCHEMA = types.Schema(
                 type=types.Type.OBJECT,
                 properties={
                     "id": types.Schema(type=types.Type.STRING, description="복선 식별자"),
-                    "type": types.Schema(type=types.Type.STRING, description="복선 유형 (아이템/인물/사건/능력/비밀/예언)"),
+                    "type": types.Schema(
+                        type=types.Type.STRING, description="복선 유형 (아이템/인물/사건/능력/비밀/예언)"
+                    ),
                     "description": types.Schema(type=types.Type.STRING, description="복선 내용"),
-                    "expected_payoff": types.Schema(type=types.Type.STRING, description="예상 회수 시점/방법")
+                    "expected_payoff": types.Schema(type=types.Type.STRING, description="예상 회수 시점/방법"),
                 },
-                required=["id", "description"]
+                required=["id", "description"],
             ),
-            description="이 Arc에서 설치하는 복선 목록"
+            description="이 Arc에서 설치하는 복선 목록",
         ),
-        "continuity_checkpoints": types.Schema(
-            type=types.Type.ARRAY,
-            items=types.Schema(type=types.Type.STRING)
-        )
+        "continuity_checkpoints": types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
     },
-    required=["arc_start_state", "arc_end_state", "protagonist_items", "items_consumed"]
+    required=["arc_start_state", "arc_end_state", "protagonist_items", "items_consumed"],
 )
 
 ARC_DESIGN_SCHEMA = types.Schema(
@@ -306,53 +265,37 @@ ARC_DESIGN_SCHEMA = types.Schema(
             type=types.Type.OBJECT,
             properties={
                 "primary": types.Schema(type=types.Type.STRING),
-                "secondary": types.Schema(
-                    type=types.Type.ARRAY,
-                    items=types.Schema(type=types.Type.STRING)
-                ),
-                "mixing_logic": types.Schema(type=types.Type.STRING)
+                "secondary": types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
+                "mixing_logic": types.Schema(type=types.Type.STRING),
             },
-            required=["primary", "mixing_logic"]
+            required=["primary", "mixing_logic"],
         ),
-        "ep_count": types.Schema(
-            type=types.Type.INTEGER,
-            minimum=2,
-            maximum=6
-        ),
+        "ep_count": types.Schema(type=types.Type.INTEGER, minimum=2, maximum=6),
         "ep_start": types.Schema(type=types.Type.INTEGER),
         "ep_end": types.Schema(type=types.Type.INTEGER),
         "title": types.Schema(type=types.Type.STRING),
-        "beat_sequence": types.Schema(
-            type=types.Type.ARRAY,
-            items=types.Schema(type=types.Type.STRING)
-        ),
+        "beat_sequence": types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
         "state_constraints": ARC_STATE_CONSTRAINTS_SCHEMA,
         "tactical_doc": types.Schema(type=types.Type.STRING),
         "joint_docs": types.Schema(
             type=types.Type.OBJECT,
             properties={
                 "final_location": types.Schema(type=types.Type.STRING),
-                "physical_inventory": types.Schema(
-                    type=types.Type.ARRAY,
-                    items=types.Schema(type=types.Type.STRING)
-                ),
-                "world_joint": types.Schema(type=types.Type.STRING)
+                "physical_inventory": types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
+                "world_joint": types.Schema(type=types.Type.STRING),
             },
-            required=["final_location", "physical_inventory", "world_joint"]
+            required=["final_location", "physical_inventory", "world_joint"],
         ),
         "status_shadow": types.Schema(
             type=types.Type.OBJECT,
             properties={
                 "internal_energy_loss": types.Schema(type=types.Type.STRING),
                 "expected_injuries": types.Schema(type=types.Type.STRING),
-                "item_consumption": types.Schema(
-                    type=types.Type.ARRAY,
-                    items=types.Schema(type=types.Type.STRING)
-                )
-            }
-        )
+                "item_consumption": types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
+            },
+        ),
     },
-    required=["arc_no", "ep_count", "ep_start", "ep_end", "title", "beat_sequence", "tactical_doc"]
+    required=["arc_no", "ep_count", "ep_start", "ep_end", "title", "beat_sequence", "tactical_doc"],
 )
 
 
@@ -377,14 +320,14 @@ BLUEPRINT_SCHEMA = types.Schema(
                     "target": types.Schema(type=types.Type.STRING),  # 대상 (NPC/집단)
                     "from_state": types.Schema(type=types.Type.STRING),  # 이전 관계
                     "to_state": types.Schema(type=types.Type.STRING),  # 변화 후 관계
-                    "justification": types.Schema(type=types.Type.STRING)  # 변화 근거
-                }
-            )
+                    "justification": types.Schema(type=types.Type.STRING),  # 변화 근거
+                },
+            ),
         ),
         # [V49.5] 시간 흐름
-        "time_flow": types.Schema(type=types.Type.STRING)  # 예: "같은 날 밤", "3일 후"
+        "time_flow": types.Schema(type=types.Type.STRING),  # 예: "같은 날 밤", "3일 후"
     },
-    required=["episode_number", "scene_breakdown", "integrated_scenario"]
+    required=["episode_number", "scene_breakdown", "integrated_scenario"],
 )
 
 
@@ -394,15 +337,16 @@ MANUSCRIPT_SCHEMA = types.Schema(
         "content": types.Schema(type=types.Type.STRING),
         "word_count": types.Schema(type=types.Type.INTEGER),
         "state_updates": types.Schema(type=types.Type.OBJECT),
-        "character_status": types.Schema(type=types.Type.STRING)
+        "character_status": types.Schema(type=types.Type.STRING),
     },
-    required=["content"]
+    required=["content"],
 )
 
 
 # =================================================================
 # Utility Functions
 # =================================================================
+
 
 def get_schema_for_task(task_type: str) -> types.Schema:
     """
@@ -453,7 +397,7 @@ def validate_response_against_schema(response: dict, schema: types.Schema) -> bo
         return False
 
     # [V70] required 필드만 체크 (optional 필드는 누락 허용)
-    required_props = getattr(schema, 'required', None)
+    required_props = getattr(schema, "required", None)
     if required_props:
         missing = [p for p in required_props if p not in response]
         if missing:
@@ -475,16 +419,10 @@ def validate_response_against_schema(response: dict, schema: types.Schema) -> bo
 BIBLE_REQUIRED_STRUCTURE = {
     "MasterBible": {
         "required_fields": ["ProjectData"],
-        "optional_fields": ["plot_roadmap", "world_setting", "character_profiles"]
+        "optional_fields": ["plot_roadmap", "world_setting", "character_profiles"],
     },
-    "ProjectData": {
-        "required_fields": ["MetaInfo"],
-        "optional_fields": ["WorldRules", "CharacterArcs"]
-    },
-    "MetaInfo": {
-        "required_fields": ["title"],
-        "optional_fields": ["author", "genre", "synopsis", "total_episodes"]
-    }
+    "ProjectData": {"required_fields": ["MetaInfo"], "optional_fields": ["WorldRules", "CharacterArcs"]},
+    "MetaInfo": {"required_fields": ["title"], "optional_fields": ["author", "genre", "synopsis", "total_episodes"]},
 }
 
 # Treatment 파일 필수 구조 정의 (배열 항목별)
@@ -603,18 +541,14 @@ def validate_phase0_files(bible_data: dict, treatment_data: list) -> tuple:
     treatment_valid, treatment_errors, treatment_warnings = validate_treatment_structure(treatment_data)
 
     report = {
-        "bible": {
-            "valid": bible_valid,
-            "errors": bible_errors,
-            "warnings": bible_warnings
-        },
+        "bible": {"valid": bible_valid, "errors": bible_errors, "warnings": bible_warnings},
         "treatment": {
             "valid": treatment_valid,
             "errors": treatment_errors,
             "warnings": treatment_warnings,
-            "block_count": len(treatment_data) if isinstance(treatment_data, list) else 0
+            "block_count": len(treatment_data) if isinstance(treatment_data, list) else 0,
         },
-        "overall_valid": bible_valid and treatment_valid
+        "overall_valid": bible_valid and treatment_valid,
     }
 
     return report["overall_valid"], report

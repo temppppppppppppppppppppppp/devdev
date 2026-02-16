@@ -4,21 +4,27 @@
 Rich 기반 진행 표시 및 상태 시각화
 """
 
-import time
 import logging
-from typing import Optional, Dict, Any, List
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 try:
     from rich.console import Console
+    from rich.live import Live
+    from rich.panel import Panel
     from rich.progress import (
-        Progress, TaskID, BarColumn, TextColumn,
-        TimeElapsedColumn, TimeRemainingColumn, SpinnerColumn
+        BarColumn,
+        Progress,
+        SpinnerColumn,
+        TaskID,
+        TextColumn,
+        TimeElapsedColumn,
+        TimeRemainingColumn,
     )
     from rich.table import Table
-    from rich.panel import Panel
-    from rich.live import Live
+
     RICH_AVAILABLE = True
 except ImportError:
     RICH_AVAILABLE = False
@@ -27,25 +33,27 @@ except ImportError:
 @dataclass
 class StageInfo:
     """스테이지 정보"""
+
     name: str
     description: str
     total_items: int = 0
     completed_items: int = 0
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
     status: str = "pending"  # pending, in_progress, completed, failed
 
 
 @dataclass
 class EpisodeProgress:
     """에피소드 진행 정보"""
+
     ep_num: int
     stage: str
     status: str = "pending"
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
     retries: int = 0
-    error: Optional[str] = None
+    error: str | None = None
 
 
 class ProgressManager:
@@ -68,7 +76,7 @@ class ProgressManager:
         "stage4": StageInfo("Stage 4", "Sovereign Production"),
     }
 
-    def __init__(self, console: Optional['Console'] = None):
+    def __init__(self, console: Optional["Console"] = None):
         """
         초기화
 
@@ -76,17 +84,14 @@ class ProgressManager:
             console: Rich Console 인스턴스 (없으면 새로 생성)
         """
         self.console = console or (Console() if RICH_AVAILABLE else None)
-        self.stages: Dict[str, StageInfo] = {
-            k: StageInfo(v.name, v.description)
-            for k, v in self.STAGES.items()
-        }
-        self.current_stage: Optional[str] = None
-        self.episode_history: List[EpisodeProgress] = []
-        self._progress: Optional['Progress'] = None
-        self._task_ids: Dict[str, 'TaskID'] = {}
+        self.stages: dict[str, StageInfo] = {k: StageInfo(v.name, v.description) for k, v in self.STAGES.items()}
+        self.current_stage: str | None = None
+        self.episode_history: list[EpisodeProgress] = []
+        self._progress: Progress | None = None
+        self._task_ids: dict[str, TaskID] = {}
 
         # 성능 통계
-        self._stage_durations: Dict[str, List[float]] = {}
+        self._stage_durations: dict[str, list[float]] = {}
 
     def start_stage(self, stage_key: str, total_items: int = 0):
         """
@@ -154,12 +159,7 @@ class ProgressManager:
 
     def start_episode(self, ep_num: int, stage: str):
         """에피소드 처리 시작"""
-        progress = EpisodeProgress(
-            ep_num=ep_num,
-            stage=stage,
-            status="in_progress",
-            start_time=datetime.now()
-        )
+        progress = EpisodeProgress(ep_num=ep_num, stage=stage, status="in_progress", start_time=datetime.now())
         self.episode_history.append(progress)
         return progress
 
@@ -172,7 +172,7 @@ class ProgressManager:
                 progress.error = error
                 break
 
-    def get_estimated_time(self, stage_key: str, remaining_items: int) -> Optional[timedelta]:
+    def get_estimated_time(self, stage_key: str, remaining_items: int) -> timedelta | None:
         """
         예상 남은 시간 계산
 
@@ -199,16 +199,12 @@ class ProgressManager:
     def _print_stage_header(self, stage: StageInfo):
         """스테이지 시작 헤더 출력"""
         if not RICH_AVAILABLE or not self.console:
-            logging.info(f"\n{'='*60}")
+            logging.info(f"\n{'=' * 60}")
             logging.info(f"{stage.name}: {stage.description}")
-            logging.info(f"{'='*60}\n")
+            logging.info(f"{'=' * 60}\n")
             return
 
-        header = Panel(
-            f"[bold]{stage.description}[/bold]",
-            title=f"[cyan]{stage.name}[/cyan]",
-            border_style="cyan"
-        )
+        header = Panel(f"[bold]{stage.description}[/bold]", title=f"[cyan]{stage.name}[/cyan]", border_style="cyan")
         self.console.print(header)
 
     def _print_stage_completion(self, stage: StageInfo, success: bool):
@@ -225,9 +221,7 @@ class ProgressManager:
             return
 
         color = "green" if success else "red"
-        self.console.print(
-            f"[{color}]{status_icon}[/{color}] {stage.name} 완료{duration}"
-        )
+        self.console.print(f"[{color}]{status_icon}[/{color}] {stage.name} 완료{duration}")
 
     def _update_progress_bar(self, stage_key: str):
         """진행률 바 업데이트 (Rich 사용 시)"""
@@ -240,7 +234,7 @@ class ProgressManager:
         if not RICH_AVAILABLE or not self.console:
             bar_width = 40
             filled = int(bar_width * stage.completed_items / stage.total_items)
-            bar = '#' * filled + '-' * (bar_width - filled)
+            bar = "#" * filled + "-" * (bar_width - filled)
             logging.info(f"\r[{bar}] {percent:.1f}% ({stage.completed_items}/{stage.total_items})", end="")
             if stage.completed_items >= stage.total_items:
                 logging.info()
@@ -248,10 +242,7 @@ class ProgressManager:
 
         # Rich 진행률 표시는 Live context에서 사용하는 것이 좋음
         # 여기서는 간단한 출력으로 대체
-        self.console.print(
-            f"  [{stage.completed_items}/{stage.total_items}] {percent:.1f}%",
-            end="\r"
-        )
+        self.console.print(f"  [{stage.completed_items}/{stage.total_items}] {percent:.1f}%", end="\r")
 
     def _format_duration(self, delta: timedelta) -> str:
         """시간 포맷팅"""
@@ -282,12 +273,9 @@ class ProgressManager:
         logging.info("=" * 60)
 
         for key, stage in self.stages.items():
-            status_icon = {
-                "pending": "[ ]",
-                "in_progress": "[~]",
-                "completed": "[O]",
-                "failed": "[X]"
-            }.get(stage.status, "[?]")
+            status_icon = {"pending": "[ ]", "in_progress": "[~]", "completed": "[O]", "failed": "[X]"}.get(
+                stage.status, "[?]"
+            )
 
             duration = ""
             if stage.start_time and stage.end_time:
@@ -311,7 +299,7 @@ class ProgressManager:
                 "pending": "[dim]대기[/dim]",
                 "in_progress": "[yellow]진행중[/yellow]",
                 "completed": "[green]완료[/green]",
-                "failed": "[red]실패[/red]"
+                "failed": "[red]실패[/red]",
             }.get(stage.status, "알 수 없음")
 
             duration = "-"
@@ -319,16 +307,11 @@ class ProgressManager:
                 delta = stage.end_time - stage.start_time
                 duration = self._format_duration(delta)
 
-            table.add_row(
-                stage.name,
-                stage.description,
-                status_style,
-                duration
-            )
+            table.add_row(stage.name, stage.description, status_style, duration)
 
         self.console.print(table)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """통계 정보 반환"""
         total_episodes = len(self.episode_history)
         successful = sum(1 for e in self.episode_history if e.status == "completed")
@@ -341,12 +324,12 @@ class ProgressManager:
             "failed": failed,
             "success_rate": (successful / total_episodes * 100) if total_episodes > 0 else 0,
             "total_retries": total_retries,
-            "stage_durations": self._stage_durations
+            "stage_durations": self._stage_durations,
         }
 
 
 # 전역 인스턴스
-_progress_manager: Optional[ProgressManager] = None
+_progress_manager: ProgressManager | None = None
 
 
 def get_progress_manager() -> ProgressManager:

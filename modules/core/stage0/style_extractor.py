@@ -9,12 +9,12 @@ Style Extractor V2 - 문체 DNA 추출기
 
 import json
 import logging
-import re
 import os
+import re
 import time
+from dataclasses import asdict, dataclass, fields
 from pathlib import Path
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, asdict, fields
+from typing import Any
 
 
 @dataclass
@@ -22,49 +22,49 @@ class StyleGuide:
     """스타일 가이드 V2 - 문체 DNA"""
 
     # === 기존 필드 (V1 호환) ===
-    tone: str = "중립"                      # 냉소적/유머/진지/가벼움/어두움
-    pov: str = "1인칭"                      # 1인칭/3인칭/전지적/혼합
-    sentence_length: str = "medium"         # short/medium/long
-    dialogue_ratio: float = 0.3             # 대화 비율 (0.0-1.0)
-    description_style: str = "균형"         # 간결/균형/묘사적
-    vocabulary_level: str = "medium"        # easy/medium/hard
-    paragraph_style: str = "mixed"          # short/mixed/long
-    action_style: str = "dynamic"           # static/dynamic/cinematic
+    tone: str = "중립"  # 냉소적/유머/진지/가벼움/어두움
+    pov: str = "1인칭"  # 1인칭/3인칭/전지적/혼합
+    sentence_length: str = "medium"  # short/medium/long
+    dialogue_ratio: float = 0.3  # 대화 비율 (0.0-1.0)
+    description_style: str = "균형"  # 간결/균형/묘사적
+    vocabulary_level: str = "medium"  # easy/medium/hard
+    paragraph_style: str = "mixed"  # short/mixed/long
+    action_style: str = "dynamic"  # static/dynamic/cinematic
 
-    sample_sentences: List[str] = None      # 대표 문장 (V2: 20-30개)
-    sample_dialogues: List[str] = None      # 대표 대화 (V2: 10-15개)
-    signature_expressions: List[str] = None # 자주 쓰는 표현
-    forbidden_expressions: List[str] = None # 피해야 할 표현
+    sample_sentences: list[str] = None  # 대표 문장 (V2: 20-30개)
+    sample_dialogues: list[str] = None  # 대표 대화 (V2: 10-15개)
+    signature_expressions: list[str] = None  # 자주 쓰는 표현
+    forbidden_expressions: list[str] = None  # 피해야 할 표현
 
     # === V2 신규 필드 ===
-    sentence_rhythm: str = ""               # 문장 리듬 패턴
-    emotion_rendering: str = ""             # 감정 표현 방식
-    scene_transitions: List[str] = None     # 장면 전환 문장 5-8개
-    dialogue_narration_pattern: str = ""    # 대화-서술 연결 패턴
-    anti_ai_patterns: List[str] = None      # AI 패턴 금지 목록
-    action_scene_density: str = ""          # 액션씬 묘사 밀도
-    calm_scene_density: str = ""            # 일상씬 묘사 밀도
-    exemplary_passages: List[str] = None    # 모범 문단 5-8개 (200-500자)
+    sentence_rhythm: str = ""  # 문장 리듬 패턴
+    emotion_rendering: str = ""  # 감정 표현 방식
+    scene_transitions: list[str] = None  # 장면 전환 문장 5-8개
+    dialogue_narration_pattern: str = ""  # 대화-서술 연결 패턴
+    anti_ai_patterns: list[str] = None  # AI 패턴 금지 목록
+    action_scene_density: str = ""  # 액션씬 묘사 밀도
+    calm_scene_density: str = ""  # 일상씬 묘사 밀도
+    exemplary_passages: list[str] = None  # 모범 문단 5-8개 (200-500자)
 
     # === 메타데이터 ===
     source_episode_count: int = 0
     source_char_count: int = 0
     analysis_version: str = "v2"
-    reference_works: List[str] = None
+    reference_works: list[str] = None
 
     def __post_init__(self) -> None:
         for f in fields(self):
-            if f.type == List[str] and getattr(self, f.name) is None:
+            if f.type == list[str] and getattr(self, f.name) is None:
                 setattr(self, f.name, [])
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict(), ensure_ascii=False, indent=2)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "StyleGuide":
+    def from_dict(cls, data: dict[str, Any]) -> "StyleGuide":
         valid_keys = {f.name for f in fields(cls)}
         return cls(**{k: v for k, v in data.items() if k in valid_keys})
 
@@ -157,8 +157,8 @@ class StyleGuide:
         # 8. 묘사 밀도
         if self.action_scene_density or self.calm_scene_density:
             sections.append(f"""## 묘사 밀도
-- 액션씬: {self.action_scene_density or '짧은 문장, 빠른 리듬'}
-- 일상씬: {self.calm_scene_density or '긴 문장, 심리/풍경 묘사 확장'}""")
+- 액션씬: {self.action_scene_density or "짧은 문장, 빠른 리듬"}
+- 일상씬: {self.calm_scene_density or "긴 문장, 심리/풍경 묘사 확장"}""")
 
         # 9. 활용/금지 표현
         if self.signature_expressions:
@@ -173,13 +173,25 @@ class StyleGuide:
 # 감각어/클리셰 사전 (샘플 큐레이션용)
 # ═══════════════════════════════════════════════════════════════
 
-_SENSORY_WORDS = set("시큰|찌릿|매캐|눅눅|축축|서늘|화끈|뻣뻣|쏟아|찢어|으스스|쿵|퍽|철컥|우두둑|사각|촉촉|아릿|싸늘|뜨끈".split("|"))
+_SENSORY_WORDS = set(
+    "시큰|찌릿|매캐|눅눅|축축|서늘|화끈|뻣뻣|쏟아|찢어|으스스|쿵|퍽|철컥|우두둑|사각|촉촉|아릿|싸늘|뜨끈".split("|")
+)
 
-_CLICHE_MARKERS = set("깊은 슬픔|마음이 무거|가슴이 먹먹|눈물이 흘|한숨을 쉬|고개를 끄덕|미소를 지|결국|마침내|드디어|그러나|하지만|물론".split("|"))
+_CLICHE_MARKERS = set(
+    "깊은 슬픔|마음이 무거|가슴이 먹먹|눈물이 흘|한숨을 쉬|고개를 끄덕|미소를 지|결국|마침내|드디어|그러나|하지만|물론".split(
+        "|"
+    )
+)
 
-_ACTION_VERBS = set("내리쳤|베었|찔렀|막았|피했|날렸|휘둘|밀쳐|때렸|잡았|던졌|쓰러|뛰어|구르|꿰뚫|쏘았|찢었|부딪|꺾었|움켜".split("|"))
+_ACTION_VERBS = set(
+    "내리쳤|베었|찔렀|막았|피했|날렸|휘둘|밀쳐|때렸|잡았|던졌|쓰러|뛰어|구르|꿰뚫|쏘았|찢었|부딪|꺾었|움켜".split("|")
+)
 
-_TRANSITION_MARKERS = set("그때|한편|잠시 후|얼마 뒤|이윽고|다음 날|그로부터|시간이 흘러|해가 지고|날이 밝자|자리를 옮기|장소를 바꿔".split("|"))
+_TRANSITION_MARKERS = set(
+    "그때|한편|잠시 후|얼마 뒤|이윽고|다음 날|그로부터|시간이 흘러|해가 지고|날이 밝자|자리를 옮기|장소를 바꿔".split(
+        "|"
+    )
+)
 
 
 class StyleExtractor:
@@ -194,7 +206,7 @@ class StyleExtractor:
     # 메인 추출 메서드
     # ═══════════════════════════════════════════════════════════════
 
-    def extract_from_drafts(self, drafts: List[str], reference_name: str = "") -> StyleGuide:
+    def extract_from_drafts(self, drafts: list[str], reference_name: str = "") -> StyleGuide:
         """
         [V2] 원고에서 문체 DNA 추출 (전체 원고 대상)
 
@@ -215,30 +227,30 @@ class StyleExtractor:
         logging.info(f"[V2] 문체 분석 시작: {total_episodes}화, {total_chars:,}자")
 
         # Phase 1: Python 통계 분석 (전체 원고)
-        logging.info(f"[1/5] 통계 분석...")
+        logging.info("[1/5] 통계 분석...")
         stats = self._analyze_statistics_v2(drafts)
 
         # Phase 2: 샘플 큐레이션
-        logging.info(f"[2/5] 샘플 큐레이션...")
+        logging.info("[2/5] 샘플 큐레이션...")
         curated = self._curate_samples(drafts)
 
         # Phase 3: 리듬 분석
-        logging.info(f"[3/5] 리듬 분석...")
+        logging.info("[3/5] 리듬 분석...")
         rhythm = self._analyze_rhythm(drafts)
 
         # Phase 4: LLM 심층 분석
         qualitative = {}
         if self.client or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY"):
-            logging.info(f"[4/5] LLM 심층 분석...")
+            logging.info("[4/5] LLM 심층 분석...")
             qualitative = self._deep_llm_analysis(drafts)
 
             # Phase 5: Anti-AI 패턴 생성
-            logging.info(f"[5/5] Anti-AI 패턴 생성...")
+            logging.info("[5/5] Anti-AI 패턴 생성...")
             anti = self._generate_anti_patterns(drafts, curated.get("exemplary_passages", []))
             qualitative.update(anti)
         else:
-            logging.info(f"[4/5] LLM 없음 - 통계 분석만 사용")
-            logging.info(f"[5/5] 스킵")
+            logging.info("[4/5] LLM 없음 - 통계 분석만 사용")
+            logging.info("[5/5] 스킵")
 
         # 병합
         merged = {**stats, **curated, **rhythm, **qualitative}
@@ -256,7 +268,7 @@ class StyleExtractor:
     # Phase 1: 통계 분석 V2
     # ═══════════════════════════════════════════════════════════════
 
-    def _analyze_statistics_v2(self, drafts: List[str]) -> Dict[str, Any]:
+    def _analyze_statistics_v2(self, drafts: list[str]) -> dict[str, Any]:
         """전체 원고 통계 분석"""
         result = {}
         all_text = "\n\n".join(drafts)
@@ -285,8 +297,8 @@ class StyleExtractor:
             result["dialogue_ratio"] = round(dialogue_chars / total_chars, 2)
 
         # 시점 감지
-        first_person = len(re.findall(r'(나는|나의|내가|나를|나에게|내 )', all_text))
-        third_person = len(re.findall(r'(그는|그녀는|그의|그녀의|그가|그를)', all_text))
+        first_person = len(re.findall(r"(나는|나의|내가|나를|나에게|내 )", all_text))
+        third_person = len(re.findall(r"(그는|그녀는|그의|그녀의|그가|그를)", all_text))
         if first_person > third_person * 2:
             result["pov"] = "1인칭"
         elif third_person > first_person * 2:
@@ -311,7 +323,7 @@ class StyleExtractor:
     # Phase 2: 샘플 큐레이션
     # ═══════════════════════════════════════════════════════════════
 
-    def _curate_samples(self, drafts: List[str]) -> Dict[str, Any]:
+    def _curate_samples(self, drafts: list[str]) -> dict[str, Any]:
         """점수 기반 최상위 샘플 선별"""
         result = {}
         all_text = "\n\n".join(drafts)
@@ -371,7 +383,7 @@ class StyleExtractor:
                 score += 3
 
         # 의성어/의태어 패턴 → +2
-        if re.search(r'[가-힣]{2,3}[!]', sentence):
+        if re.search(r"[가-힣]{2,3}[!]", sentence):
             score += 2
 
         # 클리셰 → -3
@@ -384,7 +396,7 @@ class StyleExtractor:
             score += 1
 
         # 동사로 끝나는 문장 보너스
-        if re.search(r'[았었였했]다$', sentence):
+        if re.search(r"[았었였했]다$", sentence):
             score += 0.5
 
         return score
@@ -393,7 +405,7 @@ class StyleExtractor:
     # Phase 3: 리듬 분석
     # ═══════════════════════════════════════════════════════════════
 
-    def _analyze_rhythm(self, drafts: List[str]) -> Dict[str, Any]:
+    def _analyze_rhythm(self, drafts: list[str]) -> dict[str, Any]:
         """문장 리듬 패턴 분석"""
         result = {}
         all_text = "\n\n".join(drafts[:20])  # 20화까지 분석
@@ -434,7 +446,7 @@ class StyleExtractor:
             trigrams = {}
             for seq in rhythm_sequences:
                 for i in range(len(seq) - 2):
-                    tri = seq[i:i+3]
+                    tri = seq[i : i + 3]
                     trigrams[tri] = trigrams.get(tri, 0) + 1
 
             top_patterns = sorted(trigrams.items(), key=lambda x: -x[1])[:5]
@@ -461,7 +473,7 @@ class StyleExtractor:
     # Phase 4: LLM 심층 분석
     # ═══════════════════════════════════════════════════════════════
 
-    def _deep_llm_analysis(self, drafts: List[str]) -> Dict[str, Any]:
+    def _deep_llm_analysis(self, drafts: list[str]) -> dict[str, Any]:
         """[V2] 3배치 LLM 심층 분석"""
         self._ensure_client()
         if not self.client:
@@ -503,7 +515,7 @@ JSON만 출력하세요.
     # Phase 5: Anti-AI 패턴 생성
     # ═══════════════════════════════════════════════════════════════
 
-    def _generate_anti_patterns(self, drafts: List[str], passages: List[str]) -> Dict[str, Any]:
+    def _generate_anti_patterns(self, drafts: list[str], passages: list[str]) -> dict[str, Any]:
         """[V2] 참조 원고 기반 AI 금지 패턴 생성"""
         self._ensure_client()
         if not self.client:
@@ -544,7 +556,7 @@ JSON만 출력하세요.
     # ═══════════════════════════════════════════════════════════════
 
     @staticmethod
-    def load_reference_manuscripts(genre: str) -> Dict[str, List[str]]:
+    def load_reference_manuscripts(genre: str) -> dict[str, list[str]]:
         """
         장르별 레퍼런스 원고 로드
 
@@ -566,7 +578,7 @@ JSON만 출력하세요.
             episodes = []
             for txt_file in sorted(work_dir.glob("*.txt")):
                 try:
-                    text = txt_file.read_text(encoding='utf-8')
+                    text = txt_file.read_text(encoding="utf-8")
                     if text.strip():
                         episodes.append(text)
                 except Exception as e:
@@ -577,7 +589,7 @@ JSON만 출력하세요.
 
         return works
 
-    def extract_from_references(self, genre: str) -> Optional[StyleGuide]:
+    def extract_from_references(self, genre: str) -> StyleGuide | None:
         """
         장르별 레퍼런스 폴더에서 스타일 추출
 
@@ -608,14 +620,14 @@ JSON만 출력하세요.
     # 유틸리티
     # ═══════════════════════════════════════════════════════════════
 
-    def _split_sentences(self, text: str) -> List[str]:
+    def _split_sentences(self, text: str) -> list[str]:
         """한국어 문장 분리"""
         # 대화 내 마침표는 분리하지 않음
         # 한국어 종결어미 + 마침표/느낌표/물음표 기준
-        sents = re.split(r'(?<=[다요죠음함임까])[.!?]\s*|\n', text)
+        sents = re.split(r"(?<=[다요죠음함임까])[.!?]\s*|\n", text)
         return [s.strip() for s in sents if s.strip() and len(s.strip()) > 3]
 
-    def _sample_batches(self, drafts: List[str], batch_size: int = 8000, num_batches: int = 3) -> List[str]:
+    def _sample_batches(self, drafts: list[str], batch_size: int = 8000, num_batches: int = 3) -> list[str]:
         """초반/중반/후반에서 균등 샘플링"""
         if len(drafts) <= num_batches:
             return [d[:batch_size] for d in drafts]
@@ -633,15 +645,17 @@ JSON만 출력하세요.
             return
         try:
             from google import genai
+
             api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
             if api_key:
                 self.client = genai.Client(api_key=api_key)
         except Exception:
             pass
 
-    def _llm_call(self, prompt: str) -> Dict[str, Any]:
+    def _llm_call(self, prompt: str) -> dict[str, Any]:
         """LLM 호출 + JSON 파싱 (폴백: 3-pro → 2.5-pro → 2.5-flash)"""
         from google.genai import types
+
         time.sleep(self.API_DELAY)
 
         models = ["gemini-3-pro-preview", "gemini-2.5-pro", "gemini-2.5-flash"]
@@ -652,10 +666,8 @@ JSON만 출력하세요.
                     model=model_name,
                     contents=prompt,
                     config=types.GenerateContentConfig(
-                        temperature=0.3,
-                        max_output_tokens=4000,
-                        response_mime_type="application/json"
-                    )
+                        temperature=0.3, max_output_tokens=4000, response_mime_type="application/json"
+                    ),
                 )
                 return self._parse_json(response.text)
             except Exception as e:
@@ -664,7 +676,7 @@ JSON만 출력하세요.
                 time.sleep(1)
         raise last_err if last_err else RuntimeError("All models failed")
 
-    def _parse_json(self, text: str) -> Dict[str, Any]:
+    def _parse_json(self, text: str) -> dict[str, Any]:
         """JSON 파싱 (자가 치유)"""
         if not text:
             return {}
@@ -688,7 +700,7 @@ JSON만 출력하세요.
     # 기존 호환 메서드
     # ═══════════════════════════════════════════════════════════════
 
-    def compare_styles(self, guide1: StyleGuide, guide2: StyleGuide) -> Dict[str, Any]:
+    def compare_styles(self, guide1: StyleGuide, guide2: StyleGuide) -> dict[str, Any]:
         """두 스타일 비교"""
         differences = {}
         for field_name in ["tone", "pov", "sentence_length", "description_style", "vocabulary_level"]:
@@ -702,6 +714,6 @@ JSON만 출력하세요.
             differences["dialogue_ratio"] = {
                 "original": guide1.dialogue_ratio,
                 "current": guide2.dialogue_ratio,
-                "diff": ratio_diff
+                "diff": ratio_diff,
             }
         return differences

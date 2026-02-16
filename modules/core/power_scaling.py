@@ -15,13 +15,14 @@
     result = tracker.validate_growth("팽무진", arc=3, new_power=90)
 """
 
-from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional
+from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 
 class PowerTier(Enum):
     """파워 등급"""
+
     MORTAL = (0, 20, "범인")  # 일반인
     INITIATE = (21, 40, "입문")  # 입문자
     ADEPT = (41, 60, "숙련")  # 숙련자
@@ -52,6 +53,7 @@ class PowerTier(Enum):
 @dataclass
 class PowerRecord:
     """파워 기록"""
+
     arc: int
     episode: int
     power: int
@@ -81,66 +83,71 @@ class PowerScalingTracker:
         # 매우 강함 (LEGENDARY) - +40까지 허용
         "legendary": {
             "max_growth": 40,
-            "keywords": ["전설급 비급", "신물", "천재지변", "신수의 혈", "만년", "천년",
-                        "금단의", "봉인 해제", "혈맥 각성", "선천진기", "태을신공"],
-            "description": "전설급 기연으로 획기적 성장"
+            "keywords": [
+                "전설급 비급",
+                "신물",
+                "천재지변",
+                "신수의 혈",
+                "만년",
+                "천년",
+                "금단의",
+                "봉인 해제",
+                "혈맥 각성",
+                "선천진기",
+                "태을신공",
+            ],
+            "description": "전설급 기연으로 획기적 성장",
         },
         # 강함 (STRONG) - +30까지 허용
         "strong": {
             "max_growth": 30,
-            "keywords": ["비급", "절기", "각성", "돌파", "기연", "영약", "단약",
-                        "천재", "오의", "비전", "진전", "대성", "통달"],
-            "description": "강력한 계기로 대폭 성장"
+            "keywords": [
+                "비급",
+                "절기",
+                "각성",
+                "돌파",
+                "기연",
+                "영약",
+                "단약",
+                "천재",
+                "오의",
+                "비전",
+                "진전",
+                "대성",
+                "통달",
+            ],
+            "description": "강력한 계기로 대폭 성장",
         },
         # 보통 (MODERATE) - +20까지 허용
         "moderate": {
             "max_growth": 20,
-            "keywords": ["수련", "깨달음", "실전", "경험", "훈련", "연마",
-                        "숙달", "이해", "체득", "정진", "단련"],
-            "description": "노력과 경험으로 성장"
+            "keywords": ["수련", "깨달음", "실전", "경험", "훈련", "연마", "숙달", "이해", "체득", "정진", "단련"],
+            "description": "노력과 경험으로 성장",
         },
         # 약함 (WEAK) - +10까지 허용
         "weak": {
             "max_growth": 10,
             "keywords": ["위기", "고비", "역경", "시간", "자연"],
-            "description": "시간 경과나 위기 극복으로 소폭 성장"
+            "description": "시간 경과나 위기 극복으로 소폭 성장",
         },
         # 없음 (NONE) - +5까지만 허용
-        "none": {
-            "max_growth": 5,
-            "keywords": [],
-            "description": "정당화 없음 - 최소 성장만 허용"
-        }
+        "none": {"max_growth": 5, "keywords": [], "description": "정당화 없음 - 최소 성장만 허용"},
     }
 
     # 복합 정당화 보너스 (여러 키워드 조합 시)
     COMPOUND_BONUS = {
-        2: 5,   # 2개 키워드 조합: +5 추가
+        2: 5,  # 2개 키워드 조합: +5 추가
         3: 10,  # 3개 키워드 조합: +10 추가
         4: 15,  # 4개 이상: +15 추가
     }
 
     # 레거시 호환용
-    GROWTH_JUSTIFICATIONS = {
-        "수련": 15,
-        "비급": 25,
-        "영약": 20,
-        "각성": 30,
-        "위기": 10,
-        "기본": 5
-    }
+    GROWTH_JUSTIFICATIONS = {"수련": 15, "비급": 25, "영약": 20, "각성": 30, "위기": 10, "기본": 5}
 
     def __init__(self) -> None:
-        self.characters: Dict[str, List[PowerRecord]] = {}
+        self.characters: dict[str, list[PowerRecord]] = {}
 
-    def set_power(
-        self,
-        character: str,
-        arc: int,
-        power: int,
-        reason: str = "",
-        episode: int = 0
-    ) -> Dict[str, Any]:
+    def set_power(self, character: str, arc: int, power: int, reason: str = "", episode: int = 0) -> dict[str, Any]:
         """
         캐릭터 파워 설정
 
@@ -175,43 +182,24 @@ class PowerScalingTracker:
                 elif delta < -self.MAX_GROWTH_RATE:
                     warning = f"급격한 파워 감소: {delta}pt"
 
-        record = PowerRecord(
-            arc=arc,
-            episode=episode,
-            power=power,
-            tier=tier.name_kr,
-            reason=reason,
-            delta=delta
-        )
+        record = PowerRecord(arc=arc, episode=episode, power=power, tier=tier.name_kr, reason=reason, delta=delta)
         self.characters[character].append(record)
 
-        return {
-            "success": True,
-            "power": power,
-            "tier": tier.name_kr,
-            "delta": delta,
-            "warning": warning
-        }
+        return {"success": True, "power": power, "tier": tier.name_kr, "delta": delta, "warning": warning}
 
-    def get_power(self, character: str) -> Optional[int]:
+    def get_power(self, character: str) -> int | None:
         """캐릭터 현재 파워 조회"""
         if character not in self.characters or not self.characters[character]:
             return None
         return self.characters[character][-1].power
 
-    def get_tier(self, character: str) -> Optional[str]:
+    def get_tier(self, character: str) -> str | None:
         """캐릭터 현재 등급 조회"""
         if character not in self.characters or not self.characters[character]:
             return None
         return self.characters[character][-1].tier
 
-    def validate_growth(
-        self,
-        character: str,
-        arc: int,
-        new_power: int,
-        justification: str = ""
-    ) -> Dict[str, Any]:
+    def validate_growth(self, character: str, arc: int, new_power: int, justification: str = "") -> dict[str, Any]:
         """
         [V49.7 Enhanced] 성장 유효성 검증 - 정당화 품질 기반
 
@@ -241,7 +229,7 @@ class PowerScalingTracker:
                 "message": "첫 파워 설정",
                 "suggestion": "",
                 "quality": "none",
-                "max_allowed": 100
+                "max_allowed": 100,
             }
 
         delta = new_power - current_power
@@ -254,7 +242,7 @@ class PowerScalingTracker:
                 "message": f"파워 감소: {delta}pt",
                 "suggestion": "",
                 "quality": "none",
-                "max_allowed": 0
+                "max_allowed": 0,
             }
 
         # 정당화 품질 평가
@@ -268,7 +256,7 @@ class PowerScalingTracker:
                 "message": f"정상 성장: {delta}pt",
                 "suggestion": "",
                 "quality": quality,
-                "max_allowed": max_allowed
+                "max_allowed": max_allowed,
             }
 
         # 정당화 없이 큰 성장 시도
@@ -280,7 +268,7 @@ class PowerScalingTracker:
                     "message": f"성장 {delta}pt - 정당화 권장",
                     "suggestion": "비급 습득, 각성, 영약 복용 등 '왜 강해졌는지' 명시 필요",
                     "quality": "none",
-                    "max_allowed": self.MAX_GROWTH_RATE
+                    "max_allowed": self.MAX_GROWTH_RATE,
                 }
             else:
                 return {
@@ -288,9 +276,9 @@ class PowerScalingTracker:
                     "severity": "CRITICAL",
                     "message": f"급격한 성장 {delta}pt - 정당화 필수",
                     "suggestion": "이 정도 성장에는 반드시 서사적 근거가 필요합니다. "
-                                  "예: '전설급 비급 습득', '혈맥 각성', '신물 획득' 등",
+                    "예: '전설급 비급 습득', '혈맥 각성', '신물 획득' 등",
                     "quality": "none",
-                    "max_allowed": self.MAX_GROWTH_RATE
+                    "max_allowed": self.MAX_GROWTH_RATE,
                 }
 
         # 정당화가 있는 경우 - 품질에 따라 허용
@@ -303,7 +291,7 @@ class PowerScalingTracker:
                 "suggestion": "" if severity == "OK" else "다음 Arc에서는 성장 속도 조절 권장",
                 "quality": quality,
                 "max_allowed": max_allowed,
-                "matched_keywords": matched_keywords
+                "matched_keywords": matched_keywords,
             }
         else:
             # 정당화가 있어도 부족한 경우
@@ -314,7 +302,7 @@ class PowerScalingTracker:
                 "suggestion": self._generate_stronger_justification_hint(delta, quality),
                 "quality": quality,
                 "max_allowed": max_allowed,
-                "matched_keywords": matched_keywords
+                "matched_keywords": matched_keywords,
             }
 
     def _evaluate_justification_quality(self, justification: str) -> tuple:
@@ -370,14 +358,17 @@ class PowerScalingTracker:
     def _generate_stronger_justification_hint(self, delta: int, current_quality: str) -> str:
         """더 강한 정당화가 필요할 때 힌트 생성"""
         if delta > 35:
-            return ("이 정도 성장(+{}pt)에는 '전설급' 정당화가 필요합니다. "
-                    "예: '만년 영지 복용', '전설급 비급 득음', '혈맥 각성', '신물 획득'").format(delta)
+            return (
+                f"이 정도 성장(+{delta}pt)에는 '전설급' 정당화가 필요합니다. "
+                "예: '만년 영지 복용', '전설급 비급 득음', '혈맥 각성', '신물 획득'"
+            )
         elif delta > 25:
-            return ("이 정도 성장(+{}pt)에는 '강한' 정당화가 필요합니다. "
-                    "예: '비급 습득', '각성/돌파', '기연', '천재적 깨달음'").format(delta)
+            return (
+                f"이 정도 성장(+{delta}pt)에는 '강한' 정당화가 필요합니다. "
+                "예: '비급 습득', '각성/돌파', '기연', '천재적 깨달음'"
+            )
         elif delta > 15:
-            return ("이 정도 성장(+{}pt)에는 '보통' 정당화가 필요합니다. "
-                    "예: '집중 수련', '실전 경험', '깨달음'").format(delta)
+            return f"이 정도 성장(+{delta}pt)에는 '보통' 정당화가 필요합니다. 예: '집중 수련', '실전 경험', '깨달음'"
         else:
             return f"성장(+{delta}pt)에 대한 서사적 근거를 추가하세요."
 
@@ -386,20 +377,13 @@ class PowerScalingTracker:
         quality, max_allowed, _ = self._evaluate_justification_quality(justification)
         return max_allowed
 
-    def get_power_history(self, character: str) -> List[Dict]:
+    def get_power_history(self, character: str) -> list[dict]:
         """캐릭터 파워 히스토리"""
         if character not in self.characters:
             return []
 
         return [
-            {
-                "arc": r.arc,
-                "episode": r.episode,
-                "power": r.power,
-                "tier": r.tier,
-                "delta": r.delta,
-                "reason": r.reason
-            }
+            {"arc": r.arc, "episode": r.episode, "power": r.power, "tier": r.tier, "delta": r.delta, "reason": r.reason}
             for r in self.characters[character]
         ]
 
@@ -417,7 +401,7 @@ class PowerScalingTracker:
 
         return total_growth / arc_count
 
-    def compare_characters(self, *characters: str) -> Dict[str, Any]:
+    def compare_characters(self, *characters: str) -> dict[str, Any]:
         """
         캐릭터 간 파워 비교
 
@@ -444,12 +428,9 @@ class PowerScalingTracker:
             gap = p1 - p2
             gaps.append((char1, char2, gap))
 
-        return {
-            "ranking": powers,
-            "gaps": gaps
-        }
+        return {"ranking": powers, "gaps": gaps}
 
-    def detect_power_creep(self, current_arc: int) -> List[Dict]:
+    def detect_power_creep(self, current_arc: int) -> list[dict]:
         """
         파워 크립 감지 (전체적인 파워 인플레이션)
 
@@ -474,11 +455,13 @@ class PowerScalingTracker:
             avg_growth = recent_growth / len(recent_records)
 
             if avg_growth > self.NORMAL_GROWTH_RATE * 1.5:
-                warnings.append({
-                    "character": char,
-                    "avg_growth": round(avg_growth, 1),
-                    "message": f"'{char}' 성장 속도 과다: Arc당 평균 {avg_growth:.1f}pt"
-                })
+                warnings.append(
+                    {
+                        "character": char,
+                        "avg_growth": round(avg_growth, 1),
+                        "message": f"'{char}' 성장 속도 과다: Arc당 평균 {avg_growth:.1f}pt",
+                    }
+                )
 
         return warnings
 

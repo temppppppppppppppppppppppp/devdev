@@ -11,8 +11,6 @@
 - investment: 투자/회귀물
 """
 
-from typing import Dict, Any
-
 
 class GenreStagePrompts:
     """[V57] 장르별 Stage 프롬프트 생성기"""
@@ -411,13 +409,13 @@ class GenreStagePrompts:
             장르 특화 프롬프트
         """
         genre_prompts = {
-            'wuxia': cls.STAGE2_WUXIA,
-            'hunter': cls.STAGE2_HUNTER,
-            'investment': cls.STAGE2_INVESTMENT,
-            'alt_history': cls.STAGE2_ALT_HISTORY,
-            'actor': cls.STAGE2_ACTOR,
-            'sports': cls.STAGE2_SPORTS,
-            'medical': cls.STAGE2_MEDICAL,
+            "wuxia": cls.STAGE2_WUXIA,
+            "hunter": cls.STAGE2_HUNTER,
+            "investment": cls.STAGE2_INVESTMENT,
+            "alt_history": cls.STAGE2_ALT_HISTORY,
+            "actor": cls.STAGE2_ACTOR,
+            "sports": cls.STAGE2_SPORTS,
+            "medical": cls.STAGE2_MEDICAL,
         }
         return genre_prompts.get(genre.lower(), cls.STAGE2_WUXIA)
 
@@ -433,13 +431,13 @@ class GenreStagePrompts:
             장르 특화 프롬프트
         """
         genre_prompts = {
-            'wuxia': cls.STAGE3_WUXIA,
-            'hunter': cls.STAGE3_HUNTER,
-            'investment': cls.STAGE3_INVESTMENT,
-            'alt_history': cls.STAGE3_ALT_HISTORY,
-            'actor': cls.STAGE3_ACTOR,
-            'sports': cls.STAGE3_SPORTS,
-            'medical': cls.STAGE3_MEDICAL,
+            "wuxia": cls.STAGE3_WUXIA,
+            "hunter": cls.STAGE3_HUNTER,
+            "investment": cls.STAGE3_INVESTMENT,
+            "alt_history": cls.STAGE3_ALT_HISTORY,
+            "actor": cls.STAGE3_ACTOR,
+            "sports": cls.STAGE3_SPORTS,
+            "medical": cls.STAGE3_MEDICAL,
         }
         return genre_prompts.get(genre.lower(), cls.STAGE3_WUXIA)
 
@@ -463,7 +461,7 @@ class GenreStagePrompts:
             return ""
 
     @classmethod
-    def get_all_prompts(cls, genre: str) -> Dict[str, str]:
+    def get_all_prompts(cls, genre: str) -> dict[str, str]:
         """
         [V57] 장르의 모든 Stage 프롬프트 반환
 

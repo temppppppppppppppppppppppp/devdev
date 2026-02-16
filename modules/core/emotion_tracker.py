@@ -5,8 +5,6 @@
 웹소설 특성상 "절망 속 희망" 공식을 강제하여 독자 이탈을 막습니다.
 """
 
-import json
-import re
 from collections import Counter
 
 
@@ -20,11 +18,11 @@ class EmotionArcTracker:
 
     # 감정 상태 정의 (숫자가 클수록 긍정적)
     EMOTION_STATES = {
-        'despair': -2,      # 절망
-        'frustration': -1,  # 좌절
-        'neutral': 0,       # 평온
-        'hope': 1,          # 희망
-        'triumph': 2        # 승리
+        "despair": -2,  # 절망
+        "frustration": -1,  # 좌절
+        "neutral": 0,  # 평온
+        "hope": 1,  # 희망
+        "triumph": 2,  # 승리
     }
 
     def __init__(self, project_context) -> None:
@@ -49,26 +47,70 @@ class EmotionArcTracker:
         """
         # 감정 키워드 사전 (웹소설에 특화된 표현 포함)
         emotion_keywords = {
-            'despair': [
-                '절망', '포기', '무력', '좌절', '패배', '암담', '비참', '끝',
-                '죽음', '파멸', '막막', '어둠', '나락', '벼랑', '고립'
+            "despair": [
+                "절망",
+                "포기",
+                "무력",
+                "좌절",
+                "패배",
+                "암담",
+                "비참",
+                "끝",
+                "죽음",
+                "파멸",
+                "막막",
+                "어둠",
+                "나락",
+                "벼랑",
+                "고립",
             ],
-            'frustration': [
-                '분노', '억울', '원망', '답답', '막막', '짜증', '화',
-                '적개심', '증오', '원한', '복수', '치욕', '굴욕'
+            "frustration": [
+                "분노",
+                "억울",
+                "원망",
+                "답답",
+                "막막",
+                "짜증",
+                "화",
+                "적개심",
+                "증오",
+                "원한",
+                "복수",
+                "치욕",
+                "굴욕",
             ],
-            'neutral': [
-                '평온', '일상', '담담', '무심', '고요', '평범', '보통',
-                '차분', '침착', '냉정', '이성', '계산'
+            "neutral": ["평온", "일상", "담담", "무심", "고요", "평범", "보통", "차분", "침착", "냉정", "이성", "계산"],
+            "hope": [
+                "희망",
+                "기대",
+                "설렘",
+                "가능성",
+                "빛",
+                "기회",
+                "실마리",
+                "돌파구",
+                "단서",
+                "조짐",
+                "예감",
+                "기운",
+                "각성",
             ],
-            'hope': [
-                '희망', '기대', '설렘', '가능성', '빛', '기회', '실마리',
-                '돌파구', '단서', '조짐', '예감', '기운', '각성'
+            "triumph": [
+                "승리",
+                "환희",
+                "쾌감",
+                "통쾌",
+                "압도",
+                "제압",
+                "성공",
+                "극복",
+                "달성",
+                "획득",
+                "정복",
+                "우위",
+                "지배",
+                "제압",
             ],
-            'triumph': [
-                '승리', '환희', '쾌감', '통쾌', '압도', '제압', '성공',
-                '극복', '달성', '획득', '정복', '우위', '지배', '제압'
-            ]
         }
 
         # 키워드 빈도 분석
@@ -79,7 +121,7 @@ class EmotionArcTracker:
 
         # 가장 높은 빈도의 감정 선택
         if not any(emotion_scores.values()):
-            return ('neutral', 0.0)
+            return ("neutral", 0.0)
 
         dominant_emotion = max(emotion_scores, key=emotion_scores.get)
         max_count = emotion_scores[dominant_emotion]
@@ -135,7 +177,7 @@ class EmotionArcTracker:
         Returns:
             추천 텍스트
         """
-        if current_state in ['despair', 'frustration']:
+        if current_state in ["despair", "frustration"]:
             # 🔥 웹소설 핵심: 부정적 감정 속 희망 씨앗
             recommendation = f"""
 [🌱 웹소설 특화: 절망 속 희망 씨앗 삽입 필수]
@@ -166,7 +208,7 @@ class EmotionArcTracker:
 ✅ 절망 속 작은 빛 → 독자 몰입 유지
 """
 
-        elif current_state in ['hope', 'triumph']:
+        elif current_state in ["hope", "triumph"]:
             recommendation = f"""
 [⚡ 긴장감 회복 필수]
 최근 {n_episodes}화 동안 긍정적 감정(희망/승리)이 지속되고 있습니다.
@@ -227,32 +269,34 @@ class EmotionArcTracker:
             Tuple (recommended_state: str, reasoning: str)
         """
         if len(self.history) < 2:
-            return ('neutral', "초반부는 상황 설정 중심")
+            return ("neutral", "초반부는 상황 설정 중심")
 
         # 최근 3화 분석
         recent_3 = self.history[-3:] if len(self.history) >= 3 else self.history
-        states_numeric = [self.EMOTION_STATES[ep[1]] for ep in recent_3 if ep[1] in self.EMOTION_STATES]  # [V70] KeyError 방어
+        states_numeric = [
+            self.EMOTION_STATES[ep[1]] for ep in recent_3 if ep[1] in self.EMOTION_STATES
+        ]  # [V70] KeyError 방어
         if not states_numeric:  # [V70] 유효한 감정 상태 없으면 중립 반환
-            return ('neutral', "유효한 감정 이력 없음")
+            return ("neutral", "유효한 감정 이력 없음")
         avg_emotion = sum(states_numeric) / len(states_numeric)
 
         # 🔥 웹소설 특화: 부정 감정 과다 → 희망 강제
         if avg_emotion < -1.0:
-            return ('hope', "최근 부정 감정 과다 → 독자 환기 필수 (웹소설 생존 규칙)")
+            return ("hope", "최근 부정 감정 과다 → 독자 환기 필수 (웹소설 생존 규칙)")
 
         # 감정선이 너무 높으면 하강 추천
         elif avg_emotion > 1.0:
-            return ('frustration', "최근 긍정 감정 과다 → 긴장감 회복 필요")
+            return ("frustration", "최근 긍정 감정 과다 → 긴장감 회복 필요")
 
         # 최근 3화가 전부 같은 방향이면 반전 추천
         elif len(set(states_numeric)) == 1:
             current = recent_3[-1][1]
-            if current in ['despair', 'frustration']:
-                return ('hope', "감정선 단조로움 → 희망 주입 (웹소설 필수)")
+            if current in ["despair", "frustration"]:
+                return ("hope", "감정선 단조로움 → 희망 주입 (웹소설 필수)")
             else:
-                return ('frustration', "감정선 단조로움 → 위기 투입")
+                return ("frustration", "감정선 단조로움 → 위기 투입")
 
-        return ('neutral', "현재 감정선 적정 수준")
+        return ("neutral", "현재 감정선 적정 수준")
 
     def add_episode_emotion(self, ep_num: int, emotion_state: str, intensity: float) -> None:
         """
@@ -293,7 +337,7 @@ class EmotionArcTracker:
             "recent_10_distribution": dict(emotion_counts),
             "current_emotion": current_emotion,
             "current_intensity": current_intensity,
-            "monotony_detected": self.check_monotony()[0]
+            "monotony_detected": self.check_monotony()[0],
         }
 
     def save_to_db(self, db_manager) -> None:
@@ -308,7 +352,7 @@ class EmotionArcTracker:
             for ep in self.history
             if isinstance(ep, (tuple, list)) and len(ep) >= 3  # [V70] 비정상 튜플 방어
         ]
-        db_manager.save_anchor('emotion_history', history_data)
+        db_manager.save_anchor("emotion_history", history_data)
 
     def load_from_db(self, db_manager) -> None:
         """
@@ -317,9 +361,10 @@ class EmotionArcTracker:
         Args:
             db_manager: DBManager 인스턴스
         """
-        history_data = db_manager.load_anchor('emotion_history', default=[]) or []  # [V70] None 방어
+        history_data = db_manager.load_anchor("emotion_history", default=[]) or []  # [V70] None 방어
         self.history = [
-            (ep['ep_num'], ep['emotion'], ep['intensity'])
+            (ep["ep_num"], ep["emotion"], ep["intensity"])
             for ep in history_data
-            if isinstance(ep, dict) and all(k in ep for k in ('ep_num', 'emotion', 'intensity'))  # [V70] 3개 키 전부 확인
+            if isinstance(ep, dict)
+            and all(k in ep for k in ("ep_num", "emotion", "intensity"))  # [V70] 3개 키 전부 확인
         ]

@@ -2,12 +2,13 @@
 Blueprint Editor - 개별 프로젝트 Blueprint 수정 도구
 외부 에디터(메모장, VS Code 등)와 연동하여 JSON 편집
 """
-import sqlite3
+
 import json
 import os
-import tempfile
+import sqlite3
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -27,7 +28,7 @@ def get_blueprints(db_path: Path) -> list:
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
     cur.execute("SELECT ep_num FROM blueprints ORDER BY ep_num")
-    result = [row['ep_num'] for row in cur.fetchall()]
+    result = [row["ep_num"] for row in cur.fetchall()]
     conn.close()
     return result
 
@@ -42,7 +43,7 @@ def load_blueprint(db_path: Path, ep_num: int) -> dict:
     conn.close()
     if row:
         try:
-            return json.loads(row['data'])
+            return json.loads(row["data"])
         except json.JSONDecodeError:
             return {}
     return {}
@@ -54,10 +55,7 @@ def save_blueprint(db_path: Path, ep_num: int, data: dict) -> bool:
         conn = sqlite3.connect(db_path)
         cur = conn.cursor()
         json_data = json.dumps(data, ensure_ascii=False, indent=2)
-        cur.execute(
-            "INSERT OR REPLACE INTO blueprints (ep_num, data) VALUES (?, ?)",
-            (ep_num, json_data)
-        )
+        cur.execute("INSERT OR REPLACE INTO blueprints (ep_num, data) VALUES (?, ?)", (ep_num, json_data))
         conn.commit()
         conn.close()
         return True
@@ -82,18 +80,18 @@ def delete_blueprint(db_path: Path, ep_num: int) -> bool:
 
 def open_in_editor(file_path: str):
     """외부 에디터로 파일 열기"""
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         # Windows: 기본 연결 프로그램 또는 notepad
         try:
             os.startfile(file_path)
         except OSError:  # [V64.P4] file open failure
-            subprocess.run(['notepad', file_path])
-    elif sys.platform == 'darwin':
+            subprocess.run(["notepad", file_path])
+    elif sys.platform == "darwin":
         # macOS
-        subprocess.run(['open', file_path])
+        subprocess.run(["open", file_path])
     else:
         # Linux
-        editor = os.environ.get('EDITOR', 'nano')
+        editor = os.environ.get("EDITOR", "nano")
         subprocess.run([editor, file_path])
 
 
@@ -103,17 +101,12 @@ def edit_blueprint_external(db_path: Path, ep_num: int):
     if not data:
         print(f"   Blueprint {ep_num}번이 비어있습니다.")
         create = input("   새로 생성하시겠습니까? (y/n): ").strip().lower()
-        if create != 'y':
+        if create != "y":
             return
         data = {"ep_num": ep_num, "scenes": [], "constraints": []}
 
     # 임시 파일 생성
-    with tempfile.NamedTemporaryFile(
-        mode='w',
-        suffix=f'_blueprint_{ep_num}.json',
-        delete=False,
-        encoding='utf-8'
-    ) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=f"_blueprint_{ep_num}.json", delete=False, encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
         temp_path = f.name
 
@@ -138,7 +131,7 @@ def edit_blueprint_external(db_path: Path, ep_num: int):
 
     # 수정된 JSON 읽기
     try:
-        with open(temp_path, 'r', encoding='utf-8') as f:
+        with open(temp_path, encoding="utf-8") as f:
             new_data = json.load(f)
 
         # 저장 확인
@@ -147,7 +140,7 @@ def edit_blueprint_external(db_path: Path, ep_num: int):
             print(f"      - {key}")
 
         confirm = input("\n   이 내용으로 저장하시겠습니까? (y/n): ").strip().lower()
-        if confirm == 'y':
+        if confirm == "y":
             if save_blueprint(db_path, ep_num, new_data):
                 print(f"   Blueprint {ep_num}번 저장 완료!")
             else:
@@ -176,21 +169,21 @@ def view_blueprint_summary(db_path: Path, ep_num: int):
     print(f"\n   ━━━ Blueprint #{ep_num} 요약 ━━━")
 
     # 씬 정보
-    scenes = data.get('scenes', [])
+    scenes = data.get("scenes", [])
     print(f"   씬 개수: {len(scenes)}")
     for i, scene in enumerate(scenes[:5], 1):  # 최대 5개만 표시
-        title = scene.get('title', scene.get('name', f'Scene {i}'))
+        title = scene.get("title", scene.get("name", f"Scene {i}"))
         print(f"      {i}. {title[:50]}...")
     if len(scenes) > 5:
         print(f"      ... 외 {len(scenes) - 5}개")
 
     # 제약사항
-    constraints = data.get('constraints', data.get('constraint', []))
+    constraints = data.get("constraints", data.get("constraint", []))
     if constraints:
         print(f"   제약 개수: {len(constraints) if isinstance(constraints, list) else 1}")
 
     # 기타 키 목록
-    other_keys = [k for k in data.keys() if k not in ['scenes', 'constraints', 'constraint', 'ep_num']]
+    other_keys = [k for k in data.keys() if k not in ["scenes", "constraints", "constraint", "ep_num"]]
     if other_keys:
         print(f"   기타 필드: {', '.join(other_keys)}")
 
@@ -240,7 +233,7 @@ def main_menu():
         if blueprints:
             # 10개씩 그룹으로 표시
             for i in range(0, len(blueprints), 10):
-                chunk = blueprints[i:i+10]
+                chunk = blueprints[i : i + 10]
                 print(f"   {', '.join(map(str, chunk))}")
         else:
             print("   등록된 Blueprint가 없습니다.")
@@ -255,25 +248,25 @@ def main_menu():
 
         choice = input("\n   선택: ").strip()
 
-        if choice == '1':
+        if choice == "1":
             try:
                 ep = int(input("   편집할 Blueprint 번호: ").strip())
                 edit_blueprint_external(db_path, ep)
             except ValueError:
                 print("   숫자를 입력해 주세요.")
 
-        elif choice == '2':
+        elif choice == "2":
             try:
                 ep = int(input("   조회할 Blueprint 번호: ").strip())
                 view_blueprint_summary(db_path, ep)
             except ValueError:
                 print("   숫자를 입력해 주세요.")
 
-        elif choice == '3':
+        elif choice == "3":
             try:
                 ep = int(input("   삭제할 Blueprint 번호: ").strip())
                 confirm = input(f"   Blueprint {ep}번을 삭제하시겠습니까? (y/n): ").strip().lower()
-                if confirm == 'y':
+                if confirm == "y":
                     if delete_blueprint(db_path, ep):
                         print(f"   Blueprint {ep}번 삭제 완료.")
                     else:
@@ -281,7 +274,7 @@ def main_menu():
             except ValueError:
                 print("   숫자를 입력해 주세요.")
 
-        elif choice == '4':
+        elif choice == "4":
             try:
                 ep = int(input("   새 Blueprint 번호: ").strip())
                 if ep in blueprints:
@@ -291,10 +284,10 @@ def main_menu():
             except ValueError:
                 print("   숫자를 입력해 주세요.")
 
-        elif choice == '5':
+        elif choice == "5":
             return main_menu()  # 재귀로 프로젝트 선택
 
-        elif choice == '0':
+        elif choice == "0":
             print("\n   Blueprint Editor를 종료합니다.")
             break
 

@@ -4,12 +4,13 @@
 타입 안전성, 프로퍼티 접근, HUD 관리 테스트
 """
 
-import pytest
 import math
-from pathlib import Path
-from unittest.mock import MagicMock, patch
-
 import sys
+from pathlib import Path
+from unittest.mock import MagicMock
+
+import pytest
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
@@ -18,7 +19,6 @@ class TestMartialManagerTypeSafety:
 
     def test_safe_to_float_valid(self):
         """유효한 float 변환 테스트"""
-        from modules.core.martial_manager import MartialManager
 
         # MartialManager 인스턴스 없이 헬퍼 함수만 테스트
         # 직접 _safe_to_float 메서드가 없다면 로직 검증
@@ -43,9 +43,9 @@ class TestMartialManagerTypeSafety:
             "not a number",
             [],
             {},
-            float('nan'),
-            float('inf'),
-            float('-inf'),
+            float("nan"),
+            float("inf"),
+            float("-inf"),
         ]
 
         for input_val in invalid_inputs:
@@ -75,7 +75,7 @@ class TestMartialManagerTypeSafety:
     def test_is_valid_number(self):
         """숫자 유효성 검사 테스트"""
         valid_numbers = [0, 1, -1, 3.14, 100, -50.5]
-        invalid_numbers = [float('nan'), float('inf'), float('-inf')]
+        invalid_numbers = [float("nan"), float("inf"), float("-inf")]
 
         for num in valid_numbers:
             assert not math.isnan(num) and not math.isinf(num)
@@ -89,13 +89,7 @@ class TestMartialManagerPropertyAccess:
 
     def test_nested_dict_access_safe(self):
         """중첩 딕셔너리 안전 접근 테스트"""
-        test_data = {
-            "level1": {
-                "level2": {
-                    "level3": "value"
-                }
-            }
-        }
+        test_data = {"level1": {"level2": {"level3": "value"}}}
 
         # 정상 경로
         result = test_data.get("level1", {}).get("level2", {}).get("level3")
@@ -118,14 +112,7 @@ class TestMartialManagerPropertyAccess:
         """safe_nested_get 유틸리티 테스트"""
         from modules.core.project_manager import safe_nested_get
 
-        data = {
-            "a": {
-                "b": {
-                    "c": 42
-                }
-            },
-            "x": None
-        }
+        data = {"a": {"b": {"c": 42}}, "x": None}
 
         # 정상 경로
         assert safe_nested_get(data, "a", "b", "c") == 42
@@ -147,9 +134,14 @@ class TestMartialManagerHUDOperations:
     def test_hud_wuxia_structure(self, sample_hud_wuxia):
         """무협 HUD 구조 테스트"""
         required_keys = [
-            "character", "martial_root", "internal_energy",
-            "lightness", "sword_skill", "palm_skill",
-            "equipment", "techniques"
+            "character",
+            "martial_root",
+            "internal_energy",
+            "lightness",
+            "sword_skill",
+            "palm_skill",
+            "equipment",
+            "techniques",
         ]
 
         for key in required_keys:
@@ -157,20 +149,14 @@ class TestMartialManagerHUDOperations:
 
     def test_hud_hunter_structure(self, sample_hud_hunter):
         """헌터 HUD 구조 테스트"""
-        required_keys = [
-            "character", "awakening_grade", "mana",
-            "strength", "agility", "skills", "equipment"
-        ]
+        required_keys = ["character", "awakening_grade", "mana", "strength", "agility", "skills", "equipment"]
 
         for key in required_keys:
             assert key in sample_hud_hunter
 
     def test_hud_investment_structure(self, sample_hud_investment):
         """투자 HUD 구조 테스트"""
-        required_keys = [
-            "character", "total_assets", "cash",
-            "stocks", "real_estate", "connections"
-        ]
+        required_keys = ["character", "total_assets", "cash", "stocks", "real_estate", "connections"]
 
         for key in required_keys:
             assert key in sample_hud_investment
@@ -248,11 +234,11 @@ class TestMartialManagerGenreSpecific:
     def test_wuxia_specific_properties(self):
         """무협 전용 프로퍼티 테스트"""
         wuxia_properties = [
-            "martial_root",      # 무력근
-            "internal_energy",   # 내공
-            "lightness",         # 경공
-            "sword_skill",       # 검법
-            "palm_skill"         # 장법
+            "martial_root",  # 무력근
+            "internal_energy",  # 내공
+            "lightness",  # 경공
+            "sword_skill",  # 검법
+            "palm_skill",  # 장법
         ]
 
         # 이 프로퍼티들이 MartialManager에 존재해야 함
@@ -261,19 +247,19 @@ class TestMartialManagerGenreSpecific:
     def test_hunter_specific_properties(self):
         """헌터 전용 프로퍼티 테스트"""
         hunter_properties = [
-            "awakening_grade",   # 각성등급
-            "mana",              # 마나
-            "strength",          # 근력
-            "agility"            # 민첩
+            "awakening_grade",  # 각성등급
+            "mana",  # 마나
+            "strength",  # 근력
+            "agility",  # 민첩
         ]
 
     def test_investment_specific_properties(self):
         """투자 전용 프로퍼티 테스트"""
         investment_properties = [
-            "total_assets",      # 총자산
-            "cash",              # 현금
-            "stocks",            # 주식
-            "connections"        # 인맥
+            "total_assets",  # 총자산
+            "cash",  # 현금
+            "stocks",  # 주식
+            "connections",  # 인맥
         ]
 
 
@@ -282,11 +268,7 @@ class TestMartialManagerEdgeCases:
 
     def test_zero_values(self):
         """0값 처리 테스트"""
-        hud = {
-            "martial_root": 0,
-            "internal_energy": 0,
-            "lightness": 0
-        }
+        hud = {"martial_root": 0, "internal_energy": 0, "lightness": 0}
 
         # 0은 유효한 값
         for key, value in hud.items():
@@ -299,7 +281,7 @@ class TestMartialManagerEdgeCases:
         relationships = {
             "적": -50,  # 적대 관계
             "중립": 0,
-            "우호": 50
+            "우호": 50,
         }
 
         for name, affinity in relationships.items():
@@ -307,23 +289,16 @@ class TestMartialManagerEdgeCases:
 
     def test_very_large_values(self):
         """매우 큰 값 처리 테스트"""
-        large_value = 10 ** 15  # 1000조
+        large_value = 10**15  # 1000조
 
-        hud = {
-            "total_assets": large_value
-        }
+        hud = {"total_assets": large_value}
 
         assert hud["total_assets"] == large_value
         assert not math.isinf(hud["total_assets"])
 
     def test_special_characters_in_names(self):
         """특수문자 포함 이름 테스트"""
-        names = [
-            "이청풍(李靑風)",
-            "암흑검 '살수'",
-            "독고구패",
-            "Mr. Kim"
-        ]
+        names = ["이청풍(李靑風)", "암흑검 '살수'", "독고구패", "Mr. Kim"]
 
         for name in names:
             assert isinstance(name, str)

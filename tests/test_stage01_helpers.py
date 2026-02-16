@@ -5,12 +5,11 @@
 
 from contextlib import redirect_stdout
 from io import StringIO
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from modules.core.stage01_helpers import Stage01Helpers
-
 
 # ── Fixtures ─────────────────────────────────────────────────
 
@@ -59,9 +58,11 @@ class TestConstructor:
 class TestPhase0Recovery:
     def test_cancel_choice_0(self, helpers, app_mock):
         """선택 0 → 취소 (아무 작업 안 함)"""
-        with redirect_stdout(StringIO()), \
-             patch("builtins.input", return_value="0"), \
-             patch("main_a.STAGE0_AVAILABLE", True):
+        with (
+            redirect_stdout(StringIO()),
+            patch("builtins.input", return_value="0"),
+            patch("main_a.STAGE0_AVAILABLE", True),
+        ):
             helpers.phase_0_recovery()
         # 취소 시 아무 facade 메서드도 호출하지 않음
         app_mock._stage_0_extended.assert_not_called()
@@ -69,41 +70,51 @@ class TestPhase0Recovery:
 
     def test_choice_2_delegates_to_stage_0_extended(self, helpers, app_mock):
         """선택 2 → app._stage_0_extended(mode=1) 호출"""
-        with redirect_stdout(StringIO()), \
-             patch("builtins.input", return_value="2"), \
-             patch("main_a.STAGE0_AVAILABLE", True):
+        with (
+            redirect_stdout(StringIO()),
+            patch("builtins.input", return_value="2"),
+            patch("main_a.STAGE0_AVAILABLE", True),
+        ):
             helpers.phase_0_recovery()
         app_mock._stage_0_extended.assert_called_once_with(mode=1)
 
     def test_choice_3_delegates_to_stage_0_extended(self, helpers, app_mock):
         """선택 3 → app._stage_0_extended(mode=2) 호출"""
-        with redirect_stdout(StringIO()), \
-             patch("builtins.input", return_value="3"), \
-             patch("main_a.STAGE0_AVAILABLE", True):
+        with (
+            redirect_stdout(StringIO()),
+            patch("builtins.input", return_value="3"),
+            patch("main_a.STAGE0_AVAILABLE", True),
+        ):
             helpers.phase_0_recovery()
         app_mock._stage_0_extended.assert_called_once_with(mode=2)
 
     def test_choice_4_delegates_to_stage_0_extended(self, helpers, app_mock):
         """선택 4 → app._stage_0_extended(mode=3) 호출"""
-        with redirect_stdout(StringIO()), \
-             patch("builtins.input", return_value="4"), \
-             patch("main_a.STAGE0_AVAILABLE", True):
+        with (
+            redirect_stdout(StringIO()),
+            patch("builtins.input", return_value="4"),
+            patch("main_a.STAGE0_AVAILABLE", True),
+        ):
             helpers.phase_0_recovery()
         app_mock._stage_0_extended.assert_called_once_with(mode=3)
 
     def test_choice_5_delegates_to_stage_0_extended(self, helpers, app_mock):
         """선택 5 → app._stage_0_extended(mode=4) 호출"""
-        with redirect_stdout(StringIO()), \
-             patch("builtins.input", return_value="5"), \
-             patch("main_a.STAGE0_AVAILABLE", True):
+        with (
+            redirect_stdout(StringIO()),
+            patch("builtins.input", return_value="5"),
+            patch("main_a.STAGE0_AVAILABLE", True),
+        ):
             helpers.phase_0_recovery()
         app_mock._stage_0_extended.assert_called_once_with(mode=4)
 
     def test_choice_6_delegates_to_stage_0_extended(self, helpers, app_mock):
         """선택 6 → app._stage_0_extended(mode=5) 호출"""
-        with redirect_stdout(StringIO()), \
-             patch("builtins.input", return_value="6"), \
-             patch("main_a.STAGE0_AVAILABLE", True):
+        with (
+            redirect_stdout(StringIO()),
+            patch("builtins.input", return_value="6"),
+            patch("main_a.STAGE0_AVAILABLE", True),
+        ):
             helpers.phase_0_recovery()
         app_mock._stage_0_extended.assert_called_once_with(mode=5)
 
@@ -111,9 +122,11 @@ class TestPhase0Recovery:
         """STAGE0_AVAILABLE=False 시 choice=2는 기존 방식으로 진행"""
         # choice=2이지만 STAGE0_AVAILABLE=False → 기존 방식 (bible/treatment 선택)
         # 기존 방식: choice, enrich(N), world(1), type(1), pov(2), Enter
-        with redirect_stdout(StringIO()), \
-             patch("builtins.input", side_effect=["2", "N", "1", "1", "2", ""]), \
-             patch("main_a.STAGE0_AVAILABLE", False):
+        with (
+            redirect_stdout(StringIO()),
+            patch("builtins.input", side_effect=["2", "N", "1", "1", "2", ""]),
+            patch("main_a.STAGE0_AVAILABLE", False),
+        ):
             helpers.phase_0_recovery()
         # _stage_0_extended가 호출되지 않아야 함
         app_mock._stage_0_extended.assert_not_called()
@@ -123,22 +136,24 @@ class TestPhase0Recovery:
     def test_default_choice_uses_legacy_flow(self, helpers, app_mock):
         """기본 선택(1) → 기존 방식 (파일 선택 → DNA 이식)"""
         # input sequence: choice=1, enrich=N, world=1, type=1, pov=2, Enter
-        with redirect_stdout(StringIO()), \
-             patch("builtins.input", side_effect=["1", "N", "1", "1", "2", ""]), \
-             patch("main_a.STAGE0_AVAILABLE", True):
+        with (
+            redirect_stdout(StringIO()),
+            patch("builtins.input", side_effect=["1", "N", "1", "1", "2", ""]),
+            patch("main_a.STAGE0_AVAILABLE", True),
+        ):
             helpers.phase_0_recovery()
         app_mock._ui_select_bible.assert_called_once()
         app_mock._ui_select_treatment.assert_called_once()
-        app_mock.current_project.force_sync_v25_dna.assert_called_once_with(
-            "bible.json", "treatment.json"
-        )
+        app_mock.current_project.force_sync_v25_dna.assert_called_once_with("bible.json", "treatment.json")
 
     def test_no_bible_file_aborts(self, helpers, app_mock):
         """Bible 파일 없으면 중단"""
         app_mock._ui_select_bible.return_value = None
-        with redirect_stdout(StringIO()), \
-             patch("builtins.input", return_value="1"), \
-             patch("main_a.STAGE0_AVAILABLE", True):
+        with (
+            redirect_stdout(StringIO()),
+            patch("builtins.input", return_value="1"),
+            patch("main_a.STAGE0_AVAILABLE", True),
+        ):
             helpers.phase_0_recovery()
         # 중단 시 force_sync 호출 안 함
         app_mock.current_project.force_sync_v25_dna.assert_not_called()
@@ -146,9 +161,11 @@ class TestPhase0Recovery:
     def test_dna_failure_skips_post_processing(self, helpers, app_mock):
         """DNA 이식 실패 시 후속 처리 안 함"""
         app_mock.current_project.force_sync_v25_dna.return_value = False
-        with redirect_stdout(StringIO()), \
-             patch("builtins.input", side_effect=["1", "N", "1", "1", "2", ""]), \
-             patch("main_a.STAGE0_AVAILABLE", True):
+        with (
+            redirect_stdout(StringIO()),
+            patch("builtins.input", side_effect=["1", "N", "1", "1", "2", ""]),
+            patch("main_a.STAGE0_AVAILABLE", True),
+        ):
             helpers.phase_0_recovery()
         # _load_from_db가 호출되지 않아야 함 (dna_success=False)
         app_mock.current_project._load_from_db.assert_not_called()
@@ -157,9 +174,11 @@ class TestPhase0Recovery:
         """원고 동기화 오류가 발생해도 비차단"""
         app_mock.current_project.paths.drafts.glob.return_value = [MagicMock()]
         app_mock.current_project.sync_existing_manuscripts.side_effect = RuntimeError("sync crash")
-        with redirect_stdout(StringIO()), \
-             patch("builtins.input", side_effect=["1", "N", "1", "1", "2", ""]), \
-             patch("main_a.STAGE0_AVAILABLE", True):
+        with (
+            redirect_stdout(StringIO()),
+            patch("builtins.input", side_effect=["1", "N", "1", "1", "2", ""]),
+            patch("main_a.STAGE0_AVAILABLE", True),
+        ):
             helpers.phase_0_recovery()
         app_mock._audit_event.assert_called()
         # 에러가 발생해도 _load_from_db는 여전히 호출
@@ -168,9 +187,7 @@ class TestPhase0Recovery:
     def test_genre_displayed(self, helpers, app_mock):
         """장르 정보 표시"""
         buf = StringIO()
-        with redirect_stdout(buf), \
-             patch("builtins.input", return_value="0"), \
-             patch("main_a.STAGE0_AVAILABLE", True):
+        with redirect_stdout(buf), patch("builtins.input", return_value="0"), patch("main_a.STAGE0_AVAILABLE", True):
             helpers.phase_0_recovery()
         output = buf.getvalue()
         assert "무협" in output
@@ -179,9 +196,11 @@ class TestPhase0Recovery:
     def test_no_genre_no_crash(self, helpers, app_mock):
         """장르 없어도 크래시 없음"""
         app_mock.selected_genre = None
-        with redirect_stdout(StringIO()), \
-             patch("builtins.input", return_value="0"), \
-             patch("main_a.STAGE0_AVAILABLE", True):
+        with (
+            redirect_stdout(StringIO()),
+            patch("builtins.input", return_value="0"),
+            patch("main_a.STAGE0_AVAILABLE", True),
+        ):
             helpers.phase_0_recovery()
         # No crash
 
@@ -217,8 +236,10 @@ class TestExtendBlocks:
         stage0_mgr = MagicMock()
         stage0_mgr.genre = "wuxia"
 
-        with patch("builtins.input", side_effect=["5", ""]), \
-             patch("modules.core.stage01_helpers.Stage01Helpers.extend_blocks") as mock_extend:
+        with (
+            patch("builtins.input", side_effect=["5", ""]),
+            patch("modules.core.stage01_helpers.Stage01Helpers.extend_blocks") as mock_extend,
+        ):
             # Just verify the method can be called
             mock_extend.return_value = [{"block_id": "B1"}, {"block_id": "B2"}]
             result = mock_extend(helpers, stage0_mgr)
@@ -239,9 +260,11 @@ class TestExtendBlocks:
         stage0_mgr = MagicMock()
         stage0_mgr.genre = "wuxia"
 
-        with redirect_stdout(StringIO()), \
-             patch("builtins.input", side_effect=["5", ""]), \
-             patch("modules.core.stage0.story_expander.StoryExpander", side_effect=ImportError("no module")):
+        with (
+            redirect_stdout(StringIO()),
+            patch("builtins.input", side_effect=["5", ""]),
+            patch("modules.core.stage0.story_expander.StoryExpander", side_effect=ImportError("no module")),
+        ):
             result = helpers.extend_blocks(stage0_mgr)
         assert len(result) == 1
         assert result[0]["block_id"] == "B1"
@@ -253,8 +276,7 @@ class TestExtendBlocks:
 class TestStage0Extended:
     def test_stage0_unavailable_returns_early(self, helpers, app_mock):
         """STAGE0_AVAILABLE=False → 즉시 반환"""
-        with redirect_stdout(StringIO()), \
-             patch("main_a.STAGE0_AVAILABLE", False):
+        with redirect_stdout(StringIO()), patch("main_a.STAGE0_AVAILABLE", False):
             helpers.stage_0_extended(mode=1)
         # StageZeroManager 초기화 안 함 (아무 project 접근 없음)
         app_mock.current_project.save_v20_anchor.assert_not_called()
@@ -265,11 +287,13 @@ class TestStage0Extended:
         mock_mgr.run_new_project_flow.return_value = ({"MasterBible": {}}, [], None)
         mock_mgr.preset_registry = None
         mock_mgr.style_guide = None
-        with redirect_stdout(StringIO()), \
-             patch("main_a.STAGE0_AVAILABLE", True), \
-             patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr), \
-             patch("modules.core.stage0.PresetRegistry"), \
-             patch("builtins.input", return_value=""):
+        with (
+            redirect_stdout(StringIO()),
+            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr),
+            patch("modules.core.stage0.PresetRegistry"),
+            patch("builtins.input", return_value=""),
+        ):
             helpers.stage_0_extended(mode=1)
         mock_mgr.run_new_project_flow.assert_called_once()
 
@@ -279,11 +303,13 @@ class TestStage0Extended:
         mock_mgr.import_bible.return_value = {"MasterBible": {"protagonist_config": {}}}
         mock_mgr.preset_registry = None
         mock_mgr.style_guide = None
-        with redirect_stdout(StringIO()), \
-             patch("main_a.STAGE0_AVAILABLE", True), \
-             patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr), \
-             patch("modules.core.stage0.PresetRegistry"), \
-             patch("builtins.input", return_value=""):
+        with (
+            redirect_stdout(StringIO()),
+            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr),
+            patch("modules.core.stage0.PresetRegistry"),
+            patch("builtins.input", return_value=""),
+        ):
             helpers.stage_0_extended(mode=3)
         mock_mgr.import_bible.assert_called_once()
 
@@ -291,11 +317,13 @@ class TestStage0Extended:
         """mode=4 → app._extend_blocks 호출"""
         mock_mgr = MagicMock()
         app_mock._extend_blocks.return_value = []
-        with redirect_stdout(StringIO()), \
-             patch("main_a.STAGE0_AVAILABLE", True), \
-             patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr), \
-             patch("modules.core.stage0.PresetRegistry"), \
-             patch("builtins.input", return_value=""):
+        with (
+            redirect_stdout(StringIO()),
+            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr),
+            patch("modules.core.stage0.PresetRegistry"),
+            patch("builtins.input", return_value=""),
+        ):
             helpers.stage_0_extended(mode=4)
         app_mock._extend_blocks.assert_called_once_with(mock_mgr)
 
@@ -303,11 +331,13 @@ class TestStage0Extended:
         """mode=5 → run_reference_analysis 호출"""
         mock_mgr = MagicMock()
         mock_mgr.run_reference_analysis.return_value = None
-        with redirect_stdout(StringIO()), \
-             patch("main_a.STAGE0_AVAILABLE", True), \
-             patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr), \
-             patch("modules.core.stage0.PresetRegistry"), \
-             patch("builtins.input", return_value=""):
+        with (
+            redirect_stdout(StringIO()),
+            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr),
+            patch("modules.core.stage0.PresetRegistry"),
+            patch("builtins.input", return_value=""),
+        ):
             helpers.stage_0_extended(mode=5)
         mock_mgr.run_reference_analysis.assert_called_once()
 
@@ -315,10 +345,12 @@ class TestStage0Extended:
         """유효하지 않은 choice → 취소"""
         mock_mgr = MagicMock()
         mock_mgr.show_menu.return_value = 99  # 없는 선택
-        with redirect_stdout(StringIO()), \
-             patch("main_a.STAGE0_AVAILABLE", True), \
-             patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr), \
-             patch("modules.core.stage0.PresetRegistry"):
+        with (
+            redirect_stdout(StringIO()),
+            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr),
+            patch("modules.core.stage0.PresetRegistry"),
+        ):
             helpers.stage_0_extended(mode=0)
         app_mock.current_project.save_v20_anchor.assert_not_called()
 
@@ -329,11 +361,13 @@ class TestStage0Extended:
         mock_mgr.run_new_project_flow.return_value = (bible, None, None)
         mock_mgr.preset_registry = None
         mock_mgr.style_guide = None
-        with redirect_stdout(StringIO()), \
-             patch("main_a.STAGE0_AVAILABLE", True), \
-             patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr), \
-             patch("modules.core.stage0.PresetRegistry"), \
-             patch("builtins.input", return_value=""):
+        with (
+            redirect_stdout(StringIO()),
+            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr),
+            patch("modules.core.stage0.PresetRegistry"),
+            patch("builtins.input", return_value=""),
+        ):
             helpers.stage_0_extended(mode=1)
         app_mock.current_project.save_v20_anchor.assert_any_call("bible", bible)
         app_mock.current_project._load_from_db.assert_called_once()
@@ -381,9 +415,11 @@ class TestStage1Volumes:
             "strategy_doc": "x" * 2500,
         }
 
-        with patch("builtins.input", side_effect=["1", ""]), \
-             patch("modules.core.spinners.StageSpinner"), \
-             patch("modules.core.adaptive_retry.retry_with_feedback") as mock_retry:
+        with (
+            patch("builtins.input", side_effect=["1", ""]),
+            patch("modules.core.spinners.StageSpinner"),
+            patch("modules.core.adaptive_retry.retry_with_feedback") as mock_retry,
+        ):
             # retry_with_feedback returns (result, attempts, passed)
             mock_retry.return_value = ({"strategy_doc": "x" * 2500}, 1, True)
             helpers.stage_1_volumes()
@@ -399,9 +435,11 @@ class TestStage1Volumes:
             }
         }
 
-        with patch("builtins.input", side_effect=["1"]), \
-             patch("modules.core.spinners.StageSpinner"), \
-             patch("modules.core.adaptive_retry.retry_with_feedback") as mock_retry:
+        with (
+            patch("builtins.input", side_effect=["1"]),
+            patch("modules.core.spinners.StageSpinner"),
+            patch("modules.core.adaptive_retry.retry_with_feedback") as mock_retry,
+        ):
             mock_retry.return_value = (None, 3, False)
             helpers.stage_1_volumes()
 

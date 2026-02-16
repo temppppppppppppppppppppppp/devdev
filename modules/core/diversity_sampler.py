@@ -8,12 +8,9 @@
 - Stage 4 (Writer): Pattern Tracker가 플래그할 때만 활성화
 """
 
-import re
 import logging
-import json
-from collections import Counter
-from typing import List, Dict, Tuple, Callable, Optional
-import hashlib
+import re
+from collections.abc import Callable
 
 
 class DiversitySampler:
@@ -27,7 +24,7 @@ class DiversitySampler:
     4. n-gram 중복률 (기존 원고와의 유사도)
     """
 
-    def __init__(self, reference_texts: List[str] = None):
+    def __init__(self, reference_texts: list[str] = None):
         """
         Args:
             reference_texts: 비교 기준이 되는 기존 원고들 (최근 N화)
@@ -40,20 +37,17 @@ class DiversitySampler:
         if not self.reference_texts:
             return set()
 
-        combined = '\n'.join(self.reference_texts)
-        words = re.findall(r'[\w가-힣]+', combined)
+        combined = "\n".join(self.reference_texts)
+        words = re.findall(r"[\w가-힣]+", combined)
 
         if len(words) < 3:
             return set()
 
-        return set(' '.join(words[i:i+3]) for i in range(len(words)-2))
+        return set(" ".join(words[i : i + 3]) for i in range(len(words) - 2))
 
     def sample_and_select(
-        self,
-        generator_fn: Callable[[], str],
-        n_samples: int = 3,
-        context: Dict = None
-    ) -> Tuple[str, Dict]:
+        self, generator_fn: Callable[[], str], n_samples: int = 3, context: dict = None
+    ) -> tuple[str, dict]:
         """
         N개 샘플 생성 후 가장 다양한 것 선택
 
@@ -78,34 +72,30 @@ class DiversitySampler:
                     score = self._calculate_diversity_score(sample)
                     samples.append(sample)
                     sample_scores.append(score)
-                    logging.info(f"- 샘플 {i+1}: 다양성 점수 {score['total']:.2f}")
+                    logging.info(f"- 샘플 {i + 1}: 다양성 점수 {score['total']:.2f}")
 
             except Exception as e:
-                logging.warning(f"- 샘플 {i+1} 생성 실패: {e}")
+                logging.warning(f"- 샘플 {i + 1} 생성 실패: {e}")
                 continue
 
         if not samples:
-            return "", {'error': 'no_samples_generated'}  # [V70] None → "" (callers expect str)
+            return "", {"error": "no_samples_generated"}  # [V70] None → "" (callers expect str)
 
         # 최고 다양성 점수 선택
-        best_idx = max(range(len(sample_scores)), key=lambda i: sample_scores[i]['total'])
+        best_idx = max(range(len(sample_scores)), key=lambda i: sample_scores[i]["total"])
         selected = samples[best_idx]
         selected_score = sample_scores[best_idx]
 
-        logging.info(f"[DiversitySampler] 샘플 {best_idx+1} 선택 (점수: {selected_score['total']:.2f})")
+        logging.info(f"[DiversitySampler] 샘플 {best_idx + 1} 선택 (점수: {selected_score['total']:.2f})")
 
         return selected, {
-            'selected_index': best_idx,
-            'selected_score': selected_score,
-            'all_scores': sample_scores,
-            'n_samples': len(samples)
+            "selected_index": best_idx,
+            "selected_score": selected_score,
+            "all_scores": sample_scores,
+            "n_samples": len(samples),
         }
 
-    def sample_blueprints(
-        self,
-        generator_fn: Callable[[], dict],
-        n_samples: int = 3
-    ) -> Tuple[dict, Dict]:
+    def sample_blueprints(self, generator_fn: Callable[[], dict], n_samples: int = 3) -> tuple[dict, dict]:
         """
         블루프린트 전용 샘플링 (JSON 구조)
 
@@ -129,30 +119,30 @@ class DiversitySampler:
                     score = self._calculate_blueprint_diversity(sample)
                     samples.append(sample)
                     sample_scores.append(score)
-                    logging.info(f"- 블루프린트 {i+1}: 다양성 점수 {score['total']:.2f}")
+                    logging.info(f"- 블루프린트 {i + 1}: 다양성 점수 {score['total']:.2f}")
 
             except Exception as e:
-                logging.warning(f"- 블루프린트 {i+1} 생성 실패: {e}")
+                logging.warning(f"- 블루프린트 {i + 1} 생성 실패: {e}")
                 continue
 
         if not samples:
-            return {}, {'error': 'no_blueprints_generated'}  # [V70] None → {} (callers expect dict)
+            return {}, {"error": "no_blueprints_generated"}  # [V70] None → {} (callers expect dict)
 
         # 최고 다양성 점수 선택
-        best_idx = max(range(len(sample_scores)), key=lambda i: sample_scores[i]['total'])
+        best_idx = max(range(len(sample_scores)), key=lambda i: sample_scores[i]["total"])
         selected = samples[best_idx]
         selected_score = sample_scores[best_idx]
 
-        logging.info(f"[DiversitySampler] 블루프린트 {best_idx+1} 선택 (점수: {selected_score['total']:.2f})")
+        logging.info(f"[DiversitySampler] 블루프린트 {best_idx + 1} 선택 (점수: {selected_score['total']:.2f})")
 
         return selected, {
-            'selected_index': best_idx,
-            'selected_score': selected_score,
-            'all_scores': sample_scores,
-            'n_samples': len(samples)
+            "selected_index": best_idx,
+            "selected_score": selected_score,
+            "all_scores": sample_scores,
+            "n_samples": len(samples),
         }
 
-    def _calculate_diversity_score(self, text: str) -> Dict:
+    def _calculate_diversity_score(self, text: str) -> dict:
         """
         텍스트 다양성 점수 계산 (0-100)
 
@@ -165,19 +155,19 @@ class DiversitySampler:
         scores = {}
 
         # 1. TTR (Type-Token Ratio) - 30%
-        words = re.findall(r'[\w가-힣]+', text)
+        words = re.findall(r"[\w가-힣]+", text)
         if len(words) > 0:
             # 긴 텍스트는 샘플링 (1000단어)
             sample_words = words[:1000] if len(words) > 1000 else words
             unique_words = set(sample_words)
             ttr = len(unique_words) / len(sample_words)
             # TTR 0.3-0.7 범위를 0-100으로 스케일링
-            scores['ttr'] = min(100, max(0, (ttr - 0.3) / 0.4 * 100))
+            scores["ttr"] = min(100, max(0, (ttr - 0.3) / 0.4 * 100))
         else:
-            scores['ttr'] = 0
+            scores["ttr"] = 0
 
         # 2. Sentence Variety - 25%
-        sentences = re.split(r'[.!?]\s*', text)
+        sentences = re.split(r"[.!?]\s*", text)
         sentences = [s for s in sentences if s.strip()]
         if len(sentences) >= 3:
             lengths = [len(s) for s in sentences]
@@ -185,58 +175,58 @@ class DiversitySampler:
             # 문장 길이 변동계수 (CV)
             if avg_len > 0:
                 variance = sum((l - avg_len) ** 2 for l in lengths) / len(lengths)
-                std_dev = variance ** 0.5
+                std_dev = variance**0.5
                 cv = std_dev / avg_len
                 # CV 0.3-0.6이 이상적
                 if cv < 0.3:
-                    scores['sentence_variety'] = cv / 0.3 * 70
+                    scores["sentence_variety"] = cv / 0.3 * 70
                 elif cv <= 0.6:
-                    scores['sentence_variety'] = 70 + (cv - 0.3) / 0.3 * 30
+                    scores["sentence_variety"] = 70 + (cv - 0.3) / 0.3 * 30
                 else:
-                    scores['sentence_variety'] = max(50, 100 - (cv - 0.6) * 100)
+                    scores["sentence_variety"] = max(50, 100 - (cv - 0.6) * 100)
             else:
-                scores['sentence_variety'] = 50
+                scores["sentence_variety"] = 50
         else:
-            scores['sentence_variety'] = 50
+            scores["sentence_variety"] = 50
 
         # 3. Novelty (기존 원고 대비 신선도) - 30%
         if self.reference_ngrams:
-            text_words = re.findall(r'[\w가-힣]+', text)
+            text_words = re.findall(r"[\w가-힣]+", text)
             if len(text_words) >= 3:
-                text_ngrams = set(' '.join(text_words[i:i+3]) for i in range(len(text_words)-2))
+                text_ngrams = set(" ".join(text_words[i : i + 3]) for i in range(len(text_words) - 2))
                 overlap = len(text_ngrams & self.reference_ngrams)
                 total = len(text_ngrams) if text_ngrams else 1
                 novelty_ratio = 1 - (overlap / total)
-                scores['novelty'] = novelty_ratio * 100
+                scores["novelty"] = novelty_ratio * 100
             else:
-                scores['novelty'] = 50
+                scores["novelty"] = 50
         else:
-            scores['novelty'] = 70  # 참조 없으면 기본값
+            scores["novelty"] = 70  # 참조 없으면 기본값
 
         # 4. Structure Variety - 15%
         # 문장 시작 패턴 다양성
-        starters = [s.split()[0] if s.split() else '' for s in sentences if s.strip()]
+        starters = [s.split()[0] if s.split() else "" for s in sentences if s.strip()]
         if starters:
             unique_starters = len(set(starters))
             total_starters = len(starters)
             starter_diversity = unique_starters / total_starters if total_starters > 0 else 0
-            scores['structure'] = starter_diversity * 100
+            scores["structure"] = starter_diversity * 100
         else:
-            scores['structure'] = 50
+            scores["structure"] = 50
 
         # 가중 평균 계산
-        weights = {'ttr': 0.30, 'sentence_variety': 0.25, 'novelty': 0.30, 'structure': 0.15}
+        weights = {"ttr": 0.30, "sentence_variety": 0.25, "novelty": 0.30, "structure": 0.15}
         total = sum(scores[k] * weights[k] for k in weights)
 
         return {
-            'ttr': scores['ttr'],
-            'sentence_variety': scores['sentence_variety'],
-            'novelty': scores['novelty'],
-            'structure': scores['structure'],
-            'total': total
+            "ttr": scores["ttr"],
+            "sentence_variety": scores["sentence_variety"],
+            "novelty": scores["novelty"],
+            "structure": scores["structure"],
+            "total": total,
         }
 
-    def _calculate_blueprint_diversity(self, blueprint: dict) -> Dict:
+    def _calculate_blueprint_diversity(self, blueprint: dict) -> dict:
         """
         블루프린트 다양성 점수 계산
 
@@ -247,40 +237,40 @@ class DiversitySampler:
         """
         scores = {}
 
-        scene_breakdown = blueprint.get('scene_breakdown', {})
-        integrated = blueprint.get('integrated_scenario', '')
+        scene_breakdown = blueprint.get("scene_breakdown", {})
+        integrated = blueprint.get("integrated_scenario", "")
 
         # 1. Scene Type Variety - 35%
         if isinstance(scene_breakdown, dict):
-            types = {'Core': 0, 'Buffer': 0, 'Cliffhanger': 0}
+            types = {"Core": 0, "Buffer": 0, "Cliffhanger": 0}
             for scene_content in scene_breakdown.values():
                 if isinstance(scene_content, str):
-                    if '[Core]' in scene_content:
-                        types['Core'] += 1
-                    elif '[Buffer]' in scene_content:
-                        types['Buffer'] += 1
-                    elif '[Cliffhanger]' in scene_content:
-                        types['Cliffhanger'] += 1
+                    if "[Core]" in scene_content:
+                        types["Core"] += 1
+                    elif "[Buffer]" in scene_content:
+                        types["Buffer"] += 1
+                    elif "[Cliffhanger]" in scene_content:
+                        types["Cliffhanger"] += 1
 
             total_typed = sum(types.values())
             if total_typed > 0:
                 # 이상적 비율: Core 2-3, Buffer 2-3, Cliffhanger 1
-                core_ratio = types['Core'] / total_typed
-                buffer_ratio = types['Buffer'] / total_typed
+                core_ratio = types["Core"] / total_typed
+                buffer_ratio = types["Buffer"] / total_typed
                 # 0.3-0.5 범위가 이상적
                 balance = 1 - abs(core_ratio - 0.4) - abs(buffer_ratio - 0.4)
-                scores['scene_type'] = max(0, balance * 100)
+                scores["scene_type"] = max(0, balance * 100)
             else:
-                scores['scene_type'] = 50
+                scores["scene_type"] = 50
         else:
-            scores['scene_type'] = 50
+            scores["scene_type"] = 50
 
         # 2. Content Novelty - 35%
         if integrated:
             score_detail = self._calculate_diversity_score(integrated)
-            scores['content_novelty'] = score_detail['novelty']
+            scores["content_novelty"] = score_detail["novelty"]
         else:
-            scores['content_novelty'] = 50
+            scores["content_novelty"] = 50
 
         # 3. Structure Diversity - 30%
         if isinstance(scene_breakdown, dict) and len(scene_breakdown) >= 4:
@@ -288,28 +278,28 @@ class DiversitySampler:
             scene_lengths = [len(str(v)) for v in scene_breakdown.values()]
             avg = sum(scene_lengths) / len(scene_lengths) if scene_lengths else 1
             variance = sum((l - avg) ** 2 for l in scene_lengths) / len(scene_lengths) if scene_lengths else 0
-            cv = (variance ** 0.5) / avg if avg > 0 else 0
+            cv = (variance**0.5) / avg if avg > 0 else 0
 
             # 적당한 변동 (CV 0.2-0.5)이 좋음
             if 0.2 <= cv <= 0.5:
-                scores['structure'] = 80 + (0.5 - abs(cv - 0.35)) * 100
+                scores["structure"] = 80 + (0.5 - abs(cv - 0.35)) * 100
             else:
-                scores['structure'] = max(30, 80 - abs(cv - 0.35) * 100)
+                scores["structure"] = max(30, 80 - abs(cv - 0.35) * 100)
         else:
-            scores['structure'] = 50
+            scores["structure"] = 50
 
         # 가중 평균
-        weights = {'scene_type': 0.35, 'content_novelty': 0.35, 'structure': 0.30}
+        weights = {"scene_type": 0.35, "content_novelty": 0.35, "structure": 0.30}
         total = sum(scores.get(k, 50) * weights[k] for k in weights)
 
         return {
-            'scene_type': scores.get('scene_type', 50),
-            'content_novelty': scores.get('content_novelty', 50),
-            'structure': scores.get('structure', 50),
-            'total': total
+            "scene_type": scores.get("scene_type", 50),
+            "content_novelty": scores.get("content_novelty", 50),
+            "structure": scores.get("structure", 50),
+            "total": total,
         }
 
-    def compare_candidates(self, candidates: List[str]) -> List[Dict]:
+    def compare_candidates(self, candidates: list[str]) -> list[dict]:
         """
         여러 후보 텍스트 비교 분석
 
@@ -323,16 +313,18 @@ class DiversitySampler:
 
         for i, text in enumerate(candidates):
             score = self._calculate_diversity_score(text)
-            results.append({
-                'index': i,
-                'score': score,
-                'rank': 0  # 나중에 설정
-            })
+            results.append(
+                {
+                    "index": i,
+                    "score": score,
+                    "rank": 0,  # 나중에 설정
+                }
+            )
 
         # 순위 설정
-        results.sort(key=lambda x: x['score']['total'], reverse=True)
+        results.sort(key=lambda x: x["score"]["total"], reverse=True)
         for rank, item in enumerate(results, 1):
-            item['rank'] = rank
+            item["rank"] = rank
 
         return results
 
@@ -345,7 +337,7 @@ class ConditionalDiversitySampler:
     패턴 심각도에 따라 동적으로 샘플 수 조정
     """
 
-    def __init__(self, pattern_tracker=None, reference_texts: List[str] = None):
+    def __init__(self, pattern_tracker=None, reference_texts: list[str] = None):
         """
         Args:
             pattern_tracker: PatternTracker 인스턴스
@@ -355,7 +347,7 @@ class ConditionalDiversitySampler:
         self.sampler = DiversitySampler(reference_texts)
         self.is_forced = False  # 강제 활성화 플래그
 
-    def should_sample(self) -> Tuple[bool, str]:
+    def should_sample(self) -> tuple[bool, str]:
         """
         Diversity Sampling 활성화 여부 판단
 
@@ -370,7 +362,7 @@ class ConditionalDiversitySampler:
 
         return self.pattern_tracker.should_activate_diversity_sampling()
 
-    def _calculate_dynamic_samples(self, base_samples: int = 3) -> Tuple[int, str]:
+    def _calculate_dynamic_samples(self, base_samples: int = 3) -> tuple[int, str]:
         """
         [V57] 패턴 심각도에 따른 동적 샘플 수 계산
 
@@ -395,7 +387,7 @@ class ConditionalDiversitySampler:
             "LOW": (2, "LOW - 경미한 반복"),
             "MEDIUM": (3, "MEDIUM - 중간 반복"),
             "HIGH": (4, "HIGH - 심각한 반복"),
-            "CRITICAL": (5, "CRITICAL - 위험 수준")
+            "CRITICAL": (5, "CRITICAL - 위험 수준"),
         }
 
         return severity_to_samples.get(severity, (base_samples, "MEDIUM (기본값)"))
@@ -416,10 +408,10 @@ class ConditionalDiversitySampler:
 
         try:
             # PatternTracker의 분석 결과 조회
-            if hasattr(self.pattern_tracker, 'get_severity_level'):
+            if hasattr(self.pattern_tracker, "get_severity_level"):
                 return self.pattern_tracker.get_severity_level()
 
-            if hasattr(self.pattern_tracker, 'pattern_flags'):
+            if hasattr(self.pattern_tracker, "pattern_flags"):
                 flags = self.pattern_tracker.pattern_flags
                 count = sum(1 for v in flags.values() if v)
 
@@ -451,8 +443,8 @@ class ConditionalDiversitySampler:
         generator_fn: Callable,
         n_samples: int = 3,
         force: bool = False,
-        use_dynamic_samples: bool = True  # [V57] 동적 샘플링 활성화
-    ) -> Tuple[any, Dict]:
+        use_dynamic_samples: bool = True,  # [V57] 동적 샘플링 활성화
+    ) -> tuple[any, dict]:
         """
         [V57] 조건에 따라 샘플링 또는 단일 생성
 
@@ -481,15 +473,15 @@ class ConditionalDiversitySampler:
         else:
             logging.info(f"[ConditionalSampler] 단일 생성 모드: {reason}")
             result = generator_fn()
-            return result, {'mode': 'single', 'reason': reason}
+            return result, {"mode": "single", "reason": reason}
 
     def sample_blueprint_or_single(
         self,
         generator_fn: Callable,
         n_samples: int = 3,
         force: bool = True,  # Stage 3는 기본 활성화
-        use_dynamic_samples: bool = True  # [V57] 동적 샘플링 활성화
-    ) -> Tuple[dict, Dict]:
+        use_dynamic_samples: bool = True,  # [V57] 동적 샘플링 활성화
+    ) -> tuple[dict, dict]:
         """
         [V57] 블루프린트 조건부 샘플링
 
@@ -504,7 +496,7 @@ class ConditionalDiversitySampler:
             severity_desc = "고정"
 
         if force:
-            logging.info(f"[ConditionalSampler] Blueprint Diversity Sampling (Stage 3 기본)")
+            logging.info("[ConditionalSampler] Blueprint Diversity Sampling (Stage 3 기본)")
             logging.info(f"[V57] 동적 샘플 수: {actual_samples}개 ({severity_desc})")
             return self.sampler.sample_blueprints(generator_fn, actual_samples)
         else:
@@ -515,4 +507,4 @@ class ConditionalDiversitySampler:
                 return self.sampler.sample_blueprints(generator_fn, actual_samples)
             else:
                 result = generator_fn()
-                return result, {'mode': 'single', 'reason': reason}
+                return result, {"mode": "single", "reason": reason}

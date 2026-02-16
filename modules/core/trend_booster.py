@@ -1,10 +1,9 @@
-
 class TrendBooster:
     """
     [V24 Sovereign Trend Booster]
     사장님의 상업적 정수(자기중심성, 유능함, 대리만족)를 시스템 심장에 이식합니다.
     """
-    
+
     @staticmethod
     def get_trend_prompt() -> str:
         return """

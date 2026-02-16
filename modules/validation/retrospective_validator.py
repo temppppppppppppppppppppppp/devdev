@@ -2,9 +2,9 @@
 [Phase 3] Retrospective Consistency Validator
 장기 일관성 검증 - 과거 여러 에피소드와 현재 화의 일관성 체크
 """
-import re
+
 import logging
-from typing import Dict, List, Any
+import re
 
 
 class RetrospectiveValidator:
@@ -70,10 +70,10 @@ class RetrospectiveValidator:
             "violations": violations,
             "severity_level": severity_level,
             "total_violations": len(violations),
-            "message": "PASS" if len(violations) == 0 else f"{len(violations)}개 장기 일관성 위반 감지"
+            "message": "PASS" if len(violations) == 0 else f"{len(violations)}개 장기 일관성 위반 감지",
         }
 
-    def _check_realm_regression(self, current_ep: int, manuscript: str, context: dict) -> List[dict]:
+    def _check_realm_regression(self, current_ep: int, manuscript: str, context: dict) -> list[dict]:
         """경지/능력 역행 체크"""
         violations = []
 
@@ -91,31 +91,30 @@ class RetrospectiveValidator:
                 last_realm = past_realms[-1]
 
                 # 경지 위계 정의 (낮음 → 높음)
-                realm_hierarchy = [
-                    "초출", "삼류", "이류", "일류",
-                    "후천", "선천", "절정", "화경", "천인"
-                ]
+                realm_hierarchy = ["초출", "삼류", "이류", "일류", "후천", "선천", "절정", "화경", "천인"]
 
                 # 현재 경지가 과거보다 낮은가?
-                if current_realm in realm_hierarchy and last_realm['realm'] in realm_hierarchy:
+                if current_realm in realm_hierarchy and last_realm["realm"] in realm_hierarchy:
                     current_idx = realm_hierarchy.index(current_realm)
-                    last_idx = realm_hierarchy.index(last_realm['realm'])
+                    last_idx = realm_hierarchy.index(last_realm["realm"])
 
                     if current_idx < last_idx:
-                        violations.append({
-                            "type": "realm_regression",
-                            "reason": f"경지 역행: 제{last_realm['ep']}화 '{last_realm['realm']}' → 현재 '{current_realm}'",
-                            "severity": "CRITICAL",
-                            "past_ep": last_realm['ep'],
-                            "past_value": last_realm['realm'],
-                            "current_value": current_realm
-                        })
+                        violations.append(
+                            {
+                                "type": "realm_regression",
+                                "reason": f"경지 역행: 제{last_realm['ep']}화 '{last_realm['realm']}' → 현재 '{current_realm}'",
+                                "severity": "CRITICAL",
+                                "past_ep": last_realm["ep"],
+                                "past_value": last_realm["realm"],
+                                "current_value": current_realm,
+                            }
+                        )
         except Exception as e:
             logging.warning(f"⚠️ [Retrospective] 경지 역행 체크 실패: {e}")
 
         return violations
 
-    def _check_relationship_regression(self, current_ep: int, manuscript: str, context: dict) -> List[dict]:
+    def _check_relationship_regression(self, current_ep: int, manuscript: str, context: dict) -> list[dict]:
         """NPC 관계 역행 체크"""
         violations = []
 
@@ -123,14 +122,14 @@ class RetrospectiveValidator:
             from modules.core.relationship_tracker import RelationshipTracker
 
             tracker = RelationshipTracker()
-            encyclopedia = context.get('encyclopedia', {})
-            npcs = encyclopedia.get('npcs', [])
+            encyclopedia = context.get("encyclopedia", {})
+            npcs = encyclopedia.get("npcs", [])
 
             for npc in npcs:
                 if not isinstance(npc, dict):
                     continue
 
-                name = npc.get('name', '')
+                name = npc.get("name", "")
                 if not name or name not in manuscript:
                     continue
 
@@ -147,28 +146,30 @@ class RetrospectiveValidator:
                     continue
 
                 # 최근 관계와 비교
-                last_rel = history[-1]['state']
+                last_rel = history[-1]["state"]
 
                 # 역행 체크
                 validation = tracker.validate_transition(name, last_rel, current_rel)
 
-                if not validation['valid']:
-                    violations.append({
-                        "type": "relationship_regression",
-                        "reason": f"{name}: 제{history[-1]['ep_num']}화 '{last_rel}' → 현재 '{current_rel}' (불가능한 전환)",
-                        "severity": "HIGH",
-                        "npc": name,
-                        "past_ep": history[-1]['ep_num'],
-                        "past_value": last_rel,
-                        "current_value": current_rel,
-                        "allowed_transitions": validation.get('allowed_transitions', [])
-                    })
+                if not validation["valid"]:
+                    violations.append(
+                        {
+                            "type": "relationship_regression",
+                            "reason": f"{name}: 제{history[-1]['ep_num']}화 '{last_rel}' → 현재 '{current_rel}' (불가능한 전환)",
+                            "severity": "HIGH",
+                            "npc": name,
+                            "past_ep": history[-1]["ep_num"],
+                            "past_value": last_rel,
+                            "current_value": current_rel,
+                            "allowed_transitions": validation.get("allowed_transitions", []),
+                        }
+                    )
         except Exception as e:
             logging.warning(f"⚠️ [Retrospective] 관계 역행 체크 실패: {e}")
 
         return violations
 
-    def _check_item_disappearance(self, current_ep: int, manuscript: str, context: dict) -> List[dict]:
+    def _check_item_disappearance(self, current_ep: int, manuscript: str, context: dict) -> list[dict]:
         """소유 아이템 무설명 소실 체크"""
         violations = []
 
@@ -188,19 +189,21 @@ class RetrospectiveValidator:
             if lost_items:
                 # 원고에 소실 설명이 있는가?
                 if not self._has_item_loss_explanation(manuscript, lost_items):
-                    violations.append({
-                        "type": "item_disappearance",
-                        "reason": f"아이템 무설명 소실: {list(lost_items)}",
-                        "severity": "MEDIUM",
-                        "lost_items": list(lost_items),
-                        "required_fix": "아이템 소실 사유 명시 (잃어버림, 버림, 도난 등)"
-                    })
+                    violations.append(
+                        {
+                            "type": "item_disappearance",
+                            "reason": f"아이템 무설명 소실: {list(lost_items)}",
+                            "severity": "MEDIUM",
+                            "lost_items": list(lost_items),
+                            "required_fix": "아이템 소실 사유 명시 (잃어버림, 버림, 도난 등)",
+                        }
+                    )
         except Exception as e:
             logging.warning(f"⚠️ [Retrospective] 아이템 소실 체크 실패: {e}")
 
         return violations
 
-    def _check_resolved_conflict_recurrence(self, current_ep: int, manuscript: str) -> List[dict]:
+    def _check_resolved_conflict_recurrence(self, current_ep: int, manuscript: str) -> list[dict]:
         """해결된 갈등 재발 체크"""
         violations = []
 
@@ -209,27 +212,27 @@ class RetrospectiveValidator:
             resolved_conflicts = self._get_resolved_conflicts(current_ep)
 
             for conflict in resolved_conflicts:
-                conflict_keyword = conflict.get('keyword', '')
-                resolved_ep = conflict.get('resolved_ep', 0)
+                conflict_keyword = conflict.get("keyword", "")
+                resolved_ep = conflict.get("resolved_ep", 0)
 
                 # 현재 원고에 같은 갈등이 재발했는가?
                 if conflict_keyword and conflict_keyword in manuscript:
                     # 재발 정당화 체크
-                    recurrence_justifications = [
-                        "다시", "재발", "또다시", "새로운", "다른"
-                    ]
+                    recurrence_justifications = ["다시", "재발", "또다시", "새로운", "다른"]
 
                     has_justification = any(just in manuscript for just in recurrence_justifications)
 
                     if not has_justification:
-                        violations.append({
-                            "type": "resolved_conflict_recurrence",
-                            "reason": f"해결된 갈등 재발: '{conflict_keyword}' (제{resolved_ep}화에서 해결됨)",
-                            "severity": "LOW",
-                            "conflict": conflict_keyword,
-                            "resolved_ep": resolved_ep,
-                            "required_fix": "재발 정당화 필요 (새로운 상황, 다른 원인 등)"
-                        })
+                        violations.append(
+                            {
+                                "type": "resolved_conflict_recurrence",
+                                "reason": f"해결된 갈등 재발: '{conflict_keyword}' (제{resolved_ep}화에서 해결됨)",
+                                "severity": "LOW",
+                                "conflict": conflict_keyword,
+                                "resolved_ep": resolved_ep,
+                                "required_fix": "재발 정당화 필요 (새로운 상황, 다른 원인 등)",
+                            }
+                        )
         except Exception as e:
             logging.warning(f"⚠️ [Retrospective] 갈등 재발 체크 실패: {e}")
 
@@ -245,7 +248,7 @@ class RetrospectiveValidator:
 
         return ""
 
-    def _get_past_realms(self, current_ep: int) -> List[dict]:
+    def _get_past_realms(self, current_ep: int) -> list[dict]:
         """과거 경지 이력 조회"""
         realms = []
 
@@ -255,11 +258,11 @@ class RetrospectiveValidator:
                 ms_data = self.context.db.get_manuscript(ep)
 
                 if ms_data and isinstance(ms_data, dict):
-                    hud = ms_data.get('hud_snapshot', {})
+                    hud = ms_data.get("hud_snapshot", {})
                     if isinstance(hud, dict):
-                        realm = hud.get('realm', '')
+                        realm = hud.get("realm", "")
                         if realm:
-                            realms.append({'ep': ep, 'realm': realm})
+                            realms.append({"ep": ep, "realm": realm})
         except Exception:
             pass
 
@@ -274,9 +277,9 @@ class RetrospectiveValidator:
                 ms_data = self.context.db.get_manuscript(ep)
 
                 if ms_data and isinstance(ms_data, dict):
-                    hud = ms_data.get('hud_snapshot', {})
+                    hud = ms_data.get("hud_snapshot", {})
                     if isinstance(hud, dict):
-                        equipment = hud.get('equipment', [])
+                        equipment = hud.get("equipment", [])
                         if isinstance(equipment, list):
                             items.update(equipment)
                         elif isinstance(equipment, str):
@@ -290,11 +293,11 @@ class RetrospectiveValidator:
         """원고에서 아이템 언급 추출 (간단한 휴리스틱)"""
         # 특정 아이템 패턴 추출
         item_patterns = [
-            r'([\w]+패)',      # ~패
-            r'([\w]+검)',      # ~검
-            r'([\w]+도)',      # ~도
-            r'([\w]+창)',      # ~창
-            r'([\w]+비기)'     # ~비기
+            r"([\w]+패)",  # ~패
+            r"([\w]+검)",  # ~검
+            r"([\w]+도)",  # ~도
+            r"([\w]+창)",  # ~창
+            r"([\w]+비기)",  # ~비기
         ]
 
         items = set()
@@ -312,45 +315,40 @@ class RetrospectiveValidator:
             # 아이템 주변 문맥에서 소실 설명 확인
             if item in manuscript:
                 item_idx = manuscript.find(item)
-                context = manuscript[max(0, item_idx-100):min(len(manuscript), item_idx+100)]
+                context = manuscript[max(0, item_idx - 100) : min(len(manuscript), item_idx + 100)]
 
                 if any(kw in context for kw in loss_keywords):
                     return True
 
         return False
 
-    def _get_resolved_conflicts(self, current_ep: int) -> List[dict]:
+    def _get_resolved_conflicts(self, current_ep: int) -> list[dict]:
         """해결된 갈등 목록 로드"""
         conflicts = []
 
         try:
             # DB에서 resolved_conflicts 앵커 로드
-            stored = self.context.db.load_anchor('resolved_conflicts', default=[])
+            stored = self.context.db.load_anchor("resolved_conflicts", default=[])
             if isinstance(stored, list):
                 # 과거 lookback 화 이내에 해결된 갈등만
                 conflicts = [
-                    c for c in stored
-                    if isinstance(c, dict) and
-                    current_ep - self.lookback <= c.get('resolved_ep', 0) < current_ep
+                    c
+                    for c in stored
+                    if isinstance(c, dict) and current_ep - self.lookback <= c.get("resolved_ep", 0) < current_ep
                 ]
         except Exception:
             pass
 
         return conflicts
 
-    def _calculate_severity(self, violations: List[dict]) -> str:
+    def _calculate_severity(self, violations: list[dict]) -> str:
         """위반 목록의 종합 심각도 계산"""
         if not violations:
             return "NONE"
 
-        severity_scores = {
-            "CRITICAL": 10,
-            "HIGH": 5,
-            "MEDIUM": 2,
-            "LOW": 1
-        }
+        severity_scores = {"CRITICAL": 10, "HIGH": 5, "MEDIUM": 2, "LOW": 1}
 
-        total_score = sum(severity_scores.get(v.get('severity', 'LOW'), 1) for v in violations)
+        total_score = sum(severity_scores.get(v.get("severity", "LOW"), 1) for v in violations)
 
         if total_score >= 10:
             return "CRITICAL"

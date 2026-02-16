@@ -3,29 +3,30 @@ from .base_strategy import BaseStrategy
 
 class ComposerStrategy(BaseStrategy):
     @property
-    def genre_name(self): return "COMPOSER"
+    def genre_name(self):
+        return "COMPOSER"
 
     def get_system_prompt(self) -> str:
-        genre_rules = self.law.get('composer', {})
+        genre_rules = self.law.get("composer", {})
 
         # 1. 컨텍스트 및 선택된 톤(Tone) 인출
         ctx = self.studio.project
 
-        selected_tone = getattr(ctx, 'selected_tone', {})
-        tone_name = selected_tone.get('name', '음악 전문가물')
-        tone_guide = selected_tone.get('writer', '음악의 감동과 업계의 냉혹함이 교차하는 문체')
+        selected_tone = getattr(ctx, "selected_tone", {})
+        tone_name = selected_tone.get("name", "음악 전문가물")
+        tone_guide = selected_tone.get("writer", "음악의 감동과 업계의 냉혹함이 교차하는 문체")
 
         # 2. 주인공 정보 인출
-        bible_root = ctx.master_bible.get('MasterBible', ctx.master_bible)
-        hud = bible_root.get('ComposerHUD', bible_root.get('composer_hud', {}))
-        protagonist = hud.get('Protagonist', hud.get('main', {}))
+        bible_root = ctx.master_bible.get("MasterBible", ctx.master_bible)
+        hud = bible_root.get("ComposerHUD", bible_root.get("composer_hud", {}))
+        protagonist = hud.get("Protagonist", hud.get("main", {}))
 
-        mc_name = protagonist.get('Name', protagonist.get('name', '작곡가'))
-        mc_desc = protagonist.get('description', '천재적 음악 감각의 작곡가')
+        mc_name = protagonist.get("Name", protagonist.get("name", "작곡가"))
+        mc_desc = protagonist.get("description", "천재적 음악 감각의 작곡가")
 
         return f"""
         [COMPOSER GENRE GUIDELINE]
-        1. 장르 필수 요소: {', '.join(genre_rules.get('mandatory', []))}
+        1. 장르 필수 요소: {", ".join(genre_rules.get("mandatory", []))}
         2. 주인공: {mc_name} ({mc_desc})
 
         [📜 세부 집필 톤(Tone) 지침: {tone_name}]
