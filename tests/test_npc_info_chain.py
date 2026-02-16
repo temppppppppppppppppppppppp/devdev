@@ -8,17 +8,17 @@ class TestEntityRegistryFallback:
 
     def test_entity_registry_default_is_dict(self):
         """초기값이 None이 아닌 빈 dict."""
-        from modules.core.stage2_orchestrator import Stage2Orchestrator
+        from modules.core.stage2_preflight import Stage2PreflightAnalysis
 
-        source = inspect.getsource(Stage2Orchestrator._preflight_arc_analysis)
+        source = inspect.getsource(Stage2PreflightAnalysis._preflight_arc_analysis)
         assert "entity_registry_for_director = {}" in source
         assert "entity_registry_for_director = None" not in source
 
     def test_constraint_compiler_exception_logs_warning_tag(self):
         """예외 시 WARNING 레벨 + [C-2] 태그."""
-        from modules.core.stage2_orchestrator import Stage2Orchestrator
+        from modules.core.stage2_preflight import Stage2PreflightAnalysis
 
-        source = inspect.getsource(Stage2Orchestrator._preflight_arc_analysis)
+        source = inspect.getsource(Stage2PreflightAnalysis._preflight_arc_analysis)
         assert "logging.warning" in source
         assert "[C-2]" in source
         assert "entity_registry 빈 dict 폴백" in source
