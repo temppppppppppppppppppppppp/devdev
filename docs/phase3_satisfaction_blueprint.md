@@ -1,7 +1,7 @@
 # D. 대리만족 프레임워크 — Reader Satisfaction 검증 청사진
 
-> 작성: 2026-02-16, checkpoint `470dfee`
-> 상태: **Step 1+2+3 완료** (점수축/가중치 + Director 프롬프트 확장 + 에피소드 태깅+DB)
+> 작성: 2026-02-16, checkpoint `7684a78`
+> 상태: **Step 1+2+3+4 완료** (점수축/가중치 + Director 프롬프트 확장 + 에피소드 태깅+DB + 좌절-보상 타이머)
 
 ---
 
@@ -362,14 +362,15 @@ satisfaction:
 
 **게이트**: py_compile + SovereignApp import + 기존 320 + 신규 26 = 346 + pre-commit
 
-### Step 4: 좌절-보상 타이머
+### Step 4: 좌절-보상 타이머 ✅ 완료 (`7684a78`)
 
 **수정 파일**:
-- `modules/validation/continuity_validator.py` — `_check_frustration_streak()` 추가
-- `modules/core/stage4_orchestrator.py` — ADVISORY tier에서 좌절 검사 호출
-- `tests/test_satisfaction_framework.py` — 테스트 10~13 추가
+- `modules/validation/continuity_validator.py` — `check_frustration_streak(ep_num)` 추가 (DB 조회 + streak 카운트 + 경고 생성)
+- `modules/core/stage4_orchestrator.py` — ContinuityValidator 블록 직후 pre-Director advisory 훅 (validation_results 전 후보 주입)
+- `config/settings/validation.yaml` — `satisfaction:` 섹션 (frustration_warning_streak: 3, frustration_critical_streak: 5)
+- `tests/test_satisfaction_step4_frustration.py` — 테스트 15개 신규 (streak 7 + threshold 3 + hook 3 + format 2)
 
-**게이트**: py_compile + SovereignApp import + 기존 + 신규 13 + pre-commit
+**게이트**: py_compile + SovereignApp import + 기존 346 + 신규 15 = 361 + pre-commit
 
 ### Step 5: YAML 설정 + 문서
 
