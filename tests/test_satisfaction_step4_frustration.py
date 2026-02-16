@@ -118,24 +118,24 @@ class TestStage4FrustrationHook:
 
     def test_hook_code_exists(self):
         """stage4_orchestrator 소스에 check_frustration_streak 호출 존재."""
-        from modules.core.stage4_orchestrator import Stage4Orchestrator
+        from modules.core.stage4_interview_round import Stage4InterviewRound
 
-        source = inspect.getsource(Stage4Orchestrator)
+        source = inspect.getsource(Stage4InterviewRound)
         assert "check_frustration_streak" in source
         assert "[D Step 4]" in source
 
     def test_hook_non_blocking(self):
         """좌절 타이머 예외가 비차단 패턴인지 확인."""
-        from modules.core.stage4_orchestrator import Stage4Orchestrator
+        from modules.core.stage4_interview_round import Stage4InterviewRound
 
-        source = inspect.getsource(Stage4Orchestrator)
+        source = inspect.getsource(Stage4InterviewRound)
         assert "좌절-보상 타이머 실패 (비차단)" in source
 
     def test_hook_injects_to_validation_results(self):
         """경고가 validation_results warnings로 주입되는지 확인."""
-        from modules.core.stage4_orchestrator import Stage4Orchestrator
+        from modules.core.stage4_interview_round import Stage4InterviewRound
 
-        source = inspect.getsource(Stage4Orchestrator)
+        source = inspect.getsource(Stage4InterviewRound)
         assert 'validation_results[ci]["warnings"]' in source
         assert "[D Step 4] {_fw}" in source
         assert "warning_count" in source

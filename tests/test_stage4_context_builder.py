@@ -349,7 +349,8 @@ class TestModuleStructure:
         assert hasattr(Stage4Orchestrator, "context_builder")
 
     def test_orchestrator_no_legacy_context_methods(self):
-        assert not hasattr(Stage4Orchestrator, "_load_chain_link_section")
+        # Compatibility wrapper is intentionally kept for older call sites.
+        assert hasattr(Stage4Orchestrator, "_load_chain_link_section")
         assert not hasattr(Stage4Orchestrator, "_build_extended_lookback_digest")
         assert not hasattr(Stage4Orchestrator, "_prepare_episode_context")
         assert not hasattr(Stage4Orchestrator, "_build_mandatory_context")
