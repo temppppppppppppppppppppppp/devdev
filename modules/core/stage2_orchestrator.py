@@ -1153,7 +1153,7 @@ class Stage2Orchestrator:
         # [무기 #2] ConstraintCompiler
         # ─────────────────────────────────────────────────────────────
         constraint_block = ""
-        entity_registry_for_director = None
+        entity_registry_for_director = {}
         if self.ctx.constraint_compiler and all_refined_arcs:
             try:
                 logging.info("📋 [무기 #2] ConstraintCompiler 컴파일 중...")
@@ -1179,7 +1179,9 @@ class Stage2Orchestrator:
                 analyst_weapons["constraints"] = constraint_block
                 logging.info(f"✅ [Constraints] 제약 블록 생성 완료 ({len(constraint_block)}자)")
             except Exception as cc_err:
-                logging.info(f"⚠️ [Constraints] 스킵: {str(cc_err)[:50]}")
+                logging.warning(
+                    f"⚠️ [C-2] ConstraintCompiler/Entity 추출 실패 (entity_registry 빈 dict 폴백): {str(cc_err)[:80]}"
+                )
 
         return {
             "enhanced_context": enhanced_context,
