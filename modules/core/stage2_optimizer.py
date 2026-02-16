@@ -489,13 +489,23 @@ class NegativeConstraintAmplifier:
             arc_no = arc.get("arc_no", "?")
             state = arc.get("state_constraints", {})
             grants = state.get("grants_received", [])
+            tactical = arc.get("tactical_doc", "")
 
             for grant in grants:
+                # tactical_doc에서 수여자(from) 추출 시도
+                grant_from = "알 수 없음"
+                if isinstance(grant, str) and tactical and grant in tactical:
+                    grant_idx = tactical.find(grant)
+                    context = tactical[max(0, grant_idx - 50) : grant_idx]
+                    match = re.search(r"([가-힣]{2,6})(?:가|에게|로부터|께서)", context)
+                    if match:
+                        grant_from = match.group(1)
+
                 history.append(
                     {
                         "grant": grant,
                         "arc": arc_no,
-                        "from": "알 수 없음",  # TODO: tactical_doc에서 추출
+                        "from": grant_from,
                     }
                 )
 
@@ -503,8 +513,34 @@ class NegativeConstraintAmplifier:
 
     def _build_relationship_history(self, prev_arcs: list[dict]) -> list[dict]:
         """관계 변화 히스토리 구축"""
-        # TODO: 구현
-        return []
+        history = []
+
+        for arc in prev_arcs:
+            arc_no = arc.get("arc_no", "?")
+            state = arc.get("state_changes", {})
+            rel_changes = state.get("relationship_changes", [])
+
+            for change in rel_changes:
+                if isinstance(change, dict):
+                    history.append(
+                        {
+                            "arc": arc_no,
+                            "npc": change.get("npc", "?"),
+                            "change": change.get("change", "?"),
+                            "reason": change.get("reason", ""),
+                        }
+                    )
+                elif isinstance(change, str):
+                    history.append(
+                        {
+                            "arc": arc_no,
+                            "npc": "?",
+                            "change": change,
+                            "reason": "",
+                        }
+                    )
+
+        return history
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
