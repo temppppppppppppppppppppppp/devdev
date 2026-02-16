@@ -166,8 +166,8 @@ class DBManager:
                 description TEXT,
                 frequency INTEGER DEFAULT 1,
                 solution TEXT,
-                first_seen TIMESTAMP,
-                last_seen TIMESTAMP,
+                first_seen TEXT,
+                last_seen TEXT,
                 first_ep INTEGER,
                 last_ep INTEGER
             )
@@ -296,20 +296,6 @@ class DBManager:
         """)
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_npc_history_name ON npc_history(npc_name)")
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_npc_history_arc ON npc_history(arc_no)")
-
-        # 12. Reflexion 메모리 테이블
-        self.cursor.execute("""
-            CREATE TABLE IF NOT EXISTS reflexion_memory (
-                pattern_type TEXT PRIMARY KEY,
-                description TEXT,
-                frequency INTEGER DEFAULT 1,
-                solution TEXT,
-                first_seen TEXT,
-                last_seen TEXT,
-                first_ep INTEGER,
-                last_ep INTEGER
-            )
-        """)
 
         # 13. [Phase 3-B] 크로스 에피소드 문장 핑거프린트
         self.cursor.execute("""
