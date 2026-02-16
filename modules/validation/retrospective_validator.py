@@ -6,6 +6,8 @@
 import logging
 import re
 
+_logger = logging.getLogger(__name__)
+
 
 class RetrospectiveValidator:
     """
@@ -264,7 +266,7 @@ class RetrospectiveValidator:
                         if realm:
                             realms.append({"ep": ep, "realm": realm})
         except Exception:
-            pass
+            _logger.warning("[RetrospectiveValidator] _get_past_realms DB 읽기 실패", exc_info=True)
 
         return realms
 
@@ -285,7 +287,7 @@ class RetrospectiveValidator:
                         elif isinstance(equipment, str):
                             items.add(equipment)
         except Exception:
-            pass
+            _logger.warning("[RetrospectiveValidator] _get_past_items DB 읽기 실패", exc_info=True)
 
         return items
 
@@ -337,7 +339,7 @@ class RetrospectiveValidator:
                     if isinstance(c, dict) and current_ep - self.lookback <= c.get("resolved_ep", 0) < current_ep
                 ]
         except Exception:
-            pass
+            _logger.warning("[RetrospectiveValidator] _get_resolved_conflicts DB 읽기 실패", exc_info=True)
 
         return conflicts
 
