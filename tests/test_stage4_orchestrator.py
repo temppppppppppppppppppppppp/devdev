@@ -380,8 +380,9 @@ class TestHandleRoundOutcomeErrorPaths:
 
         orch = orch_with_ctx
 
-        # 3라운드 모두 REJECT
-        orch._run_interview_round = MagicMock(
+        # 3라운드 모두 REJECT (B-1-3: interview_round.run 위임)
+        orch._interview_round = MagicMock()
+        orch._interview_round.run = MagicMock(
             return_value=_InterviewRoundResult(
                 verdict="REJECT",
                 director_feedback="피드백",
@@ -423,8 +424,9 @@ class TestHandleRoundOutcomeErrorPaths:
 
         orch = orch_with_ctx
 
-        # 3라운드 모두 REJECT
-        orch._run_interview_round = MagicMock(
+        # 3라운드 모두 REJECT (B-1-3: interview_round.run 위임)
+        orch._interview_round = MagicMock()
+        orch._interview_round.run = MagicMock(
             return_value=_InterviewRoundResult(
                 verdict="REJECT",
                 director_feedback="피드백",

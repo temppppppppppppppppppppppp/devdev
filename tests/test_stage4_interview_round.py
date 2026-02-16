@@ -1,0 +1,278 @@
+"""[B-1-3] Stage4InterviewRound unit tests."""
+
+import inspect
+from unittest.mock import MagicMock
+
+from modules.core.stage4_interview_round import Stage4InterviewRound
+from modules.core.stage4_orchestrator import Stage4Orchestrator, _RoundContext
+
+
+def _make_ctx():
+    ctx = MagicMock()
+    ctx.ui = MagicMock()
+    ctx.ui.log = MagicMock()
+    ctx.perf_timer = MagicMock()
+    ctx.current_project = MagicMock()
+    ctx.current_project.master_bible = {"MasterBible": {"protagonist_config": {}}}
+    ctx.current_project.db = MagicMock()
+    ctx.current_project.db.get_recent_manuscripts.return_value = []
+    ctx.current_project.db.get_manuscript.return_value = {"content": "이전 원고"}
+    ctx.state_tracker = MagicMock()
+    ctx.state_tracker.npc_registry = {}
+    ctx.state_tracker.item_state_registry = {}
+    ctx.state_tracker.get_npc_change_history.return_value = []
+    ctx.state_tracker.check_destroyed_entity_in_manuscript.return_value = []
+    ctx.state_tracker.in_world_timeline = []
+    ctx.state_tracker.check_time_consistency.return_value = []
+    ctx.agents = {"director": MagicMock()}
+    return ctx
+
+
+def _make_round_ctx():
+    chief_writer = MagicMock()
+    chief_writer.generate_ensemble.return_value = []
+    chief_writer.patch_with_feedback.return_value = []
+    chief_writer.regenerate_with_feedback.return_value = []
+
+    manuscript_validator = MagicMock()
+    manuscript_validator.validate_all_candidates.return_value = []
+    consistency_validator = MagicMock()
+    consistency_validator.validate.return_value = {"violations": [], "score_penalty": 0}
+    blocking_validator = MagicMock()
+    blocking_validator.validate.return_value = {"failures": []}
+    continuity_validator = MagicMock()
+    continuity_validator.validate.return_value = {"violations": [], "warnings": []}
+    continuity_validator.check_frustration_streak.return_value = []
+
+    return _RoundContext(
+        chief_writer=chief_writer,
+        manuscript_validator=manuscript_validator,
+        consistency_validator=consistency_validator,
+        blocking_validator=blocking_validator,
+        continuity_validator=continuity_validator,
+        next_ep=1,
+        blueprint={"integrated_scenario": "테스트"},
+        arc_data={"arc_no": 1},
+        arc_pos=1,
+        total_ep_in_arc=10,
+        arc_tactical="전술",
+        prev_text="이전 원고",
+        prev_ending="엔딩",
+        prev_manuscripts_text="",
+        episode_digest="",
+        hud_report="HUD",
+        current_inventory=[],
+        current_martial_arts=[],
+        dead_npcs=[],
+        item_acquisition_timeline="",
+        chain_link_section="",
+        world_state_summary="",
+        purism_prompt="",
+        genre_name="무협",
+        npc_equipment_summary="",
+        effective_anti_trope="",
+        intro_dna="CYNICAL",
+        story_context="",
+        style_guide="",
+        reference_anchor_prompt="",
+        mandatory_context="",
+        justification_prompt="",
+        reflexion_prompt="",
+    )
+
+
+def _candidate():
+    return {"manuscript": "테스트 원고 " * 300, "strategy_name": "balanced", "title": "테스트"}
+
+
+def _validation_result():
+    return {"warnings": [], "warning_count": 0, "focus_points": [], "metrics": {"length": 2000}}
+
+
+class TestInterviewRoundInit:
+    def test_init_with_ctx(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        assert ir.ctx is ctx
+        assert ir.time_warnings == []
+
+    def test_lazy_init_via_orchestrator(self):
+        app = MagicMock()
+        ctx = _make_ctx()
+        orch = Stage4Orchestrator(app, context=ctx)
+        ir = orch.interview_round
+        assert isinstance(ir, Stage4InterviewRound)
+        assert ir.ctx is ctx
+
+    def test_lazy_init_singleton(self):
+        app = MagicMock()
+        ctx = _make_ctx()
+        orch = Stage4Orchestrator(app, context=ctx)
+        assert orch.interview_round is orch.interview_round
+
+
+class TestInterviewRoundRun:
+    def test_empty_candidates_returns_empty(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.generate_ensemble.return_value = []
+
+        result = ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        assert result.verdict == "EMPTY"
+
+    def test_pass_returns_pass(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "PASS",
+            "score": 85,
+            "selection_reason": "좋음",
+            "selected_candidate": {"manuscript": "통과 원고", "title": "통과"},
+            "state_updates": {},
+        }
+
+        result = ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        assert result.verdict == "PASS"
+        assert result.final_manuscript == "통과 원고"
+
+    def test_reject_returns_reject(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "REJECT",
+            "score": 40,
+            "selection_reason": "부족",
+            "feedback": {"issues": ["문제"]},
+            "action_items": ["수정1"],
+            "selected_candidate": {"manuscript": "거절 원고"},
+        }
+
+        result = ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        assert result.verdict == "REJECT"
+        assert result.final_manuscript is None
+
+    def test_patch_and_fallback_use_ctx_state_tracker(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.patch_with_feedback.return_value = []  # 폴백 유도
+        round_ctx.chief_writer.regenerate_with_feedback.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "PASS",
+            "score": 80,
+            "selection_reason": "ok",
+            "selected_candidate": {"manuscript": "통과", "title": "통과"},
+            "state_updates": {},
+        }
+
+        ir.run(
+            round_num=1,
+            stage4_spinner=MagicMock(),
+            director_feedback="피드백",
+            previous_attempt={"score": 70, "best_manuscript": "원고"},
+            round_ctx=round_ctx,
+        )
+
+        assert round_ctx.chief_writer.patch_with_feedback.call_args.kwargs["state_tracker"] is ctx.state_tracker
+        assert round_ctx.chief_writer.regenerate_with_feedback.call_args.kwargs["state_tracker"] is ctx.state_tracker
+
+    def test_general_regenerate_uses_ctx_state_tracker(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.regenerate_with_feedback.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "PASS",
+            "score": 80,
+            "selection_reason": "ok",
+            "selected_candidate": {"manuscript": "통과", "title": "통과"},
+            "state_updates": {},
+        }
+
+        ir.run(
+            round_num=2,
+            stage4_spinner=MagicMock(),
+            director_feedback="피드백",
+            previous_attempt={"score": 20, "best_manuscript": ""},
+            round_ctx=round_ctx,
+        )
+
+        assert round_ctx.chief_writer.regenerate_with_feedback.call_args.kwargs["state_tracker"] is ctx.state_tracker
+
+    def test_time_warnings_stored_and_used_in_context(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        ir.time_warnings = ["기존 경고"]
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.state_tracker.check_time_consistency.return_value = ["신규 경고"]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "PASS",
+            "score": 90,
+            "selection_reason": "ok",
+            "selected_candidate": {"manuscript": "통과", "title": "통과"},
+            "state_updates": {},
+        }
+
+        ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        used_context = round_ctx.consistency_validator.validate.call_args.args[1]
+        assert "기존 경고" in used_context["time_warnings"]
+        assert "신규 경고" in ir.time_warnings
+
+
+class TestModuleStructure:
+    def test_import(self):
+        assert Stage4InterviewRound is not None
+
+    def test_orchestrator_has_interview_round_property(self):
+        assert hasattr(Stage4Orchestrator, "interview_round")
+
+    def test_orchestrator_no_legacy_interview_method(self):
+        assert not hasattr(Stage4Orchestrator, "_run_interview_round")
+
+    def test_no_self_app_in_interview_round(self):
+        source = inspect.getsource(Stage4InterviewRound)
+        assert "self.app" not in source
