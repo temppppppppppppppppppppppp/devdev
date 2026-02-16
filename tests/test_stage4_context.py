@@ -1,12 +1,11 @@
 """[Phase 4C-2a/2b/2c] Stage4Context + Stage4Orchestrator DI 테스트"""
 
-from unittest.mock import MagicMock, PropertyMock
+from unittest.mock import MagicMock
 
 import pytest
 
 from modules.core.stage4_context import Stage4Context
 from modules.core.stage4_orchestrator import Stage4Orchestrator
-
 
 # ── Fixtures ─────────────────────────────────────────────────
 
