@@ -6,6 +6,7 @@ Python 기반 필수 검증 (LLM 호출 불필요)
 [V59] 씬 완성도/클리프행어 검증 추가
 """
 
+import logging
 import re
 
 from modules.core.constants import ManuscriptLimits  # [V64.P4]
@@ -1015,8 +1016,8 @@ class BlockingValidator:
                             "required_fix": validation.get("required", ""),
                         }
         except Exception as e:
-            # 모듈 로드 실패 등의 경우 조용히 통과
-            logging.warning(f"⚠️ [Blocking] 관계 일관성 체크 실패: {e}")
+            logging.warning(f"[C-3] relationship consistency check failed (degraded): {e}")
+            return {"check": "relationship_consistency", "passed": True, "degraded": True, "error": str(e)}
 
         return {"check": "relationship_consistency", "passed": True}
 
@@ -1085,8 +1086,8 @@ class BlockingValidator:
                                         "required_fix": "NPC가 이미 알고 있는 것으로 수정하거나, 정보 차단 알리바이(정보 없는 변방, 격리 등) 추가 필요",
                                     }
         except Exception as e:
-            # 모듈 로드 실패 등의 경우 조용히 통과
-            logging.warning(f"⚠️ [Blocking] 정보 일관성 체크 실패: {e}")
+            logging.warning(f"[C-3] information consistency check failed (degraded): {e}")
+            return {"check": "information_consistency", "passed": True, "degraded": True, "error": str(e)}
 
         return {"check": "information_consistency", "passed": True}
 

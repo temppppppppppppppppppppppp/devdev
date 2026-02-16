@@ -132,8 +132,8 @@ class DirectorContinuityValidator:
             return result
 
         except Exception as e:
-            logging.warning(f"⚠️ [V61] Entity 일관성 검증 실패: {e}")
-            return {"decision": "PASS", "mismatches": [], "fix_instructions": "", "error": str(e)}
+            logging.warning(f"⚠️ [C-3] Entity 일관성 검증 실패 (UNKNOWN 반환): {e}")
+            return {"decision": "UNKNOWN", "mismatches": [], "fix_instructions": "", "error": str(e)}
 
     def _format_entity_registry_for_director(self, entity_registry: dict) -> str:
         """[V61] Entity Registry를 Director용 포맷으로 변환"""
@@ -661,8 +661,8 @@ class DirectorContinuityValidator:
             }
 
         except Exception as e:
-            logging.warning(f"⚠️ [V61.5] Blueprint 연속성 검증 오류: {str(e)[:50]}")
-            return {"decision": "PASS", "issues": [], "feedback": "", "error": str(e)}
+            logging.warning(f"⚠️ [C-3] Blueprint 연속성 검증 오류 (UNKNOWN 반환): {str(e)[:50]}")
+            return {"decision": "UNKNOWN", "issues": [], "feedback": "", "error": str(e)}
 
     def check_manuscript_continuity_with_cache(
         self, new_manuscript: str, ep_num: int, db=None, limit: int = 30
@@ -746,5 +746,5 @@ class DirectorContinuityValidator:
             }
 
         except Exception as e:
-            logging.warning(f"⚠️ [V61.5] Manuscript 연속성 검증 오류: {str(e)[:50]}")
-            return {"decision": "PASS", "conflicts": [], "summary": "", "error": str(e)}
+            logging.warning(f"⚠️ [C-3] Manuscript 연속성 검증 오류 (UNKNOWN 반환): {str(e)[:50]}")
+            return {"decision": "UNKNOWN", "conflicts": [], "summary": "", "error": str(e)}
