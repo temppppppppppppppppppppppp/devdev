@@ -1,7 +1,7 @@
 # D. 대리만족 프레임워크 — Reader Satisfaction 검증 청사진
 
-> 작성: 2026-02-16, checkpoint `ffc2bb8`
-> 상태: **Step 1+2 완료** (점수축/가중치 + Director 프롬프트 확장)
+> 작성: 2026-02-16, checkpoint `470dfee`
+> 상태: **Step 1+2+3 완료** (점수축/가중치 + Director 프롬프트 확장 + 에피소드 태깅+DB)
 
 ---
 
@@ -352,15 +352,15 @@ satisfaction:
 
 **게이트**: py_compile + SovereignApp import + 기존 304 + 신규 16 = 320 + pre-commit
 
-### Step 3: 에피소드 태깅 + DB
+### Step 3: 에피소드 태깅 + DB ✅ 완료 (`470dfee`)
 
 **수정 파일**:
-- `modules/domain/agents/state_extractor.py` — `extract_satisfaction_tag()` 추가
-- `modules/core/db_manager.py` — `episode_satisfaction_tags` 테이블 + CRUD
-- `modules/core/stage4_orchestrator.py` — `_post_pass_hooks()` 에서 태깅 호출
-- `tests/test_satisfaction_framework.py` — 테스트 7~9 추가
+- `modules/domain/agents/state_extractor.py` — `extract_satisfaction_tag()` + `_validate_satisfaction_tag()` + `_fallback_satisfaction_tag()` + `SATISFACTION_TAG_PROMPT`
+- `modules/core/db_manager.py` — `episode_satisfaction_tags` 테이블 + `save_satisfaction_tag()` / `get_satisfaction_tag()` / `get_recent_satisfaction_tags()`
+- `modules/core/stage4_orchestrator.py` — post-PASS 훅에서 비차단 태깅 호출
+- `tests/test_satisfaction_step3_tagging.py` — 테스트 26개 신규 (DB 2 + CRUD 8 + 태깅 6 + fallback 5 + hook 2 + prompt 3)
 
-**게이트**: py_compile + SovereignApp import + 기존 + 신규 9 + pre-commit
+**게이트**: py_compile + SovereignApp import + 기존 320 + 신규 26 = 346 + pre-commit
 
 ### Step 4: 좌절-보상 타이머
 

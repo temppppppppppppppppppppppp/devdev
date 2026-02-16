@@ -28,13 +28,13 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 ## 현재 상태 (2026-02-16)
 
 - **작동함**: Stage 0→2→4 정상 동작
-- **완료된 것**: Phase 1~2, 5-A/5-B/5-C, 6-A/6-B/6-C, 4C(DI), 4D(sqlite-vec), 3-5B(패치), 3-5A(NPC이력), **4-R1~R3(몬스터 분할)**, R4-a(NO-GO), **3-QR(품질 회귀 감지)**, **3-5C(NPC 과잉 경고)**, **3-Obs Step 1+2(관측성 계측)**, **3-B(크로스 에피소드 반복 감지)**, **D.대리만족 청사진+Step1+Step2**
+- **완료된 것**: Phase 1~2, 5-A/5-B/5-C, 6-A/6-B/6-C, 4C(DI), 4D(sqlite-vec), 3-5B(패치), 3-5A(NPC이력), **4-R1~R3(몬스터 분할)**, R4-a(NO-GO), **3-QR(품질 회귀 감지)**, **3-5C(NPC 과잉 경고)**, **3-Obs Step 1+2(관측성 계측)**, **3-B(크로스 에피소드 반복 감지)**, **D.대리만족 청사진+Step1+Step2+Step3**
 - **약점**: 플롯 중복 감지 불안정 (Chain 1)
-- **현재 단계**: D. Step 2 완료 → Step 3 (에피소드 만족도 태깅+DB)
-- **다음 우선순위**: D. 대리만족 프레임워크 구현 Step 3 (에피소드 태깅)
-- **테스트 기준선**: unit 43 + quality 15 + cross-ep 13 + agent-timer 7 + satisfaction 18 + satisfaction-prompts 16 + pipeline 89 + E2E 22 + regression 97 = **320 passed**
+- **현재 단계**: D. Step 3 완료 → Step 4 (좌절-보상 타이머)
+- **다음 우선순위**: D. 대리만족 프레임워크 구현 Step 4 (좌절-보상 타이머)
+- **테스트 기준선**: unit 43 + quality 15 + cross-ep 13 + agent-timer 7 + satisfaction 18 + satisfaction-prompts 16 + satisfaction-tagging 26 + pipeline 89 + E2E 22 + regression 97 = **346 passed**
 - **ctx refs**: stage2 350/43, stage4 325/23
-- **checkpoint**: `ffc2bb8`
+- **checkpoint**: `470dfee`
 - **실행 기준 문서(SSOT)**: `내일작업.md` (남은 작업만 관리)
 
 ---
@@ -90,7 +90,7 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 | ~~9~~ | ~~3-Obs~~ | ~~관측성 — preflight 병렬 구간 계측~~ | ✅ 완료 (`b4eaa58`) |
 | ~~10~~ | ~~3-B~~ | ~~크로스 에피소드 반복 감지 (advisory)~~ | ✅ 완료 (`db07efd`) |
 | ~~11~~ | ~~3-Obs Step 2~~ | ~~관측성 — 에이전트 레벨 ThreadPoolExecutor 계측~~ | ✅ 완료 (`597fcae`) |
-| 12 | **D. 대리만족** | **대리만족 프레임워크 구현 (5-Step)** | Step 1 ✅ (`0d676c8`), Step 2 ✅ (`ffc2bb8`), Step 3~5 대기 |
+| 12 | **D. 대리만족** | **대리만족 프레임워크 구현 (5-Step)** | Step 1 ✅ (`0d676c8`), Step 2 ✅ (`ffc2bb8`), Step 3 ✅ (`470dfee`), Step 4~5 대기 |
 
 ---
 
