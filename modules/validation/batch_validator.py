@@ -7,6 +7,7 @@ asyncio 기반 병렬 처리
 
 import asyncio
 import logging
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
@@ -32,6 +33,7 @@ class BatchValidator:
         self.max_concurrent = max_concurrent
         self.results = []
         self.stats = {"total_manuscripts": 0, "completed": 0, "failed": 0, "total_time": 0, "average_time": 0}
+        self._stats_lock = threading.Lock()
 
     async def validate_batch_async(self, manuscripts: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """
@@ -65,10 +67,12 @@ class BatchValidator:
                         ms_data["manuscript"],
                         ms_data["validation_context"],
                     )
-                    self.stats["completed"] += 1
+                    with self._stats_lock:
+                        self.stats["completed"] += 1
                     return {"ep_num": ms_data["ep_num"], "result": result, "success": True}
                 except Exception as e:
-                    self.stats["failed"] += 1
+                    with self._stats_lock:
+                        self.stats["failed"] += 1
                     return {"ep_num": ms_data["ep_num"], "error": str(e), "success": False}
 
         # 모든 원고 동시 처리
@@ -101,10 +105,12 @@ class BatchValidator:
                 result = self.orchestrator.validate(
                     ms_data["ep_num"], ms_data["manuscript"], ms_data["validation_context"]
                 )
-                self.stats["completed"] += 1
+                with self._stats_lock:
+                    self.stats["completed"] += 1
                 return {"ep_num": ms_data["ep_num"], "result": result, "success": True}
             except Exception as e:
-                self.stats["failed"] += 1
+                with self._stats_lock:
+                    self.stats["failed"] += 1
                 return {"ep_num": ms_data["ep_num"], "error": str(e), "success": False}
 
         # ThreadPoolExecutor로 병렬 처리
