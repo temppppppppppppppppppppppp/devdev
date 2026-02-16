@@ -32,12 +32,12 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 - **약점**: ~~플롯 중복 감지 불안정 (Chain 1)~~ → C-1에서 키워드 폴백 도입으로 개선
 - **현재 단계**: 기술부채 전면 정리 완료, 잔여 작업은 B-2(Protocol) + D(미활용 기능) + E-1(Silent Pass)
 - **다음 우선순위**: B-2(Protocol 미적합 어댑터), D(미활용 기능 활성화), E-1(Silent Pass 패턴)
-- **테스트 기준선**: **1,446 passed + 13 xfailed** (full suite green, `pytest tests/ -q`)
-- **Ruff**: 0 violations (E-2 전면 정리 완료)
+- **테스트 기준선**: **1,522 passed + 68 xfailed** (full suite green, `pytest tests/ -q`)
+- **Ruff**: 0 violations, Silent Pass YELLOW 0건 (E-1+E-2 완료)
 - **stage4 orchestrator**: 2,481→883줄 (**-64%**, 분할 완료, 서브모듈 3개)
 - **chief_writer**: 2,255→854줄 (**-62%**, 분할 완료, 서브모듈 2개)
 - **stage2 orchestrator**: 2,639→907줄 (**-66%**, B-1-8 완료, 서브모듈 3개)
-- **checkpoint**: `167b305`
+- **checkpoint**: `f0390e8`
 - **실행 기준 문서(SSOT)**: `내일작업.md` (남은 작업만 관리)
 
 ---
@@ -120,6 +120,8 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 | ~~26~~ | ~~Green Suite~~ | ~~테스트 정리 (B-1 regression + xfail)~~ | ✅ 완료 (`ae97ffa`) |
 | ~~27~~ | ~~E-2~~ | ~~Ruff 전면 정리 (2,234건→0 violations)~~ | ✅ 완료 (`6472c42`, `610d8e4`) |
 | ~~28~~ | ~~A-2~~ | ~~stage2_optimizer TODO 2건~~ | ✅ 완료 (`167b305`) |
+| ~~29~~ | ~~E-1~~ | ~~Silent Pass 로깅 보강 (16건)~~ | ✅ 완료 (`380c911`) |
+| ~~30~~ | ~~D-1~~ | ~~POV 시스템 활성화~~ | ✅ 완료 (`f0390e8`) |
 
 ---
 
@@ -127,7 +129,7 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 
 | 기능 | 파일 | 상태 |
 |------|------|------|
-| 시점 전환 프리셋 | `blueprint_ensemble.py` L81~84 | ✅ 존재, YAML 연동만 필요 |
+| 시점 전환 프리셋 | `blueprint_ensemble.py` L76~90, `stage0/__init__.py` | ✅ **D-1 활성화 완료** — POV 선택 메뉴 추가, 전체 체인 작동 |
 | 시점(POV) 일관성 체크 | `pre_llm_validator.py` V70 | ✅ 구현됨 |
 | A/B 테스트 | `ab_testing.py` | ⚠️ `quick_ab_test()` 존재, 확장 필요 |
 | 에피소드 롤백 | `project_manager.py` | ⚠️ `auto_backtrack_v35()`, NPC 되감기 추가 필요 |
