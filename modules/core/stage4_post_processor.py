@@ -383,7 +383,7 @@ class Stage4PostProcessor:
                     try:
                         self.ctx.fact_ledger.update_from_bible_delta(next_ep, bible_delta)
                     except Exception as _bd_err:
-                        pass  # [V70] bible_delta 갱신 실패 시 비차단
+                        logging.warning("[V70] bible_delta 갱신 실패 (비차단): %s", _bd_err)
 
                 # 3) DB 저장
                 self.ctx.fact_ledger.save()

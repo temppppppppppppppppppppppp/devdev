@@ -2520,6 +2520,11 @@ class SovereignApp:
     def _rollback_episode(self):
         """[V40.1 Rollback] 특정 회차로 되감기 (HUD, DB, Vector DB, 파일 모두 롤백)"""
         self._project_service.rollback_episode()  # [Phase 4B-3] thin delegate
+        # [Debug Sweep] 롤백 후 캐시 무효화
+        self._prompt_builder._item_timeline_cache = {}
+        self._cumulative_state_cache = None
+        self._cumulative_state_cache_key = 0
+        self._narrative_summaries_cache = None
 
     def _wipe_production_data(self):
         """[V27.1 Wipe] 설계도는 유지하고 실제 집필 기록(Manuscripts/Blueprints)만 소거"""
@@ -2694,7 +2699,7 @@ class SovereignApp:
                         _upper_parts.append(f"[볼륨 {_vi} 요약] {_vs}")
                 # 빈 볼륨이면 이후도 없을 가능성이 높지만 continue
         except Exception:
-            pass  # [V68] OPTIONAL: 상위 요약 로드 실패 시 기존 요약만 사용
+            logging.warning("[V68] 상위 요약 로드 실패 (기존 요약만 사용)", exc_info=True)
 
         if summaries or _upper_parts:
             _all_parts = []
@@ -2784,6 +2789,7 @@ class SovereignApp:
             diversity_engine=getattr(self, "diversity_engine", None),
             semantic_plot_guard=getattr(self, "semantic_plot_guard", None),
             selected_genre=getattr(self, "selected_genre", None),
+            quality_dashboard=getattr(self, "quality_dashboard", None),
             # [4C-2c] 콜백 7종
             get_int_input=self._get_int_input,
             build_item_acquisition_timeline=self._build_item_acquisition_timeline,
