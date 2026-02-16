@@ -965,7 +965,7 @@ class Stage2Orchestrator:
                 self.ctx.ui.log("      📋 [V60.11] ConstraintCompiler 체크리스트 생성 완료")
 
                 # [V66] SemanticPlotGuard — 중앙 인스턴스 사용
-                if _resolved and len(_resolved) >= 2 and getattr(self.app, "semantic_plot_guard", None):
+                if _resolved and len(_resolved) >= 2 and self.ctx.semantic_plot_guard:
                     try:
                         self.ctx.semantic_plot_guard.index_resolved_plots(_resolved)
                     except Exception as e:  # [V64.P4] SPG init — OPTIONAL
@@ -1331,7 +1331,7 @@ class Stage2Orchestrator:
                         )
 
                     # [V66] SemanticPlotGuard 인덱싱
-                    if getattr(self.app, "semantic_plot_guard", None) and self.ctx.state_tracker.resolved_plots:
+                    if self.ctx.semantic_plot_guard and self.ctx.state_tracker.resolved_plots:
                         try:
                             indexed = self.ctx.semantic_plot_guard.index_resolved_plots(
                                 self.ctx.state_tracker.resolved_plots
@@ -2008,7 +2008,7 @@ class Stage2Orchestrator:
         from modules.core.constants import RecoveryLimits
 
         # [V66] SemanticPlotGuard 중복 검사
-        if getattr(self.app, "semantic_plot_guard", None):
+        if self.ctx.semantic_plot_guard:
             try:
                 tactical_text = refined_arc.get("tactical_doc", "")
                 if isinstance(tactical_text, dict):
@@ -2190,8 +2190,8 @@ class Stage2Orchestrator:
                 return {"action": "retry", "current_feedback": current_feedback}
 
             # [V66] SemanticPlotGuard 중복 체크 (중앙 인스턴스)
-            _spg = getattr(self.app, "semantic_plot_guard", None)
-            if _spg and _spg._resolved_embeddings:
+            _spg = self.ctx.semantic_plot_guard
+            if _spg and (_spg._resolved_embeddings or _spg._resolved_keywords):
                 try:
                     _new_tactical = refined_arc.get("tactical_doc", "")
                     _spg_warnings = _spg.check_new_arc(tactical_doc=_new_tactical)

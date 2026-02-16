@@ -12,6 +12,7 @@ Usage:
 
 import logging
 import os
+import re
 import time
 
 try:
@@ -59,9 +60,12 @@ class SemanticPlotGuard:
         self._api_key = api_key or os.getenv("GOOGLE_API_KEY", "")
         self._client = None
         self._resolved_embeddings: list[dict] = []  # [{"plot": str, "embedding": list}]
+        self._resolved_keywords: list[dict] = []  # [C-1] 키워드 폴백 저장소
         self._init_attempted = False  # [V64.P4-fix] lazy init 플래그
 
         self._try_init_client()
+        if not self._client:
+            logging.info("ℹ️ [V63] SemanticPlotGuard: API 미사용 — 키워드 폴백 모드")
 
     def _try_init_client(self) -> None:
         """[V64.P4-fix] Client 초기화 시도 (실패해도 다음 사용 시 재시도)"""
@@ -108,7 +112,7 @@ class SemanticPlotGuard:
             성공적으로 인덱싱된 플롯 수
         """
         if not self._client:
-            return 0
+            return self._index_keyword_fallback(resolved_plots)
 
         indexed = 0
         for rp in resolved_plots:
@@ -146,6 +150,9 @@ class SemanticPlotGuard:
             경고 목록: [{"new_plot": str, "similar_to": str, "similarity": float}, ...]
         """
         if not self._client or not self._resolved_embeddings:
+            # [C-1] 키워드 기반 폴백
+            if self._resolved_keywords:
+                return self._check_keyword_fallback(tactical_doc=tactical_doc, new_plot_names=new_plot_names)
             return []
 
         warnings = []
@@ -191,3 +198,100 @@ class SemanticPlotGuard:
                 f'  - "{w["new_plot"]}" ↔ 완결된 "{w["similar_to"]}" (유사도 {w["similarity"]:.1%}) → 차별화 필요'
             )
         return "\n".join(lines)
+
+    def _index_keyword_fallback(self, resolved_plots: list[dict]) -> int:
+        """[C-1] API 없을 때 키워드 기반 인덱싱."""
+        indexed = 0
+        for resolved_plot in resolved_plots:
+            plot_name = resolved_plot.get("plot", "")
+            resolution = resolved_plot.get("resolution", "")
+            if not plot_name or len(plot_name) < 2:
+                continue
+            if any(item["plot"] == plot_name for item in self._resolved_keywords):
+                continue
+
+            keywords = self._extract_keywords(f"{plot_name} {resolution}")
+            self._resolved_keywords.append(
+                {
+                    "plot": plot_name,
+                    "resolution": resolution,
+                    "keywords": keywords,
+                }
+            )
+            indexed += 1
+
+        if indexed > 0:
+            logging.info(
+                f"📊 [V63] SemanticPlotGuard(키워드): {indexed}개 플롯 인덱싱 완료 (총 {len(self._resolved_keywords)}개)"
+            )
+        return indexed
+
+    @staticmethod
+    def _extract_keywords(text: str) -> set[str]:
+        """[C-1] 텍스트에서 핵심 키워드 추출 (2글자 이상)."""
+        words = re.findall(r"[가-힣]{2,}", text) + re.findall(r"[a-zA-Z]{3,}", text)
+        stopwords = {"에서", "으로", "하고", "하는", "되는", "있는", "없는", "것이", "위해", "통해", "대한"}
+        normalized = set()
+        for word in words:
+            token = SemanticPlotGuard._normalize_keyword(word)
+            if token and token not in stopwords and len(token) >= 2:
+                normalized.add(token)
+        return normalized
+
+    @staticmethod
+    def _normalize_keyword(word: str) -> str:
+        """[C-1] 조사/어미를 제거해 비교 가능한 키워드로 정규화."""
+        token = word.strip().lower()
+        if len(token) < 2:
+            return token
+
+        # 2글자 조사/격 조사
+        for suffix in ("에서", "으로", "에게", "께서", "부터", "까지", "처럼", "보다"):
+            if token.endswith(suffix) and len(token) > len(suffix) + 1:
+                token = token[: -len(suffix)]
+                break
+
+        # 1글자 조사
+        if len(token) >= 3 and token[-1] in "은는이가을를와과의도만":
+            token = token[:-1]
+
+        # 흔한 동사/어미 꼬리 제거 (인수하여 -> 인수, 처치했다 -> 처치)
+        for ending in ("하였다", "했다", "한다", "하며", "하여", "하고", "됐다", "된다", "됨"):
+            if token.endswith(ending) and len(token) > len(ending) + 1:
+                token = token[: -len(ending)]
+                break
+
+        return token
+
+    def _check_keyword_fallback(self, tactical_doc: str = "", new_plot_names: list[str] = None) -> list[dict]:
+        """[C-1] 키워드 기반 중복 검사."""
+        if not self._resolved_keywords:
+            return []
+
+        warnings = []
+        check_texts = []
+        if new_plot_names:
+            check_texts.extend(new_plot_names)
+        if tactical_doc:
+            check_texts.append(tactical_doc[:3000])
+
+        combined_text = " ".join(check_texts)
+        new_keywords = self._extract_keywords(combined_text)
+        if not new_keywords:
+            return []
+
+        for resolved in self._resolved_keywords:
+            overlap = new_keywords & resolved["keywords"]
+            if len(resolved["keywords"]) == 0:
+                continue
+            ratio = len(overlap) / len(resolved["keywords"])
+            if ratio >= 0.5 and len(overlap) >= 2:
+                warnings.append(
+                    {
+                        "new_plot": f"키워드 일치: {', '.join(sorted(overlap)[:5])}",
+                        "similar_to": resolved["plot"],
+                        "similarity": round(ratio, 3),
+                    }
+                )
+
+        return warnings
