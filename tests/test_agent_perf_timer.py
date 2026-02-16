@@ -37,6 +37,8 @@ class TestChiefWriterTimer:
             cw.ENSEMBLE_TIMEOUT = 10
             cw.SINGLE_CANDIDATE_TIMEOUT = 5
             cw.context = MagicMock()
+            cw._context_builder = None  # [B-1-4] lazy init 전제
+            cw._quality_gate = None  # [B-1-5] lazy init 전제
             return cw
 
     def test_timer_log_emitted(self, writer, caplog):
