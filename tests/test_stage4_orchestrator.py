@@ -20,6 +20,19 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from modules.core.constants import PatchModeThresholds
 
+
+def _process_pass_result_via_post_processor(orch, **kwargs):
+    """[B-1-1] Stage4 post-processing delegation helper for tests."""
+    from modules.core.stage4_orchestrator import _detect_cross_episode_repetition, _detect_npc_overexposure
+
+    return orch.post_processor.process_pass_result(
+        **kwargs,
+        extract_chain_link_fn=orch._extract_chain_link,
+        detect_npc_overexposure_fn=_detect_npc_overexposure,
+        detect_cross_episode_repetition_fn=_detect_cross_episode_repetition,
+    )
+
+
 # ══════════════════════════════════════════════════════════════
 # Fixtures
 # ══════════════════════════════════════════════════════════════
@@ -514,7 +527,7 @@ class TestQualityRegressionHook:
             "recent_avg": 55.0,
             "reason": "직전 대비 25점 하락",
         }
-        result = orch._process_pass_result(**pass_result_kwargs)
+        result = _process_pass_result_via_post_processor(orch, **pass_result_kwargs)
         assert result is True
         orch.ctx.quality_dashboard.detect_score_regression.assert_called_once_with(stage=2)
         # UI에 경고 메시지 출력 확인
@@ -532,7 +545,7 @@ class TestQualityRegressionHook:
             "recent_avg": 68.0,
             "reason": "직전 대비 12점 하락",
         }
-        result = orch._process_pass_result(**pass_result_kwargs)
+        result = _process_pass_result_via_post_processor(orch, **pass_result_kwargs)
         assert result is True
         log_calls = [str(c) for c in orch.ctx.ui.log.call_args_list]
         assert any("품질 경고" in c for c in log_calls)
@@ -541,7 +554,7 @@ class TestQualityRegressionHook:
         """dashboard 예외 시 비전파, _process_pass_result는 True 반환."""
         orch = s4_orch_with_dashboard
         orch.ctx.quality_dashboard.detect_score_regression.side_effect = RuntimeError("crash")
-        result = orch._process_pass_result(**pass_result_kwargs)
+        result = _process_pass_result_via_post_processor(orch, **pass_result_kwargs)
         assert result is True  # 비전파: 정상 반환
 
     def test_no_dashboard_skips_silently(self, mock_app, pass_result_kwargs, tmp_path):
@@ -558,7 +571,7 @@ class TestQualityRegressionHook:
         orch.ctx.character_voice = None
         orch.ctx.foreshadow_tracker = None
         orch.ctx.failure_learner = None
-        result = orch._process_pass_result(**pass_result_kwargs)
+        result = _process_pass_result_via_post_processor(orch, **pass_result_kwargs)
         assert result is True  # 크래시 없이 정상 완료
 
 
@@ -747,7 +760,7 @@ class TestNpcOverexposureHook:
         orch = s4_orch_with_npc
         # 노사부 30회(core), 무명소졸 20회(extra)
         ms = "노사부가 " * 30 + "무명소졸이 " * 20
-        result = orch._process_pass_result(**self._make_kwargs(tmp_path, ms))
+        result = _process_pass_result_via_post_processor(orch, **self._make_kwargs(tmp_path, ms))
         assert result is True
         log_calls = [str(c) for c in orch.ctx.ui.log.call_args_list]
         assert any("과잉 등장" in c and "무명소졸" in c for c in log_calls)
@@ -760,7 +773,7 @@ class TestNpcOverexposureHook:
         orch = s4_orch_with_npc
         orch.ctx.state_tracker.npc_registry = MagicMock()
         orch.ctx.state_tracker.npc_registry.keys.side_effect = RuntimeError("crash")
-        result = orch._process_pass_result(**self._make_kwargs(tmp_path))
+        result = _process_pass_result_via_post_processor(orch, **self._make_kwargs(tmp_path))
         assert result is True  # 비전파: 정상 반환
 
 
@@ -821,7 +834,7 @@ class TestCrossEpisodeRepetitionHook:
         import logging
 
         with caplog.at_level(logging.WARNING):
-            result = orch._process_pass_result(**self._make_kwargs(tmp_path, past_ms, next_ep=2))
+            result = _process_pass_result_via_post_processor(orch, **self._make_kwargs(tmp_path, past_ms, next_ep=2))
         assert result is True
         assert any("크로스 에피소드 반복" in r.message for r in caplog.records)
 
@@ -835,7 +848,7 @@ class TestCrossEpisodeRepetitionHook:
         import logging
 
         with caplog.at_level(logging.WARNING):
-            result = orch._process_pass_result(**self._make_kwargs(tmp_path, ms, next_ep=2))
+            result = _process_pass_result_via_post_processor(orch, **self._make_kwargs(tmp_path, ms, next_ep=2))
         assert result is True
         assert not any("크로스 에피소드 반복" in r.message for r in caplog.records)
 
@@ -845,5 +858,8 @@ class TestCrossEpisodeRepetitionHook:
         mock_db = MagicMock()
         mock_db.find_repeated_sentence_hashes.side_effect = RuntimeError("DB crash")
         orch.ctx.current_project.db = mock_db
-        result = orch._process_pass_result(**self._make_kwargs(tmp_path, "정상 원고 내용입니다. " * 20, next_ep=2))
+        result = _process_pass_result_via_post_processor(
+            orch,
+            **self._make_kwargs(tmp_path, "정상 원고 내용입니다. " * 20, next_ep=2),
+        )
         assert result is True
