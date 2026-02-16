@@ -900,6 +900,15 @@ class SovereignApp:
         self.current_project.guard = self.sys.guard  # 프로젝트 컨텍스트에 가드 주입
         self.ui.log(f"✅ [{self.selected_genre['name']}] Guard 시스템 초기화 완료")
 
+        # [WorkGuard] 작품별 Guard YAML 적용
+        work_guard_path = self.current_project.paths.config / "work_guard.yaml"
+        if work_guard_path.exists():
+            from modules.core.genre_guards.work_guard import WorkGuard
+
+            self.sys.guard = WorkGuard(self.sys.guard, work_guard_path)
+            self.current_project.guard = self.sys.guard
+            self.ui.log("   📋 WorkGuard 적용 완료 (작품별 커스텀 규칙 활성)")
+
         # [V27.5] 벡터 DB 무결성 점검
         if not self._check_vector_db_lock(project_name):
             self.ui.log("🛑 [System] 치명적 데이터 결함으로 인해 기동을 중지합니다.")

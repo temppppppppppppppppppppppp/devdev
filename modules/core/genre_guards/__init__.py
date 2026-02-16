@@ -13,6 +13,7 @@ from .investment_guard import InvestmentGuard
 from .medical_guard import MedicalGuard
 from .sports_guard import SportsGuard
 from .style_guard import StyleGuard
+from .work_guard import WorkGuard
 from .wuxia_guard import WuxiaGuard
 
 
@@ -64,5 +65,6 @@ __all__ = [
     "SportsGuard",
     "MedicalGuard",
     "StyleGuard",
+    "WorkGuard",
     "create_genre_guard",
 ]
