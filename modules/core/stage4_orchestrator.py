@@ -13,6 +13,15 @@ import logging
 import os
 
 from modules.core.constants import PatchModeThresholds
+from modules.core.writer_prompt_builders import (
+    build_anti_trope_instructions as _build_anti_trope,
+)
+from modules.core.writer_prompt_builders import (
+    build_justification_guidance as _build_justification,
+)
+from modules.core.writer_prompt_builders import (
+    build_mandatory_context as _build_writer_mandatory_context,
+)
 
 _perf_logger = logging.getLogger(__name__)  # [V65] PerfTimer 로깅
 
@@ -532,7 +541,9 @@ JSON으로 출력:
             self.ctx.ui.log(f"   ⚠️ ReferenceAnchor 로드 실패 (비치명): {e}")
 
         try:
-            mandatory_context = writer_agent._build_mandatory_context(next_ep)
+            _db = getattr(self.ctx.current_project, "db", None)
+            _bible = getattr(self.ctx.current_project, "master_bible", {})
+            mandatory_context = _build_writer_mandatory_context(_db, _bible, next_ep)
         except Exception as e:
             self.ctx.ui.log(f"   ⚠️ Mandatory Context 실패 (비치명): {e}")
 
@@ -763,12 +774,12 @@ JSON으로 출력:
         mandatory_context = "\n\n".join(_mc_parts)
 
         try:
-            anti_trope_prompt = writer_agent._build_anti_trope_instructions(genre_name)
+            anti_trope_prompt = _build_anti_trope(genre_name)
         except Exception as e:
             self.ctx.ui.log(f"   ⚠️ Anti-Trope 실패 (비치명): {e}")
 
         try:
-            justification_prompt = writer_agent._build_justification_guidance(hud_report, genre_name)
+            justification_prompt = _build_justification(hud_report, genre_name)
         except Exception as e:
             self.ctx.ui.log(f"   ⚠️ Justification 실패 (비치명): {e}")
 

@@ -13,10 +13,22 @@ ChiefWriter가 3회 면담 모두 실패했을 때만 소환되는 최후 폴백
   - refine_with_editor
   - Multi-round Self-Critique (단순 Python 체크로 대체)
 """
+
 import json
 import re
-from .base_agent import BaseAgent
+
 from modules.core.hud_utils import get_hud_trend_safe as _get_hud_trend_safe_shared  # [V64.P4]
+from modules.core.writer_prompt_builders import (
+    build_anti_trope_instructions as _build_anti_trope_instructions_shared,
+)
+from modules.core.writer_prompt_builders import (
+    build_justification_guidance as _build_justification_guidance_shared,
+)
+from modules.core.writer_prompt_builders import (
+    build_mandatory_context as _build_mandatory_context_shared,
+)
+
+from .base_agent import BaseAgent
 
 
 class Writer(BaseAgent):
@@ -27,7 +39,7 @@ class Writer(BaseAgent):
         self.cache_name = None  # main_a.py에서 주입됨
         self.last_hud_anomalies = None
         self.guard = None
-        self.genre = 'wuxia'
+        self.genre = "wuxia"
 
     def set_guard(self, guard) -> None:
         """장르 Guard 설정"""
@@ -41,60 +53,80 @@ class Writer(BaseAgent):
     # 핵심 생성 메서드 (main_a.py line ~6600 에서 호출)
     # ==================================================================
 
-    def write_v20_manuscript(self, ep_num, breakdown_doc, master_bible, hud_report, purism_prompt,
-                             style_mode="", intro_dna="CYNICAL", feedback="", prev_full_manuscript="",
-                             arc_doc="", tactical_references="", protagonist_name="주인공",
-                             entity_registry=None):
+    def write_v20_manuscript(
+        self,
+        ep_num,
+        breakdown_doc,
+        master_bible,
+        hud_report,
+        purism_prompt,
+        style_mode="",
+        intro_dna="CYNICAL",
+        feedback="",
+        prev_full_manuscript="",
+        arc_doc="",
+        tactical_references="",
+        protagonist_name="주인공",
+        entity_registry=None,
+    ):
         """[V64 Slim] 냉동인간 폴백 생성"""
         # 1. 데이터 추출
         focus_info = arc_doc if isinstance(arc_doc, dict) else {}
         focus_tag = focus_info.get("MUST_FOCUS_ON", "N/A")
         pattern_profile = focus_info.get("PATTERN_PROFILE", {})
         pattern_logic = focus_info.get("PATTERN_MIXING_LOGIC", "")
-        pattern_primary = pattern_profile.get("primary", "패턴 정보 없음") if isinstance(pattern_profile, dict) else "패턴 정보 없음"
+        pattern_primary = (
+            pattern_profile.get("primary", "패턴 정보 없음") if isinstance(pattern_profile, dict) else "패턴 정보 없음"
+        )
         pattern_secondary = pattern_profile.get("secondary", []) if isinstance(pattern_profile, dict) else []
 
-        bible_root = master_bible.get('MasterBible', master_bible)
-        core_identity = bible_root.get('ProjectData', {}).get('CoreIdentity', {})
-        assets = bible_root.get('AssetLibrary', {})
+        bible_root = master_bible.get("MasterBible", master_bible)
+        core_identity = bible_root.get("ProjectData", {}).get("CoreIdentity", {})
+        assets = bible_root.get("AssetLibrary", {})
 
-        protagonist_config = bible_root.get('protagonist_config', {})
-        world_origin = protagonist_config.get('world_origin', '원시인')
-        incarnation_type = protagonist_config.get('incarnation_type', '회귀자')
+        protagonist_config = bible_root.get("protagonist_config", {})
+        world_origin = protagonist_config.get("world_origin", "원시인")
+        incarnation_type = protagonist_config.get("incarnation_type", "회귀자")
 
         protagonist_instructions = []
-        if world_origin == '원시인':
-            protagonist_instructions.append('[원시인 모드] 현대 용어 절대 금지!')
+        if world_origin == "원시인":
+            protagonist_instructions.append("[원시인 모드] 현대 용어 절대 금지!")
         else:
-            protagonist_instructions.append('[현대인 모드] 현대 지식 활용 가능')
-        if incarnation_type == '회귀자':
-            protagonist_instructions.append('[회귀자] 미래를 알고 있음')
-        elif incarnation_type == '빙의자':
-            protagonist_instructions.append('[빙의자] 원래 인물의 기억/관계를 의식')
-        elif incarnation_type == '환생자':
-            protagonist_instructions.append('[환생자] 전생의 기억이 있음')
+            protagonist_instructions.append("[현대인 모드] 현대 지식 활용 가능")
+        if incarnation_type == "회귀자":
+            protagonist_instructions.append("[회귀자] 미래를 알고 있음")
+        elif incarnation_type == "빙의자":
+            protagonist_instructions.append("[빙의자] 원래 인물의 기억/관계를 의식")
+        elif incarnation_type == "환생자":
+            protagonist_instructions.append("[환생자] 전생의 기억이 있음")
         protagonist_instructions_text = "\n        ".join(protagonist_instructions)
 
         # NPC 장비
         npc_equipment_summary = []
-        key_npcs = assets.get('KeyNPCs', []) or assets.get('Key_NPCs', [])
+        key_npcs = assets.get("KeyNPCs", []) or assets.get("Key_NPCs", [])
         for npc in key_npcs:
             if isinstance(npc, dict):
-                npc_name = npc.get('name') or npc.get('Name', '알 수 없음')
-                npc_hud = npc.get('NPC_Martial_HUD', {})
+                npc_name = npc.get("name") or npc.get("Name", "알 수 없음")
+                npc_hud = npc.get("NPC_Martial_HUD", {})
                 if isinstance(npc_hud, dict):
-                    equip = npc_hud.get('equipment', [])
+                    equip = npc_hud.get("equipment", [])
                     if equip:
                         npc_equipment_summary.append(f"- {npc_name}: {equip}")
 
         entity_registry_text = self._format_entity_registry_for_writer(entity_registry)
-        safe_desire = self._escape_braces(core_identity.get('desire', '전설적 무인으로의 복귀'))
+        safe_desire = self._escape_braces(core_identity.get("desire", "전설적 무인으로의 복귀"))
         safe_assets = self._escape_braces(json.dumps(assets, ensure_ascii=False))
-        safe_npc_equipment = self._escape_braces("\n".join(npc_equipment_summary)) if npc_equipment_summary else "NPC 장비 정보 없음"
+        safe_npc_equipment = (
+            self._escape_braces("\n".join(npc_equipment_summary)) if npc_equipment_summary else "NPC 장비 정보 없음"
+        )
         safe_entity_registry = self._escape_braces(entity_registry_text)
 
         feedback_section = f"\n[REJECTION FEEDBACK]: {feedback}" if feedback else ""
-        dna_instruction = f"[제1화 특수 DNA 적용]: {intro_dna}" if int(ep_num) == 1 else "[연속 집필 모드]: 이전 화에서 이어서 전진시켜라."
+        dna_instruction = (
+            f"[제1화 특수 DNA 적용]: {intro_dna}"
+            if int(ep_num) == 1
+            else "[연속 집필 모드]: 이전 화에서 이어서 전진시켜라."
+        )
         if not tactical_references:
             tactical_references = "특이 사항 없음."
 
@@ -102,18 +134,29 @@ class Writer(BaseAgent):
         reference_anchor_prompt = ""
         try:
             from modules.core.reference_anchor import ReferenceAnchor
+
             anchor_sys = ReferenceAnchor(self.context)
             relevant = anchor_sys.get_relevant_anchors(current_ep_num=ep_num, arc_context=arc_doc or "", n_anchors=5)
-            critical = anchor_sys.get_critical_anchors(current_ep_num=ep_num, anchor_types=['item', 'injury', 'power', 'location'])
+            critical = anchor_sys.get_critical_anchors(
+                current_ep_num=ep_num, anchor_types=["item", "injury", "power", "location"]
+            )
             if relevant or critical:
-                reference_anchor_prompt = anchor_sys.generate_reference_prompt(relevant_anchors=relevant, critical_anchors=critical)
+                reference_anchor_prompt = anchor_sys.generate_reference_prompt(
+                    relevant_anchors=relevant, critical_anchors=critical
+                )
         except Exception:
             pass
 
-        anti_trope = self._build_anti_trope_instructions((getattr(self.context, 'genre', None) or {}).get('name', '무협'))  # [V70] None.get() 방어
+        anti_trope = _build_anti_trope_instructions_shared(
+            (getattr(self.context, "genre", None) or {}).get("name", "무협")
+        )
         genre_rules_prompt = self.get_genre_rules_prompt()
-        mandatory_context = self._build_mandatory_context(ep_num)
-        justification_guidance = self._build_justification_guidance(hud_report, (getattr(self.context, 'genre', None) or {}).get('name', '무협'))  # [V70]
+        mandatory_context = _build_mandatory_context_shared(
+            getattr(self.context, "db", None), getattr(self.context, "master_bible", {}), ep_num
+        )
+        justification_guidance = _build_justification_guidance_shared(
+            hud_report, (getattr(self.context, "genre", None) or {}).get("name", "무협")
+        )
 
         # 2. 프롬프트 조립
         dynamic_prompt = f"""
@@ -145,7 +188,7 @@ class Writer(BaseAgent):
 
         씬 설계도: {self._escape_braces(breakdown_doc)}
         실시간 상태: {self._escape_braces(hud_report)}
-        HUD 추세: {self._get_hud_trend_safe(ep_num)}
+        HUD 추세: {_get_hud_trend_safe_shared(self.context, ep_num)}
         NPC 빈도: {self._get_npc_frequency_warning(ep_num)}
         직전 원고 엔딩: ...{self._escape_braces(prev_full_manuscript)[-1500:]}
         아크 전술: {self._escape_braces(arc_doc)}
@@ -175,6 +218,7 @@ class Writer(BaseAgent):
         try:
             if self.cache_name:
                 from google.genai import types
+
                 response = self.client.models.generate_content(
                     model=self.primary_model,
                     contents=dynamic_prompt,
@@ -182,8 +226,8 @@ class Writer(BaseAgent):
                         cached_content=self.cache_name,
                         temperature=0.8,
                         max_output_tokens=8192,
-                        response_mime_type="application/json"
-                    )
+                        response_mime_type="application/json",
+                    ),
                 )
                 return self._sanitize_leakage(response.text)
             else:
@@ -197,7 +241,7 @@ class Writer(BaseAgent):
             rules_path = self.context.paths.config / "prompts" / "writer_rules.json"
             full_context = "[SYSTEM: WRITER MANIFESTO]\n"
             if rules_path.exists():
-                data = json.loads(rules_path.read_text(encoding='utf-8'))
+                data = json.loads(rules_path.read_text(encoding="utf-8"))
                 manifesto = "\n".join(data.get("common_manifesto", []))
                 ep1 = "\n".join(data.get("special_rule_ep1", []))
                 full_context += f"{manifesto}\n\n{ep1}\n\n"
@@ -240,199 +284,19 @@ class Writer(BaseAgent):
         if not self.guard:
             return ""
         try:
-            if self.genre == 'hunter':
+            if self.genre == "hunter":
                 prompts = []
-                if hasattr(self.guard, 'get_dungeon_rules_prompt'):
+                if hasattr(self.guard, "get_dungeon_rules_prompt"):
                     prompts.append(self.guard.get_dungeon_rules_prompt())
-                if hasattr(self.guard, 'get_awakening_rules_prompt'):
+                if hasattr(self.guard, "get_awakening_rules_prompt"):
                     prompts.append(self.guard.get_awakening_rules_prompt())
                 return "\n\n".join(filter(None, prompts))
-            elif self.genre == 'investment':
-                if hasattr(self.guard, 'get_finance_rules_prompt'):
+            elif self.genre == "investment":
+                if hasattr(self.guard, "get_finance_rules_prompt"):
                     return self.guard.get_finance_rules_prompt()
             return ""
         except Exception:
             return ""
-
-    def _build_mandatory_context(self, current_ep: int) -> str:
-        """[main_a.py line 6307] 강제 맥락 주입"""
-        parts = ["[MANDATORY CONTEXT]\n"]
-
-        hud_anomalies = self._check_hud_anomalies_v60(current_ep)
-        self.last_hud_anomalies = hud_anomalies
-        if hud_anomalies.get('has_anomalies'):
-            parts.append("\n[HUD ANOMALY WARNING]\n")
-            for a in hud_anomalies.get('anomalies', []):
-                parts.append(f"- {a['type']}: {a['description']}")
-                parts.append(f"  -> {a['recommendation']}\n")
-
-        recent_events = self._extract_recent_events(current_ep, n_episodes=3)
-        if recent_events:
-            parts.append("\n최근 중요 사건:")
-            for event in recent_events:
-                parts.append(f"- 제{event['ep_num']}화: {event['description']}")
-                if event.get('consequence'):
-                    parts.append(f"  현재 상태: {event['consequence']}")
-
-        npc_states = self._extract_npc_last_states(current_ep)
-        if npc_states:
-            parts.append("\nNPC 마지막 관계 상태:")
-            for npc_name, state_info in npc_states.items():
-                parts.append(f"- {npc_name}: {state_info['relationship']} (제{state_info['last_ep']}화)")
-
-        if len(parts) == 1:
-            parts.append("\n(첫 에피소드이거나 강제 맥락 없음)")
-        return "\n".join(parts)
-
-    def _build_anti_trope_instructions(self, genre_name: str) -> str:
-        """[main_a.py line 6354] 반클리셰 명령"""
-        return f"""[ANTI-TROPE PROTOCOL - {genre_name}]
-1. "약해 보이는 주인공" 클리셰 금지 - HUD 상태 직접 반영
-2. "무시-사이다" 매 화 반복 금지 - 명성 증가하면 무시 감소
-3. "조연 영구 생존" 금지 - 모욕/배신한 조연은 청산
-4. "순간 회복" 금지 - 부상 지속 영향 또는 치료 과정 명시
-5. "NPC 기억상실" 금지 - 관계는 단방향 발전
-"""
-
-    def _build_justification_guidance(self, hud_report: str, genre_name: str) -> str:
-        """[main_a.py line 6360] 정당화 패턴 안내"""
-        try:
-            from modules.core.justification_patterns import get_justification_guide
-        except ImportError:
-            return ""
-
-        active_constraints = []
-        physical_constraints = ['나약', '중독', '부상', '중상', '쇠약', '기력고갈', '기혈역류']
-        if any(c in hud_report for c in physical_constraints):
-            active_constraints.append('weak_body_strong_action')
-
-        hud_lower = hud_report.lower()
-        low_status_keywords = ['하인', '노예', '평민', '무명', '낭인', '거지', '천민']
-        if any(kw in hud_report for kw in low_status_keywords) or 'reputation' in hud_lower:
-            rep_match = re.search(r'reputation[:\s]+(\d+)', hud_report, re.IGNORECASE)
-            if rep_match and int(rep_match.group(1)) < 30:
-                active_constraints.append('low_status_high_authority')
-
-        breakthrough_keywords = ['돌파', '깨달음', '체득', '각성', '각오']
-        if any(kw in hud_report for kw in breakthrough_keywords):
-            active_constraints.append('sudden_power_increase')
-
-        if not active_constraints:
-            return ""
-
-        parts = ["[JUSTIFICATION PATTERNS]\n"]
-        for ct in active_constraints:
-            try:
-                parts.append(get_justification_guide(genre_name, ct))
-            except Exception:
-                pass
-        return "\n".join(parts)
-
-    # ==================================================================
-    # 내부 헬퍼 (위 메서드들이 의존)
-    # ==================================================================
-
-    def _check_hud_anomalies_v60(self, current_ep: int) -> dict:
-        """HUD 급변 감지"""
-        anomalies = []
-        if current_ep < 2:
-            return {'has_anomalies': False, 'anomalies': []}
-        try:
-            hud_history = []
-            for ep in range(max(1, current_ep - 3), current_ep):
-                try:
-                    ms_data = self.context.db.get_manuscript(ep)
-                    if ms_data and isinstance(ms_data, dict):
-                        hud_snapshot = ms_data.get('hud_snapshot', {})
-                        if hud_snapshot:
-                            hud_history.append({'ep': ep, 'hud': hud_snapshot})
-                except Exception:
-                    continue
-            if not hud_history:
-                return {'has_anomalies': False, 'anomalies': []}
-
-            if len(hud_history) >= 2:
-                latest = hud_history[-1]['hud']
-                prev_hud = hud_history[-2]['hud']
-                curr_energy = self._extract_numeric_value(latest.get('internal_energy', 0))
-                prev_energy = self._extract_numeric_value(prev_hud.get('internal_energy', 0))
-                if curr_energy - prev_energy > 500:
-                    anomalies.append({'type': '내공 급상승', 'description': f'+{curr_energy - prev_energy}', 'recommendation': '정당화 필요'})
-                curr_realm = latest.get('realm', '')
-                prev_realm = prev_hud.get('realm', '')
-                realm_tiers = ['하수', '삼류', '이류', '일류', '초일류', '절정', '화경', '현경', '귀환']
-                if curr_realm and prev_realm and curr_realm != prev_realm:
-                    try:
-                        ci = realm_tiers.index(curr_realm) if curr_realm in realm_tiers else -1
-                        pi = realm_tiers.index(prev_realm) if prev_realm in realm_tiers else -1
-                        if ci - pi >= 2:
-                            anomalies.append({'type': '경지 급상승', 'description': f'{prev_realm}->{curr_realm}', 'recommendation': '특수 기연 정당화 필수'})
-                    except ValueError:
-                        pass
-                curr_injury = str(latest.get('causal_injuries', '')).lower()
-                prev_injury = str(prev_hud.get('causal_injuries', '')).lower()
-                injury_levels = {'정상': 0, '경상': 1, '중상': 2, '중독': 2, '내상': 2, '빈사': 3, '치명상': 3}
-                cl = max((lv for nm, lv in injury_levels.items() if nm in curr_injury), default=0)
-                pl = max((lv for nm, lv in injury_levels.items() if nm in prev_injury), default=0)
-                if pl >= 2 and cl == 0:
-                    anomalies.append({'type': '부상 급회복', 'description': f'{prev_injury}->{curr_injury}', 'recommendation': '치료 과정 필요'})
-        except Exception:
-            return {'has_anomalies': False, 'anomalies': []}
-        return {'has_anomalies': len(anomalies) > 0, 'anomalies': anomalies}
-
-    def _extract_numeric_value(self, value) -> int:
-        """HUD 값에서 숫자 추출"""
-        if isinstance(value, (int, float)):
-            return int(value)
-        if isinstance(value, str):
-            match = re.search(r'[+-]?\d+', value)
-            return int(match.group()) if match else 0
-        return 0
-
-    def _extract_recent_events(self, current_ep: int, n_episodes: int = 3) -> list:
-        """최근 N화 핵심 사건 추출"""
-        events = []
-        try:
-            for ep in range(max(1, current_ep - n_episodes), current_ep):
-                log_data = self.context.db.load_state_log(ep)
-                if log_data and isinstance(log_data, dict):
-                    summary = log_data.get('summary', '')
-                    if summary and len(summary) > 10:
-                        events.append({'ep_num': ep, 'description': summary[:200], 'consequence': ''})
-                    data = log_data.get('data', {})
-                    if isinstance(data, dict):
-                        for change in (data.get('major_changes', []) or [])[:2]:
-                            if isinstance(change, dict):
-                                events.append({'ep_num': ep, 'description': change.get('event', ''), 'consequence': change.get('consequence', '')})
-        except Exception:
-            pass
-        return events[-5:]
-
-    def _extract_npc_last_states(self, current_ep: int) -> dict:
-        """등장 NPC 마지막 상태"""
-        npc_states = {}
-        try:
-            bible = getattr(self.context, 'master_bible', {})
-            bible_root = bible.get('MasterBible', bible)
-            assets = bible_root.get('AssetLibrary', {})
-            key_npcs = assets.get('KeyNPCs', []) or assets.get('Key_NPCs', [])
-            for npc in key_npcs:
-                if not isinstance(npc, dict):
-                    continue
-                name = npc.get('name') or npc.get('Name', '')
-                if not name:
-                    continue
-                relationship = npc.get('relationship_state', '중립')
-                last_appearance = npc.get('last_appearance_ep', 0)
-                if isinstance(last_appearance, int) and 0 < last_appearance < current_ep:
-                    npc_states[name] = {'relationship': relationship, 'last_ep': last_appearance}
-        except Exception:
-            pass
-        return npc_states
-
-    def _get_hud_trend_safe(self, ep_num: int) -> str:
-        """[V64.P4] 위임 → modules.core.hud_utils.get_hud_trend_safe"""
-        return _get_hud_trend_safe_shared(self.context, ep_num)
 
     def _get_npc_frequency_warning(self, ep_num: int) -> str:
         """NPC 등장 빈도 경고"""
@@ -455,20 +319,20 @@ class Writer(BaseAgent):
     def _get_npc_frequency(self, ep_num: int, window: int = 10) -> dict:
         """최근 N화 NPC 등장 빈도"""
         try:
-            master_bible = getattr(self.context, 'master_bible', None)
+            master_bible = getattr(self.context, "master_bible", None)
             if not master_bible:
                 return {}
-            assets = master_bible.get('AssetLibrary', {})
-            key_npcs = assets.get('KeyNPCs', []) or assets.get('Key_NPCs', [])
+            assets = master_bible.get("AssetLibrary", {})
+            key_npcs = assets.get("KeyNPCs", []) or assets.get("Key_NPCs", [])
             if not key_npcs:
                 return {}
-            npc_names = [npc.get('name', '') for npc in key_npcs if isinstance(npc, dict) and npc.get('name')]
+            npc_names = [npc.get("name", "") for npc in key_npcs if isinstance(npc, dict) and npc.get("name")]
             frequency = {name: 0 for name in npc_names}
             for i in range(max(1, ep_num - window), ep_num):
                 try:
                     past_ms = self.context.db.get_manuscript(i)
                     if past_ms:
-                        content = past_ms.get('content', '') if isinstance(past_ms, dict) else str(past_ms)
+                        content = past_ms.get("content", "") if isinstance(past_ms, dict) else str(past_ms)
                         for name in npc_names:
                             if name in content:
                                 frequency[name] += 1
@@ -482,8 +346,13 @@ class Writer(BaseAgent):
         """Entity Registry 포맷팅"""
         if not entity_registry:
             return "(Entity Registry 없음)"
-        categories = [('characters', '캐릭터'), ('organizations', '조직'), ('locations', '장소'),
-                      ('objects', '무기/아이템'), ('concepts', '무공/기술')]
+        categories = [
+            ("characters", "캐릭터"),
+            ("organizations", "조직"),
+            ("locations", "장소"),
+            ("objects", "무기/아이템"),
+            ("concepts", "무공/기술"),
+        ]
         lines = []
         for key, label in categories:
             items = entity_registry.get(key, [])
@@ -491,8 +360,8 @@ class Writer(BaseAgent):
                 formatted = []
                 for item in items[:10]:
                     if isinstance(item, dict):
-                        name = item.get('name', item.get('canonical_name', str(item)))
-                        aliases = item.get('aliases', [])
+                        name = item.get("name", item.get("canonical_name", str(item)))
+                        aliases = item.get("aliases", [])
                         formatted.append(f"{name}({','.join(aliases[:3])})" if aliases else name)
                     else:
                         formatted.append(str(item))
