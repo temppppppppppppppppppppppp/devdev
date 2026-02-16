@@ -28,13 +28,13 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 ## 현재 상태 (2026-02-16)
 
 - **작동함**: Stage 0→2→4 정상 동작
-- **완료된 것**: Phase 1~2, 5-A/5-B/5-C, 6-A/6-B/6-C, 4C(DI), 4D(sqlite-vec), 3-5B(패치), 3-5A(NPC이력), **4-R1~R3(몬스터 분할)**, R4-a(NO-GO), **3-QR(품질 회귀 감지)**, **3-5C(NPC 과잉 경고)**, **3-Obs Step 1+2(관측성 계측)**, **3-B(크로스 에피소드 반복 감지)**, **D.대리만족 전체 완료(Step1~5)**
-- **약점**: 플롯 중복 감지 불안정 (Chain 1)
-- **현재 단계**: D. 대리만족 프레임워크 **전체 완료** (Step 1~5)
-- **다음 우선순위**: 미정 (다음 작업 선정 필요)
-- **테스트 기준선**: unit 43 + quality 15 + cross-ep 13 + agent-timer 7 + satisfaction 18 + satisfaction-prompts 16 + satisfaction-tagging 26 + satisfaction-frustration 15 + pipeline 89 + E2E 22 + regression 97 = **361 passed**
-- **ctx refs**: stage2 350/43, stage4 325/23
-- **checkpoint**: `7684a78`
+- **완료된 것**: Phase 1~2, 5-A/5-B/5-C, 6-A/6-B/6-C, 4C(DI), 4D(sqlite-vec), 3-5B(패치), 3-5A(NPC이력), **4-R1~R3(몬스터 분할)**, R4-a(NO-GO), **3-QR(품질 회귀 감지)**, **3-5C(NPC 과잉 경고)**, **3-Obs Step 1+2(관측성 계측)**, **3-B(크로스 에피소드 반복 감지)**, **D.대리만족 전체 완료(Step1~5)**, **A-1(writer 유틸 해체)**, **A-3(test xfail)**, **C-1(PlotGuard 폴백)**, **C-2(NPC 체인)**, **C-3(Validator 체인)**
+- **약점**: ~~플롯 중복 감지 불안정 (Chain 1)~~ → C-1에서 키워드 폴백 도입으로 개선
+- **현재 단계**: 기술부채 + 버그체인 일괄 정리 **전체 완료** (A-1/A-3/C-1/C-2/C-3)
+- **다음 우선순위**: 미정 (B-1 모놀리스 분할 또는 D 미활용 기능 활성화)
+- **테스트 기준선**: **406 passed** (기존 361 + writer_builders 14 + plot_guard 14 + npc_chain 5 + validator_chain 12 + validation 12p/13xfail)
+- **ctx refs**: stage2 346/43, stage4 325/23
+- **checkpoint**: `d107eee`
 - **실행 기준 문서(SSOT)**: `내일작업.md` (남은 작업만 관리)
 
 ---
@@ -54,12 +54,14 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 | `modules/validation/*.py` | 검증 파이프라인 | |
 | `config/settings/validation.yaml` | 검증 임계값 설정 | Phase 5-B |
 | `modules/validation/threshold_helper.py` | 공유 `_threshold()` 헬퍼 | Phase 5-B-2c |
+| `modules/core/writer_prompt_builders.py` | Writer 유틸 독립 모듈 | A-1 분리 |
+| `modules/core/semantic_plot_guard.py` | 플롯 중복 감지 (임베딩+키워드 폴백) | C-1 개선 |
 
 ---
 
 ## ⚠️ 주의
 
-- `writer.py` — 레거시이나 유틸리티 3개가 stage4에서 직접 호출됨. Phase 2에서 이전 후 삭제.
+- `writer.py` — 유틸 3개는 `writer_prompt_builders.py`로 분리 완료 (A-1). 냉동인간 폴백(`write_v20_manuscript`)만 유지.
 - `memory_engine.py` — **삭제됨** (Phase 4D 완료). VecMemory(`vec_memory.py`)가 단일 벡터 경로.
 - NPC 속성 변경 — `npc_history` 테이블로 append-only 이력 기록 (Phase 3-5A 완료). `bind_db()` 호출 시 활성화.
 - `base_agent.py`의 Context Caching — 구현 완료 (`_get_or_create_context_cache` L920, `_ask_with_cached_context` L1003). `chief_writer`·`director_continuity`에서 사용 중.
@@ -91,6 +93,11 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 | ~~10~~ | ~~3-B~~ | ~~크로스 에피소드 반복 감지 (advisory)~~ | ✅ 완료 (`db07efd`) |
 | ~~11~~ | ~~3-Obs Step 2~~ | ~~관측성 — 에이전트 레벨 ThreadPoolExecutor 계측~~ | ✅ 완료 (`597fcae`) |
 | ~~12~~ | ~~D. 대리만족~~ | ~~대리만족 프레임워크 구현 (5-Step)~~ | ✅ **전체 완료** — Step 1(`0d676c8`), 2(`ffc2bb8`), 3(`470dfee`), 4(`7684a78`), 5(문서) |
+| ~~13~~ | ~~A-1~~ | ~~writer.py 유틸 해체~~ | ✅ 완료 (`4aeb9f3`) |
+| ~~14~~ | ~~A-3~~ | ~~test_validation 13건 xfail~~ | ✅ 완료 (`8b2081e`) |
+| ~~15~~ | ~~C-1~~ | ~~SemanticPlotGuard 키워드 폴백~~ | ✅ 완료 (`eb81782`) |
+| ~~16~~ | ~~C-2~~ | ~~NPC 정보 소실 체인 수정~~ | ✅ 완료 (`d145db1`) |
+| ~~17~~ | ~~C-3~~ | ~~Validator 우회 체인 수정~~ | ✅ 완료 (`d107eee`) |
 
 ---
 
