@@ -149,8 +149,8 @@ class TestChainWiring:
 
     def test_stage2_uses_ctx_and_keyword_fallback_condition(self):
         """4번째 호출에서 self.ctx + _resolved_keywords OR 조건 사용."""
-        from modules.core.stage2_orchestrator import Stage2Orchestrator
+        from modules.core.stage2_finalizer import Stage2Finalizer
 
-        source = inspect.getsource(Stage2Orchestrator)
+        source = inspect.getsource(Stage2Finalizer)
         assert "_spg = self.ctx.semantic_plot_guard" in source
         assert "(_spg._resolved_embeddings or _spg._resolved_keywords)" in source

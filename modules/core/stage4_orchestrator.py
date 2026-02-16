@@ -256,6 +256,9 @@ class Stage4Orchestrator:
             self._context_builder = Stage4ContextBuilder(self.ctx)
         return self._context_builder
 
+    def _load_chain_link_section(self, next_ep: int) -> str:
+        return self.context_builder.load_chain_link_section(next_ep)
+
     @property
     def interview_round(self):
         """[B-1-3] Interview Round 서브모듈 (lazy init)."""

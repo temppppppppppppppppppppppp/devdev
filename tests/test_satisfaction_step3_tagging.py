@@ -256,9 +256,9 @@ class TestStage4SatisfactionHook:
         """stage4_orchestrator에 만족도 태깅 훅 코드 존재"""
         import inspect
 
-        from modules.core.stage4_orchestrator import Stage4Orchestrator
+        from modules.core.stage4_post_processor import Stage4PostProcessor
 
-        source = inspect.getsource(Stage4Orchestrator)
+        source = inspect.getsource(Stage4PostProcessor)
         assert "extract_satisfaction_tag" in source
         assert "save_satisfaction_tag" in source
 
@@ -266,9 +266,9 @@ class TestStage4SatisfactionHook:
         """태깅 훅 예외가 PASS 처리를 차단하지 않음"""
         import inspect
 
-        from modules.core.stage4_orchestrator import Stage4Orchestrator
+        from modules.core.stage4_post_processor import Stage4PostProcessor
 
-        source = inspect.getsource(Stage4Orchestrator)
+        source = inspect.getsource(Stage4PostProcessor)
         # 만족도 태깅 코드가 try-except 내에 있는지 확인
         assert "만족도 태깅 실패 (비차단)" in source
 

@@ -5,17 +5,18 @@
 실행: python -m pytest tests/test_v55_modules.py -v
 """
 
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import pytest
-from typing import Dict, Any
 
+import pytest
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Test Fixtures
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 @pytest.fixture
 def sample_blueprint():
@@ -30,9 +31,7 @@ def sample_blueprint():
             "scene_5": {"description": "클리프행어 - 위기 상황", "characters": ["주인공"]},
         },
         "ending_hook": "독이 퍼지기 시작했다. 해독제가 필요하다.",
-        "protagonist_state": {
-            "inventory": ["검", "은자 10냥", "해독단"]
-        }
+        "protagonist_state": {"inventory": ["검", "은자 10냥", "해독단"]},
     }
 
 
@@ -45,27 +44,28 @@ def sample_arc():
         "joint_docs": {
             "final_location": "청풍검각",
             "physical_inventory": ["백근대도", "철혈사자패"],
-            "world_joint": "무림맹 소집 공지"
+            "world_joint": "무림맹 소집 공지",
         },
-        "state_constraints": {
-            "items_acquired": ["백근대도"],
-            "grants_received": ["철혈사자패"]
-        }
+        "state_constraints": {"items_acquired": ["백근대도"], "grants_received": ["철혈사자패"]},
     }
 
 
 @pytest.fixture
 def sample_manuscript():
     """샘플 원고 (5000자)"""
-    return """
+    return (
+        """
     청풍검각의 아침 안개가 자욱했다. 강호의 고수들이 모여드는 이 곳에서
     주인공은 새로운 임무를 맡게 되었다...
-    """ * 50  # 약 5000자
+    """
+        * 50
+    )  # 약 5000자
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # ConstitutionalChecker Tests
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 class TestConstitutionalChecker:
     """Constitutional Checker 테스트"""
@@ -73,19 +73,18 @@ class TestConstitutionalChecker:
     def test_import(self):
         """모듈 임포트 테스트"""
         from modules.core.constitutional_checker import ConstitutionalChecker
-        checker = ConstitutionalChecker(genre='wuxia')
+
+        checker = ConstitutionalChecker(genre="wuxia")
         assert checker is not None
-        assert checker.genre == 'wuxia'
+        assert checker.genre == "wuxia"
 
     def test_arc_constitution(self, sample_arc):
         """Arc 헌법 프롬프트 생성 테스트"""
         from modules.core.constitutional_checker import ConstitutionalChecker
-        checker = ConstitutionalChecker(genre='wuxia')
 
-        prompt = checker.get_analyst_constitution(
-            prev_arcs=[sample_arc],
-            additional_constraints="테스트 제약"
-        )
+        checker = ConstitutionalChecker(genre="wuxia")
+
+        prompt = checker.get_analyst_constitution(prev_arcs=[sample_arc], additional_constraints="테스트 제약")
 
         assert "Constitutional Self-Check" in prompt
         assert "Arc 설계" in prompt
@@ -95,11 +94,11 @@ class TestConstitutionalChecker:
     def test_blueprint_constitution(self, sample_blueprint):
         """Blueprint 헌법 프롬프트 생성 테스트"""
         from modules.core.constitutional_checker import ConstitutionalChecker
-        checker = ConstitutionalChecker(genre='wuxia')
+
+        checker = ConstitutionalChecker(genre="wuxia")
 
         prompt = checker.get_architect_constitution(
-            prev_blueprint=sample_blueprint,
-            arc_data={"tactical_doc": "테스트 전술"}
+            prev_blueprint=sample_blueprint, arc_data={"tactical_doc": "테스트 전술"}
         )
 
         assert "Blueprint 설계" in prompt
@@ -108,12 +107,11 @@ class TestConstitutionalChecker:
     def test_manuscript_constitution(self, sample_blueprint):
         """Manuscript 헌법 프롬프트 생성 테스트"""
         from modules.core.constitutional_checker import ConstitutionalChecker
-        checker = ConstitutionalChecker(genre='wuxia')
+
+        checker = ConstitutionalChecker(genre="wuxia")
 
         prompt = checker.get_writer_constitution(
-            blueprint=sample_blueprint,
-            prev_manuscript="직전 화 마지막...",
-            inventory=["검", "은자"]
+            blueprint=sample_blueprint, prev_manuscript="직전 화 마지막...", inventory=["검", "은자"]
         )
 
         assert "원고 작성" in prompt
@@ -122,7 +120,8 @@ class TestConstitutionalChecker:
     def test_reject_examples(self):
         """REJECT 예시 생성 테스트"""
         from modules.core.constitutional_checker import ConstitutionalChecker
-        checker = ConstitutionalChecker(genre='wuxia')
+
+        checker = ConstitutionalChecker(genre="wuxia")
 
         for stage in [2, 3, 4]:
             examples = checker.get_reject_examples(stage)
@@ -132,12 +131,10 @@ class TestConstitutionalChecker:
     def test_full_injection(self, sample_arc):
         """전체 주입 프롬프트 테스트"""
         from modules.core.constitutional_checker import ConstitutionalChecker
-        checker = ConstitutionalChecker(genre='wuxia')
 
-        full = checker.get_full_injection(
-            stage=2,
-            context={'prev_arcs': [sample_arc]}
-        )
+        checker = ConstitutionalChecker(genre="wuxia")
+
+        full = checker.get_full_injection(stage=2, context={"prev_arcs": [sample_arc]})
 
         assert "Constitutional Self-Check" in full
         assert "REJECT 사례" in full
@@ -147,24 +144,24 @@ class TestConstitutionalChecker:
 # WriterTemplate Tests
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 class TestWriterTemplate:
     """Writer Template 테스트"""
 
     def test_import(self):
         """모듈 임포트 테스트"""
         from modules.core.writer_template import WriterTemplate
-        template = WriterTemplate(genre='wuxia')
+
+        template = WriterTemplate(genre="wuxia")
         assert template is not None
 
     def test_generate_template(self, sample_blueprint):
         """템플릿 생성 테스트"""
         from modules.core.writer_template import WriterTemplate
-        wt = WriterTemplate(genre='wuxia')
 
-        template = wt.generate_template(
-            blueprint=sample_blueprint,
-            prev_ending="직전 화 마지막..."
-        )
+        wt = WriterTemplate(genre="wuxia")
+
+        template = wt.generate_template(blueprint=sample_blueprint, prev_ending="직전 화 마지막...")
 
         assert template.ep_num == 10
         assert template.total_scenes == 5
@@ -173,8 +170,9 @@ class TestWriterTemplate:
 
     def test_slot_types(self, sample_blueprint):
         """씬 타입 추론 테스트"""
-        from modules.core.writer_template import WriterTemplate, SceneType
-        wt = WriterTemplate(genre='wuxia')
+        from modules.core.writer_template import SceneType, WriterTemplate
+
+        wt = WriterTemplate(genre="wuxia")
 
         template = wt.generate_template(sample_blueprint)
 
@@ -186,7 +184,8 @@ class TestWriterTemplate:
     def test_prompt_injection(self, sample_blueprint):
         """프롬프트 주입 생성 테스트"""
         from modules.core.writer_template import WriterTemplate
-        wt = WriterTemplate(genre='wuxia')
+
+        wt = WriterTemplate(genre="wuxia")
 
         template = wt.generate_template(sample_blueprint)
         injection = wt.generate_prompt_injection(template)
@@ -198,7 +197,8 @@ class TestWriterTemplate:
     def test_validation(self, sample_blueprint, sample_manuscript):
         """템플릿 검증 테스트"""
         from modules.core.writer_template import WriterTemplate
-        wt = WriterTemplate(genre='wuxia')
+
+        wt = WriterTemplate(genre="wuxia")
 
         template = wt.generate_template(sample_blueprint)
         result = wt.validate_against_template(sample_manuscript, template)
@@ -212,26 +212,24 @@ class TestWriterTemplate:
 # PassRateMonitor Tests
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 class TestPassRateMonitor:
     """Pass Rate Monitor 테스트"""
 
     def test_import(self):
         """모듈 임포트 테스트"""
         from modules.core.pass_rate_monitor import PassRateMonitor
+
         monitor = PassRateMonitor()
         assert monitor is not None
 
     def test_record_attempt(self, tmp_path):
         """시도 기록 테스트"""
         from modules.core.pass_rate_monitor import PassRateMonitor
+
         monitor = PassRateMonitor(str(tmp_path))
 
-        monitor.record_attempt(
-            stage=4,
-            episode=10,
-            attempt_num=1,
-            success=True
-        )
+        monitor.record_attempt(stage=4, episode=10, attempt_num=1, success=True)
 
         assert len(monitor.records) == 1
         assert monitor.records[0].stage == 4
@@ -240,6 +238,7 @@ class TestPassRateMonitor:
     def test_stage_stats(self, tmp_path):
         """Stage 통계 테스트"""
         from modules.core.pass_rate_monitor import PassRateMonitor
+
         monitor = PassRateMonitor(str(tmp_path))
 
         # 테스트 데이터 추가
@@ -248,7 +247,7 @@ class TestPassRateMonitor:
                 stage=4,
                 episode=i,
                 attempt_num=1,
-                success=(i % 2 == 0)  # 50% 통과
+                success=(i % 2 == 0),  # 50% 통과
             )
 
         stats = monitor.get_stage_stats(4)
@@ -259,17 +258,13 @@ class TestPassRateMonitor:
     def test_summary(self, tmp_path):
         """요약 생성 테스트"""
         from modules.core.pass_rate_monitor import PassRateMonitor
+
         monitor = PassRateMonitor(str(tmp_path))
 
         # 테스트 데이터
         for stage in [2, 3, 4]:
             for i in range(5):
-                monitor.record_attempt(
-                    stage=stage,
-                    episode=i,
-                    attempt_num=1,
-                    success=True
-                )
+                monitor.record_attempt(stage=stage, episode=i, attempt_num=1, success=True)
 
         summary = monitor.get_summary(recent_n=20)
 
@@ -281,21 +276,22 @@ class TestPassRateMonitor:
 # TreeOfThoughts Tests (4분기)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 class TestTreeOfThoughts:
     """Tree of Thoughts 테스트"""
 
     def test_arc_approaches_count(self):
         """Arc 접근 방식 4개 확인"""
-        from modules.core.tree_of_thoughts import TreeOfThoughts
         # 클래스 내부의 arc_approaches 확인
         # (explore_arc 메서드 내부이므로 직접 확인 어려움)
         # 대신 파일에서 직접 확인
         import re
-        with open("modules/core/tree_of_thoughts.py", "r", encoding="utf-8") as f:
+
+        with open("modules/core/tree_of_thoughts.py", encoding="utf-8") as f:
             content = f.read()
 
         # arc_approaches 정의 부분 찾기
-        match = re.search(r'arc_approaches = \[(.*?)\]', content, re.DOTALL)
+        match = re.search(r"arc_approaches = \[(.*?)\]", content, re.DOTALL)
         if match:
             approaches_str = match.group(1)
             # "name" 키 개수로 접근 방식 수 확인
@@ -305,11 +301,12 @@ class TestTreeOfThoughts:
     def test_blueprint_approaches_count(self):
         """Blueprint 접근 방식 4개 확인"""
         import re
-        with open("modules/core/tree_of_thoughts.py", "r", encoding="utf-8") as f:
+
+        with open("modules/core/tree_of_thoughts.py", encoding="utf-8") as f:
             content = f.read()
 
         # blueprint_approaches 정의 부분 찾기
-        match = re.search(r'blueprint_approaches = \[(.*?)\]', content, re.DOTALL)
+        match = re.search(r"blueprint_approaches = \[(.*?)\]", content, re.DOTALL)
         if match:
             approaches_str = match.group(1)
             count = approaches_str.count('"name"')
@@ -320,25 +317,28 @@ class TestTreeOfThoughts:
 # ManuscriptEnhancer Tests
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 class TestManuscriptEnhancer:
     """Manuscript Enhancer 테스트"""
 
     def test_import(self):
         """모듈 임포트 테스트"""
         from modules.core.manuscript_enhancer import ManuscriptEnhancer
-        enhancer = ManuscriptEnhancer(genre='wuxia')
+
+        enhancer = ManuscriptEnhancer(genre="wuxia")
         assert enhancer is not None
 
     def test_analyze(self, sample_manuscript):
         """분석 테스트"""
         from modules.core.manuscript_enhancer import ManuscriptEnhancer
-        enhancer = ManuscriptEnhancer(genre='wuxia')
+
+        enhancer = ManuscriptEnhancer(genre="wuxia")
 
         result = enhancer.analyze(sample_manuscript, current_ep=10)
 
         assert result is not None
-        assert hasattr(result, 'cliche_score')
-        assert hasattr(result, 'subtext_ratio')
+        assert hasattr(result, "cliche_count")
+        assert hasattr(result, "subtext_ratio")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -348,6 +348,7 @@ class TestManuscriptEnhancer:
 # ═══════════════════════════════════════════════════════════════════════════════
 # Integration Tests
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 class TestIntegration:
     """통합 테스트"""
@@ -372,8 +373,7 @@ class TestIntegration:
     def test_main_a_imports(self):
         """main_a.py 임포트 의존성 확인"""
         # main_a.py의 try 블록 내 import 확인
-        import re
-        with open("main_a.py", "r", encoding="utf-8") as f:
+        with open("main_a.py", encoding="utf-8") as f:
             content = f.read()
 
         required_imports = [
