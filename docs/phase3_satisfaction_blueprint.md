@@ -1,7 +1,7 @@
 # D. 대리만족 프레임워크 — Reader Satisfaction 검증 청사진
 
-> 작성: 2026-02-16, checkpoint `5e80b49`
-> 상태: **설계 완료 (미착수)**
+> 작성: 2026-02-16, checkpoint `0d676c8`
+> 상태: **Step 1 완료** (reader_satisfaction 점수축 + 배점/가중치 재분배)
 
 ---
 
@@ -320,7 +320,7 @@ satisfaction:
 
 ## 7) 실행 단계 계획
 
-### Step 1: ScoringValidator 확장 (MVP)
+### Step 1: ScoringValidator 확장 (MVP) ✅ 완료 (`0d676c8`)
 
 **수정 파일**:
 - `modules/validation/scoring_validator.py` — `reader_satisfaction` 차원 추가, 배점 재분배
