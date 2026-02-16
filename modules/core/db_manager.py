@@ -325,6 +325,18 @@ class DBManager:
             "CREATE INDEX IF NOT EXISTS idx_episode_sentence_hashes_hash ON episode_sentence_hashes(sentence_hash)"
         )
 
+        # 14. [D Step 3] 에피소드 만족도 태깅
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS episode_satisfaction_tags (
+                ep_num INTEGER PRIMARY KEY,
+                primary_tag TEXT NOT NULL,
+                satisfaction_score INTEGER DEFAULT 5,
+                protagonist_agency TEXT DEFAULT '자력',
+                frustration_flag INTEGER DEFAULT 0,
+                created_at TEXT DEFAULT (datetime('now'))
+            )
+        """)
+
         self.conn.commit()
 
     # --- [트랜잭션 제어] ---
@@ -1327,3 +1339,71 @@ class DBManager:
                 (ep_num,),
             )
             return [dict(row) for row in cur.fetchall()]
+
+    # ===== [D Step 3] 에피소드 만족도 태깅 CRUD =====
+
+    def save_satisfaction_tag(self, ep_num: int, tag_dict: dict) -> None:
+        """[D Step 3] 에피소드 만족도 태그 저장 (INSERT OR REPLACE)."""
+        with self._lock:
+            self.cursor.execute(
+                "INSERT OR REPLACE INTO episode_satisfaction_tags "
+                "(ep_num, primary_tag, satisfaction_score, protagonist_agency, frustration_flag) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (
+                    ep_num,
+                    tag_dict.get("primary_tag", "일상"),
+                    tag_dict.get("satisfaction_score", 5),
+                    tag_dict.get("protagonist_agency", "자력"),
+                    1 if tag_dict.get("frustration_flag") else 0,
+                ),
+            )
+            if not self.conn.in_transaction:
+                self.conn.commit()
+
+    def get_satisfaction_tag(self, ep_num: int) -> dict | None:
+        """[D Step 3] 특정 에피소드의 만족도 태그 조회."""
+        with self._lock:
+            cur = self.cursor.execute(
+                "SELECT ep_num, primary_tag, satisfaction_score, protagonist_agency, frustration_flag "
+                "FROM episode_satisfaction_tags WHERE ep_num = ?",
+                (ep_num,),
+            )
+            row = cur.fetchone()
+            if not row:
+                return None
+            return {
+                "ep_num": row["ep_num"],
+                "primary_tag": row["primary_tag"],
+                "satisfaction_score": row["satisfaction_score"],
+                "protagonist_agency": row["protagonist_agency"],
+                "frustration_flag": bool(row["frustration_flag"]),
+            }
+
+    def get_recent_satisfaction_tags(self, before_ep: int, lookback: int = 5) -> list:
+        """[D Step 3] 최근 N화의 만족도 태그 조회 (시간순 반환).
+
+        Args:
+            before_ep: 이 에피소드 이전의 태그를 조회
+            lookback: 조회할 에피소드 수
+
+        Returns:
+            [{"ep_num": int, "primary_tag": str, ...}, ...] (오래된 순)
+        """
+        with self._lock:
+            cur = self.cursor.execute(
+                "SELECT ep_num, primary_tag, satisfaction_score, protagonist_agency, frustration_flag "
+                "FROM episode_satisfaction_tags "
+                "WHERE ep_num < ? ORDER BY ep_num DESC LIMIT ?",
+                (before_ep, lookback),
+            )
+            rows = [
+                {
+                    "ep_num": row["ep_num"],
+                    "primary_tag": row["primary_tag"],
+                    "satisfaction_score": row["satisfaction_score"],
+                    "protagonist_agency": row["protagonist_agency"],
+                    "frustration_flag": bool(row["frustration_flag"]),
+                }
+                for row in cur.fetchall()
+            ]
+            return list(reversed(rows))
