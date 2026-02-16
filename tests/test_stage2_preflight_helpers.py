@@ -399,7 +399,7 @@ class TestPreflightFinalize:
         with (
             patch("modules.core.spinners.V50_MODULES_AVAILABLE", False),
             patch(
-                "modules.core.stage2_orchestrator.validate_arc",
+                "modules.core.stage2_finalizer.validate_arc",
                 side_effect=lambda x: x,
             ),
         ):
