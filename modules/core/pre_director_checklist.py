@@ -118,6 +118,16 @@ class PreDirectorChecklist:
 
     def __init__(self) -> None:
         self.enabled = True
+        self._manuscript_checker = None  # [R5-1a] lazy sub-module
+
+    @property
+    def manuscript_checker(self):
+        """[R5-1a] 원고 품질 체크 서브모듈 (lazy init)."""
+        if self._manuscript_checker is None:
+            from modules.core.pre_director_manuscript_checker import PreDirectorManuscriptChecker
+
+            self._manuscript_checker = PreDirectorManuscriptChecker(self)
+        return self._manuscript_checker
 
     def check(self, content: str, content_type: str = "manuscript", context: dict[str, Any] = None) -> ChecklistResult:
         """
@@ -226,7 +236,7 @@ class PreDirectorChecklist:
             )
 
         # 2. 구조 체크 - 대화 (V60.5 고도화: 비율 분석 및 구체적 가이드)
-        dialogue_ratio_check = self._check_dialogue_ratio(manuscript)
+        dialogue_ratio_check = self.manuscript_checker._check_dialogue_ratio(manuscript)
         items.extend(dialogue_ratio_check)
 
         # 3. 구조 체크 - 문단
@@ -272,7 +282,7 @@ class PreDirectorChecklist:
             scene_breakdown = blueprint.get("scene_breakdown", {})
             if scene_breakdown:
                 # [V60.5] 씬별 반영률 정량 측정
-                scene_metrics = self._measure_scene_reflection(manuscript, scene_breakdown)
+                scene_metrics = self.manuscript_checker._measure_scene_reflection(manuscript, scene_breakdown)
                 items.extend(scene_metrics["check_items"])
 
                 # 전체 반영률 기반 판정
@@ -309,7 +319,7 @@ class PreDirectorChecklist:
                     )
 
                 # [V60.4] 씬 밀도 균등성 검사
-                scene_density_check = self._check_scene_density_balance(manuscript, scene_breakdown)
+                scene_density_check = self.manuscript_checker._check_scene_density_balance(manuscript, scene_breakdown)
                 items.extend(scene_density_check)
 
             # 엔딩 훅 체크
@@ -390,7 +400,7 @@ class PreDirectorChecklist:
         items.extend(setting_check)
 
         # 13. [V60.6] 클리셰 밀도 경고
-        cliche_check = self._check_cliche_density(manuscript)
+        cliche_check = self.manuscript_checker._check_cliche_density(manuscript)
         items.extend(cliche_check)
 
         return items
@@ -647,382 +657,6 @@ class PreDirectorChecklist:
                     passed=True,
                     severity=CheckSeverity.PASS,
                     message="NPC 관계 변화 양호",
-                )
-            )
-
-        return items
-
-    def _measure_scene_reflection(self, manuscript: str, scene_breakdown: dict[str, Any]) -> dict[str, Any]:
-        """
-        [V60.5] 씬별 반영률 정량 측정
-
-        각 씬이 원고에 얼마나 반영됐는지 0-100%로 측정.
-        미반영 씬을 구체적으로 지적.
-
-        Returns:
-            {
-                'per_scene': {scene_key: {'ratio': float, 'keywords': [...], 'matched': [...]}},
-                'overall_ratio': float,
-                'weak_scenes': [scene_keys...],
-                'check_items': [CheckItem...]
-            }
-        """
-        result = {"per_scene": {}, "overall_ratio": 0, "weak_scenes": [], "check_items": []}
-
-        if not scene_breakdown:
-            return result
-
-        total_keywords = 0
-        total_matched = 0
-        weak_scenes = []
-
-        for scene_key, scene_data in scene_breakdown.items():
-            # 씬 설명에서 키워드 추출
-            if isinstance(scene_data, dict):
-                desc = scene_data.get("description", "")
-                title = scene_data.get("title", "")
-                full_text = f"{title} {desc}"
-            else:
-                full_text = str(scene_data)
-
-            keywords = re.findall(r"[\w가-힣]{2,}", full_text)
-            # 중복 제거 및 상위 8개 선택
-            unique_keywords = list(dict.fromkeys(keywords))[:8]
-
-            if not unique_keywords:
-                continue
-
-            # 매칭 확인
-            matched = [kw for kw in unique_keywords if kw in manuscript]
-            ratio = len(matched) / len(unique_keywords)
-
-            result["per_scene"][scene_key] = {
-                "ratio": ratio,
-                "keywords": unique_keywords,
-                "matched": matched,
-                "missing": [kw for kw in unique_keywords if kw not in matched],
-            }
-
-            total_keywords += len(unique_keywords)
-            total_matched += len(matched)
-
-            # 약한 씬 감지 (30% 미만 반영)
-            if ratio < 0.3:
-                weak_scenes.append(scene_key)
-
-        # 전체 반영률 계산
-        result["overall_ratio"] = total_matched / total_keywords if total_keywords > 0 else 0
-        result["weak_scenes"] = weak_scenes
-
-        # 약한 씬에 대한 체크 아이템 생성
-        if weak_scenes:
-            # High Impact Zone (마지막 2개 씬) 체크
-            scene_keys = list(scene_breakdown.keys())
-            high_impact_scenes = scene_keys[-2:] if len(scene_keys) >= 2 else scene_keys
-
-            high_impact_weak = [s for s in weak_scenes if s in high_impact_scenes]
-            other_weak = [s for s in weak_scenes if s not in high_impact_scenes]
-
-            if high_impact_weak:
-                result["check_items"].append(
-                    CheckItem(
-                        category=CheckCategory.BLUEPRINT_MATCH,
-                        name="High Impact Zone 미반영",
-                        passed=False,
-                        severity=CheckSeverity.FAIL,
-                        message=f"클라이맥스 씬 미반영: {', '.join(high_impact_weak)} (반영률 30% 미만)",
-                    )
-                )
-
-            if len(other_weak) >= 2:
-                result["check_items"].append(
-                    CheckItem(
-                        category=CheckCategory.BLUEPRINT_MATCH,
-                        name="다수 씬 미반영",
-                        passed=False,
-                        severity=CheckSeverity.FAIL,
-                        message=f"다수 씬 미반영: {', '.join(other_weak[:3])} (반영률 30% 미만)",
-                    )
-                )
-            elif other_weak:
-                result["check_items"].append(
-                    CheckItem(
-                        category=CheckCategory.BLUEPRINT_MATCH,
-                        name="씬 미반영 경고",
-                        passed=True,
-                        severity=CheckSeverity.WARNING,
-                        message=f"씬 반영 부족: {', '.join(other_weak)} (보충 권장)",
-                    )
-                )
-
-        return result
-
-    def _check_scene_density_balance(self, manuscript: str, scene_breakdown: dict[str, Any]) -> list[CheckItem]:
-        """
-        [V60.4] 씬 밀도 균등성 검사
-
-        원고를 균등 분할하여 각 구간의 씬 키워드 매칭 수를 비교.
-        앞부분만 상세하고 뒷부분이 급하게 요약되는 패턴 감지.
-        """
-        items = []
-
-        if not scene_breakdown or len(scene_breakdown) < 3:
-            return items
-
-        scene_count = len(scene_breakdown)
-
-        # 원고를 씬 수만큼 균등 분할
-        section_len = len(manuscript) // scene_count
-        if section_len < 200:  # 분량이 너무 적으면 체크 불가
-            return items
-
-        sections = []
-        for i in range(scene_count):
-            start = i * section_len
-            end = (i + 1) * section_len if i < scene_count - 1 else len(manuscript)
-            sections.append(manuscript[start:end])
-
-        # 각 씬별 키워드 추출 및 매칭
-        scene_keys = list(scene_breakdown.keys())
-        section_densities = []
-
-        for i, section in enumerate(sections):
-            if i < len(scene_keys):
-                scene_data = scene_breakdown[scene_keys[i]]
-                if isinstance(scene_data, dict):
-                    desc = scene_data.get("description", "")
-                else:
-                    desc = str(scene_data)
-
-                # 키워드 매칭 밀도 계산
-                keywords = re.findall(r"[\w가-힣]{2,}", str(desc))[:5]
-                if keywords:
-                    matched = sum(1 for kw in keywords if kw in section)
-                    density = matched / len(keywords)
-                else:
-                    density = 0.5  # 키워드 없으면 중립
-
-                section_densities.append(density)
-
-        if len(section_densities) < 3:
-            return items
-
-        # 전반부 vs 후반부 밀도 비교
-        mid_point = len(section_densities) // 2
-        first_half_avg = sum(section_densities[:mid_point]) / mid_point
-        second_half_avg = sum(section_densities[mid_point:]) / (len(section_densities) - mid_point)
-
-        # 불균형 감지: 전반부가 후반부의 2배 이상이면 경고
-        if first_half_avg > 0.3 and second_half_avg < 0.15:
-            items.append(
-                CheckItem(
-                    category=CheckCategory.BLUEPRINT_MATCH,
-                    name="씬 밀도 불균형",
-                    passed=False,
-                    severity=CheckSeverity.FAIL,
-                    message=f"후반부 씬이 급하게 요약됨 (전반: {first_half_avg:.0%}, 후반: {second_half_avg:.0%})",
-                )
-            )
-        elif first_half_avg > second_half_avg * 1.8:
-            items.append(
-                CheckItem(
-                    category=CheckCategory.BLUEPRINT_MATCH,
-                    name="씬 밀도 불균형 경고",
-                    passed=True,
-                    severity=CheckSeverity.WARNING,
-                    message=f"후반부 씬 밀도가 낮음 (전반: {first_half_avg:.0%}, 후반: {second_half_avg:.0%})",
-                )
-            )
-        else:
-            items.append(
-                CheckItem(
-                    category=CheckCategory.BLUEPRINT_MATCH,
-                    name="씬 밀도 균등",
-                    passed=True,
-                    severity=CheckSeverity.PASS,
-                    message=f"씬 밀도 균등 (전반: {first_half_avg:.0%}, 후반: {second_half_avg:.0%})",
-                )
-            )
-
-        # [V60.5] High Impact Zone (마지막 2개 씬) 강화 체크
-        high_impact_check = self._check_high_impact_zone(sections, section_densities, scene_count)
-        items.extend(high_impact_check)
-
-        return items
-
-    def _check_high_impact_zone(
-        self, sections: list[str], section_densities: list[float], scene_count: int
-    ) -> list[CheckItem]:
-        """
-        [V60.5] High Impact Zone (Scene 5-6) 강화 체크
-
-        클라이맥스 영역인 마지막 2개 씬에 대해 더 높은 기준 적용:
-        - 밀도 기준 50% (일반 씬은 30%)
-        - 분량 기준 600자 이상 (일반 씬은 500자)
-        """
-        items = []
-
-        if scene_count < 4 or len(sections) < 4:
-            return items
-
-        # 마지막 2개 씬 (High Impact Zone)
-        high_impact_sections = sections[-2:]
-        high_impact_densities = section_densities[-2:] if len(section_densities) >= 2 else []
-
-        # 1. 분량 체크 (High Impact Zone은 각 600자 이상 권장)
-        high_impact_lengths = [len(s) for s in high_impact_sections]
-        short_high_impact = [i for i, length in enumerate(high_impact_lengths) if length < 600]
-
-        if short_high_impact:
-            scene_nums = [scene_count - 1 + i for i in short_high_impact]
-            items.append(
-                CheckItem(
-                    category=CheckCategory.BLUEPRINT_MATCH,
-                    name="High Impact Zone 분량 부족",
-                    passed=True,  # 경고만
-                    severity=CheckSeverity.WARNING,
-                    message=f"클라이맥스 씬(Scene {', '.join(map(str, scene_nums))}) 분량 부족 - 각 600자 이상 권장",
-                )
-            )
-
-        # 2. 밀도 체크 (High Impact Zone은 50% 이상 권장)
-        if high_impact_densities:
-            low_density_high_impact = [i for i, d in enumerate(high_impact_densities) if d < 0.5]
-            if len(low_density_high_impact) == 2:
-                # 두 씬 모두 밀도 부족
-                items.append(
-                    CheckItem(
-                        category=CheckCategory.BLUEPRINT_MATCH,
-                        name="High Impact Zone 밀도 부족",
-                        passed=False,
-                        severity=CheckSeverity.FAIL,
-                        message=f"클라이맥스 씬 전체 밀도 부족 (Scene 5: {high_impact_densities[0]:.0%}, Scene 6: {high_impact_densities[1]:.0%}) - 절벽걸기 품질 저하",
-                    )
-                )
-            elif low_density_high_impact:
-                scene_num = scene_count - 1 + low_density_high_impact[0]
-                density = high_impact_densities[low_density_high_impact[0]]
-                items.append(
-                    CheckItem(
-                        category=CheckCategory.BLUEPRINT_MATCH,
-                        name="High Impact Zone 밀도 경고",
-                        passed=True,
-                        severity=CheckSeverity.WARNING,
-                        message=f"Scene {scene_num} 밀도 부족 ({density:.0%}) - 클라이맥스 보강 권장",
-                    )
-                )
-            else:
-                # High Impact Zone 밀도 양호
-                avg_high_density = sum(high_impact_densities) / len(high_impact_densities)
-                items.append(
-                    CheckItem(
-                        category=CheckCategory.BLUEPRINT_MATCH,
-                        name="High Impact Zone 양호",
-                        passed=True,
-                        severity=CheckSeverity.PASS,
-                        message=f"클라이맥스 씬 밀도 양호 (평균 {avg_high_density:.0%})",
-                    )
-                )
-
-        return items
-
-    def _check_dialogue_ratio(self, manuscript: str) -> list[CheckItem]:
-        """
-        [V60.5] 대화/지문 비율 분석 및 구체적 가이드
-
-        권장 비율:
-        - 대화: 25-40%
-        - 지문(서술): 60-75%
-
-        Returns:
-            CheckItem 목록
-        """
-        items = []
-
-        # 대화 추출 (큰따옴표, 꺾쇠 따옴표)
-        dialogue_patterns = [
-            r'"[^"]+?"',  # 큰따옴표
-            r"「[^」]+?」",  # 꺾쇠 따옴표
-            r"'[^']{5,}'",  # 작은따옴표 (5자 이상만)
-        ]
-
-        dialogue_chars = 0
-        for pattern in dialogue_patterns:
-            matches = re.findall(pattern, manuscript)
-            for match in matches:
-                dialogue_chars += len(match)
-
-        total_chars = len(manuscript)
-        if total_chars < 1000:
-            return items  # 분량 너무 적으면 체크 불가
-
-        dialogue_ratio = dialogue_chars / total_chars
-        narrative_ratio = 1 - dialogue_ratio
-
-        # 대화 수 (기존 로직 유지)
-        dialogue_count = manuscript.count('"') // 2 + manuscript.count("「")
-        min_dialogue = self.MANUSCRIPT_REQUIRED["dialogue"][0]
-
-        # 비율 기반 판정
-        ideal_dialogue_ratio = 0.30  # 30% 목표
-        ratio_diff = ideal_dialogue_ratio - dialogue_ratio
-
-        if dialogue_count < min_dialogue:
-            # 대화 수 절대 부족
-            items.append(
-                CheckItem(
-                    category=CheckCategory.STRUCTURE,
-                    name="대화 수",
-                    passed=False,
-                    severity=CheckSeverity.FAIL,
-                    message=f"대화 부족: {dialogue_count}개 (최소 {min_dialogue}개)",
-                )
-            )
-        elif dialogue_ratio < 0.15:
-            # 비율 심각하게 낮음 (15% 미만)
-            needed_chars = int((0.20 - dialogue_ratio) * total_chars)
-            items.append(
-                CheckItem(
-                    category=CheckCategory.STRUCTURE,
-                    name="대화 비율",
-                    passed=False,
-                    severity=CheckSeverity.FAIL,
-                    message=f"대화 비율 심각 부족: {dialogue_ratio:.0%} (현재 {dialogue_chars}자) → 약 {needed_chars}자 대화 추가 필요",
-                )
-            )
-        elif dialogue_ratio < 0.22:
-            # 비율 낮음 (22% 미만)
-            needed_chars = int((0.25 - dialogue_ratio) * total_chars)
-            items.append(
-                CheckItem(
-                    category=CheckCategory.STRUCTURE,
-                    name="대화 비율",
-                    passed=True,
-                    severity=CheckSeverity.WARNING,
-                    message=f"대화 비율 낮음: {dialogue_ratio:.0%} → {needed_chars}자 대화 추가 권장",
-                )
-            )
-        elif dialogue_ratio > 0.50:
-            # 비율 너무 높음 (50% 초과)
-            excess_chars = int((dialogue_ratio - 0.40) * total_chars)
-            items.append(
-                CheckItem(
-                    category=CheckCategory.STRUCTURE,
-                    name="대화 비율",
-                    passed=True,
-                    severity=CheckSeverity.WARNING,
-                    message=f"대화 비율 과다: {dialogue_ratio:.0%} → 지문/묘사 {excess_chars}자 추가 권장",
-                )
-            )
-        else:
-            # 적정 범위
-            items.append(
-                CheckItem(
-                    category=CheckCategory.STRUCTURE,
-                    name="대화/지문 비율",
-                    passed=True,
-                    severity=CheckSeverity.PASS,
-                    message=f"대화/지문 비율 양호 (대화 {dialogue_ratio:.0%}, 지문 {narrative_ratio:.0%})",
                 )
             )
 
@@ -1448,110 +1082,6 @@ class PreDirectorChecklist:
                     passed=True,
                     severity=CheckSeverity.PASS,
                     message="설정 키워드 검증 통과",
-                )
-            )
-
-        return items
-
-    def _check_cliche_density(self, manuscript: str) -> list[CheckItem]:
-        """
-        [V60.6] 클리셰 밀도 경고
-
-        진부한 표현 목록을 정의하고 빈도 측정.
-        1000자당 3개 초과 시 WARNING, 5개 초과 시 FAIL.
-        """
-        items = []
-
-        # 클리셰 표현 목록
-        cliches = [
-            # 신체 반응
-            "이를 악물",
-            "주먹을 불끈",
-            "심장이 쿵",
-            "눈앞이 캄캄",
-            "온몸이 굳",
-            "식은땀이",
-            "심장이 멎",
-            "숨이 턱",
-            # 시각적 묘사
-            "눈빛이 날카",
-            "눈빛이 매서",
-            "살기가 뿜",
-            "섬광처럼",
-            "번개처럼",
-            "바람처럼",
-            "유령처럼",
-            "그림자처럼",
-            # 감정 표현
-            "분노가 치밀",
-            "피가 끓",
-            "눈에서 불",
-            "이성을 잃",
-            "피가 거꾸로",
-            "화가 머리끝",
-            "분노로 떨",
-            # 상투적 비유
-            "천근만근",
-            "살얼음판",
-            "벼락같은",
-            "폭풍같은",
-            "산산조각",
-            "박살이 나",
-            "가슴이 찢어",
-            # 무협 클리셰
-            "내공이 폭발",
-            "진기가 요동",
-            "경지에 오르",
-            "깨달음을 얻",
-            "하늘이 무너",
-            "세상이 멈",
-            "시간이 멈",
-        ]
-
-        # 클리셰 카운트
-        total_count = 0
-        found_cliches = []
-
-        for cliche in cliches:
-            count = manuscript.count(cliche)
-            if count > 0:
-                total_count += count
-                found_cliches.append((cliche, count))
-
-        # 밀도 계산 (1000자당)
-        density = (total_count / len(manuscript)) * 1000 if manuscript else 0
-
-        # 결과 생성
-        if density > 5:
-            top_cliches = sorted(found_cliches, key=lambda x: x[1], reverse=True)[:3]
-            cliche_list = ", ".join([f"'{c[0]}'" for c in top_cliches])
-            items.append(
-                CheckItem(
-                    category=CheckCategory.CLICHE_DENSITY,
-                    name="클리셰 과다",
-                    passed=False,
-                    severity=CheckSeverity.FAIL,
-                    message=f"클리셰 밀도 과다: {density:.1f}/1000자 ({cliche_list} 등) - 신선한 표현으로 교체 필요",
-                )
-            )
-        elif density > 3:
-            items.append(
-                CheckItem(
-                    category=CheckCategory.CLICHE_DENSITY,
-                    name="클리셰 밀도 경고",
-                    passed=True,
-                    severity=CheckSeverity.WARNING,
-                    message=f"클리셰 밀도 높음: {density:.1f}/1000자 - 일부 표현 교체 권장",
-                )
-            )
-        else:
-            items.append(
-                CheckItem(
-                    category=CheckCategory.CLICHE_DENSITY,
-                    name="클리셰 밀도",
-                    passed=True,
-                    severity=CheckSeverity.PASS,
-                    message=f"클리셰 밀도 양호: {density:.1f}/1000자",
                 )
             )
 
