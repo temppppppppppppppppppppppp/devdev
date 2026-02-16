@@ -1,7 +1,7 @@
 # D. 대리만족 프레임워크 — Reader Satisfaction 검증 청사진
 
 > 작성: 2026-02-16, checkpoint `7684a78`
-> 상태: **Step 1+2+3+4 완료** (점수축/가중치 + Director 프롬프트 확장 + 에피소드 태깅+DB + 좌절-보상 타이머)
+> 상태: **전체 완료 (Step 1~5)** — 점수축/가중치 + Director 프롬프트 확장 + 에피소드 태깅+DB + 좌절-보상 타이머 + YAML 설정+문서 동기화
 
 ---
 
@@ -372,14 +372,11 @@ satisfaction:
 
 **게이트**: py_compile + SovereignApp import + 기존 346 + 신규 15 = 361 + pre-commit
 
-### Step 5: YAML 설정 + 문서
+### Step 5: YAML 설정 + 문서 ✅ 완료
 
-**수정 파일**:
-- `config/settings/validation.yaml` — `satisfaction:` 섹션 추가
-- `tests/test_satisfaction_framework.py` — 테스트 14~15 추가
-- `내일작업.md`, `CLAUDE.md`, `docs/프로젝트_현황_로드맵_2026-02-14.md` — 문서 동기화
-
-**게이트**: py_compile + 전체 pytest + pre-commit
+- `config/settings/validation.yaml` — `satisfaction:` 섹션은 Step 4에서 이미 추가 완료
+- `tests/test_satisfaction_step4_frustration.py` — YAML threshold 검증 3건 포함 (Step 4에서 완료)
+- `내일작업.md`, `CLAUDE.md`, `docs/프로젝트_현황_로드맵_2026-02-14.md`, 본 문서 — 문서 동기화 완료
 
 ---
 
