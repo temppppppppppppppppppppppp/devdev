@@ -190,6 +190,9 @@ class ManuscriptValidator:
             "has_critical_warning": len(focus_points) >= 3,  # 집중 검토 필요
         }
 
+    # [B-2] DraftValidator Protocol 적합화
+    validate = validate_candidate
+
     def validate_all_candidates(
         self,
         candidates: list[dict],
