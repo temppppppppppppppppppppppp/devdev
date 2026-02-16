@@ -4,11 +4,12 @@
 여러 원고를 동시에 검증하여 처리 속도 향상
 asyncio 기반 병렬 처리
 """
+
 import asyncio
 import logging
-from typing import List, Dict, Any
-from concurrent.futures import ThreadPoolExecutor
 import time
+from concurrent.futures import ThreadPoolExecutor
+from typing import Any
 
 
 class BatchValidator:
@@ -30,18 +31,9 @@ class BatchValidator:
         self.orchestrator = orchestrator
         self.max_concurrent = max_concurrent
         self.results = []
-        self.stats = {
-            'total_manuscripts': 0,
-            'completed': 0,
-            'failed': 0,
-            'total_time': 0,
-            'average_time': 0
-        }
+        self.stats = {"total_manuscripts": 0, "completed": 0, "failed": 0, "total_time": 0, "average_time": 0}
 
-    async def validate_batch_async(
-        self,
-        manuscripts: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+    async def validate_batch_async(self, manuscripts: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """
         비동기 배치 검증 (asyncio)
 
@@ -56,7 +48,7 @@ class BatchValidator:
             List of validation results
         """
         start_time = time.time()
-        self.stats['total_manuscripts'] = len(manuscripts)
+        self.stats["total_manuscripts"] = len(manuscripts)
 
         # Semaphore로 동시 실행 제한 (API rate limit 보호)
         semaphore = asyncio.Semaphore(self.max_concurrent)
@@ -69,38 +61,27 @@ class BatchValidator:
                     result = await loop.run_in_executor(
                         None,
                         self.orchestrator.validate,
-                        ms_data['ep_num'],
-                        ms_data['manuscript'],
-                        ms_data['validation_context']
+                        ms_data["ep_num"],
+                        ms_data["manuscript"],
+                        ms_data["validation_context"],
                     )
-                    self.stats['completed'] += 1
-                    return {
-                        'ep_num': ms_data['ep_num'],
-                        'result': result,
-                        'success': True
-                    }
+                    self.stats["completed"] += 1
+                    return {"ep_num": ms_data["ep_num"], "result": result, "success": True}
                 except Exception as e:
-                    self.stats['failed'] += 1
-                    return {
-                        'ep_num': ms_data['ep_num'],
-                        'error': str(e),
-                        'success': False
-                    }
+                    self.stats["failed"] += 1
+                    return {"ep_num": ms_data["ep_num"], "error": str(e), "success": False}
 
         # 모든 원고 동시 처리
         tasks = [validate_one(ms) for ms in manuscripts]
         results = await asyncio.gather(*tasks)
 
         elapsed = time.time() - start_time
-        self.stats['total_time'] = elapsed
-        self.stats['average_time'] = elapsed / len(manuscripts) if manuscripts else 0
+        self.stats["total_time"] = elapsed
+        self.stats["average_time"] = elapsed / len(manuscripts) if manuscripts else 0
 
         return results
 
-    def validate_batch_sync(
-        self,
-        manuscripts: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+    def validate_batch_sync(self, manuscripts: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """
         동기 배치 검증 (ThreadPoolExecutor)
 
@@ -113,36 +94,26 @@ class BatchValidator:
             List of validation results
         """
         start_time = time.time()
-        self.stats['total_manuscripts'] = len(manuscripts)
+        self.stats["total_manuscripts"] = len(manuscripts)
 
         def validate_one(ms_data) -> dict:
             try:
                 result = self.orchestrator.validate(
-                    ms_data['ep_num'],
-                    ms_data['manuscript'],
-                    ms_data['validation_context']
+                    ms_data["ep_num"], ms_data["manuscript"], ms_data["validation_context"]
                 )
-                self.stats['completed'] += 1
-                return {
-                    'ep_num': ms_data['ep_num'],
-                    'result': result,
-                    'success': True
-                }
+                self.stats["completed"] += 1
+                return {"ep_num": ms_data["ep_num"], "result": result, "success": True}
             except Exception as e:
-                self.stats['failed'] += 1
-                return {
-                    'ep_num': ms_data['ep_num'],
-                    'error': str(e),
-                    'success': False
-                }
+                self.stats["failed"] += 1
+                return {"ep_num": ms_data["ep_num"], "error": str(e), "success": False}
 
         # ThreadPoolExecutor로 병렬 처리
         with ThreadPoolExecutor(max_workers=self.max_concurrent) as executor:
             results = list(executor.map(validate_one, manuscripts))
 
         elapsed = time.time() - start_time
-        self.stats['total_time'] = elapsed
-        self.stats['average_time'] = elapsed / len(manuscripts) if manuscripts else 0
+        self.stats["total_time"] = elapsed
+        self.stats["average_time"] = elapsed / len(manuscripts) if manuscripts else 0
 
         return results
 
@@ -161,10 +132,10 @@ class BatchValidator:
             }
         """
         stats = self.stats.copy()
-        if stats['total_time'] > 0:
-            stats['throughput'] = stats['total_manuscripts'] / stats['total_time']
+        if stats["total_time"] > 0:
+            stats["throughput"] = stats["total_manuscripts"] / stats["total_time"]
         else:
-            stats['throughput'] = 0
+            stats["throughput"] = 0
 
         return stats
 
@@ -195,7 +166,7 @@ class BatchOptimizer:
     def calculate_optimal_batch_size(
         total_manuscripts: int,
         api_rate_limit: int = 60,  # requests per minute
-        memory_limit_mb: int = 512
+        memory_limit_mb: int = 512,
     ) -> int:
         """
         최적 배치 크기 계산
@@ -221,10 +192,7 @@ class BatchOptimizer:
         return max(1, min(optimal, 10))
 
     @staticmethod
-    def split_into_batches(
-        manuscripts: List[Dict],
-        batch_size: int
-    ) -> List[List[Dict]]:
+    def split_into_batches(manuscripts: list[dict], batch_size: int) -> list[list[dict]]:
         """
         원고 리스트를 배치로 분할
 
@@ -237,7 +205,7 @@ class BatchOptimizer:
         """
         batches = []
         for i in range(0, len(manuscripts), batch_size):
-            batch = manuscripts[i:i + batch_size]
+            batch = manuscripts[i : i + batch_size]
             batches.append(batch)
 
         return batches
@@ -245,11 +213,8 @@ class BatchOptimizer:
 
 # 편의 함수
 def validate_manuscripts_in_batch(
-    orchestrator,
-    manuscripts: List[Dict[str, Any]],
-    max_concurrent: int = 3,
-    use_async: bool = True
-) -> List[Dict[str, Any]]:
+    orchestrator, manuscripts: list[dict[str, Any]], max_concurrent: int = 3, use_async: bool = True
+) -> list[dict[str, Any]]:
     """
     여러 원고를 배치로 검증
 
@@ -267,8 +232,9 @@ def validate_manuscripts_in_batch(
     if use_async:
         # 플랫폼 감지 (개선)
         import sys
-        is_notebook = 'ipykernel' in sys.modules or 'IPython' in sys.modules
-        is_streamlit = 'streamlit' in sys.modules
+
+        is_notebook = "ipykernel" in sys.modules or "IPython" in sys.modules
+        is_streamlit = "streamlit" in sys.modules
 
         if is_notebook or is_streamlit:
             # Jupyter/Streamlit 환경: 항상 ThreadPool 사용
@@ -297,7 +263,7 @@ def validate_manuscripts_in_batch(
             except Exception as e:
                 # 예기치 못한 오류 시 동기 모드로 fallback
                 logging.warning(f"[ERROR] Async 실행 실패: {e}")
-                logging.info(f"[INFO] ThreadPool 동기 모드로 전환")
+                logging.info("[INFO] ThreadPool 동기 모드로 전환")
                 results = validator.validate_batch_sync(manuscripts)
     else:
         # ThreadPoolExecutor 사용

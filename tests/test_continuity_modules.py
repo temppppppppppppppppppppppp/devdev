@@ -1,33 +1,30 @@
 """[V65] ContinuityInspector Sub-modules + PreDirectorChecklist Unit Tests"""
 
-import pytest
 import json
-import re
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch, PropertyMock
-from dataclasses import dataclass
+from unittest.mock import MagicMock, patch
 
 # 프로젝트 루트를 path에 추가
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from modules.core.pre_director_checklist import (
+    CheckCategory,
+    CheckItem,
+    ChecklistResult,
+    CheckSeverity,
+    PreDirectorChecklist,
+)
 from modules.domain.agents.continuity_arc import ContinuityArcValidator
 from modules.domain.agents.continuity_blueprint import ContinuityBlueprintValidator
 from modules.domain.agents.continuity_manuscript import ContinuityManuscriptValidator
 from modules.domain.agents.continuity_tracker import ContinuityTrackerIntegration
-from modules.core.pre_director_checklist import (
-    PreDirectorChecklist,
-    ChecklistResult,
-    CheckItem,
-    CheckCategory,
-    CheckSeverity,
-)
-
 
 # ══════════════════════════════════════════════════════════════
 # Shared Mock Factories
 # ══════════════════════════════════════════════════════════════
+
 
 def _make_mock_inspector():
     """ContinuityInspector mock을 생성 (4개 서브모듈 공통)"""
@@ -58,12 +55,14 @@ def _make_mock_inspector():
 
     # LLM 호출 mock
     inspector.ask = MagicMock(return_value='{"decision":"PASS","severity":"NONE","violations":[],"warnings":[]}')
-    inspector._extract_json_robust = MagicMock(return_value={
-        "decision": "PASS",
-        "severity": "NONE",
-        "violations": [],
-        "warnings": [],
-    })
+    inspector._extract_json_robust = MagicMock(
+        return_value={
+            "decision": "PASS",
+            "severity": "NONE",
+            "violations": [],
+            "warnings": [],
+        }
+    )
 
     # context mock (DB 접근용)
     inspector.context = MagicMock()
@@ -77,6 +76,7 @@ def _make_mock_inspector():
 # ContinuityArcValidator Tests
 # ══════════════════════════════════════════════════════════════
 
+
 class TestContinuityArcValidatorInit:
     """1. ContinuityArcValidator 초기화 테스트"""
 
@@ -88,9 +88,9 @@ class TestContinuityArcValidatorInit:
     def test_init_has_public_methods(self):
         inspector = _make_mock_inspector()
         validator = ContinuityArcValidator(inspector)
-        assert callable(getattr(validator, 'inspect_arc', None))
-        assert callable(getattr(validator, '_arc_python_precheck', None))
-        assert callable(getattr(validator, '_check_intra_arc_consistency', None))
+        assert callable(getattr(validator, "inspect_arc", None))
+        assert callable(getattr(validator, "_arc_python_precheck", None))
+        assert callable(getattr(validator, "_check_intra_arc_consistency", None))
 
 
 class TestContinuityArcValidatorTimeline:
@@ -117,21 +117,25 @@ class TestContinuityArcValidatorTimeline:
         inspector = _make_mock_inspector()
         validator = ContinuityArcValidator(inspector)
 
-        prev_arcs = [{
-            "arc_no": 1,
-            "tactical_doc": "이전 Arc 내용" * 20,
-            "joint_docs": {"final_location": "팽가", "physical_inventory": ["백근도"]},
-            "status_shadow": {"internal_energy_loss": "20%", "expected_injuries": "없음"},
-            "state_constraints": {"arc_end_state": {"internal_energy": 80}},
-            "ep_start": 1, "ep_end": 5,
-        }]
+        prev_arcs = [
+            {
+                "arc_no": 1,
+                "tactical_doc": "이전 Arc 내용" * 20,
+                "joint_docs": {"final_location": "팽가", "physical_inventory": ["백근도"]},
+                "status_shadow": {"internal_energy_loss": "20%", "expected_injuries": "없음"},
+                "state_constraints": {"arc_end_state": {"internal_energy": 80}},
+                "ep_start": 1,
+                "ep_end": 5,
+            }
+        ]
         current_arc = {
             "arc_no": 2,
             "tactical_doc": "현재 Arc 전술 설계서 " * 30,
             "joint_docs": {"final_location": "무림맹"},
             "status_shadow": {},
             "state_constraints": {"arc_start_state": {}},
-            "ep_start": 6, "ep_count": 5,
+            "ep_start": 6,
+            "ep_count": 5,
         }
 
         result = validator.inspect_arc(current_arc, prev_arcs=prev_arcs)
@@ -148,7 +152,8 @@ class TestContinuityArcValidatorTimeline:
             "arc_no": 2,
             "tactical_doc": "",
             "joint_docs": {},
-            "ep_start": 6, "ep_count": 5,
+            "ep_start": 6,
+            "ep_count": 5,
         }
         prev_arcs = [{"arc_no": 1, "tactical_doc": "x" * 100}]
         result = validator.inspect_arc(current_arc, prev_arcs=prev_arcs)
@@ -207,14 +212,17 @@ class TestContinuityArcValidatorIntraArc:
         inspector = _make_mock_inspector()
         validator = ContinuityArcValidator(inspector)
 
-        prev_arcs = [{
-            "arc_no": 1,
-            "tactical_doc": "작전" * 50,
-            "joint_docs": {"final_location": "팽가", "physical_inventory": ["검"]},
-            "status_shadow": {},
-            "state_constraints": {"arc_end_state": {}},
-            "ep_start": 1, "ep_end": 5,
-        }]
+        prev_arcs = [
+            {
+                "arc_no": 1,
+                "tactical_doc": "작전" * 50,
+                "joint_docs": {"final_location": "팽가", "physical_inventory": ["검"]},
+                "status_shadow": {},
+                "state_constraints": {"arc_end_state": {}},
+                "ep_start": 1,
+                "ep_end": 5,
+            }
+        ]
         result = validator._format_prev_arcs(prev_arcs)
         assert isinstance(result, str)
         assert "Arc 1" in result
@@ -225,9 +233,7 @@ class TestContinuityArcValidatorIntraArc:
         validator = ContinuityArcValidator(inspector)
 
         tactical_doc = (
-            "[제1화 전술 설계] 시작 내용\n"
-            "[제2화 전술 설계] 중간 내용\n"
-            "[제3화 전술 설계] 마지막 내용 여기서 끝난다"
+            "[제1화 전술 설계] 시작 내용\n[제2화 전술 설계] 중간 내용\n[제3화 전술 설계] 마지막 내용 여기서 끝난다"
         )
         result = validator._extract_last_episode_content(tactical_doc, 3)
         assert "마지막 내용" in result
@@ -236,6 +242,7 @@ class TestContinuityArcValidatorIntraArc:
 # ══════════════════════════════════════════════════════════════
 # ContinuityManuscriptValidator Tests
 # ══════════════════════════════════════════════════════════════
+
 
 class TestContinuityManuscriptValidatorInit:
     """5. ContinuityManuscriptValidator 초기화 테스트"""
@@ -248,8 +255,8 @@ class TestContinuityManuscriptValidatorInit:
     def test_has_acquisition_and_possession_patterns(self):
         inspector = _make_mock_inspector()
         validator = ContinuityManuscriptValidator(inspector)
-        assert hasattr(validator, 'ACQUISITION_PATTERNS')
-        assert hasattr(validator, 'POSSESSION_PATTERNS')
+        assert hasattr(validator, "ACQUISITION_PATTERNS")
+        assert hasattr(validator, "POSSESSION_PATTERNS")
         assert len(validator.ACQUISITION_PATTERNS) > 0
 
 
@@ -269,10 +276,7 @@ class TestContinuityManuscriptBlueprintMatch:
             }
         }
         result = validator.inspect_manuscript(
-            current_ep=1,
-            manuscript=manuscript,
-            blueprint=blueprint,
-            prev_manuscripts=[]
+            current_ep=1, manuscript=manuscript, blueprint=blueprint, prev_manuscripts=[]
         )
         assert result["decision"] in ["PASS", "REJECT"]
         assert "blueprint_alignment" in result
@@ -286,7 +290,7 @@ class TestContinuityManuscriptBlueprintMatch:
             current_ep=5,
             manuscript="짧은 텍스트",
             blueprint={},
-            prev_manuscripts=[{"ep_num": 4, "content": "이전 원고 " * 100}]
+            prev_manuscripts=[{"ep_num": 4, "content": "이전 원고 " * 100}],
         )
         assert result["decision"] == "REJECT"
         assert result["severity"] == "CRITICAL"
@@ -350,11 +354,7 @@ class TestContinuityManuscriptCrossEpisodeDuplication:
         # 10화에서 습득 기록 없는 스킬 사용
         manuscript = "그는 '절천비검법'을 펼치며 적을 압도했다."
 
-        result = validator._check_skill_timeline(
-            current_ep=10,
-            manuscript=manuscript,
-            prev_manuscripts=prev
-        )
+        result = validator._check_skill_timeline(current_ep=10, manuscript=manuscript, prev_manuscripts=prev)
         assert "skill_timeline" in result
         assert isinstance(result["violations"], list)
 
@@ -375,6 +375,7 @@ class TestContinuityManuscriptCrossEpisodeDuplication:
 # ContinuityBlueprintValidator Tests
 # ══════════════════════════════════════════════════════════════
 
+
 class TestContinuityBlueprintValidatorInit:
     """9. ContinuityBlueprintValidator 초기화 테스트"""
 
@@ -386,8 +387,8 @@ class TestContinuityBlueprintValidatorInit:
     def test_has_public_api(self):
         inspector = _make_mock_inspector()
         validator = ContinuityBlueprintValidator(inspector)
-        assert callable(getattr(validator, 'inspect', None))
-        assert callable(getattr(validator, 'get_prev_blueprints', None))
+        assert callable(getattr(validator, "inspect", None))
+        assert callable(getattr(validator, "get_prev_blueprints", None))
 
 
 class TestContinuityBlueprintValidation:
@@ -399,9 +400,7 @@ class TestContinuityBlueprintValidation:
         validator = ContinuityBlueprintValidator(inspector)
 
         result = validator.inspect(
-            current_ep=1,
-            current_blueprint={"integrated_scenario": "첫 화 시나리오"},
-            prev_blueprints=[]
+            current_ep=1, current_blueprint={"integrated_scenario": "첫 화 시나리오"}, prev_blueprints=[]
         )
         assert result["decision"] == "PASS"
         assert result["severity"] == "NONE"
@@ -414,7 +413,7 @@ class TestContinuityBlueprintValidation:
         result = validator.inspect(
             current_ep=5,
             current_blueprint={"scene_breakdown": {}},
-            prev_blueprints=[{"ep_num": 4, "integrated_scenario": "이전 시나리오"}]
+            prev_blueprints=[{"ep_num": 4, "integrated_scenario": "이전 시나리오"}],
         )
         assert result["decision"] == "REJECT"
         assert result["severity"] == "CRITICAL"
@@ -428,11 +427,7 @@ class TestContinuityBlueprintValidation:
         prev = [{"ep_num": 1, "integrated_scenario": "이전 에피소드 시나리오 내용" * 10}]
         current = {"integrated_scenario": "현재 에피소드 시나리오 " * 30}
 
-        result = validator.inspect(
-            current_ep=2,
-            current_blueprint=current,
-            prev_blueprints=prev
-        )
+        result = validator.inspect(current_ep=2, current_blueprint=current, prev_blueprints=prev)
         assert result["decision"] == "PASS"
         inspector.ask.assert_called_once()
 
@@ -443,17 +438,10 @@ class TestContinuityBlueprintValidation:
         inspector._is_same_item = MagicMock(side_effect=lambda a, b: a.strip() == b.strip())
         validator = ContinuityBlueprintValidator(inspector)
 
-        prev_bp = [{
-            "ep_num": 3,
-            "integrated_scenario": "주인공이 '용린검'을 획득하였다."
-        }]
+        prev_bp = [{"ep_num": 3, "integrated_scenario": "주인공이 '용린검'을 획득하였다."}]
         current_scenario = "주인공이 다시 '용린검'을 획득한다."
 
-        result = validator._python_precheck(
-            current_ep=5,
-            current_scenario=current_scenario,
-            prev_blueprints=prev_bp
-        )
+        result = validator._python_precheck(current_ep=5, current_scenario=current_scenario, prev_blueprints=prev_bp)
         # acquire_patterns에 매칭되면 critical_violations에 추가
         assert "critical_violations" in result
         assert "timeline" in result
@@ -477,6 +465,7 @@ class TestContinuityBlueprintValidation:
 # ContinuityTrackerIntegration Tests
 # ══════════════════════════════════════════════════════════════
 
+
 class TestContinuityTrackerInit:
     """12. ContinuityTrackerIntegration 초기화 테스트"""
 
@@ -488,15 +477,15 @@ class TestContinuityTrackerInit:
     def test_has_public_api(self):
         inspector = _make_mock_inspector()
         tracker = ContinuityTrackerIntegration(inspector)
-        assert callable(getattr(tracker, 'init_trackers', None))
-        assert callable(getattr(tracker, 'validate_with_trackers', None))
-        assert callable(getattr(tracker, 'load_trackers_from_db', None))
+        assert callable(getattr(tracker, "init_trackers", None))
+        assert callable(getattr(tracker, "validate_with_trackers", None))
+        assert callable(getattr(tracker, "load_trackers_from_db", None))
 
 
 class TestContinuityTrackerUpdate:
     """13. 추적 데이터 업데이트"""
 
-    @patch('modules.domain.agents.continuity_tracker.V49_7_MODULES_AVAILABLE', False)
+    @patch("modules.domain.agents.continuity_tracker.V49_7_MODULES_AVAILABLE", False)
     def test_init_trackers_disabled_when_modules_unavailable(self):
         """V49.7 모듈 미설치 시 비활성화"""
         inspector = _make_mock_inspector()
@@ -510,9 +499,7 @@ class TestContinuityTrackerUpdate:
         inspector.v49_7_enabled = False
         tracker = ContinuityTrackerIntegration(inspector)
 
-        result = tracker.validate_with_trackers(
-            arc=1, episode=1, content="테스트", content_type="blueprint"
-        )
+        result = tracker.validate_with_trackers(arc=1, episode=1, content="테스트", content_type="blueprint")
         assert result["warnings"] == []
         assert result["violations"] == []
         assert result["tracker_results"] == {}
@@ -561,12 +548,8 @@ class TestContinuityTrackerQuery:
         arcs_data = [
             {
                 "arc_no": 1,
-                "state_constraints": {
-                    "arc_end_state": {"power_level": 45}
-                },
-                "relationship_changes": [
-                    {"target": "장로", "from": "무시", "to": "경외", "trigger": "대결 승리"}
-                ],
+                "state_constraints": {"arc_end_state": {"power_level": 45}},
+                "relationship_changes": [{"target": "장로", "from": "무시", "to": "경외", "trigger": "대결 승리"}],
                 "ep_end": 5,
             }
         ]
@@ -588,6 +571,7 @@ class TestContinuityTrackerQuery:
 # ══════════════════════════════════════════════════════════════
 # PreDirectorChecklist Tests
 # ══════════════════════════════════════════════════════════════
+
 
 class TestPreDirectorChecklistInit:
     """15. PreDirectorChecklist 초기화 테스트"""
@@ -628,16 +612,19 @@ class TestPreDirectorChecklistGeneration:
     def test_blueprint_check_returns_result(self):
         """블루프린트 체크 결과"""
         checker = PreDirectorChecklist()
-        bp = json.dumps({
-            "integrated_scenario": "시나리오 " * 100,
-            "scene_breakdown": {
-                "scene1": {"title": "시작", "description": "도입부"},
-                "scene2": {"title": "전개", "description": "중반부"},
-                "scene3": {"title": "위기", "description": "클라이맥스"},
-                "scene4": {"title": "결말", "description": "마무리"},
+        bp = json.dumps(
+            {
+                "integrated_scenario": "시나리오 " * 100,
+                "scene_breakdown": {
+                    "scene1": {"title": "시작", "description": "도입부"},
+                    "scene2": {"title": "전개", "description": "중반부"},
+                    "scene3": {"title": "위기", "description": "클라이맥스"},
+                    "scene4": {"title": "결말", "description": "마무리"},
+                },
+                "ending_hook": "다음 화 예고",
             },
-            "ending_hook": "다음 화 예고"
-        }, ensure_ascii=False)
+            ensure_ascii=False,
+        )
         result = checker.check(bp, "blueprint")
         assert isinstance(result, ChecklistResult)
 
@@ -654,9 +641,9 @@ class TestPreDirectorChecklistGeneration:
         """충분한 길이와 구조를 갖춘 원고 생성"""
         paragraphs = []
         for i in range(10):
-            para = f"이것은 제{i+1}번째 문단입니다. "
-            para += f'"이것은 대화입니다." 그가 말했다. '
-            para += f'"정말인가요?" 그녀가 물었다. '
+            para = f"이것은 제{i + 1}번째 문단입니다. "
+            para += '"이것은 대화입니다." 그가 말했다. '
+            para += '"정말인가요?" 그녀가 물었다. '
             para += "주변의 풍경이 아름다웠다. 바람이 불었다. " * 5
             paragraphs.append(para)
         return "\n\n".join(paragraphs)
@@ -673,8 +660,7 @@ class TestPreDirectorChecklistConstraintMap:
         result = checker.check(bp_missing, "blueprint")
         assert result.passed is False
         field_fails = [
-            i for i in result.items
-            if i.category == CheckCategory.REQUIRED_FIELDS and i.severity == CheckSeverity.FAIL
+            i for i in result.items if i.category == CheckCategory.REQUIRED_FIELDS and i.severity == CheckSeverity.FAIL
         ]
         assert len(field_fails) >= 1
 
@@ -682,18 +668,18 @@ class TestPreDirectorChecklistConstraintMap:
         """블루프린트 씬 개수 검증"""
         checker = PreDirectorChecklist()
         # 씬이 2개뿐 (최소 3개 필요)
-        bp = json.dumps({
-            "integrated_scenario": "시나리오 " * 100,
-            "scene_breakdown": {
-                "scene1": "장면1",
-                "scene2": "장면2",
-            }
-        }, ensure_ascii=False)
+        bp = json.dumps(
+            {
+                "integrated_scenario": "시나리오 " * 100,
+                "scene_breakdown": {
+                    "scene1": "장면1",
+                    "scene2": "장면2",
+                },
+            },
+            ensure_ascii=False,
+        )
         result = checker.check(bp, "blueprint")
-        scene_fails = [
-            i for i in result.items
-            if i.name == "씬 개수" and i.severity == CheckSeverity.FAIL
-        ]
+        scene_fails = [i for i in result.items if i.name == "씬 개수" and i.severity == CheckSeverity.FAIL]
         assert len(scene_fails) >= 1
 
     def test_forbidden_patterns_detected(self):
@@ -701,10 +687,7 @@ class TestPreDirectorChecklistConstraintMap:
         checker = PreDirectorChecklist()
         manuscript = self._make_long_text_with_forbidden()
         result = checker.check(manuscript, "manuscript")
-        forbidden_fails = [
-            i for i in result.items
-            if i.category == CheckCategory.FORBIDDEN_PATTERNS
-        ]
+        forbidden_fails = [i for i in result.items if i.category == CheckCategory.FORBIDDEN_PATTERNS]
         assert len(forbidden_fails) > 0
 
     @staticmethod
@@ -748,8 +731,7 @@ class TestPreDirectorChecklistEmptyInput:
         """모두 통과 시 빈 피드백"""
         checker = PreDirectorChecklist()
         result = ChecklistResult(
-            passed=True, items=[], fail_count=0,
-            warning_count=0, summary="OK", blocking_reasons=[]
+            passed=True, items=[], fail_count=0, warning_count=0, summary="OK", blocking_reasons=[]
         )
         feedback = checker.get_feedback(result)
         assert feedback == ""
@@ -765,13 +747,13 @@ class TestPreDirectorChecklistEmptyInput:
                     name="최소 길이",
                     passed=False,
                     severity=CheckSeverity.FAIL,
-                    message="원고 길이 부족: 100자"
+                    message="원고 길이 부족: 100자",
                 )
             ],
             fail_count=1,
             warning_count=0,
             summary="실패",
-            blocking_reasons=["원고 길이 부족: 100자"]
+            blocking_reasons=["원고 길이 부족: 100자"],
         )
         feedback = checker.get_feedback(result)
         assert "차단 사유" in feedback
@@ -781,6 +763,7 @@ class TestPreDirectorChecklistEmptyInput:
 # ══════════════════════════════════════════════════════════════
 # Additional coverage tests
 # ══════════════════════════════════════════════════════════════
+
 
 class TestPreDirectorChecklistNarrativeFlow:
     """서사 흐름, 클리셰, 문장 다양성 추가 검증"""
@@ -808,7 +791,7 @@ class TestPreDirectorChecklistNarrativeFlow:
         # "그는"으로 시작하는 문장 10개 연속
         sentences = []
         for i in range(10):
-            sentences.append(f"그는 검을 들었다. 그는 적을 바라보았다. 그는 한 발 나아갔다.")
+            sentences.append("그는 검을 들었다. 그는 적을 바라보았다. 그는 한 발 나아갔다.")
         dialogue = '\n\n"공격해!" 그가 외쳤다. "막아!" 적이 말했다. "이겼다!" "졌다!"\n\n'
         full_text = dialogue + "\n\n".join(sentences) + dialogue * 10
         result = checker.check(full_text, "manuscript")
@@ -827,7 +810,7 @@ class TestPreDirectorChecklistNarrativeFlow:
         dialogue = '"전투다!" 그가 외쳤다. "받아라!" 적이 말했다. "이겼다!" "패배다!" "도망가!" '
         # 각 문단에 액션 키워드를 밀집시킴
         paragraph = dialogue + action_text * 3
-        full = ("\n\n".join([paragraph] * 15))
+        full = "\n\n".join([paragraph] * 15)
         # 3000자 이상 확보
         assert len(full) > 3000, f"Text length: {len(full)}"
         result = checker.check(full, "manuscript")
@@ -844,21 +827,25 @@ class TestContinuityArcLLMFailure:
         inspector.ask = MagicMock(side_effect=Exception("API error"))
         validator = ContinuityArcValidator(inspector)
 
-        prev_arcs = [{
-            "arc_no": 1,
-            "tactical_doc": "이전 내용 " * 30,
-            "joint_docs": {"final_location": "팽가"},
-            "status_shadow": {},
-            "state_constraints": {"arc_end_state": {"internal_energy": 80}},
-            "ep_start": 1, "ep_end": 5,
-        }]
+        prev_arcs = [
+            {
+                "arc_no": 1,
+                "tactical_doc": "이전 내용 " * 30,
+                "joint_docs": {"final_location": "팽가"},
+                "status_shadow": {},
+                "state_constraints": {"arc_end_state": {"internal_energy": 80}},
+                "ep_start": 1,
+                "ep_end": 5,
+            }
+        ]
         current_arc = {
             "arc_no": 2,
             "tactical_doc": "현재 내용 " * 30,
             "joint_docs": {},
             "status_shadow": {},
             "state_constraints": {"arc_start_state": {}},
-            "ep_start": 6, "ep_count": 5,
+            "ep_start": 6,
+            "ep_count": 5,
         }
 
         result = validator.inspect_arc(current_arc, prev_arcs=prev_arcs)
@@ -878,10 +865,7 @@ class TestContinuityManuscriptLLMFailure:
         manuscript = "현재 원고 내용입니다. " * 100
 
         result = validator.inspect_manuscript(
-            current_ep=2,
-            manuscript=manuscript,
-            blueprint={"scene_breakdown": {}},
-            prev_manuscripts=prev
+            current_ep=2, manuscript=manuscript, blueprint={"scene_breakdown": {}}, prev_manuscripts=prev
         )
         assert result["decision"] == "PASS"
 
@@ -911,10 +895,7 @@ class TestPreDirectorChecklistDialogueRatio:
         # 대화 없이 순수 서술만
         text = ("서술만 있는 문단입니다. 주인공은 걸어갔다. 바람이 불었다. 풍경이 아름다웠다.\n\n") * 30
         result = checker.check(text, "manuscript")
-        dialogue_fails = [
-            i for i in result.items
-            if i.category == CheckCategory.STRUCTURE and "대화" in i.message
-        ]
+        dialogue_fails = [i for i in result.items if i.category == CheckCategory.STRUCTURE and "대화" in i.message]
         assert len(dialogue_fails) > 0
 
     def test_balanced_dialogue_passes(self):
@@ -922,10 +903,7 @@ class TestPreDirectorChecklistDialogueRatio:
         checker = PreDirectorChecklist()
         text = TestPreDirectorChecklistGeneration._make_valid_manuscript()
         result = checker.check(text, "manuscript")
-        dialogue_items = [
-            i for i in result.items
-            if i.category == CheckCategory.STRUCTURE and "대화" in i.name
-        ]
+        dialogue_items = [i for i in result.items if i.category == CheckCategory.STRUCTURE and "대화" in i.name]
         # 적절한 비율이면 FAIL이 아님
         for item in dialogue_items:
             if item.severity == CheckSeverity.PASS:

@@ -7,9 +7,8 @@ StateTracker에서 resolved_plots 및 entity_name_registry 관련 메서드만 �
 모든 공유 상태는 self.tracker를 통해 접근.
 """
 
-import re
 import logging
-from typing import Dict, List, Optional
+import re
 
 # ═══════════════════════════════════════════════════════════════
 # [V66.1] C-2: Module-level compiled regex patterns
@@ -17,38 +16,39 @@ from typing import Dict, List, Optional
 # ═══════════════════════════════════════════════════════════════
 
 # --- check_destroyed_entity_in_manuscript (동적 entity 이름이므로 compile은 유지하되, 고정 접두/접미 부분만 상수화) ---
-_RE_DESTROYED_ACTIVITY_SUFFIX = r'[이가은는에서의]?\s*(?:공격|방어|전투|활동|지원|파견|출격|모집|개방)'
-_RE_DESTROYED_REVIVE_PREFIX = r'(?:건재|부활|재건)[한된]\s*'
+_RE_DESTROYED_ACTIVITY_SUFFIX = r"[이가은는에서의]?\s*(?:공격|방어|전투|활동|지원|파견|출격|모집|개방)"
+_RE_DESTROYED_REVIVE_PREFIX = r"(?:건재|부활|재건)[한된]\s*"
 
 # --- check_time_consistency ---
 _RE_RAPID_RECOVERY = re.compile(
-    r'중상.{0,100}?(?:다음\s*날|이튿날|하루\s*만에).{0,60}?(?:완치|멀쩡|회복|낫|치유)',
-    re.DOTALL
+    r"중상.{0,100}?(?:다음\s*날|이튿날|하루\s*만에).{0,60}?(?:완치|멀쩡|회복|낫|치유)", re.DOTALL
 )
 _RE_CRITICAL_RECOVERY = re.compile(
-    r'위독.{0,100}?(?:다음\s*날|이튿날|하루|사흘).{0,60}?(?:완치|멀쩡|회복|일어서|걸어)',
-    re.DOTALL
+    r"위독.{0,100}?(?:다음\s*날|이튿날|하루|사흘).{0,60}?(?:완치|멀쩡|회복|일어서|걸어)", re.DOTALL
 )
 _RE_IMPOSSIBLE_TRAVEL = re.compile(
-    r'(\d+)\s*일\s*(?:거리|걸리는|소요).{0,60}?(?:시간\s*만에|순식간|단숨에|눈\s*깜짝할\s*사이)',
-    re.DOTALL
+    r"(\d+)\s*일\s*(?:거리|걸리는|소요).{0,60}?(?:시간\s*만에|순식간|단숨에|눈\s*깜짝할\s*사이)", re.DOTALL
 )
 
 # --- _regex_extract_major_items ---
 _RE_ITEM_ACQUIRE = [
-    re.compile(r'([가-힣]{2,10}(?:검|도|창|궁|부|낫|갑|패|환|단|서|전|경|보|인))[을를]?\s*(?:획득|입수|얻|손에\s*넣|전수받|발견)'),
-    re.compile(r'(?:획득|입수|발견)[한하]?\s*([가-힣]{2,10}(?:검|도|창|궁|부|낫|갑|패|환|단|서|전|경|보|인))'),
+    re.compile(
+        r"([가-힣]{2,10}(?:검|도|창|궁|부|낫|갑|패|환|단|서|전|경|보|인))[을를]?\s*(?:획득|입수|얻|손에\s*넣|전수받|발견)"
+    ),
+    re.compile(r"(?:획득|입수|발견)[한하]?\s*([가-힣]{2,10}(?:검|도|창|궁|부|낫|갑|패|환|단|서|전|경|보|인))"),
 ]
 _RE_ITEM_LOSE = [
-    re.compile(r'([가-힣]{2,10}(?:검|도|창|궁|부|낫|갑|패|환|단|서|전|경|보|인))[을를]?\s*(?:잃|분실|파괴|소모|사용|부서|깨뜨)'),
-    re.compile(r'(?:잃어버린|파괴된|소모된)\s*([가-힣]{2,10}(?:검|도|창|궁|부|낫|갑|패|환|단|서|전|경|보|인))'),
+    re.compile(
+        r"([가-힣]{2,10}(?:검|도|창|궁|부|낫|갑|패|환|단|서|전|경|보|인))[을를]?\s*(?:잃|분실|파괴|소모|사용|부서|깨뜨)"
+    ),
+    re.compile(r"(?:잃어버린|파괴된|소모된)\s*([가-힣]{2,10}(?:검|도|창|궁|부|낫|갑|패|환|단|서|전|경|보|인))"),
 ]
 
 # --- _regex_extract_commitments ---
 _RE_COMMIT = [
-    re.compile(r'([가-힣]{2,10})[에와과]게?\s*(?:약속|맹세|서약|다짐)'),
-    re.compile(r'(?:반드시|기필코|꼭)\s*(.{2,20}?)(?:하겠|할\s*것|해주겠|갚겠)'),
-    re.compile(r'([가-힣]{2,10})[에의]게?\s*(?:빚|은혜|보답|보은)'),
+    re.compile(r"([가-힣]{2,10})[에와과]게?\s*(?:약속|맹세|서약|다짐)"),
+    re.compile(r"(?:반드시|기필코|꼭)\s*(.{2,20}?)(?:하겠|할\s*것|해주겠|갚겠)"),
+    re.compile(r"([가-힣]{2,10})[에의]게?\s*(?:빚|은혜|보답|보은)"),
 ]
 
 
@@ -58,27 +58,27 @@ class StateTrackerPlots:
     # [V66.1] F-1: 한국어 시간 표현 regex 패턴
     _TIME_ELAPSED_PATTERNS = [
         # "며칠", "몇 달", "수 년" 등
-        re.compile(r'(며칠|몇\s*[달일년주]|수\s*[달일년주]|하루|이틀|사흘|나흘|닷새)'),
+        re.compile(r"(며칠|몇\s*[달일년주]|수\s*[달일년주]|하루|이틀|사흘|나흘|닷새)"),
         # "한 달 후", "세 달 뒤", "두 해 후"
-        re.compile(r'([한두세네다여일이삼사오육칠팔구십백]\s*[달일년주시개월]\s*(?:후|뒤|전|만에|이\s*지나))'),
+        re.compile(r"([한두세네다여일이삼사오육칠팔구십백]\s*[달일년주시개월]\s*(?:후|뒤|전|만에|이\s*지나))"),
         # "3일 후", "7일 뒤", "2개월 후"
-        re.compile(r'(\d+\s*(?:일|개월|달|년|주|시간|분)\s*(?:후|뒤|전|만에|이?\s*지나))'),
+        re.compile(r"(\d+\s*(?:일|개월|달|년|주|시간|분)\s*(?:후|뒤|전|만에|이?\s*지나))"),
         # "다음 날", "그 다음날", "이튿날"
-        re.compile(r'(다음\s*날|그\s*다음\s*날|이튿날|사흘\s*후|닷새\s*후)'),
+        re.compile(r"(다음\s*날|그\s*다음\s*날|이튿날|사흘\s*후|닷새\s*후)"),
     ]
 
     _TIME_SEASON_PATTERNS = [
-        re.compile(r'(봄|여름|가을|겨울|초봄|초여름|초가을|초겨울|늦봄|늦여름|늦가을|늦겨울|한여름|한겨울)'),
+        re.compile(r"(봄|여름|가을|겨울|초봄|초여름|초가을|초겨울|늦봄|늦여름|늦가을|늦겨울|한여름|한겨울)"),
     ]
 
     _TIME_OF_DAY_PATTERNS = [
-        re.compile(r'(새벽|아침|오전|정오|오후|저녁|밤|한밤중|자정|해질\s*무렵|해뜰\s*무렵|황혼|동트기\s*전)'),
+        re.compile(r"(새벽|아침|오전|정오|오후|저녁|밤|한밤중|자정|해질\s*무렵|해뜰\s*무렵|황혼|동트기\s*전)"),
     ]
 
     _TIME_SPECIFIC_DATE_PATTERNS = [
         # 장르별 표현: "대회 3일차", "각성 후 15일차", "마왕 부활 후 2년" 등
-        re.compile(r'(\S+\s*\d+\s*일차)'),
-        re.compile(r'(\d{4}년\s*\d{1,2}월)'),
+        re.compile(r"(\S+\s*\d+\s*일차)"),
+        re.compile(r"(\d{4}년\s*\d{1,2}월)"),
     ]
 
     def __init__(self, tracker) -> None:
@@ -88,7 +88,7 @@ class StateTrackerPlots:
     # [V62.7] 완결된 플롯 추적
     # ═══════════════════════════════════════════════════════════════
 
-    def extract_resolved_plots_from_arc(self, arc: dict) -> List[Dict]:
+    def extract_resolved_plots_from_arc(self, arc: dict) -> list[dict]:
         """
         [V62.7] Arc에서 resolved_plots 추출 및 누적.
         state_changes.resolved_plots 필드에서 직접 읽기.
@@ -106,7 +106,7 @@ class StateTrackerPlots:
                             "plot": str(plot["plot"]),
                             "resolution": str(plot.get("resolution", "")),
                             "episode": plot.get("episode", 0),
-                            "arc_no": arc_no
+                            "arc_no": arc_no,
                         }
                         plots.append(entry)
                         # 누적 (중복 방지: 같은 plot+arc_no 조합)
@@ -124,9 +124,9 @@ class StateTrackerPlots:
         lines = ["[V62.7] 완결된 플롯 - 동일/유사 갈등 재생성 금지:"]
         for p in self.tracker.resolved_plots:
             lines.append(
-                f"  - [{p.get('plot','')}] "
-                f"Arc {p.get('arc_no','?')} Ep{p.get('episode','?')}: "
-                f"{p.get('resolution','')}"
+                f"  - [{p.get('plot', '')}] "
+                f"Arc {p.get('arc_no', '?')} Ep{p.get('episode', '?')}: "
+                f"{p.get('resolution', '')}"
             )
         return "\n".join(lines)
 
@@ -134,7 +134,7 @@ class StateTrackerPlots:
     # [V66] 조직/장소 파괴 추적
     # ═══════════════════════════════════════════════════════════════
 
-    def extract_entity_destructions_from_arc(self, arc: dict) -> List[Dict]:
+    def extract_entity_destructions_from_arc(self, arc: dict) -> list[dict]:
         """[V66] Arc에서 entity_destructions 추출 및 누적."""
         arc_no = arc.get("arc_no", 0)
         results = []
@@ -167,7 +167,7 @@ class StateTrackerPlots:
         if not any(e.get("name") == name for e in self.tracker.entity_destructions):
             self.tracker.entity_destructions.append(entry)
 
-    def check_destroyed_entity_in_manuscript(self, content: str) -> List[Dict]:
+    def check_destroyed_entity_in_manuscript(self, content: str) -> list[dict]:
         """[V66] 파괴된 조직/장소가 원고에서 활동 중으로 등장하는지 검사."""
         warnings = []
         if not self.tracker.entity_destructions or not content:
@@ -186,13 +186,15 @@ class StateTrackerPlots:
             ]
             for pat in activity_patterns:
                 if pat.search(content):
-                    warnings.append({
-                        "entity": name,
-                        "type": entity.get("type", "?"),
-                        "destroyed_arc": entity.get("arc_no", "?"),
-                        "severity": "WARNING",
-                        "message": f"파괴된 {entity.get('type', '엔티티')} '{name}'이(가) 활동 중으로 묘사됨",
-                    })
+                    warnings.append(
+                        {
+                            "entity": name,
+                            "type": entity.get("type", "?"),
+                            "destroyed_arc": entity.get("arc_no", "?"),
+                            "severity": "WARNING",
+                            "message": f"파괴된 {entity.get('type', '엔티티')} '{name}'이(가) 활동 중으로 묘사됨",
+                        }
+                    )
                     break
         return warnings
 
@@ -203,8 +205,7 @@ class StateTrackerPlots:
         lines = ["[V66] 파괴된 조직/장소 - 활동 상태로 재등장 금지:"]
         for e in self.tracker.entity_destructions:
             lines.append(
-                f"  - {e.get('name','')} ({e.get('type','?')}) "
-                f"Arc {e.get('arc_no','?')}: {e.get('cause','')}"
+                f"  - {e.get('name', '')} ({e.get('type', '?')}) Arc {e.get('arc_no', '?')}: {e.get('cause', '')}"
             )
         return "\n".join(lines)
 
@@ -212,8 +213,9 @@ class StateTrackerPlots:
     # [V66] 아이템 상태 레지스트리
     # ═══════════════════════════════════════════════════════════════
 
-    def register_item_state(self, item_name: str, arc_no: int, description: str = "",
-                           source: str = "", condition: str = "정상"):
+    def register_item_state(
+        self, item_name: str, arc_no: int, description: str = "", source: str = "", condition: str = "정상"
+    ):
         """[V66] 아이템 상태 등록/업데이트."""
         if not item_name or len(item_name) < 2:
             return
@@ -232,7 +234,7 @@ class StateTrackerPlots:
                 entry["prev_arc"] = existing.get("arc_no", 0)
         self.tracker.item_state_registry[item_name] = entry
 
-    def extract_item_states_from_arc(self, arc: dict) -> List[Dict]:
+    def extract_item_states_from_arc(self, arc: dict) -> list[dict]:
         """
         [V66] Arc의 state_changes.major_items에서 아이템 상태 추출.
         [V66.1] F-3: state_changes가 비어있으면 regex 폴백 사용.
@@ -252,7 +254,8 @@ class StateTrackerPlots:
                         if action in ("분실", "파괴", "소모"):
                             condition = action
                         self.register_item_state(
-                            name, arc_no,
+                            name,
+                            arc_no,
                             description=item.get("description", ""),
                             source=item.get("source", ""),
                             condition=condition,
@@ -310,7 +313,7 @@ class StateTrackerPlots:
             entry["prev_status"] = existing.get("status", "")
         self.tracker.active_plots[plot_name] = entry
 
-    def update_plot_mentions_from_arc(self, arc: dict) -> List[Dict]:
+    def update_plot_mentions_from_arc(self, arc: dict) -> list[dict]:
         """[V66] Arc에서 언급된 플롯들의 last_mention_arc 갱신 + 신규 플롯 등록."""
         arc_no = arc.get("arc_no", 0)
         updated = []
@@ -343,7 +346,7 @@ class StateTrackerPlots:
 
         return updated
 
-    def check_suspended_plots(self, current_arc_no: int, threshold: int = 3) -> List[Dict]:
+    def check_suspended_plots(self, current_arc_no: int, threshold: int = 3) -> list[dict]:
         """[V66] 3+ Arc 방치된 플롯 감지 → WARNING."""
         warnings = []
         for plot_name, info in self.tracker.active_plots.items():
@@ -353,13 +356,15 @@ class StateTrackerPlots:
             gap = current_arc_no - last_mention
             if gap >= threshold:
                 info["status"] = "suspended"
-                warnings.append({
-                    "plot": plot_name,
-                    "last_mention_arc": last_mention,
-                    "gap": gap,
-                    "severity": "WARNING",
-                    "message": f"플롯 '{plot_name}'이 {gap}개 Arc 동안 미언급 (Arc {last_mention} 이후)",
-                })
+                warnings.append(
+                    {
+                        "plot": plot_name,
+                        "last_mention_arc": last_mention,
+                        "gap": gap,
+                        "severity": "WARNING",
+                        "message": f"플롯 '{plot_name}'이 {gap}개 Arc 동안 미언급 (Arc {last_mention} 이후)",
+                    }
+                )
         return warnings
 
     def get_plot_suspension_summary(self, current_arc_no: int) -> str:
@@ -396,8 +401,7 @@ class StateTrackerPlots:
     # [V66.1] F-1: 시간선 추적 시스템
     # ═══════════════════════════════════════════════════════════════
 
-    def register_time_marker(self, arc_no: int, episode: int,
-                             marker_type: str, description: str):
+    def register_time_marker(self, arc_no: int, episode: int, marker_type: str, description: str):
         """
         [V66.1] 시간 마커 등록.
 
@@ -407,9 +411,7 @@ class StateTrackerPlots:
             marker_type: "elapsed_time" | "season" | "time_of_day" | "specific_date"
             description: 시간 표현 (예: "3일 경과", "겨울", "새벽")
         """
-        if not description or marker_type not in (
-            "elapsed_time", "season", "time_of_day", "specific_date"
-        ):
+        if not description or marker_type not in ("elapsed_time", "season", "time_of_day", "specific_date"):
             return
 
         marker = {
@@ -421,9 +423,11 @@ class StateTrackerPlots:
 
         # 중복 방지: 같은 arc+episode+description 조합
         for existing in self.tracker.in_world_timeline:
-            if (existing.get("arc_no") == arc_no
-                    and existing.get("episode") == episode
-                    and existing.get("description") == marker["description"]):
+            if (
+                existing.get("arc_no") == arc_no
+                and existing.get("episode") == episode
+                and existing.get("description") == marker["description"]
+            ):
                 return
 
         self.tracker.in_world_timeline.append(marker)
@@ -432,7 +436,7 @@ class StateTrackerPlots:
         while len(self.tracker.in_world_timeline) > 100:
             self.tracker.in_world_timeline.pop(0)
 
-    def extract_time_markers_from_arc(self, arc_data: dict) -> List[Dict]:
+    def extract_time_markers_from_arc(self, arc_data: dict) -> list[dict]:
         """
         [V66.1] Arc에서 시간 마커 추출 및 등록.
         우선순위: state_changes["time_markers"] > regex 폴백.
@@ -458,10 +462,7 @@ class StateTrackerPlots:
                         episode = tm.get("episode", arc_no)
                         if desc:
                             self.register_time_marker(arc_no, episode, m_type, desc)
-                            results.append({
-                                "arc_no": arc_no, "episode": episode,
-                                "type": m_type, "description": desc
-                            })
+                            results.append({"arc_no": arc_no, "episode": episode, "type": m_type, "description": desc})
                 if results:
                     return results
 
@@ -478,40 +479,28 @@ class StateTrackerPlots:
             for match in pattern.finditer(tactical):
                 desc = match.group(1).strip()
                 self.register_time_marker(arc_no, arc_no, "elapsed_time", desc)
-                results.append({
-                    "arc_no": arc_no, "episode": arc_no,
-                    "type": "elapsed_time", "description": desc
-                })
+                results.append({"arc_no": arc_no, "episode": arc_no, "type": "elapsed_time", "description": desc})
 
         # season 패턴
         for pattern in self._TIME_SEASON_PATTERNS:
             for match in pattern.finditer(tactical):
                 desc = match.group(1).strip()
                 self.register_time_marker(arc_no, arc_no, "season", desc)
-                results.append({
-                    "arc_no": arc_no, "episode": arc_no,
-                    "type": "season", "description": desc
-                })
+                results.append({"arc_no": arc_no, "episode": arc_no, "type": "season", "description": desc})
 
         # time_of_day 패턴
         for pattern in self._TIME_OF_DAY_PATTERNS:
             for match in pattern.finditer(tactical):
                 desc = match.group(1).strip()
                 self.register_time_marker(arc_no, arc_no, "time_of_day", desc)
-                results.append({
-                    "arc_no": arc_no, "episode": arc_no,
-                    "type": "time_of_day", "description": desc
-                })
+                results.append({"arc_no": arc_no, "episode": arc_no, "type": "time_of_day", "description": desc})
 
         # specific_date 패턴
         for pattern in self._TIME_SPECIFIC_DATE_PATTERNS:
             for match in pattern.finditer(tactical):
                 desc = match.group(1).strip()
                 self.register_time_marker(arc_no, arc_no, "specific_date", desc)
-                results.append({
-                    "arc_no": arc_no, "episode": arc_no,
-                    "type": "specific_date", "description": desc
-                })
+                results.append({"arc_no": arc_no, "episode": arc_no, "type": "specific_date", "description": desc})
 
         return results
 
@@ -543,8 +532,7 @@ class StateTrackerPlots:
 
         return "\n".join(lines)
 
-    def check_time_consistency(self, manuscript: str,
-                               current_timeline: Optional[List[Dict]] = None) -> List[Dict]:
+    def check_time_consistency(self, manuscript: str, current_timeline: list[dict] | None = None) -> list[dict]:
         """
         [V66.1] 원고 내 시간 모순 검사.
 
@@ -569,24 +557,28 @@ class StateTrackerPlots:
         # 1) 급속 회복 검사: "중상" + "다음 날" + "완치/멀쩡/회복" 패턴
         # [V66.1] C-2: module-level compiled pattern
         if _RE_RAPID_RECOVERY.search(manuscript):
-            warnings.append({
-                "type": "rapid_recovery",
-                "severity": "WARNING",
-                "description": "중상 상태에서 하루 만에 완치됨 -- 치료 과정 묘사 필요",
-            })
+            warnings.append(
+                {
+                    "type": "rapid_recovery",
+                    "severity": "WARNING",
+                    "description": "중상 상태에서 하루 만에 완치됨 -- 치료 과정 묘사 필요",
+                }
+            )
 
         # 위독 + 단기 회복
         # [V66.1] C-2: module-level compiled pattern
         if _RE_CRITICAL_RECOVERY.search(manuscript):
-            warnings.append({
-                "type": "rapid_recovery",
-                "severity": "CRITICAL",
-                "description": "위독 상태에서 단기간에 회복됨 -- 비현실적 회복",
-            })
+            warnings.append(
+                {
+                    "type": "rapid_recovery",
+                    "severity": "CRITICAL",
+                    "description": "위독 상태에서 단기간에 회복됨 -- 비현실적 회복",
+                }
+            )
 
         # 2) 계절 모순 검사: 최근 타임라인의 계절과 원고 내 계절 표현 비교
         recent_seasons = set()
-        for m in (timeline or []):
+        for m in timeline or []:
             if m.get("type") == "season":
                 recent_seasons.add(m.get("description", ""))
 
@@ -601,22 +593,26 @@ class StateTrackerPlots:
             contradicting = season_contradictions.get(season, [])
             for contra in contradicting:
                 if contra in manuscript:
-                    warnings.append({
-                        "type": "season_contradiction",
-                        "severity": "WARNING",
-                        "description": f"시간선에 '{season}'으로 기록되었으나 원고에 '{contra}' 표현 등장",
-                    })
+                    warnings.append(
+                        {
+                            "type": "season_contradiction",
+                            "severity": "WARNING",
+                            "description": f"시간선에 '{season}'으로 기록되었으나 원고에 '{contra}' 표현 등장",
+                        }
+                    )
 
         # 3) 불가능한 이동 시간: "N일 거리" + "시간/순식간/단숨" 패턴
         # [V66.1] C-2: module-level compiled pattern
         for match in _RE_IMPOSSIBLE_TRAVEL.finditer(manuscript):
             days = int(match.group(1))
             if days >= 2:
-                warnings.append({
-                    "type": "impossible_travel",
-                    "severity": "WARNING",
-                    "description": f"{days}일 거리를 순식간에 이동 -- 이동 수단 설명 필요",
-                })
+                warnings.append(
+                    {
+                        "type": "impossible_travel",
+                        "severity": "WARNING",
+                        "description": f"{days}일 거리를 순식간에 이동 -- 이동 수단 설명 필요",
+                    }
+                )
 
         return warnings
 
@@ -624,7 +620,7 @@ class StateTrackerPlots:
     # [V66.1] F-3: 아이템 regex 폴백
     # ═══════════════════════════════════════════════════════════════
 
-    def _regex_extract_major_items(self, tactical_doc: str) -> List[Dict]:
+    def _regex_extract_major_items(self, tactical_doc: str) -> list[dict]:
         """
         [V66.1] tactical_doc에서 주요 아이템 획득/소모를 regex로 추출.
         state_changes.major_items가 비어있을 때 폴백으로 사용.
@@ -645,7 +641,7 @@ class StateTrackerPlots:
         acquire_patterns = _RE_ITEM_ACQUIRE
         lose_patterns = _RE_ITEM_LOSE
 
-        exclude_words = {'주인공', '상대방', '자신', '적수', '적', '그', '그녀'}
+        exclude_words = {"주인공", "상대방", "자신", "적수", "적", "그", "그녀"}
 
         for pattern in acquire_patterns:
             for match in pattern.finditer(tactical_doc):
@@ -667,8 +663,9 @@ class StateTrackerPlots:
     # [V66.1] 약속/맹세(Commitment) 추적
     # ═══════════════════════════════════════════════════════════════
 
-    def register_commitment(self, arc_no: int, episode: int, parties: List[str],
-                            description: str, deadline_hint: str = ""):
+    def register_commitment(
+        self, arc_no: int, episode: int, parties: list[str], description: str, deadline_hint: str = ""
+    ):
         """
         [V66.1] 약속/맹세 등록.
 
@@ -684,8 +681,7 @@ class StateTrackerPlots:
 
         # 중복 방지: 같은 description + arc_no 조합
         for existing in self.tracker.pending_commitments:
-            if (existing.get("description") == description
-                    and existing.get("arc_no") == arc_no):
+            if existing.get("description") == description and existing.get("arc_no") == arc_no:
                 return
 
         entry = {
@@ -702,11 +698,10 @@ class StateTrackerPlots:
         # [V66.1] C-3: 해결된(fulfilled/broken) 약속 주기적 정리 (50개 초과 시)
         if len(self.tracker.pending_commitments) > 50:
             self.tracker.pending_commitments = [
-                c for c in self.tracker.pending_commitments
-                if c.get("status") == "pending"
+                c for c in self.tracker.pending_commitments if c.get("status") == "pending"
             ]
 
-    def extract_commitments_from_arc(self, arc_data: dict) -> List[Dict]:
+    def extract_commitments_from_arc(self, arc_data: dict) -> list[dict]:
         """
         [V66.1] Arc에서 약속/맹세 추출 및 등록.
         우선순위: state_changes["commitments"] > regex 폴백.
@@ -735,14 +730,16 @@ class StateTrackerPlots:
                         description = str(c["description"])
                         episode = c.get("episode", arc_no)
                         deadline = str(c.get("deadline_hint", ""))
-                        self.register_commitment(
-                            arc_no, episode, parties, description, deadline
+                        self.register_commitment(arc_no, episode, parties, description, deadline)
+                        results.append(
+                            {
+                                "parties": parties,
+                                "description": description,
+                                "episode": episode,
+                                "deadline_hint": deadline,
+                                "arc_no": arc_no,
+                            }
                         )
-                        results.append({
-                            "parties": parties, "description": description,
-                            "episode": episode, "deadline_hint": deadline,
-                            "arc_no": arc_no
-                        })
                 if results:
                     return results
 
@@ -756,16 +753,13 @@ class StateTrackerPlots:
 
         regex_commitments = self._regex_extract_commitments(tactical)
         for rc in regex_commitments:
-            self.register_commitment(
-                arc_no, 0, rc.get("parties", []),
-                rc["description"], rc.get("deadline_hint", "")
-            )
+            self.register_commitment(arc_no, 0, rc.get("parties", []), rc["description"], rc.get("deadline_hint", ""))
             rc["arc_no"] = arc_no
             results.append(rc)
 
         return results
 
-    def _regex_extract_commitments(self, tactical_doc: str) -> List[Dict]:
+    def _regex_extract_commitments(self, tactical_doc: str) -> list[dict]:
         """
         [V66.1] tactical_doc에서 약속/맹세를 regex로 추출.
         state_changes.commitments가 비어있을 때 폴백으로 사용.
@@ -793,19 +787,21 @@ class StateTrackerPlots:
                 seen.add(desc)
 
                 # 관련자 추출 시도
-                npc_match = re.match(r'([가-힣]{2,10})', match.group(1) if match.lastindex else "")
+                npc_match = re.match(r"([가-힣]{2,10})", match.group(1) if match.lastindex else "")
                 parties = ["주인공"]
                 if npc_match:
                     npc = npc_match.group(1)
-                    if npc not in ('주인공', '자신', '적', '상대'):
+                    if npc not in ("주인공", "자신", "적", "상대"):
                         parties.append(npc)
 
-                results.append({
-                    "parties": parties,
-                    "description": desc,
-                    "episode": 0,
-                    "deadline_hint": "",
-                })
+                results.append(
+                    {
+                        "parties": parties,
+                        "description": desc,
+                        "episode": 0,
+                        "deadline_hint": "",
+                    }
+                )
 
         return results
 
@@ -822,8 +818,7 @@ class StateTrackerPlots:
         for commitment in self.tracker.pending_commitments:
             if commitment.get("status") != "pending":
                 continue
-            if description in commitment.get("description", "") or \
-               commitment.get("description", "") in description:
+            if description in commitment.get("description", "") or commitment.get("description", "") in description:
                 commitment["status"] = "fulfilled"
                 logging.info(f"[V66.1] 약속 이행: {commitment['description']}")
                 return True
@@ -868,13 +863,13 @@ class StateTrackerPlots:
                     "type": entity_type,
                     "first_arc": arc_no,
                     "last_seen_arc": arc_no,
-                    "aliases": []  # [V70] set→list (JSON 직렬화 안전)
+                    "aliases": [],  # [V70] set→list (JSON 직렬화 안전)
                 }
                 # [V64 P2-4] LRU eviction
                 while len(self.tracker.entity_name_registry) > self.tracker._entity_registry_max_size:
                     self.tracker.entity_name_registry.popitem(last=False)
 
-    def load_entities_from_entity_registry(self, entity_registry: Dict, arc_no: int):
+    def load_entities_from_entity_registry(self, entity_registry: dict, arc_no: int):
         """[V62.7] StateExtractor의 entity_registry에서 비-NPC 엔티티를 로드"""
         if not entity_registry:
             return
@@ -898,7 +893,7 @@ class StateTrackerPlots:
                     if name and len(name) >= 2:
                         self.register_entity_name(name, entity_type, arc_no)
 
-    def check_entity_name_consistency(self, content: str, arc_no: int = 0) -> List[Dict]:
+    def check_entity_name_consistency(self, content: str, arc_no: int = 0) -> list[dict]:
         """
         [V62.7] 비-NPC 엔티티 명칭 일관성 검사.
         등록된 엔티티 이름과 유사하지만 다른 이름이 등장하면 WARNING.
@@ -919,7 +914,7 @@ class StateTrackerPlots:
             prefix_len = max(2, int(len(canonical) * 0.6))
             prefix = canonical[:prefix_len]
 
-            pattern = re.compile(re.escape(prefix) + r'[가-힣]{1,4}')
+            pattern = re.compile(re.escape(prefix) + r"[가-힣]{1,4}")
             matches = pattern.findall(content)
             for match in matches:
                 if match == canonical or match in seen_matches:  # [V70] 문자열 중복 체크
@@ -932,11 +927,13 @@ class StateTrackerPlots:
                     if key not in checked:
                         checked.add(key)
                         seen_matches.add(match)  # [V70]
-                        warnings.append({
-                            "entity": canonical,
-                            "variant": match,
-                            "entity_type": info.get("type", "?"),
-                            "first_arc": info.get("first_arc", 0),
-                            "severity": "WARNING",
-                        })
+                        warnings.append(
+                            {
+                                "entity": canonical,
+                                "variant": match,
+                                "entity_type": info.get("type", "?"),
+                                "first_arc": info.get("first_arc", 0),
+                                "severity": "WARNING",
+                            }
+                        )
         return warnings

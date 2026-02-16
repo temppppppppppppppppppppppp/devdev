@@ -17,49 +17,52 @@
     warnings = tracker.check_consistency(character_name, dialogue)
 """
 
-from dataclasses import dataclass, field
-import logging
-from typing import List, Dict, Any, Optional, Set, Tuple
-from collections import defaultdict
-from enum import Enum
-import re
 import json
+import logging
+import re
+from collections import defaultdict
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any
 
 
 class VoiceStyle(Enum):
     """말투 스타일"""
-    FORMAL = "formal"           # 정중체 (존댓말)
-    INFORMAL = "informal"       # 반말
-    ARCHAIC = "archaic"         # 고어체 (무협용)
-    CRUDE = "crude"             # 거친 말투
-    NOBLE = "noble"             # 귀족/양반 말투
-    MARTIAL = "martial"         # 무인 말투
-    SCHOLARLY = "scholarly"     # 학자 말투
-    MERCHANT = "merchant"       # 상인 말투
+
+    FORMAL = "formal"  # 정중체 (존댓말)
+    INFORMAL = "informal"  # 반말
+    ARCHAIC = "archaic"  # 고어체 (무협용)
+    CRUDE = "crude"  # 거친 말투
+    NOBLE = "noble"  # 귀족/양반 말투
+    MARTIAL = "martial"  # 무인 말투
+    SCHOLARLY = "scholarly"  # 학자 말투
+    MERCHANT = "merchant"  # 상인 말투
 
 
 @dataclass
 class VoicePattern:
     """말투 패턴"""
-    endings: List[str] = field(default_factory=list)       # 문장 종결어미
-    honorifics: bool = True                                 # 존칭 사용 여부
-    exclamations: List[str] = field(default_factory=list)  # 감탄사
-    filler_words: List[str] = field(default_factory=list)  # 말버릇
-    vocabulary_level: str = "normal"                        # 어휘 수준 (low/normal/high)
-    sentence_length: str = "normal"                         # 문장 길이 (short/normal/long)
-    characteristic_phrases: List[str] = field(default_factory=list)  # 특징적 표현
+
+    endings: list[str] = field(default_factory=list)  # 문장 종결어미
+    honorifics: bool = True  # 존칭 사용 여부
+    exclamations: list[str] = field(default_factory=list)  # 감탄사
+    filler_words: list[str] = field(default_factory=list)  # 말버릇
+    vocabulary_level: str = "normal"  # 어휘 수준 (low/normal/high)
+    sentence_length: str = "normal"  # 문장 길이 (short/normal/long)
+    characteristic_phrases: list[str] = field(default_factory=list)  # 특징적 표현
 
 
 @dataclass
 class CharacterVoiceProfile:
     """캐릭터 음성 프로필"""
+
     name: str
     style: VoiceStyle = VoiceStyle.INFORMAL
     pattern: VoicePattern = field(default_factory=VoicePattern)
-    sample_dialogues: List[str] = field(default_factory=list)  # 대표 대사 샘플
-    dialogue_count: int = 0                                     # 분석된 대사 수
-    consistency_score: float = 1.0                              # 일관성 점수 (0-1)
-    last_seen_episode: int = 0                                  # 마지막 등장 화
+    sample_dialogues: list[str] = field(default_factory=list)  # 대표 대사 샘플
+    dialogue_count: int = 0  # 분석된 대사 수
+    consistency_score: float = 1.0  # 일관성 점수 (0-1)
+    last_seen_episode: int = 0  # 마지막 등장 화
 
 
 class CharacterVoiceTracker:
@@ -67,30 +70,19 @@ class CharacterVoiceTracker:
 
     # 문장 종결어미 패턴
     ENDING_PATTERNS = {
-        VoiceStyle.FORMAL: [
-            r"습니다[.!?]?$", r"습니까[.!?]?$", r"세요[.!?]?$",
-            r"시오[.!?]?$", r"오[.!?]?$"
-        ],
-        VoiceStyle.INFORMAL: [
-            r"야[.!?]?$", r"지[.!?]?$", r"어[.!?]?$", r"냐[.!?]?$",
-            r"해[.!?]?$", r"군[.!?]?$"
-        ],
+        VoiceStyle.FORMAL: [r"습니다[.!?]?$", r"습니까[.!?]?$", r"세요[.!?]?$", r"시오[.!?]?$", r"오[.!?]?$"],
+        VoiceStyle.INFORMAL: [r"야[.!?]?$", r"지[.!?]?$", r"어[.!?]?$", r"냐[.!?]?$", r"해[.!?]?$", r"군[.!?]?$"],
         VoiceStyle.ARCHAIC: [
-            r"하오[.!?]?$", r"시오[.!?]?$", r"리라[.!?]?$",
-            r"로다[.!?]?$", r"구나[.!?]?$", r"도다[.!?]?$"
+            r"하오[.!?]?$",
+            r"시오[.!?]?$",
+            r"리라[.!?]?$",
+            r"로다[.!?]?$",
+            r"구나[.!?]?$",
+            r"도다[.!?]?$",
         ],
-        VoiceStyle.CRUDE: [
-            r"냐[.!?]?$", r"냐고[.!?]?$", r"놈[아아]?[.!?]?$",
-            r"새끼[.!?]?$", r"씨[.!?]?$"
-        ],
-        VoiceStyle.NOBLE: [
-            r"하오[.!?]?$", r"것이오[.!?]?$", r"이시다[.!?]?$",
-            r"거라[.!?]?$", r"허허[.!?]?$"
-        ],
-        VoiceStyle.MARTIAL: [
-            r"이다[.!?]?$", r"도다[.!?]?$", r"하라[.!?]?$",
-            r"하겠다[.!?]?$", r"것이다[.!?]?$"
-        ],
+        VoiceStyle.CRUDE: [r"냐[.!?]?$", r"냐고[.!?]?$", r"놈[아아]?[.!?]?$", r"새끼[.!?]?$", r"씨[.!?]?$"],
+        VoiceStyle.NOBLE: [r"하오[.!?]?$", r"것이오[.!?]?$", r"이시다[.!?]?$", r"거라[.!?]?$", r"허허[.!?]?$"],
+        VoiceStyle.MARTIAL: [r"이다[.!?]?$", r"도다[.!?]?$", r"하라[.!?]?$", r"하겠다[.!?]?$", r"것이다[.!?]?$"],
     }
 
     # 감탄사 패턴
@@ -104,26 +96,34 @@ class CharacterVoiceTracker:
 
     # 존칭 관련 패턴
     HONORIFIC_PATTERNS = [
-        r"님", r"공", r"장", r"주", r"대인", r"각하", r"어르신",
-        r"아버님", r"어머님", r"형님", r"사형", r"사제"
+        r"님",
+        r"공",
+        r"장",
+        r"주",
+        r"대인",
+        r"각하",
+        r"어르신",
+        r"아버님",
+        r"어머님",
+        r"형님",
+        r"사형",
+        r"사제",
     ]
 
     def __init__(self, max_samples: int = 10):
         self.max_samples = max_samples
-        self.profiles: Dict[str, CharacterVoiceProfile] = {}
-        self.dialogue_pattern = re.compile(
-            r'"([^"]+)"|「([^」]+)」|\'([^\']+)\'|"([^"]+)"'
-        )
+        self.profiles: dict[str, CharacterVoiceProfile] = {}
+        self.dialogue_pattern = re.compile(r'"([^"]+)"|「([^」]+)」|\'([^\']+)\'|"([^"]+)"')
         self.speaker_pattern = re.compile(
-            r'([가-힣A-Za-z]+)(?:이|가|은|는)?\s*(?:말|외치|소리|속삭|중얼|웃으며|답|물|묻)'
+            r"([가-힣A-Za-z]+)(?:이|가|은|는)?\s*(?:말|외치|소리|속삭|중얼|웃으며|답|물|묻)"
         )
 
-    def extract_dialogues(self, manuscript: str) -> List[Tuple[str, str]]:
+    def extract_dialogues(self, manuscript: str) -> list[tuple[str, str]]:
         """원고에서 화자-대사 쌍 추출"""
         dialogues = []
 
         # 문단 단위로 분석
-        paragraphs = manuscript.split('\n')
+        paragraphs = manuscript.split("\n")
 
         for para in paragraphs:
             # 대화문 추출
@@ -132,10 +132,7 @@ class CharacterVoiceTracker:
                 continue
 
             # 대화문 내용 (그룹 중 하나만 매칭됨)
-            dialogue = next(
-                (m for group in dialogue_matches for m in group if m),
-                None
-            )
+            dialogue = next((m for group in dialogue_matches for m in group if m), None)
             if not dialogue:
                 continue
 
@@ -145,14 +142,14 @@ class CharacterVoiceTracker:
                 speaker = speaker_match.group(1)
             else:
                 # 앞부분에서 이름 추출 시도
-                name_match = re.match(r'^([가-힣]{2,4})', para)
+                name_match = re.match(r"^([가-힣]{2,4})", para)
                 speaker = name_match.group(1) if name_match else "UNKNOWN"
 
             dialogues.append((speaker, dialogue))
 
         return dialogues
 
-    def analyze_dialogue(self, dialogue: str) -> Dict[str, Any]:
+    def analyze_dialogue(self, dialogue: str) -> dict[str, Any]:
         """단일 대사 분석"""
         analysis = {
             "length": len(dialogue),
@@ -160,11 +157,11 @@ class CharacterVoiceTracker:
             "endings": [],
             "exclamations": [],
             "honorifics": False,
-            "detected_style": None
+            "detected_style": None,
         }
 
         # 문장 종결어미 분석
-        sentences = re.split(r'[.!?]', dialogue)
+        sentences = re.split(r"[.!?]", dialogue)
         for sent in sentences:
             sent = sent.strip()
             if not sent:
@@ -191,6 +188,7 @@ class CharacterVoiceTracker:
         # 스타일 추론
         if analysis["endings"]:
             from collections import Counter
+
             style_counts = Counter(analysis["endings"])
             most_common = style_counts.most_common(1)
             if most_common:
@@ -198,16 +196,11 @@ class CharacterVoiceTracker:
 
         return analysis
 
-    def analyze_manuscript(
-        self,
-        ep_num: int,
-        manuscript: str,
-        known_characters: List[str] = None
-    ) -> Dict[str, Any]:
+    def analyze_manuscript(self, ep_num: int, manuscript: str, known_characters: list[str] = None) -> dict[str, Any]:
         """원고 전체 분석 및 프로필 업데이트"""
         dialogues = self.extract_dialogues(manuscript)
 
-        character_dialogues: Dict[str, List[str]] = defaultdict(list)
+        character_dialogues: dict[str, list[str]] = defaultdict(list)
         for speaker, dialogue in dialogues:
             character_dialogues[speaker].append(dialogue)
 
@@ -233,6 +226,7 @@ class CharacterVoiceTracker:
 
             if style_votes:
                 from collections import Counter
+
                 most_common_style = Counter(style_votes).most_common(1)
                 if most_common_style:
                     try:
@@ -250,21 +244,21 @@ class CharacterVoiceTracker:
 
             # 샘플 대사 저장 (가장 특징적인 것들)
             sorted_lines = sorted(lines, key=len, reverse=True)
-            profile.sample_dialogues = sorted_lines[:self.max_samples]
+            profile.sample_dialogues = sorted_lines[: self.max_samples]
             profile.dialogue_count += len(lines)
             profile.last_seen_episode = ep_num
 
             updates[character] = {
                 "dialogue_count": len(lines),
                 "style": profile.style.value,
-                "honorifics": profile.pattern.honorifics
+                "honorifics": profile.pattern.honorifics,
             }
 
         return {
             "episode": ep_num,
             "total_dialogues": len(dialogues),
             "characters_analyzed": len(updates),
-            "updates": updates
+            "updates": updates,
         }
 
     def get_voice_guidance(self, character_name: str) -> str:
@@ -285,7 +279,7 @@ class CharacterVoiceTracker:
             VoiceStyle.NOBLE: "귀족/양반 말투",
             VoiceStyle.MARTIAL: "무인 말투 (간결하고 힘있게)",
             VoiceStyle.SCHOLARLY: "학자 말투 (사색적)",
-            VoiceStyle.MERCHANT: "상인 말투 (실용적)"
+            VoiceStyle.MERCHANT: "상인 말투 (실용적)",
         }
         lines.append(f"- 기본 스타일: {style_desc.get(profile.style, profile.style.value)}")
 
@@ -301,19 +295,15 @@ class CharacterVoiceTracker:
 
         # 샘플 대사
         if profile.sample_dialogues:
-            lines.append(f"- 대표 대사 예시:")
+            lines.append("- 대표 대사 예시:")
             for sample in profile.sample_dialogues[:3]:
                 if len(sample) > 50:
                     sample = sample[:47] + "..."
-                lines.append(f"  \"{sample}\"")
+                lines.append(f'  "{sample}"')
 
         return "\n".join(lines)
 
-    def check_consistency(
-        self,
-        character_name: str,
-        dialogue: str
-    ) -> List[Dict[str, str]]:
+    def check_consistency(self, character_name: str, dialogue: str) -> list[dict[str, str]]:
         """대사 일관성 체크"""
         warnings = []
 
@@ -328,21 +318,23 @@ class CharacterVoiceTracker:
             detected = analysis["detected_style"]
             expected = profile.style.value
             if detected != expected:
-                warnings.append({
-                    "type": "style_mismatch",
-                    "message": f"{character_name}의 말투가 불일치합니다. "
-                              f"예상: {expected}, 감지: {detected}"
-                })
+                warnings.append(
+                    {
+                        "type": "style_mismatch",
+                        "message": f"{character_name}의 말투가 불일치합니다. 예상: {expected}, 감지: {detected}",
+                    }
+                )
 
         # 존칭 불일치 체크
         if profile.pattern.honorifics != analysis["honorifics"]:
             expected_hon = "사용" if profile.pattern.honorifics else "미사용"
             actual_hon = "사용" if analysis["honorifics"] else "미사용"
-            warnings.append({
-                "type": "honorific_mismatch",
-                "message": f"{character_name}의 존칭 사용이 불일치합니다. "
-                          f"예상: {expected_hon}, 실제: {actual_hon}"
-            })
+            warnings.append(
+                {
+                    "type": "honorific_mismatch",
+                    "message": f"{character_name}의 존칭 사용이 불일치합니다. 예상: {expected_hon}, 실제: {actual_hon}",
+                }
+            )
 
         return warnings
 
@@ -354,17 +346,15 @@ class CharacterVoiceTracker:
         lines = ["[V51.5 캐릭터 음성 가이드]"]
         lines.append("다음 캐릭터들의 말투를 일관되게 유지하세요:\n")
 
-        for name, profile in sorted(
-            self.profiles.items(),
-            key=lambda x: x[1].dialogue_count,
-            reverse=True
-        )[:10]:  # 상위 10명만
+        for name, profile in sorted(self.profiles.items(), key=lambda x: x[1].dialogue_count, reverse=True)[
+            :10
+        ]:  # 상위 10명만
             lines.append(self.get_voice_guidance(name))
             lines.append("")
 
         return "\n".join(lines)
 
-    def get_writer_injection(self, characters: List[str] = None) -> str:
+    def get_writer_injection(self, characters: list[str] = None) -> str:
         """Writer용 주입 프롬프트 생성"""
         if not self.profiles:
             return ""
@@ -373,11 +363,9 @@ class CharacterVoiceTracker:
             target_chars = [c for c in characters if c in self.profiles]
         else:
             # 최근 등장 상위 5명
-            target_chars = sorted(
-                self.profiles.keys(),
-                key=lambda x: self.profiles[x].last_seen_episode,
-                reverse=True
-            )[:5]
+            target_chars = sorted(self.profiles.keys(), key=lambda x: self.profiles[x].last_seen_episode, reverse=True)[
+                :5
+            ]
 
         if not target_chars:
             return ""
@@ -395,7 +383,7 @@ class CharacterVoiceTracker:
                 VoiceStyle.NOBLE: "귀족체",
                 VoiceStyle.MARTIAL: "무인체",
                 VoiceStyle.SCHOLARLY: "학자체",
-                VoiceStyle.MERCHANT: "상인체"
+                VoiceStyle.MERCHANT: "상인체",
             }
             style = style_short.get(profile.style, profile.style.value)
 
@@ -418,21 +406,21 @@ class CharacterVoiceTracker:
                     "filler_words": profile.pattern.filler_words,
                     "vocabulary_level": profile.pattern.vocabulary_level,
                     "sentence_length": profile.pattern.sentence_length,
-                    "characteristic_phrases": profile.pattern.characteristic_phrases
+                    "characteristic_phrases": profile.pattern.characteristic_phrases,
                 },
                 "sample_dialogues": profile.sample_dialogues,
                 "dialogue_count": profile.dialogue_count,
                 "consistency_score": profile.consistency_score,
-                "last_seen_episode": profile.last_seen_episode
+                "last_seen_episode": profile.last_seen_episode,
             }
 
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
     def load_from_json(self, filepath: str):
         """프로필 로드"""
         try:
-            with open(filepath, 'r', encoding='utf-8') as f:
+            with open(filepath, encoding="utf-8") as f:
                 data = json.load(f)
 
             for name, profile_data in data.items():
@@ -443,7 +431,7 @@ class CharacterVoiceTracker:
                     filler_words=profile_data.get("pattern", {}).get("filler_words", []),
                     vocabulary_level=profile_data.get("pattern", {}).get("vocabulary_level", "normal"),
                     sentence_length=profile_data.get("pattern", {}).get("sentence_length", "normal"),
-                    characteristic_phrases=profile_data.get("pattern", {}).get("characteristic_phrases", [])
+                    characteristic_phrases=profile_data.get("pattern", {}).get("characteristic_phrases", []),
                 )
 
                 try:
@@ -458,7 +446,7 @@ class CharacterVoiceTracker:
                     sample_dialogues=profile_data.get("sample_dialogues", []),
                     dialogue_count=profile_data.get("dialogue_count", 0),
                     consistency_score=profile_data.get("consistency_score", 1.0),
-                    last_seen_episode=profile_data.get("last_seen_episode", 0)
+                    last_seen_episode=profile_data.get("last_seen_episode", 0),
                 )
 
         except FileNotFoundError:

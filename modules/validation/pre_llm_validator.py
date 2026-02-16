@@ -19,8 +19,8 @@ Python 기반 검사 → LLM에게 정보 제공용 (REJECT 권한 없음)
 """
 
 import re
-from typing import Dict, List, Any
 from collections import Counter
+from typing import Any
 
 
 class PreLLMValidator:
@@ -38,7 +38,7 @@ class PreLLMValidator:
         self.genre = genre
         self.pov = pov
 
-    def validate(self, manuscript: str, context: Dict[str, Any] = None) -> Dict:
+    def validate(self, manuscript: str, context: dict[str, Any] = None) -> dict:
         """
         9가지 검증 실행
 
@@ -61,62 +61,62 @@ class PreLLMValidator:
 
         # 1. 과다 반복 단어 (TTR 악화)
         repeated = self._check_word_repetition(manuscript)
-        if repeated.get('has_issue'):
+        if repeated.get("has_issue"):
             issues.append(repeated)
             score_deduction += 3
 
         # 2. 극단적 문장 길이 변화
         rhythm_issue = self._check_extreme_sentence_length(manuscript)
-        if rhythm_issue.get('has_issue'):
+        if rhythm_issue.get("has_issue"):
             warnings.append(rhythm_issue)
             score_deduction += 2
 
         # 3. 대사 절대 부족
         dialogue = self._check_dialogue_presence(manuscript)
-        if dialogue.get('missing'):
+        if dialogue.get("missing"):
             issues.append(dialogue)
             score_deduction += 5
 
         # 4. 감각 묘사 메이저 누락
         sensory = self._check_sensory_presence(manuscript)
-        if sensory.get('missing_count', 0) > 3:
+        if sensory.get("missing_count", 0) > 3:
             warnings.append(sensory)
             score_deduction += 2
 
         # 5. 신체 물리학 오류 (중요!)
         physics = self._check_body_physics(manuscript)
-        if physics.get('violations'):
+        if physics.get("violations"):
             issues.append(physics)
             score_deduction += 4
 
         # 6. 시간 흐름 비논리
         time_logic = self._check_time_progression(manuscript)
-        if time_logic.get('violations'):
+        if time_logic.get("violations"):
             warnings.append(time_logic)
             score_deduction += 1
 
         # 7. 문장 끝 형식 일관성
         ending_format = self._check_sentence_endings(manuscript)
-        if ending_format.get('inconsistency_level', 0) > 0.5:
+        if ending_format.get("inconsistency_level", 0) > 0.5:
             warnings.append(ending_format)
             score_deduction += 1
 
         # 8. NPC 이름 일관성
         npc_names = self._check_npc_naming(manuscript, context)
-        if npc_names.get('inconsistencies'):
+        if npc_names.get("inconsistencies"):
             warnings.append(npc_names)
             score_deduction += 2
 
         # 9. 회차별 반복 구조
         repetitive = self._check_structural_repetition(manuscript)
-        if repetitive.get('repetition_score', 0) > 0.6:
+        if repetitive.get("repetition_score", 0) > 0.6:
             warnings.append(repetitive)
             score_deduction += 1
 
         # 10. [V70] 시점(POV) 일관성 체크
         if self.pov:
             pov_result = self._check_pov_consistency(manuscript)
-            if pov_result.get('has_issue'):
+            if pov_result.get("has_issue"):
                 warnings.append(pov_result)
                 score_deduction += 2
 
@@ -131,12 +131,12 @@ class PreLLMValidator:
             "warnings": warnings,
             "score_deduction": min(10, score_deduction),
             "reason": f"Advisory - 참고사항 {len(advisory_issues)}개, 경고 {len(warnings)}개",
-            "check_count": 10
+            "check_count": 10,
         }
 
-    def _check_word_repetition(self, manuscript: str) -> Dict:
+    def _check_word_repetition(self, manuscript: str) -> dict:
         """1. 과다 반복 단어 체크"""
-        words = re.findall(r'[가-힣]{2,}', manuscript)
+        words = re.findall(r"[가-힣]{2,}", manuscript)
         if not words:
             return {"has_issue": False}
 
@@ -144,11 +144,28 @@ class PreLLMValidator:
 
         # 불용어 제외
         stopwords = {
-            '것이다', '있다', '없다', '하다', '되다', '이다',
-            '그', '저', '이', '그것', '이것', '했다', '있었다',
-            '그리고', '하지만', '그러나', '그래서', '때문에'
+            "것이다",
+            "있다",
+            "없다",
+            "하다",
+            "되다",
+            "이다",
+            "그",
+            "저",
+            "이",
+            "그것",
+            "이것",
+            "했다",
+            "있었다",
+            "그리고",
+            "하지만",
+            "그러나",
+            "그래서",
+            "때문에",
         }
-        word_counts = Counter({w: c for w, c in word_counts.items() if w not in stopwords})  # [V66.2] F-3: Counter 유지 (.most_common 보존)
+        word_counts = Counter(
+            {w: c for w, c in word_counts.items() if w not in stopwords}
+        )  # [V66.2] F-3: Counter 유지 (.most_common 보존)
 
         # 같은 단어가 15회 이상 반복 = 위반
         overused = [(w, c) for w, c in word_counts.most_common(10) if c > 15]
@@ -159,16 +176,16 @@ class PreLLMValidator:
                 "category": "과다_반복_단어",
                 "items": overused[:5],
                 "severity": "HIGH" if overused[0][1] > 25 else "MEDIUM",
-                "description": f"'{overused[0][0]}' {overused[0][1]}회 반복"
+                "description": f"'{overused[0][0]}' {overused[0][1]}회 반복",
             }
 
         return {"has_issue": False}
 
-    def _check_extreme_sentence_length(self, manuscript: str) -> Dict:
+    def _check_extreme_sentence_length(self, manuscript: str) -> dict:
         """2. 극단적 문장 길이 변화"""
         import statistics
 
-        sentences = re.split(r'[.!?]\s+', manuscript)
+        sentences = re.split(r"[.!?]\s+", manuscript)
         sentences = [s.strip() for s in sentences if s.strip() and len(s.strip()) > 5]
 
         if len(sentences) < 10:
@@ -190,15 +207,15 @@ class PreLLMValidator:
                 "cv": round(cv, 2),
                 "mean": round(mean_len, 1),
                 "severity": "WARNING",
-                "description": f"문장 길이 변동계수 {cv:.2f} (권장 0.3~0.6)"
+                "description": f"문장 길이 변동계수 {cv:.2f} (권장 0.3~0.6)",
             }
 
         return {"has_issue": False}
 
-    def _check_dialogue_presence(self, manuscript: str) -> Dict:
+    def _check_dialogue_presence(self, manuscript: str) -> dict:
         """3. 대사 절대 부족"""
         # 큰따옴표 또는 유니코드 따옴표
-        dialogue_count = manuscript.count('"') + manuscript.count('\u201C') + manuscript.count('\u201D')
+        dialogue_count = manuscript.count('"') + manuscript.count("\u201c") + manuscript.count("\u201d")
         dialogue_pairs = dialogue_count // 2  # 쌍으로 계산
 
         # 1000자당 최소 1.5회의 대사 필요
@@ -211,12 +228,12 @@ class PreLLMValidator:
                 "count": dialogue_pairs,
                 "expected_min": expected_min,
                 "severity": "CRITICAL",
-                "description": f"대사 {dialogue_pairs}회 (최소 {expected_min}회 필요)"
+                "description": f"대사 {dialogue_pairs}회 (최소 {expected_min}회 필요)",
             }
 
         return {"missing": False}
 
-    def _check_sensory_presence(self, manuscript: str) -> Dict:
+    def _check_sensory_presence(self, manuscript: str) -> dict:
         """4. 감각 묘사 메이저 누락"""
         sensory_keywords = {
             "visual": ["보았다", "보이", "빛", "색", "형태", "눈에", "모습", "바라보"],
@@ -229,15 +246,11 @@ class PreLLMValidator:
         if self.genre == "wuxia":
             sensory_keywords["martial"] = ["기혈", "내공", "기운", "살기", "검기", "파동", "기감"]
 
-        paragraphs = [p for p in manuscript.split('\n\n') if len(p) > 100]
+        paragraphs = [p for p in manuscript.split("\n\n") if len(p) > 100]
         missing_senses = 0
 
         for para in paragraphs:
-            sensory_count = sum(
-                para.count(kw)
-                for senses in sensory_keywords.values()
-                for kw in senses
-            )
+            sensory_count = sum(para.count(kw) for senses in sensory_keywords.values() for kw in senses)
             if sensory_count == 0:
                 missing_senses += 1
 
@@ -246,49 +259,37 @@ class PreLLMValidator:
             "total_paragraphs": len(paragraphs),
             "category": "감각_메이저_누락",
             "severity": "WARNING" if missing_senses > 3 else "OK",
-            "description": f"{missing_senses}/{len(paragraphs)} 문단에 감각 묘사 없음"
+            "description": f"{missing_senses}/{len(paragraphs)} 문단에 감각 묘사 없음",
         }
 
-    def _check_body_physics(self, manuscript: str) -> Dict:
+    def _check_body_physics(self, manuscript: str) -> dict:
         """5. 신체 물리학 오류"""
         violations = []
 
         # 패턴: 동시에 3개 이상 행동
-        triple_action = re.findall(
-            r'(왼손|오른손|양손).{0,20}(왼손|오른손|양손).{0,20}(왼손|오른손|양손)',
-            manuscript
-        )
+        triple_action = re.findall(r"(왼손|오른손|양손).{0,20}(왼손|오른손|양손).{0,20}(왼손|오른손|양손)", manuscript)
         if triple_action:
             violations.append("손 사용 모순 (3개 이상 동시 사용)")
 
         # 패턴: 부상 상태에서 무리한 행동
-        injury_action = re.findall(
-            r'(중상|부상|피를 흘리).{0,50}(뛰어올|전력으로 달|힘껏 휘둘)',
-            manuscript
-        )
+        injury_action = re.findall(r"(중상|부상|피를 흘리).{0,50}(뛰어올|전력으로 달|힘껏 휘둘)", manuscript)
         if injury_action:
             violations.append("부상 상태에서 무리한 행동")
 
         # 패턴: 수면/기절 상태에서 행동
-        unconscious_action = re.findall(
-            r'(기절|의식을 잃|잠든).{0,30}(일어나|눈을 떴다|말했다)',
-            manuscript
-        )
+        unconscious_action = re.findall(r"(기절|의식을 잃|잠든).{0,30}(일어나|눈을 떴다|말했다)", manuscript)
         # 이건 정상적인 각성 과정일 수 있으므로 체크 안 함
 
         return {
             "violations": violations[:3],
             "category": "신체_물리학_오류",
             "severity": "CRITICAL" if violations else "OK",
-            "description": violations[0] if violations else "정상"
+            "description": violations[0] if violations else "정상",
         }
 
-    def _check_time_progression(self, manuscript: str) -> Dict:
+    def _check_time_progression(self, manuscript: str) -> dict:
         """6. 시간 흐름 비논리"""
-        time_markers = re.findall(
-            r'(?:같은 날|그날|다음날|이튿날|며칠 후|다음 주|몇 주 후|한 달|일 년)',
-            manuscript
-        )
+        time_markers = re.findall(r"(?:같은 날|그날|다음날|이튿날|며칠 후|다음 주|몇 주 후|한 달|일 년)", manuscript)
 
         violations = []
 
@@ -297,11 +298,11 @@ class PreLLMValidator:
             violations.append(f"시간 표현 과다 ({len(time_markers)}회)")
 
         # "같은 날" 다음에 바로 "며칠 후" 같은 모순
-        time_text = ' '.join(time_markers)
-        if '같은 날' in time_text and '며칠 후' in time_text:
+        time_text = " ".join(time_markers)
+        if "같은 날" in time_text and "며칠 후" in time_text:
             # 순서 체크
-            same_day_idx = manuscript.find('같은 날')
-            days_later_idx = manuscript.find('며칠 후')
+            same_day_idx = manuscript.find("같은 날")
+            days_later_idx = manuscript.find("며칠 후")
             if same_day_idx > 0 and days_later_idx > 0 and days_later_idx < same_day_idx:
                 violations.append("시간 흐름 역행 (며칠 후 → 같은 날)")
 
@@ -309,21 +310,21 @@ class PreLLMValidator:
             "violations": violations,
             "count": len(time_markers),
             "category": "시간_흐름_비논리",
-            "severity": "WARNING" if violations else "OK"
+            "severity": "WARNING" if violations else "OK",
         }
 
-    def _check_sentence_endings(self, manuscript: str) -> Dict:
+    def _check_sentence_endings(self, manuscript: str) -> dict:
         """7. 문장 끝 형식 일관성"""
         # 문장 끝 패턴
-        endings = re.findall(r'[가-힣]+다[.!?]', manuscript)
+        endings = re.findall(r"[가-힣]+다[.!?]", manuscript)
 
         if len(endings) < 10:
             return {"inconsistency_level": 0}
 
         # 마침표, 느낌표, 물음표 비율
-        period_count = sum(1 for e in endings if e.endswith('.'))
-        exclaim_count = sum(1 for e in endings if e.endswith('!'))
-        question_count = sum(1 for e in endings if e.endswith('?'))
+        period_count = sum(1 for e in endings if e.endswith("."))
+        exclaim_count = sum(1 for e in endings if e.endswith("!"))
+        question_count = sum(1 for e in endings if e.endswith("?"))
 
         total = len(endings)
 
@@ -333,25 +334,25 @@ class PreLLMValidator:
                 "inconsistency_level": 0.6,
                 "category": "느낌표_과다",
                 "severity": "WARNING",
-                "description": f"느낌표 {exclaim_count / total:.0%} (권장 10% 이하)"
+                "description": f"느낌표 {exclaim_count / total:.0%} (권장 10% 이하)",
             }
 
         return {"inconsistency_level": 0}
 
-    def _check_npc_naming(self, manuscript: str, context: Dict) -> Dict:
+    def _check_npc_naming(self, manuscript: str, context: dict) -> dict:
         """8. NPC 이름 일관성"""
         # context에서 올바른 NPC 이름 추출
-        npc_profiles = context.get('npc_profiles', {})
-        encyclopedia = context.get('encyclopedia', {})
+        npc_profiles = context.get("npc_profiles", {})
+        encyclopedia = context.get("encyclopedia", {})
 
         correct_names = set()
         if isinstance(npc_profiles, dict):
             correct_names.update(npc_profiles.keys())
         if isinstance(encyclopedia, dict):
-            npcs = encyclopedia.get('npcs', [])
+            npcs = encyclopedia.get("npcs", [])
             for npc in npcs:
-                if isinstance(npc, dict) and npc.get('name'):
-                    correct_names.add(npc['name'])
+                if isinstance(npc, dict) and npc.get("name"):
+                    correct_names.add(npc["name"])
 
         if not correct_names:
             return {"inconsistencies": []}
@@ -366,7 +367,7 @@ class PreLLMValidator:
             # 유사 이름 패턴 (1자 다름)
             for i in range(len(correct_name)):
                 # 각 위치에서 다른 문자로 대체된 이름 찾기
-                pattern = correct_name[:i] + r'[가-힣]' + correct_name[i+1:]
+                pattern = correct_name[:i] + r"[가-힣]" + correct_name[i + 1 :]
                 if len(pattern) == len(correct_name):
                     similar_names = re.findall(pattern, manuscript)
                     for found in similar_names:
@@ -380,12 +381,12 @@ class PreLLMValidator:
             "inconsistencies": inconsistencies,
             "category": "NPC_이름_불일치",
             "severity": "WARNING" if inconsistencies else "OK",
-            "description": f"{len(inconsistencies)}개 NPC 이름 불일치" if inconsistencies else "정상"
+            "description": f"{len(inconsistencies)}개 NPC 이름 불일치" if inconsistencies else "정상",
         }
 
-    def _check_structural_repetition(self, manuscript: str) -> Dict:
+    def _check_structural_repetition(self, manuscript: str) -> dict:
         """9. 회차별 반복되는 문장 구조"""
-        sentences = re.split(r'[.!?]\s+', manuscript)
+        sentences = re.split(r"[.!?]\s+", manuscript)
         sentences = [s.strip() for s in sentences if s.strip() and len(s.strip()) > 10]
 
         if len(sentences) < 15:
@@ -394,9 +395,9 @@ class PreLLMValidator:
         # 처음 3단어로 문장 시작 패턴 추출
         sentence_starts = []
         for sent in sentences:
-            words = re.findall(r'[가-힣]+', sent)
+            words = re.findall(r"[가-힣]+", sent)
             if len(words) >= 3:
-                start = ' '.join(words[:3])
+                start = " ".join(words[:3])
                 sentence_starts.append(start)
 
         if not sentence_starts:
@@ -414,34 +415,30 @@ class PreLLMValidator:
             "most_common_starts": most_common[:3],
             "category": "구조적_반복",
             "severity": "WARNING" if repetition_score > 0.6 else "OK",
-            "description": f"상위 3개 시작 패턴 비율 {repetition_score:.0%}"
+            "description": f"상위 3개 시작 패턴 비율 {repetition_score:.0%}",
         }
 
-    def _check_pov_consistency(self, manuscript: str) -> Dict:
+    def _check_pov_consistency(self, manuscript: str) -> dict:
         """10. [V70] 시점(POV) 일관성 체크"""
         # 대화 내용 제거 (대화 속 '나'는 무관)
-        no_dialogue = re.sub(r'["""][^"""]*["""]', '', manuscript)
+        no_dialogue = re.sub(r'["""][^"""]*["""]', "", manuscript)
         # ―로 시작하는 대화도 제거
-        no_dialogue = re.sub(r'―[^\n]+', '', no_dialogue)
+        no_dialogue = re.sub(r"―[^\n]+", "", no_dialogue)
 
-        first_person = len(re.findall(r'(?:나는|내가|나를|나에게|내 )', no_dialogue))
-        third_person = len(re.findall(r'(?:그는|그녀는|그가|그를|시우는|시우가)', no_dialogue))
+        first_person = len(re.findall(r"(?:나는|내가|나를|나에게|내 )", no_dialogue))
+        third_person = len(re.findall(r"(?:그는|그녀는|그가|그를|시우는|시우가)", no_dialogue))
 
         violations = []
 
         if self.pov == "1인칭":
             # 1인칭인데 3인칭 서술이 많으면 문제
             if third_person > 5 and third_person > first_person * 0.3:
-                violations.append(
-                    f"1인칭 모드인데 3인칭 서술 {third_person}회 감지 "
-                    f"(1인칭 {first_person}회 대비 과다)"
-                )
+                violations.append(f"1인칭 모드인데 3인칭 서술 {third_person}회 감지 (1인칭 {first_person}회 대비 과다)")
         elif self.pov == "3인칭":
             # 3인칭인데 서술자 '나'가 많으면 문제
             if first_person > 5 and first_person > third_person * 0.3:
                 violations.append(
-                    f"3인칭 모드인데 서술자 1인칭 {first_person}회 감지 "
-                    f"(3인칭 {third_person}회 대비 과다)"
+                    f"3인칭 모드인데 서술자 1인칭 {first_person}회 감지 (3인칭 {third_person}회 대비 과다)"
                 )
 
         if violations:
@@ -452,12 +449,12 @@ class PreLLMValidator:
                 "description": violations[0],
                 "first_person_count": first_person,
                 "third_person_count": third_person,
-                "expected_pov": self.pov
+                "expected_pov": self.pov,
             }
 
         return {"has_issue": False}
 
-    def get_summary(self, result: Dict) -> str:
+    def get_summary(self, result: dict) -> str:
         """검증 결과 요약 문자열 생성"""
         lines = [
             "=" * 50,
@@ -465,21 +462,21 @@ class PreLLMValidator:
             "=" * 50,
         ]
 
-        if result['passed']:
+        if result["passed"]:
             lines.append(f"✅ 통과 (경고 {len(result['warnings'])}개)")
         else:
             lines.append(f"❌ REJECT (이슈 {len(result['critical_issues'])}개)")
 
-        if result['critical_issues']:
+        if result["critical_issues"]:
             lines.append("\n🚨 Critical Issues:")
-            for issue in result['critical_issues']:
-                desc = issue.get('description', issue.get('category', 'Unknown'))
+            for issue in result["critical_issues"]:
+                desc = issue.get("description", issue.get("category", "Unknown"))
                 lines.append(f"   - {desc}")
 
-        if result['warnings']:
+        if result["warnings"]:
             lines.append("\n⚠️ Warnings:")
-            for warning in result['warnings'][:3]:
-                desc = warning.get('description', warning.get('category', 'Unknown'))
+            for warning in result["warnings"][:3]:
+                desc = warning.get("description", warning.get("category", "Unknown"))
                 lines.append(f"   - {desc}")
 
         lines.append(f"\n점수 감점: -{result['score_deduction']}점")

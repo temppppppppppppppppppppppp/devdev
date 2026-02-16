@@ -15,28 +15,28 @@ class TechniqueWeaver:
             "산(散)": {"vector": "해체/입자", "sound": "소멸음", "impact": "진기분해/흐름차단"},
             "자(刺)": {"vector": "일점집중", "sound": "파공음", "impact": "관통/내부파괴"},
             "암(暗)": {"vector": "소리없음", "sound": "침묵", "impact": "기척소멸/급소기습"},
-            "밀(밀)": {"vector": "연결/그물", "sound": "금속음", "impact": "공간봉쇄/지속압박"}
+            "밀(밀)": {"vector": "연결/그물", "sound": "금속음", "impact": "공간봉쇄/지속압박"},
         }
 
     # [수정 완료] main.py의 호출 규격에 맞춰 함수명 변경 (resolve_collision -> weave_v20_combat)
-    def weave_v20_combat(self, mc_tech: str, enemy_style: str) -> dict: #
+    def weave_v20_combat(self, mc_tech: str, enemy_style: str) -> dict:  #
         """[V24] 두 무공의 성질이 충돌했을 때의 물리적 상호작용 계산"""
-        
+
         # 공격자(주인공/조연)와 방어자 성질에 따른 물리 속성 매칭
         # (현재 main.py 로직상 mc_tech은 이름으로, enemy_style은 십이류 성질로 수혈됨)
-        att_phys = self.streams_physics.get("강(强)") # 기본값 설정
+        att_phys = self.streams_physics.get("강(强)")  # 기본값 설정
         def_phys = self.streams_physics.get(enemy_style, self.streams_physics["강(强)"])
-        
+
         # [Collision Blueprint] 모든 인물에게 적용되는 보편적 물리 결과
         return {
             "interaction": {
                 "vector_clash": f"공방의 궤적이 {def_phys['vector']}와 충돌",
                 "sound_landscape": f"{def_phys['sound']}의 파동이 전장에 공명함",
-                "environmental_damage": f"{def_phys['impact']} 현상이 주변 환경을 파괴"
+                "environmental_damage": f"{def_phys['impact']} 현상이 주변 환경을 파괴",
             },
             "rendering_guideline": (
                 f"{mc_tech}의 진기와 {enemy_style}의 성질이 부딪히며 발생하는 "
                 f"에너지의 인과관계를 물리 법칙에 따라 묘사하라. "
                 f"특히 {def_phys['impact']}이 발생하는 지점의 시각적 파괴력을 극대화할 것."
-            )
+            ),
         }

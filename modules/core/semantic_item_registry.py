@@ -19,13 +19,14 @@
 """
 
 import re
-from typing import Dict, List, Set, Optional, Tuple, Any
 from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass
 class ItemEvent:
     """[V49.7] 아이템 이벤트 기록"""
+
     arc: int
     episode: int
     event_type: str  # created, acquired, transferred, used, lost, destroyed
@@ -38,15 +39,16 @@ class ItemEvent:
 @dataclass
 class ItemEntry:
     """아이템 엔트리"""
+
     canonical_name: str  # 정규화된 이름
-    aliases: Set[str] = field(default_factory=set)
+    aliases: set[str] = field(default_factory=set)
     acquired_arc: int = 0
     category: str = "일반"  # 무기, 복장, 문서, 약물, 기타
     consumed_arc: int = 0  # 소모된 Arc (0이면 미소모)
     # [V49.7] 생애주기 추적 필드
     current_owner: str = ""  # 현재 소유자
     current_state: str = "소지중"  # 소지중, 착용중, 보관중, 분실, 파괴
-    event_history: List[Any] = field(default_factory=list)  # ItemEvent 리스트
+    event_history: list[Any] = field(default_factory=list)  # ItemEvent 리스트
 
 
 class SemanticItemRegistry:
@@ -60,33 +62,68 @@ class SemanticItemRegistry:
     # 무시할 수식어 패턴
     IGNORABLE_MODIFIERS = [
         # 상태/품질
-        r'녹슨', r'낡은', r'부러진', r'깨진', r'오래된', r'새로운', r'빛나는',
-        r'날카로운', r'무딘', r'예리한', r'묵직한', r'가벼운',
+        r"녹슨",
+        r"낡은",
+        r"부러진",
+        r"깨진",
+        r"오래된",
+        r"새로운",
+        r"빛나는",
+        r"날카로운",
+        r"무딘",
+        r"예리한",
+        r"묵직한",
+        r"가벼운",
         # 크기
-        r'작은', r'큰', r'거대한', r'소형', r'대형', r'중형',
+        r"작은",
+        r"큰",
+        r"거대한",
+        r"소형",
+        r"대형",
+        r"중형",
         # 재질
-        r'철제', r'강철', r'청동', r'황금', r'은제', r'목제', r'가죽',
+        r"철제",
+        r"강철",
+        r"청동",
+        r"황금",
+        r"은제",
+        r"목제",
+        r"가죽",
         # 색상
-        r'흑색', r'백색', r'적색', r'청색', r'금색', r'은색',
+        r"흑색",
+        r"백색",
+        r"적색",
+        r"청색",
+        r"금색",
+        r"은색",
         # 무게/양
-        r'백근', r'천근', r'십근', r'오십근',
+        r"백근",
+        r"천근",
+        r"십근",
+        r"오십근",
         # 등급
-        r'상급', r'중급', r'하급', r'최상급', r'일품', r'이품', r'삼품'
+        r"상급",
+        r"중급",
+        r"하급",
+        r"최상급",
+        r"일품",
+        r"이품",
+        r"삼품",
     ]
 
     # 아이템 카테고리별 핵심어
     CATEGORY_KEYWORDS = {
-        "무기": ['검', '도', '창', '봉', '편', '곤', '월', '척', '권', '장', '부'],
-        "복장": ['의', '포', '갑', '갑옷', '복', '관', '모', '신', '화', '대'],
-        "문서": ['서', '첩', '권', '문', '책', '기', '보', '전', '록'],
-        "약물": ['단', '환', '약', '주', '고'],
-        "패/인장": ['패', '인', '장', '령', '표', '첩']
+        "무기": ["검", "도", "창", "봉", "편", "곤", "월", "척", "권", "장", "부"],
+        "복장": ["의", "포", "갑", "갑옷", "복", "관", "모", "신", "화", "대"],
+        "문서": ["서", "첩", "권", "문", "책", "기", "보", "전", "록"],
+        "약물": ["단", "환", "약", "주", "고"],
+        "패/인장": ["패", "인", "장", "령", "표", "첩"],
     }
 
     def __init__(self) -> None:
-        self.items: Dict[str, ItemEntry] = {}
-        self._alias_map: Dict[str, str] = {}  # alias -> canonical_name
-        self._arc_acquisitions: Dict[int, List[str]] = {}  # arc_no -> [item names]
+        self.items: dict[str, ItemEntry] = {}
+        self._alias_map: dict[str, str] = {}  # alias -> canonical_name
+        self._arc_acquisitions: dict[int, list[str]] = {}  # arc_no -> [item names]
 
     def _normalize_name(self, name: str) -> str:
         """
@@ -102,10 +139,10 @@ class SemanticItemRegistry:
 
         # 수식어 제거
         for modifier in self.IGNORABLE_MODIFIERS:
-            normalized = re.sub(rf'\s*{modifier}\s*', ' ', normalized)
+            normalized = re.sub(rf"\s*{modifier}\s*", " ", normalized)
 
         # 연속 공백 제거
-        normalized = re.sub(r'\s+', ' ', normalized).strip()
+        normalized = re.sub(r"\s+", " ", normalized).strip()
 
         return normalized
 
@@ -124,7 +161,7 @@ class SemanticItemRegistry:
                     # 앞부분이 있으면 그것도 포함 (태극검, 철혈사자패)
                     return normalized
                 # 포함하는 경우
-                match = re.search(rf'([가-힣]*{kw})', normalized)
+                match = re.search(rf"([가-힣]*{kw})", normalized)
                 if match:
                     return match.group(1)
 
@@ -166,11 +203,11 @@ class SemanticItemRegistry:
         self,
         name: str,
         arc_no: int,
-        aliases: List[str] = None,
+        aliases: list[str] = None,
         category: str = "일반",
         owner: str = "주인공",
         episode: int = 0,
-        source: str = ""
+        source: str = "",
     ) -> str:
         """
         아이템 등록
@@ -211,7 +248,7 @@ class SemanticItemRegistry:
             event_type="acquired",
             actor=owner,
             target="",
-            description=source or f"Arc {arc_no}에서 획득"
+            description=source or f"Arc {arc_no}에서 획득",
         )
 
         # 새 항목 등록
@@ -222,7 +259,7 @@ class SemanticItemRegistry:
             category=category,
             current_owner=owner,
             current_state="소지중",
-            event_history=[initial_event]
+            event_history=[initial_event],
         )
 
         self.items[core] = entry
@@ -242,7 +279,7 @@ class SemanticItemRegistry:
 
         return core
 
-    def check_duplicate(self, name: str, current_arc: int) -> Dict[str, Any]:
+    def check_duplicate(self, name: str, current_arc: int) -> dict[str, Any]:
         """
         중복 획득 체크
 
@@ -259,13 +296,7 @@ class SemanticItemRegistry:
                 "reason": 중복 판단 사유
             }
         """
-        result = {
-            "is_duplicate": False,
-            "original": None,
-            "acquired_in": None,
-            "similarity": 0.0,
-            "reason": ""
-        }
+        result = {"is_duplicate": False, "original": None, "acquired_in": None, "similarity": 0.0, "reason": ""}
 
         # 1. 직접 매칭 (alias_map)
         canonical = self._alias_map.get(name)
@@ -289,12 +320,14 @@ class SemanticItemRegistry:
                 result["original"] = similar
                 result["acquired_in"] = entry.acquired_arc
                 result["similarity"] = similarity
-                result["reason"] = f"'{name}'은(는) Arc {entry.acquired_arc}에서 획득한 '{similar}'와(과) 유사 (유사도: {similarity:.0%})"
+                result["reason"] = (
+                    f"'{name}'은(는) Arc {entry.acquired_arc}에서 획득한 '{similar}'와(과) 유사 (유사도: {similarity:.0%})"
+                )
                 return result
 
         return result
 
-    def _find_similar_item(self, name: str, threshold: float = 0.8) -> Optional[str]:
+    def _find_similar_item(self, name: str, threshold: float = 0.8) -> str | None:
         """
         유사한 기존 아이템 찾기
 
@@ -365,7 +398,7 @@ class SemanticItemRegistry:
                 episode=episode,
                 event_type="consumed",
                 actor=entry.current_owner,
-                description=f"아이템 소모/사용됨"
+                description="아이템 소모/사용됨",
             )
             entry.event_history.append(event)
             return True
@@ -377,13 +410,7 @@ class SemanticItemRegistry:
     # ═══════════════════════════════════════════════════════════════
 
     def transfer_item(
-        self,
-        name: str,
-        from_owner: str,
-        to_owner: str,
-        arc: int,
-        episode: int = 0,
-        reason: str = ""
+        self, name: str, from_owner: str, to_owner: str, arc: int, episode: int = 0, reason: str = ""
     ) -> bool:
         """
         아이템 소유권 이전
@@ -414,7 +441,7 @@ class SemanticItemRegistry:
                 event_type="transferred",
                 actor=from_owner,
                 target=to_owner,
-                description=reason or f"{from_owner}에서 {to_owner}에게 이전"
+                description=reason or f"{from_owner}에서 {to_owner}에게 이전",
             )
             entry.event_history.append(event)
             entry.current_owner = to_owner
@@ -428,14 +455,7 @@ class SemanticItemRegistry:
             return True
         return False
 
-    def update_item_state(
-        self,
-        name: str,
-        new_state: str,
-        arc: int,
-        episode: int = 0,
-        description: str = ""
-    ) -> bool:
+    def update_item_state(self, name: str, new_state: str, arc: int, episode: int = 0, description: str = "") -> bool:
         """
         아이템 상태 업데이트
 
@@ -463,7 +483,7 @@ class SemanticItemRegistry:
                 event_type="state_change",
                 actor=entry.current_owner,
                 target=new_state,
-                description=description or f"상태 변경: {old_state} → {new_state}"
+                description=description or f"상태 변경: {old_state} → {new_state}",
             )
             entry.event_history.append(event)
             entry.current_state = new_state
@@ -471,7 +491,7 @@ class SemanticItemRegistry:
             return True
         return False
 
-    def get_item_lifecycle(self, name: str) -> Optional[Dict]:
+    def get_item_lifecycle(self, name: str) -> dict | None:
         """
         아이템 생애주기 조회
 
@@ -501,15 +521,15 @@ class SemanticItemRegistry:
                         "type": e.event_type,
                         "actor": e.actor,
                         "target": e.target,
-                        "description": e.description
+                        "description": e.description,
                     }
                     for e in entry.event_history
                 ],
-                "aliases": list(entry.aliases)
+                "aliases": list(entry.aliases),
             }
         return None
 
-    def get_protagonist_items(self, protagonist_name: str = "주인공") -> List[Dict]:
+    def get_protagonist_items(self, protagonist_name: str = "주인공") -> list[dict]:
         """
         주인공이 현재 소지 중인 아이템 목록
 
@@ -522,17 +542,23 @@ class SemanticItemRegistry:
         result = []
         for canonical, entry in self.items.items():
             # 소모되지 않고, 주인공이 소유하며, 분배되지 않은 아이템
-            if (entry.consumed_arc == 0 and
-                entry.current_state not in ["분배됨", "분실", "파괴", "소모됨"] and
-                (entry.current_owner == protagonist_name or
-                 entry.current_owner == "" or
-                 "팽무진" in entry.current_owner)):
-                result.append({
-                    "name": canonical,
-                    "category": entry.category,
-                    "state": entry.current_state,
-                    "acquired_arc": entry.acquired_arc
-                })
+            if (
+                entry.consumed_arc == 0
+                and entry.current_state not in ["분배됨", "분실", "파괴", "소모됨"]
+                and (
+                    entry.current_owner == protagonist_name
+                    or entry.current_owner == ""
+                    or "팽무진" in entry.current_owner
+                )
+            ):
+                result.append(
+                    {
+                        "name": canonical,
+                        "category": entry.category,
+                        "state": entry.current_state,
+                        "acquired_arc": entry.acquired_arc,
+                    }
+                )
         return result
 
     def is_protagonist_item(self, name: str, protagonist_name: str = "주인공") -> bool:
@@ -561,7 +587,7 @@ class SemanticItemRegistry:
             return True
         return False
 
-    def get_all_items(self, include_consumed: bool = False) -> Dict[str, Dict]:
+    def get_all_items(self, include_consumed: bool = False) -> dict[str, dict]:
         """모든 아이템 목록 반환 (V49.7 생애주기 포함)"""
         result = {}
         for canonical, entry in self.items.items():
@@ -576,15 +602,15 @@ class SemanticItemRegistry:
                 # [V49.7] 생애주기 필드
                 "current_owner": entry.current_owner,
                 "current_state": entry.current_state,
-                "event_count": len(entry.event_history)
+                "event_count": len(entry.event_history),
             }
         return result
 
-    def get_items_by_arc(self, arc_no: int) -> List[str]:
+    def get_items_by_arc(self, arc_no: int) -> list[str]:
         """특정 Arc에서 획득한 아이템 목록"""
         return self._arc_acquisitions.get(arc_no, [])
 
-    def get_forbidden_items(self, current_arc: int) -> List[Dict]:
+    def get_forbidden_items(self, current_arc: int) -> list[dict]:
         """
         현재 Arc에서 획득 금지된 아이템 목록
         (이미 소지 중이며 소모되지 않은 아이템)
@@ -592,14 +618,10 @@ class SemanticItemRegistry:
         forbidden = []
         for canonical, entry in self.items.items():
             if entry.acquired_arc < current_arc and entry.consumed_arc == 0:
-                forbidden.append({
-                    "name": canonical,
-                    "aliases": list(entry.aliases),
-                    "acquired_in": entry.acquired_arc
-                })
+                forbidden.append({"name": canonical, "aliases": list(entry.aliases), "acquired_in": entry.acquired_arc})
         return forbidden
 
-    def validate_arc_items(self, arc_no: int, items_to_acquire: List[str]) -> Dict[str, Any]:
+    def validate_arc_items(self, arc_no: int, items_to_acquire: list[str]) -> dict[str, Any]:
         """
         Arc 설계의 획득 아이템 목록 검증
 
@@ -621,25 +643,15 @@ class SemanticItemRegistry:
             result = self.check_duplicate(item, arc_no)
             if result["is_duplicate"]:
                 if result["similarity"] >= 0.9:
-                    violations.append({
-                        "item": item,
-                        "severity": "CRITICAL",
-                        "message": result["reason"]
-                    })
+                    violations.append({"item": item, "severity": "CRITICAL", "message": result["reason"]})
                 else:
-                    warnings.append({
-                        "item": item,
-                        "severity": "WARNING",
-                        "message": f"유사 아이템 존재: {result['reason']}"
-                    })
+                    warnings.append(
+                        {"item": item, "severity": "WARNING", "message": f"유사 아이템 존재: {result['reason']}"}
+                    )
 
-        return {
-            "valid": len(violations) == 0,
-            "violations": violations,
-            "warnings": warnings
-        }
+        return {"valid": len(violations) == 0, "violations": violations, "warnings": warnings}
 
-    def load_from_arcs(self, arcs_data: Dict, protagonist_name: str = "주인공") -> int:
+    def load_from_arcs(self, arcs_data: dict, protagonist_name: str = "주인공") -> int:
         """
         기존 Arc 데이터로부터 아이템 레지스트리 복원 (V49.7 확장)
 
@@ -659,38 +671,30 @@ class SemanticItemRegistry:
             if not isinstance(arc, dict):
                 continue
 
-            arc_no = arc.get('arc_no', 0)
+            arc_no = arc.get("arc_no", 0)
             if not arc_no:
                 continue
 
-            state_constraints = arc.get('state_constraints') or {}  # [V70] None 방어
+            state_constraints = arc.get("state_constraints") or {}  # [V70] None 방어
 
             # [V49.6] protagonist_items 우선, items_acquired 하위 호환
-            protagonist_items = state_constraints.get('protagonist_items') or []  # [V70] None 방어
+            protagonist_items = state_constraints.get("protagonist_items") or []  # [V70] None 방어
             if not protagonist_items:
-                protagonist_items = state_constraints.get('items_acquired') or []  # [V70] None 방어
+                protagonist_items = state_constraints.get("items_acquired") or []  # [V70] None 방어
 
             if isinstance(protagonist_items, list):
                 for item in protagonist_items:
                     if item:
-                        self.register_item(
-                            item, arc_no,
-                            owner=protagonist_name,
-                            source="주인공 획득"
-                        )
+                        self.register_item(item, arc_no, owner=protagonist_name, source="주인공 획득")
                         count += 1
 
             # [V49.6] distributed_items 처리
-            distributed_items = state_constraints.get('distributed_items') or []  # [V70] None 방어
+            distributed_items = state_constraints.get("distributed_items") or []  # [V70] None 방어
             if isinstance(distributed_items, list):
                 for item in distributed_items:
                     if item:
                         # 먼저 등록 후 타인에게 이전 처리
-                        self.register_item(
-                            item, arc_no,
-                            owner="타인",
-                            source="타인에게 분배"
-                        )
+                        self.register_item(item, arc_no, owner="타인", source="타인에게 분배")
                         # 분배됨 상태로 변경
                         canonical = self._alias_map.get(item)
                         if canonical and canonical in self.items:
@@ -698,23 +702,19 @@ class SemanticItemRegistry:
                         count += 1
 
             # 소모 아이템 처리
-            items_consumed = state_constraints.get('items_consumed') or []  # [V70] None 방어
+            items_consumed = state_constraints.get("items_consumed") or []  # [V70] None 방어
             if isinstance(items_consumed, list):
                 for item in items_consumed:
                     if item:
                         self.mark_consumed(item, arc_no)
 
             # equipment에서도 추출 (주인공 소지품)
-            arc_end_state = state_constraints.get('arc_end_state') or {}  # [V70] None 방어
-            equipment = arc_end_state.get('equipment') or []  # [V70] None 방어
+            arc_end_state = state_constraints.get("arc_end_state") or {}  # [V70] None 방어
+            equipment = arc_end_state.get("equipment") or []  # [V70] None 방어
             if isinstance(equipment, list):
                 for item in equipment:
                     if item and item not in protagonist_items:
-                        self.register_item(
-                            item, arc_no,
-                            owner=protagonist_name,
-                            source="장비"
-                        )
+                        self.register_item(item, arc_no, owner=protagonist_name, source="장비")
                         count += 1
 
         return count

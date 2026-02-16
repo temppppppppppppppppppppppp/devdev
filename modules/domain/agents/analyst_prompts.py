@@ -607,6 +607,7 @@ ANALYST_SELF_CRITIC_PROMPT = """
 # [V65] 메서드 내부 프롬프트 4개 — 함수로 감싸기
 # =================================================================
 
+
 def get_recovery_prompt() -> str:
     """[V65] total_absolute_recovery_v20() 내부 template 반환."""
     return """
@@ -733,7 +734,7 @@ def get_surgery_prompt(*, prev_arc_json: str, curr_arc_json: str, next_arc_json:
 - 반드시 기존 아크 JSON 구조를 유지하십시오.
 - `tactical_doc` 필드에 위 수술 결과를 5배 농축하여 담으십시오.
 - JSON 이외의 어떤 텍스트(설명, 인사말)도 절대 출력하지 마십시오.
-- 답변의 시작은 반드시 '{'로 시작하고 '}'로 끝나야 합니다.
+- 답변의 시작은 반드시 '{"로 시작하고 "}'로 끝나야 합니다.
 - 토큰 제한으로 응답이 잘릴 경우를 대비하여, 가장 중요한 `tactical_doc`을 최상단에 배치하십시오.
 """
 

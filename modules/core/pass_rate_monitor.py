@@ -18,18 +18,18 @@
     stats = monitor.get_stats()
 """
 
-from typing import Dict, Any, List, Optional
+import json
 import logging
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-import json
-import os
+from typing import Any
 
 
 @dataclass
 class AttemptRecord:
     """시도 기록"""
+
     timestamp: str
     stage: int
     episode: int
@@ -46,6 +46,7 @@ class AttemptRecord:
 @dataclass
 class StageStats:
     """Stage별 통계"""
+
     stage: int
     total_attempts: int = 0
     first_attempt_pass: int = 0
@@ -54,8 +55,8 @@ class StageStats:
     avg_attempts_to_pass: float = 0.0
     first_attempt_rate: float = 0.0
     eventual_rate: float = 0.0
-    common_reject_reasons: Dict[str, int] = field(default_factory=dict)
-    method_success_rate: Dict[str, float] = field(default_factory=dict)
+    common_reject_reasons: dict[str, int] = field(default_factory=dict)
+    method_success_rate: dict[str, float] = field(default_factory=dict)
 
 
 class PassRateMonitor:
@@ -68,7 +69,7 @@ class PassRateMonitor:
         """
         self.project_path = Path(project_path) if project_path else Path(".")
         self.log_path = self.project_path / "logs" / "pass_rate_monitor.json"
-        self.records: List[AttemptRecord] = []
+        self.records: list[AttemptRecord] = []
         self.session_start = datetime.now().isoformat()
 
         # 기존 기록 로드
@@ -78,11 +79,9 @@ class PassRateMonitor:
         """기존 기록 로드"""
         if self.log_path.exists():
             try:
-                with open(self.log_path, 'r', encoding='utf-8') as f:
+                with open(self.log_path, encoding="utf-8") as f:
                     data = json.load(f)
-                    self.records = [
-                        AttemptRecord(**r) for r in data.get('records', [])
-                    ]
+                    self.records = [AttemptRecord(**r) for r in data.get("records", [])]
             except Exception as e:
                 logging.warning(f"⚠️ [PassRateMonitor] 기록 로드 실패: {e}")
                 self.records = []
@@ -91,13 +90,18 @@ class PassRateMonitor:
         """기록 저장"""
         try:
             self.log_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(self.log_path, 'w', encoding='utf-8') as f:
-                json.dump({
-                    'session_start': self.session_start,
-                    'last_updated': datetime.now().isoformat(),
-                    'total_records': len(self.records),
-                    'records': [asdict(r) for r in self.records[-1000:]]  # 최근 1000개만
-                }, f, ensure_ascii=False, indent=2)
+            with open(self.log_path, "w", encoding="utf-8") as f:
+                json.dump(
+                    {
+                        "session_start": self.session_start,
+                        "last_updated": datetime.now().isoformat(),
+                        "total_records": len(self.records),
+                        "records": [asdict(r) for r in self.records[-1000:]],  # 최근 1000개만
+                    },
+                    f,
+                    ensure_ascii=False,
+                    indent=2,
+                )
         except Exception as e:
             logging.warning(f"⚠️ [PassRateMonitor] 기록 저장 실패: {e}")
 
@@ -112,7 +116,7 @@ class PassRateMonitor:
         generation_method: str = "default",
         model_tier: int = 1,
         duration_ms: int = 0,
-        token_cost: float = 0.0
+        token_cost: float = 0.0,
     ):
         """
         시도 기록
@@ -140,7 +144,7 @@ class PassRateMonitor:
             generation_method=generation_method,
             model_tier=model_tier,
             duration_ms=duration_ms,
-            token_cost=token_cost
+            token_cost=token_cost,
         )
 
         self.records.append(record)
@@ -197,10 +201,7 @@ class PassRateMonitor:
                 passed = any(r.success for r in records)
                 if passed:
                     eventual_pass += 1
-                    pass_attempt = next(
-                        (i + 1 for i, r in enumerate(records) if r.success),
-                        len(records)
-                    )
+                    pass_attempt = next((i + 1 for i, r in enumerate(records) if r.success), len(records))
                     attempts_to_pass.append(pass_attempt)
                 else:
                     total_fail += 1
@@ -243,10 +244,10 @@ class PassRateMonitor:
             first_attempt_rate=first_attempt_rate,
             eventual_rate=eventual_rate,
             common_reject_reasons=common_reasons,
-            method_success_rate=method_success_rate
+            method_success_rate=method_success_rate,
         )
 
-    def get_all_stats(self, recent_n: int = None) -> Dict[int, StageStats]:
+    def get_all_stats(self, recent_n: int = None) -> dict[int, StageStats]:
         """
         전체 Stage 통계
 
@@ -256,10 +257,7 @@ class PassRateMonitor:
         Returns:
             {stage: StageStats}
         """
-        return {
-            stage: self.get_stage_stats(stage, recent_n)
-            for stage in [1, 2, 3, 4]
-        }
+        return {stage: self.get_stage_stats(stage, recent_n) for stage in [1, 2, 3, 4]}
 
     def get_summary(self, recent_n: int = 100) -> str:
         """
@@ -318,7 +316,7 @@ class PassRateMonitor:
 
         return "\n".join(lines)
 
-    def get_trend(self, stage: int, window: int = 20) -> Dict[str, Any]:
+    def get_trend(self, stage: int, window: int = 20) -> dict[str, Any]:
         """
         트렌드 분석 (최근 vs 이전)
 
@@ -335,7 +333,7 @@ class PassRateMonitor:
             return {"trend": "insufficient_data"}
 
         recent = stage_records[-window:]
-        previous = stage_records[-window*2:-window]
+        previous = stage_records[-window * 2 : -window]
 
         recent_rate = sum(1 for r in recent if r.success) / len(recent)
         previous_rate = sum(1 for r in previous if r.success) / len(previous)
@@ -354,10 +352,10 @@ class PassRateMonitor:
             "recent_rate": recent_rate,
             "previous_rate": previous_rate,
             "diff": diff,
-            "window": window
+            "window": window,
         }
 
-    def check_alerts(self, window: int = 20) -> List[str]:
+    def check_alerts(self, window: int = 20) -> list[str]:
         """
         통과율 하락 경고 체크
 
@@ -377,23 +375,15 @@ class PassRateMonitor:
                 recent_rate = trend_info.get("recent_rate", 0)
 
                 if diff < -0.15:  # 15% 이상 급락
-                    alerts.append(
-                        f"🚨 [Stage {stage}] 통과율 급락: {recent_rate:.0%} "
-                        f"(이전 대비 {abs(diff):.0%}↓)"
-                    )
+                    alerts.append(f"🚨 [Stage {stage}] 통과율 급락: {recent_rate:.0%} (이전 대비 {abs(diff):.0%}↓)")
                 elif diff < -0.05:  # 5% 이상 하락
-                    alerts.append(
-                        f"⚠️ [Stage {stage}] 통과율 하락: {recent_rate:.0%} "
-                        f"(이전 대비 {abs(diff):.0%}↓)"
-                    )
+                    alerts.append(f"⚠️ [Stage {stage}] 통과율 하락: {recent_rate:.0%} (이전 대비 {abs(diff):.0%}↓)")
 
         # 전체 첫 시도 통과율 확인
         for stage in [3, 4]:
             stats = self.get_stage_stats(stage, recent_n=window)
             if stats.first_attempt_rate < 0.5 and stats.total_attempts >= 10:
-                alerts.append(
-                    f"📉 [Stage {stage}] 첫 시도 통과율 50% 미만: {stats.first_attempt_rate:.0%}"
-                )
+                alerts.append(f"📉 [Stage {stage}] 첫 시도 통과율 50% 미만: {stats.first_attempt_rate:.0%}")
 
         return alerts
 
@@ -405,9 +395,9 @@ class PassRateMonitor:
         """CSV 내보내기"""
         import csv
 
-        filepath = filepath or str(self.log_path.with_suffix('.csv'))
+        filepath = filepath or str(self.log_path.with_suffix(".csv"))
 
-        with open(filepath, 'w', newline='', encoding='utf-8') as f:
+        with open(filepath, "w", newline="", encoding="utf-8") as f:
             if self.records:
                 writer = csv.DictWriter(f, fieldnames=asdict(self.records[0]).keys())
                 writer.writeheader()
@@ -418,8 +408,8 @@ class PassRateMonitor:
 
 
 # 싱글톤 인스턴스
-_monitor_instance: Optional[PassRateMonitor] = None
-_monitor_project_path: Optional[str] = None  # [V70] 프로젝트 경로 추적
+_monitor_instance: PassRateMonitor | None = None
+_monitor_project_path: str | None = None  # [V70] 프로젝트 경로 추적
 
 
 def get_monitor(project_path: str = None) -> PassRateMonitor:

@@ -4,12 +4,12 @@
 V0128 vs Legacy 시스템 성능 비교
 데이터 기반 의사결정 지원
 """
+
 import json
 import logging
-import time
-from typing import Dict, List, Any, Tuple
-from datetime import datetime
 import statistics
+import time
+from datetime import datetime
 
 
 class ABTestingFramework:
@@ -37,8 +37,8 @@ class ABTestingFramework:
         validation_context: dict,
         director_a,  # Legacy Director
         director_b,  # V0128 Director
-        v0128_config: dict = None
-    ) -> Tuple[dict, dict]:
+        v0128_config: dict = None,
+    ) -> tuple[dict, dict]:
         """
         A/B 테스트 실행
 
@@ -64,18 +64,18 @@ class ABTestingFramework:
             result_a = director_a.audit_manuscript(
                 ep_num=ep_num,
                 manuscript=manuscript,
-                arc_doc=validation_context.get('arc_doc', ''),
-                history_summary=validation_context.get('history_summary', ''),
-                prev_full_text=validation_context.get('prev_full_text', ''),
-                arc_pos=validation_context.get('arc_pos', 1),
-                total_eps=validation_context.get('total_eps', 5),
+                arc_doc=validation_context.get("arc_doc", ""),
+                history_summary=validation_context.get("history_summary", ""),
+                prev_full_text=validation_context.get("prev_full_text", ""),
+                arc_pos=validation_context.get("arc_pos", 1),
+                total_eps=validation_context.get("total_eps", 5),
                 target_len=5000,
-                retry_count=0
+                retry_count=0,
             )
             time_a = time.time() - start_a
             success_a = True
         except Exception as e:
-            result_a = {'error': str(e)}
+            result_a = {"error": str(e)}
             time_a = time.time() - start_a
             success_a = False
 
@@ -87,31 +87,35 @@ class ABTestingFramework:
                 manuscript=manuscript,
                 validation_context=validation_context,
                 config=v0128_config,
-                genre='wuxia'
+                genre="wuxia",
             )
             time_b = time.time() - start_b
             success_b = True
         except Exception as e:
-            result_b = {'error': str(e)}
+            result_b = {"error": str(e)}
             time_b = time.time() - start_b
             success_b = False
 
         # 결과 저장
-        self.variant_a_results.append({
-            'ep_num': ep_num,
-            'result': result_a,
-            'time': time_a,
-            'success': success_a,
-            'timestamp': datetime.now().isoformat()
-        })
+        self.variant_a_results.append(
+            {
+                "ep_num": ep_num,
+                "result": result_a,
+                "time": time_a,
+                "success": success_a,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
 
-        self.variant_b_results.append({
-            'ep_num': ep_num,
-            'result': result_b,
-            'time': time_b,
-            'success': success_b,
-            'timestamp': datetime.now().isoformat()
-        })
+        self.variant_b_results.append(
+            {
+                "ep_num": ep_num,
+                "result": result_b,
+                "time": time_b,
+                "success": success_b,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
 
         return result_a, result_b
 
@@ -128,20 +132,20 @@ class ABTestingFramework:
         self.end_time = time.time()
 
         analysis = {
-            'project': self.project_name,
-            'total_tests': len(self.variant_a_results),
-            'variant_a': self._analyze_variant(self.variant_a_results, 'Legacy'),
-            'variant_b': self._analyze_variant(self.variant_b_results, 'V0128'),
-            'comparison': self._compare_variants(),
-            'recommendation': self._generate_recommendation()
+            "project": self.project_name,
+            "total_tests": len(self.variant_a_results),
+            "variant_a": self._analyze_variant(self.variant_a_results, "Legacy"),
+            "variant_b": self._analyze_variant(self.variant_b_results, "V0128"),
+            "comparison": self._compare_variants(),
+            "recommendation": self._generate_recommendation(),
         }
 
         return analysis
 
-    def _analyze_variant(self, results: List[dict], name: str) -> dict:
+    def _analyze_variant(self, results: list[dict], name: str) -> dict:
         """단일 variant 분석"""
         total = len(results)
-        successful = sum(1 for r in results if r['success'])
+        successful = sum(1 for r in results if r["success"])
         failed = total - successful
 
         # PASS/REJECT 통계
@@ -151,19 +155,19 @@ class ABTestingFramework:
 
         for r in results:
             # [V44] None/키 안전성 체크
-            if r.get('success', False) and r.get('result'):
-                decision = r['result'].get('decision', 'UNKNOWN')
-                if decision == 'PASS':
+            if r.get("success", False) and r.get("result"):
+                decision = r["result"].get("decision", "UNKNOWN")
+                if decision == "PASS":
                     pass_count += 1
-                elif decision == 'REJECT':
+                elif decision == "REJECT":
                     reject_count += 1
 
-                score = r['result'].get('score', 0)
+                score = r["result"].get("score", 0)
                 if score:
                     scores.append(score)
 
         # 시간 통계
-        times = [r['time'] for r in results]
+        times = [r["time"] for r in results]
         avg_time = statistics.mean(times) if times else 0
         median_time = statistics.median(times) if times else 0
 
@@ -173,37 +177,37 @@ class ABTestingFramework:
         std_dev_score = statistics.stdev(scores) if len(scores) > 1 else 0
 
         return {
-            'name': name,
-            'total_tests': total,
-            'successful': successful,
-            'failed': failed,
-            'pass_count': pass_count,
-            'reject_count': reject_count,
-            'pass_rate': pass_count / total if total > 0 else 0,
-            'avg_score': avg_score,
-            'median_score': median_score,
-            'score_std_dev': std_dev_score,
-            'avg_time': avg_time,
-            'median_time': median_time
+            "name": name,
+            "total_tests": total,
+            "successful": successful,
+            "failed": failed,
+            "pass_count": pass_count,
+            "reject_count": reject_count,
+            "pass_rate": pass_count / total if total > 0 else 0,
+            "avg_score": avg_score,
+            "median_score": median_score,
+            "score_std_dev": std_dev_score,
+            "avg_time": avg_time,
+            "median_time": median_time,
         }
 
     def _compare_variants(self) -> dict:
         """두 variant 비교 (통계적 유의성 포함)"""
-        a_stats = self._analyze_variant(self.variant_a_results, 'Legacy')
-        b_stats = self._analyze_variant(self.variant_b_results, 'V0128')
+        a_stats = self._analyze_variant(self.variant_a_results, "Legacy")
+        b_stats = self._analyze_variant(self.variant_b_results, "V0128")
 
         # 점수 데이터 추출
         a_scores = []
         b_scores = []
         for r in self.variant_a_results:
-            if r['success']:
-                score = r['result'].get('score', 0)
+            if r["success"]:
+                score = r["result"].get("score", 0)
                 if score:
                     a_scores.append(score)
 
         for r in self.variant_b_results:
-            if r['success']:
-                score = r['result'].get('score', 0)
+            if r["success"]:
+                score = r["result"].get("score", 0)
                 if score:
                     b_scores.append(score)
 
@@ -211,15 +215,15 @@ class ABTestingFramework:
         statistical_significance = self._calculate_statistical_significance(a_scores, b_scores)
 
         return {
-            'pass_rate_improvement': b_stats['pass_rate'] - a_stats['pass_rate'],
-            'score_improvement': b_stats['avg_score'] - a_stats['avg_score'],
-            'time_difference': b_stats['avg_time'] - a_stats['avg_time'],
-            'consistency_improvement': a_stats['score_std_dev'] - b_stats['score_std_dev'],
-            'statistical_significance': statistical_significance,
-            'winner': self._determine_winner(a_stats, b_stats)
+            "pass_rate_improvement": b_stats["pass_rate"] - a_stats["pass_rate"],
+            "score_improvement": b_stats["avg_score"] - a_stats["avg_score"],
+            "time_difference": b_stats["avg_time"] - a_stats["avg_time"],
+            "consistency_improvement": a_stats["score_std_dev"] - b_stats["score_std_dev"],
+            "statistical_significance": statistical_significance,
+            "winner": self._determine_winner(a_stats, b_stats),
         }
 
-    def _calculate_statistical_significance(self, scores_a: List[float], scores_b: List[float]) -> dict:
+    def _calculate_statistical_significance(self, scores_a: list[float], scores_b: list[float]) -> dict:
         """
         통계적 유의성 계산 (Welch's t-test)
 
@@ -228,12 +232,12 @@ class ABTestingFramework:
         """
         if len(scores_a) < 2 or len(scores_b) < 2:
             return {
-                'test': 'Welch t-test',
-                't_statistic': None,
-                'p_value': None,
-                'significant': False,
-                'interpretation': '샘플 수 부족 (최소 2개 필요)',
-                'confidence': 'N/A'
+                "test": "Welch t-test",
+                "t_statistic": None,
+                "p_value": None,
+                "significant": False,
+                "interpretation": "샘플 수 부족 (최소 2개 필요)",
+                "confidence": "N/A",
             }
 
         # Welch's t-test (등분산 가정 불필요)
@@ -275,27 +279,27 @@ class ABTestingFramework:
 
         # 해석
         if p_value < 0.01:
-            interpretation = '매우 유의함 (p < 0.01) - 차이가 통계적으로 매우 확실함'
-            confidence = '99%+'
+            interpretation = "매우 유의함 (p < 0.01) - 차이가 통계적으로 매우 확실함"
+            confidence = "99%+"
         elif p_value < 0.05:
-            interpretation = '유의함 (p < 0.05) - 차이가 통계적으로 유의미함'
-            confidence = '95%+'
+            interpretation = "유의함 (p < 0.05) - 차이가 통계적으로 유의미함"
+            confidence = "95%+"
         elif p_value < 0.10:
-            interpretation = '경계선 (0.05 < p < 0.10) - 추가 데이터 수집 권장'
-            confidence = '90%+'
+            interpretation = "경계선 (0.05 < p < 0.10) - 추가 데이터 수집 권장"
+            confidence = "90%+"
         else:
-            interpretation = '유의하지 않음 (p >= 0.10) - 우연일 가능성 높음'
-            confidence = '<90%'
+            interpretation = "유의하지 않음 (p >= 0.10) - 우연일 가능성 높음"
+            confidence = "<90%"
 
         return {
-            'test': 'Welch t-test (approximate)',
-            't_statistic': round(t_stat, 3),
-            'p_value': round(p_value, 4),
-            'degrees_of_freedom': round(df, 1),
-            'significant': p_value < 0.05,
-            'interpretation': interpretation,
-            'confidence': confidence,
-            'note': '정확한 p-value는 scipy 사용 권장'
+            "test": "Welch t-test (approximate)",
+            "t_statistic": round(t_stat, 3),
+            "p_value": round(p_value, 4),
+            "degrees_of_freedom": round(df, 1),
+            "significant": p_value < 0.05,
+            "interpretation": interpretation,
+            "confidence": confidence,
+            "note": "정확한 p-value는 scipy 사용 권장",
         }
 
     def _determine_winner(self, a_stats: dict, b_stats: dict) -> str:
@@ -303,50 +307,44 @@ class ABTestingFramework:
         score = 0
 
         # 통과율 비교 (가중치: 40%)
-        if b_stats['pass_rate'] > a_stats['pass_rate']:
+        if b_stats["pass_rate"] > a_stats["pass_rate"]:
             score += 40
 
         # 평균 점수 비교 (가중치: 30%)
-        if b_stats['avg_score'] > a_stats['avg_score']:
+        if b_stats["avg_score"] > a_stats["avg_score"]:
             score += 30
 
         # 일관성 비교 (가중치: 20%)
-        if b_stats['score_std_dev'] < a_stats['score_std_dev']:
+        if b_stats["score_std_dev"] < a_stats["score_std_dev"]:
             score += 20
 
         # 속도 비교 (가중치: 10%)
-        if b_stats['avg_time'] < a_stats['avg_time']:
+        if b_stats["avg_time"] < a_stats["avg_time"]:
             score += 10
 
         if score >= 50:
-            return 'V0128 (Variant B)'
+            return "V0128 (Variant B)"
         elif score <= 30:
-            return 'Legacy (Variant A)'
+            return "Legacy (Variant A)"
         else:
-            return 'Tie (similar performance)'
+            return "Tie (similar performance)"
 
     def _generate_recommendation(self) -> str:
         """추천 생성"""
         comparison = self._compare_variants()
-        winner = comparison['winner']
+        winner = comparison["winner"]
 
-        if 'V0128' in winner:
+        if "V0128" in winner:
             return (
                 f"V0128을 사용하는 것을 권장합니다.\n"
                 f"- 통과율 개선: {comparison['pass_rate_improvement']:.1%}\n"
                 f"- 점수 개선: {comparison['score_improvement']:.1f}점\n"
                 f"- 일관성 개선: {comparison['consistency_improvement']:.1f}점"
             )
-        elif 'Legacy' in winner:
-            return (
-                f"Legacy 시스템을 유지하는 것을 권장합니다.\n"
-                f"V0128의 성능이 예상보다 낮습니다."
-            )
+        elif "Legacy" in winner:
+            return "Legacy 시스템을 유지하는 것을 권장합니다.\nV0128의 성능이 예상보다 낮습니다."
         else:
-            return (
-                f"두 시스템의 성능이 유사합니다.\n"
-                f"비용 대비 효과를 고려하여 선택하십시오."
-            )
+            return "두 시스템의 성능이 유사합니다.\n비용 대비 효과를 고려하여 선택하십시오."
 
     def generate_report(self, output_path: str = None) -> str:
         """
@@ -369,7 +367,7 @@ class ABTestingFramework:
         report.append("")
 
         # Variant A
-        a = analysis['variant_a']
+        a = analysis["variant_a"]
         report.append("--- VARIANT A: Legacy System ---")
         report.append(f"Pass Rate: {a['pass_rate']:.1%} ({a['pass_count']}/{a['total_tests']})")
         report.append(f"Average Score: {a['avg_score']:.1f}")
@@ -378,7 +376,7 @@ class ABTestingFramework:
         report.append("")
 
         # Variant B
-        b = analysis['variant_b']
+        b = analysis["variant_b"]
         report.append("--- VARIANT B: V0128 System ---")
         report.append(f"Pass Rate: {b['pass_rate']:.1%} ({b['pass_count']}/{b['total_tests']})")
         report.append(f"Average Score: {b['avg_score']:.1f}")
@@ -387,7 +385,7 @@ class ABTestingFramework:
         report.append("")
 
         # Comparison
-        comp = analysis['comparison']
+        comp = analysis["comparison"]
         report.append("--- COMPARISON ---")
         report.append(f"Pass Rate Improvement: {comp['pass_rate_improvement']:.1%}")
         report.append(f"Score Improvement: {comp['score_improvement']:+.1f} points")
@@ -398,14 +396,14 @@ class ABTestingFramework:
 
         # Recommendation
         report.append("--- RECOMMENDATION ---")
-        report.append(analysis['recommendation'])
+        report.append(analysis["recommendation"])
         report.append("=" * 80)
 
         report_text = "\n".join(report)
 
         # 파일 저장 (선택적)
         if output_path:
-            with open(output_path, 'w', encoding='utf-8') as f:
+            with open(output_path, "w", encoding="utf-8") as f:
                 f.write(report_text)
             report.append(f"\nReport saved to: {output_path}")
 
@@ -414,14 +412,14 @@ class ABTestingFramework:
     def save_raw_data(self, output_path: str):
         """원시 데이터 JSON으로 저장"""
         data = {
-            'project': self.project_name,
-            'start_time': self.start_time,
-            'end_time': self.end_time,
-            'variant_a': self.variant_a_results,
-            'variant_b': self.variant_b_results
+            "project": self.project_name,
+            "start_time": self.start_time,
+            "end_time": self.end_time,
+            "variant_a": self.variant_a_results,
+            "variant_b": self.variant_b_results,
         }
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
 
     def reset(self) -> None:
@@ -433,12 +431,7 @@ class ABTestingFramework:
 
 
 # 편의 함수
-def quick_ab_test(
-    manuscripts: List[Dict],
-    director_a,
-    director_b,
-    v0128_config: dict = None
-) -> str:
+def quick_ab_test(manuscripts: list[dict], director_a, director_b, v0128_config: dict = None) -> str:
     """
     빠른 A/B 테스트
 
@@ -455,12 +448,12 @@ def quick_ab_test(
 
     for ms_data in manuscripts:
         framework.run_test(
-            ep_num=ms_data['ep_num'],
-            manuscript=ms_data['manuscript'],
-            validation_context=ms_data['validation_context'],
+            ep_num=ms_data["ep_num"],
+            manuscript=ms_data["manuscript"],
+            validation_context=ms_data["validation_context"],
             director_a=director_a,
             director_b=director_b,
-            v0128_config=v0128_config
+            v0128_config=v0128_config,
         )
 
     report = framework.generate_report()

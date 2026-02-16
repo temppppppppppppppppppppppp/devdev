@@ -18,8 +18,8 @@ Usage:
     # => [PerfTimer:Stage4] ensemble_generate=12.34s, director_audit=5.67s, _total=18.01s
 """
 
-import time
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 

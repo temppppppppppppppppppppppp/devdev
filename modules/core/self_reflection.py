@@ -21,16 +21,17 @@
     )
 """
 
-from typing import Dict, Any, Optional, Callable
+import json
 import logging
+import re
 from dataclasses import dataclass
 from enum import Enum
-import json
-import re
+from typing import Any
 
 
 class ReflectionTarget(Enum):
     """성찰 대상"""
+
     WRITER = "writer"
     ARCHITECT = "architect"
     ANALYST = "analyst"
@@ -39,6 +40,7 @@ class ReflectionTarget(Enum):
 @dataclass
 class ReflectionResult:
     """성찰 결과"""
+
     original: str
     critique: str
     improved: str
@@ -79,7 +81,6 @@ JSON 형식으로 응답:
     "overall_quality": 1-10
 }}
 ```""",
-
         ReflectionTarget.ARCHITECT: """당신은 방금 작성한 블루프린트를 검토하는 수석 설계자입니다.
 
 [작성된 블루프린트]
@@ -107,7 +108,6 @@ JSON 형식으로 응답:
     "overall_quality": 1-10
 }}
 ```""",
-
         ReflectionTarget.ANALYST: """당신은 방금 작성한 아크 설계를 검토하는 전략 고문입니다.
 
 [작성된 아크 설계]
@@ -134,7 +134,7 @@ JSON 형식으로 응답:
     "severity": "high|medium|low|none",
     "overall_quality": 1-10
 }}
-```"""
+```""",
     }
 
     IMPROVEMENT_PROMPT = """당신의 비평을 바탕으로 원본을 수정하세요.
@@ -167,23 +167,18 @@ JSON 형식으로 응답:
         """LLM 호출"""
         try:
             response = self.client.models.generate_content(
-                model=self.model,
-                contents=prompt,
-                config={
-                    "temperature": temperature,
-                    "max_output_tokens": 8192
-                }
+                model=self.model, contents=prompt, config={"temperature": temperature, "max_output_tokens": 8192}
             )
             return response.text if response.text else ""  # [V70] None 방어
         except Exception as e:
             logging.warning(f"[SelfReflector] LLM 호출 실패: {e}")
             return ""
 
-    def _parse_critique(self, critique_text: str) -> Dict[str, Any]:
+    def _parse_critique(self, critique_text: str) -> dict[str, Any]:
         """비평 결과 파싱"""
         try:
             # JSON 블록 추출
-            json_match = re.search(r'```json\s*(.*?)\s*```', critique_text, re.DOTALL)
+            json_match = re.search(r"```json\s*(.*?)\s*```", critique_text, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group(1))
 
@@ -191,18 +186,9 @@ JSON 형식으로 응답:
             return json.loads(critique_text)
         except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] JSON parse failure
             # 파싱 실패 시 기본값
-            return {
-                "issues": [],
-                "severity": "none",
-                "overall_quality": 7
-            }
+            return {"issues": [], "severity": "none", "overall_quality": 7}
 
-    def reflect(
-        self,
-        output: str,
-        context: str,
-        target: ReflectionTarget
-    ) -> Dict[str, Any]:
+    def reflect(self, output: str, context: str, target: ReflectionTarget) -> dict[str, Any]:
         """
         자기 비평 수행
 
@@ -229,12 +215,7 @@ JSON 형식으로 응답:
 
         return self._parse_critique(critique_text)
 
-    def improve(
-        self,
-        original: str,
-        critique: Dict[str, Any],
-        target: ReflectionTarget
-    ) -> str:
+    def improve(self, original: str, critique: dict[str, Any], target: ReflectionTarget) -> str:
         """
         비평 기반 개선
 
@@ -261,10 +242,7 @@ JSON 형식으로 응답:
         # [V70] 사용자 콘텐츠 내 {}는 .format()에서 KeyError 유발 → 이스케이프
         _safe_original = original[:12000].replace("{", "{{").replace("}", "}}")
         _safe_critique = critique_summary.replace("{", "{{").replace("}", "}}")
-        prompt = self.IMPROVEMENT_PROMPT.format(
-            original=_safe_original,
-            critique=_safe_critique
-        )
+        prompt = self.IMPROVEMENT_PROMPT.format(original=_safe_original, critique=_safe_critique)
 
         improved = self._call_llm(prompt, temperature=0.4)
 
@@ -275,11 +253,7 @@ JSON 형식으로 응답:
         return improved
 
     def reflect_and_improve(
-        self,
-        output: str,
-        context: str,
-        target: ReflectionTarget,
-        force: bool = False
+        self, output: str, context: str, target: ReflectionTarget, force: bool = False
     ) -> ReflectionResult:
         """
         자기 성찰 + 개선 전체 체인
@@ -318,14 +292,10 @@ JSON 형식으로 응답:
             critique=json.dumps(critique, ensure_ascii=False),
             improved=improved,
             changes_made=changes,
-            improvement_score=improvement_score
+            improvement_score=improvement_score,
         )
 
-    def quick_check(
-        self,
-        output: str,
-        target: ReflectionTarget
-    ) -> Dict[str, Any]:
+    def quick_check(self, output: str, target: ReflectionTarget) -> dict[str, Any]:
         """
         빠른 품질 체크 (개선 없이 점수만)
 
@@ -340,21 +310,17 @@ JSON 형식으로 응답:
             if len(output) < 3000:
                 issues_count += 1
             # 대화 비율 체크
-            dialogue_count = output.count('"') + output.count('「')
+            dialogue_count = output.count('"') + output.count("「")
             if dialogue_count < 4:
                 issues_count += 1
 
         elif target == ReflectionTarget.ARCHITECT:
             # 씬 개수 체크
-            scene_count = len(re.findall(r'scene_\d+|씬\s*\d+', output, re.IGNORECASE))
+            scene_count = len(re.findall(r"scene_\d+|씬\s*\d+", output, re.IGNORECASE))
             if scene_count < 3 or scene_count > 8:
                 issues_count += 1
 
         quality = max(1, 10 - issues_count * 2)
         severity = "high" if issues_count > 2 else "medium" if issues_count > 0 else "none"
 
-        return {
-            "quality": quality,
-            "severity": severity,
-            "issues_count": issues_count
-        }
+        return {"quality": quality, "severity": severity, "issues_count": issues_count}

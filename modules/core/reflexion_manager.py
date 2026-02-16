@@ -4,9 +4,8 @@
 
 Reflexion: 실패 → 분석 → 기억 → 회피
 """
-import json
+
 import logging
-from typing import Dict, List, Any
 from datetime import datetime
 
 
@@ -42,14 +41,16 @@ class ReflexionManager:
 
             self.memory = []
             for row in rows:
-                self.memory.append({
-                    'pattern_type': row[0],
-                    'description': row[1],
-                    'frequency': row[2],
-                    'solution': row[3],
-                    'first_seen': row[4],
-                    'last_seen': row[5]
-                })
+                self.memory.append(
+                    {
+                        "pattern_type": row[0],
+                        "description": row[1],
+                        "frequency": row[2],
+                        "solution": row[3],
+                        "first_seen": row[4],
+                        "last_seen": row[5],
+                    }
+                )
 
             self.loaded = True
             logging.warning(f"📚 [Reflexion] 과거 실패 패턴 {len(self.memory)}개 로드됨")
@@ -78,7 +79,7 @@ class ReflexionManager:
         # 기존 패턴 찾기
         existing = None
         for item in self.memory:
-            if item['pattern_type'] == pattern_key:
+            if item["pattern_type"] == pattern_key:
                 existing = item
                 break
 
@@ -86,19 +87,19 @@ class ReflexionManager:
 
         if existing:
             # 빈도 증가
-            new_frequency = existing['frequency'] + 1
+            new_frequency = existing["frequency"] + 1
 
             self.context.db.execute_update(
                 """UPDATE reflexion_memory
                    SET frequency = ?, last_seen = ?, last_ep = ?
                    WHERE pattern_type = ?""",
-                (new_frequency, timestamp, ep_num, pattern_key)
+                (new_frequency, timestamp, ep_num, pattern_key),
             )
             # Commit to persist frequency update
             self.context.db.conn.commit()
 
-            existing['frequency'] = new_frequency
-            existing['last_seen'] = timestamp
+            existing["frequency"] = new_frequency
+            existing["last_seen"] = timestamp
 
             logging.info(f"📝 [Reflexion] 패턴 '{pattern_key}' 빈도 증가: {new_frequency}회")
 
@@ -108,18 +109,18 @@ class ReflexionManager:
                 """INSERT INTO reflexion_memory
                    (pattern_type, description, frequency, solution, first_seen, last_seen, first_ep, last_ep)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-                (pattern_key, description, 1, solution, timestamp, timestamp, ep_num, ep_num)
+                (pattern_key, description, 1, solution, timestamp, timestamp, ep_num, ep_num),
             )
             # Commit to persist new pattern
             self.context.db.conn.commit()
 
             new_pattern = {
-                'pattern_type': pattern_key,
-                'description': description,
-                'frequency': 1,
-                'solution': solution,
-                'first_seen': timestamp,
-                'last_seen': timestamp
+                "pattern_type": pattern_key,
+                "description": description,
+                "frequency": 1,
+                "solution": solution,
+                "first_seen": timestamp,
+                "last_seen": timestamp,
             }
             self.memory.append(new_pattern)
 
@@ -137,21 +138,21 @@ class ReflexionManager:
         """
         # 키워드 매핑
         patterns = {
-            '사망': 'dead_npc_resurrection',
-            '재등장': 'dead_npc_resurrection',
-            '경외': 'relationship_regression',
-            '무시': 'relationship_regression',
-            '관계 역행': 'relationship_regression',
-            '장비': 'equipment_inconsistency',
-            'NPC 장비': 'equipment_inconsistency',
-            '미획득': 'unowned_item_usage',
-            '아이템': 'unowned_item_usage',
-            '미래': 'future_leak',
-            '누수': 'future_leak',
-            'HUD': 'hud_contradiction',
-            '모순': 'hud_contradiction',
-            '정당화': 'justification_missing',
-            '클리셰': 'cliche_overuse',
+            "사망": "dead_npc_resurrection",
+            "재등장": "dead_npc_resurrection",
+            "경외": "relationship_regression",
+            "무시": "relationship_regression",
+            "관계 역행": "relationship_regression",
+            "장비": "equipment_inconsistency",
+            "NPC 장비": "equipment_inconsistency",
+            "미획득": "unowned_item_usage",
+            "아이템": "unowned_item_usage",
+            "미래": "future_leak",
+            "누수": "future_leak",
+            "HUD": "hud_contradiction",
+            "모순": "hud_contradiction",
+            "정당화": "justification_missing",
+            "클리셰": "cliche_overuse",
         }
 
         for keyword, pattern_key in patterns.items():
@@ -159,7 +160,7 @@ class ReflexionManager:
                 return pattern_key
 
         # 매칭 안되면 일반 실패로
-        return 'generic_failure'
+        return "generic_failure"
 
     def get_prompt_injection(self, min_frequency: int = 2) -> str:
         """
@@ -174,29 +175,26 @@ class ReflexionManager:
         self.load_memory()
 
         # 빈도 높은 패턴 필터링
-        frequent_patterns = [
-            p for p in self.memory
-            if p['frequency'] >= min_frequency
-        ]
+        frequent_patterns = [p for p in self.memory if p["frequency"] >= min_frequency]
 
         if not frequent_patterns:
             return ""
 
         # 상위 5개만
-        top_patterns = sorted(frequent_patterns, key=lambda x: x['frequency'], reverse=True)[:5]
+        top_patterns = sorted(frequent_patterns, key=lambda x: x["frequency"], reverse=True)[:5]
 
         prompt_parts = [
             "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
             "\n🧠 [REFLEXION: 과거 실패 패턴 - 반드시 회피]",
             "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n",
             "\n이 프로젝트에서 과거에 반복된 실패 패턴입니다.",
-            "동일한 실수를 절대 반복하지 마십시오.\n"
+            "동일한 실수를 절대 반복하지 마십시오.\n",
         ]
 
         for i, pattern in enumerate(top_patterns, 1):
             prompt_parts.append(f"\n[실패 패턴 {i}] {pattern['description']}")
             prompt_parts.append(f"  빈도: {pattern['frequency']}회")
-            if pattern.get('solution'):
+            if pattern.get("solution"):
                 prompt_parts.append(f"  해결책: {pattern['solution']}")
             prompt_parts.append("")
 
@@ -219,7 +217,7 @@ class ReflexionManager:
 
         summary_parts = [f"총 {len(self.memory)}개 패턴 기록됨:\n"]
 
-        for pattern in sorted(self.memory, key=lambda x: x['frequency'], reverse=True)[:10]:
+        for pattern in sorted(self.memory, key=lambda x: x["frequency"], reverse=True)[:10]:
             summary_parts.append(
                 f"- {pattern['pattern_type']}: {pattern['frequency']}회 ({pattern['description'][:50]}...)"
             )

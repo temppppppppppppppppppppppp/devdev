@@ -19,47 +19,49 @@ Stage 4 통과율 향상을 위한 구조화된 원고 생성 가이드
     # Writer 프롬프트에 injection 추가
 """
 
-from typing import Dict, Any, List, Optional
+import re
 from dataclasses import dataclass
 from enum import Enum
-import json
-import re
+from typing import Any
 
 
 class SceneType(Enum):
     """씬 타입"""
-    OPENING = "opening"          # 오프닝 (직전 화 연결)
-    BUILDUP = "buildup"          # 빌드업 (긴장 상승)
+
+    OPENING = "opening"  # 오프닝 (직전 화 연결)
+    BUILDUP = "buildup"  # 빌드업 (긴장 상승)
     CONFRONTATION = "confrontation"  # 대결/충돌
-    REVELATION = "revelation"    # 반전/발각
-    RESOLUTION = "resolution"    # 해결/정리
+    REVELATION = "revelation"  # 반전/발각
+    RESOLUTION = "resolution"  # 해결/정리
     CLIFFHANGER = "cliffhanger"  # 클리프행어
 
 
 @dataclass
 class SceneSlot:
     """씬 슬롯"""
+
     index: int
     scene_id: str
     scene_type: SceneType
     description: str
     min_chars: int
     max_chars: int
-    required_elements: List[str]
-    characters: List[str]
+    required_elements: list[str]
+    characters: list[str]
 
 
 @dataclass
 class ManuscriptTemplate:
     """원고 템플릿"""
+
     ep_num: int
     total_scenes: int
-    slots: List[SceneSlot]
+    slots: list[SceneSlot]
     total_min_chars: int
     total_max_chars: int
-    opening_anchor: str      # 직전 화 연결 앵커
-    closing_hook: str        # 클리프행어 목표
-    inventory_reminder: List[str]  # 소지품 리마인더
+    opening_anchor: str  # 직전 화 연결 앵커
+    closing_hook: str  # 클리프행어 목표
+    inventory_reminder: list[str]  # 소지품 리마인더
 
 
 class WriterTemplate:
@@ -109,10 +111,7 @@ class WriterTemplate:
         self.genre = genre
 
     def generate_template(
-        self,
-        blueprint: Dict[str, Any],
-        prev_ending: str = "",
-        inventory: List[str] = None
+        self, blueprint: dict[str, Any], prev_ending: str = "", inventory: list[str] = None
     ) -> ManuscriptTemplate:
         """
         Blueprint에서 원고 템플릿 생성
@@ -125,9 +124,9 @@ class WriterTemplate:
         Returns:
             ManuscriptTemplate
         """
-        ep_num = blueprint.get('ep_num', 0)
-        scene_breakdown = blueprint.get('scene_breakdown', {})
-        ending_hook = blueprint.get('ending_hook') or blueprint.get('cliffhanger', '')
+        ep_num = blueprint.get("ep_num", 0)
+        scene_breakdown = blueprint.get("scene_breakdown", {})
+        ending_hook = blueprint.get("ending_hook") or blueprint.get("cliffhanger", "")
 
         slots = []
         total_min = 0
@@ -138,15 +137,13 @@ class WriterTemplate:
             scene_type = self._infer_scene_type(i, len(scene_breakdown), scene_data)
 
             if isinstance(scene_data, dict):
-                description = scene_data.get('description', str(scene_data))
-                characters = scene_data.get('characters', [])
+                description = scene_data.get("description", str(scene_data))
+                characters = scene_data.get("characters", [])
             else:
                 description = str(scene_data)
                 characters = []
 
-            min_chars, max_chars = self.SCENE_LENGTH.get(
-                scene_type, (500, 1000)
-            )
+            min_chars, max_chars = self.SCENE_LENGTH.get(scene_type, (500, 1000))
 
             # 필수 요소
             required = list(self.SCENE_REQUIREMENTS.get(scene_type, []))
@@ -156,16 +153,18 @@ class WriterTemplate:
             if scene_type in genre_extra:
                 required.extend(genre_extra[scene_type])
 
-            slots.append(SceneSlot(
-                index=i + 1,
-                scene_id=scene_id,
-                scene_type=scene_type,
-                description=description[:200],
-                min_chars=min_chars,
-                max_chars=max_chars,
-                required_elements=required,
-                characters=characters if isinstance(characters, list) else []
-            ))
+            slots.append(
+                SceneSlot(
+                    index=i + 1,
+                    scene_id=scene_id,
+                    scene_type=scene_type,
+                    description=description[:200],
+                    min_chars=min_chars,
+                    max_chars=max_chars,
+                    required_elements=required,
+                    characters=characters if isinstance(characters, list) else [],
+                )
+            )
 
             total_min += min_chars
             total_max += max_chars
@@ -178,15 +177,10 @@ class WriterTemplate:
             total_max_chars=min(12000, total_max),
             opening_anchor=prev_ending[-300:] if prev_ending else "",
             closing_hook=ending_hook[:200] if ending_hook else "",
-            inventory_reminder=inventory or []
+            inventory_reminder=inventory or [],
         )
 
-    def _infer_scene_type(
-        self,
-        index: int,
-        total: int,
-        scene_data: Any
-    ) -> SceneType:
+    def _infer_scene_type(self, index: int, total: int, scene_data: Any) -> SceneType:
         """씬 타입 추론"""
         # 위치 기반 추론
         if index == 0:
@@ -199,17 +193,14 @@ class WriterTemplate:
         # 내용 기반 추론
         desc = str(scene_data).lower() if scene_data else ""
 
-        if any(kw in desc for kw in ['대결', '전투', '싸움', '격돌', '교전', '습격']):
+        if any(kw in desc for kw in ["대결", "전투", "싸움", "격돌", "교전", "습격"]):
             return SceneType.CONFRONTATION
-        elif any(kw in desc for kw in ['발각', '반전', '드러나', '밝혀', '정체', '비밀']):
+        elif any(kw in desc for kw in ["발각", "반전", "드러나", "밝혀", "정체", "비밀"]):
             return SceneType.REVELATION
         else:
             return SceneType.BUILDUP
 
-    def generate_prompt_injection(
-        self,
-        template: ManuscriptTemplate
-    ) -> str:
+    def generate_prompt_injection(self, template: ManuscriptTemplate) -> str:
         """
         템플릿을 프롬프트 주입 문자열로 변환
 
@@ -262,7 +253,7 @@ class WriterTemplate:
             lines.append(f"   분량: {slot.min_chars}~{slot.max_chars}자")
 
             if slot.required_elements:
-                lines.append(f"   필수:")
+                lines.append("   필수:")
                 for elem in slot.required_elements[:3]:
                     lines.append(f"      □ {elem}")
 
@@ -283,10 +274,8 @@ class WriterTemplate:
         return "\n".join(lines)
 
     def generate_scene_by_scene_prompts(
-        self,
-        template: ManuscriptTemplate,
-        blueprint: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+        self, template: ManuscriptTemplate, blueprint: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """
         Scene-by-Scene 생성 모드용 개별 프롬프트 생성
 
@@ -331,11 +320,7 @@ class WriterTemplate:
 
         return prompts
 
-    def validate_against_template(
-        self,
-        manuscript: str,
-        template: ManuscriptTemplate
-    ) -> Dict[str, Any]:
+    def validate_against_template(self, manuscript: str, template: ManuscriptTemplate) -> dict[str, Any]:
         """
         원고가 템플릿을 준수하는지 검증
 
@@ -360,7 +345,7 @@ class WriterTemplate:
         missing_scenes = []
         for slot in template.slots:
             # 씬 설명에서 핵심 키워드 추출
-            keywords = re.findall(r'[\w가-힣]{2,}', slot.description)[:3]
+            keywords = re.findall(r"[\w가-힣]{2,}", slot.description)[:3]
             if keywords:
                 matched = sum(1 for kw in keywords if kw in manuscript)
                 if matched == 0:
@@ -371,14 +356,14 @@ class WriterTemplate:
 
         # 3. 클리프행어 체크
         if template.closing_hook:
-            hook_keywords = re.findall(r'[\w가-힣]{2,}', template.closing_hook)[:3]
+            hook_keywords = re.findall(r"[\w가-힣]{2,}", template.closing_hook)[:3]
             ending_part = manuscript[-600:] if len(manuscript) > 600 else manuscript
             if hook_keywords and not any(kw in ending_part for kw in hook_keywords):
                 warnings.append("클리프행어가 원고 끝에서 감지되지 않음")
 
         # 4. 직전 화 연결 체크
         if template.opening_anchor:
-            anchor_keywords = re.findall(r'[\w가-힣]{3,}', template.opening_anchor)[:3]
+            anchor_keywords = re.findall(r"[\w가-힣]{3,}", template.opening_anchor)[:3]
             opening_part = manuscript[:600] if len(manuscript) > 600 else manuscript
             if anchor_keywords and not any(kw in opening_part for kw in anchor_keywords):
                 warnings.append("직전 화와의 연결이 약함")
@@ -391,14 +376,10 @@ class WriterTemplate:
             "warnings": warnings,
             "length": length,
             "expected_range": f"{template.total_min_chars}~{template.total_max_chars}",
-            "scene_coverage": f"{template.total_scenes - len(missing_scenes)}/{template.total_scenes}"
+            "scene_coverage": f"{template.total_scenes - len(missing_scenes)}/{template.total_scenes}",
         }
 
-    def get_feedback_for_retry(
-        self,
-        validation_result: Dict[str, Any],
-        template: ManuscriptTemplate
-    ) -> str:
+    def get_feedback_for_retry(self, validation_result: dict[str, Any], template: ManuscriptTemplate) -> str:
         """
         재시도를 위한 피드백 생성
 

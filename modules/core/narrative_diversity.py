@@ -20,9 +20,10 @@ import logging
     injection = engine.get_writer_injection()
 """
 
-from typing import Callable, Dict, List, Tuple, Optional
+from collections.abc import Callable
+
+from .diversity_sampler import ConditionalDiversitySampler, DiversitySampler
 from .pattern_tracker import PatternTracker
-from .diversity_sampler import DiversitySampler, ConditionalDiversitySampler
 
 
 class NarrativeDiversityEngine:
@@ -37,7 +38,7 @@ class NarrativeDiversityEngine:
 
     # Contrastive CoT 네거티브 예시
     CONTRASTIVE_EXAMPLES = {
-        'wuxia': """
+        "wuxia": """
 [V48 CONTRASTIVE CoT: 이렇게 쓰지 마라]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -108,8 +109,7 @@ D: 오해 → 갈등 → 진실 발견 → 관계 심화
 3. 최근 5화에서 사용한 플롯 패턴을 반복하지 마라
 4. 문장 시작을 '그는/그녀는'으로 25% 이상 쓰지 마라
 """,
-
-        'hunter': """
+        "hunter": """
 [V48 CONTRASTIVE CoT: 이렇게 쓰지 마라]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -141,8 +141,7 @@ D: 오해 → 갈등 → 진실 발견 → 관계 심화
 ✅ 올바른 예시:
 전투의 리듬, 위기의 순간, 성장의 의미를 담아라.
 """,
-
-        'investment': """
+        "investment": """
 [V48 CONTRASTIVE CoT: 이렇게 쓰지 마라]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -156,7 +155,7 @@ D: 오해 → 갈등 → 진실 발견 → 관계 심화
 ✅ 올바른 예시:
 내면의 갈등, 불확실성, 승리의 복잡한 감정을 담아라.
 """,
-        'cooking': """
+        "cooking": """
 [V48 CONTRASTIVE CoT: 이렇게 쓰지 마라]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -188,7 +187,7 @@ D: 오해 → 갈등 → 진실 발견 → 관계 심화
 요리의 완성과 고객 반응, 경영의 고뇌와 성취를 감각적으로 담아라.
 맛을 직접 서술하지 말고 먹는 사람의 표정, 행동, 비유로 보여줘라.
 """,
-        'alt_history': """
+        "alt_history": """
 [V48 CONTRASTIVE CoT: 이렇게 쓰지 마라]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -219,7 +218,7 @@ D: 오해 → 갈등 → 진실 발견 → 관계 심화
 현대 지식의 도입은 반드시 시대적 저항과 점진적 설득 과정을 거쳐야 한다.
 유교적 보수 세력의 반발, 장인들의 기술적 한계, 재원 확보의 어려움을 그려라.
 """,
-        'actor': """
+        "actor": """
 [V62 CONTRASTIVE CoT: 이렇게 쓰지 마라]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -252,7 +251,7 @@ D: 오해 → 갈등 → 진실 발견 → 관계 심화
 연기의 결과는 숫자가 아닌 관객과 업계의 반응으로 보여줘라.
 댓글의 온도, 업계 관계자의 전화, 거리에서 알아보는 시선의 변화로 표현하라.
 """,
-        'sports': """
+        "sports": """
 [V62.1 CONTRASTIVE CoT: 이렇게 쓰지 마라]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -285,7 +284,7 @@ D: 오해 → 갈등 → 진실 발견 → 관계 심화
 훈련은 구체적 과정으로, 성장은 경기 중 발현으로 보여줘라.
 새벽 러닝의 폐 타는 감각, 반복 드릴의 근육 기억, 영상 분석의 눈 뜨임으로 묘사하라.
 """,
-        'medical': """
+        "medical": """
 [V62.1 CONTRASTIVE CoT: 이렇게 쓰지 마라]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -317,10 +316,10 @@ D: 오해 → 갈등 → 진실 발견 → 관계 심화
 ✅ 올바른 예시:
 진단은 추리 과정으로, 성장은 임상 판단의 변화로 보여줘라.
 검사 결과의 모순, 교과서에 없는 증상 조합, 선배의 한마디에서 번뜩이는 통찰로 묘사하라.
-"""
+""",
     }
 
-    def __init__(self, context, genre: str = 'wuxia', window_size: int = 10):
+    def __init__(self, context, genre: str = "wuxia", window_size: int = 10):
         """
         Args:
             context: ProjectContext 인스턴스
@@ -340,7 +339,7 @@ D: 오해 → 갈등 → 진실 발견 → 관계 심화
         self._analysis_report = None
         self._recent_manuscripts = []
 
-    def analyze_recent_episodes(self, n_episodes: int = None) -> Dict:
+    def analyze_recent_episodes(self, n_episodes: int = None) -> dict:
         """
         최근 에피소드 분석 및 패턴 추적
 
@@ -364,7 +363,7 @@ D: 오해 → 갈등 → 진실 발견 → 관계 심화
                 # 원고 로드
                 ms_data = self.context.db.get_manuscript(ep_num)
                 if ms_data:
-                    content = ms_data.get('content', '') if isinstance(ms_data, dict) else str(ms_data)
+                    content = ms_data.get("content", "") if isinstance(ms_data, dict) else str(ms_data)
                     if content:
                         manuscripts.append(content)
 
@@ -379,31 +378,23 @@ D: 오해 → 갈등 → 진실 발견 → 관계 심화
         self._recent_manuscripts = manuscripts
 
         # 패턴 분석 실행
-        self._analysis_report = self.pattern_tracker.analyze_manuscripts(
-            manuscripts=manuscripts,
-            blueprints=blueprints
-        )
+        self._analysis_report = self.pattern_tracker.analyze_manuscripts(manuscripts=manuscripts, blueprints=blueprints)
 
         # Diversity Sampler 초기화 (최근 원고를 참조 텍스트로)
         self.diversity_sampler = DiversitySampler(reference_texts=manuscripts)
         self.conditional_sampler = ConditionalDiversitySampler(
-            pattern_tracker=self.pattern_tracker,
-            reference_texts=manuscripts
+            pattern_tracker=self.pattern_tracker, reference_texts=manuscripts
         )
 
         logging.info(f"[NarrativeDiversity] {len(manuscripts)}화 분석 완료")
         if self._analysis_report:
-            high_count = self._analysis_report.get('high_severity_count', 0)
+            high_count = self._analysis_report.get("high_severity_count", 0)
             if high_count > 0:
                 logging.info(f"[NarrativeDiversity] HIGH 경고 {high_count}개 감지!")
 
         return self._analysis_report
 
-    def generate_diverse_blueprint(
-        self,
-        generator_fn: Callable[[], dict],
-        n_samples: int = 3
-    ) -> Tuple[dict, Dict]:
+    def generate_diverse_blueprint(self, generator_fn: Callable[[], dict], n_samples: int = 3) -> tuple[dict, dict]:
         """
         Stage 3 (Architect): 항상 Diversity Sampling 적용
 
@@ -417,16 +408,13 @@ D: 오해 → 갈등 → 진실 발견 → 관계 심화
         if self.diversity_sampler is None:
             # 분석 안 됐으면 단일 생성
             logging.info("[NarrativeDiversity] 분석 미완료 - 단일 블루프린트 생성")
-            return generator_fn(), {'mode': 'single', 'reason': 'no_analysis'}
+            return generator_fn(), {"mode": "single", "reason": "no_analysis"}
 
         return self.diversity_sampler.sample_blueprints(generator_fn, n_samples)
 
     def generate_diverse_manuscript(
-        self,
-        generator_fn: Callable[[], str],
-        n_samples: int = 3,
-        force: bool = False
-    ) -> Tuple[str, Dict]:
+        self, generator_fn: Callable[[], str], n_samples: int = 3, force: bool = False
+    ) -> tuple[str, dict]:
         """
         Stage 4 (Writer): 조건부 Diversity Sampling 적용
 
@@ -441,11 +429,11 @@ D: 오해 → 갈등 → 진실 발견 → 관계 심화
         if self.conditional_sampler is None:
             # 분석 안 됐으면 단일 생성
             logging.info("[NarrativeDiversity] 분석 미완료 - 단일 원고 생성")
-            return generator_fn(), {'mode': 'single', 'reason': 'no_analysis'}
+            return generator_fn(), {"mode": "single", "reason": "no_analysis"}
 
         return self.conditional_sampler.sample_or_single(generator_fn, n_samples, force)
 
-    def should_use_diversity_sampling_for_writer(self) -> Tuple[bool, str]:
+    def should_use_diversity_sampling_for_writer(self) -> tuple[bool, str]:
         """
         Writer에서 Diversity Sampling을 사용해야 하는지 판단
 
@@ -473,7 +461,7 @@ D: 오해 → 갈등 → 진실 발견 → 관계 심화
                 injection += pattern_injection + "\n\n"
 
         # 2. Contrastive CoT 예시
-        contrastive = self.CONTRASTIVE_EXAMPLES.get(self.genre, self.CONTRASTIVE_EXAMPLES['wuxia'])
+        contrastive = self.CONTRASTIVE_EXAMPLES.get(self.genre, self.CONTRASTIVE_EXAMPLES["wuxia"])
         injection += contrastive
 
         return injection
@@ -510,8 +498,8 @@ D: 오해 → 갈등 → 진실 발견 → 관계 심화
 
         # 패턴 분석 결과가 있으면 추가
         if self._analysis_report:
-            warnings = self._analysis_report.get('warnings', [])
-            plot_warnings = [w for w in warnings if w.get('type') == 'PLOT_REPEAT']
+            warnings = self._analysis_report.get("warnings", [])
+            plot_warnings = [w for w in warnings if w.get("type") == "PLOT_REPEAT"]
             if plot_warnings:
                 injection += "\n[경고: 플롯 패턴 반복 감지]\n"
                 for w in plot_warnings[:2]:
@@ -519,19 +507,17 @@ D: 오해 → 갈등 → 진실 발견 → 관계 심화
 
         return injection
 
-    def get_analysis_summary(self) -> Dict:
+    def get_analysis_summary(self) -> dict:
         """분석 결과 요약 반환"""
         if self._analysis_report is None:
-            return {'status': 'not_analyzed'}
+            return {"status": "not_analyzed"}
 
         return {
-            'status': 'analyzed',
-            'window_size': self.window_size,
-            'high_severity_warnings': self._analysis_report.get('high_severity_count', 0),
-            'diversity_sampling_recommended': self.should_use_diversity_sampling_for_writer()[0],
-            'top_issues': [
-                w['message'] for w in self._analysis_report.get('warnings', [])[:3]
-            ]
+            "status": "analyzed",
+            "window_size": self.window_size,
+            "high_severity_warnings": self._analysis_report.get("high_severity_count", 0),
+            "diversity_sampling_recommended": self.should_use_diversity_sampling_for_writer()[0],
+            "top_issues": [w["message"] for w in self._analysis_report.get("warnings", [])[:3]],
         }
 
     def save_state(self) -> bool:

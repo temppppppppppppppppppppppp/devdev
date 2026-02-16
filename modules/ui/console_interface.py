@@ -1,10 +1,12 @@
 import os
 from pathlib import Path
+
+from rich import box
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
 from rich.prompt import Prompt
-from rich import box
+from rich.table import Table
+
 
 class ConsoleInterface:
     def __init__(self, studio_system) -> None:
@@ -14,17 +16,19 @@ class ConsoleInterface:
 
     def clear(self) -> None:
         """터미널 화면을 깨끗하게 지웁니다."""
-        os.system('cls' if os.name == 'nt' else 'clear')
+        os.system("cls" if os.name == "nt" else "clear")
 
     def show_dashboard(self) -> None:
         """[FIX] 누락되었던 메인 대시보드를 출력합니다."""
         self.clear()
-        self.console.print(Panel(
-            f"[bold gold1]🏭 Novel Studio v2.0[/] | [bold cyan]Project: {self.project_name}[/]",
-            subtitle="Powered by 100 Billion Developer Logic",
-            box=box.DOUBLE,
-            style="white on black"
-        ))
+        self.console.print(
+            Panel(
+                f"[bold gold1]🏭 Novel Studio v2.0[/] | [bold cyan]Project: {self.project_name}[/]",
+                subtitle="Powered by 100 Billion Developer Logic",
+                box=box.DOUBLE,
+                style="white on black",
+            )
+        )
         self.console.print("\n[bold green]Welcome, CEO! Your AI Novel Factory is ready to produce.[/]\n")
 
     def ask_choice(self, question: str, choices: list) -> str:
@@ -46,14 +50,19 @@ class ConsoleInterface:
         table = Table(title=f"📜 [bold cyan]{genre_name.upper()}[/] Skeleton Library", box=box.ROUNDED)
         table.add_column("No", style="dim", width=4)
         table.add_column("Module Name", style="white")
-        
-        for i, name in enumerate(files):
-            table.add_row(str(i+1), name)
-        
-        self.console.print(table)
-        sel = Prompt.ask("Select Module Number", choices=[str(i+1) for i in range(len(files))], default="1")
-        return files[int(sel)-1]
 
-    def print_success(self, msg: str) -> None: self.console.print(f"✅ [bold green]{msg}[/]")
-    def print_info(self, msg: str) -> None: self.console.print(f"ℹ️  [bold blue]{msg}[/]")
-    def print_error(self, msg: str) -> None: self.console.print(f"❌ [bold red]{msg}[/]")
+        for i, name in enumerate(files):
+            table.add_row(str(i + 1), name)
+
+        self.console.print(table)
+        sel = Prompt.ask("Select Module Number", choices=[str(i + 1) for i in range(len(files))], default="1")
+        return files[int(sel) - 1]
+
+    def print_success(self, msg: str) -> None:
+        self.console.print(f"✅ [bold green]{msg}[/]")
+
+    def print_info(self, msg: str) -> None:
+        self.console.print(f"ℹ️  [bold blue]{msg}[/]")
+
+    def print_error(self, msg: str) -> None:
+        self.console.print(f"❌ [bold red]{msg}[/]")

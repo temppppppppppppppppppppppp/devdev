@@ -2,7 +2,9 @@
 
 import json
 import logging
+
 from .base_agent import BaseAgent
+
 
 class Weaver(BaseAgent):
     """
@@ -59,8 +61,8 @@ class Weaver(BaseAgent):
                         cached_content=self.cache_name,  # 🔥 weaver 캐시 참조
                         temperature=0.5,
                         max_output_tokens=4096,
-                        response_mime_type="application/json"
-                    )
+                        response_mime_type="application/json",
+                    ),
                 )
                 drive_data = self._extract_json_robust(response.text)
             else:
@@ -69,11 +71,11 @@ class Weaver(BaseAgent):
 
             # 데이터 검증 및 반환
             if drive_data and isinstance(drive_data, dict):
-                drive_data['status'] = "LOCKED"
+                drive_data["status"] = "LOCKED"
                 # [V47] 필수 필드 검증
-                if not drive_data.get('short_term_objective'):
+                if not drive_data.get("short_term_objective"):
                     logging.info("⚠️ [Weaver] short_term_objective 누락 - 보완 필요")
-                    drive_data['short_term_objective'] = "서사적 긴장감 고조"
+                    drive_data["short_term_objective"] = "서사적 긴장감 고조"
                 return drive_data
             else:
                 logging.info("⚠️ [Weaver] 유효한 욕망 데이터를 생성하지 못했습니다. 기본값 사용.")
@@ -82,7 +84,7 @@ class Weaver(BaseAgent):
                     "short_term_objective": "서사적 긴장감 고조 및 갈등 심화",
                     "mid_term_objective": "캐릭터 성장과 관계 발전",
                     "status": "FALLBACK_LOCKED",
-                    "fallback_reason": "drive_generation_failed"
+                    "fallback_reason": "drive_generation_failed",
                 }
 
         except Exception as e:
@@ -96,15 +98,15 @@ class Weaver(BaseAgent):
             full_context = "[SYSTEM: WEAVER MANIFESTO - FULL LOAD]\n"
 
             if rules_path.exists():
-                rule_data = json.loads(rules_path.read_text(encoding='utf-8'))
+                rule_data = json.loads(rules_path.read_text(encoding="utf-8"))
                 full_context += f"""
-Role: {rule_data.get('role', 'Desire-Driven Weaver')}
+Role: {rule_data.get("role", "Desire-Driven Weaver")}
 
 Core Logic:
-{json.dumps(rule_data.get('core_logic', {}), ensure_ascii=False, indent=2)}
+{json.dumps(rule_data.get("core_logic", {}), ensure_ascii=False, indent=2)}
 
 Selection Logic Fallback:
-{json.dumps(rule_data.get('selection_logic_fallback', {}), ensure_ascii=False, indent=2)}
+{json.dumps(rule_data.get("selection_logic_fallback", {}), ensure_ascii=False, indent=2)}
 
 ---
 """
@@ -114,10 +116,10 @@ Selection Logic Fallback:
             drive_data = self._extract_json_robust(raw_res)
 
             if drive_data and isinstance(drive_data, dict):
-                drive_data['status'] = "LOCKED"
+                drive_data["status"] = "LOCKED"
                 # [V47] 필수 필드 검증
-                if not drive_data.get('short_term_objective'):
-                    drive_data['short_term_objective'] = "서사적 긴장감 고조"
+                if not drive_data.get("short_term_objective"):
+                    drive_data["short_term_objective"] = "서사적 긴장감 고조"
                 return drive_data
             else:
                 # [V47 Fix] 더 구체적인 기본값
@@ -125,7 +127,7 @@ Selection Logic Fallback:
                     "short_term_objective": "서사적 긴장감 고조 및 갈등 심화",
                     "mid_term_objective": "캐릭터 성장과 관계 발전",
                     "status": "FALLBACK_LOCKED",
-                    "fallback_reason": "parsing_failed"
+                    "fallback_reason": "parsing_failed",
                 }
 
         except Exception as e:
@@ -135,7 +137,7 @@ Selection Logic Fallback:
                 "short_term_objective": "서사적 긴장감 고조 및 갈등 심화",
                 "mid_term_objective": "캐릭터 성장과 관계 발전",
                 "status": "ERROR_LOCKED",
-                "fallback_reason": f"exception: {str(e)[:50]}"
+                "fallback_reason": f"exception: {str(e)[:50]}",
             }
 
     # [Deprecated] 기존 Seed 로직은 하위 호환성을 위해 유지하거나 제거 가능

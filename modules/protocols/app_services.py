@@ -10,14 +10,12 @@ Stage 2/4 오케스트레이터가 self.app을 통해 접근하는 서비스의
 
 from __future__ import annotations
 
-from contextlib import contextmanager
-from pathlib import Path
-from typing import Any, Dict, Generator, List, Optional, Protocol, runtime_checkable
-
+from typing import Any, Protocol, runtime_checkable
 
 # ──────────────────────────────────────────────────────────────
 # 1. UIServiceProtocol
 # ──────────────────────────────────────────────────────────────
+
 
 @runtime_checkable
 class UIServiceProtocol(Protocol):
@@ -37,6 +35,7 @@ class UIServiceProtocol(Protocol):
 # ──────────────────────────────────────────────────────────────
 # 2. AuditServiceProtocol
 # ──────────────────────────────────────────────────────────────
+
 
 @runtime_checkable
 class AuditServiceProtocol(Protocol):
@@ -66,6 +65,7 @@ class AuditServiceProtocol(Protocol):
 # ──────────────────────────────────────────────────────────────
 # 3. ProjectRepositoryProtocol
 # ──────────────────────────────────────────────────────────────
+
 
 @runtime_checkable
 class ProjectRepositoryProtocol(Protocol):
@@ -107,6 +107,7 @@ class ProjectRepositoryProtocol(Protocol):
 # ──────────────────────────────────────────────────────────────
 # 4. StateServiceProtocol
 # ──────────────────────────────────────────────────────────────
+
 
 @runtime_checkable
 class StateServiceProtocol(Protocol):
@@ -200,6 +201,7 @@ class StateServiceProtocol(Protocol):
 # ──────────────────────────────────────────────────────────────
 # 5. ConfigServiceProtocol
 # ──────────────────────────────────────────────────────────────
+
 
 @runtime_checkable
 class ConfigServiceProtocol(Protocol):

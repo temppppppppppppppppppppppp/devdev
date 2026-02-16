@@ -1,6 +1,6 @@
 import json
 import logging
-import re
+
 from .base_agent import BaseAgent
 
 # =================================================================
@@ -113,8 +113,15 @@ UPDATE_STATE_PROMPT_V25 = """
 
 
 class Manager(BaseAgent):
-  
-  def update_state_and_lore_v20(self, ep_num: int, manuscript: str, current_state: dict, lore_list: list, active_seeds: list, causal_history: str = "") -> dict:
+    def update_state_and_lore_v20(
+        self,
+        ep_num: int,
+        manuscript: str,
+        current_state: dict,
+        lore_list: list,
+        active_seeds: list,
+        causal_history: str = "",
+    ) -> dict:
         """
         [V35.9 S-Grade] 정산 데이터 파싱 및 안전 전달 엔진
         - 무리한 내부 보정을 제거하여 main_a.py와의 충돌 방지
@@ -123,23 +130,25 @@ class Manager(BaseAgent):
         safe_ms = manuscript
         if not current_state:  # [V70] None/빈 dict 방어
             current_state = {}
-        safe_state = json.dumps(current_state.get('actual_truth', current_state), ensure_ascii=False)
+        safe_state = json.dumps(current_state.get("actual_truth", current_state), ensure_ascii=False)
         safe_lore = json.dumps(lore_list, ensure_ascii=False)
         safe_seeds = json.dumps(active_seeds, ensure_ascii=False)
         safe_history = causal_history if causal_history else "기록 없음"
 
         # 2. 템플릿의 중괄호 충돌을 피하기 위해 직접 치환 방식 사용
-        full_prompt = UPDATE_STATE_PROMPT_V25.replace("{ep_num}", str(ep_num)) \
-                        .replace("{manuscript}", safe_ms) \
-                        .replace("{current_state_json}", safe_state) \
-                        .replace("{active_seeds_json}", safe_seeds) \
-                        .replace("{lore_list_json}", safe_lore) \
-                        .replace("{causal_history}", safe_history)
-        
+        full_prompt = (
+            UPDATE_STATE_PROMPT_V25.replace("{ep_num}", str(ep_num))
+            .replace("{manuscript}", safe_ms)
+            .replace("{current_state_json}", safe_state)
+            .replace("{active_seeds_json}", safe_seeds)
+            .replace("{lore_list_json}", safe_lore)
+            .replace("{causal_history}", safe_history)
+        )
+
         # 3. 낮은 온도로 정밀 정산 요청
         response = self.ask(full_prompt, temperature=0.1)
-        
-      # 4. [V38.5 S-Grade Patch] 결과 파싱 후 즉시 반환 (main_a.py로 가공 위임)
+
+        # 4. [V38.5 S-Grade Patch] 결과 파싱 후 즉시 반환 (main_a.py로 가공 위임)
         try:
             # AI가 준 데이터를 섣부르게 내부에서 가공(.get 호출 등)하지 않고
             # 가장 강력한 파싱 엔진의 결과물만 그대로 main_a.py의 방탄 로직으로 넘깁니다.
@@ -148,12 +157,12 @@ class Manager(BaseAgent):
             logging.warning(f"🚨 [Manager Parsing Error] {e}")
             return {"parsing_error": True, "raw_response": response}
 
-  def audit_for_consistency(self, manuscript: str, master_bible: dict) -> dict:
+    def audit_for_consistency(self, manuscript: str, master_bible: dict) -> dict:
         """[Extra] 설정 충돌 검사 - 안전 패치 완료"""
         # 1. 중괄호 이스케이프로 파이썬 format 에러 방지
         safe_ms = self._escape_braces(manuscript)
         safe_bible = self._escape_braces(json.dumps(master_bible, ensure_ascii=False, indent=2))
-        
+
         # 2. 프롬프트 구성
         prompt = f"""
         당신은 서사 무결성 감사관입니다. 원고와 성경 설정의 충돌을 검사하십시오.
@@ -161,6 +170,6 @@ class Manager(BaseAgent):
         [원고]: {safe_ms}
         충돌 시 "CRITICAL_ERROR", 통과 시 "CLEAR" 반환.
         """
-        
+
         # 3. 낮은 온도로 엄격한 판정 요청
         return self.ask(prompt, temperature=0.1)

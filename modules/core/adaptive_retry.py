@@ -30,16 +30,17 @@ V54.3 신규 기능:
 - 연속 실패 에스컬레이션
 """
 
-import time
 import logging
 import re
-from typing import Dict, Any, Optional, List, Tuple
+import time
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any
 
 
 class ErrorType(Enum):
     """에러 타입 정의"""
+
     CONSTRAINT_VIOLATION = "constraint_violation"
     QUALITY_ISSUE = "quality_issue"
     STRUCTURE_ERROR = "structure_error"
@@ -55,13 +56,14 @@ class ErrorType(Enum):
 @dataclass
 class RetryContext:
     """재시도 컨텍스트"""
+
     attempt: int = 0
     max_attempts: int = 3
-    error_history: List[Dict] = field(default_factory=list)
-    injected_constraints: List[str] = field(default_factory=list)
+    error_history: list[dict] = field(default_factory=list)
+    injected_constraints: list[str] = field(default_factory=list)
     temperature_delta: float = 0.0
     should_use_schema: bool = True
-    prompt_modifications: List[str] = field(default_factory=list)
+    prompt_modifications: list[str] = field(default_factory=list)
 
 
 class AdaptiveRetryStrategy:
@@ -79,7 +81,7 @@ class AdaptiveRetryStrategy:
         ErrorType.STRUCTURE_ERROR: 2,
         ErrorType.TIMEOUT: 1,
         ErrorType.QUOTA_EXCEEDED: 3,
-        ErrorType.UNKNOWN: 2
+        ErrorType.UNKNOWN: 2,
     }
 
     # 에러 타입별 대기 시간 (초)
@@ -89,11 +91,11 @@ class AdaptiveRetryStrategy:
         ErrorType.STRUCTURE_ERROR: 1,
         ErrorType.TIMEOUT: 2,
         ErrorType.QUOTA_EXCEEDED: 30,
-        ErrorType.UNKNOWN: 1
+        ErrorType.UNKNOWN: 1,
     }
 
     def __init__(self) -> None:
-        self.contexts: Dict[str, RetryContext] = {}
+        self.contexts: dict[str, RetryContext] = {}
 
     def get_context(self, task_id: str) -> RetryContext:
         """태스크별 컨텍스트 가져오기"""
@@ -106,7 +108,7 @@ class AdaptiveRetryStrategy:
         if task_id in self.contexts:
             del self.contexts[task_id]
 
-    def classify_error(self, error_info: Dict) -> ErrorType:
+    def classify_error(self, error_info: dict) -> ErrorType:
         """
         에러 정보를 분류하여 타입 반환
 
@@ -128,35 +130,41 @@ class AdaptiveRetryStrategy:
 
         # 제약 조건 위반 키워드
         constraint_keywords = [
-            "중복 획득", "duplicate", "이미 보유", "already",
-            "연속성", "continuity", "상태 불연속", "state mismatch",
-            "획득 금지", "forbidden", "재획득"
+            "중복 획득",
+            "duplicate",
+            "이미 보유",
+            "already",
+            "연속성",
+            "continuity",
+            "상태 불연속",
+            "state mismatch",
+            "획득 금지",
+            "forbidden",
+            "재획득",
         ]
 
         # 품질 문제 키워드
         quality_keywords = [
-            "밀도 부족", "density", "개연성", "plausibility",
-            "품질", "quality", "미달", "insufficient",
-            "score", "점수"
+            "밀도 부족",
+            "density",
+            "개연성",
+            "plausibility",
+            "품질",
+            "quality",
+            "미달",
+            "insufficient",
+            "score",
+            "점수",
         ]
 
         # 구조적 오류 키워드
-        structure_keywords = [
-            "json", "parsing", "파싱", "key", "누락",
-            "missing", "required", "schema", "format"
-        ]
+        structure_keywords = ["json", "parsing", "파싱", "key", "누락", "missing", "required", "schema", "format"]
 
         # 타임아웃 키워드
-        timeout_keywords = [
-            "timeout", "max_tokens", "length", "truncate",
-            "절단", "시간 초과"
-        ]
+        timeout_keywords = ["timeout", "max_tokens", "length", "truncate", "절단", "시간 초과"]
 
         # 할당량 초과 키워드
-        quota_keywords = [
-            "quota", "rate limit", "429", "too many",
-            "할당량", "제한"
-        ]
+        quota_keywords = ["quota", "rate limit", "429", "too many", "할당량", "제한"]
 
         combined_text = f"{message} {reason} {' '.join(str(v) for v in violations)}"
 
@@ -174,7 +182,7 @@ class AdaptiveRetryStrategy:
 
         return ErrorType.UNKNOWN
 
-    def should_retry(self, task_id: str, error_info: Dict) -> Tuple[bool, ErrorType]:
+    def should_retry(self, task_id: str, error_info: dict) -> tuple[bool, ErrorType]:
         """
         재시도 여부 결정
 
@@ -189,11 +197,7 @@ class AdaptiveRetryStrategy:
         error_type = self.classify_error(error_info)
 
         # 에러 이력 추가
-        ctx.error_history.append({
-            "type": error_type.value,
-            "info": error_info,
-            "attempt": ctx.attempt
-        })
+        ctx.error_history.append({"type": error_type.value, "info": error_info, "attempt": ctx.attempt})
 
         max_retries = self.MAX_RETRIES_BY_TYPE.get(error_type, 2)
 
@@ -204,7 +208,7 @@ class AdaptiveRetryStrategy:
         ctx.attempt += 1
         return True, error_type
 
-    def get_retry_strategy(self, task_id: str, error_type: ErrorType, error_info: Dict) -> Dict[str, Any]:
+    def get_retry_strategy(self, task_id: str, error_type: ErrorType, error_info: dict) -> dict[str, Any]:
         """
         에러 타입에 맞는 재시도 전략 반환
 
@@ -228,7 +232,7 @@ class AdaptiveRetryStrategy:
             "temperature_delta": 0.0,
             "prompt_injection": "",
             "use_schema": True,
-            "constraints": []
+            "constraints": [],
         }
 
         if error_type == ErrorType.CONSTRAINT_VIOLATION:
@@ -244,7 +248,7 @@ class AdaptiveRetryStrategy:
 
         return strategy
 
-    def _strategy_for_constraint_violation(self, ctx: RetryContext, error_info: Dict) -> Dict[str, Any]:
+    def _strategy_for_constraint_violation(self, ctx: RetryContext, error_info: dict) -> dict[str, Any]:
         """
         제약 조건 위반에 대한 전략
         - 위반한 항목을 명시적으로 프롬프트에 주입
@@ -262,7 +266,7 @@ class AdaptiveRetryStrategy:
                     forbidden_items.append(match.group(1))
 
         # 강화된 경고 메시지 생성
-        injection = "\n\n" + "="*60 + "\n"
+        injection = "\n\n" + "=" * 60 + "\n"
         injection += "[!!! CRITICAL RETRY WARNING !!!]\n"
         injection += f"이전 시도에서 {len(violations)}건의 제약 조건 위반이 발생했습니다.\n"
         injection += "아래 항목을 절대 위반하지 마십시오:\n"
@@ -270,7 +274,7 @@ class AdaptiveRetryStrategy:
             injection += f"  {i}. {v}\n"
         if forbidden_items:
             injection += f"\n[ABSOLUTE BAN - 절대 재획득 금지]: {', '.join(forbidden_items)}\n"
-        injection += "="*60 + "\n"
+        injection += "=" * 60 + "\n"
 
         ctx.injected_constraints.extend(forbidden_items)
 
@@ -279,10 +283,10 @@ class AdaptiveRetryStrategy:
             "temperature_delta": -0.1,  # 더 보수적으로
             "prompt_injection": injection,
             "use_schema": True,
-            "constraints": forbidden_items
+            "constraints": forbidden_items,
         }
 
-    def _strategy_for_quality_issue(self, ctx: RetryContext, error_info: Dict) -> Dict[str, Any]:
+    def _strategy_for_quality_issue(self, ctx: RetryContext, error_info: dict) -> dict[str, Any]:
         """
         품질 문제에 대한 전략
         - 온도를 약간 높여 더 창의적인 생성 유도
@@ -291,7 +295,7 @@ class AdaptiveRetryStrategy:
         reason = error_info.get("reason", "")
         score = error_info.get("score", 0)
 
-        injection = "\n\n" + "-"*60 + "\n"
+        injection = "\n\n" + "-" * 60 + "\n"
         injection += "[QUALITY IMPROVEMENT REQUIRED]\n"
         injection += f"이전 시도의 품질 점수: {score}점\n"
         injection += f"개선 필요 사항: {reason}\n"
@@ -299,17 +303,17 @@ class AdaptiveRetryStrategy:
         injection += "1. 각 화의 전술 밀도를 높이십시오 (최소 800자/화)\n"
         injection += "2. 물리적 인과관계를 더 구체적으로 서술하십시오\n"
         injection += "3. 캐릭터의 심리적 동기를 명확히 하십시오\n"
-        injection += "-"*60 + "\n"
+        injection += "-" * 60 + "\n"
 
         return {
             "wait_time": 0,
             "temperature_delta": 0.1,  # 더 창의적으로
             "prompt_injection": injection,
             "use_schema": True,
-            "constraints": []
+            "constraints": [],
         }
 
-    def _strategy_for_structure_error(self, ctx: RetryContext, error_info: Dict) -> Dict[str, Any]:
+    def _strategy_for_structure_error(self, ctx: RetryContext, error_info: dict) -> dict[str, Any]:
         """
         구조적 오류에 대한 전략
         - 온도를 낮춰 정형화된 출력 유도
@@ -317,7 +321,7 @@ class AdaptiveRetryStrategy:
         """
         missing_keys = error_info.get("missing_keys", [])
 
-        injection = "\n\n" + "#"*60 + "\n"
+        injection = "\n\n" + "#" * 60 + "\n"
         injection += "[JSON STRUCTURE REPAIR REQUIRED]\n"
         injection += "이전 응답의 JSON 구조가 올바르지 않았습니다.\n"
         if missing_keys:
@@ -326,37 +330,37 @@ class AdaptiveRetryStrategy:
         injection += "- 응답은 반드시 '{' 로 시작하고 '}' 로 끝나야 합니다\n"
         injection += "- 모든 필수 키를 포함해야 합니다\n"
         injection += "- 문자열 내 큰따옴표는 이스케이프 처리해야 합니다\n"
-        injection += "#"*60 + "\n"
+        injection += "#" * 60 + "\n"
 
         return {
             "wait_time": 1,
             "temperature_delta": -0.2,  # 더 보수적으로
             "prompt_injection": injection,
             "use_schema": True,  # 스키마 강제
-            "constraints": []
+            "constraints": [],
         }
 
-    def _strategy_for_timeout(self, ctx: RetryContext, error_info: Dict) -> Dict[str, Any]:
+    def _strategy_for_timeout(self, ctx: RetryContext, error_info: dict) -> dict[str, Any]:
         """
         타임아웃에 대한 전략
         - 출력 길이 제한 요청
         """
-        injection = "\n\n" + "*"*60 + "\n"
+        injection = "\n\n" + "*" * 60 + "\n"
         injection += "[OUTPUT LENGTH CONSTRAINT]\n"
         injection += "이전 응답이 최대 토큰을 초과했습니다.\n"
         injection += "tactical_doc을 핵심 비트 위주로 압축하여 작성하십시오.\n"
         injection += "각 화당 최대 600자로 제한하십시오.\n"
-        injection += "*"*60 + "\n"
+        injection += "*" * 60 + "\n"
 
         return {
             "wait_time": 2,
             "temperature_delta": 0.0,
             "prompt_injection": injection,
             "use_schema": True,
-            "constraints": []
+            "constraints": [],
         }
 
-    def _strategy_for_quota_exceeded(self, ctx: RetryContext, error_info: Dict) -> Dict[str, Any]:
+    def _strategy_for_quota_exceeded(self, ctx: RetryContext, error_info: dict) -> dict[str, Any]:
         """
         할당량 초과에 대한 전략
         - 긴 대기 시간 후 재시도
@@ -366,10 +370,10 @@ class AdaptiveRetryStrategy:
             "temperature_delta": 0.0,
             "prompt_injection": "",
             "use_schema": True,
-            "constraints": []
+            "constraints": [],
         }
 
-    def apply_strategy(self, task_id: str, base_prompt: str, strategy: Dict[str, Any]) -> str:
+    def apply_strategy(self, task_id: str, base_prompt: str, strategy: dict[str, Any]) -> str:
         """
         전략을 프롬프트에 적용
 
@@ -428,13 +432,15 @@ def get_adaptive_retry() -> AdaptiveRetryStrategy:
 
 from collections import defaultdict
 
+
 @dataclass
 class FailureRecord:
     """실패 기록"""
+
     ep_num: int
     agent: str
     error_type: ErrorType
-    details: Dict
+    details: dict
     timestamp: float = 0
     attempt: int = 1
 
@@ -468,15 +474,11 @@ class AdaptiveRetryManager:
     ESCALATION_THRESHOLDS = {
         1: "기본 수정 지침",
         2: "강화된 수정 지침 + 구체적 예시",
-        3: "필살기 발동 권고 (ToT/ASP/MAD)"
+        3: "필살기 발동 권고 (ToT/ASP/MAD)",
     }
 
     # ErrorType → Stage 매핑 (FailureLearner 연동용)
-    AGENT_STAGE_MAP = {
-        "analyst": 2,
-        "architect": 3,
-        "writer": 4
-    }
+    AGENT_STAGE_MAP = {"analyst": 2, "architect": 3, "writer": 4}
 
     def __init__(self, max_history: int = 100, failure_learner=None):
         """
@@ -489,20 +491,12 @@ class AdaptiveRetryManager:
         self.failure_learner = failure_learner  # [V54.3.1]
 
         # 에피소드별 실패 기록
-        self._failures: Dict[int, List[FailureRecord]] = defaultdict(list)
+        self._failures: dict[int, list[FailureRecord]] = defaultdict(list)
 
         # 에이전트별 실패 통계
-        self._agent_stats: Dict[str, Dict[str, int]] = defaultdict(
-            lambda: defaultdict(int)
-        )
+        self._agent_stats: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
 
-    def record_failure(
-        self,
-        ep_num: int,
-        agent: str,
-        error_info: Dict,
-        attempt: int = 1
-    ) -> ErrorType:
+    def record_failure(self, ep_num: int, agent: str, error_info: dict, attempt: int = 1) -> ErrorType:
         """
         실패 기록 및 분류
 
@@ -530,43 +524,27 @@ class AdaptiveRetryManager:
         elif any(k in combined for k in ["범위", "초과", "scope", "overflow"]):
             error_type = ErrorType.SCOPE_OVERFLOW
 
-        record = FailureRecord(
-            ep_num=ep_num,
-            agent=agent,
-            error_type=error_type,
-            details=error_info,
-            attempt=attempt
-        )
+        record = FailureRecord(ep_num=ep_num, agent=agent, error_type=error_type, details=error_info, attempt=attempt)
 
         self._failures[ep_num].append(record)
         self._agent_stats[agent][error_type.value] += 1
 
         # 기록 수 제한
         if len(self._failures[ep_num]) > self.max_history:
-            self._failures[ep_num] = self._failures[ep_num][-self.max_history:]
+            self._failures[ep_num] = self._failures[ep_num][-self.max_history :]
 
         # [V54.3.1] FailureLearner 연동: 실패 기록 동기화
         if self.failure_learner:
             try:
                 stage = self.AGENT_STAGE_MAP.get(agent.lower(), 4)
                 reason = error_info.get("reason", error_info.get("message", "unknown"))
-                self.failure_learner.record_failure(
-                    stage=stage,
-                    episode=ep_num,
-                    reason=str(reason),
-                    details=error_info
-                )
+                self.failure_learner.record_failure(stage=stage, episode=ep_num, reason=str(reason), details=error_info)
             except Exception:
                 pass  # FailureLearner 연동 실패는 무시
 
         return error_type
 
-    def get_retry_guidance(
-        self,
-        ep_num: int,
-        agent: str,
-        current_attempt: int = 1
-    ) -> Dict[str, Any]:
+    def get_retry_guidance(self, ep_num: int, agent: str, current_attempt: int = 1) -> dict[str, Any]:
         """
         재시도 지침 생성
 
@@ -579,17 +557,14 @@ class AdaptiveRetryManager:
             재시도 지침 딕셔너리
         """
         # 이 에피소드의 실패 기록 조회
-        failures = [
-            f for f in self._failures.get(ep_num, [])
-            if f.agent == agent
-        ]
+        failures = [f for f in self._failures.get(ep_num, []) if f.agent == agent]
 
         if not failures:
             return {
                 "priority_fixes": ["블루프린트 정확히 따르기"],
                 "avoid_patterns": ["범위 초과", "연속성 오류"],
                 "temperature_adjustment": 0,
-                "escalation_level": 1
+                "escalation_level": 1,
             }
 
         # 실패 유형별 빈도 분석
@@ -607,7 +582,7 @@ class AdaptiveRetryManager:
             "priority_fixes": [],
             "avoid_patterns": [],
             "temperature_adjustment": 0,
-            "escalation_level": min(current_attempt, 3)
+            "escalation_level": min(current_attempt, 3),
         }
 
         # 에러 타입별 지침
@@ -634,21 +609,14 @@ class AdaptiveRetryManager:
 
         return guidance
 
-    def should_trigger_ultimate(
-        self,
-        ep_num: int,
-        agent: str
-    ) -> Tuple[bool, str]:
+    def should_trigger_ultimate(self, ep_num: int, agent: str) -> tuple[bool, str]:
         """
         필살기 발동 여부 판단
 
         Returns:
             (발동 여부, 권장 필살기)
         """
-        failures = [
-            f for f in self._failures.get(ep_num, [])
-            if f.agent == agent
-        ]
+        failures = [f for f in self._failures.get(ep_num, []) if f.agent == agent]
 
         if len(failures) < 2:
             return False, ""
@@ -663,17 +631,12 @@ class AdaptiveRetryManager:
         # 필살기 권장
         recommended = self.ULTIMATE_RECOMMENDATIONS.get(
             primary,
-            "adversarial_self_play"  # 기본값
+            "adversarial_self_play",  # 기본값
         )
 
         return True, recommended
 
-    def get_injection_prompt(
-        self,
-        ep_num: int,
-        agent: str,
-        current_attempt: int = 1
-    ) -> str:
+    def get_injection_prompt(self, ep_num: int, agent: str, current_attempt: int = 1) -> str:
         """
         프롬프트에 주입할 수정 지침 생성
 
@@ -702,10 +665,7 @@ class AdaptiveRetryManager:
             for a in avoid:
                 lines.append(f"  - {a}")
 
-        escalation = self.ESCALATION_THRESHOLDS.get(
-            guidance.get("escalation_level", 1),
-            "기본 수정 지침"
-        )
+        escalation = self.ESCALATION_THRESHOLDS.get(guidance.get("escalation_level", 1), "기본 수정 지침")
         lines.append(f"\n[{current_attempt}회차 시도] {escalation}")
 
         # [V54.3.1] FailureLearner 학습 제약 주입
@@ -721,7 +681,7 @@ class AdaptiveRetryManager:
 
         return "\n".join(lines)
 
-    def get_agent_weakness(self, agent: str) -> Dict[str, Any]:
+    def get_agent_weakness(self, agent: str) -> dict[str, Any]:
         """에이전트의 약점 분석"""
         stats = self._agent_stats.get(agent, {})
 
@@ -734,9 +694,7 @@ class AdaptiveRetryManager:
         return {
             "total_failures": total,
             "primary_weakness": sorted_types[0][0] if sorted_types else None,
-            "weakness_distribution": {
-                k: f"{v/total:.1%}" for k, v in sorted_types[:3]
-            }
+            "weakness_distribution": {k: f"{v / total:.1%}" for k, v in sorted_types[:3]},
         }
 
     def connect_failure_learner(self, failure_learner) -> None:
@@ -751,9 +709,7 @@ class AdaptiveRetryManager:
 
     def get_summary(self) -> str:
         """요약 통계"""
-        total_failures = sum(
-            len(records) for records in self._failures.values()
-        )
+        total_failures = sum(len(records) for records in self._failures.values())
 
         agent_summaries = []
         for agent, stats in self._agent_stats.items():
@@ -762,11 +718,7 @@ class AdaptiveRetryManager:
                 primary = max(stats, key=stats.get)
                 agent_summaries.append(f"  {agent}: {total}회 (주요: {primary})")
 
-        return (
-            f"[V54.3 Adaptive Retry 통계]\n"
-            f"총 실패: {total_failures}회\n"
-            f"에이전트별:\n" + "\n".join(agent_summaries)
-        )
+        return f"[V54.3 Adaptive Retry 통계]\n총 실패: {total_failures}회\n에이전트별:\n" + "\n".join(agent_summaries)
 
 
 # V54.3 싱글턴 인스턴스
@@ -785,14 +737,15 @@ def get_adaptive_manager() -> AdaptiveRetryManager:
 # [V65] retry_with_feedback — 범용 재시도 래퍼
 # ============================================================================
 
+
 def retry_with_feedback(
-    func,                    # 호출할 함수: func(attempt, feedback) -> result
+    func,  # 호출할 함수: func(attempt, feedback) -> result
     max_attempts: int = 3,
-    on_failure=None,         # 실패 시 피드백 생성 콜백: on_failure(result, attempt) -> str
-    on_success=None,         # 성공 판정 콜백: on_success(result) -> bool
-    logger=None,             # 로깅 함수: logger(msg)
-    task_name: str = "",     # 로그용 작업명
-) -> tuple:                  # (result, attempt_count, success)
+    on_failure=None,  # 실패 시 피드백 생성 콜백: on_failure(result, attempt) -> str
+    on_success=None,  # 성공 판정 콜백: on_success(result) -> bool
+    logger=None,  # 로깅 함수: logger(msg)
+    task_name: str = "",  # 로그용 작업명
+) -> tuple:  # (result, attempt_count, success)
     """
     [V65] 범용 피드백 재시도 래퍼.
 
@@ -829,7 +782,7 @@ def retry_with_feedback(
         try:
             result = func(attempt, feedback)
         except Exception as exc:
-            _log(f"[retry_with_feedback] {task_name} attempt {attempt+1}/{max_attempts} 예외: {exc}")
+            _log(f"[retry_with_feedback] {task_name} attempt {attempt + 1}/{max_attempts} 예외: {exc}")
             if attempt < max_attempts - 1:
                 feedback = f"이전 시도 예외: {exc}"
                 continue
@@ -839,7 +792,7 @@ def retry_with_feedback(
         # 성공 판정
         if on_success is None or on_success(result):
             success = True
-            _log(f"[retry_with_feedback] {task_name} attempt {attempt+1} 성공")
+            _log(f"[retry_with_feedback] {task_name} attempt {attempt + 1} 성공")
             return (result, attempt + 1, True)
 
         # 실패 → 피드백 생성
@@ -849,7 +802,7 @@ def retry_with_feedback(
                     feedback = on_failure(result, attempt)
                 except Exception:
                     feedback = ""
-            _log(f"[retry_with_feedback] {task_name} attempt {attempt+1} 실패, 재시도 예정")
+            _log(f"[retry_with_feedback] {task_name} attempt {attempt + 1} 실패, 재시도 예정")
 
     # 모든 시도 소진
     return (result, max_attempts, False)

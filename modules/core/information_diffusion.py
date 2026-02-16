@@ -5,14 +5,15 @@
 [V49.7] 정보 비대칭 추적 - NPC별 알고 있는 정보 관리 및 검증
 """
 
-from typing import Dict, List, Set, Any, Optional
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
 class KnowledgeEntry:
     """[V49.7] NPC 지식 엔트리"""
+
     info_id: str  # 정보 식별자
     description: str  # 정보 내용
     learned_arc: int
@@ -25,11 +26,11 @@ class InformationDiffusion:
 
     # 정보 전파 속도 (화 단위)
     DIFFUSION_RATES = {
-        "same_location": 0,      # 같은 장소: 즉시
-        "same_faction": 1,       # 같은 세력: 1화 후
-        "nearby_region": 2,      # 인접 지역: 2화 후
-        "distant_region": 5,     # 먼 지역: 5화 후
-        "isolated": 999          # 격리된 곳: 전파 안됨
+        "same_location": 0,  # 같은 장소: 즉시
+        "same_faction": 1,  # 같은 세력: 1화 후
+        "nearby_region": 2,  # 인접 지역: 2화 후
+        "distant_region": 5,  # 먼 지역: 5화 후
+        "isolated": 999,  # 격리된 곳: 전파 안됨
     }
 
     def __init__(self, context) -> None:
@@ -42,7 +43,7 @@ class InformationDiffusion:
 
         try:
             # major_events 앵커에서 로드 (있다면)
-            stored_events = self.context.db.load_anchor('major_events', default=[])
+            stored_events = self.context.db.load_anchor("major_events", default=[])
             if isinstance(stored_events, list):
                 events.extend(stored_events)
 
@@ -52,17 +53,19 @@ class InformationDiffusion:
                 log_data = self.context.db.load_state_log(ep)
 
                 if log_data and isinstance(log_data, dict):
-                    summary = log_data.get('summary', '')
+                    summary = log_data.get("summary", "")
 
                     # "비무", "승리", "처단", "획득" 같은 주요 키워드 포함 시
                     major_keywords = ["비무", "승리", "처단", "획득", "신물", "고수", "전설"]
                     if any(kw in summary for kw in major_keywords):
-                        events.append({
-                            'episode': ep,
-                            'description': summary,
-                            'location': self._extract_location_from_summary(summary),
-                            'importance': self._calculate_importance(summary)
-                        })
+                        events.append(
+                            {
+                                "episode": ep,
+                                "description": summary,
+                                "location": self._extract_location_from_summary(summary),
+                                "importance": self._calculate_importance(summary),
+                            }
+                        )
         except Exception as e:
             logging.warning(f"⚠️ [InfoDiffusion] 주요 사건 로드 실패: {e}")
 
@@ -86,10 +89,10 @@ class InformationDiffusion:
                 "npc": str
             }
         """
-        event_ep = event.get('episode', 0)
-        event_location = event.get('location', '')
-        npc_location = npc.get('current_location', '')
-        npc_faction = npc.get('faction', '')
+        event_ep = event.get("episode", 0)
+        event_location = event.get("location", "")
+        npc_location = npc.get("current_location", "")
+        npc_faction = npc.get("faction", "")
 
         # 시간 경과
         time_passed = current_ep - event_ep
@@ -102,7 +105,7 @@ class InformationDiffusion:
             distance_type = "same_location"
         elif npc_faction and protagonist_faction and npc_faction == protagonist_faction:
             distance_type = "same_faction"
-        elif npc.get('isolated', False):
+        elif npc.get("isolated", False):
             distance_type = "isolated"
         elif self._is_nearby(event_location, npc_location):
             distance_type = "nearby_region"
@@ -116,19 +119,19 @@ class InformationDiffusion:
         return {
             "should_know": should_know,
             "reason": f"{distance_type} (전파 소요: {required_time}화, 실제 경과: {time_passed}화)",
-            "event": event.get('description', ''),
-            "npc": npc.get('name', '')
+            "event": event.get("description", ""),
+            "npc": npc.get("name", ""),
         }
 
     def _get_protagonist_faction(self) -> str:
         """주인공의 세력 추출"""
         try:
-            bible = getattr(self.context, 'master_bible', {})
-            bible_root = bible.get('MasterBible', bible)
-            proj_data = bible_root.get('ProjectData', {})
-            return proj_data.get('protagonist_faction', '')
+            bible = getattr(self.context, "master_bible", {})
+            bible_root = bible.get("MasterBible", bible)
+            proj_data = bible_root.get("ProjectData", {})
+            return proj_data.get("protagonist_faction", "")
         except Exception:
-            return ''
+            return ""
 
     def _is_nearby(self, loc1: str, loc2: str) -> bool:
         """
@@ -160,17 +163,15 @@ class InformationDiffusion:
         """요약문에서 장소 추출 (간단한 휴리스틱)"""
         # "~에서", "~의" 패턴 추출
         import re
-        location_patterns = [
-            r'([가-힣]{2,5})(에서|의|로|에)',
-            r'([가-힣]{2,5})(가문|장|객잔|산장)'
-        ]
+
+        location_patterns = [r"([가-힣]{2,5})(에서|의|로|에)", r"([가-힣]{2,5})(가문|장|객잔|산장)"]
 
         for pattern in location_patterns:
             match = re.search(pattern, summary)
             if match:
                 return match.group(1)
 
-        return ''
+        return ""
 
     def _calculate_importance(self, summary: str) -> int:
         """
@@ -200,18 +201,12 @@ class InformationDiffusion:
 
     def __init_knowledge_tracker(self) -> None:
         """지식 추적기 초기화 (필요시 호출)"""
-        if not hasattr(self, 'npc_knowledge'):
-            self.npc_knowledge: Dict[str, List[KnowledgeEntry]] = {}
-            self.global_events: Dict[str, dict] = {}  # {event_id: event_data}
+        if not hasattr(self, "npc_knowledge"):
+            self.npc_knowledge: dict[str, list[KnowledgeEntry]] = {}
+            self.global_events: dict[str, dict] = {}  # {event_id: event_data}
 
     def register_event(
-        self,
-        event_id: str,
-        description: str,
-        arc: int,
-        episode: int,
-        location: str = "",
-        witnesses: List[str] = None
+        self, event_id: str, description: str, arc: int, episode: int, location: str = "", witnesses: list[str] = None
     ) -> None:
         """
         사건 등록 및 목격자에게 지식 부여
@@ -226,13 +221,7 @@ class InformationDiffusion:
         """
         self.__init_knowledge_tracker()
 
-        event_data = {
-            "id": event_id,
-            "description": description,
-            "arc": arc,
-            "episode": episode,
-            "location": location
-        }
+        event_data = {"id": event_id, "description": description, "arc": arc, "episode": episode, "location": location}
         self.global_events[event_id] = event_data
 
         # 목격자에게 즉시 지식 부여
@@ -244,17 +233,11 @@ class InformationDiffusion:
                     description=description,
                     arc=arc,
                     episode=episode,
-                    source="직접 목격"
+                    source="직접 목격",
                 )
 
     def grant_knowledge(
-        self,
-        npc_name: str,
-        info_id: str,
-        description: str,
-        arc: int,
-        episode: int,
-        source: str = "소문"
+        self, npc_name: str, info_id: str, description: str, arc: int, episode: int, source: str = "소문"
     ) -> None:
         """
         NPC에게 지식 부여
@@ -276,11 +259,7 @@ class InformationDiffusion:
         existing = [k for k in self.npc_knowledge[npc_name] if k.info_id == info_id]
         if not existing:
             entry = KnowledgeEntry(
-                info_id=info_id,
-                description=description,
-                learned_arc=arc,
-                learned_episode=episode,
-                source=source
+                info_id=info_id, description=description, learned_arc=arc, learned_episode=episode, source=source
             )
             self.npc_knowledge[npc_name].append(entry)
 
@@ -320,7 +299,7 @@ class InformationDiffusion:
 
         return any(keyword in k.description for k in self.npc_knowledge[npc_name])
 
-    def get_npc_knowledge(self, npc_name: str) -> List[Dict]:
+    def get_npc_knowledge(self, npc_name: str) -> list[dict]:
         """
         NPC가 알고 있는 모든 정보 조회
 
@@ -341,17 +320,12 @@ class InformationDiffusion:
                 "description": k.description,
                 "learned_arc": k.learned_arc,
                 "learned_episode": k.learned_episode,
-                "source": k.source
+                "source": k.source,
             }
             for k in self.npc_knowledge[npc_name]
         ]
 
-    def validate_npc_reaction(
-        self,
-        npc_name: str,
-        reaction_text: str,
-        required_knowledge: List[str]
-    ) -> Dict[str, Any]:
+    def validate_npc_reaction(self, npc_name: str, reaction_text: str, required_knowledge: list[str]) -> dict[str, Any]:
         """
         NPC 반응이 그들의 지식과 일치하는지 검증
 
@@ -376,27 +350,21 @@ class InformationDiffusion:
             if not self.npc_knows(npc_name, info_id):
                 # 이 정보를 모르는데 반응함
                 event_data = self.global_events.get(info_id, {})
-                violations.append({
-                    "type": "knowledge_violation",
-                    "npc": npc_name,
-                    "missing_info": info_id,
-                    "event_description": event_data.get("description", info_id),
-                    "message": f"'{npc_name}'은(는) '{info_id}' 사건을 모르는데 이에 반응함"
-                })
+                violations.append(
+                    {
+                        "type": "knowledge_violation",
+                        "npc": npc_name,
+                        "missing_info": info_id,
+                        "event_description": event_data.get("description", info_id),
+                        "message": f"'{npc_name}'은(는) '{info_id}' 사건을 모르는데 이에 반응함",
+                    }
+                )
 
-        return {
-            "valid": len(violations) == 0,
-            "violations": violations,
-            "warnings": warnings
-        }
+        return {"valid": len(violations) == 0, "violations": violations, "warnings": warnings}
 
     def propagate_event(
-        self,
-        event_id: str,
-        current_arc: int,
-        current_episode: int,
-        npc_locations: Dict[str, str]
-    ) -> List[str]:
+        self, event_id: str, current_arc: int, current_episode: int, npc_locations: dict[str, str]
+    ) -> list[str]:
         """
         사건 정보를 자연스럽게 전파 (시간 경과에 따라)
 
@@ -442,7 +410,7 @@ class InformationDiffusion:
                     description=event.get("description", ""),
                     arc=current_arc,
                     episode=current_episode,
-                    source=f"소문 ({distance_type})"
+                    source=f"소문 ({distance_type})",
                 )
                 newly_informed.append(npc_name)
 
@@ -463,11 +431,7 @@ class InformationDiffusion:
         if not knowledge:
             return f"\n[{npc_name}의 지식 상태: 주요 사건에 대해 아는 것이 없음]\n"
 
-        lines = [
-            "",
-            f"[{npc_name}의 지식 상태]",
-            f"알고 있는 정보 ({len(knowledge)}개):"
-        ]
+        lines = ["", f"[{npc_name}의 지식 상태]", f"알고 있는 정보 ({len(knowledge)}개):"]
 
         # [V66.1] 전체 지식 표시 (이전: [:5] 제한 → 100화+ 정보 누락 방지)
         for k in knowledge:

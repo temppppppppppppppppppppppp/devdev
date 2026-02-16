@@ -10,12 +10,10 @@
 5. 역방향 검증: 필요시 이전 Arc 수정
 """
 
-import json
 import logging
 import re
-from typing import Dict, List, Any, Optional, Tuple
-from .base_agent import BaseAgent
 
+from .base_agent import BaseAgent
 
 # [V60.34] 화별 생성 템플릿 - DraftValidator 호환 형식으로 수정
 EPISODE_TEMPLATE = """
@@ -178,12 +176,12 @@ class StateLockedArcGenerator(BaseAgent):
         self,
         arc_no: int,
         ep_start: int,
-        prev_arc: Optional[Dict],
+        prev_arc: dict | None,
         arc_direction: str,
-        episode_beats: List[str],
-        assets: Dict = None,
-        protagonist_name: str = "주인공"
-    ) -> Tuple[Optional[Dict], Dict]:
+        episode_beats: list[str],
+        assets: dict = None,
+        protagonist_name: str = "주인공",
+    ) -> tuple[dict | None, dict]:
         """
         상태 잠금 방식으로 Arc 생성
 
@@ -201,22 +199,13 @@ class StateLockedArcGenerator(BaseAgent):
         """
         # [V60.16] 주인공 이름 저장
         self.protagonist_name = protagonist_name
-        log = {
-            "arc_no": arc_no,
-            "phases": [],
-            "episodes": [],
-            "success": False
-        }
+        log = {"arc_no": arc_no, "phases": [], "episodes": [], "success": False}
 
         # ═══════════════════════════════════════════════════════════════
         # Phase A: 시작 상태 잠금 (복사, LLM 개입 없음)
         # ═══════════════════════════════════════════════════════════════
         start_state = self._lock_start_state(prev_arc)
-        log["phases"].append({
-            "phase": "A",
-            "name": "State Lock",
-            "result": start_state
-        })
+        log["phases"].append({"phase": "A", "name": "State Lock", "result": start_state})
         logging.info(f"🔒 [Phase A] 시작 상태 잠금: 내공 {start_state['energy']}%, 부상: {start_state['injuries']}")
 
         # ═══════════════════════════════════════════════════════════════
@@ -235,7 +224,7 @@ class StateLockedArcGenerator(BaseAgent):
                 start_state=current_state,
                 arc_direction=arc_direction,
                 episode_beat=beat,
-                prev_episode=episodes[-1] if episodes else None
+                prev_episode=episodes[-1] if episodes else None,
             )
 
             if not episode:
@@ -248,19 +237,21 @@ class StateLockedArcGenerator(BaseAgent):
             episode["end_state"] = end_state
 
             episodes.append(episode)
-            log["episodes"].append({
-                "ep_num": ep_num,
-                "start_energy": current_state["energy"],
-                "end_energy": end_state["energy"],
-                "items_acquired": end_state.get("items_acquired", [])
-            })
+            log["episodes"].append(
+                {
+                    "ep_num": ep_num,
+                    "start_energy": current_state["energy"],
+                    "end_energy": end_state["energy"],
+                    "items_acquired": end_state.get("items_acquired", []),
+                }
+            )
 
             # 다음 화의 시작 상태 = 이번 화의 종료 상태
             current_state = {
                 "location": end_state["location"],
                 "energy": end_state["energy"],
                 "injuries": end_state["injuries"],
-                "equipment": current_state.get("equipment", []) + end_state.get("items_acquired", [])
+                "equipment": current_state.get("equipment", []) + end_state.get("items_acquired", []),
             }
             # 소모 아이템 제거
             for item in end_state.get("items_consumed", []):
@@ -269,16 +260,12 @@ class StateLockedArcGenerator(BaseAgent):
 
             logging.info(f"✅ [Phase B] 제 {ep_num}화 완료: 내공 {current_state['energy']}%")
 
-        log["phases"].append({
-            "phase": "B",
-            "name": "Progressive Generation",
-            "episodes_count": len(episodes)
-        })
+        log["phases"].append({"phase": "B", "name": "Progressive Generation", "episodes_count": len(episodes)})
 
         # ═══════════════════════════════════════════════════════════════
         # Phase C: Arc 통합 + 최종 상태 확정
         # ═══════════════════════════════════════════════════════════════
-        logging.info(f"🔧 [Phase C] Arc 통합 중...")
+        logging.info("🔧 [Phase C] Arc 통합 중...")
 
         final_arc = self._synthesize_arc(
             arc_no=arc_no,
@@ -286,18 +273,14 @@ class StateLockedArcGenerator(BaseAgent):
             ep_end=ep_start + len(episodes) - 1,
             episodes=episodes,
             start_state=start_state,
-            end_state=current_state
+            end_state=current_state,
         )
 
         if not final_arc:
             log["phases"].append({"phase": "C", "error": "Synthesis failed"})
             return None, log
 
-        log["phases"].append({
-            "phase": "C",
-            "name": "Arc Synthesis",
-            "success": True
-        })
+        log["phases"].append({"phase": "C", "name": "Arc Synthesis", "success": True})
 
         # ═══════════════════════════════════════════════════════════════
         # Phase D: 역방향 검증 (선택적)
@@ -305,12 +288,9 @@ class StateLockedArcGenerator(BaseAgent):
         if prev_arc:
             mismatch = self._check_reverse_consistency(prev_arc, start_state)
             if mismatch:
-                log["phases"].append({
-                    "phase": "D",
-                    "name": "Reverse Validation",
-                    "mismatch": mismatch,
-                    "action": "Would fix prev_arc"
-                })
+                log["phases"].append(
+                    {"phase": "D", "name": "Reverse Validation", "mismatch": mismatch, "action": "Would fix prev_arc"}
+                )
                 logging.info(f"⚠️ [Phase D] 역방향 불일치 감지: {mismatch}")
 
         log["success"] = True
@@ -318,19 +298,14 @@ class StateLockedArcGenerator(BaseAgent):
 
         return final_arc, log
 
-    def _lock_start_state(self, prev_arc: Optional[Dict]) -> Dict:
+    def _lock_start_state(self, prev_arc: dict | None) -> dict:
         """
         Phase A: 시작 상태 잠금
         이전 Arc의 종료 상태를 그대로 복사 (LLM 개입 없음)
         """
         if not prev_arc:
             # 첫 Arc - 기본 상태
-            return {
-                "location": "서사 시작점",
-                "energy": 100,
-                "injuries": "없음",
-                "equipment": []
-            }
+            return {"location": "서사 시작점", "energy": 100, "injuries": "없음", "equipment": []}
 
         # 이전 Arc의 arc_end_state에서 복사
         state_constraints = prev_arc.get("state_constraints", {})
@@ -343,7 +318,7 @@ class StateLockedArcGenerator(BaseAgent):
             shadow = prev_arc.get("status_shadow", {})
             loss_str = shadow.get("internal_energy_loss", "0%")
             try:
-                loss = int(re.search(r'(\d+)', str(loss_str)).group(1))
+                loss = int(re.search(r"(\d+)", str(loss_str)).group(1))
                 energy = max(0, 100 - loss)
             except (ValueError, AttributeError, TypeError):  # [V64.P4] energy parse failure
                 # [V60.73] 보수적 기본값 50 (파싱 실패 시 만땅 가정 위험)
@@ -363,21 +338,11 @@ class StateLockedArcGenerator(BaseAgent):
         if isinstance(equipment, str):
             equipment = [e.strip() for e in equipment.split(",") if e.strip()]
 
-        return {
-            "location": location,
-            "energy": energy,
-            "injuries": injuries,
-            "equipment": equipment
-        }
+        return {"location": location, "energy": energy, "injuries": injuries, "equipment": equipment}
 
     def _generate_episode(
-        self,
-        ep_num: int,
-        start_state: Dict,
-        arc_direction: str,
-        episode_beat: str,
-        prev_episode: Optional[Dict]
-    ) -> Optional[Dict]:
+        self, ep_num: int, start_state: dict, arc_direction: str, episode_beat: str, prev_episode: dict | None
+    ) -> dict | None:
         """
         [V60.17] Phase B: Speculative Generation
 
@@ -390,7 +355,7 @@ class StateLockedArcGenerator(BaseAgent):
             prev_summary = prev_episode.get("text", "")[:500] + "..."
 
         equipment_str = ", ".join(start_state.get("equipment", [])) or "없음"
-        protag_name = getattr(self, 'protagonist_name', '주인공')
+        protag_name = getattr(self, "protagonist_name", "주인공")
 
         prompt = EPISODE_TEMPLATE.format(
             ep_num=ep_num,
@@ -401,7 +366,7 @@ class StateLockedArcGenerator(BaseAgent):
             start_equipment=equipment_str,
             arc_direction=self._escape_braces(arc_direction),
             episode_beat=self._escape_braces(episode_beat),
-            prev_episode_summary=self._escape_braces(prev_summary) or "(첫 화)"
+            prev_episode_summary=self._escape_braces(prev_summary) or "(첫 화)",
         )
 
         try:
@@ -424,8 +389,7 @@ class StateLockedArcGenerator(BaseAgent):
                         self.primary_model = self.refine_model
 
                         refine_prompt = SPECULATIVE_REFINE_PROMPT.format(
-                            protagonist_name=protag_name,
-                            draft=self._escape_braces(draft)
+                            protagonist_name=protag_name, draft=self._escape_braces(draft)
                         )
 
                         # [V60.25] Thinking Level 활용 - 정제 단계에서 medium 사용
@@ -453,24 +417,20 @@ class StateLockedArcGenerator(BaseAgent):
                 else:
                     text = str(response)
 
-            return {
-                "ep_num": ep_num,
-                "text": text,
-                "beat": episode_beat
-            }
+            return {"ep_num": ep_num, "text": text, "beat": episode_beat}
 
         except Exception as e:
             logging.warning(f"❌ [Episode] 생성 실패: {e}")
             return None
 
-    def _extract_state(self, episode_text: str, start_state: Dict) -> Dict:
+    def _extract_state(self, episode_text: str, start_state: dict) -> dict:
         """
         Phase B-2: 에피소드에서 종료 상태 추출 (관심사 분리)
         """
         prompt = STATE_EXTRACTION_PROMPT.format(
             episode_text=self._escape_braces(episode_text[:3000]),
             start_energy=start_state["energy"],
-            start_injuries=start_state["injuries"]
+            start_injuries=start_state["injuries"],
         )
 
         try:
@@ -491,7 +451,7 @@ class StateLockedArcGenerator(BaseAgent):
                 "injuries": response.get("end_injuries", start_state["injuries"]),
                 "items_acquired": response.get("items_acquired", []),
                 "items_consumed": response.get("items_consumed", []),
-                "key_events": response.get("key_events", [])
+                "key_events": response.get("key_events", []),
             }
 
         except Exception as e:
@@ -502,18 +462,12 @@ class StateLockedArcGenerator(BaseAgent):
                 "injuries": start_state["injuries"],
                 "items_acquired": [],
                 "items_consumed": [],
-                "key_events": []
+                "key_events": [],
             }
 
     def _synthesize_arc(
-        self,
-        arc_no: int,
-        ep_start: int,
-        ep_end: int,
-        episodes: List[Dict],
-        start_state: Dict,
-        end_state: Dict
-    ) -> Optional[Dict]:
+        self, arc_no: int, ep_start: int, ep_end: int, episodes: list[dict], start_state: dict, end_state: dict
+    ) -> dict | None:
         """
         Phase C: 에피소드들을 Arc로 통합
         """
@@ -556,30 +510,30 @@ class StateLockedArcGenerator(BaseAgent):
                     "location": start_state["location"],
                     "equipment": start_state.get("equipment", []),
                     "injuries": start_state["injuries"],
-                    "internal_energy": start_state["energy"]
+                    "internal_energy": start_state["energy"],
                 },
                 "arc_end_state": {
                     "location": end_state["location"],
                     "equipment": final_equipment,
                     "injuries": end_state["injuries"],
-                    "internal_energy": end_state["energy"]
+                    "internal_energy": end_state["energy"],
                 },
                 "items_acquired": list(set(all_acquired)),
-                "items_consumed": list(set(all_consumed))
+                "items_consumed": list(set(all_consumed)),
             },
             "joint_docs": {
                 "final_location": end_state["location"],
                 "physical_inventory": final_equipment,
-                "world_joint": ""  # 추후 생성
+                "world_joint": "",  # 추후 생성
             },
             "status_shadow": {
                 "internal_energy_loss": f"{energy_loss}%",
                 "expected_injuries": end_state["injuries"],
-                "item_consumption": list(set(all_consumed))
-            }
+                "item_consumption": list(set(all_consumed)),
+            },
         }
 
-    def _check_reverse_consistency(self, prev_arc: Dict, current_start: Dict) -> Optional[str]:
+    def _check_reverse_consistency(self, prev_arc: dict, current_start: dict) -> str | None:
         """
         Phase D: 역방향 일관성 검사
         이전 Arc의 종료 상태와 현재 시작 상태가 일치하는지 확인

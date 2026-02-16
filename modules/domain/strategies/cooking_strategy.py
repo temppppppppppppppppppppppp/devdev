@@ -3,29 +3,30 @@ from .base_strategy import BaseStrategy
 
 class CookingStrategy(BaseStrategy):
     @property
-    def genre_name(self): return "COOKING"
+    def genre_name(self):
+        return "COOKING"
 
     def get_system_prompt(self) -> str:
-        genre_rules = self.law.get('cooking', {})
+        genre_rules = self.law.get("cooking", {})
 
         # 1. 컨텍스트 및 선택된 톤(Tone) 인출
         ctx = self.studio.project
 
-        selected_tone = getattr(ctx, 'selected_tone', {})
-        tone_name = selected_tone.get('name', '요리 전문가물')
-        tone_guide = selected_tone.get('writer', '요리의 감동과 식당 경영의 현실이 교차하는 문체')
+        selected_tone = getattr(ctx, "selected_tone", {})
+        tone_name = selected_tone.get("name", "요리 전문가물")
+        tone_guide = selected_tone.get("writer", "요리의 감동과 식당 경영의 현실이 교차하는 문체")
 
         # 2. 주인공 정보 인출
-        bible_root = ctx.master_bible.get('MasterBible', ctx.master_bible)
-        hud = bible_root.get('CookingHUD', bible_root.get('cooking_hud', {}))
-        protagonist = hud.get('Protagonist', hud.get('main', {}))
+        bible_root = ctx.master_bible.get("MasterBible", ctx.master_bible)
+        hud = bible_root.get("CookingHUD", bible_root.get("cooking_hud", {}))
+        protagonist = hud.get("Protagonist", hud.get("main", {}))
 
-        mc_name = protagonist.get('Name', protagonist.get('name', '요리사'))
-        mc_desc = protagonist.get('description', '천재적 미각의 요리사')
+        mc_name = protagonist.get("Name", protagonist.get("name", "요리사"))
+        mc_desc = protagonist.get("description", "천재적 미각의 요리사")
 
         return f"""
         [COOKING GENRE GUIDELINE]
-        1. 장르 필수 요소: {', '.join(genre_rules.get('mandatory', []))}
+        1. 장르 필수 요소: {", ".join(genre_rules.get("mandatory", []))}
         2. 주인공: {mc_name} ({mc_desc})
 
         [세부 집필 톤(Tone) 지침: {tone_name}]

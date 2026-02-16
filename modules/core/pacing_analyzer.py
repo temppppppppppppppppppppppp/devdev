@@ -15,25 +15,26 @@
     prompt = analyzer.generate_pacing_prompt(result)
 """
 
-from dataclasses import dataclass, field
-from typing import List, Dict, Any, Tuple
-from enum import Enum
 import re
-from collections import Counter
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any
 
 
 class PacingZone(Enum):
     """호흡 구간 타입"""
-    RAPID = "rapid"          # 짧은 문장 연속 (긴박)
-    FLOWING = "flowing"      # 중간 길이 (자연스러운 흐름)
-    DENSE = "dense"          # 긴 문장 연속 (설명/묘사)
-    DIALOGUE = "dialogue"    # 대화 중심
-    MIXED = "mixed"          # 혼합
+
+    RAPID = "rapid"  # 짧은 문장 연속 (긴박)
+    FLOWING = "flowing"  # 중간 길이 (자연스러운 흐름)
+    DENSE = "dense"  # 긴 문장 연속 (설명/묘사)
+    DIALOGUE = "dialogue"  # 대화 중심
+    MIXED = "mixed"  # 혼합
 
 
 @dataclass
 class PacingSegment:
     """호흡 구간"""
+
     zone_type: PacingZone
     start_char: int
     end_char: int
@@ -45,6 +46,7 @@ class PacingSegment:
 @dataclass
 class PacingAnalysis:
     """호흡 분석 결과"""
+
     # 기본 통계
     total_chars: int
     total_sentences: int
@@ -53,12 +55,12 @@ class PacingAnalysis:
     sentence_length_std: float  # 표준편차 (다양성)
 
     # 비율
-    dialogue_ratio: float      # 대화 비율 (0-1)
+    dialogue_ratio: float  # 대화 비율 (0-1)
     short_sentence_ratio: float  # 짧은 문장 비율 (<20자)
-    long_sentence_ratio: float   # 긴 문장 비율 (>80자)
+    long_sentence_ratio: float  # 긴 문장 비율 (>80자)
 
     # 구간 분석
-    segments: List[PacingSegment] = field(default_factory=list)
+    segments: list[PacingSegment] = field(default_factory=list)
 
     # 장면 전환
     scene_break_count: int = 0
@@ -68,44 +70,44 @@ class PacingAnalysis:
     pacing_score: int = 70
 
     # 문제점
-    issues: List[str] = field(default_factory=list)
+    issues: list[str] = field(default_factory=list)
 
     # 권장사항
-    suggestions: List[str] = field(default_factory=list)
+    suggestions: list[str] = field(default_factory=list)
 
 
 class PacingAnalyzer:
     """호흡 분석기"""
 
     # 문장 분리 패턴
-    SENTENCE_PATTERN = re.compile(r'[^.!?。？！]+[.!?。？！]+')
+    SENTENCE_PATTERN = re.compile(r"[^.!?。？！]+[.!?。？！]+")
 
     # 대화 패턴
     DIALOGUE_PATTERN = re.compile(r'["\'"「『].*?["\'"」』]|"[^"]*"')
 
     # 장면 전환 패턴
     SCENE_BREAK_PATTERNS = [
-        re.compile(r'\n\s*\*\s*\*\s*\*\s*\n'),  # * * *
-        re.compile(r'\n\s*[#]+\s*\n'),           # ###
-        re.compile(r'\n\s*[-]{3,}\s*\n'),        # ---
-        re.compile(r'\n\n\n+'),                   # 빈 줄 3개 이상
+        re.compile(r"\n\s*\*\s*\*\s*\*\s*\n"),  # * * *
+        re.compile(r"\n\s*[#]+\s*\n"),  # ###
+        re.compile(r"\n\s*[-]{3,}\s*\n"),  # ---
+        re.compile(r"\n\n\n+"),  # 빈 줄 3개 이상
     ]
 
     # 시간 경과 표현
     TIME_SKIP_PATTERNS = [
-        re.compile(r'(다음\s*날|이튿날|며칠\s*(후|뒤)|일주일\s*(후|뒤)|한\s*달\s*(후|뒤))'),
-        re.compile(r'(그로부터|그\s*후|시간이\s*흘러|세월이)'),
-        re.compile(r'(아침이\s*밝|해가\s*(지|뜨)|밤이\s*깊)'),
+        re.compile(r"(다음\s*날|이튿날|며칠\s*(후|뒤)|일주일\s*(후|뒤)|한\s*달\s*(후|뒤))"),
+        re.compile(r"(그로부터|그\s*후|시간이\s*흘러|세월이)"),
+        re.compile(r"(아침이\s*밝|해가\s*(지|뜨)|밤이\s*깊)"),
     ]
 
     # 이상적인 범위
     IDEAL_DIALOGUE_RATIO = (0.25, 0.45)  # 25-45%
-    IDEAL_AVG_SENTENCE = (25, 50)         # 25-50자
-    IDEAL_SHORT_RATIO = (0.15, 0.35)      # 15-35%
-    IDEAL_LONG_RATIO = (0.05, 0.20)       # 5-20%
+    IDEAL_AVG_SENTENCE = (25, 50)  # 25-50자
+    IDEAL_SHORT_RATIO = (0.15, 0.35)  # 15-35%
+    IDEAL_LONG_RATIO = (0.05, 0.20)  # 5-20%
 
     def __init__(self) -> None:
-        self.history: List[PacingAnalysis] = []
+        self.history: list[PacingAnalysis] = []
 
     def analyze(self, manuscript: str) -> PacingAnalysis:
         """
@@ -128,12 +130,12 @@ class PacingAnalyzer:
                 short_sentence_ratio=0,
                 long_sentence_ratio=0,
                 pacing_score=50,
-                issues=["원고가 너무 짧습니다"]
+                issues=["원고가 너무 짧습니다"],
             )
 
         # 1. 기본 분석
         sentences = self._extract_sentences(manuscript)
-        paragraphs = [p for p in manuscript.split('\n\n') if p.strip()]
+        paragraphs = [p for p in manuscript.split("\n\n") if p.strip()]
 
         # 문장 길이 통계
         sentence_lengths = [len(s.strip()) for s in sentences if s.strip()]
@@ -212,10 +214,7 @@ class PacingAnalyzer:
             suggestions.append("설명보다 장면으로 보여주세요 (Show, don't tell)")
 
         # 6. 점수 계산
-        pacing_score = self._calculate_score(
-            dialogue_ratio, avg_len, std_len,
-            short_ratio, long_ratio, len(issues)
-        )
+        pacing_score = self._calculate_score(dialogue_ratio, avg_len, std_len, short_ratio, long_ratio, len(issues))
 
         result = PacingAnalysis(
             total_chars=len(manuscript),
@@ -231,35 +230,32 @@ class PacingAnalyzer:
             avg_scene_length=avg_scene_len,
             pacing_score=pacing_score,
             issues=issues,
-            suggestions=suggestions
+            suggestions=suggestions,
         )
 
         self.history.append(result)
         return result
 
-    def _extract_sentences(self, text: str) -> List[str]:
+    def _extract_sentences(self, text: str) -> list[str]:
         """문장 추출"""
         # 대화 내부의 문장 부호 보호
         protected = text
         for m in self.DIALOGUE_PATTERN.finditer(text):
             original = m.group()
-            replaced = original.replace('.', '\x00').replace('!', '\x01').replace('?', '\x02')
+            replaced = original.replace(".", "\x00").replace("!", "\x01").replace("?", "\x02")
             protected = protected.replace(original, replaced, 1)
 
         sentences = self.SENTENCE_PATTERN.findall(protected)
 
         # 복원
-        return [
-            s.replace('\x00', '.').replace('\x01', '!').replace('\x02', '?')
-            for s in sentences
-        ]
+        return [s.replace("\x00", ".").replace("\x01", "!").replace("\x02", "?") for s in sentences]
 
-    def _calculate_std(self, values: List[float], mean: float) -> float:
+    def _calculate_std(self, values: list[float], mean: float) -> float:
         """표준편차 계산"""
         if len(values) < 2:
             return 0
         variance = sum((x - mean) ** 2 for x in values) / len(values)
-        return variance ** 0.5
+        return variance**0.5
 
     def _count_scene_breaks(self, text: str) -> int:
         """장면 전환 횟수"""
@@ -275,7 +271,7 @@ class PacingAnalyzer:
             count += len(pattern.findall(text))
         return count
 
-    def _analyze_segments(self, text: str, sentences: List[str]) -> List[PacingSegment]:
+    def _analyze_segments(self, text: str, sentences: list[str]) -> list[PacingSegment]:
         """구간별 호흡 분석"""
         segments = []
         if not sentences:
@@ -284,7 +280,7 @@ class PacingAnalyzer:
         # 10문장 단위로 분석
         window_size = 10
         for i in range(0, len(sentences), window_size):
-            window = sentences[i:i + window_size]
+            window = sentences[i : i + window_size]
             if not window:
                 continue
 
@@ -292,7 +288,7 @@ class PacingAnalyzer:
             avg_len = sum(lengths) / len(lengths)
 
             # 대화 비율 계산
-            window_text = ' '.join(window)
+            window_text = " ".join(window)
             dialogue_chars = sum(len(m.group()) for m in self.DIALOGUE_PATTERN.finditer(window_text))
             dialogue_ratio = dialogue_chars / len(window_text) if window_text else 0
 
@@ -312,14 +308,16 @@ class PacingAnalyzer:
             start_char = sum(len(s) for s in sentences[:i])
             end_char = start_char + sum(len(s) for s in window)
 
-            segments.append(PacingSegment(
-                zone_type=zone_type,
-                start_char=start_char,
-                end_char=end_char,
-                avg_sentence_length=avg_len,
-                sentence_count=len(window),
-                dialogue_ratio=dialogue_ratio
-            ))
+            segments.append(
+                PacingSegment(
+                    zone_type=zone_type,
+                    start_char=start_char,
+                    end_char=end_char,
+                    avg_sentence_length=avg_len,
+                    sentence_count=len(window),
+                    dialogue_ratio=dialogue_ratio,
+                )
+            )
 
         return segments
 
@@ -330,7 +328,7 @@ class PacingAnalyzer:
         std_len: float,
         short_ratio: float,
         long_ratio: float,
-        issue_count: int
+        issue_count: int,
     ) -> int:
         """호흡 점수 계산 (0-100)"""
         score = 100
@@ -381,7 +379,7 @@ class PacingAnalyzer:
 
         # 현재 상태 요약
         lines.append(f"현재 호흡 점수: {analysis.pacing_score}/100")
-        lines.append(f"대화:서술 = {analysis.dialogue_ratio:.0%}:{1-analysis.dialogue_ratio:.0%}")
+        lines.append(f"대화:서술 = {analysis.dialogue_ratio:.0%}:{1 - analysis.dialogue_ratio:.0%}")
         lines.append(f"평균 문장: {analysis.avg_sentence_length:.0f}자")
 
         # 주요 제안
@@ -392,7 +390,7 @@ class PacingAnalyzer:
 
         return "\n".join(lines)
 
-    def compare_episodes(self, analyses: List[PacingAnalysis]) -> Dict[str, Any]:
+    def compare_episodes(self, analyses: list[PacingAnalysis]) -> dict[str, Any]:
         """
         여러 에피소드 호흡 비교
 
@@ -411,20 +409,20 @@ class PacingAnalyzer:
 
         # [V70] 단일 요소면 비교 불가 → 'stable'
         if len(analyses) < 2:
-            trend = 'stable'
+            trend = "stable"
         else:
-            trend = 'improving' if scores[-1] > scores[0] else ('stable' if scores[-1] == scores[0] else 'declining')
+            trend = "improving" if scores[-1] > scores[0] else ("stable" if scores[-1] == scores[0] else "declining")
 
         return {
-            'score_trend': trend,
-            'avg_score': sum(scores) / len(scores),
-            'score_range': (min(scores), max(scores)),
-            'dialogue_consistency': max(dialogue_ratios) - min(dialogue_ratios) < 0.15,
-            'length_consistency': max(avg_lengths) - min(avg_lengths) < 15,
-            'total_issues': sum(len(a.issues) for a in analyses),
+            "score_trend": trend,
+            "avg_score": sum(scores) / len(scores),
+            "score_range": (min(scores), max(scores)),
+            "dialogue_consistency": max(dialogue_ratios) - min(dialogue_ratios) < 0.15,
+            "length_consistency": max(avg_lengths) - min(avg_lengths) < 15,
+            "total_issues": sum(len(a.issues) for a in analyses),
         }
 
-    def get_zone_distribution(self, analysis: PacingAnalysis) -> Dict[PacingZone, float]:
+    def get_zone_distribution(self, analysis: PacingAnalysis) -> dict[PacingZone, float]:
         """구간 타입 분포 계산"""
         if not analysis.segments:
             return {}
@@ -435,11 +433,7 @@ class PacingAnalyzer:
 
         distribution = {}
         for zone in PacingZone:
-            zone_chars = sum(
-                s.end_char - s.start_char
-                for s in analysis.segments
-                if s.zone_type == zone
-            )
+            zone_chars = sum(s.end_char - s.start_char for s in analysis.segments if s.zone_type == zone)
             distribution[zone] = zone_chars / total_chars
 
         return distribution

@@ -22,21 +22,22 @@
     )
 """
 
-from typing import Dict, Any, List, Optional, Tuple
-from dataclasses import dataclass
-import re
 import json
+import re
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
 class CompressionResult:
     """압축 결과"""
-    compressed: Dict[str, Any]
-    original_size: int      # 원본 문자 수
-    compressed_size: int    # 압축 후 문자 수
+
+    compressed: dict[str, Any]
+    original_size: int  # 원본 문자 수
+    compressed_size: int  # 압축 후 문자 수
     compression_ratio: float
-    removed_fields: List[str]
-    summarized_fields: List[str]
+    removed_fields: list[str]
+    summarized_fields: list[str]
 
 
 class ContextCompressor:
@@ -45,37 +46,29 @@ class ContextCompressor:
     # 타입별 필수 필드 (절대 제거 안 함)
     ESSENTIAL_FIELDS = {
         "blueprint": [
-            "ep_num", "arc_num", "volume_num",
-            "scene_breakdown", "integrated_scenario",
-            "ending_hook", "prev_cliffhanger"
+            "ep_num",
+            "arc_num",
+            "volume_num",
+            "scene_breakdown",
+            "integrated_scenario",
+            "ending_hook",
+            "prev_cliffhanger",
         ],
-        "manuscript": [
-            "ep_num", "blueprint", "prev_manuscript_ending",
-            "character_states", "current_items"
-        ],
-        "arc": [
-            "arc_num", "volume_num", "tactical_doc",
-            "joint_docs", "prev_arc_ending"
-        ]
+        "manuscript": ["ep_num", "blueprint", "prev_manuscript_ending", "character_states", "current_items"],
+        "arc": ["arc_num", "volume_num", "tactical_doc", "joint_docs", "prev_arc_ending"],
     }
 
     # 요약 대상 필드 (긴 텍스트 → 핵심만)
-    SUMMARIZABLE_FIELDS = [
-        "tactical_doc", "prev_manuscript", "prev_blueprints",
-        "encyclopedia", "lore", "history"
-    ]
+    SUMMARIZABLE_FIELDS = ["tactical_doc", "prev_manuscript", "prev_blueprints", "encyclopedia", "lore", "history"]
 
     # 제거 가능 필드 (우선순위 낮음)
-    REMOVABLE_FIELDS = [
-        "debug_info", "metadata", "timestamps", "raw_data",
-        "temp_", "_cache", "_internal", "logs"
-    ]
+    REMOVABLE_FIELDS = ["debug_info", "metadata", "timestamps", "raw_data", "temp_", "_cache", "_internal", "logs"]
 
     def __init__(
         self,
         target_ratio: float = 0.6,  # 목표 압축률 (60%)
         max_field_length: int = 2000,
-        enable_summarization: bool = True
+        enable_summarization: bool = True,
     ):
         """
         Args:
@@ -88,10 +81,7 @@ class ContextCompressor:
         self.enable_summarization = enable_summarization
 
     def compress(
-        self,
-        context: Dict[str, Any],
-        target_type: str = "manuscript",
-        max_chars: int = None
+        self, context: dict[str, Any], target_type: str = "manuscript", max_chars: int = None
     ) -> CompressionResult:
         """
         컨텍스트 압축
@@ -140,10 +130,7 @@ class ContextCompressor:
             for field in self.SUMMARIZABLE_FIELDS:
                 if field in compressed and isinstance(compressed[field], str):
                     if len(compressed[field]) > self.max_field_length:
-                        compressed[field] = self._summarize_text(
-                            compressed[field],
-                            self.max_field_length
-                        )
+                        compressed[field] = self._summarize_text(compressed[field], self.max_field_length)
                         summarized_fields.append(field)
 
             # 재계산
@@ -171,7 +158,7 @@ class ContextCompressor:
             compressed_size=compressed_size,
             compression_ratio=compressed_size / original_size if original_size > 0 else 1.0,
             removed_fields=removed_fields,
-            summarized_fields=summarized_fields
+            summarized_fields=summarized_fields,
         )
 
     def _process_field(self, key: str, value: Any) -> Any:
@@ -214,15 +201,25 @@ class ContextCompressor:
             return self._smart_trim(text, max_length)
 
         # 문장 분리
-        sentences = re.split(r'[.!?。]\s*', text)
+        sentences = re.split(r"[.!?。]\s*", text)
 
         if len(sentences) <= 3:
             return self._smart_trim(text, max_length)
 
         # 중요 문장 추출 (첫 문장 + 마지막 문장 + 키워드 포함 문장)
         important_keywords = [
-            "중요", "핵심", "결론", "결과", "반드시", "주의",
-            "획득", "상승", "하락", "변화", "전환", "충돌"
+            "중요",
+            "핵심",
+            "결론",
+            "결과",
+            "반드시",
+            "주의",
+            "획득",
+            "상승",
+            "하락",
+            "변화",
+            "전환",
+            "충돌",
         ]
 
         selected = []
@@ -245,11 +242,8 @@ class ContextCompressor:
         return result
 
     def compress_for_writer(
-        self,
-        blueprint: Dict[str, Any],
-        prev_manuscripts: List[str],
-        encyclopedia: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, blueprint: dict[str, Any], prev_manuscripts: list[str], encyclopedia: dict[str, Any]
+    ) -> dict[str, Any]:
         """Writer용 컨텍스트 압축"""
         compressed = {}
 
@@ -257,7 +251,7 @@ class ContextCompressor:
         compressed["blueprint"] = {
             "ep_num": blueprint.get("ep_num"),
             "scenes": self._extract_scene_summaries(blueprint),
-            "ending_hook": blueprint.get("ending_hook", "")
+            "ending_hook": blueprint.get("ending_hook", ""),
         }
 
         # 이전 원고: 마지막 부분만
@@ -267,14 +261,11 @@ class ContextCompressor:
 
         # 백과사전: 등장 캐릭터/아이템만
         if encyclopedia:
-            compressed["encyclopedia"] = self._filter_encyclopedia(
-                encyclopedia,
-                blueprint
-            )
+            compressed["encyclopedia"] = self._filter_encyclopedia(encyclopedia, blueprint)
 
         return compressed
 
-    def _extract_scene_summaries(self, blueprint: Dict[str, Any]) -> List[Dict[str, str]]:
+    def _extract_scene_summaries(self, blueprint: dict[str, Any]) -> list[dict[str, str]]:
         """씬 요약 추출"""
         scenes = blueprint.get("scene_breakdown", {})
         summaries = []
@@ -283,25 +274,20 @@ class ContextCompressor:
 
         for scene_id, scene_data in scenes.items():
             if isinstance(scene_data, dict):
-                summaries.append({
-                    "id": scene_id,
-                    "type": scene_data.get("scene_type", ""),
-                    "goal": scene_data.get("purpose", scene_data.get("goal", ""))[:100],
-                    "chars": scene_data.get("characters", [])[:3]
-                })
+                summaries.append(
+                    {
+                        "id": scene_id,
+                        "type": scene_data.get("scene_type", ""),
+                        "goal": scene_data.get("purpose", scene_data.get("goal", ""))[:100],
+                        "chars": scene_data.get("characters", [])[:3],
+                    }
+                )
             elif isinstance(scene_data, str):
-                summaries.append({
-                    "id": scene_id,
-                    "summary": scene_data[:100]
-                })
+                summaries.append({"id": scene_id, "summary": scene_data[:100]})
 
         return summaries
 
-    def _filter_encyclopedia(
-        self,
-        encyclopedia: Dict[str, Any],
-        blueprint: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _filter_encyclopedia(self, encyclopedia: dict[str, Any], blueprint: dict[str, Any]) -> dict[str, Any]:
         """블루프린트에 등장하는 항목만 필터"""
         blueprint_str = json.dumps(blueprint, ensure_ascii=False, default=str).lower()
 
@@ -323,11 +309,8 @@ class ContextCompressor:
         return filtered
 
     def compress_for_architect(
-        self,
-        arc_data: Dict[str, Any],
-        prev_blueprints: List[Dict[str, Any]],
-        episode_bibles: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+        self, arc_data: dict[str, Any], prev_blueprints: list[dict[str, Any]], episode_bibles: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """Architect용 컨텍스트 압축"""
         compressed = {}
 
@@ -336,11 +319,8 @@ class ContextCompressor:
             compressed["arc"] = {
                 "arc_num": arc_data.get("arc_num"),
                 "volume_num": arc_data.get("volume_num"),
-                "tactical_summary": self._summarize_text(
-                    arc_data.get("tactical_doc", ""),
-                    1500
-                ),
-                "joint_docs": arc_data.get("joint_docs", {})
+                "tactical_summary": self._summarize_text(arc_data.get("tactical_doc", ""), 1500),
+                "joint_docs": arc_data.get("joint_docs", {}),
             }
 
         # 이전 블루프린트: 마지막 2개만, 엔딩훅 위주
@@ -350,23 +330,18 @@ class ContextCompressor:
                 {
                     "ep_num": bp.get("ep_num"),
                     "ending_hook": bp.get("ending_hook", ""),
-                    "scene_count": len(bp.get("scene_breakdown", {}))
+                    "scene_count": len(bp.get("scene_breakdown", {})),
                 }
                 for bp in recent
             ]
 
         # 에피소드 바이블: 핵심 변화만
         if episode_bibles:
-            compressed["recent_changes"] = self._summarize_episode_bibles(
-                episode_bibles[-3:]
-            )
+            compressed["recent_changes"] = self._summarize_episode_bibles(episode_bibles[-3:])
 
         return compressed
 
-    def _summarize_episode_bibles(
-        self,
-        bibles: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+    def _summarize_episode_bibles(self, bibles: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """에피소드 바이블 요약"""
         summaries = []
 
@@ -399,4 +374,3 @@ class ContextCompressor:
             f"  제거: {len(result.removed_fields)}개 필드\n"
             f"  요약: {len(result.summarized_fields)}개 필드"
         )
-

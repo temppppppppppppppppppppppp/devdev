@@ -12,8 +12,8 @@ stage2_orchestrator / stage4_orchestrator가 main_a.py를 역참조하던
 - STAGE0_AVAILABLE      : Stage 0 모듈 로드 여부 (main_a.py가 설정)
 """
 
-import time
 import threading
+import time
 
 from rich.console import Console
 from rich.live import Live
@@ -125,36 +125,36 @@ class StageSpinner:
             "base_color": "magenta",
             "wave_palette": "purple",
             "frames": ["📚", "📖", "🔮", "✨", "💫", "🌟"],
-            "verbs": ["Bible 로딩 중", "설정 추출 중", "스타일 분석 중", "프리셋 활성화 중", "DNA 동기화 중"]
+            "verbs": ["Bible 로딩 중", "설정 추출 중", "스타일 분석 중", "프리셋 활성화 중", "DNA 동기화 중"],
         },
         1: {
             "name": "Volume Strategy",
             "base_color": "yellow",
             "wave_palette": "gold",
             "frames": ["📜", "📖", "📚", "📖", "✨", "💫"],
-            "verbs": ["두루마리 펼치는 중", "대서사시 구상 중", "권별 전략 수립 중", "운명의 실 엮는 중"]
+            "verbs": ["두루마리 펼치는 중", "대서사시 구상 중", "권별 전략 수립 중", "운명의 실 엮는 중"],
         },
         2: {
             "name": "Arc Design",
             "base_color": "red",
             "wave_palette": "red",
             "frames": ["⚔️", "🗡️", "🛡️", "⚔️", "💥", "🔥"],
-            "verbs": ["전술 설계 중", "Arc 용접 중", "인과율 계산 중", "욕망 주입 중", "서사 단조 중"]
+            "verbs": ["전술 설계 중", "Arc 용접 중", "인과율 계산 중", "욕망 주입 중", "서사 단조 중"],
         },
         3: {
             "name": "Blueprint",
             "base_color": "cyan",
             "wave_palette": "cyan",
             "frames": ["📐", "📏", "🔧", "⚙️", "💎", "🌊"],
-            "verbs": ["설계도 제도 중", "씬 배치 중", "연속성 체크 중", "정밀 조립 중", "밀도 계산 중"]
+            "verbs": ["설계도 제도 중", "씬 배치 중", "연속성 체크 중", "정밀 조립 중", "밀도 계산 중"],
         },
         4: {
             "name": "Manuscript",
             "base_color": "green",
             "wave_palette": "green",
             "frames": ["✍️", "🖋️", "📝", "✒️", "💚", "🌿"],
-            "verbs": ["원고 집필 중", "문장 조탁 중", "서사 직조 중", "영혼 불어넣는 중", "독자 마법 걸기 중"]
-        }
+            "verbs": ["원고 집필 중", "문장 조탁 중", "서사 직조 중", "영혼 불어넣는 중", "독자 마법 걸기 중"],
+        },
     }
 
     _session_start = None
@@ -220,7 +220,7 @@ class StageSpinner:
         result = Text()
         result.append(f" {pulse} ", style=f"bold {current_color}")
         result.append(f"{detail}", style=f"{current_color}")
-        result.append(f"  ", style="dim")
+        result.append("  ", style="dim")
         result.append(f"{self._format_time(task_elapsed)}", style="dim #888888")
 
         self._wave_offset += 1
@@ -249,7 +249,7 @@ class StageSpinner:
             refresh_per_second=4,
             transient=True,
             redirect_stdout=True,
-            redirect_stderr=True
+            redirect_stderr=True,
         )
         self.live.__enter__()
         self._stop_event.clear()

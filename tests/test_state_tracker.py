@@ -7,20 +7,21 @@ check_entity_name_consistency, export/import_financial_registry,
 check_dead_npc_in_manuscript 에 대한 단위 테스트.
 """
 
-import pytest
 import sys
 from pathlib import Path
+
+import pytest
 
 # 프로젝트 루트를 path에 추가
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from modules.domain.agents.state_tracker import StateTracker, EpisodeState
-
+from modules.domain.agents.state_tracker import StateTracker
 
 # ══════════════════════════════════════════════════════════════
 # Fixtures
 # ══════════════════════════════════════════════════════════════
+
 
 @pytest.fixture
 def tracker():
@@ -39,6 +40,7 @@ def tracker_with_dead_npc(tracker):
 # ══════════════════════════════════════════════════════════════
 # Test 1: register_npc_death
 # ══════════════════════════════════════════════════════════════
+
 
 class TestRegisterNpcDeath:
     def test_basic_registration(self, tracker):
@@ -70,6 +72,7 @@ class TestRegisterNpcDeath:
 # Test 2: _is_standalone_name
 # ══════════════════════════════════════════════════════════════
 
+
 class TestIsStandaloneName:
     def test_standalone_match(self, tracker):
         """독립 이름 매칭 성공"""
@@ -97,6 +100,7 @@ class TestIsStandaloneName:
 # ══════════════════════════════════════════════════════════════
 # Test 3: merge_npc_registry (dead NPC protection)
 # ══════════════════════════════════════════════════════════════
+
 
 class TestMergeNpcRegistry:
     def test_merge_new_npcs(self, tracker):
@@ -145,16 +149,15 @@ class TestMergeNpcRegistry:
 # Test 4: extract_resolved_plots_from_arc
 # ══════════════════════════════════════════════════════════════
 
+
 class TestExtractResolvedPlots:
     def test_basic_extraction(self, tracker):
         """state_changes.resolved_plots에서 정상 추출"""
         arc = {
             "arc_no": 5,
             "state_changes": {
-                "resolved_plots": [
-                    {"plot": "철무련주와의 복수극", "resolution": "결투 승리", "episode": 25}
-                ]
-            }
+                "resolved_plots": [{"plot": "철무련주와의 복수극", "resolution": "결투 승리", "episode": 25}]
+            },
         }
         plots = tracker.extract_resolved_plots_from_arc(arc)
 
@@ -174,11 +177,7 @@ class TestExtractResolvedPlots:
         """같은 arc_no+plot 조합은 중복 누적 안 함"""
         arc = {
             "arc_no": 5,
-            "state_changes": {
-                "resolved_plots": [
-                    {"plot": "복수극", "resolution": "승리", "episode": 25}
-                ]
-            }
+            "state_changes": {"resolved_plots": [{"plot": "복수극", "resolution": "승리", "episode": 25}]},
         }
         tracker.extract_resolved_plots_from_arc(arc)
         tracker.extract_resolved_plots_from_arc(arc)
@@ -188,6 +187,7 @@ class TestExtractResolvedPlots:
 # ══════════════════════════════════════════════════════════════
 # Test 5: register_entity_name (LRU, max 200)
 # ══════════════════════════════════════════════════════════════
+
 
 class TestRegisterEntityName:
     def test_basic_registration(self, tracker):
@@ -238,6 +238,7 @@ class TestRegisterEntityName:
 # Test 6: check_entity_name_consistency
 # ══════════════════════════════════════════════════════════════
 
+
 class TestCheckEntityNameConsistency:
     def test_exact_match_no_warning(self, tracker):
         """정확한 이름이 사용되면 경고 없음"""
@@ -267,6 +268,7 @@ class TestCheckEntityNameConsistency:
 # ══════════════════════════════════════════════════════════════
 # Test 7: export/import_financial_registry
 # ══════════════════════════════════════════════════════════════
+
 
 class TestFinancialRegistry:
     def test_export_int_to_str_keys(self, tracker):
@@ -298,7 +300,7 @@ class TestFinancialRegistry:
         """export → import 라운드트립"""
         tracker.financial_number_registry[7] = {
             "total_assets": [100],
-            "key_transactions": [{"type": "buy", "target": "삼성", "amount": "50억"}]
+            "key_transactions": [{"type": "buy", "target": "삼성", "amount": "50억"}],
         }
         exported = tracker.export_financial_registry()
 
@@ -312,22 +314,19 @@ class TestFinancialRegistry:
 # Test 8: check_dead_npc_in_manuscript
 # ══════════════════════════════════════════════════════════════
 
+
 class TestCheckDeadNpcInManuscript:
     def test_dead_npc_action_detected(self, tracker_with_dead_npc):
         """사망 NPC가 행동하면 CRITICAL 위반"""
         manuscript = "철무련주가 검을 들고 나섰다. 그의 눈빛은 차가웠다."
-        violations = tracker_with_dead_npc.check_dead_npc_in_manuscript(
-            manuscript, ep_num=20, arc_no=6
-        )
+        violations = tracker_with_dead_npc.check_dead_npc_in_manuscript(manuscript, ep_num=20, arc_no=6)
         assert len(violations) >= 1
         assert any(v["npc_name"] == "철무련주" for v in violations)
 
     def test_flashback_allowed(self, tracker_with_dead_npc):
         """회상/추모 맥락은 허용"""
         manuscript = "그는 철무련주의 죽음을 떠올렸다. 가슴이 아팠다."
-        violations = tracker_with_dead_npc.check_dead_npc_in_manuscript(
-            manuscript, ep_num=20, arc_no=6
-        )
+        violations = tracker_with_dead_npc.check_dead_npc_in_manuscript(manuscript, ep_num=20, arc_no=6)
         # 회상 패턴에 해당하므로 위반 아님
         assert not any(v["npc_name"] == "철무련주" for v in violations)
 
@@ -335,20 +334,18 @@ class TestCheckDeadNpcInManuscript:
         """사망 이전 Arc에서는 검사 스킵"""
         manuscript = "철무련주가 수련을 시작했다."
         violations = tracker_with_dead_npc.check_dead_npc_in_manuscript(
-            manuscript, ep_num=5, arc_no=2  # 사망 arc=3 이전
+            manuscript,
+            ep_num=5,
+            arc_no=2,  # 사망 arc=3 이전
         )
         assert len(violations) == 0
 
     def test_empty_manuscript(self, tracker_with_dead_npc):
         """빈 원고는 위반 없음"""
-        violations = tracker_with_dead_npc.check_dead_npc_in_manuscript(
-            "", ep_num=20, arc_no=6
-        )
+        violations = tracker_with_dead_npc.check_dead_npc_in_manuscript("", ep_num=20, arc_no=6)
         assert violations == []
 
     def test_none_manuscript(self, tracker_with_dead_npc):
         """None 원고는 위반 없음"""
-        violations = tracker_with_dead_npc.check_dead_npc_in_manuscript(
-            None, ep_num=20, arc_no=6
-        )
+        violations = tracker_with_dead_npc.check_dead_npc_in_manuscript(None, ep_num=20, arc_no=6)
         assert violations == []

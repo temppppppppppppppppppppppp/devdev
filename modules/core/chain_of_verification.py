@@ -21,16 +21,17 @@
     )
 """
 
-from typing import Dict, Any, List, Optional, Tuple
+import json
 import logging
+import re
 from dataclasses import dataclass
 from enum import Enum
-import json
-import re
+from typing import Any
 
 
 class VerificationType(Enum):
     """검증 유형"""
+
     MANUSCRIPT = "manuscript"
     BLUEPRINT = "blueprint"
     ARC_DESIGN = "arc_design"
@@ -38,28 +39,31 @@ class VerificationType(Enum):
 
 class VerificationSeverity(Enum):
     """검증 결과 심각도"""
-    NONE = "none"           # 문제 없음
-    MINOR = "minor"         # 경미한 불일치 (경고만)
-    MAJOR = "major"         # 심각한 모순 (수정 필요)
-    CRITICAL = "critical"   # 치명적 오류 (재생성 필요)
+
+    NONE = "none"  # 문제 없음
+    MINOR = "minor"  # 경미한 불일치 (경고만)
+    MAJOR = "major"  # 심각한 모순 (수정 필요)
+    CRITICAL = "critical"  # 치명적 오류 (재생성 필요)
 
 
 @dataclass
 class VerificationIssue:
     """검증에서 발견된 이슈"""
-    category: str       # "item", "relationship", "timeline", "character", "setting"
+
+    category: str  # "item", "relationship", "timeline", "character", "setting"
     description: str
-    location: str       # 문제 위치 (문단 번호 등)
+    location: str  # 문제 위치 (문단 번호 등)
     severity: VerificationSeverity
-    suggestion: str     # 수정 제안
+    suggestion: str  # 수정 제안
 
 
 @dataclass
 class VerificationResult:
     """검증 결과"""
+
     passed: bool
     severity: VerificationSeverity
-    issues: List[VerificationIssue]
+    issues: list[VerificationIssue]
     summary: str
     should_regenerate: bool
     correction_hints: str  # 수정 시 참고할 힌트
@@ -129,34 +133,24 @@ JSON 형식으로 응답:
         """LLM 호출"""
         try:
             response = self.client.models.generate_content(
-                model=self.model,
-                contents=prompt,
-                config={
-                    "temperature": temperature,
-                    "max_output_tokens": 2048
-                }
+                model=self.model, contents=prompt, config={"temperature": temperature, "max_output_tokens": 2048}
             )
             return response.text or ""  # [V70] None 방어
         except Exception as e:
             logging.warning(f"[ChainOfVerification] LLM 호출 실패: {e}")
             return ""
 
-    def _parse_result(self, response_text: str) -> Dict[str, Any]:
+    def _parse_result(self, response_text: str) -> dict[str, Any]:
         """응답 파싱"""
         try:
-            json_match = re.search(r'```json\s*(.*?)\s*```', response_text, re.DOTALL)
+            json_match = re.search(r"```json\s*(.*?)\s*```", response_text, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group(1))
             return json.loads(response_text)
         except (json.JSONDecodeError, ValueError):  # [V64.P4] JSON parse failure
-            return {
-                "passed": True,
-                "overall_severity": "none",
-                "issues": [],
-                "summary": "파싱 실패 - 기본 통과"
-            }
+            return {"passed": True, "overall_severity": "none", "issues": [], "summary": "파싱 실패 - 기본 통과"}
 
-    def _build_context_string(self, context: Dict[str, Any]) -> str:
+    def _build_context_string(self, context: dict[str, Any]) -> str:
         """컨텍스트를 문자열로 변환"""
         parts = []
 
@@ -191,10 +185,7 @@ JSON 형식으로 응답:
         return "\n\n".join(parts) if parts else "컨텍스트 없음"
 
     def verify(
-        self,
-        generated_content: str,
-        context: Dict[str, Any],
-        content_type: str = "manuscript"
+        self, generated_content: str, context: dict[str, Any], content_type: str = "manuscript"
     ) -> VerificationResult:
         """
         생성된 내용 검증
@@ -214,7 +205,7 @@ JSON 형식으로 응답:
                 issues=[],
                 summary="검증 비활성화",
                 should_regenerate=False,
-                correction_hints=""
+                correction_hints="",
             )
 
         # 내용이 너무 짧으면 검증 스킵
@@ -225,7 +216,7 @@ JSON 형식으로 응답:
                 issues=[],
                 summary="내용이 짧아 검증 스킵",
                 should_regenerate=False,
-                correction_hints=""
+                correction_hints="",
             )
 
         context_str = self._build_context_string(context)
@@ -233,7 +224,7 @@ JSON 형식으로 응답:
         prompt = self.VERIFICATION_PROMPT.format(
             content_type=content_type,
             generated_content=generated_content[:6000].replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
-            context=context_str[:3000].replace("{", "{{").replace("}", "}}")  # [V70] brace escape
+            context=context_str[:3000].replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
         )
 
         response = self._call_llm(prompt)
@@ -248,13 +239,15 @@ JSON 형식으로 응답:
             except (ValueError, KeyError):  # [V64.P4] enum parse failure
                 severity = VerificationSeverity.MINOR
 
-            issues.append(VerificationIssue(
-                category=issue_data.get("category", "unknown"),
-                description=issue_data.get("description", ""),
-                location=issue_data.get("location", ""),
-                severity=severity,
-                suggestion=issue_data.get("suggestion", "")
-            ))
+            issues.append(
+                VerificationIssue(
+                    category=issue_data.get("category", "unknown"),
+                    description=issue_data.get("description", ""),
+                    location=issue_data.get("location", ""),
+                    severity=severity,
+                    suggestion=issue_data.get("suggestion", ""),
+                )
+            )
 
         overall_severity_str = result.get("overall_severity", "none")
         try:
@@ -274,10 +267,10 @@ JSON 형식으로 응답:
             issues=issues,
             summary=result.get("summary", ""),
             should_regenerate=should_regenerate,
-            correction_hints=correction_hints
+            correction_hints=correction_hints,
         )
 
-    def _generate_correction_hints(self, issues: List[VerificationIssue]) -> str:
+    def _generate_correction_hints(self, issues: list[VerificationIssue]) -> str:
         """이슈 목록에서 수정 힌트 생성"""
         if not issues:
             return ""
@@ -289,11 +282,7 @@ JSON 형식으로 응답:
 
         return "\n".join(hints)
 
-    def quick_verify(
-        self,
-        generated_content: str,
-        context: Dict[str, Any]
-    ) -> Tuple[bool, str]:
+    def quick_verify(self, generated_content: str, context: dict[str, Any]) -> tuple[bool, str]:
         """
         빠른 검증 (Python 휴리스틱만, LLM 없음)
 
@@ -307,8 +296,8 @@ JSON 형식으로 응답:
         if prev_ms:
             # 대도, 검, 무기 등 핵심 아이템 추적
             item_patterns = [
-                r'(대도|장검|단검|검|창|도끼|활|궁|봉|철퇴)',
-                r'(패|사자패|철혈|영패)',
+                r"(대도|장검|단검|검|창|도끼|활|궁|봉|철퇴)",
+                r"(패|사자패|철혈|영패)",
             ]
             for pattern in item_patterns:
                 prev_items = set(re.findall(pattern, prev_ms[-2000:]))
@@ -333,9 +322,9 @@ JSON 형식으로 응답:
 
         # 3. 급격한 관계 변화 키워드
         sudden_change_patterns = [
-            r'갑자기.{0,20}(충성|복종|굴복)',
-            r'(적대|무시).{0,30}(충성|신뢰)',
-            r'단번에.{0,20}(인정|존경)',
+            r"갑자기.{0,20}(충성|복종|굴복)",
+            r"(적대|무시).{0,30}(충성|신뢰)",
+            r"단번에.{0,20}(인정|존경)",
         ]
         for pattern in sudden_change_patterns:
             if re.search(pattern, generated_content):

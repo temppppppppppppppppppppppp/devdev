@@ -13,18 +13,19 @@ Features:
 
 import logging
 import sys
-from pathlib import Path
-from datetime import datetime
-from typing import Optional, Any
 import threading
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
 
 
 class LogLevel:
     """로그 레벨 상수"""
-    DEBUG = logging.DEBUG      # 10
-    INFO = logging.INFO        # 20
+
+    DEBUG = logging.DEBUG  # 10
+    INFO = logging.INFO  # 20
     WARNING = logging.WARNING  # 30
-    ERROR = logging.ERROR      # 40
+    ERROR = logging.ERROR  # 40
     CRITICAL = logging.CRITICAL  # 50
 
 
@@ -39,7 +40,7 @@ class StudioLogger:
         logger.error("오류 발생", exc_info=True)
     """
 
-    _instance: Optional['StudioLogger'] = None
+    _instance: Optional["StudioLogger"] = None
     _lock = threading.Lock()
 
     def __new__(cls, *args, **kwargs):
@@ -50,7 +51,7 @@ class StudioLogger:
                     cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, log_dir: Optional[Path] = None, session_name: Optional[str] = None):
+    def __init__(self, log_dir: Path | None = None, session_name: str | None = None):
         """
         로거 초기화
 
@@ -59,7 +60,7 @@ class StudioLogger:
             session_name: 세션 이름 (기본: 타임스탬프)
         """
         # 이미 초기화된 경우 스킵
-        if hasattr(self, '_initialized') and self._initialized:
+        if hasattr(self, "_initialized") and self._initialized:
             return
 
         self._initialized = True
@@ -85,7 +86,7 @@ class StudioLogger:
         self.root_logger.addHandler(self.console_handler)
 
         # 파일 핸들러 (DEBUG 이상)
-        self.file_handler = logging.FileHandler(self.log_file, encoding='utf-8')
+        self.file_handler = logging.FileHandler(self.log_file, encoding="utf-8")
         self.file_handler.setLevel(logging.DEBUG)
         self.file_handler.setFormatter(self._get_file_formatter())
         self.root_logger.addHandler(self.file_handler)
@@ -94,26 +95,16 @@ class StudioLogger:
         self._loggers = {}
 
         # 메트릭 추적
-        self._metrics = {
-            'debug_count': 0,
-            'info_count': 0,
-            'warning_count': 0,
-            'error_count': 0,
-            'critical_count': 0
-        }
+        self._metrics = {"debug_count": 0, "info_count": 0, "warning_count": 0, "error_count": 0, "critical_count": 0}
 
     def _get_console_formatter(self) -> logging.Formatter:
         """콘솔용 포맷터 (간결)"""
-        return logging.Formatter(
-            fmt='%(message)s',
-            datefmt='%H:%M:%S'
-        )
+        return logging.Formatter(fmt="%(message)s", datefmt="%H:%M:%S")
 
     def _get_file_formatter(self) -> logging.Formatter:
         """파일용 포맷터 (상세)"""
         return logging.Formatter(
-            fmt='[%(asctime)s] [%(levelname)s] [%(name)s] %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
+            fmt="[%(asctime)s] [%(levelname)s] [%(name)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
         )
 
     def get_logger(self, name: str) -> logging.Logger:
@@ -133,27 +124,27 @@ class StudioLogger:
 
     def debug(self, msg: str, *args, **kwargs):
         """DEBUG 레벨 로그"""
-        self._metrics['debug_count'] += 1
+        self._metrics["debug_count"] += 1
         self.root_logger.debug(msg, *args, **kwargs)
 
     def info(self, msg: str, *args, **kwargs):
         """INFO 레벨 로그"""
-        self._metrics['info_count'] += 1
+        self._metrics["info_count"] += 1
         self.root_logger.info(msg, *args, **kwargs)
 
     def warning(self, msg: str, *args, **kwargs):
         """WARNING 레벨 로그"""
-        self._metrics['warning_count'] += 1
+        self._metrics["warning_count"] += 1
         self.root_logger.warning(msg, *args, **kwargs)
 
     def error(self, msg: str, *args, **kwargs):
         """ERROR 레벨 로그"""
-        self._metrics['error_count'] += 1
+        self._metrics["error_count"] += 1
         self.root_logger.error(msg, *args, **kwargs)
 
     def critical(self, msg: str, *args, **kwargs):
         """CRITICAL 레벨 로그"""
-        self._metrics['critical_count'] += 1
+        self._metrics["critical_count"] += 1
         self.root_logger.critical(msg, *args, **kwargs)
 
     def log(self, msg: str, level: int = logging.INFO):
@@ -165,11 +156,11 @@ class StudioLogger:
             level: 로그 레벨 (기본: INFO)
         """
         # 이모지 기반 레벨 자동 감지
-        if any(e in msg for e in ['🚨', '❌', '🛑']):
+        if any(e in msg for e in ["🚨", "❌", "🛑"]):
             level = logging.ERROR
-        elif any(e in msg for e in ['⚠️', '⚡']):
+        elif any(e in msg for e in ["⚠️", "⚡"]):
             level = logging.WARNING
-        elif any(e in msg for e in ['🐛', '🔍']):
+        elif any(e in msg for e in ["🐛", "🔍"]):
             level = logging.DEBUG
 
         self.root_logger.log(level, msg)
@@ -178,9 +169,9 @@ class StudioLogger:
         """로그 메트릭 반환"""
         return {
             **self._metrics,
-            'session_name': self.session_name,
-            'session_start': self.session_start.isoformat(),
-            'log_file': str(self.log_file)
+            "session_name": self.session_name,
+            "session_start": self.session_start.isoformat(),
+            "log_file": str(self.log_file),
         }
 
     def set_console_level(self, level: int):
@@ -199,10 +190,10 @@ class StudioLogger:
 
 
 # 전역 로거 인스턴스
-_studio_logger: Optional[StudioLogger] = None
+_studio_logger: StudioLogger | None = None
 
 
-def init_logger(log_dir: Optional[Path] = None, session_name: Optional[str] = None) -> StudioLogger:
+def init_logger(log_dir: Path | None = None, session_name: str | None = None) -> StudioLogger:
     """
     로거 초기화 (애플리케이션 시작 시 한 번 호출)
 
@@ -249,11 +240,24 @@ def log(msg: str, level: int = logging.INFO):
 
 
 # 편의 함수들
-def debug(msg: str): log(msg, logging.DEBUG)
-def info(msg: str): log(msg, logging.INFO)
-def warning(msg: str): log(msg, logging.WARNING)
-def error(msg: str): log(msg, logging.ERROR)
-def critical(msg: str): log(msg, logging.CRITICAL)
+def debug(msg: str):
+    log(msg, logging.DEBUG)
+
+
+def info(msg: str):
+    log(msg, logging.INFO)
+
+
+def warning(msg: str):
+    log(msg, logging.WARNING)
+
+
+def error(msg: str):
+    log(msg, logging.ERROR)
+
+
+def critical(msg: str):
+    log(msg, logging.CRITICAL)
 
 
 class LoggerAdapter:

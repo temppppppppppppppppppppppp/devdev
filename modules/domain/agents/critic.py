@@ -13,6 +13,7 @@ V52.2 업데이트:
 import json
 import logging
 import re
+
 from .base_agent import BaseAgent
 
 
@@ -34,8 +35,7 @@ class Critic(BaseAgent):
         super().__init__(context, client, model_tier)
         self._agent_name = "Critic"
 
-    def critique_manuscript(self, manuscript: str, hud_report: str, genre: str,
-                            prev_manuscript: str = "") -> dict:
+    def critique_manuscript(self, manuscript: str, hud_report: str, genre: str, prev_manuscript: str = "") -> dict:
         """
         원고를 적대적으로 비평
 
@@ -58,16 +58,18 @@ class Critic(BaseAgent):
         # JSON 파싱
         try:
             data = json.loads(manuscript)
-            content = data.get('content', '')
+            content = data.get("content", "")
         except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] JSON parse with safe default
             content = manuscript
 
         if not content or len(content) < 100:
             return {
-                "issues": [{"type": "empty", "severity": "critical", "description": "원고가 너무 짧음", "location": "전체"}],
+                "issues": [
+                    {"type": "empty", "severity": "critical", "description": "원고가 너무 짧음", "location": "전체"}
+                ],
                 "severity": "high",
                 "score": 0,
-                "recommendations": ["최소 4000자 이상의 원고 필요"]
+                "recommendations": ["최소 4000자 이상의 원고 필요"],
             }
 
         # 다각도 비평 수행
@@ -104,12 +106,7 @@ class Critic(BaseAgent):
         # 권장 사항 생성
         recommendations = self._generate_recommendations(issues, genre)
 
-        result = {
-            "issues": issues,
-            "severity": severity,
-            "score": score,
-            "recommendations": recommendations
-        }
+        result = {"issues": issues, "severity": severity, "score": score, "recommendations": recommendations}
 
         logging.info(f"👹 [Critic] 비평 완료: {len(issues)}건, 심각도={severity}, 점수={score}/100")
 
@@ -121,26 +118,28 @@ class Critic(BaseAgent):
 
         # 직접 감정 표현 패턴
         direct_emotions = {
-            '기뻤다': '감정을 행동/신체 반응으로',
-            '슬펐다': '눈물, 떨림 등 신체 묘사로',
-            '화났다': '주먹 쥠, 이 악문 등으로',
-            '놀랐다': '눈 확대, 숨 멈춤 등으로',
-            '두려웠다': '떨림, 식은땀 등으로',
-            '경악했다': '동작/표정 묘사로',
-            '분노했다': '신체 반응으로',
-            '당황했다': '행동 묘사로',
-            '감동했다': '신체 반응으로'
+            "기뻤다": "감정을 행동/신체 반응으로",
+            "슬펐다": "눈물, 떨림 등 신체 묘사로",
+            "화났다": "주먹 쥠, 이 악문 등으로",
+            "놀랐다": "눈 확대, 숨 멈춤 등으로",
+            "두려웠다": "떨림, 식은땀 등으로",
+            "경악했다": "동작/표정 묘사로",
+            "분노했다": "신체 반응으로",
+            "당황했다": "행동 묘사로",
+            "감동했다": "신체 반응으로",
         }
 
         for emotion, suggestion in direct_emotions.items():
             count = content.count(emotion)
             if count >= 2:
-                issues.append({
-                    "type": "show_dont_tell",
-                    "severity": "medium" if count < 4 else "high",
-                    "description": f"'{emotion}' 직접 표현 {count}회 사용 → {suggestion}",
-                    "location": "본문 전체"
-                })
+                issues.append(
+                    {
+                        "type": "show_dont_tell",
+                        "severity": "medium" if count < 4 else "high",
+                        "description": f"'{emotion}' 직접 표현 {count}회 사용 → {suggestion}",
+                        "location": "본문 전체",
+                    }
+                )
 
         return issues
 
@@ -149,7 +148,7 @@ class Critic(BaseAgent):
         issues = []
 
         # 문장 분리
-        sentences = [s.strip() for s in re.split(r'[.!?]', content) if len(s.strip()) > 5]
+        sentences = [s.strip() for s in re.split(r"[.!?]", content) if len(s.strip()) > 5]
         if len(sentences) < 10:
             return issues
 
@@ -158,18 +157,21 @@ class Critic(BaseAgent):
 
         # 반복 카운트
         from collections import Counter
+
         starter_counts = Counter(starters)
 
         # 과도한 반복 검출
         for starter, count in starter_counts.most_common(5):
             ratio = count / len(starters)
             if ratio > 0.15:  # 15% 초과 시 문제
-                issues.append({
-                    "type": "starter_repetition",
-                    "severity": "medium" if ratio < 0.25 else "high",
-                    "description": f"'{starter}'로 시작하는 문장 {count}회 ({ratio:.0%}) - 다양화 필요",
-                    "location": "문장 시작부"
-                })
+                issues.append(
+                    {
+                        "type": "starter_repetition",
+                        "severity": "medium" if ratio < 0.25 else "high",
+                        "description": f"'{starter}'로 시작하는 문장 {count}회 ({ratio:.0%}) - 다양화 필요",
+                        "location": "문장 시작부",
+                    }
+                )
 
         return issues
 
@@ -179,37 +181,39 @@ class Critic(BaseAgent):
 
         # 장르별 클리셰 패턴
         cliche_patterns = {
-            '무협': [
-                ('피를 토하', '부상 표현 다양화'),
-                ('살기', '적의 표현 다양화'),
-                ('내공이 폭발', '파워업 표현 다양화'),
-                ('검기', '무공 표현 다양화'),
-                ('허름한 행색', '외모 묘사 다양화'),
-                ('경외', '반응 묘사 다양화'),
-                ('전율', '감정 표현 다양화'),
+            "무협": [
+                ("피를 토하", "부상 표현 다양화"),
+                ("살기", "적의 표현 다양화"),
+                ("내공이 폭발", "파워업 표현 다양화"),
+                ("검기", "무공 표현 다양화"),
+                ("허름한 행색", "외모 묘사 다양화"),
+                ("경외", "반응 묘사 다양화"),
+                ("전율", "감정 표현 다양화"),
             ],
-            '헌터': [
-                ('마나가 폭발', '능력 표현 다양화'),
-                ('스킬을 시전', '행동 표현 다양화'),
-                ('레벨업', '성장 표현 다양화'),
+            "헌터": [
+                ("마나가 폭발", "능력 표현 다양화"),
+                ("스킬을 시전", "행동 표현 다양화"),
+                ("레벨업", "성장 표현 다양화"),
             ],
-            '투자': [
-                ('주가가 폭등', '시장 표현 다양화'),
-                ('대박', '성공 표현 다양화'),
-            ]
+            "투자": [
+                ("주가가 폭등", "시장 표현 다양화"),
+                ("대박", "성공 표현 다양화"),
+            ],
         }
 
-        patterns = cliche_patterns.get(genre, cliche_patterns['무협'])
+        patterns = cliche_patterns.get(genre, cliche_patterns["무협"])
 
         for pattern, suggestion in patterns:
             count = content.count(pattern)
             if count >= 3:
-                issues.append({
-                    "type": "cliche_overuse",
-                    "severity": "low" if count < 5 else "medium",
-                    "description": f"'{pattern}' {count}회 사용 - {suggestion}",
-                    "location": "본문"
-                })
+                issues.append(
+                    {
+                        "type": "cliche_overuse",
+                        "severity": "low" if count < 5 else "medium",
+                        "description": f"'{pattern}' {count}회 사용 - {suggestion}",
+                        "location": "본문",
+                    }
+                )
 
         return issues
 
@@ -218,25 +222,27 @@ class Critic(BaseAgent):
         issues = []
 
         # 부상 상태 체크
-        injury_keywords = ['중상', '부상', '상처', '피를 흘리', '부러진']
+        injury_keywords = ["중상", "부상", "상처", "피를 흘리", "부러진"]
         has_injury = any(kw in hud_report for kw in injury_keywords)
 
         if has_injury:
             # 무리한 행동 체크
-            strong_actions = ['일격에', '박살', '압도', '제압', '분쇄', '날아올라']
+            strong_actions = ["일격에", "박살", "압도", "제압", "분쇄", "날아올라"]
             for action in strong_actions:
                 if action in content:
                     # 정당화 키워드 체크
-                    justifications = ['고통을 참', '억지로', '대가', '무리', '피를 흘리며']
+                    justifications = ["고통을 참", "억지로", "대가", "무리", "피를 흘리며"]
                     has_justification = any(j in content for j in justifications)
 
                     if not has_justification:
-                        issues.append({
-                            "type": "hud_inconsistency",
-                            "severity": "high",
-                            "description": f"부상 상태에서 '{action}' 행동 - 정당화 누락",
-                            "location": "전투 장면"
-                        })
+                        issues.append(
+                            {
+                                "type": "hud_inconsistency",
+                                "severity": "high",
+                                "description": f"부상 상태에서 '{action}' 행동 - 정당화 누락",
+                                "location": "전투 장면",
+                            }
+                        )
                         break
 
         return issues
@@ -247,7 +253,7 @@ class Critic(BaseAgent):
 
         try:
             prev_data = json.loads(prev_content)
-            prev_text = prev_data.get('content', '')
+            prev_text = prev_data.get("content", "")
         except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] JSON parse with safe default
             prev_text = prev_content
 
@@ -258,7 +264,7 @@ class Critic(BaseAgent):
         prev_ending = prev_text[-200:]
 
         # 위치 키워드 추출
-        location_patterns = [r'(객잔|주점|광장|산|숲|강|절벽|동굴|방|전각|연무장)']
+        location_patterns = [r"(객잔|주점|광장|산|숲|강|절벽|동굴|방|전각|연무장)"]
 
         prev_locations = []
         for pattern in location_patterns:
@@ -272,12 +278,14 @@ class Critic(BaseAgent):
         # 위치 급변 체크
         if prev_locations and current_locations:
             if not any(loc in current_locations for loc in prev_locations):
-                issues.append({
-                    "type": "location_jump",
-                    "severity": "medium",
-                    "description": f"위치 급변: {prev_locations[0]} → {current_locations[0]} (이동 묘사 필요)",
-                    "location": "도입부"
-                })
+                issues.append(
+                    {
+                        "type": "location_jump",
+                        "severity": "medium",
+                        "description": f"위치 급변: {prev_locations[0]} → {current_locations[0]} (이동 묘사 필요)",
+                        "location": "도입부",
+                    }
+                )
 
         return issues
 
@@ -289,37 +297,44 @@ class Critic(BaseAgent):
         dialogues = re.findall(r'["\']([^"\']+)["\']', content)
 
         if len(dialogues) < 3:
-            issues.append({
-                "type": "dialogue_lack",
-                "severity": "low",
-                "description": "대화가 너무 적음 - 캐릭터 상호작용 추가 권장",
-                "location": "전체"
-            })
+            issues.append(
+                {
+                    "type": "dialogue_lack",
+                    "severity": "low",
+                    "description": "대화가 너무 적음 - 캐릭터 상호작용 추가 권장",
+                    "location": "전체",
+                }
+            )
             return issues
 
         # 대화 길이 분석
         avg_length = sum(len(d) for d in dialogues) / len(dialogues)
         if avg_length > 100:
-            issues.append({
-                "type": "dialogue_long",
-                "severity": "low",
-                "description": f"평균 대사 길이 {avg_length:.0f}자 - 간결한 대화 권장",
-                "location": "대화문"
-            })
+            issues.append(
+                {
+                    "type": "dialogue_long",
+                    "severity": "low",
+                    "description": f"평균 대사 길이 {avg_length:.0f}자 - 간결한 대화 권장",
+                    "location": "대화문",
+                }
+            )
 
         # 반복 패턴 검출
         dialogue_starters = [d[:5] for d in dialogues if len(d) > 5]
         if len(dialogue_starters) > 5:
             from collections import Counter
+
             starter_counts = Counter(dialogue_starters)
             for starter, count in starter_counts.most_common(3):
                 if count >= 3:
-                    issues.append({
-                        "type": "dialogue_repetition",
-                        "severity": "low",
-                        "description": f"대화 시작 '{starter}...' {count}회 반복",
-                        "location": "대화문"
-                    })
+                    issues.append(
+                        {
+                            "type": "dialogue_repetition",
+                            "severity": "low",
+                            "description": f"대화 시작 '{starter}...' {count}회 반복",
+                            "location": "대화문",
+                        }
+                    )
 
         return issues
 
@@ -329,14 +344,14 @@ class Critic(BaseAgent):
             return "low", 95
 
         severity_weights = {"low": 1, "medium": 3, "high": 5, "critical": 10}
-        total_weight = sum(severity_weights.get(i['severity'], 1) for i in issues)
+        total_weight = sum(severity_weights.get(i["severity"], 1) for i in issues)
 
         # 점수 계산 (100점 만점)
         score = max(0, 100 - total_weight * 3)
 
         # 심각도 결정
-        high_count = sum(1 for i in issues if i['severity'] in ['high', 'critical'])
-        medium_count = sum(1 for i in issues if i['severity'] == 'medium')
+        high_count = sum(1 for i in issues if i["severity"] in ["high", "critical"])
+        medium_count = sum(1 for i in issues if i["severity"] == "medium")
 
         if high_count >= 2 or score < 60:
             severity = "high"
@@ -351,24 +366,24 @@ class Critic(BaseAgent):
         """권장 사항 생성"""
         recommendations = []
 
-        issue_types = [i['type'] for i in issues]
+        issue_types = [i["type"] for i in issues]
 
-        if 'show_dont_tell' in issue_types:
+        if "show_dont_tell" in issue_types:
             recommendations.append("감정을 직접 서술하지 말고 행동/신체 반응으로 보여주세요")
 
-        if 'starter_repetition' in issue_types:
+        if "starter_repetition" in issue_types:
             recommendations.append("문장 시작을 다양화하세요 (주어 변경, 부사구로 시작 등)")
 
-        if 'cliche_overuse' in issue_types:
+        if "cliche_overuse" in issue_types:
             recommendations.append("장르 클리셰를 줄이고 독창적인 표현을 사용하세요")
 
-        if 'hud_inconsistency' in issue_types:
+        if "hud_inconsistency" in issue_types:
             recommendations.append("캐릭터 상태(부상, 피로)를 행동에 반영하세요")
 
-        if 'location_jump' in issue_types:
+        if "location_jump" in issue_types:
             recommendations.append("위치 이동 시 이동 과정을 명시하세요")
 
-        if 'dialogue_lack' in issue_types:
+        if "dialogue_lack" in issue_types:
             recommendations.append("캐릭터 간 대화를 추가하여 상호작용을 보여주세요")
 
         return recommendations[:5]  # 최대 5개
@@ -489,12 +504,7 @@ JSON 형식으로 응답:
 ```"""
 
     def deep_review(
-        self,
-        manuscript: str,
-        blueprint: dict,
-        ep_num: int,
-        genre: str = "무협",
-        prev_ending: str = ""
+        self, manuscript: str, blueprint: dict, ep_num: int, genre: str = "무협", prev_ending: str = ""
     ) -> dict:
         """
         [V52.2] 7가지 관점 심층 리뷰
@@ -517,7 +527,7 @@ JSON 형식으로 응답:
                 "specific_feedback": str
             }
         """
-        logging.info(f"🔍 [V52.2 Critic] 7가지 관점 심층 리뷰 중...")
+        logging.info("🔍 [V52.2 Critic] 7가지 관점 심층 리뷰 중...")
 
         import json as json_module
 
@@ -528,7 +538,7 @@ JSON 형식으로 응답:
             blueprint=blueprint_text,
             ep_num=ep_num,
             genre=genre,
-            prev_ending=prev_ending[:500] if prev_ending else "없음"
+            prev_ending=prev_ending[:500] if prev_ending else "없음",
         )
 
         try:
@@ -563,7 +573,7 @@ JSON 형식으로 응답:
             "strengths": [],
             "weaknesses": [],
             "revision_priority": [],
-            "specific_feedback": ""
+            "specific_feedback": "",
         }
 
     def generate_revision_feedback(self, review_result: dict) -> str:
@@ -633,7 +643,7 @@ JSON 형식으로 응답:
         genre: str = "무협",
         prev_manuscript: str = "",
         hud_report: str = "",
-        use_llm: bool = True
+        use_llm: bool = True,
     ) -> dict:
         """
         [V52.2] Python 비평 + LLM 심층 리뷰 통합
@@ -652,10 +662,7 @@ JSON 형식으로 응답:
         """
         # 1. Python 기반 빠른 비평 (무료)
         python_result = self.critique_manuscript(
-            manuscript=manuscript,
-            hud_report=hud_report,
-            genre=genre,
-            prev_manuscript=prev_manuscript
+            manuscript=manuscript, hud_report=hud_report, genre=genre, prev_manuscript=prev_manuscript
         )
 
         # Python 비평에서 심각한 문제 발견 시 바로 반환
@@ -669,17 +676,14 @@ JSON 형식으로 응답:
             if prev_manuscript:
                 try:
                     import json as json_module
+
                     prev_data = json_module.loads(prev_manuscript)
-                    prev_ending = prev_data.get('content', '')[-300:]
+                    prev_ending = prev_data.get("content", "")[-300:]
                 except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] JSON parse with safe default
                     prev_ending = prev_manuscript[-300:]
 
             llm_result = self.deep_review(
-                manuscript=manuscript,
-                blueprint=blueprint,
-                ep_num=ep_num,
-                genre=genre,
-                prev_ending=prev_ending
+                manuscript=manuscript, blueprint=blueprint, ep_num=ep_num, genre=genre, prev_ending=prev_ending
             )
 
             # 결과 통합
@@ -694,7 +698,7 @@ JSON 형식으로 응답:
                 "weaknesses": llm_result.get("weaknesses", []),
                 "revision_priority": llm_result.get("revision_priority", []),
                 "specific_feedback": llm_result.get("specific_feedback", ""),
-                "recommendations": python_result.get("recommendations", [])
+                "recommendations": python_result.get("recommendations", []),
             }
 
             return combined

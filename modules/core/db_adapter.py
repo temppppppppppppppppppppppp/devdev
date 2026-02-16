@@ -35,10 +35,7 @@ class DBAdapter:
 
     def __getattr__(self, name: str) -> Any:
         if name in self._BLOCKED_ATTRS:
-            raise AttributeError(
-                f"DBAdapter: '{name}' 직접 접근 차단됨. "
-                f"DBManager API 메서드를 사용하세요."
-            )
+            raise AttributeError(f"DBAdapter: '{name}' 직접 접근 차단됨. DBManager API 메서드를 사용하세요.")
         return getattr(self._db, name)
 
     # --- Phase 4A 추가 메서드 ---
@@ -68,8 +65,7 @@ class DBAdapter:
         sql_upper = sql.strip().upper()
         if not any(sql_upper.startswith(prefix) for prefix in self._RAW_SQL_PREFIXES):
             raise ValueError(
-                f"DBAdapter.raw_execute: 허용되지 않은 SQL — {sql[:50]!r}. "
-                f"허용 접두사: {self._RAW_SQL_PREFIXES}"
+                f"DBAdapter.raw_execute: 허용되지 않은 SQL — {sql[:50]!r}. 허용 접두사: {self._RAW_SQL_PREFIXES}"
             )
         db = self._db
         with db._lock:

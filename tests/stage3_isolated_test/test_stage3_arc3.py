@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 [V60.80] Stage 3 Isolated Test - Arc 3 Blueprint Generation
 
@@ -12,17 +11,16 @@
   python tests/stage3_isolated_test/test_stage3_arc3.py
 """
 
-import os
-import sys
 import io
 
 # 이후 import
 import json
+import os
 import sqlite3
-import shutil
-from pathlib import Path
-from typing import Dict, Any, Optional
+import sys
 from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 # 프로젝트 루트 경로 설정
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -61,7 +59,7 @@ def setup_test_environment():
     return True
 
 
-def load_arc_data(arc_num: int = 3) -> Dict[str, Any]:
+def load_arc_data(arc_num: int = 3) -> dict[str, Any]:
     """Arc 데이터 로드"""
     print(f"\n[Load] Arc {arc_num} 데이터 로드 중...")
 
@@ -92,9 +90,9 @@ def load_arc_data(arc_num: int = 3) -> Dict[str, Any]:
     # Arc 파일에서 tactical_doc 보강
     arc_file = SOURCE_PROJECT / "plans" / "arcs" / f"arc_{arc_num:03d}.txt"
     if arc_file.exists():
-        with open(arc_file, 'r', encoding='utf-8') as f:
+        with open(arc_file, encoding="utf-8") as f:
             tactical_content = f.read()
-        arc_data['tactical_doc'] = tactical_content
+        arc_data["tactical_doc"] = tactical_content
         print(f"  ✓ tactical_doc 로드: {len(tactical_content)}자")
 
     print(f"  ✓ Arc {arc_num}: 제{arc_data.get('ep_start', '?')}화 ~ 제{arc_data.get('ep_end', '?')}화")
@@ -102,7 +100,7 @@ def load_arc_data(arc_num: int = 3) -> Dict[str, Any]:
     return arc_data
 
 
-def load_bible() -> Dict[str, Any]:
+def load_bible() -> dict[str, Any]:
     """Bible 데이터 로드"""
     print("\n[Load] Bible 데이터 로드 중...")
 
@@ -127,15 +125,15 @@ def load_bible() -> Dict[str, Any]:
 class MinimalProjectContext:
     """테스트용 최소 ProjectContext"""
 
-    def __init__(self, bible: Dict, arcs: list):
+    def __init__(self, bible: dict, arcs: list):
         self.bible = bible
         self.arcs = arcs
         self._blueprints = {}
 
-    def get_blueprint(self, ep_num: int) -> Optional[Dict]:
+    def get_blueprint(self, ep_num: int) -> dict | None:
         return self._blueprints.get(ep_num)
 
-    def save_episode_blueprint(self, ep_num: int, blueprint: Dict):
+    def save_episode_blueprint(self, ep_num: int, blueprint: dict):
         self._blueprints[ep_num] = blueprint
         print(f"      💾 Blueprint 저장됨: 제{ep_num}화")
 
@@ -143,7 +141,7 @@ class MinimalProjectContext:
         return "테스트용 히스토리 요약"
 
 
-def run_stage3_test(arc_data: Dict, bible: Dict, target_episodes: list = None):
+def run_stage3_test(arc_data: dict, bible: dict, target_episodes: list = None):
     """Stage 3 테스트 실행"""
     print("\n" + "=" * 60)
     print("[Test] Stage 3 Blueprint Generation 테스트")
@@ -151,13 +149,14 @@ def run_stage3_test(arc_data: Dict, bible: Dict, target_episodes: list = None):
 
     # 필요한 모듈 임포트
     from google import genai
-    from modules.domain.agents.three_phase_blueprint_generator import ThreePhaseBlueprintGenerator
+
     from modules.domain.agents.director import Director
+    from modules.domain.agents.three_phase_blueprint_generator import ThreePhaseBlueprintGenerator
 
     # API 클라이언트 생성
     api_key = os.getenv("GOOGLE_API_KEY")
     client = genai.Client(api_key=api_key)
-    print(f"  ✓ Gemini API 클라이언트 생성됨")
+    print("  ✓ Gemini API 클라이언트 생성됨")
 
     # 최소 컨텍스트 생성
     context = MinimalProjectContext(bible, [arc_data])
@@ -165,12 +164,12 @@ def run_stage3_test(arc_data: Dict, bible: Dict, target_episodes: list = None):
     # 에이전트 생성
     three_phase_bp = ThreePhaseBlueprintGenerator(context, client, model_tier="gemini-2.5-flash")
     director = Director(context, client, model_tier="gemini-2.5-flash")
-    print(f"  ✓ ThreePhaseBlueprintGenerator 생성됨")
-    print(f"  ✓ Director 생성됨")
+    print("  ✓ ThreePhaseBlueprintGenerator 생성됨")
+    print("  ✓ Director 생성됨")
 
     # 테스트할 에피소드 범위
-    ep_start = arc_data.get('ep_start', 11)
-    ep_end = arc_data.get('ep_end', 15)
+    ep_start = arc_data.get("ep_start", 11)
+    ep_end = arc_data.get("ep_end", 15)
 
     if target_episodes:
         episodes = target_episodes
@@ -182,13 +181,9 @@ def run_stage3_test(arc_data: Dict, bible: Dict, target_episodes: list = None):
     # 결과 저장
     results = {
         "test_time": datetime.now().isoformat(),
-        "arc_no": arc_data.get('arc_no', 3),
+        "arc_no": arc_data.get("arc_no", 3),
         "episodes": {},
-        "summary": {
-            "total": len(episodes),
-            "success": 0,
-            "failed": 0
-        }
+        "summary": {"total": len(episodes), "success": 0, "failed": 0},
     }
 
     prev_blueprint = None
@@ -207,7 +202,7 @@ def run_stage3_test(arc_data: Dict, bible: Dict, target_episodes: list = None):
                 prev_blueprints=prev_blueprints[-5:] if prev_blueprints else None,
                 max_retries=2,  # 총 3번 시도
                 director=director,
-                arc_idx=arc_data.get('arc_no', 3) - 1
+                arc_idx=arc_data.get("arc_no", 3) - 1,
             )
 
             if blueprint and pipeline_result.get("final_verdict") == "PASS":
@@ -217,7 +212,7 @@ def run_stage3_test(arc_data: Dict, bible: Dict, target_episodes: list = None):
                     "title": blueprint.get("title", "?"),
                     "scene_count": len(blueprint.get("scene_breakdown", {})),
                     "scenario_length": len(blueprint.get("integrated_scenario", "")),
-                    "retries": pipeline_result.get("retries", 0)
+                    "retries": pipeline_result.get("retries", 0),
                 }
 
                 print(f"\n  ✅ 제{ep_num}화 PASS")
@@ -235,18 +230,16 @@ def run_stage3_test(arc_data: Dict, bible: Dict, target_episodes: list = None):
                 results["episodes"][ep_num] = {
                     "status": "FAILED",
                     "verdict": pipeline_result.get("final_verdict", "?"),
-                    "retries": pipeline_result.get("retries", 0)
+                    "retries": pipeline_result.get("retries", 0),
                 }
                 print(f"\n  ❌ 제{ep_num}화 FAILED - {pipeline_result.get('final_verdict', '?')}")
 
         except Exception as e:
             results["summary"]["failed"] += 1
-            results["episodes"][ep_num] = {
-                "status": "ERROR",
-                "error": str(e)[:200]
-            }
+            results["episodes"][ep_num] = {"status": "ERROR", "error": str(e)[:200]}
             print(f"\n  ❌ 제{ep_num}화 ERROR: {str(e)[:100]}")
             import traceback
+
             traceback.print_exc()
 
     # 통계 출력
@@ -259,9 +252,9 @@ def run_stage3_test(arc_data: Dict, bible: Dict, target_episodes: list = None):
     print(f"  성공률: {results['summary']['success'] / results['summary']['total'] * 100:.1f}%")
 
     # Generator 통계
-    if hasattr(three_phase_bp, 'get_stats'):
+    if hasattr(three_phase_bp, "get_stats"):
         stats = three_phase_bp.get_stats()
-        print(f"\n  [Generator 통계]")
+        print("\n  [Generator 통계]")
         print(f"    Phase 1 완료: {stats.get('phase1_complete', 0)}")
         print(f"    Phase 2 완료: {stats.get('phase2_complete', 0)}")
         print(f"    Phase 3 PASS: {stats.get('phase3_pass', 0)}")
@@ -269,7 +262,7 @@ def run_stage3_test(arc_data: Dict, bible: Dict, target_episodes: list = None):
 
     # 결과 파일 저장
     result_file = TEST_DIR / f"test_result_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    with open(result_file, 'w', encoding='utf-8') as f:
+    with open(result_file, "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=2)
     print(f"\n  📄 결과 저장: {result_file}")
 
@@ -305,7 +298,7 @@ def main():
     results = run_stage3_test(
         arc_data=arc_data,
         bible=bible,
-        target_episodes=[11]  # 첫 에피소드만 테스트 (비용 절감)
+        target_episodes=[11],  # 첫 에피소드만 테스트 (비용 절감)
         # target_episodes=None  # 전체 테스트 (11~15화)
     )
 
@@ -316,7 +309,7 @@ def main():
 
 if __name__ == "__main__":
     # Windows UTF-8 출력 설정 (pytest 수집 시 capture 파괴 방지)
-    if sys.platform == 'win32':
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+    if sys.platform == "win32":
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
     main()

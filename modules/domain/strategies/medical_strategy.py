@@ -3,29 +3,30 @@ from .base_strategy import BaseStrategy
 
 class MedicalStrategy(BaseStrategy):
     @property
-    def genre_name(self): return "MEDICAL"
+    def genre_name(self):
+        return "MEDICAL"
 
     def get_system_prompt(self) -> str:
-        genre_rules = self.law.get('medical', {})
+        genre_rules = self.law.get("medical", {})
 
         # 1. 컨텍스트 및 선택된 톤(Tone) 인출
         ctx = self.studio.project
 
-        selected_tone = getattr(ctx, 'selected_tone', {})
-        tone_name = selected_tone.get('name', '의학 성장물')
-        tone_guide = selected_tone.get('writer', '생사의 긴장감과 의사의 성장이 교차하는 문체')
+        selected_tone = getattr(ctx, "selected_tone", {})
+        tone_name = selected_tone.get("name", "의학 성장물")
+        tone_guide = selected_tone.get("writer", "생사의 긴장감과 의사의 성장이 교차하는 문체")
 
         # 2. 주인공 정보 인출
-        bible_root = ctx.master_bible.get('MasterBible', ctx.master_bible)
-        hud = bible_root.get('MedicalHUD', bible_root.get('medical_hud', {}))
-        protagonist = hud.get('Protagonist', hud.get('main', {}))
+        bible_root = ctx.master_bible.get("MasterBible", ctx.master_bible)
+        hud = bible_root.get("MedicalHUD", bible_root.get("medical_hud", {}))
+        protagonist = hud.get("Protagonist", hud.get("main", {}))
 
-        mc_name = protagonist.get('Name', protagonist.get('name', '의사'))
-        mc_desc = protagonist.get('description', '천재적 의술의 의사')
+        mc_name = protagonist.get("Name", protagonist.get("name", "의사"))
+        mc_desc = protagonist.get("description", "천재적 의술의 의사")
 
         return f"""
         [MEDICAL GENRE GUIDELINE]
-        1. 장르 필수 요소: {', '.join(genre_rules.get('mandatory', []))}
+        1. 장르 필수 요소: {", ".join(genre_rules.get("mandatory", []))}
         2. 주인공: {mc_name} ({mc_desc})
 
         [세부 집필 톤(Tone) 지침: {tone_name}]

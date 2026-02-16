@@ -17,49 +17,52 @@
     warnings = tracker.get_overdue_hooks(current_ep=20)
 """
 
-from dataclasses import dataclass, field
-import logging
-from typing import List, Dict, Any, Optional, Set
-from enum import Enum
-from datetime import datetime
 import json
+import logging
 import re
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any
 
 
 class ForeshadowCategory(Enum):
     """복선 카테고리"""
-    MYSTERY = "mystery"           # 비밀/미스터리 (인물 정체, 숨겨진 과거)
-    CHEKHOV = "chekhov"           # 체호프의 총 (아이템, 기술)
-    RELATIONSHIP = "relationship" # 관계 복선 (재회, 배신)
-    POWER = "power"               # 힘/성장 복선 (잠재력, 봉인)
+
+    MYSTERY = "mystery"  # 비밀/미스터리 (인물 정체, 숨겨진 과거)
+    CHEKHOV = "chekhov"  # 체호프의 총 (아이템, 기술)
+    RELATIONSHIP = "relationship"  # 관계 복선 (재회, 배신)
+    POWER = "power"  # 힘/성장 복선 (잠재력, 봉인)
     WORLDBUILDING = "worldbuilding"  # 세계관 복선 (역사, 세력)
-    FORESIGHT = "foresight"       # 예언/암시
+    FORESIGHT = "foresight"  # 예언/암시
     OTHER = "other"
 
 
 class ForeshadowStatus(Enum):
     """복선 상태"""
-    PLANTED = "planted"           # 심어짐
-    HINTED = "hinted"             # 재암시됨 (중간 리마인더)
-    PAYOFF = "payoff"             # 회수됨
-    OVERDUE = "overdue"           # 기한 초과
-    ABANDONED = "abandoned"       # 포기됨 (의도적 미회수)
+
+    PLANTED = "planted"  # 심어짐
+    HINTED = "hinted"  # 재암시됨 (중간 리마인더)
+    PAYOFF = "payoff"  # 회수됨
+    OVERDUE = "overdue"  # 기한 초과
+    ABANDONED = "abandoned"  # 포기됨 (의도적 미회수)
 
 
 @dataclass
 class Foreshadow:
     """복선 데이터"""
-    hook: str                      # 복선 내용
+
+    hook: str  # 복선 내용
     category: ForeshadowCategory
-    planted_ep: int                # 심은 화
-    deadline_ep: int               # 회수 기한 (권장)
+    planted_ep: int  # 심은 화
+    deadline_ep: int  # 회수 기한 (권장)
     status: ForeshadowStatus = ForeshadowStatus.PLANTED
 
     # 추적
-    hint_episodes: List[int] = field(default_factory=list)  # 재암시 화
-    payoff_ep: Optional[int] = None    # 회수 화
-    importance: int = 5                 # 중요도 (1-10)
-    description: str = ""               # 설명
+    hint_episodes: list[int] = field(default_factory=list)  # 재암시 화
+    payoff_ep: int | None = None  # 회수 화
+    importance: int = 5  # 중요도 (1-10)
+    description: str = ""  # 설명
 
     # 메타
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
@@ -68,8 +71,13 @@ class Foreshadow:
     def is_overdue(self, current_ep: int) -> bool:
         """기한 초과 여부"""
         return (
-            self.status in (ForeshadowStatus.PLANTED, ForeshadowStatus.HINTED, ForeshadowStatus.OVERDUE) and  # [V70] OVERDUE 재감지 허용
-            current_ep > self.deadline_ep
+            self.status
+            in (
+                ForeshadowStatus.PLANTED,
+                ForeshadowStatus.HINTED,
+                ForeshadowStatus.OVERDUE,
+            )  # [V70] OVERDUE 재감지 허용
+            and current_ep > self.deadline_ep
         )
 
 
@@ -118,22 +126,22 @@ class ForeshadowTracker:
 
     def __init__(self, max_hooks: int = 100):
         self.max_hooks = max_hooks
-        self.hooks: Dict[str, Foreshadow] = {}
-        self.episode_plants: Dict[int, List[str]] = {}  # 화별 심은 복선
-        self.episode_payoffs: Dict[int, List[str]] = {}  # 화별 회수한 복선
+        self.hooks: dict[str, Foreshadow] = {}
+        self.episode_plants: dict[int, list[str]] = {}  # 화별 심은 복선
+        self.episode_payoffs: dict[int, list[str]] = {}  # 화별 회수한 복선
 
     def _normalize_hook(self, hook: str) -> str:
         """복선 키 정규화"""
-        return re.sub(r'\s+', ' ', hook.strip().lower())
+        return re.sub(r"\s+", " ", hook.strip().lower())
 
     def plant(
         self,
         ep_num: int,
         hook: str,
         category: ForeshadowCategory = ForeshadowCategory.OTHER,
-        deadline_ep: Optional[int] = None,
+        deadline_ep: int | None = None,
         importance: int = 5,
-        description: str = ""
+        description: str = "",
     ) -> Foreshadow:
         """복선 심기"""
         key = self._normalize_hook(hook)
@@ -152,7 +160,7 @@ class ForeshadowTracker:
             planted_ep=ep_num,
             deadline_ep=deadline_ep,
             importance=importance,
-            description=description
+            description=description,
         )
 
         self.hooks[key] = foreshadow
@@ -165,17 +173,14 @@ class ForeshadowTracker:
         # 최대 개수 관리
         if len(self.hooks) > self.max_hooks:
             # 가장 오래된 회수된 복선 제거
-            payoff_hooks = [
-                k for k, v in self.hooks.items()
-                if v.status == ForeshadowStatus.PAYOFF
-            ]
+            payoff_hooks = [k for k, v in self.hooks.items() if v.status == ForeshadowStatus.PAYOFF]
             if payoff_hooks:
                 oldest = min(payoff_hooks, key=lambda k: self.hooks[k].payoff_ep or 0)
                 del self.hooks[oldest]
 
         return foreshadow
 
-    def hint(self, ep_num: int, hook: str) -> Optional[Foreshadow]:
+    def hint(self, ep_num: int, hook: str) -> Foreshadow | None:
         """복선 재암시 (리마인더)"""
         key = self._normalize_hook(hook)
 
@@ -194,7 +199,7 @@ class ForeshadowTracker:
 
         return foreshadow
 
-    def payoff(self, ep_num: int, hook: str) -> Optional[Foreshadow]:
+    def payoff(self, ep_num: int, hook: str) -> Foreshadow | None:
         """복선 회수"""
         key = self._normalize_hook(hook)
 
@@ -217,7 +222,7 @@ class ForeshadowTracker:
 
         return foreshadow
 
-    def abandon(self, hook: str, reason: str = "") -> Optional[Foreshadow]:
+    def abandon(self, hook: str, reason: str = "") -> Foreshadow | None:
         """복선 포기 (의도적 미회수)"""
         key = self._normalize_hook(hook)
 
@@ -231,7 +236,7 @@ class ForeshadowTracker:
 
         return foreshadow
 
-    def get_overdue_hooks(self, current_ep: int) -> List[Foreshadow]:
+    def get_overdue_hooks(self, current_ep: int) -> list[Foreshadow]:
         """기한 초과 복선 목록"""
         overdue = []
 
@@ -245,22 +250,15 @@ class ForeshadowTracker:
         overdue.sort(key=lambda f: f.importance, reverse=True)
         return overdue
 
-    def get_active_hooks(self) -> List[Foreshadow]:
+    def get_active_hooks(self) -> list[Foreshadow]:
         """활성 복선 (미회수) 목록"""
         return [
-            f for f in self.hooks.values()
-            if f.status in [
-                ForeshadowStatus.PLANTED,
-                ForeshadowStatus.HINTED,
-                ForeshadowStatus.OVERDUE
-            ]
+            f
+            for f in self.hooks.values()
+            if f.status in [ForeshadowStatus.PLANTED, ForeshadowStatus.HINTED, ForeshadowStatus.OVERDUE]
         ]
 
-    def get_hooks_near_deadline(
-        self,
-        current_ep: int,
-        within_eps: int = 5
-    ) -> List[Foreshadow]:
+    def get_hooks_near_deadline(self, current_ep: int, within_eps: int = 5) -> list[Foreshadow]:
         """기한 임박 복선 목록"""
         near = []
 
@@ -276,11 +274,7 @@ class ForeshadowTracker:
         near.sort(key=lambda f: f.deadline_ep)
         return near
 
-    def auto_detect_from_manuscript(
-        self,
-        ep_num: int,
-        manuscript: str
-    ) -> List[Foreshadow]:
+    def auto_detect_from_manuscript(self, ep_num: int, manuscript: str) -> list[Foreshadow]:
         """원고에서 복선 자동 감지"""
         detected = []
 
@@ -293,17 +287,14 @@ class ForeshadowTracker:
 
                     # 이미 등록된 복선과 유사한지 확인
                     match_key = self._normalize_hook(match)
-                    is_similar = any(
-                        match_key in key or key in match_key
-                        for key in self.hooks.keys()
-                    )
+                    is_similar = any(match_key in key or key in match_key for key in self.hooks.keys())
 
                     if not is_similar and len(match) > 3:
                         foreshadow = self.plant(
                             ep_num=ep_num,
                             hook=match,
                             category=category,
-                            importance=3  # 자동 감지는 낮은 중요도
+                            importance=3,  # 자동 감지는 낮은 중요도
                         )
                         detected.append(foreshadow)
 
@@ -367,7 +358,7 @@ class ForeshadowTracker:
 
         return "\n".join(lines)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """복선 통계"""
         by_status = {}
         by_category = {}
@@ -390,7 +381,7 @@ class ForeshadowTracker:
             "active": len(active),
             "payoff_rate": round(payoff_rate, 1),
             "by_status": by_status,
-            "by_category": by_category
+            "by_category": by_category,
         }
 
     def save_to_json(self, filepath: str):
@@ -398,7 +389,7 @@ class ForeshadowTracker:
         data = {
             "hooks": {},
             "episode_plants": {str(k): v for k, v in self.episode_plants.items()},
-            "episode_payoffs": {str(k): v for k, v in self.episode_payoffs.items()}
+            "episode_payoffs": {str(k): v for k, v in self.episode_payoffs.items()},
         }
 
         for key, f in self.hooks.items():
@@ -413,16 +404,16 @@ class ForeshadowTracker:
                 "importance": f.importance,
                 "description": f.description,
                 "created_at": f.created_at,
-                "updated_at": f.updated_at
+                "updated_at": f.updated_at,
             }
 
-        with open(filepath, 'w', encoding='utf-8') as file:
+        with open(filepath, "w", encoding="utf-8") as file:
             json.dump(data, file, ensure_ascii=False, indent=2)
 
     def load_from_json(self, filepath: str):
         """로드"""
         try:
-            with open(filepath, 'r', encoding='utf-8') as file:
+            with open(filepath, encoding="utf-8") as file:
                 data = json.load(file)
 
             _loaded_hooks = {}  # [V70] 기존 hooks를 로드 완료 전까지 유지
@@ -448,16 +439,12 @@ class ForeshadowTracker:
                     importance=f_data.get("importance", 5),
                     description=f_data.get("description", ""),
                     created_at=f_data.get("created_at", ""),
-                    updated_at=f_data.get("updated_at", "")
+                    updated_at=f_data.get("updated_at", ""),
                 )
 
             self.hooks = _loaded_hooks  # [V70] 로드 성공 후에만 교체
-            self.episode_plants = {
-                int(k): v for k, v in data.get("episode_plants", {}).items()
-            }
-            self.episode_payoffs = {
-                int(k): v for k, v in data.get("episode_payoffs", {}).items()
-            }
+            self.episode_plants = {int(k): v for k, v in data.get("episode_plants", {}).items()}
+            self.episode_payoffs = {int(k): v for k, v in data.get("episode_payoffs", {}).items()}
 
         except FileNotFoundError:
             pass

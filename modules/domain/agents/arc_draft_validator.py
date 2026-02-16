@@ -18,9 +18,10 @@ Python 사전 검증 → LLM에게 정보 제공용 (REJECT 권한 없음)
 [V60.56] valid는 항상 True, warnings만 수집하여 LLM에게 전달
 """
 
-import re
 import logging
-from typing import Dict, List, Any, Tuple, Set
+import re
+from typing import Any
+
 from modules.core.constants import Stage2Limits
 
 
@@ -35,26 +36,26 @@ class ArcDraftValidator:
     def __init__(self) -> None:
         # 아이템 획득 패턴
         self.acquire_patterns = [
-            r'([가-힣]{2,15}(?:도|검|창|봉|환|단|경|비급|서|책))[를을]?\s*(?:획득|얻|받|손에\s*넣|입수)',
-            r'(?:획득|얻|받|손에\s*넣)[가-힣\s]*([가-힣]{2,15}(?:도|검|창|봉|환|단|비급))',
-            r'([가-힣]{2,15}(?:패|인장|부|권))[를을]?\s*(?:하사|수여|받|얻)',
+            r"([가-힣]{2,15}(?:도|검|창|봉|환|단|경|비급|서|책))[를을]?\s*(?:획득|얻|받|손에\s*넣|입수)",
+            r"(?:획득|얻|받|손에\s*넣)[가-힣\s]*([가-힣]{2,15}(?:도|검|창|봉|환|단|비급))",
+            r"([가-힣]{2,15}(?:패|인장|부|권))[를을]?\s*(?:하사|수여|받|얻)",
         ]
 
         # 수여물 패턴
         self.grant_patterns = [
-            r'([가-힣]{2,20}패)[를을]?\s*(?:하사|수여|받)',
-            r'([가-힣]{2,20}권)[를을]?\s*(?:위임|부여|받|하사)',
-            r'([가-힣]{2,20}인장)[를을]?\s*(?:받|하사|수여)',
-            r'([가-힣]{2,20}직)[에으로]?\s*(?:임명|취임)',
+            r"([가-힣]{2,20}패)[를을]?\s*(?:하사|수여|받)",
+            r"([가-힣]{2,20}권)[를을]?\s*(?:위임|부여|받|하사)",
+            r"([가-힣]{2,20}인장)[를을]?\s*(?:받|하사|수여)",
+            r"([가-힣]{2,20}직)[에으로]?\s*(?:임명|취임)",
         ]
 
         # 무기 키워드
-        self.weapon_keywords = ['도', '검', '창', '봉', '궁', '부', '도끼', '낫', '곤', '편']
+        self.weapon_keywords = ["도", "검", "창", "봉", "궁", "부", "도끼", "낫", "곤", "편"]
 
         # 수여물 키워드
-        self.grant_keywords = ['패', '권', '인장', '직위', '자격', '서', '부']
+        self.grant_keywords = ["패", "권", "인장", "직위", "자격", "서", "부"]
 
-    def _safe_tactical(self, arc: Dict) -> str:
+    def _safe_tactical(self, arc: dict) -> str:
         """[V60.37] tactical_doc을 안전하게 문자열로 변환"""
         tactical = arc.get("tactical_doc", "")
         if isinstance(tactical, str):
@@ -68,11 +69,11 @@ class ArcDraftValidator:
 
     def validate(
         self,
-        arc: Dict,
-        prev_arcs: List[Dict],
+        arc: dict,
+        prev_arcs: list[dict],
         constraint_block: str = "",
-        state_tracker=None  # [V60.94] StateTracker 인스턴스 (NPC 생사 검증용)
-    ) -> Dict[str, Any]:
+        state_tracker=None,  # [V60.94] StateTracker 인스턴스 (NPC 생사 검증용)
+    ) -> dict[str, Any]:
         """
         Arc 초안 검증
 
@@ -99,7 +100,7 @@ class ArcDraftValidator:
 
         # [V60.74] Arc 1 처리 명시적 로그
         if not prev_arcs:
-            logging.info(f"⏭️ [ArcDraftValidator] Arc 1 - 연속성 검증 스킵, 구조만 검증")
+            logging.info("⏭️ [ArcDraftValidator] Arc 1 - 연속성 검증 스킵, 구조만 검증")
 
         # [V60.94] 0. 죽은 NPC 등장 검증 - 유일한 REJECT 사유
         if state_tracker and prev_arcs:
@@ -169,10 +170,10 @@ class ArcDraftValidator:
             "advisory_issues": advisory_issues,  # [V60.56] LLM에게 전달할 정보
             "warnings": warnings,
             "suggestions": suggestions,
-            "reject_reason": reject_reason  # [V60.94] REJECT 사유
+            "reject_reason": reject_reason,  # [V60.94] REJECT 사유
         }
 
-    def _validate_required_fields(self, arc: Dict) -> Dict:
+    def _validate_required_fields(self, arc: dict) -> dict:
         """필수 필드 검증"""
         critical = []
         warnings = []
@@ -197,7 +198,7 @@ class ArcDraftValidator:
 
         return {"penalty": penalty, "critical": critical, "warnings": warnings}
 
-    def _validate_duplicate_acquisition(self, arc: Dict, prev_arcs: List[Dict]) -> Dict:
+    def _validate_duplicate_acquisition(self, arc: dict, prev_arcs: list[dict]) -> dict:
         """중복 아이템 획득 검증"""
         critical = []
         penalty = 0
@@ -250,7 +251,7 @@ class ArcDraftValidator:
 
         return {"penalty": penalty, "critical": critical}
 
-    def _validate_location_continuity(self, arc: Dict, prev_arc: Dict) -> Dict:
+    def _validate_location_continuity(self, arc: dict, prev_arc: dict) -> dict:
         """위치 연속성 검증"""
         critical = []
         warnings = []
@@ -277,7 +278,7 @@ class ArcDraftValidator:
 
         return {"penalty": penalty, "critical": critical, "warnings": warnings}
 
-    def _validate_injury_continuity(self, arc: Dict, prev_arc: Dict) -> Dict:
+    def _validate_injury_continuity(self, arc: dict, prev_arc: dict) -> dict:
         """부상 상태 연속성 검증"""
         warnings = []
         penalty = 0
@@ -301,14 +302,12 @@ class ArcDraftValidator:
                 has_recovery = any(kw in tactical[:1000] for kw in ["회복", "치료", "조식", "휴식", "요양"])
 
                 if not has_recovery:
-                    warnings.append(
-                        f"부상 급격 회복: 이전='{prev_injury[:30]}' → 현재='없음' (회복 장면 권장)"
-                    )
+                    warnings.append(f"부상 급격 회복: 이전='{prev_injury[:30]}' → 현재='없음' (회복 장면 권장)")
                     penalty += 5
 
         return {"penalty": penalty, "warnings": warnings}
 
-    def _validate_grant_timeline(self, arc: Dict, prev_arcs: List[Dict]) -> Dict:
+    def _validate_grant_timeline(self, arc: dict, prev_arcs: list[dict]) -> dict:
         """수여물 타임라인 검증"""
         critical = []
         penalty = 0
@@ -342,7 +341,7 @@ class ArcDraftValidator:
 
         return {"penalty": penalty, "critical": critical}
 
-    def _validate_tactical_doc(self, arc: Dict) -> Dict:
+    def _validate_tactical_doc(self, arc: dict) -> dict:
         """[V60.29] tactical_doc 분량 + 화별 분할 검증 강화"""
         critical = []
         warnings = []
@@ -366,7 +365,9 @@ class ArcDraftValidator:
 
             if len(tactical) < 100:
                 # [V60.41] 형식 오류는 WARNING (재생성으로 해결 가능)
-                warnings.append(f"tactical_doc 형식 오류: 문자열이 아닌 {type(arc.get('tactical_doc')).__name__} 타입 반환")
+                warnings.append(
+                    f"tactical_doc 형식 오류: 문자열이 아닌 {type(arc.get('tactical_doc')).__name__} 타입 반환"
+                )
                 penalty += 20
         length = len(tactical)
 
@@ -424,7 +425,7 @@ class ArcDraftValidator:
         # 4. 화 순서 검사 (숫자 순서대로인지)
         if episode_sections:
             found_eps = sorted(episode_sections.keys())
-            if found_eps != expected_eps[:len(found_eps)]:
+            if found_eps != expected_eps[: len(found_eps)]:
                 warnings.append(f"화 순서 불일치: 발견={found_eps}, 기대={expected_eps}")
                 penalty += 5
 
@@ -433,7 +434,7 @@ class ArcDraftValidator:
         for ep_no, content in episode_sections.items():
             # 대사("") 또는 행동/감정 키워드
             has_dialogue = '"' in content or '"' in content
-            has_action = any(kw in content for kw in ['했다', '했다', '됐다', '였다', '한다', '본다', '갔다', '왔다'])
+            has_action = any(kw in content for kw in ["했다", "했다", "됐다", "였다", "한다", "본다", "갔다", "왔다"])
 
             if not has_dialogue and not has_action and len(content) > 50:
                 sparse_eps.append(ep_no)
@@ -480,13 +481,13 @@ class ArcDraftValidator:
 
         return {"penalty": penalty, "critical": critical, "warnings": warnings, "suggestions": suggestions}
 
-    def _validate_state_checkpoints(self, episode_sections: Dict[int, str], arc: Dict) -> Dict:
+    def _validate_state_checkpoints(self, episode_sections: dict[int, str], arc: dict) -> dict:
         """[V60.40] 화간 상태 체크포인트 검증 - StateLocked 개념 흡수"""
         missing_checkpoints = []
         state_mismatches = []
 
         # 상태 관련 키워드
-        state_keywords = ['위치:', '내공:', '부상:', '소지품:', '획득:', '소모:', '종료 상태', '시작 상태']
+        state_keywords = ["위치:", "내공:", "부상:", "소지품:", "획득:", "소모:", "종료 상태", "시작 상태"]
 
         sorted_eps = sorted(episode_sections.keys())
 
@@ -495,25 +496,22 @@ class ArcDraftValidator:
 
             # 시작 상태 체크 (첫 화 제외하고는 이전 화 종료 상태 언급 필요)
             if i > 0:
-                has_start_state = any(kw in content for kw in ['시작 상태', '이전', '직전', '에서 이어'])
+                has_start_state = any(kw in content for kw in ["시작 상태", "이전", "직전", "에서 이어"])
                 if not has_start_state and len(content) > 300:
                     # 이전 화 종료 위치/상태 언급 체크
-                    prev_content = episode_sections.get(sorted_eps[i-1], "")
+                    prev_content = episode_sections.get(sorted_eps[i - 1], "")
                     # 간단한 연속성 체크: 이전 화 마지막 위치가 현재 화에 언급되는지
                     pass  # 복잡한 검증은 LLM에 위임
 
             # 종료 상태 체크 (마지막 화 포함 모든 화)
-            has_end_state = any(kw in content for kw in ['종료 상태', '종료:', '끝:', '마무리'])
+            has_end_state = any(kw in content for kw in ["종료 상태", "종료:", "끝:", "마무리"])
             has_state_info = sum(1 for kw in state_keywords if kw in content)
 
             # 상태 정보가 2개 미만이면 체크포인트 부족
             if has_state_info < 2 and len(content) > 300:
                 missing_checkpoints.append(f"{ep_no}화")
 
-        return {
-            "missing_checkpoints": missing_checkpoints,
-            "state_mismatches": state_mismatches
-        }
+        return {"missing_checkpoints": missing_checkpoints, "state_mismatches": state_mismatches}
 
     def _count_tactical_beats(self, content: str) -> int:
         """[V60.30] 화 내용에서 전술 비트 수 카운트"""
@@ -521,9 +519,9 @@ class ArcDraftValidator:
 
         # 번호 매겨진 비트 패턴: (1), (2), ①, ②, 1., 2.
         numbered_patterns = [
-            r'\([1-9]\)',           # (1), (2), ...
-            r'[①②③④⑤⑥⑦⑧⑨⑩]',  # ①, ②, ...
-            r'\b[1-9]\.\s',         # 1. 2. ...
+            r"\([1-9]\)",  # (1), (2), ...
+            r"[①②③④⑤⑥⑦⑧⑨⑩]",  # ①, ②, ...
+            r"\b[1-9]\.\s",  # 1. 2. ...
         ]
         for pattern in numbered_patterns:
             matches = re.findall(pattern, content)
@@ -531,43 +529,98 @@ class ArcDraftValidator:
 
         # 구조적 키워드 비트
         structure_keywords = [
-            '공간', '장소', '배경',       # 공간 묘사
-            '행동', '대결', '전투', '수련',  # 인과 마디
-            '반응', '충격', '놀라', '경악',  # 파동 전이
-            '상태', '변화', '획득', '소모',  # 연속성 체크
+            "공간",
+            "장소",
+            "배경",  # 공간 묘사
+            "행동",
+            "대결",
+            "전투",
+            "수련",  # 인과 마디
+            "반응",
+            "충격",
+            "놀라",
+            "경악",  # 파동 전이
+            "상태",
+            "변화",
+            "획득",
+            "소모",  # 연속성 체크
         ]
         keyword_beats = sum(1 for kw in structure_keywords if kw in content)
 
         # 더 많은 것 사용
         return max(beat_count, min(keyword_beats // 2, 5))
 
-    def _check_structural_elements(self, content: str) -> List[str]:
+    def _check_structural_elements(self, content: str) -> list[str]:
         """[V60.30] 화 내용에서 필수 구조 요소 확인"""
         missing = []
 
         # 1. 공간 묘사 키워드
-        space_keywords = ['장소', '공간', '객잔', '무기고', '광장', '산', '강', '숲', '도시', '마을',
-                          '방', '청', '관', '전각', '동굴', '골목', '거리', '길']
+        space_keywords = [
+            "장소",
+            "공간",
+            "객잔",
+            "무기고",
+            "광장",
+            "산",
+            "강",
+            "숲",
+            "도시",
+            "마을",
+            "방",
+            "청",
+            "관",
+            "전각",
+            "동굴",
+            "골목",
+            "거리",
+            "길",
+        ]
         if not any(kw in content for kw in space_keywords):
             # 위치 관련 조사 패턴도 체크
-            if not re.search(r'[가-힣]+(?:에서|으로|에|를)', content):
-                missing.append('공간')
+            if not re.search(r"[가-힣]+(?:에서|으로|에|를)", content):
+                missing.append("공간")
 
         # 2. 인과/행동 키워드
-        action_keywords = ['했다', '한다', '된다', '였다', '갔다', '왔다', '봤다', '보았다',
-                           '치다', '막다', '피하다', '공격', '방어', '수련']
+        action_keywords = [
+            "했다",
+            "한다",
+            "된다",
+            "였다",
+            "갔다",
+            "왔다",
+            "봤다",
+            "보았다",
+            "치다",
+            "막다",
+            "피하다",
+            "공격",
+            "방어",
+            "수련",
+        ]
         if not any(kw in content for kw in action_keywords):
-            missing.append('행동')
+            missing.append("행동")
 
         # 3. 상태 변화 키워드
-        state_keywords = ['획득', '소모', '부상', '회복', '상승', '하락', '변화', '성장',
-                          '내공', '경지', '상처', '치료']
+        state_keywords = [
+            "획득",
+            "소모",
+            "부상",
+            "회복",
+            "상승",
+            "하락",
+            "변화",
+            "성장",
+            "내공",
+            "경지",
+            "상처",
+            "치료",
+        ]
         if not any(kw in content for kw in state_keywords):
-            missing.append('상태')
+            missing.append("상태")
 
         return missing
 
-    def _extract_episode_sections(self, tactical: str, ep_start: int, ep_count: int) -> Dict[int, str]:
+    def _extract_episode_sections(self, tactical: str, ep_start: int, ep_count: int) -> dict[int, str]:
         """
         [V60.29] tactical_doc에서 각 화 섹션 추출
 
@@ -578,12 +631,12 @@ class ArcDraftValidator:
 
         # [V60.34] 다양한 화 헤더 패턴 확장
         patterns = [
-            r'##\s*제\s*(\d+)\s*화[:\s]',       # ## 제 N화: (StateLocked V60.34 형식)
-            r'\[?제\s*(\d+)\s*화[^\]]*\]?',     # [제 N화 ...] 또는 제 N화
-            r'【제\s*(\d+)\s*화[^】]*】',        # 【제 N화 ...】
-            r'#\s*제\s*(\d+)\s*화',              # # 제 N화
-            r'(\d+)화[:\s]',                     # N화: 또는 N화
-            r'---\s*\n\s*제\s*(\d+)\s*화',       # --- 구분자 후 제 N화
+            r"##\s*제\s*(\d+)\s*화[:\s]",  # ## 제 N화: (StateLocked V60.34 형식)
+            r"\[?제\s*(\d+)\s*화[^\]]*\]?",  # [제 N화 ...] 또는 제 N화
+            r"【제\s*(\d+)\s*화[^】]*】",  # 【제 N화 ...】
+            r"#\s*제\s*(\d+)\s*화",  # # 제 N화
+            r"(\d+)화[:\s]",  # N화: 또는 N화
+            r"---\s*\n\s*제\s*(\d+)\s*화",  # --- 구분자 후 제 N화
         ]
 
         # 모든 화 위치 찾기
@@ -603,9 +656,9 @@ class ArcDraftValidator:
 
         # [V60.34] 화 종료 마커 패턴 (StateLocked 형식)
         end_markers = [
-            r'【화\s*종료\s*상태】',
-            r'\[종료\s*상태\]',
-            r'---\s*$',
+            r"【화\s*종료\s*상태】",
+            r"\[종료\s*상태\]",
+            r"---\s*$",
         ]
 
         # 각 화 내용 추출
@@ -631,16 +684,16 @@ class ArcDraftValidator:
 
         return sections
 
-    def _validate_against_constraints(self, arc: Dict, constraint_block: str) -> Dict:
+    def _validate_against_constraints(self, arc: dict, constraint_block: str) -> dict:
         """제약 블록 검증"""
         critical = []
         penalty = 0
 
         # 금지 아이템 추출 (❌ 표시)
-        forbidden_items = re.findall(r'❌\s*([가-힣\w]+)', constraint_block)
+        forbidden_items = re.findall(r"❌\s*([가-힣\w]+)", constraint_block)
 
         # 획득 금지 목록에서 추출
-        forbidden_matches = re.findall(r'획득\s*(?:금지|불가)[^:]*[:：]\s*([^\n]+)', constraint_block)
+        forbidden_matches = re.findall(r"획득\s*(?:금지|불가)[^:]*[:：]\s*([^\n]+)", constraint_block)
         for match in forbidden_matches:
             items = [i.strip() for i in match.split(",")]
             forbidden_items.extend(items)
@@ -665,7 +718,7 @@ class ArcDraftValidator:
                 if any(kw in tactical for kw in ["획득", "얻", "손에"]):
                     # 더 정밀한 검사
                     for pattern in self.acquire_patterns:
-                        if re.search(pattern.replace(r'([가-힣]{2,15}', f'({forbidden}'), tactical):
+                        if re.search(pattern.replace(r"([가-힣]{2,15}", f"({forbidden}"), tactical):
                             critical.append(f"제약 위반: 금지 아이템 '{forbidden}' 획득 시도 (tactical_doc)")
                             penalty += 35
                             break
@@ -712,14 +765,14 @@ class ArcDraftValidator:
                     return True
 
         # 핵심 부분 비교 (접미사 제거)
-        suffixes = ['검', '도', '창', '패', '권', '인장', '서']
+        suffixes = ["검", "도", "창", "패", "권", "인장", "서"]
         core1 = item1
         core2 = item2
         for suffix in suffixes:
             if core1.endswith(suffix):
-                core1 = core1[:-len(suffix)]
+                core1 = core1[: -len(suffix)]
             if core2.endswith(suffix):
-                core2 = core2[:-len(suffix)]
+                core2 = core2[: -len(suffix)]
 
         # [V60.20] 코어 비교도 길이 체크 강화
         if core1 and core2 and len(core1) >= 2 and len(core2) >= 2:
@@ -746,8 +799,8 @@ class ArcDraftValidator:
             return True
 
         # 주요 지명 추출 (2글자 이상)
-        loc1_parts = set(re.findall(r'[가-힣]{2,}', loc1))
-        loc2_parts = set(re.findall(r'[가-힣]{2,}', loc2))
+        loc1_parts = set(re.findall(r"[가-힣]{2,}", loc1))
+        loc2_parts = set(re.findall(r"[가-힣]{2,}", loc2))
 
         # 교집합이 있으면 호환
         if loc1_parts & loc2_parts:
@@ -755,7 +808,7 @@ class ArcDraftValidator:
 
         return False
 
-    def _validate_dead_npc_appearance(self, arc: Dict, state_tracker) -> Dict:
+    def _validate_dead_npc_appearance(self, arc: dict, state_tracker) -> dict:
         """
         [V60.94] 죽은 NPC 등장 검증 - REJECT 대상
 

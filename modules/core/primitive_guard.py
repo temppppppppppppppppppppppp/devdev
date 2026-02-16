@@ -11,7 +11,6 @@ import json
 import logging
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
 
 
 class PrimitiveGuard:
@@ -33,7 +32,7 @@ class PrimitiveGuard:
         """JSON 파일에서 금지어 데이터 로드"""
         json_path = Path(__file__).parent / "laws" / "primitive_forbidden.json"
         try:
-            with open(json_path, 'r', encoding='utf-8') as f:
+            with open(json_path, encoding="utf-8") as f:
                 PrimitiveGuard._data = json.load(f)
         except Exception as e:
             logging.warning(f"[PrimitiveGuard] JSON 로드 실패: {e}")
@@ -41,21 +40,18 @@ class PrimitiveGuard:
                 "genre_rules": {},
                 "categories": {},
                 "regex_patterns_by_genre": {},
-                "prompt_injection_by_genre": {}
+                "prompt_injection_by_genre": {},
             }
 
     @property
-    def data(self) -> Dict:
+    def data(self) -> dict:
         return PrimitiveGuard._data or {}
 
-    def get_genre_rule(self, genre: str) -> Dict:
+    def get_genre_rule(self, genre: str) -> dict:
         """장르별 규칙 반환"""
-        return self.data.get("genre_rules", {}).get(genre, {
-            "apply_level": "none",
-            "blocked_categories": []
-        })
+        return self.data.get("genre_rules", {}).get(genre, {"apply_level": "none", "blocked_categories": []})
 
-    def get_blocked_categories(self, genre: str) -> List[str]:
+    def get_blocked_categories(self, genre: str) -> list[str]:
         """장르별 차단 카테고리 목록"""
         rule = self.get_genre_rule(genre)
         blocked = rule.get("blocked_categories", [])
@@ -63,7 +59,7 @@ class PrimitiveGuard:
             return list(self.data.get("categories", {}).keys())
         return blocked
 
-    def get_forbidden_words_for_genre(self, genre: str) -> List[str]:
+    def get_forbidden_words_for_genre(self, genre: str) -> list[str]:
         """장르별 금지어 목록"""
         words = []
         blocked_cats = self.get_blocked_categories(genre)
@@ -76,7 +72,7 @@ class PrimitiveGuard:
 
         return words
 
-    def get_regex_patterns_for_genre(self, genre: str) -> List[Tuple[str, str]]:
+    def get_regex_patterns_for_genre(self, genre: str) -> list[tuple[str, str]]:
         """장르별 regex 패턴 목록"""
         patterns = []
         genre_patterns = self.data.get("regex_patterns_by_genre", {}).get(genre, [])
@@ -89,7 +85,7 @@ class PrimitiveGuard:
         genre_prompts = self.data.get("prompt_injection_by_genre", {}).get(genre, {})
         return genre_prompts.get(length, "")
 
-    def get_alternatives_for_genre(self, genre: str) -> Dict[str, str]:
+    def get_alternatives_for_genre(self, genre: str) -> dict[str, str]:
         """장르별 대체 표현 사전"""
         alternatives = {}
         blocked_cats = self.get_blocked_categories(genre)
@@ -101,7 +97,7 @@ class PrimitiveGuard:
 
         return alternatives
 
-    def validate(self, text: str, genre: str = "wuxia") -> Tuple[str, List[Dict]]:
+    def validate(self, text: str, genre: str = "wuxia") -> tuple[str, list[dict]]:
         """
         텍스트에서 현대 용어 검출 (장르별)
 
@@ -129,13 +125,15 @@ class PrimitiveGuard:
                 if matches:
                     severity = "CRITICAL" if apply_level == "full" else "WARNING"
 
-                    violations.append({
-                        "type": "MODERN_TERM",
-                        "severity": severity,
-                        "category": category,
-                        "found": list(set(str(m) if isinstance(m, str) else str(m[0]) for m in matches))[:5],
-                        "message": f"[{genre}+원시인] {category} 사용 금지: {matches[:3]}"
-                    })
+                    violations.append(
+                        {
+                            "type": "MODERN_TERM",
+                            "severity": severity,
+                            "category": category,
+                            "found": list(set(str(m) if isinstance(m, str) else str(m[0]) for m in matches))[:5],
+                            "message": f"[{genre}+원시인] {category} 사용 금지: {matches[:3]}",
+                        }
+                    )
 
                     if severity == "CRITICAL":
                         decision = "REJECT"
@@ -184,18 +182,14 @@ def get_primitive_guard() -> PrimitiveGuard:
     return _guard_instance
 
 
-def is_primitive_mode(protagonist_config: Dict) -> bool:
+def is_primitive_mode(protagonist_config: dict) -> bool:
     """protagonist_config에서 원시인 모드 여부 확인"""
     if not protagonist_config:
         return False
     return protagonist_config.get("world_origin", "") == "원시인"
 
 
-def get_primitive_constraint_section(
-    protagonist_config: Dict,
-    genre: str = "wuxia",
-    length: str = "full"
-) -> str:
+def get_primitive_constraint_section(protagonist_config: dict, genre: str = "wuxia", length: str = "full") -> str:
     """
     장르+protagonist_config 기반 원시인 제약 섹션 반환
 
@@ -224,10 +218,8 @@ def get_primitive_constraint_section(
 
 
 def validate_primitive_compliance(
-    text: str,
-    protagonist_config: Dict,
-    genre: str = "wuxia"
-) -> Tuple[str, List[Dict], str]:
+    text: str, protagonist_config: dict, genre: str = "wuxia"
+) -> tuple[str, list[dict], str]:
     """
     텍스트의 원시인 모드 준수 검증 (장르별)
 
@@ -272,14 +264,14 @@ def validate_primitive_compliance(
 def get_genre_from_context(context) -> str:
     """context에서 장르 추출"""
     try:
-        if hasattr(context, 'db'):
-            bible = context.db.load_anchor('bible')
+        if hasattr(context, "db"):
+            bible = context.db.load_anchor("bible")
             if bible:
-                return bible.get('_genre', 'wuxia')
-        if hasattr(context, 'load_v20_anchor'):
-            bible = context.load_v20_anchor('bible')
+                return bible.get("_genre", "wuxia")
+        if hasattr(context, "load_v20_anchor"):
+            bible = context.load_v20_anchor("bible")
             if bible:
-                return bible.get('_genre', 'wuxia')
+                return bible.get("_genre", "wuxia")
     except (AttributeError, KeyError, TypeError):  # [V64.P4] genre extraction with safe default
         pass
-    return 'wuxia'  # 기본값
+    return "wuxia"  # 기본값

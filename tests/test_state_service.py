@@ -307,22 +307,34 @@ class TestValidateArcIntegrity:
 
     def test_invalid_beat_sequence_fails(self, svc, ui_mock):
         arc = {
-            "arc_no": 1, "ep_start": 1, "ep_end": 5, "ep_count": 5,
-            "tactical_doc": "x" * 600, "beat_sequence": "not_a_list",
+            "arc_no": 1,
+            "ep_start": 1,
+            "ep_end": 5,
+            "ep_count": 5,
+            "tactical_doc": "x" * 600,
+            "beat_sequence": "not_a_list",
         }
         assert svc.validate_arc_integrity(arc) is False
 
     def test_short_tactical_doc_fails(self, svc, ui_mock):
         arc = {
-            "arc_no": 1, "ep_start": 1, "ep_end": 5, "ep_count": 5,
-            "tactical_doc": "too short", "beat_sequence": [1],
+            "arc_no": 1,
+            "ep_start": 1,
+            "ep_end": 5,
+            "ep_count": 5,
+            "tactical_doc": "too short",
+            "beat_sequence": [1],
         }
         assert svc.validate_arc_integrity(arc) is False
 
     def test_valid_arc_passes(self, svc):
         arc = {
-            "arc_no": 1, "ep_start": 1, "ep_end": 5, "ep_count": 5,
-            "tactical_doc": "x" * 600, "beat_sequence": [1, 2, 3],
+            "arc_no": 1,
+            "ep_start": 1,
+            "ep_end": 5,
+            "ep_count": 5,
+            "tactical_doc": "x" * 600,
+            "beat_sequence": [1, 2, 3],
         }
         assert svc.validate_arc_integrity(arc) is True
 

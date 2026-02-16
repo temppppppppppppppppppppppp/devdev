@@ -24,9 +24,10 @@
 비용: ~$0.01/에피소드 (flash 모델 사용)
 """
 
-import re
 import logging
-from typing import Dict, List, Any, Optional, Set, Tuple
+import re
+from typing import Any
+
 from .base_agent import BaseAgent
 
 # [V64.P3] 서브모듈 임포트
@@ -163,11 +164,11 @@ class ContinuityInspector(BaseAgent):
 
         lines = []
         categories = [
-            ('characters', '캐릭터'),
-            ('organizations', '조직/문파'),
-            ('locations', '장소'),
-            ('objects', '물품/아이템'),
-            ('concepts', '기술/개념')
+            ("characters", "캐릭터"),
+            ("organizations", "조직/문파"),
+            ("locations", "장소"),
+            ("objects", "물품/아이템"),
+            ("concepts", "기술/개념"),
         ]
 
         has_any = False
@@ -178,9 +179,9 @@ class ContinuityInspector(BaseAgent):
                 formatted_items = []
                 for item in items:
                     if isinstance(item, dict):
-                        name = item.get('name', item.get('canonical_name', str(item)))
-                        aliases = item.get('aliases', [])
-                        first_ep = item.get('first_appearance', item.get('first_ep', '?'))
+                        name = item.get("name", item.get("canonical_name", str(item)))
+                        aliases = item.get("aliases", [])
+                        first_ep = item.get("first_appearance", item.get("first_ep", "?"))
                         if aliases:
                             formatted_items.append(f"{name} (별칭: {', '.join(aliases)}, 첫등장: ep{first_ep})")
                         else:
@@ -194,7 +195,7 @@ class ContinuityInspector(BaseAgent):
 
         return "\n".join(lines)
 
-    def _extract_acquisitions(self, scenario: str) -> List[str]:
+    def _extract_acquisitions(self, scenario: str) -> list[str]:
         """시나리오에서 획득 아이템 추출"""
         items = []
         for pattern in self.acquire_patterns:
@@ -205,7 +206,7 @@ class ContinuityInspector(BaseAgent):
                     items.append(item)
         return list(set(items))[:5]
 
-    def _extract_grants(self, scenario: str) -> List[str]:
+    def _extract_grants(self, scenario: str) -> list[str]:
         """시나리오에서 수여물 추출"""
         grants = []
         for pattern in self.grant_patterns:
@@ -219,11 +220,11 @@ class ContinuityInspector(BaseAgent):
     def _extract_key_sentences(self, scenario: str) -> str:
         """시나리오에서 연속성 관련 핵심 문장 추출"""
         key_patterns = [
-            r'[^.。!?]*(?:획득|집어\s*들|뽑아\s*들|챙기|얻)[^.。!?]*[.。!?]',
-            r'[^.。!?]*(?:하사|수여|위임|부여)[^.。!?]*[.。!?]',
-            r'[^.。!?]*(?:부상|상처|파열|회복)[^.。!?]*[.。!?]',
-            r'[^.。!?]*(?:품속|손에|어깨에|허리에)[^.。!?]*[.。!?]',
-            r'[^.。!?]*(?:하사|수여|위임|부여|임명)[^.。!?]*[.。!?]',
+            r"[^.。!?]*(?:획득|집어\s*들|뽑아\s*들|챙기|얻)[^.。!?]*[.。!?]",
+            r"[^.。!?]*(?:하사|수여|위임|부여)[^.。!?]*[.。!?]",
+            r"[^.。!?]*(?:부상|상처|파열|회복)[^.。!?]*[.。!?]",
+            r"[^.。!?]*(?:품속|손에|어깨에|허리에)[^.。!?]*[.。!?]",
+            r"[^.。!?]*(?:하사|수여|위임|부여|임명)[^.。!?]*[.。!?]",
         ]
 
         key_sentences = set()
@@ -234,8 +235,7 @@ class ContinuityInspector(BaseAgent):
                     key_sentences.add(match.strip())
 
         sorted_sentences = sorted(
-            key_sentences,
-            key=lambda s: scenario.find(s) if scenario.find(s) >= 0 else len(scenario)
+            key_sentences, key=lambda s: scenario.find(s) if scenario.find(s) >= 0 else len(scenario)
         )
 
         result = " ... ".join(sorted_sentences[:10])
@@ -253,8 +253,8 @@ class ContinuityInspector(BaseAgent):
         item1_clean = item1.strip()
         item2_clean = item2.strip()
 
-        item1_normalized = ''.join(item1_clean.lower().split())
-        item2_normalized = ''.join(item2_clean.lower().split())
+        item1_normalized = "".join(item1_clean.lower().split())
+        item2_normalized = "".join(item2_clean.lower().split())
 
         if item1_normalized == item2_normalized:
             logging.info(f"🔍 [_is_same_item] 정확 매칭: '{item1_clean}' == '{item2_clean}'")
@@ -279,11 +279,29 @@ class ContinuityInspector(BaseAgent):
         local_context = context[start:end]
 
         distribution_keywords = [
-            '지급', '분배', '나눠', '배분', '내려 보내', '하사하',
-            '수레', '마차', '도착', '배달', '전달',
-            '병사들', '무사들', '사병들', '부하들',
-            '병사에게', '무사에게', '사병에게', '부하에게',
-            '막사 앞', '연무장에', '도착한다', '실린',
+            "지급",
+            "분배",
+            "나눠",
+            "배분",
+            "내려 보내",
+            "하사하",
+            "수레",
+            "마차",
+            "도착",
+            "배달",
+            "전달",
+            "병사들",
+            "무사들",
+            "사병들",
+            "부하들",
+            "병사에게",
+            "무사에게",
+            "사병에게",
+            "부하에게",
+            "막사 앞",
+            "연무장에",
+            "도착한다",
+            "실린",
         ]
 
         for keyword in distribution_keywords:
@@ -298,7 +316,7 @@ class ContinuityInspector(BaseAgent):
 
         return False
 
-    def _filter_distributed_items(self, items: List[str], context: str) -> List[str]:
+    def _filter_distributed_items(self, items: list[str], context: str) -> list[str]:
         """
         [V49.6] 분배된 아이템을 필터링
         """
@@ -316,33 +334,36 @@ class ContinuityInspector(BaseAgent):
     # [V64.P3] 위임 스텁 — Blueprint 수준 검증
     # =================================================================
 
-    def inspect(self, current_ep: int, current_blueprint: dict,
-                prev_blueprints: List[dict], hud_history: List[dict] = None,
-                entity_registry: dict = None) -> dict:
+    def inspect(
+        self,
+        current_ep: int,
+        current_blueprint: dict,
+        prev_blueprints: list[dict],
+        hud_history: list[dict] = None,
+        entity_registry: dict = None,
+    ) -> dict:
         """블루프린트 연속성 검증 실행 → ContinuityBlueprintValidator에 위임"""
         return self._blueprint.inspect(
-            current_ep, current_blueprint, prev_blueprints,
-            hud_history=hud_history, entity_registry=entity_registry
+            current_ep, current_blueprint, prev_blueprints, hud_history=hud_history, entity_registry=entity_registry
         )
 
-    def _python_precheck(self, current_ep: int, current_scenario: str,
-                         prev_blueprints: List[dict]) -> dict:
+    def _python_precheck(self, current_ep: int, current_scenario: str, prev_blueprints: list[dict]) -> dict:
         """Python 기반 사전 검증 → ContinuityBlueprintValidator에 위임"""
         return self._blueprint._python_precheck(current_ep, current_scenario, prev_blueprints)
 
-    def _format_prev_blueprints(self, prev_blueprints: List[dict]) -> str:
+    def _format_prev_blueprints(self, prev_blueprints: list[dict]) -> str:
         """이전 블루프린트 포맷팅 → ContinuityBlueprintValidator에 위임"""
         return self._blueprint._format_prev_blueprints(prev_blueprints)
 
-    def _format_timeline(self, items: List[tuple]) -> str:
+    def _format_timeline(self, items: list[tuple]) -> str:
         """타임라인 포맷팅 → ContinuityBlueprintValidator에 위임"""
         return self._blueprint._format_timeline(items)
 
-    def _generate_fix_instructions(self, violations: List[dict]) -> str:
+    def _generate_fix_instructions(self, violations: list[dict]) -> str:
         """수정 지시 생성 → ContinuityBlueprintValidator에 위임"""
         return self._blueprint._generate_fix_instructions(violations)
 
-    def get_prev_blueprints(self, current_ep: int, window: int = None) -> List[dict]:
+    def get_prev_blueprints(self, current_ep: int, window: int = None) -> list[dict]:
         """DB에서 이전 블루프린트 조회 → ContinuityBlueprintValidator에 위임"""
         return self._blueprint.get_prev_blueprints(current_ep, window=window)
 
@@ -350,8 +371,7 @@ class ContinuityInspector(BaseAgent):
     # [V64.P3] 위임 스텁 — Arc 수준 검증
     # =================================================================
 
-    def inspect_arc(self, current_arc: dict, prev_arcs: List[dict],
-                    entity_registry: dict = None) -> dict:
+    def inspect_arc(self, current_arc: dict, prev_arcs: list[dict], entity_registry: dict = None) -> dict:
         """Arc 수준 연속성 검증 → ContinuityArcValidator에 위임"""
         return self._arc.inspect_arc(current_arc, prev_arcs, entity_registry=entity_registry)
 
@@ -359,34 +379,33 @@ class ContinuityInspector(BaseAgent):
         """단일 Arc 내 모순 검증 → ContinuityArcValidator에 위임"""
         return self._arc._inspect_intra_arc_only(current_arc)
 
-    def _extract_accurate_joint_docs(self, tactical_doc: str, arc_no: int,
-                                     ep_end: int, original_joint_docs: dict) -> Optional[dict]:
+    def _extract_accurate_joint_docs(
+        self, tactical_doc: str, arc_no: int, ep_end: int, original_joint_docs: dict
+    ) -> dict | None:
         """Joint Docs 자동 추출 → ContinuityArcValidator에 위임"""
-        return self._arc._extract_accurate_joint_docs(
-            tactical_doc, arc_no, ep_end, original_joint_docs
-        )
+        return self._arc._extract_accurate_joint_docs(tactical_doc, arc_no, ep_end, original_joint_docs)
 
     def _extract_last_episode_content(self, tactical_doc: str, ep_end: int) -> str:
         """마지막 화 내용 추출 → ContinuityArcValidator에 위임"""
         return self._arc._extract_last_episode_content(tactical_doc, ep_end)
 
-    def _arc_python_precheck(self, current_arc: dict, prev_arcs: List[dict]) -> dict:
+    def _arc_python_precheck(self, current_arc: dict, prev_arcs: list[dict]) -> dict:
         """Arc Python 사전 검증 → ContinuityArcValidator에 위임"""
         return self._arc._arc_python_precheck(current_arc, prev_arcs)
 
-    def _check_intra_arc_consistency(self, arc: dict) -> List[dict]:
+    def _check_intra_arc_consistency(self, arc: dict) -> list[dict]:
         """단일 Arc 내 모순 검증 → ContinuityArcValidator에 위임"""
         return self._arc._check_intra_arc_consistency(arc)
 
-    def _format_prev_arcs(self, prev_arcs: List[dict]) -> str:
+    def _format_prev_arcs(self, prev_arcs: list[dict]) -> str:
         """이전 Arc 포맷팅 → ContinuityArcValidator에 위임"""
         return self._arc._format_prev_arcs(prev_arcs)
 
-    def _format_arc_timeline(self, items: List[tuple]) -> str:
+    def _format_arc_timeline(self, items: list[tuple]) -> str:
         """Arc 타임라인 포맷팅 → ContinuityArcValidator에 위임"""
         return self._arc._format_arc_timeline(items)
 
-    def _generate_arc_fix_instructions(self, violations: List[dict]) -> str:
+    def _generate_arc_fix_instructions(self, violations: list[dict]) -> str:
         """Arc 위반 수정 지시 생성 → ContinuityArcValidator에 위임"""
         return self._arc._generate_arc_fix_instructions(violations)
 
@@ -394,55 +413,65 @@ class ContinuityInspector(BaseAgent):
     # [V64.P3] 위임 스텁 — 원고(Manuscript) 수준 검증
     # =================================================================
 
-    def inspect_manuscript(self, current_ep: int, manuscript: str,
-                           blueprint: dict, prev_manuscripts: List[dict],
-                           hud_history: List[dict] = None,
-                           entity_registry: dict = None) -> dict:
+    def inspect_manuscript(
+        self,
+        current_ep: int,
+        manuscript: str,
+        blueprint: dict,
+        prev_manuscripts: list[dict],
+        hud_history: list[dict] = None,
+        entity_registry: dict = None,
+    ) -> dict:
         """원고 연속성 검증 → ContinuityManuscriptValidator에 위임"""
         return self._manuscript.inspect_manuscript(
-            current_ep, manuscript, blueprint, prev_manuscripts,
-            hud_history=hud_history, entity_registry=entity_registry
+            current_ep,
+            manuscript,
+            blueprint,
+            prev_manuscripts,
+            hud_history=hud_history,
+            entity_registry=entity_registry,
         )
 
-    def inspect_manuscript_v59(self, current_ep: int, manuscript: str,
-                               blueprint: dict, prev_manuscripts: List[dict],
-                               hud_history: List[dict] = None) -> dict:
+    def inspect_manuscript_v59(
+        self,
+        current_ep: int,
+        manuscript: str,
+        blueprint: dict,
+        prev_manuscripts: list[dict],
+        hud_history: list[dict] = None,
+    ) -> dict:
         """[V59] 강화된 원고 검증 → ContinuityManuscriptValidator에 위임"""
         return self._manuscript.inspect_manuscript_v59(
-            current_ep, manuscript, blueprint, prev_manuscripts,
-            hud_history=hud_history
+            current_ep, manuscript, blueprint, prev_manuscripts, hud_history=hud_history
         )
 
-    def get_prev_manuscripts(self, current_ep: int, window: int = 5) -> List[dict]:
+    def get_prev_manuscripts(self, current_ep: int, window: int = 5) -> list[dict]:
         """DB에서 이전 원고 조회 → ContinuityManuscriptValidator에 위임"""
         return self._manuscript.get_prev_manuscripts(current_ep, window=window)
 
-    def _manuscript_python_precheck(self, current_ep: int, manuscript: str,
-                                     prev_manuscripts: List[dict], blueprint: dict) -> dict:
+    def _manuscript_python_precheck(
+        self, current_ep: int, manuscript: str, prev_manuscripts: list[dict], blueprint: dict
+    ) -> dict:
         """원고 Python 사전 검증 → ContinuityManuscriptValidator에 위임"""
-        return self._manuscript._manuscript_python_precheck(
-            current_ep, manuscript, prev_manuscripts, blueprint
-        )
+        return self._manuscript._manuscript_python_precheck(current_ep, manuscript, prev_manuscripts, blueprint)
 
-    def _check_relationship_jump(self, prev_manuscripts: List[dict], manuscript: str) -> List[dict]:
+    def _check_relationship_jump(self, prev_manuscripts: list[dict], manuscript: str) -> list[dict]:
         """관계 급변 탐지 → ContinuityManuscriptValidator에 위임"""
         return self._manuscript._check_relationship_jump(prev_manuscripts, manuscript)
 
-    def _check_villain_intelligence(self, prev_manuscripts: List[dict], manuscript: str) -> List[dict]:
+    def _check_villain_intelligence(self, prev_manuscripts: list[dict], manuscript: str) -> list[dict]:
         """악역 지능 보호 → ContinuityManuscriptValidator에 위임"""
         return self._manuscript._check_villain_intelligence(prev_manuscripts, manuscript)
 
-    def _check_time_flow(self, prev_manuscripts: List[dict], manuscript: str) -> List[dict]:
+    def _check_time_flow(self, prev_manuscripts: list[dict], manuscript: str) -> list[dict]:
         """시간 흐름 검증 → ContinuityManuscriptValidator에 위임"""
         return self._manuscript._check_time_flow(prev_manuscripts, manuscript)
 
-    def _check_reader_immersion(self, prev_manuscripts: List[dict], manuscript: str,
-                                current_ep: int) -> List[dict]:
+    def _check_reader_immersion(self, prev_manuscripts: list[dict], manuscript: str, current_ep: int) -> list[dict]:
         """독자 몰입도 예측 → ContinuityManuscriptValidator에 위임"""
         return self._manuscript._check_reader_immersion(prev_manuscripts, manuscript, current_ep)
 
-    def _check_skill_timeline(self, current_ep: int, manuscript: str,
-                              prev_manuscripts: List[dict]) -> dict:
+    def _check_skill_timeline(self, current_ep: int, manuscript: str, prev_manuscripts: list[dict]) -> dict:
         """[V59] 스킬 타임라인 검증 → ContinuityManuscriptValidator에 위임"""
         return self._manuscript._check_skill_timeline(current_ep, manuscript, prev_manuscripts)
 
@@ -450,8 +479,7 @@ class ContinuityInspector(BaseAgent):
         """두 스킬 동일성 판단 → ContinuityManuscriptValidator에 위임"""
         return self._manuscript._is_same_skill(skill1, skill2)
 
-    def _track_relationship_history(self, current_ep: int, manuscript: str,
-                                    prev_manuscripts: List[dict]) -> dict:
+    def _track_relationship_history(self, current_ep: int, manuscript: str, prev_manuscripts: list[dict]) -> dict:
         """[V59] 관계 히스토리 추적 → ContinuityManuscriptValidator에 위임"""
         return self._manuscript._track_relationship_history(current_ep, manuscript, prev_manuscripts)
 
@@ -459,23 +487,23 @@ class ContinuityInspector(BaseAgent):
         """Blueprint 준수만 체크 → ContinuityManuscriptValidator에 위임"""
         return self._manuscript._check_blueprint_only(current_ep, manuscript, blueprint)
 
-    def _extract_keywords(self, text: str, max_keywords: int = 5) -> List[str]:
+    def _extract_keywords(self, text: str, max_keywords: int = 5) -> list[str]:
         """핵심 키워드 추출 → ContinuityManuscriptValidator에 위임"""
         return self._manuscript._extract_keywords(text, max_keywords=max_keywords)
 
-    def _format_prev_manuscripts(self, prev_manuscripts: List[dict]) -> str:
+    def _format_prev_manuscripts(self, prev_manuscripts: list[dict]) -> str:
         """이전 원고 포맷팅 → ContinuityManuscriptValidator에 위임"""
         return self._manuscript._format_prev_manuscripts(prev_manuscripts)
 
-    def _generate_manuscript_fix_instructions(self, violations: List[dict]) -> str:
+    def _generate_manuscript_fix_instructions(self, violations: list[dict]) -> str:
         """원고 수정 지시 생성 → ContinuityManuscriptValidator에 위임"""
         return self._manuscript._generate_manuscript_fix_instructions(violations)
 
-    def _generate_v59_fix_instructions(self, violations: List[dict]) -> str:
+    def _generate_v59_fix_instructions(self, violations: list[dict]) -> str:
         """[V59] 수정 지시 생성 → ContinuityManuscriptValidator에 위임"""
         return self._manuscript._generate_v59_fix_instructions(violations)
 
-    def _is_item_acquired(self, item: str, acquired_items: Set[str]) -> bool:
+    def _is_item_acquired(self, item: str, acquired_items: set[str]) -> bool:
         """아이템 획득 여부 확인 → ContinuityManuscriptValidator에 위임"""
         return self._manuscript._is_item_acquired(item, acquired_items)
 
@@ -491,31 +519,28 @@ class ContinuityInspector(BaseAgent):
         """주인공 이름 추출 → ContinuityTrackerIntegration에 위임"""
         return self._tracker._get_protagonist_name()
 
-    def _validate_with_v49_7_trackers(self, arc: int, episode: int,
-                                       content: str, content_type: str = "blueprint") -> Dict[str, Any]:
+    def _validate_with_v49_7_trackers(
+        self, arc: int, episode: int, content: str, content_type: str = "blueprint"
+    ) -> dict[str, Any]:
         """[V49.7] 트래커 기반 검증 → ContinuityTrackerIntegration에 위임"""
         return self._tracker.validate_with_trackers(arc, episode, content, content_type=content_type)
 
-    def _check_relationship_with_tracker(self, arc: int, episode: int,
-                                         content: str) -> Dict[str, Any]:
+    def _check_relationship_with_tracker(self, arc: int, episode: int, content: str) -> dict[str, Any]:
         """관계 전이 검증 → ContinuityTrackerIntegration에 위임"""
         return self._tracker._check_relationship_with_tracker(arc, episode, content)
 
-    def _check_power_with_tracker(self, arc: int, episode: int,
-                                  content: str) -> Dict[str, Any]:
+    def _check_power_with_tracker(self, arc: int, episode: int, content: str) -> dict[str, Any]:
         """파워 스케일링 검증 → ContinuityTrackerIntegration에 위임"""
         return self._tracker._check_power_with_tracker(arc, episode, content)
 
-    def _check_foreshadowing_with_tracker(self, arc: int, episode: int,
-                                          content: str) -> Dict[str, Any]:
+    def _check_foreshadowing_with_tracker(self, arc: int, episode: int, content: str) -> dict[str, Any]:
         """복선 상태 검증 → ContinuityTrackerIntegration에 위임"""
         return self._tracker._check_foreshadowing_with_tracker(arc, episode, content)
 
-    def _check_state_with_tracker(self, arc: int, episode: int,
-                                  content: str) -> Dict[str, Any]:
+    def _check_state_with_tracker(self, arc: int, episode: int, content: str) -> dict[str, Any]:
         """내공/부상 상태 검증 → ContinuityTrackerIntegration에 위임"""
         return self._tracker._check_state_with_tracker(arc, episode, content)
 
-    def load_trackers_from_db(self, arcs_data: List[Dict] = None) -> Dict[str, int]:
+    def load_trackers_from_db(self, arcs_data: list[dict] = None) -> dict[str, int]:
         """[V49.7] DB에서 트래커 상태 로드 → ContinuityTrackerIntegration에 위임"""
         return self._tracker.load_trackers_from_db(arcs_data=arcs_data)

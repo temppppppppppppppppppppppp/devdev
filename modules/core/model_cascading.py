@@ -4,7 +4,6 @@
 flash → pro → preview 자동 업그레이드
 비용 최적화 + 품질 유지
 """
-from typing import Dict, Tuple, Optional
 
 
 class ModelCascade:
@@ -18,18 +17,18 @@ class ModelCascade:
     """
 
     # 모델 티어 정의 (Gemini 3세대)
-    TIER_1 = "gemini-2.5-flash"      # 저렴, 빠름
-    TIER_2 = "gemini-2.5-pro"         # 중간
-    TIER_3 = "gemini-3-pro-preview"   # 최고급
+    TIER_1 = "gemini-2.5-flash"  # 저렴, 빠름
+    TIER_2 = "gemini-2.5-pro"  # 중간
+    TIER_3 = "gemini-3-pro-preview"  # 최고급
 
     # 티어 진행 순서
     CASCADE_ORDER = [TIER_1, TIER_2, TIER_3]
 
     # 비용 추정 (1K 입력 토큰 기준, USD)
     COSTS = {
-        TIER_1: 0.0001,   # $0.0001/1K tokens
-        TIER_2: 0.0003,   # $0.0003/1K tokens
-        TIER_3: 0.001     # $0.001/1K tokens
+        TIER_1: 0.0001,  # $0.0001/1K tokens
+        TIER_2: 0.0003,  # $0.0003/1K tokens
+        TIER_3: 0.001,  # $0.001/1K tokens
     }
 
     def __init__(self, start_tier: int = 0, max_tier: int = 2):
@@ -64,21 +63,21 @@ class ModelCascade:
             return False
 
         # PASS면 업그레이드 불필요
-        if result.get('decision') == 'PASS':
+        if result.get("decision") == "PASS":
             return False
 
         # REJECT 시 업그레이드 판단
-        error_category = result.get('error_category', 'QUALITY_ISSUE')
+        error_category = result.get("error_category", "QUALITY_ISSUE")
 
         # LOGIC_ERROR는 모델 업그레이드로 해결 불가능
         # (설정 오류는 아크 수정 필요)
-        if error_category == 'LOGIC_ERROR':
+        if error_category == "LOGIC_ERROR":
             return False
 
         # QUALITY_ISSUE는 업그레이드로 개선 가능
         return True
 
-    def upgrade(self) -> Tuple[bool, str]:
+    def upgrade(self) -> tuple[bool, str]:
         """
         다음 티어로 업그레이드
 
@@ -91,10 +90,7 @@ class ModelCascade:
         self.current_tier += 1
         new_model = self.get_current_model()
 
-        self.attempt_history.append({
-            'tier': self.current_tier,
-            'model': new_model
-        })
+        self.attempt_history.append({"tier": self.current_tier, "model": new_model})
 
         return True, new_model
 
@@ -110,7 +106,7 @@ class ModelCascade:
         """
         total_cost = 0.0
         for attempt in self.attempt_history:
-            model = attempt['model']
+            model = attempt["model"]
             cost_per_1k = self.COSTS.get(model, 0.001)
             total_cost += (input_tokens / 1000) * cost_per_1k
 
@@ -138,12 +134,7 @@ class ModelCascade:
         actual_cost = self.COSTS[final_model]
         cost_saved = 1 - (actual_cost / max_cost)
 
-        return {
-            "attempts": attempts,
-            "final_tier": final_tier,
-            "final_model": final_model,
-            "cost_saved": cost_saved
-        }
+        return {"attempts": attempts, "final_tier": final_tier, "final_model": final_model, "cost_saved": cost_saved}
 
     def reset(self) -> None:
         """캐스케이드 초기화"""
@@ -180,10 +171,10 @@ class TaskBasedCascade:
 
         # 작업 유형별 시작 티어
         TASK_TIERS = {
-            "ADVISORY": 0,      # 간단 → flash
-            "SCORING": 0,       # Python 메트릭 있음 → flash 충분
-            "BLUEPRINT": 0,     # 구조만 검증 → flash
-            "MANUSCRIPT": 0,    # 대부분 flash로 통과 → flash 시작
+            "ADVISORY": 0,  # 간단 → flash
+            "SCORING": 0,  # Python 메트릭 있음 → flash 충분
+            "BLUEPRINT": 0,  # 구조만 검증 → flash
+            "MANUSCRIPT": 0,  # 대부분 flash로 통과 → flash 시작
         }
 
         return TASK_TIERS.get(task_type, 0)
@@ -219,12 +210,7 @@ def create_cascade_for_agent(agent_type: str, retry_count: int = 0) -> ModelCasc
         ModelCascade instance
     """
     # 작업 유형 매핑
-    task_type_map = {
-        "writer": "MANUSCRIPT",
-        "director": "MANUSCRIPT",
-        "architect": "BLUEPRINT",
-        "analyst": "BLUEPRINT"
-    }
+    task_type_map = {"writer": "MANUSCRIPT", "director": "MANUSCRIPT", "architect": "BLUEPRINT", "analyst": "BLUEPRINT"}
 
     task_type = task_type_map.get(agent_type, "MANUSCRIPT")
     start_tier = TaskBasedCascade.get_optimal_start_tier(task_type, retry_count)

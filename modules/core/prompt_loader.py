@@ -11,8 +11,8 @@ Usage:
                          prev_context="...", curr_block="...")
 """
 
-import os
 import logging
+import os
 from pathlib import Path
 from typing import Any, Optional
 
@@ -69,13 +69,14 @@ class PromptLoader:
             # PyYAML 의존성 회피 — 간단한 YAML 파서 사용
             # 구조: "KEY_NAME: |" 로 시작하는 멀티라인 블록
             import re
-            key_pattern = re.compile(r'^([A-Z][A-Z0-9_]+):\s*\|')
+
+            key_pattern = re.compile(r"^([A-Z][A-Z0-9_]+):\s*\|")
             prompts = {}
             current_key = None
             current_lines: list[str] = []
             indent_size = 2  # 기본 인덴트 크기
 
-            with open(yaml_path, "r", encoding="utf-8") as f:
+            with open(yaml_path, encoding="utf-8") as f:
                 all_lines = f.readlines()
 
             for line in all_lines:
@@ -133,7 +134,7 @@ class PromptLoader:
             self._cache[domain] = {}
             return {}
 
-    def load(self, domain: str, key: str, **kwargs: Any) -> Optional[str]:
+    def load(self, domain: str, key: str, **kwargs: Any) -> str | None:
         """프롬프트 템플릿을 로드하고 변수를 치환.
 
         Args:
@@ -164,7 +165,7 @@ class PromptLoader:
 
         return template
 
-    def get_raw(self, domain: str, key: str) -> Optional[str]:
+    def get_raw(self, domain: str, key: str) -> str | None:
         """변수 치환 없이 원본 템플릿 반환."""
         prompts = self._load_yaml_file(domain)
         return prompts.get(key)
@@ -174,7 +175,7 @@ class PromptLoader:
         prompts = self._load_yaml_file(domain)
         return list(prompts.keys())
 
-    def invalidate_cache(self, domain: Optional[str] = None) -> None:
+    def invalidate_cache(self, domain: str | None = None) -> None:
         """캐시 무효화. domain 지정 시 해당 도메인만, 없으면 전체 초기화."""
         if domain:
             self._cache.pop(domain, None)

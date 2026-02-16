@@ -22,10 +22,8 @@ Stage 3 사전검사기 + Director 최종 판정
 import json
 import logging
 import re
-from typing import Dict, List, Any, Optional, Tuple
 
 from .base_agent import _get_agent_default_model
-
 
 # Blueprint 검증용 최소 분량
 BLUEPRINT_MIN_CHARS = 800  # integrated_scenario 최소 길이
@@ -48,17 +46,17 @@ class UnifiedBlueprintValidator:
 
     def validate(
         self,
-        blueprint: Dict,
-        arc_data: Dict,
-        constraint_block: Dict,
-        prev_blueprint: Optional[Dict] = None,
+        blueprint: dict,
+        arc_data: dict,
+        constraint_block: dict,
+        prev_blueprint: dict | None = None,
         director=None,  # [V60.80] Director 인스턴스 (최종 판정용)
         working_ep: int = 1,
         arc_idx: int = 0,
-        entity_registry: Optional[Dict] = None,  # [V61] Entity 일관성 검증용
+        entity_registry: dict | None = None,  # [V61] Entity 일관성 검증용
         state_tracker=None,  # [V60.96] StateTracker (죽은 NPC 검증용)
-        all_candidates: Optional[List[Dict]] = None  # [V60.85] 전체 후보 리스트
-    ) -> Tuple[str, Dict]:
+        all_candidates: list[dict] | None = None,  # [V60.85] 전체 후보 리스트
+    ) -> tuple[str, dict]:
         """
         Blueprint 통합 검증 (사전검사 + Director 최종 판정)
 
@@ -91,7 +89,7 @@ class UnifiedBlueprintValidator:
                 ep_num=working_ep,
                 prev_blueprint=prev_blueprint,
                 entity_registry=entity_registry,
-                state_tracker=state_tracker
+                state_tracker=state_tracker,
             )
 
             verdict = compare_result.get("decision", "REJECT")
@@ -107,11 +105,13 @@ class UnifiedBlueprintValidator:
                 "confidence": 0.9 if compare_result.get("score", 0) >= 70 else 0.6,
                 "selected_index": compare_result.get("selected_index", 0),
                 "selected_blueprint": selected_bp,
-                "comparison_notes": compare_result.get("comparison_notes", "")
+                "comparison_notes": compare_result.get("comparison_notes", ""),
             }
 
             status = "✅ PASS" if verdict == "PASS" else "❌ REJECT"
-            logging.info(f"{status} [Director] 후보 {compare_result.get('selected_index', 0)+1} 선택, 점수: {compare_result.get('score', 0)}")
+            logging.info(
+                f"{status} [Director] 후보 {compare_result.get('selected_index', 0) + 1} 선택, 점수: {compare_result.get('score', 0)}"
+            )
 
             return verdict, result
 
@@ -133,18 +133,20 @@ class UnifiedBlueprintValidator:
                 violation_names = [v["npc_name"] for v in dead_npc_violations]
                 logging.info(f"💀 [V60.96] 죽은 NPC 감지 → Director에게 전달: {', '.join(violation_names)}")
                 # Director 주의 포인트로 추가 (Python은 REJECT 안 함)
-                pre_result["issues"].append({
-                    "severity": "CRITICAL",
-                    "category": "dead_npc",
-                    "issue": f"죽은 NPC 등장: {', '.join(violation_names)}",
-                    "evidence": dead_npc_violations[0]["reason"],
-                    "fix_hint": "사망한 NPC는 회상/언급만 가능"
-                })
+                pre_result["issues"].append(
+                    {
+                        "severity": "CRITICAL",
+                        "category": "dead_npc",
+                        "issue": f"죽은 NPC 등장: {', '.join(violation_names)}",
+                        "evidence": dead_npc_violations[0]["reason"],
+                        "fix_hint": "사망한 NPC는 회상/언급만 가능",
+                    }
+                )
                 pre_result["has_critical"] = True
 
         # [V60.80] Python은 경고만 - REJECT 권한 없음, Director가 최종 판정
         if pre_result["has_critical"]:
-            logging.warning(f"⚠️ [PreValidator] Python 경고: CRITICAL 이슈 발견 (Director가 최종 판정)")
+            logging.warning("⚠️ [PreValidator] Python 경고: CRITICAL 이슈 발견 (Director가 최종 판정)")
             for issue in pre_result["issues"]:
                 if issue.get("severity") == "CRITICAL":
                     logging.info(f"- {issue.get('issue', '?')}")
@@ -156,17 +158,17 @@ class UnifiedBlueprintValidator:
         # ═══════════════════════════════════════════════════════════════
         if director is None:
             # [V60.80] Director 없으면 PASS 처리 (Python은 REJECT 권한 없음)
-            logging.info(f"⚠️ [PreValidator] Director 없음 - 경고 출력 후 PASS 처리")
-            logging.warning(f"(Python은 REJECT 권한 없음, Director 전달 필수)")
+            logging.info("⚠️ [PreValidator] Director 없음 - 경고 출력 후 PASS 처리")
+            logging.warning("(Python은 REJECT 권한 없음, Director 전달 필수)")
             return "PASS", {
                 "verdict": "PASS",
                 "phase": "no_director",
                 "issues": pre_result["issues"],
                 "summary": "Director 없이 통과 (Python 경고만)",
-                "feedback": ""
+                "feedback": "",
             }
 
-        logging.info(f"🎬 [Director] Blueprint 최종 판정 중...")
+        logging.info("🎬 [Director] Blueprint 최종 판정 중...")
 
         try:
             # Director 호출을 위한 데이터 준비
@@ -207,14 +209,16 @@ class UnifiedBlueprintValidator:
                 ep_num=working_ep,
                 manuscript=manuscript_with_focus,  # 주의 포인트 포함
                 arc_doc=arc_tactical_doc,
-                history_summary=str(self.context.get_causal_history_summary()) if hasattr(self.context, 'get_causal_history_summary') else "",
+                history_summary=str(self.context.get_causal_history_summary())
+                if hasattr(self.context, "get_causal_history_summary")
+                else "",
                 prev_full_text=prev_ms_ending,
                 arc_pos=arc_pos,
                 total_eps=total_eps,
                 target_len=self.min_chars,  # Blueprint용 짧은 기준
                 retry_count=0,
                 entity_registry=entity_registry,  # [V61] Entity 일관성 검증
-                state_tracker=state_tracker  # [V61.5] 죽은 NPC 검증 (BUG FIX: 누락되어 있었음)
+                state_tracker=state_tracker,  # [V61.5] 죽은 NPC 검증 (BUG FIX: 누락되어 있었음)
             )
 
             # Director 결과 처리
@@ -226,13 +230,15 @@ class UnifiedBlueprintValidator:
             # 이슈 병합 (사전검사 + Director)
             all_issues = pre_result["issues"][:]
             if director_verdict == "REJECT":
-                all_issues.append({
-                    "severity": "MAJOR",
-                    "category": "director",
-                    "issue": f"Director REJECT: {director_reason}",
-                    "evidence": director_feedback,
-                    "fix_hint": director_feedback
-                })
+                all_issues.append(
+                    {
+                        "severity": "MAJOR",
+                        "category": "director",
+                        "issue": f"Director REJECT: {director_reason}",
+                        "evidence": director_feedback,
+                        "fix_hint": director_feedback,
+                    }
+                )
 
             # Director의 verdict가 최종 결정!
             final_verdict = director_verdict
@@ -245,7 +251,7 @@ class UnifiedBlueprintValidator:
                 "score": director_score,
                 "feedback": director_feedback if final_verdict == "REJECT" else "",
                 "pre_issues": len(pre_result["issues"]),
-                "confidence": 0.9 if director_score >= 70 else 0.6
+                "confidence": 0.9 if director_score >= 70 else 0.6,
             }
 
             status = "✅ PASS" if final_verdict == "PASS" else "❌ REJECT"
@@ -261,17 +267,17 @@ class UnifiedBlueprintValidator:
                 "verdict": "REJECT",
                 "phase": "director_error",
                 "issues": pre_result["issues"],
-                "summary": f"Director 호출 오류 - 재시도 필요",
-                "feedback": f"[Director 오류로 인한 재시도]\n오류: {str(e)[:100]}\n다시 생성해 주세요."
+                "summary": "Director 호출 오류 - 재시도 필요",
+                "feedback": f"[Director 오류로 인한 재시도]\n오류: {str(e)[:100]}\n다시 생성해 주세요.",
             }
 
     def _python_pre_validate(
         self,
-        blueprint: Dict,
-        constraint_block: Dict,
-        prev_blueprint: Optional[Dict],
-        state_tracker=None  # [V60.95] 고밀도 HUD 검증용
-    ) -> Dict:
+        blueprint: dict,
+        constraint_block: dict,
+        prev_blueprint: dict | None,
+        state_tracker=None,  # [V60.95] 고밀도 HUD 검증용
+    ) -> dict:
         """Python 사전검사 (무료, 빠름)"""
         issues = []
 
@@ -279,13 +285,15 @@ class UnifiedBlueprintValidator:
         required_fields = ["scene_breakdown", "integrated_scenario"]
         for field in required_fields:
             if field not in blueprint or not blueprint[field]:
-                issues.append({
-                    "severity": "MAJOR",
-                    "category": "structure",
-                    "issue": f"필수 필드 누락: {field}",
-                    "evidence": f"{field} 필드가 없거나 비어있음",
-                    "fix_hint": f"{field} 필드를 올바르게 작성"
-                })
+                issues.append(
+                    {
+                        "severity": "MAJOR",
+                        "category": "structure",
+                        "issue": f"필수 필드 누락: {field}",
+                        "evidence": f"{field} 필드가 없거나 비어있음",
+                        "fix_hint": f"{field} 필드를 올바르게 작성",
+                    }
+                )
 
         # 2. 분량 체크
         integrated = blueprint.get("integrated_scenario", "")
@@ -293,13 +301,15 @@ class UnifiedBlueprintValidator:
             integrated = str(integrated) if integrated else ""
 
         if len(integrated) < self.min_chars:
-            issues.append({
-                "severity": "MAJOR",
-                "category": "structure",
-                "issue": f"분량 부족: {len(integrated)}자 < {self.min_chars}자",
-                "evidence": f"integrated_scenario 길이 부족",
-                "fix_hint": f"최소 {self.min_chars}자 이상 작성"
-            })
+            issues.append(
+                {
+                    "severity": "MAJOR",
+                    "category": "structure",
+                    "issue": f"분량 부족: {len(integrated)}자 < {self.min_chars}자",
+                    "evidence": "integrated_scenario 길이 부족",
+                    "fix_hint": f"최소 {self.min_chars}자 이상 작성",
+                }
+            )
 
         # 3. 씬 개수 체크
         scenes = blueprint.get("scene_breakdown", {})
@@ -311,13 +321,15 @@ class UnifiedBlueprintValidator:
             scene_count = 0
 
         if scene_count < 3:
-            issues.append({
-                "severity": "MAJOR",
-                "category": "structure",
-                "issue": f"씬 부족: {scene_count}개 < 3개",
-                "evidence": f"scene_breakdown에 {scene_count}개 씬만 있음",
-                "fix_hint": "최소 3개 이상의 씬으로 구성"
-            })
+            issues.append(
+                {
+                    "severity": "MAJOR",
+                    "category": "structure",
+                    "issue": f"씬 부족: {scene_count}개 < 3개",
+                    "evidence": f"scene_breakdown에 {scene_count}개 씬만 있음",
+                    "fix_hint": "최소 3개 이상의 씬으로 구성",
+                }
+            )
 
         # 4. 정지선 위반 체크 (CRITICAL)
         stop_line = constraint_block.get("stop_line", {})
@@ -325,13 +337,15 @@ class UnifiedBlueprintValidator:
         if stop_content and len(stop_content) > 10:
             stop_keywords = stop_content[:30].strip()
             if stop_keywords in integrated:
-                issues.append({
-                    "severity": "CRITICAL",
-                    "category": "arc_compliance",
-                    "issue": f"정지선 위반: 다음 화 내용 포함",
-                    "evidence": f"'{stop_keywords}...'가 본문에서 발견됨",
-                    "fix_hint": "다음 화 내용을 제거하고 이번 화 범위 내에서만 작성"
-                })
+                issues.append(
+                    {
+                        "severity": "CRITICAL",
+                        "category": "arc_compliance",
+                        "issue": "정지선 위반: 다음 화 내용 포함",
+                        "evidence": f"'{stop_keywords}...'가 본문에서 발견됨",
+                        "fix_hint": "다음 화 내용을 제거하고 이번 화 범위 내에서만 작성",
+                    }
+                )
 
         # 5. 연속성 체크 (위치)
         if prev_blueprint:
@@ -349,13 +363,15 @@ class UnifiedBlueprintValidator:
             if prev_end_location and curr_start_location:
                 if prev_end_location != curr_start_location:
                     if not self._is_location_transition_valid(prev_end_location, curr_start_location):
-                        issues.append({
-                            "severity": "MAJOR",
-                            "category": "continuity",
-                            "issue": f"위치 불연속: {prev_end_location} → {curr_start_location}",
-                            "evidence": "이전 화 종료 위치와 현재 화 시작 위치 불일치",
-                            "fix_hint": "위치 이동 경위를 설명하거나 시작 위치 수정"
-                        })
+                        issues.append(
+                            {
+                                "severity": "MAJOR",
+                                "category": "continuity",
+                                "issue": f"위치 불연속: {prev_end_location} → {curr_start_location}",
+                                "evidence": "이전 화 종료 위치와 현재 화 시작 위치 불일치",
+                                "fix_hint": "위치 이동 경위를 설명하거나 시작 위치 수정",
+                            }
+                        )
 
         has_critical = any(i["severity"] == "CRITICAL" for i in issues)
         major_count = sum(1 for i in issues if i["severity"] == "MAJOR")
@@ -365,7 +381,7 @@ class UnifiedBlueprintValidator:
             "issues": issues,
             "has_critical": has_critical,
             "has_major_excess": major_count >= 3,
-            "critical_summary": "; ".join(critical_items) if critical_items else ""
+            "critical_summary": "; ".join(critical_items) if critical_items else "",
         }
 
     def _is_location_transition_valid(self, prev_loc: str, curr_loc: str) -> bool:
@@ -383,10 +399,10 @@ class UnifiedBlueprintValidator:
 
     def _extract_area(self, location: str) -> str:
         """위치에서 대분류 지역 추출"""
-        match = re.search(r'^([가-힣]{2,5})', location)
+        match = re.search(r"^([가-힣]{2,5})", location)
         return match.group(1) if match else ""
 
-    def _generate_feedback(self, issues: List[Dict]) -> str:
+    def _generate_feedback(self, issues: list[dict]) -> str:
         """재생성용 피드백 생성"""
         if not issues:
             return ""

@@ -4,16 +4,15 @@
 테스트 전역에서 사용되는 fixtures 정의
 """
 
-import pytest
-import tempfile
-import sqlite3
 import json
-import os
+import sqlite3
 import sys
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+import tempfile
 from dataclasses import dataclass
-from typing import Dict, Any, Optional
+from pathlib import Path
+from unittest.mock import MagicMock
+
+import pytest
 
 # 프로젝트 루트를 path에 추가
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -23,6 +22,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 # ============================================================
 # 기본 Fixtures
 # ============================================================
+
 
 @pytest.fixture
 def temp_dir():
@@ -51,17 +51,12 @@ def sample_bible():
                 "name": "이청풍",
                 "martial_root": 85,
                 "internal_energy": 60,
-                "techniques": ["청풍검법", "태극장"]
+                "techniques": ["청풍검법", "태극장"],
             },
-            "setting": {
-                "world": "중원 무림",
-                "era": "명대 말기"
-            },
-            "themes": ["복수", "성장", "우정"]
+            "setting": {"world": "중원 무림", "era": "명대 말기"},
+            "themes": ["복수", "성장", "우정"],
         },
-        "volumes": [
-            {"volume": 1, "title": "강호입문", "episodes": 50}
-        ]
+        "volumes": [{"volume": 1, "title": "강호입문", "episodes": 50}],
     }
 
 
@@ -77,20 +72,17 @@ def sample_blueprint():
                 "location": "청풍산장",
                 "characters": ["이청풍", "노사부"],
                 "action": "수련 장면",
-                "beats": ["기상", "수련 시작", "내공 돌파 시도"]
+                "beats": ["기상", "수련 시작", "내공 돌파 시도"],
             },
             {
                 "scene_num": 2,
                 "location": "산장 앞마당",
                 "characters": ["이청풍", "암습자"],
                 "action": "첫 전투",
-                "beats": ["암습자 등장", "검법 대결", "승리"]
-            }
+                "beats": ["암습자 등장", "검법 대결", "승리"],
+            },
         ],
-        "required_elements": {
-            "foreshadowing": ["검의 비밀"],
-            "character_development": ["주인공 성장"]
-        }
+        "required_elements": {"foreshadowing": ["검의 비밀"], "character_development": ["주인공 성장"]},
     }
 
 
@@ -142,10 +134,7 @@ def sample_hud_wuxia():
         "equipment": ["청풍검", "경공화"],
         "techniques": ["청풍검법", "태극장"],
         "injuries": [],
-        "relationships": {
-            "노사부": {"affinity": 90, "type": "스승"},
-            "암흑검": {"affinity": -50, "type": "적"}
-        }
+        "relationships": {"노사부": {"affinity": 90, "type": "스승"}, "암흑검": {"affinity": -50, "type": "적"}},
     }
 
 
@@ -161,7 +150,7 @@ def sample_hud_hunter():
         "skills": ["화염검", "순간이동"],
         "equipment": ["마검 아스트라", "마법갑옷"],
         "guild": "레드드래곤",
-        "cleared_gates": ["D급 3개", "C급 2개", "B급 1개"]
+        "cleared_gates": ["D급 3개", "C급 2개", "B급 1개"],
     }
 
 
@@ -172,21 +161,16 @@ def sample_hud_investment():
         "character": "박재현",
         "total_assets": 5000000000,
         "cash": 1000000000,
-        "stocks": {
-            "삼성전자": {"shares": 10000, "avg_price": 70000},
-            "네이버": {"shares": 500, "avg_price": 250000}
-        },
+        "stocks": {"삼성전자": {"shares": 10000, "avg_price": 70000}, "네이버": {"shares": 500, "avg_price": 250000}},
         "real_estate": ["강남 아파트", "역삼 빌딩"],
-        "connections": {
-            "김회장": {"influence": 85, "type": "재벌"},
-            "이기자": {"influence": 60, "type": "언론"}
-        }
+        "connections": {"김회장": {"influence": 85, "type": "재벌"}, "이기자": {"influence": 60, "type": "언론"}},
     }
 
 
 # ============================================================
 # Mock Fixtures
 # ============================================================
+
 
 @pytest.fixture
 def mock_api_client():
@@ -195,10 +179,7 @@ def mock_api_client():
 
     # 기본 응답 설정
     mock_response = MagicMock()
-    mock_response.text = json.dumps({
-        "status": "success",
-        "content": "테스트 응답"
-    })
+    mock_response.text = json.dumps({"status": "success", "content": "테스트 응답"})
 
     client.models.generate_content.return_value = mock_response
     return client
@@ -218,6 +199,7 @@ def mock_db_manager(temp_dir):
 @pytest.fixture
 def mock_project_context(temp_dir, sample_bible):
     """Mock ProjectContext"""
+
     @dataclass
     class MockPaths:
         root: Path
@@ -229,10 +211,7 @@ def mock_project_context(temp_dir, sample_bible):
         def __init__(self):
             self.name = "test_project"
             self.paths = MockPaths(
-                root=temp_dir,
-                drafts=temp_dir / "drafts",
-                memory=temp_dir / "memory",
-                config=temp_dir / "config"
+                root=temp_dir, drafts=temp_dir / "drafts", memory=temp_dir / "memory", config=temp_dir / "config"
             )
             self.paths.drafts.mkdir(exist_ok=True)
             self.paths.memory.mkdir(exist_ok=True)
@@ -249,6 +228,7 @@ def mock_project_context(temp_dir, sample_bible):
 # Validation Fixtures
 # ============================================================
 
+
 @pytest.fixture
 def validation_context(sample_blueprint, sample_hud_wuxia):
     """검증용 컨텍스트"""
@@ -257,32 +237,26 @@ def validation_context(sample_blueprint, sample_hud_wuxia):
             "characters": {
                 "이청풍": {"alive": True, "location": "청풍산장"},
                 "노사부": {"alive": True, "location": "청풍산장"},
-                "암흑검": {"alive": True, "location": "불명"}
+                "암흑검": {"alive": True, "location": "불명"},
             },
             "items": {
                 "청풍검": {"owner": "이청풍", "destroyed": False},
-                "경공화": {"owner": "이청풍", "destroyed": False}
+                "경공화": {"owner": "이청풍", "destroyed": False},
             },
-            "locations": {
-                "청풍산장": {"destroyed": False},
-                "마교 본단": {"destroyed": False}
-            }
+            "locations": {"청풍산장": {"destroyed": False}, "마교 본단": {"destroyed": False}},
         },
         "martial_hud": sample_hud_wuxia,
         "blueprint": sample_blueprint,
         "mode": "MANUSCRIPT",
         "history": [],
-        "npc_profiles": {}
+        "npc_profiles": {},
     }
 
 
 @pytest.fixture
 def blocking_validator_config():
     """BlockingValidator 설정"""
-    return {
-        "min_length_manuscript": 4000,
-        "min_length_blueprint": 500
-    }
+    return {"min_length_manuscript": 4000, "min_length_blueprint": 500}
 
 
 @pytest.fixture
@@ -292,13 +266,14 @@ def scoring_validator_config():
         "scoring_model": "gemini-2.5-flash",
         "scoring_threshold": 70,
         "use_self_consistency": False,
-        "consistency_votes": 3
+        "consistency_votes": 3,
     }
 
 
 # ============================================================
 # Agent Fixtures
 # ============================================================
+
 
 @pytest.fixture
 def agent_config(mock_api_client):
@@ -315,14 +290,15 @@ def agent_config(mock_api_client):
             "primary": "gemini-2.5-flash",
             "backup": "gemini-2.0-flash",
             "tier2": "gemini-2.5-pro",
-            "tier3": "gemini-3-pro-preview"
-        }
+            "tier3": "gemini-3-pro-preview",
+        },
     }
 
 
 # ============================================================
 # Helper Functions
 # ============================================================
+
 
 def create_test_db_with_tables(db_path: Path) -> sqlite3.Connection:
     """테스트용 DB 생성 및 테이블 초기화"""

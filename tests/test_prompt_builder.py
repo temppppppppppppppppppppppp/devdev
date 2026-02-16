@@ -9,22 +9,22 @@ generate_self_diagnosis_checklist, generate_writer_guidance_v60_8,
 generate_arc_context_fallback, build_item_acquisition_timeline 캐시 로직.
 """
 
-import pytest
-import json
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock
+
+import pytest
 
 # 프로젝트 루트를 path에 추가
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from modules.core.prompt_builder import PromptBuilder, GRANT_PATTERNS_COMPILED
-
+from modules.core.prompt_builder import GRANT_PATTERNS_COMPILED, PromptBuilder
 
 # ══════════════════════════════════════════════════════════════
 # Fixtures
 # ══════════════════════════════════════════════════════════════
+
 
 @pytest.fixture
 def builder():
@@ -68,13 +68,14 @@ def sample_blueprint_6scenes():
         },
         "relationship_changes": [
             {"target": "철무련주", "from": "적대", "to": "경외"},
-        ]
+        ],
     }
 
 
 # ══════════════════════════════════════════════════════════════
 # Test 1: generate_arc_position_guide
 # ══════════════════════════════════════════════════════════════
+
 
 class TestGenerateArcPositionGuide:
     def test_first_episode(self, builder):
@@ -118,6 +119,7 @@ class TestGenerateArcPositionGuide:
 # Test 2: generate_high_impact_zone_guide
 # ══════════════════════════════════════════════════════════════
 
+
 class TestGenerateHighImpactZoneGuide:
     def test_basic_generation(self, builder, sample_blueprint_6scenes):
         """6개 씬에 대한 분량 가이드 생성"""
@@ -147,25 +149,18 @@ class TestGenerateHighImpactZoneGuide:
 # Test 3: generate_npc_relationship_justification
 # ══════════════════════════════════════════════════════════════
 
+
 class TestGenerateNpcRelationshipJustification:
     def test_large_jump_generates_guide(self, builder):
         """2단계 이상 관계 점프 시 가이드 생성"""
-        bp = {
-            "relationship_changes": [
-                {"target": "철무련주", "from": "멸시", "to": "경외"}
-            ]
-        }
+        bp = {"relationship_changes": [{"target": "철무련주", "from": "멸시", "to": "경외"}]}
         result = builder.generate_npc_relationship_justification(bp)
         assert "철무련주" in result
         assert "급격한 전환" in result or "단계 점프" in result
 
     def test_small_jump_no_guide(self, builder):
         """1단계 변화는 가이드 미생성"""
-        bp = {
-            "relationship_changes": [
-                {"target": "노사부", "from": "중립", "to": "호기심"}
-            ]
-        }
+        bp = {"relationship_changes": [{"target": "노사부", "from": "중립", "to": "호기심"}]}
         result = builder.generate_npc_relationship_justification(bp)
         assert result == ""
 
@@ -189,15 +184,11 @@ class TestGenerateNpcRelationshipJustification:
 # Test 4: generate_item_acquisition_timeline
 # ══════════════════════════════════════════════════════════════
 
+
 class TestGenerateItemAcquisitionTimeline:
     def test_with_inventory(self, builder):
         """현재 인벤토리가 있으면 타임라인 생성"""
-        bp = {
-            "protagonist_state": {
-                "inventory": ["청풍검", "경공화"],
-                "skills": ["청풍검법"]
-            }
-        }
+        bp = {"protagonist_state": {"inventory": ["청풍검", "경공화"], "skills": ["청풍검법"]}}
         result = builder.generate_item_acquisition_timeline(bp)
         assert "청풍검" in result
         assert "청풍검법" in result
@@ -210,15 +201,8 @@ class TestGenerateItemAcquisitionTimeline:
 
     def test_with_episode_bibles(self, builder):
         """에피소드 바이블에서 획득 시점 추출"""
-        bp = {
-            "protagonist_state": {
-                "inventory": ["청풍검"],
-                "skills": []
-            }
-        }
-        bibles = [
-            {"ep_num": 3, "new_items": [{"name": "청풍검"}]}
-        ]
+        bp = {"protagonist_state": {"inventory": ["청풍검"], "skills": []}}
+        bibles = [{"ep_num": 3, "new_items": [{"name": "청풍검"}]}]
         result = builder.generate_item_acquisition_timeline(bp, episode_bibles=bibles)
         assert "제3화" in result
 
@@ -231,6 +215,7 @@ class TestGenerateItemAcquisitionTimeline:
 # ══════════════════════════════════════════════════════════════
 # Test 5: generate_temporal_spatial_guide
 # ══════════════════════════════════════════════════════════════
+
 
 class TestGenerateTemporalSpatialGuide:
     def test_with_prev_manuscript(self, builder):
@@ -257,6 +242,7 @@ class TestGenerateTemporalSpatialGuide:
 # Test 6: generate_cliche_avoidance_guide
 # ══════════════════════════════════════════════════════════════
 
+
 class TestGenerateClicheAvoidanceGuide:
     def test_always_generates(self, builder):
         """클리셰 가이드는 항상 생성"""
@@ -273,6 +259,7 @@ class TestGenerateClicheAvoidanceGuide:
 # ══════════════════════════════════════════════════════════════
 # Test 7: generate_self_diagnosis_checklist
 # ══════════════════════════════════════════════════════════════
+
 
 class TestGenerateSelfDiagnosisChecklist:
     def test_basic_checklist(self, builder):
@@ -291,13 +278,12 @@ class TestGenerateSelfDiagnosisChecklist:
 # Test 8: generate_writer_guidance_v60_8 (통합)
 # ══════════════════════════════════════════════════════════════
 
+
 class TestGenerateWriterGuidanceV608:
     def test_combines_multiple_guides(self, builder, sample_blueprint_6scenes):
         """여러 가이드를 통합 생성"""
         result = builder.generate_writer_guidance_v60_8(
-            blueprint=sample_blueprint_6scenes,
-            prev_manuscript="그날 밤 객잔에서 일이 있었다.",
-            target_len=5000
+            blueprint=sample_blueprint_6scenes, prev_manuscript="그날 밤 객잔에서 일이 있었다.", target_len=5000
         )
         # 최소한 클리셰 가이드는 항상 포함
         assert len(result) > 0
@@ -313,6 +299,7 @@ class TestGenerateWriterGuidanceV608:
 # Test 9: generate_arc_context_fallback
 # ══════════════════════════════════════════════════════════════
 
+
 class TestGenerateArcContextFallback:
     def test_basic_fallback(self, builder):
         """기본 폴백 컨텍스트 생성"""
@@ -323,22 +310,22 @@ class TestGenerateArcContextFallback:
                 "joint_docs": {
                     "final_location": "무림맹 본부",
                     "physical_inventory": ["청풍검", "해독약"],
-                    "world_joint": "무림맹 세력 약화"
+                    "world_joint": "무림맹 세력 약화",
                 },
                 "status_shadow": {
                     "internal_energy_loss": "30%",
                     "item_consumption": "해독약 1개",
-                    "expected_injuries": "왼팔 부상"
+                    "expected_injuries": "왼팔 부상",
                 },
                 "state_constraints": {
                     "arc_end_state": {
                         "internal_energy": 70,
                         "injuries": "왼팔 부상",
                         "location": "무림맹 본부",
-                        "equipment": "청풍검"
+                        "equipment": "청풍검",
                     },
-                    "items_acquired": ["용린검"]
-                }
+                    "items_acquired": ["용린검"],
+                },
             }
         ]
         result = builder.generate_arc_context_fallback(arcs)
@@ -355,15 +342,15 @@ class TestGenerateArcContextFallback:
                 "tactical_doc": "",
                 "joint_docs": {},
                 "status_shadow": {"internal_energy_loss": "20%"},
-                "state_constraints": {"arc_end_state": {}}
+                "state_constraints": {"arc_end_state": {}},
             },
             {
                 "arc_no": 2,
                 "tactical_doc": "",
                 "joint_docs": {},
                 "status_shadow": {"internal_energy_loss": "30%"},
-                "state_constraints": {"arc_end_state": {}}
-            }
+                "state_constraints": {"arc_end_state": {}},
+            },
         ]
         result = builder.generate_arc_context_fallback(arcs)
         # 내공 소모 이력이 포함되어야 함
@@ -377,7 +364,7 @@ class TestGenerateArcContextFallback:
                 "tactical_doc": "무림맹 금패를 하사받았다.",
                 "joint_docs": {},
                 "status_shadow": {},
-                "state_constraints": {"arc_end_state": {}}
+                "state_constraints": {"arc_end_state": {}},
             }
         ]
         result = builder.generate_arc_context_fallback(arcs)
@@ -388,6 +375,7 @@ class TestGenerateArcContextFallback:
 # ══════════════════════════════════════════════════════════════
 # Test 10: build_item_acquisition_timeline (캐시)
 # ══════════════════════════════════════════════════════════════
+
 
 class TestBuildItemAcquisitionTimeline:
     def test_zero_ep_returns_empty(self, builder_with_mock_app):
@@ -420,9 +408,7 @@ class TestBuildItemAcquisitionTimeline:
     def test_with_items_in_bible(self, builder_with_mock_app):
         """에피소드 바이블에 아이템 있으면 타임라인 생성"""
         db = builder_with_mock_app._app.current_project.db
-        db.get_episode_bible.side_effect = lambda ep: (
-            {"new_items": ["청풍검"]} if ep == 1 else None
-        )
+        db.get_episode_bible.side_effect = lambda ep: ({"new_items": ["청풍검"]} if ep == 1 else None)
         result = builder_with_mock_app.build_item_acquisition_timeline(3)
         assert "제1화" in result
         assert "청풍검" in result
@@ -430,9 +416,7 @@ class TestBuildItemAcquisitionTimeline:
     def test_lost_items_tracked(self, builder_with_mock_app):
         """분실 아이템도 타임라인에 포함"""
         db = builder_with_mock_app._app.current_project.db
-        db.get_episode_bible.side_effect = lambda ep: (
-            {"lost_items": ["파천검"]} if ep == 2 else None
-        )
+        db.get_episode_bible.side_effect = lambda ep: ({"lost_items": ["파천검"]} if ep == 2 else None)
         result = builder_with_mock_app.build_item_acquisition_timeline(3)
         assert "파천검" in result
         assert "분실" in result or "파괴" in result
@@ -441,6 +425,7 @@ class TestBuildItemAcquisitionTimeline:
 # ══════════════════════════════════════════════════════════════
 # Test 11: GRANT_PATTERNS_COMPILED
 # ══════════════════════════════════════════════════════════════
+
 
 class TestGrantPatterns:
     def test_pattern_matches_grant(self):

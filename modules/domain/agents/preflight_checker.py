@@ -13,9 +13,8 @@
 import json
 import logging
 import re
-from typing import Dict, List, Any, Optional
-from .base_agent import BaseAgent
 
+from .base_agent import BaseAgent
 
 PREFLIGHT_ANALYSIS_PROMPT = """
 [V60.12 PREFLIGHT CHECKER - 생성 전 완벽 분석]
@@ -122,7 +121,7 @@ class PreflightChecker(BaseAgent):
         super().__init__(context, client, model_tier)
         # [V60.37] 스마트 폴백 (BaseAgent에서 자동 설정: gemini-3-flash → gemini-2.5-flash)
 
-    def analyze(self, prev_arcs: List[Dict], resolved_plots_summary: str = "") -> Dict:
+    def analyze(self, prev_arcs: list[dict], resolved_plots_summary: str = "") -> dict:
         """
         이전 Arc들을 완전 분석하여 제약 맵 생성
 
@@ -145,7 +144,7 @@ class PreflightChecker(BaseAgent):
 
         prompt = PREFLIGHT_ANALYSIS_PROMPT.format(
             prev_arc_count=len(prev_arcs),
-            prev_arcs_data=self._escape_braces(prev_arcs_data)  # [V70] JSON 중괄호 이스케이프
+            prev_arcs_data=self._escape_braces(prev_arcs_data),  # [V70] JSON 중괄호 이스케이프
         )
 
         try:
@@ -168,7 +167,7 @@ class PreflightChecker(BaseAgent):
     # [V63] 오래된 Arc 요약 최대 개수 (10→20 확장)
     MAX_OLD_SUMMARY = 20
 
-    def _format_prev_arcs(self, prev_arcs: List[Dict]) -> str:
+    def _format_prev_arcs(self, prev_arcs: list[dict]) -> str:
         """[V67] 이전 Arc 데이터를 전문 포맷팅 (Gemini 대용량 컨텍스트 활용)
         - 최근 DETAIL_WINDOW개: 최상세 (tactical_doc + state + joint + shadow)
         - 나머지 Arc: tactical_doc 전문 + 핵심 메타데이터
@@ -194,18 +193,18 @@ class PreflightChecker(BaseAgent):
                 # 핵심 NPC 추출 (deaths + relationship_changes)
                 sc = arc.get("state_changes", {})
                 key_npcs = set()
-                for d in (sc.get("npc_deaths", []) if isinstance(sc, dict) else []):
+                for d in sc.get("npc_deaths", []) if isinstance(sc, dict) else []:
                     if isinstance(d, dict) and d.get("name"):
                         key_npcs.add(d["name"] + "(사망)")
-                for r in (sc.get("relationship_changes", []) if isinstance(sc, dict) else []):
+                for r in sc.get("relationship_changes", []) if isinstance(sc, dict) else []:
                     if isinstance(r, dict) and r.get("npc"):
                         key_npcs.add(r["npc"])
                 npc_str = ", ".join(list(key_npcs)[:5]) if key_npcs else "없음"
                 world_joint = arc.get("joint_docs", {}).get("world_joint", "")
 
-                lines.append(f"\n{'='*50}")
+                lines.append(f"\n{'=' * 50}")
                 lines.append(f"[ARC {arc_no}] {title} (제{ep_s}화~제{ep_e}화)")
-                lines.append(f"{'='*50}")
+                lines.append(f"{'=' * 50}")
                 lines.append(f"  종료위치: {end_loc}")
                 lines.append(f"  획득아이템: {item_str}")
                 lines.append(f"  핵심NPC: {npc_str}")
@@ -222,9 +221,9 @@ class PreflightChecker(BaseAgent):
         # ── 최근 Arc: 최상세 ──
         for arc in recent_arcs:
             arc_no = arc.get("arc_no", "?")
-            lines.append(f"\n{'='*60}")
+            lines.append(f"\n{'=' * 60}")
             lines.append(f"[ARC {arc_no}] (상세)")
-            lines.append(f"{'='*60}")
+            lines.append(f"{'=' * 60}")
 
             tactical = arc.get("tactical_doc", "")
             if isinstance(tactical, dict):
@@ -252,15 +251,10 @@ class PreflightChecker(BaseAgent):
         logging.info(f"📊 [V67] Preflight 전문: {len(old_arcs)}개 전문 + {len(recent_arcs)}개 상세 ({total_chars:,}자)")
         return result
 
-    def _ensure_required_fields(self, result: Dict) -> Dict:
+    def _ensure_required_fields(self, result: dict) -> dict:
         """필수 필드 보장"""
         if "timeline_analysis" not in result:
-            result["timeline_analysis"] = {
-                "items": [],
-                "grants": [],
-                "current_inventory": [],
-                "consumed_items": []
-            }
+            result["timeline_analysis"] = {"items": [], "grants": [], "current_inventory": [], "consumed_items": []}
 
         if "relationship_map" not in result:
             result["relationship_map"] = {}
@@ -271,7 +265,7 @@ class PreflightChecker(BaseAgent):
                 "known_information": [],
                 "ongoing_conflicts": [],
                 "resolved_conflicts": [],
-                "protagonist_status": {}
+                "protagonist_status": {},
             }
         else:
             if "resolved_conflicts" not in result["world_state"]:
@@ -281,7 +275,7 @@ class PreflightChecker(BaseAgent):
             result["absolute_prohibitions"] = {
                 "items_cannot_acquire": [],
                 "grants_cannot_receive": [],
-                "state_constraints": []
+                "state_constraints": [],
             }
 
         if "next_arc_guidance" not in result:
@@ -290,47 +284,34 @@ class PreflightChecker(BaseAgent):
                 "recommended_focus": "",
                 "available_resources": [],
                 "potential_new_acquisitions": [],
-                "warning": ""
+                "warning": "",
             }
 
         return result
 
-    def _get_initial_state(self) -> Dict:
+    def _get_initial_state(self) -> dict:
         """첫 Arc용 초기 상태"""
         return {
-            "timeline_analysis": {
-                "items": [],
-                "grants": [],
-                "current_inventory": [],
-                "consumed_items": []
-            },
+            "timeline_analysis": {"items": [], "grants": [], "current_inventory": [], "consumed_items": []},
             "relationship_map": {},
             "world_state": {
                 "current_location": "서사 시작점",
                 "known_information": [],
                 "ongoing_conflicts": [],
                 "resolved_conflicts": [],
-                "protagonist_status": {
-                    "injuries": "없음",
-                    "internal_energy": 100,
-                    "martial_level": "초기"
-                }
+                "protagonist_status": {"injuries": "없음", "internal_energy": 100, "martial_level": "초기"},
             },
-            "absolute_prohibitions": {
-                "items_cannot_acquire": [],
-                "grants_cannot_receive": [],
-                "state_constraints": []
-            },
+            "absolute_prohibitions": {"items_cannot_acquire": [], "grants_cannot_receive": [], "state_constraints": []},
             "next_arc_guidance": {
                 "must_start_with": "서사 시작점에서 출발",
                 "recommended_focus": "세계관 소개 + 주인공 소개 + 첫 갈등",
                 "available_resources": [],
                 "potential_new_acquisitions": ["첫 무기", "첫 동료", "첫 적"],
-                "warning": "첫 Arc이므로 과도한 파워업 금지"
-            }
+                "warning": "첫 Arc이므로 과도한 파워업 금지",
+            },
         }
 
-    def _extract_constraints_fallback(self, prev_arcs: List[Dict]) -> Dict:
+    def _extract_constraints_fallback(self, prev_arcs: list[dict]) -> dict:
         """LLM 실패 시 Python 폴백으로 제약 추출"""
         items = set()
         grants = set()
@@ -364,7 +345,7 @@ class PreflightChecker(BaseAgent):
                 last_energy = arc_end_state["internal_energy"]
             elif shadow.get("internal_energy_loss"):
                 try:
-                    loss = int(re.search(r'(\d+)', str(shadow["internal_energy_loss"])).group(1))
+                    loss = int(re.search(r"(\d+)", str(shadow["internal_energy_loss"])).group(1))
                     last_energy = max(0, last_energy - loss)
                 except (ValueError, AttributeError, TypeError):  # [V64.P4] energy parse failure
                     pass
@@ -380,7 +361,7 @@ class PreflightChecker(BaseAgent):
                 "items": [{"item": i, "action": "획득"} for i in items],
                 "grants": [{"grant": g} for g in grants],
                 "current_inventory": list(items),
-                "consumed_items": []
+                "consumed_items": [],
             },
             "relationship_map": {},
             "world_state": {
@@ -388,27 +369,28 @@ class PreflightChecker(BaseAgent):
                 "known_information": [],
                 "ongoing_conflicts": [],
                 "resolved_conflicts": [],
-                "protagonist_status": {
-                    "injuries": last_injuries,
-                    "internal_energy": last_energy
-                }
+                "protagonist_status": {"injuries": last_injuries, "internal_energy": last_energy},
             },
             "absolute_prohibitions": {
-                "items_cannot_acquire": [{"item": i, "reason": "이미 획득", "violation_type": "DUPLICATE_ACQUISITION"} for i in items],
-                "grants_cannot_receive": [{"grant": g, "reason": "이미 수여받음", "violation_type": "DUPLICATE_GRANT"} for g in grants],
+                "items_cannot_acquire": [
+                    {"item": i, "reason": "이미 획득", "violation_type": "DUPLICATE_ACQUISITION"} for i in items
+                ],
+                "grants_cannot_receive": [
+                    {"grant": g, "reason": "이미 수여받음", "violation_type": "DUPLICATE_GRANT"} for g in grants
+                ],
                 "state_constraints": [
                     {"constraint": f"시작 위치: {last_location}", "reason": "이전 Arc 종료 위치"},
-                    {"constraint": f"부상 상태: {last_injuries}", "reason": "이전 Arc 종료 시 상태"}
-                ]
+                    {"constraint": f"부상 상태: {last_injuries}", "reason": "이전 Arc 종료 시 상태"},
+                ],
             },
             "next_arc_guidance": {
                 "must_start_with": f"{last_location}에서 시작",
                 "available_resources": list(items),
-                "warning": "이미 획득한 아이템 재획득 금지"
-            }
+                "warning": "이미 획득한 아이템 재획득 금지",
+            },
         }
 
-    def generate_analyst_injection(self, preflight_result: Dict) -> str:
+    def generate_analyst_injection(self, preflight_result: dict) -> str:
         """Analyst 프롬프트에 주입할 제약 텍스트 생성"""
         # 절대 금지 사항
         prohibitions = preflight_result.get("absolute_prohibitions", {})

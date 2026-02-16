@@ -3,29 +3,30 @@ from .base_strategy import BaseStrategy
 
 class SportsStrategy(BaseStrategy):
     @property
-    def genre_name(self): return "SPORTS"
+    def genre_name(self):
+        return "SPORTS"
 
     def get_system_prompt(self) -> str:
-        genre_rules = self.law.get('sports', {})
+        genre_rules = self.law.get("sports", {})
 
         # 1. 컨텍스트 및 선택된 톤(Tone) 인출
         ctx = self.studio.project
 
-        selected_tone = getattr(ctx, 'selected_tone', {})
-        tone_name = selected_tone.get('name', '스포츠 성장물')
-        tone_guide = selected_tone.get('writer', '스포츠의 열정과 성장통이 교차하는 문체')
+        selected_tone = getattr(ctx, "selected_tone", {})
+        tone_name = selected_tone.get("name", "스포츠 성장물")
+        tone_guide = selected_tone.get("writer", "스포츠의 열정과 성장통이 교차하는 문체")
 
         # 2. 주인공 정보 인출
-        bible_root = ctx.master_bible.get('MasterBible', ctx.master_bible)
-        hud = bible_root.get('SportsHUD', bible_root.get('sports_hud', {}))
-        protagonist = hud.get('Protagonist', hud.get('main', {}))
+        bible_root = ctx.master_bible.get("MasterBible", ctx.master_bible)
+        hud = bible_root.get("SportsHUD", bible_root.get("sports_hud", {}))
+        protagonist = hud.get("Protagonist", hud.get("main", {}))
 
-        mc_name = protagonist.get('Name', protagonist.get('name', '선수'))
-        mc_desc = protagonist.get('description', '무한한 잠재력의 선수')
+        mc_name = protagonist.get("Name", protagonist.get("name", "선수"))
+        mc_desc = protagonist.get("description", "무한한 잠재력의 선수")
 
         return f"""
         [SPORTS GENRE GUIDELINE]
-        1. 장르 필수 요소: {', '.join(genre_rules.get('mandatory', []))}
+        1. 장르 필수 요소: {", ".join(genre_rules.get("mandatory", []))}
         2. 주인공: {mc_name} ({mc_desc})
 
         [세부 집필 톤(Tone) 지침: {tone_name}]

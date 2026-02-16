@@ -4,19 +4,20 @@ Preset Registry - 프리셋 기반 동적 스키마 체계
 공통 + 장르별 프리셋 조합, 런타임 확장 지원
 """
 
-import json
 import copy
-from typing import Dict, List, Set, Any, Optional
+import json
 from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass
 class FieldDefinition:
     """필드 정의"""
+
     name: str
     type: str  # int, str, float, enum, list, dict
     default: Any = None
-    enum_values: List[str] = field(default_factory=list)
+    enum_values: list[str] = field(default_factory=list)
     description: str = ""
 
 
@@ -45,18 +46,27 @@ class PresetRegistry:
             "stocks": FieldDefinition("stocks", "list", [], description="주식"),
             "real_estate": FieldDefinition("real_estate", "list", [], description="부동산"),
             "debt": FieldDefinition("debt", "str", "0원", description="부채"),
-            "network_level": FieldDefinition("network_level", "dict", {
-                "financial": 0, "political": 0, "business": 0
-            }, description="인맥 레벨"),
+            "network_level": FieldDefinition(
+                "network_level", "dict", {"financial": 0, "political": 0, "business": 0}, description="인맥 레벨"
+            ),
             "investment_style": FieldDefinition("investment_style", "str", "", description="투자 스타일"),
-            "risk_tolerance": FieldDefinition("risk_tolerance", "enum", "중립",
-                enum_values=["보수", "중립", "공격", "극공격"], description="위험 선호도"),
+            "risk_tolerance": FieldDefinition(
+                "risk_tolerance",
+                "enum",
+                "중립",
+                enum_values=["보수", "중립", "공격", "극공격"],
+                description="위험 선호도",
+            ),
         },
         "wuxia": {
             "internal_energy": FieldDefinition("internal_energy", "int", 0, description="내공"),
-            "rank": FieldDefinition("rank", "enum", "말류",
+            "rank": FieldDefinition(
+                "rank",
+                "enum",
+                "말류",
                 enum_values=["말류", "삼류", "이류", "일류", "절정", "화경", "현경", "신경"],
-                description="무공 경지"),
+                description="무공 경지",
+            ),
             "martial_arts": FieldDefinition("martial_arts", "list", [], description="습득 무공"),
             "faction": FieldDefinition("faction", "str", "무소속", description="소속 문파"),
             "faction_standing": FieldDefinition("faction_standing", "dict", {}, description="문파별 호감도"),
@@ -66,14 +76,21 @@ class PresetRegistry:
         },
         "hunter": {
             "level": FieldDefinition("level", "int", 1, description="레벨"),
-            "rank": FieldDefinition("rank", "enum", "E",
+            "rank": FieldDefinition(
+                "rank",
+                "enum",
+                "E",
                 enum_values=["F", "E", "D", "C", "B", "A", "S", "SS", "SSS"],
-                description="헌터 등급"),
+                description="헌터 등급",
+            ),
             "class": FieldDefinition("class", "str", "", description="직업"),
             "mana": FieldDefinition("mana", "int", 0, description="마나"),
-            "stats": FieldDefinition("stats", "dict", {
-                "strength": 10, "agility": 10, "intelligence": 10, "vitality": 10, "luck": 10
-            }, description="스탯"),
+            "stats": FieldDefinition(
+                "stats",
+                "dict",
+                {"strength": 10, "agility": 10, "intelligence": 10, "vitality": 10, "luck": 10},
+                description="스탯",
+            ),
             "skills": FieldDefinition("skills", "list", [], description="스킬"),
             "equipment": FieldDefinition("equipment", "list", [], description="장비"),
             "guild": FieldDefinition("guild", "str", "무소속", description="소속 길드"),
@@ -90,61 +107,78 @@ class PresetRegistry:
             "divine_favor": FieldDefinition("divine_favor", "dict", {}, description="신의 총애"),
         },
         "composer": {
-            "music_skill": FieldDefinition("music_skill", "dict", {
-                "composition": 0, "arrangement": 0, "production": 0,
-                "instrument": [], "vocal_range": ""
-            }, description="음악 능력치"),
-            "reputation": FieldDefinition("reputation", "dict", {
-                "public": 0, "industry": 0, "critic": 0
-            }, description="명성 (대중/업계/평론)"),
+            "music_skill": FieldDefinition(
+                "music_skill",
+                "dict",
+                {"composition": 0, "arrangement": 0, "production": 0, "instrument": [], "vocal_range": ""},
+                description="음악 능력치",
+            ),
+            "reputation": FieldDefinition(
+                "reputation", "dict", {"public": 0, "industry": 0, "critic": 0}, description="명성 (대중/업계/평론)"
+            ),
             "discography": FieldDefinition("discography", "list", [], description="발표 작품"),
             "awards": FieldDefinition("awards", "list", [], description="수상 이력"),
             "contracts": FieldDefinition("contracts", "dict", {}, description="계약 관계"),
             "wealth": FieldDefinition("wealth", "str", "0원", description="재산"),
-            "network": FieldDefinition("network", "dict", {
-                "artists": [], "producers": [], "executives": []
-            }, description="인맥"),
+            "network": FieldDefinition(
+                "network", "dict", {"artists": [], "producers": [], "executives": []}, description="인맥"
+            ),
             "mental_state": FieldDefinition("mental_state", "str", "정상", description="정신 상태"),
             "creative_block": FieldDefinition("creative_block", "str", "없음", description="슬럼프 상태"),
             "genre_mastery": FieldDefinition("genre_mastery", "list", [], description="장악한 음악 장르"),
         },
         "cooking": {
-            "chef_rank": FieldDefinition("chef_rank", "enum", "수습생",
+            "chef_rank": FieldDefinition(
+                "chef_rank",
+                "enum",
+                "수습생",
                 enum_values=["수습생", "준요리사", "요리사", "수석요리사", "셰프", "명셰프", "거장", "전설의요리인"],
-                description="요리사 등급"),
+                description="요리사 등급",
+            ),
             "signature_dish": FieldDefinition("signature_dish", "str", "", description="대표 요리"),
             "culinary_techniques": FieldDefinition("culinary_techniques", "list", [], description="습득 조리 기법"),
             "recipe_vault": FieldDefinition("recipe_vault", "list", [], description="레시피 보관함"),
             "food_philosophy": FieldDefinition("food_philosophy", "str", "", description="요리 철학"),
             "restaurant_name": FieldDefinition("restaurant_name", "str", "", description="식당 이름"),
-            "restaurant_tier": FieldDefinition("restaurant_tier", "enum", "포장마차",
+            "restaurant_tier": FieldDefinition(
+                "restaurant_tier",
+                "enum",
+                "포장마차",
                 enum_values=["포장마차", "동네식당", "맛집", "파인다이닝", "미슐랭1스타", "미슐랭2스타", "미슐랭3스타"],
-                description="식당 등급"),
+                description="식당 등급",
+            ),
             "reputation_score": FieldDefinition("reputation_score", "int", 0, description="평판 점수 (0-100)"),
             "monthly_revenue": FieldDefinition("monthly_revenue", "str", "0원", description="월 매출"),
             "capital": FieldDefinition("capital", "str", "0원", description="운영 자금"),
             "customer_loyalty": FieldDefinition("customer_loyalty", "int", 0, description="단골 고객 수"),
         },
         "alt_history": {
-            "social_class": FieldDefinition("social_class", "enum", "양반",
-                enum_values=["왕족", "양반", "중인", "상민", "천민"], description="신분"),
+            "social_class": FieldDefinition(
+                "social_class", "enum", "양반", enum_values=["왕족", "양반", "중인", "상민", "천민"], description="신분"
+            ),
             "court_rank": FieldDefinition("court_rank", "str", "무품", description="품계 (정1품~종9품)"),
             "position": FieldDefinition("position", "str", "없음", description="관직명"),
-            "faction": FieldDefinition("faction", "str", "무소속",
-                description="당파 (노론/소론/남인/북인 등)"),
+            "faction": FieldDefinition("faction", "str", "무소속", description="당파 (노론/소론/남인/북인 등)"),
             "political_influence": FieldDefinition("political_influence", "int", 0, description="정치적 영향력"),
             "wealth": FieldDefinition("wealth", "str", "빈한", description="재산 수준"),
             "knowledge": FieldDefinition("knowledge", "list", [], description="보유 지식/기술 (현대 지식 포함)"),
-            "connections": FieldDefinition("connections", "dict", {
-                "royal": 0, "nobility": 0, "commoner": 0, "foreign": 0
-            }, description="인맥 (왕실/양반/민간/외교)"),
+            "connections": FieldDefinition(
+                "connections",
+                "dict",
+                {"royal": 0, "nobility": 0, "commoner": 0, "foreign": 0},
+                description="인맥 (왕실/양반/민간/외교)",
+            ),
             "public_trust": FieldDefinition("public_trust", "int", 50, description="민심 (0~100)"),
             "karma": FieldDefinition("karma", "int", 0, description="인과율"),
         },
         "actor": {
-            "fame": FieldDefinition("fame", "enum", "무명",
+            "fame": FieldDefinition(
+                "fame",
+                "enum",
+                "무명",
                 enum_values=["무명", "엑스트라", "단역", "조연", "주연", "톱스타", "한류스타", "레전드"],
-                description="인지도 등급"),
+                description="인지도 등급",
+            ),
             "acting_skill": FieldDefinition("acting_skill", "str", "초보", description="연기력 수준"),
             "agency": FieldDefinition("agency", "str", "무소속", description="소속사"),
             "filmography": FieldDefinition("filmography", "list", [], description="출연작 목록"),
@@ -152,21 +186,31 @@ class PresetRegistry:
             "scandal_index": FieldDefinition("scandal_index", "int", 0, description="스캔들 지수 (0~100)"),
             "box_office": FieldDefinition("box_office", "str", "없음", description="흥행 성적"),
             "wealth": FieldDefinition("wealth", "str", "0원", description="재산"),
-            "network": FieldDefinition("network", "dict", {
-                "directors": [], "actors": [], "producers": [], "agencies": []
-            }, description="업계 인맥"),
+            "network": FieldDefinition(
+                "network",
+                "dict",
+                {"directors": [], "actors": [], "producers": [], "agencies": []},
+                description="업계 인맥",
+            ),
             "awards": FieldDefinition("awards", "list", [], description="수상 이력"),
             "mental_state": FieldDefinition("mental_state", "str", "정상", description="정신 상태"),
         },
         "sports": {
-            "athlete_tier": FieldDefinition("athlete_tier", "enum", "아마추어",
+            "athlete_tier": FieldDefinition(
+                "athlete_tier",
+                "enum",
+                "아마추어",
                 enum_values=["동호회", "아마추어", "세미프로", "프로신인", "프로정규", "올스타", "국가대표", "전설"],
-                description="선수 등급"),
+                description="선수 등급",
+            ),
             "sport_type": FieldDefinition("sport_type", "str", "", description="종목"),
             "position": FieldDefinition("position", "str", "", description="포지션"),
-            "physical_stats": FieldDefinition("physical_stats", "dict", {
-                "strength": 50, "speed": 50, "stamina": 50, "technique": 50, "mental": 50
-            }, description="신체 능력치 (0-100)"),
+            "physical_stats": FieldDefinition(
+                "physical_stats",
+                "dict",
+                {"strength": 50, "speed": 50, "stamina": 50, "technique": 50, "mental": 50},
+                description="신체 능력치 (0-100)",
+            ),
             "record": FieldDefinition("record", "dict", {"wins": 0, "losses": 0, "draws": 0}, description="전적"),
             "skills": FieldDefinition("skills", "list", [], description="습득 기술"),
             "team": FieldDefinition("team", "str", "무소속", description="소속팀"),
@@ -178,9 +222,13 @@ class PresetRegistry:
             "coach": FieldDefinition("coach", "str", "", description="코치/트레이너"),
         },
         "medical": {
-            "doctor_rank": FieldDefinition("doctor_rank", "enum", "의대생",
+            "doctor_rank": FieldDefinition(
+                "doctor_rank",
+                "enum",
+                "의대생",
                 enum_values=["의대생", "인턴", "레지던트", "전문의", "펠로우", "부교수", "교수", "석좌교수"],
-                description="의사 직급"),
+                description="의사 직급",
+            ),
             "specialty": FieldDefinition("specialty", "str", "", description="전공과"),
             "hospital": FieldDefinition("hospital", "str", "", description="소속 병원"),
             "surgery_count": FieldDefinition("surgery_count", "int", 0, description="수술 횟수"),
@@ -191,9 +239,9 @@ class PresetRegistry:
             "wealth": FieldDefinition("wealth", "str", "0원", description="재산"),
             "mental_state": FieldDefinition("mental_state", "str", "정상", description="정신 상태"),
             "malpractice_record": FieldDefinition("malpractice_record", "list", [], description="의료사고 이력"),
-            "network": FieldDefinition("network", "dict", {
-                "hospital": [], "academic": [], "pharmaceutical": []
-            }, description="인맥"),
+            "network": FieldDefinition(
+                "network", "dict", {"hospital": [], "academic": [], "pharmaceutical": []}, description="인맥"
+            ),
         },
         "romance": {
             "affection": FieldDefinition("affection", "dict", {}, description="NPC별 호감도"),
@@ -225,8 +273,13 @@ class PresetRegistry:
     # ========================================
     NPC_COMMON_PRESET = {
         "name": FieldDefinition("name", "str", "", description="NPC 이름"),
-        "status": FieldDefinition("status", "enum", "alive",
-            enum_values=["alive", "dead", "injured", "missing", "unknown"], description="생존 상태"),
+        "status": FieldDefinition(
+            "status",
+            "enum",
+            "alive",
+            enum_values=["alive", "dead", "injured", "missing", "unknown"],
+            description="생존 상태",
+        ),
         "role": FieldDefinition("role", "str", "", description="역할 (조력자/적대자/중립)"),
         "relationship": FieldDefinition("relationship", "str", "neutral", description="주인공과의 관계"),
         "first_appearance": FieldDefinition("first_appearance", "int", 0, description="첫 등장 Arc"),
@@ -237,8 +290,13 @@ class PresetRegistry:
     NPC_GENRE_PRESETS = {
         "wuxia": {
             "faction": FieldDefinition("faction", "str", "무소속", description="소속 문파"),
-            "rank": FieldDefinition("rank", "enum", "말류",
-                enum_values=["말류", "삼류", "이류", "일류", "절정", "화경", "현경", "신경"], description="무공 경지"),
+            "rank": FieldDefinition(
+                "rank",
+                "enum",
+                "말류",
+                enum_values=["말류", "삼류", "이류", "일류", "절정", "화경", "현경", "신경"],
+                description="무공 경지",
+            ),
             "martial_arts": FieldDefinition("martial_arts", "list", [], description="무공"),
             "weapon": FieldDefinition("weapon", "str", "", description="주 무기"),
             "karma": FieldDefinition("karma", "str", "중립", description="정사 성향"),
@@ -246,8 +304,13 @@ class PresetRegistry:
         },
         "hunter": {
             "guild": FieldDefinition("guild", "str", "무소속", description="소속 길드"),
-            "awakening_rank": FieldDefinition("awakening_rank", "enum", "E",
-                enum_values=["F", "E", "D", "C", "B", "A", "S", "SS", "SSS"], description="각성 등급"),
+            "awakening_rank": FieldDefinition(
+                "awakening_rank",
+                "enum",
+                "E",
+                enum_values=["F", "E", "D", "C", "B", "A", "S", "SS", "SSS"],
+                description="각성 등급",
+            ),
             "class": FieldDefinition("class", "str", "", description="직업"),
             "skills": FieldDefinition("skills", "list", [], description="스킬"),
             "level": FieldDefinition("level", "int", 1, description="레벨"),
@@ -270,18 +333,23 @@ class PresetRegistry:
             "musical_style": FieldDefinition("musical_style", "str", "", description="음악 스타일"),
             "company": FieldDefinition("company", "str", "", description="소속사"),
             "influence": FieldDefinition("influence", "int", 0, description="영향력"),
-            "relationship_type": FieldDefinition("relationship_type", "str", "", description="관계 유형 (멘토/라이벌/팬 등)"),
+            "relationship_type": FieldDefinition(
+                "relationship_type", "str", "", description="관계 유형 (멘토/라이벌/팬 등)"
+            ),
         },
         "cooking": {
             "role_in_kitchen": FieldDefinition("role_in_kitchen", "str", "", description="주방 역할"),
             "culinary_style": FieldDefinition("culinary_style", "str", "", description="요리 스타일"),
             "restaurant": FieldDefinition("restaurant", "str", "", description="소속 식당"),
             "chef_rank": FieldDefinition("chef_rank", "str", "", description="요리사 등급"),
-            "relationship_type": FieldDefinition("relationship_type", "str", "", description="관계 유형 (멘토/라이벌/고객 등)"),
+            "relationship_type": FieldDefinition(
+                "relationship_type", "str", "", description="관계 유형 (멘토/라이벌/고객 등)"
+            ),
         },
         "alt_history": {
-            "social_class": FieldDefinition("social_class", "enum", "양반",
-                enum_values=["왕족", "양반", "중인", "상민", "천민"], description="신분"),
+            "social_class": FieldDefinition(
+                "social_class", "enum", "양반", enum_values=["왕족", "양반", "중인", "상민", "천민"], description="신분"
+            ),
             "position": FieldDefinition("position", "str", "", description="관직"),
             "faction": FieldDefinition("faction", "str", "", description="당파"),
             "loyalty": FieldDefinition("loyalty", "str", "neutral", description="충성 대상"),
@@ -292,22 +360,32 @@ class PresetRegistry:
             "fame_level": FieldDefinition("fame_level", "str", "", description="인지도"),
             "agency": FieldDefinition("agency", "str", "", description="소속사"),
             "filmography": FieldDefinition("filmography", "list", [], description="출연작"),
-            "relationship_type": FieldDefinition("relationship_type", "str", "", description="관계 유형 (멘토/라이벌/팬 등)"),
+            "relationship_type": FieldDefinition(
+                "relationship_type", "str", "", description="관계 유형 (멘토/라이벌/팬 등)"
+            ),
         },
         "sports": {
             "team": FieldDefinition("team", "str", "", description="소속팀"),
-            "athlete_tier": FieldDefinition("athlete_tier", "enum", "아마추어",
+            "athlete_tier": FieldDefinition(
+                "athlete_tier",
+                "enum",
+                "아마추어",
                 enum_values=["동호회", "아마추어", "세미프로", "프로신인", "프로정규", "올스타", "국가대표", "전설"],
-                description="선수 등급"),
+                description="선수 등급",
+            ),
             "position": FieldDefinition("position", "str", "", description="포지션"),
             "record": FieldDefinition("record", "dict", {"wins": 0, "losses": 0}, description="전적"),
             "skills": FieldDefinition("skills", "list", [], description="기술"),
         },
         "medical": {
             "hospital": FieldDefinition("hospital", "str", "", description="소속 병원"),
-            "doctor_rank": FieldDefinition("doctor_rank", "enum", "레지던트",
+            "doctor_rank": FieldDefinition(
+                "doctor_rank",
+                "enum",
+                "레지던트",
                 enum_values=["의대생", "인턴", "레지던트", "전문의", "펠로우", "부교수", "교수", "석좌교수"],
-                description="의사 직급"),
+                description="의사 직급",
+            ),
             "specialty": FieldDefinition("specialty", "str", "", description="전공과"),
             "reputation": FieldDefinition("reputation", "str", "", description="평판"),
             "skills": FieldDefinition("skills", "list", [], description="의술"),
@@ -343,10 +421,10 @@ class PresetRegistry:
 
     def __init__(self, base_genre: str = None):
         self.base_genre = base_genre
-        self.active_presets: Set[str] = {"common"}
+        self.active_presets: set[str] = {"common"}
         if base_genre and base_genre in self.GENRE_PRESETS:
             self.active_presets.add(base_genre)
-        self.discovered_fields: Dict[str, FieldDefinition] = {}
+        self.discovered_fields: dict[str, FieldDefinition] = {}
 
     def activate_preset(self, preset_name: str) -> bool:
         """프리셋 활성화"""
@@ -362,7 +440,7 @@ class PresetRegistry:
             return True
         return False
 
-    def get_active_fields(self) -> Dict[str, FieldDefinition]:
+    def get_active_fields(self) -> dict[str, FieldDefinition]:
         """현재 활성화된 모든 필드 반환"""
         fields = dict(self.COMMON_PRESET)
         for preset_name in self.active_presets:
@@ -371,7 +449,7 @@ class PresetRegistry:
         fields.update(self.discovered_fields)
         return fields
 
-    def get_field_names(self) -> List[str]:
+    def get_field_names(self) -> list[str]:
         """활성 필드명 목록"""
         return list(self.get_active_fields().keys())
 
@@ -382,7 +460,7 @@ class PresetRegistry:
                 return canonical
         return field_name
 
-    def normalize_hud(self, raw_hud: Dict[str, Any]) -> Dict[str, Any]:
+    def normalize_hud(self, raw_hud: dict[str, Any]) -> dict[str, Any]:
         """LLM 출력 HUD 정규화"""
         normalized = {}
         active_fields = self.get_active_fields()
@@ -431,12 +509,13 @@ class PresetRegistry:
     def _parse_korean_number(self, text: str) -> int:
         """한글 숫자 파싱 (50억, 1000만원 등)"""
         import re
+
         text = text.replace(",", "").replace(" ", "")
 
         multipliers = {"억": 100000000, "만": 10000, "천": 1000, "백": 100}
 
         # 순수 숫자면 바로 반환
-        clean = re.sub(r'[^\d]', '', text)
+        clean = re.sub(r"[^\d]", "", text)
         if clean and not any(m in text for m in multipliers.keys()):
             return int(clean)
 
@@ -454,7 +533,7 @@ class PresetRegistry:
 
         return total + current
 
-    def detect_new_genre(self, content: str) -> Optional[str]:
+    def detect_new_genre(self, content: str) -> str | None:
         """콘텐츠에서 새 장르 요소 감지"""
         # 장르별 키워드
         genre_keywords = {
@@ -471,7 +550,7 @@ class PresetRegistry:
                     return genre
         return None
 
-    def build_initial_hud(self, protagonist_info: Dict[str, Any]) -> Dict[str, Any]:
+    def build_initial_hud(self, protagonist_info: dict[str, Any]) -> dict[str, Any]:
         """초기 HUD 생성"""
         hud = {}
         active_fields = self.get_active_fields()
@@ -489,7 +568,7 @@ class PresetRegistry:
     # NPC 필드 관리
     # ========================================
 
-    def get_npc_fields(self) -> Dict[str, FieldDefinition]:
+    def get_npc_fields(self) -> dict[str, FieldDefinition]:
         """현재 활성화된 NPC 필드 반환"""
         fields = dict(self.NPC_COMMON_PRESET)
         for preset_name in self.active_presets:
@@ -497,7 +576,7 @@ class PresetRegistry:
                 fields.update(self.NPC_GENRE_PRESETS[preset_name])
         return fields
 
-    def build_npc_template(self, npc_info: Dict[str, Any] = None) -> Dict[str, Any]:
+    def build_npc_template(self, npc_info: dict[str, Any] = None) -> dict[str, Any]:
         """NPC 템플릿 생성"""
         template = {}
         npc_fields = self.get_npc_fields()
@@ -510,7 +589,7 @@ class PresetRegistry:
 
         return template
 
-    def normalize_npc(self, raw_npc: Dict[str, Any]) -> Dict[str, Any]:
+    def normalize_npc(self, raw_npc: dict[str, Any]) -> dict[str, Any]:
         """NPC 데이터 정규화"""
         normalized = {}
         npc_fields = self.get_npc_fields()
@@ -553,10 +632,13 @@ class PresetRegistry:
 
     def to_json(self) -> str:
         """현재 상태 JSON 직렬화"""
-        return json.dumps({
-            "base_genre": self.base_genre,
-            "active_presets": list(self.active_presets),
-        }, ensure_ascii=False)
+        return json.dumps(
+            {
+                "base_genre": self.base_genre,
+                "active_presets": list(self.active_presets),
+            },
+            ensure_ascii=False,
+        )
 
     @classmethod
     def from_json(cls, json_str: str) -> "PresetRegistry":

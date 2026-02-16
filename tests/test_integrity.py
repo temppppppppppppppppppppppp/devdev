@@ -5,12 +5,13 @@
 실행: python -m pytest tests/test_integrity.py -v
 """
 
-import pytest
 import json
+import os
+import sys
 import threading
 import time
-import sys
-import os
+
+import pytest
 
 # 프로젝트 루트 추가
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -24,12 +25,12 @@ class TestDBManagerRaceCondition:
 
     def test_concurrent_episode_number_generation(self):
         """동시 에피소드 번호 생성 시 중복 방지 확인 (독립 SQLite 테스트)"""
-        import tempfile
         import sqlite3
+        import tempfile
         from threading import RLock
 
         # 임시 DB 생성
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
             db_path = f.name
 
         conn = None
@@ -53,9 +54,7 @@ class TestDBManagerRaceCondition:
                 try:
                     with lock:
                         # 최신 번호 조회
-                        cursor = conn.execute(
-                            "SELECT MAX(ep_num) FROM test_episodes"
-                        )
+                        cursor = conn.execute("SELECT MAX(ep_num) FROM test_episodes")
                         max_ep = cursor.fetchone()[0] or 0
                         next_ep = max_ep + 1
 
@@ -64,8 +63,7 @@ class TestDBManagerRaceCondition:
 
                         # 삽입
                         conn.execute(
-                            "INSERT INTO test_episodes (ep_num, content) VALUES (?, ?)",
-                            (next_ep, f"Episode {next_ep}")
+                            "INSERT INTO test_episodes (ep_num, content) VALUES (?, ?)", (next_ep, f"Episode {next_ep}")
                         )
                         conn.commit()
                         results.append(next_ep)
@@ -126,9 +124,9 @@ class TestBaseAgentJSONParsing:
         # 기본 JSON 파싱
         try:
             # 중괄호 이스케이프 처리 테스트
-            cleaned = re.sub(r'\{([a-z_]+)\}', r'__\1__', malformed_json)
+            cleaned = re.sub(r"\{([a-z_]+)\}", r"__\1__", malformed_json)
             result = json.loads(cleaned)
-            assert result['arc_no'] == 1
+            assert result["arc_no"] == 1
         except json.JSONDecodeError:
             # 파싱 실패는 예상된 동작
             pass
@@ -318,12 +316,7 @@ class TestDirectorErrorHandling:
                 # return {"decision": "PASS", "reason": "Director 오류로 인한 기본 통과"}
 
                 # 올바른 처리: ERROR 반환
-                return {
-                    "decision": "ERROR",
-                    "reason": f"Director 오류: {e}",
-                    "score": 0,
-                    "requires_retry": True
-                }
+                return {"decision": "ERROR", "reason": f"Director 오류: {e}", "score": 0, "requires_retry": True}
 
         result = simulate_director_audit("테스트 원고")
 
@@ -378,13 +371,13 @@ class TestRegexSafety:
         import re
 
         dangerous_names = [
-            "대도[검]",           # 문자 클래스
-            "무공비급(상)",        # 그룹
-            "철혈사자패+강화",     # 수량자
-            "비전.무공",          # 와일드카드
-            "검^법",             # 앵커
-            "도$술",             # 앵커
-            "무공|검술",          # OR
+            "대도[검]",  # 문자 클래스
+            "무공비급(상)",  # 그룹
+            "철혈사자패+강화",  # 수량자
+            "비전.무공",  # 와일드카드
+            "검^법",  # 앵커
+            "도$술",  # 앵커
+            "무공|검술",  # OR
         ]
 
         manuscript = "그는 대도[검]을 들고 철혈사자패+강화를 사용했다."
@@ -410,10 +403,10 @@ class TestMemoryDBSync:
 
     def test_save_and_load_consistency(self):
         """저장 후 로드 시 데이터 일관성"""
-        import tempfile
         import sqlite3
+        import tempfile
 
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
             db_path = f.name
 
         try:
@@ -426,16 +419,13 @@ class TestMemoryDBSync:
             """)
 
             # 메모리 데이터
-            memory_data = {
-                "volumes": [{"vol": 1}, {"vol": 2}],
-                "arcs": [{"arc": 1}, {"arc": 2}]
-            }
+            memory_data = {"volumes": [{"vol": 1}, {"vol": 2}], "arcs": [{"arc": 1}, {"arc": 2}]}
 
             # DB에 저장
             for key, value in memory_data.items():
                 conn.execute(
                     "INSERT OR REPLACE INTO anchors (key, value) VALUES (?, ?)",
-                    (key, json.dumps(value, ensure_ascii=False))
+                    (key, json.dumps(value, ensure_ascii=False)),
                 )
             conn.commit()
 
@@ -503,17 +493,10 @@ class TestIntegrationScenarios:
         arc_data = {
             "arc_no": 1,
             "tactical_doc": "# Arc 1 전술\n화1: 도입\n화2: 전개...",
-            "joint_docs": {
-                "final_location": "태산파 연무장",
-                "physical_inventory": ["대도", "비급"]
-            },
+            "joint_docs": {"final_location": "태산파 연무장", "physical_inventory": ["대도", "비급"]},
             "state_constraints": {
-                "arc_end_state": {
-                    "internal_energy": 85,
-                    "injuries": "경상",
-                    "location": "태산파 연무장"
-                }
-            }
+                "arc_end_state": {"internal_energy": 85, "injuries": "경상", "location": "태산파 연무장"}
+            },
         }
 
         # Stage 3 입력 검증
@@ -536,7 +519,7 @@ class TestIntegrationScenarios:
         # Blocking 검증 시뮬레이션
         blocking_result = {
             "passed": len(manuscript) >= 4000,
-            "reason": "길이 통과" if len(manuscript) >= 4000 else "길이 부족"
+            "reason": "길이 통과" if len(manuscript) >= 4000 else "길이 부족",
         }
 
         if not blocking_result["passed"]:

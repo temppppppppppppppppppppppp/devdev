@@ -5,10 +5,8 @@
 설정 오류와 인과성 모순을 원천 차단합니다.
 """
 
-import json
 import logging
 import re
-from typing import List, Dict, Any
 
 
 class ReferenceAnchor:
@@ -20,14 +18,14 @@ class ReferenceAnchor:
 
     # 앵커 타입 정의
     ANCHOR_TYPES = {
-        'combat': '전투',
-        'item': '아이템',
-        'relationship': '인간관계',
-        'location': '위치/이동',
-        'power': '경지/능력',
-        'revelation': '비밀/폭로',
-        'injury': '부상/상태',
-        'decision': '중요 결정'
+        "combat": "전투",
+        "item": "아이템",
+        "relationship": "인간관계",
+        "location": "위치/이동",
+        "power": "경지/능력",
+        "revelation": "비밀/폭로",
+        "injury": "부상/상태",
+        "decision": "중요 결정",
     }
 
     def __init__(self, project_context) -> None:
@@ -103,7 +101,7 @@ class ReferenceAnchor:
             from modules.domain.agents.base_agent import BaseAgent
 
             # API client 존재 여부 검증
-            if not hasattr(self.context, 'sys') or not hasattr(self.context.sys, 'api_client'):
+            if not hasattr(self.context, "sys") or not hasattr(self.context.sys, "api_client"):
                 logging.info(f"⚠️ [ReferenceAnchor] API client unavailable (ep {ep_num})")
                 return []
 
@@ -113,11 +111,11 @@ class ReferenceAnchor:
             response = agent.ask(prompt, temperature=0.2)
             result = agent._extract_json_robust(response)
 
-            anchors = result.get('anchors', [])
+            anchors = result.get("anchors", [])
 
             # 에피소드 번호 태깅
             for anchor in anchors:
-                anchor['ep_num'] = ep_num
+                anchor["ep_num"] = ep_num
 
             return anchors
 
@@ -132,7 +130,7 @@ class ReferenceAnchor:
         호출될 때 중복 DB 조회를 방지 (~100ms/ep 절감).
         """
         if self._all_anchors_cache is None:
-            self._all_anchors_cache = self.context.db.load_anchor('reference_anchors', default=[])
+            self._all_anchors_cache = self.context.db.load_anchor("reference_anchors", default=[])
         return self._all_anchors_cache
 
     def invalidate_cache(self) -> None:
@@ -158,29 +156,28 @@ class ReferenceAnchor:
             return []
 
         # [V63.3] 최근 30화 내의 앵커 + 핵심 타입은 전 구간 검색
-        critical_types = {'item', 'injury', 'power', 'relationship', 'revelation'}
+        critical_types = {"item", "injury", "power", "relationship", "revelation"}
         recent_anchors = [
-            a for a in all_anchors
-            if a.get('ep_num', 0) < current_ep_num and (
-                current_ep_num - a.get('ep_num', 0) <= 30
-                or a.get('type', '') in critical_types
-            )
+            a
+            for a in all_anchors
+            if a.get("ep_num", 0) < current_ep_num
+            and (current_ep_num - a.get("ep_num", 0) <= 30 or a.get("type", "") in critical_types)
         ]
 
         if not recent_anchors:
             return []
 
         # 키워드 매칭으로 관련성 점수 계산
-        arc_keywords = set(re.findall(r'[\w가-힣]{2,}', str(arc_context)))
+        arc_keywords = set(re.findall(r"[\w가-힣]{2,}", str(arc_context)))
 
         scored_anchors = []
         for anchor in recent_anchors:
-            summary = anchor.get('summary', '')
-            anchor_type = anchor.get('type', 'unknown')
-            ep_num = anchor.get('ep_num', 0)
+            summary = anchor.get("summary", "")
+            anchor_type = anchor.get("type", "unknown")
+            ep_num = anchor.get("ep_num", 0)
 
             # 앵커 키워드 추출
-            anchor_keywords = set(re.findall(r'[\w가-힣]{2,}', summary))
+            anchor_keywords = set(re.findall(r"[\w가-힣]{2,}", summary))
 
             # 교집합 비율로 관련성 점수 계산
             if anchor_keywords:
@@ -201,9 +198,9 @@ class ReferenceAnchor:
 
         formatted_anchors = []
         for anchor in top_anchors:
-            ep = anchor.get('ep_num', '?')
-            type_name = self.ANCHOR_TYPES.get(anchor.get('type', 'unknown'), '기타')
-            summary = anchor.get('summary', '')
+            ep = anchor.get("ep_num", "?")
+            type_name = self.ANCHOR_TYPES.get(anchor.get("type", "unknown"), "기타")
+            summary = anchor.get("summary", "")
             formatted_anchors.append(f"[제 {ep}화 | {type_name}] {summary}")
 
         return formatted_anchors
@@ -229,25 +226,25 @@ class ReferenceAnchor:
         type_latest = {}
 
         for anchor in all_anchors:
-            if anchor.get('ep_num', 0) >= current_ep_num:
+            if anchor.get("ep_num", 0) >= current_ep_num:
                 continue  # 미래 앵커는 제외
 
-            a_type = anchor.get('type', 'unknown')
+            a_type = anchor.get("type", "unknown")
 
             # 타입 필터링
             if anchor_types and a_type not in anchor_types:
                 continue
 
             # 해당 타입의 최신 앵커인지 확인
-            if a_type not in type_latest or anchor.get('ep_num', 0) > type_latest[a_type].get('ep_num', 0):
+            if a_type not in type_latest or anchor.get("ep_num", 0) > type_latest[a_type].get("ep_num", 0):
                 type_latest[a_type] = anchor
 
         # 포맷팅
         critical_list = []
         for a_type, anchor in type_latest.items():
-            ep = anchor.get('ep_num', '?')
-            type_name = self.ANCHOR_TYPES.get(a_type, '기타')
-            summary = anchor.get('summary', '')
+            ep = anchor.get("ep_num", "?")
+            type_name = self.ANCHOR_TYPES.get(a_type, "기타")
+            summary = anchor.get("summary", "")
             critical_list.append(f"[제 {ep}화 | {type_name}] {summary}")
 
         return critical_list
@@ -263,7 +260,7 @@ class ReferenceAnchor:
             return
 
         # 기존 앵커 로드
-        all_anchors = self.context.db.load_anchor('reference_anchors', default=[])
+        all_anchors = self.context.db.load_anchor("reference_anchors", default=[])
 
         # 새 앵커 추가
         all_anchors.extend(new_anchors)
@@ -275,12 +272,12 @@ class ReferenceAnchor:
             recent = all_anchors[-700:]
             older = all_anchors[:-700]
             # 오래된 것 중 핵심 타입(item/injury/power/relationship)만 유지
-            critical_types = {'item', 'injury', 'power', 'relationship', 'revelation'}
-            preserved_old = [a for a in older if a.get('type', '') in critical_types]
-            all_anchors = preserved_old[-(MAX_ANCHORS - 700):] + recent
+            critical_types = {"item", "injury", "power", "relationship", "revelation"}
+            preserved_old = [a for a in older if a.get("type", "") in critical_types]
+            all_anchors = preserved_old[-(MAX_ANCHORS - 700) :] + recent
 
         # DB 저장
-        self.context.db.save_anchor('reference_anchors', all_anchors)
+        self.context.db.save_anchor("reference_anchors", all_anchors)
         # [V66.1] B-2: 저장 후 캐시 무효화
         self.invalidate_cache()
 
@@ -329,14 +326,10 @@ class ReferenceAnchor:
             Dict with statistics
         """
         # 컨텍스트 및 DB 유효성 검증
-        if not hasattr(self.context, 'db') or not self.context.db:
-            return {
-                "status": "no_context",
-                "error": "Database context not available",
-                "total_anchors": 0
-            }
+        if not hasattr(self.context, "db") or not self.context.db:
+            return {"status": "no_context", "error": "Database context not available", "total_anchors": 0}
 
-        all_anchors = self.context.db.load_anchor('reference_anchors', default=[])
+        all_anchors = self.context.db.load_anchor("reference_anchors", default=[])
 
         if not all_anchors:
             return {"status": "no_anchors"}
@@ -344,7 +337,7 @@ class ReferenceAnchor:
         # 타입별 분포
         type_counts = {}
         for anchor in all_anchors:
-            a_type = anchor.get('type', 'unknown')
+            a_type = anchor.get("type", "unknown")
             type_counts[a_type] = type_counts.get(a_type, 0) + 1
 
         # 최신 5개
@@ -353,8 +346,5 @@ class ReferenceAnchor:
         return {
             "total_anchors": len(all_anchors),
             "type_distribution": type_counts,
-            "recent_anchors": [
-                f"[{a.get('ep_num')}화] {a.get('type')}: {a.get('summary')}"
-                for a in recent_5
-            ]
+            "recent_anchors": [f"[{a.get('ep_num')}화] {a.get('type')}: {a.get('summary')}" for a in recent_5],
         }

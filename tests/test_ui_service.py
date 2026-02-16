@@ -3,8 +3,6 @@
 추출 대상: _ui_select_bible, _ui_select_treatment, _show_volume_table, _get_int_input
 """
 
-import json
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest

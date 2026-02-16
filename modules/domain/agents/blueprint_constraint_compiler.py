@@ -14,10 +14,9 @@ Arc에서 해당 화의 제약 조건을 구조화된 블록으로 컴파일
 - INHERITED_STATE (계승해야 할 상태)
 """
 
-import re
-import logging
 import json
-from typing import Dict, List, Any, Optional, Tuple
+import logging
+import re
 
 
 class BlueprintConstraintCompiler:
@@ -31,12 +30,8 @@ class BlueprintConstraintCompiler:
         pass
 
     def compile(
-        self,
-        arc_data: Dict,
-        ep_num: int,
-        prev_blueprint: Optional[Dict] = None,
-        prev_blueprints: Optional[List[Dict]] = None
-    ) -> Dict:
+        self, arc_data: dict, ep_num: int, prev_blueprint: dict | None = None, prev_blueprints: list[dict] | None = None
+    ) -> dict:
         """
         Blueprint 제약 조건 컴파일
 
@@ -87,12 +82,12 @@ class BlueprintConstraintCompiler:
             "continuity": continuity,
             "inherited_state": inherited_state,
             "arc_constraint_summary": arc_constraint_summary,  # [V63]
-            "state_changes_summary": state_changes_summary  # [V63.2]
+            "state_changes_summary": state_changes_summary,  # [V63.2]
         }
 
         return constraint_block
 
-    def compile_to_prompt(self, constraint_block: Dict) -> str:
+    def compile_to_prompt(self, constraint_block: dict) -> str:
         """
         제약 블록을 프롬프트 문자열로 변환
 
@@ -175,12 +170,7 @@ class BlueprintConstraintCompiler:
 
         return "\n".join(lines)
 
-    def _extract_episode_focus(
-        self,
-        arc_data: Dict,
-        ep_num: int,
-        arc_position: int
-    ) -> Dict:
+    def _extract_episode_focus(self, arc_data: dict, ep_num: int, arc_position: int) -> dict:
         """이번 화 핵심 내용 추출"""
         tactical_doc = arc_data.get("tactical_doc", "")
 
@@ -193,7 +183,7 @@ class BlueprintConstraintCompiler:
         alt_tag = f"[제{ep_num}화"
 
         # 정규식으로 해당 화 섹션 추출
-        pattern = rf'\[제\s*{ep_num}\s*화[^\]]*\](.*?)(?=\[제\s*\d+\s*화|\Z)'
+        pattern = rf"\[제\s*{ep_num}\s*화[^\]]*\](.*?)(?=\[제\s*\d+\s*화|\Z)"
         match = re.search(pattern, tactical_doc, re.DOTALL)
 
         content = ""
@@ -219,16 +209,10 @@ class BlueprintConstraintCompiler:
         return {
             "content": content[:1000] if content else "이번 화 전술 정보 없음",
             "key_events": key_events[:5],
-            "arc_position": arc_position
+            "arc_position": arc_position,
         }
 
-    def _extract_stop_line(
-        self,
-        arc_data: Dict,
-        ep_num: int,
-        arc_position: int,
-        ep_count: int
-    ) -> Dict:
+    def _extract_stop_line(self, arc_data: dict, ep_num: int, arc_position: int, ep_count: int) -> dict:
         """정지선 추출 (다음 화 내용)"""
         # Arc 마지막 화면 정지선 없음
         if arc_position >= ep_count:
@@ -241,7 +225,7 @@ class BlueprintConstraintCompiler:
             tactical_doc = json.dumps(tactical_doc, ensure_ascii=False, indent=2)
 
         # 다음 화 섹션 추출
-        pattern = rf'\[제\s*{next_ep}\s*화[^\]]*\](.*?)(?=\[제\s*\d+\s*화|\Z)'
+        pattern = rf"\[제\s*{next_ep}\s*화[^\]]*\](.*?)(?=\[제\s*\d+\s*화|\Z)"
         match = re.search(pattern, tactical_doc, re.DOTALL)
 
         content = ""
@@ -253,24 +237,16 @@ class BlueprintConstraintCompiler:
             if arc_position < len(beats):
                 content = beats[arc_position]  # 다음 비트
 
-        return {
-            "content": content if content else None,
-            "is_arc_finale": False,
-            "next_ep": next_ep
-        }
+        return {"content": content if content else None, "is_arc_finale": False, "next_ep": next_ep}
 
-    def _extract_continuity(
-        self,
-        prev_blueprint: Optional[Dict],
-        prev_blueprints: Optional[List[Dict]] = None
-    ) -> Dict:
+    def _extract_continuity(self, prev_blueprint: dict | None, prev_blueprints: list[dict] | None = None) -> dict:
         """연속성 정보 추출"""
         continuity = {
             "prev_ending": None,
             "location": None,
             "time_context": None,
             "ongoing_conflicts": [],
-            "active_characters": []
+            "active_characters": [],
         }
 
         if not prev_blueprint:
@@ -278,15 +254,16 @@ class BlueprintConstraintCompiler:
 
         # 직전 Blueprint에서 추출
         continuity["prev_ending"] = prev_blueprint.get("ending_hook", "")
-        continuity["location"] = prev_blueprint.get("end_location",
-                                   prev_blueprint.get("location", ""))
+        continuity["location"] = prev_blueprint.get("end_location", prev_blueprint.get("location", ""))
         continuity["time_context"] = prev_blueprint.get("time_flow", "")
 
         # scene_breakdown에서 마지막 씬 정보
         scenes = prev_blueprint.get("scene_breakdown", {})
         if scenes and isinstance(scenes, dict):  # [V70] list 타입 방어
             # 마지막 씬 키 찾기
-            scene_keys = sorted(scenes.keys(), key=lambda x: int(re.search(r'\d+', x).group()) if re.search(r'\d+', x) else 0)
+            scene_keys = sorted(
+                scenes.keys(), key=lambda x: int(re.search(r"\d+", x).group()) if re.search(r"\d+", x) else 0
+            )
             if scene_keys:
                 last_scene = scenes.get(scene_keys[-1], {})
                 if isinstance(last_scene, dict):
@@ -312,19 +289,9 @@ class BlueprintConstraintCompiler:
 
         return continuity
 
-    def _extract_inherited_state(
-        self,
-        arc_data: Dict,
-        prev_blueprint: Optional[Dict]
-    ) -> Dict:
+    def _extract_inherited_state(self, arc_data: dict, prev_blueprint: dict | None) -> dict:
         """계승 상태 추출"""
-        inherited = {
-            "equipment": [],
-            "injuries": "없음",
-            "internal_energy": "100%",
-            "companions": [],
-            "mood": "평온"
-        }
+        inherited = {"equipment": [], "injuries": "없음", "internal_energy": "100%", "companions": [], "mood": "평온"}
 
         # Arc의 joint_docs에서 추출
         joint_docs = arc_data.get("joint_docs", {})
@@ -345,7 +312,7 @@ class BlueprintConstraintCompiler:
             energy = shadow.get("internal_energy_loss", "0%")
             if energy:
                 try:
-                    loss = int(re.search(r'(\d+)', str(energy)).group(1))
+                    loss = int(re.search(r"(\d+)", str(energy)).group(1))
                     inherited["internal_energy"] = f"{100 - loss}%"
                 except (ValueError, AttributeError, TypeError):  # [V64.P4] energy parse failure
                     pass
@@ -417,19 +384,14 @@ class BlueprintConstraintCompiler:
         if relations:
             for r in relations[:3]:
                 if isinstance(r, dict):
-                    lines.append(
-                        f"🤝 관계변화: {r.get('npc', '?')} "
-                        f"{r.get('from', '?')}→{r.get('to', '?')}"
-                    )
+                    lines.append(f"🤝 관계변화: {r.get('npc', '?')} {r.get('from', '?')}→{r.get('to', '?')}")
 
         # 주요 아이템
         items = state_changes.get("major_items", [])
         if items:
             for it in items[:3]:
                 if isinstance(it, dict):
-                    lines.append(
-                        f"📦 아이템: {it.get('name', '?')} ({it.get('action', '?')})"
-                    )
+                    lines.append(f"📦 아이템: {it.get('name', '?')} ({it.get('action', '?')})")
 
         # NPC 부상
         injuries = state_changes.get("npc_injuries", [])
@@ -454,9 +416,7 @@ class BlueprintConstraintCompiler:
         if resolved:
             for rp in resolved[:5]:
                 if isinstance(rp, dict):
-                    lines.append(
-                        f"✅ 완결 플롯: {rp.get('plot', '?')} (Arc {rp.get('arc_no', '?')}) → 재발생 금지"
-                    )
+                    lines.append(f"✅ 완결 플롯: {rp.get('plot', '?')} (Arc {rp.get('arc_no', '?')}) → 재발생 금지")
                 elif isinstance(rp, str):
                     lines.append(f"✅ 완결 플롯: {rp} → 재발생 금지")
 

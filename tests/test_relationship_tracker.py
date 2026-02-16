@@ -6,9 +6,10 @@ NPC 관계 상태 머신(validate_transition, record_transition),
 원고 추론(infer_state_from_manuscript), 파워 밸런스 분석.
 """
 
-import pytest
 import sys
 from pathlib import Path
+
+import pytest
 
 # 프로젝트 루트를 path에 추가
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -16,15 +17,12 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from modules.core.relationship_tracker import (
     RelationshipTracker,
-    RelationshipEvent,
-    FactionRelationshipEvent,
-    FactionInfo,
 )
-
 
 # ══════════════════════════════════════════════════════════════
 # Fixtures
 # ══════════════════════════════════════════════════════════════
+
 
 @pytest.fixture
 def tracker():
@@ -45,6 +43,7 @@ def tracker_with_factions(tracker):
 # ══════════════════════════════════════════════════════════════
 # Test 1: validate_transition (NPC FSM)
 # ══════════════════════════════════════════════════════════════
+
 
 class TestValidateTransition:
     def test_valid_transition(self, tracker):
@@ -93,6 +92,7 @@ class TestValidateTransition:
 # Test 2: record_transition
 # ══════════════════════════════════════════════════════════════
 
+
 class TestRecordTransition:
     def test_successful_record(self, tracker):
         """정상 전이 기록"""
@@ -100,9 +100,10 @@ class TestRecordTransition:
             npc_name="철무련주",
             from_state="무시",
             to_state="의심",
-            arc=1, episode=5,
+            arc=1,
+            episode=5,
             trigger="주인공이 마교를 물리치는 모습 목격",
-            justification="무시하던 인물이 강한 것을 봤으므로 의심 시작"
+            justification="무시하던 인물이 강한 것을 봤으므로 의심 시작",
         )
         assert result["valid"] is True
         assert result["event"] is not None
@@ -113,10 +114,12 @@ class TestRecordTransition:
         """trigger 누락 시 실패"""
         result = tracker.record_transition(
             npc_name="철무련주",
-            from_state="무시", to_state="의심",
-            arc=1, episode=5,
+            from_state="무시",
+            to_state="의심",
+            arc=1,
+            episode=5,
             trigger="",  # 누락
-            justification="충분한 근거가 있습니다"
+            justification="충분한 근거가 있습니다",
         )
         assert result["valid"] is False
         assert "trigger" in result["error"]
@@ -125,10 +128,12 @@ class TestRecordTransition:
         """trigger가 너무 짧으면 실패 (5자 미만)"""
         result = tracker.record_transition(
             npc_name="철무련주",
-            from_state="무시", to_state="의심",
-            arc=1, episode=5,
+            from_state="무시",
+            to_state="의심",
+            arc=1,
+            episode=5,
             trigger="했다",  # 3자
-            justification="충분한 근거가 있습니다 이것은 긴 문장입니다"
+            justification="충분한 근거가 있습니다 이것은 긴 문장입니다",
         )
         assert result["valid"] is False
 
@@ -136,10 +141,12 @@ class TestRecordTransition:
         """justification 누락 시 실패"""
         result = tracker.record_transition(
             npc_name="철무련주",
-            from_state="무시", to_state="의심",
-            arc=1, episode=5,
+            from_state="무시",
+            to_state="의심",
+            arc=1,
+            episode=5,
             trigger="마교 격퇴 목격",
-            justification="짧"  # 10자 미만
+            justification="짧",  # 10자 미만
         )
         assert result["valid"] is False
         assert "justification" in result["error"]
@@ -148,10 +155,12 @@ class TestRecordTransition:
         """불가능한 전환은 기록 불가"""
         result = tracker.record_transition(
             npc_name="철무련주",
-            from_state="무시", to_state="충성",
-            arc=1, episode=5,
+            from_state="무시",
+            to_state="충성",
+            arc=1,
+            episode=5,
             trigger="어떤 사건이 발생",
-            justification="이런 저런 이유로 충성하게 되었습니다"
+            justification="이런 저런 이유로 충성하게 되었습니다",
         )
         assert result["valid"] is False
 
@@ -160,12 +169,12 @@ class TestRecordTransition:
 # Test 3: validate_transition_with_justification
 # ══════════════════════════════════════════════════════════════
 
+
 class TestValidateTransitionWithJustification:
     def test_ok_validation(self, tracker):
         """정상 전환 + 충분한 사유"""
         result = tracker.validate_transition_with_justification(
-            "테스트NPC", "무시", "의심",
-            trigger="마교 격퇴", justification=""
+            "테스트NPC", "무시", "의심", trigger="마교 격퇴", justification=""
         )
         # 1단계 점프는 justification 부족해도 trigger만 있으면 OK
         assert result["severity"] in ["OK", "WARNING"]
@@ -173,8 +182,7 @@ class TestValidateTransitionWithJustification:
     def test_big_jump_without_justification(self, tracker):
         """2단계 이상 점프 + justification 부족 시 CRITICAL"""
         result = tracker.validate_transition_with_justification(
-            "테스트NPC", "무시", "경외",
-            trigger="", justification=""
+            "테스트NPC", "무시", "경외", trigger="", justification=""
         )
         # 무시→경외는 FSM에서 불허 (의심 거쳐야 함)
         assert result["severity"] == "CRITICAL"
@@ -185,8 +193,7 @@ class TestValidateTransitionWithJustification:
         # justification 부족 시 CRITICAL.
         # 1단계 전환(경외→충성)에서 trigger만 누락 시 WARNING
         result = tracker.validate_transition_with_justification(
-            "테스트NPC", "경외", "충성",
-            trigger="", justification="목숨을 걸고 지켜준 은혜에 보답하고자 합니다"
+            "테스트NPC", "경외", "충성", trigger="", justification="목숨을 걸고 지켜준 은혜에 보답하고자 합니다"
         )
         assert result["severity"] == "WARNING"
 
@@ -194,6 +201,7 @@ class TestValidateTransitionWithJustification:
 # ══════════════════════════════════════════════════════════════
 # Test 4: infer_state_from_manuscript
 # ══════════════════════════════════════════════════════════════
+
 
 class TestInferStateFromManuscript:
     def test_death_detected(self, tracker):
@@ -226,6 +234,7 @@ class TestInferStateFromManuscript:
 # Test 5: register_faction_v59
 # ══════════════════════════════════════════════════════════════
 
+
 class TestRegisterFaction:
     def test_basic_registration(self, tracker):
         """세력 기본 등록"""
@@ -254,6 +263,7 @@ class TestRegisterFaction:
 # Test 6: validate_faction_transition_v59
 # ══════════════════════════════════════════════════════════════
 
+
 class TestValidateFactionTransition:
     def test_valid_transition(self, tracker):
         """허용된 세력 전환"""
@@ -279,6 +289,7 @@ class TestValidateFactionTransition:
 # ══════════════════════════════════════════════════════════════
 # Test 7: set_faction_relation_v59
 # ══════════════════════════════════════════════════════════════
+
 
 class TestSetFactionRelation:
     def test_symmetric_relation(self, tracker_with_factions):
@@ -318,14 +329,19 @@ class TestSetFactionRelation:
 # Test 8: record_faction_transition_v59
 # ══════════════════════════════════════════════════════════════
 
+
 class TestRecordFactionTransition:
     def test_successful_record(self, tracker_with_factions):
         """정상 세력 전이 기록"""
         result = tracker_with_factions.record_faction_transition_v59(
-            "무림맹", "마교", "경계", "적대",
-            arc=3, episode=15,
+            "무림맹",
+            "마교",
+            "경계",
+            "적대",
+            arc=3,
+            episode=15,
             trigger="마교의 중원 침공 시작",
-            justification="마교가 무림맹 분파를 습격하며 전면 적대 관계 형성"
+            justification="마교가 무림맹 분파를 습격하며 전면 적대 관계 형성",
         )
         assert result["valid"] is True
         assert len(tracker_with_factions.faction_transition_history) == 1
@@ -336,11 +352,15 @@ class TestRecordFactionTransition:
         original_b = tracker_with_factions.factions["마교"].power_level
 
         tracker_with_factions.record_faction_transition_v59(
-            "무림맹", "마교", "경계", "적대",
-            arc=3, episode=15,
+            "무림맹",
+            "마교",
+            "경계",
+            "적대",
+            arc=3,
+            episode=15,
             trigger="마교 침공으로 대규모 충돌",
             justification="무림맹이 선제 방어에 성공하면서 파워 밸런스 변화",
-            power_shift=0.5  # 무림맹 유리
+            power_shift=0.5,  # 무림맹 유리
         )
         assert tracker_with_factions.factions["무림맹"].power_level > original_a
         assert tracker_with_factions.factions["마교"].power_level < original_b
@@ -348,10 +368,7 @@ class TestRecordFactionTransition:
     def test_missing_trigger_fails(self, tracker_with_factions):
         """trigger 누락 시 실패"""
         result = tracker_with_factions.record_faction_transition_v59(
-            "무림맹", "마교", "경계", "적대",
-            arc=3, episode=15,
-            trigger="",
-            justification="충분한 사유가 있습니다"
+            "무림맹", "마교", "경계", "적대", arc=3, episode=15, trigger="", justification="충분한 사유가 있습니다"
         )
         assert result["valid"] is False
 
@@ -359,6 +376,7 @@ class TestRecordFactionTransition:
 # ══════════════════════════════════════════════════════════════
 # Test 9: get_faction_power_balance_v59
 # ══════════════════════════════════════════════════════════════
+
 
 class TestGetFactionPowerBalance:
     def test_basic_balance(self, tracker_with_factions):
@@ -394,6 +412,7 @@ class TestGetFactionPowerBalance:
 # Test 10: infer_faction_state_from_manuscript_v59
 # ══════════════════════════════════════════════════════════════
 
+
 class TestInferFactionState:
     def test_war_detected(self, tracker):
         """전쟁 키워드 감지"""
@@ -422,6 +441,7 @@ class TestInferFactionState:
 # Test 11: generate_transition_prompt
 # ══════════════════════════════════════════════════════════════
 
+
 class TestGenerateTransitionPrompt:
     def test_known_transition(self, tracker):
         """알려진 전환 조건 프롬프트"""
@@ -438,6 +458,7 @@ class TestGenerateTransitionPrompt:
 # ══════════════════════════════════════════════════════════════
 # Test 12: get_transition_history
 # ══════════════════════════════════════════════════════════════
+
 
 class TestGetTransitionHistory:
     def test_empty_history(self, tracker):

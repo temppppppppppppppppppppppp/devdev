@@ -4,12 +4,12 @@
 Gemini Fine-tuning API 자동화
 데이터 수집 → 전처리 → 학습 → 배포 전체 파이프라인
 """
+
 import json
 import logging
-import os
-from typing import List, Dict, Any, Optional
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 
 class FineTuningManager:
@@ -19,11 +19,7 @@ class FineTuningManager:
     데이터 수집부터 모델 학습까지 전체 파이프라인 자동화
     """
 
-    def __init__(
-        self,
-        project_name: str,
-        base_model: str = "gemini-2.5-pro"
-    ):
+    def __init__(self, project_name: str, base_model: str = "gemini-2.5-pro"):
         """
         Args:
             project_name: 프로젝트 이름
@@ -33,7 +29,7 @@ class FineTuningManager:
         self.base_model = base_model
         self.training_jobs = []
 
-    def check_readiness(self, data_dir: str) -> Dict[str, Any]:
+    def check_readiness(self, data_dir: str) -> dict[str, Any]:
         """
         Fine-tuning 준비 상태 확인
 
@@ -46,10 +42,7 @@ class FineTuningManager:
         approved_dir = Path(data_dir) / "approved"
 
         if not approved_dir.exists():
-            return {
-                "ready": False,
-                "reason": "No approved data directory found"
-            }
+            return {"ready": False, "reason": "No approved data directory found"}
 
         # 승인된 원고 수 카운트
         approved_files = list(approved_dir.glob("*.json"))
@@ -62,7 +55,7 @@ class FineTuningManager:
             "ready": approved_count >= min_required,
             "approved_count": approved_count,
             "min_required": min_required,
-            "data_dir": str(approved_dir)
+            "data_dir": str(approved_dir),
         }
 
         if approved_count < min_required:
@@ -75,12 +68,7 @@ class FineTuningManager:
 
         return readiness
 
-    def prepare_training_data(
-        self,
-        data_dir: str,
-        output_file: str = None,
-        max_samples: int = None
-    ) -> str:
+    def prepare_training_data(self, data_dir: str, output_file: str = None, max_samples: int = None) -> str:
         """
         학습 데이터 준비
 
@@ -101,16 +89,16 @@ class FineTuningManager:
         if max_samples:
             approved_files = approved_files[:max_samples]
 
-        with open(output_file, 'w', encoding='utf-8') as out:
+        with open(output_file, "w", encoding="utf-8") as out:
             for file in approved_files:
                 try:
-                    with open(file, 'r', encoding='utf-8') as f:
+                    with open(file, encoding="utf-8") as f:
                         data = json.load(f)
 
                     # Gemini Fine-tuning 포맷
                     training_example = self._create_training_example(data)
 
-                    out.write(json.dumps(training_example, ensure_ascii=False) + '\n')
+                    out.write(json.dumps(training_example, ensure_ascii=False) + "\n")
 
                 except Exception as e:
                     logging.info(f"Error processing {file.name}: {e}")
@@ -121,23 +109,20 @@ class FineTuningManager:
 
         return output_file
 
-    def _create_training_example(self, data: Dict) -> Dict:
+    def _create_training_example(self, data: dict) -> dict:
         """학습 예제 생성"""
-        context = data.get('validation_context', {})
-        blueprint = context.get('blueprint', {})
+        context = data.get("validation_context", {})
+        blueprint = context.get("blueprint", {})
 
         # 입력: 설계도 + 품질 기준
         text_input = self._create_training_prompt(blueprint)
 
         # 출력: 승인된 원고
-        output = data.get('manuscript', '')
+        output = data.get("manuscript", "")
 
-        return {
-            "text_input": text_input,
-            "output": output
-        }
+        return {"text_input": text_input, "output": output}
 
-    def _create_training_prompt(self, blueprint: Dict) -> str:
+    def _create_training_prompt(self, blueprint: dict) -> str:
         """학습용 프롬프트 생성"""
         prompt = """다음 설계도에 따라 고품질 웹소설 원고를 작성하십시오.
 
@@ -163,12 +148,8 @@ class FineTuningManager:
         return prompt
 
     def start_fine_tuning_job(
-        self,
-        training_file: str,
-        tuned_model_name: str = None,
-        learning_rate: float = 0.001,
-        epochs: int = 3
-    ) -> Dict[str, Any]:
+        self, training_file: str, tuned_model_name: str = None, learning_rate: float = 0.001, epochs: int = 3
+    ) -> dict[str, Any]:
         """
         Fine-tuning 작업 시작
 
@@ -189,12 +170,9 @@ class FineTuningManager:
             "base_model": self.base_model,
             "tuned_model_name": tuned_model_name,
             "training_file": training_file,
-            "hyperparameters": {
-                "learning_rate": learning_rate,
-                "epochs": epochs
-            },
+            "hyperparameters": {"learning_rate": learning_rate, "epochs": epochs},
             "status": "PREPARING",
-            "created_at": datetime.now().isoformat()
+            "created_at": datetime.now().isoformat(),
         }
 
         self.training_jobs.append(job_info)
@@ -215,11 +193,7 @@ class FineTuningManager:
 
         return job_info
 
-    def estimate_cost(
-        self,
-        num_samples: int,
-        epochs: int = 3
-    ) -> Dict[str, float]:
+    def estimate_cost(self, num_samples: int, epochs: int = 3) -> dict[str, float]:
         """
         Fine-tuning 비용 추정
 
@@ -244,10 +218,10 @@ class FineTuningManager:
             "total_training_samples": total_training_samples,
             "estimated_cost_usd": estimated_cost,
             "estimated_cost_krw": estimated_cost * 1300,
-            "note": "실제 비용은 Google AI Studio에서 확인하세요"
+            "note": "실제 비용은 Google AI Studio에서 확인하세요",
         }
 
-    def validate_training_data(self, training_file: str) -> Dict[str, Any]:
+    def validate_training_data(self, training_file: str) -> dict[str, Any]:
         """
         학습 데이터 유효성 검증
 
@@ -261,19 +235,19 @@ class FineTuningManager:
         samples = []
 
         try:
-            with open(training_file, 'r', encoding='utf-8') as f:
+            with open(training_file, encoding="utf-8") as f:
                 for line_num, line in enumerate(f, 1):
                     try:
                         sample = json.loads(line)
 
                         # 필수 필드 확인
-                        if 'text_input' not in sample:
+                        if "text_input" not in sample:
                             issues.append(f"Line {line_num}: Missing 'text_input'")
-                        if 'output' not in sample:
+                        if "output" not in sample:
                             issues.append(f"Line {line_num}: Missing 'output'")
 
                         # 길이 확인
-                        if len(sample.get('output', '')) < 1000:
+                        if len(sample.get("output", "")) < 1000:
                             issues.append(f"Line {line_num}: Output too short ({len(sample.get('output', ''))} chars)")
 
                         samples.append(sample)
@@ -288,15 +262,11 @@ class FineTuningManager:
             "valid": len(issues) == 0,
             "num_samples": len(samples),
             "issues": issues,
-            "avg_input_length": sum(len(s.get('text_input', '')) for s in samples) / len(samples) if samples else 0,
-            "avg_output_length": sum(len(s.get('output', '')) for s in samples) / len(samples) if samples else 0
+            "avg_input_length": sum(len(s.get("text_input", "")) for s in samples) / len(samples) if samples else 0,
+            "avg_output_length": sum(len(s.get("output", "")) for s in samples) / len(samples) if samples else 0,
         }
 
-    def generate_fine_tuning_report(
-        self,
-        data_dir: str,
-        output_file: str = "finetuning_report.txt"
-    ) -> str:
+    def generate_fine_tuning_report(self, data_dir: str, output_file: str = "finetuning_report.txt") -> str:
         """
         Fine-tuning 준비 리포트 생성
 
@@ -323,7 +293,7 @@ class FineTuningManager:
         report.append(f"Approved Manuscripts: {readiness['approved_count']}")
         report.append(f"Required Minimum: {readiness['min_required']}")
 
-        if not readiness['ready']:
+        if not readiness["ready"]:
             report.append(f"Reason: {readiness['reason']}")
         else:
             report.append(f"Message: {readiness['message']}")
@@ -331,8 +301,8 @@ class FineTuningManager:
         report.append("")
 
         # 비용 추정
-        if readiness['ready']:
-            cost = self.estimate_cost(readiness['approved_count'])
+        if readiness["ready"]:
+            cost = self.estimate_cost(readiness["approved_count"])
             report.append("--- Cost Estimation ---")
             report.append(f"Training Samples: {cost['total_training_samples']:,}")
             report.append(f"Estimated Cost: ${cost['estimated_cost_usd']:.2f} USD")
@@ -342,7 +312,7 @@ class FineTuningManager:
 
         # 다음 단계
         report.append("--- Next Steps ---")
-        if readiness['ready']:
+        if readiness["ready"]:
             report.append("1. Run: manager.prepare_training_data(data_dir)")
             report.append("2. Validate: manager.validate_training_data(training_file)")
             report.append("3. Upload to Google AI Studio")
@@ -358,7 +328,7 @@ class FineTuningManager:
         report_text = "\n".join(report)
 
         # 파일 저장
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             f.write(report_text)
 
         return report_text
@@ -379,27 +349,18 @@ class FineTuningMonitor:
         self.project_name = project_name
         self.metrics_log = []
 
-    def log_training_metrics(
-        self,
-        epoch: int,
-        loss: float,
-        validation_loss: float = None
-    ):
+    def log_training_metrics(self, epoch: int, loss: float, validation_loss: float = None):
         """학습 메트릭 로그"""
         metric = {
-            'epoch': epoch,
-            'loss': loss,
-            'validation_loss': validation_loss,
-            'timestamp': datetime.now().isoformat()
+            "epoch": epoch,
+            "loss": loss,
+            "validation_loss": validation_loss,
+            "timestamp": datetime.now().isoformat(),
         }
 
         self.metrics_log.append(metric)
 
-    def compare_base_vs_tuned(
-        self,
-        base_results: List[Dict],
-        tuned_results: List[Dict]
-    ) -> Dict[str, Any]:
+    def compare_base_vs_tuned(self, base_results: list[dict], tuned_results: list[dict]) -> dict[str, Any]:
         """
         기본 모델 vs 튜닝 모델 성능 비교
 
@@ -418,39 +379,36 @@ class FineTuningMonitor:
         tuned_analysis = optimizer.analyze_validation_results(tuned_results)
 
         comparison = {
-            'base_model': {
-                'avg_score': base_analysis['avg_score'],
-                'pass_rate': base_analysis['pass_rate'],
-                'std_dev': base_analysis['std_dev']
+            "base_model": {
+                "avg_score": base_analysis["avg_score"],
+                "pass_rate": base_analysis["pass_rate"],
+                "std_dev": base_analysis["std_dev"],
             },
-            'tuned_model': {
-                'avg_score': tuned_analysis['avg_score'],
-                'pass_rate': tuned_analysis['pass_rate'],
-                'std_dev': tuned_analysis['std_dev']
+            "tuned_model": {
+                "avg_score": tuned_analysis["avg_score"],
+                "pass_rate": tuned_analysis["pass_rate"],
+                "std_dev": tuned_analysis["std_dev"],
             },
-            'improvements': {
-                'score_improvement': tuned_analysis['avg_score'] - base_analysis['avg_score'],
-                'pass_rate_improvement': tuned_analysis['pass_rate'] - base_analysis['pass_rate'],
-                'consistency_improvement': base_analysis['std_dev'] - tuned_analysis['std_dev']
-            }
+            "improvements": {
+                "score_improvement": tuned_analysis["avg_score"] - base_analysis["avg_score"],
+                "pass_rate_improvement": tuned_analysis["pass_rate"] - base_analysis["pass_rate"],
+                "consistency_improvement": base_analysis["std_dev"] - tuned_analysis["std_dev"],
+            },
         }
 
         # ROI 계산 (간단 버전)
-        if comparison['improvements']['score_improvement'] > 5:
-            comparison['roi'] = "HIGH - Fine-tuning significantly improved performance"
-        elif comparison['improvements']['score_improvement'] > 2:
-            comparison['roi'] = "MEDIUM - Fine-tuning moderately improved performance"
+        if comparison["improvements"]["score_improvement"] > 5:
+            comparison["roi"] = "HIGH - Fine-tuning significantly improved performance"
+        elif comparison["improvements"]["score_improvement"] > 2:
+            comparison["roi"] = "MEDIUM - Fine-tuning moderately improved performance"
         else:
-            comparison['roi'] = "LOW - Fine-tuning had minimal impact"
+            comparison["roi"] = "LOW - Fine-tuning had minimal impact"
 
         return comparison
 
 
 # 편의 함수
-def quick_finetuning_check(
-    project_name: str,
-    data_dir: str
-) -> str:
+def quick_finetuning_check(project_name: str, data_dir: str) -> str:
     """
     빠른 Fine-tuning 준비 확인
 

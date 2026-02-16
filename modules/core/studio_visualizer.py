@@ -1,37 +1,34 @@
-from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeRemainingColumn
-from rich.layout import Layout
 from rich import box
-import time
-from rich.live import Live
+from rich.console import Console
+from rich.layout import Layout
+from rich.panel import Panel
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeRemainingColumn
+from rich.table import Table
+
 
 class StudioVisualizer:
     def __init__(self) -> None:
         self.console = Console()
-        self.layout = Layout()    
+        self.layout = Layout()
 
     def make_cockpit_layout(self, ep_num: int, martial_data: str, causal_data: str):
-            """화면을 좌/우로 분할하여 정보를 배치합니다."""
-            # [🚨 수정] 매 호출마다 레이아웃을 초기화하여 중복 분할 에러 방지
-            from rich.layout import Layout # (필요시 내부 임포트 혹은 상단 확인)
-            self.layout = Layout() 
-            
-            self.layout.split_row(
-                Layout(name="main", ratio=2), # 집필 로그
-                Layout(name="side", ratio=1)  # 상태창 및 인과관계
-            )
-            
-            self.layout["side"].split_column(
-                Layout(name="martial", size=15),
-                Layout(name="causal")
-            )
-            
-           # 패널 테두리와 스타일 보강
-            self.layout["martial"].update(Panel(martial_data, title=f"⚔️ Martial HUD (Ep. {ep_num})", border_style="cyan"))
-            self.layout["causal"].update(Panel(causal_data, title="🔗 Causal Tracker", border_style="yellow"))
-            return self.layout
+        """화면을 좌/우로 분할하여 정보를 배치합니다."""
+        # [🚨 수정] 매 호출마다 레이아웃을 초기화하여 중복 분할 에러 방지
+        from rich.layout import Layout  # (필요시 내부 임포트 혹은 상단 확인)
+
+        self.layout = Layout()
+
+        self.layout.split_row(
+            Layout(name="main", ratio=2),  # 집필 로그
+            Layout(name="side", ratio=1),  # 상태창 및 인과관계
+        )
+
+        self.layout["side"].split_column(Layout(name="martial", size=15), Layout(name="causal"))
+
+        # 패널 테두리와 스타일 보강
+        self.layout["martial"].update(Panel(martial_data, title=f"⚔️ Martial HUD (Ep. {ep_num})", border_style="cyan"))
+        self.layout["causal"].update(Panel(causal_data, title="🔗 Causal Tracker", border_style="yellow"))
+        return self.layout
 
     def title(self, text: str, sub_text: str = "") -> None:
         self.console.clear()
@@ -45,9 +42,14 @@ class StudioVisualizer:
     def print_agent(self, agent_name: str, message: str, color: str = "white") -> None:
         """에이전트별 고유 색상 패널 출력"""
         emoji_map = {
-            "Analyst": "🧠", "Architect": "📐", "Writer": "✍️",
-            "Editor": "💅", "Director": "🎬", "Manager": "💼",
-            "Weaver": "🕸️", "System": "🤖"
+            "Analyst": "🧠",
+            "Architect": "📐",
+            "Writer": "✍️",
+            "Editor": "💅",
+            "Director": "🎬",
+            "Manager": "💼",
+            "Weaver": "🕸️",
+            "System": "🤖",
         }
         icon = emoji_map.get(agent_name, "🤖")
         self.console.print(Panel(message, title=f"{icon} [bold {color}]{agent_name}[/]", border_style=color))
@@ -58,12 +60,8 @@ class StudioVisualizer:
         table.add_column("Episode", justify="center")
         table.add_column("Current Module", justify="center")
         table.add_column("Active Seeds", justify="center")
-        
-        table.add_row(
-            f"[bold yellow]제 {episode} 화[/]", 
-            f"[green]{module_name}[/]", 
-            f"[red]{seeds_count} 개[/]"
-        )
+
+        table.add_row(f"[bold yellow]제 {episode} 화[/]", f"[green]{module_name}[/]", f"[red]{seeds_count} 개[/]")
         self.console.print(table)
 
     def menu(self, items: dict) -> str:
@@ -87,5 +85,5 @@ class StudioVisualizer:
             BarColumn(),
             TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
             TimeRemainingColumn(),
-            console=self.console
+            console=self.console,
         )

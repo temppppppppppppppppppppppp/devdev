@@ -15,38 +15,40 @@
 5. ABORT: 중단 및 사용자 개입 요청
 """
 
-import json
 import logging
 import time
-import traceback
-from typing import Dict, Any, Optional, Callable, List, Tuple
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import Any
 
 
 class FailureLevel(Enum):
     """실패 심각도 레벨"""
-    RECOVERABLE = 1      # 자동 복구 가능
-    DEGRADED = 2         # 품질 저하로 진행 가능
-    CRITICAL = 3         # 사용자 개입 필요
-    FATAL = 4            # 즉시 중단
+
+    RECOVERABLE = 1  # 자동 복구 가능
+    DEGRADED = 2  # 품질 저하로 진행 가능
+    CRITICAL = 3  # 사용자 개입 필요
+    FATAL = 4  # 즉시 중단
 
 
 class RecoveryStrategy(Enum):
     """복구 전략"""
-    RETRY = "retry"              # 재시도
+
+    RETRY = "retry"  # 재시도
     FALLBACK_MODEL = "fallback"  # 백업 모델
-    REDUCE_COMPLEXITY = "reduce" # 복잡도 감소
-    USE_CACHE = "cache"          # 캐시 사용
-    PARTIAL_RESULT = "partial"   # 부분 결과
-    SKIP = "skip"                # 건너뛰기
-    ABORT = "abort"              # 중단
+    REDUCE_COMPLEXITY = "reduce"  # 복잡도 감소
+    USE_CACHE = "cache"  # 캐시 사용
+    PARTIAL_RESULT = "partial"  # 부분 결과
+    SKIP = "skip"  # 건너뛰기
+    ABORT = "abort"  # 중단
 
 
 @dataclass
 class FailureRecord:
     """실패 기록"""
+
     timestamp: str
     stage: str
     agent: str
@@ -54,7 +56,7 @@ class FailureRecord:
     error_message: str
     recovery_attempted: str
     recovery_success: bool
-    context: Dict[str, Any] = field(default_factory=dict)
+    context: dict[str, Any] = field(default_factory=dict)
 
 
 class GracefulDegradation:
@@ -76,32 +78,32 @@ class GracefulDegradation:
 
     # 에이전트별 복구 전략
     AGENT_RECOVERY_CHAINS = {
-        'analyst': [
+        "analyst": [
             RecoveryStrategy.RETRY,
             RecoveryStrategy.FALLBACK_MODEL,
             RecoveryStrategy.REDUCE_COMPLEXITY,
             RecoveryStrategy.ABORT,
         ],
-        'architect': [
+        "architect": [
             RecoveryStrategy.RETRY,
             RecoveryStrategy.FALLBACK_MODEL,
             RecoveryStrategy.USE_CACHE,
             RecoveryStrategy.PARTIAL_RESULT,
             RecoveryStrategy.ABORT,
         ],
-        'writer': [
+        "writer": [
             RecoveryStrategy.RETRY,
             RecoveryStrategy.FALLBACK_MODEL,
             RecoveryStrategy.REDUCE_COMPLEXITY,
             RecoveryStrategy.PARTIAL_RESULT,
             RecoveryStrategy.ABORT,
         ],
-        'director': [
+        "director": [
             RecoveryStrategy.RETRY,
             RecoveryStrategy.FALLBACK_MODEL,
             RecoveryStrategy.SKIP,  # Director 실패 시 검증 건너뛰기
         ],
-        'default': [
+        "default": [
             RecoveryStrategy.RETRY,
             RecoveryStrategy.FALLBACK_MODEL,
             RecoveryStrategy.ABORT,
@@ -110,22 +112,22 @@ class GracefulDegradation:
 
     # 오류 유형별 복구 전략 매핑
     ERROR_RECOVERY_MAP = {
-        'RateLimitError': RecoveryStrategy.RETRY,
-        'TimeoutError': RecoveryStrategy.RETRY,
-        'JSONDecodeError': RecoveryStrategy.RETRY,
-        'ContentFilterError': RecoveryStrategy.REDUCE_COMPLEXITY,
-        'TokenLimitError': RecoveryStrategy.REDUCE_COMPLEXITY,
-        'ModelOverloadError': RecoveryStrategy.FALLBACK_MODEL,
-        'ValidationError': RecoveryStrategy.RETRY,
-        'NetworkError': RecoveryStrategy.RETRY,
+        "RateLimitError": RecoveryStrategy.RETRY,
+        "TimeoutError": RecoveryStrategy.RETRY,
+        "JSONDecodeError": RecoveryStrategy.RETRY,
+        "ContentFilterError": RecoveryStrategy.REDUCE_COMPLEXITY,
+        "TokenLimitError": RecoveryStrategy.REDUCE_COMPLEXITY,
+        "ModelOverloadError": RecoveryStrategy.FALLBACK_MODEL,
+        "ValidationError": RecoveryStrategy.RETRY,
+        "NetworkError": RecoveryStrategy.RETRY,
     }
 
     # 백업 모델 매핑
     FALLBACK_MODELS = {
-        'gemini-3-pro-preview': 'gemini-2.5-pro',
-        'gemini-2.5-pro': 'gemini-2.5-flash',
-        'gemini-2.5-flash': 'gemini-2.0-flash',
-        'gemini-2.0-flash': 'gemini-1.5-flash',
+        "gemini-3-pro-preview": "gemini-2.5-pro",
+        "gemini-2.5-pro": "gemini-2.5-flash",
+        "gemini-2.5-flash": "gemini-2.0-flash",
+        "gemini-2.0-flash": "gemini-1.5-flash",
     }
 
     def __init__(self, max_retries: int = 3, retry_delay: float = 2.0):
@@ -136,22 +138,17 @@ class GracefulDegradation:
         """
         self.max_retries = max_retries
         self.retry_delay = retry_delay
-        self.failure_history: List[FailureRecord] = []
+        self.failure_history: list[FailureRecord] = []
         self.recovery_stats = {
-            'total_failures': 0,
-            'recovered': 0,
-            'degraded': 0,
-            'aborted': 0,
+            "total_failures": 0,
+            "recovered": 0,
+            "degraded": 0,
+            "aborted": 0,
         }
 
     def execute_with_recovery(
-        self,
-        func: Callable,
-        agent_name: str,
-        stage: str,
-        context: Dict[str, Any] = None,
-        fallback_result: Any = None
-    ) -> Tuple[Any, Dict[str, Any]]:
+        self, func: Callable, agent_name: str, stage: str, context: dict[str, Any] = None, fallback_result: Any = None
+    ) -> tuple[Any, dict[str, Any]]:
         """
         복구 체인을 적용하여 함수 실행
 
@@ -167,23 +164,20 @@ class GracefulDegradation:
         """
         context = context or {}
         metadata = {
-            'attempts': 0,
-            'recovery_used': [],
-            'final_status': 'unknown',
-            'degraded': False,
+            "attempts": 0,
+            "recovery_used": [],
+            "final_status": "unknown",
+            "degraded": False,
         }
 
-        recovery_chain = self.AGENT_RECOVERY_CHAINS.get(
-            agent_name,
-            self.AGENT_RECOVERY_CHAINS['default']
-        )
+        recovery_chain = self.AGENT_RECOVERY_CHAINS.get(agent_name, self.AGENT_RECOVERY_CHAINS["default"])
 
         current_strategy_idx = 0
         retry_count = 0
 
         while current_strategy_idx < len(recovery_chain):
             strategy = recovery_chain[current_strategy_idx]
-            metadata['attempts'] += 1
+            metadata["attempts"] += 1
 
             try:
                 # 전략에 따른 컨텍스트 수정
@@ -198,8 +192,8 @@ class GracefulDegradation:
 
                 # 성공
                 if result is not None:
-                    metadata['final_status'] = 'success'
-                    self.recovery_stats['recovered'] += 1
+                    metadata["final_status"] = "success"
+                    self.recovery_stats["recovered"] += 1
                     return result, metadata
 
                 raise ValueError("결과가 None입니다")
@@ -216,7 +210,7 @@ class GracefulDegradation:
                     error_message=error_message,
                     recovery_attempted=strategy.value,
                     recovery_success=False,
-                    context=context
+                    context=context,
                 )
 
                 logging.info(f"⚠️ [{agent_name}] {error_type}: {error_message[:100]}")
@@ -235,15 +229,15 @@ class GracefulDegradation:
                         continue
 
                 # 다음 전략으로 이동
-                metadata['recovery_used'].append(strategy.value)
+                metadata["recovery_used"].append(strategy.value)
                 current_strategy_idx += 1
 
                 # SKIP 전략
                 if strategy == RecoveryStrategy.SKIP:
                     logging.info(f"⏭️ [{agent_name}] 건너뛰기")
-                    metadata['final_status'] = 'skipped'
-                    metadata['degraded'] = True
-                    self.recovery_stats['degraded'] += 1
+                    metadata["final_status"] = "skipped"
+                    metadata["degraded"] = True
+                    self.recovery_stats["degraded"] += 1
                     return fallback_result, metadata
 
                 # ABORT 전략
@@ -251,48 +245,45 @@ class GracefulDegradation:
                     break
 
         # 모든 복구 전략 실패
-        metadata['final_status'] = 'aborted'
-        self.recovery_stats['aborted'] += 1
-        self.recovery_stats['total_failures'] += 1
+        metadata["final_status"] = "aborted"
+        self.recovery_stats["aborted"] += 1
+        self.recovery_stats["total_failures"] += 1
 
         logging.warning(f"🚨 [{agent_name}] 모든 복구 전략 실패 - 중단")
         return fallback_result, metadata
 
     def _apply_strategy(
-        self,
-        strategy: RecoveryStrategy,
-        context: Dict[str, Any],
-        metadata: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, strategy: RecoveryStrategy, context: dict[str, Any], metadata: dict[str, Any]
+    ) -> dict[str, Any]:
         """복구 전략 적용"""
         modified = context.copy()
 
         if strategy == RecoveryStrategy.FALLBACK_MODEL:
-            current_model = context.get('model', 'gemini-2.5-pro')
+            current_model = context.get("model", "gemini-2.5-pro")
             fallback = self.FALLBACK_MODELS.get(current_model)
             if fallback:
-                modified['model'] = fallback
-                modified['_fallback_applied'] = True
+                modified["model"] = fallback
+                modified["_fallback_applied"] = True
                 logging.info(f"🔀 백업 모델로 전환: {current_model} → {fallback}")
 
         elif strategy == RecoveryStrategy.REDUCE_COMPLEXITY:
             # 온도 낮추기
-            modified['temperature'] = max(0.1, context.get('temperature', 0.5) - 0.2)
+            modified["temperature"] = max(0.1, context.get("temperature", 0.5) - 0.2)
             # 토큰 제한 줄이기
-            modified['max_tokens'] = int(context.get('max_tokens', 8192) * 0.7)
+            modified["max_tokens"] = int(context.get("max_tokens", 8192) * 0.7)
             # 프롬프트 단순화 플래그
-            modified['_simplified'] = True
+            modified["_simplified"] = True
             logging.info(f"📉 복잡도 감소: temp={modified['temperature']}, tokens={modified['max_tokens']}")
-            metadata['degraded'] = True
+            metadata["degraded"] = True
 
         elif strategy == RecoveryStrategy.USE_CACHE:
-            modified['_use_cache'] = True
-            logging.info(f"💾 캐시 사용 시도")
+            modified["_use_cache"] = True
+            logging.info("💾 캐시 사용 시도")
 
         elif strategy == RecoveryStrategy.PARTIAL_RESULT:
-            modified['_accept_partial'] = True
-            metadata['degraded'] = True
-            logging.info(f"📄 부분 결과 허용")
+            modified["_accept_partial"] = True
+            metadata["degraded"] = True
+            logging.info("📄 부분 결과 허용")
 
         return modified
 
@@ -304,7 +295,7 @@ class GracefulDegradation:
         error_message: str,
         recovery_attempted: str,
         recovery_success: bool,
-        context: Dict[str, Any]
+        context: dict[str, Any],
     ):
         """실패 기록"""
         record = FailureRecord(
@@ -315,7 +306,7 @@ class GracefulDegradation:
             error_message=error_message[:500],
             recovery_attempted=recovery_attempted,
             recovery_success=recovery_success,
-            context={k: str(v)[:100] for k, v in context.items() if k != 'prompt'}
+            context={k: str(v)[:100] for k, v in context.items() if k != "prompt"},
         )
         self.failure_history.append(record)
 
@@ -327,20 +318,20 @@ class GracefulDegradation:
         """오류 유형에 따른 복구 전략 제안"""
         return self.ERROR_RECOVERY_MAP.get(error_type, RecoveryStrategy.RETRY)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """복구 통계"""
-        total = self.recovery_stats['total_failures']
+        total = self.recovery_stats["total_failures"]
         if total == 0:
             return {
                 **self.recovery_stats,
-                'recovery_rate': 100.0,
-                'degradation_rate': 0.0,
+                "recovery_rate": 100.0,
+                "degradation_rate": 0.0,
             }
 
         return {
             **self.recovery_stats,
-            'recovery_rate': self.recovery_stats['recovered'] / max(1, total) * 100,
-            'degradation_rate': self.recovery_stats['degraded'] / max(1, total) * 100,
+            "recovery_rate": self.recovery_stats["recovered"] / max(1, total) * 100,
+            "degradation_rate": self.recovery_stats["degraded"] / max(1, total) * 100,
         }
 
     def get_failure_summary(self) -> str:
@@ -387,11 +378,8 @@ class ValidationRecovery:
         self.client = client
 
     def attempt_auto_fix(
-        self,
-        content: str,
-        validation_result: Dict[str, Any],
-        content_type: str = "manuscript"
-    ) -> Tuple[Optional[str], Dict[str, Any]]:
+        self, content: str, validation_result: dict[str, Any], content_type: str = "manuscript"
+    ) -> tuple[str | None, dict[str, Any]]:
         """
         검증 실패 내용 자동 수정 시도
 
@@ -404,12 +392,12 @@ class ValidationRecovery:
             (수정된 내용 또는 None, 메타데이터)
         """
         metadata = {
-            'attempted': True,
-            'fix_type': None,
-            'success': False,
+            "attempted": True,
+            "fix_type": None,
+            "success": False,
         }
 
-        issues = validation_result.get('issues', [])
+        issues = validation_result.get("issues", [])
         if not issues:
             return None, metadata
 
@@ -417,7 +405,7 @@ class ValidationRecovery:
         fixable_issues = [i for i in issues if self._is_auto_fixable(i)]
 
         if not fixable_issues:
-            metadata['fix_type'] = 'none_fixable'
+            metadata["fix_type"] = "none_fixable"
             return None, metadata
 
         # Python 기반 자동 수정 시도
@@ -428,80 +416,71 @@ class ValidationRecovery:
             fix_result = self._apply_python_fix(fixed_content, issue)
             if fix_result:
                 fixed_content = fix_result
-                fixes_applied.append(issue['type'])
+                fixes_applied.append(issue["type"])
 
         if fixes_applied:
-            metadata['fix_type'] = 'python'
-            metadata['fixes_applied'] = fixes_applied
-            metadata['success'] = True
+            metadata["fix_type"] = "python"
+            metadata["fixes_applied"] = fixes_applied
+            metadata["success"] = True
             return fixed_content, metadata
 
         # LLM 기반 수정 (비용 발생)
         if self.client and len(fixable_issues) <= 3:
             llm_result = self._apply_llm_fix(content, fixable_issues, content_type)
             if llm_result:
-                metadata['fix_type'] = 'llm'
-                metadata['success'] = True
+                metadata["fix_type"] = "llm"
+                metadata["success"] = True
                 return llm_result, metadata
 
         return None, metadata
 
-    def _is_auto_fixable(self, issue: Dict) -> bool:
+    def _is_auto_fixable(self, issue: dict) -> bool:
         """자동 수정 가능 여부 판단"""
         fixable_types = [
-            'word_repetition',      # 단어 반복
-            'sentence_ending',      # 문장 종결 형식
-            'dialogue_tag',         # 대사 태그
-            'whitespace',           # 공백 문제
-            'formatting',           # 포맷팅
-            'length_issue',         # 길이 문제 (잘라내기)
+            "word_repetition",  # 단어 반복
+            "sentence_ending",  # 문장 종결 형식
+            "dialogue_tag",  # 대사 태그
+            "whitespace",  # 공백 문제
+            "formatting",  # 포맷팅
+            "length_issue",  # 길이 문제 (잘라내기)
         ]
 
-        return issue.get('type') in fixable_types or \
-               issue.get('auto_fixable', False)
+        return issue.get("type") in fixable_types or issue.get("auto_fixable", False)
 
-    def _apply_python_fix(self, content: str, issue: Dict) -> Optional[str]:
+    def _apply_python_fix(self, content: str, issue: dict) -> str | None:
         """Python 기반 자동 수정"""
         import re
 
-        issue_type = issue.get('type', '')
+        issue_type = issue.get("type", "")
 
-        if issue_type == 'word_repetition':
+        if issue_type == "word_repetition":
             # 반복 단어 일부 제거/대체
-            word = issue.get('word', '')
+            word = issue.get("word", "")
             if word and len(word) >= 2:
                 # 연속 반복만 제거
-                pattern = rf'({re.escape(word)})\s+\1'
-                return re.sub(pattern, r'\1', content)
+                pattern = rf"({re.escape(word)})\s+\1"
+                return re.sub(pattern, r"\1", content)
 
-        elif issue_type == 'whitespace':
+        elif issue_type == "whitespace":
             # 과다 공백 정리
-            content = re.sub(r'[ \t]+', ' ', content)
-            content = re.sub(r'\n{3,}', '\n\n', content)
+            content = re.sub(r"[ \t]+", " ", content)
+            content = re.sub(r"\n{3,}", "\n\n", content)
             return content
 
-        elif issue_type == 'sentence_ending':
+        elif issue_type == "sentence_ending":
             # 문장 종결 통일 (간단한 케이스만)
             # "했다." 스타일로 통일
             pass
 
         return None
 
-    def _apply_llm_fix(
-        self,
-        content: str,
-        issues: List[Dict],
-        content_type: str
-    ) -> Optional[str]:
+    def _apply_llm_fix(self, content: str, issues: list[dict], content_type: str) -> str | None:
         """LLM 기반 자동 수정 (비용 발생)"""
         if not self.client:
             return None
 
         try:
-            issues_desc = "\n".join([
-                f"- {i.get('type')}: {i.get('message', '')}"
-                for i in issues[:3]
-            ])
+            issues_desc = "\n".join([f"- {i.get('type')}: {i.get('message', '')}" for i in issues[:3]])
 
             prompt = f"""다음 {content_type}의 문제를 수정해주세요.
 
@@ -518,9 +497,7 @@ class ValidationRecovery:
 """
 
             response = self.client.models.generate_content(
-                model="gemini-2.0-flash",
-                contents=prompt,
-                config={"temperature": 0.3, "max_output_tokens": 4096}
+                model="gemini-2.0-flash", contents=prompt, config={"temperature": 0.3, "max_output_tokens": 4096}
             )
 
             return response.text
