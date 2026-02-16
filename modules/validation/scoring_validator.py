@@ -206,13 +206,20 @@ Step 5: Article 6 (패턴 다양성) 분석
 - 클리셰를 피하고 있는가?
 → 점수와 이유 도출
 
+Step 6: Article 7 (독자 대리만족) 분석
+- 주인공이 성취/승리/인정받는 장면이 있는가? (0~4점)
+- 주인공이 자력으로 문제를 해결하는가? 타인 구출 의존이 아닌가? (0~3점)
+- 독자가 주인공의 감정에 공감할 수 있는 내면 묘사가 있는가? (0~3점)
+→ 점수와 이유 도출
+
 각 Article의 점수를 JSON으로 반환하십시오:
 {{
     "character_consistency": {{"score": X, "max": 15, "reason": "..."}},
-    "emotion_arc": {{"score": X, "max": 20, "reason": "..."}},
+    "emotion_arc": {{"score": X, "max": 15, "reason": "..."}},
     "dialogue_quality": {{"score": X, "max": 15, "reason": "..."}},
-    "commercial_appeal": {{"score": X, "max": 20, "reason": "..."}},
-    "pattern_diversity": {{"score": X, "max": 10, "reason": "..."}}
+    "commercial_appeal": {{"score": X, "max": 15, "reason": "..."}},
+    "pattern_diversity": {{"score": X, "max": 10, "reason": "..."}},
+    "reader_satisfaction": {{"score": X, "max": 10, "reason": "..."}}
 }}
 """
 
@@ -275,7 +282,7 @@ Step 5: Article 6 (패턴 다양성) 분석
 
         # 감정선 (문장 부호 다양성으로 추정)
         emotion_markers = manuscript.count("!") + manuscript.count("?") + manuscript.count("…")
-        emotion_score = min(20, 10 + int(emotion_markers / 5))
+        emotion_score = min(15, 8 + int(emotion_markers / 5))
 
         # 대화 품질 (따옴표 빈도로 추정)
         # [V44] 서로 다른 유형의 따옴표 카운트 (직선형 + 곡선형)
@@ -283,17 +290,21 @@ Step 5: Article 6 (패턴 다양성) 분석
         dialogue_score = min(15, 5 + int(dialogue_count / 10))
 
         # 상업성 (길이와 구조로 추정)
-        commercial_score = min(20, 10 + int(ms_length / 500))
+        commercial_score = min(15, 8 + int(ms_length / 500))
 
         # 패턴 다양성 (단순 중간값)
         pattern_score = 6
 
+        # [Phase 3-D1] 독자 대리만족 (단순 중간값)
+        satisfaction_score = 5
+
         return {
             "character_consistency": {"score": char_score, "max": 15, "reason": "⚠️ LLM 없음 - Fallback 추정치"},
-            "emotion_arc": {"score": emotion_score, "max": 20, "reason": "⚠️ LLM 없음 - Fallback 추정치"},
+            "emotion_arc": {"score": emotion_score, "max": 15, "reason": "⚠️ LLM 없음 - Fallback 추정치"},
             "dialogue_quality": {"score": dialogue_score, "max": 15, "reason": "⚠️ LLM 없음 - Fallback 추정치"},
-            "commercial_appeal": {"score": commercial_score, "max": 20, "reason": "⚠️ LLM 없음 - Fallback 추정치"},
+            "commercial_appeal": {"score": commercial_score, "max": 15, "reason": "⚠️ LLM 없음 - Fallback 추정치"},
             "pattern_diversity": {"score": pattern_score, "max": 10, "reason": "⚠️ LLM 없음 - Fallback 추정치"},
+            "reader_satisfaction": {"score": satisfaction_score, "max": 10, "reason": "⚠️ LLM 없음 - Fallback 추정치"},
         }
 
     # ========================================================================
@@ -669,6 +680,7 @@ Step 5: Article 6 (패턴 다양성) 분석
             "dialogue_quality": 1.0,
             "commercial_appeal": 1.1,  # 상업성 약간 중요
             "pattern_diversity": 1.1,  # 패턴 다양성 약간 중요
+            "reader_satisfaction": 1.3,  # [Phase 3-D1] 무협: 경지돌파/복수 쾌감
         },
         "hunter": {
             # 헌터: 시스템/스킬 묘사와 성장이 중요
@@ -681,6 +693,7 @@ Step 5: Article 6 (패턴 다양성) 분석
             "dialogue_quality": 0.9,
             "commercial_appeal": 1.3,  # 상업성 매우 중요
             "pattern_diversity": 1.0,
+            "reader_satisfaction": 1.2,  # [Phase 3-D1] 헌터: 레벨업/아이템 획득
         },
         "investment": {
             # 투자: 논리적 전개와 긴장감이 중요
@@ -693,6 +706,7 @@ Step 5: Article 6 (패턴 다양성) 분석
             "dialogue_quality": 1.1,
             "commercial_appeal": 1.0,
             "pattern_diversity": 1.2,  # 패턴 다양성 중요 (뻔한 전개 방지)
+            "reader_satisfaction": 0.8,  # [Phase 3-D1] 투자: 서스펜스 위주
         },
     }
 
@@ -781,17 +795,20 @@ Step 5: Article 6 (패턴 다양성) 분석
                 "sensory_balance": "무술 동작과 내공 묘사에 다양한 감각 필요",
                 "commercial_appeal": "사이다 요소와 긴장감이 독자 유입에 영향",
                 "pattern_diversity": "뻔한 복수극/성장물 패턴 탈피 필요",
+                "reader_satisfaction": "경지 돌파, 강자 제압, 비급 획득 등 무협 쾌감",
             },
             "hunter": {
                 "show_dont_tell": "스킬/시스템 설명보다 체감 묘사가 중요",
                 "commercial_appeal": "레벨업/성장의 쾌감이 핵심 상업성",
                 "character_consistency": "헌터/각성자 능력치 일관성 필수",
+                "reader_satisfaction": "레벨업, 레어 아이템, 던전 클리어 쾌감",
             },
             "investment": {
                 "vocabulary_diversity": "금융 용어와 시장 표현의 다양성",
                 "character_consistency": "투자 결정의 논리적 일관성",
                 "emotion_arc": "돈과 성공에 대한 감정 변화가 핵심",
                 "pattern_diversity": "예측 가능한 성공 패턴 탈피 필요",
+                "reader_satisfaction": "투자 성공, 정보 선점, 자산 증가 체감",
             },
         }
         return notes.get(genre, {}).get(item_name, "")
@@ -852,6 +869,7 @@ Step 5: Article 6 (패턴 다양성) 분석
             "dialogue_quality": "대사가 캐릭터를 잘 드러냅니다",
             "commercial_appeal": "독자를 끄는 매력적인 요소가 있습니다",
             "pattern_diversity": "신선하고 예측하기 어려운 전개입니다",
+            "reader_satisfaction": "독자가 대리만족을 느낄 수 있는 장면이 있습니다",
         }
         return notes.get(item_name, reason)
 
@@ -892,6 +910,11 @@ Step 5: Article 6 (패턴 다양성) 분석
             "pattern_diversity": {
                 "default": "예상 가능한 전개를 의도적으로 비틀어보세요.",
                 "wuxia": '단순 복수극이나 "스승 복수" 패턴을 넘어서는 동기를 부여하세요.',
+            },
+            "reader_satisfaction": {
+                "default": "주인공이 성취/승리/성장하는 장면을 추가하세요. 독자가 대리만족을 느낄 수 있어야 합니다.",
+                "wuxia": "경지 돌파, 강자 제압, 비급 획득 등 무협 특유의 쾌감 장면을 삽입하세요.",
+                "hunter": "레벨업, 레어 아이템 획득, 던전 클리어 등 성장 쾌감을 강조하세요.",
             },
         }
 

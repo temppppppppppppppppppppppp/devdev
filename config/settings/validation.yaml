@@ -36,10 +36,11 @@ scoring:
     fantasy: 70
   breakdown:
     character_consistency: 15
-    emotion_arc: 20
+    emotion_arc: 15
     dialogue_quality: 15
-    commercial_appeal: 20
+    commercial_appeal: 15
     pattern_diversity: 10
+    reader_satisfaction: 10
 
 # ── ADVISORY 검증 ────────────────────────────────────────────
 advisory:
