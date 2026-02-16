@@ -1507,8 +1507,12 @@ class SovereignApp:
                         from modules.core.semantic_plot_guard import SemanticPlotGuard
 
                         self.semantic_plot_guard = SemanticPlotGuard(api_key=os.getenv("GOOGLE_API_KEY", ""))
-                        self.ui.log("   📊 [V66] SemanticPlotGuard 초기화 완료")
-                    except Exception:
+                        if self.semantic_plot_guard._client:
+                            self.ui.log("   📊 [V66] SemanticPlotGuard 초기화 완료 (임베딩 모드)")
+                        else:
+                            self.ui.log("   📊 [V66] SemanticPlotGuard 초기화 완료 (키워드 폴백 모드)")
+                    except Exception as e:
+                        self.ui.log(f"   ⚠️ [V66] SemanticPlotGuard 초기화 실패: {str(e)[:80]}")
                         self.semantic_plot_guard = None
 
                     # ============================================================
