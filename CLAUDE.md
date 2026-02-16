@@ -28,13 +28,14 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 ## 현재 상태 (2026-02-16)
 
 - **작동함**: Stage 0→2→4 정상 동작
-- **완료된 것**: Phase 1~2, 5-A/5-B/5-C, 6-A/6-B/6-C, 4C(DI), 4D(sqlite-vec), 3-5B(패치), 3-5A(NPC이력), **4-R1~R3(몬스터 분할)**, R4-a(NO-GO), **3-QR(품질 회귀 감지)**, **3-5C(NPC 과잉 경고)**, **3-Obs Step 1+2(관측성 계측)**, **3-B(크로스 에피소드 반복 감지)**, **D.대리만족 전체 완료(Step1~5)**, **A-1(writer 유틸 해체)**, **A-3(test xfail)**, **C-1(PlotGuard 폴백)**, **C-2(NPC 체인)**, **C-3(Validator 체인)**, **B-1-1~3(stage4 분할 완료, 2,481→883줄)**
+- **완료된 것**: Phase 1~2, 5-A/5-B/5-C, 6-A/6-B/6-C, 4C(DI), 4D(sqlite-vec), 3-5B(패치), 3-5A(NPC이력), **4-R1~R3(몬스터 분할)**, R4-a(NO-GO), **3-QR(품질 회귀 감지)**, **3-5C(NPC 과잉 경고)**, **3-Obs Step 1+2(관측성 계측)**, **3-B(크로스 에피소드 반복 감지)**, **D.대리만족 전체 완료(Step1~5)**, **A-1(writer 유틸 해체)**, **A-3(test xfail)**, **C-1(PlotGuard 폴백)**, **C-2(NPC 체인)**, **C-3(Validator 체인)**, **B-1-1~3(stage4 분할 완료, 2,481→883줄)**, **B-1-4(chief_writer 컨텍스트 분리, 2,255→1,267줄)**
 - **약점**: ~~플롯 중복 감지 불안정 (Chain 1)~~ → C-1에서 키워드 폴백 도입으로 개선
-- **현재 단계**: **B-1 모놀리스 분할 진행 중** (stage4 3/3 완료, chief_writer 미착수)
-- **다음 우선순위**: B-1-4(chief_writer ManuscriptAnalyzer) → B-1-5(chief_writer QualityGate)
-- **테스트 기준선**: **454 passed** (기존 441 + interview_round 13)
-- **stage4 orchestrator**: 2,481→883줄 (**-64%**, B-1-3 분할 완료, 서브모듈 3개)
-- **checkpoint**: `7242d4a`
+- **현재 단계**: **B-1 모놀리스 분할 진행 중** (stage4 3/3 완료, chief_writer B-1-4 완료)
+- **다음 우선순위**: B-1-5(chief_writer QualityGate) → stage2 분할
+- **테스트 기준선**: **481 passed** (기존 454 + context_builder 27)
+- **stage4 orchestrator**: 2,481→883줄 (**-64%**, 분할 완료, 서브모듈 3개)
+- **chief_writer**: 2,255→1,267줄 (**-44%**, B-1-4 완료, 서브모듈 1개)
+- **checkpoint**: `1e8db62`
 - **실행 기준 문서(SSOT)**: `내일작업.md` (남은 작업만 관리)
 
 ---
@@ -49,6 +50,7 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 | `modules/core/stage4_post_processor.py` | Stage4 PASS 후처리 | B-1-1 분리 (543줄), V64 위임 패턴 |
 | `modules/core/stage4_context_builder.py` | Stage4 컨텍스트 빌더 | B-1-2 분리 (570줄), V64 위임 패턴 |
 | `modules/core/stage4_interview_round.py` | Stage4 인터뷰 라운드 | B-1-3 분리 (554줄), V64 위임 패턴 |
+| `modules/domain/agents/chief_writer_context.py` | CW 컨텍스트 빌더 | B-1-4 분리 (1,074줄), V64 위임 패턴 |
 | `modules/core/db_manager.py` | SQLite DB 매니저 | 모범 패턴 |
 | `modules/core/prompt_loader.py` | YAML 프롬프트 로더 (싱글톤) | |
 | `config/prompts/*.yaml` | 외부화된 프롬프트 43개 | |
@@ -104,6 +106,7 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 | ~~18~~ | ~~B-1-1~~ | ~~stage4 post-processor 추출~~ | ✅ 완료 (`ed48489`) |
 | ~~19~~ | ~~B-1-2~~ | ~~stage4 context builder 추출~~ | ✅ 완료 (`667291e`) |
 | ~~20~~ | ~~B-1-3~~ | ~~stage4 interview round 추출~~ | ✅ 완료 (`7242d4a`) |
+| ~~21~~ | ~~B-1-4~~ | ~~chief_writer context builder 추출~~ | ✅ 완료 (`1e8db62`) |
 
 ---
 
