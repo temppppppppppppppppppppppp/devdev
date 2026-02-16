@@ -505,6 +505,25 @@ class Stage4InterviewRound:
         self.ctx.ui.log(f"   📊 Director 판정: {verdict} (점수: {score}, 선택: 후보 {selected})")
         self.ctx.ui.log(f"      └─ 사유: {reason[:80]}...")
 
+        # [D-4] Director 선택 기록 (비차단)
+        try:
+            _sel_candidate = director_result.get("selected_candidate", {})
+            if not isinstance(_sel_candidate, dict):
+                _sel_candidate = {}
+            _sel_strategy = _sel_candidate.get("strategy_name", "") or _sel_candidate.get("strategy", "")
+            self.ctx.current_project.db.save_director_selection(
+                ep_num=next_ep,
+                round_num=round_num,
+                selected_label=selected,
+                selected_strategy=_sel_strategy,
+                verdict=verdict,
+                score=score,
+                selection_reason=reason,
+                candidate_count=len(candidates) if candidates else 0,
+            )
+        except Exception as e:
+            logging.warning(f"[D-4] Director 선택 기록 실패 (비차단): {e!s:.100}")
+
         if verdict == "PASS":
             selected_candidate = director_result.get("selected_candidate", {})
             final_manuscript = selected_candidate.get("manuscript", "")

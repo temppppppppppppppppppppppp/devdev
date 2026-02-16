@@ -337,6 +337,23 @@ class DBManager:
             )
         """)
 
+        # 15. [D-4] Director 앙상블 선택 기록
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS director_selections (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ep_num INTEGER NOT NULL,
+                round_num INTEGER NOT NULL,
+                selected_label TEXT NOT NULL,
+                selected_strategy TEXT,
+                verdict TEXT NOT NULL,
+                score INTEGER DEFAULT 0,
+                selection_reason TEXT,
+                candidate_count INTEGER DEFAULT 3,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_director_selections_ep ON director_selections(ep_num)")
+
         self.conn.commit()
 
     # --- [트랜잭션 제어] ---
@@ -1125,6 +1142,7 @@ class DBManager:
         self.cursor.execute("DELETE FROM npc_history WHERE episode_no >= ?", (target_ep,))
         self.cursor.execute("DELETE FROM episode_sentence_hashes WHERE episode_number >= ?", (target_ep,))
         self.cursor.execute("DELETE FROM episode_satisfaction_tags WHERE ep_num >= ?", (target_ep,))
+        self.cursor.execute("DELETE FROM director_selections WHERE ep_num >= ?", (target_ep,))
         # [V70] 누적 Bible 캐시 무효화
         invalidate_eps = [k for k in self._cumulative_bible_cache if k >= target_ep]
         for k in invalidate_eps:
@@ -1155,6 +1173,9 @@ class DBManager:
             "SELECT COUNT(*) as cnt FROM episode_satisfaction_tags WHERE ep_num >= ?", (target_ep,)
         )
         impact["satisfaction_tags"] = cur.fetchone()["cnt"]
+
+        cur = self.cursor.execute("SELECT COUNT(*) as cnt FROM director_selections WHERE ep_num >= ?", (target_ep,))
+        impact["director_selections"] = cur.fetchone()["cnt"]
 
         return impact
 
@@ -1317,6 +1338,76 @@ class DBManager:
                 (npc_name, npc_name),
             )
             return {row["field_name"]: row["new_value"] for row in cur.fetchall()}
+
+    # --- [D-4] Director 앙상블 선택 기록 ---
+
+    def save_director_selection(
+        self,
+        ep_num: int,
+        round_num: int,
+        selected_label: str,
+        selected_strategy: str,
+        verdict: str,
+        score: int = 0,
+        selection_reason: str = "",
+        candidate_count: int = 3,
+    ) -> None:
+        """[D-4] Director의 앙상블 선택 결과를 기록."""
+        with self._lock:
+            self.cursor.execute(
+                "INSERT INTO director_selections "
+                "(ep_num, round_num, selected_label, selected_strategy, verdict, score, "
+                "selection_reason, candidate_count) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    ep_num,
+                    round_num,
+                    selected_label,
+                    selected_strategy,
+                    verdict,
+                    score,
+                    selection_reason[:200] if selection_reason else "",
+                    candidate_count,
+                ),
+            )
+            if not self.conn.in_transaction:
+                self.conn.commit()
+
+    def get_strategy_win_rates(self, lookback: int = 20) -> dict:
+        """[D-4] 최근 N건의 PASS 선택에서 전략별 승률 조회."""
+        with self._lock:
+            cur = self.cursor.execute(
+                "SELECT selected_strategy "
+                "FROM director_selections "
+                "WHERE verdict = 'PASS' AND selected_strategy IS NOT NULL AND selected_strategy != '' "
+                "ORDER BY id DESC LIMIT ?",
+                (lookback,),
+            )
+            rows = [r["selected_strategy"] for r in cur.fetchall()]
+
+        total = len(rows)
+        if total == 0:
+            return {"total": 0}
+
+        result = {"total": total}
+        counts = {}
+        for strategy in rows:
+            counts[strategy] = counts.get(strategy, 0) + 1
+        for strategy, cnt in counts.items():
+            result[strategy] = round(cnt / total, 2)
+        return result
+
+    def get_recent_selections(self, ep_num: int, lookback: int = 10) -> list:
+        """[D-4] 최근 선택 이력 조회 (최신순)."""
+        with self._lock:
+            cur = self.cursor.execute(
+                "SELECT ep_num, round_num, selected_label, selected_strategy, verdict, score, selection_reason "
+                "FROM director_selections "
+                "WHERE ep_num < ? "
+                "ORDER BY id DESC LIMIT ?",
+                (ep_num, lookback),
+            )
+            return [dict(row) for row in cur.fetchall()]
 
     # --- [Phase 3-B] 크로스 에피소드 문장 핑거프린트 ---
 
