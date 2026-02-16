@@ -9,7 +9,7 @@ import sys
 import threading
 import time
 from itertools import cycle
-from typing import List, Optional
+from typing import Optional
 
 # Rich 라이브러리 임포트
 try:

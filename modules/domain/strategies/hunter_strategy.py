@@ -28,11 +28,11 @@ class HunterStrategy(BaseStrategy):
         [HUNTER GENRE GUIDELINE]
         1. 장르 필수 요소: {", ".join(genre_rules.get("mandatory", []))}
         2. 주인공: {mc_name} ({mc_desc})
-        
+
         [📜 세부 집필 톤(Tone) 지침: {tone_name}]
         - {tone_guide}를 최우선 문체 원칙으로 삼는다.
-        
-        [집필 지침]: 
+
+        [집필 지침]:
         - 주인공 {mc_name}의 각성 능력과 성장 과정을 중심으로 서사를 전개하라.
         - 한글 전용 헌터물 문체를 유지하라. (한자 병기 금지)
         - 선택된 '{tone_name}' 톤에 맞춰 전투의 긴박감과 성장의 카타르시스를 극대화하라.

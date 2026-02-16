@@ -947,7 +947,7 @@ class BaseAgent:
                                 "ProjectData",
                                 "MasterBible",
                                 "content",
-                            ] and isinstance(val, (dict, list)):
+                            ] and isinstance(val, dict | list):
                                 process_node(val, depth + 1)
                             else:
                                 clean_k = str(k).strip("'\" ")

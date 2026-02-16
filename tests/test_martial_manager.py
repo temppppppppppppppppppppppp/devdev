@@ -50,7 +50,7 @@ class TestMartialManagerTypeSafety:
 
         for input_val in invalid_inputs:
             # NaN, inf는 float()로 변환은 되지만 유효하지 않은 값
-            if input_val is None or isinstance(input_val, (list, dict, str)):
+            if input_val is None or isinstance(input_val, list | dict | str):
                 try:
                     if input_val is None:
                         continue  # None은 변환 불가
@@ -285,7 +285,7 @@ class TestMartialManagerEdgeCases:
         }
 
         for name, affinity in relationships.items():
-            assert isinstance(affinity, (int, float))
+            assert isinstance(affinity, int | float)
 
     def test_very_large_values(self):
         """매우 큰 값 처리 테스트"""
