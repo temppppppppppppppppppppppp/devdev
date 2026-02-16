@@ -28,15 +28,15 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 ## 현재 상태 (2026-02-16)
 
 - **작동함**: Stage 0→2→4 정상 동작
-- **완료된 것**: Phase 1~2, 5-A/5-B/5-C, 6-A/6-B/6-C, 4C(DI), 4D(sqlite-vec), 3-5B(패치), 3-5A(NPC이력), **4-R1~R3(몬스터 분할)**, R4-a(NO-GO), **3-QR(품질 회귀 감지)**, **3-5C(NPC 과잉 경고)**, **3-Obs Step 1+2(관측성 계측)**, **3-B(크로스 에피소드 반복 감지)**, **D.대리만족 전체 완료(Step1~5)**, **A-1(writer 유틸 해체)**, **A-3(test xfail)**, **C-1(PlotGuard 폴백)**, **C-2(NPC 체인)**, **C-3(Validator 체인)**, **B-1-1~3(stage4 분할 완료, 2,481→883줄)**, **B-1-4~5(chief_writer 분할 완료, 2,255→854줄)**, **B-1-6~7(stage2 분할 진행, 2,639→1,510줄)**
+- **완료된 것**: Phase 1~2, 5-A/5-B/5-C, 6-A/6-B/6-C, 4C(DI), 4D(sqlite-vec), 3-5B(패치), 3-5A(NPC이력), **4-R1~R3(몬스터 분할)**, R4-a(NO-GO), **3-QR(품질 회귀 감지)**, **3-5C(NPC 과잉 경고)**, **3-Obs Step 1+2(관측성 계측)**, **3-B(크로스 에피소드 반복 감지)**, **D.대리만족 전체 완료(Step1~5)**, **A-1(writer 유틸 해체)**, **A-3(test xfail)**, **C-1(PlotGuard 폴백)**, **C-2(NPC 체인)**, **C-3(Validator 체인)**, **B-1 전체 완료(stage4 883줄(-64%), chief_writer 854줄(-62%), stage2 907줄(-66%))**
 - **약점**: ~~플롯 중복 감지 불안정 (Chain 1)~~ → C-1에서 키워드 폴백 도입으로 개선
-- **현재 단계**: **B-1 모놀리스 분할 진행 중** (stage4 3/3 + chief_writer 2/2 + stage2 2/?)
-- **다음 우선순위**: stage2 추가 분할 또는 잔여 기술부채
-- **테스트 기준선**: **532 passed**
+- **현재 단계**: **B-1 모놀리스 분할 전체 완료** (3대장 모두 -62~66%)
+- **다음 우선순위**: 잔여 기술부채 (Protocol 미적합, 미활용 기능 활성화 등)
+- **테스트 기준선**: **550 passed**
 - **stage4 orchestrator**: 2,481→883줄 (**-64%**, 분할 완료, 서브모듈 3개)
 - **chief_writer**: 2,255→854줄 (**-62%**, 분할 완료, 서브모듈 2개)
-- **stage2 orchestrator**: 2,639→1,510줄 (**-43%**, B-1-7 완료, 서브모듈 2개)
-- **checkpoint**: `a6613b1`
+- **stage2 orchestrator**: 2,639→907줄 (**-66%**, B-1-8 완료, 서브모듈 3개)
+- **checkpoint**: `8d68e85`
 - **실행 기준 문서(SSOT)**: `내일작업.md` (남은 작업만 관리)
 
 ---
@@ -45,9 +45,10 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 
 | 파일 | 역할 | 비고 |
 |------|------|------|
-| `modules/core/stage2_orchestrator.py` | Arc 오케스트레이터 | B-1-6~7 분리 후 1,510줄, 서브모듈 2개 위임 |
+| `modules/core/stage2_orchestrator.py` | Arc 오케스트레이터 | B-1-6~8 분리 후 907줄, 서브모듈 3개 위임 |
 | `modules/core/stage2_validation_pipeline.py` | Stage2 검증 파이프라인 | B-1-6 분리 (683줄), V64 위임 패턴 |
 | `modules/core/stage2_finalizer.py` | Stage2 Finalizer | B-1-7 분리 (535줄), V64 위임 패턴 |
+| `modules/core/stage2_preflight.py` | Stage2 Preflight 분석 | B-1-8 분리 (637줄), V64 위임 패턴 |
 | `modules/core/stage3_orchestrator.py` | Blueprint 오케스트레이터 | DI 전환 완료 (`self.app` 0, `self.ctx` 사용) |
 | `modules/core/stage4_orchestrator.py` | 원고 오케스트레이터 | B-1-1~3 분리 후 883줄, 서브모듈 3개 위임 |
 | `modules/core/stage4_post_processor.py` | Stage4 PASS 후처리 | B-1-1 분리 (543줄), V64 위임 패턴 |
@@ -114,6 +115,7 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 | ~~22~~ | ~~B-1-5~~ | ~~chief_writer quality gate 추출~~ | ✅ 완료 (`d8c0663`) |
 | ~~23~~ | ~~B-1-6~~ | ~~stage2 validation pipeline 추출~~ | ✅ 완료 (`c1008e7`) |
 | ~~24~~ | ~~B-1-7~~ | ~~stage2 finalizer 추출~~ | ✅ 완료 (`a6613b1`) |
+| ~~25~~ | ~~B-1-8~~ | ~~stage2 preflight analysis 추출~~ | ✅ 완료 (`8d68e85`) |
 
 ---
 
