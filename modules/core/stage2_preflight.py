@@ -429,8 +429,8 @@ class Stage2PreflightAnalysis:
                     # [V65] PerfTimer: Arc 생성 측정
                     try:
                         self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_generate")
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logging.warning(f"[SilentPass:Preflight] 장르 레지스트리 갱신 실패: {e!s:.100}")
                     four_phase_arc, pipeline_result = self.ctx.agents["four_phase"].generate(
                         arc_no=global_arc_no,
                         ep_start=current_ep_start,

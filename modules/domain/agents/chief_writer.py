@@ -662,7 +662,8 @@ class ChiefWriter(BaseAgent):
             from modules.core.prompt_loader import PromptLoader
 
             _patch_template = PromptLoader().load("chief_writer", "PATCH_MODE_PROMPT")
-        except Exception:
+        except Exception as e:
+            logging.warning(f"[SilentPass:ChiefWriter] PATCH_MODE_PROMPT 로드 실패: {e!s:.100}")
             _patch_template = None
 
         # 패치 프롬프트 포맷

@@ -265,8 +265,8 @@ class Stage4InterviewRound:
                     "MasterBible", self.ctx.current_project.master_bible
                 )
                 _incarnation_type = _bible_root.get("protagonist_config", {}).get("incarnation_type", "")
-            except Exception:
-                pass
+            except Exception as e:
+                logging.warning(f"[SilentPass:InterviewRound] incarnation_type 로드 실패: {e!s:.100}")
             _cv_context["incarnation_type"] = _incarnation_type
             # [V66.2] C-1: BlockingValidator dead NPC 감지 활성화
             _encyclopedia_npcs = []
@@ -428,8 +428,8 @@ class Stage4InterviewRound:
                             _prev_ms_data.get("content", "") if isinstance(_prev_ms_data, dict) else str(_prev_ms_data)
                         )
                         _ms_history_for_check.append({"ep_num": _prev_ep, "text": _content})
-                except Exception:
-                    pass
+                except Exception as e:
+                    logging.warning(f"[SilentPass:InterviewRound] 제{_prev_ep}화 원고 이력 로드 실패: {e!s:.100}")
 
             # [V67.1] story_context 포함하여 모순 검사 호출
             if _ms_history_for_check and candidates:

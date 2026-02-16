@@ -789,8 +789,8 @@ JSON으로 출력:
                     _bible_pov = _bible_root.get("protagonist_config", {}).get("pov", "")
                     if _bible_pov:
                         loaded_sg.pov = _bible_pov
-                except Exception:
-                    pass
+                except Exception as e:
+                    logging.warning(f"[SilentPass:Stage4] Bible POV 오버라이드 실패: {e!s:.100}")
                 style_guide = loaded_sg.to_prompt()
                 self.ctx.ui.log(
                     f"🎨 [V60.95] 저장된 스타일 가이드 로드됨 (톤: {loaded_sg.tone}, 시점: {loaded_sg.pov})"
@@ -811,8 +811,8 @@ JSON으로 출력:
                     _min_sg = _SG(pov=_bible_pov)
                     style_guide = _min_sg.to_prompt()
                     self.ctx.ui.log(f"📖 [V70] Bible POV 기반 최소 스타일 가이드 생성 (시점: {_bible_pov})")
-            except Exception:
-                pass
+            except Exception as e:
+                logging.warning(f"[SilentPass:Stage4] Bible POV 기반 스타일 가이드 생성 실패: {e!s:.100}")
 
         if not style_guide:
             style_choice = self.ctx.get_int_input(

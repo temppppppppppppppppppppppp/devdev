@@ -121,7 +121,8 @@ class Stage2Finalizer:
                 elif _incarnation == "환생자":
                     _sc_parts.append("→ 환생자: 전생 기억 보유.")
             _story_context = "\n".join(_sc_parts)
-        except Exception:
+        except Exception as e:
+            logging.warning(f"[SilentPass:Stage2Finalizer] 스토리 컨텍스트 생성 실패: {e!s:.100}")
             _story_context = ""
 
         audit = self.ctx.agents["director"].audit_strategic_plan(

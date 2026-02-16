@@ -357,8 +357,8 @@ class Stage4PostProcessor:
                         "MasterBible", self.ctx.current_project.master_bible
                     )
                     _ws_prot_name = _ws_bible_root.get("protagonist_config", {}).get("name", "")
-                except Exception:
-                    pass
+                except Exception as e:
+                    logging.warning(f"[SilentPass:PostProcessor] 주인공 이름 추출 실패: {e!s:.100}")
                 self.ctx.world_state.update_protagonist_state(
                     ep_num=next_ep,
                     name=_ws_prot_name if _ws_prot_name else None,
@@ -448,8 +448,8 @@ class Stage4PostProcessor:
                     for _npc in _assets.get("KeyNPCs", []) or _assets.get("Key_NPCs", []):
                         if isinstance(_npc, dict) and _npc.get("name"):
                             _core.add(_npc["name"])
-                except Exception:
-                    pass  # Bible 접근 실패 시 빈 set → 전수 검사
+                except Exception as e:
+                    logging.warning(f"[SilentPass:PostProcessor] Core NPC 목록 추출 실패 (전수 검사 폴백): {e!s:.100}")
                 _overexposure = None
                 if detect_npc_overexposure_fn:
                     _overexposure = detect_npc_overexposure_fn(
