@@ -132,7 +132,7 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 | 시점 전환 프리셋 | `blueprint_ensemble.py` L76~90, `stage0/__init__.py` | ✅ **D-1 활성화 완료** — POV 선택 메뉴 추가, 전체 체인 작동 |
 | 시점(POV) 일관성 체크 | `pre_llm_validator.py` V70 | ✅ 구현됨 |
 | A/B 테스트 | `ab_testing.py` | ⚠️ `quick_ab_test()` 존재, 확장 필요 |
-| 에피소드 롤백 | `project_manager.py` | ⚠️ `auto_backtrack_v35()`, NPC 되감기 추가 필요 |
+| 에피소드 롤백 | `project_manager.py` | ✅ D-2 완료 — NPC이력+WorldState+FactLedger 롤백 |
 | 문체 분석 | `stage0/style_extractor.py` | ⚠️ 있음, 가드 자동생성 연동 필요 |
 | Context Caching | `base_agent.py` | ✅ 구현 완료 (`chief_writer`·`director_continuity`에서 사용 중) |
 
