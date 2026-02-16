@@ -364,6 +364,33 @@ class TestStage3ContextDI:
         cb.assert_called_once()
         assert result == "장무기"
 
+    def test_from_app_all_slots(self, app_mock):
+        """from_app이 19개 슬롯 전부 매핑하는지 확인"""
+        ctx = Stage3Context.from_app(app_mock)
+        assert ctx.ui is app_mock.ui
+        assert ctx.current_project is app_mock.current_project
+        assert ctx.agents is app_mock.agents
+        assert ctx.sys is app_mock.sys
+        assert ctx.state_tracker is app_mock.state_tracker
+        assert ctx.world_state is app_mock.world_state
+        assert ctx.fact_ledger is app_mock.fact_ledger
+        assert ctx.preset_registry is app_mock.preset_registry
+        assert ctx.selected_genre is app_mock.selected_genre
+        assert ctx.get_protagonist_name is app_mock._get_protagonist_name
+        assert ctx.audit_event is app_mock._audit_event
+        assert ctx.write_audit_summary is app_mock._write_audit_summary
+        assert ctx.get_arc_context_for_episode is app_mock._get_arc_context_for_episode
+        assert ctx.get_max_episode_from_manuscripts is app_mock._get_max_episode_from_manuscripts
+        assert ctx.get_int_input is app_mock._get_int_input
+        assert ctx.safe_commit is app_mock._safe_commit
+        assert ctx.validate_arc_data_fields is app_mock._validate_arc_data_fields
+        assert ctx.validate_blueprint_integrity is app_mock._validate_blueprint_integrity
+        assert ctx.fix_entity_registry_protagonist is app_mock._fix_entity_registry_protagonist
+
+    def test_slots_count_19(self):
+        """__slots__ 개수 검증"""
+        assert len(Stage3Context.__slots__) == 19
+
     def test_backward_compat_app_still_works(self, app_mock):
         """self.app 접근 유지 (레거시 호환)"""
         orch = Stage3Orchestrator(app=app_mock)
