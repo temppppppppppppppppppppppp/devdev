@@ -1402,7 +1402,21 @@ class SovereignApp:
 
                 # [V60.90] Director에 Guard 연결 (장르별 특화 검증용)
                 if hasattr(self.sys, "guard") and self.sys.guard:
-                    self.agents["director"].set_guard(self.sys.guard)
+                    _guard = self.sys.guard
+                    # [D-3] StyleGuide 존재 시 StyleGuard 래핑
+                    try:
+                        _sg_data = self.current_project.load_v20_anchor("style_guide")
+                        if _sg_data and isinstance(_sg_data, dict):
+                            from modules.core.genre_guards import StyleGuard
+                            from modules.core.stage0 import StyleGuide
+
+                            _sg = StyleGuide.from_dict(_sg_data)
+                            _guard = StyleGuard(_guard, _sg)
+                            self.ui.log("   🎨 StyleGuard 래핑 완료 (문체 기반 검증 활성)")
+                    except Exception as e:
+                        logging.warning(f"[D-3] StyleGuard 래핑 실패 (장르 Guard만 사용): {e}")
+
+                    self.agents["director"].set_guard(_guard)
                     self.ui.log("   🛡️ Director Guard 연결 완료")
 
                 # [V60.90] Writer에 Guard/Genre 연결 (장르별 프롬프트 주입용)
