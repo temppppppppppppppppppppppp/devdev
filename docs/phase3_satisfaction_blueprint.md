@@ -1,7 +1,7 @@
 # D. 대리만족 프레임워크 — Reader Satisfaction 검증 청사진
 
-> 작성: 2026-02-16, checkpoint `0d676c8`
-> 상태: **Step 1 완료** (reader_satisfaction 점수축 + 배점/가중치 재분배)
+> 작성: 2026-02-16, checkpoint `ffc2bb8`
+> 상태: **Step 1+2 완료** (점수축/가중치 + Director 프롬프트 확장)
 
 ---
 
@@ -336,16 +336,21 @@ satisfaction:
 
 **게이트**: py_compile + SovereignApp import + 기존 286 + 신규 6 + pre-commit
 
-### Step 2: Director 프롬프트 확장
+### Step 2: Director 프롬프트 확장 ✅ 완료 (`ffc2bb8`)
 
 **수정 파일**:
-- `config/prompts/director_ensemble.yaml` — 대리만족 심사 기준 텍스트 추가
+- `config/prompts/director.yaml` — ENSEMBLE_SELECTION + DIRECTOR_AUDIT 프롬프트 확장
+- `config/prompts/director_ensemble.yaml` — Blueprint 비교 평가기준 확장
+- `modules/validation/scoring_validator.py` — LLM 프롬프트 Step 6 장르 예시 보강
+- `tests/test_satisfaction_step2_prompts.py` — 테스트 16개 신규
 
 **삽입 내용**:
-1. `satisfaction_criteria` 키: 3개 평가 항목 (성취/유능함/좌절 밸런스)
-2. `satisfaction_genre_examples` 키: 4개 장르별 대리만족 유형 예시
+1. ENSEMBLE_SELECTION: 보상시점/좌절-보상/성장체감 + 4장르 보상 예시
+2. DIRECTOR_AUDIT: 독자몰입도 20점 항목에 대리만족 기준 + CoT Step 4 확장
+3. Blueprint 비교: 5번 기준 "독자 대리만족" 추가
+4. ScoringValidator: Step 6에 장르별 payoff 예시 + "좌절-보상 균형" 관점
 
-**게이트**: py_compile + 기존 + pre-commit
+**게이트**: py_compile + SovereignApp import + 기존 304 + 신규 16 = 320 + pre-commit
 
 ### Step 3: 에피소드 태깅 + DB
 
