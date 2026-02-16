@@ -151,7 +151,7 @@ class Stage2Orchestrator:
 
         # [V60.94] StateTracker 초기화 - NPC 생사/무공 습득/정보 추적
         # [V62.5] 증분 업데이트: 기존 StateTracker가 있으면 재사용, 새 Arc만 추가
-        existing_tracker_arcs = getattr(self.app, "_state_tracker_loaded_arcs", 0)
+        existing_tracker_arcs = self.ctx.state_tracker_loaded_arcs or 0
         if (
             self.ctx.state_tracker is None
             or existing_tracker_arcs == 0
@@ -594,7 +594,7 @@ class Stage2Orchestrator:
                                     feedback=current_feedback,
                                     recent_patterns=recent_patterns,
                                     protagonist_name=protagonist_name or "주인공",
-                                    state_tracker=getattr(self.app, "state_tracker", None),
+                                    state_tracker=self.ctx.state_tracker,
                                 )
                             generation_method = "analyst"
                             logging.info("✅ [Analyst] Arc 생성 완료!")

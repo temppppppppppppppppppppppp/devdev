@@ -2790,6 +2790,7 @@ class SovereignApp:
             semantic_plot_guard=getattr(self, "semantic_plot_guard", None),
             selected_genre=getattr(self, "selected_genre", None),
             quality_dashboard=getattr(self, "quality_dashboard", None),
+            pacing_analyzer=getattr(self, "pacing_analyzer", None),
             # [4C-2c] 콜백 7종
             get_int_input=self._get_int_input,
             build_item_acquisition_timeline=self._build_item_acquisition_timeline,

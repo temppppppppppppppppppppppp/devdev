@@ -32,6 +32,7 @@ class Stage4Context:
         "semantic_plot_guard",
         "selected_genre",
         "quality_dashboard",
+        "pacing_analyzer",
         # [4C-2c] 콜백 7종
         "get_int_input",
         "build_item_acquisition_timeline",
@@ -62,6 +63,7 @@ class Stage4Context:
         semantic_plot_guard=None,
         selected_genre=None,
         quality_dashboard=None,
+        pacing_analyzer=None,
         # [4C-2c] 콜백 — 모두 optional (None 허용)
         get_int_input=None,
         build_item_acquisition_timeline=None,
@@ -87,6 +89,7 @@ class Stage4Context:
         self.semantic_plot_guard = semantic_plot_guard
         self.selected_genre = selected_genre
         self.quality_dashboard = quality_dashboard
+        self.pacing_analyzer = pacing_analyzer
         self.get_int_input = get_int_input
         self.build_item_acquisition_timeline = build_item_acquisition_timeline
         self.load_narrative_summaries = load_narrative_summaries
@@ -115,6 +118,7 @@ class Stage4Context:
             semantic_plot_guard=getattr(app, "semantic_plot_guard", None),
             selected_genre=getattr(app, "selected_genre", None),
             quality_dashboard=getattr(app, "quality_dashboard", None),
+            pacing_analyzer=getattr(app, "pacing_analyzer", None),
             get_int_input=getattr(app, "_get_int_input", None),
             build_item_acquisition_timeline=getattr(app, "_build_item_acquisition_timeline", None),
             load_narrative_summaries=getattr(app, "_load_narrative_summaries", None),

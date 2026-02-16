@@ -419,7 +419,7 @@ JSON으로 출력:
                 anchor_sys=_anchor_sys,
                 s4_genre_type=s4_genre_type,
                 v50_modules_available=v50_modules_available,
-                pacing_analyzer=getattr(self.app, "pacing_analyzer", None),
+                pacing_analyzer=self.ctx.pacing_analyzer,
             )
             reference_anchor_prompt = _ctx_prompts["reference_anchor_prompt"]
             mandatory_context = _ctx_prompts["mandatory_context"]
