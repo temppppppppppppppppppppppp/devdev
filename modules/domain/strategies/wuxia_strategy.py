@@ -31,11 +31,11 @@ class WuxiaStrategy(BaseStrategy):
         [WUXIA GENRE GUIDELINE]
         1. 장르 필수 요소: {", ".join(genre_rules.get("mandatory", []))}
         2. 주인공: {mc_name} ({mc_desc})
-        
+
         [📜 세부 집필 톤(Tone) 지침: {tone_name}]
         - {tone_guide}를 최우선 문체 원칙으로 삼는다.
-        
-        [집필 지침]: 
+
+        [집필 지침]:
         - 주인공 {mc_name}의 신분과 성격에 최적화된 서사와 대사를 구사하라.
         - 한글 전용 무협 문체를 유지하라. (한자 병기 금지)
         - 선택된 '{tone_name}' 톤에 맞춰 어휘의 밀도와 비장미를 조절하라.

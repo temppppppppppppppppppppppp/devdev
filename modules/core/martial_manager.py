@@ -78,7 +78,7 @@ class MartialManager:
 
     def _is_valid_number(self, value) -> bool:
         """[V44] 숫자가 유효한지 검증 (NaN, inf 체크)"""
-        if not isinstance(value, (int, float)):
+        if not isinstance(value, int | float):
             return False
         if math.isnan(value) or math.isinf(value):
             return False
@@ -102,7 +102,7 @@ class MartialManager:
                 else:
                     # 직접 변환
                     result = float(value)
-            elif isinstance(value, (int, float)):
+            elif isinstance(value, int | float):
                 result = float(value)
             else:
                 return default
@@ -209,7 +209,7 @@ class MartialManager:
             # [V40.1 Safety] 특수값 처리 (음수, inf, nan)
             if energy < 0:
                 return "내공 수치 오류 (음수)"
-            if not isinstance(energy, (int, float)) or energy != energy:  # NaN 체크
+            if not isinstance(energy, int | float) or energy != energy:  # NaN 체크
                 return "내공 수치 오류 (비정상)"
             if energy == float("inf"):
                 return "내공 수치 오류 (무한대)"
@@ -366,7 +366,7 @@ class MartialManager:
                         val = numeric_res
 
                 # [V60.23] 내공 바닥 방지 - 무협 주인공이 0%로 5화 연속은 서사적으로 불가능
-                if canonical_key == "internal_energy" and isinstance(val, (int, float)):
+                if canonical_key == "internal_energy" and isinstance(val, int | float):
                     # 내공 0% 연속 카운터 체크
                     zero_streak = actual.get("_internal_energy_zero_streak", 0)
 
@@ -533,7 +533,7 @@ class MartialManager:
                                 val = actual_truth[metric]
                                 # 숫자로 변환 가능한 경우만 추가
                                 try:
-                                    if isinstance(val, (int, float)):
+                                    if isinstance(val, int | float):
                                         values.append(float(val))
                                         valid_eps.append(i)
                                     elif isinstance(val, str):

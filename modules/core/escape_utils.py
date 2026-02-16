@@ -119,7 +119,7 @@ class EscapeUtils:
         """
         result = {}
         for key, value in data_dict.items():
-            if isinstance(value, (dict, list)):
+            if isinstance(value, dict | list):
                 result[key] = EscapeUtils.escape_json_dump(value)
             else:
                 result[key] = EscapeUtils.escape_braces(value)

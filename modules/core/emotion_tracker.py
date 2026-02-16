@@ -350,7 +350,7 @@ class EmotionArcTracker:
         history_data = [
             {"ep_num": ep[0], "emotion": ep[1], "intensity": ep[2]}
             for ep in self.history
-            if isinstance(ep, (tuple, list)) and len(ep) >= 3  # [V70] 비정상 튜플 방어
+            if isinstance(ep, tuple | list) and len(ep) >= 3  # [V70] 비정상 튜플 방어
         ]
         db_manager.save_anchor("emotion_history", history_data)
 

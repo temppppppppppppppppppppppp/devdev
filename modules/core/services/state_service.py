@@ -69,7 +69,7 @@ class StateService:
         ep_count = refined_arc.get("ep_count") or refined_arc.get("ep_end")
         if not isinstance(ep_count, int):
             try:
-                ep_count = int(ep_count) if ep_count and not isinstance(ep_count, (dict, list)) else 5
+                ep_count = int(ep_count) if ep_count and not isinstance(ep_count, dict | list) else 5
             except (ValueError, TypeError):
                 ep_count = 5
         if refined_arc.get("ep_start") != expected_ep_start:
