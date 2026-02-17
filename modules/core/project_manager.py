@@ -539,15 +539,25 @@ class ProjectContext:
                 self.sync_and_cleanup_seeds()
             except Exception as bible_err:
                 logging.warning(f"🚨 [Critical] Bible 선행 저장 실패: {bible_err}")
-                raise Exception(f"Bible 저장 실패로 에피소드 커밋 중단: {bible_err}") from bible_err
+                raise RuntimeError(f"Bible 저장 실패로 에피소드 커밋 중단: {bible_err}") from bible_err
 
             # 3-2. SQLite 핵심 트랜잭션 (원고, HUD, 로그, 카르마, 로어)
-            db_success = self.db.commit_episode_factory(
-                ep_num, manuscript_data, martial_data, state_data, causal_links, karma_data, lore_data, recovered_seeds
-            )
+            try:
+                db_success = self.db.commit_episode_factory(
+                    ep_num,
+                    manuscript_data,
+                    martial_data,
+                    state_data,
+                    causal_links,
+                    karma_data,
+                    lore_data,
+                    recovered_seeds,
+                )
+            except Exception as factory_err:
+                raise RuntimeError("SQLite Episode Factory 저장 실패") from factory_err
 
             if not db_success:
-                raise Exception("SQLite Episode Factory 저장 실패")
+                raise RuntimeError("SQLite Episode Factory 저장 실패")
 
             # --- [Part 4: 벡터 동기화 (VecMemory)] ---
             try:

@@ -1023,9 +1023,27 @@ class ValidationOrchestrator:
             )
 
             # 모든 태스크 완료 대기
-            consistency_result, scoring_result, advisory_result = await asyncio.gather(
-                consistency_task, scoring_task, advisory_task
+            parallel_results = await asyncio.gather(
+                consistency_task,
+                scoring_task,
+                advisory_task,
+                return_exceptions=True,
             )
+
+            task_names = ["consistency", "scoring", "advisory"]
+            for idx, r in enumerate(parallel_results):
+                if isinstance(r, Exception):
+                    logging.warning("[Sweep7-A] parallel validation %s failed: %s", task_names[idx], r)
+                    parallel_results[idx] = None
+
+        consistency_result, scoring_result, advisory_result = parallel_results
+
+        if not isinstance(consistency_result, dict):
+            consistency_result = {"unjustifiable_violations": [], "score_penalty": 0, "feedback": ""}
+        if not isinstance(scoring_result, dict):
+            scoring_result = {"total_score": 0, "feedback": "scoring validator failed"}
+        if not isinstance(advisory_result, dict):
+            advisory_result = {"warnings": []}
 
         results["consistency_result"] = consistency_result
         results["scoring_result"] = scoring_result

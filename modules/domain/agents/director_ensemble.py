@@ -9,7 +9,7 @@ Director reference를 통해 BaseAgent 메서드(ask, _extract_json_robust 등) 
 import json
 import logging
 
-from modules.core.constants import ManuscriptLimits  # [V64.P4]
+from modules.core.constants import ContextLimits, ManuscriptLimits  # [V64.P4]
 from modules.core.prompt_loader import PromptLoader
 
 
@@ -323,8 +323,8 @@ class DirectorEnsembleSelector:
         # [V67] 이전 원고 전문 — 30+화 컨텍스트
         _prev_ms_for_director = prev_manuscripts_text if prev_manuscripts_text else "(이전 원고 없음 — 1화)"
         # Gemini 컨텍스트 윈도우가 크므로 넉넉히 전달 (최대 200K자)
-        if len(_prev_ms_for_director) > 200000:
-            _prev_ms_for_director = _prev_ms_for_director[:200000] + "\n...(이하 생략)"
+        if len(_prev_ms_for_director) > ContextLimits.MAX_CONTEXT_CHARS:
+            _prev_ms_for_director = _prev_ms_for_director[: ContextLimits.MAX_CONTEXT_CHARS] + "\n...(이하 생략)"
 
         prompt = self._prompt_loader.load(
             "director",

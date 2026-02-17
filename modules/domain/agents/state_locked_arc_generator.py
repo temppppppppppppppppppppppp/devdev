@@ -445,9 +445,14 @@ class StateLockedArcGenerator(BaseAgent):
             if isinstance(response, str):
                 response = self._extract_json_robust(response)  # [V70] json.loads → robust
 
+            try:
+                end_energy = int(response.get("end_energy", start_state.get("energy", 50)))
+            except (ValueError, TypeError):
+                end_energy = start_state.get("energy", 50)
+
             return {
                 "location": response.get("end_location", start_state["location"]),
-                "energy": int(response.get("end_energy", start_state["energy"])),
+                "energy": end_energy,
                 "injuries": response.get("end_injuries", start_state["injuries"]),
                 "items_acquired": response.get("items_acquired", []),
                 "items_consumed": response.get("items_consumed", []),

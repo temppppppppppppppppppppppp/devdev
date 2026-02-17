@@ -117,6 +117,10 @@ class WorldStateManager:
                     continue
                 if skill_name and skill_name not in self._state["protagonist"]["skills"]:
                     self._state["protagonist"]["skills"].append(skill_name)
+                    _MAX_SKILLS = 50
+                    skills_list = self._state["protagonist"]["skills"]
+                    if len(skills_list) > _MAX_SKILLS:
+                        skills_list[:] = skills_list[-_MAX_SKILLS:]
 
             # 3. 관계 변화
             for rel in state_changes.get("relationship_changes") or []:
@@ -390,6 +394,10 @@ class WorldStateManager:
                 "since_ep": since_ep,
             }
         )
+        _MAX_ACTIVE_PLOTS = 30
+        active_plots = self._state["active_plots"]
+        if len(active_plots) > _MAX_ACTIVE_PLOTS:
+            active_plots[:] = active_plots[-_MAX_ACTIVE_PLOTS:]
 
     def get_state_dict(self) -> dict:
         """내부 상태 dict 반환 (디버깅/대시보드용)"""

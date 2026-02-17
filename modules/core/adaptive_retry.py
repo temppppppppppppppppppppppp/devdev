@@ -711,7 +711,7 @@ class AdaptiveRetryManager:
         if not stats:
             return {"status": "no_data"}
 
-        total = sum(stats.values())
+        total = sum(stats.values()) or 1
         sorted_types = sorted(stats.items(), key=lambda x: -x[1])
 
         return {

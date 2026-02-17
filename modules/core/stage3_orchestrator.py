@@ -10,7 +10,7 @@ V68 lazy init: state_tracker, world_state, fact_ledger를 self.app에 할당
 import logging as _logging
 import traceback as _traceback
 
-from modules.core.constants import Emojis, ErrorMessages
+from modules.core.constants import ContextLimits, Emojis, ErrorMessages
 
 try:
     from modules.utils.notifier import notifier
@@ -410,8 +410,10 @@ class Stage3Orchestrator:
                         if _ms_text:
                             _prev_ms_for_bp.append(f"━━━ 제{_ms_ep}화 원고 ━━━\n{_ms_text}")
                 _prev_ms_text_for_bp = "\n\n".join(_prev_ms_for_bp) if _prev_ms_for_bp else ""
-                if len(_prev_ms_text_for_bp) > 200000:
-                    _prev_ms_text_for_bp = _prev_ms_text_for_bp[:200000] + "\n... (200K자 절삭)"
+                if len(_prev_ms_text_for_bp) > ContextLimits.MAX_CONTEXT_CHARS:
+                    _prev_ms_text_for_bp = (
+                        _prev_ms_text_for_bp[: ContextLimits.MAX_CONTEXT_CHARS] + "\n... (200K자 절삭)"
+                    )
                 if _prev_ms_for_bp:
                     _logging.info(
                         f"📚 [V67] Blueprint용 이전 원고 {len(_prev_ms_for_bp)}개 로드 ({len(_prev_ms_text_for_bp):,}자)"

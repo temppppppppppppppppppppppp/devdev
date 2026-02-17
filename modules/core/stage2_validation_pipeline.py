@@ -7,6 +7,7 @@ import re
 from difflib import SequenceMatcher
 
 from modules.core.constants import AIModels
+from modules.core.semantic_plot_guard import SemanticPlotGuard
 
 
 class Stage2ValidationPipeline:
@@ -670,7 +671,7 @@ class Stage2ValidationPipeline:
         stagnation_hits = 0
         for i in range(1, len(normalized)):
             sim = jaccard(normalized[i - 1], normalized[i])
-            if sim >= 0.85:
+            if sim >= SemanticPlotGuard.SIMILARITY_THRESHOLD:
                 stagnation_hits += 1
 
         if stagnation_hits >= 3:
