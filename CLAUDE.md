@@ -28,16 +28,15 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 ## 현재 상태 (2026-02-16)
 
 - **작동함**: Stage 0→2→4 정상 동작
-- **완료된 것**: Phase 1~2, 5-A/5-B/5-C, 6-A/6-B/6-C, 4C(DI), 4D(sqlite-vec), 3-5B(패치), 3-5A(NPC이력), **4-R1~R3(몬스터 분할)**, R4-a(NO-GO), **3-QR(품질 회귀 감지)**, **3-5C(NPC 과잉 경고)**, **3-Obs Step 1+2(관측성 계측)**, **3-B(크로스 에피소드 반복 감지)**, **D.대리만족 전체 완료(Step1~5)**, **A-1(writer 유틸 해체)**, **A-3(test xfail)**, **C-1(PlotGuard 폴백)**, **C-2(NPC 체인)**, **C-3(Validator 체인)**, **B-1 전체 완료(stage4 883줄(-64%), chief_writer 854줄(-62%), stage2 907줄(-66%))**, **E-2(Ruff 전면 정리 0 violations)**, **A-2(optimizer TODO 해소)**, **Green Suite 복원(1,446 passed)**
-- **약점**: ~~플롯 중복 감지 불안정 (Chain 1)~~ → C-1에서 키워드 폴백 도입으로 개선
-- **현재 단계**: 기술부채 전면 정리 완료, 잔여 작업은 B-2(Protocol) + D(미활용 기능) + E-1(Silent Pass)
-- **다음 우선순위**: B-2(Protocol 미적합 어댑터), D(미활용 기능 활성화), E-1(Silent Pass 패턴)
-- **테스트 기준선**: **1,522 passed + 68 xfailed** (full suite green, `pytest tests/ -q`)
+- **완료된 것**: Phase 1~2, 5-A/5-B/5-C, 6-A/6-B/6-C, 4C(DI), 4D(sqlite-vec), 3-5B(패치), 3-5A(NPC이력), **4-R1~R3(몬스터 분할)**, R4-a(NO-GO), **3-QR(품질 회귀 감지)**, **3-5C(NPC 과잉 경고)**, **3-Obs Step 1+2(관측성 계측)**, **3-B(크로스 에피소드 반복 감지)**, **D.대리만족 전체 완료(Step1~5)**, **A-1(writer 유틸 해체)**, **A-3(test xfail)**, **C-1(PlotGuard 폴백)**, **C-2(NPC 체인)**, **C-3(Validator 체인)**, **B-1 전체 완료(stage4 -64%, chief_writer -62%, stage2 -66%)**, **E-2(Ruff 0 violations)**, **A-2(optimizer TODO)**, **R5(2차 분할 전량)**, **WorkGuard(작품별 YAML)**, **Debug Sweep 1차+2차 전량 완료**, **B-3(Protocol 전면 표준화)**
+- **현재 단계**: 기술부채 전면 정리 + 디버깅 스윕 2차 완료, DI 마이그레이션 3 Stage 모두 완료
+- **테스트 기준선**: **1,702 passed + 68 xfailed** (full suite green, `pytest tests/ -q`)
 - **Ruff**: 0 violations, Silent Pass YELLOW 0건 (E-1+E-2 완료)
 - **stage4 orchestrator**: 2,481→883줄 (**-64%**, 분할 완료, 서브모듈 3개)
 - **chief_writer**: 2,255→854줄 (**-62%**, 분할 완료, 서브모듈 2개)
 - **stage2 orchestrator**: 2,639→907줄 (**-66%**, B-1-8 완료, 서브모듈 3개)
-- **checkpoint**: `f0390e8`
+- **DI 전환**: Stage2(43슬롯) + Stage3(19슬롯) + Stage4(24슬롯) 전량 완료
+- **checkpoint**: `7d11fa7`
 - **실행 기준 문서(SSOT)**: `내일작업.md` (남은 작업만 관리)
 
 ---
@@ -50,7 +49,7 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 | `modules/core/stage2_validation_pipeline.py` | Stage2 검증 파이프라인 | B-1-6 분리 (683줄), V64 위임 패턴 |
 | `modules/core/stage2_finalizer.py` | Stage2 Finalizer | B-1-7 분리 (535줄), V64 위임 패턴 |
 | `modules/core/stage2_preflight.py` | Stage2 Preflight 분석 | B-1-8 분리 (637줄), V64 위임 패턴 |
-| `modules/core/stage3_orchestrator.py` | Blueprint 오케스트레이터 | DI 전환 완료 (`self.app` 0, `self.ctx` 사용) |
+| `modules/core/stage3_orchestrator.py` | Blueprint 오케스트레이터 | DI 전환 완료 (19슬롯, lazy init만 self.app) |
 | `modules/core/stage4_orchestrator.py` | 원고 오케스트레이터 | B-1-1~3 분리 후 883줄, 서브모듈 3개 위임 |
 | `modules/core/stage4_post_processor.py` | Stage4 PASS 후처리 | B-1-1 분리 (543줄), V64 위임 패턴 |
 | `modules/core/stage4_context_builder.py` | Stage4 컨텍스트 빌더 | B-1-2 분리 (570줄), V64 위임 패턴 |
@@ -61,12 +60,15 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 | `modules/core/prompt_loader.py` | YAML 프롬프트 로더 (싱글톤) | |
 | `config/prompts/*.yaml` | 외부화된 프롬프트 43개 | |
 | `modules/domain/agents/*.py` | AI 에이전트 20+개 | |
-| `modules/core/genre_guards/*.py` | 장르 가드 3개 | |
+| `modules/core/genre_guards/*.py` | 장르 가드 4종 + WorkGuard + StyleGuard | Guard 체인: Genre→Work→Style |
 | `modules/validation/*.py` | 검증 파이프라인 | |
 | `config/settings/validation.yaml` | 검증 임계값 설정 | Phase 5-B |
 | `modules/validation/threshold_helper.py` | 공유 `_threshold()` 헬퍼 | Phase 5-B-2c |
 | `modules/core/writer_prompt_builders.py` | Writer 유틸 독립 모듈 | A-1 분리 |
 | `modules/core/semantic_plot_guard.py` | 플롯 중복 감지 (임베딩+키워드 폴백) | C-1 개선 |
+| `modules/core/stage2_context.py` | Stage2 DI 컨텍스트 (43슬롯) | Phase 4C-3 |
+| `modules/core/stage3_context.py` | Stage3 DI 컨텍스트 (19슬롯) | Phase E-1a |
+| `modules/core/stage4_context.py` | Stage4 DI 컨텍스트 (24슬롯) | Phase 4C-2 |
 
 ---
 
@@ -122,6 +124,14 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 | ~~28~~ | ~~A-2~~ | ~~stage2_optimizer TODO 2건~~ | ✅ 완료 (`167b305`) |
 | ~~29~~ | ~~E-1~~ | ~~Silent Pass 로깅 보강 (16건)~~ | ✅ 완료 (`380c911`) |
 | ~~30~~ | ~~D-1~~ | ~~POV 시스템 활성화~~ | ✅ 완료 (`f0390e8`) |
+| ~~31~~ | ~~D-2~~ | ~~에피소드 롤백 NPC 되감기~~ | ✅ 완료 (`9ba06cd`) |
+| ~~32~~ | ~~D-3~~ | ~~문체 분석 → StyleGuard 자동생성~~ | ✅ 완료 (`79afbfd`) |
+| ~~33~~ | ~~D-4~~ | ~~Director 선택 추적~~ | ✅ 완료 (`a2c1fb2`) |
+| ~~34~~ | ~~B-2~~ | ~~Protocol 미적합 어댑터 3종~~ | ✅ 완료 (`d45d53c`) |
+| ~~35~~ | ~~R5~~ | ~~2차 분할 (R5-1a/2a/2b/2c)~~ | ✅ 완료 (`2b0161c`) |
+| ~~36~~ | ~~WorkGuard~~ | ~~작품별 Guard YAML 시스템~~ | ✅ 완료 (`d3bd2db`) |
+| ~~37~~ | ~~Debug Sweep~~ | ~~전면 디버깅 스윕 (Phase 1~5b)~~ | ✅ 완료 (`883f438`) |
+| ~~38~~ | ~~B-3~~ | ~~ABC/Protocol 전면 표준화~~ | ✅ 완료 |
 
 ---
 
