@@ -180,12 +180,8 @@ class Stage3Orchestrator:
 
             app.state_tracker = StateTracker(preset_registry=app.preset_registry, llm_client=app.sys.api_client)
             all_arcs = app.current_project.db.load_anchor("arcs") or []
-            for arc in all_arcs:
-                app.state_tracker.extract_npc_deaths_from_arc(arc)
-                app.state_tracker.extract_skill_acquisitions_from_arc(arc)
-                _g = app.selected_genre.get("type", "") if app.selected_genre else ""
-                app.state_tracker.extract_npc_info_from_arc(arc, genre=_g)
-                app.state_tracker.extract_resolved_plots_from_arc(arc)
+            _g = app.selected_genre.get("type", "") if app.selected_genre else ""
+            app.state_tracker.full_extract_from_arcs(all_arcs, genre=_g)
             if app.state_tracker.npc_registry:
                 dead_count = sum(1 for info in app.state_tracker.npc_registry.values() if info.get("status") == "dead")
                 app.ui.log(
