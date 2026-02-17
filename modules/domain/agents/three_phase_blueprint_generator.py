@@ -165,7 +165,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             # [Patch Mode] 점수 기반 분기: 패치 모드 vs 전면 재생성
             from modules.core.constants import PatchModeThresholds
 
-            _use_patch = _previous_best is not None and _prev_reject_score >= PatchModeThresholds.REWRITE and retry == 1
+            _use_patch = _previous_best is not None and _prev_reject_score >= PatchModeThresholds.REWRITE
 
             if _use_patch:
                 logging.info(f"[Patch Mode] Blueprint 패치 모드 진입 (score={_prev_reject_score}, retry={retry})")

@@ -1,7 +1,7 @@
 """
-[V64] Writer - Thin Fallback Agent (냉동인간)
+[V64] Writer - Thin Fallback Agent
 
-ChiefWriter가 3회 면담 모두 실패했을 때만 소환되는 최후 폴백.
+독립 API로 유지 (오케스트레이터 호출 경로 제거됨).
 원래 2,580줄 → 500줄 이하로 경량화.
 
 삭제된 기능 (ChiefWriter에 이미 존재):

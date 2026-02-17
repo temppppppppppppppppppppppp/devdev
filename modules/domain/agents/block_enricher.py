@@ -342,10 +342,13 @@ class BlockEnricher(BaseAgent):
             )
 
             if validation.get("validation_result") == "FAIL":
-                # 1차 검증 실패 시 재시도
+                # 1차 검증 실패 → 원본 보존 패치 모드
+                _original_text = json.dumps(result, ensure_ascii=False, indent=2)[:20000]
                 retry_prompt = (
-                    prompt
-                    + f"\n\n[이전 시도 실패 피드백]\n{json.dumps(validation.get('issues', []), ensure_ascii=False)}"
+                    prompt + f"\n\n[🔧 패치 모드: 이전 농축 결과 원본 보존 + 지적사항만 수정]"
+                    f"\n## 이전 농축 결과\n{_original_text}"
+                    f"\n\n## 검증 실패 피드백\n{json.dumps(validation.get('issues', []), ensure_ascii=False)}"
+                    f"\n\n⚠️ 전면 재농축하지 마세요. 지적된 부분만 수정하세요."
                 )
                 result = self.ask(retry_prompt, temperature=0.5)
                 if isinstance(result, str):
@@ -361,20 +364,26 @@ class BlockEnricher(BaseAgent):
             )
 
             if director_audit.get("decision") == "REJECT":
-                # Director REJECT 시 피드백 반영하여 재농축
+                # Director REJECT → 원본 보존 패치 모드
                 feedback = director_audit.get("feedback", "품질 미달")
                 critical_issues = director_audit.get("critical_issues", [])
+                _original_text = json.dumps(result, ensure_ascii=False, indent=2)[:20000]
 
                 retry_prompt = (
                     prompt
                     + f"""
 
-[🚨 Director 심사 REJECT - 반드시 수정 필요]
+[🔧 패치 모드: 이전 농축 결과 원본 보존 + Director 지적사항만 수정]
+
+## 이전 농축 결과
+{_original_text}
+
+## Director 심사 REJECT
 점수: {director_audit.get("total_score", 0)}/100
 치명적 문제: {json.dumps(critical_issues, ensure_ascii=False)}
 수정 지시: {feedback}
 
-위 문제를 해결하여 다시 농축하라.
+⚠️ 전면 재농축하지 마세요. 지적된 부분만 수정하세요.
 """
                 )
                 result = self.ask(retry_prompt, temperature=0.4)

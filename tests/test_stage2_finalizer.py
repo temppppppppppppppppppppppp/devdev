@@ -101,7 +101,6 @@ def _make_finalize_kwargs(refined_arc, **overrides):
         "attempt": 0,
         "generation_method": "four_phase",
         "st_snapshot": None,
-        "use_analyst_fallback": False,
         "director_feedback_for_fourphase": "",
         "last_refined_context": "prev context",
         "bible_root": {"protagonist_config": {"name": "hero", "incarnation_type": "회귀자"}},
@@ -210,7 +209,6 @@ class TestRunFinalize:
             valid_refined_arc,
             draft_validator_passed=False,
             consensus_passed=False,
-            use_analyst_fallback=False,
         )
         result = asyncio.run(finalizer.run_finalize(**kwargs))
 

@@ -111,7 +111,6 @@ def _arc_analysis_kwargs(**overrides):
 def _enrichment_kwargs(**overrides):
     defaults = {
         "attempt": 0,
-        "use_analyst_fallback": False,
         "global_arc_no": 1,
         "current_ep_start": 1,
         "current_vol_strategy": {"strategy_doc": "doc"},
@@ -153,10 +152,8 @@ class TestPreflightStateSetup:
             "current_feedback",
             "constraint_block",
             "attempt",
-            "max_fourphase_attempts",
             "max_attempts",
             "director_feedback_for_fourphase",
-            "use_analyst_fallback",
             "st_snapshot",
         }
         assert required == set(out.keys())
@@ -263,12 +260,6 @@ class TestPreflightEnrichment:
         out = preflight._preflight_enrichment(**_enrichment_kwargs())
         assert out["four_phase_passed"] is False
         assert "FourPhase 오류 발생" in out["director_feedback_for_fourphase"]
-
-    @patch("modules.core.spinners.StageSpinner", MagicMock())
-    def test_use_analyst_fallback_skips_fourphase(self, preflight):
-        out = preflight._preflight_enrichment(**_enrichment_kwargs(use_analyst_fallback=True))
-        assert out["four_phase_passed"] is False
-        assert out["generation_method"] == "analyst"
 
     @patch("modules.core.spinners.StageSpinner", MagicMock())
     def test_fourphase_pass_triggers_state_tracker_enrichment(self, preflight):

@@ -185,6 +185,10 @@ class FourPhaseArcGenerator(BaseAgent):
             feedback = f"[🎬 Director 피드백 - 반드시 반영할 것]\n{director_feedback}\n"
             logging.info(f"📢 [V60.77] Director 피드백 주입됨 ({len(director_feedback)}자)")
 
+        # [Patch Mode] 내부 retry용 이전 REJECT 추적
+        _prev_rejected_arc = None
+        _prev_reject_feedback = ""
+
         for retry in range(max_internal_retries + 1):
             pipeline_result["retries"] = retry
 
@@ -227,21 +231,62 @@ class FourPhaseArcGenerator(BaseAgent):
             if vector_context:
                 prev_arc_context = f"{prev_arc_context}\n\n[과거 유사 맥락 (벡터 검색)]\n{vector_context}"
 
-            best_arc, all_candidates = self.ensemble.generate_ensemble(
-                arc_no=arc_no,
-                ep_start=ep_start,
-                vol_strategy=vol_strategy,
-                curr_block=curr_block,
-                prev_arc_context=prev_arc_context,
-                constraint_block=full_constraint_block,
-                assets=assets,
-                feedback=feedback,
-                protagonist_name=protagonist_name,
-                protagonist_config=protagonist_config,  # [V60.88]
-                entity_registry=entity_registry,  # [V60.92] Entity Registry
-                ep_count=ep_count,  # [V61.1] 가변 페이싱
-                retry=retry,  # [V61.5] 재시도 시 thinking 다운그레이드
-            )
+            # [Patch Mode] 내부 retry: 이전 REJECT arc가 있으면 패치 시도
+            best_arc = None
+            all_candidates = []
+            if _prev_rejected_arc and retry >= 1:
+                logging.info(f"[Patch Mode] FourPhase 내부 패치 시도 (retry={retry})")
+                try:
+                    best_arc, _patch_result = self.patch_arc_with_feedback(
+                        original_arc=_prev_rejected_arc,
+                        director_feedback=_prev_reject_feedback,
+                        attempt_number=retry + 1,
+                        arc_no=arc_no,
+                        ep_start=ep_start,
+                        vol_strategy=vol_strategy,
+                        curr_block=curr_block,
+                        prev_arcs=prev_arcs,
+                        assets=assets,
+                        protagonist_name=protagonist_name,
+                        entity_registry=entity_registry,
+                        state_tracker=state_tracker,
+                        vector_context=vector_context,
+                    )
+                    if best_arc and _patch_result.get("final_verdict") == "PASS":
+                        # 패치 + 검증 모두 성공 → Phase 3 스킵하고 바로 반환
+                        pipeline_result["phases"]["generate"] = {
+                            "status": "patch_pass",
+                            "candidates_count": 1,
+                            "selected_strategy": "patch",
+                        }
+                        pipeline_result["final_verdict"] = "PASS"
+                        pipeline_result["retries"] = retry
+                        self.stats["phase3_pass"] += 1
+                        logging.info(f"✅ [Patch Mode] FourPhase 내부 패치 성공 (retry={retry})")
+                        return best_arc, pipeline_result
+                    # 패치 검증 실패 → 폴백
+                    if not best_arc:
+                        logging.info("[Patch Mode] FourPhase 내부 패치 실패 → 전면 재생성 폴백")
+                except Exception as _patch_err:
+                    logging.warning(f"[Patch Mode] FourPhase 내부 패치 오류: {str(_patch_err)[:80]}")
+                    best_arc = None
+
+            if not best_arc:
+                best_arc, all_candidates = self.ensemble.generate_ensemble(
+                    arc_no=arc_no,
+                    ep_start=ep_start,
+                    vol_strategy=vol_strategy,
+                    curr_block=curr_block,
+                    prev_arc_context=prev_arc_context,
+                    constraint_block=full_constraint_block,
+                    assets=assets,
+                    feedback=feedback,
+                    protagonist_name=protagonist_name,
+                    protagonist_config=protagonist_config,  # [V60.88]
+                    entity_registry=entity_registry,  # [V60.92] Entity Registry
+                    ep_count=ep_count,  # [V61.1] 가변 페이싱
+                    retry=retry,  # [V61.5] 재시도 시 thinking 다운그레이드
+                )
 
             if not best_arc:
                 logging.warning("❌ [Phase 2] Ensemble 생성 실패")
@@ -290,6 +335,11 @@ class FourPhaseArcGenerator(BaseAgent):
             else:
                 self.stats["phase3_reject"] += 1
                 feedback = validation_result.get("feedback", "검증 실패")
+
+                # [Patch Mode] REJECT된 arc 보존 (다음 retry에서 패치 시도용)
+                if best_arc:
+                    _prev_rejected_arc = best_arc
+                    _prev_reject_feedback = feedback
 
                 # REJECT 기록
                 issues = validation_result.get("issues", [])

@@ -1,11 +1,11 @@
-"""[Phase 6-B] L2 재시도/복구 — 3라운드 재시도 루프, 패치 모드, chain_link
+"""[Phase 6-B] L2 재시도/복구 — 5라운드 재시도 루프, 패치 모드, chain_link
 
 6건:
 1. 1라운드 합격 → DB manuscripts 저장
 2. 불합격 → regenerate_with_feedback 호출
-3. score=60, round=1 → patch_with_feedback 호출
+3. score=60 → patch_with_feedback 호출 (전 라운드 패치 모드)
 4. score=30 → regenerate (패치 아님)
-5. 3라운드 전패 → legacy Writer 호출
+5. 5라운드 전패 → 실패 메시지 + should_return=True
 6. 합격 후 → DB anchor chain_link_1 존재
 """
 
@@ -124,26 +124,26 @@ class TestRound0RejectTriggersRound1:
 
 
 # ══════════════════════════════════════════════════════════════
-# L2-R-3: score=60, round=1 → patch_with_feedback 호출
+# L2-R-3: score=60 → patch_with_feedback 호출 (전 라운드 패치 모드)
 # ══════════════════════════════════════════════════════════════
 
 
 class TestPatchModeEntryScore60:
-    def _should_use_patch(self, previous_attempt, interview_round):
-        """stage4_orchestrator.py의 분기 조건 재현"""
+    def _should_use_patch(self, previous_attempt):
+        """stage4_interview_round.py의 분기 조건 재현 (전 라운드 패치 모드)"""
         _prev_score = previous_attempt.get("score", 0) if previous_attempt else 0
         _prev_manuscript = previous_attempt.get("best_manuscript", "") if previous_attempt else ""
-        return _prev_score >= PatchModeThresholds.REWRITE and interview_round == 1 and bool(_prev_manuscript)
+        return _prev_score >= PatchModeThresholds.REWRITE and bool(_prev_manuscript)
 
     def test_patch_mode_entry_score_60(self):
-        """score=60, round=1, best_manuscript 있음 → 패치 모드 진입"""
+        """score=60, best_manuscript 있음 → 패치 모드 진입 (라운드 무관)"""
         prev = {"score": 60, "best_manuscript": MOCK_MANUSCRIPT}
-        assert self._should_use_patch(prev, interview_round=1) is True
+        assert self._should_use_patch(prev) is True
 
     def test_patch_mode_boundary_50(self):
         """score=50 (경계값) → 패치 모드 진입"""
         prev = {"score": 50, "best_manuscript": MOCK_MANUSCRIPT}
-        assert self._should_use_patch(prev, interview_round=1) is True
+        assert self._should_use_patch(prev) is True
 
 
 # ══════════════════════════════════════════════════════════════
@@ -163,28 +163,24 @@ class TestLowScoreFullRewrite:
 
 
 # ══════════════════════════════════════════════════════════════
-# L2-R-5: 3라운드 전패 → legacy Writer 호출
+# L2-R-5: 5라운드 전패 → 실패 메시지 + should_return=True
 # ══════════════════════════════════════════════════════════════
 
 
-class TestAllRoundsFailFrozenHuman:
-    def test_all_rounds_fail_frozen_human(self, mock_app):
-        """3라운드 전부 REJECT 시 frozen_human 경로 (legacy writer) 진입 확인"""
+class TestAllRoundsFailReturnsError:
+    def test_all_rounds_fail_returns_error(self, mock_app):
+        """5라운드 전부 REJECT 시 final_manuscript=None → 실패 처리"""
         orch = Stage4Orchestrator(mock_app)
 
-        # 3라운드 전패 시나리오: interview_round 0, 1, 2 전부 REJECT
-        # → 루프 탈출 후 frozen_human 분기 (writer.write_v20_manuscript)
-        # 여기서는 분기 판단 로직만 검증
+        # 5라운드 전패 시나리오: interview_round 0~4 전부 REJECT
+        # → 루프 탈출 후 실패 메시지 + should_return=True
         final_manuscript = None
-        for interview_round in range(3):
+        for interview_round in range(5):
             # 모든 라운드에서 REJECT
-            verdict = "REJECT"
             final_manuscript = None  # PASS 안 됨
 
-        # 3라운드 종료 후 final_manuscript == None → frozen_human
+        # 5라운드 종료 후 final_manuscript == None → 실패 처리
         assert final_manuscript is None
-        # legacy writer가 사용 가능한지 확인
-        assert "writer" in orch.ctx.agents
 
 
 # ══════════════════════════════════════════════════════════════

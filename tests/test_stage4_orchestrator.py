@@ -374,13 +374,13 @@ class TestHandleRoundOutcomeErrorPaths:
             reflexion_prompt="",
         )
 
-    def test_user_abort_returns_dict(self, orch_with_ctx, minimal_round_ctx, monkeypatch):
-        """user abort (메뉴 선택 != 4) → _RoundOutcome 반환, TypeError 없음"""
+    def test_all_rounds_reject_returns_should_return(self, orch_with_ctx, minimal_round_ctx, monkeypatch):
+        """5라운드 모두 REJECT → _RoundOutcome(should_return=True) 반환"""
         from modules.core.stage4_orchestrator import _InterviewRoundResult
 
         orch = orch_with_ctx
 
-        # 3라운드 모두 REJECT (B-1-3: interview_round.run 위임)
+        # 5라운드 모두 REJECT (B-1-3: interview_round.run 위임)
         orch._interview_round = MagicMock()
         orch._interview_round.run = MagicMock(
             return_value=_InterviewRoundResult(
@@ -389,18 +389,6 @@ class TestHandleRoundOutcomeErrorPaths:
                 previous_attempt={"score": 30},
             )
         )
-
-        # 냉동인간 원고 반환 + Director REJECT
-        orch.ctx.agents["writer"].write_v20_manuscript.return_value = {
-            "content": "냉동 원고",
-            "title": "제1화",
-        }
-        orch.ctx.agents["director"].quick_judge_single.return_value = {
-            "verdict": "REJECT",
-            "reason": "품질 미달",
-        }
-        # get_int_input → 1 (abort, not 4)
-        orch.ctx.get_int_input.return_value = 1
 
         # StageSpinner is locally imported inside _handle_round_outcome
         import modules.core.spinners
@@ -417,36 +405,8 @@ class TestHandleRoundOutcomeErrorPaths:
         assert result.final_manuscript is None
         assert result.final_title is None
         assert result.final_state_updates == {}
-
-    def test_frozen_human_exception_returns_dict(self, orch_with_ctx, minimal_round_ctx, monkeypatch):
-        """frozen human 호출 실패 except → _RoundOutcome 반환, TypeError 없음"""
-        from modules.core.stage4_orchestrator import _InterviewRoundResult
-
-        orch = orch_with_ctx
-
-        # 3라운드 모두 REJECT (B-1-3: interview_round.run 위임)
-        orch._interview_round = MagicMock()
-        orch._interview_round.run = MagicMock(
-            return_value=_InterviewRoundResult(
-                verdict="REJECT",
-                director_feedback="피드백",
-                previous_attempt={"score": 30},
-            )
-        )
-
-        # 냉동인간 호출 시 Exception 발생
-        orch.ctx.agents["writer"].write_v20_manuscript.side_effect = RuntimeError("API 실패")
-
-        import modules.core.spinners
-
-        monkeypatch.setattr(modules.core.spinners, "StageSpinner", MagicMock())
-
-        result = orch._handle_round_outcome(round_ctx=minimal_round_ctx)
-
-        # Core assertion: returns _RoundOutcome, not dict or set
-        from modules.core.stage4_orchestrator import _RoundOutcome
-
-        assert isinstance(result, _RoundOutcome), f"Expected _RoundOutcome, got {type(result).__name__}"
+        # 5라운드 호출 확인
+        assert orch._interview_round.run.call_count == 5
         assert result.should_return is True
         assert result.final_manuscript is None
         assert result.final_title is None
