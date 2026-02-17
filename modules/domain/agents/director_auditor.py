@@ -16,6 +16,7 @@ import time
 
 from modules.core.constants import ManuscriptLimits
 from modules.core.prompt_loader import PromptLoader
+from modules.validation.threshold_helper import _threshold
 from modules.validation.validation_orchestrator import ValidationOrchestrator
 
 # [V60.95] 원시인 모드 금지어 Guard (JSON 기반)
@@ -572,7 +573,10 @@ class DirectorQualityAuditor:
             from modules.core.repetition_guard import RepetitionGuard
 
             # RepetitionGuard 초기화
-            guard = RepetitionGuard(window_size=5, threshold=3)
+            guard = RepetitionGuard(
+                window_size=_threshold("premium.repetition.window_size", 5),
+                threshold=_threshold("premium.repetition.threshold", 3),
+            )
 
             # 이전 5화 원고 수집
             prev_manuscripts = []
@@ -593,7 +597,7 @@ class DirectorQualityAuditor:
                 violations, clean_score = guard.scan_manuscript(manuscript)
 
                 # 위반 발견 시 REJECT (클린 점수 85% 미만)
-                if clean_score < 0.85:
+                if clean_score < _threshold("premium.repetition.clean_score_min", 0.85):
                     correction_prompt = guard.generate_correction_prompt(violations)
 
                     return {

@@ -301,6 +301,10 @@ class ChiefWriter(BaseAgent):
                 except Exception as e:
                     # [V61.3] as_completed 자체 예외 처리
                     logging.info(f"⚠️ [V61.3] 원고 앙상블 루프 예외: {str(e)[:80]}")
+                finally:
+                    # [Sweep3-G2] 미완료 future 정리 — 백그라운드 실행 방지
+                    for f in futures:
+                        f.cancel()
         except Exception as e:
             # [V61.3] ThreadPoolExecutor 전체 예외 처리 - 급사 방지
             # stderr로 출력 (Rich 스피너가 stdout 가림)
@@ -330,7 +334,7 @@ class ChiefWriter(BaseAgent):
                 genre_name=genre_name,
                 cache_name=cache_name,
             )
-            if fallback:
+            if fallback and not fallback.get("error"):
                 candidates = [fallback]
 
         # [V66.3] C-4: 모든 후보 생성 실패 시 에러 dict 반환 (빈 배열 방지 → downstream IndexError 크래시 방어)
@@ -420,7 +424,7 @@ class ChiefWriter(BaseAgent):
 
             data = self._extract_json_robust(response)
 
-            if not data or data.get("parsing_error"):
+            if not isinstance(data, dict) or not data or data.get("parsing_error"):
                 return None
 
             # 원고 추출 (타입 안전성 보장)
@@ -429,6 +433,12 @@ class ChiefWriter(BaseAgent):
                 # content가 리스트/딕셔너리인 경우 문자열로 변환 시도
                 if isinstance(manuscript_content, list):
                     manuscript_content = "\n".join(str(item) for item in manuscript_content)
+                elif isinstance(manuscript_content, dict):
+                    manuscript_content = (
+                        manuscript_content.get("text", "")
+                        or manuscript_content.get("content", "")
+                        or json.dumps(manuscript_content, ensure_ascii=False)
+                    )
                 else:
                     manuscript_content = str(manuscript_content) if manuscript_content else ""
             manuscript_json = json.dumps(data, ensure_ascii=False)
@@ -790,6 +800,11 @@ class ChiefWriter(BaseAgent):
                     continue
         except Exception as e:  # [V64.P4] IMPORTANT: manuscript cache build failure affects continuity checks
             logging.warning(f"⚠️ [V64.P4] 원고 캐시 구축 실패: {str(e)[:60]}")
+
+    def invalidate_manuscript_cache(self):
+        """원고 캐시 무효화 (에피소드 롤백 시 호출)."""
+        self._manuscript_cache = {}
+        self._cache_ep_num = -1
 
     def _get_cached_manuscript(self, ep_num: int) -> dict:
         """[V60.82] 캐시에서 원고 조회"""

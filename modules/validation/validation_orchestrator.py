@@ -49,25 +49,26 @@ try:
 
     RETROSPECTIVE_AVAILABLE = True
 except ImportError:
-    logging.info("⚠️ [V60.1] RetrospectiveValidator 미설치 - 회고적 검증 비활성화")
+    logging.warning("⚠️ [V60.1] RetrospectiveValidator 미설치 - 회고적 검증 비활성화")
 
 try:
     from modules.core.reflexion_manager import ReflexionManager
 
     REFLEXION_AVAILABLE = True
 except ImportError:
-    logging.info("⚠️ [V60.1] ReflexionManager 미설치 - Reflexion 기반 개선 비활성화")
+    logging.warning("⚠️ [V60.1] ReflexionManager 미설치 - Reflexion 기반 개선 비활성화")
 
 try:
     from modules.core.quality_constitution import get_constitution_for_genre
 
     CONSTITUTION_AVAILABLE = True
 except ImportError:
-    logging.info("⚠️ [V60.1] QualityConstitution 미설치 - 품질 헌법 비활성화")
+    logging.warning("⚠️ [V60.1] QualityConstitution 미설치 - 품질 헌법 비활성화")
 
 
 # [V44] Constitution 캐시 (모듈 레벨에서 관리)
 _CONSTITUTION_CACHE: dict[str, str] = {}
+_VALIDATION_HISTORY_MAX = 50
 
 # ═══════════════════════════════════════════════════════════════
 # [V59] 적응형 임계값 상수
@@ -240,8 +241,9 @@ class ValidationOrchestrator:
 
             if not pre_llm_result["passed"]:
                 # 명백한 오류 시 즉시 REJECT (LLM 비용 절약)
-                logging.warning(f"❌ PRE-LLM 실패: {len(pre_llm_result['critical_issues'])}개 이슈")
-                for issue in pre_llm_result["critical_issues"][:3]:
+                _issues = pre_llm_result.get("critical_issues", [])
+                logging.warning(f"❌ PRE-LLM 실패: {len(_issues)}개 이슈")
+                for issue in _issues[:3]:
                     desc = issue.get("description", issue.get("category", "Unknown"))
                     logging.info(f"- {desc}")
 
@@ -249,7 +251,7 @@ class ValidationOrchestrator:
                     "final_decision": "REJECT",
                     "reason": "PRE-LLM 사전검증 실패 - 명백한 오류 감지",
                     "pre_llm_result": pre_llm_result,
-                    "critical_issues": pre_llm_result["critical_issues"],
+                    "critical_issues": _issues,
                     "total_score": 0,
                     "feedback": self._generate_pre_llm_feedback(pre_llm_result),
                     "self_consistency_used": False,
@@ -259,7 +261,7 @@ class ValidationOrchestrator:
             # 경고만 있는 경우
             warning_count = len(pre_llm_result.get("warnings", []))
             if warning_count > 0:
-                logging.info(f"⚠️ PRE-LLM 경고: {warning_count}개 (점수 -{pre_llm_result['score_deduction']}점)")
+                logging.warning(f"⚠️ PRE-LLM 경고: {warning_count}개 (점수 -{pre_llm_result['score_deduction']}점)")
             else:
                 logging.info("✅ PRE-LLM 통과")
 
@@ -288,7 +290,7 @@ class ValidationOrchestrator:
         # 경고만 있는 경우 로그
         warning_count = continuity_result.get("warning_count", 0)
         if warning_count > 0:
-            logging.info(f"⚠️ CONTINUITY 경고: {warning_count}개 (계속 진행)")
+            logging.warning(f"⚠️ CONTINUITY 경고: {warning_count}개 (계속 진행)")
         else:
             logging.info("✅ CONTINUITY 통과")
 
@@ -799,7 +801,7 @@ class ValidationOrchestrator:
                 _CONSTITUTION_CACHE[genre] = constitution
                 return constitution
             except Exception as e:
-                logging.warning(f"[ERROR] Constitution 로드 실패 ({genre}): {e}")
+                logging.warning(f"[WARNING] Constitution 로드 실패 ({genre}): {e}")
         else:
             logging.warning("[WARNING] quality_constitution 모듈 미설치")
 
@@ -995,31 +997,30 @@ class ValidationOrchestrator:
         # ═══════════════════════════════════════════════════════════════
         logging.info("[V59-Parallel] Stage 2: 병렬 검증 시작...")
 
-        loop = asyncio.get_event_loop()
-        executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.max_parallel_workers)
-
-        # 병렬 실행할 검증 태스크들
-        consistency_task = loop.run_in_executor(
-            executor, partial(self.consistency.validate, manuscript, validation_context)
-        )
-
-        if self.use_self_consistency and self.client:
-            scoring_task = loop.run_in_executor(
-                executor, partial(self._evaluate_with_self_consistency, manuscript, validation_context)
-            )
-        else:
-            scoring_task = loop.run_in_executor(
-                executor, partial(self.scoring.validate, manuscript, validation_context)
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_parallel_workers) as executor:
+            # 병렬 실행할 검증 태스크들
+            consistency_task = loop.run_in_executor(
+                executor, partial(self.consistency.validate, manuscript, validation_context)
             )
 
-        advisory_task = loop.run_in_executor(executor, partial(self.advisory.validate, manuscript, validation_context))
+            if self.use_self_consistency and self.client:
+                scoring_task = loop.run_in_executor(
+                    executor, partial(self._evaluate_with_self_consistency, manuscript, validation_context)
+                )
+            else:
+                scoring_task = loop.run_in_executor(
+                    executor, partial(self.scoring.validate, manuscript, validation_context)
+                )
 
-        # 모든 태스크 완료 대기
-        consistency_result, scoring_result, advisory_result = await asyncio.gather(
-            consistency_task, scoring_task, advisory_task
-        )
+            advisory_task = loop.run_in_executor(
+                executor, partial(self.advisory.validate, manuscript, validation_context)
+            )
 
-        executor.shutdown(wait=False)
+            # 모든 태스크 완료 대기
+            consistency_result, scoring_result, advisory_result = await asyncio.gather(
+                consistency_task, scoring_task, advisory_task
+            )
 
         results["consistency_result"] = consistency_result
         results["scoring_result"] = scoring_result
@@ -1277,9 +1278,9 @@ class ValidationOrchestrator:
 
         self.validation_history.append({"ep_num": ep_num, "score": score, "passed": passed, "timestamp": time.time()})
 
-        # 히스토리 크기 제한 (최근 50개)
-        if len(self.validation_history) > 50:
-            self.validation_history = self.validation_history[-50:]
+        # 히스토리 크기 제한 (최근 N개)
+        if len(self.validation_history) > _VALIDATION_HISTORY_MAX:
+            self.validation_history = self.validation_history[-_VALIDATION_HISTORY_MAX:]
 
         # 연속 카운트 업데이트
         if passed:

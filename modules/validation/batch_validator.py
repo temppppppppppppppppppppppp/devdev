@@ -50,7 +50,8 @@ class BatchValidator:
             List of validation results
         """
         start_time = time.time()
-        self.stats["total_manuscripts"] = len(manuscripts)
+        with self._stats_lock:
+            self.stats["total_manuscripts"] = len(manuscripts)
 
         # Semaphore로 동시 실행 제한 (API rate limit 보호)
         semaphore = asyncio.Semaphore(self.max_concurrent)
@@ -98,7 +99,8 @@ class BatchValidator:
             List of validation results
         """
         start_time = time.time()
-        self.stats["total_manuscripts"] = len(manuscripts)
+        with self._stats_lock:
+            self.stats["total_manuscripts"] = len(manuscripts)
 
         def validate_one(ms_data) -> dict:
             try:
@@ -268,7 +270,7 @@ def validate_manuscripts_in_batch(
                         results = validator.validate_batch_sync(manuscripts)
             except Exception as e:
                 # 예기치 못한 오류 시 동기 모드로 fallback
-                logging.warning(f"[ERROR] Async 실행 실패: {e}")
+                logging.warning(f"[WARNING] Async 실행 실패: {e}")
                 logging.info("[INFO] ThreadPool 동기 모드로 전환")
                 results = validator.validate_batch_sync(manuscripts)
     else:

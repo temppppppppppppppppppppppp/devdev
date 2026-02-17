@@ -231,8 +231,8 @@ class Analyst(BaseAgent):
             pass
 
         # 4. 부상 상태 검증
-        prev_injuries = prev_end.get("injuries", []) or prev_end.get("status", "")
-        curr_injuries = curr_start.get("injuries", []) or curr_start.get("status", "")
+        prev_injuries = str(prev_end.get("injuries", "") or prev_end.get("status", ""))
+        curr_injuries = str(curr_start.get("injuries", "") or curr_start.get("status", ""))
 
         if prev_injuries and not curr_injuries:
             if "중상" in str(prev_injuries) or "부상" in str(prev_injuries):
@@ -274,7 +274,7 @@ class Analyst(BaseAgent):
         """
         # [V60.36 FIX] tactical_doc이 dict인 경우 문자열로 변환
         if isinstance(tactical_doc, dict):
-            tactical_doc = tactical_doc.get("tactical_doc", "") or str(tactical_doc)
+            tactical_doc = tactical_doc.get("tactical_doc", "") or json.dumps(tactical_doc, ensure_ascii=False)
         if not isinstance(tactical_doc, str):
             tactical_doc = str(tactical_doc) if tactical_doc else ""
 
@@ -359,7 +359,7 @@ class Analyst(BaseAgent):
         """
         # [V60.36 FIX] tactical_doc이 dict인 경우 문자열로 변환
         if isinstance(tactical_doc, dict):
-            tactical_doc = tactical_doc.get("tactical_doc", "") or str(tactical_doc)
+            tactical_doc = tactical_doc.get("tactical_doc", "") or json.dumps(tactical_doc, ensure_ascii=False)
         if not isinstance(tactical_doc, str):
             tactical_doc = str(tactical_doc) if tactical_doc else ""
 

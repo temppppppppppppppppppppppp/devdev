@@ -22,6 +22,8 @@ import re
 from collections import Counter
 from typing import Any
 
+from modules.validation.threshold_helper import _threshold
+
 
 class PreLLMValidator:
     """
@@ -109,7 +111,7 @@ class PreLLMValidator:
 
         # 9. 회차별 반복 구조
         repetitive = self._check_structural_repetition(manuscript)
-        if repetitive.get("repetition_score", 0) > 0.6:
+        if repetitive.get("repetition_score", 0) > _threshold("pre_llm.repetition_score_threshold", 0.6):
             warnings.append(repetitive)
             score_deduction += 1
 
@@ -194,7 +196,7 @@ class PreLLMValidator:
         lengths = [len(s) for s in sentences]
         mean_len = statistics.mean(lengths)
 
-        if mean_len == 0:
+        if mean_len < 0.001:
             return {"has_issue": False}
 
         std_dev = statistics.stdev(lengths) if len(lengths) > 1 else 0
@@ -414,7 +416,9 @@ class PreLLMValidator:
             "repetition_score": round(repetition_score, 2),
             "most_common_starts": most_common[:3],
             "category": "구조적_반복",
-            "severity": "WARNING" if repetition_score > 0.6 else "OK",
+            "severity": (
+                "WARNING" if repetition_score > _threshold("pre_llm.repetition_score_threshold", 0.6) else "OK"
+            ),
             "description": f"상위 3개 시작 패턴 비율 {repetition_score:.0%}",
         }
 

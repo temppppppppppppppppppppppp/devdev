@@ -205,7 +205,7 @@ class DiversitySampler:
 
         # 4. Structure Variety - 15%
         # 문장 시작 패턴 다양성
-        starters = [s.split()[0] if s.split() else "" for s in sentences if s.strip()]
+        starters = [(w[0] if (w := s.split()) else "") for s in sentences if s.strip()]
         if starters:
             unique_starters = len(set(starters))
             total_starters = len(starters)

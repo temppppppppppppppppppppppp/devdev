@@ -213,7 +213,7 @@ class GracefulDegradation:
                     context=context,
                 )
 
-                logging.info(f"⚠️ [{agent_name}] {error_type}: {error_message[:100]}")
+                logging.warning(f"⚠️ [{agent_name}] {error_type}: {error_message[:100]}")
 
                 # 재시도 전략인 경우
                 if strategy == RecoveryStrategy.RETRY:

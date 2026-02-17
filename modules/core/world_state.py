@@ -96,6 +96,7 @@ class WorldStateManager:
                 else:
                     continue
                 if not name:
+                    logging.warning(f"[WorldState] NPC entry missing name: {death}")
                     continue
                 # dead_npcs에 추가
                 self._state["dead_npcs"][name] = {

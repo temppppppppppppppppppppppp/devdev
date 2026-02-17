@@ -101,7 +101,7 @@ class FineTuningManager:
                     out.write(json.dumps(training_example, ensure_ascii=False) + "\n")
 
                 except Exception as e:
-                    logging.info(f"Error processing {file.name}: {e}")
+                    logging.warning(f"Error processing {file.name}: {e}")
                     continue
 
         logging.info(f"✅ Training data prepared: {output_file}")

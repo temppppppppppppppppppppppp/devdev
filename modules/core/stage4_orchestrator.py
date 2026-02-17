@@ -14,6 +14,7 @@ from modules.core.constants import PatchModeThresholds
 from modules.core.stage4_context_builder import Stage4ContextBuilder
 from modules.core.stage4_interview_round import Stage4InterviewRound
 from modules.core.stage4_post_processor import Stage4PostProcessor
+from modules.validation.threshold_helper import _threshold
 
 _perf_logger = logging.getLogger(__name__)  # [V65] PerfTimer 로깅
 
@@ -26,7 +27,7 @@ def _detect_npc_overexposure(
     npc_names,
     protagonist_name: str = "",
     *,
-    max_mentions: int = 15,
+    max_mentions: int = _threshold("npc_exposure.max_mentions_per_episode", 15),
     core_npc_names: frozenset = frozenset(),
     min_name_length: int = 2,
 ):
@@ -79,8 +80,8 @@ def _detect_cross_episode_repetition(
     fingerprints,
     repeated,
     *,
-    warning_threshold: int = 3,
-    regression_threshold: int = 6,
+    warning_threshold: int = _threshold("cross_episode_repetition.overlap_warning", 3),
+    regression_threshold: int = _threshold("cross_episode_repetition.overlap_regression", 6),
 ):
     """크로스 에피소드 문장 반복 감지 (advisory-only).
 

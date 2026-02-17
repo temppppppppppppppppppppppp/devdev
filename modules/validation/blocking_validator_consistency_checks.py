@@ -300,7 +300,7 @@ class BlockingValidatorConsistencyChecks:
             from modules.core.information_diffusion import InformationDiffusion
 
             # context 객체가 필요 (self.host.context가 있는 경우에만 동작)
-            if not self.host.context:
+            if not self.host or not self.host.context:
                 return {"check": "information_consistency", "passed": True}
 
             diffusion = InformationDiffusion(self.host.context)

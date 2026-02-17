@@ -99,8 +99,8 @@ class Stage2PreflightAnalysis:
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as _parallel_exec:
             _fut_drive = _parallel_exec.submit(_compute_arc_drive)
             _fut_preflight = _parallel_exec.submit(_compute_preflight)
-            arc_drive = _fut_drive.result()
-            _cached_preflight_injection, _cached_preflight_result = _fut_preflight.result()
+            arc_drive = _fut_drive.result(timeout=300)
+            _cached_preflight_injection, _cached_preflight_result = _fut_preflight.result(timeout=300)
         try:
             self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_preflight_parallel")
         except Exception:
@@ -136,6 +136,9 @@ class Stage2PreflightAnalysis:
                             state_result = self.ctx.agents["state_extractor"].extract_cumulative_state(all_refined_arcs)
                             self.ctx.cumulative_state_cache = state_result
                             self.ctx.cumulative_state_cache_key = arc_count
+                            # [Sweep3-D2] app 캐시 키 동기화
+                            if self.ctx.sync_cache_key_to_app:
+                                self.ctx.sync_cache_key_to_app(arc_count)
                     except Exception as e:  # [V64.P4] CRITICAL: state extraction failure → NPC validation disabled
                         self.ctx.ui.log(
                             f"      ⚠️ [V64.P4] extract_cumulative_state 실패 (NPC 검증 약화): {str(e)[:80]}"
@@ -351,6 +354,9 @@ class Stage2PreflightAnalysis:
                         state_result = self.ctx.agents["state_extractor"].extract_cumulative_state(all_refined_arcs)
                         self.ctx.cumulative_state_cache = state_result
                         self.ctx.cumulative_state_cache_key = arc_count
+                        # [Sweep3-D2] app 캐시 키 동기화
+                        if self.ctx.sync_cache_key_to_app:
+                            self.ctx.sync_cache_key_to_app(arc_count)
                     entity_registry_for_director = state_result.get("entity_registry") if state_result else None
                     if entity_registry_for_director:
                         entity_registry_for_director = self.ctx.fix_entity_registry_protagonist(

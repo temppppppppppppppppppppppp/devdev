@@ -63,7 +63,7 @@ def _load_model_config() -> dict:
                 if isinstance(data, dict):
                     return data
     except Exception:
-        logging.warning("models.yaml load failed. Falling back to hard-coded defaults.")
+        logging.warning("models.yaml 로드 실패 — 하드코딩 모델 목록 사용")
     return {}
 
 
