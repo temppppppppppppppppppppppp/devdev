@@ -202,11 +202,7 @@ class TestL3Stage3Pipeline:
     def test_stage3_runs_3_episodes(self, stage3_env):
         db = stage3_env["db"]
         app = _build_mock_app(db, stage3_env["bible"], stage3_env["arcs"])
-        ctx = Stage3Context(
-            ui=app.ui,
-            current_project=app.current_project,
-            get_protagonist_name=lambda: "\uc2dc\uc724",
-        )
+        ctx = Stage3Context.from_app(app)
 
         orchestrator = Stage3Orchestrator(app=app, context=ctx)
         orchestrator.stage_3_batch_blueprinting()
@@ -222,11 +218,7 @@ class TestL3Stage3Pipeline:
     def test_blueprint_content_valid(self, stage3_env):
         db = stage3_env["db"]
         app = _build_mock_app(db, stage3_env["bible"], stage3_env["arcs"])
-        ctx = Stage3Context(
-            ui=app.ui,
-            current_project=app.current_project,
-            get_protagonist_name=lambda: "\uc2dc\uc724",
-        )
+        ctx = Stage3Context.from_app(app)
 
         orchestrator = Stage3Orchestrator(app=app, context=ctx)
         orchestrator.stage_3_batch_blueprinting()

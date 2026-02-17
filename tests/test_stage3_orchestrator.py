@@ -391,6 +391,34 @@ class TestStage3ContextDI:
         """__slots__ 개수 검증"""
         assert len(Stage3Context.__slots__) == 19
 
+    def test_ctx_sync_after_lazy_init(self, app_mock):
+        """lazy init 후 state_tracker/world_state/fact_ledger가 ctx에 sync되는지 확인"""
+        app_mock.state_tracker = None
+        app_mock.world_state = None
+        app_mock.fact_ledger = None
+        app_mock._get_int_input.return_value = 1
+
+        orch = Stage3Orchestrator(app=app_mock)
+
+        with (
+            patch("modules.domain.agents.state_tracker.StateTracker") as MockST,
+            patch("modules.core.world_state.WorldStateManager") as MockWS,
+            patch("modules.core.fact_ledger.FactLedger") as MockFL,
+            patch("modules.core.spinners.StageSpinner"),
+        ):
+            mock_st = MagicMock(npc_registry={})
+            MockST.return_value = mock_st
+            mock_ws = MagicMock(last_updated_ep=0)
+            MockWS.return_value = mock_ws
+            mock_fl = MagicMock(last_updated_ep=0)
+            MockFL.return_value = mock_fl
+
+            orch.stage_3_batch_blueprinting()
+
+        assert orch.ctx.state_tracker is mock_st
+        assert orch.ctx.world_state is mock_ws
+        assert orch.ctx.fact_ledger is mock_fl
+
     def test_backward_compat_app_still_works(self, app_mock):
         """self.app 접근 유지 (레거시 호환)"""
         orch = Stage3Orchestrator(app=app_mock)
