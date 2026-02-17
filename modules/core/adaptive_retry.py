@@ -572,6 +572,15 @@ class AdaptiveRetryManager:
         for f in failures:
             type_counts[f.error_type] += 1
 
+        if not type_counts:
+            return {
+                "primary_error": "unknown",
+                "failure_count": len(failures),
+                "priority_fixes": [],
+                "avoid_patterns": [],
+                "temperature_adjustment": 0,
+            }
+
         # 가장 빈번한 실패 유형
         primary_error = max(type_counts, key=type_counts.get)
 
@@ -625,6 +634,9 @@ class AdaptiveRetryManager:
         type_counts = defaultdict(int)
         for f in failures:
             type_counts[f.error_type] += 1
+
+        if not type_counts:
+            return False, "adversarial_self_play"
 
         primary = max(type_counts, key=type_counts.get)
 

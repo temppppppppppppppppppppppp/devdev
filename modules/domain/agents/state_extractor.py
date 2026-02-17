@@ -250,6 +250,14 @@ class StateExtractor(BaseAgent):
             self._state_cache[cache_key] = result
             return result
 
+    def invalidate_cache(self, arc_no=None):
+        """캐시 무효화. arc_no 지정 시 해당 키만, None이면 전체."""
+        if arc_no is not None:
+            cache_key = arc_no if isinstance(arc_no, int) else hash(str(arc_no))
+            self._state_cache.pop(cache_key, None)
+        else:
+            self._state_cache.clear()
+
     def extract_cumulative_state(self, arcs: list[dict]) -> dict:
         """
         여러 Arc의 누적 상태 추출

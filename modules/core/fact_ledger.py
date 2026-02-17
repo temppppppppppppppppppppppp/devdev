@@ -93,8 +93,10 @@ class FactLedger:
             if not isinstance(death, dict):
                 continue
             name = death.get("name", "")
-            if name:
-                self._upsert_character(name, ep_num, status="dead", note=f"사망 (원인: {death.get('cause', '불명')})")
+            if not name:
+                _logger.warning(f"[FactLedger] NPC death entry missing name: {death}")
+                continue
+            self._upsert_character(name, ep_num, status="dead", note=f"사망 (원인: {death.get('cause', '불명')})")
 
         # relationship_changes
         for rel in state_changes.get("relationship_changes") or []:  # [V70] None 방어

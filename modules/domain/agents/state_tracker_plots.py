@@ -919,7 +919,7 @@ class StateTrackerPlots:
             for match in matches:
                 if match == canonical or match in seen_matches:  # [V70] 문자열 중복 체크
                     continue
-                if match in info.get("aliases", set()):
+                if match in (info.get("aliases") or set()):
                     continue
                 # 길이 차이 2자 이내
                 if abs(len(match) - len(canonical)) <= 2:

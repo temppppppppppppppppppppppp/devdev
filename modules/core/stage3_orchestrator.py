@@ -85,10 +85,10 @@ class Stage3Orchestrator:
         # ═══════════════════════════════════════════════════════════════
         self._init_fact_ledger_if_needed()
 
-        # [E-1b] Sync lazy-inited objects to ctx
-        ctx.state_tracker = self.app.state_tracker
-        ctx.world_state = self.app.world_state
-        ctx.fact_ledger = self.app.fact_ledger
+        # [E-1b] Sync lazy-inited objects to ctx (getattr for safety if lazy init failed)
+        ctx.state_tracker = getattr(self.app, "state_tracker", None)
+        ctx.world_state = getattr(self.app, "world_state", None)
+        ctx.fact_ledger = getattr(self.app, "fact_ledger", None)
 
         # ═══════════════════════════════════════════════════════════════
         # 1. 목표 범위 설정

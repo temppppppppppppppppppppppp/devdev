@@ -270,6 +270,18 @@ class DirectorEnsembleSelector:
                 qualified_indices.append(idx)
 
         if not qualified_indices:
+            if not candidates:
+                logging.warning("🚨 [V60.97] 빈 후보 리스트 — REJECT 반환")
+                return {
+                    "selected": "A",
+                    "selected_candidate": {"manuscript": "", "error": True},
+                    "verdict": "REJECT",
+                    "score": 0,
+                    "feedback": {
+                        "issues": ["빈 후보 리스트: 앙상블 생성 실패"],
+                        "action_items": ["원고 생성 과정을 확인하세요"],
+                    },
+                }
             lengths = [len(c.get("manuscript", "")) for c in candidates]
             best_idx = lengths.index(max(lengths))
             logging.warning(f"🚨 [V60.97] 모든 후보 분량 미달 (최대: {max(lengths)}자 < {MIN_MANUSCRIPT_LENGTH}자)")

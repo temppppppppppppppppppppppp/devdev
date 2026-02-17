@@ -452,7 +452,7 @@ class CharacterVoiceTracker:
         except FileNotFoundError:
             pass
         except Exception as e:
-            logging.info(f"[CharacterVoiceTracker] Load error: {e}")
+            logging.warning(f"[CharacterVoiceTracker] Load error: {e}")
 
     def clear(self) -> None:
         """모든 프로필 초기화"""

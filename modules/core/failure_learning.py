@@ -357,7 +357,7 @@ class FailureLearner:
         except FileNotFoundError:
             pass  # 파일 없으면 빈 상태 유지
         except Exception as e:
-            logging.info(f"[FailureLearner] Load error: {e}")
+            logging.warning(f"[FailureLearner] Load error: {e}")
 
     def clear(self) -> None:
         """모든 기록 초기화"""

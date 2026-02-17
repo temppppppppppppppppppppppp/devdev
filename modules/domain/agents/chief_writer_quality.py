@@ -12,6 +12,8 @@ from .chief_writer_prompts import get_fix_issues_prompt
 class ChiefWriterQualityGate:
     """ChiefWriter? Self-Critique + ?? ?? ?? ????."""
 
+    CLICHE_WINDOW = 10  # [Sweep3-E3] 클리셰 감지 윈도우 크기
+
     def __init__(self, host):
         self.host = host
 
@@ -198,7 +200,7 @@ class ChiefWriterQualityGate:
 
         # 최근 빈도 체크
         if ep_num is not None and ep_num > 1:
-            recent_counts = self._count_recent_cliches(ep_num, content, window=10)
+            recent_counts = self._count_recent_cliches(ep_num, content, window=self.CLICHE_WINDOW)
 
             overused = [f"'{keyword}' ({count}회)" for keyword, count in recent_counts.items() if count >= 3]
 

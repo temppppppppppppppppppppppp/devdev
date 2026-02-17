@@ -69,7 +69,7 @@ class ConsistencyValidator:
                 logging.warning(f"[WARNING] 미지원 장르 '{genre}' - 기본 검증만 수행")
                 return None
         except Exception as e:
-            logging.warning(f"[ERROR] Guard 로드 실패 ({genre}): {e}")
+            logging.warning(f"[WARNING] Guard 로드 실패 ({genre}): {e}")
             return None
 
     def validate(self, manuscript: str, validation_context: dict) -> dict:

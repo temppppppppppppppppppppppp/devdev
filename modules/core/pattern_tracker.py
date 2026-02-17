@@ -828,8 +828,16 @@ class PatternTracker:
                 "change": round(last["diversity_score"] - first["diversity_score"], 1),
             },
             "emotion_shift": {
-                "from": max(first["emotion_balance"], key=first["emotion_balance"].get),
-                "to": max(last["emotion_balance"], key=last["emotion_balance"].get),
+                "from": (
+                    max(first["emotion_balance"], key=first["emotion_balance"].get)
+                    if first.get("emotion_balance")
+                    else "neutral"
+                ),
+                "to": (
+                    max(last["emotion_balance"], key=last["emotion_balance"].get)
+                    if last.get("emotion_balance")
+                    else "neutral"
+                ),
             },
         }
 

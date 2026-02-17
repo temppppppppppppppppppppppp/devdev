@@ -860,6 +860,11 @@ class SovereignApp:
         self.sys.boot_v20_project(project_name)
         self.current_project = self.sys.project
 
+        # [Sweep3-D1] 프로젝트 전환 시 PromptLoader 캐시 무효화
+        from modules.core.prompt_loader import PromptLoader
+
+        PromptLoader().invalidate_cache()
+
         # [V40] 장르 정보를 프로젝트에 주입
         self.current_project.genre = self.selected_genre
 
@@ -2065,7 +2070,7 @@ class SovereignApp:
 
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 future = executor.submit(asyncio.run, self._stage2_orch.stage_2_arcs_async_logic())
-                future.result()
+                future.result(timeout=600)  # [Sweep3-G1] 10분 타임아웃 — 무한 블록 방지
         else:
             asyncio.run(self._stage2_orch.stage_2_arcs_async_logic())
 
@@ -2531,6 +2536,12 @@ class SovereignApp:
         self._cumulative_state_cache = None
         self._cumulative_state_cache_key = 0
         self._narrative_summaries_cache = None
+        try:
+            _writer = self.agents.get("writer") if isinstance(self.agents, dict) else None
+            if _writer and hasattr(_writer, "invalidate_manuscript_cache"):
+                _writer.invalidate_manuscript_cache()
+        except Exception:
+            pass
 
     def _wipe_production_data(self):
         """[V27.1 Wipe] 설계도는 유지하고 실제 집필 기록(Manuscripts/Blueprints)만 소거"""

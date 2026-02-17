@@ -139,7 +139,7 @@ class BlockingValidatorEntityChecks:
 
         # 최종 안전성 확인 (강화)
         if not isinstance(owned_items, list):
-            logging.warning(f"[ERROR] owned_items is not a list after processing: {type(owned_items).__name__}")
+            logging.warning(f"[WARNING] owned_items is not a list after processing: {type(owned_items).__name__}")
             owned_items = []
 
         # 각 원소가 문자열이고 비어있지 않은지 확인

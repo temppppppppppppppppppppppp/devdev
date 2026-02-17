@@ -259,12 +259,15 @@ Step 6: Article 7 (독자 대리만족) 분석
                     try:
                         _val["score"] = min(int(_val["score"]), int(_val["max"]))
                     except (ValueError, TypeError):
-                        pass
+                        logging.warning(
+                            f"[ScoringValidator] 점수 변환 실패: score={_val.get('score')}, max={_val.get('max')} — 0 대입"
+                        )
+                        _val["score"] = 0
 
             return result
 
         except Exception as e:
-            logging.warning(f"[ERROR] LLM 평가 실패: {e}")
+            logging.warning(f"[WARNING] LLM 평가 실패: {e}")
             logging.warning("[WARNING] Fallback으로 전환 - Constitutional AI 평가 불가")
             return self._fallback_llm_scores(manuscript, context)
 
@@ -767,7 +770,16 @@ Step 6: Article 7 (독자 대리만족) 분석
 
         # 가중치 적용된 총점으로 PASS/FAIL 재계산
         weighted_max_total = sum(w.get("weighted_max", 0) for w in weighted_breakdown.values() if isinstance(w, dict))
-        weighted_percentage = (weighted_total / weighted_max_total * 100) if weighted_max_total > 0 else 0
+        if weighted_max_total > 0:
+            weighted_percentage = weighted_total / weighted_max_total * 100
+        elif raw_total > 0:
+            raw_max_total = sum(
+                d.get("max", 0) for d in base_result.get("breakdown", {}).values() if isinstance(d, dict)
+            )
+            logging.warning(f"[ScoringValidator] weighted_max_total=0 — raw_total({raw_total}) 기반 폴백 계산")
+            weighted_percentage = (raw_total / max(raw_max_total, 1)) * 100
+        else:
+            weighted_percentage = 0
         passed = weighted_percentage >= self.pass_threshold
 
         return {

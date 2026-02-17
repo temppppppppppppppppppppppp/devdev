@@ -610,7 +610,15 @@ class Stage2Orchestrator:
                     if _fin["action"] == "break":
                         passed = True
                         break
-                    elif _fin["action"] == "retry":
+                    if _fin["action"] in {"retry", "next"}:
+                        # [Sweep4-D1] 동일 arc_no 재생성 시 StateExtractor 스탈 캐시 방지
+                        try:
+                            _se = self.ctx.agents.get("state_extractor") if self.ctx.agents else None
+                            if _se and hasattr(_se, "invalidate_cache"):
+                                _se.invalidate_cache(global_arc_no)
+                        except Exception:
+                            pass
+                    if _fin["action"] == "retry":
                         attempt += 1
                         continue
 

@@ -130,7 +130,7 @@ class DataCollector:
                 os.rename(temp_filepath, filepath)
 
             except OSError as e:
-                logging.warning(f"[ERROR] 파일 저장 실패 ({filepath}): {e}")
+                logging.warning(f"[WARNING] 파일 저장 실패 ({filepath}): {e}")
                 # 임시 파일 정리
                 if os.path.exists(temp_filepath):
                     try:
@@ -170,7 +170,7 @@ class DataCollector:
                 os.rename(temp_filepath, filepath)
 
             except OSError as e:
-                logging.warning(f"[ERROR] 파일 저장 실패 ({filepath}): {e}")
+                logging.warning(f"[WARNING] 파일 저장 실패 ({filepath}): {e}")
                 # 임시 파일 정리
                 if os.path.exists(temp_filepath):
                     try:

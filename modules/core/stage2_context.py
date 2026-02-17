@@ -73,6 +73,8 @@ class Stage2Context:
         "analyze_rejection_pattern_v60",
         "get_adaptive_feedback_intensity",
         "generate_arc_context_v60",
+        # [Sweep3-D2] 캐시 키 동기화 콜백
+        "sync_cache_key_to_app",
     )
 
     def __init__(
@@ -123,6 +125,8 @@ class Stage2Context:
         analyze_rejection_pattern_v60=None,
         get_adaptive_feedback_intensity=None,
         generate_arc_context_v60=None,
+        # [Sweep3-D2]
+        sync_cache_key_to_app=None,
     ):
         self.ui = ui
         self.current_project = current_project
@@ -167,6 +171,7 @@ class Stage2Context:
         self.analyze_rejection_pattern_v60 = analyze_rejection_pattern_v60
         self.get_adaptive_feedback_intensity = get_adaptive_feedback_intensity
         self.generate_arc_context_v60 = generate_arc_context_v60
+        self.sync_cache_key_to_app = sync_cache_key_to_app
 
     @classmethod
     def from_app(cls, app):
@@ -215,4 +220,5 @@ class Stage2Context:
             analyze_rejection_pattern_v60=getattr(app, "_analyze_rejection_pattern_v60", None),
             get_adaptive_feedback_intensity=getattr(app, "_get_adaptive_feedback_intensity", None),
             generate_arc_context_v60=getattr(app, "_generate_arc_context_v60", None),
+            sync_cache_key_to_app=lambda key: setattr(app, "_cumulative_state_cache_key", key),
         )

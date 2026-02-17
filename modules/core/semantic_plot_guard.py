@@ -61,7 +61,7 @@ class SemanticPlotGuard:
         self._client = None
         self._resolved_embeddings: list[dict] = []  # [{"plot": str, "embedding": list}]
         self._resolved_keywords: list[dict] = []  # [C-1] 키워드 폴백 저장소
-        self._init_attempted = False  # [V64.P4-fix] lazy init 플래그
+        self._init_done = False  # [V64.P4-fix] lazy init 플래그
 
         self._try_init_client()
         if not self._client:
@@ -73,17 +73,17 @@ class SemanticPlotGuard:
             return
         try:
             self._client = genai.Client(api_key=self._api_key)
-            self._init_attempted = True
+            self._init_done = True
         except Exception as e:
             logging.warning(f"⚠️ [V63] SemanticPlotGuard 초기화 실패 (다음 사용 시 재시도): {str(e)[:80]}")
             self._client = None
-            self._init_attempted = True
+            self._init_done = True
 
     def _embed_text(self, text: str) -> list | None:
         """단일 텍스트를 임베딩 벡터로 변환"""
         # [V64.P4-fix] lazy init: client가 없으면 한 번 더 시도
-        if not self._client and self._init_attempted:
-            self._init_attempted = False  # 재시도 1회 허용
+        if not self._client and self._init_done:
+            self._init_done = False  # 재시도 1회 허용
             self._try_init_client()
 
         if not self._client or not text:

@@ -449,7 +449,7 @@ class ForeshadowTracker:
         except FileNotFoundError:
             pass
         except Exception as e:
-            logging.info(f"[ForeshadowTracker] Load error: {e}")
+            logging.warning(f"[ForeshadowTracker] Load error: {e}")
 
     def clear(self) -> None:
         """초기화"""
