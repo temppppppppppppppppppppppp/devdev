@@ -827,8 +827,23 @@ class Analyst(BaseAgent):
                     combined = " / ".join(beats[actual_ep_count - 1 :])
                     beats = beats[: actual_ep_count - 1] + [f"[통합 전개]: {combined}"]
                 else:
+                    original_count = len(beats)
+                    fallback_beats = [
+                        "서사적 긴장감 고조 및 빌드업 수행",
+                        "캐릭터 내면 갈등 심화 및 선택의 기로",
+                        "예상치 못한 전환점 발생",
+                        "이해관계자 간 대립 격화",
+                        "결정적 사건을 향한 수렴",
+                    ]
                     while len(beats) < actual_ep_count:
-                        beats.append("서사적 긴장감 고조 및 빌드업 수행")
+                        idx = len(beats) % len(fallback_beats)
+                        beats.append(fallback_beats[idx])
+                    logging.warning(
+                        "[Analyst] beat_sequence 부족 (%d/%d) — 폴백 비트 %d개 추가",
+                        original_count,
+                        actual_ep_count,
+                        actual_ep_count - original_count,
+                    )
                 draft_result["beat_sequence"] = beats
 
             # 공유 상태 업데이트

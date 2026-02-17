@@ -80,7 +80,7 @@ class PacingAnalyzer:
     """호흡 분석기"""
 
     # 문장 분리 패턴
-    SENTENCE_PATTERN = re.compile(r"[^.!?。？！]+[.!?。？！]+")
+    SENTENCE_PATTERN = re.compile(r"[^.!?。？！]+[.!?。？！]+|[^.!?。？！]+$")
 
     # 대화 패턴
     DIALOGUE_PATTERN = re.compile(r'["\'"「『].*?["\'"」』]|"[^"]*"')
@@ -415,10 +415,10 @@ class PacingAnalyzer:
 
         return {
             "score_trend": trend,
-            "avg_score": sum(scores) / len(scores),
-            "score_range": (min(scores), max(scores)),
-            "dialogue_consistency": max(dialogue_ratios) - min(dialogue_ratios) < 0.15,
-            "length_consistency": max(avg_lengths) - min(avg_lengths) < 15,
+            "avg_score": sum(scores) / len(scores) if scores else 0,
+            "score_range": (min(scores), max(scores)) if scores else (0, 0),
+            "dialogue_consistency": (max(dialogue_ratios) - min(dialogue_ratios) < 0.15) if dialogue_ratios else True,
+            "length_consistency": (max(avg_lengths) - min(avg_lengths) < 15) if avg_lengths else True,
             "total_issues": sum(len(a.issues) for a in analyses),
         }
 

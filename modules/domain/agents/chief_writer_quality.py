@@ -322,7 +322,9 @@ class ChiefWriterQualityGate:
         # 수정 지시 구성
         fix_instructions = []
         for issue in issues[:3]:  # 최대 3개만 수정
-            fix_instructions.append(f"- {issue['type']}: {issue['description']}")
+            issue_type = issue.get("type", "unknown") if isinstance(issue, dict) else str(issue)
+            issue_desc = issue.get("description", "") if isinstance(issue, dict) else ""
+            fix_instructions.append(f"- {issue_type}: {issue_desc}")
 
         # [V65] 교정 프롬프트 함수 래핑 호출
         prompt = get_fix_issues_prompt(
