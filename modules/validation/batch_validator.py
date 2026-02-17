@@ -60,7 +60,7 @@ class BatchValidator:
             async with semaphore:
                 try:
                     # ThreadPoolExecutor로 동기 함수를 비동기로 실행
-                    loop = asyncio.get_event_loop()
+                    loop = asyncio.get_running_loop()
                     result = await loop.run_in_executor(
                         None,
                         self.orchestrator.validate,

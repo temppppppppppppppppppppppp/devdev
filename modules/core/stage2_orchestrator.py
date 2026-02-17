@@ -616,8 +616,12 @@ class Stage2Orchestrator:
                             _se = self.ctx.agents.get("state_extractor") if self.ctx.agents else None
                             if _se and hasattr(_se, "invalidate_cache"):
                                 _se.invalidate_cache(global_arc_no)
-                        except Exception:
-                            pass
+                        except Exception as cache_err:
+                            logging.warning(
+                                "[Sweep5-D] state_extractor cache invalidation failed (arc=%s): %s",
+                                global_arc_no,
+                                cache_err,
+                            )
                     if _fin["action"] == "retry":
                         attempt += 1
                         continue

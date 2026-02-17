@@ -2540,8 +2540,11 @@ class SovereignApp:
             _writer = self.agents.get("writer") if isinstance(self.agents, dict) else None
             if _writer and hasattr(_writer, "invalidate_manuscript_cache"):
                 _writer.invalidate_manuscript_cache()
-        except Exception:
-            pass
+        except Exception as cache_err:
+            logging.warning(
+                "[Sweep5-D] writer cache invalidation failed during rollback (non-blocking): %s",
+                cache_err,
+            )
 
     def _wipe_production_data(self):
         """[V27.1 Wipe] 설계도는 유지하고 실제 집필 기록(Manuscripts/Blueprints)만 소거"""

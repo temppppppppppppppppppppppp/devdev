@@ -165,32 +165,30 @@ class ArcEnsembleGenerator(BaseAgent):
                                 result["_strategy"] = strategy_name
                                 candidates.append(result)
                         except FutureTimeoutError:
-                            logging.info(
+                            logging.warning(
                                 f"⏰ [V61.3] {strategy_name} 전략 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)"
                             )
                         except Exception as e:
                             logging.warning(f"⚠️ [Ensemble] {strategy_name} 전략 실패: {str(e)[:50]}")
                 except FutureTimeoutError:
                     # 전체 앙상블 타임아웃 - 완료된 후보만 사용
-                    logging.info(
+                    logging.warning(
                         f"⏰ [V61.3] 앙상블 전체 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용"
                     )
                 except Exception as e:
                     # [V61.3] as_completed 자체 예외 처리
-                    logging.info(f"⚠️ [V61.3] 앙상블 루프 예외: {str(e)[:80]}")
+                    logging.warning(f"⚠️ [V61.3] 앙상블 루프 예외: {str(e)[:80]}")
         except Exception as e:
             # [V61.3] ThreadPoolExecutor 전체 예외 처리 - 급사 방지
             # stderr로 출력 (Rich 스피너가 stdout 가림)
-            import sys
             import traceback
 
-            print(f"      🚨 [V61.3] Arc 병렬 처리 크래시 방지: {str(e)[:100]}", file=sys.stderr)
-            traceback.print_exc(file=sys.stderr)
-            sys.stderr.flush()
+            logging.error(f"🚨 [V61.3] Arc 병렬 처리 크래시 방지: {str(e)[:100]}")
+            logging.error(traceback.format_exc())
 
         # [Phase 3-Obs] 병렬 구간 소요 시간 기록
         try:
-            logging.info(f"[PerfTimer:ArcEnsemble] arc_{arc_no}_ensemble={time.monotonic() - _tp_t0:.2f}s")
+            logging.warning(f"[PerfTimer:ArcEnsemble] arc_{arc_no}_ensemble={time.monotonic() - _tp_t0:.2f}s")
         except Exception:
             pass
 
@@ -232,7 +230,7 @@ class ArcEnsembleGenerator(BaseAgent):
                 )
                 logging.warning("→ Critic/Consensus에서 REJECT 가능성 높음")
             else:
-                logging.info(f"⚠️ [Ensemble] 모든 후보 분량 미달, 최대 분량 후보 선택: {longest_len}자")
+                logging.warning(f"⚠️ [Ensemble] 모든 후보 분량 미달, 최대 분량 후보 선택: {longest_len}자")
 
             valid_candidates = candidates[:1]
 
@@ -255,7 +253,7 @@ class ArcEnsembleGenerator(BaseAgent):
         )
 
         # [V61.3] 후보별 점수 비교 출력
-        logging.info("🏆 [Ensemble] 후보 비교:")
+        logging.warning("🏆 [Ensemble] 후보 비교:")
         for c in scored_candidates:
             strategy = c.get("_strategy", "?")
             score = c.get("_score", 0)
@@ -390,12 +388,10 @@ class ArcEnsembleGenerator(BaseAgent):
 
         except Exception as e:
             # [V61.3] stderr로 출력 (Rich 스피너가 stdout 가림)
-            import sys
             import traceback
 
-            print(f"      🚨 [V61.3] ArcEnsemble _generate_single 크래시: {str(e)[:80]}", file=sys.stderr)
-            traceback.print_exc(file=sys.stderr)
-            sys.stderr.flush()
+            logging.error(f"🚨 [V61.3] ArcEnsemble _generate_single 크래시: {str(e)[:80]}")
+            logging.error(traceback.format_exc())
             return None
 
     def _evaluate_candidate(

@@ -235,7 +235,7 @@ class ValidationOrchestrator:
         # [V56] TIER 0.25: PRE-LLM (Python 기반 사전검증, 비용 0원)
         # ═══════════════════════════════════════════════════════════════
         if self.use_pre_llm and self.pre_llm:
-            logging.info("[V56] TIER 0.25: PRE-LLM 검증 중...")
+            logging.warning("[V56] TIER 0.25: PRE-LLM 검증 중...")
             pre_llm_result = self.pre_llm.validate(manuscript, validation_context)
             results["pre_llm_result"] = pre_llm_result
 
@@ -263,7 +263,7 @@ class ValidationOrchestrator:
             if warning_count > 0:
                 logging.warning(f"⚠️ PRE-LLM 경고: {warning_count}개 (점수 -{pre_llm_result['score_deduction']}점)")
             else:
-                logging.info("✅ PRE-LLM 통과")
+                logging.warning("✅ PRE-LLM 통과")
 
         # ═══════════════════════════════════════════════════════════════
         # [V47] TIER 0.5: CONTINUITY (에피소드 간 연속성)
@@ -292,7 +292,7 @@ class ValidationOrchestrator:
         if warning_count > 0:
             logging.warning(f"⚠️ CONTINUITY 경고: {warning_count}개 (계속 진행)")
         else:
-            logging.info("✅ CONTINUITY 통과")
+            logging.warning("✅ CONTINUITY 통과")
 
         # ═══════════════════════════════════════════════════════════════
         # TIER 1: BLOCKING (필수 통과)
@@ -346,9 +346,9 @@ class ValidationOrchestrator:
         justifiable_count = len(consistency_result.get("justifiable_violations", []))
 
         if justifiable_count > 0:
-            logging.info(f"⚠️ CONSISTENCY 경고: {justifiable_count}개 (감점: {consistency_penalty}점)")
+            logging.warning(f"⚠️ CONSISTENCY 경고: {justifiable_count}개 (감점: {consistency_penalty}점)")
         else:
-            logging.info("✅ CONSISTENCY 통과")
+            logging.warning("✅ CONSISTENCY 통과")
 
         # ═══════════════════════════════════════════════════════════════
         # TIER 2: SCORING (점수 기반)
@@ -390,7 +390,7 @@ class ValidationOrchestrator:
             refine_reason = f"중요 화 (제{ep_num}화)" if not refine_reason else refine_reason + " + 중요 화"
 
         if refine_applied:
-            logging.info(f"✨ [Self-Refine] 품질 정제 권장 ({refine_reason})")
+            logging.warning(f"✨ [Self-Refine] 품질 정제 권장 ({refine_reason})")
             results["refine_recommended"] = True
             results["refine_reason"] = refine_reason
             # [V49.3] Writer._self_refine()는 main_a.py:3461-3504에서 호출됨
@@ -416,11 +416,11 @@ class ValidationOrchestrator:
         results["catharsis_result"] = catharsis_result
 
         if catharsis_result.get("status") == "warning":
-            logging.info(f"⚠️ CATHARSIS: {catharsis_result.get('message')}")
+            logging.warning(f"⚠️ CATHARSIS: {catharsis_result.get('message')}")
         elif catharsis_result.get("status") == "critical":
             logging.warning(f"🚨 CATHARSIS: {catharsis_result.get('message')}")
         else:
-            logging.info("✅ CATHARSIS: 적절한 타이밍")
+            logging.warning("✅ CATHARSIS: 적절한 타이밍")
 
         # ActionSceneEvaluator - 전투/액션 씬 평가
         action_context = {
@@ -490,7 +490,7 @@ class ValidationOrchestrator:
                     severity = retrospective_result.get("severity_level", "NONE")
                     violation_count = retrospective_result.get("total_violations", 0)
 
-                    logging.info(f"⚠️ RETROSPECTIVE: {violation_count}개 장기 일관성 위반 ({severity})")
+                    logging.warning(f"⚠️ RETROSPECTIVE: {violation_count}개 장기 일관성 위반 ({severity})")
 
                     # CRITICAL 위반이 있으면 즉시 REJECT
                     if severity == "CRITICAL":
@@ -509,7 +509,7 @@ class ValidationOrchestrator:
                     if severity in ["HIGH", "MEDIUM"]:
                         penalty = 10 if severity == "HIGH" else 5
                         total_score = max(0, total_score - penalty)
-                        logging.info(f"📊 장기 일관성 감점: -{penalty}점 (새 총점: {total_score})")
+                        logging.warning(f"📊 장기 일관성 감점: -{penalty}점 (새 총점: {total_score})")
                 else:
                     logging.info("✅ RETROSPECTIVE: 장기 일관성 통과")
 
@@ -951,7 +951,7 @@ class ValidationOrchestrator:
         if self.use_adaptive_threshold:
             adaptive_threshold = self.calculate_adaptive_threshold_v59(ep_num, validation_context)
             self.scoring.pass_threshold = adaptive_threshold
-            logging.info(
+            logging.warning(
                 f"[V59] 적응형 임계값: {adaptive_threshold}점 (기본: {self.threshold_profile['base_threshold']})"
             )
         else:
@@ -1137,7 +1137,7 @@ class ValidationOrchestrator:
                     return loop.run_until_complete(self.validate_parallel_v59(ep_num, manuscript, validation_context))
                 except ImportError:
                     # nest_asyncio 없으면 동기 버전으로 fallback
-                    logging.info("⚠️ [V59] nest_asyncio 미설치 - 순차 검증으로 전환")
+                    logging.warning("⚠️ [V59] nest_asyncio 미설치 - 순차 검증으로 전환")
                     return self.validate(ep_num, manuscript, validation_context)
             except RuntimeError:
                 # 실행 중인 루프 없음 - 새로 생성

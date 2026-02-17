@@ -672,7 +672,7 @@ def create_hud_manager(genre_type, context):
         return FantasyHUDManager(context)  # [V66]
     else:
         # [V70] 미매핑 장르 (romance, politics, military 등) → MartialManager 폴백
-        logging.info(f"⚠️ [V70] 미매핑 장르 '{genre_type}' → MartialManager 폴백")
+        logging.warning(f"⚠️ [V70] 미매핑 장르 '{genre_type}' → MartialManager 폴백")
         return MartialManager(context)  # [V70] WuxiaHUDManager → MartialManager (NameError 수정)
 
 

@@ -62,7 +62,7 @@ class Stage2ValidationPipeline:
         python_advisory = []
         if not four_phase_passed and refined_arc and self.ctx.arc_draft_validator:
             try:
-                logging.info("🔬 [무기 #3] DraftValidator 사전 검증...")
+                logging.warning("🔬 [무기 #3] DraftValidator 사전 검증...")
                 draft_result = self.ctx.arc_draft_validator.validate(
                     arc=refined_arc,
                     prev_arcs=all_refined_arcs,
@@ -80,7 +80,7 @@ class Stage2ValidationPipeline:
                 logging.info("✅ [DraftValidator] 사전 검증 통과!")
                 draft_validator_passed = True
             except Exception as dv_err:
-                logging.info(f"⚠️ [DraftValidator] 스킵: {str(dv_err)[:50]}")
+                logging.warning(f"⚠️ [DraftValidator] 스킵: {str(dv_err)[:50]}")
 
         # ─────────────────────────────────────────────────────────────
         # [V60.36] SelfReflector
@@ -93,7 +93,7 @@ class Stage2ValidationPipeline:
             and ReflectionTarget
         ):
             try:
-                logging.info("🪞 [SelfReflector] Analyst 자기 비판 시작...")
+                logging.warning("🪞 [SelfReflector] Analyst 자기 비판 시작...")
                 arc_str = json.dumps(refined_arc, ensure_ascii=False, indent=2)
                 context_str = f"Arc {global_arc_no} 설계. 피드백: {current_feedback or '없음'}"
 
@@ -111,16 +111,16 @@ class Stage2ValidationPipeline:
                     except json.JSONDecodeError:
                         logging.warning("⚠️ [SelfReflector] 개선 결과 파싱 실패, 원본 유지")
                 else:
-                    logging.info("ℹ️ [SelfReflector] 개선 불필요")
+                    logging.warning("ℹ️ [SelfReflector] 개선 불필요")
             except Exception as sr_err:
-                logging.info(f"⚠️ [SelfReflector] 스킵: {str(sr_err)[:50]}")
+                logging.warning(f"⚠️ [SelfReflector] 스킵: {str(sr_err)[:50]}")
 
         # ─────────────────────────────────────────────────────────────
         # [V60.36] Consensus 검증
         # ─────────────────────────────────────────────────────────────
         if not four_phase_passed and refined_arc and "consensus" in self.ctx.agents:
             try:
-                logging.info("🗳️ [Consensus] 3-LLM 합의 검증 시작...")
+                logging.warning("🗳️ [Consensus] 3-LLM 합의 검증 시작...")
                 with rich_console.status("[bold magenta]🗳️ Consensus 3-LLM 검증 중...[/]", spinner="dots"):
                     consensus_verdict, consensus_result = self.ctx.agents["consensus"].validate_with_consensus(
                         arc=refined_arc,
@@ -155,7 +155,7 @@ class Stage2ValidationPipeline:
                     if passed_checks:
                         logging.info(f"- 통과 항목: {passed_checks[:3]}")
             except Exception as cv_err:
-                logging.info(f"⚠️ [Consensus] 검증 스킵: {str(cv_err)[:50]}")
+                logging.warning(f"⚠️ [Consensus] 검증 스킵: {str(cv_err)[:50]}")
 
         # [데이터 검증]
         if not refined_arc or not isinstance(refined_arc, dict):
@@ -631,7 +631,7 @@ class Stage2ValidationPipeline:
                 pattern = result.get("pattern", "")
                 recommendation = result.get("recommendation", "")
 
-                logging.info(f"🔍 [V60.15] 진짜 서사 정체 감지: {stagnation_type}")
+                logging.warning(f"🔍 [V60.15] 진짜 서사 정체 감지: {stagnation_type}")
                 logging.info(f"패턴: {pattern}")
 
                 return {
@@ -643,11 +643,11 @@ class Stage2ValidationPipeline:
             if result.get("status") == "WARNING":
                 warning_type = result.get("warning_type", "")
                 pattern = result.get("pattern", "")
-                logging.info(f"⚠️ [V60.15] 서사 경고: {warning_type} - {pattern}")
+                logging.warning(f"⚠️ [V60.15] 서사 경고: {warning_type} - {pattern}")
 
             diversity = result.get("diversity_score", 1.0)
             if diversity < 0.6:
-                logging.info(f"📊 [V60.15] 서사 다양성: {diversity:.0%} (개선 권장)")
+                logging.warning(f"📊 [V60.15] 서사 다양성: {diversity:.0%} (개선 권장)")
 
             return {"status": "PASS", "diversity_score": diversity}
 

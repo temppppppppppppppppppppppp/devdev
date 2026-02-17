@@ -164,7 +164,7 @@ class BaseAgent:
                 keys.append(k)
         cls._api_keys = keys
         if len(keys) > 1:
-            logging.info(f"🔑 [V61.5] API 키 {len(keys)}개 로드 완료 (자동 순환 활성화)")
+            logging.warning(f"🔑 [V61.5] API 키 {len(keys)}개 로드 완료 (자동 순환 활성화)")
 
     @classmethod
     def _try_rotate_key(cls):
@@ -506,7 +506,7 @@ class BaseAgent:
                 # 이어쓰기 중 이스케이프 단절 방지
                 # [V44] 최소 길이 체크 (빈 문자열/단일 백슬래시 방지)
                 if len(full_response) > 1 and full_response.endswith("\\"):
-                    logging.info("⚠️ [JSON Repair] 후행 이스케이프 감지. 강제 제거")
+                    logging.warning("⚠️ [JSON Repair] 후행 이스케이프 감지. 강제 제거")
                     full_response = full_response[:-1]
 
                 if not response.candidates:
@@ -517,10 +517,12 @@ class BaseAgent:
                 if hasattr(candidate, "finish_reason") and candidate.finish_reason in ["MAX_TOKENS", "LENGTH"]:
                     # 🔒 Circuit Breaker 경고
                     if attempt >= WARN_THRESHOLD:
-                        logging.info(
+                        logging.warning(
                             f"⚠️ [Circuit Breaker] 과도한 continuation 감지 ({attempt + 1}/{MAX_CONTINUATIONS}회)"
                         )
-                        logging.info(f"⚠️ [Cost Warning] API 비용 증가 중 - 누적 응답 길이: {len(full_response)} chars")
+                        logging.warning(
+                            f"⚠️ [Cost Warning] API 비용 증가 중 - 누적 응답 길이: {len(full_response)} chars"
+                        )
 
                     # 🔒 Circuit Breaker 트립 (최대 시도 횟수 도달)
                     if attempt >= MAX_CONTINUATIONS - 1:
@@ -534,7 +536,7 @@ class BaseAgent:
                     overlap_anchor = full_response[-50:].strip()
                     # [FIX] 중괄호 이스케이프 적용 (f-string 오류 방지)
                     safe_anchor = self._escape_braces(overlap_anchor)
-                    logging.info(
+                    logging.warning(
                         f"🔄 [System] 데이터 절단 감지. '{overlap_anchor[:20]}...' 지점부터 인과율 용접 시도 ({attempt + 1}/{MAX_CONTINUATIONS})"
                     )
 
@@ -591,7 +593,7 @@ class BaseAgent:
             # 부분 응답이 있으면 저장
             if full_response:
                 self.last_partial_response = full_response
-                logging.info(f"📝 [Recovery] 부분 응답 {len(full_response)}자 보존")
+                logging.warning(f"📝 [Recovery] 부분 응답 {len(full_response)}자 보존")
 
             try:
                 # [FIX] 백업 모델용 별도 config (response_schema 제거 - 호환성 문제 방지)
@@ -648,7 +650,7 @@ class BaseAgent:
                         if self.last_partial_response:
                             merged = self._try_merge_responses(self.last_partial_response, backup_text)
                             if merged:
-                                logging.info("✅ [Recovery] 부분 응답 병합 성공")
+                                logging.warning("✅ [Recovery] 부분 응답 병합 성공")
                                 return merged
 
                 # 빈 응답 처리
@@ -986,7 +988,7 @@ class BaseAgent:
                 kv_pattern = r'"(\w+)"\s*:\s*"(.*?)"(?="|\s*\}|\s*,)'
                 found_pairs = re.findall(kv_pattern, json_str, re.DOTALL)
                 if found_pairs:
-                    logging.info(f"→ 정규식으로 {len(found_pairs)}개 키-값 추출 성공")
+                    logging.warning(f"→ 정규식으로 {len(found_pairs)}개 키-값 추출 성공")
                     return {k: v.replace("\\n", "\n").strip() for k, v in found_pairs}
                 logging.warning("→ 정규식 추출 실패, RAW 반환")
                 return {"content": json_str, "status": "REPAIRED_RAW"}
@@ -1077,7 +1079,7 @@ class BaseAgent:
             error_str = str(e).lower()
             # [V61.9] 캐싱 중 429/quota → 현재 작업은 캐시 없이 진행, 다음 작업에서 키 전환
             if "429" in error_str or "resource_exhausted" in error_str or "quota" in error_str:
-                logging.info("⚠️ [V61.9] 캐싱 중 API 제한 감지 → 키 전환 예약 (현재 작업은 캐시 없이 진행)")
+                logging.warning("⚠️ [V61.9] 캐싱 중 API 제한 감지 → 키 전환 예약 (현재 작업은 캐시 없이 진행)")
                 with BaseAgent._rotation_lock:
                     BaseAgent._key_rotation_pending = True
             else:

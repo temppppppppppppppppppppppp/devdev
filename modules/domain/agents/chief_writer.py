@@ -227,7 +227,7 @@ class ChiefWriter(BaseAgent):
             )
             cache_name = cache_info.get("cache_name")
             if cache_name:
-                logging.info(f"📦 [V61.7] 컨텍스트 캐시 활성 (ep{ep_num}, {len(common_context)}자)")
+                logging.warning(f"📦 [V61.7] 컨텍스트 캐시 활성 (ep{ep_num}, {len(common_context)}자)")
         except Exception as e:  # [V64.P4] OPTIONAL: context caching
             logging.debug(f"[SILENT] context caching: {e}")
             pass  # 캐싱 실패해도 기존 방식으로 진행
@@ -295,12 +295,12 @@ class ChiefWriter(BaseAgent):
                             )
                 except FutureTimeoutError:
                     # 전체 앙상블 타임아웃 - 완료된 후보만 사용
-                    logging.info(
+                    logging.warning(
                         f"⏰ [V61.3] 원고 앙상블 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용"
                     )
                 except Exception as e:
                     # [V61.3] as_completed 자체 예외 처리
-                    logging.info(f"⚠️ [V61.3] 원고 앙상블 루프 예외: {str(e)[:80]}")
+                    logging.warning(f"⚠️ [V61.3] 원고 앙상블 루프 예외: {str(e)[:80]}")
                 finally:
                     # [Sweep3-G2] 미완료 future 정리 — 백그라운드 실행 방지
                     for f in futures:
@@ -308,16 +308,14 @@ class ChiefWriter(BaseAgent):
         except Exception as e:
             # [V61.3] ThreadPoolExecutor 전체 예외 처리 - 급사 방지
             # stderr로 출력 (Rich 스피너가 stdout 가림)
-            import sys
             import traceback
 
-            print(f"      🚨 [V61.3] 원고 병렬 처리 크래시 방지: {str(e)[:100]}", file=sys.stderr)
-            traceback.print_exc(file=sys.stderr)
-            sys.stderr.flush()
+            logging.error(f"🚨 [V61.3] 원고 병렬 처리 크래시 방지: {str(e)[:100]}")
+            logging.error(traceback.format_exc())
 
         # [Phase 3-Obs] 병렬 구간 소요 시간 기록
         try:
-            logging.info(f"[PerfTimer:ChiefWriter] cw_ep{ep_num}_ensemble={time.monotonic() - _tp_t0:.2f}s")
+            logging.warning(f"[PerfTimer:ChiefWriter] cw_ep{ep_num}_ensemble={time.monotonic() - _tp_t0:.2f}s")
         except Exception:
             pass
 
@@ -482,12 +480,10 @@ class ChiefWriter(BaseAgent):
 
         except Exception as e:
             # [V61.3] stderr로 출력 (Rich 스피너가 stdout 가림)
-            import sys
             import traceback
 
-            print(f"      🚨 [V61.3] ChiefWriter _generate_single_candidate 크래시: {str(e)[:80]}", file=sys.stderr)
-            traceback.print_exc(file=sys.stderr)
-            sys.stderr.flush()
+            logging.error(f"🚨 [V61.3] ChiefWriter _generate_single_candidate 크래시: {str(e)[:80]}")
+            logging.error(traceback.format_exc())
             return None
 
     def _build_common_context(self, *args, **kwargs):
