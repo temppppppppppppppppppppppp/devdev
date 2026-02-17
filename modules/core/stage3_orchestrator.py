@@ -7,7 +7,7 @@
 V68 lazy init: state_tracker, world_state, fact_ledger를 self.app에 할당
 """
 
-import sys as _sys
+import logging as _logging
 import traceback as _traceback
 
 from modules.core.constants import Emojis, ErrorMessages
@@ -363,9 +363,8 @@ class Stage3Orchestrator:
         try:
             prev_blueprint = self.ctx.current_project.get_blueprint(working_ep - 1) if working_ep > 1 else None
         except Exception as prev_bp_err:
-            print(f"🚨 [V61.3] prev_blueprint 로드 크래시: {str(prev_bp_err)[:100]}", file=_sys.stderr)
-            _traceback.print_exc(file=_sys.stderr)
-            _sys.stderr.flush()
+            _logging.error(f"🚨 [V61.3] prev_blueprint 로드 크래시: {str(prev_bp_err)[:100]}")
+            _logging.error(_traceback.format_exc())
             self.ctx.ui.log("      ⚠️ 직전 Blueprint 로드 실패, None으로 진행")
         return prev_blueprint
 
@@ -375,9 +374,8 @@ class Stage3Orchestrator:
         try:
             protagonist_name = self.ctx.get_protagonist_name()
         except Exception as protag_err:
-            print(f"🚨 [V61.3] protagonist_name 추출 크래시: {str(protag_err)[:100]}", file=_sys.stderr)
-            _traceback.print_exc(file=_sys.stderr)
-            _sys.stderr.flush()
+            _logging.error(f"🚨 [V61.3] protagonist_name 추출 크래시: {str(protag_err)[:100]}")
+            _logging.error(_traceback.format_exc())
             self.ctx.ui.log("      ⚠️ 주인공 이름 추출 실패, 기본값 사용")
         return protagonist_name
 
@@ -415,8 +413,8 @@ class Stage3Orchestrator:
                 if len(_prev_ms_text_for_bp) > 200000:
                     _prev_ms_text_for_bp = _prev_ms_text_for_bp[:200000] + "\n... (200K자 절삭)"
                 if _prev_ms_for_bp:
-                    print(
-                        f"      📚 [V67] Blueprint용 이전 원고 {len(_prev_ms_for_bp)}개 로드 ({len(_prev_ms_text_for_bp):,}자)"
+                    _logging.info(
+                        f"📚 [V67] Blueprint용 이전 원고 {len(_prev_ms_for_bp)}개 로드 ({len(_prev_ms_text_for_bp):,}자)"
                     )
 
                 blueprint, pipeline_result = ctx.agents["three_phase_bp"].generate(
@@ -437,9 +435,8 @@ class Stage3Orchestrator:
                 )
 
         except Exception as gen_err:
-            print(f"🚨 [V61.3] 제{working_ep}화 Blueprint 생성 크래시: {str(gen_err)[:100]}", file=_sys.stderr)
-            _traceback.print_exc(file=_sys.stderr)
-            _sys.stderr.flush()
+            _logging.error(f"🚨 [V61.3] 제{working_ep}화 Blueprint 생성 크래시: {str(gen_err)[:100]}")
+            _logging.error(_traceback.format_exc())
 
             ctx.ui.log(f"❌ [V60.80] 제{working_ep}화 생성 실패: {str(gen_err)[:100]}")
             ctx.audit_event("blueprint_gen_error", str(gen_err)[:200], {"ep_num": working_ep})

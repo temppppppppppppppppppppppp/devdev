@@ -61,7 +61,7 @@ class DirectorEnsembleSelector:
             single_result["comparison_notes"] = "단일 후보"
             return single_result
 
-        logging.info(f"🎭 [Director] {len(candidates)}개 후보 비교 중...")
+        logging.warning(f"🎭 [Director] {len(candidates)}개 후보 비교 중...")
 
         arc_tactical = arc_data.get("tactical_doc", "")
         if isinstance(arc_tactical, dict):
@@ -151,7 +151,7 @@ class DirectorEnsembleSelector:
             comparison_notes = result.get("comparison_notes", "")
             reason = result.get("reason", "")
 
-            logging.info(f"🎯 [Director] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")
+            logging.warning(f"🎯 [Director] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")
             if comparison_notes:
                 logging.info(f"📝 비교: {comparison_notes[:150]}{'...' if len(comparison_notes) > 150 else ''}")
             if reason:
@@ -223,7 +223,7 @@ class DirectorEnsembleSelector:
         self, candidates: list, arc_data: dict, ep_num: int, prev_blueprint: dict, entity_registry: dict, state_tracker
     ) -> dict:
         """폴백: 첫 번째 후보 선택 (비교 실패 시)"""
-        logging.info("⚠️ [Director] 폴백 - 첫 번째 후보 평가")
+        logging.warning("⚠️ [Director] 폴백 - 첫 번째 후보 평가")
         result = self._evaluate_single_blueprint(
             candidates[0], arc_data, ep_num, prev_blueprint, entity_registry, state_tracker
         )
@@ -299,7 +299,7 @@ class DirectorEnsembleSelector:
                 "length_violation": True,
             }
 
-        logging.info(
+        logging.warning(
             f"✅ [V60.97] 분량 통과 후보: {len(qualified_indices)}개 ({[['A', 'B', 'C'][i] for i in qualified_indices]})"
         )
 
@@ -397,7 +397,7 @@ class DirectorEnsembleSelector:
             selected_idx = qualified_indices[0]
             selected_letter = ["A", "B", "C"][selected_idx]
             v60_97_swapped = True
-            logging.info(f"⚠️ [V60.97] LLM 선택 {old_selection} → {selected_letter}로 교체 (분량 기준)")
+            logging.warning(f"⚠️ [V60.97] LLM 선택 {old_selection} → {selected_letter}로 교체 (분량 기준)")
 
         selected_candidate = candidates[selected_idx] if selected_idx < len(candidates) else candidates[0]
 

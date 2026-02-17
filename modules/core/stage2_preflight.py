@@ -83,7 +83,7 @@ class Stage2PreflightAnalysis:
                         if _pf_result:
                             _pf_injection = self.ctx.agents["preflight"].generate_analyst_injection(_pf_result)
                     except Exception as pf_err:
-                        logging.info(f"⚠️ [Preflight] 스킵: {str(pf_err)[:50]}")
+                        logging.warning(f"⚠️ [Preflight] 스킵: {str(pf_err)[:50]}")
                 return _pf_injection, _pf_result
             finally:
                 try:
@@ -107,7 +107,7 @@ class Stage2PreflightAnalysis:
             pass
 
         if _cached_preflight_result:
-            logging.info("✅ [V66.1] arc_drive + preflight 병렬 완료")
+            logging.warning("✅ [V66.1] arc_drive + preflight 병렬 완료")
             logging.info(f"- 아이템 타임라인: {len(_cached_preflight_result.get('item_timeline', []))}개")
             logging.info(f"- 금지 사항: {len(_cached_preflight_result.get('absolute_prohibitions', []))}개")
             logging.info(f"- 관계 맵: {len(_cached_preflight_result.get('relationship_map', {}))}명")
@@ -326,7 +326,7 @@ class Stage2PreflightAnalysis:
         generation_method = "analyst"
         analyst_weapons = {}
 
-        logging.info(f"\n      {'=' * 60}")
+        logging.warning(f"\n      {'=' * 60}")
         logging.info(f"[V60.36] Arc {global_arc_no} 생성 시작 (attempt {attempt + 1})")
         logging.info(f"{'=' * 60}")
 
@@ -466,7 +466,7 @@ class Stage2PreflightAnalysis:
                     refined_arc["joint_docs"] = enriched_block.get("joint_docs", {})
                     refined_arc["status_shadow"] = enriched_block.get("status_shadow", {})
 
-                    logging.info(f"✅ [V60.77] FourPhase 성공! (내부 재시도: {pipeline_result.get('retries', 0)}회)")
+                    logging.warning(f"✅ [V60.77] FourPhase 성공! (내부 재시도: {pipeline_result.get('retries', 0)}회)")
 
                     # [V70] Director REJECT 시 롤백을 위한 StateTracker 핵심 레지스트리 스냅샷
                     import copy as _copy
@@ -511,12 +511,15 @@ class Stage2PreflightAnalysis:
                     _suspended = self.ctx.state_tracker.check_suspended_plots(global_arc_no)
                     if _suspended:
                         for sw in _suspended:
-                            logging.info(f"⚠️ [V66] {sw['message']}")
+                            logging.warning(f"⚠️ [V66] {sw['message']}")
                     # [V66] 장르별 레지스트리 업데이트
                     try:
                         self.ctx.state_tracker._populate_genre_registries_from_arc(refined_arc)
-                    except Exception:
-                        pass
+                    except Exception as _e:
+                        logging.warning(
+                            "[Sweep5-D] genre registry update failed: %s",
+                            _e,
+                        )
                     if genre_for_tracker == "investment":
                         self.ctx.state_tracker.extract_financial_events_from_arc(refined_arc)
                         self.ctx.current_project.save_v20_anchor(
@@ -530,9 +533,12 @@ class Stage2PreflightAnalysis:
                                 self.ctx.state_tracker.resolved_plots
                             )
                             if indexed > 0:
-                                logging.info(f"📊 [V66] SemanticPlotGuard: {indexed}개 플롯 인덱싱")
-                        except Exception:
-                            pass
+                                logging.warning(f"📊 [V66] SemanticPlotGuard: {indexed}개 플롯 인덱싱")
+                        except Exception as _e:
+                            logging.warning(
+                                "[Sweep5-D] semantic plot indexing failed: %s",
+                                _e,
+                            )
 
                     # [V66] NPC 대화 스타일 추출
                     try:

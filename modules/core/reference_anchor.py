@@ -102,7 +102,7 @@ class ReferenceAnchor:
 
             # API client 존재 여부 검증
             if not hasattr(self.context, "sys") or not hasattr(self.context.sys, "api_client"):
-                logging.info(f"⚠️ [ReferenceAnchor] API client unavailable (ep {ep_num})")
+                logging.warning(f"⚠️ [ReferenceAnchor] API client unavailable (ep {ep_num})")
                 return []
 
             # 임시 에이전트 생성

@@ -169,7 +169,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
             logging.warning(f"⚠️ [V61.3] genre 사전 로드 실패: {str(e)[:50]}")
 
         # 병렬 생성
-        logging.info(f"🎲 [BPEnsemble] 3개 후보 병렬 생성 중... (주인공: {protagonist_name})")
+        logging.warning(f"🎲 [BPEnsemble] 3개 후보 병렬 생성 중... (주인공: {protagonist_name})")
 
         # [Phase 3-Obs] 에이전트 레벨 ThreadPoolExecutor 계측
         _tp_t0 = time.monotonic()
@@ -216,20 +216,18 @@ class BlueprintEnsembleGenerator(BaseAgent):
                     )
                 except Exception as e:
                     # [V61.3] as_completed 자체 예외 처리
-                    logging.info(f"⚠️ [V61.3] 앙상블 루프 예외: {str(e)[:80]}")
+                    logging.warning(f"⚠️ [V61.3] 앙상블 루프 예외: {str(e)[:80]}")
         except Exception as e:
             # [V61.3] ThreadPoolExecutor 전체 예외 처리 - 급사 방지
             # stderr로 출력 (Rich 스피너가 stdout 가림)
-            import sys
             import traceback
 
-            print(f"      🚨 [V61.3] 병렬 처리 크래시 방지: {str(e)[:100]}", file=sys.stderr)
-            traceback.print_exc(file=sys.stderr)
-            sys.stderr.flush()
+            logging.error(f"🚨 [V61.3] 병렬 처리 크래시 방지: {str(e)[:100]}")
+            logging.error(traceback.format_exc())
 
         # [Phase 3-Obs] 병렬 구간 소요 시간 기록
         try:
-            logging.info(f"[PerfTimer:BlueprintEnsemble] bp_ep{ep_num}_ensemble={time.monotonic() - _tp_t0:.2f}s")
+            logging.warning(f"[PerfTimer:BlueprintEnsemble] bp_ep{ep_num}_ensemble={time.monotonic() - _tp_t0:.2f}s")
         except Exception:
             pass
 
@@ -370,12 +368,10 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         except Exception as e:
             # [V61.3] stderr로 출력 (Rich 스피너가 stdout 가림)
-            import sys
             import traceback
 
-            print(f"         🚨 [V61.3] BPEnsemble _generate_single 크래시: {str(e)[:80]}", file=sys.stderr)
-            traceback.print_exc(file=sys.stderr)
-            sys.stderr.flush()
+            logging.error(f"🚨 [V61.3] BPEnsemble _generate_single 크래시: {str(e)[:80]}")
+            logging.error(traceback.format_exc())
             return None
 
     def _evaluate_candidate(self, candidate: dict, constraint_block: dict) -> int:
@@ -400,7 +396,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         if scene_count <= 3:
             # 당선 불가 수준의 대형 감점 (-100000)
             score -= 100000
-            logging.info(f"⚠️ 씬 {scene_count}개 (≤3) → 당선 불가")
+            logging.warning(f"⚠️ 씬 {scene_count}개 (≤3) → 당선 불가")
 
         return score
 

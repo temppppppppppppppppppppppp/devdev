@@ -44,5 +44,5 @@ class GenreManager:
             return MedicalStrategy(self.studio)
         else:
             # 알 수 없는 장르는 무협으로 폴백
-            logging.info(f"⚠️ [GenreManager] 알 수 없는 장르: {genre_type}, 무협으로 대체합니다.")
+            logging.warning(f"⚠️ [GenreManager] 알 수 없는 장르: {genre_type}, 무협으로 대체합니다.")
             return WuxiaStrategy(self.studio)

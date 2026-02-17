@@ -61,7 +61,7 @@ class Stage2Finalizer:
                 spg_warnings = self.ctx.semantic_plot_guard.check_new_arc(tactical_doc=tactical_text)
                 if spg_warnings:
                     spg_text = self.ctx.semantic_plot_guard.format_warnings(spg_warnings)
-                    logging.info(f"⚠️ [V66] {spg_text}")
+                    logging.warning(f"⚠️ [V66] {spg_text}")
                     # Director 피드백에 추가
                     if current_feedback:
                         current_feedback = f"{current_feedback}\n{spg_text}"
@@ -101,7 +101,7 @@ class Stage2Finalizer:
                     f"{_full_arc_history}\n\n"
                     f"═══ 상태 요약 ═══\n{last_refined_context}"
                 )
-                logging.info(
+                logging.warning(
                     f"📚 [V67] Director 컨텍스트 확장: {len(_prev_arc_docs)}개 Arc ({len(_expanded_prev_context)}자)"
                 )
 
@@ -341,7 +341,7 @@ class Stage2Finalizer:
                         _vol_result = self.ctx.agents["director"].ask(_vol_prompt, temperature=0.2)
                         if _vol_result and isinstance(_vol_result, str) and len(_vol_result) > 20:
                             self.ctx.current_project.save_v20_anchor(f"volume_summary_{_vol_no}", _vol_result)
-                            logging.info(f"📖 [V68] 볼륨 {_vol_no} 요약 저장 완료 ({len(_vol_result)}자)")
+                            logging.warning(f"📖 [V68] 볼륨 {_vol_no} 요약 저장 완료 ({len(_vol_result)}자)")
 
                             # [V68] 시리즈 요약 갱신 — 기존 + 새 볼륨 통합
                             try:
@@ -363,7 +363,7 @@ class Stage2Finalizer:
                             except Exception as _se:
                                 logging.warning(f"⚠️ [V68] 시리즈 요약 갱신 실패 (비차단): {_se}")
                         else:
-                            logging.info("⚠️ [V68] 볼륨 요약 LLM 응답 불충분 — 건너뜀")
+                            logging.warning("⚠️ [V68] 볼륨 요약 LLM 응답 불충분 — 건너뜀")
                 except Exception as _ve:
                     logging.warning(f"⚠️ [V68] 볼륨 요약 생성 실패 (비차단): {_ve}")
 

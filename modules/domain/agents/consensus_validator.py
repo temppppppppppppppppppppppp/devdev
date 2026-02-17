@@ -178,7 +178,7 @@ class ConsensusValidator(BaseAgent):
         python_advisory = python_advisory or []
         # [V60.28] Arc 1 (이전 Arc 없음)은 연속성 검증 불필요 - 구조/서사만 검증
         if not prev_arcs:
-            logging.info("⏭️ [Consensus] Arc 1 - 연속성 검증 스킵, 구조/서사만 검증")
+            logging.warning("⏭️ [Consensus] Arc 1 - 연속성 검증 스킵, 구조/서사만 검증")
             # structure_focused와 narrative_focused만 사용
             active_perspectives = [p for p in self.perspectives if p["name"] != "continuity_focused"]
         else:
@@ -252,25 +252,23 @@ class ConsensusValidator(BaseAgent):
                             )
                 except FutureTimeoutError:
                     # 전체 합의 타임아웃 - 완료된 결과만 사용
-                    logging.info(
+                    logging.warning(
                         f"⏰ [V61.3] 합의 검증 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(results)}개 결과 사용"
                     )
                 except Exception as e:
                     # [V61.3] as_completed 자체 예외 처리
-                    logging.info(f"⚠️ [V61.3] 합의 루프 예외: {str(e)[:80]}")
+                    logging.warning(f"⚠️ [V61.3] 합의 루프 예외: {str(e)[:80]}")
         except Exception as e:
             # [V61.3] ThreadPoolExecutor 전체 예외 처리 - 급사 방지
             # stderr로 출력 (Rich 스피너가 stdout 가림)
-            import sys
             import traceback
 
-            print(f"      🚨 [V61.3] 합의 검증 크래시 방지: {str(e)[:100]}", file=sys.stderr)
-            traceback.print_exc(file=sys.stderr)
-            sys.stderr.flush()
+            logging.error(f"🚨 [V61.3] 합의 검증 크래시 방지: {str(e)[:100]}")
+            logging.error(traceback.format_exc())
 
         # [Phase 3-Obs] 병렬 구간 소요 시간 기록
         try:
-            logging.info(f"[PerfTimer:Consensus] consensus_validation={time.monotonic() - _tp_t0:.2f}s")
+            logging.warning(f"[PerfTimer:Consensus] consensus_validation={time.monotonic() - _tp_t0:.2f}s")
         except Exception:
             pass
 
@@ -390,16 +388,16 @@ class ConsensusValidator(BaseAgent):
                     cat = ci.get("category", "?")
                     issue = ci.get("issue", "?")
                     evidence = ci.get("evidence", "")[:80] if ci.get("evidence") else ""
-                    logging.info(f"- [{cat}] {issue}")
+                    logging.warning(f"- [{cat}] {issue}")
                     if evidence:
                         logging.info(f"└ 근거: {evidence}")
 
             if major_issues:
-                logging.info(f"⚠️ MAJOR ({len(major_issues)}개):")
+                logging.warning(f"⚠️ MAJOR ({len(major_issues)}개):")
                 for mi in major_issues[:3]:  # 최대 3개만
                     cat = mi.get("category", "?")
                     issue = mi.get("issue", "?")
-                    logging.info(f"- [{cat}] {issue}")
+                    logging.warning(f"- [{cat}] {issue}")
 
             if minor_issues and not critical_issues and not major_issues:
                 logging.info(f"📝 MINOR ({len(minor_issues)}개):")

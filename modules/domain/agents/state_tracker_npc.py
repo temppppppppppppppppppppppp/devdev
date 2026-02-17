@@ -1963,7 +1963,7 @@ class StateTrackerNPC:
                         removed.append(name)
 
             if removed:
-                print(
+                logging.info(
                     f"      \U0001f9f9 [V69] NPC 레지스트리 LLM 정리 (Arc {arc_no}): "
                     f"{len(removed)}개 오탐 제거 - {removed}"
                 )

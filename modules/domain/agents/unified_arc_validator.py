@@ -143,7 +143,7 @@ class UnifiedArcValidator(BaseAgent):
         # ═══════════════════════════════════════════════════════════════
         # Phase B: LLM 문맥 검증 (유료)
         # ═══════════════════════════════════════════════════════════════
-        logging.info("🔍 [UnifiedValidator] LLM 검증 중...")
+        logging.warning("🔍 [UnifiedValidator] LLM 검증 중...")
 
         llm_result = self._llm_validate(arc, prev_arcs, constraints, python_result)
 
@@ -161,7 +161,7 @@ class UnifiedArcValidator(BaseAgent):
             # MAJOR가 있어도 PASS → Director가 최종 판정
             verdict = "PASS"
             if major_count > 0:
-                logging.info(f"⚠️ [UnifiedValidator] MAJOR {major_count}건 경고 → Director에게 위임")
+                logging.warning(f"⚠️ [UnifiedValidator] MAJOR {major_count}건 경고 → Director에게 위임")
 
         result = {
             "verdict": verdict,
