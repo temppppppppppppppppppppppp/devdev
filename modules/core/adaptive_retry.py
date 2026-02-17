@@ -267,15 +267,17 @@ class AdaptiveRetryStrategy:
                     forbidden_items.append(match.group(1))
 
         # 강화된 경고 메시지 생성
-        injection = "\n\n" + "=" * 60 + "\n"
-        injection += "[!!! CRITICAL RETRY WARNING !!!]\n"
-        injection += f"이전 시도에서 {len(violations)}건의 제약 조건 위반이 발생했습니다.\n"
-        injection += "아래 항목을 절대 위반하지 마십시오:\n"
-        for i, v in enumerate(violations[:5], 1):  # 최대 5개
-            injection += f"  {i}. {v}\n"
+        parts = [
+            "\n\n" + "=" * 60,
+            "[!!! CRITICAL RETRY WARNING !!!]",
+            f"이전 시도에서 {len(violations)}건의 제약 조건 위반이 발생했습니다.",
+            "아래 항목을 절대 위반하지 마십시오:",
+            *[f"  {i}. {v}" for i, v in enumerate(violations[:5], 1)],
+        ]
         if forbidden_items:
-            injection += f"\n[ABSOLUTE BAN - 절대 재획득 금지]: {', '.join(forbidden_items)}\n"
-        injection += "=" * 60 + "\n"
+            parts.append(f"\n[ABSOLUTE BAN - 절대 재획득 금지]: {', '.join(forbidden_items)}")
+        parts.append("=" * 60)
+        injection = "\n".join(parts) + "\n"
 
         ctx.injected_constraints.extend(forbidden_items)
 
@@ -296,15 +298,18 @@ class AdaptiveRetryStrategy:
         reason = error_info.get("reason", "")
         score = error_info.get("score", 0)
 
-        injection = "\n\n" + "-" * 60 + "\n"
-        injection += "[QUALITY IMPROVEMENT REQUIRED]\n"
-        injection += f"이전 시도의 품질 점수: {score}점\n"
-        injection += f"개선 필요 사항: {reason}\n"
-        injection += "\n[개선 지침]:\n"
-        injection += "1. 각 화의 전술 밀도를 높이십시오 (최소 800자/화)\n"
-        injection += "2. 물리적 인과관계를 더 구체적으로 서술하십시오\n"
-        injection += "3. 캐릭터의 심리적 동기를 명확히 하십시오\n"
-        injection += "-" * 60 + "\n"
+        parts = [
+            "\n\n" + "-" * 60,
+            "[QUALITY IMPROVEMENT REQUIRED]",
+            f"이전 시도의 품질 점수: {score}점",
+            f"개선 필요 사항: {reason}",
+            "\n[개선 지침]:",
+            "1. 각 화의 전술 밀도를 높이십시오 (최소 800자/화)",
+            "2. 물리적 인과관계를 더 구체적으로 서술하십시오",
+            "3. 캐릭터의 심리적 동기를 명확히 하십시오",
+            "-" * 60,
+        ]
+        injection = "\n".join(parts) + "\n"
 
         return {
             "wait_time": 0,
@@ -322,16 +327,23 @@ class AdaptiveRetryStrategy:
         """
         missing_keys = error_info.get("missing_keys", [])
 
-        injection = "\n\n" + "#" * 60 + "\n"
-        injection += "[JSON STRUCTURE REPAIR REQUIRED]\n"
-        injection += "이전 응답의 JSON 구조가 올바르지 않았습니다.\n"
+        parts = [
+            "\n\n" + "#" * 60,
+            "[JSON STRUCTURE REPAIR REQUIRED]",
+            "이전 응답의 JSON 구조가 올바르지 않았습니다.",
+        ]
         if missing_keys:
-            injection += f"누락된 필수 키: {', '.join(missing_keys)}\n"
-        injection += "\n반드시 아래 구조를 준수하십시오:\n"
-        injection += "- 응답은 반드시 '{' 로 시작하고 '}' 로 끝나야 합니다\n"
-        injection += "- 모든 필수 키를 포함해야 합니다\n"
-        injection += "- 문자열 내 큰따옴표는 이스케이프 처리해야 합니다\n"
-        injection += "#" * 60 + "\n"
+            parts.append(f"누락된 필수 키: {', '.join(missing_keys)}")
+        parts.extend(
+            [
+                "\n반드시 아래 구조를 준수하십시오:",
+                "- 응답은 반드시 '{' 로 시작하고 '}' 로 끝나야 합니다",
+                "- 모든 필수 키를 포함해야 합니다",
+                "- 문자열 내 큰따옴표는 이스케이프 처리해야 합니다",
+                "#" * 60,
+            ]
+        )
+        injection = "\n".join(parts) + "\n"
 
         return {
             "wait_time": 1,
@@ -346,12 +358,15 @@ class AdaptiveRetryStrategy:
         타임아웃에 대한 전략
         - 출력 길이 제한 요청
         """
-        injection = "\n\n" + "*" * 60 + "\n"
-        injection += "[OUTPUT LENGTH CONSTRAINT]\n"
-        injection += "이전 응답이 최대 토큰을 초과했습니다.\n"
-        injection += "tactical_doc을 핵심 비트 위주로 압축하여 작성하십시오.\n"
-        injection += "각 화당 최대 600자로 제한하십시오.\n"
-        injection += "*" * 60 + "\n"
+        parts = [
+            "\n\n" + "*" * 60,
+            "[OUTPUT LENGTH CONSTRAINT]",
+            "이전 응답이 최대 토큰을 초과했습니다.",
+            "tactical_doc을 핵심 비트 위주로 압축하여 작성하십시오.",
+            "각 화당 최대 600자로 제한하십시오.",
+            "*" * 60,
+        ]
+        injection = "\n".join(parts) + "\n"
 
         return {
             "wait_time": 2,
