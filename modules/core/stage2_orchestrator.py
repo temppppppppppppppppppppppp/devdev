@@ -168,75 +168,7 @@ class Stage2Orchestrator:
 
         new_arcs_to_load = all_refined_arcs[existing_tracker_arcs:]
         _genre_for_tracker = self.ctx.selected_genre.get("type", "") if self.ctx.selected_genre else ""
-        for prev_arc in new_arcs_to_load:
-            self.ctx.state_tracker.extract_npc_deaths_from_arc(prev_arc)
-            self.ctx.state_tracker.extract_skill_acquisitions_from_arc(prev_arc)
-            self.ctx.state_tracker.extract_npc_info_from_arc(
-                prev_arc, genre=_genre_for_tracker
-            )  # [V60.95] NPC 무장/수준 정보 [V66.2] F-1 장르 가드
-            self.ctx.state_tracker.extract_resolved_plots_from_arc(prev_arc)  # [V62.7] 완결된 플롯
-            # [V66.1] F-1: 시간선 마커 추출
-            try:
-                self.ctx.state_tracker.extract_time_markers_from_arc(prev_arc)
-            except Exception as e:
-                logging.warning(f"[V66.1] 시간선 추출 실패 (무시): {e}")
-            # [V66.1] F-8: NPC 신체 변화 추출
-            try:
-                self.ctx.state_tracker.extract_permanent_injuries_from_arc(prev_arc)
-            except Exception as e:
-                logging.warning(f"[V66.1] 신체 변화 추출 실패 (무시): {e}")
-            # [V66.1] 동행자 변경 추출
-            try:
-                self.ctx.state_tracker.update_companions_from_arc(prev_arc)
-            except Exception as e:
-                logging.warning(f"[V66.1] 동행자 추출 실패 (무시): {e}")
-            # [V66.1] 약속/맹세 추출
-            try:
-                self.ctx.state_tracker.extract_commitments_from_arc(prev_arc)
-            except Exception as e:
-                logging.warning(f"[V66.1] 약속 추출 실패 (무시): {e}")
-            # [V66.1] 주인공 감정 추출
-            try:
-                self.ctx.state_tracker.extract_protagonist_emotion_from_arc(prev_arc)
-            except Exception as e:
-                logging.warning(f"[V66.1] 감정 추출 실패 (무시): {e}")
-            # [V66.2] H-1~H-5: 재시작 시 V66 확장 데이터 복원
-            try:
-                self.ctx.state_tracker.extract_item_states_from_arc(prev_arc)
-            except (KeyError, ValueError, TypeError) as e:
-                logging.warning(f"[V66.3] Init load 복원 실패 (major_items): {e}")
-            try:
-                self.ctx.state_tracker.extract_entity_destructions_from_arc(prev_arc)
-            except (KeyError, ValueError, TypeError) as e:
-                logging.warning(f"[V66.3] Init load 복원 실패 (entity_destructions): {e}")
-            try:
-                self.ctx.state_tracker.extract_npc_personality_from_arc(prev_arc)
-            except (KeyError, ValueError, TypeError) as e:
-                logging.warning(f"[V66.3] Init load 복원 실패 (npc_personality): {e}")
-            try:
-                self.ctx.state_tracker.extract_npc_npc_relationships_from_arc(prev_arc)
-            except (KeyError, ValueError, TypeError) as e:
-                logging.warning(f"[V66.3] Init load 복원 실패 (npc_npc_relationships): {e}")
-            try:
-                self.ctx.state_tracker.extract_npc_dialogue_styles_from_arc(prev_arc)
-            except (KeyError, ValueError, TypeError) as e:
-                logging.warning(f"[V66.3] Init load 복원 실패 (dialogue_profiles): {e}")
-            # [V66.2] D-1,2,3: 관계/부상/이동 추출 연결
-            try:
-                self.ctx.state_tracker.extract_relationship_changes_from_arc(prev_arc)
-            except Exception as e:
-                logging.warning(f"[V66.2] 관계 변화 추출 실패 (무시): {e}")
-            try:
-                self.ctx.state_tracker.extract_npc_injuries_from_arc(prev_arc)
-            except Exception as e:
-                logging.warning(f"[V66.2] NPC 부상 추출 실패 (무시): {e}")
-            try:
-                self.ctx.state_tracker.extract_npc_movements_from_arc(prev_arc)
-            except Exception as e:
-                logging.warning(f"[V66.2] NPC 이동 추출 실패 (무시): {e}")
-            # [V63.1] 투자물: 금융 이벤트 추출
-            if _genre_for_tracker == "investment":
-                self.ctx.state_tracker.extract_financial_events_from_arc(prev_arc)
+        self.ctx.state_tracker.full_extract_from_arcs(new_arcs_to_load, genre=_genre_for_tracker)
         self.ctx.state_tracker_loaded_arcs = len(all_refined_arcs)
 
         # [V63.4 P0] 금융 레지스트리 DB 영구 저장 (투자물)

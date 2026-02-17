@@ -349,3 +349,64 @@ class TestCheckDeadNpcInManuscript:
         """None 원고는 위반 없음"""
         violations = tracker_with_dead_npc.check_dead_npc_in_manuscript(None, ep_num=20, arc_no=6)
         assert violations == []
+
+
+class TestFullExtractFromArcs:
+    """B-1/B-2: full_extract_from_arcs가 17개 메서드를 일관 호출하는지 검증."""
+
+    def test_calls_all_17_extract_methods(self):
+        """17개 extract 메서드가 모두 호출되는지 확인."""
+        from unittest.mock import MagicMock
+
+        tracker = MagicMock(spec=StateTracker)
+        arcs = [{"arc_number": 1, "content": {}}]
+
+        StateTracker.full_extract_from_arcs(tracker, arcs, genre="wuxia")
+
+        tracker.extract_npc_deaths_from_arc.assert_called_once()
+        tracker.extract_skill_acquisitions_from_arc.assert_called_once()
+        tracker.extract_npc_info_from_arc.assert_called_once()
+        tracker.extract_resolved_plots_from_arc.assert_called_once()
+        tracker.extract_time_markers_from_arc.assert_called_once()
+        tracker.extract_permanent_injuries_from_arc.assert_called_once()
+        tracker.update_companions_from_arc.assert_called_once()
+        tracker.extract_commitments_from_arc.assert_called_once()
+        tracker.extract_protagonist_emotion_from_arc.assert_called_once()
+        tracker.extract_item_states_from_arc.assert_called_once()
+        tracker.extract_entity_destructions_from_arc.assert_called_once()
+        tracker.extract_npc_personality_from_arc.assert_called_once()
+        tracker.extract_npc_npc_relationships_from_arc.assert_called_once()
+        tracker.extract_npc_dialogue_styles_from_arc.assert_called_once()
+        tracker.extract_relationship_changes_from_arc.assert_called_once()
+        tracker.extract_npc_injuries_from_arc.assert_called_once()
+        tracker.extract_npc_movements_from_arc.assert_called_once()
+
+    def test_financial_extract_only_for_investment_genre(self):
+        """투자물 장르에서만 금융 이벤트 추출 호출."""
+        from unittest.mock import MagicMock
+
+        tracker = MagicMock(spec=StateTracker)
+        arcs = [{"arc_number": 1}]
+
+        StateTracker.full_extract_from_arcs(tracker, arcs, genre="wuxia")
+        tracker.extract_financial_events_from_arc.assert_not_called()
+
+        tracker.reset_mock()
+        StateTracker.full_extract_from_arcs(tracker, arcs, genre="investment")
+        tracker.extract_financial_events_from_arc.assert_called_once()
+
+    def test_optional_extract_exception_does_not_propagate(self):
+        """확장 extract 예외가 비전파되고 필수 4종 호출은 유지."""
+        from unittest.mock import MagicMock
+
+        tracker = MagicMock(spec=StateTracker)
+        tracker.extract_time_markers_from_arc.side_effect = ValueError("test")
+        tracker.extract_permanent_injuries_from_arc.side_effect = KeyError("test")
+        tracker.extract_npc_personality_from_arc.side_effect = TypeError("test")
+
+        StateTracker.full_extract_from_arcs(tracker, [{"arc_number": 1}])
+
+        tracker.extract_npc_deaths_from_arc.assert_called_once()
+        tracker.extract_skill_acquisitions_from_arc.assert_called_once()
+        tracker.extract_npc_info_from_arc.assert_called_once()
+        tracker.extract_resolved_plots_from_arc.assert_called_once()

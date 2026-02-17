@@ -181,6 +181,73 @@ class StateTracker:
         self._financial = StateTrackerFinancial(self)
         self._plots = StateTrackerPlots(self)
 
+    def full_extract_from_arcs(self, arcs: list[dict], genre: str = "") -> None:
+        """Arc 목록에서 17개 extract 메서드를 순회 호출해 NPC 상태를 구축."""
+        for arc in arcs:
+            # 핵심 4종: 항상 호출
+            self.extract_npc_deaths_from_arc(arc)
+            self.extract_skill_acquisitions_from_arc(arc)
+            self.extract_npc_info_from_arc(arc, genre=genre)
+            self.extract_resolved_plots_from_arc(arc)
+
+            # V66 확장: 실패해도 비차단
+            try:
+                self.extract_time_markers_from_arc(arc)
+            except Exception as e:
+                logging.warning("[V66.1] 시간선 추출 실패 (무시): %s", e)
+            try:
+                self.extract_permanent_injuries_from_arc(arc)
+            except Exception as e:
+                logging.warning("[V66.1] 신체 변화 추출 실패 (무시): %s", e)
+            try:
+                self.update_companions_from_arc(arc)
+            except Exception as e:
+                logging.warning("[V66.1] 동행자 추출 실패 (무시): %s", e)
+            try:
+                self.extract_commitments_from_arc(arc)
+            except Exception as e:
+                logging.warning("[V66.1] 약속 추출 실패 (무시): %s", e)
+            try:
+                self.extract_protagonist_emotion_from_arc(arc)
+            except Exception as e:
+                logging.warning("[V66.1] 감정 추출 실패 (무시): %s", e)
+            try:
+                self.extract_item_states_from_arc(arc)
+            except (KeyError, ValueError, TypeError) as e:
+                logging.warning("[V66.3] Init load 복원 실패 (major_items): %s", e)
+            try:
+                self.extract_entity_destructions_from_arc(arc)
+            except (KeyError, ValueError, TypeError) as e:
+                logging.warning("[V66.3] Init load 복원 실패 (entity_destructions): %s", e)
+            try:
+                self.extract_npc_personality_from_arc(arc)
+            except (KeyError, ValueError, TypeError) as e:
+                logging.warning("[V66.3] Init load 복원 실패 (npc_personality): %s", e)
+            try:
+                self.extract_npc_npc_relationships_from_arc(arc)
+            except (KeyError, ValueError, TypeError) as e:
+                logging.warning("[V66.3] Init load 복원 실패 (npc_npc_relationships): %s", e)
+            try:
+                self.extract_npc_dialogue_styles_from_arc(arc)
+            except (KeyError, ValueError, TypeError) as e:
+                logging.warning("[V66.3] Init load 복원 실패 (dialogue_profiles): %s", e)
+            try:
+                self.extract_relationship_changes_from_arc(arc)
+            except Exception as e:
+                logging.warning("[V66.2] 관계 변화 추출 실패 (무시): %s", e)
+            try:
+                self.extract_npc_injuries_from_arc(arc)
+            except Exception as e:
+                logging.warning("[V66.2] NPC 부상 추출 실패 (무시): %s", e)
+            try:
+                self.extract_npc_movements_from_arc(arc)
+            except Exception as e:
+                logging.warning("[V66.2] NPC 이동 추출 실패 (무시): %s", e)
+
+            # 투자물: 금융 이벤트 추출
+            if genre == "investment":
+                self.extract_financial_events_from_arc(arc)
+
     def _init_tracking_fields(self) -> None:
         """[V60.95] 프리셋 기반 추적 필드 초기화"""
         self.tracking_fields: dict[str, Any] = {}

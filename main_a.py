@@ -2732,11 +2732,7 @@ class SovereignApp:
             self.state_tracker = StateTracker(preset_registry=self.preset_registry, llm_client=self.sys.api_client)
             all_arcs = self.current_project.db.load_anchor("arcs") or []
             _g = self.selected_genre.get("type", "") if self.selected_genre else ""
-            for arc in all_arcs:
-                self.state_tracker.extract_npc_deaths_from_arc(arc)
-                self.state_tracker.extract_skill_acquisitions_from_arc(arc)
-                self.state_tracker.extract_npc_info_from_arc(arc, genre=_g)
-                self.state_tracker.extract_resolved_plots_from_arc(arc)
+            self.state_tracker.full_extract_from_arcs(all_arcs, genre=_g)
             if self.state_tracker.npc_registry:
                 dead_count = sum(1 for info in self.state_tracker.npc_registry.values() if info.get("status") == "dead")
                 self.ui.log(
