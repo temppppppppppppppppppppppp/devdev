@@ -164,6 +164,18 @@ class TestProjectRepositoryProtocol:
 
         assert isinstance(MockProject(), ProjectRepositoryProtocol)
 
+    def test_non_conforming(self):
+        from modules.protocols.app_services import ProjectRepositoryProtocol
+
+        class Incomplete:
+            @property
+            def name(self):
+                return "test"
+
+            # master_bible, volumes, arcs, paths, db 누락
+
+        assert not isinstance(Incomplete(), ProjectRepositoryProtocol)
+
 
 # ──────────────────────────────────────────────────────────────
 # 5. ConfigServiceProtocol
@@ -215,6 +227,13 @@ class TestConfigServiceProtocol:
 
 class TestStateServiceProtocol:
     """StateServiceProtocol은 50+ 메서드. 핵심 3개로 isinstance 검증."""
+
+    def test_state_tracker_conforms(self):
+        from modules.domain.agents.state_tracker import StateTracker
+        from modules.protocols.app_services import StateServiceProtocol
+
+        st = StateTracker()
+        assert isinstance(st, StateServiceProtocol)
 
     def test_partial_conformance_fails(self):
         from modules.protocols.app_services import StateServiceProtocol
@@ -275,7 +294,7 @@ class TestDBRepositoryProtocol:
 
 
 class TestReExport:
-    """modules.protocols에서 11종 전부 import 가능 확인"""
+    """modules.protocols에서 13종 전부 import 가능 확인"""
 
     EXPECTED = [
         # Step 3
@@ -284,6 +303,9 @@ class TestReExport:
         "ArtifactValidator",
         "ArtifactCritic",
         "Corrector",
+        # B-3 — Validator Protocol
+        "TierValidator",
+        "EpisodeAwareValidator",
         # Phase 4A
         "UIServiceProtocol",
         "AuditServiceProtocol",
