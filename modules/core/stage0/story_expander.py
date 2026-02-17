@@ -9,13 +9,13 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from .preset_registry import PresetRegistry
 
 # 스피너 import (실패해도 동작)
 try:
-    from .spinner import PhaseIndicator, ProgressBar, Spinner, print_error, print_header, print_success
+    from .spinner import PhaseIndicator, Spinner, print_header, print_success
 
     SPINNER_AVAILABLE = True
 except ImportError:

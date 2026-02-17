@@ -693,8 +693,11 @@ class Stage2Orchestrator:
 
                     report_content = "\n".join(report_lines)
 
-                    with open(failure_report_path, "w", encoding="utf-8") as f:
-                        f.write(report_content)
+                    def _write_failure_report(path, content):
+                        with open(path, "w", encoding="utf-8") as f:
+                            f.write(content)
+
+                    await asyncio.to_thread(_write_failure_report, failure_report_path, report_content)
 
                     logging.info(f"\n{'=' * 60}")
                     logging.warning(f"📋 [V60.46] Arc {global_arc_no} 실패 분석 리포트")

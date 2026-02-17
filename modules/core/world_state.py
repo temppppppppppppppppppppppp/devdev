@@ -59,7 +59,7 @@ class WorldStateManager:
         except Exception as e:
             _logger.warning("[V68] WorldState: DB 로드 실패, 초기화: %s", e)
 
-        return json.loads(json.dumps(self._INIT_STATE))  # deep copy
+        return json.loads(json.dumps(self._INIT_STATE, ensure_ascii=False))  # deep copy
 
     def save(self) -> None:
         """DB anchor 'world_state'에 저장"""
@@ -410,5 +410,5 @@ class WorldStateManager:
             target_ep,
             self._state.get("last_updated_ep", 0),
         )
-        self._state = json.loads(json.dumps(self._INIT_STATE))
+        self._state = json.loads(json.dumps(self._INIT_STATE, ensure_ascii=False))
         self.save()

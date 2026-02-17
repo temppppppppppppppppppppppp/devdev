@@ -13,7 +13,6 @@ from google.genai import types
 
 # [V44] 에스케이프 유틸리티 임포트
 try:
-    from modules.core.escape_utils import EscapeUtils
     from modules.core.escape_utils import escape_braces as util_escape_braces
 except ImportError:
     # 폴백: 유틸리티 없을 시 기본 구현 사용

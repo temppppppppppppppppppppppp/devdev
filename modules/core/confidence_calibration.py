@@ -29,6 +29,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
+from modules.core.constants import ManuscriptLimits
+
 
 class ContentType(Enum):
     """콘텐츠 유형"""
@@ -145,12 +147,15 @@ class ConfidenceCalibrator:
 
         # 1. 길이 적절성 (15점)
         length = len(manuscript)
-        if 5000 <= length <= 12000:
+        if ManuscriptLimits.TARGET_LENGTH <= length <= 12000:
             factors["length_adequacy"] = 15
-        elif 4000 <= length < 5000 or 12000 < length <= 15000:
+        elif (
+            ManuscriptLimits.MIN_LENGTH <= length < ManuscriptLimits.TARGET_LENGTH
+            or 12000 < length <= ManuscriptLimits.MAX_LENGTH
+        ):
             factors["length_adequacy"] = 10
             concerns.append(f"길이가 다소 {'짧음' if length < 5000 else '김'} ({length}자)")
-        elif 3000 <= length < 4000:
+        elif 3000 <= length < ManuscriptLimits.MIN_LENGTH:
             factors["length_adequacy"] = 5
             concerns.append(f"길이 부족 ({length}자)")
         else:

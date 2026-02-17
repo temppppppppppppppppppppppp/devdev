@@ -1,3 +1,4 @@
+from modules.core.constants import ManuscriptLimits
 from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
 
 from .base_agent import BaseAgent
@@ -138,7 +139,7 @@ class Director(BaseAgent):
         prev_full_text,
         arc_pos,
         total_eps=None,
-        target_len=4500,
+        target_len=ManuscriptLimits.WARNING_LENGTH,
         retry_count=0,
         validation_context=None,
         entity_registry=None,
@@ -195,7 +196,7 @@ class Director(BaseAgent):
     # [V0128] 3-Tier Validation System
     # =================================================================
 
-    def _audit_with_v0128(self, ep_num, manuscript, validation_context, target_len=4500):
+    def _audit_with_v0128(self, ep_num, manuscript, validation_context, target_len=ManuscriptLimits.WARNING_LENGTH):
         """[V64] 위임 → DirectorQualityAuditor"""
         return self._auditor._audit_with_v0128(ep_num, manuscript, validation_context, target_len)
 
