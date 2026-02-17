@@ -2069,6 +2069,12 @@ class SovereignApp:
         else:
             asyncio.run(self._stage2_orch.stage_2_arcs_async_logic())
 
+        # [Sweep2-A1] Stage 2에서 구축한 StateTracker를 app에 동기화
+        # Stage 3/4 lazy init이 재사용할 수 있도록 함
+        _s2_ctx = self._stage2_orch.ctx
+        if _s2_ctx is not None and getattr(_s2_ctx, "state_tracker", None) is not None:
+            self.state_tracker = _s2_ctx.state_tracker
+
     # -- [V64.P3] Stage 2 helpers -> Stage2Orchestrator delegation stubs ------
 
     def _normalize_tactical_text(self, text):
