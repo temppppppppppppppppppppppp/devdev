@@ -21,6 +21,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
+from modules.core.constants import ManuscriptLimits
+
 
 class CheckType(Enum):
     """체크 타입"""
@@ -165,7 +167,7 @@ class ConstitutionalChecker:
         ConstitutionArticle(
             id="M5",
             check_type=CheckType.QUALITY,
-            question="원고가 4000자 미만인가?",
+            question=f"원고가 {ManuscriptLimits.MIN_LENGTH}자 미만인가?",
             reject_if_yes=True,
             severity="HIGH",
         ),

@@ -46,7 +46,6 @@ from modules.core.services.audit_service import AuditService  # [Phase 4B-1]
 from modules.core.services.project_service import ProjectService  # [Phase 4B-3]
 from modules.core.services.state_service import StateService  # [Phase 4B-3]
 from modules.core.services.ui_service import UIService  # [Phase 4B-2]
-from modules.core.spinners import FancySpinner, StageSpinner, rich_console  # noqa: F401
 from modules.core.stage01_helpers import Stage01Helpers  # [Phase 4C-1b]
 from modules.core.stage2_orchestrator import Stage2Orchestrator  # [V64.P3]
 from modules.core.stage3_orchestrator import Stage3Orchestrator  # [Phase 4C-1a]
@@ -84,7 +83,7 @@ from modules.domain.agents.writer import Writer
 
 # [V60.95] Stage 0 모듈 - 프로젝트 초기화 및 역설계
 try:
-    from modules.core.stage0 import PresetRegistry, StageZeroManager, StyleGuide
+    from modules.core.stage0 import PresetRegistry, StyleGuide
 
     STAGE0_AVAILABLE = True
 except ImportError as e:
@@ -108,7 +107,7 @@ try:
     from modules.core.confidence_calibration import ConfidenceCalibrator  # [V53.3] 신뢰도 보정
     from modules.core.constitutional_checker import ConstitutionalChecker  # [V55.2] 헌법적 자기검증
     from modules.core.context_compression import ContextCompressor  # [V54.2] 컨텍스트 압축
-    from modules.core.cross_agent_verifier import ComplianceLevel, CrossAgentVerifier  # [V52.4] 교차 검증
+    from modules.core.cross_agent_verifier import CrossAgentVerifier  # [V52.4] 교차 검증
     from modules.core.dynamic_prompt_weighting import DynamicPromptWeighter  # [V53.1] 동적 프롬프트 가중치
     from modules.core.emotion_tracker import EmotionArcTracker  # [V60.26] 감정선 추적
     from modules.core.expert_mixture import ExpertMixture  # [V52.3] 전문가 혼합
@@ -122,7 +121,7 @@ try:
     from modules.core.pre_director_checklist import PreDirectorChecklist  # [V53.4] 사전 체크리스트
     from modules.core.quality_amplifier import QualityAmplifier  # [V51.2] 품질 증폭기
     from modules.core.quality_dashboard import QualityDashboard  # [V60] 품질 대시보드
-    from modules.core.self_reflection import ReflectionTarget, SelfReflector  # [V52.1] 자기 성찰
+    from modules.core.self_reflection import SelfReflector  # [V52.1] 자기 성찰
 
     # [V54] 비용 절감 + 품질 향상 모듈
     from modules.core.semantic_cache import SemanticCache  # [V54.1] 의미론적 캐시
@@ -153,6 +152,7 @@ from modules.core.constants import (
     ErrorMessages,
     GenreTypes,
     HUDKeys,
+    ManuscriptLimits,
     RetryLimits,
     SuccessMessages,
 )
@@ -164,6 +164,8 @@ _SUMMARY_MODEL = AIModels.SUMMARY_MODEL
 
 
 class SovereignApp:
+    _PROJECTS_DIR = "projects"
+
     def __init__(self):
         load_dotenv(override=True)
         self.ui = StudioVisualizer()
@@ -353,16 +355,16 @@ class SovereignApp:
         if audit_result.get("decision") == "REJECT":
             # 분량 문제
             if stage == 4 and content_length > 0:
-                if content_length < 4000:
+                if content_length < ManuscriptLimits.MIN_LENGTH:
                     action_items.append(
                         {
                             "type": "QUALITY_ISSUE",
                             "description": f"분량 절대 미달 ({content_length}자)",
                             "severity": "CRITICAL",
-                            "suggestion": f"최소 {4000 - content_length}자 추가 필요. 심리 묘사, 조연 리액션, 환경 묘사로 보충.",
+                            "suggestion": f"최소 {ManuscriptLimits.MIN_LENGTH - content_length}자 추가 필요. 심리 묘사, 조연 리액션, 환경 묘사로 보충.",
                         }
                     )
-                elif content_length < 4500:
+                elif content_length < ManuscriptLimits.WARNING_LENGTH:
                     action_items.append(
                         {
                             "type": "QUALITY_ISSUE",
@@ -616,7 +618,7 @@ class SovereignApp:
         prev_manuscript: str = "",
         episode_bibles: list = None,
         cliche_check_result: dict = None,
-        target_len: int = 5000,
+        target_len: int = ManuscriptLimits.TARGET_LENGTH,
     ) -> str:
         """[V64 P2-2] -> PromptBuilder"""
         return self._prompt_builder.generate_writer_guidance_v60_8(
@@ -841,7 +843,7 @@ class SovereignApp:
         project_name = self._select_project()
 
         # [V60.37] 프로젝트별 .env 로드 지원
-        project_env_path = Path("projects") / project_name / ".env"
+        project_env_path = Path(self._PROJECTS_DIR) / project_name / ".env"
         if project_env_path.exists():
             load_dotenv(project_env_path, override=True)
             print(f"   🔑 [V60.37] 프로젝트별 API 키 로드: {project_env_path}")
@@ -1132,7 +1134,7 @@ class SovereignApp:
         Returns:
             bool: 무결성 검증 통과 여부 (True=정상, False=손상 감지)
         """
-        memory_path = Path(f"projects/{project_name}/memory")
+        memory_path = Path(self._PROJECTS_DIR) / project_name / "memory"
 
         # 1. sqlite-vec DB 파일 점검
         vec_db = memory_path / "vec_memory.db"
@@ -1509,7 +1511,7 @@ class SovereignApp:
                     self.failure_learner = FailureLearner()
                     # 프로젝트별 실패 기록 로드 시도
                     failure_log_path = os.path.join(
-                        "projects", self.current_project.name, "logs", "failure_learning.json"
+                        self._PROJECTS_DIR, self.current_project.name, "logs", "failure_learning.json"
                     )
                     if os.path.exists(failure_log_path):
                         self.failure_learner.load_from_json(failure_log_path)
@@ -1517,14 +1519,18 @@ class SovereignApp:
 
                     # V51.5 캐릭터 음성 추적
                     self.character_voice = CharacterVoiceTracker()
-                    voice_log_path = os.path.join("projects", self.current_project.name, "logs", "character_voice.json")
+                    voice_log_path = os.path.join(
+                        self._PROJECTS_DIR, self.current_project.name, "logs", "character_voice.json"
+                    )
                     if os.path.exists(voice_log_path):
                         self.character_voice.load_from_json(voice_log_path)
                         self.ui.log(f"   🎭 [V51.5] 캐릭터 음성 {len(self.character_voice.profiles)}명 로드")
 
                     # V51.6 복선 추적
                     self.foreshadow_tracker = ForeshadowTracker()
-                    foreshadow_log_path = os.path.join("projects", self.current_project.name, "logs", "foreshadow.json")
+                    foreshadow_log_path = os.path.join(
+                        self._PROJECTS_DIR, self.current_project.name, "logs", "foreshadow.json"
+                    )
                     if os.path.exists(foreshadow_log_path):
                         self.foreshadow_tracker.load_from_json(foreshadow_log_path)
                         stats = self.foreshadow_tracker.get_stats()
@@ -1578,7 +1584,7 @@ class SovereignApp:
                     # V60.26-5 캐릭터 음성 프로파일러 (V58, 기존 V51.5보다 고급)
                     self.voice_profiler = CharacterVoiceProfiler()
                     voice_profiler_path = os.path.join(
-                        "projects", self.current_project.name, "logs", "voice_profiles.json"
+                        self._PROJECTS_DIR, self.current_project.name, "logs", "voice_profiles.json"
                     )
                     if os.path.exists(voice_profiler_path):
                         try:
@@ -1949,7 +1955,7 @@ class SovereignApp:
         # [V51.4] 실패 학습 기록 저장
         if V50_MODULES_AVAILABLE and self.failure_learner and self.current_project:
             try:
-                logs_dir = os.path.join("projects", self.current_project.name, "logs")
+                logs_dir = os.path.join(self._PROJECTS_DIR, self.current_project.name, "logs")
                 os.makedirs(logs_dir, exist_ok=True)
                 failure_log_path = os.path.join(logs_dir, "failure_learning.json")
                 self.failure_learner.save_to_json(failure_log_path)
@@ -1961,7 +1967,7 @@ class SovereignApp:
         # [V51.5] 캐릭터 음성 프로필 저장
         if V50_MODULES_AVAILABLE and self.character_voice and self.current_project:
             try:
-                logs_dir = os.path.join("projects", self.current_project.name, "logs")
+                logs_dir = os.path.join(self._PROJECTS_DIR, self.current_project.name, "logs")
                 os.makedirs(logs_dir, exist_ok=True)
                 voice_log_path = os.path.join(logs_dir, "character_voice.json")
                 self.character_voice.save_to_json(voice_log_path)
@@ -1972,7 +1978,7 @@ class SovereignApp:
         # [V51.6] 복선 추적 저장
         if V50_MODULES_AVAILABLE and self.foreshadow_tracker and self.current_project:
             try:
-                logs_dir = os.path.join("projects", self.current_project.name, "logs")
+                logs_dir = os.path.join(self._PROJECTS_DIR, self.current_project.name, "logs")
                 os.makedirs(logs_dir, exist_ok=True)
                 foreshadow_log_path = os.path.join(logs_dir, "foreshadow.json")
                 self.foreshadow_tracker.save_to_json(foreshadow_log_path)
@@ -2510,7 +2516,7 @@ class SovereignApp:
         Returns:
             str: 선택된 프로젝트 이름
         """
-        root = Path("projects")
+        root = Path(self._PROJECTS_DIR)
         projects = [d.name for d in root.iterdir() if d.is_dir()]
         if not projects:  # [V70] 빈 프로젝트 폴더 방어
             self.ui.log("❌ projects/ 폴더에 프로젝트가 없습니다. 먼저 프로젝트를 생성하세요.")

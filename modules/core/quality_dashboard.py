@@ -18,6 +18,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from modules.core.constants import ManuscriptLimits
+
 
 class QualityDashboard:
     """
@@ -585,15 +587,19 @@ class QualityDashboard:
             # 분량 조정
             length = current_metrics.get("length", 0)
             if length > 0:
-                if length < 4000:
+                if length < ManuscriptLimits.MIN_LENGTH:
                     probability -= 40  # 최소 미달 시 대폭 감점
                     result["factors"].append(
-                        {"name": "분량 부족", "impact": f"{length}자 (최소 4000자)", "weight": -40}
+                        {
+                            "name": "분량 부족",
+                            "impact": f"{length}자 (최소 {ManuscriptLimits.MIN_LENGTH}자)",
+                            "weight": -40,
+                        }
                     )
-                elif length < 4500:
+                elif length < ManuscriptLimits.WARNING_LENGTH:
                     probability -= 15
                     result["factors"].append({"name": "분량 경계", "impact": f"{length}자", "weight": -15})
-                elif 4500 <= length <= 8000:
+                elif ManuscriptLimits.WARNING_LENGTH <= length <= 8000:
                     probability += 5
                     result["factors"].append({"name": "분량 적정", "impact": f"{length}자", "weight": +5})
 

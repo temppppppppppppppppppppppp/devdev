@@ -720,21 +720,21 @@ class FeedbackSystem:
                     "pass_threshold": 70,
                     "feedback_level": "detailed",
                     "strictness": "high",
-                    "guidance": "5000자 이상, 균형 잡힌 씬 분배를 목표로.",
+                    "guidance": f"{ManuscriptLimits.TARGET_LENGTH}자 이상, 균형 잡힌 씬 분배를 목표로.",
                 }
             elif retry_count == 1:
                 return {
                     "pass_threshold": 65,
                     "feedback_level": "focused",
                     "strictness": "medium",
-                    "guidance": "4500자 이상, 핵심 씬 반영에 집중.",
+                    "guidance": f"{ManuscriptLimits.WARNING_LENGTH}자 이상, 핵심 씬 반영에 집중.",
                 }
             else:
                 return {
                     "pass_threshold": 55,
                     "feedback_level": "minimal",
                     "strictness": "low",
-                    "guidance": "4000자 최소 기준, Blueprint 핵심만 반영.",
+                    "guidance": f"{ManuscriptLimits.MIN_LENGTH}자 최소 기준, Blueprint 핵심만 반영.",
                 }
 
     def classify_rejection_feedback(self, reason: str, feedback: str, blueprint: dict = None) -> str:

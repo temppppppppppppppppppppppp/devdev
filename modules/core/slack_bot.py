@@ -52,7 +52,7 @@ class SlackNotifier:
         try:
             response = requests.post(
                 self.webhook_url,
-                data=json.dumps(payload),
+                data=json.dumps(payload, ensure_ascii=False),
                 headers={"Content-Type": "application/json"},
                 timeout=10,  # [V70] 무한 대기 방지
             )

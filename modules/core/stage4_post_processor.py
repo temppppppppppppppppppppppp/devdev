@@ -6,6 +6,8 @@ import json
 import logging
 import os
 
+_PROJECTS_DIR = "projects"
+
 
 class Stage4PostProcessor:
     """[B-1-1] Stage4 PASS 후처리 전담 모듈"""
@@ -124,7 +126,7 @@ class Stage4PostProcessor:
 
         # [V60.87 C] 로그 파일 저장
         try:
-            logs_dir = os.path.join("projects", self.ctx.current_project.name, "logs")
+            logs_dir = os.path.join(_PROJECTS_DIR, self.ctx.current_project.name, "logs")
             os.makedirs(logs_dir, exist_ok=True)
 
             if v50_modules_available and self.ctx.failure_learner:

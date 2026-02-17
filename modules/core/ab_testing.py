@@ -11,6 +11,8 @@ import statistics
 import time
 from datetime import datetime
 
+from modules.core.constants import ManuscriptLimits
+
 
 class ABTestingFramework:
     """
@@ -69,7 +71,7 @@ class ABTestingFramework:
                 prev_full_text=validation_context.get("prev_full_text", ""),
                 arc_pos=validation_context.get("arc_pos", 1),
                 total_eps=validation_context.get("total_eps", 5),
-                target_len=5000,
+                target_len=ManuscriptLimits.TARGET_LENGTH,
                 retry_count=0,
             )
             time_a = time.time() - start_a

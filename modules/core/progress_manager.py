@@ -5,8 +5,7 @@ Rich 기반 진행 표시 및 상태 시각화
 """
 
 import logging
-import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Optional
 

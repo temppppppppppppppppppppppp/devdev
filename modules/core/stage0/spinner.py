@@ -9,12 +9,10 @@ import sys
 import threading
 import time
 from itertools import cycle
-from typing import Optional
 
 # Rich 라이브러리 임포트
 try:
     from rich import box
-    from rich.color import Color
     from rich.console import Console
     from rich.live import Live
     from rich.panel import Panel

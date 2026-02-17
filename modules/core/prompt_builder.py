@@ -10,6 +10,8 @@ import json
 import logging
 import re
 
+from modules.core.constants import ManuscriptLimits
+
 # [V60.10] 수여물 패턴 (main_a.py에서 이관)
 GRANT_PATTERNS_COMPILED = [
     (re.compile(r"([가-힣]+패)[를을]?\s*(?:하사|수여|받|얻)"), "패"),
@@ -117,7 +119,7 @@ class PromptBuilder:
     # [V60.8] Writer 사전 가이드 시스템 — Pure
     # ═══════════════════════════════════════════════════════════════════════
 
-    def generate_high_impact_zone_guide(self, blueprint: dict, target_len: int = 5000) -> str:
+    def generate_high_impact_zone_guide(self, blueprint: dict, target_len: int = ManuscriptLimits.TARGET_LENGTH) -> str:
         """[V60.8-1] High Impact Zone 분량 가이드 생성"""
         if not blueprint or not isinstance(blueprint, dict):
             return ""
@@ -445,7 +447,7 @@ class PromptBuilder:
         prev_manuscript: str = "",
         episode_bibles: list = None,
         cliche_check_result: dict = None,
-        target_len: int = 5000,
+        target_len: int = ManuscriptLimits.TARGET_LENGTH,
     ) -> str:
         """
         [V60.8] Writer 사전 가이드 통합 생성
@@ -878,18 +880,15 @@ class PromptBuilder:
                 _pov = _bible_root.get("protagonist_config", {}).get("pov", "")
                 if _pov:
                     context["pov"] = _pov
-            except Exception:
-                pass
+            except (AttributeError, KeyError, TypeError):
+                pass  # POV 미설정 시 정상 생략
 
         except Exception as e:
             # [V70] app이 None일 수 있으므로 안전하게 로깅
-            try:
-                if app and hasattr(app, "ui") and app.ui:
-                    app.ui.log(f"⚠️ [Validation Context] 구성 중 오류 (비치명적): {e}")
-                else:
-                    logging.warning(f"⚠️ [Validation Context] 구성 중 오류 (비치명적): {e}")
-            except Exception:
-                pass
+            if app and hasattr(app, "ui") and getattr(app.ui, "log", None):
+                app.ui.log(f"⚠️ [Validation Context] 구성 중 오류 (비치명적): {e}")
+            else:
+                logging.warning("[Validation Context] 구성 중 오류 (비치명적): %s", e)
 
         return context
 

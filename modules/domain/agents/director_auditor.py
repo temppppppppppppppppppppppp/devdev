@@ -21,7 +21,7 @@ from modules.validation.validation_orchestrator import ValidationOrchestrator
 
 # [V60.95] 원시인 모드 금지어 Guard (JSON 기반)
 try:
-    from modules.core.primitive_guard import get_primitive_guard, validate_primitive_compliance
+    from modules.core.primitive_guard import get_primitive_guard
 
     PRIMITIVE_GUARD_AVAILABLE = True
 except ImportError:
@@ -168,13 +168,13 @@ class DirectorQualityAuditor:
         response = self._d.ask(prompt, temperature=0.1, thinking_level="low")
         return self._d._extract_json_robust(response)
 
-    def _audit_with_v0128(self, ep_num, manuscript, validation_context, target_len=4500):
+    def _audit_with_v0128(self, ep_num, manuscript, validation_context, target_len=ManuscriptLimits.WARNING_LENGTH):
         """
         [V43 내부 헬퍼] V0128 검증 시스템 사용 (장르 자동 전달)
 
         audit_manuscript에서 use_v0128=True일 때 호출됨
         """
-        mode = "BLUEPRINT" if target_len <= 4000 else "MANUSCRIPT"
+        mode = "BLUEPRINT" if target_len <= ManuscriptLimits.MIN_LENGTH else "MANUSCRIPT"
         validation_context["mode"] = mode
 
         return self.audit_manuscript_v0128(
@@ -321,7 +321,7 @@ class DirectorQualityAuditor:
         prev_full_text,
         arc_pos,
         total_eps=None,
-        target_len=4500,
+        target_len=ManuscriptLimits.WARNING_LENGTH,
         retry_count=0,
         validation_context=None,
         entity_registry=None,

@@ -11,14 +11,14 @@ import os
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from .preset_registry import PresetRegistry
 from .style_extractor import StyleExtractor, StyleGuide
 
 # 스피너 import (실패해도 동작)
 try:
-    from .spinner import PhaseIndicator, ProgressBar, Spinner, print_error, print_header, print_info, print_success
+    from .spinner import ProgressBar, Spinner, print_header, print_info, print_success
 
     SPINNER_AVAILABLE = True
 except ImportError:

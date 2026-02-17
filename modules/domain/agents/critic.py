@@ -14,6 +14,8 @@ import json
 import logging
 import re
 
+from modules.core.constants import ManuscriptLimits
+
 from .base_agent import BaseAgent
 
 
@@ -69,7 +71,7 @@ class Critic(BaseAgent):
                 ],
                 "severity": "high",
                 "score": 0,
-                "recommendations": ["최소 4000자 이상의 원고 필요"],
+                "recommendations": [f"최소 {ManuscriptLimits.MIN_LENGTH}자 이상의 원고 필요"],
             }
 
         # 다각도 비평 수행

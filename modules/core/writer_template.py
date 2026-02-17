@@ -24,6 +24,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
+from modules.core.constants import ManuscriptLimits
+
 
 class SceneType(Enum):
     """씬 타입"""
@@ -173,7 +175,7 @@ class WriterTemplate:
             ep_num=ep_num,
             total_scenes=len(slots),
             slots=slots,
-            total_min_chars=max(4000, total_min),
+            total_min_chars=max(ManuscriptLimits.MIN_LENGTH, total_min),
             total_max_chars=min(12000, total_max),
             opening_anchor=prev_ending[-300:] if prev_ending else "",
             closing_hook=ending_hook[:200] if ending_hook else "",

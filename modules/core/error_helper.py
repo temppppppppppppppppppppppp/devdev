@@ -8,6 +8,8 @@ import logging
 from dataclasses import dataclass
 from enum import Enum
 
+from modules.core.constants import ManuscriptLimits
+
 
 class ErrorCategory(Enum):
     """에러 카테고리"""
@@ -120,7 +122,7 @@ ERROR_DEFINITIONS: dict[str, ErrorInfo] = {
         category=ErrorCategory.VALIDATION,
         code="VAL001",
         message="원고 길이가 최소 기준에 미달합니다",
-        solution="원고가 4000자 이상이 되도록 내용을 보강하세요",
+        solution=f"원고가 {ManuscriptLimits.MIN_LENGTH}자 이상이 되도록 내용을 보강하세요",
         severity="WARNING",
     ),
     "VALIDATION_DEAD_NPC": ErrorInfo(

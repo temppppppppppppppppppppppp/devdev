@@ -212,7 +212,7 @@ class ArcCritic(BaseAgent):
 
     def _apply_auto_fixes(self, arc: dict, critique: dict) -> dict:
         """자동 수정 적용"""
-        fixed = json.loads(json.dumps(arc))  # Deep copy
+        fixed = json.loads(json.dumps(arc, ensure_ascii=False))  # Deep copy
 
         auto_fixes = critique.get("auto_fixes", {})
 
