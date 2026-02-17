@@ -62,7 +62,7 @@ def _load_model_config() -> dict:
                 data = yaml.safe_load(f) or {}
                 if isinstance(data, dict):
                     return data
-    except Exception:
+    except (OSError, yaml.YAMLError):
         logging.warning("models.yaml 로드 실패 — 하드코딩 모델 목록 사용")
     return {}
 
@@ -113,7 +113,7 @@ def _load_system_config() -> dict:
                 data = yaml.safe_load(f) or {}
                 if isinstance(data, dict):
                     return data
-    except Exception:
+    except (OSError, yaml.YAMLError):
         logging.warning("system.yaml load failed. Using hard-coded defaults.")
     return {}
 

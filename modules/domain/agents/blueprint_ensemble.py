@@ -18,6 +18,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FutureTimeoutError
 
+from modules.core.constants import ContextLimits
 from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
 from modules.core.prompt_loader import PromptLoader
 
@@ -669,8 +670,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         result = "\n\n".join(sections)
         total_len = len(result)
-        if total_len > 200000:
-            result = result[:200000] + "\n... (200K자 절삭)"
+        if total_len > ContextLimits.MAX_CONTEXT_CHARS:
+            result = result[: ContextLimits.MAX_CONTEXT_CHARS] + "\n... (200K자 절삭)"
         return result
 
 

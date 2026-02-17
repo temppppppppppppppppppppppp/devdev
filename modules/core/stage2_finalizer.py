@@ -50,7 +50,7 @@ class Stage2Finalizer:
 
         Returns dict with action='break'|'retry'|'next'.
         """
-        from modules.core.constants import RecoveryLimits
+        from modules.core.constants import ContextLimits, RecoveryLimits
 
         # [V66] SemanticPlotGuard 중복 검사
         if self.ctx.semantic_plot_guard:
@@ -94,8 +94,8 @@ class Stage2Finalizer:
             if _prev_arc_docs:
                 _full_arc_history = "\n\n".join(_prev_arc_docs)
                 # 200K자 상한 (Gemini 대용량 컨텍스트 윈도우 활용)
-                if len(_full_arc_history) > 200000:
-                    _full_arc_history = _full_arc_history[:200000] + "\n... (200K자 절삭)"
+                if len(_full_arc_history) > ContextLimits.MAX_CONTEXT_CHARS:
+                    _full_arc_history = _full_arc_history[: ContextLimits.MAX_CONTEXT_CHARS] + "\n... (200K자 절삭)"
                 _expanded_prev_context = (
                     f"[V67] ═══ 이전 Arc 전술서 전문 ({len(_prev_arc_docs)}개) ═══\n"
                     f"{_full_arc_history}\n\n"

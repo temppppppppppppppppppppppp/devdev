@@ -760,7 +760,7 @@ class Analyst(BaseAgent):
                     )
                     draft_result = self._extract_json_robust(response.text)
                 else:
-                    raise Exception("No Cache Found")
+                    raise LookupError("No Cache Found")
 
             except Exception as e:
                 # Case B: 캐시가 없거나 호출 실패 시 즉시 Full-Text로 복구 (품질 보존)

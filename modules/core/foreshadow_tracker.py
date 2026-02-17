@@ -443,8 +443,22 @@ class ForeshadowTracker:
                 )
 
             self.hooks = _loaded_hooks  # [V70] 로드 성공 후에만 교체
-            self.episode_plants = {int(k): v for k, v in data.get("episode_plants", {}).items()}
-            self.episode_payoffs = {int(k): v for k, v in data.get("episode_payoffs", {}).items()}
+
+            plants_result = {}
+            for k, v in data.get("episode_plants", {}).items():
+                try:
+                    plants_result[int(k)] = v
+                except (ValueError, TypeError):
+                    logging.warning("[Sweep7-C] foreshadow_tracker: skipping non-integer key: %s", k)
+            self.episode_plants = plants_result
+
+            payoffs_result = {}
+            for k, v in data.get("episode_payoffs", {}).items():
+                try:
+                    payoffs_result[int(k)] = v
+                except (ValueError, TypeError):
+                    logging.warning("[Sweep7-C] foreshadow_tracker: skipping non-integer key: %s", k)
+            self.episode_payoffs = payoffs_result
 
         except FileNotFoundError:
             pass

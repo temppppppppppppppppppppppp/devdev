@@ -236,7 +236,10 @@ class DataCollector:
                     data = json.load(f)
 
                 # Gemini Fine-tuning 포맷
-                training_example = {"text_input": self._create_training_prompt(data), "output": data["manuscript"]}
+                training_example = {
+                    "text_input": self._create_training_prompt(data),
+                    "output": data.get("manuscript", ""),
+                }
 
                 out.write(json.dumps(training_example, ensure_ascii=False) + "\n")
 

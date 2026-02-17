@@ -18,7 +18,7 @@
 import json
 import logging
 
-from modules.core.constants import Stage2Limits
+from modules.core.constants import ContextLimits, Stage2Limits
 
 from .arc_ensemble import ArcEnsembleGenerator
 from .base_agent import BaseAgent, _get_sub_component_models
@@ -399,8 +399,8 @@ class FourPhaseArcGenerator(BaseAgent):
         if _arc_history_lines:
             _full_history = "\n\n".join(_arc_history_lines)
             # 200K자 상한
-            if len(_full_history) > 200000:
-                _full_history = _full_history[:200000] + "\n... (200K자 절삭)"
+            if len(_full_history) > ContextLimits.MAX_CONTEXT_CHARS:
+                _full_history = _full_history[: ContextLimits.MAX_CONTEXT_CHARS] + "\n... (200K자 절삭)"
             lines.append("")
             lines.append(f"[V67] ═══ 이전 Arc 전술서 전문 ({len(_arc_history_lines)}개) ═══")
             lines.append(_full_history)

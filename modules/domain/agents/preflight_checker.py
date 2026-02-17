@@ -14,6 +14,8 @@ import json
 import logging
 import re
 
+from modules.core.constants import ContextLimits
+
 from .base_agent import BaseAgent
 
 PREFLIGHT_ANALYSIS_PROMPT = """
@@ -246,8 +248,8 @@ class PreflightChecker(BaseAgent):
         total_chars = sum(len(l) for l in lines)
         # [V67] 200K자 상한 적용
         result = "\n".join(lines)
-        if len(result) > 200000:
-            result = result[:200000] + "\n... (200K자 절삭)"
+        if len(result) > ContextLimits.MAX_CONTEXT_CHARS:
+            result = result[: ContextLimits.MAX_CONTEXT_CHARS] + "\n... (200K자 절삭)"
         logging.info(f"📊 [V67] Preflight 전문: {len(old_arcs)}개 전문 + {len(recent_arcs)}개 상세 ({total_chars:,}자)")
         return result
 

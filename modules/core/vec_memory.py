@@ -294,6 +294,7 @@ class VecMemory:
             return ""
 
         # 에피소드 번호 기준 균등 간격 샘플링
+        max_results = max(1, max_results)
         sorted_eps = sorted(seen.keys())
         if len(sorted_eps) > max_results:
             step = len(sorted_eps) / max_results

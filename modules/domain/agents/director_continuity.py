@@ -8,6 +8,7 @@ Entity 일관성, 원고 역사 충돌 검사, Blueprint/Manuscript 연속성 �
 import json
 import logging
 
+from modules.core.constants import ContextLimits
 from modules.core.prompt_loader import PromptLoader
 
 
@@ -379,8 +380,8 @@ class DirectorContinuityValidator:
         history_text = "\n\n---\n\n".join(history_parts)
 
         # [V67] 200K자까지 허용 (Gemini 컨텍스트 윈도우 활용)
-        if len(history_text) > 200000:
-            history_text = history_text[:200000] + "\n... (이하 생략)"
+        if len(history_text) > ContextLimits.MAX_CONTEXT_CHARS:
+            history_text = history_text[: ContextLimits.MAX_CONTEXT_CHARS] + "\n... (이하 생략)"
 
         # [V67.1] 프롬프트 구성 (story_context 추가)
         prompt = self._prompt_loader.load(
@@ -717,7 +718,7 @@ class DirectorContinuityValidator:
                 ep_num=ep_num,
                 manuscript_history="(캐시된 컨텍스트 참조)"
                 if cache_result.get("cache_name")
-                else self._d._escape_braces(context_text[:200000]),
+                else self._d._escape_braces(context_text[: ContextLimits.MAX_CONTEXT_CHARS]),
                 current_manuscript=self._d._escape_braces(new_manuscript[:12000]),  # [V70] 중괄호 이스케이프
                 story_context="(캐시 경로 — 설정 정보 미전달)",
             )

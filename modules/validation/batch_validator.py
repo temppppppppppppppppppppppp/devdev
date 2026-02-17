@@ -78,7 +78,20 @@ class BatchValidator:
 
         # 모든 원고 동시 처리
         tasks = [validate_one(ms) for ms in manuscripts]
-        results = await asyncio.gather(*tasks)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # gather 결과 중 Exception 인스턴스 처리
+        processed = []
+        for i, r in enumerate(results):
+            if isinstance(r, Exception):
+                logging.warning("[Sweep7-A] batch validation failed for item %d: %s", i, r)
+                ep_num = (
+                    manuscripts[i].get("ep_num") if i < len(manuscripts) and isinstance(manuscripts[i], dict) else -1
+                )
+                processed.append({"ep_num": ep_num, "success": False, "error": str(r)})
+            else:
+                processed.append(r)
+        results = processed
 
         elapsed = time.time() - start_time
         with self._stats_lock:

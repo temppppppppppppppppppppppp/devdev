@@ -96,6 +96,12 @@ class ManuscriptLimits:
     MAX_LENGTH = 15000  # 최대 글자수
 
 
+class ContextLimits:
+    """컨텍스트 크기 제한 상수."""
+
+    MAX_CONTEXT_CHARS = 200_000  # 200K 문자 절삭 임계값
+
+
 class WritingLimits:
     """집필 관련 제한"""
 

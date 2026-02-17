@@ -344,7 +344,8 @@ class BlockEnricher(BaseAgent):
             if validation.get("validation_result") == "FAIL":
                 # 1차 검증 실패 시 재시도
                 retry_prompt = (
-                    prompt + f"\n\n[이전 시도 실패 피드백]\n{json.dumps(validation['issues'], ensure_ascii=False)}"
+                    prompt
+                    + f"\n\n[이전 시도 실패 피드백]\n{json.dumps(validation.get('issues', []), ensure_ascii=False)}"
                 )
                 result = self.ask(retry_prompt, temperature=0.5)
                 if isinstance(result, str):

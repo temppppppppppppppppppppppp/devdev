@@ -719,6 +719,9 @@ class PatternTracker:
         Returns:
             트렌드 분석 결과
         """
+        if window_splits <= 0:
+            return {"status": "invalid_window_splits"}
+
         if len(manuscripts) < window_splits * 2:
             return {"status": "insufficient_data", "min_required": window_splits * 2}
 

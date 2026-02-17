@@ -6,6 +6,7 @@ import json
 import logging
 import re
 
+from modules.core.constants import ContextLimits
 from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
 from modules.core.hud_utils import get_hud_trend_safe as _get_hud_trend_safe_shared
 
@@ -294,7 +295,7 @@ class ChiefWriterContextBuilder:
 특히 고유명사(인물, 조직, 장소, 회사명), 수치(금액, 가격, 환율), 상태(부상, 관계, 소지품)가
 이전 원고와 달라지면 반드시 작중에서 이유를 명확히 설명해야 합니다.
 
-{self.host._escape_braces(prev_manuscripts_text[:200000])}
+{self.host._escape_braces(prev_manuscripts_text[: ContextLimits.MAX_CONTEXT_CHARS])}
 """
 
         # [V65] 메인 프롬프트 함수 래핑 호출
