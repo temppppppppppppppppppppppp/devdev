@@ -35,7 +35,6 @@ class Stage2Finalizer:
         attempt: int,
         generation_method: str,
         st_snapshot,
-        use_analyst_fallback: bool,
         director_feedback_for_fourphase: str,
         last_refined_context: str,
         bible_root: dict,
@@ -407,8 +406,7 @@ class Stage2Finalizer:
                     logging.warning(f"⚠️ [V70] StateTracker 롤백 실패 (비차단): {_rb_err}")
                 st_snapshot = None
 
-            if not use_analyst_fallback:
-                director_feedback_for_fourphase = f"""[Director REJECT 사유]
+            director_feedback_for_fourphase = f"""[Director REJECT 사유]
 {reject_reason}
 
 [수정 지시]
@@ -417,12 +415,8 @@ class Stage2Finalizer:
 [재시도 가이드]
 {intensity_guide}
 """
-                refined_arc = None
-                self.ctx.ui.log(f"      🔄 [V60.77] Director 피드백 → FourPhase 대면 {attempt + 2}/3")
-            else:
-                current_feedback = f"{base_feedback}{intensity_guide}"
-                refined_arc = None
-                self.ctx.ui.log(f"      ❌ [V60.77] Analyst 최후 기회도 REJECT → Arc {global_arc_no} 최종 실패")
+            refined_arc = None
+            self.ctx.ui.log(f"      🔄 [V60.77] Director 피드백 → FourPhase 대면 {min(attempt + 2, 5)}/5")
 
             # [4-R3-f] REJECT 메트릭 기록
             self._record_s2_reject_metrics(

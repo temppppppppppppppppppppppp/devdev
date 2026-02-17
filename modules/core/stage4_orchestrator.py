@@ -518,7 +518,7 @@ JSON으로 출력:
                 style_guide=style_guide,
                 mandatory_context=mandatory_context,
             )
-            # ===== Phase 4: Director 면담 + 냉동인간 =====
+            # ===== Phase 4: Director 면담 (5회) =====
             _outcome = self._handle_round_outcome(round_ctx=_round_ctx)
             if _outcome.should_return:
                 return True
@@ -549,21 +549,13 @@ JSON으로 출력:
         return False
 
     def _handle_round_outcome(self, *, round_ctx: _RoundContext) -> _RoundOutcome:
-        """[4-R1-e-3] Run 3-round interview loop + frozen human fallback.
+        """[4-R1-e-3] Run 5-round interview loop.
 
         Returns _RoundOutcome: final_manuscript, final_title, final_state_updates, should_return
         """
         from modules.core.spinners import StageSpinner
 
-        # Unpack values needed by frozen human fallback
         next_ep = round_ctx.next_ep
-        blueprint = round_ctx.blueprint
-        hud_report = round_ctx.hud_report
-        purism_prompt = round_ctx.purism_prompt
-        style_guide = round_ctx.style_guide
-        prev_text = round_ctx.prev_text
-        prev_ending = round_ctx.prev_ending
-        arc_tactical = round_ctx.arc_tactical
 
         final_manuscript = None
         final_title = None
@@ -572,7 +564,7 @@ JSON으로 출력:
         previous_attempt = {}
 
         with StageSpinner(4, f"제{next_ep}화 · 앙상블 준비") as stage4_spinner:
-            for interview_round in range(3):
+            for interview_round in range(5):
                 _round_result = self.interview_round.run(
                     round_num=interview_round,
                     stage4_spinner=stage4_spinner,
@@ -588,90 +580,15 @@ JSON으로 출력:
                 director_feedback = _round_result.director_feedback
                 previous_attempt = _round_result.previous_attempt
 
-        # ===== 3번 모두 실패: 냉동인간 소환 =====
+        # ===== 5번 모두 실패 =====
         if not final_manuscript:
-            self.ctx.ui.log("\n🧊 [냉동인간 소환] 3번 면담 모두 실패. 기존 Writer로 최종 시도...")
-
-            try:
-                frozen_result = self.ctx.agents["writer"].write_v20_manuscript(
-                    ep_num=next_ep,
-                    breakdown_doc=blueprint.get("integrated_scenario", ""),
-                    master_bible=self.ctx.current_project.master_bible,
-                    hud_report=hud_report,
-                    purism_prompt=purism_prompt,
-                    style_mode=style_guide,
-                    feedback=director_feedback,
-                    prev_full_manuscript=prev_text,
-                    arc_doc=arc_tactical,
-                    protagonist_name=self.ctx.get_protagonist_name(),
-                )
-
-                frozen_manuscript = (
-                    frozen_result.get("content", "") if isinstance(frozen_result, dict) else str(frozen_result)
-                )
-                frozen_title = (
-                    frozen_result.get("title", f"제{next_ep}화")
-                    if isinstance(frozen_result, dict)
-                    else f"제{next_ep}화"
-                )
-
-                frozen_judge = self.ctx.agents["director"].quick_judge_single(
-                    ep_num=next_ep,
-                    manuscript=frozen_manuscript,
-                    blueprint=blueprint,
-                    previous_ending=prev_ending,
-                    retry_count=3,
-                )
-
-                if frozen_judge.get("verdict") == "PASS":
-                    final_manuscript = frozen_manuscript
-                    final_title = frozen_title
-                    final_state_updates = (
-                        frozen_result.get("state_updates", {}) if isinstance(frozen_result, dict) else {}
-                    )
-                    self.ctx.ui.log(f"   ✅ 냉동인간 PASS (점수: {frozen_judge.get('score', 0)})")
-                    self.ctx.ui.log("   ⚠️ [경고] 냉동인간 통과 - 품질 재검토 권장")
-                else:
-                    self.ctx.ui.log("   ❌ 냉동인간도 REJECT. 인간 개입 필요!")
-                    self.ctx.ui.log(f"      사유: {frozen_judge.get('reason', '알 수 없음')}")
-                    self.ctx.ui.log(f"\n⛔ [EP {next_ep}] 자동 생산 실패. 인간 검토 필요.")
-                    self.ctx.ui.log("   다음 옵션:")
-                    self.ctx.ui.log("   1. Blueprint 수정 후 재시도")
-                    self.ctx.ui.log("   2. 수동 원고 작성")
-                    self.ctx.ui.log("   3. 이 에피소드 건너뛰기")
-
-                    choice = self.ctx.get_int_input(
-                        "\n👉 선택 (1.Blueprint수정 / 2.수동작성 / 3.건너뛰기 / 4.강제진행): ",
-                        default=4,
-                        min_val=1,
-                        max_val=4,
-                    )
-
-                    if choice == 4:
-                        final_manuscript = frozen_manuscript
-                        final_title = f"[⚠️ 강제 통과] {frozen_title}"
-                        final_state_updates = (
-                            frozen_result.get("state_updates", {}) if isinstance(frozen_result, dict) else {}
-                        )
-                        self.ctx.ui.log("   ⚠️ 강제 진행 선택됨. 품질 보장 불가.")
-                    else:
-                        self.ctx.ui.log(f"   🛑 제{next_ep}화 생산 중단. 메뉴로 돌아갑니다.")
-                        return _RoundOutcome(
-                            final_manuscript=None,
-                            final_title=None,
-                            final_state_updates={},
-                            should_return=True,
-                        )
-
-            except Exception as frozen_err:
-                self.ctx.ui.log(f"   🚨 냉동인간 호출 실패: {frozen_err}")
-                self.ctx.ui.log(f"\n⛔ [EP {next_ep}] 자동 생산 완전 실패. 인간 검토 필요.")
-                return _RoundOutcome(
-                    final_manuscript=None,
-                    final_title=None,
-                    final_state_updates={},
-                    should_return=True,
-                )
+            self.ctx.ui.log(f"\n⛔ [EP {next_ep}] 5회 면담 모두 실패. 인간 검토 필요.")
+            return _RoundOutcome(
+                final_manuscript=None,
+                final_title=None,
+                final_state_updates={},
+                should_return=True,
+            )
 
         return _RoundOutcome(
             final_manuscript=final_manuscript,
@@ -754,8 +671,7 @@ JSON으로 출력:
         self.ctx.ui.log("🎬 [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처 가동")
         self.ctx.ui.log(f"   • Chief Writer 모델: {AIModels.STAGE4_FIXED_WRITER_MODEL}")
         self.ctx.ui.log("   • 앙상블: 3개 병렬 생성")
-        self.ctx.ui.log("   • Director 면담: 3번 기회")
-        self.ctx.ui.log("   • 냉동인간: 기존 Writer (최후의 수단)")
+        self.ctx.ui.log("   • Director 면담: 5번 기회 (패치 모드 전 라운드 적용)")
 
         # 3. 환경 설정
         output_dir = self.ctx.current_project.paths.drafts
@@ -862,9 +778,8 @@ JSON으로 출력:
         - Phase 1: 프롬프트 조립 (필수만)
         - Phase 2: Chief Writer 앙상블 (3개 병렬 생성)
         - Phase 3: Python 사전 검증 (경고만, REJECT 권한 없음)
-        - Phase 4: Director 면담 (3번 기회)
-        - 냉동인간: 기존 Writer (3번 실패 시)
-        - 인간 개입: 냉동인간도 실패 시 중단
+        - Phase 4: Director 면담 (5번 기회, 패치 모드 전 라운드 적용)
+        - 인간 개입: 5번 실패 시 중단
         """
         try:
             session = self._prepare_stage4_session(limit_mode=limit_mode)

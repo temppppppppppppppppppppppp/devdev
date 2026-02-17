@@ -206,14 +206,6 @@ class TestL3PipelineSmoke:
             mock_analyst.enrich_raw_block_async = AsyncMock(side_effect=_enrich_passthrough)
             mock_analyst.stitch_joints = MagicMock(return_value={"status": "OK"})
             mock_analyst.get_lack_report = MagicMock(return_value={"status": "ok", "martial_deficit": "none"})
-            mock_analyst.plan_single_arc_v20 = MagicMock(
-                side_effect=lambda **kwargs: _make_mock_arc(
-                    int(kwargs.get("arc_no", 1)),
-                    int(kwargs.get("ep_start", 1)),
-                    {"content": {"context": "fallback analyst arc"}},
-                )
-            )
-
             mock_weaver = MagicMock()
             mock_weaver.generate_arc_drive = MagicMock(return_value={"desire_vector": "stable", "status": "ok"})
 

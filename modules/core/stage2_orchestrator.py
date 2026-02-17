@@ -13,9 +13,7 @@ SovereignApp에서 분리된 Stage 2 관련 메서드:
 """
 
 import asyncio
-import json
 import logging
-import time
 
 
 class Stage2Orchestrator:
@@ -102,7 +100,7 @@ class Stage2Orchestrator:
         _SUMMARY_MODEL = AIModels.SUMMARY_MODEL
 
         # [V65] 스피너 & 전역 상수 → spinners 모듈에서 직접 import (순환 참조 해소)
-        from modules.core.spinners import V50_MODULES_AVAILABLE, StageSpinner, rich_console
+        from modules.core.spinners import V50_MODULES_AVAILABLE, StageSpinner
 
         ReflectionTarget = None
         if V50_MODULES_AVAILABLE:
@@ -217,7 +215,6 @@ class Stage2Orchestrator:
         target_limit = max(done_count + 1, min(target_limit, total_count))
 
         sem = asyncio.Semaphore(5)
-        full_roadmap_str = json.dumps(arcs_source, ensure_ascii=False)
 
         # [V49.4] Pre-Generation Constraint DB 초기화
         constraint_db = ConstraintDB(self.ctx.current_project)
@@ -407,10 +404,8 @@ class Stage2Orchestrator:
                 current_feedback = _setup["current_feedback"]
                 constraint_block = _setup["constraint_block"]
                 attempt = _setup["attempt"]
-                max_fourphase_attempts = _setup["max_fourphase_attempts"]
                 max_attempts = _setup["max_attempts"]
                 director_feedback_for_fourphase = _setup["director_feedback_for_fourphase"]
-                use_analyst_fallback = _setup["use_analyst_fallback"]
                 _st_snapshot = _setup["st_snapshot"]
 
                 _previous_attempt = None  # [Patch Mode] Arc 패치 모드를 위한 이전 시도 추적
@@ -418,19 +413,6 @@ class Stage2Orchestrator:
                 while attempt < max_attempts:
                     draft_validator_passed = False
                     consensus_passed = False
-
-                    if attempt == max_fourphase_attempts:
-                        use_analyst_fallback = True
-                        self.ctx.ui.log(
-                            f"   ⏸️ [V60.77] FourPhase {max_fourphase_attempts}회 실패. Analyst 최후의 기회..."
-                        )
-                        self.ctx.audit_event(
-                            "stage2_analyst_fallback",
-                            f"FourPhase {max_fourphase_attempts} rejects, Analyst last chance",
-                            {"arc_no": global_arc_no, "attempt": attempt},
-                        )
-                        time.sleep(1)  # [V66.1] 5→1초 축소 (폴백 전 불필요 대기 제거)
-                        current_feedback = f"[🚨 최종 시도] FourPhase 3회 모두 Director REJECT. Analyst가 근본적 재설계 필요.\n{director_feedback_for_fourphase}"
 
                     # [V60.10] 이전 시도 REJECT 패턴 분석
                     if attempt >= 1 and self.ctx.stage_rejection_history:
@@ -457,18 +439,14 @@ class Stage2Orchestrator:
                         cached_preflight_injection=_cached_preflight_injection,
                         cached_preflight_result=_cached_preflight_result,
                     )
-                    enhanced_context = _analysis["enhanced_context"]
-                    recent_patterns = _analysis["recent_patterns"]
                     refined_arc = _analysis["refined_arc"]
                     generation_method = _analysis["generation_method"]
-                    preflight_injection = _analysis["preflight_injection"]
                     constraint_block = _analysis["constraint_block"]
                     entity_registry_for_director = _analysis["entity_registry_for_director"]
 
                     ### [4-R3-c] FourPhase 생성 + 상태 보강
                     _enrichment = self.preflight._preflight_enrichment(
                         attempt=attempt,
-                        use_analyst_fallback=use_analyst_fallback,
                         global_arc_no=global_arc_no,
                         current_ep_start=current_ep_start,
                         current_vol_strategy=current_vol_strategy,
@@ -492,67 +470,12 @@ class Stage2Orchestrator:
                     # ─────────────────────────────────────────────────────────────
                     # [V60.77] FourPhase 실패 시 다음 대면으로
                     # ─────────────────────────────────────────────────────────────
-                    if refined_arc is None and not use_analyst_fallback:
-                        self.ctx.ui.log(f"      🔄 [V60.77] FourPhase 실패 → Director 대면 {attempt + 2}/3 재시도")
+                    if refined_arc is None:
+                        self.ctx.ui.log(
+                            f"      🔄 [V60.77] FourPhase 실패 → Director 대면 {min(attempt + 2, max_attempts)}/{max_attempts} 재시도"
+                        )
                         attempt += 1
                         continue
-
-                    # ─────────────────────────────────────────────────────────────
-                    # [V60.77] Analyst 호출 - 최후의 기회
-                    # ─────────────────────────────────────────────────────────────
-                    if refined_arc is None and use_analyst_fallback:
-                        try:
-                            self.ctx.ui.log(f"      🆘 [V60.77] Analyst 최후의 기회! Arc {global_arc_no} 설계 시작...")
-
-                            enhanced_arc_context = enhanced_context
-                            if preflight_injection:
-                                enhanced_arc_context = preflight_injection + "\n\n" + enhanced_arc_context
-                            if constraint_block:
-                                enhanced_arc_context = constraint_block + "\n\n" + enhanced_arc_context
-
-                            logging.info(f"- 컨텍스트 크기: {len(enhanced_arc_context)}자")
-                            logging.info(f"- 피드백: {current_feedback[:100] if current_feedback else '없음'}...")
-
-                            with rich_console.status(
-                                f"[bold cyan]🤖 Arc {global_arc_no} LLM 생성 중...[/]", spinner="dots"
-                            ):
-                                refined_arc = self.ctx.agents["analyst"].plan_single_arc_v20(
-                                    arc_no=global_arc_no,
-                                    vol_strategy=current_vol_strategy.get("strategy_doc", ""),
-                                    prev_block=None,
-                                    curr_block=enriched_block,
-                                    next_block=None,
-                                    ep_start=current_ep_start,
-                                    prev_arc_context=enhanced_arc_context,
-                                    assets=bible_root.get("AssetLibrary", {}),
-                                    full_roadmap=full_roadmap_str,
-                                    assigned_seeds=[],
-                                    feedback=current_feedback,
-                                    recent_patterns=recent_patterns,
-                                    protagonist_name=protagonist_name or "주인공",
-                                    state_tracker=self.ctx.state_tracker,
-                                )
-                            generation_method = "analyst"
-                            logging.info("✅ [Analyst] Arc 생성 완료!")
-
-                            if refined_arc:
-                                logging.info(f"- tactical_doc: {len(refined_arc.get('tactical_doc', ''))}자")
-                                logging.info(f"- ep_count: {refined_arc.get('ep_count', '?')}화")
-                                logging.info(
-                                    f"- items_acquired: {refined_arc.get('state_constraints', {}).get('items_acquired', [])}"
-                                )
-                        except Exception as analyst_err:
-                            logging.warning(f"❌ [Analyst] 에러: {str(analyst_err)[:100]}")
-                            self.ctx.audit_event(
-                                "analyst_error",
-                                "plan_single_arc_v20 failed",
-                                {"arc_no": global_arc_no, "error": str(analyst_err)},
-                            )
-                            current_feedback = (
-                                f"Analyst 엔진 오류: {str(analyst_err)[:100]}. 안정적인 JSON 출력을 확보하라."
-                            )
-                            attempt += 1
-                            continue
 
                     ### [4-R3-d] Pre-Director 검증 체인
                     _val = self.validation_pipeline.run_validation(
@@ -599,7 +522,6 @@ class Stage2Orchestrator:
                         attempt=attempt,
                         generation_method=generation_method,
                         st_snapshot=_st_snapshot,
-                        use_analyst_fallback=use_analyst_fallback,
                         director_feedback_for_fourphase=director_feedback_for_fourphase,
                         last_refined_context=last_refined_context,
                         bible_root=bible_root,

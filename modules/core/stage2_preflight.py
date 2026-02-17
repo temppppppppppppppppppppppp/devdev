@@ -163,10 +163,8 @@ class Stage2PreflightAnalysis:
 
         # [V60.77] FourPhase-Director 대면 루프
         attempt = 0
-        max_fourphase_attempts = 5  # [V62.4]
-        max_attempts = max_fourphase_attempts + 1
+        max_attempts = 5
         director_feedback_for_fourphase = ""
-        use_analyst_fallback = False
 
         _st_snapshot = None  # [V70] StateTracker 롤백용 스냅샷
 
@@ -178,10 +176,8 @@ class Stage2PreflightAnalysis:
             "current_feedback": current_feedback,
             "constraint_block": constraint_block,
             "attempt": attempt,
-            "max_fourphase_attempts": max_fourphase_attempts,
             "max_attempts": max_attempts,
             "director_feedback_for_fourphase": director_feedback_for_fourphase,
-            "use_analyst_fallback": use_analyst_fallback,
             "st_snapshot": _st_snapshot,
         }
 
@@ -388,7 +384,6 @@ class Stage2PreflightAnalysis:
         self,
         *,
         attempt: int,
-        use_analyst_fallback: bool,
         global_arc_no: int,
         current_ep_start: int,
         current_vol_strategy: dict,
@@ -420,9 +415,9 @@ class Stage2PreflightAnalysis:
         consensus_passed = False
         _st_snapshot = None
 
-        if "four_phase" in self.ctx.agents and not use_analyst_fallback:
+        if "four_phase" in self.ctx.agents:
             try:
-                self.ctx.ui.log(f"      🎯 [V60.77] FourPhase-Director 대면 {attempt + 1}/3")
+                self.ctx.ui.log(f"      🎯 [V60.77] FourPhase-Director 대면 {attempt + 1}/5")
                 with StageSpinner(2, f"Arc {global_arc_no}"):
                     # [V63.3] Stage 2 벡터 검색
                     _s2_vector_ctx = ""
@@ -445,7 +440,6 @@ class Stage2PreflightAnalysis:
                         previous_attempt
                         and previous_attempt.get("score", 0) >= PatchModeThresholds.REWRITE
                         and previous_attempt.get("best_arc")
-                        and attempt == 1
                     )
 
                     four_phase_arc = None

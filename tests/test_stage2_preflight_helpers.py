@@ -372,7 +372,6 @@ class TestPreflightFinalize:
             "attempt": 0,
             "generation_method": "four_phase",
             "st_snapshot": None,
-            "use_analyst_fallback": False,
             "director_feedback_for_fourphase": "",
             "last_refined_context": "이전 컨텍스트",
             "bible_root": {"protagonist_config": {"name": "이청풍"}},
@@ -411,7 +410,7 @@ class TestPreflightFinalize:
         director_mock.audit_strategic_plan.assert_called_once()
 
     def test_next_on_director_reject(self, s2_orch, valid_refined_arc):
-        """Director REJECT + use_analyst_fallback=False → action=next"""
+        """Director REJECT → action=next"""
         director_mock = MagicMock()
         director_mock.audit_strategic_plan.return_value = {
             "decision": "REJECT",
@@ -427,7 +426,6 @@ class TestPreflightFinalize:
             valid_refined_arc,
             draft_validator_passed=False,
             consensus_passed=False,
-            use_analyst_fallback=False,
         )
         with patch("modules.core.spinners.V50_MODULES_AVAILABLE", False):
             result = asyncio.run(s2_orch._preflight_finalize(**kwargs))
@@ -460,7 +458,6 @@ class TestPreflightEnrichmentDefaults:
     def _make_enrichment_kwargs(self):
         return {
             "attempt": 0,
-            "use_analyst_fallback": False,
             "global_arc_no": 1,
             "current_ep_start": 1,
             "current_vol_strategy": {},
@@ -485,18 +482,6 @@ class TestPreflightEnrichmentDefaults:
         assert result["draft_validator_passed"] is False
         assert result["consensus_passed"] is False
         assert result["st_snapshot"] is None
-
-    def test_analyst_fallback_returns_safe_defaults(self, s2_orch):
-        """use_analyst_fallback=True이면 FourPhase 건너뛰고 안전 기본값 반환."""
-        s2_orch.ctx.agents = {"four_phase": MagicMock()}
-        kwargs = self._make_enrichment_kwargs()
-        kwargs["use_analyst_fallback"] = True
-        result = s2_orch._preflight_enrichment(**kwargs)
-
-        assert self.REQUIRED_KEYS == set(result.keys())
-        assert result["four_phase_passed"] is False
-        assert result["refined_arc"] is None
-        assert result["generation_method"] == "analyst"
 
     def test_fourphase_exception_returns_safe_defaults(self, s2_orch):
         """FourPhase가 예외를 던지면 안전 기본값 + 에러 피드백 반환."""

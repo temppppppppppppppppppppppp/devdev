@@ -99,7 +99,7 @@ class Stage4InterviewRound:
             # [Phase 3-5B] 점수 기반 분기: 패치 모드 vs 전면 재작성
             _prev_score = previous_attempt.get("score", 0) if previous_attempt else 0
             _prev_manuscript = previous_attempt.get("best_manuscript", "") if previous_attempt else ""
-            _use_patch = _prev_score >= _PATCH_REWRITE_THRESHOLD and round_num == 1 and _prev_manuscript
+            _use_patch = _prev_score >= _PATCH_REWRITE_THRESHOLD and _prev_manuscript
 
             if _use_patch:
                 logging.info(f"[Phase 3-5B] 패치 모드 진입 (score={_prev_score}, round={round_num})")
@@ -208,7 +208,7 @@ class Stage4InterviewRound:
         if not candidates:
             logging.error(f"[Stage4] 제{next_ep}화 {round_num + 1}차 면담: candidates 빈 배열 — 모든 후보 생성 실패")
             self.ctx.ui.log(
-                f"   🚨 [V66.3] 모든 후보 생성 실패 — {'냉동인간 소환' if round_num >= 2 else '다음 면담으로 진행'}"
+                f"   🚨 [V66.3] 모든 후보 생성 실패 — {'최종 실패 처리' if round_num >= 4 else '다음 면담으로 진행'}"
             )
             director_feedback += "\n[시스템] 모든 후보 생성 실패. 재시도 필요."
             previous_attempt = {

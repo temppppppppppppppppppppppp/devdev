@@ -539,5 +539,5 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 
 - `write_v20_manuscript()` 로직 변경 금지
 - `main_a.py`의 Writer 초기화 경로 변경 금지
-- stage4_orchestrator.py L1638 냉동인간 소환 경로 변경 금지
+- ~~stage4_orchestrator.py 냉동인간 소환 경로~~ (삭제됨 — 5라운드 실패 시 종료로 교체)
 - 기존 테스트 파일 수정 금지

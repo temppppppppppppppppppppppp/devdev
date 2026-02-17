@@ -2,7 +2,7 @@
 #레거시 에이전트 - Analyst
 =========================
 Stage 2 진짜 주인: FourPhaseArcGenerator (four_phase_arc_generator.py)
-이 Analyst의 plan_single_arc_v20은 FourPhase 실패 시 fallback으로만 사용됨.
+plan_single_arc_v20은 독립 API로 유지 (오케스트레이터 fallback 호출 제거됨).
 
 여전히 사용되는 기능:
 - plan_single_volume_v20: Stage 1 Volume Strategy

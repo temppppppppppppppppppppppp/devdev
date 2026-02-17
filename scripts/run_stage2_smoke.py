@@ -224,13 +224,6 @@ async def run_stage2_smoke() -> None:
         analyst.enrich_raw_block_async = AsyncMock(side_effect=_enrich_passthrough)
         analyst.stitch_joints = MagicMock(return_value={"status": "OK"})
         analyst.get_lack_report = MagicMock(return_value={"status": "ok", "martial_deficit": "none"})
-        analyst.plan_single_arc_v20 = MagicMock(
-            side_effect=lambda **kwargs: make_mock_arc(
-                int(kwargs.get("arc_no", 1)),
-                roadmap[min(max(int(kwargs.get("arc_no", 1)) - 1, 0), len(roadmap) - 1)],
-            )
-        )
-
         weaver = MagicMock()
         weaver.generate_arc_drive = MagicMock(return_value={"desire_vector": "stable", "status": "ok"})
 
