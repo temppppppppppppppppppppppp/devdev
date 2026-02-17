@@ -127,6 +127,11 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         # 제약 블록 캐싱
         cached_constraint_block = None
 
+        # [Patch Mode] 이전 REJECT 결과 추적
+        _previous_best = None
+        _prev_reject_score = 0
+        _prev_reject_feedback = ""
+
         for retry in range(max_retries + 1):  # max_retries=2 → 3번 시도
             pipeline_result["retries"] = retry
 
@@ -157,18 +162,54 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             # ═══════════════════════════════════════════════════════════════
             logging.info("🎲 [Phase 2] Ensemble 생성 중 (3개 후보)...")
 
-            best_blueprint, all_candidates = self.ensemble.generate_ensemble(
-                ep_num=ep_num,
-                arc_data=arc_data,
-                constraint_block=constraint_block,
-                prev_blueprint=prev_blueprint,
-                feedback=feedback,
-                protagonist_name=protagonist_name,  # [V61] 주인공 이름 전달
-                protagonist_config=protagonist_config,  # [V60.90] 주인공 설정 전달
-                state_tracker=state_tracker,  # [V60.95] 고밀도 HUD 전달
-                prev_blueprints=prev_blueprints,  # [V67] 이전 Blueprint 전문 전달
-                prev_manuscripts_text=prev_manuscripts_text,  # [V67] 이전 원고 전문 전달
-            )
+            # [Patch Mode] 점수 기반 분기: 패치 모드 vs 전면 재생성
+            from modules.core.constants import PatchModeThresholds
+
+            _use_patch = _previous_best is not None and _prev_reject_score >= PatchModeThresholds.REWRITE and retry == 1
+
+            if _use_patch:
+                logging.info(f"[Patch Mode] Blueprint 패치 모드 진입 (score={_prev_reject_score}, retry={retry})")
+                best_blueprint, all_candidates = self._patch_blueprint_with_feedback(
+                    original_blueprint=_previous_best,
+                    director_feedback=_prev_reject_feedback,
+                    attempt_number=retry + 1,
+                    ep_num=ep_num,
+                    arc_data=arc_data,
+                    constraint_block=constraint_block,
+                    prev_blueprint=prev_blueprint,
+                    protagonist_name=protagonist_name,
+                    protagonist_config=protagonist_config,
+                    state_tracker=state_tracker,
+                    prev_blueprints=prev_blueprints,
+                    prev_manuscripts_text=prev_manuscripts_text,
+                )
+                if not best_blueprint:
+                    logging.info("[Patch Mode] Blueprint 패치 실패 → 전면 재생성 폴백")
+                    best_blueprint, all_candidates = self.ensemble.generate_ensemble(
+                        ep_num=ep_num,
+                        arc_data=arc_data,
+                        constraint_block=constraint_block,
+                        prev_blueprint=prev_blueprint,
+                        feedback=feedback,
+                        protagonist_name=protagonist_name,
+                        protagonist_config=protagonist_config,
+                        state_tracker=state_tracker,
+                        prev_blueprints=prev_blueprints,
+                        prev_manuscripts_text=prev_manuscripts_text,
+                    )
+            else:
+                best_blueprint, all_candidates = self.ensemble.generate_ensemble(
+                    ep_num=ep_num,
+                    arc_data=arc_data,
+                    constraint_block=constraint_block,
+                    prev_blueprint=prev_blueprint,
+                    feedback=feedback,
+                    protagonist_name=protagonist_name,
+                    protagonist_config=protagonist_config,
+                    state_tracker=state_tracker,
+                    prev_blueprints=prev_blueprints,
+                    prev_manuscripts_text=prev_manuscripts_text,
+                )
 
             if not best_blueprint:
                 logging.warning("❌ [Phase 2] Ensemble 생성 실패")
@@ -245,6 +286,14 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 self.stats["phase3_reject"] += 1
                 feedback = validation_result.get("feedback", "검증 실패")
 
+                # [Patch Mode] REJECT 결과 추적
+                _prev_reject_score = validation_result.get("score", 0)
+                if _prev_reject_score >= PatchModeThresholds.REWRITE and best_blueprint:
+                    _previous_best = best_blueprint
+                    _prev_reject_feedback = feedback
+                else:
+                    _previous_best = None
+
                 # 이슈 출력
                 issues = validation_result.get("issues", [])
                 if issues:
@@ -263,6 +312,94 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         if feedback:
             logging.info(f"마지막 피드백: {feedback[:200]}...")
         return None, pipeline_result
+
+    # =========================================================================
+    # [Patch Mode] Blueprint 원본 보존 + Director 피드백 지적사항만 수정
+    # =========================================================================
+
+    def _patch_blueprint_with_feedback(
+        self,
+        *,
+        original_blueprint: dict,
+        director_feedback: str,
+        attempt_number: int,
+        ep_num: int,
+        arc_data: dict,
+        constraint_block: dict,
+        prev_blueprint: dict | None = None,
+        protagonist_name: str = "주인공",
+        protagonist_config: dict | None = None,
+        state_tracker=None,
+        prev_blueprints: list[dict] | None = None,
+        prev_manuscripts_text: str = "",
+    ) -> tuple[dict | None, list]:
+        """[Patch Mode] 원본 Blueprint를 보존하며 Director 피드백 지적사항만 수정.
+
+        패치 전용 프롬프트(BLUEPRINT_PATCH_MODE_PROMPT)를 로드하여 원본 Blueprint +
+        Director 피드백을 enhanced_feedback으로 조립한 뒤, ensemble.generate_ensemble()을
+        호출하여 후보를 생성한다.
+
+        실패 시 (None, []) 반환 → 호출측에서 full regenerate 폴백.
+        """
+        import json
+
+        # 1) YAML 프롬프트 로드
+        try:
+            from modules.core.prompt_loader import PromptLoader
+
+            _patch_template = PromptLoader().load("blueprint_generator", "BLUEPRINT_PATCH_MODE_PROMPT")
+        except Exception as e:
+            logging.warning(f"[SilentPass:BlueprintGen] BLUEPRINT_PATCH_MODE_PROMPT 로드 실패: {e!s:.100}")
+            _patch_template = None
+
+        # 2) 원본 Blueprint 직렬화
+        _original_text = json.dumps(original_blueprint, ensure_ascii=False, indent=2)[:30000]
+
+        # 3) 패치 프롬프트 포맷
+        if _patch_template:
+            _patch_section = _patch_template.format(
+                feedback_text=director_feedback,
+                original_blueprint=_original_text,
+            )
+        else:
+            _patch_section = (
+                f"[패치 모드: Blueprint 원본 보존 + 지적사항만 수정]\n\n"
+                f"## Director 피드백\n{director_feedback}\n\n"
+                f"## 원본 Blueprint\n{_original_text}\n\n"
+                f"전면 재설계하지 마세요. 지적된 부분만 고치세요."
+            )
+
+        enhanced_feedback = (
+            f"[🔧 {attempt_number}차 수정 - 패치 모드: Blueprint 원본 보존 + 지적사항만 수정]\n\n"
+            f"{_patch_section}\n\n"
+            f"⚠️ 원본 Blueprint의 씬 배분, 감정 곡선, 핵심 장면을 보존하면서 피드백 지적사항만 수정하세요.\n"
+            f"⚠️ 수정하지 않는 부분은 원본을 그대로 유지하세요."
+        )
+
+        # 4) Ensemble 생성 (패치 피드백 주입)
+        try:
+            best_blueprint, all_candidates = self.ensemble.generate_ensemble(
+                ep_num=ep_num,
+                arc_data=arc_data,
+                constraint_block=constraint_block,
+                prev_blueprint=prev_blueprint,
+                feedback=enhanced_feedback,
+                protagonist_name=protagonist_name,
+                protagonist_config=protagonist_config,
+                state_tracker=state_tracker,
+                prev_blueprints=prev_blueprints,
+                prev_manuscripts_text=prev_manuscripts_text,
+            )
+        except Exception as e:
+            logging.warning(f"[Patch Mode] Blueprint ensemble 생성 실패: {e!s:.200}")
+            return None, []
+
+        if not best_blueprint:
+            logging.warning("[Patch Mode] Blueprint ensemble 후보 없음 → 폴백 필요")
+            return None, []
+
+        logging.info(f"✅ [Patch Mode] Blueprint 제{ep_num}화 패치 후보 생성 완료")
+        return best_blueprint, all_candidates
 
     def get_stats(self) -> dict:
         """통계 반환"""
