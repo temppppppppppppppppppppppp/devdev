@@ -199,15 +199,24 @@ class Stage2Finalizer:
                     prev_inventory = prev_joint.get("physical_inventory", [])
                     if prev_inventory and prev_inventory != [] and prev_inventory != "[]":
                         curr_status = refined_arc.get("status_shadow", {})
-                        consumed = curr_status.get("item_consumption", [])
-                        if isinstance(consumed, str):
-                            consumed = [consumed] if consumed else []
+                        consumed_raw = curr_status.get("item_consumption", [])
+                        if isinstance(consumed_raw, str):
+                            consumed_names = [consumed_raw] if consumed_raw else []
+                        elif isinstance(consumed_raw, list):
+                            consumed_names = []
+                            for consumed_item in consumed_raw:
+                                if isinstance(consumed_item, str):
+                                    consumed_names.append(consumed_item)
+                                elif isinstance(consumed_item, dict):
+                                    consumed_names.append(consumed_item.get("name", consumed_item.get("item", "")))
+                        else:
+                            consumed_names = []
                         state_constraints = refined_arc.get("state_constraints", {})
                         acquired = state_constraints.get("items_acquired", [])
                         if isinstance(acquired, str):
                             acquired = [acquired] if acquired else []
                         if isinstance(prev_inventory, list):
-                            inherited = [item for item in prev_inventory if item not in consumed]
+                            inherited = [item for item in prev_inventory if item not in consumed_names]
                             inherited.extend(acquired)
                             refined_arc["joint_docs"]["physical_inventory"] = inherited
                             self.ctx.ui.log(

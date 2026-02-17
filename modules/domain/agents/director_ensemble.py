@@ -394,7 +394,7 @@ class DirectorEnsembleSelector:
         v60_97_swapped = False
         if selected_idx not in qualified_indices and qualified_indices:
             old_selection = selected_letter
-            selected_idx = qualified_indices[0]
+            selected_idx = max(qualified_indices, key=lambda i: len(candidates[i].get("manuscript", "")))
             selected_letter = ["A", "B", "C"][selected_idx]
             v60_97_swapped = True
             logging.warning(f"⚠️ [V60.97] LLM 선택 {old_selection} → {selected_letter}로 교체 (분량 기준)")

@@ -1388,7 +1388,7 @@ class ValidationOrchestrator:
             duration_episodes: 적용 기간 (0=영구, N=N화 동안)
         """
         self.current_threshold = max(60, min(90, threshold))
-        self.use_adaptive_threshold = duration_episodes == 0  # 영구면 적응형 비활성화
+        self.use_adaptive_threshold = duration_episodes != 0  # 영구(0)면 적응형 비활성화
 
         if duration_episodes > 0:
             logging.info(f"[V59] 임계값 {threshold}점으로 {duration_episodes}화 동안 고정")
