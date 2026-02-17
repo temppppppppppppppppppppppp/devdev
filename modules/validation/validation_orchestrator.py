@@ -20,6 +20,7 @@
 import asyncio
 import concurrent.futures
 import logging
+import threading
 from functools import partial
 
 from .action_scene_evaluator import ActionSceneEvaluator
@@ -68,6 +69,7 @@ except ImportError:
 
 # [V44] Constitution 캐시 (모듈 레벨에서 관리)
 _CONSTITUTION_CACHE: dict[str, str] = {}
+_CONSTITUTION_LOCK = threading.Lock()
 _VALIDATION_HISTORY_MAX = 50
 
 # ═══════════════════════════════════════════════════════════════
@@ -791,14 +793,16 @@ class ValidationOrchestrator:
         global _CONSTITUTION_CACHE
 
         # 캐시 확인
-        if genre in _CONSTITUTION_CACHE:
-            return _CONSTITUTION_CACHE[genre]
+        with _CONSTITUTION_LOCK:
+            if genre in _CONSTITUTION_CACHE:
+                return _CONSTITUTION_CACHE[genre]
 
         # [V59.1] Constitution 로드 시도 (사전 검증된 플래그 사용)
         if CONSTITUTION_AVAILABLE:
             try:
                 constitution = get_constitution_for_genre(genre)
-                _CONSTITUTION_CACHE[genre] = constitution
+                with _CONSTITUTION_LOCK:
+                    _CONSTITUTION_CACHE[genre] = constitution
                 return constitution
             except Exception as e:
                 logging.warning(f"[WARNING] Constitution 로드 실패 ({genre}): {e}")
@@ -809,7 +813,8 @@ class ValidationOrchestrator:
 
         # [V44] 장르별 fallback Constitution
         fallback = self._get_fallback_constitution(genre)
-        _CONSTITUTION_CACHE[genre] = fallback
+        with _CONSTITUTION_LOCK:
+            _CONSTITUTION_CACHE[genre] = fallback
         return fallback
 
     def _get_fallback_constitution(self, genre: str) -> str:

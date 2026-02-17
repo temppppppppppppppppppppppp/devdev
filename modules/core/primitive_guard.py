@@ -10,7 +10,11 @@ world_origin == '원시인' + 장르별 적용
 import json
 import logging
 import re
+import threading
 from pathlib import Path
+
+_primitive_guard_lock = threading.Lock()
+_guard_lock = threading.Lock()
 
 
 class PrimitiveGuard:
@@ -21,7 +25,9 @@ class PrimitiveGuard:
 
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super().__new__(cls)
+            with _primitive_guard_lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self) -> None:
@@ -178,7 +184,9 @@ def get_primitive_guard() -> PrimitiveGuard:
     """PrimitiveGuard 싱글톤 인스턴스 반환"""
     global _guard_instance
     if _guard_instance is None:
-        _guard_instance = PrimitiveGuard()
+        with _guard_lock:
+            if _guard_instance is None:
+                _guard_instance = PrimitiveGuard()
     return _guard_instance
 
 

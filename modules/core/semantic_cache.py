@@ -27,6 +27,7 @@
 """
 
 import hashlib
+import threading
 import time
 from collections import OrderedDict
 from dataclasses import dataclass
@@ -99,6 +100,7 @@ class SemanticCache:
         # 통계
         self.stats = CacheStats()
 
+        self._lock = threading.Lock()
         self.enabled = True
 
     def _generate_context_hash(self, context: dict[str, Any]) -> str:
@@ -205,42 +207,43 @@ class SemanticCache:
         Returns:
             캐시된 값 또는 None
         """
-        if not self.enabled:
+        with self._lock:
+            if not self.enabled:
+                return None
+
+            self.stats.total_requests += 1
+
+            # 캐시 키 생성
+            context_hash = self._generate_context_hash(context)
+            cache_key = f"{request_type}:{context_hash}"
+
+            # 정확한 매칭 시도
+            if cache_key in self._cache:
+                entry = self._cache[cache_key]
+
+                # TTL 체크
+                if time.time() - entry.created_at > self.ttl:
+                    self._evict(cache_key)
+                else:
+                    # 히트 업데이트
+                    entry.hit_count += 1
+                    entry.last_hit = time.time()
+
+                    # LRU 업데이트 (맨 뒤로)
+                    self._cache.move_to_end(cache_key)
+
+                    self.stats.cache_hits += 1
+                    return entry.value
+
+            # 유사 매칭 시도 (exact_match가 False일 때)
+            if not exact_match:
+                similar = self._find_similar(request_type, context)
+                if similar:
+                    self.stats.cache_hits += 1
+                    return similar
+
+            self.stats.cache_misses += 1
             return None
-
-        self.stats.total_requests += 1
-
-        # 캐시 키 생성
-        context_hash = self._generate_context_hash(context)
-        cache_key = f"{request_type}:{context_hash}"
-
-        # 정확한 매칭 시도
-        if cache_key in self._cache:
-            entry = self._cache[cache_key]
-
-            # TTL 체크
-            if time.time() - entry.created_at > self.ttl:
-                self._evict(cache_key)
-            else:
-                # 히트 업데이트
-                entry.hit_count += 1
-                entry.last_hit = time.time()
-
-                # LRU 업데이트 (맨 뒤로)
-                self._cache.move_to_end(cache_key)
-
-                self.stats.cache_hits += 1
-                return entry.value
-
-        # 유사 매칭 시도 (exact_match가 False일 때)
-        if not exact_match:
-            similar = self._find_similar(request_type, context)
-            if similar:
-                self.stats.cache_hits += 1
-                return similar
-
-        self.stats.cache_misses += 1
-        return None
 
     def _find_similar(self, request_type: str, context: dict[str, Any]) -> Any | None:
         """유사한 캐시 엔트리 검색"""
@@ -283,47 +286,48 @@ class SemanticCache:
         Returns:
             캐시 키
         """
-        if not self.enabled:
-            return ""
+        with self._lock:
+            if not self.enabled:
+                return ""
 
-        # 캐시 키 생성
-        context_hash = self._generate_context_hash(context)
-        cache_key = f"{request_type}:{context_hash}"
+            # 캐시 키 생성
+            context_hash = self._generate_context_hash(context)
+            cache_key = f"{request_type}:{context_hash}"
 
-        # 시그니처 생성
-        signature = self._generate_signature(context)
+            # 시그니처 생성
+            signature = self._generate_signature(context)
 
-        # 용량 체크 및 LRU 정리
-        while len(self._cache) >= self.max_size:
-            self._evict_lru()
+            # 용량 체크 및 LRU 정리
+            while len(self._cache) >= self.max_size:
+                self._evict_lru()
 
-        # 엔트리 생성
-        entry = CacheEntry(
-            key=cache_key,
-            value=value,
-            context_signature=signature,
-            created_at=time.time(),
-            hit_count=0,
-            last_hit=time.time(),
-        )
+            # 엔트리 생성
+            entry = CacheEntry(
+                key=cache_key,
+                value=value,
+                context_signature=signature,
+                created_at=time.time(),
+                hit_count=0,
+                last_hit=time.time(),
+            )
 
-        # [V70] 기존 엔트리가 있으면 시그니처 인덱스에서 먼저 제거
-        if cache_key in self._cache:
-            old_entry = self._cache[cache_key]
-            if old_entry.context_signature in self._signature_index:
-                sig_list = self._signature_index[old_entry.context_signature]
-                if cache_key in sig_list:
-                    sig_list.remove(cache_key)
+            # [V70] 기존 엔트리가 있으면 시그니처 인덱스에서 먼저 제거
+            if cache_key in self._cache:
+                old_entry = self._cache[cache_key]
+                if old_entry.context_signature in self._signature_index:
+                    sig_list = self._signature_index[old_entry.context_signature]
+                    if cache_key in sig_list:
+                        sig_list.remove(cache_key)
 
-        self._cache[cache_key] = entry
+            self._cache[cache_key] = entry
 
-        # 시그니처 인덱스 업데이트
-        if signature:
-            if signature not in self._signature_index:
-                self._signature_index[signature] = []
-            self._signature_index[signature].append(cache_key)
+            # 시그니처 인덱스 업데이트
+            if signature:
+                if signature not in self._signature_index:
+                    self._signature_index[signature] = []
+                self._signature_index[signature].append(cache_key)
 
-        return cache_key
+            return cache_key
 
     def _evict(self, key: str):
         """특정 키 제거"""

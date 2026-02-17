@@ -1002,6 +1002,7 @@ class BaseAgent:
 
     # 클래스 변수: 캐시 저장소
     _context_caches = {}  # {cache_key: {"name": str, "created_at": float, "content_hash": str}}
+    _CONTEXT_CACHE_MAX = 50
 
     def _get_or_create_context_cache(
         self, cache_type: str, content: str, ttl_seconds: int = 1800, project_name: str = ""
@@ -1069,6 +1070,13 @@ class BaseAgent:
                 "created_at": current_time,
                 "content_hash": content_hash,
             }
+            if len(self._context_caches) > self._CONTEXT_CACHE_MAX:
+                sorted_keys = sorted(
+                    self._context_caches,
+                    key=lambda k: self._context_caches[k].get("created_at", 0),
+                )
+                for old_key in sorted_keys[: len(sorted_keys) - self._CONTEXT_CACHE_MAX]:
+                    del self._context_caches[old_key]
 
             logging.info(f"📦 [V61.5] 컨텍스트 캐시 생성: {cache_type} ({len(content)}자)")
 

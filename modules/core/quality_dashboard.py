@@ -12,6 +12,7 @@ Usage:
 
 import json
 import logging
+import threading
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
@@ -897,13 +898,16 @@ class QualityDashboard:
 
 # 싱글톤 인스턴스 (선택적 사용)
 _dashboard_instance: QualityDashboard | None = None
+_dashboard_lock = threading.Lock()
 
 
 def get_dashboard(project_path: Path | None = None) -> QualityDashboard:
     """대시보드 싱글톤 인스턴스 반환"""
     global _dashboard_instance
     if _dashboard_instance is None:
-        _dashboard_instance = QualityDashboard(project_path)
+        with _dashboard_lock:
+            if _dashboard_instance is None:
+                _dashboard_instance = QualityDashboard(project_path)
     return _dashboard_instance
 
 
