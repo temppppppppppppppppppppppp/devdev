@@ -32,6 +32,7 @@ V54.3 신규 기능:
 
 import logging
 import re
+import threading
 import time
 from dataclasses import dataclass, field
 from enum import Enum
@@ -416,13 +417,16 @@ class AdaptiveRetryStrategy:
 
 # 싱글턴 인스턴스
 _adaptive_retry_instance = None
+_adaptive_retry_lock = threading.Lock()
 
 
 def get_adaptive_retry() -> AdaptiveRetryStrategy:
     """AdaptiveRetryStrategy 싱글턴 인스턴스 반환"""
     global _adaptive_retry_instance
     if _adaptive_retry_instance is None:
-        _adaptive_retry_instance = AdaptiveRetryStrategy()
+        with _adaptive_retry_lock:
+            if _adaptive_retry_instance is None:
+                _adaptive_retry_instance = AdaptiveRetryStrategy()
     return _adaptive_retry_instance
 
 
@@ -487,6 +491,7 @@ class AdaptiveRetryManager:
             failure_learner: [V54.3.1] FailureLearner 인스턴스 (연동 활성화)
         """
         self.max_history = max_history
+        self._max_episode_keys = 50
         self.strategy = get_adaptive_retry()
         self.failure_learner = failure_learner  # [V54.3.1]
 
@@ -532,6 +537,12 @@ class AdaptiveRetryManager:
         # 기록 수 제한
         if len(self._failures[ep_num]) > self.max_history:
             self._failures[ep_num] = self._failures[ep_num][-self.max_history :]
+
+        # [Sweep6] 에피소드 키 수 제한 - 최근 50개만 유지
+        if len(self._failures) > self._max_episode_keys:
+            oldest_eps = sorted(self._failures.keys())[: len(self._failures) - self._max_episode_keys]
+            for old_ep in oldest_eps:
+                del self._failures[old_ep]
 
         # [V54.3.1] FailureLearner 연동: 실패 기록 동기화
         if self.failure_learner:
@@ -735,13 +746,16 @@ class AdaptiveRetryManager:
 
 # V54.3 싱글턴 인스턴스
 _adaptive_manager_instance = None
+_adaptive_manager_lock = threading.Lock()
 
 
 def get_adaptive_manager() -> AdaptiveRetryManager:
     """AdaptiveRetryManager 싱글턴 인스턴스 반환"""
     global _adaptive_manager_instance
     if _adaptive_manager_instance is None:
-        _adaptive_manager_instance = AdaptiveRetryManager()
+        with _adaptive_manager_lock:
+            if _adaptive_manager_instance is None:
+                _adaptive_manager_instance = AdaptiveRetryManager()
     return _adaptive_manager_instance
 
 

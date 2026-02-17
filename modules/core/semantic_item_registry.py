@@ -19,6 +19,7 @@
 """
 
 import re
+import threading
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -759,13 +760,16 @@ class SemanticItemRegistry:
 
 # 싱글턴 인스턴스
 _registry_instance = None
+_registry_lock = threading.Lock()
 
 
 def get_item_registry() -> SemanticItemRegistry:
     """SemanticItemRegistry 싱글턴 인스턴스 반환"""
     global _registry_instance
     if _registry_instance is None:
-        _registry_instance = SemanticItemRegistry()
+        with _registry_lock:
+            if _registry_instance is None:
+                _registry_instance = SemanticItemRegistry()
     return _registry_instance
 
 

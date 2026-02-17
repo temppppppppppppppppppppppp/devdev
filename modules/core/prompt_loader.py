@@ -13,6 +13,7 @@ Usage:
 
 import logging
 import os
+import threading
 from pathlib import Path
 from typing import Any, Optional
 
@@ -28,12 +29,16 @@ class PromptLoader:
 
     _instance: Optional["PromptLoader"] = None
     _cache: dict[str, dict[str, str]] = {}
+    _instance_lock = threading.Lock()
+    _cache_lock = threading.Lock()
 
     def __new__(cls) -> "PromptLoader":
         """싱글톤 패턴 — 앱 전체에서 하나의 인스턴스만 사용."""
         if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._cache = {}
+            with cls._instance_lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+                    cls._cache = {}
         return cls._instance
 
     def __init__(self) -> None:
@@ -56,13 +61,15 @@ class PromptLoader:
 
     def _load_yaml_file(self, domain: str) -> dict[str, str]:
         """YAML 파일을 로드하여 딕셔너리로 반환."""
-        if domain in self._cache:
-            return self._cache[domain]
+        with self._cache_lock:
+            if domain in self._cache:
+                return self._cache[domain]
 
         yaml_path = self._prompts_dir / f"{domain}.yaml"
         if not yaml_path.exists():
             logging.debug(f"[PromptLoader] YAML not found: {yaml_path}")
-            self._cache[domain] = {}
+            with self._cache_lock:
+                self._cache[domain] = {}
             return {}
 
         try:
@@ -125,13 +132,15 @@ class PromptLoader:
                     current_lines.pop()
                 prompts[current_key] = "\n".join(current_lines)
 
-            self._cache[domain] = prompts
+            with self._cache_lock:
+                self._cache[domain] = prompts
             logging.debug(f"[PromptLoader] Loaded {len(prompts)} prompts from {domain}.yaml")
             return prompts
 
         except Exception as e:
             logging.warning(f"[PromptLoader] Failed to load {yaml_path}: {e}")
-            self._cache[domain] = {}
+            with self._cache_lock:
+                self._cache[domain] = {}
             return {}
 
     def load(self, domain: str, key: str, **kwargs: Any) -> str | None:
@@ -177,7 +186,8 @@ class PromptLoader:
 
     def invalidate_cache(self, domain: str | None = None) -> None:
         """캐시 무효화. domain 지정 시 해당 도메인만, 없으면 전체 초기화."""
-        if domain:
-            self._cache.pop(domain, None)
-        else:
-            self._cache.clear()
+        with self._cache_lock:
+            if domain:
+                self._cache.pop(domain, None)
+            else:
+                self._cache.clear()

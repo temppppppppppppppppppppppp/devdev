@@ -20,6 +20,7 @@
 
 import json
 import logging
+import threading
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -410,14 +411,17 @@ class PassRateMonitor:
 # 싱글톤 인스턴스
 _monitor_instance: PassRateMonitor | None = None
 _monitor_project_path: str | None = None  # [V70] 프로젝트 경로 추적
+_monitor_lock = threading.Lock()
 
 
 def get_monitor(project_path: str = None) -> PassRateMonitor:
     """싱글톤 모니터 인스턴스 반환 [V70] 프로젝트 변경 시 재생성"""
     global _monitor_instance, _monitor_project_path
     if _monitor_instance is None or (project_path and project_path != _monitor_project_path):
-        _monitor_instance = PassRateMonitor(project_path)
-        _monitor_project_path = project_path
+        with _monitor_lock:
+            if _monitor_instance is None or (project_path and project_path != _monitor_project_path):
+                _monitor_instance = PassRateMonitor(project_path)
+                _monitor_project_path = project_path
     return _monitor_instance
 
 

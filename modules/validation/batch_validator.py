@@ -81,8 +81,9 @@ class BatchValidator:
         results = await asyncio.gather(*tasks)
 
         elapsed = time.time() - start_time
-        self.stats["total_time"] = elapsed
-        self.stats["average_time"] = elapsed / len(manuscripts) if manuscripts else 0
+        with self._stats_lock:
+            self.stats["total_time"] = elapsed
+            self.stats["average_time"] = elapsed / len(manuscripts) if manuscripts else 0
 
         return results
 
