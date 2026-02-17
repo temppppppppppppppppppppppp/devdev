@@ -386,6 +386,7 @@ class Stage2Finalizer:
             }
         else:
             # [V60.77] Director REJECT
+            _rejected_arc = refined_arc  # [Patch Mode] REJECT된 Arc 보존 (패치 모드 판단용)
             base_feedback = audit.get("re_slice_instruction") or "밀도 보강 필요"
             reject_reason = audit.get("reason") or "사유 미상"
 
@@ -438,6 +439,8 @@ class Stage2Finalizer:
             "current_feedback": current_feedback,
             "director_feedback_for_fourphase": director_feedback_for_fourphase,
             "st_snapshot": st_snapshot,
+            "score": audit.get("score", 0),  # [Patch Mode] Director 점수
+            "rejected_arc": _rejected_arc,  # [Patch Mode] REJECT된 Arc (패치 입력용)
         }
 
     def _record_s2_pass_metrics(self, *, global_arc_no: int, attempt: int, generation_method: str, audit: dict) -> None:

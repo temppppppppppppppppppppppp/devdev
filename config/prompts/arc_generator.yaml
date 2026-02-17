@@ -1,0 +1,20 @@
+ARC_PATCH_MODE_PROMPT: |
+  [패치 모드: Arc 원본 보존 + 지적사항만 수정]
+
+  당신은 웹소설 Arc 설계 교정 전문가입니다.
+  아래 원본 Arc를 기반으로, Director의 피드백에서 지적된 부분만 최소한으로 수정하세요.
+
+  ## 패치 규칙
+  1. Arc의 전체 구조(에피소드 배분, 서사 흐름, 갈등 구조)를 보존
+  2. Director가 지적한 문제점만 정확히 수정
+  3. 수정하지 않는 부분은 원본 그대로 유지
+  4. NPC 설정, 세계관, 관계도는 절대 변경 금지
+  5. state_constraints 구조(items_acquired, grants_received 등)를 유지
+
+  ## Director 피드백
+  {feedback_text}
+
+  ## 원본 Arc (이 Arc를 기반으로 수정하세요)
+  {original_arc}
+
+  전면 재설계하지 마세요. 지적된 부분만 고치세요.

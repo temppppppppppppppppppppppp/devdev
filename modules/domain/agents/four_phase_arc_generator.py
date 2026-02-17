@@ -316,6 +316,158 @@ class FourPhaseArcGenerator(BaseAgent):
             logging.info(f"마지막 피드백: {feedback[:200]}...")
         return None, pipeline_result
 
+    # =========================================================================
+    # [Patch Mode] Arc 원본 보존 + Director 피드백 지적사항만 수정
+    # =========================================================================
+
+    def patch_arc_with_feedback(
+        self,
+        *,
+        original_arc: dict,
+        director_feedback: str,
+        attempt_number: int,
+        # generate()와 동일 파라미터
+        arc_no: int,
+        ep_start: int,
+        vol_strategy: str,
+        curr_block: dict,
+        prev_arcs: list[dict],
+        assets: dict = None,
+        protagonist_name: str = "주인공",
+        entity_registry: dict = None,
+        state_tracker=None,
+        vector_context: str = "",
+    ) -> tuple[dict | None, dict]:
+        """[Patch Mode] 원본 Arc를 보존하며 Director 피드백 지적사항만 수정.
+
+        패치 전용 프롬프트(ARC_PATCH_MODE_PROMPT)를 로드하여 원본 Arc + Director
+        피드백을 enhanced_feedback으로 조립한 뒤, generate()의 Phase 2 ensemble을
+        호출하여 후보를 생성한다.
+
+        실패 시 (None, pipeline_result) 반환 → 호출측에서 full regenerate 폴백.
+        """
+        pipeline_result = {"arc_no": arc_no, "phases": {}, "final_verdict": None, "retries": 0, "patch_mode": True}
+
+        # 1) YAML 프롬프트 로드
+        try:
+            from modules.core.prompt_loader import PromptLoader
+
+            _patch_template = PromptLoader().load("arc_generator", "ARC_PATCH_MODE_PROMPT")
+        except Exception as e:
+            logging.warning(f"[SilentPass:ArcGen] ARC_PATCH_MODE_PROMPT 로드 실패: {e!s:.100}")
+            _patch_template = None
+
+        # 2) 원본 Arc 직렬화
+        _original_text = json.dumps(original_arc, ensure_ascii=False, indent=2)[:30000]
+
+        # 3) 패치 프롬프트 포맷
+        if _patch_template:
+            _patch_section = _patch_template.format(
+                feedback_text=director_feedback,
+                original_arc=_original_text,
+            )
+        else:
+            _patch_section = (
+                f"[패치 모드: Arc 원본 보존 + 지적사항만 수정]\n\n"
+                f"## Director 피드백\n{director_feedback}\n\n"
+                f"## 원본 Arc\n{_original_text}\n\n"
+                f"전면 재설계하지 마세요. 지적된 부분만 고치세요."
+            )
+
+        enhanced_feedback = (
+            f"[🔧 {attempt_number}차 수정 - 패치 모드: Arc 원본 보존 + 지적사항만 수정]\n\n"
+            f"{_patch_section}\n\n"
+            f"⚠️ 원본 Arc의 전체 구조, 에피소드 배분, 서사 흐름을 보존하면서 피드백 지적사항만 수정하세요.\n"
+            f"⚠️ 수정하지 않는 부분은 원본을 그대로 유지하세요."
+        )
+
+        # 4) Phase 1: Constraint (generate()와 동일)
+        preflight_result = self.preflight.analyze(prev_arcs)
+        preflight_injection = self.preflight.generate_analyst_injection(preflight_result)
+        compiled_constraints = self.compiler.compile(prev_arcs)
+        negative_examples = self.negative_injector.generate_injection()
+        self_check = self.negative_injector.generate_self_check_prompt()
+        full_constraint_block = "\n".join([preflight_injection, compiled_constraints, negative_examples, self_check])
+
+        # 5) Phase 2: Ensemble 생성 (패치 피드백 주입)
+        ep_count, _ = self._determine_ep_count(curr_block, arc_no, prev_arcs)
+        protagonist_config = {}
+        try:
+            master_bible = getattr(self.context, "master_bible", {})
+            if master_bible:
+                bible_root = master_bible.get("MasterBible", master_bible)
+                protagonist_config = bible_root.get("protagonist_config", {})
+        except Exception:
+            pass
+
+        prev_arc_context = self._generate_prev_context(prev_arcs, preflight_result)
+        if vector_context:
+            prev_arc_context = f"{prev_arc_context}\n\n[과거 유사 맥락 (벡터 검색)]\n{vector_context}"
+
+        try:
+            best_arc, all_candidates = self.ensemble.generate_ensemble(
+                arc_no=arc_no,
+                ep_start=ep_start,
+                vol_strategy=vol_strategy,
+                curr_block=curr_block,
+                prev_arc_context=prev_arc_context,
+                constraint_block=full_constraint_block,
+                assets=assets,
+                feedback=enhanced_feedback,
+                protagonist_name=protagonist_name,
+                protagonist_config=protagonist_config,
+                entity_registry=entity_registry,
+                ep_count=ep_count,
+                retry=0,
+            )
+        except Exception as e:
+            logging.warning(f"[Patch Mode] Arc ensemble 생성 실패: {e!s:.200}")
+            pipeline_result["final_verdict"] = "FAILED"
+            return None, pipeline_result
+
+        if not best_arc:
+            logging.warning("[Patch Mode] Arc ensemble 후보 없음 → 폴백 필요")
+            pipeline_result["final_verdict"] = "FAILED"
+            return None, pipeline_result
+
+        # 6) Phase 2.5: Auto-sanitize
+        best_arc = self._auto_sanitize_injuries(best_arc)
+
+        # 7) Phase 3: Validate
+        _pre_items = set()
+        _pre_grants = set()
+        for _prev in prev_arcs:
+            _acq = _prev.get("state_constraints", {}).get("items_acquired", [])
+            if isinstance(_acq, list):
+                _pre_items.update(i.strip() for i in _acq if i)
+            _grt = _prev.get("state_constraints", {}).get("grants_received", [])
+            if isinstance(_grt, list):
+                _pre_grants.update(g.strip() for g in _grt if g)
+
+        verdict, validation_result = self.validator.validate(
+            arc=best_arc,
+            prev_arcs=prev_arcs,
+            constraints=full_constraint_block,
+            state_tracker=state_tracker,
+            pre_collected_items=_pre_items,
+            pre_collected_grants=_pre_grants,
+        )
+
+        pipeline_result["phases"]["validate"] = {
+            "status": "complete",
+            "verdict": verdict,
+            "issues_count": len(validation_result.get("issues", [])),
+        }
+
+        if verdict == "PASS":
+            pipeline_result["final_verdict"] = "PASS"
+            logging.info(f"✅ [Patch Mode] Arc {arc_no} 패치 성공")
+            return best_arc, pipeline_result
+
+        logging.warning(f"⚠️ [Patch Mode] Arc {arc_no} 패치 검증 실패 → 폴백 필요")
+        pipeline_result["final_verdict"] = "FAILED"
+        return None, pipeline_result
+
     def _generate_prev_context(self, prev_arcs: list[dict], preflight_result: dict) -> str:
         """[V67] 이전 Arc 컨텍스트 생성 - 전문 확장 (Gemini 대용량 컨텍스트 활용)"""
         if not prev_arcs:

@@ -399,6 +399,7 @@ class Stage2PreflightAnalysis:
         director_feedback_for_fourphase: str,
         entity_registry_for_director,
         genre_for_tracker: str,
+        previous_attempt: dict | None = None,
     ) -> dict:
         """[4-R3-c] FourPhase generation and state tracker enrichment.
 
@@ -437,20 +438,57 @@ class Stage2PreflightAnalysis:
                         self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_generate")
                     except Exception as e:
                         logging.warning(f"[SilentPass:Preflight] 장르 레지스트리 갱신 실패: {e!s:.100}")
-                    four_phase_arc, pipeline_result = self.ctx.agents["four_phase"].generate(
-                        arc_no=global_arc_no,
-                        ep_start=current_ep_start,
-                        vol_strategy=current_vol_strategy.get("strategy_doc", ""),
-                        curr_block=enriched_block,
-                        prev_arcs=all_refined_arcs,
-                        assets=bible_root.get("AssetLibrary", {}),
-                        max_internal_retries=4,
-                        protagonist_name=protagonist_name or "주인공",
-                        director_feedback=director_feedback_for_fourphase,
-                        entity_registry=entity_registry_for_director,
-                        state_tracker=self.ctx.state_tracker,
-                        vector_context=_s2_vector_ctx,
+                    # [Patch Mode] 점수 기반 분기: 패치 모드 vs 전면 재생성
+                    from modules.core.constants import PatchModeThresholds
+
+                    _use_patch = (
+                        previous_attempt
+                        and previous_attempt.get("score", 0) >= PatchModeThresholds.REWRITE
+                        and previous_attempt.get("best_arc")
+                        and attempt == 1
                     )
+
+                    four_phase_arc = None
+                    pipeline_result = {"final_verdict": None}
+
+                    if _use_patch:
+                        _prev_score = previous_attempt["score"]
+                        logging.info(f"[Patch Mode] Arc 패치 모드 진입 (score={_prev_score}, attempt={attempt})")
+                        self.ctx.ui.log(f"   🔧 [Patch Mode] Arc 패치: score={_prev_score}, 원본 보존 수정")
+                        four_phase_arc, pipeline_result = self.ctx.agents["four_phase"].patch_arc_with_feedback(
+                            original_arc=previous_attempt["best_arc"],
+                            director_feedback=previous_attempt.get("rejection_reason", ""),
+                            attempt_number=attempt + 1,
+                            arc_no=global_arc_no,
+                            ep_start=current_ep_start,
+                            vol_strategy=current_vol_strategy.get("strategy_doc", ""),
+                            curr_block=enriched_block,
+                            prev_arcs=all_refined_arcs,
+                            assets=bible_root.get("AssetLibrary", {}),
+                            protagonist_name=protagonist_name or "주인공",
+                            entity_registry=entity_registry_for_director,
+                            state_tracker=self.ctx.state_tracker,
+                            vector_context=_s2_vector_ctx,
+                        )
+                        if not four_phase_arc:
+                            logging.info("[Patch Mode] Arc 패치 실패 → 전면 재생성 폴백")
+                            self.ctx.ui.log("   ⚠️ [Patch Mode] Arc 패치 실패 → 전면 재생성 폴백")
+
+                    if not four_phase_arc:
+                        four_phase_arc, pipeline_result = self.ctx.agents["four_phase"].generate(
+                            arc_no=global_arc_no,
+                            ep_start=current_ep_start,
+                            vol_strategy=current_vol_strategy.get("strategy_doc", ""),
+                            curr_block=enriched_block,
+                            prev_arcs=all_refined_arcs,
+                            assets=bible_root.get("AssetLibrary", {}),
+                            max_internal_retries=4,
+                            protagonist_name=protagonist_name or "주인공",
+                            director_feedback=director_feedback_for_fourphase,
+                            entity_registry=entity_registry_for_director,
+                            state_tracker=self.ctx.state_tracker,
+                            vector_context=_s2_vector_ctx,
+                        )
                     try:
                         self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_generate")
                     except Exception:

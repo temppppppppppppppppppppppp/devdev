@@ -90,6 +90,7 @@ class Stage2Orchestrator:
         from modules.core.constants import (
             AIModels,
             HUDKeys,
+            PatchModeThresholds,
             RecoveryLimits,
             VolumeSettings,
         )
@@ -412,6 +413,8 @@ class Stage2Orchestrator:
                 use_analyst_fallback = _setup["use_analyst_fallback"]
                 _st_snapshot = _setup["st_snapshot"]
 
+                _previous_attempt = None  # [Patch Mode] Arc 패치 모드를 위한 이전 시도 추적
+
                 while attempt < max_attempts:
                     draft_validator_passed = False
                     consensus_passed = False
@@ -476,6 +479,7 @@ class Stage2Orchestrator:
                         director_feedback_for_fourphase=director_feedback_for_fourphase,
                         entity_registry_for_director=entity_registry_for_director,
                         genre_for_tracker=_genre_for_tracker,
+                        previous_attempt=_previous_attempt,
                     )
                     four_phase_passed = _enrichment["four_phase_passed"]
                     refined_arc = _enrichment["refined_arc"]
@@ -607,6 +611,19 @@ class Stage2Orchestrator:
                     current_feedback = _fin["current_feedback"]
                     director_feedback_for_fourphase = _fin["director_feedback_for_fourphase"]
                     _st_snapshot = _fin["st_snapshot"]
+
+                    # [Patch Mode] REJECT 시 previous_attempt 갱신 (패치 모드 판단용)
+                    _rej_score = _fin.get("score", 0)
+                    _rej_arc = _fin.get("rejected_arc")
+                    if _fin["action"] != "break" and _rej_score >= PatchModeThresholds.REWRITE and _rej_arc:
+                        _previous_attempt = {
+                            "score": _rej_score,
+                            "best_arc": _rej_arc,
+                            "rejection_reason": _fin.get("director_feedback_for_fourphase", ""),
+                        }
+                    else:
+                        _previous_attempt = None
+
                     if _fin["action"] == "break":
                         passed = True
                         break
