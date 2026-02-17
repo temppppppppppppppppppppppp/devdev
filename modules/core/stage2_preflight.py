@@ -315,6 +315,31 @@ class Stage2PreflightAnalysis:
                 "v60_9_stage3to2_error", "stage 3→2 reverse feedback failed", {"error": str(rf32_err)[:100]}
             )
 
+        # [Item4] Stage 4→2 역방향 피드백 주입 (이전 Arc 집필 난이도 기반)
+        try:
+            if (
+                global_arc_no > 1
+                and self.ctx.pass_rate_monitor
+                and self.ctx.generate_reverse_feedback_stage4_to_2
+                and hasattr(self.ctx.pass_rate_monitor, "get_arc_difficulty")
+            ):
+                prev_difficulty = self.ctx.pass_rate_monitor.get_arc_difficulty(global_arc_no - 1)
+                reverse_feedback_4to2 = self.ctx.generate_reverse_feedback_stage4_to_2(prev_difficulty)
+                if reverse_feedback_4to2:
+                    stage4_warning = "\n\n🔄 [Item4 Stage 4→2 역방향 피드백]\n"
+                    stage4_warning += f"{reverse_feedback_4to2}\n"
+                    enhanced_context = stage4_warning + "\n" + enhanced_context
+                    self.ctx.audit_event(
+                        "s4_to_s2_feedback",
+                        "Arc difficulty feedback injected",
+                        {"arc_no": global_arc_no, "prev_difficulty": prev_difficulty},
+                    )
+                    self.ctx.ui.log(
+                        f"      🔄 [Item4] Stage 4→2 역방향 피드백 주입 (이전 Arc 난이도: {prev_difficulty.get('difficulty')})"
+                    )
+        except Exception as rf42_err:
+            logging.warning(f"[Item4] Stage 4→2 피드백 실패: {rf42_err}")
+
         # ═══════════════════════════════════════════════════════════════
         # [V60.36] Analyst 강화 - Director 검수 통과를 위한 무장
         # ═══════════════════════════════════════════════════════════════
@@ -414,6 +439,9 @@ class Stage2PreflightAnalysis:
         draft_validator_passed = False
         consensus_passed = False
         _st_snapshot = None
+        _was_patch = False
+        _patch_fallback = False
+        _prev_score = 0
 
         if "four_phase" in self.ctx.agents:
             try:
@@ -441,6 +469,8 @@ class Stage2PreflightAnalysis:
                         and previous_attempt.get("score", 0) >= PatchModeThresholds.REWRITE
                         and previous_attempt.get("best_arc")
                     )
+                    _was_patch = bool(_use_patch)
+                    _prev_score = previous_attempt.get("score", 0) if previous_attempt else 0
 
                     four_phase_arc = None
                     pipeline_result = {"final_verdict": None}
@@ -465,6 +495,7 @@ class Stage2PreflightAnalysis:
                             vector_context=_s2_vector_ctx,
                         )
                         if not four_phase_arc:
+                            _patch_fallback = True
                             logging.info("[Patch Mode] Arc 패치 실패 → 전면 재생성 폴백")
                             self.ctx.ui.log("   ⚠️ [Patch Mode] Arc 패치 실패 → 전면 재생성 폴백")
 
@@ -670,6 +701,21 @@ class Stage2PreflightAnalysis:
                 self.ctx.audit_event("four_phase_error", str(fp_err)[:100], {"arc_no": global_arc_no})
                 director_feedback_for_fourphase = f"FourPhase 오류 발생: {str(fp_err)[:100]}"
 
+        if _was_patch:
+            try:
+                self.ctx.audit_event(
+                    "stage2_patch_mode",
+                    "stage2 four_phase patch mode attempted",
+                    {
+                        "arc_no": global_arc_no,
+                        "attempt": attempt + 1,
+                        "prev_score": _prev_score,
+                        "fallback": _patch_fallback,
+                    },
+                )
+            except Exception:
+                pass
+
         return {
             "four_phase_passed": four_phase_passed,
             "refined_arc": refined_arc,
@@ -678,4 +724,7 @@ class Stage2PreflightAnalysis:
             "consensus_passed": consensus_passed,
             "st_snapshot": _st_snapshot,
             "director_feedback_for_fourphase": director_feedback_for_fourphase,
+            "was_patch": _was_patch,
+            "patch_fallback": _patch_fallback,
+            "prev_score": _prev_score,
         }

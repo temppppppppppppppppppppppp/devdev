@@ -166,6 +166,39 @@ class TestProcessPassResult:
 
         mock_fn.assert_called_once_with(5, "테스트 원고 " * 500, {"scene_breakdown": []})
 
+    def test_records_episode_cost_when_scope_has_usage(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+
+        collector = MagicMock()
+        collector.session_id = "sess_ep"
+        collector.snapshot_and_reset_scope.return_value = {
+            "total_calls": 3,
+            "total_tokens": 2400,
+            "total_cost_usd": 0.021,
+            "model_breakdown": "{}",
+        }
+
+        with patch("modules.core.stage4_post_processor.get_metrics_collector", return_value=collector):
+            result = pp.process_pass_result(
+                next_ep=2,
+                final_manuscript="테스트 원고 " * 500,
+                final_title="테스트",
+                final_state_updates={},
+                blueprint={"scene_breakdown": []},
+                arc_data={"arc_no": 1},
+                output_dir=tmp_path,
+                v50_modules_available=False,
+                extract_chain_link_fn=lambda *_args, **_kwargs: {},
+            )
+
+        assert result is True
+        pp.ctx.current_project.db.save_cost_record.assert_called_once()
+        cost_kw = pp.ctx.current_project.db.save_cost_record.call_args.kwargs
+        assert cost_kw["scope_type"] == "episode"
+        assert cost_kw["scope_id"] == 2
+        assert cost_kw["total_calls"] == 3
+
 
 class TestRunPostEpisodeTasks:
     def test_vector_sync_called_when_operational(self):

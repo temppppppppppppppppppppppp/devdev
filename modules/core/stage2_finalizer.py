@@ -3,6 +3,7 @@
 import json
 import logging
 
+from modules.core.metrics_collector import get_metrics_collector
 from modules.models.arc import validate_arc
 
 
@@ -40,6 +41,9 @@ class Stage2Finalizer:
         bible_root: dict,
         genre: str,
         constraint_db,
+        is_patch: bool = False,
+        prev_score: float = 0.0,
+        patch_fallback: bool = False,
     ) -> dict:
         """[4-R3-e] Director audit and post-audit finalize.
 
@@ -295,7 +299,32 @@ class Stage2Finalizer:
                 attempt=attempt,
                 generation_method=generation_method,
                 audit=audit,
+                is_patch=is_patch,
+                prev_score=prev_score,
+                patch_fallback=patch_fallback,
             )
+
+            # [Phase 6] Arc 단위 비용 스냅샷 저장 (비차단)
+            try:
+                collector = get_metrics_collector()
+                if collector and self.ctx.current_project and hasattr(self.ctx.current_project, "db"):
+                    scope = collector.snapshot_and_reset_scope()
+                    if (
+                        scope.get("total_calls", 0) > 0
+                        or scope.get("total_tokens", 0) > 0
+                        or scope.get("total_cost_usd", 0.0) > 0
+                    ):
+                        self.ctx.current_project.db.save_cost_record(
+                            session_id=collector.session_id,
+                            scope_type="arc",
+                            scope_id=global_arc_no,
+                            total_calls=scope.get("total_calls", 0),
+                            total_tokens=scope.get("total_tokens", 0),
+                            total_cost_usd=scope.get("total_cost_usd", 0.0),
+                            model_breakdown=scope.get("model_breakdown", "{}"),
+                        )
+            except Exception as cost_err:
+                logging.warning("[Phase 6] Arc 비용 기록 실패 (비차단): %s", cost_err)
 
             # [V68] 계층적 요약 피라미드 — 볼륨 요약 (10 Arc마다)
             if global_arc_no > 0 and global_arc_no % 10 == 0:
@@ -424,6 +453,9 @@ class Stage2Finalizer:
                 attempt=attempt,
                 generation_method=generation_method,
                 audit=audit,
+                is_patch=is_patch,
+                prev_score=prev_score,
+                patch_fallback=patch_fallback,
             )
 
         return {
@@ -437,7 +469,17 @@ class Stage2Finalizer:
             "rejected_arc": _rejected_arc,  # [Patch Mode] REJECT된 Arc (패치 입력용)
         }
 
-    def _record_s2_pass_metrics(self, *, global_arc_no: int, attempt: int, generation_method: str, audit: dict) -> None:
+    def _record_s2_pass_metrics(
+        self,
+        *,
+        global_arc_no: int,
+        attempt: int,
+        generation_method: str,
+        audit: dict,
+        is_patch: bool = False,
+        prev_score: float = 0.0,
+        patch_fallback: bool = False,
+    ) -> None:
         """[4-R3-f] Record Stage 2 PASS metrics (PassRateMonitor, Dashboard, Optimizer, PerfTimer)."""
         from modules.core.spinners import V50_MODULES_AVAILABLE
 
@@ -450,6 +492,9 @@ class Stage2Finalizer:
                     attempt_num=attempt + 1,
                     success=True,
                     generation_method=generation_method,
+                    is_patch=is_patch,
+                    prev_score=prev_score,
+                    patch_fallback=patch_fallback,
                 )
             except Exception as e:  # [V64.P4] OPTIONAL: metrics
                 logging.debug(f"[SILENT] metrics (success): {e}")
@@ -483,7 +528,15 @@ class Stage2Finalizer:
             pass
 
     def _record_s2_reject_metrics(
-        self, *, global_arc_no: int, attempt: int, generation_method: str, audit: dict
+        self,
+        *,
+        global_arc_no: int,
+        attempt: int,
+        generation_method: str,
+        audit: dict,
+        is_patch: bool = False,
+        prev_score: float = 0.0,
+        patch_fallback: bool = False,
     ) -> None:
         """[4-R3-f] Record Stage 2 REJECT metrics (PassRateMonitor, Dashboard, History, Optimizer)."""
         from modules.core.spinners import V50_MODULES_AVAILABLE
@@ -498,6 +551,9 @@ class Stage2Finalizer:
                     success=False,
                     reject_reason=str(audit.get("reason", ""))[:100],
                     generation_method=generation_method,
+                    is_patch=is_patch,
+                    prev_score=prev_score,
+                    patch_fallback=patch_fallback,
                 )
             except Exception as e:  # [V64.P4] OPTIONAL: metrics
                 logging.debug(f"[SILENT] metrics (reject): {e}")

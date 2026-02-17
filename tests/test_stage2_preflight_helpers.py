@@ -453,6 +453,9 @@ class TestPreflightEnrichmentDefaults:
         "consensus_passed",
         "st_snapshot",
         "director_feedback_for_fourphase",
+        "was_patch",
+        "patch_fallback",
+        "prev_score",
     }
 
     def _make_enrichment_kwargs(self):
@@ -979,6 +982,64 @@ class TestQualityTrendInjection:
         assert "enhanced_context" in result
         # 크래시 없이 기존 컨텍스트만 반환
         assert "기존 컨텍스트" in result["enhanced_context"]
+
+
+# ══════════════════════════════════════════════════════════════
+# [Item4] Stage 4→2 reverse feedback injection in _preflight_arc_analysis
+# ══════════════════════════════════════════════════════════════
+
+
+class TestStage4To2FeedbackInjection:
+    @staticmethod
+    def _base_kwargs():
+        return {
+            "attempt": 0,
+            "current_feedback": "",
+            "constraint_block": "",
+            "last_refined_context": "기존 컨텍스트",
+            "all_refined_arcs": [],
+            "protagonist_name": "이청풍",
+            "global_arc_no": 2,
+            "cached_preflight_injection": "",
+            "cached_preflight_result": None,
+        }
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_injects_stage4_to_2_feedback_when_hard(self, s2_orch):
+        s2_orch.ctx.stage2_optimizer = None
+        s2_orch.ctx.quality_dashboard = None
+        s2_orch.ctx.stage_rejection_history = []
+        s2_orch.ctx.generate_reverse_feedback_stage4_to_2 = MagicMock(return_value="[S4->S2] 난이도 완화 지시")
+        s2_orch.ctx.pass_rate_monitor.get_arc_difficulty = MagicMock(
+            return_value={"arc_no": 1, "difficulty": "hard", "avg_attempts": 3.2, "hard_episodes": [7, 8]}
+        )
+
+        result = s2_orch._preflight_arc_analysis(**self._base_kwargs())
+
+        assert "Stage 4→2 역방향 피드백" in result["enhanced_context"]
+        assert "[S4->S2] 난이도 완화 지시" in result["enhanced_context"]
+        s2_orch.ctx.audit_event.assert_any_call(
+            "s4_to_s2_feedback",
+            "Arc difficulty feedback injected",
+            {
+                "arc_no": 2,
+                "prev_difficulty": {"arc_no": 1, "difficulty": "hard", "avg_attempts": 3.2, "hard_episodes": [7, 8]},
+            },
+        )
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_no_injection_when_feedback_empty(self, s2_orch):
+        s2_orch.ctx.stage2_optimizer = None
+        s2_orch.ctx.quality_dashboard = None
+        s2_orch.ctx.stage_rejection_history = []
+        s2_orch.ctx.generate_reverse_feedback_stage4_to_2 = MagicMock(return_value="")
+        s2_orch.ctx.pass_rate_monitor.get_arc_difficulty = MagicMock(
+            return_value={"arc_no": 1, "difficulty": "normal", "avg_attempts": 1.8, "hard_episodes": []}
+        )
+
+        result = s2_orch._preflight_arc_analysis(**self._base_kwargs())
+
+        assert "Stage 4→2 역방향 피드백" not in result["enhanced_context"]
 
 
 # ══════════════════════════════════════════════════════════════

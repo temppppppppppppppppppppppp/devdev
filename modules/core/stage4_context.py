@@ -5,9 +5,10 @@ class Stage4Context:
     """Stage4Orchestrator의 DI 컨텍스트.
 
     [4C-2a] 필수 5종: ui, current_project, agents, sys, state_tracker
-    [4C-2b] 확장 11종: memory, world_state, fact_ledger, character_voice,
+    [4C-2b] 확장 13종: memory, world_state, fact_ledger, character_voice,
             perf_timer, foreshadow_tracker, failure_learner, diversity_engine,
-            semantic_plot_guard, selected_genre, quality_dashboard
+            semantic_plot_guard, selected_genre, quality_dashboard,
+            pacing_analyzer, pass_rate_monitor
     [4C-2c] 콜백 7종: get_int_input, build_item_acquisition_timeline,
             load_narrative_summaries, get_protagonist_name,
             generate_narrative_summary, flush_audit_buffer, safe_commit
@@ -33,6 +34,7 @@ class Stage4Context:
         "selected_genre",
         "quality_dashboard",
         "pacing_analyzer",
+        "pass_rate_monitor",
         # [4C-2c] 콜백 7종
         "get_int_input",
         "build_item_acquisition_timeline",
@@ -64,6 +66,7 @@ class Stage4Context:
         selected_genre=None,
         quality_dashboard=None,
         pacing_analyzer=None,
+        pass_rate_monitor=None,
         # [4C-2c] 콜백 — 모두 optional (None 허용)
         get_int_input=None,
         build_item_acquisition_timeline=None,
@@ -90,6 +93,7 @@ class Stage4Context:
         self.selected_genre = selected_genre
         self.quality_dashboard = quality_dashboard
         self.pacing_analyzer = pacing_analyzer
+        self.pass_rate_monitor = pass_rate_monitor
         self.get_int_input = get_int_input
         self.build_item_acquisition_timeline = build_item_acquisition_timeline
         self.load_narrative_summaries = load_narrative_summaries
@@ -119,6 +123,7 @@ class Stage4Context:
             selected_genre=getattr(app, "selected_genre", None),
             quality_dashboard=getattr(app, "quality_dashboard", None),
             pacing_analyzer=getattr(app, "pacing_analyzer", None),
+            pass_rate_monitor=getattr(app, "pass_rate_monitor", None),
             get_int_input=getattr(app, "_get_int_input", None),
             build_item_acquisition_timeline=getattr(app, "_build_item_acquisition_timeline", None),
             load_narrative_summaries=getattr(app, "_load_narrative_summaries", None),

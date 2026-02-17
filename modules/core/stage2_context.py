@@ -12,13 +12,14 @@ class Stage2Context:
             pass_rate_monitor, quality_dashboard, quality_amplifier,
             agent_intelligence, constitutional_checker, self_reflector,
             use_arc_corrector
-    [4C-3c] 콜백 20종: audit_event, cumulative_state_cache,
+    [4C-3c] 콜백 21종: audit_event, cumulative_state_cache,
             cumulative_state_cache_key, write_audit_summary,
             validate_arc_mapping, validate_arc_integrity,
             state_tracker_loaded_arcs, safe_commit_async,
             get_max_episode_from_manuscripts, get_int_input,
             generate_structured_arc_feedback,
             generate_reverse_feedback_stage3_to_2,
+            generate_reverse_feedback_stage4_to_2,
             fix_entity_registry_protagonist,
             calculate_arc_from_episode,
             build_strong_kind_feedback, build_minimal_arc_context,
@@ -52,7 +53,7 @@ class Stage2Context:
         "constitutional_checker",
         "self_reflector",
         "use_arc_corrector",
-        # [4C-3c] 콜백 20종
+        # [4C-3c] 콜백 21종
         "audit_event",
         "cumulative_state_cache",
         "cumulative_state_cache_key",
@@ -65,6 +66,7 @@ class Stage2Context:
         "get_int_input",
         "generate_structured_arc_feedback",
         "generate_reverse_feedback_stage3_to_2",
+        "generate_reverse_feedback_stage4_to_2",
         "fix_entity_registry_protagonist",
         "calculate_arc_from_episode",
         "build_strong_kind_feedback",
@@ -117,6 +119,7 @@ class Stage2Context:
         get_int_input=None,
         generate_structured_arc_feedback=None,
         generate_reverse_feedback_stage3_to_2=None,
+        generate_reverse_feedback_stage4_to_2=None,
         fix_entity_registry_protagonist=None,
         calculate_arc_from_episode=None,
         build_strong_kind_feedback=None,
@@ -163,6 +166,7 @@ class Stage2Context:
         self.get_int_input = get_int_input
         self.generate_structured_arc_feedback = generate_structured_arc_feedback
         self.generate_reverse_feedback_stage3_to_2 = generate_reverse_feedback_stage3_to_2
+        self.generate_reverse_feedback_stage4_to_2 = generate_reverse_feedback_stage4_to_2
         self.fix_entity_registry_protagonist = fix_entity_registry_protagonist
         self.calculate_arc_from_episode = calculate_arc_from_episode
         self.build_strong_kind_feedback = build_strong_kind_feedback
@@ -212,6 +216,7 @@ class Stage2Context:
             get_int_input=getattr(app, "_get_int_input", None),
             generate_structured_arc_feedback=getattr(app, "_generate_structured_arc_feedback", None),
             generate_reverse_feedback_stage3_to_2=getattr(app, "_generate_reverse_feedback_stage3_to_2", None),
+            generate_reverse_feedback_stage4_to_2=getattr(app, "_generate_reverse_feedback_stage4_to_2", None),
             fix_entity_registry_protagonist=getattr(app, "_fix_entity_registry_protagonist", None),
             calculate_arc_from_episode=getattr(app, "_calculate_arc_from_episode", None),
             build_strong_kind_feedback=getattr(app, "_build_strong_kind_feedback", None),

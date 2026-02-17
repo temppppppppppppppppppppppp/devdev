@@ -42,6 +42,9 @@ class AttemptRecord:
     model_tier: int = 1
     duration_ms: int = 0
     token_cost: float = 0.0
+    is_patch: bool = False
+    prev_score: float = 0.0
+    patch_fallback: bool = False
 
 
 @dataclass
@@ -118,6 +121,9 @@ class PassRateMonitor:
         model_tier: int = 1,
         duration_ms: int = 0,
         token_cost: float = 0.0,
+        is_patch: bool = False,
+        prev_score: float = 0.0,
+        patch_fallback: bool = False,
     ):
         """
         시도 기록
@@ -146,6 +152,9 @@ class PassRateMonitor:
             model_tier=model_tier,
             duration_ms=duration_ms,
             token_cost=token_cost,
+            is_patch=is_patch,
+            prev_score=prev_score,
+            patch_fallback=patch_fallback,
         )
 
         self.records.append(record)
@@ -259,6 +268,42 @@ class PassRateMonitor:
             {stage: StageStats}
         """
         return {stage: self.get_stage_stats(stage, recent_n) for stage in [1, 2, 3, 4]}
+
+    def get_patch_effectiveness(self, stage: int | None = None, recent_n: int = 200) -> dict[str, Any]:
+        """Patch mode effectiveness summary."""
+        records = self.records[-recent_n:] if recent_n else self.records
+        if stage is not None:
+            records = [r for r in records if r.stage == stage]
+
+        patch_records = [r for r in records if getattr(r, "is_patch", False)]
+        non_patch_records = [r for r in records if not getattr(r, "is_patch", False)]
+
+        patch_attempts = len(patch_records)
+        patch_success = sum(1 for r in patch_records if r.success)
+        patch_fallbacks = sum(1 for r in patch_records if getattr(r, "patch_fallback", False))
+        direct_patch_records = [r for r in patch_records if not getattr(r, "patch_fallback", False)]
+        direct_patch_success = sum(1 for r in direct_patch_records if r.success)
+        avg_prev_score = (
+            sum(float(getattr(r, "prev_score", 0) or 0) for r in patch_records) / patch_attempts
+            if patch_attempts
+            else 0.0
+        )
+
+        return {
+            "stage": stage,
+            "recent_n": recent_n,
+            "total_attempts": len(records),
+            "patch_attempts": patch_attempts,
+            "patch_success_rate": patch_success / patch_attempts if patch_attempts else 0.0,
+            "patch_fallback_rate": patch_fallbacks / patch_attempts if patch_attempts else 0.0,
+            "direct_patch_success_rate": direct_patch_success / len(direct_patch_records)
+            if direct_patch_records
+            else 0.0,
+            "non_patch_success_rate": (
+                (sum(1 for r in non_patch_records if r.success) / len(non_patch_records)) if non_patch_records else 0.0
+            ),
+            "avg_prev_score": avg_prev_score,
+        }
 
     def get_summary(self, recent_n: int = 100) -> str:
         """
@@ -387,6 +432,62 @@ class PassRateMonitor:
                 alerts.append(f"📉 [Stage {stage}] 첫 시도 통과율 50% 미만: {stats.first_attempt_rate:.0%}")
 
         return alerts
+
+    def get_arc_difficulty(self, arc_no: int) -> dict[str, Any]:
+        """
+        Arc별 집필 난이도 추정 (Stage 4 시도 횟수 기반).
+
+        Returns:
+            {
+                "arc_no": int,
+                "difficulty": "easy" | "normal" | "hard" | "unknown",
+                "avg_attempts": float,
+                "hard_episodes": list[int],
+            }
+        """
+        if arc_no <= 0:
+            return {
+                "arc_no": arc_no,
+                "difficulty": "unknown",
+                "avg_attempts": 0.0,
+                "hard_episodes": [],
+            }
+
+        arc_records = [r for r in self.records if r.stage == 4 and r.arc == arc_no and r.episode > 0]
+        if not arc_records:
+            return {
+                "arc_no": arc_no,
+                "difficulty": "unknown",
+                "avg_attempts": 0.0,
+                "hard_episodes": [],
+            }
+
+        episodes: dict[int, list[AttemptRecord]] = {}
+        for record in arc_records:
+            episodes.setdefault(record.episode, []).append(record)
+
+        attempts_per_ep: list[int] = []
+        hard_eps: list[int] = []
+        for episode, recs in sorted(episodes.items()):
+            attempt_count = len(recs)
+            attempts_per_ep.append(attempt_count)
+            if attempt_count >= 3:
+                hard_eps.append(episode)
+
+        avg_attempts = sum(attempts_per_ep) / len(attempts_per_ep) if attempts_per_ep else 0.0
+        if avg_attempts <= 1.5:
+            difficulty = "easy"
+        elif avg_attempts <= 3.0:
+            difficulty = "normal"
+        else:
+            difficulty = "hard"
+
+        return {
+            "arc_no": arc_no,
+            "difficulty": difficulty,
+            "avg_attempts": round(avg_attempts, 1),
+            "hard_episodes": hard_eps,
+        }
 
     def save(self) -> None:
         """명시적 저장"""

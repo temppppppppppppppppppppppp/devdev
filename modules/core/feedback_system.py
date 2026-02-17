@@ -662,6 +662,23 @@ class FeedbackSystem:
 
         return "\n".join(lines)
 
+    def generate_reverse_feedback_stage4_to_2(self, arc_difficulty: dict | None = None) -> str:
+        """[Item4] Stage 4→2 역방향 피드백 (집필 난이도 기반)."""
+        if not arc_difficulty or arc_difficulty.get("difficulty") != "hard":
+            return ""
+
+        arc_no = arc_difficulty.get("arc_no", "?")
+        avg = arc_difficulty.get("avg_attempts", 0)
+        hard_eps = arc_difficulty.get("hard_episodes", [])
+
+        lines = [
+            f"[Stage 4→2 역방향 피드백] 이전 Arc(#{arc_no}) 집필 난이도 높음",
+            f"  평균 {avg}회 시도 필요 (hard_episodes: {hard_eps})",
+            "  → 다음 Arc 설계 시 씬 구조를 단순화하고 집필 난이도를 낮추세요.",
+            "  → 복잡한 다중 NPC 동시 등장, 비선형 시간 전개를 최소화하세요.",
+        ]
+        return "\n".join(lines)
+
     # ═══════════════════════════════════════════════════════════════════════
     # 적응형 / 분류
     # ═══════════════════════════════════════════════════════════════════════
