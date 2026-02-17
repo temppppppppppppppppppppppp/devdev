@@ -74,6 +74,27 @@ class TestStrategyWinRates:
         assert rates["total"] == 0
 
 
+class TestSelectionAnalysis:
+    def test_get_selection_analysis_returns_latest_first(self, db):
+        db.save_director_selection(1, 0, "A", "balanced", "PASS", 82, "ok")
+        db.save_director_selection(2, 0, "B", "narrative", "REJECT", 35, "low")
+
+        rows = db.get_selection_analysis(lookback=10)
+
+        assert len(rows) == 2
+        assert rows[0]["selected_strategy"] == "narrative"
+        assert rows[0]["verdict"] == "REJECT"
+        assert rows[0]["score"] == 35
+        assert rows[1]["selected_strategy"] == "balanced"
+
+    def test_get_selection_analysis_zero_lookback(self, db):
+        db.save_director_selection(1, 0, "A", "balanced", "PASS", 80, "ok")
+
+        rows = db.get_selection_analysis(lookback=0)
+
+        assert rows == []
+
+
 class TestRollbackIncludesSelections:
     def test_reset_after_deletes_selections(self, db):
         db.save_director_selection(3, 0, "A", "balanced", "PASS", 80)

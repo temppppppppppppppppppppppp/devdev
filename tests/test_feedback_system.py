@@ -442,6 +442,27 @@ class TestGenerateReverseFeedbackStage3To2:
 
 
 # ══════════════════════════════════════════════════════════════
+# Test 11-B: generate_reverse_feedback_stage4_to_2
+# ══════════════════════════════════════════════════════════════
+
+
+class TestGenerateReverseFeedbackStage4To2:
+    def test_hard_arc_generates_feedback(self, fs):
+        """hard 난이도면 피드백 생성."""
+        result = fs.generate_reverse_feedback_stage4_to_2(
+            {"arc_no": 7, "difficulty": "hard", "avg_attempts": 3.4, "hard_episodes": [61, 62]}
+        )
+        assert "Arc(#7)" in result
+        assert "집필 난이도 높음" in result
+        assert "61" in result
+
+    def test_non_hard_returns_empty(self, fs):
+        """hard가 아니면 빈 문자열."""
+        assert fs.generate_reverse_feedback_stage4_to_2({"arc_no": 2, "difficulty": "normal"}) == ""
+        assert fs.generate_reverse_feedback_stage4_to_2(None) == ""
+
+
+# ══════════════════════════════════════════════════════════════
 # Test 12: get_adaptive_feedback_intensity
 # ══════════════════════════════════════════════════════════════
 

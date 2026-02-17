@@ -340,6 +340,23 @@ class DBManager:
         """)
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_director_selections_ep ON director_selections(ep_num)")
 
+        # 16. [Phase 6] 비용 추적 로그
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS cost_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL,
+                scope_type TEXT NOT NULL CHECK(scope_type IN ('arc', 'episode', 'session')),
+                scope_id INTEGER DEFAULT 0,
+                total_calls INTEGER DEFAULT 0,
+                total_tokens INTEGER DEFAULT 0,
+                total_cost_usd REAL DEFAULT 0.0,
+                model_breakdown TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_cost_log_scope ON cost_log(scope_type, scope_id)")
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_cost_log_session ON cost_log(session_id)")
+
         self.conn.commit()
 
     # --- [트랜잭션 제어] ---
@@ -1382,6 +1399,73 @@ class DBManager:
         for strategy, cnt in counts.items():
             result[strategy] = round(cnt / total, 2)
         return result
+
+    def get_selection_analysis(self, lookback: int = 100) -> list[dict]:
+        """최근 Director 선택 기록 조회 (편향 분석용)."""
+        lookback = max(int(lookback), 0)
+        if lookback == 0:
+            return []
+
+        with self._lock:
+            cur = self.cursor.execute(
+                "SELECT selected_strategy, verdict, score, selection_reason "
+                "FROM director_selections ORDER BY id DESC LIMIT ?",
+                (lookback,),
+            )
+            return [dict(row) for row in cur.fetchall()]
+
+    def save_cost_record(
+        self,
+        *,
+        session_id: str,
+        scope_type: str,
+        scope_id: int = 0,
+        total_calls: int = 0,
+        total_tokens: int = 0,
+        total_cost_usd: float = 0.0,
+        model_breakdown: str | dict = "{}",
+    ) -> None:
+        """비용 기록 저장."""
+        if scope_type not in {"arc", "episode", "session"}:
+            raise ValueError(f"invalid scope_type: {scope_type}")
+
+        if isinstance(model_breakdown, dict):
+            model_breakdown = json.dumps(model_breakdown, ensure_ascii=False)
+        elif not isinstance(model_breakdown, str):
+            model_breakdown = "{}"
+
+        with self._lock:
+            self.cursor.execute(
+                "INSERT INTO cost_log (session_id, scope_type, scope_id, total_calls, total_tokens, total_cost_usd, model_breakdown) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (
+                    session_id,
+                    scope_type,
+                    int(scope_id),
+                    int(total_calls),
+                    int(total_tokens),
+                    float(total_cost_usd),
+                    model_breakdown,
+                ),
+            )
+            if not self.conn.in_transaction:
+                self.conn.commit()
+
+    def get_cost_summary(self, scope_type: str | None = None, lookback: int = 50) -> list[dict]:
+        """비용 요약 조회 (최신순)."""
+        lookback = max(int(lookback), 0)
+        if lookback == 0:
+            return []
+
+        with self._lock:
+            if scope_type:
+                cur = self.cursor.execute(
+                    "SELECT * FROM cost_log WHERE scope_type = ? ORDER BY id DESC LIMIT ?",
+                    (scope_type, lookback),
+                )
+            else:
+                cur = self.cursor.execute("SELECT * FROM cost_log ORDER BY id DESC LIMIT ?", (lookback,))
+            return [dict(row) for row in cur.fetchall()]
 
     def get_recent_selections(self, ep_num: int, lookback: int = 10) -> list:
         """[D-4] 최근 선택 이력 조회 (최신순)."""

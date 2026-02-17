@@ -641,6 +641,10 @@ class SovereignApp:
         """[V64 P2-3] -> FeedbackSystem"""
         return self._feedback_system.generate_reverse_feedback_stage3_to_2(architect_failures, arc_no)
 
+    def _generate_reverse_feedback_stage4_to_2(self, arc_difficulty: dict | None = None) -> str:
+        """[V64 P2-3] -> FeedbackSystem"""
+        return self._feedback_system.generate_reverse_feedback_stage4_to_2(arc_difficulty)
+
     def _generate_arc_context_v60(self, all_refined_arcs: list, current_arc_no: int = None) -> str:
         """[V64 P2-2] -> PromptBuilder"""
         return self._prompt_builder.generate_arc_context_v60(all_refined_arcs, current_arc_no)
@@ -1952,6 +1956,90 @@ class SovereignApp:
         except Exception as metrics_err:
             print(f"⚠️ [Metrics] 비용 추적 리포트 생성 실패: {metrics_err}", flush=True)
 
+        # [Phase 6] Session 단위 잔여 비용 스냅샷 저장 (비차단)
+        try:
+            collector = get_metrics_collector()
+            if (
+                collector
+                and self.current_project
+                and hasattr(self.current_project, "db")
+                and hasattr(self.current_project.db, "save_cost_record")
+            ):
+                scope = collector.snapshot_and_reset_scope()
+                if (
+                    scope.get("total_calls", 0) > 0
+                    or scope.get("total_tokens", 0) > 0
+                    or scope.get("total_cost_usd", 0.0) > 0
+                ):
+                    self.current_project.db.save_cost_record(
+                        session_id=collector.session_id,
+                        scope_type="session",
+                        scope_id=0,
+                        total_calls=scope.get("total_calls", 0),
+                        total_tokens=scope.get("total_tokens", 0),
+                        total_cost_usd=scope.get("total_cost_usd", 0.0),
+                        model_breakdown=scope.get("model_breakdown", "{}"),
+                    )
+                    print(
+                        f"💾 [CostDB] Session 비용 저장: ${scope.get('total_cost_usd', 0.0):.4f} "
+                        f"({scope.get('total_tokens', 0):,} tokens)",
+                        flush=True,
+                    )
+        except Exception as cost_err:
+            print(f"⚠️ [CostDB] Session 비용 저장 실패: {cost_err}", flush=True)
+
+        # [Phase 2] PassRateMonitor 종료 시 flush 저장
+        if V50_MODULES_AVAILABLE and getattr(self, "pass_rate_monitor", None):
+            try:
+                self.pass_rate_monitor.save()
+                record_count = len(getattr(self.pass_rate_monitor, "records", []))
+                print(f"📈 [PassRate] 통과율 기록 저장: {record_count}건", flush=True)
+            except Exception as pr_err:
+                print(f"⚠️ [PassRate] 저장 실패: {pr_err}", flush=True)
+
+        # [Phase 4] Director 선택 편향 진단 (advisory)
+        if (
+            V50_MODULES_AVAILABLE
+            and getattr(self, "quality_dashboard", None)
+            and self.current_project
+            and hasattr(self.current_project, "db")
+            and hasattr(self.current_project.db, "get_selection_analysis")
+        ):
+            try:
+                selections = self.current_project.db.get_selection_analysis(lookback=100)
+                if selections:
+                    bias_result = self.quality_dashboard.detect_director_bias(selections)
+                    warnings = bias_result.get("bias_warnings", [])
+                    if warnings:
+                        print("⚖️ [Director Bias] 편향 경고:", flush=True)
+                        for warning in warnings[:5]:
+                            print(f"   - {warning}", flush=True)
+                    else:
+                        print("⚖️ [Director Bias] 유의미한 편향 경고 없음", flush=True)
+            except Exception as bias_err:
+                print(f"⚠️ [Director Bias] 분석 실패: {bias_err}", flush=True)
+
+        # [Phase 3] 장기 품질 드리프트 감지 (advisory)
+        if V50_MODULES_AVAILABLE and getattr(self, "quality_dashboard", None):
+            try:
+                drift = self.quality_dashboard.detect_quality_drift(stage=4, min_windows=3, window_size=10)
+                drift_status = drift.get("drift", "insufficient_data")
+                if drift_status == "declining":
+                    print(
+                        f"📉 [Quality Drift] Stage 4 품질 하락 감지: "
+                        f"최근 평균 {drift.get('recent_avg', 0)}점, 전체 평균 {drift.get('overall_avg', 0)}점",
+                        flush=True,
+                    )
+                elif drift_status == "improving":
+                    print(
+                        f"📈 [Quality Drift] Stage 4 품질 상승 추세: 최근 평균 {drift.get('recent_avg', 0)}점",
+                        flush=True,
+                    )
+                elif drift_status == "stable":
+                    print(f"➡️ [Quality Drift] Stage 4 품질 안정: 평균 {drift.get('overall_avg', 0)}점", flush=True)
+            except Exception as drift_err:
+                print(f"⚠️ [Quality Drift] 분석 실패: {drift_err}", flush=True)
+
         # [V51.4] 실패 학습 기록 저장
         if V50_MODULES_AVAILABLE and self.failure_learner and self.current_project:
             try:
@@ -2059,8 +2147,34 @@ class SovereignApp:
         # 1-10화 -> Arc 1, 11-20화 -> Arc 2, ...
         return (ep_num - 1) // 10 + 1
 
+    def _show_resume_status(self):
+        """프로젝트 진행 현황 출력 (크래시 후 재시작 포함)."""
+        if not self.current_project or not hasattr(self.current_project, "db"):
+            return
+
+        try:
+            arcs = self.current_project.db.load_anchor("arcs") or []
+            bp_max = self.current_project.db.get_latest_blueprint_number()
+            latest_ep_fn = getattr(self.current_project, "get_latest_episode_number", None)
+            ms_max = max(0, int(latest_ep_fn() - 1)) if callable(latest_ep_fn) else 0
+            arc_count = len(arcs) if isinstance(arcs, list) else 0
+            total_eps = sum(a.get("ep_count", 0) for a in arcs if isinstance(a, dict)) if isinstance(arcs, list) else 0
+
+            self.ui.log("─" * 50)
+            self.ui.log(f"📥 [Resume] 프로젝트: {self.current_project.name}")
+            self.ui.log(f"   Arc 설계: {arc_count}개 완료")
+            self.ui.log(f"   Blueprint: ep {bp_max}까지 완료")
+            self.ui.log(f"   원고: ep {ms_max}까지 완료")
+            if total_eps > 0:
+                self.ui.log(f"   예상 총 에피소드: {total_eps}")
+            self.ui.log("─" * 50)
+        except Exception as e:
+            logging.warning(f"[Resume] 상태 보고 실패: {e}")
+
     def _stage_2_arcs(self):
         """[V64.P3] Stage 2 Arc 설계 → Stage2Orchestrator 위임"""
+        self._show_resume_status()
+
         # [Phase 4C-3] DI 컨텍스트 주입 (최신 속성 반영)
         from modules.core.stage2_context import Stage2Context
 
@@ -2292,6 +2406,8 @@ class SovereignApp:
 
     def _stage_3_batch_blueprinting(self) -> None:
         """[V60.80] Stage 3 - Three Phase Blueprint Generator"""
+        self._show_resume_status()
+
         # [Phase 4C-4] DI 컨텍스트 주입 (최신 속성 반영)
         from modules.core.stage3_context import Stage3Context
 
@@ -2745,6 +2861,8 @@ class SovereignApp:
         """[V64.P3] Stage 4 V2 Chief Writer -> Stage4Orchestrator 위임
         [V69.1] Stage 4 진입 시 StateTracker/WorldState/FactLedger lazy init
         """
+        self._show_resume_status()
+
         # ═══════════════════════════════════════════════════════════════
         # [V69.1] StateTracker 초기화 (Stage 3 없이 Stage 4 직행 시 필요)
         # ═══════════════════════════════════════════════════════════════

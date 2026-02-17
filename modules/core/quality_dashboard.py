@@ -901,6 +901,148 @@ class QualityDashboard:
             "summary": f"최근 {len(scores)}화 평균 {avg:.0f}점, 추세: {trend_label} (직전 대비 {delta:+d})",
         }
 
+    def get_windowed_quality_trend(self, window_size: int = 10, stage: int = 4) -> list[dict[str, Any]]:
+        """
+        N 에피소드 단위의 품질 추세(평균 점수/통과율) 반환.
+
+        Args:
+            window_size: 윈도우 크기
+            stage: 분석 대상 Stage
+
+        Returns:
+            [{"window": "ep1-10", "avg_score": 75.2, "pass_rate": 0.8, "count": 10}, ...]
+        """
+        if window_size <= 0:
+            return []
+
+        scored = [
+            r
+            for r in self.validation_history
+            if r.get("stage") == stage and isinstance(r.get("score"), int | float) and r.get("score", 0) > 0
+        ]
+        if not scored:
+            return []
+
+        windows: list[dict[str, Any]] = []
+        for i in range(0, len(scored), window_size):
+            chunk = scored[i : i + window_size]
+            if not chunk:
+                continue
+
+            scores = [float(r.get("score", 0)) for r in chunk]
+            passes = sum(1 for r in chunk if r.get("decision") == "PASS")
+            ep_start = chunk[0].get("ep_num", "?")
+            ep_end = chunk[-1].get("ep_num", "?")
+
+            windows.append(
+                {
+                    "window": f"ep{ep_start}-{ep_end}",
+                    "avg_score": round(sum(scores) / len(scores), 1),
+                    "pass_rate": round(passes / len(chunk), 2),
+                    "count": len(chunk),
+                }
+            )
+
+        return windows
+
+    def detect_quality_drift(self, stage: int = 4, min_windows: int = 3, window_size: int = 10) -> dict[str, Any]:
+        """
+        윈도우 기반 장기 품질 드리프트(하락/상승/안정) 감지.
+
+        Args:
+            stage: 분석 대상 Stage
+            min_windows: 판정에 필요한 최소 윈도우 수
+            window_size: 윈도우 크기
+
+        Returns:
+            {"drift": str, "recent_avg": float, "overall_avg": float, "windows": int}
+        """
+        windows = self.get_windowed_quality_trend(window_size=window_size, stage=stage)
+        if len(windows) < min_windows:
+            return {
+                "drift": "insufficient_data",
+                "recent_avg": 0.0,
+                "overall_avg": 0.0,
+                "windows": len(windows),
+            }
+
+        recent_window_scores = [
+            w["avg_score"] for w in windows[-min_windows:] if isinstance(w.get("avg_score"), int | float)
+        ]
+        all_window_scores = [w["avg_score"] for w in windows if isinstance(w.get("avg_score"), int | float)]
+
+        if not recent_window_scores or not all_window_scores:
+            return {
+                "drift": "insufficient_data",
+                "recent_avg": 0.0,
+                "overall_avg": 0.0,
+                "windows": len(windows),
+            }
+
+        recent_avg = round(sum(recent_window_scores) / len(recent_window_scores), 1)
+        overall_avg = round(sum(all_window_scores) / len(all_window_scores), 1)
+        slope = recent_window_scores[-1] - recent_window_scores[0]
+
+        if slope <= -5:
+            drift = "declining"
+        elif slope >= 5:
+            drift = "improving"
+        else:
+            drift = "stable"
+
+        return {
+            "drift": drift,
+            "recent_avg": recent_avg,
+            "overall_avg": overall_avg,
+            "windows": len(windows),
+        }
+
+    def detect_director_bias(self, selections: list[dict]) -> dict[str, Any]:
+        """
+        전략별 점수 분포 분석 + 편향 경고 생성.
+
+        Args:
+            selections: director_selections 조회 결과
+
+        Returns:
+            {
+                "strategy_stats": {
+                    "balanced": {"avg_score": 75.0, "pass_rate": 0.85, "count": 20},
+                    ...
+                },
+                "bias_warnings": ["전략 'X' 평균 81점 - 편향 가능성", ...],
+            }
+        """
+        by_strategy: dict[str, list[dict]] = defaultdict(list)
+        for rec in selections or []:
+            strategy = rec.get("selected_strategy") or "unknown"
+            by_strategy[str(strategy)].append(rec)
+
+        strategy_stats: dict[str, dict[str, Any]] = {}
+        warnings: list[str] = []
+
+        for strategy, recs in by_strategy.items():
+            scores = [float(r.get("score")) for r in recs if isinstance(r.get("score"), int | float)]
+            passes = sum(1 for r in recs if str(r.get("verdict", "")).upper() == "PASS")
+            count = len(recs)
+            avg_score = round(sum(scores) / len(scores), 1) if scores else 0.0
+
+            strategy_stats[strategy] = {
+                "avg_score": avg_score,
+                "pass_rate": round(passes / count, 2) if count > 0 else 0.0,
+                "count": count,
+            }
+
+            if len(scores) >= 10 and avg_score > 80:
+                warnings.append(f"전략 '{strategy}' 평균 {avg_score:.0f}점 - 편향 가능성")
+            if len(scores) >= 10 and avg_score < 40:
+                warnings.append(f"전략 '{strategy}' 평균 {avg_score:.0f}점 - 과소평가 가능성")
+
+        return {
+            "strategy_stats": strategy_stats,
+            "bias_warnings": warnings,
+        }
+
 
 # 싱글톤 인스턴스 (선택적 사용)
 _dashboard_instance: QualityDashboard | None = None

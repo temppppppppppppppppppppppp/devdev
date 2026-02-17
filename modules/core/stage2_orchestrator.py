@@ -466,6 +466,9 @@ class Stage2Orchestrator:
                     consensus_passed = _enrichment["consensus_passed"]
                     _st_snapshot = _enrichment["st_snapshot"]
                     director_feedback_for_fourphase = _enrichment["director_feedback_for_fourphase"]
+                    _was_patch = _enrichment.get("was_patch", False)
+                    _patch_fallback = _enrichment.get("patch_fallback", False)
+                    _prev_score = _enrichment.get("prev_score", 0)
 
                     # ─────────────────────────────────────────────────────────────
                     # [V60.77] FourPhase 실패 시 다음 대면으로
@@ -521,6 +524,9 @@ class Stage2Orchestrator:
                         consensus_passed=consensus_passed,
                         attempt=attempt,
                         generation_method=generation_method,
+                        is_patch=_was_patch,
+                        prev_score=_prev_score,
+                        patch_fallback=_patch_fallback,
                         st_snapshot=_st_snapshot,
                         director_feedback_for_fourphase=director_feedback_for_fourphase,
                         last_refined_context=last_refined_context,

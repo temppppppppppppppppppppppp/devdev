@@ -68,6 +68,9 @@ class Stage4InterviewRound:
             self.ctx.perf_timer.start(f"s4_ep{next_ep}_generate_r{round_num}")
         except Exception:
             pass
+        _is_patch = False
+        _is_patch_fallback = False
+        _prev_score = 0
         if round_num == 0:
             candidates = chief_writer.generate_ensemble(
                 ep_num=next_ep,
@@ -100,6 +103,7 @@ class Stage4InterviewRound:
             _prev_score = previous_attempt.get("score", 0) if previous_attempt else 0
             _prev_manuscript = previous_attempt.get("best_manuscript", "") if previous_attempt else ""
             _use_patch = _prev_score >= _PATCH_REWRITE_THRESHOLD and _prev_manuscript
+            _is_patch = bool(_use_patch)
 
             if _use_patch:
                 logging.info(f"[Phase 3-5B] 패치 모드 진입 (score={_prev_score}, round={round_num})")
@@ -135,6 +139,7 @@ class Stage4InterviewRound:
                     chain_link_section=_chain_link_section,
                 )
                 if not candidates:
+                    _is_patch_fallback = True
                     # [Phase 3-5B] 패치 실패 → full rewrite 폴백
                     logging.info("[Phase 3-5B] 패치 실패, full rewrite 폴백")
                     self.ctx.ui.log("   ⚠️ [Phase 3-5B] 패치 실패 → 전면 재작성 폴백")
@@ -217,6 +222,15 @@ class Stage4InterviewRound:
                 "action_items": [],
                 "score": 0,
             }
+            self._record_s4_attempt(
+                episode=next_ep,
+                round_num=round_num,
+                success=False,
+                score=0,
+                is_patch=_is_patch,
+                prev_score=_prev_score,
+                patch_fallback=_is_patch_fallback,
+            )
             return _InterviewRoundResult(
                 verdict="EMPTY",
                 director_feedback=director_feedback,
@@ -507,6 +521,12 @@ class Stage4InterviewRound:
 
         # [D-4] Director 선택 기록 (비차단)
         try:
+            _selection_reason = reason
+            if _is_patch:
+                _tag = "patch-fallback" if _is_patch_fallback else "patch"
+                _selection_reason = (
+                    f"[{_tag}|score={_prev_score}] {reason}" if reason else f"[{_tag}|score={_prev_score}]"
+                )
             _sel_candidate = director_result.get("selected_candidate", {})
             if not isinstance(_sel_candidate, dict):
                 _sel_candidate = {}
@@ -518,7 +538,7 @@ class Stage4InterviewRound:
                 selected_strategy=_sel_strategy,
                 verdict=verdict,
                 score=score,
-                selection_reason=reason,
+                selection_reason=_selection_reason,
                 candidate_count=len(candidates) if candidates else 0,
             )
         except Exception as e:
@@ -545,6 +565,15 @@ class Stage4InterviewRound:
                     logging.warning(f"⚠️ [V66.1] 시간선 검사 오류: {_tc_err}")
 
             self.ctx.ui.log(f"   ✅ {round_num + 1}차 면담 PASS!")
+            self._record_s4_attempt(
+                episode=next_ep,
+                round_num=round_num,
+                success=True,
+                score=score,
+                is_patch=_is_patch,
+                prev_score=_prev_score,
+                patch_fallback=_is_patch_fallback,
+            )
             return _InterviewRoundResult(
                 verdict="PASS",
                 director_feedback=director_feedback,
@@ -566,8 +595,49 @@ class Stage4InterviewRound:
                 "best_manuscript": director_result.get("selected_candidate", {}).get("manuscript", ""),
             }
             self.ctx.ui.log(f"   ❌ {round_num + 1}차 면담 REJECT. 피드백: {director_feedback[:100]}...")
+        self._record_s4_attempt(
+            episode=next_ep,
+            round_num=round_num,
+            success=False,
+            score=score,
+            is_patch=_is_patch,
+            prev_score=_prev_score,
+            patch_fallback=_is_patch_fallback,
+        )
         return _InterviewRoundResult(
             verdict="REJECT",
             director_feedback=director_feedback,
             previous_attempt=previous_attempt,
         )
+
+    # ── Stage 4 PassRateMonitor 기록 ──────────────────────────────
+
+    def _record_s4_attempt(
+        self,
+        *,
+        episode: int,
+        round_num: int,
+        success: bool,
+        score: int = 0,
+        is_patch: bool = False,
+        prev_score: float = 0,
+        patch_fallback: bool = False,
+    ) -> None:
+        """Stage 4 시도 결과를 PassRateMonitor에 기록 (비차단)."""
+        if not getattr(self.ctx, "pass_rate_monitor", None):
+            return
+        try:
+            self.ctx.pass_rate_monitor.record_attempt(
+                stage=4,
+                episode=episode,
+                arc=0,
+                attempt_num=round_num + 1,
+                success=success,
+                reject_reason="" if success else f"score={score}",
+                generation_method="patch" if is_patch else "ensemble",
+                is_patch=is_patch,
+                prev_score=prev_score,
+                patch_fallback=patch_fallback,
+            )
+        except Exception:
+            pass

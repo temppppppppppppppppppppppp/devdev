@@ -263,6 +263,156 @@ class TestInterviewRoundRun:
         assert "신규 경고" in ir.time_warnings
 
 
+class TestRecordS4Attempt:
+    """Stage 4 PassRateMonitor 기록 테스트."""
+
+    def test_pass_records_success(self):
+        ctx = _make_ctx()
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "PASS",
+            "score": 85,
+            "selection_reason": "좋음",
+            "selected_candidate": {"manuscript": "통과 원고", "title": "통과"},
+            "state_updates": {},
+        }
+
+        ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        ctx.pass_rate_monitor.record_attempt.assert_called_once()
+        kw = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
+        assert kw["stage"] == 4
+        assert kw["success"] is True
+        assert kw["generation_method"] == "ensemble"
+        assert kw["is_patch"] is False
+
+    def test_reject_records_failure(self):
+        ctx = _make_ctx()
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "REJECT",
+            "score": 40,
+            "selection_reason": "부족",
+            "feedback": {"issues": ["문제"]},
+            "action_items": ["수정1"],
+            "selected_candidate": {"manuscript": "거절 원고"},
+        }
+
+        ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        ctx.pass_rate_monitor.record_attempt.assert_called_once()
+        kw = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
+        assert kw["success"] is False
+        assert "score=40" in kw["reject_reason"]
+
+    def test_patch_records_method_patch(self):
+        ctx = _make_ctx()
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.patch_with_feedback.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "PASS",
+            "score": 80,
+            "selection_reason": "ok",
+            "selected_candidate": {"manuscript": "통과", "title": "통과"},
+            "state_updates": {},
+        }
+
+        ir.run(
+            round_num=1,
+            stage4_spinner=MagicMock(),
+            director_feedback="피드백",
+            previous_attempt={"score": 70, "best_manuscript": "원고"},
+            round_ctx=round_ctx,
+        )
+
+        ctx.pass_rate_monitor.record_attempt.assert_called_once()
+        kw = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
+        assert kw["is_patch"] is True
+        assert kw["generation_method"] == "patch"
+        assert kw["prev_score"] == 70
+
+    def test_empty_candidates_records_failure(self):
+        ctx = _make_ctx()
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.generate_ensemble.return_value = []
+
+        ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        ctx.pass_rate_monitor.record_attempt.assert_called_once()
+        kw = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
+        assert kw["success"] is False
+        assert kw["reject_reason"] == "score=0"
+
+    def test_no_monitor_does_not_crash(self):
+        ctx = _make_ctx()
+        ctx.pass_rate_monitor = None
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.generate_ensemble.return_value = []
+
+        result = ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        assert result.verdict == "EMPTY"
+
+    def test_monitor_exception_is_non_blocking(self):
+        ctx = _make_ctx()
+        ctx.pass_rate_monitor = MagicMock()
+        ctx.pass_rate_monitor.record_attempt.side_effect = RuntimeError("boom")
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.generate_ensemble.return_value = []
+
+        result = ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        assert result.verdict == "EMPTY"
+
+
 class TestModuleStructure:
     def test_import(self):
         assert Stage4InterviewRound is not None

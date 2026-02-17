@@ -80,6 +80,22 @@ class TestStage4Context:
         with pytest.raises(TypeError):
             Stage4Context(1, 2, 3, 4, 5)
 
+    def test_pass_rate_monitor_default_none(self, ctx):
+        """pass_rate_monitor 기본값 None"""
+        assert ctx.pass_rate_monitor is None
+
+    def test_pass_rate_monitor_stored(self, mock_deps):
+        """pass_rate_monitor 전달 시 정확히 저장"""
+        monitor = MagicMock()
+        ctx = Stage4Context(**mock_deps, pass_rate_monitor=monitor)
+        assert ctx.pass_rate_monitor is monitor
+
+    def test_from_app_extracts_pass_rate_monitor(self, app_mock):
+        """from_app가 pass_rate_monitor를 추출"""
+        app_mock.pass_rate_monitor = MagicMock()
+        ctx = Stage4Context.from_app(app_mock)
+        assert ctx.pass_rate_monitor is app_mock.pass_rate_monitor
+
     def test_callbacks_default_none(self, ctx):
         """[4C-2c] 콜백 7종 기본값 None"""
         assert ctx.get_int_input is None

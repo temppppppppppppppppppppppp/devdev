@@ -94,6 +94,7 @@ class TestStage2Context:
         app_mock._safe_commit_async = MagicMock()
         app_mock._build_focused_context = MagicMock()
         app_mock._generate_arc_context_v60 = MagicMock()
+        app_mock._generate_reverse_feedback_stage4_to_2 = MagicMock()
 
         ctx = Stage2Context.from_app(app_mock)
         assert ctx.audit_event is app_mock._audit_event
@@ -101,6 +102,7 @@ class TestStage2Context:
         assert ctx.safe_commit_async is app_mock._safe_commit_async
         assert ctx.build_focused_context is app_mock._build_focused_context
         assert ctx.generate_arc_context_v60 is app_mock._generate_arc_context_v60
+        assert ctx.generate_reverse_feedback_stage4_to_2 is app_mock._generate_reverse_feedback_stage4_to_2
 
     def test_callbacks_default_none(self, ctx):
         """콜백 미전달 시 기본값 None"""
@@ -109,6 +111,7 @@ class TestStage2Context:
         assert ctx.safe_commit_async is None
         assert ctx.build_focused_context is None
         assert ctx.generate_arc_context_v60 is None
+        assert ctx.generate_reverse_feedback_stage4_to_2 is None
 
     def test_from_app_missing_callbacks_none(self):
         """콜백 미구현 app에서도 from_app 정상 (None)"""

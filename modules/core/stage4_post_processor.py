@@ -6,6 +6,8 @@ import json
 import logging
 import os
 
+from modules.core.metrics_collector import get_metrics_collector
+
 _PROJECTS_DIR = "projects"
 
 
@@ -510,6 +512,33 @@ class Stage4PostProcessor:
                     _db.store_sentence_hashes(next_ep, _fps)
         except Exception as _cr_err:
             logging.warning("[Phase 3-B] 크로스 에피소드 반복 감지 실패 (비차단): %s", _cr_err)
+
+        # [Phase 6] Episode 단위 비용 스냅샷 저장 (비차단)
+        try:
+            collector = get_metrics_collector()
+            _db = getattr(self.ctx.current_project, "db", None)
+            if collector and _db and hasattr(_db, "save_cost_record"):
+                scope = collector.snapshot_and_reset_scope()
+                if (
+                    scope.get("total_calls", 0) > 0
+                    or scope.get("total_tokens", 0) > 0
+                    or scope.get("total_cost_usd", 0.0) > 0
+                ):
+                    _db.save_cost_record(
+                        session_id=collector.session_id,
+                        scope_type="episode",
+                        scope_id=next_ep,
+                        total_calls=scope.get("total_calls", 0),
+                        total_tokens=scope.get("total_tokens", 0),
+                        total_cost_usd=scope.get("total_cost_usd", 0.0),
+                        model_breakdown=scope.get("model_breakdown", "{}"),
+                    )
+                    self.ctx.ui.log(
+                        f"   💰 [Cost] Episode {next_ep} 비용: ${scope.get('total_cost_usd', 0.0):.4f} "
+                        f"({scope.get('total_tokens', 0):,} tokens)"
+                    )
+        except Exception as _cost_err:
+            logging.warning("[Phase 6] Episode 비용 기록 실패 (비차단): %s", _cost_err)
 
         self.ctx.ui.log(f"\n✅ 제{next_ep}화 '{final_title}' 생산 완료! ({len(final_manuscript)}자)")
 

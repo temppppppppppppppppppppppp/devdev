@@ -163,7 +163,14 @@ class FourPhaseArcGenerator(BaseAgent):
 
         ep_end = ep_start + ep_count - 1
 
-        pipeline_result = {"arc_no": arc_no, "phases": {}, "final_verdict": None, "retries": 0}
+        pipeline_result = {
+            "arc_no": arc_no,
+            "phases": {},
+            "final_verdict": None,
+            "retries": 0,
+            "patch_used": False,
+            "patch_fallback": False,
+        }
 
         # [V62.5] 이전 Arc 아이템/수여물 사전 수집 (UnifiedArcValidator 중복 스캔 방지)
         _pre_items = set()
@@ -235,6 +242,7 @@ class FourPhaseArcGenerator(BaseAgent):
             best_arc = None
             all_candidates = []
             if _prev_rejected_arc and retry >= 1:
+                pipeline_result["patch_used"] = True
                 logging.info(f"[Patch Mode] FourPhase 내부 패치 시도 (retry={retry})")
                 try:
                     best_arc, _patch_result = self.patch_arc_with_feedback(
@@ -266,9 +274,11 @@ class FourPhaseArcGenerator(BaseAgent):
                         return best_arc, pipeline_result
                     # 패치 검증 실패 → 폴백
                     if not best_arc:
+                        pipeline_result["patch_fallback"] = True
                         logging.info("[Patch Mode] FourPhase 내부 패치 실패 → 전면 재생성 폴백")
                 except Exception as _patch_err:
                     logging.warning(f"[Patch Mode] FourPhase 내부 패치 오류: {str(_patch_err)[:80]}")
+                    pipeline_result["patch_fallback"] = True
                     best_arc = None
 
             if not best_arc:
@@ -396,7 +406,15 @@ class FourPhaseArcGenerator(BaseAgent):
 
         실패 시 (None, pipeline_result) 반환 → 호출측에서 full regenerate 폴백.
         """
-        pipeline_result = {"arc_no": arc_no, "phases": {}, "final_verdict": None, "retries": 0, "patch_mode": True}
+        pipeline_result = {
+            "arc_no": arc_no,
+            "phases": {},
+            "final_verdict": None,
+            "retries": 0,
+            "patch_mode": True,
+            "patch_used": True,
+            "patch_fallback": False,
+        }
 
         # 1) YAML 프롬프트 로드
         try:

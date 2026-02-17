@@ -197,6 +197,30 @@ class TestRunFinalize:
         assert len(kwargs["all_refined_arcs"]) == 1
         finalizer.ctx.current_project.save_v20_anchor.assert_called()
 
+    @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_director_pass_records_arc_cost(self, _validate, finalizer, valid_refined_arc):
+        collector = MagicMock()
+        collector.session_id = "sess_test"
+        collector.snapshot_and_reset_scope.return_value = {
+            "total_calls": 2,
+            "total_tokens": 1500,
+            "total_cost_usd": 0.0123,
+            "model_breakdown": "{}",
+        }
+
+        kwargs = _make_finalize_kwargs(valid_refined_arc)
+        with patch("modules.core.stage2_finalizer.get_metrics_collector", return_value=collector):
+            result = asyncio.run(finalizer.run_finalize(**kwargs))
+
+        assert result["action"] == "break"
+        finalizer.ctx.current_project.db.save_cost_record.assert_called_once()
+        cost_kw = finalizer.ctx.current_project.db.save_cost_record.call_args.kwargs
+        assert cost_kw["session_id"] == "sess_test"
+        assert cost_kw["scope_type"] == "arc"
+        assert cost_kw["scope_id"] == 1
+        assert cost_kw["total_calls"] == 2
+
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_director_reject_returns_next(self, finalizer, valid_refined_arc):
         finalizer.ctx.agents["director"].audit_strategic_plan.return_value = {

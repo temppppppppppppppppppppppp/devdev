@@ -147,6 +147,11 @@ class MetricsCollector:
         self._agent_successes: dict[str, int] = defaultdict(int)
         self._agent_retries: dict[str, int] = defaultdict(int)
         self._model_tokens: dict[str, dict[str, int]] = defaultdict(lambda: {"input": 0, "output": 0})
+        # [Phase 6] 스코프 단위 누적 (arc/episode 스냅샷 후 리셋)
+        self._scope_calls = 0
+        self._scope_tokens = 0
+        self._scope_cost = 0.0
+        self._scope_model_breakdown: dict[str, dict[str, float]] = defaultdict(lambda: {"tokens": 0, "cost": 0.0})
 
         # 스레드 안전성
         # [V49.6 FIX] Lock → RLock (재진입 가능, 데드락 방지)
@@ -217,6 +222,15 @@ class MetricsCollector:
             model = metric.model
             self._model_tokens[model]["input"] += input_tokens
             self._model_tokens[model]["output"] += output_tokens
+
+            # [Phase 6] 스코프 집계
+            call_tokens = input_tokens + output_tokens
+            cost = self.calculate_cost(model, input_tokens, output_tokens)
+            self._scope_calls += 1
+            self._scope_tokens += call_tokens
+            self._scope_cost += cost
+            self._scope_model_breakdown[model]["tokens"] += call_tokens
+            self._scope_model_breakdown[model]["cost"] += cost
 
     def record_retry(self, agent_name: str):
         """재시도 기록 (간편 메서드)"""
@@ -410,6 +424,29 @@ class MetricsCollector:
             json.dump(data, f, ensure_ascii=False, indent=2, default=str)
 
         return filepath
+
+    def snapshot_and_reset_scope(self) -> dict[str, Any]:
+        """현재 스코프 집계를 반환하고 스코프 카운터를 리셋."""
+        with self._lock:
+            model_breakdown = {
+                model: {
+                    "tokens": int(stats.get("tokens", 0)),
+                    "cost": round(float(stats.get("cost", 0.0)), 6),
+                }
+                for model, stats in self._scope_model_breakdown.items()
+            }
+            summary = {
+                "total_calls": int(self._scope_calls),
+                "total_tokens": int(self._scope_tokens),
+                "total_cost_usd": round(float(self._scope_cost), 6),
+                "model_breakdown": json.dumps(model_breakdown, ensure_ascii=False),
+            }
+
+            self._scope_calls = 0
+            self._scope_tokens = 0
+            self._scope_cost = 0.0
+            self._scope_model_breakdown = defaultdict(lambda: {"tokens": 0, "cost": 0.0})
+            return summary
 
     def _percentile(self, data: list[float], percentile: int) -> float:
         """백분위수 계산"""
