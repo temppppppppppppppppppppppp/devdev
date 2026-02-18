@@ -307,6 +307,17 @@ class ContinuityManuscriptValidator:
                     w.get("description", str(w)) if isinstance(w, dict) else w for w in python_check["warnings"]
                 )
 
+            # [Sweep54] critical_violations도 warnings로 병합 (inspect_arc와 동일 패턴)
+            if python_check.get("critical_violations"):
+                result.setdefault("warnings", [])
+                for _cv in python_check["critical_violations"]:
+                    _cv_desc = (
+                        _cv.get("description", _cv.get("item_or_subject", "알 수 없음"))
+                        if isinstance(_cv, dict)
+                        else str(_cv)
+                    )
+                    result["warnings"].append(f"[Python advisory] {_cv_desc}")
+
             return result
 
         except Exception as e:
