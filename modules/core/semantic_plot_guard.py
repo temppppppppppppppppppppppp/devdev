@@ -170,7 +170,8 @@ class SemanticPlotGuard:
             texts_to_check.extend([(name, name) for name in new_plot_names if name])
 
         # tactical_doc에서 핵심 문장 추출 (제목 부분만)
-        if tactical_doc and not texts_to_check:
+        # [Sweep51] plot_names가 있어도 tactical_doc 보충 검사 (short-circuit 제거)
+        if tactical_doc:
             lines = tactical_doc.split("\n")
             for line in lines[:20]:
                 stripped = line.strip()
