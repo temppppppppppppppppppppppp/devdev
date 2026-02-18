@@ -115,15 +115,18 @@ class FactLedger:
                     note=f"관계 변화: {rel.get('from', '?')} -> {rel.get('to', '?')}",
                 )
 
-        # skill_acquisitions
+        # skill_acquisitions — [Sweep55] WorldState와 동일하게 str/dict 모두 처리
         for skill in state_changes.get("skill_acquisitions") or []:  # [V70] None 방어
-            if not isinstance(skill, dict):
+            if isinstance(skill, dict):
+                name = skill.get("name", "")
+                source = skill.get("source", "불명")
+            elif isinstance(skill, str):
+                name = skill
+                source = "불명"
+            else:
                 continue
-            name = skill.get("name", "")
             if name:
-                self._upsert_item(
-                    name, ep_num, owner="주인공", status="습득", note=f"습득 (출처: {skill.get('source', '불명')})"
-                )
+                self._upsert_item(name, ep_num, owner="주인공", status="습득", note=f"습득 (출처: {source})")
 
         # major_items
         for item in state_changes.get("major_items") or []:  # [V70] None 방어
@@ -158,7 +161,8 @@ class FactLedger:
                 continue
             name = injury.get("name", "") or injury.get("npc", "")
             if name:
-                injury_type = injury.get("type", "") or injury.get("injury", "")
+                # [Sweep55] LLM 스키마는 "state" 키 사용 (경상/중상/위독)
+                injury_type = injury.get("state", "") or injury.get("type", "") or injury.get("injury", "")
                 self._upsert_character(name, ep_num, note=f"부상: {injury_type}" if injury_type else "부상")
 
         # npc_movements

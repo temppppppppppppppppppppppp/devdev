@@ -1468,11 +1468,8 @@ class Analyst(BaseAgent):
             if not arcs_anchor:
                 return ""
 
-            prev_arcs = []
-            for i in range(1, arc_no):
-                arc_key = f"arc_{i}"
-                if arc_key in arcs_anchor:
-                    prev_arcs.append(arcs_anchor[arc_key])
+            # [Sweep55] arcs_anchor는 list[dict] — arc_no로 필터
+            prev_arcs = [a for a in arcs_anchor if isinstance(a, dict) and a.get("arc_no", 0) < arc_no]
 
             if not prev_arcs:
                 return ""

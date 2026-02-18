@@ -82,22 +82,23 @@ class Stage4PostProcessor:
             _mem_entity_names = set()
             if arc_data and arc_data.get("state_changes"):
                 _sc = arc_data["state_changes"]
+                # [Sweep55] str/dict 혼재 대응 — npc_deaths/skill_acquisitions는 str일 수 있음
                 if _sc.get("npc_deaths"):
                     _mem_event_types.add("death")
                     for d in _sc["npc_deaths"]:
-                        _mem_entity_names.add(d.get("name", ""))
+                        _mem_entity_names.add(d.get("name", "") if isinstance(d, dict) else str(d))
                 if _sc.get("skill_acquisitions"):
                     _mem_event_types.add("skill")
                     for s in _sc["skill_acquisitions"]:
-                        _mem_entity_names.add(s.get("name", ""))
+                        _mem_entity_names.add(s.get("name", "") if isinstance(s, dict) else str(s))
                 if _sc.get("relationship_changes"):
                     _mem_event_types.add("relationship")
                     for r in _sc["relationship_changes"]:
-                        _mem_entity_names.add(r.get("npc", ""))
+                        _mem_entity_names.add(r.get("npc", "") if isinstance(r, dict) else str(r))
                 if _sc.get("major_items"):
                     _mem_event_types.add("item")
                     for i in _sc["major_items"]:
-                        _mem_entity_names.add(i.get("name", ""))
+                        _mem_entity_names.add(i.get("name", "") if isinstance(i, dict) else str(i))
                 if _sc.get("npc_injuries"):
                     _mem_event_types.add("injury")
                 if _sc.get("npc_movements"):
