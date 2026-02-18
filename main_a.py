@@ -2900,15 +2900,21 @@ class SovereignApp:
         # [V69.1] StateTracker 초기화 (Stage 3 없이 Stage 4 직행 시 필요)
         # ═══════════════════════════════════════════════════════════════
         if not hasattr(self, "state_tracker") or self.state_tracker is None:
-            self.state_tracker = StateTracker(preset_registry=self.preset_registry, llm_client=self.sys.api_client)
-            all_arcs = self.current_project.db.load_anchor("arcs") or []
-            _g = self.selected_genre.get("type", "") if self.selected_genre else ""
-            self.state_tracker.full_extract_from_arcs(all_arcs, genre=_g)
-            if self.state_tracker.npc_registry:
-                dead_count = sum(1 for info in self.state_tracker.npc_registry.values() if info.get("status") == "dead")
-                self.ui.log(
-                    f"      👤 [V69.1] StateTracker 초기화: NPC {len(self.state_tracker.npc_registry)}명 (사망: {dead_count}명)"
-                )
+            try:
+                self.state_tracker = StateTracker(preset_registry=self.preset_registry, llm_client=self.sys.api_client)
+                all_arcs = self.current_project.db.load_anchor("arcs") or []
+                _g = self.selected_genre.get("type", "") if self.selected_genre else ""
+                self.state_tracker.full_extract_from_arcs(all_arcs, genre=_g)
+                if self.state_tracker.npc_registry:
+                    dead_count = sum(
+                        1 for info in self.state_tracker.npc_registry.values() if info.get("status") == "dead"
+                    )
+                    self.ui.log(
+                        f"      👤 [V69.1] StateTracker 초기화: NPC {len(self.state_tracker.npc_registry)}명 (사망: {dead_count}명)"
+                    )
+            except Exception as _st_err:
+                self.ui.log(f"      ⚠️ [V69.1] StateTracker 초기화 실패 (비차단): {str(_st_err)[:60]}")
+                self.state_tracker = None
 
         # [V69.1] WorldStateManager 초기화
         if not hasattr(self, "world_state") or self.world_state is None:
