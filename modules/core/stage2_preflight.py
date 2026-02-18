@@ -365,7 +365,8 @@ class Stage2PreflightAnalysis:
         # ─────────────────────────────────────────────────────────────
         # [무기 #2] ConstraintCompiler
         # ─────────────────────────────────────────────────────────────
-        constraint_block = ""
+        # [Sweep46] 입력 constraint_block (ConstraintDB 데이터 포함) 보존
+        _compiler_block = ""
         entity_registry_for_director = {}
         if self.ctx.constraint_compiler and all_refined_arcs:
             try:
@@ -390,15 +391,21 @@ class Stage2PreflightAnalysis:
                         )
                         logging.info("🏷️ [V61] Entity Registry 추출됨 (Director용)")
                 _resolved = getattr(self.ctx.state_tracker, "resolved_plots", []) if self.ctx.state_tracker else []
-                constraint_block = self.ctx.constraint_compiler.compile(
+                _compiler_block = self.ctx.constraint_compiler.compile(
                     all_refined_arcs, state_result, resolved_plots=_resolved
                 )
-                analyst_weapons["constraints"] = constraint_block
-                logging.info(f"✅ [Constraints] 제약 블록 생성 완료 ({len(constraint_block)}자)")
+                analyst_weapons["constraints"] = _compiler_block
+                logging.info(f"✅ [Constraints] 제약 블록 생성 완료 ({len(_compiler_block)}자)")
             except Exception as cc_err:
                 logging.warning(
                     f"⚠️ [C-2] ConstraintCompiler/Entity 추출 실패 (entity_registry 빈 dict 폴백): {str(cc_err)[:80]}"
                 )
+
+        # [Sweep46] ConstraintDB 데이터 병합 보존 (retry 시에도 유지)
+        if _compiler_block and constraint_block:
+            constraint_block = _compiler_block + "\n\n" + constraint_block
+        elif _compiler_block:
+            constraint_block = _compiler_block
 
         return {
             "refined_arc": refined_arc,

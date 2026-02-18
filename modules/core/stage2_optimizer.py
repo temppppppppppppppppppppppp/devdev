@@ -198,11 +198,24 @@ class ArcAutoCorrector:
         existing_items = set()
         for prev_arc in prev_arcs:
             state = prev_arc.get("state_constraints", {})
-            existing_items.update(state.get("items_acquired", []))
+            # [Sweep46] dict 아이템 → 이름 추출 (set 추가 시 unhashable 방지)
+            for _it in state.get("items_acquired", []):
+                if isinstance(_it, dict):
+                    _n = _it.get("name", _it.get("item", ""))
+                    if _n:
+                        existing_items.add(_n)
+                elif isinstance(_it, str):
+                    existing_items.add(_it)
             joint = prev_arc.get("joint_docs", {})
             inv = joint.get("physical_inventory", [])
             if isinstance(inv, list):
-                existing_items.update(inv)
+                for _it in inv:
+                    if isinstance(_it, dict):
+                        _n = _it.get("name", _it.get("item", ""))
+                        if _n:
+                            existing_items.add(_n)
+                    elif isinstance(_it, str):
+                        existing_items.add(_it)
 
         # 현재 Arc의 items_acquired에서 중복 제거
         state = arc.get("state_constraints", {})

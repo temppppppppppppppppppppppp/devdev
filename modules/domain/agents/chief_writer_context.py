@@ -1049,7 +1049,8 @@ class ChiefWriterContextBuilder:
 
         # 2. 지위 제약 감지
         low_status_keywords = ["하인", "노예", "평민", "무명", "낭인", "거지", "천민"]
-        if any(keyword in hud_report for keyword in low_status_keywords):
+        # [Sweep46] hud_lower 활용 — "reputation" 대소문자 무관 검사 누락 수정
+        if any(keyword in hud_report for keyword in low_status_keywords) or "reputation" in hud_lower:
             active_constraints.append("authority")
             guidance_parts.append("\n[지위 제약 감지] 현재 주인공은 낮은 명성/지위입니다.")
             guidance_parts.append("명령/지시 행위 시 반드시 정당화 필요:")

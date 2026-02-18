@@ -93,8 +93,9 @@ class Director(BaseAgent):
     def set_genre(self, genre: str):
         """장르 설정 (main_a.py에서 boot 시 호출)"""
         self.genre = genre
-        # 기존 orchestrator 리셋 (장르 변경 시 재초기화 필요)
+        # [Sweep46] auditor의 v0128_orchestrator도 리셋 (장르 변경 시 재초기화 필요)
         self.v0128_orchestrator = None
+        self._auditor.v0128_orchestrator = None
 
     def set_guard(self, guard) -> None:
         """[V60.90] 장르 Guard 설정 (main_a.py에서 호출)"""
