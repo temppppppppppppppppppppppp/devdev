@@ -677,7 +677,7 @@ class PromptBuilder:
             f"🏅 [이미 수여받은 권한/패]:\n"
             f"   {grants_str}\n"
             f"══════════════════════════════════════\n"
-            f"[📜 핵심 전술 요약]: {last_arc.get('tactical_doc', '')[:600]}...\n"
+            f"[📜 핵심 전술 요약]: {(last_arc.get('tactical_doc') or '')[:600]}...\n"
             f"══════════════════════════════════════\n"
             f"🚨 [CONTINUITY LOCK] 위 상태는 절대 무시하거나 리셋할 수 없습니다. "
             f"현재 아크는 위 종료 시점에서 단 1초의 공백 없이 이어져야 합니다."
@@ -825,14 +825,13 @@ class PromptBuilder:
                         lost_str = str(lost_items)
                     timeline_lines.append(f"제{ep}화: {lost_str} 분실/파괴")
 
-            # 캐시 저장
-            self._item_timeline_cache[up_to_ep] = list(timeline_lines)
-
             # [V66.1] C-3: LRU 캐시 크기 제한 (최대 3개 — 장기 세션 메모리 안정화)
+            # [Sweep53] 방금 쓴 키가 즉시 퇴출되지 않도록 쓰기 전 evict
             _MAX_TIMELINE_CACHE = 3
-            while len(self._item_timeline_cache) > _MAX_TIMELINE_CACHE:
+            while len(self._item_timeline_cache) >= _MAX_TIMELINE_CACHE:
                 oldest_ep = min(self._item_timeline_cache.keys())
                 del self._item_timeline_cache[oldest_ep]
+            self._item_timeline_cache[up_to_ep] = list(timeline_lines)
 
             if timeline_lines:
                 return "\n".join(timeline_lines)

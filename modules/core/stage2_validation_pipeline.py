@@ -273,9 +273,9 @@ class Stage2ValidationPipeline:
                     },
                 )
 
-                all_issues = draft_result.get("issues", [])
-                critical_only = [i for i in all_issues if i.get("severity") == "CRITICAL"]
-                major_only = [i for i in all_issues if i.get("severity") in ["MAJOR", "WARNING"]]
+                # [Sweep53] ArcDraftValidator 반환 키에 맞춤 (issues→critical_issues/warnings)
+                critical_only = draft_result.get("critical_issues", [])
+                major_only = [{"message": w, "severity": "WARNING"} for w in draft_result.get("warnings", [])]
 
                 if not critical_only and major_only and self.ctx.arc_corrector and self.ctx.use_arc_corrector:
                     self.ctx.ui.log(

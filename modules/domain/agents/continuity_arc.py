@@ -571,8 +571,8 @@ class ContinuityArcValidator:
                 break
 
         if last_ep_start < 0:
-            cutoff = int(len(tactical_doc) * 0.7)
-            return tactical_doc[cutoff:]
+            # [Sweep53] 패턴 미매칭 시 빈 문자열 반환 → 호출자가 original_joint_docs 사용
+            return ""
 
         return tactical_doc[last_ep_start:]
 
