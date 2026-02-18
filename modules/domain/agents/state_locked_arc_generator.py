@@ -362,10 +362,10 @@ class StateLockedArcGenerator(BaseAgent):
         prompt = EPISODE_TEMPLATE.format(
             ep_num=ep_num,
             protagonist_name=protag_name,
-            start_location=start_state["location"],
+            start_location=self._escape_braces(str(start_state["location"])),
             start_energy=start_state["energy"],
-            start_injuries=start_state["injuries"],
-            start_equipment=equipment_str,
+            start_injuries=self._escape_braces(str(start_state["injuries"])),
+            start_equipment=self._escape_braces(equipment_str),
             arc_direction=self._escape_braces(arc_direction),
             episode_beat=self._escape_braces(episode_beat),
             prev_episode_summary=self._escape_braces(prev_summary) or "(첫 화)",
@@ -432,7 +432,7 @@ class StateLockedArcGenerator(BaseAgent):
         prompt = STATE_EXTRACTION_PROMPT.format(
             episode_text=self._escape_braces(episode_text[:3000]),
             start_energy=start_state["energy"],
-            start_injuries=start_state["injuries"],
+            start_injuries=self._escape_braces(str(start_state["injuries"])),
         )
 
         try:

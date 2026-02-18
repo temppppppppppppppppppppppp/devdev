@@ -167,6 +167,8 @@ class Stage4ContextBuilder:
 
         cumulative_bible = self.ctx.current_project.db.get_cumulative_bible(next_ep - 1)
         dead_npcs = cumulative_bible.get("dead_npcs", []) if cumulative_bible else []
+        if isinstance(dead_npcs, str):
+            dead_npcs = [dead_npcs]  # LLM이 단일 문자열 반환 시 리스트화
 
         item_acquisition_timeline = self.ctx.build_item_acquisition_timeline(next_ep - 1)
 

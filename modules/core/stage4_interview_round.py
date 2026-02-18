@@ -269,6 +269,7 @@ class Stage4InterviewRound:
         # [V63.2] ConsistencyValidator
         try:
             _cv_context = {
+                "mode": "MANUSCRIPT",
                 "martial_hud": {},
                 "karma_matrix": {},
                 "asset_library": {},

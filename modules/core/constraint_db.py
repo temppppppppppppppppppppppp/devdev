@@ -103,6 +103,8 @@ class ConstraintDB:
 
         # state_constraints에서 상태 추출
         state_constraints = arc_data.get("state_constraints") or {}  # [V70] null → {} 방어
+        if not isinstance(state_constraints, dict):
+            state_constraints = {}  # LLM이 문자열 반환 시 방어
         arc_end_state = state_constraints.get("arc_end_state") or {}  # [V70]
 
         # joint_docs에서 추가 정보 추출
@@ -530,7 +532,10 @@ class ConstraintDB:
                 "warnings": [경고 목록]
             }
         """
-        arc_no = arc_data.get("arc_no", 0)
+        try:
+            arc_no = int(arc_data.get("arc_no", 0))
+        except (ValueError, TypeError):
+            return {"valid": True, "violations": [], "warnings": ["arc_no 파싱 실패"]}
         violations = []
         warnings = []
 
@@ -538,6 +543,8 @@ class ConstraintDB:
         forbidden = set(self.get_forbidden_items(arc_no))
 
         state_constraints = arc_data.get("state_constraints") or {}  # [V70] null → {} 방어
+        if not isinstance(state_constraints, dict):
+            state_constraints = {}  # LLM이 문자열 반환 시 방어
         new_acquired = state_constraints.get("items_acquired") or []  # [V70]
 
         # [V49.4] Semantic Registry를 사용한 고급 중복 감지

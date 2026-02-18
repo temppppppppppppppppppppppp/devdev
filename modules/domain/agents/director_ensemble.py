@@ -278,7 +278,7 @@ class DirectorEnsembleSelector:
         MIN_MANUSCRIPT_LENGTH = ManuscriptLimits.MIN_LENGTH  # [V64.P4]
         qualified_indices = []
         for idx, c in enumerate(candidates):
-            ms_len = len(c.get("manuscript", ""))
+            ms_len = len(c.get("manuscript") or "")
             if ms_len >= MIN_MANUSCRIPT_LENGTH:
                 qualified_indices.append(idx)
 
@@ -434,6 +434,8 @@ class DirectorEnsembleSelector:
             # [Sweep59] 적응형 하향 조정 (PASS+저점수→REJECT) vs 상향/스왑 (→PASS) 구분
             if adaptive_result.get("adjusted") and original_verdict == "PASS":
                 final_verdict = "REJECT"
+            elif v60_97_swapped:
+                final_verdict = "REJECT"  # 스왑된 후보는 REJECT (적응형이 별도로 승격하지 않는 한)
             else:
                 final_verdict = "PASS"
 

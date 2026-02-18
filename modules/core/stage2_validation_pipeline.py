@@ -610,7 +610,15 @@ class Stage2ValidationPipeline:
                 "feedback": "각 화마다 고유 사건을 분리해 비트를 늘려라.",
             }
 
-        normalized = [self._normalize_flow_text(b) for b in beats if isinstance(b, str)]
+        # dict 형태 비트도 처리 (LLM이 {"beat": "...", "ep": 1} 반환 시)
+        def _extract_beat_text(b):
+            if isinstance(b, str):
+                return b
+            if isinstance(b, dict):
+                return b.get("beat") or b.get("description") or b.get("content") or ""
+            return ""
+
+        normalized = [self._normalize_flow_text(t) for t in (_extract_beat_text(b) for b in beats) if t]
         if len(normalized) < 2:
             return {
                 "status": "REJECT",
