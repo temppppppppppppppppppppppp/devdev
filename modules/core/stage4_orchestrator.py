@@ -555,7 +555,9 @@ JSON으로 출력:
                     detect_npc_overexposure_fn=_detect_npc_overexposure,
                     detect_cross_episode_repetition_fn=_detect_cross_episode_repetition,
                 ):
-                    continue
+                    # [Sweep46] DB 저장 실패 시 무한 재시도 방지 — break
+                    self.ctx.ui.log(f"   ⛔ [EP {next_ep}] DB 저장 실패. 집필 중단.")
+                    break
 
         # [V62.3] Stage 4 루프 종료
         self.post_processor.run_post_episode_tasks()

@@ -257,6 +257,8 @@ class DirectorEnsembleSelector:
         story_context: str = "",
     ) -> dict:
         """[V60.80] 3개 후보 중 최선 선택 + PASS/REJECT 판정"""
+        # [Sweep46] 호출자 리스트 변이 방지 — 복사본 사용
+        candidates = list(candidates)
         while len(candidates) < 3:
             candidates.append(
                 {

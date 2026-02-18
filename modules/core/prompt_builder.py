@@ -596,6 +596,9 @@ class PromptBuilder:
                     all_acquired_items.append(f"Arc{arc_label}: {prev_inventory}")
 
             tactical = prev_arc.get("tactical_doc", "")
+            # [Sweep46] tactical_doc가 dict일 수 있음 (arc.py: str | dict) — regex TypeError 방지
+            if not isinstance(tactical, str):
+                tactical = ""
             for pattern_compiled, suffix in GRANT_PATTERNS_COMPILED:
                 matches = pattern_compiled.findall(tactical)
                 for match in matches:

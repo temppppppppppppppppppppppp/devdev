@@ -157,12 +157,13 @@ class ChiefWriterQualityGate:
         npc_issues = self._check_npc_relationship(content, encyclopedia)
         issues.extend(npc_issues)
 
-        # 심각도 판단
+        # [Sweep46] 심각도 판단 — 1~2건은 "low" (self-critique 스킵 의도 복원)
         severity = "low"
-        if len(issues) >= 3:
+        if len(issues) >= 5:
             severity = "high"
-        elif len(issues) >= 1:
+        elif len(issues) >= 3:
             severity = "medium"
+        # 1~2건: severity="low", has_issues=True → apply_self_critique에서 break
 
         has_issues = len(issues) > 0
 
