@@ -129,7 +129,7 @@ class BlockingValidator:
             "passed": len(failures) == 0,
             "failures": failures,
             "warnings": warnings,
-            "message": "REJECT - ?? ?? ??" if failures else "PASS",
+            "message": f"REJECT - 차단 검증 실패 ({len(failures)}건)" if failures else "PASS",
             "failure_count": len(failures),
         }
 

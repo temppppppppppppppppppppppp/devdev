@@ -564,7 +564,17 @@ class ProjectContext:
             # --- [Part 4: 벡터 동기화 (VecMemory)] ---
             try:
                 # 벡터 기억 주입
-                summary = state_data.get("context_audit", {}).get("summary", "요약 없음")
+                # [Sweep43] state_data가 문자열일 경우 방어
+                if isinstance(state_data, str):
+                    try:
+                        state_data = json.loads(state_data)
+                    except (json.JSONDecodeError, TypeError):
+                        state_data = {}
+                summary = (
+                    state_data.get("context_audit", {}).get("summary", "요약 없음")
+                    if isinstance(state_data, dict)
+                    else "요약 없음"
+                )
                 content_text = manuscript_data["content"] if isinstance(manuscript_data, dict) else str(manuscript_data)
 
                 vector_success = memory.memorize_v20_episode(ep_num, content_text, summary, causal_links)

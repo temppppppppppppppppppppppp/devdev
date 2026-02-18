@@ -351,7 +351,8 @@ class Stage3Orchestrator:
             except Exception as entity_err:
                 ctx.ui.log(f"      ⚠️ [V61] Entity Registry 추출 실패: {str(entity_err)[:50]}")
                 self._cached_entity_registry = None
-                self._entity_cache_arc_idx = arc_idx
+                # [Sweep43] 실패 시 arc_idx 캐싱 제거 — 다음 호출에서 재시도 가능
+                self._entity_cache_arc_idx = -1
         else:
             ctx.ui.log(f"      ♻️ [V61.6] Entity Registry 캐시 재사용 (Arc {arc_idx})")
 

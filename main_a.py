@@ -2147,10 +2147,10 @@ class SovereignApp:
             return 0
 
     def _calculate_arc_from_episode(self, ep_num):
-        """에피소드 번호로부터 Arc 번호 계산 (각 Arc는 10화)"""
+        """에피소드 번호로부터 Arc 번호 계산 (각 Arc는 5화)"""
         if ep_num <= 0:
             return 0
-        # 1-10화 -> Arc 1, 11-20화 -> Arc 2, ...
+        # 1-5화 -> Arc 1, 6-10화 -> Arc 2, ...
         return (ep_num - 1) // 5 + 1
 
     def _show_resume_status(self):

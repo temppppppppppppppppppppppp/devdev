@@ -290,6 +290,13 @@ class PromptBuilder:
                         item_name = item.get("name", item) if isinstance(item, dict) else str(item)
                         if item_name and item_name not in item_timeline:
                             item_timeline[item_name] = ep_num
+                # [Sweep43] skill_timeline 누락 수정
+                new_skills = eb.get("new_skills", []) or eb.get("acquired_skills", [])
+                if isinstance(new_skills, list):
+                    for skill in new_skills:
+                        skill_name = skill.get("name", skill) if isinstance(skill, dict) else str(skill)
+                        if skill_name and skill_name not in skill_timeline:
+                            skill_timeline[skill_name] = ep_num
 
         if not current_inventory and not current_skills:
             return ""
@@ -910,7 +917,7 @@ class PromptBuilder:
             return npcs
 
         bible = self._app.current_project.master_bible.get("MasterBible", {})
-        npc_lib = bible.get("AssetLibrary", {}).get("Key_NPCs", [])
+        npc_lib = bible.get("AssetLibrary", {}).get("KeyNPCs", []) or bible.get("AssetLibrary", {}).get("Key_NPCs", [])
 
         arc_text = json.dumps(arc_data, ensure_ascii=False) if arc_data else ""
         for npc in npc_lib:
@@ -928,7 +935,9 @@ class PromptBuilder:
 
         bible = self._app.current_project.master_bible.get("MasterBible", {})
 
-        for npc in bible.get("AssetLibrary", {}).get("Key_NPCs", []):
+        for npc in bible.get("AssetLibrary", {}).get("KeyNPCs", []) or bible.get("AssetLibrary", {}).get(
+            "Key_NPCs", []
+        ):
             npc_name = npc.get("name", "") or npc.get("Name", "")
             if npc_name:
                 traits[npc_name] = {
