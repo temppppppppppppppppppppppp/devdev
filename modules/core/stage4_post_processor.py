@@ -35,7 +35,21 @@ class Stage4PostProcessor:
         """[4-R1-c] Pass result post-processing. Returns False on DB save failure."""
         self.ctx.ui.log(f"\n📦 제{next_ep}화 데이터 정산 중...")
 
-        # HUD 업데이트
+        # DB 저장 (HUD보다 먼저 — DB 실패 시 HUD 오염 방지) [Sweep56]
+        try:
+            self.ctx.current_project.db.save_manuscript(ep_num=next_ep, title=final_title, content=final_manuscript)
+
+            if final_state_updates:
+                self.ctx.current_project.db.update_martial_tracker(next_ep, final_state_updates)
+                self.ctx.ui.log(f"      📊 제 {next_ep}화 15대 지표 트래커 저장 완료")
+
+            self.ctx.current_project.db.conn.commit()
+            self.ctx.ui.log("   ✅ DB 저장 완료")
+        except Exception as db_err:
+            self.ctx.ui.log(f"   🚨 DB 저장 실패: {db_err}")
+            return False
+
+        # HUD 업데이트 (DB 커밋 성공 후에만 실행)
         if final_state_updates and hasattr(self.ctx.sys, "hud"):
             try:
                 approved = self.ctx.agents["director"].on_approve_workflow(
@@ -52,20 +66,6 @@ class Stage4PostProcessor:
                         self.ctx.ui.log("   ✅ HUD 업데이트 완료 (fallback)")
             except Exception as hud_err:
                 self.ctx.ui.log(f"   ⚠️ HUD 업데이트 실패: {hud_err}")
-
-        # DB 저장
-        try:
-            self.ctx.current_project.db.save_manuscript(ep_num=next_ep, title=final_title, content=final_manuscript)
-
-            if final_state_updates:
-                self.ctx.current_project.db.update_martial_tracker(next_ep, final_state_updates)
-                self.ctx.ui.log(f"      📊 제 {next_ep}화 15대 지표 트래커 저장 완료")
-
-            self.ctx.current_project.db.conn.commit()
-            self.ctx.ui.log("   ✅ DB 저장 완료")
-        except Exception as db_err:
-            self.ctx.ui.log(f"   🚨 DB 저장 실패: {db_err}")
-            return False
 
         # 파일 저장
         try:
