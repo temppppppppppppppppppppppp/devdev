@@ -121,6 +121,9 @@ class Stage2Orchestrator:
             self.ctx.current_project.volumes = self.ctx.current_project.db.load_anchor("volumes")
 
         bible_data = self.ctx.current_project.master_bible
+        if not bible_data:
+            self.ctx.ui.log("❌ [Stage 2] Bible 데이터를 찾을 수 없습니다. Stage 0-1을 먼저 실행하세요.")
+            return
         # [V41 Patch] Stage 1 스킵 시 빈 volumes 안전 처리
         volumes_strategy = self.ctx.current_project.volumes or []
         if not volumes_strategy:
