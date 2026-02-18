@@ -473,7 +473,7 @@ class ChiefWriterContextBuilder:
                 break
         if cliffhanger_found:
             # 마지막 문장 추출
-            last_sentences = re.split(r"[.!?]\s*", ending.strip())
+            last_sentences = [s for s in re.split(r"[.!?]\s*", ending.strip()) if s.strip()]
             last_sentence = last_sentences[-1] if last_sentences else ""
             if last_sentence and len(last_sentence) > 5:
                 digest_parts.append(f'클리프행어: "{last_sentence[:50]}"')

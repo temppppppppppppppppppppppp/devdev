@@ -529,7 +529,9 @@ class StateTrackerNPC:
                 if existing.get("status") == "dead" and info.get("status") != "dead":
                     continue  # 사망 상태 보존
                 elif info.get("status") == "dead":
-                    self.tracker.npc_registry[name] = info.copy()
+                    # [Sweep42] 기존 속성 보존 후 사망 정보 병합 (full overwrite → filtered merge)
+                    filtered = {k: v for k, v in info.items() if v not in ("", None, [], {})}
+                    existing.update(filtered)
                 else:
                     # [Sweep34] 빈값으로 기존 속성이 덮어쓰기 되는 문제 방지
                     filtered = {k: v for k, v in info.items() if v not in ("", None, [], {})}

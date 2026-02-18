@@ -195,7 +195,7 @@ class DBManager:
             existing_columns = {row["name"] for row in self.cursor.fetchall()}
 
             # MARTIAL_METRICS 순회하며 누락된 컬럼 추가
-            for metric in MARTIAL_METRICS:
+            for metric in validated_metrics:  # [Sweep43] MARTIAL_METRICS → validated_metrics (SQL 안전성)
                 if metric not in existing_columns:
                     logging.info(f"🔧 [DB Migration] 새로운 지표 '{metric}' 발견. 테이블에 컬럼을 추가합니다.")
                     self.cursor.execute(f"ALTER TABLE martial_tracker ADD COLUMN {metric} TEXT")

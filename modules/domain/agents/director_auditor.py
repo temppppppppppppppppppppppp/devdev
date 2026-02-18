@@ -497,13 +497,14 @@ class DirectorQualityAuditor:
             if char_logic_result.get("decision") == "REJECT":
                 severity = char_logic_result.get("severity", "NONE")
                 violations = char_logic_result.get("violations", [])
-                major_count = sum(1 for v in violations if isinstance(v, dict) and v.get("severity") == "MAJOR")
+                # [Sweep42] 프롬프트가 per-item severity 미요청 → violation 개수로 판정
+                violation_count = len(violations)
 
-                # CRITICAL은 1개라도 REJECT, MAJOR는 2개 이상일 때만 REJECT
-                should_reject = (severity == "CRITICAL") or (severity == "MAJOR" and major_count >= 2)
+                # CRITICAL은 1개라도 REJECT, MAJOR는 위반 2개 이상일 때만 REJECT
+                should_reject = (severity == "CRITICAL") or (severity == "MAJOR" and violation_count >= 2)
 
                 if should_reject:
-                    logging.warning(f"🚨 [V46] 캐릭터 논리 위반 감지 ({severity}, MAJOR {major_count}개)")
+                    logging.warning(f"🚨 [V46] 캐릭터 논리 위반 감지 ({severity}, 위반 {violation_count}개)")
                     return {
                         "decision": "REJECT",
                         "score": char_logic_result.get("score", 30),
@@ -516,7 +517,7 @@ class DirectorQualityAuditor:
                     }
                 else:
                     # MAJOR 1개 또는 MINOR는 경고만 하고 계속 진행
-                    logging.warning(f"⚠️ [V46] 캐릭터 논리 이슈 ({severity}, MAJOR {major_count}개) - 계속 진행")
+                    logging.warning(f"⚠️ [V46] 캐릭터 논리 이슈 ({severity}, 위반 {violation_count}개) - 계속 진행")
 
         # ═══════════════════════════════════════════════════════════════
         # [V60] Blueprint 완전성 검증 - main_a.py에서 사전 검증하므로 여기서는 스킵

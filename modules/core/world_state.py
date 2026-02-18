@@ -400,8 +400,8 @@ class WorldStateManager:
             active_plots[:] = active_plots[-_MAX_ACTIVE_PLOTS:]
 
     def get_state_dict(self) -> dict:
-        """내부 상태 dict 반환 (디버깅/대시보드용)"""
-        return self._state.copy()
+        """내부 상태 dict 반환 (디버깅/대시보드용) — deep copy로 외부 변조 방지"""
+        return json.loads(json.dumps(self._state, ensure_ascii=False))
 
     def rollback_to(self, target_ep: int) -> None:
         """[D-2] 특정 에피소드 이전 상태로 초기화 후 저장."""
