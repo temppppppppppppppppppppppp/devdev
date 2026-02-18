@@ -629,11 +629,13 @@ class HunterGuard(BaseGuard):
         rest_required = rules.get("rest_required", 0)
 
         if consecutive_count > max_consecutive:
-            if rest_hours < rest_required:
+            # [Sweep47] rest_required=0이면 무조건 차단 (E/D급 연속 제한 복원)
+            if rest_required == 0 or rest_hours < rest_required:
                 return (
                     False,
                     f"[V57] {dungeon_grade} 던전 연속 {consecutive_count}회 입장 불가: "
-                    f"{rest_required}시간 휴식 필요 (현재: {rest_hours}시간)",
+                    f"최대 {max_consecutive}회 연속 가능"
+                    + (f" ({rest_required}시간 휴식 필요, 현재: {rest_hours}시간)" if rest_required > 0 else ""),
                 )
 
         return True, f"[V57] {dungeon_grade} 던전 입장 가능 (연속 {consecutive_count}회)"
@@ -854,7 +856,7 @@ class HunterGuard(BaseGuard):
                 }
             )
 
-        result["has_critical"] = any(v.get("severity") == "HIGH" for v in result["violations"])
+        result["has_critical"] = any(v.get("severity") in ("HIGH", "CRITICAL") for v in result["violations"])
         if result["violations"]:
             result["summary"] = "; ".join(v.get("message", "") for v in result["violations"][:5])
             result["feedback"] = f"[헌터 Guard] {len(result['violations'])}건: {result['summary']}"
