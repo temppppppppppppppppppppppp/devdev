@@ -97,6 +97,7 @@ class StateTrackerNPC:
         old_value: str,
         new_value: str,
         source: str = "arc_extraction",
+        episode_no: int = 0,
     ) -> None:
         """[Phase 3-5A] DB에 NPC 변경 이력 기록. 실패 시 비차단."""
         try:
@@ -104,7 +105,7 @@ class StateTrackerNPC:
             if db and hasattr(db, "insert_npc_change"):
                 db.insert_npc_change(
                     npc_name,
-                    0,
+                    episode_no,
                     arc_no,
                     field_name,
                     str(old_value or ""),
@@ -118,7 +119,7 @@ class StateTrackerNPC:
     # NPC 등록/정보
     # ═══════════════════════════════════════════════════════════════
 
-    def register_npc_death(self, npc_name: str, death_arc: int, death_context: str = ""):
+    def register_npc_death(self, npc_name: str, death_arc: int, death_context: str = "", episode_no: int = 0):
         """
         [V60.94] NPC 사망 등록
 
@@ -139,7 +140,7 @@ class StateTrackerNPC:
         logging.info(f"\U0001f480 [V60.94] NPC 사망 등록: {npc_name} (Arc {death_arc})")
 
         # [Phase 3-5A] 이력 기록
-        self._record_change(npc_name, death_arc, "status", old_status, "dead")
+        self._record_change(npc_name, death_arc, "status", old_status, "dead", episode_no=episode_no)
 
     def register_npc_info(
         self,
@@ -149,6 +150,7 @@ class StateTrackerNPC:
         level: str = None,
         personality_traits: str = None,
         primary_motivation: str = None,
+        episode_no: int = 0,
     ):
         """
         [V60.94] NPC 정보 등록/업데이트
@@ -172,22 +174,26 @@ class StateTrackerNPC:
         if weapon:
             old = npc.get("weapon", "")
             if old != weapon:
-                self._record_change(npc_name, arc_no, "weapon", old, weapon)
+                self._record_change(npc_name, arc_no, "weapon", old, weapon, episode_no=episode_no)
             npc["weapon"] = weapon
         if level:
             old = npc.get("level", "")
             if old != level:
-                self._record_change(npc_name, arc_no, "level", old, level)
+                self._record_change(npc_name, arc_no, "level", old, level, episode_no=episode_no)
             npc["level"] = level
         if personality_traits:
             old = npc.get("personality_traits", "")
             if old != personality_traits:
-                self._record_change(npc_name, arc_no, "personality_traits", old, personality_traits)
+                self._record_change(
+                    npc_name, arc_no, "personality_traits", old, personality_traits, episode_no=episode_no
+                )
             npc["personality_traits"] = personality_traits
         if primary_motivation:
             old = npc.get("primary_motivation", "")
             if old != primary_motivation:
-                self._record_change(npc_name, arc_no, "primary_motivation", old, primary_motivation)
+                self._record_change(
+                    npc_name, arc_no, "primary_motivation", old, primary_motivation, episode_no=episode_no
+                )
             npc["primary_motivation"] = primary_motivation
 
     def check_npc_changes(self, content: str, arc_no: int) -> list[dict]:
@@ -286,6 +292,7 @@ class StateTrackerNPC:
             return []
 
         arc_no = arc.get("arc_no", 0)
+        ep_start = arc.get("ep_start", 0)  # 롤백 시 episode_no 기준 삭제를 위해
         tactical = arc.get("tactical_doc", "")
         if isinstance(tactical, dict):
             tactical = "\n".join(str(v) for v in tactical.values() if v)
@@ -311,7 +318,7 @@ class StateTrackerNPC:
             for match in matches:
                 npc_name, weapon = match[0], match[1]
                 if npc_name not in exclude_words and len(npc_name) >= 2:
-                    self.register_npc_info(npc_name, arc_no, weapon=weapon)
+                    self.register_npc_info(npc_name, arc_no, weapon=weapon, episode_no=ep_start)
                     extracted.append({"name": npc_name, "weapon": weapon, "arc": arc_no})
 
         for pattern in level_patterns:
@@ -323,7 +330,7 @@ class StateTrackerNPC:
                     npc_name, level = match[0], match[1]
 
                 if npc_name not in exclude_words and len(npc_name) >= 2:
-                    self.register_npc_info(npc_name, arc_no, level=level)
+                    self.register_npc_info(npc_name, arc_no, level=level, episode_no=ep_start)
                     extracted.append({"name": npc_name, "level": level, "arc": arc_no})
 
         return extracted
@@ -572,11 +579,15 @@ class StateTrackerNPC:
                         episode = death.get("episode", arc_no)
                         cause = death.get("cause", "state_changes에서 추출")
                         if npc_name and len(npc_name) >= 2:
-                            self.register_npc_death(npc_name, arc_no, f"Arc {arc_no} Ep {episode}: {cause}")
+                            self.register_npc_death(
+                                npc_name, arc_no, f"Arc {arc_no} Ep {episode}: {cause}", episode_no=ep_start
+                            )
                             dead_npcs.append(npc_name)
                     elif isinstance(death, str) and len(death) >= 2:
                         # 단순 문자열 형태도 지원
-                        self.register_npc_death(death, arc_no, f"Arc {arc_no} state_changes에서 추출")
+                        self.register_npc_death(
+                            death, arc_no, f"Arc {arc_no} state_changes에서 추출", episode_no=ep_start
+                        )
                         dead_npcs.append(death)
                 if dead_npcs:
                     return list(set(dead_npcs))
@@ -607,7 +618,9 @@ class StateTrackerNPC:
         if regex_candidates:
             verified = self._verify_npc_names_llm(regex_candidates, tactical, arc_no)
             for npc_name in verified:
-                self.register_npc_death(npc_name, arc_no, f"Arc {arc_no} tactical_doc Regex+LLM검증")
+                self.register_npc_death(
+                    npc_name, arc_no, f"Arc {arc_no} tactical_doc Regex+LLM검증", episode_no=ep_start
+                )
                 dead_npcs.append(npc_name)
 
         return list(set(dead_npcs))
@@ -1415,6 +1428,7 @@ class StateTrackerNPC:
     def extract_npc_personality_from_arc(self, arc: dict) -> list[dict]:
         """[V66] Arc에서 npc_personality_changes 추출 및 NPC 레지스트리 업데이트."""
         arc_no = arc.get("arc_no", 0)
+        ep_start = arc.get("ep_start", 0)
         results = []
 
         state_changes = arc.get("state_changes", {})
@@ -1426,7 +1440,9 @@ class StateTrackerNPC:
                         name = str(pc["name"])
                         traits = str(pc.get("traits", ""))
                         motivation = str(pc.get("motivation", ""))
-                        self.register_npc_info(name, arc_no, personality_traits=traits, primary_motivation=motivation)
+                        self.register_npc_info(
+                            name, arc_no, personality_traits=traits, primary_motivation=motivation, episode_no=ep_start
+                        )
                         results.append({"name": name, "traits": traits, "motivation": motivation, "arc_no": arc_no})
         return results
 
