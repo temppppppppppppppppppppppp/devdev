@@ -65,10 +65,7 @@ def test_arc_draft_validator_source_has_items_list_guards():
 def test_director_auditor_source_handles_non_dict_char_logic_result():
     src = _read("modules/domain/agents/director_auditor.py")
     assert "if not isinstance(char_logic_result, dict):" in src
-    assert (
-        "char_logic_result = char_logic_result[0] if isinstance(char_logic_result, list) and char_logic_result else {}"
-        in src
-    )
+    assert "char_logic_result[0] if isinstance(char_logic_result, list) and char_logic_result else {}" in src
 
 
 def test_continuity_manuscript_source_has_scene_breakdown_dict_guards():
