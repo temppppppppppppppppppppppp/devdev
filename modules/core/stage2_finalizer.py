@@ -280,7 +280,10 @@ class Stage2Finalizer:
             ### [0124 핵심 4] DB 원자적 커밋
             try:
                 self.ctx.current_project.save_v20_anchor("arcs", all_refined_arcs)
-                await self.ctx.safe_commit_async()
+                # [Codex-fix] safe_commit_async는 실패 시 예외 대신 False 반환
+                _commit_ok = await self.ctx.safe_commit_async()
+                if not _commit_ok:
+                    raise RuntimeError("safe_commit_async returned False")
             except Exception as commit_err:
                 self.ctx.ui.log(f"🚨 [DB] Arc {global_arc_no} 저장 실패: {commit_err}")
                 self.ctx.audit_event(

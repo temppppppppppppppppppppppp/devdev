@@ -248,7 +248,10 @@ class StateService:
             "arc_drive": {},
             "hybrid_composition": {"primary": "standard", "secondary": [], "mixing_logic": "기본"},
             "ep_count": arc_data.get("ep_count", VolumeSettings.EPISODES_PER_ARC),
-            "ep_end": arc_data.get("ep_start", 1) + arc_data.get("ep_count", VolumeSettings.EPISODES_PER_ARC) - 1,
+            # [Codex-fix] LLM이 string 반환 시 TypeError 방지
+            "ep_end": int(arc_data.get("ep_start", 1))
+            + int(arc_data.get("ep_count", VolumeSettings.EPISODES_PER_ARC))
+            - 1,
         }
 
         repaired = False
