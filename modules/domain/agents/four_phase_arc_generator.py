@@ -188,8 +188,10 @@ class FourPhaseArcGenerator(BaseAgent):
         cached_preflight = None
         # [V60.77] Director 피드백이 있으면 우선 반영
         feedback = ""
+        _base_director_feedback = ""
         if director_feedback:
-            feedback = f"[🎬 Director 피드백 - 반드시 반영할 것]\n{director_feedback}\n"
+            _base_director_feedback = f"[🎬 Director 피드백 - 반드시 반영할 것]\n{director_feedback}\n"
+            feedback = _base_director_feedback
             logging.info(f"📢 [V60.77] Director 피드백 주입됨 ({len(director_feedback)}자)")
 
         # [Patch Mode] 내부 retry용 이전 REJECT 추적
@@ -344,7 +346,13 @@ class FourPhaseArcGenerator(BaseAgent):
                 return best_arc, pipeline_result
             else:
                 self.stats["phase3_reject"] += 1
-                feedback = validation_result.get("feedback", "검증 실패")
+                # [Sweep53] Director 원래 피드백 보존 + 검증 피드백 결합
+                _validator_feedback = validation_result.get("feedback", "검증 실패")
+                feedback = (
+                    f"{_base_director_feedback}\n[검증 피드백]\n{_validator_feedback}"
+                    if _base_director_feedback
+                    else _validator_feedback
+                )
 
                 # [Patch Mode] REJECT된 arc 보존 (다음 retry에서 패치 시도용)
                 if best_arc:

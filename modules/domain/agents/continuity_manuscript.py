@@ -302,7 +302,10 @@ class ContinuityManuscriptValidator:
 
             if python_check.get("warnings"):
                 result.setdefault("warnings", [])
-                result["warnings"].extend(python_check["warnings"])
+                # [Sweep53] dict warnings → str 변환 (LLM result["warnings"]는 list[str])
+                result["warnings"].extend(
+                    w.get("description", str(w)) if isinstance(w, dict) else w for w in python_check["warnings"]
+                )
 
             return result
 

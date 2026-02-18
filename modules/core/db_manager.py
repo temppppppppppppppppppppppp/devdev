@@ -582,15 +582,13 @@ class DBManager:
             reveals = json.loads(row["reveals"] or "[]")
             cumulative["all_reveals"].extend(reveals)
 
-        # 캐시 저장
-        self._cumulative_bible_cache[up_to_ep] = _copy.deepcopy(cumulative)
-
         # [V66.1] C-3: LRU 캐시 크기 제한 (최대 5개 — 장기 세션 메모리 안정화)
+        # [Sweep53] 방금 쓴 키가 즉시 퇴출되지 않도록 쓰기 전 evict
         _MAX_BIBLE_CACHE = 5
-        while len(self._cumulative_bible_cache) > _MAX_BIBLE_CACHE:
-            # 가장 오래된 (가장 작은 ep) 캐시 제거
+        while len(self._cumulative_bible_cache) >= _MAX_BIBLE_CACHE:
             oldest_ep = min(self._cumulative_bible_cache.keys())
             del self._cumulative_bible_cache[oldest_ep]
+        self._cumulative_bible_cache[up_to_ep] = _copy.deepcopy(cumulative)
 
         return cumulative
 

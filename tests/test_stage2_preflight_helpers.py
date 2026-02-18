@@ -739,10 +739,9 @@ class TestPreflightValidationRejectPaths:
         s2_orch.ctx.arc_draft_validator.validate.return_value = {
             "valid": False,
             "score": 55,
-            "critical_issues": ["경미한 구조 문제"],
-            "issues": [{"severity": "MAJOR", "message": "인과 약함"}],
+            "critical_issues": [],
             "advisory_issues": [],
-            "warnings": [],
+            "warnings": ["인과 약함"],
         }
         corrector = MagicMock()
         corrector.can_correct.return_value = (True, [{"message": "인과 약함"}], [])
@@ -776,23 +775,20 @@ class TestPreflightValidationRejectPaths:
                 "valid": True,
                 "score": 80,
                 "critical_issues": [],
-                "issues": [],
                 "advisory_issues": [],
                 "warnings": [],
             },
             {
                 "valid": False,
                 "score": 50,
-                "critical_issues": ["구조 개선 필요"],
-                "issues": [{"severity": "MAJOR", "message": "인과 약함"}],
+                "critical_issues": [],
                 "advisory_issues": [],
-                "warnings": [],
+                "warnings": ["인과 약함"],
             },
             {
                 "valid": False,
                 "score": 60,
                 "critical_issues": ["여전히 부족"],
-                "issues": [],
                 "advisory_issues": [],
                 "warnings": [],
             },
