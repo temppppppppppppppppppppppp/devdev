@@ -227,7 +227,8 @@ class StateExtractor(BaseAgent):
         }
 
         prompt = STATE_EXTRACTION_PROMPT.format(
-            arc_data=json.dumps(cleaned_data, ensure_ascii=False, indent=2), arc_no=arc_no
+            arc_data=self._escape_braces(json.dumps(cleaned_data, ensure_ascii=False, indent=2)),
+            arc_no=arc_no,
         )
 
         try:
@@ -781,7 +782,7 @@ class StateExtractor(BaseAgent):
         """
         prompt = SATISFACTION_TAG_PROMPT.format(
             ep_num=ep_num,
-            manuscript=manuscript[:5000],
+            manuscript=self._escape_braces(manuscript[:5000]),
         )
 
         try:

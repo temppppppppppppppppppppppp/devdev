@@ -320,10 +320,14 @@ class BlockEnricher(BaseAgent):
 
         # 프롬프트 구성
         prompt = BLOCK_ENRICHMENT_PROMPT.format(
-            reference_block=json.dumps(reference_block, ensure_ascii=False, indent=2),
-            current_block=json.dumps(current_block, ensure_ascii=False, indent=2),
-            prev_block=json.dumps(prev_block, ensure_ascii=False, indent=2) if prev_block else "없음 (첫 번째 Block)",
-            next_block=json.dumps(next_block, ensure_ascii=False, indent=2) if next_block else "없음 (마지막 Block)",
+            reference_block=self._escape_braces(json.dumps(reference_block, ensure_ascii=False, indent=2)),
+            current_block=self._escape_braces(json.dumps(current_block, ensure_ascii=False, indent=2)),
+            prev_block=self._escape_braces(json.dumps(prev_block, ensure_ascii=False, indent=2))
+            if prev_block
+            else "없음 (첫 번째 Block)",
+            next_block=self._escape_braces(json.dumps(next_block, ensure_ascii=False, indent=2))
+            if next_block
+            else "없음 (마지막 Block)",
             block_id=current_block.get("block_id", "Unknown"),
             protagonist_name=protagonist_name,
             genre=genre,
@@ -413,10 +417,14 @@ class BlockEnricher(BaseAgent):
         """농축 결과 1차 검증 (Self-Check)"""
 
         prompt = ENRICHMENT_VALIDATION_PROMPT.format(
-            original_block=json.dumps(original, ensure_ascii=False, indent=2),
-            enriched_block=json.dumps(enriched, ensure_ascii=False, indent=2),
-            prev_block=json.dumps(prev_block, ensure_ascii=False, indent=2) if prev_block else "없음",
-            next_block=json.dumps(next_block, ensure_ascii=False, indent=2) if next_block else "없음",
+            original_block=self._escape_braces(json.dumps(original, ensure_ascii=False, indent=2)),
+            enriched_block=self._escape_braces(json.dumps(enriched, ensure_ascii=False, indent=2)),
+            prev_block=self._escape_braces(json.dumps(prev_block, ensure_ascii=False, indent=2))
+            if prev_block
+            else "없음",
+            next_block=self._escape_braces(json.dumps(next_block, ensure_ascii=False, indent=2))
+            if next_block
+            else "없음",
         )
 
         try:
@@ -451,10 +459,14 @@ class BlockEnricher(BaseAgent):
         """
 
         prompt = DIRECTOR_BLOCK_AUDIT_PROMPT.format(
-            original_block=json.dumps(original, ensure_ascii=False, indent=2),
-            enriched_block=json.dumps(enriched, ensure_ascii=False, indent=2),
-            prev_block=json.dumps(prev_block, ensure_ascii=False, indent=2) if prev_block else "없음 (첫 번째 Block)",
-            next_block=json.dumps(next_block, ensure_ascii=False, indent=2) if next_block else "없음 (마지막 Block)",
+            original_block=self._escape_braces(json.dumps(original, ensure_ascii=False, indent=2)),
+            enriched_block=self._escape_braces(json.dumps(enriched, ensure_ascii=False, indent=2)),
+            prev_block=self._escape_braces(json.dumps(prev_block, ensure_ascii=False, indent=2))
+            if prev_block
+            else "없음 (첫 번째 Block)",
+            next_block=self._escape_braces(json.dumps(next_block, ensure_ascii=False, indent=2))
+            if next_block
+            else "없음 (마지막 Block)",
         )
 
         try:
