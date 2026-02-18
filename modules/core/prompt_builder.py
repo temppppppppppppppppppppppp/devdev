@@ -876,8 +876,8 @@ class PromptBuilder:
 
             # 2. Martial HUD 구성
             if hasattr(app.sys, "hud") and app.sys.hud:
-                hud_data = app.sys.hud.pro_root
-                context["martial_hud"] = {"actual_truth": app.sys.hud.pro_data}
+                # [Sweep48] pro_root 전체 사용 (actual_truth + public_reputation)
+                context["martial_hud"] = app.sys.hud.pro_root or {}
 
             # 3. 최근 히스토리 추출
             if app.current_project:

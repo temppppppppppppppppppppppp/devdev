@@ -236,6 +236,9 @@ class Stage2PreflightAnalysis:
             enhanced_context = _quality_trend_block + enhanced_context
         if constraint_block:
             enhanced_context = constraint_block + "\n" + enhanced_context
+        # [Sweep48] Preflight 분석 결과 주입 (LLM이 생성한 분석 텍스트)
+        if cached_preflight_injection:
+            enhanced_context = cached_preflight_injection + "\n\n" + enhanced_context
 
         # [V60.25] Stage 2 Optimizer 주입
         if self.ctx.stage2_optimizer:
@@ -401,11 +404,8 @@ class Stage2PreflightAnalysis:
                     f"⚠️ [C-2] ConstraintCompiler/Entity 추출 실패 (entity_registry 빈 dict 폴백): {str(cc_err)[:80]}"
                 )
 
-        # [Sweep46] ConstraintDB 데이터 병합 보존 (retry 시에도 유지)
-        if _compiler_block and constraint_block:
-            constraint_block = _compiler_block + "\n\n" + constraint_block
-        elif _compiler_block:
-            constraint_block = _compiler_block
+        # [Sweep48] constraint_block은 입력값 그대로 보존 (setup에서 이미 DB+Compiler 병합됨)
+        # _compiler_block은 analyst_weapons에만 전달, constraint_block에 중복 누적 방지
 
         return {
             "refined_arc": refined_arc,
