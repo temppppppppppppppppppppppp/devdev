@@ -412,7 +412,7 @@ class ProjectContext:
         """[V26 Integrity Filter] AI 오타 교정 및 성경 ID 매칭"""
         # 1. 성경 내 실제 ID 목록 확보
         bible_seeds = self.master_bible.get("MasterBible", {}).get("Seeds", [])
-        valid_ids = {s.get("id"): s.get("id") for s in bible_seeds}
+        valid_ids = {s.get("id"): s.get("id") for s in bible_seeds if isinstance(s, dict)}
 
         # 2. 완전 일치 여부 확인
         if raw_id in valid_ids:
@@ -575,7 +575,9 @@ class ProjectContext:
                     if isinstance(state_data, dict)
                     else "요약 없음"
                 )
-                content_text = manuscript_data["content"] if isinstance(manuscript_data, dict) else str(manuscript_data)
+                content_text = (
+                    manuscript_data.get("content", "") if isinstance(manuscript_data, dict) else str(manuscript_data)
+                )
 
                 vector_success = memory.memorize_v20_episode(ep_num, content_text, summary, causal_links)
 

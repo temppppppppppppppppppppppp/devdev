@@ -368,7 +368,7 @@ class ValidationOrchestrator:
 
         results["scoring_result"] = scoring_result
 
-        total_score = scoring_result["total_score"]
+        total_score = scoring_result.get("total_score", 0)
         logging.info(f"📊 SCORING: {total_score}/100점 (임계값: {self.scoring.pass_threshold})")
 
         # ═══════════════════════════════════════════════════════════════
@@ -433,7 +433,9 @@ class ValidationOrchestrator:
         results["action_result"] = action_result
 
         if action_result.get("action_scene_count", 0) > 0:
-            logging.info(f"⚔️ ACTION: {action_result['total_score']}/10점 ({action_result['action_scene_count']}개 씬)")
+            logging.info(
+                f"⚔️ ACTION: {action_result.get('total_score', 0)}/10점 ({action_result['action_scene_count']}개 씬)"
+            )
 
         # 추가 평가 결과를 총점에 반영 (보너스/감점)
         catharsis_adjustment = 0
@@ -1070,7 +1072,7 @@ class ValidationOrchestrator:
         # ═══════════════════════════════════════════════════════════════
         # Stage 3: 추가 평가 (CatharsisTimer, ActionEvaluator)
         # ═══════════════════════════════════════════════════════════════
-        total_score = scoring_result["total_score"]
+        total_score = scoring_result.get("total_score", 0)
 
         # CatharsisTimer
         catharsis_history = validation_context.get("catharsis_history", [])
