@@ -383,7 +383,8 @@ class ChiefWriterQualityGate:
             scores.append(1)
 
         # 2. 문장 시작 다양성
-        sentences = [s.strip() for s in re.split(r"[.!?]", content) if len(s.strip()) > 5]
+        # [Sweep49] 문장 끝 구두점 뒤 공백/줄바꿈으로 분리 (소수점 오분리 방지)
+        sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", content) if len(s.strip()) > 5]
         if sentences:
             starters = [s[:2] for s in sentences[:20]]
             unique_rate = len(set(starters)) / max(len(starters), 1)
