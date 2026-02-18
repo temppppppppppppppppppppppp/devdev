@@ -955,6 +955,7 @@ class ValidationOrchestrator:
         # ═══════════════════════════════════════════════════════════════
 
         # [V59] 적응형 임계값 계산
+        _original_threshold = self.scoring.pass_threshold  # [Sweep64] 원본 보존 → finally에서 복원
         if self.use_adaptive_threshold:
             adaptive_threshold = self.calculate_adaptive_threshold_v59(ep_num, validation_context)
             self.scoring.pass_threshold = adaptive_threshold
@@ -1134,6 +1135,9 @@ class ValidationOrchestrator:
 
         # [V59] 히스토리 기록 + 연속 카운트 업데이트
         self._record_validation_history_v59(ep_num, total_score, passed)
+
+        # [Sweep64] 적응형 임계값이 영구 변경되지 않도록 원본 복원
+        self.scoring.pass_threshold = _original_threshold
 
         return results
 

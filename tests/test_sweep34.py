@@ -181,4 +181,5 @@ def test_sweep34_source_guards_exist():
     assert 'confidence": 0.9 if _safe_int(compare_result.get("score", 0), 0) >= 70 else 0.6' in ubv_src
     assert 'director_score = _safe_int(director_result.get("score", 50), 50)' in ubv_src
     st_src = _read("modules/domain/agents/state_tracker_npc.py")
-    assert 'filtered = {k: v for k, v in info.items() if v not in ("", None, [], {})}' in st_src
+    # [Sweep64] dead 분기는 원본 필터 유지, non-dead 분기는 0/False 보호 추가
+    assert 'v not in ("", None, [], {})' in st_src

@@ -401,7 +401,7 @@ class DirectorEnsembleSelector:
                 "parsing_error": True,
             }
 
-        selected_letter = result.get("selected", "A").upper()
+        selected_letter = str(result.get("selected", "A")).strip().upper()
         selected_idx = {"A": 0, "B": 1, "C": 2}.get(selected_letter, 0)
 
         v60_97_swapped = False

@@ -537,12 +537,18 @@ class StateTrackerNPC:
                     continue  # 사망 상태 보존
                 elif info.get("status") == "dead":
                     # [Sweep42] 기존 속성 보존 후 사망 정보 병합 (full overwrite → filtered merge)
-                    filtered = {k: v for k, v in info.items() if v not in ("", None, [], {})}
+                    filtered = {k: v for k, v in info.items() if v not in ("", None, [], {}) and v is not False}
                     existing.update(filtered)
                 else:
                     # [Sweep34] 빈값으로 기존 속성이 덮어쓰기 되는 문제 방지
-                    filtered = {k: v for k, v in info.items() if v not in ("", None, [], {})}
-                    existing.update(filtered)
+                    # [Sweep64] 0/False도 기존 값 덮어쓰기 방지 (last_arc=0 회귀 등)
+                    filtered = {
+                        k: v
+                        for k, v in info.items()
+                        if v not in ("", None, [], {})
+                        and v is not False
+                        and not (isinstance(v, int) and v == 0 and k in existing and existing[k])
+                    }
 
         # 무공 목록 병합
         self.tracker.protagonist_skills.update(other.protagonist_skills)
@@ -566,6 +572,7 @@ class StateTrackerNPC:
             사망한 NPC 이름 목록
         """
         arc_no = arc.get("arc_no", 0)
+        ep_start = arc.get("ep_start", 0)  # 롤백 시 episode_no 기준 삭제를 위해
         dead_npcs = []
 
         # [V61] 1순위: state_changes 필드 직접 읽기 (정확도 ~98%)
