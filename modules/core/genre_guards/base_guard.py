@@ -225,7 +225,8 @@ class BaseGuard(ABC):
                 }
             )
 
-        has_critical = any(v.get("severity") == "HIGH" for v in all_violations)
+        # [Sweep44] "CRITICAL" severity도 has_critical 트리거 (hunter_guard 등)
+        has_critical = any(v.get("severity") in ("HIGH", "CRITICAL") for v in all_violations)
         summary_parts = [v.get("message", "") for v in all_violations[:5]]
         summary = "; ".join(summary_parts) if summary_parts else "검증 통과"
 
