@@ -427,6 +427,9 @@ class Analyst(BaseAgent):
                 logging.info(f"🔧 [V60] joint_docs 소지품 보정: {final_inventory}")
                 joint_docs["physical_inventory"] = final_inventory
 
+        # [Sweep11] 상위 레벨에도 동기화 (finalizer/arc_corrector는 top-level에서 읽음)
+        arc_data["joint_docs"] = arc_data["state_constraints"]["joint_docs"]
+
         return arc_data
 
     def plan_single_arc_v20(

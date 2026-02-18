@@ -66,7 +66,8 @@ class StateService:
             )
             refined_arc["arc_no"] = expected_arc_no
 
-        ep_count = refined_arc.get("ep_count") or refined_arc.get("ep_end")
+        # [Sweep11] ep_end를 ep_count 대용으로 쓰면 절대값→카운트 혼동 → 과팽창
+        ep_count = refined_arc.get("ep_count")
         if not isinstance(ep_count, int):
             try:
                 ep_count = int(ep_count) if ep_count and not isinstance(ep_count, dict | list) else 5

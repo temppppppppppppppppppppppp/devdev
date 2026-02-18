@@ -190,7 +190,7 @@ class Stage2Finalizer:
                 self.ctx.audit_event("data_missing", "joint_docs missing", {"arc_no": global_arc_no})
                 refined_arc["joint_docs"] = {
                     "final_location": "위치 미정",
-                    "physical_inventory": "물품 미정",
+                    "physical_inventory": ["물품 미정"],
                     "world_joint": "변화 없음",
                 }
                 critical_missing.append("joint_docs")
