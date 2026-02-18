@@ -399,204 +399,213 @@ class DBManager:
 
     # --- [Section 1: 원고 및 지표] ---
     def save_manuscript(self, ep_num, title, content) -> None:
-        self.cursor.execute(
-            "INSERT OR REPLACE INTO manuscripts (ep_num, title, content) VALUES (?, ?, ?)", (ep_num, title, content)
-        )
-        if not self.conn.in_transaction:
-            self.conn.commit()
+        with self._lock:
+            self.cursor.execute(
+                "INSERT OR REPLACE INTO manuscripts (ep_num, title, content) VALUES (?, ?, ?)",
+                (ep_num, title, content),
+            )
+            if not self.conn.in_transaction:
+                self.conn.commit()
 
     def get_manuscript(self, ep_num):
-        cur = self.cursor.execute("SELECT * FROM manuscripts WHERE ep_num = ?", (ep_num,))
-        row = cur.fetchone()
-        return dict(row) if row else None
+        with self._lock:
+            cur = self.cursor.execute("SELECT * FROM manuscripts WHERE ep_num = ?", (ep_num,))
+            row = cur.fetchone()
+            return dict(row) if row else None
 
     # 📂 modules/core/db_manager.py 내부에 추가
 
     def get_blueprint(self, ep_num):
         """특정 회차의 설계도 JSON 인출"""
-        cur = self.cursor.execute("SELECT data FROM blueprints WHERE ep_num = ?", (ep_num,))
-        row = cur.fetchone()
-        if not row:
-            return None
-        try:
-            return json.loads(row["data"])
-        except (json.JSONDecodeError, TypeError) as e:  # [V70] NULL data → TypeError 방어
-            logging.warning(f"🚨 [DB] Blueprint JSON 파싱 실패 (ep_num={ep_num}): {e}")
-            return None
+        with self._lock:
+            cur = self.cursor.execute("SELECT data FROM blueprints WHERE ep_num = ?", (ep_num,))
+            row = cur.fetchone()
+            if not row:
+                return None
+            try:
+                return json.loads(row["data"])
+            except (json.JSONDecodeError, TypeError) as e:  # [V70] NULL data → TypeError 방어
+                logging.warning(f"🚨 [DB] Blueprint JSON 파싱 실패 (ep_num={ep_num}): {e}")
+                return None
 
     def update_martial_tracker(self, ep_num, martial_data) -> None:
         """[V26.6 S-Grade] DB 스키마에 존재하는 컬럼만 선별하여 저장 (Mismatched Key Guard)"""
-        # 1. 약속된 15대 지표(MARTIAL_METRICS)만 필터링 (스키마 가드)
-        sanitized_data = {k: martial_data[k] for k in MARTIAL_METRICS if k in martial_data}
+        with self._lock:
+            # 1. 약속된 15대 지표(MARTIAL_METRICS)만 필터링 (스키마 가드)
+            sanitized_data = {k: martial_data[k] for k in MARTIAL_METRICS if k in martial_data}
 
-        if not sanitized_data:
-            return
+            if not sanitized_data:
+                return
 
-        # 2. 필터링된 데이터로 쿼리 생성 (동적 컬럼 매핑)
-        columns = ", ".join(sanitized_data.keys())
-        placeholders = ", ".join(["?"] * len(sanitized_data))
-        query = f"INSERT OR REPLACE INTO martial_tracker (ep_num, {columns}) VALUES (?, {placeholders})"
+            # 2. 필터링된 데이터로 쿼리 생성 (동적 컬럼 매핑)
+            columns = ", ".join(sanitized_data.keys())
+            placeholders = ", ".join(["?"] * len(sanitized_data))
+            query = f"INSERT OR REPLACE INTO martial_tracker (ep_num, {columns}) VALUES (?, {placeholders})"
 
-        self.cursor.execute(query, [ep_num] + list(sanitized_data.values()))
-        if not self.conn.in_transaction:
-            self.conn.commit()
+            self.cursor.execute(query, [ep_num] + list(sanitized_data.values()))
+            if not self.conn.in_transaction:
+                self.conn.commit()
 
-    # --- [V49.5] 화별 Bible CRUD ---
-    # [V60.82] causal_links, karma_matrix, knowledge_map 필드 추가
+        # --- [V49.5] 화별 Bible CRUD ---
+        # [V60.82] causal_links, karma_matrix, knowledge_map 필드 추가
+
     def save_episode_bible(self, ep_num: int, bible_delta: dict):
         """화별 Bible 저장 (원고에서 추출된 설정 변화)"""
-        self.cursor.execute(
-            """
-            INSERT OR REPLACE INTO episode_bibles
-            (ep_num, new_items, lost_items, new_npcs, npc_deaths,
-             relationship_changes, state_changes, time_passed, reveals,
-             causal_links, karma_matrix, knowledge_map)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-            (
-                ep_num,
-                json.dumps(bible_delta.get("new_items", []), ensure_ascii=False),
-                json.dumps(bible_delta.get("lost_items", []), ensure_ascii=False),
-                json.dumps(bible_delta.get("new_npcs", []), ensure_ascii=False),
-                json.dumps(bible_delta.get("npc_deaths", []), ensure_ascii=False),
-                json.dumps(bible_delta.get("relationship_changes", []), ensure_ascii=False),
-                json.dumps(bible_delta.get("state_changes", {}), ensure_ascii=False),
-                bible_delta.get("time_passed", ""),
-                json.dumps(bible_delta.get("reveals", []), ensure_ascii=False),
-                json.dumps(bible_delta.get("causal_links", []), ensure_ascii=False),
-                json.dumps(bible_delta.get("karma_matrix", []), ensure_ascii=False),
-                json.dumps(bible_delta.get("knowledge_map", {}), ensure_ascii=False),
-            ),
-        )
-        if not self.conn.in_transaction:
-            self.conn.commit()
-        # [V64 P2-7] 누적 Bible 캐시 무효화: 이 ep 이후 캐시 모두 삭제
-        invalidate_eps = [k for k in self._cumulative_bible_cache if k >= ep_num]
-        for k in invalidate_eps:
-            del self._cumulative_bible_cache[k]
+        with self._lock:
+            self.cursor.execute(
+                """
+                INSERT OR REPLACE INTO episode_bibles
+                (ep_num, new_items, lost_items, new_npcs, npc_deaths,
+                 relationship_changes, state_changes, time_passed, reveals,
+                 causal_links, karma_matrix, knowledge_map)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+                (
+                    ep_num,
+                    json.dumps(bible_delta.get("new_items", []), ensure_ascii=False),
+                    json.dumps(bible_delta.get("lost_items", []), ensure_ascii=False),
+                    json.dumps(bible_delta.get("new_npcs", []), ensure_ascii=False),
+                    json.dumps(bible_delta.get("npc_deaths", []), ensure_ascii=False),
+                    json.dumps(bible_delta.get("relationship_changes", []), ensure_ascii=False),
+                    json.dumps(bible_delta.get("state_changes", {}), ensure_ascii=False),
+                    bible_delta.get("time_passed", ""),
+                    json.dumps(bible_delta.get("reveals", []), ensure_ascii=False),
+                    json.dumps(bible_delta.get("causal_links", []), ensure_ascii=False),
+                    json.dumps(bible_delta.get("karma_matrix", []), ensure_ascii=False),
+                    json.dumps(bible_delta.get("knowledge_map", {}), ensure_ascii=False),
+                ),
+            )
+            if not self.conn.in_transaction:
+                self.conn.commit()
+            # [V64 P2-7] 누적 Bible 캐시 무효화: 이 ep 이후 캐시 모두 삭제
+            invalidate_eps = [k for k in self._cumulative_bible_cache if k >= ep_num]
+            for k in invalidate_eps:
+                del self._cumulative_bible_cache[k]
 
     def get_episode_bible(self, ep_num: int) -> dict:
         """특정 화의 Bible delta 조회"""
-        cur = self.cursor.execute("SELECT * FROM episode_bibles WHERE ep_num = ?", (ep_num,))
-        row = cur.fetchone()
-        if not row:
-            return {}
+        with self._lock:
+            cur = self.cursor.execute("SELECT * FROM episode_bibles WHERE ep_num = ?", (ep_num,))
+            row = cur.fetchone()
+            if not row:
+                return {}
 
-        # [V60.82] 새 컬럼 안전 조회 (마이그레이션 전 DB 호환)
-        def safe_get(key, default="[]"):
-            try:
-                return row[key] if key in row.keys() else default
-            except (KeyError, IndexError, TypeError):  # [V64.P4] specific exception for row access
-                return default
+            # [V60.82] 새 컬럼 안전 조회 (마이그레이션 전 DB 호환)
+            def safe_get(key, default="[]"):
+                try:
+                    return row[key] if key in row.keys() else default
+                except (KeyError, IndexError, TypeError):  # [V64.P4] specific exception for row access
+                    return default
 
-        def _safe_json(val, default_str="[]"):
-            try:
-                return json.loads(val or default_str)
-            except (json.JSONDecodeError, TypeError):
-                return json.loads(default_str)
+            def _safe_json(val, default_str="[]"):
+                try:
+                    return json.loads(val or default_str)
+                except (json.JSONDecodeError, TypeError):
+                    return json.loads(default_str)
 
-        return {
-            "ep_num": row["ep_num"],
-            "new_items": _safe_json(row["new_items"], "[]"),
-            "lost_items": _safe_json(row["lost_items"], "[]"),
-            "new_npcs": _safe_json(row["new_npcs"], "[]"),
-            "npc_deaths": _safe_json(row["npc_deaths"], "[]"),
-            "relationship_changes": _safe_json(row["relationship_changes"], "[]"),
-            "state_changes": _safe_json(row["state_changes"], "{}"),
-            "time_passed": row["time_passed"] or "",
-            "reveals": _safe_json(row["reveals"], "[]"),
-            # [V60.82] 새 필드
-            "causal_links": _safe_json(safe_get("causal_links", "[]"), "[]"),
-            "karma_matrix": _safe_json(safe_get("karma_matrix", "[]"), "[]"),
-            "knowledge_map": _safe_json(safe_get("knowledge_map", "{}"), "{}"),
-        }
+            return {
+                "ep_num": row["ep_num"],
+                "new_items": _safe_json(row["new_items"], "[]"),
+                "lost_items": _safe_json(row["lost_items"], "[]"),
+                "new_npcs": _safe_json(row["new_npcs"], "[]"),
+                "npc_deaths": _safe_json(row["npc_deaths"], "[]"),
+                "relationship_changes": _safe_json(row["relationship_changes"], "[]"),
+                "state_changes": _safe_json(row["state_changes"], "{}"),
+                "time_passed": row["time_passed"] or "",
+                "reveals": _safe_json(row["reveals"], "[]"),
+                # [V60.82] 새 필드
+                "causal_links": _safe_json(safe_get("causal_links", "[]"), "[]"),
+                "karma_matrix": _safe_json(safe_get("karma_matrix", "[]"), "[]"),
+                "knowledge_map": _safe_json(safe_get("knowledge_map", "{}"), "{}"),
+            }
 
     def get_cumulative_bible(self, up_to_ep: int) -> dict:
         """
         1화부터 특정 화까지의 누적 Bible 계산
         [V64 P2-7] 증분 캐시: 이전 결과를 재활용하여 새 에피소드만 DB 조회
         """
-        import copy as _copy
+        with self._lock:
+            import copy as _copy
 
-        # [V64 P2-7] 정확히 같은 ep 캐시가 있으면 즉시 반환 (deep copy로 mutation 방지)
-        if up_to_ep in self._cumulative_bible_cache:
-            return _copy.deepcopy(self._cumulative_bible_cache[up_to_ep])
+            # [V64 P2-7] 정확히 같은 ep 캐시가 있으면 즉시 반환 (deep copy로 mutation 방지)
+            if up_to_ep in self._cumulative_bible_cache:
+                return _copy.deepcopy(self._cumulative_bible_cache[up_to_ep])
 
-        # 이전 캐시 중 가장 큰 ep 찾아서 재활용
-        best_cached_ep = 0
-        for cached_ep in self._cumulative_bible_cache:
-            if cached_ep < up_to_ep and cached_ep > best_cached_ep:
-                best_cached_ep = cached_ep
+            # 이전 캐시 중 가장 큰 ep 찾아서 재활용
+            best_cached_ep = 0
+            for cached_ep in self._cumulative_bible_cache:
+                if cached_ep < up_to_ep and cached_ep > best_cached_ep:
+                    best_cached_ep = cached_ep
 
-        if best_cached_ep > 0:
-            cumulative = _copy.deepcopy(self._cumulative_bible_cache[best_cached_ep])
-            start_ep = best_cached_ep + 1
-        else:
-            cumulative = {
-                "items": [],  # 현재 소지 아이템
-                "npcs": [],  # 등장한 NPC 목록
-                "dead_npcs": [],  # 사망 NPC 목록
-                "relationships": {},  # {target: current_state}
-                "states": {},  # {subject: current_state}
-                "total_time": "",  # 누적 시간 흐름
-                "all_reveals": [],  # 모든 밝혀진 사실
-            }
-            start_ep = 1
+            if best_cached_ep > 0:
+                cumulative = _copy.deepcopy(self._cumulative_bible_cache[best_cached_ep])
+                start_ep = best_cached_ep + 1
+            else:
+                cumulative = {
+                    "items": [],  # 현재 소지 아이템
+                    "npcs": [],  # 등장한 NPC 목록
+                    "dead_npcs": [],  # 사망 NPC 목록
+                    "relationships": {},  # {target: current_state}
+                    "states": {},  # {subject: current_state}
+                    "total_time": "",  # 누적 시간 흐름
+                    "all_reveals": [],  # 모든 밝혀진 사실
+                }
+                start_ep = 1
 
-        cur = self.cursor.execute(
-            "SELECT * FROM episode_bibles WHERE ep_num >= ? AND ep_num <= ? ORDER BY ep_num", (start_ep, up_to_ep)
-        )
-        rows = cur.fetchall()
+            cur = self.cursor.execute(
+                "SELECT * FROM episode_bibles WHERE ep_num >= ? AND ep_num <= ? ORDER BY ep_num", (start_ep, up_to_ep)
+            )
+            rows = cur.fetchall()
 
-        for row in rows:
-            # 아이템: 획득은 추가, 분실은 제거
-            new_items = json.loads(row["new_items"] or "[]")
-            lost_items = json.loads(row["lost_items"] or "[]")
-            cumulative["items"].extend(new_items)
-            cumulative["items"] = [i for i in cumulative["items"] if i not in lost_items]
+            for row in rows:
+                # 아이템: 획득은 추가, 분실은 제거
+                new_items = json.loads(row["new_items"] or "[]")
+                lost_items = json.loads(row["lost_items"] or "[]")
+                cumulative["items"].extend(new_items)
+                cumulative["items"] = [i for i in cumulative["items"] if i not in lost_items]
 
-            # NPC: 등장 추가, 사망은 별도 추적
-            new_npcs = json.loads(row["new_npcs"] or "[]")
-            npc_deaths = json.loads(row["npc_deaths"] or "[]")
-            cumulative["npcs"].extend(new_npcs)
-            cumulative["dead_npcs"].extend(npc_deaths)
+                # NPC: 등장 추가, 사망은 별도 추적
+                new_npcs = json.loads(row["new_npcs"] or "[]")
+                npc_deaths = json.loads(row["npc_deaths"] or "[]")
+                cumulative["npcs"].extend(new_npcs)
+                cumulative["dead_npcs"].extend(npc_deaths)
 
-            # 관계: 최신 상태로 덮어씀
-            rel_changes = json.loads(row["relationship_changes"] or "[]")
-            for change in rel_changes:
-                if isinstance(change, dict):
-                    target = change.get("target", "")
-                    if target:
-                        cumulative["relationships"][target] = change.get("to", "")
+                # 관계: 최신 상태로 덮어씀
+                rel_changes = json.loads(row["relationship_changes"] or "[]")
+                for change in rel_changes:
+                    if isinstance(change, dict):
+                        target = change.get("target", "")
+                        if target:
+                            cumulative["relationships"][target] = change.get("to", "")
 
-            # 상태: 최신 상태로 덮어씀 [V61.5] dict/list 양방향 처리
-            state_changes = json.loads(row["state_changes"] or "{}")
-            if isinstance(state_changes, dict):
-                # dict 형태: {"internal_energy": "80%", "realm": "기경팔맥"}
-                for subject, value in state_changes.items():
-                    if isinstance(value, (str, int, float)):
-                        cumulative["states"][subject] = str(value)
-            elif isinstance(state_changes, list):
-                # 레거시 list 형태: [{"subject": "내공", "to": "80%"}]
-                for state in state_changes:
-                    if isinstance(state, dict):
-                        subject = state.get("subject", "")
-                        if subject:
-                            cumulative["states"][subject] = state.get("to", "")
+                # 상태: 최신 상태로 덮어씀 [V61.5] dict/list 양방향 처리
+                state_changes = json.loads(row["state_changes"] or "{}")
+                if isinstance(state_changes, dict):
+                    # dict 형태: {"internal_energy": "80%", "realm": "기경팔맥"}
+                    for subject, value in state_changes.items():
+                        if isinstance(value, (str, int, float)):
+                            cumulative["states"][subject] = str(value)
+                elif isinstance(state_changes, list):
+                    # 레거시 list 형태: [{"subject": "내공", "to": "80%"}]
+                    for state in state_changes:
+                        if isinstance(state, dict):
+                            subject = state.get("subject", "")
+                            if subject:
+                                cumulative["states"][subject] = state.get("to", "")
 
-            # 밝혀진 사실 누적
-            reveals = json.loads(row["reveals"] or "[]")
-            cumulative["all_reveals"].extend(reveals)
+                # 밝혀진 사실 누적
+                reveals = json.loads(row["reveals"] or "[]")
+                cumulative["all_reveals"].extend(reveals)
 
-        # [V66.1] C-3: LRU 캐시 크기 제한 (최대 5개 — 장기 세션 메모리 안정화)
-        # [Sweep53] 방금 쓴 키가 즉시 퇴출되지 않도록 쓰기 전 evict
-        _MAX_BIBLE_CACHE = 5
-        while len(self._cumulative_bible_cache) >= _MAX_BIBLE_CACHE:
-            oldest_ep = min(self._cumulative_bible_cache.keys())
-            del self._cumulative_bible_cache[oldest_ep]
-        self._cumulative_bible_cache[up_to_ep] = _copy.deepcopy(cumulative)
+            # [V66.1] C-3: LRU 캐시 크기 제한 (최대 5개 — 장기 세션 메모리 안정화)
+            # [Sweep53] 방금 쓴 키가 즉시 퇴출되지 않도록 쓰기 전 evict
+            _MAX_BIBLE_CACHE = 5
+            while len(self._cumulative_bible_cache) >= _MAX_BIBLE_CACHE:
+                oldest_ep = min(self._cumulative_bible_cache.keys())
+                del self._cumulative_bible_cache[oldest_ep]
+            self._cumulative_bible_cache[up_to_ep] = _copy.deepcopy(cumulative)
 
-        return cumulative
+            return cumulative
 
     def get_all_episode_bibles(self) -> list:
         """
@@ -606,119 +615,103 @@ class DBManager:
         Returns:
             list: Episode Bible dict 목록 (ep_num 순 정렬)
         """
-        cur = self.cursor.execute("SELECT * FROM episode_bibles ORDER BY ep_num")
-        rows = cur.fetchall()
+        with self._lock:
+            cur = self.cursor.execute("SELECT * FROM episode_bibles ORDER BY ep_num")
+            rows = cur.fetchall()
 
-        bibles = []
-        for row in rows:
-            # [V60.82] 새 컬럼 안전 조회
-            def safe_get(key, default="[]"):
-                try:
-                    return row[key] if key in row.keys() else default
-                except (KeyError, IndexError, TypeError):  # [V64.P4] specific exception for row access
-                    return default
+            bibles = []
+            for row in rows:
+                # [V60.82] 새 컬럼 안전 조회
+                def safe_get(key, default="[]"):
+                    try:
+                        return row[key] if key in row.keys() else default
+                    except (KeyError, IndexError, TypeError):  # [V64.P4] specific exception for row access
+                        return default
 
-            bibles.append(
-                {
-                    "ep_num": row["ep_num"],
-                    "new_items": json.loads(row["new_items"] or "[]"),
-                    "lost_items": json.loads(row["lost_items"] or "[]"),
-                    "new_npcs": json.loads(row["new_npcs"] or "[]"),
-                    "npc_deaths": json.loads(row["npc_deaths"] or "[]"),
-                    "relationship_changes": json.loads(row["relationship_changes"] or "[]"),
-                    "state_changes": json.loads(row["state_changes"] or "{}"),
-                    "time_passed": row["time_passed"] or "",
-                    "reveals": json.loads(row["reveals"] or "[]"),
-                    # [V60.82] 새 필드
-                    "causal_links": json.loads(safe_get("causal_links", "[]") or "[]"),
-                    "karma_matrix": json.loads(safe_get("karma_matrix", "[]") or "[]"),
-                    "knowledge_map": json.loads(safe_get("knowledge_map", "{}") or "{}"),
-                }
-            )
+                bibles.append(
+                    {
+                        "ep_num": row["ep_num"],
+                        "new_items": json.loads(row["new_items"] or "[]"),
+                        "lost_items": json.loads(row["lost_items"] or "[]"),
+                        "new_npcs": json.loads(row["new_npcs"] or "[]"),
+                        "npc_deaths": json.loads(row["npc_deaths"] or "[]"),
+                        "relationship_changes": json.loads(row["relationship_changes"] or "[]"),
+                        "state_changes": json.loads(row["state_changes"] or "{}"),
+                        "time_passed": row["time_passed"] or "",
+                        "reveals": json.loads(row["reveals"] or "[]"),
+                        # [V60.82] 새 필드
+                        "causal_links": json.loads(safe_get("causal_links", "[]") or "[]"),
+                        "karma_matrix": json.loads(safe_get("karma_matrix", "[]") or "[]"),
+                        "knowledge_map": json.loads(safe_get("knowledge_map", "{}") or "{}"),
+                    }
+                )
 
-        return bibles
+            return bibles
 
     def delete_episode_bibles_after(self, ep_num: int):
         """특정 화 이후의 Bible delta 삭제 (롤백용)"""
-        self.cursor.execute("DELETE FROM episode_bibles WHERE ep_num > ?", (ep_num,))
-        if not self.conn.in_transaction:
-            self.conn.commit()
-        # [V70] 누적 Bible 캐시 무효화 (save_episode_bible과 동일 패턴)
-        invalidate_eps = [k for k in self._cumulative_bible_cache if k > ep_num]
-        for k in invalidate_eps:
-            del self._cumulative_bible_cache[k]
-        return self.cursor.rowcount
+        with self._lock:
+            self.cursor.execute("DELETE FROM episode_bibles WHERE ep_num > ?", (ep_num,))
+            if not self.conn.in_transaction:
+                self.conn.commit()
+            # [V70] 누적 Bible 캐시 무효화 (save_episode_bible과 동일 패턴)
+            invalidate_eps = [k for k in self._cumulative_bible_cache if k > ep_num]
+            for k in invalidate_eps:
+                del self._cumulative_bible_cache[k]
+            return self.cursor.rowcount
 
-    # --- [Section 2: 복선 및 로어] ---
-    # modules/core/db_manager.py
-    # [V35.5] 수술 기록 박제 메서드 추가
+        # --- [Section 2: 복선 및 로어] ---
+        # modules/core/db_manager.py
+        # [V35.5] 수술 기록 박제 메서드 추가
+
     def save_surgery_log(self, ep_num, category, failed_logic, result) -> None:
-        self.cursor.execute(
-            """
-            INSERT INTO surgery_logs (ep_num, error_category, failed_logic, surgery_result)
-            VALUES (?, ?, ?, ?)
-        """,
-            (ep_num, category, failed_logic, result),
-        )
-        # [V44 Fix] 중첩 트랜잭션 안전성 보장
-        if not self.conn.in_transaction:
-            self.conn.commit()
+        with self._lock:
+            self.cursor.execute(
+                """
+                INSERT INTO surgery_logs (ep_num, error_category, failed_logic, surgery_result)
+                VALUES (?, ?, ?, ?)
+            """,
+                (ep_num, category, failed_logic, result),
+            )
+            # [V44 Fix] 중첩 트랜잭션 안전성 보장
+            if not self.conn.in_transaction:
+                self.conn.commit()
 
     def sync_seeds(self, seeds_list) -> None:
         """[V24 Precise Mode] 데이터 누락 시 기본값 할당으로 시스템 중단 방지"""
-        for s in seeds_list:
-            # 1. 필수 데이터 인출 (KeyError 방지를 위해 .get() 사용)
-            seed_id = s.get("id") or s.get("seed_id", f"unknown_{int(time.time())}")
-            category = s.get("category", "일반")  # 카테고리 누락 시 '일반'으로 처리
-            content = s.get("content") or s.get("description", "내용 없음")
-            status = s.get("status", "active")
-            planted_ep = s.get("planted_at") or s.get("planted_ep", 0)
+        with self._lock:
+            for s in seeds_list:
+                # 1. 필수 데이터 인출 (KeyError 방지를 위해 .get() 사용)
+                seed_id = s.get("id") or s.get("seed_id", f"unknown_{int(time.time())}")
+                category = s.get("category", "일반")  # 카테고리 누락 시 '일반'으로 처리
+                content = s.get("content") or s.get("description", "내용 없음")
+                status = s.get("status", "active")
+                planted_ep = s.get("planted_at") or s.get("planted_ep", 0)
 
-            # 2. DB 박제
-            self.cursor.execute(
-                """
-                INSERT OR REPLACE INTO seeds (seed_id, category, content, status, planted_ep)
-                VALUES (?, ?, ?, ?, ?)
-            """,
-                (seed_id, category, content, status, planted_ep),
-            )
+                # 2. DB 박제
+                self.cursor.execute(
+                    """
+                    INSERT OR REPLACE INTO seeds (seed_id, category, content, status, planted_ep)
+                    VALUES (?, ?, ?, ?, ?)
+                """,
+                    (seed_id, category, content, status, planted_ep),
+                )
 
-        if not self.conn.in_transaction:
-            self.conn.commit()
+            if not self.conn.in_transaction:
+                self.conn.commit()
 
     def archive_seed(self, seed_id, ep_num) -> None:
-        self.cursor.execute(
-            "UPDATE seeds SET status = 'archived', recovered_ep = ? WHERE seed_id = ?", (ep_num, seed_id)
-        )
-        if not self.conn.in_transaction:
-            self.conn.commit()
+        with self._lock:
+            self.cursor.execute(
+                "UPDATE seeds SET status = 'archived', recovered_ep = ? WHERE seed_id = ?", (ep_num, seed_id)
+            )
+            if not self.conn.in_transaction:
+                self.conn.commit()
 
     def update_lore_item(self, category, item, description) -> None:
         """[PATCHED] 카테고리+이름 복합 키 기준 저장"""
-        self.cursor.execute(
-            """
-            INSERT INTO encyclopedia (category, item, description)
-            VALUES (?, ?, ?)
-            ON CONFLICT(item) DO UPDATE SET
-                category = excluded.category,
-                description = excluded.description,
-                updated_at = CURRENT_TIMESTAMP
-        """,
-            (category, item, description),
-        )
-        if not self.conn.in_transaction:
-            self.conn.commit()
-
-    def update_lore_items_batch(self, lore_items_list) -> None:
-        """[PATCHED] 일괄 업데이트 트랜잭션"""
-        if not lore_items_list:
-            return
-        nested = self.conn.in_transaction
-        try:
-            if not nested:
-                self.begin()
-
-            self.cursor.executemany(
+        with self._lock:
+            self.cursor.execute(
                 """
                 INSERT INTO encyclopedia (category, item, description)
                 VALUES (?, ?, ?)
@@ -727,115 +720,148 @@ class DBManager:
                     description = excluded.description,
                     updated_at = CURRENT_TIMESTAMP
             """,
-                lore_items_list,
+                (category, item, description),
             )
+            if not self.conn.in_transaction:
+                self.conn.commit()
 
-            if not nested:
-                self.commit()
+    def update_lore_items_batch(self, lore_items_list) -> None:
+        """[PATCHED] 일괄 업데이트 트랜잭션"""
+        with self._lock:
+            if not lore_items_list:
+                return
+            nested = self.conn.in_transaction
+            try:
+                if not nested:
+                    self.begin()
 
-        except sqlite3.IntegrityError as e:
-            # 중복 키 등 무결성 오류 - 개별 항목으로 재시도 가능
-            if not nested:
-                self.rollback()
-            logging.warning(f"🚨 [{DBErrorSeverity.HIGH}] 로어 일괄 저장 무결성 오류: {e}")
-            logging.info("→ 해결책: 중복 항목 확인 후 개별 저장 시도")
-            if nested:
-                raise DBIntegrityError(f"로어 저장 무결성 오류: {e}", original_error=e) from e
-        except sqlite3.OperationalError as e:
-            if not nested:
-                self.rollback()
-            error_str = str(e).lower()
-            if "locked" in error_str:
-                logging.warning(f"🚨 [{DBErrorSeverity.CRITICAL}] DB 잠금 상태: {e}")
-                logging.info("→ 해결책: 다른 프로세스/연결 종료 후 재시도")
-            else:
-                logging.warning(f"🚨 [{DBErrorSeverity.HIGH}] 로어 저장 운영 오류: {e}")
-            if nested:
-                raise DBTransactionError(f"로어 저장 트랜잭션 오류: {e}", original_error=e) from e
-        except Exception as e:
-            if not nested:
-                self.rollback()
-            logging.warning(f"🚨 [{DBErrorSeverity.HIGH}] 로어 일괄 저장 실패: {e}")
-            logging.info(f"→ 상세: {traceback.format_exc()[:300]}")
-            if nested:
-                raise DBError(f"로어 저장 기타 오류: {e}", original_error=e) from e
+                self.cursor.executemany(
+                    """
+                    INSERT INTO encyclopedia (category, item, description)
+                    VALUES (?, ?, ?)
+                    ON CONFLICT(item) DO UPDATE SET
+                        category = excluded.category,
+                        description = excluded.description,
+                        updated_at = CURRENT_TIMESTAMP
+                """,
+                    lore_items_list,
+                )
 
-    # --- [Section 2 보완: 로어 인출] ---
+                if not nested:
+                    self.commit()
+
+            except sqlite3.IntegrityError as e:
+                # 중복 키 등 무결성 오류 - 개별 항목으로 재시도 가능
+                if not nested:
+                    self.rollback()
+                logging.warning(f"🚨 [{DBErrorSeverity.HIGH}] 로어 일괄 저장 무결성 오류: {e}")
+                logging.info("→ 해결책: 중복 항목 확인 후 개별 저장 시도")
+                if nested:
+                    raise DBIntegrityError(f"로어 저장 무결성 오류: {e}", original_error=e) from e
+            except sqlite3.OperationalError as e:
+                if not nested:
+                    self.rollback()
+                error_str = str(e).lower()
+                if "locked" in error_str:
+                    logging.warning(f"🚨 [{DBErrorSeverity.CRITICAL}] DB 잠금 상태: {e}")
+                    logging.info("→ 해결책: 다른 프로세스/연결 종료 후 재시도")
+                else:
+                    logging.warning(f"🚨 [{DBErrorSeverity.HIGH}] 로어 저장 운영 오류: {e}")
+                if nested:
+                    raise DBTransactionError(f"로어 저장 트랜잭션 오류: {e}", original_error=e) from e
+            except Exception as e:
+                if not nested:
+                    self.rollback()
+                logging.warning(f"🚨 [{DBErrorSeverity.HIGH}] 로어 일괄 저장 실패: {e}")
+                logging.info(f"→ 상세: {traceback.format_exc()[:300]}")
+                if nested:
+                    raise DBError(f"로어 저장 기타 오류: {e}", original_error=e) from e
+
+        # --- [Section 2 보완: 로어 인출] ---
+
     def get_lore_item(self, item_name):
         """특정 인물/아이템의 설정을 테이블에서 즉시 조회"""
-        cur = self.cursor.execute("SELECT * FROM encyclopedia WHERE item = ?", (item_name,))
-        row = cur.fetchone()
-        return dict(row) if row else None
+        with self._lock:
+            cur = self.cursor.execute("SELECT * FROM encyclopedia WHERE item = ?", (item_name,))
+            row = cur.fetchone()
+            return dict(row) if row else None
 
     def get_lore_list_by_category(self, category):
         """특정 카테고리(NPC, ITEM 등) 전체 리스트 인출. category가 None이면 전체 반환"""
-        if category is None:
-            cur = self.cursor.execute("SELECT * FROM encyclopedia")
-        else:
-            cur = self.cursor.execute("SELECT * FROM encyclopedia WHERE category = ?", (category,))
-        return [dict(row) for row in cur.fetchall()]
+        with self._lock:
+            if category is None:
+                cur = self.cursor.execute("SELECT * FROM encyclopedia")
+            else:
+                cur = self.cursor.execute("SELECT * FROM encyclopedia WHERE category = ?", (category,))
+            return [dict(row) for row in cur.fetchall()]
 
     def save_anchor(self, key, data) -> bool:
         """S등급 데이터를 박제하고 타임스탬프를 강제 갱신함"""
-        try:
-            json_data = json.dumps(data, ensure_ascii=False)
-            # 쿼리문에 CURRENT_TIMESTAMP를 명시하여 REPLACE 시에도 시간이 갱신되게 함
-            self.cursor.execute(
-                """
-                INSERT OR REPLACE INTO anchors (key, data, updated_at)
-                VALUES (?, ?, CURRENT_TIMESTAMP)
-            """,
-                (key, json_data),
-            )
-            # [V44 Fix] 중첩 트랜잭션 안전성 보장
-            if not self.conn.in_transaction:
-                self.conn.commit()
-            return True
-        except Exception as e:
-            logging.warning(f"❌ [DB Error] Anchor 저장 실패: {e}")
-            return False
+        with self._lock:
+            try:
+                json_data = json.dumps(data, ensure_ascii=False)
+                # 쿼리문에 CURRENT_TIMESTAMP를 명시하여 REPLACE 시에도 시간이 갱신되게 함
+                self.cursor.execute(
+                    """
+                    INSERT OR REPLACE INTO anchors (key, data, updated_at)
+                    VALUES (?, ?, CURRENT_TIMESTAMP)
+                """,
+                    (key, json_data),
+                )
+                # [V44 Fix] 중첩 트랜잭션 안전성 보장
+                if not self.conn.in_transaction:
+                    self.conn.commit()
+                return True
+            except Exception as e:
+                logging.warning(f"❌ [DB Error] Anchor 저장 실패: {e}")
+                return False
 
     def load_anchor(self, key, default=None):
-        cur = self.cursor.execute("SELECT data FROM anchors WHERE key = ?", (key,))
-        row = cur.fetchone()
-        if not row:
-            # [V61.5] default=[] 전달 시 [] or {} → {} 반환 버그 수정
-            return default if default is not None else {}
-        try:
-            return json.loads(row["data"])
-        except (json.JSONDecodeError, TypeError) as e:  # [V70] row['data']가 None일 때 TypeError 방어
-            logging.warning(f"🚨 [DB] Anchor JSON 파싱 실패 (key={key}): {e}")
-            return default if default is not None else {}
+        with self._lock:
+            cur = self.cursor.execute("SELECT data FROM anchors WHERE key = ?", (key,))
+            row = cur.fetchone()
+            if not row:
+                # [V61.5] default=[] 전달 시 [] or {} → {} 반환 버그 수정
+                return default if default is not None else {}
+            try:
+                return json.loads(row["data"])
+            except (json.JSONDecodeError, TypeError) as e:  # [V70] row['data']가 None일 때 TypeError 방어
+                logging.warning(f"🚨 [DB] Anchor JSON 파싱 실패 (key={key}): {e}")
+                return default if default is not None else {}
 
     def load_all_anchors(self):
-        cur = self.cursor.execute("SELECT key, data FROM anchors")
-        result = {}
-        for row in cur.fetchall():
-            try:
-                result[row["key"]] = json.loads(row["data"]) if row["data"] else {}
-            except (json.JSONDecodeError, TypeError) as e:
-                logging.warning(f"🚨 [DB] Anchor JSON 파싱 실패 (key={row['key']}): {e}")
-                result[row["key"]] = {}
-        return result
+        with self._lock:
+            cur = self.cursor.execute("SELECT key, data FROM anchors")
+            result = {}
+            for row in cur.fetchall():
+                try:
+                    result[row["key"]] = json.loads(row["data"]) if row["data"] else {}
+                except (json.JSONDecodeError, TypeError) as e:
+                    logging.warning(f"🚨 [DB] Anchor JSON 파싱 실패 (key={row['key']}): {e}")
+                    result[row["key"]] = {}
+            return result
 
-    # --- [Section 4: 설계도 및 로그] ---
+        # --- [Section 4: 설계도 및 로그] ---
+
     def save_blueprint(self, ep_num, data_dict) -> None:
-        serialized = json.dumps(data_dict, ensure_ascii=False)
-        self.cursor.execute("INSERT OR REPLACE INTO blueprints (ep_num, data) VALUES (?, ?)", (ep_num, serialized))
-        # [수정] 트랜잭션 안전성 확보
-        if not self.conn.in_transaction:
-            self.conn.commit()
+        with self._lock:
+            serialized = json.dumps(data_dict, ensure_ascii=False)
+            self.cursor.execute("INSERT OR REPLACE INTO blueprints (ep_num, data) VALUES (?, ?)", (ep_num, serialized))
+            # [수정] 트랜잭션 안전성 확보
+            if not self.conn.in_transaction:
+                self.conn.commit()
 
     def get_previous_blueprint(self, current_ep):
-        cur = self.cursor.execute("SELECT data FROM blueprints WHERE ep_num = ?", (current_ep - 1,))
-        row = cur.fetchone()
-        if not row:
-            return None
-        try:
-            return json.loads(row["data"])
-        except (json.JSONDecodeError, TypeError) as e:  # [V70] NULL data → TypeError 방어
-            logging.warning(f"🚨 [DB] Blueprint JSON 파싱 실패 (ep_num={current_ep - 1}): {e}")
-            return None
+        with self._lock:
+            cur = self.cursor.execute("SELECT data FROM blueprints WHERE ep_num = ?", (current_ep - 1,))
+            row = cur.fetchone()
+            if not row:
+                return None
+            try:
+                return json.loads(row["data"])
+            except (json.JSONDecodeError, TypeError) as e:  # [V70] NULL data → TypeError 방어
+                logging.warning(f"🚨 [DB] Blueprint JSON 파싱 실패 (ep_num={current_ep - 1}): {e}")
+                return None
 
     def save_state_log(self, ep_num, data_dict) -> None:
         """기존 메서드 호환성 유지"""
@@ -843,81 +869,92 @@ class DBManager:
 
     def save_state_log_with_summary(self, ep_num, data_dict, summary) -> None:
         """[NEW] 요약 포함 로그 저장"""
-        serialized = json.dumps(data_dict, ensure_ascii=False)
-        self.cursor.execute(
-            "INSERT OR REPLACE INTO state_logs (ep_num, data, summary) VALUES (?, ?, ?)", (ep_num, serialized, summary)
-        )
-        if not self.conn.in_transaction:
-            self.conn.commit()
+        with self._lock:
+            serialized = json.dumps(data_dict, ensure_ascii=False)
+            self.cursor.execute(
+                "INSERT OR REPLACE INTO state_logs (ep_num, data, summary) VALUES (?, ?, ?)",
+                (ep_num, serialized, summary),
+            )
+            if not self.conn.in_transaction:
+                self.conn.commit()
 
     def get_latest_state(self) -> dict:
-        cur = self.cursor.execute("SELECT data FROM state_logs ORDER BY ep_num DESC LIMIT 1")
-        row = cur.fetchone()
-        if not row:
-            return {}
-        try:
-            return json.loads(row["data"]) if row["data"] else {}
-        except (json.JSONDecodeError, TypeError) as e:
-            logging.warning(f"🚨 [DB] State log JSON 파싱 실패: {e}")
-            return {}
+        with self._lock:
+            cur = self.cursor.execute("SELECT data FROM state_logs ORDER BY ep_num DESC LIMIT 1")
+            row = cur.fetchone()
+            if not row:
+                return {}
+            try:
+                return json.loads(row["data"]) if row["data"] else {}
+            except (json.JSONDecodeError, TypeError) as e:
+                logging.warning(f"🚨 [DB] State log JSON 파싱 실패: {e}")
+                return {}
 
     def load_state_log(self, ep_num: int) -> dict:
         """[FIX] 특정 에피소드의 state_log 조회"""
-        try:
-            cur = self.cursor.execute("SELECT data, summary FROM state_logs WHERE ep_num = ?", (ep_num,))
-            row = cur.fetchone()
-            if not row:
-                return None
-            result = {"summary": row["summary"] if row["summary"] else ""}
+        with self._lock:
             try:
-                result["data"] = json.loads(row["data"]) if row["data"] else {}
-            except json.JSONDecodeError:
-                result["data"] = {}
-            return result
-        except Exception as e:
-            logging.warning(f"🚨 [DB] State log 조회 실패 (ep {ep_num}): {e}")
-            return None
+                cur = self.cursor.execute("SELECT data, summary FROM state_logs WHERE ep_num = ?", (ep_num,))
+                row = cur.fetchone()
+                if not row:
+                    return None
+                result = {"summary": row["summary"] if row["summary"] else ""}
+                try:
+                    result["data"] = json.loads(row["data"]) if row["data"] else {}
+                except json.JSONDecodeError:
+                    result["data"] = {}
+                return result
+            except Exception as e:
+                logging.warning(f"🚨 [DB] State log 조회 실패 (ep {ep_num}): {e}")
+                return None
 
     def get_causal_summary_chain(self, limit=5):
         """[NEW] 과거 요약 체인 인출"""
-        cur = self.cursor.execute(
-            "SELECT ep_num, summary FROM state_logs WHERE summary IS NOT NULL ORDER BY ep_num DESC LIMIT ?", (limit,)
-        )
-        return "\n".join([f"- [제 {r['ep_num']} 화]: {r['summary']}" for r in reversed(cur.fetchall())])
+        with self._lock:
+            cur = self.cursor.execute(
+                "SELECT ep_num, summary FROM state_logs WHERE summary IS NOT NULL ORDER BY ep_num DESC LIMIT ?",
+                (limit,),
+            )
+            return "\n".join([f"- [제 {r['ep_num']} 화]: {r['summary']}" for r in reversed(cur.fetchall())])
 
-    # --- [Section 5: 관계 및 인과] ---
+        # --- [Section 5: 관계 및 인과] ---
+
     def update_karma(self, npc_name, mis_val, obs_val, ep_num) -> None:
-        self.cursor.execute(
-            """
-            INSERT INTO karma_status (npc_name, misunderstanding, obsession, last_updated_ep)
-            VALUES (?, ?, ?, ?)
-            ON CONFLICT(npc_name) DO UPDATE SET
-                misunderstanding = ?,
-                obsession = ?,
-                last_updated_ep = ?
-        """,
-            (npc_name, mis_val, obs_val, ep_num, mis_val, obs_val, ep_num),
-        )
-        if not self.conn.in_transaction:
-            self.conn.commit()
+        with self._lock:
+            self.cursor.execute(
+                """
+                INSERT INTO karma_status (npc_name, misunderstanding, obsession, last_updated_ep)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(npc_name) DO UPDATE SET
+                    misunderstanding = ?,
+                    obsession = ?,
+                    last_updated_ep = ?
+            """,
+                (npc_name, mis_val, obs_val, ep_num, mis_val, obs_val, ep_num),
+            )
+            if not self.conn.in_transaction:
+                self.conn.commit()
 
     def get_all_karma(self):
-        cur = self.cursor.execute("SELECT * FROM karma_status")
-        return {row["npc_name"]: dict(row) for row in cur.fetchall()}
+        with self._lock:
+            cur = self.cursor.execute("SELECT * FROM karma_status")
+            return {row["npc_name"]: dict(row) for row in cur.fetchall()}
 
     def save_causal_links(self, new_links, current_ep) -> None:
-        if not new_links:
-            return
-        data_to_insert = []
-        for link in new_links:
-            ep = link.get("ep") or current_ep
-            serialized = json.dumps(link, ensure_ascii=False)
-            data_to_insert.append((ep, serialized))
-        self.cursor.executemany("INSERT INTO causal_graph (ep_num, data) VALUES (?, ?)", data_to_insert)
-        if not self.conn.in_transaction:
-            self.conn.commit()
+        with self._lock:
+            if not new_links:
+                return
+            data_to_insert = []
+            for link in new_links:
+                ep = link.get("ep") or current_ep
+                serialized = json.dumps(link, ensure_ascii=False)
+                data_to_insert.append((ep, serialized))
+            self.cursor.executemany("INSERT INTO causal_graph (ep_num, data) VALUES (?, ?)", data_to_insert)
+            if not self.conn.in_transaction:
+                self.conn.commit()
 
-    # --- [Sovereign Unified Transaction: 최종 박제] ---
+        # --- [Sovereign Unified Transaction: 최종 박제] ---
+
     def commit_episode_factory(
         self,
         ep_num,
@@ -1127,98 +1164,109 @@ class DBManager:
 
     # --- [Utility] ---
     def get_latest_episode_number(self) -> int:
-        cur = self.cursor.execute("SELECT MAX(ep_num) as max_ep FROM manuscripts")
-        row = cur.fetchone()
-        return (row["max_ep"] or 0) + 1
+        with self._lock:
+            cur = self.cursor.execute("SELECT MAX(ep_num) as max_ep FROM manuscripts")
+            row = cur.fetchone()
+            return (row["max_ep"] or 0) + 1
 
     def get_latest_blueprint_number(self) -> int:
         """Blueprint 테이블의 최대 ep_num 반환 (없으면 0)"""
-        cur = self.cursor.execute("SELECT MAX(ep_num) as max_ep FROM blueprints")
-        row = cur.fetchone()
-        return row["max_ep"] or 0
+        with self._lock:
+            cur = self.cursor.execute("SELECT MAX(ep_num) as max_ep FROM blueprints")
+            row = cur.fetchone()
+            return row["max_ep"] or 0
 
     def get_context_manuscripts(self, current_ep, limit=3):
-        cur = self.cursor.execute(
-            "SELECT ep_num, title, content FROM manuscripts WHERE ep_num < ? ORDER BY ep_num DESC LIMIT ?",
-            (current_ep, limit),
-        )
-        return [dict(row) for row in cur.fetchall()]
+        with self._lock:
+            cur = self.cursor.execute(
+                "SELECT ep_num, title, content FROM manuscripts WHERE ep_num < ? ORDER BY ep_num DESC LIMIT ?",
+                (current_ep, limit),
+            )
+            return [dict(row) for row in cur.fetchall()]
 
     def reset_after(self, target_ep) -> None:
         """전체 테이블 리셋 및 롤백"""
-        tables = ["blueprints", "state_logs", "causal_graph", "manuscripts", "martial_tracker"]
-        for tbl in tables:
-            self.cursor.execute(f"DELETE FROM {tbl} WHERE ep_num >= ?", (target_ep,))
-        self.cursor.execute("DELETE FROM episode_bibles WHERE ep_num >= ?", (target_ep,))  # [V70] 누락 수정
-        self.cursor.execute("DELETE FROM sync_status WHERE ep_num >= ?", (target_ep,))  # [V70] 동기화 상태도 리셋
-        self.cursor.execute("DELETE FROM karma_status WHERE last_updated_ep >= ?", (target_ep,))
-        self.cursor.execute("DELETE FROM seeds WHERE planted_ep >= ?", (target_ep,))
-        # [D-2] 롤백 누락 데이터 정리
-        self.cursor.execute("DELETE FROM npc_history WHERE episode_no >= ?", (target_ep,))
-        self.cursor.execute("DELETE FROM episode_sentence_hashes WHERE episode_number >= ?", (target_ep,))
-        self.cursor.execute("DELETE FROM episode_satisfaction_tags WHERE ep_num >= ?", (target_ep,))
-        self.cursor.execute("DELETE FROM director_selections WHERE ep_num >= ?", (target_ep,))
-        # [V70] 누적 Bible 캐시 무효화
-        invalidate_eps = [k for k in self._cumulative_bible_cache if k >= target_ep]
-        for k in invalidate_eps:
-            del self._cumulative_bible_cache[k]
-        # 로어는 시간 개념이 모호하므로 유지하거나 별도 정책 필요 (여기선 유지)
-        self.conn.commit()
-        self.cursor.execute("VACUUM")
+        with self._lock:
+            tables = ["blueprints", "state_logs", "causal_graph", "manuscripts", "martial_tracker"]
+            for tbl in tables:
+                self.cursor.execute(f"DELETE FROM {tbl} WHERE ep_num >= ?", (target_ep,))
+            self.cursor.execute("DELETE FROM episode_bibles WHERE ep_num >= ?", (target_ep,))  # [V70] 누락 수정
+            self.cursor.execute("DELETE FROM sync_status WHERE ep_num >= ?", (target_ep,))  # [V70] 동기화 상태도 리셋
+            self.cursor.execute("DELETE FROM karma_status WHERE last_updated_ep >= ?", (target_ep,))
+            self.cursor.execute("DELETE FROM seeds WHERE planted_ep >= ?", (target_ep,))
+            # [D-2] 롤백 누락 데이터 정리
+            self.cursor.execute("DELETE FROM npc_history WHERE episode_no >= ?", (target_ep,))
+            self.cursor.execute("DELETE FROM episode_sentence_hashes WHERE episode_number >= ?", (target_ep,))
+            self.cursor.execute("DELETE FROM episode_satisfaction_tags WHERE ep_num >= ?", (target_ep,))
+            self.cursor.execute("DELETE FROM director_selections WHERE ep_num >= ?", (target_ep,))
+            # [V70] 누적 Bible 캐시 무효화
+            invalidate_eps = [k for k in self._cumulative_bible_cache if k >= target_ep]
+            for k in invalidate_eps:
+                del self._cumulative_bible_cache[k]
+            # 로어는 시간 개념이 모호하므로 유지하거나 별도 정책 필요 (여기선 유지)
+            self.conn.commit()
+            self.cursor.execute("VACUUM")
 
     def get_rollback_impact(self, target_ep: int) -> dict:
         """[D-2] 롤백 영향 범위 조회 — 삭제될 데이터 건수 미리보기."""
-        impact = {}
-        for tbl in ["blueprints", "state_logs", "causal_graph", "manuscripts", "martial_tracker"]:
-            cur = self.cursor.execute(f"SELECT COUNT(*) as cnt FROM {tbl} WHERE ep_num >= ?", (target_ep,))  # noqa: S608
-            impact[tbl] = cur.fetchone()["cnt"]
+        with self._lock:
+            impact = {}
+            for tbl in ["blueprints", "state_logs", "causal_graph", "manuscripts", "martial_tracker"]:
+                cur = self.cursor.execute(f"SELECT COUNT(*) as cnt FROM {tbl} WHERE ep_num >= ?", (target_ep,))  # noqa: S608
+                impact[tbl] = cur.fetchone()["cnt"]
 
-        cur = self.cursor.execute("SELECT COUNT(*) as cnt FROM episode_bibles WHERE ep_num >= ?", (target_ep,))
-        impact["episode_bibles"] = cur.fetchone()["cnt"]
+            cur = self.cursor.execute("SELECT COUNT(*) as cnt FROM episode_bibles WHERE ep_num >= ?", (target_ep,))
+            impact["episode_bibles"] = cur.fetchone()["cnt"]
 
-        cur = self.cursor.execute("SELECT COUNT(*) as cnt FROM npc_history WHERE episode_no >= ?", (target_ep,))
-        impact["npc_history"] = cur.fetchone()["cnt"]
+            cur = self.cursor.execute("SELECT COUNT(*) as cnt FROM npc_history WHERE episode_no >= ?", (target_ep,))
+            impact["npc_history"] = cur.fetchone()["cnt"]
 
-        cur = self.cursor.execute(
-            "SELECT COUNT(*) as cnt FROM episode_sentence_hashes WHERE episode_number >= ?", (target_ep,)
-        )
-        impact["sentence_hashes"] = cur.fetchone()["cnt"]
+            cur = self.cursor.execute(
+                "SELECT COUNT(*) as cnt FROM episode_sentence_hashes WHERE episode_number >= ?", (target_ep,)
+            )
+            impact["sentence_hashes"] = cur.fetchone()["cnt"]
 
-        cur = self.cursor.execute(
-            "SELECT COUNT(*) as cnt FROM episode_satisfaction_tags WHERE ep_num >= ?", (target_ep,)
-        )
-        impact["satisfaction_tags"] = cur.fetchone()["cnt"]
+            cur = self.cursor.execute(
+                "SELECT COUNT(*) as cnt FROM episode_satisfaction_tags WHERE ep_num >= ?", (target_ep,)
+            )
+            impact["satisfaction_tags"] = cur.fetchone()["cnt"]
 
-        cur = self.cursor.execute("SELECT COUNT(*) as cnt FROM director_selections WHERE ep_num >= ?", (target_ep,))
-        impact["director_selections"] = cur.fetchone()["cnt"]
+            cur = self.cursor.execute("SELECT COUNT(*) as cnt FROM director_selections WHERE ep_num >= ?", (target_ep,))
+            impact["director_selections"] = cur.fetchone()["cnt"]
 
-        return impact
+            return impact
 
-    # --- [Memory Sync 전용 메서드] ---
+        # --- [Memory Sync 전용 메서드] ---
+
     def get_sync_status(self, ep_num):
         """특정 에피소드의 벡터 DB 동기화 여부 조회"""
-        cur = self.cursor.execute("SELECT vector_synced FROM sync_status WHERE ep_num = ?", (ep_num,))
-        row = cur.fetchone()
-        return row["vector_synced"] if row else None
+        with self._lock:
+            cur = self.cursor.execute("SELECT vector_synced FROM sync_status WHERE ep_num = ?", (ep_num,))
+            row = cur.fetchone()
+            return row["vector_synced"] if row else None
 
     def update_sync_status(self, ep_num, status) -> None:
         """벡터 DB 동기화 상태 업데이트 (0: 미완료, 1: 완료)"""
-        self.cursor.execute(
-            """
-            INSERT OR REPLACE INTO sync_status (ep_num, vector_synced, updated_at)
-            VALUES (?, ?, CURRENT_TIMESTAMP)
-        """,
-            (ep_num, status),
-        )
-        if not self.conn.in_transaction:
-            self.conn.commit()
+        with self._lock:
+            self.cursor.execute(
+                """
+                INSERT OR REPLACE INTO sync_status (ep_num, vector_synced, updated_at)
+                VALUES (?, ?, CURRENT_TIMESTAMP)
+            """,
+                (ep_num, status),
+            )
+            if not self.conn.in_transaction:
+                self.conn.commit()
 
-    # modules/core/db_manager.py 에 추가하면 좋은 전용 메서드
+        # modules/core/db_manager.py 에 추가하면 좋은 전용 메서드
+
     def get_active_seeds(self):
-        cur = self.cursor.execute("SELECT * FROM seeds WHERE status = 'active'")
-        return [dict(row) for row in cur.fetchall()]
+        with self._lock:
+            cur = self.cursor.execute("SELECT * FROM seeds WHERE status = 'active'")
+            return [dict(row) for row in cur.fetchall()]
 
-    # --- [V61.5] Blueprint/Manuscript 연속성 캐싱용 메서드 ---
+        # --- [V61.5] Blueprint/Manuscript 연속성 캐싱용 메서드 ---
+
     def get_recent_blueprints(self, before_ep: int, limit: int = 10) -> list:
         """
         [V61.5] ep_num < before_ep인 blueprint 중 최근 limit개 조회
@@ -1230,22 +1278,23 @@ class DBManager:
         Returns:
             list: [{'ep_num': int, 'data': dict}, ...] (ep_num 오름차순)
         """
-        cur = self.cursor.execute(
-            """SELECT ep_num, data FROM blueprints
-               WHERE ep_num < ?
-               ORDER BY ep_num DESC
-               LIMIT ?""",
-            (before_ep, limit),
-        )
-        results = []
-        for row in cur.fetchall():
-            try:
-                data = json.loads(row["data"]) if row["data"] else {}
-            except json.JSONDecodeError:
-                data = {}
-            results.append({"ep_num": row["ep_num"], "data": data})
-        # 오름차순으로 정렬 (시간순)
-        return list(reversed(results))
+        with self._lock:
+            cur = self.cursor.execute(
+                """SELECT ep_num, data FROM blueprints
+                   WHERE ep_num < ?
+                   ORDER BY ep_num DESC
+                   LIMIT ?""",
+                (before_ep, limit),
+            )
+            results = []
+            for row in cur.fetchall():
+                try:
+                    data = json.loads(row["data"]) if row["data"] else {}
+                except json.JSONDecodeError:
+                    data = {}
+                results.append({"ep_num": row["ep_num"], "data": data})
+            # 오름차순으로 정렬 (시간순)
+            return list(reversed(results))
 
     def get_recent_manuscripts(self, before_ep: int, limit: int = 10) -> list:
         """
@@ -1258,16 +1307,17 @@ class DBManager:
         Returns:
             list: [{'ep_num': int, 'title': str, 'content': str}, ...] (ep_num 오름차순)
         """
-        cur = self.cursor.execute(
-            """SELECT ep_num, title, content FROM manuscripts
-               WHERE ep_num < ?
-               ORDER BY ep_num DESC
-               LIMIT ?""",
-            (before_ep, limit),
-        )
-        results = [dict(row) for row in cur.fetchall()]
-        # 오름차순으로 정렬 (시간순)
-        return list(reversed(results))
+        with self._lock:
+            cur = self.cursor.execute(
+                """SELECT ep_num, title, content FROM manuscripts
+                   WHERE ep_num < ?
+                   ORDER BY ep_num DESC
+                   LIMIT ?""",
+                (before_ep, limit),
+            )
+            results = [dict(row) for row in cur.fetchall()]
+            # 오름차순으로 정렬 (시간순)
+            return list(reversed(results))
 
     def get_recent_manuscript_excerpts(self, before_ep: int, limit: int = 10, max_chars: int = 200) -> list:
         """
@@ -1282,35 +1332,38 @@ class DBManager:
         Returns:
             list: [{'ep_num': int, 'title': str, 'content': str}, ...] (ep_num 오름차순)
         """
-        cur = self.cursor.execute(
-            """SELECT ep_num, title, SUBSTR(content, 1, ?) AS content FROM manuscripts
-               WHERE ep_num < ?
-               ORDER BY ep_num DESC
-               LIMIT ?""",
-            (max_chars, before_ep, limit),
-        )
-        results = [dict(row) for row in cur.fetchall()]
-        # 오름차순으로 정렬 (시간순)
-        return list(reversed(results))
+        with self._lock:
+            cur = self.cursor.execute(
+                """SELECT ep_num, title, SUBSTR(content, 1, ?) AS content FROM manuscripts
+                   WHERE ep_num < ?
+                   ORDER BY ep_num DESC
+                   LIMIT ?""",
+                (max_chars, before_ep, limit),
+            )
+            results = [dict(row) for row in cur.fetchall()]
+            # 오름차순으로 정렬 (시간순)
+            return list(reversed(results))
 
     def get_all_manuscripts(self) -> list:
         """전체 원고 목록 조회 (ep_num 오름차순)"""
-        cur = self.cursor.execute("SELECT ep_num, title, content FROM manuscripts ORDER BY ep_num ASC")
-        return [dict(row) for row in cur.fetchall()]
+        with self._lock:
+            cur = self.cursor.execute("SELECT ep_num, title, content FROM manuscripts ORDER BY ep_num ASC")
+            return [dict(row) for row in cur.fetchall()]
 
     def get_all_blueprints(self) -> list:
         """전체 블루프린트 목록 조회 (ep_num 오름차순)"""
-        cur = self.cursor.execute("SELECT ep_num, data FROM blueprints ORDER BY ep_num ASC")
-        results = []
-        for row in cur.fetchall():
-            try:
-                data = json.loads(row["data"]) if row["data"] else {}
-            except json.JSONDecodeError:
-                data = {}
-            results.append({"ep_num": row["ep_num"], "data": data})
-        return results
+        with self._lock:
+            cur = self.cursor.execute("SELECT ep_num, data FROM blueprints ORDER BY ep_num ASC")
+            results = []
+            for row in cur.fetchall():
+                try:
+                    data = json.loads(row["data"]) if row["data"] else {}
+                except json.JSONDecodeError:
+                    data = {}
+                results.append({"ep_num": row["ep_num"], "data": data})
+            return results
 
-    # --- [Phase 3-5A] NPC 변경 이력 ---
+        # --- [Phase 3-5A] NPC 변경 이력 ---
 
     def insert_npc_change(
         self,
