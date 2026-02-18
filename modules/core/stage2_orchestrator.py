@@ -533,11 +533,14 @@ class Stage2Orchestrator:
                         genre=genre,
                         constraint_db=constraint_db,
                     )
-                    last_refined_context = _fin["last_refined_context"]
-                    current_ep_start = _fin["current_ep_start"]
-                    current_feedback = _fin["current_feedback"]
-                    director_feedback_for_fourphase = _fin["director_feedback_for_fourphase"]
-                    _st_snapshot = _fin["st_snapshot"]
+                    # [Sweep45] 조기 retry 리턴 시 누락 키 방어 (.get 폴백)
+                    last_refined_context = _fin.get("last_refined_context", last_refined_context)
+                    current_ep_start = _fin.get("current_ep_start", current_ep_start)
+                    current_feedback = _fin.get("current_feedback", current_feedback)
+                    director_feedback_for_fourphase = _fin.get(
+                        "director_feedback_for_fourphase", director_feedback_for_fourphase
+                    )
+                    _st_snapshot = _fin.get("st_snapshot", _st_snapshot)
 
                     # [Patch Mode] REJECT 시 previous_attempt 갱신 (패치 모드 판단용)
                     try:

@@ -219,7 +219,13 @@ class Stage2Finalizer:
                         if isinstance(acquired, str):
                             acquired = [acquired] if acquired else []
                         if isinstance(prev_inventory, list):
-                            inherited = [item for item in prev_inventory if item not in consumed_names]
+                            # [Sweep45] dict 아이템도 consumed 비교 가능하도록 이름 추출
+                            def _item_name(it):
+                                if isinstance(it, dict):
+                                    return it.get("name", it.get("item", ""))
+                                return str(it)
+
+                            inherited = [item for item in prev_inventory if _item_name(item) not in consumed_names]
                             inherited.extend(acquired)
                             refined_arc["joint_docs"]["physical_inventory"] = inherited
                             self.ctx.ui.log(

@@ -346,7 +346,10 @@ JSON으로 출력:
         total_planned_ep = session.total_planned_ep
 
         loop_guard = 0
-        max_loops = min((target_ep or total_planned_ep) - self.ctx.current_project.get_latest_episode_number() + 5, 100)
+        # [Sweep45] max(1, ...) — latest_ep > total_planned_ep 시 음수 방지
+        max_loops = max(
+            1, min((target_ep or total_planned_ep) - self.ctx.current_project.get_latest_episode_number() + 5, 100)
+        )
 
         # [V66.1] B-2: ReferenceAnchor 루프 밖 1회 생성 (내부 캐시로 DB 중복 조회 방지)
         from modules.core.reference_anchor import ReferenceAnchor
@@ -491,6 +494,9 @@ JSON으로 출력:
                         _removed_count += 1
                         _removed_chars += len(_removed_section)
                     mandatory_context = "\n".join(_sections)
+                    # [Sweep45] 첫 섹션 단독 > 50K 시 fallback truncation
+                    if len(mandatory_context) > 50000:
+                        mandatory_context = mandatory_context[:49950] + "\n\n...(컨텍스트 크기 초과로 일부 생략)"
                     if _removed_count > 0:
                         _perf_logger.info(
                             f"[V66.1] mandatory_context {_removed_count}개 섹션 제거 ({_removed_chars}자)"
@@ -527,6 +533,8 @@ JSON으로 출력:
             # ===== Phase 4: Director 면담 (5회) =====
             _outcome = self._handle_round_outcome(round_ctx=_round_ctx)
             if _outcome.should_return:
+                # [Sweep45] 5회 실패 시에도 벡터 메모리 동기화 보장
+                self.post_processor.run_post_episode_tasks()
                 return True
             final_manuscript = _outcome.final_manuscript
             final_title = _outcome.final_title
