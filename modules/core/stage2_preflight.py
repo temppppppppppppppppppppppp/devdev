@@ -532,8 +532,8 @@ class Stage2PreflightAnalysis:
                     refined_arc = four_phase_arc
                     generation_method = "four_phase"
                     four_phase_passed = True
-                    draft_validator_passed = True
-                    consensus_passed = True
+                    draft_validator_passed = False  # FourPhase는 독립 파이프라인 — 별도 검증 미실행
+                    consensus_passed = False
 
                     refined_arc["joint_docs"] = enriched_block.get("joint_docs", {})
                     refined_arc["status_shadow"] = enriched_block.get("status_shadow", {})

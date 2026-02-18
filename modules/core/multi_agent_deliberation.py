@@ -249,20 +249,23 @@ JSON 형식:
         architect = next((o for o in opinions if o.role == AgentRole.ARCHITECT), None)
         writer = next((o for o in opinions if o.role == AgentRole.WRITER), None)
 
+        def _esc(s):
+            return s.replace("{", "{{").replace("}", "}}")
+
         prompt = self.CONSENSUS_PROMPT.format(
-            content=content[:6000].replace("{", "{{").replace("}", "}}"),  # [V70] brace escape
+            content=_esc(content[:6000]),
             analyst_score=analyst.score if analyst else 70,
-            analyst_strengths=", ".join(analyst.strengths[:3]) if analyst else "없음",
-            analyst_concerns=", ".join(analyst.concerns[:3]) if analyst else "없음",
-            analyst_suggestions=", ".join(analyst.suggestions[:3]) if analyst else "없음",
+            analyst_strengths=_esc(", ".join(analyst.strengths[:3])) if analyst else "없음",
+            analyst_concerns=_esc(", ".join(analyst.concerns[:3])) if analyst else "없음",
+            analyst_suggestions=_esc(", ".join(analyst.suggestions[:3])) if analyst else "없음",
             architect_score=architect.score if architect else 70,
-            architect_strengths=", ".join(architect.strengths[:3]) if architect else "없음",
-            architect_concerns=", ".join(architect.concerns[:3]) if architect else "없음",
-            architect_suggestions=", ".join(architect.suggestions[:3]) if architect else "없음",
+            architect_strengths=_esc(", ".join(architect.strengths[:3])) if architect else "없음",
+            architect_concerns=_esc(", ".join(architect.concerns[:3])) if architect else "없음",
+            architect_suggestions=_esc(", ".join(architect.suggestions[:3])) if architect else "없음",
             writer_score=writer.score if writer else 70,
-            writer_strengths=", ".join(writer.strengths[:3]) if writer else "없음",
-            writer_concerns=", ".join(writer.concerns[:3]) if writer else "없음",
-            writer_suggestions=", ".join(writer.suggestions[:3]) if writer else "없음",
+            writer_strengths=_esc(", ".join(writer.strengths[:3])) if writer else "없음",
+            writer_concerns=_esc(", ".join(writer.concerns[:3])) if writer else "없음",
+            writer_suggestions=_esc(", ".join(writer.suggestions[:3])) if writer else "없음",
         )
 
         return self._call_llm(prompt, temperature=0.5)

@@ -17,6 +17,7 @@ if sys.platform == "win32":
 
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+        sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8", errors="replace")
     except (AttributeError, OSError):
         pass
 
@@ -2088,6 +2089,14 @@ class SovereignApp:
         # [V40] 장르 정보 저장
         if self.selected_genre and hasattr(self.current_project, "db"):
             self.current_project.db.save_anchor("genre_info", self.selected_genre)
+
+        # 1-b. VecMemory 연결 종료
+        if hasattr(self, "memory") and self.memory:
+            try:
+                self.memory.close()
+                self.ui.log("[System] VecMemory 연결 해제 완료")
+            except Exception as mem_err:
+                print(f"VecMemory close 오류: {mem_err}", flush=True)
 
         # 2. DB 연결 종료 (이 시점에 close를 수행)
         # [V44] try-finally로 안전한 연결 종료 보장
