@@ -274,9 +274,6 @@ class Stage2Finalizer:
 
             refined_arc = validate_arc(refined_arc)  # [Step2] Pydantic ingress+egress
             all_refined_arcs.append(refined_arc)
-            st_snapshot = None  # [V70] Director PASS 확정 — 스냅샷 불필요
-            self.ctx.cumulative_state_cache = None
-            self.ctx.cumulative_state_cache_key = 0
 
             ### [0124 핵심 4] DB 원자적 커밋
             try:
@@ -290,7 +287,20 @@ class Stage2Finalizer:
                     {"arc_no": global_arc_no, "error": str(commit_err)},
                 )
                 all_refined_arcs.pop()
+                # [Sweep52] DB 실패 시 StateTracker 롤백 (st_snapshot 보존)
+                if st_snapshot:
+                    try:
+                        _st = self.ctx.state_tracker
+                        for _k, _v in st_snapshot.items():
+                            setattr(_st, _k, _v)
+                        logging.warning("🔄 [V70] DB 실패 StateTracker 롤백 완료")
+                    except Exception as _rb_err:
+                        logging.warning(f"⚠️ [V70] DB 실패 StateTracker 롤백 실패: {_rb_err}")
                 return {"action": "retry", "current_feedback": current_feedback}
+
+            st_snapshot = None  # [V70] DB 커밋 성공 후 스냅샷 해제
+            self.ctx.cumulative_state_cache = None
+            self.ctx.cumulative_state_cache_key = 0
 
             constraint_db.update_arc_state(refined_arc)
             self.ctx.ui.log(f"      🔒 [V49.4] ConstraintDB 업데이트 완료 (총 {len(constraint_db.arc_states)}개 Arc)")

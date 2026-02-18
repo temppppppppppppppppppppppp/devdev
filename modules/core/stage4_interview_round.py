@@ -590,7 +590,11 @@ class Stage4InterviewRound:
         else:
             feedback = director_result.get("feedback") or {}
             action_items = director_result.get("action_items") or []
-            director_feedback = "\n".join(action_items) if action_items else str(feedback.get("issues", []))
+            # [Sweep52] str([]) → "[]" 방지 — issues를 개별 join
+            _issues = feedback.get("issues", []) if isinstance(feedback, dict) else []
+            director_feedback = (
+                "\n".join(action_items) if action_items else ("\n".join(str(i) for i in _issues) if _issues else "")
+            )
             previous_attempt = {
                 "strategy": selected,
                 "rejection_reason": director_feedback,
