@@ -736,12 +736,27 @@ class DirectorContinuityValidator:
             if not isinstance(result, dict):
                 return {"decision": "PASS", "conflicts": [], "summary": "파싱 오류"}
 
-            return {
-                "decision": result.get("decision", "PASS"),
-                "conflicts": result.get("conflicts", []),
-                "summary": result.get("summary", ""),
-                "cache_used": cache_result.get("cached", False),
-            }
+            # [Sweep59] 자매 메서드와 동일한 CRITICAL 필터 적용
+            decision = result.get("decision", "PASS")
+            conflicts = result.get("conflicts", [])
+            critical_count = sum(1 for c in conflicts if isinstance(c, dict) and c.get("severity") == "CRITICAL")
+
+            if decision == "CONFLICT" and critical_count > 0:
+                return {
+                    "decision": "CONFLICT",
+                    "conflicts": conflicts,
+                    "summary": result.get("summary", ""),
+                    "critical_count": critical_count,
+                    "cache_used": cache_result.get("cached", False),
+                }
+            else:
+                return {
+                    "decision": "PASS",
+                    "conflicts": conflicts,
+                    "summary": result.get("summary", ""),
+                    "warnings_only": True,
+                    "cache_used": cache_result.get("cached", False),
+                }
 
         except Exception as e:
             logging.warning(f"⚠️ [C-3] Manuscript 연속성 검증 오류 (UNKNOWN 반환): {str(e)[:50]}")
