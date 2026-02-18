@@ -780,7 +780,6 @@ class ContinuityArcValidator:
         """[V49] 단일 Arc 내 모순 검증"""
         violations = []
         tactical_doc = arc.get("tactical_doc", "")
-        beat_sequence = arc.get("beat_sequence", [])
         ep_start = arc.get("ep_start", 1)
 
         if not tactical_doc:

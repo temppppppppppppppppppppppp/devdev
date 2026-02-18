@@ -177,6 +177,10 @@ class ForeshadowTracker:
             if payoff_hooks:
                 oldest = min(payoff_hooks, key=lambda k: self.hooks[k].payoff_ep or 0)
                 del self.hooks[oldest]
+            else:
+                # [Sweep51] PAYOFF 없을 때 가장 오래된 hook 제거 (무한 성장 방지)
+                oldest = min(self.hooks, key=lambda k: self.hooks[k].planted_ep)
+                del self.hooks[oldest]
 
         return foreshadow
 
