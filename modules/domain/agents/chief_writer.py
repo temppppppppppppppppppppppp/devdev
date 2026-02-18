@@ -677,9 +677,13 @@ class ChiefWriter(BaseAgent):
 
         # 패치 프롬프트 포맷
         if _patch_template:
+            # [Sweep55] .format()에 {}가 있으면 KeyError/ValueError 크래시 방지
+            def _esc(s):
+                return s.replace("{", "{{").replace("}", "}}")
+
             _patch_section = _patch_template.format(
-                feedback_text=director_feedback,
-                original_manuscript=original_manuscript[:30000],
+                feedback_text=_esc(director_feedback),
+                original_manuscript=_esc(original_manuscript[:30000]),
             )
         else:
             # YAML 로드 실패 시 인라인 폴백

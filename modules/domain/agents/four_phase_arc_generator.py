@@ -303,7 +303,9 @@ class FourPhaseArcGenerator(BaseAgent):
             if not best_arc:
                 logging.warning("❌ [Phase 2] Ensemble 생성 실패")
                 pipeline_result["phases"]["generate"] = {"status": "failed"}
-                feedback = "Ensemble 생성 실패. 다시 시도하세요."
+                # [Sweep55] Director 원래 피드백 보존 (Sweep53 패턴과 동일)
+                _gen_fail_msg = "Ensemble 생성 실패. 다시 시도하세요."
+                feedback = f"{_base_director_feedback}\n{_gen_fail_msg}" if _base_director_feedback else _gen_fail_msg
                 continue
 
             pipeline_result["phases"]["generate"] = {
@@ -438,9 +440,13 @@ class FourPhaseArcGenerator(BaseAgent):
 
         # 3) 패치 프롬프트 포맷
         if _patch_template:
+            # [Sweep55] .format()에 json.dumps의 {}가 있으면 KeyError/ValueError 크래시 방지
+            def _esc(s):
+                return s.replace("{", "{{").replace("}", "}}")
+
             _patch_section = _patch_template.format(
-                feedback_text=director_feedback,
-                original_arc=_original_text,
+                feedback_text=_esc(director_feedback),
+                original_arc=_esc(_original_text),
             )
         else:
             _patch_section = (

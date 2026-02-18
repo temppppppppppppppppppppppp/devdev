@@ -357,9 +357,13 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
 
         # 3) 패치 프롬프트 포맷
         if _patch_template:
+            # [Sweep55] .format()에 json.dumps의 {}가 있으면 KeyError/ValueError 크래시 방지
+            def _esc(s):
+                return s.replace("{", "{{").replace("}", "}}")
+
             _patch_section = _patch_template.format(
-                feedback_text=director_feedback,
-                original_blueprint=_original_text,
+                feedback_text=_esc(director_feedback),
+                original_blueprint=_esc(_original_text),
             )
         else:
             _patch_section = (
