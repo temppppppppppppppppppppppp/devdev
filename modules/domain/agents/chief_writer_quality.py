@@ -298,7 +298,9 @@ class ChiefWriterQualityGate:
                 for kw in disrespect_keywords:
                     if kw in content:
                         # NPC가 주인공을 무시하는 맥락인지 확인
-                        context_pattern = f"{name}.*{kw}|{kw}.*{name}"
+                        # [Sweep-Codex] re.escape: NPC 이름에 regex 특수문자 방어
+                        esc_name = re.escape(name)
+                        context_pattern = f"{esc_name}.*{kw}|{kw}.*{esc_name}"
                         if re.search(context_pattern, content):
                             issues.append(
                                 {

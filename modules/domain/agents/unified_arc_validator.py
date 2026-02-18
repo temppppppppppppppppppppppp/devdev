@@ -351,7 +351,12 @@ class UnifiedArcValidator(BaseAgent):
             for prev in prev_arcs:
                 acquired = prev.get("state_constraints", {}).get("items_acquired", [])
                 if isinstance(acquired, list):
-                    prev_items.update(item.strip() for item in acquired if item)
+                    # [Sweep-Codex] dict 아이템 방어 (unhashable type 방지)
+                    prev_items.update(
+                        (item.get("name", item.get("item", "")) if isinstance(item, dict) else str(item).strip())
+                        for item in acquired
+                        if item
+                    )
 
         current_acquired = arc.get("state_constraints", {}).get("items_acquired", [])
         if isinstance(current_acquired, list):

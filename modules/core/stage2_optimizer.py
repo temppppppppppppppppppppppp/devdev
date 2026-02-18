@@ -77,7 +77,11 @@ class StateSnapshotInjector:
         elif isinstance(inv, str):
             items.extend([i.strip() for i in inv.split(",") if i.strip()])
 
-        return list(set(items))
+        # [Sweep-Codex] dict 아이템 방어 (unhashable type 방지)
+        def _ikey(x):
+            return x.get("name", x.get("item", "")) if isinstance(x, dict) else str(x)
+
+        return list({_ikey(i) for i in items if i})
 
     def _get_default_snapshot(self) -> dict:
         """첫 Arc용 기본 스냅샷"""
@@ -99,12 +103,16 @@ class StateSnapshotInjector:
         snapshot = self.extract_snapshot(prev_arcs[-1])
 
         # 전체 Arc에서 획득한 아이템 누적
+        # [Sweep-Codex] dict 아이템 방어 (unhashable type 방지)
+        def _ikey(x):
+            return x.get("name", x.get("item", "")) if isinstance(x, dict) else str(x)
+
         all_items = set()
         all_grants = set()
         for arc in prev_arcs:
             state = arc.get("state_constraints", {})
-            all_items.update(state.get("items_acquired", []))
-            all_grants.update(state.get("grants_received", []))
+            all_items.update(_ikey(i) for i in state.get("items_acquired", []) if i)
+            all_grants.update(_ikey(i) for i in state.get("grants_received", []) if i)
 
         prompt = f"""
 ╔══════════════════════════════════════════════════════════════════════════════╗

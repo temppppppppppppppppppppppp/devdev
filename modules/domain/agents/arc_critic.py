@@ -287,15 +287,19 @@ class ArcCritic(BaseAgent):
 
         # 3. 중복 아이템 체크
         if prev_arcs:
+            # [Sweep-Codex] dict 아이템 방어 (unhashable type 방지)
+            def _ikey(x):
+                return x.get("name", x.get("item", "")) if isinstance(x, dict) else str(x)
+
             all_prev_items = set()
             for p in prev_arcs:
                 items = p.get("state_constraints", {}).get("items_acquired", [])
                 if isinstance(items, list):
-                    all_prev_items.update(items)
+                    all_prev_items.update(_ikey(i) for i in items)
 
             current_items = arc.get("state_constraints", {}).get("items_acquired", [])
             if isinstance(current_items, list):
-                duplicates = set(current_items) & all_prev_items
+                duplicates = {_ikey(i) for i in current_items} & all_prev_items
                 if duplicates:
                     issues.append(
                         {

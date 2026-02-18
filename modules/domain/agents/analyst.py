@@ -216,8 +216,12 @@ class Analyst(BaseAgent):
         if isinstance(curr_inventory, str):
             curr_inventory = [curr_inventory] if curr_inventory else []
 
-        prev_set = set(prev_inventory) if prev_inventory else set()
-        curr_set = set(curr_inventory) if curr_inventory else set()
+        # [Sweep-Codex] dict 아이템 방어 (unhashable type 방지)
+        def _ikey(x):
+            return x.get("name", x.get("item", "")) if isinstance(x, dict) else str(x)
+
+        prev_set = {_ikey(i) for i in prev_inventory} if prev_inventory else set()
+        curr_set = {_ikey(i) for i in curr_inventory} if curr_inventory else set()
 
         missing_items = prev_set - curr_set
         if missing_items:
