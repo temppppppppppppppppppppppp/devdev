@@ -166,7 +166,9 @@ class Stage2Finalizer:
                     {"arc_no": global_arc_no, "scores": scores, "zero_count": zero_count},
                 )
 
-        if audit.get("decision") == "PASS" and len(refined_arc.get("tactical_doc", "")) >= 1500:
+        _td = refined_arc.get("tactical_doc", "")
+        _td_len = len(str(_td)) if isinstance(_td, dict) else len(_td or "")
+        if audit.get("decision") == "PASS" and _td_len >= 1500:
             ### [0124 핵심 3] 욕망 데이터 및 HUD 그림자 물리적 박제
             refined_arc["arc_drive"] = arc_drive if arc_drive else {}
             refined_arc["joint_docs"] = enriched_block.get("joint_docs", {})

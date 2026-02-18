@@ -489,20 +489,26 @@ class DBManager:
             except (KeyError, IndexError, TypeError):  # [V64.P4] specific exception for row access
                 return default
 
+        def _safe_json(val, default_str="[]"):
+            try:
+                return json.loads(val or default_str)
+            except (json.JSONDecodeError, TypeError):
+                return json.loads(default_str)
+
         return {
             "ep_num": row["ep_num"],
-            "new_items": json.loads(row["new_items"] or "[]"),
-            "lost_items": json.loads(row["lost_items"] or "[]"),
-            "new_npcs": json.loads(row["new_npcs"] or "[]"),
-            "npc_deaths": json.loads(row["npc_deaths"] or "[]"),
-            "relationship_changes": json.loads(row["relationship_changes"] or "[]"),
-            "state_changes": json.loads(row["state_changes"] or "{}"),
+            "new_items": _safe_json(row["new_items"], "[]"),
+            "lost_items": _safe_json(row["lost_items"], "[]"),
+            "new_npcs": _safe_json(row["new_npcs"], "[]"),
+            "npc_deaths": _safe_json(row["npc_deaths"], "[]"),
+            "relationship_changes": _safe_json(row["relationship_changes"], "[]"),
+            "state_changes": _safe_json(row["state_changes"], "{}"),
             "time_passed": row["time_passed"] or "",
-            "reveals": json.loads(row["reveals"] or "[]"),
+            "reveals": _safe_json(row["reveals"], "[]"),
             # [V60.82] 새 필드
-            "causal_links": json.loads(safe_get("causal_links", "[]") or "[]"),
-            "karma_matrix": json.loads(safe_get("karma_matrix", "[]") or "[]"),
-            "knowledge_map": json.loads(safe_get("knowledge_map", "{}") or "{}"),
+            "causal_links": _safe_json(safe_get("causal_links", "[]"), "[]"),
+            "karma_matrix": _safe_json(safe_get("karma_matrix", "[]"), "[]"),
+            "knowledge_map": _safe_json(safe_get("knowledge_map", "{}"), "{}"),
         }
 
     def get_cumulative_bible(self, up_to_ep: int) -> dict:
