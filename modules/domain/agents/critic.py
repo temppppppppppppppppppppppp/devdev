@@ -536,11 +536,11 @@ JSON 형식으로 응답:
         blueprint_text = json_module.dumps(blueprint, ensure_ascii=False, indent=2)[:3000] if blueprint else "없음"
 
         prompt = self.DEEP_REVIEW_PROMPT.format(
-            manuscript=manuscript[:10000],
-            blueprint=blueprint_text,
+            manuscript=self._escape_braces(manuscript[:10000]),
+            blueprint=self._escape_braces(blueprint_text),
             ep_num=ep_num,
             genre=genre,
-            prev_ending=prev_ending[:500] if prev_ending else "없음",
+            prev_ending=self._escape_braces(prev_ending[:500]) if prev_ending else "없음",
         )
 
         try:

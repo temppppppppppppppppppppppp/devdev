@@ -651,6 +651,8 @@ class PromptBuilder:
         final_injuries = arc_end_state.get("injuries") or status_shadow.get("expected_injuries", "없음")
         final_location = arc_end_state.get("location") or joint_docs.get("final_location", "알 수 없음")
         final_equipment = arc_end_state.get("equipment") or joint_docs.get("physical_inventory", "알 수 없음")
+        if isinstance(final_equipment, list):
+            final_equipment = ", ".join(str(x) for x in final_equipment) or "없음"
 
         acquired_items_str = "\n   ".join(all_acquired_items) if all_acquired_items else "없음"
         grants_str = "\n   ".join(all_grants_received) if all_grants_received else "없음"

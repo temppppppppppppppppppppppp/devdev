@@ -252,8 +252,8 @@ class ArcCorrector(BaseAgent):
         prompt = CORRECTION_PROMPT.format(
             issue_description=f"tactical_doc의 제 {target_ep}화 분량이 부족합니다. 500자 이상으로 확장하세요.",
             correction_scope=f"제 {target_ep}화 섹션만 수정. 다른 화는 절대 변경 금지.",
-            original_arc=json.dumps(arc, ensure_ascii=False, indent=2)[:3000],
-            context=context[:1000],
+            original_arc=self._escape_braces(json.dumps(arc, ensure_ascii=False, indent=2)[:3000]),
+            context=self._escape_braces(context[:1000]),
         )
 
         try:
@@ -301,8 +301,8 @@ class ArcCorrector(BaseAgent):
         prompt = CORRECTION_PROMPT.format(
             issue_description=f"제 {target_ep}화에 시작/종료 상태 체크포인트가 누락되었습니다.",
             correction_scope=f"제 {target_ep}화에 ▶ 시작 상태, ▶ 종료 상태 섹션을 추가하세요.",
-            original_arc=json.dumps(arc, ensure_ascii=False, indent=2)[:3000],
-            context=context[:1000],
+            original_arc=self._escape_braces(json.dumps(arc, ensure_ascii=False, indent=2)[:3000]),
+            context=self._escape_braces(context[:1000]),
         )
 
         try:
@@ -383,8 +383,8 @@ class ArcCorrector(BaseAgent):
         prompt = CORRECTION_PROMPT.format(
             issue_description=f"제 {target_ep}화가 누락되었습니다. 추가해주세요.",
             correction_scope=f"제 {target_ep}화 전체 섹션을 생성하세요. (시작/종료 상태 체크포인트 포함, 최소 500자)",
-            original_arc=json.dumps(arc, ensure_ascii=False, indent=2)[:3000],
-            context=context[:1000],
+            original_arc=self._escape_braces(json.dumps(arc, ensure_ascii=False, indent=2)[:3000]),
+            context=self._escape_braces(context[:1000]),
         )
 
         try:
