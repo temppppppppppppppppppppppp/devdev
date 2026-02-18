@@ -1056,7 +1056,7 @@ class ContinuityManuscriptValidator:
             "적대": ["적대", "원수", "죽이겠", "공격", "증오", "살의", "적의"],
         }
 
-        STATE_ORDER = ["적대", "무시", "의심", "경외", "충성"]
+        STATE_ORDER = ["적대", "무시", "의심", "중립", "경외", "충성"]
 
         NPC_KEYWORDS = [
             "사병",

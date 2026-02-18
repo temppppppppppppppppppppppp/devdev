@@ -333,7 +333,9 @@ class FeedbackSystem:
         injury = arc_end.get("injuries") or shadow.get("expected_injuries", "없음")
         location = arc_end.get("location") or joint.get("final_location", "?")
 
-        inventory = arc_end.get("equipment") or joint.get("physical_inventory", [])
+        inventory = arc_end.get("equipment")
+        if inventory is None:
+            inventory = joint.get("physical_inventory", [])
         if isinstance(inventory, str):
             inventory = [i.strip() for i in inventory.split(",") if i.strip()]
         if isinstance(inventory, list):

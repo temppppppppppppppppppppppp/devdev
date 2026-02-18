@@ -585,7 +585,9 @@ class FourPhaseArcGenerator(BaseAgent):
         raw_injuries = arc_end.get("injuries") or shadow.get("expected_injuries", "없음")
         final_injuries = self._sanitize_injuries(raw_injuries)
         final_location = arc_end.get("location") or joint.get("final_location", "알 수 없음")
-        final_equipment = arc_end.get("equipment") or joint.get("physical_inventory", [])
+        final_equipment = arc_end.get("equipment")
+        if final_equipment is None:
+            final_equipment = joint.get("physical_inventory", [])
         if isinstance(final_equipment, str):
             final_equipment = [i.strip() for i in final_equipment.split(",") if i.strip()]
 

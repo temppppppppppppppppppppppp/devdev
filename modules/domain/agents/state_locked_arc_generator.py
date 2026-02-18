@@ -334,7 +334,9 @@ class StateLockedArcGenerator(BaseAgent):
         location = arc_end.get("location") or joint_docs.get("final_location", "알 수 없음")
 
         # 소지품
-        equipment = arc_end.get("equipment") or joint_docs.get("physical_inventory", [])
+        equipment = arc_end.get("equipment")
+        if equipment is None:
+            equipment = joint_docs.get("physical_inventory", [])
         if isinstance(equipment, str):
             equipment = [e.strip() for e in equipment.split(",") if e.strip()]
 

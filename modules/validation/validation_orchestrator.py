@@ -446,7 +446,7 @@ class ValidationOrchestrator:
 
         action_adjustment = 0
         if action_result.get("action_scene_count", 0) > 0:
-            action_score = action_result.get("total_score", 10)
+            action_score = action_result.get("total_score", 6)
             if action_score < 5:
                 action_adjustment = -3  # 액션 씬 품질 낮음
             elif action_score >= 8:
@@ -1096,7 +1096,7 @@ class ValidationOrchestrator:
 
         action_adjustment = 0
         if action_result.get("action_scene_count", 0) > 0:
-            action_score = action_result.get("total_score", 10)
+            action_score = action_result.get("total_score", 6)
             if action_score < 5:
                 action_adjustment = -3
             elif action_score >= 8:
@@ -1230,17 +1230,24 @@ class ValidationOrchestrator:
 
     def _get_episode_type_adjustment_v59(self, ep_num: int) -> int:
         """[V59] 에피소드 유형에 따른 임계값 조정"""
-        adjustment = 0
+        positive_adj = 0
+        negative_adj = 0
 
         for ep_type, config in EPISODE_TYPE_ADJUSTMENTS.items():
+            matched = False
             if "episodes" in config:
-                if ep_num in config["episodes"]:
-                    adjustment = max(adjustment, config["threshold_delta"])
+                matched = ep_num in config["episodes"]
             elif "episode_pattern" in config:
-                if config["episode_pattern"](ep_num):
-                    adjustment = max(adjustment, config["threshold_delta"])
+                matched = config["episode_pattern"](ep_num)
 
-        return adjustment
+            if matched:
+                delta = config["threshold_delta"]
+                if delta >= 0:
+                    positive_adj = max(positive_adj, delta)
+                else:
+                    negative_adj = min(negative_adj, delta)
+
+        return positive_adj + negative_adj
 
     def _get_streak_adjustment_v59(self) -> int:
         """[V59] 연속 통과/실패에 따른 임계값 조정"""

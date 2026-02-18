@@ -991,8 +991,8 @@ Step 6: Article 7 (독자 대리만족) 분석
             max_score = item_data.get("weighted_max", 1)
             weight = weights.get(item_name, 1.0)
 
-            # 부족분 계산 (가중치 반영)
-            deficit = (max_score - score) * weight
+            # 부족분 계산 (weighted_score/weighted_max는 이미 가중치 적용됨)
+            deficit = max_score - score
 
             if deficit > 0:
                 priorities.append(
