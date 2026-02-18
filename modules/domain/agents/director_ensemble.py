@@ -270,6 +270,8 @@ class DirectorEnsembleSelector:
                 }
             )
 
+        # [Sweep59] 호출자 리스트 변이 방지 — 복사본 사용 (candidates와 동일 패턴)
+        validation_results = list(validation_results)
         while len(validation_results) < 3:
             validation_results.append({"warnings": ["후보 없음"], "focus_points": ["빈 후보"]})
 
@@ -429,7 +431,11 @@ class DirectorEnsembleSelector:
 
         final_verdict = adaptive_result["decision"]
         if final_verdict == "CONDITIONAL_PASS":
-            final_verdict = "PASS"
+            # [Sweep59] 적응형 하향 조정 (PASS+저점수→REJECT) vs 상향/스왑 (→PASS) 구분
+            if adaptive_result.get("adjusted") and original_verdict == "PASS":
+                final_verdict = "REJECT"
+            else:
+                final_verdict = "PASS"
 
         feedback = result.get("feedback", {})
         if isinstance(feedback, str):
