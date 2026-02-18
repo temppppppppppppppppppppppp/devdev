@@ -203,7 +203,12 @@ class Analyst(BaseAgent):
             auto_corrections["location"] = prev_location
 
         # 2. 소지품 검증
-        prev_inventory = prev_joint.get("physical_inventory", []) or prev_end.get("equipment", [])
+        # [Sweep50] 빈 리스트 [] 보존 — or 연산자가 falsy 값 무시하는 패턴 수정
+        prev_inventory = (
+            prev_joint.get("physical_inventory")
+            if "physical_inventory" in prev_joint
+            else prev_end.get("equipment", [])
+        )
         curr_inventory = curr_start.get("equipment", [])
 
         if isinstance(prev_inventory, str):
@@ -836,7 +841,7 @@ class Analyst(BaseAgent):
                 beats = []
             if len(beats) != actual_ep_count:
                 if len(beats) > actual_ep_count:
-                    combined = " / ".join(beats[actual_ep_count - 1 :])
+                    combined = " / ".join(str(b) for b in beats[actual_ep_count - 1 :])
                     beats = beats[: actual_ep_count - 1] + [f"[통합 전개]: {combined}"]
                 else:
                     original_count = len(beats)
@@ -1044,7 +1049,7 @@ class Analyst(BaseAgent):
                     rest = m.group(1) if m else beat.strip()
                     normalized.append(f"제 {expected_ep}화: {rest}".strip())
                 else:
-                    normalized.append(beat)
+                    normalized.append(str(beat))
             arc_data["beat_sequence"] = normalized
 
         # 1-1) tactical_doc 회차 헤더 정규화 (전술 설계 제목 오타 방지)
