@@ -899,7 +899,7 @@ class DirectorQualityAuditor:
         for e in evaluations:
             if isinstance(e, dict):
                 scores.append(_safe_int_score(e.get("score", 50), 50))
-        median_score = statistics.median(scores) if scores else 50
+        median_score = int(round(statistics.median(scores))) if scores else 50
 
         # PASS/REJECT 다수결
         pass_votes = sum(1 for e in evaluations if e.get("decision") == "PASS")
