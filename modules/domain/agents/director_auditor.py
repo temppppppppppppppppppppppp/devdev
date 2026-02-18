@@ -415,7 +415,8 @@ class DirectorQualityAuditor:
                 conflict_details = "; ".join(
                     [
                         f"[{c.get('type', '?')}] {c.get('prev_fact', '')} vs {c.get('current_violation', '')}"
-                        for c in conflicts[:3]  # 최대 3개만 표시
+                        for c in conflicts[:3]
+                        if isinstance(c, dict)  # [Sweep64] LLM이 문자열 반환 시 방어
                     ]
                 )
                 return {

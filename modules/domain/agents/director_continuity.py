@@ -416,7 +416,7 @@ class DirectorContinuityValidator:
             conflicts = result.get("conflicts", [])
 
             # CRITICAL 충돌이 있으면 CONFLICT, 아니면 경고만
-            critical_count = sum(1 for c in conflicts if c.get("severity") == "CRITICAL")
+            critical_count = sum(1 for c in conflicts if isinstance(c, dict) and c.get("severity") == "CRITICAL")
 
             if decision == "CONFLICT" and critical_count > 0:
                 return {
@@ -527,7 +527,7 @@ class DirectorContinuityValidator:
 
             decision = result.get("decision", "PASS")
             conflicts = result.get("conflicts", [])
-            critical_count = sum(1 for c in conflicts if c.get("severity") == "CRITICAL")
+            critical_count = sum(1 for c in conflicts if isinstance(c, dict) and c.get("severity") == "CRITICAL")
 
             if decision == "CONFLICT" and critical_count > 0:
                 return {
