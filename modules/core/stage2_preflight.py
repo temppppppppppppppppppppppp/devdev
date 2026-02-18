@@ -96,18 +96,25 @@ class Stage2PreflightAnalysis:
             self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_preflight_parallel")
         except Exception:
             pass
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as _parallel_exec:
-            _fut_drive = _parallel_exec.submit(_compute_arc_drive)
-            _fut_preflight = _parallel_exec.submit(_compute_preflight)
-            arc_drive = _fut_drive.result(timeout=300)
-            _cached_preflight_injection, _cached_preflight_result = _fut_preflight.result(timeout=300)
         try:
-            self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_preflight_parallel")
-        except Exception:
-            pass
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as _parallel_exec:
+                _fut_drive = _parallel_exec.submit(_compute_arc_drive)
+                _fut_preflight = _parallel_exec.submit(_compute_preflight)
+                arc_drive = _fut_drive.result(timeout=300)
+                _cached_preflight_injection, _cached_preflight_result = _fut_preflight.result(timeout=300)
+        except Exception as _pf_err:
+            logging.warning(f"⚠️ [Preflight] 병렬 실행 타임아웃/오류 (비치명): {str(_pf_err)[:80]}")
+            arc_drive = {}
+            _cached_preflight_injection = ""
+            _cached_preflight_result = {}
+        finally:
+            try:
+                self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_preflight_parallel")
+            except Exception:
+                pass
 
         if _cached_preflight_result:
-            logging.warning("✅ [V66.1] arc_drive + preflight 병렬 완료")
+            logging.info("✅ [V66.1] arc_drive + preflight 병렬 완료")
             logging.info(f"- 아이템 타임라인: {len(_cached_preflight_result.get('item_timeline', []))}개")
             logging.info(f"- 금지 사항: {len(_cached_preflight_result.get('absolute_prohibitions', []))}개")
             logging.info(f"- 관계 맵: {len(_cached_preflight_result.get('relationship_map', {}))}명")
@@ -140,6 +147,10 @@ class Stage2PreflightAnalysis:
                             if self.ctx.sync_cache_key_to_app:
                                 self.ctx.sync_cache_key_to_app(arc_count)
                     except Exception as e:  # [V64.P4] CRITICAL: state extraction failure → NPC validation disabled
+                        logging.warning(
+                            f"[V64.P4] CRITICAL: extract_cumulative_state 실패 (NPC 검증 약화): {e}",
+                            exc_info=True,
+                        )
                         self.ctx.ui.log(
                             f"      ⚠️ [V64.P4] extract_cumulative_state 실패 (NPC 검증 약화): {str(e)[:80]}"
                         )
@@ -208,12 +219,6 @@ class Stage2PreflightAnalysis:
         self.ctx.ui.log(
             f"   {Emojis.BRAIN} [Arc {global_arc_no}] 전술 설계 중 (시도 {attempt + 1}/{RetryLimits.ANALYST_MAX_ATTEMPTS})..."
         )
-
-        recent_patterns = [
-            a.get("hybrid_composition", {}).get("primary")
-            for a in all_refined_arcs
-            if a.get("hybrid_composition", {}).get("primary")
-        ]
 
         # [Phase 3-QR] 품질 추세 요약 주입 (advisory)
         _quality_trend_block = ""
@@ -354,7 +359,6 @@ class Stage2PreflightAnalysis:
         # ─────────────────────────────────────────────────────────────
         # [무기 #1] Preflight 분석 — [V66.1] 병렬 실행 캐시 재사용
         # ─────────────────────────────────────────────────────────────
-        preflight_injection = cached_preflight_injection
         if cached_preflight_result:
             analyst_weapons["preflight"] = cached_preflight_result
 
@@ -396,11 +400,8 @@ class Stage2PreflightAnalysis:
                 )
 
         return {
-            "enhanced_context": enhanced_context,
-            "recent_patterns": recent_patterns,
             "refined_arc": refined_arc,
             "generation_method": generation_method,
-            "preflight_injection": preflight_injection,
             "constraint_block": constraint_block,
             "entity_registry_for_director": entity_registry_for_director,
         }
@@ -460,7 +461,7 @@ class Stage2PreflightAnalysis:
                     try:
                         self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_generate")
                     except Exception as e:
-                        logging.warning(f"[SilentPass:Preflight] 장르 레지스트리 갱신 실패: {e!s:.100}")
+                        logging.warning(f"[SilentPass:Preflight] perf_timer start failed: {e!s:.100}")
                     # [Patch Mode] 점수 기반 분기: 패치 모드 vs 전면 재생성
                     from modules.core.constants import PatchModeThresholds
 
@@ -496,7 +497,7 @@ class Stage2PreflightAnalysis:
                         )
                         if not four_phase_arc:
                             _patch_fallback = True
-                            logging.info("[Patch Mode] Arc 패치 실패 → 전면 재생성 폴백")
+                            logging.warning("[Patch Mode] Arc 패치 실패 → 전면 재생성 폴백")
                             self.ctx.ui.log("   ⚠️ [Patch Mode] Arc 패치 실패 → 전면 재생성 폴백")
 
                     if not four_phase_arc:
@@ -529,7 +530,7 @@ class Stage2PreflightAnalysis:
                     refined_arc["joint_docs"] = enriched_block.get("joint_docs", {})
                     refined_arc["status_shadow"] = enriched_block.get("status_shadow", {})
 
-                    logging.warning(f"✅ [V60.77] FourPhase 성공! (내부 재시도: {pipeline_result.get('retries', 0)}회)")
+                    logging.info(f"✅ [V60.77] FourPhase 성공! (내부 재시도: {pipeline_result.get('retries', 0)}회)")
 
                     # [V70] Director REJECT 시 롤백을 위한 StateTracker 핵심 레지스트리 스냅샷
                     import copy as _copy
@@ -584,10 +585,16 @@ class Stage2PreflightAnalysis:
                             _e,
                         )
                     if genre_for_tracker == "investment":
-                        self.ctx.state_tracker.extract_financial_events_from_arc(refined_arc)
-                        self.ctx.current_project.save_v20_anchor(
-                            "financial_registry", self.ctx.state_tracker.export_financial_registry()
-                        )
+                        try:
+                            self.ctx.state_tracker.extract_financial_events_from_arc(refined_arc)
+                            self.ctx.current_project.save_v20_anchor(
+                                "financial_registry", self.ctx.state_tracker.export_financial_registry()
+                            )
+                        except Exception as _fin_err:
+                            logging.warning(
+                                "[SilentPass:Preflight] financial registry save failed: %s",
+                                _fin_err,
+                            )
 
                     # [V66] SemanticPlotGuard 인덱싱
                     if self.ctx.semantic_plot_guard and self.ctx.state_tracker.resolved_plots:

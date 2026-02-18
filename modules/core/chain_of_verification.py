@@ -144,11 +144,14 @@ JSON 형식으로 응답:
         """응답 파싱"""
         try:
             json_match = re.search(r"```json\s*(.*?)\s*```", response_text, re.DOTALL)
-            if json_match:
-                return json.loads(json_match.group(1))
-            return json.loads(response_text)
+            parsed = json.loads(json_match.group(1)) if json_match else json.loads(response_text)
+            if isinstance(parsed, list):
+                parsed = parsed[0] if parsed else {}
+            if isinstance(parsed, dict):
+                return parsed
         except (json.JSONDecodeError, ValueError):  # [V64.P4] JSON parse failure
-            return {"passed": True, "overall_severity": "none", "issues": [], "summary": "파싱 실패 - 기본 통과"}
+            pass
+        return {"passed": True, "overall_severity": "none", "issues": [], "summary": "파싱 실패 - 기본 통과"}
 
     def _build_context_string(self, context: dict[str, Any]) -> str:
         """컨텍스트를 문자열로 변환"""

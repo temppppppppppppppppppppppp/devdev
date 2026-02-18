@@ -187,8 +187,8 @@ class ContinuityManuscriptValidator:
                 if _bible:
                     _bible_root = _bible.get("MasterBible", _bible)
                     return _bible_root.get("protagonist_config", {}).get("incarnation_type", "")
-        except Exception:
-            pass
+        except Exception as e:
+            logging.warning(f"[ContinuityManuscript] incarnation_type 추출 실패: {e}")
         return ""
 
     # =================================================================
@@ -309,19 +309,25 @@ class ContinuityManuscriptValidator:
         except Exception as e:
             logging.warning(f"🚨 [ContinuityInspector] 원고 LLM 검증 실패: {e}")
             if python_check.get("warnings"):
+                _warnings = list(python_check["warnings"])
+                _warnings.append("LLM 검증 실패 - 수동 확인 권장")
                 return {
                     "decision": "PASS",
                     "severity": "MINOR",
+                    "degraded": True,
+                    "degraded_reason": str(e),
                     "continuity_analysis": python_check.get("timeline", {}),
                     "entity_consistency": {},
                     "blueprint_alignment": {},
                     "violations": [],
-                    "warnings": python_check["warnings"],
+                    "warnings": _warnings,
                     "fix_instructions": "LLM 검증 실패 - Python 사전 검증만 수행됨",
                 }
             return {
                 "decision": "PASS",
-                "severity": "NONE",
+                "severity": "MINOR",
+                "degraded": True,
+                "degraded_reason": str(e),
                 "continuity_analysis": {},
                 "entity_consistency": {},
                 "blueprint_alignment": {},
@@ -420,7 +426,7 @@ class ContinuityManuscriptValidator:
 
         # 5. Blueprint 핵심 씬 반영 체크
         scene_breakdown = blueprint.get("scene_breakdown", {})
-        if scene_breakdown:
+        if scene_breakdown and isinstance(scene_breakdown, dict):
             core_scenes = [k for k, v in scene_breakdown.items() if "[Core]" in str(v)]
             reflected_count = 0
 
@@ -619,7 +625,7 @@ class ContinuityManuscriptValidator:
                 issues.append(
                     {
                         "type": "stupid_villain",
-                        "severity": "WARNING",
+                        "severity": "MINOR",
                         "description": f"악역이 주인공을 {underestimate_count + 1}회 과소평가 (학습 반응 감지됨). "
                         f"지속적인 과소평가 주의.",
                     }
@@ -825,7 +831,7 @@ class ContinuityManuscriptValidator:
         """1화 또는 이전 원고 없을 때 Blueprint 준수만 체크"""
         scene_breakdown = blueprint.get("scene_breakdown", {})
 
-        if not scene_breakdown:
+        if not scene_breakdown or not isinstance(scene_breakdown, dict):
             return {
                 "decision": "PASS",
                 "severity": "NONE",

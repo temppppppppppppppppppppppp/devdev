@@ -42,7 +42,22 @@ def get_plan_volume_prompt_v25(**kwargs) -> str:
 
 
 def get_plan_arc_prompt_v25(**kwargs) -> str:
-    return _load_prompt("PLAN_ARC_PROMPT_V25", legacy.PLAN_ARC_PROMPT_V25, **kwargs)
+    # Return raw template to avoid brace-collapse across multi-pass formatting.
+    raw = _PROMPT_LOADER.get_raw("analyst", "PLAN_ARC_PROMPT_V25")
+    if raw is not None:
+        return raw
+
+    if not kwargs:
+        return legacy.PLAN_ARC_PROMPT_V25
+    try:
+
+        class _SafeDict(dict):
+            def __missing__(self, k):
+                return "{" + k + "}"
+
+        return legacy.PLAN_ARC_PROMPT_V25.format_map(_SafeDict(**kwargs))
+    except Exception:
+        return legacy.PLAN_ARC_PROMPT_V25
 
 
 def get_analyst_self_critic_prompt() -> str:

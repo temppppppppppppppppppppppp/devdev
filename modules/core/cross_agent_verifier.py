@@ -142,9 +142,17 @@ JSON 형식으로 응답:
             # JSON 블록 추출
             json_match = re.search(r"```json\s*(.*?)\s*```", response_text, re.DOTALL)
             if json_match:
-                return json.loads(json_match.group(1))
+                parsed = json.loads(json_match.group(1))
+            else:
+                # 직접 JSON 시도
+                parsed = json.loads(response_text)
+
+            if isinstance(parsed, list):
+                parsed = parsed[0] if parsed and isinstance(parsed[0], dict) else {}
+            if isinstance(parsed, dict):
+                return parsed
             # 직접 JSON 시도
-            return json.loads(response_text)
+            return {"compliance_score": 0.7, "violations": [], "warnings": [], "summary": "파싱 실패 - 기본값 반환"}
         except (json.JSONDecodeError, ValueError):  # [V64.P4] JSON parse failure
             return {"compliance_score": 0.7, "violations": [], "warnings": [], "summary": "파싱 실패 - 기본값 반환"}
 
@@ -156,6 +164,8 @@ JSON 형식으로 응답:
 
         # 1. 필수 씬 개수 체크
         scene_breakdown = blueprint.get("scene_breakdown", {})
+        if not isinstance(scene_breakdown, dict):
+            scene_breakdown = {}
         min_scenes = arc_design.get("min_scenes", 4)
         if len(scene_breakdown) < min_scenes:
             violations.append(
@@ -203,6 +213,8 @@ JSON 형식으로 응답:
 
         # 2. 씬 반영 체크 (휴리스틱)
         scene_breakdown = blueprint.get("scene_breakdown", {})
+        if not isinstance(scene_breakdown, dict):
+            scene_breakdown = {}
         if scene_breakdown:
             # 각 씬의 핵심 키워드가 원고에 있는지 체크
             scene_count = len(scene_breakdown)
@@ -301,7 +313,10 @@ JSON 형식으로 응답:
 
             violations = py_violations + result.get("violations", [])
             warnings = result.get("warnings", [])
-            score = result.get("compliance_score", 0.7)
+            try:
+                score = float(result.get("compliance_score", 0.7))
+            except (ValueError, TypeError):
+                score = 0.7
 
             # Python 위반이 있으면 점수 감점
             if py_violations:
@@ -382,7 +397,10 @@ JSON 형식으로 응답:
 
             violations = py_violations + result.get("violations", [])
             warnings = result.get("warnings", [])
-            score = result.get("compliance_score", 0.7)
+            try:
+                score = float(result.get("compliance_score", 0.7))
+            except (ValueError, TypeError):
+                score = 0.7
 
             if py_violations:
                 score = max(0.0, score - 0.2 * len(py_violations))

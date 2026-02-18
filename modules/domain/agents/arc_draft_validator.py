@@ -229,6 +229,8 @@ class ArcDraftValidator:
 
         # 현재 Arc의 획득 아이템
         current_items = arc.get("state_constraints", {}).get("items_acquired", [])
+        if not isinstance(current_items, list):
+            current_items = [current_items] if isinstance(current_items, str) else []
         tactical = self._safe_tactical(arc)
 
         # tactical_doc에서도 획득 패턴 추출
@@ -329,6 +331,11 @@ class ArcDraftValidator:
 
         # 현재 Arc에서 이미 수여된 것을 다시 수여받으려 하는지 검사
         current_grants = arc.get("state_constraints", {}).get("grants_received", [])
+        if isinstance(current_grants, list):
+            for grant in current_grants:
+                if grant and grant in all_granted:
+                    critical.append(f"중복 수여 시도: '{grant}' (state_constraints에서 발견)")
+                    penalty += 25
         tactical = self._safe_tactical(arc)
 
         for pattern in self.grant_patterns:
@@ -700,6 +707,8 @@ class ArcDraftValidator:
 
         # 현재 Arc의 획득 아이템과 비교
         items_acquired = arc.get("state_constraints", {}).get("items_acquired", [])
+        if not isinstance(items_acquired, list):
+            items_acquired = []
         tactical = self._safe_tactical(arc)
 
         for forbidden in forbidden_items:

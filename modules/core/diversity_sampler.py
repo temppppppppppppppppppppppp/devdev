@@ -282,7 +282,7 @@ class DiversitySampler:
 
             # 적당한 변동 (CV 0.2-0.5)이 좋음
             if 0.2 <= cv <= 0.5:
-                scores["structure"] = 80 + (0.5 - abs(cv - 0.35)) * 100
+                scores["structure"] = min(100, 80 + (0.5 - abs(cv - 0.35)) * 100)
             else:
                 scores["structure"] = max(30, 80 - abs(cv - 0.35) * 100)
         else:

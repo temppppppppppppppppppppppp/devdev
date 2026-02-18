@@ -447,3 +447,27 @@ class TestGrantPatterns:
                 matches_found = True
                 break
         assert matches_found
+
+
+class TestAppNoneGuards:
+    def test_extract_npc_profiles_with_none_app_returns_empty(self, builder):
+        assert builder.extract_npc_profiles({"arc_no": 1}) == {}
+
+    def test_get_character_traits_with_none_app_returns_empty(self, builder):
+        assert builder.get_character_traits() == {}
+
+    def test_generate_arc_context_v60_with_none_app_uses_fallback(self, builder):
+        arcs = [
+            {
+                "arc_no": 1,
+                "joint_docs": {},
+                "status_shadow": {},
+                "state_constraints": {"arc_end_state": {}},
+            }
+        ]
+        result = builder.generate_arc_context_v60(arcs)
+        assert isinstance(result, str)
+
+    def test_build_item_acquisition_timeline_with_none_app_returns_empty(self, builder):
+        result = builder.build_item_acquisition_timeline(1)
+        assert result == ""

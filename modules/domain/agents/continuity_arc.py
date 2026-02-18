@@ -411,21 +411,27 @@ class ContinuityArcValidator:
 
             # [V60.13] intra_arc_contradiction은 WARNING으로 완화
             violations = result.get("violations", [])
+            if not isinstance(violations, list):
+                violations = []
             has_critical_cross_arc = any(
                 v.get("type") in ["duplicate_acquisition", "premature_possession", "state_discontinuity"]
                 and v.get("severity") in ["CRITICAL", "MAJOR"]
                 for v in violations
+                if isinstance(v, dict)
             )
 
             if result.get("decision") == "REJECT" and not has_critical_cross_arc:
-                intra_only = all(
-                    v.get("type") in ["intra_arc_contradiction", "setting_inconsistency"] for v in violations
+                intra_only = violations and all(
+                    isinstance(v, dict) and v.get("type") in ["intra_arc_contradiction", "setting_inconsistency"]
+                    for v in violations
                 )
                 if intra_only and start_state_corrected:
                     result["decision"] = "PASS"
                     result["severity"] = "MINOR"
                     result.setdefault("warnings", [])
                     for v in violations:
+                        if not isinstance(v, dict):
+                            continue
                         result["warnings"].append(f"[완화됨] {v.get('type')}: {v.get('description', '')[:100]}")
                     result["violations"] = []
                     logging.warning("⚠️ [V60.13] intra-arc 오류 완화 → PASS (cross-arc 정상)")

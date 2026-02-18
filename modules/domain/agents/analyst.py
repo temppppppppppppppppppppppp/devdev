@@ -34,7 +34,6 @@ from .analyst_prompt_api import (
     get_volume_strategy_prompt,
 )
 from .base_agent import BaseAgent
-from .state_tracker import StateTracker
 
 # [V49.4] Structured Output Schema
 try:
@@ -126,6 +125,10 @@ class Analyst(BaseAgent):
             protagonist_config=self._escape_braces(protagonist_config_text),  # [V60.88]
             protagonist_name=protagonist_name,  # [V60.93]
         )
+        # Guard against prompt-loader contamination returning overly generic text (e.g., "prompt").
+        if isinstance(prompt, str) and protagonist_config_text:
+            if world_origin not in prompt and incarnation_type not in prompt:
+                prompt = f"{prompt}\n\n[PROTAGONIST_CONFIG]\n{protagonist_config_text}"
 
         response = self.ask(prompt, temperature=0.7)
         # [V60.2] DEBUG → 조건부 로깅 (프로덕션에서는 비활성화)
@@ -685,7 +688,8 @@ class Analyst(BaseAgent):
                         hud_lines.append(f"  보유 아이템: {', '.join(items[:8])}")
                     hud_context = "\n".join(hud_lines)
             except Exception as e:
-                hud_context = f"(HUD 로드 오류: {str(e)[:30]})"
+                logging.warning(f"[Analyst] HUD 로드 오류: {e}")
+                hud_context = f"(HUD 로드 오류: {str(e)[:50]})"
 
         # 4. 공통 데이터셋 조립 (데이터 이스케이프 적용)
         safe_data = {
@@ -702,6 +706,7 @@ class Analyst(BaseAgent):
             "ep_start": ep_start,
             "ep_end": ep_start + target_ep_count - 1,
             "ep_count": target_ep_count,  # [V60.36 FIX] 템플릿에서 사용하는 ep_count 추가
+            "ep_count_suggestion": str(target_ep_count),
             "assets": self._escape_braces(json.dumps(assets, ensure_ascii=False)) if assets else "{}",
             "full_roadmap": self._escape_braces(full_roadmap),
             "protagonist_hud_state": self._escape_braces(hud_context) if hud_context else "",  # [V60.95] 고밀도 HUD
@@ -718,11 +723,15 @@ class Analyst(BaseAgent):
         # [V65] 루프 간 공유 상태를 dict로 관리 (클로저 캡처용)
         _arc_loop_state = {"draft_result": None, "actual_ep_count": target_ep_count}
 
+        class _SafeDict(dict):
+            def __missing__(self, key):
+                return "{" + key + "}"
+
         def _arc_attempt_func(attempt, retry_feedback):
             """[V65] 단일 시도 로직 — retry_with_feedback에 전달"""
             current_feedback = retry_feedback if retry_feedback else initial_feedback
             # [V60.31] 템플릿의 ep_count_suggestion 변수를 동적으로 치환
-            adjusted_prompt_tpl = get_plan_arc_prompt_v25(ep_count_suggestion=str(target_ep_count))
+            adjusted_prompt_tpl = get_plan_arc_prompt_v25()
 
             # 6. [API 호출 분기 로직]
             try:
@@ -740,7 +749,7 @@ class Analyst(BaseAgent):
                             "special_instructions": f"\n[🚨 PACING GUIDE]: 권장 {target_ep_count}화 (사건 밀도에 따라 3~7화 범위 내 조정 가능)",
                         }
                     )
-                    prompt = adjusted_prompt_tpl.format(**cache_safe_data)
+                    prompt = adjusted_prompt_tpl.format_map(_SafeDict(**cache_safe_data))
                     if attempt > 0 or feedback:
                         prompt += f"\n\n🚨 [FEEDBACK]: {current_feedback}"
 
@@ -778,7 +787,7 @@ class Analyst(BaseAgent):
                         "special_instructions": f"\n[🚨 PACING GUIDE]: 권장 {target_ep_count}화 (사건 밀도에 따라 3~7화 범위 내 조정 가능)",
                     }
                 )
-                prompt = adjusted_prompt_tpl.format(**full_safe_data)
+                prompt = adjusted_prompt_tpl.format_map(_SafeDict(**full_safe_data))
                 if attempt > 0:
                     prompt += f"\n\n🚨 [FEEDBACK]: {current_feedback}"
 
@@ -822,6 +831,8 @@ class Analyst(BaseAgent):
                 logging.info(f"📊 [V60.31] 가변 페이싱: 권장 {target_ep_count}화 → LLM 결정 {actual_ep_count}화")
 
             beats = draft_result.get("beat_sequence", [])
+            if not isinstance(beats, list):
+                beats = []
             if len(beats) != actual_ep_count:
                 if len(beats) > actual_ep_count:
                     combined = " / ".join(beats[actual_ep_count - 1 :])
@@ -1424,32 +1435,9 @@ class Analyst(BaseAgent):
     def _validate_arc_with_state_tracker(self, arc_data: dict) -> list:
         """
         [V49.3] StateTracker를 사용하여 Arc 설계의 상태 일관성 검증
-
-        Args:
-            arc_data: Arc 전술 문서
-
-        Returns:
-            검증 이슈 목록 (빈 리스트면 문제 없음)
         """
-        try:
-            # [V70] NOTE: StateTracker()는 인자 없이 호출 불가 — 항상 except로 빠짐 (dead code)
-            tracker = StateTracker()
-            if not tracker.load_arc_design(arc_data):
-                logging.warning("⚠️ [Analyst] StateTracker 로드 실패, 검증 스킵")
-                return []
-
-            # 타임라인 검증
-            issues = tracker.validate_timeline()
-
-            if issues:
-                # DAG 시각화 출력 (디버깅용)
-                logging.warning(tracker.get_dag_visualization())
-
-            return issues
-
-        except Exception as e:
-            logging.warning(f"⚠️ [Analyst] StateTracker 검증 중 오류: {e}")
-            return []
+        # [V70] StateTracker는 preset_registry/llm_client 없이 의미 있는 검증 불가
+        return []
 
     def get_state_constraint_prompt(self, arc_no: int) -> str:
         """

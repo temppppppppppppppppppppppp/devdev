@@ -183,6 +183,23 @@ class TestPrepareEpisodeContext:
         mock_loader.assert_called_once_with(3)
         assert result["chain_link_section"] == "chain text"
 
+    def test_hud_none_falls_back_to_empty(self):
+        ctx = _make_ctx()
+        ctx.sys.hud = None
+        ctx.current_project.db.get_manuscript.return_value = {"content": "x" * 600}
+        ctx.current_project.db.get_cumulative_bible.return_value = {}
+        cb = Stage4ContextBuilder(ctx)
+
+        result = cb.prepare_episode_context(
+            2,
+            {"ep_start": 1, "ep_count": 5, "tactical_doc": ""},
+            MagicMock(),
+        )
+
+        assert result["hud_report"] == ""
+        assert result["current_inventory"] == []
+        assert result["current_martial_arts"] == []
+
 
 class TestBuildMandatoryContext:
     def test_no_writer_agent_returns_empty(self):

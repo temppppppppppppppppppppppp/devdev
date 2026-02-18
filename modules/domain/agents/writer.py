@@ -322,7 +322,8 @@ class Writer(BaseAgent):
             master_bible = getattr(self.context, "master_bible", None)
             if not master_bible:
                 return {}
-            assets = master_bible.get("AssetLibrary", {})
+            bible_root = master_bible.get("MasterBible", master_bible)
+            assets = bible_root.get("AssetLibrary", {})
             key_npcs = assets.get("KeyNPCs", []) or assets.get("Key_NPCs", [])
             if not key_npcs:
                 return {}

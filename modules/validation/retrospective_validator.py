@@ -112,7 +112,7 @@ class RetrospectiveValidator:
                             }
                         )
         except Exception as e:
-            logging.warning(f"⚠️ [Retrospective] 경지 역행 체크 실패: {e}")
+            _logger.warning(f"⚠️ [Retrospective] 경지 역행 체크 실패: {e}")
 
         return violations
 
@@ -167,7 +167,7 @@ class RetrospectiveValidator:
                         }
                     )
         except Exception as e:
-            logging.warning(f"⚠️ [Retrospective] 관계 역행 체크 실패: {e}")
+            _logger.warning(f"⚠️ [Retrospective] 관계 역행 체크 실패: {e}")
 
         return violations
 
@@ -201,7 +201,7 @@ class RetrospectiveValidator:
                         }
                     )
         except Exception as e:
-            logging.warning(f"⚠️ [Retrospective] 아이템 소실 체크 실패: {e}")
+            _logger.warning(f"⚠️ [Retrospective] 아이템 소실 체크 실패: {e}")
 
         return violations
 
@@ -236,7 +236,7 @@ class RetrospectiveValidator:
                             }
                         )
         except Exception as e:
-            logging.warning(f"⚠️ [Retrospective] 갈등 재발 체크 실패: {e}")
+            _logger.warning(f"⚠️ [Retrospective] 갈등 재발 체크 실패: {e}")
 
         return violations
 

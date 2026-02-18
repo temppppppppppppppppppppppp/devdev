@@ -1,6 +1,7 @@
 """[B-1-3] Stage4InterviewRound unit tests."""
 
 import inspect
+from pathlib import Path
 from unittest.mock import MagicMock
 
 from modules.core.stage4_interview_round import Stage4InterviewRound
@@ -296,6 +297,7 @@ class TestRecordS4Attempt:
         assert kw["success"] is True
         assert kw["generation_method"] == "ensemble"
         assert kw["is_patch"] is False
+        assert kw["arc"] == 1
 
     def test_reject_records_failure(self):
         ctx = _make_ctx()
@@ -326,6 +328,7 @@ class TestRecordS4Attempt:
         kw = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
         assert kw["success"] is False
         assert "score=40" in kw["reject_reason"]
+        assert kw["arc"] == 1
 
     def test_patch_records_method_patch(self):
         ctx = _make_ctx()
@@ -356,6 +359,39 @@ class TestRecordS4Attempt:
         assert kw["is_patch"] is True
         assert kw["generation_method"] == "patch"
         assert kw["prev_score"] == 70
+        assert kw["arc"] == 1
+
+    def test_patch_fallback_records_method_ensemble(self):
+        ctx = _make_ctx()
+        ctx.pass_rate_monitor = MagicMock()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.patch_with_feedback.return_value = []
+        round_ctx.chief_writer.regenerate_with_feedback.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "PASS",
+            "score": 82,
+            "selection_reason": "ok",
+            "selected_candidate": {"manuscript": "통과", "title": "통과"},
+            "state_updates": {},
+        }
+
+        ir.run(
+            round_num=1,
+            stage4_spinner=MagicMock(),
+            director_feedback="피드백",
+            previous_attempt={"score": 70, "best_manuscript": "원고"},
+            round_ctx=round_ctx,
+        )
+
+        ctx.pass_rate_monitor.record_attempt.assert_called_once()
+        kw = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
+        assert kw["is_patch"] is True
+        assert kw["patch_fallback"] is True
+        assert kw["generation_method"] == "ensemble"
+        round_ctx.chief_writer.regenerate_with_feedback.assert_called_once()
 
     def test_empty_candidates_records_failure(self):
         ctx = _make_ctx()
@@ -376,6 +412,7 @@ class TestRecordS4Attempt:
         kw = ctx.pass_rate_monitor.record_attempt.call_args.kwargs
         assert kw["success"] is False
         assert kw["reject_reason"] == "score=0"
+        assert kw["arc"] == 1
 
     def test_no_monitor_does_not_crash(self):
         ctx = _make_ctx()
@@ -426,3 +463,7 @@ class TestModuleStructure:
     def test_no_self_app_in_interview_round(self):
         source = inspect.getsource(Stage4InterviewRound)
         assert "self.app" not in source
+
+    def test_main_a_stage4_context_includes_pass_rate_monitor(self):
+        source = Path("main_a.py").read_text(encoding="utf-8")
+        assert 'pass_rate_monitor=getattr(self, "pass_rate_monitor", None),' in source

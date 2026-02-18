@@ -419,9 +419,6 @@ class NegativeConstraintAmplifier:
         # 수여물 히스토리
         grant_history = self._build_grant_history(prev_arcs)
 
-        # 관계 변화 히스토리
-        relationship_history = self._build_relationship_history(prev_arcs)
-
         prompt = """
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║  🚫 [V60.25] 절대 금지 사항 - 위반 시 즉시 REJECT                             ║

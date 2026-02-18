@@ -36,6 +36,8 @@ class QualityDashboard:
     def __init__(self, project_path: Path | None = None):
         self.project_path = project_path
         self.metrics_file = project_path / "logs" / "quality_metrics.jsonl" if project_path else None
+        self._max_history = 500
+        self._max_stage_scores = 500
 
         # 인메모리 메트릭
         self.validation_history: list[dict] = []
@@ -78,12 +80,28 @@ class QualityDashboard:
 
             if score > 0:
                 self.stage_stats[stage]["scores"].append(score)
+            self._trim_histories(stage=stage)
 
         elif record_type == "hud_anomaly":
             self.hud_anomalies.append(record)
+            self._trim_histories()
 
         elif record_type == "blueprint_coverage":
             self.blueprint_coverage.append(record)
+            self._trim_histories()
+
+    def _trim_histories(self, stage: int | None = None) -> None:
+        if len(self.validation_history) > self._max_history:
+            self.validation_history = self.validation_history[-self._max_history :]
+        if len(self.hud_anomalies) > self._max_history:
+            self.hud_anomalies = self.hud_anomalies[-self._max_history :]
+        if len(self.blueprint_coverage) > self._max_history:
+            self.blueprint_coverage = self.blueprint_coverage[-self._max_history :]
+
+        if stage is not None:
+            scores = self.stage_stats[stage]["scores"]
+            if len(scores) > self._max_stage_scores:
+                self.stage_stats[stage]["scores"] = scores[-self._max_stage_scores :]
 
     def record_validation(self, ep_num: int, result: dict, stage: int = 4):
         """
@@ -129,7 +147,7 @@ class QualityDashboard:
             "severities": [a.get("severity", "medium") for a in anomalies],
         }
 
-        self.hud_anomalies.append(record)
+        self._process_record(record)
         self._save_record(record)
 
         return record
@@ -152,7 +170,7 @@ class QualityDashboard:
             "valid": coverage_result.get("valid", True),
         }
 
-        self.blueprint_coverage.append(record)
+        self._process_record(record)
         self._save_record(record)
 
         return record
@@ -783,16 +801,23 @@ class QualityDashboard:
                     "reason": f"ep {ep_num}까지 데이터 부족",
                 }
 
-        current_score = scored[-1].get("score", 0)
-        prev_score = scored[-2].get("score", 0)
+        try:
+            current_score = int(scored[-1].get("score", 0))
+            prev_score = int(scored[-2].get("score", 0))
+        except (ValueError, TypeError):
+            current_score, prev_score = 0, 0
         delta = prev_score - current_score  # 양수 = 하락
 
         # 기준선 평균 (최근 제외 직전 N개)
         window = _threshold("quality_regression.window", 5)
         baseline_records = scored[:-1][-window:]
-        baseline_avg = (
-            sum(r.get("score", 0) for r in baseline_records) / len(baseline_records) if baseline_records else 0
-        )
+        baseline_scores = []
+        for r in baseline_records:
+            try:
+                baseline_scores.append(int(r.get("score", 0)))
+            except (ValueError, TypeError):
+                baseline_scores.append(0)
+        baseline_avg = sum(baseline_scores) / len(baseline_scores) if baseline_scores else 0
 
         if delta >= drop_th:
             return {
@@ -866,7 +891,12 @@ class QualityDashboard:
                 "summary": f"데이터 부족 ({len(recent)}화)",
             }
 
-        scores = [r.get("score", 0) for r in recent]
+        scores = []
+        for r in recent:
+            try:
+                scores.append(int(r.get("score", 0)))
+            except (ValueError, TypeError):
+                scores.append(0)
         avg = sum(scores) / len(scores)
         s_min = min(scores)
         s_max = max(scores)
@@ -1023,9 +1053,13 @@ class QualityDashboard:
 
         for strategy, recs in by_strategy.items():
             scores = [float(r.get("score")) for r in recs if isinstance(r.get("score"), int | float)]
-            passes = sum(1 for r in recs if str(r.get("verdict", "")).upper() == "PASS")
-            count = len(recs)
-            avg_score = round(sum(scores) / len(scores), 1) if scores else 0.0
+            passes = sum(
+                1
+                for r in recs
+                if isinstance(r.get("score"), int | float) and str(r.get("verdict", "")).upper() == "PASS"
+            )
+            count = len(scores)
+            avg_score = round(sum(scores) / count, 1) if count > 0 else 0.0
 
             strategy_stats[strategy] = {
                 "avg_score": avg_score,

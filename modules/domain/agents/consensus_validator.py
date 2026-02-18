@@ -258,6 +258,10 @@ class ConsensusValidator(BaseAgent):
                 except Exception as e:
                     # [V61.3] as_completed 자체 예외 처리
                     logging.warning(f"⚠️ [V61.3] 합의 루프 예외: {str(e)[:80]}")
+                finally:
+                    # [Sweep34] 미완료 future 정리로 shutdown 대기 최소화
+                    for f in futures:
+                        f.cancel()
         except Exception as e:
             # [V61.3] ThreadPoolExecutor 전체 예외 처리 - 급사 방지
             # stderr로 출력 (Rich 스피너가 stdout 가림)
@@ -336,8 +340,15 @@ class ConsensusValidator(BaseAgent):
         all_passed = []
 
         for r in results:
-            all_issues.extend(r.get("issues_found", []))
-            all_passed.extend(r.get("passed_checks", []))
+            issues = r.get("issues_found", [])
+            if not isinstance(issues, list):
+                issues = []
+            all_issues.extend(i for i in issues if isinstance(i, dict))
+
+            passed_checks = r.get("passed_checks", [])
+            if not isinstance(passed_checks, list):
+                passed_checks = []
+            all_passed.extend(c for c in passed_checks if isinstance(c, str))
 
         # CRITICAL 이슈가 있으면 즉시 REJECT
         critical_issues = [i for i in all_issues if i.get("severity") == "CRITICAL"]

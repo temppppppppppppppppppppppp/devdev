@@ -160,7 +160,7 @@ class ArcCorrector(BaseAgent):
 
         for issue in correctable[: self.max_corrections]:
             try:
-                logging.info(f"🔧 [Corrector] 수정 시도: {issue.get('message', '')[:50]}...")
+                logging.info(f"🔧 [Corrector] 수정 시도: {(issue.get('message', '') or '')[:50]}...")
 
                 corrected_arc, correction_result = self._correct_single_issue(
                     corrected_arc, issue, prev_arcs, original_arc
@@ -175,12 +175,12 @@ class ArcCorrector(BaseAgent):
                         }
                     )
                     correction_count += 1
-                    logging.info(f"✅ [Corrector] 수정 완료: {correction_result.get('summary', '')[:50]}")
+                    logging.info(f"✅ [Corrector] 수정 완료: {(correction_result.get('summary', '') or '')[:50]}")
                 else:
                     log["corrections_failed"].append(
                         {"issue": issue.get("message", ""), "reason": correction_result.get("reason", "unknown")}
                     )
-                    logging.warning(f"❌ [Corrector] 수정 실패: {correction_result.get('reason', '')[:50]}")
+                    logging.warning(f"❌ [Corrector] 수정 실패: {(correction_result.get('reason', '') or '')[:50]}")
 
             except Exception as e:
                 log["corrections_failed"].append({"issue": issue.get("message", ""), "reason": str(e)[:100]})

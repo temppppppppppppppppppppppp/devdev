@@ -53,7 +53,7 @@ class ReflexionManager:
                 )
 
             self.loaded = True
-            logging.warning(f"📚 [Reflexion] 과거 실패 패턴 {len(self.memory)}개 로드됨")
+            logging.info(f"📚 [Reflexion] 과거 실패 패턴 {len(self.memory)}개 로드됨")
 
         except Exception as e:
             # 테이블이 없거나 오류 시 빈 메모리

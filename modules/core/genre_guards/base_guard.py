@@ -46,7 +46,7 @@ class BaseGuard(ABC):
         return {}
 
     @abstractmethod
-    def get_genre_name(self) -> None:
+    def get_genre_name(self) -> str:
         """장르 이름 반환"""
         pass
 
@@ -163,7 +163,7 @@ class BaseGuard(ABC):
         return {"is_pure": len(issues) == 0, "issues": issues}
 
     @abstractmethod
-    def get_v20_purism_prompt(self) -> None:
+    def get_v20_purism_prompt(self) -> str:
         """장르별 순혈주의 프롬프트 생성"""
         pass
 
@@ -502,11 +502,12 @@ class BaseGuard(ABC):
 
                         # 상위자 이름으로 명분 빌리는지 확인
                         if superior_name:
+                            superior_name_esc = re.escape(superior_name)
                             superior_delegation = [
-                                f"{superior_name}.*명",
-                                f"{superior_name}.*위임",
-                                f"{superior_name}.*허락",
-                                f"{superior_name}.*뜻",
+                                f"{superior_name_esc}.*명",
+                                f"{superior_name_esc}.*위임",
+                                f"{superior_name_esc}.*허락",
+                                f"{superior_name_esc}.*뜻",
                             ]
                             has_delegation = has_delegation or any(
                                 re.search(sp, manuscript) for sp in superior_delegation
@@ -624,14 +625,15 @@ class BaseGuard(ABC):
                 continue
 
             # 동행/협력 패턴 검색
+            npc_name_esc = re.escape(npc_name)
             companion_patterns = [
-                f"{npc_name}.*함께",
-                f"{npc_name}.*동행",
-                f"{npc_name}.*따라",
-                f"{npc_name}.*수행",
-                f"{npc_name}.*옆에",
-                f"{npc_name}이 말했다",
-                f"{npc_name}가 말했다",
+                f"{npc_name_esc}.*함께",
+                f"{npc_name_esc}.*동행",
+                f"{npc_name_esc}.*따라",
+                f"{npc_name_esc}.*수행",
+                f"{npc_name_esc}.*옆에",
+                f"{npc_name_esc}이 말했다",
+                f"{npc_name_esc}가 말했다",
             ]
 
             is_companion = any(re.search(cp, manuscript) for cp in companion_patterns)
@@ -639,12 +641,12 @@ class BaseGuard(ABC):
             if is_companion:
                 # 공포/굴복 묘사가 있는지 확인 (정당화)
                 fear_patterns = [
-                    f"{npc_name}.*공포",
-                    f"{npc_name}.*두려",
-                    f"{npc_name}.*벌벌",
-                    f"{npc_name}.*고개.*숙",
-                    f"{npc_name}.*감히",
-                    f"{npc_name}.*말도.*못",
+                    f"{npc_name_esc}.*공포",
+                    f"{npc_name_esc}.*두려",
+                    f"{npc_name_esc}.*벌벌",
+                    f"{npc_name_esc}.*고개.*숙",
+                    f"{npc_name_esc}.*감히",
+                    f"{npc_name_esc}.*말도.*못",
                 ]
                 has_fear = any(re.search(fp, manuscript) for fp in fear_patterns)
 
@@ -765,14 +767,15 @@ class BaseGuard(ABC):
             return {"passed": True, "violations": [], "incompetent_villain_risk": False}
 
         # 빌런의 대응 확인
+        villain_name_esc = re.escape(villain_name)
         villain_specific_response = [
-            f"{villain_name}.*당황",
-            f"{villain_name}.*경악",
-            f"{villain_name}.*분노",
-            f"{villain_name}.*이를",
-            f"{villain_name}.*계획",
-            f"{villain_name}.*떠나",
-            f"{villain_name}.*자리.*비",
+            f"{villain_name_esc}.*당황",
+            f"{villain_name_esc}.*경악",
+            f"{villain_name_esc}.*분노",
+            f"{villain_name_esc}.*이를",
+            f"{villain_name_esc}.*계획",
+            f"{villain_name_esc}.*떠나",
+            f"{villain_name_esc}.*자리.*비",
         ]
 
         has_response = any(re.search(rp, manuscript) for rp in villain_specific_response)

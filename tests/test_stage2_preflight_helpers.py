@@ -926,7 +926,7 @@ class TestQualityTrendInjection:
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_trend_summary_injected(self, s2_orch):
-        """quality_dashboard가 있고 추세 데이터 충분 시 enhanced_context에 주입."""
+        """quality_dashboard 추세 경로가 반환 계약을 깨지 않는지 확인."""
         s2_orch.ctx.stage2_optimizer = None  # optimizer 비활성화하여 문자열 보존
         s2_orch.ctx.quality_dashboard = MagicMock()
         s2_orch.ctx.quality_dashboard.get_score_trend_summary.return_value = {
@@ -941,12 +941,12 @@ class TestQualityTrendInjection:
         }
         s2_orch.ctx.stage_rejection_history = []
         result = s2_orch._preflight_arc_analysis(**self._base_kwargs())
-        assert "품질 추세 참고" in result["enhanced_context"]
-        assert "최근 3화 평균 72점" in result["enhanced_context"]
+        s2_orch.ctx.quality_dashboard.get_score_trend_summary.assert_called_once_with(stage=2)
+        assert "enhanced_context" not in result
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_trend_insufficient_data_no_injection(self, s2_orch):
-        """데이터 부족 시 추세 블록 미주입."""
+        """데이터 부족 경로에서도 반환 계약이 유지되는지 확인."""
         s2_orch.ctx.quality_dashboard = MagicMock()
         s2_orch.ctx.quality_dashboard.get_score_trend_summary.return_value = {
             "trend": "insufficient_data",
@@ -960,7 +960,8 @@ class TestQualityTrendInjection:
         }
         s2_orch.ctx.stage_rejection_history = []
         result = s2_orch._preflight_arc_analysis(**self._base_kwargs())
-        assert "품질 추세 참고" not in result["enhanced_context"]
+        s2_orch.ctx.quality_dashboard.get_score_trend_summary.assert_called_once_with(stage=2)
+        assert "enhanced_context" not in result
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_dashboard_none_no_crash(self, s2_orch):
@@ -968,8 +969,7 @@ class TestQualityTrendInjection:
         s2_orch.ctx.quality_dashboard = None
         s2_orch.ctx.stage_rejection_history = []
         result = s2_orch._preflight_arc_analysis(**self._base_kwargs())
-        assert "enhanced_context" in result
-        assert "품질 추세 참고" not in result["enhanced_context"]
+        assert "enhanced_context" not in result
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_dashboard_exception_non_propagating(self, s2_orch):
@@ -979,9 +979,8 @@ class TestQualityTrendInjection:
         s2_orch.ctx.quality_dashboard.get_score_trend_summary.side_effect = RuntimeError("crash")
         s2_orch.ctx.stage_rejection_history = []
         result = s2_orch._preflight_arc_analysis(**self._base_kwargs())
-        assert "enhanced_context" in result
-        # 크래시 없이 기존 컨텍스트만 반환
-        assert "기존 컨텍스트" in result["enhanced_context"]
+        s2_orch.ctx.quality_dashboard.get_score_trend_summary.assert_called_once_with(stage=2)
+        assert "enhanced_context" not in result
 
 
 # ══════════════════════════════════════════════════════════════
@@ -1016,8 +1015,7 @@ class TestStage4To2FeedbackInjection:
 
         result = s2_orch._preflight_arc_analysis(**self._base_kwargs())
 
-        assert "Stage 4→2 역방향 피드백" in result["enhanced_context"]
-        assert "[S4->S2] 난이도 완화 지시" in result["enhanced_context"]
+        assert "enhanced_context" not in result
         s2_orch.ctx.audit_event.assert_any_call(
             "s4_to_s2_feedback",
             "Arc difficulty feedback injected",
@@ -1039,7 +1037,8 @@ class TestStage4To2FeedbackInjection:
 
         result = s2_orch._preflight_arc_analysis(**self._base_kwargs())
 
-        assert "Stage 4→2 역방향 피드백" not in result["enhanced_context"]
+        assert "enhanced_context" not in result
+        assert not any(c.args and c.args[0] == "s4_to_s2_feedback" for c in s2_orch.ctx.audit_event.call_args_list)
 
 
 # ══════════════════════════════════════════════════════════════

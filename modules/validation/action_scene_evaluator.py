@@ -107,7 +107,6 @@ class ActionSceneEvaluator:
         "휘청",
         "후퇴",
         "상처",
-        "피",
         "부상",
         "골절",
         "기절",

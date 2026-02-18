@@ -80,6 +80,10 @@ class TestValidationPipelineStructure:
         assert hasattr(pipeline, "_stage2_flow_guard")
         assert hasattr(pipeline, "_stage2_flow_guard_legacy")
 
+    def test_legacy_flow_guard_annotation_is_list(self):
+        ann = Stage2ValidationPipeline._stage2_flow_guard_legacy.__annotations__
+        assert ann.get("normalized") is list
+
 
 class TestTextUtils:
     def test_normalize_tactical_basic(self, pipeline):

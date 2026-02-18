@@ -227,7 +227,7 @@ class ChiefWriter(BaseAgent):
             )
             cache_name = cache_info.get("cache_name")
             if cache_name:
-                logging.warning(f"📦 [V61.7] 컨텍스트 캐시 활성 (ep{ep_num}, {len(common_context)}자)")
+                logging.info(f"📦 [V61.7] 컨텍스트 캐시 활성 (ep{ep_num}, {len(common_context)}자)")
         except Exception as e:  # [V64.P4] OPTIONAL: context caching
             logging.debug(f"[SILENT] context caching: {e}")
             pass  # 캐싱 실패해도 기존 방식으로 진행
@@ -269,7 +269,7 @@ class ChiefWriter(BaseAgent):
                                     f"✅ [ChiefWriter] 후보 {strategy} 생성 완료 ({len(result.get('manuscript', ''))}자)"
                                 )
                         except FutureTimeoutError:
-                            logging.info(f"⏰ [V61.3] 후보 {strategy} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
+                            logging.warning(f"⏰ [V61.3] 후보 {strategy} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
                             candidates.append(
                                 {
                                     "strategy": strategy,
@@ -455,7 +455,7 @@ class ChiefWriter(BaseAgent):
             # Self-Critique 결과에서 content 재추출
             try:
                 critiqued_data = json.loads(critiqued_manuscript)
-                final_content = critiqued_data.get("content", manuscript_content)
+                final_content = critiqued_data.get("content") or manuscript_content
                 final_title = critiqued_data.get("title", data.get("title", f"제{ep_num}화"))
                 final_state = critiqued_data.get("state_updates", data.get("state_updates", {}))
             except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] IMPORTANT: critique parse, safe default

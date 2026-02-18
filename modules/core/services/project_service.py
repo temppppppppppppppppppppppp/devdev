@@ -122,14 +122,14 @@ class ProjectService:
                 project.db.cursor.execute("SELECT data FROM state_logs WHERE ep_num = ?", (target_ep - 1,))
                 row = project.db.cursor.fetchone()
                 if row:
-                    past_data = json.loads(row["data"])
+                    past_data = json.loads(row["data"]) if row["data"] else {}
                     past_actual = past_data.get("state_updates", {}).get("actual_truth")
 
                     if past_actual:
                         project.db.cursor.execute("SELECT data FROM anchors WHERE key = 'bible'")
                         bible_row = project.db.cursor.fetchone()
                         if bible_row:
-                            bible_data = json.loads(bible_row["data"])
+                            bible_data = json.loads(bible_row["data"]) if bible_row["data"] else {}
                             if "MasterBible" in bible_data:
                                 selected_genre = self._genre_fn()
                                 genre = selected_genre.get("type", "") if selected_genre else ""

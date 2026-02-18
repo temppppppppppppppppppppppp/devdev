@@ -336,7 +336,8 @@ class BaseAgent:
             MAX_RATE_LIMIT_RETRIES = 3  # [V60.97] Rate Limit 최대 재시도 (같은 모델)
             network_retry_count = 0  # [V61.2] 네트워크 오류 재시도 카운터
 
-            for attempt in range(MAX_CONTINUATIONS):
+            attempt = 0
+            while attempt < MAX_CONTINUATIONS:
                 try:
                     # [V60.99] API Rate Limit 예방 딜레이
                     time.sleep(self.API_DELAY)
@@ -465,6 +466,8 @@ class BaseAgent:
                                 "top_p": 0.95,
                                 "response_mime_type": "application/json",
                             }
+                            if response_schema:
+                                fallback_config_params["response_schema"] = response_schema
                             if thinking_level:
                                 if isinstance(thinking_level, str):
                                     budget = self.THINKING_BUDGET_MAP.get(thinking_level.lower(), 8192)
@@ -546,6 +549,8 @@ class BaseAgent:
                         f"Do not summarize. Do not skip any bits (especially 'Beat 3')."
                     )
                     time.sleep(1)
+                    attempt += 1
+                    continue
                 else:
                     break
 
@@ -595,13 +600,15 @@ class BaseAgent:
                 logging.warning(f"📝 [Recovery] 부분 응답 {len(full_response)}자 보존")
 
             try:
-                # [FIX] 백업 모델용 별도 config (response_schema 제거 - 호환성 문제 방지)
+                # [FIX] 백업 모델용 별도 config
                 backup_config_params = {
                     "temperature": temperature,
                     "max_output_tokens": 8192,
                     "top_p": 0.95,
                     "response_mime_type": "application/json",
                 }
+                if response_schema:
+                    backup_config_params["response_schema"] = response_schema
                 backup_config = types.GenerateContentConfig(**backup_config_params)
 
                 # [V49.3] 백업 모델 비용 추적 시작
@@ -1070,12 +1077,18 @@ class BaseAgent:
                 "content_hash": content_hash,
             }
             if len(self._context_caches) > self._CONTEXT_CACHE_MAX:
-                sorted_keys = sorted(
-                    self._context_caches,
-                    key=lambda k: self._context_caches[k].get("created_at", 0),
-                )
+                try:
+                    sorted_keys = sorted(
+                        list(self._context_caches.keys()),
+                        key=lambda k: self._context_caches.get(k, {}).get("created_at", 0),
+                    )
+                except RuntimeError:
+                    sorted_keys = sorted(
+                        list(self._context_caches.keys()),
+                        key=lambda k: self._context_caches.get(k, {}).get("created_at", 0),
+                    )
                 for old_key in sorted_keys[: len(sorted_keys) - self._CONTEXT_CACHE_MAX]:
-                    del self._context_caches[old_key]
+                    self._context_caches.pop(old_key, None)
 
             logging.info(f"📦 [V61.5] 컨텍스트 캐시 생성: {cache_type} ({len(content)}자)")
 

@@ -50,3 +50,20 @@ def test_detect_director_bias_insufficient_samples_no_warning():
     assert result["strategy_stats"]["balanced"]["count"] == 3
     assert result["strategy_stats"]["narrative"]["count"] == 2
     assert result["bias_warnings"] == []
+
+
+def test_detect_director_bias_uses_numeric_score_denominator():
+    dashboard = QualityDashboard(project_path=None)
+    selections = [
+        {"selected_strategy": "balanced", "verdict": "PASS", "score": 80, "selection_reason": "ok"},
+        {"selected_strategy": "balanced", "verdict": "PASS", "score": None, "selection_reason": "missing"},
+        {"selected_strategy": "balanced", "verdict": "PASS", "selection_reason": "missing"},
+        {"selected_strategy": "balanced", "verdict": "REJECT", "score": "N/A", "selection_reason": "invalid"},
+    ]
+
+    result = dashboard.detect_director_bias(selections)
+    stats = result["strategy_stats"]["balanced"]
+
+    assert stats["count"] == 1
+    assert stats["avg_score"] == 80.0
+    assert stats["pass_rate"] == 1.0

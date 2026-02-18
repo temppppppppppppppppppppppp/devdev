@@ -117,6 +117,11 @@ class TestCheckerMethods:
         issues = gate._check_hud_consistency(content, hud_report)
         assert any(i.get("type") == "hud_contradiction" for i in issues)
 
+    def test_check_hud_consistency_none_hud_report(self):
+        gate = ChiefWriterQualityGate(_make_host())
+        issues = gate._check_hud_consistency("강한 액션 장면", None)
+        assert issues == []
+
     def test_check_cliche_overuse(self):
         gate = ChiefWriterQualityGate(_make_host())
         issues = gate._check_cliche_overuse("plain content", "genre", ep_num=1)
@@ -150,6 +155,11 @@ class TestCheckerMethods:
             content = content.replace(kw, "")
         issues = gate._check_justification_gaps(content, hud_report)
         assert any(i.get("type") == "justification_gap" for i in issues)
+
+    def test_check_justification_gaps_none_hud_report(self):
+        gate = ChiefWriterQualityGate(_make_host())
+        issues = gate._check_justification_gaps("돌파에 성공했다.", None)
+        assert issues == []
 
     def test_check_npc_relationship(self):
         gate = ChiefWriterQualityGate(_make_host())

@@ -184,10 +184,16 @@ class ArcCritic(BaseAgent):
 
         if "total_score" not in result:
             scores = result["scores"]
-            result["total_score"] = sum(scores.values()) if scores else 0
+            try:
+                result["total_score"] = sum(int(v) for v in scores.values()) if scores else 0
+            except (ValueError, TypeError):
+                result["total_score"] = 0
 
         if "verdict" not in result:
-            score = result["total_score"]
+            try:
+                score = int(result["total_score"])
+            except (ValueError, TypeError):
+                score = 0
             has_critical = len(result.get("critical_issues", [])) > 0
             if score >= 70 and not has_critical:
                 result["verdict"] = "PASS"
@@ -331,7 +337,12 @@ class ArcCritic(BaseAgent):
         lines = ["[ARC CRITIC 피드백 - 재생성 필요]", ""]
 
         # Critical issues
-        for issue in critique.get("critical_issues", []):
+        critical_issues = critique.get("critical_issues", [])
+        if not isinstance(critical_issues, list):
+            critical_issues = []
+        for issue in critical_issues:
+            if not isinstance(issue, dict):
+                continue
             lines.append(f"🚨 [{issue.get('severity', 'HIGH')}] {issue.get('issue', '')}")
             if issue.get("fix_instruction"):
                 lines.append(f"   → {issue['fix_instruction']}")

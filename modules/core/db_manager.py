@@ -808,8 +808,8 @@ class DBManager:
         result = {}
         for row in cur.fetchall():
             try:
-                result[row["key"]] = json.loads(row["data"])
-            except json.JSONDecodeError as e:
+                result[row["key"]] = json.loads(row["data"]) if row["data"] else {}
+            except (json.JSONDecodeError, TypeError) as e:
                 logging.warning(f"🚨 [DB] Anchor JSON 파싱 실패 (key={row['key']}): {e}")
                 result[row["key"]] = {}
         return result
@@ -852,8 +852,8 @@ class DBManager:
         if not row:
             return {}
         try:
-            return json.loads(row["data"])
-        except json.JSONDecodeError as e:
+            return json.loads(row["data"]) if row["data"] else {}
+        except (json.JSONDecodeError, TypeError) as e:
             logging.warning(f"🚨 [DB] State log JSON 파싱 실패: {e}")
             return {}
 
@@ -985,8 +985,16 @@ class DBManager:
 
                     # AI의 다양한 키값 형태(target/npc_name, misunderstanding/value)를 모두 포용
                     npc = k.get("target") or k.get("npc_name") or k.get("name", "Unknown")
-                    mis = k.get("misunderstanding") or k.get("value") or k.get("point", 0)
-                    obs = k.get("obsession") or k.get("point") or 0
+                    mis = k.get("misunderstanding")
+                    if mis is None:
+                        mis = k.get("value")
+                    if mis is None:
+                        mis = k.get("point", 0)
+                    obs = k.get("obsession")
+                    if obs is None:
+                        obs = k.get("point")
+                    if obs is None:
+                        obs = 0
 
                     # 수동 갱신 시점(ep_num)을 현재 화수로 박제하여 데이터 오염 방지
                     self.update_karma(npc, mis, obs, ep_num)

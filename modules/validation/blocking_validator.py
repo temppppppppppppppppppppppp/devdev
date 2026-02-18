@@ -54,6 +54,7 @@ class BlockingValidator:
 
     def validate(self, manuscript: str, validation_context: dict) -> dict:
         failures = []
+        warnings = []
 
         dead_npc_check = self._check_dead_npc_resurrection(manuscript, validation_context)
         if not dead_npc_check["passed"]:
@@ -86,10 +87,20 @@ class BlockingValidator:
             failures.append(damaged_item_check)
 
         relationship_check = self._check_relationship_consistency(manuscript, validation_context)
+        if relationship_check.get("degraded"):
+            logging.warning(
+                f"[BlockingValidator] {relationship_check.get('check', 'relationship_consistency')} 검증 degraded: {relationship_check.get('error', '')}"
+            )
+            warnings.append(f"degraded: {relationship_check.get('check', 'relationship_consistency')}")
         if not relationship_check["passed"]:
             failures.append(relationship_check)
 
         information_check = self._check_information_consistency(manuscript, validation_context)
+        if information_check.get("degraded"):
+            logging.warning(
+                f"[BlockingValidator] {information_check.get('check', 'information_consistency')} 검증 degraded: {information_check.get('error', '')}"
+            )
+            warnings.append(f"degraded: {information_check.get('check', 'information_consistency')}")
         if not information_check["passed"]:
             failures.append(information_check)
 
@@ -117,6 +128,7 @@ class BlockingValidator:
             "tier": "BLOCKING",
             "passed": len(failures) == 0,
             "failures": failures,
+            "warnings": warnings,
             "message": "REJECT - ?? ?? ??" if failures else "PASS",
             "failure_count": len(failures),
         }

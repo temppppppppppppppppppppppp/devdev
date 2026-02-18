@@ -226,9 +226,14 @@ JSON 형식:
                 role=role, score=70, strengths=["파싱 실패"], concerns=[], suggestions=[], critical_issues=[]
             )
 
+        try:
+            _score = int(result.get("score", 70))
+        except (ValueError, TypeError):
+            _score = 70
+
         return AgentOpinion(
             role=role,
-            score=result.get("score", 70),
+            score=_score,
             strengths=result.get("strengths", []),
             concerns=result.get("concerns", []),
             suggestions=result.get("suggestions", []),

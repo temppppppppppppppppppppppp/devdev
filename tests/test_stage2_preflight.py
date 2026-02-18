@@ -192,11 +192,8 @@ class TestPreflightArcAnalysis:
     def test_returns_all_required_keys(self, preflight):
         out = preflight._preflight_arc_analysis(**_arc_analysis_kwargs())
         required = {
-            "enhanced_context",
-            "recent_patterns",
             "refined_arc",
             "generation_method",
-            "preflight_injection",
             "constraint_block",
             "entity_registry_for_director",
         }
@@ -207,7 +204,7 @@ class TestPreflightArcAnalysis:
         out = preflight._preflight_arc_analysis(
             **_arc_analysis_kwargs(attempt=1, current_feedback="fix this", constraint_block="")
         )
-        assert "fix this" in out["enhanced_context"]
+        assert out["generation_method"] == "analyst"
         preflight.ctx.build_minimal_arc_context.assert_called_once()
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
@@ -215,10 +212,11 @@ class TestPreflightArcAnalysis:
         preflight.ctx.quality_dashboard = MagicMock()
         preflight.ctx.quality_dashboard.get_score_trend_summary.return_value = {
             "trend": "up",
-            "summary": "품질 추세 상승",
+            "summary": "?덉쭏 異붿꽭 ?곸듅",
         }
         out = preflight._preflight_arc_analysis(**_arc_analysis_kwargs(constraint_block=""))
-        assert "품질 추세 참고" in out["enhanced_context"]
+        preflight.ctx.quality_dashboard.get_score_trend_summary.assert_called_once_with(stage=2)
+        assert "enhanced_context" not in out
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_constraint_compiler_sets_entity_registry(self, preflight):
@@ -242,7 +240,7 @@ class TestPreflightArcAnalysis:
             {"hybrid_composition": {}},
         ]
         out = preflight._preflight_arc_analysis(**_arc_analysis_kwargs(all_refined_arcs=arcs))
-        assert out["recent_patterns"] == ["p1", "p2"]
+        assert "recent_patterns" not in out
 
 
 class TestPreflightEnrichment:
@@ -259,7 +257,8 @@ class TestPreflightEnrichment:
         preflight.ctx.agents["four_phase"].generate.side_effect = RuntimeError("fail")
         out = preflight._preflight_enrichment(**_enrichment_kwargs())
         assert out["four_phase_passed"] is False
-        assert "FourPhase 오류 발생" in out["director_feedback_for_fourphase"]
+        assert "FourPhase" in out["director_feedback_for_fourphase"]
+        assert "fail" in out["director_feedback_for_fourphase"]
 
     @patch("modules.core.spinners.StageSpinner", MagicMock())
     def test_fourphase_pass_triggers_state_tracker_enrichment(self, preflight):

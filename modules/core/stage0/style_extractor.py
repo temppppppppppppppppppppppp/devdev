@@ -54,7 +54,7 @@ class StyleGuide:
 
     def __post_init__(self) -> None:
         for f in fields(self):
-            if f.type == list[str] and getattr(self, f.name) is None:
+            if str(f.type) == "list[str]" and getattr(self, f.name) is None:
                 setattr(self, f.name, [])
 
     def to_dict(self) -> dict[str, Any]:
@@ -243,10 +243,14 @@ class StyleExtractor:
         if self.client or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY"):
             logging.info("[4/5] LLM 심층 분석...")
             qualitative = self._deep_llm_analysis(drafts)
+            if not isinstance(qualitative, dict):
+                qualitative = {}
 
             # Phase 5: Anti-AI 패턴 생성
             logging.info("[5/5] Anti-AI 패턴 생성...")
             anti = self._generate_anti_patterns(drafts, curated.get("exemplary_passages", []))
+            if not isinstance(anti, dict):
+                anti = {}
             qualitative.update(anti)
         else:
             logging.info("[4/5] LLM 없음 - 통계 분석만 사용")

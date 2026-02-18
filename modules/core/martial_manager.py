@@ -156,7 +156,7 @@ class MartialManager:
 
         protagonist = hud_data.get("Protagonist")
         if not isinstance(protagonist, dict):
-            return hud_data
+            return {"actual_truth": {"name": "주인공"}}
 
         return protagonist
 

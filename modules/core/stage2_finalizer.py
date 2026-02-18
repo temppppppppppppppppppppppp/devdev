@@ -340,7 +340,7 @@ class Stage2Finalizer:
                                 if not _as_text:
                                     # [V70] arc_summary dict를 읽기 좋은 텍스트로 변환
                                     _parts = []
-                                    if _as.get("npc_status"):
+                                    if _as.get("npc_status") and isinstance(_as["npc_status"], dict):
                                         _parts.append(
                                             "NPC: "
                                             + ", ".join(
@@ -378,7 +378,7 @@ class Stage2Finalizer:
                         _vol_result = self.ctx.agents["director"].ask(_vol_prompt, temperature=0.2)
                         if _vol_result and isinstance(_vol_result, str) and len(_vol_result) > 20:
                             self.ctx.current_project.save_v20_anchor(f"volume_summary_{_vol_no}", _vol_result)
-                            logging.warning(f"📖 [V68] 볼륨 {_vol_no} 요약 저장 완료 ({len(_vol_result)}자)")
+                            logging.info(f"📖 [V68] 볼륨 {_vol_no} 요약 저장 완료 ({len(_vol_result)}자)")
 
                             # [V68] 시리즈 요약 갱신 — 기존 + 새 볼륨 통합
                             try:

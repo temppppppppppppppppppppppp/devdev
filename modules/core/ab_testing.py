@@ -165,7 +165,7 @@ class ABTestingFramework:
                     reject_count += 1
 
                 score = r["result"].get("score", 0)
-                if score:
+                if score is not None:
                     scores.append(score)
 
         # 시간 통계
@@ -204,13 +204,13 @@ class ABTestingFramework:
         for r in self.variant_a_results:
             if r["success"]:
                 score = r["result"].get("score", 0)
-                if score:
+                if score is not None:
                     a_scores.append(score)
 
         for r in self.variant_b_results:
             if r["success"]:
                 score = r["result"].get("score", 0)
-                if score:
+                if score is not None:
                     b_scores.append(score)
 
         # 통계적 유의성 검정 (t-test)

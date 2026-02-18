@@ -244,6 +244,7 @@ class StateExtractor(BaseAgent):
             return result
 
         except Exception as e:
+            logging.warning(f"[StateExtractor] LLM 추출 실패 (fallback 사용): {e}")
             # 실패 시 기본 추출 (Python 기반)
             result = self._fallback_extraction(arc_data)
             # [V62.5] 폴백 결과도 캐시 (재호출 시 LLM 재시도 방지)
@@ -288,7 +289,8 @@ class StateExtractor(BaseAgent):
 
         # 마지막 Arc 기준으로 추출
         latest_arc = arcs[-1]
-        current_state = self.extract_state(latest_arc)
+        # Cache 오염 방지: 누적 상태 계산은 최신 Arc 상태의 사본에서만 수행
+        current_state = dict(self.extract_state(latest_arc))
 
         # 전체 Arc에서 획득한 아이템 누적
         all_acquired = []
@@ -320,6 +322,8 @@ class StateExtractor(BaseAgent):
             tactical = arc.get("tactical_doc", "")
             if isinstance(tactical, dict):  # [V70] dict → str 변환
                 tactical = "\n".join(str(v) for v in tactical.values() if v)
+            elif not isinstance(tactical, str):
+                tactical = str(tactical) if tactical else ""
             grants = self._extract_grants_from_text(tactical)
             all_grants.extend(grants)
 
@@ -402,8 +406,12 @@ class StateExtractor(BaseAgent):
         ]
 
         injuries = protagonist.get("injuries", [])
+        if not isinstance(injuries, list):
+            injuries = []
         if injuries:
             for inj in injuries:
+                if not isinstance(inj, dict):
+                    continue
                 lines.append(
                     f"   - {inj.get('name', '?')}: {inj.get('severity', '?')} "
                     f"(회복 {inj.get('recovery_days', '?')}일 필요)"
@@ -412,6 +420,8 @@ class StateExtractor(BaseAgent):
             lines.append("   - 없음")
 
         energy = protagonist.get("internal_energy", {})
+        if not isinstance(energy, dict):
+            energy = {"current_percent": int(energy) if isinstance(energy, int | float) else 100}
         lines.append(
             f"   - 내공: {energy.get('current_percent', 100)}% (회복 {energy.get('recovery_needed_days', 0)}일 필요)"
         )
@@ -493,10 +503,14 @@ class StateExtractor(BaseAgent):
         # next_arc_constraints 보정
         if "next_arc_constraints" not in result:
             injuries = ps.get("injuries", [])
+            if not isinstance(injuries, list):
+                injuries = []
             energy = ps.get("internal_energy", {})
+            if not isinstance(energy, dict):
+                energy = {"current_percent": int(energy) if isinstance(energy, int | float) else 100}
 
             recovery_needed = bool(injuries) or energy.get("current_percent", 100) < 50
-            min_days = max([inj.get("recovery_days", 0) for inj in injuries] + [0])
+            min_days = max([inj.get("recovery_days", 0) for inj in injuries if isinstance(inj, dict)] + [0])
 
             result["next_arc_constraints"] = {
                 "must_start_with": "이전 상태 계승" if recovery_needed else None,

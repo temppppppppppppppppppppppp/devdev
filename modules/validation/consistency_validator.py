@@ -172,7 +172,7 @@ class ConsistencyValidator:
             authority_check = self.guard.check_authority_delegation(manuscript, authority_context)
             if not authority_check["passed"]:
                 for v in authority_check["violations"]:
-                    if authority_check.get("has_justification", False):
+                    if v.get("has_justification", False):
                         justifiable.append({**v, "category": "authority_delegation"})
                     else:
                         unjustifiable.append(
@@ -342,6 +342,8 @@ class ConsistencyValidator:
             # Guard의 기본 효능 규칙 사용
             if self.guard and hasattr(self.guard, "get_technique_effect_rules"):
                 asset_library = self.guard.get_technique_effect_rules()
+                if not asset_library or not isinstance(asset_library, dict):
+                    return {"passed": True, "violations": []}
             else:
                 return {"passed": True, "violations": []}
 
@@ -359,7 +361,9 @@ class ConsistencyValidator:
             # 금지된 용도로 사용되었는지 확인
             for forbidden_use in cannot_be_used_for:
                 # 용도 패턴 생성 (예: "독약.*치료" → 독약으로 치료)
-                use_pattern = f"{item_name}.*{forbidden_use}|{forbidden_use}.*{item_name}"
+                item_name_esc = re.escape(item_name)
+                forbidden_use_esc = re.escape(forbidden_use)
+                use_pattern = f"{item_name_esc}.*{forbidden_use_esc}|{forbidden_use_esc}.*{item_name_esc}"
 
                 if re.search(use_pattern, manuscript, re.IGNORECASE):
                     # 변환 설명이 있는지 확인
@@ -459,12 +463,13 @@ class ConsistencyValidator:
     def _get_relation_contradiction_patterns(self, npc_name: str, relation_type: str, event_type: str) -> list[dict]:
         """관계 유형별 모순 패턴 생성"""
         patterns = []
+        npc_name_esc = re.escape(npc_name)
 
         # 배신 후 충성 표현
         if event_type in ["betrayal", "배신"]:
             patterns.append(
                 {
-                    "pattern": f"{npc_name}.*충성|{npc_name}.*믿음|{npc_name}.*은혜",
+                    "pattern": f"{npc_name_esc}.*충성|{npc_name_esc}.*믿음|{npc_name_esc}.*은혜",
                     "reason": f"'{npc_name}'이(가) 배신한 후 충성/신뢰 표현 모순",
                 }
             )
@@ -473,7 +478,7 @@ class ConsistencyValidator:
         if relation_type in ["enemy", "적대", "원수"]:
             patterns.append(
                 {
-                    "pattern": f"{npc_name}.*친구|{npc_name}.*동지|{npc_name}.*믿",
+                    "pattern": f"{npc_name_esc}.*친구|{npc_name_esc}.*동지|{npc_name_esc}.*믿",
                     "reason": f"적대 관계인 '{npc_name}'에게 우호적 표현 모순",
                 }
             )
@@ -482,7 +487,7 @@ class ConsistencyValidator:
         if relation_type in ["subordinate", "하수인", "부하"]:
             patterns.append(
                 {
-                    "pattern": f"{npc_name}.*에게.*명령받|{npc_name}.*지시.*따라",
+                    "pattern": f"{npc_name_esc}.*에게.*명령받|{npc_name_esc}.*지시.*따라",
                     "reason": f"하위자 '{npc_name}'이(가) 주인공에게 명령하는 모순",
                 }
             )
@@ -491,12 +496,13 @@ class ConsistencyValidator:
 
     def _has_trigger_event(self, manuscript: str, npc_name: str, event_type: str) -> bool:
         """트리거 이벤트 존재 여부 확인"""
+        npc_name_esc = re.escape(npc_name)
         trigger_patterns = [
-            f"{npc_name}.*용서",
-            f"{npc_name}.*화해",
-            f"{npc_name}.*진심",
-            f"{npc_name}.*사과",
-            f"{npc_name}.*변화",
+            f"{npc_name_esc}.*용서",
+            f"{npc_name_esc}.*화해",
+            f"{npc_name_esc}.*진심",
+            f"{npc_name_esc}.*사과",
+            f"{npc_name_esc}.*변화",
             r"마음.*바뀌",
             r"생각.*달라",
             r"오해.*풀",

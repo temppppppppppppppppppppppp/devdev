@@ -161,8 +161,11 @@ class ContextCompressor:
             summarized_fields=summarized_fields,
         )
 
-    def _process_field(self, key: str, value: Any) -> Any:
+    def _process_field(self, key: str, value: Any, _depth: int = 0) -> Any:
         """필드 처리 (타입별 최적화)"""
+        if _depth > 20:
+            return value
+
         if isinstance(value, str):
             # 긴 텍스트 트림
             if len(value) > self.max_field_length:
@@ -177,7 +180,7 @@ class ContextCompressor:
 
         elif isinstance(value, dict):
             # 딕셔너리 재귀 처리
-            return {k: self._process_field(k, v) for k, v in value.items()}
+            return {k: self._process_field(k, v, _depth + 1) for k, v in value.items()}
 
         return value
 

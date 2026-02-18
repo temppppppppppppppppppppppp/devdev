@@ -315,6 +315,22 @@ class TestContinuityManuscriptContradiction:
         assert len(issues) > 0
         assert any(i.get("type") == "stupid_villain" for i in issues)
 
+    def test_villain_intelligence_learning_reaction_is_minor(self):
+        """학습 반응이 감지되면 stupid_villain은 MINOR로 완화된다."""
+        inspector = _make_mock_inspector()
+        validator = ContinuityManuscriptValidator(inspector)
+
+        prev_manuscripts = [
+            {"ep_num": 1, "content": "악역이 '철부지 놈' 이라며 주인공을 비웃었다."},
+        ]
+        manuscript = "악역이 또 내버려 둬라고 했지만, 다음엔 반드시 대비하겠다고 다짐했다."
+
+        issues = validator._check_villain_intelligence(prev_manuscripts, manuscript)
+
+        assert len(issues) > 0
+        assert issues[0].get("type") == "stupid_villain"
+        assert issues[0].get("severity") == "MINOR"
+
     def test_time_flow_warning(self):
         """시간 흐름 검증 - 연속 대형 이벤트"""
         inspector = _make_mock_inspector()

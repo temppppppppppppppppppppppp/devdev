@@ -116,6 +116,14 @@ class TestPatchModeThresholds:
         assert PatchModeThresholds.REWRITE < PatchModeThresholds.PATCH
 
 
+class TestRoundContextAnnotations:
+    def test_inventory_and_martial_arts_are_list_annotations(self):
+        from modules.core.stage4_orchestrator import _RoundContext
+
+        assert _RoundContext.__annotations__["current_inventory"] is list
+        assert _RoundContext.__annotations__["current_martial_arts"] is list
+
+
 # ══════════════════════════════════════════════════════════════
 # Test: 패치 모드 분기 로직 (stage4_orchestrator.py 핵심)
 # ══════════════════════════════════════════════════════════════
@@ -407,10 +415,6 @@ class TestHandleRoundOutcomeErrorPaths:
         assert result.final_state_updates == {}
         # 5라운드 호출 확인
         assert orch._interview_round.run.call_count == 5
-        assert result.should_return is True
-        assert result.final_manuscript is None
-        assert result.final_title is None
-        assert result.final_state_updates == {}
 
 
 # ══════════════════════════════════════════════════════════════

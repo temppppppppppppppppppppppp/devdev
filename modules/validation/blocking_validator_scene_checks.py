@@ -46,7 +46,7 @@ class BlockingValidatorSceneChecks:
         blueprint = context.get("blueprint", {})
         scene_breakdown = blueprint.get("scene_breakdown", {})
 
-        if not scene_breakdown:
+        if not scene_breakdown or not isinstance(scene_breakdown, dict):
             # Blueprint 없으면 체크 불가 → 통과 처리
             return {"check": "required_scenes", "passed": True}
 

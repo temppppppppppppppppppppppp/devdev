@@ -125,7 +125,7 @@ class PromptBuilder:
             return ""
 
         scene_breakdown = blueprint.get("scene_breakdown", {})
-        if not scene_breakdown:
+        if not scene_breakdown or not isinstance(scene_breakdown, dict):
             return ""
 
         total_scenes = len(scene_breakdown)
@@ -513,6 +513,8 @@ class PromptBuilder:
         """
         if not all_refined_arcs:
             return "서사 시작점"
+        if not self._app or not getattr(self._app, "agents", None):
+            return self.generate_arc_context_fallback(all_refined_arcs)
 
         try:
             state_extractor = self._app.agents.get("state_extractor")
@@ -539,10 +541,14 @@ class PromptBuilder:
                 return constraint_prompt
 
         except Exception as se_err:
-            self._app._audit_event(
-                "v60_10_state_extractor_error", "StateExtractor failed, using fallback", {"error": str(se_err)[:100]}
-            )
-            self._app.ui.log(f"      ⚠️ [V60.10] StateExtractor 실패, Python 폴백 사용: {str(se_err)[:50]}")
+            if hasattr(self._app, "_audit_event"):
+                self._app._audit_event(
+                    "v60_10_state_extractor_error",
+                    "StateExtractor failed, using fallback",
+                    {"error": str(se_err)[:100]},
+                )
+            if getattr(getattr(self._app, "ui", None), "log", None):
+                self._app.ui.log(f"      ⚠️ [V60.10] StateExtractor 실패, Python 폴백 사용: {str(se_err)[:50]}")
 
         return self.generate_arc_context_fallback(all_refined_arcs)
 
@@ -751,6 +757,8 @@ class PromptBuilder:
         """
         if up_to_ep <= 0:
             return ""
+        if not self._app or not getattr(self._app, "current_project", None):
+            return ""
 
         try:
             # [V64 P2-7] 증분 캐시 활용: 가장 가까운 이전 캐시 찾기
@@ -822,7 +830,10 @@ class PromptBuilder:
                 return ""
 
         except Exception as e:
-            self._app.ui.log(f"⚠️ 아이템 타임라인 생성 실패 (비차단): {e}")
+            if getattr(getattr(self._app, "ui", None), "log", None):
+                self._app.ui.log(f"⚠️ 아이템 타임라인 생성 실패 (비차단): {e}")
+            else:
+                logging.warning(f"[PromptBuilder] item timeline build failed: {e}")
             return ""
 
     # ═══════════════════════════════════════════════════════════════════════
@@ -895,7 +906,7 @@ class PromptBuilder:
     def extract_npc_profiles(self, arc_data: dict) -> dict:
         """[V41] 아크 데이터에서 등장 NPC 프로필 추출"""
         npcs = {}
-        if not self._app.current_project:
+        if not self._app or not getattr(self._app, "current_project", None):
             return npcs
 
         bible = self._app.current_project.master_bible.get("MasterBible", {})
@@ -912,7 +923,7 @@ class PromptBuilder:
     def get_character_traits(self) -> dict:
         """[V41] 캐릭터 특성 DB 로드 (성격, 지능, 무공수준)"""
         traits = {}
-        if not self._app.current_project:
+        if not self._app or not getattr(self._app, "current_project", None):
             return traits
 
         bible = self._app.current_project.master_bible.get("MasterBible", {})

@@ -257,7 +257,7 @@ Step 6: Article 7 (독자 대리만족) 분석
             for _cat, _val in result.items():
                 if isinstance(_val, dict) and "score" in _val and "max" in _val:
                     try:
-                        _val["score"] = min(int(_val["score"]), int(_val["max"]))
+                        _val["score"] = max(0, min(int(_val["score"]), int(_val["max"])))
                     except (ValueError, TypeError):
                         logging.warning(
                             f"[ScoringValidator] 점수 변환 실패: score={_val.get('score')}, max={_val.get('max')} — 0 대입"
@@ -612,7 +612,7 @@ Step 6: Article 7 (독자 대리만족) 분석
             sensory_penalty = 1
             sensory_note = "감각 묘사 부족"
         elif sensory_counts.get("visual", 0) > total_sensory * 0.7:  # 시각 70% 초과
-            sensory_penalty = 0.5
+            sensory_penalty = 1
             sensory_note = "시각 편중"
         else:
             sensory_note = "감각 균형 양호"
@@ -635,7 +635,7 @@ Step 6: Article 7 (독자 대리만족) 분석
             reason = f"직접 서술 {ratio:.1f}/1000자 (극심)"
 
         # [V56] 최종 점수 = 기본 점수 - 감각 페널티
-        final_score = max(1, base_score - sensory_penalty)
+        final_score = int(max(1, base_score - sensory_penalty))
 
         return {
             "score": final_score,

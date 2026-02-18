@@ -405,8 +405,14 @@ class StateDeltaTracker:
         energy = arc_end.get("internal_energy", 100)
         if isinstance(energy, str):
             # "50%" 같은 문자열 처리
-            energy = int(energy.replace("%", "").strip())
-        self.current_energy = max(0, min(100, int(energy)))
+            try:
+                energy = int(energy.replace("%", "").strip())
+            except (ValueError, TypeError):
+                energy = 50
+        try:
+            self.current_energy = max(0, min(100, int(energy)))
+        except (ValueError, TypeError):
+            self.current_energy = 50
 
         # 부상 로드
         injuries = arc_end.get("injuries", "정상")

@@ -300,7 +300,7 @@ class PreDirectorChecklist:
         blueprint = context.get("blueprint", {})
         if blueprint and isinstance(blueprint, dict):
             scene_breakdown = blueprint.get("scene_breakdown", {})
-            if scene_breakdown:
+            if scene_breakdown and isinstance(scene_breakdown, dict):
                 # [V60.5] 씬별 반영률 정량 측정
                 scene_metrics = self.manuscript_checker._measure_scene_reflection(manuscript, scene_breakdown)
                 items.extend(scene_metrics["check_items"])
@@ -362,7 +362,8 @@ class PreDirectorChecklist:
         # 6. 범위 초과 체크
         blueprint = context.get("blueprint", {})
         if blueprint and isinstance(blueprint, dict):
-            scene_count = len(blueprint.get("scene_breakdown", {}))
+            _sb = blueprint.get("scene_breakdown", {})
+            scene_count = len(_sb) if isinstance(_sb, dict) else 0
             if scene_count > 0:
                 expected_max = scene_count * 1500 * 1.4  # 씬당 1500자 + 40% 여유
                 if length > expected_max:
@@ -506,6 +507,8 @@ class PreDirectorChecklist:
 
         # 3. 씬 개수 체크
         scene_breakdown = bp.get("scene_breakdown", {})
+        if not isinstance(scene_breakdown, dict):
+            scene_breakdown = {}
         scene_count = len(scene_breakdown)
 
         if scene_count < 3:

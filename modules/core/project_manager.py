@@ -421,6 +421,8 @@ class ProjectContext:
         # 3. 퍼지 매칭 (특수문자 제거 후 대조)
         clean_raw = re.sub(r"[^a-zA-Z0-9]", "", raw_id).upper()
         for vid in valid_ids:
+            if not vid:
+                continue
             clean_vid = re.sub(r"[^a-zA-Z0-9]", "", vid).upper()
             if clean_raw == clean_vid:
                 logging.warning(f"🔧 [Normalized] Seed ID 교정: {raw_id} -> {vid}")
@@ -504,7 +506,7 @@ class ProjectContext:
                                 # 변화량 추적 및 출력
                                 changes = []
                                 for key in ["achievement_rate", "current_status", "realm"]:
-                                    if new_hud.get(key) and new_hud.get(key) != old_hud.get(key):
+                                    if new_hud.get(key) is not None and new_hud.get(key) != old_hud.get(key):
                                         changes.append(f"{key}: {old_hud.get(key, 'N/A')} -> {new_hud[key]}")
 
                                 # [V45] NPC equipment 변화 추적
@@ -867,9 +869,9 @@ class ProjectContext:
         """
         try:
             match = re.search(r"(\d+)\s*화", error_report)
-            origin_ep = int(match.group(1)) if match else self.get_latest_episode_number()
+            origin_ep = int(match.group(1)) if match else max(1, self.get_latest_episode_number() - 1)
 
-            current_ep = self.get_latest_episode_number()
+            current_ep = self.get_latest_episode_number() - 1
             target_ep = max(origin_ep, current_ep - 3)
 
             # [D-2] 롤백 영향 범위 미리보기

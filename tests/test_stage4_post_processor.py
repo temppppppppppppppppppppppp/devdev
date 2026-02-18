@@ -199,6 +199,60 @@ class TestProcessPassResult:
         assert cost_kw["scope_id"] == 2
         assert cost_kw["total_calls"] == 3
 
+    def test_bible_delta_time_passed_uses_time_passed_field(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.agents["manager"].update_state_and_lore_v20.return_value = {
+            "state_updates": {
+                "time_passed": "3일",
+                "location": "무당산",
+            }
+        }
+
+        result = pp.process_pass_result(
+            next_ep=3,
+            final_manuscript="테스트 원고 " * 500,
+            final_title="테스트",
+            final_state_updates={},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        pp.ctx.current_project.db.save_episode_bible.assert_called_once()
+        _args, _kwargs = pp.ctx.current_project.db.save_episode_bible.call_args
+        bible_delta = _args[1]
+        assert bible_delta["time_passed"] == "3일"
+
+    def test_overexposure_receives_empty_protagonist_name_when_callback_returns_none(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.state_tracker = MagicMock()
+        pp.ctx.state_tracker.npc_registry = {"조연": {"status": "alive"}}
+        pp.ctx.get_protagonist_name = lambda: None
+
+        detector = MagicMock(return_value=None)
+
+        result = pp.process_pass_result(
+            next_ep=4,
+            final_manuscript="테스트 원고 " * 500,
+            final_title="테스트",
+            final_state_updates={},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+            detect_npc_overexposure_fn=detector,
+        )
+
+        assert result is True
+        detector.assert_called_once()
+        assert detector.call_args.args[2] == ""
+
 
 class TestRunPostEpisodeTasks:
     def test_vector_sync_called_when_operational(self):

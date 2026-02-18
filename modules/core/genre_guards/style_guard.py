@@ -62,6 +62,40 @@ class StyleGuard(BaseGuard):
     def check_state_action_consistency(self, manuscript: str, current_state: dict) -> dict:
         return self._base.check_state_action_consistency(manuscript, current_state)
 
+    # [V46.1] 권위/갈등/빌런 응답 검증 메서드 위임
+    def get_authority_hierarchy(self) -> dict[str, Any]:
+        return self._base.get_authority_hierarchy()
+
+    def get_delegation_patterns(self) -> list[str]:
+        return self._base.get_delegation_patterns()
+
+    def check_authority_delegation(self, manuscript: str, context: dict[str, Any]) -> dict[str, Any]:
+        return self._base.check_authority_delegation(manuscript, context)
+
+    def get_hostile_action_types(self) -> list[str]:
+        return self._base.get_hostile_action_types()
+
+    def get_resolution_patterns(self) -> list[str]:
+        return self._base.get_resolution_patterns()
+
+    def check_unresolved_conflict(self, manuscript: str, karma_matrix: dict[str, Any], ep_num: int) -> dict[str, Any]:
+        return self._base.check_unresolved_conflict(manuscript, karma_matrix, ep_num)
+
+    def get_protagonist_victory_patterns(self) -> list[str]:
+        return self._base.get_protagonist_victory_patterns()
+
+    def get_villain_response_patterns(self) -> list[str]:
+        return self._base.get_villain_response_patterns()
+
+    def check_villain_response(
+        self, manuscript: str, villain_context: dict[str, Any], recent_events: list[dict]
+    ) -> dict[str, Any]:
+        return self._base.check_villain_response(manuscript, villain_context, recent_events)
+
+    def __getattr__(self, name):
+        """미구현 메서드는 base guard로 위임."""
+        return getattr(self._base, name)
+
     def run_deep_validation(self, manuscript: str, current_state: dict[str, Any] = None) -> dict[str, Any]:
         """기존 장르 검증 + 문체 기반 추가 검증."""
         result = self._base.run_deep_validation(manuscript, current_state)

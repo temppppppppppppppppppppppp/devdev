@@ -161,7 +161,7 @@ class PacingAnalyzer:
         time_skips = self._count_time_skips(manuscript)
         total_breaks = scene_breaks + time_skips
 
-        avg_scene_len = len(manuscript) / (total_breaks + 1) if total_breaks >= 0 else len(manuscript)
+        avg_scene_len = len(manuscript) / (total_breaks + 1) if total_breaks > 0 else len(manuscript)
 
         # 4. 구간 분석
         segments = self._analyze_segments(manuscript, sentences)

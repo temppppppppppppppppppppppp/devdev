@@ -44,7 +44,7 @@ class FactLedger:
                         raw[key] = default_val
                 return raw
         except Exception as e:
-            logging.warning(f"⚠️ [V70] FactLedger DB 로드 실패, 초기화: {e}")
+            _logger.warning(f"⚠️ [V70] FactLedger DB 로드 실패, 초기화: {e}")
         return self._empty_ledger()
 
     @staticmethod
@@ -487,12 +487,12 @@ class FactLedger:
     def get_dead_characters(self) -> list[str]:
         """사망한 캐릭터 이름 목록."""
         chars = self._ledger.get("characters", {})
-        return [name for name, info in chars.items() if info.get("status") == "dead"]
+        return [name for name, info in chars.items() if isinstance(info, dict) and info.get("status") == "dead"]
 
     def get_alive_characters(self) -> list[str]:
         """생존 캐릭터 이름 목록."""
         chars = self._ledger.get("characters", {})
-        return [name for name, info in chars.items() if info.get("status") == "alive"]
+        return [name for name, info in chars.items() if isinstance(info, dict) and info.get("status") == "alive"]
 
     def get_stats(self) -> dict:
         """팩트 원장 통계."""
@@ -500,8 +500,8 @@ class FactLedger:
         return {
             "last_updated_ep": self._ledger.get("last_updated_ep", 0),
             "characters": len(chars),
-            "alive": sum(1 for v in chars.values() if v.get("status") == "alive"),
-            "dead": sum(1 for v in chars.values() if v.get("status") == "dead"),
+            "alive": sum(1 for v in chars.values() if isinstance(v, dict) and v.get("status") == "alive"),
+            "dead": sum(1 for v in chars.values() if isinstance(v, dict) and v.get("status") == "dead"),
             "items": len(self._ledger.get("items", {})),
             "locations": len(self._ledger.get("locations", {})),
             "organizations": len(self._ledger.get("organizations", {})),

@@ -329,7 +329,7 @@ class ConstitutionalChecker:
         # Blueprint 핵심 씬
         if blueprint:
             scene_breakdown = blueprint.get("scene_breakdown", {})
-            if scene_breakdown:
+            if scene_breakdown and isinstance(scene_breakdown, dict):
                 lines.append("\n📋 [Blueprint 필수 씬 - 모두 반영할 것]")
                 for i, (scene_id, scene_data) in enumerate(list(scene_breakdown.items())[:6], 1):
                     if isinstance(scene_data, dict):

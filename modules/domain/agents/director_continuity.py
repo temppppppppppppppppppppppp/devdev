@@ -124,7 +124,7 @@ class DirectorContinuityValidator:
             mismatches = result.get("mismatches", [])
             if mismatches:
                 decision = result.get("decision", "WARNING")
-                logging.info(f"⚠️ [V61] Entity 일관성 검증: {decision} ({len(mismatches)}개 불일치)")
+                logging.warning(f"⚠️ [V61] Entity 일관성 검증: {decision} ({len(mismatches)}개 불일치)")
                 for m in mismatches[:3]:
                     logging.info(
                         f"- [{m.get('category', '?')}] {m.get('registered_name', '?')} → {m.get('found_variant', '?')}"
@@ -633,10 +633,6 @@ class DirectorContinuityValidator:
                         }
                     )
 
-            # 시점 체크 (있으면)
-            if prev_ending_state.get("timeline") and new_blueprint.get("ending_state", {}).get("timeline"):
-                pass
-
             # 결정 로직
             major_count = sum(1 for i in issues if i.get("severity") == "MAJOR")
             critical_count = sum(1 for i in issues if i.get("severity") == "CRITICAL")
@@ -704,6 +700,7 @@ class DirectorContinuityValidator:
                 )
                 self._cached_manuscript_ep = ep_num
                 self._cached_context_text_manuscript = context_text
+                self._manuscript_cache_name = cache_result.get("cache_name")
                 logging.info(f"📦 [V61.5] Manuscript 캐시 갱신 (ep={ep_num})")
             else:
                 context_text = getattr(self, "_cached_context_text_manuscript", "")

@@ -167,11 +167,25 @@ class ConstraintCompiler:
         if state_extractor_result:
             protagonist = state_extractor_result.get("protagonist_state", {})
             inventory = state_extractor_result.get("inventory", {})
+            if not isinstance(protagonist, dict):
+                protagonist = {}
+            if not isinstance(inventory, dict):
+                inventory = {}
+            _loc = protagonist.get("location", {})
+            _energy = protagonist.get("internal_energy", {})
 
             return {
-                "location": protagonist.get("location", {}).get("current", "알 수 없음"),
+                "location": (
+                    _loc.get("current", "알 수 없음") if isinstance(_loc, dict) else str(_loc) if _loc else "알 수 없음"
+                ),
                 "injuries": protagonist.get("injuries", []),
-                "internal_energy": protagonist.get("internal_energy", {}).get("current_percent", 100),
+                "internal_energy": (
+                    _energy.get("current_percent", 100)
+                    if isinstance(_energy, dict)
+                    else int(_energy)
+                    if isinstance(_energy, int | float)
+                    else 100
+                ),
                 "equipment": inventory.get("current_items", []),
                 "world_state": state_extractor_result.get("next_arc_constraints", {}).get("must_start_with", ""),
             }

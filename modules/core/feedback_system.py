@@ -201,7 +201,7 @@ class FeedbackSystem:
         elif "protagonist" in v_type.lower():
             core_fix = f"주인공 이름을 '{protagonist_name}'으로 통일."
         else:
-            core_fix = v.get("description", "위반사항 수정")[:80]
+            core_fix = (v.get("description", "위반사항 수정") or "위반사항 수정")[:80]
 
         feedback = f"""
 <CRITICAL_INSTRUCTION priority="HIGHEST">
@@ -254,7 +254,7 @@ class FeedbackSystem:
 
         for i, v in enumerate(violations[:3], 1):
             v_type = v.get("type", "unknown")
-            v_desc = v.get("description", "")[:150]
+            v_desc = (v.get("description", "") or "")[:150]
             item_name = v.get("item_or_subject", "")
 
             lines.append(f"━━━ 수정 {i} ━━━")
@@ -326,7 +326,7 @@ class FeedbackSystem:
             loss = shadow.get("internal_energy_loss", "0%")
             try:
                 loss_val = int(str(loss).replace("%", "").strip())
-                energy = max(0, 100 - loss_val)
+                energy = max(0, min(100, 100 - loss_val))
             except (ValueError, TypeError):
                 energy = "?"
 

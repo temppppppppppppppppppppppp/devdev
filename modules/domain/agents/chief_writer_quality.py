@@ -171,7 +171,8 @@ class ChiefWriterQualityGate:
     def _check_hud_consistency(self, content: str, hud_report: str) -> list:
         """HUD 모순 체크"""
         issues = []
-
+        if not hud_report:
+            return issues
         weak_keywords = ["나약", "중독", "부상", "중상", "쇠약", "기력고갈", "빈사"]
         strong_actions = ["일격에", "압도", "박살", "분쇄", "제압", "일도양단"]
 
@@ -244,7 +245,8 @@ class ChiefWriterQualityGate:
     def _check_justification_gaps(self, content: str, hud_report: str) -> list:
         """정당화 누락 체크"""
         issues = []
-
+        if not hud_report:
+            return issues
         constraints = []
         if "나약" in hud_report or "중독" in hud_report:
             constraints.append("physical")
