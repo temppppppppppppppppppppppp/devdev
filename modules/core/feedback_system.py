@@ -94,7 +94,7 @@ class FeedbackSystem:
             if shortage > 0:
                 dialogue_add = int(shortage * 0.35)
                 desc_add = int(shortage * 0.40)
-                action_add = int(shortage * 0.25)
+                action_add = shortage - dialogue_add - desc_add
 
                 quantified.append(
                     {

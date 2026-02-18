@@ -104,49 +104,41 @@ class VecMemory:
             logging.warning(f"[VecMemory] genai 클라이언트 초기화 실패: {str(e)[:80]}")
 
     def _ensure_tables(self) -> None:
-        """벡터 테이블 + 메타데이터 테이블 + 앵커 테이블 생성"""
+        """Create vec/meta/sync/anchor tables."""
         cur = self._conn.cursor()
-
-        # vec0 가상 테이블 (에피소드)
-        cur.execute(f"""
-            CREATE VIRTUAL TABLE IF NOT EXISTS vec_episodes
-            USING vec0(embedding float[{EMBED_DIM}])
-        """)
-
-        # 에피소드 메타데이터
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS episode_meta (
-                ep_num      INTEGER PRIMARY KEY,
-                summary     TEXT,
-                causal_data TEXT,
-                arc_no      INTEGER,
-                event_types TEXT,
-                entity_names TEXT,
-                created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-
-        # 동기화 상태 (기존 sync_status 호환)
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS sync_status (
-                ep_num    INTEGER PRIMARY KEY,
-                synced    INTEGER DEFAULT 0,
-                synced_at TIMESTAMP
-            )
-        """)
-
-        # 범용 앵커 저장소 (LongTermMemory.save_v20_anchor 호환)
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS anchors (
-                key        TEXT PRIMARY KEY,
-                value      TEXT,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-
-        self._conn.commit()
-
-    # ── 임베딩 ──────────────────────────────────────────────
+        try:
+            cur.execute(f"""
+                CREATE VIRTUAL TABLE IF NOT EXISTS vec_episodes
+                USING vec0(embedding float[{EMBED_DIM}])
+            """)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS episode_meta (
+                    ep_num      INTEGER PRIMARY KEY,
+                    summary     TEXT,
+                    causal_data TEXT,
+                    arc_no      INTEGER,
+                    event_types TEXT,
+                    entity_names TEXT,
+                    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS sync_status (
+                    ep_num    INTEGER PRIMARY KEY,
+                    synced    INTEGER DEFAULT 0,
+                    synced_at TIMESTAMP
+                )
+            """)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS anchors (
+                    key        TEXT PRIMARY KEY,
+                    value      TEXT,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            self._conn.commit()
+        finally:
+            cur.close()
 
     def _embed_text(self, text: str) -> list | None:
         """텍스트 → 임베딩 벡터. 실패 시 None."""
@@ -185,7 +177,6 @@ class VecMemory:
         return None
 
     # ── 에피소드 저장 ───────────────────────────────────────
-
     def memorize_v20_episode(
         self,
         ep_num: int,
@@ -196,27 +187,26 @@ class VecMemory:
         event_types=None,
         entity_names=None,
     ) -> bool:
-        """에피소드를 벡터 DB에 저장 (LongTermMemory 호환)."""
+        """Store one episode into vec DB (LongTermMemory-compatible)."""
         if not self.has_valid_memory:
-            self._ui_log(f"[VecMemory] DB 미초기화 — 제 {ep_num}화 저장 건너뜀")
+            self._ui_log(f"[VecMemory] DB not initialized -> skip episode {ep_num}")
             return False
 
         emb = self._embed_text(text)
         if emb is None:
-            self._ui_log(f"[VecMemory] 임베딩 실패 — 제 {ep_num}화 저장 건너뜀")
+            self._ui_log(f"[VecMemory] embedding failed -> skip episode {ep_num}")
             return False
 
+        cur = None
         try:
             cur = self._conn.cursor()
 
-            # vec0 upsert: 기존 rowid 삭제 후 삽입
             cur.execute("DELETE FROM vec_episodes WHERE rowid = ?", (ep_num,))
             cur.execute(
                 "INSERT INTO vec_episodes(rowid, embedding) VALUES (?, ?)",
                 (ep_num, _serialize_f32(emb)),
             )
 
-            # 메타데이터 upsert
             causal_str = json.dumps(causal_links, ensure_ascii=False)[:500] if causal_links else ""
             evt_str = ",".join(str(e) for e in event_types)[:200] if event_types else ""
             ent_str = ",".join(str(n) for n in entity_names)[:300] if entity_names else ""
@@ -227,7 +217,6 @@ class VecMemory:
                 (ep_num, summary[:500], causal_str, arc_no, evt_str, ent_str),
             )
 
-            # 동기화 상태 갱신
             cur.execute(
                 "INSERT OR REPLACE INTO sync_status (ep_num, synced, synced_at) VALUES (?, 1, CURRENT_TIMESTAMP)",
                 (ep_num,),
@@ -237,10 +226,11 @@ class VecMemory:
             return True
 
         except Exception as e:
-            self._ui_log(f"[VecMemory] 제 {ep_num}화 저장 실패: {e}")
+            self._ui_log(f"[VecMemory] failed to save episode {ep_num}: {e}")
             return False
-
-    # ── 벡터 검색 ───────────────────────────────────────────
+        finally:
+            if cur is not None:
+                cur.close()
 
     def retrieve_high_res_context(self, query, current_ep: int, n_results: int = 3) -> str:
         """쿼리와 유사한 과거 에피소드 맥락 반환 (LongTermMemory 호환)."""
@@ -445,14 +435,13 @@ class VecMemory:
             return 0
 
     # ── 삭제 ────────────────────────────────────────────────
-
     def delete_episodes_from(self, target_ep: int) -> int:
-        """target_ep 이상의 에피소드 벡터+메타를 삭제. 삭제된 건수 반환."""
+        """Delete vectors/meta for episodes >= target_ep and return deleted count."""
         if not self._conn:
             return 0
+        cur = None
         try:
             cur = self._conn.cursor()
-            # 삭제 대상 rowid 조회
             rows = cur.execute("SELECT ep_num FROM episode_meta WHERE ep_num >= ?", (target_ep,)).fetchall()
             count = len(rows)
             for (ep,) in rows:
@@ -462,8 +451,11 @@ class VecMemory:
             self._conn.commit()
             return count
         except Exception as e:
-            self._ui_log(f"[VecMemory] 에피소드 삭제 실패 (>={target_ep}): {e}")
+            self._ui_log(f"[VecMemory] delete episodes failed (>={target_ep}): {e}")
             return 0
+        finally:
+            if cur is not None:
+                cur.close()
 
     def delete_all_episodes(self) -> int:
         """모든 에피소드 벡터+메타 삭제. 삭제된 건수 반환."""
