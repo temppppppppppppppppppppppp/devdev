@@ -75,6 +75,7 @@ class PassRateMonitor:
         self.log_path = self.project_path / "logs" / "pass_rate_monitor.json"
         self.records: list[AttemptRecord] = []
         self.session_start = datetime.now().isoformat()
+        self._lock = threading.Lock()
 
         # 기존 기록 로드
         self._load_records()
@@ -96,14 +97,18 @@ class PassRateMonitor:
     def _save_records(self) -> None:
         """기록 저장"""
         try:
+            with self._lock:
+                records_snapshot = [asdict(r) for r in self.records[-1000:]]  # 최근 1000개만
+                total_records = len(self.records)
+                session_start = self.session_start
             self.log_path.parent.mkdir(parents=True, exist_ok=True)
             with open(self.log_path, "w", encoding="utf-8") as f:
                 json.dump(
                     {
-                        "session_start": self.session_start,
+                        "session_start": session_start,
                         "last_updated": datetime.now().isoformat(),
-                        "total_records": len(self.records),
-                        "records": [asdict(r) for r in self.records[-1000:]],  # 최근 1000개만
+                        "total_records": total_records,
+                        "records": records_snapshot,
                     },
                     f,
                     ensure_ascii=False,
@@ -160,10 +165,12 @@ class PassRateMonitor:
             patch_fallback=patch_fallback,
         )
 
-        self.records.append(record)
+        with self._lock:
+            self.records.append(record)
+            should_save = len(self.records) % 100 == 0
 
         # 100건마다 자동 저장
-        if len(self.records) % 100 == 0:
+        if should_save:
             self._save_records()
 
     def get_stage_stats(self, stage: int, recent_n: int = None) -> StageStats:
@@ -178,7 +185,8 @@ class PassRateMonitor:
             StageStats
         """
         # 해당 Stage 기록 필터링
-        stage_records = [r for r in self.records if r.stage == stage]
+        with self._lock:
+            stage_records = [r for r in self.records if r.stage == stage]
         if recent_n:
             stage_records = stage_records[-recent_n:]
 
@@ -274,7 +282,9 @@ class PassRateMonitor:
 
     def get_patch_effectiveness(self, stage: int | None = None, recent_n: int = 200) -> dict[str, Any]:
         """Patch mode effectiveness summary."""
-        records = self.records[-recent_n:] if recent_n else self.records
+        with self._lock:
+            records = list(self.records)
+        records = records[-recent_n:] if recent_n else records
         if stage is not None:
             records = [r for r in records if r.stage == stage]
 
@@ -376,7 +386,8 @@ class PassRateMonitor:
         Returns:
             트렌드 정보
         """
-        stage_records = [r for r in self.records if r.stage == stage]
+        with self._lock:
+            stage_records = [r for r in self.records if r.stage == stage]
 
         if len(stage_records) < window * 2:
             return {"trend": "insufficient_data"}
@@ -456,7 +467,8 @@ class PassRateMonitor:
                 "hard_episodes": [],
             }
 
-        arc_records = [r for r in self.records if r.stage == 4 and r.arc == arc_no and r.episode > 0]
+        with self._lock:
+            arc_records = [r for r in self.records if r.stage == 4 and r.arc == arc_no and r.episode > 0]
         if not arc_records:
             return {
                 "arc_no": arc_no,
@@ -501,12 +513,14 @@ class PassRateMonitor:
         import csv
 
         filepath = filepath or str(self.log_path.with_suffix(".csv"))
+        with self._lock:
+            records_snapshot = list(self.records)
 
         with open(filepath, "w", newline="", encoding="utf-8") as f:
-            if self.records:
-                writer = csv.DictWriter(f, fieldnames=asdict(self.records[0]).keys())
+            if records_snapshot:
+                writer = csv.DictWriter(f, fieldnames=asdict(records_snapshot[0]).keys())
                 writer.writeheader()
-                for record in self.records:
+                for record in records_snapshot:
                     writer.writerow(asdict(record))
 
         return filepath

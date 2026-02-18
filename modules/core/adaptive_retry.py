@@ -97,17 +97,19 @@ class AdaptiveRetryStrategy:
 
     def __init__(self) -> None:
         self.contexts: dict[str, RetryContext] = {}
+        self._lock = threading.Lock()
 
     def get_context(self, task_id: str) -> RetryContext:
         """태스크별 컨텍스트 가져오기"""
-        if task_id not in self.contexts:
-            self.contexts[task_id] = RetryContext()
-        return self.contexts[task_id]
+        with self._lock:
+            if task_id not in self.contexts:
+                self.contexts[task_id] = RetryContext()
+            return self.contexts[task_id]
 
     def reset_context(self, task_id: str):
         """컨텍스트 초기화"""
-        if task_id in self.contexts:
-            del self.contexts[task_id]
+        with self._lock:
+            self.contexts.pop(task_id, None)
 
     def classify_error(self, error_info: dict) -> ErrorType:
         """
@@ -515,6 +517,7 @@ class AdaptiveRetryManager:
 
         # 에이전트별 실패 통계
         self._agent_stats: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        self._lock = threading.Lock()
 
     def record_failure(self, ep_num: int, agent: str, error_info: dict, attempt: int = 1) -> ErrorType:
         """
@@ -546,18 +549,19 @@ class AdaptiveRetryManager:
 
         record = FailureRecord(ep_num=ep_num, agent=agent, error_type=error_type, details=error_info, attempt=attempt)
 
-        self._failures[ep_num].append(record)
-        self._agent_stats[agent][error_type.value] += 1
+        with self._lock:
+            self._failures[ep_num].append(record)
+            self._agent_stats[agent][error_type.value] += 1
 
-        # 기록 수 제한
-        if len(self._failures[ep_num]) > self.max_history:
-            self._failures[ep_num] = self._failures[ep_num][-self.max_history :]
+            # 기록 수 제한
+            if len(self._failures[ep_num]) > self.max_history:
+                self._failures[ep_num] = self._failures[ep_num][-self.max_history :]
 
-        # [Sweep6] 에피소드 키 수 제한 - 최근 50개만 유지
-        if len(self._failures) > self._max_episode_keys:
-            oldest_eps = sorted(self._failures.keys())[: len(self._failures) - self._max_episode_keys]
-            for old_ep in oldest_eps:
-                del self._failures[old_ep]
+            # [Sweep6] 에피소드 키 수 제한 - 최근 50개만 유지
+            if len(self._failures) > self._max_episode_keys:
+                oldest_eps = sorted(self._failures.keys())[: len(self._failures) - self._max_episode_keys]
+                for old_ep in oldest_eps:
+                    del self._failures[old_ep]
 
         # [V54.3.1] FailureLearner 연동: 실패 기록 동기화
         if self.failure_learner:
@@ -583,7 +587,8 @@ class AdaptiveRetryManager:
             재시도 지침 딕셔너리
         """
         # 이 에피소드의 실패 기록 조회
-        failures = [f for f in self._failures.get(ep_num, []) if f.agent == agent]
+        with self._lock:
+            failures = [f for f in self._failures.get(ep_num, []) if f.agent == agent]
 
         if not failures:
             return {
@@ -651,7 +656,8 @@ class AdaptiveRetryManager:
         Returns:
             (발동 여부, 권장 필살기)
         """
-        failures = [f for f in self._failures.get(ep_num, []) if f.agent == agent]
+        with self._lock:
+            failures = [f for f in self._failures.get(ep_num, []) if f.agent == agent]
 
         if len(failures) < 2:
             return False, ""
@@ -721,7 +727,8 @@ class AdaptiveRetryManager:
 
     def get_agent_weakness(self, agent: str) -> dict[str, Any]:
         """에이전트의 약점 분석"""
-        stats = self._agent_stats.get(agent, {})
+        with self._lock:
+            stats = dict(self._agent_stats.get(agent, {}))
 
         if not stats:
             return {"status": "no_data"}
@@ -747,10 +754,14 @@ class AdaptiveRetryManager:
 
     def get_summary(self) -> str:
         """요약 통계"""
-        total_failures = sum(len(records) for records in self._failures.values())
+        with self._lock:
+            failures_snapshot = {ep: list(records) for ep, records in self._failures.items()}
+            stats_snapshot = {agent: dict(stats) for agent, stats in self._agent_stats.items()}
+
+        total_failures = sum(len(records) for records in failures_snapshot.values())
 
         agent_summaries = []
-        for agent, stats in self._agent_stats.items():
+        for agent, stats in stats_snapshot.items():
             total = sum(stats.values())
             if stats:
                 primary = max(stats, key=stats.get)

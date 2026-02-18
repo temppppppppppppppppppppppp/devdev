@@ -269,12 +269,20 @@ class PreLLMValidator:
         violations = []
 
         # 패턴: 동시에 3개 이상 행동
-        triple_action = re.findall(r"(왼손|오른손|양손).{0,20}(왼손|오른손|양손).{0,20}(왼손|오른손|양손)", manuscript)
+        triple_action = re.findall(
+            r"(왼손|오른손|양손).{0,20}(왼손|오른손|양손).{0,20}(왼손|오른손|양손)",
+            manuscript,
+            re.DOTALL,
+        )
         if triple_action:
             violations.append("손 사용 모순 (3개 이상 동시 사용)")
 
         # 패턴: 부상 상태에서 무리한 행동
-        injury_action = re.findall(r"(중상|부상|피를 흘리).{0,50}(뛰어올|전력으로 달|힘껏 휘둘)", manuscript)
+        injury_action = re.findall(
+            r"(중상|부상|피를 흘리).{0,50}(뛰어올|전력으로 달|힘껏 휘둘)",
+            manuscript,
+            re.DOTALL,
+        )
         if injury_action:
             violations.append("부상 상태에서 무리한 행동")
 

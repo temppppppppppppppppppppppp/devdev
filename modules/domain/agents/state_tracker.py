@@ -64,7 +64,7 @@ class EpisodeState:
             "relationships": self.relationships.copy(),
         }
         # 동적 필드 병합
-        base.update(self.extra_fields)
+        base.update(copy.deepcopy(self.extra_fields))
         return base
 
     def get(self, key: str, default=None):

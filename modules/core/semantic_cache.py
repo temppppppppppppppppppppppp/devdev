@@ -353,25 +353,27 @@ class SemanticCache:
         Args:
             pattern: 패턴 (없으면 전체 무효화)
         """
-        if pattern is None:
-            self._cache.clear()
-            self._signature_index.clear()
-        else:
-            # 패턴 매칭하는 것들 제거
-            keys_to_remove = [k for k in self._cache.keys() if pattern in k]
-            for key in keys_to_remove:
-                self._evict(key)
+        with self._lock:
+            if pattern is None:
+                self._cache.clear()
+                self._signature_index.clear()
+            else:
+                # 패턴 매칭하는 것들 제거
+                keys_to_remove = [k for k in self._cache.keys() if pattern in k]
+                for key in keys_to_remove:
+                    self._evict(key)
 
     def get_stats(self) -> dict[str, Any]:
         """통계 반환"""
-        return {
-            "total_requests": self.stats.total_requests,
-            "cache_hits": self.stats.cache_hits,
-            "cache_misses": self.stats.cache_misses,
-            "hit_rate": f"{self.stats.hit_rate:.1%}",
-            "cache_size": len(self._cache),
-            "max_size": self.max_size,
-        }
+        with self._lock:
+            return {
+                "total_requests": self.stats.total_requests,
+                "cache_hits": self.stats.cache_hits,
+                "cache_misses": self.stats.cache_misses,
+                "hit_rate": f"{self.stats.hit_rate:.1%}",
+                "cache_size": len(self._cache),
+                "max_size": self.max_size,
+            }
 
     def get_summary(self) -> str:
         """요약 문자열"""

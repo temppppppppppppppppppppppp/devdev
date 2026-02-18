@@ -501,9 +501,9 @@ class PresetRegistry:
                 if value in field_def.enum_values:
                     return value
                 # 가장 가까운 값 찾기
-                return field_def.default
+                return copy.deepcopy(field_def.default)
         except (ValueError, TypeError, KeyError, AttributeError):  # [V64.P4] field validation failure
-            return field_def.default
+            return copy.deepcopy(field_def.default)
         return value
 
     def _parse_korean_number(self, text: str) -> int:
