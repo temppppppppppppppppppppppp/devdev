@@ -457,18 +457,19 @@ class QualityDashboard:
             }
 
         # 전체 평균
-        all_scores = [r.get("score", 0) for r in stage_records]
+        # [Sweep60] score=None 방어 (key 존재 시 get default 무시됨)
+        all_scores = [r.get("score") or 0 for r in stage_records]
         overall_avg = sum(all_scores) / len(all_scores)
 
         # 최근 평균
         recent_records = stage_records[-window:]
-        recent_scores = [r.get("score", 0) for r in recent_records]
+        recent_scores = [r.get("score") or 0 for r in recent_records]
         recent_avg = sum(recent_scores) / len(recent_scores)
 
         # 추이 분석
         if len(stage_records) >= window * 2:
             older_records = stage_records[-(window * 2) : -window]
-            older_scores = [r.get("score", 0) for r in older_records]
+            older_scores = [r.get("score") or 0 for r in older_records]
             older_avg = sum(older_scores) / len(older_scores)
 
             diff = recent_avg - older_avg
@@ -959,7 +960,7 @@ class QualityDashboard:
             if not chunk:
                 continue
 
-            scores = [float(r.get("score", 0)) for r in chunk]
+            scores = [float(r.get("score") or 0) for r in chunk]
             passes = sum(1 for r in chunk if r.get("decision") == "PASS")
             ep_start = chunk[0].get("ep_num", "?")
             ep_end = chunk[-1].get("ep_num", "?")

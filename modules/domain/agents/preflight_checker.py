@@ -192,7 +192,7 @@ class PreflightChecker(BaseAgent):
             lines.append("-" * 40)
             for arc in old_arcs:
                 arc_no = arc.get("arc_no", "?")
-                title = arc.get("title", "")[:50]
+                title = (arc.get("title") or "")[:50]
                 ep_s = arc.get("ep_start", "?")
                 ep_e = arc.get("ep_end", "?")
                 end_loc = arc.get("joint_docs", {}).get("final_location", "?")

@@ -400,7 +400,7 @@ class Stage2ValidationPipeline:
 
                 self.ctx.ui.log(f"      🚨 [V49 REJECT] Arc 연속성 위반 감지 (심각도: {severity})")
                 for v in violations[:3]:
-                    self.ctx.ui.log(f"         - {v.get('type', 'unknown')}: {v.get('description', '')[:100]}")
+                    self.ctx.ui.log(f"         - {v.get('type', 'unknown')}: {(v.get('description') or '')[:100]}")
 
                 self.ctx.audit_event(
                     "arc_continuity_reject",
@@ -415,7 +415,7 @@ class Stage2ValidationPipeline:
                             stage=2,
                             episode=current_ep_start,
                             arc=global_arc_no,
-                            reason=f"{v.get('type', 'unknown')}: {v.get('description', '')[:150]}",
+                            reason=f"{v.get('type', 'unknown')}: {(v.get('description') or '')[:150]}",
                             details={"severity": severity, "violation": v},
                         )
 

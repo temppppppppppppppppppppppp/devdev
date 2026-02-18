@@ -257,7 +257,7 @@ JSON:
         recent_blocks = existing_treatment[-5:] if len(existing_treatment) >= 5 else existing_treatment
         recent_context = "\n".join(
             [
-                f"- Block {b.get('block_id', i + 1)}: {b.get('title', '')} - {(b.get('content', {}).get('context', '')[:100] if isinstance(b.get('content'), dict) else str(b.get('content', ''))[:100])}"  # [V70] content str 방어
+                f"- Block {b.get('block_id', i + 1)}: {b.get('title') or ''} - {((b.get('content') or {}).get('context') or '')[:100] if isinstance(b.get('content'), dict) else str(b.get('content') or '')[:100]}"  # [V70] content str 방어 + None 가드
                 for i, b in enumerate(recent_blocks)
             ]
         )
@@ -293,7 +293,7 @@ JSON:
             # 다음 배치를 위한 컨텍스트 업데이트
             recent_context = "\n".join(
                 [
-                    f"- Block {b.get('block_id', '')}: {b.get('title', '')} - {(b.get('content', {}).get('context', '')[:100] if isinstance(b.get('content'), dict) else str(b.get('content', ''))[:100])}"  # [V70] content str 방어
+                    f"- Block {b.get('block_id', '')}: {b.get('title') or ''} - {((b.get('content') or {}).get('context') or '')[:100] if isinstance(b.get('content'), dict) else str(b.get('content') or '')[:100]}"  # [V70] content str 방어 + None 가드
                     for b in new_blocks[-5:]
                 ]
             )

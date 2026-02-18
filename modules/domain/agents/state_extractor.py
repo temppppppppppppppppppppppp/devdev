@@ -219,7 +219,7 @@ class StateExtractor(BaseAgent):
         # [V60.13 FIX] state_constraints.arc_end_state 포함
         cleaned_data = {
             "arc_no": arc_no,
-            "tactical_doc": arc_data.get("tactical_doc", "")[:3000],  # 토큰 절약
+            "tactical_doc": (arc_data.get("tactical_doc") or "")[:3000],  # 토큰 절약
             "joint_docs": arc_data.get("joint_docs", {}),
             "status_shadow": arc_data.get("status_shadow", {}),
             "state_constraints": arc_data.get("state_constraints", {}),  # [V60.13] arc_end_state 포함
