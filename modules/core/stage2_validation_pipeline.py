@@ -63,7 +63,7 @@ class Stage2ValidationPipeline:
         python_advisory = []
         if not four_phase_passed and refined_arc and self.ctx.arc_draft_validator:
             try:
-                logging.warning("🔬 [무기 #3] DraftValidator 사전 검증...")
+                logging.info("🔬 [무기 #3] DraftValidator 사전 검증...")
                 draft_result = self.ctx.arc_draft_validator.validate(
                     arc=refined_arc,
                     prev_arcs=all_refined_arcs,
@@ -142,7 +142,7 @@ class Stage2ValidationPipeline:
                     logging.warning(f"- CRITICAL: {len(critical_issues)}개")
                     logging.info(f"- 전체 이슈: {len(all_issues)}개")
                     for ci in critical_issues[:3]:
-                        logging.warning(f"🚨 [{ci.get('category', '?')}] {ci.get('issue', '?')[:80]}")
+                        logging.warning(f"🚨 [{ci.get('category', '?')}] {(ci.get('issue', '?') or '?')[:80]}")
 
                     feedback_parts = [f"[{ci.get('category')}] {ci.get('issue')}" for ci in critical_issues[:3]]
                     current_feedback = "Consensus 검증 실패: " + "; ".join(feedback_parts)
@@ -339,7 +339,7 @@ class Stage2ValidationPipeline:
                                 refined_arc = None
                                 return {"action": "retry", "current_feedback": current_feedback}
                         else:
-                            uncorr_msgs = [i.get("message", "")[:30] for i in uncorrectable_issues[:2]]
+                            uncorr_msgs = [(i.get("message", "") or "")[:30] for i in uncorrectable_issues[:2]]
                             self.ctx.ui.log(f"      ⚠️ [V60.42] 수정 불가: {', '.join(uncorr_msgs)}")
                             issues_str = "\n".join([f"- {i.get('message', str(i))}" for i in major_only[:3]])
                             current_feedback = f"[수정 불가]\n{issues_str}"
@@ -659,7 +659,7 @@ class Stage2ValidationPipeline:
             logging.warning(f"⚠️ [V60.15] 서사 분석 오류 (비차단): {e}")
             return {"status": "PASS", "fallback": True}
 
-    def _stage2_flow_guard_legacy(self, normalized: str) -> dict:
+    def _stage2_flow_guard_legacy(self, normalized: list) -> dict:
         """[V60.15] 레거시 Flow Guard (폴백용)"""
 
         def jaccard(a, b) -> float:

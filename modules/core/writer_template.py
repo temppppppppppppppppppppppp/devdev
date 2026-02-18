@@ -128,6 +128,8 @@ class WriterTemplate:
         """
         ep_num = blueprint.get("ep_num", 0)
         scene_breakdown = blueprint.get("scene_breakdown", {})
+        if not isinstance(scene_breakdown, dict):
+            scene_breakdown = {}
         ending_hook = blueprint.get("ending_hook") or blueprint.get("cliffhanger", "")
 
         slots = []

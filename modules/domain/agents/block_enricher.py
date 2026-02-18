@@ -470,7 +470,10 @@ class BlockEnricher(BaseAgent):
                 result = self._extract_json_robust(result)  # [V70] json.loads → robust parser
 
             # 점수 기반 PASS/REJECT 결정
-            total_score = result.get("total_score", 0)
+            try:
+                total_score = int(result.get("total_score", 0))
+            except (ValueError, TypeError):
+                total_score = 0
             if total_score >= 70:
                 result["decision"] = "PASS"
             else:
@@ -625,21 +628,36 @@ class BlockEnricher(BaseAgent):
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=batch_size) as executor:
                 futures = {executor.submit(enrich_single, idx): idx for idx in batch}
-                for future in concurrent.futures.as_completed(futures):
-                    try:
-                        idx, result = future.result()
-                        if result.get("enriched") and result.get("block"):
-                            enriched_blocks[idx] = result["block"]
-                            stats["enriched_count"] += 1
-                        else:
+                processed_indices = set()
+                try:
+                    for future in concurrent.futures.as_completed(futures, timeout=600):
+                        try:
+                            idx, result = future.result(timeout=60)
+                            processed_indices.add(idx)
+                            if result.get("enriched") and result.get("block"):
+                                enriched_blocks[idx] = result["block"]
+                                stats["enriched_count"] += 1
+                            else:
+                                enriched_blocks[idx] = treatment_blocks[idx]
+                                stats["failed_count"] += 1
+                        except Exception as e:
+                            idx = futures[future]
+                            processed_indices.add(idx)
                             enriched_blocks[idx] = treatment_blocks[idx]
                             stats["failed_count"] += 1
-                    except Exception as e:
-                        idx = futures[future]
-                        enriched_blocks[idx] = treatment_blocks[idx]
-                        stats["failed_count"] += 1
-                        if ui:
-                            ui.log(f"      ⚠️ Block {idx + 1} 농축 실패: {str(e)[:30]}")
+                            if ui:
+                                ui.log(f"      ⚠️ Block {idx + 1} 농축 실패: {str(e)[:30]}")
+                except Exception as _timeout_err:
+                    # [Sweep34] as_completed 전체 timeout/오류 시 미처리 블록 원본 유지
+                    for fut, idx in futures.items():
+                        if idx not in processed_indices:
+                            enriched_blocks[idx] = treatment_blocks[idx]
+                            stats["failed_count"] += 1
+                    if ui:
+                        ui.log(f"      ⏰ 배치 타임아웃: {str(_timeout_err)[:50]}")
+                finally:
+                    for f in futures:
+                        f.cancel()
 
             # [V66.1] Rate Limit 딜레이 제거 (BaseAgent.API_DELAY에서 이미 적용)
 
@@ -763,6 +781,9 @@ class BlockEnricher(BaseAgent):
             return result.get("issues", [])
 
         except Exception as e:
+            import logging
+
+            logging.warning(f"[BlockEnricher] validate_causal_chain 실패 (non-blocking): {e}")
             return []  # 검증 실패 시 빈 리스트 (에러 없음 처리)
 
     def _re_enrich_with_causal_fix(

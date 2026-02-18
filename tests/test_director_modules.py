@@ -8,6 +8,7 @@ Comprehensive unit tests for the Director facade and its 5 sub-modules:
 - DirectorQualityAuditor (director_auditor.py)
 """
 
+import logging
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -436,6 +437,55 @@ class TestDirectorContinuity:
 # ═══════════════════════════════════════════════════════════════
 
 
+class TestDirectorContinuitySweep21:
+    def test_check_manuscript_continuity_reuses_cached_context_name(self, director):
+        """Sweep21 A-1: same episode second call should reuse stored manuscript cache_name."""
+        db = MagicMock()
+        db.get_recent_manuscripts.return_value = [{"ep_num": 4, "content": "prev manuscript"}]
+
+        director.merge_contexts_for_caching = MagicMock(return_value="merged context")
+        director._get_or_create_context_cache = MagicMock(return_value={"cached": True, "cache_name": "test_cache"})
+        director._ask_with_cached_context = MagicMock(return_value='{"decision":"PASS","conflicts":[],"summary":"ok"}')
+        director.ask = MagicMock(return_value='{"decision":"PASS","conflicts":[],"summary":"ok"}')
+        director._extract_json_robust = MagicMock(return_value={"decision": "PASS", "conflicts": [], "summary": "ok"})
+        director._continuity._prompt_loader.load = MagicMock(return_value="prompt")
+
+        first = director.check_manuscript_continuity_with_cache("new manuscript", ep_num=5, db=db)
+        assert first["decision"] == "PASS"
+
+        director._ask_with_cached_context.reset_mock()
+        director.ask.reset_mock()
+
+        second = director.check_manuscript_continuity_with_cache("new manuscript", ep_num=5, db=db)
+        assert second["decision"] == "PASS"
+        assert director._ask_with_cached_context.call_count == 1
+        director.ask.assert_not_called()
+        assert db.get_recent_manuscripts.call_count == 1
+
+    def test_validate_entity_consistency_logs_warning_on_mismatch(self, director, caplog):
+        """Sweep21 B-1: mismatches should be warning level."""
+        director.entity_consistency_enabled = True
+        director.ask = MagicMock(return_value="raw")
+        director._extract_json_robust = MagicMock(
+            return_value={
+                "decision": "WARNING",
+                "mismatches": [
+                    {"category": "character", "registered_name": "A", "found_variant": "B", "severity": "MAJOR"}
+                ],
+                "fix_instructions": "fix",
+            }
+        )
+
+        with caplog.at_level(logging.WARNING):
+            result = director.validate_entity_consistency(
+                content="A가 등장하는 원고",
+                entity_registry={"characters": [{"name": "A"}]},
+            )
+
+        assert result["decision"] == "WARNING"
+        assert any(r.levelno == logging.WARNING and "Entity" in r.message for r in caplog.records)
+
+
 class TestDirectorAuditor:
     """Tests for DirectorQualityAuditor."""
 
@@ -484,6 +534,32 @@ class TestDirectorAuditor:
         )
         assert result["decision"] == "REJECT"
         assert "오류" in result["reason"]
+
+    def test_audit_manuscript_legacy_expand_prev_called_once(self, director):
+        """legacy 경로(use_v0128=False)에서는 _expand_prev_full_text가 1회만 호출된다."""
+        director.use_v0128 = False
+        director.genre_validation_enabled = False
+        director.guard = None
+        director.manuscript_history_check_enabled = False
+        director.protagonist_config_check_enabled = False
+        director.entity_consistency_enabled = False
+        director._escape_braces = lambda x: x if isinstance(x, str) else ""
+
+        director._auditor._expand_prev_full_text = MagicMock(return_value="")
+
+        result = director._auditor.audit_manuscript(
+            ep_num=5,
+            manuscript="짧은 원고",
+            arc_doc="",
+            history_summary="",
+            prev_full_text="",
+            arc_pos=1,
+            target_len=5000,
+            validation_context=None,
+        )
+
+        assert result["decision"] == "REJECT"
+        director._auditor._expand_prev_full_text.assert_called_once_with(5, "")
 
 
 # ═══════════════════════════════════════════════════════════════

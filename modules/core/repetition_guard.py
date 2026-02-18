@@ -18,7 +18,7 @@ class RepetitionGuard:
     Attributes:
         window_size: 분석할 이전 에피소드 수 (기본 5화)
         threshold: 동일 n-gram이 이 횟수 이상 나오면 차단 (기본 3회)
-        banned_phrases: 금지 구문 집합
+        banned_phrases: 금지 구문과 빈도 맵
     """
 
     def __init__(self, window_size: int = 5, threshold: int = 3) -> None:
@@ -29,9 +29,9 @@ class RepetitionGuard:
         """
         self.window_size = window_size
         self.threshold = threshold
-        self.banned_phrases = set()
+        self.banned_phrases = {}
 
-    def build_banned_list(self, previous_manuscripts: list) -> set:
+    def build_banned_list(self, previous_manuscripts: list) -> dict:
         """
         이전 원고들에서 과다 반복 구문 추출
 
@@ -39,10 +39,10 @@ class RepetitionGuard:
             previous_manuscripts: List of manuscript contents (최근 N화)
 
         Returns:
-            Set of banned phrases
+            Dict of banned phrases and frequency
         """
         if not previous_manuscripts:
-            return set()
+            return {}
 
         # 전체 텍스트 병합 (None 및 비문자열 필터링)
         filtered = [ms for ms in previous_manuscripts[-self.window_size :] if ms and isinstance(ms, str)]
@@ -50,13 +50,13 @@ class RepetitionGuard:
 
         # 필터링 후 데이터가 없으면 빈 set 반환
         if not combined:
-            return set()
+            return {}
 
         # 3-gram 추출 (한글/영문 단어 기준)
         words = re.findall(r"[\w가-힣]+", combined)
 
         if len(words) < 3:
-            return set()
+            return {}
 
         trigrams = [" ".join(words[i : i + 3]) for i in range(len(words) - 2)]
 
@@ -66,7 +66,7 @@ class RepetitionGuard:
         # threshold 이상 반복된 것들을 금지 목록에 추가
         # 단, 5자 이상의 의미 있는 구문만 (조사 조합 제외)
         self.banned_phrases = {
-            phrase for phrase, count in counter.items() if count >= self.threshold and len(phrase) > 5
+            phrase: count for phrase, count in counter.items() if count >= self.threshold and len(phrase) > 5
         }
 
         return self.banned_phrases
@@ -109,7 +109,7 @@ class RepetitionGuard:
                         "phrase": trigram,
                         "position": i,
                         "context": f"...{context}...",
-                        "frequency": self.threshold,  # 이전 화에서 몇 번 나왔는지
+                        "frequency": self.banned_phrases[trigram],  # 이전 화에서 몇 번 나왔는지
                     }
                 )
 

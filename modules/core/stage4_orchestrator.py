@@ -170,8 +170,8 @@ class _RoundContext:
     prev_manuscripts_text: str
     episode_digest: str
     hud_report: str
-    current_inventory: str
-    current_martial_arts: str
+    current_inventory: list
+    current_martial_arts: list
     dead_npcs: list
     item_acquisition_timeline: str
     chain_link_section: str
@@ -242,6 +242,10 @@ class Stage4Orchestrator:
     @ctx.setter
     def ctx(self, value):
         self._ctx = value
+        # 서브모듈이 새 ctx를 사용하도록 캐시 무효화
+        self._post_processor = None
+        self._context_builder = None
+        self._interview_round = None
 
     @property
     def post_processor(self):
@@ -488,7 +492,9 @@ JSON으로 출력:
                         _removed_chars += len(_removed_section)
                     mandatory_context = "\n".join(_sections)
                     if _removed_count > 0:
-                        logging.info(f"[V66.1] mandatory_context {_removed_count}개 섹션 제거 ({_removed_chars}자)")
+                        _perf_logger.info(
+                            f"[V66.1] mandatory_context {_removed_count}개 섹션 제거 ({_removed_chars}자)"
+                        )
                         self.ctx.ui.log(
                             f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → {len(mandatory_context)}자 (섹션 {_removed_count}개 제거)"
                         )
@@ -663,9 +669,9 @@ JSON으로 출력:
                 if _core_traits:
                     _sc_parts.append(f"- 핵심 특성: {_core_traits}")
             _story_context = "\n".join(_sc_parts)
-            logging.info(f"📋 [V67.1] story_context 조립 완료 ({len(_story_context)}자)")
+            _perf_logger.info(f"📋 [V67.1] story_context 조립 완료 ({len(_story_context)}자)")
         except Exception as _sc_err:
-            logging.warning(f"⚠️ [V67.1] story_context 조립 실패 (비차단): {str(_sc_err)[:50]}")
+            _perf_logger.warning(f"⚠️ [V67.1] story_context 조립 실패 (비차단): {str(_sc_err)[:50]}")
             _story_context = f"- 장르: {_s4_genre_type}"
 
         self.ctx.ui.log("🎬 [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처 가동")
@@ -707,7 +713,7 @@ JSON으로 출력:
                     if _bible_pov:
                         loaded_sg.pov = _bible_pov
                 except Exception as e:
-                    logging.warning(f"[SilentPass:Stage4] Bible POV 오버라이드 실패: {e!s:.100}")
+                    _perf_logger.warning(f"[SilentPass:Stage4] Bible POV 오버라이드 실패: {e!s:.100}")
                 style_guide = loaded_sg.to_prompt()
                 self.ctx.ui.log(
                     f"🎨 [V60.95] 저장된 스타일 가이드 로드됨 (톤: {loaded_sg.tone}, 시점: {loaded_sg.pov})"
@@ -729,7 +735,7 @@ JSON으로 출력:
                     style_guide = _min_sg.to_prompt()
                     self.ctx.ui.log(f"📖 [V70] Bible POV 기반 최소 스타일 가이드 생성 (시점: {_bible_pov})")
             except Exception as e:
-                logging.warning(f"[SilentPass:Stage4] Bible POV 기반 스타일 가이드 생성 실패: {e!s:.100}")
+                _perf_logger.warning(f"[SilentPass:Stage4] Bible POV 기반 스타일 가이드 생성 실패: {e!s:.100}")
 
         if not style_guide:
             style_choice = self.ctx.get_int_input(

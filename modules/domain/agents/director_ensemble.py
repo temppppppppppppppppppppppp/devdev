@@ -13,6 +13,14 @@ from modules.core.constants import ContextLimits, ManuscriptLimits  # [V64.P4]
 from modules.core.prompt_loader import PromptLoader
 
 
+def _safe_int(value, default=0):
+    """LLM 반환값을 안전하게 int로 변환한다."""
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return default
+
+
 class DirectorEnsembleSelector:
     """
     [V64 P2-1] Director에서 분리된 앙상블 선택 모듈
@@ -61,7 +69,7 @@ class DirectorEnsembleSelector:
             single_result["comparison_notes"] = "단일 후보"
             return single_result
 
-        logging.warning(f"🎭 [Director] {len(candidates)}개 후보 비교 중...")
+        logging.info(f"🎭 [Director] {len(candidates)}개 후보 비교 중...")
 
         arc_tactical = arc_data.get("tactical_doc", "")
         if isinstance(arc_tactical, dict):
@@ -142,16 +150,16 @@ class DirectorEnsembleSelector:
                     candidates, arc_data, ep_num, prev_blueprint, entity_registry, state_tracker
                 )
 
-            selected_idx = result.get("selected_index", 0)
+            selected_idx = _safe_int(result.get("selected_index", 0), 0)
             if selected_idx < 0 or selected_idx >= len(candidates):
                 selected_idx = 0
 
             decision = result.get("decision", "PASS")
-            score = result.get("score", 70)
+            score = _safe_int(result.get("score", 70), 70)
             comparison_notes = result.get("comparison_notes", "")
             reason = result.get("reason", "")
 
-            logging.warning(f"🎯 [Director] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")
+            logging.info(f"🎯 [Director] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")
             if comparison_notes:
                 logging.info(f"📝 비교: {comparison_notes[:150]}{'...' if len(comparison_notes) > 150 else ''}")
             if reason:
@@ -200,7 +208,8 @@ class DirectorEnsembleSelector:
                     "feedback": f"사망한 NPC가 등장합니다: {', '.join(names)}. 회상/언급만 허용됩니다.",
                 }
 
-        scene_count = len(blueprint.get("scene_breakdown", {}))
+        _sb = blueprint.get("scene_breakdown", {})
+        scene_count = len(_sb) if isinstance(_sb, dict) else 0
         if scene_count < 4:
             return {
                 "decision": "REJECT",
@@ -299,7 +308,7 @@ class DirectorEnsembleSelector:
                 "length_violation": True,
             }
 
-        logging.warning(
+        logging.info(
             f"✅ [V60.97] 분량 통과 후보: {len(qualified_indices)}개 ({[['A', 'B', 'C'][i] for i in qualified_indices]})"
         )
 
@@ -402,7 +411,7 @@ class DirectorEnsembleSelector:
         selected_candidate = candidates[selected_idx] if selected_idx < len(candidates) else candidates[0]
 
         original_verdict = result.get("verdict", "REJECT")
-        score = result.get("score", 50)
+        score = _safe_int(result.get("score", 50), 50)
 
         if v60_97_swapped:
             score = 50

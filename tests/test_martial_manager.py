@@ -13,6 +13,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from modules.core.martial_manager import MartialManager
+
 
 class TestMartialManagerTypeSafety:
     """타입 안전성 테스트"""
@@ -303,3 +305,14 @@ class TestMartialManagerEdgeCases:
         for name in names:
             assert isinstance(name, str)
             assert len(name) > 0
+
+    def test_pro_data_name_fallback_when_protagonist_is_not_dict(self):
+        """Protagonist가 dict가 아니어도 최소 구조로 name 접근 가능해야 함."""
+        ctx = MagicMock()
+        ctx.master_bible = {"MasterBible": {"MartialHUD": {"Protagonist": "broken"}}}
+        ctx.guard = None
+        ctx.ui = MagicMock()
+
+        manager = MartialManager(ctx)
+
+        assert manager.pro_data.get("name") == "주인공"

@@ -281,7 +281,7 @@ class Stage4PostProcessor:
                 "npc_deaths": npc_deaths,
                 "relationship_changes": relationship_changes,
                 "state_changes": actual_truth if actual_truth else final_state_updates,
-                "time_passed": state_updates_from_audit.get("location", ""),
+                "time_passed": state_updates_from_audit.get("time_passed", ""),
                 "reveals": reveal_list,
                 "causal_links": causal_links,
                 "karma_matrix": karma_matrix,
@@ -441,7 +441,7 @@ class Stage4PostProcessor:
                 _max_m = _threshold("npc_exposure.max_mentions_per_episode", 15)
                 _min_len = _threshold("npc_exposure.min_name_length", 2)
                 _npc_names = list(self.ctx.state_tracker.npc_registry.keys())
-                _prot_name = self.ctx.get_protagonist_name() if self.ctx.get_protagonist_name else ""
+                _prot_name = (self.ctx.get_protagonist_name() or "") if self.ctx.get_protagonist_name else ""
                 # Bible KeyNPCs → core set (핵심 NPC 제외 대상)
                 _core = set()
                 try:

@@ -278,10 +278,6 @@ class PreLLMValidator:
         if injury_action:
             violations.append("부상 상태에서 무리한 행동")
 
-        # 패턴: 수면/기절 상태에서 행동
-        unconscious_action = re.findall(r"(기절|의식을 잃|잠든).{0,30}(일어나|눈을 떴다|말했다)", manuscript)
-        # 이건 정상적인 각성 과정일 수 있으므로 체크 안 함
-
         return {
             "violations": violations[:3],
             "category": "신체_물리학_오류",
@@ -305,7 +301,7 @@ class PreLLMValidator:
             # 순서 체크
             same_day_idx = manuscript.find("같은 날")
             days_later_idx = manuscript.find("며칠 후")
-            if same_day_idx > 0 and days_later_idx > 0 and days_later_idx < same_day_idx:
+            if same_day_idx >= 0 and days_later_idx >= 0 and days_later_idx < same_day_idx:
                 violations.append("시간 흐름 역행 (며칠 후 → 같은 날)")
 
         return {
@@ -369,12 +365,11 @@ class PreLLMValidator:
             # 유사 이름 패턴 (1자 다름)
             for i in range(len(correct_name)):
                 # 각 위치에서 다른 문자로 대체된 이름 찾기
-                pattern = correct_name[:i] + r"[가-힣]" + correct_name[i + 1 :]
-                if len(pattern) == len(correct_name):
-                    similar_names = re.findall(pattern, manuscript)
-                    for found in similar_names:
-                        if found != correct_name and found in manuscript:
-                            inconsistencies.append((found, correct_name))
+                pattern = re.escape(correct_name[:i]) + r"[가-힣]" + re.escape(correct_name[i + 1 :])
+                similar_names = re.findall(pattern, manuscript)
+                for found in similar_names:
+                    if found != correct_name:
+                        inconsistencies.append((found, correct_name))
 
         # 중복 제거
         inconsistencies = list(set(inconsistencies))[:3]

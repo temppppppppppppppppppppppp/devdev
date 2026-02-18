@@ -237,7 +237,7 @@ class ValidationOrchestrator:
         # [V56] TIER 0.25: PRE-LLM (Python 기반 사전검증, 비용 0원)
         # ═══════════════════════════════════════════════════════════════
         if self.use_pre_llm and self.pre_llm:
-            logging.warning("[V56] TIER 0.25: PRE-LLM 검증 중...")
+            logging.info("[V56] TIER 0.25: PRE-LLM 검증 중...")
             pre_llm_result = self.pre_llm.validate(manuscript, validation_context)
             results["pre_llm_result"] = pre_llm_result
 
@@ -265,7 +265,7 @@ class ValidationOrchestrator:
             if warning_count > 0:
                 logging.warning(f"⚠️ PRE-LLM 경고: {warning_count}개 (점수 -{pre_llm_result['score_deduction']}점)")
             else:
-                logging.warning("✅ PRE-LLM 통과")
+                logging.info("✅ PRE-LLM 통과")
 
         # ═══════════════════════════════════════════════════════════════
         # [V47] TIER 0.5: CONTINUITY (에피소드 간 연속성)
@@ -294,7 +294,7 @@ class ValidationOrchestrator:
         if warning_count > 0:
             logging.warning(f"⚠️ CONTINUITY 경고: {warning_count}개 (계속 진행)")
         else:
-            logging.warning("✅ CONTINUITY 통과")
+            logging.info("✅ CONTINUITY 통과")
 
         # ═══════════════════════════════════════════════════════════════
         # TIER 1: BLOCKING (필수 통과)
@@ -318,7 +318,7 @@ class ValidationOrchestrator:
                 "self_consistency_used": False,
             }
 
-        logging.warning(f"✅ BLOCKING 통과 (0/{blocking_result.get('failure_count', 0)} 실패)")
+        logging.info(f"✅ BLOCKING 통과 (0/{blocking_result.get('failure_count', 0)} 실패)")
 
         # ═══════════════════════════════════════════════════════════════
         # [V46] TIER 1.5: CONSISTENCY (일관성 검증)
@@ -350,7 +350,7 @@ class ValidationOrchestrator:
         if justifiable_count > 0:
             logging.warning(f"⚠️ CONSISTENCY 경고: {justifiable_count}개 (감점: {consistency_penalty}점)")
         else:
-            logging.warning("✅ CONSISTENCY 통과")
+            logging.info("✅ CONSISTENCY 통과")
 
         # ═══════════════════════════════════════════════════════════════
         # TIER 2: SCORING (점수 기반)
@@ -422,7 +422,7 @@ class ValidationOrchestrator:
         elif catharsis_result.get("status") == "critical":
             logging.warning(f"🚨 CATHARSIS: {catharsis_result.get('message')}")
         else:
-            logging.warning("✅ CATHARSIS: 적절한 타이밍")
+            logging.info("✅ CATHARSIS: 적절한 타이밍")
 
         # ActionSceneEvaluator - 전투/액션 씬 평가
         action_context = {
@@ -1043,7 +1043,7 @@ class ValidationOrchestrator:
         if not isinstance(scoring_result, dict):
             scoring_result = {"total_score": 0, "feedback": "scoring validator failed"}
         if not isinstance(advisory_result, dict):
-            advisory_result = {"warnings": []}
+            advisory_result = {"suggestions": []}
 
         results["consistency_result"] = consistency_result
         results["scoring_result"] = scoring_result

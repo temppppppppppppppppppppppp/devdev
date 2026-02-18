@@ -148,7 +148,7 @@ class Stage4ContextBuilder:
             _episode_digest = chief_writer._generate_episode_digest(prev_text, next_ep - 1)
 
         # HUD 리포트
-        hud_report = self.ctx.sys.hud.get_v20_hud_report() if hasattr(self.ctx.sys, "hud") else ""
+        hud_report = self.ctx.sys.hud.get_v20_hud_report() if hasattr(self.ctx.sys, "hud") and self.ctx.sys.hud else ""
 
         # ===== [V60.80 FIX] 미래 침범 방지 데이터 추출 =====
         current_inventory = []
@@ -257,6 +257,9 @@ class Stage4ContextBuilder:
             mandatory_context = _build_writer_mandatory_context(_db, _bible, next_ep)
         except Exception as e:
             self.ctx.ui.log(f"   ⚠️ Mandatory Context 실패 (비치명): {e}")
+            mandatory_context = (
+                "[경고] 필수 컨텍스트 로딩 실패 - 이전 에피소드 상태를 우선 참조하여 연속성을 유지하세요."
+            )
 
         _mc_parts = [mandatory_context] if mandatory_context else []
 

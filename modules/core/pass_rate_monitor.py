@@ -85,7 +85,10 @@ class PassRateMonitor:
             try:
                 with open(self.log_path, encoding="utf-8") as f:
                     data = json.load(f)
-                    self.records = [AttemptRecord(**r) for r in data.get("records", [])]
+                    fields = set(AttemptRecord.__dataclass_fields__.keys())
+                    self.records = [
+                        AttemptRecord(**{k: v for k, v in r.items() if k in fields}) for r in data.get("records", [])
+                    ]
             except Exception as e:
                 logging.warning(f"⚠️ [PassRateMonitor] 기록 로드 실패: {e}")
                 self.records = []
@@ -185,7 +188,7 @@ class PassRateMonitor:
         # 에피소드/Arc 단위로 그룹핑
         episodes = {}
         for r in stage_records:
-            key = (r.episode, r.arc) if r.arc else (r.episode,)
+            key = (r.episode, r.arc)
             if key not in episodes:
                 episodes[key] = []
             episodes[key].append(r)

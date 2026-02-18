@@ -100,7 +100,10 @@ class Stage4InterviewRound:
             )
         else:
             # [Phase 3-5B] 점수 기반 분기: 패치 모드 vs 전면 재작성
-            _prev_score = previous_attempt.get("score", 0) if previous_attempt else 0
+            try:
+                _prev_score = int(previous_attempt.get("score", 0)) if previous_attempt else 0
+            except (ValueError, TypeError):
+                _prev_score = 0
             _prev_manuscript = previous_attempt.get("best_manuscript", "") if previous_attempt else ""
             _use_patch = _prev_score >= _PATCH_REWRITE_THRESHOLD and _prev_manuscript
             _is_patch = bool(_use_patch)
@@ -141,7 +144,7 @@ class Stage4InterviewRound:
                 if not candidates:
                     _is_patch_fallback = True
                     # [Phase 3-5B] 패치 실패 → full rewrite 폴백
-                    logging.info("[Phase 3-5B] 패치 실패, full rewrite 폴백")
+                    logging.warning("[Phase 3-5B] 패치 실패, full rewrite 폴백")
                     self.ctx.ui.log("   ⚠️ [Phase 3-5B] 패치 실패 → 전면 재작성 폴백")
                     candidates = chief_writer.regenerate_with_feedback(
                         ep_num=next_ep,
@@ -230,6 +233,7 @@ class Stage4InterviewRound:
                 is_patch=_is_patch,
                 prev_score=_prev_score,
                 patch_fallback=_is_patch_fallback,
+                arc=round_ctx.arc_data.get("arc_no", 0),
             )
             return _InterviewRoundResult(
                 verdict="EMPTY",
@@ -320,7 +324,7 @@ class Stage4InterviewRound:
                     else {}
                 )
                 # [Phase 3-5A-2] NPC 이력 데이터 검증 컨텍스트 주입
-                if hasattr(self.ctx.state_tracker, "get_npc_change_history"):
+                if hasattr(self.ctx.state_tracker, "get_npc_change_history") and self.ctx.state_tracker.npc_registry:
                     _npc_history = {}
                     for _hn in self.ctx.state_tracker.npc_registry:
                         _hh = self.ctx.state_tracker.get_npc_change_history(_hn, limit=10)
@@ -573,6 +577,7 @@ class Stage4InterviewRound:
                 is_patch=_is_patch,
                 prev_score=_prev_score,
                 patch_fallback=_is_patch_fallback,
+                arc=round_ctx.arc_data.get("arc_no", 0),
             )
             return _InterviewRoundResult(
                 verdict="PASS",
@@ -603,6 +608,7 @@ class Stage4InterviewRound:
             is_patch=_is_patch,
             prev_score=_prev_score,
             patch_fallback=_is_patch_fallback,
+            arc=round_ctx.arc_data.get("arc_no", 0),
         )
         return _InterviewRoundResult(
             verdict="REJECT",
@@ -622,6 +628,7 @@ class Stage4InterviewRound:
         is_patch: bool = False,
         prev_score: float = 0,
         patch_fallback: bool = False,
+        arc: int = 0,
     ) -> None:
         """Stage 4 시도 결과를 PassRateMonitor에 기록 (비차단)."""
         if not getattr(self.ctx, "pass_rate_monitor", None):
@@ -630,11 +637,11 @@ class Stage4InterviewRound:
             self.ctx.pass_rate_monitor.record_attempt(
                 stage=4,
                 episode=episode,
-                arc=0,
+                arc=arc,
                 attempt_num=round_num + 1,
                 success=success,
                 reject_reason="" if success else f"score={score}",
-                generation_method="patch" if is_patch else "ensemble",
+                generation_method="patch" if is_patch and not patch_fallback else "ensemble",
                 is_patch=is_patch,
                 prev_score=prev_score,
                 patch_fallback=patch_fallback,

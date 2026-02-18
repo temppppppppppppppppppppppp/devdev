@@ -1,5 +1,7 @@
 """[Item4] PassRateMonitor arc difficulty tests."""
 
+import pytest
+
 from modules.core.pass_rate_monitor import PassRateMonitor
 
 
@@ -42,5 +44,5 @@ def test_get_arc_difficulty_hard_and_hard_episodes(tmp_path):
     result = monitor.get_arc_difficulty(arc_no=3)
 
     assert result["difficulty"] == "hard"
-    assert result["avg_attempts"] == 3.3
+    assert result["avg_attempts"] == pytest.approx(3.3, abs=0.01)
     assert result["hard_episodes"] == [21, 22, 23]

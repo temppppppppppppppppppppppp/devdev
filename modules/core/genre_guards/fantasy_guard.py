@@ -190,6 +190,8 @@ class FantasyGuard(BaseGuard):
                     mana = float(re.search(r"(\d+)", str(mana)).group(1))
                 except (AttributeError, ValueError):
                     mana = 100
+        if mana is None:
+            mana = 100
 
         tier = str(current_state.get("magic_tier", current_state.get("realm", ""))).strip()
 

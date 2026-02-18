@@ -845,6 +845,9 @@ class SovereignApp:
         self.selected_genre = self._select_genre()
 
         project_name = self._select_project()
+        if not project_name:
+            self.ui.log("⚠️ 프로젝트 선택이 취소되어 부팅을 중단합니다.")
+            return
 
         # [V60.37] 프로젝트별 .env 로드 지원
         project_env_path = Path(self._PROJECTS_DIR) / project_name / ".env"
@@ -1902,7 +1905,10 @@ class SovereignApp:
             # 에러 스택 저장
             import traceback
 
-            error_log = self.current_project.paths.root / "logs" / "error.log"
+            if self.current_project and hasattr(self.current_project, "paths"):
+                error_log = self.current_project.paths.root / "logs" / "error.log"
+            else:
+                error_log = Path("logs") / "error.log"
             error_log.parent.mkdir(exist_ok=True)
 
             with open(error_log, "a", encoding="utf-8") as f:
@@ -2145,7 +2151,7 @@ class SovereignApp:
         if ep_num <= 0:
             return 0
         # 1-10화 -> Arc 1, 11-20화 -> Arc 2, ...
-        return (ep_num - 1) // 10 + 1
+        return (ep_num - 1) // 5 + 1
 
     def _show_resume_status(self):
         """프로젝트 진행 현황 출력 (크래시 후 재시작 포함)."""
@@ -2199,6 +2205,7 @@ class SovereignApp:
         _s2_ctx = self._stage2_orch.ctx
         if _s2_ctx is not None and getattr(_s2_ctx, "state_tracker", None) is not None:
             self.state_tracker = _s2_ctx.state_tracker
+        self._state_tracker_loaded_arcs = getattr(_s2_ctx, "state_tracker_loaded_arcs", 0)
 
     # -- [V64.P3] Stage 2 helpers -> Stage2Orchestrator delegation stubs ------
 
@@ -2596,8 +2603,10 @@ class SovereignApp:
             min_val=1,
             max_val=10,  # [V70] Medical(10) 선택 가능하도록
         )
+        if choice is None:
+            choice = 1
 
-        selected = genres[str(choice)]
+        selected = genres.get(str(choice), genres["1"])
         self.ui.log(f"✅ [{selected['name']}] 전문 공정이 선택되었습니다.")
         self.ui.log(f"   📌 HUD 시스템: {selected['type'].upper()}")
 
@@ -2649,6 +2658,17 @@ class SovereignApp:
     def _rewind_stage_2(self):
         """[V20] 특정 아크 번호부터 그 이후를 전부 삭제 (정밀 되감기)"""
         self._project_service.rewind_stage_2()  # [Phase 4B-3] thin delegate
+        # [Sweep35] clear state-related caches after rewind
+        self._cumulative_state_cache = None
+        self._cumulative_state_cache_key = 0
+        self._prompt_builder._item_timeline_cache = {}
+        self._narrative_summaries_cache = None
+        try:
+            _se = self.agents.get("state_extractor") if isinstance(self.agents, dict) else None
+            if _se and hasattr(_se, "invalidate_cache"):
+                _se.invalidate_cache()
+        except Exception as _se_err:
+            logging.warning(f"[Sweep35] StateExtractor cache clear failed (non-blocking): {_se_err}")
 
     def _rollback_episode(self):
         """[V40.1 Rollback] 특정 회차로 되감기 (HUD, DB, Vector DB, 파일 모두 롤백)"""
@@ -2667,6 +2687,18 @@ class SovereignApp:
                 "[Sweep5-D] writer cache invalidation failed during rollback (non-blocking): %s",
                 cache_err,
             )
+
+        # [Sweep35] clear director manuscript caches after rollback
+        try:
+            _director = self.agents.get("director") if isinstance(self.agents, dict) else None
+            if _director and hasattr(_director, "_caching"):
+                _director._caching.manuscript_cache_name = None
+                _director._caching._cached_manuscript_count = 0
+            if _director and hasattr(_director, "_continuity"):
+                _director._continuity._cached_manuscript_ep = None
+                _director._continuity._cached_blueprint_ep = None
+        except Exception as _dc_err:
+            logging.warning(f"[Sweep35] Director cache invalidation failed (non-blocking): {_dc_err}")
 
     def _wipe_production_data(self):
         """[V27.1 Wipe] 설계도는 유지하고 실제 집필 기록(Manuscripts/Blueprints)만 소거"""
@@ -2698,8 +2730,9 @@ class SovereignApp:
 
         # 최근 5화 원고 수집
         manuscripts = self.current_project.db.get_recent_manuscripts(before_ep=up_to_ep + 1, limit=5)
-        if not manuscripts or len(manuscripts) < 2:  # [V66] 최소 2화로 완화
-            self.ui.log(f"   ⚠️ 원고 부족 ({len(manuscripts)}화) - 요약 건너뜀")
+        manuscript_count = len(manuscripts) if isinstance(manuscripts, list) else 0
+        if manuscript_count < 2:  # [V66] 최소 2화로 완화
+            self.ui.log(f"   ⚠️ 원고 부족 ({manuscript_count}화) - 요약 건너뜀")
             return
 
         # [V66.1] 원고 텍스트 결합 (앞 800자 + 중간 핵심 500자 + 뒤 500자 ≈ 1800자/화)
@@ -2931,6 +2964,7 @@ class SovereignApp:
             selected_genre=getattr(self, "selected_genre", None),
             quality_dashboard=getattr(self, "quality_dashboard", None),
             pacing_analyzer=getattr(self, "pacing_analyzer", None),
+            pass_rate_monitor=getattr(self, "pass_rate_monitor", None),
             # [4C-2c] 콜백 7종
             get_int_input=self._get_int_input,
             build_item_acquisition_timeline=self._build_item_acquisition_timeline,

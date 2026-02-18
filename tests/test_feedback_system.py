@@ -103,6 +103,7 @@ class TestBuildStructuredFeedback:
         """priority_order가 포함됨"""
         result = fs.build_structured_feedback(decision="REJECT", reason="test", violations=sample_violations)
         assert isinstance(result["priority_order"], list)
+        assert len(result["priority_order"]) == 3
 
 
 # ══════════════════════════════════════════════════════════════
@@ -199,7 +200,7 @@ class TestQuantifyRejectFeedback:
         """문제 없으면 빈 리스트"""
         result = fs.quantify_reject_feedback(reason="기타 문제", content_length=6000, audit_result={})
         # "기타" 키워드는 어떤 조건에도 매칭 안 됨
-        assert isinstance(result, list)
+        assert result == []
 
 
 # ══════════════════════════════════════════════════════════════
@@ -295,6 +296,20 @@ class TestBuildMinimalArcContext:
         ]
         result = fs.build_minimal_arc_context(arcs, "이청풍")
         assert "60%" in result  # 100 - 40
+
+    def test_energy_calculation_clamped_at_100(self, fs):
+        """음수 loss 입력 시에도 에너지는 최대 100%로 제한"""
+        arcs = [
+            {
+                "arc_no": 2,
+                "state_constraints": {"arc_end_state": {}},
+                "joint_docs": {},
+                "status_shadow": {"internal_energy_loss": "-10%"},
+            }
+        ]
+        result = fs.build_minimal_arc_context(arcs, "이청풍")
+        assert "100%" in result
+        assert "110%" not in result
 
 
 # ══════════════════════════════════════════════════════════════

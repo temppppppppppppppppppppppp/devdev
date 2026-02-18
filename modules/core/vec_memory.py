@@ -169,7 +169,7 @@ class VecMemory:
                 val = None
                 if hasattr(res, "embeddings") and res.embeddings:
                     val = res.embeddings[0].values
-                elif hasattr(res, "embedding"):
+                elif hasattr(res, "embedding") and res.embedding:
                     val = res.embedding.values
                 if val is not None:
                     return list(val)

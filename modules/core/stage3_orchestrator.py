@@ -93,7 +93,7 @@ class Stage3Orchestrator:
         # ═══════════════════════════════════════════════════════════════
         # 1. 목표 범위 설정
         # ═══════════════════════════════════════════════════════════════
-        total_planned_ep = ctx.current_project.arcs[-1].get("ep_end", 50)
+        total_planned_ep = ctx.current_project.arcs[-1].get("ep_end", 50) if ctx.current_project.arcs else 50
 
         # [V60.80 FIX] Blueprint 테이블 기준으로 시작점 결정
         existing_bp_max = ctx.current_project.db.get_latest_blueprint_number()  # 0 if empty
@@ -153,7 +153,7 @@ class Stage3Orchestrator:
         ctx.ui.log(f"\n{'═' * 60}")
         ctx.ui.log("📊 [V60.80] Stage 3 완료 통계")
         ctx.ui.log(f"   성공: {success_count}개 | 실패: {fail_count}개")
-        if hasattr(ctx.agents.get("three_phase_bp"), "get_stats"):
+        if ctx.agents and hasattr(ctx.agents.get("three_phase_bp"), "get_stats"):
             stats = ctx.agents["three_phase_bp"].get_stats()
             ctx.ui.log(f"   통과율: {stats.get('pass_rate', 'N/A')}")
         ctx.ui.log(f"{'═' * 60}\n")
@@ -327,7 +327,7 @@ class Stage3Orchestrator:
         if self._entity_cache_arc_idx != arc_idx:
             ctx.ui.log(f"      ⏳ Entity Registry 추출 중... (Arc {arc_idx}, 첫 호출)")
             try:
-                if "state_extractor" in ctx.agents and ctx.current_project.arcs:
+                if ctx.agents and "state_extractor" in ctx.agents and ctx.current_project.arcs:
                     all_arcs_for_entity = list(ctx.current_project.arcs)[: arc_idx + 1]
                     if all_arcs_for_entity:
                         state_for_entity = ctx.agents["state_extractor"].extract_cumulative_state(all_arcs_for_entity)

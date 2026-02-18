@@ -4,8 +4,14 @@
 WuxiaGuard(BaseGuard)의 공용 메서드를 검증합니다.
 """
 
+import inspect
+from types import SimpleNamespace
+
 import pytest
 
+from modules.core.genre_guards.base_guard import BaseGuard
+from modules.core.genre_guards.style_guard import StyleGuard
+from modules.core.genre_guards.work_guard import WorkGuard
 from modules.core.genre_guards.wuxia_guard import WuxiaGuard
 
 
@@ -158,3 +164,26 @@ class TestGetPurismPrompt:
         prompt = guard.get_v20_purism_prompt()
         # 금기어 예시가 포함되어야 함
         assert "상태창" in prompt
+
+
+class TestGuardWrapperDelegation:
+    def test_work_guard_delegates_v461_methods(self, tmp_path):
+        base = WuxiaGuard()
+        wrapped = WorkGuard(base_guard=base, yaml_path=tmp_path / "missing_work_guard.yaml")
+        assert wrapped.get_authority_hierarchy() == base.get_authority_hierarchy()
+
+    def test_style_guard_delegates_v461_methods(self):
+        base = WuxiaGuard()
+        style_guide = SimpleNamespace(
+            anti_ai_patterns=[],
+            forbidden_expressions=[],
+            sentence_length="medium",
+        )
+        wrapped = StyleGuard(base_guard=base, style_guide=style_guide)
+        assert wrapped.get_authority_hierarchy() == base.get_authority_hierarchy()
+
+
+class TestBaseGuardAnnotations:
+    def test_abstract_return_types_are_str(self):
+        assert inspect.signature(BaseGuard.get_genre_name).return_annotation is str
+        assert inspect.signature(BaseGuard.get_v20_purism_prompt).return_annotation is str

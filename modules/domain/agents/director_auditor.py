@@ -90,7 +90,13 @@ class DirectorQualityAuditor:
 
         except (ValueError, KeyError, IndexError) as e:
             logging.warning(f"⚠️ [V66] 장르 검증 오류: {str(e)[:50]}")
-            return {"has_critical": False, "violations": [], "summary": "", "feedback": ""}
+            return {
+                "has_critical": False,
+                "violations": [],
+                "summary": f"장르 검증 실패: {str(e)[:100]}",
+                "feedback": "장르 검증 중 오류 발생 - 수동 확인 권장",
+                "degraded": True,
+            }
 
     def assess_character_logic(self, ep_num, manuscript, npc_profiles, character_traits):
         """
@@ -245,7 +251,7 @@ class DirectorQualityAuditor:
                 "decision": result["final_decision"],
                 "score": result["total_score"],
                 "reason": result["feedback"],
-                "feedback": result["detailed_feedback"],
+                "feedback": result.get("detailed_feedback", result.get("feedback", "")),
                 "v0128_full_result": result,
             }
 
@@ -302,7 +308,7 @@ class DirectorQualityAuditor:
 
         if loaded_parts:
             result = "\n\n---\n\n".join(loaded_parts)
-            logging.warning(f"📖 [V67] Director 컨텍스트 확대: {len(loaded_parts)}화 이전 원고 로드 (ep {ep_num})")
+            logging.info(f"📖 [V67] Director 컨텍스트 확대: {len(loaded_parts)}화 이전 원고 로드 (ep {ep_num})")
             return result
 
         # 폴백: 기존 prev_full_text 사용
@@ -482,6 +488,10 @@ class DirectorQualityAuditor:
             char_logic_result = self.assess_character_logic(
                 ep_num=ep_num, manuscript=manuscript, npc_profiles=npc_profiles, character_traits=character_traits
             )
+            if not isinstance(char_logic_result, dict):
+                char_logic_result = (
+                    char_logic_result[0] if isinstance(char_logic_result, list) and char_logic_result else {}
+                )
 
             # [FIX] CRITICAL 1개 또는 MAJOR 2개 이상일 때만 REJECT (주석과 코드 일치)
             if char_logic_result.get("decision") == "REJECT":
@@ -523,12 +533,12 @@ class DirectorQualityAuditor:
                 "\n\n[⚠️ Python 사전 검증 경고 — 문맥 확인 후 최종 판단 필요]\n" + "\n---\n".join(_pre_llm_warnings)
             )
 
-        # [V66.1] V0128 경로에도 prev_full_text 확대 적용 (기존 legacy 경로만 적용 → 양쪽 모두)
-        expanded_prev_for_v0128 = self._expand_prev_full_text(ep_num, prev_full_text)
+        # [V66.1] prev_full_text 확대를 1회 수행 후 V0128/legacy 경로에서 공용 사용
+        expanded_prev = self._expand_prev_full_text(ep_num, prev_full_text)
         if validation_context is None:
             validation_context = {}
-        if expanded_prev_for_v0128:
-            validation_context["expanded_prev_full_text"] = expanded_prev_for_v0128
+        if expanded_prev:
+            validation_context["expanded_prev_full_text"] = expanded_prev
 
         # [V43] V0128 검증 시스템 조건부 사용
         if self._d.use_v0128 and validation_context:
@@ -549,8 +559,7 @@ class DirectorQualityAuditor:
         safe_arc = self._d._escape_braces(arc_doc)
         safe_history = self._d._escape_braces(history_summary)
 
-        # [V66.1] prev_full_text 확대: 1화→최대 3화 이전 원고 로드
-        expanded_prev = self._expand_prev_full_text(ep_num, prev_full_text)
+        # [V66.1] prev_full_text 확대 결과 재사용
         safe_prev = self._d._escape_braces(expanded_prev)
 
         current_len = len(manuscript)
@@ -632,7 +641,6 @@ class DirectorQualityAuditor:
             total_eps=total_eps if total_eps else "미정",
             arc_pos=arc_pos,
             arc_doc=safe_arc,
-            current_len=current_len,
             target_len=target_len,
             history_summary=safe_history,
             prev_full_text=safe_prev,
@@ -714,7 +722,7 @@ class DirectorQualityAuditor:
             tactical_doc = arc_plan.get("tactical_doc", "")
             name_in_tactical = protagonist_name in tactical_doc
             name_in_dump = protagonist_name in arc_dump
-            logging.warning(f"🔍 [V60.55 DEBUG] 주인공 이름 검증: '{protagonist_name}'")
+            logging.info(f"🔍 [V60.55 DEBUG] 주인공 이름 검증: '{protagonist_name}'")
             logging.info(f"- tactical_doc 내 존재: {name_in_tactical}")
             logging.info(f"- arc_dump 내 존재: {name_in_dump}")
             logging.info(f"- tactical_doc 앞 200자: {tactical_doc[:200]}...")
@@ -802,8 +810,14 @@ class DirectorQualityAuditor:
         if not isinstance(first_eval, dict):
             first_eval = {"decision": "REJECT", "score": 0, "reason": "JSON 파싱 실패"}
 
+        def _safe_int_score(value, default=50):
+            try:
+                return int(value)
+            except (ValueError, TypeError):
+                return default
+
         first_decision = first_eval.get("decision", "REJECT")
-        first_score = first_eval.get("score", 50)
+        first_score = _safe_int_score(first_eval.get("score", 50), 50)
 
         # 명확한 REJECT → 추가 평가 없이 반환
         if first_decision == "REJECT" and first_score < self._d.ambiguous_lower:
@@ -856,7 +870,7 @@ class DirectorQualityAuditor:
                         if isinstance(eval_result, dict):
                             evaluations.append(eval_result)
                             eval_decision = eval_result.get("decision", "REJECT")
-                            eval_score = eval_result.get("score", 0)
+                            eval_score = _safe_int_score(eval_result.get("score", 0), 0)
                             logging.info(f"Vote {vote_idx + 1}: {eval_decision} (score={eval_score})")
                     except FutureTimeoutError:
                         logging.info("⏰ [V61.3] Vote 타임아웃")
@@ -864,6 +878,12 @@ class DirectorQualityAuditor:
                         logging.warning(f"⚠️ Vote 오류: {str(e)[:50]}")
             except FutureTimeoutError:
                 logging.info(f"⏰ [V61.3] Self-Consistency 전체 타임아웃 - 완료된 {len(evaluations)}개 투표 사용")
+            except Exception as e:
+                logging.warning(f"⚠️ [V61.3] Self-Consistency 루프 예외: {str(e)[:80]}")
+            finally:
+                # [Sweep34] 미완료 future 정리로 shutdown 대기 최소화
+                for f in futures:
+                    f.cancel()
 
         # [Phase 3-Obs] 병렬 구간 소요 시간 기록
         try:
@@ -872,7 +892,10 @@ class DirectorQualityAuditor:
             pass
 
         # 점수들의 중앙값
-        scores = [e.get("score", 50) for e in evaluations if isinstance(e, dict)]
+        scores = []
+        for e in evaluations:
+            if isinstance(e, dict):
+                scores.append(_safe_int_score(e.get("score", 50), 50))
         median_score = statistics.median(scores) if scores else 50
 
         # PASS/REJECT 다수결
@@ -880,7 +903,7 @@ class DirectorQualityAuditor:
         final_decision = "PASS" if pass_votes > (len(evaluations) // 2) else "REJECT"
 
         # 대표 결과 선택 (중앙값에 가장 가까운 것)
-        representative = min(evaluations, key=lambda e: abs(e.get("score", 50) - median_score))
+        representative = min(evaluations, key=lambda e: abs(_safe_int_score(e.get("score", 50), 50) - median_score))
 
         # 결과 병합
         result = representative.copy()

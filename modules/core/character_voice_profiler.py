@@ -222,12 +222,13 @@ class CharacterVoiceProfiler:
     def _extract_character_dialogues(self, character_name: str, text: str) -> list[str]:
         """텍스트에서 특정 캐릭터의 대사 추출"""
         dialogues = []
+        character_name_esc = re.escape(character_name)
 
         # 패턴: "캐릭터명...대사" 또는 대사 후 캐릭터명
         patterns = [
-            rf'{character_name}[이가은는]\s*[^"]*"([^"]+)"',
-            rf'{character_name}[이가은는][^"]*말했다[^"]*"([^"]+)"',
-            rf'"([^"]+)"[^"]*{character_name}',
+            rf'{character_name_esc}[이가은는]\s*[^"]*"([^"]+)"',
+            rf'{character_name_esc}[이가은는][^"]*말했다[^"]*"([^"]+)"',
+            rf'"([^"]+)"[^"]*{character_name_esc}',
         ]
 
         for pattern in patterns:

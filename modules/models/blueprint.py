@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +49,17 @@ class Blueprint(BaseModel):
     location: str = ""  # start_location 별칭
     core_tension: str = ""
     expected_ending: str = ""
+
+    @model_validator(mode="before")
+    @classmethod
+    def _sync_ep_num_alias(cls, values):
+        """`ep_num`과 `episode_number`를 상호 동기화."""
+        if isinstance(values, dict):
+            if "ep_num" in values and not values.get("episode_number"):
+                values["episode_number"] = values["ep_num"]
+            elif "episode_number" in values and "ep_num" not in values:
+                values["ep_num"] = values["episode_number"]
+        return values
 
 
 def validate_blueprint(raw: dict) -> dict:

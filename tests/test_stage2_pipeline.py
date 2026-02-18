@@ -276,6 +276,12 @@ class TestAnalystGenreLibrary:
         assert "analyst_libraries.json" in str(path)
 
 
+class TestAnalystStateTrackerValidation:
+    def test_validate_arc_with_state_tracker_returns_empty_list(self, analyst):
+        result = analyst._validate_arc_with_state_tracker({"arc_no": 1})
+        assert result == []
+
+
 # ══════════════════════════════════════════════════════════════
 # [Analyst] Test 7: 장르별 분기 처리 (wuxia vs investment)
 # ══════════════════════════════════════════════════════════════

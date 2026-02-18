@@ -844,7 +844,7 @@ class ChiefWriterContextBuilder:
             if not master_bible:
                 return {}
 
-            bible_root = master_bible.get("MasterBible", master_bible)
+            bible_root = master_bible.get("MasterBible", master_bible) if isinstance(master_bible, dict) else {}
             assets = bible_root.get("AssetLibrary", {})
             key_npcs = assets.get("KeyNPCs", []) or assets.get("Key_NPCs", [])
 

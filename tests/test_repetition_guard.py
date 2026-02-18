@@ -18,7 +18,7 @@ class TestRepetitionGuardInit:
         guard = RepetitionGuard()
         assert guard.window_size == 5
         assert guard.threshold == 3
-        assert guard.banned_phrases == set()
+        assert guard.banned_phrases == {}
 
     def test_custom_params(self):
         guard = RepetitionGuard(window_size=10, threshold=5)
@@ -37,19 +37,19 @@ class TestBuildBannedList:
     def test_empty_manuscripts(self):
         guard = RepetitionGuard()
         result = guard.build_banned_list([])
-        assert result == set()
+        assert result == {}
 
     def test_none_manuscripts(self):
         guard = RepetitionGuard()
         result = guard.build_banned_list([None, None])
-        assert result == set()
+        assert result == {}
 
     def test_mixed_none_and_valid(self):
         guard = RepetitionGuard(threshold=2)
         text = "이청풍은 검을 들었다. 이청풍은 검을 들었다. 이청풍은 검을 들었다."
         result = guard.build_banned_list([None, text, None])
         # 반복된 3-gram이 있어야 함
-        assert isinstance(result, set)
+        assert isinstance(result, dict)
 
     def test_repeated_phrases_detected(self):
         guard = RepetitionGuard(threshold=2)
@@ -66,12 +66,12 @@ class TestBuildBannedList:
         # window_size=2 이므로 최근 2개만 사용
         result = guard.build_banned_list([old_text, old_text, old_text, new_text])
         # old_text 3개 중 최근 2개만 (old_text, new_text) 사용됨
-        assert isinstance(result, set)
+        assert isinstance(result, dict)
 
     def test_short_text_no_trigrams(self):
         guard = RepetitionGuard()
         result = guard.build_banned_list(["짧은"])
-        assert result == set()
+        assert result == {}
 
     def test_banned_phrases_stored(self):
         guard = RepetitionGuard(threshold=2)
@@ -115,7 +115,7 @@ class TestScanManuscript:
 
     def test_short_manuscript(self):
         guard = RepetitionGuard()
-        guard.banned_phrases = {"이건 금지 구문"}
+        guard.banned_phrases = {"이건 금지 구문": 3}
         violations, score = guard.scan_manuscript("짧")
         assert violations == []
         assert score == 1.0

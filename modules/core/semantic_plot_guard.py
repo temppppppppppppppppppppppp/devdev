@@ -149,6 +149,9 @@ class SemanticPlotGuard:
         Returns:
             경고 목록: [{"new_plot": str, "similar_to": str, "similarity": float}, ...]
         """
+        if tactical_doc and not isinstance(tactical_doc, str):
+            tactical_doc = str(tactical_doc)
+
         if not self._client or not self._resolved_embeddings:
             # [C-1] 키워드 기반 폴백
             if self._resolved_keywords:

@@ -47,6 +47,8 @@ class AuditService:
             "data": data or {},
         }
         self._runtime_audit.append(event)
+        if len(self._runtime_audit) > 1000:
+            self._runtime_audit[:] = self._runtime_audit[-500:]
         self._buffer.append(event)
 
     # ── flush_audit_buffer ───────────────────────────────────────

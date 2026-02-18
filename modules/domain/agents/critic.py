@@ -601,7 +601,7 @@ JSON 형식으로 응답:
 
         # 점수 (critique_manuscript용)
         score = review_result.get("score")
-        if score:
+        if score is not None:
             lines.append(f"품질 점수: {score}/100")
 
         # 약점

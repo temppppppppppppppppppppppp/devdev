@@ -347,12 +347,13 @@ class ManuscriptValidator:
             # 죽은 NPC가 현재 원고에서 말하거나 행동하면 경고
             for npc in self._dead_npcs:
                 if len(npc) >= 2:
+                    npc_esc = re.escape(npc)
                     # 대화나 행동 패턴
                     alive_patterns = [
-                        f"{npc}[이가은는]\\s*말했다",
-                        f"{npc}[이가은는]\\s*웃",
-                        f'"{npc}"[이가은는]',
-                        f"{npc}[이가은는]\\s*(?:검을|칼을|창을)",
+                        f"{npc_esc}[이가은는]\\s*말했다",
+                        f"{npc_esc}[이가은는]\\s*웃",
+                        f'"{npc_esc}"[이가은는]',
+                        f"{npc_esc}[이가은는]\\s*(?:검을|칼을|창을)",
                     ]
                     for pattern in alive_patterns:
                         if re.search(pattern, manuscript):

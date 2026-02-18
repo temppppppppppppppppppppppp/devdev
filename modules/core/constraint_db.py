@@ -95,6 +95,11 @@ class ConstraintDB:
         arc_no = arc_data.get("arc_no")
         if not arc_no:
             return
+        try:
+            arc_no = int(arc_no)
+        except (ValueError, TypeError):
+            logging.warning(f"[ConstraintDB] arc_no 파싱 실패: {arc_no!r} -> 스킵")
+            return
 
         # state_constraints에서 상태 추출
         state_constraints = arc_data.get("state_constraints") or {}  # [V70] null → {} 방어
@@ -150,7 +155,7 @@ class ConstraintDB:
         internal_energy = self._parse_internal_energy(arc_end_state.get("internal_energy", 100))
 
         state = ArcState(
-            arc_no=int(arc_no),
+            arc_no=arc_no,
             location=joint_docs.get("final_location", arc_end_state.get("location", "")),
             inventory=inventory,
             injuries=arc_end_state.get("injuries", "정상"),
@@ -160,16 +165,16 @@ class ConstraintDB:
             consumed_items=items_consumed,
         )
 
-        self.arc_states[int(arc_no)] = state
+        self.arc_states[arc_no] = state
 
         # [V49.4] Semantic Registry에 아이템 등록
         if self.item_registry:
             for item in items_acquired:
                 if item:
-                    self.item_registry.register_item(item, int(arc_no))
+                    self.item_registry.register_item(item, arc_no)
             for item in items_consumed:
                 if item:
-                    self.item_registry.mark_consumed(item, int(arc_no))
+                    self.item_registry.mark_consumed(item, arc_no)
 
     def _extract_grants_from_tactical(self, tactical_doc: str) -> list[str]:
         """tactical_doc에서 수여물 추출"""

@@ -328,15 +328,14 @@ class BlockingValidatorConsistencyChecks:
 
                     if knowledge_check["should_know"]:
                         # NPC가 알아야 하는 사건인데, 원고에서 모르는 것처럼 행동하는가?
+                        name_esc = re.escape(name)
                         ignorance_patterns = [
-                            f"{name}.*알지 못",
-                            f"{name}.*처음 듣",
-                            f"{name}.*누구",
-                            f"{name}.*모르",
-                            f"{name}.*들어본 적 없",
+                            f"{name_esc}.*알지 못",
+                            f"{name_esc}.*처음 듣",
+                            f"{name_esc}.*누구",
+                            f"{name_esc}.*모르",
+                            f"{name_esc}.*들어본 적 없",
                         ]
-
-                        import re
 
                         for pattern in ignorance_patterns:
                             if re.search(pattern, manuscript):

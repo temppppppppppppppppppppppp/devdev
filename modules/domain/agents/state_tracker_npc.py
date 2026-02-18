@@ -531,7 +531,9 @@ class StateTrackerNPC:
                 elif info.get("status") == "dead":
                     self.tracker.npc_registry[name] = info.copy()
                 else:
-                    existing.update(info)
+                    # [Sweep34] 빈값으로 기존 속성이 덮어쓰기 되는 문제 방지
+                    filtered = {k: v for k, v in info.items() if v not in ("", None, [], {})}
+                    existing.update(filtered)
 
         # 무공 목록 병합
         self.tracker.protagonist_skills.update(other.protagonist_skills)
@@ -935,6 +937,9 @@ class StateTrackerNPC:
                     else:
                         npc_name = groups[0]
                         state = default_state or groups[1]
+                elif len(groups) == 1 and default_state:
+                    npc_name = groups[0]
+                    state = default_state
                 else:
                     continue
 
@@ -1945,7 +1950,7 @@ class StateTrackerNPC:
                 _resp_text = None
             if not _resp_text:
                 logging.info("⚠️ [V69] NPC 정리 LLM 응답 비어있음, 건너뜀")
-                return
+                return []
             result = json.loads(_resp_text)
             remove_list = []
             if isinstance(result, dict):

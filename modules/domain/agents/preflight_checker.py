@@ -452,13 +452,15 @@ class PreflightChecker(BaseAgent):
         lines.append(f"🗺️ 시작 위치: {world.get('current_location', '알 수 없음')}")
 
         status = world.get("protagonist_status", {})
+        if not isinstance(status, dict):
+            status = {}
         if status.get("injuries") and status["injuries"] != "없음":
             lines.append(f"💔 부상 상태: {status['injuries']}")
         lines.append(f"⚡ 내공: {status.get('internal_energy', 100)}%")
 
         inventory = preflight_result.get("timeline_analysis", {}).get("current_inventory", [])
         if inventory:
-            lines.append(f"📦 소지품: {', '.join(inventory[:10])}")
+            lines.append(f"📦 소지품: {', '.join(str(i) for i in inventory[:10])}")
 
         lines.append("")
 

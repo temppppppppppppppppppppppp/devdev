@@ -356,7 +356,7 @@ D: 오해 → 갈등 → 진실 발견 → 관계 심화
         blueprints = []
 
         try:
-            latest_ep = self.context.db.get_latest_episode_number()
+            latest_ep = self.context.db.get_latest_episode_number() - 1
             start_ep = max(1, latest_ep - n + 1)
 
             for ep_num in range(start_ep, latest_ep + 1):

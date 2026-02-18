@@ -29,6 +29,14 @@ from .base_agent import _get_agent_default_model
 BLUEPRINT_MIN_CHARS = 800  # integrated_scenario 최소 길이
 
 
+def _safe_int(value, default=0):
+    """LLM 반환값을 안전하게 int로 변환한다."""
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return default
+
+
 class UnifiedBlueprintValidator:
     """
     [V60.80] 통합 Blueprint 검증기
@@ -102,7 +110,7 @@ class UnifiedBlueprintValidator:
                 "summary": compare_result.get("reason", ""),
                 "score": compare_result.get("score", 0),
                 "feedback": compare_result.get("feedback", ""),
-                "confidence": 0.9 if compare_result.get("score", 0) >= 70 else 0.6,
+                "confidence": 0.9 if _safe_int(compare_result.get("score", 0), 0) >= 70 else 0.6,
                 "selected_index": compare_result.get("selected_index", 0),
                 "selected_blueprint": selected_bp,
                 "comparison_notes": compare_result.get("comparison_notes", ""),
@@ -225,7 +233,7 @@ class UnifiedBlueprintValidator:
             director_verdict = director_result.get("decision", "PASS")
             director_reason = director_result.get("reason", "")
             director_feedback = director_result.get("feedback", "")
-            director_score = director_result.get("score", 50)
+            director_score = _safe_int(director_result.get("score", 50), 50)
 
             # 이슈 병합 (사전검사 + Director)
             all_issues = pre_result["issues"][:]
@@ -255,7 +263,7 @@ class UnifiedBlueprintValidator:
             }
 
             status = "✅ PASS" if final_verdict == "PASS" else "❌ REJECT"
-            logging.warning(f"{status} [Director] 점수: {director_score}, 사유: {director_reason[:50]}...")
+            logging.warning(f"{status} [Director] 점수: {director_score}, 사유: {(director_reason or '')[:50]}...")
 
             return final_verdict, result
 

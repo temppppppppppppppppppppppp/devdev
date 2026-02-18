@@ -131,6 +131,7 @@ class Stage2Orchestrator:
         # [V42] 주인공 이름 추출 (PROTAGONIST IDENTITY LOCK)
         # [V61.2 Fix] 장르별 HUD 탐색으로 변경
         protagonist_name = None
+        genre = ""
         try:
             genre = self.ctx.selected_genre.get("type", "") if self.ctx.selected_genre else ""
             protagonist_name = HUDKeys.get_protagonist_name(bible_root, genre)
@@ -188,9 +189,7 @@ class Stage2Orchestrator:
         existing_ms_max_ep = self.ctx.get_max_episode_from_manuscripts()
         if existing_ms_max_ep > 0:
             skip_arc_no = self.ctx.calculate_arc_from_episode(existing_ms_max_ep)
-            if skip_arc_no <= done_count:
-                pass
-            elif skip_arc_no > done_count:
+            if skip_arc_no > done_count:
                 self.ctx.ui.log(f"📂 [Manuscript Detected] 기존 원고 {existing_ms_max_ep}화까지 발견")
                 self.ctx.ui.log(
                     f"⚠️  [Warning] Arc {skip_arc_no}까지 필요하지만 Arc {done_count}까지만 DB에 존재합니다."
@@ -541,7 +540,10 @@ class Stage2Orchestrator:
                     _st_snapshot = _fin["st_snapshot"]
 
                     # [Patch Mode] REJECT 시 previous_attempt 갱신 (패치 모드 판단용)
-                    _rej_score = _fin.get("score", 0)
+                    try:
+                        _rej_score = int(_fin.get("score", 0))
+                    except (ValueError, TypeError):
+                        _rej_score = 0
                     _rej_arc = _fin.get("rejected_arc")
                     if _fin["action"] != "break" and _rej_score >= PatchModeThresholds.REWRITE and _rej_arc:
                         _previous_attempt = {

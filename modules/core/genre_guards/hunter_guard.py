@@ -6,6 +6,7 @@
 헌터물 장르의 일관성을 유지하고 무협 용어를 차단
 """
 
+import re
 from typing import Any
 
 from .base_guard import BaseGuard
@@ -279,7 +280,7 @@ class HunterGuard(BaseGuard):
                 if remaining and remaining > 0:
                     actions.append(
                         {
-                            "pattern": skill_name,
+                            "pattern": re.escape(skill_name),
                             "reason": f"'{skill_name}' 쿨타임 {remaining}초 남음",
                             "severity": "MEDIUM",
                         }

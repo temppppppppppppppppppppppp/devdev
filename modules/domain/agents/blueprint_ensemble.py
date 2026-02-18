@@ -207,17 +207,21 @@ class BlueprintEnsembleGenerator(BaseAgent):
                                 candidates.append(result)
                                 logging.info(f"✓ {strategy_name} 생성 완료")
                         except FutureTimeoutError:
-                            logging.info(f"⏰ [V61.3] {strategy_name} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
+                            logging.warning(f"⏰ [V61.3] {strategy_name} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
                         except Exception as e:
                             logging.warning(f"✗ {strategy_name} 실패: {str(e)[:50]}")
                 except FutureTimeoutError:
                     # 전체 앙상블 타임아웃 - 완료된 후보만 사용
-                    logging.info(
+                    logging.warning(
                         f"⏰ [V61.3] 블루프린트 앙상블 타임아웃 ({self.ENSEMBLE_TIMEOUT}초) - 완료된 {len(candidates)}개 후보 사용"
                     )
                 except Exception as e:
                     # [V61.3] as_completed 자체 예외 처리
                     logging.warning(f"⚠️ [V61.3] 앙상블 루프 예외: {str(e)[:80]}")
+                finally:
+                    # [Sweep34] 미완료 future 정리로 shutdown 대기 최소화
+                    for f in futures:
+                        f.cancel()
         except Exception as e:
             # [V61.3] ThreadPoolExecutor 전체 예외 처리 - 급사 방지
             # stderr로 출력 (Rich 스피너가 stdout 가림)
@@ -228,7 +232,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         # [Phase 3-Obs] 병렬 구간 소요 시간 기록
         try:
-            logging.warning(f"[PerfTimer:BlueprintEnsemble] bp_ep{ep_num}_ensemble={time.monotonic() - _tp_t0:.2f}s")
+            logging.info(f"[PerfTimer:BlueprintEnsemble] bp_ep{ep_num}_ensemble={time.monotonic() - _tp_t0:.2f}s")
         except Exception:
             pass
 

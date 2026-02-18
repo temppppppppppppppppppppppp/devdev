@@ -116,7 +116,10 @@ class StoryExpander:
 }}
 ```
 """
-        self.extracted = self._parse_json(self._call_llm(prompt)) or {}
+        parsed = self._parse_json(self._call_llm(prompt))
+        if isinstance(parsed, list):
+            parsed = parsed[0] if parsed else {}
+        self.extracted = parsed if isinstance(parsed, dict) else {}
 
         # 장르 설정
         if not self.genre:

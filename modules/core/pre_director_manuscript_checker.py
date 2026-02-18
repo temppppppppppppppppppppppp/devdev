@@ -133,7 +133,7 @@ class PreDirectorManuscriptChecker:
         """
         result: dict[str, Any] = {"per_scene": {}, "overall_ratio": 0, "weak_scenes": [], "check_items": []}
 
-        if not scene_breakdown:
+        if not scene_breakdown or not isinstance(scene_breakdown, dict):
             return result
 
         total_keywords = 0
@@ -227,7 +227,7 @@ class PreDirectorManuscriptChecker:
         """
         items = []
 
-        if not scene_breakdown or len(scene_breakdown) < 3:
+        if not isinstance(scene_breakdown, dict) or not scene_breakdown or len(scene_breakdown) < 3:
             return items
 
         scene_count = len(scene_breakdown)

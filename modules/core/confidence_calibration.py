@@ -337,6 +337,8 @@ class ConfidenceCalibrator:
 
         # 2. 씬 개수 (20점)
         scene_breakdown = bp.get("scene_breakdown", {})
+        if not isinstance(scene_breakdown, dict):
+            scene_breakdown = {}
         scene_count = len(scene_breakdown)
 
         if 4 <= scene_count <= 7:
