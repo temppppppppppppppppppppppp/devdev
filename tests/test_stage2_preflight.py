@@ -222,8 +222,8 @@ class TestPreflightArcAnalysis:
     def test_constraint_compiler_sets_entity_registry(self, preflight):
         preflight.ctx.constraint_compiler = MagicMock(compile=MagicMock(return_value="cc"))
         out = preflight._preflight_arc_analysis(**_arc_analysis_kwargs(all_refined_arcs=[{"arc_no": 1}]))
-        # [Sweep46] compiler("cc") + 입력("constraint block") 병합
-        assert out["constraint_block"] == "cc\n\nconstraint block"
+        # [Sweep48] constraint_block은 입력값 그대로 보존 (setup에서 이미 병합됨)
+        assert out["constraint_block"] == "constraint block"
         assert out["entity_registry_for_director"] == {"npc": {"role": "ally"}}
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)

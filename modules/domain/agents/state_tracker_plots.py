@@ -342,6 +342,9 @@ class StateTrackerPlots:
                 continue
             if plot_name in tactical:
                 info["last_mention_arc"] = arc_no
+                # [Sweep48] suspended 플롯이 다시 언급되면 active로 복원
+                if info.get("status") == "suspended":
+                    info["status"] = "active"
                 updated.append({"plot": plot_name, "status": "mentioned"})
 
         return updated

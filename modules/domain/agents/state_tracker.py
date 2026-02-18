@@ -1400,7 +1400,7 @@ class StateTracker:
             "permanent_injuries": self.extract_permanent_injuries_from_arc(arc),
             "companion_changes": self.update_companions_from_arc(arc),
             "commitments": self.extract_commitments_from_arc(arc),
-            "protagonist_emotion": self.extract_protagonist_emotion_from_arc(arc),
+            "protagonist_emotion": self.extract_protagonist_emotion_from_arc(arc) or {},
         }
 
     def _populate_genre_registries_from_arc(self, arc: dict):

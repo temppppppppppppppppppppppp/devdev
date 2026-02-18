@@ -518,7 +518,7 @@ class Stage4InterviewRound:
         selected = director_result.get("selected", "A")
         verdict = director_result.get("verdict", "REJECT")
         score = director_result.get("score", 0)
-        reason = director_result.get("selection_reason", "")
+        reason = director_result.get("selection_reason") or ""
 
         self.ctx.ui.log(f"   📊 Director 판정: {verdict} (점수: {score}, 선택: 후보 {selected})")
         self.ctx.ui.log(f"      └─ 사유: {reason[:80]}...")
@@ -588,8 +588,8 @@ class Stage4InterviewRound:
                 final_state_updates=final_state_updates,
             )
         else:
-            feedback = director_result.get("feedback", {})
-            action_items = director_result.get("action_items", [])
+            feedback = director_result.get("feedback") or {}
+            action_items = director_result.get("action_items") or []
             director_feedback = "\n".join(action_items) if action_items else str(feedback.get("issues", []))
             previous_attempt = {
                 "strategy": selected,
