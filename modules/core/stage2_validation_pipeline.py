@@ -625,7 +625,8 @@ class Stage2ValidationPipeline:
 
             analyzer = NarrativeStructureAnalyzer(client=self.ctx.sys.api_client, model=_SUMMARY_MODEL)
 
-            result = analyzer.analyze(beats[:5])
+            # [Sweep45] dict 혼합 beats 방지 — normalized (문자열만) 전달
+            result = analyzer.analyze(normalized[:5])
 
             if result.get("status") == "STAGNATION":
                 stagnation_type = result.get("stagnation_type", "unknown")

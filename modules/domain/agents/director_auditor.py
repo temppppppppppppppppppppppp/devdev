@@ -247,10 +247,11 @@ class DirectorQualityAuditor:
                 ep_num=ep_num, manuscript=manuscript, validation_context=validation_context
             )
 
+            # [Sweep45] KeyError 방지 — 부분 결과 시 False REJECT 방지
             legacy_result = {
-                "decision": result["final_decision"],
-                "score": result["total_score"],
-                "reason": result["feedback"],
+                "decision": result.get("final_decision", "REJECT"),
+                "score": result.get("total_score", 0),
+                "reason": result.get("feedback", ""),
                 "feedback": result.get("detailed_feedback", result.get("feedback", "")),
                 "v0128_full_result": result,
             }
@@ -542,7 +543,8 @@ class DirectorQualityAuditor:
             validation_context["expanded_prev_full_text"] = expanded_prev
 
         # [V43] V0128 검증 시스템 조건부 사용
-        if self._d.use_v0128 and validation_context:
+        # [Sweep45] {} is falsy → is not None 으로 변경
+        if self._d.use_v0128 and validation_context is not None:
             return self._audit_with_v0128(
                 ep_num=ep_num, manuscript=manuscript, validation_context=validation_context, target_len=target_len
             )

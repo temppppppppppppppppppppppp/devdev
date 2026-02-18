@@ -398,7 +398,8 @@ class ChiefWriterQualityGate:
             scores.append(2)
 
         # 3. 대화 자연스러움 (대화 비율)
-        dialogue_matches = re.findall(r'["\'].*?["\']', content)
+        # [Sweep45] 한국어 따옴표(\u201c\u201d) + ASCII 따옴표 모두 매칭
+        dialogue_matches = re.findall(r'["\u201c].*?["\u201d]|[\'\u2018].*?[\'\u2019]', content)
         dialogue_chars = sum(len(d) for d in dialogue_matches)
         dialogue_ratio = dialogue_chars / max(len(content), 1)
 

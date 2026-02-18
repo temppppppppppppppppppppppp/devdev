@@ -59,8 +59,9 @@ def test_select_genre_uses_default_when_int_input_returns_none(monkeypatch):
 
 def test_director_auditor_v0128_block_has_no_unreachable_none_guard():
     src = inspect.getsource(DirectorQualityAuditor.audit_manuscript)
+    # [Sweep45] validation_context is not None 으로 변경됨
     block = re.search(
-        r"if self\._d\.use_v0128 and validation_context:(?P<body>[\s\S]*?)return self\._audit_with_v0128\(",
+        r"if self\._d\.use_v0128 and validation_context is not None:(?P<body>[\s\S]*?)return self\._audit_with_v0128\(",
         src,
     )
     assert block is not None

@@ -334,6 +334,9 @@ class ChiefWriter(BaseAgent):
             )
             if fallback and not fallback.get("error"):
                 candidates = [fallback]
+            else:
+                # [Sweep45] 에러 후보만 남은 상태 → 비우고 C-4 폴백으로 전환
+                candidates = []
 
         # [V66.3] C-4: 모든 후보 생성 실패 시 에러 dict 반환 (빈 배열 방지 → downstream IndexError 크래시 방어)
         if not candidates:

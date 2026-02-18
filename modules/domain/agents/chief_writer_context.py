@@ -110,7 +110,8 @@ class ChiefWriterContextBuilder:
         # [V60.95] 주인공 설정 추출 (원시인/현대인 제약)
         protagonist_config = bible_root.get("protagonist_config", {})
         world_origin = protagonist_config.get("world_origin", "원시인")
-        incarnation_type = protagonist_config.get("incarnation_type", "회귀자")
+        # [Sweep45] 기본값 "" — 미설정 프로젝트에 회귀자 가이드 주입 방지
+        incarnation_type = protagonist_config.get("incarnation_type", "")
 
         # [V67.1] 환생 유형별 집필 맥락 주입
         incarnation_context_section = ""

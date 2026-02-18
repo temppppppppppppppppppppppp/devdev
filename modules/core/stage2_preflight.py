@@ -382,7 +382,8 @@ class Stage2PreflightAnalysis:
                         # [Sweep3-D2] app 캐시 키 동기화
                         if self.ctx.sync_cache_key_to_app:
                             self.ctx.sync_cache_key_to_app(arc_count)
-                    entity_registry_for_director = state_result.get("entity_registry") if state_result else None
+                    # [Sweep45] None 대신 {} 폴백 (downstream .items() / .get() 크래시 방지)
+                    entity_registry_for_director = (state_result.get("entity_registry") if state_result else None) or {}
                     if entity_registry_for_director:
                         entity_registry_for_director = self.ctx.fix_entity_registry_protagonist(
                             entity_registry_for_director, protagonist_name
