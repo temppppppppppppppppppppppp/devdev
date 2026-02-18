@@ -281,7 +281,7 @@ class ContextCompressor:
                     {
                         "id": scene_id,
                         "type": scene_data.get("scene_type", ""),
-                        "goal": scene_data.get("purpose", scene_data.get("goal", ""))[:100],
+                        "goal": (scene_data.get("purpose") or scene_data.get("goal") or "")[:100],
                         "chars": scene_data.get("characters", [])[:3],
                     }
                 )

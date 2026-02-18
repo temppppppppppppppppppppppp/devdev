@@ -255,12 +255,12 @@ class QualityAmplifier:
             lines.append("\n[필수 반영 씬]")
             if isinstance(scenes, dict):
                 for scene_id, scene_data in list(scenes.items())[:4]:
-                    desc = scene_data.get("summary", scene_data.get("description", str(scene_data)[:50]))
+                    desc = scene_data.get("summary") or scene_data.get("description") or str(scene_data)[:50]
                     lines.append(f"- {scene_id}: {desc[:60]}")
             elif isinstance(scenes, list):
                 for i, scene in enumerate(scenes[:4], 1):
                     if isinstance(scene, dict):
-                        desc = scene.get("summary", scene.get("description", ""))[:60]
+                        desc = (scene.get("summary") or scene.get("description") or "")[:60]
                     else:
                         desc = str(scene)[:60]
                     lines.append(f"- Scene {i}: {desc}")

@@ -442,9 +442,9 @@ class DirectorGradingSystem:
                 lines.append("\n📚 수정 예시:")
                 for ex in examples[:2]:
                     if ex:
-                        lines.append(f"   Before: {ex.get('before', '')[:50]}...")
-                        lines.append(f"   After:  {ex.get('after', '')[:50]}...")
-                        lines.append(f"   💡 {ex.get('note', '')}")
+                        lines.append(f"   Before: {(ex.get('before') or '')[:50]}...")
+                        lines.append(f"   After:  {(ex.get('after') or '')[:50]}...")
+                        lines.append(f"   💡 {ex.get('note') or ''}")
                         lines.append("")
 
         lines.append(f"{'=' * 60}\n")

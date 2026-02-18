@@ -741,8 +741,8 @@ class BlockEnricher(BaseAgent):
                 continue
             content = block.get("content", {})
             if isinstance(content, dict):
-                reward = content.get("reward", "")[:100]
-                context = content.get("context", "")[:100]
+                reward = (content.get("reward") or "")[:100]
+                context = (content.get("context") or "")[:100]
             else:
                 reward = ""
                 context = str(content)[:100]

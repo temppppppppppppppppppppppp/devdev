@@ -195,6 +195,12 @@ class BlueprintConstraintCompiler:
             if arc_position - 1 < len(beats):
                 content = beats[arc_position - 1]
 
+        # [Sweep60] beat_sequence 항목이 dict일 수 있음 → str 보장
+        if isinstance(content, dict):
+            content = content.get("beat", content.get("description", str(content)))
+        if not isinstance(content, str):
+            content = str(content) if content else ""
+
         # 핵심 이벤트 추출
         key_events = []
         if content:
