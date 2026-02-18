@@ -506,7 +506,8 @@ class Stage2ValidationPipeline:
                     protagonist_name=protagonist_name or "주인공",
                 )
 
-                current_feedback = f"{strong_kind_feedback}\n\n{focused_context}"
+                # 모든 피드백 조합: 핵심 지시 + 컨텍스트 + 금지 아이템 + 직전 상태 + 재시도 가이드
+                current_feedback = f"{strong_kind_feedback}\n\n{focused_context}{banned_items_warning}{prev_state_reminder}{intensity_guide}"
 
                 feedback_size = len(current_feedback)
                 self.ctx.ui.log(f"      📋 [V60.21] 집중 피드백 주입 ({feedback_size}자, 목표: <500자)")

@@ -317,7 +317,9 @@ class ContinuityArcValidator:
 
             correct_injuries = prev_end.get("injuries") or prev_shadow.get("expected_injuries", "없음")
             correct_location = prev_end.get("location") or prev_joint.get("final_location", "알 수 없음")
-            correct_equipment = prev_end.get("equipment") or prev_joint.get("physical_inventory", [])
+            correct_equipment = prev_end.get("equipment")
+            if correct_equipment is None:
+                correct_equipment = prev_joint.get("physical_inventory", [])
 
             curr_state = current_arc.get("state_constraints", {})
             curr_start = curr_state.get("arc_start_state", {})

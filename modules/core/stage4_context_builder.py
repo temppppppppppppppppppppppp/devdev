@@ -285,7 +285,7 @@ class Stage4ContextBuilder:
                     _mc_parts.append(f"[V68 시리즈 전체 요약]\n{_series_summary}")
 
             _current_arc_no = arc_data.get("arc_no", 1) if arc_data else 1
-            _current_vol = max(1, (_current_arc_no - 1) // 10 + 1)
+            _current_vol = max(1, (_current_arc_no - 1) // 5 + 1)  # ARCS_PER_VOLUME = 5
             _volume_summaries = []
             for _vi in range(max(1, _current_vol - 2), _current_vol + 1):
                 _vs = self.ctx.current_project.load_v20_anchor(f"volume_summary_{_vi}")
