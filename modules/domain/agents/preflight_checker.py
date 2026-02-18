@@ -155,6 +155,12 @@ class PreflightChecker(BaseAgent):
             if isinstance(result, str):
                 result = json.loads(result)
 
+            # [Sweep55] LLM이 list 반환 시 첫 dict 추출
+            if isinstance(result, list):
+                result = result[0] if result and isinstance(result[0], dict) else {}
+            if not isinstance(result, dict):
+                result = {}
+
             # 필수 필드 보장
             result = self._ensure_required_fields(result)
 

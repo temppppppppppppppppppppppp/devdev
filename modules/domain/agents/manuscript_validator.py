@@ -660,6 +660,11 @@ class ManuscriptValidator:
             )
 
             result = json.loads(response.text)
+            # [Sweep55] LLM이 list 반환 시 dict 보장
+            if isinstance(result, list):
+                result = result[0] if result and isinstance(result[0], dict) else {}
+            if not isinstance(result, dict):
+                result = {}
             verified_indices = result.get("verified", [])
 
             if isinstance(verified_indices, list):

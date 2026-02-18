@@ -179,11 +179,11 @@ JSON 형식으로 응답:
         try:
             # JSON 블록 추출
             json_match = re.search(r"```json\s*(.*?)\s*```", critique_text, re.DOTALL)
-            if json_match:
-                return json.loads(json_match.group(1))
-
-            # 직접 JSON 시도
-            return json.loads(critique_text)
+            parsed = json.loads(json_match.group(1)) if json_match else json.loads(critique_text)
+            # [Sweep55] LLM이 list 반환 시 첫 dict 추출
+            if isinstance(parsed, list):
+                parsed = parsed[0] if parsed and isinstance(parsed[0], dict) else {}
+            return parsed if isinstance(parsed, dict) else {}
         except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] JSON parse failure
             # 파싱 실패 시 기본값
             return {"issues": [], "severity": "none", "overall_quality": 7}

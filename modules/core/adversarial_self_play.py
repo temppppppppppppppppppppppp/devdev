@@ -159,9 +159,11 @@ JSON 형식으로 냉정하게:
         """JSON 파싱"""
         try:
             json_match = re.search(r"```json\s*(.*?)\s*```", text, re.DOTALL)
-            if json_match:
-                return json.loads(json_match.group(1))
-            return json.loads(text)
+            parsed = json.loads(json_match.group(1)) if json_match else json.loads(text)
+            # [Sweep55] LLM이 list 반환 시 첫 dict 추출
+            if isinstance(parsed, list):
+                parsed = parsed[0] if parsed and isinstance(parsed[0], dict) else {}
+            return parsed if isinstance(parsed, dict) else {}
         except (json.JSONDecodeError, ValueError):  # [V64.P4] JSON parse failure
             return {}
 

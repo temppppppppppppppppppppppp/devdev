@@ -72,7 +72,7 @@ class ReverseExpander:
             logging.warning(f"[X] LLM 오류: {e}")
             return ""
 
-    def _parse_json(self, text: str) -> Any:
+    def _parse_json(self, text: str) -> dict | None:
         """JSON 파싱"""
         if not text:
             return None
@@ -82,7 +82,11 @@ class ReverseExpander:
                 json_str = json_str.split("```json")[1].split("```")[0]
             elif "```" in json_str:
                 json_str = json_str.split("```")[1].split("```")[0]
-            return json.loads(json_str.strip())
+            parsed = json.loads(json_str.strip())
+            # [Sweep55] LLM이 list 반환 시 첫 dict 추출
+            if isinstance(parsed, list):
+                parsed = parsed[0] if parsed and isinstance(parsed[0], dict) else {}
+            return parsed if isinstance(parsed, dict) else None
         except Exception:
             return None
 

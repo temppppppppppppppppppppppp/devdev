@@ -105,10 +105,18 @@ class Stage2ValidationPipeline:
                 if reflection_result and reflection_result.improved != arc_str:
                     try:
                         improved_arc = json.loads(reflection_result.improved)
-                        refined_arc = improved_arc
-                        logging.info(
-                            f"✅ [SelfReflector] 자기 개선 완료 (점수: {getattr(reflection_result, 'improvement_score', '?')})"
-                        )
+                        # [Sweep55] list 반환 시 dict 보장
+                        if isinstance(improved_arc, list):
+                            improved_arc = (
+                                improved_arc[0] if improved_arc and isinstance(improved_arc[0], dict) else None
+                            )
+                        if isinstance(improved_arc, dict):
+                            refined_arc = improved_arc
+                            logging.info(
+                                f"✅ [SelfReflector] 자기 개선 완료 (점수: {getattr(reflection_result, 'improvement_score', '?')})"
+                            )
+                        else:
+                            logging.warning("⚠️ [SelfReflector] 개선 결과가 dict가 아님, 원본 유지")
                     except json.JSONDecodeError:
                         logging.warning("⚠️ [SelfReflector] 개선 결과 파싱 실패, 원본 유지")
                 else:
