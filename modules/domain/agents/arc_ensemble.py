@@ -510,7 +510,8 @@ class ArcEnsembleGenerator(BaseAgent):
         if "ep_count" not in result:
             result["ep_count"] = ep_end - ep_start + 1
 
-        if "state_constraints" not in result:
+        # [Sweep47] 타입도 검증 — LLM이 list/string 반환 시 AttributeError 방지
+        if "state_constraints" not in result or not isinstance(result["state_constraints"], dict):
             result["state_constraints"] = {
                 "arc_start_state": {"location": "이전 Arc 종료 위치", "equipment": []},
                 "arc_end_state": {"location": "알 수 없음", "equipment": []},

@@ -510,7 +510,7 @@ class ComposerGuard(BaseGuard):
 
         # [V70] get_impossible_actions 중복 제거 (super()가 이미 check_state_action_consistency에서 호출)
 
-        result["has_critical"] = any(v.get("severity") == "HIGH" for v in result["violations"])
+        result["has_critical"] = any(v.get("severity") in ("HIGH", "CRITICAL") for v in result["violations"])
         if result["violations"]:
             result["summary"] = "; ".join(v.get("message", "") for v in result["violations"][:5])
             result["feedback"] = f"[작곡가물 Guard] {len(result['violations'])}건: {result['summary']}"

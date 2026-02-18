@@ -526,6 +526,7 @@ class BaseGuard(ABC):
                                     "severity": "HIGH",
                                 }
                             )
+                        break  # [Sweep47] 동일 title에 대해 1회만 검사 (중복 위반 방지)
 
         has_justification = len(violations) == 0 or any(re.search(dp, manuscript) for dp in delegation_patterns)
 

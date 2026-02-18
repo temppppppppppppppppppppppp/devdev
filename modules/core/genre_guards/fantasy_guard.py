@@ -305,7 +305,7 @@ class FantasyGuard(BaseGuard):
                             }
                         )
 
-        result["has_critical"] = any(v.get("severity") == "HIGH" for v in result["violations"])
+        result["has_critical"] = any(v.get("severity") in ("HIGH", "CRITICAL") for v in result["violations"])
         if result["violations"]:
             result["summary"] = "; ".join(v.get("message", "") for v in result["violations"][:5])
             result["feedback"] = f"[판타지 Guard] {len(result['violations'])}건: {result['summary']}"

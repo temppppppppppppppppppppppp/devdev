@@ -789,6 +789,10 @@ class ProjectContext:
                 )
                 logging.info(f"📊 로드맵 크기: {len(self.master_bible['MasterBible']['plot_roadmap'])} blocks")
                 return True
+            else:
+                # [Sweep47] save_v20_anchor False 반환 시 명시적 실패 처리
+                logging.warning("🚨 [DNA Sync Error] save_v20_anchor returned False — DB 저장 실패")
+                return False
 
         except Exception as e:
             logging.warning(f"🚨 [DNA Sync Error] 강제 주입 실패: {e}")
@@ -882,6 +886,10 @@ class ProjectContext:
             origin_ep = int(match.group(1)) if match else max(1, self.get_latest_episode_number() - 1)
 
             current_ep = self.get_latest_episode_number() - 1
+            # [Sweep47] 빈 프로젝트에서 전체 삭제 방지
+            if current_ep <= 0:
+                logging.warning("[Backtrack] 저장된 에피소드 없음 — 되감기 건너뜀")
+                return None
             target_ep = max(origin_ep, current_ep - 3)
 
             # [D-2] 롤백 영향 범위 미리보기

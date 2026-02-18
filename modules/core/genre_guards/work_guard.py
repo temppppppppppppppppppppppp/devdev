@@ -182,7 +182,7 @@ class WorkGuard(BaseGuard):
             except re.error:
                 _logger.warning("[WorkGuard] 잘못된 정규식: %s", pattern)
 
-        has_critical = any(v.get("severity") == "HIGH" for v in violations)
+        has_critical = any(v.get("severity") in ("HIGH", "CRITICAL") for v in violations)
         summary_parts = [v.get("message", "") for v in violations[:5]]
         summary = "; ".join(summary_parts) if summary_parts else "검증 통과"
         feedback = ""

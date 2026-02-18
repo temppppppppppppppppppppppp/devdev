@@ -788,7 +788,8 @@ class Analyst(BaseAgent):
                     }
                 )
                 prompt = adjusted_prompt_tpl.format_map(_SafeDict(**full_safe_data))
-                if attempt > 0:
+                # [Sweep47] 캐시 경로와 동일하게 — attempt 0에서도 caller feedback 포함
+                if attempt > 0 or feedback:
                     prompt += f"\n\n🚨 [FEEDBACK]: {current_feedback}"
 
                 # [V49.4] 일반 API 호출 (Structured Schema 적용)

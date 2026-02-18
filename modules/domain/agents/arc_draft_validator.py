@@ -725,12 +725,11 @@ class ArcDraftValidator:
             # tactical_doc에서 획득 패턴과 함께 검사
             if forbidden in tactical:
                 if any(kw in tactical for kw in ["획득", "얻", "손에"]):
-                    # 더 정밀한 검사
-                    for pattern in self.acquire_patterns:
-                        if re.search(pattern.replace(r"([가-힣]{2,15}", f"({forbidden}"), tactical):
-                            critical.append(f"제약 위반: 금지 아이템 '{forbidden}' 획득 시도 (tactical_doc)")
-                            penalty += 35
-                            break
+                    # [Sweep47] 금지 아이템명 + 획득 키워드 근접 매칭 (기존 regex 치환 깨짐 수정)
+                    acq_pattern = rf"{re.escape(forbidden)}[를을]?\s*(?:획득|얻|받|손에\s*넣|입수)"
+                    if re.search(acq_pattern, tactical):
+                        critical.append(f"제약 위반: 금지 아이템 '{forbidden}' 획득 시도 (tactical_doc)")
+                        penalty += 35
 
         return {"penalty": penalty, "critical": critical}
 
