@@ -601,7 +601,11 @@ class Stage2ValidationPipeline:
         _SUMMARY_MODEL = AIModels.SUMMARY_MODEL
 
         beats = refined_arc.get("beat_sequence", [])
-        ep_count = refined_arc.get("ep_count", 0)
+        # [Sweep-Codex] ep_count가 문자열일 수 있음 (SelfReflector 경로)
+        try:
+            ep_count = int(refined_arc.get("ep_count", 0))
+        except (ValueError, TypeError):
+            ep_count = 0
 
         if not isinstance(beats, list) or len(beats) < max(3, ep_count):
             return {

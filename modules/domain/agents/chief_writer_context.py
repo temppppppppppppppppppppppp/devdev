@@ -691,6 +691,9 @@ class ChiefWriterContextBuilder:
         """
         [V60.81] HUD 급변 감지 - 내공/경지/부상 상태의 급격한 변화 탐지
 
+        NOTE: 현재 hud_snapshot 데이터 소스가 미구현 상태로,
+        실질적으로 빈 결과를 반환함. 향후 HUD 데이터 파이프라인 완성 시 활성화 예정.
+
         Returns:
             {
                 'has_anomalies': bool,

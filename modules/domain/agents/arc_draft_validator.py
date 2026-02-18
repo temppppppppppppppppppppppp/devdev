@@ -203,18 +203,22 @@ class ArcDraftValidator:
         critical = []
         penalty = 0
 
+        # [Sweep-Codex] dict 아이템 방어 (unhashable type 방지)
+        def _ikey(x):
+            return x.get("name", x.get("item", "")) if isinstance(x, dict) else str(x)
+
         # 이전 Arc들에서 획득한 모든 아이템 수집
         all_acquired = set()
         for prev_arc in prev_arcs:
             # state_constraints.items_acquired
             items = prev_arc.get("state_constraints", {}).get("items_acquired", [])
             if isinstance(items, list):
-                all_acquired.update(items)
+                all_acquired.update(_ikey(i) for i in items)
 
             # joint_docs.physical_inventory
             inventory = prev_arc.get("joint_docs", {}).get("physical_inventory", [])
             if isinstance(inventory, list):
-                all_acquired.update(inventory)
+                all_acquired.update(_ikey(i) for i in inventory)
             elif isinstance(inventory, str):
                 all_acquired.update([i.strip() for i in inventory.split(",") if i.strip()])
 
