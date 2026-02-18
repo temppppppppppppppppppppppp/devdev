@@ -161,7 +161,9 @@ class WorldStateManager:
                 if not isinstance(dest, dict):
                     continue
                 _dest_name = dest.get("name", "")
-                if _dest_name and _dest_name in _existing_destroyed_names:  # [V70] 이미 등록됨
+                if not _dest_name:
+                    continue
+                if _dest_name in _existing_destroyed_names:  # [V70] 이미 등록됨
                     continue
                 self._state["destroyed"].append(
                     {

@@ -176,17 +176,24 @@ class Stage3Orchestrator:
         """[V60.96] StateTracker lazy init — app 인스턴스에 할당"""
         app = self.app
         if not hasattr(app, "state_tracker") or app.state_tracker is None:
-            from modules.domain.agents.state_tracker import StateTracker
+            try:
+                from modules.domain.agents.state_tracker import StateTracker
 
-            app.state_tracker = StateTracker(preset_registry=app.preset_registry, llm_client=app.sys.api_client)
-            all_arcs = app.current_project.db.load_anchor("arcs") or []
-            _g = app.selected_genre.get("type", "") if app.selected_genre else ""
-            app.state_tracker.full_extract_from_arcs(all_arcs, genre=_g)
-            if app.state_tracker.npc_registry:
-                dead_count = sum(1 for info in app.state_tracker.npc_registry.values() if info.get("status") == "dead")
-                app.ui.log(
-                    f"      👤 [V60.96] StateTracker 초기화: NPC {len(app.state_tracker.npc_registry)}명 (사망: {dead_count}명)"
-                )
+                app.state_tracker = StateTracker(preset_registry=app.preset_registry, llm_client=app.sys.api_client)
+                all_arcs = app.current_project.db.load_anchor("arcs") or []
+                _g = app.selected_genre.get("type", "") if app.selected_genre else ""
+                app.state_tracker.full_extract_from_arcs(all_arcs, genre=_g)
+                if app.state_tracker.npc_registry:
+                    dead_count = sum(
+                        1 for info in app.state_tracker.npc_registry.values() if info.get("status") == "dead"
+                    )
+                    app.ui.log(
+                        f"      👤 [V60.96] StateTracker 초기화: NPC {len(app.state_tracker.npc_registry)}명 (사망: {dead_count}명)"
+                    )
+            except Exception as _st_err:
+                # [Sweep54] sister 메서드(WorldState, FactLedger)와 동일한 비차단 패턴
+                app.ui.log(f"      ⚠️ [V60.96] StateTracker 초기화 실패 (비차단): {str(_st_err)[:60]}")
+                app.state_tracker = None
 
     def _init_world_state_if_needed(self) -> None:
         """[V68] WorldStateManager lazy init — app 인스턴스에 할당"""
@@ -239,8 +246,12 @@ class Stage3Orchestrator:
         """단일 에피소드 Blueprint 생성 처리. 루프 상태를 dict로 반환."""
         ctx = self.ctx
 
-        # 이미 설계도가 존재하면 스킵
-        if ctx.current_project.get_blueprint(working_ep):
+        # 이미 설계도가 존재하면 스킵 — [Sweep54] prev_blueprints에도 추가 (연속성 gap 방지)
+        _existing_bp = ctx.current_project.get_blueprint(working_ep)
+        if _existing_bp:
+            prev_blueprints.append(_existing_bp)
+            if len(prev_blueprints) > 30:
+                prev_blueprints[:] = prev_blueprints[-30:]
             ctx.ui.log(f"   ⏭️  제{working_ep}화 - 기존 설계도 존재, 스킵")
             return {"next_ep": working_ep + 1, "success_count": success_count, "fail_count": fail_count}
 

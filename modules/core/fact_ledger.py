@@ -88,15 +88,19 @@ class FactLedger:
         if not state_changes or not isinstance(state_changes, dict):
             return
 
-        # npc_deaths
+        # npc_deaths — [Sweep54] WorldState와 동일하게 str/dict 모두 처리
         for death in state_changes.get("npc_deaths") or []:  # [V70] None 방어
-            if not isinstance(death, dict):
+            if isinstance(death, dict):
+                name = death.get("name", "")
+            elif isinstance(death, str):
+                name = death
+            else:
                 continue
-            name = death.get("name", "")
             if not name:
                 _logger.warning(f"[FactLedger] NPC death entry missing name: {death}")
                 continue
-            self._upsert_character(name, ep_num, status="dead", note=f"사망 (원인: {death.get('cause', '불명')})")
+            cause = death.get("cause", "불명") if isinstance(death, dict) else "사망"
+            self._upsert_character(name, ep_num, status="dead", note=f"사망 (원인: {cause})")
 
         # relationship_changes
         for rel in state_changes.get("relationship_changes") or []:  # [V70] None 방어
@@ -463,6 +467,8 @@ class FactLedger:
         if numbers:
             parts.append(f"\n[주요 수치 ({len(numbers)}개)]")
             for key, info in list(numbers.items())[:15]:
+                if not isinstance(info, dict):
+                    continue
                 unit = info.get("unit", "")
                 unit_str = f" {unit}" if unit else ""
                 parts.append(f"  - {key}: {info.get('value', '?')}{unit_str} (ep{info.get('last_ep', '?')} 기준)")

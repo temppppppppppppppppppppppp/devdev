@@ -359,7 +359,9 @@ class Stage4ContextBuilder:
                 _mc_parts.append(_item_state)
 
         if self.ctx.state_tracker:
-            _plot_suspension = self.ctx.state_tracker.get_plot_suspension_summary(arc_data.get("arc_no", 0))
+            _plot_suspension = self.ctx.state_tracker.get_plot_suspension_summary(
+                arc_data.get("arc_no", 0) if arc_data else 0
+            )
             if _plot_suspension:
                 _mc_parts.append(_plot_suspension)
 
@@ -415,7 +417,13 @@ class Stage4ContextBuilder:
                     _npc_names = []
                     for _field in ["npc_deaths", "relationship_changes", "npc_injuries"]:
                         for _entry in _sc.get(_field) or []:
-                            _n = _entry.get("name") or _entry.get("npc", "")
+                            # [Sweep54] string 엔트리 대응 (stage4_post_processor가 npc_deaths를 str로 생성)
+                            if isinstance(_entry, dict):
+                                _n = _entry.get("name") or _entry.get("npc", "")
+                            elif isinstance(_entry, str):
+                                _n = _entry
+                            else:
+                                continue
                             if _n:
                                 _npc_names.append(_n)
                     if _npc_names:
