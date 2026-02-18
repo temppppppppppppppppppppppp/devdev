@@ -895,6 +895,10 @@ class Analyst(BaseAgent):
 
         # 8. 메타데이터 최종 동기화 및 반환 (인과율 유지)
         if not final_arc_data:
+            # [Sweep44] draft_result이 None일 수 있음 (전체 재시도 실패 시)
+            if draft_result is None:
+                draft_result = {"arc_no": clean_arc_no, "ep_count": target_ep_count}
+                logging.warning("[Analyst] 전체 재시도 실패 — 최소 폴백 Arc 데이터 사용")
             final_arc_data = draft_result
             final_arc_data["_actual_ep_count"] = actual_ep_count  # [V60.31]
 

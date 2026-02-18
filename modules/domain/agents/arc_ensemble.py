@@ -471,6 +471,12 @@ class ArcEnsembleGenerator(BaseAgent):
         if not isinstance(tactical, str):
             tactical = str(tactical) if tactical else ""
         ep_count = candidate.get("ep_count", 5)
+        # [Sweep44] LLM이 문자열 반환 시 int 변환 (TypeError 방지)
+        if not isinstance(ep_count, int):
+            try:
+                ep_count = int(ep_count)
+            except (ValueError, TypeError):
+                ep_count = 5
         min_length = ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE  # 3화=1500자, 5화=2500자, 7화=3500자
         recommended_length = ep_count * 600  # 권장: 화당 600자
         if len(tactical) < min_length:
@@ -485,8 +491,7 @@ class ArcEnsembleGenerator(BaseAgent):
             score -= 5
             issues.append(f"tactical_doc 분량 보통: {len(tactical)}자")
 
-        # 화수별 구분 검사
-        ep_count = candidate.get("ep_count", 5)
+        # 화수별 구분 검사 (ep_count는 상단에서 이미 int 변환됨)
         ep_mentions = len(re.findall(r"제\s*\d+\s*화", tactical))
         if ep_mentions < ep_count:
             score -= 5
