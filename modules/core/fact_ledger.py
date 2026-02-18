@@ -519,11 +519,22 @@ class FactLedger:
         }
 
     def rollback_to(self, target_ep: int) -> None:
-        """[D-2] 특정 에피소드 이전 상태로 초기화 후 저장."""
+        """[D-2] 특정 에피소드 이전 상태로 롤백 (episode_bibles 리플레이)."""
         _logger.warning(
-            "[D-2] FactLedger 롤백: ep %d 이후 데이터 초기화 (이전 last_updated_ep=%d)",
+            "[D-2] FactLedger 롤백: ep %d 이전으로 복원 (이전 last_updated_ep=%d)",
             target_ep,
             self._ledger.get("last_updated_ep", 0),
         )
         self._ledger = self._empty_ledger()
+        # [Sweep64] 1~(target_ep-1) 에피소드의 state_changes + bible_delta 리플레이
+        for ep in range(1, target_ep):
+            try:
+                bible = self.db.get_episode_bible(ep)
+                if bible:
+                    sc = bible.get("state_changes", {})
+                    if sc:
+                        self.update_from_state_changes(ep, sc)
+                    self.update_from_bible_delta(ep, bible)
+            except Exception as e:
+                _logger.warning("[D-2] FactLedger 리플레이 실패 ep %d: %s", ep, e)
         self.save()

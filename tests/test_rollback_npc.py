@@ -110,40 +110,110 @@ class TestGetRollbackImpact:
 
 
 class TestWorldStateRollback:
-    def test_rollback_resets_to_init_state(self, db):
+    def test_rollback_replays_episodes_before_target(self, db):
+        """[Sweep64] rollback_to는 target_ep 이전 에피소드를 리플레이해야 함."""
         from modules.core.world_state import WorldStateManager
 
-        ws = WorldStateManager(db)
-        ws.update_from_state_changes(
-            5,
+        # ep 2: NPC 등장 (episode_bible에 저장)
+        db.save_episode_bible(
+            2,
             {
-                "npc_deaths": [{"name": "노사부", "cause": "전투"}],
+                "state_changes": {"npc_deaths": [], "relationship_changes": [{"npc": "이청풍", "to": "동맹"}]},
+                "new_npcs": ["이청풍"],
             },
         )
+        # ep 5: NPC 사망 (episode_bible에 저장)
+        db.save_episode_bible(
+            5,
+            {
+                "state_changes": {"npc_deaths": [{"name": "노사부", "cause": "전투"}]},
+            },
+        )
+
+        ws = WorldStateManager(db)
+        ws.update_from_state_changes(2, {"relationship_changes": [{"npc": "이청풍", "to": "동맹"}]})
+        ws.update_from_state_changes(5, {"npc_deaths": [{"name": "노사부", "cause": "전투"}]})
         ws.save()
         assert "노사부" in ws._state["dead_npcs"]
 
+        # rollback_to(3): ep 1~2만 리플레이 → 이청풍 관계는 살아있고, 노사부 사망은 없어야 함
         ws.rollback_to(3)
+
+        assert ws._state["dead_npcs"] == {}
+        assert ws._state["relationships"].get("이청풍") == "동맹"
+        assert ws._state["last_updated_ep"] == 2
+
+    def test_rollback_to_1_gives_empty_state(self, db):
+        """rollback_to(1)이면 리플레이할 에피소드 없음 → 초기 상태."""
+        from modules.core.world_state import WorldStateManager
+
+        db.save_episode_bible(
+            5,
+            {
+                "state_changes": {"npc_deaths": [{"name": "노사부", "cause": "전투"}]},
+            },
+        )
+        ws = WorldStateManager(db)
+        ws.update_from_state_changes(5, {"npc_deaths": [{"name": "노사부", "cause": "전투"}]})
+        ws.save()
+
+        ws.rollback_to(1)
 
         assert ws._state["dead_npcs"] == {}
         assert ws._state["last_updated_ep"] == 0
 
 
 class TestFactLedgerRollback:
-    def test_rollback_resets_to_empty_ledger(self, db):
+    def test_rollback_replays_episodes_before_target(self, db):
+        """[Sweep64] rollback_to는 target_ep 이전 에피소드를 리플레이해야 함."""
         from modules.core.fact_ledger import FactLedger
 
-        fl = FactLedger(db)
-        fl.update_from_state_changes(
-            5,
+        # ep 2: 관계 변화 (episode_bible에 저장)
+        db.save_episode_bible(
+            2,
             {
-                "npc_deaths": [{"name": "노사부", "cause": "전투"}],
+                "state_changes": {"relationship_changes": [{"npc": "이청풍", "to": "동맹"}]},
+                "new_npcs": ["이청풍"],
             },
         )
+        # ep 5: NPC 사망 (episode_bible에 저장)
+        db.save_episode_bible(
+            5,
+            {
+                "state_changes": {"npc_deaths": [{"name": "노사부", "cause": "전투"}]},
+            },
+        )
+
+        fl = FactLedger(db)
+        fl.update_from_state_changes(2, {"relationship_changes": [{"npc": "이청풍", "to": "동맹"}]})
+        fl.update_from_state_changes(5, {"npc_deaths": [{"name": "노사부", "cause": "전투"}]})
         fl.save()
         assert "노사부" in fl._ledger.get("characters", {})
 
+        # rollback_to(3): ep 1~2만 리플레이 → 이청풍은 존재, 노사부 사망은 없어야 함
         fl.rollback_to(3)
+
+        assert "이청풍" in fl._ledger["characters"]
+        chars = fl._ledger["characters"]
+        # 노사부는 ep5에서만 등장했으므로 리플레이에 없어야 함
+        assert chars.get("노사부", {}).get("status") != "dead"
+        assert fl._ledger["last_updated_ep"] == 2
+
+    def test_rollback_to_1_gives_empty_ledger(self, db):
+        """rollback_to(1)이면 리플레이할 에피소드 없음 → 빈 원장."""
+        from modules.core.fact_ledger import FactLedger
+
+        db.save_episode_bible(
+            5,
+            {
+                "state_changes": {"npc_deaths": [{"name": "노사부", "cause": "전투"}]},
+            },
+        )
+        fl = FactLedger(db)
+        fl.update_from_state_changes(5, {"npc_deaths": [{"name": "노사부", "cause": "전투"}]})
+        fl.save()
+
+        fl.rollback_to(1)
 
         assert fl._ledger["characters"] == {}
         assert fl._ledger["last_updated_ep"] == 0

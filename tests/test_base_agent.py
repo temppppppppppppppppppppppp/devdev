@@ -59,11 +59,12 @@ class TestExtractJsonRobustNormal:
         assert result["title"] == "제목"
 
     def test_nested_json(self, agent):
-        """중첩 JSON 평탄화"""
+        """[Sweep64] state_updates는 평탄화하지 않고 원본 보존"""
         text = json.dumps({"title": "테스트", "state_updates": {"location": "무림맹", "energy": 70}})
         result = agent._extract_json_robust(text)
-        assert result.get("location") == "무림맹"
-        assert result.get("energy") == 70
+        # state_updates는 _RECURSE_KEYS가 아니므로 원본 dict 보존
+        assert result.get("state_updates") == {"location": "무림맹", "energy": 70}
+        assert result.get("title") == "테스트"
 
 
 # ══════════════════════════════════════════════════════════════

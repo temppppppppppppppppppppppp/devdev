@@ -164,7 +164,7 @@ class ValidationOrchestrator:
 
         # TIER 2: SCORING
         scoring_model = config.get("scoring_model", "gemini-2.5-pro")
-        self.scoring = ScoringValidator(client=client, model=scoring_model, constitution=self.constitution)
+        self.scoring = ScoringValidator(client=client, model=scoring_model, constitution=self.constitution, genre=genre)
         self.scoring.pass_threshold = config.get("scoring_threshold", 70)
 
         # TIER 3: ADVISORY
@@ -522,7 +522,9 @@ class ValidationOrchestrator:
         # ═══════════════════════════════════════════════════════════════
         results["total_score"] = total_score
 
-        if total_score >= 85:
+        # [Sweep64] 무조건 PASS 임계값도 adaptive threshold 반영
+        _unconditional_pass = max(85, self.scoring.pass_threshold)
+        if total_score >= _unconditional_pass:
             final_decision = "PASS"
             feedback = f"우수한 품질 ({total_score}점)"
         elif total_score >= self.scoring.pass_threshold:

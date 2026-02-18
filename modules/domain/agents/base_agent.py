@@ -948,16 +948,13 @@ class BaseAgent:
                             final_dict[str(t).strip("'\" ")] = v
 
                         # 중첩 구조 해제 루프
+                        _RECURSE_KEYS = {"actual_truth", "ProjectData", "MasterBible"}
                         for k, val in node.items():
-                            if k in [
-                                "actual_truth",
-                                "state_updates",
-                                "ProjectData",
-                                "MasterBible",
-                                "content",
-                            ] and isinstance(val, dict | list):
+                            if k in _RECURSE_KEYS and isinstance(val, dict | list):
                                 process_node(val, depth + 1)
                             else:
+                                # [Sweep64] state_updates/content는 원본 키 보존
+                                # — 호출자가 result.get("state_updates") 등으로 접근
                                 clean_k = str(k).strip("'\" ")
                                 if clean_k not in final_dict or val is not None:
                                     final_dict[clean_k] = val

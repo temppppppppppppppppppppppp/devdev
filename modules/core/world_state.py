@@ -406,11 +406,21 @@ class WorldStateManager:
         return json.loads(json.dumps(self._state, ensure_ascii=False))
 
     def rollback_to(self, target_ep: int) -> None:
-        """[D-2] 특정 에피소드 이전 상태로 초기화 후 저장."""
+        """[D-2] 특정 에피소드 이전 상태로 롤백 (episode_bibles 리플레이)."""
         _logger.warning(
-            "[D-2] WorldState 롤백: ep %d 이후 데이터 초기화 (이전 last_updated_ep=%d)",
+            "[D-2] WorldState 롤백: ep %d 이전으로 복원 (이전 last_updated_ep=%d)",
             target_ep,
             self._state.get("last_updated_ep", 0),
         )
         self._state = json.loads(json.dumps(self._INIT_STATE, ensure_ascii=False))
+        # [Sweep64] 1~(target_ep-1) 에피소드의 state_changes를 리플레이
+        for ep in range(1, target_ep):
+            try:
+                bible = self.db.get_episode_bible(ep)
+                if bible:
+                    sc = bible.get("state_changes", {})
+                    if sc:
+                        self.update_from_state_changes(ep, sc)
+            except Exception as e:
+                _logger.warning("[D-2] WorldState 리플레이 실패 ep %d: %s", ep, e)
         self.save()
