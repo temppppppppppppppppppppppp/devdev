@@ -476,7 +476,10 @@ class Stage3Orchestrator:
 
         # DB에 저장
         ctx.current_project.save_episode_blueprint(working_ep, blueprint)
-        ctx.safe_commit()
+        if not ctx.safe_commit():
+            ctx.ui.log(f"   🚨 [DB] 제{working_ep}화 Blueprint 커밋 실패")
+            ctx.audit_event("db_commit_error", "blueprint commit failed", {"ep_num": working_ep})
+            return {"next_ep": working_ep + 1, "success_count": success_count, "fail_count": fail_count + 1}
 
         # prev_blueprints 업데이트
         prev_blueprints.append(blueprint)

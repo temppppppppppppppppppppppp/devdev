@@ -501,11 +501,7 @@ class ArcCorrector(BaseAgent):
         original_len = len(original_str)
         diff_len = abs(len(corrected_str) - original_len)
 
-        # 추가된 내용은 허용 (분량 확장)
-        if len(corrected_str) > original_len:
-            return True
-
-        # 삭제된 비율 체크
+        # [Sweep11] 확장/축소 모두 변경 비율 검증 (이전: 확장 시 무조건 통과)
         change_ratio = diff_len / max(original_len, 1)
         return change_ratio <= self.max_change_ratio
 
