@@ -224,7 +224,10 @@ class UnifiedArcValidator(BaseAgent):
     def _check_length(self, arc: dict) -> list[dict]:
         """[#1] 분량 체크"""
         issues = []
-        ep_count = arc.get("ep_count", 5)
+        try:
+            ep_count = int(arc.get("ep_count", 5))
+        except (TypeError, ValueError):
+            ep_count = 5
         tactical = arc.get("tactical_doc", "")
         if not isinstance(tactical, str):
             tactical = str(tactical) if tactical else ""

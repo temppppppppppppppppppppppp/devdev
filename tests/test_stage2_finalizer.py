@@ -37,7 +37,7 @@ def finalizer_ctx():
     ctx.state_tracker = SimpleNamespace(foo=0, bar=0)
 
     director = MagicMock()
-    director.audit_strategic_plan.return_value = {"decision": "PASS", "score": 80, "reason": "ok"}
+    director.audit_strategic_plan.return_value = {"decision": "PASS", "score": 95, "reason": "ok"}
     director.ask.return_value = "volume summary text long enough"
     ctx.agents = {"director": director}
     return ctx
@@ -251,7 +251,8 @@ class TestRunFinalize:
         kwargs = _make_finalize_kwargs(valid_refined_arc, draft_validator_passed=True, consensus_passed=True)
         result = asyncio.run(finalizer.run_finalize(**kwargs))
 
-        assert result["action"] == "break"
+        # [Phase 2.5] QualityGate(90) 적용 후 quota fallback PASS(50)는 REJECT→retry로 전환
+        assert result["action"] == "retry"
         finalizer.ctx.audit_event.assert_any_call(
             "v60_43_quota_override",
             "Arc accepted due to quota exhaustion",

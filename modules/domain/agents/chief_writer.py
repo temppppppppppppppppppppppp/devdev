@@ -21,6 +21,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FutureTimeoutError
 
+from modules.core.constants import smart_truncate
 from modules.models.manuscript import validate_manuscript_candidate
 
 from .base_agent import BaseAgent
@@ -458,7 +459,17 @@ class ChiefWriter(BaseAgent):
             # Self-Critique 결과에서 content 재추출
             try:
                 critiqued_data = json.loads(critiqued_manuscript)
-                final_content = critiqued_data.get("content") or manuscript_content
+                _crit_content = critiqued_data.get("content")
+                # [TypeSafety] content가 dict/list일 수 있음 → 문자열 변환
+                if isinstance(_crit_content, list):
+                    _crit_content = "\n".join(str(item) for item in _crit_content)
+                elif isinstance(_crit_content, dict):
+                    _crit_content = (
+                        _crit_content.get("text", "")
+                        or _crit_content.get("content", "")
+                        or json.dumps(_crit_content, ensure_ascii=False)
+                    )
+                final_content = _crit_content or manuscript_content
                 final_title = critiqued_data.get("title", data.get("title", f"제{ep_num}화"))
                 final_state = critiqued_data.get("state_updates", data.get("state_updates", {}))
             except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] IMPORTANT: critique parse, safe default
@@ -580,6 +591,16 @@ class ChiefWriter(BaseAgent):
 ⚠️ 위 피드백을 100% 반영하지 않으면 다시 REJECT됩니다.
 """
 
+        _sb = previous_attempt.get("score_breakdown", {})
+        if isinstance(_sb, dict) and _sb:
+            _sb_lines = [f"  - {k}: {v}" for k, v in _sb.items() if isinstance(v, int | float)]
+            if _sb_lines:
+                enhanced_feedback += "\n[세부 채점]\n" + "\n".join(_sb_lines)
+
+        _vw = previous_attempt.get("validation_warnings", [])
+        if isinstance(_vw, list) and _vw:
+            enhanced_feedback += "\n[Python 검증 경고]\n" + "\n".join(f"- {w}" for w in _vw[:10])
+
         # 실패 학습 제약 구성
         failure_constraints = ""
         if previous_attempt.get("action_items"):
@@ -683,14 +704,14 @@ class ChiefWriter(BaseAgent):
 
             _patch_section = _patch_template.format(
                 feedback_text=_esc(director_feedback),
-                original_manuscript=_esc(original_manuscript[:30000]),
+                original_manuscript=_esc(smart_truncate(original_manuscript, max_chars=30000, head_chars=5000)),
             )
         else:
             # YAML 로드 실패 시 인라인 폴백
             _patch_section = (
                 f"[패치 모드: 원본 보존 + 지적사항만 수정]\n\n"
                 f"## Director 피드백\n{director_feedback}\n\n"
-                f"## 원본 원고\n{original_manuscript[:30000]}\n\n"
+                f"## 원본 원고\n{smart_truncate(original_manuscript, max_chars=30000, head_chars=5000)}\n\n"
                 f"전면 재작성하지 마세요. 지적된 부분만 고치세요."
             )
 

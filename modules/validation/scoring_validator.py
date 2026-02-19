@@ -124,7 +124,16 @@ class ScoringValidator:
         all_scores = {**python_scores, **llm_scores}
 
         # [V69] 값 타입 방어 — LLM이 비정상 구조 반환 시 안전 합산
-        total_score = sum(v.get("score", 0) if isinstance(v, dict) else 0 for v in all_scores.values())
+        def _safe_score(v):
+            if not isinstance(v, dict):
+                return 0
+            s = v.get("score", 0)
+            try:
+                return float(s)
+            except (TypeError, ValueError):
+                return 0
+
+        total_score = sum(_safe_score(v) for v in all_scores.values())
         max_score = 100
         passed = total_score >= self.pass_threshold
 
@@ -744,8 +753,15 @@ Step 6: Article 7 (독자 대리만족) 분석
             if not isinstance(item_data, dict):
                 continue
 
-            raw_score = item_data.get("score", 0)
-            max_score = item_data.get("max", 0)
+            # [TypeSafety] LLM이 score/max를 문자열로 반환할 수 있으므로 float 변환
+            try:
+                raw_score = float(item_data.get("score", 0))
+            except (TypeError, ValueError):
+                raw_score = 0.0
+            try:
+                max_score = float(item_data.get("max", 0))
+            except (TypeError, ValueError):
+                max_score = 0.0
             weight = weights.get(item_name, 1.0)
 
             # 가중치 적용

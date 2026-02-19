@@ -860,6 +860,15 @@ class DirectorQualityAuditor:
 
         vote_tasks = [(i, 0.1 + (i * 0.05)) for i in range(1, self._d.consistency_votes)]
 
+        if not vote_tasks:
+            # [G1] 추가 투표가 없으면 첫 평가만으로 결과 반환
+            first_eval["self_consistency"] = {
+                "votes": 1,
+                "reason": "no_extra_votes",
+                "pass_votes": 1 if first_decision == "PASS" else 0,
+            }
+            return first_eval
+
         # [Phase 3-Obs] 에이전트 레벨 ThreadPoolExecutor 계측
         _tp_t0 = time.monotonic()
 

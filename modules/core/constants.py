@@ -1,9 +1,11 @@
-import logging
-
 """
 [V40 Enhanced] 시스템 전역 상수 정의
 모든 매직 넘버와 설정값을 중앙에서 관리
 """
+
+import logging
+
+from modules.validation.threshold_helper import _threshold
 
 # ============================================================================
 # [V40] 장르 시스템 상수
@@ -90,16 +92,37 @@ class RecoveryLimits:
 class ManuscriptLimits:
     """[V64.P4] 원고 분량 임계값 중앙 관리 (Single Source of Truth)."""
 
-    MIN_LENGTH = 4000  # 최소 글자수 (blocking - 이 미만 자동 REJECT)
-    WARNING_LENGTH = 4500  # 경고 글자수 (scoring 감점 시작)
-    TARGET_LENGTH = 5000  # 목표 글자수 (작가 지시용)
-    MAX_LENGTH = 15000  # 최대 글자수
+    MIN_LENGTH = _threshold("manuscript.min_length", 4000)  # 최소 글자수 (blocking - 이 미만 자동 REJECT)
+    WARNING_LENGTH = _threshold("manuscript.warning_length", 4500)  # 경고 글자수 (scoring 감점 시작)
+    TARGET_LENGTH = _threshold("manuscript.target_length", 5000)  # 목표 글자수 (작가 지시용)
+    MAX_LENGTH = _threshold("manuscript.max_length", 15000)  # 최대 글자수
 
 
 class ContextLimits:
     """컨텍스트 크기 제한 상수."""
 
     MAX_CONTEXT_CHARS = 200_000  # 200K 문자 절삭 임계값
+
+
+def smart_truncate(text: str, max_chars: int = ContextLimits.MAX_CONTEXT_CHARS, head_chars: int = 20_000) -> str:
+    """Preserve head and tail when truncating long context text."""
+    if not isinstance(text, str):
+        text = str(text or "")
+
+    if len(text) <= max_chars:
+        return text
+
+    if max_chars <= 0:
+        return ""
+
+    if head_chars < 0:
+        head_chars = 0
+
+    tail_budget = max_chars - head_chars - 50
+    if tail_budget <= 0:
+        return text[:max_chars]
+
+    return text[:head_chars] + "\n\n...(중간 생략)...\n\n" + text[-tail_budget:]
 
 
 class WritingLimits:
@@ -511,8 +534,8 @@ class AuditEvents:
 class PatchModeThresholds:
     """[Phase 3-5B] 점수 기반 수정 모드 분기 임계값"""
 
-    REWRITE = 50  # 미만: 전면 재작성 (기존 동작)
-    PATCH = 80  # 50~80: 부분 수정 (패치 모드). 80 이상은 Director PASS.
+    REWRITE = _threshold("patch_mode.rewrite_below", 50)  # 미만: 전면 재작성 (기존 동작)
+    PATCH = _threshold("patch_mode.patch_below", 80)  # 50~80: 부분 수정 (패치 모드). 80 이상은 Director PASS.
 
 
 # ============================================================================

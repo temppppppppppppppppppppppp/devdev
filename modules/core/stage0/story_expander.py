@@ -213,7 +213,12 @@ JSON:
 [{{"name": "이름", "role": "역할", "desc": "설명"}}]
 ```
 """
-        return self._parse_json(self._call_llm(prompt)) or []
+        result = self._parse_json(self._call_llm(prompt))
+        if isinstance(result, list):
+            return result
+        if isinstance(result, dict):
+            return [result]
+        return []
 
     # ============================================
     # Phase 3: Treatment 생성
@@ -402,6 +407,9 @@ JSON:
 ```
 """
             result = self._parse_json(self._call_llm(prompt)) or []
+            # [G24] dict 반환 시 list로 래핑 (extend는 iterable of items 기대)
+            if isinstance(result, dict):
+                result = [result]
             detailed.extend(result if result else batch)
 
         return detailed

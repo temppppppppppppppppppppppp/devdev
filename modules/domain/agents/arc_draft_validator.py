@@ -305,6 +305,8 @@ class ArcDraftValidator:
             if not curr_injury or curr_injury in ["없음", ""]:
                 # 회복 장면이 있는지 확인
                 tactical = arc.get("tactical_doc", "")
+                if isinstance(tactical, dict):
+                    tactical = "\n".join(f"{k}: {v}" for k, v in tactical.items())
                 has_recovery = any(kw in tactical[:1000] for kw in ["회복", "치료", "조식", "휴식", "요양"])
 
                 if not has_recovery:
@@ -384,7 +386,10 @@ class ArcDraftValidator:
 
         # [V60.29] 화별 분할 검증 강화
         ep_start = arc.get("ep_start", 1)
-        ep_count = arc.get("ep_count", 5)
+        try:
+            ep_count = int(arc.get("ep_count", 5))
+        except (TypeError, ValueError):
+            ep_count = 5
 
         # [V60.41] 분량 검증 - 모두 WARNING (재생성으로 해결 가능)
         min_length = ep_count * Stage2Limits.MIN_CHARS_PER_EPISODE  # 최소 기준

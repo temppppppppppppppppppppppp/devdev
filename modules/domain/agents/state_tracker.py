@@ -515,12 +515,14 @@ class StateTracker:
             items_consumed = state_constraints.get("items_consumed", [])
 
             for item in items_acquired:
+                item = str(item) if isinstance(item, dict) else item
                 if item not in self.acquired_items:
                     # 획득 에피소드 추정 (checkpoint에서)
                     acq_ep = self._find_acquisition_episode(item, checkpoints, base_ep)
                     self.acquired_items[item] = acq_ep
 
             for item in items_consumed:
+                item = str(item) if isinstance(item, dict) else item
                 if item not in self.consumed_items:
                     cons_ep = self._find_consumption_episode(item, checkpoints, base_ep)
                     self.consumed_items[item] = cons_ep

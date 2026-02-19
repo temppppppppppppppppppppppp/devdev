@@ -251,7 +251,10 @@ class StateLockedArcGenerator(BaseAgent):
                 "location": end_state["location"],
                 "energy": end_state["energy"],
                 "injuries": end_state["injuries"],
-                "equipment": current_state.get("equipment", []) + end_state.get("items_acquired", []),
+                "equipment": [
+                    str(x) if isinstance(x, dict) else x
+                    for x in current_state.get("equipment", []) + end_state.get("items_acquired", [])
+                ],
             }
             # 소모 아이템 제거
             for item in end_state.get("items_consumed", []):
@@ -356,7 +359,9 @@ class StateLockedArcGenerator(BaseAgent):
         if prev_episode:
             prev_summary = prev_episode.get("text", "")[:500] + "..."
 
-        equipment_str = ", ".join(start_state.get("equipment", [])) or "없음"
+        equipment_str = (
+            ", ".join(str(x) if isinstance(x, dict) else x for x in start_state.get("equipment", [])) or "없음"
+        )
         protag_name = getattr(self, "protagonist_name", "주인공")
 
         prompt = EPISODE_TEMPLATE.format(
@@ -525,8 +530,8 @@ class StateLockedArcGenerator(BaseAgent):
                     "injuries": end_state["injuries"],
                     "internal_energy": end_state["energy"],
                 },
-                "items_acquired": list(set(all_acquired)),
-                "items_consumed": list(set(all_consumed)),
+                "items_acquired": list({str(x) if isinstance(x, dict) else x for x in all_acquired}),
+                "items_consumed": list({str(x) if isinstance(x, dict) else x for x in all_consumed}),
             },
             "joint_docs": {
                 "final_location": end_state["location"],
@@ -536,7 +541,7 @@ class StateLockedArcGenerator(BaseAgent):
             "status_shadow": {
                 "internal_energy_loss": f"{energy_loss}%",
                 "expected_injuries": end_state["injuries"],
-                "item_consumption": list(set(all_consumed)),
+                "item_consumption": list({str(x) if isinstance(x, dict) else x for x in all_consumed}),
             },
         }
 

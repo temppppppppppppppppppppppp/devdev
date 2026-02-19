@@ -591,6 +591,17 @@ class DialogueBeatInjector:
                 max_consecutive = max(max_consecutive, consecutive_count)
                 consecutive_count = 0
 
+        # [G14] 루프 종료 후 마지막 연속 대화 구간 플러시
+        if consecutive_count >= 3:
+            issues.append(
+                {
+                    "position": len(parts),
+                    "consecutive": consecutive_count,
+                    "suggestion": "대화 비트 삽입 (행동, 표정, 환경 반응)",
+                }
+            )
+        max_consecutive = max(max_consecutive, consecutive_count)
+
         return {"total_dialogues": len(dialogues), "max_consecutive": max_consecutive, "issues": issues}
 
     def check_environment_anchors(self, text: str) -> dict[str, Any]:

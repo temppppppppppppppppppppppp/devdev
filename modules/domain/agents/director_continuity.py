@@ -8,7 +8,7 @@ Entity 일관성, 원고 역사 충돌 검사, Blueprint/Manuscript 연속성 �
 import json
 import logging
 
-from modules.core.constants import ContextLimits
+from modules.core.constants import ContextLimits, smart_truncate
 from modules.core.prompt_loader import PromptLoader
 
 
@@ -365,23 +365,23 @@ class DirectorContinuityValidator:
         if not manuscript_history:
             return {"decision": "PASS", "conflicts": [], "summary": "이전 원고 없음"}
 
-        # [V67] 최근 30화 참조 (Gemini 대용량 컨텍스트 활용)
-        recent_history = manuscript_history[-30:]
+        # [V67] 설정 기반 참조 화수 사용
+        recent_history = manuscript_history[-self._d.history_check_max_episodes :]
 
         # [V67] 역사 텍스트 구성 — 전문 사용 (요약 대신)
         history_parts = []
         for h in recent_history:
             h_ep = h.get("ep_num", "?")
-            # 전문 사용 (Gemini 컨텍스트 윈도우가 크므로 전문 전달)
-            h_text = h.get("text", "") or h.get("summary", "")
+            if use_summary:
+                h_text = h.get("summary", "") or h.get("text", "")[:500]
+            else:
+                h_text = h.get("text", "") or h.get("summary", "")
             if h_text:
                 history_parts.append(f"[제{h_ep}화]\n{h_text}")
 
         history_text = "\n\n---\n\n".join(history_parts)
 
-        # [V67] 200K자까지 허용 (Gemini 컨텍스트 윈도우 활용)
-        if len(history_text) > ContextLimits.MAX_CONTEXT_CHARS:
-            history_text = history_text[: ContextLimits.MAX_CONTEXT_CHARS] + "\n... (이하 생략)"
+        history_text = smart_truncate(history_text)
 
         # [V67.1] 프롬프트 구성 (story_context 추가)
         prompt = self._prompt_loader.load(
@@ -389,7 +389,7 @@ class DirectorContinuityValidator:
             "MANUSCRIPT_HISTORY_CONFLICT_PROMPT",
             ep_num=ep_num,
             manuscript_history=self._d._escape_braces(history_text),
-            current_manuscript=self._d._escape_braces(current_manuscript[:12000]),
+            current_manuscript=self._d._escape_braces(current_manuscript),
             story_context=self._d._escape_braces(story_context) if story_context else "(작품 설정 정보 없음)",
         )
         if not prompt:
@@ -662,7 +662,7 @@ class DirectorContinuityValidator:
             return {"decision": "UNKNOWN", "issues": [], "feedback": "", "error": str(e)}
 
     def check_manuscript_continuity_with_cache(
-        self, new_manuscript: str, ep_num: int, db=None, limit: int = 30
+        self, new_manuscript: str, ep_num: int, db=None, limit: int = 30, story_context: str = ""
     ) -> dict:
         """
         [V61.5] 이전 Manuscript 컨텍스트 캐싱 기반 연속성 검증
@@ -708,7 +708,7 @@ class DirectorContinuityValidator:
                 logging.info(f"♻️ [V61.5] Manuscript 캐시 재사용 (ep={ep_num})")
 
             # 캐시가 있으면 캐시 기반 질의, 없으면 일반 질의
-            # [V67.1] story_context 추가 (캐시 경로에서는 빈 값 전달)
+            # [V67.1] story_context 추가
             prompt = self._prompt_loader.load(
                 "director",
                 "MANUSCRIPT_HISTORY_CONFLICT_PROMPT",
@@ -716,8 +716,8 @@ class DirectorContinuityValidator:
                 manuscript_history="(캐시된 컨텍스트 참조)"
                 if cache_result.get("cache_name")
                 else self._d._escape_braces(context_text[: ContextLimits.MAX_CONTEXT_CHARS]),
-                current_manuscript=self._d._escape_braces(new_manuscript[:12000]),  # [V70] 중괄호 이스케이프
-                story_context="(캐시 경로 — 설정 정보 미전달)",
+                current_manuscript=self._d._escape_braces(new_manuscript),  # [V70] 중괄호 이스케이프
+                story_context=self._d._escape_braces(story_context) if story_context else "(작품 설정 정보 없음)",
             )
             if not prompt:
                 return {

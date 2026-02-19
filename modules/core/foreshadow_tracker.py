@@ -132,6 +132,8 @@ class ForeshadowTracker:
 
     def _normalize_hook(self, hook: str) -> str:
         """복선 키 정규화"""
+        if not isinstance(hook, str):
+            hook = str(hook) if hook else ""
         return re.sub(r"\s+", " ", hook.strip().lower())
 
     def plant(

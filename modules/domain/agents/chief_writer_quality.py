@@ -361,6 +361,13 @@ class ChiefWriterQualityGate:
         try:
             data = json.loads(manuscript)
             content = data.get("content", "")
+            # [TypeSafety] content가 dict/list일 수 있음 → 문자열 변환
+            if isinstance(content, list):
+                content = "\n".join(str(item) for item in content)
+            elif isinstance(content, dict):
+                content = content.get("text", "") or json.dumps(content, ensure_ascii=False)
+            elif not isinstance(content, str):
+                content = str(content) if content else ""
         except (json.JSONDecodeError, ValueError, TypeError):  # [V64.P4] JSON parse with safe default
             content = manuscript
 

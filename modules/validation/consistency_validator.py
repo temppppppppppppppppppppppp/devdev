@@ -355,7 +355,7 @@ class ConsistencyValidator:
             if item_name not in manuscript:
                 continue
 
-            cannot_be_used_for = item_data.get("cannot_be_used_for", [])
+            cannot_be_used_for = item_data.get("cannot_be_used_for") or []
             transformation_allowed = item_data.get("transformation_allowed", True)
 
             # 금지된 용도로 사용되었는지 확인

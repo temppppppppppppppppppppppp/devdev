@@ -140,7 +140,7 @@ class TestBlueprintPatchIntegration:
         bp_patched = {"ep_num": 1, "scene_list": [{"scene_no": 1, "summary": "패치됨"}]}
 
         # retry 0: 생성 성공 → REJECT (score=60)
-        # retry 1: 패치 시도 → 생성 성공 → PASS
+        # retry 1: 패치 시도 → 생성 성공 → PASS (QualityGate 90+)
         blueprint_generator.constraint_compiler.compile.return_value = {}
         blueprint_generator.ensemble.generate_ensemble.side_effect = [
             (bp1, [bp1]),  # retry 0: 정상 생성
@@ -148,7 +148,7 @@ class TestBlueprintPatchIntegration:
         ]
         blueprint_generator.validator.validate.side_effect = [
             ("REJECT", {"score": 60, "feedback": "밀도 부족", "issues": []}),
-            ("PASS", {"score": 85, "issues": [], "confidence": 90}),
+            ("PASS", {"score": 95, "issues": [], "confidence": 90}),
         ]
 
         result, pipeline = blueprint_generator.generate(
@@ -174,7 +174,7 @@ class TestBlueprintPatchIntegration:
         ]
         blueprint_generator.validator.validate.side_effect = [
             ("REJECT", {"score": 30, "feedback": "근본적 재설계 필요", "issues": []}),
-            ("PASS", {"score": 80, "issues": [], "confidence": 85}),
+            ("PASS", {"score": 95, "issues": [], "confidence": 85}),
         ]
 
         result, pipeline = blueprint_generator.generate(

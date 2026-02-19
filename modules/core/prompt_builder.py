@@ -579,6 +579,7 @@ class PromptBuilder:
             items_acquired = state_constraints.get("items_acquired", [])
             if items_acquired:
                 for item in items_acquired:
+                    item = str(item) if isinstance(item, dict) else item
                     if item and item not in _seen_item_names:
                         _seen_item_names.add(item)
                         all_acquired_items.append(f"Arc{arc_label}: {item}")
@@ -587,6 +588,7 @@ class PromptBuilder:
             prev_inventory = prev_joint.get("physical_inventory", [])
             if isinstance(prev_inventory, list):
                 for item in prev_inventory:
+                    item = str(item) if isinstance(item, dict) else item
                     if item and item not in _seen_item_names:
                         _seen_item_names.add(item)
                         all_acquired_items.append(f"Arc{arc_label}: {item}")

@@ -161,6 +161,11 @@ class PowerScalingTracker:
         Returns:
             {"success": bool, "delta": int, "warning": str or None}
         """
+        # [TypeSafety] LLM이 power_level을 문자열("85")로 반환할 수 있음
+        try:
+            power = int(power)
+        except (TypeError, ValueError):
+            power = 0
         power = max(0, min(100, power))
         tier = PowerTier.from_power(power)
 
@@ -314,6 +319,8 @@ class PowerScalingTracker:
         """
         if not justification:
             return ("none", 5, [])
+        if not isinstance(justification, str):
+            justification = str(justification)
 
         justification_lower = justification.lower()
         matched_keywords = []

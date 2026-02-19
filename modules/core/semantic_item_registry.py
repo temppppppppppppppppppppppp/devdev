@@ -136,6 +136,7 @@ class SemanticItemRegistry:
         if not name:
             return ""
 
+        name = str(name) if isinstance(name, dict) else name
         normalized = name.strip()
 
         # 수식어 제거
@@ -711,6 +712,8 @@ class SemanticItemRegistry:
 
             # equipment에서도 추출 (주인공 소지품)
             arc_end_state = state_constraints.get("arc_end_state") or {}  # [V70] None 방어
+            if not isinstance(arc_end_state, dict):
+                arc_end_state = {}
             equipment = arc_end_state.get("equipment") or []  # [V70] None 방어
             if isinstance(equipment, list):
                 for item in equipment:

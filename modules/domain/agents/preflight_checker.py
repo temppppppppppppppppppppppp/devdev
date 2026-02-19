@@ -197,7 +197,11 @@ class PreflightChecker(BaseAgent):
                 ep_e = arc.get("ep_end", "?")
                 end_loc = arc.get("joint_docs", {}).get("final_location", "?")
                 items = (arc.get("state_constraints") or {}).get("items_acquired", [])  # [V70] None 방어
-                item_str = ", ".join(items[:10]) if isinstance(items, list) and items else "없음"
+                item_str = (
+                    ", ".join(str(x) if isinstance(x, dict) else x for x in items[:10])
+                    if isinstance(items, list) and items
+                    else "없음"
+                )
                 # 핵심 NPC 추출 (deaths + relationship_changes)
                 sc = arc.get("state_changes", {})
                 key_npcs = set()
@@ -331,12 +335,12 @@ class PreflightChecker(BaseAgent):
             # items_acquired
             acquired = (arc.get("state_constraints") or {}).get("items_acquired", [])  # [V70] None 방어
             if isinstance(acquired, list):
-                items.update(acquired)
+                items.update(str(x) if isinstance(x, dict) else x for x in acquired)
 
             # grants_received
             received = (arc.get("state_constraints") or {}).get("grants_received", [])  # [V70] None 방어
             if isinstance(received, list):
-                grants.update(received)
+                grants.update(str(x) if isinstance(x, dict) else x for x in received)
 
             # 마지막 위치
             joint = arc.get("joint_docs") or {}  # [V70] None 방어

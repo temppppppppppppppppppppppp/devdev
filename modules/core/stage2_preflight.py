@@ -3,6 +3,8 @@
 import concurrent.futures
 import logging
 
+from modules.validation.threshold_helper import _threshold
+
 
 class Stage2PreflightAnalysis:
     """State setup, arc analysis, and enrichment for Stage 2 preflight."""
@@ -461,7 +463,9 @@ class Stage2PreflightAnalysis:
                     try:
                         if self.ctx.memory and current_ep_start > 1:
                             _s2_vector_ctx = self.ctx.memory.retrieve_high_res_context(
-                                enriched_block.get("block_theme", ""), current_ep_start, n_results=2
+                                enriched_block.get("block_theme", ""),
+                                current_ep_start,
+                                n_results=_threshold("context.vector_max_results_s2", 5),
                             )
                     except Exception as e:  # [V64.P4] OPTIONAL: vector search — non-blocking
                         self.ctx.audit_event("s2_vector_search_failed", str(e)[:100])

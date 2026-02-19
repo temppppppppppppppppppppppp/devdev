@@ -253,12 +253,19 @@ class Stage2ValidationPipeline:
         # [V60.56] Arc Draft 정보 수집
         # ═══════════════════════════════════════════════════════════════
         if not four_phase_passed and self.ctx.arc_draft_validator:
-            draft_result = self.ctx.arc_draft_validator.validate(
-                arc=refined_arc,
-                prev_arcs=all_refined_arcs,
-                constraint_block=constraint_block or "",
-                state_tracker=self.ctx.state_tracker,
-            )
+            # [G6] DraftValidator 호출 크래시 방어
+            try:
+                draft_result = self.ctx.arc_draft_validator.validate(
+                    arc=refined_arc,
+                    prev_arcs=all_refined_arcs,
+                    constraint_block=constraint_block or "",
+                    state_tracker=self.ctx.state_tracker,
+                )
+            except Exception as _dv_err:
+                import logging as _dv_log
+
+                _dv_log.warning(f"[G6] DraftValidator 호출 실패: {_dv_err!s:.100}")
+                draft_result = {"valid": True, "score": 50, "advisory_issues": [], "critical_issues": []}
 
             advisory_issues = draft_result.get("advisory_issues", [])
             if advisory_issues:

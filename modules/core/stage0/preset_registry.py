@@ -507,7 +507,11 @@ class PresetRegistry:
         return value
 
     def _parse_korean_number(self, text: str) -> int:
-        """한글 숫자 파싱 (50억, 1000만원 등)"""
+        """한글 숫자 파싱 (50억, 1000만원, 1억5천만 등)
+
+        [G15] 복합 단위 지원: "1억5천만" = 150,000,000
+        억/만은 대단위, 천/백은 소단위로 분리하여 파싱.
+        """
         import re
 
         text = text.replace(",", "").replace(" ", "")
@@ -519,8 +523,11 @@ class PresetRegistry:
         if clean and not any(m in text for m in multipliers.keys()):
             return int(clean)
 
+        # [G15] 대단위(억, 만) 기준으로 분리하여 복합 파싱
+        # "1억5천만" → 억 파트: "1억" = 1*억, 만 파트: "5천만" = 5천*만
         total = 0
-        current = 0
+        current = 0  # 현재 누적 숫자
+        sub_total = 0  # 소단위(천/백) 누적
 
         for char in text:
             if char.isdigit():
@@ -528,10 +535,19 @@ class PresetRegistry:
             elif char in multipliers:
                 if current == 0:
                     current = 1
-                total += current * multipliers[char]
-                current = 0
+                mult_val = multipliers[char]
+                if mult_val >= 10000:
+                    # 대단위(억, 만): sub_total + current를 계수로 사용
+                    total += (sub_total + current) * mult_val
+                    current = 0
+                    sub_total = 0
+                else:
+                    # 소단위(천, 백): sub_total에 누적
+                    sub_total += current * mult_val
+                    current = 0
 
-        return total + current
+        # 나머지 (단위 없는 끝자리 숫자)
+        return total + sub_total + current
 
     def detect_new_genre(self, content: str) -> str | None:
         """콘텐츠에서 새 장르 요소 감지"""
@@ -643,7 +659,12 @@ class PresetRegistry:
     @classmethod
     def from_json(cls, json_str: str) -> "PresetRegistry":
         """JSON에서 복원"""
-        data = json.loads(json_str)
+        try:
+            data = json.loads(json_str)
+        except (json.JSONDecodeError, TypeError):
+            return cls()
+        if not isinstance(data, dict):
+            return cls()
         registry = cls(base_genre=data.get("base_genre"))
         for preset in data.get("active_presets", []):
             registry.activate_preset(preset)

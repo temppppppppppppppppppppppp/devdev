@@ -955,8 +955,14 @@ class Analyst(BaseAgent):
         if clean_arc_no > 1:
             try:
                 arcs_anchor = self.context.db.load_anchor("arcs")
+                # [G9] arcs_anchor는 dict 또는 list일 수 있음 — 둘 다 처리
                 if arcs_anchor and isinstance(arcs_anchor, dict):
                     prev_arc_data = arcs_anchor.get(f"arc_{clean_arc_no - 1}")
+                elif arcs_anchor and isinstance(arcs_anchor, list):
+                    prev_arc_data = next(
+                        (a for a in arcs_anchor if isinstance(a, dict) and a.get("arc_no") == clean_arc_no - 1),
+                        None,
+                    )
             except Exception as e:
                 logging.warning(f"⚠️ [V60] 이전 Arc 로드 실패: {e}")
 
@@ -994,6 +1000,8 @@ class Analyst(BaseAgent):
 
         # 10-3. Arc 내 화 간 모순 탐지
         tactical_doc = final_arc_data.get("tactical_doc", "")
+        if isinstance(tactical_doc, dict):
+            tactical_doc = "\n".join(f"{k}: {v}" for k, v in tactical_doc.items())
         if tactical_doc:
             doc_continuity = self._validate_tactical_doc_continuity_v60(tactical_doc, final_ep_count)
             if doc_continuity["issues"]:

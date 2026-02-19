@@ -242,12 +242,20 @@ class ContinuityArcValidator:
 
         # 현재 Arc 데이터 추출
         tactical_doc = current_arc.get("tactical_doc", "")
+        if isinstance(tactical_doc, dict):
+            tactical_doc = "\n".join(f"{k}: {v}" for k, v in tactical_doc.items())
         joint_docs = current_arc.get("joint_docs", {})
         status_shadow = current_arc.get("status_shadow", {})
         ep_start = current_arc.get("ep_start", 1)
         # [V60.73] ep_count 우선 참조
-        ep_count = current_arc.get("ep_count", 5)
-        ep_end = current_arc.get("ep_end", ep_start + ep_count - 1)
+        try:
+            ep_count = int(current_arc.get("ep_count", 5))
+        except (TypeError, ValueError):
+            ep_count = 5
+        try:
+            ep_end = int(current_arc.get("ep_end", ep_start + ep_count - 1))
+        except (TypeError, ValueError):
+            ep_end = ep_start + ep_count - 1
 
         if not tactical_doc:
             return {

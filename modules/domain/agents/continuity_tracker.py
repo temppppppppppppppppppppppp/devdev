@@ -118,6 +118,8 @@ class ContinuityTrackerIntegration:
             power_result = self._check_power_with_tracker(arc, episode, content)
             if power_result.get("warnings"):
                 warnings.extend(power_result["warnings"])
+            if power_result.get("violations"):  # [G22] violations도 수집
+                violations.extend(power_result["violations"])
             tracker_results["power_scaling"] = power_result.get("details", {})
 
         # 3. 복선 상태 검증
@@ -125,6 +127,8 @@ class ContinuityTrackerIntegration:
             foreshadow_result = self._check_foreshadowing_with_tracker(arc, episode, content)
             if foreshadow_result.get("warnings"):
                 warnings.extend(foreshadow_result["warnings"])
+            if foreshadow_result.get("violations"):  # [G22] violations도 수집
+                violations.extend(foreshadow_result["violations"])
             tracker_results["foreshadowing"] = foreshadow_result.get("details", {})
 
         # 4. 상태 델타 검증 (manuscript에서만)
@@ -132,6 +136,8 @@ class ContinuityTrackerIntegration:
             state_result = self._check_state_with_tracker(arc, episode, content)
             if state_result.get("warnings"):
                 warnings.extend(state_result["warnings"])
+            if state_result.get("violations"):  # [G22] violations도 수집
+                violations.extend(state_result["violations"])
             tracker_results["state_delta"] = state_result.get("details", {})
 
         return {"warnings": warnings, "violations": violations, "tracker_results": tracker_results}

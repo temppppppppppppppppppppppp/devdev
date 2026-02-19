@@ -191,7 +191,7 @@ async def _run_stage2_three_blocks(db: DBManager, monkeypatch) -> dict:
     mock_four_phase.generate = MagicMock(side_effect=_generate_four_phase)
 
     mock_director = MagicMock()
-    mock_director.audit_strategic_plan = MagicMock(return_value={"decision": "PASS", "score": 80, "reason": "ok"})
+    mock_director.audit_strategic_plan = MagicMock(return_value={"decision": "PASS", "score": 95, "reason": "ok"})
     mock_director.ask = MagicMock(return_value="ok")
 
     agents = {

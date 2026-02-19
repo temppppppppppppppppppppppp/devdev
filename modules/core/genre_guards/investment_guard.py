@@ -611,7 +611,7 @@ class InvestmentGuard(BaseGuard):
                 elif unit == "만":
                     amount *= 10_000
                 _wealth = float((current_state or {}).get("total_assets", 0) or 0)
-                valid, msg = self.validate_investment_scale("stock", amount, _wealth)
+                valid, msg = self.validate_investment_scale("개인 주식", amount, _wealth)  # [G20] 한국어 키 매칭
                 if not valid:
                     result["violations"].append({"type": "investment_scale", "severity": "MEDIUM", "message": msg})
             except (ValueError, TypeError):
@@ -623,7 +623,7 @@ class InvestmentGuard(BaseGuard):
             try:
                 roi = float(roi_str)
                 if roi > 100:
-                    valid, msg = self.validate_return_rate("stock", roi, 1.0)
+                    valid, msg = self.validate_return_rate("주식", roi, 1.0)  # [G20] 한국어 키 매칭
                     if not valid:
                         result["violations"].append({"type": "return_rate", "severity": "MEDIUM", "message": msg})
             except (ValueError, TypeError):

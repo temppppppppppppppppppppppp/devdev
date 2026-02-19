@@ -243,7 +243,17 @@ class CookingGuard(BaseGuard):
 
         # 3. 자금난
         capital = current_state.get("capital", "0원")
-        if isinstance(capital, str) and ("0원" in capital or "마이너스" in capital or "적자" in capital):
+        # [TypeSafety] LLM이 capital을 숫자(0)로 반환할 수 있음
+        _capital_is_broke = False
+        if isinstance(capital, int | float):
+            _capital_is_broke = capital <= 0
+        elif isinstance(capital, str):
+            # 숫자 문자열 시도
+            try:
+                _capital_is_broke = float(capital) <= 0
+            except (TypeError, ValueError):
+                _capital_is_broke = "0원" in capital or "마이너스" in capital or "적자" in capital
+        if _capital_is_broke:
             actions.append(
                 {
                     "pattern": r"고급.*식재료.*대량|리모델링|2호점|프리미엄.*장비",

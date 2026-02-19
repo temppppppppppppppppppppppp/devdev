@@ -741,7 +741,9 @@ class HunterGuard(BaseGuard):
         Returns:
             (허용 여부, 사유)
         """
-        cooldown = custom_cooldown if custom_cooldown else self.get_skill_cooldown(skill_type)
+        cooldown = (
+            custom_cooldown if custom_cooldown is not None else self.get_skill_cooldown(skill_type)
+        )  # [G19] cooldown=0 유효
 
         if last_used_seconds_ago < cooldown:
             remaining = cooldown - last_used_seconds_ago

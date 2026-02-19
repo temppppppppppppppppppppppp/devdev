@@ -298,7 +298,7 @@ class MartialManager:
     # --- [핵심 업데이트부: 데이터 정규화 가드] ---
     def update_physical_status(self, full_state_data) -> list:
         """[🛡️ Guard Logic] 에이전트의 변칙 키를 표준 키로 강제 치환하여 성경에 박제"""
-        if not full_state_data:
+        if not full_state_data or not isinstance(full_state_data, dict):
             return []  # 변경 사항 리스트 반환으로 변경
 
         _mb = (

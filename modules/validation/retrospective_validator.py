@@ -256,15 +256,16 @@ class RetrospectiveValidator:
 
         try:
             for ep in range(max(1, current_ep - self.lookback), current_ep):
-                # state_log 또는 manuscripts의 hud_snapshot에서 추출
-                ms_data = self.context.db.get_manuscript(ep)
-
-                if ms_data and isinstance(ms_data, dict):
-                    hud = ms_data.get("hud_snapshot", {})
-                    if isinstance(hud, dict):
-                        realm = hud.get("realm", "")
-                        if realm:
-                            realms.append({"ep": ep, "realm": realm})
+                # [G18] state_log에서 HUD 데이터 조회 (manuscripts에는 hud_snapshot 없음)
+                state_log = self.context.db.load_state_log(ep)
+                if state_log and isinstance(state_log, dict):
+                    data = state_log.get("data", {})
+                    if isinstance(data, dict):
+                        hud = data.get("hud_snapshot", data.get("hud", data))
+                        if isinstance(hud, dict):
+                            realm = hud.get("realm", "")
+                            if realm:
+                                realms.append({"ep": ep, "realm": realm})
         except Exception:
             _logger.warning("[RetrospectiveValidator] _get_past_realms DB 읽기 실패", exc_info=True)
 
@@ -276,16 +277,18 @@ class RetrospectiveValidator:
 
         try:
             for ep in range(max(1, current_ep - self.lookback), current_ep):
-                ms_data = self.context.db.get_manuscript(ep)
-
-                if ms_data and isinstance(ms_data, dict):
-                    hud = ms_data.get("hud_snapshot", {})
-                    if isinstance(hud, dict):
-                        equipment = hud.get("equipment", [])
-                        if isinstance(equipment, list):
-                            items.update(equipment)
-                        elif isinstance(equipment, str):
-                            items.add(equipment)
+                # [G18] state_log에서 HUD 데이터 조회 (manuscripts에는 hud_snapshot 없음)
+                state_log = self.context.db.load_state_log(ep)
+                if state_log and isinstance(state_log, dict):
+                    data = state_log.get("data", {})
+                    if isinstance(data, dict):
+                        hud = data.get("hud_snapshot", data.get("hud", data))
+                        if isinstance(hud, dict):
+                            equipment = hud.get("equipment", [])
+                            if isinstance(equipment, list):
+                                items.update(equipment)
+                            elif isinstance(equipment, str):
+                                items.add(equipment)
         except Exception:
             _logger.warning("[RetrospectiveValidator] _get_past_items DB 읽기 실패", exc_info=True)
 

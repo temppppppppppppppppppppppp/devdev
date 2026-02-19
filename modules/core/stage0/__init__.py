@@ -292,7 +292,14 @@ class StageZeroManager:
 
         try:
             with open(path, encoding="utf-8") as f:
-                self.bible = json.load(f)
+                loaded = json.load(f)
+
+            # [G3] 빈/손상 데이터로 기존 bible 덮어쓰기 방지
+            if not loaded or not isinstance(loaded, dict):
+                logging.warning("[!] Bible JSON이 비어있거나 유효하지 않습니다.")
+                return {}
+
+            self.bible = loaded
 
             # 장르 추출
             self.genre = self.bible.get("_genre", "")
@@ -472,42 +479,61 @@ class StageZeroManager:
         # state 로드
         state_file = out / "stage0_state.json"
         if state_file.exists():
-            with open(state_file, encoding="utf-8") as f:
-                state = json.load(f)
-            manager.genre = state.get("genre", "")
-            manager.protagonist_config = state.get("protagonist_config", {})
+            try:
+                with open(state_file, encoding="utf-8") as f:
+                    state = json.load(f)
+                manager.genre = state.get("genre", "")
+                manager.protagonist_config = state.get("protagonist_config", {})
+            except (json.JSONDecodeError, OSError) as e:
+                logging.warning("[Stage0] state 로드 실패: %s", e)
 
         # bible 로드
         bible_file = out / "bible.json"
         if bible_file.exists():
-            with open(bible_file, encoding="utf-8") as f:
-                manager.bible = json.load(f)
+            try:
+                with open(bible_file, encoding="utf-8") as f:
+                    manager.bible = json.load(f)
+            except (json.JSONDecodeError, OSError) as e:
+                logging.warning("[Stage0] bible 로드 실패: %s", e)
 
         # treatment 로드
         treatment_file = out / "treatment.json"
         if treatment_file.exists():
-            with open(treatment_file, encoding="utf-8") as f:
-                manager.treatment = json.load(f)
+            try:
+                with open(treatment_file, encoding="utf-8") as f:
+                    manager.treatment = json.load(f)
+            except (json.JSONDecodeError, OSError) as e:
+                logging.warning("[Stage0] treatment 로드 실패: %s", e)
 
         # episode_bibles 로드
         ep_bibles_file = out / "episode_bibles.json"
         if ep_bibles_file.exists():
-            with open(ep_bibles_file, encoding="utf-8") as f:
-                manager.episode_bibles = json.load(f)
+            try:
+                with open(ep_bibles_file, encoding="utf-8") as f:
+                    manager.episode_bibles = json.load(f)
+            except (json.JSONDecodeError, OSError) as e:
+                logging.warning("[Stage0] episode_bibles 로드 실패: %s", e)
 
         # preset 로드
         preset_file = out / "preset_state.json"
         if preset_file.exists():
-            with open(preset_file, encoding="utf-8") as f:
-                manager.preset_registry = PresetRegistry.from_json(f.read())
+            try:
+                with open(preset_file, encoding="utf-8") as f:
+                    manager.preset_registry = PresetRegistry.from_json(f.read())
+            except (json.JSONDecodeError, OSError, ValueError) as e:
+                logging.warning("[Stage0] preset 로드 실패: %s", e)
+                manager.preset_registry = PresetRegistry(base_genre=manager.genre)
         else:
             manager.preset_registry = PresetRegistry(base_genre=manager.genre)
 
         # style guide 로드
         style_file = out / "style_guide.json"
         if style_file.exists():
-            with open(style_file, encoding="utf-8") as f:
-                manager.style_guide = StyleGuide.from_dict(json.load(f))
+            try:
+                with open(style_file, encoding="utf-8") as f:
+                    manager.style_guide = StyleGuide.from_dict(json.load(f))
+            except (json.JSONDecodeError, OSError) as e:
+                logging.warning("[Stage0] style_guide 로드 실패: %s", e)
 
         return manager
 

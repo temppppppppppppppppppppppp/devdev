@@ -256,6 +256,9 @@ class Writer(BaseAgent):
         """출력 누수 방지 필터"""
         if not text:
             return text
+        # [TypeSafety] ask()가 list/tuple을 반환할 수 있음 → 문자열로 결합
+        if isinstance(text, list | tuple):
+            text = "\n".join(str(item) for item in text)
         # [V70] ask()가 dict를 직접 반환할 수 있음 → re.sub TypeError 방어
         if isinstance(text, dict):
             banned_keys = ["Beat 3", "Beat 4", "continuation_text", "scene_summary"]

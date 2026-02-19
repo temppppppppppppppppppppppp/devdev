@@ -18,7 +18,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FutureTimeoutError
 
-from modules.core.constants import ContextLimits
+from modules.core.constants import smart_truncate
 from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
 from modules.core.prompt_loader import PromptLoader
 
@@ -539,7 +539,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         if inherited.get("equipment"):
             equip = inherited["equipment"]
             if isinstance(equip, list):
-                equip = ", ".join(equip[:5])
+                equip = ", ".join(str(x) if isinstance(x, dict) else x for x in equip[:5])
             lines.append("\n[소지품]")
             lines.append(f"  {equip}")
 
@@ -598,7 +598,11 @@ class BlueprintEnsembleGenerator(BaseAgent):
             if injuries and injuries != "없음":
                 lines.append(f"부상: {injuries}")
             if equipment:
-                equip_str = ", ".join(equipment[:5]) if isinstance(equipment, list) else str(equipment)
+                equip_str = (
+                    ", ".join(str(x) if isinstance(x, dict) else x for x in equipment[:5])
+                    if isinstance(equipment, list)
+                    else str(equipment)
+                )
                 lines.append(f"소지품: {equip_str}")
 
         lines.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -673,10 +677,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
             sections.append(ms_section)
 
         result = "\n\n".join(sections)
-        total_len = len(result)
-        if total_len > ContextLimits.MAX_CONTEXT_CHARS:
-            result = result[: ContextLimits.MAX_CONTEXT_CHARS] + "\n... (200K자 절삭)"
-        return result
+        return smart_truncate(result)
 
 
 def create_blueprint_ensemble(context, client, model_tier: str = "gemini-3-pro-preview"):

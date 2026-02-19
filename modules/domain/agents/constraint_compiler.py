@@ -94,6 +94,7 @@ class ConstraintCompiler:
             acquired = (arc.get("state_constraints") or {}).get("items_acquired") or []  # [V70] None 방어
             if isinstance(acquired, list):
                 for item in acquired:
+                    item = str(item) if isinstance(item, dict) else item
                     if item and len(item) >= 2:
                         items[item] = arc_no
 
@@ -101,6 +102,7 @@ class ConstraintCompiler:
             inventory = (arc.get("joint_docs") or {}).get("physical_inventory") or []  # [V70] None 방어
             if isinstance(inventory, list):
                 for item in inventory:
+                    item = str(item) if isinstance(item, dict) else item
                     if item and len(item) >= 2 and item not in items:
                         items[item] = arc_no
             elif isinstance(inventory, str):
@@ -139,6 +141,7 @@ class ConstraintCompiler:
             received = (arc.get("state_constraints") or {}).get("grants_received", [])  # [V70] None 방어
             if isinstance(received, list):
                 for grant in received:
+                    grant = str(grant) if isinstance(grant, dict) else grant
                     if grant and len(grant) >= 2:
                         grants[grant] = (arc_no, "알 수 없음")
 

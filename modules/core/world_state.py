@@ -126,7 +126,7 @@ class WorldStateManager:
             for rel in state_changes.get("relationship_changes") or []:
                 if not isinstance(rel, dict):
                     continue
-                npc = rel.get("npc", "")
+                npc = rel.get("npc", "") or rel.get("target", "")  # [G16] analyst 프롬프트는 "target" 키 사용
                 to_rel = rel.get("to", "")
                 if npc and to_rel:
                     self._state["relationships"][npc] = to_rel

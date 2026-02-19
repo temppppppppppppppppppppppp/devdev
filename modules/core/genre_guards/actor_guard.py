@@ -238,6 +238,12 @@ class ActorGuard(BaseGuard):
 
         # 3. 스캔들 지수 높은 경우
         scandal_idx = current_state.get("scandal_index", 0)
+        # [TypeSafety] LLM이 scandal_index를 문자열("85")로 반환할 수 있음
+        if isinstance(scandal_idx, str):
+            try:
+                scandal_idx = float(scandal_idx)
+            except (TypeError, ValueError):
+                scandal_idx = 0
         if isinstance(scandal_idx, int | float) and scandal_idx >= 80:
             actions.append(
                 {

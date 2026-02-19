@@ -178,10 +178,10 @@ class FourPhaseArcGenerator(BaseAgent):
         for _prev in prev_arcs:
             _acq = _prev.get("state_constraints", {}).get("items_acquired", [])
             if isinstance(_acq, list):
-                _pre_items.update(i.strip() for i in _acq if i)
+                _pre_items.update((str(i) if isinstance(i, dict) else i).strip() for i in _acq if i)
             _grt = _prev.get("state_constraints", {}).get("grants_received", [])
             if isinstance(_grt, list):
-                _pre_grants.update(g.strip() for g in _grt if g)
+                _pre_grants.update((str(g) if isinstance(g, dict) else g).strip() for g in _grt if g)
 
         # Preflight 캐싱
         cached_constraint_block = None
@@ -521,10 +521,10 @@ class FourPhaseArcGenerator(BaseAgent):
         for _prev in prev_arcs:
             _acq = _prev.get("state_constraints", {}).get("items_acquired", [])
             if isinstance(_acq, list):
-                _pre_items.update(i.strip() for i in _acq if i)
+                _pre_items.update((str(i) if isinstance(i, dict) else i).strip() for i in _acq if i)
             _grt = _prev.get("state_constraints", {}).get("grants_received", [])
             if isinstance(_grt, list):
-                _pre_grants.update(g.strip() for g in _grt if g)
+                _pre_grants.update((str(g) if isinstance(g, dict) else g).strip() for g in _grt if g)
 
         verdict, validation_result = self.validator.validate(
             arc=best_arc,

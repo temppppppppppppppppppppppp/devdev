@@ -25,19 +25,24 @@ class WorkGuard(BaseGuard):
     def __init__(self, base_guard: BaseGuard, yaml_path: Path | str) -> None:
         super().__init__()
         self._base = base_guard
-        self._config = self._load_yaml(yaml_path)
+        _raw_config = self._load_yaml(yaml_path)
+        self._config = _raw_config if isinstance(_raw_config, dict) else {}
 
         # base guard 속성 병합
+        def _ensure_str(v):
+            return str(v) if isinstance(v, dict) else v
+
         base_forbidden_set = set(base_guard.FORBIDDEN_TERMS)
-        extra_forbidden = set(self._config.get("extra_forbidden_terms", []))
-        extra_allowed = set(self._config.get("extra_allowed_terms", []))
+        extra_forbidden = {_ensure_str(x) for x in self._config.get("extra_forbidden_terms", [])}
+        extra_allowed = {_ensure_str(x) for x in self._config.get("extra_allowed_terms", [])}
 
         self.FORBIDDEN_TERMS = [
             t for t in list(base_guard.FORBIDDEN_TERMS) + list(extra_forbidden) if t not in extra_allowed
         ]
         self.ALLOWED_TERMS = list(set(base_guard.ALLOWED_TERMS) | extra_allowed)
         self.MANDATORY_CONCEPTS = list(
-            set(base_guard.MANDATORY_CONCEPTS) | set(self._config.get("extra_mandatory_concepts", []))
+            set(base_guard.MANDATORY_CONCEPTS)
+            | {_ensure_str(x) for x in self._config.get("extra_mandatory_concepts", [])}
         )
 
         # run_deep_validation에서 추가로 검사할 금기어 (base에 없는 것만)
@@ -64,7 +69,8 @@ class WorkGuard(BaseGuard):
             return {}
         try:
             with open(path, encoding="utf-8") as f:
-                return yaml.safe_load(f) or {}
+                data = yaml.safe_load(f)
+                return data if isinstance(data, dict) else {}
         except Exception:
             _logger.warning("[WorkGuard] YAML 로드 실패: %s", path)
             return {}

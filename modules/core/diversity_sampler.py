@@ -312,7 +312,7 @@ class DiversitySampler:
         results = []
 
         for i, text in enumerate(candidates):
-            score = self._calculate_diversity_score(text)
+            score = self._calculate_diversity_score(text or "")
             results.append(
                 {
                     "index": i,

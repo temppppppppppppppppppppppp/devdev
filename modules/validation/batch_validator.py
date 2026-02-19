@@ -127,7 +127,8 @@ class BatchValidator:
             except Exception as e:
                 with self._stats_lock:
                     self.stats["failed"] += 1
-                return {"ep_num": ms_data["ep_num"], "error": str(e), "success": False}
+                ep = ms_data.get("ep_num", -1) if isinstance(ms_data, dict) else -1
+                return {"ep_num": ep, "error": str(e), "success": False}
 
         # ThreadPoolExecutor로 병렬 처리
         with ThreadPoolExecutor(max_workers=self.max_concurrent) as executor:

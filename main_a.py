@@ -107,14 +107,12 @@ try:
     from modules.core.character_voice_profiler import CharacterVoiceProfiler  # [V60.26] 캐릭터 음성 프로파일러 (V58)
     from modules.core.confidence_calibration import ConfidenceCalibrator  # [V53.3] 신뢰도 보정
     from modules.core.constitutional_checker import ConstitutionalChecker  # [V55.2] 헌법적 자기검증
-    from modules.core.context_compression import ContextCompressor  # [V54.2] 컨텍스트 압축
     from modules.core.cross_agent_verifier import CrossAgentVerifier  # [V52.4] 교차 검증
     from modules.core.dynamic_prompt_weighting import DynamicPromptWeighter  # [V53.1] 동적 프롬프트 가중치
     from modules.core.emotion_tracker import EmotionArcTracker  # [V60.26] 감정선 추적
     from modules.core.expert_mixture import ExpertMixture  # [V52.3] 전문가 혼합
     from modules.core.failure_learning import FailureLearner  # [V51.4] 실패 학습 시스템
     from modules.core.foreshadow_tracker import ForeshadowTracker  # [V51.6] 복선 추적
-    from modules.core.manuscript_enhancer import ManuscriptEnhancer  # [V55] 원고 품질/분량 향상
     from modules.core.multi_agent_deliberation import MultiAgentDeliberation  # [V53.7] 다중 에이전트 토론
     from modules.core.pacing_analyzer import PacingAnalyzer  # [V65] 호흡 분석기 재연결
     from modules.core.pass_rate_monitor import PassRateMonitor  # [V55.3] 통과율 모니터
@@ -125,7 +123,6 @@ try:
     from modules.core.self_reflection import SelfReflector  # [V52.1] 자기 성찰
 
     # [V54] 비용 절감 + 품질 향상 모듈
-    from modules.core.semantic_cache import SemanticCache  # [V54.1] 의미론적 캐시
     from modules.core.semantic_item_registry import SemanticItemRegistry  # [V60.26] 의미적 아이템 레지스트리
     from modules.core.stage2_optimizer import create_stage2_optimizer  # [V60.25] [V65] Stage2Optimizer 미사용 삭제
     from modules.core.state_delta_tracker import StateDeltaTracker  # [V60.26] 상태 변화 추적
@@ -259,12 +256,9 @@ class SovereignApp:
         self.multi_agent_deliberation = None  # [V53.7] 다중 에이전트 토론
 
         # [V54] 비용 절감 + 품질 향상 모듈
-        self.semantic_cache = None  # [V54.1] 의미론적 캐시
-        self.context_compressor = None  # [V54.2] 컨텍스트 압축
         self.adaptive_manager = None  # [V54.3] 적응형 재시도 관리자
         # [V65] two_phase_ms/bp/arc 삭제 (Dead Code — TwoPhaseGenerator 제거)
         # [Phase 4D-4] success_patterns 삭제 (ChromaDB 레거시 제거)
-        self.manuscript_enhancer = None  # [V55] 원고 품질/분량 향상
         self.constitutional_checker = None  # [V55.2] 헌법적 자기검증
         self.writer_template = None  # [V55.3] 원고 템플릿
         self.pass_rate_monitor = None  # [V55.3] 통과율 모니터
@@ -527,6 +521,11 @@ class SovereignApp:
         result = {}
         for area, config in area_config.items():
             score = breakdown.get(area, config["max"])  # 없으면 만점으로 간주
+            # [TypeSafety] LLM이 score를 문자열로 반환할 수 있음
+            try:
+                score = int(score)
+            except (TypeError, ValueError):
+                score = config["max"]
 
             # 심각도 판단
             if score <= config["thresholds"]["critical"]:
@@ -718,6 +717,7 @@ class SovereignApp:
 
     def _normalize_rejection_reason(self, reason: str) -> str:
         """REJECT 사유 정규화"""
+        reason = reason or ""
         reason_lower = reason.lower()
 
         if "중복" in reason or "duplicate" in reason_lower:
@@ -1678,14 +1678,6 @@ class SovereignApp:
                     # [V54] 비용 절감 + 품질 향상 모듈
                     # ============================================================
 
-                    # V54.1 의미론적 캐시
-                    self.semantic_cache = SemanticCache(max_size=500)
-                    self.ui.log("   💾 [V54.1] Semantic Cache 활성화")
-
-                    # V54.2 컨텍스트 압축
-                    self.context_compressor = ContextCompressor(target_ratio=0.6, max_field_length=2000)
-                    self.ui.log("   📦 [V54.2] Context Compressor 활성화")
-
                     # V54.3 적응형 재시도 관리자
                     self.adaptive_manager = get_adaptive_manager()
                     # [V54.3.1] FailureLearner 연동
@@ -1698,10 +1690,6 @@ class SovereignApp:
                     # [V65] TwoPhaseGenerator 삭제 (two_phase_ms/bp/arc — Dead Code)
 
                     # [Phase 4D-4] SuccessPatternMemory 삭제 (ChromaDB 레거시 제거)
-
-                    # V55 원고 품질/분량 향상
-                    self.manuscript_enhancer = ManuscriptEnhancer(genre=genre_type)
-                    self.ui.log("   ✨ [V55] Manuscript Enhancer 활성화 (7개 서브모듈)")
 
                     # V55.2 헌법적 자기검증
                     self.constitutional_checker = ConstitutionalChecker(genre=genre_type)
@@ -2173,7 +2161,18 @@ class SovereignApp:
             latest_ep_fn = getattr(self.current_project, "get_latest_episode_number", None)
             ms_max = max(0, int(latest_ep_fn() - 1)) if callable(latest_ep_fn) else 0
             arc_count = len(arcs) if isinstance(arcs, list) else 0
-            total_eps = sum(a.get("ep_count", 0) for a in arcs if isinstance(a, dict)) if isinstance(arcs, list) else 0
+
+            def _safe_ep(v):
+                try:
+                    return int(v)
+                except (TypeError, ValueError):
+                    return 0
+
+            total_eps = (
+                sum(_safe_ep(a.get("ep_count", 0)) for a in arcs if isinstance(a, dict))
+                if isinstance(arcs, list)
+                else 0
+            )
 
             self.ui.log("─" * 50)
             self.ui.log(f"📥 [Resume] 프로젝트: {self.current_project.name}")
@@ -2651,6 +2650,7 @@ class SovereignApp:
             str: 선택된 프로젝트 이름
         """
         root = Path(self._PROJECTS_DIR)
+        root.mkdir(parents=True, exist_ok=True)
         projects = [d.name for d in root.iterdir() if d.is_dir()]
         if not projects:  # [V70] 빈 프로젝트 폴더 방어
             self.ui.log("❌ projects/ 폴더에 프로젝트가 없습니다. 먼저 프로젝트를 생성하세요.")

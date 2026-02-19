@@ -167,6 +167,7 @@ class PreDirectorChecklist:
             )
 
         context = context or {}
+        content = content or ""
         items = []
 
         if content_type == "manuscript":
