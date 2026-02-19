@@ -15,6 +15,7 @@ import os
 import sqlite3
 import struct
 import time
+from contextlib import contextmanager
 from pathlib import Path
 
 # ── 임베딩 모델 설정 ────────────────────────────────────────
@@ -52,8 +53,8 @@ class VecMemory:
         ui_log:  로그 콜백 ``(msg: str) -> None``. 없으면 print 사용.
     """
 
-    def __init__(self, db_path, api_key: str = "", *, ui_log=None) -> None:
-        self._db_path = str(db_path)
+    def __init__(self, db_path=None, api_key: str = "", *, ui_log=None, conn=None, lock=None) -> None:
+        self._db_path = str(db_path) if db_path else ":shared:"
         self._api_key = api_key or os.getenv("GOOGLE_API_KEY", "")
         self._ui_log = ui_log or (lambda msg: print(f"[VecMemory] {msg}"))
 
@@ -65,7 +66,20 @@ class VecMemory:
         self._conn: sqlite3.Connection | None = None
         self._genai_client = None
 
-        self._init_db()
+        # [DB-MERGE] 단일모드: shared(프로덕션) vs standalone(테스트)
+        self._shared_mode = conn is not None
+        self._lock = lock
+
+        if self._shared_mode:
+            self._conn = conn
+            try:
+                conn.execute("SELECT COUNT(*) FROM vec_episodes LIMIT 0")
+                self.has_valid_memory = True
+            except Exception:
+                self.initialization_error = "vec_episodes table not available in shared connection"
+                self._ui_log("[VecMemory] shared 모드: vec_episodes 테이블 없음 -> 벡터 검색 비활성")
+        else:
+            self._init_db()
         self._init_genai()
 
     # ── 초기화 ──────────────────────────────────────────────
@@ -102,6 +116,15 @@ class VecMemory:
             self._genai_client = genai.Client(api_key=self._api_key)
         except Exception as e:
             logging.warning(f"[VecMemory] genai 클라이언트 초기화 실패: {str(e)[:80]}")
+
+    @contextmanager
+    def _db_lock(self):
+        """[DB-MERGE] shared 모드에서 DBManager RLock 사용."""
+        if self._lock:
+            with self._lock:
+                yield
+        else:
+            yield
 
     def _ensure_tables(self) -> None:
         """Create vec/meta/sync/anchor tables."""
@@ -197,40 +220,49 @@ class VecMemory:
             self._ui_log(f"[VecMemory] embedding failed -> skip episode {ep_num}")
             return False
 
-        cur = None
-        try:
-            cur = self._conn.cursor()
+        with self._db_lock():
+            cur = None
+            try:
+                cur = self._conn.cursor()
 
-            cur.execute("DELETE FROM vec_episodes WHERE rowid = ?", (ep_num,))
-            cur.execute(
-                "INSERT INTO vec_episodes(rowid, embedding) VALUES (?, ?)",
-                (ep_num, _serialize_f32(emb)),
-            )
+                cur.execute("DELETE FROM vec_episodes WHERE rowid = ?", (ep_num,))
+                cur.execute(
+                    "INSERT INTO vec_episodes(rowid, embedding) VALUES (?, ?)",
+                    (ep_num, _serialize_f32(emb)),
+                )
 
-            causal_str = json.dumps(causal_links, ensure_ascii=False)[:2000] if causal_links else ""
-            evt_str = ",".join(str(e) for e in event_types)[:500] if event_types else ""
-            ent_str = ",".join(str(n) for n in entity_names)[:1000] if entity_names else ""
-            cur.execute(
-                """INSERT OR REPLACE INTO episode_meta
-                   (ep_num, summary, causal_data, arc_no, event_types, entity_names)
-                   VALUES (?, ?, ?, ?, ?, ?)""",
-                (ep_num, summary[:1000], causal_str, arc_no, evt_str, ent_str),
-            )
+                causal_str = json.dumps(causal_links, ensure_ascii=False)[:2000] if causal_links else ""
+                evt_str = ",".join(str(e) for e in event_types)[:500] if event_types else ""
+                ent_str = ",".join(str(n) for n in entity_names)[:1000] if entity_names else ""
+                cur.execute(
+                    """INSERT OR REPLACE INTO episode_meta
+                       (ep_num, summary, causal_data, arc_no, event_types, entity_names)
+                       VALUES (?, ?, ?, ?, ?, ?)""",
+                    (ep_num, summary[:1000], causal_str, arc_no, evt_str, ent_str),
+                )
 
-            cur.execute(
-                "INSERT OR REPLACE INTO sync_status (ep_num, synced, synced_at) VALUES (?, 1, CURRENT_TIMESTAMP)",
-                (ep_num,),
-            )
+                # [DB-MERGE] shared 모드: DBManager sync_status.vector_synced 사용
+                if self._shared_mode:
+                    cur.execute(
+                        "INSERT INTO sync_status (ep_num, vector_synced, updated_at) VALUES (?, 1, CURRENT_TIMESTAMP) "
+                        "ON CONFLICT(ep_num) DO UPDATE SET vector_synced = 1, updated_at = CURRENT_TIMESTAMP",
+                        (ep_num,),
+                    )
+                else:
+                    cur.execute(
+                        "INSERT OR REPLACE INTO sync_status (ep_num, synced, synced_at) VALUES (?, 1, CURRENT_TIMESTAMP)",
+                        (ep_num,),
+                    )
 
-            self._conn.commit()
-            return True
+                self._conn.commit()
+                return True
 
-        except Exception as e:
-            self._ui_log(f"[VecMemory] failed to save episode {ep_num}: {e}")
-            return False
-        finally:
-            if cur is not None:
-                cur.close()
+            except Exception as e:
+                self._ui_log(f"[VecMemory] failed to save episode {ep_num}: {e}")
+                return False
+            finally:
+                if cur is not None:
+                    cur.close()
 
     def retrieve_high_res_context(self, query, current_ep: int, n_results: int = 3) -> str:
         """쿼리와 유사한 과거 에피소드 맥락 반환 (LongTermMemory 호환)."""
@@ -264,11 +296,12 @@ class VecMemory:
             if emb is None:
                 continue
             try:
-                rows = self._conn.execute(
-                    """SELECT rowid, distance FROM vec_episodes
-                       WHERE embedding MATCH ? ORDER BY distance LIMIT ?""",
-                    (_serialize_f32(emb), n_per_query),
-                ).fetchall()
+                with self._db_lock():
+                    rows = self._conn.execute(
+                        """SELECT rowid, distance FROM vec_episodes
+                           WHERE embedding MATCH ? ORDER BY distance LIMIT ?""",
+                        (_serialize_f32(emb), n_per_query),
+                    ).fetchall()
                 for rowid, dist in rows:
                     if rowid >= current_ep:
                         continue
@@ -310,59 +343,61 @@ class VecMemory:
 
     def _knn_search(self, query_emb: list, current_ep: int, n_results: int) -> str:
         """벡터 KNN 검색 후 맥락 블록 문자열 반환."""
-        try:
-            # current_ep 이전만 필터링하기 위해 넉넉히 검색 후 필터
-            fetch_n = n_results + 10
-            rows = self._conn.execute(
-                """SELECT rowid, distance FROM vec_episodes
-                   WHERE embedding MATCH ? ORDER BY distance LIMIT ?""",
-                (_serialize_f32(query_emb), fetch_n),
-            ).fetchall()
+        with self._db_lock():
+            try:
+                # current_ep 이전만 필터링하기 위해 넉넉히 검색 후 후필터
+                fetch_n = n_results + 10
+                rows = self._conn.execute(
+                    """SELECT rowid, distance FROM vec_episodes
+                       WHERE embedding MATCH ? ORDER BY distance LIMIT ?""",
+                    (_serialize_f32(query_emb), fetch_n),
+                ).fetchall()
 
-            results = [(rowid, dist) for rowid, dist in rows if rowid < current_ep]
-            results = results[:n_results]
+                results = [(rowid, dist) for rowid, dist in rows if rowid < current_ep]
+                results = results[:n_results]
 
-            if not results:
+                if not results:
+                    return ""
+
+                blocks = []
+                for rowid, _dist in results:
+                    meta = self._load_episode_meta(rowid)
+                    if not meta:
+                        continue
+                    summary = meta.get("summary", "요약 정보가 없는 기억입니다.")
+                    block = f"### [제 {rowid} 화의 기억]\n요약: {summary}"
+                    evt = meta.get("event_types", "")
+                    ent = meta.get("entity_names", "")
+                    if evt:
+                        block += f"\n사건: {evt}"
+                    if ent:
+                        block += f"\n인물: {ent}"
+                    blocks.append(block)
+
+                return "\n\n".join(blocks)
+
+            except Exception as e:
+                self._ui_log(f"[VecMemory] KNN 검색 오류: {e}")
                 return ""
-
-            blocks = []
-            for rowid, _dist in results:
-                meta = self._load_episode_meta(rowid)
-                if not meta:
-                    continue
-                summary = meta.get("summary", "요약 정보가 없는 기억입니다.")
-                block = f"### [제 {rowid} 화의 기억]\n요약: {summary}"
-                evt = meta.get("event_types", "")
-                ent = meta.get("entity_names", "")
-                if evt:
-                    block += f"\n사건: {evt}"
-                if ent:
-                    block += f"\n인물: {ent}"
-                blocks.append(block)
-
-            return "\n\n".join(blocks)
-
-        except Exception as e:
-            self._ui_log(f"[VecMemory] KNN 검색 오류: {e}")
-            return ""
 
     def _load_episode_meta(self, ep_num: int) -> dict | None:
         """에피소드 메타데이터 로드."""
-        try:
-            row = self._conn.execute(
-                "SELECT summary, causal_data, arc_no, event_types, entity_names FROM episode_meta WHERE ep_num = ?",
-                (ep_num,),
-            ).fetchone()
-            if row:
-                return {
-                    "summary": row[0] or "",
-                    "causal_data": row[1] or "",
-                    "arc_no": row[2],
-                    "event_types": row[3] or "",
-                    "entity_names": row[4] or "",
-                }
-        except Exception:
-            pass
+        with self._db_lock():
+            try:
+                row = self._conn.execute(
+                    "SELECT summary, causal_data, arc_no, event_types, entity_names FROM episode_meta WHERE ep_num = ?",
+                    (ep_num,),
+                ).fetchone()
+                if row:
+                    return {
+                        "summary": row[0] or "",
+                        "causal_data": row[1] or "",
+                        "arc_no": row[2],
+                        "event_types": row[3] or "",
+                        "entity_names": row[4] or "",
+                    }
+            except Exception:
+                pass
         return None
 
     # ── 앵커 저장소 (LongTermMemory 호환) ───────────────────
@@ -371,34 +406,41 @@ class VecMemory:
         """JSON 앵커 저장."""
         if not self._conn:
             return False
-        try:
-            serialized = json.dumps(data, ensure_ascii=False) if isinstance(data, dict | list) else str(data)
-            self._conn.execute(
-                "INSERT OR REPLACE INTO anchors (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)",
-                (key, serialized),
-            )
-            self._conn.commit()
-            return True
-        except Exception as e:
-            self._ui_log(f"[VecMemory] 앵커 저장 실패 ({key}): {e}")
-            return False
+        with self._db_lock():
+            try:
+                serialized = json.dumps(data, ensure_ascii=False) if isinstance(data, dict | list) else str(data)
+                if self._shared_mode:
+                    self._conn.execute(
+                        "INSERT OR REPLACE INTO anchors (key, data, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)",
+                        (key, serialized),
+                    )
+                else:
+                    self._conn.execute(
+                        "INSERT OR REPLACE INTO anchors (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)",
+                        (key, serialized),
+                    )
+                self._conn.commit()
+                return True
+            except Exception as e:
+                self._ui_log(f"[VecMemory] 앵커 저장 실패 ({key}): {e}")
+                return False
 
     def load_v20_anchor(self, key: str):
         """JSON 앵커 로드."""
         if not self._conn:
             return None
-        try:
-            row = self._conn.execute("SELECT value FROM anchors WHERE key = ?", (key,)).fetchone()
-            if row:
-                try:
-                    return json.loads(row[0])
-                except (json.JSONDecodeError, TypeError):
-                    return row[0]
-        except Exception as e:
-            self._ui_log(f"[VecMemory] 앵커 로드 실패 ({key}): {e}")
+        with self._db_lock():
+            try:
+                col = "data" if self._shared_mode else "value"
+                row = self._conn.execute(f"SELECT {col} FROM anchors WHERE key = ?", (key,)).fetchone()
+                if row:
+                    try:
+                        return json.loads(row[0])
+                    except (json.JSONDecodeError, TypeError):
+                        return row[0]
+            except Exception as e:
+                self._ui_log(f"[VecMemory] 앵커 로드 실패 ({key}): {e}")
         return None
-
-    # ── 동기화 ──────────────────────────────────────────────
 
     def sync_v20_drafts(self, force_repair: bool = False, drafts_path: Path | None = None) -> None:
         """원고 파일 → 벡터 DB 동기화 (LongTermMemory 호환)."""
@@ -419,7 +461,12 @@ class VecMemory:
 
             # 동기화 상태 확인
             if not force_repair:
-                row = self._conn.execute("SELECT synced FROM sync_status WHERE ep_num = ?", (ep_num,)).fetchone()
+                sync_col = "vector_synced" if self._shared_mode else "synced"
+                with self._db_lock():
+                    row = self._conn.execute(
+                        f"SELECT {sync_col} FROM sync_status WHERE ep_num = ?",
+                        (ep_num,),
+                    ).fetchone()
                 if row and row[0] == 1:
                     continue
 
@@ -440,34 +487,45 @@ class VecMemory:
         """특정 에피소드 동기화 상태 조회. 0=미동기화, 1=완료."""
         if not self._conn:
             return 0
-        try:
-            row = self._conn.execute("SELECT synced FROM sync_status WHERE ep_num = ?", (ep_num,)).fetchone()
-            return row[0] if row else 0
-        except Exception:
-            return 0
+        with self._db_lock():
+            try:
+                if self._shared_mode:
+                    row = self._conn.execute(
+                        "SELECT vector_synced FROM sync_status WHERE ep_num = ?",
+                        (ep_num,),
+                    ).fetchone()
+                else:
+                    row = self._conn.execute("SELECT synced FROM sync_status WHERE ep_num = ?", (ep_num,)).fetchone()
+                return row[0] if row else 0
+            except Exception:
+                return 0
 
     # ── 삭제 ────────────────────────────────────────────────
     def delete_episodes_from(self, target_ep: int) -> int:
         """Delete vectors/meta for episodes >= target_ep and return deleted count."""
         if not self._conn:
             return 0
-        cur = None
-        try:
-            cur = self._conn.cursor()
-            rows = cur.execute("SELECT ep_num FROM episode_meta WHERE ep_num >= ?", (target_ep,)).fetchall()
-            count = len(rows)
-            for (ep,) in rows:
-                cur.execute("DELETE FROM vec_episodes WHERE rowid = ?", (ep,))
-            cur.execute("DELETE FROM episode_meta WHERE ep_num >= ?", (target_ep,))
-            cur.execute("DELETE FROM sync_status WHERE ep_num >= ?", (target_ep,))
-            self._conn.commit()
-            return count
-        except Exception as e:
-            self._ui_log(f"[VecMemory] delete episodes failed (>={target_ep}): {e}")
-            return 0
-        finally:
-            if cur is not None:
-                cur.close()
+        with self._db_lock():
+            cur = None
+            try:
+                cur = self._conn.cursor()
+                rows = cur.execute("SELECT ep_num FROM episode_meta WHERE ep_num >= ?", (target_ep,)).fetchall()
+                count = len(rows)
+                for (ep,) in rows:
+                    cur.execute("DELETE FROM vec_episodes WHERE rowid = ?", (ep,))
+                cur.execute("DELETE FROM episode_meta WHERE ep_num >= ?", (target_ep,))
+                if self._shared_mode:
+                    cur.execute("UPDATE sync_status SET vector_synced = 0 WHERE ep_num >= ?", (target_ep,))
+                else:
+                    cur.execute("DELETE FROM sync_status WHERE ep_num >= ?", (target_ep,))
+                self._conn.commit()
+                return count
+            except Exception as e:
+                self._ui_log(f"[VecMemory] delete episodes failed (>={target_ep}): {e}")
+                return 0
+            finally:
+                if cur is not None:
+                    cur.close()
 
     def delete_all_episodes(self) -> int:
         """모든 에피소드 벡터+메타 삭제. 삭제된 건수 반환."""
@@ -490,11 +548,12 @@ class VecMemory:
             "db_path": self._db_path,
         }
         if self._conn:
-            try:
-                row = self._conn.execute("SELECT COUNT(*) FROM episode_meta").fetchone()
-                status["episode_count"] = row[0] if row else 0
-            except Exception:
-                status["episode_count"] = "unknown"
+            with self._db_lock():
+                try:
+                    row = self._conn.execute("SELECT COUNT(*) FROM episode_meta").fetchone()
+                    status["episode_count"] = row[0] if row else 0
+                except Exception:
+                    status["episode_count"] = "unknown"
         return status
 
     def ui_log(self, msg: str) -> None:
@@ -507,7 +566,8 @@ class VecMemory:
         """연결 종료 및 리소스 정리."""
         if self._conn:
             try:
-                self._conn.close()
+                if not self._shared_mode:
+                    self._conn.close()
             except Exception:
                 pass
             self._conn = None

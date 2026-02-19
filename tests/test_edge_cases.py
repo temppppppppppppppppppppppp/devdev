@@ -244,15 +244,12 @@ class TestVectorDBLock:
     def test_vectordb_lock_detection(self, temp_dir):
         """벡터 DB 잠금 감지 테스트"""
         # 0KB 파일 생성으로 손상 시뮬레이션
-        memory_path = temp_dir / "memory"
-        memory_path.mkdir()
+        db_file = temp_dir / "project_data.db"
+        db_file.write_text("")
 
-        vec_db = memory_path / "vec_memory.db"
-        vec_db.write_text("")
-
-        # 손상 감지 로직 테스트
-        assert vec_db.exists()
-        assert vec_db.stat().st_size == 0
+        # 이상 감지 로직 테스트
+        assert db_file.exists()
+        assert db_file.stat().st_size == 0
 
     def test_vectordb_lock_recovery_hint(self, temp_dir):
         """벡터 DB 잠금 복구 힌트 테스트"""
