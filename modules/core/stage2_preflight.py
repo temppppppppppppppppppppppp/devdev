@@ -544,6 +544,7 @@ class Stage2PreflightAnalysis:
                             entity_registry=entity_registry_for_director,
                             state_tracker=self.ctx.state_tracker,
                             vector_context=_s2_vector_ctx,
+                            adversarial_self_play=self.ctx.adversarial_self_play,
                         )
                     try:
                         self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_generate")
