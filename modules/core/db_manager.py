@@ -64,6 +64,19 @@ class DBManager:
         self.conn = sqlite3.connect(self.db_path, check_same_thread=False, timeout=30.0)
         self.conn.row_factory = sqlite3.Row
         self.cursor = self.conn.cursor()
+        # [DB-MERGE] sqlite-vec 확장 로드 (선택적)
+        self._vec_available = False
+        try:
+            import sqlite_vec as _sv
+
+            self.conn.enable_load_extension(True)
+            _sv.load(self.conn)
+            self.conn.enable_load_extension(False)
+            self._vec_available = True
+        except ImportError:
+            logging.info("[DBManager] sqlite-vec 미설치 - 벡터 테이블 생략")
+        except Exception as e:
+            logging.info(f"[DBManager] sqlite-vec 로드 실패: {e}")
 
         # 1. 앵커 데이터 (Bible, Volumes, Arcs)
         self.cursor.execute("""
@@ -356,10 +369,123 @@ class DBManager:
         """)
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_cost_log_scope ON cost_log(scope_type, scope_id)")
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_cost_log_session ON cost_log(session_id)")
+        # 17. [DB-MERGE] 벡터 검색 테이블
+        if self._vec_available:
+            self.cursor.execute("""
+                CREATE VIRTUAL TABLE IF NOT EXISTS vec_episodes
+                USING vec0(embedding float[768])
+            """)
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS episode_meta (
+                ep_num       INTEGER PRIMARY KEY,
+                summary      TEXT,
+                causal_data  TEXT,
+                arc_no       INTEGER,
+                event_types  TEXT,
+                entity_names TEXT,
+                created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
 
         self.conn.commit()
+        # [DB-MERGE] 기존 vec_memory.db 1회성 마이그레이션
+        self._migrate_vec_memory_db()
 
     # --- [트랜잭션 제어] ---
+    def _migrate_vec_memory_db(self) -> None:
+        """[DB-MERGE] 기존 memory/vec_memory.db -> project_data.db 1회성 마이그레이션."""
+        vec_path = Path(self.db_path).parent / "memory" / "vec_memory.db"
+        partial_path = vec_path.with_suffix(".db.partial_migrated")
+
+        # [FIX-9] sqlite-vec 설치 후 partial 파일 자동 복구
+        if not vec_path.exists() and partial_path.exists() and self._vec_available:
+            partial_path.rename(vec_path)
+
+        if not vec_path.exists():
+            return
+
+        attached = False
+        cur = None
+        try:
+            with self._lock:
+                cur = self.conn.cursor()
+                cur.execute("ATTACH DATABASE ? AS vec_old", (str(vec_path),))
+                attached = True
+
+                def _old_table_exists(table_name: str) -> bool:
+                    row = cur.execute(
+                        "SELECT 1 FROM vec_old.sqlite_master WHERE type='table' AND name=?",
+                        (table_name,),
+                    ).fetchone()
+                    return row is not None
+
+                # 1) episode_meta
+                if _old_table_exists("episode_meta"):
+                    cur.execute("""
+                        INSERT OR IGNORE INTO episode_meta
+                        SELECT * FROM vec_old.episode_meta
+                    """)
+
+                # 2) vec_episodes (sqlite-vec 사용 가능할 때만)
+                if self._vec_available and _old_table_exists("vec_episodes"):
+                    rows = cur.execute("SELECT rowid, embedding FROM vec_old.vec_episodes").fetchall()
+                    for rowid, embedding in rows:
+                        try:
+                            cur.execute(
+                                "INSERT OR REPLACE INTO vec_episodes(rowid, embedding) VALUES (?, ?)",
+                                (rowid, embedding),
+                            )
+                        except Exception:
+                            pass
+
+                # 3) sync_status: old.synced -> main.vector_synced (UPSERT)
+                if _old_table_exists("sync_status"):
+                    old_synced = cur.execute("SELECT ep_num FROM vec_old.sync_status WHERE synced = 1").fetchall()
+                    for (ep_num,) in old_synced:
+                        cur.execute(
+                            "INSERT INTO sync_status (ep_num, vector_synced, updated_at) VALUES (?, 1, CURRENT_TIMESTAMP) "
+                            "ON CONFLICT(ep_num) DO UPDATE SET vector_synced = 1, updated_at = CURRENT_TIMESTAMP",
+                            (ep_num,),
+                        )
+
+                # 4) anchors: old.value -> main.data (충돌 시 기존 유지)
+                if _old_table_exists("anchors"):
+                    old_anchors = cur.execute("SELECT key, value, updated_at FROM vec_old.anchors").fetchall()
+                    for key, value, updated_at in old_anchors:
+                        cur.execute(
+                            "INSERT OR IGNORE INTO anchors (key, data, updated_at) VALUES (?, ?, ?)",
+                            (key, value, updated_at),
+                        )
+
+                self.conn.commit()
+                cur.execute("DETACH DATABASE vec_old")
+                attached = False
+
+            if self._vec_available:
+                vec_path.rename(vec_path.with_suffix(".db.migrated"))
+                logging.info("[DB-MERGE] vec_memory.db 마이그레이션 완료 -> .db.migrated")
+            else:
+                vec_path.rename(vec_path.with_suffix(".db.partial_migrated"))
+                logging.warning(
+                    "[DB-MERGE] sqlite-vec 미설치로 vec_episodes 미이관. "
+                    "원본 보존(.partial_migrated). sqlite-vec 설치 후 재시도 가능."
+                )
+        except Exception as e:
+            logging.warning(f"[DB-MERGE] 마이그레이션 실패 (비치명): {e}")
+            # [FIX-2] rollback -> DETACH 순서
+            try:
+                self.conn.rollback()
+            except Exception:
+                pass
+            try:
+                if attached and cur is not None:
+                    cur.execute("DETACH DATABASE vec_old")
+            except Exception:
+                pass
+        finally:
+            if cur is not None:
+                cur.close()
+
     def begin(self):
         self.cursor.execute("BEGIN TRANSACTION")
 

@@ -930,12 +930,12 @@ class SovereignApp:
             return
 
         # [Phase 4D-2] sqlite-vec 벡터 메모리 초기화 (ChromaDB 대체)
-        vec_db_path = self.current_project.paths.memory / "vec_memory.db"
         self.current_project.paths.memory.mkdir(parents=True, exist_ok=True)
         self.memory = VecMemory(
-            db_path=vec_db_path,
             api_key=os.getenv("GOOGLE_API_KEY", ""),
             ui_log=self.ui.log,
+            conn=self.current_project.db.conn,
+            lock=self.current_project.db._lock,
         )
         if self.memory.is_operational():
             self.ui.log("✅ [VecMemory] sqlite-vec 벡터 엔진 초기화 완료")
@@ -1134,24 +1134,14 @@ class SovereignApp:
             return False
 
     def _check_vector_db_lock(self, project_name: str) -> bool:
-        """[Phase 4D] 벡터 DB 무결성 점검 (sqlite-vec).
-
-        Args:
-            project_name: 프로젝트 이름
-
-        Returns:
-            bool: 무결성 검증 통과 여부 (True=정상, False=손상 감지)
-        """
-        memory_path = Path(self._PROJECTS_DIR) / project_name / "memory"
-
-        # 1. sqlite-vec DB 파일 점검
-        vec_db = memory_path / "vec_memory.db"
-        if vec_db.exists() and vec_db.stat().st_size == 0:
-            self.ui.log(f"🚨 [Critical] 벡터 DB 파일({vec_db.name}) 손상 감지 (0KB).")
-            self.ui.log("👉 [해결] 파일 삭제 후 Stage 0을 재실행하십시오.")
+        """[DB-MERGE] DB file integrity check (project_data.db)."""
+        db_file = Path(self._PROJECTS_DIR) / project_name / "project_data.db"
+        if db_file.exists() and db_file.stat().st_size == 0:
+            self.ui.log(f"🚨 [Critical] DB file ({db_file.name}) looks corrupted (0KB).")
+            self.ui.log("💡 [Fix] Remove the file and rerun from Stage 0.")
             return False
 
-        self.ui.log("✅ [System] 벡터 DB 엔진 무결성 점검 완료.")
+        self.ui.log("✅ [System] Vector DB integrity check complete.")
         return True
 
     def _ui_select_bible(self) -> str | None:

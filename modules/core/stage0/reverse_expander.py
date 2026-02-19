@@ -417,9 +417,16 @@ JSON:
 
                 from modules.core.vec_memory import VecMemory
 
-                vec_db_path = ctx.paths.memory / "vec_memory.db"
-                ctx.paths.memory.mkdir(parents=True, exist_ok=True)
-                memory = VecMemory(db_path=vec_db_path, api_key=os.getenv("GOOGLE_API_KEY", ""))
+                if hasattr(ctx, "db") and ctx.db and hasattr(ctx.db, "conn") and ctx.db.conn:
+                    memory = VecMemory(
+                        api_key=os.getenv("GOOGLE_API_KEY", ""),
+                        conn=ctx.db.conn,
+                        lock=getattr(ctx.db, "_lock", None),
+                    )
+                else:
+                    vec_db_path = ctx.paths.memory / "vec_memory.db"
+                    ctx.paths.memory.mkdir(parents=True, exist_ok=True)
+                    memory = VecMemory(db_path=vec_db_path, api_key=os.getenv("GOOGLE_API_KEY", ""))
             except Exception as e:
                 logging.warning(f"[!] VecMemory 초기화 실패: {e}")
                 return 0

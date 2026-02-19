@@ -75,7 +75,7 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 ## ⚠️ 주의
 
 - `writer.py` — 유틸 3개는 `writer_prompt_builders.py`로 분리 완료 (A-1). `write_v20_manuscript` API만 유지 (오케스트레이터에서 호출 제거됨, 외부 진입점용).
-- `memory_engine.py` — **삭제됨** (Phase 4D 완료). VecMemory(`vec_memory.py`)가 단일 벡터 경로.
+- `memory_engine.py` — **삭제됨** (Phase 4D 완료). VecMemory(`vec_memory.py`)가 DBManager 커넥션을 공유 (DB-MERGE). `project_data.db` 단일 파일이 SSOT.
 - NPC 속성 변경 — `npc_history` 테이블로 append-only 이력 기록 (Phase 3-5A 완료). `bind_db()` 호출 시 활성화.
 - `base_agent.py`의 Context Caching — 구현 완료 (`_get_or_create_context_cache` L920, `_ask_with_cached_context` L1003). `chief_writer`·`director_continuity`에서 사용 중.
 
