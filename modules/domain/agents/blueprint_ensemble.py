@@ -115,6 +115,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
         constraint_block: dict,
         prev_blueprint: dict | None = None,
         feedback: str = "",
+        strategy_specific_feedback: str = "",
+        rejected_strategy: str = "",
+        single_strategy: str = "",
         protagonist_name: str = "주인공",  # [V61] 주인공 이름 (필수!)
         protagonist_config: dict = None,  # [V60.90] 주인공 설정 (world_origin, incarnation_type)
         state_tracker=None,  # [V60.95] StateTracker (고밀도 HUD 전달)
@@ -171,6 +174,11 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         # 병렬 생성
         logging.warning(f"🎲 [BPEnsemble] 3개 후보 병렬 생성 중... (주인공: {protagonist_name})")
+        _active_strategies = self.strategies
+        if single_strategy:
+            _filtered = [s for s in self.strategies if s.get("name") == single_strategy]
+            if _filtered:
+                _active_strategies = _filtered
 
         # [Phase 3-Obs] 에이전트 레벨 ThreadPoolExecutor 계측
         _tp_t0 = time.monotonic()
@@ -179,7 +187,12 @@ class BlueprintEnsembleGenerator(BaseAgent):
         try:
             with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
                 futures = {}
-                for strategy in self.strategies:
+                for strategy in _active_strategies:
+                    _strategy_feedback = (
+                        strategy_specific_feedback
+                        if (strategy.get("name") == rejected_strategy and strategy_specific_feedback)
+                        else ""
+                    )
                     future = executor.submit(
                         self._generate_single,
                         ep_num=ep_num,
@@ -188,6 +201,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                         prev_info=prev_info,
                         strategy=strategy,
                         feedback=feedback,
+                        strategy_feedback=_strategy_feedback,
                         protagonist_name=protagonist_name,  # [V61] 주인공 이름 전달
                         protagonist_config=protagonist_config,  # [V60.90] 주인공 설정 전달
                         hud_context=hud_context,  # [V60.95] 고밀도 HUD 주입
@@ -300,6 +314,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         prev_info: str,
         strategy: dict,
         feedback: str = "",
+        strategy_feedback: str = "",
         protagonist_name: str = "주인공",  # [V61] 주인공 이름
         protagonist_config: dict = None,  # [V60.90] 주인공 설정
         hud_context: str = "",  # [V60.95] 고밀도 HUD 컨텍스트
@@ -310,13 +325,20 @@ class BlueprintEnsembleGenerator(BaseAgent):
         try:
             # [V60.80] 피드백 강화 주입 - Director 피드백은 반드시 반영
             extra_directive = ""
-            if feedback:
+            _merged_feedback = feedback or ""
+            if strategy_feedback:
+                _merged_feedback = (
+                    f"{_merged_feedback}\n\n[전략별 보정 피드백]\n{strategy_feedback}"
+                    if _merged_feedback
+                    else f"[전략별 보정 피드백]\n{strategy_feedback}"
+                )
+            if _merged_feedback:
                 extra_directive = f"""
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🚨 [CRITICAL] Director REJECT 피드백 - 이전 시도 실패 원인
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-{feedback}
+{_merged_feedback}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⚠️ 위 피드백을 반드시 반영하세요. 동일한 실수 반복 시 다시 REJECT됩니다.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

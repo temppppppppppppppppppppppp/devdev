@@ -321,7 +321,7 @@ class Stage3Orchestrator:
         )
 
         # 결과 처리
-        if blueprint and pipeline_result.get("final_verdict") == "PASS":
+        if blueprint and pipeline_result.get("final_verdict") in ("PASS", "PASS_WITH_WARNING"):
             return self._handle_success(
                 working_ep, arc_no, blueprint, pipeline_result, prev_blueprints, success_count, fail_count
             )
@@ -446,6 +446,7 @@ class Stage3Orchestrator:
                     db=ctx.current_project.db,
                     semantic_context=_bp_semantic_ctx,
                     prev_manuscripts_text=_prev_ms_text_for_bp,
+                    adversarial_self_play=ctx.adversarial_self_play,
                 )
 
         except Exception as gen_err:
@@ -467,6 +468,18 @@ class Stage3Orchestrator:
     ) -> dict:
         """Blueprint 생성 성공 시 저장 + 메트릭 기록"""
         ctx = self.ctx
+        _final_verdict = pipeline_result.get("final_verdict", "PASS")
+        _quality_gate_failed = bool(pipeline_result.get("quality_gate_failed", False))
+        _quality_risk = bool(pipeline_result.get("quality_risk", False) or _quality_gate_failed)
+        if isinstance(blueprint, dict):
+            blueprint["_stage3_meta"] = {
+                "final_verdict": _final_verdict,
+                "quality_gate_failed": _quality_gate_failed,
+                "quality_risk": _quality_risk,
+                "last_score": pipeline_result.get("last_score", 0),
+            }
+            blueprint["quality_gate_failed"] = _quality_gate_failed
+            blueprint["quality_risk"] = _quality_risk
 
         # 무결성 검증 후 저장
         if not ctx.validate_blueprint_integrity(blueprint):
@@ -495,6 +508,8 @@ class Stage3Orchestrator:
                 "arc_no": arc_no,
                 "strategy": pipeline_result.get("phases", {}).get("generate", {}).get("selected_strategy", "unknown"),
                 "score": pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 0),
+                "final_verdict": _final_verdict,
+                "quality_risk": _quality_risk,
             },
         )
 
@@ -511,6 +526,30 @@ class Stage3Orchestrator:
             f"ep_{working_ep}_all_retries_exhausted",
             {"ep_num": working_ep, "final_verdict": pipeline_result.get("final_verdict", "UNKNOWN")},
         )
+        try:
+            _final_verdict = pipeline_result.get("final_verdict", "UNKNOWN")
+            _score = pipeline_result.get("last_score", 0)
+            if not isinstance(_score, int):
+                try:
+                    _score = int(_score)
+                except (ValueError, TypeError):
+                    _score = 0
+            ctx.current_project.db.save_cost_record(
+                session_id=f"ep_{working_ep}",
+                scope_type="episode",
+                scope_id=int(working_ep),
+                total_calls=0,
+                total_tokens=0,
+                total_cost_usd=0.0,
+                model_breakdown={
+                    "event": "stage3_reject",
+                    "verdict": _final_verdict,
+                    "score": _score,
+                    "quality_gate_failed": bool(pipeline_result.get("quality_gate_failed", False)),
+                },
+            )
+        except Exception as e:
+            _logging.warning(f"[SilentPass:Stage3RejectMetric] {e!s:.120}")
         new_fail_count = fail_count + 1
 
         # 연속 실패 3회 시 중단
