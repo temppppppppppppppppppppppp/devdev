@@ -309,11 +309,38 @@ set PYTHONIOENCODING=utf-8 && python -m pytest tests/ -q -x -k "tree_of_thoughts
 
 ---
 
+## 구현 대조 결과 (2026-02-19)
+
+코드 실측 기준 대조 결과:
+
+- Phase 1: 완료 (`chief_writer.py`, `blueprint_ensemble.py`, `three_phase_blueprint_generator.py`)
+- Phase 2: 완료 (`stage4_interview_round.py`의 `selected_strategy_key` 저장 + `chief_writer.py` 단일 전략 정제 + 폴백 확인)
+- Phase 3: 완료 (`three_phase_blueprint_generator.py`, `stage2_preflight.py`에 `selection_reason/score_breakdown/validation_warnings` 전달 확인)
+- Phase 4: 완료 (`stage3_orchestrator.py`에서 `PASS_WITH_WARNING` 수용 + `quality_gate_failed/quality_risk` 메타 전파)
+- Phase 5: 완료
+  - Stage 3: 완료 (`stage3_context.py`, `stage3_orchestrator.py`, `three_phase_blueprint_generator.py`)
+  - Stage 2: 완료 (`modules/core/stage2_preflight.py`의 `four_phase.generate(...)`에 `adversarial_self_play` 전달 연결 + post-ASP/patch 경로 유지)
+- Phase 6: 완료 (`stage4_context.py` DI + `stage4_interview_round.py`의 `_tot_used/_mad_used` retry-window 1회 보장)
+- Phase 7: 완료
+  - `stage4_reject`: `modules/core/stage4_interview_round.py`
+  - `stage3_reject`: `modules/core/stage3_orchestrator.py`
+  - `stage2_reject`: `modules/core/stage2_finalizer.py` (문서 초안의 `stage2_preflight.py` 대신 최종izer 위치에 구현)
+
+테스트 확인:
+- `ruff check` 통과
+- `pytest tests/` 통과 (`2100 passed, 68 xfailed`)
+- Stage2/3/4 타깃 테스트 통과 (`257 passed`)
+
+---
+
 ## 최종 체크리스트
 
-- [ ] Director 외 모듈이 PASS 확정하지 않는가?
-- [ ] ASP/ToT/MAD API 호출 시 반환 계약(`final_output`, `best_path`, `consensus_output`)을 지키는가?
-- [ ] DI 키가 실제 앱 속성명과 일치하는가?
-- [ ] `save_cost_record()` 계약(`session_id`, `scope_type`, `scope_id`...)을 지키는가?
-- [ ] 단일 후보 정제 실패 시 기존 경로로 정상 폴백하는가?
+- [x] Director 외 모듈이 PASS 확정하지 않는가?
+- [x] ASP/ToT/MAD API 호출 시 반환 계약(`final_output`, `best_path`, `consensus_output`)을 지키는가?
+- [x] DI 키가 실제 앱 속성명과 일치하는가?
+- [x] `save_cost_record()` 계약(`session_id`, `scope_type`, `scope_id`...)을 지키는가?
+- [x] 단일 후보 정제 실패 시 기존 경로로 정상 폴백하는가?
+
+잔여 액션:
+- [x] 없음
 
