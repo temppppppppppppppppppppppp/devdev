@@ -124,6 +124,7 @@ class FourPhaseArcGenerator(BaseAgent):
         entity_registry: dict = None,  # [V60.92] Entity Registry (NPC 명칭 일관성)
         state_tracker=None,  # [V60.94] StateTracker (죽은 NPC 검증용)
         vector_context: str = "",  # [V63.3] 벡터 검색 결과
+        adversarial_self_play=None,
     ) -> tuple[dict | None, dict]:
         """
         3단계 Arc 생성
@@ -307,6 +308,34 @@ class FourPhaseArcGenerator(BaseAgent):
                 _gen_fail_msg = "Ensemble 생성 실패. 다시 시도하세요."
                 feedback = f"{_base_director_feedback}\n{_gen_fail_msg}" if _base_director_feedback else _gen_fail_msg
                 continue
+
+            if retry >= 2 and adversarial_self_play and best_arc:
+                try:
+                    _asp_ctx = {
+                        "arc_no": arc_no,
+                        "ep_start": ep_start,
+                        "director_feedback": feedback,
+                    }
+                    _asp_input = json.dumps(best_arc, ensure_ascii=False)
+                    _asp_result = adversarial_self_play.generate_with_adversary(
+                        initial_content=_asp_input,
+                        content_type="arc",
+                        context=_asp_ctx,
+                    )
+                    _asp_output = getattr(_asp_result, "final_output", "") if _asp_result else ""
+                    if _asp_output:
+                        _asp_arc = self._extract_json_robust(_asp_output)
+                        if not isinstance(_asp_arc, dict) or not _asp_arc:
+                            try:
+                                _asp_arc = json.loads(_asp_output)
+                            except (json.JSONDecodeError, ValueError):
+                                _asp_arc = {}
+                        if isinstance(_asp_arc, dict) and _asp_arc.get("tactical_doc"):
+                            best_arc = _asp_arc
+                            pipeline_result["asp_used"] = True
+                            logging.info(f"✅ [ASP] Stage2 Arc 교정 적용 (retry={retry})")
+                except Exception as e:
+                    logging.warning(f"[SilentPass:Stage2:ASP] {e!s:.120}")
 
             pipeline_result["phases"]["generate"] = {
                 "status": "complete",

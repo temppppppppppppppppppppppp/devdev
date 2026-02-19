@@ -53,6 +53,7 @@ class Stage2Context:
         "constitutional_checker",
         "self_reflector",
         "use_arc_corrector",
+        "adversarial_self_play",
         # [4C-3c] 콜백 21종
         "audit_event",
         "cumulative_state_cache",
@@ -106,6 +107,7 @@ class Stage2Context:
         constitutional_checker=None,
         self_reflector=None,
         use_arc_corrector=False,
+        adversarial_self_play=None,
         # [4C-3c] 콜백 — 모두 optional
         audit_event=None,
         cumulative_state_cache=None,
@@ -154,6 +156,7 @@ class Stage2Context:
         self.constitutional_checker = constitutional_checker
         self.self_reflector = self_reflector
         self.use_arc_corrector = use_arc_corrector
+        self.adversarial_self_play = adversarial_self_play
         self.audit_event = audit_event
         self.cumulative_state_cache = cumulative_state_cache
         self.cumulative_state_cache_key = cumulative_state_cache_key
@@ -204,6 +207,7 @@ class Stage2Context:
             constitutional_checker=getattr(app, "constitutional_checker", None),
             self_reflector=getattr(app, "self_reflector", None),
             use_arc_corrector=getattr(app, "use_arc_corrector", False),
+            adversarial_self_play=getattr(app, "adversarial_self_play", None),
             audit_event=getattr(app, "_audit_event", None),
             cumulative_state_cache=getattr(app, "_cumulative_state_cache", None),
             cumulative_state_cache_key=getattr(app, "_cumulative_state_cache_key", None),

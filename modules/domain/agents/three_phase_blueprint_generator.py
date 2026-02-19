@@ -17,6 +17,7 @@ Stage 3 통합 파이프라인 - 단순화 + 효율화
 - 효과: 비용 50% 절감, 디렉터주권주의 유지
 """
 
+import json
 import logging
 
 from modules.models.blueprint import validate_blueprint
@@ -70,6 +71,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         db=None,  # [V61.5] DBManager (캐시 연속성 검사용)
         semantic_context: str = "",  # [V63.3] 벡터 시맨틱 검색 결과
         prev_manuscripts_text: str = "",  # [V67] 이전 원고 전문 (모순 방지)
+        adversarial_self_play=None,
     ) -> tuple[dict | None, dict]:
         """
         3단계 Blueprint 생성 (ToT 방식: 3전략 × 3시도 = 최대 9회 생성)
@@ -132,9 +134,34 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         _previous_best = None
         _prev_reject_score = 0
         _prev_reject_feedback = ""
+        _prev_reject_strategy = ""
+        _prev_score_breakdown = {}
+        _prev_selection_reason = ""
+        _prev_validation_warnings = []
+
+        def _build_strategy_feedback() -> str:
+            _parts = []
+            if _prev_selection_reason:
+                _parts.append(f"[이전 선택/거절 사유]\n{_prev_selection_reason}")
+            if isinstance(_prev_score_breakdown, dict) and _prev_score_breakdown:
+                _sb = ", ".join(f"{k}={v}" for k, v in _prev_score_breakdown.items() if isinstance(v, int | float))
+                if _sb:
+                    _parts.append(f"[이전 점수 분해]\n{_sb}")
+            if isinstance(_prev_validation_warnings, list) and _prev_validation_warnings:
+                _parts.append(
+                    "[이전 검증 경고]\n"
+                    + "\n".join(f"- {w}" for w in _prev_validation_warnings[:10] if isinstance(w, str))
+                )
+            return "\n\n".join(_parts)
 
         for retry in range(max_retries + 1):  # max_retries=2 → 3번 시도
             pipeline_result["retries"] = retry
+            _attempt_feedback = feedback
+            _strategy_feedback = _build_strategy_feedback()
+            if _strategy_feedback:
+                _attempt_feedback = (
+                    f"{_attempt_feedback}\n\n{_strategy_feedback}" if _attempt_feedback else _strategy_feedback
+                )
 
             # ═══════════════════════════════════════════════════════════════
             # PHASE 1: CONSTRAINT - 제약 수집
@@ -183,6 +210,10 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                     state_tracker=state_tracker,
                     prev_blueprints=prev_blueprints,
                     prev_manuscripts_text=prev_manuscripts_text,
+                    rejected_strategy=_prev_reject_strategy,
+                    selection_reason=_prev_selection_reason,
+                    score_breakdown=_prev_score_breakdown,
+                    validation_warnings=_prev_validation_warnings,
                 )
                 if not best_blueprint:
                     logging.info("[Patch Mode] Blueprint 패치 실패 → 전면 재생성 폴백")
@@ -191,7 +222,9 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                         arc_data=arc_data,
                         constraint_block=constraint_block,
                         prev_blueprint=prev_blueprint,
-                        feedback=feedback,
+                        feedback=_attempt_feedback,
+                        strategy_specific_feedback=_strategy_feedback,
+                        rejected_strategy=_prev_reject_strategy,
                         protagonist_name=protagonist_name,
                         protagonist_config=protagonist_config,
                         state_tracker=state_tracker,
@@ -204,13 +237,56 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                     arc_data=arc_data,
                     constraint_block=constraint_block,
                     prev_blueprint=prev_blueprint,
-                    feedback=feedback,
+                    feedback=_attempt_feedback,
+                    strategy_specific_feedback=_strategy_feedback,
+                    rejected_strategy=_prev_reject_strategy,
                     protagonist_name=protagonist_name,
                     protagonist_config=protagonist_config,
                     state_tracker=state_tracker,
                     prev_blueprints=prev_blueprints,
                     prev_manuscripts_text=prev_manuscripts_text,
                 )
+
+            if retry >= 2 and adversarial_self_play and best_blueprint:
+                try:
+                    _asp_ctx = {
+                        "arc_data": arc_data,
+                        "constraint_block": constraint_block,
+                        "director_feedback": _attempt_feedback,
+                    }
+                    _asp_input = json.dumps(best_blueprint, ensure_ascii=False)
+                    _asp_result = adversarial_self_play.generate_with_adversary(
+                        initial_content=_asp_input,
+                        content_type="blueprint",
+                        context=_asp_ctx,
+                    )
+                    _asp_output = getattr(_asp_result, "final_output", "") if _asp_result else ""
+                    if _asp_output:
+                        _asp_bp = self._extract_json_robust(_asp_output)
+                        if not isinstance(_asp_bp, dict) or not _asp_bp:
+                            try:
+                                _asp_bp = json.loads(_asp_output)
+                            except (json.JSONDecodeError, ValueError):
+                                _asp_bp = {}
+                        if (
+                            isinstance(_asp_bp, dict)
+                            and _asp_bp.get("scene_breakdown")
+                            and _asp_bp.get("integrated_scenario")
+                        ):
+                            _asp_bp["_ensemble_meta"] = {
+                                "strategy": "asp_correction",
+                                "scene_count": len(_asp_bp.get("scene_breakdown", {}))
+                                if isinstance(_asp_bp.get("scene_breakdown"), dict)
+                                else 0,
+                                "length": len(_asp_bp.get("integrated_scenario", "") or ""),
+                            }
+                            if not isinstance(all_candidates, list):
+                                all_candidates = []
+                            all_candidates.append(_asp_bp)
+                            pipeline_result["asp_used"] = True
+                            logging.info(f"✅ [ASP] Stage3 후보 추가 (retry={retry})")
+                except Exception as e:
+                    logging.warning(f"[SilentPass:Stage3:ASP] {e!s:.120}")
 
             if not best_blueprint:
                 logging.warning("❌ [Phase 2] Ensemble 생성 실패")
@@ -264,6 +340,8 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 selected_idx = validation_result.get("selected_index", 0)
                 logging.info(f"🎯 [V60.85] Director 선택: 후보 {selected_idx + 1}")
 
+            _selected_meta = best_blueprint.get("_ensemble_meta", {}) if isinstance(best_blueprint, dict) else {}
+            _selected_strategy = _selected_meta.get("strategy", "")
             pipeline_result["phases"]["validate"] = {
                 "status": "complete",
                 "verdict": verdict,
@@ -281,47 +359,65 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 _score = int(_score_raw)
             except (ValueError, TypeError):
                 _score = 0
+            pipeline_result["phases"]["generate"]["selected_strategy"] = _selected_strategy or "unknown"
+            pipeline_result["phases"]["generate"]["selected_score"] = _score
+
+            if verdict == "PASS" and _score < _quality_gate_score:
+                logging.warning(f"[QualityGate] Stage3 PASS이나 score={_score} < {_quality_gate_score} → REJECT 전환")
+                verdict = "REJECT"
+                feedback = (feedback or "") + f"\n[Quality Gate] score {_score}점으로 {_quality_gate_score}점 미달."
 
             if verdict == "PASS":
-                if _score < _quality_gate_score:
-                    logging.warning(
-                        f"[QualityGate] Stage3 PASS이나 score={_score} < {_quality_gate_score} → REJECT 전환"
-                    )
-                    verdict = "REJECT"
-                    feedback = (feedback or "") + (
-                        f"\n[Quality Gate] score {_score}점으로 {_quality_gate_score}점 미달."
-                    )
-                else:
-                    self.stats["phase3_pass"] += 1
-                    pipeline_result["final_verdict"] = "PASS"
-                    logging.info(f"✅ [Phase 3] PASS - 제{ep_num}화 Blueprint 생성 완료")
+                self.stats["phase3_pass"] += 1
+                pipeline_result["final_verdict"] = "PASS"
+                logging.info(f"✅ [Phase 3] PASS - 제{ep_num}화 Blueprint 생성 완료")
 
-                    # [Step2] Pydantic ingress+egress
-                    best_blueprint = validate_blueprint(best_blueprint)
-                    return best_blueprint, pipeline_result
+                # [Step2] Pydantic ingress+egress
+                best_blueprint = validate_blueprint(best_blueprint)
+                return best_blueprint, pipeline_result
+
+            self.stats["phase3_reject"] += 1
+            feedback = validation_result.get("feedback", "검증 실패")
+
+            _prev_reject_score = _score
+            _prev_reject_feedback = feedback
+            _prev_reject_strategy = _selected_strategy or ""
+            _prev_score_breakdown = (
+                validation_result.get("score_breakdown", {})
+                if isinstance(validation_result.get("score_breakdown", {}), dict)
+                else {}
+            )
+            _prev_selection_reason = (
+                validation_result.get("summary")
+                or validation_result.get("comparison_notes", "")
+                or str(validation_result.get("feedback", ""))
+            )
+            _issues = validation_result.get("issues", [])
+            _prev_validation_warnings = []
+            if isinstance(_issues, list):
+                for _iss in _issues[:10]:
+                    if isinstance(_iss, dict):
+                        _cat = _iss.get("category", "issue")
+                        _msg = _iss.get("issue", "")
+                        _prev_validation_warnings.append(f"{_cat}: {_msg}".strip(": "))
+                    elif _iss:
+                        _prev_validation_warnings.append(str(_iss))
+
+            if _prev_reject_score >= PatchModeThresholds.REWRITE and best_blueprint:
+                _previous_best = best_blueprint
             else:
-                self.stats["phase3_reject"] += 1
-                feedback = validation_result.get("feedback", "검증 실패")
+                _previous_best = None
 
-                # [Patch Mode] REJECT 결과 추적
-                _prev_reject_score = validation_result.get("score", 0)
-                if _prev_reject_score >= PatchModeThresholds.REWRITE and best_blueprint:
-                    _previous_best = best_blueprint
-                    _prev_reject_feedback = feedback
-                else:
-                    _previous_best = None
+            issues = validation_result.get("issues", [])
+            if issues:
+                logging.warning("🚨 [Phase 3] REJECT - 주요 이슈:")
+                for issue in issues[:3]:
+                    sev = issue.get("severity", "?")
+                    cat = issue.get("category", "?")
+                    text = issue.get("issue", "?")
+                    logging.info(f"[{sev}][{cat}] {text}")
 
-                # 이슈 출력
-                issues = validation_result.get("issues", [])
-                if issues:
-                    logging.warning("🚨 [Phase 3] REJECT - 주요 이슈:")
-                    for issue in issues[:3]:
-                        sev = issue.get("severity", "?")
-                        cat = issue.get("category", "?")
-                        text = issue.get("issue", "?")
-                        logging.info(f"[{sev}][{cat}] {text}")
-
-                logging.warning(f"❌ [Phase 3] REJECT - 재시도 {retry + 1}/{max_retries + 1}")
+            logging.warning(f"❌ [Phase 3] REJECT - 재시도 {retry + 1}/{max_retries + 1}")
 
         # 모든 재시도 실패
         _last_score = validation_result.get("score", 0) if "validation_result" in locals() else 0
@@ -331,6 +427,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             )
             pipeline_result["final_verdict"] = "PASS_WITH_WARNING"
             pipeline_result["quality_gate_failed"] = True
+            pipeline_result["quality_risk"] = True
             pipeline_result["last_score"] = _last_score
             return best_blueprint, pipeline_result
 
@@ -359,6 +456,10 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         state_tracker=None,
         prev_blueprints: list[dict] | None = None,
         prev_manuscripts_text: str = "",
+        rejected_strategy: str = "",
+        selection_reason: str = "",
+        score_breakdown: dict | None = None,
+        validation_warnings: list[str] | None = None,
     ) -> tuple[dict | None, list]:
         """[Patch Mode] 원본 Blueprint를 보존하며 Director 피드백 지적사항만 수정.
 
@@ -400,6 +501,17 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 f"전면 재설계하지 마세요. 지적된 부분만 고치세요."
             )
 
+        _strategy_parts = []
+        if selection_reason:
+            _strategy_parts.append(f"[선택/거절 사유]\n{selection_reason}")
+        if isinstance(score_breakdown, dict) and score_breakdown:
+            _sb = ", ".join(f"{k}={v}" for k, v in score_breakdown.items() if isinstance(v, int | float))
+            if _sb:
+                _strategy_parts.append(f"[점수 분해]\n{_sb}")
+        if isinstance(validation_warnings, list) and validation_warnings:
+            _strategy_parts.append("[검증 경고]\n" + "\n".join(f"- {w}" for w in validation_warnings[:10]))
+        _strategy_feedback = "\n\n".join(_strategy_parts)
+
         enhanced_feedback = (
             f"[🔧 {attempt_number}차 수정 - 패치 모드: Blueprint 원본 보존 + 지적사항만 수정]\n\n"
             f"{_patch_section}\n\n"
@@ -415,6 +527,9 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 constraint_block=constraint_block,
                 prev_blueprint=prev_blueprint,
                 feedback=enhanced_feedback,
+                strategy_specific_feedback=_strategy_feedback,
+                rejected_strategy=rejected_strategy,
+                single_strategy=rejected_strategy,
                 protagonist_name=protagonist_name,
                 protagonist_config=protagonist_config,
                 state_tracker=state_tracker,

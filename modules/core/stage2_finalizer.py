@@ -468,6 +468,13 @@ class Stage2Finalizer:
             _rejected_arc = refined_arc  # [Patch Mode] REJECT된 Arc 보존 (패치 모드 판단용)
             base_feedback = audit.get("re_slice_instruction") or "밀도 보강 필요"
             reject_reason = audit.get("reason") or "사유 미상"
+            _score_breakdown = {}
+            _self_consistency = audit.get("self_consistency", {})
+            if isinstance(_self_consistency, dict):
+                for _k in ("votes", "pass_votes", "median_score"):
+                    _v = _self_consistency.get(_k)
+                    if isinstance(_v, int | float):
+                        _score_breakdown[_k] = _v
 
             adaptive_intensity = self.ctx.get_adaptive_feedback_intensity(attempt, stage=2)
             intensity_guide = f"\n\n[V60.9 재시도 가이드 ({attempt + 1}회차)]\n{adaptive_intensity['guidance']}"
@@ -518,6 +525,9 @@ class Stage2Finalizer:
             "st_snapshot": st_snapshot,
             "score": audit.get("score", 0),  # [Patch Mode] Director 점수
             "rejected_arc": _rejected_arc,  # [Patch Mode] REJECT된 Arc (패치 입력용)
+            "score_breakdown": _score_breakdown,
+            "selection_reason": reject_reason,
+            "validation_warnings": [reject_reason, base_feedback],
         }
 
     def _record_s2_pass_metrics(
@@ -608,6 +618,32 @@ class Stage2Finalizer:
                 )
             except Exception as e:  # [V64.P4] OPTIONAL: metrics
                 logging.debug(f"[SILENT] metrics (reject): {e}")
+
+        try:
+            _score = audit.get("score", 0)
+            if not isinstance(_score, int):
+                try:
+                    _score = int(_score)
+                except (ValueError, TypeError):
+                    _score = 0
+            self.ctx.current_project.db.save_cost_record(
+                session_id=f"arc_{global_arc_no}",
+                scope_type="arc",
+                scope_id=int(global_arc_no),
+                total_calls=0,
+                total_tokens=0,
+                total_cost_usd=0.0,
+                model_breakdown={
+                    "event": "stage2_reject",
+                    "score": _score,
+                    "attempt": attempt + 1,
+                    "generation_method": generation_method,
+                    "is_patch": is_patch,
+                    "patch_fallback": patch_fallback,
+                },
+            )
+        except Exception as e:
+            logging.warning(f"[SilentPass:Stage2RejectMetric] {e!s:.120}")
 
         if V50_MODULES_AVAILABLE and self.ctx.quality_dashboard:
             try:

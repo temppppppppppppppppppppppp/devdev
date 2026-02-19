@@ -122,6 +122,9 @@ class ChiefWriter(BaseAgent):
         master_bible: dict,
         style_guide: str = "",
         director_feedback: str = "",
+        strategy_specific_feedback: str = "",
+        rejected_strategy: str = "",
+        single_strategy: str = "",
         failure_constraints: str = "",
         # [V60.80 FIX] 미래 침범 방지용 추가 파라미터
         current_inventory: list[str] = None,
@@ -236,6 +239,10 @@ class ChiefWriter(BaseAgent):
         # 병렬 생성
         candidates = []
         strategies = ["balanced", "narrative", "tension"]
+        if single_strategy:
+            _target = [s for s in strategies if s == single_strategy]
+            if _target:
+                strategies = _target
 
         # [Phase 3-Obs] 에이전트 레벨 ThreadPoolExecutor 계측
         _tp_t0 = time.monotonic()
@@ -243,8 +250,14 @@ class ChiefWriter(BaseAgent):
         # [V61.3] 전체 병렬 처리 블록을 try-except로 감싸서 급사 방지
         try:
             with ThreadPoolExecutor(max_workers=3) as executor:
-                futures = {
-                    executor.submit(
+                futures = {}
+                for strategy in strategies:
+                    _feedback = (
+                        strategy_specific_feedback
+                        if (strategy == rejected_strategy and strategy_specific_feedback)
+                        else ""
+                    )
+                    future = executor.submit(
                         self._generate_single_candidate,
                         ep_num=ep_num,
                         strategy=strategy,
@@ -253,9 +266,9 @@ class ChiefWriter(BaseAgent):
                         master_bible=master_bible,
                         genre_name=genre_name,
                         cache_name=cache_name,
-                    ): strategy
-                    for strategy in strategies
-                }
+                        strategy_feedback=_feedback,
+                    )
+                    futures[future] = strategy
 
                 # [V61.3] 타임아웃 적용 - 야간 무인 운영 시 무한 대기 방지
                 try:
@@ -324,14 +337,20 @@ class ChiefWriter(BaseAgent):
         valid_candidates = [c for c in candidates if not c.get("error")]
         if not valid_candidates:
             logging.warning("🚨 [ChiefWriter] 모든 후보 생성 실패 - 단일 재시도")
+            _fallback_strategy = strategies[0] if strategies else "balanced"
             fallback = self._generate_single_candidate(
                 ep_num=ep_num,
-                strategy="balanced",
+                strategy=_fallback_strategy,
                 common_context=common_context,
                 hud_report=hud_report,
                 master_bible=master_bible,
                 genre_name=genre_name,
                 cache_name=cache_name,
+                strategy_feedback=(
+                    strategy_specific_feedback
+                    if (_fallback_strategy == rejected_strategy and strategy_specific_feedback)
+                    else ""
+                ),
             )
             if fallback and not fallback.get("error"):
                 candidates = [fallback]
@@ -368,6 +387,7 @@ class ChiefWriter(BaseAgent):
         master_bible: dict = None,
         genre_name: str = "무협",
         cache_name: str = None,
+        strategy_feedback: str = "",
     ) -> dict | None:
         """
         [V60.81] 단일 후보 생성 + Self-Critique + Leakage 방지
@@ -385,17 +405,20 @@ class ChiefWriter(BaseAgent):
         # [V61.3] 전체 메서드를 try-except로 감싸서 worker thread 크래시 방지
         try:
             strategy_config = self.ENSEMBLE_STRATEGIES.get(strategy, self.ENSEMBLE_STRATEGIES["balanced"])
+            _strategy_feedback_block = (
+                f"\n[Strategy-Specific Feedback]\n{strategy_feedback}\n" if strategy_feedback else ""
+            )
 
             # [V61.7] 캐시 사용 분기
             if cache_name:
                 # 캐시 활성: common_context는 캐시에 있으므로 전략 부분만 전송
                 strategy_prompt = f"""{strategy_config["instruction"]}
-
+{_strategy_feedback_block}
 {self.PROMPT_TEMPLATE_OUTPUT.format(strategy=strategy)}"""
 
                 # 폴백용 전체 프롬프트 (캐시 실패 시)
                 full_prompt = f"""{common_context}
-
+{_strategy_feedback_block}
 {strategy_config["instruction"]}
 
 {self.PROMPT_TEMPLATE_OUTPUT.format(strategy=strategy)}"""
@@ -410,7 +433,7 @@ class ChiefWriter(BaseAgent):
             else:
                 # [V60.82] 기존 방식: 전체 프롬프트
                 full_prompt = f"""{common_context}
-
+{_strategy_feedback_block}
 {strategy_config["instruction"]}
 
 {self.PROMPT_TEMPLATE_OUTPUT.format(strategy=strategy)}"""
@@ -606,6 +629,12 @@ class ChiefWriter(BaseAgent):
         if previous_attempt.get("action_items"):
             items = previous_attempt.get("action_items", [])
             failure_constraints = "이전 REJECT 사유:\n" + "\n".join([f"- {item}" for item in items])
+        _rejected_strategy = str(previous_attempt.get("selected_strategy_key", "") or "")
+        _strategy_feedback = previous_attempt.get("selection_reason", "")
+        if isinstance(_strategy_feedback, dict):
+            _strategy_feedback = json.dumps(_strategy_feedback, ensure_ascii=False)
+        if not isinstance(_strategy_feedback, str):
+            _strategy_feedback = str(_strategy_feedback or "")
 
         return self.generate_ensemble(
             ep_num=ep_num,
@@ -616,6 +645,8 @@ class ChiefWriter(BaseAgent):
             master_bible=master_bible,
             style_guide=style_guide,
             director_feedback=enhanced_feedback,
+            strategy_specific_feedback=_strategy_feedback,
+            rejected_strategy=_rejected_strategy,
             failure_constraints=failure_constraints,
             # 미래 침범 방지 데이터 전달
             current_inventory=current_inventory,
@@ -728,6 +759,12 @@ class ChiefWriter(BaseAgent):
         if previous_attempt.get("action_items"):
             items = previous_attempt.get("action_items", [])
             failure_constraints = "이전 REJECT 사유:\n" + "\n".join([f"- {item}" for item in items])
+        _rejected_strategy = str(previous_attempt.get("selected_strategy_key", "") or "")
+        _strategy_feedback = previous_attempt.get("selection_reason", "")
+        if isinstance(_strategy_feedback, dict):
+            _strategy_feedback = json.dumps(_strategy_feedback, ensure_ascii=False)
+        if not isinstance(_strategy_feedback, str):
+            _strategy_feedback = str(_strategy_feedback or "")
 
         try:
             return self.generate_ensemble(
@@ -739,6 +776,9 @@ class ChiefWriter(BaseAgent):
                 master_bible=master_bible,
                 style_guide=style_guide,
                 director_feedback=enhanced_feedback,
+                strategy_specific_feedback=_strategy_feedback,
+                rejected_strategy=_rejected_strategy,
+                single_strategy=_rejected_strategy,
                 failure_constraints=failure_constraints,
                 current_inventory=current_inventory,
                 current_martial_arts=current_martial_arts,

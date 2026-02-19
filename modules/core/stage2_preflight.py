@@ -1,6 +1,7 @@
 """[B-1-8] Stage2 preflight analysis extracted from Stage2Orchestrator."""
 
 import concurrent.futures
+import json
 import logging
 
 from modules.validation.threshold_helper import _threshold
@@ -492,9 +493,25 @@ class Stage2PreflightAnalysis:
                         _prev_score = previous_attempt["score"]
                         logging.info(f"[Patch Mode] Arc 패치 모드 진입 (score={_prev_score}, attempt={attempt})")
                         self.ctx.ui.log(f"   🔧 [Patch Mode] Arc 패치: score={_prev_score}, 원본 보존 수정")
+                        _patch_feedback = previous_attempt.get("rejection_reason", "")
+                        _sel_reason = previous_attempt.get("selection_reason", "")
+                        _score_breakdown = previous_attempt.get("score_breakdown", {})
+                        _val_warnings = previous_attempt.get("validation_warnings", [])
+                        if _sel_reason:
+                            _patch_feedback += f"\n[선택/거절 사유]\n{_sel_reason}"
+                        if isinstance(_score_breakdown, dict) and _score_breakdown:
+                            _sb = ", ".join(
+                                f"{k}={v}" for k, v in _score_breakdown.items() if isinstance(v, int | float)
+                            )
+                            if _sb:
+                                _patch_feedback += f"\n[점수 분해]\n{_sb}"
+                        if isinstance(_val_warnings, list) and _val_warnings:
+                            _patch_feedback += "\n[검증 경고]\n" + "\n".join(
+                                f"- {w}" for w in _val_warnings[:10] if isinstance(w, str)
+                            )
                         four_phase_arc, pipeline_result = self.ctx.agents["four_phase"].patch_arc_with_feedback(
                             original_arc=previous_attempt["best_arc"],
-                            director_feedback=previous_attempt.get("rejection_reason", ""),
+                            director_feedback=_patch_feedback,
                             attempt_number=attempt + 1,
                             arc_no=global_arc_no,
                             ep_start=current_ep_start,
@@ -506,6 +523,7 @@ class Stage2PreflightAnalysis:
                             entity_registry=entity_registry_for_director,
                             state_tracker=self.ctx.state_tracker,
                             vector_context=_s2_vector_ctx,
+                            adversarial_self_play=self.ctx.adversarial_self_play,
                         )
                         if not four_phase_arc:
                             _patch_fallback = True
@@ -538,6 +556,37 @@ class Stage2PreflightAnalysis:
                     four_phase_passed = True
                     draft_validator_passed = False  # FourPhase는 독립 파이프라인 — 별도 검증 미실행
                     consensus_passed = False
+
+                    if attempt >= 2 and self.ctx.adversarial_self_play and refined_arc:
+                        try:
+                            _asp_ctx = {
+                                "arc_no": global_arc_no,
+                                "director_feedback": director_feedback_for_fourphase,
+                                "attempt": attempt + 1,
+                            }
+                            _asp_input = json.dumps(refined_arc, ensure_ascii=False)
+                            _asp_result = self.ctx.adversarial_self_play.generate_with_adversary(
+                                initial_content=_asp_input,
+                                content_type="arc",
+                                context=_asp_ctx,
+                            )
+                            _asp_output = getattr(_asp_result, "final_output", "") if _asp_result else ""
+                            if _asp_output:
+                                _asp_arc = {}
+                                _fp_agent = self.ctx.agents.get("four_phase")
+                                if _fp_agent and hasattr(_fp_agent, "_extract_json_robust"):
+                                    _asp_arc = _fp_agent._extract_json_robust(_asp_output)
+                                if not isinstance(_asp_arc, dict) or not _asp_arc:
+                                    try:
+                                        _asp_arc = json.loads(_asp_output)
+                                    except (json.JSONDecodeError, ValueError):
+                                        _asp_arc = {}
+                                if isinstance(_asp_arc, dict) and _asp_arc.get("tactical_doc"):
+                                    refined_arc = _asp_arc
+                                    generation_method = "four_phase_asp"
+                                    logging.info(f"✅ [ASP] Stage2 Arc 교정 적용 (attempt={attempt + 1})")
+                        except Exception as e:
+                            logging.warning(f"[SilentPass:Stage2:ASP:Post] {e!s:.120}")
 
                     refined_arc["joint_docs"] = enriched_block.get("joint_docs", {})
                     refined_arc["status_shadow"] = enriched_block.get("status_shadow", {})

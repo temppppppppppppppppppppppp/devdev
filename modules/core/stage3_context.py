@@ -23,6 +23,7 @@ class Stage3Context:
         "state_tracker",
         "world_state",
         "fact_ledger",
+        "adversarial_self_play",
         "preset_registry",
         "selected_genre",
         # [콜백 10종]
@@ -48,6 +49,7 @@ class Stage3Context:
         state_tracker=None,
         world_state=None,
         fact_ledger=None,
+        adversarial_self_play=None,
         preset_registry=None,
         selected_genre=None,
         get_protagonist_name=None,
@@ -68,6 +70,7 @@ class Stage3Context:
         self.state_tracker = state_tracker
         self.world_state = world_state
         self.fact_ledger = fact_ledger
+        self.adversarial_self_play = adversarial_self_play
         self.preset_registry = preset_registry
         self.selected_genre = selected_genre
         self.get_protagonist_name = get_protagonist_name
@@ -92,6 +95,7 @@ class Stage3Context:
             state_tracker=getattr(app, "state_tracker", None),
             world_state=getattr(app, "world_state", None),
             fact_ledger=getattr(app, "fact_ledger", None),
+            adversarial_self_play=getattr(app, "adversarial_self_play", None),
             preset_registry=getattr(app, "preset_registry", None),
             selected_genre=getattr(app, "selected_genre", None),
             get_protagonist_name=getattr(app, "_get_protagonist_name", None),

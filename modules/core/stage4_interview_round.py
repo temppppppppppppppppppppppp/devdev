@@ -78,6 +78,8 @@ class Stage4InterviewRound:
         _is_patch_fallback = False
         _prev_score = 0
         _prev_manuscript = previous_attempt.get("best_manuscript", "") if previous_attempt else ""
+        _tot_used = bool(previous_attempt.get("_tot_used", False)) if previous_attempt else False
+        _mad_used = bool(previous_attempt.get("_mad_used", False)) if previous_attempt else False
 
         _weighted_injection = ""
         if self.ctx.prompt_weighter:
@@ -268,6 +270,8 @@ class Stage4InterviewRound:
                 "rejection_reason": "모든 후보 생성 실패",
                 "action_items": [],
                 "score": 0,
+                "_tot_used": _tot_used,
+                "_mad_used": _mad_used,
             }
             self._record_s4_attempt(
                 episode=next_ep,
@@ -740,8 +744,54 @@ class Stage4InterviewRound:
             director_feedback = (
                 "\n".join(action_items) if action_items else ("\n".join(str(i) for i in _issues) if _issues else "")
             )
+            _reject_text = f"{director_feedback}\n" + "\n".join(str(a) for a in action_items)
+            _reject_lower = _reject_text.lower()
+            _reject_bucket = "quality_issue"
+            if any(k in _reject_lower for k in ("constraint", "제약", "충돌", "금지", "모순", "consistency", "검증")):
+                _reject_bucket = "constraint_violation"
+            elif any(k in _reject_lower for k in ("구조", "structure", "흐름", "flow", "씬", "전개", "페이싱")):
+                _reject_bucket = "structure_error"
+
+            _seed_manuscript = director_result.get("selected_candidate", {}).get("manuscript", "") or _prev_manuscript
+            if _reject_bucket == "structure_error" and self.ctx.tree_of_thoughts and not _tot_used and _seed_manuscript:
+                try:
+                    _tot_result = self.ctx.tree_of_thoughts.explore(
+                        task=f"원고 구조 개선: {director_feedback}",
+                        context={"manuscript": _seed_manuscript[:3000], "blueprint": blueprint},
+                    )
+                    _best_path = getattr(_tot_result, "best_path", None)
+                    _tot_output = getattr(_best_path, "output", "") if _best_path else ""
+                    if _tot_output:
+                        director_feedback += f"\n[ToT 구조 개선 지침]\n{_tot_output[:1000]}"
+                        _tot_used = True
+                except Exception as e:
+                    logging.warning(f"[SilentPass:ToT] {e!s:.120}")
+            if (
+                _reject_bucket == "constraint_violation"
+                and self.ctx.multi_agent_deliberation
+                and not _mad_used
+                and _seed_manuscript
+            ):
+                try:
+                    _mad_result = self.ctx.multi_agent_deliberation.deliberate(
+                        content=_seed_manuscript,
+                        content_type="manuscript",
+                        context={"blueprint": blueprint, "director_feedback": director_feedback},
+                    )
+                    _mad_output = getattr(_mad_result, "consensus_output", "") if _mad_result else ""
+                    if _mad_output:
+                        director_feedback += f"\n[MAD 제약/합의 개선 지침]\n{_mad_output[:1000]}"
+                        _mad_used = True
+                except Exception as e:
+                    logging.warning(f"[SilentPass:MAD] {e!s:.120}")
+
+            _sel_candidate = director_result.get("selected_candidate", {})
+            if not isinstance(_sel_candidate, dict):
+                _sel_candidate = {}
+            _sel_strategy_key = _sel_candidate.get("strategy", "") or _sel_candidate.get("strategy_name", "")
             previous_attempt = {
                 "strategy": selected,
+                "selected_strategy_key": _sel_strategy_key,
                 "rejection_reason": director_feedback,
                 "action_items": action_items,
                 "score": score,
@@ -750,7 +800,33 @@ class Stage4InterviewRound:
                 "score_breakdown": director_result.get("score_breakdown", {}),
                 "selection_reason": director_result.get("selection_reason", ""),
                 "validation_warnings": [w for vr in validation_results for w in vr.get("warnings", [])][:20],
+                "reject_bucket": _reject_bucket,
+                "_tot_used": _tot_used,
+                "_mad_used": _mad_used,
             }
+            try:
+                self.ctx.current_project.db.save_cost_record(
+                    session_id=f"ep_{next_ep}",
+                    scope_type="episode",
+                    scope_id=int(next_ep),
+                    total_calls=0,
+                    total_tokens=0,
+                    total_cost_usd=0.0,
+                    model_breakdown={
+                        "event": "stage4_reject",
+                        "bucket": _reject_bucket,
+                        "score": score,
+                        "round": round_num,
+                        "strategy": selected,
+                        "intelligence_used": {
+                            "asp": bool(_asp_manuscript),
+                            "tot": _tot_used,
+                            "mad": _mad_used,
+                        },
+                    },
+                )
+            except Exception as e:
+                logging.warning(f"[SilentPass:Stage4RejectMetric] {e!s:.120}")
             self.ctx.ui.log(f"   ❌ {round_num + 1}차 면담 REJECT. 피드백: {director_feedback[:100]}...")
         self._record_s4_attempt(
             episode=next_ep,

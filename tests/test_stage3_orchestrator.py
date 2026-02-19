@@ -365,7 +365,7 @@ class TestStage3ContextDI:
         assert result == "장무기"
 
     def test_from_app_all_slots(self, app_mock):
-        """from_app이 19개 슬롯 전부 매핑하는지 확인"""
+        """from_app이 20개 슬롯 전부 매핑하는지 확인"""
         ctx = Stage3Context.from_app(app_mock)
         assert ctx.ui is app_mock.ui
         assert ctx.current_project is app_mock.current_project
@@ -374,6 +374,7 @@ class TestStage3ContextDI:
         assert ctx.state_tracker is app_mock.state_tracker
         assert ctx.world_state is app_mock.world_state
         assert ctx.fact_ledger is app_mock.fact_ledger
+        assert ctx.adversarial_self_play is app_mock.adversarial_self_play
         assert ctx.preset_registry is app_mock.preset_registry
         assert ctx.selected_genre is app_mock.selected_genre
         assert ctx.get_protagonist_name is app_mock._get_protagonist_name
@@ -387,9 +388,9 @@ class TestStage3ContextDI:
         assert ctx.validate_blueprint_integrity is app_mock._validate_blueprint_integrity
         assert ctx.fix_entity_registry_protagonist is app_mock._fix_entity_registry_protagonist
 
-    def test_slots_count_19(self):
+    def test_slots_count_20(self):
         """__slots__ 개수 검증"""
-        assert len(Stage3Context.__slots__) == 19
+        assert len(Stage3Context.__slots__) == 20
 
     def test_ctx_sync_after_lazy_init(self, app_mock):
         """lazy init 후 state_tracker/world_state/fact_ledger가 ctx에 sync되는지 확인"""

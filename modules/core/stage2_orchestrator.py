@@ -556,6 +556,9 @@ class Stage2Orchestrator:
                             "score": _rej_score,
                             "best_arc": _rej_arc,
                             "rejection_reason": _fin.get("director_feedback_for_fourphase", ""),
+                            "score_breakdown": _fin.get("score_breakdown", {}),
+                            "selection_reason": _fin.get("selection_reason", ""),
+                            "validation_warnings": _fin.get("validation_warnings", []),
                         }
                     else:
                         _previous_attempt = None

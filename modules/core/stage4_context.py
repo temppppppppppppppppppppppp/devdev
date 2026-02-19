@@ -42,6 +42,8 @@ class Stage4Context:
         "cross_verifier",
         "chain_of_verification",
         "adversarial_self_play",
+        "tree_of_thoughts",
+        "multi_agent_deliberation",
         # [4C-2c] 콜백 7종
         "get_int_input",
         "build_item_acquisition_timeline",
@@ -80,6 +82,8 @@ class Stage4Context:
         cross_verifier=None,
         chain_of_verification=None,
         adversarial_self_play=None,
+        tree_of_thoughts=None,
+        multi_agent_deliberation=None,
         # [4C-2c] 콜백 — 모두 optional (None 허용)
         get_int_input=None,
         build_item_acquisition_timeline=None,
@@ -113,6 +117,8 @@ class Stage4Context:
         self.cross_verifier = cross_verifier
         self.chain_of_verification = chain_of_verification
         self.adversarial_self_play = adversarial_self_play
+        self.tree_of_thoughts = tree_of_thoughts
+        self.multi_agent_deliberation = multi_agent_deliberation
         self.get_int_input = get_int_input
         self.build_item_acquisition_timeline = build_item_acquisition_timeline
         self.load_narrative_summaries = load_narrative_summaries
@@ -149,6 +155,8 @@ class Stage4Context:
             cross_verifier=getattr(app, "cross_verifier", None),
             chain_of_verification=getattr(app, "chain_of_verification", None),
             adversarial_self_play=getattr(app, "adversarial_self_play", None),
+            tree_of_thoughts=getattr(app, "tree_of_thoughts", None),
+            multi_agent_deliberation=getattr(app, "multi_agent_deliberation", None),
             get_int_input=getattr(app, "_get_int_input", None),
             build_item_acquisition_timeline=getattr(app, "_build_item_acquisition_timeline", None),
             load_narrative_summaries=getattr(app, "_load_narrative_summaries", None),
