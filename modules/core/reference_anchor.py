@@ -48,6 +48,7 @@ class ReferenceAnchor:
         Returns:
             List of anchor dicts
         """
+        manuscript_content = manuscript_content or ""
         # 원고가 너무 길면 압축 (API 토큰 제한)
         if len(manuscript_content) > 4000:
             compressed = manuscript_content[:2000] + "\n\n...(중략)...\n\n" + manuscript_content[-2000:]

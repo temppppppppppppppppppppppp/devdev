@@ -60,7 +60,7 @@ def test_stage3_orchestrator_agents_none_guard_added():
 
 def test_chief_writer_final_content_falls_back_when_content_is_none():
     source = Path("modules/domain/agents/chief_writer.py").read_text(encoding="utf-8")
-    assert 'final_content = critiqued_data.get("content") or manuscript_content' in source
+    assert "final_content = _crit_content or manuscript_content" in source
 
 
 def test_director_ensemble_info_levels_for_normal_progress_events():

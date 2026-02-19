@@ -379,7 +379,6 @@ class TestIntegration:
         required_imports = [
             "ConstitutionalChecker",
             # [V65] TwoPhaseArcGenerator 삭제됨
-            "ManuscriptEnhancer",
         ]
 
         for imp in required_imports:

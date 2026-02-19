@@ -1168,9 +1168,13 @@ class ContinuityManuscriptValidator:
         )
         all_warnings = base_result.get("warnings", []) + skill_check.get("warnings", []) + rel_check.get("warnings", [])
 
-        if any(v.get("severity") in ["CRITICAL", "MAJOR"] for v in all_violations):
+        if any(v.get("severity") in ["CRITICAL", "MAJOR"] for v in all_violations if isinstance(v, dict)):
             final_decision = "REJECT"
-            final_severity = "CRITICAL" if any(v.get("severity") == "CRITICAL" for v in all_violations) else "MAJOR"
+            final_severity = (
+                "CRITICAL"
+                if any(v.get("severity") == "CRITICAL" for v in all_violations if isinstance(v, dict))
+                else "MAJOR"
+            )
         else:
             final_decision = base_result.get("decision", "PASS")
             final_severity = base_result.get("severity", "NONE")

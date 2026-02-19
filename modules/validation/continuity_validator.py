@@ -841,15 +841,13 @@ class ContinuityValidator:
                     continue
                 if not isinstance(history_entries, list):
                     continue
-                # personality_traits 변경 이력 필터 (오래된 순)
+                # [G21] personality_traits 변경 이력 필터 — 최신 2개 비교
                 personality_changes = [
-                    h
-                    for h in reversed(history_entries)
-                    if isinstance(h, dict) and h.get("field_name") == "personality_traits"
+                    h for h in history_entries if isinstance(h, dict) and h.get("field_name") == "personality_traits"
                 ]
                 if len(personality_changes) >= 2:
-                    prev = personality_changes[-2]
-                    curr = personality_changes[-1]
+                    prev = personality_changes[-2]  # 직전
+                    curr = personality_changes[-1]  # 최신
                     old_val = prev.get("new_value", "")
                     new_val = curr.get("new_value", "")
                     if self._is_contradictory_trait_change(old_val, new_val):

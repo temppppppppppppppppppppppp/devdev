@@ -65,6 +65,8 @@ class BlockingValidatorEntityChecks:
         for npc in dead_npcs:
             name = npc.get("name", "")
             aliases = npc.get("aliases", [])
+            if not isinstance(aliases, list):
+                aliases = [aliases] if aliases else []
 
             for identifier in [name] + aliases:
                 if not identifier or identifier not in manuscript:
@@ -150,6 +152,8 @@ class BlockingValidatorEntityChecks:
         all_items = encyclopedia.get("items", [])
 
         for item in all_items:
+            if not isinstance(item, dict):
+                continue
             item_name = item.get("name", "")
             item_aliases = item.get("aliases", [])
 
@@ -159,6 +163,8 @@ class BlockingValidatorEntityChecks:
                     owned_items_with_aliases.extend(item_aliases)
 
         for item in all_items:
+            if not isinstance(item, dict):
+                continue
             item_name = item.get("name", "")
             item_aliases = item.get("aliases", []) if isinstance(item.get("aliases"), list) else []
 

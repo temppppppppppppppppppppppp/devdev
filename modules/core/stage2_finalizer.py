@@ -128,15 +128,25 @@ class Stage2Finalizer:
             logging.warning(f"[SilentPass:Stage2Finalizer] 스토리 컨텍스트 생성 실패: {e!s:.100}")
             _story_context = ""
 
-        audit = self.ctx.agents["director"].audit_strategic_plan(
-            refined_arc,
-            _expanded_prev_context,
-            curr_block=enriched_block,
-            protagonist_name=protagonist_name,
-            suspected_duplicates=suspected_duplicates,
-            entity_registry=entity_registry_for_director,
-            story_context=_story_context,  # [V67.1]
-        )
+        # [G7] Director 심사 호출 크래시 방어
+        try:
+            audit = self.ctx.agents["director"].audit_strategic_plan(
+                refined_arc,
+                _expanded_prev_context,
+                curr_block=enriched_block,
+                protagonist_name=protagonist_name,
+                suspected_duplicates=suspected_duplicates,
+                entity_registry=entity_registry_for_director,
+                story_context=_story_context,  # [V67.1]
+            )
+        except Exception as _dir_err:
+            logging.warning(f"[G7] Director 심사 호출 실패: {_dir_err!s:.100}")
+            audit = {
+                "decision": "PASS",
+                "score": 50,
+                "reason": "Director 호출 실패 — 폴백 PASS",
+                "self_consistency": {},
+            }
         try:
             self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_director")
         except Exception:
@@ -166,9 +176,29 @@ class Stage2Finalizer:
                     {"arc_no": global_arc_no, "scores": scores, "zero_count": zero_count},
                 )
 
+        from modules.validation.threshold_helper import _threshold
+
+        _quality_gate_score = _threshold("scoring.quality_gate_score", 90)
+        _score_raw = audit.get("score", 0)
+        try:
+            _score = int(_score_raw)
+        except (ValueError, TypeError):
+            _score = 0
+
         _td = refined_arc.get("tactical_doc", "")
         _td_len = len(str(_td)) if isinstance(_td, dict) else len(_td or "")
         if audit.get("decision") == "PASS" and _td_len >= 1500:
+            if _score < _quality_gate_score:
+                self.ctx.ui.log(
+                    f"      ⚠️ [QualityGate] PASS 판정이나 score={_score} < {_quality_gate_score} → REJECT 전환"
+                )
+                audit["decision"] = "REJECT"
+                audit["reason"] = (audit.get("reason") or "") + (
+                    f"\n[Quality Gate] score {_score}점으로 {_quality_gate_score}점 미달."
+                )
+                audit["re_slice_instruction"] = audit.get("re_slice_instruction") or "품질 개선 후 재제출"
+                return {"action": "retry", "current_feedback": audit["reason"]}
+
             ### [0124 핵심 3] 욕망 데이터 및 HUD 그림자 물리적 박제
             refined_arc["arc_drive"] = arc_drive if arc_drive else {}
             refined_arc["joint_docs"] = enriched_block.get("joint_docs", {})

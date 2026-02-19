@@ -241,7 +241,9 @@ class BlueprintConstraintCompiler:
             # 폴백: beat_sequence 사용
             beats = arc_data.get("beat_sequence", [])
             if arc_position < len(beats):
-                content = beats[arc_position]  # 다음 비트
+                # [TypeSafety] beat가 dict일 수 있음 → str() 래핑
+                beat = beats[arc_position]
+                content = str(beat) if not isinstance(beat, str) else beat
 
         return {"content": content if content else None, "is_arc_finale": False, "next_ep": next_ep}
 

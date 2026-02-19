@@ -207,14 +207,14 @@ class VecMemory:
                 (ep_num, _serialize_f32(emb)),
             )
 
-            causal_str = json.dumps(causal_links, ensure_ascii=False)[:500] if causal_links else ""
-            evt_str = ",".join(str(e) for e in event_types)[:200] if event_types else ""
-            ent_str = ",".join(str(n) for n in entity_names)[:300] if entity_names else ""
+            causal_str = json.dumps(causal_links, ensure_ascii=False)[:2000] if causal_links else ""
+            evt_str = ",".join(str(e) for e in event_types)[:500] if event_types else ""
+            ent_str = ",".join(str(n) for n in entity_names)[:1000] if entity_names else ""
             cur.execute(
                 """INSERT OR REPLACE INTO episode_meta
                    (ep_num, summary, causal_data, arc_no, event_types, entity_names)
                    VALUES (?, ?, ?, ?, ?, ?)""",
-                (ep_num, summary[:500], causal_str, arc_no, evt_str, ent_str),
+                (ep_num, summary[:1000], causal_str, arc_no, evt_str, ent_str),
             )
 
             cur.execute(
@@ -295,10 +295,16 @@ class VecMemory:
             _, meta = seen[ep]
             summary = meta.get("summary", "")
             evt = meta.get("event_types", "")
+            ent = meta.get("entity_names", "")
             header = f"### [제 {ep} 화의 기억]"
             if evt:
                 header += f" ({evt})"
-            blocks.append(f"{header}\n요약: {summary}")
+            block = f"{header}\n요약: {summary}"
+            if evt:
+                block += f"\n사건: {evt}"
+            if ent:
+                block += f"\n인물: {ent}"
+            blocks.append(block)
 
         return "\n\n".join(blocks)
 
@@ -326,6 +332,12 @@ class VecMemory:
                     continue
                 summary = meta.get("summary", "요약 정보가 없는 기억입니다.")
                 block = f"### [제 {rowid} 화의 기억]\n요약: {summary}"
+                evt = meta.get("event_types", "")
+                ent = meta.get("entity_names", "")
+                if evt:
+                    block += f"\n사건: {evt}"
+                if ent:
+                    block += f"\n인물: {ent}"
                 blocks.append(block)
 
             return "\n\n".join(blocks)
@@ -413,8 +425,8 @@ class VecMemory:
 
             try:
                 content = f_path.read_text(encoding="utf-8")
-                first_line = content.split("\n")[0].strip()[:100]
-                self.memorize_v20_episode(ep_num, content, f"[동기화] {first_line}", {})
+                excerpt = content[:500].replace("\n", " ").strip()
+                self.memorize_v20_episode(ep_num, content, f"[동기화] {excerpt}", {})
                 chunk_counter += 1
                 if chunk_counter >= chunk_size:
                     time.sleep(0.5)

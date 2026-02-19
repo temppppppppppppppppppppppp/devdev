@@ -258,6 +258,10 @@ class RelationshipTrackerNPC:
             }
         """
         # 사유 필수 체크
+        if not isinstance(trigger, str):
+            trigger = str(trigger) if trigger else ""
+        if not isinstance(justification, str):
+            justification = str(justification) if justification else ""
         if not trigger or len(trigger.strip()) < 5:
             return {
                 "valid": False,

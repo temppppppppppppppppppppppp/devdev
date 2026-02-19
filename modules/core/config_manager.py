@@ -2,8 +2,6 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from modules.core.constants import ManuscriptLimits
-
 
 class ConfigManager:
     """[V20 Sovereign Config] 모델 티어 배정 및 프로젝트 경로 체계를 총괄 관리
@@ -17,6 +15,14 @@ class ConfigManager:
 
     def __init__(self) -> None:
         self.root = Path.cwd()
+
+        _target_manuscript_length = 5000
+        try:
+            from modules.core.constants import ManuscriptLimits
+
+            _target_manuscript_length = ManuscriptLimits.TARGET_LENGTH
+        except Exception:
+            pass
 
         # 1. 프로젝트 폴더 생성
         self.projects_dir = self.root / "projects"
@@ -41,7 +47,7 @@ class ConfigManager:
             },
             "limits": {
                 "max_retries": 10,  # V20 매니페스토 기준 재시도 횟수
-                "target_manuscript_length": ManuscriptLimits.TARGET_LENGTH,  # 목표 원고 자수
+                "target_manuscript_length": _target_manuscript_length,  # 목표 원고 자수
             },
         }
 

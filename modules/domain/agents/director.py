@@ -54,7 +54,7 @@ class Director(BaseAgent):
 
         # [V60.87] 원고 역사 충돌 검사 설정
         self.manuscript_history_check_enabled = True  # 전체 원고 대비 충돌 검사 활성화
-        self.history_check_max_episodes = 10  # 최대 몇 화까지 역사 참조할지 (너무 많으면 토큰 초과)
+        self.history_check_max_episodes = 30  # 최대 몇 화까지 역사 참조할지
 
         # [V64 P2-1] CachingManager 분리 — 원고 캐시, 역사 구성, protagonist_config 캐싱
         self._caching = DirectorCachingManager(self.client, self.primary_model, self.context)
@@ -323,7 +323,9 @@ class Director(BaseAgent):
         return self._continuity.check_blueprint_continuity_with_cache(new_blueprint, ep_num, db, limit)
 
     def check_manuscript_continuity_with_cache(
-        self, new_manuscript: str, ep_num: int, db=None, limit: int = 10
+        self, new_manuscript: str, ep_num: int, db=None, limit: int = 10, story_context: str = ""
     ) -> dict:
         """[V64] 위임 → DirectorContinuityValidator"""
-        return self._continuity.check_manuscript_continuity_with_cache(new_manuscript, ep_num, db, limit)
+        return self._continuity.check_manuscript_continuity_with_cache(
+            new_manuscript, ep_num, db, limit, story_context=story_context
+        )

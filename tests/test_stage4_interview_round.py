@@ -138,7 +138,7 @@ class TestInterviewRoundRun:
         ctx.agents["director"].select_and_judge_ensemble.return_value = {
             "selected": "A",
             "verdict": "PASS",
-            "score": 85,
+            "score": 95,
             "selection_reason": "좋음",
             "selected_candidate": {"manuscript": "통과 원고", "title": "통과"},
             "state_updates": {},
@@ -277,7 +277,7 @@ class TestRecordS4Attempt:
         ctx.agents["director"].select_and_judge_ensemble.return_value = {
             "selected": "A",
             "verdict": "PASS",
-            "score": 85,
+            "score": 95,
             "selection_reason": "좋음",
             "selected_candidate": {"manuscript": "통과 원고", "title": "통과"},
             "state_updates": {},

@@ -9,8 +9,9 @@ Director reference를 통해 BaseAgent 메서드(ask, _extract_json_robust 등) 
 import json
 import logging
 
-from modules.core.constants import ContextLimits, ManuscriptLimits  # [V64.P4]
+from modules.core.constants import ManuscriptLimits, smart_truncate  # [V64.P4]
 from modules.core.prompt_loader import PromptLoader
+from modules.validation.threshold_helper import _threshold
 
 
 def _safe_int(value, default=0):
@@ -325,7 +326,7 @@ class DirectorEnsembleSelector:
             v = validation_results[idx] if idx < len(validation_results) else {}
             return {
                 "strategy": c.get("strategy_name", c.get("strategy", f"후보{idx + 1}")),
-                "manuscript": c.get("manuscript", "")[:12000],
+                "manuscript": c.get("manuscript", ""),
                 "warnings": "\n".join(v.get("warnings", [])) or "(경고 없음)",
             }
 
@@ -336,8 +337,7 @@ class DirectorEnsembleSelector:
         # [V67] 이전 원고 전문 — 30+화 컨텍스트
         _prev_ms_for_director = prev_manuscripts_text if prev_manuscripts_text else "(이전 원고 없음 — 1화)"
         # Gemini 컨텍스트 윈도우가 크므로 넉넉히 전달 (최대 200K자)
-        if len(_prev_ms_for_director) > ContextLimits.MAX_CONTEXT_CHARS:
-            _prev_ms_for_director = _prev_ms_for_director[: ContextLimits.MAX_CONTEXT_CHARS] + "\n...(이하 생략)"
+        _prev_ms_for_director = smart_truncate(_prev_ms_for_director)
 
         prompt = self._prompt_loader.load(
             "director",
@@ -372,9 +372,13 @@ class DirectorEnsembleSelector:
 
         # [V67] mandatory_context 확장 — 25,000자 상한 (기존 8,000자)
         if mandatory_context:
-            _mc_for_director = mandatory_context[:25000]
-            if len(mandatory_context) > 25000:
-                _mc_for_director = _mc_for_director[:24950] + "\n...(mandatory_context 25,000자 초과로 일부 생략)"
+            _dir_mc_max = _threshold("context.director_mandatory_max", 40000)
+            _mc_for_director = mandatory_context[:_dir_mc_max]
+            if len(mandatory_context) > _dir_mc_max:
+                _mc_for_director = (
+                    _mc_for_director[: _dir_mc_max - 50]
+                    + f"\n...(mandatory_context {_dir_mc_max:,}자 초과로 일부 생략)"
+                )
             prompt += f"""
 
 ### 📌 [V67] 필수 컨텍스트 (Python 감지 + StateTracker 상태)
@@ -511,9 +515,14 @@ class DirectorEnsembleSelector:
                 }
             return {"verdict": "REJECT", "score": 30, "reason": "간소 검토 파싱 실패 + 분량 미달"}
 
+        # [G5] critical_issues가 list가 아닐 수 있음 (LLM 응답 안전성)
+        _issues = result.get("critical_issues", [])
+        if not isinstance(_issues, list):
+            _issues = [_issues] if _issues else []
+
         return {
             "verdict": result.get("verdict", "REJECT"),
             "score": result.get("score", 50),
             "reason": result.get("reason", ""),
-            "critical_issues": result.get("critical_issues", []),
+            "critical_issues": _issues,
         }

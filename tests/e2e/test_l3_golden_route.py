@@ -214,7 +214,7 @@ class TestL3PipelineSmoke:
 
             mock_director = MagicMock()
             mock_director.audit_strategic_plan = MagicMock(
-                return_value={"decision": "PASS", "score": 80, "reason": "ok"}
+                return_value={"decision": "PASS", "score": 95, "reason": "ok"}
             )
             mock_director.ask = MagicMock(return_value="ok")
 

@@ -23,6 +23,7 @@ class Stage4InterviewRound:
     ):
         """[4-R1-e-1] Single interview round: generation, validation, judgment."""
         from modules.core.stage4_orchestrator import _PATCH_REWRITE_THRESHOLD, _InterviewRoundResult
+        from modules.validation.threshold_helper import _threshold
 
         # [4-R2-b] Unpack round context
         chief_writer = round_ctx.chief_writer
@@ -59,6 +60,11 @@ class Stage4InterviewRound:
         justification_prompt = round_ctx.justification_prompt
         reflexion_prompt = round_ctx.reflexion_prompt
 
+        if type(director_feedback) is not str:
+            director_feedback = str(director_feedback or "")
+        if type(mandatory_context) is not str:
+            mandatory_context = str(mandatory_context or "")
+
         stage4_spinner.update_detail(f"제{next_ep}화 · {round_num + 1}차 면담 · 앙상블 생성")
         self.ctx.ui.log(f"\n🎬 [{round_num + 1}차 면담] Chief Writer 앙상블 생성 중...")
 
@@ -71,6 +77,19 @@ class Stage4InterviewRound:
         _is_patch = False
         _is_patch_fallback = False
         _prev_score = 0
+        _prev_manuscript = previous_attempt.get("best_manuscript", "") if previous_attempt else ""
+
+        _weighted_injection = ""
+        if self.ctx.prompt_weighter:
+            try:
+                _weighted_injection = self.ctx.prompt_weighter.get_weighted_prompt("writer", 4, top_n=3)
+            except Exception as e:
+                logging.warning(f"[SilentPass:PromptWeighter] {e!s:.100}")
+        if _weighted_injection:
+            director_feedback = (
+                (_weighted_injection + "\n\n" + director_feedback) if director_feedback else _weighted_injection
+            )
+
         if round_num == 0:
             candidates = chief_writer.generate_ensemble(
                 ep_num=next_ep,
@@ -104,8 +123,8 @@ class Stage4InterviewRound:
                 _prev_score = int(previous_attempt.get("score", 0)) if previous_attempt else 0
             except (ValueError, TypeError):
                 _prev_score = 0
-            _prev_manuscript = previous_attempt.get("best_manuscript", "") if previous_attempt else ""
-            _use_patch = _prev_score >= _PATCH_REWRITE_THRESHOLD and _prev_manuscript
+            _patch_enabled = bool(_threshold("feature_flags.enable_patch_mode", 1))
+            _use_patch = _patch_enabled and _prev_score >= _PATCH_REWRITE_THRESHOLD and _prev_manuscript
             _is_patch = bool(_use_patch)
 
             if _use_patch:
@@ -205,6 +224,31 @@ class Stage4InterviewRound:
                     world_state_summary=_world_state_summary,
                     chain_link_section=_chain_link_section,
                 )
+
+        _asp_manuscript = None
+        if round_num >= 2 and self.ctx.adversarial_self_play and previous_attempt:
+            try:
+                if _prev_manuscript:
+                    self.ctx.ui.log(f"   🔥 [ASP] 레드팀 교정 발동 (재시도 {round_num + 1}회차)")
+                    _asp_ctx = {}
+                    if blueprint:
+                        _asp_ctx["blueprint"] = blueprint
+                    if director_feedback:
+                        _asp_ctx["director_feedback"] = director_feedback
+                    _asp_result = self.ctx.adversarial_self_play.generate_with_adversary(
+                        initial_content=_prev_manuscript,
+                        content_type="manuscript",
+                        context=_asp_ctx,
+                    )
+                    if _asp_result and hasattr(_asp_result, "final_output") and _asp_result.final_output:
+                        _asp_manuscript = _asp_result.final_output
+                        self.ctx.ui.log(
+                            f"   ✅ [ASP] 교정 완료 (delta: +{getattr(_asp_result, 'improvement_delta', '?')})"
+                        )
+            except Exception as e:
+                logging.warning(f"[SilentPass:ASP] {e!s:.200}")
+        if _asp_manuscript:
+            candidates.append({"manuscript": _asp_manuscript, "strategy": "asp_correction"})
 
         # [V65] PerfTimer: 원고 생성 종료
         try:
@@ -340,9 +384,14 @@ class Stage4InterviewRound:
                     cv_violations = cv_result.get("violations", [])
                     cv_penalty = cv_result.get("score_penalty", 0)
                     if cv_violations:
+                        if "structured_violations" not in validation_results[ci]:
+                            validation_results[ci]["structured_violations"] = []
                         for v in cv_violations:
                             reason = v.get("reason", str(v))
-                            validation_results[ci]["warnings"].append(f"[V63.2] 일관성: {reason}")
+                            severity = v.get("severity", "")
+                            tagged = f"[{severity}] {reason}" if severity else reason
+                            validation_results[ci]["warnings"].append(f"[V63.2] 일관성: {tagged}")
+                            validation_results[ci]["structured_violations"].append(v)
                         validation_results[ci]["warning_count"] = len(validation_results[ci]["warnings"])
                         validation_results[ci]["focus_points"].append(
                             f"일관성 위반 {len(cv_violations)}건 (감점 {cv_penalty})"
@@ -422,17 +471,29 @@ class Stage4InterviewRound:
         # [V61.5] 캐시 기반 연속성 검사
         if round_num == 0 and next_ep > 1 and candidates:
             stage4_spinner.update_detail(f"제{next_ep}화 · 연속성 검사")
-            first_manuscript = candidates[0].get("manuscript", "")
-            continuity_check = self.ctx.agents["director"].check_manuscript_continuity_with_cache(
-                new_manuscript=first_manuscript,
-                ep_num=next_ep,
-                db=self.ctx.current_project.db,
-                limit=10,
-            )
-            if continuity_check.get("decision") == "CONFLICT":
-                conflict_summary = continuity_check.get("summary", "연속성 충돌 감지")
-                self.ctx.ui.log(f"   ⚠️ [V61.5] 연속성 검사: {conflict_summary[:50]}...")
-                director_feedback += f"\n[연속성 충돌]\n{conflict_summary}"
+            _continuity_conflicts = []
+            for ci, cand in enumerate(candidates):
+                _ms = cand.get("manuscript", "")
+                if not _ms:
+                    continue
+
+                continuity_check = self.ctx.agents["director"].check_manuscript_continuity_with_cache(
+                    new_manuscript=_ms,
+                    ep_num=next_ep,
+                    db=self.ctx.current_project.db,
+                    limit=10,
+                    story_context=_story_context,
+                )
+                if continuity_check.get("decision") == "CONFLICT":
+                    conflict_summary = continuity_check.get("summary", "연속성 충돌 감지")
+                    self.ctx.ui.log(f"   ⚠️ [V61.5] 후보{ci + 1} 연속성: {conflict_summary[:50]}...")
+                    if ci < len(validation_results):
+                        validation_results[ci]["warnings"].append(f"[연속성 충돌] {conflict_summary}")
+                        validation_results[ci]["warning_count"] = len(validation_results[ci]["warnings"])
+                    _continuity_conflicts.append(f"후보{ci + 1}: {conflict_summary[:80]}")
+
+            if _continuity_conflicts:
+                director_feedback += "\n[연속성 충돌]\n" + "\n".join(_continuity_conflicts)
 
         # [V67] 명시적 모순 검사 — 이전 원고와 비교
         if _prev_manuscripts_text and hasattr(
@@ -452,22 +513,91 @@ class Stage4InterviewRound:
 
             # [V67.1] story_context 포함하여 모순 검사 호출
             if _ms_history_for_check and candidates:
-                _first_ms = candidates[0].get("manuscript", "")
-                if _first_ms:
+                _history_conflicts = []
+                for ci, cand in enumerate(candidates):
+                    _cand_ms = cand.get("manuscript", "")
+                    if not _cand_ms:
+                        continue
                     try:
                         _conflict_result = self.ctx.agents["director"].check_manuscript_history_conflicts(
                             ep_num=next_ep,
-                            current_manuscript=_first_ms,
+                            current_manuscript=_cand_ms,
                             manuscript_history=_ms_history_for_check,
                             use_summary=False,
                             story_context=_story_context,
                         )
                         if _conflict_result.get("decision") == "CONFLICT":
                             _conflict_summary = _conflict_result.get("summary", "모순 감지")
-                            self.ctx.ui.log(f"   ⚠️ [V67] 원고 역사 충돌: {_conflict_summary[:80]}")
-                            director_feedback += f"\n[V67 원고 역사 충돌]\n{_conflict_summary}"
+                            self.ctx.ui.log(f"   ⚠️ [V67] 후보{ci + 1} 역사 충돌: {_conflict_summary[:80]}")
+                            if ci < len(validation_results):
+                                validation_results[ci]["warnings"].append(f"[V67 역사 충돌] {_conflict_summary}")
+                                validation_results[ci]["warning_count"] = len(validation_results[ci]["warnings"])
+                            _history_conflicts.append(f"후보{ci + 1}: {_conflict_summary[:80]}")
                     except Exception as _hc_err:
-                        logging.warning(f"⚠️ [V67] 원고 역사 충돌 검사 실패 (비차단): {str(_hc_err)[:50]}")
+                        logging.warning(f"⚠️ [V67] 후보{ci + 1} 역사 충돌 검사 실패: {_hc_err}")
+
+                if _history_conflicts:
+                    director_feedback += "\n[V67 원고 역사 충돌]\n" + "\n".join(_history_conflicts)
+
+        if self.ctx.pre_director_checklist:
+            try:
+                _checklist_ctx = {}
+                if blueprint:
+                    _checklist_ctx["blueprint"] = blueprint
+                if _prev_manuscript:
+                    _checklist_ctx["prev_manuscript"] = _prev_manuscript
+                for ci, cand in enumerate(candidates):
+                    _ms = cand.get("manuscript", "")
+                    if not _ms or ci >= len(validation_results):
+                        continue
+                    _cl_result = self.ctx.pre_director_checklist.check(_ms, "manuscript", context=_checklist_ctx)
+                    if not _cl_result.passed:
+                        for _br in _cl_result.blocking_reasons:
+                            validation_results[ci]["warnings"].append(f"[PreCheck] {_br}")
+                        validation_results[ci]["warning_count"] = len(validation_results[ci]["warnings"])
+                        self.ctx.ui.log(f"   ⚠️ [PreCheck] 후보{ci + 1}: {_cl_result.summary[:60]}...")
+            except Exception as e:
+                logging.warning(f"[SilentPass:PreDirectorChecklist] {e!s:.100}")
+
+        if self.ctx.confidence_calibrator:
+            try:
+                for ci, cand in enumerate(candidates):
+                    _ms = cand.get("manuscript", "")
+                    if not _ms or ci >= len(validation_results):
+                        continue
+                    _conf = self.ctx.confidence_calibrator.assess(
+                        _ms, "manuscript", context={"blueprint": blueprint, "prev_manuscript": _prev_manuscript}
+                    )
+                    if _conf.concerns:
+                        for _c in _conf.concerns[:3]:
+                            validation_results[ci]["warnings"].append(f"[Confidence:{_conf.level.value}] {_c}")
+                        validation_results[ci]["warning_count"] = len(validation_results[ci]["warnings"])
+            except Exception as e:
+                logging.warning(f"[SilentPass:ConfidenceCalibrator] {e!s:.100}")
+
+        if self.ctx.cross_verifier and blueprint:
+            try:
+                from modules.core.cross_agent_verifier import ComplianceLevel
+
+                for ci, cand in enumerate(candidates):
+                    _ms = cand.get("manuscript", "")
+                    if not _ms or ci >= len(validation_results):
+                        continue
+                    _compliance = self.ctx.cross_verifier.verify_writer_compliance(
+                        manuscript=_ms, blueprint=blueprint, use_llm=False
+                    )
+                    if _compliance.level == ComplianceLevel.VIOLATION:
+                        for _v in _compliance.violations[:5]:
+                            _v_msg = _v.get("reason", str(_v)) if isinstance(_v, dict) else str(_v)
+                            validation_results[ci]["warnings"].append(f"[CrossVerify:VIOLATION] {_v_msg}")
+                        validation_results[ci]["warning_count"] = len(validation_results[ci]["warnings"])
+                    elif _compliance.warnings:
+                        for _w in _compliance.warnings[:3]:
+                            _w_msg = _w.get("reason", str(_w)) if isinstance(_w, dict) else str(_w)
+                            validation_results[ci]["warnings"].append(f"[CrossVerify:WARNING] {_w_msg}")
+                        validation_results[ci]["warning_count"] = len(validation_results[ci]["warnings"])
+            except Exception as e:
+                logging.warning(f"[SilentPass:CrossAgentVerifier] {e!s:.100}")
 
         # Phase 4: Director 면담
         stage4_spinner.update_detail(f"제{next_ep}화 · {round_num + 1}차 면담 · Director 심사")
@@ -479,13 +609,14 @@ class Stage4InterviewRound:
             pass
         # [V66.3] C-1: mandatory_context + Python 검증 경고를 Director에 전달
         # validation_results에서 경고를 추출하여 mandatory_context에 병합
-        _director_mc_parts = [mandatory_context] if mandatory_context else []
+        _mandatory_text = mandatory_context if isinstance(mandatory_context, str) else str(mandatory_context or "")
+        _director_mc_parts = [_mandatory_text] if _mandatory_text else []
         _vr_warnings_for_director = []
         for _vr_idx, _vr in enumerate(validation_results):
             _vr_warns = _vr.get("warnings", [])
             if _vr_warns:
                 _label = ["A", "B", "C"][_vr_idx] if _vr_idx < 3 else f"{_vr_idx + 1}"
-                _vr_warnings_for_director.append(f"[후보 {_label} Python 감지 경고]\n" + "\n".join(_vr_warns[:10]))
+                _vr_warnings_for_director.append(f"[후보 {_label} Python 감지 경고]\n" + "\n".join(_vr_warns[:30]))
         if _vr_warnings_for_director:
             _director_mc_parts.append(
                 "[V66.3] Python 사전 검증 결과 (Director 참고용)\n" + "\n\n".join(_vr_warnings_for_director)
@@ -495,7 +626,7 @@ class Stage4InterviewRound:
             _director_mc_parts.append(
                 "🚨 [V69.1] Python 감지된 원고 충돌 경고 (반드시 반영하세요)\n" + director_feedback.strip()
             )
-        _director_mandatory_context = "\n\n".join(_director_mc_parts)
+        _director_mandatory_context = "\n\n".join(str(x) for x in _director_mc_parts if x is not None)
 
         director_result = self.ctx.agents["director"].select_and_judge_ensemble(
             ep_num=next_ep,
@@ -519,6 +650,10 @@ class Stage4InterviewRound:
         selected = director_result.get("selected", "A")
         verdict = director_result.get("verdict", "REJECT")
         score = director_result.get("score", 0)
+        try:
+            score = int(score)
+        except (ValueError, TypeError):
+            score = 0
         reason = director_result.get("selection_reason") or ""
 
         self.ctx.ui.log(f"   📊 Director 판정: {verdict} (점수: {score}, 선택: 후보 {selected})")
@@ -548,6 +683,15 @@ class Stage4InterviewRound:
             )
         except Exception as e:
             logging.warning(f"[D-4] Director 선택 기록 실패 (비차단): {e!s:.100}")
+
+        _quality_gate_score = _threshold("scoring.quality_gate_score", 90)
+        if verdict == "PASS" and score < _quality_gate_score:
+            self.ctx.ui.log(f"   ⚠️ [QualityGate] PASS 판정이나 score={score} < {_quality_gate_score} → 패치 모드")
+            verdict = "REJECT"
+            director_feedback += (
+                f"\n[Quality Gate] Director PASS 판정이나 점수 {score}점으로 {_quality_gate_score}점 미달. "
+                "품질 개선 후 재제출."
+            )
 
         if verdict == "PASS":
             selected_candidate = director_result.get("selected_candidate", {})
@@ -603,6 +747,9 @@ class Stage4InterviewRound:
                 "score": score,
                 # [Phase 3-5B] 패치 모드용 원본 원고 보존
                 "best_manuscript": director_result.get("selected_candidate", {}).get("manuscript", ""),
+                "score_breakdown": director_result.get("score_breakdown", {}),
+                "selection_reason": director_result.get("selection_reason", ""),
+                "validation_warnings": [w for vr in validation_results for w in vr.get("warnings", [])][:20],
             }
             self.ctx.ui.log(f"   ❌ {round_num + 1}차 면담 REJECT. 피드백: {director_feedback[:100]}...")
         self._record_s4_attempt(

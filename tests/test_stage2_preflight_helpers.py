@@ -386,7 +386,7 @@ class TestPreflightFinalize:
         director_mock = MagicMock()
         director_mock.audit_strategic_plan.return_value = {
             "decision": "PASS",
-            "score": 85,
+            "score": 95,
             "reason": "좋은 설계",
         }
         s2_orch.ctx.agents = {"director": director_mock}

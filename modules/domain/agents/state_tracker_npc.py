@@ -549,6 +549,7 @@ class StateTrackerNPC:
                         and v is not False
                         and not (isinstance(v, int) and v == 0 and k in existing and existing[k])
                     }
+                    existing.update(filtered)  # [G12] 필터링 결과를 기존 데이터에 병합
 
         # 무공 목록 병합
         self.tracker.protagonist_skills.update(other.protagonist_skills)

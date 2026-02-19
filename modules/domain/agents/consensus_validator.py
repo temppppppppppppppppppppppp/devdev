@@ -333,13 +333,15 @@ class ConsensusValidator(BaseAgent):
     def _derive_consensus(self, results: list[dict]) -> tuple[str, dict]:
         """합의 도출"""
         total_count = len(results)
-        pass_count = sum(1 for r in results if r.get("verdict") == "PASS")
+        pass_count = sum(1 for r in results if isinstance(r, dict) and r.get("verdict") == "PASS")
         reject_count = total_count - pass_count
 
         all_issues = []
         all_passed = []
 
         for r in results:
+            if not isinstance(r, dict):
+                continue
             issues = r.get("issues_found", [])
             if not isinstance(issues, list):
                 issues = []

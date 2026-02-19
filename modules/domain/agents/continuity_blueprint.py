@@ -184,6 +184,8 @@ class ContinuityBlueprintValidator:
 
         # 현재 시나리오 추출
         current_scenario = current_blueprint.get("integrated_scenario", "")
+        if isinstance(current_scenario, dict):
+            current_scenario = str(current_scenario)
         if not current_scenario:
             return {
                 "decision": "REJECT",
@@ -276,6 +278,8 @@ class ContinuityBlueprintValidator:
         for bp in prev_blueprints:
             ep_num = bp.get("ep_num", 0)
             scenario = bp.get("integrated_scenario", "")
+            if isinstance(scenario, dict):
+                scenario = str(scenario)
 
             for pattern in self._ci.acquire_patterns:
                 matches = re.findall(pattern, scenario)
@@ -374,6 +378,8 @@ class ContinuityBlueprintValidator:
         for bp in prev_blueprints:
             ep_num = bp.get("ep_num", "?")
             scenario = bp.get("integrated_scenario", "")
+            if isinstance(scenario, dict):
+                scenario = str(scenario)
 
             items = self._ci._extract_acquisitions(scenario)
             grants = self._ci._extract_grants(scenario)

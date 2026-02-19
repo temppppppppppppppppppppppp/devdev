@@ -267,6 +267,8 @@ JSON 형식으로:
         result = self._parse_json(response)
 
         approaches = result.get("approaches", [])
+        if not isinstance(approaches, list):
+            approaches = []
 
         # 충분한 접근 방식이 없으면 기본값 추가
         if len(approaches) < n_branches:
@@ -401,6 +403,10 @@ JSON 형식으로:
                     weaknesses=[],
                 )
             )
+
+        # [G2] paths가 비어있으면 빈 결과 반환
+        if not paths:
+            return ToTResult(paths=[], best_path=None, merged_output=None, exploration_summary="No paths generated")
 
         # 평가
         for path in paths:

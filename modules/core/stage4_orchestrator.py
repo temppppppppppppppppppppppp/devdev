@@ -476,7 +476,8 @@ JSON으로 출력:
             self.ctx.ui.log(f"{'=' * 60}")
 
             # [V67] mandatory_context 우선순위 기반 스마트 트렁케이션 (50,000자 상한)
-            if len(mandatory_context) > 50000:
+            _mc_max = _threshold("context.mandatory_context_max", 80000)
+            if len(mandatory_context) > _mc_max:
                 _original_len = len(mandatory_context)
                 # 섹션 분리: "\n[" 또는 "\n\n[" 마커 기준으로 분할
                 import re as _re_trunc
@@ -489,14 +490,16 @@ JSON으로 출력:
                     # 뒤에서부터 (낮은 우선순위) 하나씩 제거
                     _removed_count = 0
                     _removed_chars = 0
-                    while len("\n".join(_sections)) > 50000 and len(_sections) > 1:
+                    while len("\n".join(_sections)) > _mc_max and len(_sections) > 1:
                         _removed_section = _sections.pop()
                         _removed_count += 1
                         _removed_chars += len(_removed_section)
                     mandatory_context = "\n".join(_sections)
                     # [Sweep45] 첫 섹션 단독 > 50K 시 fallback truncation
-                    if len(mandatory_context) > 50000:
-                        mandatory_context = mandatory_context[:49950] + "\n\n...(컨텍스트 크기 초과로 일부 생략)"
+                    if len(mandatory_context) > _mc_max:
+                        mandatory_context = (
+                            mandatory_context[: _mc_max - 50] + "\n\n...(컨텍스트 크기 초과로 일부 생략)"
+                        )
                     if _removed_count > 0:
                         _perf_logger.info(
                             f"[V66.1] mandatory_context {_removed_count}개 섹션 제거 ({_removed_chars}자)"
@@ -506,8 +509,10 @@ JSON으로 출력:
                         )
                 else:
                     # 섹션 분리 불가 시 기존 방식 폴백
-                    mandatory_context = mandatory_context[:49950] + "\n\n...(컨텍스트 크기 초과로 일부 생략)"
-                    self.ctx.ui.log(f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → 50,000자로 truncate (폴백)")
+                    mandatory_context = mandatory_context[: _mc_max - 50] + "\n\n...(컨텍스트 크기 초과로 일부 생략)"
+                    self.ctx.ui.log(
+                        f"   ⚠️ [V66.1] mandatory_context {_original_len}자 → {_mc_max:,}자로 truncate (폴백)"
+                    )
 
             # [V61.6] 전체 면담 루프를 스피너로 감싸기
             _round_ctx = self.context_builder.build_round_context(
@@ -592,19 +597,75 @@ JSON으로 출력:
                     final_manuscript = _round_result.final_manuscript
                     final_title = _round_result.final_title
                     final_state_updates = _round_result.final_state_updates
+
+                    if self.ctx.chain_of_verification and final_manuscript:
+                        try:
+                            _cove_context = {}
+                            _prev_ms = round_ctx.prev_manuscripts_text or ""
+                            _bp = round_ctx.blueprint
+                            if _prev_ms:
+                                _cove_context["prev_manuscript"] = _prev_ms[-1500:]
+                            if _bp:
+                                _cove_context["blueprint"] = _bp
+
+                            _quick_ok, _quick_msg = self.ctx.chain_of_verification.quick_verify(
+                                final_manuscript, _cove_context
+                            )
+                            if not _quick_ok:
+                                self.ctx.ui.log(f"   ⚠️ [CoVe] 사후검증 경고: {_quick_msg[:60]}...")
+                                try:
+                                    _cove_result = self.ctx.chain_of_verification.verify(
+                                        final_manuscript, _cove_context, content_type="manuscript"
+                                    )
+                                    if _cove_result.should_regenerate:
+                                        self.ctx.ui.log("   🚨 [CoVe] 치명적 모순 감지 → REJECT 전환")
+                                        _cove_feedback = _cove_result.correction_hints or _cove_result.summary
+                                        director_feedback = f"[CoVe 사후검증 실패]\n{_cove_feedback}"
+                                        previous_attempt = {
+                                            "score": 90,
+                                            "best_manuscript": final_manuscript,
+                                            "rejection_reason": director_feedback,
+                                        }
+                                        final_manuscript = None
+                                        continue
+                                except Exception as e:
+                                    logging.warning(f"[SilentPass:CoVe:LLM] {e!s:.100}")
+                        except Exception as e:
+                            logging.warning(f"[SilentPass:CoVe:Quick] {e!s:.100}")
+
                     break
                 director_feedback = _round_result.director_feedback
                 previous_attempt = _round_result.previous_attempt
 
         # ===== 5번 모두 실패 =====
         if not final_manuscript:
-            self.ctx.ui.log(f"\n⛔ [EP {next_ep}] 5회 면담 모두 실패. 인간 검토 필요.")
-            return _RoundOutcome(
-                final_manuscript=None,
-                final_title=None,
-                final_state_updates={},
-                should_return=True,
-            )
+            _last_best = previous_attempt.get("best_manuscript", "") if previous_attempt else ""
+            _last_score = previous_attempt.get("score", 0) if previous_attempt else 0
+            if _last_best:
+                self.ctx.ui.log(f"\n⚠️ [EP {next_ep}] 5회 소진. 마지막 최선 결과물(score={_last_score}) 존재.")
+                _choice = 2
+                if callable(getattr(self.ctx, "get_int_input", None)):
+                    _choice = self.ctx.get_int_input(
+                        "  1=최선 결과물로 진행  2=건너뛰기: ", default=2, min_val=1, max_val=2
+                    )
+                if _choice == 1:
+                    final_manuscript = _last_best
+                    final_title = final_title or f"제{next_ep}화"
+                else:
+                    return _RoundOutcome(
+                        final_manuscript=None,
+                        final_title=None,
+                        final_state_updates={},
+                        should_return=True,
+                    )
+            else:
+                self.ctx.ui.log(f"\n⛔ [EP {next_ep}] 5회 면담 모두 실패. 인간 검토 필요.")
+                return _RoundOutcome(
+                    final_manuscript=None,
+                    final_title=None,
+                    final_state_updates={},
+                    should_return=True,
+                )
 
         return _RoundOutcome(
             final_manuscript=final_manuscript,

@@ -72,8 +72,12 @@ class ReverseExpander:
             logging.warning(f"[X] LLM 오류: {e}")
             return ""
 
-    def _parse_json(self, text: str) -> dict | None:
-        """JSON 파싱"""
+    def _parse_json(self, text: str) -> dict | list | None:
+        """JSON 파싱 — dict 또는 list 모두 보존
+
+        [G23] list가 반환될 때 첫 dict만 추출하면 데이터 소실.
+        호출부에서 isinstance 체크로 타입 분기.
+        """
         if not text:
             return None
         try:
@@ -83,10 +87,9 @@ class ReverseExpander:
             elif "```" in json_str:
                 json_str = json_str.split("```")[1].split("```")[0]
             parsed = json.loads(json_str.strip())
-            # [Sweep55] LLM이 list 반환 시 첫 dict 추출
-            if isinstance(parsed, list):
-                parsed = parsed[0] if parsed and isinstance(parsed[0], dict) else {}
-            return parsed if isinstance(parsed, dict) else None
+            if isinstance(parsed, dict | list):
+                return parsed
+            return None
         except Exception:
             return None
 
@@ -187,7 +190,7 @@ class ReverseExpander:
 ```
 """
         result = self._parse_json(self._call_llm(prompt, temperature=0.3))
-        return result.get("genre", "investment") if result else "investment"
+        return result.get("genre", "investment") if isinstance(result, dict) else "investment"
 
     def init_preset(self, genre: str):
         """프리셋 레지스트리 초기화"""
@@ -328,8 +331,11 @@ JSON:
 ```
 """
             result = self._parse_json(self._call_llm(prompt, temperature=0.5))
+            # [G23] list 반환 시 첫 dict 추출
+            if isinstance(result, list):
+                result = result[0] if result and isinstance(result[0], dict) else None
 
-            if result:
+            if result and isinstance(result, dict):
                 # HUD 정규화
                 if self.preset_registry and "hud_snapshot" in result:
                     result["hud_snapshot"] = self.preset_registry.normalize_hud(result["hud_snapshot"])
@@ -576,8 +582,11 @@ JSON:
 ```
 """
             result = self._parse_json(self._call_llm(prompt, temperature=0.5))
+            # [G23] list 반환 시 첫 dict 추출
+            if isinstance(result, list):
+                result = result[0] if result and isinstance(result[0], dict) else None
 
-            if result:
+            if result and isinstance(result, dict):
                 if self.preset_registry and "hud_snapshot" in result:
                     result["hud_snapshot"] = self.preset_registry.normalize_hud(result["hud_snapshot"])
                 self.episode_bibles.append(result)

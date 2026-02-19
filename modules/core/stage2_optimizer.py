@@ -484,6 +484,7 @@ class NegativeConstraintAmplifier:
             tactical = arc.get("tactical_doc", "")
 
             for item in items:
+                item = str(item) if isinstance(item, dict) else item
                 # tactical_doc에서 획득 맥락 추출
                 context = ""
                 if tactical:

@@ -679,11 +679,15 @@ class Stage2Orchestrator:
 
                         if user_choice == "1":
                             self.ctx.ui.log(f"⏭️ Arc {global_arc_no}을 건너뛰고 계속합니다.")
-                            _skip_ep = (
+                            _skip_ep_raw = (
                                 arcs_source[global_arc_no - 1].get("ep_count", 5)
                                 if global_arc_no <= len(arcs_source)
                                 else 5
                             )  # [V70] 하드코딩 5 → 실제 ep_count
+                            try:
+                                _skip_ep = int(_skip_ep_raw)
+                            except (TypeError, ValueError):
+                                _skip_ep = 5
                             current_ep_start += _skip_ep
                             break
                         elif user_choice == "3":
@@ -703,11 +707,15 @@ class Stage2Orchestrator:
                             )
                             if manual_input == "skip":
                                 self.ctx.ui.log(f"⏭️ Arc {global_arc_no}을 건너뛰고 계속합니다.")
-                                _skip_ep2 = (
+                                _skip_ep2_raw = (
                                     arcs_source[global_arc_no - 1].get("ep_count", 5)
                                     if global_arc_no <= len(arcs_source)
                                     else 5
                                 )  # [V70]
+                                try:
+                                    _skip_ep2 = int(_skip_ep2_raw)
+                                except (TypeError, ValueError):
+                                    _skip_ep2 = 5
                                 current_ep_start += _skip_ep2
                                 break
                             elif manual_input == "quit":

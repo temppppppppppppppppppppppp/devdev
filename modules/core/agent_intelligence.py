@@ -464,8 +464,14 @@ JSON 형식으로 응답:
 
         # 3. 아크 내 위치 기반 가이드
         if arc_data:
-            ep_start = arc_data.get("ep_start", 1)
-            ep_end = arc_data.get("ep_end", 5)
+            try:
+                ep_start = int(arc_data.get("ep_start", 1))
+            except (TypeError, ValueError):
+                ep_start = 1
+            try:
+                ep_end = int(arc_data.get("ep_end", 5))
+            except (TypeError, ValueError):
+                ep_end = 5
             position = ep_num - ep_start + 1
             total = ep_end - ep_start + 1
 

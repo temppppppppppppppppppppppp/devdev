@@ -28,6 +28,7 @@ scope:
 
 # ── SCORING 검증 ─────────────────────────────────────────────
 scoring:
+  quality_gate_score: 90
   default_pass_threshold: 70
   genre_thresholds:
     wuxia: 70
@@ -52,6 +53,16 @@ pre_llm:
 # ── CONTINUITY 검증 ──────────────────────────────────────────
 continuity:
   personality_proximity: 150  # NPC 이름 주변 탐색 글자수
+
+# [V71] Gemini context usage settings
+context:
+  mandatory_context_max: 80000
+  director_mandatory_max: 40000
+  lookback_excerpt_chars: 500
+  lookback_total_chars: 4000
+  vector_max_results_s4: 10
+  vector_max_results_s2: 5
+  cache_merge_chars_per_ep: 4000
 
 # ── 재시도 제한 ──────────────────────────────────────────────
 retry:

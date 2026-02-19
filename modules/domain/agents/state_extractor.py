@@ -219,7 +219,11 @@ class StateExtractor(BaseAgent):
         # [V60.13 FIX] state_constraints.arc_end_state 포함
         cleaned_data = {
             "arc_no": arc_no,
-            "tactical_doc": (arc_data.get("tactical_doc") or "")[:3000],  # 토큰 절약
+            "tactical_doc": (
+                "\n".join(f"{k}: {v}" for k, v in (arc_data.get("tactical_doc") or {}).items())
+                if isinstance(arc_data.get("tactical_doc"), dict)
+                else (arc_data.get("tactical_doc") or "")
+            )[:3000],  # 토큰 절약
             "joint_docs": arc_data.get("joint_docs", {}),
             "status_shadow": arc_data.get("status_shadow", {}),
             "state_constraints": arc_data.get("state_constraints", {}),  # [V60.13] arc_end_state 포함
@@ -371,8 +375,8 @@ class StateExtractor(BaseAgent):
 
         # 중복 제거
         current_state["cumulative"] = {
-            "all_acquired_items": list(set(all_acquired)),
-            "all_grants_received": list(set(all_grants)),
+            "all_acquired_items": list({str(x) if isinstance(x, dict) else x for x in all_acquired}),
+            "all_grants_received": list({str(x) if isinstance(x, dict) else x for x in all_grants}),
             "total_arcs_completed": len(arcs),
         }
 

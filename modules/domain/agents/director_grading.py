@@ -603,6 +603,32 @@ class DirectorGradingSystem:
             if value in ["현상 유지", "유지", "변화 없음", None, ""]:
                 continue
 
+            # [TypeSafety] LLM이 숫자를 직접 반환한 경우 LIMITS 검증 적용
+            if isinstance(value, int | float) and key in LIMITS:
+                change = int(value)
+                limits = LIMITS[key]
+                if "max_increase" in limits and change > limits["max_increase"]:
+                    rejected[key] = {
+                        "proposed": value,
+                        "reason": f"증가량 초과 (최대 +{limits['max_increase']})",
+                    }
+                    warnings.append(f"[REJECT] {key}: {value} → 비합리적 증가량")
+                    continue
+                if "max_decrease" in limits and change < limits["max_decrease"]:
+                    rejected[key] = {
+                        "proposed": value,
+                        "reason": f"감소량 초과 (최대 {limits['max_decrease']})",
+                    }
+                    warnings.append(f"[REJECT] {key}: {value} → 비합리적 감소량")
+                    continue
+                if "max_change" in limits and abs(change) > limits["max_change"]:
+                    rejected[key] = {
+                        "proposed": value,
+                        "reason": f"변화량 초과 (최대 ±{limits['max_change']})",
+                    }
+                    warnings.append(f"[REJECT] {key}: {value} → 변화량 초과")
+                    continue
+
             if isinstance(value, str) and (value.startswith("+") or value.startswith("-")):
                 try:
                     import re

@@ -31,7 +31,7 @@ from .conftest import MOCK_MANUSCRIPT
 
 class TestStage4ContextCreation:
     def test_stage4_context_creation(self, e2e_stage4_ctx):
-        """Stage4Context 22개 __slots__ 조립 성공"""
+        """Stage4Context 확장 __slots__ 조립 성공"""
         ctx = e2e_stage4_ctx
         # 필수 5종
         assert ctx.ui is not None
@@ -46,8 +46,8 @@ class TestStage4ContextCreation:
         assert ctx.get_int_input is None
         assert ctx.flush_audit_buffer is None
         assert ctx.safe_commit is None
-        # __slots__ 총 25개 (+pass_rate_monitor)
-        assert len(Stage4Context.__slots__) == 25
+        # Phase 3/4 확장 모듈 슬롯 포함 (총 31개)
+        assert len(Stage4Context.__slots__) == 31
 
 
 # ══════════════════════════════════════════════════════════════

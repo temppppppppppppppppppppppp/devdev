@@ -638,7 +638,9 @@ class StateTrackerPlots:
             return []
 
         items = []
-        seen = set()
+        # [G13] 획득/분실 각각 별도 seen 세트 — 같은 아이템이 획득+분실 모두 될 수 있음
+        seen_acquire = set()
+        seen_lose = set()
 
         # [V66.1] C-2: module-level compiled patterns
         acquire_patterns = _RE_ITEM_ACQUIRE
@@ -649,15 +651,15 @@ class StateTrackerPlots:
         for pattern in acquire_patterns:
             for match in pattern.finditer(tactical_doc):
                 name = match.group(1).strip()
-                if name and len(name) >= 2 and name not in exclude_words and name not in seen:
-                    seen.add(name)
+                if name and len(name) >= 2 and name not in exclude_words and name not in seen_acquire:
+                    seen_acquire.add(name)
                     items.append({"name": name, "action": "획득", "episode": 0})
 
         for pattern in lose_patterns:
             for match in pattern.finditer(tactical_doc):
                 name = match.group(1).strip()
-                if name and len(name) >= 2 and name not in exclude_words and name not in seen:
-                    seen.add(name)
+                if name and len(name) >= 2 and name not in exclude_words and name not in seen_lose:
+                    seen_lose.add(name)
                     items.append({"name": name, "action": "분실", "episode": 0})
 
         return items

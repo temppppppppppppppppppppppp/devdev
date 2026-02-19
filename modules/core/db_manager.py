@@ -557,21 +557,28 @@ class DBManager:
             )
             rows = cur.fetchall()
 
+            def _safe_json_loads(raw, fallback):
+                """[TypeSafety] 비정상 JSON 데이터 방어"""
+                try:
+                    return json.loads(raw or fallback)
+                except (json.JSONDecodeError, TypeError, ValueError):
+                    return json.loads(fallback)
+
             for row in rows:
                 # 아이템: 획득은 추가, 분실은 제거
-                new_items = json.loads(row["new_items"] or "[]")
-                lost_items = json.loads(row["lost_items"] or "[]")
+                new_items = _safe_json_loads(row["new_items"], "[]")
+                lost_items = _safe_json_loads(row["lost_items"], "[]")
                 cumulative["items"].extend(new_items)
                 cumulative["items"] = [i for i in cumulative["items"] if i not in lost_items]
 
                 # NPC: 등장 추가, 사망은 별도 추적
-                new_npcs = json.loads(row["new_npcs"] or "[]")
-                npc_deaths = json.loads(row["npc_deaths"] or "[]")
+                new_npcs = _safe_json_loads(row["new_npcs"], "[]")
+                npc_deaths = _safe_json_loads(row["npc_deaths"], "[]")
                 cumulative["npcs"].extend(new_npcs)
                 cumulative["dead_npcs"].extend(npc_deaths)
 
                 # 관계: 최신 상태로 덮어씀
-                rel_changes = json.loads(row["relationship_changes"] or "[]")
+                rel_changes = _safe_json_loads(row["relationship_changes"], "[]")
                 for change in rel_changes:
                     if isinstance(change, dict):
                         target = change.get("target", "")
@@ -579,7 +586,7 @@ class DBManager:
                             cumulative["relationships"][target] = change.get("to", "")
 
                 # 상태: 최신 상태로 덮어씀 [V61.5] dict/list 양방향 처리
-                state_changes = json.loads(row["state_changes"] or "{}")
+                state_changes = _safe_json_loads(row["state_changes"], "{}")
                 if isinstance(state_changes, dict):
                     # dict 형태: {"internal_energy": "80%", "realm": "기경팔맥"}
                     for subject, value in state_changes.items():
@@ -594,7 +601,7 @@ class DBManager:
                                 cumulative["states"][subject] = state.get("to", "")
 
                 # 밝혀진 사실 누적
-                reveals = json.loads(row["reveals"] or "[]")
+                reveals = _safe_json_loads(row["reveals"], "[]")
                 cumulative["all_reveals"].extend(reveals)
 
             # [V66.1] C-3: LRU 캐시 크기 제한 (최대 5개 — 장기 세션 메모리 안정화)

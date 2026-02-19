@@ -106,7 +106,7 @@ class FactLedger:
         for rel in state_changes.get("relationship_changes") or []:  # [V70] None 방어
             if not isinstance(rel, dict):
                 continue
-            npc = rel.get("npc", "")
+            npc = rel.get("npc", "") or rel.get("target", "")  # [G17] analyst 프롬프트는 "target" 키 사용
             if npc:
                 self._upsert_character(
                     npc,

@@ -15,6 +15,7 @@ from modules.core.writer_prompt_builders import (
 from modules.core.writer_prompt_builders import (
     build_mandatory_context as _build_writer_mandatory_context,
 )
+from modules.validation.threshold_helper import _threshold
 
 
 class Stage4ContextBuilder:
@@ -76,8 +77,9 @@ class Stage4ContextBuilder:
             start_ep = max(1, next_ep - 10)
             end_ep = max(1, next_ep - 3)  # 최근 3화는 기존 lookback이 커버
             # [V66.1] B-4: 발췌 전용 쿼리 (첫 200자만 DB에서 조회)
+            _excerpt_max = _threshold("context.lookback_excerpt_chars", 500)
             manuscripts = self.ctx.current_project.db.get_recent_manuscript_excerpts(
-                before_ep=next_ep, limit=10, max_chars=200
+                before_ep=next_ep, limit=10, max_chars=_excerpt_max
             )
             if not manuscripts or not isinstance(manuscripts, list):
                 return ""
@@ -91,19 +93,21 @@ class Stage4ContextBuilder:
                 if not content:
                     continue
                 # 첫 문단 또는 첫 150자에서 핵심 요약 추출
-                first_para = content.split("\n\n")[0] if "\n\n" in content else content[:150]
+                paragraphs = content.split("\n\n")
+                first_para = "\n\n".join(paragraphs[:2]) if len(paragraphs) > 1 else content[:_excerpt_max]
                 # 줄바꿈 정리
                 first_para = re.sub(r"\s+", " ", first_para).strip()
-                if len(first_para) > 150:
-                    first_para = first_para[:147] + "..."
+                if len(first_para) > _excerpt_max:
+                    first_para = first_para[: _excerpt_max - 3] + "..."
                 lines.append(f"[제{ep_num}화] {first_para}")
 
             if not lines:
                 return ""
 
             digest = "\n".join(lines)
-            if len(digest) > 1500:
-                digest = digest[:1497] + "..."
+            _total_max = _threshold("context.lookback_total_chars", 4000)
+            if len(digest) > _total_max:
+                digest = digest[: _total_max - 3] + "..."
             return f"[확장 Lookback: 직전 4~10화 요약]\n{digest}"
         except Exception as e:
             logging.warning(f"[SilentPass:ContextBuilder] 확장 lookback 다이제스트 실패: {e!s:.100}")
@@ -431,7 +435,7 @@ class Stage4ContextBuilder:
                     if _npc_names:
                         _mq_queries.append(" ".join(_npc_names[:5]))
                 if arc_tactical and len(arc_tactical) > 50:
-                    _mq_queries.append(arc_tactical[:300])
+                    _mq_queries.append(arc_tactical[:600])
                 _genre_queries = {
                     "hunter": ["던전 클리어 각성 스킬 랭크"],
                     "investment": ["포트폴리오 거래 수익률 투자"],
@@ -443,7 +447,7 @@ class Stage4ContextBuilder:
                     queries=_mq_queries,
                     current_ep=next_ep,
                     n_per_query=3,
-                    max_results=5,
+                    max_results=_threshold("context.vector_max_results_s4", 10),
                 )
                 if _vector_memory:
                     _mc_parts.append(f"[과거 유사 맥락 (벡터 검색)]\n{_vector_memory}")

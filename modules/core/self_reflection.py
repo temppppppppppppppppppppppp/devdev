@@ -273,6 +273,8 @@ JSON 형식으로 응답:
         # 2. 개선 필요 여부 판단
         severity = critique.get("severity", "none")
         issues = critique.get("issues", [])
+        if not isinstance(issues, list):
+            issues = list(issues.values()) if isinstance(issues, dict) else []
         quality = critique.get("overall_quality", 7)
 
         should_improve = force or severity in ["high", "medium"] or quality < 6
@@ -280,7 +282,7 @@ JSON 형식으로 응답:
         # 3. 개선 (필요시)
         if should_improve and issues:
             improved = self.improve(output, critique, target)
-            changes = [issue.get("type", "unknown") for issue in issues]
+            changes = [issue.get("type", "unknown") for issue in issues if isinstance(issue, dict)]
             improvement_score = min(1.0, len(issues) * 0.15)
         else:
             improved = output

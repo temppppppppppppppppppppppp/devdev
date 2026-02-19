@@ -46,7 +46,12 @@ class Stage4PostProcessor:
             self.ctx.current_project.db.conn.commit()
             self.ctx.ui.log("   ✅ DB 저장 완료")
         except Exception as db_err:
-            self.ctx.ui.log(f"   🚨 DB 저장 실패: {db_err}")
+            # [G8] DB 실패 시 롤백으로 부분 저장 방지
+            try:
+                self.ctx.current_project.db.conn.rollback()
+            except Exception:
+                pass
+            self.ctx.ui.log(f"   🚨 DB 저장 실패 (롤백 완료): {db_err}")
             return False
 
         # HUD 업데이트 (DB 커밋 성공 후에만 실행)
@@ -106,11 +111,57 @@ class Stage4PostProcessor:
                 if _sc.get("resolved_plots"):
                     _mem_event_types.add("resolved_plot")
             _mem_entity_names.discard("")
+            _summary_parts = [final_title or f"제{next_ep}화"]
+            _state_changes = arc_data.get("state_changes", {}) if isinstance(arc_data, dict) else {}
+            if isinstance(_state_changes, dict):
+                _npc_deaths = _state_changes.get("npc_deaths", [])
+                if isinstance(_npc_deaths, list) and _npc_deaths:
+                    _death_names = []
+                    for d in _npc_deaths:
+                        _name = d.get("name", "") if isinstance(d, dict) else str(d)
+                        if _name:
+                            _death_names.append(_name)
+                    if _death_names:
+                        _summary_parts.append("사망: " + ", ".join(_death_names)[:60])
+
+                _rel_changes = _state_changes.get("relationship_changes", [])
+                if isinstance(_rel_changes, list) and _rel_changes:
+                    _rel_texts = []
+                    for r in _rel_changes:
+                        if isinstance(r, dict):
+                            _who = r.get("npc", "") or r.get("target", "")
+                            _delta = r.get("change", "")
+                            _rel_texts.append(f"{_who}-{_delta}")
+                        else:
+                            _rel_texts.append(str(r))
+                    if _rel_texts:
+                        _summary_parts.append("관계: " + ", ".join(_rel_texts)[:80])
+
+                _major_items = _state_changes.get("major_items", [])
+                if isinstance(_major_items, list) and _major_items:
+                    _item_names = []
+                    for i in _major_items:
+                        _name = i.get("name", "") if isinstance(i, dict) else str(i)
+                        if _name:
+                            _item_names.append(_name)
+                    if _item_names:
+                        _summary_parts.append("아이템: " + ", ".join(_item_names)[:60])
+
+                _resolved_plots = _state_changes.get("resolved_plots", [])
+                if isinstance(_resolved_plots, list) and _resolved_plots:
+                    _summary_parts.append("해결: " + ", ".join(str(p)[:30] for p in _resolved_plots[:2]))
+
+            if isinstance(blueprint, dict):
+                _scene = blueprint.get("scene_summary", "") or blueprint.get("핵심장면", "")
+                if _scene:
+                    _summary_parts.append(f"장면: {str(_scene)[:80]}")
+
+            _rich_summary = " | ".join(p for p in _summary_parts if p)[:500]
             if self.ctx.memory and self.ctx.memory.is_operational():
                 self.ctx.memory.memorize_v20_episode(
                     ep_num=next_ep,
                     text=final_manuscript,
-                    summary=final_title[:100] if final_title else f"제{next_ep}화",
+                    summary=_rich_summary,
                     causal_links=[],
                     arc_no=_mem_arc_no,
                     event_types=list(_mem_event_types),

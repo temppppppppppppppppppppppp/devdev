@@ -191,7 +191,6 @@ class ValidationOrchestrator:
         # ═══════════════════════════════════════════════════════════════
         # [V59] 병렬 검증 + 적응형 임계값 설정
         # ═══════════════════════════════════════════════════════════════
-        self.use_parallel_validation = config.get("use_parallel_validation", True)
         self.use_adaptive_threshold = config.get("use_adaptive_threshold", True)
         self.max_parallel_workers = config.get("max_parallel_workers", 3)
 
@@ -974,6 +973,8 @@ class ValidationOrchestrator:
             results["pre_llm_result"] = pre_llm_result
 
             if not pre_llm_result["passed"]:
+                # [G11] 조기 반환 전 임계값 복원
+                self.scoring.pass_threshold = _original_threshold
                 return self._build_reject_result_v59(
                     "PRE-LLM", pre_llm_result, self._generate_pre_llm_feedback(pre_llm_result)
                 )
@@ -985,6 +986,8 @@ class ValidationOrchestrator:
 
         if not continuity_result["passed"]:
             self._record_failure_to_reflexion(ep_num, "continuity", continuity_result["violations"])
+            # [G11] 조기 반환 전 임계값 복원
+            self.scoring.pass_threshold = _original_threshold
             return self._build_reject_result_v59(
                 "CONTINUITY", continuity_result, self._generate_continuity_feedback(continuity_result)
             )
@@ -996,6 +999,8 @@ class ValidationOrchestrator:
 
         if not blocking_result["passed"]:
             self._record_failure_to_reflexion(ep_num, "blocking", blocking_result["failures"])
+            # [G11] 조기 반환 전 임계값 복원
+            self.scoring.pass_threshold = _original_threshold
             return self._build_reject_result_v59(
                 "BLOCKING", blocking_result, self._generate_blocking_feedback(blocking_result)
             )
@@ -1061,6 +1066,8 @@ class ValidationOrchestrator:
         unjustifiable = consistency_result.get("unjustifiable_violations", [])
         if unjustifiable:
             logging.warning(f"❌ CONSISTENCY 실패: {len(unjustifiable)}개 정당화 불가 위반")
+            # [G11] 조기 반환 전 임계값 복원
+            self.scoring.pass_threshold = _original_threshold
             return {
                 "final_decision": "REJECT",
                 "reason": "CONSISTENCY 검증 실패 - 정당화 불가 모순",

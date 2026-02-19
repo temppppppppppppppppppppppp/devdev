@@ -20,6 +20,7 @@ Stage 3 통합 파이프라인 - 단순화 + 효율화
 import logging
 
 from modules.models.blueprint import validate_blueprint
+from modules.validation.threshold_helper import _threshold
 
 from .base_agent import BaseAgent, _get_sub_component_models
 from .blueprint_constraint_compiler import BlueprintConstraintCompiler
@@ -274,14 +275,30 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 "comparison_notes": validation_result.get("comparison_notes", ""),  # [V60.85] 비교 근거
             }
 
-            if verdict == "PASS":
-                self.stats["phase3_pass"] += 1
-                pipeline_result["final_verdict"] = "PASS"
-                logging.info(f"✅ [Phase 3] PASS - 제{ep_num}화 Blueprint 생성 완료")
+            _quality_gate_score = _threshold("scoring.quality_gate_score", 90)
+            _score_raw = validation_result.get("score", 0)
+            try:
+                _score = int(_score_raw)
+            except (ValueError, TypeError):
+                _score = 0
 
-                # [Step2] Pydantic ingress+egress
-                best_blueprint = validate_blueprint(best_blueprint)
-                return best_blueprint, pipeline_result
+            if verdict == "PASS":
+                if _score < _quality_gate_score:
+                    logging.warning(
+                        f"[QualityGate] Stage3 PASS이나 score={_score} < {_quality_gate_score} → REJECT 전환"
+                    )
+                    verdict = "REJECT"
+                    feedback = (feedback or "") + (
+                        f"\n[Quality Gate] score {_score}점으로 {_quality_gate_score}점 미달."
+                    )
+                else:
+                    self.stats["phase3_pass"] += 1
+                    pipeline_result["final_verdict"] = "PASS"
+                    logging.info(f"✅ [Phase 3] PASS - 제{ep_num}화 Blueprint 생성 완료")
+
+                    # [Step2] Pydantic ingress+egress
+                    best_blueprint = validate_blueprint(best_blueprint)
+                    return best_blueprint, pipeline_result
             else:
                 self.stats["phase3_reject"] += 1
                 feedback = validation_result.get("feedback", "검증 실패")
@@ -307,6 +324,16 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 logging.warning(f"❌ [Phase 3] REJECT - 재시도 {retry + 1}/{max_retries + 1}")
 
         # 모든 재시도 실패
+        _last_score = validation_result.get("score", 0) if "validation_result" in locals() else 0
+        if best_blueprint:
+            logging.warning(
+                f"[ThreePhase] 제{ep_num}화 모든 재시도 실패이나 마지막 최선 blueprint 존재 (score={_last_score})"
+            )
+            pipeline_result["final_verdict"] = "PASS_WITH_WARNING"
+            pipeline_result["quality_gate_failed"] = True
+            pipeline_result["last_score"] = _last_score
+            return best_blueprint, pipeline_result
+
         pipeline_result["final_verdict"] = "FAILED"
         logging.warning(f"❌ [ThreePhase] 제{ep_num}화 모든 재시도 실패 ({max_retries + 1}회)")
         if feedback:

@@ -11,6 +11,8 @@ import yaml
 from google import genai
 from google.genai import types
 
+from modules.validation.threshold_helper import _threshold
+
 # [V44] 에스케이프 유틸리티 임포트
 try:
     from modules.core.escape_utils import escape_braces as util_escape_braces
@@ -205,7 +207,7 @@ class BaseAgent:
     NETWORK_RETRY_DELAY_MAX = _SYSTEM_CFG.get("network_retry", {}).get("delay_max", 30)
     MAX_NETWORK_RETRIES = _SYSTEM_CFG.get("network_retry", {}).get("max_retries", 22)
 
-    def __init__(self, context, client, model_tier=None, enable_cascade=False) -> None:
+    def __init__(self, context, client, model_tier=None) -> None:
         self.context = context
         self.client = client
         resolved_model = model_tier
@@ -217,8 +219,6 @@ class BaseAgent:
         # [V60.78] 기본 폴백을 2.5-flash로 변경 (2.0 이하 미사용 정책)
         self.backup_model = self.MODEL_FALLBACK_CHAIN.get(self.primary_model, DEFAULT_MODEL_TIER)
         self.cache_name = None
-        self.enable_cascade = enable_cascade
-        self.cascade = None  # ModelCascade instance (lazy init)
         # [V44] 실패 복구 상태 추적
         self.last_partial_response = ""
         self.requires_human_intervention = False
@@ -1186,6 +1186,8 @@ class BaseAgent:
 
         lines = [f"=== {item_type.upper()} 연속성 컨텍스트 ===\n"]
 
+        _merge_chars = _threshold("context.cache_merge_chars_per_ep", 4000)
+
         for item in items:
             if item_type == "blueprint":
                 ep_num = item.get("ep_num", "?")
@@ -1224,6 +1226,6 @@ class BaseAgent:
                     lines.append(f"제목: {title}")
                 # 원고는 앞부분만 (토큰 절약)
                 if content:
-                    lines.append(f"내용 요약: {content[:2000]}...")
+                    lines.append(f"내용 요약: {content[:_merge_chars]}...")
 
         return "\n".join(lines)

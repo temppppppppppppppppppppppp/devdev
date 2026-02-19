@@ -835,7 +835,7 @@ class ProjectContext:
             self.save_manuscript_to_db(ep_num, title, content)
 
             # 2. Vector DB 기억 주입 (AI 요약 대신 원고 앞부분 사용해서 토큰 절약)
-            summary = content[:300].replace("\n", " ") + "..."
+            summary = content[:1000].replace("\n", " ") + "..."
             # [V63.3] Python regex로 핵심 이벤트 추출 (LLM 비용 0)
             import re as _re
 
@@ -850,7 +850,7 @@ class ProjectContext:
             if _re.search(r"배신|동맹|화해|적대", content):
                 _bulk_events.add("relationship")
             # NPC 이름 패턴 (한글 2-4자 + "은/는/이/가/을/를")
-            for _m in _re.finditer(r"([가-힣]{2,4})(?:은|는|이|가|을|를)\s", content[:3000]):
+            for _m in _re.finditer(r"([가-힣]{2,4})(?:은|는|이|가|을|를)\s", content[:8000]):
                 _bulk_entities.add(_m.group(1))
             memory.memorize_v20_episode(
                 ep_num,
@@ -858,7 +858,7 @@ class ProjectContext:
                 summary,
                 causal_links=[],
                 event_types=list(_bulk_events) if _bulk_events else None,
-                entity_names=list(_bulk_entities)[:10] if _bulk_entities else None,
+                entity_names=list(_bulk_entities)[:30] if _bulk_entities else None,
             )
 
             # 3. 동기화 상태 갱신

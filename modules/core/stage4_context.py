@@ -35,6 +35,13 @@ class Stage4Context:
         "quality_dashboard",
         "pacing_analyzer",
         "pass_rate_monitor",
+        # [Phase 3/4] always-on + conditional modules
+        "pre_director_checklist",
+        "confidence_calibrator",
+        "prompt_weighter",
+        "cross_verifier",
+        "chain_of_verification",
+        "adversarial_self_play",
         # [4C-2c] 콜백 7종
         "get_int_input",
         "build_item_acquisition_timeline",
@@ -67,6 +74,12 @@ class Stage4Context:
         quality_dashboard=None,
         pacing_analyzer=None,
         pass_rate_monitor=None,
+        pre_director_checklist=None,
+        confidence_calibrator=None,
+        prompt_weighter=None,
+        cross_verifier=None,
+        chain_of_verification=None,
+        adversarial_self_play=None,
         # [4C-2c] 콜백 — 모두 optional (None 허용)
         get_int_input=None,
         build_item_acquisition_timeline=None,
@@ -94,6 +107,12 @@ class Stage4Context:
         self.quality_dashboard = quality_dashboard
         self.pacing_analyzer = pacing_analyzer
         self.pass_rate_monitor = pass_rate_monitor
+        self.pre_director_checklist = pre_director_checklist
+        self.confidence_calibrator = confidence_calibrator
+        self.prompt_weighter = prompt_weighter
+        self.cross_verifier = cross_verifier
+        self.chain_of_verification = chain_of_verification
+        self.adversarial_self_play = adversarial_self_play
         self.get_int_input = get_int_input
         self.build_item_acquisition_timeline = build_item_acquisition_timeline
         self.load_narrative_summaries = load_narrative_summaries
@@ -124,6 +143,12 @@ class Stage4Context:
             quality_dashboard=getattr(app, "quality_dashboard", None),
             pacing_analyzer=getattr(app, "pacing_analyzer", None),
             pass_rate_monitor=getattr(app, "pass_rate_monitor", None),
+            pre_director_checklist=getattr(app, "pre_director_checklist", None),
+            confidence_calibrator=getattr(app, "confidence_calibrator", None),
+            prompt_weighter=getattr(app, "prompt_weighter", None),
+            cross_verifier=getattr(app, "cross_verifier", None),
+            chain_of_verification=getattr(app, "chain_of_verification", None),
+            adversarial_self_play=getattr(app, "adversarial_self_play", None),
             get_int_input=getattr(app, "_get_int_input", None),
             build_item_acquisition_timeline=getattr(app, "_build_item_acquisition_timeline", None),
             load_narrative_summaries=getattr(app, "_load_narrative_summaries", None),

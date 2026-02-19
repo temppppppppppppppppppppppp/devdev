@@ -106,9 +106,13 @@ class ConstraintDB:
         if not isinstance(state_constraints, dict):
             state_constraints = {}  # LLM이 문자열 반환 시 방어
         arc_end_state = state_constraints.get("arc_end_state") or {}  # [V70]
+        if not isinstance(arc_end_state, dict):
+            arc_end_state = {}
 
         # joint_docs에서 추가 정보 추출
         joint_docs = arc_data.get("joint_docs", {})
+        if not isinstance(joint_docs, dict):
+            joint_docs = {}
 
         # 소지품 추출 (여러 소스에서)
         inventory = []
