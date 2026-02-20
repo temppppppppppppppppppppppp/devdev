@@ -84,6 +84,8 @@ class ArcEnsembleGenerator(BaseAgent):
         constraint_block: str,
         assets: dict = None,
         feedback: str = "",
+        strategy_specific_feedback: str = "",  # [EnsembleFB] 특정 전략 전용 추가 피드백
+        rejected_strategy: str = "",  # [EnsembleFB] REJECT된 전략 이름
         protagonist_name: str = "주인공",  # [V60.18] 주인공 이름 (필수!)
         protagonist_config: dict = None,  # [V60.88] 주인공 설정 (world_origin, incarnation_type)
         entity_registry: dict = None,  # [V60.92] Entity Registry (NPC 명칭 일관성)
@@ -134,6 +136,12 @@ class ArcEnsembleGenerator(BaseAgent):
             with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
                 futures = {}
                 for strategy in self.strategies:
+                    # [EnsembleFB] REJECT된 전략에만 전용 피드백 주입
+                    _strategy_fb = (
+                        strategy_specific_feedback
+                        if (strategy["name"] == rejected_strategy and strategy_specific_feedback)
+                        else ""
+                    )
                     future = executor.submit(
                         self._generate_single,
                         arc_no=arc_no,
@@ -145,6 +153,7 @@ class ArcEnsembleGenerator(BaseAgent):
                         constraint_block=constraint_block,
                         assets=assets,
                         feedback=feedback,
+                        strategy_feedback=_strategy_fb,
                         strategy=strategy,
                         protagonist_name=protagonist_name,  # [V60.18]
                         protagonist_config=protagonist_config,  # [V60.88]
@@ -295,7 +304,8 @@ class ArcEnsembleGenerator(BaseAgent):
         constraint_block: str,
         assets: dict,
         feedback: str,
-        strategy: dict,
+        strategy_feedback: str = "",  # [EnsembleFB] 전략별 보정 피드백
+        strategy: dict = None,
         protagonist_name: str = "주인공",  # [V60.18]
         protagonist_config: dict = None,  # [V60.88]
         entity_registry: dict = None,  # [V60.92]
@@ -304,6 +314,15 @@ class ArcEnsembleGenerator(BaseAgent):
     ) -> dict | None:
         """단일 전략으로 Arc 생성"""
         try:
+            # [EnsembleFB] 전략별 보정 피드백 병합
+            _merged_feedback = feedback or ""
+            if strategy_feedback:
+                _merged_feedback = (
+                    f"{_merged_feedback}\n\n[전략별 보정 피드백]\n{strategy_feedback}"
+                    if _merged_feedback
+                    else f"[전략별 보정 피드백]\n{strategy_feedback}"
+                )
+
             # [V60.13] 최우선 금지 요약 생성 - 프롬프트 최상단에 배치
             prohibition_summary = self._generate_prohibition_summary(prev_arc_context, constraint_block)
 
@@ -364,7 +383,7 @@ class ArcEnsembleGenerator(BaseAgent):
                 genre_ext_guide=self._escape_braces(genre_ext_guide),
                 vol_strategy=self._escape_braces(vol_strategy[:2000] if vol_strategy else "(없음)"),
                 assets=self._escape_braces(json.dumps(assets, ensure_ascii=False)[:2000] if assets else "{}"),
-                feedback=self._escape_braces(feedback[:1500] if feedback else "(없음)"),
+                feedback=self._escape_braces(_merged_feedback[:1500] if _merged_feedback else "(없음)"),
                 entity_registry_section=self._escape_braces(entity_registry_section),  # [V60.92]
                 arc_no=arc_no,
                 ep_start=ep_start,
