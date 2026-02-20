@@ -198,6 +198,7 @@ class FourPhaseArcGenerator(BaseAgent):
         # [Patch Mode] 내부 retry용 이전 REJECT 추적
         _prev_rejected_arc = None
         _prev_reject_feedback = ""
+        _prev_selected_strategy = ""  # [EnsembleFB] REJECT된 당선 전략 이름
 
         for retry in range(max_internal_retries + 1):
             pipeline_result["retries"] = retry
@@ -294,6 +295,8 @@ class FourPhaseArcGenerator(BaseAgent):
                     constraint_block=full_constraint_block,
                     assets=assets,
                     feedback=feedback,
+                    strategy_specific_feedback=_prev_reject_feedback if retry > 0 else "",  # [EnsembleFB]
+                    rejected_strategy=_prev_selected_strategy if retry > 0 else "",  # [EnsembleFB]
                     protagonist_name=protagonist_name,
                     protagonist_config=protagonist_config,  # [V60.88]
                     entity_registry=entity_registry,  # [V60.92] Entity Registry
@@ -337,10 +340,12 @@ class FourPhaseArcGenerator(BaseAgent):
                 except Exception as e:
                     logging.warning(f"[SilentPass:Stage2:ASP] {e!s:.120}")
 
+            # [EnsembleFB] 당선 전략 이름 기록 (REJECT 시 다음 retry에 전달)
+            _current_strategy = best_arc.get("_ensemble_meta", {}).get("best_strategy", "unknown")
             pipeline_result["phases"]["generate"] = {
                 "status": "complete",
                 "candidates_count": len(all_candidates),
-                "selected_strategy": best_arc.get("_ensemble_meta", {}).get("best_strategy", "unknown"),
+                "selected_strategy": _current_strategy,
             }
             self.stats["phase2_complete"] += 1
 
@@ -389,6 +394,7 @@ class FourPhaseArcGenerator(BaseAgent):
                 if best_arc:
                     _prev_rejected_arc = best_arc
                     _prev_reject_feedback = feedback
+                    _prev_selected_strategy = _current_strategy  # [EnsembleFB]
 
                 # REJECT 기록
                 issues = validation_result.get("issues", [])
