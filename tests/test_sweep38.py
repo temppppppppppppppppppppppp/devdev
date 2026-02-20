@@ -71,9 +71,7 @@ def test_pass_rate_monitor_lock_guards_core_record_access():
 
 def test_pre_llm_validator_body_physics_regex_uses_dotall():
     src = _read("modules/validation/pre_llm_validator.py")
+    # [I-07] injury_action 패턴은 continuity_validator로 이관됨 — triple_action만 검증
     triple_idx = src.index("triple_action = re.findall(")
-    injury_idx = src.index("injury_action = re.findall(")
-    triple_section = src[triple_idx:injury_idx]
-    injury_section = src[injury_idx : injury_idx + 260]
+    triple_section = src[triple_idx : triple_idx + 300]
     assert "re.DOTALL" in triple_section
-    assert "re.DOTALL" in injury_section

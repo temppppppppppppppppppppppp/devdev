@@ -398,6 +398,7 @@ class HUDKeys:
             "ActorHUD",
             "SportsHUD",
             "MedicalHUD",
+            "FantasyHUD",  # [TF-I19] V66 판타지 독립 후 누락 수정
         ]:
             if hk not in hud_keys:
                 hud_keys.append(hk)

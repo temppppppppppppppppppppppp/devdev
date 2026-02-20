@@ -72,9 +72,14 @@ class WorldStateManager:
     # state_changes 기반 자동 갱신
     # ═══════════════════════════════════════════════════════════════
 
-    def update_from_state_changes(self, ep_num: int, state_changes: dict):
+    def update_from_state_changes(self, ep_num: int, state_changes: dict, *, source: str = "episode"):
         """
         state_changes에서 자동 갱신 -- Python만으로.
+
+        Args:
+            ep_num: 에피소드 번호
+            state_changes: 상태 변경 dict
+            source: "episode" (기본) 또는 "arc" (아크 단위 갱신 시)
 
         state_changes 스키마:
             npc_deaths, skill_acquisitions, relationship_changes,
@@ -85,7 +90,10 @@ class WorldStateManager:
             return
 
         try:
-            self._state["last_updated_ep"] = ep_num
+            if source == "arc":
+                self._state["last_updated_ep"] = f"arc@{ep_num}"
+            else:
+                self._state["last_updated_ep"] = ep_num
 
             # 1. NPC 사망 처리
             for death in state_changes.get("npc_deaths") or []:
@@ -287,11 +295,27 @@ class WorldStateManager:
             if prot_lines:
                 parts.append("[주인공]\n" + "\n".join(prot_lines))
 
-            # 생존 NPC
+            # 생존 NPC — [TF-C06] 중요도 기반 정렬 후 truncation
             alive = self._state.get("alive_npcs", {})
             if alive:
                 npc_lines = []
-                for name, info in list(alive.items())[:30]:  # 최대 30명
+
+                # 중요도: 동행자(3) > 관계있음(2) > 역할있음(1) > 기타(0)
+                def _npc_importance(item):
+                    _name, _info = item
+                    if not isinstance(_info, dict):
+                        return 0
+                    score = 0
+                    if _info.get("companion"):
+                        score += 3
+                    if _info.get("relation"):
+                        score += 2
+                    if _info.get("role"):
+                        score += 1
+                    return score
+
+                sorted_alive = sorted(alive.items(), key=_npc_importance, reverse=True)
+                for name, info in sorted_alive[:30]:  # 최대 30명
                     desc_parts = []
                     if isinstance(info, dict):
                         if info.get("role"):

@@ -134,7 +134,11 @@ class BaseAgent:
 
     # [V60.68] 쿼터 소진 모델 캐싱 (클래스 변수 - 세션 전체 공유)
     _quota_exhausted_models = {}  # {model_name: exhausted_until_timestamp}
+    _quota_lock = threading.Lock()  # [I-18] 쿼터 캐시 읽기/쓰기 경쟁 방지
     _QUOTA_CACHE_DURATION = _SYSTEM_CFG.get("api", {}).get("quota_cache_duration", 3600)
+
+    # [S-02] max_output_tokens 클래스 상수
+    MAX_OUTPUT_TOKENS = _SYSTEM_CFG.get("api", {}).get("max_output_tokens", 8192)
 
     # [V60.99] API Rate Limit 예방 딜레이 (초)
     API_DELAY = _SYSTEM_CFG.get("api", {}).get("delay", 0.1)
@@ -270,11 +274,13 @@ class BaseAgent:
         if next_fallback and next_fallback not in model_stack:
             model_stack.append(next_fallback)
 
-        # [V60.68] 쿼터 소진 모델 필터링 (세션 캐싱)
+        # [V60.68] 쿼터 소진 모델 필터링 (세션 캐싱) [I-18] Lock 보호
         current_time = time.time()
         available_models = []
+        with BaseAgent._quota_lock:
+            quota_snapshot = dict(BaseAgent._quota_exhausted_models)
         for model in model_stack:
-            exhausted_until = self._quota_exhausted_models.get(model, 0)
+            exhausted_until = quota_snapshot.get(model, 0)
             if current_time >= exhausted_until:
                 available_models.append(model)
             else:
@@ -294,7 +300,7 @@ class BaseAgent:
 
         config_params = {
             "temperature": temperature,
-            "max_output_tokens": 8192,
+            "max_output_tokens": self.MAX_OUTPUT_TOKENS,
             "top_p": 0.95,
             "response_mime_type": "application/json",
         }
@@ -446,10 +452,11 @@ class BaseAgent:
                                 else model_stack[-1]
                             )
 
-                            # [V60.68] 쿼터 소진 모델 캐시 등록
+                            # [V60.68] 쿼터 소진 모델 캐시 등록 [I-18] Lock 보호
                             # [V62.3] 3-pro는 시간 단위 차단 — Rate Limit도 길게 캐싱
                             cache_duration = BaseAgent._QUOTA_CACHE_DURATION
-                            BaseAgent._quota_exhausted_models[old_model] = time.time() + cache_duration
+                            with BaseAgent._quota_lock:
+                                BaseAgent._quota_exhausted_models[old_model] = time.time() + cache_duration
 
                             # [V62.3] 전체 키 시도 전까지만 순환 예약
                             with BaseAgent._rotation_lock:
@@ -462,7 +469,7 @@ class BaseAgent:
                             # 폴백 모델용 config 재생성
                             fallback_config_params = {
                                 "temperature": temperature,
-                                "max_output_tokens": 8192,
+                                "max_output_tokens": self.MAX_OUTPUT_TOKENS,
                                 "top_p": 0.95,
                                 "response_mime_type": "application/json",
                             }
@@ -603,7 +610,7 @@ class BaseAgent:
                 # [FIX] 백업 모델용 별도 config
                 backup_config_params = {
                     "temperature": temperature,
-                    "max_output_tokens": 8192,
+                    "max_output_tokens": self.MAX_OUTPUT_TOKENS,
                     "top_p": 0.95,
                     "response_mime_type": "application/json",
                 }
@@ -856,6 +863,8 @@ class BaseAgent:
         }
         return hints.get(error_type, hints[AgentErrorType.UNKNOWN])
 
+    _MAX_JSON_PAYLOAD = 500_000  # [TF-C11] 500KB 크기 가드
+
     def _extract_json_robust(self, text):
         """
         [V40.5 Ultimate Sovereign]
@@ -864,6 +873,11 @@ class BaseAgent:
 
         if not text or not isinstance(text, str):
             return {"parsing_error": True, "content": "Empty or Invalid Input"}
+
+        # [TF-C11] 페이로드 크기 가드 — 500KB 초과 시 절삭 후 처리
+        if len(text) > self._MAX_JSON_PAYLOAD:
+            logging.warning("[TF-C11] JSON 페이로드 %d자 → %d자로 절삭", len(text), self._MAX_JSON_PAYLOAD)
+            text = text[: self._MAX_JSON_PAYLOAD]
 
         # 1. [Self-Healing] 괄호/따옴표 쌍 검사 및 강제 폐쇄
         open_braces = text.count("{")
@@ -923,10 +937,16 @@ class BaseAgent:
             # [V44] 순환 참조 감지 및 깊이 제한 추가
             final_dict = {}
             seen_ids = set()  # 순환 참조 감지용
+            _visit_count = [0]  # [TF-C11] mutable counter for nonlocal
             MAX_DEPTH = 20  # 최대 재귀 깊이
+            _MAX_VISITS = 100  # [TF-C11] 전체 방문 횟수 상한
 
             def process_node(node, depth=0) -> None:
                 nonlocal final_dict
+                # [TF-C11] 전체 방문 횟수 상한 — 이론적 무한루프 차단
+                _visit_count[0] += 1
+                if _visit_count[0] > _MAX_VISITS:
+                    return
                 # [V44] 깊이 제한 체크
                 if depth > MAX_DEPTH:
                     return
@@ -988,11 +1008,27 @@ class BaseAgent:
                 logging.warning(
                     f"⚠️ [JSON Parser] ast.literal_eval 실패, 정규식 fallback 사용 (길이: {len(json_str)}자)"
                 )
+                # [TF-C11] 2-pass regex: 문자열 값 + 숫자/불리언 값
                 kv_pattern = r'"(\w+)"\s*:\s*"(.*?)"(?="|\s*\}|\s*,)'
                 found_pairs = re.findall(kv_pattern, json_str, re.DOTALL)
-                if found_pairs:
-                    logging.warning(f"→ 정규식으로 {len(found_pairs)}개 키-값 추출 성공")
-                    return {k: v.replace("\\n", "\n").strip() for k, v in found_pairs}
+                result_dict = {k: v.replace("\\n", "\n").strip() for k, v in found_pairs}
+                # pass 2: 숫자, 불리언, null
+                kv_num_pattern = r'"(\w+)"\s*:\s*([-+]?\d+(?:\.\d+)?|true|false|null)(?:\s*[,}\]])'
+                for k, v in re.findall(kv_num_pattern, json_str, re.IGNORECASE):
+                    if k not in result_dict:
+                        if v.lower() == "true":
+                            result_dict[k] = True
+                        elif v.lower() == "false":
+                            result_dict[k] = False
+                        elif v.lower() == "null":
+                            result_dict[k] = None
+                        elif "." in v:
+                            result_dict[k] = float(v)
+                        else:
+                            result_dict[k] = int(v)
+                if result_dict:
+                    logging.warning(f"→ 정규식으로 {len(result_dict)}개 키-값 추출 성공")
+                    return result_dict
                 logging.warning("→ 정규식 추출 실패, RAW 반환")
                 return {"content": json_str, "status": "REPAIRED_RAW"}
         except Exception as e:
@@ -1043,8 +1079,8 @@ class BaseAgent:
             if current_time - cached_info["created_at"] < ttl_seconds:
                 return {"cache_name": cached_info.get("name"), "cached": True, "content_hash": content_hash}
             else:
-                # 만료된 캐시 삭제
-                del self._context_caches[cache_key]
+                # 만료된 캐시 삭제 [I-20] KeyError 방지
+                self._context_caches.pop(cache_key, None)
 
         # Gemini Context Caching API 호출 시도
         try:
@@ -1073,18 +1109,11 @@ class BaseAgent:
                 "created_at": current_time,
                 "content_hash": content_hash,
             }
+            # [I-20] list() 스냅샷 1회로 TOCTOU 제거
             if len(self._context_caches) > self._CONTEXT_CACHE_MAX:
-                try:
-                    sorted_keys = sorted(
-                        list(self._context_caches.keys()),
-                        key=lambda k: self._context_caches.get(k, {}).get("created_at", 0),
-                    )
-                except RuntimeError:
-                    sorted_keys = sorted(
-                        list(self._context_caches.keys()),
-                        key=lambda k: self._context_caches.get(k, {}).get("created_at", 0),
-                    )
-                for old_key in sorted_keys[: len(sorted_keys) - self._CONTEXT_CACHE_MAX]:
+                snapshot = list(self._context_caches.items())
+                snapshot.sort(key=lambda kv: kv[1].get("created_at", 0))
+                for old_key, _ in snapshot[: len(snapshot) - self._CONTEXT_CACHE_MAX]:
                     self._context_caches.pop(old_key, None)
 
             logging.info(f"📦 [V61.5] 컨텍스트 캐시 생성: {cache_type} ({len(content)}자)")
@@ -1140,7 +1169,7 @@ class BaseAgent:
 
             config_params = {
                 "temperature": temperature,
-                "max_output_tokens": 8192,
+                "max_output_tokens": self.MAX_OUTPUT_TOKENS,
                 "top_p": 0.95,
                 "response_mime_type": "application/json",
                 "cached_content": cache_name,

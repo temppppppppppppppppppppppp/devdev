@@ -15,6 +15,10 @@ SovereignApp에서 분리된 Stage 2 관련 메서드:
 import asyncio
 import logging
 
+from modules.core.constants import VolumeSettings
+
+DEFAULT_EP_COUNT = VolumeSettings.EPISODES_PER_ARC
+
 
 class Stage2Orchestrator:
     """
@@ -224,7 +228,7 @@ class Stage2Orchestrator:
 
         # [V62.5] extract_cumulative_state 배치 캐시
         self.ctx.cumulative_state_cache = None
-        self.ctx.cumulative_state_cache_key = 0
+        self.ctx.cumulative_state_cache_key = None  # [S-08] 센티넬
 
         # 2. 배치(Batch) 처리 루프 시작
         for batch_start in range(done_count, target_limit, 5):
@@ -682,20 +686,23 @@ class Stage2Orchestrator:
                         logging.info("[1] 건너뛰고 계속")
                         logging.info("[2] 중단")
                         logging.info("[3] 다시 하기 (자동)")
-                        print("   [4] 수동 개입 (리포트 확인 후 재시도)")
-                        user_choice = input("   선택 (기본: 2): ").strip()
+                        logging.info("   [4] 수동 개입 (리포트 확인 후 재시도)")
+                        try:
+                            user_choice = input("   선택 (기본: 2): ").strip()
+                        except (EOFError, KeyboardInterrupt):
+                            user_choice = "2"
 
                         if user_choice == "1":
                             self.ctx.ui.log(f"⏭️ Arc {global_arc_no}을 건너뛰고 계속합니다.")
                             _skip_ep_raw = (
-                                arcs_source[global_arc_no - 1].get("ep_count", 5)
+                                arcs_source[global_arc_no - 1].get("ep_count", DEFAULT_EP_COUNT)
                                 if global_arc_no <= len(arcs_source)
-                                else 5
-                            )  # [V70] 하드코딩 5 → 실제 ep_count
+                                else DEFAULT_EP_COUNT
+                            )
                             try:
                                 _skip_ep = int(_skip_ep_raw)
                             except (TypeError, ValueError):
-                                _skip_ep = 5
+                                _skip_ep = DEFAULT_EP_COUNT
                             current_ep_start += _skip_ep
                             break
                         elif user_choice == "3":
@@ -707,23 +714,26 @@ class Stage2Orchestrator:
                             break
                         elif user_choice == "4":
                             logging.info(f"\n   📝 리포트 파일을 확인하세요: {failure_report_path}")
-                            print("   💡 문제가 된 아이템이나 표현을 확인 후, 아래 옵션을 선택하세요.")
-                            manual_input = (
-                                input("   준비되면 [Enter]로 재시도, 'skip'으로 건너뛰기, 'quit'으로 중단: ")
-                                .strip()
-                                .lower()
-                            )
+                            logging.info("   💡 문제가 된 아이템이나 표현을 확인 후, 아래 옵션을 선택하세요.")
+                            try:
+                                manual_input = (
+                                    input("   준비되면 [Enter]로 재시도, 'skip'으로 건너뛰기, 'quit'으로 중단: ")
+                                    .strip()
+                                    .lower()
+                                )
+                            except (EOFError, KeyboardInterrupt):
+                                manual_input = "quit"
                             if manual_input == "skip":
                                 self.ctx.ui.log(f"⏭️ Arc {global_arc_no}을 건너뛰고 계속합니다.")
                                 _skip_ep2_raw = (
-                                    arcs_source[global_arc_no - 1].get("ep_count", 5)
+                                    arcs_source[global_arc_no - 1].get("ep_count", DEFAULT_EP_COUNT)
                                     if global_arc_no <= len(arcs_source)
-                                    else 5
-                                )  # [V70]
+                                    else DEFAULT_EP_COUNT
+                                )
                                 try:
                                     _skip_ep2 = int(_skip_ep2_raw)
                                 except (TypeError, ValueError):
-                                    _skip_ep2 = 5
+                                    _skip_ep2 = DEFAULT_EP_COUNT
                                 current_ep_start += _skip_ep2
                                 break
                             elif manual_input == "quit":
@@ -763,7 +773,10 @@ class Stage2Orchestrator:
 
         self.ctx.ui.log("✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.")
         self.ctx.write_audit_summary("stage2_complete")
-        input("\n[Enter] 메뉴로 돌아가기")
+        try:
+            input("\n[Enter] 메뉴로 돌아가기")
+        except (EOFError, KeyboardInterrupt):
+            pass
 
     # ═══════════════════════════════════════════════════════════════════════
     # Stage 2 헬퍼 메서드

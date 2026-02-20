@@ -149,9 +149,9 @@ class BaseGuard(ABC):
                 english_words = re.findall(r"[a-zA-Z]+", content)
                 issues.append(f"외국어(영어) 노출: {', '.join(english_words[:3])}...")
 
-        # 3. 금기어 검사
+        # 3. 금기어 검사 [S-10] 비유적 사용 필터
         for term in self.FORBIDDEN_TERMS:
-            if term in content:
+            if term in content and not self._is_figurative_use(term, content):
                 issues.append(f"장르 파괴 금기어 발견: '{term}'")
 
         # 4. 숫자(아라비아 숫자) 미변환 검사 (장르에 따라 완화 가능)
@@ -166,6 +166,28 @@ class BaseGuard(ABC):
     def get_v20_purism_prompt(self) -> str:
         """장르별 순혈주의 프롬프트 생성"""
         pass
+
+    # [S-10] 비유적 사용 허용 컨텍스트 (서브클래스에서 확장 가능)
+    _FIGURATIVE_CONTEXTS: dict[str, tuple[str, ...]] = {
+        "마법": ("처럼", "같은", "같이", "마치"),
+        "레벨": ("수준", "급"),
+    }
+
+    def _is_figurative_use(self, term: str, text: str) -> bool:
+        """[S-10] 금기어가 비유적으로 사용되었는지 확인.
+
+        term 바로 뒤 5자 이내에 비유 조사가 있으면 비유적 사용으로 판단.
+        """
+        suffixes = self._FIGURATIVE_CONTEXTS.get(term)
+        if not suffixes:
+            return False
+        idx = text.find(term)
+        while idx >= 0:
+            after = text[idx + len(term) : idx + len(term) + 5]
+            if any(s in after for s in suffixes):
+                return True
+            idx = text.find(term, idx + 1)
+        return False
 
     def _should_check_english(self) -> bool:
         """영어 검증 여부 (장르별 오버라이드 가능)"""
@@ -202,9 +224,9 @@ class BaseGuard(ABC):
 
         all_violations = []
 
-        # 1. 금기어 검사
+        # 1. 금기어 검사 [S-10] 비유적 사용 필터
         for term in self.FORBIDDEN_TERMS:
-            if term in manuscript:
+            if term in manuscript and not self._is_figurative_use(term, manuscript):
                 all_violations.append(
                     {
                         "type": "forbidden_term",

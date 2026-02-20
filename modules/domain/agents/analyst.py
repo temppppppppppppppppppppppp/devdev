@@ -19,7 +19,7 @@ import logging
 import os
 import re
 
-from modules.core.constants import HUDKeys
+from modules.core.constants import GenreTypes, HUDKeys
 
 # [V65] 프롬프트 외부화
 from .analyst_prompt_api import (
@@ -45,6 +45,13 @@ except ImportError:
     ARC_DESIGN_SCHEMA = None
 
 # [V65] 모듈-레벨 프롬프트 상수 5개는 프롬프트 모듈로 이동됨
+
+
+class _SafeDict(dict):
+    """format_map()에서 누락 키를 원본 그대로 유지."""
+
+    def __missing__(self, key):
+        return "{" + key + "}"
 
 
 class Analyst(BaseAgent):
@@ -158,6 +165,85 @@ class Analyst(BaseAgent):
     # endregion
 
     # region //arc planning
+
+    @staticmethod
+    def _extract_content_parts(block: dict) -> tuple[list[str], int]:
+        """[TF-#2] Block에서 content 파츠 추출 + 총 길이 반환."""
+        if not isinstance(block, dict):
+            return [], 0
+        parts = []
+
+        # 1. 최상위 레벨에서 직접 추출 (LLM이 flatten된 구조로 반환)
+        for key in ["context", "event_villain", "solution", "reward"]:
+            if block.get(key) and isinstance(block.get(key), str):
+                parts.append(str(block[key]))
+
+        # 2. content 객체 내부에서 추출 (nested 구조)
+        content_obj = block.get("content", {})
+        if isinstance(content_obj, dict):
+            for key in ["context", "event_villain", "solution", "reward"]:
+                if content_obj.get(key):
+                    parts.append(str(content_obj[key]))
+        elif isinstance(content_obj, str):
+            parts.append(content_obj)
+
+        # 3. [V62.2] 레거시 호환: raw_data 래핑 구조 (기존 DB)
+        raw_data = block.get("raw_data", {})
+        if isinstance(raw_data, dict):
+            rd_content = raw_data.get("content", {})
+            if isinstance(rd_content, dict):
+                for key in ["context", "event_villain", "solution", "reward"]:
+                    if rd_content.get(key):
+                        parts.append(str(rd_content[key]))
+            rd_ge = raw_data.get("genre_ext", {})
+            if isinstance(rd_ge, dict):
+                for v in rd_ge.values():
+                    if isinstance(v, str) and v:
+                        parts.append(v)
+            if raw_data.get("title"):
+                parts.append(str(raw_data["title"]))
+
+        # 4. [V62.2] genre_ext에서도 추출 (장르 특화 정보)
+        genre_ext = block.get("genre_ext", {})
+        if isinstance(genre_ext, dict):
+            for v in genre_ext.values():
+                if isinstance(v, str) and v:
+                    parts.append(v)
+
+        # 5. 최상위 title
+        if block.get("title"):
+            parts.append(str(block["title"]))
+
+        return parts, len(" ".join(parts))
+
+    _LIB_KEYS = {
+        "intro": "intro_patterns",
+        "dev": "narrative_archetypes",
+        "ending": "ending_patterns",
+        "trans": "transition_patterns",
+    }
+
+    def _load_genre_libraries(self, genre: str) -> dict[str, str]:
+        """[TF-#3] 장르 라이브러리 로드 — 장르별 → 기본 → 빈 dict fallback."""
+        from pathlib import Path
+
+        root_config = Path(__file__).parent.parent.parent.parent / "config"
+        candidates = [
+            self._get_genre_library_path(genre),
+            root_config / "prompts" / "analyst_libraries.json",
+        ]
+        for path in candidates:
+            if path.exists():
+                try:
+                    lib = json.loads(path.read_text(encoding="utf-8"))
+                    result = {k: json.dumps(lib.get(v, {}), ensure_ascii=False) for k, v in self._LIB_KEYS.items()}
+                    result["archetype"] = result["dev"]
+                    logging.warning(f"📚 [Analyst] {genre} 장르 라이브러리 로드 완료 ({path.name})")
+                    return result
+                except Exception as e:
+                    logging.warning(f"🚨 [Analyst] 라이브러리 파싱 실패 ({path.name}): {e}")
+        empty = json.dumps({}, ensure_ascii=False)
+        return {k: empty for k in [*self._LIB_KEYS, "archetype"]}
 
     # ═══════════════════════════════════════════════════════════════
     # [V60] Arc 상태 계승 검증 메서드
@@ -498,52 +584,8 @@ class Analyst(BaseAgent):
         # [V60.62] 3가지 구조 모두 대응: flatten, nested content, plot_roadmap
         original_guess = 5
         if isinstance(curr_block, dict):
-            content_parts = []
-
-            # [V60.62] 1. 최상위 레벨에서 직접 추출 (LLM이 flatten된 구조로 반환)
-            for key in ["context", "event_villain", "solution", "reward"]:
-                if curr_block.get(key) and isinstance(curr_block.get(key), str):
-                    content_parts.append(str(curr_block[key]))
-
-            # 2. content 객체 내부에서 추출 (nested 구조)
-            content_obj = curr_block.get("content", {})
-            if isinstance(content_obj, dict):
-                for key in ["context", "event_villain", "solution", "reward"]:
-                    if content_obj.get(key):
-                        content_parts.append(str(content_obj[key]))
-            elif isinstance(content_obj, str):
-                content_parts.append(content_obj)
-
-            # 3. [V62.2] 레거시 호환: raw_data 래핑 구조 (기존 DB)
-            raw_data = curr_block.get("raw_data", {})
-            if isinstance(raw_data, dict):
-                rd_content = raw_data.get("content", {})
-                if isinstance(rd_content, dict):
-                    for key in ["context", "event_villain", "solution", "reward"]:
-                        if rd_content.get(key):
-                            content_parts.append(str(rd_content[key]))
-                # raw_data 내 genre_ext도 추출
-                rd_ge = raw_data.get("genre_ext", {})
-                if isinstance(rd_ge, dict):
-                    for v in rd_ge.values():
-                        if isinstance(v, str) and v:
-                            content_parts.append(v)
-                if raw_data.get("title"):
-                    content_parts.append(str(raw_data["title"]))
-
-            # 4. [V62.2] genre_ext에서도 추출 (장르 특화 정보)
-            genre_ext = curr_block.get("genre_ext", {})
-            if isinstance(genre_ext, dict):
-                for v in genre_ext.values():
-                    if isinstance(v, str) and v:
-                        content_parts.append(v)
-
-            # 5. 최상위 title
-            if curr_block.get("title"):
-                content_parts.append(str(curr_block["title"]))
-
+            content_parts, content_len = self._extract_content_parts(curr_block)
             content_sample = " ".join(content_parts)
-            content_len = len(content_sample)
 
             # 내용 길이/복잡도에 따라 화수 추정
             # - 500자 미만: 간단한 블록 → 3화
@@ -563,53 +605,9 @@ class Analyst(BaseAgent):
         target_ep_count = max(3, min(7, original_guess - 1))
 
         # [V60.31] Block 빈약 경고 - 화당 200자 이상 권장
-        # [V60.59] plot_roadmap 구조 대응: raw_data.content에서 추출
         min_content_per_ep = 200
         if isinstance(curr_block, dict):
-            content_parts = []
-
-            # [V60.62] 1. 최상위 레벨에서 직접 추출 (LLM이 flatten된 구조로 반환하는 경우)
-            for key in ["context", "event_villain", "solution", "reward"]:
-                if curr_block.get(key) and isinstance(curr_block.get(key), str):
-                    content_parts.append(str(curr_block[key]))
-
-            # 2. content 객체 내부에서 추출 (nested 구조인 경우)
-            content_obj = curr_block.get("content", {})
-            if isinstance(content_obj, dict):
-                for key in ["context", "event_villain", "solution", "reward"]:
-                    if content_obj.get(key):
-                        content_parts.append(str(content_obj[key]))
-            elif isinstance(content_obj, str):
-                content_parts.append(content_obj)
-
-            # 3. [V62.2] 레거시 호환: raw_data 래핑 구조 (기존 DB)
-            raw_data = curr_block.get("raw_data", {})
-            if isinstance(raw_data, dict):
-                rd_content = raw_data.get("content", {})
-                if isinstance(rd_content, dict):
-                    for key in ["context", "event_villain", "solution", "reward"]:
-                        if rd_content.get(key):
-                            content_parts.append(str(rd_content[key]))
-                rd_ge = raw_data.get("genre_ext", {})
-                if isinstance(rd_ge, dict):
-                    for v in rd_ge.values():
-                        if isinstance(v, str) and v:
-                            content_parts.append(v)
-                if raw_data.get("title"):
-                    content_parts.append(str(raw_data["title"]))
-
-            # 4. [V62.2] genre_ext에서도 추출 (장르 특화 정보)
-            genre_ext = curr_block.get("genre_ext", {})
-            if isinstance(genre_ext, dict):
-                for v in genre_ext.values():
-                    if isinstance(v, str) and v:
-                        content_parts.append(v)
-
-            # 5. 최상위 title
-            if curr_block.get("title"):
-                content_parts.append(str(curr_block["title"]))
-
-            content_len = len(" ".join(content_parts))
+            _warn_parts, content_len = self._extract_content_parts(curr_block)
 
             if content_len < target_ep_count * min_content_per_ep:
                 logging.warning(
@@ -618,48 +616,12 @@ class Analyst(BaseAgent):
 
         # 3. [V43] 장르별 라이브러리 로드 - 장르에 맞는 서사 패턴 사용
         current_genre = self._get_current_genre()
-        lib_path = self._get_genre_library_path(current_genre)
-
-        if lib_path.exists():
-            try:
-                lib_data = json.loads(lib_path.read_text(encoding="utf-8"))
-                intro_lib_full = json.dumps(lib_data.get("intro_patterns", {}), ensure_ascii=False)
-                dev_lib_full = json.dumps(lib_data.get("narrative_archetypes", {}), ensure_ascii=False)
-                ending_lib_full = json.dumps(lib_data.get("ending_patterns", {}), ensure_ascii=False)
-                trans_lib_full = json.dumps(lib_data.get("transition_patterns", {}), ensure_ascii=False)
-                archetype_lib_full = dev_lib_full
-                logging.warning(f"📚 [Analyst] {current_genre} 장르 라이브러리 로드 완료")
-            except Exception as e:
-                logging.warning(f"🚨 [Analyst] 라이브러리 파일 파싱 실패: {e}")
-                # [V47 Fix] 빈 dict를 JSON 직렬화 - 이중 이스케이프 방지
-                empty_json = json.dumps({}, ensure_ascii=False)
-                intro_lib_full = dev_lib_full = ending_lib_full = trans_lib_full = archetype_lib_full = empty_json
-        else:
-            logging.warning(f"⚠️ [Analyst] {current_genre} 라이브러리 없음, 기본 사용")
-            # 폴백: 기본 라이브러리 시도 [V45 Fix] 루트 config 경로 사용
-            from pathlib import Path
-
-            root_config = Path(__file__).parent.parent.parent.parent / "config"
-            fallback_path = root_config / "prompts" / "analyst_libraries.json"
-            if fallback_path.exists():
-                try:
-                    lib_data = json.loads(fallback_path.read_text(encoding="utf-8"))
-                    intro_lib_full = json.dumps(lib_data.get("intro_patterns", {}), ensure_ascii=False)
-                    dev_lib_full = json.dumps(lib_data.get("narrative_archetypes", {}), ensure_ascii=False)
-                    ending_lib_full = json.dumps(lib_data.get("ending_patterns", {}), ensure_ascii=False)
-                    trans_lib_full = json.dumps(lib_data.get("transition_patterns", {}), ensure_ascii=False)
-                    archetype_lib_full = dev_lib_full
-                    logging.warning("📚 [Analyst] 기본 라이브러리 로드 완료")
-                except (json.JSONDecodeError, KeyError, TypeError) as e:
-                    # [V44] JSON 파싱 실패 경고 추가
-                    logging.warning(f"🚨 [Analyst] 기본 라이브러리 파싱 실패: {str(e)[:50]}")
-                    # [V47 Fix] 빈 dict를 JSON 직렬화 - 이중 이스케이프 방지
-                    empty_json = json.dumps({}, ensure_ascii=False)
-                    intro_lib_full = dev_lib_full = ending_lib_full = trans_lib_full = archetype_lib_full = empty_json
-            else:
-                # [V47 Fix] 빈 dict를 JSON 직렬화 - 이중 이스케이프 방지
-                empty_json = json.dumps({}, ensure_ascii=False)
-                intro_lib_full = dev_lib_full = ending_lib_full = trans_lib_full = archetype_lib_full = empty_json
+        libs = self._load_genre_libraries(current_genre)
+        intro_lib_full = libs["intro"]
+        dev_lib_full = libs["dev"]
+        ending_lib_full = libs["ending"]
+        trans_lib_full = libs["trans"]
+        archetype_lib_full = libs["archetype"]
 
         # 3-1. [V42 + V60.32] 주인공 이름 결정 (파라미터 우선, 없으면 Bible 추출)
         final_protagonist_name = protagonist_name  # 파라미터로 받은 값 우선
@@ -734,10 +696,6 @@ class Analyst(BaseAgent):
         final_arc_data = None
         # [V65] 루프 간 공유 상태를 dict로 관리 (클로저 캡처용)
         _arc_loop_state = {"draft_result": None, "actual_ep_count": target_ep_count}
-
-        class _SafeDict(dict):
-            def __missing__(self, key):
-                return "{" + key + "}"
 
         def _arc_attempt_func(attempt, retry_feedback):
             """[V65] 단일 시도 로직 — retry_with_feedback에 전달"""
@@ -906,17 +864,35 @@ class Analyst(BaseAgent):
             final_arc_data = draft_result
             final_arc_data["_actual_ep_count"] = actual_ep_count
 
-        # 8. 메타데이터 최종 동기화 및 반환 (인과율 유지)
+        # 8. 메타데이터 동기화 + 상태 검증 + Joint Docs 보정
         if not final_arc_data:
-            # [Sweep44] draft_result이 None일 수 있음 (전체 재시도 실패 시)
             if draft_result is None:
                 draft_result = {"arc_no": clean_arc_no, "ep_count": target_ep_count}
-                actual_ep_count = target_ep_count  # [Sweep52] 안전한 기본값으로 리셋
+                actual_ep_count = target_ep_count
                 logging.warning("[Analyst] 전체 재시도 실패 — 최소 폴백 Arc 데이터 사용")
             final_arc_data = draft_result
-            final_arc_data["_actual_ep_count"] = actual_ep_count  # [V60.31]
+            final_arc_data["_actual_ep_count"] = actual_ep_count
 
-        # [V60.31] 가변 페이싱: LLM 결정 ep_count 사용
+        return self._post_process_arc(
+            final_arc_data,
+            clean_arc_no,
+            vol_no,
+            ep_start,
+            target_ep_count,
+        )
+
+    # endregion
+
+    def _post_process_arc(
+        self,
+        final_arc_data: dict,
+        clean_arc_no: int,
+        vol_no,
+        ep_start: int,
+        target_ep_count: int,
+    ) -> dict:
+        """[TF-#1] Arc 후처리: 메타 동기화 + 상태 검증 + Joint Docs + state_changes 보장."""
+        # 가변 페이싱: LLM 결정 ep_count 사용
         final_ep_count = final_arc_data.get("_actual_ep_count", target_ep_count)
         final_arc_data.update(
             {
@@ -928,34 +904,27 @@ class Analyst(BaseAgent):
             }
         )
         if "_actual_ep_count" in final_arc_data:
-            del final_arc_data["_actual_ep_count"]  # 임시 키 제거
+            del final_arc_data["_actual_ep_count"]
         self._normalize_arc_output(final_arc_data, ep_start, final_ep_count)
 
-        # 9. [V49.3] StateTracker를 통한 상태 일관성 검증
-        state_issues = self._validate_arc_with_state_tracker(final_arc_data)
+        # StateTracker 검증
+        state_issues = self._validate_arc_with_state_tracker(final_arc_data)  # [V70] 의도적 비활성화 스텁
         if state_issues:
             logging.warning(f"⚠️ [Analyst] StateTracker 검증 이슈 발견: {len(state_issues)}건")
-            # 검증 이슈를 Arc 데이터에 첨부 (Director/ContinuityInspector 참조용)
             final_arc_data["state_tracker_issues"] = state_issues
-            # Critical 이슈가 있으면 tactical_doc에 경고 주입
             critical_issues = [i for i in state_issues if i.get("severity") in ["critical", "major"]]
             if critical_issues:
                 warning_text = "\n\n⚠️ [STATE TRACKER WARNING]:\n"
-                for issue in critical_issues[:3]:  # 최대 3개
+                for issue in critical_issues[:3]:
                     warning_text += f"- [{issue['severity'].upper()}] {issue['description']}\n"
                 if "tactical_doc" in final_arc_data and isinstance(final_arc_data["tactical_doc"], str):
                     final_arc_data["tactical_doc"] = warning_text + final_arc_data["tactical_doc"]
 
-        # ═══════════════════════════════════════════════════════════════
-        # 10. [V60] Arc 상태 계승 검증 + 화 간 모순 탐지 + Joint Docs 보정
-        # ═══════════════════════════════════════════════════════════════
-
-        # 10-1. 이전 Arc 데이터 로드
+        # Arc 상태 계승 검증
         prev_arc_data = None
         if clean_arc_no > 1:
             try:
                 arcs_anchor = self.context.db.load_anchor("arcs")
-                # [G9] arcs_anchor는 dict 또는 list일 수 있음 — 둘 다 처리
                 if arcs_anchor and isinstance(arcs_anchor, dict):
                     prev_arc_data = arcs_anchor.get(f"arc_{clean_arc_no - 1}")
                 elif arcs_anchor and isinstance(arcs_anchor, list):
@@ -966,7 +935,6 @@ class Analyst(BaseAgent):
             except Exception as e:
                 logging.warning(f"⚠️ [V60] 이전 Arc 로드 실패: {e}")
 
-        # 10-2. Arc 상태 계승 검증
         if prev_arc_data:
             continuity_result = self._validate_arc_state_continuity_v60(final_arc_data, prev_arc_data)
             if continuity_result["issues"]:
@@ -974,7 +942,6 @@ class Analyst(BaseAgent):
                 for issue in continuity_result["issues"][:3]:
                     logging.info(f"- {issue}")
 
-                # 자동 보정 적용
                 if continuity_result["auto_corrections"]:
                     if "state_constraints" not in final_arc_data:
                         final_arc_data["state_constraints"] = {}
@@ -995,10 +962,9 @@ class Analyst(BaseAgent):
                         start_state["equipment"] = list(set(existing))
                         logging.info(f"🔧 [V60] 시작 소지품 자동 보정: {start_state['equipment']}")
 
-                # 검증 결과 첨부
                 final_arc_data["v60_continuity_check"] = continuity_result
 
-        # 10-3. Arc 내 화 간 모순 탐지
+        # Arc 내 화 간 모순 탐지
         tactical_doc = final_arc_data.get("tactical_doc", "")
         if isinstance(tactical_doc, dict):
             tactical_doc = "\n".join(f"{k}: {v}" for k, v in tactical_doc.items())
@@ -1009,7 +975,6 @@ class Analyst(BaseAgent):
                 for issue in doc_continuity["issues"][:3]:
                     logging.info(f"- {issue}")
 
-                # 경고 주입
                 warning_text = "\n\n⚠️ [V60 CONTINUITY WARNING]:\n"
                 for issue in doc_continuity["issues"][:5]:
                     warning_text += f"- {issue}\n"
@@ -1017,11 +982,11 @@ class Analyst(BaseAgent):
 
             final_arc_data["v60_doc_continuity"] = doc_continuity
 
-        # 10-4. Joint Docs 자동 추출 보정
+        # Joint Docs 자동 추출 보정
         if tactical_doc:
             final_arc_data = self._auto_correct_joint_docs_v60(tactical_doc, final_arc_data)
 
-        # [V70] state_changes 기본값 보장 (FourPhase의 _ensure_required_fields와 동일 수준)
+        # state_changes 기본값 보장
         if "state_changes" not in final_arc_data or not isinstance(final_arc_data.get("state_changes"), dict):
             final_arc_data["state_changes"] = {}
         _sc = final_arc_data["state_changes"]
@@ -1045,8 +1010,6 @@ class Analyst(BaseAgent):
                 _sc[_sc_key] = []
 
         return final_arc_data
-
-    # endregion
 
     def _normalize_arc_output(self, arc_data, ep_start, ep_count):
         """아크 출력의 회차 표기 및 분량 메타를 정규화한다."""
@@ -1402,37 +1365,42 @@ class Analyst(BaseAgent):
 
         return {"lack_summary": summary, "raw_analysis": lack_analysis}
 
+    _GENRE_DETECT_MAP: dict[str, str] = {
+        "hunter": GenreTypes.HUNTER,
+        "헌터": GenreTypes.HUNTER,
+        "invest": GenreTypes.INVESTMENT,
+        "투자": GenreTypes.INVESTMENT,
+        "wuxia": GenreTypes.WUXIA,
+        "무협": GenreTypes.WUXIA,
+        "actor": GenreTypes.ACTOR,
+        "배우": GenreTypes.ACTOR,
+        "sports": GenreTypes.SPORTS,
+        "스포츠": GenreTypes.SPORTS,
+        "medical": GenreTypes.MEDICAL,
+        "의학": GenreTypes.MEDICAL,
+        "의료": GenreTypes.MEDICAL,
+        "cook": GenreTypes.COOKING,
+        "요리": GenreTypes.COOKING,
+        "composer": GenreTypes.COMPOSER,
+        "작곡": GenreTypes.COMPOSER,
+        "alt_history": GenreTypes.ALT_HISTORY,
+        "대체역사": GenreTypes.ALT_HISTORY,
+        "조선": GenreTypes.ALT_HISTORY,
+        "fantasy": GenreTypes.FANTASY,
+        "판타지": GenreTypes.FANTASY,
+    }
+
     def _get_current_genre(self) -> str:
-        """
-        [V43] 현재 장르를 감지하여 반환
-        Guard에서 장르 정보를 추출하거나 기본값 반환
-        """
+        """[V43] 현재 장르를 감지하여 반환 — dict lookup 기반."""
         try:
             if hasattr(self.context, "guard") and self.context.guard:
-                # Guard의 get_genre_name()에서 장르 추출
-                genre_name = self.context.guard.get_genre_name()
-                if "hunter" in genre_name.lower() or "헌터" in genre_name:
-                    return "hunter"
-                elif "invest" in genre_name.lower() or "투자" in genre_name:
-                    return "investment"
-                elif "wuxia" in genre_name.lower() or "무협" in genre_name:
-                    return "wuxia"
-                elif "actor" in genre_name.lower() or "배우" in genre_name:
-                    return "actor"
-                elif "sports" in genre_name.lower() or "스포츠" in genre_name:
-                    return "sports"
-                elif "medical" in genre_name.lower() or "의학" in genre_name or "의료" in genre_name:
-                    return "medical"
-                elif "cook" in genre_name.lower() or "요리" in genre_name:
-                    return "cooking"
-                elif "composer" in genre_name.lower() or "작곡" in genre_name:
-                    return "composer"
-                elif "alt_history" in genre_name.lower() or "대체역사" in genre_name or "조선" in genre_name:
-                    return "alt_history"
+                genre_name = self.context.guard.get_genre_name().lower()
+                for key, genre_type in self._GENRE_DETECT_MAP.items():
+                    if key in genre_name:
+                        return genre_type
         except Exception as e:
             logging.warning(f"⚠️ [Analyst] 장르 감지 실패: {e}")
-
-        return "wuxia"  # 기본값
+        return GenreTypes.WUXIA
 
     def _get_genre_library_path(self, genre: str):
         """
@@ -1459,10 +1427,11 @@ class Analyst(BaseAgent):
         return root_config / "prompts" / lib_filename
 
     def _validate_arc_with_state_tracker(self, arc_data: dict) -> list:
+        """[V49.3 → V70] StateTracker 기반 Arc 검증 — 의도적 비활성화.
+
+        preset_registry/llm_client 없이 의미 있는 검증 불가하여 빈 리스트 리턴.
+        향후 StateTracker가 독립 검증 기능을 갖추면 활성화 예정.
         """
-        [V49.3] StateTracker를 사용하여 Arc 설계의 상태 일관성 검증
-        """
-        # [V70] StateTracker는 preset_registry/llm_client 없이 의미 있는 검증 불가
         return []
 
     def get_state_constraint_prompt(self, arc_no: int) -> str:

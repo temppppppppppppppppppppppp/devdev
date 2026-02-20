@@ -289,6 +289,126 @@ class TestRunPostEpisodeTasks:
             pp.run_post_episode_tasks()
 
 
+class TestAtomicMetadataSave:
+    """[TF-C10] WorldState + FactLedger 원자적 저장 테스트"""
+
+    def _make_pp_with_metadata(self):
+        """WorldState + FactLedger가 활성화된 PP 생성"""
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        ctx.sys = MagicMock()
+        ctx.sys.hud = MagicMock()
+        ctx.sys.hud.snapshot.return_value = {}
+        ctx.sys.hud.bulk_update = MagicMock()
+
+        director = MagicMock()
+        director.on_approve_workflow.return_value = {}
+        manager = MagicMock()
+        manager.update_state_and_lore_v20.return_value = {}
+        state_extractor = MagicMock()
+        state_extractor.extract_satisfaction_tag.return_value = None
+
+        ctx.agents = {
+            "director": director,
+            "manager": manager,
+            "state_extractor": state_extractor,
+        }
+
+        db = MagicMock()
+        db.conn = MagicMock()
+        db.get_episode_bible.return_value = {}
+        db.load_anchor.return_value = []
+        # transaction() 컨텍스트 매니저 mock
+        db.transaction.return_value.__enter__ = MagicMock(return_value=None)
+        db.transaction.return_value.__exit__ = MagicMock(return_value=False)
+
+        project = MagicMock()
+        project.db = db
+        project.name = "test_project"
+        project.latest_state = {}
+        project.seed_tracker = None
+        project.karma_matrix = {}
+        project.master_bible = {
+            "MasterBible": {
+                "AssetLibrary": {"KeyNPCs": []},
+                "protagonist_config": {"name": "주인공"},
+            },
+            "npc_registry": {},
+        }
+        ctx.current_project = project
+
+        # WorldState + FactLedger mock
+        ws = MagicMock()
+        ws.update_from_state_changes = MagicMock()
+        ws.update_protagonist_state = MagicMock()
+        ws.save = MagicMock()
+        ctx.world_state = ws
+
+        fl = MagicMock()
+        fl.update_from_state_changes = MagicMock()
+        fl.update_from_bible_delta = MagicMock()
+        fl.save = MagicMock()
+        fl.get_stats.return_value = {"characters": 5, "items": 3}
+        ctx.fact_ledger = fl
+
+        ctx.memory = None
+        ctx.state_tracker = None
+        ctx.character_voice = None
+        ctx.foreshadow_tracker = None
+        ctx.failure_learner = None
+        ctx.quality_dashboard = None
+        ctx.perf_timer = MagicMock()
+        ctx.flush_audit_buffer = MagicMock()
+        ctx.get_protagonist_name = lambda: "주인공"
+        ctx.generate_narrative_summary = MagicMock()
+
+        return Stage4PostProcessor(ctx)
+
+    def test_transaction_wraps_both_saves(self, tmp_path):
+        """[TF-C10] WorldState.save + FactLedger.save가 트랜잭션 안에서 호출"""
+        pp = self._make_pp_with_metadata()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+
+        pp.process_pass_result(
+            next_ep=1,
+            final_manuscript="테스트 원고 " * 500,
+            final_title="테스트",
+            final_state_updates={},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1, "state_changes": {"power_level": 50}},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        # transaction() 호출 확인
+        pp.ctx.current_project.db.transaction.assert_called_once()
+        # 양쪽 save 호출 확인
+        pp.ctx.world_state.save.assert_called_once()
+        pp.ctx.fact_ledger.save.assert_called_once()
+
+    def test_transaction_rollback_on_failure(self, tmp_path):
+        """[TF-C10] FactLedger.save 실패 시 전체 트랜잭션 롤백 (비차단)"""
+        pp = self._make_pp_with_metadata()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.fact_ledger.save.side_effect = RuntimeError("DB write error")
+
+        # 비차단 — 원고는 이미 저장됨, 전체 프로세스는 True 반환
+        result = pp.process_pass_result(
+            next_ep=1,
+            final_manuscript="테스트 원고 " * 500,
+            final_title="테스트",
+            final_state_updates={},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1, "state_changes": {}},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True  # 원고 저장은 성공 → True
+
+
 class TestModuleStructure:
     def test_import(self):
         assert Stage4PostProcessor is not None

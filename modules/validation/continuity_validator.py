@@ -750,6 +750,9 @@ class ContinuityValidator:
         # NPC 이름 근처 탐색 범위 (앞뒤 N자)
         proximity = _threshold("continuity.personality_proximity", 150)
 
+        # [I-02] 성장/변화 키워드 — 근접 윈도우 내 존재 시 MAJOR → MINOR 다운그레이드
+        _GROWTH_KEYWORDS = ("변했다", "달라졌다", "처음으로", "비로소", "깨달았다", "결심했다", "각성", "변화")
+
         for npc_name, personality_data in npc_personalities.items():
             if not npc_name or not isinstance(personality_data, dict):
                 continue
@@ -782,15 +785,20 @@ class ContinuityValidator:
 
                     for contradiction in self._COLD_CONTRADICTIONS:
                         if contradiction in nearby_text:
+                            # [I-02] 성장 컨텍스트 감지 → MINOR 다운그레이드
+                            has_growth = any(gk in nearby_text for gk in _GROWTH_KEYWORDS)
+                            severity = "MINOR" if has_growth else "MAJOR"
                             violations.append(
                                 {
                                     "type": "personality_contradiction",
-                                    "severity": "MAJOR",
+                                    "severity": severity,
                                     "npc": npc_name,
                                     "traits": traits_str,
                                     "contradiction": contradiction,
+                                    "growth_context": has_growth,
                                     "reason": f"냉혹한 NPC '{npc_name}'(성격: {traits_str}) 근처에서 "
-                                    f"모순 표현 '{contradiction}' 감지",
+                                    f"모순 표현 '{contradiction}' 감지"
+                                    + (" (성장 컨텍스트 감지)" if has_growth else ""),
                                     "context": nearby_text[:200],
                                     "fix_suggestion": f"'{npc_name}'의 성격({traits_str})에 맞게 "
                                     f"'{contradiction}' 표현을 수정하거나, "
@@ -811,15 +819,20 @@ class ContinuityValidator:
 
                     for contradiction in self._KIND_CONTRADICTIONS:
                         if contradiction in nearby_text:
+                            # [I-02] 성장 컨텍스트 감지 → MINOR 다운그레이드
+                            has_growth = any(gk in nearby_text for gk in _GROWTH_KEYWORDS)
+                            severity = "MINOR" if has_growth else "MAJOR"
                             violations.append(
                                 {
                                     "type": "personality_contradiction",
-                                    "severity": "MAJOR",
+                                    "severity": severity,
                                     "npc": npc_name,
                                     "traits": traits_str,
                                     "contradiction": contradiction,
+                                    "growth_context": has_growth,
                                     "reason": f"온화한 NPC '{npc_name}'(성격: {traits_str}) 근처에서 "
-                                    f"모순 표현 '{contradiction}' 감지",
+                                    f"모순 표현 '{contradiction}' 감지"
+                                    + (" (성장 컨텍스트 감지)" if has_growth else ""),
                                     "context": nearby_text[:200],
                                     "fix_suggestion": f"'{npc_name}'의 성격({traits_str})에 맞게 "
                                     f"'{contradiction}' 표현을 수정하거나, "

@@ -307,6 +307,9 @@ BLUEPRINT_GENERATION_PROMPT: |
       }}
   }}
 
+  ### [TF-I23/I24] 독자 반응 추이 (참고용, advisory)
+  {reader_feedback}
+
   ### [V63] 독자 경험 설계
   각 씬의 목표 독자 감정:
   - 놀라움 / 분노→쾌감(사이다) / 감동 / 긴장 / 궁금증

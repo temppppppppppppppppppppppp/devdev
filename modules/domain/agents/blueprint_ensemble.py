@@ -18,7 +18,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FutureTimeoutError
 
-from modules.core.constants import smart_truncate
+from modules.core.constants import GenreTypes, smart_truncate
 from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
 from modules.core.prompt_loader import PromptLoader
 
@@ -163,12 +163,12 @@ class BlueprintEnsembleGenerator(BaseAgent):
         hud_context = self._build_hud_context(state_tracker, ep_num)
 
         # [V61.3] 병렬 실행 전에 genre 미리 로드 (SQLite thread-safety 문제 방지)
-        genre = "wuxia"
+        genre = GenreTypes.WUXIA
         try:
             if hasattr(self, "context") and hasattr(self.context, "db"):
                 bible = self.context.db.load_anchor("bible")
                 if bible:
-                    genre = bible.get("_genre", "wuxia")
+                    genre = bible.get("_genre", GenreTypes.WUXIA)
         except Exception as e:
             logging.warning(f"⚠️ [V61.3] genre 사전 로드 실패: {str(e)[:50]}")
 
@@ -318,7 +318,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         protagonist_name: str = "주인공",  # [V61] 주인공 이름
         protagonist_config: dict = None,  # [V60.90] 주인공 설정
         hud_context: str = "",  # [V60.95] 고밀도 HUD 컨텍스트
-        genre: str = "wuxia",  # [V61.3] 미리 로드한 genre (thread-safety)
+        genre: str = GenreTypes.WUXIA,  # [V61.3] 미리 로드한 genre (thread-safety)
     ) -> dict | None:
         """단일 Blueprint 생성"""
         # [V61.3] 전체 메서드를 try-except로 감싸서 worker thread 크래시 방지
@@ -361,6 +361,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
 - villain_scheme, side_glimpse는 씬 전환(***) 후 짧게만 사용 (1-2문단)
 - omniscient_hint는 화당 1회 이내로 제한"""
 
+            # [TF-I23/I24] 독자 피드백 컨텍스트 (advisory-only)
+            _reader_fb = self._build_reader_feedback_context(ep_num)
             prompt = self._prompt_loader.load(
                 "ensemble",
                 "BLUEPRINT_GENERATION_PROMPT",
@@ -376,6 +378,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 prev_info=self._escape_braces(prev_info),
                 hud_context=self._escape_braces(hud_context) if hud_context else "(상태 정보 없음)",  # [V60.95]
                 pov_constraint=_pov_constraint,  # [V70]
+                reader_feedback=self._escape_braces(_reader_fb) if _reader_fb else "",  # [TF-I23/I24]
             )
             if not prompt:
                 logging.warning("[BPEnsemble] BLUEPRINT_GENERATION_PROMPT not found in prompt loader")
@@ -530,6 +533,65 @@ class BlueprintEnsembleGenerator(BaseAgent):
             lines.append("║ 👶 [환생자] 전생의 기억이 있음")
 
         return "\n".join(lines) if lines else "║ (주인공 설정 정보 없음)"
+
+    def _build_reader_feedback_context(self, ep_num: int) -> str:
+        """[TF-I23/I24] 독자 만족도 + 호흡 분석 추이 → advisory 컨텍스트 생성.
+
+        Python은 데이터만 수집/포맷. Blueprint LLM이 활용 여부 판단.
+        """
+        parts = []
+        try:
+            db = getattr(self.context, "db", None)
+            if not db:
+                return ""
+
+            # ── I-23: 만족도 추이 ──
+            try:
+                sat_tags = db.get_recent_satisfaction_tags(before_ep=ep_num, lookback=5)
+            except Exception:
+                sat_tags = []
+            if sat_tags:
+                parts.append("[독자 만족도 추이 (최근 5화)]")
+                consecutive_frustration = 0
+                for tag in sat_tags:
+                    score = tag.get("satisfaction_score", 5)
+                    frust = "불만" if tag.get("frustration_flag") else ""
+                    agency = tag.get("protagonist_agency", "자력")
+                    extras = ", ".join(filter(None, [agency, frust]))
+                    parts.append(f"  제{tag['ep_num']}화: {tag['primary_tag']} ({score}/10, {extras})")
+                    if tag.get("frustration_flag"):
+                        consecutive_frustration += 1
+                    else:
+                        consecutive_frustration = 0
+                if consecutive_frustration >= 2:
+                    parts.append("  ⚠️ 연속 좌절감 — 주인공 능동적 활약 씬 필수")
+
+            # ── I-24: 호흡 분석 추이 ──
+            try:
+                pacing_records = db.get_recent_pacing_records(before_ep=ep_num, lookback=5)
+            except Exception:
+                pacing_records = []
+            if pacing_records:
+                parts.append("[호흡 분석 추이 (최근 5화)]")
+                for rec in pacing_records:
+                    dial_pct = f"{rec['dialogue_ratio']:.0%}" if rec.get("dialogue_ratio") else "0%"
+                    parts.append(
+                        f"  제{rec['ep_num']}화: 점수 {rec['pacing_score']}/100, "
+                        f"대화 {dial_pct}, 장면전환 {rec['scene_break_count']}회"
+                    )
+                # 최근 평균 호흡 경고
+                avg_dial = sum(r.get("dialogue_ratio", 0) for r in pacing_records) / len(pacing_records)
+                avg_score = sum(r.get("pacing_score", 50) for r in pacing_records) / len(pacing_records)
+                if avg_dial < 0.15:
+                    parts.append("  ⚠️ 대화 비율 저조 — 캐릭터 상호작용 씬 추가 고려")
+                if avg_score < 40:
+                    parts.append("  ⚠️ 호흡 점수 낮음 — 문장 길이 다양화 및 장면 전환 고려")
+
+        except Exception as e:
+            logging.warning("[TF-I23/I24] 독자 피드백 컨텍스트 생성 실패: %s", e)
+            return ""
+
+        return "\n".join(parts) if parts else ""
 
     def _format_constraints(self, constraint_block: dict) -> str:
         """제약 조건 포맷팅"""

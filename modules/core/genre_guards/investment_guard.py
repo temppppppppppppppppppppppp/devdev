@@ -524,6 +524,13 @@ class InvestmentGuard(BaseGuard):
         # 연환산 수익률
         annualized = return_rate / period_years if period_years > 0 else return_rate
 
+        # [I-21] 단기 수익률 상한 — 일간 100%, 주간 500% (crypto 기준)
+        if period_years > 0 and period_years < 0.1 and annualized > 1000:
+            return (
+                False,
+                f"[I-21] 비현실적 단기 수익: {return_rate:.1f}% / {period_years:.3f}년 (연환산 {annualized:.0f}%)",
+            )
+
         if annualized < min_rate:
             return True, f"[V57] 손실: {annualized:.1f}%/년 (범위 내)"
         elif annualized > max_rate:

@@ -38,9 +38,9 @@ def test_state_extractor_validate_and_fix_result_handles_invalid_shapes():
 
 def test_base_agent_source_has_thread_safe_context_cache_eviction():
     src = _read("modules/domain/agents/base_agent.py")
-    assert "list(self._context_caches.keys())" in src
+    # [I-20] TOCTOU fix: list() snapshot instead of RuntimeError retry
+    assert "list(self._context_caches.items())" in src
     assert "self._context_caches.pop(old_key, None)" in src
-    assert "except RuntimeError:" in src
 
 
 def test_state_extractor_source_has_injuries_energy_type_guards():

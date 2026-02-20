@@ -22,6 +22,7 @@ class BlockingValidator:
         self._entity_checks = None
         self._scene_checks = None
         self._consistency_checks = None
+        self._degraded_count = 0  # [I-C03] degraded 검증 누적 카운터
         if not enable_justification_checks:
             logging.getLogger(__name__).warning(
                 "[V66.1] BlockingValidator: justification checks disabled - "
@@ -87,7 +88,9 @@ class BlockingValidator:
             failures.append(damaged_item_check)
 
         relationship_check = self._check_relationship_consistency(manuscript, validation_context)
+        degraded_checks = []
         if relationship_check.get("degraded"):
+            degraded_checks.append(relationship_check.get("check", "relationship_consistency"))
             logging.warning(
                 f"[BlockingValidator] {relationship_check.get('check', 'relationship_consistency')} 검증 degraded: {relationship_check.get('error', '')}"
             )
@@ -97,12 +100,20 @@ class BlockingValidator:
 
         information_check = self._check_information_consistency(manuscript, validation_context)
         if information_check.get("degraded"):
+            degraded_checks.append(information_check.get("check", "information_consistency"))
             logging.warning(
                 f"[BlockingValidator] {information_check.get('check', 'information_consistency')} 검증 degraded: {information_check.get('error', '')}"
             )
             warnings.append(f"degraded: {information_check.get('check', 'information_consistency')}")
         if not information_check["passed"]:
             failures.append(information_check)
+
+        # [I-C03] 모든 일관성 검증이 degraded면 경고
+        if len(degraded_checks) >= 2:
+            self._degraded_count += 1
+            logging.warning(
+                f"[C-03] ALL consistency checks degraded ({self._degraded_count}회 누적): {degraded_checks}"
+            )
 
         if self.enable_justification_checks:
             physical_check = self._check_physical_capability(manuscript, validation_context)
@@ -124,7 +135,7 @@ class BlockingValidator:
             if not cliffhanger_check["passed"]:
                 failures.append(cliffhanger_check)
 
-        return {
+        result = {
             "tier": "BLOCKING",
             "passed": len(failures) == 0,
             "failures": failures,
@@ -132,6 +143,9 @@ class BlockingValidator:
             "message": f"REJECT - 차단 검증 실패 ({len(failures)}건)" if failures else "PASS",
             "failure_count": len(failures),
         }
+        if degraded_checks:
+            result["degraded_checks"] = degraded_checks
+        return result
 
     # Backward-compatible wrappers for existing tests/callers.
     def _check_dead_npc_resurrection(self, manuscript: str, context: dict) -> dict:

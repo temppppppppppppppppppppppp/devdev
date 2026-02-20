@@ -55,6 +55,11 @@ class AdvisoryValidator:
         foreshadowing_suggestions = self._suggest_foreshadowing_opportunities(manuscript)
         suggestions.extend(foreshadowing_suggestions)
 
+        # 4. [S-07] 페이싱 검증 (advisory)
+        pacing_suggestion = self._check_pacing(manuscript, validation_context)
+        if pacing_suggestion:
+            suggestions.append(pacing_suggestion)
+
         return {
             "tier": "ADVISORY",
             "passed": True,  # 항상 PASS
@@ -179,3 +184,28 @@ JSON 형식으로 답하십시오:
                 )
 
         return suggestions[:2]  # 최대 2개
+
+    def _check_pacing(self, manuscript: str, validation_context: dict) -> dict | None:
+        """[S-07] 페이싱 advisory 검증 (기본 휴리스틱)."""
+        if not manuscript or len(manuscript) < 1000:
+            return None
+
+        # 문단 분리 빈도 체크
+        paragraphs = [p for p in manuscript.split("\n\n") if p.strip()]
+        if len(paragraphs) < 3:
+            return {
+                "type": "pacing_advisory",
+                "suggestion": "문단 분리가 부족합니다. 장면 전환·대화·서술 간 여백을 권장합니다.",
+                "severity": "low",
+            }
+
+        # 평균 문단 길이 → 호흡 조절 권고
+        avg_para_len = len(manuscript) / max(1, len(paragraphs))
+        if avg_para_len > _threshold("advisory.pacing_para_limit", 2000):
+            return {
+                "type": "pacing_advisory",
+                "suggestion": f"평균 문단 길이가 {int(avg_para_len)}자로 깁니다. 호흡 조절을 위해 문단 분리를 권장합니다.",
+                "severity": "low",
+            }
+
+        return None

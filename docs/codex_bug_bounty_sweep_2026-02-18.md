@@ -1,4 +1,4 @@
-﻿# Codex Bug Bounty Sweep Report (No Code Changes)
+# Codex Bug Bounty Sweep Report (No Code Changes)
 
 - Date: 2026-02-18
 - Scope: `main_a.py`, `modules/core/**`, `modules/domain/agents/**`, `modules/core/services/**`

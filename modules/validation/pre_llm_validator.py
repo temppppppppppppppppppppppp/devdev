@@ -31,14 +31,16 @@ class PreLLMValidator:
     LLM 호출 비용 없이 명백한 오류를 사전 차단
     """
 
-    def __init__(self, genre: str = "wuxia", pov: str = ""):
+    def __init__(self, genre: str = "wuxia", pov: str = "", protagonist_name: str = ""):
         """
         Args:
             genre: 장르 (wuxia, hunter, investment)
             pov: [V70] 서술 시점 (1인칭/3인칭/전지적/혼합)
+            protagonist_name: [S-06] 주인공 이름 (동적 POV regex 빌드)
         """
         self.genre = genre
         self.pov = pov
+        self.protagonist_name = protagonist_name
 
     def validate(self, manuscript: str, context: dict[str, Any] = None) -> dict:
         """
@@ -277,14 +279,8 @@ class PreLLMValidator:
         if triple_action:
             violations.append("손 사용 모순 (3개 이상 동시 사용)")
 
-        # 패턴: 부상 상태에서 무리한 행동
-        injury_action = re.findall(
-            r"(중상|부상|피를 흘리).{0,50}(뛰어올|전력으로 달|힘껏 휘둘)",
-            manuscript,
-            re.DOTALL,
-        )
-        if injury_action:
-            violations.append("부상 상태에서 무리한 행동")
+        # [I-07] 부상-행동 패턴은 continuity_validator 전담 → 여기서 제거
+        # (명백한 물리 위반인 "손 3개" 등만 pre_llm에서 감지)
 
         return {
             "violations": violations[:3],
@@ -433,7 +429,13 @@ class PreLLMValidator:
         no_dialogue = re.sub(r"―[^\n]+", "", no_dialogue)
 
         first_person = len(re.findall(r"(?:나는|내가|나를|나에게|내 )", no_dialogue))
-        third_person = len(re.findall(r"(?:그는|그녀는|그가|그를|시우는|시우가)", no_dialogue))
+        # [S-06] 동적 주인공명 regex — 하드코딩 "시우" 제거
+        _third_base = r"(?:그는|그녀는|그가|그를"
+        if self.protagonist_name:
+            _name = re.escape(self.protagonist_name)
+            _third_base += rf"|{_name}는|{_name}가"
+        _third_base += r")"
+        third_person = len(re.findall(_third_base, no_dialogue))
 
         violations = []
 

@@ -80,6 +80,29 @@ class TestStage4Context:
         with pytest.raises(TypeError):
             Stage4Context(1, 2, 3, 4, 5)
 
+    def test_conditional_modules_default_empty(self, ctx):
+        """[S-13] conditional_modules 기본값 빈 dict"""
+        assert ctx.conditional_modules == {}
+        assert ctx.get_module("non_existent") is None
+
+    def test_conditional_modules_stored(self, mock_deps):
+        """[S-13] conditional_modules 전달 시 정확히 저장 및 get_module"""
+        mock_tot = MagicMock()
+        cm = {"tree_of_thoughts": mock_tot}
+        ctx = Stage4Context(**mock_deps, conditional_modules=cm)
+        assert ctx.get_module("tree_of_thoughts") is mock_tot
+        assert ctx.get_module("missing") is None
+
+    def test_from_app_extracts_conditional_modules(self, app_mock):
+        """[S-13] from_app가 조건부 모듈 8종을 dict로 추출"""
+        mock_cv = MagicMock()
+        mock_asp = MagicMock()
+        app_mock.cross_verifier = mock_cv
+        app_mock.adversarial_self_play = mock_asp
+        ctx = Stage4Context.from_app(app_mock)
+        assert ctx.get_module("cross_verifier") is mock_cv
+        assert ctx.get_module("adversarial_self_play") is mock_asp
+
     def test_pass_rate_monitor_default_none(self, ctx):
         """pass_rate_monitor 기본값 None"""
         assert ctx.pass_rate_monitor is None

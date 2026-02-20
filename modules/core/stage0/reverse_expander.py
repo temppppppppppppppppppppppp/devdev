@@ -13,6 +13,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from modules.core.constants import AIModels, GenreTypes, VolumeSettings
+
 from .preset_registry import PresetRegistry
 from .style_extractor import StyleExtractor, StyleGuide
 
@@ -51,26 +53,29 @@ class ReverseExpander:
         except Exception:
             pass
 
+    _FALLBACK_MODELS = [AIModels.SUMMARY_MODEL, AIModels.V50_MODULE_MODEL]
+
     def _call_llm(self, prompt: str, temperature: float = 0.7, max_tokens: int = 8192) -> str:
-        """LLM 호출"""
+        """LLM 호출 (2-모델 폴백)"""
         self._init_llm()
         if not self.client:
             return ""
-        try:
-            from google.genai import types
+        from google.genai import types
 
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=temperature,
-                    max_output_tokens=max_tokens,
-                ),
-            )
-            return response.text
-        except Exception as e:
-            logging.warning(f"[X] LLM 오류: {e}")
-            return ""
+        for model in self._FALLBACK_MODELS:
+            try:
+                response = self.client.models.generate_content(
+                    model=model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=temperature,
+                        max_output_tokens=max_tokens,
+                    ),
+                )
+                return response.text
+            except Exception as e:
+                logging.warning(f"[X] {model} LLM 오류: {e}")
+        return ""
 
     def _parse_json(self, text: str) -> dict | list | None:
         """JSON 파싱 — dict 또는 list 모두 보존
@@ -166,23 +171,14 @@ class ReverseExpander:
         """장르 자동 감지"""
         sample = "\n".join([d["content"][:1000] for d in self.raw_drafts[:3]])
 
+        genre_lines = "\n".join(f"- {g}: {GenreTypes.get_name(g)}" for g in GenreTypes.all())
         prompt = f"""다음 원고의 장르를 판별하세요.
 
 ## 원고 샘플
 {sample[:3000]}
 
 ## 가능한 장르
-- investment: 투자물, 재벌물, 금융
-- wuxia: 무협, 강호, 무림
-- hunter: 헌터물, 던전물, 각성물
-- fantasy: 판타지, 마법, 이세계
-- romance: 로맨스, 연애
-- composer: 작곡가물, 음악, 프로듀싱
-- cooking: 요리물, 셰프, 미식
-- alt_history: 대체역사, 조선, 궁중
-- actor: 배우물, 연기, 연예계
-- sports: 스포츠물, 선수, 경기, 팀
-- medical: 의학물, 의사, 수술, 병원
+{genre_lines}
 
 ## 출력 (JSON)
 ```json
@@ -190,7 +186,7 @@ class ReverseExpander:
 ```
 """
         result = self._parse_json(self._call_llm(prompt, temperature=0.3))
-        return result.get("genre", "investment") if isinstance(result, dict) else "investment"
+        return result.get("genre", GenreTypes.INVESTMENT) if isinstance(result, dict) else GenreTypes.INVESTMENT
 
     def init_preset(self, genre: str):
         """프리셋 레지스트리 초기화"""
@@ -203,7 +199,7 @@ class ReverseExpander:
     def extract_bible(self) -> dict[str, Any]:
         """마스터 Bible 추출"""
         sample_text = "\n\n---\n\n".join(
-            [f"[{d['ep_num']}화: {d['title']}]\n{d['content'][:2000]}" for d in self.raw_drafts[:3]]
+            [f"[{d['ep_num']}화: {d['title']}]\n{d['content'][:4000]}" for d in self.raw_drafts[:3]]
         )
 
         # 주인공 추출
@@ -298,21 +294,12 @@ JSON:
     # Phase 4: 회차별 상태 추출
     # ============================================
 
-    def extract_episode_bibles(self) -> list[dict[str, Any]]:
-        """회차별 상태 변화 추출"""
-        self.episode_bibles = []
-
-        schema = self.preset_registry.get_schema_for_prompt() if self.preset_registry else ""
-
-        for i, draft in enumerate(self.raw_drafts):
-            logging.info(f"회차 {draft['ep_num']} 상태 추출...")
-
-            prev_state = self.episode_bibles[-1] if self.episode_bibles else {}
-
-            prompt = f"""이 에피소드 끝 시점의 주인공 상태를 추출하세요.
+    def _extract_single_episode_bible(self, draft: dict, prev_state: dict, schema: str) -> dict[str, Any]:
+        """단일 에피소드 상태 추출 (공통 로직)"""
+        prompt = f"""이 에피소드 끝 시점의 주인공 상태를 추출하세요.
 
 ## 에피소드 {draft["ep_num"]}화
-{draft["content"][:3000]}
+{draft["content"][:6000]}
 
 ## 이전 상태
 {json.dumps(prev_state.get("hud_snapshot", {}), ensure_ascii=False)[:1000]}
@@ -330,20 +317,28 @@ JSON:
 }}
 ```
 """
-            result = self._parse_json(self._call_llm(prompt, temperature=0.5))
-            # [G23] list 반환 시 첫 dict 추출
-            if isinstance(result, list):
-                result = result[0] if result and isinstance(result[0], dict) else None
+        result = self._parse_json(self._call_llm(prompt, temperature=0.5))
+        # [G23] list 반환 시 첫 dict 추출
+        if isinstance(result, list):
+            result = result[0] if result and isinstance(result[0], dict) else None
 
-            if result and isinstance(result, dict):
-                # HUD 정규화
-                if self.preset_registry and "hud_snapshot" in result:
-                    result["hud_snapshot"] = self.preset_registry.normalize_hud(result["hud_snapshot"])
-                self.episode_bibles.append(result)
-            else:
-                self.episode_bibles.append(
-                    {"ep_num": draft["ep_num"], "hud_snapshot": {}, "changes": [], "new_npcs": [], "key_events": []}
-                )
+        if result and isinstance(result, dict):
+            # HUD 정규화
+            if self.preset_registry and "hud_snapshot" in result:
+                result["hud_snapshot"] = self.preset_registry.normalize_hud(result["hud_snapshot"])
+            return result
+
+        return {"ep_num": draft["ep_num"], "hud_snapshot": {}, "changes": [], "new_npcs": [], "key_events": []}
+
+    def extract_episode_bibles(self) -> list[dict[str, Any]]:
+        """회차별 상태 변화 추출"""
+        self.episode_bibles = []
+        schema = self.preset_registry.get_schema_for_prompt() if self.preset_registry else ""
+
+        for draft in self.raw_drafts:
+            logging.info(f"회차 {draft['ep_num']} 상태 추출...")
+            prev_state = self.episode_bibles[-1] if self.episode_bibles else {}
+            self.episode_bibles.append(self._extract_single_episode_bible(draft, prev_state, schema))
 
         return self.episode_bibles
 
@@ -560,47 +555,12 @@ JSON:
         schema = self.preset_registry.get_schema_for_prompt() if self.preset_registry else ""
 
         progress = ProgressBar(len(self.raw_drafts), "회차별 상태 추출")
-        progress.start()  # [V70] Rich 프로그레스바 시작 누락 수정
+        progress.start()
 
-        for i, draft in enumerate(self.raw_drafts):
+        for draft in self.raw_drafts:
             progress.update(message=f"제{draft['ep_num']}화 처리 중")
-
             prev_state = self.episode_bibles[-1] if self.episode_bibles else {}
-
-            prompt = f"""이 에피소드 끝 시점의 주인공 상태를 추출하세요.
-
-## 에피소드 {draft["ep_num"]}화
-{draft["content"][:3000]}
-
-## 이전 상태
-{json.dumps(prev_state.get("hud_snapshot", {}), ensure_ascii=False)[:1000]}
-
-{schema}
-
-JSON:
-```json
-{{
-  "ep_num": {draft["ep_num"]},
-  "hud_snapshot": {{필드들}},
-  "changes": ["이번 화에서 변한 것들"],
-  "new_npcs": ["새로 등장한 인물"],
-  "key_events": ["핵심 사건"]
-}}
-```
-"""
-            result = self._parse_json(self._call_llm(prompt, temperature=0.5))
-            # [G23] list 반환 시 첫 dict 추출
-            if isinstance(result, list):
-                result = result[0] if result and isinstance(result[0], dict) else None
-
-            if result and isinstance(result, dict):
-                if self.preset_registry and "hud_snapshot" in result:
-                    result["hud_snapshot"] = self.preset_registry.normalize_hud(result["hud_snapshot"])
-                self.episode_bibles.append(result)
-            else:
-                self.episode_bibles.append(
-                    {"ep_num": draft["ep_num"], "hud_snapshot": {}, "changes": [], "new_npcs": [], "key_events": []}
-                )
+            self.episode_bibles.append(self._extract_single_episode_bible(draft, prev_state, schema))
 
         progress.finish(f"회차별 상태 추출 완료 ({len(self.episode_bibles)}개)")
 
@@ -820,7 +780,7 @@ JSON:
                 "_source": "reverse_engineered",
                 "ep_num": ep_num,
                 "title": draft.get("title", f"제{ep_num}화"),
-                "arc_no": (ep_num - 1) // 5 + 1,  # 5화 단위 Arc
+                "arc_no": (ep_num - 1) // VolumeSettings.EPISODES_PER_ARC + 1,
                 "scenes": [],  # 빈 씬 (stub이므로)
                 "key_events": ep_bible.get("key_events", []),
                 "hud_snapshot": ep_bible.get("hud_snapshot", {}),
@@ -848,15 +808,16 @@ JSON:
         if not self.raw_drafts:
             return 0
 
-        # 에피소드 범위로 Arc 계산 (5화 단위)
+        # 에피소드 범위로 Arc 계산
         ep_nums = sorted([d["ep_num"] for d in self.raw_drafts])
         max_ep = max(ep_nums)
-        arc_count = (max_ep - 1) // 5 + 1
+        epa = VolumeSettings.EPISODES_PER_ARC
+        arc_count = (max_ep - 1) // epa + 1
 
         arc_stubs = []
         for arc_no in range(1, arc_count + 1):
-            ep_start = (arc_no - 1) * 5 + 1
-            ep_end = min(arc_no * 5, max_ep)
+            ep_start = (arc_no - 1) * epa + 1
+            ep_end = min(arc_no * epa, max_ep)
 
             # 해당 Arc의 에피소드들
             arc_episodes = [d for d in self.raw_drafts if ep_start <= d["ep_num"] <= ep_end]
@@ -874,7 +835,7 @@ JSON:
                 "_stub": True,
                 "_source": "reverse_engineered",
                 "arc_no": arc_no,
-                "volume_no": (arc_no - 1) // 5 + 1,  # 5개 Arc = 1권
+                "volume_no": (arc_no - 1) // VolumeSettings.ARCS_PER_VOLUME + 1,
                 "ep_start": ep_start,
                 "ep_end": ep_end,
                 "tactical_doc": f"[역설계] Arc {arc_no}: 제{ep_start}화~제{ep_end}화 (원고 존재)",
@@ -1060,10 +1021,8 @@ JSON:
         max_ep = max(ep_nums)
         min_ep = min(ep_nums)
 
-        # Arc 계산 (5화 단위)
-        # 예: 15화 → Arc 1~3 stub → 다음 Arc 4
-        # 예: 13화 → Arc 1~3 stub (Arc3는 11~13 부분) → 다음 Arc 4
-        arc_count = (max_ep - 1) // 5 + 1
+        # Arc 계산
+        arc_count = (max_ep - 1) // VolumeSettings.EPISODES_PER_ARC + 1
 
         return {
             "episodes": len(self.raw_drafts),

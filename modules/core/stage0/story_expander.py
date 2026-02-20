@@ -11,6 +11,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from modules.core.constants import AIModels, GenreTypes
+
 from .preset_registry import PresetRegistry
 
 # 스피너 import (실패해도 동작)
@@ -48,26 +50,29 @@ class StoryExpander:
         except (ImportError, ValueError, RuntimeError):  # [V64.P4] LLM client init failure
             pass
 
+    _FALLBACK_MODELS = [AIModels.SUMMARY_MODEL, AIModels.V50_MODULE_MODEL]
+
     def _call_llm(self, prompt: str, temperature: float = 0.85, max_tokens: int = 8192) -> str:
-        """LLM 호출"""
+        """LLM 호출 (2-모델 폴백)"""
         self._init_llm()
         if not self.client:
             return ""
-        try:
-            from google.genai import types
+        from google.genai import types
 
-            response = self.client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=temperature,
-                    max_output_tokens=max_tokens,
-                ),
-            )
-            return response.text
-        except Exception as e:
-            logging.warning(f"[X] LLM 오류: {e}")
-            return ""
+        for model in self._FALLBACK_MODELS:
+            try:
+                response = self.client.models.generate_content(
+                    model=model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=temperature,
+                        max_output_tokens=max_tokens,
+                    ),
+                )
+                return response.text
+            except Exception as e:
+                logging.warning(f"[X] {model} LLM 오류: {e}")
+        return ""
 
     def _parse_json(self, text: str) -> Any:
         """JSON 파싱"""
@@ -110,7 +115,7 @@ class StoryExpander:
     "start_era": "시작 시점",
     "story_span": "스토리 기간"
   }},
-  "suggested_genre": "investment/wuxia/hunter/fantasy/composer/cooking/alt_history/actor/sports/medical",
+  "suggested_genre": "{"/".join(GenreTypes.all())}",
   "themes": ["테마1", "테마2"],
   "tone": "작품 톤"
 }}
@@ -362,20 +367,40 @@ JSON:
         return result
 
     def _generate_skeleton(self, count: int) -> list[dict[str, Any]]:
-        """블록 스켈레톤"""
-        prompt = f"""웹소설 {count}개 블록의 뼈대를 생성하세요.
+        """블록 스켈레톤 (20블록 배치)"""
+        batch_size = 20
+        all_blocks: list[dict[str, Any]] = []
+        prev_titles: list[str] = []
+
+        for start in range(1, count + 1, batch_size):
+            end = min(start + batch_size - 1, count)
+            batch_count = end - start + 1
+
+            continuity = ""
+            if prev_titles:
+                recent = prev_titles[-5:]
+                continuity = "\n## 이전 블록 (연결성 유지)\n" + "\n".join(f"- {t}" for t in recent)
+
+            prompt = f"""웹소설 Block {start}~{end} ({batch_count}개)의 뼈대를 생성하세요.
 
 컨셉: {self.concept[:500]}
 장르: {self.genre}
+{continuity}
 
 JSON:
 ```json
-[{{"block_id": "Block 1", "title": "제목", "summary": "요약"}}]
+[{{"block_id": "Block {start}", "title": "제목", "summary": "요약"}}]
 ```
 
-{count}개 모두 출력.
+정확히 {batch_count}개 출력.
 """
-        return self._parse_json(self._call_llm(prompt, max_tokens=20000)) or []
+            result = self._parse_json(self._call_llm(prompt, max_tokens=8192)) or []
+            if isinstance(result, dict):
+                result = [result]
+            all_blocks.extend(result)
+            prev_titles.extend(b.get("title", "") for b in result)
+
+        return all_blocks
 
     def _generate_details(self, skeleton: list[dict]) -> list[dict[str, Any]]:
         """블록 상세"""

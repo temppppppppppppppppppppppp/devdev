@@ -60,7 +60,13 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 | `modules/core/prompt_loader.py` | YAML 프롬프트 로더 (싱글톤) | |
 | `config/prompts/*.yaml` | 외부화된 프롬프트 43개 | |
 | `modules/domain/agents/*.py` | AI 에이전트 20+개 | |
-| `modules/core/genre_guards/*.py` | 장르 가드 4종 + WorkGuard + StyleGuard | Guard 체인: Genre→Work→Style |
+| `modules/core/genre_guards/*.py` | 장르 가드 10종 + WorkGuard + StyleGuard | Guard 체인: Genre→Work→Style |
+| `modules/core/genre_guards/alt_history_guard.py` | 대체역사 Guard | 실제 역사 오류·미래기술 금지 |
+| `modules/core/genre_guards/composer_guard.py` | 음악/작곡 Guard | 음악 용어·악기 일관성 |
+| `modules/core/genre_guards/medical_guard.py` | 의료 Guard | 의학 용어·시술 정합성 |
+| `modules/core/genre_guards/sports_guard.py` | 스포츠 Guard | 종목별 규칙·경기 진행 |
+| `modules/core/genre_guards/actor_guard.py` | 연예/배우 Guard | 업계 용어·오디션 절차 |
+| `modules/core/genre_guards/cooking_guard.py` | 요리 Guard | 조리법·식재료 일관성 |
 | `modules/validation/*.py` | 검증 파이프라인 | |
 | `config/settings/validation.yaml` | 검증 임계값 설정 | Phase 5-B |
 | `modules/validation/threshold_helper.py` | 공유 `_threshold()` 헬퍼 | Phase 5-B-2c |

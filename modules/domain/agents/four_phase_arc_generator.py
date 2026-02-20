@@ -352,7 +352,7 @@ class FourPhaseArcGenerator(BaseAgent):
             # ═══════════════════════════════════════════════════════════════
             # PHASE 2.5: AUTO-SANITIZE - 부상 에스컬레이션 자동 세정
             # ═══════════════════════════════════════════════════════════════
-            best_arc = self._auto_sanitize_injuries(best_arc)
+            best_arc = self._check_arc_end_state(best_arc)
 
             # ═══════════════════════════════════════════════════════════════
             # PHASE 3: VALIDATE - 통합 검증
@@ -476,7 +476,10 @@ class FourPhaseArcGenerator(BaseAgent):
         # 3) 패치 프롬프트 포맷
         if _patch_template:
             # [Sweep55] .format()에 json.dumps의 {}가 있으면 KeyError/ValueError 크래시 방지
+            # WARNING: _esc()는 str.format() 호출 전에 반드시 적용해야 합니다.
+            # JSON 문자열 내 {/}가 format placeholder로 해석되어 KeyError 발생 방지.
             def _esc(s):
+                """Escape braces for str.format() — {→{{ }→}}"""
                 return s.replace("{", "{{").replace("}", "}}")
 
             _patch_section = _patch_template.format(
@@ -548,7 +551,7 @@ class FourPhaseArcGenerator(BaseAgent):
             return None, pipeline_result
 
         # 6) Phase 2.5: Auto-sanitize
-        best_arc = self._auto_sanitize_injuries(best_arc)
+        best_arc = self._check_arc_end_state(best_arc)
 
         # 7) Phase 3: Validate
         _pre_items = set()
@@ -714,42 +717,32 @@ class FourPhaseArcGenerator(BaseAgent):
         logging.info(f"🩹 [V62.2] 자연 치유: '{raw[:50]}' → '없음' (아크 간 회복)")
         return "없음"
 
-    def _auto_sanitize_injuries(self, arc: dict) -> dict:
-        """[V62.2] 생성된 Arc 종료 시 자연 회복 적용.
-        - 부상: arc_end → '없음'
-        - 내공: arc_end → 100% 복원
+    def _check_arc_end_state(self, arc: dict) -> dict:
+        """[I-12] 아크 종료 상태 점검 (advisory only — 대원칙 #1 준수).
+
+        자동 덮어쓰기 대신 WARNING 로깅으로 LLM에 판단을 위임합니다.
+        부상 회복 여부, 내공 복원 여부는 LLM이 아크 생성 시 결정합니다.
         """
-        cleaned = 0
+        warnings = []
 
         sc = arc.get("state_constraints", {})
         end_state = sc.get("arc_end_state", {})
         if isinstance(end_state, dict):
-            # 부상 → 없음
             inj = str(end_state.get("injuries", "없음"))
             if inj not in ("없음", "정상", ""):
-                end_state["injuries"] = "없음"
-                cleaned += 1
-            # 내공 → 100%
+                warnings.append(f"부상 미회복: '{inj}' (아크 간 자연 치유 고려)")
             energy = end_state.get("internal_energy")
             if isinstance(energy, (int, float)) and energy < 100:
-                end_state["internal_energy"] = 100
-                cleaned += 1
+                warnings.append(f"내공 미복원: {energy}% (아크 간 회복 고려)")
 
-        # status_shadow
         ss = arc.get("status_shadow", {})
         if isinstance(ss, dict):
             ei = str(ss.get("expected_injuries", "없음"))
             if ei not in ("없음", "정상", ""):
-                ss["expected_injuries"] = "없음"
-                cleaned += 1
-            # energy_loss → 0%
-            el = ss.get("internal_energy_loss", "")
-            if el and el != "0%":
-                ss["internal_energy_loss"] = "0%"
-                cleaned += 1
+                warnings.append(f"status_shadow 부상 잔류: '{ei}'")
 
-        if cleaned:
-            logging.info(f"🩹 [V62.2] 자연 회복 적용: {cleaned}건 (부상→없음, 내공→100%)")
+        if warnings:
+            logging.warning(f"[I-12] 아크 종료 상태 점검: {warnings}")
 
         return arc
 

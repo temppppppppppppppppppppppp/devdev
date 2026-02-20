@@ -76,8 +76,8 @@ class Stage2Finalizer:
         # [V65] PerfTimer: Director 대면 측정
         try:
             self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_director")
-        except Exception:
-            pass
+        except Exception as e:
+            logging.debug(f"[PerfTimer] start s2 director: {e}")
 
         # [V67] Director 컨텍스트 확장: 이전 30개 Arc tactical_doc 전문 전달
         _expanded_prev_context = last_refined_context
@@ -149,8 +149,8 @@ class Stage2Finalizer:
             }
         try:
             self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_director")
-        except Exception:
-            pass
+        except Exception as e:
+            logging.debug(f"[PerfTimer] stop s2 director: {e}")
 
         # ═══════════════════════════════════════════════════════════════
         # [V60.43] API 할당량 오류 시 폴백 로직
@@ -315,6 +315,14 @@ class Stage2Finalizer:
                 if not _commit_ok:
                     raise RuntimeError("safe_commit_async returned False")
             except Exception as commit_err:
+                # [TF-C09] DB 트랜잭션 롤백 — 반쪽 커밋 방지
+                try:
+                    _conn = self.ctx.current_project.db.conn
+                    if _conn.in_transaction:
+                        _conn.rollback()
+                        logging.warning("🔄 [TF-C09] DB rollback 완료 (Arc %d)", global_arc_no)
+                except Exception as _rb:
+                    logging.warning("⚠️ [TF-C09] DB rollback 실패: %s", _rb)
                 self.ctx.ui.log(f"🚨 [DB] Arc {global_arc_no} 저장 실패: {commit_err}")
                 self.ctx.audit_event(
                     "db_commit_error",
@@ -335,7 +343,7 @@ class Stage2Finalizer:
 
             st_snapshot = None  # [V70] DB 커밋 성공 후 스냅샷 해제
             self.ctx.cumulative_state_cache = None
-            self.ctx.cumulative_state_cache_key = 0
+            self.ctx.cumulative_state_cache_key = None  # [S-08] 센티넬 (0은 유효한 키일 수 있음)
 
             constraint_db.update_arc_state(refined_arc)
             self.ctx.ui.log(f"      🔒 [V49.4] ConstraintDB 업데이트 완료 (총 {len(constraint_db.arc_states)}개 Arc)")
@@ -585,8 +593,8 @@ class Stage2Finalizer:
         try:
             self.ctx.perf_timer.log_summary()
             self.ctx.perf_timer.reset()
-        except Exception:
-            pass
+        except Exception as e:
+            logging.debug(f"[PerfTimer] s2 summary/reset: {e}")
 
     def _record_s2_reject_metrics(
         self,
