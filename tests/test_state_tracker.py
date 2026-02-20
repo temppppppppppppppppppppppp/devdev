@@ -410,3 +410,53 @@ class TestFullExtractFromArcs:
         tracker.extract_skill_acquisitions_from_arc.assert_called_once()
         tracker.extract_npc_info_from_arc.assert_called_once()
         tracker.extract_resolved_plots_from_arc.assert_called_once()
+
+
+# ══════════════════════════════════════════════════════════════
+# [Sweep4] create_tracker_from_arcs — cross-arc boundary transition
+# ══════════════════════════════════════════════════════════════
+class TestCreateTrackerFromArcs:
+    """create_tracker_from_arcs cross-arc transition 재구축 테스트"""
+
+    def test_cross_arc_boundary_transition_exists(self):
+        """[Sweep4] 2-arc 데이터 투입 → EP5→EP6 경계 transition 존재 확인"""
+        from modules.domain.agents.state_tracker import create_tracker_from_arcs
+
+        arc1 = {
+            "arc_no": 1,
+            "state_constraints": {
+                "arc_start_state": {"location": "산동성", "equipment": ["철검"]},
+                "arc_end_state": {"location": "화산파"},
+                "continuity_checkpoints": [],
+            },
+            "episode_breakdown": {},
+        }
+        arc2 = {
+            "arc_no": 2,
+            "state_constraints": {
+                "arc_start_state": {"location": "화산파", "equipment": ["화산검"]},
+                "arc_end_state": {"location": "소림사"},
+                "continuity_checkpoints": [],
+            },
+            "episode_breakdown": {},
+        }
+
+        tracker = create_tracker_from_arcs([arc1, arc2])
+
+        # states에 arc1 시작(ep1)과 arc2 시작(ep6)이 모두 존재해야 함
+        assert 1 in tracker.states, "Arc1 시작 EP1이 states에 없음"
+        assert 6 in tracker.states, "Arc2 시작 EP6이 states에 없음"
+
+        # cross-arc boundary transition (ep5→ep6 또는 ep1→ep6) 존재 확인
+        boundary_transitions = [t for t in tracker.transitions if t.from_ep < 6 and t.to_ep >= 6]
+        assert len(boundary_transitions) > 0, (
+            f"Cross-arc boundary transition이 없음. transitions: {[(t.from_ep, t.to_ep) for t in tracker.transitions]}"
+        )
+
+    def test_empty_arcs_no_crash(self):
+        """빈 arc 데이터에서 크래시 없음"""
+        from modules.domain.agents.state_tracker import create_tracker_from_arcs
+
+        tracker = create_tracker_from_arcs([])
+        assert len(tracker.transitions) == 0
+        assert len(tracker.states) == 0

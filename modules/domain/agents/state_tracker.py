@@ -1452,4 +1452,10 @@ def create_tracker_from_arcs(arcs_data: list[dict]) -> StateTracker:
             master_tracker.states.update(arc_tracker.states)
             master_tracker.transitions.extend(arc_tracker.transitions)
 
+    # [Sweep4] cross-arc boundary transitions 재구축
+    # extend로 모은 within-arc transitions만으로는 arc 경계(예: ep5→ep6) 전이가 누락됨
+    # _build_transitions()가 states 전체를 정렬하여 연속 EP 간 전이를 재생성
+    if master_tracker.states:
+        master_tracker._build_transitions()
+
     return master_tracker
