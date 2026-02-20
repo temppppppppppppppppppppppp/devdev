@@ -18,7 +18,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FutureTimeoutError
 
-from modules.core.constants import Stage2Limits
+from modules.core.constants import GenreTypes, Stage2Limits
 from modules.core.prompt_loader import PromptLoader
 
 from .base_agent import BaseAgent
@@ -119,12 +119,12 @@ class ArcEnsembleGenerator(BaseAgent):
         candidates = []
 
         # [V61.3] 병렬 실행 전에 genre 미리 로드 (SQLite thread-safety 문제 방지)
-        genre = "wuxia"
+        genre = GenreTypes.WUXIA
         try:
             if hasattr(self, "context") and hasattr(self.context, "db"):
                 bible = self.context.db.load_anchor("bible")
                 if bible:
-                    genre = bible.get("_genre", "wuxia")
+                    genre = bible.get("_genre", GenreTypes.WUXIA)
         except Exception as e:
             logging.warning(f"⚠️ [V61.3] genre 사전 로드 실패: {str(e)[:50]}")
 
@@ -309,7 +309,7 @@ class ArcEnsembleGenerator(BaseAgent):
         protagonist_name: str = "주인공",  # [V60.18]
         protagonist_config: dict = None,  # [V60.88]
         entity_registry: dict = None,  # [V60.92]
-        genre: str = "wuxia",  # [V61.3] 미리 로드한 genre (thread-safety)
+        genre: str = GenreTypes.WUXIA,  # [V61.3] 미리 로드한 genre (thread-safety)
         retry: int = 0,  # [V61.5] 재시도 횟수
     ) -> dict | None:
         """단일 전략으로 Arc 생성"""

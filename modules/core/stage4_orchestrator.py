@@ -10,10 +10,10 @@ SovereignApp에서 분리된 Stage 4 관련 메서드:
 import dataclasses
 import logging
 
-from modules.core.constants import PatchModeThresholds
 from modules.core.stage4_context_builder import Stage4ContextBuilder
 from modules.core.stage4_interview_round import Stage4InterviewRound
 from modules.core.stage4_post_processor import Stage4PostProcessor
+from modules.core.stage4_types import _RoundContext
 from modules.validation.threshold_helper import _threshold
 
 _perf_logger = logging.getLogger(__name__)  # [V65] PerfTimer 로깅
@@ -128,10 +128,6 @@ def _detect_cross_episode_repetition(
     }
 
 
-# [Phase 3-5B] 패치 모드 임계값 (모듈 레벨 상수로 캐시)
-_PATCH_REWRITE_THRESHOLD = PatchModeThresholds.REWRITE
-
-
 @dataclasses.dataclass(slots=True)
 class _SessionConfig:
     """[4-R2-a] Session-level config for Stage 4 interview loop."""
@@ -148,57 +144,6 @@ class _SessionConfig:
     output_dir: object  # Path
     v50_modules_available: bool
     total_planned_ep: int
-
-
-@dataclasses.dataclass(slots=True)
-class _RoundContext:
-    """[4-R2-b] Round-level context for interview round execution."""
-
-    chief_writer: object
-    manuscript_validator: object
-    consistency_validator: object
-    blocking_validator: object
-    continuity_validator: object
-    next_ep: int
-    blueprint: dict
-    arc_data: dict
-    arc_pos: int
-    total_ep_in_arc: int
-    arc_tactical: str
-    prev_text: str
-    prev_ending: str
-    prev_manuscripts_text: str
-    episode_digest: str
-    hud_report: str
-    current_inventory: list
-    current_martial_arts: list
-    dead_npcs: list
-    item_acquisition_timeline: str
-    chain_link_section: str
-    world_state_summary: str
-    purism_prompt: str
-    genre_name: str
-    npc_equipment_summary: str
-    effective_anti_trope: str
-    intro_dna: str
-    story_context: str
-    style_guide: str
-    reference_anchor_prompt: str
-    mandatory_context: str
-    justification_prompt: str
-    reflexion_prompt: str
-
-
-@dataclasses.dataclass(slots=True)
-class _InterviewRoundResult:
-    """[4-R2-e] Result of a single interview round."""
-
-    verdict: str  # "PASS" | "REJECT" | "EMPTY"
-    director_feedback: str
-    previous_attempt: dict
-    final_manuscript: object = None  # str | None, set only on PASS
-    final_title: object = None  # str | None, set only on PASS
-    final_state_updates: dict = dataclasses.field(default_factory=dict)  # set only on PASS
 
 
 @dataclasses.dataclass(slots=True)
@@ -598,7 +543,8 @@ JSON으로 출력:
                     final_title = _round_result.final_title
                     final_state_updates = _round_result.final_state_updates
 
-                    if self.ctx.chain_of_verification and final_manuscript:
+                    _cove = self.ctx.get_module("chain_of_verification")
+                    if _cove and final_manuscript:
                         try:
                             _cove_context = {}
                             _prev_ms = round_ctx.prev_manuscripts_text or ""
@@ -608,13 +554,11 @@ JSON으로 출력:
                             if _bp:
                                 _cove_context["blueprint"] = _bp
 
-                            _quick_ok, _quick_msg = self.ctx.chain_of_verification.quick_verify(
-                                final_manuscript, _cove_context
-                            )
+                            _quick_ok, _quick_msg = _cove.quick_verify(final_manuscript, _cove_context)
                             if not _quick_ok:
                                 self.ctx.ui.log(f"   ⚠️ [CoVe] 사후검증 경고: {_quick_msg[:60]}...")
                                 try:
-                                    _cove_result = self.ctx.chain_of_verification.verify(
+                                    _cove_result = _cove.verify(
                                         final_manuscript, _cove_context, content_type="manuscript"
                                     )
                                     if _cove_result.should_regenerate:

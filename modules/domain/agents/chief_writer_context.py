@@ -211,8 +211,32 @@ class ChiefWriterContextBuilder:
 ⚠️ 위 세계 상태와 모순되는 묘사/대화/사건은 절대 금지.
 """
 
+        # [I-25] 캐릭터 보이스 섹션 주입
+        character_voice_section = ""
+        _cv = getattr(self.host, "context", None)
+        _cv_module = getattr(_cv, "character_voice", None) if _cv else None
+        if _cv_module is None:
+            # Stage4Context에서도 탐색
+            _s4ctx = getattr(self.host, "_stage4_ctx", None)
+            _cv_module = getattr(_s4ctx, "character_voice", None) if _s4ctx else None
+        if _cv_module and hasattr(_cv_module, "get_writing_guide"):
+            try:
+                # blueprint에서 등장 NPC 이름 추출
+                _npc_names = []
+                if isinstance(blueprint, dict):
+                    for _scene in (blueprint.get("scene_breakdown") or {}).values():
+                        if isinstance(_scene, dict):
+                            _npc_names.extend(_scene.get("npcs", []))
+                _guide = _cv_module.get_writing_guide(_npc_names) if _npc_names else ""
+                if _guide:
+                    character_voice_section = f"\n### [I-25] 캐릭터 보이스 가이드\n{_guide}\n"
+            except Exception as _cv_err:
+                logging.debug(f"[I-25] character_voice guide failed (non-blocking): {_cv_err}")
+
         # [V60.80+] 기존 Writer 핵심 기능 섹션 조립
         writer_core_section = ""
+        if character_voice_section:
+            writer_core_section += character_voice_section
         if world_state_section:
             writer_core_section += f"\n{world_state_section}\n"
         if reference_anchor_prompt:

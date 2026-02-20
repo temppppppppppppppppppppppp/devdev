@@ -180,8 +180,8 @@ class ValidationOrchestrator:
         self.catharsis_timer = CatharsisTimer(max_frustration=catharsis_max_gap, genre=genre)
         self.action_evaluator = ActionSceneEvaluator(genre=genre)
 
-        # [Phase 3] 장기 일관성 검증 (선택적)
-        self.use_retrospective = config.get("use_retrospective", False)
+        # [Phase 3] 장기 일관성 검증 — [TF-C04] 기본 활성화
+        self.use_retrospective = config.get("use_retrospective", True)
         self.retrospective = None  # Lazy initialization
 
         # [Phase 5.2.2] Reflexion 시스템 (선택적)
@@ -197,6 +197,7 @@ class ValidationOrchestrator:
         # 적응형 임계값 히스토리 추적
         self.validation_history: list[dict] = []  # [{ep_num, score, passed, timestamp}]
         self.consecutive_passes = 0
+        self._consecutive_floor_hits = 0  # [I-01] 바닥 연속 도달 카운터
         self.consecutive_fails = 0
         self.current_threshold = config.get("scoring_threshold", 70)
 
@@ -361,8 +362,8 @@ class ValidationOrchestrator:
             scoring_result = self._evaluate_with_self_consistency(manuscript, validation_context)
             results["self_consistency_used"] = True
         else:
-            # 단일 평가
-            scoring_result = self.scoring.validate(manuscript, validation_context)
+            # 단일 평가 — [TF-C02] validate_v59 장르 가중치 (±1점 캡)
+            scoring_result = self.scoring.validate_v59(manuscript, validation_context)
             results["self_consistency_used"] = False
 
         results["scoring_result"] = scoring_result
@@ -454,11 +455,24 @@ class ValidationOrchestrator:
         # [V46] CONSISTENCY 감점 적용
         consistency_adjustment = consistency_penalty  # 이미 음수
 
+        # [TF-C01] Pre-LLM 감점: score_deduction > 0이면 1점만 차감 (대원칙 #1 존중)
+        pre_llm_adjustment = 0
+        _pre_llm = results.get("pre_llm_result")
+        if _pre_llm and _pre_llm.get("score_deduction", 0) > 0:
+            pre_llm_adjustment = -1
+
         # 조정된 총점
-        adjusted_total = total_score + catharsis_adjustment + action_adjustment + consistency_adjustment
+        adjusted_total = (
+            total_score + catharsis_adjustment + action_adjustment + consistency_adjustment + pre_llm_adjustment
+        )
         adjusted_total = max(0, min(100, adjusted_total))  # 0~100 범위 제한
 
-        adjustments_made = catharsis_adjustment != 0 or action_adjustment != 0 or consistency_adjustment != 0
+        adjustments_made = (
+            catharsis_adjustment != 0
+            or action_adjustment != 0
+            or consistency_adjustment != 0
+            or pre_llm_adjustment != 0
+        )
         if adjustments_made:
             adjustment_parts = []
             if consistency_adjustment != 0:
@@ -467,6 +481,8 @@ class ValidationOrchestrator:
                 adjustment_parts.append(f"카타르시스: {catharsis_adjustment:+d}")
             if action_adjustment != 0:
                 adjustment_parts.append(f"액션: {action_adjustment:+d}")
+            if pre_llm_adjustment != 0:
+                adjustment_parts.append(f"Pre-LLM: {pre_llm_adjustment:+d}")
             logging.info(f"📊 점수 조정: {total_score} → {adjusted_total} ({', '.join(adjustment_parts)})")
             total_score = adjusted_total
 
@@ -551,24 +567,39 @@ class ValidationOrchestrator:
 
         목적: 비용 60% 절감, 품질 유지
         """
-        # 1차 평가
+        # 1차 평가 — [TF-C02] validate_v59 장르 가중치 (±1점 캡)
         logging.info("🔄 Self-Consistency (Conditional): 1차 평가 중...")
-        first_eval = self.scoring.validate(manuscript, context)
+        first_eval = self.scoring.validate_v59(manuscript, context)
         first_score = first_eval["total_score"]
 
         logging.info(f"Vote 1: {first_score}점, {first_eval['message']}")
 
-        # 조건부 판단: 애매한 점수인가?
-        ambiguous_lower = 70
-        ambiguous_upper = 85
+        # [I-05] 조건부 판단: 경계값을 validation.yaml에서 로드 + 소프트마진
+        from modules.validation.threshold_helper import _threshold
 
-        if ambiguous_lower <= first_score <= ambiguous_upper:
+        ambiguous_lower = int(_threshold("adaptive_threshold.ambiguous_lower", 70))
+        ambiguous_upper = int(_threshold("adaptive_threshold.ambiguous_upper", 85))
+        soft_margin = int(_threshold("adaptive_threshold.soft_margin", 2))
+
+        # 소프트 마진: 경계 ±N점 구간에서 50% 확률로 멀티보팅 확대
+        import random
+
+        effective_lower = ambiguous_lower
+        effective_upper = ambiguous_upper
+        if ambiguous_lower - soft_margin <= first_score < ambiguous_lower:
+            if random.random() < 0.5:
+                effective_lower = ambiguous_lower - soft_margin
+        if ambiguous_upper < first_score <= ambiguous_upper + soft_margin:
+            if random.random() < 0.5:
+                effective_upper = ambiguous_upper + soft_margin
+
+        if effective_lower <= first_score <= effective_upper:
             # 애매한 구간 → 추가 2회 평가
             logging.info(f"⚖️ 애매한 점수({first_score}) → 추가 평가 활성화")
 
             evaluations = [first_eval]
             for i in range(1, self.consistency_votes):
-                result = self.scoring.validate(manuscript, context)
+                result = self.scoring.validate_v59(manuscript, context)
                 evaluations.append(result)
                 logging.info(f"Vote {i + 1}: {result['total_score']}점, {result['message']}")
 
@@ -1025,7 +1056,8 @@ class ValidationOrchestrator:
                 )
             else:
                 scoring_task = loop.run_in_executor(
-                    executor, partial(self.scoring.validate, manuscript, validation_context)
+                    executor,
+                    partial(self.scoring.validate_v59, manuscript, validation_context),  # [TF-C02]
                 )
 
             advisory_task = loop.run_in_executor(
@@ -1236,8 +1268,24 @@ class ValidationOrchestrator:
         # 최종 계산
         final_threshold = base_threshold + episode_adjustment + streak_adjustment + pattern_adjustment + arc_adjustment
 
-        # 범위 제한 (60-90)
-        final_threshold = max(60, min(90, final_threshold))
+        # [I-01] 범위 제한 — 바닥값을 validation.yaml에서 로드
+        from modules.validation.threshold_helper import _threshold
+
+        floor = int(_threshold("adaptive_threshold.floor", 60))
+        final_threshold = max(floor, min(90, final_threshold))
+
+        # [I-01] 바닥 연속 도달 시 리셋
+        floor_hit_reset = int(_threshold("adaptive_threshold.floor_hit_reset", 3))
+        if final_threshold <= floor:
+            self._consecutive_floor_hits += 1
+            if self._consecutive_floor_hits >= floor_hit_reset:
+                logging.warning(
+                    f"[I-01] 임계값 바닥({floor}) {self._consecutive_floor_hits}회 연속 → consecutive_passes 리셋"
+                )
+                self.consecutive_passes = 0
+                self._consecutive_floor_hits = 0
+        else:
+            self._consecutive_floor_hits = 0
 
         return int(final_threshold)
 
@@ -1299,9 +1347,13 @@ class ValidationOrchestrator:
                 # 하락 추세 감지
                 if recent_scores[-1] < recent_scores[-3] - 5:
                     adjustment += PATTERN_ADJUSTMENTS["declining_quality"]
-                # 상승 추세 감지
+                # 상승 추세 감지 [I-01] cascade cap 적용
                 elif recent_scores[-1] > recent_scores[-3] + 5:
-                    adjustment += PATTERN_ADJUSTMENTS["improving_quality"]
+                    from modules.validation.threshold_helper import _threshold
+
+                    cascade_cap = int(_threshold("adaptive_threshold.cascade_cap_passes", 10))
+                    if self.consecutive_passes < cascade_cap:
+                        adjustment += PATTERN_ADJUSTMENTS["improving_quality"]
 
         return adjustment
 

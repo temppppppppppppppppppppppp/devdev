@@ -6,6 +6,8 @@ main_a.py에서 분리된 Stage 0 전용 모듈
 
 import logging
 
+from modules.core.constants import GenreTypes
+
 from .preset_registry import FieldDefinition, PresetRegistry
 from .reverse_expander import ReverseExpander
 from .story_expander import StoryExpander
@@ -42,17 +44,16 @@ class StageZeroManager:
     - Bible 임포트: 기존 JSON 불러오기
     """
 
-    # 지원 장르 (preset_registry.GENRE_PRESETS와 동기화)
+    # 지원 장르 (GenreTypes.all()과 동기화)
     SUPPORTED_GENRES = {
-        "investment": "투자물/재벌물",
         "wuxia": "무협",
         "hunter": "헌터물/던전물",
+        "investment": "투자물/재벌물",
+        "fantasy": "판타지",
         "composer": "작곡가물",
         "cooking": "요리물",
-        "fantasy": "판타지",
-        "romance": "로맨스",
-        "politics": "정치물",
-        "military": "군사/전쟁물",
+        "alt_history": "대체역사",
+        "actor": "배우물/연예계",
         "sports": "스포츠물",
         "medical": "의학물/닥터물",
     }
@@ -195,11 +196,14 @@ class StageZeroManager:
         logging.info("스토리 컨셉 입력 (여러 줄 가능, 빈 줄로 종료)")
         logging.info("-" * 40)
         lines = []
-        while True:
-            line = input()
-            if not line:
-                break
-            lines.append(line)
+        try:
+            while True:
+                line = input()
+                if not line:
+                    break
+                lines.append(line)
+        except (EOFError, KeyboardInterrupt):
+            pass
         concept = "\n".join(lines)
 
         if not concept.strip():
@@ -249,8 +253,11 @@ class StageZeroManager:
         """역설계 플로우"""
         # 입력 경로
         if not input_path:
-            print("\n  원고 경로 입력 (파일 또는 폴더):")
-            input_path = input("  > ").strip()
+            logging.info("\n  원고 경로 입력 (파일 또는 폴더):")
+            try:
+                input_path = input("  > ").strip()
+            except (EOFError, KeyboardInterrupt):
+                input_path = ""
 
         if not input_path or not Path(input_path).exists():
             logging.info("[!] 유효하지 않은 경로입니다.")
@@ -282,8 +289,11 @@ class StageZeroManager:
     def import_bible(self, bible_path: str = None) -> dict[str, Any]:
         """기존 Bible JSON 임포트"""
         if not bible_path:
-            print("\n  Bible JSON 경로 입력:")
-            bible_path = input("  > ").strip()
+            logging.info("\n  Bible JSON 경로 입력:")
+            try:
+                bible_path = input("  > ").strip()
+            except (EOFError, KeyboardInterrupt):
+                bible_path = ""
 
         path = Path(bible_path)
         if not path.exists() or path.suffix.lower() != ".json":
@@ -305,7 +315,7 @@ class StageZeroManager:
             self.genre = self.bible.get("_genre", "")
             if not self.genre:
                 master = self.bible.get("MasterBible", {})
-                self.genre = master.get("_genre", "investment")
+                self.genre = master.get("_genre", GenreTypes.INVESTMENT)
 
             # 프리셋 초기화
             self.preset_registry = PresetRegistry(base_genre=self.genre)
@@ -389,7 +399,10 @@ class StageZeroManager:
         for w in works:
             logging.info(f"- {w}: {len(ref_data[w])}편")
 
-        confirm = input("\n  분석을 시작하시겠습니까? (y/n): ").strip().lower()
+        try:
+            confirm = input("\n  분석을 시작하시겠습니까? (y/n): ").strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            confirm = "n"
         if confirm != "y":
             return None
 

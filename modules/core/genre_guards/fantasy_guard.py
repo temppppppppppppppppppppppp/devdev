@@ -273,8 +273,19 @@ class FantasyGuard(BaseGuard):
     # [V66] run_deep_validation override
     # ═══════════════════════════════════════════════════════════════
 
+    # [S-16] 무협 복합 표현 패턴 (단일 금기어 외 추가 패턴)
+    _WUXIA_COMPOUND_PATTERNS = [
+        (r"기[를을]\s*(?:모으|운용|폭발|끌어올|집중)", "기 운용 표현"),
+        (r"(?:내력|내공)[을를이가]\s*(?:끌어올|폭발|운용|집중|회전)", "내공 운용 표현"),
+        (r"(?:단전|기해)[에서의]\s*(?:뜨거|차가|진동|울림|폭발)", "단전/기해 반응 표현"),
+        (r"(?:검|도|권|장)[기강법][을를이가]", "무공 기법 표현"),
+        (r"(?:경공|보법|신법)[을를으로]", "이동 기법 표현"),
+        (r"혈[도맥][을를]?\s*(?:막|찍|찌르|풀)", "혈도 공격 표현"),
+        (r"(?:사파|정파|마교)[의에]\s", "무림 세력 표현"),
+    ]
+
     def run_deep_validation(self, manuscript: str, current_state: dict[str, Any] = None) -> dict[str, Any]:
-        """[V66] Fantasy 심층 검증: base + 무협 용어 차단 + 마법 티어 제한."""
+        """[V66] Fantasy 심층 검증: base + 무협 용어 차단 + 복합 패턴 + 마법 티어 제한."""
         result = super().run_deep_validation(manuscript, current_state or {})
 
         # 무협 용어 → HIGH 승격 (base class FORBIDDEN_TERMS는 MEDIUM, 판타지에서는 HIGH)
@@ -290,6 +301,19 @@ class FantasyGuard(BaseGuard):
                 "화경",
             ):
                 v["severity"] = "HIGH"
+
+        # [S-16] 무협 복합 표현 패턴 검사
+        for pattern, desc in self._WUXIA_COMPOUND_PATTERNS:
+            matches = re.finditer(pattern, manuscript)
+            for m in matches:
+                result["violations"].append(
+                    {
+                        "type": "wuxia_compound_pattern",
+                        "severity": "HIGH",
+                        "message": f"무협 복합 표현 감지: '{m.group()}' ({desc})",
+                        "position": m.start(),
+                    }
+                )
 
         # 마법 티어 검증 (현재 상태 기반)
         if current_state:

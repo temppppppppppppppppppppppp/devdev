@@ -5,6 +5,7 @@
 import json
 import logging
 import os
+from contextlib import nullcontext as _nullcontext
 
 from modules.core.metrics_collector import get_metrics_collector
 
@@ -16,6 +17,84 @@ class Stage4PostProcessor:
 
     def __init__(self, ctx) -> None:
         self.ctx = ctx
+
+    @staticmethod
+    def _extract_state_change_info(state_changes) -> dict:
+        """[TF-T5] state_changes에서 event_types, entity_names, summary_parts 추출.
+
+        벡터 메모리 저장(Block 1)과 rich_summary 구성(Block 2)에서 동일 데이터를
+        이중 순회하던 것을 단일 패스로 통합.
+        """
+        event_types: set[str] = set()
+        entity_names: set[str] = set()
+        summary_parts: list[str] = []
+
+        if not isinstance(state_changes, dict):
+            return {"event_types": event_types, "entity_names": entity_names, "summary_parts": summary_parts}
+
+        # npc_deaths
+        npc_deaths = state_changes.get("npc_deaths", [])
+        if npc_deaths:
+            event_types.add("death")
+            death_names = []
+            for d in npc_deaths:
+                name = d.get("name", "") if isinstance(d, dict) else str(d)
+                if name:
+                    entity_names.add(name)
+                    death_names.append(name)
+            if death_names:
+                summary_parts.append("사망: " + ", ".join(death_names)[:60])
+
+        # skill_acquisitions
+        skill_acqs = state_changes.get("skill_acquisitions", [])
+        if skill_acqs:
+            event_types.add("skill")
+            for s in skill_acqs:
+                entity_names.add(s.get("name", "") if isinstance(s, dict) else str(s))
+
+        # relationship_changes
+        rel_changes = state_changes.get("relationship_changes", [])
+        if isinstance(rel_changes, list) and rel_changes:
+            event_types.add("relationship")
+            rel_texts = []
+            for r in rel_changes:
+                if isinstance(r, dict):
+                    who = r.get("npc", "") or r.get("target", "")
+                    entity_names.add(who)
+                    delta = r.get("change", "")
+                    rel_texts.append(f"{who}-{delta}")
+                else:
+                    rel_texts.append(str(r))
+            if rel_texts:
+                summary_parts.append("관계: " + ", ".join(rel_texts)[:80])
+
+        # major_items
+        major_items = state_changes.get("major_items", [])
+        if isinstance(major_items, list) and major_items:
+            event_types.add("item")
+            item_names = []
+            for i in major_items:
+                name = i.get("name", "") if isinstance(i, dict) else str(i)
+                if name:
+                    entity_names.add(name)
+                    item_names.append(name)
+            if item_names:
+                summary_parts.append("아이템: " + ", ".join(item_names)[:60])
+
+        # npc_injuries / npc_movements
+        if state_changes.get("npc_injuries"):
+            event_types.add("injury")
+        if state_changes.get("npc_movements"):
+            event_types.add("movement")
+
+        # resolved_plots
+        resolved_plots = state_changes.get("resolved_plots", [])
+        if isinstance(resolved_plots, list) and resolved_plots:
+            event_types.add("resolved_plot")
+            summary_parts.append("해결: " + ", ".join(str(p)[:30] for p in resolved_plots[:2]))
+
+        entity_names.discard("")
+        return {"event_types": event_types, "entity_names": entity_names, "summary_parts": summary_parts}
 
     def process_pass_result(
         self,
@@ -83,73 +162,13 @@ class Stage4PostProcessor:
         # [V63.3] 벡터 메모리 즉시 저장
         try:
             _mem_arc_no = arc_data.get("arc_no") if arc_data else None
-            _mem_event_types = set()
-            _mem_entity_names = set()
-            if arc_data and arc_data.get("state_changes"):
-                _sc = arc_data["state_changes"]
-                # [Sweep55] str/dict 혼재 대응 — npc_deaths/skill_acquisitions는 str일 수 있음
-                if _sc.get("npc_deaths"):
-                    _mem_event_types.add("death")
-                    for d in _sc["npc_deaths"]:
-                        _mem_entity_names.add(d.get("name", "") if isinstance(d, dict) else str(d))
-                if _sc.get("skill_acquisitions"):
-                    _mem_event_types.add("skill")
-                    for s in _sc["skill_acquisitions"]:
-                        _mem_entity_names.add(s.get("name", "") if isinstance(s, dict) else str(s))
-                if _sc.get("relationship_changes"):
-                    _mem_event_types.add("relationship")
-                    for r in _sc["relationship_changes"]:
-                        _mem_entity_names.add(r.get("npc", "") if isinstance(r, dict) else str(r))
-                if _sc.get("major_items"):
-                    _mem_event_types.add("item")
-                    for i in _sc["major_items"]:
-                        _mem_entity_names.add(i.get("name", "") if isinstance(i, dict) else str(i))
-                if _sc.get("npc_injuries"):
-                    _mem_event_types.add("injury")
-                if _sc.get("npc_movements"):
-                    _mem_event_types.add("movement")
-                if _sc.get("resolved_plots"):
-                    _mem_event_types.add("resolved_plot")
-            _mem_entity_names.discard("")
+            # [TF-T5] state_changes 단일 패스 추출
+            _sc_raw = arc_data.get("state_changes", {}) if isinstance(arc_data, dict) else {}
+            _sc_info = self._extract_state_change_info(_sc_raw)
+            _mem_event_types = _sc_info["event_types"]
+            _mem_entity_names = _sc_info["entity_names"]
             _summary_parts = [final_title or f"제{next_ep}화"]
-            _state_changes = arc_data.get("state_changes", {}) if isinstance(arc_data, dict) else {}
-            if isinstance(_state_changes, dict):
-                _npc_deaths = _state_changes.get("npc_deaths", [])
-                if isinstance(_npc_deaths, list) and _npc_deaths:
-                    _death_names = []
-                    for d in _npc_deaths:
-                        _name = d.get("name", "") if isinstance(d, dict) else str(d)
-                        if _name:
-                            _death_names.append(_name)
-                    if _death_names:
-                        _summary_parts.append("사망: " + ", ".join(_death_names)[:60])
-
-                _rel_changes = _state_changes.get("relationship_changes", [])
-                if isinstance(_rel_changes, list) and _rel_changes:
-                    _rel_texts = []
-                    for r in _rel_changes:
-                        if isinstance(r, dict):
-                            _who = r.get("npc", "") or r.get("target", "")
-                            _delta = r.get("change", "")
-                            _rel_texts.append(f"{_who}-{_delta}")
-                        else:
-                            _rel_texts.append(str(r))
-                    if _rel_texts:
-                        _summary_parts.append("관계: " + ", ".join(_rel_texts)[:80])
-
-                _major_items = _state_changes.get("major_items", [])
-                if isinstance(_major_items, list) and _major_items:
-                    _item_names = []
-                    for i in _major_items:
-                        _name = i.get("name", "") if isinstance(i, dict) else str(i)
-                        if _name:
-                            _item_names.append(_name)
-                    if _item_names:
-                        _summary_parts.append("아이템: " + ", ".join(_item_names)[:60])
-
-                _resolved_plots = _state_changes.get("resolved_plots", [])
-                if isinstance(_resolved_plots, list) and _resolved_plots:
-                    _summary_parts.append("해결: " + ", ".join(str(p)[:30] for p in _resolved_plots[:2]))
+            _summary_parts.extend(_sc_info["summary_parts"])
 
             if isinstance(blueprint, dict):
                 _scene = blueprint.get("scene_summary", "") or blueprint.get("핵심장면", "")
@@ -398,57 +417,51 @@ class Stage4PostProcessor:
         except Exception as _cl_err:
             self.ctx.ui.log(f"   [V68] 연결고리 저장 실패 (비차단): {str(_cl_err)[:50]}")
 
-        # ===== [V68] WorldState 갱신 =====
-        if self.ctx.world_state:
-            try:
-                # state_changes 추출 (arc_data에서)
-                _ws_sc = arc_data.get("state_changes", {}) if arc_data else {}
-                if _ws_sc:
-                    self.ctx.world_state.update_from_state_changes(next_ep, _ws_sc)
+        # ===== [TF-C10] WorldState + FactLedger 원자적 갱신 =====
+        # 원고(핵심 산출물)는 이미 저장 완료 — 메타데이터만 트랜잭션으로 묶어 반쪽 커밋 방지
+        _meta_db = getattr(self.ctx.current_project, "db", None)
+        try:
+            _txn = _meta_db.transaction() if _meta_db and hasattr(_meta_db, "transaction") else None
+            _ctx_mgr = _txn if _txn is not None else _nullcontext()
+            with _ctx_mgr:
+                # ── WorldState 갱신 ──
+                if self.ctx.world_state:
+                    _ws_sc = arc_data.get("state_changes", {}) if arc_data else {}
+                    if _ws_sc:
+                        self.ctx.world_state.update_from_state_changes(next_ep, _ws_sc)
 
-                # 주인공 이름 갱신
-                _ws_prot_name = ""
-                try:
-                    _ws_bible_root = self.ctx.current_project.master_bible.get(
-                        "MasterBible", self.ctx.current_project.master_bible
-                    )
-                    _ws_prot_name = _ws_bible_root.get("protagonist_config", {}).get("name", "")
-                except Exception as e:
-                    logging.warning(f"[SilentPass:PostProcessor] 주인공 이름 추출 실패: {e!s:.100}")
-                self.ctx.world_state.update_protagonist_state(
-                    ep_num=next_ep,
-                    name=_ws_prot_name if _ws_prot_name else None,
-                )
-
-                # DB 저장
-                self.ctx.world_state.save()
-                self.ctx.ui.log(f"   🌍 [V68] 세계 상태 갱신 완료 (제{next_ep}화)")
-            except Exception as _ws_upd_err:
-                self.ctx.ui.log(f"   ⚠️ [V68] 세계 상태 갱신 실패 (비차단): {str(_ws_upd_err)[:60]}")
-
-        # ===== [V68] 팩트 원장 갱신 =====
-        if self.ctx.fact_ledger:
-            try:
-                # 1) Arc state_changes에서 갱신
-                _fl_sc = arc_data.get("state_changes", {}) if arc_data else {}
-                if _fl_sc:
-                    self.ctx.fact_ledger.update_from_state_changes(next_ep, _fl_sc)
-
-                # 2) bible_delta에서 추가 갱신 (new_npcs, new_items, lost_items 등)
-                if bible_delta:
+                    _ws_prot_name = ""
                     try:
-                        self.ctx.fact_ledger.update_from_bible_delta(next_ep, bible_delta)
-                    except Exception as _bd_err:
-                        logging.warning("[V70] bible_delta 갱신 실패 (비차단): %s", _bd_err)
+                        _ws_bible_root = self.ctx.current_project.master_bible.get(
+                            "MasterBible", self.ctx.current_project.master_bible
+                        )
+                        _ws_prot_name = _ws_bible_root.get("protagonist_config", {}).get("name", "")
+                    except Exception as e:
+                        logging.warning(f"[SilentPass:PostProcessor] 주인공 이름 추출 실패: {e!s:.100}")
+                    self.ctx.world_state.update_protagonist_state(
+                        ep_num=next_ep,
+                        name=_ws_prot_name if _ws_prot_name else None,
+                    )
+                    self.ctx.world_state.save()
+                    self.ctx.ui.log(f"   🌍 [V68] 세계 상태 갱신 완료 (제{next_ep}화)")
 
-                # 3) DB 저장
-                self.ctx.fact_ledger.save()
-                _fl_stats = self.ctx.fact_ledger.get_stats()
-                self.ctx.ui.log(
-                    f"   📋 [V68] 팩트 원장 갱신 완료 (인물 {_fl_stats.get('characters', 0)}명, 아이템 {_fl_stats.get('items', 0)}개)"
-                )
-            except Exception as _fl_err:
-                self.ctx.ui.log(f"   ⚠️ [V68] 팩트 원장 갱신 실패 (비차단): {str(_fl_err)[:50]}")
+                # ── FactLedger 갱신 ──
+                if self.ctx.fact_ledger:
+                    _fl_sc = arc_data.get("state_changes", {}) if arc_data else {}
+                    if _fl_sc:
+                        self.ctx.fact_ledger.update_from_state_changes(next_ep, _fl_sc)
+                    if bible_delta:
+                        try:
+                            self.ctx.fact_ledger.update_from_bible_delta(next_ep, bible_delta)
+                        except Exception as _bd_err:
+                            logging.warning("[V70] bible_delta 갱신 실패 (비차단): %s", _bd_err)
+                    self.ctx.fact_ledger.save()
+                    _fl_stats = self.ctx.fact_ledger.get_stats()
+                    self.ctx.ui.log(
+                        f"   📋 [V68] 팩트 원장 갱신 완료 (인물 {_fl_stats.get('characters', 0)}명, 아이템 {_fl_stats.get('items', 0)}개)"
+                    )
+        except Exception as _meta_err:
+            self.ctx.ui.log(f"   ⚠️ [TF-C10] 메타데이터 원자적 저장 실패 (비차단): {str(_meta_err)[:60]}")
 
         # ===== [D Step 3] 에피소드 만족도 태깅 (비차단) =====
         try:
@@ -464,6 +477,31 @@ class Stage4PostProcessor:
                     )
         except Exception as _sat_err:
             logging.warning("[D Step 3] 만족도 태깅 실패 (비차단): %s", _sat_err)
+
+        # ===== [TF-I24] 호흡 분석 DB 저장 (비차단) =====
+        try:
+            _pace_db = getattr(self.ctx.current_project, "db", None)
+            _pace_analyzer = self.ctx.pacing_analyzer if hasattr(self.ctx, "pacing_analyzer") else None
+            if _pace_db and _pace_analyzer and final_manuscript and len(final_manuscript) >= 100:
+                _pacing_result = _pace_analyzer.analyze(final_manuscript)
+                _pace_db.save_pacing_record(
+                    next_ep,
+                    {
+                        "pacing_score": _pacing_result.pacing_score,
+                        "dialogue_ratio": round(_pacing_result.dialogue_ratio, 3),
+                        "scene_break_count": _pacing_result.scene_break_count,
+                        "avg_sentence_length": round(_pacing_result.avg_sentence_length, 1),
+                        "short_sentence_ratio": round(_pacing_result.short_sentence_ratio, 3),
+                        "long_sentence_ratio": round(_pacing_result.long_sentence_ratio, 3),
+                        "issues": _pacing_result.issues[:5],
+                    },
+                )
+                self.ctx.ui.log(
+                    f"   📊 [TF-I24] 호흡 분석 저장: 점수 {_pacing_result.pacing_score}/100, "
+                    f"대화 {_pacing_result.dialogue_ratio:.0%}, 장면전환 {_pacing_result.scene_break_count}회"
+                )
+        except Exception as _pace_err:
+            logging.warning("[TF-I24] 호흡 분석 저장 실패 (비차단): %s", _pace_err)
 
         # ===== [Phase 3-QR] 품질 회귀 감지 (advisory-only) =====
         if self.ctx.quality_dashboard:
@@ -601,8 +639,8 @@ class Stage4PostProcessor:
         try:
             self.ctx.perf_timer.log_summary()
             self.ctx.perf_timer.reset()
-        except Exception:
-            pass
+        except Exception as e:
+            logging.debug(f"[PerfTimer] s4 summary/reset: {e}")
         return True
 
     def run_post_episode_tasks(self) -> None:

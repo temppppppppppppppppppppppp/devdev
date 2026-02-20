@@ -1,4 +1,4 @@
-﻿# Codex Bug Bounty Sweep 12 + FP Recheck (No Code Changes)
+# Codex Bug Bounty Sweep 12 + FP Recheck (No Code Changes)
 
 - Date: 2026-02-18
 - Scope: Stage2 preflight persistence, manuscript backfill sync path, narrative summary anchor save path

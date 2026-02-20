@@ -17,7 +17,7 @@ _logger = logging.getLogger(__name__)
 class FactLedger:
     """[V68] 누적 팩트 원장 — 장기연재 모순 방지의 핵심"""
 
-    MAX_HISTORY_PER_ENTITY = 10  # 엔티티당 이력 최대 수
+    MAX_HISTORY_PER_ENTITY = 100  # [TF-C05] 10→100 확장 (장기연재 팩트 보존)
     MAX_SUMMARY_CHARS = 20000  # 프롬프트 주입 시 최대 크기
 
     # ═══════════════════════════════════════════════════════════════
@@ -202,6 +202,9 @@ class FactLedger:
                 self._upsert_character(npc1, ep_num, note=f"{npc2}와 관계: {relation}")
                 self._upsert_character(npc2, ep_num, note=f"{npc1}와 관계: {relation}")
 
+        # [TF-C07] 수치 팩트 자동 추출 — 기존 update_number() 활용
+        self._extract_numerical_facts(ep_num, state_changes)
+
         self._ledger["last_updated_ep"] = ep_num
 
     def update_from_bible_delta(self, ep_num: int, bible_delta: dict):
@@ -259,6 +262,40 @@ class FactLedger:
         elif old_val != value:
             entry["history"].append(f"ep{ep_num}: {old_val} -> {value}")
         entry["history"] = entry["history"][-self.MAX_HISTORY_PER_ENTITY :]
+
+    def _extract_numerical_facts(self, ep_num: int, state_changes: dict) -> None:
+        """[TF-C07] state_changes에서 수치 팩트 자동 추출 → update_number() 배선."""
+        if not state_changes or not isinstance(state_changes, dict):
+            return
+
+        # ── status_shadow (무협: 내공/체력 변동) ──
+        shadow = state_changes.get("status_shadow") or {}
+        if isinstance(shadow, dict):
+            energy = shadow.get("internal_energy_loss")
+            if energy is not None and isinstance(energy, int | float):
+                self.update_number("내공_소모량", energy, "단위", ep_num, note="status_shadow 자동 추출")
+            remaining = shadow.get("internal_energy_remaining")
+            if remaining is not None and isinstance(remaining, int | float):
+                self.update_number("내공_잔여", remaining, "단위", ep_num, note="status_shadow 자동 추출")
+
+        # ── financial_events (투자 장르) ──
+        for fin in state_changes.get("financial_events") or []:
+            if not isinstance(fin, dict):
+                continue
+            asset_name = fin.get("asset") or fin.get("name") or ""
+            if not asset_name:
+                continue
+            for field in ("price", "value", "amount", "leverage", "exchange_rate"):
+                val = fin.get(field)
+                if val is not None and isinstance(val, int | float):
+                    key = f"{asset_name}_{field}"
+                    unit = fin.get("currency", "") or fin.get("unit", "")
+                    self.update_number(key, val, unit, ep_num, note="financial_events 자동 추출")
+
+        # ── power_level (파워 스케일링) ──
+        power = state_changes.get("power_level")
+        if power is not None and isinstance(power, int | float):
+            self.update_number("주인공_전투력", power, "레벨", ep_num, note="power_level 자동 추출")
 
     # ═══════════════════════════════════════════════════════════════
     # 내부 upsert 메서드

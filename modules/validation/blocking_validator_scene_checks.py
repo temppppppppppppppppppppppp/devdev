@@ -371,7 +371,7 @@ class BlockingValidatorSceneChecks:
         # [V60.7] Cliffhanger 강도 점수 계산
         strength_score = self._calculate_cliffhanger_strength(ending_text, matched_patterns, cliffhanger_hint)
 
-        return {
+        result = {
             "check": "cliffhanger_ending",
             "passed": True,
             "cliffhanger_detected": True,
@@ -379,6 +379,13 @@ class BlockingValidatorSceneChecks:
             "cliffhanger_strength": strength_score,  # [V60.7] 0-100 강도 점수
             "strength_grade": self._get_strength_grade(strength_score),
         }
+
+        # [S-15] 목표 강도 미달 시 advisory WARNING (비차단)
+        _target = _threshold("cliffhanger.target_strength", 40)
+        if strength_score < _target:
+            result["warning"] = f"클리프행어 강도 {strength_score}/{_target} 미달 — 긴장감 강화 권장"
+
+        return result
 
     def _calculate_cliffhanger_strength(
         self, ending_text: str, matched_patterns: list[str], blueprint_hint: str

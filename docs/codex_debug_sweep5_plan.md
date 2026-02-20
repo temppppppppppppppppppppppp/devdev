@@ -1,4 +1,4 @@
-﻿# Debug Sweep 5 Plan (Codex Parallel)
+# Debug Sweep 5 Plan (Codex Parallel)
 
 > Updated: 2026-02-17
 > Baseline: `1722 passed, 68 xfailed`

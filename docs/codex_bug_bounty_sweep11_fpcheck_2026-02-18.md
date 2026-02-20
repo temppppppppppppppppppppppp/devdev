@@ -1,4 +1,4 @@
-﻿# Codex Bug Bounty Sweep 11 + FP Recheck (No Code Changes)
+# Codex Bug Bounty Sweep 11 + FP Recheck (No Code Changes)
 
 - Date: 2026-02-18
 - Scope: persistence contracts around `save_anchor` / `save_v20_anchor`, Stage4 quality hook re-triage

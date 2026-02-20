@@ -1,5 +1,21 @@
 """[Phase 4C-3] Stage2 DI 컨텍스트 — 속성·콜백 의존 주입"""
 
+import weakref
+
+
+def _make_sync_callback(app_ref):
+    """[S-04] weakref 기반 sync 콜백 — 람다 순환 참조 방지."""
+
+    def _sync(key, cache=None):
+        app = app_ref()
+        if app is None:
+            return
+        setattr(app, "_cumulative_state_cache_key", key)
+        if cache is not None:
+            setattr(app, "_cumulative_state_cache", cache)
+
+    return _sync
+
 
 class Stage2Context:
     """Stage2Orchestrator의 DI 컨텍스트.
@@ -229,8 +245,5 @@ class Stage2Context:
             analyze_rejection_pattern_v60=getattr(app, "_analyze_rejection_pattern_v60", None),
             get_adaptive_feedback_intensity=getattr(app, "_get_adaptive_feedback_intensity", None),
             generate_arc_context_v60=getattr(app, "_generate_arc_context_v60", None),
-            sync_cache_key_to_app=lambda key, cache=None: (
-                setattr(app, "_cumulative_state_cache_key", key),
-                setattr(app, "_cumulative_state_cache", cache) if cache is not None else None,
-            ),
+            sync_cache_key_to_app=_make_sync_callback(weakref.ref(app)),
         )

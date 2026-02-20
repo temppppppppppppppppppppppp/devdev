@@ -91,8 +91,20 @@ class ChiefWriterQualityGate:
         # [V60.82] 조기 스킵 조건 - Rubric 점수로 사전 평가
         rubric_score = self._evaluate_with_rubric(current_manuscript, genre_name)
         if rubric_score >= 3.5:
-            # 이미 품질 높음 - Self-Critique 스킵
-            return current_manuscript
+            # [TF-I08] 구조적 적신호 확인 — rubric 높아도 구조 문제 있으면 스킵 금지
+            _structural = self._self_critique(current_manuscript, hud_report, encyclopedia, genre_name, ep_num)
+            _medium_plus = [
+                i
+                for i in _structural.get("issues", [])
+                if isinstance(i, dict) and i.get("severity") in ("medium", "high")
+            ]
+            if not _medium_plus:
+                return current_manuscript
+            logging.info(
+                "[ChiefWriter] Rubric %.1f ≥ 3.5이나 구조적 이슈 %d건 — Self-Critique 진행",
+                rubric_score,
+                len(_medium_plus),
+            )
 
         for round_num in range(1, MAX_CRITIQUE_ROUNDS + 1):
             critique_result = self._self_critique(current_manuscript, hud_report, encyclopedia, genre_name, ep_num)
@@ -335,7 +347,7 @@ class ChiefWriterQualityGate:
         prompt = get_fix_issues_prompt(
             fix_instructions_text=chr(10).join(fix_instructions),
             hud_report_escaped=self.host._escape_braces(hud_report[:500]),
-            manuscript_escaped=self.host._escape_braces(manuscript[:8000]),
+            manuscript_escaped=self.host._escape_braces(manuscript),  # [TF-I09] 전문 전달 (8000자 절삭 제거)
         )
         try:
             fixed = self.host.ask(prompt, temperature=0.5, thinking_level="low")

@@ -43,6 +43,19 @@ class PromptBuilder:
         # [V64 P2-7] 아이템 타임라인 증분 캐시 {up_to_ep: (timeline_lines_list, max_ep_loaded)}
         self._item_timeline_cache: dict = {}
 
+    def invalidate_timeline_cache(self, from_ep: int | None = None) -> None:
+        """[I-15] 타임라인 캐시 순방향 무효화.
+
+        Args:
+            from_ep: 이 에피소드 이상 키 전부 제거. None이면 전체 클리어.
+        """
+        if from_ep is None:
+            self._item_timeline_cache.clear()
+        else:
+            keys_to_remove = [k for k in self._item_timeline_cache if k >= from_ep]
+            for k in keys_to_remove:
+                del self._item_timeline_cache[k]
+
     # ═══════════════════════════════════════════════════════════════════════
     # [V60.5] Writer 가이드 — Pure (app 의존 없음)
     # ═══════════════════════════════════════════════════════════════════════

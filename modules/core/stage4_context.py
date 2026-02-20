@@ -1,5 +1,17 @@
 """[Phase 4C-2a/2b/2c] Stage4 DI 컨텍스트 — 속성·콜백 의존 주입"""
 
+# [S-13] 조건부 모듈 8종 키 상수
+_CONDITIONAL_MODULE_KEYS = (
+    "pre_director_checklist",
+    "confidence_calibrator",
+    "prompt_weighter",
+    "cross_verifier",
+    "chain_of_verification",
+    "adversarial_self_play",
+    "tree_of_thoughts",
+    "multi_agent_deliberation",
+)
+
 
 class Stage4Context:
     """Stage4Orchestrator의 DI 컨텍스트.
@@ -9,6 +21,7 @@ class Stage4Context:
             perf_timer, foreshadow_tracker, failure_learner, diversity_engine,
             semantic_plot_guard, selected_genre, quality_dashboard,
             pacing_analyzer, pass_rate_monitor
+    [S-13] 조건부 모듈 8종 → conditional_modules dict 통합
     [4C-2c] 콜백 7종: get_int_input, build_item_acquisition_timeline,
             load_narrative_summaries, get_protagonist_name,
             generate_narrative_summary, flush_audit_buffer, safe_commit
@@ -21,7 +34,7 @@ class Stage4Context:
         "agents",
         "sys",
         "state_tracker",
-        # [4C-2b] 확장 11종
+        # [4C-2b] 확장 13종
         "memory",
         "world_state",
         "fact_ledger",
@@ -35,15 +48,8 @@ class Stage4Context:
         "quality_dashboard",
         "pacing_analyzer",
         "pass_rate_monitor",
-        # [Phase 3/4] always-on + conditional modules
-        "pre_director_checklist",
-        "confidence_calibrator",
-        "prompt_weighter",
-        "cross_verifier",
-        "chain_of_verification",
-        "adversarial_self_play",
-        "tree_of_thoughts",
-        "multi_agent_deliberation",
+        # [S-13] 조건부 모듈 8종 → 1 composite dict
+        "conditional_modules",
         # [4C-2c] 콜백 7종
         "get_int_input",
         "build_item_acquisition_timeline",
@@ -76,14 +82,8 @@ class Stage4Context:
         quality_dashboard=None,
         pacing_analyzer=None,
         pass_rate_monitor=None,
-        pre_director_checklist=None,
-        confidence_calibrator=None,
-        prompt_weighter=None,
-        cross_verifier=None,
-        chain_of_verification=None,
-        adversarial_self_play=None,
-        tree_of_thoughts=None,
-        multi_agent_deliberation=None,
+        # [S-13] 조건부 모듈 8종 → composite dict
+        conditional_modules=None,
         # [4C-2c] 콜백 — 모두 optional (None 허용)
         get_int_input=None,
         build_item_acquisition_timeline=None,
@@ -111,14 +111,7 @@ class Stage4Context:
         self.quality_dashboard = quality_dashboard
         self.pacing_analyzer = pacing_analyzer
         self.pass_rate_monitor = pass_rate_monitor
-        self.pre_director_checklist = pre_director_checklist
-        self.confidence_calibrator = confidence_calibrator
-        self.prompt_weighter = prompt_weighter
-        self.cross_verifier = cross_verifier
-        self.chain_of_verification = chain_of_verification
-        self.adversarial_self_play = adversarial_self_play
-        self.tree_of_thoughts = tree_of_thoughts
-        self.multi_agent_deliberation = multi_agent_deliberation
+        self.conditional_modules = conditional_modules or {}
         self.get_int_input = get_int_input
         self.build_item_acquisition_timeline = build_item_acquisition_timeline
         self.load_narrative_summaries = load_narrative_summaries
@@ -127,9 +120,20 @@ class Stage4Context:
         self.flush_audit_buffer = flush_audit_buffer
         self.safe_commit = safe_commit
 
+    def get_module(self, name: str):
+        """[S-13] 조건부 모듈 조회 헬퍼."""
+        return self.conditional_modules.get(name)
+
     @classmethod
     def from_app(cls, app):
         """SovereignApp에서 전체 속성 추출"""
+        # [S-13] 조건부 모듈 8종을 dict로 구성
+        cm = {}
+        for key in _CONDITIONAL_MODULE_KEYS:
+            val = getattr(app, key, None)
+            if val is not None:
+                cm[key] = val
+
         return cls(
             ui=app.ui,
             current_project=app.current_project,
@@ -149,14 +153,7 @@ class Stage4Context:
             quality_dashboard=getattr(app, "quality_dashboard", None),
             pacing_analyzer=getattr(app, "pacing_analyzer", None),
             pass_rate_monitor=getattr(app, "pass_rate_monitor", None),
-            pre_director_checklist=getattr(app, "pre_director_checklist", None),
-            confidence_calibrator=getattr(app, "confidence_calibrator", None),
-            prompt_weighter=getattr(app, "prompt_weighter", None),
-            cross_verifier=getattr(app, "cross_verifier", None),
-            chain_of_verification=getattr(app, "chain_of_verification", None),
-            adversarial_self_play=getattr(app, "adversarial_self_play", None),
-            tree_of_thoughts=getattr(app, "tree_of_thoughts", None),
-            multi_agent_deliberation=getattr(app, "multi_agent_deliberation", None),
+            conditional_modules=cm,
             get_int_input=getattr(app, "_get_int_input", None),
             build_item_acquisition_timeline=getattr(app, "_build_item_acquisition_timeline", None),
             load_narrative_summaries=getattr(app, "_load_narrative_summaries", None),

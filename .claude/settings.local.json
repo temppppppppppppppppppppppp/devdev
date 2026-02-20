@@ -81,7 +81,9 @@
       "Bash(for f in \"C:\\\\Users\\\\User\\\\Desktop\\\\글도비\\\\modules\\\\core\"/*.py \"C:\\\\Users\\\\User\\\\Desktop\\\\글도비\\\\modules\\\\domain\\\\agents\"/*.py \"C:\\\\Users\\\\User\\\\Desktop\\\\글도비\\\\modules\\\\validation\"/*.py)",
       "Bash(xargs:*)",
       "Bash(while read f)",
-      "Bash(do basename \"$f\")"
+      "Bash(do basename \"$f\")",
+      "Bash(/tmp/codex_sweep300_detailed_comparison.txt:*)",
+      "Bash(ruff check:*)"
     ]
   }
 }

@@ -138,6 +138,19 @@ npc_exposure:
   max_mentions_per_episode: 15   # NPC 1명 기준 최대 언급 횟수 (초과 시 advisory WARNING)
   min_name_length: 2             # 이 미만 글자수 NPC 이름은 skip (1글자 오탐 방지)
 
+# ── 적응형 임계값 제어 ──────────────────────────────────────────
+adaptive_threshold:
+  floor: 60                      # 임계값 하한 (이 아래로 내려가지 않음)
+  floor_hit_reset: 3             # 바닥 N회 연속 도달 시 consecutive_passes 리셋
+  cascade_cap_passes: 10         # N연속 통과 후 improving_quality 조정 0으로 고정
+  ambiguous_lower: 70            # self-consistency 투표 하한
+  ambiguous_upper: 85            # self-consistency 투표 상한
+  soft_margin: 2                 # 경계 ±N점 소프트 마진 (확률적 멀티보팅)
+
+# ── 클리프행어 설정 ────────────────────────────────────────────
+cliffhanger:
+  target_strength: 40            # 이 미만이면 advisory WARNING (비차단)
+
 # ── 크로스 에피소드 반복 감지 ────────────────────────────────────
 cross_episode_repetition:
   enabled: true

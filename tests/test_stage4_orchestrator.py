@@ -384,7 +384,7 @@ class TestHandleRoundOutcomeErrorPaths:
 
     def test_all_rounds_reject_returns_should_return(self, orch_with_ctx, minimal_round_ctx, monkeypatch):
         """5라운드 모두 REJECT → _RoundOutcome(should_return=True) 반환"""
-        from modules.core.stage4_orchestrator import _InterviewRoundResult
+        from modules.core.stage4_types import _InterviewRoundResult
 
         orch = orch_with_ctx
 
@@ -431,7 +431,7 @@ class TestStage4OrchestratorImport:
 
     def test_patch_threshold_imported(self):
         """_PATCH_REWRITE_THRESHOLD 모듈 상수 존재"""
-        from modules.core.stage4_orchestrator import _PATCH_REWRITE_THRESHOLD
+        from modules.core.stage4_types import _PATCH_REWRITE_THRESHOLD
 
         assert _PATCH_REWRITE_THRESHOLD == PatchModeThresholds.REWRITE
 

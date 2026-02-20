@@ -1,4 +1,4 @@
-﻿# Codex Debug Sweep v2 Findings
+# Codex Debug Sweep v2 Findings
 
 ## 통계
 - 총 발견: 97건 (CRITICAL: 0, HIGH: 68, MEDIUM: 29)

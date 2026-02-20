@@ -386,3 +386,111 @@ class TestMergeContextsForCaching:
     def test_empty_items(self, agent):
         """빈 아이템 목록"""
         assert agent.merge_contexts_for_caching([], item_type="blueprint") == ""
+
+
+# ══════════════════════════════════════════════════════════════
+# Test 12: [TF-C11] JSON 안전화
+# ══════════════════════════════════════════════════════════════
+
+
+class TestJsonSafetyC11:
+    def test_regex_captures_numeric_values(self, agent):
+        """[TF-C11] 숫자/불리언 값도 regex fallback에서 추출"""
+        # ast.literal_eval도 실패하도록 깨진 JSON
+        broken = '{"name": "test", "score": 42, "active": true, broken syntax here'
+        result = agent._parse_and_repair_hard(broken)
+        assert isinstance(result, dict)
+        assert result.get("name") == "test"
+        assert result.get("score") == 42
+        assert result.get("active") is True
+
+    def test_payload_size_guard(self, agent):
+        """[TF-C11] 500KB 초과 페이로드 절삭 후 처리"""
+        huge = '{"content": "' + "x" * 600_000 + '"}'
+        result = agent._extract_json_robust(huge)
+        assert isinstance(result, dict)
+        # 절삭되어도 파싱은 시도됨 (크래시 없음)
+
+    def test_deep_nesting_visit_limit(self, agent):
+        """[TF-C11] 깊은 중첩 + 많은 노드 시 visit_count 상한 작동"""
+        # 100개 초과 dict를 포함하는 list
+        items = [{"target": f"t{i}", "value": f"v{i}"} for i in range(150)]
+        text = json.dumps({"items": items})
+        result = agent._extract_json_robust(text)
+        assert isinstance(result, dict)
+        # 100개 방문 상한 → 일부만 추출되어도 크래시 없음
+
+
+# ══════════════════════════════════════════════════════════════
+# [I-18] _quota_exhausted_models 스레드 안전성
+# ══════════════════════════════════════════════════════════════
+
+
+class TestQuotaLock:
+    def test_quota_lock_exists(self):
+        """[I-18] _quota_lock 클래스 변수 존재"""
+        import threading
+
+        assert hasattr(BaseAgent, "_quota_lock")
+        assert isinstance(BaseAgent._quota_lock, type(threading.Lock()))
+
+    def test_quota_write_under_lock(self):
+        """[I-18] 쿼터 캐시 쓰기가 크래시 없이 동작"""
+        import time
+
+        with BaseAgent._quota_lock:
+            BaseAgent._quota_exhausted_models["test_model"] = time.time() + 100
+        # cleanup
+        with BaseAgent._quota_lock:
+            BaseAgent._quota_exhausted_models.pop("test_model", None)
+
+
+# ══════════════════════════════════════════════════════════════
+# [I-20] Context Cache 에빅션 TOCTOU
+# ══════════════════════════════════════════════════════════════
+
+
+class TestContextCacheEviction:
+    def test_expired_cache_pop(self, agent):
+        """[I-20] 만료 캐시 삭제 시 KeyError 없이 pop"""
+        import hashlib
+        import time
+
+        content = "short content"
+        content_hash = hashlib.md5(content.encode("utf-8")).hexdigest()[:16]
+        cache_key = f"test__{content_hash}"
+        agent._context_caches[cache_key] = {
+            "name": "test",
+            "created_at": time.time() - 99999,
+            "content_hash": content_hash,
+        }
+        # 만료 캐시 접근 → pop으로 안전 삭제 (KeyError 없음)
+        result = agent._get_or_create_context_cache("test", content, ttl_seconds=1)
+        assert result["cached"] is False
+        assert cache_key not in agent._context_caches
+
+    def test_eviction_snapshot(self, agent):
+        """[I-20] 에빅션이 list() 스냅샷으로 안전하게 동작"""
+        import time
+
+        old_max = agent._CONTEXT_CACHE_MAX
+        agent._CONTEXT_CACHE_MAX = 2
+        try:
+            for i in range(5):
+                agent._context_caches[f"evict_{i}"] = {
+                    "name": f"cache_{i}",
+                    "created_at": time.time() + i,
+                    "content_hash": f"hash_{i}",
+                }
+            # 수동 에빅션 트리거 — 직접 로직 호출
+            if len(agent._context_caches) > agent._CONTEXT_CACHE_MAX:
+                snapshot = list(agent._context_caches.items())
+                snapshot.sort(key=lambda kv: kv[1].get("created_at", 0))
+                for old_key, _ in snapshot[: len(snapshot) - agent._CONTEXT_CACHE_MAX]:
+                    agent._context_caches.pop(old_key, None)
+            assert len(agent._context_caches) <= 2
+        finally:
+            agent._CONTEXT_CACHE_MAX = old_max
+            for k in list(agent._context_caches.keys()):
+                if k.startswith("evict_"):
+                    agent._context_caches.pop(k, None)

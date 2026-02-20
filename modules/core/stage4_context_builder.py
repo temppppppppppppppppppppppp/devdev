@@ -550,7 +550,7 @@ class Stage4ContextBuilder:
         mandatory_context: str,
     ):
         """[4-R1-e-2] Build round context dict from episode context and prompts."""
-        from modules.core.stage4_orchestrator import _RoundContext
+        from modules.core.stage4_types import _RoundContext
 
         return _RoundContext(
             chief_writer=chief_writer,

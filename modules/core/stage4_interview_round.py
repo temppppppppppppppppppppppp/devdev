@@ -22,7 +22,7 @@ class Stage4InterviewRound:
         round_ctx,
     ):
         """[4-R1-e-1] Single interview round: generation, validation, judgment."""
-        from modules.core.stage4_orchestrator import _PATCH_REWRITE_THRESHOLD, _InterviewRoundResult
+        from modules.core.stage4_types import _PATCH_REWRITE_THRESHOLD, _InterviewRoundResult
         from modules.validation.threshold_helper import _threshold
 
         # [4-R2-b] Unpack round context
@@ -65,6 +65,34 @@ class Stage4InterviewRound:
         if type(mandatory_context) is not str:
             mandatory_context = str(mandatory_context or "")
 
+        # [TF-T4] 24개 공통 kwargs — 4개 호출부에서 재사용
+        _common_writer_kwargs = {
+            "ep_num": next_ep,
+            "blueprint": blueprint,
+            "prev_manuscript": prev_text,
+            "hud_report": hud_report,
+            "arc_doc": arc_tactical,
+            "master_bible": self.ctx.current_project.master_bible,
+            "style_guide": style_guide,
+            "current_inventory": current_inventory,
+            "current_martial_arts": current_martial_arts,
+            "dead_npcs": dead_npcs,
+            "item_acquisition_timeline": item_acquisition_timeline,
+            "reference_anchor_prompt": reference_anchor_prompt,
+            "mandatory_context": mandatory_context,
+            "anti_trope_prompt": _effective_anti_trope,
+            "justification_prompt": justification_prompt,
+            "reflexion_prompt": reflexion_prompt,
+            "genre_name": genre_name,
+            "npc_equipment_summary": npc_equipment_summary,
+            "intro_dna": intro_dna,
+            "purism_prompt": purism_prompt,
+            "state_tracker": self.ctx.state_tracker,
+            "prev_manuscripts_text": _prev_manuscripts_text,
+            "world_state_summary": _world_state_summary,
+            "chain_link_section": _chain_link_section,
+        }
+
         stage4_spinner.update_detail(f"제{next_ep}화 · {round_num + 1}차 면담 · 앙상블 생성")
         self.ctx.ui.log(f"\n🎬 [{round_num + 1}차 면담] Chief Writer 앙상블 생성 중...")
 
@@ -72,8 +100,8 @@ class Stage4InterviewRound:
         # [V65] PerfTimer: 원고 생성 측정
         try:
             self.ctx.perf_timer.start(f"s4_ep{next_ep}_generate_r{round_num}")
-        except Exception:
-            pass
+        except Exception as e:
+            logging.debug(f"[PerfTimer] start generate: {e}")
         _is_patch = False
         _is_patch_fallback = False
         _prev_score = 0
@@ -82,9 +110,10 @@ class Stage4InterviewRound:
         _mad_used = bool(previous_attempt.get("_mad_used", False)) if previous_attempt else False
 
         _weighted_injection = ""
-        if self.ctx.prompt_weighter:
+        _pw = self.ctx.get_module("prompt_weighter")
+        if _pw:
             try:
-                _weighted_injection = self.ctx.prompt_weighter.get_weighted_prompt("writer", 4, top_n=3)
+                _weighted_injection = _pw.get_weighted_prompt("writer", 4, top_n=3)
             except Exception as e:
                 logging.warning(f"[SilentPass:PromptWeighter] {e!s:.100}")
         if _weighted_injection:
@@ -93,32 +122,7 @@ class Stage4InterviewRound:
             )
 
         if round_num == 0:
-            candidates = chief_writer.generate_ensemble(
-                ep_num=next_ep,
-                blueprint=blueprint,
-                prev_manuscript=prev_text,
-                hud_report=hud_report,
-                arc_doc=arc_tactical,
-                master_bible=self.ctx.current_project.master_bible,
-                style_guide=style_guide,
-                current_inventory=current_inventory,
-                current_martial_arts=current_martial_arts,
-                dead_npcs=dead_npcs,
-                item_acquisition_timeline=item_acquisition_timeline,
-                reference_anchor_prompt=reference_anchor_prompt,
-                mandatory_context=mandatory_context,
-                anti_trope_prompt=_effective_anti_trope,
-                justification_prompt=justification_prompt,
-                reflexion_prompt=reflexion_prompt,
-                genre_name=genre_name,
-                npc_equipment_summary=npc_equipment_summary,
-                intro_dna=intro_dna,
-                purism_prompt=purism_prompt,
-                state_tracker=self.ctx.state_tracker,
-                prev_manuscripts_text=_prev_manuscripts_text,  # [V67]
-                world_state_summary=_world_state_summary,  # [V68]
-                chain_link_section=_chain_link_section,  # [V68]
-            )
+            candidates = chief_writer.generate_ensemble(**_common_writer_kwargs)
         else:
             # [Phase 3-5B] 점수 기반 분기: 패치 모드 vs 전면 재작성
             try:
@@ -133,34 +137,11 @@ class Stage4InterviewRound:
                 logging.info(f"[Phase 3-5B] 패치 모드 진입 (score={_prev_score}, round={round_num})")
                 self.ctx.ui.log(f"   🔧 [Phase 3-5B] 패치 모드: score={_prev_score}, 원본 보존 수정")
                 candidates = chief_writer.patch_with_feedback(
-                    ep_num=next_ep,
-                    blueprint=blueprint,
-                    prev_manuscript=prev_text,
-                    hud_report=hud_report,
-                    arc_doc=arc_tactical,
-                    master_bible=self.ctx.current_project.master_bible,
-                    style_guide=style_guide,
+                    **_common_writer_kwargs,
                     original_manuscript=_prev_manuscript,
                     director_feedback=director_feedback,
                     previous_attempt=previous_attempt,
                     attempt_number=round_num + 1,
-                    current_inventory=current_inventory,
-                    current_martial_arts=current_martial_arts,
-                    dead_npcs=dead_npcs,
-                    item_acquisition_timeline=item_acquisition_timeline,
-                    reference_anchor_prompt=reference_anchor_prompt,
-                    mandatory_context=mandatory_context,
-                    anti_trope_prompt=_effective_anti_trope,
-                    justification_prompt=justification_prompt,
-                    reflexion_prompt=reflexion_prompt,
-                    genre_name=genre_name,
-                    npc_equipment_summary=npc_equipment_summary,
-                    intro_dna=intro_dna,
-                    purism_prompt=purism_prompt,
-                    state_tracker=self.ctx.state_tracker,
-                    prev_manuscripts_text=_prev_manuscripts_text,
-                    world_state_summary=_world_state_summary,
-                    chain_link_section=_chain_link_section,
                 )
                 if not candidates:
                     _is_patch_fallback = True
@@ -168,67 +149,22 @@ class Stage4InterviewRound:
                     logging.warning("[Phase 3-5B] 패치 실패, full rewrite 폴백")
                     self.ctx.ui.log("   ⚠️ [Phase 3-5B] 패치 실패 → 전면 재작성 폴백")
                     candidates = chief_writer.regenerate_with_feedback(
-                        ep_num=next_ep,
-                        blueprint=blueprint,
-                        prev_manuscript=prev_text,
-                        hud_report=hud_report,
-                        arc_doc=arc_tactical,
-                        master_bible=self.ctx.current_project.master_bible,
-                        style_guide=style_guide,
+                        **_common_writer_kwargs,
                         director_feedback=director_feedback,
                         previous_attempt=previous_attempt,
                         attempt_number=round_num + 1,
-                        current_inventory=current_inventory,
-                        current_martial_arts=current_martial_arts,
-                        dead_npcs=dead_npcs,
-                        item_acquisition_timeline=item_acquisition_timeline,
-                        reference_anchor_prompt=reference_anchor_prompt,
-                        mandatory_context=mandatory_context,
-                        anti_trope_prompt=_effective_anti_trope,
-                        justification_prompt=justification_prompt,
-                        reflexion_prompt=reflexion_prompt,
-                        genre_name=genre_name,
-                        npc_equipment_summary=npc_equipment_summary,
-                        intro_dna=intro_dna,
-                        purism_prompt=purism_prompt,
-                        state_tracker=self.ctx.state_tracker,
-                        prev_manuscripts_text=_prev_manuscripts_text,
-                        world_state_summary=_world_state_summary,
-                        chain_link_section=_chain_link_section,
                     )
             else:
                 candidates = chief_writer.regenerate_with_feedback(
-                    ep_num=next_ep,
-                    blueprint=blueprint,
-                    prev_manuscript=prev_text,
-                    hud_report=hud_report,
-                    arc_doc=arc_tactical,
-                    master_bible=self.ctx.current_project.master_bible,
-                    style_guide=style_guide,
+                    **_common_writer_kwargs,
                     director_feedback=director_feedback,
                     previous_attempt=previous_attempt,
                     attempt_number=round_num + 1,
-                    current_inventory=current_inventory,
-                    current_martial_arts=current_martial_arts,
-                    dead_npcs=dead_npcs,
-                    item_acquisition_timeline=item_acquisition_timeline,
-                    reference_anchor_prompt=reference_anchor_prompt,
-                    mandatory_context=mandatory_context,
-                    anti_trope_prompt=_effective_anti_trope,
-                    justification_prompt=justification_prompt,
-                    reflexion_prompt=reflexion_prompt,
-                    genre_name=genre_name,
-                    npc_equipment_summary=npc_equipment_summary,
-                    intro_dna=intro_dna,
-                    purism_prompt=purism_prompt,
-                    state_tracker=self.ctx.state_tracker,
-                    prev_manuscripts_text=_prev_manuscripts_text,
-                    world_state_summary=_world_state_summary,
-                    chain_link_section=_chain_link_section,
                 )
 
         _asp_manuscript = None
-        if round_num >= 2 and self.ctx.adversarial_self_play and previous_attempt:
+        _asp = self.ctx.get_module("adversarial_self_play")
+        if round_num >= 2 and _asp and previous_attempt:
             try:
                 if _prev_manuscript:
                     self.ctx.ui.log(f"   🔥 [ASP] 레드팀 교정 발동 (재시도 {round_num + 1}회차)")
@@ -237,7 +173,7 @@ class Stage4InterviewRound:
                         _asp_ctx["blueprint"] = blueprint
                     if director_feedback:
                         _asp_ctx["director_feedback"] = director_feedback
-                    _asp_result = self.ctx.adversarial_self_play.generate_with_adversary(
+                    _asp_result = _asp.generate_with_adversary(
                         initial_content=_prev_manuscript,
                         content_type="manuscript",
                         context=_asp_ctx,
@@ -255,8 +191,8 @@ class Stage4InterviewRound:
         # [V65] PerfTimer: 원고 생성 종료
         try:
             self.ctx.perf_timer.stop(f"s4_ep{next_ep}_generate_r{round_num}")
-        except Exception:
-            pass
+        except Exception as e:
+            logging.debug(f"[PerfTimer] stop generate: {e}")
 
         # [V66.3] C-3: 빈 candidates 방어 — 모든 후보 생성 실패 시 다음 면담으로 스킵
         if not candidates:
@@ -543,7 +479,8 @@ class Stage4InterviewRound:
                 if _history_conflicts:
                     director_feedback += "\n[V67 원고 역사 충돌]\n" + "\n".join(_history_conflicts)
 
-        if self.ctx.pre_director_checklist:
+        _pdcl = self.ctx.get_module("pre_director_checklist")
+        if _pdcl:
             try:
                 _checklist_ctx = {}
                 if blueprint:
@@ -554,7 +491,7 @@ class Stage4InterviewRound:
                     _ms = cand.get("manuscript", "")
                     if not _ms or ci >= len(validation_results):
                         continue
-                    _cl_result = self.ctx.pre_director_checklist.check(_ms, "manuscript", context=_checklist_ctx)
+                    _cl_result = _pdcl.check(_ms, "manuscript", context=_checklist_ctx)
                     if not _cl_result.passed:
                         for _br in _cl_result.blocking_reasons:
                             validation_results[ci]["warnings"].append(f"[PreCheck] {_br}")
@@ -563,13 +500,14 @@ class Stage4InterviewRound:
             except Exception as e:
                 logging.warning(f"[SilentPass:PreDirectorChecklist] {e!s:.100}")
 
-        if self.ctx.confidence_calibrator:
+        _cc = self.ctx.get_module("confidence_calibrator")
+        if _cc:
             try:
                 for ci, cand in enumerate(candidates):
                     _ms = cand.get("manuscript", "")
                     if not _ms or ci >= len(validation_results):
                         continue
-                    _conf = self.ctx.confidence_calibrator.assess(
+                    _conf = _cc.assess(
                         _ms, "manuscript", context={"blueprint": blueprint, "prev_manuscript": _prev_manuscript}
                     )
                     if _conf.concerns:
@@ -579,7 +517,8 @@ class Stage4InterviewRound:
             except Exception as e:
                 logging.warning(f"[SilentPass:ConfidenceCalibrator] {e!s:.100}")
 
-        if self.ctx.cross_verifier and blueprint:
+        _cv = self.ctx.get_module("cross_verifier")
+        if _cv and blueprint:
             try:
                 from modules.core.cross_agent_verifier import ComplianceLevel
 
@@ -587,9 +526,7 @@ class Stage4InterviewRound:
                     _ms = cand.get("manuscript", "")
                     if not _ms or ci >= len(validation_results):
                         continue
-                    _compliance = self.ctx.cross_verifier.verify_writer_compliance(
-                        manuscript=_ms, blueprint=blueprint, use_llm=False
-                    )
+                    _compliance = _cv.verify_writer_compliance(manuscript=_ms, blueprint=blueprint, use_llm=False)
                     if _compliance.level == ComplianceLevel.VIOLATION:
                         for _v in _compliance.violations[:5]:
                             _v_msg = _v.get("reason", str(_v)) if isinstance(_v, dict) else str(_v)
@@ -609,8 +546,8 @@ class Stage4InterviewRound:
         # [V65] PerfTimer: Director 대면 측정
         try:
             self.ctx.perf_timer.start(f"s4_ep{next_ep}_director_r{round_num}")
-        except Exception:
-            pass
+        except Exception as e:
+            logging.debug(f"[PerfTimer] start director: {e}")
         # [V66.3] C-1: mandatory_context + Python 검증 경고를 Director에 전달
         # validation_results에서 경고를 추출하여 mandatory_context에 병합
         _mandatory_text = mandatory_context if isinstance(mandatory_context, str) else str(mandatory_context or "")
@@ -648,8 +585,8 @@ class Stage4InterviewRound:
         )
         try:
             self.ctx.perf_timer.stop(f"s4_ep{next_ep}_director_r{round_num}")
-        except Exception:
-            pass
+        except Exception as e:
+            logging.debug(f"[PerfTimer] stop director: {e}")
 
         selected = director_result.get("selected", "A")
         verdict = director_result.get("verdict", "REJECT")
@@ -755,9 +692,10 @@ class Stage4InterviewRound:
             _seed_manuscript = (director_result.get("selected_candidate") or {}).get(
                 "manuscript", ""
             ) or _prev_manuscript
-            if _reject_bucket == "structure_error" and self.ctx.tree_of_thoughts and not _tot_used and _seed_manuscript:
+            _tot = self.ctx.get_module("tree_of_thoughts")
+            if _reject_bucket == "structure_error" and _tot and not _tot_used and _seed_manuscript:
                 try:
-                    _tot_result = self.ctx.tree_of_thoughts.explore(
+                    _tot_result = _tot.explore(
                         task=f"원고 구조 개선: {director_feedback}",
                         context={"manuscript": _seed_manuscript[:3000], "blueprint": blueprint},
                     )
@@ -768,14 +706,10 @@ class Stage4InterviewRound:
                         _tot_used = True
                 except Exception as e:
                     logging.warning(f"[SilentPass:ToT] {e!s:.120}")
-            if (
-                _reject_bucket == "constraint_violation"
-                and self.ctx.multi_agent_deliberation
-                and not _mad_used
-                and _seed_manuscript
-            ):
+            _mad = self.ctx.get_module("multi_agent_deliberation")
+            if _reject_bucket == "constraint_violation" and _mad and not _mad_used and _seed_manuscript:
                 try:
-                    _mad_result = self.ctx.multi_agent_deliberation.deliberate(
+                    _mad_result = _mad.deliberate(
                         content=_seed_manuscript,
                         content_type="manuscript",
                         context={"blueprint": blueprint, "director_feedback": director_feedback},

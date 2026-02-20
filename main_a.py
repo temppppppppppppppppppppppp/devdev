@@ -181,7 +181,7 @@ class SovereignApp:
         self.stage_rejection_history = []  # [V60.3] Stage간 REJECT 히스토리 전달
         # [V62.5] extract_cumulative_state 배치 캐시
         self._cumulative_state_cache = None
-        self._cumulative_state_cache_key = 0
+        self._cumulative_state_cache_key = None  # [S-08] 센티넬 (0은 유효한 키)
         self._state_tracker_loaded_arcs = 0  # [V62.5] StateTracker 증분 업데이트 추적
         self._prompt_builder = PromptBuilder(app=self)  # [V64 P2-2]
         self._feedback_system = FeedbackSystem()  # [V64 P2-3]
@@ -2665,10 +2665,10 @@ class SovereignApp:
     def _rewind_stage_2(self):
         """[V20] 특정 아크 번호부터 그 이후를 전부 삭제 (정밀 되감기)"""
         self._project_service.rewind_stage_2()  # [Phase 4B-3] thin delegate
-        # [Sweep35] clear state-related caches after rewind
+        # [Sweep35] clear state-related caches after rewind [I-16] 공개 메서드 사용
         self._cumulative_state_cache = None
-        self._cumulative_state_cache_key = 0
-        self._prompt_builder._item_timeline_cache = {}
+        self._cumulative_state_cache_key = None
+        self._prompt_builder.invalidate_timeline_cache()
         self._narrative_summaries_cache = None
         try:
             _se = self.agents.get("state_extractor") if isinstance(self.agents, dict) else None
@@ -2680,10 +2680,10 @@ class SovereignApp:
     def _rollback_episode(self):
         """[V40.1 Rollback] 특정 회차로 되감기 (HUD, DB, Vector DB, 파일 모두 롤백)"""
         self._project_service.rollback_episode()  # [Phase 4B-3] thin delegate
-        # [Debug Sweep] 롤백 후 캐시 무효화
-        self._prompt_builder._item_timeline_cache = {}
+        # [Debug Sweep] 롤백 후 캐시 무효화 [I-16] 공개 메서드 사용
+        self._prompt_builder.invalidate_timeline_cache()
         self._cumulative_state_cache = None
-        self._cumulative_state_cache_key = 0
+        self._cumulative_state_cache_key = None
         self._narrative_summaries_cache = None
         try:
             _writer = self.agents.get("writer") if isinstance(self.agents, dict) else None
@@ -2695,15 +2695,11 @@ class SovereignApp:
                 cache_err,
             )
 
-        # [Sweep35] clear director manuscript caches after rollback
+        # [Sweep35] clear director manuscript caches after rollback [I-16] 공개 메서드 사용
         try:
             _director = self.agents.get("director") if isinstance(self.agents, dict) else None
-            if _director and hasattr(_director, "_caching"):
-                _director._caching.manuscript_cache_name = None
-                _director._caching._cached_manuscript_count = 0
-            if _director and hasattr(_director, "_continuity"):
-                _director._continuity._cached_manuscript_ep = None
-                _director._continuity._cached_blueprint_ep = None
+            if _director and hasattr(_director, "invalidate_caches"):
+                _director.invalidate_caches()
         except Exception as _dc_err:
             logging.warning(f"[Sweep35] Director cache invalidation failed (non-blocking): {_dc_err}")
 
@@ -2957,7 +2953,10 @@ class SovereignApp:
                 self.fact_ledger = None
 
         # [Phase 4C-2a/2b/2c] DI 컨텍스트 주입 (lazy init 후)
-        from modules.core.stage4_context import Stage4Context
+        # [S-13] 조건부 모듈 8종 → conditional_modules dict
+        from modules.core.stage4_context import _CONDITIONAL_MODULE_KEYS, Stage4Context
+
+        _cm = {k: getattr(self, k, None) for k in _CONDITIONAL_MODULE_KEYS if getattr(self, k, None) is not None}
 
         self._stage4_orch.ctx = Stage4Context(
             ui=self.ui,
@@ -2978,6 +2977,7 @@ class SovereignApp:
             quality_dashboard=getattr(self, "quality_dashboard", None),
             pacing_analyzer=getattr(self, "pacing_analyzer", None),
             pass_rate_monitor=getattr(self, "pass_rate_monitor", None),
+            conditional_modules=_cm,
             # [4C-2c] 콜백 7종
             get_int_input=self._get_int_input,
             build_item_acquisition_timeline=self._build_item_acquisition_timeline,

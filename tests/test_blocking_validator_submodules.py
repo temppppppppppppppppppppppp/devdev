@@ -170,3 +170,37 @@ class TestIntegration:
         assert validator._entity_checks is not None
         assert validator._scene_checks is not None
         assert validator._consistency_checks is not None
+
+
+class TestDegradedCheck:
+    """[C-03] Degraded blocking check counter and warning."""
+
+    def test_degraded_counter_increments(self):
+        """양쪽 모두 degraded일 때 카운터 증가"""
+        validator = BlockingValidator()
+        ctx = _base_context()
+        ctx["encyclopedia"]["npcs"] = []
+        # 양쪽 모두 exception 발생하도록 consistency_checks mock
+        from unittest.mock import MagicMock
+
+        mock_cc = MagicMock()
+        mock_cc._check_relationship_consistency.side_effect = RuntimeError("test")
+        mock_cc._check_information_consistency.side_effect = RuntimeError("test")
+        validator._consistency_checks = mock_cc
+        result = validator.validate("테스트 원고 " * 500, ctx)
+        assert validator._degraded_count >= 1
+        assert "degraded_checks" in result
+        assert len(result["degraded_checks"]) == 2
+
+    def test_single_degraded_no_all_warning(self):
+        """한쪽만 degraded면 all-degraded 경고 없음"""
+        validator = BlockingValidator()
+        ctx = _base_context()
+        from unittest.mock import MagicMock
+
+        mock_cc = MagicMock()
+        mock_cc._check_relationship_consistency.side_effect = RuntimeError("test")
+        mock_cc._check_information_consistency.return_value = {"passed": True}
+        validator._consistency_checks = mock_cc
+        result = validator.validate("테스트 원고 " * 500, ctx)
+        assert result.get("degraded_checks") is None or len(result.get("degraded_checks", [])) < 2

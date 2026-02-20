@@ -1,4 +1,4 @@
-﻿# Codex Bug Bounty Sweep 10 + FP Recheck (No Code Changes)
+# Codex Bug Bounty Sweep 10 + FP Recheck (No Code Changes)
 
 - Date: 2026-02-18
 - Scope: `modules/core/**`, `modules/domain/**`, `main_a.py`

@@ -1,4 +1,4 @@
-﻿# Debug Sweep 4차 — 전면 디버깅 플랜 (Codex 병렬 실행용)
+# Debug Sweep 4차 — 전면 디버깅 플랜 (Codex 병렬 실행용)
 
 > **목적**: 코드 품질·안전성·관측성 향상을 위한 21개 독립 수정 항목
 > **규칙**: 각 항목은 독립 실행 가능 (의존성 없음). 수정 후 반드시 `set PYTHONIOENCODING=utf-8 && pytest tests/ -q` 통과 확인.

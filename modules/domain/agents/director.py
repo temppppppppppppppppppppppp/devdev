@@ -101,6 +101,15 @@ class Director(BaseAgent):
         """[V60.90] 장르 Guard 설정 (main_a.py에서 호출)"""
         self.guard = guard
 
+    def invalidate_caches(self) -> None:
+        """[I-16] 캐시 전량 무효화 (rollback/rewind 시 호출)."""
+        if hasattr(self, "_caching"):
+            self._caching.manuscript_cache_name = None
+            self._caching._cached_manuscript_count = 0
+        if hasattr(self, "_continuity"):
+            self._continuity._cached_manuscript_ep = None
+            self._continuity._cached_blueprint_ep = None
+
     def _build_hud_context(self, state_tracker, ep_num: int) -> str:
         """[V64 P2-7] 위임 → modules.core.hud_utils.build_hud_context (director variant)"""
         return _build_hud_context_shared(state_tracker, ep_num, variant="director")

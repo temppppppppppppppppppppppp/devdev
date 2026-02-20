@@ -62,15 +62,39 @@ class TestQualityGateBasics:
 
 class TestApplyAndCritique:
     def test_apply_self_critique_high_rubric_skip(self):
+        """[TF-I08] rubric ≥ 3.5 + 구조적 이슈 없음 → 스킵"""
         gate = ChiefWriterQualityGate(_make_host())
         manuscript = '{"content":"본문"}'
         with (
             patch.object(gate, "_evaluate_with_rubric", return_value=3.6),
-            patch.object(gate, "_self_critique") as mock_critique,
+            patch.object(
+                gate,
+                "_self_critique",
+                return_value={"has_issues": False, "issues": [], "severity": "low"},
+            ) as mock_critique,
         ):
             out = gate.apply_self_critique(manuscript, "hud", [], "genre", ep_num=2)
         assert out == manuscript
-        mock_critique.assert_not_called()
+        # [TF-I08] 구조적 검사를 위해 1회 호출됨 (이슈 없으면 스킵)
+        mock_critique.assert_called_once()
+
+    def test_apply_self_critique_high_rubric_structural_issue_proceeds(self):
+        """[TF-I08] rubric ≥ 3.5이지만 구조적 이슈 있으면 Self-Critique 진행"""
+        gate = ChiefWriterQualityGate(_make_host())
+        manuscript = '{"content":"본문"}'
+        structural_issue = {
+            "has_issues": True,
+            "issues": [{"type": "hud_contradiction", "severity": "medium", "description": "test"}],
+            "severity": "medium",
+        }
+        with (
+            patch.object(gate, "_evaluate_with_rubric", return_value=3.8),
+            patch.object(gate, "_self_critique", return_value=structural_issue),
+            patch.object(gate, "_fix_manuscript_issues", return_value=manuscript) as mock_fix,
+        ):
+            gate.apply_self_critique(manuscript, "hud", [], "genre", ep_num=2)
+        # 구조적 이슈가 있으므로 수정 시도
+        mock_fix.assert_called_once()
 
     def test_apply_self_critique_low_rubric_runs(self):
         gate = ChiefWriterQualityGate(_make_host())

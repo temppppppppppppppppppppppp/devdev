@@ -150,51 +150,74 @@ class ContinuityTrackerIntegration:
 
         group_keywords = ["사병", "무사들", "병사들", "부하들", "수하들", "호위", "교두", "장로들"]
 
-        for group in group_keywords:
-            if group in content:
-                current_state = self._ci.relationship_tracker.infer_state_from_manuscript(group, content)
+        # [TF-C14] 개별 NPC 이름도 검증 대상에 추가
+        npc_names = self._get_tracked_npc_names()
+        check_targets = list(group_keywords) + npc_names
 
-                if current_state:
-                    prev_history = self._ci.relationship_tracker.get_transition_history(group)
+        for target in check_targets:
+            if target not in content:
+                continue
 
-                    if prev_history:
-                        prev_state = prev_history[-1].get("to_state", "무시")
+            current_state = self._ci.relationship_tracker.infer_state_from_manuscript(target, content)
+            if not current_state:
+                continue
 
-                        validation = self._ci.relationship_tracker.validate_transition_with_justification(
-                            npc_name=group,
-                            from_state=prev_state,
-                            to_state=current_state,
-                            proposed_justification="",
-                            arc=arc,
-                            episode=episode,
-                        )
+            prev_history = self._ci.relationship_tracker.get_transition_history(target)
+            if not prev_history:
+                continue
 
-                        if not validation.get("valid"):
-                            severity = validation.get("severity", "MINOR")
-                            if severity in ["CRITICAL", "MAJOR"]:
-                                violations.append(
-                                    {
-                                        "type": "relationship_violation",
-                                        "severity": severity,
-                                        "description": validation.get("message", "관계 전이 오류"),
-                                    }
-                                )
-                            else:
-                                warnings.append(
-                                    {
-                                        "type": "relationship_warning",
-                                        "severity": "MINOR",
-                                        "description": validation.get("message", "관계 전이 경고"),
-                                    }
-                                )
+            prev_state = prev_history[-1].get("to_state", "무시")
 
-                        details[group] = {
-                            "from": prev_state,
-                            "to": current_state,
-                            "valid": validation.get("valid", True),
+            validation = self._ci.relationship_tracker.validate_transition_with_justification(
+                npc_name=target,
+                from_state=prev_state,
+                to_state=current_state,
+                proposed_justification="",
+                arc=arc,
+                episode=episode,
+            )
+
+            if not validation.get("valid"):
+                severity = validation.get("severity", "MINOR")
+                if severity in ["CRITICAL", "MAJOR"]:
+                    violations.append(
+                        {
+                            "type": "relationship_violation",
+                            "severity": severity,
+                            "description": validation.get("message", "관계 전이 오류"),
                         }
+                    )
+                else:
+                    warnings.append(
+                        {
+                            "type": "relationship_warning",
+                            "severity": "MINOR",
+                            "description": validation.get("message", "관계 전이 경고"),
+                        }
+                    )
+
+            details[target] = {
+                "from": prev_state,
+                "to": current_state,
+                "valid": validation.get("valid", True),
+            }
 
         return {"warnings": warnings, "violations": violations, "details": details}
+
+    def _get_tracked_npc_names(self) -> list[str]:
+        """[TF-C14] RelationshipTracker에 기록된 개별 NPC 이름 추출"""
+        _group_set = {"사병", "무사들", "병사들", "부하들", "수하들", "호위", "교두", "장로들"}
+        try:
+            tracker = self._ci.relationship_tracker
+            if not tracker:
+                return []
+            # npc_states: {npc_name: current_state} — 기록된 NPC만 반환
+            npc_states = getattr(tracker, "npc_states", None)
+            if isinstance(npc_states, dict):
+                return [name for name in npc_states if name not in _group_set]
+            return []
+        except Exception:
+            return []
 
     def _check_power_with_tracker(self, arc: int, episode: int, content: str) -> dict[str, Any]:
         """PowerScalingTracker를 사용한 파워 스케일링 검증"""
@@ -217,8 +240,16 @@ class ContinuityTrackerIntegration:
         detected_growth = 0
         growth_reason = ""
 
+        # [I-22] 회상 컨텍스트 감지 — 키워드 주변 100자 이내에 회상 표현이면 성장 0
+        _RECALL_KEYWORDS = ("과거", "회상", "기억", "떠올렸다", "그때", "옛날", "이전에")
+
         for keyword, power_delta in power_keywords.items():
             if keyword in content:
+                # 키워드 주변 회상 컨텍스트 체크
+                idx = content.find(keyword)
+                nearby = content[max(0, idx - 100) : idx + len(keyword) + 100] if idx >= 0 else ""
+                if any(rk in nearby for rk in _RECALL_KEYWORDS):
+                    continue  # 회상 컨텍스트 → 실제 성장 아님
                 detected_growth = max(detected_growth, power_delta)
                 growth_reason = keyword
 

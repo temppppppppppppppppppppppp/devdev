@@ -796,13 +796,16 @@ Step 6: Article 7 (독자 대리만족) 분석
             weighted_percentage = (raw_total / max(raw_max_total, 1)) * 100
         else:
             weighted_percentage = 0
-        passed = weighted_percentage >= self.pass_threshold
+        # [TF-C02] 장르 가중치 영향력 ±1점 캡 (대원칙 #1: Python 판단 최소화)
+        _genre_delta = round(weighted_percentage) - raw_total
+        capped_score = raw_total + max(-1, min(1, _genre_delta))
+        passed = capped_score >= self.pass_threshold
 
         return {
             "tier": "SCORING",
             "version": "V59",
             "passed": passed,
-            "total_score": round(weighted_total, 1),
+            "total_score": capped_score,
             "raw_score": raw_total,
             "max_score": round(weighted_max_total, 1),
             "percentage": round(weighted_percentage, 1),

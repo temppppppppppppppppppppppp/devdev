@@ -166,7 +166,9 @@ class ConsistencyValidator:
 
         # ═══════════════════════════════════════════════════════════════
         # [V46.1] 6. 권위 위임 일관성 (정당화 가능 - 명분 표현)
+        # [I-04] 컨텍스트 미제공 시 skipped_checks 기록
         # ═══════════════════════════════════════════════════════════════
+        skipped_checks = []
         authority_context = validation_context.get("authority_context", {})
         if authority_context and self.guard:
             authority_check = self.guard.check_authority_delegation(manuscript, authority_context)
@@ -179,6 +181,8 @@ class ConsistencyValidator:
                             {**v, "category": "authority_delegation"}
                         )  # [V70] FIX: 정당화 불가 → unjustifiable
                     violations.append({**v, "category": "authority_delegation"})
+        elif not authority_context:
+            skipped_checks.append("authority_delegation")
 
         # ═══════════════════════════════════════════════════════════════
         # [V46.1] 7. 미해결 갈등 (고구마 감지) - 정당화 가능
@@ -202,6 +206,8 @@ class ConsistencyValidator:
                             "category": "goguma_warning",
                         }
                     )
+        elif not karma_matrix:
+            skipped_checks.append("unresolved_conflict")
 
         # ═══════════════════════════════════════════════════════════════
         # [V46.1] 8. 빌런 반응 검증 - 정당화 가능
@@ -214,6 +220,14 @@ class ConsistencyValidator:
                 for v in villain_check["violations"]:
                     justifiable.append({**v, "category": "villain_response"})
                     violations.append({**v, "category": "villain_response"})
+        elif not villain_context:
+            skipped_checks.append("villain_response")
+
+        # [I-04] 스킵된 검사 로깅
+        if skipped_checks:
+            logging.warning(
+                f"[I-04] ConsistencyValidator: {len(skipped_checks)} checks skipped (no context): {skipped_checks}"
+            )
 
         # ═══════════════════════════════════════════════════════════════
         # 결과 집계
@@ -240,7 +254,7 @@ class ConsistencyValidator:
         # unjustifiable이 있으면 REJECT, 없으면 PASS (justifiable 개수는 경고만)
         is_passed = len(unjustifiable) == 0
 
-        return {
+        result = {
             "tier": "CONSISTENCY",
             "passed": is_passed,
             "violations": violations,
@@ -254,6 +268,9 @@ class ConsistencyValidator:
             if justifiable
             else "PASS",
         }
+        if skipped_checks:
+            result["skipped_checks"] = skipped_checks
+        return result
 
     # ========================================================================
     # 개별 검증 메서드

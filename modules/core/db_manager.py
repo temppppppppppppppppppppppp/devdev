@@ -395,6 +395,21 @@ class DBManager:
             )
         """)
 
+        # 18. [TF-I24] 에피소드 호흡 분석 기록
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS episode_pacing (
+                ep_num INTEGER PRIMARY KEY,
+                pacing_score INTEGER DEFAULT 50,
+                dialogue_ratio REAL DEFAULT 0.0,
+                scene_break_count INTEGER DEFAULT 0,
+                avg_sentence_length REAL DEFAULT 0.0,
+                short_sentence_ratio REAL DEFAULT 0.0,
+                long_sentence_ratio REAL DEFAULT 0.0,
+                issues TEXT DEFAULT '[]',
+                created_at TEXT DEFAULT (datetime('now'))
+            )
+        """)
+
         self.conn.commit()
         # [DB-MERGE] 기존 vec_memory.db 1회성 마이그레이션
         self._migrate_vec_memory_db()
@@ -1333,6 +1348,7 @@ class DBManager:
             self.cursor.execute("DELETE FROM episode_sentence_hashes WHERE episode_number >= ?", (target_ep,))
             self.cursor.execute("DELETE FROM episode_satisfaction_tags WHERE ep_num >= ?", (target_ep,))
             self.cursor.execute("DELETE FROM director_selections WHERE ep_num >= ?", (target_ep,))
+            self.cursor.execute("DELETE FROM episode_pacing WHERE ep_num >= ?", (target_ep,))
             # [V70] 누적 Bible 캐시 무효화
             invalidate_eps = [k for k in self._cumulative_bible_cache if k >= target_ep]
             for k in invalidate_eps:
@@ -1795,4 +1811,72 @@ class DBManager:
                 }
                 for row in cur.fetchall()
             ]
+            return list(reversed(rows))
+
+    # ═══════════════════════════════════════════════════════════════
+    # [TF-I24] 에피소드 호흡 분석 기록
+    # ═══════════════════════════════════════════════════════════════
+
+    def save_pacing_record(self, ep_num: int, pacing_data: dict) -> None:
+        """[TF-I24] 에피소드 호흡 분석 결과 저장."""
+        import json as _json
+
+        with self._lock:
+            self.cursor.execute(
+                "INSERT OR REPLACE INTO episode_pacing "
+                "(ep_num, pacing_score, dialogue_ratio, scene_break_count, "
+                "avg_sentence_length, short_sentence_ratio, long_sentence_ratio, issues) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    ep_num,
+                    pacing_data.get("pacing_score", 50),
+                    pacing_data.get("dialogue_ratio", 0.0),
+                    pacing_data.get("scene_break_count", 0),
+                    pacing_data.get("avg_sentence_length", 0.0),
+                    pacing_data.get("short_sentence_ratio", 0.0),
+                    pacing_data.get("long_sentence_ratio", 0.0),
+                    _json.dumps(pacing_data.get("issues", []), ensure_ascii=False),
+                ),
+            )
+            if not self.conn.in_transaction:
+                self.conn.commit()
+
+    def get_recent_pacing_records(self, before_ep: int, lookback: int = 5) -> list:
+        """[TF-I24] 최근 N화의 호흡 분석 조회 (오래된 순).
+
+        Args:
+            before_ep: 이 에피소드 이전의 기록을 조회
+            lookback: 조회할 에피소드 수
+
+        Returns:
+            [{"ep_num": int, "pacing_score": int, ...}, ...] (오래된 순)
+        """
+        import json as _json
+
+        with self._lock:
+            cur = self.cursor.execute(
+                "SELECT ep_num, pacing_score, dialogue_ratio, scene_break_count, "
+                "avg_sentence_length, short_sentence_ratio, long_sentence_ratio, issues "
+                "FROM episode_pacing "
+                "WHERE ep_num < ? ORDER BY ep_num DESC LIMIT ?",
+                (before_ep, lookback),
+            )
+            rows = []
+            for row in cur.fetchall():
+                try:
+                    issues = _json.loads(row["issues"]) if row["issues"] else []
+                except (ValueError, TypeError):
+                    issues = []
+                rows.append(
+                    {
+                        "ep_num": row["ep_num"],
+                        "pacing_score": row["pacing_score"],
+                        "dialogue_ratio": row["dialogue_ratio"],
+                        "scene_break_count": row["scene_break_count"],
+                        "avg_sentence_length": row["avg_sentence_length"],
+                        "short_sentence_ratio": row["short_sentence_ratio"],
+                        "long_sentence_ratio": row["long_sentence_ratio"],
+                        "issues": issues,
+                    }
+                )
             return list(reversed(rows))

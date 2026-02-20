@@ -46,3 +46,40 @@ def test_get_alive_characters_handles_non_dict_entries():
     alive = ledger.get_alive_characters()
 
     assert alive == ["정상생존"]
+
+
+# ══════════════════════════════════════════════════════════════
+# [TF-C07] 수치 팩트 자동 추출 테스트
+# ══════════════════════════════════════════════════════════════
+
+
+def test_extract_numerical_facts_from_state_changes():
+    """[TF-C07] status_shadow + financial_events에서 수치 팩트 자동 추출"""
+    ledger = FactLedger(_StubDB())
+    state_changes = {
+        "status_shadow": {
+            "internal_energy_loss": 30,
+            "internal_energy_remaining": 70,
+        },
+        "financial_events": [
+            {"asset": "삼성전자", "price": 85000, "currency": "원"},
+        ],
+        "power_level": 45,
+    }
+    ledger.update_from_state_changes(ep_num=15, state_changes=state_changes)
+
+    nums = ledger._ledger["numbers"]
+    assert nums["내공_소모량"]["value"] == 30
+    assert nums["내공_잔여"]["value"] == 70
+    assert nums["삼성전자_price"]["value"] == 85000
+    assert nums["삼성전자_price"]["unit"] == "원"
+    assert nums["주인공_전투력"]["value"] == 45
+
+
+def test_extract_numerical_facts_empty_safe():
+    """[TF-C07] 빈 state_changes에서도 안전"""
+    ledger = FactLedger(_StubDB())
+    ledger.update_from_state_changes(ep_num=1, state_changes={})
+    assert ledger._ledger["numbers"] == {}
+    ledger.update_from_state_changes(ep_num=2, state_changes=None)
+    assert ledger._ledger["numbers"] == {}

@@ -10,18 +10,16 @@ def _read(path: str) -> str:
 def test_rollback_episode_source_invalidates_director_caches():
     src = _read("main_a.py")
     section = src[src.index("def _rollback_episode") : src.index("def _wipe_production_data")]
-    assert "_director._caching.manuscript_cache_name = None" in section
-    assert "_director._caching._cached_manuscript_count = 0" in section
-    assert "_director._continuity._cached_manuscript_ep = None" in section
-    assert "_director._continuity._cached_blueprint_ep = None" in section
+    # [I-16] 공개 메서드 사용
+    assert "_director.invalidate_caches()" in section
 
 
 def test_rewind_stage_2_source_invalidates_state_related_caches():
     src = _read("main_a.py")
     section = src[src.index("def _rewind_stage_2") : src.index("def _rollback_episode")]
     assert "self._cumulative_state_cache = None" in section
-    assert "self._cumulative_state_cache_key = 0" in section
-    assert "self._prompt_builder._item_timeline_cache = {}" in section
+    assert "self._cumulative_state_cache_key = None" in section  # [S-08] 센티넬
+    assert "self._prompt_builder.invalidate_timeline_cache()" in section  # [I-15/I-16]
     assert "self._narrative_summaries_cache = None" in section
     assert "_se.invalidate_cache()" in section
 
