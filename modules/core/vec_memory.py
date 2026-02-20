@@ -258,6 +258,11 @@ class VecMemory:
                 return True
 
             except Exception as e:
+                # [Sweep4] 명시적 rollback — SQLite 자동 rollback에 의존하지 않음
+                try:
+                    self._conn.rollback()
+                except Exception:
+                    pass
                 self._ui_log(f"[VecMemory] failed to save episode {ep_num}: {e}")
                 return False
             finally:

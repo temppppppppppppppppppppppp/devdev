@@ -665,14 +665,15 @@ class Stage2Finalizer:
             except Exception as e:  # [V64.P4] OPTIONAL: dashboard metrics
                 logging.debug(f"[SILENT] dashboard metrics (REJECT): {e}")
 
-        self.ctx.stage_rejection_history.append(
-            {
-                "stage": 2,
-                "arc_no": global_arc_no,
-                "reason": str(audit.get("reason", ""))[:200],
-                "attempt": attempt + 1,
-            }
-        )
+        if self.ctx.stage_rejection_history is not None:  # [Sweep4] None 가드
+            self.ctx.stage_rejection_history.append(
+                {
+                    "stage": 2,
+                    "arc_no": global_arc_no,
+                    "reason": str(audit.get("reason", ""))[:200],
+                    "attempt": attempt + 1,
+                }
+            )
 
         if self.ctx.stage2_optimizer:
             try:

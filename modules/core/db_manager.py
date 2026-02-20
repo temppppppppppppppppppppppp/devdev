@@ -58,6 +58,14 @@ class DBManager:
         self._cumulative_bible_cache: dict = {}
         self._boot_db()
 
+    @staticmethod
+    def _safe_json_loads(raw, fallback: str):
+        """[Sweep4] 비정상 JSON 데이터 방어 — 1행 파손이 전체 조회를 크래시하지 않도록"""
+        try:
+            return json.loads(raw or fallback)
+        except (json.JSONDecodeError, TypeError, ValueError):
+            return json.loads(fallback)
+
     def _boot_db(self) -> None:
         """DB 연결 및 10대 핵심 테이블 초기화"""
         # [V45] check_same_thread=False 사용 시 RLock으로 보호
@@ -683,28 +691,21 @@ class DBManager:
             )
             rows = cur.fetchall()
 
-            def _safe_json_loads(raw, fallback):
-                """[TypeSafety] 비정상 JSON 데이터 방어"""
-                try:
-                    return json.loads(raw or fallback)
-                except (json.JSONDecodeError, TypeError, ValueError):
-                    return json.loads(fallback)
-
             for row in rows:
                 # 아이템: 획득은 추가, 분실은 제거
-                new_items = _safe_json_loads(row["new_items"], "[]")
-                lost_items = _safe_json_loads(row["lost_items"], "[]")
+                new_items = self._safe_json_loads(row["new_items"], "[]")
+                lost_items = self._safe_json_loads(row["lost_items"], "[]")
                 cumulative["items"].extend(new_items)
                 cumulative["items"] = [i for i in cumulative["items"] if i not in lost_items]
 
                 # NPC: 등장 추가, 사망은 별도 추적
-                new_npcs = _safe_json_loads(row["new_npcs"], "[]")
-                npc_deaths = _safe_json_loads(row["npc_deaths"], "[]")
+                new_npcs = self._safe_json_loads(row["new_npcs"], "[]")
+                npc_deaths = self._safe_json_loads(row["npc_deaths"], "[]")
                 cumulative["npcs"].extend(new_npcs)
                 cumulative["dead_npcs"].extend(npc_deaths)
 
                 # 관계: 최신 상태로 덮어씀
-                rel_changes = _safe_json_loads(row["relationship_changes"], "[]")
+                rel_changes = self._safe_json_loads(row["relationship_changes"], "[]")
                 for change in rel_changes:
                     if isinstance(change, dict):
                         target = change.get("target", "")
@@ -712,7 +713,7 @@ class DBManager:
                             cumulative["relationships"][target] = change.get("to", "")
 
                 # 상태: 최신 상태로 덮어씀 [V61.5] dict/list 양방향 처리
-                state_changes = _safe_json_loads(row["state_changes"], "{}")
+                state_changes = self._safe_json_loads(row["state_changes"], "{}")
                 if isinstance(state_changes, dict):
                     # dict 형태: {"internal_energy": "80%", "realm": "기경팔맥"}
                     for subject, value in state_changes.items():
@@ -727,7 +728,7 @@ class DBManager:
                                 cumulative["states"][subject] = state.get("to", "")
 
                 # 밝혀진 사실 누적
-                reveals = _safe_json_loads(row["reveals"], "[]")
+                reveals = self._safe_json_loads(row["reveals"], "[]")
                 cumulative["all_reveals"].extend(reveals)
 
             # [V66.1] C-3: LRU 캐시 크기 제한 (최대 5개 — 장기 세션 메모리 안정화)
@@ -764,18 +765,18 @@ class DBManager:
                 bibles.append(
                     {
                         "ep_num": row["ep_num"],
-                        "new_items": json.loads(row["new_items"] or "[]"),
-                        "lost_items": json.loads(row["lost_items"] or "[]"),
-                        "new_npcs": json.loads(row["new_npcs"] or "[]"),
-                        "npc_deaths": json.loads(row["npc_deaths"] or "[]"),
-                        "relationship_changes": json.loads(row["relationship_changes"] or "[]"),
-                        "state_changes": json.loads(row["state_changes"] or "{}"),
+                        "new_items": self._safe_json_loads(row["new_items"], "[]"),
+                        "lost_items": self._safe_json_loads(row["lost_items"], "[]"),
+                        "new_npcs": self._safe_json_loads(row["new_npcs"], "[]"),
+                        "npc_deaths": self._safe_json_loads(row["npc_deaths"], "[]"),
+                        "relationship_changes": self._safe_json_loads(row["relationship_changes"], "[]"),
+                        "state_changes": self._safe_json_loads(row["state_changes"], "{}"),
                         "time_passed": row["time_passed"] or "",
-                        "reveals": json.loads(row["reveals"] or "[]"),
+                        "reveals": self._safe_json_loads(row["reveals"], "[]"),
                         # [V60.82] 새 필드
-                        "causal_links": json.loads(safe_get("causal_links", "[]") or "[]"),
-                        "karma_matrix": json.loads(safe_get("karma_matrix", "[]") or "[]"),
-                        "knowledge_map": json.loads(safe_get("knowledge_map", "{}") or "{}"),
+                        "causal_links": self._safe_json_loads(safe_get("causal_links", "[]"), "[]"),
+                        "karma_matrix": self._safe_json_loads(safe_get("karma_matrix", "[]"), "[]"),
+                        "knowledge_map": self._safe_json_loads(safe_get("knowledge_map", "{}"), "{}"),
                     }
                 )
 

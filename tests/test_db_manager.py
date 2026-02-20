@@ -290,3 +290,35 @@ class TestDBManagerMigration:
         # 버전 정보가 있거나 없을 수 있음 (구현에 따라)
 
         db.close()
+
+
+# ══════════════════════════════════════════════════════════════
+# [Sweep4] get_all_episode_bibles — malformed JSON 방어
+# ══════════════════════════════════════════════════════════════
+class TestGetAllEpisodeBiblesJsonSafety:
+    """[Sweep4] get_all_episode_bibles malformed JSON row 크래시 방지"""
+
+    def test_malformed_json_row_does_not_crash(self, temp_dir):
+        """1행에 비정상 JSON → 전체 조회가 크래시하지 않고 fallback 반환"""
+        db = DBManager(temp_dir / "bible_test.db")
+
+        # 정상 행 삽입
+        db.save_episode_bible(1, {"new_items": ["철검"], "time_passed": "1일"})
+
+        # 비정상 JSON 직접 삽입 (new_items 컬럼에 깨진 JSON)
+        db.cursor.execute(
+            "INSERT OR REPLACE INTO episode_bibles (ep_num, new_items, lost_items, new_npcs, npc_deaths, "
+            "relationship_changes, state_changes, time_passed, reveals) "
+            "VALUES (2, '{broken', '[]', '[]', '[]', '[]', '{}', '', '[]')"
+        )
+        db.conn.commit()
+
+        # get_all_episode_bibles가 크래시 없이 결과 반환
+        bibles = db.get_all_episode_bibles()
+        assert len(bibles) == 2
+        # 정상 행은 정상 파싱
+        assert bibles[0]["new_items"] == ["철검"]
+        # 비정상 행은 fallback (빈 리스트)
+        assert bibles[1]["new_items"] == []
+
+        db.close()
