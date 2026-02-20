@@ -3,6 +3,8 @@
 각 장르에 맞는 금기어 검증 및 순혈성 보존
 """
 
+import logging
+
 from .actor_guard import ActorGuard
 from .alt_history_guard import AltHistoryGuard
 from .composer_guard import ComposerGuard
@@ -49,7 +51,8 @@ def create_genre_guard(genre_type):
     elif genre_type == "medical":
         return MedicalGuard()
     else:
-        # 기본값: 무협
+        # [ContractR84] 미지원 장르 경고 후 무협 폴백
+        logging.warning(f"[GenreGuard] 미지원 장르 '{genre_type}' → WuxiaGuard 폴백")
         return WuxiaGuard()
 
 

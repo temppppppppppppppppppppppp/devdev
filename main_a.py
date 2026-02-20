@@ -1437,12 +1437,16 @@ class SovereignApp:
                     self.agents["director"].set_guard(_guard)
                     self.ui.log("   🛡️ Director Guard 연결 완료")
 
-                # [V60.90] Writer에 Guard/Genre 연결 (장르별 프롬프트 주입용)
+                    # [V60.90] Writer에 Guard/Genre 연결 (장르별 프롬프트 주입용)
+                    # [ContractR94] Director와 동일 guard(_guard) 사용 — StyleGuard 포함
+                    if "writer" in self.agents:
+                        if hasattr(self.agents["writer"], "set_guard"):
+                            self.agents["writer"].set_guard(_guard)
+
+                # Writer genre는 guard 유무와 무관하게 설정
                 if "writer" in self.agents:
                     if hasattr(self.agents["writer"], "set_genre"):
                         self.agents["writer"].set_genre(genre_type)
-                    if hasattr(self.agents["writer"], "set_guard") and hasattr(self.sys, "guard"):
-                        self.agents["writer"].set_guard(self.sys.guard)
                     self.ui.log("   ✍️ Writer Guard/Genre 연결 완료")
 
             # V0128 검증 시스템 활성화 여부 확인

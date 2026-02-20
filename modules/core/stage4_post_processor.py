@@ -376,7 +376,7 @@ class Stage4PostProcessor:
             else:
                 self.ctx.ui.log("   📖 Episode Bible 저장 완료 (변화 없음)")
 
-        except Exception as bible_err:
+        except Exception as bible_err:  # [V64.P4] OPTIONAL: 비차단 — bible 저장 실패 시 에피소드 진행 유지
             self.ctx.ui.log(f"   ⚠️ Episode Bible 저장 실패 (비차단): {str(bible_err)[:50]}")
             import traceback
 
