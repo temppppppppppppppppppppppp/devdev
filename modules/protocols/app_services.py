@@ -52,9 +52,9 @@ class AuditServiceProtocol(Protocol):
 
     def audit_event(
         self,
-        category: str,
+        event_type: str,
         message: str,
-        extra: dict | None = None,
+        data: dict | None = None,
     ) -> None: ...
 
     def flush_audit_buffer(self) -> None: ...
@@ -96,6 +96,9 @@ class ProjectRepositoryProtocol(Protocol):
 
     @property
     def arcs(self) -> list: ...
+
+    @arcs.setter
+    def arcs(self, value: list) -> None: ...
 
     @property
     def paths(self) -> Any: ...  # ProjectPaths — drafts, config, root 등
