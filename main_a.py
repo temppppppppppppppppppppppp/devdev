@@ -5,10 +5,14 @@ import faulthandler
 import os
 import sys
 
-_fault_log = open("crash_dump.log", "w", encoding="utf-8")
-faulthandler.enable(file=_fault_log, all_threads=True)
-atexit.register(_fault_log.close)
-print("[V61.3] Faulthandler 활성화 → crash_dump.log", file=sys.stderr)
+# [CrosscutR70] 읽기전용 디렉토리/디스크풀 시 앱 크래시 방지
+try:
+    _fault_log = open("crash_dump.log", "w", encoding="utf-8")
+    faulthandler.enable(file=_fault_log, all_threads=True)
+    atexit.register(_fault_log.close)
+    print("[V61.3] Faulthandler 활성화 → crash_dump.log", file=sys.stderr)
+except OSError as _fh_err:
+    print(f"[V61.3] Faulthandler 초기화 실패 (비차단): {_fh_err}", file=sys.stderr)
 
 # Windows에서 UTF-8 인코딩 강제 설정 (이모지 및 한글 출력 지원)
 if sys.platform == "win32":

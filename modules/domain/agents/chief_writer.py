@@ -271,6 +271,10 @@ class ChiefWriter(BaseAgent):
                     futures[future] = strategy
 
                 # [V61.3] 타임아웃 적용 - 야간 무인 운영 시 무한 대기 방지
+                # [Sweep300-R41] 알려진 제한: as_completed(timeout=T)는 soft bound.
+                # Python ThreadPoolExecutor는 실행 중인 스레드를 강제 중단할 수 없으므로,
+                # LLM API 호출이 T초를 초과하면 실제 대기 시간 > T가 될 수 있다.
+                # cancel()은 PENDING(미시작) future에만 유효하며, RUNNING future에는 무효.
                 try:
                     for future in as_completed(futures, timeout=self.ENSEMBLE_TIMEOUT):
                         strategy = futures[future]
