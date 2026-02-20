@@ -136,13 +136,14 @@ class Manager(BaseAgent):
         safe_history = causal_history if causal_history else "기록 없음"
 
         # 2. 템플릿의 중괄호 충돌을 피하기 위해 직접 치환 방식 사용
+        # [CrosscutR41] {manuscript}를 맨 마지막에 치환 — 원고 내 플레이스홀더 리터럴 이중 치환 방지
         full_prompt = (
             UPDATE_STATE_PROMPT_V25.replace("{ep_num}", str(ep_num))
-            .replace("{manuscript}", safe_ms)
             .replace("{current_state_json}", safe_state)
             .replace("{active_seeds_json}", safe_seeds)
             .replace("{lore_list_json}", safe_lore)
             .replace("{causal_history}", safe_history)
+            .replace("{manuscript}", safe_ms)
         )
 
         # 3. 낮은 온도로 정밀 정산 요청

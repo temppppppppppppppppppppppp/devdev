@@ -226,6 +226,19 @@ class PowerScalingTracker:
                 "max_allowed": int  # 허용된 최대 성장량
             }
         """
+        # [CrosscutR59] non-int new_power 방어
+        try:
+            new_power = int(new_power)
+        except (TypeError, ValueError):
+            return {
+                "valid": False,
+                "severity": "WARNING",
+                "message": f"new_power 타입 오류: {type(new_power).__name__}",
+                "suggestion": "정수 파워 레벨을 입력하세요",
+                "quality": "none",
+                "max_allowed": 0,
+            }
+
         current_power = self.get_power(character)
         if current_power is None:
             return {

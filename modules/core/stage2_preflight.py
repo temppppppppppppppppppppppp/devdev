@@ -146,9 +146,9 @@ class Stage2PreflightAnalysis:
                             state_result = self.ctx.agents["state_extractor"].extract_cumulative_state(all_refined_arcs)
                             self.ctx.cumulative_state_cache = state_result
                             self.ctx.cumulative_state_cache_key = arc_count
-                            # [Sweep3-D2] app 캐시 키 동기화
+                            # [Sweep3-D2][Sweep300-R1] app 캐시 키+객체 동기화
                             if self.ctx.sync_cache_key_to_app:
-                                self.ctx.sync_cache_key_to_app(arc_count)
+                                self.ctx.sync_cache_key_to_app(arc_count, cache=state_result)
                     except Exception as e:  # [V64.P4] CRITICAL: state extraction failure → NPC validation disabled
                         logging.warning(
                             f"[V64.P4] CRITICAL: extract_cumulative_state 실패 (NPC 검증 약화): {e}",
@@ -386,9 +386,9 @@ class Stage2PreflightAnalysis:
                         state_result = self.ctx.agents["state_extractor"].extract_cumulative_state(all_refined_arcs)
                         self.ctx.cumulative_state_cache = state_result
                         self.ctx.cumulative_state_cache_key = arc_count
-                        # [Sweep3-D2] app 캐시 키 동기화
+                        # [Sweep3-D2][CrosscutR32] app 캐시 키+객체 동기화
                         if self.ctx.sync_cache_key_to_app:
-                            self.ctx.sync_cache_key_to_app(arc_count)
+                            self.ctx.sync_cache_key_to_app(arc_count, cache=state_result)
                     # [Sweep45] None 대신 {} 폴백 (downstream .items() / .get() 크래시 방지)
                     entity_registry_for_director = (state_result.get("entity_registry") if state_result else None) or {}
                     if entity_registry_for_director:

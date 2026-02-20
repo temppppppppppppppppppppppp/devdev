@@ -698,7 +698,7 @@ class Stage4InterviewRound:
             )
 
         if verdict == "PASS":
-            selected_candidate = director_result.get("selected_candidate", {})
+            selected_candidate = director_result.get("selected_candidate") or {}
             final_manuscript = selected_candidate.get("manuscript", "")
             final_title = selected_candidate.get("title", f"제{next_ep}화")
             final_state_updates = director_result.get("state_updates", {})
@@ -752,7 +752,9 @@ class Stage4InterviewRound:
             elif any(k in _reject_lower for k in ("구조", "structure", "흐름", "flow", "씬", "전개", "페이싱")):
                 _reject_bucket = "structure_error"
 
-            _seed_manuscript = director_result.get("selected_candidate", {}).get("manuscript", "") or _prev_manuscript
+            _seed_manuscript = (director_result.get("selected_candidate") or {}).get(
+                "manuscript", ""
+            ) or _prev_manuscript
             if _reject_bucket == "structure_error" and self.ctx.tree_of_thoughts and not _tot_used and _seed_manuscript:
                 try:
                     _tot_result = self.ctx.tree_of_thoughts.explore(
@@ -796,7 +798,7 @@ class Stage4InterviewRound:
                 "action_items": action_items,
                 "score": score,
                 # [Phase 3-5B] 패치 모드용 원본 원고 보존
-                "best_manuscript": director_result.get("selected_candidate", {}).get("manuscript", ""),
+                "best_manuscript": (director_result.get("selected_candidate") or {}).get("manuscript", ""),
                 "score_breakdown": director_result.get("score_breakdown", {}),
                 "selection_reason": director_result.get("selection_reason", ""),
                 "validation_warnings": [w for vr in validation_results for w in vr.get("warnings", [])][:20],

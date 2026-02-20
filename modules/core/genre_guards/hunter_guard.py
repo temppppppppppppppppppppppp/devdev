@@ -822,7 +822,8 @@ class HunterGuard(BaseGuard):
 
         # 던전 진입 검증
         dungeon_patterns = re.findall(r"(\w+)\s*(?:등급|랭크|급)\s*던전", manuscript)
-        hunter_rank = str((current_state or {}).get("realm", "E"))
+        _cs = current_state or {}
+        hunter_rank = str(_cs.get("rank", _cs.get("realm", "E")))
         for dungeon_rank in dungeon_patterns:
             valid, msg = self.validate_dungeon_entry(
                 f"{dungeon_rank}급", hunter_rank

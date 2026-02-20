@@ -229,5 +229,8 @@ class Stage2Context:
             analyze_rejection_pattern_v60=getattr(app, "_analyze_rejection_pattern_v60", None),
             get_adaptive_feedback_intensity=getattr(app, "_get_adaptive_feedback_intensity", None),
             generate_arc_context_v60=getattr(app, "_generate_arc_context_v60", None),
-            sync_cache_key_to_app=lambda key: setattr(app, "_cumulative_state_cache_key", key),
+            sync_cache_key_to_app=lambda key, cache=None: (
+                setattr(app, "_cumulative_state_cache_key", key),
+                setattr(app, "_cumulative_state_cache", cache) if cache is not None else None,
+            ),
         )

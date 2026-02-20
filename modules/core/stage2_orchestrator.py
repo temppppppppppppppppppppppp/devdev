@@ -598,11 +598,16 @@ class Stage2Orchestrator:
                     )
                     failure_report_path.parent.mkdir(parents=True, exist_ok=True)
 
-                    arc_rejects = [
-                        r
-                        for r in self.ctx.stage_rejection_history
-                        if r.get("stage") == 2 and r.get("arc_no") == global_arc_no
-                    ]
+                    # [Sweep300-R2] None 가드 — L420 패턴과 일치
+                    arc_rejects = (
+                        [
+                            r
+                            for r in self.ctx.stage_rejection_history
+                            if r.get("stage") == 2 and r.get("arc_no") == global_arc_no
+                        ]
+                        if self.ctx.stage_rejection_history
+                        else []
+                    )
                     current_constraints = (
                         constraint_db.generate_constraint_block(global_arc_no) if constraint_db else "N/A"
                     )
