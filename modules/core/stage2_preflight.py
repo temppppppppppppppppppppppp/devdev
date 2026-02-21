@@ -620,6 +620,7 @@ class Stage2PreflightAnalysis:
                         "dungeon_clear_registry": _copy.deepcopy(_st.dungeon_clear_registry),
                         "skill_cooldown_registry": _copy.deepcopy(_st.skill_cooldown_registry),
                         "spell_repertoire": _copy.deepcopy(_st.spell_repertoire),
+                        "financial_number_registry": _copy.deepcopy(_st.financial_number_registry),  # [TF-R2-S2-12]
                     }
 
                     # [V60.94] NPC 사망/무공 습득 추출 및 StateTracker 업데이트

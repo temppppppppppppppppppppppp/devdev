@@ -235,6 +235,15 @@ class ValidationOrchestrator:
         """
         results = {}
 
+        # [TF-R2-XC-01] 적응형 임계값 (async validate와 동일 패턴)
+        _original_threshold = self.scoring.pass_threshold
+        if self.use_adaptive_threshold:
+            adaptive_threshold = self.calculate_adaptive_threshold_v59(ep_num, validation_context)
+            self.scoring.pass_threshold = adaptive_threshold
+            logging.warning(f"[V59-Sync] 적응형 임계값: {adaptive_threshold}점")
+        else:
+            adaptive_threshold = self.current_threshold
+
         # ═══════════════════════════════════════════════════════════════
         # [V56] TIER 0.25: PRE-LLM (Python 기반 사전검증, 비용 0원)
         # ═══════════════════════════════════════════════════════════════
@@ -251,6 +260,7 @@ class ValidationOrchestrator:
                     desc = issue.get("description", issue.get("category", "Unknown"))
                     logging.info(f"- {desc}")
 
+                self.scoring.pass_threshold = _original_threshold  # [TF-R2-XC-01] 조기 반환 복원
                 return {
                     "final_decision": "REJECT",
                     "reason": "PRE-LLM 사전검증 실패 - 명백한 오류 감지",
@@ -553,9 +563,17 @@ class ValidationOrchestrator:
 
         results["final_decision"] = final_decision
         results["feedback"] = feedback
+        results["adaptive_threshold"] = adaptive_threshold  # [TF-R2-XC-01]
 
         # 상세 피드백 생성
         results["detailed_feedback"] = self._generate_detailed_feedback(results)
+
+        # [TF-R2-XC-03] 히스토리 기록 (async validate와 동일 패턴)
+        passed = final_decision in ("PASS", "CONDITIONAL_PASS")
+        self._record_validation_history_v59(ep_num, total_score, passed)
+
+        # [TF-R2-XC-01] 원본 임계값 복원
+        self.scoring.pass_threshold = _original_threshold
 
         return results
 

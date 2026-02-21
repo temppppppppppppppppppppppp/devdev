@@ -73,7 +73,7 @@ def test_sweep33_source_guards_and_cleanup_exist():
     assert "if not isinstance(scene_breakdown, dict):" in _read("modules/core/writer_template.py")
     assert "if not isinstance(scene_breakdown, dict):" in _read("modules/core/confidence_calibration.py")
     pdc = _read("modules/core/pre_director_checklist.py")
-    assert "scene_count = len(_sb) if isinstance(_sb, dict) else 0" in pdc
+    assert "scene_count = len(_sb) if isinstance(_sb, dict | list) else 0" in pdc
     assert "if scene_breakdown and isinstance(scene_breakdown, dict):" in pdc
     pdm = _read("modules/core/pre_director_manuscript_checker.py")
     assert "if not scene_breakdown or not isinstance(scene_breakdown, dict):" in pdm

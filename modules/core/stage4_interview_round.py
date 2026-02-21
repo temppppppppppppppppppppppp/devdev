@@ -674,6 +674,18 @@ class Stage4InterviewRound:
                 final_state_updates=final_state_updates,
             )
         else:
+            # [TF-R2-S4-03] 시스템 감지 라인 보존 (REJECT 시 덮어쓰기 전 추출)
+            _system_prefixes = ("[연속성 충돌]", "[V67]", "[CoVe]", "[ToT", "[MAD")
+            _prev_system_lines = (
+                [
+                    line
+                    for line in director_feedback.split("\n")
+                    if any(line.strip().startswith(p) for p in _system_prefixes)
+                ]
+                if director_feedback
+                else []
+            )
+
             feedback = director_result.get("feedback") or {}
             action_items = director_result.get("action_items") or []
             # [Sweep52] str([]) → "[]" 방지 — issues를 개별 join
@@ -681,6 +693,8 @@ class Stage4InterviewRound:
             director_feedback = (
                 "\n".join(action_items) if action_items else ("\n".join(str(i) for i in _issues) if _issues else "")
             )
+            if _prev_system_lines:  # [TF-R2-S4-03] 시스템 감지 라인 복원
+                director_feedback = "\n".join(_prev_system_lines) + "\n" + director_feedback
             _reject_text = f"{director_feedback}\n" + "\n".join(str(a) for a in action_items)
             _reject_lower = _reject_text.lower()
             _reject_bucket = "quality_issue"

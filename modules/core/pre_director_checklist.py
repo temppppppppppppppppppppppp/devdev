@@ -364,7 +364,7 @@ class PreDirectorChecklist:
         blueprint = context.get("blueprint", {})
         if blueprint and isinstance(blueprint, dict):
             _sb = blueprint.get("scene_breakdown", {})
-            scene_count = len(_sb) if isinstance(_sb, dict) else 0
+            scene_count = len(_sb) if isinstance(_sb, dict | list) else 0  # [TF-R2-S3-01]
             if scene_count > 0:
                 expected_max = scene_count * 1500 * 1.4  # 씬당 1500자 + 40% 여유
                 if length > expected_max:

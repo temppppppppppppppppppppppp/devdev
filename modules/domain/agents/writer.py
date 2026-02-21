@@ -190,7 +190,7 @@ class Writer(BaseAgent):
         실시간 상태: {self._escape_braces(hud_report)}
         HUD 추세: {_get_hud_trend_safe_shared(self.context, ep_num)}
         NPC 빈도: {self._get_npc_frequency_warning(ep_num)}
-        직전 원고 엔딩: ...{self._escape_braces(prev_full_manuscript)[-1500:]}
+        직전 원고 엔딩: ...{self._escape_braces(prev_full_manuscript[-1500:])}  # [TF-R2-S4-I05]
         아크 전술: {self._escape_braces(arc_doc)}
         {self._escape_braces(tactical_references)}
         주 패턴: {self._escape_braces(str(pattern_primary))}
