@@ -194,6 +194,9 @@ class Stage4InterviewRound:
         except Exception as e:
             logging.debug(f"[PerfTimer] stop generate: {e}")
 
+        # [TF-R2-S4-I01] 빈 원고 후보 필터링
+        candidates = [c for c in candidates if c.get("manuscript", "").strip()]
+
         # [V66.3] C-3: 빈 candidates 방어 — 모든 후보 생성 실패 시 다음 면담으로 스킵
         if not candidates:
             logging.error(f"[Stage4] 제{next_ep}화 {round_num + 1}차 면담: candidates 빈 배열 — 모든 후보 생성 실패")
