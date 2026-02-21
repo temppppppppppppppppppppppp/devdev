@@ -27,6 +27,18 @@ from .negative_example_injector import NegativeExampleInjector
 from .preflight_checker import PreflightChecker
 from .unified_arc_validator import UnifiedArcValidator
 
+# 장르 Guard 이름 → NegativeExampleInjector 장르 키 매핑
+_NEI_GENRE_DETECT_MAP: dict[str, str] = {
+    "wuxia": "wuxia",
+    "무협": "wuxia",
+    "hunter": "hunter",
+    "헌터": "hunter",
+    "investment": "investment",
+    "투자": "investment",
+    "fantasy": "fantasy",
+    "판타지": "fantasy",
+}
+
 
 class FourPhaseArcGenerator(BaseAgent):
     """
@@ -45,7 +57,18 @@ class FourPhaseArcGenerator(BaseAgent):
         self.ensemble = ArcEnsembleGenerator(context, client, sub_models.get("ensemble", "gemini-2.5-pro"))
         self.validator = UnifiedArcValidator(context, client, sub_models.get("validator", "gemini-2.5-flash"))
         self.compiler = ConstraintCompiler()
-        self.negative_injector = NegativeExampleInjector("wuxia")
+        # [S2#1] 장르 Guard에서 장르 감지 → NegativeExampleInjector에 전달
+        _detected_genre = "wuxia"
+        try:
+            if hasattr(context, "guard") and context.guard:
+                _guard_name = context.guard.get_genre_name().lower()
+                for _key, _genre in _NEI_GENRE_DETECT_MAP.items():
+                    if _key in _guard_name:
+                        _detected_genre = _genre
+                        break
+        except Exception:
+            pass
+        self.negative_injector = NegativeExampleInjector(_detected_genre)
 
         # 통계
         self.stats = {
