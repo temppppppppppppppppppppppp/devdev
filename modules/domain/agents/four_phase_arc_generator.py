@@ -286,6 +286,7 @@ class FourPhaseArcGenerator(BaseAgent):
                         entity_registry=entity_registry,
                         state_tracker=state_tracker,
                         vector_context=vector_context,
+                        adversarial_self_play=adversarial_self_play,
                     )
                     if best_arc and _patch_result.get("final_verdict") == "PASS":
                         # 패치 + 검증 모두 성공 → Phase 3 스킵하고 바로 반환
@@ -465,6 +466,7 @@ class FourPhaseArcGenerator(BaseAgent):
         entity_registry: dict = None,
         state_tracker=None,
         vector_context: str = "",
+        adversarial_self_play=None,
     ) -> tuple[dict | None, dict]:
         """[Patch Mode] 원본 Arc를 보존하며 Director 피드백 지적사항만 수정.
 
@@ -603,6 +605,35 @@ class FourPhaseArcGenerator(BaseAgent):
         }
 
         if verdict == "PASS":
+            # [OpusTF] ASP 교정 — generate() L338-349 패턴 재사용
+            if adversarial_self_play and best_arc:
+                try:
+                    _asp_ctx = {
+                        "arc_no": arc_no,
+                        "ep_start": ep_start,
+                        "director_feedback": director_feedback,
+                    }
+                    _asp_input = json.dumps(best_arc, ensure_ascii=False)
+                    _asp_result = adversarial_self_play.generate_with_adversary(
+                        initial_content=_asp_input,
+                        content_type="arc",
+                        context=_asp_ctx,
+                    )
+                    _asp_output = getattr(_asp_result, "final_output", "") if _asp_result else ""
+                    if _asp_output:
+                        _asp_arc = self._extract_json_robust(_asp_output)
+                        if not isinstance(_asp_arc, dict) or not _asp_arc:
+                            try:
+                                _asp_arc = json.loads(_asp_output)
+                            except (json.JSONDecodeError, ValueError):
+                                _asp_arc = {}
+                        if isinstance(_asp_arc, dict) and _asp_arc.get("tactical_doc"):
+                            best_arc = _asp_arc
+                            pipeline_result["asp_used"] = True
+                            logging.info(f"✅ [Patch+ASP] Arc {arc_no} ASP 교정 적용")
+                except Exception as e:
+                    logging.warning(f"[SilentPass:PatchMode:ASP] {e!s:.120}")
+
             pipeline_result["final_verdict"] = "PASS"
             logging.info(f"✅ [Patch Mode] Arc {arc_no} 패치 성공")
             return best_arc, pipeline_result

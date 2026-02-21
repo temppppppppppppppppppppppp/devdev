@@ -167,15 +167,29 @@ class Stage4PostProcessor:
             _sc_info = self._extract_state_change_info(_sc_raw)
             _mem_event_types = _sc_info["event_types"]
             _mem_entity_names = _sc_info["entity_names"]
-            _summary_parts = [final_title or f"제{next_ep}화"]
-            _summary_parts.extend(_sc_info["summary_parts"])
 
+            # [OpusTF-P0-3] 4-슬롯 정규화 요약: 사건 | 인물 | 장소 | 결말
+            _slot_event = (
+                ", ".join(_sc_info["summary_parts"])[:120]
+                if _sc_info["summary_parts"]
+                else (final_title or f"제{next_ep}화")
+            )
+            _slot_chars = ", ".join(sorted(_mem_entity_names)[:5])[:80] if _mem_entity_names else ""
+            _slot_place = ""
+            _slot_ending = ""
             if isinstance(blueprint, dict):
-                _scene = blueprint.get("scene_summary", "") or blueprint.get("핵심장면", "")
-                if _scene:
-                    _summary_parts.append(f"장면: {str(_scene)[:80]}")
-
-            _rich_summary = " | ".join(p for p in _summary_parts if p)[:500]
+                _slot_place = str(blueprint.get("scene_summary", "") or blueprint.get("핵심장면", "") or "")[:80]
+                _slot_ending = str(blueprint.get("cliffhanger", "") or blueprint.get("ending_hook", "") or "")[:80]
+            _rich_summary = " | ".join(
+                f"{label}: {val}"
+                for label, val in [
+                    ("사건", _slot_event),
+                    ("인물", _slot_chars),
+                    ("장소", _slot_place),
+                    ("결말", _slot_ending),
+                ]
+                if val
+            )[:500]
             if self.ctx.memory and self.ctx.memory.is_operational():
                 self.ctx.memory.memorize_v20_episode(
                     ep_num=next_ep,

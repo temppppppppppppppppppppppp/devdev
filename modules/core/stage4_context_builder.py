@@ -447,7 +447,7 @@ class Stage4ContextBuilder:
                     queries=_mq_queries,
                     current_ep=next_ep,
                     n_per_query=3,
-                    max_results=_threshold("context.vector_max_results_s4", 10),
+                    max_results=_threshold("context.vector_max_results_s4", 12),
                 )
                 if _vector_memory:
                     _mc_parts.append(f"[과거 유사 맥락 (벡터 검색)]\n{_vector_memory}")
