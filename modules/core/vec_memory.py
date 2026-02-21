@@ -277,7 +277,8 @@ class VecMemory:
         query_text = json.dumps(query, ensure_ascii=False) if isinstance(query, dict | list) else str(query)
         emb = self._embed_text(query_text)
         if emb is None:
-            return ""
+            # [OpusTF-P0-2] 임베딩 실패 시 LIKE 키워드 폴백
+            return self._keyword_fallback_search(query_text, current_ep, n_results)
 
         return self._knn_search(emb, current_ep, n_results)
 
@@ -319,14 +320,28 @@ class VecMemory:
                 continue
 
         if not seen:
+            # [OpusTF-P0-2] 모든 임베딩 실패 시 LIKE 키워드 폴백
+            for q in queries:
+                if not q or not str(q).strip():
+                    continue
+                qt = json.dumps(q, ensure_ascii=False) if isinstance(q, dict | list) else str(q)
+                fb = self._keyword_fallback_search(qt, current_ep, max_results)
+                if fb:
+                    return fb
             return ""
 
-        # 에피소드 번호 기준 균등 간격 샘플링
+        # [OpusTF-P0-1] 거리(유사도) 기반 랭킹 + 연속 에피소드 중복 제거
         max_results = max(1, max_results)
-        sorted_eps = sorted(seen.keys())
-        if len(sorted_eps) > max_results:
-            step = len(sorted_eps) / max_results
-            sorted_eps = [sorted_eps[int(i * step)] for i in range(max_results)]
+        sorted_by_dist = sorted(seen.items(), key=lambda x: x[1][0])  # distance ASC
+        # 다양성 보정: 연속 에피소드(±1) 중 더 먼 것 제거
+        selected: list[int] = []
+        for ep, (_dist, _meta) in sorted_by_dist:
+            if any(abs(ep - s) <= 1 for s in selected):
+                continue
+            selected.append(ep)
+            if len(selected) >= max_results:
+                break
+        sorted_eps = selected
 
         blocks = []
         for ep in sorted_eps:
@@ -384,6 +399,49 @@ class VecMemory:
             except Exception as e:
                 self._ui_log(f"[VecMemory] KNN 검색 오류: {e}")
                 return ""
+
+    def _keyword_fallback_search(self, query_text: str, current_ep: int, n_results: int) -> str:
+        """[OpusTF-P0-2] 임베딩 실패 시 episode_meta LIKE 키워드 폴백 검색."""
+        # 쿼리에서 핵심 키워드 추출 (2글자 이상 단어)
+        import re
+
+        keywords = [w for w in re.split(r"[\s,.\-|/]+", query_text) if len(w) >= 2]
+        if not keywords:
+            return ""
+        # 최대 5개 키워드만 사용
+        keywords = keywords[:5]
+        try:
+            with self._db_lock():
+                conditions = " OR ".join(
+                    "summary LIKE ? OR event_types LIKE ? OR entity_names LIKE ?" for _ in keywords
+                )
+                params: list = []
+                for kw in keywords:
+                    like = f"%{kw}%"
+                    params.extend([like, like, like])
+                params.append(current_ep)
+                rows = self._conn.execute(
+                    f"SELECT ep_num, summary, event_types, entity_names FROM episode_meta "
+                    f"WHERE ({conditions}) AND ep_num < ? ORDER BY ep_num DESC LIMIT ?",
+                    (*params, n_results),
+                ).fetchall()
+            if not rows:
+                return ""
+            blocks = []
+            for ep_num, summary, evt, ent in rows:
+                header = f"### [제 {ep_num} 화의 기억 (키워드)]"
+                if evt:
+                    header += f" ({evt})"
+                block = f"{header}\n요약: {summary or ''}"
+                if evt:
+                    block += f"\n사건: {evt}"
+                if ent:
+                    block += f"\n인물: {ent}"
+                blocks.append(block)
+            return "\n\n".join(blocks)
+        except Exception as e:
+            self._ui_log(f"[VecMemory] 키워드 폴백 검색 오류: {str(e)[:50]}")
+            return ""
 
     def _load_episode_meta(self, ep_num: int) -> dict | None:
         """에피소드 메타데이터 로드."""

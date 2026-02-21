@@ -466,7 +466,7 @@ class Stage2PreflightAnalysis:
                             _s2_vector_ctx = self.ctx.memory.retrieve_high_res_context(
                                 enriched_block.get("block_theme", ""),
                                 current_ep_start,
-                                n_results=_threshold("context.vector_max_results_s2", 5),
+                                n_results=_threshold("context.vector_max_results_s2", 8),
                             )
                     except Exception as e:  # [V64.P4] OPTIONAL: vector search — non-blocking
                         self.ctx.audit_event("s2_vector_search_failed", str(e)[:100])

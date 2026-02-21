@@ -60,8 +60,8 @@ context:
   director_mandatory_max: 40000
   lookback_excerpt_chars: 500
   lookback_total_chars: 4000
-  vector_max_results_s4: 10
-  vector_max_results_s2: 5
+  vector_max_results_s4: 12
+  vector_max_results_s2: 8
   cache_merge_chars_per_ep: 4000
 
 # ── 재시도 제한 ──────────────────────────────────────────────
