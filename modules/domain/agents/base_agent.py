@@ -150,26 +150,28 @@ class BaseAgent:
     _key_rotation_pending = False
     _last_rotation_time = 0
     _MIN_ROTATION_INTERVAL = _SYSTEM_CFG.get("key_rotation", {}).get("min_interval", 10)
-    _rotation_lock = threading.Lock()  # [V61.7] 병렬 앙상블 시 race condition 방지
+    _rotation_lock = threading.RLock()  # [V61.7+TF-XC-05] 재진입 허용 (init→rotate 체인)
     _rotation_count = 0  # [V62.3] 연속 키 순환 횟수 (전체 키 수 도달 시 순환 중단)
 
     @classmethod
     def _init_api_keys(cls) -> None:
         """환경변수에서 모든 API 키 로드 (GOOGLE_API_KEY, _2, _3, ...)"""
-        if cls._keys_initialized:
-            return
-        cls._keys_initialized = True
-        keys = []
-        primary = os.getenv("GOOGLE_API_KEY")
-        if primary:
-            keys.append(primary)
-        for i in range(2, 10):
-            k = os.getenv(f"GOOGLE_API_KEY_{i}")
-            if k:
-                keys.append(k)
-        cls._api_keys = keys
-        if len(keys) > 1:
-            logging.warning(f"🔑 [V61.5] API 키 {len(keys)}개 로드 완료 (자동 순환 활성화)")
+        # [TF-XC-05] check-then-act를 _rotation_lock 안으로 이동 (TOCTOU 방지)
+        with cls._rotation_lock:
+            if cls._keys_initialized:
+                return
+            cls._keys_initialized = True
+            keys = []
+            primary = os.getenv("GOOGLE_API_KEY")
+            if primary:
+                keys.append(primary)
+            for i in range(2, 10):
+                k = os.getenv(f"GOOGLE_API_KEY_{i}")
+                if k:
+                    keys.append(k)
+            cls._api_keys = keys
+            if len(keys) > 1:
+                logging.warning(f"🔑 [V61.5] API 키 {len(keys)}개 로드 완료 (자동 순환 활성화)")
 
     @classmethod
     def _try_rotate_key(cls):

@@ -284,10 +284,13 @@ class NegativeExampleInjector:
             "",
         ]
 
-        # 최근 REJECT 히스토리 기반 사례
-        if self.rejection_history:
+        # [TF-S2-05] 최근 REJECT 히스토리 스냅샷 (스레드 안전)
+        with _rejection_lock:
+            _history_snapshot = list(self.rejection_history[-5:])
+
+        if _history_snapshot:
             lines.append("\u2501\u2501\u2501 \ucd5c\uadfc REJECT \uc0ac\ub840 \u2501\u2501\u2501")
-            for rej in self.rejection_history[-5:]:
+            for rej in _history_snapshot:
                 lines.append(f"\u274c Arc {rej['arc_no']}: {rej['reason']}")
             lines.append("")
 
@@ -337,8 +340,9 @@ class NegativeExampleInjector:
             "power_inflation",
         ]
 
-        # 최근 REJECT 히스토리 기반 우선순위 조정
-        recent_categories = [r.get("category") for r in self.rejection_history[-5:]]
+        # [TF-S2-05] 최근 REJECT 히스토리 스냅샷 (스레드 안전)
+        with _rejection_lock:
+            recent_categories = [r.get("category") for r in self.rejection_history[-5:]]
         for cat in recent_categories:
             if cat in priority:
                 priority.remove(cat)

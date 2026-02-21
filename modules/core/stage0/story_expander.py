@@ -146,8 +146,18 @@ class StoryExpander:
         # 주인공 상세 생성
         protagonist = self._generate_protagonist_detail()
 
+        # [TF-S01-04] protagonist 빈값 검증 게이트
+        if not protagonist or not isinstance(protagonist, dict) or "name" not in protagonist:
+            logging.error("[StoryExpander] LLM 실패: protagonist 생성 불가")
+            return None
+
         # NPC 생성
         npcs = self._generate_npcs()
+
+        # [TF-S01-04] NPC 빈값 방어
+        if not npcs:
+            logging.warning("[StoryExpander] NPC 생성 실패 — 빈 목록으로 진행")
+            npcs = []
 
         # 초기 HUD
         hud_input = {

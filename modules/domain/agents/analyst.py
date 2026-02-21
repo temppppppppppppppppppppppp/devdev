@@ -861,7 +861,9 @@ class Analyst(BaseAgent):
         draft_result = _arc_loop_state["draft_result"]
         actual_ep_count = _arc_loop_state["actual_ep_count"]
         if _arc_success:
-            final_arc_data = draft_result
+            # [TF-S01-03] self-critic이 revised_arc를 반환했으면 draft 대신 사용
+            _revised = audit_result.get("revised_arc") if isinstance(audit_result, dict) else None
+            final_arc_data = _revised if _revised and isinstance(_revised, dict) else draft_result
             final_arc_data["_actual_ep_count"] = actual_ep_count
 
         # 8. 메타데이터 동기화 + 상태 검증 + Joint Docs 보정
@@ -925,9 +927,8 @@ class Analyst(BaseAgent):
         if clean_arc_no > 1:
             try:
                 arcs_anchor = self.context.db.load_anchor("arcs")
-                if arcs_anchor and isinstance(arcs_anchor, dict):
-                    prev_arc_data = arcs_anchor.get(f"arc_{clean_arc_no - 1}")
-                elif arcs_anchor and isinstance(arcs_anchor, list):
+                # [TF-S01-01] arcs_anchor는 항상 list — dead dict 분기 제거
+                if arcs_anchor and isinstance(arcs_anchor, list):
                     prev_arc_data = next(
                         (a for a in arcs_anchor if isinstance(a, dict) and a.get("arc_no") == clean_arc_no - 1),
                         None,
