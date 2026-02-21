@@ -48,6 +48,7 @@
 - On any restart or context compaction, rebuild state from persistent snapshot plus events.
 - Never rely only on in-context chat memory for canon facts.
 - Sweep resumes from last committed round index and canonical checkpoint id.
+- **[Gemini 3.1 Pro / Antigravity 권고사항]**: `Stale Cache` 방어. 수동 개입이나 Director Override로 인해 현재 Arc나 이전 Stage의 상태가 수정될 경우, 메모리에 상주 중인 Entity Registry(Stage 3 등) 캐시를 즉각 `Invalidate`(무효화)하는 트리거 연동이 필수적입니다.
 
 ## Minimal Integration Points
 - Write and commit: `modules/core/stage4_post_processor.py`

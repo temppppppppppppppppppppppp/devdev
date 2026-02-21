@@ -222,6 +222,11 @@ director.audit_strategic_plan(
 
 ## 3. Stage별 수정 전략
 
+> [!CAUTION]
+> **[Gemini 3.1 Pro / Antigravity 긴급 권고사항: Event Loop 블로킹 리스크]**
+> 본 패치 재시도 루프가 Stage 2에 도입될 경우, 루프 내부에서 동기식 `input()` 함수가 호출되면 **Python Asyncio Event Loop 전체가 프리징되는 치명적인 결함**이 발생합니다.
+> 패치 확장에 앞서 패치 재시도 입력을 포함한 모든 콘솔 I/O는 `aioconsole.ainput()` 또는 `asyncio.to_thread` 등으로 감싸서 비동기 호환 구조(`Non-blocking IO`)로 전환하는 리팩토링이 반드시 선행되어야 합니다.
+
 ### ⚠️ Stage 2 — Director 주입 + 반환값 변경 + 재시도 루프 (가장 복잡)
 
 4개 변경이 필요. 순서대로 적용:
