@@ -495,7 +495,7 @@ class TestQualityRegressionHook:
         }
         result = _process_pass_result_via_post_processor(orch, **pass_result_kwargs)
         assert result is True
-        orch.ctx.quality_dashboard.detect_score_regression.assert_called_once_with(stage=2)
+        orch.ctx.quality_dashboard.detect_score_regression.assert_called_once_with(stage=4)
         # UI에 경고 메시지 출력 확인
         log_calls = [str(c) for c in orch.ctx.ui.log.call_args_list]
         assert any("품질 회귀" in c for c in log_calls)
