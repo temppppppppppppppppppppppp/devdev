@@ -71,7 +71,6 @@ from modules.domain.agents.critic import Critic  # [V52.2] 비평가 에이전�
 from modules.domain.agents.director import Director
 from modules.domain.agents.four_phase_arc_generator import FourPhaseArcGenerator  # [V60.12] 4단계 Arc 생성기
 from modules.domain.agents.manager import Manager
-from modules.domain.agents.negative_example_injector import NegativeExampleInjector  # [V60.12] 실패 사례 주입
 from modules.domain.agents.preflight_checker import PreflightChecker  # [V60.12] 생성 전 분석
 from modules.domain.agents.state_extractor import StateExtractor  # [V60.10] 상태 추출 에이전트
 from modules.domain.agents.state_locked_arc_generator import StateLockedArcGenerator  # [V60.14] 상태 잠금 Arc 생성기
@@ -1383,8 +1382,6 @@ class SovereignApp:
             # [V60.11] Python 기반 헬퍼 초기화 (LLM 미사용)
             self.arc_draft_validator = ArcDraftValidator()
             self.constraint_compiler = ConstraintCompiler()
-            # [V60.12] Negative Example Injector - 실패 사례 주입
-            self.negative_injector = NegativeExampleInjector("wuxia")
             # [V60.42] Arc Corrector - MAJOR 이슈 부분 수정 (ON/OFF 토글 가능)
             self.arc_corrector = ArcCorrector(
                 context=self.current_project,
