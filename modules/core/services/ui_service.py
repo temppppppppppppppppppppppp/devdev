@@ -111,9 +111,18 @@ class UIService:
         attempts: int = 3,
     ) -> int | None:
         """사용자로부터 정수 입력. 원본: main_a.py:2752"""
+        # [TF-CX-RISK-01] 범위 역전 사전 검증
+        if min_val is not None and max_val is not None and min_val > max_val:
+            self._ui.log(f"⚠️ 입력 범위 오류 (min={min_val} > max={max_val}). 기본값({default})을 반환합니다.")
+            return default
         for _ in range(attempts):
             raw = input(prompt).strip()
             if raw == "":
+                # [TF-CX-RISK-01] default도 min/max 검증
+                if default is not None:
+                    if (min_val is not None and default < min_val) or (max_val is not None and default > max_val):
+                        self._ui.log(f"⚠️ 기본값 {default}이(가) 범위({min_val}~{max_val})를 벗어났습니다.")
+                        continue
                 return default
             if not raw.isdigit():
                 self._ui.log("⚠️ 숫자만 입력 가능합니다.")

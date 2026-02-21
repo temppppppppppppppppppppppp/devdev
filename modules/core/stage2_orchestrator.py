@@ -688,7 +688,7 @@ class Stage2Orchestrator:
                         logging.info("[3] 다시 하기 (자동)")
                         logging.info("   [4] 수동 개입 (리포트 확인 후 재시도)")
                         try:
-                            user_choice = input("   선택 (기본: 2): ").strip()
+                            user_choice = (await asyncio.to_thread(input, "   선택 (기본: 2): ")).strip()
                         except (EOFError, KeyboardInterrupt):
                             user_choice = "2"
 
@@ -717,7 +717,12 @@ class Stage2Orchestrator:
                             logging.info("   💡 문제가 된 아이템이나 표현을 확인 후, 아래 옵션을 선택하세요.")
                             try:
                                 manual_input = (
-                                    input("   준비되면 [Enter]로 재시도, 'skip'으로 건너뛰기, 'quit'으로 중단: ")
+                                    (
+                                        await asyncio.to_thread(
+                                            input,
+                                            "   준비되면 [Enter]로 재시도, 'skip'으로 건너뛰기, 'quit'으로 중단: ",
+                                        )
+                                    )
                                     .strip()
                                     .lower()
                                 )
@@ -774,7 +779,7 @@ class Stage2Orchestrator:
         self.ctx.ui.log("✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.")
         self.ctx.write_audit_summary("stage2_complete")
         try:
-            input("\n[Enter] 메뉴로 돌아가기")
+            await asyncio.to_thread(input, "\n[Enter] 메뉴로 돌아가기")
         except (EOFError, KeyboardInterrupt):
             pass
 

@@ -704,6 +704,10 @@ JSON으로 출력:
 
         # 4. 플랫폼 스타일 선택
         if limit_mode:
+            # [TF-CX-BUG-02] 입력 범위 역전 방어: 블루프린트가 0개인 경우
+            if total_planned_ep == 0:
+                self.ctx.ui.log("⚠️ 블루프린트가 없습니다. Stage 3에서 먼저 설계도를 생성해주세요.")
+                return None
             target_ep = self.ctx.get_int_input(
                 f"\n👉 몇 화까지 집필하시겠습니까? (최대 {total_planned_ep}화): ",
                 default=None,
