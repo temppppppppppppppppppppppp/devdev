@@ -14,13 +14,20 @@ from typing import Any
 from modules.validation.threshold_helper import _threshold
 
 
+class RetrievalSources:
+    """Canonical source identifiers for retrieval slots."""
+
+    VEC_MEMORY = "vec_memory"
+    DB_NPC_HISTORY = "db_npc_history"
+
+
 @dataclass(slots=True)
 class RetrievalSlot:
     """Single retrieval instruction."""
 
     category: str
     query: str
-    source: str = "vec_memory"
+    source: str = RetrievalSources.VEC_MEMORY
     priority: int = 2
     max_chars: int = 0
 
@@ -273,7 +280,7 @@ class ContextAdvisor:
                     RetrievalSlot(
                         category=str(item.get("category", "llm_suggestion")),
                         query=query,
-                        source="vec_memory",
+                        source=RetrievalSources.VEC_MEMORY,
                         priority=priority,
                     )
                 )
@@ -291,7 +298,8 @@ class ContextAdvisor:
                 total_budget_chars=base_plan.total_budget_chars,
                 used_llm=True,
             )
-        except Exception:
+        except Exception as exc:
+            logging.warning("[SilentPass:SC:LLMEnrich] LLM enrichment 실패, 휴리스틱 폴백: %s", exc)
             return base_plan
 
     def _should_use_llm(self, stage: str, context_data: dict[str, Any]) -> bool:
@@ -333,7 +341,7 @@ class ContextAdvisor:
                 RetrievalSlot(
                     "npc_recent",
                     f"등장 NPC 최근 행적/상태 변화: {' '.join(npc_names[:5])}",
-                    source="db_npc_history",
+                    source=RetrievalSources.DB_NPC_HISTORY,
                     priority=2,
                 )
             )
@@ -363,7 +371,7 @@ class ContextAdvisor:
                 RetrievalSlot(
                     "npc_history",
                     f"등장 NPC 과거 행적/관계/상태: {' '.join(sorted(set(npc_names))[:6])}",
-                    source="db_npc_history",
+                    source=RetrievalSources.DB_NPC_HISTORY,
                     priority=1,
                 )
             )
@@ -408,7 +416,7 @@ class ContextAdvisor:
                 RetrievalSlot(
                     "npc_consistency",
                     f"원고 등장 NPC 연속성 검증: {' '.join(mentioned_npcs[:6])}",
-                    source="db_npc_history",
+                    source=RetrievalSources.DB_NPC_HISTORY,
                     priority=1,
                 )
             )

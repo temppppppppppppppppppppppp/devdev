@@ -373,3 +373,26 @@ class TestPreflightEnrichment:
         assert "[SC:block_theme]" in vector_context
         assert "[SC:npc_recent]" in vector_context
         assert "[SC:arc_tactical]" in vector_context
+
+
+class TestGlobalBudgetTruncation:
+    """P1-3: stage2 글로벌 예산 가드 검증."""
+
+    def test_global_budget_truncation(self, preflight):
+        """결합 텍스트가 total_budget_chars 초과 시 절단."""
+        preflight.ctx.memory = MagicMock()
+        preflight.ctx.memory.retrieve_multi_query_context.return_value = "x" * 5000
+        preflight.ctx.memory.retrieve_npc_context.return_value = "y" * 5000
+
+        plan = RetrievalPlan(
+            stage="stage2",
+            episode_num=5,
+            slots=[
+                RetrievalSlot(category="block_theme", query="theme query", source="vec_memory", priority=1),
+                RetrievalSlot(category="npc_recent", query="npc query", source="db_npc_history", priority=2),
+            ],
+            total_budget_chars=100,
+        )
+
+        result = preflight._execute_stage2_retrieval_plan(plan, current_ep=5)
+        assert len(result) <= 100

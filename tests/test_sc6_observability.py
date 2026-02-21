@@ -274,3 +274,27 @@ def test_perf_timer_called_for_retrieval():
     stop_names = [call.args[0] for call in ctx.perf_timer.stop.call_args_list]
     assert any(name.startswith("sc_stage4_ep4_retrieval") for name in start_names)
     assert any(name.startswith("sc_stage4_ep4_retrieval") for name in stop_names)
+
+
+def test_silentpass_label_consistency():
+    """P2-1: SC 관련 SilentPass 라벨이 [SilentPass:SC:*] 패턴 통일 확인."""
+    import re
+    from pathlib import Path
+
+    interview_src = Path("modules/core/stage4_interview_round.py").read_text(encoding="utf-8")
+    # SC 관련 라벨만 검증 (Director 벡터 메모리 경로)
+    sc_labels = re.findall(r"\[SilentPass:SC:[^\]]+\]", interview_src)
+    assert len(sc_labels) >= 2
+    # 레거시 DirectorSC5 라벨이 없어야 함
+    assert "DirectorSC5" not in interview_src
+
+
+def test_main_a_context_advisor_wiring():
+    """P0-1: main_a.py에 ContextAdvisor가 배선되어 있는지 확인."""
+    from pathlib import Path
+
+    source = Path("main_a.py").read_text(encoding="utf-8")
+    assert "from modules.core.context_advisor import ContextAdvisor" in source
+    assert "self.context_advisor = None" in source
+    assert "self.context_advisor = ContextAdvisor()" in source
+    assert 'context_advisor=getattr(self, "context_advisor", None),' in source
