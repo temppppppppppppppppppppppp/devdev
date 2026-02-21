@@ -365,7 +365,9 @@ class DirectorEnsembleSelector:
                 "verdict": "REJECT",
                 "score": 50,
                 "feedback": {"issues": ["Prompt loading failed: ENSEMBLE_SELECTION_PROMPT"]},
-                "state_updates": candidates[0].get("state_updates", {}) if candidates else {},
+                "state_updates": (candidates[0].get("state_updates") or {})
+                if candidates
+                else {},  # [TF-R4] LLM null 방어
                 "action_items": ["프롬프트 로더 설정 확인 필요"],
                 "prompt_error": True,
             }
@@ -400,7 +402,9 @@ class DirectorEnsembleSelector:
                 "verdict": "REJECT",
                 "score": 50,
                 "feedback": {"issues": ["Director 판정 파싱 실패"]},
-                "state_updates": candidates[0].get("state_updates", {}) if candidates else {},
+                "state_updates": (candidates[0].get("state_updates") or {})
+                if candidates
+                else {},  # [TF-R4] LLM null 방어
                 "action_items": ["재생성 필요"],
                 "parsing_error": True,
             }
@@ -464,7 +468,9 @@ class DirectorEnsembleSelector:
             "score_breakdown": result.get("score_breakdown", {}),
             "selection_reason": result.get("selection_reason", ""),
             "feedback": feedback,
-            "state_updates": result.get("state_updates", selected_candidate.get("state_updates", {})),
+            "state_updates": result.get("state_updates")
+            or selected_candidate.get("state_updates")
+            or {},  # [TF-R4] LLM null 방어
             "action_items": feedback.get("action_items", []) if isinstance(feedback, dict) else [],
             "other_candidates_notes": result.get("other_candidates_notes", {}),
             "adaptive_threshold": adaptive_result.get("threshold_used", 65),
