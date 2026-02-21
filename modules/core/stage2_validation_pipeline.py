@@ -266,7 +266,13 @@ class Stage2ValidationPipeline:
                 import logging as _dv_log
 
                 _dv_log.warning(f"[G6] DraftValidator 호출 실패: {_dv_err!s:.100}")
-                draft_result = {"valid": True, "score": 50, "advisory_issues": [], "critical_issues": []}
+                draft_result = {
+                    "valid": True,
+                    "score": 50,
+                    "advisory_issues": [],
+                    "critical_issues": [],
+                    "warnings": [],
+                }  # [TF-R4-S2-02] warnings 키 추가
 
             advisory_issues = draft_result.get("advisory_issues", [])
             if advisory_issues:

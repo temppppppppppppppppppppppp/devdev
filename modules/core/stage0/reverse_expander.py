@@ -274,7 +274,11 @@ JSON:
 }}
 ```
 """
-        return self._parse_json(self._call_llm(prompt)) or {}
+        # [TF-R4-S0-01] list 반환 방어 (_extract_npcs 동일 패턴)
+        result = self._parse_json(self._call_llm(prompt))
+        if isinstance(result, list):
+            result = result[0] if result and isinstance(result[0], dict) else None
+        return result if isinstance(result, dict) else {}
 
     def _extract_npcs(self, sample: str) -> list[dict[str, Any]]:
         """NPC 추출"""
@@ -305,7 +309,11 @@ JSON:
 {{"era": "시대", "location": "장소", "setting": "세계관 설명"}}
 ```
 """
-        return self._parse_json(self._call_llm(prompt)) or {}
+        # [TF-R4-S0-02] list 반환 방어 (_extract_npcs 동일 패턴)
+        result = self._parse_json(self._call_llm(prompt))
+        if isinstance(result, list):
+            result = result[0] if result and isinstance(result[0], dict) else None
+        return result if isinstance(result, dict) else {}
 
     # ============================================
     # Phase 4: 회차별 상태 추출
