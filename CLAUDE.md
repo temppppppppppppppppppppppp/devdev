@@ -25,19 +25,20 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 
 ---
 
-## 현재 상태 (2026-02-16)
+## 현재 상태 (2026-02-21)
 
 - **작동함**: Stage 0→2→4 정상 동작
-- **완료된 것**: Phase 1~2, 5-A/5-B/5-C, 6-A/6-B/6-C, 4C(DI), 4D(sqlite-vec), 3-5B(패치), 3-5A(NPC이력), **4-R1~R3(몬스터 분할)**, R4-a(NO-GO), **3-QR(품질 회귀 감지)**, **3-5C(NPC 과잉 경고)**, **3-Obs Step 1+2(관측성 계측)**, **3-B(크로스 에피소드 반복 감지)**, **D.대리만족 전체 완료(Step1~5)**, **A-1(writer 유틸 해체)**, **A-3(test xfail)**, **C-1(PlotGuard 폴백)**, **C-2(NPC 체인)**, **C-3(Validator 체인)**, **B-1 전체 완료(stage4 -64%, chief_writer -62%, stage2 -66%)**, **E-2(Ruff 0 violations)**, **A-2(optimizer TODO)**, **R5(2차 분할 전량)**, **WorkGuard(작품별 YAML)**, **Debug Sweep 1차+2차 전량 완료**, **B-3(Protocol 전면 표준화)**
-- **현재 단계**: 기술부채 전면 정리 + 디버깅 스윕 2차 완료, DI 마이그레이션 3 Stage 모두 완료
-- **테스트 기준선**: **1,702 passed + 68 xfailed** (full suite green, `pytest tests/ -q`)
+- **완료된 것**: Phase 1~2, 5-A/5-B/5-C, 6-A/6-B/6-C, 4C(DI), 4D(sqlite-vec), 3-5B(패치), 3-5A(NPC이력), **4-R1~R3(몬스터 분할)**, R4-a(NO-GO), **3-QR(품질 회귀 감지)**, **3-5C(NPC 과잉 경고)**, **3-Obs Step 1+2(관측성 계측)**, **3-B(크로스 에피소드 반복 감지)**, **D.대리만족 전체 완료(Step1~5)**, **A-1(writer 유틸 해체)**, **A-3(test xfail)**, **C-1(PlotGuard 폴백)**, **C-2(NPC 체인)**, **C-3(Validator 체인)**, **B-1 전체 완료(stage4 -64%, chief_writer -62%, stage2 -66%)**, **E-2(Ruff 0 violations)**, **A-2(optimizer TODO)**, **R5(2차 분할 전량)**, **WorkGuard(작품별 YAML)**, **Debug Sweep 1차~12차 전량 완료**, **B-3(Protocol 전면 표준화)**, **DB-SSOT(VecMemory merge)**, **Patch Mode(Stage 2/3)**, **Passrate 전략 배선**, **Ensemble Feedback**, **Ops Quality 6대 개선**, **Opus TF 전면 재감사+T1/T2 수정**
+- **현재 단계**: 디버깅 스윕 12차 + Opus 감사 전량 완료, 안정화 단계 진입
+- **테스트 기준선**: **2,114 passed + 68 xfailed** (last verified, `pytest tests/ -q`)
 - **Ruff**: 0 violations, Silent Pass YELLOW 0건 (E-1+E-2 완료)
 - **stage4 orchestrator**: 2,481→883줄 (**-64%**, 분할 완료, 서브모듈 3개)
 - **chief_writer**: 2,255→854줄 (**-62%**, 분할 완료, 서브모듈 2개)
 - **stage2 orchestrator**: 2,639→907줄 (**-66%**, B-1-8 완료, 서브모듈 3개)
-- **DI 전환**: Stage2(43슬롯) + Stage3(19슬롯) + Stage4(24슬롯) 전량 완료
-- **checkpoint**: `7d11fa7`
+- **DI 전환**: Stage2(44슬롯) + Stage3(19슬롯) + Stage4(24슬롯) 전량 완료
+- **checkpoint**: `77b0164`
 - **실행 기준 문서(SSOT)**: `내일작업.md` (남은 작업만 관리)
+- **향후 계획 문서**: `docs/codex_memory_roi_boost_plan.md` (Memory ROI), `docs/codex_hybrid_retrieval_refactor_plan.md` (Hybrid Retrieval)
 
 ---
 
@@ -138,6 +139,15 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 | ~~36~~ | ~~WorkGuard~~ | ~~작품별 Guard YAML 시스템~~ | ✅ 완료 (`d3bd2db`) |
 | ~~37~~ | ~~Debug Sweep~~ | ~~전면 디버깅 스윕 (Phase 1~5b)~~ | ✅ 완료 (`883f438`) |
 | ~~38~~ | ~~B-3~~ | ~~ABC/Protocol 전면 표준화~~ | ✅ 완료 |
+| ~~39~~ | ~~Sweep 3차~12차~~ | ~~전면 디버깅 스윕 (sweep3~64 + codex)~~ | ✅ 완료 — 128파일+, 200건+ 수정 |
+| ~~40~~ | ~~Patch Mode~~ | ~~Stage 2/3 패치 모드 + Legacy 제거~~ | ✅ 완료 (`396280b`, `dd825a8`) |
+| ~~41~~ | ~~Ops Quality~~ | ~~운영 품질 6대 개선~~ | ✅ 완료 (`af32192`) |
+| ~~42~~ | ~~DB-SSOT~~ | ~~VecMemory → project_data.db 통합~~ | ✅ 완료 (`d7ff7f0`) |
+| ~~43~~ | ~~Passrate~~ | ~~전략별 재시도 + 조건부 지능 배선~~ | ✅ 완료 (`0141553`) |
+| ~~44~~ | ~~Ensemble FB~~ | ~~Stage 2 arc 앙상블 전략 피드백~~ | ✅ 완료 (`b037cf7`) |
+| ~~45~~ | ~~크로스컷+계약~~ | ~~R1-R100 시나리오 스윕 + 계약 위생~~ | ✅ 완료 (`16dc053`, `24b6372`) |
+| ~~46~~ | ~~Multi-Sweep~~ | ~~sweep 4~12 + codex 종합 버그 수정~~ | ✅ 완료 (`a4f984f`, `5d073a7`) |
+| ~~47~~ | ~~Opus TF 재감사~~ | ~~전면 재감사 + T1/T2 9건 수정~~ | ✅ 완료 (`7ba32c0`, `77b0164`) |
 
 ---
 
