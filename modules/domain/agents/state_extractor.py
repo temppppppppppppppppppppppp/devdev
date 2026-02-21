@@ -223,7 +223,7 @@ class StateExtractor(BaseAgent):
                 "\n".join(f"{k}: {v}" for k, v in (arc_data.get("tactical_doc") or {}).items())
                 if isinstance(arc_data.get("tactical_doc"), dict)
                 else (arc_data.get("tactical_doc") or "")
-            )[:3000],  # 토큰 절약
+            )[:20000],  # Gemini 대용량 컨텍스트 활용
             "joint_docs": arc_data.get("joint_docs", {}),
             "status_shadow": arc_data.get("status_shadow", {}),
             "state_constraints": arc_data.get("state_constraints", {}),  # [V60.13] arc_end_state 포함
@@ -786,7 +786,7 @@ class StateExtractor(BaseAgent):
         """
         prompt = SATISFACTION_TAG_PROMPT.format(
             ep_num=ep_num,
-            manuscript=self._escape_braces(manuscript[:5000]),
+            manuscript=self._escape_braces(manuscript[:20000]),
         )
 
         try:

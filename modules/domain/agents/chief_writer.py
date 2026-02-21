@@ -739,14 +739,14 @@ class ChiefWriter(BaseAgent):
 
             _patch_section = _patch_template.format(
                 feedback_text=_esc(director_feedback),
-                original_manuscript=_esc(smart_truncate(original_manuscript, max_chars=30000, head_chars=5000)),
+                original_manuscript=_esc(smart_truncate(original_manuscript, max_chars=150000, head_chars=20000)),
             )
         else:
             # YAML 로드 실패 시 인라인 폴백
             _patch_section = (
                 f"[패치 모드: 원본 보존 + 지적사항만 수정]\n\n"
                 f"## Director 피드백\n{director_feedback}\n\n"
-                f"## 원본 원고\n{smart_truncate(original_manuscript, max_chars=30000, head_chars=5000)}\n\n"
+                f"## 원본 원고\n{smart_truncate(original_manuscript, max_chars=150000, head_chars=20000)}\n\n"
                 f"전면 재작성하지 마세요. 지적된 부분만 고치세요."
             )
 

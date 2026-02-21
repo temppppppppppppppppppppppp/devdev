@@ -17,7 +17,7 @@ class LoreManager:
     # [V44] 캐시 설정 - 점진적 노화 적용
     CACHE_SOFT_TTL_SECONDS = 300  # 5분: 소프트 TTL (경고 시작)
     CACHE_HARD_TTL_SECONDS = 600  # 10분: 하드 TTL (강제 무효화)
-    MAX_CONTEXT_LENGTH = 2000  # 검색에 사용할 최대 컨텍스트 길이
+    MAX_CONTEXT_LENGTH = 10000  # 검색에 사용할 최대 컨텍스트 길이
     MAX_LORE_RESULTS = 10  # 최대 반환 로어 수
 
     def __init__(self, context) -> None:
