@@ -36,6 +36,7 @@ class Stage4Context:
         "state_tracker",
         # [4C-2b] 확장 13종
         "memory",
+        "context_advisor",
         "world_state",
         "fact_ledger",
         "character_voice",
@@ -70,6 +71,7 @@ class Stage4Context:
         state_tracker,
         # [4C-2b] 확장 — 모두 optional (None 허용)
         memory=None,
+        context_advisor=None,
         world_state=None,
         fact_ledger=None,
         character_voice=None,
@@ -99,6 +101,7 @@ class Stage4Context:
         self.sys = sys
         self.state_tracker = state_tracker
         self.memory = memory
+        self.context_advisor = context_advisor
         self.world_state = world_state
         self.fact_ledger = fact_ledger
         self.character_voice = character_voice
@@ -141,6 +144,7 @@ class Stage4Context:
             sys=app.sys,
             state_tracker=getattr(app, "state_tracker", None),
             memory=getattr(app, "memory", None),
+            context_advisor=getattr(app, "context_advisor", None),
             world_state=getattr(app, "world_state", None),
             fact_ledger=getattr(app, "fact_ledger", None),
             character_voice=getattr(app, "character_voice", None),

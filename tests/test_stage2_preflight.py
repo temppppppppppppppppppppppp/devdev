@@ -9,6 +9,7 @@ import pytest
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from modules.core.context_advisor import RetrievalPlan, RetrievalSlot
 from modules.core.stage2_preflight import Stage2PreflightAnalysis
 
 
@@ -65,6 +66,7 @@ def preflight_ctx():
     ctx.fix_entity_registry_protagonist = MagicMock(side_effect=lambda registry, _name: registry)
 
     ctx.memory = None
+    ctx.context_advisor = None
     ctx.semantic_plot_guard = None
     ctx.current_project = MagicMock()
 
@@ -301,3 +303,73 @@ class TestPreflightEnrichment:
         tracker.extract_npc_deaths_from_arc.assert_called_once()
         tracker.extract_skill_acquisitions_from_arc.assert_called_once()
         preflight.ctx.current_project.save_v20_anchor.assert_called()
+
+    @patch("modules.core.spinners.StageSpinner", MagicMock())
+    def test_legacy_vector_fallback_without_advisor(self, preflight):
+        preflight.ctx.context_advisor = None
+        preflight.ctx.memory = MagicMock()
+        preflight.ctx.memory.retrieve_high_res_context.return_value = "legacy vector block"
+        preflight.ctx.memory.retrieve_multi_query_context = MagicMock()
+        preflight.ctx.memory.retrieve_npc_context = MagicMock()
+
+        preflight._preflight_enrichment(**_enrichment_kwargs(current_ep_start=3))
+
+        preflight.ctx.memory.retrieve_high_res_context.assert_called_once()
+        assert not preflight.ctx.memory.retrieve_multi_query_context.called
+        assert not preflight.ctx.memory.retrieve_npc_context.called
+        call_kwargs = preflight.ctx.agents["four_phase"].generate.call_args.kwargs
+        assert call_kwargs["vector_context"] == "legacy vector block"
+
+    @patch("modules.core.spinners.StageSpinner", MagicMock())
+    def test_advisor_plan_dispatches_vec_and_npc_sources(self, preflight):
+        preflight.ctx.memory = MagicMock()
+        preflight.ctx.memory.retrieve_high_res_context = MagicMock(return_value="legacy")
+        preflight.ctx.memory.retrieve_multi_query_context = MagicMock(side_effect=["vec one", "vec two"])
+        preflight.ctx.memory.retrieve_npc_context = MagicMock(return_value="npc one")
+        preflight.ctx.context_advisor = MagicMock()
+        preflight.ctx.context_advisor.plan_stage2_retrieval.return_value = RetrievalPlan(
+            stage="stage2",
+            episode_num=3,
+            slots=[
+                RetrievalSlot(category="block_theme", query="theme query", source="vec_memory", priority=1),
+                RetrievalSlot(category="npc_recent", query="alice bob", source="db_npc_history", priority=1),
+                RetrievalSlot(category="arc_tactical", query="tactical query", source="vec_memory", priority=2),
+            ],
+            total_budget_chars=2000,
+        )
+
+        def threshold_side_effect(key, default=None):
+            if key == "smart_retrieval.enabled":
+                return True
+            if key == "smart_retrieval.stage2_enabled":
+                return True
+            if key == "context.vector_max_results_s2":
+                return 8
+            return default
+
+        with patch("modules.core.stage2_preflight._threshold", side_effect=threshold_side_effect):
+            preflight._preflight_enrichment(
+                **_enrichment_kwargs(
+                    current_ep_start=3,
+                    enriched_block={
+                        "block_theme": "theme",
+                        "tactical_doc": "tactical",
+                        "npc_roster": ["alice", "bob"],
+                        "joint_docs": {},
+                        "status_shadow": {},
+                    },
+                )
+            )
+
+        preflight.ctx.context_advisor.plan_stage2_retrieval.assert_called_once()
+        assert preflight.ctx.memory.retrieve_multi_query_context.call_count == 2
+        preflight.ctx.memory.retrieve_npc_context.assert_called_once()
+        preflight.ctx.memory.retrieve_high_res_context.assert_not_called()
+
+        npc_call = preflight.ctx.memory.retrieve_npc_context.call_args.kwargs
+        assert npc_call["npc_names"][:2] == ["alice", "bob"]
+
+        vector_context = preflight.ctx.agents["four_phase"].generate.call_args.kwargs["vector_context"]
+        assert "[SC:block_theme]" in vector_context
+        assert "[SC:npc_recent]" in vector_context
+        assert "[SC:arc_tactical]" in vector_context

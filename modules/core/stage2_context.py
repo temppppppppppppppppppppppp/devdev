@@ -57,6 +57,7 @@ class Stage2Context:
         "semantic_plot_guard",
         "failure_learner",
         "memory",
+        "context_advisor",
         "stage2_optimizer",
         "arc_draft_validator",
         "arc_corrector",
@@ -111,6 +112,7 @@ class Stage2Context:
         semantic_plot_guard=None,
         failure_learner=None,
         memory=None,
+        context_advisor=None,
         stage2_optimizer=None,
         arc_draft_validator=None,
         arc_corrector=None,
@@ -160,6 +162,7 @@ class Stage2Context:
         self.semantic_plot_guard = semantic_plot_guard
         self.failure_learner = failure_learner
         self.memory = memory
+        self.context_advisor = context_advisor
         self.stage2_optimizer = stage2_optimizer
         self.arc_draft_validator = arc_draft_validator
         self.arc_corrector = arc_corrector
@@ -211,6 +214,7 @@ class Stage2Context:
             semantic_plot_guard=getattr(app, "semantic_plot_guard", None),
             failure_learner=getattr(app, "failure_learner", None),
             memory=getattr(app, "memory", None),
+            context_advisor=getattr(app, "context_advisor", None),
             stage2_optimizer=getattr(app, "stage2_optimizer", None),
             arc_draft_validator=getattr(app, "arc_draft_validator", None),
             arc_corrector=getattr(app, "arc_corrector", None),

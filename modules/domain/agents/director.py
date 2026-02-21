@@ -293,10 +293,16 @@ class Director(BaseAgent):
         manuscript_history: list,
         use_summary: bool = True,
         story_context: str = "",
+        memory_context: str = "",
     ) -> dict:
         """[V67.1] 위임 → DirectorContinuityValidator (story_context 추가)"""
         return self._continuity.check_manuscript_history_conflicts(
-            ep_num, current_manuscript, manuscript_history, use_summary, story_context=story_context
+            ep_num,
+            current_manuscript,
+            manuscript_history,
+            use_summary,
+            story_context=story_context,
+            memory_context=memory_context,
         )
 
     def build_manuscript_history_for_check(self, db_manager, ep_num: int) -> list:
@@ -332,9 +338,20 @@ class Director(BaseAgent):
         return self._continuity.check_blueprint_continuity_with_cache(new_blueprint, ep_num, db, limit)
 
     def check_manuscript_continuity_with_cache(
-        self, new_manuscript: str, ep_num: int, db=None, limit: int = 10, story_context: str = ""
+        self,
+        new_manuscript: str,
+        ep_num: int,
+        db=None,
+        limit: int = 10,
+        story_context: str = "",
+        memory_context: str = "",
     ) -> dict:
         """[V64] 위임 → DirectorContinuityValidator"""
         return self._continuity.check_manuscript_continuity_with_cache(
-            new_manuscript, ep_num, db, limit, story_context=story_context
+            new_manuscript,
+            ep_num,
+            db,
+            limit,
+            story_context=story_context,
+            memory_context=memory_context,
         )

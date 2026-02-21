@@ -253,6 +253,66 @@ class TestProcessPassResult:
         detector.assert_called_once()
         assert detector.call_args.args[2] == ""
 
+    def test_vector_memory_summary_normalized_to_four_slots(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.memory = MagicMock()
+        pp.ctx.memory.is_operational.return_value = True
+
+        result = pp.process_pass_result(
+            next_ep=2,
+            final_manuscript="테스트 원고 " * 500,
+            final_title="테스트 타이틀",
+            final_state_updates={
+                "npc_deaths": [{"name": "철수"}],
+                "relationship_changes": [{"npc": "영희", "change": "적대"}],
+                "major_items": [{"name": "청룡검"}],
+            },
+            blueprint={"end_location": "서울", "ending_hook": "다음 화에서 반격"},
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        pp.ctx.memory.memorize_v20_episode.assert_called_once()
+        kwargs = pp.ctx.memory.memorize_v20_episode.call_args.kwargs
+        summary = kwargs["summary"]
+        assert "사건:" in summary
+        assert "인물:" in summary
+        assert "장소:" in summary
+        assert "결말:" in summary
+        assert "서울" in summary
+        assert "다음 화에서 반격" in summary
+        assert "death" in kwargs["event_types"]
+        assert "철수" in kwargs["entity_names"]
+
+    def test_vector_memory_summary_fallback_when_blueprint_and_entities_empty(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.memory = MagicMock()
+        pp.ctx.memory.is_operational.return_value = True
+
+        result = pp.process_pass_result(
+            next_ep=3,
+            final_manuscript="테스트 원고 " * 500,
+            final_title="",
+            final_state_updates={},
+            blueprint={},
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        pp.ctx.memory.memorize_v20_episode.assert_called_once()
+        kwargs = pp.ctx.memory.memorize_v20_episode.call_args.kwargs
+        assert kwargs["summary"] == "사건: 제3화"
+        assert kwargs["event_types"] == []
+        assert kwargs["entity_names"] == []
+
 
 class TestRunPostEpisodeTasks:
     def test_vector_sync_called_when_operational(self):

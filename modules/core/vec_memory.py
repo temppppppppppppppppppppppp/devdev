@@ -407,6 +407,150 @@ class VecMemory:
 
         return "\n\n".join(blocks)
 
+    def retrieve_npc_context(self, npc_names: list[str], current_ep: int, max_results: int = 5) -> str:
+        """
+        Retrieve NPC-focused context by combining:
+        - episode_meta.entity_names token matching
+        - vector similarity search with NPC-aware queries
+        """
+        if not self.has_valid_memory:
+            return ""
+
+        cleaned_names: list[str] = []
+        for name in npc_names or []:
+            text = str(name).strip()
+            if text and text not in cleaned_names:
+                cleaned_names.append(text)
+        if not cleaned_names:
+            return ""
+
+        safe_max = max(1, int(max_results))
+        core_cap = 5
+        core_names = cleaned_names[:core_cap]
+        overflow_names = cleaned_names[core_cap:]
+        candidates: dict[int, dict] = {}
+
+        # 1) Direct entity token match from comma-separated entity_names.
+        try:
+            with self._db_lock():
+                like_conditions = " OR ".join(
+                    "((',' || REPLACE(IFNULL(entity_names, ''), ' ', '') || ',') LIKE ?)" for _ in core_names
+                )
+                like_params = [f"%,{name.replace(' ', '')},%" for name in core_names]
+                rows = self._conn.execute(
+                    f"""SELECT ep_num, summary, arc_no, event_types, entity_names
+                        FROM episode_meta
+                        WHERE ep_num < ? AND ({like_conditions})
+                        ORDER BY ep_num DESC
+                        LIMIT ?""",
+                    (current_ep, *like_params, safe_max * 3),
+                ).fetchall()
+
+            for ep_num, summary, arc_no, event_types, entity_names in rows:
+                candidates[int(ep_num)] = {
+                    "dist": float("inf"),
+                    "meta": {
+                        "summary": summary or "",
+                        "arc_no": arc_no,
+                        "event_types": event_types or "",
+                        "entity_names": entity_names or "",
+                    },
+                    "entity_hit": True,
+                    "vector_hit": False,
+                }
+        except Exception as e:
+            self._ui_log(f"[VecMemory] NPC entity match search failed: {str(e)[:60]}")
+
+        # 2) Vector search with bounded query plan.
+        # Max query count: core(<=5) + core aggregate(1) + overflow aggregate(1) = <=7.
+        vector_queries = [f"{name} 과거 행적 상태 변화 관계 사건" for name in core_names]
+        if len(core_names) > 1:
+            vector_queries.append(f"{' '.join(core_names)} 과거 관계 사건 연속성")
+        if overflow_names:
+            overflow_phrase = " ".join(overflow_names[:20])
+            vector_queries.append(f"{overflow_phrase} 외 등장 NPC 과거 관계 사건 연속성")
+
+        for query_text in vector_queries:
+            emb = self._embed_text(query_text)
+            if emb is None:
+                continue
+
+            try:
+                with self._db_lock():
+                    rows = self._conn.execute(
+                        """SELECT rowid, distance FROM vec_episodes
+                           WHERE embedding MATCH ? ORDER BY distance LIMIT ?""",
+                        (_serialize_f32(emb), max(6, safe_max * 2)),
+                    ).fetchall()
+
+                for rowid, dist in rows:
+                    ep_num = int(rowid)
+                    if ep_num >= current_ep:
+                        continue
+                    meta = self._load_episode_meta(ep_num)
+                    if not meta:
+                        continue
+
+                    entry = candidates.get(ep_num)
+                    if entry is None:
+                        candidates[ep_num] = {
+                            "dist": float(dist),
+                            "meta": meta,
+                            "entity_hit": False,
+                            "vector_hit": True,
+                        }
+                    else:
+                        entry["vector_hit"] = True
+                        if float(dist) < float(entry["dist"]):
+                            entry["dist"] = float(dist)
+            except Exception as e:
+                self._ui_log(f"[VecMemory] NPC vector search failed: {str(e)[:60]}")
+
+        if not candidates:
+            return self._keyword_fallback_search(" ".join(cleaned_names), current_ep, safe_max)
+
+        def _sort_key(item):
+            ep_num, info = item
+            both_hit = info["entity_hit"] and info["vector_hit"]
+            if both_hit:
+                source_rank = 0
+            elif info["entity_hit"]:
+                source_rank = 1
+            else:
+                source_rank = 2
+            dist = info["dist"] if info["dist"] != float("inf") else 9.0
+            return (source_rank, dist, -ep_num)
+
+        selected = sorted(candidates.items(), key=_sort_key)[:safe_max]
+
+        blocks: list[str] = []
+        for ep_num, info in selected:
+            meta = info["meta"]
+            summary = meta.get("summary", "")
+            evt = meta.get("event_types", "")
+            ent = meta.get("entity_names", "")
+
+            sim_label = ""
+            if info["vector_hit"] and float(info["dist"]) < 1.0:
+                sim_label = f" similarity {1.0 - float(info['dist']):.2f}"
+
+            tags = []
+            if info["entity_hit"]:
+                tags.append("entity")
+            if info["vector_hit"]:
+                tags.append("vector")
+            tag_label = f" ({'/'.join(tags)})" if tags else ""
+
+            header = f"### [EP{ep_num} NPC context{sim_label}]{tag_label}"
+            block = f"{header}\nsummary: {summary}"
+            if evt:
+                block += f"\nevents: {evt}"
+            if ent:
+                block += f"\nentities: {ent}"
+            blocks.append(block)
+
+        return "\n\n".join(blocks)
+
     def _knn_search(self, query_emb: list, current_ep: int, n_results: int) -> str:
         """벡터 KNN 검색 후 맥락 블록 문자열 반환."""
         with self._db_lock():

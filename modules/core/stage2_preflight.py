@@ -3,6 +3,7 @@
 import concurrent.futures
 import json
 import logging
+import re
 
 from modules.validation.threshold_helper import _threshold
 
@@ -16,6 +17,149 @@ class Stage2PreflightAnalysis:
     @property
     def ctx(self):
         return self.host.ctx
+
+    @staticmethod
+    def _extract_npc_tokens(query: str) -> list[str]:
+        """Extract candidate NPC tokens from retrieval query text."""
+        if not query:
+            return []
+
+        stopwords = {
+            "npc",
+            "history",
+            "context",
+            "query",
+            "past",
+            "state",
+            "change",
+            "relation",
+            "event",
+            "continuity",
+            "recent",
+            "block",
+            "theme",
+            "arc",
+        }
+        tokens: list[str] = []
+        for token in re.split(r"[\s,|/:;()\[\]{}]+", str(query)):
+            text = token.strip()
+            if len(text) < 2:
+                continue
+            if text.lower() in stopwords:
+                continue
+            if text not in tokens:
+                tokens.append(text)
+        return tokens[:20]
+
+    @staticmethod
+    def _collect_npc_roster(enriched_block: dict | None) -> list[str]:
+        """Collect NPC candidates from Stage2 enriched block."""
+        if not isinstance(enriched_block, dict):
+            return []
+
+        names: list[str] = []
+
+        def _add_name(value) -> None:
+            text = str(value or "").strip()
+            if text and text not in names:
+                names.append(text)
+
+        def _consume(raw) -> None:
+            if isinstance(raw, list):
+                for item in raw:
+                    if isinstance(item, dict):
+                        for key in ("name", "npc", "source", "target", "npc_name", "character"):
+                            if item.get(key):
+                                _add_name(item.get(key))
+                    else:
+                        _add_name(item)
+            elif isinstance(raw, dict):
+                for key in ("name", "npc", "source", "target", "npc_name", "character"):
+                    if raw.get(key):
+                        _add_name(raw.get(key))
+            elif isinstance(raw, str):
+                for part in re.split(r"[,\n/|]+", raw):
+                    _add_name(part)
+
+        for key in ("npc_roster", "assigned_npcs", "key_npcs", "characters", "npcs"):
+            _consume(enriched_block.get(key))
+
+        for container_key in ("state_changes", "status_shadow", "joint_docs"):
+            container = enriched_block.get(container_key)
+            if not isinstance(container, dict):
+                continue
+            for key in ("npc_deaths", "relationship_changes", "npc_injuries", "npcs", "characters"):
+                _consume(container.get(key))
+
+        return names[:50]
+
+    def _execute_stage2_retrieval_plan(
+        self,
+        plan,
+        *,
+        current_ep: int,
+        npc_roster: list[str] | None = None,
+        current_arc_no: int | None = None,
+    ) -> str:
+        """Execute Stage2 retrieval plan and return merged context text."""
+        memory = getattr(self.ctx, "memory", None)
+        if not memory or not plan or not getattr(plan, "slots", None):
+            return ""
+
+        max_results = int(_threshold("context.vector_max_results_s2", 8))
+        sections: list[str] = []
+        ordered_slots = sorted(plan.slots, key=lambda slot: getattr(slot, "priority", 2))
+        vec_slot_count = sum(
+            1 for slot in ordered_slots if str(getattr(slot, "source", "vec_memory") or "vec_memory") == "vec_memory"
+        )
+        fallback_names = [str(name).strip() for name in (npc_roster or []) if str(name).strip()]
+
+        for slot in ordered_slots:
+            source = str(getattr(slot, "source", "vec_memory") or "vec_memory")
+            category = str(getattr(slot, "category", "context") or "context")
+            query_text = str(getattr(slot, "query", "") or "").strip()
+            if not query_text:
+                continue
+
+            try:
+                if source == "db_npc_history":
+                    npc_names = fallback_names or self._extract_npc_tokens(query_text)
+                    result = memory.retrieve_npc_context(
+                        npc_names=npc_names,
+                        current_ep=current_ep,
+                        max_results=max_results,
+                    )
+                elif vec_slot_count <= 1:
+                    result = memory.retrieve_high_res_context(
+                        query_text,
+                        current_ep,
+                        n_results=max_results,
+                    )
+                else:
+                    result = memory.retrieve_multi_query_context(
+                        queries=[query_text],
+                        current_ep=current_ep,
+                        n_per_query=3,
+                        max_results=max_results,
+                        current_arc_no=current_arc_no,
+                    )
+            except Exception as exc:  # OPTIONAL: retrieval failure should not block generation
+                audit_cb = getattr(self.ctx, "audit_event", None)
+                if callable(audit_cb):
+                    audit_cb("s2_vector_search_failed", str(exc)[:100])
+                continue
+
+            if not result:
+                continue
+
+            slot_max = int(getattr(slot, "max_chars", 0) or 0)
+            if slot_max > 0 and len(result) > slot_max:
+                result = result[:slot_max]
+
+            sections.append(f"[SC:{category}]\n{result}")
+
+        logging.info(f"[SC] stage2 retrieval: {len(sections)} sections from {len(plan.slots)} slots")
+        return "\n\n".join(sections)
 
     def _preflight_state_setup(
         self,
@@ -463,13 +607,52 @@ class Stage2PreflightAnalysis:
                     _s2_vector_ctx = ""
                     try:
                         if self.ctx.memory and current_ep_start > 1:
-                            _s2_vector_ctx = self.ctx.memory.retrieve_high_res_context(
-                                enriched_block.get("block_theme", ""),
-                                current_ep_start,
-                                n_results=_threshold("context.vector_max_results_s2", 8),
+                            _use_advisor_path = False
+                            _advisor = getattr(self.ctx, "context_advisor", None)
+                            _smart_enabled = bool(_threshold("smart_retrieval.enabled", False)) and bool(
+                                _threshold("smart_retrieval.stage2_enabled", False)
                             )
+                            if _advisor and _smart_enabled:
+                                try:
+                                    _npc_roster = self._collect_npc_roster(enriched_block)
+                                    _retrieval_plan = _advisor.plan_stage2_retrieval(
+                                        arc_data=enriched_block or {},
+                                        current_ep=current_ep_start,
+                                        npc_roster=_npc_roster,
+                                    )
+                                    _perf_key = f"sc_stage2_arc{global_arc_no}_retrieval"
+                                    try:
+                                        self.ctx.perf_timer.start(_perf_key)
+                                    except Exception:
+                                        pass
+                                    try:
+                                        _s2_vector_ctx = self._execute_stage2_retrieval_plan(
+                                            _retrieval_plan,
+                                            current_ep=current_ep_start,
+                                            npc_roster=_npc_roster,
+                                            current_arc_no=global_arc_no,
+                                        )
+                                    finally:
+                                        try:
+                                            self.ctx.perf_timer.stop(_perf_key)
+                                        except Exception:
+                                            pass
+                                    _use_advisor_path = True
+                                except Exception as exc:  # advisor path failure -> fallback to legacy
+                                    _audit_cb = getattr(self.ctx, "audit_event", None)
+                                    if callable(_audit_cb):
+                                        _audit_cb("s2_vector_search_failed", str(exc)[:100])
+
+                            if not _use_advisor_path:
+                                _s2_vector_ctx = self.ctx.memory.retrieve_high_res_context(
+                                    enriched_block.get("block_theme", ""),
+                                    current_ep_start,
+                                    n_results=_threshold("context.vector_max_results_s2", 8),
+                                )
                     except Exception as e:  # [V64.P4] OPTIONAL: vector search — non-blocking
-                        self.ctx.audit_event("s2_vector_search_failed", str(e)[:100])
+                        _audit_cb = getattr(self.ctx, "audit_event", None)
+                        if callable(_audit_cb):
+                            _audit_cb("s2_vector_search_failed", str(e)[:100])
                     # [V65] PerfTimer: Arc 생성 측정
                     try:
                         self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_generate")
