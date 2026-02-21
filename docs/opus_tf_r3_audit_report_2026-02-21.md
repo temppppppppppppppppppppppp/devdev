@@ -1,7 +1,7 @@
-# Opus TF R3 전 스테이지 감사 보고서
+# Opus TF R2~R4 전 스테이지 감사 보고서
 
 **날짜**: 2026-02-21
-**커밋**: `801dff7` (R2-INSIGHT) → `62240e2` (R3) → `e5cd941` (R3-2)
+**커밋**: `801dff7` (R2-INSIGHT) → `62240e2` (R3) → `e5cd941` (R3-2) → `a114c38` (R4)
 **테스트**: 2,213 passed, 68 xfailed, 0 failures
 
 ---
@@ -105,7 +105,40 @@ R3 수정 후 6개 병렬 에이전트로 전 스테이지 재조사.
 
 ---
 
-## 4. 전체 요약
+## 4. R4 심층 감사 (커밋 `a114c38`)
+
+### 4.1 조사 범위
+
+R3 완료 후 5개 병렬 에이전트로 전 스테이지 심층 재조사.
+~20,000줄 재조사, 초기 보고 8건 → 1건 스킵 후 7건 확정.
+
+### 4.2 스킵 (1건)
+
+| 보고 이슈 | 판정 | 근거 |
+|-----------|------|------|
+| S0-R4-03: StoryExpander.run() Bible 실패 무시 | 스킵 | tools/ 전용, 메인 파이프라인 미사용 |
+
+### 4.3 수정 완료 (7건)
+
+| ID | 심각도 | 파일 | 수정 내용 |
+|----|--------|------|----------|
+| S2-R4-01 | **CRITICAL** | `stage2_finalizer.py` L190 | PASS+short tactical_doc → REJECT 처리 방지 (조건 분리) |
+| S2-R4-02 | IMPORTANT | `stage2_validation_pipeline.py` L269 | DraftValidator 폴백 dict "warnings" 키 누락 → KeyError 방지 |
+| S0-R4-01 | IMPORTANT | `reverse_expander.py` L277 | _extract_protagonist list 반환 → dict 변환 방어 |
+| S0-R4-02 | IMPORTANT | `reverse_expander.py` L308 | _extract_world_state list 반환 → dict 변환 방어 |
+| S3-R4-01 | IMPORTANT | `three_phase_blueprint_generator.py` L319 | 연속성 REJECT 피드백 전략 변수 설정 (retry 전달) |
+| S3-R4-02 | IMPORTANT | `three_phase_blueprint_generator.py` L433 | stale validation_result → _prev_reject_score 사용 + Pydantic 검증 |
+| S4-R4-01 | IMPORTANT | `stage4_interview_round.py` L745 | REJECT previous_attempt에 state_updates 추가 (R3 S4-03 수정 완성) |
+
+### 4.4 Cross-stage 감사 결과
+
+**0건 (INSIGHT 2건)**:
+- reset_after에서 episode_meta 미정리 (별도 경로로 처리, 결합 취약점이나 결함 아님)
+- 클리셰 키워드가 무협 전용 (품질 갭이나 크래시 아님)
+
+---
+
+## 5. 전체 요약
 
 ### 수정 통계
 
@@ -114,7 +147,8 @@ R3 수정 후 6개 병렬 에이전트로 전 스테이지 재조사.
 | R2-INSIGHT | `801dff7` | 7건 (신규 1 + 수정 6) | 7 |
 | R3 1차 | `62240e2` | 6건 | 5 |
 | R3 2차 | `e5cd941` | 4건 | 3 |
-| **합계** | | **17건** | **15 (중복 제외 12)** |
+| R4 | `a114c38` | 7건 | 5 |
+| **합계** | | **24건** | **20 (중복 제외 14)** |
 
 ### 오탐 통계
 
@@ -122,34 +156,36 @@ R3 수정 후 6개 병렬 에이전트로 전 스테이지 재조사.
 |--------|-----------|-----------|-----------|--------|
 | R3 1차 | 38건 | 32건 | 6건 | 84% |
 | R3 2차 | 21건 | 17건 | 4건 | 81% |
+| R4 | 8건 | 1건 | 7건 | 13% |
 
 ### 심각도 분포
 
-| 심각도 | R2-INSIGHT | R3 1차 | R3 2차 | 합계 |
-|--------|-----------|--------|--------|------|
-| CRITICAL | 0 | 0 | 1 | 1 |
-| IMPORTANT | 7 | 5 | 3 | 15 |
-| INSIGHT | 0 | 1 | 0 | 1 |
+| 심각도 | R2-INSIGHT | R3 1차 | R3 2차 | R4 | 합계 |
+|--------|-----------|--------|--------|-----|------|
+| CRITICAL | 0 | 0 | 1 | 1 | 2 |
+| IMPORTANT | 7 | 5 | 3 | 6 | 21 |
+| INSIGHT | 0 | 1 | 0 | 0 | 1 |
 
 ### 잔여 이슈
 
-**없음** — 전 스테이지 2회 감사 완료, 수정 가치 있는 이슈 전량 해결.
+**없음** — 전 스테이지 4라운드 감사 완료, 수정 가치 있는 이슈 전량 해결.
 
 ---
 
-## 5. 수정 대상 파일 전체 목록
+## 6. 수정 대상 파일 전체 목록
 
-| 파일 | R2-I | R3 | R3-2 |
-|------|------|----|------|
-| `config/prompts/analyst_libraries_composer.json` | 신규 | | |
-| `modules/domain/agents/analyst.py` | B | | |
-| `modules/core/stage0/__init__.py` | C | | |
-| `modules/core/stage0/style_extractor.py` | D | | |
-| `modules/core/stage0/reverse_expander.py` | | S0-01 | S0-03, S0-04 |
-| `modules/domain/agents/three_phase_blueprint_generator.py` | E | S3-01, S3-02 | |
-| `modules/core/stage4_interview_round.py` | F | | |
-| `modules/domain/agents/chief_writer_quality.py` | G | | |
-| `modules/core/stage4_post_processor.py` | | S4-02 | |
-| `modules/core/stage2_finalizer.py` | | S2-02 | S2-03 |
-| `modules/core/db_manager.py` | | XC-01 | |
-| `modules/core/stage4_orchestrator.py` | | | S4-03 |
+| 파일 | R2-I | R3 | R3-2 | R4 |
+|------|------|----|------|-----|
+| `config/prompts/analyst_libraries_composer.json` | 신규 | | | |
+| `modules/domain/agents/analyst.py` | B | | | |
+| `modules/core/stage0/__init__.py` | C | | | |
+| `modules/core/stage0/style_extractor.py` | D | | | |
+| `modules/core/stage0/reverse_expander.py` | | S0-01 | S0-03, S0-04 | S0-R4-01, S0-R4-02 |
+| `modules/domain/agents/three_phase_blueprint_generator.py` | E | S3-01, S3-02 | | S3-R4-01, S3-R4-02 |
+| `modules/core/stage4_interview_round.py` | F | | | S4-R4-01 |
+| `modules/domain/agents/chief_writer_quality.py` | G | | | |
+| `modules/core/stage4_post_processor.py` | | S4-02 | | |
+| `modules/core/stage2_finalizer.py` | | S2-02 | S2-03 | S2-R4-01 |
+| `modules/core/stage2_validation_pipeline.py` | | | | S2-R4-02 |
+| `modules/core/db_manager.py` | | XC-01 | | |
+| `modules/core/stage4_orchestrator.py` | | | S4-03 | |
