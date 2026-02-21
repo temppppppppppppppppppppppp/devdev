@@ -66,10 +66,11 @@ def build_justification_guidance(hud_report: str, genre_name: str) -> str:
 
     hud_lower = hud_report.lower()
     low_status_keywords = ["하인", "노예", "평민", "무명", "낭인", "거지", "천민"]
-    if any(keyword in hud_report for keyword in low_status_keywords) or "reputation" in hud_lower:
-        rep_match = re.search(r"reputation[:\s]+(\d+)", hud_report, re.IGNORECASE)
-        if rep_match and int(rep_match.group(1)) < 30:
-            active_constraints.append("low_status_high_authority")
+    _is_low_status = any(keyword in hud_report for keyword in low_status_keywords)
+    rep_match = re.search(r"reputation[:\s]+(\d+)", hud_report, re.IGNORECASE)
+    _is_low_rep = rep_match and int(rep_match.group(1)) < 30
+    if _is_low_status or _is_low_rep:  # [TF-R2-S4-02] 독립 조건
+        active_constraints.append("low_status_high_authority")
 
     breakthrough_keywords = ["돌파", "깨달음", "체득", "각성", "각오"]
     if any(keyword in hud_report for keyword in breakthrough_keywords):

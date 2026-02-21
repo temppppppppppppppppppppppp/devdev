@@ -480,7 +480,7 @@ class Stage2Finalizer:
             self.ctx.ui.log(f"      📋 피드백: {base_feedback[:100]}")
 
             # [V70] StateTracker 롤백: FourPhase PASS → Director REJECT 시 팬텀 데이터 제거
-            if st_snapshot and generation_method == "four_phase":
+            if st_snapshot and generation_method.startswith("four_phase"):  # [TF-R2-S2-11] ASP 포함
                 try:
                     _st = self.ctx.state_tracker
                     for _k, _v in st_snapshot.items():

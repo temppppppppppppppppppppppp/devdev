@@ -163,7 +163,7 @@ class Stage4PostProcessor:
         try:
             _mem_arc_no = arc_data.get("arc_no") if arc_data else None
             # [TF-T5] state_changes 단일 패스 추출
-            _sc_raw = arc_data.get("state_changes", {}) if isinstance(arc_data, dict) else {}
+            _sc_raw = final_state_updates if final_state_updates else {}  # [TF-R2-S4-01] 실제 산출물 사용
             _sc_info = self._extract_state_change_info(_sc_raw)
             _mem_event_types = _sc_info["event_types"]
             _mem_entity_names = _sc_info["entity_names"]

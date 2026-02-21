@@ -139,7 +139,7 @@ def _build_mock_app(db: DBManager, bible: dict, arcs: list[dict]) -> MagicMock:
     )
     app._get_protagonist_name = MagicMock(return_value="\uc2dc\uc724")
     app._fix_entity_registry_protagonist = MagicMock(side_effect=lambda registry, _name: registry)
-    app._safe_commit = MagicMock(side_effect=lambda: db.conn.commit())
+    app._safe_commit = MagicMock(side_effect=lambda: db.conn.commit() or True)
     app._audit_event = MagicMock()
     app._write_audit_summary = MagicMock()
 

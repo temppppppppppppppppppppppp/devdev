@@ -1419,6 +1419,7 @@ class Analyst(BaseAgent):
             "actor": "analyst_libraries_actor.json",
             "sports": "analyst_libraries_sports.json",
             "medical": "analyst_libraries_medical.json",
+            "alt_history": "analyst_libraries_alt_history.json",  # [TF-R2-S01-02]
         }
 
         lib_filename = genre_library_map.get(genre, "analyst_libraries.json")

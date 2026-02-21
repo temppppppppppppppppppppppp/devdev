@@ -450,12 +450,12 @@ JSON:
                 "char_count": len(content),
             }
 
-            if self.episode_bibles and 0 <= ep_num - 1 < len(self.episode_bibles):
-                ep_bible = self.episode_bibles[ep_num - 1]
-                if ep_bible:
-                    causal_links["new_npcs"] = ep_bible.get("new_npcs", [])
-                    causal_links["new_items"] = ep_bible.get("new_items", [])
-                    causal_links["location_change"] = ep_bible.get("location_change", "")
+            _eb_map = {eb.get("ep_num"): eb for eb in self.episode_bibles} if self.episode_bibles else {}
+            ep_bible = _eb_map.get(ep_num, {})  # [TF-R2-S01-01] 인덱스 대신 ep_num 키 사용
+            if ep_bible:
+                causal_links["new_npcs"] = ep_bible.get("new_npcs", [])
+                causal_links["new_items"] = ep_bible.get("new_items", [])
+                causal_links["location_change"] = ep_bible.get("location_change", "")
 
             try:
                 result = memory.memorize_v20_episode(

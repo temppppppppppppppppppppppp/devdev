@@ -210,7 +210,7 @@ class DirectorEnsembleSelector:
                 }
 
         _sb = blueprint.get("scene_breakdown", {})
-        scene_count = len(_sb) if isinstance(_sb, dict) else 0
+        scene_count = len(_sb) if isinstance(_sb, dict | list) else 0  # [TF-R2-S3-01]
         if scene_count < 4:
             return {
                 "decision": "REJECT",
