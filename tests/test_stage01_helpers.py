@@ -69,54 +69,59 @@ class TestPhase0Recovery:
         app_mock._ui_select_bible.assert_not_called()
 
     def test_choice_2_delegates_to_stage_0_extended(self, helpers, app_mock):
-        """선택 2 → app._stage_0_extended(mode=1) 호출"""
+        """선택 2 → self.stage_0_extended(mode=1) 호출"""
         with (
             redirect_stdout(StringIO()),
             patch("builtins.input", return_value="2"),
             patch("main_a.STAGE0_AVAILABLE", True),
+            patch.object(helpers, "stage_0_extended") as mock_s0,
         ):
             helpers.phase_0_recovery()
-        app_mock._stage_0_extended.assert_called_once_with(mode=1)
+        mock_s0.assert_called_once_with(mode=1)
 
     def test_choice_3_delegates_to_stage_0_extended(self, helpers, app_mock):
-        """선택 3 → app._stage_0_extended(mode=2) 호출"""
+        """선택 3 → self.stage_0_extended(mode=2) 호출"""
         with (
             redirect_stdout(StringIO()),
             patch("builtins.input", return_value="3"),
             patch("main_a.STAGE0_AVAILABLE", True),
+            patch.object(helpers, "stage_0_extended") as mock_s0,
         ):
             helpers.phase_0_recovery()
-        app_mock._stage_0_extended.assert_called_once_with(mode=2)
+        mock_s0.assert_called_once_with(mode=2)
 
     def test_choice_4_delegates_to_stage_0_extended(self, helpers, app_mock):
-        """선택 4 → app._stage_0_extended(mode=3) 호출"""
+        """선택 4 → self.stage_0_extended(mode=3) 호출"""
         with (
             redirect_stdout(StringIO()),
             patch("builtins.input", return_value="4"),
             patch("main_a.STAGE0_AVAILABLE", True),
+            patch.object(helpers, "stage_0_extended") as mock_s0,
         ):
             helpers.phase_0_recovery()
-        app_mock._stage_0_extended.assert_called_once_with(mode=3)
+        mock_s0.assert_called_once_with(mode=3)
 
     def test_choice_5_delegates_to_stage_0_extended(self, helpers, app_mock):
-        """선택 5 → app._stage_0_extended(mode=4) 호출"""
+        """선택 5 → self.stage_0_extended(mode=4) 호출"""
         with (
             redirect_stdout(StringIO()),
             patch("builtins.input", return_value="5"),
             patch("main_a.STAGE0_AVAILABLE", True),
+            patch.object(helpers, "stage_0_extended") as mock_s0,
         ):
             helpers.phase_0_recovery()
-        app_mock._stage_0_extended.assert_called_once_with(mode=4)
+        mock_s0.assert_called_once_with(mode=4)
 
     def test_choice_6_delegates_to_stage_0_extended(self, helpers, app_mock):
-        """선택 6 → app._stage_0_extended(mode=5) 호출"""
+        """선택 6 → self.stage_0_extended(mode=5) 호출"""
         with (
             redirect_stdout(StringIO()),
             patch("builtins.input", return_value="6"),
             patch("main_a.STAGE0_AVAILABLE", True),
+            patch.object(helpers, "stage_0_extended") as mock_s0,
         ):
             helpers.phase_0_recovery()
-        app_mock._stage_0_extended.assert_called_once_with(mode=5)
+        mock_s0.assert_called_once_with(mode=5)
 
     def test_stage0_unavailable_skips_extended_choices(self, helpers, app_mock):
         """STAGE0_AVAILABLE=False 시 choice=2는 기존 방식으로 진행"""
@@ -185,13 +190,16 @@ class TestPhase0Recovery:
         app_mock.current_project._load_from_db.assert_called_once()
 
     def test_genre_displayed(self, helpers, app_mock):
-        """장르 정보 표시"""
-        buf = StringIO()
-        with redirect_stdout(buf), patch("builtins.input", return_value="0"), patch("main_a.STAGE0_AVAILABLE", True):
+        """장르 정보 표시 — app.ui.log 호출에서 확인"""
+        with (
+            redirect_stdout(StringIO()),
+            patch("builtins.input", return_value="0"),
+            patch("main_a.STAGE0_AVAILABLE", True),
+        ):
             helpers.phase_0_recovery()
-        output = buf.getvalue()
-        assert "무협" in output
-        assert "wuxia" in output
+        logged = " ".join(str(c) for c in app_mock.ui.log.call_args_list)
+        assert "무협" in logged
+        assert "wuxia" in logged
 
     def test_no_genre_no_crash(self, helpers, app_mock):
         """장르 없어도 크래시 없음"""
@@ -314,18 +322,18 @@ class TestStage0Extended:
         mock_mgr.import_bible.assert_called_once()
 
     def test_mode_4_calls_extend_blocks(self, helpers, app_mock):
-        """mode=4 → app._extend_blocks 호출"""
+        """mode=4 → self.extend_blocks 호출 (via _s0_handle_block_extension)"""
         mock_mgr = MagicMock()
-        app_mock._extend_blocks.return_value = []
         with (
             redirect_stdout(StringIO()),
             patch("main_a.STAGE0_AVAILABLE", True),
             patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr),
             patch("modules.core.stage0.PresetRegistry"),
             patch("builtins.input", return_value=""),
+            patch.object(helpers, "extend_blocks", return_value=[]) as mock_eb,
         ):
             helpers.stage_0_extended(mode=4)
-        app_mock._extend_blocks.assert_called_once_with(mock_mgr)
+        mock_eb.assert_called_once_with(mock_mgr)
 
     def test_mode_5_calls_reference_analysis(self, helpers, app_mock):
         """mode=5 → run_reference_analysis 호출"""

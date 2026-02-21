@@ -15,7 +15,8 @@ except OSError as _fh_err:
     print(f"[V61.3] Faulthandler 초기화 실패 (비차단): {_fh_err}", file=sys.stderr)
 
 # Windows에서 UTF-8 인코딩 강제 설정 (이모지 및 한글 출력 지원)
-if sys.platform == "win32":
+# pytest 환경에서는 capture fd 충돌 방지를 위해 스킵
+if sys.platform == "win32" and "pytest" not in sys.modules:
     try:
         import io
 

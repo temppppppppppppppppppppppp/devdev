@@ -46,8 +46,8 @@ class TestStage4ContextCreation:
         assert ctx.get_int_input is None
         assert ctx.flush_audit_buffer is None
         assert ctx.safe_commit is None
-        # Phase 3/4 + ToT/MAD 확장 모듈 슬롯 포함 (총 33개)
-        assert len(Stage4Context.__slots__) == 33
+        # Phase 3/4 + conditional_modules 통합 후 26개
+        assert len(Stage4Context.__slots__) == 26
 
 
 # ══════════════════════════════════════════════════════════════
