@@ -285,21 +285,14 @@ class DBManager:
 
         # [V60.82] 기존 테이블에 새 컬럼 추가 (마이그레이션)
         # [V64.P4] sqlite3.OperationalError: column already exists — expected during migration
-        try:
-            self.cursor.execute("ALTER TABLE episode_bibles ADD COLUMN causal_links TEXT")
-        except sqlite3.OperationalError:
-            logging.debug("[SILENT] ALTER TABLE causal_links: column already exists")
-            pass  # 이미 존재
-        try:
-            self.cursor.execute("ALTER TABLE episode_bibles ADD COLUMN karma_matrix TEXT")
-        except sqlite3.OperationalError:
-            logging.debug("[SILENT] ALTER TABLE karma_matrix: column already exists")
-            pass  # 이미 존재
-        try:
-            self.cursor.execute("ALTER TABLE episode_bibles ADD COLUMN knowledge_map TEXT")
-        except sqlite3.OperationalError:
-            logging.debug("[SILENT] ALTER TABLE knowledge_map: column already exists")
-            pass  # 이미 존재
+        # [TF-R3-XC-01] "already exists" 외 OperationalError는 재발생
+        for _col_name in ("causal_links", "karma_matrix", "knowledge_map"):
+            try:
+                self.cursor.execute(f"ALTER TABLE episode_bibles ADD COLUMN {_col_name} TEXT")  # noqa: S608
+            except sqlite3.OperationalError as _e:
+                if "duplicate column" not in str(_e).lower() and "already exists" not in str(_e).lower():
+                    raise
+                logging.debug(f"[SILENT] ALTER TABLE {_col_name}: column already exists")
 
         # 11. [Phase 3-5A] NPC 변경 이력 (append-only)
         self.cursor.execute("""
