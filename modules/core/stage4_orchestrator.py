@@ -596,6 +596,7 @@ JSON으로 출력:
                 if _choice == 1:
                     final_manuscript = _last_best
                     final_title = final_title or f"제{next_ep}화"
+                    final_state_updates = previous_attempt.get("state_updates", {})  # [TF-R3-S4-03] 폴백 시 상태 복구
                 else:
                     return _RoundOutcome(
                         final_manuscript=None,
