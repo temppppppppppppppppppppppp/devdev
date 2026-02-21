@@ -159,9 +159,44 @@ class VecMemory:
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
+            # [B6] 임베딩 모델 버전 추적
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS vec_metadata (
+                    key   TEXT PRIMARY KEY,
+                    value TEXT
+                )
+            """)
             self._conn.commit()
+            # [B6] 모델 버전 저장 및 불일치 검증
+            self._check_embedding_version(cur)
         finally:
             cur.close()
+
+    def _check_embedding_version(self, cur) -> None:
+        """[B6] 임베딩 모델 버전 저장 및 불일치 시 경고."""
+        try:
+            row = cur.execute("SELECT value FROM vec_metadata WHERE key = 'embed_model'").fetchone()
+            if row:
+                stored_model = row[0]
+                if stored_model != EMBED_MODEL:
+                    logging.warning(
+                        f"[VecMemory] 임베딩 모델 불일치: DB={stored_model}, 현재={EMBED_MODEL} — 재색인 권장"
+                    )
+                row_dim = cur.execute("SELECT value FROM vec_metadata WHERE key = 'embed_dim'").fetchone()
+                if row_dim and int(row_dim[0]) != EMBED_DIM:
+                    logging.warning(f"[VecMemory] 임베딩 차원 불일치: DB={row_dim[0]}, 현재={EMBED_DIM} — 재색인 필요")
+            else:
+                cur.execute(
+                    "INSERT OR REPLACE INTO vec_metadata (key, value) VALUES (?, ?)",
+                    ("embed_model", EMBED_MODEL),
+                )
+                cur.execute(
+                    "INSERT OR REPLACE INTO vec_metadata (key, value) VALUES (?, ?)",
+                    ("embed_dim", str(EMBED_DIM)),
+                )
+                self._conn.commit()
+        except Exception as e:
+            logging.warning(f"[VecMemory] 임베딩 버전 체크 실패 (비차단): {str(e)[:60]}")
 
     def _embed_text(self, text: str) -> list | None:
         """텍스트 → 임베딩 벡터. 실패 시 None."""
@@ -288,6 +323,7 @@ class VecMemory:
         current_ep: int,
         n_per_query: int = 3,
         max_results: int = 5,
+        current_arc_no: int | None = None,
     ) -> str:
         """멀티쿼리 벡터 검색 — 다양한 쿼리로 검색 후 merge+dedup (LongTermMemory 호환)."""
         if not self.has_valid_memory:
@@ -332,7 +368,15 @@ class VecMemory:
 
         # [OpusTF-P0-1] 거리(유사도) 기반 랭킹 + 연속 에피소드 중복 제거
         max_results = max(1, max_results)
-        sorted_by_dist = sorted(seen.items(), key=lambda x: x[1][0])  # distance ASC
+
+        # [B3] 같은 Arc 에피소드에 distance 보너스 (×0.9 = 10% 우대)
+        def _arc_adjusted_dist(item):
+            ep, (dist, meta) = item
+            if current_arc_no and meta.get("arc_no") == current_arc_no:
+                return dist * 0.9
+            return dist
+
+        sorted_by_dist = sorted(seen.items(), key=_arc_adjusted_dist)  # distance ASC + arc bonus
         # 다양성 보정: 연속 에피소드(±1) 중 더 먼 것 제거
         selected: list[int] = []
         for ep, (_dist, _meta) in sorted_by_dist:
@@ -345,11 +389,13 @@ class VecMemory:
 
         blocks = []
         for ep in sorted_eps:
-            _, meta = seen[ep]
+            _dist, meta = seen[ep]
             summary = meta.get("summary", "")
             evt = meta.get("event_types", "")
             ent = meta.get("entity_names", "")
-            header = f"### [제 {ep} 화의 기억]"
+            # [B5] 유사도 점수 노출
+            _sim_label = f" 유사도:{1.0 - _dist:.2f}" if _dist < 1.0 else ""
+            header = f"### [제 {ep} 화의 기억{_sim_label}]"
             if evt:
                 header += f" ({evt})"
             block = f"{header}\n요약: {summary}"
@@ -385,7 +431,9 @@ class VecMemory:
                     if not meta:
                         continue
                     summary = meta.get("summary", "요약 정보가 없는 기억입니다.")
-                    block = f"### [제 {rowid} 화의 기억]\n요약: {summary}"
+                    # [B5] 유사도 점수 노출 (distance 낮을수록 유사)
+                    _sim_label = f" (유사도: {1.0 - _dist:.2f})" if _dist < 1.0 else ""
+                    block = f"### [제 {rowid} 화의 기억{_sim_label}]\n요약: {summary}"
                     evt = meta.get("event_types", "")
                     ent = meta.get("entity_names", "")
                     if evt:

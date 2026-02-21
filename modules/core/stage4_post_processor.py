@@ -178,8 +178,8 @@ class Stage4PostProcessor:
             _slot_place = ""
             _slot_ending = ""
             if isinstance(blueprint, dict):
-                _slot_place = str(blueprint.get("scene_summary", "") or blueprint.get("핵심장면", "") or "")[:80]
-                _slot_ending = str(blueprint.get("cliffhanger", "") or blueprint.get("ending_hook", "") or "")[:80]
+                _slot_place = str(blueprint.get("end_location", "") or blueprint.get("start_location", "") or "")[:80]
+                _slot_ending = str(blueprint.get("ending_hook", "") or blueprint.get("cliffhanger", "") or "")[:80]
             _rich_summary = " | ".join(
                 f"{label}: {val}"
                 for label, val in [

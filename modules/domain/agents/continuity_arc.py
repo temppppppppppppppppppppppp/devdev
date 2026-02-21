@@ -364,7 +364,7 @@ class ContinuityArcValidator:
             ep_count=ep_count,
             ep_start=ep_start,
             ep_end=ep_end,
-            tactical_doc=self._ci._escape_braces(tactical_doc[:6000]),
+            tactical_doc=self._ci._escape_braces(tactical_doc[:50000]),
             joint_docs=self._ci._escape_braces(json.dumps(joint_docs, ensure_ascii=False)),
             status_shadow=self._ci._escape_braces(json.dumps(status_shadow, ensure_ascii=False)),
             prev_arc_count=len(prev_arcs),

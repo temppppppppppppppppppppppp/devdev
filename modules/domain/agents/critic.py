@@ -411,7 +411,7 @@ class Critic(BaseAgent):
 [주인공 상태]: {hud_report}
 
 [원고]
-{manuscript[:3000]}
+{manuscript[:20000]}
 
 [비평 기준]
 1. "Show Don't Tell" - 감정을 직접 서술했는가?
@@ -533,10 +533,10 @@ JSON 형식으로 응답:
 
         import json as json_module
 
-        blueprint_text = json_module.dumps(blueprint, ensure_ascii=False, indent=2)[:3000] if blueprint else "없음"
+        blueprint_text = json_module.dumps(blueprint, ensure_ascii=False, indent=2)[:10000] if blueprint else "없음"
 
         prompt = self.DEEP_REVIEW_PROMPT.format(
-            manuscript=self._escape_braces(manuscript[:10000]),
+            manuscript=self._escape_braces(manuscript[:30000]),
             blueprint=self._escape_braces(blueprint_text),
             ep_num=ep_num,
             genre=genre,

@@ -742,9 +742,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
                             bp_lines.append(f"  [{sk}] {s_title} | 등장: {chars_str} | 이벤트: {events_str}")
 
             bp_full = "\n".join(bp_lines)
-            # 100K자 상한 (원고와 합산 200K 이내)
-            if len(bp_full) > 100000:
-                bp_full = bp_full[:100000] + "\n... (100K자 절삭)"
+            # 400K자 상한 (Gemini 1.05M 토큰 입력 여유)
+            if len(bp_full) > 400000:
+                bp_full = bp_full[:400000] + "\n... (400K자 절삭)"
             sections.append(bp_full)
 
         # ── [V67] 이전 원고 전문 ──
@@ -755,9 +755,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 f"특히: 사망한 캐릭터 재등장, 이미 일어난 이벤트 반복, 위치/시간 불연속에 주의하세요.\n\n"
                 f"{prev_manuscripts_text}"
             )
-            # 100K자 상한 (Blueprint와 합산 200K 이내)
-            if len(ms_section) > 100000:
-                ms_section = ms_section[:100000] + "\n... (100K자 절삭)"
+            # 400K자 상한 (Gemini 1.05M 토큰 입력 여유)
+            if len(ms_section) > 400000:
+                ms_section = ms_section[:400000] + "\n... (400K자 절삭)"
             sections.append(ms_section)
 
         result = "\n\n".join(sections)

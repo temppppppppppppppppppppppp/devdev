@@ -1075,15 +1075,15 @@ class Analyst(BaseAgent):
 
         # [🔥 중요] 원고가 너무 길 경우: 앞부분(설정) + 뒷부분(최신 상태) 병합
         compact_draft = ""
-        if len(draft_contents) > 60000:
-            compact_draft = draft_contents[:10000] + "\n\n...[중략: 서사 중간 생략]...\n\n" + draft_contents[-50000:]
+        if len(draft_contents) > 200000:
+            compact_draft = draft_contents[:40000] + "\n\n...[중략: 서사 중간 생략]...\n\n" + draft_contents[-160000:]
         else:
             compact_draft = draft_contents
 
         template = get_recovery_prompt()  # [V65] 외부화
         # 3. 모든 동적 데이터에 _escape_braces 적용 후 주입
         prompt = template.format(
-            draft_data=self._escape_braces(compact_draft), treatment_data=self._escape_braces(treatment_content[:15000])
+            draft_data=self._escape_braces(compact_draft), treatment_data=self._escape_braces(treatment_content[:50000])
         )
 
         response = self.ask(prompt, temperature=0.3)

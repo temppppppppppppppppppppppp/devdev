@@ -101,10 +101,10 @@ class ManuscriptLimits:
 class ContextLimits:
     """컨텍스트 크기 제한 상수."""
 
-    MAX_CONTEXT_CHARS = 200_000  # 200K 문자 절삭 임계값
+    MAX_CONTEXT_CHARS = 800_000  # 800K 문자 (Gemini 1.05M 토큰 입력 기준 안전 마진)
 
 
-def smart_truncate(text: str, max_chars: int = ContextLimits.MAX_CONTEXT_CHARS, head_chars: int = 20_000) -> str:
+def smart_truncate(text: str, max_chars: int = ContextLimits.MAX_CONTEXT_CHARS, head_chars: int = 80_000) -> str:
     """Preserve head and tail when truncating long context text."""
     if not isinstance(text, str):
         text = str(text or "")
