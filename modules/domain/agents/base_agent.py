@@ -1075,9 +1075,9 @@ class BaseAgent:
 
         current_time = time.time()
 
-        # 기존 캐시 확인
-        if cache_key in self._context_caches:
-            cached_info = self._context_caches[cache_key]
+        # 기존 캐시 확인 — [TF-R4] .get()으로 TOCTOU 제거 (키 순환 시 .clear() 경합 방지)
+        cached_info = self._context_caches.get(cache_key)
+        if cached_info:
             if current_time - cached_info["created_at"] < ttl_seconds:
                 return {"cache_name": cached_info.get("name"), "cached": True, "content_hash": content_hash}
             else:
