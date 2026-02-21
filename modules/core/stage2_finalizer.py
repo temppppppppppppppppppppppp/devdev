@@ -232,6 +232,14 @@ class Stage2Finalizer:
                 if all_refined_arcs:
                     prev_joint = all_refined_arcs[-1].get("joint_docs", {})
                     prev_inventory = prev_joint.get("physical_inventory", [])
+                    # [TF-R3-S2-02] 문자열 직렬화된 인벤토리 → 리스트 변환
+                    if isinstance(prev_inventory, str):
+                        try:
+                            import json as _json
+
+                            prev_inventory = _json.loads(prev_inventory)
+                        except (ValueError, TypeError):
+                            prev_inventory = []
                     if prev_inventory and prev_inventory != [] and prev_inventory != "[]":
                         curr_status = refined_arc.get("status_shadow", {})
                         consumed_raw = curr_status.get("item_consumption", [])

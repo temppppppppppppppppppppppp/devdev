@@ -105,8 +105,14 @@ class ReverseExpander:
     def load_drafts_from_file(self, file_path: str) -> int:
         """단일 파일에서 에피소드들 로드"""
         path = Path(file_path)
-        with open(path, encoding="utf-8") as f:
-            text = f.read()
+        try:
+            with open(path, encoding="utf-8") as f:
+                text = f.read()
+        except UnicodeDecodeError:
+            # [TF-R3-S0-01] cp949/euc-kr 등 비-UTF-8 파일 폴백
+            logging.warning(f"[!] UTF-8 인코딩 실패, cp949로 재시도: {file_path}")
+            with open(path, encoding="cp949") as f:
+                text = f.read()
 
         # ⓚ 제N화 패턴으로 분리
         pattern = r"ⓚ\s*제(\d+)화[.\s]*([^\n]*)"

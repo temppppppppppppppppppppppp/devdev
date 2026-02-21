@@ -313,7 +313,7 @@ class Stage4PostProcessor:
             npc_deaths = []
             for npc in key_npcs:
                 if isinstance(npc, dict):
-                    status = npc.get("NPC_Martial_HUD", {}).get("current_status", "")
+                    status = (npc.get("NPC_Martial_HUD") or {}).get("current_status", "")  # [TF-R3-S4-02] None 방어
                     if "사망" in str(status) or "죽" in str(status) or "절명" in str(status):
                         npc_deaths.append(npc.get("name", ""))
 

@@ -320,6 +320,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                     self.stats["phase3_reject"] += 1  # [TF-S3-01] stats 갱신
                     continuity_feedback = continuity_result.get("feedback", "")
                     _prev_reject_feedback = continuity_feedback
+                    _prev_reject_score = 0  # [TF-R3-S3-01] 연속성 실패는 품질 점수 아님 → 패치 모드 차단
                     if best_blueprint:
                         _previous_best = best_blueprint  # [TF-S3-01] patch mode용 보존
                     feedback += f"\n[연속성 오류]\n{continuity_feedback}"
@@ -427,9 +428,10 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
 
         # 모든 재시도 실패
         _last_score = validation_result.get("score", 0) if "validation_result" in locals() else 0
-        if best_blueprint and director:
+        # [TF-R3-S3-02] Director 주권주의: 점수 임계값 이상만 긴급 폴백 허용
+        if best_blueprint and director and _last_score >= PatchModeThresholds.REWRITE:
             logging.warning(
-                f"[ThreePhase] 제{ep_num}화 모든 재시도 실패이나 마지막 최선 blueprint 존재 (score={_last_score})"
+                f"⚠️ [ThreePhase] 제{ep_num}화 긴급 폴백 (score={_last_score} >= {PatchModeThresholds.REWRITE})"
             )
             pipeline_result["final_verdict"] = "PASS_WITH_WARNING"
             pipeline_result["quality_gate_failed"] = True
