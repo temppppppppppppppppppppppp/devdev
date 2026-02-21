@@ -1,7 +1,7 @@
 """Unit tests for ContextAdvisor (SC-1)."""
 
 from modules.core.constants import GenreTypes
-from modules.core.context_advisor import ContextAdvisor, ContextBudgetTracker, RetrievalSlot
+from modules.core.context_advisor import ContextAdvisor, ContextBudgetTracker, RetrievalSlot, RetrievalSources
 
 
 def _make_enabled_advisor(*, llm_enricher=None):
@@ -215,3 +215,32 @@ def test_dedupe_slots_keeps_first_and_sorts_by_priority():
     deduped = ContextAdvisor._dedupe_slots(slots)
     assert len(deduped) == 2
     assert deduped[0].priority <= deduped[1].priority
+
+
+def test_llm_enrich_logs_warning_on_failure(caplog):
+    """P1-1: LLM enrichment 실패 시 경고 로깅 확인."""
+
+    def boom_enricher(**_kwargs):
+        raise RuntimeError("LLM timeout")
+
+    advisor = _make_enabled_advisor(llm_enricher=boom_enricher)
+    import logging
+
+    with caplog.at_level(logging.WARNING):
+        plan = advisor.plan_stage4_retrieval(
+            arc_data={},
+            blueprint={"scene_breakdown": [{"goal": "test"}]},
+            prev_ending="x",
+            current_ep=5,
+            npc_roster=["A", "B", "C", "D", "E"],
+            genre="investment",
+        )
+    assert plan.used_llm is False
+    assert any("[SilentPass:SC:LLMEnrich]" in rec.message for rec in caplog.records)
+
+
+def test_retrieval_sources_constants_match():
+    """P2-2: RetrievalSources 상수가 RetrievalSlot 기본값과 일치."""
+    assert RetrievalSources.VEC_MEMORY == "vec_memory"
+    assert RetrievalSources.DB_NPC_HISTORY == "db_npc_history"
+    assert RetrievalSlot(category="x", query="y").source == RetrievalSources.VEC_MEMORY

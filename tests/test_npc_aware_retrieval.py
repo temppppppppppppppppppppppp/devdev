@@ -119,3 +119,26 @@ class TestDBManagerNpcAware:
         _insert_episode_meta(db, 1, "alice,bob")
         assert db.get_npc_recent_episodes("", before_ep=10, limit=5) == []
         assert db.get_npc_recent_episodes("   ", before_ep=10, limit=5) == []
+
+
+class TestNpcNameEscape:
+    """P0-2: LIKE 와일드카드 이스케이프 검증."""
+
+    def test_npc_name_with_percent_escaped(self, vec_mem: VecMemory):
+        _memorize_episode(vec_mem, ep_num=1, seed=1.0, entity_names=["alice%bob"])
+        _memorize_episode(vec_mem, ep_num=2, seed=2.0, entity_names=["carol"])
+
+        vec_mem._embed_text = MagicMock(return_value=None)
+        result = vec_mem.retrieve_npc_context(["alice%bob"], current_ep=3, max_results=5)
+        assert "EP1" in result
+        assert "EP2" not in result
+
+    def test_npc_name_with_underscore_escaped(self, vec_mem: VecMemory):
+        _memorize_episode(vec_mem, ep_num=1, seed=1.0, entity_names=["alice_bob"])
+        _memorize_episode(vec_mem, ep_num=2, seed=2.0, entity_names=["aliceXbob"])
+
+        vec_mem._embed_text = MagicMock(return_value=None)
+        result = vec_mem.retrieve_npc_context(["alice_bob"], current_ep=3, max_results=5)
+        assert "EP1" in result
+        # Without ESCAPE, _  would match any char and EP2 would also match
+        assert "EP2" not in result

@@ -5,6 +5,7 @@ import json
 import logging
 import re
 
+from modules.core.context_advisor import RetrievalSources
 from modules.validation.threshold_helper import _threshold
 
 
@@ -109,20 +110,19 @@ class Stage2PreflightAnalysis:
         max_results = int(_threshold("context.vector_max_results_s2", 8))
         sections: list[str] = []
         ordered_slots = sorted(plan.slots, key=lambda slot: getattr(slot, "priority", 2))
-        vec_slot_count = sum(
-            1 for slot in ordered_slots if str(getattr(slot, "source", "vec_memory") or "vec_memory") == "vec_memory"
-        )
+        _VM = RetrievalSources.VEC_MEMORY
+        vec_slot_count = sum(1 for slot in ordered_slots if str(getattr(slot, "source", _VM) or _VM) == _VM)
         fallback_names = [str(name).strip() for name in (npc_roster or []) if str(name).strip()]
 
         for slot in ordered_slots:
-            source = str(getattr(slot, "source", "vec_memory") or "vec_memory")
+            source = str(getattr(slot, "source", _VM) or _VM)
             category = str(getattr(slot, "category", "context") or "context")
             query_text = str(getattr(slot, "query", "") or "").strip()
             if not query_text:
                 continue
 
             try:
-                if source == "db_npc_history":
+                if source == RetrievalSources.DB_NPC_HISTORY:
                     npc_names = fallback_names or self._extract_npc_tokens(query_text)
                     result = memory.retrieve_npc_context(
                         npc_names=npc_names,
@@ -159,7 +159,12 @@ class Stage2PreflightAnalysis:
             sections.append(f"[SC:{category}]\n{result}")
 
         logging.info(f"[SC] stage2 retrieval: {len(sections)} sections from {len(plan.slots)} slots")
-        return "\n\n".join(sections)
+        joined = "\n\n".join(sections)
+        budget = int(getattr(plan, "total_budget_chars", 0) or 0)
+        if budget > 0 and len(joined) > budget:
+            joined = joined[:budget]
+            logging.info(f"[SC] stage2 budget truncation → {budget}자")
+        return joined
 
     def _preflight_state_setup(
         self,

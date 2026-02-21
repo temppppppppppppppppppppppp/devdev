@@ -7,6 +7,7 @@ import logging
 import re
 from typing import TYPE_CHECKING
 
+from modules.core.context_advisor import RetrievalSources
 from modules.core.context_compression import ContextCompressor
 from modules.core.writer_prompt_builders import (
     build_anti_trope_instructions as _build_anti_trope,
@@ -130,13 +131,14 @@ class Stage4ContextBuilder:
         ordered_slots = sorted(plan.slots, key=lambda slot: getattr(slot, "priority", 2))
 
         for slot in ordered_slots:
-            source = str(getattr(slot, "source", "vec_memory") or "vec_memory")
+            _VM = RetrievalSources.VEC_MEMORY
+            source = str(getattr(slot, "source", _VM) or _VM)
             query_text = str(getattr(slot, "query", "") or "").strip()
             if not query_text:
                 continue
 
             try:
-                if source == "db_npc_history":
+                if source == RetrievalSources.DB_NPC_HISTORY:
                     npc_tokens = self._extract_npc_tokens(query_text)
                     result = memory.retrieve_npc_context(
                         npc_names=npc_tokens,

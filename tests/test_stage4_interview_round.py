@@ -4,7 +4,7 @@ import inspect
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from modules.core.context_advisor import RetrievalPlan, RetrievalSlot
+from modules.core.context_advisor import RetrievalPlan, RetrievalSlot, RetrievalSources
 from modules.core.stage4_interview_round import Stage4InterviewRound
 from modules.core.stage4_orchestrator import Stage4Orchestrator, _RoundContext
 
@@ -572,3 +572,73 @@ class TestModuleStructure:
     def test_main_a_stage4_context_includes_pass_rate_monitor(self):
         source = Path("main_a.py").read_text(encoding="utf-8")
         assert 'pass_rate_monitor=getattr(self, "pass_rate_monitor", None),' in source
+
+
+class TestSlotMaxChars:
+    """P1-2: 슬롯별 max_chars가 하드코딩 1500 대신 반영되는지 검증."""
+
+    def test_slot_max_chars_respected(self):
+        ctx = _make_ctx()
+        ctx.context_advisor = MagicMock()
+        ctx.memory = MagicMock()
+        ctx.memory.retrieve_multi_query_context.return_value = "A" * 3000
+        ctx.context_advisor.plan_director_retrieval.return_value = RetrievalPlan(
+            stage="director",
+            episode_num=3,
+            slots=[
+                RetrievalSlot(
+                    category="event_claim",
+                    query="event query",
+                    source=RetrievalSources.VEC_MEMORY,
+                    priority=1,
+                    max_chars=500,
+                ),
+            ],
+            total_budget_chars=50000,
+        )
+
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.next_ep = 3
+        round_ctx.prev_manuscripts_text = "history-present"
+        round_ctx.blueprint = {"characters": [{"name": "alice"}], "integrated_scenario": "x"}
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+
+        ctx.agents["director"].check_manuscript_continuity_with_cache.return_value = {"decision": "PASS", "summary": ""}
+        ctx.agents["director"].check_manuscript_history_conflicts.return_value = {"decision": "PASS", "summary": ""}
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "PASS",
+            "score": 95,
+            "selection_reason": "ok",
+            "selected_candidate": {"manuscript": "pass manuscript", "title": "pass"},
+            "state_updates": {},
+        }
+
+        def _threshold_side_effect(key, default=None):
+            if key == "smart_retrieval.enabled":
+                return True
+            if key == "smart_retrieval.director_enabled":
+                return True
+            if key == "context.vector_max_results_s4":
+                return 16
+            if key == "smart_retrieval.director_total_budget":
+                return 50000
+            return default
+
+        with patch("modules.validation.threshold_helper._threshold", side_effect=_threshold_side_effect):
+            ir.run(
+                round_num=0,
+                stage4_spinner=MagicMock(),
+                director_feedback="",
+                previous_attempt={},
+                round_ctx=round_ctx,
+            )
+
+        continuity_ctx = ctx.agents["director"].check_manuscript_continuity_with_cache.call_args.kwargs[
+            "memory_context"
+        ]
+        # slot.max_chars=500, so the content within [SC:event_claim] should be <= 500 chars
+        sc_block = continuity_ctx.split("[SC:event_claim]\n")[-1] if "[SC:event_claim]" in continuity_ctx else ""
+        assert len(sc_block) <= 500

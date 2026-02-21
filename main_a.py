@@ -111,6 +111,7 @@ try:
     from modules.core.character_voice_profiler import CharacterVoiceProfiler  # [V60.26] 캐릭터 음성 프로파일러 (V58)
     from modules.core.confidence_calibration import ConfidenceCalibrator  # [V53.3] 신뢰도 보정
     from modules.core.constitutional_checker import ConstitutionalChecker  # [V55.2] 헌법적 자기검증
+    from modules.core.context_advisor import ContextAdvisor  # [SC] Smart Context Retrieval
     from modules.core.cross_agent_verifier import CrossAgentVerifier  # [V52.4] 교차 검증
     from modules.core.dynamic_prompt_weighting import DynamicPromptWeighter  # [V53.1] 동적 프롬프트 가중치
     from modules.core.emotion_tracker import EmotionArcTracker  # [V60.26] 감정선 추적
@@ -267,6 +268,7 @@ class SovereignApp:
         self.writer_template = None  # [V55.3] 원고 템플릿
         self.pass_rate_monitor = None  # [V55.3] 통과율 모니터
         self.quality_dashboard = None  # [V60] 품질 대시보드
+        self.context_advisor = None  # [SC] Smart Context Retrieval
 
         # [V66] SemanticPlotGuard 활성화
         self.semantic_plot_guard = None
@@ -1704,6 +1706,10 @@ class SovereignApp:
                     self.quality_dashboard = QualityDashboard(Path(project_path))
                     self.ui.log("   📊 [V60] Quality Dashboard 활성화")
 
+                    # [SC] Smart Context Retrieval
+                    self.context_advisor = ContextAdvisor()
+                    self.ui.log("   🧭 [SC] Context Advisor 활성화")
+
                     self.ui.log(f"   📊 [V50~V60] 서사 품질 모듈 초기화 완료 (장르: {genre_type})")
 
                     # 기존 에피소드에서 데이터 로드
@@ -2963,6 +2969,7 @@ class SovereignApp:
             sys=self.sys,
             state_tracker=self.state_tracker,
             memory=getattr(self, "memory", None),
+            context_advisor=getattr(self, "context_advisor", None),
             world_state=self.world_state,
             fact_ledger=self.fact_ledger,
             character_voice=getattr(self, "character_voice", None),

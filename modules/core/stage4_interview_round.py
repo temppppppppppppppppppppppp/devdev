@@ -4,6 +4,8 @@
 
 import logging
 
+from modules.core.context_advisor import RetrievalSources
+
 
 class Stage4InterviewRound:
     """[B-1-3] Stage4 단일 면담 라운드 실행 모듈."""
@@ -458,14 +460,19 @@ class Stage4InterviewRound:
                 _max_results = int(_threshold("context.vector_max_results_s4", 16))
                 _mem_parts = []
                 for _slot in getattr(_plan, "slots", []) or []:
-                    _slot_source = str(getattr(_slot, "source", "vec_memory") or "vec_memory")
+                    _slot_source = str(
+                        getattr(_slot, "source", RetrievalSources.VEC_MEMORY) or RetrievalSources.VEC_MEMORY
+                    )
                     _slot_category = str(getattr(_slot, "category", "director_context") or "director_context")
                     _slot_query = str(getattr(_slot, "query", "") or "").strip()
                     if not _slot_query:
                         continue
 
                     try:
-                        if _slot_source == "db_npc_history" and hasattr(_vec_mem, "retrieve_npc_context"):
+                        _slot_max = int(getattr(_slot, "max_chars", 0) or 0) or 1500
+                        if _slot_source == RetrievalSources.DB_NPC_HISTORY and hasattr(
+                            _vec_mem, "retrieve_npc_context"
+                        ):
                             _slot_npcs = _npc_roster[:5]
                             if not _slot_npcs:
                                 _slot_npcs = []
@@ -485,7 +492,7 @@ class Stage4InterviewRound:
                                 max_results=_max_results,
                             )
                             if _npc_text:
-                                _mem_parts.append(f"[SC:npc]\n{str(_npc_text)[:1500]}")
+                                _mem_parts.append(f"[SC:npc]\n{str(_npc_text)[:_slot_max]}")
                         else:
                             _vec_text = _vec_mem.retrieve_multi_query_context(
                                 queries=[_slot_query],
@@ -494,9 +501,9 @@ class Stage4InterviewRound:
                                 max_results=_max_results,
                             )
                             if _vec_text:
-                                _mem_parts.append(f"[SC:{_slot_category}]\n{str(_vec_text)[:1500]}")
+                                _mem_parts.append(f"[SC:{_slot_category}]\n{str(_vec_text)[:_slot_max]}")
                     except Exception as _slot_err:
-                        logging.warning(f"[SilentPass:DirectorSC5] 슬롯 {_slot_category} 실패: {_slot_err!s:.100}")
+                        logging.warning(f"[SilentPass:SC:Director] 슬롯 {_slot_category} 실패: {_slot_err!s:.100}")
 
                 if _mem_parts:
                     _budget = int(_threshold("smart_retrieval.director_total_budget", 20000))
@@ -508,7 +515,7 @@ class Stage4InterviewRound:
             if not _use_advisor_path:
                 _director_memory_context = ""
         except Exception as _sc5_err:
-            logging.warning(f"[SilentPass:DirectorSC5] 벡터 메모리 조립 실패: {_sc5_err!s:.100}")
+            logging.warning(f"[SilentPass:SC:Director] 벡터 메모리 조립 실패: {_sc5_err!s:.100}")
             _director_memory_context = ""
         finally:
             try:

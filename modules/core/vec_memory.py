@@ -434,9 +434,14 @@ class VecMemory:
         try:
             with self._db_lock():
                 like_conditions = " OR ".join(
-                    "((',' || REPLACE(IFNULL(entity_names, ''), ' ', '') || ',') LIKE ?)" for _ in core_names
+                    "((',' || REPLACE(IFNULL(entity_names, ''), ' ', '') || ',') LIKE ? ESCAPE '\\')"
+                    for _ in core_names
                 )
-                like_params = [f"%,{name.replace(' ', '')},%" for name in core_names]
+
+                def _escape_like(s: str) -> str:
+                    return s.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+                like_params = [f"%,{_escape_like(name.replace(' ', ''))},%" for name in core_names]
                 rows = self._conn.execute(
                     f"""SELECT ep_num, summary, arc_no, event_types, entity_names
                         FROM episode_meta
