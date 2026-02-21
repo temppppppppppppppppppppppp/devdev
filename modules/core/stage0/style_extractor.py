@@ -662,7 +662,9 @@ JSON만 출력하세요.
 
         time.sleep(self.API_DELAY)
 
-        models = ["gemini-3-pro-preview", "gemini-2.5-pro", "gemini-2.5-flash"]
+        from modules.core.constants import AIModels
+
+        models = [AIModels.TIER_1_ARCHITECT, AIModels.EMERGENCY_FALLBACK, AIModels.SUMMARY_MODEL]
         last_err = None
         for model_name in models:
             try:

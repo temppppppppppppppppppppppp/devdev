@@ -233,6 +233,11 @@ class StageZeroManager:
         logging.info("[*] Bible 생성 중...")
         self.bible = expander.generate_bible(self.protagonist_config)
 
+        # [TF-R2-S01-04] Bible 실패 시 조기 종료
+        if not self.bible or not isinstance(self.bible, dict) or not self.bible.get("MasterBible"):
+            logging.warning("[!] Bible 생성 실패 — Treatment 생성 건너뜀")
+            return {}, [], None
+
         # Treatment 생성
         logging.info("[*] Treatment 생성 중...")
         self.treatment = expander.generate_treatment(60)

@@ -185,7 +185,8 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 "must_focus_length": len(str(constraint_block.get("must_focus", {}).get("content", ""))),
                 "has_stop_line": bool(constraint_block.get("stop_line", {}).get("content")),
             }
-            self.stats["phase1_complete"] += 1
+            if retry == 0:  # [TF-R2-S3-02] 첫 시도만 카운트
+                self.stats["phase1_complete"] += 1
 
             # ═══════════════════════════════════════════════════════════════
             # PHASE 2: GENERATE - Ensemble 생성

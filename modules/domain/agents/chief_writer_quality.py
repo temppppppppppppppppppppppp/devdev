@@ -488,8 +488,5 @@ class ChiefWriterQualityGate:
                 for keyword in cliche_keywords:
                     counts[keyword] += content.count(keyword)
 
-        # 현재 원고도 체크
-        for keyword in cliche_keywords:
-            counts[keyword] += manuscript.count(keyword)
-
+        # [TF-R2-S4-I08] 현재 원고 제외 — 이전 에피소드만 기준선
         return {k: v for k, v in counts.items() if v > 0}
