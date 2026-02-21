@@ -110,7 +110,7 @@
    - `fix_text`
    - `accept_change`
    - `override_with_reason` (사유 필수)
-6. 승인된 변경만 `canon_facts`/`canon_events`에 commit
+7. **[Gemini 3.1 Pro / Antigravity 권고사항]**: 모든 Director 위반 개입, 사유 입력, 수동 패치 등은 동기식 `input()` 대신 UI 추상화 계층(`ui.ask_user()` 또는 `aioconsole`)을 통과하도록 강제하여 Event Loop Freezing을 방지해야 합니다.
 
 ## 7. 다필드 공통 규칙 템플릿
 - `regression_without_event`:
@@ -148,6 +148,7 @@
 ### Phase 1 (Core 12, 1~2주)
 - D01~D12 우선 적용
 - Stage4 승인 커밋 게이트 적용
+- **[Gemini 3.1 Pro 권고사항]**: 이 시점에서 모든 수동 개입 인터페이스의 비동기화(`to_thread` 등) 점검 포함
 
 ### Phase 2 (Alias + C-13, 1주)
 - item/character alias registry 도입

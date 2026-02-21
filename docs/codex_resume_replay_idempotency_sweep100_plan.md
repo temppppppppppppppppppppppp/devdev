@@ -9,7 +9,7 @@
 
 ## 10개 Phase × 10 Round
 - Phase 1 (R01-R10): checkpoint 생성 시점 검증
-- Phase 2 (R11-R20): Stage별 재개(0/2/3/4) 정확도
+- Phase 2 (R11-R20): Stage별 재개(0/2/3/4) 정확도 (및 Lazy Init 모듈의 메모리 복원 완결성 검증 - **[Gemini 3.1 Pro 권고사항]**)
 - Phase 3 (R21-R30): 동일 ep 재실행 중복 write 방지
 - Phase 4 (R31-R40): rollback->replay 정합성
 - Phase 5 (R41-R50): commit 경계 장애 원자성
