@@ -3,6 +3,7 @@
 import inspect
 from unittest.mock import MagicMock, patch
 
+from modules.core.context_advisor import RetrievalPlan, RetrievalSlot
 from modules.core.stage4_context_builder import Stage4ContextBuilder
 from modules.core.stage4_orchestrator import Stage4Orchestrator, _RoundContext
 
@@ -25,6 +26,7 @@ def _make_ctx():
     ctx.fact_ledger = None
     ctx.state_tracker = None
     ctx.memory = None
+    ctx.context_advisor = None
     ctx.foreshadow_tracker = None
     ctx.semantic_plot_guard = None
     ctx.load_narrative_summaries = MagicMock(return_value="")
@@ -307,6 +309,110 @@ class TestBuildMandatoryContext:
         source = inspect.getsource(Stage4ContextBuilder.build_mandatory_context)
         assert "self.app" not in source
         assert "self.ctx.semantic_plot_guard" in source
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_falls_back_to_legacy_vector_path_without_advisor(self, *_mocks):
+        ctx = _make_ctx()
+        ctx.memory = MagicMock()
+        ctx.memory.retrieve_multi_query_context.return_value = "legacy vector block"
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        result = cb.build_mandatory_context(
+            next_ep=5,
+            arc_data={"arc_no": 1, "state_changes": {"npc_deaths": ["alice"]}},
+            arc_tactical="arc tactical text " * 10,
+            prev_text="x" * 200,
+            prev_ending="ending context",
+            hud_report="HUD",
+            writer_agent=MagicMock(),
+            anchor_sys=anchor_sys,
+            s4_genre_type="wuxia",
+            v50_modules_available=False,
+        )
+
+        assert "legacy vector block" in result["mandatory_context"]
+        ctx.memory.retrieve_multi_query_context.assert_called()
+
+    @patch("modules.core.stage4_context_builder._build_writer_mandatory_context", return_value="writer mandatory")
+    def test_uses_advisor_retrieval_plan_when_available(self, *_mocks):
+        ctx = _make_ctx()
+        ctx.memory = MagicMock()
+        ctx.memory.retrieve_multi_query_context.return_value = "vec hit"
+        ctx.memory.retrieve_npc_context.return_value = "npc hit"
+        ctx.context_advisor = MagicMock()
+        ctx.context_advisor.plan_stage4_retrieval.return_value = RetrievalPlan(
+            stage="stage4",
+            episode_num=7,
+            slots=[
+                RetrievalSlot(category="scene_context", query="scene query", source="vec_memory", priority=1),
+                RetrievalSlot(category="npc_history", query="alice bob", source="db_npc_history", priority=1),
+            ],
+            total_budget_chars=1200,
+        )
+        cb = Stage4ContextBuilder(ctx)
+        anchor_sys = MagicMock()
+        anchor_sys.get_relevant_anchors.return_value = []
+        anchor_sys.get_critical_anchors.return_value = []
+
+        def threshold_side_effect(key, default=None):
+            if key == "smart_retrieval.enabled":
+                return True
+            if key == "smart_retrieval.stage4_enabled":
+                return True
+            if key == "context.vector_max_results_s4":
+                return 16
+            return default
+
+        with patch("modules.core.stage4_context_builder._threshold", side_effect=threshold_side_effect):
+            result = cb.build_mandatory_context(
+                next_ep=7,
+                arc_data={"arc_no": 1, "ep_start": 1, "ep_count": 10},
+                arc_tactical="arc tactical",
+                prev_text="x" * 200,
+                prev_ending="ending context",
+                hud_report="HUD",
+                writer_agent=MagicMock(),
+                anchor_sys=anchor_sys,
+                s4_genre_type="wuxia",
+                v50_modules_available=False,
+            )
+
+        ctx.context_advisor.plan_stage4_retrieval.assert_called_once()
+        ctx.memory.retrieve_multi_query_context.assert_called_once()
+        ctx.memory.retrieve_npc_context.assert_called_once()
+        assert "[SC:scene_context]" in result["mandatory_context"]
+        assert "[SC:npc_history]" in result["mandatory_context"]
+
+    def test_execute_retrieval_plan_respects_slot_max_chars(self):
+        ctx = _make_ctx()
+        ctx.memory = MagicMock()
+        ctx.memory.retrieve_multi_query_context.return_value = "x" * 1200
+        cb = Stage4ContextBuilder(ctx)
+        plan = RetrievalPlan(
+            stage="stage4",
+            episode_num=3,
+            slots=[RetrievalSlot(category="long_slot", query="query", source="vec_memory", max_chars=80)],
+            total_budget_chars=1000,
+        )
+
+        sections = cb._execute_retrieval_plan(plan)
+
+        assert len(sections) == 1
+        raw_len = len("[SC:long_slot]\n" + ("x" * 1200))
+        assert len(sections[0]) < raw_len
+
+    def test_apply_context_budget_logs_and_trims(self, caplog):
+        cb = Stage4ContextBuilder(_make_ctx())
+        original_sections = ["a" * 1200, "b" * 1200]
+
+        with caplog.at_level("INFO"):
+            trimmed_sections = cb._apply_context_budget(original_sections, total_budget_chars=500)
+
+        assert sum(len(s) for s in trimmed_sections) < 2400
+        assert any("[SC] Context budget:" in rec.message for rec in caplog.records)
 
 
 class TestBuildRoundContext:

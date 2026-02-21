@@ -5,7 +5,9 @@
 import json
 import logging
 import re
+from typing import TYPE_CHECKING
 
+from modules.core.context_compression import ContextCompressor
 from modules.core.writer_prompt_builders import (
     build_anti_trope_instructions as _build_anti_trope,
 )
@@ -17,12 +19,205 @@ from modules.core.writer_prompt_builders import (
 )
 from modules.validation.threshold_helper import _threshold
 
+if TYPE_CHECKING:
+    from modules.core.context_advisor import RetrievalPlan
+
 
 class Stage4ContextBuilder:
     """[B-1-2] Stage4 컨텍스트 빌더 전담 모듈."""
 
     def __init__(self, ctx) -> None:
         self.ctx = ctx
+
+    @staticmethod
+    def _extract_npc_tokens(query: str) -> list[str]:
+        """Extract candidate NPC tokens from retrieval query text."""
+        if not query:
+            return []
+
+        stopwords = {
+            "npc",
+            "history",
+            "context",
+            "consistency",
+            "query",
+            "past",
+            "state",
+            "change",
+            "relation",
+            "event",
+            "continuity",
+            "appear",
+            "verify",
+        }
+        tokens: list[str] = []
+        for token in re.split(r"[\s,|/:;()\[\]{}]+", str(query)):
+            text = token.strip()
+            if len(text) < 2:
+                continue
+            if text.lower() in stopwords:
+                continue
+            if text not in tokens:
+                tokens.append(text)
+        return tokens[:20]
+
+    @staticmethod
+    def _collect_npc_roster(arc_data: dict, blueprint: dict | None = None) -> list[str]:
+        """Collect NPC candidates from arc state_changes and blueprint hints."""
+        names: list[str] = []
+        state_changes = (arc_data or {}).get("state_changes", {}) if isinstance(arc_data, dict) else {}
+
+        for field in ("npc_deaths", "relationship_changes", "npc_injuries"):
+            for entry in state_changes.get(field) or []:
+                if isinstance(entry, dict):
+                    candidates = [
+                        entry.get("name"),
+                        entry.get("npc"),
+                        entry.get("source"),
+                        entry.get("target"),
+                        entry.get("npc_name"),
+                    ]
+                    for cand in candidates:
+                        text = str(cand or "").strip()
+                        if text and text not in names:
+                            names.append(text)
+                elif isinstance(entry, str):
+                    text = entry.strip()
+                    if text and text not in names:
+                        names.append(text)
+
+        bp = blueprint or {}
+        scene_blocks = bp.get("scene_breakdown") or bp.get("scenes") or []
+        if isinstance(scene_blocks, list):
+            for scene in scene_blocks:
+                if not isinstance(scene, dict):
+                    continue
+                for key in ("npcs", "characters", "participants"):
+                    raw = scene.get(key)
+                    if isinstance(raw, list):
+                        for item in raw:
+                            text = str(item or "").strip()
+                            if text and text not in names:
+                                names.append(text)
+                    elif isinstance(raw, str):
+                        for item in re.split(r"[,\n/|]+", raw):
+                            text = item.strip()
+                            if text and text not in names:
+                                names.append(text)
+
+        for key in ("npc_roster", "key_npcs", "characters"):
+            raw = bp.get(key)
+            if isinstance(raw, list):
+                for item in raw:
+                    if isinstance(item, dict):
+                        text = str(item.get("name") or item.get("npc") or "").strip()
+                    else:
+                        text = str(item or "").strip()
+                    if text and text not in names:
+                        names.append(text)
+
+        return names[:50]
+
+    def _execute_retrieval_plan(self, plan: "RetrievalPlan") -> list[str]:
+        """Execute retrieval plan slots and return context sections."""
+        memory = getattr(self.ctx, "memory", None)
+        if not memory or not plan or not getattr(plan, "slots", None):
+            return []
+
+        sections: list[str] = []
+        compressor = ContextCompressor()
+        max_results = int(_threshold("context.vector_max_results_s4", 12))
+        ordered_slots = sorted(plan.slots, key=lambda slot: getattr(slot, "priority", 2))
+
+        for slot in ordered_slots:
+            source = str(getattr(slot, "source", "vec_memory") or "vec_memory")
+            query_text = str(getattr(slot, "query", "") or "").strip()
+            if not query_text:
+                continue
+
+            try:
+                if source == "db_npc_history":
+                    npc_tokens = self._extract_npc_tokens(query_text)
+                    result = memory.retrieve_npc_context(
+                        npc_names=npc_tokens,
+                        current_ep=plan.episode_num,
+                        max_results=max_results,
+                    )
+                else:
+                    result = memory.retrieve_multi_query_context(
+                        queries=[query_text],
+                        current_ep=plan.episode_num,
+                        n_per_query=3,
+                        max_results=max_results,
+                    )
+            except Exception as e:
+                self.ctx.ui.log(f"   [SC] retrieval slot failed ({source}/{slot.category}): {str(e)[:80]}")
+                continue
+
+            if not result:
+                continue
+
+            slot_max = int(getattr(slot, "max_chars", 0) or 0)
+            if slot_max > 0 and len(result) > slot_max:
+                result = compressor._smart_trim(result, slot_max)
+
+            sections.append(f"[SC:{slot.category}]\n{result}")
+
+        logging.info(f"[SC] stage4 retrieval: {len(sections)} sections from {len(plan.slots)} slots")
+        return sections
+
+    def _apply_context_budget(self, sections: list[str], total_budget_chars: int) -> list[str]:
+        """Track section-level budget usage and trim large sections when over budget."""
+        if not sections:
+            return sections
+
+        if total_budget_chars <= 0:
+            total_budget_chars = int(_threshold("smart_retrieval.stage4_total_budget", 50000))
+        if total_budget_chars <= 0:
+            return sections
+
+        from modules.core.context_advisor import ContextBudgetTracker
+
+        def _build_tracker(values: list[str]) -> ContextBudgetTracker:
+            tracker = ContextBudgetTracker(total_budget_chars=total_budget_chars)
+            for idx, content in enumerate(values, start=1):
+                tracker.register_section(f"section_{idx}", content)
+            return tracker
+
+        tracker = _build_tracker(sections)
+        report = tracker.get_usage_report()
+        logging.info(
+            f"[SC] Context budget: {report['used_chars']}/{report['total_budget_chars']} ({report['usage_pct']}%)"
+        )
+
+        if report["used_chars"] <= report["total_budget_chars"]:
+            return sections
+
+        compressor = ContextCompressor()
+        for target in tracker.get_compression_targets():
+            try:
+                idx = int(target.split("_")[-1]) - 1
+            except (TypeError, ValueError):
+                continue
+            if idx < 0 or idx >= len(sections):
+                continue
+
+            section = sections[idx]
+            if len(section) <= 300:
+                continue
+
+            trim_target = max(300, int(len(section) * 0.7))
+            sections[idx] = compressor._smart_trim(section, trim_target)
+
+            tracker = _build_tracker(sections)
+            report = tracker.get_usage_report()
+            if report["used_chars"] <= report["total_budget_chars"]:
+                break
+
+        logging.info(
+            f"[SC] Context budget: {report['used_chars']}/{report['total_budget_chars']} ({report['usage_pct']}%)"
+        )
+        return sections
 
     def load_chain_link_section(self, next_ep: int) -> str:
         """
@@ -220,6 +415,7 @@ class Stage4ContextBuilder:
         anchor_sys,
         s4_genre_type: str,
         v50_modules_available: bool,
+        blueprint: dict | None = None,
         pacing_analyzer=None,
     ) -> dict:
         """[4-R1-b] mandatory_context + writer prompt 조립을 분리 (동작 변화 없음)."""
@@ -415,10 +611,47 @@ class Stage4ContextBuilder:
             if _fin_summary:
                 _mc_parts.append(_fin_summary)
 
+        _retrieval_plan = None
         try:
             if self.ctx.memory and prev_ending:
-                _mq_queries = [prev_ending]
-                if arc_data and arc_data.get("state_changes"):
+                _use_advisor_path = False
+                _advisor = getattr(self.ctx, "context_advisor", None)
+                _smart_enabled = bool(_threshold("smart_retrieval.enabled", False)) and bool(
+                    _threshold("smart_retrieval.stage4_enabled", False)
+                )
+                if _advisor and _smart_enabled:
+                    _arc_ep_start = arc_data.get("ep_start", next_ep) if arc_data else next_ep
+                    _arc_ep_count = arc_data.get("ep_count", 0) if arc_data else 0
+                    _arc_pos = next_ep - _arc_ep_start + 1
+                    _is_arc_boundary = _arc_pos <= 1 or (_arc_ep_count > 0 and _arc_pos >= _arc_ep_count)
+                    _npc_roster = self._collect_npc_roster(arc_data=arc_data, blueprint=blueprint)
+                    _retrieval_plan = _advisor.plan_stage4_retrieval(
+                        arc_data=arc_data or {},
+                        blueprint=blueprint or {},
+                        prev_ending=prev_ending,
+                        current_ep=next_ep,
+                        npc_roster=_npc_roster,
+                        genre=s4_genre_type,
+                        is_arc_boundary=_is_arc_boundary,
+                        is_reject_retry=False,
+                    )
+                    _perf_key = f"sc_stage4_ep{next_ep}_retrieval"
+                    try:
+                        self.ctx.perf_timer.start(_perf_key)
+                    except Exception:
+                        pass
+                    try:
+                        for _retrieved in self._execute_retrieval_plan(_retrieval_plan):
+                            _mc_parts.append(_retrieved)
+                    finally:
+                        try:
+                            self.ctx.perf_timer.stop(_perf_key)
+                        except Exception:
+                            pass
+                    _use_advisor_path = True
+
+                _mq_queries = [] if _use_advisor_path else [prev_ending]
+                if (not _use_advisor_path) and arc_data and arc_data.get("state_changes"):
                     _sc = arc_data["state_changes"]
                     _npc_names = []
                     for _field in ["npc_deaths", "relationship_changes", "npc_injuries"]:
@@ -434,24 +667,25 @@ class Stage4ContextBuilder:
                                 _npc_names.append(_n)
                     if _npc_names:
                         _mq_queries.append(" ".join(_npc_names[:5]))
-                if arc_tactical and len(arc_tactical) > 50:
+                if (not _use_advisor_path) and arc_tactical and len(arc_tactical) > 50:
                     _mq_queries.append(arc_tactical[:600])
                 _genre_queries = {
                     "hunter": ["던전 클리어 각성 스킬 랭크"],
                     "investment": ["포트폴리오 거래 수익률 투자"],
                     "fantasy": ["마법 축복 주문 마나 정령"],
                 }
-                if s4_genre_type in _genre_queries:
+                if (not _use_advisor_path) and s4_genre_type in _genre_queries:
                     _mq_queries.extend(_genre_queries[s4_genre_type])
-                _vector_memory = self.ctx.memory.retrieve_multi_query_context(
-                    queries=_mq_queries,
-                    current_ep=next_ep,
-                    n_per_query=3,
-                    max_results=_threshold("context.vector_max_results_s4", 12),
-                    current_arc_no=current_arc_no,
-                )
-                if _vector_memory:
-                    _mc_parts.append(f"[과거 유사 맥락 (벡터 검색)]\n{_vector_memory}")
+                if _mq_queries:
+                    _vector_memory = self.ctx.memory.retrieve_multi_query_context(
+                        queries=_mq_queries,
+                        current_ep=next_ep,
+                        n_per_query=3,
+                        max_results=_threshold("context.vector_max_results_s4", 12),
+                        current_arc_no=current_arc_no,
+                    )
+                    if _vector_memory:
+                        _mc_parts.append(f"[과거 유사 맥락 (벡터 검색)]\n{_vector_memory}")
         except Exception as e:
             self.ctx.ui.log(f"   ⚠️ 벡터 검색 실패 (비치명): {e}")
 
@@ -498,6 +732,10 @@ class Stage4ContextBuilder:
                 _mc_parts.append(_narrative_summaries)
         except Exception as e:
             self.ctx.ui.log(f"   ⚠️ [V64.P4] 내러티브 요약 로드 실패 (비치명): {str(e)[:60]}")
+
+        _sc_budget = int(getattr(_retrieval_plan, "total_budget_chars", 0) or 0)
+        if _threshold("smart_retrieval.enabled", False):
+            _mc_parts = self._apply_context_budget(_mc_parts, _sc_budget)
 
         mandatory_context = "\n\n".join(_mc_parts)
 

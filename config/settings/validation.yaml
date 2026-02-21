@@ -60,8 +60,8 @@ context:
   director_mandatory_max: 40000
   lookback_excerpt_chars: 500
   lookback_total_chars: 4000
-  vector_max_results_s4: 12
-  vector_max_results_s2: 8
+  vector_max_results_s4: 16
+  vector_max_results_s2: 12
   cache_merge_chars_per_ep: 4000
 
 # ── 재시도 제한 ──────────────────────────────────────────────
@@ -172,3 +172,14 @@ feature_flags:
   enable_fact_ledger: true
   enable_chain_links: true
   enable_volume_summaries: true
+
+# Smart Context Retrieval (SC-0~6)
+smart_retrieval:
+  enabled: false
+  stage2_enabled: false
+  stage4_enabled: false
+  director_enabled: false
+  stage2_total_budget: 20000
+  stage4_total_budget: 30000
+  director_total_budget: 20000
+  max_queries_per_plan: 8

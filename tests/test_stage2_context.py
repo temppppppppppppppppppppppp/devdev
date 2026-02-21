@@ -69,6 +69,7 @@ class TestStage2Context:
         assert ctx.semantic_plot_guard is None
         assert ctx.failure_learner is None
         assert ctx.memory is None
+        assert ctx.context_advisor is None
         assert ctx.stage2_optimizer is None
         assert ctx.arc_draft_validator is None
         assert ctx.arc_corrector is None
@@ -113,6 +114,17 @@ class TestStage2Context:
         assert ctx.generate_arc_context_v60 is None
         assert ctx.generate_reverse_feedback_stage4_to_2 is None
 
+    def test_context_advisor_stored_when_injected(self, mock_deps):
+        advisor = MagicMock()
+        ctx = Stage2Context(**mock_deps, context_advisor=advisor)
+        assert ctx.context_advisor is advisor
+
+    def test_from_app_extracts_context_advisor(self, app_mock):
+        advisor = MagicMock()
+        app_mock.context_advisor = advisor
+        ctx = Stage2Context.from_app(app_mock)
+        assert ctx.context_advisor is advisor
+
     def test_from_app_missing_callbacks_none(self):
         """콜백 미구현 app에서도 from_app 정상 (None)"""
         app = MagicMock(spec=[])
@@ -124,6 +136,7 @@ class TestStage2Context:
         assert ctx.audit_event is None
         assert ctx.get_int_input is None
         assert ctx.state_tracker is None
+        assert ctx.context_advisor is None
 
     def test_keyword_only_init(self):
         """위치 인자로 생성 시 TypeError"""

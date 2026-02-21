@@ -36,6 +36,7 @@ def app_mock(mock_deps):
     app.agents = mock_deps["agents"]
     app.sys = mock_deps["sys"]
     app.state_tracker = mock_deps["state_tracker"]
+    app.context_advisor = None
     return app
 
 
@@ -69,6 +70,20 @@ class TestStage4Context:
         app.sys = MagicMock()
         ctx = Stage4Context.from_app(app)
         assert ctx.state_tracker is None
+
+    def test_context_advisor_default_none(self, ctx):
+        assert ctx.context_advisor is None
+
+    def test_context_advisor_stored(self, mock_deps):
+        advisor = MagicMock()
+        with_advisor = Stage4Context(**mock_deps, context_advisor=advisor)
+        assert with_advisor.context_advisor is advisor
+
+    def test_from_app_extracts_context_advisor(self, app_mock):
+        advisor = MagicMock()
+        app_mock.context_advisor = advisor
+        extracted = Stage4Context.from_app(app_mock)
+        assert extracted.context_advisor is advisor
 
     def test_slots_prevent_extra_attrs(self, ctx):
         """__slots__로 추가 속성 차단"""

@@ -46,8 +46,8 @@ class TestStage4ContextCreation:
         assert ctx.get_int_input is None
         assert ctx.flush_audit_buffer is None
         assert ctx.safe_commit is None
-        # Phase 3/4 + conditional_modules 통합 후 26개
-        assert len(Stage4Context.__slots__) == 26
+        # Phase 3/4 + SC-3(context_advisor) + conditional_modules
+        assert len(Stage4Context.__slots__) == 27
 
 
 # ══════════════════════════════════════════════════════════════

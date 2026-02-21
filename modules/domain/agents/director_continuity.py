@@ -342,6 +342,7 @@ class DirectorContinuityValidator:
         manuscript_history: list,
         use_summary: bool = True,
         story_context: str = "",
+        memory_context: str = "",
     ) -> dict:
         """
         [V67.1] 현재 원고가 이전 원고들과 충돌하는지 검사 (story_context 추가)
@@ -392,6 +393,8 @@ class DirectorContinuityValidator:
             current_manuscript=self._d._escape_braces(current_manuscript),
             story_context=self._d._escape_braces(story_context) if story_context else "(작품 설정 정보 없음)",
         )
+        if prompt and memory_context:
+            prompt += f"\n\n### 🔍 [SC-5] 벡터 메모리 참고 — 과거 에피소드 관련 컨텍스트\n{memory_context}"
         if not prompt:
             return {
                 "decision": "PASS",
@@ -662,7 +665,13 @@ class DirectorContinuityValidator:
             return {"decision": "UNKNOWN", "issues": [], "feedback": "", "error": str(e)}
 
     def check_manuscript_continuity_with_cache(
-        self, new_manuscript: str, ep_num: int, db=None, limit: int = 30, story_context: str = ""
+        self,
+        new_manuscript: str,
+        ep_num: int,
+        db=None,
+        limit: int = 30,
+        story_context: str = "",
+        memory_context: str = "",
     ) -> dict:
         """
         [V61.5] 이전 Manuscript 컨텍스트 캐싱 기반 연속성 검증
@@ -719,6 +728,8 @@ class DirectorContinuityValidator:
                 current_manuscript=self._d._escape_braces(new_manuscript),  # [V70] 중괄호 이스케이프
                 story_context=self._d._escape_braces(story_context) if story_context else "(작품 설정 정보 없음)",
             )
+            if prompt and memory_context:
+                prompt += f"\n\n### 🔍 [SC-5] 벡터 메모리 참고 — 과거 에피소드 관련 컨텍스트\n{memory_context}"
             if not prompt:
                 return {
                     "decision": "PASS",

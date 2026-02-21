@@ -411,6 +411,111 @@ class Stage4InterviewRound:
         except (KeyError, ValueError, TypeError) as _de_err:
             logging.warning(f"⚠️ [V66.2] 파괴 엔티티 검사 오류: {_de_err}")
 
+        # [SC-5] Director 벡터 메모리 컨텍스트 조립 (후보 공통 1회)
+        _director_memory_context = ""
+        _sc5_perf_key = f"sc_director_ep{next_ep}_retrieval"
+        try:
+            self.ctx.perf_timer.start(_sc5_perf_key)
+        except Exception:
+            pass
+        try:
+            _advisor = getattr(self.ctx, "context_advisor", None)
+            _vec_mem = getattr(self.ctx, "memory", None)
+            _use_advisor_path = False
+            if (
+                _advisor
+                and _vec_mem
+                and next_ep > 1
+                and _threshold("smart_retrieval.enabled", False)
+                and _threshold("smart_retrieval.director_enabled", False)
+            ):
+                _npc_roster = []
+                if isinstance(blueprint, dict):
+                    _raw_chars = blueprint.get("characters") or blueprint.get("npcs") or []
+                    if isinstance(_raw_chars, list):
+                        for _char in _raw_chars:
+                            _name = _char.get("name", "") if isinstance(_char, dict) else str(_char or "")
+                            _name = _name.strip()
+                            if _name and _name not in _npc_roster:
+                                _npc_roster.append(_name)
+                    elif isinstance(_raw_chars, str):
+                        for _char in _raw_chars.replace("|", ",").split(","):
+                            _name = _char.strip()
+                            if _name and _name not in _npc_roster:
+                                _npc_roster.append(_name)
+
+                _is_arc_boundary = (arc_pos == 1) or (total_ep_in_arc > 0 and arc_pos == total_ep_in_arc)
+                _is_reject_retry = round_num > 0
+                _plan = _advisor.plan_director_retrieval(
+                    manuscript="",
+                    blueprint=blueprint or {},
+                    current_ep=next_ep,
+                    npc_roster=_npc_roster,
+                    is_arc_boundary=_is_arc_boundary,
+                    is_reject_retry=_is_reject_retry,
+                )
+
+                _max_results = int(_threshold("context.vector_max_results_s4", 16))
+                _mem_parts = []
+                for _slot in getattr(_plan, "slots", []) or []:
+                    _slot_source = str(getattr(_slot, "source", "vec_memory") or "vec_memory")
+                    _slot_category = str(getattr(_slot, "category", "director_context") or "director_context")
+                    _slot_query = str(getattr(_slot, "query", "") or "").strip()
+                    if not _slot_query:
+                        continue
+
+                    try:
+                        if _slot_source == "db_npc_history" and hasattr(_vec_mem, "retrieve_npc_context"):
+                            _slot_npcs = _npc_roster[:5]
+                            if not _slot_npcs:
+                                _slot_npcs = []
+                                for _tok in _slot_query.replace("|", " ").replace("/", " ").replace(",", " ").split():
+                                    _tok = _tok.strip()
+                                    if len(_tok) < 2:
+                                        continue
+                                    if _tok not in _slot_npcs:
+                                        _slot_npcs.append(_tok)
+                                    if len(_slot_npcs) >= 5:
+                                        break
+                            if not _slot_npcs:
+                                continue
+                            _npc_text = _vec_mem.retrieve_npc_context(
+                                npc_names=_slot_npcs,
+                                current_ep=next_ep,
+                                max_results=_max_results,
+                            )
+                            if _npc_text:
+                                _mem_parts.append(f"[SC:npc]\n{str(_npc_text)[:1500]}")
+                        else:
+                            _vec_text = _vec_mem.retrieve_multi_query_context(
+                                queries=[_slot_query],
+                                current_ep=next_ep,
+                                n_per_query=3,
+                                max_results=_max_results,
+                            )
+                            if _vec_text:
+                                _mem_parts.append(f"[SC:{_slot_category}]\n{str(_vec_text)[:1500]}")
+                    except Exception as _slot_err:
+                        logging.warning(f"[SilentPass:DirectorSC5] 슬롯 {_slot_category} 실패: {_slot_err!s:.100}")
+
+                if _mem_parts:
+                    _budget = int(_threshold("smart_retrieval.director_total_budget", 20000))
+                    _director_memory_context = "\n\n".join(_mem_parts)
+                    if _budget > 0 and len(_director_memory_context) > _budget:
+                        _director_memory_context = _director_memory_context[:_budget]
+                    logging.info(f"[SC-5] Director 벡터 메모리 {len(_mem_parts)}건, {len(_director_memory_context)}자")
+                    _use_advisor_path = True
+            if not _use_advisor_path:
+                _director_memory_context = ""
+        except Exception as _sc5_err:
+            logging.warning(f"[SilentPass:DirectorSC5] 벡터 메모리 조립 실패: {_sc5_err!s:.100}")
+            _director_memory_context = ""
+        finally:
+            try:
+                self.ctx.perf_timer.stop(_sc5_perf_key)
+            except Exception:
+                pass
+
         # [V61.5] 캐시 기반 연속성 검사
         if round_num == 0 and next_ep > 1 and candidates:
             stage4_spinner.update_detail(f"제{next_ep}화 · 연속성 검사")
@@ -426,6 +531,7 @@ class Stage4InterviewRound:
                     db=self.ctx.current_project.db,
                     limit=10,
                     story_context=_story_context,
+                    memory_context=_director_memory_context,
                 )
                 if continuity_check.get("decision") == "CONFLICT":
                     conflict_summary = continuity_check.get("summary", "연속성 충돌 감지")
@@ -468,6 +574,7 @@ class Stage4InterviewRound:
                             manuscript_history=_ms_history_for_check,
                             use_summary=False,
                             story_context=_story_context,
+                            memory_context=_director_memory_context,
                         )
                         if _conflict_result.get("decision") == "CONFLICT":
                             _conflict_summary = _conflict_result.get("summary", "모순 감지")

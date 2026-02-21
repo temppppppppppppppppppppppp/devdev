@@ -1462,6 +1462,40 @@ class DBManager:
             # 오름차순으로 정렬 (시간순)
             return list(reversed(results))
 
+    def get_npc_recent_episodes(self, npc_name: str, before_ep: int, limit: int = 5) -> list[int]:
+        """
+        episode_meta.entity_names(쉼표 구분)에서 특정 NPC가 등장한 최근 에피소드 번호 조회.
+        반환 순서는 최신순(ep_num DESC).
+        """
+        name = str(npc_name or "").strip()
+        if not name:
+            return []
+
+        safe_before_ep = int(before_ep)
+        safe_limit = max(1, int(limit))
+        if safe_before_ep <= 0:
+            return []
+
+        # entity_names는 "a,b,c" 포맷. 토큰 경계 매칭으로 부분일치 오탐 방지.
+        name_token = name.replace(" ", "")
+        like_pattern = f"%,{name_token},%"
+
+        with self._lock:
+            try:
+                cur = self.cursor.execute(
+                    """SELECT ep_num
+                       FROM episode_meta
+                       WHERE ep_num < ?
+                         AND (',' || REPLACE(IFNULL(entity_names, ''), ' ', '') || ',') LIKE ?
+                       ORDER BY ep_num DESC
+                       LIMIT ?""",
+                    (safe_before_ep, like_pattern, safe_limit),
+                )
+                return [int(row["ep_num"]) for row in cur.fetchall()]
+            except Exception as e:
+                logging.warning(f"[DBManager] get_npc_recent_episodes failed: {str(e)[:80]}")
+                return []
+
     def get_recent_manuscript_excerpts(self, before_ep: int, limit: int = 10, max_chars: int = 200) -> list:
         """
         [V66.1] B-4: ep_num < before_ep인 manuscript 중 최근 limit개의 발췌만 조회.
