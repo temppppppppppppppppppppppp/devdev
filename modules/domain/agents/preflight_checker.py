@@ -153,7 +153,7 @@ class PreflightChecker(BaseAgent):
             result = self.ask(prompt, temperature=0.2)  # 낮은 온도로 정확성 우선
 
             if isinstance(result, str):
-                result = json.loads(result)
+                result = self._extract_json_robust(result)
 
             # [Sweep55] LLM이 list 반환 시 첫 dict 추출
             if isinstance(result, list):

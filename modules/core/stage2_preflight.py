@@ -617,6 +617,9 @@ class Stage2PreflightAnalysis:
                         "current_companions": _copy.deepcopy(_st.current_companions),
                         "pending_commitments": _copy.deepcopy(_st.pending_commitments),
                         "protagonist_emotion": _copy.deepcopy(_st.protagonist_emotion),
+                        "dungeon_clear_registry": _copy.deepcopy(_st.dungeon_clear_registry),
+                        "skill_cooldown_registry": _copy.deepcopy(_st.skill_cooldown_registry),
+                        "spell_repertoire": _copy.deepcopy(_st.spell_repertoire),
                     }
 
                     # [V60.94] NPC 사망/무공 습득 추출 및 StateTracker 업데이트

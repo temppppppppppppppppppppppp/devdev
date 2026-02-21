@@ -142,9 +142,9 @@ class Stage2Finalizer:
         except Exception as _dir_err:
             logging.warning(f"[G7] Director 심사 호출 실패: {_dir_err!s:.100}")
             audit = {
-                "decision": "PASS",
+                "decision": "REJECT",
                 "score": 50,
-                "reason": "Director 호출 실패 — 폴백 PASS",
+                "reason": "Director 호출 실패 — 폴백 REJECT",
                 "self_consistency": {},
             }
         try:

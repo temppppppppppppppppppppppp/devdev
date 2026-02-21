@@ -426,7 +426,7 @@ class Stage4PostProcessor:
             with _ctx_mgr:
                 # ── WorldState 갱신 ──
                 if self.ctx.world_state:
-                    _ws_sc = arc_data.get("state_changes", {}) if arc_data else {}
+                    _ws_sc = final_state_updates or {}
                     if _ws_sc:
                         self.ctx.world_state.update_from_state_changes(next_ep, _ws_sc)
 
@@ -447,7 +447,7 @@ class Stage4PostProcessor:
 
                 # ── FactLedger 갱신 ──
                 if self.ctx.fact_ledger:
-                    _fl_sc = arc_data.get("state_changes", {}) if arc_data else {}
+                    _fl_sc = final_state_updates or {}
                     if _fl_sc:
                         self.ctx.fact_ledger.update_from_state_changes(next_ep, _fl_sc)
                     if bible_delta:
@@ -506,7 +506,7 @@ class Stage4PostProcessor:
         # ===== [Phase 3-QR] 품질 회귀 감지 (advisory-only) =====
         if self.ctx.quality_dashboard:
             try:
-                _regression = self.ctx.quality_dashboard.detect_score_regression(stage=2)
+                _regression = self.ctx.quality_dashboard.detect_score_regression(stage=4)
                 if _regression.get("is_regression"):
                     logging.warning(
                         "[Phase 3-QR] 품질 회귀 감지 — 제%d화: delta=%s, severity=%s",
