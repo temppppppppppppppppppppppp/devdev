@@ -91,7 +91,8 @@ class WorldStateManager:
 
         try:
             if source == "arc":
-                self._state["last_updated_ep"] = f"arc@{ep_num}"
+                self._state["last_updated_ep"] = ep_num
+                self._state["last_updated_source"] = "arc"
             else:
                 self._state["last_updated_ep"] = ep_num
 

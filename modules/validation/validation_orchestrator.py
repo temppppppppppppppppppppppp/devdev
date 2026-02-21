@@ -1156,7 +1156,7 @@ class ValidationOrchestrator:
         # ═══════════════════════════════════════════════════════════════
         results["total_score"] = total_score
 
-        if total_score >= 85:
+        if total_score >= max(85, adaptive_threshold):
             final_decision = "PASS"
             feedback = f"우수한 품질 ({total_score}점)"
             passed = True

@@ -127,7 +127,10 @@ class ConsistencyValidator:
         relation_check = self._check_relation_dynamics(manuscript, karma_matrix, validation_context)
         if not relation_check["passed"]:
             for v in relation_check["violations"]:
-                justifiable.append({**v, "category": "relation_dynamics"})
+                if v.get("has_justification", False):
+                    justifiable.append({**v, "category": "relation_dynamics"})
+                else:
+                    unjustifiable.append({**v, "category": "relation_dynamics"})
                 violations.append({**v, "category": "relation_dynamics"})
 
         # ═══════════════════════════════════════════════════════════════

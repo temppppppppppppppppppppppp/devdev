@@ -421,7 +421,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
 
         # 모든 재시도 실패
         _last_score = validation_result.get("score", 0) if "validation_result" in locals() else 0
-        if best_blueprint:
+        if best_blueprint and director:
             logging.warning(
                 f"[ThreePhase] 제{ep_num}화 모든 재시도 실패이나 마지막 최선 blueprint 존재 (score={_last_score})"
             )
