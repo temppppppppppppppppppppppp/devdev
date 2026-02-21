@@ -119,6 +119,8 @@ STREAK_ADJUSTMENTS = {
 }
 
 # [V59] 패턴 감지에 따른 조정
+_UNCONDITIONAL_PASS_FLOOR = 85  # [TF-XC-14] 무조건 PASS 최소 점수
+
 PATTERN_ADJUSTMENTS = {
     "high_repetition": +3,  # 높은 반복 패턴 시 더 엄격
     "low_diversity": +2,  # 낮은 다양성 시 더 엄격
@@ -538,7 +540,7 @@ class ValidationOrchestrator:
         results["total_score"] = total_score
 
         # [Sweep64] 무조건 PASS 임계값도 adaptive threshold 반영
-        _unconditional_pass = max(85, self.scoring.pass_threshold)
+        _unconditional_pass = max(_UNCONDITIONAL_PASS_FLOOR, self.scoring.pass_threshold)
         if total_score >= _unconditional_pass:
             final_decision = "PASS"
             feedback = f"우수한 품질 ({total_score}점)"
@@ -1156,7 +1158,7 @@ class ValidationOrchestrator:
         # ═══════════════════════════════════════════════════════════════
         results["total_score"] = total_score
 
-        if total_score >= max(85, adaptive_threshold):
+        if total_score >= max(_UNCONDITIONAL_PASS_FLOOR, adaptive_threshold):
             final_decision = "PASS"
             feedback = f"우수한 품질 ({total_score}점)"
             passed = True
