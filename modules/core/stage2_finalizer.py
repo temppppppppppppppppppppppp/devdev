@@ -285,18 +285,7 @@ class Stage2Finalizer:
                 refined_arc = None
                 return {"action": "retry", "current_feedback": current_feedback}
 
-            # [V66] SemanticPlotGuard 중복 체크 (중앙 인스턴스)
-            _spg = self.ctx.semantic_plot_guard
-            if _spg and (_spg._resolved_embeddings or _spg._resolved_keywords):
-                try:
-                    _new_tactical = refined_arc.get("tactical_doc", "")
-                    _spg_warnings = _spg.check_new_arc(tactical_doc=_new_tactical)
-                    if _spg_warnings:
-                        _warn_str = _spg.format_warnings(_spg_warnings)
-                        self.ctx.ui.log(f"      {_warn_str}")
-                        self.ctx.audit_event("v66_semantic_plot_warning", _warn_str[:300])
-                except Exception as e:  # [V64.P4] IMPORTANT: plot dedup check — log but continue
-                    self.ctx.audit_event("semantic_plot_check_failed", str(e)[:100])
+            # [TF-S2-03] 중복 check_new_arc() 제거 — L58-74의 첫 번째 호출이 이미 처리
 
             # [V63] constraint_summary 저장
             if constraint_block:

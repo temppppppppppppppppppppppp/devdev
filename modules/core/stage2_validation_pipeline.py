@@ -7,7 +7,8 @@ import re
 from difflib import SequenceMatcher
 
 from modules.core.constants import AIModels
-from modules.core.semantic_plot_guard import SemanticPlotGuard
+
+_JACCARD_SIMILARITY_THRESHOLD = 0.50  # [TF-S2-04] Jaccard 전용 (SemanticPlotGuard.SIMILARITY_THRESHOLD와 분리)
 
 
 class Stage2ValidationPipeline:
@@ -700,7 +701,7 @@ class Stage2ValidationPipeline:
         stagnation_hits = 0
         for i in range(1, len(normalized)):
             sim = jaccard(normalized[i - 1], normalized[i])
-            if sim >= SemanticPlotGuard.SIMILARITY_THRESHOLD:
+            if sim >= _JACCARD_SIMILARITY_THRESHOLD:  # [TF-S2-04] Jaccard 전용 상수
                 stagnation_hits += 1
 
         if stagnation_hits >= 3:

@@ -154,9 +154,11 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 )
             return "\n\n".join(_parts)
 
+        _initial_feedback = feedback  # [TF-S3-04] 초기 피드백 보존 (retry간 누적 방지)
+
         for retry in range(max_retries + 1):  # max_retries=2 → 3번 시도
             pipeline_result["retries"] = retry
-            _attempt_feedback = feedback
+            _attempt_feedback = _initial_feedback  # [TF-S3-04] 매 retry마다 초기값에서 시작
             _strategy_feedback = _build_strategy_feedback()
             if _strategy_feedback:
                 _attempt_feedback = (
