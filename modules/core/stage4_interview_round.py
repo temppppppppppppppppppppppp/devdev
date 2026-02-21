@@ -756,6 +756,7 @@ class Stage4InterviewRound:
                 "reject_bucket": _reject_bucket,
                 "_tot_used": _tot_used,
                 "_mad_used": _mad_used,
+                "state_updates": director_result.get("state_updates", {}),  # [TF-R4-S4-01] 폴백 시 HUD 복구용
             }
             try:
                 self.ctx.current_project.db.save_cost_record(

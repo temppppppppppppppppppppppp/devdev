@@ -187,8 +187,8 @@ class Stage2Finalizer:
 
         _td = refined_arc.get("tactical_doc", "")
         _td_len = len(str(_td)) if isinstance(_td, dict) else len(_td or "")
-        if audit.get("decision") == "PASS" and _td_len >= 1500:
-            if _score < _quality_gate_score:
+        if audit.get("decision") == "PASS":  # [TF-R4-S2-01] PASS/REJECT 분리 (short tactical_doc REJECT 방지)
+            if _td_len >= 1500 and _score < _quality_gate_score:
                 self.ctx.ui.log(
                     f"      ⚠️ [QualityGate] PASS 판정이나 score={_score} < {_quality_gate_score} → REJECT 전환"
                 )
