@@ -110,6 +110,13 @@ class Stage3Orchestrator:
             ctx.ui.log("📂 [Fresh Start] 기존 데이터 없음 - 1화부터 시작")
 
         ctx.ui.log(f"📊 [V60.80] 현재 총 {total_planned_ep}화까지 설계가 가능합니다.")
+
+        # [TF-CX-BUG-01] 입력 범위 역전 방어: 모든 블루프린트 이미 완료된 경우
+        if production_head >= total_planned_ep:
+            ctx.ui.log(f"✅ 이미 {production_head}화까지 완료되어 추가 생성할 범위가 없습니다.")
+            ctx.ui.log("   💡 Stage 2에서 Arc를 추가하면 설계 범위가 늘어납니다.")
+            return
+
         target_ep = ctx.get_int_input(
             f"👉 몇 화까지 설계도를 생성하시겠습니까? (현재 {production_head}화 / 최대 {total_planned_ep}화): ",
             default=total_planned_ep,
