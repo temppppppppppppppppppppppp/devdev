@@ -1,10 +1,10 @@
 # Smart Context Retrieval 설계 문서
 
-> 작성일: 2026-02-21 11:06 (rev.2 — Codex TF 피드백 반영)
-> 상태: 설계 완료, 구현 대기
+> 작성일: 2026-02-21 11:06 (rev.3 — 구현 완료 + Post-Audit 반영)
+> 상태: **✅ 전량 구현 완료 + Post-Audit P0/P1/P2 수정 완료**
+> 구현 커밋: `5c762b6` (SC-0~6 전량), `6454f5a` (Post-Audit 8건)
 > 기준 커밋: `2a8a158` (2026-02-21, `feat(context): Gemini 컨텍스트 활용률 대폭 확대`)
-> 선행 조건: Memory ROI P0-4 (검색 개수 상향)
-> 테스트 기준: CI 최신 기준 (CLAUDE.md 기록: 2,114 passed + 68 xfailed)
+> 테스트 기준: **2,263 passed + 68 xfailed** (Post-Audit 후 최종 확인)
 
 ---
 
@@ -103,23 +103,22 @@ class ContextBudgetTracker:
 
 ## 4. Phase별 구현 계획
 
-### Phase SC-0: Memory ROI 잔여분 (0.5일)
+### Phase SC-0: Memory ROI 잔여분 (0.5일) — ✅ 완료
 
-**SC-0a: P0-3 테스트 보강** (구현은 완료됨)
-- `stage4_post_processor.py` L171-192에 4-slot 요약 이미 구현
-- 할 일: 엣지 케이스 테스트 추가 (빈 blueprint, entity 없음 등)
-- `tests/test_stage4_post_processor.py`
+**SC-0a: P0-3 테스트 보강** ✅
+- `stage4_post_processor.py` L171-192에 4-slot 요약 구현 완료
+- 엣지 케이스 테스트 추가 완료 (빈 blueprint, entity 없음 등)
 
-**SC-0b: P0-4 검색 개수 상향**
-- `config/settings/validation.yaml` L63-64:
-  - `vector_max_results_s4`: 12 → 16
-  - `vector_max_results_s2`: 8 → 12
+**SC-0b: P0-4 검색 개수 상향** ✅
+- `config/settings/validation.yaml`:
+  - `vector_max_results_s4`: 12 → 16 ✅
+  - `vector_max_results_s2`: 8 → 12 ✅
 
 ---
 
-### Phase SC-1: ContextAdvisor 코어 — 하이브리드 (1.5일)
+### Phase SC-1: ContextAdvisor 코어 — 하이브리드 (1.5일) — ✅ 완료
 
-**새 파일**: `modules/core/context_advisor.py` (~400줄)
+**새 파일**: `modules/core/context_advisor.py` (~570줄, 설계 400줄 대비 확대)
 
 **Stage 4 쿼리 계획화**:
 - 기존 다중 쿼리(`stage4_context_builder.py` L418-456)를 RetrievalSlot으로 래핑 + 우선순위/예산 할당
@@ -143,39 +142,47 @@ class ContextBudgetTracker:
 4. 위치/아이템 일관성
 5. blueprint vs 원고 연결
 
-**설정 추가** (`validation.yaml`):
+**설정 추가** (`validation.yaml`) — ✅ 구현 완료:
 ```yaml
 smart_retrieval:
-  enabled: true
-  stage2_enabled: true
-  stage4_enabled: true
-  director_enabled: true
-  max_queries_per_plan: 8
-  stage4_total_budget: 50000
+  enabled: false          # 마스터 스위치 (기본 off, 운영 시 true)
+  stage2_enabled: false
+  stage4_enabled: false
+  director_enabled: false
   stage2_total_budget: 20000
+  stage4_total_budget: 50000
   director_total_budget: 20000
+  max_queries_per_plan: 8
 ```
+> 참고: 기본 `false` — 운영 투입 시 `true`로 전환.
 
-**테스트**: `tests/test_context_advisor.py` (~200줄)
+**테스트**: `tests/test_context_advisor.py` (~240줄, 16개 테스트) ✅
+
+**Post-Audit 추가 사항**:
+- `RetrievalSources` 상수 클래스 추출 (P2-2) — `"vec_memory"`, `"db_npc_history"` 하드코딩 제거
+- `_llm_enrich_plan()` 예외 로깅 추가 (P1-1) — `[SilentPass:SC:LLMEnrich]`
 
 ---
 
-### Phase SC-2: NPC-Aware Retrieval (0.5일)
+### Phase SC-2: NPC-Aware Retrieval (0.5일) — ✅ 완료
 
-**`vec_memory.py`** — 새 메서드:
+**`vec_memory.py`** — 새 메서드: ✅
 ```python
 def retrieve_npc_context(self, npc_names: list[str], current_ep: int, max_results: int = 5) -> str:
 ```
 - `episode_meta.entity_names`에서 NPC 이름 LIKE 검색 + 벡터 결합
+- **Post-Audit (P0-2)**: LIKE 와일드카드 이스케이프 추가 (`%`/`_` 방어 + `ESCAPE '\\'` 절)
 
-**`db_manager.py`** — 새 메서드:
+**`db_manager.py`** — 새 메서드: ✅
 ```python
 def get_npc_recent_episodes(self, npc_name: str, before_ep: int, limit: int = 5) -> list[int]:
 ```
 
+**테스트**: `tests/test_npc_aware_retrieval.py` (11개 테스트, 이스케이프 검증 포함) ✅
+
 ---
 
-### Phase SC-3: Stage 4 통합 (1일)
+### Phase SC-3: Stage 4 통합 (1일) — ✅ 완료
 
 **`stage4_context_builder.py`** L418-456 교체:
 - `_execute_retrieval_plan(plan)` 메서드 — RetrievalSlot별 소스 디스패치
@@ -190,7 +197,7 @@ def get_npc_recent_episodes(self, npc_name: str, before_ep: int, limit: int = 5)
 
 ---
 
-### Phase SC-4: Stage 2 통합 (0.5일)
+### Phase SC-4: Stage 2 통합 (0.5일) — ✅ 완료
 
 **`stage2_preflight.py`** L463-472 교체:
 - 기존 단일 `retrieve_high_res_context()` → ContextAdvisor plan 기반
@@ -199,9 +206,11 @@ def get_npc_recent_episodes(self, npc_name: str, before_ep: int, limit: int = 5)
 **`stage2_context.py`** — `__slots__`에 `"context_advisor"` 추가 + `from_app()` (L200)에 `context_advisor=getattr(app, "context_advisor", None)` 추출 라인 추가
   > 참고: Stage 4와 동일 패턴. 오케스트레이터(`stage2_orchestrator.py:48`)는 `Stage2Context.from_app(self.app)` 호출만 하므로 변경 불필요.
 
+**Post-Audit (P1-3)**: 글로벌 예산 가드 추가 — `total_budget_chars` 초과 시 tail truncation
+
 ---
 
-### Phase SC-5: Director 기존 경로에 벡터 메모리 주입 (0.5일)
+### Phase SC-5: Director 기존 경로에 벡터 메모리 주입 (0.5일) — ✅ 완료
 
 **신규 패스 추가 아님 — 기존 경로 확장.**
 
@@ -216,9 +225,12 @@ def get_npc_recent_episodes(self, npc_name: str, before_ep: int, limit: int = 5)
 - **`stage4_interview_round.py`** L416 부근 — 연속성 검사 전 벡터 검색 결과 조립 + `memory_context`로 전달
 - ContextAdvisor `_should_use_llm()` → Director도 조건부만: arc 경계 / REJECT 재시도 / NPC 5+
 
+**Post-Audit (P1-2)**: 슬롯별 `max_chars` 반영 — `[:1500]` 하드코딩 제거, `slot.max_chars` 우선 사용
+**Post-Audit (P2-1)**: SilentPass 라벨 통일 — `DirectorSC5` → `SC:Director`
+
 ---
 
-### Phase SC-6: 관측성 + 피처 플래그 (0.5일)
+### Phase SC-6: 관측성 + 피처 플래그 (0.5일) — ✅ 완료
 
 - `validation.yaml`의 `smart_retrieval.enabled` 마스터 스위치
 - 모든 통합 지점에 `_threshold("smart_retrieval.enabled", False)` 폴백
@@ -280,13 +292,15 @@ SC-5 (Director 검색)
 
 ---
 
-## 8. 검증 방법
+## 8. 검증 결과
 
-1. `pytest tests/test_context_advisor.py tests/test_vec_memory.py -v`
-2. `pytest tests/ -q` — 2,114 passed + 68 xfailed 유지 (기준: `2a8a158`, CLAUDE.md 기록)
-3. `smart_retrieval.enabled: false`로 전환 → 기존 동작 확인
-4. Stage2→4 1에피소드 생성 → `[SC]` 로그로 쿼리 수/예산 사용률 확인
-5. `ruff check modules/core/context_advisor.py` — 0 violations
+| 검증 항목 | 결과 |
+|----------|------|
+| SC 관련 테스트 5개 파일 | **74 passed** ✅ |
+| 전체 회귀 `pytest tests/ -q` | **2,263 passed + 68 xfailed** ✅ |
+| `smart_retrieval.enabled: false` 폴백 | `test_sc6_observability.py` 검증 ✅ |
+| Ruff check + format | **0 violations** ✅ |
+| Post-Audit 감사 (P0 2건, P1 3건, P2 2건+보류1건) | **7/8건 수정 완료** ✅ |
 
 ---
 

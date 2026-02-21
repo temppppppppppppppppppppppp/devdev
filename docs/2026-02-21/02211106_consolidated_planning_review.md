@@ -1,9 +1,10 @@
 # 기획 문서 유효성 검토 통합본
 
-> 작성일: 2026-02-21 11:06 (rev.4 — Codex TF 3차 피드백 반영, 내부 서술 충돌 해소)
+> 작성일: 2026-02-21 11:06 (rev.5 — SC-0~6 구현 완료 + Post-Audit 반영)
 > 검토 대상: 7개 기획 문서
-> 기준 커밋: `2a8a158` (2026-02-21, `feat(context): Gemini 컨텍스트 활용률 대폭 확대`)
-> 테스트 기준: CI 최신 기준 (CLAUDE.md 기록: 2,114 passed + 68 xfailed)
+> 기준 커밋: `6454f5a` (2026-02-22, `fix(SC): Post-Audit P0/P1/P2 전량 수정`)
+> 이전 기준: `2a8a158` (2026-02-21, `feat(context): Gemini 컨텍스트 활용률 대폭 확대`)
+> 테스트 기준: **2,263 passed + 68 xfailed** (Post-Audit 후 최종)
 
 ---
 
@@ -15,44 +16,50 @@
 - **벡터 검색**: sqlite-vec 기반, multi-query + arc bonus + keyword fallback 구현
 - **Director 분해**: God Object → 5개 전문 클래스 완료 (V64)
 - **컨텍스트 예산**: 80,000자 중 ~38% 사용, 62% 여유
+- **SC-0~6**: ✅ **전량 구현 완료** (`5c762b6` + `6454f5a` Post-Audit)
+- **테스트**: **2,263 passed + 68 xfailed**, Ruff 0 violations
 
 ---
 
-## 2. 즉시 실행 — SC-0
+## 2. 즉시 실행 — SC-0 ✅ 완료
 
-### P0-4: 검색 개수 상향 (미완)
+### P0-4: 검색 개수 상향 ✅
 
 - **출처**: `codex_memory_roi_boost_plan.md` §3 P0-4
-- **상태**: 미완
-- **작업**: `validation.yaml` L63-64 값 상향
-  - `vector_max_results_s4`: 12 → 16
-  - `vector_max_results_s2`: 8 → 12
-- **리스크**: 낮음 (설정 플래그로 즉시 복구)
-- **예상 공수**: 0.2일
+- **상태**: ✅ **완료** (`5c762b6`)
+- `vector_max_results_s4`: 12 → 16 ✅
+- `vector_max_results_s2`: 8 → 12 ✅
 
-### P0-3: 테스트 보강 (구현은 완료)
+### P0-3: 테스트 보강 ✅
 
 - **출처**: `codex_memory_roi_boost_plan.md` §3 P0-3
-- **상태**: **코드 구현 완료** (`stage4_post_processor.py` L171-192에 4-slot 요약)
-- **작업**: 엣지 케이스 테스트 추가 (빈 blueprint, entity 없음 등)
-- **예상 공수**: 0.3일
+- **상태**: ✅ **완료** — 엣지 케이스 테스트 추가됨
 
 ---
 
-## 3. 단기 실행 — Smart Context Retrieval (SC-1~6)
+## 3. 단기 실행 — Smart Context Retrieval (SC-1~6) ✅ 전량 완료
 
 > 상세: `02211106_smart_context_retrieval_plan.md` 참조
 
-| Phase | 작업 | 공수 | 관련 원본 문서 |
-|-------|------|------|--------------|
-| SC-1 | ContextAdvisor 코어 (하이브리드) | 1.5일 | Memory ROI D4, Hybrid Retrieval P4 |
-| SC-2 | NPC-Aware Retrieval | 0.5일 | Canon OS D01, Stage Canon §Hard Fact |
-| SC-3 | Stage 4 통합 | 1일 | Memory ROI D1, Hybrid Retrieval P4 |
-| SC-4 | Stage 2 통합 | 0.5일 | — |
-| SC-5 | Director 기존 경로 벡터 주입 | 0.5일 | Director Issues #4, Stage Canon §Runtime Flow |
-| SC-6 | 관측성 + 피처 플래그 | 0.5일 | Memory ROI D2, Hybrid Retrieval P5 |
+| Phase | 작업 | 상태 | 커밋 |
+|-------|------|------|------|
+| SC-1 | ContextAdvisor 코어 (하이브리드) | ✅ 완료 | `5c762b6` |
+| SC-2 | NPC-Aware Retrieval | ✅ 완료 | `5c762b6` |
+| SC-3 | Stage 4 통합 | ✅ 완료 | `5c762b6` |
+| SC-4 | Stage 2 통합 | ✅ 완료 | `5c762b6` |
+| SC-5 | Director 기존 경로 벡터 주입 | ✅ 완료 | `5c762b6` |
+| SC-6 | 관측성 + 피처 플래그 | ✅ 완료 | `5c762b6` |
+| Post-Audit | P0/P1/P2 8건 수정 | ✅ 완료 | `6454f5a` |
 
-**총 예상**: ~5일
+**Post-Audit 수정 내역** (8건):
+- P0-1: main_a.py ContextAdvisor 배선 누락 → 4곳 추가
+- P0-2: vec_memory.py LIKE 와일드카드 이스케이프 방어
+- P1-1: LLM enrich 예외 로깅 (`[SilentPass:SC:LLMEnrich]`)
+- P1-2: 슬롯별 `max_chars` 반영 (하드코딩 `[:1500]` 제거)
+- P1-3: Stage2 글로벌 예산 가드 추가
+- P2-1: SilentPass 라벨 통일 (`DirectorSC5` → `SC:Director`)
+- P2-2: `RetrievalSources` 상수 추출 (3개 파일 참조 전환)
+- P2-3: `_safe_json_loads` 예외 — 보류 (의도적 설계)
 
 ---
 
@@ -170,22 +177,24 @@
 
 ### 집계
 
-| 분류 | 건수 |
-|------|------|
-| **이미 완료** | 6건 |
-| **SC로 흡수** | 8건 |
-| **유효 (백로그)** | 21건 |
-| **폐기/보류** | 34건 |
-| **합계** | 69건 |
+| 분류 | 건수 | 비고 |
+|------|------|------|
+| **이미 완료** | 6건 | |
+| **SC로 흡수 → 구현 완료** | 8건 | SC-0~6 + Post-Audit |
+| **유효 (백로그)** | 21건 | |
+| **폐기/보류** | 34건 | |
+| **합계** | 69건 | **완료 14건 (20%)** |
 
 ---
 
 ## 8. 실행 우선순위 요약
 
 ```
-[즉시]  SC-0: P0-4 검색 상향 + P0-3 테스트 보강 (0.5일)
+[완료]  SC-0: P0-4 검색 상향 + P0-3 테스트 보강 ✅
   ↓
-[단기]  SC-1~6: Smart Context Retrieval (5일)
+[완료]  SC-1~6: Smart Context Retrieval + Post-Audit ✅
+  ↓
+[다음]  운영 투입: smart_retrieval.enabled: true 전환 + 실제 에피소드 생성 검증
   ↓
 [중기]  Hybrid Retrieval P0~P5 (6~8일, SC 지표 확인 후)
   ↓
