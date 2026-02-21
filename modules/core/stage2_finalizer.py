@@ -258,6 +258,9 @@ class Stage2Finalizer:
                         acquired = state_constraints.get("items_acquired", [])
                         if isinstance(acquired, str):
                             acquired = [acquired] if acquired else []
+                        elif not isinstance(acquired, list):
+                            # [TF-R3-S2-03] dict 등 비-리스트 타입 방어
+                            acquired = [acquired] if acquired else []
                         if isinstance(prev_inventory, list):
                             # [Sweep45] dict 아이템도 consumed 비교 가능하도록 이름 추출
                             def _item_name(it):

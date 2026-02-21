@@ -163,8 +163,14 @@ class ReverseExpander:
         numbered_files.sort(key=lambda x: x[0])
 
         for ep_num, f in numbered_files:
-            with open(f, encoding="utf-8") as fp:
-                content = fp.read()
+            try:
+                with open(f, encoding="utf-8") as fp:
+                    content = fp.read()
+            except UnicodeDecodeError:
+                # [TF-R3-S0-03] cp949 폴백 (load_drafts_from_file과 동일 패턴)
+                logging.warning(f"[!] UTF-8 실패, cp949 재시도: {f}")
+                with open(f, encoding="cp949") as fp:
+                    content = fp.read()
             self.raw_drafts.append({"ep_num": ep_num, "title": f"제{ep_num}화", "content": content})
 
         return len(self.raw_drafts)
@@ -281,7 +287,12 @@ JSON:
 [{{"name": "이름", "role": "역할", "relationship": "주인공과의 관계"}}]
 ```
 """
-        return self._parse_json(self._call_llm(prompt)) or []
+        result = self._parse_json(self._call_llm(prompt))
+        if isinstance(result, list):
+            return result
+        if isinstance(result, dict):
+            return [result]  # [TF-R3-S0-04] 단일 NPC dict → list 래핑
+        return []
 
     def _extract_world_state(self, sample: str) -> dict[str, Any]:
         """세계관 추출"""
