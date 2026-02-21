@@ -569,6 +569,7 @@ JSON으로 출력:
                                             "score": 90,
                                             "best_manuscript": final_manuscript,
                                             "rejection_reason": director_feedback,
+                                            "state_updates": final_state_updates,  # [TF-S4-01] CoVe REJECT 시 소실 방지
                                         }
                                         final_manuscript = None
                                         continue

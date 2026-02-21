@@ -257,6 +257,10 @@ class UnifiedBlueprintValidator:
                 "issues": all_issues,
                 "summary": director_reason,
                 "score": director_score,
+                "score_breakdown": {  # [TF-S3-11] patch mode 피드백용
+                    "director_score": director_score,
+                    "pre_issues_count": len(pre_result["issues"]),
+                },
                 "feedback": director_feedback if final_verdict == "REJECT" else "",
                 "pre_issues": len(pre_result["issues"]),
                 "confidence": 0.9 if director_score >= 70 else 0.6,

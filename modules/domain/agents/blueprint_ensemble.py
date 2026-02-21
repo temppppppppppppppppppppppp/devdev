@@ -377,7 +377,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 ),  # [V70] Director feedback 내 {} 방어
                 prev_info=self._escape_braces(prev_info),
                 hud_context=self._escape_braces(hud_context) if hud_context else "(상태 정보 없음)",  # [V60.95]
-                pov_constraint=_pov_constraint,  # [V70]
+                pov_constraint=self._escape_braces(_pov_constraint),  # [V70] [TF-S3-10]
                 reader_feedback=self._escape_braces(_reader_fb) if _reader_fb else "",  # [TF-I23/I24]
             )
             if not prompt:

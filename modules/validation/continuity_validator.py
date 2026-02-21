@@ -208,10 +208,8 @@ class ContinuityValidator:
             except Exception as e:
                 logging.warning(f"⚠️ [CONTINUITY] 직전 HUD 조회 실패: {e}")
 
-        # 3. martial_hud에서 이전 상태 추론 (fallback)
-        martial_hud = validation_context.get("martial_hud", {})
-        if martial_hud:
-            return martial_hud  # 현재 HUD를 이전으로 가정 (제한적)
+        # [TF-XC-04] 현재 HUD를 이전 HUD로 사용하면 false negative 발생
+        logging.info("[CONTINUITY] 이전 HUD 조회 불가 — 연속성 검사 스킵")
 
         return None
 

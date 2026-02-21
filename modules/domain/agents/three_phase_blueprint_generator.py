@@ -316,8 +316,11 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                     new_blueprint=best_blueprint, ep_num=ep_num, db=db, limit=10
                 )
                 if continuity_result.get("decision") == "REJECT":
-                    # 연속성 REJECT면 피드백에 추가하고 재시도
+                    self.stats["phase3_reject"] += 1  # [TF-S3-01] stats 갱신
                     continuity_feedback = continuity_result.get("feedback", "")
+                    _prev_reject_feedback = continuity_feedback
+                    if best_blueprint:
+                        _previous_best = best_blueprint  # [TF-S3-01] patch mode용 보존
                     feedback += f"\n[연속성 오류]\n{continuity_feedback}"
                     logging.warning("⚠️ [V61.5] 연속성 검사 REJECT")
                     continue  # 다음 재시도로

@@ -552,14 +552,13 @@ class Stage3Orchestrator:
             _logging.warning(f"[SilentPass:Stage3RejectMetric] {e!s:.120}")
         new_fail_count = fail_count + 1
 
-        # 연속 실패 3회 시 중단
+        # [TF-S3-02] 실패 에피소드에서 중단 (순차 의존성 보존)
+        # 후속 에피소드는 현재 에피소드 Blueprint에 의존하므로 건너뛰기 금지
         if new_fail_count >= 3:
             ctx.ui.log(f"🛑 [Safety] 연속 {new_fail_count}회 실패로 공정을 중단합니다.")
-            return {
-                "next_ep": working_ep + 1,
-                "success_count": success_count,
-                "fail_count": new_fail_count,
-                "break": True,
-            }
-
-        return {"next_ep": working_ep + 1, "success_count": success_count, "fail_count": new_fail_count}
+        return {
+            "next_ep": working_ep,  # [TF-S3-02] 현재 에피소드에 머무름
+            "success_count": success_count,
+            "fail_count": new_fail_count,
+            "break": True,  # 오케스트레이터 루프 종료
+        }

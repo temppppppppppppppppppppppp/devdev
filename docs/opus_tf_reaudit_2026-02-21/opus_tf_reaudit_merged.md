@@ -181,3 +181,28 @@
 - 스레드 안전성 강화 (XC-05, S2-05)
 - Dead code 정리 (XC-03, S01-01)
 - 중복 호출 제거 (S2-03, S4-06)
+
+---
+
+## 8. 수정 이력
+
+### T1/T2 — 9건 (commit `77b0164`)
+- S2-01, S2-02, S4-02, S4-07, XC-07, XC-01, XC-10, S3-09, S2-06 ✅
+
+### T3/T4 — 8건 (commit `4517a7d`)
+- S2-04, S01-03, S01-04, S3-04, XC-05, S2-05, S2-03, S01-01 ✅
+
+### 잔여 — 7건 (2026-02-21)
+- **S4-01** ✅ CoVe REJECT 시 `state_updates` 보존 (`stage4_orchestrator.py`)
+- **XC-04** ✅ 현재 HUD→이전 HUD 폴백 제거 (`continuity_validator.py`)
+- **S3-01** ✅ 연속성 REJECT 시 stats/\_previous\_best 갱신 (`three_phase_blueprint_generator.py`)
+- **S3-11** ✅ `score_breakdown` 반환값 추가 (`unified_blueprint_validator.py`)
+- **S3-02** ✅ 실패 에피소드 건너뛰기 방지 — 순차 의존성 보존 (`stage3_orchestrator.py`)
+- **S3-10** ✅ `pov_constraint`에 `_escape_braces` 적용 (`blueprint_ensemble.py`)
+- **XC-14** ✅ 하드코딩 85 → `_UNCONDITIONAL_PASS_FLOOR` 상수 추출 (`validation_orchestrator.py`)
+
+### 의도적 스킵 — 2건
+- **S01-02**: FALSE ALARM (bounds check 정상)
+- **XC-03**: 대원칙 #1 준수 (PreLLMValidator `passed=True`는 의도적 설계)
+
+### 최종 현황: 56건 중 **24건 수정 완료**, 2건 스킵, 30건 INSIGHT(정보성)
