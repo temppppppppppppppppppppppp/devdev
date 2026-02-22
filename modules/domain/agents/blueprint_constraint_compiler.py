@@ -170,6 +170,21 @@ class BlueprintConstraintCompiler:
 
         return "\n".join(lines)
 
+    # [S3-I4] 에피소드 헤더 정규식 — 다양한 LLM 출력 형식 대응
+    # 우선순위: [제N화] > ### 제N화 > **제N화** > 제N화: > 제N화)
+    _EPISODE_HEADER_PATTERNS = [
+        # 기존 패턴: [제 N화 ...]
+        r"\[제\s*{ep}\s*화[^\]]*\](.*?)(?=\[제\s*\d+\s*화|\Z)",
+        # ### 제N화, ## 제N화 (마크다운 헤더)
+        r"#{2,3}\s*제\s*{ep}\s*화[^\n]*(.*?)(?=#{2,3}\s*제\s*\d+\s*화|\Z)",
+        # **제N화** (마크다운 볼드)
+        r"\*\*제\s*{ep}\s*화[^*]*\*\*(.*?)(?=\*\*제\s*\d+\s*화|\Z)",
+        # 제N화: 또는 제N화 - (콜론/대시 구분)
+        r"제\s*{ep}\s*화\s*[:\-–—]\s*(.*?)(?=제\s*\d+\s*화\s*[:\-–—]|\Z)",
+        # 제N화) 또는 (제N화) (괄호 구분)
+        r"[\(]?제\s*{ep}\s*화[\)]\s*(.*?)(?=[\(]?제\s*\d+\s*화[\)]|\Z)",
+    ]
+
     def _extract_episode_focus(self, arc_data: dict, ep_num: int, arc_position: int) -> dict:
         """이번 화 핵심 내용 추출"""
         tactical_doc = arc_data.get("tactical_doc", "")
@@ -178,19 +193,19 @@ class BlueprintConstraintCompiler:
         if isinstance(tactical_doc, dict):
             tactical_doc = json.dumps(tactical_doc, ensure_ascii=False, indent=2)
 
-        # 해당 화 섹션 추출 패턴
-        focus_tag = f"[제 {ep_num}화"
-        alt_tag = f"[제{ep_num}화"
-
-        # 정규식으로 해당 화 섹션 추출
-        pattern = rf"\[제\s*{ep_num}\s*화[^\]]*\](.*?)(?=\[제\s*\d+\s*화|\Z)"
-        match = re.search(pattern, tactical_doc, re.DOTALL)
-
         content = ""
-        if match:
-            content = match.group(1).strip()
-        else:
-            # 폴백: beat_sequence 사용
+
+        # [S3-I4] 다중 정규식 폴백 패턴으로 에피소드 섹션 추출
+        for pattern_template in self._EPISODE_HEADER_PATTERNS:
+            pattern = pattern_template.format(ep=ep_num)
+            match = re.search(pattern, tactical_doc, re.DOTALL)
+            if match:
+                content = match.group(1).strip()
+                if content:
+                    break
+
+        if not content:
+            # 최종 폴백: beat_sequence 사용
             beats = arc_data.get("beat_sequence", [])
             if arc_position - 1 < len(beats):
                 content = beats[arc_position - 1]
@@ -230,14 +245,17 @@ class BlueprintConstraintCompiler:
         if isinstance(tactical_doc, dict):
             tactical_doc = json.dumps(tactical_doc, ensure_ascii=False, indent=2)
 
-        # 다음 화 섹션 추출
-        pattern = rf"\[제\s*{next_ep}\s*화[^\]]*\](.*?)(?=\[제\s*\d+\s*화|\Z)"
-        match = re.search(pattern, tactical_doc, re.DOTALL)
-
+        # [S3-I4] 다중 정규식 폴백 패턴으로 다음 화 정지선 추출
         content = ""
-        if match:
-            content = match.group(1).strip()[:300]
-        else:
+        for pattern_template in self._EPISODE_HEADER_PATTERNS:
+            pattern = pattern_template.format(ep=next_ep)
+            match = re.search(pattern, tactical_doc, re.DOTALL)
+            if match:
+                content = match.group(1).strip()[:300]
+                if content:
+                    break
+
+        if not content:
             # 폴백: beat_sequence 사용
             beats = arc_data.get("beat_sequence", [])
             if arc_position < len(beats):

@@ -87,6 +87,14 @@ class DBManager:
         self.conn = sqlite3.connect(self.db_path, check_same_thread=False, timeout=30.0)
         self.conn.row_factory = sqlite3.Row
         self.cursor = self.conn.cursor()
+
+        # [INF-I3] WAL 모드 활성화 — 읽기/쓰기 동시성 향상, 크래시 복구 안전성 강화
+        try:
+            self.cursor.execute("PRAGMA journal_mode=WAL")
+            self.cursor.execute("PRAGMA synchronous=NORMAL")
+        except sqlite3.OperationalError as e:
+            logging.warning(f"[DBManager] WAL 모드 설정 실패 (비차단): {e}")
+
         # [DB-MERGE] sqlite-vec 확장 로드 (선택적)
         self._vec_available = False
         try:

@@ -560,9 +560,13 @@ JSON으로 출력:
                             if _bp:
                                 _cove_context["blueprint"] = _bp
 
+                            # [S4-I5] CoVe 최적화: quick_verify(Python) → verify(LLM) 단일 경로
+                            # quick_verify 통과 시 LLM 호출 스킵 (기존). 실패 시 경고를 LLM 컨텍스트에 주입.
                             _quick_ok, _quick_msg = _cove.quick_verify(final_manuscript, _cove_context)
                             if not _quick_ok:
                                 self.ctx.ui.log(f"   ⚠️ [CoVe] 사후검증 경고: {_quick_msg[:60]}...")
+                                # [S4-I5] quick_verify 경고를 LLM verify 컨텍스트에 주입 → 집중 검증
+                                _cove_context["quick_verify_warnings"] = _quick_msg
                                 try:
                                     _cove_result = _cove.verify(
                                         final_manuscript, _cove_context, content_type="manuscript"
@@ -580,6 +584,10 @@ JSON으로 출력:
                                         final_manuscript = None
                                         final_title = None  # [S4-P1-1] CoVe REJECT 시 title도 리셋
                                         continue
+                                    # [S4-I5] LLM verify에서 MINOR/MAJOR 경고만 → 통과 (REJECT 안 함)
+                                    if _cove_result.issues:
+                                        _cove_warnings = "; ".join(i.description[:40] for i in _cove_result.issues[:3])
+                                        self.ctx.ui.log(f"   ℹ️ [CoVe] LLM 검증 경고 (비차단): {_cove_warnings}")
                                 except Exception as e:
                                     logging.warning(f"[SilentPass:CoVe:LLM] {e!s:.100}")
                         except Exception as e:

@@ -285,13 +285,22 @@ class ValidationOrchestrator:
         results = {}
 
         # [TF-R2-XC-01] 적응형 임계값 (async validate와 동일 패턴)
+        # [V-I5] try/finally로 예외 발생 시에도 복원 보장
         _original_threshold = self.scoring.pass_threshold
-        if self.use_adaptive_threshold:
-            adaptive_threshold = self.calculate_adaptive_threshold_v59(ep_num, validation_context)
-            self.scoring.pass_threshold = adaptive_threshold
-            logging.warning(f"[V59-Sync] 적응형 임계값: {adaptive_threshold}점")
-        else:
-            adaptive_threshold = self.current_threshold
+        try:
+            if self.use_adaptive_threshold:
+                adaptive_threshold = self.calculate_adaptive_threshold_v59(ep_num, validation_context)
+                self.scoring.pass_threshold = adaptive_threshold
+                logging.warning(f"[V59-Sync] 적응형 임계값: {adaptive_threshold}점")
+            else:
+                adaptive_threshold = self.current_threshold
+
+            return self._validate_sync_body(ep_num, manuscript, validation_context, results, adaptive_threshold)
+        finally:
+            self.scoring.pass_threshold = _original_threshold
+
+    def _validate_sync_body(self, ep_num, manuscript, validation_context, results, adaptive_threshold):
+        """[V-I5] validate_v59 본체 — try/finally에서 호출."""
 
         # ═══════════════════════════════════════════════════════════════
         # [V56] TIER 0.25: PRE-LLM (Python 기반 사전검증, 비용 0원)
@@ -602,9 +611,6 @@ class ValidationOrchestrator:
         # [TF-R2-XC-03] 히스토리 기록 (async validate와 동일 패턴)
         passed = final_decision in ("PASS", "CONDITIONAL_PASS")
         self._record_validation_history_v59(ep_num, total_score, passed)
-
-        # [TF-R2-XC-01] 원본 임계값 복원
-        self.scoring.pass_threshold = _original_threshold
 
         return results
 
@@ -1033,20 +1039,26 @@ class ValidationOrchestrator:
         """
         results = {}
 
-        # ═══════════════════════════════════════════════════════════════
-        # Stage 1: 순차 실행 (의존성 있는 검증, 실패 시 조기 종료)
-        # ═══════════════════════════════════════════════════════════════
+        # [V-I5] try/finally로 예외 발생 시에도 임계값 복원 보장
+        _original_threshold = self.scoring.pass_threshold
+        try:
+            if self.use_adaptive_threshold:
+                adaptive_threshold = self.calculate_adaptive_threshold_v59(ep_num, validation_context)
+                self.scoring.pass_threshold = adaptive_threshold
+                logging.warning(
+                    f"[V59] 적응형 임계값: {adaptive_threshold}점 (기본: {self.threshold_profile['base_threshold']})"
+                )
+            else:
+                adaptive_threshold = self.current_threshold
 
-        # [V59] 적응형 임계값 계산
-        _original_threshold = self.scoring.pass_threshold  # [Sweep64] 원본 보존 → finally에서 복원
-        if self.use_adaptive_threshold:
-            adaptive_threshold = self.calculate_adaptive_threshold_v59(ep_num, validation_context)
-            self.scoring.pass_threshold = adaptive_threshold
-            logging.warning(
-                f"[V59] 적응형 임계값: {adaptive_threshold}점 (기본: {self.threshold_profile['base_threshold']})"
+            return await self._validate_parallel_body(
+                ep_num, manuscript, validation_context, results, adaptive_threshold
             )
-        else:
-            adaptive_threshold = self.current_threshold
+        finally:
+            self.scoring.pass_threshold = _original_threshold
+
+    async def _validate_parallel_body(self, ep_num, manuscript, validation_context, results, adaptive_threshold):
+        """[V-I5] validate_parallel_v59 본체 — try/finally에서 호출."""
 
         # PRE_LLM 검증
         if self.use_pre_llm and self.pre_llm:
@@ -1055,8 +1067,6 @@ class ValidationOrchestrator:
             results["pre_llm_result"] = pre_llm_result
 
             if not pre_llm_result["passed"]:
-                # [G11] 조기 반환 전 임계값 복원
-                self.scoring.pass_threshold = _original_threshold
                 return self._build_reject_result_v59(
                     "PRE-LLM", pre_llm_result, self._generate_pre_llm_feedback(pre_llm_result)
                 )
@@ -1068,8 +1078,6 @@ class ValidationOrchestrator:
 
         if not continuity_result["passed"]:
             self._record_failure_to_reflexion(ep_num, "continuity", continuity_result["violations"])
-            # [G11] 조기 반환 전 임계값 복원
-            self.scoring.pass_threshold = _original_threshold
             return self._build_reject_result_v59(
                 "CONTINUITY", continuity_result, self._generate_continuity_feedback(continuity_result)
             )
@@ -1081,8 +1089,6 @@ class ValidationOrchestrator:
 
         if not blocking_result["passed"]:
             self._record_failure_to_reflexion(ep_num, "blocking", blocking_result["failures"])
-            # [G11] 조기 반환 전 임계값 복원
-            self.scoring.pass_threshold = _original_threshold
             return self._build_reject_result_v59(
                 "BLOCKING", blocking_result, self._generate_blocking_feedback(blocking_result)
             )
@@ -1149,8 +1155,6 @@ class ValidationOrchestrator:
         unjustifiable = consistency_result.get("unjustifiable_violations", [])
         if unjustifiable:
             logging.warning(f"❌ CONSISTENCY 실패: {len(unjustifiable)}개 정당화 불가 위반")
-            # [G11] 조기 반환 전 임계값 복원
-            self.scoring.pass_threshold = _original_threshold
             return {
                 "final_decision": "REJECT",
                 "reason": "CONSISTENCY 검증 실패 - 정당화 불가 모순",
@@ -1227,9 +1231,6 @@ class ValidationOrchestrator:
 
         # [V59] 히스토리 기록 + 연속 카운트 업데이트
         self._record_validation_history_v59(ep_num, total_score, passed)
-
-        # [Sweep64] 적응형 임계값이 영구 변경되지 않도록 원본 복원
-        self.scoring.pass_threshold = _original_threshold
 
         return results
 

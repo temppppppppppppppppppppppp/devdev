@@ -288,7 +288,9 @@ class BlockingValidatorConsistencyChecks:
                             "allowed_transitions": validation.get("allowed_transitions", []),
                             "required_fix": validation.get("required", ""),
                         }
-        except Exception as e:
+        except (ImportError, TypeError, AttributeError):
+            raise  # [V-I4] 프로그래밍 오류는 조기 발견을 위해 re-raise
+        except (ValueError, KeyError, RuntimeError) as e:
             logging.warning(f"[C-3] relationship consistency check failed (degraded): {e}")
             return {"check": "relationship_consistency", "passed": True, "degraded": True, "error": str(e)}
 
@@ -357,7 +359,9 @@ class BlockingValidatorConsistencyChecks:
                                         "should_know_reason": knowledge_check["reason"],
                                         "required_fix": "NPC가 이미 알고 있는 것으로 수정하거나, 정보 차단 알리바이(정보 없는 변방, 격리 등) 추가 필요",
                                     }
-        except Exception as e:
+        except (ImportError, TypeError, AttributeError):
+            raise  # [V-I4] 프로그래밍 오류는 조기 발견을 위해 re-raise
+        except (ValueError, KeyError, RuntimeError) as e:
             logging.warning(f"[C-3] information consistency check failed (degraded): {e}")
             return {"check": "information_consistency", "passed": True, "degraded": True, "error": str(e)}
 

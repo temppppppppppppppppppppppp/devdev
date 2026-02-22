@@ -206,6 +206,13 @@ class BaseAgent:
         logging.info(
             f"🔑 [V61.5] API 키 순환: Key {old_idx + 1} → Key {cls._current_key_idx + 1} (총 {len(cls._api_keys)}개)"
         )
+        # [INF-I5] 키 순환 구조화 로그
+        logging.debug(
+            "[SilentPass:Agent] key_rotate old_idx=%d new_idx=%d total_keys=%d",
+            old_idx,
+            cls._current_key_idx,
+            len(cls._api_keys),
+        )
         return new_client
 
     # [V61.2] 네트워크 복원력 설정 (야간 무인 운영 대응)
@@ -322,6 +329,14 @@ class BaseAgent:
             config_params["thinking_config"] = types.ThinkingConfig(thinking_budget=budget)
 
         config = types.GenerateContentConfig(**config_params)
+
+        # [INF-I5] API 호출 시작 구조화 로그
+        logging.debug(
+            "[SilentPass:Agent] call_start agent=%s model=%s prompt_len=%d",
+            self._agent_name,
+            current_model,
+            len(base_prompt),
+        )
 
         # [V49.3] 비용 추적 시작
         metric_id = None
@@ -469,6 +484,14 @@ class BaseAgent:
 
                             error_type = "Quota 소진" if is_quota_exhausted else "Rate Limit 초과"
                             logging.info(f"🔄 [V60.97 Fallback] {old_model} {error_type} → {current_model}로 전환")
+                            # [INF-I5] 폴백 전환 구조화 로그
+                            logging.debug(
+                                "[SilentPass:Agent] fallback agent=%s from=%s to=%s reason=%s",
+                                self._agent_name,
+                                old_model,
+                                current_model,
+                                error_type,
+                            )
 
                             # 폴백 모델용 config 재생성
                             fallback_config_params = {
@@ -576,12 +599,27 @@ class BaseAgent:
                     logging.debug(f"[SILENT] metrics end (success): {e}")
                     pass
 
+            # [INF-I5] API 호출 성공 구조화 로그
+            logging.debug(
+                "[SilentPass:Agent] call_success agent=%s model=%s response_len=%d",
+                self._agent_name,
+                current_model,
+                len(full_response),
+            )
             return full_response
 
         except Exception as e:
             # [V44] 에러 타입 분류 및 적절한 복구 전략 선택
             error_type = self._classify_error(e)
             self.last_error_type = error_type
+            # [INF-I5] API 호출 실패 구조화 로그
+            logging.debug(
+                "[SilentPass:Agent] call_failure agent=%s model=%s error_type=%s backup=%s",
+                self._agent_name,
+                current_model,
+                error_type,
+                self.backup_model,
+            )
             # [V60.66] 429 폴백이 인라인에서 이미 시도되었음을 표시
             if error_type == AgentErrorType.QUOTA_EXCEEDED:
                 logging.warning(f"🚨 [V60.66] 모든 폴백 모델 할당량 초과 ({model_stack}): {str(e)[:50]}")

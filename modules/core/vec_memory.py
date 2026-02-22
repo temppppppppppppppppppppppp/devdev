@@ -9,12 +9,15 @@ save_v20_anchor, load_v20_anchor, get_status, close,
 delete_episodes_from, delete_all_episodes
 """
 
+import hashlib
 import json
 import logging
 import os
 import sqlite3
 import struct
+import threading
 import time
+from collections import OrderedDict
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -65,6 +68,11 @@ class VecMemory:
         # 리소스
         self._conn: sqlite3.Connection | None = None
         self._genai_client = None
+
+        # [INF-I2] 임베딩 결과 LRU 캐시 (MD5 해시 키, 최대 128개)
+        self._embed_cache: OrderedDict[str, list] = OrderedDict()
+        self._embed_cache_max = 128
+        self._embed_cache_lock = threading.Lock()
 
         # [DB-MERGE] 단일모드: shared(프로덕션) vs standalone(테스트)
         self._shared_mode = conn is not None
@@ -263,8 +271,30 @@ class VecMemory:
         except Exception as e:
             logging.warning(f"[VecMemory] 마이그레이션 실패 (비차단): {str(e)[:80]}")
 
+    def _embed_cache_key(self, text: str) -> str:
+        """[INF-I2] 텍스트 → MD5 해시 캐시 키."""
+        return hashlib.md5(text.encode("utf-8")).hexdigest()
+
+    def _embed_cache_get(self, key: str) -> list | None:
+        """[INF-I2] 캐시에서 임베딩 벡터 조회 (LRU 순서 갱신)."""
+        with self._embed_cache_lock:
+            if key in self._embed_cache:
+                self._embed_cache.move_to_end(key)
+                return self._embed_cache[key]
+        return None
+
+    def _embed_cache_put(self, key: str, vec: list) -> None:
+        """[INF-I2] 캐시에 임베딩 벡터 저장 (최대 128개, LRU 퇴출)."""
+        with self._embed_cache_lock:
+            if key in self._embed_cache:
+                self._embed_cache.move_to_end(key)
+            else:
+                self._embed_cache[key] = vec
+                while len(self._embed_cache) > self._embed_cache_max:
+                    self._embed_cache.popitem(last=False)
+
     def _embed_text(self, text: str) -> list | None:
-        """텍스트 → 임베딩 벡터. 실패 시 None."""
+        """텍스트 → 임베딩 벡터. 실패 시 None. [INF-I2] LRU 캐시 적용."""
         if not self._genai_client or not text:
             return None
 
@@ -277,6 +307,12 @@ class VecMemory:
             mid = len(clean) // 2 - 1500
             clean = clean[:4000] + " " + clean[mid : mid + 3000] + " " + clean[-3000:]
 
+        # [INF-I2] 캐시 조회 — 동일 텍스트 재임베딩 방지
+        cache_key = self._embed_cache_key(clean)
+        cached = self._embed_cache_get(cache_key)
+        if cached is not None:
+            return cached
+
         max_retries = 3
         for attempt in range(max_retries):
             try:
@@ -287,7 +323,10 @@ class VecMemory:
                 elif hasattr(res, "embedding") and res.embedding:
                     val = res.embedding.values
                 if val is not None:
-                    return list(val)
+                    result = list(val)
+                    # [INF-I2] 성공한 임베딩 결과 캐시 저장
+                    self._embed_cache_put(cache_key, result)
+                    return result
                 time.sleep(0.5)
             except Exception as e:
                 if any(c in str(e) for c in ("429", "503", "504")) and attempt < max_retries - 1:
