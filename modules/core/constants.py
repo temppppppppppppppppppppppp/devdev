@@ -5,7 +5,32 @@
 
 import logging
 
-from modules.validation.threshold_helper import _threshold
+
+# [INF-P2-7] Lazy threshold: _threshold()를 모듈 임포트 시점이 아닌
+# 최초 접근 시점에 호출하여 YAML I/O를 지연시킨다.
+class _LazyThreshold:
+    """Descriptor that defers _threshold() call until first attribute access."""
+
+    def __init__(self, key: str, default):
+        self.key = key
+        self.default = default
+        self.attr_name = None
+
+    def __set_name__(self, owner, name):
+        self.attr_name = f"_lazy_{name}"
+
+    def __get__(self, obj, objtype=None):
+        # 클래스 속성 접근 (obj is None for class access)
+        cache = objtype.__dict__ if objtype else type(obj).__dict__
+        if self.attr_name in cache:
+            return cache[self.attr_name]
+        from modules.validation.threshold_helper import _threshold
+
+        val = _threshold(self.key, self.default)
+        # 클래스에 캐시하여 다음 접근 시 재계산 방지
+        setattr(objtype or type(obj), self.attr_name, val)
+        return val
+
 
 # ============================================================================
 # [V40] 장르 시스템 상수
@@ -90,12 +115,15 @@ class RecoveryLimits:
 
 
 class ManuscriptLimits:
-    """[V64.P4] 원고 분량 임계값 중앙 관리 (Single Source of Truth)."""
+    """[V64.P4] 원고 분량 임계값 중앙 관리 (Single Source of Truth).
 
-    MIN_LENGTH = _threshold("manuscript.min_length", 4000)  # 최소 글자수 (blocking - 이 미만 자동 REJECT)
-    WARNING_LENGTH = _threshold("manuscript.warning_length", 4500)  # 경고 글자수 (scoring 감점 시작)
-    TARGET_LENGTH = _threshold("manuscript.target_length", 5000)  # 목표 글자수 (작가 지시용)
-    MAX_LENGTH = _threshold("manuscript.max_length", 15000)  # 최대 글자수
+    [INF-P2-7] 지연 평가: YAML I/O는 최초 접근 시 1회만 수행.
+    """
+
+    MIN_LENGTH = _LazyThreshold("manuscript.min_length", 4000)  # 최소 글자수 (blocking)
+    WARNING_LENGTH = _LazyThreshold("manuscript.warning_length", 4500)  # 경고 글자수
+    TARGET_LENGTH = _LazyThreshold("manuscript.target_length", 5000)  # 목표 글자수
+    MAX_LENGTH = _LazyThreshold("manuscript.max_length", 15000)  # 최대 글자수
 
 
 class ContextLimits:
@@ -533,10 +561,13 @@ class AuditEvents:
 
 
 class PatchModeThresholds:
-    """[Phase 3-5B] 점수 기반 수정 모드 분기 임계값"""
+    """[Phase 3-5B] 점수 기반 수정 모드 분기 임계값
 
-    REWRITE = _threshold("patch_mode.rewrite_below", 50)  # 미만: 전면 재작성 (기존 동작)
-    PATCH = _threshold("patch_mode.patch_below", 80)  # 50~80: 부분 수정 (패치 모드). 80 이상은 Director PASS.
+    [INF-P2-7] 지연 평가: YAML I/O는 최초 접근 시 1회만 수행.
+    """
+
+    REWRITE = _LazyThreshold("patch_mode.rewrite_below", 50)  # 미만: 전면 재작성
+    PATCH = _LazyThreshold("patch_mode.patch_below", 80)  # 50~80: 부분 수정 (패치 모드)
 
 
 # ============================================================================
@@ -717,8 +748,9 @@ class V40PremiumThresholds:
     ANCHOR_COMPRESSED_PART_SIZE = 2000  # 압축 시 추출 부분 크기
 
     # Manuscript Quality (원고 품질) — [V64.P4] ManuscriptLimits 참조
-    MANUSCRIPT_MIN_LENGTH_DIRECTOR = ManuscriptLimits.MIN_LENGTH
-    MANUSCRIPT_TARGET_LENGTH_WRITER = ManuscriptLimits.TARGET_LENGTH
+    # [INF-P2-7] 지연 평가로 변경 (ManuscriptLimits 접근 시점 통일)
+    MANUSCRIPT_MIN_LENGTH_DIRECTOR = _LazyThreshold("manuscript.min_length", 4000)
+    MANUSCRIPT_TARGET_LENGTH_WRITER = _LazyThreshold("manuscript.target_length", 5000)
 
     # Emotion States (감정 상태 값)
     EMOTION_STATE_DESPAIR = -2  # 절망

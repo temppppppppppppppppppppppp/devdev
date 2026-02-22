@@ -188,11 +188,13 @@ class BlueprintEnsembleGenerator(BaseAgent):
             with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
                 futures = {}
                 for strategy in _active_strategies:
-                    _strategy_feedback = (
-                        strategy_specific_feedback
-                        if (strategy.get("name") == rejected_strategy and strategy_specific_feedback)
-                        else ""
-                    )
+                    # [S3-P1-3] 모든 전략에 generic 피드백 전달, 거절된 전략에는 추가 specific 피드백
+                    if strategy.get("name") == rejected_strategy and strategy_specific_feedback:
+                        _strategy_feedback = strategy_specific_feedback
+                    elif strategy_specific_feedback:
+                        _strategy_feedback = f"[이전 시도 문제 요약]\n{strategy_specific_feedback}"
+                    else:
+                        _strategy_feedback = ""
                     future = executor.submit(
                         self._generate_single,
                         ep_num=ep_num,

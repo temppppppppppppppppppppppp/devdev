@@ -556,22 +556,46 @@ class FactLedger:
         }
 
     def rollback_to(self, target_ep: int) -> None:
-        """[D-2] 특정 에피소드 이전 상태로 롤백 (episode_bibles 리플레이)."""
+        """[D-2] 특정 에피소드 이전 상태로 롤백 (episode_bibles 리플레이).
+
+        [INF-P1-9] 최적화: 개별 get_episode_bible(ep) N회 호출 대신
+        get_all_episode_bibles()로 한 번에 로드 후 필터링하여 O(1) DB 호출.
+        """
         _logger.warning(
             "[D-2] FactLedger 롤백: ep %d 이전으로 복원 (이전 last_updated_ep=%d)",
             target_ep,
             self._ledger.get("last_updated_ep", 0),
         )
         self._ledger = self._empty_ledger()
-        # [Sweep64] 1~(target_ep-1) 에피소드의 state_changes + bible_delta 리플레이
-        for ep in range(1, target_ep):
-            try:
-                bible = self.db.get_episode_bible(ep)
-                if bible:
+        # [INF-P1-9] 일괄 로드 후 target_ep 미만만 리플레이
+        try:
+            all_bibles = self.db.get_all_episode_bibles()
+        except Exception as e:
+            _logger.warning("[D-2] FactLedger 일괄 로드 실패, 개별 조회 폴백: %s", e)
+            all_bibles = None
+
+        if all_bibles is not None:
+            for bible in all_bibles:
+                ep = bible.get("ep_num", 0)
+                if ep >= target_ep:
+                    break  # ep_num 순 정렬이므로 즉시 중단
+                try:
                     sc = bible.get("state_changes", {})
                     if sc:
                         self.update_from_state_changes(ep, sc)
                     self.update_from_bible_delta(ep, bible)
-            except Exception as e:
-                _logger.warning("[D-2] FactLedger 리플레이 실패 ep %d: %s", ep, e)
+                except Exception as e:
+                    _logger.warning("[D-2] FactLedger 리플레이 실패 ep %d: %s", ep, e)
+        else:
+            # 폴백: 개별 조회 (기존 동작)
+            for ep in range(1, target_ep):
+                try:
+                    bible = self.db.get_episode_bible(ep)
+                    if bible:
+                        sc = bible.get("state_changes", {})
+                        if sc:
+                            self.update_from_state_changes(ep, sc)
+                        self.update_from_bible_delta(ep, bible)
+                except Exception as e:
+                    _logger.warning("[D-2] FactLedger 리플레이 실패 ep %d: %s", ep, e)
         self.save()

@@ -6,6 +6,7 @@ Preset Registry - 프리셋 기반 동적 스키마 체계
 
 import copy
 import json
+import re
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
@@ -417,6 +418,38 @@ class PresetRegistry:
         "mana": ["마나", "mp", "마력"],
         "skills": ["스킬", "기술", "abilities"],
         "martial_arts": ["무공", "무술", "techniques"],
+        # composer
+        "music_skill": ["음악능력", "음악_능력치"],
+        "genre_mastery": ["장르숙련", "장르_마스터리"],
+        "creative_block": ["슬럼프", "창작막힘"],
+        # cooking
+        "chef_rank": ["셰프등급", "요리사등급", "chef_level"],
+        "signature_dish": ["대표요리", "시그니처"],
+        "culinary_techniques": ["조리기법", "요리기술"],
+        "restaurant_tier": ["식당등급", "레스토랑등급"],
+        "reputation_score": ["평판점수", "reputation_point"],
+        # alt_history
+        "social_class": ["신분", "계급", "신분등급"],
+        "court_rank": ["품계", "관품"],
+        "political_influence": ["정치영향력", "정치력"],
+        "public_trust": ["민심", "신뢰도"],
+        # actor
+        "acting_skill": ["연기력", "연기실력", "acting_level"],
+        "fame": ["인지도", "fame_level", "명성"],
+        "filmography": ["출연작", "필모그래피"],
+        "scandal_index": ["스캔들지수", "스캔들"],
+        "fandom": ["팬덤", "팬규모"],
+        # sports
+        "athlete_tier": ["선수등급", "선수_티어", "athlete_rank"],
+        "sport_type": ["종목", "스포츠종목"],
+        "physical_stats": ["신체능력", "체력스탯"],
+        "ranking": ["순위", "랭킹"],
+        # medical
+        "doctor_rank": ["의사직급", "의사등급", "doctor_level"],
+        "specialty": ["전공과", "전문분야"],
+        "surgery_count": ["수술횟수", "수술_건수"],
+        "success_rate": ["성공률", "수술성공률"],
+        "malpractice_record": ["의료사고", "의료사고이력"],
     }
 
     def __init__(self, base_genre: str = None):
@@ -512,8 +545,6 @@ class PresetRegistry:
         [G15] 복합 단위 지원: "1억5천만" = 150,000,000
         억/만은 대단위, 천/백은 소단위로 분리하여 파싱.
         """
-        import re
-
         text = text.replace(",", "").replace(" ", "")
 
         multipliers = {"억": 100000000, "만": 10000, "천": 1000, "백": 100}
@@ -553,7 +584,16 @@ class PresetRegistry:
         """콘텐츠에서 새 장르 요소 감지"""
         # 장르별 키워드
         genre_keywords = {
+            "wuxia": ["내공", "무공", "경지", "강호", "문파", "무림", "검법", "장풍"],
+            "hunter": ["던전", "각성", "헌터", "길드", "마나", "레이드", "게이트", "몬스터"],
+            "investment": ["주식", "투자", "자본", "부동산", "펀드", "배당", "시세", "상장"],
             "fantasy": ["마법", "마력", "주문", "용", "엘프", "드래곤", "이계", "차원"],
+            "composer": ["작곡", "편곡", "프로듀싱", "음원", "앨범", "차트", "보컬", "멜로디"],
+            "cooking": ["요리", "셰프", "레시피", "식재료", "조리", "미슐랭", "식당", "주방"],
+            "alt_history": ["조선", "관직", "양반", "궁궐", "임금", "당파", "과거시험", "내시"],
+            "actor": ["오디션", "촬영", "배우", "대본", "감독", "캐스팅", "시청률", "영화제"],
+            "sports": ["선수", "경기", "코치", "훈련", "리그", "챔피언", "체력", "시합"],
+            "medical": ["수술", "환자", "진료", "병원", "의사", "레지던트", "진단", "처방"],
             "romance": ["사랑", "연애", "고백", "키스", "호감", "설렘", "짝사랑"],
             "politics": ["왕위", "왕좌", "대권", "정치", "파벌", "암투", "권력"],
             "military": ["전쟁", "군대", "병사", "장군", "전투", "진영", "병력"],

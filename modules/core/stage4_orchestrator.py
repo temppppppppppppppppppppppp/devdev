@@ -133,7 +133,12 @@ def _detect_cross_episode_repetition(
 
 @dataclasses.dataclass(slots=True)
 class _SessionConfig:
-    """[4-R2-a] Session-level config for Stage 4 interview loop."""
+    """[4-R2-a] Session-level config for Stage 4 interview loop.
+
+    NOTE: chief_writer~continuity_validator, story_context, style_guide는
+    _RoundContext(stage4_types.py)와 의도적으로 중복됩니다.
+    세션 설정이 에피소드별 _RoundContext로 복사되는 구조입니다.
+    """
 
     chief_writer: object
     manuscript_validator: object
@@ -348,8 +353,7 @@ JSON으로 출력:
             hud_report = _ep_ctx["hud_report"]
             current_inventory = _ep_ctx["current_inventory"]
             current_martial_arts = _ep_ctx["current_martial_arts"]
-            cumulative_bible = _ep_ctx["cumulative_bible"]
-            dead_npcs = _ep_ctx["dead_npcs"]
+            dead_npcs = _ep_ctx["dead_npcs"]  # [S4-P2-6] cumulative_bible는 dead_npcs 추출 후 불필요
             item_acquisition_timeline = _ep_ctx["item_acquisition_timeline"]
             _chain_link_section = _ep_ctx["chain_link_section"]
             _world_state_summary = _ep_ctx["world_state_summary"]

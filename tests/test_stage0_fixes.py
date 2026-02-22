@@ -100,12 +100,18 @@ class TestPhaseB:
 # Phase C: 코드 위생
 # ──────────────────────────────────────────────
 class TestPhaseC:
-    def test_no_bare_print_in_init(self):
-        """__init__.py 소스에 bare print( 미존재"""
+    def test_no_logging_info_for_ui_in_init(self):
+        """__init__.py 메뉴/UI 텍스트에 logging.info 미사용 (print 사용)
+
+        [S0-P1-6] 사용자에게 보여야 할 메뉴 텍스트는 print()를 사용.
+        logging.info()는 WARNING 레벨에서 보이지 않으므로 UI용으로 부적합.
+        """
         src = inspect.getsource(StageZeroManager)
-        # print_header 등 스피너 함수는 허용, bare print( 는 불허
         lines = src.split("\n")
         for i, line in enumerate(lines, 1):
             stripped = line.strip()
-            if stripped.startswith("print("):
-                pytest.fail(f"StageZeroManager L{i}: bare print() 발견: {stripped[:80]}")
+            # 메뉴 표시용 logging.info 금지 (logging.warning/error는 허용)
+            if stripped.startswith("logging.info(") and any(
+                kw in stripped for kw in ["[1]", "[2]", "[3]", "[4]", "[5]", "[0]", "메뉴", "선택", "====", "----"]
+            ):
+                pytest.fail(f"StageZeroManager L{i}: UI용 logging.info() 발견: {stripped[:80]}")

@@ -14,7 +14,13 @@ _PATCH_REWRITE_THRESHOLD = PatchModeThresholds.REWRITE
 
 @dataclasses.dataclass(slots=True)
 class _RoundContext:
-    """[4-R2-b] Round-level context for interview round execution."""
+    """[4-R2-b] Round-level context for interview round execution.
+
+    NOTE: chief_writer~continuity_validator, story_context, style_guide는
+    _SessionConfig와 의도적으로 중복됩니다. _SessionConfig는 세션 전체 설정,
+    _RoundContext는 에피소드별 컨텍스트 + 세션 설정의 스냅샷입니다.
+    slots=True 데이터클래스는 다중 상속이 제한되어 구조적 분리를 유지합니다.
+    """
 
     chief_writer: object
     manuscript_validator: object

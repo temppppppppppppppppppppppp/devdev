@@ -715,6 +715,97 @@ Step 6: Article 7 (독자 대리만족) 분석
             "pattern_diversity": 1.2,  # 패턴 다양성 중요 (뻔한 전개 방지)
             "reader_satisfaction": 0.8,  # [Phase 3-D1] 투자: 서스펜스 위주
         },
+        "fantasy": {
+            # 판타지: 세계관 몰입과 마법 체계 일관성이 중요
+            "prose_rhythm": 1.1,  # 전투/마법 장면 리듬감
+            "vocabulary_diversity": 1.1,  # 판타지 용어 다양성
+            "sensory_balance": 1.2,  # 마법 이펙트·환경 묘사
+            "show_dont_tell": 1.1,  # 설정 설명 대신 체감 묘사
+            "character_consistency": 1.1,  # 능력치 일관성
+            "emotion_arc": 1.0,
+            "dialogue_quality": 0.9,
+            "commercial_appeal": 1.2,  # 성장·레벨업 쾌감
+            "pattern_diversity": 1.0,
+            "reader_satisfaction": 1.2,  # 각성/퀘스트 달성 쾌감
+        },
+        "composer": {
+            # 작곡가: 음악 전문성과 감정선이 중요
+            "prose_rhythm": 1.3,  # 음악적 리듬감 반영된 문체
+            "vocabulary_diversity": 1.2,  # 음악 전문 용어 다양성
+            "sensory_balance": 1.2,  # 청각 묘사 중심 감각
+            "show_dont_tell": 1.1,  # 음악을 글로 체감시키기
+            "character_consistency": 1.0,
+            "emotion_arc": 1.3,  # 음악과 감정의 연결이 핵심
+            "dialogue_quality": 0.9,
+            "commercial_appeal": 0.9,
+            "pattern_diversity": 1.0,
+            "reader_satisfaction": 1.0,
+        },
+        "cooking": {
+            # 요리: 감각 묘사와 전문성이 중요
+            "prose_rhythm": 1.0,
+            "vocabulary_diversity": 1.1,  # 식재료·조리법 용어
+            "sensory_balance": 1.5,  # 미각·후각·시각 묘사 핵심
+            "show_dont_tell": 1.2,  # 맛을 글로 체감시키기
+            "character_consistency": 1.0,
+            "emotion_arc": 1.0,
+            "dialogue_quality": 0.9,
+            "commercial_appeal": 1.0,
+            "pattern_diversity": 1.1,  # 대회/요리 패턴 다양성
+            "reader_satisfaction": 1.1,  # 대회 우승·인정 쾌감
+        },
+        "alt_history": {
+            # 대체역사: 역사 고증과 세계관 일관성이 중요
+            "prose_rhythm": 1.0,
+            "vocabulary_diversity": 1.3,  # 시대 용어·관직명 다양성
+            "sensory_balance": 1.0,
+            "show_dont_tell": 1.0,
+            "character_consistency": 1.3,  # 역사 인물 일관성 필수
+            "emotion_arc": 1.1,  # 정치극 감정선
+            "dialogue_quality": 1.2,  # 시대풍 대화체 품질
+            "commercial_appeal": 0.9,
+            "pattern_diversity": 1.1,  # 역사 분기 다양성
+            "reader_satisfaction": 1.0,
+        },
+        "actor": {
+            # 배우물: 캐릭터 성장과 업계 묘사가 중요
+            "prose_rhythm": 1.0,
+            "vocabulary_diversity": 1.1,  # 연예계 용어
+            "sensory_balance": 1.0,
+            "show_dont_tell": 1.3,  # 연기력을 글로 보여주기
+            "character_consistency": 1.2,  # 인물 성장 일관성
+            "emotion_arc": 1.2,  # 감정 연기·성장 드라마
+            "dialogue_quality": 1.2,  # 대사/대본 품질
+            "commercial_appeal": 1.0,
+            "pattern_diversity": 0.9,
+            "reader_satisfaction": 1.0,
+        },
+        "sports": {
+            # 스포츠: 경기 묘사와 긴장감이 중요
+            "prose_rhythm": 1.3,  # 경기 장면 속도감
+            "vocabulary_diversity": 1.1,  # 종목별 전문 용어
+            "sensory_balance": 1.2,  # 신체 감각·경기장 묘사
+            "show_dont_tell": 1.1,  # 경기 체감
+            "character_consistency": 1.0,
+            "emotion_arc": 1.1,  # 승부 감정선
+            "dialogue_quality": 0.8,  # 경기 중 대사 적음
+            "commercial_appeal": 1.1,  # 승리 쾌감
+            "pattern_diversity": 1.0,
+            "reader_satisfaction": 1.2,  # 우승·신기록 쾌감
+        },
+        "medical": {
+            # 의학: 전문성과 리얼리즘이 중요
+            "prose_rhythm": 0.9,
+            "vocabulary_diversity": 1.3,  # 의학 전문 용어 다양성
+            "sensory_balance": 1.1,  # 수술 장면 묘사
+            "show_dont_tell": 1.2,  # 시술 과정 체감
+            "character_consistency": 1.2,  # 의사 성장 일관성
+            "emotion_arc": 1.2,  # 환자·의사 감정선
+            "dialogue_quality": 1.1,  # 의학 상담·진단 대사
+            "commercial_appeal": 0.9,
+            "pattern_diversity": 1.0,
+            "reader_satisfaction": 1.0,
+        },
     }
 
     def validate_v59(self, manuscript: str, validation_context: dict) -> dict:
@@ -791,6 +882,8 @@ Step 6: Article 7 (독자 대리만족) 분석
         else:
             weighted_percentage = 0
         # [TF-C02] 장르 가중치 영향력 ±1점 캡 (대원칙 #1: Python 판단 최소화)
+        # NOTE: weighted_percentage는 0~100 백분율, raw_total은 합산 점수(동일 0~100 스케일).
+        # 가중치 적용 후 두 값의 차이(_genre_delta)를 ±1점으로 제한하므로 단위 차이가 안전하게 흡수됨.
         _genre_delta = round(weighted_percentage) - raw_total
         capped_score = raw_total + max(-1, min(1, _genre_delta))
         passed = capped_score >= self.pass_threshold

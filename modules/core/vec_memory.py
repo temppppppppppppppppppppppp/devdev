@@ -390,7 +390,16 @@ class VecMemory:
         max_results: int = 5,
         current_arc_no: int | None = None,
     ) -> str:
-        """멀티쿼리 벡터 검색 — 다양한 쿼리로 검색 후 merge+dedup (LongTermMemory 호환)."""
+        """멀티쿼리 벡터 검색 — 다양한 쿼리로 검색 후 merge+dedup (LongTermMemory 호환).
+
+        [INF-P1-5] Thread-safety note:
+        이 메서드 내부에서 ``_db_lock()``으로 KNN 쿼리를 보호한 뒤
+        ``_load_episode_meta()``를 호출하는데, ``_load_episode_meta``도
+        ``_db_lock()``을 사용합니다. shared 모드에서 ``self._lock``은
+        **DBManager의 RLock** 이므로 동일 스레드 내 재진입이 안전합니다.
+        standalone 모드에서는 ``self._lock``이 None이므로 no-op입니다.
+        이 패턴을 변경할 경우 Lock → RLock 요구사항을 반드시 유지하세요.
+        """
         if not self.has_valid_memory:
             return ""
 
