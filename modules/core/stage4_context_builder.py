@@ -127,7 +127,7 @@ class Stage4ContextBuilder:
 
         sections: list[str] = []
         compressor = ContextCompressor()
-        max_results = int(_threshold("context.vector_max_results_s4", 12))
+        max_results = int(_threshold("context.vector_max_results_s4", 16))
         ordered_slots = sorted(plan.slots, key=lambda slot: getattr(slot, "priority", 2))
 
         for slot in ordered_slots:
@@ -638,7 +638,7 @@ class Stage4ContextBuilder:
                         queries=_mq_queries,
                         current_ep=next_ep,
                         n_per_query=3,
-                        max_results=_threshold("context.vector_max_results_s4", 12),
+                        max_results=_threshold("context.vector_max_results_s4", 16),
                         current_arc_no=current_arc_no,
                     )
                     if _vector_memory:

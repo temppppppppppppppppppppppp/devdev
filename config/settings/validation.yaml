@@ -35,6 +35,12 @@ scoring:
     hunter: 68
     investment: 72
     fantasy: 70
+    composer: 71
+    cooking: 70
+    alt_history: 72
+    actor: 70
+    sports: 69
+    medical: 72
   breakdown:
     character_consistency: 15
     emotion_arc: 15
@@ -76,12 +82,14 @@ retry:
   api_timeout_seconds: 300   # 5분
 
 # ── 집필 제한 ────────────────────────────────────────────────
+# [xfail-sweep] writing: unused - planned future wiring
 writing:
   max_retry_per_episode: 5
   min_episode_loop_guard: 5
   max_failure_streak: 3
 
 # ── 검증 임계값 ──────────────────────────────────────────────
+# [xfail-sweep] thresholds: unused - planned future wiring
 thresholds:
   tactical_duplicate: 0.98
   pattern_min_hits: 1
@@ -93,11 +101,13 @@ thresholds:
   hud_change: 0.1
 
 # ── 패치 모드 ────────────────────────────────────────────────
+# [xfail-sweep] patch_mode: unused - planned future wiring
 patch_mode:
   rewrite_below: 50          # 미만: 전면 재작성
   patch_below: 80            # 50~80: 부분 수정
 
 # ── 권/아크 설정 ─────────────────────────────────────────────
+# [xfail-sweep] volume: unused - planned future wiring
 volume:
   arcs_per_volume: 5
   episodes_per_arc: 5

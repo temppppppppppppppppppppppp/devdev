@@ -1415,6 +1415,7 @@ class Analyst(BaseAgent):
             "wuxia": "analyst_libraries.json",
             "hunter": "analyst_libraries_hunter.json",
             "investment": "analyst_libraries_investment.json",
+            "fantasy": "analyst_libraries_fantasy.json",  # [TF3-C3/C4]
             "cooking": "analyst_libraries_cooking.json",
             "actor": "analyst_libraries_actor.json",
             "sports": "analyst_libraries_sports.json",

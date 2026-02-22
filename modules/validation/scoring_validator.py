@@ -31,6 +31,21 @@ class ScoringValidator:
         "hunter": 68,  # 헌터: 액션 위주로 약간 낮게
         "investment": 72,  # 투자: 논리성 중요로 약간 높게
         "fantasy": 70,  # 판타지: 기본값
+        "composer": 71,  # 작곡가: 전문성/감정선 균형
+        "cooking": 70,  # 요리: 기본값
+        "alt_history": 72,  # 대체역사: 고증/정합성 중요
+        "actor": 70,  # 배우물: 기본값
+        "sports": 69,  # 스포츠: 액션 호흡 고려
+        "medical": 72,  # 의학: 전문성/정확성 중요
+    }
+
+    DEFAULT_SCORE_BREAKDOWN = {
+        "character_consistency": 15,
+        "emotion_arc": 15,
+        "dialogue_quality": 15,
+        "commercial_appeal": 15,
+        "pattern_diversity": 10,
+        "reader_satisfaction": 10,
     }
 
     def __init__(
@@ -167,6 +182,7 @@ class ScoringValidator:
 
         # [V46] GenreGuard 기반 동적 컨텍스트 생성
         dynamic_context = self._generate_dynamic_context(context)
+        score_breakdown = self._get_score_breakdown()
 
         # LLM 호출 with Chain-of-Thought
         prompt = f"""
@@ -218,19 +234,24 @@ Step 6: Article 7 (독자 대리만족) 분석
 
 각 Article의 점수를 JSON으로 반환하십시오:
 {{
-    "character_consistency": {{"score": X, "max": 15, "reason": "..."}},
-    "emotion_arc": {{"score": X, "max": 15, "reason": "..."}},
-    "dialogue_quality": {{"score": X, "max": 15, "reason": "..."}},
-    "commercial_appeal": {{"score": X, "max": 15, "reason": "..."}},
-    "pattern_diversity": {{"score": X, "max": 10, "reason": "..."}},
-    "reader_satisfaction": {{"score": X, "max": 10, "reason": "..."}}
+    "character_consistency": {{"score": X, "max": {score_breakdown["character_consistency"]}, "reason": "..."}},
+    "emotion_arc": {{"score": X, "max": {score_breakdown["emotion_arc"]}, "reason": "..."}},
+    "dialogue_quality": {{"score": X, "max": {score_breakdown["dialogue_quality"]}, "reason": "..."}},
+    "commercial_appeal": {{"score": X, "max": {score_breakdown["commercial_appeal"]}, "reason": "..."}},
+    "pattern_diversity": {{"score": X, "max": {score_breakdown["pattern_diversity"]}, "reason": "..."}},
+    "reader_satisfaction": {{"score": X, "max": {score_breakdown["reader_satisfaction"]}, "reason": "..."}}
 }}
 """
 
         try:
             from google.genai import types
 
-            config = types.GenerateContentConfig(temperature=0.3, response_mime_type="application/json")
+            timeout_seconds = int(_threshold("retry.api_timeout_seconds", 300))
+            config = types.GenerateContentConfig(
+                temperature=0.3,
+                response_mime_type="application/json",
+                http_options=types.HttpOptions(timeout=max(1, timeout_seconds)),
+            )
 
             response = self.client.models.generate_content(model=self.model, contents=prompt, config=config)
 
@@ -283,36 +304,72 @@ Step 6: Article 7 (독자 대리만족) 분석
         """
         # 간단한 휴리스틱 평가
         ms_length = len(manuscript)
+        score_breakdown = self._get_score_breakdown()
 
         # 캐릭터 일관성 (길이 기반 단순 추정)
-        char_score = min(15, int(ms_length / 300))
+        char_score = min(score_breakdown["character_consistency"], int(ms_length / 300))
 
         # 감정선 (문장 부호 다양성으로 추정)
         emotion_markers = manuscript.count("!") + manuscript.count("?") + manuscript.count("…")
-        emotion_score = min(15, 8 + int(emotion_markers / 5))
+        emotion_score = min(score_breakdown["emotion_arc"], 8 + int(emotion_markers / 5))
 
         # 대화 품질 (따옴표 빈도로 추정)
         # [V44] 서로 다른 유형의 따옴표 카운트 (직선형 + 곡선형)
         dialogue_count = manuscript.count('"') + manuscript.count("\u201c") + manuscript.count("\u201d")
-        dialogue_score = min(15, 5 + int(dialogue_count / 10))
+        dialogue_score = min(score_breakdown["dialogue_quality"], 5 + int(dialogue_count / 10))
 
         # 상업성 (길이와 구조로 추정)
-        commercial_score = min(15, 8 + int(ms_length / 500))
+        commercial_score = min(score_breakdown["commercial_appeal"], 8 + int(ms_length / 500))
 
         # 패턴 다양성 (단순 중간값)
-        pattern_score = 6
+        pattern_score = min(score_breakdown["pattern_diversity"], 6)
 
         # [Phase 3-D1] 독자 대리만족 (단순 중간값)
-        satisfaction_score = 5
+        satisfaction_score = min(score_breakdown["reader_satisfaction"], 5)
 
         return {
-            "character_consistency": {"score": char_score, "max": 15, "reason": "⚠️ LLM 없음 - Fallback 추정치"},
-            "emotion_arc": {"score": emotion_score, "max": 15, "reason": "⚠️ LLM 없음 - Fallback 추정치"},
-            "dialogue_quality": {"score": dialogue_score, "max": 15, "reason": "⚠️ LLM 없음 - Fallback 추정치"},
-            "commercial_appeal": {"score": commercial_score, "max": 15, "reason": "⚠️ LLM 없음 - Fallback 추정치"},
-            "pattern_diversity": {"score": pattern_score, "max": 10, "reason": "⚠️ LLM 없음 - Fallback 추정치"},
-            "reader_satisfaction": {"score": satisfaction_score, "max": 10, "reason": "⚠️ LLM 없음 - Fallback 추정치"},
+            "character_consistency": {
+                "score": char_score,
+                "max": score_breakdown["character_consistency"],
+                "reason": "⚠️ LLM 없음 - Fallback 추정치",
+            },
+            "emotion_arc": {
+                "score": emotion_score,
+                "max": score_breakdown["emotion_arc"],
+                "reason": "⚠️ LLM 없음 - Fallback 추정치",
+            },
+            "dialogue_quality": {
+                "score": dialogue_score,
+                "max": score_breakdown["dialogue_quality"],
+                "reason": "⚠️ LLM 없음 - Fallback 추정치",
+            },
+            "commercial_appeal": {
+                "score": commercial_score,
+                "max": score_breakdown["commercial_appeal"],
+                "reason": "⚠️ LLM 없음 - Fallback 추정치",
+            },
+            "pattern_diversity": {
+                "score": pattern_score,
+                "max": score_breakdown["pattern_diversity"],
+                "reason": "⚠️ LLM 없음 - Fallback 추정치",
+            },
+            "reader_satisfaction": {
+                "score": satisfaction_score,
+                "max": score_breakdown["reader_satisfaction"],
+                "reason": "⚠️ LLM 없음 - Fallback 추정치",
+            },
         }
+
+    def _get_score_breakdown(self) -> dict[str, int]:
+        """validation.yaml scoring.breakdown 기반 max score 로드."""
+        breakdown = {}
+        for key, default in self.DEFAULT_SCORE_BREAKDOWN.items():
+            value = _threshold(f"scoring.breakdown.{key}", default)
+            try:
+                breakdown[key] = max(1, int(value))
+            except (TypeError, ValueError):
+                breakdown[key] = default
+        return breakdown
 
     # ========================================================================
     # [V46] 동적 컨텍스트 생성
@@ -1080,6 +1137,90 @@ Step 6: Article 7 (독자 대리만족) 분석
             explanation_patterns = ["때문에", "왜냐하면", "따라서", "결과적으로"]
             if not any(p in manuscript for p in explanation_patterns):
                 feedback.append("투자 결정의 논리적 근거 설명이 부족합니다.")
+
+        elif genre == "fantasy":
+            # 판타지 특화 체크
+            fantasy_keywords = ["마나", "주문", "마법", "정령", "유물", "던전", "퀘스트", "왕국"]
+            fantasy_count = sum(manuscript.count(kw) for kw in fantasy_keywords)
+            if fantasy_count < 3:
+                feedback.append("판타지 장르임에도 세계관 핵심 요소(마나, 주문, 유물 등) 언급이 부족합니다.")
+
+            # 체계/제약 묘사 체크
+            rule_patterns = ["대가", "제약", "규칙", "계약", "의식", "룬"]
+            if not any(p in manuscript for p in rule_patterns):
+                feedback.append("마법/능력 체계의 규칙과 제약(대가) 묘사가 부족합니다.")
+
+        elif genre == "composer":
+            # 작곡가 특화 체크
+            music_keywords = ["작곡", "악보", "화성", "멜로디", "리듬", "편곡", "공연", "연주"]
+            music_count = sum(manuscript.count(kw) for kw in music_keywords)
+            if music_count < 3:
+                feedback.append("작곡가 장르임에도 음악 창작/공연 관련 전문 용어가 부족합니다.")
+
+            # 청각 중심 감각 묘사 체크
+            auditory_patterns = ["울림", "진동", "박자", "음색", "화음", "잔향"]
+            if not any(p in manuscript for p in auditory_patterns):
+                feedback.append("음악의 질감을 전달하는 청각 묘사(음색, 울림, 박자)가 부족합니다.")
+
+        elif genre == "cooking":
+            # 요리 특화 체크
+            cooking_keywords = ["식재료", "조리", "불향", "육수", "칼질", "팬", "소스", "플레이팅"]
+            cooking_count = sum(manuscript.count(kw) for kw in cooking_keywords)
+            if cooking_count < 3:
+                feedback.append("요리 장르임에도 조리 과정/식재료 관련 디테일이 부족합니다.")
+
+            # 맛/향/식감 묘사 체크
+            sensory_patterns = ["향", "식감", "고소", "짭짤", "바삭", "부드럽", "매콤"]
+            if not any(p in manuscript for p in sensory_patterns):
+                feedback.append("요리 장면의 오감 묘사(향, 식감, 온도감)를 보강해 주세요.")
+
+        elif genre == "alt_history":
+            # 대체역사 특화 체크
+            history_keywords = ["조정", "전하", "대신", "관직", "군영", "사대부", "왕명", "개혁"]
+            history_count = sum(manuscript.count(kw) for kw in history_keywords)
+            if history_count < 3:
+                feedback.append("대체역사 장르임에도 시대 배경/관직/정치 구조 묘사가 부족합니다.")
+
+            # 정치적 인과/명분 체크
+            logic_patterns = ["명분", "정통성", "세력", "파벌", "외교", "군량", "재정"]
+            if not any(p in manuscript for p in logic_patterns):
+                feedback.append("정책·권력 이동의 인과(명분, 세력 구도, 재정/군사 근거)가 부족합니다.")
+
+        elif genre == "actor":
+            # 배우물 특화 체크
+            actor_keywords = ["오디션", "대본", "촬영", "카메라", "감독", "리허설", "컷", "배역", "연기"]
+            actor_count = sum(manuscript.count(kw) for kw in actor_keywords)
+            if actor_count < 3:
+                feedback.append("배우물 장르임에도 업계/촬영/연기 과정 디테일이 부족합니다.")
+
+            # 연기 해석/감정선 체크
+            acting_patterns = ["해석", "호흡", "감정선", "캐릭터", "톤", "디렉션"]
+            if not any(p in manuscript for p in acting_patterns):
+                feedback.append("배역 해석과 감정선 구축 과정(톤·호흡·디렉션 반영)을 보강해 주세요.")
+
+        elif genre == "sports":
+            # 스포츠 특화 체크
+            sports_keywords = ["훈련", "경기", "전술", "체력", "코치", "기록", "시합", "리그", "팀"]
+            sports_count = sum(manuscript.count(kw) for kw in sports_keywords)
+            if sports_count < 3:
+                feedback.append("스포츠 장르임에도 훈련/전술/경기 맥락 설명이 부족합니다.")
+
+            # 신체 감각/리듬 체크
+            body_patterns = ["호흡", "스텝", "가속", "근육", "균형", "리듬", "템포"]
+            if not any(p in manuscript for p in body_patterns):
+                feedback.append("경기의 속도감과 신체 감각(호흡, 스텝, 템포) 묘사를 강화해 주세요.")
+
+        elif genre == "medical":
+            # 의학 특화 체크
+            medical_keywords = ["환자", "진단", "수술", "처치", "바이탈", "검사", "병동", "증상", "회진"]
+            medical_count = sum(manuscript.count(kw) for kw in medical_keywords)
+            if medical_count < 3:
+                feedback.append("의학 장르임에도 진단/처치/병원 환경 관련 디테일이 부족합니다.")
+
+            # 임상 판단 근거 체크
+            clinical_patterns = ["감별", "근거", "프로토콜", "합병증", "응급", "우선순위"]
+            if not any(p in manuscript for p in clinical_patterns):
+                feedback.append("임상 판단의 근거(감별진단, 프로토콜, 합병증 대응) 서술이 부족합니다.")
 
         return feedback
 
