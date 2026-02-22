@@ -80,7 +80,8 @@ class Stage2ValidationPipeline:
                             logging.info(f"- {str(issue)[:60]}")
                     python_advisory.extend(advisory_issues)
                 logging.info("✅ [DraftValidator] 사전 검증 통과!")
-                draft_validator_passed = True
+                # [S2-P1-4] draft_validator_passed는 2차 호출(L256)에서만 설정
+                # 1차 호출은 Consensus용 advisory 수집 전용
             except Exception as dv_err:
                 logging.warning(f"⚠️ [DraftValidator] 스킵: {str(dv_err)[:50]}")
 
@@ -695,6 +696,11 @@ class Stage2ValidationPipeline:
 
     def _stage2_flow_guard_legacy(self, normalized: list) -> dict:
         """[V60.15] 레거시 Flow Guard (폴백용)"""
+        # [S2-P2-1] str → list 타입 방어 (SelfReflector 경로 등)
+        if isinstance(normalized, str):
+            normalized = [normalized]
+        if not isinstance(normalized, list):
+            normalized = list(normalized) if normalized else []
 
         def jaccard(a, b) -> float:
             sa, sb = set(a.split()), set(b.split())

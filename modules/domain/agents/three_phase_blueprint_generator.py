@@ -326,7 +326,8 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                     _prev_validation_warnings = [continuity_feedback]
                     if best_blueprint:
                         _previous_best = best_blueprint  # [TF-S3-01] patch mode용 보존
-                    feedback += f"\n[연속성 오류]\n{continuity_feedback}"
+                    # [S3-P1-4] += 누적 대신 _initial_feedback 기반 재구성
+                    feedback = _initial_feedback + f"\n[연속성 오류]\n{continuity_feedback}"
                     logging.warning("⚠️ [V61.5] 연속성 검사 REJECT")
                     continue  # 다음 재시도로
 
@@ -375,7 +376,8 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             if verdict == "PASS" and _score < _quality_gate_score:
                 logging.warning(f"[QualityGate] Stage3 PASS이나 score={_score} < {_quality_gate_score} → REJECT 전환")
                 verdict = "REJECT"
-                feedback = (feedback or "") + f"\n[Quality Gate] score {_score}점으로 {_quality_gate_score}점 미달."
+                # [S3-P1-4] += 누적 대신 _initial_feedback 기반 재구성
+                feedback = _initial_feedback + f"\n[Quality Gate] score {_score}점으로 {_quality_gate_score}점 미달."
 
             if verdict == "PASS":
                 self.stats["phase3_pass"] += 1

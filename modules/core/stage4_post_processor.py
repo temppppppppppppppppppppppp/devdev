@@ -373,7 +373,13 @@ class Stage4PostProcessor:
                 "knowledge_map": knowledge_map,
             }
 
-            self.ctx.current_project.db.save_episode_bible(next_ep, bible_delta)
+            # [S4-P1-5] save_episode_bible 실패가 후속 처리(state_log, FactLedger)를 차단하지 않도록 격리
+            try:
+                self.ctx.current_project.db.save_episode_bible(next_ep, bible_delta)
+            except Exception as _bible_save_err:
+                self.ctx.ui.log(
+                    f"      ⚠️ Episode Bible DB 저장 실패 (bible_delta 구성은 성공): {str(_bible_save_err)[:50]}"
+                )
 
             if actual_truth or state_updates_from_audit:
                 state_log_data = {

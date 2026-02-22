@@ -254,7 +254,9 @@ class Spinner:
         """스피너 정지"""
         self.running = False
         if self.thread:
-            self.thread.join(timeout=0.5)
+            self.thread.join(timeout=2.0)
+            if self.thread.is_alive():
+                self.thread.join()
 
         elapsed = time.time() - self.start_time if self.start_time else 0
 

@@ -1,4 +1,5 @@
 import logging
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +13,8 @@ class ConfigManager:
     # [Phase 5-B-1] YAML 설정 파일 경로 (프로젝트 루트 기준)
     _SETTINGS_DIR = "config/settings"
     _VALIDATION_YAML = "validation.yaml"
+    # [INF-P1-6] 클래스 레벨 Lock — load_settings의 force_reload 경합 방지
+    _settings_lock = threading.Lock()
 
     def __init__(self) -> None:
         self.root = Path.cwd()
@@ -82,28 +85,35 @@ class ConfigManager:
 
         - 파일 누락/파싱 실패 시 빈 dict 반환 (기존 하드코드 동작 유지)
         - force_reload=True 시 캐시 무시하고 재로드
+        - [INF-P1-6] _settings_lock으로 동시 reload 경합 방지
         """
+        # 캐시 히트: lock 없이 빠르게 반환
         if self._validation_settings is not None and not force_reload:
             return self._validation_settings
 
-        yaml_path = self.root / self._SETTINGS_DIR / self._VALIDATION_YAML
-        if not yaml_path.exists():
-            logging.warning(f"[Phase 5-B-1] validation.yaml 없음: {yaml_path} — 기본값 사용")
-            self._validation_settings = {}
+        with self._settings_lock:
+            # double-check after acquiring lock
+            if self._validation_settings is not None and not force_reload:
+                return self._validation_settings
+
+            yaml_path = self.root / self._SETTINGS_DIR / self._VALIDATION_YAML
+            if not yaml_path.exists():
+                logging.warning(f"[Phase 5-B-1] validation.yaml 없음: {yaml_path} — 기본값 사용")
+                self._validation_settings = {}
+                return self._validation_settings
+
+            try:
+                import yaml
+
+                with open(yaml_path, encoding="utf-8") as f:
+                    data = yaml.safe_load(f)
+                self._validation_settings = data if isinstance(data, dict) else {}
+                logging.info(f"[Phase 5-B-1] validation.yaml 로드 완료 ({len(self._validation_settings)} 섹션)")
+            except Exception as e:
+                logging.warning(f"[Phase 5-B-1] validation.yaml 파싱 실패 — 기본값 사용: {e}")
+                self._validation_settings = {}
+
             return self._validation_settings
-
-        try:
-            import yaml
-
-            with open(yaml_path, encoding="utf-8") as f:
-                data = yaml.safe_load(f)
-            self._validation_settings = data if isinstance(data, dict) else {}
-            logging.info(f"[Phase 5-B-1] validation.yaml 로드 완료 ({len(self._validation_settings)} 섹션)")
-        except Exception as e:
-            logging.warning(f"[Phase 5-B-1] validation.yaml 파싱 실패 — 기본값 사용: {e}")
-            self._validation_settings = {}
-
-        return self._validation_settings
 
     def _get_nested(self, dotted_key: str, default: Any = None) -> Any:
         """[Phase 5-B-1] 점(.) 구분 키로 중첩 dict 탐색.

@@ -4,6 +4,7 @@ import concurrent.futures
 import json
 import logging
 import re
+import threading
 
 from modules.core.context_advisor import RetrievalSources
 from modules.validation.threshold_helper import _threshold
@@ -189,10 +190,14 @@ class Stage2PreflightAnalysis:
         # preflight: LLM 호출 (독립적 — all_refined_arcs만 사용)
         # 두 호출이 독립적이므로 병렬 실행하여 15-30s 절감
 
+        # [S2-P1-5] perf_timer 공유 상태 보호용 Lock
+        _perf_lock = threading.Lock()
+
         def _compute_arc_drive() -> dict:
             """Weaver 욕망 드라이브 생성 (LLM)"""
             try:
-                self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_arc_drive")
+                with _perf_lock:
+                    self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_arc_drive")
             except Exception:
                 pass
             try:
@@ -211,14 +216,16 @@ class Stage2PreflightAnalysis:
                 return {"desire_vector": "생성 실패", "status": "error"}
             finally:
                 try:
-                    self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_arc_drive")
+                    with _perf_lock:
+                        self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_arc_drive")
                 except Exception:
                     pass
 
         def _compute_preflight() -> tuple:
             """Preflight 분석 (LLM) — 결과를 attempt 루프에서 재사용"""
             try:
-                self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_preflight_analysis")
+                with _perf_lock:
+                    self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_preflight_analysis")
             except Exception:
                 pass
             _pf_injection = ""
@@ -239,7 +246,8 @@ class Stage2PreflightAnalysis:
                 return _pf_injection, _pf_result
             finally:
                 try:
-                    self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_preflight_analysis")
+                    with _perf_lock:
+                        self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_preflight_analysis")
                 except Exception:
                     pass
 
@@ -326,7 +334,7 @@ class Stage2PreflightAnalysis:
 
         # [V60.77] FourPhase-Director 대면 루프
         attempt = 0
-        max_attempts = 5
+        max_attempts = int(_threshold("retry.analyst_max_attempts", 5))
         director_feedback_for_fourphase = ""
 
         _st_snapshot = None  # [V70] StateTracker 롤백용 스냅샷

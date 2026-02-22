@@ -46,12 +46,19 @@ class DBTransactionError(DBError):
 
 
 class DBManager:
-    """[V20 Sovereign DB Engine] S등급 무결성: 트랜잭션 보호 및 로어 테이블화 완비"""
+    """[V20 Sovereign DB Engine] S등급 무결성: 트랜잭션 보호 및 로어 테이블화 완비
+
+    [INF-P1-1] Thread-safety note:
+    ``self.cursor`` is retained for backward compatibility but should NOT be used
+    in new/modified code. Instead, create a **local cursor** via
+    ``cur = self.conn.cursor()`` inside each method, always within ``with self._lock:``.
+    This avoids shared-cursor race conditions across threads.
+    """
 
     def __init__(self, db_path: Path):
         self.db_path = db_path
         self.conn = None
-        self.cursor = None
+        self.cursor = None  # [INF-P1-1] legacy — prefer local cursors in methods
         # [V45] 멀티스레드 안전성을 위한 Lock
         self._lock = threading.RLock()
         # [V64 P2-7] 누적 Bible 증분 캐시 {up_to_ep: cumulative_dict}
@@ -511,16 +518,26 @@ class DBManager:
                 cur.close()
 
     def begin(self):
-        self._ensure_open()
-        self.cursor.execute("BEGIN TRANSACTION")
+        # [INF-P1-2] RLock으로 트랜잭션 제어 보호 (중첩 안전)
+        with self._lock:
+            self._ensure_open()
+            cur = self.conn.cursor()
+            try:
+                cur.execute("BEGIN TRANSACTION")
+            finally:
+                cur.close()
 
     def commit(self):
-        self._ensure_open()
-        self.conn.commit()
+        # [INF-P1-2] RLock으로 트랜잭션 제어 보호
+        with self._lock:
+            self._ensure_open()
+            self.conn.commit()
 
     def rollback(self):
-        self._ensure_open()
-        self.conn.rollback()
+        # [INF-P1-2] RLock으로 트랜잭션 제어 보호
+        with self._lock:
+            self._ensure_open()
+            self.conn.rollback()
 
     def close(self) -> None:
         """[Phase 4A] DB 연결 안전 종료"""
@@ -540,48 +557,80 @@ class DBManager:
 
     # --- [범용 쿼리] ---
     def execute_query(self, sql: str, params: tuple = ()) -> list:
-        """SELECT 쿼리 실행 후 결과 리스트 반환"""
+        """[INF-P2-1] **읽기 전용** SELECT 쿼리 실행 후 결과 리스트 반환.
+
+        WARNING: 이 메서드에는 하드코딩된 SQL만 전달해야 합니다.
+        사용자 입력을 SQL 문자열에 직접 삽입하지 마세요 — params를 사용하세요.
+        INSERT/UPDATE/DELETE 등 쓰기 쿼리는 execute_update()를 사용하세요.
+        """
         self._ensure_open()
+        # [INF-P2-1] SELECT 전용 가드 — 실수로 쓰기 쿼리 전달 방지
+        stripped = sql.strip().upper()
+        if stripped and not stripped.startswith("SELECT") and not stripped.startswith("PRAGMA"):
+            raise DBError(
+                f"execute_query()는 읽기 전용입니다. 쓰기 쿼리는 execute_update()를 사용하세요: {sql[:60]}",
+                severity=DBErrorSeverity.HIGH,
+            )
         with self._lock:
-            self.cursor.execute(sql, params)
-            return self.cursor.fetchall()
+            cur = self.conn.cursor()
+            try:
+                cur.execute(sql, params)
+                return cur.fetchall()
+            finally:
+                cur.close()
 
     def execute_update(self, sql: str, params: tuple = ()):
         """INSERT/UPDATE/DELETE 쿼리 실행"""
         self._ensure_open()
         with self._lock:
-            self.cursor.execute(sql, params)
+            cur = self.conn.cursor()
+            try:
+                cur.execute(sql, params)
+            finally:
+                cur.close()
 
     # --- [Section 1: 원고 및 지표] ---
     def save_manuscript(self, ep_num, title, content) -> None:
         with self._lock:
-            self.cursor.execute(
-                "INSERT OR REPLACE INTO manuscripts (ep_num, title, content) VALUES (?, ?, ?)",
-                (ep_num, title, content),
-            )
-            if not self.conn.in_transaction:
-                self.conn.commit()
+            cur = self.conn.cursor()
+            try:
+                cur.execute(
+                    "INSERT OR REPLACE INTO manuscripts (ep_num, title, content) VALUES (?, ?, ?)",
+                    (ep_num, title, content),
+                )
+                if not self.conn.in_transaction:
+                    self.conn.commit()
+            finally:
+                cur.close()
 
     def get_manuscript(self, ep_num):
         with self._lock:
-            cur = self.cursor.execute("SELECT * FROM manuscripts WHERE ep_num = ?", (ep_num,))
-            row = cur.fetchone()
-            return dict(row) if row else None
+            cur = self.conn.cursor()
+            try:
+                cur.execute("SELECT * FROM manuscripts WHERE ep_num = ?", (ep_num,))
+                row = cur.fetchone()
+                return dict(row) if row else None
+            finally:
+                cur.close()
 
     # 📂 modules/core/db_manager.py 내부에 추가
 
     def get_blueprint(self, ep_num):
         """특정 회차의 설계도 JSON 인출"""
         with self._lock:
-            cur = self.cursor.execute("SELECT data FROM blueprints WHERE ep_num = ?", (ep_num,))
-            row = cur.fetchone()
-            if not row:
-                return None
+            cur = self.conn.cursor()
             try:
-                return json.loads(row["data"])
-            except (json.JSONDecodeError, TypeError) as e:  # [V70] NULL data → TypeError 방어
-                logging.warning(f"🚨 [DB] Blueprint JSON 파싱 실패 (ep_num={ep_num}): {e}")
-                return None
+                cur.execute("SELECT data FROM blueprints WHERE ep_num = ?", (ep_num,))
+                row = cur.fetchone()
+                if not row:
+                    return None
+                try:
+                    return json.loads(row["data"])
+                except (json.JSONDecodeError, TypeError) as e:  # [V70] NULL data → TypeError 방어
+                    logging.warning(f"🚨 [DB] Blueprint JSON 파싱 실패 (ep_num={ep_num}): {e}")
+                    return None
+            finally:
+                cur.close()
 
     # [INF-P2-2] 안전한 SQL 식별자 패턴 (알파벳/숫자/언더스코어만 허용)
     _SAFE_COLUMN_RE = __import__("re").compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
@@ -605,9 +654,13 @@ class DBManager:
             placeholders = ", ".join(["?"] * len(validated_data))
             query = f"INSERT OR REPLACE INTO martial_tracker (ep_num, {columns}) VALUES (?, {placeholders})"
 
-            self.cursor.execute(query, [ep_num] + list(validated_data.values()))
-            if not self.conn.in_transaction:
-                self.conn.commit()
+            cur = self.conn.cursor()
+            try:
+                cur.execute(query, [ep_num] + list(validated_data.values()))
+                if not self.conn.in_transaction:
+                    self.conn.commit()
+            finally:
+                cur.close()
 
         # --- [V49.5] 화별 Bible CRUD ---
         # [V60.82] causal_links, karma_matrix, knowledge_map 필드 추가
@@ -615,31 +668,35 @@ class DBManager:
     def save_episode_bible(self, ep_num: int, bible_delta: dict):
         """화별 Bible 저장 (원고에서 추출된 설정 변화)"""
         with self._lock:
-            self.cursor.execute(
-                """
-                INSERT OR REPLACE INTO episode_bibles
-                (ep_num, new_items, lost_items, new_npcs, npc_deaths,
-                 relationship_changes, state_changes, time_passed, reveals,
-                 causal_links, karma_matrix, knowledge_map)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-                (
-                    ep_num,
-                    json.dumps(bible_delta.get("new_items", []), ensure_ascii=False),
-                    json.dumps(bible_delta.get("lost_items", []), ensure_ascii=False),
-                    json.dumps(bible_delta.get("new_npcs", []), ensure_ascii=False),
-                    json.dumps(bible_delta.get("npc_deaths", []), ensure_ascii=False),
-                    json.dumps(bible_delta.get("relationship_changes", []), ensure_ascii=False),
-                    json.dumps(bible_delta.get("state_changes", {}), ensure_ascii=False),
-                    bible_delta.get("time_passed", ""),
-                    json.dumps(bible_delta.get("reveals", []), ensure_ascii=False),
-                    json.dumps(bible_delta.get("causal_links", []), ensure_ascii=False),
-                    json.dumps(bible_delta.get("karma_matrix", []), ensure_ascii=False),
-                    json.dumps(bible_delta.get("knowledge_map", {}), ensure_ascii=False),
-                ),
-            )
-            if not self.conn.in_transaction:
-                self.conn.commit()
+            cur = self.conn.cursor()
+            try:
+                cur.execute(
+                    """
+                    INSERT OR REPLACE INTO episode_bibles
+                    (ep_num, new_items, lost_items, new_npcs, npc_deaths,
+                     relationship_changes, state_changes, time_passed, reveals,
+                     causal_links, karma_matrix, knowledge_map)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                    (
+                        ep_num,
+                        json.dumps(bible_delta.get("new_items", []), ensure_ascii=False),
+                        json.dumps(bible_delta.get("lost_items", []), ensure_ascii=False),
+                        json.dumps(bible_delta.get("new_npcs", []), ensure_ascii=False),
+                        json.dumps(bible_delta.get("npc_deaths", []), ensure_ascii=False),
+                        json.dumps(bible_delta.get("relationship_changes", []), ensure_ascii=False),
+                        json.dumps(bible_delta.get("state_changes", {}), ensure_ascii=False),
+                        bible_delta.get("time_passed", ""),
+                        json.dumps(bible_delta.get("reveals", []), ensure_ascii=False),
+                        json.dumps(bible_delta.get("causal_links", []), ensure_ascii=False),
+                        json.dumps(bible_delta.get("karma_matrix", []), ensure_ascii=False),
+                        json.dumps(bible_delta.get("knowledge_map", {}), ensure_ascii=False),
+                    ),
+                )
+                if not self.conn.in_transaction:
+                    self.conn.commit()
+            finally:
+                cur.close()
             # [V64 P2-7] 누적 Bible 캐시 무효화: 이 ep 이후 캐시 모두 삭제
             invalidate_eps = [k for k in self._cumulative_bible_cache if k >= ep_num]
             for k in invalidate_eps:
@@ -648,8 +705,12 @@ class DBManager:
     def get_episode_bible(self, ep_num: int) -> dict:
         """특정 화의 Bible delta 조회"""
         with self._lock:
-            cur = self.cursor.execute("SELECT * FROM episode_bibles WHERE ep_num = ?", (ep_num,))
-            row = cur.fetchone()
+            cur = self.conn.cursor()
+            try:
+                cur.execute("SELECT * FROM episode_bibles WHERE ep_num = ?", (ep_num,))
+                row = cur.fetchone()
+            finally:
+                cur.close()
             if not row:
                 return {}
 
@@ -715,10 +776,15 @@ class DBManager:
                 }
                 start_ep = 1
 
-            cur = self.cursor.execute(
-                "SELECT * FROM episode_bibles WHERE ep_num >= ? AND ep_num <= ? ORDER BY ep_num", (start_ep, up_to_ep)
-            )
-            rows = cur.fetchall()
+            cur = self.conn.cursor()
+            try:
+                cur.execute(
+                    "SELECT * FROM episode_bibles WHERE ep_num >= ? AND ep_num <= ? ORDER BY ep_num",
+                    (start_ep, up_to_ep),
+                )
+                rows = cur.fetchall()
+            finally:
+                cur.close()
 
             for row in rows:
                 # 아이템: 획득은 추가, 분실은 제거
@@ -779,8 +845,12 @@ class DBManager:
             list: Episode Bible dict 목록 (ep_num 순 정렬)
         """
         with self._lock:
-            cur = self.cursor.execute("SELECT * FROM episode_bibles ORDER BY ep_num")
-            rows = cur.fetchall()
+            cur = self.conn.cursor()
+            try:
+                cur.execute("SELECT * FROM episode_bibles ORDER BY ep_num")
+                rows = cur.fetchall()
+            finally:
+                cur.close()
 
             bibles = []
             for row in rows:

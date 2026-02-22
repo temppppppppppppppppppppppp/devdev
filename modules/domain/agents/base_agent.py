@@ -197,7 +197,8 @@ class BaseAgent:
             cls._last_rotation_time = time.time()
             cls._rotation_count += 1  # [V62.3]
             cls._quota_exhausted_models.clear()  # 새 키에서 3-pro 한 번은 시도
-            cls._context_caches.clear()  # [V61.9] 키 변경 시 캐시 무효화 (API 키별 캐시 격리)
+            with cls._cache_lock:  # [INF-P1-8]
+                cls._context_caches.clear()  # [V61.9] 키 변경 시 캐시 무효화 (API 키별 캐시 격리)
             cls._key_rotation_pending = False
 
         # Client 생성은 lock 밖에서 (네트워크 IO 포함하므로)
@@ -744,6 +745,10 @@ class BaseAgent:
         """
         네트워크 연결 상태 확인 (가벼운 요청으로)
 
+        [INF-P2-5] 이전 구현은 ``models.list()``를 호출하여 API 쿼터를 소비했음.
+        현재는 ``urllib``으로 Google endpoint에 HEAD 요청을 보내 네트워크 연결만 확인.
+        API 쿼터 소비 없이 순수 네트워크 가용성만 점검한다.
+
         Args:
             timeout: 최대 대기 시간 (초). 기본 15초.
 
@@ -751,12 +756,14 @@ class BaseAgent:
             True: 연결 정상
             False: 연결 불가 또는 타임아웃
         """
-        import concurrent.futures
+        import urllib.request
 
         try:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                future = executor.submit(self.client.models.list)
-                future.result(timeout=timeout)
+            req = urllib.request.Request(
+                "https://generativelanguage.googleapis.com/$discovery/rest?version=v1beta",
+                method="HEAD",
+            )
+            urllib.request.urlopen(req, timeout=timeout)
             return True
         except Exception as e:  # [V64.P4] connectivity check — any failure means offline
             logging.debug(f"[V66.3] 온라인 체크 실패: {e}")
@@ -1044,6 +1051,7 @@ class BaseAgent:
 
     # 클래스 변수: 캐시 저장소
     _context_caches = {}  # {cache_key: {"name": str, "created_at": float, "content_hash": str}}
+    _cache_lock = threading.Lock()  # [INF-P1-8] _context_caches 동시 접근 보호
     _CONTEXT_CACHE_MAX = 50
 
     def _get_or_create_context_cache(
@@ -1076,14 +1084,16 @@ class BaseAgent:
 
         current_time = time.time()
 
-        # 기존 캐시 확인 — [TF-R4] .get()으로 TOCTOU 제거 (키 순환 시 .clear() 경합 방지)
-        cached_info = self._context_caches.get(cache_key)
-        if cached_info:
-            if current_time - cached_info["created_at"] < ttl_seconds:
-                return {"cache_name": cached_info.get("name"), "cached": True, "content_hash": content_hash}
-            else:
-                # 만료된 캐시 삭제 [I-20] KeyError 방지
-                self._context_caches.pop(cache_key, None)
+        # [INF-P1-8] Lock으로 _context_caches 동시 접근 보호
+        with self._cache_lock:
+            # 기존 캐시 확인 — [TF-R4] .get()으로 TOCTOU 제거 (키 순환 시 .clear() 경합 방지)
+            cached_info = self._context_caches.get(cache_key)
+            if cached_info:
+                if current_time - cached_info["created_at"] < ttl_seconds:
+                    return {"cache_name": cached_info.get("name"), "cached": True, "content_hash": content_hash}
+                else:
+                    # 만료된 캐시 삭제 [I-20] KeyError 방지
+                    self._context_caches.pop(cache_key, None)
 
         # Gemini Context Caching API 호출 시도
         try:
@@ -1106,18 +1116,20 @@ class BaseAgent:
                 ),
             )
 
-            # 캐시 정보 저장
-            self._context_caches[cache_key] = {
-                "name": cache.name,
-                "created_at": current_time,
-                "content_hash": content_hash,
-            }
-            # [I-20] list() 스냅샷 1회로 TOCTOU 제거
-            if len(self._context_caches) > self._CONTEXT_CACHE_MAX:
-                snapshot = list(self._context_caches.items())
-                snapshot.sort(key=lambda kv: kv[1].get("created_at", 0))
-                for old_key, _ in snapshot[: len(snapshot) - self._CONTEXT_CACHE_MAX]:
-                    self._context_caches.pop(old_key, None)
+            # [INF-P1-8] Lock으로 캐시 쓰기 보호
+            with self._cache_lock:
+                # 캐시 정보 저장
+                self._context_caches[cache_key] = {
+                    "name": cache.name,
+                    "created_at": current_time,
+                    "content_hash": content_hash,
+                }
+                # [I-20] list() 스냅샷 1회로 TOCTOU 제거
+                if len(self._context_caches) > self._CONTEXT_CACHE_MAX:
+                    snapshot = list(self._context_caches.items())
+                    snapshot.sort(key=lambda kv: kv[1].get("created_at", 0))
+                    for old_key, _ in snapshot[: len(snapshot) - self._CONTEXT_CACHE_MAX]:
+                        self._context_caches.pop(old_key, None)
 
             logging.info(f"📦 [V61.5] 컨텍스트 캐시 생성: {cache_type} ({len(content)}자)")
 

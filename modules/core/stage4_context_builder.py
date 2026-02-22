@@ -195,8 +195,10 @@ class Stage4ContextBuilder:
         if report["used_chars"] <= report["total_budget_chars"]:
             return sections
 
+        # [S4-P1-6] 압축 대상 목록을 루프 전 1회 캐시하여 O(n^2) → O(n) 개선
+        compression_targets = tracker.get_compression_targets()
         compressor = ContextCompressor()
-        for target in tracker.get_compression_targets():
+        for target in compression_targets:
             try:
                 idx = int(target.split("_")[-1]) - 1
             except (TypeError, ValueError):
@@ -211,11 +213,14 @@ class Stage4ContextBuilder:
             trim_target = max(300, int(len(section) * 0.7))
             sections[idx] = compressor._smart_trim(section, trim_target)
 
-            tracker = _build_tracker(sections)
-            report = tracker.get_usage_report()
-            if report["used_chars"] <= report["total_budget_chars"]:
+            # 총 사용량만 빠르게 체크 (tracker 재생성 대신 합산)
+            _used = sum(len(s) for s in sections)
+            if _used <= total_budget_chars:
                 break
 
+        # 최종 보고용 tracker 1회 재생성
+        tracker = _build_tracker(sections)
+        report = tracker.get_usage_report()
         logging.info(
             f"[SC] Context budget: {report['used_chars']}/{report['total_budget_chars']} ({report['usage_pct']}%)"
         )
@@ -366,6 +371,7 @@ class Stage4ContextBuilder:
                 else []
             )
 
+        # [S4-P2-6] dead_npcs만 필요하지만 개별 쿼리 없음 — DBManager 내부 캐시(_cumulative_bible_cache)로 반복 로드 무비용
         cumulative_bible = self.ctx.current_project.db.get_cumulative_bible(next_ep - 1)
         dead_npcs = cumulative_bible.get("dead_npcs", []) if cumulative_bible else []
         if isinstance(dead_npcs, str):
@@ -512,87 +518,29 @@ class Stage4ContextBuilder:
             except Exception as _fl_mc_err:
                 logging.warning(f"⚠️ [V68] 팩트 원장 주입 실패 (비치명): {str(_fl_mc_err)[:50]}")
 
-        if self.ctx.state_tracker:
-            _destroyed = self.ctx.state_tracker.get_entity_destruction_summary()
-            if _destroyed:
-                _mc_parts.append(_destroyed)
-
-        if self.ctx.state_tracker:
-            _resolved = self.ctx.state_tracker.get_resolved_plots_summary()
-            if _resolved:
-                _mc_parts.append(_resolved)
-
-        if self.ctx.state_tracker:
-            _personality = self.ctx.state_tracker.get_npc_personality_summary()
-            if _personality:
-                _mc_parts.append(_personality)
-
-        if self.ctx.state_tracker:
-            _npc_rel = self.ctx.state_tracker.get_npc_npc_relationship_summary()
-            if _npc_rel:
-                _mc_parts.append(_npc_rel)
-
-        if self.ctx.state_tracker:
-            _perm_inj = self.ctx.state_tracker.get_permanent_injury_summary()
-            if _perm_inj:
-                _mc_parts.append(_perm_inj)
-
-        if self.ctx.state_tracker:
-            _timeline = self.ctx.state_tracker.get_time_timeline_summary()
-            if _timeline:
-                _mc_parts.append(_timeline)
-
-        if self.ctx.state_tracker:
-            _companions = self.ctx.state_tracker.get_companion_summary()
-            if _companions:
-                _mc_parts.append(_companions)
-
-        if self.ctx.state_tracker:
-            _commitments = self.ctx.state_tracker.get_commitment_summary()
-            if _commitments:
-                _mc_parts.append(_commitments)
-
-        if self.ctx.state_tracker:
-            _emotion = self.ctx.state_tracker.get_protagonist_emotion_summary()
-            if _emotion:
-                _mc_parts.append(_emotion)
-
-        if self.ctx.state_tracker:
-            _item_state = self.ctx.state_tracker.get_item_state_summary()
-            if _item_state:
-                _mc_parts.append(_item_state)
-
-        if self.ctx.state_tracker:
-            _plot_suspension = self.ctx.state_tracker.get_plot_suspension_summary(
-                arc_data.get("arc_no", 0) if arc_data else 0
-            )
-            if _plot_suspension:
-                _mc_parts.append(_plot_suspension)
-
-        if self.ctx.state_tracker:
-            _dialogue_style = self.ctx.state_tracker.get_npc_dialogue_style_summary()
-            if _dialogue_style:
-                _mc_parts.append(_dialogue_style)
-
-        if self.ctx.state_tracker:
-            _rel_summary = self.ctx.state_tracker.get_relationship_changes_summary()
-            if _rel_summary:
-                _mc_parts.append(_rel_summary)
-
-        if self.ctx.state_tracker:
-            _injury_summary = self.ctx.state_tracker.get_npc_injury_summary()
-            if _injury_summary:
-                _mc_parts.append(_injury_summary)
-
-        if self.ctx.state_tracker:
-            _movement_summary = self.ctx.state_tracker.get_npc_movement_summary()
-            if _movement_summary:
-                _mc_parts.append(_movement_summary)
-
-        if self.ctx.state_tracker:
-            _skills_summary = self.ctx.state_tracker.get_protagonist_skills_summary()
-            if _skills_summary:
-                _mc_parts.append(_skills_summary)
+        # [S4-P1-2] state_tracker 로컬 변수로 None 체크 1회만 수행
+        _st = self.ctx.state_tracker
+        if _st:
+            for _summary in (
+                _st.get_entity_destruction_summary(),
+                _st.get_resolved_plots_summary(),
+                _st.get_npc_personality_summary(),
+                _st.get_npc_npc_relationship_summary(),
+                _st.get_permanent_injury_summary(),
+                _st.get_time_timeline_summary(),
+                _st.get_companion_summary(),
+                _st.get_commitment_summary(),
+                _st.get_protagonist_emotion_summary(),
+                _st.get_item_state_summary(),
+                _st.get_plot_suspension_summary(arc_data.get("arc_no", 0) if arc_data else 0),
+                _st.get_npc_dialogue_style_summary(),
+                _st.get_relationship_changes_summary(),
+                _st.get_npc_injury_summary(),
+                _st.get_npc_movement_summary(),
+                _st.get_protagonist_skills_summary(),
+            ):
+                if _summary:
+                    _mc_parts.append(_summary)
 
         try:
             arc_summaries = []
@@ -601,15 +549,15 @@ class Stage4ContextBuilder:
                 arc_sum = self.ctx.current_project.load_v20_anchor(f"arc_summary_{prev_arc}")
                 if arc_sum and isinstance(arc_sum, dict):
                     arc_summaries.append(arc_sum)
-            if arc_summaries and self.ctx.state_tracker:
-                _arc_summary_text = self.ctx.state_tracker.format_arc_summary_for_prompt(arc_summaries)
+            if arc_summaries and _st:
+                _arc_summary_text = _st.format_arc_summary_for_prompt(arc_summaries)
                 if _arc_summary_text:
                     _mc_parts.append(_arc_summary_text)
         except Exception as e:
             self.ctx.ui.log(f"   ⚠️ [V66] Arc 요약 주입 실패 (비치명): {e}")
 
-        if s4_genre_type == "investment" and self.ctx.state_tracker is not None:
-            _fin_summary = self.ctx.state_tracker.get_financial_state_summary()
+        if s4_genre_type == "investment" and _st is not None:
+            _fin_summary = _st.get_financial_state_summary()
             if _fin_summary:
                 _mc_parts.append(_fin_summary)
 

@@ -55,7 +55,7 @@ class Stage4InterviewRound:
         npc_equipment_summary = round_ctx.npc_equipment_summary
         _effective_anti_trope = round_ctx.effective_anti_trope
         intro_dna = round_ctx.intro_dna
-        _story_context = round_ctx.story_context
+        story_context = round_ctx.story_context
         style_guide = round_ctx.style_guide
         reference_anchor_prompt = round_ctx.reference_anchor_prompt
         mandatory_context = round_ctx.mandatory_context
@@ -67,7 +67,7 @@ class Stage4InterviewRound:
         if type(mandatory_context) is not str:
             mandatory_context = str(mandatory_context or "")
 
-        # [TF-T4] 24개 공통 kwargs — 4개 호출부에서 재사용
+        # [TF-T4] 25개 공통 kwargs — 4개 호출부에서 재사용
         _common_writer_kwargs = {
             "ep_num": next_ep,
             "blueprint": blueprint,
@@ -93,6 +93,7 @@ class Stage4InterviewRound:
             "prev_manuscripts_text": _prev_manuscripts_text,
             "world_state_summary": _world_state_summary,
             "chain_link_section": _chain_link_section,
+            "episode_digest": _episode_digest,  # [S4-P2-4]
         }
 
         stage4_spinner.update_detail(f"제{next_ep}화 · {round_num + 1}차 면담 · 앙상블 생성")
@@ -537,7 +538,7 @@ class Stage4InterviewRound:
                     ep_num=next_ep,
                     db=self.ctx.current_project.db,
                     limit=10,
-                    story_context=_story_context,
+                    story_context=story_context,
                     memory_context=_director_memory_context,
                 )
                 if continuity_check.get("decision") == "CONFLICT":
@@ -594,7 +595,7 @@ class Stage4InterviewRound:
                             current_manuscript=_cand_ms,
                             manuscript_history=_ms_history_for_check,
                             use_summary=False,
-                            story_context=_story_context,
+                            story_context=story_context,
                             memory_context=_director_memory_context,
                         )
                         if _conflict_result.get("decision") == "CONFLICT":
@@ -712,7 +713,7 @@ class Stage4InterviewRound:
             episode_digest=_episode_digest,
             mandatory_context=_director_mandatory_context,
             prev_manuscripts_text=_prev_manuscripts_text,  # [V67]
-            story_context=_story_context,  # [V67.1]
+            story_context=story_context,  # [V67.1]
         )
         try:
             self.ctx.perf_timer.stop(f"s4_ep{next_ep}_director_r{round_num}")

@@ -99,6 +99,55 @@ GENRE_THRESHOLD_PROFILES = {
         "emotion_weight": 1.2,  # 감정선 중시
         "commercial_weight": 1.1,
     },
+    "fantasy": {
+        "base_threshold": 69,
+        "action_weight": 1.2,  # 전투·마법 액션
+        "dialogue_weight": 0.9,
+        "emotion_weight": 1.0,
+        "commercial_weight": 1.2,  # 성장 쾌감 상업성
+    },
+    "composer": {
+        "base_threshold": 71,
+        "action_weight": 0.7,  # 액션 비중 낮음
+        "dialogue_weight": 1.0,
+        "emotion_weight": 1.3,  # 음악과 감정 연결 핵심
+        "commercial_weight": 0.9,
+    },
+    "cooking": {
+        "base_threshold": 70,
+        "action_weight": 0.8,  # 요리 대결 외 액션 적음
+        "dialogue_weight": 1.0,
+        "emotion_weight": 1.1,
+        "commercial_weight": 1.0,
+    },
+    "alt_history": {
+        "base_threshold": 72,
+        "action_weight": 1.0,
+        "dialogue_weight": 1.2,  # 정치 대화·협상 중시
+        "emotion_weight": 1.1,
+        "commercial_weight": 0.9,
+    },
+    "actor": {
+        "base_threshold": 70,
+        "action_weight": 0.7,  # 물리적 액션 적음
+        "dialogue_weight": 1.3,  # 대사·연기 품질 핵심
+        "emotion_weight": 1.2,  # 감정 연기·성장
+        "commercial_weight": 1.0,
+    },
+    "sports": {
+        "base_threshold": 69,
+        "action_weight": 1.3,  # 경기 장면 핵심
+        "dialogue_weight": 0.8,  # 경기 중 대사 적음
+        "emotion_weight": 1.1,  # 승부 감정선
+        "commercial_weight": 1.1,
+    },
+    "medical": {
+        "base_threshold": 73,
+        "action_weight": 0.9,  # 수술 장면 긴장감
+        "dialogue_weight": 1.2,  # 진단·상담 대화
+        "emotion_weight": 1.2,  # 환자·의사 감정선
+        "commercial_weight": 0.9,
+    },
 }
 
 # [V59] 에피소드 유형별 임계값 조정
