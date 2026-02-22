@@ -214,7 +214,7 @@ class ChiefWriterQualityGate:
 
         # 최근 빈도 체크
         if ep_num is not None and ep_num > 1:
-            recent_counts = self._count_recent_cliches(ep_num, content, window=self.CLICHE_WINDOW)
+            recent_counts = self._count_recent_cliches(ep_num, window=self.CLICHE_WINDOW)
 
             overused = [f"'{keyword}' ({count}회)" for keyword, count in recent_counts.items() if count >= 3]
 
@@ -457,7 +457,7 @@ class ChiefWriterQualityGate:
         avg_score = sum(scores) / len(scores) if scores else 2.0
         return round(avg_score, 1)
 
-    def _count_recent_cliches(self, ep_num: int, manuscript: str, window: int = 10) -> dict:
+    def _count_recent_cliches(self, ep_num: int, window: int = 10) -> dict:
         """
         최근 N화에서 클리셰 빈도 카운트
         """

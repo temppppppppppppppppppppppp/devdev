@@ -555,17 +555,31 @@ class Stage4InterviewRound:
         if _prev_manuscripts_text and hasattr(
             self.ctx.agents.get("director", None), "check_manuscript_history_conflicts"
         ):
+            # [S4-P0-1] round_ctx.prev_manuscripts_text에서 개별 에피소드 재구성 (DB 이중 로드 방지)
             _ms_history_for_check = []
-            for _prev_ep in range(max(1, next_ep - 30), next_ep):
-                try:
-                    _prev_ms_data = self.ctx.current_project.db.get_manuscript(_prev_ep)
-                    if _prev_ms_data:
-                        _content = (
-                            _prev_ms_data.get("content", "") if isinstance(_prev_ms_data, dict) else str(_prev_ms_data)
-                        )
-                        _ms_history_for_check.append({"ep_num": _prev_ep, "text": _content})
-                except Exception as e:
-                    logging.warning(f"[SilentPass:InterviewRound] 제{_prev_ep}화 원고 이력 로드 실패: {e!s:.100}")
+            import re as _re_hist
+
+            for _block in _prev_manuscripts_text.split("\n\n---\n\n"):
+                _m = _re_hist.match(r"^\[제(\d+)화\]\n", _block)
+                if _m:
+                    _ep = int(_m.group(1))
+                    _text = _block[_m.end() :]
+                    if _text and len(_text) > 100:
+                        _ms_history_for_check.append({"ep_num": _ep, "text": _text})
+            # 파싱 실패 시 DB 폴백
+            if not _ms_history_for_check:
+                for _prev_ep in range(max(1, next_ep - 30), next_ep):
+                    try:
+                        _prev_ms_data = self.ctx.current_project.db.get_manuscript(_prev_ep)
+                        if _prev_ms_data:
+                            _content = (
+                                _prev_ms_data.get("content", "")
+                                if isinstance(_prev_ms_data, dict)
+                                else str(_prev_ms_data)
+                            )
+                            _ms_history_for_check.append({"ep_num": _prev_ep, "text": _content})
+                    except Exception as e:
+                        logging.warning(f"[SilentPass:InterviewRound] 제{_prev_ep}화 원고 이력 로드 실패: {e!s:.100}")
 
             # [V67.1] story_context 포함하여 모순 검사 호출
             if _ms_history_for_check and candidates:

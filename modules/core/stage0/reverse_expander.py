@@ -111,8 +111,13 @@ class ReverseExpander:
         except UnicodeDecodeError:
             # [TF-R3-S0-01] cp949/euc-kr 등 비-UTF-8 파일 폴백
             logging.warning(f"[!] UTF-8 인코딩 실패, cp949로 재시도: {file_path}")
-            with open(path, encoding="cp949") as f:
-                text = f.read()
+            try:
+                with open(path, encoding="cp949") as f:
+                    text = f.read()
+            except UnicodeDecodeError:
+                logging.warning(f"[!] cp949도 실패, errors='replace'로 최종 폴백: {file_path}")
+                with open(path, encoding="utf-8", errors="replace") as f:
+                    text = f.read()
 
         # ⓚ 제N화 패턴으로 분리
         pattern = r"ⓚ\s*제(\d+)화[.\s]*([^\n]*)"
@@ -169,8 +174,13 @@ class ReverseExpander:
             except UnicodeDecodeError:
                 # [TF-R3-S0-03] cp949 폴백 (load_drafts_from_file과 동일 패턴)
                 logging.warning(f"[!] UTF-8 실패, cp949 재시도: {f}")
-                with open(f, encoding="cp949") as fp:
-                    content = fp.read()
+                try:
+                    with open(f, encoding="cp949") as fp:
+                        content = fp.read()
+                except UnicodeDecodeError:
+                    logging.warning(f"[!] cp949도 실패, errors='replace'로 최종 폴백: {f}")
+                    with open(f, encoding="utf-8", errors="replace") as fp:
+                        content = fp.read()
             self.raw_drafts.append({"ep_num": ep_num, "title": f"제{ep_num}화", "content": content})
 
         return len(self.raw_drafts)
@@ -503,13 +513,13 @@ JSON:
     # 통합 실행
     # ============================================
 
-    def run(self, input_path: str, output_dir: str, genre: str = None) -> tuple[dict, list, StyleGuide]:
+    def run(self, input_path: str, output_dir: str, genre: str = None) -> tuple[dict, list, StyleGuide | None]:
         """전체 역설계 파이프라인"""
         if SPINNER_AVAILABLE:
             print_header("Reverse Engineering", style="double")
 
             # 1. 로드
-            with Spinner("원고 로드 중", style="dots") as sp:
+            with Spinner("원고 로드 중", style="dots"):
                 path = Path(input_path)
                 if path.is_file():
                     count = self.load_drafts_from_file(str(path))
@@ -518,14 +528,14 @@ JSON:
             print_success(f"{count}개 에피소드 로드")
 
             # 2. 장르 감지
-            with Spinner("장르 감지 중", style="braille") as sp:
+            with Spinner("장르 감지 중", style="braille"):
                 if not genre:
                     genre = self.detect_genre()
                 self.init_preset(genre)
             print_success(f"장르: {genre}")
 
             # 3. Bible 추출
-            with Spinner("Bible 추출 중", style="pulse") as sp:
+            with Spinner("Bible 추출 중", style="pulse"):
                 self.extract_bible()
             print_success("Bible 추출 완료")
 
@@ -534,12 +544,12 @@ JSON:
             self._extract_episode_bibles_with_progress()
 
             # 5. 스타일 가이드 추출
-            with Spinner("스타일 가이드 추출 중", style="star") as sp:
+            with Spinner("스타일 가이드 추출 중", style="star"):
                 self.extract_style_guide()
             print_success("스타일 가이드 추출 완료")
 
             # 6. 저장
-            with Spinner("저장 중", style="grow") as sp:
+            with Spinner("저장 중", style="grow"):
                 self.save_all(output_dir)
 
             print_header("역설계 완료!", style="simple")
@@ -571,6 +581,9 @@ JSON:
             self.save_all(output_dir)
 
             logging.info("\n[v] 역설계 완료!")
+
+        if self.style_guide is None:
+            logging.warning("[ReverseExpander] 스타일 가이드 추출 실패 — None 반환")
 
         return self.bible, self.episode_bibles, self.style_guide
 

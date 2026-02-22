@@ -112,15 +112,13 @@ def test_main_a_stage2_sync_writes_loaded_arcs():
     assert 'self._state_tracker_loaded_arcs = getattr(_s2_ctx, "state_tracker_loaded_arcs", 0)' in source
 
 
-def test_negative_constraint_amplifier_skips_relationship_history(monkeypatch):
+def test_negative_constraint_amplifier_no_relationship_history_method():
     from modules.core.stage2_optimizer import NegativeConstraintAmplifier
 
     amp = NegativeConstraintAmplifier()
 
-    def _must_not_call(_prev_arcs):
-        raise AssertionError("must not call")
-
-    monkeypatch.setattr(amp, "_build_relationship_history", _must_not_call)
+    # _build_relationship_history was dead code and has been removed
+    assert not hasattr(amp, "_build_relationship_history")
 
     out = amp.amplify_constraints([{"arc_no": 1, "state_constraints": {"items_acquired": [], "grants_received": []}}])
 

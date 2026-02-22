@@ -663,8 +663,14 @@ class Stage4PostProcessor:
         self.ctx.ui.log(f"\n{'=' * 50}")
         self.ctx.ui.log("📋 Stage 4 집필 세션 종료.")
         try:
-            input("   ⏎ Enter를 누르면 메뉴로 돌아갑니다...")
-        except EOFError:
+            # [S4-P2-3] 자동화 환경에서 blocking input() 방지
+            import sys
+
+            if sys.stdin and sys.stdin.isatty():
+                input("   ⏎ Enter를 누르면 메뉴로 돌아갑니다...")
+            else:
+                self.ctx.ui.log("   (비대화 모드 — 자동 진행)")
+        except (EOFError, OSError):
             pass
 
         # [V62.3] 벡터 메모리 일괄 동기화

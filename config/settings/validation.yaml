@@ -46,6 +46,7 @@ scoring:
 # ── ADVISORY 검증 ────────────────────────────────────────────
 advisory:
   max_suggestions: 5
+  pacing_para_limit: 2000
 
 pre_llm:
   repetition_score_threshold: 0.6

@@ -9,6 +9,7 @@ SovereignApp에서 분리된 Stage 4 관련 메서드:
 
 import dataclasses
 import logging
+import re
 
 from modules.core.stage4_context_builder import Stage4ContextBuilder
 from modules.core.stage4_interview_round import Stage4InterviewRound
@@ -27,7 +28,7 @@ def _detect_npc_overexposure(
     npc_names,
     protagonist_name: str = "",
     *,
-    max_mentions: int = _threshold("npc_exposure.max_mentions_per_episode", 15),
+    max_mentions: int | None = None,
     core_npc_names: frozenset = frozenset(),
     min_name_length: int = 2,
 ):
@@ -36,6 +37,8 @@ def _detect_npc_overexposure(
     주인공·핵심NPC(core_npc_names)·짧은 이름(min_name_length 미만)은 제외.
     Longest-match-first 마스킹으로 부분일치 이중 카운트 방지.
     """
+    if max_mentions is None:
+        max_mentions = _threshold("npc_exposure.max_mentions_per_episode", 15)
     if not manuscript or not npc_names:
         return None
     # 후보 필터링: 주인공, 핵심NPC, 짧은 이름 제외
@@ -101,7 +104,7 @@ def _detect_cross_episode_repetition(
     overlap_count = len(unique_hashes)
     if overlap_count < warning_threshold:
         return None
-    overlap_ratio = overlap_count / len(fingerprints) if fingerprints else 0
+    overlap_ratio = overlap_count / len(fingerprints)
     severity = "regression" if overlap_count >= regression_threshold else "warning"
     # 반복 문장 상위 5개 (미리보기 포함)
     seen = set()
@@ -372,6 +375,7 @@ JSON으로 출력:
                 anchor_sys=_anchor_sys,
                 s4_genre_type=s4_genre_type,
                 v50_modules_available=v50_modules_available,
+                blueprint=blueprint,
                 pacing_analyzer=self.ctx.pacing_analyzer,
             )
             reference_anchor_prompt = _ctx_prompts["reference_anchor_prompt"]
@@ -425,9 +429,7 @@ JSON으로 출력:
             if len(mandatory_context) > _mc_max:
                 _original_len = len(mandatory_context)
                 # 섹션 분리: "\n[" 또는 "\n\n[" 마커 기준으로 분할
-                import re as _re_trunc
-
-                _section_pattern = _re_trunc.compile(r"\n(?=\[)")
+                _section_pattern = re.compile(r"\n(?=\[)")
                 _sections = _section_pattern.split(mandatory_context)
                 # 빈 섹션 제거
                 _sections = [s for s in _sections if s.strip()]
@@ -572,6 +574,7 @@ JSON으로 출력:
                                             "state_updates": final_state_updates,  # [TF-S4-01] CoVe REJECT 시 소실 방지
                                         }
                                         final_manuscript = None
+                                        final_title = None  # [S4-P1-1] CoVe REJECT 시 title도 리셋
                                         continue
                                 except Exception as e:
                                     logging.warning(f"[SilentPass:CoVe:LLM] {e!s:.100}")

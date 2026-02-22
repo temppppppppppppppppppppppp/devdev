@@ -357,7 +357,8 @@ class BaseAgent:
                     network_retry_count = 0  # [V61.2] 네트워크 카운터도 리셋
                     # [V62.3] primary 모델 성공 시 키 순환 카운터 리셋
                     if current_model == self.primary_model:
-                        BaseAgent._rotation_count = 0
+                        with BaseAgent._rotation_lock:
+                            BaseAgent._rotation_count = 0
                 except Exception as api_error:
                     # ═══════════════════════════════════════════════════════════════
                     # [V61.2] Case 0: 네트워크/타임아웃 오류 → 백오프 + 연결 체크 후 재시도

@@ -431,7 +431,8 @@ class Stage3Orchestrator:
                 _prev_ms_text_for_bp = "\n\n".join(_prev_ms_for_bp) if _prev_ms_for_bp else ""
                 if len(_prev_ms_text_for_bp) > ContextLimits.MAX_CONTEXT_CHARS:
                     _prev_ms_text_for_bp = (
-                        _prev_ms_text_for_bp[: ContextLimits.MAX_CONTEXT_CHARS] + "\n... (200K자 절삭)"
+                        _prev_ms_text_for_bp[: ContextLimits.MAX_CONTEXT_CHARS]
+                        + f"\n... ({ContextLimits.MAX_CONTEXT_CHARS // 1000}K자 절삭)"
                     )
                 if _prev_ms_for_bp:
                     _logging.info(
@@ -534,7 +535,8 @@ class Stage3Orchestrator:
         return {"next_ep": working_ep + 1, "success_count": success_count + 1, "fail_count": 0}
 
     def _handle_failure(self, working_ep, pipeline_result, success_count, fail_count) -> dict:
-        """Blueprint 생성 실패 시 처리"""
+        """Blueprint 생성 실패 시 처리. 항상 break=True를 반환하여 루프를 종료한다
+        (순차 의존성: 후속 에피소드는 현재 에피소드 Blueprint에 의존)."""
         ctx = self.ctx
 
         ctx.ui.log(f"   ❌ 제{working_ep}화 Blueprint 생성 실패")

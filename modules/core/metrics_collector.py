@@ -109,10 +109,8 @@ class MetricsCollector:
     @classmethod
     def reset(cls, metrics_dir: Path | None = None):
         """[V70] 싱글톤 리셋 (프로젝트 변경 시 호출)"""
-        global _collector
         with cls._lock:
             cls._instance = None
-            _collector = None
         if metrics_dir:
             return cls(metrics_dir)
 
@@ -232,6 +230,9 @@ class MetricsCollector:
             self._scope_cost += cost
             self._scope_model_breakdown[model]["tokens"] += call_tokens
             self._scope_model_breakdown[model]["cost"] += cost
+
+            # [INF-P1-4] 완료된 메트릭 엔트리 삭제 (메모리 누수 방지)
+            del self._metrics[metric_id]
 
     def record_retry(self, agent_name: str):
         """재시도 기록 (간편 메서드)"""
@@ -463,16 +464,9 @@ class MetricsCollector:
         return sorted_data[lower] * (1 - weight) + sorted_data[upper] * weight
 
 
-# 전역 인스턴스
-_collector: MetricsCollector | None = None
-
-
 def get_metrics_collector(metrics_dir: Path | None = None) -> MetricsCollector:
-    """전역 메트릭 수집기 반환 [V70] metrics_dir 파라미터 추가"""
-    global _collector
-    if _collector is None:
-        _collector = MetricsCollector(metrics_dir)
-    return _collector
+    """전역 메트릭 수집기 반환 [V70] metrics_dir 파라미터 추가. _instance 싱글톤 사용."""
+    return MetricsCollector(metrics_dir)
 
 
 def start_call(agent_name: str, model: str) -> str:

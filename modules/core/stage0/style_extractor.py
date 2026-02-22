@@ -664,7 +664,9 @@ JSON만 출력하세요.
 
         from modules.core.constants import AIModels
 
-        models = [AIModels.TIER_1_ARCHITECT, AIModels.EMERGENCY_FALLBACK, AIModels.SUMMARY_MODEL]
+        models = [m for m in [AIModels.TIER_1_ARCHITECT, AIModels.EMERGENCY_FALLBACK, AIModels.SUMMARY_MODEL] if m]
+        if not models:
+            raise RuntimeError("[StyleExtractor] 사용 가능한 LLM 모델이 없습니다. AIModels 상수를 확인하세요.")
         last_err = None
         for model_name in models:
             try:
