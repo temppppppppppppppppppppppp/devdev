@@ -250,7 +250,7 @@ class Stage01Helpers:
         try:
             from modules.core.stage0.story_expander import StoryExpander
 
-            expander = StoryExpander(genre=stage0_manager.genre)
+            expander = StoryExpander(genre=stage0_manager.genre, llm_client=stage0_manager.client)
 
             app.ui.log(f"\n   🔄 Block {len(existing_treatment) + 1}부터 {extend_count}개 생성 시작...")
 

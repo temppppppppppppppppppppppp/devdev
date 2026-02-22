@@ -56,26 +56,47 @@ class ReverseExpander:
 
     _FALLBACK_MODELS = [AIModels.SUMMARY_MODEL, AIModels.V50_MODULE_MODEL]
 
+    # [S0-N-P1-2] 재시도 가능한 에러 패턴 (StoryExpander S0-I3과 동일)
+    _RETRYABLE_PATTERNS = ("429", "rate limit", "resource exhausted", "quota", "503", "500", "unavailable", "timeout")
+    _MAX_RETRIES = 3
+    _BASE_DELAY = 2.0  # 초
+
     def _call_llm(self, prompt: str, temperature: float = 0.7, max_tokens: int = 8192) -> str:
-        """LLM 호출 (2-모델 폴백)"""
+        """LLM 호출 (2-모델 폴백 + 지수 백오프 재시도)"""
         self._init_llm()
         if not self.client:
             return ""
         from google.genai import types
 
         for model in self._FALLBACK_MODELS:
-            try:
-                response = self.client.models.generate_content(
-                    model=model,
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        temperature=temperature,
-                        max_output_tokens=max_tokens,
-                    ),
-                )
-                return response.text
-            except Exception as e:
-                logging.warning(f"[X] {model} LLM 오류: {e}")
+            for attempt in range(self._MAX_RETRIES):
+                try:
+                    response = self.client.models.generate_content(
+                        model=model,
+                        contents=prompt,
+                        config=types.GenerateContentConfig(
+                            temperature=temperature,
+                            max_output_tokens=max_tokens,
+                        ),
+                    )
+                    return response.text
+                except Exception as e:
+                    err_lower = str(e).lower()
+                    is_retryable = any(p in err_lower for p in self._RETRYABLE_PATTERNS)
+
+                    if is_retryable and attempt < self._MAX_RETRIES - 1:
+                        delay = self._BASE_DELAY * (2**attempt)
+                        logging.warning(
+                            f"[S0-N-P1-2] {model} 일시적 오류 (attempt {attempt + 1}/{self._MAX_RETRIES}), "
+                            f"{delay:.1f}초 후 재시도: {e}"
+                        )
+                        import time
+
+                        time.sleep(delay)
+                        continue
+
+                    logging.warning(f"[X] {model} LLM 오류: {e}")
+                    break  # 비재시도 에러 → 다음 모델로 폴백
         return ""
 
     def _parse_json(self, text: str) -> dict | list | None:

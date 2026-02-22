@@ -268,11 +268,12 @@ class Stage3Orchestrator:
             if not prev_bp_check:
                 ctx.ui.log(f"🚨 [V60.83] 제{working_ep - 1}화 Blueprint 없음! 연속성 보장 불가.")
                 ctx.ui.log(f"   → 제{working_ep - 1}화를 먼저 생성하세요.")
-                ctx.audit_event(
-                    "continuity_block",
-                    f"ep_{working_ep}_blocked_no_prev",
-                    {"blocked_ep": working_ep, "missing_ep": working_ep - 1},
-                )
+                if callable(ctx.audit_event):
+                    ctx.audit_event(
+                        "continuity_block",
+                        f"ep_{working_ep}_blocked_no_prev",
+                        {"blocked_ep": working_ep, "missing_ep": working_ep - 1},
+                    )
                 return {"next_ep": working_ep, "success_count": success_count, "fail_count": fail_count, "break": True}
 
         # Arc 컨텍스트 확보
@@ -284,7 +285,8 @@ class Stage3Orchestrator:
         ep_start_val = arc_data.get("ep_start")
         if ep_start_val is None or not isinstance(ep_start_val, int):
             ctx.ui.log(f"⚠️ [Stop] Arc ep_start 누락: arc_idx={arc_idx}")
-            ctx.audit_event("data_missing", "arc ep_start missing", {"arc_idx": arc_idx})
+            if callable(ctx.audit_event):
+                ctx.audit_event("data_missing", "arc ep_start missing", {"arc_idx": arc_idx})
             return {"next_ep": working_ep, "success_count": success_count, "fail_count": fail_count, "break": True}
 
         # Arc 데이터 검증
@@ -525,7 +527,8 @@ class Stage3Orchestrator:
             _logging.error(_traceback.format_exc())
 
             ctx.ui.log(f"❌ [V60.80] 제{working_ep}화 생성 실패: {str(gen_err)[:100]}")
-            ctx.audit_event("blueprint_gen_error", str(gen_err)[:200], {"ep_num": working_ep})
+            if callable(ctx.audit_event):
+                ctx.audit_event("blueprint_gen_error", str(gen_err)[:200], {"ep_num": working_ep})
             blueprint = None
             pipeline_result = {"final_verdict": "ERROR", "error": str(gen_err)[:200]}
 
@@ -553,9 +556,11 @@ class Stage3Orchestrator:
             blueprint["quality_risk"] = _quality_risk
 
         # 무결성 검증 후 저장
-        if not ctx.validate_blueprint_integrity(blueprint):
+        # [S3-N-P1-3] DI 콜백 None 방어
+        if callable(ctx.validate_blueprint_integrity) and not ctx.validate_blueprint_integrity(blueprint):
             ctx.ui.log(f"   🚨 [Integrity] 제{working_ep}화 Blueprint 무결성 실패")
-            ctx.audit_event("integrity_fail", "blueprint integrity check failed", {"ep_num": working_ep})
+            if callable(ctx.audit_event):
+                ctx.audit_event("integrity_fail", "blueprint integrity check failed", {"ep_num": working_ep})
             return {
                 "next_ep": working_ep + 1,
                 "success_count": success_count,
@@ -565,9 +570,11 @@ class Stage3Orchestrator:
 
         # DB에 저장
         ctx.current_project.save_episode_blueprint(working_ep, blueprint)
-        if not ctx.safe_commit():
+        # [S3-N-P1-3] DI 콜백 None 방어
+        if callable(ctx.safe_commit) and not ctx.safe_commit():
             ctx.ui.log(f"   🚨 [DB] 제{working_ep}화 Blueprint 커밋 실패")
-            ctx.audit_event("db_commit_error", "blueprint commit failed", {"ep_num": working_ep})
+            if callable(ctx.audit_event):
+                ctx.audit_event("db_commit_error", "blueprint commit failed", {"ep_num": working_ep})
             return {
                 "next_ep": working_ep + 1,
                 "success_count": success_count,
@@ -581,18 +588,22 @@ class Stage3Orchestrator:
             prev_blueprints[:] = prev_blueprints[-30:]
 
         # 메트릭 기록
-        ctx.audit_event(
-            "blueprint_success",
-            f"ep_{working_ep}_blueprint_generated",
-            {
-                "ep_num": working_ep,
-                "arc_no": arc_no,
-                "strategy": pipeline_result.get("phases", {}).get("generate", {}).get("selected_strategy", "unknown"),
-                "score": pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 0),
-                "final_verdict": _final_verdict,
-                "quality_risk": _quality_risk,
-            },
-        )
+        # [S3-N-P1-3] DI 콜백 None 방어
+        if callable(ctx.audit_event):
+            ctx.audit_event(
+                "blueprint_success",
+                f"ep_{working_ep}_blueprint_generated",
+                {
+                    "ep_num": working_ep,
+                    "arc_no": arc_no,
+                    "strategy": pipeline_result.get("phases", {})
+                    .get("generate", {})
+                    .get("selected_strategy", "unknown"),
+                    "score": pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 0),
+                    "final_verdict": _final_verdict,
+                    "quality_risk": _quality_risk,
+                },
+            )
 
         ctx.ui.log(f"   ✅ 제{working_ep}화 Blueprint 저장 완료")
         return {"next_ep": working_ep + 1, "success_count": success_count + 1, "fail_count": 0}
@@ -603,11 +614,13 @@ class Stage3Orchestrator:
         ctx = self.ctx
 
         ctx.ui.log(f"   ❌ 제{working_ep}화 Blueprint 생성 실패")
-        ctx.audit_event(
-            "blueprint_fail",
-            f"ep_{working_ep}_all_retries_exhausted",
-            {"ep_num": working_ep, "final_verdict": pipeline_result.get("final_verdict", "UNKNOWN")},
-        )
+        # [S3-N-P1-3] DI 콜백 None 방어
+        if callable(ctx.audit_event):
+            ctx.audit_event(
+                "blueprint_fail",
+                f"ep_{working_ep}_all_retries_exhausted",
+                {"ep_num": working_ep, "final_verdict": pipeline_result.get("final_verdict", "UNKNOWN")},
+            )
         try:
             _final_verdict = pipeline_result.get("final_verdict", "UNKNOWN")
             _score = pipeline_result.get("last_score", 0)

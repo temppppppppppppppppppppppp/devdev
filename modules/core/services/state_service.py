@@ -349,8 +349,20 @@ class StateService:
             self._ui.log(f"{Emojis.ERROR} [Integrity] integrated_scenario 누락")
             self._audit_event("integrity_fail", "integrated_scenario missing")
             return False
-        if "scene_breakdown" not in blueprint or not isinstance(blueprint.get("scene_breakdown"), dict):
+        _sb = blueprint.get("scene_breakdown")
+        if _sb is None:
             self._ui.log(f"{Emojis.ERROR} [Integrity] scene_breakdown 누락")
             self._audit_event("integrity_fail", "scene_breakdown missing")
+            return False
+        # [S3-N-P1-1] LLM이 list로 반환할 수 있으므로 list→dict 자동 변환
+        if isinstance(_sb, list):
+            _converted = {}
+            for i, item in enumerate(_sb):
+                key = f"scene_{i + 1}" if not isinstance(item, dict) or "scene_id" not in item else item["scene_id"]
+                _converted[key] = item
+            blueprint["scene_breakdown"] = _converted
+        elif not isinstance(_sb, dict):
+            self._ui.log(f"{Emojis.ERROR} [Integrity] scene_breakdown 형식 오류 (dict/list 아님)")
+            self._audit_event("integrity_fail", "scene_breakdown invalid type")
             return False
         return True
