@@ -452,7 +452,7 @@ class Stage3Orchestrator:
                         genre=_s3_genre,
                     )
                     _s3_parts = []
-                    _s3_max_results = int(_s3_th("context.vector_max_results_s4", 8))
+                    _s3_max_results = int(_s3_th("context.vector_max_results_s4", 16))
                     for _slot in getattr(_s3_plan, "slots", []) or []:
                         _slot_query = str(getattr(_slot, "query", "") or "").strip()
                         if not _slot_query:

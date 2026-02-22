@@ -254,6 +254,11 @@ class TestAnalystGenreLibrary:
         analyst.context.guard.get_genre_name.return_value = "투자물"
         assert analyst._get_current_genre() == "investment"
 
+    def test_get_current_genre_fantasy(self, analyst):
+        """fantasy 장르 감지"""
+        analyst.context.guard.get_genre_name.return_value = "판타지"
+        assert analyst._get_current_genre() == "fantasy"
+
     def test_get_current_genre_fallback(self, analyst):
         """장르 감지 실패 시 wuxia 기본값"""
         analyst.context.guard.get_genre_name.side_effect = Exception("감지 실패")
@@ -270,10 +275,22 @@ class TestAnalystGenreLibrary:
         path = analyst._get_genre_library_path("hunter")
         assert "analyst_libraries_hunter.json" in str(path)
 
+    def test_genre_library_path_fantasy(self, analyst):
+        """fantasy 장르 전용 라이브러리 경로"""
+        path = analyst._get_genre_library_path("fantasy")
+        assert "analyst_libraries_fantasy.json" in str(path)
+
     def test_genre_library_path_unknown(self, analyst):
         """알 수 없는 장르는 기본 라이브러리 사용"""
         path = analyst._get_genre_library_path("unknown_genre")
         assert "analyst_libraries.json" in str(path)
+
+    def test_load_genre_libraries_fantasy(self, analyst):
+        """fantasy 라이브러리 로딩 결과가 비어있지 않음"""
+        libs = analyst._load_genre_libraries("fantasy")
+        assert isinstance(libs, dict)
+        assert libs.get("intro", "{}") != "{}"
+        assert libs.get("dev", "{}") != "{}"
 
 
 class TestAnalystStateTrackerValidation:

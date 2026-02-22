@@ -143,6 +143,9 @@ class BaseAgent:
     # [V60.99] API Rate Limit 예방 딜레이 (초)
     API_DELAY = _SYSTEM_CFG.get("api", {}).get("delay", 0.1)
 
+    # [TF3-H7] 프롬프트 총량 사전 게이트 (API 호출 전)
+    MAX_CONTEXT_CHARS = _SYSTEM_CFG.get("api", {}).get("max_context_chars", 900000)
+
     # [V61.5] API 키 순환 (429 방어)
     _api_keys = []
     _current_key_idx = 0
@@ -216,7 +219,7 @@ class BaseAgent:
         return new_client
 
     # [V61.2] 네트워크 복원력 설정 (야간 무인 운영 대응)
-    API_TIMEOUT = _SYSTEM_CFG.get("api", {}).get("timeout", 90)
+    API_TIMEOUT = _SYSTEM_CFG.get("api", {}).get("timeout", _threshold("retry.api_timeout_seconds", 90))
     NETWORK_RETRY_DELAY_BASE = _SYSTEM_CFG.get("network_retry", {}).get("delay_base", 10)
     NETWORK_RETRY_DELAY_MAX = _SYSTEM_CFG.get("network_retry", {}).get("delay_max", 30)
     MAX_NETWORK_RETRIES = _SYSTEM_CFG.get("network_retry", {}).get("max_retries", 22)
@@ -239,6 +242,40 @@ class BaseAgent:
         self.last_error_type = None
         # [V49.3] 에이전트 이름 (비용 추적용)
         self._agent_name = self.__class__.__name__
+
+    @classmethod
+    def _build_http_options(cls):
+        """[TF3-H3] API 타임아웃을 GenerateContentConfig에 주입."""
+        try:
+            timeout = int(cls.API_TIMEOUT)
+            if timeout <= 0:
+                return None
+            return types.HttpOptions(timeout=timeout)
+        except Exception:
+            return None
+
+    def _apply_prompt_size_gate(self, prompt: str) -> str:
+        """[TF3-H7] 과대 프롬프트를 API 호출 전에 절삭."""
+        max_chars = int(self.MAX_CONTEXT_CHARS or 0)
+        if max_chars <= 0:
+            return prompt
+        if len(prompt) <= max_chars:
+            return prompt
+
+        notice = (
+            "\n\n[System Note] Prompt truncated by safety gate to prevent context overflow."
+            " Focus on the most recent instructions."
+        )
+        keep = max(0, max_chars - len(notice))
+        clipped = prompt[:keep] + notice
+        logging.warning(
+            "[TF3-H7] Prompt length gate applied: %d -> %d chars (agent=%s)",
+            len(prompt),
+            len(clipped),
+            self._agent_name,
+        )
+        self.requires_human_intervention = True
+        return clipped
 
     @property
     def agent_name(self) -> str:
@@ -263,6 +300,7 @@ class BaseAgent:
             f"### [TASK]\n{prompt}\n\n"
             f"### [FORMAT]\nRespond ONLY in valid JSON format."
         )
+        base_prompt = self._apply_prompt_size_gate(base_prompt)
 
         full_response = ""
         current_prompt = base_prompt
@@ -314,6 +352,9 @@ class BaseAgent:
             "top_p": 0.95,
             "response_mime_type": "application/json",
         }
+        http_options = self._build_http_options()
+        if http_options is not None:
+            config_params["http_options"] = http_options
 
         # [V0128] JSON Schema enforcement if provided
         if response_schema:
@@ -500,6 +541,8 @@ class BaseAgent:
                                 "top_p": 0.95,
                                 "response_mime_type": "application/json",
                             }
+                            if http_options is not None:
+                                fallback_config_params["http_options"] = http_options
                             if response_schema:
                                 fallback_config_params["response_schema"] = response_schema
                             if thinking_level:
@@ -656,6 +699,8 @@ class BaseAgent:
                     "top_p": 0.95,
                     "response_mime_type": "application/json",
                 }
+                if http_options is not None:
+                    backup_config_params["http_options"] = http_options
                 if response_schema:
                     backup_config_params["response_schema"] = response_schema
                 backup_config = types.GenerateContentConfig(**backup_config_params)
@@ -1219,6 +1264,7 @@ class BaseAgent:
                 f"### [TASK]\n{prompt}\n\n"
                 f"### [FORMAT]\nRespond ONLY in valid JSON format."
             )
+            wrapped_prompt = self._apply_prompt_size_gate(wrapped_prompt)
 
             config_params = {
                 "temperature": temperature,
@@ -1227,6 +1273,9 @@ class BaseAgent:
                 "response_mime_type": "application/json",
                 "cached_content": cache_name,
             }
+            http_options = self._build_http_options()
+            if http_options is not None:
+                config_params["http_options"] = http_options
 
             # [V61.7] Thinking Budget 지원
             if thinking_level:

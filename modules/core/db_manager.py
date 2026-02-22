@@ -81,11 +81,74 @@ class DBManager:
         except (json.JSONDecodeError, TypeError, ValueError):
             return json.loads(fallback)
 
+    @staticmethod
+    def _is_db_corruption_error(exc: Exception) -> bool:
+        """SQLite 손상 계열 에러 판별."""
+        text = str(exc).lower()
+        return any(
+            marker in text
+            for marker in (
+                "database disk image is malformed",
+                "malformed",
+                "file is not a database",
+                "database corruption",
+                "not a database",
+            )
+        )
+
+    def _quarantine_corrupt_db(self, reason: str = "") -> Path | None:
+        """손상 DB를 .corrupt_* 파일로 격리."""
+        source = Path(self.db_path)
+        if not source.exists():
+            return None
+
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        target = source.with_name(f"{source.name}.corrupt_{timestamp}")
+        try:
+            source.rename(target)
+            if reason:
+                logging.warning("[DBManager] 손상 DB 격리: %s (reason=%s)", target, reason)
+            else:
+                logging.warning("[DBManager] 손상 DB 격리: %s", target)
+            return target
+        except Exception as e:
+            logging.warning("[DBManager] 손상 DB 격리 실패: %s", e)
+            return None
+
+    def _connect_with_integrity_recovery(self) -> sqlite3.Connection:
+        """DB 연결 + PRAGMA integrity_check + 자동 복구."""
+        db_path = Path(self.db_path)
+        db_path.parent.mkdir(parents=True, exist_ok=True)
+
+        conn = sqlite3.connect(db_path, check_same_thread=False, timeout=30.0)
+        conn.row_factory = sqlite3.Row
+
+        try:
+            cur = conn.cursor()
+            row = cur.execute("PRAGMA integrity_check").fetchone()
+            status = str(row[0]).strip().lower() if row and len(row) > 0 else "unknown"
+            if status != "ok":
+                conn.close()
+                self._quarantine_corrupt_db(status)
+                conn = sqlite3.connect(db_path, check_same_thread=False, timeout=30.0)
+                conn.row_factory = sqlite3.Row
+                logging.warning("[DBManager] integrity_check 실패로 신규 DB 재생성")
+        except sqlite3.DatabaseError as e:
+            conn.close()
+            if self._is_db_corruption_error(e):
+                self._quarantine_corrupt_db(str(e))
+                conn = sqlite3.connect(db_path, check_same_thread=False, timeout=30.0)
+                conn.row_factory = sqlite3.Row
+                logging.warning("[DBManager] 손상 감지로 DB 재생성")
+            else:
+                raise
+
+        return conn
+
     def _boot_db(self) -> None:
         """DB 연결 및 10대 핵심 테이블 초기화"""
         # [V45] check_same_thread=False 사용 시 RLock으로 보호
-        self.conn = sqlite3.connect(self.db_path, check_same_thread=False, timeout=30.0)
-        self.conn.row_factory = sqlite3.Row
+        self.conn = self._connect_with_integrity_recovery()
         self.cursor = self.conn.cursor()
 
         # [INF-I3] WAL 모드 활성화 — 읽기/쓰기 동시성 향상, 크래시 복구 안전성 강화

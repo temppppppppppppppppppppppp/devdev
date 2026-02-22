@@ -494,3 +494,42 @@ class TestContextCacheEviction:
             for k in list(agent._context_caches.keys()):
                 if k.startswith("evict_"):
                     agent._context_caches.pop(k, None)
+
+
+# ══════════════════════════════════════════════════════════════
+# [TF3-H3/H7] Timeout + Prompt Gate
+# ══════════════════════════════════════════════════════════════
+
+
+class TestTimeoutAndPromptGate:
+    def test_ask_injects_http_timeout_option(self, agent, monkeypatch):
+        monkeypatch.setattr(agent, "API_DELAY", 0)
+        response = MagicMock()
+        response.text = json.dumps({"content": "ok"})
+        response.candidates = [MagicMock(finish_reason="STOP")]
+        agent.client.models.generate_content.return_value = response
+
+        _ = agent.ask("짧은 프롬프트")
+        config = agent.client.models.generate_content.call_args.kwargs["config"]
+        assert getattr(config, "http_options", None) is not None
+        assert config.http_options.timeout == int(agent.API_TIMEOUT)
+
+    def test_cached_context_call_injects_http_timeout_option(self, agent, monkeypatch):
+        monkeypatch.setattr(agent, "API_DELAY", 0)
+        response = MagicMock()
+        response.text = json.dumps({"content": "cached"})
+        agent.client.models.generate_content.return_value = response
+
+        _ = agent._ask_with_cached_context(cache_name="cached/ctx", prompt="테스트")
+        config = agent.client.models.generate_content.call_args.kwargs["config"]
+        assert getattr(config, "http_options", None) is not None
+        assert config.http_options.timeout == int(agent.API_TIMEOUT)
+
+    def test_prompt_size_gate_truncates(self, agent):
+        agent.MAX_CONTEXT_CHARS = 140
+        agent.requires_human_intervention = False
+
+        clipped = agent._apply_prompt_size_gate("x" * 600)
+        assert len(clipped) <= 140
+        assert "Prompt truncated" in clipped
+        assert agent.requires_human_intervention is True
