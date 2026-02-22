@@ -91,7 +91,7 @@ class ConfidenceCalibrator:
         """
         self.client = api_client
         self.use_llm = use_llm and api_client is not None
-        self.model = "gemini-2.0-flash"
+        self.model = "gemini-2.5-flash"
         self.enabled = True
 
     def _score_to_level(self, score: int) -> ConfidenceLevel:

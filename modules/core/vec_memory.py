@@ -19,7 +19,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 # ── 임베딩 모델 설정 ────────────────────────────────────────
-EMBED_DIM = 768  # gemini-embedding-001 기본 차원
+EMBED_DIM = 3072  # gemini-embedding-001 기본 차원 (2025-12 이후 3072)
 EMBED_MODEL = "gemini-embedding-001"
 MAX_EMBED_CHARS = 10000
 
@@ -173,7 +173,7 @@ class VecMemory:
             cur.close()
 
     def _check_embedding_version(self, cur) -> None:
-        """[B6] 임베딩 모델 버전 저장 및 불일치 시 경고."""
+        """[B6] 임베딩 모델 버전 저장 및 불일치 시 자동 마이그레이션."""
         try:
             row = cur.execute("SELECT value FROM vec_metadata WHERE key = 'embed_model'").fetchone()
             if row:
@@ -184,7 +184,11 @@ class VecMemory:
                     )
                 row_dim = cur.execute("SELECT value FROM vec_metadata WHERE key = 'embed_dim'").fetchone()
                 if row_dim and int(row_dim[0]) != EMBED_DIM:
-                    logging.warning(f"[VecMemory] 임베딩 차원 불일치: DB={row_dim[0]}, 현재={EMBED_DIM} — 재색인 필요")
+                    old_dim = int(row_dim[0])
+                    logging.warning(
+                        f"[VecMemory] 임베딩 차원 불일치: DB={old_dim}, 현재={EMBED_DIM} — 자동 마이그레이션 시작"
+                    )
+                    self._migrate_vec_table(cur)
             else:
                 cur.execute(
                     "INSERT OR REPLACE INTO vec_metadata (key, value) VALUES (?, ?)",
@@ -197,6 +201,32 @@ class VecMemory:
                 self._conn.commit()
         except Exception as e:
             logging.warning(f"[VecMemory] 임베딩 버전 체크 실패 (비차단): {str(e)[:60]}")
+
+    def _migrate_vec_table(self, cur) -> None:
+        """차원 불일치 시 vec_episodes 재생성 + 메타데이터 갱신."""
+        try:
+            cur.execute("DROP TABLE IF EXISTS vec_episodes")
+            cur.execute(f"""
+                CREATE VIRTUAL TABLE vec_episodes
+                USING vec0(embedding float[{EMBED_DIM}])
+            """)
+            # sync_status 리셋 — 재색인 대상 표시
+            cur.execute("UPDATE sync_status SET synced = 0, synced_at = NULL")
+            # 메타데이터 갱신
+            cur.execute(
+                "INSERT OR REPLACE INTO vec_metadata (key, value) VALUES (?, ?)",
+                ("embed_model", EMBED_MODEL),
+            )
+            cur.execute(
+                "INSERT OR REPLACE INTO vec_metadata (key, value) VALUES (?, ?)",
+                ("embed_dim", str(EMBED_DIM)),
+            )
+            self._conn.commit()
+            logging.warning(
+                f"[VecMemory] vec_episodes 재생성 완료 (dim={EMBED_DIM}). 기존 벡터 삭제됨 — 새 에피소드부터 자동 색인."
+            )
+        except Exception as e:
+            logging.warning(f"[VecMemory] 마이그레이션 실패 (비차단): {str(e)[:80]}")
 
     def _embed_text(self, text: str) -> list | None:
         """텍스트 → 임베딩 벡터. 실패 시 None."""

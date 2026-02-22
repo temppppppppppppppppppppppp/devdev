@@ -107,7 +107,7 @@ class ReferenceAnchor:
                 return []
 
             # 임시 에이전트 생성
-            agent = BaseAgent(self.context, self.context.sys.api_client, model_tier="gemini-2.0-flash")
+            agent = BaseAgent(self.context, self.context.sys.api_client, model_tier="gemini-2.5-flash")
 
             response = agent.ask(prompt, temperature=0.2)
             result = agent._extract_json_robust(response)

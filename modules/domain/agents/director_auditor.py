@@ -221,7 +221,7 @@ class DirectorQualityAuditor:
         if self.v0128_orchestrator is None:
             default_config = {
                 "scoring_model": self._d.primary_model,
-                "advisory_model": "gemini-2.0-flash",
+                "advisory_model": "gemini-2.5-flash",
                 "scoring_threshold": 70,  # [TF-I06] 65→70 YAML/코드 일치
                 "use_self_consistency": True,
                 "consistency_votes": 3,

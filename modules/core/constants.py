@@ -159,7 +159,7 @@ class AIModels:
     # [V60.65] 기본 3-pro, 할당량 초과 시 2.5-pro 폴백
 
     # [V65] 경량/보조 모델 (SSOT — main_a.py, stage2_orchestrator.py 등에서 참조)
-    V50_MODULE_MODEL = "gemini-2.0-flash"  # V50 품질 모듈 전용 (SelfReflector, CrossVerifier 등)
+    V50_MODULE_MODEL = "gemini-2.5-flash"  # V50 품질 모듈 전용 (SelfReflector, CrossVerifier 등)
     FLASH_ANALYSIS_MODEL = "gemini-3-flash-preview"  # 경량 분석/추출용 (Preflight, StateExtractor 등)
     SUMMARY_MODEL = "gemini-2.5-flash"  # 요약/저비용 LLM 호출용
 
