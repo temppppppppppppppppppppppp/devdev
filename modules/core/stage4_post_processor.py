@@ -159,6 +159,59 @@ class Stage4PostProcessor:
         except Exception as file_err:
             self.ctx.ui.log(f"   ⚠️ 파일 저장 실패: {file_err}")
 
+        # ===== [S4-N-P1-1][S4-I6] Manager LLM 비동기 제출 (먼저 submit → 독립 작업 → result 회수) =====
+        bible_delta = None  # [V70] NameError 방지 사전 초기화
+        _bible_future = None
+        audit = {}
+        # 동기 폴백에 필요한 변수 사전 초기화
+        current_state = {}
+        lore_list = []
+        active_seeds = []
+        causal_history = ""
+        try:
+            self.ctx.ui.log("   📖 [V60.82] Manager 정산 비동기 제출...")
+            from concurrent.futures import ThreadPoolExecutor
+
+            current_state = (
+                self.ctx.current_project.latest_state if hasattr(self.ctx.current_project, "latest_state") else {}
+            )
+            if not current_state and hasattr(self.ctx.sys, "hud") and self.ctx.sys.hud:
+                current_state = {"actual_truth": self.ctx.sys.hud.pro_data}
+
+            if hasattr(self.ctx.current_project, "master_bible"):
+                bible_root = self.ctx.current_project.master_bible.get(
+                    "MasterBible", self.ctx.current_project.master_bible
+                )
+                assets = bible_root.get("AssetLibrary", {})
+                lore_list = assets.get("KeyNPCs", []) or assets.get("Key_NPCs", [])
+
+            if hasattr(self.ctx.current_project, "db"):
+                try:
+                    seeds_data = self.ctx.current_project.db.load_anchor("active_seeds")
+                    if seeds_data:
+                        active_seeds = seeds_data if isinstance(seeds_data, list) else []
+                except (ValueError, TypeError, json.JSONDecodeError) as e:
+                    logging.warning(f"[V66.3] active_seeds 로드 실패: {e}")
+
+            _manager_agent = self.ctx.agents["manager"]
+            _bible_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="bible_settle")
+            _bible_future = _bible_executor.submit(
+                _manager_agent.update_state_and_lore_v20,
+                ep_num=next_ep,
+                manuscript=final_manuscript,
+                current_state=current_state,
+                lore_list=lore_list,
+                active_seeds=active_seeds,
+                causal_history=causal_history,
+            )
+            _bible_executor.shutdown(wait=False)
+            self.ctx.ui.log("      ⏳ [S4-I6] Manager 정산 비동기 실행 중...")
+        except Exception as _submit_err:
+            logging.warning("[S4-I6] 비동기 제출 실패, 동기 폴백 예정: %s", _submit_err)
+            _bible_future = None
+
+        # ===== [S4-N-P1-1] Bible LLM 실행 중 독립 작업 병렬 수행 =====
+
         # [V63.3] 벡터 메모리 즉시 저장
         try:
             _mem_arc_no = arc_data.get("arc_no") if arc_data else None
@@ -238,61 +291,8 @@ class Stage4PostProcessor:
         except Exception as log_err:
             self.ctx.ui.log(f"   ⚠️ 로그 저장 실패: {log_err}")
 
-        # ===== [V60.82][S4-I6] Episode Bible 저장 (Manager LLM 비동기 실행) =====
-        bible_delta = None  # [V70] NameError 방지 사전 초기화
+        # ===== [S4-N-P1-1] Manager LLM Future 회수 (독립 작업 완료 후) =====
         try:
-            self.ctx.ui.log("   📖 [V60.82] Manager 정산 시작...")
-
-            audit = {}
-
-            # [S4-I6] Manager LLM 호출을 ThreadPoolExecutor로 비동기 실행
-            # 다른 후처리(벡터 메모리 저장, 로그 등)와 병렬로 진행
-            _bible_future = None
-            try:
-                from concurrent.futures import ThreadPoolExecutor
-
-                current_state = (
-                    self.ctx.current_project.latest_state if hasattr(self.ctx.current_project, "latest_state") else {}
-                )
-                if not current_state and hasattr(self.ctx.sys, "hud") and self.ctx.sys.hud:
-                    current_state = {"actual_truth": self.ctx.sys.hud.pro_data}
-
-                lore_list = []
-                active_seeds = []
-                causal_history = ""
-
-                if hasattr(self.ctx.current_project, "master_bible"):
-                    bible_root = self.ctx.current_project.master_bible.get(
-                        "MasterBible", self.ctx.current_project.master_bible
-                    )
-                    assets = bible_root.get("AssetLibrary", {})
-                    lore_list = assets.get("KeyNPCs", []) or assets.get("Key_NPCs", [])
-
-                if hasattr(self.ctx.current_project, "db"):
-                    try:
-                        seeds_data = self.ctx.current_project.db.load_anchor("active_seeds")
-                        if seeds_data:
-                            active_seeds = seeds_data if isinstance(seeds_data, list) else []
-                    except (ValueError, TypeError, json.JSONDecodeError) as e:
-                        logging.warning(f"[V66.3] active_seeds 로드 실패: {e}")
-
-                _manager_agent = self.ctx.agents["manager"]
-                _bible_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="bible_settle")
-                _bible_future = _bible_executor.submit(
-                    _manager_agent.update_state_and_lore_v20,
-                    ep_num=next_ep,
-                    manuscript=final_manuscript,
-                    current_state=current_state,
-                    lore_list=lore_list,
-                    active_seeds=active_seeds,
-                    causal_history=causal_history,
-                )
-                _bible_executor.shutdown(wait=False)
-                self.ctx.ui.log("      ⏳ [S4-I6] Manager 정산 비동기 실행 중...")
-            except Exception as _submit_err:
-                logging.warning("[S4-I6] 비동기 제출 실패, 동기 폴백: %s", _submit_err)
-                _bible_future = None
-
             # [S4-I6] Future 회수: 결과를 기다린 후 audit에 반영
             try:
                 if _bible_future is not None:
