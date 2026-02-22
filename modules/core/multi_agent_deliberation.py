@@ -178,7 +178,7 @@ JSON 형식:
 
 합의된 수정본을 출력하세요. 원본의 형식을 유지하되, 합의된 개선사항을 반영하세요."""
 
-    def __init__(self, api_client, model: str = "gemini-2.0-flash"):
+    def __init__(self, api_client, model: str = "gemini-2.5-flash"):
         """
         Args:
             api_client: Google GenAI 클라이언트

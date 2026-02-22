@@ -115,7 +115,7 @@ JSON 형식으로 응답:
 }
 ```"""
 
-    def __init__(self, api_client, model: str = "gemini-2.0-flash"):
+    def __init__(self, api_client, model: str = "gemini-2.5-flash"):
         """
         Args:
             api_client: Google GenAI 클라이언트

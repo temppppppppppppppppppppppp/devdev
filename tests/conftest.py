@@ -288,7 +288,7 @@ def agent_config(mock_api_client):
         "karma": MagicMock(),
         "models": {
             "primary": "gemini-2.5-flash",
-            "backup": "gemini-2.0-flash",
+            "backup": "gemini-2.5-flash",
             "tier2": "gemini-2.5-pro",
             "tier3": "gemini-3-pro-preview",
         },

@@ -374,7 +374,7 @@ class DBManager:
         if self._vec_available:
             self.cursor.execute("""
                 CREATE VIRTUAL TABLE IF NOT EXISTS vec_episodes
-                USING vec0(embedding float[768])
+                USING vec0(embedding float[3072])
             """)
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS episode_meta (
