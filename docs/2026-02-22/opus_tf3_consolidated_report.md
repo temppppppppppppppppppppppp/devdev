@@ -60,7 +60,7 @@
 
 ### C-3/C-4: fantasy 장르 analyst_libraries + genre_library_map 부재 [Genre]
 
-- **위치**: `config/prompts/analyst_libraries_fantasy.json` (미존재), `analyst.py` L1414
+- **위치**: `config/prompts/analyst_libraries_fantasy.json` (미존재), `modules/domain/agents/analyst.py` L1414
 - **영향**: fantasy 장르 선택 시 wuxia(무협) 서사 아키타입이 폴백 적용
 - **권고**: `analyst_libraries_fantasy.json` 생성, `analyst.py` genre_library_map에 fantasy 추가
 
@@ -85,7 +85,7 @@
 
 - **위치**: `config/system.yaml` L17, `base_agent.py`
 - **현상**: `generate_content()` 호출에 timeout 미전달, SDK 기본(수분) 대기
-- **영향**: Gemini API 무응답 시 야간 무인 운영에서 장시간 행
+- **영향**: Gemini API 무응답 시 야간 무인 운영에서 장시간 행(hang) 발생 가능. `generate_content()` 호출부 L368, L515, L675, L1242 모두 timeout 파라미터 없음
 - **권고**: httpx_client 타임아웃 설정 또는 signal.alarm 래퍼
 
 ### H-4: validation.yaml Dead Configuration [Config/Ops]
