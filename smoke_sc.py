@@ -2,7 +2,7 @@
 """SC Smoke Test — smart_retrieval 활성화 후 Stage 4 에피소드 1개 생성.
 
 실제 Gemini API를 호출합니다. 비용 ~$0.5~2, 소요 3~10분.
-기존 프로젝트(테스트 원고__11, investment, 54화 완료)에서 55화 생성.
+기존 프로젝트(테스트 원고__11, investment)에서 다음 1화 생성.
 
 Usage:
     python smoke_sc.py
@@ -16,11 +16,16 @@ from pathlib import Path
 
 # ── 인터랙션 차단: input() → 자동 응답 ──
 _original_input = builtins.input
+_auto_state = {"target_ep": "999"}  # 프로젝트 부팅 후 실제 값으로 갱신
 
 
 def _auto_input(prompt=""):
-    # 숫자 선택 프롬프트 → '1', 그 외 → 'y'
-    resp = "1" if any(k in prompt for k in ("1.", "2.", "선택")) else "y"
+    if "몇 화까지" in prompt:
+        resp = _auto_state["target_ep"]
+    elif any(k in prompt for k in ("1.", "2.", "선택")):
+        resp = "1"
+    else:
+        resp = "y"
     print(f"[AUTO] {prompt.strip()} → '{resp}'")
     return resp
 
@@ -46,7 +51,6 @@ atexit.register(_restore_yaml)
 
 # ── 로그 캡처: [SC] 패턴 수집 ──
 _sc_logs: list[str] = []
-_original_print = print
 
 
 # ── 메인 ──
@@ -141,6 +145,11 @@ def main():
         sys.exit(1)
     print("[SC-SMOKE] 에이전트 초기화 완료")
 
+    # ── 4.5 limit_mode 에피소드 제한 설정 ──
+    next_ep = app.current_project.get_latest_episode_number() + 1
+    _auto_state["target_ep"] = str(next_ep)
+    print(f"[SC-SMOKE] 목표: {next_ep}화 1개만 생성 (limit_mode=True)")
+
     # ── 5. ui.log 래핑: [SC] 로그 캡처 ──
     _original_log = app.ui.log
 
@@ -162,15 +171,17 @@ def main():
 
     _sc_handler = SCLogHandler()
     _sc_handler.setLevel(logging.DEBUG)
+    # root logger 레벨을 DEBUG로 낮춰야 logging.info/debug 메시지가 핸들러에 도달
+    logging.getLogger().setLevel(logging.DEBUG)
     logging.getLogger().addHandler(_sc_handler)
 
     # ── 6. Stage 4 실행 (에피소드 1개) ──
     print("\n" + "=" * 60)
-    print("[SC-SMOKE] Stage 4 시작 — 에피소드 55화 생성")
+    print(f"[SC-SMOKE] Stage 4 시작 — 에피소드 {next_ep}화 생성")
     print("=" * 60 + "\n")
 
     try:
-        app._stage_4_v2_chief_writer(limit_mode=False)
+        app._stage_4_v2_chief_writer(limit_mode=True)
     except Exception as e:
         print(f"\n[SC-SMOKE] Stage 4 실행 중 오류: {e}")
         import traceback
@@ -194,10 +205,10 @@ def main():
     # 원고 확인
     last_ep = app.current_project.db.cursor.execute("SELECT MAX(ep_num) FROM manuscripts").fetchone()[0]
     print(f"\n최종 원고 에피소드: {last_ep}화")
-    if last_ep and last_ep >= 55:
-        print("✅ 55화 원고 생성 성공!")
+    if last_ep and last_ep >= next_ep:
+        print(f"✅ {next_ep}화 원고 생성 성공!")
     else:
-        print("⚠️ 55화 원고 미생성 — Stage 4가 완료되지 않았을 수 있음")
+        print(f"⚠️ {next_ep}화 원고 미생성 — Stage 4가 완료되지 않았을 수 있음")
 
     # cleanup
     logging.getLogger().removeHandler(_sc_handler)
