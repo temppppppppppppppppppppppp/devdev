@@ -149,3 +149,52 @@ def test_scoring_validator_source_has_non_negative_clamp():
 def test_base_agent_source_uses_rotation_lock_on_reset():
     source = Path("modules/domain/agents/base_agent.py").read_text(encoding="utf-8")
     assert "with BaseAgent._rotation_lock:" in source
+
+
+# ── ForeshadowTracker.load_from_arcs ──────────────────────────
+
+
+def test_foreshadow_tracker_load_from_arcs_basic():
+    from modules.core.foreshadow_tracker import ForeshadowTracker
+
+    tracker = ForeshadowTracker()
+    arcs = [
+        {
+            "arc_no": 1,
+            "start_episode": 1,
+            "foreshadowings": [
+                {"id": "secret_letter", "type": "비밀", "description": "비밀 편지"},
+                {"id": "sword", "type": "아이템", "description": "봉인된 검"},
+            ],
+        },
+        {
+            "arc_no": 2,
+            "foreshadowings": [
+                {"id": "prophecy", "type": "예언", "description": "대예언"},
+            ],
+        },
+    ]
+    count = tracker.load_from_arcs(arcs)
+    assert count == 3
+    assert len(tracker.get_active_hooks()) == 3
+
+
+def test_foreshadow_tracker_load_from_arcs_empty():
+    from modules.core.foreshadow_tracker import ForeshadowTracker
+
+    tracker = ForeshadowTracker()
+    assert tracker.load_from_arcs([]) == 0
+    assert tracker.load_from_arcs(None) == 0
+
+
+def test_foreshadow_tracker_load_from_arcs_invalid_entries():
+    from modules.core.foreshadow_tracker import ForeshadowTracker
+
+    tracker = ForeshadowTracker()
+    arcs = [
+        {"arc_no": 1, "foreshadowings": [{"id": "", "description": ""}]},  # empty hook
+        {"arc_no": 2, "foreshadowings": "not a list"},  # invalid type
+        "not a dict",  # invalid arc
+    ]
+    count = tracker.load_from_arcs(arcs)
+    assert count == 0
