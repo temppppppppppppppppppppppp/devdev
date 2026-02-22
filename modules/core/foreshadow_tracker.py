@@ -471,6 +471,72 @@ class ForeshadowTracker:
         except Exception as e:
             logging.warning(f"[ForeshadowTracker] Load error: {e}")
 
+    def load_from_arcs(self, arcs_data) -> int:
+        """Arc 데이터에서 복선(foreshadowings) 로드.
+
+        Args:
+            arcs_data: Arc 데이터 리스트 (각 arc는 dict, foreshadowings 키 포함 가능)
+
+        Returns:
+            로드된 복선 수
+        """
+        count = 0
+        if not arcs_data:
+            return count
+
+        items_iter = arcs_data.items() if isinstance(arcs_data, dict) else enumerate(arcs_data)
+
+        for _key, arc in items_iter:
+            if not isinstance(arc, dict):
+                continue
+
+            arc_no = arc.get("arc_no", 0)
+            foreshadowings = arc.get("foreshadowings") or []
+            if not isinstance(foreshadowings, list):
+                continue
+
+            for fs in foreshadowings:
+                if not isinstance(fs, dict):
+                    continue
+
+                hook = fs.get("description") or fs.get("id") or ""
+                if not hook:
+                    continue
+
+                # type → category 매핑
+                fs_type = (fs.get("type") or "other").lower()
+                category_map = {
+                    "아이템": ForeshadowCategory.CHEKHOV,
+                    "인물": ForeshadowCategory.RELATIONSHIP,
+                    "사건": ForeshadowCategory.MYSTERY,
+                    "능력": ForeshadowCategory.POWER,
+                    "비밀": ForeshadowCategory.MYSTERY,
+                    "예언": ForeshadowCategory.FORESIGHT,
+                    "세계관": ForeshadowCategory.WORLDBUILDING,
+                }
+                category = category_map.get(fs_type, ForeshadowCategory.OTHER)
+
+                # 심은 화: Arc 시작 에피소드 추정
+                start_ep = arc.get("start_episode", 0) or (arc_no - 1) * 5 + 1 if arc_no else 1
+
+                # expected_payoff에서 deadline 추출 시도
+                deadline = None
+                payoff_hint = fs.get("expected_payoff", "")
+                if isinstance(payoff_hint, int | float):
+                    deadline = int(payoff_hint)
+
+                self.plant(
+                    ep_num=start_ep,
+                    hook=hook,
+                    category=category,
+                    deadline_ep=deadline,
+                    importance=fs.get("importance", 5),
+                    description=fs.get("description", ""),
+                )
+                count += 1
+
+        return count
+
     def clear(self) -> None:
         """초기화"""
         self.hooks = {}
