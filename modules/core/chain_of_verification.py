@@ -185,6 +185,12 @@ JSON 형식으로 응답:
             rel = context["relationships"]
             parts.append(f"[NPC 관계 상태]\n{rel}")
 
+        # [S4-I5] quick_verify 경고를 LLM 검증 컨텍스트에 포함
+        if "quick_verify_warnings" in context:
+            qv = context["quick_verify_warnings"]
+            if qv:
+                parts.append(f"[Python 사전검증 경고 — 이 항목을 중점 검증할 것]\n{qv}")
+
         return "\n\n".join(parts) if parts else "컨텍스트 없음"
 
     def verify(

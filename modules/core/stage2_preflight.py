@@ -251,22 +251,34 @@ class Stage2PreflightAnalysis:
                 except Exception:
                     pass
 
+        # [S2-I1] constraint_db 수집을 arc_drive/preflight와 병렬 실행
+        def _compute_constraint_block() -> str:
+            """ConstraintDB 제약 블록 생성 (독립 — LLM 미사용)"""
+            try:
+                return constraint_db.generate_constraint_block(global_arc_no) or ""
+            except Exception as _cb_err:
+                logging.warning(f"[S2-I1] constraint_block 생성 실패 (비차단): {_cb_err}")
+                return ""
+
         # [Phase 3-Obs] PerfTimer: preflight 병렬 구간 외곽 타이머
         try:
             self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_preflight_parallel")
         except Exception:
             pass
+        arc_drive = {}
+        _cached_preflight_injection = ""
+        _cached_preflight_result = {}
+        constraint_block = ""
         try:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as _parallel_exec:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as _parallel_exec:
                 _fut_drive = _parallel_exec.submit(_compute_arc_drive)
                 _fut_preflight = _parallel_exec.submit(_compute_preflight)
+                _fut_constraint = _parallel_exec.submit(_compute_constraint_block)
                 arc_drive = _fut_drive.result(timeout=300)
                 _cached_preflight_injection, _cached_preflight_result = _fut_preflight.result(timeout=300)
+                constraint_block = _fut_constraint.result(timeout=60)
         except Exception as _pf_err:
             logging.warning(f"⚠️ [Preflight] 병렬 실행 타임아웃/오류 (비치명): {str(_pf_err)[:80]}")
-            arc_drive = {}
-            _cached_preflight_injection = ""
-            _cached_preflight_result = {}
         finally:
             try:
                 self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_preflight_parallel")
@@ -274,7 +286,7 @@ class Stage2PreflightAnalysis:
                 pass
 
         if _cached_preflight_result:
-            logging.info("✅ [V66.1] arc_drive + preflight 병렬 완료")
+            logging.info("✅ [V66.1] arc_drive + preflight + constraint 병렬 완료")
             logging.info(f"- 아이템 타임라인: {len(_cached_preflight_result.get('item_timeline', []))}개")
             logging.info(f"- 금지 사항: {len(_cached_preflight_result.get('absolute_prohibitions', []))}개")
             logging.info(f"- 관계 맵: {len(_cached_preflight_result.get('relationship_map', {}))}명")
@@ -282,8 +294,7 @@ class Stage2PreflightAnalysis:
         passed = False
         current_feedback = ""
 
-        # [V49.4] Pre-Generation Constraint 생성
-        constraint_block = constraint_db.generate_constraint_block(global_arc_no)
+        # [S2-I1] constraint_block 로깅 (병렬 결과)
         if constraint_block:
             self.ctx.ui.log(f"      🔒 [V49.4] Arc {global_arc_no} 제약 조건 주입됨")
 
@@ -507,6 +518,16 @@ class Stage2PreflightAnalysis:
                     )
         except Exception as rf42_err:
             logging.warning(f"[Item4] Stage 4→2 피드백 실패: {rf42_err}")
+
+        # [S2-I8] enhanced_context 총 크기 로깅 + Gemini context window 초과 경고
+        _ec_size = len(enhanced_context)
+        logging.info(f"[S2-I8] enhanced_context 크기: {_ec_size:,}자 (constraint_block: {len(constraint_block):,}자)")
+        _CONTEXT_WARNING_THRESHOLD = 100_000
+        if _ec_size > _CONTEXT_WARNING_THRESHOLD:
+            logging.warning(
+                f"[S2-I8] enhanced_context {_ec_size:,}자 > {_CONTEXT_WARNING_THRESHOLD:,}자 경고: "
+                "Gemini context window 초과 가능성 — 컨텍스트 축소 권장"
+            )
 
         # ═══════════════════════════════════════════════════════════════
         # [V60.36] Analyst 강화 - Director 검수 통과를 위한 무장

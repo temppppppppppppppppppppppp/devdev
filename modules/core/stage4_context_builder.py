@@ -518,29 +518,41 @@ class Stage4ContextBuilder:
             except Exception as _fl_mc_err:
                 logging.warning(f"⚠️ [V68] 팩트 원장 주입 실패 (비치명): {str(_fl_mc_err)[:50]}")
 
-        # [S4-P1-2] state_tracker 로컬 변수로 None 체크 1회만 수행
+        # [S4-I2] state_tracker 16종 요약을 get_all_summaries()로 일괄 수집
         _st = self.ctx.state_tracker
         if _st:
-            for _summary in (
-                _st.get_entity_destruction_summary(),
-                _st.get_resolved_plots_summary(),
-                _st.get_npc_personality_summary(),
-                _st.get_npc_npc_relationship_summary(),
-                _st.get_permanent_injury_summary(),
-                _st.get_time_timeline_summary(),
-                _st.get_companion_summary(),
-                _st.get_commitment_summary(),
-                _st.get_protagonist_emotion_summary(),
-                _st.get_item_state_summary(),
-                _st.get_plot_suspension_summary(arc_data.get("arc_no", 0) if arc_data else 0),
-                _st.get_npc_dialogue_style_summary(),
-                _st.get_relationship_changes_summary(),
-                _st.get_npc_injury_summary(),
-                _st.get_npc_movement_summary(),
-                _st.get_protagonist_skills_summary(),
-            ):
-                if _summary:
-                    _mc_parts.append(_summary)
+            _arc_no_for_st = arc_data.get("arc_no", 0) if arc_data else 0
+            try:
+                _all_summaries = _st.get_all_summaries(
+                    arc_no=_arc_no_for_st,
+                    genre=s4_genre_type,
+                )
+                for _summary in _all_summaries.values():
+                    if _summary:
+                        _mc_parts.append(_summary)
+            except Exception as _st_err:
+                logging.warning("[S4-I2] get_all_summaries 실패, 개별 폴백: %s", _st_err)
+                # 폴백: 개별 호출 (하위 호환성 보장)
+                for _summary in (
+                    _st.get_entity_destruction_summary(),
+                    _st.get_resolved_plots_summary(),
+                    _st.get_npc_personality_summary(),
+                    _st.get_npc_npc_relationship_summary(),
+                    _st.get_permanent_injury_summary(),
+                    _st.get_time_timeline_summary(),
+                    _st.get_companion_summary(),
+                    _st.get_commitment_summary(),
+                    _st.get_protagonist_emotion_summary(),
+                    _st.get_item_state_summary(),
+                    _st.get_plot_suspension_summary(_arc_no_for_st),
+                    _st.get_npc_dialogue_style_summary(),
+                    _st.get_relationship_changes_summary(),
+                    _st.get_npc_injury_summary(),
+                    _st.get_npc_movement_summary(),
+                    _st.get_protagonist_skills_summary(),
+                ):
+                    if _summary:
+                        _mc_parts.append(_summary)
 
         try:
             arc_summaries = []
@@ -555,11 +567,6 @@ class Stage4ContextBuilder:
                     _mc_parts.append(_arc_summary_text)
         except Exception as e:
             self.ctx.ui.log(f"   ⚠️ [V66] Arc 요약 주입 실패 (비치명): {e}")
-
-        if s4_genre_type == "investment" and _st is not None:
-            _fin_summary = _st.get_financial_state_summary()
-            if _fin_summary:
-                _mc_parts.append(_fin_summary)
 
         _retrieval_plan = None
         try:

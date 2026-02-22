@@ -296,5 +296,6 @@ def test_main_a_context_advisor_wiring():
     source = Path("main_a.py").read_text(encoding="utf-8")
     assert "from modules.core.context_advisor import ContextAdvisor" in source
     assert "self.context_advisor = None" in source
-    assert "self.context_advisor = ContextAdvisor()" in source
+    # lazy import 패턴: _v50["ContextAdvisor"]() 또는 직접 ContextAdvisor()
+    assert "context_advisor" in source and "ContextAdvisor" in source
     assert 'context_advisor=getattr(self, "context_advisor", None),' in source

@@ -9,9 +9,90 @@ import json
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from modules.validation.threshold_helper import _threshold
+
+
+def _load_genre_hints() -> dict[str, list[str]]:
+    """[INF-I7] config/smart_retrieval/genre_hints.yaml에서 장르 힌트 로드.
+
+    YAML 로드 실패 시 하드코딩된 기본값을 반환한다.
+    """
+    yaml_path = Path(__file__).resolve().parent.parent.parent / "config" / "smart_retrieval" / "genre_hints.yaml"
+    try:
+        import yaml
+
+        with open(yaml_path, encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+        if isinstance(data, dict):
+            # 값이 list[str]인지 간단 검증
+            return {k: v for k, v in data.items() if isinstance(v, list)}
+    except Exception as exc:
+        logging.debug("[INF-I7] genre_hints.yaml 로드 실패, 하드코딩 폴백 사용: %s", exc)
+    return _DEFAULT_GENRE_HINTS
+
+
+_DEFAULT_GENRE_HINTS: dict[str, list[str]] = {
+    "hunter": [
+        "던전 클리어 각성 스킬 랭크",
+        "보스 공략 파티 구성 전투 손실 회복",
+        "게이트 붕괴 레이드 보상 길드 경쟁",
+        "검술 체술 사격 마법 복합 전투",
+        "장비 강화 제작 재료 경매 자원 채굴",
+    ],
+    "investment": [
+        "포트폴리오 자산배분 주식 채권 부동산",
+        "레버리지 손절 리스크 관리 금리 유동성",
+        "매크로 이벤트 금리 환율 유동성",
+        "원자재 선물 옵션 환헤지 변동성 관리",
+        "M&A 지분 인수 규제 세무 회계",
+    ],
+    "fantasy": [
+        "마법 검술 창술 궁술 체술 전투",
+        "유물 계약 혈통 각성 의식",
+        "왕국 음모 길드 전쟁 봉인 해제",
+        "정령 소환 연금술 룬 각인 제작",
+        "신성력 저주 해제 성물 축복 의식",
+    ],
+    "wuxia": [
+        "검술 내공 경공 권법 장법",
+        "문파 비급 심법 기연 수련",
+        "강호 세력 암투 복수 의리",
+        "영약 단약 독공 해독 경맥",
+    ],
+    "composer": [
+        "작곡 편곡 사운드 디자인 멜로디",
+        "음원 발매 차트 반응 저작권 수익",
+        "공연 리허설 밴드 합주 프로듀싱",
+    ],
+    "cooking": [
+        "식재료 손질 조리법 불 조절 플레이팅",
+        "주방 동선 원가 관리 재고 회전 위생",
+        "메뉴 개발 단골 확보 리뷰 대응 운영",
+    ],
+    "alt_history": [
+        "역사 분기 정치 외교 군사 전략",
+        "산업 기술 도입 개혁 세력 균형",
+        "전쟁 억제 동맹 협상 정보전 심리전",
+    ],
+    "actor": [
+        "대본 분석 캐릭터 구축 감정선 연기",
+        "오디션 캐스팅 촬영 스케줄 현장 대응",
+        "흥행 성적 평단 반응 이미지 관리",
+    ],
+    "sports": [
+        "기술 훈련 체력 강화 경기 운영 전술",
+        "부상 관리 재활 루틴 컨디션 조절",
+        "리그 일정 상대 분석 기록 갱신",
+    ],
+    "medical": [
+        "증상 감별 진단 검사 수술 처치",
+        "응급 대응 중증도 분류 협진 프로토콜",
+        "의료 윤리 병원 운영 연구 임상",
+    ],
+}
 
 
 class RetrievalSources:
@@ -86,81 +167,27 @@ class ContextAdvisor:
 
     _STAGE_BUDGET_KEYS = {
         "stage2": "smart_retrieval.stage2_total_budget",
+        "stage3": "smart_retrieval.stage3_total_budget",
         "stage4": "smart_retrieval.stage4_total_budget",
         "director": "smart_retrieval.director_total_budget",
     }
 
     _STAGE_ENABLED_KEYS = {
         "stage2": "smart_retrieval.stage2_enabled",
+        "stage3": "smart_retrieval.stage3_enabled",
         "stage4": "smart_retrieval.stage4_enabled",
         "director": "smart_retrieval.director_enabled",
     }
 
     _STAGE_QUERY_CAPS = {
         "stage2": 5,
+        "stage3": 6,
         "stage4": 8,
         "director": 5,
     }
 
-    _GENRE_HINTS = {
-        "hunter": [
-            "던전 클리어 각성 스킬 랭크",
-            "보스 공략 파티 구성 전투 손실 회복",
-            "게이트 붕괴 레이드 보상 길드 경쟁",
-            "검술 체술 사격 마법 복합 전투",
-            "장비 강화 제작 재료 경매 자원 채굴",
-        ],
-        "investment": [
-            "포트폴리오 자산배분 주식 채권 부동산",
-            "레버리지 손절 리스크 관리 금리 유동성",
-            "매크로 이벤트 금리 환율 유동성",
-            "원자재 선물 옵션 환헤지 변동성 관리",
-            "M&A 지분 인수 규제 세무 회계",
-        ],
-        "fantasy": [
-            "마법 검술 창술 궁술 체술 전투",
-            "유물 계약 혈통 각성 의식",
-            "왕국 음모 길드 전쟁 봉인 해제",
-            "정령 소환 연금술 룬 각인 제작",
-            "신성력 저주 해제 성물 축복 의식",
-        ],
-        "wuxia": [
-            "검술 내공 경공 권법 장법",
-            "문파 비급 심법 기연 수련",
-            "강호 세력 암투 복수 의리",
-            "영약 단약 독공 해독 경맥",
-        ],
-        "composer": [
-            "작곡 편곡 사운드 디자인 멜로디",
-            "음원 발매 차트 반응 저작권 수익",
-            "공연 리허설 밴드 합주 프로듀싱",
-        ],
-        "cooking": [
-            "식재료 손질 조리법 불 조절 플레이팅",
-            "주방 동선 원가 관리 재고 회전 위생",
-            "메뉴 개발 단골 확보 리뷰 대응 운영",
-        ],
-        "alt_history": [
-            "역사 분기 정치 외교 군사 전략",
-            "산업 기술 도입 개혁 세력 균형",
-            "전쟁 억제 동맹 협상 정보전 심리전",
-        ],
-        "actor": [
-            "대본 분석 캐릭터 구축 감정선 연기",
-            "오디션 캐스팅 촬영 스케줄 현장 대응",
-            "흥행 성적 평단 반응 이미지 관리",
-        ],
-        "sports": [
-            "기술 훈련 체력 강화 경기 운영 전술",
-            "부상 관리 재활 루틴 컨디션 조절",
-            "리그 일정 상대 분석 기록 갱신",
-        ],
-        "medical": [
-            "증상 감별 진단 검사 수술 처치",
-            "응급 대응 중증도 분류 협진 프로토콜",
-            "의료 윤리 병원 운영 연구 임상",
-        ],
-    }
+    # [INF-I7] 장르 힌트 YAML 외부화 — 모듈 로드 시 1회 로딩
+    _GENRE_HINTS = _load_genre_hints()
 
     def __init__(
         self,
@@ -180,6 +207,24 @@ class ContextAdvisor:
             "current_ep": current_ep,
         }
         return self._build_plan("stage2", current_ep, context_data)
+
+    def plan_stage3_retrieval(
+        self,
+        arc_data: dict,
+        prev_blueprints: list[dict] | None = None,
+        current_ep: int = 1,
+        npc_roster: list[Any] | None = None,
+        genre: str = "",
+    ) -> RetrievalPlan:
+        """[S3-I1] Stage 3 Blueprint 생성 시 과거 유사 Blueprint를 SC로 검색."""
+        context_data = {
+            "arc_data": arc_data or {},
+            "prev_blueprints": prev_blueprints or [],
+            "npc_roster": npc_roster or [],
+            "genre": genre or "",
+            "current_ep": current_ep,
+        }
+        return self._build_plan("stage3", current_ep, context_data)
 
     def plan_stage4_retrieval(
         self,
@@ -246,6 +291,8 @@ class ContextAdvisor:
     def _heuristic_plan(self, stage: str, context_data: dict[str, Any]) -> RetrievalPlan:
         if stage == "stage2":
             slots = self._build_stage2_slots(context_data)
+        elif stage == "stage3":
+            slots = self._build_stage3_slots(context_data)
         elif stage == "stage4":
             slots = self._build_stage4_slots(context_data)
         elif stage == "director":
@@ -350,6 +397,63 @@ class ContextAdvisor:
             slots.append(RetrievalSlot("unresolved_plot", f"미해결 복선/보류 플롯: {joined}", priority=1))
         if tactical:
             slots.append(RetrievalSlot("arc_tactical", f"아크 전술 키워드: {tactical[:260]}", priority=2))
+
+        return slots
+
+    def _build_stage3_slots(self, context_data: dict[str, Any]) -> list[RetrievalSlot]:
+        """[S3-I1] Stage 3 Blueprint SC 슬롯: 과거 유사 Blueprint + NPC + 전술 연속성."""
+        arc_data = context_data.get("arc_data", {})
+        npc_names = self._normalize_npc_names(context_data.get("npc_roster", []))
+        prev_blueprints = context_data.get("prev_blueprints", [])
+        genre = str(context_data.get("genre", "")).strip().lower()
+
+        slots: list[RetrievalSlot] = []
+
+        # 1. Arc 전술 키워드 → 과거 유사 블루프린트 검색
+        tactical = str(arc_data.get("tactical_doc", "") or arc_data.get("arc_tactical", "")).strip()
+        if tactical:
+            slots.append(
+                RetrievalSlot(
+                    "similar_blueprint",
+                    f"유사 블루프린트/아크 전술 키워드: {tactical[:300]}",
+                    priority=1,
+                )
+            )
+
+        # 2. NPC 최근 행적 (Blueprint 단계에서도 NPC 연속성 필요)
+        if npc_names:
+            slots.append(
+                RetrievalSlot(
+                    "npc_history",
+                    f"등장 NPC 과거 행적/관계/상태: {' '.join(npc_names[:6])}",
+                    source=RetrievalSources.DB_NPC_HISTORY,
+                    priority=1,
+                )
+            )
+
+        # 3. 직전 Blueprint의 ending_hook → 연결 포인트 검색
+        if prev_blueprints:
+            last_bp = prev_blueprints[-1] if prev_blueprints else {}
+            ending_hook = str(last_bp.get("ending_hook", "") or last_bp.get("cliffhanger", "")).strip()
+            if ending_hook:
+                slots.append(
+                    RetrievalSlot(
+                        "continuity_hook",
+                        f"직전 화 연결 포인트: {ending_hook[:200]}",
+                        priority=1,
+                    )
+                )
+
+        # 4. 미해결 플롯 검색
+        plot_suspension = arc_data.get("plot_suspension", []) or []
+        if plot_suspension:
+            joined = ", ".join(str(item)[:30] for item in plot_suspension[:3])
+            slots.append(RetrievalSlot("unresolved_plot", f"미해결 복선/보류 플롯: {joined}", priority=2))
+
+        # 5. 장르별 컨텍스트
+        if genre in self._GENRE_HINTS:
+            for idx, phrase in enumerate(self._GENRE_HINTS[genre][:1], start=1):
+                slots.append(RetrievalSlot(f"genre_context_{idx}", f"장르 맥락 키워드: {phrase}", priority=3))
 
         return slots
 
@@ -558,7 +662,7 @@ class ContextAdvisor:
         return bool(_threshold(key, True)) if key else True
 
     def _get_stage_budget(self, stage: str) -> int:
-        defaults = {"stage2": 20000, "stage4": 50000, "director": 20000}
+        defaults = {"stage2": 20000, "stage3": 30000, "stage4": 50000, "director": 20000}
         key = self._STAGE_BUDGET_KEYS.get(stage)
         if not key:
             return defaults["stage2"]

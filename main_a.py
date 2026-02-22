@@ -59,87 +59,145 @@ from modules.core.stage4_orchestrator import Stage4Orchestrator  # [V64.P3]
 from modules.core.studio_visualizer import StudioVisualizer
 from modules.core.system import StudioSystem
 from modules.core.vec_memory import VecMemory  # [Phase 4D-2] ChromaDB → sqlite-vec
-from modules.domain.agents.analyst import Analyst
-from modules.domain.agents.arc_corrector import ArcCorrector  # [V60.42] Arc 부분 수정
-from modules.domain.agents.arc_critic import ArcCritic  # [V60.12] Arc 비평가
-from modules.domain.agents.arc_draft_validator import ArcDraftValidator  # [V60.11] Arc 초안 검증기
-from modules.domain.agents.arc_ensemble import ArcEnsembleGenerator  # [V60.11] Arc 앙상블 생성기
-from modules.domain.agents.block_enricher import BlockEnricher  # [V60.10] Treatment Block 농축 에이전트
-from modules.domain.agents.consensus_validator import ConsensusValidator  # [V60.12] 합의 검증기
-from modules.domain.agents.constraint_compiler import ConstraintCompiler  # [V60.11] 제약 컴파일러
-from modules.domain.agents.continuity_inspector import ContinuityInspector  # [V48] 연속성 검증 에이전트
-from modules.domain.agents.critic import Critic  # [V52.2] 비평가 에이전트
-from modules.domain.agents.director import Director
-from modules.domain.agents.four_phase_arc_generator import FourPhaseArcGenerator  # [V60.12] 4단계 Arc 생성기
-from modules.domain.agents.manager import Manager
-from modules.domain.agents.preflight_checker import PreflightChecker  # [V60.12] 생성 전 분석
-from modules.domain.agents.state_extractor import StateExtractor  # [V60.10] 상태 추출 에이전트
-from modules.domain.agents.state_locked_arc_generator import StateLockedArcGenerator  # [V60.14] 상태 잠금 Arc 생성기
-from modules.domain.agents.state_tracker import StateTracker  # [V60.94] 상태 추적기 (NPC 생사, 무공 습득)
-from modules.domain.agents.three_phase_blueprint_generator import (
-    ThreePhaseBlueprintGenerator,  # [V60.80] 3단계 Blueprint 생성기
-)
-from modules.domain.agents.weaver import Weaver
 
-# [V65] Architect 삭제 (완전 레거시 — ThreePhaseBlueprintGenerator로 대체됨)
-from modules.domain.agents.writer import Writer
+# [INF-I8] Stage 전용 에이전트 및 V50 모듈은 lazy import로 전환
+# _attach_agents() 진입 시에만 import하여 초기 로드 시간 절감
+# 아래 변수만 미리 선언 (boot 전 참조 방어)
+V50_MODULES_AVAILABLE = False  # _attach_agents()에서 실제 판정
+STAGE0_AVAILABLE = False  # _lazy_load_stage0()에서 실제 판정
 
-# [V65] ConstraintDB 미사용 import 삭제
 
-# [V60.95] Stage 0 모듈 - 프로젝트 초기화 및 역설계
-try:
-    from modules.core.stage0 import PresetRegistry, StyleGuide
+def _lazy_load_stage0():
+    """[INF-I8] Stage 0 모듈 lazy import"""
+    global STAGE0_AVAILABLE
+    try:
+        from modules.core.stage0 import PresetRegistry, StyleGuide  # noqa: F811
 
-    STAGE0_AVAILABLE = True
-except ImportError as e:
-    print(f"[!] Stage 0 모듈 로드 실패: {e}")
-    STAGE0_AVAILABLE = False
+        STAGE0_AVAILABLE = True
+        return PresetRegistry, StyleGuide
+    except ImportError as e:
+        print(f"[!] Stage 0 모듈 로드 실패: {e}")
+        STAGE0_AVAILABLE = False
+        return None, None
 
-# [V50] 서사 품질 향상 모듈
-try:
-    # [V65] V50.1~V51.1 삭제: TensionCurveManager, DialogueQualityEngine, SubplotWeaver, ReaderSimulator
-    # [V65] PacingAnalyzer 재연결 완료
-    # Stage 4 V2 전환 이후 호출 경로 없음 — 모듈 파일은 보존 (재연결 가능)
-    from modules.core.adaptive_retry import get_adaptive_manager  # [V54.3] 적응형 재시도
-    from modules.core.adversarial_self_play import AdversarialSelfPlay  # [V53.6] 적대적 자기 대결
-    from modules.core.agent_intelligence import AgentIntelligence  # [V51.3] 에이전트 지능 향상
 
-    # [V65] TwoPhaseGenerator 삭제 (Dead Code — Stage 4 V2 전환으로 미사용)
-    # [Phase 4D-4] SuccessPatternMemory 삭제 (blueprint_memory.py → ChromaDB 레거시 제거)
-    from modules.core.chain_of_verification import ChainOfVerification  # [V53.2] 사실 검증 체인
-    from modules.core.character_voice import CharacterVoiceTracker  # [V51.5] 캐릭터 음성 추적
-    from modules.core.character_voice_profiler import CharacterVoiceProfiler  # [V60.26] 캐릭터 음성 프로파일러 (V58)
-    from modules.core.confidence_calibration import ConfidenceCalibrator  # [V53.3] 신뢰도 보정
-    from modules.core.constitutional_checker import ConstitutionalChecker  # [V55.2] 헌법적 자기검증
-    from modules.core.context_advisor import ContextAdvisor  # [SC] Smart Context Retrieval
-    from modules.core.cross_agent_verifier import CrossAgentVerifier  # [V52.4] 교차 검증
-    from modules.core.dynamic_prompt_weighting import DynamicPromptWeighter  # [V53.1] 동적 프롬프트 가중치
-    from modules.core.emotion_tracker import EmotionArcTracker  # [V60.26] 감정선 추적
-    from modules.core.expert_mixture import ExpertMixture  # [V52.3] 전문가 혼합
-    from modules.core.failure_learning import FailureLearner  # [V51.4] 실패 학습 시스템
-    from modules.core.foreshadow_tracker import ForeshadowTracker  # [V51.6] 복선 추적
-    from modules.core.multi_agent_deliberation import MultiAgentDeliberation  # [V53.7] 다중 에이전트 토론
-    from modules.core.pacing_analyzer import PacingAnalyzer  # [V65] 호흡 분석기 재연결
-    from modules.core.pass_rate_monitor import PassRateMonitor  # [V55.3] 통과율 모니터
-    from modules.core.power_scaling import PowerScalingTracker  # [V60.26] 파워 스케일링 추적
-    from modules.core.pre_director_checklist import PreDirectorChecklist  # [V53.4] 사전 체크리스트
-    from modules.core.quality_amplifier import QualityAmplifier  # [V51.2] 품질 증폭기
-    from modules.core.quality_dashboard import QualityDashboard  # [V60] 품질 대시보드
-    from modules.core.self_reflection import SelfReflector  # [V52.1] 자기 성찰
+def _lazy_load_agents():
+    """[INF-I8] Stage 전용 에이전트 lazy import — _attach_agents()에서 호출"""
+    from modules.domain.agents.analyst import Analyst
+    from modules.domain.agents.arc_corrector import ArcCorrector
+    from modules.domain.agents.arc_critic import ArcCritic
+    from modules.domain.agents.arc_draft_validator import ArcDraftValidator
+    from modules.domain.agents.arc_ensemble import ArcEnsembleGenerator
+    from modules.domain.agents.consensus_validator import ConsensusValidator
+    from modules.domain.agents.constraint_compiler import ConstraintCompiler
+    from modules.domain.agents.continuity_inspector import ContinuityInspector
+    from modules.domain.agents.critic import Critic
+    from modules.domain.agents.director import Director
+    from modules.domain.agents.four_phase_arc_generator import FourPhaseArcGenerator
+    from modules.domain.agents.manager import Manager
+    from modules.domain.agents.preflight_checker import PreflightChecker
+    from modules.domain.agents.state_extractor import StateExtractor
+    from modules.domain.agents.state_locked_arc_generator import StateLockedArcGenerator
+    from modules.domain.agents.state_tracker import StateTracker  # noqa: F811
+    from modules.domain.agents.three_phase_blueprint_generator import ThreePhaseBlueprintGenerator
+    from modules.domain.agents.weaver import Weaver
+    from modules.domain.agents.writer import Writer
 
-    # [V54] 비용 절감 + 품질 향상 모듈
-    from modules.core.semantic_item_registry import SemanticItemRegistry  # [V60.26] 의미적 아이템 레지스트리
-    from modules.core.stage2_optimizer import create_stage2_optimizer  # [V60.25] [V65] Stage2Optimizer 미사용 삭제
-    from modules.core.state_delta_tracker import StateDeltaTracker  # [V60.26] 상태 변화 추적
-    from modules.core.tree_of_thoughts import TreeOfThoughts  # [V53.5] Tree of Thoughts
-    from modules.core.writer_template import WriterTemplate  # [V55.3] 원고 템플릿
+    return {
+        "Analyst": Analyst,
+        "ArcCorrector": ArcCorrector,
+        "ArcCritic": ArcCritic,
+        "ArcDraftValidator": ArcDraftValidator,
+        "ArcEnsembleGenerator": ArcEnsembleGenerator,
+        "ConsensusValidator": ConsensusValidator,
+        "ConstraintCompiler": ConstraintCompiler,
+        "ContinuityInspector": ContinuityInspector,
+        "Critic": Critic,
+        "Director": Director,
+        "FourPhaseArcGenerator": FourPhaseArcGenerator,
+        "Manager": Manager,
+        "PreflightChecker": PreflightChecker,
+        "StateExtractor": StateExtractor,
+        "StateLockedArcGenerator": StateLockedArcGenerator,
+        "StateTracker": StateTracker,
+        "ThreePhaseBlueprintGenerator": ThreePhaseBlueprintGenerator,
+        "Weaver": Weaver,
+        "Writer": Writer,
+    }
 
-    V50_MODULES_AVAILABLE = True
-except ImportError as e:
-    V50_MODULES_AVAILABLE = False
-    print(f"⚠️ [V50] 일부 모듈 미설치: {e}")
 
-# [V65] 모듈 가용성 플래그를 spinners 모듈에 동기화 (orchestrator 순환 참조 해소)
+def _lazy_load_v50_modules():
+    """[INF-I8] V50 서사 품질 향상 모듈 lazy import — _attach_agents()에서 호출"""
+    global V50_MODULES_AVAILABLE
+    try:
+        from modules.core.adaptive_retry import get_adaptive_manager
+        from modules.core.adversarial_self_play import AdversarialSelfPlay
+        from modules.core.agent_intelligence import AgentIntelligence
+        from modules.core.chain_of_verification import ChainOfVerification
+        from modules.core.character_voice import CharacterVoiceTracker
+        from modules.core.character_voice_profiler import CharacterVoiceProfiler
+        from modules.core.confidence_calibration import ConfidenceCalibrator
+        from modules.core.constitutional_checker import ConstitutionalChecker
+        from modules.core.context_advisor import ContextAdvisor
+        from modules.core.cross_agent_verifier import CrossAgentVerifier
+        from modules.core.dynamic_prompt_weighting import DynamicPromptWeighter
+        from modules.core.emotion_tracker import EmotionArcTracker
+        from modules.core.expert_mixture import ExpertMixture
+        from modules.core.failure_learning import FailureLearner
+        from modules.core.foreshadow_tracker import ForeshadowTracker
+        from modules.core.multi_agent_deliberation import MultiAgentDeliberation
+        from modules.core.pacing_analyzer import PacingAnalyzer
+        from modules.core.pass_rate_monitor import PassRateMonitor
+        from modules.core.power_scaling import PowerScalingTracker
+        from modules.core.pre_director_checklist import PreDirectorChecklist
+        from modules.core.quality_amplifier import QualityAmplifier
+        from modules.core.quality_dashboard import QualityDashboard
+        from modules.core.self_reflection import SelfReflector
+        from modules.core.semantic_item_registry import SemanticItemRegistry
+        from modules.core.stage2_optimizer import create_stage2_optimizer
+        from modules.core.state_delta_tracker import StateDeltaTracker
+        from modules.core.tree_of_thoughts import TreeOfThoughts
+        from modules.core.writer_template import WriterTemplate
+
+        V50_MODULES_AVAILABLE = True
+        return {
+            "get_adaptive_manager": get_adaptive_manager,
+            "AdversarialSelfPlay": AdversarialSelfPlay,
+            "AgentIntelligence": AgentIntelligence,
+            "ChainOfVerification": ChainOfVerification,
+            "CharacterVoiceTracker": CharacterVoiceTracker,
+            "CharacterVoiceProfiler": CharacterVoiceProfiler,
+            "ConfidenceCalibrator": ConfidenceCalibrator,
+            "ConstitutionalChecker": ConstitutionalChecker,
+            "ContextAdvisor": ContextAdvisor,
+            "CrossAgentVerifier": CrossAgentVerifier,
+            "DynamicPromptWeighter": DynamicPromptWeighter,
+            "EmotionArcTracker": EmotionArcTracker,
+            "ExpertMixture": ExpertMixture,
+            "FailureLearner": FailureLearner,
+            "ForeshadowTracker": ForeshadowTracker,
+            "MultiAgentDeliberation": MultiAgentDeliberation,
+            "PacingAnalyzer": PacingAnalyzer,
+            "PassRateMonitor": PassRateMonitor,
+            "PowerScalingTracker": PowerScalingTracker,
+            "PreDirectorChecklist": PreDirectorChecklist,
+            "QualityAmplifier": QualityAmplifier,
+            "QualityDashboard": QualityDashboard,
+            "SelfReflector": SelfReflector,
+            "SemanticItemRegistry": SemanticItemRegistry,
+            "create_stage2_optimizer": create_stage2_optimizer,
+            "StateDeltaTracker": StateDeltaTracker,
+            "TreeOfThoughts": TreeOfThoughts,
+            "WriterTemplate": WriterTemplate,
+        }
+    except ImportError as e:
+        V50_MODULES_AVAILABLE = False
+        print(f"⚠️ [V50] 일부 모듈 미설치: {e}")
+        return None
+
+
+# [V65][INF-I8] 모듈 가용성 플래그 — lazy import 전환으로 boot 시 동기화
+# 초기값 False, _attach_agents()에서 실제 import 후 동기화
 _spinners_mod.V50_MODULES_AVAILABLE = V50_MODULES_AVAILABLE
 _spinners_mod.STAGE0_AVAILABLE = STAGE0_AVAILABLE
 
@@ -1187,6 +1245,8 @@ class SovereignApp:
 
             # 2. BlockEnricher 초기화 (context, client, model_tier 순서로 전달)
             # [V60.24] Flash (농축용)
+            from modules.domain.agents.block_enricher import BlockEnricher  # [INF-I8] lazy import
+
             enricher = BlockEnricher(self.current_project, self.sys.api_client, model_tier=_FLASH_ANALYSIS_MODEL)
 
             # 3. 각 Block 분석 및 농축 필요 여부 확인
@@ -1305,6 +1365,7 @@ class SovereignApp:
     def _attach_agents(self) -> bool:
         """
         [V38 패치] 방어적 에이전트 초기화
+        [INF-I8] lazy import 적용 — 에이전트/V50 모듈을 이 시점에서만 import
 
         시스템에 필요한 모든 AI 에이전트(Analyst, Architect, Writer, Director,
         Manager, Weaver)를 초기화합니다.
@@ -1313,6 +1374,38 @@ class SovereignApp:
             bool: 초기화 성공 여부
         """
         try:
+            # [INF-I8] Stage 전용 에이전트 lazy import
+            global V50_MODULES_AVAILABLE, STAGE0_AVAILABLE
+            _agents = _lazy_load_agents()
+            Analyst = _agents["Analyst"]
+            ArcCorrector = _agents["ArcCorrector"]
+            ArcCritic = _agents["ArcCritic"]
+            ArcDraftValidator = _agents["ArcDraftValidator"]
+            ArcEnsembleGenerator = _agents["ArcEnsembleGenerator"]
+            ConsensusValidator = _agents["ConsensusValidator"]
+            ConstraintCompiler = _agents["ConstraintCompiler"]
+            ContinuityInspector = _agents["ContinuityInspector"]
+            Critic = _agents["Critic"]
+            Director = _agents["Director"]
+            FourPhaseArcGenerator = _agents["FourPhaseArcGenerator"]
+            Manager = _agents["Manager"]
+            PreflightChecker = _agents["PreflightChecker"]
+            StateExtractor = _agents["StateExtractor"]
+            StateLockedArcGenerator = _agents["StateLockedArcGenerator"]
+            ThreePhaseBlueprintGenerator = _agents["ThreePhaseBlueprintGenerator"]
+            Weaver = _agents["Weaver"]
+            Writer = _agents["Writer"]
+
+            # [INF-I8] V50 모듈 lazy import
+            _v50 = _lazy_load_v50_modules()
+
+            # [INF-I8] Stage 0 lazy import
+            _lazy_load_stage0()
+
+            # [V65][INF-I8] spinners 모듈에 가용성 플래그 동기화 (lazy import 후)
+            _spinners_mod.V50_MODULES_AVAILABLE = V50_MODULES_AVAILABLE
+            _spinners_mod.STAGE0_AVAILABLE = STAGE0_AVAILABLE
+
             models = self._get_agent_model_map()
 
             if not models:
@@ -1393,7 +1486,8 @@ class SovereignApp:
             )
             self.use_arc_corrector = True  # [V60.42] 기본 활성화 (False로 설정하면 비활성화)
             # [V60.25] Stage 2 Optimizer - 통과율 최적화
-            self.stage2_optimizer = create_stage2_optimizer() if V50_MODULES_AVAILABLE else None
+            create_stage2_optimizer = _v50["create_stage2_optimizer"] if _v50 else None
+            self.stage2_optimizer = create_stage2_optimizer() if create_stage2_optimizer else None
             self.ui.log("   🔧 [V60.11] Stage 2 고도화 모듈 초기화 (Ensemble + DraftValidator + ConstraintCompiler)")
             self.ui.log(
                 "   🚀 [V60.12] Stage 2 초기통과율 극대화 모듈 초기화 (FourPhase + Preflight + Critic + Consensus)"
@@ -1498,23 +1592,23 @@ class SovereignApp:
             # ═══════════════════════════════════════════════════════════════
             # [V50] 서사 품질 향상 모듈 초기화
             # ═══════════════════════════════════════════════════════════════
-            if V50_MODULES_AVAILABLE:
+            if V50_MODULES_AVAILABLE and _v50:
                 try:
                     genre_type = self.selected_genre.get("type", "wuxia") if self.selected_genre else "wuxia"
 
                     # [V65] V50.1~V51.1 초기화 삭제 (Dead Code 정리)
 
                     # [V65] V51.1 호흡 분석기 재연결
-                    self.pacing_analyzer = PacingAnalyzer()
+                    self.pacing_analyzer = _v50["PacingAnalyzer"]()
 
                     # V51.2 품질 증폭기
-                    self.quality_amplifier = QualityAmplifier()
+                    self.quality_amplifier = _v50["QualityAmplifier"]()
 
                     # V51.3 에이전트 지능 향상
-                    self.agent_intelligence = AgentIntelligence(genre=genre_type)
+                    self.agent_intelligence = _v50["AgentIntelligence"](genre=genre_type)
 
                     # V51.4 실패 학습 시스템
-                    self.failure_learner = FailureLearner()
+                    self.failure_learner = _v50["FailureLearner"]()
                     # 프로젝트별 실패 기록 로드 시도
                     failure_log_path = os.path.join(
                         self._PROJECTS_DIR, self.current_project.name, "logs", "failure_learning.json"
@@ -1524,7 +1618,7 @@ class SovereignApp:
                         self.ui.log(f"   📚 [V51.4] 실패 기록 {len(self.failure_learner.records)}건 로드")
 
                     # V51.5 캐릭터 음성 추적
-                    self.character_voice = CharacterVoiceTracker()
+                    self.character_voice = _v50["CharacterVoiceTracker"]()
                     voice_log_path = os.path.join(
                         self._PROJECTS_DIR, self.current_project.name, "logs", "character_voice.json"
                     )
@@ -1533,7 +1627,7 @@ class SovereignApp:
                         self.ui.log(f"   🎭 [V51.5] 캐릭터 음성 {len(self.character_voice.profiles)}명 로드")
 
                     # V51.6 복선 추적
-                    self.foreshadow_tracker = ForeshadowTracker()
+                    self.foreshadow_tracker = _v50["ForeshadowTracker"]()
                     foreshadow_log_path = os.path.join(
                         self._PROJECTS_DIR, self.current_project.name, "logs", "foreshadow.json"
                     )
@@ -1562,7 +1656,7 @@ class SovereignApp:
                     # ============================================================
 
                     # V60.26-1 감정선 추적
-                    self.emotion_tracker = EmotionArcTracker(self.current_project)
+                    self.emotion_tracker = _v50["EmotionArcTracker"](self.current_project)
                     # [V70] JSON 파일이 아닌 DB anchor에서 직접 로드 (emotion_arc.json은 미생성)
                     try:
                         self.emotion_tracker.load_from_db(self.current_project.db)
@@ -1576,19 +1670,19 @@ class SovereignApp:
                         self.ui.log("   💓 [V60.26] 감정선 추적기 활성화")
 
                     # V60.26-2 파워 스케일링 추적
-                    self.power_scaling = PowerScalingTracker()
+                    self.power_scaling = _v50["PowerScalingTracker"]()
                     self.ui.log("   ⚡ [V60.26] 파워 스케일링 추적기 활성화")
 
                     # V60.26-3 상태 변화 추적
-                    self.state_delta_tracker = StateDeltaTracker()
+                    self.state_delta_tracker = _v50["StateDeltaTracker"]()
                     self.ui.log("   📊 [V60.26] 상태 변화 추적기 활성화")
 
                     # V60.26-4 의미적 아이템 레지스트리
-                    self.semantic_item_registry = SemanticItemRegistry()
+                    self.semantic_item_registry = _v50["SemanticItemRegistry"]()
                     self.ui.log("   📦 [V60.26] 의미적 아이템 레지스트리 활성화")
 
                     # V60.26-5 캐릭터 음성 프로파일러 (V58, 기존 V51.5보다 고급)
-                    self.voice_profiler = CharacterVoiceProfiler()
+                    self.voice_profiler = _v50["CharacterVoiceProfiler"]()
                     voice_profiler_path = os.path.join(
                         self._PROJECTS_DIR, self.current_project.name, "logs", "voice_profiles.json"
                     )
@@ -1612,61 +1706,61 @@ class SovereignApp:
                         self.ui.log("   🎭 [V60.26] 캐릭터 음성 프로파일러 활성화")
 
                     # V52.1 자기 성찰 체인
-                    self.self_reflector = SelfReflector(
+                    self.self_reflector = _v50["SelfReflector"](
                         api_client=self.sys.api_client,
                         model=_V50_MODULE_MODEL,  # [V65] 중앙 상수
                     )
                     self.ui.log("   🔄 [V52.1] Self-Reflection Chain 활성화")
 
                     # V52.3 전문가 혼합
-                    self.expert_mixture = ExpertMixture(genre=genre_type)
+                    self.expert_mixture = _v50["ExpertMixture"](genre=genre_type)
                     self.ui.log(f"   🎯 [V52.3] Expert Mixture 활성화 ({genre_type})")
 
                     # V52.4 교차 에이전트 검증
-                    self.cross_verifier = CrossAgentVerifier(
+                    self.cross_verifier = _v50["CrossAgentVerifier"](
                         api_client=self.sys.api_client,
                         model=_V50_MODULE_MODEL,  # [V65] 중앙 상수
                     )
                     self.ui.log("   🔗 [V52.4] Cross-Agent Verifier 활성화")
 
                     # V53.1 동적 프롬프트 가중치
-                    self.prompt_weighter = DynamicPromptWeighter(failure_learner=self.failure_learner)
+                    self.prompt_weighter = _v50["DynamicPromptWeighter"](failure_learner=self.failure_learner)
                     self.ui.log("   ⚖️ [V53.1] Dynamic Prompt Weighter 활성화")
 
                     # V53.2 사실 검증 체인
-                    self.chain_of_verification = ChainOfVerification(
+                    self.chain_of_verification = _v50["ChainOfVerification"](
                         api_client=self.sys.api_client,
                         model=_V50_MODULE_MODEL,  # [V65] 중앙 상수
                     )
                     self.ui.log("   🔍 [V53.2] Chain-of-Verification 활성화")
 
                     # V53.3 신뢰도 보정
-                    self.confidence_calibrator = ConfidenceCalibrator(
+                    self.confidence_calibrator = _v50["ConfidenceCalibrator"](
                         api_client=self.sys.api_client,
                         use_llm=False,  # Python 휴리스틱만 (비용 0)
                     )
                     self.ui.log("   📊 [V53.3] Confidence Calibrator 활성화")
 
                     # V53.4 사전 체크리스트
-                    self.pre_director_checklist = PreDirectorChecklist()
+                    self.pre_director_checklist = _v50["PreDirectorChecklist"]()
                     self.ui.log("   ✅ [V53.4] Pre-Director Checklist 활성화")
 
                     # V53.5 Tree of Thoughts
-                    self.tree_of_thoughts = TreeOfThoughts(
+                    self.tree_of_thoughts = _v50["TreeOfThoughts"](
                         api_client=self.sys.api_client,
                         model=AIModels.STAGE2_MAIN_MODEL,  # [V65] 중앙 상수
                     )
                     self.ui.log("   🌳 [V53.5] Tree of Thoughts 활성화 (Gemini 3)")
 
                     # V53.6 적대적 자기 대결
-                    self.adversarial_self_play = AdversarialSelfPlay(
+                    self.adversarial_self_play = _v50["AdversarialSelfPlay"](
                         api_client=self.sys.api_client,
                         model=_V50_MODULE_MODEL,  # [V65] 중앙 상수
                     )
                     self.ui.log("   ⚔️ [V53.6] Adversarial Self-Play 활성화")
 
                     # V53.7 다중 에이전트 토론
-                    self.multi_agent_deliberation = MultiAgentDeliberation(
+                    self.multi_agent_deliberation = _v50["MultiAgentDeliberation"](
                         api_client=self.sys.api_client,
                         model=_V50_MODULE_MODEL,  # [V65] 중앙 상수
                     )
@@ -1677,7 +1771,7 @@ class SovereignApp:
                     # ============================================================
 
                     # V54.3 적응형 재시도 관리자
-                    self.adaptive_manager = get_adaptive_manager()
+                    self.adaptive_manager = _v50["get_adaptive_manager"]()
                     # [V54.3.1] FailureLearner 연동
                     if self.failure_learner:
                         self.adaptive_manager.connect_failure_learner(self.failure_learner)
@@ -1690,24 +1784,24 @@ class SovereignApp:
                     # [Phase 4D-4] SuccessPatternMemory 삭제 (ChromaDB 레거시 제거)
 
                     # V55.2 헌법적 자기검증
-                    self.constitutional_checker = ConstitutionalChecker(genre=genre_type)
+                    self.constitutional_checker = _v50["ConstitutionalChecker"](genre=genre_type)
                     self.ui.log("   📜 [V55.2] Constitutional Checker 활성화")
 
                     # V55.3 원고 템플릿
-                    self.writer_template = WriterTemplate(genre=genre_type)
+                    self.writer_template = _v50["WriterTemplate"](genre=genre_type)
                     self.ui.log("   📝 [V55.3] Writer Template 활성화")
 
                     # V55.3 통과율 모니터
                     project_path = str(self.current_project.paths.root) if self.current_project else "."
-                    self.pass_rate_monitor = PassRateMonitor(project_path)
+                    self.pass_rate_monitor = _v50["PassRateMonitor"](project_path)
                     self.ui.log("   📊 [V55.3] Pass Rate Monitor 활성화")
 
                     # V60 품질 대시보드
-                    self.quality_dashboard = QualityDashboard(Path(project_path))
+                    self.quality_dashboard = _v50["QualityDashboard"](Path(project_path))
                     self.ui.log("   📊 [V60] Quality Dashboard 활성화")
 
                     # [SC] Smart Context Retrieval
-                    self.context_advisor = ContextAdvisor()
+                    self.context_advisor = _v50["ContextAdvisor"]()
                     self.ui.log("   🧭 [SC] Context Advisor 활성화")
 
                     self.ui.log(f"   📊 [V50~V60] 서사 품질 모듈 초기화 완료 (장르: {genre_type})")
@@ -2620,8 +2714,9 @@ class SovereignApp:
         self.ui.log(f"✅ [{selected['name']}] 전문 공정이 선택되었습니다.")
         self.ui.log(f"   📌 HUD 시스템: {selected['type'].upper()}")
 
-        # [V60.95] PresetRegistry 초기화
-        if STAGE0_AVAILABLE:
+        # [V60.95] PresetRegistry 초기화 — [INF-I8] lazy import 적용
+        _PresetRegistry, _ = _lazy_load_stage0()
+        if STAGE0_AVAILABLE and _PresetRegistry:
             genre_map = {
                 GenreTypes.WUXIA: "wuxia",
                 GenreTypes.HUNTER: "hunter",
@@ -2635,7 +2730,7 @@ class SovereignApp:
                 GenreTypes.MEDICAL: "medical",
             }
             base_genre = genre_map.get(selected["type"], "wuxia")
-            self.preset_registry = PresetRegistry(base_genre=base_genre)
+            self.preset_registry = _PresetRegistry(base_genre=base_genre)
             self.ui.log(f"   📦 프리셋 초기화: {base_genre}")
 
         input("\n[Enter] 프로젝트 선택으로 이동")
@@ -2908,7 +3003,9 @@ class SovereignApp:
         # ═══════════════════════════════════════════════════════════════
         if not hasattr(self, "state_tracker") or self.state_tracker is None:
             try:
-                self.state_tracker = StateTracker(preset_registry=self.preset_registry, llm_client=self.sys.api_client)
+                from modules.domain.agents.state_tracker import StateTracker as _StateTracker  # [INF-I8] lazy import
+
+                self.state_tracker = _StateTracker(preset_registry=self.preset_registry, llm_client=self.sys.api_client)
                 all_arcs = self.current_project.db.load_anchor("arcs") or []
                 _g = self.selected_genre.get("type", "") if self.selected_genre else ""
                 self.state_tracker.full_extract_from_arcs(all_arcs, genre=_g)

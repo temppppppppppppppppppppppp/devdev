@@ -1224,6 +1224,72 @@ class StateTracker:
         return self._npc.get_protagonist_skills_summary()
 
     # ═══════════════════════════════════════════════════════════════
+    # [S4-I2] 통합 요약 메서드
+    # ═══════════════════════════════════════════════════════════════
+
+    def get_all_summaries(self, *, arc_no: int = 0, genre: str = "") -> dict[str, str]:
+        """[S4-I2] 16종 get_XXX_summary() 호출 결과를 dict로 통합 반환.
+
+        빈 문자열인 항목은 포함하되 None은 제외한다.
+        stage4_context_builder 등에서 일괄 수집에 사용.
+
+        Args:
+            arc_no: 현재 Arc 번호 (plot_suspension_summary에 필요).
+            genre: 장르 코드 (``'investment'``이면 financial 요약 포함).
+
+        Returns:
+            ``{ summary_name: summary_text }`` 딕셔너리.
+        """
+        summaries: dict[str, str] = {}
+
+        # 16종 기본 요약
+        _methods: list[tuple[str, str]] = [
+            ("entity_destruction", "get_entity_destruction_summary"),
+            ("resolved_plots", "get_resolved_plots_summary"),
+            ("npc_personality", "get_npc_personality_summary"),
+            ("npc_npc_relationship", "get_npc_npc_relationship_summary"),
+            ("permanent_injury", "get_permanent_injury_summary"),
+            ("time_timeline", "get_time_timeline_summary"),
+            ("companion", "get_companion_summary"),
+            ("commitment", "get_commitment_summary"),
+            ("protagonist_emotion", "get_protagonist_emotion_summary"),
+            ("item_state", "get_item_state_summary"),
+            ("npc_dialogue_style", "get_npc_dialogue_style_summary"),
+            ("relationship_changes", "get_relationship_changes_summary"),
+            ("npc_injury", "get_npc_injury_summary"),
+            ("npc_movement", "get_npc_movement_summary"),
+            ("protagonist_skills", "get_protagonist_skills_summary"),
+            ("dead_npc", "get_dead_npc_summary"),
+        ]
+
+        for key, method_name in _methods:
+            try:
+                val = getattr(self, method_name)()
+                if val is not None:
+                    summaries[key] = val
+            except Exception as exc:
+                logging.warning("[S4-I2] %s() 실패 (무시): %s", method_name, exc)
+
+        # arc_no 필요 메서드
+        try:
+            val = self.get_plot_suspension_summary(arc_no)
+            if val is not None:
+                summaries["plot_suspension"] = val
+        except Exception as exc:
+            logging.warning("[S4-I2] get_plot_suspension_summary() 실패 (무시): %s", exc)
+
+        # 투자물 전용
+        if genre == "investment":
+            try:
+                val = self.get_financial_state_summary()
+                if val is not None:
+                    summaries["financial_state"] = val
+            except Exception as exc:
+                logging.warning("[S4-I2] get_financial_state_summary() 실패 (무시): %s", exc)
+
+        return summaries
+
+    # ═══════════════════════════════════════════════════════════════
     # [V66] 멀티-Arc 요약
     # ═══════════════════════════════════════════════════════════════
 

@@ -178,9 +178,11 @@ feature_flags:
 smart_retrieval:
   enabled: false
   stage2_enabled: false
+  stage3_enabled: false
   stage4_enabled: false
   director_enabled: false
   stage2_total_budget: 20000
+  stage3_total_budget: 30000
   stage4_total_budget: 50000
   director_total_budget: 20000
   max_queries_per_plan: 8

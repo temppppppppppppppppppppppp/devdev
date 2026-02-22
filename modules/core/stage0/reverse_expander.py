@@ -9,6 +9,7 @@ import json
 import logging
 import os
 import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -365,16 +366,47 @@ JSON:
 
         return {"ep_num": draft["ep_num"], "hud_snapshot": {}, "changes": [], "new_npcs": [], "key_events": []}
 
+    _BATCH_SIZE = 5  # [S0-I4] 배치 크기
+    _MAX_WORKERS = 3  # [S0-I4] API rate limit 고려
+
     def extract_episode_bibles(self) -> list[dict[str, Any]]:
-        """회차별 상태 변화 추출"""
+        """회차별 상태 변화 추출 — [S0-I4] 5화 단위 배치 병렬화"""
         self.episode_bibles = []
         schema = self.preset_registry.get_schema_for_prompt() if self.preset_registry else ""
 
-        for draft in self.raw_drafts:
-            logging.info(f"회차 {draft['ep_num']} 상태 추출...")
+        drafts = self.raw_drafts
+        total = len(drafts)
+        for batch_start in range(0, total, self._BATCH_SIZE):
+            batch = drafts[batch_start : batch_start + self._BATCH_SIZE]
             prev_state = self.episode_bibles[-1] if self.episode_bibles else {}
-            self.episode_bibles.append(self._extract_single_episode_bible(draft, prev_state, schema))
+            logging.info(
+                f"[S0-I4] 배치 병렬 추출 시작: {batch[0]['ep_num']}~{batch[-1]['ep_num']}화 "
+                f"({len(batch)}건, workers={self._MAX_WORKERS})"
+            )
+            batch_results: dict[int, dict] = {}
+            with ThreadPoolExecutor(max_workers=self._MAX_WORKERS) as pool:
+                future_map = {
+                    pool.submit(self._extract_single_episode_bible, draft, prev_state, schema): draft["ep_num"]
+                    for draft in batch
+                }
+                for future in as_completed(future_map):
+                    ep_num = future_map[future]
+                    try:
+                        batch_results[ep_num] = future.result()
+                    except Exception as exc:
+                        logging.warning(f"[S0-I4] 제{ep_num}화 병렬 추출 실패: {exc}")
+                        batch_results[ep_num] = {
+                            "ep_num": ep_num,
+                            "hud_snapshot": {},
+                            "changes": [],
+                            "new_npcs": [],
+                            "key_events": [],
+                        }
+            # 배치 내 결과를 원래 순서대로 추가
+            for draft in batch:
+                self.episode_bibles.append(batch_results[draft["ep_num"]])
 
+        logging.info(f"[S0-I4] 전체 배치 병렬 추출 완료: {len(self.episode_bibles)}건")
         return self.episode_bibles
 
     # ============================================
@@ -588,17 +620,40 @@ JSON:
         return self.bible, self.episode_bibles, self.style_guide
 
     def _extract_episode_bibles_with_progress(self) -> None:
-        """스피너와 함께 회차별 상태 추출"""
+        """스피너와 함께 회차별 상태 추출 — [S0-I4] 5화 단위 배치 병렬화"""
         self.episode_bibles = []
         schema = self.preset_registry.get_schema_for_prompt() if self.preset_registry else ""
 
-        progress = ProgressBar(len(self.raw_drafts), "회차별 상태 추출")
+        drafts = self.raw_drafts
+        total = len(drafts)
+        progress = ProgressBar(total, "회차별 상태 추출")
         progress.start()
 
-        for draft in self.raw_drafts:
-            progress.update(message=f"제{draft['ep_num']}화 처리 중")
+        for batch_start in range(0, total, self._BATCH_SIZE):
+            batch = drafts[batch_start : batch_start + self._BATCH_SIZE]
             prev_state = self.episode_bibles[-1] if self.episode_bibles else {}
-            self.episode_bibles.append(self._extract_single_episode_bible(draft, prev_state, schema))
+            progress.update(message=f"배치 {batch[0]['ep_num']}~{batch[-1]['ep_num']}화 병렬 처리 중")
+            batch_results: dict[int, dict] = {}
+            with ThreadPoolExecutor(max_workers=self._MAX_WORKERS) as pool:
+                future_map = {
+                    pool.submit(self._extract_single_episode_bible, draft, prev_state, schema): draft["ep_num"]
+                    for draft in batch
+                }
+                for future in as_completed(future_map):
+                    ep_num = future_map[future]
+                    try:
+                        batch_results[ep_num] = future.result()
+                    except Exception as exc:
+                        logging.warning(f"[S0-I4] 제{ep_num}화 병렬 추출 실패: {exc}")
+                        batch_results[ep_num] = {
+                            "ep_num": ep_num,
+                            "hud_snapshot": {},
+                            "changes": [],
+                            "new_npcs": [],
+                            "key_events": [],
+                        }
+            for draft in batch:
+                self.episode_bibles.append(batch_results[draft["ep_num"]])
 
         progress.finish(f"회차별 상태 추출 완료 ({len(self.episode_bibles)}개)")
 

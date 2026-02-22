@@ -419,15 +419,78 @@ class Stage3Orchestrator:
         try:
             _bp_semantic_ctx = ""
 
+            # [S3-I1] Smart Context Retrieval — 과거 유사 Blueprint 참조
+            try:
+                _s3_memory = getattr(self.app, "vec_memory", None) or getattr(self.app, "memory", None)
+                _s3_advisor = getattr(self.app, "context_advisor", None)
+                _s3_genre = ""
+                if hasattr(self.app, "selected_genre") and self.app.selected_genre:
+                    _s3_genre = self.app.selected_genre.get("type", "")
+
+                from modules.validation.threshold_helper import _threshold as _s3_th
+
+                _s3_sc_enabled = bool(_s3_th("smart_retrieval.enabled", False)) and bool(
+                    _s3_th("smart_retrieval.stage3_enabled", False)
+                )
+                if _s3_sc_enabled and _s3_advisor and _s3_memory:
+                    _s3_npc_roster = []
+                    if entity_registry and isinstance(entity_registry, dict):
+                        for _cat_items in entity_registry.values():
+                            if isinstance(_cat_items, list):
+                                for _item in _cat_items[:10]:
+                                    _name = _item.get("name", "") if isinstance(_item, dict) else str(_item)
+                                    if _name and _name not in _s3_npc_roster:
+                                        _s3_npc_roster.append(_name)
+
+                    _s3_plan = _s3_advisor.plan_stage3_retrieval(
+                        arc_data=arc_data,
+                        prev_blueprints=prev_blueprints[-5:] if prev_blueprints else [],
+                        current_ep=working_ep,
+                        npc_roster=_s3_npc_roster[:10],
+                        genre=_s3_genre,
+                    )
+                    _s3_parts = []
+                    _s3_max_results = int(_s3_th("context.vector_max_results_s4", 8))
+                    for _slot in getattr(_s3_plan, "slots", []) or []:
+                        _slot_query = str(getattr(_slot, "query", "") or "").strip()
+                        if not _slot_query:
+                            continue
+                        _slot_source = str(getattr(_slot, "source", "vec_memory") or "vec_memory")
+                        _slot_category = str(getattr(_slot, "category", "stage3") or "stage3")
+                        _slot_max = int(getattr(_slot, "max_chars", 0) or 0) or 2000
+                        try:
+                            if _slot_source == "db_npc_history" and hasattr(_s3_memory, "retrieve_npc_context"):
+                                _s3_text = _s3_memory.retrieve_npc_context(
+                                    npc_names=_s3_npc_roster[:5],
+                                    current_ep=working_ep,
+                                    max_results=_s3_max_results,
+                                )
+                            else:
+                                _s3_text = _s3_memory.retrieve_multi_query_context(
+                                    queries=[_slot_query],
+                                    current_ep=working_ep,
+                                    n_per_query=3,
+                                    max_results=_s3_max_results,
+                                )
+                            if _s3_text:
+                                _s3_parts.append(f"[SC:{_slot_category}]\n{str(_s3_text)[:_slot_max]}")
+                        except Exception as _s3_slot_err:
+                            _logging.warning("[SilentPass:SC:Stage3] 슬롯 %s 실패: %s", _slot_category, _s3_slot_err)
+                    if _s3_parts:
+                        _bp_semantic_ctx = "\n\n".join(_s3_parts)
+                        _logging.info("[S3-I1] Stage3 SC 검색 완료: %d건, %d자", len(_s3_parts), len(_bp_semantic_ctx))
+            except Exception as _s3_sc_err:
+                _logging.warning("[SilentPass:SC:Stage3] SC 검색 실패 (비차단): %s", _s3_sc_err)
+
             with StageSpinner(3, f"제{working_ep}화"):
-                # [V67] 이전 원고 로드 (Blueprint 모순 방지용)
+                # [V67][S3-I5] 이전 원고 로드 — 단일 쿼리로 최적화 (N+1 → 1)
                 _prev_ms_for_bp = []
-                for _ms_ep in range(max(1, working_ep - 30), working_ep):
-                    _ms_data = ctx.current_project.db.get_manuscript(_ms_ep)
-                    if _ms_data:
-                        _ms_text = _ms_data.get("content", "") if isinstance(_ms_data, dict) else str(_ms_data)
-                        if _ms_text:
-                            _prev_ms_for_bp.append(f"━━━ 제{_ms_ep}화 원고 ━━━\n{_ms_text}")
+                _recent_manuscripts = ctx.current_project.db.get_recent_manuscripts(before_ep=working_ep, limit=30)
+                for _ms_row in _recent_manuscripts:
+                    _ms_text = _ms_row.get("content", "")
+                    _ms_ep_num = _ms_row.get("ep_num", 0)
+                    if _ms_text:
+                        _prev_ms_for_bp.append(f"━━━ 제{_ms_ep_num}화 원고 ━━━\n{_ms_text}")
                 _prev_ms_text_for_bp = "\n\n".join(_prev_ms_for_bp) if _prev_ms_for_bp else ""
                 if len(_prev_ms_text_for_bp) > ContextLimits.MAX_CONTEXT_CHARS:
                     _prev_ms_text_for_bp = (

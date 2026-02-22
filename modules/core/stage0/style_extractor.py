@@ -597,12 +597,33 @@ JSON만 출력하세요.
         """
         장르별 레퍼런스 폴더에서 스타일 추출
 
+        [S0-I5] 캐싱 강화: style_guide.json으로 결과 캐싱.
+        레퍼런스 파일 mtime이 변경되지 않으면 캐시 사용 (LLM 3-4회 호출 절감).
+
         Args:
             genre: 장르 타입
 
         Returns:
             StyleGuide 또는 None
         """
+        ref_dir = Path("config/style_references") / genre
+        cache_path = ref_dir / "style_guide.json"
+
+        # [S0-I5] 캐시 유효성 검사: 레퍼런스 파일 최신 mtime vs 캐시 mtime
+        if cache_path.exists():
+            try:
+                cache_mtime = cache_path.stat().st_mtime
+                ref_latest_mtime = self._get_latest_ref_mtime(ref_dir)
+                if ref_latest_mtime > 0 and cache_mtime >= ref_latest_mtime:
+                    cached_data = json.loads(cache_path.read_text(encoding="utf-8"))
+                    guide = StyleGuide.from_dict(cached_data)
+                    logging.info(f"[S0-I5] 캐시 히트: {cache_path} (LLM 호출 절감)")
+                    return guide
+                else:
+                    logging.info("[S0-I5] 캐시 만료 — 레퍼런스 파일 변경 감지")
+            except Exception as e:
+                logging.warning(f"[S0-I5] 캐시 로드 실패, 재분석 진행: {e}")
+
         works = self.load_reference_manuscripts(genre)
         if not works:
             return None
@@ -618,7 +639,31 @@ JSON만 출력하세요.
 
         guide = self.extract_from_drafts(all_drafts, reference_name=", ".join(work_names))
         guide.reference_works = list(works.keys())
+
+        # [S0-I5] 결과를 JSON 캐시로 저장
+        try:
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            cache_path.write_text(guide.to_json(), encoding="utf-8")
+            logging.info(f"[S0-I5] 스타일 캐시 저장: {cache_path}")
+        except Exception as e:
+            logging.warning(f"[S0-I5] 캐시 저장 실패 (비차단): {e}")
+
         return guide
+
+    @staticmethod
+    def _get_latest_ref_mtime(ref_dir: Path) -> float:
+        """[S0-I5] 레퍼런스 디렉토리 내 .txt 파일 중 가장 최신 mtime 반환"""
+        latest = 0.0
+        if not ref_dir.exists():
+            return 0.0
+        for txt_file in ref_dir.rglob("*.txt"):
+            try:
+                mtime = txt_file.stat().st_mtime
+                if mtime > latest:
+                    latest = mtime
+            except OSError:
+                continue
+        return latest
 
     # ═══════════════════════════════════════════════════════════════
     # 유틸리티
