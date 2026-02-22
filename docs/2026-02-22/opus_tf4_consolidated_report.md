@@ -71,7 +71,7 @@
 |-------|------|--------|------|
 | A | Manager 모델 다운그레이드, Self-Consistency 조건부 스킵, 후선택 검증 | -47% | -47% |
 | B | ArcEnsemble/BlueprintEnsemble에 Context Caching 추가 | -41% | -88% |
-| C | 30화 전문 → 5화 전문 + 25화 요약 하이브리드 | -6% | **-94%** |
+| C | 30화 전문 → **3단계 하이브리드** (10화 전문 + 20화 요약 + Arc 요약) + SC 검색 연동 | -6% | **-94%** |
 
 ### 현재 vs 목표
 
@@ -147,7 +147,7 @@
 
 | ID | 위치 | 현재 | 200화 | 권고 |
 |---|---|---|---|---|
-| **30화 전문 N+1** | `stage4_context_builder.py` L332 | 30회 SELECT | 30회 SELECT (고정) | 5화 전문 + 25화 SUBSTR → **58% 절감** |
+| **30화 전문 N+1** | `stage4_context_builder.py` L332 | 30회 SELECT | 30회 SELECT (고정) | 3단계 하이브리드: 10화 전문 + 20화 요약 + Arc 요약 → **37~57% 절감** |
 | **resolved_plots 무한 증가** | `state_tracker.py` L132 | ~30개 | ~120개 | 상한 30개 + 오래된 것 요약 |
 | **Context Window 압박** | mandatory_context | ~40K자 | ~77K자 | 16종 합산 15K자 총량 상한 |
 
@@ -194,7 +194,7 @@
 | # | 작업 | 효과 |
 |---|------|------|
 | 11 | ArcEnsemble/BlueprintEnsemble Context Caching | 비용 -41% |
-| 12 | 30화 전문 → 5화 전문 + 25화 요약 하이브리드 | 프롬프트 -58% |
+| 12 | 30화 전문 → 3단계 하이브리드 (10화 전문 + 20화 요약 + Arc 요약) + SC 검색 연동 | 프롬프트 -37~57% + 전체 이력 검색 가능 |
 | 13 | resolved_plots 상한 30개 | 메모리 안정화 |
 | 14 | episode_meta 인덱스 추가 | 쿼리 성능 |
 
