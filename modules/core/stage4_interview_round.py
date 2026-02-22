@@ -93,7 +93,7 @@ class Stage4InterviewRound:
             "prev_manuscripts_text": _prev_manuscripts_text,
             "world_state_summary": _world_state_summary,
             "chain_link_section": _chain_link_section,
-            "episode_digest": _episode_digest,  # [S4-P2-4]
+            # episode_digest는 Director 전용 — L713에서 별도 전달
         }
 
         stage4_spinner.update_detail(f"제{next_ep}화 · {round_num + 1}차 면담 · 앙상블 생성")
