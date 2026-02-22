@@ -75,6 +75,8 @@ class VecMemory:
             try:
                 conn.execute("SELECT COUNT(*) FROM vec_episodes LIMIT 0")
                 self.has_valid_memory = True
+                # shared 모드에서도 메타데이터 테이블 + 차원 마이그레이션 검사
+                self._ensure_metadata_and_migrate()
             except Exception:
                 self.initialization_error = "vec_episodes table not available in shared connection"
                 self._ui_log("[VecMemory] shared 모드: vec_episodes 테이블 없음 -> 벡터 검색 비활성")
@@ -126,6 +128,24 @@ class VecMemory:
         else:
             yield
 
+    def _ensure_metadata_and_migrate(self) -> None:
+        """shared 모드: vec_metadata 생성 + 차원 불일치 시 자동 마이그레이션."""
+        try:
+            cur = self._conn.cursor()
+            try:
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS vec_metadata (
+                        key   TEXT PRIMARY KEY,
+                        value TEXT
+                    )
+                """)
+                self._conn.commit()
+                self._check_embedding_version(cur)
+            finally:
+                cur.close()
+        except Exception as e:
+            logging.warning(f"[VecMemory] shared 모드 메타데이터 초기화 실패 (비차단): {str(e)[:80]}")
+
     def _ensure_tables(self) -> None:
         """Create vec/meta/sync/anchor tables."""
         cur = self._conn.cursor()
@@ -173,34 +193,49 @@ class VecMemory:
             cur.close()
 
     def _check_embedding_version(self, cur) -> None:
-        """[B6] 임베딩 모델 버전 저장 및 불일치 시 자동 마이그레이션."""
+        """[B6] 임베딩 모델 버전 저장 + 테이블 차원 실측 검증 + 자동 마이그레이션."""
         try:
+            # 실제 테이블 차원 검증 (메타데이터와 무관하게 항상 확인)
+            if self._table_needs_migration():
+                logging.warning(
+                    f"[VecMemory] vec_episodes 차원 불일치 감지 (현재={EMBED_DIM}) — 자동 마이그레이션 시작"
+                )
+                self._migrate_vec_table(cur)
+                return
+
+            # 모델 불일치 경고 (차원은 OK지만 모델명이 다를 때)
             row = cur.execute("SELECT value FROM vec_metadata WHERE key = 'embed_model'").fetchone()
             if row:
-                stored_model = row[0]
-                if stored_model != EMBED_MODEL:
-                    logging.warning(
-                        f"[VecMemory] 임베딩 모델 불일치: DB={stored_model}, 현재={EMBED_MODEL} — 재색인 권장"
-                    )
-                row_dim = cur.execute("SELECT value FROM vec_metadata WHERE key = 'embed_dim'").fetchone()
-                if row_dim and int(row_dim[0]) != EMBED_DIM:
-                    old_dim = int(row_dim[0])
-                    logging.warning(
-                        f"[VecMemory] 임베딩 차원 불일치: DB={old_dim}, 현재={EMBED_DIM} — 자동 마이그레이션 시작"
-                    )
-                    self._migrate_vec_table(cur)
-            else:
-                cur.execute(
-                    "INSERT OR REPLACE INTO vec_metadata (key, value) VALUES (?, ?)",
-                    ("embed_model", EMBED_MODEL),
-                )
-                cur.execute(
-                    "INSERT OR REPLACE INTO vec_metadata (key, value) VALUES (?, ?)",
-                    ("embed_dim", str(EMBED_DIM)),
-                )
-                self._conn.commit()
+                if row[0] != EMBED_MODEL:
+                    logging.warning(f"[VecMemory] 임베딩 모델 불일치: DB={row[0]}, 현재={EMBED_MODEL} — 재색인 권장")
+
+            # 메타데이터 갱신
+            cur.execute(
+                "INSERT OR REPLACE INTO vec_metadata (key, value) VALUES (?, ?)",
+                ("embed_model", EMBED_MODEL),
+            )
+            cur.execute(
+                "INSERT OR REPLACE INTO vec_metadata (key, value) VALUES (?, ?)",
+                ("embed_dim", str(EMBED_DIM)),
+            )
+            self._conn.commit()
         except Exception as e:
             logging.warning(f"[VecMemory] 임베딩 버전 체크 실패 (비차단): {str(e)[:60]}")
+
+    def _table_needs_migration(self) -> bool:
+        """vec_episodes 테이블의 실제 차원이 EMBED_DIM과 다른지 테스트 인서트로 확인."""
+        try:
+            test_vec = [0.0] * EMBED_DIM
+            self._conn.execute(
+                "INSERT INTO vec_episodes(rowid, embedding) VALUES (?, ?)",
+                (-999999, _serialize_f32(test_vec)),
+            )
+            self._conn.execute("DELETE FROM vec_episodes WHERE rowid = -999999")
+            self._conn.commit()
+            return False  # 차원 일치
+        except Exception:
+            self._conn.rollback()
+            return True  # 차원 불일치
 
     def _migrate_vec_table(self, cur) -> None:
         """차원 불일치 시 vec_episodes 재생성 + 메타데이터 갱신."""
