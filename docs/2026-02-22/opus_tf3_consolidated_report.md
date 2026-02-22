@@ -60,9 +60,9 @@
 
 ### C-3/C-4: fantasy 장르 analyst_libraries + genre_library_map 부재 [Genre]
 
-- **위치**: `config/prompts/analyst_libraries_fantasy.json` (미존재), `modules/domain/agents/analyst.py` L1414
+- **위치**: `config/prompts/analyst_libraries_fantasy.json` (미존재), `modules/domain/agents/analyst.py` L1414 (`genre_library_map` dict, L1415~L1424에 fantasy 키 없음)
 - **영향**: fantasy 장르 선택 시 wuxia(무협) 서사 아키타입이 폴백 적용
-- **권고**: `analyst_libraries_fantasy.json` 생성, `analyst.py` genre_library_map에 fantasy 추가
+- **권고**: `analyst_libraries_fantasy.json` 생성 + `analyst.py` L1414 genre_library_map에 `"fantasy": "analyst_libraries_fantasy"` 추가
 
 ---
 
@@ -241,7 +241,7 @@
 | 16 | Stage 4 원고-메타데이터 원자성 강화 | 의도적 분리 설계, 변경 시 위험 |
 | 17 | V67 30화 전문 → 하이브리드(5화 전문 + 25화 요약) | 비용 최적화, 품질 검증 필요 |
 | 18 | 스키마 버전 관리 시스템 도입 | 현재 인라인 ALTER TABLE로 동작 중 |
-| 19 | fantasy/alt_history/actor strategy 파일 생성 | 현재 generic 폴백으로 동작 중 |
+| 19 | fantasy/alt_history/actor strategy 파일 생성 | `modules/domain/strategies/` 내 7개 장르 파일 존재하나 코드베이스 어디에서도 import 없음 (dead code). 파일 추가보다 사용처 배선이 선행 필요 |
 
 ---
 
