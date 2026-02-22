@@ -55,7 +55,7 @@ def test_pattern_tracker_empty_emotion_balance_defaults_to_neutral():
 
 
 def test_validation_orchestrator_handles_missing_critical_issues_key():
-    """PRE-LLM failure should not KeyError when critical_issues key is missing."""
+    """PRE-LLM with missing keys should not KeyError (V-P1-3: dead REJECT branch removed)."""
     from modules.validation.validation_orchestrator import ValidationOrchestrator
 
     orch = ValidationOrchestrator(
@@ -65,11 +65,12 @@ def test_validation_orchestrator_handles_missing_critical_issues_key():
         context={},
     )
     orch.pre_llm = MagicMock()
-    orch.pre_llm.validate.return_value = {"passed": False}
+    # PreLLMValidator always returns passed=True; test that missing keys don't cause KeyError
+    orch.pre_llm.validate.return_value = {"passed": True}
 
     result = orch.validate(ep_num=1, manuscript="테스트 원고", validation_context={})
-    assert result["final_decision"] == "REJECT"
-    assert result["critical_issues"] == []
+    # Should proceed through validation without KeyError
+    assert result["final_decision"] in ("PASS", "CONDITIONAL_PASS", "REJECT")
 
 
 def test_state_extractor_invalidate_cache():

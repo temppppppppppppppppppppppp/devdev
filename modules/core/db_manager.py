@@ -58,6 +58,14 @@ class DBManager:
         self._cumulative_bible_cache: dict = {}
         self._boot_db()
 
+    def _ensure_open(self) -> None:
+        """[INF-P1-7] close() 후 사용 시 명확한 에러 발생"""
+        if self.conn is None:
+            raise DBConnectionError(
+                "DB 연결이 이미 종료되었습니다. close() 호출 후 재사용 불가.",
+                severity=DBErrorSeverity.CRITICAL,
+            )
+
     @staticmethod
     def _safe_json_loads(raw, fallback: str):
         """[Sweep4] 비정상 JSON 데이터 방어 — 1행 파손이 전체 조회를 크래시하지 않도록"""
@@ -503,12 +511,15 @@ class DBManager:
                 cur.close()
 
     def begin(self):
+        self._ensure_open()
         self.cursor.execute("BEGIN TRANSACTION")
 
     def commit(self):
+        self._ensure_open()
         self.conn.commit()
 
     def rollback(self):
+        self._ensure_open()
         self.conn.rollback()
 
     def close(self) -> None:
@@ -530,12 +541,14 @@ class DBManager:
     # --- [범용 쿼리] ---
     def execute_query(self, sql: str, params: tuple = ()) -> list:
         """SELECT 쿼리 실행 후 결과 리스트 반환"""
+        self._ensure_open()
         with self._lock:
             self.cursor.execute(sql, params)
             return self.cursor.fetchall()
 
     def execute_update(self, sql: str, params: tuple = ()):
         """INSERT/UPDATE/DELETE 쿼리 실행"""
+        self._ensure_open()
         with self._lock:
             self.cursor.execute(sql, params)
 
@@ -570,6 +583,9 @@ class DBManager:
                 logging.warning(f"🚨 [DB] Blueprint JSON 파싱 실패 (ep_num={ep_num}): {e}")
                 return None
 
+    # [INF-P2-2] 안전한 SQL 식별자 패턴 (알파벳/숫자/언더스코어만 허용)
+    _SAFE_COLUMN_RE = __import__("re").compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
+
     def update_martial_tracker(self, ep_num, martial_data) -> None:
         """[V26.6 S-Grade] DB 스키마에 존재하는 컬럼만 선별하여 저장 (Mismatched Key Guard)"""
         with self._lock:
@@ -579,12 +595,17 @@ class DBManager:
             if not sanitized_data:
                 return
 
+            # [INF-P2-2] 컬럼명 SQL 안전성 검증 (화이트리스트 + 정규식 이중 방어)
+            validated_data = {k: v for k, v in sanitized_data.items() if self._SAFE_COLUMN_RE.match(k)}
+            if not validated_data:
+                return
+
             # 2. 필터링된 데이터로 쿼리 생성 (동적 컬럼 매핑)
-            columns = ", ".join(sanitized_data.keys())
-            placeholders = ", ".join(["?"] * len(sanitized_data))
+            columns = ", ".join(validated_data.keys())
+            placeholders = ", ".join(["?"] * len(validated_data))
             query = f"INSERT OR REPLACE INTO martial_tracker (ep_num, {columns}) VALUES (?, {placeholders})"
 
-            self.cursor.execute(query, [ep_num] + list(sanitized_data.values()))
+            self.cursor.execute(query, [ep_num] + list(validated_data.values()))
             if not self.conn.in_transaction:
                 self.conn.commit()
 
@@ -1115,6 +1136,7 @@ class DBManager:
         - 하위 엔터티(카르마, 로어, 복선)의 정규화 및 박제
         """
         # [FIX] RLock으로 멀티스레드 동시 접근 보호
+        self._ensure_open()
         self._lock.acquire()
         try:
             # 1. 최상위 데이터 파싱 및 정규화 (딕셔너리 보장)
@@ -1274,6 +1296,7 @@ class DBManager:
     @contextmanager
     def transaction(self) -> None:
         """[V44] 원자적 트랜잭션 보장 가드. 에러 타입별 롤백 및 세션 보호"""
+        self._ensure_open()
         nested = self.conn.in_transaction
         try:
             if not nested:

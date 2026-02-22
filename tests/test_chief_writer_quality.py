@@ -248,7 +248,7 @@ class TestRecentCliches:
             pytest.skip("cliche keyword constants not found")
         keyword = keywords_groups[0][0]
         host._get_cached_manuscript = lambda ep: {"content": (keyword * 2) if ep in (8, 9) else "", "hud_snapshot": {}}
-        result = gate._count_recent_cliches(ep_num=10, manuscript=keyword * 2, window=3)
+        result = gate._count_recent_cliches(ep_num=10, window=3)
         assert result
         assert keyword in result
 
@@ -256,5 +256,5 @@ class TestRecentCliches:
         host = _make_host()
         host._get_cached_manuscript = lambda _ep: {"content": "", "hud_snapshot": {}}
         gate = ChiefWriterQualityGate(host)
-        result = gate._count_recent_cliches(ep_num=10, manuscript="", window=3)
+        result = gate._count_recent_cliches(ep_num=10, window=3)
         assert result == {}

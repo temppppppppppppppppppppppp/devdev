@@ -6,7 +6,7 @@ Preset Registry - 프리셋 기반 동적 스키마 체계
 
 import copy
 import json
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Any
 
 
@@ -648,13 +648,13 @@ class PresetRegistry:
 
     def to_json(self) -> str:
         """현재 상태 JSON 직렬화"""
-        return json.dumps(
-            {
-                "base_genre": self.base_genre,
-                "active_presets": list(self.active_presets),
-            },
-            ensure_ascii=False,
-        )
+        data: dict[str, Any] = {
+            "base_genre": self.base_genre,
+            "active_presets": list(self.active_presets),
+        }
+        if self.discovered_fields:
+            data["discovered_fields"] = {k: asdict(v) for k, v in self.discovered_fields.items()}
+        return json.dumps(data, ensure_ascii=False)
 
     @classmethod
     def from_json(cls, json_str: str) -> "PresetRegistry":
@@ -668,4 +668,7 @@ class PresetRegistry:
         registry = cls(base_genre=data.get("base_genre"))
         for preset in data.get("active_presets", []):
             registry.activate_preset(preset)
+        for name, fd in data.get("discovered_fields", {}).items():
+            if isinstance(fd, dict):
+                registry.discovered_fields[name] = FieldDefinition(**fd)
         return registry

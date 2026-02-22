@@ -252,30 +252,12 @@ class ValidationOrchestrator:
             pre_llm_result = self.pre_llm.validate(manuscript, validation_context)
             results["pre_llm_result"] = pre_llm_result
 
-            if not pre_llm_result["passed"]:
-                # 명백한 오류 시 즉시 REJECT (LLM 비용 절약)
-                _issues = pre_llm_result.get("critical_issues", [])
-                logging.warning(f"❌ PRE-LLM 실패: {len(_issues)}개 이슈")
-                for issue in _issues[:3]:
-                    desc = issue.get("description", issue.get("category", "Unknown"))
-                    logging.info(f"- {desc}")
-
-                self.scoring.pass_threshold = _original_threshold  # [TF-R2-XC-01] 조기 반환 복원
-                return {
-                    "final_decision": "REJECT",
-                    "reason": "PRE-LLM 사전검증 실패 - 명백한 오류 감지",
-                    "pre_llm_result": pre_llm_result,
-                    "critical_issues": _issues,
-                    "total_score": 0,
-                    "feedback": self._generate_pre_llm_feedback(pre_llm_result),
-                    "self_consistency_used": False,
-                    "llm_cost_saved": True,  # LLM 비용 절약 표시
-                }
-
-            # 경고만 있는 경우
+            # PreLLMValidator always returns passed=True; warnings feed into score deductions
             warning_count = len(pre_llm_result.get("warnings", []))
             if warning_count > 0:
-                logging.warning(f"⚠️ PRE-LLM 경고: {warning_count}개 (점수 -{pre_llm_result['score_deduction']}점)")
+                logging.warning(
+                    f"⚠️ PRE-LLM 경고: {warning_count}개 (점수 -{pre_llm_result.get('score_deduction', 0)}점)"
+                )
             else:
                 logging.info("✅ PRE-LLM 통과")
 

@@ -90,7 +90,6 @@ class Stage2Orchestrator:
         """
         # [V64.P3] lazy imports (main_a.py 스코프 밖이므로)
         from modules.core.constants import (
-            AIModels,
             HUDKeys,
             PatchModeThresholds,
             RecoveryLimits,
@@ -98,22 +97,8 @@ class Stage2Orchestrator:
         )
         from modules.core.constraint_db import ConstraintDB
         from modules.core.slack_bot import notifier
+        from modules.core.spinners import StageSpinner  # [V65] 스피너 (순환 참조 해소)
         from modules.domain.agents.state_tracker import StateTracker
-
-        # [V65] 모델명 상수 — constants.py AIModels SSOT
-        _SUMMARY_MODEL = AIModels.SUMMARY_MODEL
-
-        # [V65] 스피너 & 전역 상수 → spinners 모듈에서 직접 import (순환 참조 해소)
-        from modules.core.spinners import V50_MODULES_AVAILABLE, StageSpinner
-
-        ReflectionTarget = None
-        if V50_MODULES_AVAILABLE:
-            try:
-                from modules.core.self_reflection import ReflectionTarget as _RT
-
-                ReflectionTarget = _RT
-            except ImportError:
-                pass
 
         ### [0124 핵심] 욕망 엔진 가동 로고 및 로그 출력
         self.ctx.ui.log("🎯 [Stage 2] 0124 매니페스토: 욕망 엔진 및 인과율 용접 공정 기동...")

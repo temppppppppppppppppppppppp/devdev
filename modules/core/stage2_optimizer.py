@@ -534,37 +534,6 @@ class NegativeConstraintAmplifier:
 
         return history
 
-    def _build_relationship_history(self, prev_arcs: list[dict]) -> list[dict]:
-        """관계 변화 히스토리 구축"""
-        history = []
-
-        for arc in prev_arcs:
-            arc_no = arc.get("arc_no", "?")
-            state = arc.get("state_changes", {})
-            rel_changes = state.get("relationship_changes", [])
-
-            for change in rel_changes:
-                if isinstance(change, dict):
-                    history.append(
-                        {
-                            "arc": arc_no,
-                            "npc": change.get("npc", "?"),
-                            "change": change.get("change", "?"),
-                            "reason": change.get("reason", ""),
-                        }
-                    )
-                elif isinstance(change, str):
-                    history.append(
-                        {
-                            "arc": arc_no,
-                            "npc": "?",
-                            "change": change,
-                            "reason": "",
-                        }
-                    )
-
-        return history
-
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # 4. FOCUSED FEEDBACK GENERATOR
@@ -730,12 +699,6 @@ class SessionFailureMemory:
         prompt += """╚══════════════════════════════════════════════════════════════════════════════╝
 """
         return prompt
-
-    def should_increase_constraints(self) -> bool:
-        """제약 강화 필요 여부"""
-        # 최근 3회 중 2회 이상 실패하면 제약 강화
-        recent = self.failures[-3:]
-        return len(recent) >= 2
 
     def clear(self) -> None:
         """메모리 초기화"""

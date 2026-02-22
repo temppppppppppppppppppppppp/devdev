@@ -30,6 +30,7 @@ class ScoringValidator:
         "wuxia": 70,  # 무협: 기본값
         "hunter": 68,  # 헌터: 액션 위주로 약간 낮게
         "investment": 72,  # 투자: 논리성 중요로 약간 높게
+        "fantasy": 70,  # 판타지: 기본값
     }
 
     def __init__(
@@ -64,16 +65,9 @@ class ScoringValidator:
         if not genre:
             return None
         try:
-            if genre == "wuxia":
-                from modules.core.genre_guards.wuxia_guard import WuxiaGuard
+            from modules.core.genre_guards import create_genre_guard
 
-                return WuxiaGuard()
-            elif genre == "hunter":
-                from modules.core.genre_guards.hunter_guard import HunterGuard
-
-                return HunterGuard()
-            else:
-                return None
+            return create_genre_guard(genre)
         except Exception as e:
             logging.warning(f"[WARNING] Guard 로드 실패 ({genre}): {e}")
             return None

@@ -288,7 +288,8 @@ class Stage01Helpers:
         from modules.core.stage0 import PresetRegistry, StageZeroManager
 
         project_path = str(app.current_project.paths.root) if app.current_project else None
-        stage0_manager = StageZeroManager(project_path=project_path)
+        llm_client = getattr(app.sys, "api_client", None) if hasattr(app, "sys") else None
+        stage0_manager = StageZeroManager(project_path=project_path, llm_client=llm_client)
 
         if app.selected_genre:
             genre_type = app.selected_genre.get("type", "")

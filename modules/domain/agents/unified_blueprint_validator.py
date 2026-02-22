@@ -52,6 +52,16 @@ class UnifiedBlueprintValidator:
         self.model_tier = model_tier or _get_agent_default_model("unified_blueprint_validator") or "gemini-2.5-flash"
         self.min_chars = BLUEPRINT_MIN_CHARS
 
+    def _safe_causal_history(self) -> str:
+        """get_causal_history_summary()를 안전하게 호출한다 (DB 오류 시 빈 문자열)."""
+        if not hasattr(self.context, "get_causal_history_summary"):
+            return ""
+        try:
+            return str(self.context.get_causal_history_summary())
+        except Exception as e:
+            logging.warning(f"[S3-P1-2] get_causal_history_summary DB 오류: {e!s:.100}")
+            return ""
+
     def validate(
         self,
         blueprint: dict,
@@ -217,9 +227,7 @@ class UnifiedBlueprintValidator:
                 ep_num=working_ep,
                 manuscript=manuscript_with_focus,  # 주의 포인트 포함
                 arc_doc=arc_tactical_doc,
-                history_summary=str(self.context.get_causal_history_summary())
-                if hasattr(self.context, "get_causal_history_summary")
-                else "",
+                history_summary=self._safe_causal_history(),
                 prev_full_text=prev_ms_ending,
                 arc_pos=arc_pos,
                 total_eps=total_eps,
@@ -413,30 +421,6 @@ class UnifiedBlueprintValidator:
         """위치에서 대분류 지역 추출"""
         match = re.search(r"^([가-힣]{2,5})", location)
         return match.group(1) if match else ""
-
-    def _generate_feedback(self, issues: list[dict]) -> str:
-        """재생성용 피드백 생성"""
-        if not issues:
-            return ""
-
-        lines = ["[검증 실패 - 다음 문제 해결 필요]", ""]
-
-        critical = [i for i in issues if i.get("severity") == "CRITICAL"]
-        if critical:
-            lines.append("[CRITICAL - 필수 수정]:")
-            for c in critical:
-                lines.append(f"  - {c.get('issue', '?')}")
-                if c.get("fix_hint"):
-                    lines.append(f"    -> {c['fix_hint']}")
-
-        major = [i for i in issues if i.get("severity") == "MAJOR"]
-        if major:
-            lines.append("")
-            lines.append("[MAJOR - 수정 권장]:")
-            for m in major[:3]:
-                lines.append(f"  - {m.get('issue', '?')}")
-
-        return "\n".join(lines)
 
 
 def create_unified_blueprint_validator(context, client, model_tier: str = "gemini-2.5-flash"):

@@ -407,6 +407,8 @@ JSON:
             result = self._parse_json(self._call_llm(prompt, max_tokens=8192)) or []
             if isinstance(result, dict):
                 result = [result]
+            if not result:
+                logging.warning(f"[StoryExpander] _generate_skeleton: Block {start}~{end} LLM 응답 비어있음")
             all_blocks.extend(result)
             prev_titles.extend(b.get("title", "") for b in result)
 
@@ -482,28 +484,30 @@ JSON:
             indicator.show()
 
             # Phase 1: 컨셉 분석
-            with Spinner("컨셉 분석 중", style="braille") as sp:
+            with Spinner("컨셉 분석 중", style="braille"):
                 self.analyze_concept(concept)
             print_success(f"컨셉 분석 완료 (장르: {self.genre})")
             indicator.next()
             indicator.show()
 
             # Phase 2: Bible 생성
-            with Spinner("Bible 생성 중", style="dots") as sp:
+            with Spinner("Bible 생성 중", style="dots"):
                 self.generate_bible(protagonist_config)
+            if not self.bible:
+                logging.warning("[StoryExpander] generate_bible() 결과가 비어있음 — 후속 단계 출력 불완전 가능")
             print_success("Bible 생성 완료")
             indicator.next()
             indicator.show()
 
             # Phase 3: Treatment 생성
-            with Spinner("Treatment 생성 중 (60 블록)", style="grow") as sp:
+            with Spinner("Treatment 생성 중 (60 블록)", style="grow"):
                 self.generate_treatment()
             print_success(f"Treatment 생성 완료 ({len(self.treatment)} 블록)")
             indicator.next()
             indicator.show()
 
             # Phase 4: 저장
-            with Spinner("저장 중", style="pulse") as sp:
+            with Spinner("저장 중", style="pulse"):
                 self.save_all(output_dir)
             print_success(f"저장 완료: {output_dir}")
             indicator.complete()
@@ -517,6 +521,8 @@ JSON:
 
             logging.info("[*] Bible 생성...")
             self.generate_bible(protagonist_config)
+            if not self.bible:
+                logging.warning("[StoryExpander] generate_bible() 결과가 비어있음 — 후속 단계 출력 불완전 가능")
 
             logging.info("[*] Treatment 생성...")
             self.generate_treatment()

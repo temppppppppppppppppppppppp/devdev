@@ -178,14 +178,14 @@ class BlockingValidator:
     def _check_relationship_consistency(self, manuscript: str, context: dict) -> dict:
         try:
             return self.consistency_checks._check_relationship_consistency(manuscript, context)
-        except Exception as e:
+        except (ValueError, KeyError, TypeError, RuntimeError) as e:
             logging.warning(f"[C-3] relationship consistency check failed (degraded): {e}")
             return {"check": "relationship_consistency", "passed": True, "degraded": True, "error": str(e)}
 
     def _check_information_consistency(self, manuscript: str, context: dict) -> dict:
         try:
             return self.consistency_checks._check_information_consistency(manuscript, context)
-        except Exception as e:
+        except (ValueError, KeyError, TypeError, RuntimeError) as e:
             logging.warning(f"[C-3] information consistency check failed (degraded): {e}")
             return {"check": "information_consistency", "passed": True, "degraded": True, "error": str(e)}
 

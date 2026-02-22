@@ -350,7 +350,6 @@ class Stage2Finalizer:
 
             last_refined_context = self.ctx.generate_arc_context_v60(all_refined_arcs, global_arc_no + 1)
             current_ep_start = refined_arc["ep_end"] + 1
-            passed = True
 
             # [4-R3-f] PASS 메트릭 기록
             self._record_s2_pass_metrics(

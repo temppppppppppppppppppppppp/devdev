@@ -263,9 +263,7 @@ class Stage2ValidationPipeline:
                     state_tracker=self.ctx.state_tracker,
                 )
             except Exception as _dv_err:
-                import logging as _dv_log
-
-                _dv_log.warning(f"[G6] DraftValidator 호출 실패: {_dv_err!s:.100}")
+                logging.warning(f"[G6] DraftValidator 호출 실패: {_dv_err!s:.100}")
                 draft_result = {
                     "valid": True,
                     "score": 50,
