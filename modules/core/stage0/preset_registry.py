@@ -605,9 +605,10 @@ class PresetRegistry:
             "military": ["전쟁", "군대", "병사", "장군", "전투", "진영", "병력"],
         }
 
+        content_lower = content.lower()
         for genre, keywords in genre_keywords.items():
             if genre not in self.active_presets:
-                matches = sum(1 for kw in keywords if kw in content)
+                matches = sum(1 for kw in keywords if kw in content_lower)
                 if matches >= 3:  # 3개 이상 키워드 매칭 시
                     return genre
         return None
