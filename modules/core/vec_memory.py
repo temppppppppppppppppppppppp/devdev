@@ -13,6 +13,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 import sqlite3
 import struct
 import threading
@@ -926,7 +927,7 @@ class VecMemory:
             list of {"ep_num": int, "summary": str, "event_types": str,
                      "entity_names": str, "fts_rank": int}
         """
-        keywords = [w for w in __import__("re").split(r"[\s,.\-|/]+", query) if len(w) >= 2]
+        keywords = [w for w in re.split(r"[\s,.\-|/]+", query) if len(w) >= 2]
         if not keywords:
             return []
 
@@ -1106,7 +1107,6 @@ class VecMemory:
                 count = len(rows)
                 for (ep,) in rows:
                     cur.execute("DELETE FROM vec_episodes WHERE rowid = ?", (ep,))
-                    cur.execute("DELETE FROM episode_fts WHERE rowid = ?", (ep,))
                 cur.execute("DELETE FROM episode_meta WHERE ep_num >= ?", (target_ep,))
                 cur.execute("DELETE FROM episode_fts WHERE rowid >= ?", (target_ep,))
                 if self._shared_mode:
