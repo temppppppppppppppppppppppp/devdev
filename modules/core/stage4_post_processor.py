@@ -221,6 +221,29 @@ class Stage4PostProcessor:
             _mem_event_types = _sc_info["event_types"]
             _mem_entity_names = _sc_info["entity_names"]
 
+            # [TF-17] Truth Gate — 메모리 오염 방지 advisory 검증
+            try:
+                from modules.core.truth_gate import TruthGate
+
+                _truth_gate = TruthGate(
+                    world_state=getattr(self.ctx, "world_state", None),
+                    fact_ledger=getattr(self.ctx, "fact_ledger", None),
+                )
+                _npc_reg = None
+                if hasattr(self.ctx, "state_tracker") and self.ctx.state_tracker:
+                    _npc_reg = getattr(self.ctx.state_tracker, "npc_registry", None)
+                _tg_result = _truth_gate.validate(
+                    manuscript=final_manuscript,
+                    state_updates=_sc_raw,
+                    npc_registry=_npc_reg,
+                )
+                if not _tg_result["passed"]:
+                    for _tg_w in _tg_result["warnings"]:
+                        self.ctx.ui.log(f"   ⚠️ [TruthGate] {_tg_w}")
+                        logging.warning("[TruthGate] %s", _tg_w)
+            except Exception as _tg_err:
+                logging.debug("[TruthGate] 검증 실패 (비차단): %s", _tg_err)
+
             # [OpusTF-P0-3] 4-슬롯 정규화 요약: 사건 | 인물 | 장소 | 결말
             _slot_event = (
                 ", ".join(_sc_info["summary_parts"])[:120]
