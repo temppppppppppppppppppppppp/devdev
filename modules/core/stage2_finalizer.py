@@ -379,8 +379,14 @@ class Stage2Finalizer:
             self.ctx.cumulative_state_cache = None
             self.ctx.cumulative_state_cache_key = None  # [S-08] 센티넬 (0은 유효한 키일 수 있음)
 
-            constraint_db.update_arc_state(refined_arc)
-            self.ctx.ui.log(f"      🔒 [V49.4] ConstraintDB 업데이트 완료 (총 {len(constraint_db.arc_states)}개 Arc)")
+            # [B4-P1-1] constraint_db는 DB 커밋 이후 업데이트 — 실패해도 다음 루프에서 복구 가능
+            try:
+                constraint_db.update_arc_state(refined_arc)
+                self.ctx.ui.log(
+                    f"      🔒 [V49.4] ConstraintDB 업데이트 완료 (총 {len(constraint_db.arc_states)}개 Arc)"
+                )
+            except Exception as _cdb_err:
+                logging.warning("[B4-P1-1] constraint_db.update_arc_state 실패 (비치명적): %s", _cdb_err)
 
             last_refined_context = self.ctx.generate_arc_context_v60(all_refined_arcs, global_arc_no + 1)
             current_ep_start = refined_arc["ep_end"] + 1

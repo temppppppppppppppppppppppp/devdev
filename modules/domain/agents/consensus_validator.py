@@ -228,7 +228,7 @@ class ConsensusValidator(BaseAgent):
                             result["perspective"] = perspective_name
                             results.append(result)
                         except FutureTimeoutError:
-                            logging.info(f"⏰ [V61.3] {perspective_name} 타임아웃 ({self.SINGLE_VOTE_TIMEOUT}초)")
+                            logging.warning(f"⏰ [V61.3] {perspective_name} 타임아웃 ({self.SINGLE_VOTE_TIMEOUT}초)")
                             # 타임아웃 시 보수적으로 PASS 처리
                             results.append(
                                 {

@@ -131,7 +131,7 @@ class Stage4InterviewRound:
                 _prev_score = int(previous_attempt.get("score", 0)) if previous_attempt else 0
             except (ValueError, TypeError):
                 _prev_score = 0
-            _patch_enabled = bool(_threshold("feature_flags.enable_patch_mode", 1))
+            _patch_enabled = bool(_threshold("feature_flags.enable_patch_mode", True))
             _use_patch = _patch_enabled and _prev_score >= _PATCH_REWRITE_THRESHOLD and _prev_manuscript
             _is_patch = bool(_use_patch)
 

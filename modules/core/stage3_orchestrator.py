@@ -411,14 +411,17 @@ class Stage3Orchestrator:
         return prev_blueprint
 
     def _get_protagonist_name_safe(self) -> str:
-        """주인공 이름 추출 [V61.3 보호]"""
+        """주인공 이름 추출 [V61.3 보호] [C4-P1-3] callable 사전 검사"""
         protagonist_name = "주인공"
-        try:
-            protagonist_name = self.ctx.get_protagonist_name()
-        except Exception as protag_err:
-            _logging.error(f"🚨 [V61.3] protagonist_name 추출 크래시: {str(protag_err)[:100]}")
-            _logging.error(_traceback.format_exc())
-            self.ctx.ui.log("      ⚠️ 주인공 이름 추출 실패, 기본값 사용")
+        if callable(getattr(self.ctx, "get_protagonist_name", None)):
+            try:
+                protagonist_name = self.ctx.get_protagonist_name()
+            except Exception as protag_err:
+                _logging.error(f"🚨 [V61.3] protagonist_name 추출 크래시: {str(protag_err)[:100]}")
+                _logging.error(_traceback.format_exc())
+                self.ctx.ui.log("      ⚠️ 주인공 이름 추출 실패, 기본값 사용")
+        else:
+            _logging.debug("[C4-P1-3] ctx.get_protagonist_name이 callable이 아님 — 기본값 사용")
         return protagonist_name
 
     # ─────────────────────────────────────────────────────────────
@@ -473,6 +476,7 @@ class Stage3Orchestrator:
                         genre=_s3_genre,
                     )
                     _s3_parts = []
+                    # NOTE: S3 전용 키 없음 — S4의 vector_max_results_s4를 의도적으로 공유
                     _s3_max_results = int(_s3_th("context.vector_max_results_s4", 16))
                     for _slot in getattr(_s3_plan, "slots", []) or []:
                         _slot_query = str(getattr(_slot, "query", "") or "").strip()

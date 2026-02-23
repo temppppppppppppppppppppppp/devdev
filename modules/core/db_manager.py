@@ -170,7 +170,7 @@ class DBManager:
         except ImportError:
             logging.info("[DBManager] sqlite-vec 미설치 - 벡터 테이블 생략")
         except Exception as e:
-            logging.info(f"[DBManager] sqlite-vec 로드 실패: {e}")
+            logging.warning(f"[DBManager] sqlite-vec 로드 실패: {e}")
 
         # 1. 앵커 데이터 (Bible, Volumes, Arcs)
         self.cursor.execute("""
@@ -575,6 +575,7 @@ class DBManager:
                     old_fts_rows = cur.execute(
                         "SELECT rowid, summary, event_types, entity_names FROM vec_old.episode_fts"
                     ).fetchall()
+                    _fts_fail_count = 0
                     for rowid, summary, event_types, entity_names in old_fts_rows:
                         try:
                             cur.execute(
@@ -587,8 +588,14 @@ class DBManager:
                                     entity_names or "",
                                 ),
                             )
-                        except Exception:
-                            pass
+                        except Exception as _fts_row_err:
+                            _fts_fail_count += 1
+                            if _fts_fail_count <= 3:
+                                logging.warning(
+                                    "[B4-P1-6] episode_fts 행 이관 실패 (rowid=%s): %s", rowid, _fts_row_err
+                                )
+                    if _fts_fail_count:
+                        logging.warning("[B4-P1-6] episode_fts 이관 중 %d행 실패", _fts_fail_count)
                 elif _old_table_exists("episode_meta"):
                     cur.execute("""
                         INSERT OR IGNORE INTO episode_fts(rowid, summary, event_types, entity_names)
@@ -599,14 +606,21 @@ class DBManager:
                 # 2) vec_episodes (sqlite-vec 사용 가능할 때만)
                 if self._vec_available and _old_table_exists("vec_episodes"):
                     rows = cur.execute("SELECT rowid, embedding FROM vec_old.vec_episodes").fetchall()
+                    _vec_fail_count = 0
                     for rowid, embedding in rows:
                         try:
                             cur.execute(
                                 "INSERT OR REPLACE INTO vec_episodes(rowid, embedding) VALUES (?, ?)",
                                 (rowid, embedding),
                             )
-                        except Exception:
-                            pass
+                        except Exception as _vec_row_err:
+                            _vec_fail_count += 1
+                            if _vec_fail_count <= 3:
+                                logging.warning(
+                                    "[B4-P1-6] vec_episodes 행 이관 실패 (rowid=%s): %s", rowid, _vec_row_err
+                                )
+                    if _vec_fail_count:
+                        logging.warning("[B4-P1-6] vec_episodes 이관 중 %d행 실패", _vec_fail_count)
 
                 # 3) sync_status: old.synced -> main.vector_synced (UPSERT)
                 if _old_table_exists("sync_status"):
@@ -684,7 +698,8 @@ class DBManager:
             if self.conn:
                 try:
                     if self.conn.in_transaction:
-                        self.conn.commit()
+                        logging.warning("[B4-P1-3] close() 호출 시 미완료 트랜잭션 발견 — rollback 수행")
+                        self.conn.rollback()
                     self.conn.close()
                 finally:
                     self.conn = None
@@ -1367,9 +1382,10 @@ class DBManager:
         - 하위 엔터티(카르마, 로어, 복선)의 정규화 및 박제
         """
         # [FIX] RLock으로 멀티스레드 동시 접근 보호
-        self._ensure_open()
+        # [B4-P1-7] _ensure_open()을 lock 내부로 이동 — 동시 접근 시 conn 경합 방지
         self._lock.acquire()
         try:
+            self._ensure_open()
             # 1. 최상위 데이터 파싱 및 정규화 (딕셔너리 보장)
             if isinstance(manuscript_data, str):
                 try:
@@ -1586,25 +1602,33 @@ class DBManager:
     def reset_after(self, target_ep) -> None:
         """전체 테이블 리셋 및 롤백"""
         with self._lock:
-            tables = ["blueprints", "state_logs", "causal_graph", "manuscripts", "martial_tracker"]
-            for tbl in tables:
-                self.cursor.execute(f"DELETE FROM {tbl} WHERE ep_num >= ?", (target_ep,))
-            self.cursor.execute("DELETE FROM episode_bibles WHERE ep_num >= ?", (target_ep,))  # [V70] 누락 수정
-            self.cursor.execute("DELETE FROM sync_status WHERE ep_num >= ?", (target_ep,))  # [V70] 동기화 상태도 리셋
-            self.cursor.execute("DELETE FROM karma_status WHERE last_updated_ep >= ?", (target_ep,))
-            self.cursor.execute("DELETE FROM seeds WHERE planted_ep >= ?", (target_ep,))
-            # [D-2] 롤백 누락 데이터 정리
-            self.cursor.execute("DELETE FROM npc_history WHERE episode_no >= ?", (target_ep,))
-            self.cursor.execute("DELETE FROM episode_sentence_hashes WHERE episode_number >= ?", (target_ep,))
-            self.cursor.execute("DELETE FROM episode_satisfaction_tags WHERE ep_num >= ?", (target_ep,))
-            self.cursor.execute("DELETE FROM director_selections WHERE ep_num >= ?", (target_ep,))
-            self.cursor.execute("DELETE FROM episode_pacing WHERE ep_num >= ?", (target_ep,))
-            # [V70] 누적 Bible 캐시 무효화
+            try:
+                self.cursor.execute("BEGIN")
+                tables = ["blueprints", "state_logs", "causal_graph", "manuscripts", "martial_tracker"]
+                for tbl in tables:
+                    self.cursor.execute(f"DELETE FROM {tbl} WHERE ep_num >= ?", (target_ep,))
+                self.cursor.execute("DELETE FROM episode_bibles WHERE ep_num >= ?", (target_ep,))  # [V70] 누락 수정
+                self.cursor.execute(
+                    "DELETE FROM sync_status WHERE ep_num >= ?", (target_ep,)
+                )  # [V70] 동기화 상태도 리셋
+                self.cursor.execute("DELETE FROM karma_status WHERE last_updated_ep >= ?", (target_ep,))
+                self.cursor.execute("DELETE FROM seeds WHERE planted_ep >= ?", (target_ep,))
+                # [D-2] 롤백 누락 데이터 정리
+                self.cursor.execute("DELETE FROM npc_history WHERE episode_no >= ?", (target_ep,))
+                self.cursor.execute("DELETE FROM episode_sentence_hashes WHERE episode_number >= ?", (target_ep,))
+                self.cursor.execute("DELETE FROM episode_satisfaction_tags WHERE ep_num >= ?", (target_ep,))
+                self.cursor.execute("DELETE FROM director_selections WHERE ep_num >= ?", (target_ep,))
+                self.cursor.execute("DELETE FROM episode_pacing WHERE ep_num >= ?", (target_ep,))
+                self.conn.commit()
+            except Exception as e:
+                self.conn.rollback()
+                logging.error("[B4-P1-4] reset_after(ep>=%s) 트랜잭션 실패 — rollback 수행: %s", target_ep, e)
+                raise
+            # [V70] 누적 Bible 캐시 무효화 (트랜잭션 외부 — 메모리 전용)
             invalidate_eps = [k for k in self._cumulative_bible_cache if k >= target_ep]
             for k in invalidate_eps:
                 del self._cumulative_bible_cache[k]
             # 로어는 시간 개념이 모호하므로 유지하거나 별도 정책 필요 (여기선 유지)
-            self.conn.commit()
             self.cursor.execute("VACUUM")
 
     def get_rollback_impact(self, target_ep: int) -> dict:

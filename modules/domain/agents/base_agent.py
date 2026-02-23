@@ -206,9 +206,15 @@ class BaseAgent:
                 cls._context_caches.clear()  # [V61.9] 키 변경 시 캐시 무효화 (API 키별 캐시 격리)
             cls._key_rotation_pending = False
 
+            # [A4-P1-3] Client 생성도 lock 내에서 수행 — TOCTOU 방지
+            # (_current_key_idx가 lock 밖에서 읽히면 다른 스레드가 재순환할 수 있음)
+            new_key_idx = cls._current_key_idx
+            new_key = cls._api_keys[new_key_idx]
+
         # Client 생성은 lock 밖에서 (네트워크 IO 포함하므로)
+        # 단, key index/key 값은 lock 내에서 캡처해두었으므로 TOCTOU 안전
         try:
-            new_client = genai.Client(api_key=cls._api_keys[cls._current_key_idx])
+            new_client = genai.Client(api_key=new_key)
         except Exception as create_err:
             with cls._rotation_lock:
                 cls._current_key_idx = old_idx
@@ -306,6 +312,8 @@ class BaseAgent:
                              TODO: 다른 에이전트에도 구조화 응답이 필요하면 활용 확대 검토.
             thinking_level: [V60.25] Gemini 3 thinking level ("minimal", "low", "medium", "high")
         """
+        # [B4-P2-4] 이전 ask() 호출의 부분 응답이 남아있으면 새 호출에서 오염됨 — 초기화
+        self.last_partial_response = ""
         directives = self._escape_braces(getattr(self.context, "author_directives", ""))
         base_prompt = (
             f"### [AUTHOR'S ABSOLUTE DIRECTIVES]\n{directives}\n\n"
