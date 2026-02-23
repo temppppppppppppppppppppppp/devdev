@@ -115,6 +115,10 @@ class StateTrackerPlots:
                             for p in self.tracker.resolved_plots
                         ):
                             self.tracker.resolved_plots.append(entry)
+                            # [TF-B-1] 상한 초과 시 오래된 플롯부터 제거
+                            _max = int(getattr(self.tracker, "_resolved_plots_max", 500))
+                            if len(self.tracker.resolved_plots) > _max:
+                                self.tracker.resolved_plots = self.tracker.resolved_plots[-_max:]
         return plots
 
     def get_resolved_plots_summary(self, max_items: int = 30) -> str:

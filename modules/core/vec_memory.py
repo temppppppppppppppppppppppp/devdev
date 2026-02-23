@@ -894,6 +894,10 @@ class VecMemory:
                 self._conn.commit()
                 return count
             except Exception as e:
+                try:
+                    self._conn.rollback()
+                except Exception:
+                    pass
                 self._ui_log(f"[VecMemory] delete episodes failed (>={target_ep}): {e}")
                 return 0
             finally:

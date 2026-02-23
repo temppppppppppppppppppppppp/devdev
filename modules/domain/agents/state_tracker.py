@@ -130,6 +130,7 @@ class StateTracker:
 
         # [V62.7] 완결된 플롯 누적 추적
         self.resolved_plots: list[dict] = []
+        self._resolved_plots_max: int = 500  # [TF-B-1] 메모리 누적 상한
         # [V62.7→V64 P2-4] 비-NPC 엔티티 명칭 레지스트리 (LRU, max 500)
         self.entity_name_registry: OrderedDict = OrderedDict()
         self._entity_registry_max_size = 500  # [V66] 200→500 엔티티 망각 방지

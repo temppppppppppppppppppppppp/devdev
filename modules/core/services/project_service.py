@@ -23,6 +23,7 @@ class ProjectService:
         safe_commit_fn: _safe_commit 콜백
         genre_fn: () -> selected_genre dict 또는 None
         memory_fn: () -> memory (VectorDB) 또는 None
+        state_tracker_invalidator: 롤백 성공 후 state tracker 무효화 콜백
     """
 
     def __init__(
@@ -32,12 +33,14 @@ class ProjectService:
         safe_commit_fn: Callable[[], bool],
         genre_fn: Callable[[], Any],
         memory_fn: Callable[[], Any],
+        state_tracker_invalidator: Callable[[], None] | None = None,
     ) -> None:
         self._project_fn = project_fn
         self._ui = ui
         self._safe_commit = safe_commit_fn
         self._genre_fn = genre_fn
         self._memory_fn = memory_fn
+        self._invalidate_tracker = state_tracker_invalidator
 
     # ── reset_stage_2 ────────────────────────────────────────────
     def reset_stage_2(self) -> None:
@@ -119,6 +122,7 @@ class ProjectService:
             return False
 
         try:
+            _pending_bible = None
             # 1. HUD 롤백
             if target_ep > 1:
                 project.db.cursor.execute("SELECT data FROM state_logs WHERE ep_num = ?", (target_ep - 1,))
@@ -149,7 +153,7 @@ class ProjectService:
                                     (json.dumps(bible_data, ensure_ascii=False),),
                                 )
                                 self._ui.log(f"   📉 [Rollback] HUD를 {target_ep - 1}화 시점으로 복구했습니다.")
-                                project.master_bible = bible_data
+                                _pending_bible = bible_data  # [TF-A-1] 커밋 성공 후 인메모리 반영
 
             # 2. SQL DB 데이터 삭제
             ALLOWED_EP_TABLES = frozenset(
@@ -188,6 +192,8 @@ class ProjectService:
             if not self._safe_commit():
                 self._ui.log("❌ DB 커밋 실패 — 롤백 중단 (파일/벡터 보존)")
                 return False
+            if _pending_bible is not None:
+                project.master_bible = _pending_bible
 
             # 5. 물리 파일 삭제
             for f in project.paths.drafts.glob("*.txt"):
@@ -212,6 +218,8 @@ class ProjectService:
 
             # 7. 데이터 리로드
             project._load_from_db()
+            if self._invalidate_tracker:
+                self._invalidate_tracker()
 
             self._ui.log(f"\n✅ [Success] {target_ep}화 직전 상태로 롤백 완료!")
             self._ui.log(f"👉 이제 Stage 4를 실행하면 {target_ep}화부터 새로 집필합니다.")

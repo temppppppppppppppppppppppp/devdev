@@ -12,6 +12,12 @@ from collections import Counter
 
 from modules.validation.threshold_helper import _threshold  # [Phase 5-B-2c]
 
+_SANITIZE_MAX_CHARS = int(_threshold("scoring.sanitize_max_chars", 3000))
+_CV_OPTIMAL_LOW = float(_threshold("scoring.cv_optimal_low", 0.35))
+_CV_OPTIMAL_HIGH = float(_threshold("scoring.cv_optimal_high", 0.55))
+_WUXIA_MARTIAL_MIN = int(_threshold("scoring.wuxia_martial_min", 3))
+_HUNTER_SYSTEM_MIN = int(_threshold("scoring.hunter_system_min", 5))
+
 
 class ScoringValidator:
     """
@@ -104,8 +110,8 @@ class ScoringValidator:
         # 제어 문자 제거 (개행/탭 제외)
         sanitized = "".join(char for char in sanitized if char.isprintable() or char in "\n\r\t")
 
-        # 길이 제한 (3000자)
-        return sanitized[:3000]
+        # 길이 제한
+        return sanitized[:_SANITIZE_MAX_CHARS]
 
     def validate(self, manuscript: str, validation_context: dict) -> dict:
         """
@@ -467,16 +473,23 @@ Step 6: Article 7 (독자 대리만족) 분석
         cv = std_dev / mean_len if mean_len > 0 else 0
 
         # 점수 매기기
-        if 0.35 <= cv <= 0.55:
+        _cv_good_low = _CV_OPTIMAL_LOW - 0.05
+        _cv_good_high = _CV_OPTIMAL_HIGH + 0.05
+        _cv_fair_low = _CV_OPTIMAL_LOW - 0.10
+        _cv_fair_high = _CV_OPTIMAL_HIGH + 0.10
+        _cv_poor_low = _CV_OPTIMAL_LOW - 0.15
+        _cv_poor_high = _CV_OPTIMAL_HIGH + 0.15
+
+        if _CV_OPTIMAL_LOW <= cv <= _CV_OPTIMAL_HIGH:
             score = 5
             reason = f"CV={cv:.2f} (이상적)"
-        elif 0.30 <= cv < 0.35 or 0.55 < cv <= 0.60:
+        elif _cv_good_low <= cv < _CV_OPTIMAL_LOW or _CV_OPTIMAL_HIGH < cv <= _cv_good_high:
             score = 4
             reason = f"CV={cv:.2f} (양호)"
-        elif 0.25 <= cv < 0.30 or 0.60 < cv <= 0.65:
+        elif _cv_fair_low <= cv < _cv_good_low or _cv_good_high < cv <= _cv_fair_high:
             score = 3
             reason = f"CV={cv:.2f} (보통)"
-        elif 0.20 <= cv < 0.25 or 0.65 < cv <= 0.70:
+        elif _cv_poor_low <= cv < _cv_fair_low or _cv_fair_high < cv <= _cv_poor_high:
             score = 2
             reason = f"CV={cv:.2f} (미흡)"
         else:
@@ -1105,7 +1118,7 @@ Step 6: Article 7 (독자 대리만족) 분석
             # 무협 특화 체크
             martial_keywords = ["내공", "검기", "장풍", "경공", "비급", "검법", "장법"]
             martial_count = sum(manuscript.count(kw) for kw in martial_keywords)
-            if martial_count < 3:
+            if martial_count < _WUXIA_MARTIAL_MIN:
                 feedback.append("무협 장르임에도 무술 관련 묘사(내공, 검기 등)가 부족합니다.")
 
             # 클리셰 체크
@@ -1118,7 +1131,7 @@ Step 6: Article 7 (독자 대리만족) 분석
             # 헌터 특화 체크
             system_keywords = ["레벨", "스킬", "스탯", "던전", "게이트", "마나", "각성"]
             system_count = sum(manuscript.count(kw) for kw in system_keywords)
-            if system_count < 5:
+            if system_count < _HUNTER_SYSTEM_MIN:
                 feedback.append("헌터 장르 특유의 시스템 요소(스킬, 레벨, 던전 등) 언급이 부족합니다.")
 
             # 성장 묘사 체크
