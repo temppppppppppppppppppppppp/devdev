@@ -37,6 +37,9 @@ class DirectorContinuityValidator:
         # [V61.5] 캐시 연속성 검사 — ep_num 기반 갱신
         self._cached_blueprint_ep = None
         self._cached_manuscript_ep = None
+        # DI 후보: _cached_recent_blueprints (getattr fallback, L602)
+        # DI 후보: _cached_context_text_manuscript (getattr fallback, L715)
+        # DI 후보: _manuscript_cache_name (getattr fallback, L716)
 
     def validate_entity_consistency(
         self, content: str, entity_registry: dict, content_type: str = "manuscript"

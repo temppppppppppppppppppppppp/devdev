@@ -50,6 +50,8 @@ class FourPhaseArcGenerator(BaseAgent):
 
     def __init__(self, context, client, model_tier: str = None):
         super().__init__(context, client, model_tier)
+        # DI 후보: context.master_bible (getattr fallback 2회: L177, L545 — protagonist_config 추출)
+        # DI 후보: context.guard (hasattr 패턴 — 장르 감지용, L63)
 
         # 서브 모듈
         sub_models = _get_sub_component_models("four_phase_arc_generator")

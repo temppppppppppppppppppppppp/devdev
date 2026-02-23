@@ -198,8 +198,8 @@ class Stage2PreflightAnalysis:
             try:
                 with _perf_lock:
                     self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_arc_drive")
-            except Exception:
-                pass
+            except Exception as _e:
+                logging.debug("[Stage2Preflight] perf_timer arc_drive start 실패 (무시): %s", _e)
             try:
                 return self.ctx.agents["weaver"].generate_arc_drive(
                     current_arc_dna=arcs_source[arc_idx],
@@ -218,16 +218,16 @@ class Stage2PreflightAnalysis:
                 try:
                     with _perf_lock:
                         self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_arc_drive")
-                except Exception:
-                    pass
+                except Exception as _e:
+                    logging.debug("[Stage2Preflight] perf_timer arc_drive stop 실패 (무시): %s", _e)
 
         def _compute_preflight() -> tuple:
             """Preflight 분석 (LLM) — 결과를 attempt 루프에서 재사용"""
             try:
                 with _perf_lock:
                     self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_preflight_analysis")
-            except Exception:
-                pass
+            except Exception as _e:
+                logging.debug("[Stage2Preflight] perf_timer preflight start 실패 (무시): %s", _e)
             _pf_injection = ""
             _pf_result = None
             try:
@@ -248,8 +248,8 @@ class Stage2PreflightAnalysis:
                 try:
                     with _perf_lock:
                         self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_preflight_analysis")
-                except Exception:
-                    pass
+                except Exception as _e:
+                    logging.debug("[Stage2Preflight] perf_timer preflight stop 실패 (무시): %s", _e)
 
         # [S2-I1] constraint_db 수집을 arc_drive/preflight와 병렬 실행
         def _compute_constraint_block() -> str:
@@ -263,8 +263,8 @@ class Stage2PreflightAnalysis:
         # [Phase 3-Obs] PerfTimer: preflight 병렬 구간 외곽 타이머
         try:
             self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_preflight_parallel")
-        except Exception:
-            pass
+        except Exception as _e:
+            logging.debug("[Stage2Preflight] perf_timer parallel start 실패 (무시): %s", _e)
         arc_drive = {}
         _cached_preflight_injection = ""
         _cached_preflight_result = {}
@@ -282,19 +282,19 @@ class Stage2PreflightAnalysis:
             if _parallel_exec is not None:
                 try:
                     _parallel_exec.shutdown(wait=False, cancel_futures=True)
-                except Exception:
-                    pass
+                except Exception as _e:
+                    logging.debug("[Stage2Preflight] executor shutdown(err path) 실패 (무시): %s", _e)
             logging.warning(f"⚠️ [Preflight] 병렬 실행 타임아웃/오류 (비치명): {str(_pf_err)[:80]}")
         finally:
             if _parallel_exec is not None:
                 try:
                     _parallel_exec.shutdown(wait=False, cancel_futures=True)
-                except Exception:
-                    pass
+                except Exception as _e:
+                    logging.debug("[Stage2Preflight] executor shutdown(finally) 실패 (무시): %s", _e)
             try:
                 self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_preflight_parallel")
-            except Exception:
-                pass
+            except Exception as _e:
+                logging.debug("[Stage2Preflight] perf_timer parallel stop 실패 (무시): %s", _e)
 
         if _cached_preflight_result:
             logging.info("✅ [V66.1] arc_drive + preflight + constraint 병렬 완료")
@@ -668,8 +668,8 @@ class Stage2PreflightAnalysis:
                                     _perf_key = f"sc_stage2_arc{global_arc_no}_retrieval"
                                     try:
                                         self.ctx.perf_timer.start(_perf_key)
-                                    except Exception:
-                                        pass
+                                    except Exception as _e:
+                                        logging.debug("[Stage2Preflight] SC perf_timer start 실패 (무시): %s", _e)
                                     try:
                                         _s2_vector_ctx = self._execute_stage2_retrieval_plan(
                                             _retrieval_plan,
@@ -680,8 +680,8 @@ class Stage2PreflightAnalysis:
                                     finally:
                                         try:
                                             self.ctx.perf_timer.stop(_perf_key)
-                                        except Exception:
-                                            pass
+                                        except Exception as _e:
+                                            logging.debug("[Stage2Preflight] SC perf_timer stop 실패 (무시): %s", _e)
                                     _use_advisor_path = True
                                 except Exception as exc:  # advisor path failure -> fallback to legacy
                                     _audit_cb = getattr(self.ctx, "audit_event", None)
@@ -776,8 +776,8 @@ class Stage2PreflightAnalysis:
                         )
                     try:
                         self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_generate")
-                    except Exception:
-                        pass
+                    except Exception as _e:
+                        logging.debug("[Stage2Preflight] perf_timer generate stop 실패 (무시): %s", _e)
 
                 if four_phase_arc and pipeline_result.get("final_verdict") == "PASS":
                     refined_arc = four_phase_arc
@@ -1014,8 +1014,8 @@ class Stage2PreflightAnalysis:
                         "fallback": _patch_fallback,
                     },
                 )
-            except Exception:
-                pass
+            except Exception as _e:
+                logging.debug("[Stage2Preflight] audit_event(patch_mode) 실패 (무시): %s", _e)
 
         return {
             "four_phase_passed": four_phase_passed,

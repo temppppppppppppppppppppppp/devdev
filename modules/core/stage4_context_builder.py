@@ -713,16 +713,16 @@ class Stage4ContextBuilder:
                     _perf_key = f"sc_stage4_ep{next_ep}_retrieval"
                     try:
                         self.ctx.perf_timer.start(_perf_key)
-                    except Exception:
-                        pass
+                    except Exception as _e:
+                        logging.debug("[Stage4ContextBuilder] perf_timer SC start 실패 (무시): %s", _e)
                     try:
                         for _retrieved in self._execute_retrieval_plan(_retrieval_plan):
                             _mc_parts.append(_retrieved)
                     finally:
                         try:
                             self.ctx.perf_timer.stop(_perf_key)
-                        except Exception:
-                            pass
+                        except Exception as _e:
+                            logging.debug("[Stage4ContextBuilder] perf_timer SC stop 실패 (무시): %s", _e)
                     _use_advisor_path = True
 
                 _mq_queries = [] if _use_advisor_path else [prev_ending]

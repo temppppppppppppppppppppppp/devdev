@@ -369,8 +369,8 @@ class ValidationOrchestrator:
                             failure_type=_f.get("type", "BLOCKING") if isinstance(_f, dict) else "BLOCKING",
                             description=str(_f.get("description", _f.get("reason", "")))[:200] if isinstance(_f, dict) else str(_f)[:200],
                         )
-                    except Exception:
-                        pass
+                    except Exception as _e:
+                        logging.debug("[ValidationOrchestrator] FailureLearner 기록 실패 (무시): %s", _e)
 
             return {
                 "final_decision": "REJECT",
@@ -1113,8 +1113,8 @@ class ValidationOrchestrator:
                             failure_type=_f.get("type", "BLOCKING") if isinstance(_f, dict) else "BLOCKING",
                             description=str(_f.get("description", _f.get("reason", "")))[:200] if isinstance(_f, dict) else str(_f)[:200],
                         )
-                    except Exception:
-                        pass
+                    except Exception as _e:
+                        logging.debug("[ValidationOrchestrator] FailureLearner(parallel) 기록 실패 (무시): %s", _e)
 
             return self._build_reject_result_v59(
                 "BLOCKING", blocking_result, self._generate_blocking_feedback(blocking_result)

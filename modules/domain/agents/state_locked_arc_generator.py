@@ -168,6 +168,7 @@ class StateLockedArcGenerator(BaseAgent):
 
     def __init__(self, context, client, model_tier: str = None):
         super().__init__(context, client, model_tier)
+        # DI 후보: protagonist_name (getattr fallback, L367 — 생성 시마다 조회)
         # [V60.24] 모든 모델을 Gemini 3로 통일
         self.extraction_model = "gemini-3-pro-preview"  # 추출도 Gemini 3
         self.draft_model = "gemini-3-pro-preview"  # [V60.17] Speculative: 초안용 모델

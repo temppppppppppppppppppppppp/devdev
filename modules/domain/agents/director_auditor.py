@@ -940,8 +940,8 @@ class DirectorQualityAuditor:
         # [Phase 3-Obs] 병렬 구간 소요 시간 기록
         try:
             logging.info(f"[PerfTimer:DirectorAuditor] director_sc_arc{arc_no}_voting={time.monotonic() - _tp_t0:.2f}s")
-        except Exception:
-            pass
+        except Exception as _e:
+            logging.debug("[DirectorAuditor] PerfTimer 기록 실패 (무시): %s", _e)
 
         # 점수들의 중앙값
         scores = []

@@ -326,8 +326,8 @@ class Stage3Orchestrator:
         try:
             _bp_bible_root = ctx.current_project.master_bible.get("MasterBible", ctx.current_project.master_bible)
             _bp_protagonist_config = _bp_bible_root.get("protagonist_config", {})
-        except Exception:
-            pass
+        except Exception as _e:
+            _logging.debug("[Stage3] protagonist_config 추출 실패 (기본값 사용): %s", _e)
 
         blueprint, pipeline_result = self._generate_blueprint(
             working_ep,
@@ -632,8 +632,8 @@ class Stage3Orchestrator:
                     },
                     stage=3,
                 )
-            except Exception:
-                pass
+            except Exception as _e:
+                _logging.debug("[Stage3] QualityDashboard PASS 기록 실패 (무시): %s", _e)
         return {"next_ep": working_ep + 1, "success_count": success_count + 1, "fail_count": 0}
 
     def _handle_failure(self, working_ep, pipeline_result, success_count, fail_count) -> dict:
@@ -689,8 +689,8 @@ class Stage3Orchestrator:
                     },
                     stage=3,
                 )
-            except Exception:
-                pass
+            except Exception as _e:
+                _logging.debug("[Stage3] QualityDashboard REJECT 기록 실패 (무시): %s", _e)
         # [TF-S3-02] 실패 에피소드에서 중단 (순차 의존성 보존)
         # 후속 에피소드는 현재 에피소드 Blueprint에 의존하므로 건너뛰기 금지
         if new_fail_count >= 3:
