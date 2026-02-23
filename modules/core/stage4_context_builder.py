@@ -137,7 +137,7 @@ class Stage4ContextBuilder:
 
         return names[:50]
 
-    def _execute_retrieval_plan(self, plan: "RetrievalPlan") -> list[str]:
+    def _execute_retrieval_plan(self, plan: "RetrievalPlan", arc_no: int | None = None) -> list[str]:
         """Execute retrieval plan slots and return context sections."""
         memory = getattr(self.ctx, "memory", None)
         if not memory or not plan or not getattr(plan, "slots", None):
@@ -146,7 +146,7 @@ class Stage4ContextBuilder:
         sections: list[str] = []
         compressor = ContextCompressor()
         max_results = int(_threshold("context.vector_max_results_s4", 16))
-        current_arc_no = getattr(plan, "arc_no", None)
+        current_arc_no = arc_no
         ordered_slots = sorted(plan.slots, key=lambda slot: getattr(slot, "priority", 2))
 
         for slot in ordered_slots:
@@ -179,11 +179,17 @@ class Stage4ContextBuilder:
                         )
                     elif _retrieval_mode == "sparse" and hasattr(memory, "_fts_search"):
                         _fts = memory._fts_search(query_text, plan.episode_num, n_results=max_results)
-                        result = "\n\n".join(
-                            f"=== EP {r['ep_num']} [sparse] ===\n{r['summary']}"
-                            for r in _fts
-                        ) if _fts else ""
+                        result = (
+                            "\n\n".join(f"=== EP {r['ep_num']} [sparse] ===\n{r['summary']}" for r in _fts)
+                            if _fts
+                            else ""
+                        )
                     else:
+                        if _retrieval_mode not in ("dense", "hybrid", "sparse"):
+                            logging.warning(
+                                "[Retrieval] 알 수 없는 retrieval_mode '%s', dense로 폴백",
+                                _retrieval_mode,
+                            )
                         result = memory.retrieve_multi_query_context(
                             queries=[query_text],
                             current_ep=plan.episode_num,
@@ -737,7 +743,8 @@ class Stage4ContextBuilder:
                     except Exception as _e:
                         logging.debug("[Stage4ContextBuilder] perf_timer SC start 실패 (무시): %s", _e)
                     try:
-                        for _retrieved in self._execute_retrieval_plan(_retrieval_plan):
+                        _arc_no_s4 = arc_data.get("arc_no", None) if arc_data else None
+                        for _retrieved in self._execute_retrieval_plan(_retrieval_plan, arc_no=_arc_no_s4):
                             _mc_parts.append(_retrieved)
                     finally:
                         try:
