@@ -18,6 +18,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from modules.core.constants import ManuscriptLimits
+
 
 class QualityDashboard:
     """
@@ -528,6 +530,191 @@ class QualityDashboard:
             lines.append("\n✨ 현재 패턴을 유지하라. 성공 요인:")
             if analysis["recent_avg"] >= 80:
                 lines.append("- 품질이 우수합니다. 이 방향을 계속 유지하세요.")
+
+        return "\n".join(lines)
+
+    def predict_pass_probability(self, stage: int = 4, current_metrics: dict | None = None) -> dict:
+        """
+        [V60.5] PASS 확률 예측
+
+        과거 데이터 기반으로 현재 원고의 PASS 확률을 예측.
+        Pre-Director Checklist 결과, 분량, 다이얼로그 비율 등을 고려.
+
+        Args:
+            stage: Stage 번호
+            current_metrics: 현재 원고의 메트릭 (선택)
+                - length: 원고 길이
+                - dialogue_ratio: 대화 비율
+                - scene_coverage: 씬 반영률
+                - pre_checklist_warnings: Pre-Director 경고 수
+                - pre_checklist_fails: Pre-Director 실패 수
+
+        Returns:
+            {
+                'probability': float (0-100),
+                'confidence': 'high' | 'medium' | 'low',
+                'factors': [{'name': str, 'impact': str, 'weight': float}, ...],
+                'recommendation': str,
+                'alert_level': 'success' | 'warning' | 'danger'
+            }
+        """
+        result = {
+            "probability": 50.0,
+            "confidence": "low",
+            "factors": [],
+            "recommendation": "",
+            "alert_level": "warning",
+        }
+
+        # 1. 기본 확률 계산 (과거 PASS율 기반)
+        stage_stat = self.stage_stats.get(stage, {"pass": 0, "reject": 0})
+        total = stage_stat["pass"] + stage_stat["reject"]
+
+        if total < 5:
+            result["confidence"] = "low"
+            result["recommendation"] = "데이터 부족으로 예측 신뢰도가 낮습니다."
+            return result
+
+        base_rate = (stage_stat["pass"] / total) * 100
+        probability = base_rate
+
+        if total >= 20:
+            result["confidence"] = "high"
+        elif total >= 10:
+            result["confidence"] = "medium"
+        else:
+            result["confidence"] = "low"
+
+        # 2. 현재 메트릭 기반 조정
+        if current_metrics:
+            length = current_metrics.get("length", 0)
+            if length > 0:
+                if length < ManuscriptLimits.MIN_LENGTH:
+                    probability -= 40
+                    result["factors"].append(
+                        {
+                            "name": "분량 부족",
+                            "impact": f"{length}자 (최소 {ManuscriptLimits.MIN_LENGTH}자)",
+                            "weight": -40,
+                        }
+                    )
+                elif length < ManuscriptLimits.WARNING_LENGTH:
+                    probability -= 15
+                    result["factors"].append({"name": "분량 경계", "impact": f"{length}자", "weight": -15})
+                elif ManuscriptLimits.WARNING_LENGTH <= length <= 8000:
+                    probability += 5
+                    result["factors"].append({"name": "분량 적정", "impact": f"{length}자", "weight": +5})
+
+            dialogue_ratio = current_metrics.get("dialogue_ratio", -1)
+            if dialogue_ratio >= 0:
+                if dialogue_ratio < 0.15:
+                    probability -= 20
+                    result["factors"].append({"name": "대화 부족", "impact": f"{dialogue_ratio:.0%}", "weight": -20})
+                elif 0.25 <= dialogue_ratio <= 0.40:
+                    probability += 5
+                    result["factors"].append(
+                        {"name": "대화 비율 양호", "impact": f"{dialogue_ratio:.0%}", "weight": +5}
+                    )
+
+            scene_coverage = current_metrics.get("scene_coverage", -1)
+            if scene_coverage >= 0:
+                if scene_coverage < 0.3:
+                    probability -= 30
+                    result["factors"].append({"name": "씬 반영 부족", "impact": f"{scene_coverage:.0%}", "weight": -30})
+                elif scene_coverage < 0.5:
+                    probability -= 10
+                    result["factors"].append({"name": "씬 반영 경계", "impact": f"{scene_coverage:.0%}", "weight": -10})
+                elif scene_coverage >= 0.7:
+                    probability += 10
+                    result["factors"].append({"name": "씬 반영 우수", "impact": f"{scene_coverage:.0%}", "weight": +10})
+
+            pre_fails = current_metrics.get("pre_checklist_fails", 0)
+            pre_warnings = current_metrics.get("pre_checklist_warnings", 0)
+
+            if pre_fails > 0:
+                probability -= pre_fails * 25
+                result["factors"].append(
+                    {"name": "Pre-Check 실패", "impact": f"{pre_fails}개 항목", "weight": -pre_fails * 25}
+                )
+            elif pre_warnings > 2:
+                probability -= (pre_warnings - 2) * 5
+                result["factors"].append(
+                    {"name": "Pre-Check 경고", "impact": f"{pre_warnings}개 항목", "weight": -(pre_warnings - 2) * 5}
+                )
+
+        # 3. 추이 기반 조정
+        trend_analysis = self.analyze_score_trend(stage=stage)
+        if trend_analysis["trend"] == "declining":
+            probability -= 10
+            result["factors"].append({"name": "하락 추세", "impact": "최근 점수 하락", "weight": -10})
+        elif trend_analysis["trend"] == "improving":
+            probability += 5
+            result["factors"].append({"name": "상승 추세", "impact": "최근 점수 상승", "weight": +5})
+
+        # 4. 확률 범위 제한
+        probability = max(5, min(95, probability))
+        result["probability"] = round(probability, 1)
+
+        # 5. Alert level 결정
+        if probability >= 70:
+            result["alert_level"] = "success"
+        elif probability >= 40:
+            result["alert_level"] = "warning"
+        else:
+            result["alert_level"] = "danger"
+
+        # 6. 추천 생성
+        if probability < 40:
+            critical_factors = [f for f in result["factors"] if f.get("weight", 0) <= -20]
+            if critical_factors:
+                factor_names = [f["name"] for f in critical_factors[:2]]
+                result["recommendation"] = f"PASS 확률 낮음. 우선 개선 필요: {', '.join(factor_names)}"
+            else:
+                result["recommendation"] = "PASS 확률 낮음. 전반적인 품질 개선이 필요합니다."
+        elif probability < 60:
+            result["recommendation"] = "PASS 확률 보통. 경고 항목 해소 시 확률 상승 가능."
+        else:
+            result["recommendation"] = "PASS 확률 양호. 현재 품질 유지하세요."
+
+        return result
+
+    def get_pass_prediction_warning(self, stage: int = 4, current_metrics: dict | None = None) -> str:
+        """
+        [V60.5] Writer 프롬프트에 주입할 PASS 확률 예측 경고
+
+        Args:
+            stage: Stage 번호
+            current_metrics: 현재 원고 메트릭
+
+        Returns:
+            프롬프트 주입용 경고 문자열 (확률 60% 미만일 때만)
+        """
+        prediction = self.predict_pass_probability(stage=stage, current_metrics=current_metrics)
+
+        if prediction["probability"] >= 60:
+            return ""
+
+        lines = [
+            "[V60.5 PASS 확률 예측 경고]",
+            f"현재 예측 PASS 확률: {prediction['probability']:.0f}% ({prediction['confidence']} 신뢰도)",
+            "",
+        ]
+
+        negative_factors = [f for f in prediction["factors"] if f.get("weight", 0) < 0]
+        if negative_factors:
+            lines.append("PASS 확률 저하 요인:")
+            for factor in negative_factors[:4]:
+                lines.append(f"  - {factor['name']}: {factor['impact']} (영향: {factor['weight']:+d}점)")
+
+        lines.append("")
+        lines.append(f"{prediction['recommendation']}")
+
+        if prediction["probability"] < 40:
+            lines.append("")
+            lines.append("현재 상태로는 REJECT 가능성 높음. 다음을 반드시 확인하라:")
+            lines.append("  1. 분량이 4,500자 이상인가?")
+            lines.append("  2. Blueprint 6개 씬을 모두 반영했는가?")
+            lines.append("  3. 대화와 묘사가 균형 잡혀 있는가?")
 
         return "\n".join(lines)
 
