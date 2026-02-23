@@ -460,3 +460,29 @@ class TestCreateTrackerFromArcs:
         tracker = create_tracker_from_arcs([])
         assert len(tracker.transitions) == 0
         assert len(tracker.states) == 0
+
+
+class TestResolvedPlotsSummaryLimit:
+    def test_resolved_plots_summary_max_items(self, tracker):
+        tracker.resolved_plots = [
+            {"plot": f"plot_{i}", "resolution": f"done_{i}", "episode": i, "arc_no": i} for i in range(1, 41)
+        ]
+
+        summary = tracker.get_resolved_plots_summary(max_items=30)
+
+        assert summary.startswith("[V62.7]")
+        assert summary.count("Arc ") == 30
+        assert "Arc 1 " not in summary
+        assert "Arc 40 " in summary
+
+    def test_resolved_plots_summary_omitted_count(self, tracker):
+        tracker.resolved_plots = [
+            {"plot": f"plot_{i}", "resolution": f"done_{i}", "episode": i, "arc_no": i} for i in range(1, 36)
+        ]
+
+        summary = tracker.get_resolved_plots_summary(max_items=30)
+        lines = summary.splitlines()
+
+        assert len(lines) > 2
+        assert lines[1].strip().startswith("(")
+        assert "5" in lines[1]

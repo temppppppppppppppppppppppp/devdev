@@ -11,6 +11,8 @@ import json
 import logging
 import re
 
+from modules.core.prompt_loader import SafeDict
+
 # =================================================================
 # [V49 NEW] Arc 수준 연속성 검증 프롬프트
 # =================================================================
@@ -359,17 +361,19 @@ class ContinuityArcValidator:
         prev_arcs_summary = self._format_prev_arcs(prev_arcs)
         entity_registry_str = self._ci._format_entity_registry(entity_registry)
 
-        prompt = ARC_CONTINUITY_INSPECTION_PROMPT.format(
-            current_arc_no=arc_no,
-            ep_count=ep_count,
-            ep_start=ep_start,
-            ep_end=ep_end,
-            tactical_doc=self._ci._escape_braces(tactical_doc[:50000]),
-            joint_docs=self._ci._escape_braces(json.dumps(joint_docs, ensure_ascii=False)),
-            status_shadow=self._ci._escape_braces(json.dumps(status_shadow, ensure_ascii=False)),
-            prev_arc_count=len(prev_arcs),
-            prev_arcs_summary=self._ci._escape_braces(prev_arcs_summary),
-            entity_registry=self._ci._escape_braces(entity_registry_str),
+        prompt = ARC_CONTINUITY_INSPECTION_PROMPT.format_map(
+            SafeDict(
+                current_arc_no=arc_no,
+                ep_count=ep_count,
+                ep_start=ep_start,
+                ep_end=ep_end,
+                tactical_doc=self._ci._escape_braces(tactical_doc[:50000]),
+                joint_docs=self._ci._escape_braces(json.dumps(joint_docs, ensure_ascii=False)),
+                status_shadow=self._ci._escape_braces(json.dumps(status_shadow, ensure_ascii=False)),
+                prev_arc_count=len(prev_arcs),
+                prev_arcs_summary=self._ci._escape_braces(prev_arcs_summary),
+                entity_registry=self._ci._escape_braces(entity_registry_str),
+            )
         )
 
         try:
@@ -470,7 +474,7 @@ class ContinuityArcValidator:
 
     def _inspect_intra_arc_only(self, current_arc: dict) -> dict:
         """[V49] Arc 1 또는 이전 Arc 없을 때 단일 Arc 내 모순만 검증"""
-        arc_no = current_arc.get("arc_no", 1)
+        current_arc.get("arc_no", 1)
         tactical_doc = current_arc.get("tactical_doc", "")
 
         if not tactical_doc:
@@ -529,8 +533,8 @@ class ContinuityArcValidator:
         if not last_ep_content or len(last_ep_content) < 100:
             return original_joint_docs
 
-        prompt = JOINT_DOCS_EXTRACTION_PROMPT.format(
-            arc_no=arc_no, last_ep=ep_end, last_ep_content=self._ci._escape_braces(last_ep_content[:4000])
+        prompt = JOINT_DOCS_EXTRACTION_PROMPT.format_map(
+            SafeDict(arc_no=arc_no, last_ep=ep_end, last_ep_content=self._ci._escape_braces(last_ep_content[:4000]))
         )
 
         try:
@@ -593,7 +597,7 @@ class ContinuityArcValidator:
 
         current_arc_no = current_arc.get("arc_no", 0)
         tactical_doc = current_arc.get("tactical_doc", "")
-        joint_docs = current_arc.get("joint_docs", {})
+        current_arc.get("joint_docs", {})
 
         # 이전 Arc들에서 획득한 아이템/수여물 추적
         acquired_items = {}
@@ -705,7 +709,8 @@ class ContinuityArcValidator:
         if usage_items:
             logging.info(f"📦 [V60.54 DEBUG] 사용 패턴 감지: {list(usage_items)[:5]}")
 
-        all_existing_items = prev_inventory_items + current_inventory_items + list(usage_items)
+        # [I-1] 현재 Arc 인벤토리는 선필터에 포함하지 않음 (중복 획득 검증 우회 방지)
+        all_existing_items = prev_inventory_items + list(usage_items)
 
         logging.info(f"📦 [V60.54 DEBUG] Arc {current_arc_no} 중복 검사 시작")
         logging.info(f"- 현재 획득 후보: {current_acquisitions[:5] if current_acquisitions else '없음'}")
@@ -790,7 +795,7 @@ class ContinuityArcValidator:
         """[V49] 단일 Arc 내 모순 검증"""
         violations = []
         tactical_doc = arc.get("tactical_doc", "")
-        ep_start = arc.get("ep_start", 1)
+        arc.get("ep_start", 1)
 
         if not tactical_doc:
             return violations

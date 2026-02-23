@@ -139,7 +139,6 @@ class RelationshipTrackerNPC:
         positive_path = ["무시", "의심", "경외", "충성"]
 
         # 부정적 관계 경로
-        negative_path = ["무시", "적대", "굴복"]
 
         try:
             if from_state in positive_path and to_state in positive_path:

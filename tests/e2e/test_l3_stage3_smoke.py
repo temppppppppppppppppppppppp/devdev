@@ -133,9 +133,11 @@ def _build_mock_app(db: DBManager, bible: dict, arcs: list[dict]) -> MagicMock:
     app._get_arc_context_for_episode = MagicMock(side_effect=_get_arc_context_for_episode)
     app._validate_arc_data_fields = MagicMock(side_effect=lambda arc, _idx: arc)
     app._validate_blueprint_integrity = MagicMock(
-        side_effect=lambda bp: isinstance(bp, dict)
-        and isinstance(bp.get("integrated_scenario"), str)
-        and isinstance(bp.get("scene_breakdown"), dict)
+        side_effect=lambda bp: (
+            isinstance(bp, dict)
+            and isinstance(bp.get("integrated_scenario"), str)
+            and isinstance(bp.get("scene_breakdown"), dict)
+        )
     )
     app._get_protagonist_name = MagicMock(return_value="\uc2dc\uc724")
     app._fix_entity_registry_protagonist = MagicMock(side_effect=lambda registry, _name: registry)

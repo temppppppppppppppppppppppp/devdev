@@ -27,6 +27,7 @@ import re
 
 from modules.core.arc_summary_utils import generate_prev_arc_summary  # [V64.P4]
 from modules.core.constants import Stage2Limits
+from modules.core.prompt_loader import SafeDict
 
 from .base_agent import BaseAgent
 
@@ -535,12 +536,14 @@ class UnifiedArcValidator(BaseAgent):
         python_text = self._format_python_result(python_result)
 
         # 프롬프트 생성
-        prompt = UNIFIED_VALIDATION_PROMPT.format(
-            arc_data=self._escape_braces(json.dumps(arc, ensure_ascii=False, indent=2)[:6000]),
-            prev_summary=self._escape_braces(prev_summary),
-            constraints=self._escape_braces(constraints[:3000] if constraints else "(없음)"),
-            python_result=self._escape_braces(python_text),
-            min_chars=self.min_chars_per_ep,
+        prompt = UNIFIED_VALIDATION_PROMPT.format_map(
+            SafeDict(
+                arc_data=self._escape_braces(json.dumps(arc, ensure_ascii=False, indent=2)[:6000]),
+                prev_summary=self._escape_braces(prev_summary),
+                constraints=self._escape_braces(constraints[:3000] if constraints else "(없음)"),
+                python_result=self._escape_braces(python_text),
+                min_chars=self.min_chars_per_ep,
+            )
         )
 
         try:

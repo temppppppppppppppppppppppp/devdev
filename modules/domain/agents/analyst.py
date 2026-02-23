@@ -585,7 +585,7 @@ class Analyst(BaseAgent):
         original_guess = 5
         if isinstance(curr_block, dict):
             content_parts, content_len = self._extract_content_parts(curr_block)
-            content_sample = " ".join(content_parts)
+            " ".join(content_parts)
 
             # 내용 길이/복잡도에 따라 화수 추정
             # - 500자 미만: 간단한 블록 → 3화

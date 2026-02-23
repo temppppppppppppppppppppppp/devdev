@@ -193,7 +193,7 @@ class StageSpinner:
 
     def _render(self) -> Text:
         now = time.time()
-        session_elapsed = now - StageSpinner._session_start
+        now - StageSpinner._session_start
         task_elapsed = now - self.task_start if self.task_start else 0
 
         # [V61.2] 클로드 스타일 미니멀 스피너

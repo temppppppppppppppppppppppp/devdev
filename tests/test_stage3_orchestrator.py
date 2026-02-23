@@ -424,3 +424,17 @@ class TestStage3ContextDI:
         """self.app 접근 유지 (레거시 호환)"""
         orch = Stage3Orchestrator(app=app_mock)
         assert orch.app is app_mock
+
+    def test_none_callbacks_do_not_raise_type_error(self, app_mock):
+        """[G-1] DI 콜백이 None이어도 callable 가드로 TypeError 없이 종료."""
+        ctx = Stage3Context.from_app(app_mock)
+        ctx.get_max_episode_from_manuscripts = None
+        ctx.get_int_input = None
+        ctx.write_audit_summary = None
+        ctx.get_arc_context_for_episode = None
+        ctx.get_protagonist_name = None
+        orch = Stage3Orchestrator(app=app_mock, context=ctx)
+
+        orch.stage_3_batch_blueprinting()
+
+        app_mock._write_audit_summary.assert_not_called()

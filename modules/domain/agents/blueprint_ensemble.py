@@ -181,6 +181,16 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 _active_strategies = _filtered
 
         # [Phase 3-Obs] 에이전트 레벨 ThreadPoolExecutor 계측
+        # [Tier4-11] shared context cache for ensemble fan-out
+        shared_context = f"{arc_focus or ''}\n\n{constraints_str or ''}\n\n{prev_info or ''}\n\n{hud_context or ''}"
+        cache_info = self._get_or_create_context_cache(
+            cache_type="blueprint_ensemble",
+            content=shared_context,
+            ttl_seconds=600,
+            project_name=f"ep{ep_num}",
+        )
+        cache_name = cache_info.get("cache_name")
+
         _tp_t0 = time.monotonic()
 
         # [V61.3] 전체 병렬 처리 블록을 try-except로 감싸서 급사 방지
@@ -208,6 +218,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                         protagonist_config=protagonist_config,  # [V60.90] 주인공 설정 전달
                         hud_context=hud_context,  # [V60.95] 고밀도 HUD 주입
                         genre=genre,  # [V61.3] 미리 로드한 genre 전달 (thread-safety)
+                        cache_name=cache_name,  # [Tier4-11]
                     )
                     futures[future] = strategy["name"]
 
@@ -321,6 +332,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         protagonist_config: dict = None,  # [V60.90] 주인공 설정
         hud_context: str = "",  # [V60.95] 고밀도 HUD 컨텍스트
         genre: str = GenreTypes.WUXIA,  # [V61.3] 미리 로드한 genre (thread-safety)
+        cache_name: str = "",  # [Tier4-11] shared context cache name
     ) -> dict | None:
         """단일 Blueprint 생성"""
         # [V61.3] 전체 메서드를 try-except로 감싸서 worker thread 크래시 방지
@@ -365,6 +377,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
             # [TF-I23/I24] 독자 피드백 컨텍스트 (advisory-only)
             _reader_fb = self._build_reader_feedback_context(ep_num)
+            _use_cached_context = bool(cache_name)
+            _cached_context_stub = "[context cached: refer to cached_content]"
             prompt = self._prompt_loader.load(
                 "ensemble",
                 "BLUEPRINT_GENERATION_PROMPT",
@@ -372,21 +386,52 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 ep_num=ep_num,
                 protagonist_name=self._escape_braces(protagonist_name),  # [V70] 주인공 이름 주입
                 protagonist_instructions=self._escape_braces(protagonist_instructions),  # [V70] 주인공 설정 지시
-                arc_focus=self._escape_braces(arc_focus),
-                constraints=self._escape_braces(constraints_str),
+                arc_focus=self._escape_braces(_cached_context_stub if _use_cached_context else arc_focus),
+                constraints=self._escape_braces(_cached_context_stub if _use_cached_context else constraints_str),
                 strategy_directive=self._escape_braces(
                     strategy["directive"] + extra_directive
                 ),  # [V70] Director feedback 내 {} 방어
-                prev_info=self._escape_braces(prev_info),
-                hud_context=self._escape_braces(hud_context) if hud_context else "(상태 정보 없음)",  # [V60.95]
+                prev_info=self._escape_braces(_cached_context_stub if _use_cached_context else prev_info),
+                hud_context=(
+                    self._escape_braces(_cached_context_stub if _use_cached_context else hud_context)
+                    if hud_context
+                    else "(상태 정보 없음)"
+                ),  # [V60.95]
                 pov_constraint=self._escape_braces(_pov_constraint),  # [V70] [TF-S3-10]
                 reader_feedback=self._escape_braces(_reader_fb) if _reader_fb else "",  # [TF-I23/I24]
             )
+            full_prompt_fallback = prompt
+            if _use_cached_context:
+                full_prompt_fallback = self._prompt_loader.load(
+                    "ensemble",
+                    "BLUEPRINT_GENERATION_PROMPT",
+                    strategy_display=strategy["display"],
+                    ep_num=ep_num,
+                    protagonist_name=self._escape_braces(protagonist_name),  # [V70] 주인공 이름 주입
+                    protagonist_instructions=self._escape_braces(protagonist_instructions),  # [V70] 주인공 설정 지시
+                    arc_focus=self._escape_braces(arc_focus),
+                    constraints=self._escape_braces(constraints_str),
+                    strategy_directive=self._escape_braces(
+                        strategy["directive"] + extra_directive
+                    ),  # [V70] Director feedback 내 {} 방어
+                    prev_info=self._escape_braces(prev_info),
+                    hud_context=self._escape_braces(hud_context) if hud_context else "(상태 정보 없음)",  # [V60.95]
+                    pov_constraint=self._escape_braces(_pov_constraint),  # [V70] [TF-S3-10]
+                    reader_feedback=self._escape_braces(_reader_fb) if _reader_fb else "",  # [TF-I23/I24]
+                )
+                if not full_prompt_fallback:
+                    full_prompt_fallback = prompt
             if not prompt:
                 logging.warning("[BPEnsemble] BLUEPRINT_GENERATION_PROMPT not found in prompt loader")
                 return None
 
-            response = self.ask(prompt, temperature=0.7, thinking_level="medium")  # [V61.6] thinking 활성화
+            response = self._ask_with_cached_context(
+                cache_name=cache_name,
+                prompt=prompt,
+                temperature=0.7,
+                thinking_level="medium",
+                full_prompt_fallback=full_prompt_fallback,
+            )
             result = self._extract_json_robust(response)
 
             if not isinstance(result, dict):

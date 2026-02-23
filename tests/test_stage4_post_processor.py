@@ -313,6 +313,73 @@ class TestProcessPassResult:
         assert kwargs["event_types"] == []
         assert kwargs["entity_names"] == []
 
+    def test_manager_sync_retry_runs_when_async_future_fails(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.agents["manager"].update_state_and_lore_v20.return_value = {
+            "new_lore": {},
+            "knowledge_map_updates": {},
+            "recovered_seeds": [],
+            "state_updates": {},
+            "causal_links": [],
+        }
+
+        class _BrokenFuture:
+            def result(self, timeout=None):
+                raise TimeoutError("async manager timeout")
+
+        class _BrokenExecutor:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def submit(self, *args, **kwargs):
+                return _BrokenFuture()
+
+            def shutdown(self, wait=False):
+                return None
+
+        with patch("concurrent.futures.ThreadPoolExecutor", _BrokenExecutor):
+            result = pp.process_pass_result(
+                next_ep=6,
+                final_manuscript="테스트 원고 " * 500,
+                final_title="테스트",
+                final_state_updates={},
+                blueprint={"scene_breakdown": []},
+                arc_data={"arc_no": 1},
+                output_dir=tmp_path,
+                v50_modules_available=False,
+                extract_chain_link_fn=lambda *_args, **_kwargs: {},
+            )
+
+        assert result is True
+        assert pp.ctx.agents["manager"].update_state_and_lore_v20.call_count == 1
+        assert any("Manager 동기 재시도 성공" in str(c.args[0]) for c in pp.ctx.ui.log.call_args_list)
+
+    def test_records_stage4_validation_when_quality_dashboard_present(self, tmp_path):
+        pp = self._make_pp()
+        pp.ctx.current_project.db.save_manuscript.return_value = True
+        pp.ctx.quality_dashboard = MagicMock()
+        pp.ctx.quality_dashboard.detect_score_regression.return_value = {"is_regression": False, "severity": "none"}
+
+        result = pp.process_pass_result(
+            next_ep=7,
+            final_manuscript="테스트 원고 " * 500,
+            final_title="테스트",
+            final_state_updates={},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True
+        pp.ctx.quality_dashboard.record_validation.assert_called_once()
+        record_kwargs = pp.ctx.quality_dashboard.record_validation.call_args.kwargs
+        assert record_kwargs["ep_num"] == 7
+        assert record_kwargs["stage"] == 4
+        assert record_kwargs["result"]["decision"] == "PASS"
+
 
 class TestRunPostEpisodeTasks:
     def test_vector_sync_called_when_operational(self):

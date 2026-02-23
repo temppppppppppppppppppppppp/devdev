@@ -238,6 +238,31 @@ class TestContinuityArcValidatorIntraArc:
         result = validator._extract_last_episode_content(tactical_doc, 3)
         assert "마지막 내용" in result
 
+    def test_current_inventory_does_not_bypass_duplicate_detection(self):
+        """[I-1] 현재 Arc 인벤토리와 동일 아이템이어도 중복 획득 검증은 수행되어야 한다."""
+        inspector = _make_mock_inspector()
+        validator = ContinuityArcValidator(inspector)
+
+        prev_arcs = [
+            {
+                "arc_no": 1,
+                "tactical_doc": "이전 Arc",
+                "joint_docs": {"physical_inventory": []},
+                "status_shadow": {},
+                "state_constraints": {"protagonist_items": ["백근도"]},
+            }
+        ]
+        current_arc = {
+            "arc_no": 2,
+            "tactical_doc": "이번 Arc에서 백근도를 다시 획득한다.",
+            "joint_docs": {"physical_inventory": ["백근도"]},
+            "state_constraints": {"protagonist_items": ["백근도"]},
+        }
+
+        result = validator._arc_python_precheck(current_arc, prev_arcs)
+        duplicate_violations = [v for v in result["critical_violations"] if v.get("type") == "duplicate_acquisition"]
+        assert len(duplicate_violations) == 1
+
 
 # ══════════════════════════════════════════════════════════════
 # ContinuityManuscriptValidator Tests
@@ -387,6 +412,20 @@ class TestContinuityManuscriptCrossEpisodeDuplication:
         assert any(w.get("type") == "relationship_jump" for w in warnings)
 
 
+class TestContinuityManuscriptItemMatching:
+    def test_is_item_acquired_rejects_short_substring_false_positive(self):
+        inspector = _make_mock_inspector()
+        validator = ContinuityManuscriptValidator(inspector)
+
+        assert validator._is_item_acquired("검", {"청룡검"}) is False
+
+    def test_is_item_acquired_accepts_meaningful_overlap(self):
+        inspector = _make_mock_inspector()
+        validator = ContinuityManuscriptValidator(inspector)
+
+        assert validator._is_item_acquired("청룡", {"청룡검"}) is True
+
+
 # ══════════════════════════════════════════════════════════════
 # ContinuityBlueprintValidator Tests
 # ══════════════════════════════════════════════════════════════
@@ -461,6 +500,20 @@ class TestContinuityBlueprintValidation:
         # acquire_patterns에 매칭되면 critical_violations에 추가
         assert "critical_violations" in result
         assert "timeline" in result
+
+    def test_python_precheck_premature_possession_requires_same_item_match(self):
+        inspector = _make_mock_inspector()
+        inspector._is_same_item = MagicMock(side_effect=lambda a, b: a.strip() == b.strip())
+        validator = ContinuityBlueprintValidator(inspector)
+
+        prev_bp = [{"ep_num": 3, "integrated_scenario": "사부가 '비전서고'를 수여했다."}]
+        current_scenario = "품속 통행서가 있었다."
+
+        result = validator._python_precheck(current_ep=5, current_scenario=current_scenario, prev_blueprints=prev_bp)
+        premature = [v for v in result["critical_violations"] if v.get("type") == "premature_possession"]
+
+        assert premature
+        assert "통행서" in premature[0]["item_or_subject"]
 
     def test_format_prev_blueprints_returns_string(self):
         """_format_prev_blueprints가 문자열 반환"""

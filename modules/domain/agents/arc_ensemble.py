@@ -129,6 +129,16 @@ class ArcEnsembleGenerator(BaseAgent):
             logging.warning(f"⚠️ [V61.3] genre 사전 로드 실패: {str(e)[:50]}")
 
         # [Phase 3-Obs] 에이전트 레벨 ThreadPoolExecutor 계측
+        # [Tier4-11] shared context cache for ensemble fan-out
+        shared_context = f"{prev_arc_context or ''}\n\n{constraint_block or ''}"
+        cache_info = self._get_or_create_context_cache(
+            cache_type="arc_ensemble",
+            content=shared_context,
+            ttl_seconds=600,
+            project_name=f"arc{arc_no}",
+        )
+        cache_name = cache_info.get("cache_name")
+
         _tp_t0 = time.monotonic()
 
         # [V61.3] 전체 병렬 처리 블록을 try-except로 감싸서 급사 방지
@@ -160,6 +170,7 @@ class ArcEnsembleGenerator(BaseAgent):
                         entity_registry=entity_registry,  # [V60.92]
                         genre=genre,  # [V61.3] 미리 로드한 genre 전달 (thread-safety)
                         retry=retry,  # [V61.5] 재시도 횟수 전달
+                        cache_name=cache_name,  # [Tier4-11]
                     )
                     futures[future] = strategy["name"]
 
@@ -311,6 +322,7 @@ class ArcEnsembleGenerator(BaseAgent):
         entity_registry: dict = None,  # [V60.92]
         genre: str = GenreTypes.WUXIA,  # [V61.3] 미리 로드한 genre (thread-safety)
         retry: int = 0,  # [V61.5] 재시도 횟수
+        cache_name: str = "",  # [Tier4-11] shared context cache name
     ) -> dict | None:
         """단일 전략으로 Arc 생성"""
         try:
@@ -368,6 +380,9 @@ class ArcEnsembleGenerator(BaseAgent):
                         lines.append(f"- **{k}**: {v}")
                     genre_ext_guide = "\n".join(lines)
 
+            _use_cached_context = bool(cache_name)
+            _cached_context_stub = "[context cached: refer to cached_content]"
+
             prompt = self._prompt_loader.load(
                 "ensemble",
                 "ENSEMBLE_ARC_PROMPT",
@@ -377,8 +392,12 @@ class ArcEnsembleGenerator(BaseAgent):
                 prohibition_summary=self._escape_braces(prohibition_summary),  # [V70]
                 protagonist_name=self._escape_braces(protagonist_name),  # [V70]
                 protagonist_instructions=self._escape_braces(protagonist_instructions),  # [V70]
-                constraint_block=self._escape_braces(constraint_block or "(없음)"),
-                prev_arc_context=self._escape_braces(prev_arc_context or "시작점"),
+                constraint_block=self._escape_braces(
+                    _cached_context_stub if _use_cached_context else (constraint_block or "(없음)")
+                ),
+                prev_arc_context=self._escape_braces(
+                    _cached_context_stub if _use_cached_context else (prev_arc_context or "시작점")
+                ),
                 curr_block=self._escape_braces(json.dumps(curr_block, ensure_ascii=False) if curr_block else "{}"),
                 genre_ext_guide=self._escape_braces(genre_ext_guide),
                 vol_strategy=self._escape_braces(vol_strategy[:2000] if vol_strategy else "(없음)"),
@@ -389,6 +408,31 @@ class ArcEnsembleGenerator(BaseAgent):
                 ep_start=ep_start,
                 ep_end=ep_end,
             )
+            full_prompt_fallback = prompt
+            if _use_cached_context:
+                full_prompt_fallback = self._prompt_loader.load(
+                    "ensemble",
+                    "ENSEMBLE_ARC_PROMPT",
+                    strategy_name=strategy["name"].upper(),
+                    strategy_focus=strategy["focus"],
+                    strategy_style=strategy["style"],
+                    prohibition_summary=self._escape_braces(prohibition_summary),  # [V70]
+                    protagonist_name=self._escape_braces(protagonist_name),  # [V70]
+                    protagonist_instructions=self._escape_braces(protagonist_instructions),  # [V70]
+                    constraint_block=self._escape_braces(constraint_block or "(없음)"),
+                    prev_arc_context=self._escape_braces(prev_arc_context or "시작점"),
+                    curr_block=self._escape_braces(json.dumps(curr_block, ensure_ascii=False) if curr_block else "{}"),
+                    genre_ext_guide=self._escape_braces(genre_ext_guide),
+                    vol_strategy=self._escape_braces(vol_strategy[:2000] if vol_strategy else "(없음)"),
+                    assets=self._escape_braces(json.dumps(assets, ensure_ascii=False)[:2000] if assets else "{}"),
+                    feedback=self._escape_braces(_merged_feedback[:1500] if _merged_feedback else "(없음)"),
+                    entity_registry_section=self._escape_braces(entity_registry_section),  # [V60.92]
+                    arc_no=arc_no,
+                    ep_start=ep_start,
+                    ep_end=ep_end,
+                )
+                if not full_prompt_fallback:
+                    full_prompt_fallback = prompt
             if not prompt:
                 logging.warning("[ArcEnsemble] ENSEMBLE_ARC_PROMPT not found in prompt loader")
                 return None
@@ -396,7 +440,13 @@ class ArcEnsembleGenerator(BaseAgent):
             # [V60.27] Thinking Level 적용 - Arc 생성 품질 향상
             # [V61.5] 재시도 시 "medium"으로 다운그레이드 (피드백이 사고를 보조)
             thinking = "high" if retry == 0 else "medium"
-            result = self.ask(prompt, temperature=strategy["temperature"], thinking_level=thinking)
+            result = self._ask_with_cached_context(
+                cache_name=cache_name,
+                prompt=prompt,
+                temperature=strategy["temperature"],
+                thinking_level=thinking,
+                full_prompt_fallback=full_prompt_fallback,
+            )
 
             if isinstance(result, str):
                 result = self._extract_json_robust(result)

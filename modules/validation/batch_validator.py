@@ -271,7 +271,7 @@ def validate_manuscripts_in_batch(
                 # 🔒 Event Loop Nested Execution 방지 (Issue #1)
                 # 현재 실행 중인 loop 확인
                 try:
-                    running_loop = asyncio.get_running_loop()
+                    asyncio.get_running_loop()
                     # Loop가 있으면 동기 모드로 fallback (nested loop 방지)
                     logging.warning("[WARNING] 실행 중인 event loop 감지 - ThreadPool 동기 모드로 전환")
                     logging.info("[INFO] (Nested event loop execution을 방지하기 위한 안전 조치)")

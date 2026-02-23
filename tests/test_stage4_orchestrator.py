@@ -11,7 +11,7 @@
 
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -415,6 +415,29 @@ class TestHandleRoundOutcomeErrorPaths:
         assert result.final_state_updates == {}
         # 5라운드 호출 확인
         assert orch._interview_round.run.call_count == 5
+
+    def test_round_count_respects_retry_director_max_attempts(self, orch_with_ctx, minimal_round_ctx, monkeypatch):
+        """[L-3] interview 라운드 수는 retry.director_max_attempts 설정값을 따른다."""
+        from modules.core.stage4_types import _InterviewRoundResult
+
+        orch = orch_with_ctx
+        orch._interview_round = MagicMock()
+        orch._interview_round.run = MagicMock(
+            return_value=_InterviewRoundResult(
+                verdict="REJECT",
+                director_feedback="피드백",
+                previous_attempt={"score": 30},
+            )
+        )
+
+        import modules.core.spinners
+
+        monkeypatch.setattr(modules.core.spinners, "StageSpinner", MagicMock())
+
+        with patch("modules.core.stage4_orchestrator._threshold", return_value=2):
+            orch._handle_round_outcome(round_ctx=minimal_round_ctx)
+
+        assert orch._interview_round.run.call_count == 2
 
 
 # ══════════════════════════════════════════════════════════════

@@ -364,16 +364,6 @@ class QualityAmplifier:
 
     def extract_relationships_from_manuscript(self, manuscript: str) -> dict[str, str]:
         """원고에서 관계 상태 추출"""
-        relationship_markers = {
-            "적대": ["적", "원수", "증오", "죽이"],
-            "무시": ["무시", "거들떠", "안중에"],
-            "경계": ["경계", "의심", "수상"],
-            "중립": ["중립", "담담", "무관심"],
-            "호감": ["호감", "호의", "관심"],
-            "경외": ["경외", "존경", "두려움"],
-            "충성": ["충성", "따르", "모시"],
-            "굴복": ["굴복", "항복", "무릎"],
-        }
 
         # 간단한 휴리스틱 추출
         relationships = {}

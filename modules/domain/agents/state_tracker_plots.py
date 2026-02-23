@@ -117,12 +117,21 @@ class StateTrackerPlots:
                             self.tracker.resolved_plots.append(entry)
         return plots
 
-    def get_resolved_plots_summary(self) -> str:
-        """[V62.7] 완결된 플롯 목록 -> 프롬프트 주입용 문자열"""
+    def get_resolved_plots_summary(self, max_items: int = 30) -> str:
+        """[V62.7] Resolved plot list for prompt injection."""
         if not self.tracker.resolved_plots:
             return ""
+
         lines = ["[V62.7] 완결된 플롯 - 동일/유사 갈등 재생성 금지:"]
-        for p in self.tracker.resolved_plots:
+        safe_max_items = max(1, int(max_items))
+        total_items = len(self.tracker.resolved_plots)
+        recent_items = self.tracker.resolved_plots[-safe_max_items:]
+
+        if total_items > safe_max_items:
+            omitted_count = total_items - safe_max_items
+            lines.append(f"  (이전 {omitted_count}건 생략)")
+
+        for p in recent_items:
             lines.append(
                 f"  - [{p.get('plot', '')}] "
                 f"Arc {p.get('arc_no', '?')} Ep{p.get('episode', '?')}: "
@@ -130,7 +139,6 @@ class StateTrackerPlots:
             )
         return "\n".join(lines)
 
-    # ═══════════════════════════════════════════════════════════════
     # [V66] 조직/장소 파괴 추적
     # ═══════════════════════════════════════════════════════════════
 

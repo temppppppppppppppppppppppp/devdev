@@ -89,6 +89,8 @@ class Stage4ContextBuilder:
 
         bp = blueprint or {}
         scene_blocks = bp.get("scene_breakdown") or bp.get("scenes") or []
+        if isinstance(scene_blocks, dict):
+            scene_blocks = list(scene_blocks.values())
         if isinstance(scene_blocks, list):
             for scene in scene_blocks:
                 if not isinstance(scene, dict):
@@ -329,23 +331,123 @@ class Stage4ContextBuilder:
         prev_text = (prev_ms_data.get("content") or "") if prev_ms_data else ""  # [V70] NULL content 방어
         prev_ending = prev_text[-500:] if prev_text else ""
 
-        # [V67] 이전 30화 원고 전문 로드 — Director + ChiefWriter 공유
-        _prev_manuscripts_parts = []
-        for _prev_ep in range(max(1, next_ep - 30), next_ep):
+        _db = self.ctx.current_project.db
+        _prev_manuscripts_parts: list[str] = []
+
+        # [Tier4-12] Tier 1: recent 10 episodes full text
+        _tier1_start = max(1, next_ep - 10)
+        _tier1_rows: list[dict] = []
+        try:
+            if hasattr(_db, "get_manuscripts_range"):
+                _tier1_rows = _db.get_manuscripts_range(_tier1_start, next_ep) or []
+            else:
+                for _prev_ep in range(_tier1_start, next_ep):
+                    _row = _db.get_manuscript(_prev_ep)
+                    if _row:
+                        _tier1_rows.append(
+                            {
+                                "ep_num": _prev_ep,
+                                "content": _row.get("content", "") if isinstance(_row, dict) else str(_row),
+                            }
+                        )
+        except Exception as e:
+            logging.warning(f"[SilentPass:Tier4-12] tier1 full-text load failed: {e!s:.100}")
+            _tier1_rows = []
+
+        for _row in _tier1_rows:
+            _ep_no = int(_row.get("ep_num", 0) or 0)
+            _content = str(_row.get("content", "") or "")
+            if _content and len(_content) > 100:
+                _prev_manuscripts_parts.append(f"[EP {_ep_no}]\n{_content}")
+
+        # [Tier4-12] Tier 2: summaries for episodes 11~30 before current
+        _tier2_start = max(1, next_ep - 30)
+        _tier2_end = _tier1_start
+        if _tier2_end > _tier2_start:
+            _tier2_parts: list[str] = []
             try:
-                _prev_ms_data = self.ctx.current_project.db.get_manuscript(_prev_ep)
-                if _prev_ms_data:
-                    _prev_content = (
-                        _prev_ms_data.get("content", "") if isinstance(_prev_ms_data, dict) else str(_prev_ms_data)
-                    )
-                    if _prev_content and len(_prev_content) > 100:
-                        _prev_manuscripts_parts.append(f"[제{_prev_ep}화]\n{_prev_content}")
+                if hasattr(_db, "_lock") and hasattr(_db, "cursor"):
+                    with _db._lock:
+                        _cur = _db.cursor.execute(
+                            "SELECT ep_num, summary FROM episode_meta "
+                            "WHERE ep_num >= ? AND ep_num < ? ORDER BY ep_num ASC",
+                            (_tier2_start, _tier2_end),
+                        )
+                        _rows = _cur.fetchall()
+                else:
+                    _rows = []
+
+                for _row in _rows:
+                    if isinstance(_row, dict):
+                        _ep_no = int(_row.get("ep_num", 0) or 0)
+                        _summary = str(_row.get("summary", "") or "")
+                    else:
+                        _ep_no = int(_row["ep_num"])
+                        _summary = str(_row["summary"] or "")
+                    if _summary:
+                        _tier2_parts.append(f"[EP {_ep_no} summary] {_summary[:500]}")
             except Exception as e:
-                logging.warning(f"[SilentPass:ContextBuilder] 제{_prev_ep}화 원고 로드 실패: {e!s:.100}")
+                logging.warning(f"[SilentPass:Tier4-12] tier2 summary load failed: {e!s:.100}")
+
+            if _tier2_parts:
+                _prev_manuscripts_parts.insert(
+                    0, "-- Tier2 summaries (11-30 episodes back) --\n" + "\n".join(_tier2_parts)
+                )
+
+        # [Tier4-12] Tier 3: older arc summaries
+        if _tier2_start > 1:
+            _tier3_parts: list[str] = []
+            try:
+                _arcs = _db.load_anchor("arcs") or []
+            except Exception:
+                _arcs = []
+
+            for _idx, _arc in enumerate(_arcs):
+                if not isinstance(_arc, dict):
+                    continue
+                _arc_no = int(_arc.get("arc_no", _idx + 1) or (_idx + 1))
+                _arc_eps = _arc.get("episodes", [])
+                if not isinstance(_arc_eps, list) or not _arc_eps:
+                    continue
+
+                _arc_max_ep = 0
+                for _ep in _arc_eps:
+                    if isinstance(_ep, int):
+                        _arc_max_ep = max(_arc_max_ep, _ep)
+                    elif isinstance(_ep, dict):
+                        _cand = _ep.get("ep_num") or _ep.get("episode") or _ep.get("ep") or 0
+                        try:
+                            _arc_max_ep = max(_arc_max_ep, int(_cand))
+                        except (TypeError, ValueError):
+                            continue
+                if _arc_max_ep >= _tier2_start:
+                    continue
+
+                try:
+                    _arc_sum = self.ctx.current_project.load_v20_anchor(f"arc_summary_{_arc_no}")
+                    if not _arc_sum:
+                        continue
+                    if isinstance(_arc_sum, dict):
+                        _sum_text = str(_arc_sum.get("summary", _arc_sum) or "")
+                    else:
+                        _sum_text = str(_arc_sum)
+                    if _sum_text:
+                        _tier3_parts.append(f"[Arc {_arc_no} summary] {_sum_text[:1000]}")
+                except Exception:
+                    continue
+
+            if _tier3_parts:
+                _prev_manuscripts_parts.insert(
+                    0,
+                    "-- Tier3 arc summaries (older than 30 episodes) --\n" + "\n".join(_tier3_parts),
+                )
+
         _prev_manuscripts_text = "\n\n---\n\n".join(_prev_manuscripts_parts) if _prev_manuscripts_parts else ""
         if _prev_manuscripts_parts:
             logging.info(
-                f"📚 [V67] 이전 {len(_prev_manuscripts_parts)}화 원고 전문 로드 완료 ({len(_prev_manuscripts_text):,}자)"
+                "[Tier4-12] hybrid lookback ready: parts=%d chars=%d",
+                len(_prev_manuscripts_parts),
+                len(_prev_manuscripts_text),
             )
 
         # [V62.6] 에피소드 상태 다이제스트

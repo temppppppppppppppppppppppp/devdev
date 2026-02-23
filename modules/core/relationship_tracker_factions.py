@@ -256,10 +256,6 @@ class RelationshipTrackerFactions:
         [V59] 불가능한 세력 관계 전환에 대해 권장 경로 제안
         """
         # 일반적인 관계 발전 경로
-        positive_path = ["무관심", "중립", "우호", "동맹"]
-        negative_path = ["중립", "경계", "적대", "전쟁"]
-        submission_path = ["전쟁", "굴복", "예속"]
-        liberation_path = ["예속", "반란", "독립"]
 
         paths = {
             ("동맹", "적대"): "동맹 → 우호 → 중립 → 경계 → 적대",
@@ -710,7 +706,7 @@ class RelationshipTrackerFactions:
             return {"faction": None, "power_rank": 0, "threat_level": "unknown", "opportunities": [], "threats": []}
 
         pf = self.host.factions[self.host.protagonist_faction]
-        power_balance = self.get_faction_power_balance_v59()
+        self.get_faction_power_balance_v59()
 
         # 파워 순위 계산
         sorted_power = sorted(self.host.factions.values(), key=lambda x: x.power_level, reverse=True)

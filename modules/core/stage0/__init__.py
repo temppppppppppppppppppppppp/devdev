@@ -320,7 +320,9 @@ class StageZeroManager:
             self.genre = self.bible.get("_genre", "")
             if not self.genre:
                 master = self.bible.get("MasterBible", {})
-                self.genre = master.get("_genre", GenreTypes.INVESTMENT)
+                self.genre = master.get("_genre", "")
+            if not self.genre:
+                self.genre = self._select_genre() if hasattr(self, "_select_genre") else ""
 
             # 프리셋 초기화
             self.preset_registry = PresetRegistry(base_genre=self.genre)

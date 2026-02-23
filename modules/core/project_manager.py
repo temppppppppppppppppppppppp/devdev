@@ -656,15 +656,6 @@ class ProjectContext:
             # 파일 확인 실패 시 DB 값 사용
             return db_ep
 
-    # --- [Bridge 보완: 에이전트용 로어 인출] ---
-    def get_lore_data(self, item_name):
-        """[Main 연결] 에이전트가 특정 인물/아이템 설정을 DB에서 즉시 인출"""
-        return self.db.get_lore_item(item_name)
-
-    def get_all_lore_by_category(self, category):
-        """특정 카테고리(NPC/ITEM 등) 전체 정보를 리스트로 인출"""
-        return self.db.get_lore_list_by_category(category)
-
     # --- [Bridge 보완: 15대 지표 데이터 가드] ---
     def record_martial_stats(self, ep_num, stats_data) -> None:
         """에이전트의 데이터 키 누락이나 오타로부터 DB를 보호하며 기록"""
@@ -920,21 +911,3 @@ class ProjectContext:
         except Exception as e:
             logging.warning(f"🚨 [Backtrack Error] 자동 되감기 실패: {e}")
             return None
-
-    def record_surgery_result(self, ep_num, category, failed_logic, result) -> None:
-        """수술 결과를 DB에 저장하여 향후 '실패 사례' 지능으로 활용"""
-        self.db.save_surgery_log(ep_num, category, failed_logic, result)
-
-    def get_surgery_intelligence(self, limit=3) -> str:
-        """최근 수술 기록을 가져와 프롬프트에 주입할 '반성문' 형태로 반환"""
-        cur = self.db.cursor.execute(
-            "SELECT ep_num, error_category, surgery_result FROM surgery_logs ORDER BY id DESC LIMIT ?", (limit,)
-        )
-        logs = cur.fetchall()
-        if not logs:
-            return ""
-
-        intel = "\n[⚠️ 최근 발생한 설정 오류 및 교정 사례]\n"
-        for log in logs:
-            intel += f"- 제 {log['ep_num']}화 ({log['error_category']}): {log['surgery_result']}\n"
-        return intel

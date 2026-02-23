@@ -57,7 +57,6 @@ class StateTrackerFinancial:
             최신 엔트리 dict ({"value": ..., "arc_no": ...}) 또는 None
         """
         latest = None
-        latest_arc = -1
 
         for arc_no in sorted(self.tracker.financial_number_registry.keys()):
             entries = self.tracker.financial_number_registry[arc_no].get(field_name, [])
@@ -65,7 +64,6 @@ class StateTrackerFinancial:
                 for entry in entries:
                     if isinstance(entry, dict) and "value" in entry:
                         latest = {**entry, "arc_no": arc_no}
-                        latest_arc = arc_no
 
         return latest
 

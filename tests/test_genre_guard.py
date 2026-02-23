@@ -187,3 +187,111 @@ class TestBaseGuardAnnotations:
     def test_abstract_return_types_are_str(self):
         assert inspect.signature(BaseGuard.get_genre_name).return_annotation is str
         assert inspect.signature(BaseGuard.get_v20_purism_prompt).return_annotation is str
+
+
+class _DummyConsistencyGuard(BaseGuard):
+    def get_genre_name(self) -> str:
+        return "dummy"
+
+    def get_v20_purism_prompt(self) -> str:
+        return "dummy"
+
+    def get_impossible_actions(self, current_state: dict) -> list[dict]:
+        return [
+            {
+                "pattern": r"성벽을 뛰어넘었다",
+                "reason": "중상 상태에서 불가능한 행동",
+                "severity": "HIGH",
+            }
+        ]
+
+    def get_justification_patterns(self) -> list[str]:
+        return [r"이를 악물고"]
+
+    def get_hostile_action_types(self) -> list[str]:
+        return ["배신"]
+
+    def get_resolution_patterns(self) -> list[str]:
+        return [r"복수", r"용서"]
+
+    def get_protagonist_victory_patterns(self) -> list[str]:
+        return [r"역전"]
+
+    def get_villain_response_patterns(self) -> list[str]:
+        return [r"분노", r"후퇴"]
+
+
+class TestStateActionJustificationWindow:
+    def test_justification_far_away_does_not_clear_violation(self):
+        guard = _DummyConsistencyGuard()
+        manuscript = "그는 중상을 입은 몸으로 성벽을 뛰어넘었다." + ("아" * 300) + "이를 악물고 버텼다."
+
+        result = guard.check_state_action_consistency(manuscript, {})
+
+        assert result["passed"] is False
+        assert len(result["violations"]) == 1
+
+    def test_justification_nearby_clears_violation(self):
+        guard = _DummyConsistencyGuard()
+        manuscript = "그는 중상을 입은 몸으로 성벽을 뛰어넘었다. 이를 악물고 버텼다."
+
+        result = guard.check_state_action_consistency(manuscript, {})
+
+        assert result["passed"] is True
+        assert result["violations"] == []
+
+
+class TestUnresolvedConflictResolutionWindow:
+    def test_resolution_far_away_does_not_clear_npc_conflict(self):
+        guard = _DummyConsistencyGuard()
+        karma_matrix = {
+            "마두": {
+                "events": [{"type": "배신"}],
+                "relation_type": "hostile",
+            }
+        }
+        manuscript = "마두가 함께 움직였다." + ("아" * 120) + "군중은 복수를 외쳤다."
+
+        result = guard.check_unresolved_conflict(manuscript, karma_matrix, ep_num=12)
+
+        assert result["passed"] is False
+        assert result["violations"]
+        assert result["violations"][0]["npc"] == "마두"
+
+    def test_resolution_nearby_clears_npc_conflict(self):
+        guard = _DummyConsistencyGuard()
+        karma_matrix = {
+            "마두": {
+                "events": [{"type": "배신"}],
+                "relation_type": "hostile",
+            }
+        }
+        manuscript = "마두가 복수를 당한 뒤 함께 움직였다."
+
+        result = guard.check_unresolved_conflict(manuscript, karma_matrix, ep_num=12)
+
+        assert result["passed"] is True
+        assert result["violations"] == []
+
+
+class TestVillainResponseWindow:
+    def test_generic_response_far_away_does_not_clear_villain_check(self):
+        guard = _DummyConsistencyGuard()
+        villain_context = {"villain_name": "마두", "villain_role": "주적", "is_aware": True}
+        manuscript = "주인공은 역전에 성공했다.\n마두는 성루에 서 있었다.\n" + ("아" * 120) + "\n군중은 분노했다."
+
+        result = guard.check_villain_response(manuscript, villain_context, recent_events=[{"type": "역전"}])
+
+        assert result["passed"] is False
+        assert result["incompetent_villain_risk"] is True
+        assert result["violations"]
+
+    def test_generic_response_nearby_clears_villain_check(self):
+        guard = _DummyConsistencyGuard()
+        villain_context = {"villain_name": "마두", "villain_role": "주적", "is_aware": True}
+        manuscript = "주인공은 역전에 성공했다. 마두는 후퇴를 명령했다."
+
+        result = guard.check_villain_response(manuscript, villain_context, recent_events=[{"type": "역전"}])
+
+        assert result["passed"] is True
+        assert result["violations"] == []

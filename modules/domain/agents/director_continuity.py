@@ -613,12 +613,12 @@ class DirectorContinuityValidator:
                     prev_data = {}
 
             prev_end_location = prev_data.get("end_location", "")
-            prev_ending_state = prev_data.get("ending_state", {})
-            prev_time_flow = prev_data.get("time_flow", "")
+            prev_data.get("ending_state", {})
+            prev_data.get("time_flow", "")
 
             # 새 Blueprint 정보 추출
             new_start_location = new_blueprint.get("start_location", "")
-            new_time_flow = new_blueprint.get("time_flow", "")
+            new_blueprint.get("time_flow", "")
 
             # Python 기반 빠른 체크 (LLM 호출 없이)
             issues = []
@@ -642,7 +642,7 @@ class DirectorContinuityValidator:
 
             if critical_count > 0:
                 decision = "REJECT"
-            elif major_count >= 2:
+            elif major_count >= 1:
                 decision = "WARNING"
             else:
                 decision = "PASS"

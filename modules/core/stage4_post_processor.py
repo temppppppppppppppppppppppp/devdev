@@ -315,6 +315,21 @@ class Stage4PostProcessor:
                     self.ctx.ui.log("      ⚠️ Manager 파싱 실패, 기본 추출 사용")
             except Exception as mgr_err:
                 self.ctx.ui.log(f"      ⚠️ Manager 호출 실패: {str(mgr_err)[:50]}")
+                logging.warning("[B-1] Manager 정산 실패 — 동기 재시도: %s", mgr_err)
+                try:
+                    raw_audit = self.ctx.agents["manager"].update_state_and_lore_v20(
+                        ep_num=next_ep,
+                        manuscript=final_manuscript,
+                        current_state=current_state,
+                        lore_list=lore_list,
+                        active_seeds=active_seeds,
+                        causal_history=causal_history,
+                    )
+                    if raw_audit and not raw_audit.get("parsing_error"):
+                        audit = raw_audit
+                        self.ctx.ui.log("      ✅ Manager 동기 재시도 성공")
+                except Exception as retry_err:
+                    logging.error("[B-1] Manager 동기 재시도도 실패: %s", retry_err)
 
             new_lore = audit.get("new_lore", {}) if isinstance(audit, dict) else {}
             knowledge_map = audit.get("knowledge_map_updates", {}) if isinstance(audit, dict) else {}
@@ -555,6 +570,16 @@ class Stage4PostProcessor:
         # ===== [Phase 3-QR] 품질 회귀 감지 (advisory-only) =====
         if self.ctx.quality_dashboard:
             try:
+                _stage4_score = 0
+                if isinstance(final_state_updates, dict):
+                    _cand_score = final_state_updates.get("director_score", 0)
+                    if isinstance(_cand_score, int | float):
+                        _stage4_score = int(_cand_score)
+                self.ctx.quality_dashboard.record_validation(
+                    ep_num=next_ep,
+                    result={"decision": "PASS", "score": _stage4_score},
+                    stage=4,
+                )
                 _regression = self.ctx.quality_dashboard.detect_score_regression(stage=4)
                 if _regression.get("is_regression"):
                     logging.warning(

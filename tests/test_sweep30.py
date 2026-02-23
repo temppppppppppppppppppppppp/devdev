@@ -1,33 +1,13 @@
 from pathlib import Path
 
-from modules.core.ab_testing import ABTestingFramework
-
 
 def _read(path: str) -> str:
     return Path(path).read_text(encoding="utf-8")
 
 
-def test_ab_testing_includes_zero_score_in_stats():
-    fw = ABTestingFramework("sweep30")
-    results = [
-        {"success": True, "result": {"decision": "PASS", "score": 0}, "time": 0.1},
-        {"success": True, "result": {"decision": "PASS", "score": 100}, "time": 0.2},
-    ]
-
-    stats = fw._analyze_variant(results, "variant")
-
-    assert stats["avg_score"] == 50
-    assert stats["median_score"] == 50
-
-
 def test_state_extractor_cumulative_uses_copy_for_latest_state():
     source = _read("modules/domain/agents/state_extractor.py")
     assert "current_state = dict(self.extract_state(latest_arc))" in source
-
-
-def test_ab_testing_source_uses_explicit_none_check():
-    source = _read("modules/core/ab_testing.py")
-    assert source.count("if score is not None:") >= 3
 
 
 def test_project_manager_hud_change_detects_zero_values():

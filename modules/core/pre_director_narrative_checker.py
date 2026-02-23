@@ -171,17 +171,6 @@ class PreDirectorNarrativeChecker:
         }
 
         # 허용된 전환 (1~2단계까지)
-        ALLOWED_TRANSITIONS = {
-            "멸시": ["무시", "의심"],
-            "경멸": ["무시", "의심"],
-            "무시": ["의심", "경계", "경외"],  # 무시→충성 직행 불가
-            "의심": ["경계", "중립", "경외"],
-            "경계": ["중립", "호감", "경외"],
-            "중립": ["호감", "경외", "충성"],
-            "호감": ["경외", "존경", "충성"],
-            "경외": ["존경", "충성"],
-            "존경": ["충성", "복종"],
-        }
 
         # 관계 변화 키워드 패턴
         relationship_change_patterns = [
@@ -284,7 +273,7 @@ class PreDirectorNarrativeChecker:
         items = []
 
         # context에서 설정 데이터 추출
-        encyclopedia = context.get("encyclopedia", {})
+        context.get("encyclopedia", {})
         hud = context.get("hud", {}) or context.get("martial_hud", {})
         dead_npcs = context.get("dead_npcs", [])
         owned_items = context.get("owned_items", [])

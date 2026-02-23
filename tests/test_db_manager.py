@@ -72,3 +72,25 @@ def test_get_all_episode_bibles_handles_malformed_json(db):
     assert len(rows) == 2
     assert rows[0]["new_items"] == ["철검"]
     assert rows[1]["new_items"] == []
+
+
+def test_episode_meta_arc_no_index_exists(db):
+    rows = db.cursor.execute("PRAGMA index_list('episode_meta')").fetchall()
+    names = {row["name"] for row in rows}
+    assert "idx_episode_meta_arc_no" in names
+
+
+def test_causal_graph_ep_num_index_exists(db):
+    rows = db.cursor.execute("PRAGMA index_list('causal_graph')").fetchall()
+    names = {row["name"] for row in rows}
+    assert "idx_causal_graph_ep_num" in names
+
+
+def test_get_manuscripts_range_returns_ordered_rows(db):
+    db.save_manuscript(1, "t1", "c1")
+    db.save_manuscript(2, "t2", "c2")
+    db.save_manuscript(3, "t3", "c3")
+
+    rows = db.get_manuscripts_range(1, 3)
+
+    assert [row["ep_num"] for row in rows] == [1, 2]

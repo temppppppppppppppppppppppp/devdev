@@ -821,7 +821,6 @@ def retry_with_feedback(
     """
     result = None
     feedback = ""
-    success = False
 
     def _log(msg: str):
         if logger:
@@ -843,7 +842,6 @@ def retry_with_feedback(
 
         # 성공 판정
         if on_success is None or on_success(result):
-            success = True
             _log(f"[retry_with_feedback] {task_name} attempt {attempt + 1} 성공")
             return (result, attempt + 1, True)
 

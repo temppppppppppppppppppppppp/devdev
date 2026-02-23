@@ -408,7 +408,7 @@ class TestBuildItemAcquisitionTimeline:
     def test_with_items_in_bible(self, builder_with_mock_app):
         """에피소드 바이블에 아이템 있으면 타임라인 생성"""
         db = builder_with_mock_app._app.current_project.db
-        db.get_episode_bible.side_effect = lambda ep: ({"new_items": ["청풍검"]} if ep == 1 else None)
+        db.get_episode_bible.side_effect = lambda ep: {"new_items": ["청풍검"]} if ep == 1 else None
         result = builder_with_mock_app.build_item_acquisition_timeline(3)
         assert "제1화" in result
         assert "청풍검" in result
@@ -416,7 +416,7 @@ class TestBuildItemAcquisitionTimeline:
     def test_lost_items_tracked(self, builder_with_mock_app):
         """분실 아이템도 타임라인에 포함"""
         db = builder_with_mock_app._app.current_project.db
-        db.get_episode_bible.side_effect = lambda ep: ({"lost_items": ["파천검"]} if ep == 2 else None)
+        db.get_episode_bible.side_effect = lambda ep: {"lost_items": ["파천검"]} if ep == 2 else None
         result = builder_with_mock_app.build_item_acquisition_timeline(3)
         assert "파천검" in result
         assert "분실" in result or "파괴" in result

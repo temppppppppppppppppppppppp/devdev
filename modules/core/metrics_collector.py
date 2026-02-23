@@ -67,7 +67,6 @@ class SessionStats:
 
 # 모델별 토큰 비용 (USD per 1M tokens, 2024년 기준 추정)
 MODEL_COSTS = {
-    "gemini-2.0-flash": {"input": 0.075, "output": 0.30},  # legacy (비용 추적용 유지)
     "gemini-2.5-flash-preview-04-17": {"input": 0.15, "output": 0.60},
     "gemini-2.5-flash": {"input": 0.15, "output": 0.60},
     "gemini-2.5-pro": {"input": 1.25, "output": 5.00},

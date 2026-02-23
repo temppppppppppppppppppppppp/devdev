@@ -86,7 +86,7 @@ class DirectorGradingSystem:
             }
         """
         # 1. 기본 점수 추출
-        base_score = validation_result.get("total_score", 0)
+        validation_result.get("total_score", 0)
         breakdown = validation_result.get("breakdown", {})
 
         # 2. 세부 점수 분석

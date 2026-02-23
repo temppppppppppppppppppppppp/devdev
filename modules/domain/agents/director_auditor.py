@@ -581,7 +581,6 @@ class DirectorQualityAuditor:
             }
 
         # 2-2. 🚫 [V40 Premium] 반복 구문 체크 (N-gram Deduplication)
-        repetition_check_passed = True
         try:
             from modules.core.repetition_guard import RepetitionGuard
 
@@ -598,13 +597,13 @@ class DirectorQualityAuditor:
                     ms = self._d.context.db.get_manuscript(i)
                     if ms and "content" in ms:
                         prev_manuscripts.append(ms["content"])
-                except Exception as ms_err:
+                except Exception:
                     # DB 조회 실패는 무시 (원고 없을 수 있음)
                     pass
 
             # 금지 구문 목록 구축
             if prev_manuscripts:
-                banned_phrases = guard.build_banned_list(prev_manuscripts)
+                guard.build_banned_list(prev_manuscripts)
 
                 # 현재 원고 스캔
                 violations, clean_score = guard.scan_manuscript(manuscript)
@@ -624,13 +623,10 @@ class DirectorQualityAuditor:
                     }
         except ImportError as ie:
             logging.warning(f"⚠️ [Director] RepetitionGuard 모듈 로드 실패: {ie}")
-            repetition_check_passed = False
         except AttributeError as ae:
             logging.warning(f"⚠️ [Director] DB 컨텍스트 오류 (RepetitionGuard): {ae}")
-            repetition_check_passed = False
         except Exception as e:
             logging.warning(f"⚠️ [Director] RepetitionGuard 실행 중 예상치 못한 오류: {type(e).__name__}: {e}")
-            repetition_check_passed = False
 
         # 3. [V60.95] 고밀도 HUD 컨텍스트 구축
         high_density_hud = self._d._build_hud_context(state_tracker, ep_num)
@@ -827,6 +823,7 @@ class DirectorQualityAuditor:
         if first_decision == "REJECT" and first_score < self._d.ambiguous_lower:
             reject_reason = first_eval.get("reason", first_eval.get("re_slice_instruction", "사유 미상"))
             logging.warning(f"🎬 [Director] REJECT (score={first_score})")
+            logging.info(f"⚖️ [SC-Skip] Clear REJECT (score={first_score} < ambiguous_lower={self._d.ambiguous_lower})")
             logging.warning(f"└─ 사유: {reject_reason[:80]}{'...' if len(str(reject_reason)) > 80 else ''}")
             first_eval["self_consistency"] = {"votes": 1, "reason": "clear_reject", "pass_votes": 0}
             return first_eval
@@ -835,6 +832,7 @@ class DirectorQualityAuditor:
         if first_decision == "PASS" and first_score > self._d.ambiguous_upper:
             pass_reason = first_eval.get("reason", first_eval.get("strengths", "판단 근거 미상"))
             logging.info(f"🎬 [Director] PASS (score={first_score})")
+            logging.info(f"⚖️ [SC-Skip] Clear PASS (score={first_score} > ambiguous_upper={self._d.ambiguous_upper})")
             logging.info(f"└─ 근거: {str(pass_reason)[:80]}{'...' if len(str(pass_reason)) > 80 else ''}")
             first_eval["self_consistency"] = {"votes": 1, "reason": "clear_pass", "pass_votes": 1}
             return first_eval

@@ -314,34 +314,6 @@ class TestTreeOfThoughts:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# ManuscriptEnhancer Tests
-# ═══════════════════════════════════════════════════════════════════════════════
-
-
-class TestManuscriptEnhancer:
-    """Manuscript Enhancer 테스트"""
-
-    def test_import(self):
-        """모듈 임포트 테스트"""
-        from modules.core.manuscript_enhancer import ManuscriptEnhancer
-
-        enhancer = ManuscriptEnhancer(genre="wuxia")
-        assert enhancer is not None
-
-    def test_analyze(self, sample_manuscript):
-        """분석 테스트"""
-        from modules.core.manuscript_enhancer import ManuscriptEnhancer
-
-        enhancer = ManuscriptEnhancer(genre="wuxia")
-
-        result = enhancer.analyze(sample_manuscript, current_ep=10)
-
-        assert result is not None
-        assert hasattr(result, "cliche_count")
-        assert hasattr(result, "subtext_ratio")
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
 # [V65] TwoPhaseArcGenerator 삭제됨 — TestTwoPhaseArcGenerator 클래스 제거
 
 
@@ -356,7 +328,6 @@ class TestIntegration:
     def test_all_v55_modules_importable(self):
         """V55 모든 모듈 임포트 가능 확인"""
         modules = [
-            "modules.core.manuscript_enhancer",
             "modules.core.constitutional_checker",
             "modules.core.writer_template",
             "modules.core.pass_rate_monitor",

@@ -351,10 +351,10 @@ JSON으로 출력:
             _prev_manuscripts_text = _ep_ctx["prev_manuscripts_text"]
             _episode_digest = _ep_ctx["episode_digest"]
             hud_report = _ep_ctx["hud_report"]
-            current_inventory = _ep_ctx["current_inventory"]
-            current_martial_arts = _ep_ctx["current_martial_arts"]
-            dead_npcs = _ep_ctx["dead_npcs"]  # [S4-P2-6] cumulative_bible는 dead_npcs 추출 후 불필요
-            item_acquisition_timeline = _ep_ctx["item_acquisition_timeline"]
+            _ = _ep_ctx["current_inventory"]  # reserved for future use
+            _ = _ep_ctx["current_martial_arts"]  # reserved for future use
+            _ = _ep_ctx["dead_npcs"]  # reserved for future use
+            _ = _ep_ctx["item_acquisition_timeline"]  # reserved for future use
             _chain_link_section = _ep_ctx["chain_link_section"]
             _world_state_summary = _ep_ctx["world_state_summary"]
             # ===== [V60.80+] 기존 Writer 전달 기능 추출 =====
@@ -382,11 +382,11 @@ JSON으로 출력:
                 blueprint=blueprint,
                 pacing_analyzer=self.ctx.pacing_analyzer,
             )
-            reference_anchor_prompt = _ctx_prompts["reference_anchor_prompt"]
+            _ = _ctx_prompts["reference_anchor_prompt"]  # reserved for future use
             mandatory_context = _ctx_prompts["mandatory_context"]
             anti_trope_prompt = _ctx_prompts["anti_trope_prompt"]
-            justification_prompt = _ctx_prompts["justification_prompt"]
-            reflexion_prompt = _ctx_prompts["reflexion_prompt"]
+            _ = _ctx_prompts["justification_prompt"]  # reserved for future use
+            _ = _ctx_prompts["reflexion_prompt"]  # reserved for future use
 
             # [V60.81] NPC equipment summary extraction
             npc_equipment_summary = ""
@@ -536,7 +536,13 @@ JSON으로 출력:
         previous_attempt = {}
 
         with StageSpinner(4, f"제{next_ep}화 · 앙상블 준비") as stage4_spinner:
-            for interview_round in range(5):
+            try:
+                _max_rounds = int(_threshold("retry.director_max_attempts", 5))
+            except (TypeError, ValueError):
+                _max_rounds = 5
+            _max_rounds = max(1, _max_rounds)
+
+            for interview_round in range(_max_rounds):
                 _round_result = self.interview_round.run(
                     round_num=interview_round,
                     stage4_spinner=stage4_spinner,
@@ -597,12 +603,14 @@ JSON으로 출력:
                 director_feedback = _round_result.director_feedback
                 previous_attempt = _round_result.previous_attempt
 
-        # ===== 5번 모두 실패 =====
+        # ===== 설정된 라운드 수 모두 실패 =====
         if not final_manuscript:
             _last_best = previous_attempt.get("best_manuscript", "") if previous_attempt else ""
             _last_score = previous_attempt.get("score", 0) if previous_attempt else 0
             if _last_best:
-                self.ctx.ui.log(f"\n⚠️ [EP {next_ep}] 5회 소진. 마지막 최선 결과물(score={_last_score}) 존재.")
+                self.ctx.ui.log(
+                    f"\n⚠️ [EP {next_ep}] {_max_rounds}회 소진. 마지막 최선 결과물(score={_last_score}) 존재."
+                )
                 _choice = 2
                 if callable(getattr(self.ctx, "get_int_input", None)):
                     _choice = self.ctx.get_int_input(

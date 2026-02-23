@@ -391,7 +391,7 @@ def quick_optimize(prompt: str, validation_results: list[dict], prompt_name: str
     improved_prompt = optimizer.generate_improved_prompt(prompt, analysis["weaknesses"], analysis)
 
     # 저장
-    filepath = optimizer.save_optimized_prompt(improved_prompt, prompt_name)
+    optimizer.save_optimized_prompt(improved_prompt, prompt_name)
 
     # 리포트
     report = optimizer.generate_report(analysis)

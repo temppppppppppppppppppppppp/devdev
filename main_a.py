@@ -2778,29 +2778,31 @@ class SovereignApp:
 
     def _rollback_episode(self):
         """[V40.1 Rollback] 특정 회차로 되감기 (HUD, DB, Vector DB, 파일 모두 롤백)"""
-        self._project_service.rollback_episode()  # [Phase 4B-3] thin delegate
-        # [Debug Sweep] 롤백 후 캐시 무효화 [I-16] 공개 메서드 사용
-        self._prompt_builder.invalidate_timeline_cache()
-        self._cumulative_state_cache = None
-        self._cumulative_state_cache_key = None
-        self._narrative_summaries_cache = None
-        try:
-            _writer = self.agents.get("writer") if isinstance(self.agents, dict) else None
-            if _writer and hasattr(_writer, "invalidate_manuscript_cache"):
-                _writer.invalidate_manuscript_cache()
-        except Exception as cache_err:
-            logging.warning(
-                "[Sweep5-D] writer cache invalidation failed during rollback (non-blocking): %s",
-                cache_err,
-            )
+        success = self._project_service.rollback_episode()  # [Phase 4B-3] thin delegate
+        if success:
+            self.state_tracker = None  # [NPC-L2] 롤백 후 stale NPC 레지스트리 방지
+            # [Debug Sweep] 롤백 후 캐시 무효화 [I-16] 공개 메서드 사용
+            self._prompt_builder.invalidate_timeline_cache()
+            self._cumulative_state_cache = None
+            self._cumulative_state_cache_key = None
+            self._narrative_summaries_cache = None
+            try:
+                _writer = self.agents.get("writer") if isinstance(self.agents, dict) else None
+                if _writer and hasattr(_writer, "invalidate_manuscript_cache"):
+                    _writer.invalidate_manuscript_cache()
+            except Exception as cache_err:
+                logging.warning(
+                    "[Sweep5-D] writer cache invalidation failed during rollback (non-blocking): %s",
+                    cache_err,
+                )
 
-        # [Sweep35] clear director manuscript caches after rollback [I-16] 공개 메서드 사용
-        try:
-            _director = self.agents.get("director") if isinstance(self.agents, dict) else None
-            if _director and hasattr(_director, "invalidate_caches"):
-                _director.invalidate_caches()
-        except Exception as _dc_err:
-            logging.warning(f"[Sweep35] Director cache invalidation failed (non-blocking): {_dc_err}")
+            # [Sweep35] clear director manuscript caches after rollback [I-16] 공개 메서드 사용
+            try:
+                _director = self.agents.get("director") if isinstance(self.agents, dict) else None
+                if _director and hasattr(_director, "invalidate_caches"):
+                    _director.invalidate_caches()
+            except Exception as _dc_err:
+                logging.warning(f"[Sweep35] Director cache invalidation failed (non-blocking): {_dc_err}")
 
     def _wipe_production_data(self):
         """[V27.1 Wipe] 설계도는 유지하고 실제 집필 기록(Manuscripts/Blueprints)만 소거"""
@@ -3006,6 +3008,7 @@ class SovereignApp:
                 from modules.domain.agents.state_tracker import StateTracker as _StateTracker  # [INF-I8] lazy import
 
                 self.state_tracker = _StateTracker(preset_registry=self.preset_registry, llm_client=self.sys.api_client)
+                self.state_tracker.bind_db(self.current_project.db)  # [NPC-L1] NPC 이력 DB 배선
                 all_arcs = self.current_project.db.load_anchor("arcs") or []
                 _g = self.selected_genre.get("type", "") if self.selected_genre else ""
                 self.state_tracker.full_extract_from_arcs(all_arcs, genre=_g)

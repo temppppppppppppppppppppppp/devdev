@@ -707,8 +707,8 @@ class StateTrackerNPC:
                 for skill in skill_acq:
                     if isinstance(skill, dict):
                         skill_name = skill.get("name", "")
-                        episode = skill.get("episode", arc_no)
-                        source = skill.get("source", "state_changes에서 추출")
+                        skill.get("episode", arc_no)
+                        skill.get("source", "state_changes에서 추출")
                         if skill_name and len(skill_name) >= 2:
                             self.register_protagonist_skill(skill_name, arc_no)
                             learned_skills.append(skill_name)
@@ -1574,7 +1574,7 @@ class StateTrackerNPC:
                     if name in _seen_names:  # [V70] 명시적 프로필 우선
                         continue
                     traits = str(pc.get("traits", ""))
-                    motivation = str(pc.get("motivation", ""))
+                    str(pc.get("motivation", ""))
                     # 성격에서 말투 추론
                     speech = ""
                     if any(k in traits for k in ["냉혹", "살벌", "무뚝뚝", "차가운"]):

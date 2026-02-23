@@ -24,7 +24,7 @@ class TechniqueWeaver:
 
         # 공격자(주인공/조연)와 방어자 성질에 따른 물리 속성 매칭
         # (현재 main.py 로직상 mc_tech은 이름으로, enemy_style은 십이류 성질로 수혈됨)
-        att_phys = self.streams_physics.get("강(强)")  # 기본값 설정
+        self.streams_physics.get("강(强)")  # 기본값 설정
         def_phys = self.streams_physics.get(enemy_style, self.streams_physics["강(强)"])
 
         # [Collision Blueprint] 모든 인물에게 적용되는 보편적 물리 결과

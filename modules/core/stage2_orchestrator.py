@@ -152,6 +152,7 @@ class Stage2Orchestrator:
             self.ctx.state_tracker = StateTracker(
                 preset_registry=self.ctx.preset_registry, llm_client=self.ctx.sys.api_client
             )
+            self.ctx.state_tracker.bind_db(self.ctx.current_project.db)  # [NPC-L1] NPC 이력 DB 배선
             existing_tracker_arcs = 0
             # [V63.4 P0] DB에서 금융 레지스트리 복원 (투자물)
             _saved_fin = self.ctx.current_project.load_v20_anchor("financial_registry", default=None)

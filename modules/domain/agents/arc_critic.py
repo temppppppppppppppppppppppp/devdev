@@ -14,6 +14,7 @@ import json
 import logging
 
 from modules.core.arc_summary_utils import generate_prev_arc_summary  # [V64.P4]
+from modules.core.prompt_loader import SafeDict
 
 from .base_agent import BaseAgent
 
@@ -147,10 +148,12 @@ class ArcCritic(BaseAgent):
         # 이전 Arc 요약 생성
         prev_summary = self._generate_prev_summary(prev_arcs)
 
-        prompt = ARC_CRITIQUE_PROMPT.format(
-            generated_arc=self._escape_braces(json.dumps(generated_arc, ensure_ascii=False, indent=2)[:6000]),
-            prev_arc_summary=self._escape_braces(prev_summary),
-            constraints=self._escape_braces(constraints[:3000] if constraints else "(없음)"),
+        prompt = ARC_CRITIQUE_PROMPT.format_map(
+            SafeDict(
+                generated_arc=self._escape_braces(json.dumps(generated_arc, ensure_ascii=False, indent=2)[:6000]),
+                prev_arc_summary=self._escape_braces(prev_summary),
+                constraints=self._escape_braces(constraints[:3000] if constraints else "(없음)"),
+            )
         )
 
         try:

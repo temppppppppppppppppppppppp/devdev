@@ -515,12 +515,12 @@ class ArcDraftValidator:
                 has_start_state = any(kw in content for kw in ["시작 상태", "이전", "직전", "에서 이어"])
                 if not has_start_state and len(content) > 300:
                     # 이전 화 종료 위치/상태 언급 체크
-                    prev_content = episode_sections.get(sorted_eps[i - 1], "")
+                    episode_sections.get(sorted_eps[i - 1], "")
                     # 간단한 연속성 체크: 이전 화 마지막 위치가 현재 화에 언급되는지
                     pass  # 복잡한 검증은 LLM에 위임
 
             # 종료 상태 체크 (마지막 화 포함 모든 화)
-            has_end_state = any(kw in content for kw in ["종료 상태", "종료:", "끝:", "마무리"])
+            any(kw in content for kw in ["종료 상태", "종료:", "끝:", "마무리"])
             has_state_info = sum(1 for kw in state_keywords if kw in content)
 
             # 상태 정보가 2개 미만이면 체크포인트 부족

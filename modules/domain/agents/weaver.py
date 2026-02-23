@@ -139,8 +139,3 @@ Selection Logic Fallback:
                 "status": "ERROR_LOCKED",
                 "fallback_reason": f"exception: {str(e)[:50]}",
             }
-
-    # [Deprecated] 기존 Seed 로직은 하위 호환성을 위해 유지하거나 제거 가능
-    def assign_seeds_to_arcs(self, arcs_data: dict, seeds_library: dict) -> None:
-        """V37 체제에서는 더 이상 사용하지 않음 (Drive 로직으로 대체됨)"""
-        pass

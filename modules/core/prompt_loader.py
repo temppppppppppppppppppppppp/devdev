@@ -18,6 +18,13 @@ from pathlib import Path
 from typing import Any, Optional
 
 
+class SafeDict(dict):
+    """Preserve unknown placeholders during format_map substitution."""
+
+    def __missing__(self, k: str) -> str:
+        return "{" + k + "}"
+
+
 class PromptLoader:
     """YAML 기반 프롬프트 템플릿 로더.
 
@@ -162,11 +169,6 @@ class PromptLoader:
 
         if kwargs:
             try:
-                # format_map은 누락된 키를 그대로 유지
-                class SafeDict(dict):
-                    def __missing__(self, k: str) -> str:
-                        return "{" + k + "}"
-
                 return template.format_map(SafeDict(**kwargs))
             except Exception as e:
                 logging.warning(f"[PromptLoader] Template substitution failed for {domain}/{key}: {e}")
