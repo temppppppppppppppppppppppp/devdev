@@ -115,21 +115,22 @@ class Stage4PostProcessor:
         self.ctx.ui.log(f"\n📦 제{next_ep}화 데이터 정산 중...")
 
         # DB 저장 (HUD보다 먼저 — DB 실패 시 HUD 오염 방지) [Sweep56]
+        # [P0-D1/D4] lock 보호 + 원자적 트랜잭션으로 부분 저장 방지
+        _db = self.ctx.current_project.db
         try:
-            self.ctx.current_project.db.save_manuscript(ep_num=next_ep, title=final_title, content=final_manuscript)
-
-            if final_state_updates:
-                self.ctx.current_project.db.update_martial_tracker(next_ep, final_state_updates)
-                self.ctx.ui.log(f"      📊 제 {next_ep}화 15대 지표 트래커 저장 완료")
-
-            self.ctx.current_project.db.conn.commit()
+            with _db._lock:
+                _db.conn.execute("BEGIN")
+                try:
+                    _db.save_manuscript(ep_num=next_ep, title=final_title, content=final_manuscript)
+                    if final_state_updates:
+                        _db.update_martial_tracker(next_ep, final_state_updates)
+                        self.ctx.ui.log(f"      📊 제 {next_ep}화 15대 지표 트래커 저장 완료")
+                    _db.conn.commit()
+                except Exception:
+                    _db.conn.rollback()
+                    raise
             self.ctx.ui.log("   ✅ DB 저장 완료")
         except Exception as db_err:
-            # [G8] DB 실패 시 롤백으로 부분 저장 방지
-            try:
-                self.ctx.current_project.db.conn.rollback()
-            except Exception:
-                pass
             self.ctx.ui.log(f"   🚨 DB 저장 실패 (롤백 완료): {db_err}")
             return False
 
@@ -347,6 +348,9 @@ class Stage4PostProcessor:
                 else:
                     self.ctx.ui.log("      ⚠️ Manager 파싱 실패, 기본 추출 사용")
             except Exception as mgr_err:
+                # [P0-D2] 타임아웃 시 비동기 future 취소 후 동기 재시도
+                if _bible_future is not None and hasattr(_bible_future, "cancel"):
+                    _bible_future.cancel()
                 self.ctx.ui.log(f"      ⚠️ Manager 호출 실패: {str(mgr_err)[:50]}")
                 logging.warning("[B-1] Manager 정산 실패 — 동기 재시도: %s", mgr_err)
                 try:

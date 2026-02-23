@@ -734,7 +734,11 @@ class BaseAgent:
                 res = self.client.models.generate_content(
                     model=self.backup_model, contents=base_prompt, config=backup_config
                 )
-                backup_text = res.text if res.text else ""
+                try:
+                    backup_text = res.text if res.text else ""
+                except (ValueError, AttributeError):
+                    backup_text = ""
+                    logging.warning("[base_agent] backup response.text 접근 실패 (safety filter?) — 빈 응답 처리")
 
                 # [V49.3] 백업 모델 비용 추적 종료
                 if METRICS_ENABLED and backup_metric_id:
@@ -1324,7 +1328,11 @@ class BaseAgent:
                 config=config,
             )
 
-            return response.text if response.text else ""
+            try:
+                return response.text if response.text else ""
+            except (ValueError, AttributeError):
+                logging.warning("[V61.7] 캐시 응답 response.text 접근 실패 — 빈 문자열 반환")
+                return ""
 
         except Exception as e:
             logging.warning(f"⚠️ [V61.7] 캐시 기반 질의 실패, 일반 질의로 폴백: {str(e)[:80]}")

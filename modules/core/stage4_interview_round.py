@@ -315,18 +315,14 @@ class Stage4InterviewRound:
                     _mb = self.ctx.current_project.master_bible or {}
                     _mb_root = _mb.get("MasterBible", _mb)
                     _proto_name = (
-                        _mb_root.get("protagonist_name")
-                        or _mb_root.get("protagonist_config", {}).get("name", "")
-                        or ""
+                        _mb_root.get("protagonist_name") or _mb_root.get("protagonist_config", {}).get("name", "") or ""
                     )
                 except Exception:
                     pass
                 if _proto_name:
                     _cv_context["protagonist_name"] = _proto_name
                 else:
-                    logging.warning(
-                        "[Stage4] protagonist_name 주입 실패 — POV 검사 민감도 저하 가능"
-                    )
+                    logging.warning("[Stage4] protagonist_name 주입 실패 — POV 검사 민감도 저하 가능")
             # [P6-01] FailureLearner 주입 — ValidationOrchestrator가 BLOCKING 실패 시 환류할 수 있도록
             _cv_context["_failure_learner"] = getattr(self.ctx, "failure_learner", None)
             # [V66.1] BlockingValidator/ContinuityValidator에 추적 데이터 전달
@@ -830,6 +826,12 @@ class Stage4InterviewRound:
                 )
                 verdict = "REJECT"
                 director_feedback += "\n" + "\n".join(_post_select_conflicts)
+                # [P0-D3] 다운그레이드 시 previous_attempt 갱신 — 다음 라운드 패치 모드용
+                previous_attempt = {
+                    "best_manuscript": final_manuscript,
+                    "state_updates": final_state_updates,
+                    "score": score,
+                }
 
             if verdict == "PASS":
                 # [V66.1] F-1: time consistency check -> forward warnings to validator context
