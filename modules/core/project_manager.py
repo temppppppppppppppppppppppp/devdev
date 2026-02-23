@@ -844,7 +844,8 @@ class ProjectContext:
             if not content or not content.strip():
                 logging.warning(f"⚠️ 제 {ep_num}화 파일이 비어있음. 건너뜀.")
                 continue
-            title = content.split("\n")[0].strip()[:50] if content else f"제{ep_num}화"
+            _first_line = content.split("\n")[0].strip() if content else ""
+            title = _first_line[:50] if _first_line else f"제{ep_num}화"
 
             # 1. SQLite 원고 테이블에 직접 저장
             self.save_manuscript_to_db(ep_num, title, content)
@@ -899,7 +900,7 @@ class ProjectContext:
             fact_ledger: FactLedger 인스턴스 (선택, 있으면 롤백)
         """
         try:
-            match = re.search(r"(\d+)\s*화", error_report)
+            match = re.search(r"(\d+)\s*화", error_report or "")
             origin_ep = int(match.group(1)) if match else max(1, self.get_latest_episode_number() - 1)
 
             current_ep = self.get_latest_episode_number() - 1

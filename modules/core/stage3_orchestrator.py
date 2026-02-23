@@ -301,7 +301,11 @@ class Stage3Orchestrator:
             return {"next_ep": working_ep, "success_count": success_count, "fail_count": fail_count, "break": True}
 
         # Arc 데이터 검증
-        arc_data_validated = ctx.validate_arc_data_fields(arc_data, arc_idx)
+        arc_data_validated = (
+            ctx.validate_arc_data_fields(arc_data, arc_idx)
+            if callable(getattr(ctx, "validate_arc_data_fields", None))
+            else None
+        )
         if arc_data_validated:
             arc_data = arc_data_validated
 
@@ -367,9 +371,10 @@ class Stage3Orchestrator:
                         )
                         if self._cached_entity_registry:
                             stage3_protag = ctx.get_protagonist_name() if callable(ctx.get_protagonist_name) else ""
-                            self._cached_entity_registry = ctx.fix_entity_registry_protagonist(
-                                self._cached_entity_registry, stage3_protag
-                            )
+                            if callable(getattr(ctx, "fix_entity_registry_protagonist", None)):
+                                self._cached_entity_registry = ctx.fix_entity_registry_protagonist(
+                                    self._cached_entity_registry, stage3_protag
+                                )
                             total_entities = sum(
                                 len(v) for v in self._cached_entity_registry.values() if isinstance(v, list)
                             )
@@ -621,7 +626,11 @@ class Stage3Orchestrator:
         _qd = getattr(self.app, "quality_dashboard", None)
         if _qd is not None and hasattr(_qd, "record_validation"):
             try:
-                _bp_score = pipeline_result.get("last_score", 0) or pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 1.0) or 1.0
+                _bp_score = (
+                    pipeline_result.get("last_score", 0)
+                    or pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 1.0)
+                    or 1.0
+                )
                 _qd.record_validation(
                     ep_num=working_ep,
                     result={

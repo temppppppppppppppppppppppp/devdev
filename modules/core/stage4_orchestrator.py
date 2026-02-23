@@ -299,6 +299,10 @@ JSON으로 출력:
         total_planned_ep = session.total_planned_ep
 
         loop_guard = 0
+        # [P1-D2] total_planned_ep=0 방어 (블루프린트 없는 경우)
+        if not target_ep and total_planned_ep <= 0:
+            self.ctx.ui.log("⚠️ 블루프린트가 없습니다. Stage 2를 먼저 실행하세요.")
+            return False
         # [Sweep45] max(1, ...) — latest_ep > total_planned_ep 시 음수 방지
         max_loops = max(
             1, min((target_ep or total_planned_ep) - self.ctx.current_project.get_latest_episode_number() + 5, 100)

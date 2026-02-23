@@ -198,6 +198,13 @@ class Stage2Finalizer:
                     f"\n[Quality Gate] score {_score}점으로 {_quality_gate_score}점 미달."
                 )
                 audit["re_slice_instruction"] = audit.get("re_slice_instruction") or "품질 개선 후 재제출"
+                # [P1-B1] StateTracker 롤백 — FourPhase PASS 후 팬텀 데이터 방지
+                if st_snapshot and generation_method.startswith("four_phase"):
+                    _st = self.ctx.state_tracker
+                    if _st:
+                        for _k, _v in st_snapshot.items():
+                            if hasattr(_st, _k):
+                                setattr(_st, _k, _v)
                 return {"action": "retry", "current_feedback": audit["reason"]}
 
             ### [0124 핵심 3] 욕망 데이터 및 HUD 그림자 물리적 박제
@@ -293,11 +300,21 @@ class Stage2Finalizer:
                 self.ctx.ui.log(f"🚨 [Arc {global_arc_no}] 핵심 데이터 과다 누락({len(critical_missing)}개)")
                 current_feedback = f"필수 키 누락: {', '.join(critical_missing)}. 완전한 JSON 구조로 재설계하라."
                 refined_arc = None
+                # [P1-B1] StateTracker 롤백
+                if st_snapshot and generation_method.startswith("four_phase") and self.ctx.state_tracker:
+                    for _k, _v in st_snapshot.items():
+                        if hasattr(self.ctx.state_tracker, _k):
+                            setattr(self.ctx.state_tracker, _k, _v)
                 return {"action": "retry", "current_feedback": current_feedback}
 
             if not self.ctx.validate_arc_integrity(refined_arc):
                 current_feedback = "필수 키가 누락된 전술 설계입니다. 형식을 완전한 JSON으로 다시 출력하십시오."
                 refined_arc = None
+                # [P1-B1] StateTracker 롤백
+                if st_snapshot and generation_method.startswith("four_phase") and self.ctx.state_tracker:
+                    for _k, _v in st_snapshot.items():
+                        if hasattr(self.ctx.state_tracker, _k):
+                            setattr(self.ctx.state_tracker, _k, _v)
                 return {"action": "retry", "current_feedback": current_feedback}
 
             # [TF-S2-03] 중복 check_new_arc() 제거 — L58-74의 첫 번째 호출이 이미 처리

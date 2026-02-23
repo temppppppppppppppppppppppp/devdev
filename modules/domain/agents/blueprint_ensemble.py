@@ -515,7 +515,9 @@ class BlueprintEnsembleGenerator(BaseAgent):
                     frust = "불만" if tag.get("frustration_flag") else ""
                     agency = tag.get("protagonist_agency", "자력")
                     extras = ", ".join(filter(None, [agency, frust]))
-                    parts.append(f"  제{tag['ep_num']}화: {tag['primary_tag']} ({score}/10, {extras})")
+                    parts.append(
+                        f"  제{tag.get('ep_num', '?')}화: {tag.get('primary_tag', '미분류')} ({score}/10, {extras})"
+                    )
                     if tag.get("frustration_flag"):
                         consecutive_frustration += 1
                     else:
@@ -531,14 +533,15 @@ class BlueprintEnsembleGenerator(BaseAgent):
             if pacing_records:
                 parts.append("[호흡 분석 추이 (최근 5화)]")
                 for rec in pacing_records:
-                    dial_pct = f"{rec['dialogue_ratio']:.0%}" if rec.get("dialogue_ratio") else "0%"
+                    _dr = rec.get("dialogue_ratio")
+                    dial_pct = f"{_dr:.0%}" if _dr is not None else "0%"
                     parts.append(
-                        f"  제{rec['ep_num']}화: 점수 {rec['pacing_score']}/100, "
-                        f"대화 {dial_pct}, 장면전환 {rec['scene_break_count']}회"
+                        f"  제{rec.get('ep_num', '?')}화: 점수 {rec.get('pacing_score', 0)}/100, "
+                        f"대화 {dial_pct}, 장면전환 {rec.get('scene_break_count', 0)}회"
                     )
                 # 최근 평균 호흡 경고
-                avg_dial = sum(r.get("dialogue_ratio", 0) for r in pacing_records) / len(pacing_records)
-                avg_score = sum(r.get("pacing_score", 50) for r in pacing_records) / len(pacing_records)
+                avg_dial = sum(r.get("dialogue_ratio") or 0 for r in pacing_records) / len(pacing_records)
+                avg_score = sum(r.get("pacing_score") or 50 for r in pacing_records) / len(pacing_records)
                 if avg_dial < 0.15:
                     parts.append("  ⚠️ 대화 비율 저조 — 캐릭터 상호작용 씬 추가 고려")
                 if avg_score < 40:

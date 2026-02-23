@@ -78,7 +78,7 @@ class ReverseExpander:
                             max_output_tokens=max_tokens,
                         ),
                     )
-                    return response.text
+                    return response.text or ""
                 except Exception as e:
                     err_lower = str(e).lower()
                     is_retryable = any(p in err_lower for p in self._RETRYABLE_PATTERNS)
@@ -869,14 +869,18 @@ JSON:
         if not self.raw_drafts:
             return 0
 
+        # [P1-A9] ep_num 키 기반 매핑 (인덱스 불일치 방지)
+        _eb_map = (
+            {eb.get("ep_num"): eb for eb in self.episode_bibles if eb.get("ep_num") is not None}
+            if self.episode_bibles
+            else {}
+        )
         count = 0
         for i, draft in enumerate(self.raw_drafts):
             ep_num = draft.get("ep_num")
 
-            # episode_bibles에서 정보 가져오기
-            ep_bible = {}
-            if self.episode_bibles and i < len(self.episode_bibles):
-                ep_bible = self.episode_bibles[i]
+            # [P1-A9] ep_num 키 기반 매핑 (인덱스 불일치 방지)
+            ep_bible = _eb_map.get(ep_num, {})
 
             # Blueprint stub 생성
             stub = {

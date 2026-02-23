@@ -425,7 +425,7 @@ class Stage4ContextBuilder:
                         _ep_no = int(_row.get("ep_num", 0) or 0)
                         _summary = str(_row.get("summary", "") or "")
                     else:
-                        _ep_no = int(_row["ep_num"])
+                        _ep_no = int(_row["ep_num"] or 0)
                         _summary = str(_row["summary"] or "")
                     if _summary:
                         _tier2_parts.append(f"[EP {_ep_no} summary] {_summary[:500]}")
