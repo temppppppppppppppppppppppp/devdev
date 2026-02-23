@@ -270,12 +270,12 @@ class Stage4PostProcessor:
             os.makedirs(logs_dir, exist_ok=True)
 
             if v50_modules_available and self.ctx.failure_learner:
-                self.ctx.failure_learner.save_to_json(os.path.join(logs_dir, "failure_learning.json"))
+                self.ctx.failure_learner.save_to_json(os.path.join(logs_dir, "failure_learning.json"))  # TODO: save_to_db 미구현 - JSON 유지
 
             if v50_modules_available and self.ctx.character_voice:
                 try:
                     self.ctx.character_voice.analyze_manuscript(next_ep, final_manuscript)
-                    self.ctx.character_voice.save_to_json(os.path.join(logs_dir, "character_voice.json"))
+                    self.ctx.character_voice.save_to_db(self.ctx.current_project.db)  # [DB-Eff-P1] JSON->DB
                 except Exception as e:
                     logging.warning(f"⚠️ [V64.P4-fix] character_voice 분석/저장 실패: {e}")
 
@@ -283,7 +283,7 @@ class Stage4PostProcessor:
                 # [V66] 원고에서 복선 자동 감지
                 try:
                     self.ctx.foreshadow_tracker.auto_detect_from_manuscript(next_ep, final_manuscript)
-                    self.ctx.foreshadow_tracker.save_to_json(os.path.join(logs_dir, "foreshadow.json"))
+                    self.ctx.foreshadow_tracker.save_to_db(self.ctx.current_project.db)  # [DB-Eff-P1] JSON->DB
                 except Exception as e:
                     logging.warning(f"⚠️ [V66-fix] foreshadow 감지/저장 실패: {e}")
 
