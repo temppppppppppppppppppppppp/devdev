@@ -167,6 +167,7 @@ class PromptLoader:
         """
         prompts = self._load_yaml_file(domain)
         if key not in prompts:
+            logging.debug("[PromptLoader] 키 미발견: %s/%s", domain, key)
             return None
 
         template = prompts[key]

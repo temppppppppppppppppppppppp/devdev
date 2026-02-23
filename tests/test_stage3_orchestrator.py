@@ -199,7 +199,7 @@ class TestGetEntityRegistry:
         app_mock.agents["state_extractor"].extract_cumulative_state.side_effect = RuntimeError("LLM error")
         result = orch._get_entity_registry(arc_idx=0)
         assert result is None
-        assert orch._entity_cache_arc_idx == -1  # [Sweep43] 실패 시 캐시 무효화 → 다음 호출에서 재시도
+        assert orch._entity_cache_arc_idx == 0  # [P0] 실패한 arc_idx 캐싱 — 동일 arc 무한 재시도 방지
 
 
 # ── Blueprint Helpers ────────────────────────────────────────

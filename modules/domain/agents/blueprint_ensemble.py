@@ -292,7 +292,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         if not qualified_candidates:
             logging.warning("❌ [BPEnsemble] 모든 후보 최소 기준 미달")
-            return None, candidates  # 원본 반환 (디버깅용)
+            return None, []  # [P0] 미검증 원본 대신 빈 리스트 반환
 
         # [V60.85] Director가 선택할 수 있도록 후보 목록 반환
         # Python은 선택하지 않음 - Director에게 전체 전달
