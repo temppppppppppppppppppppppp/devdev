@@ -343,6 +343,171 @@ class TestSyncDrafts:
         assert mem._embed_text.call_count > call_count_1
 
 
+# ── P0-1: distance-first selection ──────────────────────────
+
+
+class TestMultiQueryDistanceFirst:
+    """[OpusTF-P0-1] distance가 낮은(관련도 높은) 결과가 에피소드 번호 순보다 우선 선택된다."""
+
+    def _populate(self, m, count: int = 6) -> None:
+        for i in range(1, count + 1):
+            m._embed_text = MagicMock(return_value=_make_vec(float(i)))
+            m.memorize_v20_episode(i, f"text_{i}", f"요약_{i}", {})
+
+    def test_multi_query_distance_first(self, mem_with_embed):
+        """낮은 distance(고관련도) 에피소드가 높은 번호 에피소드보다 우선 선택된다."""
+        m = mem_with_embed
+        self._populate(m, 6)
+
+        # ep1과 매우 유사한 쿼리 벡터(delta 0.001) → ep1이 distance 최소여야 함
+        # ep6과 유사한 쿼리 벡터 → ep6이 distance 최소여야 함
+        # 두 쿼리를 날려 ep1, ep6이 모두 선택되는지 확인
+        call_count = [0]
+        vecs = [_make_similar_vec(1.0, 0.001), _make_similar_vec(6.0, 0.001)]
+
+        def side_effect(text):
+            idx = min(call_count[0], len(vecs) - 1)
+            call_count[0] += 1
+            return vecs[idx]
+
+        m._embed_text = MagicMock(side_effect=side_effect)
+        result = m.retrieve_multi_query_context(
+            ["q_ep1", "q_ep6"], current_ep=10, max_results=2
+        )
+        # ep1과 ep6 모두 최상위 관련도 → 둘 다 포함되어야 함
+        assert "제 1 화의 기억" in result
+        assert "제 6 화의 기억" in result
+
+    def test_distance_ranked_before_episode_order(self, mem_with_embed):
+        """동일 쿼리에서 낮은 distance 에피소드(ep1)가 높은 distance 에피소드(ep5)보다 우선."""
+        m = mem_with_embed
+        self._populate(m, 5)
+
+        # ep1과 매우 유사한 쿼리 → ep1이 distance 최소, ep5가 최대
+        m._embed_text = MagicMock(return_value=_make_similar_vec(1.0, 0.001))
+        result = m.retrieve_multi_query_context(
+            ["q1"], current_ep=10, max_results=1
+        )
+        # 가장 관련도 높은 ep1이 선택되어야 함
+        assert "제 1 화의 기억" in result
+
+    def test_diversity_correction_skips_adjacent_episodes(self, mem_with_embed):
+        """연속 에피소드(±1)는 더 먼 것을 제거해 다양성을 보장한다."""
+        m = mem_with_embed
+        self._populate(m, 6)
+
+        # ep3과 ep4는 연속 — 더 가까운 ep3만 남아야 함
+        call_count = [0]
+        # ep3과 매우 유사한 벡터 두 번 → ep3, ep4 모두 top에 오지만 ep4는 제거
+        vecs = [_make_similar_vec(3.0, 0.001), _make_similar_vec(3.0, 0.001)]
+
+        def side_effect(text):
+            idx = min(call_count[0], len(vecs) - 1)
+            call_count[0] += 1
+            return vecs[idx]
+
+        m._embed_text = MagicMock(side_effect=side_effect)
+        result = m.retrieve_multi_query_context(
+            ["q1", "q2"], current_ep=10, max_results=5
+        )
+        # ep3과 ep4가 모두 후보이지만 연속이라 ep4(높은 distance)는 제거됨
+        assert "제 3 화의 기억" in result
+        # ep4는 ep3과 adjacent(±1)이므로 제거
+        assert "제 4 화의 기억" not in result
+
+
+# ── P0-2: embedding failure keyword SQL fallback ──────────
+
+
+class TestEmbeddingKeywordFallback:
+    """[OpusTF-P0-2] 임베딩 실패 시 빈 문자열 대신 keyword SQL fallback이 작동한다."""
+
+    def _populate_with_keywords(self, m) -> None:
+        """키워드가 포함된 요약으로 에피소드 저장."""
+        data = [
+            (1, "장무기가 구양신공을 익히기 시작했다", "수련,성장", "장무기,구양신공"),
+            (2, "조민이 장무기를 배신했다", "배신,갈등", "조민,장무기"),
+            (3, "주지약과 장무기가 결혼식을 올렸다", "결혼,의식", "주지약,장무기"),
+        ]
+        for ep, summary, evt, ent in data:
+            m._embed_text = MagicMock(return_value=_make_vec(float(ep)))
+            m.memorize_v20_episode(
+                ep, f"text_{ep}", summary, {}, event_types=[evt], entity_names=[ent]
+            )
+
+    def test_embedding_failure_uses_keyword_fallback(self, mem_with_embed):
+        """임베딩 생성 실패 시 빈 문자열 대신 keyword SQL fallback 결과가 반환된다."""
+        m = mem_with_embed
+        self._populate_with_keywords(m)
+
+        # 임베딩 실패 시뮬레이션
+        m._embed_text = MagicMock(return_value=None)
+
+        # 요약에 포함된 키워드로 쿼리
+        result = m.retrieve_high_res_context("장무기", current_ep=10, n_results=3)
+
+        # 빈 문자열이 아니라 fallback 결과가 반환되어야 함
+        assert result != ""
+        assert "키워드" in result  # 키워드 fallback 헤더
+        assert "장무기" in result or "화의 기억" in result
+
+    def test_embedding_fallback_returns_empty_on_no_match(self, mem_with_embed):
+        """DB에 키워드 매칭 항목이 없으면 fallback도 빈 문자열을 안전하게 반환한다."""
+        m = mem_with_embed
+        self._populate_with_keywords(m)
+
+        m._embed_text = MagicMock(return_value=None)
+        # 존재하지 않는 키워드
+        result = m.retrieve_high_res_context("xyzzyqqqnotexist", current_ep=10)
+        assert result == ""
+
+    def test_embedding_fallback_empty_query_returns_empty(self, mem_with_embed):
+        """키워드 없는 빈 쿼리는 fallback에서 빈 결과를 안전하게 반환한다."""
+        m = mem_with_embed
+        self._populate_with_keywords(m)
+
+        m._embed_text = MagicMock(return_value=None)
+        # 빈 쿼리 — _embed_text도 None 반환, 키워드도 없음
+        result = m.retrieve_high_res_context("", current_ep=10)
+        assert result == ""
+
+    def test_multi_query_all_embed_fail_uses_fallback(self, mem_with_embed):
+        """멀티쿼리에서 모든 임베딩 실패 시 첫 번째 매칭 쿼리의 fallback이 반환된다."""
+        m = mem_with_embed
+        self._populate_with_keywords(m)
+
+        m._embed_text = MagicMock(return_value=None)
+        result = m.retrieve_multi_query_context(
+            ["조민", "주지약"], current_ep=10, max_results=3
+        )
+        # 임베딩 실패 → keyword fallback 동작
+        assert result != ""
+        assert "화의 기억" in result
+
+    def test_multi_query_all_embed_fail_no_match_returns_empty(self, mem_with_embed):
+        """멀티쿼리 임베딩 전량 실패 + 키워드 불일치 → 빈 문자열 반환."""
+        m = mem_with_embed
+        self._populate_with_keywords(m)
+
+        m._embed_text = MagicMock(return_value=None)
+        result = m.retrieve_multi_query_context(
+            ["xyzzynotexist1", "xyzzynotexist2"], current_ep=10
+        )
+        assert result == ""
+
+    def test_keyword_fallback_excludes_future_episodes(self, mem_with_embed):
+        """keyword fallback도 current_ep 이상의 에피소드를 제외한다."""
+        m = mem_with_embed
+        self._populate_with_keywords(m)
+
+        m._embed_text = MagicMock(return_value=None)
+        # current_ep=2 → ep2, ep3 제외
+        result = m.retrieve_high_res_context("장무기", current_ep=2, n_results=5)
+        # ep2, ep3 제외, ep1만 포함 가능
+        assert "제 3 화" not in result
+        assert "제 2 화" not in result
+
+
 # ── LongTermMemory 인터페이스 호환 ──────────────────────────
 
 
@@ -372,3 +537,119 @@ class TestInterfaceCompat:
 
     def test_initialization_error_attr(self, mem):
         assert hasattr(mem, "initialization_error")
+
+
+# ── P0-3: 4-slot summary normalization storage ──────────────
+
+
+class TestSummaryNormalizationStorage:
+    """[OpusTF-P0-3] memorize_v20_episode가 전달된 summary를 변형 없이 저장한다.
+
+    4-slot 정규화는 stage4_post_processor._rich_summary 생성 단계에서 이미 완료된다.
+    VecMemory는 이를 그대로 episode_meta에 저장해야 한다.
+    """
+
+    def test_pipe_separated_summary_stored_verbatim(self, mem_with_embed):
+        """파이프 구분자가 포함된 4-slot 요약이 그대로 저장된다."""
+        m = mem_with_embed
+        m._embed_text = MagicMock(return_value=_make_vec(1.0))
+
+        four_slot = "사건: 결투 발생 | 인물: 장무기 | 장소: 무당산 | 결말: 적 제압"
+        m.memorize_v20_episode(
+            ep_num=1,
+            text="원고 텍스트",
+            summary=four_slot,
+            causal_links=[],
+        )
+
+        meta = m._load_episode_meta(1)
+        assert meta is not None
+        assert meta["summary"] == four_slot
+
+    def test_summary_with_all_four_slots_is_retrievable(self, mem_with_embed):
+        """4-slot 요약에 포함된 키워드로 keyword fallback 검색이 작동한다."""
+        m = mem_with_embed
+        m._embed_text = MagicMock(return_value=_make_vec(1.0))
+
+        four_slot = "사건: 독공 각성 | 인물: 조민, 장무기 | 장소: 비무대 | 결말: 승리"
+        m.memorize_v20_episode(ep_num=5, text="원고", summary=four_slot, causal_links=[])
+
+        # 임베딩 실패 → keyword fallback
+        m._embed_text = MagicMock(return_value=None)
+        result = m.retrieve_high_res_context("조민", current_ep=10, n_results=3)
+
+        assert result != ""
+        assert "조민" in result or "화의 기억" in result
+
+    def test_empty_summary_stored_as_empty(self, mem_with_embed):
+        """빈 summary는 그대로 빈 문자열로 저장된다."""
+        m = mem_with_embed
+        m._embed_text = MagicMock(return_value=_make_vec(2.0))
+
+        m.memorize_v20_episode(ep_num=2, text="원고", summary="", causal_links=[])
+
+        meta = m._load_episode_meta(2)
+        assert meta is not None
+        assert meta["summary"] == ""
+
+    def test_passthrough_already_formatted_summary(self, mem_with_embed):
+        """이미 4-slot 포맷인 summary는 변경 없이 저장된다."""
+        m = mem_with_embed
+        m._embed_text = MagicMock(return_value=_make_vec(3.0))
+
+        formatted = "사건: 정파 회맹 | 인물: 장무기, 주지약 | 장소: 광명정 | 결말: 동맹 성사"
+        m.memorize_v20_episode(ep_num=3, text="원고", summary=formatted, causal_links=[])
+
+        meta = m._load_episode_meta(3)
+        assert meta["summary"] == formatted
+
+
+# ── P0-4: retrieval count config tuning ─────────────────────
+
+
+class TestRetrievalCountConfig:
+    """[P0-4] validation.yaml의 vector_max_results 값이 적정 수준 이상인지 검증.
+
+    _threshold() 싱글톤 캐시 오염을 피하기 위해 YAML 파일을 직접 파싱한다.
+    """
+
+    @staticmethod
+    def _load_yaml_direct() -> dict:
+        """validation.yaml을 직접 로드한다 (cwd 의존성 없음)."""
+        from pathlib import Path
+
+        import yaml
+
+        yaml_path = Path(__file__).parent.parent / "config" / "settings" / "validation.yaml"
+        with yaml_path.open(encoding="utf-8") as f:
+            return yaml.safe_load(f)
+
+    def test_stage4_max_results_at_least_16(self):
+        """S4 검색 개수가 16 이상 (P0-4 이후 20)으로 설정되어 있다."""
+        data = self._load_yaml_direct()
+        val = int(data["context"]["vector_max_results_s4"])
+        assert val >= 16, f"vector_max_results_s4={val} < 16 — 검색 개수 너무 낮음"
+
+    def test_stage2_max_results_at_least_12(self):
+        """S2 검색 개수가 12 이상 (P0-4 이후 16)으로 설정되어 있다."""
+        data = self._load_yaml_direct()
+        val = int(data["context"]["vector_max_results_s2"])
+        assert val >= 12, f"vector_max_results_s2={val} < 12 — 검색 개수 너무 낮음"
+
+    def test_stage4_max_results_yaml_exceeds_hardcoded_default(self):
+        """YAML 설정값이 Python 하드코드 기본값(16)보다 크다 — P0-4 업그레이드 확인."""
+        data = self._load_yaml_direct()
+        val = int(data["context"]["vector_max_results_s4"])
+        # P0-4 이후 YAML은 20, 하드코드 기본값은 16
+        assert val > 16, (
+            f"vector_max_results_s4={val} — YAML이 하드코드 기본값(16)을 초과해야 함 (P0-4 미적용)"
+        )
+
+    def test_stage2_max_results_yaml_exceeds_hardcoded_default(self):
+        """YAML 설정값이 Python 하드코드 기본값(12)보다 크다 — P0-4 업그레이드 확인."""
+        data = self._load_yaml_direct()
+        val = int(data["context"]["vector_max_results_s2"])
+        # P0-4 이후 YAML은 16, 하드코드 기본값은 12
+        assert val > 12, (
+            f"vector_max_results_s2={val} — YAML이 하드코드 기본값(12)을 초과해야 함 (P0-4 미적용)"
+        )
