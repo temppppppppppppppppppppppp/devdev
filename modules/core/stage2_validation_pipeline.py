@@ -516,22 +516,34 @@ class Stage2ValidationPipeline:
                         f"- 부상: {last_status.get('expected_injuries', '?')}"
                     )
 
-                structured_feedback = self.ctx.generate_structured_arc_feedback(
-                    continuity_result=continuity_result, prev_arcs=all_refined_arcs, arc_no=global_arc_no
-                )
+                if callable(getattr(self.ctx, "generate_structured_arc_feedback", None)):
+                    structured_feedback = self.ctx.generate_structured_arc_feedback(
+                        continuity_result=continuity_result, prev_arcs=all_refined_arcs, arc_no=global_arc_no
+                    )
+                else:
+                    structured_feedback = ""
 
-                adaptive_intensity = self.ctx.get_adaptive_feedback_intensity(attempt, stage=2)
-                intensity_guide = f"\n\n[V60.9 재시도 가이드 ({attempt + 1}회차)]\n{adaptive_intensity['guidance']}"
+                if callable(getattr(self.ctx, "get_adaptive_feedback_intensity", None)):
+                    adaptive_intensity = self.ctx.get_adaptive_feedback_intensity(attempt, stage=2)
+                    intensity_guide = f"\n\n[V60.9 재시도 가이드 ({attempt + 1}회차)]\n{adaptive_intensity['guidance']}"
+                else:
+                    intensity_guide = ""
 
-                strong_kind_feedback = self.ctx.build_strong_kind_feedback(
-                    violations=violations, attempt=attempt, protagonist_name=protagonist_name or "주인공"
-                )
+                if callable(getattr(self.ctx, "build_strong_kind_feedback", None)):
+                    strong_kind_feedback = self.ctx.build_strong_kind_feedback(
+                        violations=violations, attempt=attempt, protagonist_name=protagonist_name or "주인공"
+                    )
+                else:
+                    strong_kind_feedback = ""
 
-                focused_context = self.ctx.build_focused_context(
-                    violations=violations,
-                    prev_arcs=all_refined_arcs,
-                    protagonist_name=protagonist_name or "주인공",
-                )
+                if callable(getattr(self.ctx, "build_focused_context", None)):
+                    focused_context = self.ctx.build_focused_context(
+                        violations=violations,
+                        prev_arcs=all_refined_arcs,
+                        protagonist_name=protagonist_name or "주인공",
+                    )
+                else:
+                    focused_context = ""
 
                 # 모든 피드백 조합: 핵심 지시 + 컨텍스트 + 금지 아이템 + 직전 상태 + 재시도 가이드
                 current_feedback = (

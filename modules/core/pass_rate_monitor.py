@@ -167,6 +167,8 @@ class PassRateMonitor:
 
         with self._lock:
             self.records.append(record)
+            if len(self.records) > 1000:
+                self.records = self.records[-1000:]
             should_save = len(self.records) % 100 == 0
 
         # 100건마다 자동 저장

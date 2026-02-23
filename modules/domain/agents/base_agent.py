@@ -230,7 +230,7 @@ class BaseAgent:
         return new_client
 
     # [V61.2] 네트워크 복원력 설정 (야간 무인 운영 대응)
-    API_TIMEOUT = _SYSTEM_CFG.get("api", {}).get("timeout", _threshold("retry.api_timeout_seconds", 90))
+    API_TIMEOUT = _SYSTEM_CFG.get("api", {}).get("timeout", _threshold("retry.api_timeout_seconds", 300))
     NETWORK_RETRY_DELAY_BASE = _SYSTEM_CFG.get("network_retry", {}).get("delay_base", 10)
     NETWORK_RETRY_DELAY_MAX = _SYSTEM_CFG.get("network_retry", {}).get("delay_max", 30)
     MAX_NETWORK_RETRIES = _SYSTEM_CFG.get("network_retry", {}).get("max_retries", 22)

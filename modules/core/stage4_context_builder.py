@@ -145,7 +145,7 @@ class Stage4ContextBuilder:
 
         sections: list[str] = []
         compressor = ContextCompressor()
-        max_results = int(_threshold("context.vector_max_results_s4", 16))
+        max_results = int(_threshold("context.vector_max_results_s4", 20))
         current_arc_no = arc_no
         ordered_slots = sorted(plan.slots, key=lambda slot: getattr(slot, "priority", 2))
 
@@ -409,14 +409,18 @@ class Stage4ContextBuilder:
         if _tier2_end > _tier2_start:
             _tier2_parts: list[str] = []
             try:
-                if hasattr(_db, "_lock") and hasattr(_db, "cursor"):
+                if hasattr(_db, "_lock"):
                     with _db._lock:
-                        _cur = _db.cursor.execute(
-                            "SELECT ep_num, summary FROM episode_meta "
-                            "WHERE ep_num >= ? AND ep_num < ? ORDER BY ep_num ASC",
-                            (_tier2_start, _tier2_end),
-                        )
-                        _rows = _cur.fetchall()
+                        _cur = _db.conn.cursor()
+                        try:
+                            _cur.execute(
+                                "SELECT ep_num, summary FROM episode_meta "
+                                "WHERE ep_num >= ? AND ep_num < ? ORDER BY ep_num ASC",
+                                (_tier2_start, _tier2_end),
+                            )
+                            _rows = _cur.fetchall()
+                        finally:
+                            _cur.close()
                 else:
                     _rows = []
 
@@ -784,7 +788,7 @@ class Stage4ContextBuilder:
                         queries=_mq_queries,
                         current_ep=next_ep,
                         n_per_query=3,
-                        max_results=_threshold("context.vector_max_results_s4", 16),
+                        max_results=_threshold("context.vector_max_results_s4", 20),
                         current_arc_no=current_arc_no,
                     )
                     if _vector_memory:

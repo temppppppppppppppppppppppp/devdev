@@ -517,8 +517,11 @@ class Stage2Finalizer:
                     if isinstance(_v, int | float):
                         _score_breakdown[_k] = _v
 
-            adaptive_intensity = self.ctx.get_adaptive_feedback_intensity(attempt, stage=2)
-            intensity_guide = f"\n\n[V60.9 재시도 가이드 ({attempt + 1}회차)]\n{adaptive_intensity['guidance']}"
+            if callable(getattr(self.ctx, "get_adaptive_feedback_intensity", None)):
+                adaptive_intensity = self.ctx.get_adaptive_feedback_intensity(attempt, stage=2)
+                intensity_guide = f"\n\n[V60.9 재시도 가이드 ({attempt + 1}회차)]\n{adaptive_intensity['guidance']}"
+            else:
+                intensity_guide = ""
 
             self.ctx.ui.log(f"      🎬 [Director REJECT] {reject_reason[:100]}")
             self.ctx.ui.log(f"      📋 피드백: {base_feedback[:100]}")
