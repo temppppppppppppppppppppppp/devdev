@@ -937,9 +937,9 @@ class VecMemory:
 
     def _knn_search(self, query_emb: list, current_ep: int, n_results: int) -> str:
         """벡터 KNN 검색 후 맥락 블록 문자열 반환."""
-        with self._db_lock():
-            try:
-                # current_ep 이전만 필터링하기 위해 넉넉히 검색 후 후필터
+        try:
+            # [P0-E3] KNN 쿼리만 lock scope 안에서 실행, meta 로드는 밖으로
+            with self._db_lock():
                 fetch_n = n_results + 10
                 rows = self._conn.execute(
                     """SELECT rowid, distance FROM vec_episodes
@@ -947,34 +947,34 @@ class VecMemory:
                     (_serialize_f32(query_emb), fetch_n),
                 ).fetchall()
 
-                results = [(rowid, dist) for rowid, dist in rows if rowid < current_ep]
-                results = results[:n_results]
+            results = [(rowid, dist) for rowid, dist in rows if rowid < current_ep]
+            results = results[:n_results]
 
-                if not results:
-                    return ""
-
-                blocks = []
-                for rowid, _dist in results:
-                    meta = self._load_episode_meta(rowid)
-                    if not meta:
-                        continue
-                    summary = meta.get("summary", "요약 정보가 없는 기억입니다.")
-                    # [B5] 유사도 점수 노출 (distance 낮을수록 유사)
-                    _sim_label = f" (유사도: {1.0 - _dist:.2f})" if _dist < 1.0 else ""
-                    block = f"### [제 {rowid} 화의 기억{_sim_label}]\n요약: {summary}"
-                    evt = meta.get("event_types", "")
-                    ent = meta.get("entity_names", "")
-                    if evt:
-                        block += f"\n사건: {evt}"
-                    if ent:
-                        block += f"\n인물: {ent}"
-                    blocks.append(block)
-
-                return "\n\n".join(blocks)
-
-            except Exception as e:
-                self._ui_log(f"[VecMemory] KNN 검색 오류: {e}")
+            if not results:
                 return ""
+
+            blocks = []
+            for rowid, _dist in results:
+                meta = self._load_episode_meta(rowid)
+                if not meta:
+                    continue
+                summary = meta.get("summary", "요약 정보가 없는 기억입니다.")
+                # [B5] 유사도 점수 노출 (distance 낮을수록 유사)
+                _sim_label = f" (유사도: {1.0 - _dist:.2f})" if _dist < 1.0 else ""
+                block = f"### [제 {rowid} 화의 기억{_sim_label}]\n요약: {summary}"
+                evt = meta.get("event_types", "")
+                ent = meta.get("entity_names", "")
+                if evt:
+                    block += f"\n사건: {evt}"
+                if ent:
+                    block += f"\n인물: {ent}"
+                blocks.append(block)
+
+            return "\n\n".join(blocks)
+
+        except Exception as e:
+            self._ui_log(f"[VecMemory] KNN 검색 오류: {e}")
+            return ""
 
     def _keyword_fallback_search(self, query_text: str, current_ep: int, n_results: int) -> str:
         """[OpusTF-P0-2] 임베딩 실패 시 episode_meta LIKE 키워드 폴백 검색."""
