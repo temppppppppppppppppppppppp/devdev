@@ -324,9 +324,9 @@ class PreLLMValidator:
             return {"inconsistency_level": 0}
 
         # 마침표, 느낌표, 물음표 비율
-        sum(1 for e in endings if e.endswith("."))
+        period_count = sum(1 for e in endings if e.endswith("."))
         exclaim_count = sum(1 for e in endings if e.endswith("!"))
-        sum(1 for e in endings if e.endswith("?"))
+        question_count = sum(1 for e in endings if e.endswith("?"))
 
         total = len(endings)
 

@@ -761,7 +761,6 @@ class ValidationOrchestrator:
         feedback_parts = ["## CONTINUITY 검증 실패 (에피소드 간 연속성 위반)\n"]
 
         for violation in violations:
-            violation.get("type", "unknown")
             reason = violation.get("reason", "")
             severity = violation.get("severity", "CRITICAL")
             fix = violation.get("fix_suggestion", "")
@@ -790,7 +789,6 @@ class ValidationOrchestrator:
         feedback_parts = ["## BLOCKING 검증 실패\n"]
 
         for failure in failures:
-            failure.get("check", "unknown")
             reason = failure.get("reason", "")
             severity = failure.get("severity", "UNKNOWN")
 
@@ -984,7 +982,6 @@ class ValidationOrchestrator:
         feedback_parts.append(f"총 {len(violations)}개 위반 감지\n")
 
         for violation in violations:
-            violation.get("type", "unknown")
             reason = violation.get("reason", "")
             severity = violation.get("severity", "LOW")
 
@@ -1246,10 +1243,18 @@ class ValidationOrchestrator:
             elif action_score >= 8:
                 action_adjustment = 2
 
-        adjusted_total = total_score + catharsis_adjustment + action_adjustment + consistency_penalty
+        # [P0-fix] Pre-LLM 감점 (sync 경로와 동일)
+        pre_llm_adjustment = 0
+        _pre_llm = results.get("pre_llm_result")
+        if _pre_llm and _pre_llm.get("score_deduction", 0) > 0:
+            pre_llm_adjustment = -1
+
+        adjusted_total = (
+            total_score + catharsis_adjustment + action_adjustment + consistency_penalty + pre_llm_adjustment
+        )
         adjusted_total = max(0, min(100, adjusted_total))
 
-        if catharsis_adjustment != 0 or action_adjustment != 0 or consistency_penalty != 0:
+        if catharsis_adjustment != 0 or action_adjustment != 0 or consistency_penalty != 0 or pre_llm_adjustment != 0:
             logging.info(f"📊 점수 조정: {total_score} → {adjusted_total}")
             total_score = adjusted_total
 

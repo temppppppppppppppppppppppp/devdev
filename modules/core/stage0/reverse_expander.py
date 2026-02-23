@@ -1094,9 +1094,8 @@ JSON:
                 enriched_count += 1
                 logging.info(f"[v] Arc {arc_no} 보강: rels={len(agg_relationships[:10])}, npcs={len(agg_npcs[:20])}")
 
-            # 저장
+            # 저장 (save_anchor 내부에서 commit 처리)
             ctx.db.save_anchor("arcs", arcs)
-            ctx.db.conn.commit()
 
             return enriched_count
 

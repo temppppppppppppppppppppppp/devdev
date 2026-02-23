@@ -194,8 +194,6 @@ class DirectorEnsembleSelector:
         if isinstance(arc_tactical, dict):
             arc_tactical = json.dumps(arc_tactical, ensure_ascii=False)
 
-        prev_blueprint.get("ending_hook", "") if prev_blueprint else ""
-
         arc_no = arc_data.get("arc_no", 0) if arc_data else 0
 
         if state_tracker:
@@ -400,7 +398,7 @@ class DirectorEnsembleSelector:
                 "selected": "A",
                 "selected_candidate": candidates[0] if candidates else {},
                 "verdict": "REJECT",
-                "score": 50,
+                "score": 0,  # [P0-3] 파싱 실패 시 적응형 승격 방지
                 "feedback": {"issues": ["Director 판정 파싱 실패"]},
                 "state_updates": (candidates[0].get("state_updates") or {})
                 if candidates
