@@ -7,6 +7,7 @@ Story Expander - 컨셉 → Bible + Treatment 생성
 import json
 import logging
 import os
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -86,8 +87,6 @@ class StoryExpander:
                             f"[S0-I3] {model} 일시적 오류 (attempt {attempt + 1}/{self._MAX_RETRIES}), "
                             f"{delay:.1f}초 후 재시도: {e}"
                         )
-                        import time
-
                         time.sleep(delay)
                         continue
 

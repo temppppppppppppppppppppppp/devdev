@@ -93,7 +93,8 @@ class Stage3Orchestrator:
         # ═══════════════════════════════════════════════════════════════
         # 1. 목표 범위 설정
         # ═══════════════════════════════════════════════════════════════
-        total_planned_ep = ctx.current_project.arcs[-1].get("ep_end", 50) if ctx.current_project.arcs else 50
+        _last_arc = ctx.current_project.arcs[-1] if ctx.current_project.arcs else None
+        total_planned_ep = _last_arc.get("ep_end", 50) if isinstance(_last_arc, dict) else 50
 
         # [V60.80 FIX] Blueprint 테이블 기준으로 시작점 결정
         existing_bp_max = ctx.current_project.db.get_latest_blueprint_number()  # 0 if empty

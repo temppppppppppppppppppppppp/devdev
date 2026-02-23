@@ -118,7 +118,7 @@ class SemanticCache:
         # 정렬된 문자열로 변환
         key_string = "|".join(str(f) for f in key_fields if f)
 
-        return hashlib.md5(key_string.encode()).hexdigest()[:16]
+        return hashlib.md5(key_string.encode(), usedforsecurity=False).hexdigest()[:16]
 
     def _generate_signature(self, context: dict[str, Any]) -> str:
         """컨텍스트 시그니처 생성 (유사도 비교용)"""

@@ -573,9 +573,8 @@ __all__ = [
     "StoryExpander",
     "ReverseExpander",
     "create_stage_zero",
-    # 스피너 유틸리티
-    "Spinner",
-    "ProgressBar",
-    "PhaseIndicator",
     "SPINNER_AVAILABLE",
 ]
+# [P2] 스피너 유틸리티는 조건부 import이므로 존재할 때만 __all__에 추가
+if SPINNER_AVAILABLE:
+    __all__ += ["Spinner", "ProgressBar", "PhaseIndicator"]

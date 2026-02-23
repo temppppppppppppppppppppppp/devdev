@@ -593,13 +593,13 @@ class Stage2ValidationPipeline:
         if not candidate:
             return False
         recent_refs = reference_texts[-3:] if len(reference_texts) > 3 else reference_texts
-        candidate_hash = hashlib.md5(candidate.encode("utf-8")).hexdigest()
+        candidate_hash = hashlib.md5(candidate.encode("utf-8"), usedforsecurity=False).hexdigest()
         ref_hashes = set()
         for ref_text in recent_refs:
             ref = self._normalize_tactical_text(ref_text)
             if not ref:
                 continue
-            ref_hashes.add(hashlib.md5(ref.encode("utf-8")).hexdigest())
+            ref_hashes.add(hashlib.md5(ref.encode("utf-8"), usedforsecurity=False).hexdigest())
             if candidate == ref:
                 return True
         if candidate_hash in ref_hashes:
@@ -655,7 +655,9 @@ class Stage2ValidationPipeline:
                 return b.get("beat") or b.get("description") or b.get("content") or ""
             return ""
 
-        normalized = [self._normalize_flow_text(t) for t in (_extract_beat_text(b) for b in beats) if t]
+        normalized = [
+            nt for nt in (self._normalize_flow_text(t) for t in (_extract_beat_text(b) for b in beats) if t) if nt
+        ]
         if len(normalized) < 2:
             return {
                 "status": "REJECT",

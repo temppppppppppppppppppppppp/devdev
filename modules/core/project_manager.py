@@ -664,13 +664,11 @@ class ProjectContext:
 
         # 물리 파일에서도 확인 (sync 누락 방지)
         try:
-            import re as _re
-
             draft_files = list(self.paths.drafts.glob("*.txt"))
             file_ep = 0
             for f in draft_files:
                 # [V70] ep_NNNN.txt 패턴 매칭 (기존 [:4].isdigit()는 "ep_0"이라 항상 False)
-                _m = _re.match(r"ep_(\d+)\.txt", f.name)
+                _m = re.match(r"ep_(\d+)\.txt", f.name)
                 if _m:
                     file_ep = max(file_ep, int(_m.group(1)))
 
@@ -720,11 +718,9 @@ class ProjectContext:
         self.db.reset_after(target_ep)  #
 
         if self.paths.drafts.exists():
-            import re as _re
-
             for f in self.paths.drafts.glob("*.txt"):
                 # [V70] ep_NNNN.txt 패턴 매칭
-                _m = _re.match(r"ep_(\d+)\.txt", f.name)
+                _m = re.match(r"ep_(\d+)\.txt", f.name)
                 if _m and int(_m.group(1)) >= target_ep:
                     f.unlink()
         logging.info(f"🔥 [Reset] 제 {target_ep}화 이후의 모든 타임라인이 소거되었습니다.")
@@ -826,11 +822,9 @@ class ProjectContext:
         """
         draft_files = sorted(list(self.paths.drafts.glob("*.txt")))
 
-        import re as _re_sync
-
         for f_path in draft_files:
             # [V70] ep_NNNN.txt + 레거시 NNNN.txt 양쪽 호환
-            _m = _re_sync.match(r"(?:ep_)?(\d{1,5})\.txt", f_path.name)
+            _m = re.match(r"(?:ep_)?(\d{1,5})\.txt", f_path.name)
             if not _m:
                 continue
             ep_num = int(_m.group(1))
@@ -853,20 +847,18 @@ class ProjectContext:
             # 2. Vector DB 기억 주입 (AI 요약 대신 원고 앞부분 사용해서 토큰 절약)
             summary = content[:1000].replace("\n", " ") + "..."
             # [V63.3] Python regex로 핵심 이벤트 추출 (LLM 비용 0)
-            import re as _re
-
             _bulk_events = set()
             _bulk_entities = set()
-            if _re.search(r"사망|죽였|처단|숨을\s*거두", content):
+            if re.search(r"사망|죽였|처단|숨을\s*거두", content):
                 _bulk_events.add("death")
-            if _re.search(r"습득|비급|전수|깨달", content):
+            if re.search(r"습득|비급|전수|깨달", content):
                 _bulk_events.add("skill")
-            if _re.search(r"획득|발견|손에\s*넣", content):
+            if re.search(r"획득|발견|손에\s*넣", content):
                 _bulk_events.add("item")
-            if _re.search(r"배신|동맹|화해|적대", content):
+            if re.search(r"배신|동맹|화해|적대", content):
                 _bulk_events.add("relationship")
             # NPC 이름 패턴 (한글 2-4자 + "은/는/이/가/을/를")
-            for _m in _re.finditer(r"([가-힣]{2,4})(?:은|는|이|가|을|를)\s", content[:8000]):
+            for _m in re.finditer(r"([가-힣]{2,4})(?:은|는|이|가|을|를)\s", content[:8000]):
                 _bulk_entities.add(_m.group(1))
             memory.memorize_v20_episode(
                 ep_num,
