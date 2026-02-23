@@ -440,10 +440,14 @@ JSON:
 
         # Bible
         with open(out / "bible.json", "w", encoding="utf-8") as f:
+            # [DB-Eff-P4] export 전용: DB anchors 테이블이 primary source.
+            # stage0_output/*.json은 편집/참조용 사본.
             json.dump(self.bible, f, ensure_ascii=False, indent=2)
 
         # Episode Bibles
         with open(out / "episode_bibles.json", "w", encoding="utf-8") as f:
+            # [DB-Eff-P4] export 전용: DB anchors 테이블이 primary source.
+            # stage0_output/*.json은 편집/참조용 사본.
             json.dump(self.episode_bibles, f, ensure_ascii=False, indent=2)
 
         # Style Guide

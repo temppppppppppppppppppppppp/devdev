@@ -284,6 +284,8 @@ class ProjectContext:
         self._save_blueprint_to_txt(ep_num, data)
 
     def _save_arcs_to_txt(self, arcs_data) -> None:
+        # [DB-Eff-P4] export 전용: DB(blueprints/anchors 테이블)가 primary source.
+        # 이 파일은 human-readable 참조용. 배포/롤백 대상 아님.
         """[V40.1] Arc 데이터를 txt 파일로 저장"""
         if not arcs_data or not isinstance(arcs_data, list):
             return
@@ -356,6 +358,8 @@ class ProjectContext:
             logging.warning(f"⚠️ [Plans] Arc txt 저장 실패: {e}")
 
     def _save_blueprint_to_txt(self, ep_num, data) -> None:
+        # [DB-Eff-P4] export 전용: DB(blueprints 테이블)가 primary source.
+        # 이 파일은 human-readable 참조용. 배포/롤백 대상 아님.
         """[V40.1] Blueprint 데이터를 txt 파일로 저장"""
         if not data or not isinstance(data, dict):
             return
