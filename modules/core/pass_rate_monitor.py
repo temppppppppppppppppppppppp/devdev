@@ -510,23 +510,6 @@ class PassRateMonitor:
         """명시적 저장"""
         self._save_records()
 
-    def export_csv(self, filepath: str = None):
-        """CSV 내보내기"""
-        import csv
-
-        filepath = filepath or str(self.log_path.with_suffix(".csv"))
-        with self._lock:
-            records_snapshot = list(self.records)
-
-        with open(filepath, "w", newline="", encoding="utf-8") as f:
-            if records_snapshot:
-                writer = csv.DictWriter(f, fieldnames=asdict(records_snapshot[0]).keys())
-                writer.writeheader()
-                for record in records_snapshot:
-                    writer.writerow(asdict(record))
-
-        return filepath
-
 
 # 싱글톤 인스턴스
 _monitor_instance: PassRateMonitor | None = None
