@@ -46,7 +46,9 @@ class ProjectService:
         confirm = input("\n🚨 정말로 Stage 2(Arcs) 설계 데이터를 삭제하시겠습니까? (y/n): ").strip().lower()
         if confirm == "y":
             project.db.cursor.execute("DELETE FROM anchors WHERE key = 'arcs'")
-            self._safe_commit()
+            if not self._safe_commit():
+                self._ui.log("❌ DB 커밋 실패 — Stage 2 리셋 중단")
+                return
             project.arcs = []
             self._ui.log("✅ Stage 2 데이터가 삭제되었습니다. 이제 메뉴에서 2번 [❌] 상태로 보일 것입니다.")
             input("\n[Enter] 메뉴로 돌아가기")
@@ -83,27 +85,27 @@ class ProjectService:
             input("\n[Enter] 메뉴로 돌아가기")
 
     # ── rollback_episode ─────────────────────────────────────────
-    def rollback_episode(self) -> None:
+    def rollback_episode(self) -> bool:
         """특정 회차로 되감기 (HUD, DB, Vector DB, 파일 모두 롤백). 원본: main_a.py:3815"""
         project = self._project_fn()
         latest_ep = project.get_latest_episode_number() - 1
 
         if latest_ep <= 0:
             self._ui.log("❌ 롤백할 에피소드가 없습니다.")
-            return
+            return False
 
         self._ui.log(f"📊 현재 최신 에피소드: {latest_ep}화")
         target_input = input(f"\n👉 몇 화로 되감기하시겠습니까? (1~{latest_ep} 입력, 1 입력 시 전체 삭제): ").strip()
 
         if not target_input.isdigit():
             self._ui.log("❌ 숫자만 입력 가능합니다.")
-            return
+            return False
 
         target_ep = int(target_input)
 
         if target_ep < 1 or target_ep > latest_ep:
             self._ui.log(f"❌ 1~{latest_ep} 범위 내에서 입력해주세요.")
-            return
+            return False
 
         confirm = (
             input(
@@ -114,7 +116,7 @@ class ProjectService:
         )
         if confirm != "y":
             self._ui.log("❌ 취소되었습니다.")
-            return
+            return False
 
         try:
             # 1. HUD 롤백
@@ -165,6 +167,7 @@ class ProjectService:
             # 3. 로어, 카르마, 씨드 처리
             project.db.cursor.execute("DELETE FROM encyclopedia")
             project.db.cursor.execute("DELETE FROM karma_status WHERE last_updated_ep >= ?", (target_ep,))
+            project.db.cursor.execute("DELETE FROM npc_history WHERE episode_no >= ?", (target_ep,))
             project.db.cursor.execute(
                 "UPDATE seeds SET status = 'active', recovered_ep = NULL WHERE recovered_ep >= ?", (target_ep,)
             )
@@ -182,7 +185,9 @@ class ProjectService:
             self._ui.log("   🔢 [Sequence] 테이블 ID 카운터 초기화 완료")
 
             # 커밋
-            self._safe_commit()
+            if not self._safe_commit():
+                self._ui.log("❌ DB 커밋 실패 — 롤백 중단 (파일/벡터 보존)")
+                return False
 
             # 5. 물리 파일 삭제
             for f in project.paths.drafts.glob("*.txt"):
@@ -211,12 +216,14 @@ class ProjectService:
             self._ui.log(f"\n✅ [Success] {target_ep}화 직전 상태로 롤백 완료!")
             self._ui.log(f"👉 이제 Stage 4를 실행하면 {target_ep}화부터 새로 집필합니다.")
             input("\n[Enter] 메뉴로 돌아가기")
+            return True
 
         except Exception as e:
             self._ui.log(f"❌ 롤백 실패: {e}")
             import traceback
 
             traceback.print_exc()
+            return False
 
     # ── wipe_production_data ─────────────────────────────────────
     def wipe_production_data(self) -> None:

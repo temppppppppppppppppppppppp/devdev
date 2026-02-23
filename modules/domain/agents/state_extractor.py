@@ -12,6 +12,8 @@ Purpose:
 import json
 import logging
 
+from modules.core.prompt_loader import SafeDict
+
 from .base_agent import BaseAgent
 
 SATISFACTION_TAG_PROMPT = """
@@ -230,9 +232,11 @@ class StateExtractor(BaseAgent):
             "beat_sequence": arc_data.get("beat_sequence", []),
         }
 
-        prompt = STATE_EXTRACTION_PROMPT.format(
-            arc_data=self._escape_braces(json.dumps(cleaned_data, ensure_ascii=False, indent=2)),
-            arc_no=arc_no,
+        prompt = STATE_EXTRACTION_PROMPT.format_map(
+            SafeDict(
+                arc_data=self._escape_braces(json.dumps(cleaned_data, ensure_ascii=False, indent=2)),
+                arc_no=arc_no,
+            )
         )
 
         try:
@@ -300,7 +304,6 @@ class StateExtractor(BaseAgent):
         # 전체 Arc에서 획득한 아이템 누적
         all_acquired = []
         all_grants = []
-        all_deceased = []
 
         # [V61.1] 전체 Arc에서 Entity 누적
         cumulative_entities = {
@@ -784,9 +787,11 @@ class StateExtractor(BaseAgent):
                 "frustration_flag": bool,
             }
         """
-        prompt = SATISFACTION_TAG_PROMPT.format(
-            ep_num=ep_num,
-            manuscript=self._escape_braces(manuscript[:20000]),
+        prompt = SATISFACTION_TAG_PROMPT.format_map(
+            SafeDict(
+                ep_num=ep_num,
+                manuscript=self._escape_braces(manuscript[:20000]),
+            )
         )
 
         try:

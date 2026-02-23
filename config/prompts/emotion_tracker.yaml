@@ -1,7 +1,7 @@
 # [V70] emotion_tracker 프롬프트 (인라인)
 
 
-GENERATE_RECOMMENDATION__RECOMMENDATION: |
+GENERATE_RECOMMENDATION__NEGATIVE_STREAK: |
   [🌱 웹소설 특화: 절망 속 희망 씨앗 삽입 필수]
   최근 {n_episodes}화 동안 부정적 감정(절망/좌절)이 지속되고 있습니다.
   웹소설 독자는 3화 이상 부정 감정이 지속되면 이탈합니다.
@@ -29,7 +29,7 @@ GENERATE_RECOMMENDATION__RECOMMENDATION: |
   ❌ 희망 없는 파국 → 독자 이탈
   ✅ 절망 속 작은 빛 → 독자 몰입 유지
 
-GENERATE_RECOMMENDATION__RECOMMENDATION: |
+GENERATE_RECOMMENDATION__POSITIVE_STREAK: |
   [⚡ 긴장감 회복 필수]
   최근 {n_episodes}화 동안 긍정적 감정(희망/승리)이 지속되고 있습니다.
   웹소설은 긴장과 이완의 리듬이 필요합니다.

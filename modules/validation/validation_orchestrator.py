@@ -746,7 +746,7 @@ class ValidationOrchestrator:
         feedback_parts = ["## CONTINUITY 검증 실패 (에피소드 간 연속성 위반)\n"]
 
         for violation in violations:
-            vtype = violation.get("type", "unknown")
+            violation.get("type", "unknown")
             reason = violation.get("reason", "")
             severity = violation.get("severity", "CRITICAL")
             fix = violation.get("fix_suggestion", "")
@@ -775,7 +775,7 @@ class ValidationOrchestrator:
         feedback_parts = ["## BLOCKING 검증 실패\n"]
 
         for failure in failures:
-            check = failure.get("check", "unknown")
+            failure.get("check", "unknown")
             reason = failure.get("reason", "")
             severity = failure.get("severity", "UNKNOWN")
 
@@ -969,7 +969,7 @@ class ValidationOrchestrator:
         feedback_parts.append(f"총 {len(violations)}개 위반 감지\n")
 
         for violation in violations:
-            vtype = violation.get("type", "unknown")
+            violation.get("type", "unknown")
             reason = violation.get("reason", "")
             severity = violation.get("severity", "LOW")
 

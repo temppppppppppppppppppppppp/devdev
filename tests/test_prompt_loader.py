@@ -4,11 +4,47 @@
 modules/core/prompt_loader.py의 싱글톤 로더, YAML 파싱, 변수 치환 검증.
 """
 
+import re
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
-from modules.core.prompt_loader import PromptLoader
+from modules.core.prompt_loader import PromptLoader, SafeDict
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _code_text() -> str:
+    """Return concatenated production Python source used for prompt lookups."""
+    parts = []
+    modules_root = PROJECT_ROOT / "modules"
+    for py_file in modules_root.rglob("*.py"):
+        parts.append(py_file.read_text(encoding="utf-8", errors="ignore"))
+    parts.append((PROJECT_ROOT / "main_a.py").read_text(encoding="utf-8", errors="ignore"))
+    return "\n".join(parts)
+
+
+def _remaining_yaml_keys() -> dict[str, set[str]]:
+    key_re = re.compile(r"^([A-Z][A-Z0-9_]+):\s*\|\s*$", re.MULTILINE)
+    out: dict[str, set[str]] = {}
+    for yaml_file in sorted((PROJECT_ROOT / "config" / "prompts").glob("*.yaml")):
+        keys = set(key_re.findall(yaml_file.read_text(encoding="utf-8")))
+        out[yaml_file.stem] = keys
+    return out
+
+
+def _load_references_from_code() -> dict[str, set[str]]:
+    load_re = re.compile(
+        r"""(?:[A-Za-z_][A-Za-z0-9_]*|PromptLoader\(\))\s*\.\s*load\(
+            \s*["']([a-z0-9_]+)["']\s*,\s*["']([A-Z0-9_]+)["']
+        """,
+        re.VERBOSE,
+    )
+    refs: dict[str, set[str]] = {}
+    for domain, key in load_re.findall(_code_text()):
+        refs.setdefault(domain, set()).add(key)
+    return refs
 
 
 @pytest.fixture(autouse=True)
@@ -230,7 +266,82 @@ class TestRealYamlFiles:
         keys = loader.list_keys("chief_writer")
         assert len(keys) > 0
 
-    def test_genre_stage_yaml_loads(self):
+    def test_emotion_tracker_yaml_loads(self):
         loader = PromptLoader()
-        keys = loader.list_keys("genre_stage")
+        keys = loader.list_keys("emotion_tracker")
         assert len(keys) > 0
+
+
+class TestTier5PromptHygiene:
+    def test_deleted_yaml_keys_not_referenced(self):
+        refs = _load_references_from_code()
+        deleted_keys = {
+            "SUGGEST_EXPRESSION_IMPROVEMENTS__PROMPT",
+            "INIT_EXEMPLARS__CONTENT",
+            "CHECK_CAUSAL_ERRORS__PROMPT",
+            "RE_ENRICH_WITH_CAUSAL_FIX__PROMPT",
+            "BLOCK_ENRICHMENT_PROMPT",
+            "ENRICHMENT_VALIDATION_PROMPT",
+            "DIRECTOR_BLOCK_AUDIT_PROMPT",
+            "ASSESS_CHARACTER_LOGIC__PROMPT",
+            "VALIDATE_ENTITY_CONSISTENCY__PROMPT",
+            "CHECK_MANUSCRIPT_HISTORY_WITH_CACHE__PROMPT",
+            "COMPARE_AND_SELECT_BLUEPRINT__COMPARISON_PROMPT",
+            "STAGE3_MEDICAL",
+            "GENERATE_CORRECTION_PROMPT__PROMPT",
+            "DEEP_LLM_ANALYSIS__PROMPT",
+            "GENERATE_ANTI_PATTERNS__PROMPT",
+            "GENERATE_ARC_DRIVE__DYNAMIC_PROMPT",
+            "WRITE_V20_MANUSCRIPT__DYNAMIC_PROMPT",
+            "CORRECTION_PROMPT",
+            "ARC_CRITIQUE_PROMPT",
+            "CONSENSUS_VALIDATION_PROMPT",
+            "ARC_CONTINUITY_INSPECTION_PROMPT",
+            "JOINT_DOCS_EXTRACTION_PROMPT",
+            "CONTINUITY_INSPECTION_PROMPT",
+            "MANUSCRIPT_CONTINUITY_PROMPT",
+            "UPDATE_STATE_PROMPT_V25",
+            "PREFLIGHT_ANALYSIS_PROMPT",
+            "STATE_EXTRACTION_PROMPT",
+            "UNIFIED_VALIDATION_PROMPT",
+            "EPISODE_TEMPLATE",
+            "ARC_SYNTHESIS_PROMPT",
+        }
+        for domain_keys in refs.values():
+            assert domain_keys.isdisjoint(deleted_keys)
+
+    def test_safedict_format_map_resilience(self):
+        template = "A={a}, B={b}, C={c}"
+        rendered = template.format_map(SafeDict(a="1", c="3"))
+        assert rendered == "A=1, B={b}, C=3"
+
+    def test_remaining_yaml_keys_all_referenced(self):
+        code = _code_text()
+        missing = {}
+        for domain, keys in _remaining_yaml_keys().items():
+            missing_keys = sorted(k for k in keys if f'"{k}"' not in code and f"'{k}'" not in code)
+            if missing_keys:
+                missing[domain] = missing_keys
+        assert missing == {}
+
+    def test_no_dual_definition_yaml_inline(self):
+        # Keys removed from YAML should remain only as inline constants, not in YAML.
+        removed_keys = {
+            "CORRECTION_PROMPT",
+            "ARC_CRITIQUE_PROMPT",
+            "CONSENSUS_VALIDATION_PROMPT",
+            "ARC_CONTINUITY_INSPECTION_PROMPT",
+            "JOINT_DOCS_EXTRACTION_PROMPT",
+            "CONTINUITY_INSPECTION_PROMPT",
+            "MANUSCRIPT_CONTINUITY_PROMPT",
+            "UPDATE_STATE_PROMPT_V25",
+            "PREFLIGHT_ANALYSIS_PROMPT",
+            "STATE_EXTRACTION_PROMPT",
+            "UNIFIED_VALIDATION_PROMPT",
+            "EPISODE_TEMPLATE",
+            "ARC_SYNTHESIS_PROMPT",
+        }
+        remaining_key_set = set()
+        for keys in _remaining_yaml_keys().values():
+            remaining_key_set.update(keys)
+        assert removed_keys.isdisjoint(remaining_key_set)

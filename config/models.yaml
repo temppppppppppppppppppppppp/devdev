@@ -1,6 +1,6 @@
 agents:
   analyst: "gemini-3-pro-preview"
-  manager: "gemini-3-pro-preview"
+  manager: "gemini-2.5-flash"
   chief_writer: "gemini-3-pro-preview"
   blueprint_ensemble: "gemini-3-pro-preview"
   three_phase_blueprint_generator: "gemini-3-pro-preview"

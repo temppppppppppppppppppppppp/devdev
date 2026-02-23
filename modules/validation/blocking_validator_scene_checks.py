@@ -52,7 +52,7 @@ class BlockingValidatorSceneChecks:
 
         # 최소 4개 장면이 원고에 반영되었는지 체크
         scene_count = len(scene_breakdown)
-        min_required = 4
+        min_required = min(4, scene_count)
 
         # 각 Scene의 키워드가 원고에 있는지 체크
         scenes_found = 0

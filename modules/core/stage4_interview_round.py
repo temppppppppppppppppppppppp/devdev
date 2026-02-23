@@ -266,6 +266,8 @@ class Stage4InterviewRound:
                 "npc_profiles": {},
                 "prev_episode_events": [],
                 "ep_num": next_ep,
+                "blueprint": blueprint if isinstance(blueprint, dict) else {},
+                "blueprint_text": str(blueprint or "")[:3000],
             }
             # [V67.1] incarnation_type 주입 — Validator 오탐 방지
             _incarnation_type = ""
@@ -524,93 +526,6 @@ class Stage4InterviewRound:
             except Exception:
                 pass
 
-        # [V61.5] 캐시 기반 연속성 검사
-        if round_num == 0 and next_ep > 1 and candidates:
-            stage4_spinner.update_detail(f"제{next_ep}화 · 연속성 검사")
-            _continuity_conflicts = []
-            for ci, cand in enumerate(candidates):
-                _ms = cand.get("manuscript", "")
-                if not _ms:
-                    continue
-
-                continuity_check = self.ctx.agents["director"].check_manuscript_continuity_with_cache(
-                    new_manuscript=_ms,
-                    ep_num=next_ep,
-                    db=self.ctx.current_project.db,
-                    limit=10,
-                    story_context=story_context,
-                    memory_context=_director_memory_context,
-                )
-                if continuity_check.get("decision") == "CONFLICT":
-                    conflict_summary = continuity_check.get("summary", "연속성 충돌 감지")
-                    self.ctx.ui.log(f"   ⚠️ [V61.5] 후보{ci + 1} 연속성: {conflict_summary[:50]}...")
-                    if ci < len(validation_results):
-                        validation_results[ci]["warnings"].append(f"[연속성 충돌] {conflict_summary}")
-                        validation_results[ci]["warning_count"] = len(validation_results[ci]["warnings"])
-                    _continuity_conflicts.append(f"후보{ci + 1}: {conflict_summary[:80]}")
-
-            if _continuity_conflicts:
-                director_feedback += "\n[연속성 충돌]\n" + "\n".join(_continuity_conflicts)
-
-        # [V67] 명시적 모순 검사 — 이전 원고와 비교
-        if _prev_manuscripts_text and hasattr(
-            self.ctx.agents.get("director", None), "check_manuscript_history_conflicts"
-        ):
-            # [S4-P0-1] round_ctx.prev_manuscripts_text에서 개별 에피소드 재구성 (DB 이중 로드 방지)
-            _ms_history_for_check = []
-            import re as _re_hist
-
-            for _block in _prev_manuscripts_text.split("\n\n---\n\n"):
-                _m = _re_hist.match(r"^\[제(\d+)화\]\n", _block)
-                if _m:
-                    _ep = int(_m.group(1))
-                    _text = _block[_m.end() :]
-                    if _text and len(_text) > 100:
-                        _ms_history_for_check.append({"ep_num": _ep, "text": _text})
-            # 파싱 실패 시 DB 폴백
-            if not _ms_history_for_check:
-                for _prev_ep in range(max(1, next_ep - 30), next_ep):
-                    try:
-                        _prev_ms_data = self.ctx.current_project.db.get_manuscript(_prev_ep)
-                        if _prev_ms_data:
-                            _content = (
-                                _prev_ms_data.get("content", "")
-                                if isinstance(_prev_ms_data, dict)
-                                else str(_prev_ms_data)
-                            )
-                            _ms_history_for_check.append({"ep_num": _prev_ep, "text": _content})
-                    except Exception as e:
-                        logging.warning(f"[SilentPass:InterviewRound] 제{_prev_ep}화 원고 이력 로드 실패: {e!s:.100}")
-
-            # [V67.1] story_context 포함하여 모순 검사 호출
-            if _ms_history_for_check and candidates:
-                _history_conflicts = []
-                for ci, cand in enumerate(candidates):
-                    _cand_ms = cand.get("manuscript", "")
-                    if not _cand_ms:
-                        continue
-                    try:
-                        _conflict_result = self.ctx.agents["director"].check_manuscript_history_conflicts(
-                            ep_num=next_ep,
-                            current_manuscript=_cand_ms,
-                            manuscript_history=_ms_history_for_check,
-                            use_summary=False,
-                            story_context=story_context,
-                            memory_context=_director_memory_context,
-                        )
-                        if _conflict_result.get("decision") == "CONFLICT":
-                            _conflict_summary = _conflict_result.get("summary", "모순 감지")
-                            self.ctx.ui.log(f"   ⚠️ [V67] 후보{ci + 1} 역사 충돌: {_conflict_summary[:80]}")
-                            if ci < len(validation_results):
-                                validation_results[ci]["warnings"].append(f"[V67 역사 충돌] {_conflict_summary}")
-                                validation_results[ci]["warning_count"] = len(validation_results[ci]["warnings"])
-                            _history_conflicts.append(f"후보{ci + 1}: {_conflict_summary[:80]}")
-                    except Exception as _hc_err:
-                        logging.warning(f"⚠️ [V67] 후보{ci + 1} 역사 충돌 검사 실패: {_hc_err}")
-
-                if _history_conflicts:
-                    director_feedback += "\n[V67 원고 역사 충돌]\n" + "\n".join(_history_conflicts)
-
         _pdcl = self.ctx.get_module("pre_director_checklist")
         if _pdcl:
             try:
@@ -769,45 +684,101 @@ class Stage4InterviewRound:
         if verdict == "PASS":
             selected_candidate = director_result.get("selected_candidate") or {}
             final_manuscript = selected_candidate.get("manuscript", "")
-            final_title = selected_candidate.get("title", f"제{next_ep}화")
+            final_title = selected_candidate.get("title", f"\uc81c{next_ep}\ud654")
             final_state_updates = director_result.get("state_updates", {})
 
-            # [V66.1] F-1: 시간선 일관성 체크 → 검증 파이프라인에 경고 전달
-            if self.ctx.state_tracker:
-                try:
-                    _time_warnings = self.ctx.state_tracker.check_time_consistency(
-                        final_manuscript, self.ctx.state_tracker.in_world_timeline
-                    )
-                    if _time_warnings:
-                        for tw in _time_warnings:
-                            self.ctx.ui.log(f"   ⏰ [V66.1] 시간선 경고: {tw}")
-                        # [V66.1] 검증 파이프라인용 경고 저장
-                        self.time_warnings.extend(_time_warnings)
-                except (KeyError, ValueError, TypeError) as _tc_err:
-                    logging.warning(f"⚠️ [V66.1] 시간선 검사 오류: {_tc_err}")
+            # [Phase A-3] Post-select validation: run LLM checks on selected candidate only
+            _post_select_conflicts = []
 
-            self.ctx.ui.log(f"   ✅ {round_num + 1}차 면담 PASS!")
-            self._record_s4_attempt(
-                episode=next_ep,
-                round_num=round_num,
-                success=True,
-                score=score,
-                is_patch=_is_patch,
-                prev_score=_prev_score,
-                patch_fallback=_is_patch_fallback,
-                arc=round_ctx.arc_data.get("arc_no", 0),
-            )
-            return _InterviewRoundResult(
-                verdict="PASS",
-                director_feedback=director_feedback,
-                previous_attempt=previous_attempt,
-                final_manuscript=final_manuscript,
-                final_title=final_title,
-                final_state_updates=final_state_updates,
-            )
-        else:
+            # (a) Continuity check for selected candidate only
+            if round_num == 0 and next_ep > 1 and final_manuscript:
+                stage4_spinner.update_detail(f"Ep {next_ep} · post-select continuity check")
+                try:
+                    continuity_check = self.ctx.agents["director"].check_manuscript_continuity_with_cache(
+                        new_manuscript=final_manuscript,
+                        ep_num=next_ep,
+                        db=self.ctx.current_project.db,
+                        limit=10,
+                        story_context=story_context,
+                        memory_context=_director_memory_context,
+                    )
+                    if continuity_check.get("decision") == "CONFLICT":
+                        _conflict_msg = continuity_check.get("summary", "Continuity conflict detected")
+                        _post_select_conflicts.append(f"[Continuity Conflict] {_conflict_msg}")
+                        self.ctx.ui.log(f"   [A-3] Post-select continuity conflict: {_conflict_msg[:80]}")
+                except Exception as _cont_err:
+                    logging.warning(f"[SilentPass:SC:PostSelectContinuity] {_cont_err!s:.100}")
+
+            # (b) History conflict check for selected candidate only
+            if (
+                _prev_manuscripts_text
+                and final_manuscript
+                and hasattr(self.ctx.agents.get("director", None), "check_manuscript_history_conflicts")
+            ):
+                stage4_spinner.update_detail(f"Ep {next_ep} · post-select history conflict check")
+                try:
+                    _ms_history_for_check = self._build_manuscript_history_for_check(_prev_manuscripts_text, next_ep)
+                    if _ms_history_for_check:
+                        _conflict_result = self.ctx.agents["director"].check_manuscript_history_conflicts(
+                            ep_num=next_ep,
+                            current_manuscript=final_manuscript,
+                            manuscript_history=_ms_history_for_check,
+                            use_summary=False,
+                            story_context=story_context,
+                            memory_context=_director_memory_context,
+                        )
+                        if _conflict_result.get("decision") == "CONFLICT":
+                            _conflict_msg = _conflict_result.get("summary", "History conflict detected")
+                            _post_select_conflicts.append(f"[V67] History Conflict: {_conflict_msg}")
+                            self.ctx.ui.log(f"   [A-3] Post-select history conflict: {_conflict_msg[:80]}")
+                except Exception as _hist_err:
+                    logging.warning(f"[SilentPass:SC:PostSelectHistory] {_hist_err!s:.100}")
+
+            # (c) Downgrade PASS to REJECT if post-select validation found conflicts
+            if _post_select_conflicts:
+                self.ctx.ui.log(
+                    f"   [A-3] {len(_post_select_conflicts)} post-select conflicts detected -> downgrade to REJECT"
+                )
+                verdict = "REJECT"
+                director_feedback += "\n" + "\n".join(_post_select_conflicts)
+
+            if verdict == "PASS":
+                # [V66.1] F-1: time consistency check -> forward warnings to validator context
+                if self.ctx.state_tracker:
+                    try:
+                        _time_warnings = self.ctx.state_tracker.check_time_consistency(
+                            final_manuscript, self.ctx.state_tracker.in_world_timeline
+                        )
+                        if _time_warnings:
+                            for tw in _time_warnings:
+                                self.ctx.ui.log(f"   [V66.1] Time warning: {tw}")
+                            # [V66.1] save warnings for validator context
+                            self.time_warnings.extend(_time_warnings)
+                    except (KeyError, ValueError, TypeError) as _tc_err:
+                        logging.warning(f"[V66.1] Time consistency check failed: {_tc_err}")
+
+                self.ctx.ui.log(f"   Round {round_num + 1} PASS!")
+                self._record_s4_attempt(
+                    episode=next_ep,
+                    round_num=round_num,
+                    success=True,
+                    score=score,
+                    is_patch=_is_patch,
+                    prev_score=_prev_score,
+                    patch_fallback=_is_patch_fallback,
+                    arc=round_ctx.arc_data.get("arc_no", 0),
+                )
+                return _InterviewRoundResult(
+                    verdict="PASS",
+                    director_feedback=director_feedback,
+                    previous_attempt=previous_attempt,
+                    final_manuscript=final_manuscript,
+                    final_title=final_title,
+                    final_state_updates=final_state_updates,
+                )
+        if verdict != "PASS":
             # [TF-R2-S4-03] 시스템 감지 라인 보존 (REJECT 시 덮어쓰기 전 추출)
-            _system_prefixes = ("[연속성 충돌]", "[V67]", "[CoVe]", "[ToT", "[MAD")
+            _system_prefixes = ("[연속성 충돌]", "[Continuity Conflict]", "[V67]", "[CoVe]", "[ToT", "[MAD")
             _prev_system_lines = (
                 [
                     line
@@ -928,6 +899,35 @@ class Stage4InterviewRound:
         )
 
     # ── Stage 4 PassRateMonitor 기록 ──────────────────────────────
+
+    def _build_manuscript_history_for_check(self, prev_manuscripts_text: str, next_ep: int) -> list:
+        """[Phase A-3] Build manuscript-history records for conflict checks."""
+        _ms_history_for_check = []
+        import re as _re_hist
+
+        if prev_manuscripts_text:
+            for _block in prev_manuscripts_text.split("\n\n---\n\n"):
+                _m = _re_hist.match(r"^\[[^\d]*(\d+)[^\]]*\]\s*", _block)
+                if _m:
+                    _ep = int(_m.group(1))
+                    _text = _block[_m.end() :]
+                    if _text and len(_text) > 100:
+                        _ms_history_for_check.append({"ep_num": _ep, "text": _text})
+
+        if not _ms_history_for_check:
+            for _prev_ep in range(max(1, next_ep - 30), next_ep):
+                try:
+                    _prev_ms_data = self.ctx.current_project.db.get_manuscript(_prev_ep)
+                    if _prev_ms_data:
+                        _content = (
+                            _prev_ms_data.get("content", "") if isinstance(_prev_ms_data, dict) else str(_prev_ms_data)
+                        )
+                        if _content:
+                            _ms_history_for_check.append({"ep_num": _prev_ep, "text": _content})
+                except Exception as e:
+                    logging.warning(f"[SilentPass:InterviewRound] ep{_prev_ep} history load failed: {e!s:.100}")
+
+        return _ms_history_for_check
 
     def _record_s4_attempt(
         self,

@@ -269,17 +269,28 @@ class Stage2PreflightAnalysis:
         _cached_preflight_injection = ""
         _cached_preflight_result = {}
         constraint_block = ""
+        _parallel_exec = None
         try:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as _parallel_exec:
-                _fut_drive = _parallel_exec.submit(_compute_arc_drive)
-                _fut_preflight = _parallel_exec.submit(_compute_preflight)
-                _fut_constraint = _parallel_exec.submit(_compute_constraint_block)
-                arc_drive = _fut_drive.result(timeout=300)
-                _cached_preflight_injection, _cached_preflight_result = _fut_preflight.result(timeout=300)
-                constraint_block = _fut_constraint.result(timeout=60)
+            _parallel_exec = concurrent.futures.ThreadPoolExecutor(max_workers=3)
+            _fut_drive = _parallel_exec.submit(_compute_arc_drive)
+            _fut_preflight = _parallel_exec.submit(_compute_preflight)
+            _fut_constraint = _parallel_exec.submit(_compute_constraint_block)
+            arc_drive = _fut_drive.result(timeout=300)
+            _cached_preflight_injection, _cached_preflight_result = _fut_preflight.result(timeout=300)
+            constraint_block = _fut_constraint.result(timeout=60)
         except Exception as _pf_err:
+            if _parallel_exec is not None:
+                try:
+                    _parallel_exec.shutdown(wait=False, cancel_futures=True)
+                except Exception:
+                    pass
             logging.warning(f"⚠️ [Preflight] 병렬 실행 타임아웃/오류 (비치명): {str(_pf_err)[:80]}")
         finally:
+            if _parallel_exec is not None:
+                try:
+                    _parallel_exec.shutdown(wait=False, cancel_futures=True)
+                except Exception:
+                    pass
             try:
                 self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_preflight_parallel")
             except Exception:

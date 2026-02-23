@@ -1,5 +1,6 @@
 """[B-1-8] Unit tests for Stage2PreflightAnalysis extracted from Stage2Orchestrator."""
 
+import concurrent.futures
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -187,6 +188,44 @@ class TestPreflightStateSetup:
         out = preflight._preflight_state_setup(**_state_setup_kwargs(all_refined_arcs=[{"arc_no": 0}]))
         assert isinstance(out, dict)
         preflight.ctx.audit_event.assert_called()
+
+    def test_parallel_timeout_uses_nonblocking_shutdown(self, preflight):
+        class _FakeFuture:
+            def __init__(self, value=None, error=None):
+                self._value = value
+                self._error = error
+
+            def result(self, timeout=None):  # noqa: ARG002 - 테스트 더블 시그니처 호환
+                if self._error:
+                    raise self._error
+                return self._value
+
+        class _FakeExecutor:
+            instances = []
+
+            def __init__(self, *args, **kwargs):  # noqa: ARG002 - 테스트 더블 시그니처 호환
+                self.shutdown_calls = []
+                _FakeExecutor.instances.append(self)
+
+            def submit(self, fn, *args, **kwargs):  # noqa: ARG002 - 테스트 더블 시그니처 호환
+                if fn.__name__ == "_compute_arc_drive":
+                    return _FakeFuture(error=concurrent.futures.TimeoutError("timeout"))
+                if fn.__name__ == "_compute_preflight":
+                    return _FakeFuture(value=("", {}))
+                if fn.__name__ == "_compute_constraint_block":
+                    return _FakeFuture(value="")
+                return _FakeFuture(value=None)
+
+            def shutdown(self, wait=True, cancel_futures=False):
+                self.shutdown_calls.append((wait, cancel_futures))
+
+        with patch("modules.core.stage2_preflight.concurrent.futures.ThreadPoolExecutor", _FakeExecutor):
+            out = preflight._preflight_state_setup(**_state_setup_kwargs(all_refined_arcs=[{"arc_no": 0}]))
+
+        assert isinstance(out, dict)
+        assert _FakeExecutor.instances
+        shutdown_calls = _FakeExecutor.instances[-1].shutdown_calls
+        assert any((wait is False and cancel is True) for wait, cancel in shutdown_calls)
 
 
 class TestPreflightArcAnalysis:

@@ -79,6 +79,23 @@ class TestResetStage2:
         project_mock.db.cursor.execute.assert_not_called()
         safe_commit_mock.assert_not_called()
 
+    def test_safe_commit_failure_keeps_arcs(self, ui_mock, project_mock, genre_fn, memory_mock):
+        safe_commit = MagicMock(return_value=False)
+        svc = ProjectService(
+            project_fn=lambda: project_mock,
+            ui=ui_mock,
+            safe_commit_fn=safe_commit,
+            genre_fn=genre_fn,
+            memory_fn=lambda: memory_mock,
+        )
+        original_arcs = list(project_mock.arcs)
+
+        with patch("builtins.input", side_effect=["y"]):
+            svc.reset_stage_2()
+
+        assert project_mock.arcs == original_arcs
+        ui_mock.log.assert_any_call("❌ DB 커밋 실패 — Stage 2 리셋 중단")
+
 
 # ── rewind_stage_2 ───────────────────────────────────────────
 
@@ -146,14 +163,16 @@ class TestRollbackEpisode:
 
     def test_cancel_returns_early(self, svc, ui_mock):
         with patch("builtins.input", side_effect=["3", "n"]):
-            svc.rollback_episode()
+            result = svc.rollback_episode()
+        assert result is False
         ui_mock.log.assert_any_call("❌ 취소되었습니다.")
 
     def test_confirm_y_executes_rollback(self, svc, project_mock, safe_commit_mock, ui_mock):
         # No HUD data (cursor returns None for state_logs)
         project_mock.db.cursor.fetchone.return_value = None
         with patch("builtins.input", side_effect=["3", "y", ""]):
-            svc.rollback_episode()
+            result = svc.rollback_episode()
+        assert result is True
         safe_commit_mock.assert_called_once()
         project_mock._load_from_db.assert_called_once()
 
@@ -176,6 +195,50 @@ class TestRollbackEpisode:
         # Should still succeed despite no memory
         assert any("벡터 소거 생략" in str(c) for c in ui_mock.log.call_args_list) or any(
             "Success" in str(c) for c in ui_mock.log.call_args_list
+        )
+
+    def test_commit_failure_preserves_files_and_vector_data(self, ui_mock, genre_fn):
+        project = MagicMock()
+        project.get_latest_episode_number.return_value = 6  # latest_ep = 5
+        project.db.cursor.fetchone.return_value = None
+        project.db.delete_episode_bibles_after.return_value = 0
+        draft_file = MagicMock()
+        draft_file.name = "ep_0003.txt"
+        project.paths.drafts.glob.return_value = [draft_file]
+        safe_commit = MagicMock(return_value=False)
+        memory = MagicMock()
+        memory.delete_episodes_from = MagicMock(return_value=3)
+        svc = ProjectService(
+            project_fn=lambda: project,
+            ui=ui_mock,
+            safe_commit_fn=safe_commit,
+            genre_fn=genre_fn,
+            memory_fn=lambda: memory,
+        )
+
+        with patch("builtins.input", side_effect=["3", "y"]):
+            result = svc.rollback_episode()
+
+        assert result is False
+        safe_commit.assert_called_once()
+        draft_file.unlink.assert_not_called()
+        memory.delete_episodes_from.assert_not_called()
+        project._load_from_db.assert_not_called()
+        ui_mock.log.assert_any_call("❌ DB 커밋 실패 — 롤백 중단 (파일/벡터 보존)")
+
+    def test_confirm_y_deletes_npc_history_from_target_episode(self, svc, project_mock):
+        project_mock.db.cursor.fetchone.return_value = None
+
+        with patch("builtins.input", side_effect=["3", "y", ""]):
+            svc.rollback_episode()
+
+        execute_calls = project_mock.db.cursor.execute.call_args_list
+        assert any(
+            c.args
+            and c.args[0] == "DELETE FROM npc_history WHERE episode_no >= ?"
+            and len(c.args) > 1
+            and c.args[1] == (3,)
+            for c in execute_calls
         )
 
 

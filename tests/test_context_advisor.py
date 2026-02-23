@@ -69,6 +69,27 @@ def test_stage4_plan_includes_scene_plot_and_relationship_slots():
     assert any(cat.startswith("genre_context_") for cat in categories)
 
 
+def test_stage4_plan_accepts_scene_breakdown_dict():
+    advisor = _make_enabled_advisor()
+    plan = advisor.plan_stage4_retrieval(
+        arc_data={"state_changes": {}},
+        blueprint={
+            "scene_breakdown": {
+                "scene1": {"goal": "위원회를 설득한다"},
+                "scene2": {"summary": "야간 헤지를 실행한다"},
+            }
+        },
+        prev_ending="포지션이 노출됐다",
+        current_ep=11,
+        npc_roster=["Han"],
+        genre="investment",
+    )
+
+    scene_slots = [slot for slot in plan.slots if slot.category == "scene_context"]
+    assert scene_slots
+    assert "장면1" in scene_slots[0].query
+
+
 def test_director_plan_uses_npc_mentions_from_manuscript():
     advisor = _make_enabled_advisor()
     plan = advisor.plan_director_retrieval(
@@ -189,6 +210,18 @@ def test_master_flag_off_returns_empty_plan(monkeypatch):
     plan = advisor.plan_stage2_retrieval({"block_theme": "x"}, 1, ["npc"])
 
     assert plan.slots == []
+
+
+def test_stage_flag_defaults_to_disabled(monkeypatch):
+    def fake_threshold(_key, default):
+        return default
+
+    monkeypatch.setattr("modules.core.context_advisor._threshold", fake_threshold)
+    advisor = ContextAdvisor()
+
+    assert advisor._is_stage_enabled("stage2") is False
+    assert advisor._is_stage_enabled("stage4") is False
+    assert advisor._is_stage_enabled("unknown-stage") is True
 
 
 def test_budget_tracker_reports_and_targets():

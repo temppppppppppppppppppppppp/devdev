@@ -15,6 +15,7 @@ import logging
 import re
 
 from modules.core.constants import ContextLimits
+from modules.core.prompt_loader import SafeDict
 
 from .base_agent import BaseAgent
 
@@ -144,9 +145,11 @@ class PreflightChecker(BaseAgent):
         if resolved_plots_summary:
             prev_arcs_data += f"\n\n### 완결 플롯 (절대 재발생 금지)\n{resolved_plots_summary}"
 
-        prompt = PREFLIGHT_ANALYSIS_PROMPT.format(
-            prev_arc_count=len(prev_arcs),
-            prev_arcs_data=self._escape_braces(prev_arcs_data),  # [V70] JSON 중괄호 이스케이프
+        prompt = PREFLIGHT_ANALYSIS_PROMPT.format_map(
+            SafeDict(
+                prev_arc_count=len(prev_arcs),
+                prev_arcs_data=self._escape_braces(prev_arcs_data),  # [V70] JSON 중괄호 이스케이프
+            )
         )
 
         try:

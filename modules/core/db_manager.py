@@ -473,6 +473,9 @@ class DBManager:
                 created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        # [Tier4-14] episode_meta / causal_graph index tuning
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_episode_meta_arc_no ON episode_meta(arc_no)")
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_causal_graph_ep_num ON causal_graph(ep_num)")
 
         # 18. [TF-I24] 에피소드 호흡 분석 기록
         self.cursor.execute("""
@@ -1625,6 +1628,22 @@ class DBManager:
             results = [dict(row) for row in cur.fetchall()]
             # 오름차순으로 정렬 (시간순)
             return list(reversed(results))
+
+    def get_manuscripts_range(self, start_ep: int, end_ep: int) -> list[dict]:
+        """[Tier4-12] manuscript range batch query: start_ep <= ep_num < end_ep."""
+        safe_start = int(start_ep)
+        safe_end = int(end_ep)
+        if safe_end <= safe_start:
+            return []
+
+        with self._lock:
+            cur = self.cursor.execute(
+                """SELECT ep_num, title, content FROM manuscripts
+                   WHERE ep_num >= ? AND ep_num < ?
+                   ORDER BY ep_num ASC""",
+                (safe_start, safe_end),
+            )
+            return [dict(row) for row in cur.fetchall()]
 
     def get_npc_recent_episodes(self, npc_name: str, before_ep: int, limit: int = 5) -> list[int]:
         """

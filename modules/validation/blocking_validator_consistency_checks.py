@@ -70,14 +70,12 @@ class BlockingValidatorConsistencyChecks:
 
         import re
 
-        violation_found = False
         violation_location = 0
         violation_context = ""
 
         for pattern in strong_action_patterns:
             match = re.search(pattern, manuscript)
             if match:
-                violation_found = True
                 violation_location = match.start()
 
                 # 주변 100자 문맥 추출
@@ -251,7 +249,7 @@ class BlockingValidatorConsistencyChecks:
             tracker = RelationshipTracker()
             encyclopedia = context.get("encyclopedia", {})
             npcs = encyclopedia.get("npcs", [])
-            current_ep = context.get("ep_num", 0)
+            context.get("ep_num", 0)
             # [V67.1] incarnation_type 추출
             incarnation_type = context.get("incarnation_type", "")
 

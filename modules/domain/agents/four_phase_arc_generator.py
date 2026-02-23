@@ -185,7 +185,7 @@ class FourPhaseArcGenerator(BaseAgent):
         ep_count, pacing_reason = self._determine_ep_count(curr_block, arc_no, prev_arcs)
         logging.info(f"📊 [V61.1] 가변 페이싱: {ep_count}화 결정 - {pacing_reason}")
 
-        ep_end = ep_start + ep_count - 1
+        ep_start + ep_count - 1
 
         pipeline_result = {
             "arc_no": arc_no,
@@ -202,10 +202,14 @@ class FourPhaseArcGenerator(BaseAgent):
         for _prev in prev_arcs:
             _acq = _prev.get("state_constraints", {}).get("items_acquired", [])
             if isinstance(_acq, list):
-                _pre_items.update((str(i) if isinstance(i, dict) else i).strip() for i in _acq if i)
+                _pre_items.update(
+                    (i.get("name", i.get("item", "")) if isinstance(i, dict) else str(i)).strip() for i in _acq if i
+                )
             _grt = _prev.get("state_constraints", {}).get("grants_received", [])
             if isinstance(_grt, list):
-                _pre_grants.update((str(g) if isinstance(g, dict) else g).strip() for g in _grt if g)
+                _pre_grants.update(
+                    (g.get("name", g.get("item", "")) if isinstance(g, dict) else str(g)).strip() for g in _grt if g
+                )
 
         # Preflight 캐싱
         cached_constraint_block = None
@@ -584,10 +588,14 @@ class FourPhaseArcGenerator(BaseAgent):
         for _prev in prev_arcs:
             _acq = _prev.get("state_constraints", {}).get("items_acquired", [])
             if isinstance(_acq, list):
-                _pre_items.update((str(i) if isinstance(i, dict) else i).strip() for i in _acq if i)
+                _pre_items.update(
+                    (i.get("name", i.get("item", "")) if isinstance(i, dict) else str(i)).strip() for i in _acq if i
+                )
             _grt = _prev.get("state_constraints", {}).get("grants_received", [])
             if isinstance(_grt, list):
-                _pre_grants.update((str(g) if isinstance(g, dict) else g).strip() for g in _grt if g)
+                _pre_grants.update(
+                    (g.get("name", g.get("item", "")) if isinstance(g, dict) else str(g)).strip() for g in _grt if g
+                )
 
         verdict, validation_result = self.validator.validate(
             arc=best_arc,

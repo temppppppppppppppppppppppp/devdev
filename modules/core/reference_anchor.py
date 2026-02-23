@@ -174,7 +174,7 @@ class ReferenceAnchor:
         scored_anchors = []
         for anchor in recent_anchors:
             summary = anchor.get("summary", "")
-            anchor_type = anchor.get("type", "unknown")
+            anchor.get("type", "unknown")
             ep_num = anchor.get("ep_num", 0)
 
             # 앵커 키워드 추출

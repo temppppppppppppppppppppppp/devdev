@@ -10,6 +10,8 @@ inspector reference를 통해 BaseAgent 메서드(ask, _extract_json_robust 등)
 import logging
 import re
 
+from modules.core.prompt_loader import SafeDict
+
 # =================================================================
 # Blueprint 연속성 검증 프롬프트 (기존 CONTINUITY_INSPECTION_PROMPT)
 # =================================================================
@@ -218,12 +220,14 @@ class ContinuityBlueprintValidator:
         prev_summaries = self._format_prev_blueprints(prev_blueprints)
         entity_registry_str = self._ci._format_entity_registry(entity_registry)
 
-        prompt = CONTINUITY_INSPECTION_PROMPT.format(
-            current_ep=current_ep,
-            current_scenario=self._ci._escape_braces(current_scenario[:4000]),
-            prev_count=len(prev_blueprints),
-            prev_summaries=self._ci._escape_braces(prev_summaries),
-            entity_registry=self._ci._escape_braces(entity_registry_str),
+        prompt = CONTINUITY_INSPECTION_PROMPT.format_map(
+            SafeDict(
+                current_ep=current_ep,
+                current_scenario=self._ci._escape_braces(current_scenario[:4000]),
+                prev_count=len(prev_blueprints),
+                prev_summaries=self._ci._escape_braces(prev_summaries),
+                entity_registry=self._ci._escape_braces(entity_registry_str),
+            )
         )
 
         try:
@@ -336,11 +340,9 @@ class ContinuityBlueprintValidator:
             for keyword in grant_keywords:
                 if keyword in possession:
                     was_granted = False
-                    granted_ep = None
                     for granted_item, g_ep in granted_items.items():
-                        if keyword in granted_item:
+                        if self._ci._is_same_item(possession, granted_item):
                             was_granted = True
-                            granted_ep = g_ep
                             break
 
                     if not was_granted:
@@ -373,7 +375,6 @@ class ContinuityBlueprintValidator:
 
         all_acquisitions = []
         all_grants = []
-        all_status_changes = []
 
         for bp in prev_blueprints:
             ep_num = bp.get("ep_num", "?")

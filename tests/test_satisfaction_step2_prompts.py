@@ -87,10 +87,10 @@ class TestDirectorAuditSatisfaction:
 class TestBlueprintComparisonSatisfaction:
     """COMPARE_AND_SELECT_BLUEPRINT__COMPARISON_PROMPT에 대리만족 기준 포함"""
 
-    def test_blueprint_prompt_has_satisfaction_criterion(self, loader):
-        """Blueprint 비교 평가 기준에 '대리만족' 키워드 존재"""
+    def test_blueprint_comparison_prompt_removed(self, loader):
+        """Removed director_ensemble comparison prompt should return None."""
         prompt = loader.load("director_ensemble", "COMPARE_AND_SELECT_BLUEPRINT__COMPARISON_PROMPT")
-        assert "대리만족" in prompt
+        assert prompt is None
 
 
 # ── 4. JSON 스키마 보존 (회귀 테스트) ──────────────────────────

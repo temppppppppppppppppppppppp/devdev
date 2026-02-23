@@ -856,6 +856,14 @@ class ContinuityValidator:
                 personality_changes = [
                     h for h in history_entries if isinstance(h, dict) and h.get("field_name") == "personality_traits"
                 ]
+
+                def _safe_int(value) -> int:
+                    try:
+                        return int(value or 0)
+                    except (TypeError, ValueError):
+                        return 0
+
+                personality_changes.sort(key=lambda h: (_safe_int(h.get("episode_no")), _safe_int(h.get("id"))))
                 if len(personality_changes) >= 2:
                     prev = personality_changes[-2]  # 직전
                     curr = personality_changes[-1]  # 최신

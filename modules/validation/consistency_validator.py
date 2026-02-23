@@ -12,6 +12,8 @@
 import logging
 import re
 
+from modules.core.genre_guards import create_genre_guard
+
 
 class ConsistencyValidator:
     """
@@ -48,28 +50,12 @@ class ConsistencyValidator:
     def _load_guard_for_genre(self, genre: str):
         """장르에 맞는 Guard 동적 로드"""
         try:
-            if genre == "wuxia":
-                from modules.core.genre_guards.wuxia_guard import WuxiaGuard
-
-                return WuxiaGuard()
-            elif genre == "hunter":
-                from modules.core.genre_guards.hunter_guard import HunterGuard
-
-                return HunterGuard()
-            elif genre == "investment":
-                # InvestmentGuard가 있으면 로드, 없으면 BaseGuard 사용
-                try:
-                    from modules.core.genre_guards.investment_guard import InvestmentGuard
-
-                    return InvestmentGuard()
-                except ImportError:
-                    logging.warning("[WARNING] InvestmentGuard 없음 - 기본 검증만 수행")
-                    return None
-            else:
+            guard = create_genre_guard(genre)
+            if guard is None:
                 logging.warning(f"[WARNING] 미지원 장르 '{genre}' - 기본 검증만 수행")
-                return None
+            return guard
         except Exception as e:
-            logging.warning(f"[WARNING] Guard 로드 실패 ({genre}): {e}")
+            logging.warning(f"[WARNING] Guard 로드 실패 '{genre}': {e}")
             return None
 
     def validate(self, manuscript: str, validation_context: dict) -> dict:
@@ -236,7 +222,7 @@ class ConsistencyValidator:
         # 결과 집계
         # ═══════════════════════════════════════════════════════════════
         # 정당화 불가 위반이 있으면 REJECT
-        has_unjustifiable = len(unjustifiable) > 0
+        len(unjustifiable) > 0
 
         # 점수 감점 계산
         score_penalty = 0

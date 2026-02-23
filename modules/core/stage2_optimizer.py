@@ -230,7 +230,9 @@ class ArcAutoCorrector:
         current_items = state.get("items_acquired", [])
         # [Sweep45] LLM이 dict 리스트 반환 시 문자열 정규화 (AttributeError 방지)
         if current_items and not all(isinstance(x, str) for x in current_items):
-            current_items = [x.get("name", str(x)) if isinstance(x, dict) else str(x) for x in current_items]
+            current_items = [
+                x.get("name", x.get("item", str(x))) if isinstance(x, dict) else str(x) for x in current_items
+            ]
             state["items_acquired"] = current_items
 
         if current_items:

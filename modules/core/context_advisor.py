@@ -584,6 +584,8 @@ class ContextAdvisor:
         if not isinstance(blueprint, dict):
             return ""
         scene_breakdown = blueprint.get("scene_breakdown", [])
+        if isinstance(scene_breakdown, dict):
+            scene_breakdown = list(scene_breakdown.values())
         if not isinstance(scene_breakdown, list) or not scene_breakdown:
             return ""
         parts: list[str] = []
@@ -659,7 +661,7 @@ class ContextAdvisor:
 
     def _is_stage_enabled(self, stage: str) -> bool:
         key = self._STAGE_ENABLED_KEYS.get(stage)
-        return bool(_threshold(key, True)) if key else True
+        return bool(_threshold(key, False)) if key else True
 
     def _get_stage_budget(self, stage: str) -> int:
         defaults = {"stage2": 20000, "stage3": 30000, "stage4": 50000, "director": 20000}

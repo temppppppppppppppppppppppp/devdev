@@ -336,7 +336,6 @@ class PowerScalingTracker:
             justification = str(justification)
 
         justification_lower = justification.lower()
-        matched_keywords = []
 
         # 각 품질 등급에서 매칭되는 키워드 수집
         quality_matches = {}
@@ -356,7 +355,7 @@ class PowerScalingTracker:
         for q in quality_order:
             if q in quality_matches:
                 best_quality = q
-                matched_keywords = quality_matches[q]
+                quality_matches[q]
                 break
 
         # 기본 최대치

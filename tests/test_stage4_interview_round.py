@@ -267,6 +267,47 @@ class TestInterviewRoundRun:
         assert "기존 경고" in used_context["time_warnings"]
         assert "신규 경고" in ir.time_warnings
 
+    def test_cv_context_includes_blueprint_payload(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.next_ep = 2
+        round_ctx.blueprint = {"integrated_scenario": "테스트 플롯", "characters": [{"name": "청운"}]}
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "PASS",
+            "score": 90,
+            "selection_reason": "ok",
+            "selected_candidate": {"manuscript": "통과", "title": "통과"},
+            "state_updates": {},
+        }
+
+        ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        used_context = round_ctx.consistency_validator.validate.call_args.args[1]
+        assert used_context["blueprint"] == round_ctx.blueprint
+        assert "integrated_scenario" in used_context["blueprint_text"]
+
+    def test_build_history_parser_accepts_inline_header_without_newline(self):
+        ctx = _make_ctx()
+        ctx.current_project.db.get_manuscript.return_value = None
+        ir = Stage4InterviewRound(ctx)
+        prev_manuscripts_text = "[제2화] " + ("history " * 30)
+
+        history = ir._build_manuscript_history_for_check(prev_manuscripts_text, next_ep=3)
+
+        assert len(history) == 1
+        assert history[0]["ep_num"] == 2
+        assert "history" in history[0]["text"]
+
     def test_director_sc5_legacy_fallback_without_advisor(self):
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
@@ -367,6 +408,164 @@ class TestInterviewRoundRun:
         assert history_ctx
         assert continuity_ctx == history_ctx
         assert "[SC:" in continuity_ctx
+
+    def test_post_select_continuity_conflict_downgrades_pass(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.next_ep = 3
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "PASS",
+            "score": 95,
+            "selection_reason": "ok",
+            "selected_candidate": {"manuscript": "selected manuscript", "title": "selected"},
+            "state_updates": {},
+            "feedback": {"issues": []},
+            "action_items": [],
+        }
+        ctx.agents["director"].check_manuscript_continuity_with_cache.return_value = {
+            "decision": "CONFLICT",
+            "summary": "dead npc appears again",
+        }
+        ctx.agents["director"].check_manuscript_history_conflicts.return_value = {
+            "decision": "PASS",
+            "summary": "",
+        }
+
+        result = ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        assert result.verdict == "REJECT"
+        rejection_reason = result.previous_attempt.get("rejection_reason", "") if result.previous_attempt else ""
+        assert "[Continuity Conflict]" in rejection_reason
+        ctx.agents["director"].check_manuscript_continuity_with_cache.assert_called_once()
+
+    def test_post_select_history_conflict_downgrades_pass(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.next_ep = 3
+        round_ctx.prev_manuscripts_text = "[제2화]\n" + ("history " * 60)
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "PASS",
+            "score": 95,
+            "selection_reason": "ok",
+            "selected_candidate": {"manuscript": "selected manuscript", "title": "selected"},
+            "state_updates": {},
+            "feedback": {"issues": []},
+            "action_items": [],
+        }
+        ctx.agents["director"].check_manuscript_continuity_with_cache.return_value = {
+            "decision": "PASS",
+            "summary": "",
+        }
+        ctx.agents["director"].check_manuscript_history_conflicts.return_value = {
+            "decision": "CONFLICT",
+            "summary": "location mismatch",
+        }
+
+        result = ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        assert result.verdict == "REJECT"
+        rejection_reason = result.previous_attempt.get("rejection_reason", "") if result.previous_attempt else ""
+        assert "[V67] History Conflict:" in rejection_reason
+        ctx.agents["director"].check_manuscript_history_conflicts.assert_called_once()
+
+    def test_post_select_no_conflict_keeps_pass(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.next_ep = 3
+        round_ctx.prev_manuscripts_text = "[제2화]\n" + ("history " * 60)
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
+
+        ctx.agents["director"].select_and_judge_ensemble.return_value = {
+            "selected": "A",
+            "verdict": "PASS",
+            "score": 95,
+            "selection_reason": "ok",
+            "selected_candidate": {"manuscript": "selected manuscript", "title": "selected"},
+            "state_updates": {},
+        }
+        ctx.agents["director"].check_manuscript_continuity_with_cache.return_value = {
+            "decision": "PASS",
+            "summary": "",
+        }
+        ctx.agents["director"].check_manuscript_history_conflicts.return_value = {
+            "decision": "PASS",
+            "summary": "",
+        }
+
+        result = ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        assert result.verdict == "PASS"
+        assert result.final_manuscript == "selected manuscript"
+
+    def test_pre_selection_no_llm_continuity_check(self):
+        ctx = _make_ctx()
+        ir = Stage4InterviewRound(ctx)
+        round_ctx = _make_round_ctx()
+        round_ctx.next_ep = 3
+        round_ctx.prev_manuscripts_text = "[제2화]\n" + ("history " * 60)
+        round_ctx.chief_writer.generate_ensemble.return_value = [_candidate(), _candidate(), _candidate()]
+        round_ctx.manuscript_validator.validate_all_candidates.return_value = [
+            _validation_result(),
+            _validation_result(),
+            _validation_result(),
+        ]
+
+        def _select_side_effect(*args, **kwargs):
+            assert ctx.agents["director"].check_manuscript_continuity_with_cache.call_count == 0
+            assert ctx.agents["director"].check_manuscript_history_conflicts.call_count == 0
+            return {
+                "selected": "A",
+                "verdict": "REJECT",
+                "score": 40,
+                "selection_reason": "reject",
+                "feedback": {"issues": ["issue"]},
+                "action_items": ["fix"],
+                "selected_candidate": {"manuscript": "candidate manuscript"},
+            }
+
+        ctx.agents["director"].select_and_judge_ensemble.side_effect = _select_side_effect
+
+        result = ir.run(
+            round_num=0,
+            stage4_spinner=MagicMock(),
+            director_feedback="",
+            previous_attempt={},
+            round_ctx=round_ctx,
+        )
+
+        assert result.verdict == "REJECT"
+        assert ctx.agents["director"].check_manuscript_continuity_with_cache.call_count == 0
+        assert ctx.agents["director"].check_manuscript_history_conflicts.call_count == 0
 
 
 class TestRecordS4Attempt:

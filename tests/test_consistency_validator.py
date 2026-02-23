@@ -1,5 +1,7 @@
 """[Sweep20] Regression tests for consistency validator guards."""
 
+from unittest.mock import patch
+
 from modules.validation.consistency_validator import ConsistencyValidator
 
 
@@ -51,3 +53,12 @@ def test_effect_consistency_guard_handles_none_rule_map():
     validator = ConsistencyValidator(guard=_EffectRuleGuard())
     result = validator._check_effect_consistency("테스트 원고", asset_library=None)
     assert result == {"passed": True, "violations": []}
+
+
+def test_load_guard_for_supported_nonlegacy_genre_uses_factory():
+    fake_guard = object()
+    with patch("modules.validation.consistency_validator.create_genre_guard", return_value=fake_guard) as mock_factory:
+        validator = ConsistencyValidator(guard=None, genre="fantasy")
+
+    assert validator.guard is fake_guard
+    mock_factory.assert_called_once_with("fantasy")

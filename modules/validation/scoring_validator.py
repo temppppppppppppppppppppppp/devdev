@@ -421,7 +421,7 @@ Step 6: Article 7 (독자 대리만족) 분석
                     for action in impossible_actions[:5]:  # 최대 5개
                         reason = action.get("reason", "") if isinstance(action, dict) else str(action)
                         parts.append(f"- {reason}")
-            except (AttributeError, Exception) as e:
+            except (AttributeError, Exception):
                 pass  # Guard 메서드 오류 시 조용히 무시
 
         # 3. 정당화 인정 패턴
@@ -437,7 +437,7 @@ Step 6: Article 7 (독자 대리만족) 분석
                         readable = p.replace(r".*", "...").replace(r"\s+", " ")
                         readable_patterns.append(f'"{readable}"')
                     parts.append(", ".join(readable_patterns))
-            except (AttributeError, Exception) as e:
+            except (AttributeError, Exception):
                 pass  # Guard 메서드 오류 시 조용히 무시
 
         # 4. 검증 지침

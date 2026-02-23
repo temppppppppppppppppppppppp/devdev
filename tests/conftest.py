@@ -5,7 +5,6 @@ from __future__ import annotations
 import gc
 import json
 import shutil
-import sqlite3
 import sys
 import tempfile
 import time
@@ -37,19 +36,6 @@ def temp_dir():
             except PermissionError:
                 gc.collect()
                 time.sleep(0.1)
-
-
-@pytest.fixture
-def temp_db(temp_dir):
-    """Create and close a temporary SQLite DB connection."""
-    db_path = temp_dir / "test.db"
-    conn = sqlite3.connect(db_path)
-    try:
-        yield conn
-    finally:
-        conn.close()
-        gc.collect()
-        time.sleep(0.1)
 
 
 @pytest.fixture
@@ -266,90 +252,3 @@ def validation_context(sample_blueprint, sample_hud_wuxia):
         "history": [],
         "npc_profiles": {},
     }
-
-
-@pytest.fixture
-def blocking_validator_config():
-    return {"min_length_manuscript": 4000, "min_length_blueprint": 500}
-
-
-@pytest.fixture
-def scoring_validator_config():
-    return {
-        "scoring_model": "gemini-2.5-flash",
-        "scoring_threshold": 70,
-        "use_self_consistency": False,
-        "consistency_votes": 3,
-    }
-
-
-@pytest.fixture
-def agent_config(mock_api_client):
-    return {
-        "project": MagicMock(),
-        "api_client": mock_api_client,
-        "martial": MagicMock(),
-        "world": MagicMock(),
-        "techniques": MagicMock(),
-        "guard": MagicMock(),
-        "karma": MagicMock(),
-        "models": {
-            "primary": "gemini-2.5-flash",
-            "backup": "gemini-2.5-flash",
-            "tier2": "gemini-2.5-pro",
-            "tier3": "gemini-3-pro-preview",
-        },
-    }
-
-
-def create_test_db_with_tables(db_path: Path) -> sqlite3.Connection:
-    """Create a small standalone test DB with common tables."""
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS anchors (
-            key TEXT PRIMARY KEY,
-            data TEXT,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """
-    )
-
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS blueprints (
-            ep_num INTEGER PRIMARY KEY,
-            data TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """
-    )
-
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS manuscripts (
-            ep_num INTEGER PRIMARY KEY,
-            title TEXT,
-            content TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """
-    )
-
-    conn.commit()
-    return conn
-
-
-@pytest.fixture
-def initialized_test_db(temp_dir):
-    """Initialized standalone test DB connection + path."""
-    db_path = temp_dir / "initialized_test.db"
-    conn = create_test_db_with_tables(db_path)
-    try:
-        yield conn, db_path
-    finally:
-        conn.close()
-        gc.collect()
-        time.sleep(0.1)

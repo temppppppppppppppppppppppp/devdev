@@ -195,9 +195,9 @@ class ConstraintCompiler:
 
         # [V60.13 FIX] 폴백: arc_end_state 우선 사용
         joint = last_arc.get("joint_docs", {})
-        shadow = last_arc.get("status_shadow", {})
+        last_arc.get("status_shadow", {})
         state_constraints = last_arc.get("state_constraints", {})
-        arc_end_state = state_constraints.get("arc_end_state", {})
+        state_constraints.get("arc_end_state", {})
 
         equipment = joint.get("physical_inventory", [])
         if isinstance(equipment, str):

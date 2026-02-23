@@ -99,7 +99,9 @@ class Stage3Orchestrator:
         existing_bp_max = ctx.current_project.db.get_latest_blueprint_number()  # 0 if empty
 
         # [Smart Skip] 기존 원고가 있다면 원고 기준으로도 체크
-        existing_ms_max_ep = ctx.get_max_episode_from_manuscripts()
+        existing_ms_max_ep = (
+            ctx.get_max_episode_from_manuscripts() if callable(ctx.get_max_episode_from_manuscripts) else 0
+        )
 
         # 둘 중 큰 값을 기준으로 (Blueprint나 원고가 있는 화 다음부터)
         production_head = max(existing_bp_max, existing_ms_max_ep)
@@ -117,11 +119,15 @@ class Stage3Orchestrator:
             ctx.ui.log("   💡 Stage 2에서 Arc를 추가하면 설계 범위가 늘어납니다.")
             return
 
-        target_ep = ctx.get_int_input(
-            f"👉 몇 화까지 설계도를 생성하시겠습니까? (현재 {production_head}화 / 최대 {total_planned_ep}화): ",
-            default=total_planned_ep,
-            min_val=production_head + 1,
-            max_val=total_planned_ep,
+        target_ep = (
+            ctx.get_int_input(
+                f"👉 몇 화까지 설계도를 생성하시겠습니까? (현재 {production_head}화 / 최대 {total_planned_ep}화): ",
+                default=total_planned_ep,
+                min_val=production_head + 1,
+                max_val=total_planned_ep,
+            )
+            if callable(ctx.get_int_input)
+            else total_planned_ep
         )
 
         # ═══════════════════════════════════════════════════════════════
@@ -154,7 +160,8 @@ class Stage3Orchestrator:
         # ═══════════════════════════════════════════════════════════════
         # 3. 완료 처리
         # ═══════════════════════════════════════════════════════════════
-        ctx.write_audit_summary("stage3_complete")
+        if callable(ctx.write_audit_summary):
+            ctx.write_audit_summary("stage3_complete")
 
         # 통계 출력
         ctx.ui.log(f"\n{'═' * 60}")
@@ -187,6 +194,7 @@ class Stage3Orchestrator:
                 from modules.domain.agents.state_tracker import StateTracker
 
                 app.state_tracker = StateTracker(preset_registry=app.preset_registry, llm_client=app.sys.api_client)
+                app.state_tracker.bind_db(app.current_project.db)  # [NPC-L1] NPC 이력 DB 배선
                 all_arcs = app.current_project.db.load_anchor("arcs") or []
                 _g = app.selected_genre.get("type", "") if app.selected_genre else ""
                 app.state_tracker.full_extract_from_arcs(all_arcs, genre=_g)
@@ -277,7 +285,10 @@ class Stage3Orchestrator:
                 return {"next_ep": working_ep, "success_count": success_count, "fail_count": fail_count, "break": True}
 
         # Arc 컨텍스트 확보
-        arc_idx, arc_data = ctx.get_arc_context_for_episode(working_ep)
+        if callable(ctx.get_arc_context_for_episode):
+            arc_idx, arc_data = ctx.get_arc_context_for_episode(working_ep)
+        else:
+            arc_idx, arc_data = 0, {}
         if arc_idx is None or arc_data is None:
             ctx.ui.log(f"❌ [V60.80] 제{working_ep}화의 Arc 컨텍스트를 찾을 수 없습니다.")
             return {"next_ep": working_ep, "success_count": success_count, "fail_count": fail_count, "break": True}
@@ -355,7 +366,7 @@ class Stage3Orchestrator:
                             state_for_entity.get("entity_registry") if state_for_entity else None
                         )
                         if self._cached_entity_registry:
-                            stage3_protag = ctx.get_protagonist_name()
+                            stage3_protag = ctx.get_protagonist_name() if callable(ctx.get_protagonist_name) else ""
                             self._cached_entity_registry = ctx.fix_entity_registry_protagonist(
                                 self._cached_entity_registry, stage3_protag
                             )

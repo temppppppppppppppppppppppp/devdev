@@ -11,6 +11,8 @@ inspector reference를 통해 BaseAgent 메서드(ask, _extract_json_robust 등)
 import logging
 import re
 
+from modules.core.prompt_loader import SafeDict
+
 # =================================================================
 # [V49.1 NEW] Stage 4 원고 연속성 검증 프롬프트
 # =================================================================
@@ -273,13 +275,15 @@ class ContinuityManuscriptValidator:
         manuscript_excerpt = manuscript[:4000] if len(manuscript) > 4000 else manuscript
         entity_registry_str = self._ci._format_entity_registry(entity_registry)
 
-        prompt = MANUSCRIPT_CONTINUITY_PROMPT.format(
-            current_ep=current_ep,
-            manuscript_excerpt=self._ci._escape_braces(manuscript_excerpt),
-            prev_count=len(prev_manuscripts),
-            prev_manuscripts_timeline=self._ci._escape_braces(prev_timeline[:50000]),
-            blueprint_scenario=self._ci._escape_braces(blueprint_scenario[:10000]),
-            entity_registry=self._ci._escape_braces(entity_registry_str),
+        prompt = MANUSCRIPT_CONTINUITY_PROMPT.format_map(
+            SafeDict(
+                current_ep=current_ep,
+                manuscript_excerpt=self._ci._escape_braces(manuscript_excerpt),
+                prev_count=len(prev_manuscripts),
+                prev_manuscripts_timeline=self._ci._escape_braces(prev_timeline[:50000]),
+                blueprint_scenario=self._ci._escape_braces(blueprint_scenario[:10000]),
+                entity_registry=self._ci._escape_braces(entity_registry_str),
+            )
         )
 
         try:
@@ -494,8 +498,12 @@ class ContinuityManuscriptValidator:
         if item in acquired_items:
             return True
         for acquired in acquired_items:
-            if item in acquired or acquired in item:
+            if item == acquired:
                 return True
+            if len(item) >= 2 and len(acquired) >= 2:
+                shorter, longer = (item, acquired) if len(item) <= len(acquired) else (acquired, item)
+                if shorter in longer and len(shorter) / len(longer) >= 0.5:
+                    return True
         return False
 
     def _check_relationship_jump(self, prev_manuscripts: list[dict], manuscript: str) -> list[dict]:
@@ -975,12 +983,10 @@ class ContinuityManuscriptValidator:
                 continue
 
             is_acquired = False
-            acquired_ep = None
 
             for known_skill, acq_ep in skill_timeline.items():
                 if self._is_same_skill(skill, known_skill):
                     is_acquired = True
-                    acquired_ep = acq_ep
                     break
 
             if not is_acquired:

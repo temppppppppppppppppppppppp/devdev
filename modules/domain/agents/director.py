@@ -42,8 +42,8 @@ class Director(BaseAgent):
         # [V49.3] Self-Consistency 설정 (Stage 1-3 감사에 적용)
         self.use_self_consistency = True  # Self-Consistency 활성화 여부
         self.consistency_votes = 3  # 투표 횟수
-        self.ambiguous_lower = 40  # 애매한 점수 하한 (전략 감사는 0-100 스케일이 아님)
-        self.ambiguous_upper = 65  # [V60.24] 애매한 점수 상한 (70→65)
+        self.ambiguous_lower = 50  # 애매한 점수 하한 (전략 감사는 0-100 스케일이 아님)
+        self.ambiguous_upper = 60  # [V60.24] 애매한 점수 상한 (70→65)
 
         # [V60.24] 적응형 PASS 기준선 기본값 - 살짝 완화
         self.base_pass_threshold = 60  # 기본 PASS 기준 점수 (65→60)

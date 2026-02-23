@@ -478,7 +478,7 @@ class StateTracker:
 
             # Arc 시작 상태 설정
             arc_start = state_constraints.get("arc_start_state", {})
-            arc_end = state_constraints.get("arc_end_state", {})
+            state_constraints.get("arc_end_state", {})
 
             # 에피소드별 상태 추출 (continuity_checkpoints에서)
             checkpoints = state_constraints.get("continuity_checkpoints", [])
@@ -1064,8 +1064,8 @@ class StateTracker:
     def extract_resolved_plots_from_arc(self, arc: dict) -> list[dict]:
         return self._plots.extract_resolved_plots_from_arc(arc)
 
-    def get_resolved_plots_summary(self) -> str:
-        return self._plots.get_resolved_plots_summary()
+    def get_resolved_plots_summary(self, max_items: int = 30) -> str:
+        return self._plots.get_resolved_plots_summary(max_items=max_items)
 
     def register_entity_name(self, name: str, entity_type: str, arc_no: int):
         return self._plots.register_entity_name(name, entity_type, arc_no)

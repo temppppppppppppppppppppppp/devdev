@@ -5,7 +5,13 @@
 웹소설 특성상 "절망 속 희망" 공식을 강제하여 독자 이탈을 막습니다.
 """
 
+import logging
 from collections import Counter
+
+try:
+    from modules.core.prompt_loader import PromptLoader
+except ImportError:  # pragma: no cover - prompt loader optional
+    PromptLoader = None
 
 
 class EmotionArcTracker:
@@ -32,6 +38,19 @@ class EmotionArcTracker:
         """
         self.context = project_context
         self.history = []  # [(ep_num, emotion_state, intensity)]
+        self._prompt_loader = PromptLoader() if PromptLoader else None
+
+    def _load_recommendation_prompt(self, key: str, n_episodes: int) -> str | None:
+        """Load recommendation template from YAML; return None on any failure."""
+        if not self._prompt_loader:
+            return None
+
+        try:
+            prompt = self._prompt_loader.load("emotion_tracker", key, n_episodes=n_episodes)
+            return prompt if prompt else None
+        except Exception as e:
+            logging.warning("[EmotionArcTracker] Prompt load failed for %s: %s", key, e)
+            return None
 
     def analyze_manuscript_emotion(self, manuscript_content: str) -> tuple:
         """
@@ -178,6 +197,10 @@ class EmotionArcTracker:
             추천 텍스트
         """
         if current_state in ["despair", "frustration"]:
+            recommendation = self._load_recommendation_prompt("GENERATE_RECOMMENDATION__NEGATIVE_STREAK", n_episodes)
+            if recommendation:
+                return recommendation
+
             # 🔥 웹소설 핵심: 부정적 감정 속 희망 씨앗
             recommendation = f"""
 [🌱 웹소설 특화: 절망 속 희망 씨앗 삽입 필수]
@@ -209,6 +232,10 @@ class EmotionArcTracker:
 """
 
         elif current_state in ["hope", "triumph"]:
+            recommendation = self._load_recommendation_prompt("GENERATE_RECOMMENDATION__POSITIVE_STREAK", n_episodes)
+            if recommendation:
+                return recommendation
+
             recommendation = f"""
 [⚡ 긴장감 회복 필수]
 최근 {n_episodes}화 동안 긍정적 감정(희망/승리)이 지속되고 있습니다.

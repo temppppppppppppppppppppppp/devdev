@@ -34,6 +34,28 @@ def _make_ctx():
     return ctx
 
 
+def _configure_hybrid_db(db, *, manuscripts=None, summaries=None, arcs=None):
+    lock = MagicMock()
+    lock.__enter__.return_value = None
+    lock.__exit__.return_value = False
+    db._lock = lock
+
+    db.cursor = MagicMock()
+    exec_result = MagicMock()
+    exec_result.fetchall.return_value = summaries or []
+    db.cursor.execute.return_value = exec_result
+
+    db.get_manuscripts_range.return_value = manuscripts or []
+    db.get_cumulative_bible.return_value = {}
+
+    def _load_anchor_side_effect(key):
+        if key == "arcs":
+            return arcs or []
+        return None
+
+    db.load_anchor.side_effect = _load_anchor_side_effect
+
+
 class TestContextBuilderInit:
     def test_init_with_ctx(self):
         ctx = _make_ctx()
@@ -59,6 +81,21 @@ class TestContextBuilderInit:
         cb2 = orch.context_builder
 
         assert cb1 is cb2
+
+    def test_collect_npc_roster_handles_scene_breakdown_dict(self):
+        names = Stage4ContextBuilder._collect_npc_roster(
+            arc_data={},
+            blueprint={
+                "scene_breakdown": {
+                    "scene1": {"npcs": ["alice"]},
+                    "scene2": {"participants": "bob,charlie"},
+                }
+            },
+        )
+
+        assert "alice" in names
+        assert "bob" in names
+        assert "charlie" in names
 
 
 class TestLoadChainLinkSection:
@@ -201,6 +238,119 @@ class TestPrepareEpisodeContext:
         assert result["hud_report"] == ""
         assert result["current_inventory"] == []
         assert result["current_martial_arts"] == []
+
+    def test_hybrid_context_tier1_full_text(self):
+        ctx = _make_ctx()
+        db = ctx.current_project.db
+        _configure_hybrid_db(
+            db,
+            manuscripts=[
+                {"ep_num": 34, "content": "A" * 140},
+                {"ep_num": 39, "content": "B" * 140},
+            ],
+            summaries=[],
+            arcs=[],
+        )
+        db.get_manuscript.side_effect = lambda ep: {"content": f"ep{ep} " * 120}
+        chief_writer = MagicMock()
+        chief_writer._generate_episode_digest.return_value = ""
+
+        cb = Stage4ContextBuilder(ctx)
+        result = cb.prepare_episode_context(
+            40,
+            {"ep_start": 1, "ep_count": 50, "tactical_doc": ""},
+            chief_writer,
+        )
+
+        assert "[EP 34]" in result["prev_manuscripts_text"]
+        assert "[EP 39]" in result["prev_manuscripts_text"]
+
+    def test_hybrid_context_tier2_summary(self):
+        ctx = _make_ctx()
+        db = ctx.current_project.db
+        _configure_hybrid_db(
+            db,
+            manuscripts=[],
+            summaries=[{"ep_num": 12, "summary": "summary tier2"}],
+            arcs=[],
+        )
+        db.get_manuscript.side_effect = lambda ep: {"content": f"ep{ep} " * 120}
+        chief_writer = MagicMock()
+        chief_writer._generate_episode_digest.return_value = ""
+
+        cb = Stage4ContextBuilder(ctx)
+        result = cb.prepare_episode_context(
+            40,
+            {"ep_start": 1, "ep_count": 50, "tactical_doc": ""},
+            chief_writer,
+        )
+
+        assert "-- Tier2 summaries (11-30 episodes back) --" in result["prev_manuscripts_text"]
+        assert "[EP 12 summary] summary tier2" in result["prev_manuscripts_text"]
+
+    def test_hybrid_context_tier3_arc_summary(self):
+        ctx = _make_ctx()
+        db = ctx.current_project.db
+        _configure_hybrid_db(
+            db,
+            manuscripts=[],
+            summaries=[],
+            arcs=[
+                {"arc_no": 1, "episodes": [1, 2, 3]},
+                {"arc_no": 2, "episodes": [32, 33, 34]},
+            ],
+        )
+        db.get_manuscript.side_effect = lambda ep: {"content": f"ep{ep} " * 120}
+
+        def _load_v20_anchor(name):
+            if name == "arc_summary_1":
+                return {"summary": "arc one summary"}
+            if name == "arc_summary_2":
+                return {"summary": "arc two summary"}
+            return None
+
+        ctx.current_project.load_v20_anchor.side_effect = _load_v20_anchor
+        chief_writer = MagicMock()
+        chief_writer._generate_episode_digest.return_value = ""
+
+        cb = Stage4ContextBuilder(ctx)
+        result = cb.prepare_episode_context(
+            40,
+            {"ep_start": 1, "ep_count": 50, "tactical_doc": ""},
+            chief_writer,
+        )
+
+        assert "-- Tier3 arc summaries (older than 30 episodes) --" in result["prev_manuscripts_text"]
+        assert "[Arc 1 summary] arc one summary" in result["prev_manuscripts_text"]
+        assert "[Arc 2 summary]" not in result["prev_manuscripts_text"]
+
+    def test_hybrid_context_early_episodes(self):
+        ctx = _make_ctx()
+        db = ctx.current_project.db
+        _configure_hybrid_db(
+            db,
+            manuscripts=[
+                {"ep_num": 1, "content": "A" * 140},
+                {"ep_num": 5, "content": "B" * 140},
+            ],
+            summaries=[{"ep_num": 2, "summary": "should not appear"}],
+            arcs=[{"arc_no": 1, "episodes": [1, 2, 3]}],
+        )
+        db.get_manuscript.side_effect = lambda ep: {"content": f"ep{ep} " * 120}
+        ctx.current_project.load_v20_anchor.return_value = {"summary": "arc summary should be ignored"}
+        chief_writer = MagicMock()
+        chief_writer._generate_episode_digest.return_value = ""
+
+        cb = Stage4ContextBuilder(ctx)
+        result = cb.prepare_episode_context(
+            6,
+            {"ep_start": 1, "ep_count": 50, "tactical_doc": ""},
+            chief_writer,
+        )
+
+        assert "[EP 5]" in result["prev_manuscripts_text"]
+        assert "-- Tier2 summaries (11-30 episodes back) --" not in result["prev_manuscripts_text"]
+        assert "-- Tier3 arc summaries (older than 30 episodes) --" not in result["prev_manuscripts_text"]
 
 
 class TestBuildMandatoryContext:

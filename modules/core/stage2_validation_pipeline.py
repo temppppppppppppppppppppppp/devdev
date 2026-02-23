@@ -408,7 +408,7 @@ class Stage2ValidationPipeline:
 
             if continuity_result.get("decision") == "REJECT":
                 severity = continuity_result.get("severity", "UNKNOWN")
-                fix_instructions = continuity_result.get("fix_instructions", "")
+                continuity_result.get("fix_instructions", "")
                 violations = continuity_result.get("violations", [])
 
                 self.ctx.ui.log(f"      🚨 [V49 REJECT] Arc 연속성 위반 감지 (심각도: {severity})")
@@ -473,7 +473,7 @@ class Stage2ValidationPipeline:
                         if item_name:
                             banned_items.append(item_name)
 
-                detailed_feedback = "\n".join(violation_details)
+                "\n".join(violation_details)
 
                 banned_items_warning = ""
                 if banned_items:
@@ -502,7 +502,7 @@ class Stage2ValidationPipeline:
                         f"- 부상: {last_status.get('expected_injuries', '?')}"
                     )
 
-                structured_arc_feedback = self.ctx.generate_structured_arc_feedback(
+                structured_feedback = self.ctx.generate_structured_arc_feedback(
                     continuity_result=continuity_result, prev_arcs=all_refined_arcs, arc_no=global_arc_no
                 )
 
@@ -520,7 +520,10 @@ class Stage2ValidationPipeline:
                 )
 
                 # 모든 피드백 조합: 핵심 지시 + 컨텍스트 + 금지 아이템 + 직전 상태 + 재시도 가이드
-                current_feedback = f"{strong_kind_feedback}\n\n{focused_context}{banned_items_warning}{prev_state_reminder}{intensity_guide}"
+                current_feedback = (
+                    f"{strong_kind_feedback}\n\n"
+                    f"{focused_context}{structured_feedback or ''}{banned_items_warning}{prev_state_reminder}{intensity_guide}"
+                )
 
                 feedback_size = len(current_feedback)
                 self.ctx.ui.log(f"      📋 [V60.21] 집중 피드백 주입 ({feedback_size}자, 목표: <500자)")

@@ -13,6 +13,8 @@
 import logging
 import re
 
+from modules.core.prompt_loader import SafeDict
+
 from .base_agent import BaseAgent
 
 # [V60.34] 화별 생성 템플릿 - DraftValidator 호환 형식으로 수정
@@ -364,16 +366,18 @@ class StateLockedArcGenerator(BaseAgent):
         )
         protag_name = getattr(self, "protagonist_name", "주인공")
 
-        prompt = EPISODE_TEMPLATE.format(
-            ep_num=ep_num,
-            protagonist_name=protag_name,
-            start_location=self._escape_braces(str(start_state["location"])),
-            start_energy=start_state["energy"],
-            start_injuries=self._escape_braces(str(start_state["injuries"])),
-            start_equipment=self._escape_braces(equipment_str),
-            arc_direction=self._escape_braces(arc_direction),
-            episode_beat=self._escape_braces(episode_beat),
-            prev_episode_summary=self._escape_braces(prev_summary) or "(첫 화)",
+        prompt = EPISODE_TEMPLATE.format_map(
+            SafeDict(
+                ep_num=ep_num,
+                protagonist_name=protag_name,
+                start_location=self._escape_braces(str(start_state["location"])),
+                start_energy=start_state["energy"],
+                start_injuries=self._escape_braces(str(start_state["injuries"])),
+                start_equipment=self._escape_braces(equipment_str),
+                arc_direction=self._escape_braces(arc_direction),
+                episode_beat=self._escape_braces(episode_beat),
+                prev_episode_summary=self._escape_braces(prev_summary) or "(첫 화)",
+            )
         )
 
         try:
@@ -395,8 +399,8 @@ class StateLockedArcGenerator(BaseAgent):
                     if len(draft) >= 400:
                         self.primary_model = self.refine_model
 
-                        refine_prompt = SPECULATIVE_REFINE_PROMPT.format(
-                            protagonist_name=protag_name, draft=self._escape_braces(draft)
+                        refine_prompt = SPECULATIVE_REFINE_PROMPT.format_map(
+                            SafeDict(protagonist_name=protag_name, draft=self._escape_braces(draft))
                         )
 
                         # [V60.25] Thinking Level 활용 - 정제 단계에서 medium 사용
@@ -434,10 +438,12 @@ class StateLockedArcGenerator(BaseAgent):
         """
         Phase B-2: 에피소드에서 종료 상태 추출 (관심사 분리)
         """
-        prompt = STATE_EXTRACTION_PROMPT.format(
-            episode_text=self._escape_braces(episode_text[:3000]),
-            start_energy=start_state["energy"],
-            start_injuries=self._escape_braces(str(start_state["injuries"])),
+        prompt = STATE_EXTRACTION_PROMPT.format_map(
+            SafeDict(
+                episode_text=self._escape_braces(episode_text[:3000]),
+                start_energy=start_state["energy"],
+                start_injuries=self._escape_braces(str(start_state["injuries"])),
+            )
         )
 
         try:

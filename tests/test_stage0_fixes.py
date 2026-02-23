@@ -1,6 +1,7 @@
 """Stage 0 개선 테스트 (12건)"""
 
 import inspect
+import json
 import re
 
 import pytest
@@ -49,6 +50,15 @@ class TestPhaseA:
         """import_bible 소스에 GenreTypes.INVESTMENT 참조"""
         src = inspect.getsource(StageZeroManager.import_bible)
         assert "GenreTypes.INVESTMENT" in src or '"investment"' not in src
+
+    def test_import_bible_missing_genre_does_not_force_investment(self, tmp_path):
+        manager = StageZeroManager()
+        bible_path = tmp_path / "bible_missing_genre.json"
+        bible_path.write_text(json.dumps({"MasterBible": {}}, ensure_ascii=False), encoding="utf-8")
+
+        manager.import_bible(str(bible_path))
+
+        assert manager.genre == ""
 
 
 # ──────────────────────────────────────────────

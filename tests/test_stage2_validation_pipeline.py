@@ -225,3 +225,26 @@ class TestRunValidation:
         result = pipeline.run_validation(**kwargs)
         required = {"action", "refined_arc", "draft_validator_passed", "consensus_passed", "suspected_duplicates"}
         assert required == set(result.keys())
+
+    @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
+    def test_retry_feedback_includes_structured_feedback(self, pipeline, valid_refined_arc):
+        continuity_inspector = MagicMock()
+        continuity_inspector.inspect_arc.return_value = {
+            "decision": "REJECT",
+            "severity": "MAJOR",
+            "violations": [{"type": "state_conflict", "description": "state issue", "item_or_subject": "item"}],
+        }
+
+        pipeline.ctx.agents = {"continuity_inspector": continuity_inspector}
+        pipeline.ctx.generate_structured_arc_feedback = MagicMock(return_value="\n[STRUCTURED_FEEDBACK]")
+        pipeline.ctx.get_adaptive_feedback_intensity = MagicMock(return_value={"guidance": "keep consistency"})
+        pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
+
+        kwargs = self._base_kwargs(valid_refined_arc)
+        kwargs["four_phase_passed"] = False
+        kwargs["all_refined_arcs"] = [{"arc_no": 0, "joint_docs": {}, "status_shadow": {}}]
+
+        result = pipeline.run_validation(**kwargs)
+
+        assert result["action"] == "retry"
+        assert "[STRUCTURED_FEEDBACK]" in result["current_feedback"]

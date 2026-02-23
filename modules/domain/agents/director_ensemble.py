@@ -66,7 +66,7 @@ class DirectorEnsembleSelector:
                 candidates[0], arc_data, ep_num, prev_blueprint, entity_registry, state_tracker
             )
             single_result["selected_index"] = 0
-            single_result["selected_blueprint"] = candidates[0] if single_result["decision"] == "PASS" else None
+            single_result["selected_blueprint"] = candidates[0]
             single_result["comparison_notes"] = "단일 후보"
             return single_result
 
@@ -169,7 +169,7 @@ class DirectorEnsembleSelector:
             return {
                 "decision": decision,
                 "selected_index": selected_idx,
-                "selected_blueprint": candidates[selected_idx] if decision == "PASS" else None,
+                "selected_blueprint": candidates[selected_idx],
                 "score": score,
                 "reason": result.get("reason", ""),
                 "feedback": result.get("feedback", "") if decision == "REJECT" else "",
@@ -194,7 +194,7 @@ class DirectorEnsembleSelector:
         if isinstance(arc_tactical, dict):
             arc_tactical = json.dumps(arc_tactical, ensure_ascii=False)
 
-        prev_ending = prev_blueprint.get("ending_hook", "") if prev_blueprint else ""
+        prev_blueprint.get("ending_hook", "") if prev_blueprint else ""
 
         arc_no = arc_data.get("arc_no", 0) if arc_data else 0
 
@@ -238,7 +238,7 @@ class DirectorEnsembleSelector:
             candidates[0], arc_data, ep_num, prev_blueprint, entity_registry, state_tracker
         )
         result["selected_index"] = 0
-        result["selected_blueprint"] = candidates[0] if result["decision"] == "PASS" else None
+        result["selected_blueprint"] = candidates[0]
         result["comparison_notes"] = "폴백 선택 (비교 실패)"
         return result
 

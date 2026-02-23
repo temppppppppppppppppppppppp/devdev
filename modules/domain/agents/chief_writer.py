@@ -864,7 +864,7 @@ class ChiefWriter(BaseAgent):
                         # [V70] NOTE: manuscripts 테이블에 hud_snapshot 컬럼 없음 — 항상 {} 반환 (dead code)
                         hud_snapshot = past_ms.get("hud_snapshot", {}) if isinstance(past_ms, dict) else {}
                         self._manuscript_cache[i] = {"content": content, "hud_snapshot": hud_snapshot}
-                except (KeyError, TypeError, AttributeError) as e:  # [V64.P4] individual ms load failure
+                except (KeyError, TypeError, AttributeError):  # [V64.P4] individual ms load failure
                     continue
         except Exception as e:  # [V64.P4] IMPORTANT: manuscript cache build failure affects continuity checks
             logging.warning(f"⚠️ [V64.P4] 원고 캐시 구축 실패: {str(e)[:60]}")

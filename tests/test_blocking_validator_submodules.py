@@ -103,6 +103,24 @@ class TestSceneChecks:
         assert result["check"] == "required_scenes"
         assert isinstance(result["passed"], bool)
 
+    def test_required_scenes_passes_when_two_of_two_scenes_found(self):
+        validator = BlockingValidator()
+        manuscript = "주인공은 객잔에 도착했다. 이후 비밀 문서를 확보했다."
+        context = {
+            "mode": "MANUSCRIPT",
+            "blueprint": {
+                "scene_breakdown": {
+                    "scene_1": {"description": "객잔 도착"},
+                    "scene_2": {"description": "비밀 문서 확보"},
+                }
+            },
+        }
+
+        result = validator.scene_checks._check_required_scenes(manuscript, context)
+
+        assert result["check"] == "required_scenes"
+        assert result["passed"] is True
+
     def test_scope_overflow_smoke(self):
         validator = BlockingValidator()
         manuscript = "가" * 5000

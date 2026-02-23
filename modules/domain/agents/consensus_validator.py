@@ -17,6 +17,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FutureTimeoutError
 
 from modules.core.arc_summary_utils import generate_prev_arc_summary  # [V64.P4]
+from modules.core.prompt_loader import SafeDict
 
 from .base_agent import BaseAgent
 
@@ -295,14 +296,16 @@ class ConsensusValidator(BaseAgent):
         python_advisory_text: str = "(없음)",
     ) -> dict:
         """단일 관점 검증"""
-        prompt = CONSENSUS_VALIDATION_PROMPT.format(
-            role=perspective["role"],
-            focus=perspective["focus"],
-            perspective_name=perspective["name"],
-            arc_data=self._escape_braces(arc_data),
-            prev_summary=self._escape_braces(prev_summary),
-            constraints=self._escape_braces(constraints[:2000] if constraints else "(없음)"),
-            python_advisory=self._escape_braces(python_advisory_text),
+        prompt = CONSENSUS_VALIDATION_PROMPT.format_map(
+            SafeDict(
+                role=perspective["role"],
+                focus=perspective["focus"],
+                perspective_name=perspective["name"],
+                arc_data=self._escape_braces(arc_data),
+                prev_summary=self._escape_braces(prev_summary),
+                constraints=self._escape_braces(constraints[:2000] if constraints else "(없음)"),
+                python_advisory=self._escape_braces(python_advisory_text),
+            )
         )
 
         result = self.ask(prompt, temperature=perspective["temperature"])

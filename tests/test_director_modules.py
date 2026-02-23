@@ -98,9 +98,9 @@ class TestDirectorCaching:
         """3. build_manuscript_history_for_check returns structured history from DB."""
         db = MagicMock()
         db.get_manuscript = MagicMock(
-            side_effect=lambda ep: {"content": f"Episode {ep} content", "summary": f"Summary of ep {ep}"}
-            if ep < 3
-            else None
+            side_effect=lambda ep: (
+                {"content": f"Episode {ep} content", "summary": f"Summary of ep {ep}"} if ep < 3 else None
+            )
         )
 
         history = caching_manager.build_manuscript_history_for_check(db, ep_num=3)
@@ -298,6 +298,7 @@ class TestDirectorEnsemble:
         )
         assert result["decision"] == "REJECT"
         assert "분량 부족" in result["reason"]
+        assert result["selected_blueprint"] == candidate
 
     def test_compare_and_select_single_candidate_reject_few_scenes(self, director):
         """21. Single candidate with fewer than 4 scenes gets REJECT."""
@@ -310,6 +311,34 @@ class TestDirectorEnsemble:
         )
         assert result["decision"] == "REJECT"
         assert "씬 개수 부족" in result["reason"]
+
+    def test_compare_and_select_multi_candidate_reject_keeps_selected_blueprint(self, director):
+        candidates = [
+            {
+                "integrated_scenario": "A" * 1000,
+                "scene_breakdown": {"scene1": "x", "scene2": "y", "scene3": "z", "scene4": "w"},
+            },
+            {
+                "integrated_scenario": "B" * 1000,
+                "scene_breakdown": {"scene1": "x", "scene2": "y", "scene3": "z", "scene4": "w"},
+            },
+        ]
+        director._ensemble._d.ask = MagicMock(return_value="{}")
+        director._ensemble._d._extract_json_robust = MagicMock(
+            return_value={
+                "selected_index": 1,
+                "decision": "REJECT",
+                "score": 48,
+                "reason": "insufficient quality",
+                "feedback": "revise blueprint",
+            }
+        )
+
+        result = director.compare_and_select_blueprint(candidates=candidates, arc_data={"tactical_doc": "x"}, ep_num=2)
+
+        assert result["decision"] == "REJECT"
+        assert result["selected_index"] == 1
+        assert result["selected_blueprint"] == candidates[1]
 
     def test_ensemble_all_short_manuscripts_reject(self, director):
         """22. select_and_judge_ensemble returns REJECT when all candidates are too short."""

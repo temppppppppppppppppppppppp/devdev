@@ -106,7 +106,7 @@ class FeedbackSystem:
                 )
 
         # 2. 대화 비율 정량화
-        score_breakdown = audit_result.get("score_breakdown", {})
+        audit_result.get("score_breakdown", {})
         if "대화" in reason or "건조" in reason:
             current_dialogue_chars = int(content_length * 0.15)
             target_dialogue_chars = int(content_length * 0.30)
@@ -759,7 +759,7 @@ class FeedbackSystem:
     def classify_rejection_feedback(self, reason: str, feedback: str, blueprint: dict = None) -> str:
         """[V56] REJECT 피드백 분류 및 구조화"""
         reason_lower = reason.lower() if reason else ""
-        feedback_lower = feedback.lower() if feedback else ""
+        feedback.lower() if feedback else ""
 
         classified_parts = ["\n[🚨 V56 STRUCTURED REJECTION FEEDBACK]"]
 

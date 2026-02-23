@@ -345,15 +345,20 @@ class BaseGuard(ABC):
                 continue
 
             # 정규식 매칭
-            matches = re.findall(pattern, manuscript)
+            matches = list(re.finditer(pattern, manuscript))
             if matches:
-                # 정당화 패턴 존재 여부 확인
-                has_justification = any(re.search(jp, manuscript) for jp in justifications)
+                first_match = matches[0]
+                matched_action = first_match.group(0)
+                # [H-1] 정당화는 매칭 구간 주변에서만 인정 (전역 매칭 오탐 방지)
+                window_start = max(0, first_match.start() - 120)
+                window_end = min(len(manuscript), first_match.end() + 120)
+                local_window = manuscript[window_start:window_end]
+                has_justification = any(re.search(jp, local_window) for jp in justifications)
 
                 if not has_justification:
                     violations.append(
                         {
-                            "action": matches[0] if matches else pattern,
+                            "action": matched_action,
                             "reason": reason,
                             "has_justification": False,
                             "severity": action.get("severity", "MEDIUM"),
@@ -492,7 +497,7 @@ class BaseGuard(ABC):
             return {"passed": True, "violations": [], "has_justification": False}
 
         # 위임이 필요한 직위 목록
-        delegation_required = hierarchy.get("delegation_required", [])
+        hierarchy.get("delegation_required", [])
         position_titles = hierarchy.get("position_titles", {})
 
         # 주인공이 상위 직위를 자칭하는지 검사
@@ -619,7 +624,7 @@ class BaseGuard(ABC):
                 continue
 
             events = npc_data.get("events", [])
-            current_relation = npc_data.get("relation_type", "")
+            npc_data.get("relation_type", "")
 
             # 적대적 이벤트가 있었는지 확인
             hostile_event = None
@@ -643,7 +648,11 @@ class BaseGuard(ABC):
                         break
 
             # 현재 원고에서 해결 패턴이 있는지 확인
-            has_resolution_in_manuscript = any(re.search(rp, manuscript) for rp in resolution_patterns)
+            npc_name_esc = re.escape(npc_name)
+            has_resolution_in_manuscript = any(
+                re.search(f"(?:{npc_name_esc}.{{0,60}}{rp}|{rp}.{{0,60}}{npc_name_esc})", manuscript)
+                for rp in resolution_patterns
+            )
 
             if resolved or has_resolution_in_manuscript:
                 continue
@@ -806,7 +815,10 @@ class BaseGuard(ABC):
 
         # 일반 대응 패턴도 확인
         if not has_response:
-            has_response = any(re.search(rp, manuscript) for rp in response_patterns)
+            has_response = any(
+                re.search(f"(?:{villain_name_esc}.{{0,80}}{rp}|{rp}.{{0,80}}{villain_name_esc})", manuscript)
+                for rp in response_patterns
+            )
 
         # 빌런이 원고에 언급되는지 확인
         villain_mentioned = villain_name in manuscript

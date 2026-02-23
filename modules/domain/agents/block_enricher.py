@@ -11,6 +11,8 @@ Purpose:
 import json
 import re
 
+from modules.core.prompt_loader import SafeDict
+
 from .base_agent import BaseAgent
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -319,18 +321,20 @@ class BlockEnricher(BaseAgent):
             }
 
         # 프롬프트 구성
-        prompt = BLOCK_ENRICHMENT_PROMPT.format(
-            reference_block=self._escape_braces(json.dumps(reference_block, ensure_ascii=False, indent=2)),
-            current_block=self._escape_braces(json.dumps(current_block, ensure_ascii=False, indent=2)),
-            prev_block=self._escape_braces(json.dumps(prev_block, ensure_ascii=False, indent=2))
-            if prev_block
-            else "없음 (첫 번째 Block)",
-            next_block=self._escape_braces(json.dumps(next_block, ensure_ascii=False, indent=2))
-            if next_block
-            else "없음 (마지막 Block)",
-            block_id=current_block.get("block_id", "Unknown"),
-            protagonist_name=protagonist_name,
-            genre=genre,
+        prompt = BLOCK_ENRICHMENT_PROMPT.format_map(
+            SafeDict(
+                reference_block=self._escape_braces(json.dumps(reference_block, ensure_ascii=False, indent=2)),
+                current_block=self._escape_braces(json.dumps(current_block, ensure_ascii=False, indent=2)),
+                prev_block=self._escape_braces(json.dumps(prev_block, ensure_ascii=False, indent=2))
+                if prev_block
+                else "없음 (첫 번째 Block)",
+                next_block=self._escape_braces(json.dumps(next_block, ensure_ascii=False, indent=2))
+                if next_block
+                else "없음 (마지막 Block)",
+                block_id=current_block.get("block_id", "Unknown"),
+                protagonist_name=protagonist_name,
+                genre=genre,
+            )
         )
 
         # LLM 호출
@@ -416,15 +420,17 @@ class BlockEnricher(BaseAgent):
     ) -> dict:
         """농축 결과 1차 검증 (Self-Check)"""
 
-        prompt = ENRICHMENT_VALIDATION_PROMPT.format(
-            original_block=self._escape_braces(json.dumps(original, ensure_ascii=False, indent=2)),
-            enriched_block=self._escape_braces(json.dumps(enriched, ensure_ascii=False, indent=2)),
-            prev_block=self._escape_braces(json.dumps(prev_block, ensure_ascii=False, indent=2))
-            if prev_block
-            else "없음",
-            next_block=self._escape_braces(json.dumps(next_block, ensure_ascii=False, indent=2))
-            if next_block
-            else "없음",
+        prompt = ENRICHMENT_VALIDATION_PROMPT.format_map(
+            SafeDict(
+                original_block=self._escape_braces(json.dumps(original, ensure_ascii=False, indent=2)),
+                enriched_block=self._escape_braces(json.dumps(enriched, ensure_ascii=False, indent=2)),
+                prev_block=self._escape_braces(json.dumps(prev_block, ensure_ascii=False, indent=2))
+                if prev_block
+                else "없음",
+                next_block=self._escape_braces(json.dumps(next_block, ensure_ascii=False, indent=2))
+                if next_block
+                else "없음",
+            )
         )
 
         try:
@@ -458,15 +464,17 @@ class BlockEnricher(BaseAgent):
         70점 이상이면 PASS, 미만이면 REJECT.
         """
 
-        prompt = DIRECTOR_BLOCK_AUDIT_PROMPT.format(
-            original_block=self._escape_braces(json.dumps(original, ensure_ascii=False, indent=2)),
-            enriched_block=self._escape_braces(json.dumps(enriched, ensure_ascii=False, indent=2)),
-            prev_block=self._escape_braces(json.dumps(prev_block, ensure_ascii=False, indent=2))
-            if prev_block
-            else "없음 (첫 번째 Block)",
-            next_block=self._escape_braces(json.dumps(next_block, ensure_ascii=False, indent=2))
-            if next_block
-            else "없음 (마지막 Block)",
+        prompt = DIRECTOR_BLOCK_AUDIT_PROMPT.format_map(
+            SafeDict(
+                original_block=self._escape_braces(json.dumps(original, ensure_ascii=False, indent=2)),
+                enriched_block=self._escape_braces(json.dumps(enriched, ensure_ascii=False, indent=2)),
+                prev_block=self._escape_braces(json.dumps(prev_block, ensure_ascii=False, indent=2))
+                if prev_block
+                else "없음 (첫 번째 Block)",
+                next_block=self._escape_braces(json.dumps(next_block, ensure_ascii=False, indent=2))
+                if next_block
+                else "없음 (마지막 Block)",
+            )
         )
 
         try:

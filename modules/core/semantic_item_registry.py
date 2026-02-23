@@ -434,7 +434,6 @@ class SemanticItemRegistry:
 
         if canonical and canonical in self.items:
             entry = self.items[canonical]
-            old_owner = entry.current_owner
 
             # 이벤트 기록
             event = ItemEvent(
