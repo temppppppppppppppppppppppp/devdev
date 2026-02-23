@@ -299,6 +299,8 @@ class ContinuityValidator:
         아이템 소지 연속성 검증
         - 이미 소유한 아이템을 다시 획득하러 가는 패턴 감지
         """
+        if prev_manuscript is None:
+            prev_manuscript = ""
         violations = []
         warnings = []
 
@@ -343,6 +345,8 @@ class ContinuityValidator:
         무기 소지 연속성 검증
         - 직전 에피소드 끝에서 들고 있던 무기가 현재 에피소드에서 사라지는 문제
         """
+        if prev_manuscript is None:
+            prev_manuscript = ""
         violations = []
         warnings = []
 
@@ -408,6 +412,8 @@ class ContinuityValidator:
         - SEVERE 부상(위독/빈사/중상/골절/파열)에서 회복 묘사 없이 정상 행동 → BLOCKING
         - 경미한 부상에서 무리한 행동 → WARNING (기존)
         """
+        if prev_manuscript is None:
+            prev_manuscript = ""
         violations = []
         warnings = []
 
@@ -568,6 +574,8 @@ class ContinuityValidator:
         - 불가능한 순간이동 (DISTANT_LOCATION_PAIRS) → BLOCKING
         - 일반적인 위치 변화 → WARNING (기존)
         """
+        if prev_manuscript is None:
+            prev_manuscript = ""
         violations = []
         warnings = []
 

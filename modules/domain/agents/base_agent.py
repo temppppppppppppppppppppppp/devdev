@@ -302,7 +302,8 @@ class BaseAgent:
         Args:
             prompt: 질의 프롬프트
             temperature: 생성 온도 (0.0-1.0)
-            response_schema: JSON 스키마 (선택)
+            response_schema: JSON 스키마 (선택). 현재 analyst.py에서만 사용 중.
+                             TODO: 다른 에이전트에도 구조화 응답이 필요하면 활용 확대 검토.
             thinking_level: [V60.25] Gemini 3 thinking level ("minimal", "low", "medium", "high")
         """
         directives = self._escape_braces(getattr(self.context, "author_directives", ""))

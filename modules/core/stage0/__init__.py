@@ -322,7 +322,7 @@ class StageZeroManager:
                 master = self.bible.get("MasterBible", {})
                 self.genre = master.get("_genre", "")
             if not self.genre:
-                self.genre = self._select_genre() if hasattr(self, "_select_genre") else ""
+                self.genre = self.show_genre_menu()  # [P1-A3-7] 존재하는 메서드로 교체
 
             # 프리셋 초기화
             self.preset_registry = PresetRegistry(base_genre=self.genre)

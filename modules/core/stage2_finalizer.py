@@ -238,6 +238,11 @@ class Stage2Finalizer:
             # [V49.6 NEW] physical_inventory 계승
             curr_joint = refined_arc.get("joint_docs", {})
             curr_inventory = curr_joint.get("physical_inventory", [])
+            # [B3-P1-2] physical_inventory 타입 정규화 (str|dict → list)
+            if isinstance(curr_inventory, str):
+                curr_inventory = [curr_inventory] if curr_inventory and curr_inventory != "[]" else []
+            elif isinstance(curr_inventory, dict):
+                curr_inventory = [curr_inventory] if curr_inventory else []
             if not curr_inventory or curr_inventory == [] or curr_inventory == "[]":
                 if all_refined_arcs:
                     prev_joint = all_refined_arcs[-1].get("joint_docs", {})
@@ -250,6 +255,9 @@ class Stage2Finalizer:
                             prev_inventory = _json.loads(prev_inventory)
                         except (ValueError, TypeError):
                             prev_inventory = []
+                    # [B3-P1-2] prev_inventory도 dict일 수 있음 → list 정규화
+                    if isinstance(prev_inventory, dict):
+                        prev_inventory = [prev_inventory] if prev_inventory else []
                     if prev_inventory and prev_inventory != [] and prev_inventory != "[]":
                         curr_status = refined_arc.get("status_shadow", {})
                         consumed_raw = curr_status.get("item_consumption", [])

@@ -161,6 +161,8 @@ class StoryExpander:
 
     def generate_bible(self, protagonist_config: dict[str, Any] = None) -> dict[str, Any]:
         """Bible 생성"""
+        if not self.extracted:  # [P1-A3-6] extracted None/빈값 방어
+            self.extracted = {}
         proto = self.extracted.get("protagonist", {})
 
         # 주인공 상세 생성
