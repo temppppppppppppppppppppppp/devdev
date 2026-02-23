@@ -32,6 +32,9 @@ nul
 _*.py
 _*.txt
 *.log
+recent_diff*.txt
+temp_inspect.txt
+test_results_new.xml
 
 # === DB/캐시 ===
 *.db-journal
