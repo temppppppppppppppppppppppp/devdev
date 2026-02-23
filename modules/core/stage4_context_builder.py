@@ -164,12 +164,30 @@ class Stage4ContextBuilder:
                         max_results=max_results,
                     )
                 else:
-                    result = memory.retrieve_multi_query_context(
-                        queries=[query_text],
-                        current_ep=plan.episode_num,
-                        n_per_query=3,
-                        max_results=max_results,
-                    )
+                    # [Hybrid-P4] retrieval_mode 플래그 기반 경로 분기
+                    _retrieval_mode = _threshold("smart_retrieval.retrieval_mode", "dense")
+                    if _retrieval_mode == "hybrid" and hasattr(memory, "retrieve_hybrid_context"):
+                        result = memory.retrieve_hybrid_context(
+                            query=query_text,
+                            current_ep=plan.episode_num,
+                            dense_k=int(_threshold("smart_retrieval.dense_k", 10)),
+                            sparse_k=int(_threshold("smart_retrieval.sparse_k", 10)),
+                            max_results=max_results,
+                            rrf_k=int(_threshold("smart_retrieval.rrf_k", 60)),
+                        )
+                    elif _retrieval_mode == "sparse" and hasattr(memory, "_fts_search"):
+                        _fts = memory._fts_search(query_text, plan.episode_num, n_results=max_results)
+                        result = "\n\n".join(
+                            f"=== EP {r['ep_num']} [sparse] ===\n{r['summary']}"
+                            for r in _fts
+                        ) if _fts else ""
+                    else:
+                        result = memory.retrieve_multi_query_context(
+                            queries=[query_text],
+                            current_ep=plan.episode_num,
+                            n_per_query=3,
+                            max_results=max_results,
+                        )
             except Exception as e:
                 self.ctx.ui.log(f"   [SC] retrieval slot failed ({source}/{slot.category}): {str(e)[:80]}")
                 continue

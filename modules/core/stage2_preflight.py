@@ -130,20 +130,39 @@ class Stage2PreflightAnalysis:
                         current_ep=current_ep,
                         max_results=max_results,
                     )
-                elif vec_slot_count <= 1:
-                    result = memory.retrieve_high_res_context(
-                        query_text,
-                        current_ep,
-                        n_results=max_results,
-                    )
                 else:
-                    result = memory.retrieve_multi_query_context(
-                        queries=[query_text],
-                        current_ep=current_ep,
-                        n_per_query=3,
-                        max_results=max_results,
-                        current_arc_no=current_arc_no,
-                    )
+                    # [Hybrid-P4] retrieval_mode 플래그 기반 경로 분기
+                    _retrieval_mode = _threshold("smart_retrieval.retrieval_mode", "dense")
+                    if _retrieval_mode == "hybrid" and hasattr(memory, "retrieve_hybrid_context"):
+                        result = memory.retrieve_hybrid_context(
+                            query=query_text,
+                            current_ep=current_ep,
+                            dense_k=int(_threshold("smart_retrieval.dense_k", 10)),
+                            sparse_k=int(_threshold("smart_retrieval.sparse_k", 10)),
+                            max_results=max_results,
+                            current_arc_no=current_arc_no,
+                            rrf_k=int(_threshold("smart_retrieval.rrf_k", 60)),
+                        )
+                    elif _retrieval_mode == "sparse" and hasattr(memory, "_fts_search"):
+                        _fts = memory._fts_search(query_text, current_ep, n_results=max_results)
+                        result = "\n\n".join(
+                            f"=== EP {r['ep_num']} [sparse] ===\n{r['summary']}"
+                            for r in _fts
+                        ) if _fts else ""
+                    elif vec_slot_count <= 1:
+                        result = memory.retrieve_high_res_context(
+                            query_text,
+                            current_ep,
+                            n_results=max_results,
+                        )
+                    else:
+                        result = memory.retrieve_multi_query_context(
+                            queries=[query_text],
+                            current_ep=current_ep,
+                            n_per_query=3,
+                            max_results=max_results,
+                            current_arc_no=current_arc_no,
+                        )
             except Exception as exc:  # OPTIONAL: retrieval failure should not block generation
                 audit_cb = getattr(self.ctx, "audit_event", None)
                 if callable(audit_cb):

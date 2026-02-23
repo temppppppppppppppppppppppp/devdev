@@ -473,6 +473,16 @@ class DBManager:
                 created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        # [Hybrid-P2] FTS5 전문 검색 테이블 (vec_memory 공유 모드와 동기화)
+        self.conn.execute("""
+            CREATE VIRTUAL TABLE IF NOT EXISTS episode_fts
+            USING fts5(
+                summary,
+                event_types,
+                entity_names,
+                tokenize='unicode61 remove_diacritics 2'
+            )
+        """)
         # [Tier4-14] episode_meta / causal_graph index tuning
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_episode_meta_arc_no ON episode_meta(arc_no)")
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_causal_graph_ep_num ON causal_graph(ep_num)")
