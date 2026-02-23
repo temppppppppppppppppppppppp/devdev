@@ -233,8 +233,9 @@ class TestPromptLoaderCacheInvalidation:
         from modules.core.prompt_loader import PromptLoader
 
         loader = PromptLoader()
-        loader._cache["test_domain"] = {"KEY": "value"}
-        loader._cache["other_domain"] = {"KEY2": "value2"}
+        _dir = str(loader._prompts_dir)
+        loader._cache[(_dir, "test_domain")] = {"KEY": "value"}
+        loader._cache[(_dir, "other_domain")] = {"KEY2": "value2"}
 
         loader.invalidate_cache()
         assert loader._cache == {}
@@ -243,12 +244,13 @@ class TestPromptLoaderCacheInvalidation:
         from modules.core.prompt_loader import PromptLoader
 
         loader = PromptLoader()
-        loader._cache["test_domain"] = {"KEY": "value"}
-        loader._cache["other_domain"] = {"KEY2": "value2"}
+        _dir = str(loader._prompts_dir)
+        loader._cache[(_dir, "test_domain")] = {"KEY": "value"}
+        loader._cache[(_dir, "other_domain")] = {"KEY2": "value2"}
 
         loader.invalidate_cache("test_domain")
-        assert "test_domain" not in loader._cache
-        assert "other_domain" in loader._cache
+        assert (_dir, "test_domain") not in loader._cache
+        assert (_dir, "other_domain") in loader._cache
 
 
 # ═══════════════════════════════════════════════════════════════
