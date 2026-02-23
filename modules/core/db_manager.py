@@ -474,7 +474,7 @@ class DBManager:
             )
         """)
         # [Hybrid-P2] FTS5 전문 검색 테이블 (vec_memory 공유 모드와 동기화)
-        self.conn.execute("""
+        self.cursor.execute("""
             CREATE VIRTUAL TABLE IF NOT EXISTS episode_fts
             USING fts5(
                 summary,
