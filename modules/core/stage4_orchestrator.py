@@ -605,9 +605,36 @@ JSON으로 출력:
                                         _cove_warnings = "; ".join(i.description[:40] for i in _cove_result.issues[:3])
                                         self.ctx.ui.log(f"   ℹ️ [CoVe] LLM 검증 경고 (비차단): {_cove_warnings}")
                                 except Exception as e:
-                                    logging.warning(f"[SilentPass:CoVe:LLM] {e!s:.100}")
+                                    logging.warning(f"[FailClosed:CoVe:LLM] {e!s:.100}")
+                                    self.ctx.ui.log("   🚨 [CoVe] LLM 검증 런타임 실패 → REJECT 전환")
+                                    director_feedback = (
+                                        "[CoVe 사후검증 런타임 실패]\n"
+                                        f"LLM verify runtime error: {type(e).__name__}: {e}"
+                                    )
+                                    previous_attempt = {
+                                        "score": 90,
+                                        "best_manuscript": final_manuscript,
+                                        "rejection_reason": director_feedback,
+                                        "state_updates": final_state_updates,
+                                    }
+                                    final_manuscript = None
+                                    final_title = None
+                                    continue
                         except Exception as e:
-                            logging.warning(f"[SilentPass:CoVe:Quick] {e!s:.100}")
+                            logging.warning(f"[FailClosed:CoVe:Quick] {e!s:.100}")
+                            self.ctx.ui.log("   🚨 [CoVe] Quick 검증 런타임 실패 → REJECT 전환")
+                            director_feedback = (
+                                f"[CoVe 사후검증 런타임 실패]\nquick_verify runtime error: {type(e).__name__}: {e}"
+                            )
+                            previous_attempt = {
+                                "score": 90,
+                                "best_manuscript": final_manuscript,
+                                "rejection_reason": director_feedback,
+                                "state_updates": final_state_updates,
+                            }
+                            final_manuscript = None
+                            final_title = None
+                            continue
 
                     break
                 director_feedback = _round_result.director_feedback

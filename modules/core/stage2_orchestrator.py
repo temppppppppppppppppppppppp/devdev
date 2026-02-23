@@ -251,23 +251,24 @@ class Stage2Orchestrator:
                 enriched_batch = await asyncio.gather(*enrichment_tasks, return_exceptions=True)
 
             # [안전성 패치] 실패한 항목에 대한 재시도 메커니즘
-            sanitized_batch = []
+            indexed_batch = []
             failed_indices = []
             for idx, item in enumerate(enriched_batch):
+                source_arc_idx = batch_start + idx
                 if isinstance(item, Exception):
-                    self.ctx.ui.log(f"⚠️ [Enrich] 병렬 농축 실패 (idx={batch_start + idx}): {item}")
+                    self.ctx.ui.log(f"⚠️ [Enrich] 병렬 농축 실패 (idx={source_arc_idx}): {item}")
                     self.ctx.audit_event(
-                        "enrich_error", "batch enrich failed", {"error": str(item), "arc_idx": batch_start + idx}
+                        "enrich_error", "batch enrich failed", {"error": str(item), "arc_idx": source_arc_idx}
                     )
-                    failed_indices.append(batch_start + idx)
+                    failed_indices.append(source_arc_idx)
                     continue
                 if not isinstance(item, dict):
-                    self.ctx.ui.log(f"⚠️ [Enrich] 잘못된 데이터 타입 (idx={batch_start + idx}): {type(item)}")
-                    failed_indices.append(batch_start + idx)
+                    self.ctx.ui.log(f"⚠️ [Enrich] 잘못된 데이터 타입 (idx={source_arc_idx}): {type(item)}")
+                    failed_indices.append(source_arc_idx)
                     continue
-                sanitized_batch.append(item)
+                indexed_batch.append((source_arc_idx, item))
 
-            enriched_batch = sanitized_batch
+            enriched_batch = indexed_batch
 
             # [V40.1 Critical Fix] 복구 시도
             if failed_indices and len(enriched_batch) < (batch_end - batch_start):
@@ -298,16 +299,12 @@ class Stage2Orchestrator:
                 # [V43 Fix] 원래 위치에 삽입하여 순서 보장
                 if recovery_map:
                     # [V70] compacted enriched_batch → 원본 인덱스 복원 (failed_indices 간격 반영)
-                    _success_indices = sorted(set(range(batch_start, batch_end)) - set(failed_indices))
-                    original_batch_data = {}
-                    for _si, _orig_idx in enumerate(_success_indices):
-                        if _si < len(enriched_batch) and enriched_batch[_si]:
-                            original_batch_data[_orig_idx] = enriched_batch[_si]
+                    original_batch_data = {orig_idx: arc_data for orig_idx, arc_data in enriched_batch if arc_data}
                     original_batch_data.update(recovery_map)
                     enriched_batch = []
                     for idx in range(batch_start, batch_end):
                         if idx in original_batch_data:
-                            enriched_batch.append(original_batch_data[idx])
+                            enriched_batch.append((idx, original_batch_data[idx]))
                         else:
                             self.ctx.ui.log(f"⚠️ [Recovery] idx={idx} 데이터 누락 - 해당 Arc 스킵")
                             self.ctx.audit_event("data_missing", "arc data not recovered", {"arc_idx": idx})
@@ -320,8 +317,8 @@ class Stage2Orchestrator:
             ### [B. 사후 용접 및 고유 명사 앵커링]
             with StageSpinner(2, f"Arc {batch_start + 1}~{batch_end} 인과율 용접"):
                 for i in range(len(enriched_batch) - 1):
-                    arc_a = enriched_batch[i]
-                    arc_b = enriched_batch[i + 1]
+                    arc_a_idx, arc_a = enriched_batch[i]
+                    arc_b_idx, arc_b = enriched_batch[i + 1]
                     try:
                         stitch_res = self.ctx.agents["analyst"].stitch_joints(
                             arc_a.get("joint_docs", {}),
@@ -329,13 +326,11 @@ class Stage2Orchestrator:
                             arc_b.get("content", {}).get("context", ""),
                         )
                     except Exception as stitch_err:
-                        self.ctx.ui.log(
-                            f"⚠️ [Analyst] Arc {batch_start + i + 1}-{batch_start + i + 2} 용접 실패: {stitch_err}"
-                        )
+                        self.ctx.ui.log(f"⚠️ [Analyst] Arc {arc_a_idx + 1}-{arc_b_idx + 1} 용접 실패: {stitch_err}")
                         self.ctx.audit_event(
                             "analyst_error",
                             "stitch_joints failed",
-                            {"arc_pair": f"{batch_start + i + 1}-{batch_start + i + 2}", "error": str(stitch_err)},
+                            {"arc_pair": f"{arc_a_idx + 1}-{arc_b_idx + 1}", "error": str(stitch_err)},
                         )
                         continue
 
@@ -347,12 +342,10 @@ class Stage2Orchestrator:
                         if stitch_res.get("entity_anchors"):
                             try:
                                 self.ctx.sys.lore.update_v20_assets({"Temporary_Anchors": stitch_res["entity_anchors"]})
-                                self.ctx.ui.log(
-                                    f"      ⚓ Arc {batch_start + i + 1}-{batch_start + i + 2} 고유 명사 앵커링 완료."
-                                )
+                                self.ctx.ui.log(f"      ⚓ Arc {arc_a_idx + 1}-{arc_b_idx + 1} 고유 명사 앵커링 완료.")
                             except Exception as lore_err:
                                 self.ctx.ui.log(f"⚠️ [Lore] 앵커링 실패: {lore_err}")
-                        self.ctx.ui.log(f"   🧶 Arc {batch_start + i + 1}-{batch_start + i + 2} 인과율 용접 완료.")
+                        self.ctx.ui.log(f"   🧶 Arc {arc_a_idx + 1}-{arc_b_idx + 1} 인과율 용접 완료.")
 
             # C. [순차 설계 단계]
             current_ep_start = 1 if not all_refined_arcs else all_refined_arcs[-1].get("ep_end", 0) + 1
@@ -360,8 +353,8 @@ class Stage2Orchestrator:
             # [V60.45] while 루프로 변경 - "다시 하기" 지원
             idx = 0
             while idx < len(enriched_batch):
-                enriched_block = enriched_batch[idx]
-                global_arc_no = batch_start + idx + 1
+                source_arc_idx, enriched_block = enriched_batch[idx]
+                global_arc_no = source_arc_idx + 1
                 vol_no = ((global_arc_no - 1) // VolumeSettings.ARCS_PER_VOLUME) + 1
                 default_vol_strategy = {"vol_no": vol_no, "strategy_doc": ""}
                 current_vol_strategy = next(
@@ -383,7 +376,7 @@ class Stage2Orchestrator:
                 _setup = self.preflight._preflight_state_setup(
                     all_refined_arcs=all_refined_arcs,
                     arcs_source=arcs_source,
-                    arc_idx=batch_start + idx,
+                    arc_idx=source_arc_idx,
                     lack_report=lack_report,
                     grand_obj=grand_obj,
                     global_arc_no=global_arc_no,

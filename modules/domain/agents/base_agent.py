@@ -196,6 +196,7 @@ class BaseAgent:
                 return None
 
             old_idx = cls._current_key_idx
+            prev_rotation_time = cls._last_rotation_time
             cls._current_key_idx = (cls._current_key_idx + 1) % len(cls._api_keys)
             cls._last_rotation_time = time.time()
             cls._rotation_count += 1  # [V62.3]
@@ -205,7 +206,16 @@ class BaseAgent:
             cls._key_rotation_pending = False
 
         # Client 생성은 lock 밖에서 (네트워크 IO 포함하므로)
-        new_client = genai.Client(api_key=cls._api_keys[cls._current_key_idx])
+        try:
+            new_client = genai.Client(api_key=cls._api_keys[cls._current_key_idx])
+        except Exception as create_err:
+            with cls._rotation_lock:
+                cls._current_key_idx = old_idx
+                cls._last_rotation_time = prev_rotation_time
+                cls._rotation_count = max(0, cls._rotation_count - 1)
+                cls._key_rotation_pending = False
+            logging.warning("[TF-15/P0] API key rotation client creation failed: %s", create_err)
+            return None
         logging.info(
             f"🔑 [V61.5] API 키 순환: Key {old_idx + 1} → Key {cls._current_key_idx + 1} (총 {len(cls._api_keys)}개)"
         )

@@ -1,10 +1,10 @@
 """Property-based tests for validation boundary conditions.
 
 Key invariants:
-1. prev_hud=None (and not resolvable) -> degraded=True, passed=True
+1. prev_hud=None (and not resolvable) -> degraded=True, passed=False (TF-15 P0-06 fail-closed)
 2. blueprint=None in context never raises AttributeError
 3. blueprint={} in context never raises
-4. Degraded result structure is always {"passed": True, "degraded": True, warnings: [non-empty]}
+4. Degraded result structure is always {"passed": False, "degraded": True, violations: [BLOCKING]}
 """
 
 from __future__ import annotations
@@ -70,9 +70,7 @@ _small_dict_st = st.dictionaries(
     current_ep=st.integers(min_value=2, max_value=100),
 )
 @settings(max_examples=300, suppress_health_check=[HealthCheck.too_slow])
-def test_continuity_no_prev_hud_always_degraded(
-    manuscript: str, current_ep: int
-) -> None:
+def test_continuity_no_prev_hud_always_degraded(manuscript: str, current_ep: int) -> None:
     """When no prev_hud is available, validate() returns degraded=True, passed=True."""
     validator = ContinuityValidator(context=None)
     # Empty context: no prev_hud key anywhere
@@ -84,11 +82,9 @@ def test_continuity_no_prev_hud_always_degraded(
         prev_hud=None,
     )
     assert isinstance(result, dict), "validate() must return a dict"
-    assert result.get("degraded") is True, (
-        f"Expected degraded=True when prev_hud absent, got: {result}"
-    )
-    assert result.get("passed") is True, (
-        f"Expected passed=True in degraded path, got: {result}"
+    assert result.get("degraded") is True, f"Expected degraded=True when prev_hud absent, got: {result}"
+    assert result.get("passed") is False, (
+        f"Expected passed=False in degraded path (TF-15 P0-06 fail-closed), got: {result}"
     )
 
 
@@ -98,9 +94,7 @@ def test_continuity_no_prev_hud_always_degraded(
     extra_ctx=_small_dict_st,
 )
 @settings(max_examples=200, suppress_health_check=[HealthCheck.too_slow])
-def test_continuity_no_prev_hud_degraded_structure(
-    manuscript: str, current_ep: int, extra_ctx: dict
-) -> None:
+def test_continuity_no_prev_hud_degraded_structure(manuscript: str, current_ep: int, extra_ctx: dict) -> None:
     """Degraded result always has passed=True and at least one warning."""
     validator = ContinuityValidator(context=None)
     result = validator.validate(
@@ -110,11 +104,9 @@ def test_continuity_no_prev_hud_degraded_structure(
         prev_hud=None,
     )
     if result.get("degraded"):
-        assert result["passed"] is True
-        warnings = result.get("warnings", [])
-        assert len(warnings) >= 1, (
-            "Degraded result must carry at least one warning"
-        )
+        assert result["passed"] is False, "Degraded must fail-closed (TF-15 P0-06)"
+        violations = result.get("violations", [])
+        assert len(violations) >= 1, "Degraded result must carry at least one BLOCKING violation"
 
 
 @given(
@@ -139,9 +131,7 @@ def test_continuity_ep1_always_passes(manuscript: str) -> None:
     current_ep=st.integers(min_value=2, max_value=100),
 )
 @settings(max_examples=200, suppress_health_check=[HealthCheck.too_slow])
-def test_continuity_validate_always_returns_dict(
-    manuscript: str, current_ep: int
-) -> None:
+def test_continuity_validate_always_returns_dict(manuscript: str, current_ep: int) -> None:
     """validate() never raises; always returns a dict."""
     validator = ContinuityValidator(context=None)
     result = validator.validate(
@@ -213,9 +203,7 @@ def test_scene_checks_blueprint_empty_dict_never_raises(manuscript: str) -> None
     ),
 )
 @settings(max_examples=200, suppress_health_check=[HealthCheck.too_slow])
-def test_scene_checks_arbitrary_blueprint_never_raises(
-    manuscript: str, blueprint_value: object
-) -> None:
+def test_scene_checks_arbitrary_blueprint_never_raises(manuscript: str, blueprint_value: object) -> None:
     """Scene checks never raise for any non-dict blueprint value."""
     host = _make_scene_checks_host()
     checker = BlockingValidatorSceneChecks(host)
@@ -233,18 +221,14 @@ def test_scene_checks_arbitrary_blueprint_never_raises(
     blueprint_value=st.one_of(st.none(), st.just({})),
 )
 @settings(max_examples=200, suppress_health_check=[HealthCheck.too_slow])
-def test_scene_checks_none_blueprint_required_scenes_passes(
-    manuscript: str, blueprint_value: object
-) -> None:
+def test_scene_checks_none_blueprint_required_scenes_passes(manuscript: str, blueprint_value: object) -> None:
     """With blueprint=None or {}, _check_required_scenes always returns passed=True."""
     host = _make_scene_checks_host()
     checker = BlockingValidatorSceneChecks(host)
     ctx = {"blueprint": blueprint_value, "mode": "MANUSCRIPT"}
 
     result = checker._check_required_scenes(manuscript, ctx)
-    assert result["passed"] is True, (
-        f"required_scenes must pass when blueprint has no scene_breakdown: {result}"
-    )
+    assert result["passed"] is True, f"required_scenes must pass when blueprint has no scene_breakdown: {result}"
 
 
 @given(
@@ -252,15 +236,11 @@ def test_scene_checks_none_blueprint_required_scenes_passes(
     blueprint_value=st.one_of(st.none(), st.just({})),
 )
 @settings(max_examples=200, suppress_health_check=[HealthCheck.too_slow])
-def test_scene_checks_none_blueprint_scene_completeness_passes(
-    manuscript: str, blueprint_value: object
-) -> None:
+def test_scene_checks_none_blueprint_scene_completeness_passes(manuscript: str, blueprint_value: object) -> None:
     """With blueprint=None or {}, _check_scene_completeness always passes."""
     host = _make_scene_checks_host()
     checker = BlockingValidatorSceneChecks(host)
     ctx = {"blueprint": blueprint_value, "mode": "MANUSCRIPT"}
 
     result = checker._check_scene_completeness(manuscript, ctx)
-    assert result["passed"] is True, (
-        f"scene_completeness must pass when blueprint has no scene_breakdown: {result}"
-    )
+    assert result["passed"] is True, f"scene_completeness must pass when blueprint has no scene_breakdown: {result}"

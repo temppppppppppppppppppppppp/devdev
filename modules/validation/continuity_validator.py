@@ -117,13 +117,20 @@ class ContinuityValidator:
             )
             return {
                 "tier": "CONTINUITY",
-                "passed": True,
-                "score": 0.5,
+                "passed": False,
+                "score": 0.0,
                 "degraded": True,
-                "violations": [],
+                "violations": [
+                    {
+                        "type": "prev_hud_missing",
+                        "severity": "BLOCKING",
+                        "reason": "prev_hud missing; continuity checks cannot be trusted",
+                        "fix_suggestion": "inject prev_hud into validation_context before continuity validation",
+                    }
+                ],
                 "warnings": ["prev_hud 누락으로 연속성 검증 DEGRADED"],
-                "message": "prev_hud 누락 — 연속성 검증 DEGRADED",
-                "violation_count": 0,
+                "message": "prev_hud missing - continuity validation failed (degraded)",
+                "violation_count": 1,
                 "warning_count": 1,
             }
 
