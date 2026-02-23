@@ -417,6 +417,45 @@ class CharacterVoiceTracker:
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
+    def save_to_db(self, db) -> None:
+        """[DB-Eff-P1] character_voice 테이블에 저장."""
+        if not db or not hasattr(db, "conn") or db.conn is None:
+            return
+
+        lock = getattr(db, "_lock", None)
+
+        def _save() -> None:
+            for name, profile in self.profiles.items():
+                profile_data = {
+                    "name": name,
+                    "style": profile.style.value,
+                    "pattern": {
+                        "endings": profile.pattern.endings,
+                        "honorifics": profile.pattern.honorifics,
+                        "exclamations": profile.pattern.exclamations,
+                        "filler_words": profile.pattern.filler_words,
+                        "vocabulary_level": profile.pattern.vocabulary_level,
+                        "sentence_length": profile.pattern.sentence_length,
+                        "characteristic_phrases": profile.pattern.characteristic_phrases,
+                    },
+                    "sample_dialogues": profile.sample_dialogues,
+                    "dialogue_count": profile.dialogue_count,
+                    "consistency_score": profile.consistency_score,
+                    "last_seen_episode": profile.last_seen_episode,
+                }
+                db.conn.execute(
+                    """INSERT OR REPLACE INTO character_voice(npc_name, profile_data, updated_at)
+                       VALUES (?, ?, datetime('now'))""",
+                    (name, json.dumps(profile_data, ensure_ascii=False)),
+                )
+            db.conn.commit()
+
+        if lock:
+            with lock:
+                _save()
+        else:
+            _save()
+
     def load_from_json(self, filepath: str):
         """프로필 로드"""
         try:
@@ -453,6 +492,72 @@ class CharacterVoiceTracker:
             pass
         except Exception as e:
             logging.warning(f"[CharacterVoiceTracker] Load error: {e}")
+
+    def load_from_db(self, db) -> int:
+        """[DB-Eff-P1] character_voice 테이블에서 로드. 로드된 수 반환."""
+        if not db or not hasattr(db, "conn") or db.conn is None:
+            return 0
+
+        lock = getattr(db, "_lock", None)
+
+        def _load_rows():
+            return db.conn.execute(
+                "SELECT npc_name, profile_data FROM character_voice"
+            ).fetchall()
+
+        try:
+            if lock:
+                with lock:
+                    rows = _load_rows()
+            else:
+                rows = _load_rows()
+        except Exception as e:
+            logging.warning(f"[CharacterVoiceTracker] DB load error: {e}")
+            return 0
+
+        loaded_profiles: dict[str, CharacterVoiceProfile] = {}
+        for row in rows:
+            if isinstance(row, tuple):
+                name, raw_data = row
+            else:
+                name = row["npc_name"]
+                raw_data = row["profile_data"]
+
+            try:
+                profile_data = json.loads(raw_data) if raw_data else {}
+                if not isinstance(profile_data, dict):
+                    continue
+            except Exception:
+                continue
+
+            pattern_data = profile_data.get("pattern", {})
+            pattern = VoicePattern(
+                endings=pattern_data.get("endings", []),
+                honorifics=pattern_data.get("honorifics", True),
+                exclamations=pattern_data.get("exclamations", []),
+                filler_words=pattern_data.get("filler_words", []),
+                vocabulary_level=pattern_data.get("vocabulary_level", "normal"),
+                sentence_length=pattern_data.get("sentence_length", "normal"),
+                characteristic_phrases=pattern_data.get("characteristic_phrases", []),
+            )
+
+            try:
+                style = VoiceStyle(profile_data.get("style", "informal"))
+            except ValueError:
+                style = VoiceStyle.INFORMAL
+
+            loaded_profiles[name] = CharacterVoiceProfile(
+                name=name,
+                style=style,
+                pattern=pattern,
+                sample_dialogues=profile_data.get("sample_dialogues", []),
+                dialogue_count=profile_data.get("dialogue_count", 0),
+                consistency_score=profile_data.get("consistency_score", 1.0),
+                last_seen_episode=profile_data.get("last_seen_episode", 0),
+            )
+
+        self.profiles = loaded_profiles
+        return len(loaded_profiles)
 
     def clear(self) -> None:
         """모든 프로필 초기화"""

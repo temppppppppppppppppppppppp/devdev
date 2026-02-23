@@ -193,6 +193,10 @@ class DBManager:
         """)
         self.conn.commit()
 
+        # [DB-Eff-P3] anchors 테이블 SSOT 정책:
+        # 허용 키: "bible", "arcs", "genre_info", "sys_caches"
+        # 금지: character_voice, foreshadow, failure_learning → 전용 테이블 사용
+        # 추가 키 등록 시 이 목록에 명시 후 진행
         # anchors 테이블: 'key'가 유니크해야 REPLACE가 작동함
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS anchors (
@@ -336,6 +340,7 @@ class DBManager:
                 recovered_ep INTEGER
             )
         """)
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_seeds_status ON seeds(status)")
 
         # 9. [NEW] 로어 백과사전 (Encyclopedia)
         self.cursor.execute("""
@@ -348,6 +353,7 @@ class DBManager:
                 UNIQUE(item)
             )
         """)
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_encyclopedia_category ON encyclopedia(category)")
 
         # 10. [V49.5] 화별 Bible (에피소드별 설정 변화 추적)
         # [V60.82] causal_links, karma_matrix, knowledge_map 컬럼 추가
@@ -501,6 +507,31 @@ class DBManager:
                 created_at TEXT DEFAULT (datetime('now'))
             )
         """)
+        # [DB-Eff-P1] character_voice 프로필 테이블
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS character_voice (
+                npc_name TEXT PRIMARY KEY,
+                profile_data TEXT NOT NULL,
+                updated_at TEXT DEFAULT (datetime('now'))
+            )
+        """)
+
+        # [DB-Eff-P1] foreshadow 복선 테이블
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS foreshadow (
+                seed_id TEXT PRIMARY KEY,
+                category TEXT,
+                content TEXT NOT NULL,
+                status TEXT DEFAULT 'planted',
+                planted_ep INTEGER,
+                resolved_ep INTEGER,
+                data TEXT,
+                updated_at TEXT DEFAULT (datetime('now'))
+            )
+        """)
+        self.cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_foreshadow_status ON foreshadow(status)"
+        )
 
         self.conn.commit()
         # [DB-MERGE] 기존 vec_memory.db 1회성 마이그레이션

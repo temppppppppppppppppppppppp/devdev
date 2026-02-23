@@ -416,6 +416,52 @@ class ForeshadowTracker:
         with open(filepath, "w", encoding="utf-8") as file:
             json.dump(data, file, ensure_ascii=False, indent=2)
 
+    def save_to_db(self, db) -> None:
+        """[DB-Eff-P1] foreshadow 테이블에 저장."""
+        if not db or not hasattr(db, "conn") or db.conn is None:
+            return
+
+        lock = getattr(db, "_lock", None)
+
+        def _save() -> None:
+            db.conn.execute("DELETE FROM foreshadow")
+            for key, f in self.hooks.items():
+                payload = {
+                    "seed_id": key,
+                    "hook": f.hook,
+                    "category": f.category.value,
+                    "planted_ep": f.planted_ep,
+                    "deadline_ep": f.deadline_ep,
+                    "status": f.status.value,
+                    "hint_episodes": f.hint_episodes,
+                    "payoff_ep": f.payoff_ep,
+                    "importance": f.importance,
+                    "description": f.description,
+                    "created_at": f.created_at,
+                    "updated_at": f.updated_at,
+                }
+                db.conn.execute(
+                    """INSERT OR REPLACE INTO foreshadow
+                       (seed_id, category, content, status, planted_ep, resolved_ep, data, updated_at)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))""",
+                    (
+                        key,
+                        f.category.value,
+                        f.hook,
+                        f.status.value,
+                        f.planted_ep,
+                        f.payoff_ep,
+                        json.dumps(payload, ensure_ascii=False),
+                    ),
+                )
+            db.conn.commit()
+
+        if lock:
+            with lock:
+                _save()
+        else:
+            _save()
+
     def load_from_json(self, filepath: str):
         """로드"""
         try:
@@ -470,6 +516,91 @@ class ForeshadowTracker:
             pass
         except Exception as e:
             logging.warning(f"[ForeshadowTracker] Load error: {e}")
+
+    def load_from_db(self, db) -> int:
+        """[DB-Eff-P1] foreshadow 테이블에서 로드. 로드된 수 반환."""
+        if not db or not hasattr(db, "conn") or db.conn is None:
+            return 0
+
+        lock = getattr(db, "_lock", None)
+
+        def _load_rows():
+            return db.conn.execute(
+                "SELECT seed_id, category, content, status, planted_ep, resolved_ep, data FROM foreshadow"
+            ).fetchall()
+
+        try:
+            if lock:
+                with lock:
+                    rows = _load_rows()
+            else:
+                rows = _load_rows()
+        except Exception as e:
+            logging.warning(f"[ForeshadowTracker] DB load error: {e}")
+            return 0
+
+        self.hooks = {}
+        self.episode_plants = {}
+        self.episode_payoffs = {}
+
+        for row in rows:
+            if isinstance(row, tuple):
+                seed_id, category_raw, content, status_raw, planted_ep, resolved_ep, raw_data = row
+            else:
+                seed_id = row["seed_id"]
+                category_raw = row["category"]
+                content = row["content"]
+                status_raw = row["status"]
+                planted_ep = row["planted_ep"]
+                resolved_ep = row["resolved_ep"]
+                raw_data = row["data"]
+
+            payload = {}
+            if raw_data:
+                try:
+                    loaded = json.loads(raw_data)
+                    if isinstance(loaded, dict):
+                        payload = loaded
+                except Exception:
+                    payload = {}
+
+            try:
+                category = ForeshadowCategory(payload.get("category", category_raw or "other"))
+            except ValueError:
+                category = ForeshadowCategory.OTHER
+
+            _status_text = str(payload.get("status", status_raw or "planted")).lower()
+            _status_map = {
+                "triggered": ForeshadowStatus.HINTED,
+                "resolved": ForeshadowStatus.PAYOFF,
+            }
+            try:
+                status = _status_map.get(_status_text, ForeshadowStatus(_status_text))
+            except ValueError:
+                status = ForeshadowStatus.PLANTED
+
+            hook_text = payload.get("hook", content or "")
+            fs = Foreshadow(
+                hook=hook_text,
+                category=category,
+                planted_ep=int(payload.get("planted_ep", planted_ep or 0)),
+                deadline_ep=int(payload.get("deadline_ep", (planted_ep or 0) + 20)),
+                status=status,
+                hint_episodes=payload.get("hint_episodes", []),
+                payoff_ep=payload.get("payoff_ep", resolved_ep),
+                importance=int(payload.get("importance", 5)),
+                description=payload.get("description", ""),
+                created_at=payload.get("created_at", ""),
+                updated_at=payload.get("updated_at", ""),
+            )
+
+            key = str(seed_id or self._normalize_hook(hook_text))
+            self.hooks[key] = fs
+            self.episode_plants.setdefault(fs.planted_ep, []).append(key)
+            if fs.payoff_ep is not None:
+                self.episode_payoffs.setdefault(int(fs.payoff_ep), []).append(key)
+
+        return len(self.hooks)
 
     def load_from_arcs(self, arcs_data) -> int:
         """Arc 데이터에서 복선(foreshadowings) 로드.

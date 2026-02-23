@@ -1638,33 +1638,143 @@ class SovereignApp:
 
                     # V51.4 실패 학습 시스템
                     self.failure_learner = _v50["FailureLearner"]()
-                    # 프로젝트별 실패 기록 로드 시도
-                    failure_log_path = os.path.join(
-                        self._PROJECTS_DIR, self.current_project.name, "logs", "failure_learning.json"
-                    )
-                    if os.path.exists(failure_log_path):
-                        self.failure_learner.load_from_json(failure_log_path)
-                        self.ui.log(f"   📚 [V51.4] 실패 기록 {len(self.failure_learner.records)}건 로드")
+                    # [DB-Eff-P2] DB 우선 로드, 폴백: JSON 1회 마이그레이션
+                    _fl_loaded = False
+                    try:
+                        _fl_row = self.current_project.db.conn.execute(
+                            "SELECT description FROM reflexion_memory WHERE pattern_type = ?",
+                            ("failure_learner_snapshot",),
+                        ).fetchone()
+                        if _fl_row and _fl_row[0]:
+                            from collections import defaultdict as _defaultdict
+
+                            from modules.core.failure_learning import (
+                                FailureCategory as _FailureCategory,
+                            )
+                            from modules.core.failure_learning import (
+                                FailureRecord as _FailureRecord,
+                            )
+
+                            _snapshot = json.loads(_fl_row[0])
+                            self.failure_learner.records = []
+                            self.failure_learner.category_counts = _defaultdict(int)
+                            self.failure_learner.stage_counts = {
+                                2: _defaultdict(int),
+                                3: _defaultdict(int),
+                                4: _defaultdict(int),
+                            }
+                            self.failure_learner.recent_failures = {2: [], 3: [], 4: []}
+
+                            for _r in _snapshot.get("records", []):
+                                try:
+                                    _category = _FailureCategory(_r.get("category", "unknown"))
+                                except ValueError:
+                                    _category = _FailureCategory.UNKNOWN
+
+                                _stage = int(_r.get("stage", 4))
+                                _record = _FailureRecord(
+                                    category=_category,
+                                    stage=_stage,
+                                    episode=int(_r.get("episode", 0)),
+                                    arc=int(_r.get("arc", 0)),
+                                    reason=str(_r.get("reason", "")),
+                                    details=_r.get("details", {}),
+                                    timestamp=str(_r.get("timestamp", "")),
+                                )
+                                self.failure_learner.records.append(_record)
+                                self.failure_learner.category_counts[_category] += 1
+                                self.failure_learner.stage_counts.setdefault(_stage, _defaultdict(int))[_category] += 1
+                                self.failure_learner.recent_failures.setdefault(_stage, []).append(_record)
+                                if len(self.failure_learner.recent_failures[_stage]) > 10:
+                                    self.failure_learner.recent_failures[_stage].pop(0)
+                            _fl_loaded = bool(self.failure_learner.records)
+                    except Exception as _fl_db_err:
+                        logging.debug("[DB-Eff] failure_learner DB load 실패: %s", _fl_db_err)
+
+                    if _fl_loaded:
+                        self.ui.log(f"   📚 [V51.4] 실패 기록 {len(self.failure_learner.records)}건 로드(DB)")
+                    else:
+                        failure_log_path = os.path.join(
+                            self._PROJECTS_DIR, self.current_project.name, "logs", "failure_learning.json"
+                        )
+                        if os.path.exists(failure_log_path):
+                            self.failure_learner.load_from_json(failure_log_path)
+                            if self.failure_learner.records:
+                                _snapshot = {
+                                    "records": [
+                                        {
+                                            "category": r.category.value,
+                                            "stage": r.stage,
+                                            "episode": r.episode,
+                                            "arc": r.arc,
+                                            "reason": r.reason,
+                                            "details": r.details,
+                                            "timestamp": r.timestamp,
+                                        }
+                                        for r in self.failure_learner.records
+                                    ],
+                                    "stats": self.failure_learner.get_failure_stats(),
+                                }
+                                _ts = time.strftime("%Y-%m-%d %H:%M:%S")
+                                _first_ep = min((int(r.episode) for r in self.failure_learner.records), default=0)
+                                _last_ep = max((int(r.episode) for r in self.failure_learner.records), default=0)
+                                self.current_project.db.conn.execute(
+                                    """INSERT INTO reflexion_memory
+                                       (pattern_type, description, frequency, solution, first_seen, last_seen, first_ep, last_ep)
+                                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                                       ON CONFLICT(pattern_type) DO UPDATE SET
+                                         description=excluded.description,
+                                         frequency=excluded.frequency,
+                                         solution=excluded.solution,
+                                         last_seen=excluded.last_seen,
+                                         first_ep=excluded.first_ep,
+                                         last_ep=excluded.last_ep""",
+                                    (
+                                        "failure_learner_snapshot",
+                                        json.dumps(_snapshot, ensure_ascii=False),
+                                        len(self.failure_learner.records),
+                                        "failure_learner_json_migrated",
+                                        _ts,
+                                        _ts,
+                                        _first_ep,
+                                        _last_ep,
+                                    ),
+                                )
+                                self.current_project.db.conn.commit()
+                                self.ui.log("   📚 [DB-Eff] failure_learning JSON→DB 마이그레이션 완료")
 
                     # V51.5 캐릭터 음성 추적
                     self.character_voice = _v50["CharacterVoiceTracker"]()
-                    voice_log_path = os.path.join(
-                        self._PROJECTS_DIR, self.current_project.name, "logs", "character_voice.json"
-                    )
-                    if os.path.exists(voice_log_path):
-                        self.character_voice.load_from_json(voice_log_path)
-                        self.ui.log(f"   🎭 [V51.5] 캐릭터 음성 {len(self.character_voice.profiles)}명 로드")
+                    # [DB-Eff-P1] DB 우선 로드, 폴백: 파일
+                    _cv_db_count = self.character_voice.load_from_db(self.current_project.db)
+                    if _cv_db_count == 0:
+                        voice_log_path = os.path.join(
+                            self._PROJECTS_DIR, self.current_project.name, "logs", "character_voice.json"
+                        )
+                        if os.path.exists(voice_log_path):
+                            self.character_voice.load_from_json(voice_log_path)
+                            self.character_voice.save_to_db(self.current_project.db)
+                            self.ui.log("   🎭 [DB-Eff] character_voice JSON→DB 마이그레이션 완료")
+                    else:
+                        self.ui.log(f"   🎭 [V51.5] 캐릭터 음성 {len(self.character_voice.profiles)}명 로드(DB)")
 
                     # V51.6 복선 추적
                     self.foreshadow_tracker = _v50["ForeshadowTracker"]()
-                    foreshadow_log_path = os.path.join(
-                        self._PROJECTS_DIR, self.current_project.name, "logs", "foreshadow.json"
-                    )
-                    if os.path.exists(foreshadow_log_path):
-                        self.foreshadow_tracker.load_from_json(foreshadow_log_path)
+                    # [DB-Eff-P1] DB 우선 로드, 폴백: 파일
+                    _ft_db_count = self.foreshadow_tracker.load_from_db(self.current_project.db)
+                    if _ft_db_count == 0:
+                        foreshadow_log_path = os.path.join(
+                            self._PROJECTS_DIR, self.current_project.name, "logs", "foreshadow.json"
+                        )
+                        if os.path.exists(foreshadow_log_path):
+                            self.foreshadow_tracker.load_from_json(foreshadow_log_path)
+                            self.foreshadow_tracker.save_to_db(self.current_project.db)
+                            self.ui.log("   🔮 [DB-Eff] foreshadow JSON→DB 마이그레이션 완료")
+                    else:
                         stats = self.foreshadow_tracker.get_stats()
                         self.ui.log(
-                            f"   🔮 [V51.6] 복선 {stats['total']}개 로드 (활성: {stats['active']}, 회수율: {stats['payoff_rate']}%)"
+                            f"   🔮 [V51.6] 복선 {stats['total']}개 로드(DB) "
+                            f"(활성: {stats['active']}, 회수율: {stats['payoff_rate']}%)"
                         )
 
                     # [V66] SemanticPlotGuard 활성화
@@ -2163,22 +2273,57 @@ class SovereignApp:
         # [V51.4] 실패 학습 기록 저장
         if V50_MODULES_AVAILABLE and self.failure_learner and self.current_project:
             try:
-                logs_dir = os.path.join(self._PROJECTS_DIR, self.current_project.name, "logs")
-                os.makedirs(logs_dir, exist_ok=True)
-                failure_log_path = os.path.join(logs_dir, "failure_learning.json")
-                self.failure_learner.save_to_json(failure_log_path)
+                # [DB-Eff-P2] failure_learning JSON 저장 제거 → DB(reflexion_memory) 저장
+                _snapshot = {
+                    "records": [
+                        {
+                            "category": r.category.value,
+                            "stage": r.stage,
+                            "episode": r.episode,
+                            "arc": r.arc,
+                            "reason": r.reason,
+                            "details": r.details,
+                            "timestamp": r.timestamp,
+                        }
+                        for r in self.failure_learner.records
+                    ],
+                    "stats": self.failure_learner.get_failure_stats(),
+                }
+                _ts = time.strftime("%Y-%m-%d %H:%M:%S")
+                _first_ep = min((int(r.episode) for r in self.failure_learner.records), default=0)
+                _last_ep = max((int(r.episode) for r in self.failure_learner.records), default=0)
+                self.current_project.db.conn.execute(
+                    """INSERT INTO reflexion_memory
+                       (pattern_type, description, frequency, solution, first_seen, last_seen, first_ep, last_ep)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                       ON CONFLICT(pattern_type) DO UPDATE SET
+                         description=excluded.description,
+                         frequency=excluded.frequency,
+                         solution=excluded.solution,
+                         last_seen=excluded.last_seen,
+                         first_ep=excluded.first_ep,
+                         last_ep=excluded.last_ep""",
+                    (
+                        "failure_learner_snapshot",
+                        json.dumps(_snapshot, ensure_ascii=False),
+                        len(self.failure_learner.records),
+                        "failure_learner_snapshot",
+                        _ts,
+                        _ts,
+                        _first_ep,
+                        _last_ep,
+                    ),
+                )
+                self.current_project.db.conn.commit()
                 stats = self.failure_learner.get_failure_stats()
-                print(f"📚 [V51.4] 실패 학습 기록 저장: {stats['total_failures']}건", flush=True)
+                print(f"📚 [V51.4] 실패 학습 기록 저장(DB): {stats['total_failures']}건", flush=True)
             except Exception as fl_err:
                 print(f"⚠️ [V51.4] 실패 기록 저장 실패: {fl_err}", flush=True)
 
         # [V51.5] 캐릭터 음성 프로필 저장
         if V50_MODULES_AVAILABLE and self.character_voice and self.current_project:
             try:
-                logs_dir = os.path.join(self._PROJECTS_DIR, self.current_project.name, "logs")
-                os.makedirs(logs_dir, exist_ok=True)
-                voice_log_path = os.path.join(logs_dir, "character_voice.json")
-                self.character_voice.save_to_json(voice_log_path)
+                self.character_voice.save_to_db(self.current_project.db)
                 print(f"🎭 [V51.5] 캐릭터 음성 저장: {len(self.character_voice.profiles)}명", flush=True)
             except Exception as cv_err:
                 print(f"⚠️ [V51.5] 캐릭터 음성 저장 실패: {cv_err}", flush=True)
@@ -2186,10 +2331,7 @@ class SovereignApp:
         # [V51.6] 복선 추적 저장
         if V50_MODULES_AVAILABLE and self.foreshadow_tracker and self.current_project:
             try:
-                logs_dir = os.path.join(self._PROJECTS_DIR, self.current_project.name, "logs")
-                os.makedirs(logs_dir, exist_ok=True)
-                foreshadow_log_path = os.path.join(logs_dir, "foreshadow.json")
-                self.foreshadow_tracker.save_to_json(foreshadow_log_path)
+                self.foreshadow_tracker.save_to_db(self.current_project.db)
                 stats = self.foreshadow_tracker.get_stats()
                 print(f"🔮 [V51.6] 복선 저장: {stats['total']}개 (회수율: {stats['payoff_rate']}%)", flush=True)
             except Exception as fs_err:
@@ -2847,14 +2989,9 @@ class SovereignApp:
                 _ft = getattr(self, "foreshadow_tracker", None)
                 if _ft is not None and hasattr(_ft, "clear"):
                     _ft.clear()
-                    if self.current_project:
-                        import os as _os
-
-                        _ft_logs_dir = _os.path.join(self._PROJECTS_DIR, self.current_project.name, "logs")
-                        _os.makedirs(_ft_logs_dir, exist_ok=True)
-                        _ft_path = _os.path.join(_ft_logs_dir, "foreshadow.json")
-                        _ft.save_to_json(_ft_path)
-                        logging.info(f"[TF7-P1-08] ForeshadowTracker 초기화 및 저장 완료: {_ft_path}")
+                    if self.current_project and hasattr(self.current_project, "db"):
+                        _ft.save_to_db(self.current_project.db)
+                        logging.info("[TF7-P1-08] ForeshadowTracker 초기화 및 DB 저장 완료")
             except Exception as _ft_err:
                 logging.warning(f"[TF7-P1-08] ForeshadowTracker rollback sync 실패 (비치명): {_ft_err}")
 
