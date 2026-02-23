@@ -213,8 +213,8 @@ class ArcEnsembleGenerator(BaseAgent):
         # [Phase 3-Obs] 병렬 구간 소요 시간 기록
         try:
             logging.warning(f"[PerfTimer:ArcEnsemble] arc_{arc_no}_ensemble={time.monotonic() - _tp_t0:.2f}s")
-        except Exception:
-            pass
+        except Exception as _e:
+            logging.debug("[ArcEnsemble] PerfTimer 기록 실패 (무시): %s", _e)
 
         if not candidates:
             return None, []

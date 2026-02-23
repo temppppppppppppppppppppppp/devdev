@@ -35,7 +35,6 @@ class Stage4InterviewRound:
         continuity_validator = round_ctx.continuity_validator
         next_ep = round_ctx.next_ep
         blueprint = round_ctx.blueprint
-        arc_data = round_ctx.arc_data
         arc_pos = round_ctx.arc_pos
         total_ep_in_arc = round_ctx.total_ep_in_arc
         arc_tactical = round_ctx.arc_tactical
@@ -496,8 +495,8 @@ class Stage4InterviewRound:
         _sc5_perf_key = f"sc_director_ep{next_ep}_retrieval"
         try:
             self.ctx.perf_timer.start(_sc5_perf_key)
-        except Exception:
-            pass
+        except Exception as _e:
+            logging.debug("[InterviewRound] perf_timer.start 실패 (무시): %s", _e)
         try:
             _advisor = getattr(self.ctx, "context_advisor", None)
             _vec_mem = getattr(self.ctx, "memory", None)
@@ -1093,5 +1092,5 @@ class Stage4InterviewRound:
                 prev_score=prev_score,
                 patch_fallback=patch_fallback,
             )
-        except Exception:
-            pass
+        except Exception as _e:
+            logging.debug("[InterviewRound] PassRateMonitor 기록 실패 (무시): %s", _e)

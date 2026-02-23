@@ -417,8 +417,8 @@ JSON으로 출력:
                     _diversity_cot = self.ctx.diversity_engine.get_writer_injection()
                     if _diversity_cot:
                         _effective_anti_trope = f"{anti_trope_prompt}\n\n{_diversity_cot}"
-                except Exception:  # [V64.P4] OPTIONAL: diversity injection
-                    pass
+                except Exception as _e:  # [V64.P4] OPTIONAL: diversity injection
+                    logging.debug("[Stage4] diversity_engine 주입 실패 (무시): %s", _e)
 
             intro_dna = "CYNICAL"
 
@@ -522,8 +522,8 @@ JSON으로 출력:
                         _alerts = _prm.check_alerts()
                         for _alert in _alerts:
                             logging.warning(f"[PassRate 경보] {_alert}")
-                    except Exception:
-                        pass
+                    except Exception as _e:
+                        logging.debug("[Stage4] PassRateMonitor.check_alerts 실패 (무시): %s", _e)
 
         # [V62.3] Stage 4 루프 종료
         self.post_processor.run_post_episode_tasks()

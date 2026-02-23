@@ -569,8 +569,8 @@ class AdaptiveRetryManager:
                 stage = self.AGENT_STAGE_MAP.get(agent.lower(), 4)
                 reason = error_info.get("reason", error_info.get("message", "unknown"))
                 self.failure_learner.record_failure(stage=stage, episode=ep_num, reason=str(reason), details=error_info)
-            except Exception:
-                pass  # FailureLearner 연동 실패는 무시
+            except Exception as _e:
+                logging.debug("[AdaptiveRetry] FailureLearner.record_failure 실패 (무시): %s", _e)
 
         return error_type
 
@@ -720,8 +720,8 @@ class AdaptiveRetryManager:
                 if learned_prompt:
                     lines.append("")
                     lines.append(learned_prompt)
-            except Exception:
-                pass  # FailureLearner 연동 실패는 무시
+            except Exception as _e:
+                logging.debug("[AdaptiveRetry] FailureLearner.generate_constraint_prompt 실패 (무시): %s", _e)
 
         return "\n".join(lines)
 
@@ -826,8 +826,8 @@ def retry_with_feedback(
         if logger:
             try:
                 logger(msg)
-            except Exception:
-                pass
+            except Exception as _e:
+                logging.debug("[retry_with_feedback] 외부 logger 호출 실패 (무시): %s", _e)
 
     for attempt in range(max_attempts):
         try:
