@@ -233,11 +233,12 @@ class Stage2PreflightAnalysis:
                 )
             except Exception as weaver_err:
                 self.ctx.ui.log(f"⚠️ [Weaver] 욕망 드라이브 생성 실패: {weaver_err}")
-                self.ctx.audit_event(
-                    "weaver_error",
-                    "generate_arc_drive failed",
-                    {"arc_no": global_arc_no, "error": str(weaver_err)},
-                )
+                if callable(getattr(self.ctx, "audit_event", None)):
+                    self.ctx.audit_event(
+                        "weaver_error",
+                        "generate_arc_drive failed",
+                        {"arc_no": global_arc_no, "error": str(weaver_err)},
+                    )
                 return {"desire_vector": "생성 실패", "status": "error"}
             finally:
                 try:
@@ -361,7 +362,8 @@ class Stage2PreflightAnalysis:
                         self.ctx.ui.log(
                             f"      ⚠️ [V64.P4] extract_cumulative_state 실패 (NPC 검증 약화): {str(e)[:80]}"
                         )
-                        self.ctx.audit_event("critical_state_extraction_failed", str(e)[:200])
+                        if callable(getattr(self.ctx, "audit_event", None)):
+                            self.ctx.audit_event("critical_state_extraction_failed", str(e)[:200])
 
                 _resolved = getattr(self.ctx.state_tracker, "resolved_plots", []) if self.ctx.state_tracker else []
                 compiled_constraints = self.ctx.constraint_compiler.compile(
@@ -375,9 +377,11 @@ class Stage2PreflightAnalysis:
                     try:
                         self.ctx.semantic_plot_guard.index_resolved_plots(_resolved)
                     except Exception as e:  # [V64.P4] SPG init — OPTIONAL
-                        self.ctx.audit_event("semantic_plot_guard_index_failed", str(e)[:100])
+                        if callable(getattr(self.ctx, "audit_event", None)):
+                            self.ctx.audit_event("semantic_plot_guard_index_failed", str(e)[:100])
             except Exception as cc_err:
-                self.ctx.audit_event("v60_11_constraint_compiler_error", str(cc_err)[:100])
+                if callable(getattr(self.ctx, "audit_event", None)):
+                    self.ctx.audit_event("v60_11_constraint_compiler_error", str(cc_err)[:100])
 
         # [V60.77] FourPhase-Director 대면 루프
         attempt = 0
@@ -459,7 +463,8 @@ class Stage2PreflightAnalysis:
                 if attempt == 0:
                     self.ctx.ui.log("      ⚡ [V60.25] Stage 2 Optimizer 프롬프트 주입 완료")
             except Exception as opt_err:
-                self.ctx.audit_event("v60_25_optimizer_error", str(opt_err)[:100])
+                if callable(getattr(self.ctx, "audit_event", None)):
+                    self.ctx.audit_event("v60_25_optimizer_error", str(opt_err)[:100])
 
         # [V60.21] Focus Mode
         is_retry = attempt > 0 and current_feedback
@@ -526,9 +531,10 @@ class Stage2PreflightAnalysis:
                             f"      🔄 [V60.9] Stage 3→2 역방향 피드백 주입 ({len(arc_stage3_failures)}회 실패 기반)"
                         )
         except Exception as rf32_err:
-            self.ctx.audit_event(
-                "v60_9_stage3to2_error", "stage 3→2 reverse feedback failed", {"error": str(rf32_err)[:100]}
-            )
+            if callable(getattr(self.ctx, "audit_event", None)):
+                self.ctx.audit_event(
+                    "v60_9_stage3to2_error", "stage 3→2 reverse feedback failed", {"error": str(rf32_err)[:100]}
+                )
 
         # [Item4] Stage 4→2 역방향 피드백 주입 (이전 Arc 집필 난이도 기반)
         try:
@@ -544,11 +550,12 @@ class Stage2PreflightAnalysis:
                     stage4_warning = "\n\n🔄 [Item4 Stage 4→2 역방향 피드백]\n"
                     stage4_warning += f"{reverse_feedback_4to2}\n"
                     enhanced_context = stage4_warning + "\n" + enhanced_context
-                    self.ctx.audit_event(
-                        "s4_to_s2_feedback",
-                        "Arc difficulty feedback injected",
-                        {"arc_no": global_arc_no, "prev_difficulty": prev_difficulty},
-                    )
+                    if callable(getattr(self.ctx, "audit_event", None)):
+                        self.ctx.audit_event(
+                            "s4_to_s2_feedback",
+                            "Arc difficulty feedback injected",
+                            {"arc_no": global_arc_no, "prev_difficulty": prev_difficulty},
+                        )
                     self.ctx.ui.log(
                         f"      🔄 [Item4] Stage 4→2 역방향 피드백 주입 (이전 Arc 난이도: {prev_difficulty.get('difficulty')})"
                     )
@@ -1024,23 +1031,25 @@ class Stage2PreflightAnalysis:
                     director_feedback_for_fourphase = "FourPhase 내부 검증 실패. 구조적 문제 해결 필요."
             except Exception as fp_err:
                 logging.warning(f"❌ [V60.77] FourPhase 오류: {str(fp_err)[:80]}")
-                self.ctx.audit_event("four_phase_error", str(fp_err)[:100], {"arc_no": global_arc_no})
+                if callable(getattr(self.ctx, "audit_event", None)):
+                    self.ctx.audit_event("four_phase_error", str(fp_err)[:100], {"arc_no": global_arc_no})
                 director_feedback_for_fourphase = f"FourPhase 오류 발생: {str(fp_err)[:100]}"
 
         if _was_patch:
-            try:
-                self.ctx.audit_event(
-                    "stage2_patch_mode",
-                    "stage2 four_phase patch mode attempted",
-                    {
-                        "arc_no": global_arc_no,
-                        "attempt": attempt + 1,
-                        "prev_score": _prev_score,
-                        "fallback": _patch_fallback,
-                    },
-                )
-            except Exception as _e:
-                logging.debug("[Stage2Preflight] audit_event(patch_mode) 실패 (무시): %s", _e)
+            if callable(getattr(self.ctx, "audit_event", None)):
+                try:
+                    self.ctx.audit_event(
+                        "stage2_patch_mode",
+                        "stage2 four_phase patch mode attempted",
+                        {
+                            "arc_no": global_arc_no,
+                            "attempt": attempt + 1,
+                            "prev_score": _prev_score,
+                            "fallback": _patch_fallback,
+                        },
+                    )
+                except Exception as _e:
+                    logging.debug("[Stage2Preflight] audit_event(patch_mode) 실패 (무시): %s", _e)
 
         return {
             "four_phase_passed": four_phase_passed,

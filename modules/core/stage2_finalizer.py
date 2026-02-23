@@ -170,11 +170,12 @@ class Stage2Finalizer:
                 audit["v60_43_override"] = True
                 audit["original_decision"] = "REJECT"
                 audit["override_reason"] = "api_quota_exhausted_fallback"
-                self.ctx.audit_event(
-                    "v60_43_quota_override",
-                    "Arc accepted due to quota exhaustion",
-                    {"arc_no": global_arc_no, "scores": scores, "zero_count": zero_count},
-                )
+                if callable(getattr(self.ctx, "audit_event", None)):
+                    self.ctx.audit_event(
+                        "v60_43_quota_override",
+                        "Arc accepted due to quota exhaustion",
+                        {"arc_no": global_arc_no, "scores": scores, "zero_count": zero_count},
+                    )
 
         from modules.validation.threshold_helper import _threshold
 
@@ -207,7 +208,8 @@ class Stage2Finalizer:
             critical_missing = []
             if not refined_arc.get("hybrid_composition"):
                 self.ctx.ui.log(f"⚠️ [Arc {global_arc_no}] 패턴 구성(hybrid_composition) 누락 - 기본값 주입")
-                self.ctx.audit_event("data_missing", "hybrid_composition missing", {"arc_no": global_arc_no})
+                if callable(getattr(self.ctx, "audit_event", None)):
+                    self.ctx.audit_event("data_missing", "hybrid_composition missing", {"arc_no": global_arc_no})
                 refined_arc["hybrid_composition"] = {
                     "primary": "standard_progression",
                     "secondary": [],
@@ -217,7 +219,8 @@ class Stage2Finalizer:
 
             if not refined_arc.get("joint_docs"):
                 self.ctx.ui.log(f"⚠️ [Arc {global_arc_no}] joint_docs 누락 - 기본값 주입")
-                self.ctx.audit_event("data_missing", "joint_docs missing", {"arc_no": global_arc_no})
+                if callable(getattr(self.ctx, "audit_event", None)):
+                    self.ctx.audit_event("data_missing", "joint_docs missing", {"arc_no": global_arc_no})
                 refined_arc["joint_docs"] = {
                     "final_location": "위치 미정",
                     "physical_inventory": ["물품 미정"],
@@ -277,7 +280,8 @@ class Stage2Finalizer:
 
             if not refined_arc.get("status_shadow"):
                 self.ctx.ui.log(f"⚠️ [Arc {global_arc_no}] status_shadow 누락 - 기본값 주입")
-                self.ctx.audit_event("data_missing", "status_shadow missing", {"arc_no": global_arc_no})
+                if callable(getattr(self.ctx, "audit_event", None)):
+                    self.ctx.audit_event("data_missing", "status_shadow missing", {"arc_no": global_arc_no})
                 refined_arc["status_shadow"] = {
                     "internal_energy_loss": "0%",
                     "expected_injuries": "없음",
@@ -311,9 +315,10 @@ class Stage2Finalizer:
             try:
                 self.ctx.current_project.save_v20_anchor("arcs", all_refined_arcs)
                 # [Codex-fix] safe_commit_async는 실패 시 예외 대신 False 반환
-                _commit_ok = await self.ctx.safe_commit_async()
-                if not _commit_ok:
-                    raise RuntimeError("safe_commit_async returned False")
+                if callable(getattr(self.ctx, "safe_commit_async", None)):
+                    _commit_ok = await self.ctx.safe_commit_async()
+                    if not _commit_ok:
+                        raise RuntimeError("safe_commit_async returned False")
             except Exception as commit_err:
                 # [TF-C09] DB 트랜잭션 롤백 — 반쪽 커밋 방지
                 try:
@@ -324,11 +329,12 @@ class Stage2Finalizer:
                 except Exception as _rb:
                     logging.warning("⚠️ [TF-C09] DB rollback 실패: %s", _rb)
                 self.ctx.ui.log(f"🚨 [DB] Arc {global_arc_no} 저장 실패: {commit_err}")
-                self.ctx.audit_event(
-                    "db_commit_error",
-                    "arc save failed in async",
-                    {"arc_no": global_arc_no, "error": str(commit_err)},
-                )
+                if callable(getattr(self.ctx, "audit_event", None)):
+                    self.ctx.audit_event(
+                        "db_commit_error",
+                        "arc save failed in async",
+                        {"arc_no": global_arc_no, "error": str(commit_err)},
+                    )
                 all_refined_arcs.pop()
                 # [Sweep52] DB 실패 시 StateTracker 롤백 (st_snapshot 보존)
                 if st_snapshot:
