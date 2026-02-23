@@ -752,7 +752,8 @@ class Stage4PostProcessor:
         self.ctx.ui.log(f"\n✅ 제{next_ep}화 '{final_title}' 생산 완료! ({len(final_manuscript)}자)")
 
         # [V66.1] B-3: 에피소드 완료 시 audit 버퍼 flush
-        self.ctx.flush_audit_buffer()
+        if callable(getattr(self.ctx, "flush_audit_buffer", None)):
+            self.ctx.flush_audit_buffer()
 
         # [V65] PerfTimer: 에피소드 완료 시 요약 로그
         try:

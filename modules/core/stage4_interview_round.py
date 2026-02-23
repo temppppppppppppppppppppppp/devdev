@@ -530,7 +530,7 @@ class Stage4InterviewRound:
                     is_reject_retry=_is_reject_retry,
                 )
 
-                _max_results = int(_threshold("context.vector_max_results_s4", 16))
+                _max_results = int(_threshold("context.vector_max_results_s4", 20))
                 _default_slot_max = int(_threshold("smart_retrieval.slot_max_chars_default", 1500))
                 _max_npcs_per_slot = int(_threshold("smart_retrieval.max_npcs_per_slot", 5))
                 _mem_parts = []

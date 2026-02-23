@@ -680,14 +680,15 @@ class DBManager:
 
     def close(self) -> None:
         """[Phase 4A] DB 연결 안전 종료"""
-        if self.conn:
-            try:
-                if self.conn.in_transaction:
-                    self.conn.commit()
-                self.conn.close()
-            finally:
-                self.conn = None
-                self.cursor = None
+        with self._lock:
+            if self.conn:
+                try:
+                    if self.conn.in_transaction:
+                        self.conn.commit()
+                    self.conn.close()
+                finally:
+                    self.conn = None
+                    self.cursor = None
 
     @property
     def in_transaction(self) -> bool:

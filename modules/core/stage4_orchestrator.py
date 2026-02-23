@@ -877,12 +877,16 @@ JSON으로 출력:
 
         except KeyboardInterrupt:
             self.ctx.ui.log("\n⚠️ 사용자 중단 요청. 저장 후 종료합니다.")
-            self.ctx.flush_audit_buffer()  # [V66.1] B-3
-            self.ctx.safe_commit()
+            if callable(getattr(self.ctx, "flush_audit_buffer", None)):
+                self.ctx.flush_audit_buffer()
+            if callable(getattr(self.ctx, "safe_commit", None)):
+                self.ctx.safe_commit()
         except Exception as e:
             self.ctx.ui.log(f"\n🚨 Stage 4 V2 오류: {e}")
             import traceback
 
             traceback.print_exc()
-            self.ctx.flush_audit_buffer()  # [V66.1] B-3
-            self.ctx.safe_commit()
+            if callable(getattr(self.ctx, "flush_audit_buffer", None)):
+                self.ctx.flush_audit_buffer()
+            if callable(getattr(self.ctx, "safe_commit", None)):
+                self.ctx.safe_commit()

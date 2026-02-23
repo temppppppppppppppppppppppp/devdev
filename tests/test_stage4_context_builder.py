@@ -44,6 +44,12 @@ def _configure_hybrid_db(db, *, manuscripts=None, summaries=None, arcs=None):
     exec_result = MagicMock()
     exec_result.fetchall.return_value = summaries or []
     db.cursor.execute.return_value = exec_result
+    # [A4-P0-2] conn.cursor() 로컬 커서 패턴 대응
+    local_cur = MagicMock()
+    local_cur.execute.return_value = local_cur
+    local_cur.fetchall.return_value = summaries or []
+    db.conn = MagicMock()
+    db.conn.cursor.return_value = local_cur
 
     db.get_manuscripts_range.return_value = manuscripts or []
     db.get_cumulative_bible.return_value = {}

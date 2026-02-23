@@ -211,6 +211,8 @@ class MetricsCollector:
             # 집계 업데이트
             agent = metric.agent_name
             self._agent_durations[agent].append(metric.duration_ms)
+            if len(self._agent_durations[agent]) > 500:
+                self._agent_durations[agent] = self._agent_durations[agent][-500:]
             self._agent_retries[agent] += retry_count
 
             if success:
