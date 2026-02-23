@@ -254,7 +254,9 @@ class VecMemory:
             # 실제 테이블 차원 검증 (메타데이터와 무관하게 항상 확인)
             if self._table_needs_migration():
                 logging.warning(
-                    f"[VecMemory] vec_episodes 차원 불일치 감지 (현재={EMBED_DIM}) — 자동 마이그레이션 시작"
+                    "[VecMemory] vec_episodes 차원 불일치 감지 (기대=%d) — 자동 마이그레이션 시작. "
+                    "기존 벡터는 삭제되며 새 에피소드부터 재색인됩니다.",
+                    EMBED_DIM,
                 )
                 self._migrate_vec_table(cur)
                 return
@@ -322,10 +324,17 @@ class VecMemory:
             )
             self._conn.commit()
             logging.warning(
-                f"[VecMemory] vec_episodes 재생성 완료 (dim={EMBED_DIM}). 기존 벡터 삭제됨 — 새 에피소드부터 자동 색인."
+                "[VecMemory] vec_episodes 재생성 완료 (dim=%d, model=%s). "
+                "기존 벡터 전량 삭제됨 — sync_status 리셋, 새 에피소드부터 자동 색인.",
+                EMBED_DIM,
+                EMBED_MODEL,
             )
         except Exception as e:
-            logging.warning(f"[VecMemory] 마이그레이션 실패 (비차단): {str(e)[:80]}")
+            logging.warning(
+                "[VecMemory] 마이그레이션 실패 (비차단, dim=%d): %s — 벡터 검색 정확도 저하 가능",
+                EMBED_DIM,
+                str(e)[:80],
+            )
 
     def _embed_cache_key(self, text: str) -> str:
         """[INF-I2] 텍스트 → MD5 해시 캐시 키."""

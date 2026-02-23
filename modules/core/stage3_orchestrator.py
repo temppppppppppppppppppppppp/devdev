@@ -332,7 +332,7 @@ class Stage3Orchestrator:
             _bp_bible_root = ctx.current_project.master_bible.get("MasterBible", ctx.current_project.master_bible)
             _bp_protagonist_config = _bp_bible_root.get("protagonist_config", {})
         except Exception as _e:
-            _logging.debug("[Stage3] protagonist_config 추출 실패 (기본값 사용): %s", _e)
+            _logging.warning("[Stage3] protagonist_config 추출 실패 (기본값 사용): %s", _e)
 
         blueprint, pipeline_result = self._generate_blueprint(
             working_ep,
@@ -404,6 +404,10 @@ class Stage3Orchestrator:
             _logging.error(f"🚨 [V61.3] prev_blueprint 로드 크래시: {str(prev_bp_err)[:100]}")
             _logging.error(_traceback.format_exc())
             self.ctx.ui.log("      ⚠️ 직전 Blueprint 로드 실패, None으로 진행")
+        # [C3-P1-5] prev_blueprint 미존재 시 경고 강화
+        if prev_blueprint is None and working_ep > 1:
+            _logging.warning("[Stage3] prev_blueprint is None for ep %d (ep>1) — 연속성 참조 없이 진행", working_ep)
+            self.ctx.ui.log(f"      ⚠️ 제{working_ep - 1}화 Blueprint 없음 — 연속성 참조 없이 진행")
         return prev_blueprint
 
     def _get_protagonist_name_safe(self) -> str:
@@ -525,7 +529,7 @@ class Stage3Orchestrator:
                     ep_num=working_ep,
                     arc_data=arc_data,
                     prev_blueprint=prev_blueprint,
-                    prev_blueprints=prev_blueprints[-30:] if prev_blueprints else None,
+                    prev_blueprints=prev_blueprints[-30:] if prev_blueprints else [],
                     max_retries=4,
                     director=ctx.agents["director"],
                     arc_idx=arc_idx,

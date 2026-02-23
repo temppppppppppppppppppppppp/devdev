@@ -359,7 +359,8 @@ class Stage2Orchestrator:
                         self.ctx.ui.log(f"   🧶 Arc {arc_a_idx + 1}-{arc_b_idx + 1} 인과율 용접 완료.")
 
             # C. [순차 설계 단계]
-            current_ep_start = 1 if not all_refined_arcs else all_refined_arcs[-1].get("ep_end", 0) + 1
+            # [B3-P1-1] ep_end가 음수/0일 수 있으므로 max(1, ...) 경계값 방어
+            current_ep_start = 1 if not all_refined_arcs else max(1, all_refined_arcs[-1].get("ep_end", 0) + 1)
 
             # [V60.45] while 루프로 변경 - "다시 하기" 지원
             idx = 0

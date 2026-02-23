@@ -360,7 +360,7 @@ JSON:
         prompt = f"""이 에피소드 끝 시점의 주인공 상태를 추출하세요.
 
 ## 에피소드 {draft["ep_num"]}화
-{draft["content"][:6000]}
+{draft.get("content", "")[:6000]}
 
 ## 이전 상태
 {json.dumps(prev_state.get("hud_snapshot", {}), ensure_ascii=False)[:1000]}
@@ -845,7 +845,9 @@ JSON:
             relationships = hud.get("relationships", {})
             if isinstance(relationships, dict):
                 for target, desc in relationships.items():
-                    relationship_changes.append({"target": target, "to": desc, "justification": "역설계 추출"})
+                    relationship_changes.append(
+                        {"target": target, "to": str(desc), "justification": "역설계 추출"}
+                    )  # [P1-A3-5] desc 타입 강제
 
             # reveals: key_events를 reveals로 매핑
             reveals = key_events if isinstance(key_events, list) else []
@@ -939,7 +941,11 @@ JSON:
 
             # Arc 내 key_events 수집
             arc_events = []
-            _eb_map = {eb.get("ep_num"): eb for eb in self.episode_bibles} if self.episode_bibles else {}
+            _eb_map = (
+                {eb.get("ep_num"): eb for eb in self.episode_bibles if eb.get("ep_num") is not None}
+                if self.episode_bibles
+                else {}
+            )  # [P1-A3-1] None 키 필터
             for ep in arc_episodes:
                 _ep_bible = _eb_map.get(ep["ep_num"], {})
                 arc_events.extend(_ep_bible.get("key_events", []))

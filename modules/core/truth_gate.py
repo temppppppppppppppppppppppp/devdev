@@ -100,14 +100,16 @@ class TruthGate:
                 if is_recall:
                     continue
 
-                # 직접 대사/행동 패턴
+                # [E3-P1-1] 직접 대사/행동 패턴 — (?<![가-힣]) lookbehind로 부분문자열 false positive 방지
+                _esc = re.escape(name)
+                _lb = r"(?<![가-힣])"  # 한글 선행 문자가 없을 때만 매칭
                 action_patterns = [
-                    rf"{re.escape(name)}[이가은는]\s",  # 주어로 등장
-                    rf'"{re.escape(name)}',  # 대사 시작
-                    rf"{re.escape(name)}.*말했다",
-                    rf"{re.escape(name)}.*외쳤다",
-                    rf"{re.escape(name)}.*달려",
-                    rf"{re.escape(name)}.*공격",
+                    rf"{_lb}{_esc}[이가은는]\s",  # 주어로 등장
+                    rf'"{_lb}{_esc}',  # 대사 시작
+                    rf"{_lb}{_esc}.*말했다",
+                    rf"{_lb}{_esc}.*외쳤다",
+                    rf"{_lb}{_esc}.*달려",
+                    rf"{_lb}{_esc}.*공격",
                 ]
                 _found_action = False
                 for pat in action_patterns:

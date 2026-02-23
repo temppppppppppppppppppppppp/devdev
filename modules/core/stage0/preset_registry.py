@@ -712,7 +712,10 @@ class PresetRegistry:
         if not isinstance(data, dict):
             return cls()
         registry = cls(base_genre=data.get("base_genre"))
-        for preset in data.get("active_presets", []):
+        active_presets = data.get("active_presets", [])
+        if not isinstance(active_presets, list):  # [P1-A3-4] 타입 검증
+            active_presets = []
+        for preset in active_presets:
             registry.activate_preset(preset)
         for name, fd in data.get("discovered_fields", {}).items():
             if isinstance(fd, dict):
