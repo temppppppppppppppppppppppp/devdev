@@ -223,11 +223,12 @@ class TestInvalidateCache:
         with patch.object(loader, "_prompts_dir", sample_yaml):
             # 캐시 로드
             loader.load("test_domain", "SIMPLE_PROMPT")
-            assert "test_domain" in loader._cache
+            cache_key = (str(sample_yaml), "test_domain")
+            assert cache_key in loader._cache
 
             # 특정 도메인 무효화
             loader.invalidate_cache("test_domain")
-            assert "test_domain" not in loader._cache
+            assert cache_key not in loader._cache
 
     def test_invalidate_all(self, sample_yaml):
         loader = PromptLoader()
