@@ -205,6 +205,8 @@ class ValidationOrchestrator:
         self.use_pre_llm = config.get("use_pre_llm", True)  # 기본 활성화
 
         # [V47] TIER 0.5: CONTINUITY (에피소드 간 연속성)
+        # [C4-P1-2] context는 dict (ProjectContext가 아님).
+        # DB 기반 prev_hud 조회 불가 — 호출자가 validation_context dict에 prev_hud를 미리 채워야 함.
         self.continuity = ContinuityValidator(context=context)
 
         # TIER 1: BLOCKING

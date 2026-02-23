@@ -347,6 +347,9 @@ class Stage4PostProcessor:
                     self.ctx.ui.log("      ✅ Manager 정산 완료")
                 else:
                     self.ctx.ui.log("      ⚠️ Manager 파싱 실패, 기본 추출 사용")
+                    logging.warning(
+                        "[B4-P1-8] Manager LLM 파싱 실패 — bible_delta 미생성으로 FactLedger 갱신 불완전할 수 있음"
+                    )
             except Exception as mgr_err:
                 # [P0-D2] 타임아웃 시 비동기 future 취소 후 동기 재시도
                 if _bible_future is not None and hasattr(_bible_future, "cancel"):
@@ -367,6 +370,7 @@ class Stage4PostProcessor:
                         self.ctx.ui.log("      ✅ Manager 동기 재시도 성공")
                 except Exception as retry_err:
                     logging.error("[B-1] Manager 동기 재시도도 실패: %s", retry_err)
+                    logging.warning("[B4-P1-8] Manager LLM 완전 실패 — bible_delta=None, FactLedger 갱신 건너뜀")
 
             new_lore = audit.get("new_lore", {}) if isinstance(audit, dict) else {}
             knowledge_map = audit.get("knowledge_map_updates", {}) if isinstance(audit, dict) else {}

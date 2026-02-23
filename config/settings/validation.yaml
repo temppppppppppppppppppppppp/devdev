@@ -17,8 +17,8 @@ manuscript:
 
 # ── 장면(Scene) 구성 ────────────────────────────────────────
 scene:
-  target_count: 6            # 목표 장면 수
-  min_count: 4               # 최소 장면 수 (blocking)
+  target_count: 6            # TODO: 미사용 — 코드에서 미참조
+  min_count: 4               # TODO: 미사용 — 코드에서 미참조
   min_scene_length: 300      # 장면당 최소 글자
 
 # ── 스코프 검증 ──────────────────────────────────────────────
@@ -85,10 +85,10 @@ context:
 retry:
   director_max_attempts: 5
   analyst_max_attempts: 5
-  architect_max_attempts: 5
-  writer_max_attempts: 5
-  blueprint_max_attempts: 12
-  cache_ttl_seconds: 86400   # 24시간
+  architect_max_attempts: 5   # TODO: 미사용 — 코드에서 미참조
+  writer_max_attempts: 5     # TODO: 미사용 — 코드에서 미참조
+  blueprint_max_attempts: 12 # TODO: 미사용 — 코드에서 미참조
+  cache_ttl_seconds: 86400   # TODO: 미사용 — 코드에서 미참조
   api_timeout_seconds: 300   # 5분
 
 # ── 패치 모드 ────────────────────────────────────────────────
@@ -102,16 +102,16 @@ premium:
   repetition:
     window_size: 5
     threshold: 3
-    min_phrase_length: 5
+    min_phrase_length: 5      # TODO: 미사용 — 코드에서 미참조
     clean_score_min: 0.85
-  emotion:
+  emotion:                    # TODO: 미사용 — 코드에서 미참조 (섹션 전체)
     variance_min: 0.5
     history_window: 5
     min_episodes_for_check: 3
     negative_alert_avg: -1.0
     positive_alert_avg: 1.0
     max_history_size: 50
-  anchor:
+  anchor:                     # TODO: 미사용 — 코드에서 미참조 (섹션 전체)
     recent_window: 10
     recency_bonus_threshold: 5
     recency_bonus_score: 10
@@ -161,11 +161,11 @@ satisfaction:
 # ── 기능 플래그 ──────────────────────────────────────────────
 feature_flags:
   enable_patch_mode: true
-  enable_npc_history: true
-  enable_world_state: true
-  enable_fact_ledger: true
-  enable_chain_links: true
-  enable_volume_summaries: true
+  enable_npc_history: true     # TODO: 미사용 — 코드에서 미참조
+  enable_world_state: true     # TODO: 미사용 — 코드에서 미참조
+  enable_fact_ledger: true     # TODO: 미사용 — 코드에서 미참조
+  enable_chain_links: true     # TODO: 미사용 — 코드에서 미참조
+  enable_volume_summaries: true  # TODO: 미사용 — 코드에서 미참조
 
 # Smart Context Retrieval (SC-0~6)
 smart_retrieval:

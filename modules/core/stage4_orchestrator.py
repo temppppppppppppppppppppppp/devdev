@@ -83,8 +83,8 @@ def _detect_cross_episode_repetition(
     fingerprints,
     repeated,
     *,
-    warning_threshold: int = _threshold("cross_episode_repetition.overlap_warning", 3),
-    regression_threshold: int = _threshold("cross_episode_repetition.overlap_regression", 6),
+    warning_threshold: int | None = None,
+    regression_threshold: int | None = None,
 ):
     """크로스 에피소드 문장 반복 감지 (advisory-only).
 
@@ -98,6 +98,11 @@ def _detect_cross_episode_repetition(
         dict with detected/severity/overlap_count/overlap_ratio/top_repeated/warning
         or None if below threshold.
     """
+    # [C4-P2-2] _threshold()를 default arg에서 호출하면 import 시점에 고정됨 — 함수 body에서 해소
+    if warning_threshold is None:
+        warning_threshold = _threshold("cross_episode_repetition.overlap_warning", 3)
+    if regression_threshold is None:
+        regression_threshold = _threshold("cross_episode_repetition.overlap_regression", 6)
     if not fingerprints or not repeated:
         return None
     unique_hashes = {r["sentence_hash"] for r in repeated}

@@ -924,11 +924,11 @@ class DirectorQualityAuditor:
                             eval_score = _safe_int_score(eval_result.get("score", 0), 0)
                             logging.info(f"Vote {vote_idx + 1}: {eval_decision} (score={eval_score})")
                     except FutureTimeoutError:
-                        logging.info("⏰ [V61.3] Vote 타임아웃")
+                        logging.warning("⏰ [V61.3] Vote 타임아웃")
                     except Exception as e:
                         logging.warning(f"⚠️ Vote 오류: {str(e)[:50]}")
             except FutureTimeoutError:
-                logging.info(f"⏰ [V61.3] Self-Consistency 전체 타임아웃 - 완료된 {len(evaluations)}개 투표 사용")
+                logging.warning(f"⏰ [V61.3] Self-Consistency 전체 타임아웃 - 완료된 {len(evaluations)}개 투표 사용")
             except Exception as e:
                 logging.warning(f"⚠️ [V61.3] Self-Consistency 루프 예외: {str(e)[:80]}")
         finally:
