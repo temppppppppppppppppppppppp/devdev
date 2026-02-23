@@ -893,8 +893,23 @@ class BaseAgent:
         if abs(open_braces - close_braces) > 2:
             return {"valid": False, "reason": f"괄호 불균형 ({open_braces} vs {close_braces})"}
 
-        # 핵심 필드 존재 검사 (최소 하나)
-        key_fields = ["content", "tactical_doc", "integrated_scenario", "title", "state_updates"]
+        # 핵심 필드 존재 검사 (최소 하나) — Writer/Director/Validator 공통
+        key_fields = [
+            "content",
+            "tactical_doc",
+            "integrated_scenario",
+            "title",
+            "state_updates",
+            "decision",
+            "score",
+            "reason",
+            "feedback",
+            "conflicts",
+            "scores",
+            "corrected_content",
+            "beat_sequence",
+            "arc_no",
+        ]
         has_key_field = any(f'"{field}"' in response for field in key_fields)
         if not has_key_field:
             return {"valid": False, "reason": "핵심 필드 없음"}
@@ -956,7 +971,7 @@ class BaseAgent:
         }
         return hints.get(error_type, hints[AgentErrorType.UNKNOWN])
 
-    _MAX_JSON_PAYLOAD = 500_000  # [TF-C11] 500KB 크기 가드
+    _MAX_JSON_PAYLOAD = int(_SYSTEM_CFG.get("retry", {}).get("max_json_payload", 500_000))
 
     def _extract_json_robust(self, text):
         """
@@ -1031,8 +1046,8 @@ class BaseAgent:
             final_dict = {}
             seen_ids = set()  # 순환 참조 감지용
             _visit_count = [0]  # [TF-C11] mutable counter for nonlocal
-            MAX_DEPTH = 20  # 최대 재귀 깊이
-            _MAX_VISITS = 100  # [TF-C11] 전체 방문 횟수 상한
+            MAX_DEPTH = 20  # JSON 중첩 깊이 한계 (보안)
+            _MAX_VISITS = 100  # JSON 노드 방문 상한 (무한루프 방지)
 
             def process_node(node, depth=0) -> None:
                 nonlocal final_dict
@@ -1135,7 +1150,8 @@ class BaseAgent:
     # 클래스 변수: 캐시 저장소
     _context_caches = {}  # {cache_key: {"name": str, "created_at": float, "content_hash": str}}
     _cache_lock = threading.Lock()  # [INF-P1-8] _context_caches 동시 접근 보호
-    _CONTEXT_CACHE_MAX = 50
+    _CONTEXT_CACHE_MAX = int(_SYSTEM_CFG.get("cache", {}).get("context_max_entries", 50))
+    _MIN_CACHE_CONTENT = int(_SYSTEM_CFG.get("cache", {}).get("min_content_chars", 50000))
 
     def _get_or_create_context_cache(
         self, cache_type: str, content: str, ttl_seconds: int = 1800, project_name: str = ""
@@ -1181,7 +1197,7 @@ class BaseAgent:
         # Gemini Context Caching API 호출 시도
         try:
             # 콘텐츠가 너무 짧으면 캐싱 스킵 (32k 토큰 이하)
-            if len(content) < 50000:
+            if len(content) < self._MIN_CACHE_CONTENT:
                 return {
                     "cache_name": None,
                     "cached": False,

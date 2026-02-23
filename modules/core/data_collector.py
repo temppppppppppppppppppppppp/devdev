@@ -11,6 +11,7 @@ import logging
 import os
 import re
 import threading
+from collections import deque
 from datetime import datetime
 
 
@@ -347,7 +348,7 @@ class RLHFCollector:
 
         os.makedirs(self.project_dir, exist_ok=True)
 
-        self.feedback_log = []
+        self.feedback_log = deque(maxlen=200)  # [TF-B-3] 최근 200건만 유지
 
     def collect_feedback(
         self,

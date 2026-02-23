@@ -286,6 +286,7 @@ class SovereignApp:
             safe_commit_fn=self._safe_commit,
             genre_fn=lambda: self.selected_genre,
             memory_fn=lambda: self.memory,
+            state_tracker_invalidator=lambda: setattr(self, "state_tracker", None),
         )
 
         # [V64.P4] 동적 주입 속성 선언 (monkey-patching 제거)

@@ -461,6 +461,8 @@ class Stage4InterviewRound:
                 )
 
                 _max_results = int(_threshold("context.vector_max_results_s4", 16))
+                _default_slot_max = int(_threshold("smart_retrieval.slot_max_chars_default", 1500))
+                _max_npcs_per_slot = int(_threshold("smart_retrieval.max_npcs_per_slot", 5))
                 _mem_parts = []
                 for _slot in getattr(_plan, "slots", []) or []:
                     _slot_source = str(
@@ -472,11 +474,11 @@ class Stage4InterviewRound:
                         continue
 
                     try:
-                        _slot_max = int(getattr(_slot, "max_chars", 0) or 0) or 1500
+                        _slot_max = int(getattr(_slot, "max_chars", 0) or 0) or _default_slot_max
                         if _slot_source == RetrievalSources.DB_NPC_HISTORY and hasattr(
                             _vec_mem, "retrieve_npc_context"
                         ):
-                            _slot_npcs = _npc_roster[:5]
+                            _slot_npcs = _npc_roster[:_max_npcs_per_slot]
                             if not _slot_npcs:
                                 _slot_npcs = []
                                 for _tok in _slot_query.replace("|", " ").replace("/", " ").replace(",", " ").split():
@@ -485,7 +487,7 @@ class Stage4InterviewRound:
                                         continue
                                     if _tok not in _slot_npcs:
                                         _slot_npcs.append(_tok)
-                                    if len(_slot_npcs) >= 5:
+                                    if len(_slot_npcs) >= _max_npcs_per_slot:
                                         break
                             if not _slot_npcs:
                                 continue

@@ -614,7 +614,13 @@ class Stage2ValidationPipeline:
         """
         [V60.15] Stage2: 진짜 서사 구조 분석 기반 Flow Guard
         """
+        from modules.validation.threshold_helper import _threshold
+
         _SUMMARY_MODEL = AIModels.SUMMARY_MODEL
+        _min_beats_floor = int(_threshold("scope.min_beats_floor", 1))
+        _min_avg_words = int(_threshold("scope.min_avg_words", 6))
+        _min_word_per_beat = int(_threshold("scope.min_word_per_beat", 4))
+        _min_diversity = float(_threshold("scope.min_diversity", 0.6))
 
         beats = refined_arc.get("beat_sequence", [])
         # [Sweep-Codex] ep_count가 문자열일 수 있음 (SelfReflector 경로)
@@ -623,7 +629,8 @@ class Stage2ValidationPipeline:
         except (ValueError, TypeError):
             ep_count = 0
 
-        if not isinstance(beats, list) or len(beats) < max(3, ep_count):
+        _min_beats = max(_min_beats_floor, ep_count)  # [TF-E-1] 단일 에피소드 아크 허용
+        if not isinstance(beats, list) or len(beats) < _min_beats:
             return {
                 "status": "REJECT",
                 "reason": "서사 폭주 위험: 비트 수가 화수보다 부족",
@@ -649,7 +656,7 @@ class Stage2ValidationPipeline:
         # 1) 서사 폭주 감지
         word_counts = [len(t.split()) for t in normalized if t]
         avg_words = sum(word_counts) / max(1, len(word_counts))
-        if avg_words < 6 or any(c < 4 for c in word_counts):
+        if avg_words < _min_avg_words or any(c < _min_word_per_beat for c in word_counts):
             return {
                 "status": "REJECT",
                 "reason": "서사 폭주 위험: 비트가 과도하게 축약됨",
@@ -685,7 +692,7 @@ class Stage2ValidationPipeline:
                 logging.warning(f"⚠️ [V60.15] 서사 경고: {warning_type} - {pattern}")
 
             diversity = result.get("diversity_score", 1.0)
-            if diversity < 0.6:
+            if diversity < _min_diversity:
                 logging.warning(f"📊 [V60.15] 서사 다양성: {diversity:.0%} (개선 권장)")
 
             return {"status": "PASS", "diversity_score": diversity}
@@ -699,6 +706,10 @@ class Stage2ValidationPipeline:
 
     def _stage2_flow_guard_legacy(self, normalized: list) -> dict:
         """[V60.15] 레거시 Flow Guard (폴백용)"""
+        from modules.validation.threshold_helper import _threshold
+
+        _max_stagnation_hits = int(_threshold("scope.max_stagnation_hits", 3))
+
         # [S2-P2-1] str → list 타입 방어 (SelfReflector 경로 등)
         if isinstance(normalized, str):
             normalized = [normalized]
@@ -717,7 +728,7 @@ class Stage2ValidationPipeline:
             if sim >= _JACCARD_SIMILARITY_THRESHOLD:  # [TF-S2-04] Jaccard 전용 상수
                 stagnation_hits += 1
 
-        if stagnation_hits >= 3:
+        if stagnation_hits >= _max_stagnation_hits:
             return {
                 "status": "REJECT",
                 "reason": "서사 정체 감지: 유사 비트가 연속 반복",

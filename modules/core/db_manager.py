@@ -899,6 +899,10 @@ class DBManager:
                 # 밝혀진 사실 누적
                 reveals = self._safe_json_loads(row["reveals"], "[]")
                 cumulative["all_reveals"].extend(reveals)
+                # [TF-B-2] 누적 크기 상한
+                _reveals_max = 500
+                if len(cumulative["all_reveals"]) > _reveals_max:
+                    cumulative["all_reveals"] = cumulative["all_reveals"][-_reveals_max:]
 
             # [V66.1] C-3: LRU 캐시 크기 제한 (최대 5개 — 장기 세션 메모리 안정화)
             # [Sweep53] 방금 쓴 키가 즉시 퇴출되지 않도록 쓰기 전 evict
@@ -1441,6 +1445,7 @@ class DBManager:
     def transaction(self) -> None:
         """[V44] 원자적 트랜잭션 보장 가드. 에러 타입별 롤백 및 세션 보호"""
         self._ensure_open()
+        self._lock.acquire()  # [TF-C-2] begin/commit/rollback과 동일한 lock 보호
         nested = self.conn.in_transaction
         try:
             if not nested:
@@ -1470,6 +1475,8 @@ class DBManager:
             logging.warning(f"🚨 [{DBErrorSeverity.HIGH}] 트랜잭션 오류 - 롤백 수행: {e}")
             logging.info(f"→ 상세: {traceback.format_exc()[:300]}")
             raise DBError(str(e), original_error=e) from e
+        finally:
+            self._lock.release()
 
     # --- [Utility] ---
     def get_latest_episode_number(self) -> int:
