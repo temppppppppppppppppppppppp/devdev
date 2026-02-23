@@ -572,6 +572,32 @@ class DBManager:
                         SELECT * FROM vec_old.episode_meta
                     """)
 
+                # 1-b) episode_fts (존재 시 직접 이관, 없으면 episode_meta 기반 백필)
+                if _old_table_exists("episode_fts"):
+                    old_fts_rows = cur.execute(
+                        "SELECT rowid, summary, event_types, entity_names FROM vec_old.episode_fts"
+                    ).fetchall()
+                    for rowid, summary, event_types, entity_names in old_fts_rows:
+                        try:
+                            cur.execute(
+                                "INSERT OR REPLACE INTO episode_fts(rowid, summary, event_types, entity_names) "
+                                "VALUES (?, ?, ?, ?)",
+                                (
+                                    rowid,
+                                    summary or "",
+                                    event_types or "",
+                                    entity_names or "",
+                                ),
+                            )
+                        except Exception:
+                            pass
+                elif _old_table_exists("episode_meta"):
+                    cur.execute("""
+                        INSERT OR IGNORE INTO episode_fts(rowid, summary, event_types, entity_names)
+                        SELECT ep_num, IFNULL(summary, ''), IFNULL(event_types, ''), IFNULL(entity_names, '')
+                        FROM episode_meta
+                    """)
+
                 # 2) vec_episodes (sqlite-vec 사용 가능할 때만)
                 if self._vec_available and _old_table_exists("vec_episodes"):
                     rows = cur.execute("SELECT rowid, embedding FROM vec_old.vec_episodes").fetchall()

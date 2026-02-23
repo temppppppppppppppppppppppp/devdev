@@ -756,6 +756,51 @@ class TestHybridRetrieval:
         assert isinstance(result, list)
         assert len(result) == 0
 
+    def test_fts_search_handles_quoted_keyword(self):
+        """따옴표가 포함된 쿼리도 FTS 구문 오류 없이 검색된다."""
+        vm, conn = self._make_vm()
+        conn.execute(
+            "INSERT INTO episode_fts(rowid, summary, event_types, entity_names) VALUES (?, ?, ?, ?)",
+            (1, "장무기 수련", "수련", "장무기"),
+        )
+        conn.commit()
+
+        result = vm._fts_search('장무기 "수련"', current_ep=10, n_results=5)
+
+        assert isinstance(result, list)
+        assert len(result) >= 1
+        assert result[0]["ep_num"] == 1
+
+    def test_knn_search_raw_arc_bonus_reorders_dense_rank(self):
+        """arc bonus 적용 후 dense_rank는 보정된 distance 순서를 반영한다."""
+        vm, _ = self._make_vm()
+
+        class _Rows:
+            def __init__(self, rows):
+                self._rows = rows
+
+            def fetchall(self):
+                return self._rows
+
+        class _FakeConn:
+            def __init__(self, rows):
+                self._rows = rows
+
+            def execute(self, *_args, **_kwargs):
+                return _Rows(self._rows)
+
+        # base distance 기준으로는 ep2(0.10)가 먼저지만, ep1은 같은 arc bonus(0.11*0.9)로 역전
+        vm._conn = _FakeConn(
+            [
+                (2, 0.10, "ep2", "", "", 2),
+                (1, 0.11, "ep1", "", "", 1),
+            ]
+        )
+        result = vm._knn_search_raw([0.1, 0.2], current_ep=10, n_results=2, current_arc_no=1)
+
+        assert [item["ep_num"] for item in result] == [1, 2]
+        assert [item["dense_rank"] for item in result] == [0, 1]
+
     def test_retrieval_mode_dense_uses_existing_api(self):
         """retrieval_mode=dense일 때 retrieve_hybrid_context가 str을 반환한다."""
         vm, _ = self._make_vm()

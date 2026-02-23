@@ -425,30 +425,37 @@ class CharacterVoiceTracker:
         lock = getattr(db, "_lock", None)
 
         def _save() -> None:
-            for name, profile in self.profiles.items():
-                profile_data = {
-                    "name": name,
-                    "style": profile.style.value,
-                    "pattern": {
-                        "endings": profile.pattern.endings,
-                        "honorifics": profile.pattern.honorifics,
-                        "exclamations": profile.pattern.exclamations,
-                        "filler_words": profile.pattern.filler_words,
-                        "vocabulary_level": profile.pattern.vocabulary_level,
-                        "sentence_length": profile.pattern.sentence_length,
-                        "characteristic_phrases": profile.pattern.characteristic_phrases,
-                    },
-                    "sample_dialogues": profile.sample_dialogues,
-                    "dialogue_count": profile.dialogue_count,
-                    "consistency_score": profile.consistency_score,
-                    "last_seen_episode": profile.last_seen_episode,
-                }
-                db.conn.execute(
-                    """INSERT OR REPLACE INTO character_voice(npc_name, profile_data, updated_at)
-                       VALUES (?, ?, datetime('now'))""",
-                    (name, json.dumps(profile_data, ensure_ascii=False)),
-                )
-            db.conn.commit()
+            try:
+                for name, profile in self.profiles.items():
+                    profile_data = {
+                        "name": name,
+                        "style": profile.style.value,
+                        "pattern": {
+                            "endings": profile.pattern.endings,
+                            "honorifics": profile.pattern.honorifics,
+                            "exclamations": profile.pattern.exclamations,
+                            "filler_words": profile.pattern.filler_words,
+                            "vocabulary_level": profile.pattern.vocabulary_level,
+                            "sentence_length": profile.pattern.sentence_length,
+                            "characteristic_phrases": profile.pattern.characteristic_phrases,
+                        },
+                        "sample_dialogues": profile.sample_dialogues,
+                        "dialogue_count": profile.dialogue_count,
+                        "consistency_score": profile.consistency_score,
+                        "last_seen_episode": profile.last_seen_episode,
+                    }
+                    db.conn.execute(
+                        """INSERT OR REPLACE INTO character_voice(npc_name, profile_data, updated_at)
+                           VALUES (?, ?, datetime('now'))""",
+                        (name, json.dumps(profile_data, ensure_ascii=False)),
+                    )
+                db.conn.commit()
+            except Exception as e:
+                try:
+                    db.conn.rollback()
+                except Exception:
+                    pass
+                logging.warning(f"[CharacterVoiceTracker] DB save rollback: {e}")
 
         if lock:
             with lock:

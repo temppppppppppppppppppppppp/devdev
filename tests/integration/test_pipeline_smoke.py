@@ -127,6 +127,32 @@ class TestDBInitAndVecMemorySharedMode:
         finally:
             db.close()
 
+    def test_vec_memory_shared_mode_backfills_episode_fts_from_meta(self, tmp_path):
+        """shared 모드 초기화 시 episode_meta 기반으로 episode_fts 누락 행을 백필한다."""
+        db = DBManager(tmp_path / "smoke.db")
+        try:
+            has_vec = db.conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='vec_episodes'"
+            ).fetchone()
+            if not has_vec:
+                pytest.skip("sqlite-vec unavailable in this environment")
+
+            db.conn.execute(
+                "INSERT OR REPLACE INTO episode_meta (ep_num, summary, causal_data, arc_no, event_types, entity_names) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (99, "백필 대상 요약", "", 1, "회상", "장무기"),
+            )
+            db.conn.execute("DELETE FROM episode_fts WHERE rowid = 99")
+            db.conn.commit()
+
+            _ = VecMemory(conn=db.conn, lock=db._lock, ui_log=lambda _msg: None)
+            row = db.conn.execute("SELECT summary FROM episode_fts WHERE rowid = 99").fetchone()
+
+            assert row is not None
+            assert "백필 대상 요약" in row[0]
+        finally:
+            db.close()
+
 
 # ══════════════════════════════════════════════════════════════
 # Smoke Test 2: memorize + retrieve 흐름
