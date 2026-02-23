@@ -617,6 +617,23 @@ class Stage3Orchestrator:
             )
 
         ctx.ui.log(f"   ✅ 제{working_ep}화 Blueprint 저장 완료")
+        # [P6-02] QualityDashboard Stage3 PASS 기록
+        _qd = getattr(self.app, "quality_dashboard", None)
+        if _qd is not None and hasattr(_qd, "record_validation"):
+            try:
+                _bp_score = pipeline_result.get("last_score", 0) or pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 1.0) or 1.0
+                _qd.record_validation(
+                    ep_num=working_ep,
+                    result={
+                        "decision": "PASS",
+                        "score": _bp_score,
+                        "violations": [],
+                        "warnings": [],
+                    },
+                    stage=3,
+                )
+            except Exception:
+                pass
         return {"next_ep": working_ep + 1, "success_count": success_count + 1, "fail_count": 0}
 
     def _handle_failure(self, working_ep, pipeline_result, success_count, fail_count) -> dict:
@@ -658,6 +675,22 @@ class Stage3Orchestrator:
             _logging.warning(f"[SilentPass:Stage3RejectMetric] {e!s:.120}")
         new_fail_count = fail_count + 1
 
+        # [P6-02] QualityDashboard Stage3 REJECT 기록
+        _qd = getattr(self.app, "quality_dashboard", None)
+        if _qd is not None and hasattr(_qd, "record_validation"):
+            try:
+                _qd.record_validation(
+                    ep_num=working_ep,
+                    result={
+                        "decision": "REJECT",
+                        "score": 0,
+                        "violations": [{"type": "blueprint_max_retries", "description": "Blueprint 최대 재시도 초과"}],
+                        "warnings": [],
+                    },
+                    stage=3,
+                )
+            except Exception:
+                pass
         # [TF-S3-02] 실패 에피소드에서 중단 (순차 의존성 보존)
         # 후속 에피소드는 현재 에피소드 Blueprint에 의존하므로 건너뛰기 금지
         if new_fail_count >= 3:

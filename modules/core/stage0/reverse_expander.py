@@ -681,17 +681,36 @@ JSON:
             logging.info("[!] project_context가 필요합니다.")
             return {"manuscripts": 0, "blueprints": 0, "arcs": 0}
 
-        result = {
-            "manuscripts": self._save_manuscripts_to_db(ctx),
-            "state_logs": self._save_state_logs_to_db(ctx),  # hud_snapshot 저장
-            "episode_bibles": self._save_episode_bibles_to_db(ctx),
-            "blueprints": self._save_blueprint_stubs(ctx),
-            "arcs": self._save_arc_stubs(ctx),
-        }
+        # [TF7-P2-01] 원자적 트랜잭션: 모든 _save_* 완료 후 단일 커밋
+        try:
+            ctx.db.begin()
+            result = {
+                "manuscripts": self._save_manuscripts_to_db(ctx),
+                "state_logs": self._save_state_logs_to_db(ctx),  # hud_snapshot 저장
+                "episode_bibles": self._save_episode_bibles_to_db(ctx),
+                "blueprints": self._save_blueprint_stubs(ctx),
+                "arcs": self._save_arc_stubs(ctx),
+            }
 
-        # [V61.1] Arc stub 보강 (episode_bibles 데이터로 state_changes, joint_docs 채우기)
-        enriched = self._enrich_arc_stubs_from_episode_bibles(ctx)
-        result["arc_enriched"] = enriched
+            # [V61.1] Arc stub 보강 (episode_bibles 데이터로 state_changes, joint_docs 채우기)
+            enriched = self._enrich_arc_stubs_from_episode_bibles(ctx)
+            result["arc_enriched"] = enriched
+
+            ctx.db.commit()
+        except Exception as _tx_err:
+            logging.warning(f"[!] persist_to_db 트랜잭션 실패, 롤백: {_tx_err}")
+            try:
+                ctx.db.rollback()
+            except Exception:
+                pass
+            result = {
+                "manuscripts": 0,
+                "state_logs": 0,
+                "episode_bibles": 0,
+                "blueprints": 0,
+                "arcs": 0,
+                "arc_enriched": 0,
+            }
 
         logging.info(f"[v] DB 저장 완료: {result}")
         return result
@@ -716,13 +735,6 @@ JSON:
                 count += 1
             except Exception as e:
                 logging.warning(f"[!] 원고 저장 실패 (ep_{ep_num}): {e}")
-
-        # 커밋 [V61.5] 실패 시 경고 + count 보정
-        try:
-            ctx.db.conn.commit()
-        except Exception as e:
-            logging.warning(f"[!] 원고 커밋 실패: {e}")
-            count = 0
 
         return count
 
@@ -763,12 +775,6 @@ JSON:
                 count += 1
             except Exception as e:
                 logging.warning(f"[!] State Log 저장 실패 (ep_{ep_num}): {e}")
-
-        try:
-            ctx.db.conn.commit()
-        except Exception as e:
-            logging.warning(f"[!] State Log 커밋 실패: {e}")
-            count = 0
 
         return count
 
@@ -847,12 +853,6 @@ JSON:
             except Exception as e:
                 logging.warning(f"[!] Episode Bible DB 저장 실패 (ep_{ep_num}): {e}")
 
-        try:
-            ctx.db.conn.commit()
-        except Exception as e:
-            logging.warning(f"[!] Episode Bible 커밋 실패: {e}")
-            count = 0
-
         return count
 
     def _save_blueprint_stubs(self, ctx) -> int:
@@ -889,12 +889,6 @@ JSON:
                 count += 1
             except Exception as e:
                 logging.warning(f"[!] Blueprint stub 저장 실패 (ep_{ep_num}): {e}")
-
-        try:
-            ctx.db.conn.commit()
-        except Exception as e:
-            logging.warning(f"[!] Blueprint stub 커밋 실패: {e}")
-            count = 0
 
         return count
 
@@ -956,7 +950,6 @@ JSON:
             existing_arcs.sort(key=lambda x: x.get("arc_no", 0))
 
             ctx.db.save_anchor("arcs", existing_arcs)
-            ctx.db.conn.commit()
 
             return len(arc_stubs)
         except Exception as e:

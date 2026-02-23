@@ -417,3 +417,17 @@ class StateDeltaTracker:
         # 부상 로드
         injuries = arc_end.get("injuries", "정상")
         self.current_injury_level = InjuryLevel.from_string(injuries)
+
+    def rollback_to(self, ep_num: int) -> None:
+        """ep_num 이후의 이력 항목을 제거하여 해당 에피소드 직전 상태로 되돌립니다.
+
+        Args:
+            ep_num: 목표 에피소드 번호 (이 번호 이상의 항목을 제거)
+        """
+        self.energy_history = [e for e in self.energy_history if e.episode < ep_num]
+        self.injury_history = [e for e in self.injury_history if e.episode < ep_num]
+
+    def reset(self) -> None:
+        """에너지/부상 이력을 모두 초기화합니다."""
+        self.energy_history = []
+        self.injury_history = []

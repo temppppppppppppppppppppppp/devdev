@@ -666,14 +666,15 @@ class DBManager:
     # --- [Section 1: 원고 및 지표] ---
     def save_manuscript(self, ep_num, title, content) -> None:
         with self._lock:
+            nested = self.conn.in_transaction
             cur = self.conn.cursor()
             try:
                 cur.execute(
                     "INSERT OR REPLACE INTO manuscripts (ep_num, title, content) VALUES (?, ?, ?)",
                     (ep_num, title, content),
                 )
-                if not self.conn.in_transaction:
-                    self.conn.commit()
+                if not nested:
+                    self.commit()
             finally:
                 cur.close()
 
@@ -712,6 +713,7 @@ class DBManager:
     def update_martial_tracker(self, ep_num, martial_data) -> None:
         """[V26.6 S-Grade] DB 스키마에 존재하는 컬럼만 선별하여 저장 (Mismatched Key Guard)"""
         with self._lock:
+            nested = self.conn.in_transaction
             # 1. 약속된 15대 지표(MARTIAL_METRICS)만 필터링 (스키마 가드)
             sanitized_data = {k: martial_data[k] for k in MARTIAL_METRICS if k in martial_data}
 
@@ -731,8 +733,8 @@ class DBManager:
             cur = self.conn.cursor()
             try:
                 cur.execute(query, [ep_num] + list(validated_data.values()))
-                if not self.conn.in_transaction:
-                    self.conn.commit()
+                if not nested:
+                    self.commit()
             finally:
                 cur.close()
 
@@ -742,6 +744,7 @@ class DBManager:
     def save_episode_bible(self, ep_num: int, bible_delta: dict):
         """화별 Bible 저장 (원고에서 추출된 설정 변화)"""
         with self._lock:
+            nested = self.conn.in_transaction
             cur = self.conn.cursor()
             try:
                 cur.execute(
@@ -767,8 +770,8 @@ class DBManager:
                         json.dumps(bible_delta.get("knowledge_map", {}), ensure_ascii=False),
                     ),
                 )
-                if not self.conn.in_transaction:
-                    self.conn.commit()
+                if not nested:
+                    self.commit()
             finally:
                 cur.close()
             # [V64 P2-7] 누적 Bible 캐시 무효화: 이 ep 이후 캐시 모두 삭제
@@ -962,9 +965,10 @@ class DBManager:
     def delete_episode_bibles_after(self, ep_num: int):
         """특정 화 이후의 Bible delta 삭제 (롤백용)"""
         with self._lock:
+            nested = self.conn.in_transaction
             self.cursor.execute("DELETE FROM episode_bibles WHERE ep_num > ?", (ep_num,))
-            if not self.conn.in_transaction:
-                self.conn.commit()
+            if not nested:
+                self.commit()
             # [V70] 누적 Bible 캐시 무효화 (save_episode_bible과 동일 패턴)
             invalidate_eps = [k for k in self._cumulative_bible_cache if k > ep_num]
             for k in invalidate_eps:
@@ -977,6 +981,7 @@ class DBManager:
 
     def save_surgery_log(self, ep_num, category, failed_logic, result) -> None:
         with self._lock:
+            nested = self.conn.in_transaction
             self.cursor.execute(
                 """
                 INSERT INTO surgery_logs (ep_num, error_category, failed_logic, surgery_result)
@@ -985,12 +990,13 @@ class DBManager:
                 (ep_num, category, failed_logic, result),
             )
             # [V44 Fix] 중첩 트랜잭션 안전성 보장
-            if not self.conn.in_transaction:
-                self.conn.commit()
+            if not nested:
+                self.commit()
 
     def sync_seeds(self, seeds_list) -> None:
         """[V24 Precise Mode] 데이터 누락 시 기본값 할당으로 시스템 중단 방지"""
         with self._lock:
+            nested = self.conn.in_transaction
             for s in seeds_list:
                 # 1. 필수 데이터 인출 (KeyError 방지를 위해 .get() 사용)
                 seed_id = s.get("id") or s.get("seed_id", f"unknown_{int(time.time())}")
@@ -1008,20 +1014,22 @@ class DBManager:
                     (seed_id, category, content, status, planted_ep),
                 )
 
-            if not self.conn.in_transaction:
-                self.conn.commit()
+            if not nested:
+                self.commit()
 
     def archive_seed(self, seed_id, ep_num) -> None:
         with self._lock:
+            nested = self.conn.in_transaction
             self.cursor.execute(
                 "UPDATE seeds SET status = 'archived', recovered_ep = ? WHERE seed_id = ?", (ep_num, seed_id)
             )
-            if not self.conn.in_transaction:
-                self.conn.commit()
+            if not nested:
+                self.commit()
 
     def update_lore_item(self, category, item, description) -> None:
         """[PATCHED] 카테고리+이름 복합 키 기준 저장"""
         with self._lock:
+            nested = self.conn.in_transaction
             self.cursor.execute(
                 """
                 INSERT INTO encyclopedia (category, item, description)
@@ -1033,8 +1041,8 @@ class DBManager:
             """,
                 (category, item, description),
             )
-            if not self.conn.in_transaction:
-                self.conn.commit()
+            if not nested:
+                self.commit()
 
     def update_lore_items_batch(self, lore_items_list) -> None:
         """[PATCHED] 일괄 업데이트 트랜잭션"""
@@ -1109,6 +1117,7 @@ class DBManager:
     def save_anchor(self, key, data) -> bool:
         """S등급 데이터를 박제하고 타임스탬프를 강제 갱신함"""
         with self._lock:
+            nested = self.conn.in_transaction
             try:
                 json_data = json.dumps(data, ensure_ascii=False)
                 # 쿼리문에 CURRENT_TIMESTAMP를 명시하여 REPLACE 시에도 시간이 갱신되게 함
@@ -1120,8 +1129,8 @@ class DBManager:
                     (key, json_data),
                 )
                 # [V44 Fix] 중첩 트랜잭션 안전성 보장
-                if not self.conn.in_transaction:
-                    self.conn.commit()
+                if not nested:
+                    self.commit()
                 return True
             except Exception as e:
                 logging.warning(f"❌ [DB Error] Anchor 저장 실패: {e}")
@@ -1156,11 +1165,12 @@ class DBManager:
 
     def save_blueprint(self, ep_num, data_dict) -> None:
         with self._lock:
+            nested = self.conn.in_transaction
             serialized = json.dumps(data_dict, ensure_ascii=False)
             self.cursor.execute("INSERT OR REPLACE INTO blueprints (ep_num, data) VALUES (?, ?)", (ep_num, serialized))
             # [수정] 트랜잭션 안전성 확보
-            if not self.conn.in_transaction:
-                self.conn.commit()
+            if not nested:
+                self.commit()
 
     def get_previous_blueprint(self, current_ep):
         with self._lock:
@@ -1181,13 +1191,14 @@ class DBManager:
     def save_state_log_with_summary(self, ep_num, data_dict, summary) -> None:
         """[NEW] 요약 포함 로그 저장"""
         with self._lock:
+            nested = self.conn.in_transaction
             serialized = json.dumps(data_dict, ensure_ascii=False)
             self.cursor.execute(
                 "INSERT OR REPLACE INTO state_logs (ep_num, data, summary) VALUES (?, ?, ?)",
                 (ep_num, serialized, summary),
             )
-            if not self.conn.in_transaction:
-                self.conn.commit()
+            if not nested:
+                self.commit()
 
     def get_latest_state(self) -> dict:
         with self._lock:
@@ -1232,6 +1243,7 @@ class DBManager:
 
     def update_karma(self, npc_name, mis_val, obs_val, ep_num) -> None:
         with self._lock:
+            nested = self.conn.in_transaction
             self.cursor.execute(
                 """
                 INSERT INTO karma_status (npc_name, misunderstanding, obsession, last_updated_ep)
@@ -1243,8 +1255,8 @@ class DBManager:
             """,
                 (npc_name, mis_val, obs_val, ep_num, mis_val, obs_val, ep_num),
             )
-            if not self.conn.in_transaction:
-                self.conn.commit()
+            if not nested:
+                self.commit()
 
     def get_all_karma(self):
         with self._lock:
@@ -1253,6 +1265,7 @@ class DBManager:
 
     def save_causal_links(self, new_links, current_ep) -> None:
         with self._lock:
+            nested = self.conn.in_transaction
             if not new_links:
                 return
             data_to_insert = []
@@ -1261,8 +1274,8 @@ class DBManager:
                 serialized = json.dumps(link, ensure_ascii=False)
                 data_to_insert.append((ep, serialized))
             self.cursor.executemany("INSERT INTO causal_graph (ep_num, data) VALUES (?, ?)", data_to_insert)
-            if not self.conn.in_transaction:
-                self.conn.commit()
+            if not nested:
+                self.commit()
 
         # --- [Sovereign Unified Transaction: 최종 박제] ---
 
@@ -1565,6 +1578,7 @@ class DBManager:
     def update_sync_status(self, ep_num, status) -> None:
         """벡터 DB 동기화 상태 업데이트 (0: 미완료, 1: 완료)"""
         with self._lock:
+            nested = self.conn.in_transaction
             self.cursor.execute(
                 """
                 INSERT OR REPLACE INTO sync_status (ep_num, vector_synced, updated_at)
@@ -1572,8 +1586,8 @@ class DBManager:
             """,
                 (ep_num, status),
             )
-            if not self.conn.in_transaction:
-                self.conn.commit()
+            if not nested:
+                self.commit()
 
         # modules/core/db_manager.py 에 추가하면 좋은 전용 메서드
 
@@ -1744,13 +1758,14 @@ class DBManager:
     ) -> None:
         """[Phase 3-5A] NPC 변경 이력 append-only 삽입"""
         with self._lock:
+            nested = self.conn.in_transaction
             self.cursor.execute(
                 "INSERT INTO npc_history (npc_name, episode_no, arc_no, field_name, old_value, new_value, change_source) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
                 (npc_name, episode_no, arc_no, field_name, old_value, new_value, change_source),
             )
-            if not self.conn.in_transaction:
-                self.conn.commit()
+            if not nested:
+                self.commit()
 
     def get_npc_history(self, npc_name: str, limit: int = 50) -> list:
         """[Phase 3-5A] NPC 변경 이력 조회 (최신순)"""
@@ -1789,6 +1804,7 @@ class DBManager:
     ) -> None:
         """[D-4] Director의 앙상블 선택 결과를 기록."""
         with self._lock:
+            nested = self.conn.in_transaction
             self.cursor.execute(
                 "INSERT INTO director_selections "
                 "(ep_num, round_num, selected_label, selected_strategy, verdict, score, "
@@ -1805,8 +1821,8 @@ class DBManager:
                     candidate_count,
                 ),
             )
-            if not self.conn.in_transaction:
-                self.conn.commit()
+            if not nested:
+                self.commit()
 
     def get_strategy_win_rates(self, lookback: int = 20) -> dict:
         """[D-4] 최근 N건의 PASS 선택에서 전략별 승률 조회."""
@@ -1867,6 +1883,7 @@ class DBManager:
             model_breakdown = "{}"
 
         with self._lock:
+            nested = self.conn.in_transaction
             self.cursor.execute(
                 "INSERT INTO cost_log (session_id, scope_type, scope_id, total_calls, total_tokens, total_cost_usd, model_breakdown) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
@@ -1880,8 +1897,8 @@ class DBManager:
                     model_breakdown,
                 ),
             )
-            if not self.conn.in_transaction:
-                self.conn.commit()
+            if not nested:
+                self.commit()
 
     def get_cost_summary(self, scope_type: str | None = None, lookback: int = 50) -> list[dict]:
         """비용 요약 조회 (최신순)."""
@@ -1923,13 +1940,14 @@ class DBManager:
         if not hashes_with_preview:
             return
         with self._lock:
+            nested = self.conn.in_transaction
             self.cursor.executemany(
                 "INSERT OR IGNORE INTO episode_sentence_hashes "
                 "(episode_number, sentence_hash, sentence_preview) VALUES (?, ?, ?)",
                 [(ep_num, h, p) for h, p in hashes_with_preview],
             )
-            if not self.conn.in_transaction:
-                self.conn.commit()
+            if not nested:
+                self.commit()
 
     def find_repeated_sentence_hashes(self, target_hashes: list, current_ep: int, lookback: int = 5) -> list:
         """[Phase 3-B] 현재 해시 중 최근 N화에 이미 존재하는 해시 조회.
@@ -1967,6 +1985,7 @@ class DBManager:
     def save_satisfaction_tag(self, ep_num: int, tag_dict: dict) -> None:
         """[D Step 3] 에피소드 만족도 태그 저장 (INSERT OR REPLACE)."""
         with self._lock:
+            nested = self.conn.in_transaction
             self.cursor.execute(
                 "INSERT OR REPLACE INTO episode_satisfaction_tags "
                 "(ep_num, primary_tag, satisfaction_score, protagonist_agency, frustration_flag) "
@@ -1979,8 +1998,8 @@ class DBManager:
                     1 if tag_dict.get("frustration_flag") else 0,
                 ),
             )
-            if not self.conn.in_transaction:
-                self.conn.commit()
+            if not nested:
+                self.commit()
 
     def get_satisfaction_tag(self, ep_num: int) -> dict | None:
         """[D Step 3] 특정 에피소드의 만족도 태그 조회."""
@@ -2039,6 +2058,7 @@ class DBManager:
         import json as _json
 
         with self._lock:
+            nested = self.conn.in_transaction
             self.cursor.execute(
                 "INSERT OR REPLACE INTO episode_pacing "
                 "(ep_num, pacing_score, dialogue_ratio, scene_break_count, "
@@ -2055,8 +2075,8 @@ class DBManager:
                     _json.dumps(pacing_data.get("issues", []), ensure_ascii=False),
                 ),
             )
-            if not self.conn.in_transaction:
-                self.conn.commit()
+            if not nested:
+                self.commit()
 
     def get_recent_pacing_records(self, before_ep: int, lookback: int = 5) -> list:
         """[TF-I24] 최근 N화의 호흡 분석 조회 (오래된 순).

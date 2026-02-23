@@ -625,8 +625,9 @@ class ContextAdvisor:
         weight_map = {1: 3, 2: 2, 3: 1}
         weights = [weight_map.get(slot.priority, 1) for slot in slots]
         weight_sum = sum(weights) or 1
+        _min_chars = int(_threshold("smart_retrieval.slot_max_chars_default", 1500))  # [P3-04]
         for slot, weight in zip(slots, weights, strict=False):
-            slot.max_chars = max(500, int(total_budget * (weight / weight_sum)))
+            slot.max_chars = max(_min_chars, int(total_budget * (weight / weight_sum)))
 
     @staticmethod
     def _safe_priority(value: Any) -> int:

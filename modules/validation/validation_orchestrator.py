@@ -359,6 +359,19 @@ class ValidationOrchestrator:
             # [Phase 5.2.2] Reflexion: 실패 패턴 기록
             self._record_failure_to_reflexion(ep_num, "blocking", blocking_result["failures"])
 
+            # [P6-01] FailureLearner 환류 — validation_context에서 주입된 경우에만
+            _fl = validation_context.get("_failure_learner") if isinstance(validation_context, dict) else None
+            if _fl is not None and hasattr(_fl, "record_failure"):
+                for _f in (blocking_result.get("failures") or []):
+                    try:
+                        _fl.record_failure(
+                            stage=4,
+                            failure_type=_f.get("type", "BLOCKING") if isinstance(_f, dict) else "BLOCKING",
+                            description=str(_f.get("description", _f.get("reason", "")))[:200] if isinstance(_f, dict) else str(_f)[:200],
+                        )
+                    except Exception:
+                        pass
+
             return {
                 "final_decision": "REJECT",
                 "reason": "BLOCKING 검증 실패",
@@ -1089,6 +1102,20 @@ class ValidationOrchestrator:
 
         if not blocking_result["passed"]:
             self._record_failure_to_reflexion(ep_num, "blocking", blocking_result["failures"])
+
+            # [P6-01] FailureLearner 환류 (parallel path)
+            _fl_p = validation_context.get("_failure_learner") if isinstance(validation_context, dict) else None
+            if _fl_p is not None and hasattr(_fl_p, "record_failure"):
+                for _f in (blocking_result.get("failures") or []):
+                    try:
+                        _fl_p.record_failure(
+                            stage=4,
+                            failure_type=_f.get("type", "BLOCKING") if isinstance(_f, dict) else "BLOCKING",
+                            description=str(_f.get("description", _f.get("reason", "")))[:200] if isinstance(_f, dict) else str(_f)[:200],
+                        )
+                    except Exception:
+                        pass
+
             return self._build_reject_result_v59(
                 "BLOCKING", blocking_result, self._generate_blocking_feedback(blocking_result)
             )

@@ -287,6 +287,11 @@ class SovereignApp:
             genre_fn=lambda: self.selected_genre,
             memory_fn=lambda: self.memory,
             state_tracker_invalidator=lambda: setattr(self, "state_tracker", None),
+            world_state_fn=lambda: getattr(self, "world_state", None),
+            fact_ledger_fn=lambda: getattr(self, "fact_ledger", None),
+            preset_registry_restorer=self._restore_preset_registry,
+            emotion_tracker_fn=lambda: getattr(self, "emotion_tracker", None),
+            state_delta_tracker_fn=lambda: getattr(self, "state_delta_tracker", None),
         )
 
         # [V64.P4] 동적 주입 속성 선언 (monkey-patching 제거)
@@ -334,6 +339,18 @@ class SovereignApp:
 
         # [V60.95] Stage 0 프리셋 레지스트리
         self.preset_registry = None  # PresetRegistry 인스턴스
+
+    def _restore_preset_registry(self) -> None:
+        """[TF-7-P0-03] 프로젝트 _preset_state_raw에서 app.preset_registry 복원."""
+        _ps_raw = getattr(self.current_project, "_preset_state_raw", None) if self.current_project else None
+        if _ps_raw is None:
+            return
+        try:
+            from modules.core.stage0.preset_registry import PresetRegistry as _PresetRegistry
+
+            self.preset_registry = _PresetRegistry.from_json(json.dumps(_ps_raw, ensure_ascii=False))
+        except Exception as _e:
+            self.ui.log(f"   ⚠️ [TF7-P0-03] preset_registry 복원 실패 (무시): {_e}")
 
     def _safe_commit(self) -> bool:
         """
@@ -939,6 +956,17 @@ class SovereignApp:
         from modules.core.prompt_loader import PromptLoader
 
         PromptLoader().invalidate_cache()
+
+        # [TF-7-P0-03] preset_state anchor → app.preset_registry 복원 (프로젝트 로드 시)
+        _ps_raw = getattr(self.current_project, "_preset_state_raw", None)
+        if _ps_raw is not None:
+            try:
+                from modules.core.stage0.preset_registry import PresetRegistry as _PresetRegistry
+
+                self.preset_registry = _PresetRegistry.from_json(json.dumps(_ps_raw, ensure_ascii=False))
+                self.ui.log("   ✅ [TF7-P0-03] preset_registry DB에서 복원 완료")
+            except Exception as _pr_err:
+                self.ui.log(f"   ⚠️ [TF7-P0-03] preset_registry 복원 실패 (무시): {_pr_err}")
 
         # [V40] 장르 정보를 프로젝트에 주입
         self.current_project.genre = self.selected_genre
@@ -2167,6 +2195,15 @@ class SovereignApp:
             except Exception as fs_err:
                 print(f"⚠️ [V51.6] 복선 저장 실패: {fs_err}", flush=True)
 
+        # [TF7-P2-06] EmotionArcTracker 종료 저장
+        if V50_MODULES_AVAILABLE and getattr(self, "emotion_tracker", None) and self.current_project:
+            try:
+                if hasattr(self.current_project, "db"):
+                    self.emotion_tracker.save_to_db(self.current_project.db)
+                    print(f"💓 [V60.26] 감정선 기록 저장: {len(self.emotion_tracker.history)}건", flush=True)
+            except Exception as _et_err:
+                print(f"⚠️ [V60.26] 감정선 저장 실패: {_et_err}", flush=True)
+
         # 1. 현재 메모리의 성경 데이터 최종 저장
         if hasattr(self.current_project, "master_bible"):
             self.current_project.save_v20_anchor("bible", self.current_project.master_bible)
@@ -2805,6 +2842,22 @@ class SovereignApp:
             except Exception as _dc_err:
                 logging.warning(f"[Sweep35] Director cache invalidation failed (non-blocking): {_dc_err}")
 
+            # [TF7-P1-08] ForeshadowTracker 롤백 동기화 — stale 복선 방지
+            try:
+                _ft = getattr(self, "foreshadow_tracker", None)
+                if _ft is not None and hasattr(_ft, "clear"):
+                    _ft.clear()
+                    if self.current_project:
+                        import os as _os
+
+                        _ft_logs_dir = _os.path.join(self._PROJECTS_DIR, self.current_project.name, "logs")
+                        _os.makedirs(_ft_logs_dir, exist_ok=True)
+                        _ft_path = _os.path.join(_ft_logs_dir, "foreshadow.json")
+                        _ft.save_to_json(_ft_path)
+                        logging.info(f"[TF7-P1-08] ForeshadowTracker 초기화 및 저장 완료: {_ft_path}")
+            except Exception as _ft_err:
+                logging.warning(f"[TF7-P1-08] ForeshadowTracker rollback sync 실패 (비치명): {_ft_err}")
+
     def _wipe_production_data(self):
         """[V27.1 Wipe] 설계도는 유지하고 실제 집필 기록(Manuscripts/Blueprints)만 소거"""
         self._project_service.wipe_production_data()  # [Phase 4B-3] thin delegate
@@ -3083,6 +3136,7 @@ class SovereignApp:
             quality_dashboard=getattr(self, "quality_dashboard", None),
             pacing_analyzer=getattr(self, "pacing_analyzer", None),
             pass_rate_monitor=getattr(self, "pass_rate_monitor", None),
+            emotion_tracker=getattr(self, "emotion_tracker", None),  # [TF7-P2-06]
             conditional_modules=_cm,
             # [4C-2c] 콜백 7종
             get_int_input=self._get_int_input,

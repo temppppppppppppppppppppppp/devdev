@@ -7,6 +7,7 @@ Protocol 참조: modules/protocols/app_services.py ProjectRepositoryProtocol
 from __future__ import annotations
 
 import json
+import logging
 import re as _re_rollback
 from collections.abc import Callable
 from typing import Any
@@ -24,6 +25,9 @@ class ProjectService:
         genre_fn: () -> selected_genre dict 또는 None
         memory_fn: () -> memory (VectorDB) 또는 None
         state_tracker_invalidator: 롤백 성공 후 state tracker 무효화 콜백
+        world_state_fn: () -> WorldStateManager 또는 None (롤백 후 stale 차단)
+        fact_ledger_fn: () -> FactLedger 또는 None (롤백 후 stale 차단)
+        preset_registry_restorer: 롤백 후 preset_registry 복원 콜백
     """
 
     def __init__(
@@ -34,6 +38,11 @@ class ProjectService:
         genre_fn: Callable[[], Any],
         memory_fn: Callable[[], Any],
         state_tracker_invalidator: Callable[[], None] | None = None,
+        world_state_fn: Callable[[], Any] | None = None,
+        fact_ledger_fn: Callable[[], Any] | None = None,
+        preset_registry_restorer: Callable[[], None] | None = None,
+        emotion_tracker_fn: Callable[[], Any] | None = None,
+        state_delta_tracker_fn: Callable[[], Any] | None = None,
     ) -> None:
         self._project_fn = project_fn
         self._ui = ui
@@ -41,6 +50,11 @@ class ProjectService:
         self._genre_fn = genre_fn
         self._memory_fn = memory_fn
         self._invalidate_tracker = state_tracker_invalidator
+        self._world_state_fn = world_state_fn
+        self._fact_ledger_fn = fact_ledger_fn
+        self._preset_registry_restorer = preset_registry_restorer
+        self._emotion_tracker_fn = emotion_tracker_fn
+        self._state_delta_tracker_fn = state_delta_tracker_fn
 
     # ── reset_stage_2 ────────────────────────────────────────────
     def reset_stage_2(self) -> None:
@@ -175,6 +189,9 @@ class ProjectService:
             project.db.cursor.execute(
                 "UPDATE seeds SET status = 'active', recovered_ep = NULL WHERE recovered_ep >= ?", (target_ep,)
             )
+            # [TF7-P1-07] director_selections 롤백 대상 누락 수정 (reset_after와 동일 패턴)
+            project.db.cursor.execute("DELETE FROM director_selections WHERE ep_num >= ?", (target_ep,))
+            self._ui.log("   ✂️  'director_selections' 테이블: 롤백 대상 삭제 완료")
             self._ui.log("   📚 [Lore/Seeds] 인과 관계 초기화 완료")
 
             # 3.5 Episode Bibles 롤백
@@ -221,9 +238,43 @@ class ProjectService:
             if self._invalidate_tracker:
                 self._invalidate_tracker()
 
+            # [TF-7-P0-01] world_state / fact_ledger stale 차단 — rollback_to 호출
+            _ws = self._world_state_fn() if self._world_state_fn else None
+            if _ws is not None and hasattr(_ws, "rollback_to"):
+                try:
+                    _ws.rollback_to(target_ep)
+                    self._ui.log(f"   🌐 [WorldState] {target_ep}화 이전으로 롤백 완료")
+                except Exception as _ws_err:
+                    self._ui.log(f"   ⚠️ [WorldState] rollback_to 실패: {_ws_err}")
+            _fl = self._fact_ledger_fn() if self._fact_ledger_fn else None
+            if _fl is not None and hasattr(_fl, "rollback_to"):
+                try:
+                    _fl.rollback_to(target_ep)
+                    self._ui.log(f"   📋 [FactLedger] {target_ep}화 이전으로 롤백 완료")
+                except Exception as _fl_err:
+                    self._ui.log(f"   ⚠️ [FactLedger] rollback_to 실패: {_fl_err}")
+
+            if self._emotion_tracker_fn and callable(self._emotion_tracker_fn):
+                _et = self._emotion_tracker_fn()
+                if _et is not None and hasattr(_et, "rollback_to"):
+                    _et.rollback_to(target_ep)
+
+            if self._state_delta_tracker_fn and callable(self._state_delta_tracker_fn):
+                _sdt = self._state_delta_tracker_fn()
+                if _sdt is not None and hasattr(_sdt, "rollback_to"):
+                    _sdt.rollback_to(target_ep)
+
+            # [TF-7-P0-03] preset_registry 복원 (rollback 후 _preset_state_raw 갱신됨)
+            if self._preset_registry_restorer:
+                try:
+                    self._preset_registry_restorer()
+                except Exception as _pr_err:
+                    self._ui.log(f"   ⚠️ [PresetRegistry] 복원 실패 (무시): {_pr_err}")
+
             self._ui.log(f"\n✅ [Success] {target_ep}화 직전 상태로 롤백 완료!")
             self._ui.log(f"👉 이제 Stage 4를 실행하면 {target_ep}화부터 새로 집필합니다.")
             input("\n[Enter] 메뉴로 돌아가기")
+            self._assert_rollback_invariants(target_ep)
             return True
 
         except Exception as e:
@@ -232,6 +283,42 @@ class ProjectService:
 
             traceback.print_exc()
             return False
+
+    def _assert_rollback_invariants(self, target_ep: int) -> None:
+        """롤백 완료 후 post-invariant 검사 — 트래커 ep가 target_ep를 초과하면 WARNING."""
+        if self._emotion_tracker_fn and callable(self._emotion_tracker_fn):
+            _et = self._emotion_tracker_fn()
+            if _et is not None and hasattr(_et, "history") and _et.history:
+                max_ep = max(entry[0] for entry in _et.history)
+                if max_ep >= target_ep:
+                    logging.warning(
+                        "[RollbackInvariant] EmotionArcTracker max ep=%d >= target_ep=%d after rollback",
+                        max_ep,
+                        target_ep,
+                    )
+                else:
+                    logging.debug(
+                        "[RollbackInvariant] EmotionArcTracker OK (max ep=%d < target_ep=%d)",
+                        max_ep,
+                        target_ep,
+                    )
+
+        if self._state_delta_tracker_fn and callable(self._state_delta_tracker_fn):
+            _sdt = self._state_delta_tracker_fn()
+            if _sdt is not None and hasattr(_sdt, "energy_history") and _sdt.energy_history:
+                max_ep = max(e.episode for e in _sdt.energy_history)
+                if max_ep >= target_ep:
+                    logging.warning(
+                        "[RollbackInvariant] StateDeltaTracker max ep=%d >= target_ep=%d after rollback",
+                        max_ep,
+                        target_ep,
+                    )
+                else:
+                    logging.debug(
+                        "[RollbackInvariant] StateDeltaTracker OK (max ep=%d < target_ep=%d)",
+                        max_ep,
+                        target_ep,
+                    )
 
     # ── wipe_production_data ─────────────────────────────────────
     def wipe_production_data(self) -> None:

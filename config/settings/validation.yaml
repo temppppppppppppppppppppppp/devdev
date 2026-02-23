@@ -25,6 +25,11 @@ scene:
 scope:
   chars_per_scene: 1500      # 장면당 기준 글자수
   overflow_ratio: 1.2        # 초과 비율 임계값
+  min_beats_floor: 1         # [TF7-P2-08] 최소 비트 하한
+  min_avg_words: 6           # [TF7-P2-08] 평균 단어 최소 수
+  min_word_per_beat: 4       # [TF7-P2-08] 비트당 최소 단어 수
+  min_diversity: 0.6         # [TF7-P2-08] 최소 다양성 점수
+  max_stagnation_hits: 3     # [TF7-P2-08] 정체 허용 최대 횟수
 
 # ── SCORING 검증 ─────────────────────────────────────────────
 scoring:
@@ -41,6 +46,11 @@ scoring:
     actor: 70
     sports: 69
     medical: 72
+  sanitize_max_chars: 3000   # [TF7-P2-08] sanitize 최대 글자수
+  cv_optimal_low: 0.35       # [TF7-P2-08] CV 최적 하한
+  cv_optimal_high: 0.55      # [TF7-P2-08] CV 최적 상한
+  wuxia_martial_min: 3       # [TF7-P2-08] 무협 무공 묘사 최소 수
+  hunter_system_min: 5       # [TF7-P2-08] 헌터물 시스템 언급 최소 수
   breakdown:
     character_consistency: 15
     emotion_arc: 15
@@ -169,3 +179,5 @@ smart_retrieval:
   stage4_total_budget: 50000
   director_total_budget: 20000
   max_queries_per_plan: 8
+  slot_max_chars_default: 1500  # [TF7-P2-08] 슬롯 기본 최대 글자수
+  max_npcs_per_slot: 5          # [TF7-P2-08] 슬롯당 최대 NPC 수

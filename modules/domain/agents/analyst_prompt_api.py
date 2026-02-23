@@ -1,5 +1,7 @@
 """Prompt wrapper API for Analyst with PromptLoader fallback."""
 
+import logging
+
 from modules.core.prompt_loader import PromptLoader
 
 from . import analyst_prompts as legacy
@@ -65,13 +67,21 @@ def get_analyst_self_critic_prompt() -> str:
 
 
 def get_recovery_prompt() -> str:
+    # [TF7-P2-10] YAML 외부화 완결 — fallback 본문 제거, YAML 미존재 시 경고
     prompt = _PROMPT_LOADER.load("analyst", "RECOVERY_PROMPT")
-    return prompt if prompt is not None else legacy.get_recovery_prompt()
+    if prompt is not None:
+        return prompt
+    logging.warning("[PromptLoader] RECOVERY_PROMPT not found in analyst.yaml — returning empty string")
+    return ""
 
 
 def get_volume_strategy_prompt() -> str:
+    # [TF7-P2-10] YAML 외부화 완결 — fallback 본문 제거, YAML 미존재 시 경고
     prompt = _PROMPT_LOADER.load("analyst", "VOLUME_STRATEGY_PROMPT")
-    return prompt if prompt is not None else legacy.get_volume_strategy_prompt()
+    if prompt is not None:
+        return prompt
+    logging.warning("[PromptLoader] VOLUME_STRATEGY_PROMPT not found in analyst.yaml — returning empty string")
+    return ""
 
 
 def get_surgery_prompt(*, prev_arc_json: str, curr_arc_json: str, next_arc_json: str, feedback: str) -> str:

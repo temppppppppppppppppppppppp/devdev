@@ -395,3 +395,15 @@ class EmotionArcTracker:
             if isinstance(ep, dict)
             and all(k in ep for k in ("ep_num", "emotion", "intensity"))  # [V70] 3개 키 전부 확인
         ]
+
+    def rollback_to(self, ep_num: int) -> None:
+        """ep_num 이후의 감정 이력 항목을 제거합니다.
+
+        Args:
+            ep_num: 목표 에피소드 번호 (이 번호 이상의 항목을 제거)
+        """
+        self.history = [entry for entry in self.history if entry[0] < ep_num]
+
+    def clear(self) -> None:
+        """감정 이력 전체를 초기화합니다."""
+        self.history = []
