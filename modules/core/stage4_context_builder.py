@@ -146,6 +146,7 @@ class Stage4ContextBuilder:
         sections: list[str] = []
         compressor = ContextCompressor()
         max_results = int(_threshold("context.vector_max_results_s4", 16))
+        current_arc_no = getattr(plan, "arc_no", None)
         ordered_slots = sorted(plan.slots, key=lambda slot: getattr(slot, "priority", 2))
 
         for slot in ordered_slots:
@@ -173,6 +174,7 @@ class Stage4ContextBuilder:
                             dense_k=int(_threshold("smart_retrieval.dense_k", 10)),
                             sparse_k=int(_threshold("smart_retrieval.sparse_k", 10)),
                             max_results=max_results,
+                            current_arc_no=current_arc_no,
                             rrf_k=int(_threshold("smart_retrieval.rrf_k", 60)),
                         )
                     elif _retrieval_mode == "sparse" and hasattr(memory, "_fts_search"):
@@ -187,6 +189,7 @@ class Stage4ContextBuilder:
                             current_ep=plan.episode_num,
                             n_per_query=3,
                             max_results=max_results,
+                            current_arc_no=current_arc_no,
                         )
             except Exception as e:
                 self.ctx.ui.log(f"   [SC] retrieval slot failed ({source}/{slot.category}): {str(e)[:80]}")

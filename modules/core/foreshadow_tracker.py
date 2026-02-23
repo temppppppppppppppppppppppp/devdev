@@ -424,37 +424,44 @@ class ForeshadowTracker:
         lock = getattr(db, "_lock", None)
 
         def _save() -> None:
-            db.conn.execute("DELETE FROM foreshadow")
-            for key, f in self.hooks.items():
-                payload = {
-                    "seed_id": key,
-                    "hook": f.hook,
-                    "category": f.category.value,
-                    "planted_ep": f.planted_ep,
-                    "deadline_ep": f.deadline_ep,
-                    "status": f.status.value,
-                    "hint_episodes": f.hint_episodes,
-                    "payoff_ep": f.payoff_ep,
-                    "importance": f.importance,
-                    "description": f.description,
-                    "created_at": f.created_at,
-                    "updated_at": f.updated_at,
-                }
-                db.conn.execute(
-                    """INSERT OR REPLACE INTO foreshadow
-                       (seed_id, category, content, status, planted_ep, resolved_ep, data, updated_at)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))""",
-                    (
-                        key,
-                        f.category.value,
-                        f.hook,
-                        f.status.value,
-                        f.planted_ep,
-                        f.payoff_ep,
-                        json.dumps(payload, ensure_ascii=False),
-                    ),
-                )
-            db.conn.commit()
+            try:
+                db.conn.execute("DELETE FROM foreshadow")
+                for key, f in self.hooks.items():
+                    payload = {
+                        "seed_id": key,
+                        "hook": f.hook,
+                        "category": f.category.value,
+                        "planted_ep": f.planted_ep,
+                        "deadline_ep": f.deadline_ep,
+                        "status": f.status.value,
+                        "hint_episodes": f.hint_episodes,
+                        "payoff_ep": f.payoff_ep,
+                        "importance": f.importance,
+                        "description": f.description,
+                        "created_at": f.created_at,
+                        "updated_at": f.updated_at,
+                    }
+                    db.conn.execute(
+                        """INSERT OR REPLACE INTO foreshadow
+                           (seed_id, category, content, status, planted_ep, resolved_ep, data, updated_at)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))""",
+                        (
+                            key,
+                            f.category.value,
+                            f.hook,
+                            f.status.value,
+                            f.planted_ep,
+                            f.payoff_ep,
+                            json.dumps(payload, ensure_ascii=False),
+                        ),
+                    )
+                db.conn.commit()
+            except Exception as e:
+                try:
+                    db.conn.rollback()
+                except Exception:
+                    pass
+                logging.warning(f"[ForeshadowTracker] DB save rollback: {e}")
 
         if lock:
             with lock:

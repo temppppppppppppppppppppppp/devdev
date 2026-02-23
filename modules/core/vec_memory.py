@@ -86,6 +86,8 @@ class VecMemory:
                 self.has_valid_memory = True
                 # shared 모드에서도 메타데이터 테이블 + 차원 마이그레이션 검사
                 self._ensure_metadata_and_migrate()
+                # [TF8] hybrid 테이블 보장 + 누락된 FTS 행 백필
+                self._ensure_hybrid_tables()
             except Exception:
                 # [Hybrid-P2] shared 모드에서도 최소 테이블을 자체 부트스트랩 시도
                 try:
@@ -94,6 +96,7 @@ class VecMemory:
                         sqlite_vec.load(conn)
                         conn.enable_load_extension(False)
                     self._ensure_tables()
+                    self._ensure_hybrid_tables()
                     self.has_valid_memory = True
                 except Exception:
                     self.initialization_error = "vec_episodes table not available in shared connection"
@@ -163,6 +166,31 @@ class VecMemory:
                 cur.close()
         except Exception as e:
             logging.warning(f"[VecMemory] shared 모드 메타데이터 초기화 실패 (비차단): {str(e)[:80]}")
+
+    def _ensure_hybrid_tables(self) -> None:
+        """shared 모드에서 episode_fts 테이블 및 기존 episode_meta 기반 FTS 백필 보장."""
+        try:
+            cur = self._conn.cursor()
+            try:
+                cur.execute("""
+                    CREATE VIRTUAL TABLE IF NOT EXISTS episode_fts
+                    USING fts5(
+                        summary,
+                        event_types,
+                        entity_names,
+                        tokenize='unicode61 remove_diacritics 2'
+                    )
+                """)
+                cur.execute("""
+                    INSERT OR IGNORE INTO episode_fts(rowid, summary, event_types, entity_names)
+                    SELECT ep_num, IFNULL(summary, ''), IFNULL(event_types, ''), IFNULL(entity_names, '')
+                    FROM episode_meta
+                """)
+                self._conn.commit()
+            finally:
+                cur.close()
+        except Exception as e:
+            logging.warning(f"[VecMemory] hybrid 테이블 보장 실패 (비차단): {str(e)[:80]}")
 
     def _ensure_tables(self) -> None:
         """Create vec/meta/sync/anchor tables."""
@@ -273,8 +301,11 @@ class VecMemory:
                 CREATE VIRTUAL TABLE vec_episodes
                 USING vec0(embedding float[{EMBED_DIM}])
             """)
-            # sync_status 리셋 — 재색인 대상 표시
-            cur.execute("UPDATE sync_status SET synced = 0, synced_at = NULL")
+            # sync_status 리셋 — shared/standalone 스키마 모두 지원
+            try:
+                cur.execute("UPDATE sync_status SET synced = 0, synced_at = NULL")
+            except Exception:
+                cur.execute("UPDATE sync_status SET vector_synced = 0, updated_at = CURRENT_TIMESTAMP")
             # 메타데이터 갱신
             cur.execute(
                 "INSERT OR REPLACE INTO vec_metadata (key, value) VALUES (?, ?)",
@@ -787,7 +818,15 @@ class VecMemory:
                 self._ui_log(f"[VecMemory] NPC vector search failed: {str(e)[:60]}")
 
         if not candidates:
-            return self._keyword_fallback_search(" ".join(cleaned_names), current_ep, safe_max)
+            _fallback_query = " ".join(cleaned_names)
+            _fallback_result = self._keyword_fallback_search(_fallback_query, current_ep, safe_max)
+            logging.debug(
+                "[VecMem] path=npc ep<%d q=%r hits=0 fallback=true selected=[] chars=%d",
+                current_ep,
+                _fallback_query[:30],
+                len(_fallback_result),
+            )
+            return _fallback_result
 
         def _sort_key(item):
             ep_num, info = item
@@ -829,7 +868,17 @@ class VecMemory:
                 block += f"\nentities: {ent}"
             blocks.append(block)
 
-        return "\n\n".join(blocks)
+        _d2_selected = [ep_num for ep_num, _ in selected]
+        _d2_result = "\n\n".join(blocks)
+        logging.debug(
+            "[VecMem] path=npc ep<%d q=%r hits=%d fallback=false selected=%s chars=%d",
+            current_ep,
+            " ".join(cleaned_names)[:30],
+            len(candidates),
+            _d2_selected,
+            len(_d2_result),
+        )
+        return _d2_result
 
     def _knn_search_raw(
         self,
@@ -863,7 +912,7 @@ class VecMemory:
             return []
 
         results = []
-        for rank, (ep_num, distance, summary, event_types, entity_names, arc_no) in enumerate(rows):
+        for ep_num, distance, summary, event_types, entity_names, arc_no in rows:
             # arc bonus: same arc gets distance * 0.9
             adj_distance = distance
             if current_arc_no is not None and arc_no == current_arc_no:
@@ -874,8 +923,10 @@ class VecMemory:
                 "event_types": event_types or "",
                 "entity_names": entity_names or "",
                 "distance": adj_distance,
-                "dense_rank": rank,
             })
+        results.sort(key=lambda item: float(item["distance"]))
+        for rank, item in enumerate(results):
+            item["dense_rank"] = rank
         return results
 
     def _knn_search(self, query_emb: list, current_ep: int, n_results: int) -> str:
@@ -976,7 +1027,11 @@ class VecMemory:
             list of {"ep_num": int, "summary": str, "event_types": str,
                      "entity_names": str, "fts_rank": int}
         """
-        keywords = [w for w in re.split(r"[\s,.\-|/]+", query) if len(w) >= 2]
+        keywords = [
+            w.replace('"', "").replace("'", "").strip()
+            for w in re.split(r"[\s,.\-|/]+", query)
+            if len(w) >= 2
+        ]
         if not keywords:
             return []
 
