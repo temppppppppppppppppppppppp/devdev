@@ -515,6 +515,16 @@ JSON으로 출력:
                     self.ctx.ui.log(f"   ⛔ [EP {next_ep}] DB 저장 실패. 집필 중단.")
                     break
 
+                # [TF7-P2-07] PassRateMonitor 경보 소비
+                _prm = getattr(self.ctx, "pass_rate_monitor", None)
+                if _prm is not None:
+                    try:
+                        _alerts = _prm.check_alerts()
+                        for _alert in _alerts:
+                            logging.warning(f"[PassRate 경보] {_alert}")
+                    except Exception:
+                        pass
+
         # [V62.3] Stage 4 루프 종료
         self.post_processor.run_post_episode_tasks()
 
@@ -628,7 +638,7 @@ JSON으로 출력:
                         should_return=True,
                     )
             else:
-                self.ctx.ui.log(f"\n⛔ [EP {next_ep}] 5회 면담 모두 실패. 인간 검토 필요.")
+                self.ctx.ui.log(f"\n⛔ [EP {next_ep}] {_max_rounds}회 면담 모두 실패. 인간 검토 필요.")
                 return _RoundOutcome(
                     final_manuscript=None,
                     final_title=None,

@@ -50,6 +50,22 @@ class Stage4ContextBuilder:
             "continuity",
             "appear",
             "verify",
+            # [TF7-P1-02] 한국어 일반어 — NPC 코어 슬롯 오점유 방지
+            "등장",
+            "과거",
+            "행적",
+            "관계",
+            "상태",
+            "내용",
+            "정보",
+            "히스토리",
+            "배경",
+            "이야기",
+            "설명",
+            "기록",
+            "요약",
+            "분석",
+            "추적",
         }
         tokens: list[str] = []
         for token in re.split(r"[\s,|/:;()\[\]{}]+", str(query)):
@@ -793,7 +809,8 @@ class Stage4ContextBuilder:
             self.ctx.ui.log(f"   ⚠️ [V64.P4] 내러티브 요약 로드 실패 (비치명): {str(e)[:60]}")
 
         _sc_budget = int(getattr(_retrieval_plan, "total_budget_chars", 0) or 0)
-        if _threshold("smart_retrieval.enabled", False):
+        # [TF7-P1-03] SC 비활성 시 비-SC 필수 문맥이 절삭되지 않도록 양쪽 플래그 모두 확인
+        if _threshold("smart_retrieval.enabled", False) and _threshold("smart_retrieval.stage4_enabled", False):
             _mc_parts = self._apply_context_budget(_mc_parts, _sc_budget)
 
         mandatory_context = "\n\n".join(_mc_parts)

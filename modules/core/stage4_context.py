@@ -49,6 +49,7 @@ class Stage4Context:
         "quality_dashboard",
         "pacing_analyzer",
         "pass_rate_monitor",
+        "emotion_tracker",  # [TF7-P2-06] EmotionArcTracker 배선
         # [S-13] 조건부 모듈 8종 → 1 composite dict
         "conditional_modules",
         # [4C-2c] 콜백 7종
@@ -84,6 +85,7 @@ class Stage4Context:
         quality_dashboard=None,
         pacing_analyzer=None,
         pass_rate_monitor=None,
+        emotion_tracker=None,  # [TF7-P2-06]
         # [S-13] 조건부 모듈 8종 → composite dict
         conditional_modules=None,
         # [4C-2c] 콜백 — 모두 optional (None 허용)
@@ -114,6 +116,7 @@ class Stage4Context:
         self.quality_dashboard = quality_dashboard
         self.pacing_analyzer = pacing_analyzer
         self.pass_rate_monitor = pass_rate_monitor
+        self.emotion_tracker = emotion_tracker  # [TF7-P2-06]
         self.conditional_modules = conditional_modules or {}
         self.get_int_input = get_int_input
         self.build_item_acquisition_timeline = build_item_acquisition_timeline

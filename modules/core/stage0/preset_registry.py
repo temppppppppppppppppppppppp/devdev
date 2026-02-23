@@ -454,28 +454,34 @@ class PresetRegistry:
 
     def __init__(self, base_genre: str = None):
         self.base_genre = base_genre
-        self.active_presets: set[str] = {"common"}
+        # [TF7-P2-02] set → list로 변경하여 순서 보장 (common 항상 첫 번째)
+        self.active_presets: list[str] = ["common"]
         if base_genre and base_genre in self.GENRE_PRESETS:
-            self.active_presets.add(base_genre)
+            self.active_presets.append(base_genre)
         self.discovered_fields: dict[str, FieldDefinition] = {}
 
     def activate_preset(self, preset_name: str) -> bool:
         """프리셋 활성화"""
         if preset_name in self.GENRE_PRESETS or preset_name == "common":
-            self.active_presets.add(preset_name)
+            # [TF7-P2-02] 중복 추가 방지
+            if preset_name not in self.active_presets:
+                self.active_presets.append(preset_name)
             return True
         return False
 
     def deactivate_preset(self, preset_name: str) -> bool:
         """프리셋 비활성화"""
         if preset_name in self.active_presets and preset_name != "common":
-            self.active_presets.discard(preset_name)
+            self.active_presets.remove(preset_name)
             return True
         return False
 
     def get_active_fields(self) -> dict[str, FieldDefinition]:
-        """현재 활성화된 모든 필드 반환"""
+        """현재 활성화된 모든 필드 반환
+        [TF7-P2-02] 우선순위: common → base_genre → 추가 preset 순으로 적용
+        """
         fields = dict(self.COMMON_PRESET)
+        # list 순회로 순서 보장 (common은 __init__에서 항상 첫 번째)
         for preset_name in self.active_presets:
             if preset_name in self.GENRE_PRESETS:
                 fields.update(self.GENRE_PRESETS[preset_name])

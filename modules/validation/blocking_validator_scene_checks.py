@@ -43,7 +43,10 @@ class BlockingValidatorSceneChecks:
 
     def _check_required_scenes(self, manuscript: str, context: dict) -> dict:
         """필수 씬 포함 체크 (MANUSCRIPT 모드만)"""
-        blueprint = context.get("blueprint", {})
+        # [TF-7-P0-05] blueprint=None/비정규 입력 fail-safe
+        blueprint = context.get("blueprint")
+        if not isinstance(blueprint, dict):
+            blueprint = {}
         scene_breakdown = blueprint.get("scene_breakdown", {})
 
         if not scene_breakdown or not isinstance(scene_breakdown, dict):
@@ -88,7 +91,10 @@ class BlockingValidatorSceneChecks:
         - 씬당 평균 700-1200자 가정
         - 씬 개수 * 1500자 * 1.2배를 초과하면 범위 초과로 판단
         """
-        blueprint = context.get("blueprint", {})
+        # [TF-7-P0-05] blueprint=None/비정규 입력 fail-safe
+        blueprint = context.get("blueprint")
+        if not isinstance(blueprint, dict):
+            blueprint = {}
         blueprint_text = context.get("blueprint_text", "")  # 원본 텍스트
 
         # 1. 씬 개수 추출 (두 가지 방법 시도)
@@ -161,7 +167,10 @@ class BlockingValidatorSceneChecks:
         - 너무 짧게 넘어가는 씬이 있으면 WARNING
         - 반 이상의 씬이 미달이면 REJECT
         """
-        blueprint = context.get("blueprint", {})
+        # [TF-7-P0-05] blueprint=None/비정규 입력 fail-safe
+        blueprint = context.get("blueprint")
+        if not isinstance(blueprint, dict):
+            blueprint = {}
         scene_breakdown = blueprint.get("scene_breakdown", {})
 
         if not scene_breakdown or not isinstance(scene_breakdown, dict):
@@ -240,7 +249,10 @@ class BlockingValidatorSceneChecks:
 
         Blueprint에 cliffhanger 지시가 있으면 필수 검증
         """
-        blueprint = context.get("blueprint", {})
+        # [TF-7-P0-05] blueprint=None/비정규 입력 fail-safe
+        blueprint = context.get("blueprint")
+        if not isinstance(blueprint, dict):
+            blueprint = {}
 
         # Blueprint에서 cliffhanger 관련 지시 확인
         cliffhanger_required = False

@@ -148,6 +148,15 @@ class PatternTracker:
         if not manuscripts:
             return {"status": "no_data", "warnings": []}
 
+        # [TF7-P2-04] 분석 전 pattern_history 초기화 (이전 분석 누적 방지)
+        for key in self.pattern_history:
+            if isinstance(self.pattern_history[key], Counter):
+                self.pattern_history[key] = Counter()
+            elif isinstance(self.pattern_history[key], list):
+                self.pattern_history[key] = []
+            elif isinstance(self.pattern_history[key], dict):
+                self.pattern_history[key] = {}
+
         # 최근 window_size 화만 분석
         recent_ms = manuscripts[-self.window_size :]
         recent_bp = blueprints[-self.window_size :] if blueprints else []
@@ -205,16 +214,18 @@ class PatternTracker:
 
         for i, ms in enumerate(manuscripts):
             for pattern in self.PLOT_PATTERNS:
-                # 패턴의 모든 키워드가 순서대로 등장하는지 확인
+                # [TF7-P2-05] 순차 포인터 방식: 이전 매치 위치 이후에서 탐색
                 positions = []
+                pos = 0
                 for keyword in pattern:
-                    pos = ms.find(keyword)
-                    if pos == -1:
+                    found = ms.find(keyword, pos)
+                    if found == -1:
                         break
-                    positions.append(pos)
+                    positions.append(found)
+                    pos = found + len(keyword)
 
                 # 모든 키워드가 순서대로 존재
-                if len(positions) == len(pattern) and positions == sorted(positions):
+                if len(positions) == len(pattern):
                     detected_patterns.append(
                         {"episode_index": i, "pattern": pattern, "pattern_name": "→".join(pattern)}
                     )
@@ -633,15 +644,17 @@ class PatternTracker:
         return result
 
     def _check_pattern_sequence(self, text: str, pattern: tuple) -> bool:
-        """패턴 시퀀스가 순서대로 등장하는지 확인"""
-        positions = []
+        """패턴 시퀀스가 순서대로 등장하는지 확인
+        [TF7-P2-05] 순차 포인터 방식으로 교체 (첫 매치에만 의존하는 오탐 방지)
+        """
+        pos = 0
         for keyword in pattern:
-            pos = text.find(keyword)
-            if pos == -1:
+            found = text.find(keyword, pos)
+            if found == -1:
                 return False
-            positions.append(pos)
+            pos = found + len(keyword)
 
-        return positions == sorted(positions)
+        return True
 
     def _evaluate_genre_health(self, analysis: dict, genre: str) -> str:
         """장르 건강도 평가"""

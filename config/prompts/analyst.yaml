@@ -589,3 +589,81 @@ ANALYST_SELF_CRITIC_PROMPT: |
       "final_arc": {{ ... }}
   }}
 
+# [TF7-P2-10] 외부화 완결: RECOVERY_PROMPT, VOLUME_STRATEGY_PROMPT
+RECOVERY_PROMPT: |
+        [Role] V20 서사 DNA 시퀀서 (DNA Sequencer & Auditor)
+        [Task] 원고(역사)와 트리트먼트(설계)를 융합하여 1:1 무결성 '마스터 바이블'을 구축하라.
+                **현재 시점의 물리적 진실과 세간의 인식을 엄격히 분리하고, 누락된 NPC 설정을 자율적으로 보완하라.**
+
+        [🛡️ V20 시간선 정합성 절대 지침]
+        1. **시점 인식**: 제공된 원고의 마지막 화수가 몇 화인지 파악하라.
+        2. **HUD 분리 정산**:
+            - 만약 원고가 0화(또는 1화 시작 전)라면, 'MartialHUD'는 반드시 트리트먼트의 'Block 1' 시점의 비참한 초기 상태로 설정하라.
+            - 주인공의 최종 목표(탈규의 경지, 무한 자금 등)는 절대 HUD에 넣지 말고, 'Final_Goal_State'라는 별도 섹션에 보관하라.
+        3. **실시간 동기화**: 원고가 이미 진행 중이라면, '마지막 화'에서 묘사된 물리적 상태만을 HUD에 반영하라.
+
+        [📑 원고 데이터 (Actual History)]
+        {draft_data}
+
+        [🧬 트리트먼트 소스 (Standard Source)]
+        {treatment_data}
+
+        [🚨 S-Grade 통합 정산 강령 - 단 하나의 조항도 누락 금지]
+        1. **현재 시점 확정**: 원고의 마지막 화수를 기준으로 서사의 현 위치를 확정하라.
+        2. **역사 기록 (RecoveredEvents)**: 원고의 핵심 사건을 각 화당 한 문장으로 압축하여 박제하라.
+        3. **DNA 1:1 이식 (plot_roadmap)**: [🧬 트리트먼트]에 포함된 모든 Block(Block 1부터 마지막 Block까지)의 제목과 핵심 목표를 1:1로 이식하라.
+        4. **HUD 추출 우선순위**: 주인공 상태는 원고 마지막 장면 근거, 원고 없으면 트리트먼트 Block 1 채택.
+        5. **다층 HUD 정산**: actual_truth(진실)와 public_reputation(세간의 인식)을 철저히 분리하라.
+        6. **자율적 로어 생성**: 조연의 무공/성격 누락 시 문파 설정에 근거해 개연성 있게 보완하라.
+        7. **복선 관리 (Seeds)**: 5대 SEEDS를 규격에 맞춰 박제하고 원고 내 활성화 여부를 반영하라.
+
+        [Output Format: JSON Only]
+        {{
+            "MasterBible": {{
+                "MetaInfo": {{ "title": "...", "genre": "...", "logline": "..." }},
+                "RecoveredEvents": [ {{ "ep": 1, "event": "...", "impact": "..." }} ],
+                "MartialHUD": {{
+                    "Protagonist": {{
+                        "actual_truth": {{
+                            "alias": "별호",
+                            "rank": "신분",
+                            "realm": "물리적 경지",
+                            "internal_energy": "내공 수치",
+                            "martial_arts": ["보유 무공 목록"],
+                            "equipment": "장비",
+                            "wealth": "자금"
+                        }},
+                        "public_reputation": {{
+                            "identity": "세간의 호칭",
+                            "realm": "인식상 경지"
+                        }},
+                        "knowledge_map": {{ "knows_truth": [], "misled": [] }}
+                    }}
+                }},
+                "Final_Goal_State": {{ "target_realm": "...", "target_wealth": "..." }},
+                "AssetLibrary": {{
+                    "Key_NPCs": [ {{ "name": "...", "role": "...", "desc": "..." }} ],
+                    "Key_Items": []
+                }},
+                "Seeds": [ {{ "id": "S-001", "category": "...", "description": "...", "status": "active" }} ],
+                "plot_roadmap": [ {{ "block_no": 1, "title": "...", "content": {{ "context": "...", "event_villain": "...", "solution": "...", "reward": "..." }}, "genre_ext": {{}} }} ]
+            }}
+        }}
+
+VOLUME_STRATEGY_PROMPT: |
+        [Role] 전설적인 웹소설 기획자
+        [Task] 50개 서사 블록을 분석하여 10권(Volumes) 분량의 분권 전략을 수립하라.
+
+        [🚨 CRITICAL RULES]
+        - 모든 응답은 반드시 지정된 JSON 스키마를 100% 준수해야 함.
+        - 특히 'vol_no', 'title', 'start_arc', 'end_arc' 키는 하나라도 누락 시 데이터 주권이 파기됨.
+        - 결과는 반드시 아래의 리스트 형식으로만 반환하라.
+
+        [JSON Format Example]
+        [ {{ "vol_no": 1, "title": "...", "start_arc": 1, "end_arc": 5 }}, ... ]
+        [성경 정보]
+        {bible_info}
+
+        [로드맵]
+        {roadmap_info}
+

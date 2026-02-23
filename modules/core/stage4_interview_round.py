@@ -225,6 +225,21 @@ class Stage4InterviewRound:
                 patch_fallback=_is_patch_fallback,
                 arc=round_ctx.arc_data.get("arc_no", 0),
             )
+            # [TF-7-P0-04] EMPTY → QualityDashboard 집계
+            if getattr(self.ctx, "quality_dashboard", None):
+                try:
+                    self.ctx.quality_dashboard.record_validation(
+                        ep_num=next_ep,
+                        result={
+                            "decision": "REJECT",
+                            "score": 0,
+                            "violations": [{"type": "empty_candidates"}],
+                            "warnings": [],
+                        },
+                        stage=4,
+                    )
+                except Exception as _qd_err:
+                    logging.debug(f"[SILENT] quality_dashboard EMPTY: {_qd_err}")
             return _InterviewRoundResult(
                 verdict="EMPTY",
                 director_feedback=director_feedback,
@@ -294,6 +309,27 @@ class Stage4InterviewRound:
             _cv_context["encyclopedia"] = {"npcs": _encyclopedia_npcs}
             # [V66.1] 시간선 경고를 검증 컨텍스트에 주입
             _cv_context["time_warnings"] = self.time_warnings
+            # [P3-02] protagonist_name 항상 주입 — POV 검사 민감도 보장
+            if "protagonist_name" not in _cv_context:
+                _proto_name = ""
+                try:
+                    _mb = self.ctx.current_project.master_bible or {}
+                    _mb_root = _mb.get("MasterBible", _mb)
+                    _proto_name = (
+                        _mb_root.get("protagonist_name")
+                        or _mb_root.get("protagonist_config", {}).get("name", "")
+                        or ""
+                    )
+                except Exception:
+                    pass
+                if _proto_name:
+                    _cv_context["protagonist_name"] = _proto_name
+                else:
+                    logging.warning(
+                        "[Stage4] protagonist_name 주입 실패 — POV 검사 민감도 저하 가능"
+                    )
+            # [P6-01] FailureLearner 주입 — ValidationOrchestrator가 BLOCKING 실패 시 환류할 수 있도록
+            _cv_context["_failure_learner"] = getattr(self.ctx, "failure_learner", None)
             # [V66.1] BlockingValidator/ContinuityValidator에 추적 데이터 전달
             if self.ctx.state_tracker:
                 _cv_context["item_states"] = (
@@ -349,21 +385,60 @@ class Stage4InterviewRound:
             self.ctx.ui.log(f"      ⚠️ [V63.2] ConsistencyValidator 실행 실패: {str(_cv_err)[:60]}")
 
         # [V66.1] BlockingValidator — item_states 기반 파손 아이템 사용 체크
+        # [TF-7-P0-02] passed=False 후보는 warnings 누적 대신 즉시 제외 처리
+        _bv_disqualified: set[int] = set()
         try:
             for ci, cand in enumerate(candidates):
                 _bv_ms = cand.get("manuscript", "")
                 if _bv_ms and ci < len(validation_results):
                     bv_result = blocking_validator.validate(_bv_ms, _cv_context)
-                    bv_failures = bv_result.get("failures", [])
-                    if bv_failures:
+                    if not bv_result.get("passed", True):
+                        bv_failures = bv_result.get("failures", [])
+                        _bv_disqualified.add(ci)
                         for f in bv_failures:
                             reason = f.get("reason", str(f))
-                            validation_results[ci]["warnings"].append(f"[V66.1] BLOCKING: {reason}")
+                            validation_results[ci]["warnings"].append(f"[V66.1] BLOCKING(DISQ): {reason}")
                         validation_results[ci]["warning_count"] = len(validation_results[ci]["warnings"])
-                        validation_results[ci]["focus_points"].append(f"BLOCKING 위반 {len(bv_failures)}건")
-                        self.ctx.ui.log(f"      ⚠️ 후보{ci + 1} BLOCKING 위반 {len(bv_failures)}건")
+                        validation_results[ci]["focus_points"].append(f"BLOCKING 위반 {len(bv_failures)}건 — 후보 탈락")
+                        self.ctx.ui.log(f"      ❌ 후보{ci + 1} BLOCKING 위반 {len(bv_failures)}건 — 탈락 처리")
         except Exception as _bv_err:
             self.ctx.ui.log(f"      ⚠️ [V66.1] BlockingValidator 실행 실패: {str(_bv_err)[:60]}")
+
+        # [TF-7-P0-02] 탈락 후보 제거 (모두 탈락 시 REJECT 경로 유지)
+        if _bv_disqualified:
+            _original_count = len(candidates)
+            candidates = [c for i, c in enumerate(candidates) if i not in _bv_disqualified]
+            validation_results = [vr for i, vr in enumerate(validation_results) if i not in _bv_disqualified]
+            self.ctx.ui.log(
+                f"      [TF7-P0-02] BLOCKING 탈락: {len(_bv_disqualified)}/{_original_count}건 제외"
+                f" — 잔여 후보 {len(candidates)}건"
+            )
+            if not candidates:
+                self.ctx.ui.log("      ❌ [TF7-P0-02] 전체 후보 BLOCKING 탈락 → REJECT 처리")
+                director_feedback += "\n[시스템] BLOCKING 위반으로 전체 후보 탈락. 재작성 필요."
+                previous_attempt = {
+                    "strategy": "",
+                    "rejection_reason": "BLOCKING 위반으로 전체 후보 탈락",
+                    "action_items": [],
+                    "score": 0,
+                    "_tot_used": _tot_used,
+                    "_mad_used": _mad_used,
+                }
+                self._record_s4_attempt(
+                    episode=next_ep,
+                    round_num=round_num,
+                    success=False,
+                    score=0,
+                    is_patch=_is_patch,
+                    prev_score=_prev_score,
+                    patch_fallback=_is_patch_fallback,
+                    arc=round_ctx.arc_data.get("arc_no", 0),
+                )
+                return _InterviewRoundResult(
+                    verdict="REJECT",
+                    director_feedback=director_feedback,
+                    previous_attempt=previous_attempt,
+                )
 
         # [V66.1] ContinuityValidator — npc_personalities, time_warnings 라우팅
         try:
@@ -616,6 +691,19 @@ class Stage4InterviewRound:
             _director_mc_parts.append(
                 "🚨 [V69.1] Python 감지된 원고 충돌 경고 (반드시 반영하세요)\n" + director_feedback.strip()
             )
+        # [TF7-P1-04] 전략별 최근 통과율을 Director 선택 프롬프트에 주입
+        try:
+            _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+            if _db is not None and hasattr(_db, "get_strategy_win_rates"):
+                _win_rates = _db.get_strategy_win_rates()
+                if _win_rates and _win_rates.get("total", 0) > 0:
+                    _wr_lines = [f"[TF7-P1-04] 전략별 최근 통과율 (최근 {_win_rates['total']}건 기준)"]
+                    for _k, _v in _win_rates.items():
+                        if _k != "total":
+                            _wr_lines.append(f"  - {_k}: {int(_v * 100)}%")
+                    _director_mc_parts.append("\n".join(_wr_lines))
+        except Exception as _wr_err:
+            logging.debug(f"[TF7-P1-04] win_rates fetch 실패 (비치명): {_wr_err}")
         _director_mandatory_context = "\n\n".join(str(x) for x in _director_mc_parts if x is not None)
 
         director_result = self.ctx.agents["director"].select_and_judge_ensemble(
@@ -894,6 +982,52 @@ class Stage4InterviewRound:
             patch_fallback=_is_patch_fallback,
             arc=round_ctx.arc_data.get("arc_no", 0),
         )
+        # [TF7-P1-06] FailureLearner Stage4 REJECT 기록 (Stage2 stage2_validation_pipeline.py:425~433 동일 패턴)
+        try:
+            _fl = getattr(self.ctx, "failure_learner", None)
+            if _fl is not None and hasattr(_fl, "record_failure"):
+                _fl.record_failure(
+                    stage=4,
+                    episode=next_ep,
+                    arc=round_ctx.arc_data.get("arc_no", 0),
+                    reason=f"{_reject_bucket}: {director_feedback[:150]}",
+                    details={"bucket": _reject_bucket, "score": score, "round": round_num},
+                )
+        except Exception as _fl_err:
+            logging.debug(f"[TF7-P1-06] failure_learner Stage4 기록 실패 (비치명): {_fl_err}")
+        # [TF7-P1-05] AdaptiveRetryManager Stage4 REJECT 연결 — 다음 라운드 프롬프트 주입용
+        try:
+            _adaptive_mgr = getattr(self.ctx, "adaptive_manager", None)
+            if _adaptive_mgr is not None and hasattr(_adaptive_mgr, "record_failure"):
+                _adaptive_mgr.record_failure(
+                    ep_num=next_ep,
+                    agent="director",
+                    error_info={"reason": director_feedback[:200], "bucket": _reject_bucket},
+                    attempt=round_num + 1,
+                )
+                if hasattr(_adaptive_mgr, "get_injection_prompt"):
+                    _injection = _adaptive_mgr.get_injection_prompt(
+                        ep_num=next_ep, agent="director", current_attempt=round_num + 1
+                    )
+                    if _injection:
+                        director_feedback = director_feedback + "\n" + _injection
+        except Exception as _am_err:
+            logging.debug(f"[TF7-P1-05] adaptive_manager REJECT 기록 실패 (비치명): {_am_err}")
+        # [TF-7-P0-04] REJECT → QualityDashboard 집계 (Stage2 동일 패턴)
+        if getattr(self.ctx, "quality_dashboard", None):
+            try:
+                self.ctx.quality_dashboard.record_validation(
+                    ep_num=next_ep,
+                    result={
+                        "decision": "REJECT",
+                        "score": score,
+                        "violations": [{"type": "director_reject", "description": str(director_feedback)[:200]}],
+                        "warnings": [],
+                    },
+                    stage=4,
+                )
+            except Exception as _qd_err:
+                logging.debug(f"[SILENT] quality_dashboard REJECT: {_qd_err}")
         return _InterviewRoundResult(
             verdict="REJECT",
             director_feedback=director_feedback,

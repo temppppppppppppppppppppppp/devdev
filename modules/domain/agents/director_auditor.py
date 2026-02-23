@@ -217,6 +217,16 @@ class DirectorQualityAuditor:
                 "self_consistency_used": bool
             }
         """
+        # [P3-03] encyclopedia.npcs 누락 시 DEGRADED 경고
+        _encyclopedia = validation_context.get("encyclopedia") or {} if isinstance(validation_context, dict) else {}
+        _npcs = _encyclopedia.get("npcs") or {}
+        _degraded = not bool(_npcs)
+        if _degraded:
+            logging.warning(
+                "[V0128] encyclopedia.npcs 누락 — NPC 일관성 검증 DEGRADED. "
+                "validation_context에 encyclopedia를 주입하세요."
+            )
+
         # Lazy initialization of ValidationOrchestrator
         if self.v0128_orchestrator is None:
             default_config = {
@@ -226,6 +236,30 @@ class DirectorQualityAuditor:
                 "use_self_consistency": True,
                 "consistency_votes": 3,
             }
+            # [TF7-P2-09] settings.json validation 키를 default_config에 병합
+            try:
+                import json as _json
+                from pathlib import Path as _Path
+
+                _sj_path = _Path("config/settings.json")
+                if _sj_path.exists():
+                    with open(_sj_path, encoding="utf-8") as _sj_f:
+                        _sj = _json.load(_sj_f)
+                    _sj_val = _sj.get("validation", {})
+                    _SETTINGS_KEYS = {
+                        "scoring_model",
+                        "advisory_model",
+                        "scoring_threshold",
+                        "use_self_consistency",
+                        "consistency_votes",
+                        "use_retrospective",
+                    }
+                    for _k in _SETTINGS_KEYS:
+                        if _k in _sj_val:
+                            default_config[_k] = _sj_val[_k]
+            except Exception:
+                pass  # settings.json 읽기 실패 시 기본값 유지
+
             if config:
                 default_config.update(config)
 
@@ -254,6 +288,7 @@ class DirectorQualityAuditor:
                 "reason": result.get("feedback", ""),
                 "feedback": result.get("detailed_feedback", result.get("feedback", "")),
                 "v0128_full_result": result,
+                "degraded": _degraded,  # [P3-03]
             }
 
             final_decision = result.get("final_decision", "REJECT") if isinstance(result, dict) else "REJECT"
@@ -272,6 +307,7 @@ class DirectorQualityAuditor:
                 "reason": f"V0128 검증 시스템 오류: {str(e)}",
                 "feedback": "검증 시스템 오류 - 수동 검토 필요",
                 "error": str(e),
+                "degraded": _degraded,  # [P3-03]
             }
 
     # ═══════════════════════════════════════════════════════════════════════
@@ -870,7 +906,11 @@ class DirectorQualityAuditor:
         # [Phase 3-Obs] 에이전트 레벨 ThreadPoolExecutor 계측
         _tp_t0 = time.monotonic()
 
-        with ThreadPoolExecutor(max_workers=min(3, len(vote_tasks))) as executor:
+        # [TF7-P1-01] 명시적 executor + finally shutdown(wait=False) — context manager의
+        # wait=True 기본값으로 인한 타임아웃 후에도 running future 무한 대기 방지
+        executor = ThreadPoolExecutor(max_workers=min(3, len(vote_tasks)))
+        futures: dict = {}
+        try:
             futures = {executor.submit(_vote_task, idx, temp): idx for idx, temp in vote_tasks}
 
             # [V61.3] 타임아웃 적용 - 야간 무인 운영 시 무한 대기 방지
@@ -891,10 +931,11 @@ class DirectorQualityAuditor:
                 logging.info(f"⏰ [V61.3] Self-Consistency 전체 타임아웃 - 완료된 {len(evaluations)}개 투표 사용")
             except Exception as e:
                 logging.warning(f"⚠️ [V61.3] Self-Consistency 루프 예외: {str(e)[:80]}")
-            finally:
-                # [Sweep34] 미완료 future 정리로 shutdown 대기 최소화
-                for f in futures:
-                    f.cancel()
+        finally:
+            # [TF7-P1-01] 어떤 경로에서도 실행 — cancel_futures=True로 대기 최소화
+            for f in futures:
+                f.cancel()
+            executor.shutdown(wait=False, cancel_futures=True)
 
         # [Phase 3-Obs] 병렬 구간 소요 시간 기록
         try:

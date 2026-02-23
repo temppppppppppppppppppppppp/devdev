@@ -143,6 +143,13 @@ class ProjectContext:
         self.volumes = anchors.get("volumes") if isinstance(anchors.get("volumes"), list) else []
         self.arcs = anchors.get("arcs") if isinstance(anchors.get("arcs"), list) else []
 
+        # [TF-7-P0-03] preset_state anchor 복원 — 호출부에서 app.preset_registry 재구성용
+        try:
+            _preset_raw = self.db.load_anchor("preset_state")
+            self._preset_state_raw = _preset_raw if isinstance(_preset_raw, dict) else None
+        except Exception:
+            self._preset_state_raw = None
+
         # [V44] karma 로드 (별도 예외 처리)
         try:
             self.karma_status = self.db.get_all_karma()

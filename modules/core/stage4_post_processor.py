@@ -287,6 +287,16 @@ class Stage4PostProcessor:
                 except Exception as e:
                     logging.warning(f"⚠️ [V66-fix] foreshadow 감지/저장 실패: {e}")
 
+            # [TF7-P2-06] EmotionArcTracker: 에피소드 감정 기록 + DB 저장
+            if v50_modules_available and getattr(self.ctx, "emotion_tracker", None):
+                try:
+                    _et = self.ctx.emotion_tracker
+                    _et.add_episode_emotion(next_ep, "neutral", 0.5)
+                    if hasattr(self.ctx, "current_project") and hasattr(self.ctx.current_project, "db"):
+                        _et.save_to_db(self.ctx.current_project.db)
+                except Exception as _et_err:
+                    logging.warning(f"⚠️ [TF7-P2-06] emotion_tracker 저장 실패: {_et_err}")
+
             self.ctx.ui.log("   💾 [V60.87] 로그 파일 저장 완료")
         except Exception as log_err:
             self.ctx.ui.log(f"   ⚠️ 로그 저장 실패: {log_err}")
