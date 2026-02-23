@@ -990,7 +990,10 @@ class BaseAgent:
         }
         return hints.get(error_type, hints[AgentErrorType.UNKNOWN])
 
-    _MAX_JSON_PAYLOAD = int(_SYSTEM_CFG.get("retry", {}).get("max_json_payload", 500_000))
+    try:
+        _MAX_JSON_PAYLOAD = int(_SYSTEM_CFG.get("retry", {}).get("max_json_payload", 500_000))
+    except (ValueError, TypeError):
+        _MAX_JSON_PAYLOAD = 500_000
 
     def _extract_json_robust(self, text):
         """
@@ -1197,7 +1200,7 @@ class BaseAgent:
         import hashlib
 
         # 콘텐츠 해시 생성
-        content_hash = hashlib.md5(content.encode("utf-8")).hexdigest()[:16]
+        content_hash = hashlib.md5(content.encode("utf-8"), usedforsecurity=False).hexdigest()[:16]
         cache_key = f"{cache_type}_{project_name}_{content_hash}"
 
         current_time = time.time()

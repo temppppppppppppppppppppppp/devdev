@@ -355,10 +355,7 @@ JSON으로 출력:
             _prev_manuscripts_text = _ep_ctx["prev_manuscripts_text"]
             _episode_digest = _ep_ctx["episode_digest"]
             hud_report = _ep_ctx["hud_report"]
-            _ = _ep_ctx["current_inventory"]  # reserved for future use
-            _ = _ep_ctx["current_martial_arts"]  # reserved for future use
-            _ = _ep_ctx["dead_npcs"]  # reserved for future use
-            _ = _ep_ctx["item_acquisition_timeline"]  # reserved for future use
+            # reserved for future use: current_inventory, current_martial_arts, dead_npcs, item_acquisition_timeline
             _chain_link_section = _ep_ctx["chain_link_section"]
             _world_state_summary = _ep_ctx["world_state_summary"]
             # ===== [V60.80+] 기존 Writer 전달 기능 추출 =====
@@ -386,11 +383,9 @@ JSON으로 출력:
                 blueprint=blueprint,
                 pacing_analyzer=self.ctx.pacing_analyzer,
             )
-            _ = _ctx_prompts["reference_anchor_prompt"]  # reserved for future use
+            # reserved for future use: reference_anchor_prompt, justification_prompt, reflexion_prompt
             mandatory_context = _ctx_prompts["mandatory_context"]
             anti_trope_prompt = _ctx_prompts["anti_trope_prompt"]
-            _ = _ctx_prompts["justification_prompt"]  # reserved for future use
-            _ = _ctx_prompts["reflexion_prompt"]  # reserved for future use
 
             # [V60.81] NPC equipment summary extraction
             npc_equipment_summary = ""

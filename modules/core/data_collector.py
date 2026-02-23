@@ -278,7 +278,7 @@ class DataCollector:
 
     def _hash_text(self, text: str) -> str:
         """텍스트 해시 생성 (중복 체크용)"""
-        return hashlib.md5(text.encode("utf-8")).hexdigest()[:16]
+        return hashlib.md5(text.encode("utf-8"), usedforsecurity=False).hexdigest()[:16]
 
     def get_statistics(self) -> dict:
         """수집 통계 반환"""
@@ -372,7 +372,7 @@ class RLHFCollector:
         """
         feedback = {
             "ep_num": ep_num,
-            "manuscript_hash": hashlib.md5(manuscript.encode("utf-8")).hexdigest()[:16],
+            "manuscript_hash": hashlib.md5(manuscript.encode("utf-8"), usedforsecurity=False).hexdigest()[:16],
             "ai_score": ai_score,
             "human_score": human_score,
             "score_difference": human_score - ai_score,

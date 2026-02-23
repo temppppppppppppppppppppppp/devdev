@@ -454,6 +454,14 @@ class Stage4PostProcessor:
                 "knowledge_map": knowledge_map,
             }
 
+            logging.debug(
+                "[P2] bible_delta ep=%d: items=%d, npcs=%d, deaths=%d",
+                next_ep,
+                len(all_new_items),
+                len(new_npc_names),
+                len(npc_deaths),
+            )
+
             # [S4-P1-5] save_episode_bible 실패가 후속 처리(state_log, FactLedger)를 차단하지 않도록 격리
             try:
                 self.ctx.current_project.db.save_episode_bible(next_ep, bible_delta)

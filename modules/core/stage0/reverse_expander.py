@@ -9,6 +9,7 @@ import json
 import logging
 import os
 import re
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -89,8 +90,6 @@ class ReverseExpander:
                             f"[S0-N-P1-2] {model} 일시적 오류 (attempt {attempt + 1}/{self._MAX_RETRIES}), "
                             f"{delay:.1f}초 후 재시도: {e}"
                         )
-                        import time
-
                         time.sleep(delay)
                         continue
 
@@ -212,6 +211,9 @@ class ReverseExpander:
 
     def detect_genre(self) -> str:
         """장르 자동 감지"""
+        if not self.raw_drafts:
+            logging.warning("[detect_genre] raw_drafts가 비어있음 — 기본 장르 반환")
+            return GenreTypes.INVESTMENT
         sample = "\n".join([d["content"][:1000] for d in self.raw_drafts[:3]])
 
         genre_lines = "\n".join(f"- {g}: {GenreTypes.get_name(g)}" for g in GenreTypes.all())

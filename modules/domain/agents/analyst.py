@@ -78,7 +78,7 @@ class Analyst(BaseAgent):
         protagonist_name: str = None,
     ):
         """[Stage 1] 10권 전략 수립 (가공 데이터 보존 및 슬라이싱 단일화)"""
-        bible_root = master_bible.get("MasterBible", master_bible)
+        bible_root = master_bible.get("MasterBible", master_bible) if isinstance(master_bible, dict) else {}
         assets = bible_root.get("AssetLibrary", {})
 
         # [V61.2 Fix] 주인공 이름 추출 - 장르별 HUD 탐색

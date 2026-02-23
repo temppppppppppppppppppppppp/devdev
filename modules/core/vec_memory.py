@@ -58,7 +58,7 @@ class VecMemory:
     """
 
     def __init__(self, db_path=None, api_key: str = "", *, ui_log=None, conn=None, lock=None) -> None:
-        self._db_path = str(db_path) if db_path else ":shared:"
+        self._db_path = str(db_path) if db_path else ":memory:"
         self._api_key = api_key or os.getenv("GOOGLE_API_KEY", "")
         self._ui_log = ui_log or (lambda msg: print(f"[VecMemory] {msg}"))
 
@@ -329,7 +329,7 @@ class VecMemory:
 
     def _embed_cache_key(self, text: str) -> str:
         """[INF-I2] 텍스트 → MD5 해시 캐시 키."""
-        return hashlib.md5(text.encode("utf-8")).hexdigest()
+        return hashlib.md5(text.encode("utf-8"), usedforsecurity=False).hexdigest()
 
     def _embed_cache_get(self, key: str) -> list | None:
         """[INF-I2] 캐시에서 임베딩 벡터 조회 (LRU 순서 갱신)."""
@@ -1038,7 +1038,13 @@ class VecMemory:
             list of {"ep_num": int, "summary": str, "event_types": str,
                      "entity_names": str, "fts_rank": int}
         """
-        keywords = [w.replace('"', "").replace("'", "").strip() for w in re.split(r"[\s,.\-|/]+", query) if len(w) >= 2]
+        # [P2] FTS5 예약어(AND/OR/NOT/NEAR) 및 특수문자 제거
+        _fts_reserved = {"AND", "OR", "NOT", "NEAR"}
+        keywords = [
+            w.replace('"', "").replace("'", "").strip()
+            for w in re.split(r"[\s,.\-|/]+", query)
+            if len(w) >= 2 and w.upper() not in _fts_reserved
+        ]
         if not keywords:
             return []
 

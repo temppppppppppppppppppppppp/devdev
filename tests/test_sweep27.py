@@ -25,4 +25,5 @@ def test_director_auditor_v0128_handles_missing_detailed_feedback_key():
 
 def test_stage3_orchestrator_total_planned_ep_has_empty_arcs_guard():
     source = Path("modules/core/stage3_orchestrator.py").read_text(encoding="utf-8")
-    assert 'ctx.current_project.arcs[-1].get("ep_end", 50) if ctx.current_project.arcs else 50' in source
+    # [P2] arcs[-1] isinstance dict 방어 추가됨
+    assert "if isinstance(_last_arc, dict) else 50" in source
