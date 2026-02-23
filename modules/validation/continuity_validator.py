@@ -638,9 +638,7 @@ class ContinuityValidator:
                                 break  # 한 쌍만 감지하면 충분
                     if violations:
                         break
-                if violations:
-                    pass  # 이미 violation 발생
-                else:
+                if not violations:
                     # 위치가 완전히 다르면 경고 (기존)
                     overlap = prev_locations & curr_locations
                     if not overlap and len(prev_locations) > 0 and len(curr_locations) > 0:

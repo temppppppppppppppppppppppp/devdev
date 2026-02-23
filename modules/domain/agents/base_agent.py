@@ -575,7 +575,11 @@ class BaseAgent:
                         # 기타 에러 - 예외 재발생
                         raise api_error
 
-                chunk = response.text if response.text else ""
+                try:
+                    chunk = response.text if response.text else ""
+                except (ValueError, AttributeError):
+                    chunk = ""
+                    logging.warning("[base_agent] response.text 접근 실패 (safety filter?) — 빈 응답 처리")
 
                 # 💡 [Sovereign Logic] 지능형 중첩 제거 병합 (Overlap-Aware Merge)
                 if full_response:

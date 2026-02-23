@@ -49,8 +49,11 @@ class PromptLoader:
         return cls._instance
 
     def __init__(self) -> None:
+        if hasattr(self, "_initialized"):
+            return
         # 프로젝트 루트/config/prompts/ 경로 자동 탐색
         self._prompts_dir = self._find_prompts_dir()
+        self._initialized = True
 
     def _find_prompts_dir(self) -> Path:
         """config/prompts/ 디렉토리 경로를 탐색."""

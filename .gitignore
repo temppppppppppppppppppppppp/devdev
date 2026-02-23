@@ -40,5 +40,8 @@ test_results_new.xml
 *.db-journal
 chroma_data/
 
+# === 테스트 ===
+.hypothesis/
+
 # === Gemini 관련 ===
 .gemini/

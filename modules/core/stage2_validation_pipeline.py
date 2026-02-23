@@ -420,7 +420,6 @@ class Stage2ValidationPipeline:
 
             if continuity_result.get("decision") == "REJECT":
                 severity = continuity_result.get("severity", "UNKNOWN")
-                continuity_result.get("fix_instructions", "")
                 violations = continuity_result.get("violations", [])
 
                 self.ctx.ui.log(f"      🚨 [V49 REJECT] Arc 연속성 위반 감지 (심각도: {severity})")
@@ -485,8 +484,6 @@ class Stage2ValidationPipeline:
                         item_name = v.get("item_or_subject", "")
                         if item_name:
                             banned_items.append(item_name)
-
-                "\n".join(violation_details)
 
                 banned_items_warning = ""
                 if banned_items:

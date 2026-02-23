@@ -412,9 +412,9 @@ class DirectorContinuityValidator:
 
             if not result or result.get("parsing_error"):
                 return {
-                    "decision": "PASS",
-                    "conflicts": [],
-                    "summary": "충돌 검사 응답 파싱 실패 - 비차단 통과",
+                    "decision": "REJECT",
+                    "conflicts": [{"severity": "CRITICAL", "description": "응답 파싱 실패 — fail-closed"}],
+                    "summary": "충돌 검사 응답 파싱 실패 — fail-closed",
                     "parsing_error": True,
                 }
 
@@ -441,10 +441,11 @@ class DirectorContinuityValidator:
                 }
 
         except Exception as e:
+            logging.warning("[P0-2] check_manuscript_history_conflicts 예외 — fail-closed: %s", e)
             return {
-                "decision": "PASS",
-                "conflicts": [],
-                "summary": f"충돌 검사 중 오류 발생 (비차단): {str(e)}",
+                "decision": "REJECT",
+                "conflicts": [{"severity": "CRITICAL", "description": "충돌 검사 예외 — fail-closed"}],
+                "summary": f"충돌 검사 중 오류 발생 — fail-closed: {str(e)[:100]}",
                 "error": str(e),
             }
 
@@ -616,12 +617,9 @@ class DirectorContinuityValidator:
                     prev_data = {}
 
             prev_end_location = prev_data.get("end_location", "")
-            prev_data.get("ending_state", {})
-            prev_data.get("time_flow", "")
 
             # 새 Blueprint 정보 추출
             new_start_location = new_blueprint.get("start_location", "")
-            new_blueprint.get("time_flow", "")
 
             # Python 기반 빠른 체크 (LLM 호출 없이)
             issues = []

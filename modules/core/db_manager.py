@@ -529,9 +529,7 @@ class DBManager:
                 updated_at TEXT DEFAULT (datetime('now'))
             )
         """)
-        self.cursor.execute(
-            "CREATE INDEX IF NOT EXISTS idx_foreshadow_status ON foreshadow(status)"
-        )
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_foreshadow_status ON foreshadow(status)")
 
         self.conn.commit()
         # [DB-MERGE] 기존 vec_memory.db 1회성 마이그레이션
@@ -1033,14 +1031,18 @@ class DBManager:
         """특정 화 이후의 Bible delta 삭제 (롤백용)"""
         with self._lock:
             nested = self.conn.in_transaction
-            self.cursor.execute("DELETE FROM episode_bibles WHERE ep_num > ?", (ep_num,))
-            if not nested:
-                self.commit()
-            # [V70] 누적 Bible 캐시 무효화 (save_episode_bible과 동일 패턴)
-            invalidate_eps = [k for k in self._cumulative_bible_cache if k > ep_num]
-            for k in invalidate_eps:
-                del self._cumulative_bible_cache[k]
-            return self.cursor.rowcount
+            cur = self.conn.cursor()
+            try:
+                cur.execute("DELETE FROM episode_bibles WHERE ep_num > ?", (ep_num,))
+                if not nested:
+                    self.commit()
+                # [V70] 누적 Bible 캐시 무효화 (save_episode_bible과 동일 패턴)
+                invalidate_eps = [k for k in self._cumulative_bible_cache if k > ep_num]
+                for k in invalidate_eps:
+                    del self._cumulative_bible_cache[k]
+                return cur.rowcount
+            finally:
+                cur.close()
 
         # --- [Section 2: 복선 및 로어] ---
         # modules/core/db_manager.py

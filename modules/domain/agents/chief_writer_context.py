@@ -105,8 +105,6 @@ class ChiefWriterContextBuilder:
         # 마스터 바이블에서 핵심 정보 추출
         bible_root = master_bible.get("MasterBible", master_bible) if isinstance(master_bible, dict) else {}
         core_identity = bible_root.get("ProjectData", {}).get("CoreIdentity", {})
-        bible_root.get("AssetLibrary", {})
-
         # [V60.95] 주인공 설정 추출 (원시인/현대인 제약)
         protagonist_config = bible_root.get("protagonist_config", {})
         world_origin = protagonist_config.get("world_origin", "원시인")
