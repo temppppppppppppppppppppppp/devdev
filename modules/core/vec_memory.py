@@ -279,18 +279,23 @@ class VecMemory:
             logging.warning(f"[VecMemory] 임베딩 버전 체크 실패 (비차단): {str(e)[:60]}")
 
     def _table_needs_migration(self) -> bool:
-        """vec_episodes 테이블의 실제 차원이 EMBED_DIM과 다른지 테스트 인서트로 확인."""
+        """vec_episodes 테이블의 실제 차원이 EMBED_DIM과 다른지 SAVEPOINT로 안전 확인."""
         try:
             test_vec = [0.0] * EMBED_DIM
+            self._conn.execute("SAVEPOINT _dim_check")
             self._conn.execute(
                 "INSERT INTO vec_episodes(rowid, embedding) VALUES (?, ?)",
                 (-999999, _serialize_f32(test_vec)),
             )
-            self._conn.execute("DELETE FROM vec_episodes WHERE rowid = -999999")
-            self._conn.commit()
+            self._conn.execute("ROLLBACK TO SAVEPOINT _dim_check")
+            self._conn.execute("RELEASE SAVEPOINT _dim_check")
             return False  # 차원 일치
         except Exception:
-            self._conn.rollback()
+            try:
+                self._conn.execute("ROLLBACK TO SAVEPOINT _dim_check")
+                self._conn.execute("RELEASE SAVEPOINT _dim_check")
+            except Exception:
+                pass
             return True  # 차원 불일치
 
     def _migrate_vec_table(self, cur) -> None:

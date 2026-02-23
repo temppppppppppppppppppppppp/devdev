@@ -232,7 +232,7 @@ class Stage2PreflightAnalysis:
                     grand_objective=grand_obj,
                 )
             except Exception as weaver_err:
-                self.ctx.ui.log(f"⚠️ [Weaver] 욕망 드라이브 생성 실패: {weaver_err}")
+                logging.warning("[Weaver] 욕망 드라이브 생성 실패: %s", weaver_err)
                 if callable(getattr(self.ctx, "audit_event", None)):
                     self.ctx.audit_event(
                         "weaver_error",
@@ -301,9 +301,19 @@ class Stage2PreflightAnalysis:
             _fut_drive = _parallel_exec.submit(_compute_arc_drive)
             _fut_preflight = _parallel_exec.submit(_compute_preflight)
             _fut_constraint = _parallel_exec.submit(_compute_constraint_block)
-            arc_drive = _fut_drive.result(timeout=300)
-            _cached_preflight_injection, _cached_preflight_result = _fut_preflight.result(timeout=300)
-            constraint_block = _fut_constraint.result(timeout=60)
+            # [P1-B3] 개별 try/except — 부분 타임아웃 시에도 다른 결과 수거
+            try:
+                arc_drive = _fut_drive.result(timeout=300)
+            except Exception as _drv_err:
+                logging.warning("[Preflight] arc_drive 타임아웃/실패: %s", str(_drv_err)[:80])
+            try:
+                _cached_preflight_injection, _cached_preflight_result = _fut_preflight.result(timeout=300)
+            except Exception as _pf_err2:
+                logging.warning("[Preflight] preflight 타임아웃/실패: %s", str(_pf_err2)[:80])
+            try:
+                constraint_block = _fut_constraint.result(timeout=60)
+            except Exception as _con_err:
+                logging.warning("[Preflight] constraint 타임아웃/실패: %s", str(_con_err)[:80])
         except Exception as _pf_err:
             if _parallel_exec is not None:
                 try:

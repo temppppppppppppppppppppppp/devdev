@@ -109,10 +109,14 @@ class TruthGate:
                     rf"{re.escape(name)}.*달려",
                     rf"{re.escape(name)}.*공격",
                 ]
+                _found_action = False
                 for pat in action_patterns:
                     if re.search(pat, line):
                         warnings.append(f"사망 NPC '{name}'가 행동/대사로 등장: {line[:60]}...")
+                        _found_action = True
                         break
+                if _found_action:
+                    break  # NPC당 1건만 경고
 
             # state_updates에서 사망 NPC 갱신 검사
             npc_updates = state_updates.get("npc_updates", {})

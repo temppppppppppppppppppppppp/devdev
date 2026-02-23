@@ -389,7 +389,11 @@ class DirectorEnsembleSelector:
 {self._d._escape_braces(_mc_for_director)}
 """
 
-        response = self._d.ask(prompt, temperature=0.1, thinking_level="high")
+        try:
+            response = self._d.ask(prompt, temperature=0.1, thinking_level="high")
+        except Exception as _ask_err:
+            logging.warning("[Director] select_and_judge_ensemble ask() 실패: %s", _ask_err)
+            response = ""
         result = self._d._extract_json_robust(response)
 
         if not result or result.get("parsing_error"):

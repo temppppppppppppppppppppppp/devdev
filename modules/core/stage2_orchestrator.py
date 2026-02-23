@@ -829,6 +829,6 @@ class Stage2Orchestrator:
         """[B-1-6] Thin wrapper for backward compatibility."""
         return self.validation_pipeline._stage2_flow_guard(refined_arc)
 
-    def _stage2_flow_guard_legacy(self, normalized: str) -> dict:
+    def _stage2_flow_guard_legacy(self, normalized: list | str) -> dict:
         """[B-1-6] Thin wrapper for backward compatibility."""
         return self.validation_pipeline._stage2_flow_guard_legacy(normalized)

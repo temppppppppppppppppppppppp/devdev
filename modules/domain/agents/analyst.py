@@ -121,9 +121,11 @@ class Analyst(BaseAgent):
         target_blocks_str = json.dumps(target_blocks, ensure_ascii=False, indent=2)
 
         # 2. 프롬프트 데이터 안전화 및 주입
+        _guard = getattr(self.context, "guard", None)
+        _genre_prompt = _guard.get_v20_purism_prompt() if _guard and hasattr(_guard, "get_v20_purism_prompt") else ""
         prompt = get_plan_volume_prompt_v25(
             vol_no=vol_no,
-            genre_prompt=self.context.guard.get_v20_purism_prompt(),
+            genre_prompt=_genre_prompt,
             structured_context=self._escape_braces(structured_context),
             previous_context=self._escape_braces(previous_volumes_context),
             target_blocks=self._escape_braces(target_blocks_str),

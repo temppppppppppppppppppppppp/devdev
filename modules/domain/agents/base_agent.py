@@ -200,7 +200,8 @@ class BaseAgent:
             cls._current_key_idx = (cls._current_key_idx + 1) % len(cls._api_keys)
             cls._last_rotation_time = time.time()
             cls._rotation_count += 1  # [V62.3]
-            cls._quota_exhausted_models.clear()  # 새 키에서 3-pro 한 번은 시도
+            with cls._quota_lock:
+                cls._quota_exhausted_models.clear()  # 새 키에서 3-pro 한 번은 시도
             with cls._cache_lock:  # [INF-P1-8]
                 cls._context_caches.clear()  # [V61.9] 키 변경 시 캐시 무효화 (API 키별 캐시 격리)
             cls._key_rotation_pending = False

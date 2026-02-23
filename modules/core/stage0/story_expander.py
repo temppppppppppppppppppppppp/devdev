@@ -75,7 +75,7 @@ class StoryExpander:
                             max_output_tokens=max_tokens,
                         ),
                     )
-                    return response.text
+                    return response.text or ""
                 except Exception as e:
                     err_lower = str(e).lower()
                     is_retryable = any(p in err_lower for p in self._RETRYABLE_PATTERNS)
@@ -236,7 +236,10 @@ JSON:
 }}
 ```
 """
-        return self._parse_json(self._call_llm(prompt)) or {}
+        result = self._parse_json(self._call_llm(prompt))
+        if isinstance(result, list):
+            result = result[0] if result and isinstance(result[0], dict) else None
+        return result if isinstance(result, dict) else {}
 
     def _generate_npcs(self) -> list[dict[str, Any]]:
         """NPC 생성"""

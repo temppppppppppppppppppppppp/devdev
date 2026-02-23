@@ -328,7 +328,7 @@ class DirectorGradingSystem:
             },
         }
 
-        base_revision = revisions.get(category, {})
+        base_revision = dict(revisions.get(category, {}))
         if not base_revision:
             return None
 

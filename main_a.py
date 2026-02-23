@@ -7,7 +7,7 @@ import sys
 
 # [CrosscutR70] 읽기전용 디렉토리/디스크풀 시 앱 크래시 방지
 try:
-    _fault_log = open("crash_dump.log", "w", encoding="utf-8")
+    _fault_log = open("crash_dump.log", "a", encoding="utf-8")
     faulthandler.enable(file=_fault_log, all_threads=True)
     atexit.register(_fault_log.close)
     print("[V61.3] Faulthandler 활성화 → crash_dump.log", file=sys.stderr)
@@ -1089,8 +1089,11 @@ class SovereignApp:
         style_seed_path = self.current_project.paths.config / "cash" / "style_seeds_final.txt"
         writer_context = "[SYSTEM: ABSOLUTE WRITER MANIFESTO]\n"
         if writer_rules_path.exists():
-            w_data = json.loads(writer_rules_path.read_text(encoding="utf-8"))
-            writer_context += "\n".join(w_data.get("common_manifesto", [])) + "\n"
+            try:
+                w_data = json.loads(writer_rules_path.read_text(encoding="utf-8"))
+                writer_context += "\n".join(w_data.get("common_manifesto", [])) + "\n"
+            except (json.JSONDecodeError, ValueError) as _wr_err:
+                logging.warning("[P1] writer_rules.json 파싱 실패 (무시): %s", _wr_err)
         if style_seed_path.exists():
             writer_context += f"### [STYLE SEEDS]\n{style_seed_path.read_text(encoding='utf-8')}"
 
