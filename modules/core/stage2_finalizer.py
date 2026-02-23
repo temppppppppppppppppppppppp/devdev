@@ -325,6 +325,9 @@ class Stage2Finalizer:
                 _must_not = [ln.strip() for ln in _constraint_lines if "금지" in ln or "MUST NOT" in ln or "절대" in ln]
                 refined_arc["constraint_summary"] = "\n".join(_must_not[:10]) if _must_not else ""
 
+            # [P0-B3-1] arc_no 보장 — validate_arc 전 주입
+            if isinstance(refined_arc, dict) and "arc_no" not in refined_arc:
+                refined_arc["arc_no"] = global_arc_no
             refined_arc = validate_arc(refined_arc)  # [Step2] Pydantic ingress+egress
             all_refined_arcs.append(refined_arc)
 

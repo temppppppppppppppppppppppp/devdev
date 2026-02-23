@@ -216,6 +216,8 @@ class ContinuityValidator:
             return prev_hud
 
         # 2. context를 통해 DB에서 조회
+        # [P0] manuscripts 테이블에 hud_snapshot 컬럼 없음 — 항상 None 반환
+        # 실제 prev_hud는 validation_context["prev_hud"]로 주입해야 함
         if self.context and hasattr(self.context, "db"):
             try:
                 prev_ep = current_ep - 1

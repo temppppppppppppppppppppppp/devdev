@@ -5,7 +5,8 @@ from pathlib import Path
 
 def test_stage2_defaults_align_with_validation_yaml():
     text = Path("modules/core/stage2_preflight.py").read_text(encoding="utf-8")
-    assert '_threshold("context.vector_max_results_s2", 12)' in text
+    # [P0-B3-2] 기본값을 YAML 값(16)과 정합
+    assert '_threshold("context.vector_max_results_s2", 16)' in text
 
 
 def test_stage3_stage4_defaults_align_with_validation_yaml():

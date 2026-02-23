@@ -244,7 +244,10 @@ class ReverseExpander:
     def extract_bible(self) -> dict[str, Any]:
         """마스터 Bible 추출"""
         sample_text = "\n\n---\n\n".join(
-            [f"[{d['ep_num']}화: {d['title']}]\n{d['content'][:4000]}" for d in self.raw_drafts[:3]]
+            [
+                f"[{d.get('ep_num', 0)}화: {d.get('title', '')}]\n{d.get('content', '')[:4000]}"
+                for d in self.raw_drafts[:3]
+            ]
         )
 
         # 주인공 추출
@@ -400,6 +403,8 @@ JSON:
         total = len(drafts)
         for batch_start in range(0, total, self._BATCH_SIZE):
             batch = drafts[batch_start : batch_start + self._BATCH_SIZE]
+            if not batch:
+                continue
             logging.info(f"[G-2] 배치 순차 추출 시작: {batch[0]['ep_num']}~{batch[-1]['ep_num']}화 ({len(batch)}건)")
             for draft in batch:
                 prev_state = self.episode_bibles[-1] if self.episode_bibles else {}
@@ -427,7 +432,7 @@ JSON:
     def extract_style_guide(self) -> StyleGuide:
         """스타일 가이드 추출"""
         extractor = StyleExtractor(llm_client=self.client)
-        drafts_text = [d["content"] for d in self.raw_drafts]
+        drafts_text = [d.get("content", "") for d in self.raw_drafts if d.get("content")]
         self.style_guide = extractor.extract_from_drafts(drafts_text)
         return self.style_guide
 
@@ -651,6 +656,8 @@ JSON:
 
         for batch_start in range(0, total, self._BATCH_SIZE):
             batch = drafts[batch_start : batch_start + self._BATCH_SIZE]
+            if not batch:
+                continue
             progress.update(message=f"배치 {batch[0]['ep_num']}~{batch[-1]['ep_num']}화 순차 처리 중")
             for draft in batch:
                 prev_state = self.episode_bibles[-1] if self.episode_bibles else {}
@@ -805,7 +812,7 @@ JSON:
 
             # 스키마 변환
             hud = ep_bible.get("hud_snapshot", {})
-            ep_bible.get("changes", [])
+            _changes = ep_bible.get("changes", [])  # 향후 bible_delta 보강 시 사용
             key_events = ep_bible.get("key_events", [])
             new_npcs_raw = ep_bible.get("new_npcs", [])
 
@@ -913,7 +920,9 @@ JSON:
             return 0
 
         # 에피소드 범위로 Arc 계산
-        ep_nums = sorted([d["ep_num"] for d in self.raw_drafts])
+        ep_nums = sorted([d["ep_num"] for d in self.raw_drafts if d.get("ep_num") is not None])
+        if not ep_nums:
+            return 0
         max_ep = max(ep_nums)
         epa = VolumeSettings.EPISODES_PER_ARC
         arc_count = (max_ep - 1) // epa + 1
@@ -1119,7 +1128,9 @@ JSON:
         if not self.raw_drafts:
             return {}
 
-        ep_nums = sorted([d["ep_num"] for d in self.raw_drafts])
+        ep_nums = sorted([d["ep_num"] for d in self.raw_drafts if d.get("ep_num") is not None])
+        if not ep_nums:
+            return {}
         max_ep = max(ep_nums)
         min_ep = min(ep_nums)
 

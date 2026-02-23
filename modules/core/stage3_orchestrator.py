@@ -388,8 +388,8 @@ class Stage3Orchestrator:
             except Exception as entity_err:
                 ctx.ui.log(f"      ⚠️ [V61] Entity Registry 추출 실패: {str(entity_err)[:50]}")
                 self._cached_entity_registry = None
-                # [Sweep43] 실패 시 arc_idx 캐싱 제거 — 다음 호출에서 재시도 가능
-                self._entity_cache_arc_idx = -1
+                # [P0] 실패한 arc_idx 캐싱 — 동일 arc 무한 재시도 방지
+                self._entity_cache_arc_idx = arc_idx
         else:
             ctx.ui.log(f"      ♻️ [V61.6] Entity Registry 캐시 재사용 (Arc {arc_idx})")
 
@@ -569,8 +569,7 @@ class Stage3Orchestrator:
                 "quality_risk": _quality_risk,
                 "last_score": pipeline_result.get("last_score", 0),
             }
-            blueprint["quality_gate_failed"] = _quality_gate_failed
-            blueprint["quality_risk"] = _quality_risk
+            # [P0] _stage3_meta에 통합 — 최상위 중복 키 제거
 
         # 무결성 검증 후 저장
         # [S3-N-P1-3] DI 콜백 None 방어
