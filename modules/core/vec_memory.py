@@ -639,9 +639,7 @@ class VecMemory:
         dense_results: list[dict] = []
         emb = self._embed_text(query_text)
         if emb is not None:
-            dense_results = self._knn_search_raw(
-                emb, current_ep, n_results=dense_k, current_arc_no=current_arc_no
-            )
+            dense_results = self._knn_search_raw(emb, current_ep, n_results=dense_k, current_arc_no=current_arc_no)
 
         # 2. Sparse FTS search
         sparse_results = self._fts_search(query_text, current_ep, n_results=sparse_k)
@@ -681,6 +679,15 @@ class VecMemory:
 
         if not top:
             logging.debug("[VecMemory] hybrid search: no results for ep<%d", current_ep)
+            fallback = self._keyword_fallback_search(query_text, current_ep, max_results)
+            if fallback:
+                logging.debug(
+                    "[VecMem] path=hybrid ep<%d q=%r hits=0 fallback=true selected=[] chars=%d",
+                    current_ep,
+                    query_text[:30],
+                    len(fallback),
+                )
+                return fallback
             return ""
 
         # 5. 결과 포맷
@@ -694,10 +701,7 @@ class VecMemory:
             else:
                 source_label = "sparse"
 
-            block = (
-                f"=== EP {ep_num} [{source_label}, rrf={score:.4f}] ===\n"
-                f"{info.get('summary', '')}"
-            )
+            block = f"=== EP {ep_num} [{source_label}, rrf={score:.4f}] ===\n{info.get('summary', '')}"
             if info.get("event_types"):
                 block += f"\n[events] {info['event_types']}"
             if info.get("entity_names"):
@@ -917,13 +921,15 @@ class VecMemory:
             adj_distance = distance
             if current_arc_no is not None and arc_no == current_arc_no:
                 adj_distance = distance * 0.9
-            results.append({
-                "ep_num": ep_num,
-                "summary": summary or "",
-                "event_types": event_types or "",
-                "entity_names": entity_names or "",
-                "distance": adj_distance,
-            })
+            results.append(
+                {
+                    "ep_num": ep_num,
+                    "summary": summary or "",
+                    "event_types": event_types or "",
+                    "entity_names": entity_names or "",
+                    "distance": adj_distance,
+                }
+            )
         results.sort(key=lambda item: float(item["distance"]))
         for rank, item in enumerate(results):
             item["dense_rank"] = rank
@@ -1027,11 +1033,7 @@ class VecMemory:
             list of {"ep_num": int, "summary": str, "event_types": str,
                      "entity_names": str, "fts_rank": int}
         """
-        keywords = [
-            w.replace('"', "").replace("'", "").strip()
-            for w in re.split(r"[\s,.\-|/]+", query)
-            if len(w) >= 2
-        ]
+        keywords = [w.replace('"', "").replace("'", "").strip() for w in re.split(r"[\s,.\-|/]+", query) if len(w) >= 2]
         if not keywords:
             return []
 
@@ -1055,13 +1057,15 @@ class VecMemory:
 
         results = []
         for rank, (ep_num, summary, event_types, entity_names) in enumerate(rows):
-            results.append({
-                "ep_num": ep_num,
-                "summary": summary or "",
-                "event_types": event_types or "",
-                "entity_names": entity_names or "",
-                "fts_rank": rank,
-            })
+            results.append(
+                {
+                    "ep_num": ep_num,
+                    "summary": summary or "",
+                    "event_types": event_types or "",
+                    "entity_names": entity_names or "",
+                    "fts_rank": rank,
+                }
+            )
         return results
 
     @staticmethod

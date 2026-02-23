@@ -160,6 +160,7 @@ class Stage4Context:
             quality_dashboard=getattr(app, "quality_dashboard", None),
             pacing_analyzer=getattr(app, "pacing_analyzer", None),
             pass_rate_monitor=getattr(app, "pass_rate_monitor", None),
+            emotion_tracker=getattr(app, "emotion_tracker", None),
             conditional_modules=cm,
             get_int_input=getattr(app, "_get_int_input", None),
             build_item_acquisition_timeline=getattr(app, "_build_item_acquisition_timeline", None),

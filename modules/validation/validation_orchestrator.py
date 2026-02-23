@@ -362,12 +362,14 @@ class ValidationOrchestrator:
             # [P6-01] FailureLearner 환류 — validation_context에서 주입된 경우에만
             _fl = validation_context.get("_failure_learner") if isinstance(validation_context, dict) else None
             if _fl is not None and hasattr(_fl, "record_failure"):
-                for _f in (blocking_result.get("failures") or []):
+                for _f in blocking_result.get("failures") or []:
                     try:
                         _fl.record_failure(
                             stage=4,
                             failure_type=_f.get("type", "BLOCKING") if isinstance(_f, dict) else "BLOCKING",
-                            description=str(_f.get("description", _f.get("reason", "")))[:200] if isinstance(_f, dict) else str(_f)[:200],
+                            description=str(_f.get("description", _f.get("reason", "")))[:200]
+                            if isinstance(_f, dict)
+                            else str(_f)[:200],
                         )
                     except Exception as _e:
                         logging.debug("[ValidationOrchestrator] FailureLearner 기록 실패 (무시): %s", _e)
@@ -1106,12 +1108,14 @@ class ValidationOrchestrator:
             # [P6-01] FailureLearner 환류 (parallel path)
             _fl_p = validation_context.get("_failure_learner") if isinstance(validation_context, dict) else None
             if _fl_p is not None and hasattr(_fl_p, "record_failure"):
-                for _f in (blocking_result.get("failures") or []):
+                for _f in blocking_result.get("failures") or []:
                     try:
                         _fl_p.record_failure(
                             stage=4,
                             failure_type=_f.get("type", "BLOCKING") if isinstance(_f, dict) else "BLOCKING",
-                            description=str(_f.get("description", _f.get("reason", "")))[:200] if isinstance(_f, dict) else str(_f)[:200],
+                            description=str(_f.get("description", _f.get("reason", "")))[:200]
+                            if isinstance(_f, dict)
+                            else str(_f)[:200],
                         )
                     except Exception as _e:
                         logging.debug("[ValidationOrchestrator] FailureLearner(parallel) 기록 실패 (무시): %s", _e)
@@ -1160,7 +1164,23 @@ class ValidationOrchestrator:
             for idx, r in enumerate(parallel_results):
                 if isinstance(r, Exception):
                     logging.warning("[Sweep7-A] parallel validation %s failed: %s", task_names[idx], r)
-                    parallel_results[idx] = None
+                    if idx == 0:
+                        # [TF-15/P0] consistency validator runtime failure must fail-closed.
+                        parallel_results[idx] = {
+                            "unjustifiable_violations": [
+                                {
+                                    "type": "consistency_validator_runtime_error",
+                                    "severity": "CRITICAL",
+                                    "reason": f"consistency validator failed: {type(r).__name__}",
+                                }
+                            ],
+                            "score_penalty": 0,
+                            "feedback": f"consistency validator runtime error: {r}",
+                        }
+                    elif idx == 1:
+                        parallel_results[idx] = {"total_score": 0, "feedback": "scoring validator failed"}
+                    else:
+                        parallel_results[idx] = {"suggestions": []}
 
         consistency_result, scoring_result, advisory_result = parallel_results
 

@@ -261,7 +261,13 @@ class ProjectContext:
         # [V61.6 Fix] 하위 테이블 동기화(sync_seeds, lore_batch)가 암묵적 트랜잭션을 열어
         # save_anchor의 in_transaction 체크에 의해 commit이 스킵되는 버그 수정
         if self.db.conn.in_transaction:
-            self.db.conn.commit()
+            if result:
+                self.db.conn.commit()
+            else:
+                try:
+                    self.db.conn.rollback()
+                except Exception as rollback_err:
+                    logging.warning(f"[TF-15/P0] save_anchor rollback failed: {rollback_err}")
         return result
 
     def load_v20_anchor(self, stage, default=None):
