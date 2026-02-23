@@ -269,8 +269,8 @@ class Stage4PostProcessor:
             logs_dir = os.path.join(_PROJECTS_DIR, self.ctx.current_project.name, "logs")
             os.makedirs(logs_dir, exist_ok=True)
 
-            if v50_modules_available and self.ctx.failure_learner:
-                self.ctx.failure_learner.save_to_json(os.path.join(logs_dir, "failure_learning.json"))  # TODO: save_to_db 미구현 - JSON 유지
+            # [DB-Eff-P2] failure_learner: 세션 종료 시 main_a.py가 reflexion_memory DB에 저장.
+            # 매 화 중간 저장 불필요 — 누적 학습 이력은 세션 내 메모리 유지로 충분.
 
             if v50_modules_available and self.ctx.character_voice:
                 try:
