@@ -179,7 +179,11 @@ class Stage2Orchestrator:
             )
 
         # [V40.1 Smart Skip] 기존 원고가 있다면 해당 Arc까지 자동 건너뛰기
-        existing_ms_max_ep = self.ctx.get_max_episode_from_manuscripts()
+        existing_ms_max_ep = (
+            self.ctx.get_max_episode_from_manuscripts()
+            if callable(getattr(self.ctx, "get_max_episode_from_manuscripts", None))
+            else 0
+        )
         if existing_ms_max_ep > 0:
             skip_arc_no = self.ctx.calculate_arc_from_episode(existing_ms_max_ep)
             if skip_arc_no > done_count:
@@ -198,12 +202,15 @@ class Stage2Orchestrator:
         self.ctx.ui.log("💡 Tip: 인과율 정밀 용접을 위해 1회 10개(2개 배치) 이내 진행을 권장합니다.")
 
         default_limit = min(done_count + 5, total_count)
-        target_limit = self.ctx.get_int_input(
-            f"👉 몇 번 아크까지 설계하시겠습니까? (현재 {done_count + 1} ~ 최대 {total_count}): ",
-            default=default_limit,
-            min_val=done_count + 1,
-            max_val=total_count,
-        )
+        if callable(getattr(self.ctx, "get_int_input", None)):
+            target_limit = self.ctx.get_int_input(
+                f"👉 몇 번 아크까지 설계하시겠습니까? (현재 {done_count + 1} ~ 최대 {total_count}): ",
+                default=default_limit,
+                min_val=done_count + 1,
+                max_val=total_count,
+            )
+        else:
+            target_limit = default_limit
         target_limit = max(done_count + 1, min(target_limit, total_count))
 
         sem = asyncio.Semaphore(5)
@@ -257,9 +264,10 @@ class Stage2Orchestrator:
                 source_arc_idx = batch_start + idx
                 if isinstance(item, Exception):
                     self.ctx.ui.log(f"⚠️ [Enrich] 병렬 농축 실패 (idx={source_arc_idx}): {item}")
-                    self.ctx.audit_event(
-                        "enrich_error", "batch enrich failed", {"error": str(item), "arc_idx": source_arc_idx}
-                    )
+                    if callable(getattr(self.ctx, "audit_event", None)):
+                        self.ctx.audit_event(
+                            "enrich_error", "batch enrich failed", {"error": str(item), "arc_idx": source_arc_idx}
+                        )
                     failed_indices.append(source_arc_idx)
                     continue
                 if not isinstance(item, dict):
@@ -307,11 +315,13 @@ class Stage2Orchestrator:
                             enriched_batch.append((idx, original_batch_data[idx]))
                         else:
                             self.ctx.ui.log(f"⚠️ [Recovery] idx={idx} 데이터 누락 - 해당 Arc 스킵")
-                            self.ctx.audit_event("data_missing", "arc data not recovered", {"arc_idx": idx})
+                            if callable(getattr(self.ctx, "audit_event", None)):
+                                self.ctx.audit_event("data_missing", "arc data not recovered", {"arc_idx": idx})
 
             if not enriched_batch:
                 self.ctx.ui.log("❌ [Critical] 농축 결과가 비어 있습니다. 공정을 중단합니다.")
-                self.ctx.audit_event("enrich_error", "empty batch after sanitize and recovery")
+                if callable(getattr(self.ctx, "audit_event", None)):
+                    self.ctx.audit_event("enrich_error", "empty batch after sanitize and recovery")
                 return
 
             ### [B. 사후 용접 및 고유 명사 앵커링]
@@ -327,11 +337,12 @@ class Stage2Orchestrator:
                         )
                     except Exception as stitch_err:
                         self.ctx.ui.log(f"⚠️ [Analyst] Arc {arc_a_idx + 1}-{arc_b_idx + 1} 용접 실패: {stitch_err}")
-                        self.ctx.audit_event(
-                            "analyst_error",
-                            "stitch_joints failed",
-                            {"arc_pair": f"{arc_a_idx + 1}-{arc_b_idx + 1}", "error": str(stitch_err)},
-                        )
+                        if callable(getattr(self.ctx, "audit_event", None)):
+                            self.ctx.audit_event(
+                                "analyst_error",
+                                "stitch_joints failed",
+                                {"arc_pair": f"{arc_a_idx + 1}-{arc_b_idx + 1}", "error": str(stitch_err)},
+                            )
                         continue
 
                     if stitch_res and isinstance(stitch_res, dict) and stitch_res.get("status") == "REPAIRED":
@@ -367,9 +378,10 @@ class Stage2Orchestrator:
                     lack_report = self.ctx.agents["analyst"].get_lack_report(self.ctx.sys.hud.pro_root)
                 except Exception as lack_err:
                     self.ctx.ui.log(f"⚠️ [Analyst] 결핍 리포트 생성 실패: {lack_err}")
-                    self.ctx.audit_event(
-                        "analyst_error", "get_lack_report failed", {"arc_no": global_arc_no, "error": str(lack_err)}
-                    )
+                    if callable(getattr(self.ctx, "audit_event", None)):
+                        self.ctx.audit_event(
+                            "analyst_error", "get_lack_report failed", {"arc_no": global_arc_no, "error": str(lack_err)}
+                        )
                     lack_report = {"martial_deficit": "분석 실패", "status": "error"}
 
                 ### [4-R3-a] Preflight 상태 초기화
@@ -569,11 +581,12 @@ class Stage2Orchestrator:
 
                 if not passed:
                     self.ctx.ui.log(f"🚨 [Critical] Arc {global_arc_no} 최종 설계 실패.")
-                    self.ctx.audit_event(
-                        "arc_design_failed",
-                        "max retries exhausted",
-                        {"arc_no": global_arc_no, "batch_start": batch_start, "batch_end": batch_end},
-                    )
+                    if callable(getattr(self.ctx, "audit_event", None)):
+                        self.ctx.audit_event(
+                            "arc_design_failed",
+                            "max retries exhausted",
+                            {"arc_no": global_arc_no, "batch_start": batch_start, "batch_end": batch_end},
+                        )
 
                     # [V60.46] 실패 리포트 생성 및 출력
                     failure_report_path = (
@@ -756,7 +769,8 @@ class Stage2Orchestrator:
                 self.ctx.ui.log(f"⚠️ [Slack] 알림 전송 실패 (무시하고 계속): {slack_err}")
 
         self.ctx.ui.log("✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.")
-        self.ctx.write_audit_summary("stage2_complete")
+        if callable(getattr(self.ctx, "write_audit_summary", None)):
+            self.ctx.write_audit_summary("stage2_complete")
         try:
             await asyncio.to_thread(input, "\n[Enter] 메뉴로 돌아가기")
         except (EOFError, KeyboardInterrupt):

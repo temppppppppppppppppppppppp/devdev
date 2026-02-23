@@ -171,11 +171,12 @@ class Stage2ValidationPipeline:
         # [데이터 검증]
         if not refined_arc or not isinstance(refined_arc, dict):
             self.ctx.ui.log(f"🚨 [Analyst Error] Arc {global_arc_no} 설계 결과가 유효하지 않음: {type(refined_arc)}")
-            self.ctx.audit_event(
-                "analyst_error",
-                "invalid response type",
-                {"arc_no": global_arc_no, "type": str(type(refined_arc))},
-            )
+            if callable(getattr(self.ctx, "audit_event", None)):
+                self.ctx.audit_event(
+                    "analyst_error",
+                    "invalid response type",
+                    {"arc_no": global_arc_no, "type": str(type(refined_arc))},
+                )
             current_feedback = "Analyst가 유효한 딕셔너리를 반환하지 않았습니다. JSON 규격을 확인하라."
             return {"action": "retry", "current_feedback": current_feedback}
 
@@ -189,13 +190,15 @@ class Stage2ValidationPipeline:
                     arc=refined_arc, prev_arcs=all_refined_arcs
                 )
                 if corrections:
-                    self.ctx.audit_event(
-                        "v60_25_auto_correct",
-                        "arc auto-corrected",
-                        {"arc_no": global_arc_no, "corrections": corrections[:5]},
-                    )
+                    if callable(getattr(self.ctx, "audit_event", None)):
+                        self.ctx.audit_event(
+                            "v60_25_auto_correct",
+                            "arc auto-corrected",
+                            {"arc_no": global_arc_no, "corrections": corrections[:5]},
+                        )
             except Exception as ac_err:
-                self.ctx.audit_event("v60_25_auto_correct_error", str(ac_err)[:100])
+                if callable(getattr(self.ctx, "audit_event", None)):
+                    self.ctx.audit_event("v60_25_auto_correct_error", str(ac_err)[:100])
 
         # 🔒 [V49.4] Pre-Validation
         suspected_duplicates = []
@@ -206,11 +209,12 @@ class Stage2ValidationPipeline:
                 for v in pre_validation["violations"][:2]:
                     self.ctx.ui.log(f"         {v}")
                 suspected_duplicates = pre_validation["violations"][:3]
-                self.ctx.audit_event(
-                    "constraint_suspected",
-                    "suspected duplicates for LLM review",
-                    {"arc_no": global_arc_no, "suspected": suspected_duplicates},
-                )
+                if callable(getattr(self.ctx, "audit_event", None)):
+                    self.ctx.audit_event(
+                        "constraint_suspected",
+                        "suspected duplicates for LLM review",
+                        {"arc_no": global_arc_no, "suspected": suspected_duplicates},
+                    )
 
             if pre_validation.get("warnings"):
                 for w in pre_validation["warnings"][:2]:
@@ -220,7 +224,8 @@ class Stage2ValidationPipeline:
         flow_guard = self._stage2_flow_guard(refined_arc)
         if flow_guard.get("status") == "REJECT":
             self.ctx.ui.log(f"   🚨 [Flow Guard] {flow_guard.get('reason')}")
-            self.ctx.audit_event("flow_guard", flow_guard.get("reason"), {"arc_no": global_arc_no})
+            if callable(getattr(self.ctx, "audit_event", None)):
+                self.ctx.audit_event("flow_guard", flow_guard.get("reason"), {"arc_no": global_arc_no})
             current_feedback = flow_guard.get("feedback", "서사 폭주/정체 위험이 감지되었습니다.")
             return {"action": "retry", "current_feedback": current_feedback}
 
@@ -229,11 +234,12 @@ class Stage2ValidationPipeline:
             prev_tactical = all_refined_arcs[-1].get("tactical_doc", "")
             if self._is_tactical_doc_duplicate(refined_arc.get("tactical_doc", ""), [prev_tactical]):
                 self.ctx.ui.log("   🚨 [Duplicate Guard] 전술 설계가 직전 아크와 중복됩니다. 재생성합니다.")
-                self.ctx.audit_event(
-                    "duplicate_guard",
-                    "arc tactical_doc duplicated",
-                    {"arc_no": global_arc_no, "prev_arc_no": all_refined_arcs[-1].get("arc_no")},
-                )
+                if callable(getattr(self.ctx, "audit_event", None)):
+                    self.ctx.audit_event(
+                        "duplicate_guard",
+                        "arc tactical_doc duplicated",
+                        {"arc_no": global_arc_no, "prev_arc_no": all_refined_arcs[-1].get("arc_no")},
+                    )
                 current_feedback = "직전 아크와 동일한 전술 설계입니다. 사건/공간/인과를 완전히 새로 구성하십시오."
                 refined_arc = None
                 return {"action": "retry", "current_feedback": current_feedback}
@@ -241,13 +247,15 @@ class Stage2ValidationPipeline:
         # [안전성 패치] Director 호출 전 필수 데이터 검증
         if not refined_arc or not isinstance(refined_arc, dict):
             self.ctx.ui.log("🚨 [Data Error] refined_arc가 유효하지 않습니다")
-            self.ctx.audit_event("data_validation_error", "refined_arc invalid", {"arc_no": global_arc_no})
+            if callable(getattr(self.ctx, "audit_event", None)):
+                self.ctx.audit_event("data_validation_error", "refined_arc invalid", {"arc_no": global_arc_no})
             current_feedback = "설계 데이터 구조 오류. 전술 설계를 완전한 JSON으로 재작성하라."
             return {"action": "retry", "current_feedback": current_feedback}
 
         if not enriched_block or not isinstance(enriched_block, dict):
             self.ctx.ui.log("🚨 [Data Error] enriched_block이 유효하지 않습니다")
-            self.ctx.audit_event("data_validation_error", "enriched_block invalid", {"arc_no": global_arc_no})
+            if callable(getattr(self.ctx, "audit_event", None)):
+                self.ctx.audit_event("data_validation_error", "enriched_block invalid", {"arc_no": global_arc_no})
             current_feedback = "농축 데이터 누락. 블록 정보를 포함하여 재설계하라."
             return {"action": "retry", "current_feedback": current_feedback}
 
@@ -284,15 +292,16 @@ class Stage2ValidationPipeline:
                 for issue in draft_result["critical_issues"][:3]:
                     self.ctx.ui.log(f"         ❌ {issue}")
 
-                self.ctx.audit_event(
-                    "draft_validation_reject",
-                    "draft validation failed",
-                    {
-                        "arc_no": global_arc_no,
-                        "score": draft_result["score"],
-                        "critical_count": len(draft_result["critical_issues"]),
-                    },
-                )
+                if callable(getattr(self.ctx, "audit_event", None)):
+                    self.ctx.audit_event(
+                        "draft_validation_reject",
+                        "draft validation failed",
+                        {
+                            "arc_no": global_arc_no,
+                            "score": draft_result["score"],
+                            "critical_count": len(draft_result["critical_issues"]),
+                        },
+                    )
 
                 # [Sweep53] ArcDraftValidator 반환 키에 맞춤 (issues→critical_issues/warnings)
                 critical_only = draft_result.get("critical_issues", [])
@@ -324,15 +333,16 @@ class Stage2ValidationPipeline:
                                     fix_summary = fix.get("change_summary", fix.get("issue", "")[:50])
                                     self.ctx.ui.log(f"         🔨 {fix_summary}")
 
-                                self.ctx.audit_event(
-                                    "arc_corrector_success",
-                                    "arc partially corrected",
-                                    {
-                                        "arc_no": global_arc_no,
-                                        "corrections": len(corrections_made),
-                                        "failed": len(corrections_failed),
-                                    },
-                                )
+                                if callable(getattr(self.ctx, "audit_event", None)):
+                                    self.ctx.audit_event(
+                                        "arc_corrector_success",
+                                        "arc partially corrected",
+                                        {
+                                            "arc_no": global_arc_no,
+                                            "corrections": len(corrections_made),
+                                            "failed": len(corrections_failed),
+                                        },
+                                    )
 
                                 revalidation = self.ctx.arc_draft_validator.validate(
                                     arc=refined_arc,
@@ -354,7 +364,8 @@ class Stage2ValidationPipeline:
                             else:
                                 reason = correction_log.get("reason", "알 수 없음")
                                 self.ctx.ui.log(f"      ⚠️ [V60.42] ArcCorrector 수정 실패: {reason}")
-                                self.ctx.audit_event("arc_corrector_fail", reason, {"arc_no": global_arc_no})
+                                if callable(getattr(self.ctx, "audit_event", None)):
+                                    self.ctx.audit_event("arc_corrector_fail", reason, {"arc_no": global_arc_no})
                                 issues_str = "\n".join([f"- {i.get('message', str(i))}" for i in major_only[:3]])
                                 current_feedback = f"[V60.42 수정 불가]\n{issues_str}\n재설계 필요."
                                 refined_arc = None
@@ -369,7 +380,8 @@ class Stage2ValidationPipeline:
 
                     except Exception as corr_err:
                         self.ctx.ui.log(f"      ⚠️ [V60.42] ArcCorrector 오류: {str(corr_err)[:50]}")
-                        self.ctx.audit_event("arc_corrector_error", str(corr_err)[:100])
+                        if callable(getattr(self.ctx, "audit_event", None)):
+                            self.ctx.audit_event("arc_corrector_error", str(corr_err)[:100])
                         issues_str = "\n".join([f"- {i}" for i in draft_result["critical_issues"][:5]])
                         current_feedback = f"[V60.11 검증 실패 + Corrector 오류]\n{issues_str}"
                         refined_arc = None
@@ -415,11 +427,12 @@ class Stage2ValidationPipeline:
                 for v in violations[:3]:
                     self.ctx.ui.log(f"         - {v.get('type', 'unknown')}: {(v.get('description') or '')[:100]}")
 
-                self.ctx.audit_event(
-                    "arc_continuity_reject",
-                    "continuity violation detected",
-                    {"arc_no": global_arc_no, "severity": severity, "violations_count": len(violations)},
-                )
+                if callable(getattr(self.ctx, "audit_event", None)):
+                    self.ctx.audit_event(
+                        "arc_continuity_reject",
+                        "continuity violation detected",
+                        {"arc_no": global_arc_no, "severity": severity, "violations_count": len(violations)},
+                    )
 
                 # [V51.4] 실패 기록
                 if V50_MODULES_AVAILABLE and self.ctx.failure_learner:

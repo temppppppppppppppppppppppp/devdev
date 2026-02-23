@@ -35,7 +35,7 @@ class PromptLoader:
     """
 
     _instance: Optional["PromptLoader"] = None
-    _cache: dict[str, dict[str, str]] = {}
+    _cache: dict[tuple[str, str], dict[str, str]] = {}
     _instance_lock = threading.Lock()
     _cache_lock = threading.Lock()
 
@@ -68,15 +68,16 @@ class PromptLoader:
 
     def _load_yaml_file(self, domain: str) -> dict[str, str]:
         """YAML 파일을 로드하여 딕셔너리로 반환."""
+        cache_key = (str(self._prompts_dir), domain)
         with self._cache_lock:
-            if domain in self._cache:
-                return self._cache[domain]
+            if cache_key in self._cache:
+                return self._cache[cache_key]
 
         yaml_path = self._prompts_dir / f"{domain}.yaml"
         if not yaml_path.exists():
             logging.debug(f"[PromptLoader] YAML not found: {yaml_path}")
             with self._cache_lock:
-                self._cache[domain] = {}
+                self._cache[cache_key] = {}
             return {}
 
         try:
@@ -140,14 +141,14 @@ class PromptLoader:
                 prompts[current_key] = "\n".join(current_lines)
 
             with self._cache_lock:
-                self._cache[domain] = prompts
+                self._cache[cache_key] = prompts
             logging.debug(f"[PromptLoader] Loaded {len(prompts)} prompts from {domain}.yaml")
             return prompts
 
         except Exception as e:
             logging.warning(f"[PromptLoader] Failed to load {yaml_path}: {e}")
             with self._cache_lock:
-                self._cache[domain] = {}
+                self._cache[cache_key] = {}
             return {}
 
     def load(self, domain: str, key: str, **kwargs: Any) -> str | None:
@@ -190,6 +191,8 @@ class PromptLoader:
         """캐시 무효화. domain 지정 시 해당 도메인만, 없으면 전체 초기화."""
         with self._cache_lock:
             if domain:
-                self._cache.pop(domain, None)
+                keys_to_remove = [k for k in self._cache if k[1] == domain]
+                for k in keys_to_remove:
+                    del self._cache[k]
             else:
                 self._cache.clear()

@@ -400,8 +400,8 @@ class DirectorContinuityValidator:
             prompt += f"\n\n### 🔍 [SC-5] 벡터 메모리 참고 — 과거 에피소드 관련 컨텍스트\n{memory_context}"
         if not prompt:
             return {
-                "decision": "PASS",
-                "conflicts": [],
+                "decision": "REJECT",
+                "conflicts": [{"severity": "CRITICAL", "description": "프롬프트 로드 실패 — fail-closed"}],
                 "summary": "Prompt loading failed: MANUSCRIPT_HISTORY_CONFLICT_PROMPT",
                 "prompt_error": True,
             }
@@ -735,8 +735,8 @@ class DirectorContinuityValidator:
                 prompt += f"\n\n### 🔍 [SC-5] 벡터 메모리 참고 — 과거 에피소드 관련 컨텍스트\n{memory_context}"
             if not prompt:
                 return {
-                    "decision": "PASS",
-                    "conflicts": [],
+                    "decision": "REJECT",
+                    "conflicts": [{"severity": "CRITICAL", "description": "프롬프트 로드 실패 — fail-closed"}],
                     "summary": "Prompt loading failed: MANUSCRIPT_HISTORY_CONFLICT_PROMPT",
                     "prompt_error": True,
                 }
