@@ -86,8 +86,17 @@ class VecMemory:
                 # shared 모드에서도 메타데이터 테이블 + 차원 마이그레이션 검사
                 self._ensure_metadata_and_migrate()
             except Exception:
-                self.initialization_error = "vec_episodes table not available in shared connection"
-                self._ui_log("[VecMemory] shared 모드: vec_episodes 테이블 없음 -> 벡터 검색 비활성")
+                # [Hybrid-P2] shared 모드에서도 최소 테이블을 자체 부트스트랩 시도
+                try:
+                    if _VEC_AVAILABLE:
+                        conn.enable_load_extension(True)
+                        sqlite_vec.load(conn)
+                        conn.enable_load_extension(False)
+                    self._ensure_tables()
+                    self.has_valid_memory = True
+                except Exception:
+                    self.initialization_error = "vec_episodes table not available in shared connection"
+                    self._ui_log("[VecMemory] shared 모드: vec_episodes 테이블 없음 -> 벡터 검색 비활성")
         else:
             self._init_db()
         self._init_genai()
@@ -178,6 +187,16 @@ class VecMemory:
                     ep_num    INTEGER PRIMARY KEY,
                     synced    INTEGER DEFAULT 0,
                     synced_at TIMESTAMP
+                )
+            """)
+            # [Hybrid-P2] FTS5 전문 검색 테이블
+            cur.execute("""
+                CREATE VIRTUAL TABLE IF NOT EXISTS episode_fts
+                USING fts5(
+                    summary,
+                    event_types,
+                    entity_names,
+                    tokenize='unicode61 remove_diacritics 2'
                 )
             """)
             cur.execute("""
@@ -379,6 +398,12 @@ class VecMemory:
                        VALUES (?, ?, ?, ?, ?, ?)""",
                     (ep_num, summary[:1000], causal_str, arc_no, evt_str, ent_str),
                 )
+                # [Hybrid-P2] FTS 동기화
+                cur.execute("DELETE FROM episode_fts WHERE rowid = ?", (ep_num,))
+                cur.execute(
+                    "INSERT INTO episode_fts(rowid, summary, event_types, entity_names) VALUES (?,?,?,?)",
+                    (ep_num, summary or "", evt_str or "", ent_str or ""),
+                )
 
                 # [DB-MERGE] shared 모드: DBManager sync_status.vector_synced 사용
                 if self._shared_mode:
@@ -516,6 +541,100 @@ class VecMemory:
                 block += f"\n사건: {evt}"
             if ent:
                 block += f"\n인물: {ent}"
+            blocks.append(block)
+
+        return "\n\n".join(blocks)
+
+    def retrieve_hybrid_context(
+        self,
+        query: str,
+        current_ep: int,
+        dense_k: int = 10,
+        sparse_k: int = 10,
+        max_results: int = 5,
+        current_arc_no: int | None = None,
+        rrf_k: int = 60,
+    ) -> str:
+        """[Hybrid-P3] Dense (KNN) + Sparse (FTS5) RRF 하이브리드 검색.
+
+        1. Dense: KNN embedding search → dense_rank 부여
+        2. Sparse: FTS5 keyword search → fts_rank 부여
+        3. RRF score = 1/(rrf_k+dense_rank) + 1/(rrf_k+fts_rank)
+        4. 상위 max_results 포맷 반환
+        """
+        if not self.has_valid_memory:
+            return ""
+
+        query_text = query.strip()
+        if not query_text:
+            return ""
+
+        # 1. Dense search
+        dense_results: list[dict] = []
+        emb = self._embed_text(query_text)
+        if emb is not None:
+            dense_results = self._knn_search_raw(
+                emb, current_ep, n_results=dense_k, current_arc_no=current_arc_no
+            )
+
+        # 2. Sparse FTS search
+        sparse_results = self._fts_search(query_text, current_ep, n_results=sparse_k)
+
+        # 3. RRF fusion
+        ep_scores: dict[int, dict] = {}
+
+        for item in dense_results:
+            ep = item["ep_num"]
+            ep_scores[ep] = {**item, "dense_rank": item["dense_rank"], "sparse_rank": None}
+
+        for item in sparse_results:
+            ep = item["ep_num"]
+            if ep in ep_scores:
+                ep_scores[ep]["sparse_rank"] = item["fts_rank"]
+            else:
+                ep_scores[ep] = {**item, "dense_rank": None, "sparse_rank": item["fts_rank"]}
+
+        # 4. 점수 계산 및 정렬
+        scored = []
+        for ep, info in ep_scores.items():
+            score = self._rrf_score(info.get("dense_rank"), info.get("sparse_rank"), k=rrf_k)
+            scored.append((score, ep, info))
+
+        scored.sort(key=lambda x: x[0], reverse=True)
+        logging.debug(
+            "[Hybrid] ep<%d query=%r dense=%d sparse=%d fused=%d top_score=%.4f",
+            current_ep,
+            query_text[:40],
+            len(dense_results),
+            len(sparse_results),
+            len(scored),
+            scored[0][0] if scored else 0.0,
+        )
+        top = scored[:max_results]
+
+        if not top:
+            logging.debug("[VecMemory] hybrid search: no results for ep<%d", current_ep)
+            return ""
+
+        # 5. 결과 포맷
+        blocks = []
+        for score, ep_num, info in top:
+            source_label = "hybrid"
+            if info.get("dense_rank") is not None and info.get("sparse_rank") is not None:
+                source_label = "hybrid"
+            elif info.get("dense_rank") is not None:
+                source_label = "dense"
+            else:
+                source_label = "sparse"
+
+            block = (
+                f"=== EP {ep_num} [{source_label}, rrf={score:.4f}] ===\n"
+                f"{info.get('summary', '')}"
+            )
+            if info.get("event_types"):
+                block += f"\n[events] {info['event_types']}"
+            if info.get("entity_names"):
+                block += f"\n[entities] {info['entity_names']}"
             blocks.append(block)
 
         return "\n\n".join(blocks)
@@ -669,6 +788,53 @@ class VecMemory:
 
         return "\n\n".join(blocks)
 
+    def _knn_search_raw(
+        self,
+        emb: list,
+        current_ep: int,
+        n_results: int = 10,
+        current_arc_no: int | None = None,
+    ) -> list[dict]:
+        """[Hybrid-P3] KNN 검색 결과를 dict 리스트로 반환 (RRF용).
+
+        Returns:
+            list of {"ep_num": int, "summary": str, "event_types": str,
+                     "entity_names": str, "distance": float, "dense_rank": int}
+        """
+        ser = _serialize_f32(emb)
+        try:
+            with self._db_lock():
+                rows = self._conn.execute(
+                    """SELECT vec_episodes.rowid, distance,
+                              m.summary, m.event_types, m.entity_names, m.arc_no
+                       FROM vec_episodes
+                       LEFT JOIN episode_meta m ON m.ep_num = vec_episodes.rowid
+                       WHERE embedding MATCH ?
+                         AND vec_episodes.rowid < ?
+                       ORDER BY distance
+                       LIMIT ?""",
+                    (ser, current_ep, n_results),
+                ).fetchall()
+        except Exception as _e:
+            logging.debug("[VecMemory] KNN raw search failed: %s", _e)
+            return []
+
+        results = []
+        for rank, (ep_num, distance, summary, event_types, entity_names, arc_no) in enumerate(rows):
+            # arc bonus: same arc gets distance * 0.9
+            adj_distance = distance
+            if current_arc_no is not None and arc_no == current_arc_no:
+                adj_distance = distance * 0.9
+            results.append({
+                "ep_num": ep_num,
+                "summary": summary or "",
+                "event_types": event_types or "",
+                "entity_names": entity_names or "",
+                "distance": adj_distance,
+                "dense_rank": rank,
+            })
+        return results
+
     def _knn_search(self, query_emb: list, current_ep: int, n_results: int) -> str:
         """벡터 KNN 검색 후 맥락 블록 문자열 반환."""
         with self._db_lock():
@@ -752,6 +918,60 @@ class VecMemory:
         except Exception as e:
             self._ui_log(f"[VecMemory] 키워드 폴백 검색 오류: {str(e)[:50]}")
             return ""
+
+    def _fts_search(self, query: str, current_ep: int, n_results: int = 10) -> list[dict]:
+        """[Hybrid-P2] FTS5 전문 검색. 결과를 dict 리스트로 반환.
+
+        Returns:
+            list of {"ep_num": int, "summary": str, "event_types": str,
+                     "entity_names": str, "fts_rank": int}
+        """
+        keywords = [w for w in __import__("re").split(r"[\s,.\-|/]+", query) if len(w) >= 2]
+        if not keywords:
+            return []
+
+        # FTS5 쿼리 구성 (각 키워드 OR 결합)
+        fts_query = " OR ".join(f'"{kw}"' for kw in keywords[:5])
+
+        try:
+            with self._db_lock():
+                rows = self._conn.execute(
+                    """SELECT rowid, summary, event_types, entity_names
+                       FROM episode_fts
+                       WHERE episode_fts MATCH ?
+                         AND rowid < ?
+                       ORDER BY rank
+                       LIMIT ?""",
+                    (fts_query, current_ep, n_results),
+                ).fetchall()
+        except Exception as _e:
+            logging.debug("[VecMemory] FTS search failed: %s", _e)
+            return []
+
+        results = []
+        for rank, (ep_num, summary, event_types, entity_names) in enumerate(rows):
+            results.append({
+                "ep_num": ep_num,
+                "summary": summary or "",
+                "event_types": event_types or "",
+                "entity_names": entity_names or "",
+                "fts_rank": rank,
+            })
+        return results
+
+    @staticmethod
+    def _rrf_score(dense_rank: int | None, sparse_rank: int | None, k: int = 60) -> float:
+        """[Hybrid-P3] Reciprocal Rank Fusion 점수 계산.
+
+        score = 1/(k + dense_rank) + 1/(k + sparse_rank)
+        rank가 없으면 해당 항 제외.
+        """
+        score = 0.0
+        if dense_rank is not None:
+            score += 1.0 / (k + dense_rank)
+        if sparse_rank is not None:
+            score += 1.0 / (k + sparse_rank)
+        return score
 
     def _load_episode_meta(self, ep_num: int) -> dict | None:
         """에피소드 메타데이터 로드."""
@@ -886,7 +1106,9 @@ class VecMemory:
                 count = len(rows)
                 for (ep,) in rows:
                     cur.execute("DELETE FROM vec_episodes WHERE rowid = ?", (ep,))
+                    cur.execute("DELETE FROM episode_fts WHERE rowid = ?", (ep,))
                 cur.execute("DELETE FROM episode_meta WHERE ep_num >= ?", (target_ep,))
+                cur.execute("DELETE FROM episode_fts WHERE rowid >= ?", (target_ep,))
                 if self._shared_mode:
                     cur.execute("UPDATE sync_status SET vector_synced = 0 WHERE ep_num >= ?", (target_ep,))
                 else:

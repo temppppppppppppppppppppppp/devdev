@@ -181,3 +181,8 @@ smart_retrieval:
   max_queries_per_plan: 8
   slot_max_chars_default: 1500  # [TF7-P2-08] 슬롯 기본 최대 글자수
   max_npcs_per_slot: 5          # [TF7-P2-08] 슬롯당 최대 NPC 수
+  # [Hybrid-P4] 하이브리드 검색 설정
+  retrieval_mode: dense          # dense | hybrid | sparse
+  dense_k: 10                    # KNN 후보 수
+  sparse_k: 10                   # FTS 후보 수
+  rrf_k: 60                      # RRF k 파라미터

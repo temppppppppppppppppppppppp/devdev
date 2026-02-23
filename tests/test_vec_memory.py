@@ -653,3 +653,113 @@ class TestRetrievalCountConfig:
         assert val > 12, (
             f"vector_max_results_s2={val} — YAML이 하드코드 기본값(12)을 초과해야 함 (P0-4 미적용)"
         )
+
+
+class TestDenseBaselineRegression:
+    """Phase 0: dense-only 동작 회귀 기준선."""
+
+    def _make_vec(self, db_conn):
+        """VecMemory 공유 모드 인스턴스 생성."""
+        import threading
+
+        lock = threading.RLock()
+        from modules.core.vec_memory import VecMemory
+
+        return VecMemory(conn=db_conn, lock=lock)
+
+    def test_retrieve_high_res_returns_str(self, tmp_path):
+        """retrieve_high_res_context()는 항상 str을 반환한다."""
+        import sqlite3
+
+        conn = sqlite3.connect(":memory:")
+        vm = self._make_vec(conn)
+        result = vm.retrieve_high_res_context("test query", current_ep=5)
+        assert isinstance(result, str)
+
+    def test_retrieve_multi_query_returns_str(self, tmp_path):
+        """retrieve_multi_query_context()는 항상 str을 반환한다."""
+        import sqlite3
+
+        conn = sqlite3.connect(":memory:")
+        vm = self._make_vec(conn)
+        result = vm.retrieve_multi_query_context(
+            queries=["query1", "query2"],
+            current_ep=5,
+            max_results=3,
+        )
+        assert isinstance(result, str)
+
+    def test_no_memory_returns_empty(self, tmp_path):
+        """벡터 데이터 없을 때 빈 문자열 반환."""
+        import sqlite3
+
+        conn = sqlite3.connect(":memory:")
+        vm = self._make_vec(conn)
+        assert vm.retrieve_high_res_context("any query", current_ep=3) == ""
+        assert vm.retrieve_multi_query_context(["any"], current_ep=3) == ""
+
+
+class TestHybridRetrieval:
+    """Phase 5: hybrid retrieval 경로 검증."""
+
+    def _make_vm(self):
+        import sqlite3
+        import threading
+
+        from modules.core.vec_memory import VecMemory
+
+        conn = sqlite3.connect(":memory:")
+        vm = VecMemory(conn=conn, lock=threading.RLock())
+        return vm, conn
+
+    def test_retrieve_hybrid_returns_str(self):
+        """retrieve_hybrid_context()는 항상 str을 반환한다."""
+        vm, _ = self._make_vm()
+        result = vm.retrieve_hybrid_context("test query", current_ep=5)
+        assert isinstance(result, str)
+
+    def test_retrieve_hybrid_empty_db_returns_empty(self):
+        """벡터 데이터 없을 때 빈 문자열 반환."""
+        vm, _ = self._make_vm()
+        assert vm.retrieve_hybrid_context("query", current_ep=3) == ""
+
+    def test_rrf_score_both_ranks(self):
+        """RRF 점수: dense+sparse 모두 있으면 각 단독보다 크다."""
+        from modules.core.vec_memory import VecMemory
+
+        score_both = VecMemory._rrf_score(0, 0, k=60)
+        score_dense_only = VecMemory._rrf_score(0, None, k=60)
+        score_sparse_only = VecMemory._rrf_score(None, 0, k=60)
+        assert score_both > score_dense_only
+        assert score_both > score_sparse_only
+
+    def test_rrf_score_none_rank_excluded(self):
+        """RRF 점수: rank None은 해당 항 제외."""
+        from modules.core.vec_memory import VecMemory
+
+        score = VecMemory._rrf_score(None, None, k=60)
+        assert score == 0.0
+
+    def test_fts_table_exists_after_init(self):
+        """VecMemory 초기화 후 episode_fts 테이블이 존재한다."""
+        vm, conn = self._make_vm()
+        tables = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type IN ('table','shadow')"
+        ).fetchall()
+        names = [t[0] for t in tables]
+        assert any("episode_fts" in n for n in names), f"episode_fts not in {names}"
+
+    def test_fts_search_empty_db_returns_empty_list(self):
+        """FTS 검색: 빈 DB에서 빈 리스트 반환."""
+        vm, _ = self._make_vm()
+        result = vm._fts_search("이준혁", current_ep=10, n_results=5)
+        assert isinstance(result, list)
+        assert len(result) == 0
+
+    def test_retrieval_mode_dense_uses_existing_api(self):
+        """retrieval_mode=dense일 때 retrieve_hybrid_context가 str을 반환한다."""
+        vm, _ = self._make_vm()
+        result = vm.retrieve_hybrid_context(
+            "query", current_ep=5, dense_k=5, sparse_k=5, max_results=3
+        )
+        assert isinstance(result, str)
