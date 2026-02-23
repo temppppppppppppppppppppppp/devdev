@@ -371,9 +371,7 @@ class TestMultiQueryDistanceFirst:
             return vecs[idx]
 
         m._embed_text = MagicMock(side_effect=side_effect)
-        result = m.retrieve_multi_query_context(
-            ["q_ep1", "q_ep6"], current_ep=10, max_results=2
-        )
+        result = m.retrieve_multi_query_context(["q_ep1", "q_ep6"], current_ep=10, max_results=2)
         # ep1과 ep6 모두 최상위 관련도 → 둘 다 포함되어야 함
         assert "제 1 화의 기억" in result
         assert "제 6 화의 기억" in result
@@ -385,9 +383,7 @@ class TestMultiQueryDistanceFirst:
 
         # ep1과 매우 유사한 쿼리 → ep1이 distance 최소, ep5가 최대
         m._embed_text = MagicMock(return_value=_make_similar_vec(1.0, 0.001))
-        result = m.retrieve_multi_query_context(
-            ["q1"], current_ep=10, max_results=1
-        )
+        result = m.retrieve_multi_query_context(["q1"], current_ep=10, max_results=1)
         # 가장 관련도 높은 ep1이 선택되어야 함
         assert "제 1 화의 기억" in result
 
@@ -407,9 +403,7 @@ class TestMultiQueryDistanceFirst:
             return vecs[idx]
 
         m._embed_text = MagicMock(side_effect=side_effect)
-        result = m.retrieve_multi_query_context(
-            ["q1", "q2"], current_ep=10, max_results=5
-        )
+        result = m.retrieve_multi_query_context(["q1", "q2"], current_ep=10, max_results=5)
         # ep3과 ep4가 모두 후보이지만 연속이라 ep4(높은 distance)는 제거됨
         assert "제 3 화의 기억" in result
         # ep4는 ep3과 adjacent(±1)이므로 제거
@@ -431,9 +425,7 @@ class TestEmbeddingKeywordFallback:
         ]
         for ep, summary, evt, ent in data:
             m._embed_text = MagicMock(return_value=_make_vec(float(ep)))
-            m.memorize_v20_episode(
-                ep, f"text_{ep}", summary, {}, event_types=[evt], entity_names=[ent]
-            )
+            m.memorize_v20_episode(ep, f"text_{ep}", summary, {}, event_types=[evt], entity_names=[ent])
 
     def test_embedding_failure_uses_keyword_fallback(self, mem_with_embed):
         """임베딩 생성 실패 시 빈 문자열 대신 keyword SQL fallback 결과가 반환된다."""
@@ -477,9 +469,7 @@ class TestEmbeddingKeywordFallback:
         self._populate_with_keywords(m)
 
         m._embed_text = MagicMock(return_value=None)
-        result = m.retrieve_multi_query_context(
-            ["조민", "주지약"], current_ep=10, max_results=3
-        )
+        result = m.retrieve_multi_query_context(["조민", "주지약"], current_ep=10, max_results=3)
         # 임베딩 실패 → keyword fallback 동작
         assert result != ""
         assert "화의 기억" in result
@@ -490,9 +480,7 @@ class TestEmbeddingKeywordFallback:
         self._populate_with_keywords(m)
 
         m._embed_text = MagicMock(return_value=None)
-        result = m.retrieve_multi_query_context(
-            ["xyzzynotexist1", "xyzzynotexist2"], current_ep=10
-        )
+        result = m.retrieve_multi_query_context(["xyzzynotexist1", "xyzzynotexist2"], current_ep=10)
         assert result == ""
 
     def test_keyword_fallback_excludes_future_episodes(self, mem_with_embed):
@@ -641,18 +629,14 @@ class TestRetrievalCountConfig:
         data = self._load_yaml_direct()
         val = int(data["context"]["vector_max_results_s4"])
         # P0-4 이후 YAML은 20, 하드코드 기본값은 16
-        assert val > 16, (
-            f"vector_max_results_s4={val} — YAML이 하드코드 기본값(16)을 초과해야 함 (P0-4 미적용)"
-        )
+        assert val > 16, f"vector_max_results_s4={val} — YAML이 하드코드 기본값(16)을 초과해야 함 (P0-4 미적용)"
 
     def test_stage2_max_results_yaml_exceeds_hardcoded_default(self):
         """YAML 설정값이 Python 하드코드 기본값(12)보다 크다 — P0-4 업그레이드 확인."""
         data = self._load_yaml_direct()
         val = int(data["context"]["vector_max_results_s2"])
         # P0-4 이후 YAML은 16, 하드코드 기본값은 12
-        assert val > 12, (
-            f"vector_max_results_s2={val} — YAML이 하드코드 기본값(12)을 초과해야 함 (P0-4 미적용)"
-        )
+        assert val > 12, f"vector_max_results_s2={val} — YAML이 하드코드 기본값(12)을 초과해야 함 (P0-4 미적용)"
 
 
 class TestDenseBaselineRegression:
@@ -743,9 +727,7 @@ class TestHybridRetrieval:
     def test_fts_table_exists_after_init(self):
         """VecMemory 초기화 후 episode_fts 테이블이 존재한다."""
         vm, conn = self._make_vm()
-        tables = conn.execute(
-            "SELECT name FROM sqlite_master WHERE type IN ('table','shadow')"
-        ).fetchall()
+        tables = conn.execute("SELECT name FROM sqlite_master WHERE type IN ('table','shadow')").fetchall()
         names = [t[0] for t in tables]
         assert any("episode_fts" in n for n in names), f"episode_fts not in {names}"
 
@@ -804,7 +786,34 @@ class TestHybridRetrieval:
     def test_retrieval_mode_dense_uses_existing_api(self):
         """retrieval_mode=dense일 때 retrieve_hybrid_context가 str을 반환한다."""
         vm, _ = self._make_vm()
-        result = vm.retrieve_hybrid_context(
-            "query", current_ep=5, dense_k=5, sparse_k=5, max_results=3
-        )
+        result = vm.retrieve_hybrid_context("query", current_ep=5, dense_k=5, sparse_k=5, max_results=3)
         assert isinstance(result, str)
+
+    def test_d2_fallback_log_format(self, caplog):
+        """임베딩 실패 시 [VecMem] path=fallback 포맷 로그가 남는다."""
+        import logging
+
+        vm, _ = self._make_vm()
+        vm._embed_text = lambda _: None
+
+        with caplog.at_level(logging.DEBUG, logger="root"):
+            vm.retrieve_high_res_context("test query", current_ep=5)
+
+        d2_logs = [r.message for r in caplog.records if "[VecMem]" in r.message]
+        assert any("path=fallback" in msg for msg in d2_logs), f"path=fallback log missing: {d2_logs}"
+        assert any("ep<5" in msg for msg in d2_logs), f"ep<5 missing: {d2_logs}"
+
+    def test_d2_dense_log_format(self, caplog):
+        """임베딩 성공 + KNN 결과 시 [VecMem] path=dense 포맷 로그가 남는다."""
+        import logging
+
+        vm, _ = self._make_vm()
+        vm._embed_text = lambda _: [0.0] * EMBED_DIM
+        vm._knn_search = lambda *a, **k: "mock result"
+
+        with caplog.at_level(logging.DEBUG, logger="root"):
+            vm.retrieve_high_res_context("test query", current_ep=5)
+
+        d2_logs = [r.message for r in caplog.records if "[VecMem]" in r.message]
+        assert any("path=dense" in msg for msg in d2_logs), f"path=dense log missing: {d2_logs}"
+        assert any("ep<5" in msg for msg in d2_logs), f"ep<5 missing: {d2_logs}"

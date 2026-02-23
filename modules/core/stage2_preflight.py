@@ -145,10 +145,11 @@ class Stage2PreflightAnalysis:
                         )
                     elif _retrieval_mode == "sparse" and hasattr(memory, "_fts_search"):
                         _fts = memory._fts_search(query_text, current_ep, n_results=max_results)
-                        result = "\n\n".join(
-                            f"=== EP {r['ep_num']} [sparse] ===\n{r['summary']}"
-                            for r in _fts
-                        ) if _fts else ""
+                        result = (
+                            "\n\n".join(f"=== EP {r['ep_num']} [sparse] ===\n{r['summary']}" for r in _fts)
+                            if _fts
+                            else ""
+                        )
                     elif vec_slot_count <= 1:
                         result = memory.retrieve_high_res_context(
                             query_text,
@@ -156,6 +157,11 @@ class Stage2PreflightAnalysis:
                             n_results=max_results,
                         )
                     else:
+                        if _retrieval_mode not in ("dense", "hybrid", "sparse"):
+                            logging.warning(
+                                "[Retrieval] 알 수 없는 retrieval_mode '%s', dense로 폴백",
+                                _retrieval_mode,
+                            )
                         result = memory.retrieve_multi_query_context(
                             queries=[query_text],
                             current_ep=current_ep,
