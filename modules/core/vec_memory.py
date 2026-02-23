@@ -443,9 +443,25 @@ class VecMemory:
         emb = self._embed_text(query_text)
         if emb is None:
             # [OpusTF-P0-2] 임베딩 실패 시 LIKE 키워드 폴백
-            return self._keyword_fallback_search(query_text, current_ep, n_results)
+            result = self._keyword_fallback_search(query_text, current_ep, n_results)
+            # [D2] fallback 경로 계측
+            logging.debug(
+                "[VecMem] path=fallback ep<%d q=%r hits=0 fallback=true selected=[] chars=%d",
+                current_ep,
+                query_text[:30],
+                len(result),
+            )
+            return result
 
-        return self._knn_search(emb, current_ep, n_results)
+        result = self._knn_search(emb, current_ep, n_results)
+        # [D2] dense 경로 계측
+        logging.debug(
+            "[VecMem] path=dense ep<%d q=%r fallback=false chars=%d",
+            current_ep,
+            query_text[:30],
+            len(result),
+        )
+        return result
 
     def retrieve_multi_query_context(
         self,
@@ -502,6 +518,13 @@ class VecMemory:
                 qt = json.dumps(q, ensure_ascii=False) if isinstance(q, dict | list) else str(q)
                 fb = self._keyword_fallback_search(qt, current_ep, max_results)
                 if fb:
+                    # [D2] multi_dense fallback 계측
+                    logging.debug(
+                        "[VecMem] path=fallback ep<%d q=%r hits=0 fallback=true selected=[] chars=%d",
+                        current_ep,
+                        qt[:30],
+                        len(fb),
+                    )
                     return fb
             return ""
 
@@ -544,7 +567,18 @@ class VecMemory:
                 block += f"\n인물: {ent}"
             blocks.append(block)
 
-        return "\n\n".join(blocks)
+        # [D2] multi_dense 정상 경로 계측
+        _d2_result = "\n\n".join(blocks)
+        _d2_selected = sorted(seen.keys())[:max_results]
+        logging.debug(
+            "[VecMem] path=multi_dense ep<%d q_count=%d hits=%d fallback=false selected=%s chars=%d",
+            current_ep,
+            len(queries),
+            len(seen),
+            _d2_selected,
+            len(_d2_result),
+        )
+        return _d2_result
 
     def retrieve_hybrid_context(
         self,
@@ -602,16 +636,17 @@ class VecMemory:
             scored.append((score, ep, info))
 
         scored.sort(key=lambda x: x[0], reverse=True)
+        top = scored[:max_results]
+        # [D2] hybrid 경로 계측 (포맷 통일)
+        _d2_selected = [ep for _, ep, _ in top]
         logging.debug(
-            "[Hybrid] ep<%d query=%r dense=%d sparse=%d fused=%d top_score=%.4f",
+            "[VecMem] path=hybrid ep<%d q=%r hits=%d fallback=false selected=%s chars=pending top_score=%.4f",
             current_ep,
-            query_text[:40],
-            len(dense_results),
-            len(sparse_results),
-            len(scored),
+            query_text[:30],
+            len(dense_results) + len(sparse_results),
+            _d2_selected,
             scored[0][0] if scored else 0.0,
         )
-        top = scored[:max_results]
 
         if not top:
             logging.debug("[VecMemory] hybrid search: no results for ep<%d", current_ep)
@@ -638,7 +673,14 @@ class VecMemory:
                 block += f"\n[entities] {info['entity_names']}"
             blocks.append(block)
 
-        return "\n\n".join(blocks)
+        # [D2] hybrid 결과 길이 계측
+        _d2_result = "\n\n".join(blocks)
+        logging.debug(
+            "[VecMem] path=hybrid ep<%d chars=%d",
+            current_ep,
+            len(_d2_result),
+        )
+        return _d2_result
 
     def retrieve_npc_context(self, npc_names: list[str], current_ep: int, max_results: int = 5) -> str:
         """
@@ -879,6 +921,13 @@ class VecMemory:
 
     def _keyword_fallback_search(self, query_text: str, current_ep: int, n_results: int) -> str:
         """[OpusTF-P0-2] 임베딩 실패 시 episode_meta LIKE 키워드 폴백 검색."""
+        # [D2] keyword fallback 진입 계측
+        logging.debug(
+            "[VecMem] path=fallback_entry ep<%d q=%r n=%d",
+            current_ep,
+            query_text[:30],
+            n_results,
+        )
         # 쿼리에서 핵심 키워드 추출 (2글자 이상 단어)
         import re
 
