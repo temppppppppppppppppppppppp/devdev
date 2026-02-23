@@ -28,17 +28,17 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 ## 현재 상태 (2026-02-23)
 
 - **작동함**: Stage 0→2→4 정상 동작
-- **완료된 것**: Phase 1~2, 5-A/5-B/5-C, 6-A/6-B/6-C, 4C(DI), 4D(sqlite-vec), 3-5B(패치), 3-5A(NPC이력), **4-R1~R3(몬스터 분할)**, R4-a(NO-GO), **3-QR(품질 회귀 감지)**, **3-5C(NPC 과잉 경고)**, **3-Obs Step 1+2(관측성 계측)**, **3-B(크로스 에피소드 반복 감지)**, **D.대리만족 전체 완료(Step1~5)**, **A-1(writer 유틸 해체)**, **A-3(test xfail)**, **C-1(PlotGuard 폴백)**, **C-2(NPC 체인)**, **C-3(Validator 체인)**, **B-1 전체 완료(stage4 -64%, chief_writer -62%, stage2 -66%)**, **E-2(Ruff 0 violations)**, **A-2(optimizer TODO)**, **R5(2차 분할 전량)**, **WorkGuard(작품별 YAML)**, **Debug Sweep 1차~12차 전량 완료**, **B-3(Protocol 전면 표준화)**, **DB-SSOT(VecMemory merge)**, **Patch Mode(Stage 2/3)**, **Passrate 전략 배선**, **Ensemble Feedback**, **Ops Quality 6대 개선**, **Opus TF 전면 재감사+T1/T2 수정**, **SC-0~6(Smart Context Retrieval) + Post-Audit**, **TF-5 전체 시스템 디버깅 감사 32건 패치**
-- **현재 단계**: TF-4~6 전체 시스템 감사·패치 완료, 안정화 단계
-- **테스트 기준선**: **2,377 passed + 0 xfailed** (last verified 2026-02-23, `pytest tests/ -q`)
+- **완료된 것**: Phase 1~2, 5-A/5-B/5-C, 6-A/6-B/6-C, 4C(DI), 4D(sqlite-vec), 3-5B(패치), 3-5A(NPC이력), **4-R1~R3(몬스터 분할)**, R4-a(NO-GO), **3-QR(품질 회귀 감지)**, **3-5C(NPC 과잉 경고)**, **3-Obs Step 1+2(관측성 계측)**, **3-B(크로스 에피소드 반복 감지)**, **D.대리만족 전체 완료(Step1~5)**, **A-1(writer 유틸 해체)**, **A-3(test xfail)**, **C-1(PlotGuard 폴백)**, **C-2(NPC 체인)**, **C-3(Validator 체인)**, **B-1 전체 완료(stage4 -64%, chief_writer -62%, stage2 -66%)**, **E-2(Ruff 0 violations)**, **A-2(optimizer TODO)**, **R5(2차 분할 전량)**, **WorkGuard(작품별 YAML)**, **Debug Sweep 1차~12차 전량 완료**, **B-3(Protocol 전면 표준화)**, **DB-SSOT(VecMemory merge)**, **Patch Mode(Stage 2/3)**, **Passrate 전략 배선**, **Ensemble Feedback**, **Ops Quality 6대 개선**, **Opus TF 전면 재감사+T1/T2 수정**, **SC-0~6(Smart Context Retrieval) + Post-Audit**, **TF-5 전체 시스템 디버깅 감사 32건 패치**, **TF-6 롤백 원자성·상태 누적·트랜잭션 등 16건 패치**, **TF-7 전체 감사(A~N) + P0/P1/P2 24건 패치**, **TF-7R 1차/3차/6차 17건 + 7차 카오스 테스트 38개**, **PBT(hypothesis) 46개**, **E2E 통합 wiring 16개**, **아키텍처 부채 감사(silent except·DI주석·dead var)**
+- **현재 단계**: TF-7 + TF-7R 완료, 검증 체계(chaos+property+integration) 구축 완료
+- **테스트 기준선**: **2,477 passed + 0 xfailed** (last verified 2026-02-23, `pytest tests/ -q`)
 - **Ruff**: 0 violations, Silent Pass YELLOW 0건 (E-1+E-2 완료)
 - **stage4 orchestrator**: 2,481→883줄 (**-64%**, 분할 완료, 서브모듈 3개)
 - **chief_writer**: 2,255→854줄 (**-62%**, 분할 완료, 서브모듈 2개)
 - **stage2 orchestrator**: 2,639→907줄 (**-66%**, B-1-8 완료, 서브모듈 3개)
 - **DI 전환**: Stage2(44슬롯) + Stage3(19슬롯) + Stage4(24슬롯) 전량 완료
-- **checkpoint**: `9f0de73`
-- **실행 기준 문서(SSOT)**: `내일작업.md` (남은 작업만 관리)
-- **향후 계획 문서**: `docs/codex_memory_roi_boost_plan.md` (Memory ROI), `docs/codex_hybrid_retrieval_refactor_plan.md` (Hybrid Retrieval)
+- **checkpoint**: `77f5d62`
+- **향후 계획 문서**: `docs/codex_memory_roi_boost_plan.md` (Memory ROI — 다음 작업), `docs/codex_hybrid_retrieval_refactor_plan.md` (Hybrid Retrieval — 그 다음)
+- **후순위(관찰 대기)**: `docs/2026-02-23/next_steps_plan.md` — 2차(동적 장르), 4차(캐시), 5차(설정 SSOT)
 
 ---
 
@@ -152,6 +152,12 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 | ~~48~~ | ~~SC-0~6~~ | ~~Smart Context Retrieval 전량 + Post-Audit~~ | ✅ 완료 (`5c762b6`, `6454f5a`) |
 | ~~49~~ | ~~TF-5~~ | ~~전체 시스템 디버깅 감사 12TF + 32건 패치~~ | ✅ 완료 (`5e7f7c0`) |
 | ~~50~~ | ~~TF-6~~ | ~~롤백 원자성·상태 누적·트랜잭션 등 16건 패치~~ | ✅ 완료 (`9f0de73`) |
+| ~~51~~ | ~~TF-7~~ | ~~전체 감사(A~N 14TF) + TF-C-1 + P0/P1/P2 24건 패치~~ | ✅ 완료 (`ddef308`) |
+| ~~52~~ | ~~TF-7R~~ | ~~1차(롤백SSOT) + 3차(fail-close) + 6차(피드백루프) + 7차(카오스테스트38개)~~ | ✅ 완료 (`ddef308`) |
+| ~~53~~ | ~~PBT~~ | ~~hypothesis property-based tests 46개 — rollback/validation/budget/invariant~~ | ✅ 완료 (`cff4ae5`) |
+| ~~54~~ | ~~E2E 통합~~ | ~~DI 배선 wiring 검증 16개 — TF-7R 8개 신호 경로 전량 확인~~ | ✅ 완료 (`67a0262`) |
+| ~~55~~ | ~~Debt Audit~~ | ~~아키텍처 부채 감사 — silent except 22건 debug화, DI 후보 주석, dead var 제거~~ | ✅ 완료 (`77f5d62`) |
+| **56** | **Memory ROI** | **vec_memory 검색 품질 4건 개선 (P0-1~P0-4)** | **다음 작업** |
 
 ---
 
