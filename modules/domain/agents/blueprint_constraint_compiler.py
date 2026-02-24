@@ -187,22 +187,32 @@ class BlueprintConstraintCompiler:
 
     def _extract_episode_focus(self, arc_data: dict, ep_num: int, arc_position: int) -> dict:
         """이번 화 핵심 내용 추출"""
+        # [TF10-2-1] episode_details 우선 참조 — Arc 압축 손실 보완
+        content = ""
+        _ep_details = arc_data.get("episode_details") or []
+        if isinstance(_ep_details, list):
+            for _item in _ep_details:
+                if isinstance(_item, dict) and _item.get("ep_num") == ep_num:
+                    _details = _item.get("details") or []
+                    if isinstance(_details, list) and _details:
+                        content = "\n".join(f"- {d}" for d in _details if isinstance(d, str))
+                    break
+
         tactical_doc = arc_data.get("tactical_doc", "")
 
         # 딕셔너리면 문자열로 변환
         if isinstance(tactical_doc, dict):
             tactical_doc = json.dumps(tactical_doc, ensure_ascii=False, indent=2)
 
-        content = ""
-
-        # [S3-I4] 다중 정규식 폴백 패턴으로 에피소드 섹션 추출
-        for pattern_template in self._EPISODE_HEADER_PATTERNS:
-            pattern = pattern_template.format(ep=ep_num)
-            match = re.search(pattern, tactical_doc, re.DOTALL)
-            if match:
-                content = match.group(1).strip()
-                if content:
-                    break
+        # [S3-I4] 다중 정규식 폴백 패턴으로 에피소드 섹션 추출 (episode_details 없을 때)
+        if not content:
+            for pattern_template in self._EPISODE_HEADER_PATTERNS:
+                pattern = pattern_template.format(ep=ep_num)
+                match = re.search(pattern, tactical_doc, re.DOTALL)
+                if match:
+                    content = match.group(1).strip()
+                    if content:
+                        break
 
         if not content:
             # 최종 폴백: beat_sequence 사용
@@ -245,13 +255,24 @@ class BlueprintConstraintCompiler:
         if isinstance(tactical_doc, dict):
             tactical_doc = json.dumps(tactical_doc, ensure_ascii=False, indent=2)
 
-        # [S3-I4] 다중 정규식 폴백 패턴으로 다음 화 정지선 추출
+        # [TF10-2-2] episode_details 우선 참조 — 다음 화 정지선
         content = ""
-        for pattern_template in self._EPISODE_HEADER_PATTERNS:
-            pattern = pattern_template.format(ep=next_ep)
-            match = re.search(pattern, tactical_doc, re.DOTALL)
-            if match:
-                content = match.group(1).strip()[:300]
+        _ep_details = arc_data.get("episode_details") or []
+        if isinstance(_ep_details, list):
+            for _item in _ep_details:
+                if isinstance(_item, dict) and _item.get("ep_num") == next_ep:
+                    _details = _item.get("details") or []
+                    if isinstance(_details, list) and _details:
+                        content = "; ".join(d for d in _details if isinstance(d, str))[:300]
+                    break
+
+        # [S3-I4] 다중 정규식 폴백 패턴으로 다음 화 정지선 추출
+        if not content:
+            for pattern_template in self._EPISODE_HEADER_PATTERNS:
+                pattern = pattern_template.format(ep=next_ep)
+                match = re.search(pattern, tactical_doc, re.DOTALL)
+                if match:
+                    content = match.group(1).strip()[:300]
                 if content:
                     break
 
