@@ -306,6 +306,8 @@ BLUEPRINT_GENERATION_PROMPT: |
       "start_location": "시작 위치",
       "end_location": "종료 위치",
       "time_flow": "시간 흐름 (예: 오전 → 저녁)",
+      "core_tension": "이 화의 핵심 갈등/긴장 요소 (50자 이내)",
+      "expected_ending": "이 화 결말 방향 (50자 이내)",
       "ending_hook": "다음 화 연결 훅 (50자 이내)",
       "protagonist_state": {{
           "mood": "감정 상태",
