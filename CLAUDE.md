@@ -30,13 +30,13 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 - **작동함**: Stage 0→2→4 정상 동작
 - **완료된 것**: Phase 1~2, 5-A/5-B/5-C, 6-A/6-B/6-C, 4C(DI), 4D(sqlite-vec), 3-5B(패치), 3-5A(NPC이력), **4-R1~R3(몬스터 분할)**, R4-a(NO-GO), **3-QR(품질 회귀 감지)**, **3-5C(NPC 과잉 경고)**, **3-Obs Step 1+2(관측성 계측)**, **3-B(크로스 에피소드 반복 감지)**, **D.대리만족 전체 완료(Step1~5)**, **A-1(writer 유틸 해체)**, **A-3(test xfail)**, **C-1(PlotGuard 폴백)**, **C-2(NPC 체인)**, **C-3(Validator 체인)**, **B-1 전체 완료(stage4 -64%, chief_writer -62%, stage2 -66%)**, **E-2(Ruff 0 violations)**, **A-2(optimizer TODO)**, **R5(2차 분할 전량)**, **WorkGuard(작품별 YAML)**, **Debug Sweep 1차~12차 전량 완료**, **B-3(Protocol 전면 표준화)**, **DB-SSOT(VecMemory merge)**, **Patch Mode(Stage 2/3)**, **Passrate 전략 배선**, **Ensemble Feedback**, **Ops Quality 6대 개선**, **Opus TF 전면 재감사+T1/T2 수정**, **SC-0~6(Smart Context Retrieval) + Post-Audit**, **TF-5 전체 시스템 디버깅 감사 32건 패치**, **TF-6 롤백 원자성·상태 누적·트랜잭션 등 16건 패치**, **TF-7 전체 감사(A~N) + P0/P1/P2 24건 패치**, **TF-7R 1차/3차/6차 17건 + 7차 카오스 테스트 38개**, **PBT(hypothesis) 46개**, **E2E 통합 wiring 16개**, **아키텍처 부채 감사(silent except·DI주석·dead var)**, **Memory ROI P0-1~P0-4(검색품질 4건)**, **D1 Hybrid Retrieval(FTS5+RRF)**, **DB 효율화(chroma_db삭제·file→DB·인덱스보강)**, **D2 Memory Observability(경로별 계측)**, **문서정리(docs 445→70개)**, **E2E Smoke Tests(파이프라인 통합 33개)**, **TF-10~15 전면 감사+P0 패치**, **TF-16(P1 백로그 3건)**, **TF-17(Truth Gate 메모리 오염 방지)**, **TF-18(Hybrid 검색 활성화)**, **TF-19(Memory Benchmark 17개)**, **Opus TF 전수조사(P0 7+P1 17건 패치)**, **2차 전수조사(P0 10건 + P1 34건 전량 패치)**, **3차 전수조사(P0 19+P1 17+P2 2건 패치)**, **4차 전수조사(동시성·복구·계약·설정·크로스컷 51건 — P0 10+P1 18+dead code 1744줄 삭제)**, **메타감리(1~4차 130+패치 검증 — 오작업 0건, 테스트 복원 17개)**, **5차 전수조사(에러전파·입력검증·리소스·LLM파싱·상태일관성 — P0 7+P1 12건 패치)**, **1~3차 재감사(7TF 병렬 — P0 1+P1 11건 패치, 감리 12/12 CORRECT)**, **extended_block_guide(treatment 확장 필드 → Arc LLM generic serialization)**, **Treatment 반응 다양화(골든루트 60블록 — Intensity·캐릭터아크·power_shift 전량)**, **Bible 동기화(골든루트 — 이름 충돌 3건 통일·NPC 2건 추가)**
 - **현재 단계**: Treatment 콘텐츠 보강 + Bible 동기화 완료. 안정화 단계.
-- **테스트 기준선**: **2,585 passed + 0 xfailed** (last verified 2026-02-24, `pytest tests/ -q`)
+- **테스트 기준선**: **2,583 passed + 0 xfailed** (last verified 2026-02-24, `pytest tests/ -q`)
 - **Ruff**: 0 violations, Silent Pass YELLOW 0건 (E-1+E-2 완료)
 - **stage4 orchestrator**: 2,481→883줄 (**-64%**, 분할 완료, 서브모듈 3개)
 - **chief_writer**: 2,255→854줄 (**-62%**, 분할 완료, 서브모듈 2개)
 - **stage2 orchestrator**: 2,639→907줄 (**-66%**, B-1-8 완료, 서브모듈 3개)
 - **DI 전환**: Stage2(44슬롯) + Stage3(19슬롯) + Stage4(24슬롯) 전량 완료
-- **checkpoint**: `4f3c247`
+- **checkpoint**: `faa2831`
 - **향후 계획 문서**: `docs/2026-02-23/next_steps_plan.md` (후순위 관찰 대기 항목)
 - **후순위(관찰 대기)**: `docs/2026-02-23/next_steps_plan.md` — 2차(동적 장르), 4차(캐시), 5차(설정 SSOT)
 
