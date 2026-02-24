@@ -171,7 +171,7 @@ feature_flags:
 smart_retrieval:
   enabled: true
   stage2_enabled: true
-  stage3_enabled: false
+  stage3_enabled: true
   stage4_enabled: true
   director_enabled: false
   stage2_total_budget: 20000

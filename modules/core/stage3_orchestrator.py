@@ -509,6 +509,35 @@ class Stage3Orchestrator:
             except Exception as _s3_sc_err:
                 _logging.warning("[SilentPass:SC:Stage3] SC 검색 실패 (비차단): %s", _s3_sc_err)
 
+            # [TF9] Treatment Block 직접 주입 — arc 압축으로 인한 정보 손실 보완
+            try:
+                _master_bible = getattr(ctx.current_project, "master_bible", None) or {}
+                _bible_root = _master_bible.get("MasterBible", _master_bible)
+                _plot_roadmap = _bible_root.get("plot_roadmap", [])
+                if isinstance(_plot_roadmap, list) and _plot_roadmap:
+                    _ep_offset = working_ep - arc_data.get("ep_start", working_ep)
+                    if 0 <= _ep_offset < len(_plot_roadmap):
+                        _block = _plot_roadmap[_ep_offset]
+                        if isinstance(_block, dict):
+                            _block_fields = []
+                            for _f in ("title", "emotional_beat", "foreshadow", "power_shift",
+                                       "event_villain", "solution", "reward"):
+                                if _block.get(_f):
+                                    _block_fields.append(f"  {_f}: {_block[_f]}")
+                            _content = _block.get("content", {})
+                            if isinstance(_content, dict):
+                                for _cf in ("context", "event_villain", "solution"):
+                                    if _content.get(_cf):
+                                        _block_fields.append(f"  content.{_cf}: {_content[_cf]}")
+                            if _block_fields:
+                                _tb_text = "[원본 Treatment Block (정보 손실 보완)]\n" + "\n".join(_block_fields)
+                                _bp_semantic_ctx = _tb_text + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+                                _logging.info(
+                                    "[TF9] Treatment Block 주입 완료 (ep_offset=%d, %d자)", _ep_offset, len(_tb_text)
+                                )
+            except Exception as _tb_err:
+                _logging.warning("[SilentPass:TreatmentBlock] 추출 실패 (비차단): %s", _tb_err)
+
             with StageSpinner(3, f"제{working_ep}화"):
                 # [V67][S3-I5] 이전 원고 로드 — 단일 쿼리로 최적화 (N+1 → 1)
                 _prev_ms_for_bp = []
