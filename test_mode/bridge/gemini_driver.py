@@ -211,21 +211,109 @@ class GeminiDriver:
             pass
 
     def _install_upload_interceptor(self):
-        """HTMLInputElement.click() hijack — 파일 다이얼로그 차단
-        + Page Visibility API 오버라이드 — 백그라운드 쓰로틀링 방지"""
+        """파일 선택 트리거(click/showPicker/showOpenFilePicker) 가로채기 + deep file-input 탐색기 설치."""
         self.driver.execute_script("""
-            if (window._uploadInterceptorInstalled) return;
+            if (window._uploadInterceptorVersion >= 4) return;
 
             // ── 파일 업로드 인터셉터 ──
-            const origClick = HTMLInputElement.prototype.click;
-            HTMLInputElement.prototype.click = function() {
-                if (this.type === 'file') {
-                    window._interceptedFileInput = this;
-                    return;
-                }
-                return origClick.call(this);
+            const origShowPicker = window._origInputShowPicker || HTMLInputElement.prototype.showPicker || null;
+            window._origInputShowPicker = origShowPicker;
+
+            const captureFileInput = (inp) => {
+                if (!inp) return;
+                // 고유 ID 부여 + body로 이동 — Python이 ID로 fresh 탐색
+                try {
+                    if (!inp.id || inp.id.startsWith('gd_fi_')) {
+                        inp.id = 'gd_fi_' + Date.now();
+                    }
+                    window._capturedFileInputId = inp.id;
+                    window._interceptedFileInput = inp;  // 하위 호환 유지
+                    inp.style.position = 'fixed';
+                    inp.style.left = '-9999px';
+                    inp.style.top = '0';
+                    inp.style.width = '1px';
+                    inp.style.height = '1px';
+                    inp.style.opacity = '0';
+                    if (document.body && inp.parentElement !== document.body) {
+                        document.body.appendChild(inp);
+                    }
+                } catch (e) {}
             };
+
+            if (origShowPicker) {
+                HTMLInputElement.prototype.showPicker = function() {
+                    if (this.type === 'file' || this.accept) {
+                        captureFileInput(this);
+                        return;
+                    }
+                    return origShowPicker.call(this);
+                };
+            }
+
+            // ── showOpenFilePicker (File System Access API) 오버라이드 ──
+            // Gemini가 input[type=file] 대신 이 API를 쓸 때 대응
+            if (window.showOpenFilePicker && !window._showOpenFilePickerPatched) {
+                window._showOpenFilePickerPatched = true;
+                window.showOpenFilePicker = async function(options) {
+                    // 임시 input 생성 → body에 붙이고 캡처
+                    const inp = document.createElement('input');
+                    inp.type = 'file';
+                    inp.style.position = 'fixed';
+                    inp.style.left = '-9999px';
+                    inp.style.top = '0';
+                    inp.style.width = '1px';
+                    inp.style.height = '1px';
+                    document.body.appendChild(inp);
+                    captureFileInput(inp);
+                    window._filePickerMode = true;
+                    // Python이 send_keys 후 resolve 호출할 때까지 대기
+                    return new Promise((resolve, reject) => {
+                        window._filePickerResolve = resolve;
+                        window._filePickerReject = reject;
+                    });
+                };
+            }
+
             window._interceptedFileInput = null;
+            window._filePickerMode = false;
+            window._filePickerResolve = null;
+
+            // open shadow root / same-origin iframe까지 포함해 file input 탐색
+            window._findFileInputDeep = function() {
+                const visited = new Set();
+                const scan = (root) => {
+                    if (!root || visited.has(root)) return null;
+                    visited.add(root);
+
+                    if (root.querySelectorAll) {
+                        const direct = root.querySelectorAll("input[type='file'], input[accept]");
+                        for (const inp of direct) {
+                            const t = (inp.type || "").toLowerCase();
+                            if (t === "file" || !!inp.accept) return inp;
+                        }
+                    }
+
+                    if (root.querySelectorAll) {
+                        const all = root.querySelectorAll("*");
+                        for (const el of all) {
+                            if (el.shadowRoot) {
+                                const inShadow = scan(el.shadowRoot);
+                                if (inShadow) return inShadow;
+                            }
+                            if (el.tagName === "IFRAME") {
+                                try {
+                                    const doc = el.contentDocument;
+                                    const inFrame = scan(doc);
+                                    if (inFrame) return inFrame;
+                                } catch (e) {}
+                            }
+                        }
+                    }
+                    return null;
+                };
+
+                return scan(document);
+            };
 
             // ── Page Visibility 오버라이드 (항상 visible) ──
             Object.defineProperty(Document.prototype, 'hidden', {
@@ -242,6 +330,47 @@ class GeminiDriver:
             }, true);
 
             window._uploadInterceptorInstalled = true;
+            window._uploadInterceptorVersion = 4;
+        """)
+
+    def _install_file_input_capture(self):
+        """'파일 업로드' 메뉴 옵션 클릭 직전에 호출.
+        HTMLInputElement.click 일회용 인터셉터 설치 — 클릭 1회 후 즉시 원복.
+        Angular CDK 메뉴 파괴 없이 file input을 안전하게 캡처."""
+        self.driver.execute_script("""
+            // 기존 _origClick 보존 (중첩 설치 방지 — 항상 native 기준)
+            const _origClick = window._fileCapture_origClick
+                || HTMLInputElement.prototype.click;
+            window._fileCapture_origClick = _origClick;
+            window._capturedFileInputId = null;
+            window._interceptedFileInput = null;
+
+            HTMLInputElement.prototype.click = function() {
+                if (this.type === 'file' || this.accept) {
+                    // 일회용: 즉시 원복
+                    HTMLInputElement.prototype.click = _origClick;
+                    window._fileCapture_origClick = null;
+                    // input 캡처 + body로 이동 (stale 방지)
+                    try {
+                        if (!this.id || this.id.startsWith('gd_fi_')) {
+                            this.id = 'gd_fi_cap_' + Date.now();
+                        }
+                        window._capturedFileInputId = this.id;
+                        window._interceptedFileInput = this;
+                        this.style.position = 'fixed';
+                        this.style.left = '-9999px';
+                        this.style.top = '0';
+                        this.style.width = '1px';
+                        this.style.height = '1px';
+                        this.style.opacity = '0';
+                        if (document.body && this.parentElement !== document.body) {
+                            document.body.appendChild(this);
+                        }
+                    } catch(e) {}
+                    return;  // OS 다이얼로그 차단
+                }
+                return _origClick.call(this);
+            };
         """)
 
     def select_model(self, model: str = ""):
@@ -456,39 +585,48 @@ class GeminiDriver:
         """)
         if not menu_clicked:
             return False
-        time.sleep(0.8)
 
-        # Step B: '파일 업로드' 옵션 클릭 (메뉴 팝업에서)
-        opt_clicked = self.driver.execute_script("""
-            // 메뉴 아이템/옵션/버튼 전부 탐색
-            const targets = [
-                "파일 업로드", "파일업로드", "Upload file",
-                "Upload a file", "내 컴퓨터에서 업로드"
-            ];
-            const sels = [
-                '[role="menuitem"]', '[role="option"]',
-                '.mat-menu-item', '.mdc-list-item',
-                '.cdk-overlay-pane button',
-                '.cdk-overlay-pane [role="menuitem"]',
-                'button', 'div[class*="menu"]',
-            ];
-            for (const sel of sels) {
-                for (const el of document.querySelectorAll(sel)) {
-                    const txt = (el.textContent || "").trim();
-                    for (const t of targets) {
-                        if (txt.includes(t)) {
-                            el.click();
-                            return true;
-                        }
-                    }
-                }
-            }
-            return false;
-        """)
-        if not opt_clicked:
-            return False
-        time.sleep(1)
-        return True
+        # Step B: '파일 업로드' 옵션 클릭 — Selenium XPath로 재시도
+        keywords = ["파일 업로드", "파일업로드", "Upload file", "Upload a file",
+                    "내 컴퓨터에서 업로드", "컴퓨터에서 업로드", "기기에서 업로드"]
+        for b_wait in [1.0, 1.5, 2.0, 2.5]:
+            time.sleep(b_wait)
+            # Selenium XPath — 텍스트 직접 포함 요소 탐색
+            for kw in keywords:
+                try:
+                    elems = self.driver.find_elements(
+                        By.XPATH,
+                        f"//*[contains(normalize-space(text()), '{kw}') "
+                        f"or contains(normalize-space(.), '{kw}')]"
+                    )
+                    for el in elems:
+                        try:
+                            if not el.is_displayed():
+                                continue
+                            # 클릭 가능한 조상 우선 (button / [role=menuitem])
+                            clickable = el
+                            try:
+                                anc = self.driver.execute_script(
+                                    "return arguments[0].closest"
+                                    "('button,[role=\"menuitem\"],[role=\"option\"]')", el
+                                )
+                                if anc:
+                                    clickable = anc
+                            except Exception:
+                                pass
+                            # 클릭 직전 일회용 file-input 인터셉터 설치
+                            self._install_file_input_capture()
+                            try:
+                                clickable.click()
+                            except Exception:
+                                pass  # 클릭 후 DOM 변경으로 stale 가능 — capture는 됐을 수 있음
+                            time.sleep(0.8)
+                            return True
+                        except Exception:
+                            continue
+                except Exception:
+                    continue
+        return False
 
     def upload_file(self, file_path: str):
         """Gemini 웹에 파일 업로드 — OS 다이얼로그 없이 send_keys 직접 주입"""
@@ -518,6 +656,10 @@ class GeminiDriver:
 
         if not menu_opened:
             self._log("[FAIL] 업로드 메뉴를 열 수 없습니다")
+            # UIDiscovery 캐시 무효화 → 다음 upload_file 호출 시 재탐지
+            if self._ui:
+                self._ui.invalidate("upload_menu_btn")
+                self._ui.invalidate("upload_file_option")
             return False
 
         # 약관 동의 모달 자동 닫기 (첫 업로드 시 1회 표시)
@@ -548,26 +690,51 @@ class GeminiDriver:
         target = None
         for fi_attempt in range(3):
             # 방법 1: DOM에서 직접 찾기
-            inputs = self.driver.find_elements(By.CSS_SELECTOR, "input[type='file']")
-            if inputs:
-                target = inputs[-1]
-                break
+            try:
+                inputs = self.driver.find_elements(By.CSS_SELECTOR, "input[type='file'], input[accept]")
+                if inputs:
+                    target = inputs[-1]
+                    break
+            except Exception:
+                pass
 
-            # 방법 2: interceptor가 캡처한 요소
-            target = self.driver.execute_script("return window._interceptedFileInput")
-            if target:
-                break
+            # 방법 2: interceptor가 캡처한 ID로 fresh 탐색 (stale 방지)
+            try:
+                captured_id = self.driver.execute_script("return window._capturedFileInputId || null")
+                if captured_id:
+                    from selenium.webdriver.common.by import By as _By
+                    elems = self.driver.find_elements(_By.ID, captured_id)
+                    if elems:
+                        target = elems[0]
+                        break
+            except Exception:
+                pass
 
-            # 방법 3: JS로 숨겨진 file input까지 탐색
-            target = self.driver.execute_script("""
-                const all = document.querySelectorAll('input');
-                for (const inp of all) {
-                    if (inp.type === 'file' || inp.accept) return inp;
-                }
-                return null;
-            """)
-            if target:
-                break
+            # 방법 3: JS deep 탐색 (shadow root/iframe 포함) — ID 반환
+            try:
+                found_id = self.driver.execute_script("""
+                    if (window._findFileInputDeep) {
+                        const el = window._findFileInputDeep();
+                        if (el) {
+                            if (!el.id) el.id = 'gd_fi_deep_' + Date.now();
+                            return el.id;
+                        }
+                    }
+                    const all = document.querySelectorAll("input[type='file'], input[accept]");
+                    if (all.length) {
+                        const el = all[all.length - 1];
+                        if (!el.id) el.id = 'gd_fi_q_' + Date.now();
+                        return el.id;
+                    }
+                    return null;
+                """)
+                if found_id:
+                    elems = self.driver.find_elements(By.ID, found_id)
+                    if elems:
+                        target = elems[0]
+                        break
+            except Exception:
+                pass
 
             if fi_attempt < 2:
                 self._log(f"[!] 파일 input 못 찾음 → 재시도 ({fi_attempt + 1}/3)")
@@ -587,14 +754,91 @@ class GeminiDriver:
                     time.sleep(2)
 
         if not target:
+            # ── 진단 덤프 ──
+            try:
+                diag = self.driver.execute_script("""
+                    return {
+                        showOpenFilePicker: typeof window.showOpenFilePicker,
+                        showOpenFilePickerPatched: !!window._showOpenFilePickerPatched,
+                        interceptorVersion: window._uploadInterceptorVersion || 0,
+                        interceptedInput: !!window._interceptedFileInput,
+                        filePickerMode: !!window._filePickerMode,
+                        fileInputsInDOM: document.querySelectorAll(
+                            "input[type=file], input[accept]").length,
+                        overlayItems: [...document.querySelectorAll(
+                            '[role="menuitem"], [role="option"], .mdc-list-item')]
+                            .map(e => e.textContent.trim()).filter(Boolean).slice(0, 10),
+                        visibleButtons: [...document.querySelectorAll('button')]
+                            .filter(b => b.getBoundingClientRect().width > 0)
+                            .map(b => b.getAttribute('aria-label') || b.textContent.trim().slice(0, 20))
+                            .filter(Boolean).slice(0, 15),
+                    };
+                """)
+                self._log(f"[DIAG] {diag}")
+            except Exception as de:
+                self._log(f"[DIAG] 진단 실패: {de}")
             self._log("[FAIL] 파일 input 요소를 찾을 수 없습니다")
+            # UI 구조 변경 가능성 → 전체 재캘리브레이션
+            if self._ui:
+                self._ui.invalidate_all()
             return False
 
         # display 강제 + send_keys로 파일 주입
         self.driver.execute_script(
             "arguments[0].style.display='block';arguments[0].style.visibility='visible';", target
         )
-        target.send_keys(abs_path)
+        try:
+            target.send_keys(abs_path)
+        except Exception as e:
+            self._log(f"[!] 1차 send_keys 실패 → 재탐색 재시도: {type(e).__name__}")
+            try:
+                target = self.driver.execute_script("""
+                    return window._interceptedFileInput
+                        || (window._findFileInputDeep ? window._findFileInputDeep() : null);
+                """)
+            except Exception:
+                target = None
+            if not target:
+                self._log("[FAIL] 재탐색 후에도 파일 input을 찾지 못했습니다")
+                return False
+            try:
+                self.driver.execute_script(
+                    "arguments[0].style.display='block';arguments[0].style.visibility='visible';", target
+                )
+                target.send_keys(abs_path)
+            except Exception as e2:
+                self._log(f"[FAIL] 2차 send_keys도 실패: {type(e2).__name__}")
+                return False
+
+        # showOpenFilePicker 하이재킹 모드 — Promise resolve
+        # send_keys 후 files[0]가 세팅되면 FileSystemFileHandle 모방 객체로 resolve
+        time.sleep(0.5)
+        self.driver.execute_script("""
+            if (!window._filePickerResolve) return;
+            try {
+                const inp = window._interceptedFileInput;
+                const file = inp && inp.files && inp.files[0];
+                if (file) {
+                    const handle = {
+                        kind: 'file',
+                        name: file.name,
+                        getFile: async () => file,
+                        queryPermission: async () => 'granted',
+                        requestPermission: async () => 'granted',
+                    };
+                    window._filePickerResolve([handle]);
+                } else {
+                    // files 미세팅 시 빈 배열로 resolve (Gemini가 reject 처리 안 하도록)
+                    window._filePickerResolve([]);
+                }
+            } catch(e) {
+                if (window._filePickerReject) window._filePickerReject(e);
+            } finally {
+                window._filePickerResolve = null;
+                window._filePickerReject = null;
+                window._filePickerMode = false;
+            }
+        """)
 
         # 업로드 완료 대기 — JS 폴링 (Gemini UI 변경에 강건)
         base = os.path.splitext(os.path.basename(abs_path))[0]
@@ -1041,8 +1285,8 @@ class GeminiDriver:
             if was_hidden:
                 self.show_window()
                 time.sleep(1)
-            self._delete_current_chat()
-            time.sleep(3)
+            # self._delete_current_chat()
+            # time.sleep(3)
         except Exception:
             pass
         self.new_chat()
@@ -1052,11 +1296,26 @@ class GeminiDriver:
     # ── 통합 메서드 ──────────────────────────────────────
 
     def send_with_file(self, file_path: str, prompt: str) -> str:
-        """파일 업로드 + 프롬프트 전송 → 응답 텍스트 반환"""
-        result = self.upload_file(file_path)
-        if result is False:
-            return "[EMPTY] 파일 업로드 실패 — 세션 리셋 필요"
-        if not self.send_message(prompt):
+        """파일 내용을 텍스트로 인라인해 프롬프트와 함께 전송 → 응답 텍스트 반환.
+        (Google 웹 UI 파일 업로드 불가 → 텍스트 인라인을 기본으로 사용)"""
+        try:
+            file_content = Path(file_path).read_text(encoding="utf-8")
+            fname = Path(file_path).name
+            sep = "█" * 60
+            full_prompt = (
+                f"{sep}\n"
+                f"▌ 첨부 컨텍스트: {fname}\n"
+                f"{sep}\n"
+                f"{file_content}\n"
+                f"{sep}\n"
+                f"▌ 여기까지 컨텍스트 끝. 아래부터 지시사항.\n"
+                f"{sep}\n\n"
+                f"{prompt}"
+            )
+        except Exception as e:
+            self._log(f"[FAIL] 컨텍스트 파일 읽기 실패: {e}")
+            return "[EMPTY] 파일 읽기 실패 — 경로 확인 필요"
+        if not self.send_message(full_prompt):
             return "[EMPTY] 텍스트 입력 실패 — 세션 리셋 필요"
         before = self._count_responses()
         self.click_send()

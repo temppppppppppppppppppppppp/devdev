@@ -1,0 +1,47 @@
+{
+  "session_id": "20260224_122540",
+  "start_time": "2026-02-24T12:25:40.684392",
+  "end_time": "2026-02-24T12:26:07.282538",
+  "total_calls": 99,
+  "successful_calls": 0,
+  "failed_calls": 99,
+  "total_retries": 0,
+  "total_tokens": 280345,
+  "total_cost_usd": 0.1402,
+  "agent_stats": {
+    "BlockEnricher": {
+      "agent_name": "BlockEnricher",
+      "total_calls": 49,
+      "successful_calls": 0,
+      "failed_calls": 49,
+      "success_rate": 0.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 297.1028454449712,
+        "min_ms": 273.07701110839844,
+        "max_ms": 357.96189308166504,
+        "p50_ms": 291.11647605895996,
+        "p90_ms": 314.61219787597656,
+        "p99_ms": 351.79158210754395
+      }
+    },
+    "BlockEnricher_Backup": {
+      "agent_name": "BlockEnricher_Backup",
+      "total_calls": 50,
+      "successful_calls": 0,
+      "failed_calls": 50,
+      "success_rate": 0.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0
+    }
+  },
+  "model_stats": {
+    "gemini-3-flash-preview": {
+      "input_tokens": 280345,
+      "output_tokens": 0,
+      "total_tokens": 280345,
+      "cost_usd": 0.1402
+    }
+  }
+}

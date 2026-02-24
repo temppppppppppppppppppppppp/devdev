@@ -83,7 +83,9 @@
       "Bash(while read f)",
       "Bash(do basename \"$f\")",
       "Bash(/tmp/codex_sweep300_detailed_comparison.txt:*)",
-      "Bash(ruff check:*)"
+      "Bash(ruff check:*)",
+      "Bash(tail:*)",
+      "Bash(cd C:\\\\Users\\\\wjjo\\\\Desktop\\\\글도비:*)"
     ]
   }
 }
