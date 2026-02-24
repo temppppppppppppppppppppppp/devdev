@@ -634,11 +634,11 @@ class Stage3Orchestrator:
         _qd = getattr(self.app, "quality_dashboard", None)
         if _qd is not None and hasattr(_qd, "record_validation"):
             try:
-                _bp_score = (
-                    pipeline_result.get("last_score", 0)
-                    or pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 1.0)
-                    or 1.0
-                )
+                _bp_score = pipeline_result.get("last_score")
+                if _bp_score is None:
+                    _bp_score = pipeline_result.get("phases", {}).get("generate", {}).get("selected_score")
+                if _bp_score is None:
+                    _bp_score = 1.0
                 _qd.record_validation(
                     ep_num=working_ep,
                     result={
@@ -669,9 +669,9 @@ class Stage3Orchestrator:
         try:
             _final_verdict = pipeline_result.get("final_verdict", "UNKNOWN")
             _score = pipeline_result.get("last_score", 0)
-            if not isinstance(_score, int):
+            if not isinstance(_score, int | float):
                 try:
-                    _score = int(_score)
+                    _score = float(_score)
                 except (ValueError, TypeError):
                     _score = 0
             ctx.current_project.db.save_cost_record(

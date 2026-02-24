@@ -332,7 +332,9 @@ class Stage2Finalizer:
                             setattr(self.ctx.state_tracker, _k, _v)
                 return {"action": "retry", "current_feedback": current_feedback}
 
-            if not self.ctx.validate_arc_integrity(refined_arc):
+            if callable(getattr(self.ctx, "validate_arc_integrity", None)) and not self.ctx.validate_arc_integrity(
+                refined_arc
+            ):
                 current_feedback = "필수 키가 누락된 전술 설계입니다. 형식을 완전한 JSON으로 다시 출력하십시오."
                 refined_arc = None
                 # [P1-B1] StateTracker 롤백
@@ -405,7 +407,8 @@ class Stage2Finalizer:
             except Exception as _cdb_err:
                 logging.warning("[B4-P1-1] constraint_db.update_arc_state 실패 (비치명적): %s", _cdb_err)
 
-            last_refined_context = self.ctx.generate_arc_context_v60(all_refined_arcs, global_arc_no + 1)
+            if callable(getattr(self.ctx, "generate_arc_context_v60", None)):
+                last_refined_context = self.ctx.generate_arc_context_v60(all_refined_arcs, global_arc_no + 1)
             current_ep_start = refined_arc["ep_end"] + 1
 
             # [4-R3-f] PASS 메트릭 기록

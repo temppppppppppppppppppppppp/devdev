@@ -205,7 +205,7 @@ class Stage4PostProcessor:
                 active_seeds=active_seeds,
                 causal_history=causal_history,
             )
-            _bible_executor.shutdown(wait=False, cancel_futures=True)
+            _bible_executor.shutdown(wait=False, cancel_futures=False)
             self.ctx.ui.log("      ⏳ [S4-I6] Manager 정산 비동기 실행 중...")
         except Exception as _submit_err:
             logging.warning("[S4-I6] 비동기 제출 실패, 동기 폴백 예정: %s", _submit_err)

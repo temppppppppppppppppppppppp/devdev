@@ -514,7 +514,12 @@ class Stage2PreflightAnalysis:
 
         # [V60.21] Focus Mode: 재시도 시 컨텍스트 대폭 축소
         if is_retry:
-            minimal_prev_context = self.ctx.build_minimal_arc_context(all_refined_arcs, protagonist_name or "주인공")
+            if callable(getattr(self.ctx, "build_minimal_arc_context", None)):
+                minimal_prev_context = self.ctx.build_minimal_arc_context(
+                    all_refined_arcs, protagonist_name or "주인공"
+                )
+            else:
+                minimal_prev_context = enhanced_context[:2000]
             enhanced_context = f"{current_feedback}\n\n{minimal_prev_context}"
             context_size = len(enhanced_context)
             self.ctx.ui.log(f"      📢 [V60.21] Focus Mode 활성화 - 컨텍스트 {context_size}자 (최소화)")
@@ -622,7 +627,9 @@ class Stage2PreflightAnalysis:
                             self.ctx.sync_cache_key_to_app(arc_count, cache=state_result)
                     # [Sweep45] None 대신 {} 폴백 (downstream .items() / .get() 크래시 방지)
                     entity_registry_for_director = (state_result.get("entity_registry") if state_result else None) or {}
-                    if entity_registry_for_director:
+                    if entity_registry_for_director and callable(
+                        getattr(self.ctx, "fix_entity_registry_protagonist", None)
+                    ):
                         entity_registry_for_director = self.ctx.fix_entity_registry_protagonist(
                             entity_registry_for_director, protagonist_name
                         )

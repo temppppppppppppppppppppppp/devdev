@@ -1479,6 +1479,9 @@ class ValidationOrchestrator:
         """[V59] 검증 히스토리 기록 + 연속 카운트 업데이트"""
         import time
 
+        # [R6-P1-1] 재시도 여부 판별 — 같은 ep_num이 이미 기록돼 있으면 retry
+        was_retry = any(h.get("ep_num") == ep_num for h in self.validation_history)
+
         # [E5c-P2-5] Remove previous entries for same ep_num so retries overwrite, not accumulate
         self.validation_history = [h for h in self.validation_history if h.get("ep_num") != ep_num]
 
@@ -1488,13 +1491,14 @@ class ValidationOrchestrator:
         if len(self.validation_history) > _VALIDATION_HISTORY_MAX:
             self.validation_history = self.validation_history[-_VALIDATION_HISTORY_MAX:]
 
-        # 연속 카운트 업데이트
-        if passed:
-            self.consecutive_passes += 1
-            self.consecutive_fails = 0
-        else:
-            self.consecutive_fails += 1
-            self.consecutive_passes = 0
+        # [R6-P1-1] 연속 카운트는 새 에피소드일 때만 업데이트 (재시도 시 drift 방지)
+        if not was_retry:
+            if passed:
+                self.consecutive_passes += 1
+                self.consecutive_fails = 0
+            else:
+                self.consecutive_fails += 1
+                self.consecutive_passes = 0
 
     def set_manual_threshold_v59(self, threshold: int, duration_episodes: int = 0):
         """

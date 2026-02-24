@@ -519,7 +519,8 @@ JSON:
             with Spinner("Bible 생성 중", style="dots"):
                 self.generate_bible(protagonist_config)
             if not self.bible:
-                logging.warning("[StoryExpander] generate_bible() 결과가 비어있음 — 후속 단계 출력 불완전 가능")
+                logging.warning("[StoryExpander] generate_bible() 결과가 비어있음 — 조기 반환")
+                return self.bible, self.treatment
             print_success("Bible 생성 완료")
             indicator.next()
             indicator.show()
@@ -547,7 +548,8 @@ JSON:
             logging.info("[*] Bible 생성...")
             self.generate_bible(protagonist_config)
             if not self.bible:
-                logging.warning("[StoryExpander] generate_bible() 결과가 비어있음 — 후속 단계 출력 불완전 가능")
+                logging.warning("[StoryExpander] generate_bible() 결과가 비어있음 — 조기 반환")
+                return self.bible, self.treatment
 
             logging.info("[*] Treatment 생성...")
             self.generate_treatment()

@@ -233,7 +233,8 @@ class Stage2Orchestrator:
                 self.ctx.ui.log(f"📦 [Batch] {batch_start + 1}~{batch_end}번 구간 욕망 수혈 공정 가동...")
 
                 # [V60.10] 수혈 맥락 준비 - StateExtractor 활용
-                last_refined_context = self.ctx.generate_arc_context_v60(all_refined_arcs, batch_start + 1)
+                if callable(getattr(self.ctx, "generate_arc_context_v60", None)):
+                    last_refined_context = self.ctx.generate_arc_context_v60(all_refined_arcs, batch_start + 1)
                 if all_refined_arcs:
                     self.ctx.ui.log(f"      🧠 [V60.10] StateExtractor: {len(all_refined_arcs)}개 Arc 상태 추출 완료")
 

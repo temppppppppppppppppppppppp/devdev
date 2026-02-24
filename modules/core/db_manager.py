@@ -1486,7 +1486,10 @@ class DBManager:
         except sqlite3.IntegrityError as e:
             # 무결성 오류: 중복 키, 제약 조건 위반 등
             if not nested_transaction:
-                self.rollback()
+                try:
+                    self.rollback()
+                except Exception:
+                    pass  # [R7-P1-2] closed DB 시 이차 예외 방지
                 logging.warning(f"🚨 [{DBErrorSeverity.HIGH}] 데이터 무결성 오류(롤백 완료): {e}")
                 logging.info("→ 해결책: 중복 에피소드 번호 또는 키 확인")
                 return False
@@ -1500,7 +1503,10 @@ class DBManager:
             # 운영 오류: DB 잠금, 디스크 오류, 쿼리 오류 등
             error_str = str(e).lower()
             if not nested_transaction:
-                self.rollback()
+                try:
+                    self.rollback()
+                except Exception:
+                    pass  # [R7-P1-2] closed DB 시 이차 예외 방지
 
             if "locked" in error_str:
                 logging.warning(f"🚨 [{DBErrorSeverity.CRITICAL}] DB 잠금 상태(롤백 완료): {e}")
@@ -1521,7 +1527,10 @@ class DBManager:
         except (DBError, DBIntegrityError, DBTransactionError) as e:
             # 커스텀 DB 예외 (하위 메서드에서 발생)
             if not nested_transaction:
-                self.rollback()
+                try:
+                    self.rollback()
+                except Exception:
+                    pass  # [R7-P1-2] closed DB 시 이차 예외 방지
                 logging.warning(f"🚨 [{e.severity}] 하위 저장 오류(롤백 완료): {e}")
                 return False
             else:
@@ -1530,7 +1539,10 @@ class DBManager:
         except Exception as e:
             # 🛡️ [핵심] 기타 예외 - 롤백 및 전파 전략
             if not nested_transaction:
-                self.rollback()
+                try:
+                    self.rollback()
+                except Exception:
+                    pass  # [R7-P1-2] closed DB 시 이차 예외 방지
                 logging.warning(f"🚨 [{DBErrorSeverity.HIGH}] 트랜잭션 실패(롤백 완료): {e}")
                 logging.info(f"→ 상세: {traceback.format_exc()[:400]}")
                 return False
@@ -1624,6 +1636,12 @@ class DBManager:
                 self.cursor.execute("DELETE FROM episode_satisfaction_tags WHERE ep_num >= ?", (target_ep,))
                 self.cursor.execute("DELETE FROM director_selections WHERE ep_num >= ?", (target_ep,))
                 self.cursor.execute("DELETE FROM episode_pacing WHERE ep_num >= ?", (target_ep,))
+                # [R7-P1-1] episode_fts/episode_meta 롤백 (FTS 먼저 삭제 후 meta 삭제)
+                try:
+                    self.cursor.execute("DELETE FROM episode_fts WHERE rowid >= ?", (target_ep,))
+                except Exception:
+                    pass  # FTS table may not exist
+                self.cursor.execute("DELETE FROM episode_meta WHERE ep_num >= ?", (target_ep,))
                 self.conn.commit()
             except Exception as e:
                 self.conn.rollback()
