@@ -85,9 +85,9 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 -
 
 ---
 
-### 작업 2: TF-10 Phase 0~1 구현 (episode_details 스키마 추가)
+### 작업 2: TF-10 Phase 0~4 구현 (episode_details 전 범위)
 
-**상태**: 미시작
+**상태**: ✅ 완료
 
 #### Phase 0: 선결 조건 (3건)
 
@@ -130,15 +130,15 @@ if isinstance(_asp_arc, dict) and _asp_arc.get("tactical_doc"):
 
 ### 작업 3: TF-11 게이트웨이 구현 (경량 대안)
 
-**상태**: 부분 완료 (P2+P3 완료, response_schema 확대 미시작)
+**상태**: ✅ 완료
 
-**채택된 경량 조치**:
-- [x] TF-10 P2: ASP episode_details 복원 (`four_phase_arc_generator.py`)
-- [x] TF-10 P3: ArcCorrector episode_details 동기화 (`arc_corrector.py`)
-- [ ] `response_schema` 확대 적용 (arc_ensemble.py + four_phase_arc_generator.py, ~5줄)
-- [ ] `episode_details` Pydantic 필드 추가 (TF-10 Phase 1과 병합)
+**완료된 경량 조치**:
+- [x] TF-10 P2: ASP episode_details 복원 (`four_phase_arc_generator.py`, commit `90ebb8f`)
+- [x] TF-10 P3: ArcCorrector episode_details 동기화 (`arc_corrector.py`, commit `90ebb8f`)
+- [x] `response_schema` 확대 적용 — `base_agent._ask_with_cached_context()` + `arc_ensemble.py` (commit `4b745e8`)
+- [x] `episode_details` Pydantic 필드 추가 (`modules/models/arc.py`, TF-10 Phase 1, commit `1647acb`)
 
-**Gateway 전면 도입**: 후순위 (process_node 평탄화 opt-in 전환 후 재검토)
+**Gateway 전면 도입**: 후순위 (POC 이후, process_node 평탄화 opt-in 전환 후 재검토)
 
 ---
 
