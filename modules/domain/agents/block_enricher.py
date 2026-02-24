@@ -10,6 +10,7 @@ Purpose:
 
 import json
 import re
+import time
 
 from modules.core.prompt_loader import SafeDict
 
@@ -714,7 +715,8 @@ class BlockEnricher(BaseAgent):
                     for f in futures:
                         f.cancel()
 
-            # [V66.1] Rate Limit 딜레이 제거 (BaseAgent.API_DELAY에서 이미 적용)
+            # 배치 간 딜레이 (API Rate Limit 과부하 방지)
+            time.sleep(2)
 
         # ─────────────────────────────────────────────────────────────────────
         # Phase 2: 인과 에러 검증

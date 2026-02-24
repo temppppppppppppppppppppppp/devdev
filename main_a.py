@@ -1284,7 +1284,7 @@ class SovereignApp:
             # [V60.24] Flash (농축용)
             from modules.domain.agents.block_enricher import BlockEnricher  # [INF-I8] lazy import
 
-            enricher = BlockEnricher(self.current_project, self.sys.api_client, model_tier=_FLASH_ANALYSIS_MODEL)
+            enricher = BlockEnricher(self.current_project, self.sys.api_client, model_tier=_SUMMARY_MODEL)
 
             # 3. 각 Block 분석 및 농축 필요 여부 확인
             needs_enrichment = []
