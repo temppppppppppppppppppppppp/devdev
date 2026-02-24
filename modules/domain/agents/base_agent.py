@@ -373,10 +373,6 @@ class BaseAgent:
             "top_p": 0.95,
             "response_mime_type": "application/json",
         }
-        http_options = self._build_http_options()
-        if http_options is not None:
-            config_params["http_options"] = http_options
-
         # [V0128] JSON Schema enforcement if provided
         if response_schema:
             config_params["response_schema"] = response_schema
@@ -562,8 +558,6 @@ class BaseAgent:
                                 "top_p": 0.95,
                                 "response_mime_type": "application/json",
                             }
-                            if http_options is not None:
-                                fallback_config_params["http_options"] = http_options
                             if response_schema:
                                 fallback_config_params["response_schema"] = response_schema
                             if thinking_level:
@@ -724,8 +718,6 @@ class BaseAgent:
                     "top_p": 0.95,
                     "response_mime_type": "application/json",
                 }
-                if http_options is not None:
-                    backup_config_params["http_options"] = http_options
                 if response_schema:
                     backup_config_params["response_schema"] = response_schema
                 backup_config = types.GenerateContentConfig(**backup_config_params)
@@ -841,7 +833,7 @@ class BaseAgent:
         """에러 타입을 분류하여 적절한 복구 전략 결정에 활용"""
         error_str = str(error).lower()
 
-        if "timeout" in error_str or "deadline" in error_str:
+        if "timeout" in error_str or "timed out" in error_str or "deadline" in error_str:
             return AgentErrorType.TIMEOUT
         elif "quota" in error_str or "rate" in error_str or "429" in error_str:
             return AgentErrorType.QUOTA_EXCEEDED
@@ -1321,10 +1313,6 @@ class BaseAgent:
                 "response_mime_type": "application/json",
                 "cached_content": cache_name,
             }
-            http_options = self._build_http_options()
-            if http_options is not None:
-                config_params["http_options"] = http_options
-
             # [V61.7] Thinking Budget 지원
             if thinking_level:
                 if isinstance(thinking_level, str):
