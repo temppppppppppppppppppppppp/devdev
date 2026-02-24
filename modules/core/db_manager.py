@@ -811,9 +811,14 @@ class DBManager:
             placeholders = ", ".join(["?"] * len(validated_data))
             query = f"INSERT OR REPLACE INTO martial_tracker (ep_num, {columns}) VALUES (?, {placeholders})"
 
+            # list/dict 값은 JSON 직렬화 (SQLite는 기본 타입만 허용)
+            serialized_values = [
+                json.dumps(v, ensure_ascii=False) if isinstance(v, (list, dict)) else v
+                for v in validated_data.values()
+            ]
             cur = self.conn.cursor()
             try:
-                cur.execute(query, [ep_num] + list(validated_data.values()))
+                cur.execute(query, [ep_num] + serialized_values)
                 if not nested:
                     self.commit()
             finally:
