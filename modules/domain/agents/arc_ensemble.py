@@ -20,6 +20,7 @@ from concurrent.futures import TimeoutError as FutureTimeoutError
 
 from modules.core.constants import GenreTypes, Stage2Limits
 from modules.core.prompt_loader import PromptLoader
+from modules.core.response_schemas import ARC_DESIGN_SCHEMA  # [TF11] response_schema 확대
 
 from .base_agent import BaseAgent
 
@@ -477,6 +478,7 @@ class ArcEnsembleGenerator(BaseAgent):
                 temperature=strategy["temperature"],
                 thinking_level=thinking,
                 full_prompt_fallback=full_prompt_fallback,
+                response_schema=ARC_DESIGN_SCHEMA,  # [TF11] API 레벨 스키마 강제
             )
 
             if isinstance(result, str):
