@@ -8,9 +8,9 @@
 ## 0. 즉시 파악 요약 (30초 버전)
 
 - **글도비**는 AI 웹소설 자동 생성 시스템 (Python + Gemini API). Stage 0(설정) -> 2(Arc) -> 3(Blueprint) -> 4(원고) 파이프라인.
-- **현재 상태**: 시스템 안정화 완료 (2,583 tests passed, ruff 0 violations). Treatment 콘텐츠 보강 + Bible 동기화 완료.
-- **다음 할 일**: TF-11 게이트웨이 설계 -> TF-10 Phase 0~1 (episode_details 스키마 추가) -> 게이트웨이 구현 -> TF-10 Phase 2~4 (소비 코드 + 검증 + 테스트).
-- **TF-11 게이트웨이 설계 문서는 아직 미작성 상태** (OPUS TF 진행 중이었으나 문서 미생성). 이 작업부터 재개.
+- **현재 상태**: 시스템 안정화 완료 (2,599 tests passed, ruff 0 violations). TF-10(episode_details) + TF-11(response_schema 확대) 전 범위 구현 완료. pushed to origin (`9b9d3c9`).
+- **다음 할 일**: POC 생산 (20~30화 원고 생성) → Phase 1.5 검증 게이트 (episode_details 생성률 70%+ 확인) → POC 완료 후 TF-12 (암묵적 계약 → 명시적 계약 대대적 전환).
+- **Phase 1.5는 코드 작업 아님** — 실제 Gemini 출력 로그에서 `episode_details` 생성률 관찰만. 70% 미만 시 프롬프트 재조정.
 - **절대 주의**: 4대 원칙 (Python=수집만, 팩트시트 수정=LLM만, Director 주권, 사망 캐릭터 제한) 위반 금지.
 
 ---
@@ -55,13 +55,19 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 -
 | `099d91c` | Work A: `config/settings/validation.yaml` -- `stage3_enabled: true` (L174) |
 | `099d91c` | Work B: `modules/core/stage3_orchestrator.py` -- Treatment Block 직접 주입 |
 | `9fb7a36` | 인덱스 버그 수정: `arc_idx` 사용 + 시간적 게이팅 안내문 |
-| (미커밋) | TF-10 P2: `four_phase_arc_generator.py` L376, L651 -- ASP episode_details 복원 |
-| (미커밋) | TF-10 P3: `arc_corrector.py` 3곳 -- tactical_doc 수정 시 해당 화 episode_details 삭제 |
-| (미커밋) | TF-11 Section 11 -- 3-시각 리뷰 종합 + 경량 대안 채택 결정 |
+| `90ebb8f` | TF-10 P2: `four_phase_arc_generator.py` -- ASP episode_details 복원 |
+| `90ebb8f` | TF-10 P3: `arc_corrector.py` 3곳 -- tactical_doc 수정 시 해당 화 episode_details 삭제 |
+| `90ebb8f` | TF-11 Section 11 -- 3-시각 리뷰 종합 + 경량 대안 채택 결정 |
+| `1647acb` | TF-10 Phase 1 -- episode_details 스키마 + 프롬프트 추가 |
+| `f34b171` | TF-10 Phase 2 -- Stage 3 소비 코드 episode_details 우선 참조 |
+| `1c3ceb7` | TF-10 Phase 3 -- episode_details 타입 검증 (ADVISORY) |
+| `1e00d17` | TF-10 Phase 4 -- 테스트 16개 + `#{2,3}` 포맷 충돌 버그 수정 |
+| `4b745e8` | TF-11 response_schema 확대 -- ArcEnsemble API 레벨 스키마 강제 |
+| `9b9d3c9` | docs: MASTER_EXECUTION_GUIDE 현황 최신화 + push to origin |
 
 ### 2-2. 시스템 전체 상태
 
-- **테스트**: 2,583 passed + 0 xfailed (2026-02-24 최신)
+- **테스트**: 2,599 passed + 0 xfailed (2026-02-24 최신)
 - **Ruff**: 0 violations (P2/P3 코드는 미사용 변수 없음 확인)
 - **모듈 분할**: stage4(-64%), chief_writer(-62%), stage2(-66%) 완료
 - **DI 전환**: Stage2(44슬롯) + Stage3(19슬롯) + Stage4(24슬롯) 전량 완료
@@ -144,7 +150,7 @@ if isinstance(_asp_arc, dict) and _asp_arc.get("tactical_doc"):
 
 ### 작업 4: TF-10 Phase 2~4 구현 (소비 코드 + 검증 + 테스트)
 
-**상태**: 미시작 (작업 2+3 완료 후 진행)
+**상태**: ✅ 완료
 
 #### Phase 2: Stage 3 소비 코드 (4건, 순차 진행)
 
@@ -214,7 +220,7 @@ if isinstance(_asp_arc, dict) and _asp_arc.get("tactical_doc"):
 ### Step 1: 상태 확인
 ```bash
 cd "C:\Users\wjjo\Desktop\글도비"
-pytest tests/ -q                    # 2,583 passed 확인
+pytest tests/ -q                    # 2,599 passed 확인
 git log --oneline -5                # 최근 커밋 확인
 ```
 
@@ -294,14 +300,14 @@ ruff check .                        # 0 violations
 
 | 항목 | 값 |
 |------|-----|
-| pytest 통과 기준 | **2,583 passed + 0 xfailed** |
+| pytest 통과 기준 | **2,599 passed + 0 xfailed** |
 | 마지막 검증 | 2026-02-24 |
 | Ruff | 0 violations |
-| checkpoint 커밋 | `42e3954` |
+| checkpoint 커밋 | `9b9d3c9` |
 | 테스트 명령어 | `pytest tests/ -q` |
 | Ruff 명령어 | `ruff check .` |
 
-**주의**: 작업 4(Phase 4) 완료 후 테스트 수는 2,597 이상이어야 한다 (기존 2,583 + 신규 14).
+**참고**: TF-10 Phase 4에서 테스트 16개 추가 (기존 2,583 + 16 = 2,599). 현재 기준선.
 
 ---
 
@@ -314,7 +320,8 @@ ruff check .                        # 0 violations
 | 2차 | 동적 장르 | 스토리 진행 중 장르 프리셋 추가 |
 | 4차 | 캐시 | 컨텍스트 캐싱 최적화 |
 | 5차 | 설정 SSOT | 설정 값 단일 소스화 |
-| 후순위 | 근본 구조 개선 | Pydantic 전경계 강제, 계약 기반 테스트, 암묵적 계약 전수 제거 |
+| **TF-12** | **암묵적 계약 → 명시적 계약 대대적 전환** | Pydantic 전경계 강제, 계약 기반 테스트, `dict.get()` 패턴 전수 제거. **POC 완료 후 진행** |
+| 후순위 | 근본 구조 개선 (TF-12 포함) | Bounded Context 강화, Gateway 전면 도입 opt-in |
 
 상세: `docs/2026-02-23/next_steps_plan.md`
 
