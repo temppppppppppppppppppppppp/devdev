@@ -202,7 +202,7 @@ class StageZeroManager:
                 if not line:
                     break
                 lines.append(line)
-        except (EOFError, KeyboardInterrupt):
+        except (EOFError, KeyboardInterrupt, ValueError):
             pass
         concept = "\n".join(lines)
 
@@ -261,7 +261,7 @@ class StageZeroManager:
             print("\n  원고 경로 입력 (파일 또는 폴더):")
             try:
                 input_path = input("  > ").strip()
-            except (EOFError, KeyboardInterrupt):
+            except (EOFError, KeyboardInterrupt, ValueError):
                 input_path = ""
 
         if not input_path or not Path(input_path).exists():
@@ -297,7 +297,7 @@ class StageZeroManager:
             print("\n  Bible JSON 경로 입력:")
             try:
                 bible_path = input("  > ").strip()
-            except (EOFError, KeyboardInterrupt):
+            except (EOFError, KeyboardInterrupt, ValueError):
                 bible_path = ""
 
         path = Path(bible_path)
@@ -408,7 +408,7 @@ class StageZeroManager:
 
         try:
             confirm = input("\n  분석을 시작하시겠습니까? (y/n): ").strip().lower()
-        except (EOFError, KeyboardInterrupt):
+        except (EOFError, KeyboardInterrupt, ValueError):
             confirm = "n"
         if confirm != "y":
             return None

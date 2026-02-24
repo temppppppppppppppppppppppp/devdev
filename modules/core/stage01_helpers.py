@@ -54,7 +54,7 @@ class Stage01Helpers:
 
         try:
             p0_choice = input("\n  선택 (기본: 1): ").strip()
-        except (EOFError, KeyboardInterrupt):
+        except (EOFError, KeyboardInterrupt, ValueError):
             p0_choice = "1"
 
         if p0_choice == "0":
@@ -89,7 +89,7 @@ class Stage01Helpers:
             enrich_choice = (
                 input("   🔧 [V60.10] Treatment Block 자동 농축을 수행하시겠습니까? (y/N): ").strip().lower()
             )
-        except (EOFError, KeyboardInterrupt):
+        except (EOFError, KeyboardInterrupt, ValueError):
             enrich_choice = "n"
         if enrich_choice == "y":
             treatment_file = app._enrich_treatment_blocks(treatment_file)
@@ -102,7 +102,7 @@ class Stage01Helpers:
         app.ui.log("      [2] 현대인 - 제약 없음 (권장: 회귀/빙의물)")
         try:
             world_choice = input("   선택 (기본: 1): ").strip()
-        except (EOFError, KeyboardInterrupt):
+        except (EOFError, KeyboardInterrupt, ValueError):
             world_choice = "1"
         world_origin = "현대인" if world_choice == "2" else "원시인"
 
@@ -113,7 +113,7 @@ class Stage01Helpers:
         app.ui.log("      [4] 기타 - 특별한 유형 없음")
         try:
             type_choice = input("   선택 (기본: 1): ").strip()
-        except (EOFError, KeyboardInterrupt):
+        except (EOFError, KeyboardInterrupt, ValueError):
             type_choice = "1"
         incarnation_types = {"1": "회귀자", "2": "빙의자", "3": "환생자", "4": "기타"}
         incarnation_type = incarnation_types.get(type_choice, "회귀자")
@@ -124,7 +124,7 @@ class Stage01Helpers:
         app.ui.log("      [3] 전지적 - 모든 캐릭터 내면 접근 가능")
         try:
             pov_choice = input("   선택 (기본: 2): ").strip()
-        except (EOFError, KeyboardInterrupt):
+        except (EOFError, KeyboardInterrupt, ValueError):
             pov_choice = "2"
         pov_types = {"1": "1인칭", "2": "3인칭", "3": "전지적"}
         selected_pov = pov_types.get(pov_choice, "3인칭")
@@ -177,7 +177,7 @@ class Stage01Helpers:
 
         try:
             input("\n[Enter] 메뉴로 돌아가기")
-        except (EOFError, KeyboardInterrupt):
+        except (EOFError, KeyboardInterrupt, ValueError):
             pass
 
     # ─────────────────────────────────────────────────────────────
@@ -229,7 +229,7 @@ class Stage01Helpers:
 
         try:
             direction_hint = input("   방향 힌트 (예: '클라이맥스로', '새 빌런 등장', 생략 가능): ").strip()
-        except (EOFError, KeyboardInterrupt):
+        except (EOFError, KeyboardInterrupt, ValueError):
             direction_hint = ""
 
         # 3. 배치별 확인 콜백
@@ -242,7 +242,7 @@ class Stage01Helpers:
 
             try:
                 confirm = input("   계속 진행하시겠습니까? (Y/n): ").strip().lower()
-            except (EOFError, KeyboardInterrupt):
+            except (EOFError, KeyboardInterrupt, ValueError):
                 confirm = "y"
             return confirm != "n"
 
@@ -427,7 +427,7 @@ class Stage01Helpers:
 
         try:
             input("\n[Enter] 메뉴로 돌아가기")
-        except (EOFError, KeyboardInterrupt):
+        except (EOFError, KeyboardInterrupt, ValueError):
             pass
         return None, None  # 자체 저장 완료, 공통 후처리 불필요
 
@@ -444,7 +444,7 @@ class Stage01Helpers:
                 logging.warning(f"⚠️ StyleGuide DB 저장 실패: {sg_err}")
         try:
             input("\n[Enter] 메뉴로 돌아가기")
-        except (EOFError, KeyboardInterrupt):
+        except (EOFError, KeyboardInterrupt, ValueError):
             pass
         return None, None
 
@@ -490,7 +490,7 @@ class Stage01Helpers:
 
         try:
             input("\n[Enter] 메뉴로 돌아가기")
-        except (EOFError, KeyboardInterrupt):
+        except (EOFError, KeyboardInterrupt, ValueError):
             pass
 
     # ─────────────────────────────────────────────────────────────
@@ -506,13 +506,13 @@ class Stage01Helpers:
         app.ui.log("💡 Stage 1은 선택 사항입니다. 스킵해도 Stage 2 진행이 가능합니다.")
         try:
             skip_choice = input("   [1] 진행  [2] 스킵 (기본: 1): ").strip()
-        except (EOFError, KeyboardInterrupt):
+        except (EOFError, KeyboardInterrupt, ValueError):
             skip_choice = "1"
         if skip_choice == "2":
             app.ui.log("⏭️ Stage 1을 건너뜁니다. Stage 2에서 기본값으로 진행됩니다.")
             try:
                 input("\n[Enter] 메뉴로 돌아가기")
-            except (EOFError, KeyboardInterrupt):
+            except (EOFError, KeyboardInterrupt, ValueError):
                 pass
             return
 
@@ -524,7 +524,7 @@ class Stage01Helpers:
             app.ui.log("❌ 프로젝트가 로드되지 않았습니다.")
             try:
                 input("\n[Enter] 메뉴로 돌아가기")
-            except (EOFError, KeyboardInterrupt):
+            except (EOFError, KeyboardInterrupt, ValueError):
                 pass
             return
         master_bible = app.current_project.master_bible or {}
@@ -550,7 +550,7 @@ class Stage01Helpers:
             app.ui.log("❌ 에러: 성경 내 로드맵 데이터가 없습니다. Phase 0을 다시 실행하세요.")
             try:
                 input("\n[Enter] 메뉴로 돌아가기")
-            except (EOFError, KeyboardInterrupt):
+            except (EOFError, KeyboardInterrupt, ValueError):
                 pass
             return
 
@@ -687,5 +687,5 @@ class Stage01Helpers:
 
         try:
             input("\n[Enter] 메뉴로 이동")
-        except (EOFError, KeyboardInterrupt):
+        except (EOFError, KeyboardInterrupt, ValueError):
             pass
