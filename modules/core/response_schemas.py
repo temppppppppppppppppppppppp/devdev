@@ -294,6 +294,18 @@ ARC_DESIGN_SCHEMA = types.Schema(
                 "item_consumption": types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
             },
         ),
+        # [TF10-1-2] 화별 사건 인덱스 (선택 필드 — required에 추가하지 않음)
+        "episode_details": types.Schema(
+            type=types.Type.ARRAY,
+            items=types.Schema(
+                type=types.Type.OBJECT,
+                properties={
+                    "ep_num": types.Schema(type=types.Type.INTEGER),
+                    "details": types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
+                },
+                required=["ep_num", "details"],
+            ),
+        ),
     },
     required=["arc_no", "ep_count", "ep_start", "ep_end", "title", "beat_sequence", "tactical_doc"],
 )
