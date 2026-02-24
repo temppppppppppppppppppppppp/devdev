@@ -338,6 +338,8 @@ BLUEPRINT_SCHEMA = types.Schema(
         ),
         # [V49.5] 시간 흐름
         "time_flow": types.Schema(type=types.Type.STRING),  # 예: "같은 날 밤", "3일 후"
+        "core_tension": types.Schema(type=types.Type.STRING),
+        "expected_ending": types.Schema(type=types.Type.STRING),
     },
     required=["episode_number", "scene_breakdown", "integrated_scenario"],
 )
