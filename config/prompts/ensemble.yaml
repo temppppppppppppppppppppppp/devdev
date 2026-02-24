@@ -51,6 +51,8 @@ ENSEMBLE_ARC_PROMPT: |
 
   {genre_ext_guide}
 
+  {extended_block_guide}
+
   ### [Volume 전략]
   {vol_strategy}
 

@@ -130,6 +130,16 @@ class FourPhaseArcGenerator(BaseAgent):
                 ep_count = Stage2Limits.DEFAULT_EP_COUNT  # 5화
                 reasoning = f"표준 정보량 ({content_len}자, {sentence_count}문장) → 기본 5화"
 
+        # [TF-9] tension_level 보정 — treatment 설계 의도 반영
+        tension_level = curr_block.get("tension_level") if isinstance(curr_block, dict) else None
+        if isinstance(tension_level, (int, float)):
+            if tension_level >= 8:
+                ep_count += 1
+                reasoning += f" / tension={tension_level} → +1화"
+            elif tension_level <= 3:
+                ep_count -= 1
+                reasoning += f" / tension={tension_level} → -1화"
+
         # 범위 강제 (안전장치)
         ep_count = max(Stage2Limits.MIN_EP_COUNT, min(Stage2Limits.MAX_EP_COUNT, ep_count))
 
