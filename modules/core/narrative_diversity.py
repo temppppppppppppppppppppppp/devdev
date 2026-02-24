@@ -5,7 +5,6 @@ Pattern Tracking + Diversity Sampling + Contrastive CoT 통합 관리
 
 사용법:
     from modules.core.narrative_diversity import NarrativeDiversityEngine
-import logging
 
     engine = NarrativeDiversityEngine(context, genre='wuxia')
     engine.analyze_recent_episodes(10)  # 최근 10화 분석
@@ -20,6 +19,7 @@ import logging
     injection = engine.get_writer_injection()
 """
 
+import logging
 from collections.abc import Callable
 
 from .diversity_sampler import ConditionalDiversitySampler, DiversitySampler

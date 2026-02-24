@@ -344,6 +344,18 @@ class BlockEnricher(BaseAgent):
             if isinstance(result, str):
                 result = self._extract_json_robust(result)  # [V70] json.loads → robust parser
 
+            # [D5-P0-1] LLM 결과 구조 검증 — content/block_id 없거나 parsing_error면 원본 반환
+            if (
+                not isinstance(result, dict)
+                or result.get("parsing_error")
+                or ("content" not in result and "block_id" not in result)
+            ):
+                return {
+                    "enriched": False,
+                    "reason": "LLM 결과 구조 불량 (content/block_id 누락 또는 parsing_error)",
+                    "block": current_block,
+                }
+
             # 검증
             validation = self._validate_enrichment(
                 original=current_block, enriched=result, prev_block=prev_block, next_block=next_block
@@ -361,6 +373,17 @@ class BlockEnricher(BaseAgent):
                 result = self.ask(retry_prompt, temperature=0.5)
                 if isinstance(result, str):
                     result = self._extract_json_robust(result)  # [V70]
+                # [D5-P0-1] 재시도 결과도 구조 검증
+                if (
+                    not isinstance(result, dict)
+                    or result.get("parsing_error")
+                    or ("content" not in result and "block_id" not in result)
+                ):
+                    return {
+                        "enriched": False,
+                        "reason": "재시도 LLM 결과 구조 불량",
+                        "block": current_block,
+                    }
                 # 재검증
                 validation = self._validate_enrichment(
                     original=current_block, enriched=result, prev_block=prev_block, next_block=next_block
@@ -397,6 +420,18 @@ class BlockEnricher(BaseAgent):
                 result = self.ask(retry_prompt, temperature=0.4)
                 if isinstance(result, str):
                     result = self._extract_json_robust(result)  # [V70]
+
+                # [D5-P0-1] Director 재시도 결과도 구조 검증
+                if (
+                    not isinstance(result, dict)
+                    or result.get("parsing_error")
+                    or ("content" not in result and "block_id" not in result)
+                ):
+                    return {
+                        "enriched": False,
+                        "reason": "Director 재시도 LLM 결과 구조 불량",
+                        "block": current_block,
+                    }
 
                 # 재심사
                 director_audit = self._director_audit_block(
@@ -449,9 +484,9 @@ class BlockEnricher(BaseAgent):
 
         except Exception as e:
             return {
-                "validation_result": "PASS",  # 검증 실패 시 일단 통과
+                "validation_result": "FAIL",  # [D5-P0-2] fail-closed: 검증 실패 시 FAIL 처리
                 "issues": [f"검증 오류: {str(e)}"],
-                "confidence_score": 0.5,
+                "confidence_score": 0.0,
             }
 
     def _director_audit_block(

@@ -120,7 +120,7 @@ class DirectorContinuityValidator:
             response = self._d.ask(prompt, temperature=0.1, thinking_level="low")
             result = self._d._extract_json_robust(response)
 
-            if not isinstance(result, dict):
+            if not isinstance(result, dict) or result.get("parsing_error"):
                 return {"decision": "PASS", "mismatches": [], "fix_instructions": "", "parsing_error": True}
 
             # 결과 로깅
@@ -516,9 +516,9 @@ class DirectorContinuityValidator:
                 _resp_text = None
             if not _resp_text:
                 return {
-                    "decision": "PASS",
-                    "conflicts": [],
-                    "summary": "캐시 검사 응답 비어있음 - 비차단 통과",
+                    "decision": "REJECT",
+                    "conflicts": [{"severity": "CRITICAL", "description": "캐시 검사 응답 비어있음 — fail-closed"}],
+                    "summary": "캐시 검사 응답 비어있음 — fail-closed",
                     "parsing_error": True,
                 }
 
@@ -526,9 +526,9 @@ class DirectorContinuityValidator:
 
             if not result or result.get("parsing_error"):
                 return {
-                    "decision": "PASS",
-                    "conflicts": [],
-                    "summary": "캐시 검사 응답 파싱 실패 - 비차단 통과",
+                    "decision": "REJECT",
+                    "conflicts": [{"severity": "CRITICAL", "description": "캐시 검사 응답 파싱 실패 — fail-closed"}],
+                    "summary": "캐시 검사 응답 파싱 실패 — fail-closed",
                     "parsing_error": True,
                 }
 
@@ -746,7 +746,12 @@ class DirectorContinuityValidator:
 
             result = self._d._extract_json_robust(response)
             if not isinstance(result, dict):
-                return {"decision": "PASS", "conflicts": [], "summary": "파싱 오류"}
+                return {
+                    "decision": "REJECT",
+                    "conflicts": [{"severity": "CRITICAL", "description": "응답 파싱 실패 — fail-closed"}],
+                    "summary": "파싱 오류 — fail-closed",
+                    "parsing_error": True,
+                }
 
             # [Sweep59] 자매 메서드와 동일한 CRITICAL 필터 적용
             decision = result.get("decision", "PASS")

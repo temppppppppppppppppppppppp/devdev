@@ -1177,9 +1177,10 @@ class VecMemory:
         chunk_size = 5
 
         for f_path in draft_files:
-            if not f_path.name[:4].isdigit():
+            _m = re.match(r"(?:ep_)?(\d{1,5})(?:_[^.]+)?\.txt", f_path.name)
+            if not _m:
                 continue
-            ep_num = int(f_path.name[:4])
+            ep_num = int(_m.group(1))
 
             # 동기화 상태 확인
             if not force_repair:

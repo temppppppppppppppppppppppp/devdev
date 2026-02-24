@@ -276,14 +276,14 @@ class Stage2ValidationPipeline:
                     state_tracker=self.ctx.state_tracker,
                 )
             except Exception as _dv_err:
-                logging.warning(f"[G6] DraftValidator 호출 실패: {_dv_err!s:.100}")
+                logging.warning(f"[G6] DraftValidator 호출 실패 — fail-closed: {_dv_err!s:.100}")
                 draft_result = {
-                    "valid": True,
-                    "score": 50,
+                    "valid": False,
+                    "score": 0,
                     "advisory_issues": [],
-                    "critical_issues": [],
+                    "critical_issues": [f"DraftValidator crash: {_dv_err!s:.100}"],
                     "warnings": [],
-                }  # [TF-R4-S2-02] warnings 키 추가
+                }  # [A5-P1-4] fail-closed: crash → REJECT (was synthetic PASS)
 
             advisory_issues = draft_result.get("advisory_issues", [])
             if advisory_issues:

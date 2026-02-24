@@ -335,7 +335,7 @@ class TestProcessPassResult:
             def submit(self, *args, **kwargs):
                 return _BrokenFuture()
 
-            def shutdown(self, wait=False):
+            def shutdown(self, wait=False, cancel_futures=False):
                 return None
 
         with patch("concurrent.futures.ThreadPoolExecutor", _BrokenExecutor):
