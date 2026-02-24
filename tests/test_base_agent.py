@@ -301,7 +301,7 @@ class TestErrorResponse:
 class TestModelFallbackChain:
     def test_gemini3_falls_to_25pro(self):
         """gemini-3-pro → gemini-2.5-pro"""
-        assert BaseAgent.MODEL_FALLBACK_CHAIN["gemini-3-pro-preview"] == "gemini-2.5-pro"
+        assert BaseAgent.MODEL_FALLBACK_CHAIN["gemini-3.1-pro-preview"] == "gemini-2.5-pro"
 
     def test_25pro_is_terminal(self):
         """gemini-2.5-pro는 최종 방어선 (체인 없음)"""

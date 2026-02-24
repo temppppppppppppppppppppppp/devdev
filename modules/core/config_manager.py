@@ -39,12 +39,12 @@ class ConfigManager:
         # Stage 1~4: 모든 단계에서 Gemini 3 Pro 사용
         self.settings = {
             "models": {
-                "analyst": "gemini-3-pro-preview",  # [V60.24] Gemini 3
+                "analyst": "gemini-3.1-pro-preview",  # [V60.24] Gemini 3
                 # [V65] architect 삭제 (레거시 에이전트 제거)
-                "writer": "gemini-3-pro-preview",  # 7,000자 고해상도 집필
-                "director": "gemini-3-pro-preview",  # [V60.24] Gemini 3
-                "manager": "gemini-3-pro-preview",  # [V60.24] Gemini 3
-                "editor": "gemini-3-pro-preview",  # [V60.24] Gemini 3
+                "writer": "gemini-3.1-pro-preview",  # 7,000자 고해상도 집필
+                "director": "gemini-3.1-pro-preview",  # [V60.24] Gemini 3
+                "manager": "gemini-3.1-pro-preview",  # [V60.24] Gemini 3
+                "editor": "gemini-3.1-pro-preview",  # [V60.24] Gemini 3
             },
             "limits": {
                 "max_retries": 10,  # V20 매니페스토 기준 재시도 횟수
