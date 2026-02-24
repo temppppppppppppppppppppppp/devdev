@@ -153,6 +153,17 @@ class BlueprintEnsembleGenerator(BaseAgent):
             # [V62.8] 절삭 상한 완화: 2000→4000 (중략 없이 전문 전달 우선)
             arc_focus = tactical[:4000]
 
+        # [TF10-2-3] episode_details로 arc_focus 보강 — 현재 화 구조화된 사건 정보 선두 삽입
+        _ep_details = arc_data.get("episode_details") or []
+        if isinstance(_ep_details, list):
+            for _item in _ep_details:
+                if isinstance(_item, dict) and _item.get("ep_num") == ep_num:
+                    _details = _item.get("details") or []
+                    if isinstance(_details, list) and _details:
+                        _detail_text = "\n".join(f"  - {d}" for d in _details if isinstance(d, str))
+                        arc_focus = f"[{ep_num}화 핵심 사건 (Arc 설계 원본)]\n{_detail_text}\n\n{arc_focus}"
+                    break
+
         # 제약 조건 문자열
         constraints_str = self._format_constraints(constraint_block)
 
