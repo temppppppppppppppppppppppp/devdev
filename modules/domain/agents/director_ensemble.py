@@ -157,8 +157,8 @@ class DirectorEnsembleSelector:
 
             decision = result.get("decision", "PASS")
             score = _safe_int(result.get("score", 70), 70)
-            comparison_notes = result.get("comparison_notes", "")
-            reason = result.get("reason", "")
+            comparison_notes = str(result.get("comparison_notes", ""))
+            reason = str(result.get("reason", ""))
 
             logging.info(f"🎯 [Director] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")
             if comparison_notes:
