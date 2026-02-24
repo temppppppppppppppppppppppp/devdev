@@ -683,7 +683,7 @@ class Stage2Orchestrator:
                         logging.info("   [4] 수동 개입 (리포트 확인 후 재시도)")
                         try:
                             user_choice = (await asyncio.to_thread(input, "   선택 (기본: 2): ")).strip()
-                        except (EOFError, KeyboardInterrupt):
+                        except (EOFError, KeyboardInterrupt, ValueError):
                             user_choice = "2"
 
                         if user_choice == "1":
@@ -720,7 +720,7 @@ class Stage2Orchestrator:
                                     .strip()
                                     .lower()
                                 )
-                            except (EOFError, KeyboardInterrupt):
+                            except (EOFError, KeyboardInterrupt, ValueError):
                                 manual_input = "quit"
                             if manual_input == "skip":
                                 self.ctx.ui.log(f"⏭️ Arc {global_arc_no}을 건너뛰고 계속합니다.")
@@ -775,7 +775,7 @@ class Stage2Orchestrator:
             self.ctx.write_audit_summary("stage2_complete")
         try:
             await asyncio.to_thread(input, "\n[Enter] 메뉴로 돌아가기")
-        except (EOFError, KeyboardInterrupt):
+        except (EOFError, KeyboardInterrupt, ValueError):
             pass
 
     # ═══════════════════════════════════════════════════════════════════════
