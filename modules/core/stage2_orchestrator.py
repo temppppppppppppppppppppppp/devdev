@@ -351,7 +351,7 @@ class Stage2Orchestrator:
                             arc_b["content"]["context"] = stitch_res.get(
                                 "repaired_joint_b", arc_b["content"].get("context", "")
                             )
-                        if stitch_res.get("entity_anchors"):
+                        if stitch_res.get("entity_anchors") and getattr(self.ctx.sys, "lore", None):
                             try:
                                 self.ctx.sys.lore.update_v20_assets({"Temporary_Anchors": stitch_res["entity_anchors"]})
                                 self.ctx.ui.log(f"      ⚓ Arc {arc_a_idx + 1}-{arc_b_idx + 1} 고유 명사 앵커링 완료.")

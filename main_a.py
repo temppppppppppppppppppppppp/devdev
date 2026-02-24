@@ -949,7 +949,8 @@ class SovereignApp:
                 BaseAgent._context_caches.clear()
                 BaseAgent._init_api_keys()
 
-        self.sys.boot_v20_project(project_name)
+        _genre_type = self.selected_genre.get("type", "wuxia") if isinstance(self.selected_genre, dict) else "wuxia"
+        self.sys.boot_v20_project(project_name, genre=_genre_type)
         self.current_project = self.sys.project
 
         # [Sweep3-D1] 프로젝트 전환 시 PromptLoader 캐시 무효화
