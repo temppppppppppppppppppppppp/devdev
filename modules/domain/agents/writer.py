@@ -34,7 +34,7 @@ from .base_agent import BaseAgent
 class Writer(BaseAgent):
     """[V64] Thin Fallback Writer — ChiefWriter 실패 시 최후 폴백 전용"""
 
-    def __init__(self, context, client, model_tier="gemini-1.5-pro") -> None:
+    def __init__(self, context, client, model_tier="gemini-2.5-flash") -> None:
         super().__init__(context, client, model_tier)
         self.cache_name = None  # main_a.py에서 주입됨
         self.last_hud_anomalies = None

@@ -17,8 +17,8 @@ agents:
   unified_arc_validator: "gemini-2.5-flash"
   unified_blueprint_validator: "gemini-2.5-flash"
   critic: "gemini-2.5-flash"
-  weaver: "gemini-1.5-pro"
-  writer: "gemini-1.5-pro"
+  weaver: "gemini-2.5-flash"
+  writer: "gemini-2.5-flash"
 
 fallback_chain:
   "gemini-3.1-pro-preview": "gemini-3-pro-preview"
