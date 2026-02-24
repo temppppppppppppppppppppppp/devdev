@@ -270,6 +270,9 @@ class ArcCorrector(BaseAgent):
 
                 if corrected_tactical and len(corrected_tactical) > len(tactical):
                     arc["tactical_doc"] = corrected_tactical
+                    # [TF10-P3] episode_details 동기화 — 수정된 화의 캐시 무효화
+                    if isinstance(arc.get("episode_details"), list):
+                        arc["episode_details"] = [d for d in arc["episode_details"] if d.get("ep_num") != target_ep]
                     result["success"] = True
                     result["field"] = "tactical_doc"
                     result["summary"] = response.get("change_summary", f"제 {target_ep}화 확장")
@@ -320,6 +323,9 @@ class ArcCorrector(BaseAgent):
 
                 if corrected_tactical:
                     arc["tactical_doc"] = corrected_tactical
+                    # [TF10-P3] episode_details 동기화 — 수정된 화의 캐시 무효화
+                    if isinstance(arc.get("episode_details"), list):
+                        arc["episode_details"] = [d for d in arc["episode_details"] if d.get("ep_num") != target_ep]
                     result["success"] = True
                     result["field"] = "tactical_doc"
                     result["summary"] = response.get("change_summary", f"제 {target_ep}화 체크포인트 추가")
@@ -406,6 +412,9 @@ class ArcCorrector(BaseAgent):
 
                 if corrected_tactical:
                     arc["tactical_doc"] = corrected_tactical
+                    # [TF10-P3] episode_details 동기화 — 삽입된 화의 캐시 무효화
+                    if isinstance(arc.get("episode_details"), list):
+                        arc["episode_details"] = [d for d in arc["episode_details"] if d.get("ep_num") != target_ep]
                     result["success"] = True
                     result["field"] = "tactical_doc"
                     result["summary"] = response.get("change_summary", f"제 {target_ep}화 추가")

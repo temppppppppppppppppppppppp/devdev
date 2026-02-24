@@ -374,7 +374,11 @@ class FourPhaseArcGenerator(BaseAgent):
                             except (json.JSONDecodeError, ValueError):
                                 _asp_arc = {}
                         if isinstance(_asp_arc, dict) and _asp_arc.get("tactical_doc"):
+                            # [TF10-P2] episode_details 복원 — ASP 교체 시 소실 방지
+                            _orig_details = best_arc.get("episode_details")
                             best_arc = _asp_arc
+                            if _orig_details and not best_arc.get("episode_details"):
+                                best_arc["episode_details"] = _orig_details
                             pipeline_result["asp_used"] = True
                             logging.info(f"✅ [ASP] Stage2 Arc 교정 적용 (retry={retry})")
                 except Exception as e:
@@ -648,7 +652,11 @@ class FourPhaseArcGenerator(BaseAgent):
                             except (json.JSONDecodeError, ValueError):
                                 _asp_arc = {}
                         if isinstance(_asp_arc, dict) and _asp_arc.get("tactical_doc"):
+                            # [TF10-P2] episode_details 복원 — Patch Mode ASP 교체 시 소실 방지
+                            _orig_details = best_arc.get("episode_details")
                             best_arc = _asp_arc
+                            if _orig_details and not best_arc.get("episode_details"):
+                                best_arc["episode_details"] = _orig_details
                             pipeline_result["asp_used"] = True
                             logging.info(f"✅ [Patch+ASP] Arc {arc_no} ASP 교정 적용")
                 except Exception as e:
