@@ -22,7 +22,11 @@ if sys.platform == "win32" and "pytest" not in sys.modules:
 
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
-        sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8", errors="replace")
+        # [BUG-FIX] stdin을 새 TextIOWrapper로 교체하면 GC가 원본을 수집할 때
+        # underlying buffer를 닫아 ValueError: I/O operation on closed file 발생.
+        # reconfigure()로 기존 wrapper를 유지하면서 인코딩만 변경.
+        if hasattr(sys.stdin, "reconfigure"):
+            sys.stdin.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, OSError):
         pass
 
