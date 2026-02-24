@@ -15,6 +15,7 @@ thinking_budget_map:
 api:
   delay: 0.1                 # 호출 간 딜레이 (초)
   timeout: 90                # 호출 타임아웃 (초)
+  max_output_tokens: 65536   # [TF9] 데이터 절단 방지 — gemini-2.5-pro 최대값
   max_context_chars: 900000  # [TF3-H7] 프롬프트 사전 게이트
   quota_cache_duration: 3600 # 쿼터 소진 캐시 유효시간 (초, 1시간)
 
