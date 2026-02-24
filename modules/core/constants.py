@@ -192,27 +192,27 @@ class AIModels:
     SUMMARY_MODEL = "gemini-2.5-flash"  # 요약/저비용 LLM 호출용
 
     # 점진적 모델 업그레이드 체계 - Architect
-    TIER_1_ARCHITECT = "gemini-3-pro-preview"  # 1차 시도: 3 Pro
-    TIER_2_ARCHITECT = "gemini-3-pro-preview"  # 2차 시도: 3 Pro
-    TIER_3_ARCHITECT = "gemini-3-pro-preview"  # 3차+ 시도: 3 Pro
+    TIER_1_ARCHITECT = "gemini-3.1-pro-preview"  # 1차 시도: 3 Pro
+    TIER_2_ARCHITECT = "gemini-3.1-pro-preview"  # 2차 시도: 3 Pro
+    TIER_3_ARCHITECT = "gemini-3.1-pro-preview"  # 3차+ 시도: 3 Pro
 
     # 점진적 모델 업그레이드 체계 - Writer
-    TIER_1_WRITER = "gemini-3-pro-preview"  # 1차 시도: 3 Pro
-    TIER_2_WRITER = "gemini-3-pro-preview"  # 2차 시도: 3 Pro
-    TIER_3_WRITER = "gemini-3-pro-preview"  # 3차 시도 이후: 3 Pro
+    TIER_1_WRITER = "gemini-3.1-pro-preview"  # 1차 시도: 3 Pro
+    TIER_2_WRITER = "gemini-3.1-pro-preview"  # 2차 시도: 3 Pro
+    TIER_3_WRITER = "gemini-3.1-pro-preview"  # 3차 시도 이후: 3 Pro
 
     EMERGENCY_FALLBACK = "gemini-2.5-pro"  # [V60.65] 긴급/할당량 초과 시 2.5 Pro
     QUOTA_FALLBACK = "gemini-2.5-pro"  # [V60.65] 429 에러 시 폴백 모델
-    DEFAULT_WRITER = "gemini-3-pro-preview"
-    DEFAULT_ARCHITECT = "gemini-3-pro-preview"
-    DEFAULT_ANALYST = "gemini-3-pro-preview"
+    DEFAULT_WRITER = "gemini-3.1-pro-preview"
+    DEFAULT_ARCHITECT = "gemini-3.1-pro-preview"
+    DEFAULT_ANALYST = "gemini-3.1-pro-preview"
     DEFAULT_REVIEWER = "gemini-2.5-pro"
 
     # [V40 Fix] Stage 4 전용 고정 모델
-    STAGE4_FIXED_WRITER_MODEL = "gemini-3-pro-preview"
+    STAGE4_FIXED_WRITER_MODEL = "gemini-3.1-pro-preview"
 
     # Stage 2 전용 모델 상수
-    STAGE2_MAIN_MODEL = "gemini-3-pro-preview"  # Stage 2 주요 생성 모델
+    STAGE2_MAIN_MODEL = "gemini-3.1-pro-preview"  # Stage 2 주요 생성 모델
     STAGE2_EXTRACTION_MODEL = "gemini-2.5-pro"  # Stage 2 추출 모델
     STAGE2_VALIDATION_MODEL = "gemini-2.5-pro"  # Stage 2 검증 모델
 

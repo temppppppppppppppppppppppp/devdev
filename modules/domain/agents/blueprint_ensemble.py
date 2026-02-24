@@ -724,6 +724,6 @@ class BlueprintEnsembleGenerator(BaseAgent):
         return smart_truncate(result)
 
 
-def create_blueprint_ensemble(context, client, model_tier: str = "gemini-3-pro-preview"):
+def create_blueprint_ensemble(context, client, model_tier: str = "gemini-3.1-pro-preview"):
     """BlueprintEnsembleGenerator 생성 헬퍼"""
     return BlueprintEnsembleGenerator(context, client, model_tier)

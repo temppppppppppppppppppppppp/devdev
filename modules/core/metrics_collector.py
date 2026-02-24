@@ -70,7 +70,7 @@ MODEL_COSTS = {
     "gemini-2.5-flash-preview-04-17": {"input": 0.15, "output": 0.60},
     "gemini-2.5-flash": {"input": 0.15, "output": 0.60},
     "gemini-2.5-pro": {"input": 1.25, "output": 5.00},
-    "gemini-3-pro-preview": {"input": 2.50, "output": 10.00},
+    "gemini-3.1-pro-preview": {"input": 2.50, "output": 10.00},
     "default": {"input": 0.50, "output": 2.00},
 }
 
@@ -83,7 +83,7 @@ class MetricsCollector:
         collector = MetricsCollector()
 
         # 호출 시작
-        metric_id = collector.start_call("Writer", "gemini-3-pro-preview")
+        metric_id = collector.start_call("Writer", "gemini-3.1-pro-preview")
 
         # 작업 수행...
 

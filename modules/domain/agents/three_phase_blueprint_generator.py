@@ -42,7 +42,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         # 서브 모듈
         self.constraint_compiler = BlueprintConstraintCompiler()
         sub_models = _get_sub_component_models("three_phase_blueprint_generator")
-        self.ensemble = BlueprintEnsembleGenerator(context, client, sub_models.get("ensemble", "gemini-3-pro-preview"))
+        self.ensemble = BlueprintEnsembleGenerator(context, client, sub_models.get("ensemble", "gemini-3.1-pro-preview"))
         self.validator = UnifiedBlueprintValidator(context, client, sub_models.get("validator", "gemini-2.5-flash"))
 
         # 통계
@@ -582,6 +582,6 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         logging.info(f"최종 통과율: {stats.get('pass_rate', 'N/A')}")
 
 
-def create_three_phase_blueprint_generator(context, client, model_tier: str = "gemini-3-pro-preview"):
+def create_three_phase_blueprint_generator(context, client, model_tier: str = "gemini-3.1-pro-preview"):
     """ThreePhaseBlueprintGenerator 생성 헬퍼"""
     return ThreePhaseBlueprintGenerator(context, client, model_tier)

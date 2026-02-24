@@ -83,7 +83,7 @@ def test_base_agent_quota_fallback_keeps_response_schema(monkeypatch):
     client = MagicMock()
     client.models.generate_content = MagicMock(side_effect=_fake_generate_content)
 
-    agent = base_agent_module.BaseAgent(context=context, client=client, model_tier="gemini-3-pro-preview")
+    agent = base_agent_module.BaseAgent(context=context, client=client, model_tier="gemini-3.1-pro-preview")
     agent.backup_model = "gemini-2.5-pro"
     base_agent_module.BaseAgent._quota_exhausted_models.clear()
 
