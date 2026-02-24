@@ -107,7 +107,8 @@ def main():
             BaseAgent._context_caches.clear()
             BaseAgent._init_api_keys()
 
-    app.sys.boot_v20_project(PROJECT_NAME)
+    _genre_type = app.selected_genre.get("type", "wuxia") if isinstance(getattr(app, "selected_genre", None), dict) else "wuxia"
+    app.sys.boot_v20_project(PROJECT_NAME, genre=_genre_type)
     app.current_project = app.sys.project
     app.current_project.genre = app.selected_genre
 

@@ -2,12 +2,8 @@ import logging
 from pathlib import Path
 
 from .config_manager import ConfigManager
-from .jianghu_logic import JianghuLogic
-from .karma_service import KarmaService  # 👈 임포트 추가
 from .lore_manager import LoreManager
-from .martial_manager import MartialManager
 from .project_manager import ProjectContext
-from .technique_weaver import TechniqueWeaver
 
 
 class StudioSystem:
@@ -27,21 +23,43 @@ class StudioSystem:
         self.hud = None
         self.api_client = api_client  # main.py에서 주입받은 클라이언트를 할당
 
-    def boot_v20_project(self, project_name: str) -> None:
-        """[Phase 0] V20 지능 기동 및 시스템 복구"""
-        logging.info(f"🚀 [Phase 0] 프로젝트 '{project_name}' V20 지능 기동 중...")
+    def boot_v20_project(self, project_name: str, genre: str = "wuxia") -> None:
+        """[Phase 0] V20 지능 기동 및 시스템 복구
 
-        # 1. 데이터 앵커링 엔진 기동 (ProjectContext)
+        Args:
+            project_name: 프로젝트 디렉터리명
+            genre: 장르 타입 문자열 (예: "wuxia", "hunter", "investment")
+                   wuxia 전용 서비스(MartialManager 등)는 wuxia 장르에서만 초기화됨
+        """
+        logging.info(f"🚀 [Phase 0] 프로젝트 '{project_name}' V20 지능 기동 중... (장르: {genre})")
+
+        # 1. 데이터 앵커링 엔진 기동 (ProjectContext) — 모든 장르 공통
         self.project = ProjectContext(project_name)
 
-        # 2. 강호 물리 및 로어 서비스 연동
+        # 2. 범용 서비스 — 모든 장르 공통
         self.lore = LoreManager(self.project)
-        self.martial = MartialManager(self.project)
-        self.world = JianghuLogic(self.project)
-        self.techniques = TechniqueWeaver()
-        # [V40] guard는 장르 선택 후 main_a.py에서 동적으로 초기화됨
+
+        # 3. wuxia 전용 서비스 — 무협 장르에서만 초기화
+        if genre == "wuxia":
+            from .jianghu_logic import JianghuLogic
+            from .karma_service import KarmaService
+            from .martial_manager import MartialManager
+            from .technique_weaver import TechniqueWeaver
+
+            self.martial = MartialManager(self.project)
+            self.world = JianghuLogic(self.project)
+            self.techniques = TechniqueWeaver()
+            self.karma = KarmaService(self.project)
+            logging.info("   ⚔️  [System] wuxia 전용 서비스 초기화 완료")
+        else:
+            self.martial = None
+            self.world = None
+            self.techniques = None
+            self.karma = None
+            logging.info(f"   ℹ️  [System] 비무협 장르({genre}): wuxia 전용 서비스 스킵")
+
+        # 4. guard는 장르 선택 후 main_a.py에서 동적으로 초기화됨
         self.guard = None
-        self.karma = KarmaService(self.project)  # 👈 서비스 기동
 
         logging.info(f"✅ [System] 모든 V20 서비스 계층이 프로젝트 '{project_name}'에 결착되었습니다.")
 
