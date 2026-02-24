@@ -10,6 +10,7 @@ ARC_PATCH_MODE_PROMPT: |
   3. 수정하지 않는 부분은 원본 그대로 유지
   4. NPC 설정, 세계관, 관계도는 절대 변경 금지
   5. state_constraints 구조(items_acquired, grants_received 등)를 유지
+  6. [TF10] episode_details 필드가 원본에 있으면 반드시 보존 (수정 대상 화만 갱신, 나머지는 원본 유지)
 
   ## Director 피드백
   {feedback_text}

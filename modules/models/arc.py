@@ -190,6 +190,9 @@ class ArcData(BaseModel):
     hybrid_composition: dict = Field(default_factory=dict)
     seed_injection: list[dict] | None = None
     seeds: list[dict] | None = None
+    # [TF10-1-1] 화별 사건 인덱스 — Arc 압축 손실 보완
+    # 형식: [{"ep_num": 4, "details": ["사건1", "사건2"]}, ...]
+    episode_details: list[dict] = Field(default_factory=list)
 
     @model_validator(mode="before")
     @classmethod

@@ -188,8 +188,18 @@ ENSEMBLE_ARC_PROMPT: |
                   {{"type": "매수/매도/인수/청산", "target": "대상", "amount": "금액", "episode": N}}
               ]
           }}
-      }}
+      }},
+      "episode_details": [
+          {{"ep_num": 화번호_정수, "details": ["이 화의 핵심 장면/사건 (장소-인물-사건 형식)", "두번째 사건"]}},
+          {{"ep_num": 다음화번호_정수, "details": ["다음 화 핵심 사건"]}}
+      ]
   }}
+
+  ⚠️ [TF10] episode_details 작성 지침:
+  - episode_details는 tactical_doc과 beat_sequence 작성 완료 후, 그 내용에서 화별 핵심 사건을 추출하여 작성
+  - ep_num은 이 Arc의 각 화 번호 ({ep_start}~{ep_end})를 정수로, details는 최소 1개 이상의 사건 설명 문자열 배열
+  - 형식 예시: {{"ep_num": 4, "details": ["무림맹에서 장노와 조우 — 동맹 타진", "야간 수련 중 신체 기억 각성"]}}
+  - 해당 화에 실질적 사건이 없으면 빈 배열 [] 허용
 
   ⚠️ [V61] state_changes 필수 작성:
   - timeline: Arc의 시작/종료 시점 필수 기록 (장르별 표현 사용)
