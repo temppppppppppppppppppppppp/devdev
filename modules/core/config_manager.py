@@ -3,6 +3,8 @@ import threading
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 
 class ConfigManager:
     """[V20 Sovereign Config] 모델 티어 배정 및 프로젝트 경로 체계를 총괄 관리
@@ -19,13 +21,9 @@ class ConfigManager:
     def __init__(self) -> None:
         self.root = Path.cwd()
 
+        # [순환참조 방지] ManuscriptLimits.TARGET_LENGTH는 _threshold() → ConfigManager()를
+        # 재호출하므로 여기서 읽으면 무한재귀 발생. 하드코드 기본값 사용.
         _target_manuscript_length = 5000
-        try:
-            from modules.core.constants import ManuscriptLimits
-
-            _target_manuscript_length = ManuscriptLimits.TARGET_LENGTH
-        except Exception:
-            pass
 
         # 1. 프로젝트 폴더 생성
         self.projects_dir = self.root / "projects"
@@ -103,8 +101,6 @@ class ConfigManager:
                 return self._validation_settings
 
             try:
-                import yaml
-
                 with open(yaml_path, encoding="utf-8") as f:
                     data = yaml.safe_load(f)
                 self._validation_settings = data if isinstance(data, dict) else {}
