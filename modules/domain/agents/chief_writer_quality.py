@@ -358,6 +358,7 @@ class ChiefWriterQualityGate:
                 json.loads(fixed)
                 return fixed
             except (json.JSONDecodeError, ValueError, TypeError):
+                logging.info("[ChiefWriter] Fix manuscript JSON parse failed, preserving original")
                 return manuscript  # 파싱 실패시 원본 유지
         except Exception as e:
             logging.warning(f"⚠️ [ChiefWriter] 수정 실패: {e}")

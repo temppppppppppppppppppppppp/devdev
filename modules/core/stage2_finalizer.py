@@ -205,7 +205,24 @@ class Stage2Finalizer:
                         for _k, _v in st_snapshot.items():
                             if hasattr(_st, _k):
                                 setattr(_st, _k, _v)
-                return {"action": "retry", "current_feedback": audit["reason"]}
+                # [E5a-P1-1] QualityGate REJECT — reject metrics 기록
+                self._record_s2_reject_metrics(
+                    global_arc_no=global_arc_no,
+                    attempt=attempt,
+                    generation_method=generation_method,
+                    audit=audit,
+                    is_patch=is_patch,
+                    prev_score=prev_score,
+                    patch_fallback=patch_fallback,
+                )
+                return {
+                    "action": "retry",
+                    "current_feedback": audit["reason"],
+                    "score": _score,
+                    "rejected_arc": refined_arc,
+                    "score_breakdown": {},
+                    "director_feedback_for_fourphase": director_feedback_for_fourphase,
+                }
 
             ### [0124 핵심 3] 욕망 데이터 및 HUD 그림자 물리적 박제
             refined_arc["arc_drive"] = arc_drive if arc_drive else {}

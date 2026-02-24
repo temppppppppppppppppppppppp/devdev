@@ -78,8 +78,8 @@ class TruthGate:
                     for n in ws_deceased:
                         if n not in deceased_names:
                             deceased_names.append(n)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("[TruthGate] world_state.get_deceased_npcs() failed: %s", e)
 
         if not deceased_names:
             return
@@ -147,7 +147,8 @@ class TruthGate:
                 owned = self._world_state.get_owned_items()
                 if owned:
                     owned_items = set(owned)
-            except Exception:
+            except Exception as e:
+                logger.warning("[TruthGate] world_state.get_owned_items() failed: %s", e)
                 return  # 조회 실패 시 검사 스킵
 
         for item_name, update in item_updates.items():
@@ -169,7 +170,8 @@ class TruthGate:
                 dl = self._world_state.get_destroyed_locations()
                 if dl:
                     destroyed_locations = list(dl)
-            except Exception:
+            except Exception as e:
+                logger.warning("[TruthGate] world_state.get_destroyed_locations() failed: %s", e)
                 return
 
         if not destroyed_locations:
@@ -208,7 +210,8 @@ class TruthGate:
                 ks = self._world_state.get_known_skills()
                 if ks:
                     known_skills = set(ks)
-            except Exception:
+            except Exception as e:
+                logger.warning("[TruthGate] world_state.get_known_skills() failed: %s", e)
                 return
 
         for skill_entry in skill_updates:

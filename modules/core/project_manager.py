@@ -1,3 +1,4 @@
+import copy
 import json
 import logging
 import re
@@ -115,6 +116,17 @@ class ProjectContext:
                     else:
                         logging.warning(f"🚨 [System] 스타일 시드 생성 최종 실패: {e}")
                         self._style_seed_available = False  # [V45] 실패 플래그 설정
+
+    def close(self):
+        """Release DB resources."""
+        if self.db:
+            self.db.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.close()
 
     def _load_directives(self) -> None:
         d_path = self.paths.config / "author_directives.txt"
@@ -460,20 +472,21 @@ class ProjectContext:
         # 1. 성경에 등록된 유효 ID 목록 확보
         valid_ids = [s.get("id") for s in bible_seeds if s.get("id")]
 
-        # 2. DB에는 존재하지만 성경에는 없는 '유령 복선' 삭제 (Orphaned Data Cleanup)
-        if valid_ids:
-            placeholders = ", ".join(["?"] * len(valid_ids))
-            query = f"DELETE FROM seeds WHERE seed_id NOT IN ({placeholders})"
-            with self.db._lock:
-                cur = self.db.conn.cursor()
-                try:
-                    cur.execute(query, valid_ids)
-                finally:
-                    cur.close()
+        # [E5c-P1-1] Atomic DELETE + sync_seeds under single lock scope with rollback
+        with self.db._lock:
+            try:
+                # 2. DB에는 존재하지만 성경에는 없는 '유령 복선' 삭제 (Orphaned Data Cleanup)
+                if valid_ids:
+                    placeholders = ", ".join(["?"] * len(valid_ids))
+                    query = f"DELETE FROM seeds WHERE seed_id NOT IN ({placeholders})"
+                    self.db.conn.execute(query, valid_ids)
 
-        # 3. 성경의 최신 내용을 DB에 강제 동기화 (Upsert)
-        self.db.sync_seeds(bible_seeds)
-        self.db.conn.commit()
+                # 3. 성경의 최신 내용을 DB에 강제 동기화 (Upsert)
+                self.db.sync_seeds(bible_seeds)
+                self.db.conn.commit()
+            except Exception:
+                self.db.conn.rollback()
+                raise
         logging.info(f"🧹 [Cleanup] 복선 데이터 정화 완료 (유효 ID: {len(valid_ids)}건)")
 
     def commit_full_episode_data(
@@ -506,6 +519,8 @@ class ProjectContext:
             recovered_seeds = normalized_seeds
 
             # --- [Part 2: 🚨 NPC HUD 변화 추적 및 성경 반영] ---
+            # [E5c-P1-2] Deep-copy bible before mutation for rollback on failure
+            _bible_snapshot = copy.deepcopy(self.master_bible)
             if lore_data and isinstance(lore_data, dict) and "Key_NPCs" in lore_data:
                 bible_root = self.master_bible.get("MasterBible", self.master_bible)
                 bible_npcs = bible_root.get("AssetLibrary", {}).get("KeyNPCs", [])
@@ -630,6 +645,8 @@ class ProjectContext:
 
         except Exception as e:
             logging.warning(f"🛑 [Critical Error] 제 {ep_num}화 원자적 저장 실패: {e}")
+            # [E5c-P1-2] Restore bible from snapshot on failure
+            self.master_bible = _bible_snapshot
             self.db.update_sync_status(ep_num, 0)
             return False
 

@@ -1479,6 +1479,9 @@ class ValidationOrchestrator:
         """[V59] 검증 히스토리 기록 + 연속 카운트 업데이트"""
         import time
 
+        # [E5c-P2-5] Remove previous entries for same ep_num so retries overwrite, not accumulate
+        self.validation_history = [h for h in self.validation_history if h.get("ep_num") != ep_num]
+
         self.validation_history.append({"ep_num": ep_num, "score": score, "passed": passed, "timestamp": time.time()})
 
         # 히스토리 크기 제한 (최근 N개)

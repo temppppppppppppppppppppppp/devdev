@@ -172,7 +172,10 @@ class DirectorQualityAuditor:
 """
 
         response = self._d.ask(prompt, temperature=0.1, thinking_level="low")
-        return self._d._extract_json_robust(response)
+        result = self._d._extract_json_robust(response)
+        if not isinstance(result, dict) or result.get("parsing_error"):
+            return {"character_logic_score": 0, "character_issues": [], "parsing_error": True}
+        return result
 
     def _audit_with_v0128(self, ep_num, manuscript, validation_context, target_len=ManuscriptLimits.WARNING_LENGTH):
         """

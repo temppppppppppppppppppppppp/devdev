@@ -1383,6 +1383,7 @@ class DBManager:
         """
         # [FIX] RLock으로 멀티스레드 동시 접근 보호
         # [B4-P1-7] _ensure_open()을 lock 내부로 이동 — 동시 접근 시 conn 경합 방지
+        nested_transaction = False
         self._lock.acquire()
         try:
             self._ensure_open()
@@ -1543,8 +1544,12 @@ class DBManager:
     @contextmanager
     def transaction(self) -> None:
         """[V44] 원자적 트랜잭션 보장 가드. 에러 타입별 롤백 및 세션 보호"""
-        self._ensure_open()
         self._lock.acquire()  # [TF-C-2] begin/commit/rollback과 동일한 lock 보호
+        try:
+            self._ensure_open()
+        except Exception:
+            self._lock.release()
+            raise
         nested = self.conn.in_transaction
         try:
             if not nested:

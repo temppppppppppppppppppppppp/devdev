@@ -170,6 +170,13 @@ class MetricsCollector:
             self._metric_counter += 1
             metric_id = f"{self.session_id}_{self._metric_counter}"
 
+            # [C5-P1-3] Stale metrics cleanup — every ~50 calls to avoid overhead
+            if len(self._metrics) > 50:
+                now = time.time()
+                stale_ids = [mid for mid, m in self._metrics.items() if (now - m.start_time) > 600]
+                for mid in stale_ids:
+                    del self._metrics[mid]
+
             metric = AgentMetric(agent_name=agent_name, model=model, start_time=time.time())
             self._metrics[metric_id] = metric
             self._agent_calls[agent_name] += 1
