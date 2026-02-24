@@ -510,31 +510,41 @@ class Stage3Orchestrator:
                 _logging.warning("[SilentPass:SC:Stage3] SC 검색 실패 (비차단): %s", _s3_sc_err)
 
             # [TF9] Treatment Block 직접 주입 — arc 압축으로 인한 정보 손실 보완
+            # arc_idx = plot_roadmap의 블록 인덱스 (Arc 1→0, Arc 2→1, ...)
+            # plot_roadmap[arc_idx]가 현재 아크 전체(ep_start~ep_end)의 원본 블록
             try:
                 _master_bible = getattr(ctx.current_project, "master_bible", None) or {}
                 _bible_root = _master_bible.get("MasterBible", _master_bible)
                 _plot_roadmap = _bible_root.get("plot_roadmap", [])
-                if isinstance(_plot_roadmap, list) and _plot_roadmap:
-                    _ep_offset = working_ep - arc_data.get("ep_start", working_ep)
-                    if 0 <= _ep_offset < len(_plot_roadmap):
-                        _block = _plot_roadmap[_ep_offset]
-                        if isinstance(_block, dict):
-                            _block_fields = []
-                            for _f in ("title", "emotional_beat", "foreshadow", "power_shift",
-                                       "event_villain", "solution", "reward"):
-                                if _block.get(_f):
-                                    _block_fields.append(f"  {_f}: {_block[_f]}")
-                            _content = _block.get("content", {})
-                            if isinstance(_content, dict):
-                                for _cf in ("context", "event_villain", "solution"):
-                                    if _content.get(_cf):
-                                        _block_fields.append(f"  content.{_cf}: {_content[_cf]}")
-                            if _block_fields:
-                                _tb_text = "[원본 Treatment Block (정보 손실 보완)]\n" + "\n".join(_block_fields)
-                                _bp_semantic_ctx = _tb_text + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
-                                _logging.info(
-                                    "[TF9] Treatment Block 주입 완료 (ep_offset=%d, %d자)", _ep_offset, len(_tb_text)
-                                )
+                if isinstance(_plot_roadmap, list) and 0 <= arc_idx < len(_plot_roadmap):
+                    _block = _plot_roadmap[arc_idx]
+                    if isinstance(_block, dict):
+                        _ep_start = arc_data.get("ep_start", working_ep)
+                        _ep_end = arc_data.get("ep_end", working_ep)
+                        _block_fields = []
+                        for _f in ("title", "emotional_beat", "foreshadow", "power_shift",
+                                   "event_villain", "solution", "reward"):
+                            if _block.get(_f):
+                                _block_fields.append(f"  {_f}: {_block[_f]}")
+                        _content = _block.get("content", {})
+                        if isinstance(_content, dict):
+                            for _cf in ("context", "event_villain", "solution"):
+                                if _content.get(_cf):
+                                    _block_fields.append(f"  content.{_cf}: {_content[_cf]}")
+                        if _block_fields:
+                            _tb_header = (
+                                f"[원본 Treatment Block — 아크 {_ep_start}~{_ep_end}화 전체 참조용]\n"
+                                f"⚠️ 현재 화는 {working_ep}화입니다. 위의 아크 설계(arc_focus)에서 "
+                                f"{working_ep}화에 배정된 내용만 구현하세요. "
+                                f"블록의 세부 정보(특정 NPC 만남·스킬·장소 등)는 아크 설계의 현재 화 베아트에 "
+                                f"맞을 때만 사용하고, 이후 화의 내용은 보류하세요."
+                            )
+                            _tb_text = _tb_header + "\n" + "\n".join(_block_fields)
+                            _bp_semantic_ctx = _tb_text + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
+                            _logging.info(
+                                "[TF9] Treatment Block 주입 완료 (arc_idx=%d, ep=%d~%d, %d자)",
+                                arc_idx, _ep_start, _ep_end, len(_tb_text),
+                            )
             except Exception as _tb_err:
                 _logging.warning("[SilentPass:TreatmentBlock] 추출 실패 (비차단): %s", _tb_err)
 
