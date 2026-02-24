@@ -5,7 +5,7 @@ agents:
   blueprint_ensemble: "gemini-3.1-pro-preview"
   three_phase_blueprint_generator: "gemini-3.1-pro-preview"
   state_locked_arc_generator: "gemini-3.1-pro-preview"
-  block_enricher: "gemini-3-flash-preview"
+  block_enricher: "gemini-2.5-flash"
   preflight_checker: "gemini-3-flash-preview"
   state_extractor: "gemini-3-flash-preview"
   four_phase_arc_generator: "gemini-2.5-pro"
