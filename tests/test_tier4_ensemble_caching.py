@@ -74,7 +74,7 @@ def test_arc_ensemble_cached_path_uses_stub_prompt_and_full_fallback():
 
     captured = {}
 
-    def _cached_side_effect(*, cache_name, prompt, temperature, thinking_level, full_prompt_fallback):
+    def _cached_side_effect(*, cache_name, prompt, temperature, thinking_level, full_prompt_fallback, response_schema=None):
         captured["cache_name"] = cache_name
         captured["prompt"] = prompt
         captured["fallback"] = full_prompt_fallback
@@ -166,7 +166,7 @@ def test_blueprint_ensemble_cached_path_uses_stub_prompt_and_full_fallback():
 
     captured = {}
 
-    def _cached_side_effect(*, cache_name, prompt, temperature, thinking_level, full_prompt_fallback):
+    def _cached_side_effect(*, cache_name, prompt, temperature, thinking_level, full_prompt_fallback, response_schema=None):
         captured["cache_name"] = cache_name
         captured["prompt"] = prompt
         captured["fallback"] = full_prompt_fallback

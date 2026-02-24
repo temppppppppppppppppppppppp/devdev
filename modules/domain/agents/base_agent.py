@@ -1277,6 +1277,7 @@ class BaseAgent:
         temperature: float = 0.3,
         thinking_level=None,
         full_prompt_fallback: str = "",
+        response_schema=None,
     ) -> str:
         """
         [V61.5] 캐시된 컨텍스트를 사용하여 LLM 질의
@@ -1294,7 +1295,7 @@ class BaseAgent:
         """
         if not cache_name:
             fallback_prompt = full_prompt_fallback if full_prompt_fallback else prompt
-            return self.ask(fallback_prompt, temperature=temperature, thinking_level=thinking_level)
+            return self.ask(fallback_prompt, temperature=temperature, thinking_level=thinking_level, response_schema=response_schema)
 
         try:
             # [V61.7] 전략 프롬프트를 ask()와 동일한 형식으로 래핑
@@ -1313,6 +1314,9 @@ class BaseAgent:
                 "response_mime_type": "application/json",
                 "cached_content": cache_name,
             }
+            # [TF11] response_schema 확대 적용 — API 레벨 타입 강제
+            if response_schema:
+                config_params["response_schema"] = response_schema
             # [V61.7] Thinking Budget 지원
             if thinking_level:
                 if isinstance(thinking_level, str):
@@ -1339,7 +1343,7 @@ class BaseAgent:
         except Exception as e:
             logging.warning(f"⚠️ [V61.7] 캐시 기반 질의 실패, 일반 질의로 폴백: {str(e)[:80]}")
             fallback_prompt = full_prompt_fallback if full_prompt_fallback else prompt
-            return self.ask(fallback_prompt, temperature=temperature, thinking_level=thinking_level)
+            return self.ask(fallback_prompt, temperature=temperature, thinking_level=thinking_level, response_schema=response_schema)
 
     def merge_contexts_for_caching(self, items: list, item_type: str = "blueprint") -> str:
         """
