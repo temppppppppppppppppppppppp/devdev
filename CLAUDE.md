@@ -36,7 +36,7 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 - **chief_writer**: 2,255→854줄 (**-62%**, 분할 완료, 서브모듈 2개)
 - **stage2 orchestrator**: 2,639→907줄 (**-66%**, B-1-8 완료, 서브모듈 3개)
 - **DI 전환**: Stage2(44슬롯) + Stage3(19슬롯) + Stage4(24슬롯) 전량 완료
-- **checkpoint**: `040fc6e`
+- **checkpoint**: `de6a045`
 - **향후 계획 문서**: `docs/2026-02-23/next_steps_plan.md` (후순위 관찰 대기 항목)
 - **후순위(관찰 대기)**: `docs/2026-02-23/next_steps_plan.md` — 2차(동적 장르), 4차(캐시), 5차(설정 SSOT)
 
