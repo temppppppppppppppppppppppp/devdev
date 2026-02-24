@@ -817,14 +817,26 @@ class DirectorQualityAuditor:
 
         # [V49.3] Self-Consistency 적용
         if self._d.use_self_consistency:
-            return self._strategic_audit_with_self_consistency(prompt, arc_no)
+            result = self._strategic_audit_with_self_consistency(prompt, arc_no)
         else:
             response = self._d.ask(prompt, temperature=0.1, thinking_level="medium")  # [V61.6] Arc 감사
             result = self._d._extract_json_robust(response)
             # [V70] 파싱 실패 시 안전한 REJECT 반환
             if not isinstance(result, dict) or result.get("parsing_error"):
                 return {"decision": "REJECT", "score": 0, "reason": "Arc 감사 응답 파싱 실패", "loop_detected": False}
-            return result
+
+        # 모순 로깅 (Director 주권주의 — Stage 2 Arc 내부 모순 추적)
+        _contradictions = result.get("contradictions", [])
+        if not isinstance(_contradictions, list):
+            _contradictions = []
+        if _contradictions:
+            logging.warning(f"🚨 [Director/Arc] 모순 {len(_contradictions)}건 발견:")
+            for _c in _contradictions[:5]:
+                logging.warning(f"   ▸ {str(_c)[:150]}")
+        else:
+            logging.info("✅ [Director/Arc] 모순·일관성 이상 없음")
+
+        return result
 
     # ═══════════════════════════════════════════════════════════════════════
     # [V65 C-5] _strategic_audit_with_self_consistency — Director에서 이관

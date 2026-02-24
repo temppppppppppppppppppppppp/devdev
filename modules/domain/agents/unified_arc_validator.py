@@ -33,7 +33,7 @@ from .base_agent import BaseAgent
 
 # 통합 검증 프롬프트
 UNIFIED_VALIDATION_PROMPT = """
-[V60.75 UNIFIED ARC VALIDATOR - 통합 Arc 검증]
+[UNIFIED ARC VALIDATOR - 통합 Arc 검증]
 
 당신은 Arc 품질 검증 전문가입니다.
 생성된 Arc를 다음 기준으로 검증하세요.
@@ -54,6 +54,14 @@ UNIFIED_VALIDATION_PROMPT = """
 
 ### [검증 기준]
 
+#### 0. 🔍 모순·일관성 검사 (CRITICAL/MAJOR — 능동적으로 반드시 검사)
+이전 Arc 요약과 제약 조건을 기준으로 다음 항목을 하나씩 직접 대조하라:
+- **사망·부재 NPC 활동**: 이전 Arc에서 사망하거나 퇴장한 NPC가 이번 Arc에서 활동하면 CRITICAL
+- **수치·사실 모순**: 이전 Arc에서 확립된 금액·지분율·날짜·회사명·직함 등과 충돌하면 CRITICAL
+- **인물 관계·설정 모순**: 기존 확립된 인물 관계·직함·성격과 다른 서술이 있으면 MAJOR
+- **장소·시간 모순**: 이전 Arc 종료 위치·상황과 이어질 수 없는 공간적·시간적 비약이 있으면 MAJOR
+- **내부 모순**: Arc 내 화수별 사건이 서로 인과적으로 충돌하면 MAJOR
+
 #### 1. 연속성 (CRITICAL 가능)
 - **아이템**: items_acquired에 이미 획득한 아이템이 있으면 CRITICAL
 - **수여물**: grants_received에 이미 수여받은 것이 있으면 CRITICAL
@@ -65,9 +73,9 @@ UNIFIED_VALIDATION_PROMPT = """
 - **화 구분**: "제N화" 형식이 ep_count개 미만이면 MAJOR
 - **필수 필드**: state_constraints, joint_docs 누락 시 MAJOR
 
-#### 3. 서사 (MINOR 최대)
-- **개연성**: 캐릭터 행동이 동기와 맞지 않으면 MINOR
-- **일관성**: 이전 복선/갈등이 무시되면 MINOR
+#### 3. 서사 (MAJOR 최대)
+- **개연성**: 캐릭터 행동이 확립된 동기와 명백히 맞지 않으면 MAJOR
+- **복선·갈등 무시**: 이전 Arc에서 설정된 복선·갈등이 아무 설명 없이 무시되면 MAJOR
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -82,12 +90,13 @@ UNIFIED_VALIDATION_PROMPT = """
     "issues": [
         {{
             "severity": "CRITICAL/MAJOR/MINOR",
-            "category": "continuity/structure/narrative",
+            "category": "contradiction/continuity/structure/narrative",
             "issue": "문제 설명",
-            "evidence": "근거",
+            "evidence": "근거 (이전 Arc의 어떤 사실과 충돌하는지 구체적으로)",
             "fix_hint": "수정 방향"
         }}
     ],
+    "contradictions": ["모순 요약 (구체적)", ...],
     "summary": "전체 평가 요약 (1-2문장)",
     "confidence": 0.85
 }}
@@ -596,6 +605,14 @@ class UnifiedArcValidator(BaseAgent):
                     "summary": "LLM 응답 파싱 실패로 REJECT",
                     "confidence": 0.0,
                 }
+
+            _contradictions = result.get("contradictions", [])
+            if isinstance(_contradictions, list) and _contradictions:
+                logging.warning(f"🚨 [ArcValidator] 모순 {len(_contradictions)}건 발견:")
+                for _c in _contradictions[:5]:
+                    logging.warning(f"   ▸ {str(_c)[:150]}")
+            else:
+                logging.info("✅ [ArcValidator] 모순·일관성 이상 없음")
 
             return result
 
