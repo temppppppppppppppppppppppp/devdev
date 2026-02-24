@@ -380,6 +380,35 @@ class ArcEnsembleGenerator(BaseAgent):
                         lines.append(f"- **{k}**: {v}")
                     genre_ext_guide = "\n".join(lines)
 
+            # [TF-9] 확장 블록 메타데이터 가이드 - 범용 직렬화 (장르 불문 자동 처리)
+            # genre_ext/regression_ext/content/block_id/title/raw_data 외 나머지 필드 전체를 섹션화
+            _BLOCK_STANDARD_FIELDS = {"block_id", "title", "content", "genre_ext", "regression_ext", "raw_data"}
+            extended_block_guide = ""
+            if isinstance(curr_block, dict):
+                _ext_parts = []
+                for _key, _val in curr_block.items():
+                    if _key in _BLOCK_STANDARD_FIELDS or not _val:
+                        continue
+                    # 값 직렬화
+                    if isinstance(_val, list):
+                        _serialized = ", ".join(str(i) for i in _val) if _val else ""
+                    elif isinstance(_val, dict):
+                        _serialized = json.dumps(_val, ensure_ascii=False)
+                    else:
+                        _serialized = str(_val)
+                    if _serialized:
+                        _ext_parts.append(f"- **{_key}**: {_serialized}")
+                if _ext_parts:
+                    extended_block_guide = (
+                        "### [블록 확장 메타데이터 - 반드시 Arc에 반영]\n"
+                        "아래는 treatment 설계 시 포함된 핵심 연출 데이터입니다. "
+                        "모든 항목을 Arc tactical_doc에 반영하세요.\n"
+                        "특히 foreshadow는 tactical_doc 씬에 직접 심고, "
+                        "callback은 이전 복선이 회수되는 씬을 명시하고, "
+                        "emotional_beat/tension_level은 화별 감정 밀도 설계에 반영하세요:\n"
+                        + "\n".join(_ext_parts)
+                    )
+
             _use_cached_context = bool(cache_name)
             _cached_context_stub = "[context cached: refer to cached_content]"
 
@@ -400,6 +429,7 @@ class ArcEnsembleGenerator(BaseAgent):
                 ),
                 curr_block=self._escape_braces(json.dumps(curr_block, ensure_ascii=False) if curr_block else "{}"),
                 genre_ext_guide=self._escape_braces(genre_ext_guide),
+                extended_block_guide=self._escape_braces(extended_block_guide),  # [TF-9]
                 vol_strategy=self._escape_braces(vol_strategy[:2000] if vol_strategy else "(없음)"),
                 assets=self._escape_braces(json.dumps(assets, ensure_ascii=False)[:2000] if assets else "{}"),
                 feedback=self._escape_braces(_merged_feedback[:1500] if _merged_feedback else "(없음)"),
@@ -423,6 +453,7 @@ class ArcEnsembleGenerator(BaseAgent):
                     prev_arc_context=self._escape_braces(prev_arc_context or "시작점"),
                     curr_block=self._escape_braces(json.dumps(curr_block, ensure_ascii=False) if curr_block else "{}"),
                     genre_ext_guide=self._escape_braces(genre_ext_guide),
+                    extended_block_guide=self._escape_braces(extended_block_guide),  # [TF-9]
                     vol_strategy=self._escape_braces(vol_strategy[:2000] if vol_strategy else "(없음)"),
                     assets=self._escape_braces(json.dumps(assets, ensure_ascii=False)[:2000] if assets else "{}"),
                     feedback=self._escape_braces(_merged_feedback[:1500] if _merged_feedback else "(없음)"),
