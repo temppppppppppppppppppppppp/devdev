@@ -568,6 +568,7 @@ class PatchModeThresholds:
 
     REWRITE = _LazyThreshold("patch_mode.rewrite_below", 50)  # 미만: 전면 재작성
     PATCH = _LazyThreshold("patch_mode.patch_below", 80)  # 50~80: 부분 수정 (패치 모드)
+    INPLACE = _LazyThreshold("patch_mode.inplace_below", 60)  # 60 이상: in-place 단일 수정
 
 
 # ============================================================================

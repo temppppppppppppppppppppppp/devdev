@@ -193,33 +193,27 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             # ═══════════════════════════════════════════════════════════════
             logging.info("🎲 [Phase 2] Ensemble 생성 중 (3개 후보)...")
 
-            # [Patch Mode] 점수 기반 분기: 패치 모드 vs 전면 재생성
+            # [Patch Mode] 점수 기반 분기: in-place 수정 vs 전면 재생성
+            # - score >= INPLACE(60): 단일 ask() 1회 in-place 수정
+            # - score 50~59: 전면 재생성 (in-place로 고치기엔 품질 부족, _strategy_feedback 주입)
+            # - score < REWRITE(50): 전면 재생성, _previous_best 미보존
             from modules.core.constants import PatchModeThresholds
 
-            _use_patch = _previous_best is not None and _prev_reject_score >= PatchModeThresholds.REWRITE
+            _use_inplace = _previous_best is not None and _prev_reject_score >= PatchModeThresholds.INPLACE
 
-            if _use_patch:
-                logging.info(f"[Patch Mode] Blueprint 패치 모드 진입 (score={_prev_reject_score}, retry={retry})")
-                best_blueprint, all_candidates = self._patch_blueprint_with_feedback(
+            if _use_inplace:
+                logging.info(f"[InPlace] Blueprint in-place 수정 진입 (score={_prev_reject_score})")
+                patched = self._inplace_patch_blueprint(
                     original_blueprint=_previous_best,
                     director_feedback=_prev_reject_feedback,
-                    attempt_number=retry + 1,
                     ep_num=ep_num,
                     arc_data=arc_data,
-                    constraint_block=constraint_block,
-                    prev_blueprint=prev_blueprint,
-                    protagonist_name=protagonist_name,
-                    protagonist_config=protagonist_config,
-                    state_tracker=state_tracker,
-                    prev_blueprints=prev_blueprints,
-                    prev_manuscripts_text=prev_manuscripts_text,
-                    rejected_strategy=_prev_reject_strategy,
-                    selection_reason=_prev_selection_reason,
-                    score_breakdown=_prev_score_breakdown,
-                    validation_warnings=_prev_validation_warnings,
                 )
-                if not best_blueprint:
-                    logging.info("[Patch Mode] Blueprint 패치 실패 → 전면 재생성 폴백")
+                if patched:
+                    best_blueprint = patched
+                    all_candidates = [patched]
+                else:
+                    logging.warning("[InPlace] 실패 → 전면 재생성 폴백")
                     best_blueprint, all_candidates = self.ensemble.generate_ensemble(
                         ep_num=ep_num,
                         arc_data=arc_data,
@@ -373,6 +367,13 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             pipeline_result["phases"]["generate"]["selected_strategy"] = _selected_strategy or "unknown"
             pipeline_result["phases"]["generate"]["selected_score"] = _score
 
+            _contradictions = validation_result.get("contradictions", [])
+            if isinstance(_contradictions, list) and _contradictions:
+                logging.warning(f"🚨 [Consistency] 모순 {len(_contradictions)}건:")
+                for _c in _contradictions[:5]:
+                    logging.warning(f"   ▸ {str(_c)[:150]}")
+                pipeline_result["phases"]["validate"]["contradictions"] = _contradictions
+
             if verdict == "PASS" and _score < _quality_gate_score:
                 logging.warning(f"[QualityGate] Stage3 PASS이나 score={_score} < {_quality_gate_score} → REJECT 전환")
                 verdict = "REJECT"
@@ -453,114 +454,62 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         return None, pipeline_result
 
     # =========================================================================
-    # [Patch Mode] Blueprint 원본 보존 + Director 피드백 지적사항만 수정
+    # [InPlace] Blueprint 단일 LLM 1회 호출로 in-place 수정
     # =========================================================================
 
-    def _patch_blueprint_with_feedback(
+    def _inplace_patch_blueprint(
         self,
         *,
         original_blueprint: dict,
         director_feedback: str,
-        attempt_number: int,
         ep_num: int,
         arc_data: dict,
-        constraint_block: dict,
-        prev_blueprint: dict | None = None,
-        protagonist_name: str = "주인공",
-        protagonist_config: dict | None = None,
-        state_tracker=None,
-        prev_blueprints: list[dict] | None = None,
-        prev_manuscripts_text: str = "",
-        rejected_strategy: str = "",
-        selection_reason: str = "",
-        score_breakdown: dict | None = None,
-        validation_warnings: list[str] | None = None,
-    ) -> tuple[dict | None, list]:
-        """[Patch Mode] 원본 Blueprint를 보존하며 Director 피드백 지적사항만 수정.
+    ) -> dict | None:
+        """score >= 60: 단일 LLM 1회 호출로 Blueprint in-place 수정.
 
-        패치 전용 프롬프트(BLUEPRINT_PATCH_MODE_PROMPT)를 로드하여 원본 Blueprint +
-        Director 피드백을 enhanced_feedback으로 조립한 뒤, ensemble.generate_ensemble()을
-        호출하여 후보를 생성한다.
-
-        실패 시 (None, []) 반환 → 호출측에서 full regenerate 폴백.
+        실패 시 None 반환 → 호출측에서 전면 재생성 폴백.
         """
-        import json
+        from modules.core.prompt_loader import PromptLoader
+        from modules.core.response_schemas import BLUEPRINT_SCHEMA
 
-        # 1) YAML 프롬프트 로드
+        original_json = json.dumps(original_blueprint, ensure_ascii=False, indent=2)[:30000]
+
         try:
-            from modules.core.prompt_loader import PromptLoader
-
-            _patch_template = PromptLoader().load("blueprint_generator", "BLUEPRINT_PATCH_MODE_PROMPT")
+            patch_template = PromptLoader().load("blueprint_generator", "BLUEPRINT_PATCH_MODE_PROMPT")
         except Exception as e:
-            logging.warning(f"[SilentPass:BlueprintGen] BLUEPRINT_PATCH_MODE_PROMPT 로드 실패: {e!s:.100}")
-            _patch_template = None
+            logging.warning(f"[InPlace] BLUEPRINT_PATCH_MODE_PROMPT 로드 실패: {e!s:.100}")
+            patch_template = None
 
-        # 2) 원본 Blueprint 직렬화
-        _original_text = json.dumps(original_blueprint, ensure_ascii=False, indent=2)[:30000]
-
-        # 3) 패치 프롬프트 포맷
-        if _patch_template:
-            # [Sweep55] .format()에 json.dumps의 {}가 있으면 KeyError/ValueError 크래시 방지
+        if patch_template:
             def _esc(s):
                 return s.replace("{", "{{").replace("}", "}}")
 
-            _patch_section = _patch_template.format(
+            prompt = patch_template.format(
                 feedback_text=_esc(director_feedback),
-                original_blueprint=_esc(_original_text),
+                original_blueprint=_esc(original_json),
             )
         else:
-            _patch_section = (
-                f"[패치 모드: Blueprint 원본 보존 + 지적사항만 수정]\n\n"
+            prompt = (
+                f"[Blueprint 원본 보존 + 지적사항만 수정]\n\n"
                 f"## Director 피드백\n{director_feedback}\n\n"
-                f"## 원본 Blueprint\n{_original_text}\n\n"
+                f"## 원본 Blueprint\n{original_json}\n\n"
                 f"전면 재설계하지 마세요. 지적된 부분만 고치세요."
             )
 
-        _strategy_parts = []
-        if selection_reason:
-            _strategy_parts.append(f"[선택/거절 사유]\n{selection_reason}")
-        if isinstance(score_breakdown, dict) and score_breakdown:
-            _sb = ", ".join(f"{k}={v}" for k, v in score_breakdown.items() if isinstance(v, int | float))
-            if _sb:
-                _strategy_parts.append(f"[점수 분해]\n{_sb}")
-        if isinstance(validation_warnings, list) and validation_warnings:
-            _strategy_parts.append("[검증 경고]\n" + "\n".join(f"- {w}" for w in validation_warnings[:10]))
-        _strategy_feedback = "\n\n".join(_strategy_parts)
-
-        enhanced_feedback = (
-            f"[🔧 {attempt_number}차 수정 - 패치 모드: Blueprint 원본 보존 + 지적사항만 수정]\n\n"
-            f"{_patch_section}\n\n"
-            f"⚠️ 원본 Blueprint의 씬 배분, 감정 곡선, 핵심 장면을 보존하면서 피드백 지적사항만 수정하세요.\n"
-            f"⚠️ 수정하지 않는 부분은 원본을 그대로 유지하세요."
-        )
-
-        # 4) Ensemble 생성 (패치 피드백 주입)
         try:
-            best_blueprint, all_candidates = self.ensemble.generate_ensemble(
-                ep_num=ep_num,
-                arc_data=arc_data,
-                constraint_block=constraint_block,
-                prev_blueprint=prev_blueprint,
-                feedback=enhanced_feedback,
-                strategy_specific_feedback=_strategy_feedback,
-                rejected_strategy=rejected_strategy,
-                single_strategy=rejected_strategy,
-                protagonist_name=protagonist_name,
-                protagonist_config=protagonist_config,
-                state_tracker=state_tracker,
-                prev_blueprints=prev_blueprints,
-                prev_manuscripts_text=prev_manuscripts_text,
-            )
+            response = self.ensemble.ask(prompt, temperature=0.3, response_schema=BLUEPRINT_SCHEMA)
+            result = self.ensemble._extract_json_robust(response)
+            if not isinstance(result, dict):
+                return None
+            result.setdefault("episode_number", ep_num)
+            for key, val in original_blueprint.items():
+                if key not in result:
+                    result[key] = val
+            logging.info(f"✅ [InPlace] Blueprint 제{ep_num}화 in-place 수정 완료")
+            return result
         except Exception as e:
-            logging.warning(f"[Patch Mode] Blueprint ensemble 생성 실패: {e!s:.200}")
-            return None, []
-
-        if not best_blueprint:
-            logging.warning("[Patch Mode] Blueprint ensemble 후보 없음 → 폴백 필요")
-            return None, []
-
-        logging.info(f"✅ [Patch Mode] Blueprint 제{ep_num}화 패치 후보 생성 완료")
-        return best_blueprint, all_candidates
+            logging.warning(f"[InPlace] Blueprint in-place 패치 실패: {e!s:.200}")
+            return None
 
     def get_stats(self) -> dict:
         """통계 반환"""

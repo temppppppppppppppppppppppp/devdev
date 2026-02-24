@@ -108,10 +108,10 @@ class DirectorEnsembleSelector:
 """
             candidate_summaries.append(summary)
 
-        comparison_prompt = f"""[V60.85 Blueprint 비교 선택]
+        comparison_prompt = f"""[Blueprint 비교 선택 + 일관성·모순 판정]
 
 당신은 웹소설 시리즈의 품질 관리 감독입니다.
-제{ep_num}화 Blueprint 후보 {len(candidates)}개 중 최적의 것을 선택하고 판정하세요.
+제{ep_num}화 Blueprint 후보 {len(candidates)}개를 **각각 절대 기준으로 독립 평가**한 뒤, 최적 후보를 선택하고 최종 판정하세요.
 
 ### Arc 전술서 (이번 화 기준)
 {arc_tactical[:2000]}
@@ -122,20 +122,44 @@ class DirectorEnsembleSelector:
 ### 후보 목록
 {"".join(candidate_summaries)}
 
-### 평가 기준
-1. **Arc 준수**: 전술서의 이번 화 내용을 충실히 반영하는가?
-2. **연속성**: 이전 화 종료 상태에서 자연스럽게 이어지는가?
-3. **서사 밀도**: 씬 구성과 시나리오가 충분히 풍부한가?
-4. **다음 화 연결**: 적절한 훅으로 마무리하는가?
+### 🔍 일관성·모순 체크 항목 (각 후보를 아래 항목으로 반드시 검사)
+1. **사망·부재 NPC 활동**: 이전 화에서 사망하거나 퇴장한 NPC가 활동하는가?
+2. **수치·사실 모순**: 금액, 지분율, 날짜, 회사명, 직함 등 확립된 수치·사실과 충돌하는가?
+3. **인물 관계·설정 모순**: 기존에 확립된 인물 관계, 직함, 성격과 다른가?
+4. **장소·시간 모순**: 이전 화 종료 위치·상황과 공간적·시간적으로 불가능한 변화가 있는가?
+5. **내부 모순**: 시나리오 내 앞뒤 내용이 서로 충돌하는가? (한 씬에서 A를 했는데 다음 씬에서 A를 안 한 것처럼 묘사 등)
+
+### 🚨 즉시 REJECT 조건 (하나라도 해당 시 해당 후보 탈락)
+- 모순 체크 항목에서 **명백한 모순이 1건 이상** 발견됨
+- Arc 전술서에서 지정한 핵심 사건이 **단 하나도** 반영되지 않음
+- 이전 화 종료 위치·상황과 **공간적·시간적 모순** 발생
+- 통합 시나리오 **1000자 미만** (서사 밀도 부족)
+- 엔딩 훅 **누락** 또는 내용 없음
+
+### 📊 점수 기준 (절대 평가 — 상대 비교 아님)
+- **90~100**: 모순 없음 + Arc 핵심 사건 전부 반영 + 연속성 완벽 + 강한 훅
+- **80~89**: 모순 없음 + Arc 주요 사건 반영 + 연속성 양호 + 훅 존재
+- **70~79**: 경미한 모순 의심 1건 또는 Arc 사건 일부 누락 또는 연속성 어색
+- **60~69**: 모순 2건 이상 또는 Arc 사건 절반 이상 누락
+- **60 미만**: 반드시 REJECT
+
+⚠️ **핵심 원칙**: 3개 후보 중 상대적으로 가장 낫더라도, **절대 점수 80점 미만이면 REJECT**하세요.
+
+### 평가 기준 (가중치)
+1. **일관성·모순 없음** (40%): 확립된 사실·수치·관계·설정과 모순이 없는가?
+2. **Arc 준수** (35%): 전술서의 이번 화 핵심 사건을 충실히 반영하는가?
+3. **연속성** (15%): 이전 화 종료 상태에서 자연스럽게 이어지는가?
+4. **다음 화 연결** (10%): 적절한 훅으로 마무리하는가?
 
 ### 출력 형식 (JSON)
 {{
-    "selected_index": 0,  // 0부터 시작, 가장 좋은 후보 번호
-    "decision": "PASS" | "REJECT",  // 선택한 후보도 기준 미달이면 REJECT
+    "selected_index": 0,
+    "decision": "PASS" | "REJECT",
     "score": 0-100,
+    "contradictions": ["모순 설명 (구체적 — 어떤 사실과 무엇이 충돌하는지)", ...],  // 없으면 빈 배열
     "reason": "선택/판정 이유 (50자 이내)",
     "comparison_notes": "후보별 비교 분석 (각 후보의 장단점)",
-    "feedback": "REJECT인 경우 수정 지침"
+    "feedback": "REJECT인 경우 구체적 수정 지침"
 }}
 
 반드시 유효한 JSON만 출력하세요.
@@ -159,8 +183,17 @@ class DirectorEnsembleSelector:
             score = _safe_int(result.get("score", 70), 70)
             comparison_notes = str(result.get("comparison_notes", ""))
             reason = str(result.get("reason", ""))
+            contradictions = result.get("contradictions", [])
+            if not isinstance(contradictions, list):
+                contradictions = []
 
             logging.info(f"🎯 [Director] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")
+            if contradictions:
+                logging.warning(f"🚨 [Director] 모순 {len(contradictions)}건 발견:")
+                for c in contradictions[:5]:
+                    logging.warning(f"   ▸ {str(c)[:120]}")
+            else:
+                logging.info("✅ [Director] 모순·일관성 이상 없음")
             if comparison_notes:
                 logging.info(f"📝 비교: {comparison_notes[:150]}{'...' if len(comparison_notes) > 150 else ''}")
             if reason:
@@ -171,6 +204,7 @@ class DirectorEnsembleSelector:
                 "selected_index": selected_idx,
                 "selected_blueprint": candidates[selected_idx],
                 "score": score,
+                "contradictions": contradictions,
                 "reason": result.get("reason", ""),
                 "feedback": result.get("feedback", "") if decision == "REJECT" else "",
                 "comparison_notes": result.get("comparison_notes", ""),

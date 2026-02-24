@@ -94,8 +94,9 @@ retry:
 # ── 패치 모드 ────────────────────────────────────────────────
 # [xfail-sweep] patch_mode: unused - planned future wiring
 patch_mode:
-  rewrite_below: 50          # 미만: 전면 재작성
-  patch_below: 80            # 50~80: 부분 수정
+  rewrite_below: 50          # < 50: 전면 재작성 (_previous_best 미보존)
+  patch_below: 80            # Stage4 등에서 참조하는 부분수정 임계값
+  inplace_below: 60          # Stage3: 50~59 → 전면 재생성, >= 60 → in-place 단일 수정
 
 # ── Premium 품질 시스템 ──────────────────────────────────────
 premium:

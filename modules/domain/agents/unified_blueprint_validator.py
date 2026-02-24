@@ -113,6 +113,10 @@ class UnifiedBlueprintValidator:
             verdict = compare_result.get("decision", "REJECT")
             selected_bp = compare_result.get("selected_blueprint")
 
+            _contradictions = compare_result.get("contradictions", [])
+            if not isinstance(_contradictions, list):
+                _contradictions = []
+
             result = {
                 "verdict": verdict,
                 "phase": "director_compare",
@@ -124,6 +128,7 @@ class UnifiedBlueprintValidator:
                 "selected_index": compare_result.get("selected_index", 0),
                 "selected_blueprint": selected_bp,
                 "comparison_notes": compare_result.get("comparison_notes", ""),
+                "contradictions": _contradictions,
             }
 
             status = "✅ PASS" if verdict == "PASS" else "❌ REJECT"
