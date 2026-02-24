@@ -222,7 +222,7 @@ class UnifiedBlueprintValidator:
             else:
                 manuscript_with_focus = integrated_scenario
 
-            # Director.audit_manuscript() 호출
+            # Director.audit_manuscript() 호출 (Blueprint 모드 — CONTINUITY 스킵)
             director_result = director.audit_manuscript(
                 ep_num=working_ep,
                 manuscript=manuscript_with_focus,  # 주의 포인트 포함
@@ -235,6 +235,7 @@ class UnifiedBlueprintValidator:
                 retry_count=0,
                 entity_registry=entity_registry,  # [V61] Entity 일관성 검증
                 state_tracker=state_tracker,  # [V61.5] 죽은 NPC 검증 (BUG FIX: 누락되어 있었음)
+                validation_context={"skip_continuity": True},  # Blueprint는 원고 아님 — HUD 연속성 검증 불필요
             )
 
             # Director 결과 처리

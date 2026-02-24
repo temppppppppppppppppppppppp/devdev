@@ -1014,6 +1014,8 @@ class ValidationOrchestrator:
                 # 이 경우 기록 스킵
                 if not hasattr(self, "context") or self.context is None:
                     return
+                if isinstance(self.context, dict) or not hasattr(self.context, "db"):
+                    return
 
                 self.reflexion = ReflexionManager(self.context)
 

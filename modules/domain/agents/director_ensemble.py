@@ -101,7 +101,7 @@ class DirectorEnsembleSelector:
 - 시작 위치: {bp.get("start_location", "?")}
 - 종료 위치: {bp.get("end_location", "?")}
 - 시간 흐름: {bp.get("time_flow", "?")}
-- 엔딩 훅: {(bp.get("ending_hook") or "?")[:100]}
+- 엔딩 훅: {str(bp.get("ending_hook") or "?")[:100]}
 
 [시나리오 요약]
 {integrated[:1500]}...
