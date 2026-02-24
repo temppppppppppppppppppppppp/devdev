@@ -908,6 +908,14 @@ class BlockEnricher(BaseAgent):
             if isinstance(result, str):
                 result = self._extract_json_robust(result)  # [V70]
 
+            # [R5-P1-2] LLM 결과 구조 검증 — enrich_block()과 동일 패턴
+            if (
+                not isinstance(result, dict)
+                or result.get("parsing_error")
+                or ("content" not in result and "block_id" not in result)
+            ):
+                return {"enriched": False, "reason": "재농축 JSON 파싱 실패", "block": current_block}
+
             return {"enriched": True, "block": result, "causal_fixed": True}
 
         except Exception as e:

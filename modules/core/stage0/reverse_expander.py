@@ -929,23 +929,25 @@ JSON:
         epa = VolumeSettings.EPISODES_PER_ARC
         arc_count = (max_ep - 1) // epa + 1
 
+        _eb_map = (
+            {eb.get("ep_num"): eb for eb in self.episode_bibles if eb.get("ep_num") is not None}
+            if self.episode_bibles
+            else {}
+        )  # [P1-A3-1] None 키 필터, hoisted before loop
         arc_stubs = []
         for arc_no in range(1, arc_count + 1):
             ep_start = (arc_no - 1) * epa + 1
             ep_end = min(arc_no * epa, max_ep)
 
             # 해당 Arc의 에피소드들
-            arc_episodes = [d for d in self.raw_drafts if ep_start <= d["ep_num"] <= ep_end]
+            arc_episodes = [
+                d for d in self.raw_drafts if d.get("ep_num") is not None and ep_start <= d["ep_num"] <= ep_end
+            ]
             if not arc_episodes:
                 continue
 
             # Arc 내 key_events 수집
             arc_events = []
-            _eb_map = (
-                {eb.get("ep_num"): eb for eb in self.episode_bibles if eb.get("ep_num") is not None}
-                if self.episode_bibles
-                else {}
-            )  # [P1-A3-1] None 키 필터
             for ep in arc_episodes:
                 _ep_bible = _eb_map.get(ep["ep_num"], {})
                 arc_events.extend(_ep_bible.get("key_events", []))

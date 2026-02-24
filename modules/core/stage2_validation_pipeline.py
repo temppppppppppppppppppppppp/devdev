@@ -182,10 +182,11 @@ class Stage2ValidationPipeline:
 
         # 🧭 [Mapping Validation]
         _pre_mapping_arc = refined_arc
-        refined_arc = self.ctx.validate_arc_mapping(refined_arc, enriched_block, global_arc_no, current_ep_start)
-        # [B3-P1-5] validate_arc_mapping 반환값이 dict가 아니면 원본 유지
-        if not isinstance(refined_arc, dict):
-            refined_arc = _pre_mapping_arc
+        if callable(getattr(self.ctx, "validate_arc_mapping", None)):
+            refined_arc = self.ctx.validate_arc_mapping(refined_arc, enriched_block, global_arc_no, current_ep_start)
+            # [B3-P1-5] validate_arc_mapping 반환값이 dict가 아니면 원본 유지
+            if not isinstance(refined_arc, dict):
+                refined_arc = _pre_mapping_arc
 
         # ⚡ [V60.25] Auto-Corrector
         if self.ctx.stage2_optimizer:
