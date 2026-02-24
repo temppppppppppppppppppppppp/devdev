@@ -125,6 +125,28 @@ TF-7R 패치(EmotionTracker, StateDeltaTracker, Stage3 QualityDashboard, Failure
 - TF-7-C-R2, TF-7-C-1, TF-7-M-R2
 - **트리거**: 타임아웃/캐시 관련 프로덕션 이슈 발생 시
 
-### 5차: 설정 SSOT 완결
+### 5차: Arc JSON 출력 토큰 한도 초과 (데이터 절단 구조적 해결)
+- **현황**: Arc 생성 시 매번 `ast.literal_eval 실패 → 정규식 fallback` 발생. tactical_doc(4,000자+) + episode_details + state_constraints 등 합산 시 10,000~13,000자 → Gemini 출력 토큰 한도 초과.
+- **현재 대응**: 절단 감지 → 정규식으로 28개 키 복구. 실질 데이터 손실은 없음.
+- **근본 해결 방향**: 출력 토큰 한도 상향 설정이 현실적. 2-pass 생성(tactical_doc 별도 호출)은 앙상블 병렬성을 깨므로 부적합 — 후보별로 2차 호출 컨텍스트가 달라져 순차 처리가 필요해짐.
+- **트리거**: 정규식 복구 실패율이 올라가거나 키 누락이 발생할 때
+
+### 6차: 설정 SSOT 완결
 - TF-7-M-R1 계열 (validation.yaml/system.yaml 100% 키 명시)
 - **트리거**: startup 경고나 fallback 발화 빈도가 높아질 때
+
+### 6차: Blueprint↔원고 인터리브 자동 모드
+- **현황**: Blueprint 전체 먼저 뽑고 → 원고 전체 생성. 교차 방식(화별로 블루→원고 반복)은 수동으로 메뉴 왔다갔다 해야 함.
+- **개선 방향**: Stage 4 진입 시 "다음 화 Blueprint가 없으면 자동으로 Stage 3 실행 후 원고 생성" 조건 추가.
+- **구현 포인트**: `stage4_orchestrator.py` 루프 내에서 `next_ep` Blueprint 존재 여부 확인 → 없으면 `stage3_orchestrator.run_single(next_ep)` 호출 후 진행.
+- **효과**: 메뉴 전환 없이 블루+원고 한 번에 n화까지 자동 생성. 화별 WorldState 갱신이 다음 Blueprint에 반영됨.
+- **트리거**: 원할 때 언제든 (공사 규모 작음)
+
+### 6차: 앙상블 차순위 재활용 (REJECT 시 재생성 최적화)
+- **현황**: 앙상블 N개 생성 → 최고점 1개 선택 → UnifiedValidator REJECT → N개 재생성. 차순위 후보들이 버려짐.
+- **개선 방향**: REJECT 시 동일 배치의 차순위 후보를 순서대로 재검증 → 전부 소진 시에만 앙상블 재생성.
+- **구현 포인트**: `generate_ensemble()`이 이미 `(best, candidates)` 반환. 오케스트레이터에서 `candidates` 리스트를 소진하는 루프 추가.
+- **효과**: REJECT 1회당 앙상블 재생성(~2분) 절약. 차순위 통과 시 즉시 진행.
+- **적용 대상**: Stage 2 (`arc_ensemble.py`) + Stage 3 (`blueprint_ensemble.py`) 둘 다 해당.
+- **Stage 4는 이미 해결됨**: Chief Writer도 `generate_ensemble()`로 후보 N개 생성하지만, BLOCKING 필터로 전체 후보를 거른 뒤 Director가 그 중에서 선택하는 구조. REJECT 시에도 ToT(구조 오류) / MAD(제약 위반) 버킷별 전문 fallback 존재. 후보를 버리지 않음.
+- **트리거**: REJECT 빈도가 높아져 총 소요 시간이 유의미하게 늘어날 때
