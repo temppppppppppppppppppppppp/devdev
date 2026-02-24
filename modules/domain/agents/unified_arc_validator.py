@@ -498,6 +498,34 @@ class UnifiedArcValidator(BaseAgent):
             )
         return issues
 
+    def _check_episode_details_type(self, arc: dict) -> list[dict]:
+        """[TF10-3-1] episode_details 타입 정합성 체크 (ADVISORY — 비차단)"""
+        issues = []
+        ep_details = arc.get("episode_details")
+        if ep_details is None:
+            return issues  # 선택 필드 — 없어도 OK
+        if not isinstance(ep_details, list):
+            issues.append({
+                "severity": "ADVISORY",
+                "issue": f"episode_details 타입 오류: list 기대, {type(ep_details).__name__} 수신 — downstream 폴백 발동",
+                "detail": str(ep_details)[:100],
+            })
+            return issues
+        for i, item in enumerate(ep_details):
+            if not isinstance(item, dict):
+                issues.append({
+                    "severity": "ADVISORY",
+                    "issue": f"episode_details[{i}] 타입 오류: dict 기대, {type(item).__name__} 수신",
+                    "detail": str(item)[:80],
+                })
+            elif not isinstance(item.get("ep_num"), int):
+                issues.append({
+                    "severity": "ADVISORY",
+                    "issue": f"episode_details[{i}].ep_num 타입 오류: int 기대, {type(item.get('ep_num')).__name__} 수신",
+                    "detail": str(item.get("ep_num"))[:40],
+                })
+        return issues
+
     def _python_validate(
         self,
         arc: dict,
@@ -506,7 +534,7 @@ class UnifiedArcValidator(BaseAgent):
         pre_collected_items: set | None = None,
         pre_collected_grants: set | None = None,
     ) -> dict:
-        """[V63.4 P1] Python 즉시 검증 — 8개 독립 체크 조합"""
+        """[V63.4 P1] Python 즉시 검증 — 9개 독립 체크 조합"""
         issues = []
         issues.extend(self._check_dead_npc(arc, state_tracker, prev_arcs))
         issues.extend(self._check_length(arc))
@@ -516,6 +544,7 @@ class UnifiedArcValidator(BaseAgent):
         issues.extend(self._check_injury_escalation(arc))
         issues.extend(self._check_resolved_plots(arc, state_tracker))
         issues.extend(self._check_entity_consistency(arc, state_tracker))
+        issues.extend(self._check_episode_details_type(arc))
 
         has_critical = any(i["severity"] == "CRITICAL" for i in issues)
         critical_items = [i["issue"] for i in issues if i["severity"] == "CRITICAL"]
