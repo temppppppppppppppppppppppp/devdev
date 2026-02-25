@@ -365,7 +365,9 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 "comparison_notes": validation_result.get("comparison_notes", ""),  # [V60.85] 비교 근거
             }
 
-            _quality_gate_score = _threshold("scoring.quality_gate_score", 90)
+            # Stage 3 Blueprint 전용 QualityGate — Director 프롬프트의 "80점 미만 REJECT" 기준과 일치
+            # (Stage 2/4는 scoring.quality_gate_score: 90 그대로 유지)
+            _quality_gate_score = _threshold("scoring.blueprint_quality_gate_score", 80)
             _score_raw = validation_result.get("score", 0)
             try:
                 _score = int(_score_raw)
