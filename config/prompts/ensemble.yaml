@@ -37,8 +37,7 @@ ENSEMBLE_ARC_PROMPT: |
   ████████████████████████████████████████████████████████████████████████████████
 
   ⚠️ CRITICAL: tactical_doc 내용과 state_constraints는 반드시 일치해야 합니다!
-  - 이전 Arc 종료 시 내공이 70%이면, tactical_doc에서도 "내공 70%" 또는 "7할의 내공"으로 표현
-  - "2할" "20%" 같은 다른 수치 사용 금지
+  - 이전 Arc 종료 상태(위치·부상·소지품 등 모든 수치)는 tactical_doc에서도 동일하게 표현할 것
   - 부상 상태도 state_constraints.arc_start_state와 동일하게 표현
 
   {constraint_block}
@@ -64,23 +63,7 @@ ENSEMBLE_ARC_PROMPT: |
 
   {entity_registry_section}
 
-  ### [V62.2] 🩹 주인공 자연 회복 원칙 (전 장르 공통)
-  - 주인공은 소설 주인공이다. 힐링팩터가 있다. 절대 약해지지 않는다.
-  - 아크 시작: 부상="없음", 내공=100%. 예외 없음.
-  - 화별 내공 규칙:
-    · 한 화 안에서 긴장/전투로 소모 가능 (최저 60%까지만)
-    · 다음 화 시작 시 반드시 90% 이상으로 회복
-    · 내공이 화를 거듭하며 떨어지기만 하는 것은 절대 금지
-    · 주인공은 점점 강해진다. 내공은 우상향이 기본이다.
-  - 부상: Arc 내 일시적 피로/타박 허용, 다음 화면 회복됨. 만성화 금지.
-  - arc_end_state: injuries="없음", internal_energy=100
-  - status_shadow: expected_injuries="없음", internal_energy_loss="0%"
-
-  ### [V60.40] 화간 상태 체크포인트 필수
-  각 화는 반드시 시작 상태와 종료 상태를 명시하라:
-  - 시작 상태: 위치, 내공%, 부상, 소지품 (이전 화 종료 상태 기반 + 자연 회복 적용)
-  - 종료 상태: 위치, 내공%, 부상, 획득/소모 아이템
-  - ⚠️ 내공이 화를 넘기며 계속 떨어지는 패턴은 REJECT 사유임
+  {energy_system_block}
 
   ### [Output JSON Schema]
   {{

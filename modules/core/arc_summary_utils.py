@@ -69,7 +69,10 @@ def generate_prev_arc_summary(
 
             final_location = arc_end.get("location") or joint.get("final_location", "?")
 
-            lines.append(f"  최종 내공: {final_energy}% <- 다음 Arc 시작점")
+            if final_energy == 0:
+                lines.append("  최종 내공: 해당없음(비무협)")
+            else:
+                lines.append(f"  최종 내공: {final_energy}% <- 다음 Arc 시작점")
             lines.append(f"  최종 부상: {final_injuries}")
             lines.append(f"  종료 위치: {final_location}")
         else:

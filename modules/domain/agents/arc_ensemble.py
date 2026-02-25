@@ -33,6 +33,42 @@ except ImportError:
     PRIMITIVE_GUARD_AVAILABLE = False
 
 
+# ── [장르별 에너지 시스템 블록] ──────────────────────────────────────
+_WUXIA_ENERGY_BLOCK = """\
+  ### [V62.2] 🩹 주인공 자연 회복 원칙 (무협 전용)
+  - 주인공은 소설 주인공이다. 힐링팩터가 있다. 절대 약해지지 않는다.
+  - 아크 시작: 부상="없음", 내공=100%. 예외 없음.
+  - 화별 내공 규칙:
+    · 한 화 안에서 긴장/전투로 소모 가능 (최저 60%까지만)
+    · 다음 화 시작 시 반드시 90% 이상으로 회복
+    · 내공이 화를 거듭하며 떨어지기만 하는 것은 절대 금지
+    · 주인공은 점점 강해진다. 내공은 우상향이 기본이다.
+  - 부상: Arc 내 일시적 피로/타박 허용, 다음 화면 회복됨. 만성화 금지.
+  - arc_end_state: injuries="없음", internal_energy=100
+  - status_shadow: expected_injuries="없음", internal_energy_loss="0%"
+
+  ### [V60.40] 화간 상태 체크포인트 필수
+  각 화는 반드시 시작 상태와 종료 상태를 명시하라:
+  - 시작 상태: 위치, 내공%, 부상, 소지품 (이전 화 종료 상태 기반 + 자연 회복 적용)
+  - 종료 상태: 위치, 내공%, 부상, 획득/소모 아이템
+  - ⚠️ 내공이 화를 넘기며 계속 떨어지는 패턴은 REJECT 사유임"""
+
+_NON_WUXIA_ENERGY_BLOCK = """\
+  ### [V62.2] 🩹 주인공 자연 회복 원칙
+  - 주인공은 소설 주인공이다. 절대 약해지지 않는다.
+  - 아크 시작: 부상="없음". 예외 없음.
+  - 부상: Arc 내 일시적 피로/타박 허용, 다음 화면 회복됨. 만성화 금지.
+  - ⚠️ 이 장르는 내공/기력 시스템이 없음. tactical_doc에 "내공 소모" 표현 절대 금지.
+  - arc_end_state: injuries="없음", internal_energy=0 (해당없음)
+  - status_shadow: expected_injuries="없음", internal_energy_loss="해당없음"
+
+  ### [V60.40] 화간 상태 체크포인트 필수
+  각 화는 반드시 시작 상태와 종료 상태를 명시하라:
+  - 시작 상태: 위치, 부상, 소지품 (이전 화 종료 상태 기반)
+  - 종료 상태: 위치, 부상, 획득/소모 아이템
+  - ⚠️ internal_energy 필드: 0으로 고정 (이 장르 해당없음)"""
+
+
 # 다양한 생성 전략
 GENERATION_STRATEGIES = [
     {
@@ -434,6 +470,7 @@ class ArcEnsembleGenerator(BaseAgent):
                 assets=self._escape_braces(json.dumps(assets, ensure_ascii=False)[:2000] if assets else "{}"),
                 feedback=self._escape_braces(_merged_feedback[:3000] if _merged_feedback else "(없음)"),
                 entity_registry_section=self._escape_braces(entity_registry_section),  # [V60.92]
+                energy_system_block=self._escape_braces(self._get_energy_system_block(genre)),
                 arc_no=arc_no,
                 ep_start=ep_start,
                 ep_end=ep_end,
@@ -458,6 +495,7 @@ class ArcEnsembleGenerator(BaseAgent):
                     assets=self._escape_braces(json.dumps(assets, ensure_ascii=False)[:2000] if assets else "{}"),
                     feedback=self._escape_braces(_merged_feedback[:3000] if _merged_feedback else "(없음)"),
                     entity_registry_section=self._escape_braces(entity_registry_section),  # [V60.92]
+                    energy_system_block=self._escape_braces(self._get_energy_system_block(genre)),
                     arc_no=arc_no,
                     ep_start=ep_start,
                     ep_end=ep_end,
@@ -738,6 +776,13 @@ class ArcEnsembleGenerator(BaseAgent):
         return "\n".join(lines)
 
     # [V61.5] _escape_braces 오버라이드 제거 → BaseAgent의 이중 이스케이프 방지 로직 사용
+
+    @staticmethod
+    def _get_energy_system_block(genre: str) -> str:
+        """장르별 에너지(내공) 시스템 규칙 블록. 무협만 내공 규칙 포함."""
+        if genre in ("wuxia", "무협"):
+            return _WUXIA_ENERGY_BLOCK
+        return _NON_WUXIA_ENERGY_BLOCK
 
     def _format_entity_registry(self, entity_registry: dict) -> str:
         """
