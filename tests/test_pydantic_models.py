@@ -465,3 +465,73 @@ class TestDictCompatibility:
         assert "arc_no" in serialized
         reloaded = json.loads(serialized)
         assert reloaded["arc_no"] == 1
+
+
+# ═══════════════════════════════════════════════════════════════════
+# TF-12 Layer 1: SSOT 계약 강제 검증
+# ═══════════════════════════════════════════════════════════════════
+
+
+class TestArcDataSSOTContracts:
+    """TF-12 Layer 1: SSOT 계약 강제 검증"""
+
+    def test_injuries_none_normalized(self):
+        arc = ArcData.model_validate(
+            {"arc_no": 1, "ep_start": 1, "ep_end": 5,
+             "state_constraints": {"arc_end_state": {"injuries": None}}}
+        )
+        assert arc.state_constraints["arc_end_state"]["injuries"] == "없음"
+
+    def test_injuries_empty_string_normalized(self):
+        arc = ArcData.model_validate(
+            {"arc_no": 1, "ep_start": 1, "ep_end": 5,
+             "state_constraints": {"arc_end_state": {"injuries": ""}}}
+        )
+        assert arc.state_constraints["arc_end_state"]["injuries"] == "없음"
+
+    def test_injuries_real_value_preserved(self):
+        arc = ArcData.model_validate(
+            {"arc_no": 1, "ep_start": 1, "ep_end": 5,
+             "state_constraints": {"arc_end_state": {"injuries": "왼팔 골절"}}}
+        )
+        assert arc.state_constraints["arc_end_state"]["injuries"] == "왼팔 골절"
+
+    def test_location_synced_from_joint_docs(self):
+        arc = ArcData.model_validate(
+            {"arc_no": 1, "ep_start": 1, "ep_end": 5,
+             "state_constraints": {"arc_end_state": {}},
+             "joint_docs": {"final_location": "역삼동 사무실"}}
+        )
+        assert arc.state_constraints["arc_end_state"]["location"] == "역삼동 사무실"
+
+    def test_location_not_overridden_if_set(self):
+        arc = ArcData.model_validate(
+            {"arc_no": 1, "ep_start": 1, "ep_end": 5,
+             "state_constraints": {"arc_end_state": {"location": "강남"}},
+             "joint_docs": {"final_location": "역삼동"}}
+        )
+        assert arc.state_constraints["arc_end_state"]["location"] == "강남"
+
+    def test_no_arc_end_state_key_untouched(self):
+        arc = ArcData.model_validate(
+            {"arc_no": 1, "ep_start": 1, "ep_end": 5,
+             "state_constraints": {}}
+        )
+        assert arc.state_constraints.get("arc_end_state") is None
+
+    def test_empty_state_constraints_untouched(self):
+        arc = ArcData.model_validate(
+            {"arc_no": 1, "ep_start": 1, "ep_end": 5}
+        )
+        assert arc.state_constraints == {}
+
+    def test_shadow_does_not_leak_into_injuries(self):
+        """핵심: validate_arc 통과 후 shadow가 injuries에 영향 없음"""
+        result = validate_arc({
+            "arc_no": 1, "ep_start": 1, "ep_end": 5,
+            "state_constraints": {"arc_end_state": {}},
+            "status_shadow": {"expected_injuries": "폐암 말기"},
+            "joint_docs": {"final_location": "판교"},
+        })
+        assert result["state_constraints"]["arc_end_state"]["injuries"] == "없음"
+        assert result["state_constraints"]["arc_end_state"]["location"] == "판교"

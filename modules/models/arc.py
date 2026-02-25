@@ -22,7 +22,16 @@ logger = logging.getLogger(__name__)
 
 
 class ArcState(BaseModel):
-    """Arc 시작/종료 상태 (response_schemas.py ARC_STATE_SCHEMA 대응)"""
+    """Arc 시작/종료 상태 (response_schemas.py ARC_STATE_SCHEMA 대응)
+
+    *** SSOT 계약 ***
+    이 모델의 필드들이 주인공 물리적 상태의 Single Source of Truth.
+    - injuries: 공식 부상 상태. StatusShadow.expected_injuries(예측값)와 혼용 금지.
+    - location: 공식 위치. joint_docs.final_location과 동기화 후 여기가 SSOT.
+    - internal_energy: 공식 내공 수치 (0-100).
+
+    소비 코드: arc_end_state["injuries"] 사용. StatusShadow 폴백 금지.
+    """
 
     model_config = ConfigDict(extra="allow")
 
@@ -121,7 +130,17 @@ class JointDocs(BaseModel):
 
 
 class StatusShadow(BaseModel):
-    """Arc 상태 그림자 (부상/내공 예측)"""
+    """Arc 상태 그림자 — PREDICTION ONLY (LLM 서사 추론, SSOT 아님)
+
+    *** 경고: 모든 필드는 예측값. ground truth 사용 금지. ***
+    - expected_injuries: LLM이 서사 흐름에서 추론한 부상 예측.
+      arc_end_state.injuries(SSOT) 대신 사용 절대 금지.
+      허용: LLM 프롬프트에 '[참고]' 레이블로만 제공.
+    - internal_energy_loss: 내공 소모 예측 (e.g. "30%").
+      arc_end_state.internal_energy(SSOT) 대신 사용 절대 금지.
+
+    SSOT는 반드시 StateConstraints.arc_end_state를 통해 읽을 것.
+    """
 
     model_config = ConfigDict(extra="allow")
 
@@ -204,6 +223,42 @@ class ArcData(BaseModel):
             elif "arc_no" in data and "global_arc_no" not in data:
                 data["global_arc_no"] = data["arc_no"]
         return data
+
+    @model_validator(mode="after")
+    def _enforce_arc_ssot_contracts(self) -> "ArcData":
+        """[TF-12 Layer1] arc_end_state SSOT 계약 강제 (ingress 정규화)
+
+        규칙:
+        1. arc_end_state.injuries: falsy → "없음"  (StatusShadow fallback 차단)
+        2. arc_end_state.location: 빈값 + joint_docs.final_location 있음 → 동기화
+           (fill-if-missing only. 기존값 override 금지)
+
+        Note: _sync_final_location()과 이중 안전장치 구성.
+        이 validator는 Pydantic ingress에서 fill-if-missing,
+        _sync_final_location()은 생성 파이프라인에서 항상-override.
+        """
+        sc = self.state_constraints
+        if not isinstance(sc, dict):
+            return self
+
+        arc_end = sc.get("arc_end_state")
+        if not isinstance(arc_end, dict):
+            return self
+
+        # 규칙 1: injuries SSOT 강제
+        if not arc_end.get("injuries"):
+            arc_end["injuries"] = "없음"
+
+        # 규칙 2: location fill-if-missing
+        if not arc_end.get("location"):
+            jd = self.joint_docs
+            if isinstance(jd, dict):
+                final_loc = jd.get("final_location", "")
+                if final_loc:
+                    arc_end["location"] = final_loc
+
+        sc["arc_end_state"] = arc_end
+        return self
 
 
 def validate_arc(raw: dict) -> dict:

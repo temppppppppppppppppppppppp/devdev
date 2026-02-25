@@ -568,11 +568,17 @@ class Stage2ValidationPipeline:
                     last = all_refined_arcs[-1]
                     last_joint = last.get("joint_docs", {})
                     last_status = last.get("status_shadow", {})
+                    _energy_loss = last_status.get('internal_energy_loss', '?')
+                    _energy_line = (
+                        f"- 내공 소모: {_energy_loss}\n"
+                        if _energy_loss not in ('해당없음', '')
+                        else ""
+                    )
                     prev_state_reminder = (
                         f"\n\n📌 [직전 Arc {last.get('arc_no', '?')} 확정 상태 - 반드시 계승할 것]:\n"
                         f"- 위치: {last_joint.get('final_location', '?')}\n"
                         f"- 소지품: {last_joint.get('physical_inventory', '?')}\n"
-                        f"- 내공 소모: {last_status.get('internal_energy_loss', '?')}\n"
+                        f"{_energy_line}"
                         f"- 부상: {last_status.get('expected_injuries', '?')}"
                     )
 

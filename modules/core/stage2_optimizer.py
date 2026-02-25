@@ -370,6 +370,10 @@ class ArcAutoCorrector:
 
         joint_docs.final_location이 SSOT (LLM이 tactical_doc에서 생성).
         arc_end_state.location은 Python이 이전 Arc에서 복사하므로 stale 가능.
+
+        Note: ArcData._enforce_arc_ssot_contracts()가 Pydantic 레벨에서
+        fill-if-missing 동기화를 수행 (이중 안전장치).
+        이 메서드는 더 공격적으로 기존값도 joint_docs로 덮어씀.
         """
         joint_loc = arc.get("joint_docs", {}).get("final_location", "")
         if not joint_loc:
@@ -430,7 +434,9 @@ class ArcAutoCorrector:
                 try:
                     energy = int(energy)
                     # 범위 클램핑
-                    if energy < 5:
+                    if energy == 0:
+                        pass  # 0 = 비무협 해당없음 — 최소값 보정 제외
+                    elif energy < 5:
                         self.corrections_made.append(f"{state_key} 내공 하한 적용: {energy}% → 5%")
                         energy = 5
                     elif energy > 100:
