@@ -327,7 +327,71 @@ ruff check .                        # 0 violations
 
 ---
 
-## 9. 리스크 체크리스트
+## 9. Stage 3 Director QualityGate 감사 결과 (2026-02-25)
+
+### 9-1. 수정 완료: QualityGate 역설 해소
+
+**문제**: Director 프롬프트("80점 미만 REJECT")와 Python QualityGate(90점 기준) 불일치
+- Director가 82점으로 PASS 판정 → Python이 "90점 미만"이라며 REJECT로 뒤집음 → 디렉터 주권주의 위반
+
+**수정 내용** (커밋: TBD):
+- `config/settings/validation.yaml`: `blueprint_quality_gate_score: 80` 추가 (Stage 3 전용 키)
+- `modules/domain/agents/three_phase_blueprint_generator.py` L368: `scoring.blueprint_quality_gate_score` (80) 읽도록 변경
+- Stage 2 Arc / Stage 4 원고의 `quality_gate_score: 90`은 변경 없음 (별도 기준)
+
+---
+
+### 9-2. 미수정 항목 (관찰 대기)
+
+#### 항목 A — LLM 고점수 편향 (낮은 우선순위)
+
+**현상**: Director가 모순 없는 Blueprint에 95~100점을 일관되게 부여 → 3개 후보 중 항상 1개 이상 첫 시도 PASS → in-place patch 실제 발동 드묾
+
+**원인**: 프롬프트에 점수 앵커링("평균 기대 점수" 명시) 부재. LLM은 "모순 없음 = 고득점" 경향.
+
+**대응 방향 (미결)**:
+- Option A: 프롬프트에 앵커링 추가 ("품질 중간 수준 기대 점수: 75점")
+- Option B: 점수 체계 대신 체크리스트 기반 PASS/REJECT 전환 (향후 TF)
+
+**현재 영향**: in-place patch 경로는 정상 구현됨. 모순이 실제 발생하면 score에 따라 in-place(≥60) 또는 전면 재생성(<60)으로 올바르게 분기됨. 고점수 편향은 버그가 아니라 "생성 품질이 높아서" 해석 가능.
+
+---
+
+#### 항목 B — 긴급 폴백 임계값 (낮은 우선순위)
+
+**현상**: 3회 재시도 전부 REJECT여도 마지막 score ≥ 50이면 `PASS_WITH_WARNING`으로 통과 (`three_phase_blueprint_generator.py` L442)
+
+**관련 설정**: `patch_mode.rewrite_below: 50` (validation.yaml L91)
+
+**잠재적 문제**: 낮은 품질 Blueprint가 경고만 달고 그냥 통과될 수 있음
+
+**대응 방향 (미결)**:
+- 임계값 50 → 70으로 상향하면 score 50~69는 완전 FAILED 처리
+- 단, 파이프라인 중단 위험 증가. POC 완료 후 품질 데이터 확인 후 결정
+
+---
+
+### 9-3. Stage 3 REJECT 흐름 요약 (정상 동작 확인)
+
+```
+retry=0: 3개 후보 병렬 생성 → Director 비교 선택
+         선택 후보 score < 80  → REJECT (Director 프롬프트 기준)
+         선택 후보 score 80~79 → Python QualityGate(80) 통과 → PASS ← 이제 일치
+         선택 후보 score ≥ 80  → PASS
+
+retry=1 (REJECT 시):
+         _prev_reject_score ≥ 60 → in-place patch (단일 LLM 1회)
+         _prev_reject_score 50~59 → 전면 재생성
+         _prev_reject_score < 50  → 전면 재생성 + _previous_best 폐기
+
+retry=2: 동일 분기
+         전부 실패 + score ≥ 50 → PASS_WITH_WARNING (긴급 폴백)
+         전부 실패 + score < 50  → FAILED
+```
+
+---
+
+## 10. 리스크 체크리스트
 
 TF-10 구현 시 주의할 리스크 (TF-10 Section 10 + Section 11에서 도출):
 

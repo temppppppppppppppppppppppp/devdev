@@ -31,7 +31,8 @@ scope:
 
 # ── SCORING 검증 ─────────────────────────────────────────────
 scoring:
-  quality_gate_score: 90
+  quality_gate_score: 90              # Stage 2 Arc / Stage 4 원고 QualityGate
+  blueprint_quality_gate_score: 80    # Stage 3 Blueprint 전용 — Director 프롬프트 "80점 미만 REJECT" 기준과 일치
   default_pass_threshold: 70
   genre_thresholds:
     wuxia: 70
