@@ -28,3 +28,12 @@ network_retry:
 # API 키 순환 설정
 key_rotation:
   min_interval: 10           # 최소 순환 간격 (초)
+
+# JSON 페이로드 제한
+retry:
+  max_json_payload: 500000   # LLM 응답 JSON 최대 크기 (bytes)
+
+# Context Cache 설정
+cache:
+  context_max_entries: 50    # 캐시 최대 엔트리 수
+  min_content_chars: 50000   # 캐시 대상 최소 글자수

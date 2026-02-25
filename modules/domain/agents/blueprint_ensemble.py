@@ -12,7 +12,6 @@
 2. 상세화 (integrated_scenario)
 """
 
-import json
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -21,6 +20,7 @@ from concurrent.futures import TimeoutError as FutureTimeoutError
 from modules.core.constants import GenreTypes, smart_truncate
 from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
 from modules.core.prompt_loader import PromptLoader
+from modules.core.tactical_utils import extract_episode_tactical
 
 from .base_agent import BaseAgent
 
@@ -147,11 +147,12 @@ class BlueprintEnsembleGenerator(BaseAgent):
         # Arc 포커스 추출
         arc_focus = constraint_block.get("must_focus", {}).get("content", "")
         if not arc_focus:
-            tactical = arc_data.get("tactical_doc", "")
-            if isinstance(tactical, dict):
-                tactical = json.dumps(tactical, ensure_ascii=False)
-            # [V62.8] 절삭 상한 완화: 2000→4000 (중략 없이 전문 전달 우선)
-            arc_focus = tactical[:4000]
+            # [TTE] 에피소드별 지능 추출 + 안전캡 12000 (기존 4000×3)
+            arc_focus = extract_episode_tactical(
+                arc_data.get("tactical_doc", ""),
+                ep_num,
+                episode_details=arc_data.get("episode_details"),
+            )[:12000]
 
         # [TF10-2-3] episode_details로 arc_focus 보강 — 현재 화 구조화된 사건 정보 선두 삽입
         _ep_details = arc_data.get("episode_details") or []

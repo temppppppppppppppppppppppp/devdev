@@ -386,8 +386,10 @@ class ContinuityInspector(BaseAgent):
         return self._arc._extract_accurate_joint_docs(tactical_doc, arc_no, ep_end, original_joint_docs)
 
     def _extract_last_episode_content(self, tactical_doc: str, ep_end: int) -> str:
-        """마지막 화 내용 추출 → ContinuityArcValidator에 위임"""
-        return self._arc._extract_last_episode_content(tactical_doc, ep_end)
+        """마지막 화 내용 추출 — [TTE] 공유 유틸 위임"""
+        from modules.core.tactical_utils import extract_episode_tactical
+
+        return extract_episode_tactical(tactical_doc, ep_end, fallback_full=False)
 
     def _arc_python_precheck(self, current_arc: dict, prev_arcs: list[dict]) -> dict:
         """Arc Python 사전 검증 → ContinuityArcValidator에 위임"""

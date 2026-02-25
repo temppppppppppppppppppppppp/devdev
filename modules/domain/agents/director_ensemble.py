@@ -11,6 +11,7 @@ import logging
 
 from modules.core.constants import ManuscriptLimits, smart_truncate  # [V64.P4]
 from modules.core.prompt_loader import PromptLoader
+from modules.core.tactical_utils import extract_episode_tactical
 from modules.validation.threshold_helper import _threshold
 
 
@@ -72,9 +73,12 @@ class DirectorEnsembleSelector:
 
         logging.info(f"🎭 [Director] {len(candidates)}개 후보 비교 중...")
 
-        arc_tactical = arc_data.get("tactical_doc", "")
-        if isinstance(arc_tactical, dict):
-            arc_tactical = json.dumps(arc_tactical, ensure_ascii=False)
+        # [TTE] 에피소드별 지능 추출 + 안전캡 6000 (기존 2000×3)
+        arc_tactical_ep = extract_episode_tactical(
+            arc_data.get("tactical_doc", ""),
+            ep_num,
+            episode_details=arc_data.get("episode_details"),
+        )[:6000]
 
         prev_ending = ""
         if prev_blueprint:
@@ -114,7 +118,7 @@ class DirectorEnsembleSelector:
 제{ep_num}화 Blueprint 후보 {len(candidates)}개를 **각각 절대 기준으로 독립 평가**한 뒤, 최적 후보를 선택하고 최종 판정하세요.
 
 ### Arc 전술서 (이번 화 기준)
-{arc_tactical[:2000]}
+{arc_tactical_ep}
 
 ### 이전 화 정보
 {prev_ending if prev_ending else "(1화 또는 이전 정보 없음)"}
@@ -198,6 +202,21 @@ class DirectorEnsembleSelector:
                 logging.info(f"📝 비교: {comparison_notes[:150]}{'...' if len(comparison_notes) > 150 else ''}")
             if reason:
                 logging.info(f"💡 이유: {reason[:100]}{'...' if len(reason) > 100 else ''}")
+
+            print(f"\n{'=' * 60}")
+            print(f"  [Stage3 Director] Blueprint {decision} (점수: {score})")
+            print(f"  선택: 후보 {selected_idx + 1}")
+            if reason:
+                print(f"  사유: {reason[:200]}")
+            if comparison_notes:
+                print(f"  비교: {comparison_notes[:200]}")
+            if contradictions:
+                for c in contradictions[:3]:
+                    print(f"  모순: {str(c)[:150]}")
+            _bp_feedback = result.get("feedback", "")
+            if decision == "REJECT" and _bp_feedback:
+                print(f"  피드백: {str(_bp_feedback)[:200]}")
+            print(f"{'=' * 60}\n")
 
             return {
                 "decision": decision,
@@ -494,6 +513,28 @@ class DirectorEnsembleSelector:
                 _existing_issues = feedback.get("issues", [])
                 _existing_issues.append(f"[자유 리뷰] {_open_review}")
                 feedback["issues"] = _existing_issues
+
+        # --- Director 판정 상세 출력 ---
+        print(f"\n{'=' * 60}")
+        print(f"  [Stage4 Director] 원고 앙상블 판정: {final_verdict} (점수: {score})")
+        print(f"  선택: 후보 {selected_letter} | 원래 판정: {original_verdict}")
+        _sel_reason = result.get("selection_reason", "")
+        if _sel_reason:
+            print(f"  선택 사유: {str(_sel_reason)[:200]}")
+        _sb = result.get("score_breakdown", {})
+        if _sb:
+            _sb_str = ", ".join(f"{k}={v}" for k, v in _sb.items() if isinstance(v, int | float))
+            if _sb_str:
+                print(f"  점수 분해: {_sb_str}")
+        _issues = feedback.get("issues", []) if isinstance(feedback, dict) else []
+        if _issues:
+            for _iss in _issues[:5]:
+                print(f"  이슈: {str(_iss)[:150]}")
+        if _open_review and _open_review not in ("특이사항 없음", "없음", ""):
+            print(f"  자유 리뷰: {_open_review[:200]}")
+        if adaptive_result.get("reason"):
+            print(f"  적응형: {adaptive_result['reason']}")
+        print(f"{'=' * 60}\n")
 
         return {
             "selected": selected_letter,

@@ -274,6 +274,7 @@ class Stage4InterviewRound:
         try:
             _cv_context = {
                 "mode": "MANUSCRIPT",
+                "genre": genre_name,
                 "martial_hud": {},
                 "karma_matrix": {},
                 "asset_library": {},
@@ -283,6 +284,20 @@ class Stage4InterviewRound:
                 "blueprint": blueprint if isinstance(blueprint, dict) else {},
                 "blueprint_text": str(blueprint or "")[:3000],
             }
+            # [P1-FIX] prev_hud 주입 — ContinuityValidator 연속성 검증 활성화
+            _prev_hud = {}
+            if next_ep > 1:
+                try:
+                    if hasattr(self.ctx.sys, "hud") and self.ctx.sys.hud:
+                        _prev_hud = self.ctx.sys.hud.pro_root
+                        if not isinstance(_prev_hud, dict):
+                            _prev_hud = {}
+                except Exception as _hud_err:
+                    logging.warning(f"[SilentPass:InterviewRound] prev_hud 로드 실패: {_hud_err!s:.100}")
+            _cv_context["prev_hud"] = _prev_hud
+            # martial_hud도 동일 소스 (하위 호환)
+            if _prev_hud:
+                _cv_context["martial_hud"] = _prev_hud
             # [V67.1] incarnation_type 주입 — Validator 오탐 방지
             _incarnation_type = ""
             try:
@@ -312,14 +327,14 @@ class Stage4InterviewRound:
             if "protagonist_name" not in _cv_context:
                 _proto_name = ""
                 try:
+                    from modules.core.constants import HUDKeys
+
                     _mb = self.ctx.current_project.master_bible or {}
                     _mb_root = _mb.get("MasterBible", _mb)
-                    _proto_name = (
-                        _mb_root.get("protagonist_name") or _mb_root.get("protagonist_config", {}).get("name", "") or ""
-                    )
+                    _proto_name = HUDKeys.get_protagonist_name(_mb_root, genre_name)
                 except Exception:
                     pass
-                if _proto_name:
+                if _proto_name and _proto_name != "주인공":
                     _cv_context["protagonist_name"] = _proto_name
                 else:
                     logging.warning("[Stage4] protagonist_name 주입 실패 — POV 검사 민감도 저하 가능")
@@ -356,6 +371,104 @@ class Stage4InterviewRound:
                             _npc_history[_hn] = _hh
                     if _npc_history:
                         _cv_context["npc_history"] = _npc_history
+            # [P2-FIX] karma_matrix 조립 — ConsistencyValidator unresolved_conflict 활성화
+            _karma_dict = {}
+            try:
+                if next_ep > 1:
+                    _prev_bible = self.ctx.current_project.db.get_episode_bible(next_ep - 1)
+                    _raw_karma = _prev_bible.get("karma_matrix", []) if _prev_bible else []
+                    if isinstance(_raw_karma, list):
+                        for _k in _raw_karma:
+                            if isinstance(_k, dict) and _k.get("target"):
+                                _tgt = _k["target"]
+                                if _tgt not in _karma_dict:
+                                    _karma_dict[_tgt] = {"relation_type": _k.get("relation", ""), "events": []}
+                                _karma_dict[_tgt]["events"].append(
+                                    {
+                                        "type": _k.get("type", ""),
+                                        "description": _k.get("description", ""),
+                                    }
+                                )
+            except Exception as _km_err:
+                logging.warning(f"[SilentPass:InterviewRound] karma_matrix 조립 실패: {_km_err!s:.100}")
+            if _karma_dict:
+                _cv_context["karma_matrix"] = _karma_dict
+            # [P2-FIX] villain_context 조립 — ConsistencyValidator villain_response 활성화
+            _villain_ctx = {}
+            try:
+                _mb = self.ctx.current_project.master_bible or {}
+                _mb_root = _mb.get("MasterBible", _mb)
+                _key_npcs = _mb_root.get("AssetLibrary", {}).get("KeyNPCs", [])
+                if not _key_npcs:
+                    _key_npcs = _mb_root.get("AssetLibrary", {}).get("Key_NPCs", [])
+                _VILLAIN_KEYWORDS = ("빌런", "적대", "악역", "antagonist", "주적", "숙적", "원수")
+                for _npc in _key_npcs or []:
+                    if not isinstance(_npc, dict):
+                        continue
+                    _role = str(_npc.get("role", ""))
+                    if any(kw in _role for kw in _VILLAIN_KEYWORDS):
+                        _vname = _npc.get("name", "")
+                        if _vname:
+                            # 사망 빌런은 스킵 → 다음 빌런 후보 탐색
+                            if self.ctx.state_tracker and hasattr(self.ctx.state_tracker, "npc_registry"):
+                                _v_info = self.ctx.state_tracker.npc_registry.get(_vname, {})
+                                if _v_info.get("status") == "deceased":
+                                    continue
+                            _villain_ctx = {
+                                "villain_name": _vname,
+                                "villain_role": _role,
+                                "is_aware": True,
+                            }
+                            break
+            except Exception as _vc_err:
+                logging.warning(f"[SilentPass:InterviewRound] villain_context 조립 실패: {_vc_err!s:.100}")
+            if _villain_ctx:
+                _cv_context["villain_context"] = _villain_ctx
+            # [P2-FIX] authority_context 조립 — ConsistencyValidator authority_delegation 활성화
+            _auth_ctx = {}
+            try:
+                _mb = self.ctx.current_project.master_bible or {}
+                _mb_root = _mb.get("MasterBible", _mb)
+                _key_npcs = _mb_root.get("AssetLibrary", {}).get("KeyNPCs", [])
+                if not _key_npcs:
+                    _key_npcs = _mb_root.get("AssetLibrary", {}).get("Key_NPCs", [])
+                _SUPERIOR_KEYWORDS = (
+                    "상사",
+                    "상관",
+                    "사부",
+                    "스승",
+                    "사형",
+                    "문주",
+                    "장문인",
+                    "회장",
+                    "대표",
+                    "사장",
+                    "원장",
+                    "교수",
+                )
+                for _npc in _key_npcs or []:
+                    if not isinstance(_npc, dict):
+                        continue
+                    _role = str(_npc.get("role", ""))
+                    if any(kw in _role for kw in _SUPERIOR_KEYWORDS):
+                        _sname = _npc.get("name", "")
+                        if _sname:
+                            # 사망 상사는 스킵 → 다음 상사 후보 탐색
+                            if self.ctx.state_tracker and hasattr(self.ctx.state_tracker, "npc_registry"):
+                                _s_info = self.ctx.state_tracker.npc_registry.get(_sname, {})
+                                if _s_info.get("status") == "deceased":
+                                    continue
+                            _auth_ctx = {
+                                "protagonist_position": _mb_root.get("protagonist_config", {}).get("position", ""),
+                                "superior_alive": True,
+                                "superior_name": _sname,
+                                "superior_position": _npc.get("position", _role),
+                            }
+                            break
+            except Exception as _ac_err:
+                logging.warning(f"[SilentPass:InterviewRound] authority_context 조립 실패: {_ac_err!s:.100}")
+            if _auth_ctx:
+                _cv_context["authority_context"] = _auth_ctx
             for ci, cand in enumerate(candidates):
                 _cv_ms = cand.get("manuscript", "")
                 if _cv_ms and ci < len(validation_results):

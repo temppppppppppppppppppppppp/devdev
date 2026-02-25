@@ -522,8 +522,15 @@ class Stage3Orchestrator:
                         _ep_start = arc_data.get("ep_start", working_ep)
                         _ep_end = arc_data.get("ep_end", working_ep)
                         _block_fields = []
-                        for _f in ("title", "emotional_beat", "foreshadow", "power_shift",
-                                   "event_villain", "solution", "reward"):
+                        for _f in (
+                            "title",
+                            "emotional_beat",
+                            "foreshadow",
+                            "power_shift",
+                            "event_villain",
+                            "solution",
+                            "reward",
+                        ):
                             if _block.get(_f):
                                 _block_fields.append(f"  {_f}: {_block[_f]}")
                         _content = _block.get("content", {})
@@ -543,7 +550,10 @@ class Stage3Orchestrator:
                             _bp_semantic_ctx = _tb_text + ("\n\n" + _bp_semantic_ctx if _bp_semantic_ctx else "")
                             _logging.info(
                                 "[TF9] Treatment Block 주입 완료 (arc_idx=%d, ep=%d~%d, %d자)",
-                                arc_idx, _ep_start, _ep_end, len(_tb_text),
+                                arc_idx,
+                                _ep_start,
+                                _ep_end,
+                                len(_tb_text),
                             )
             except Exception as _tb_err:
                 _logging.warning("[SilentPass:TreatmentBlock] 추출 실패 (비차단): %s", _tb_err)
@@ -568,6 +578,16 @@ class Stage3Orchestrator:
                         f"📚 [V67] Blueprint용 이전 원고 {len(_prev_ms_for_bp)}개 로드 ({len(_prev_ms_text_for_bp):,}자)"
                     )
 
+                # [TF-4] prev_hud 추출 — BlockingValidator consistency checks용
+                _bp_prev_hud = None
+                if hasattr(ctx, "sys") and ctx.sys and hasattr(ctx.sys, "hud") and ctx.sys.hud:
+                    try:
+                        _bp_prev_hud = ctx.sys.hud.pro_root
+                        if not isinstance(_bp_prev_hud, dict):
+                            _bp_prev_hud = None
+                    except Exception:
+                        _bp_prev_hud = None
+
                 blueprint, pipeline_result = ctx.agents["three_phase_bp"].generate(
                     ep_num=working_ep,
                     arc_data=arc_data,
@@ -584,6 +604,7 @@ class Stage3Orchestrator:
                     semantic_context=_bp_semantic_ctx,
                     prev_manuscripts_text=_prev_ms_text_for_bp,
                     adversarial_self_play=ctx.adversarial_self_play,
+                    prev_hud=_bp_prev_hud,
                 )
 
         except Exception as gen_err:

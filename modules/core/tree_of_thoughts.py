@@ -30,6 +30,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
+from modules.core.tactical_utils import extract_episode_tactical
+
 
 class ExplorationStrategy(Enum):
     """탐색 전략"""
@@ -371,7 +373,13 @@ JSON 형식으로:
         task = f"제 {ep_num}화 블루프린트 설계"
         context = {
             "ep_num": ep_num,
-            "arc_tactical": arc_data.get("tactical_doc", "")[:1000] if arc_data else "",
+            "arc_tactical": extract_episode_tactical(
+                arc_data.get("tactical_doc", ""),
+                ep_num,
+                episode_details=arc_data.get("episode_details"),
+            )
+            if arc_data
+            else "",
             "arc_drive": arc_data.get("arc_drive", {}) if arc_data else {},
             "prev_cliffhanger": prev_blueprint.get("ending_hook", "") if prev_blueprint else "",
         }

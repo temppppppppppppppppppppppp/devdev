@@ -74,6 +74,7 @@ class UnifiedBlueprintValidator:
         entity_registry: dict | None = None,  # [V61] Entity 일관성 검증용
         state_tracker=None,  # [V60.96] StateTracker (죽은 NPC 검증용)
         all_candidates: list[dict] | None = None,  # [V60.85] 전체 후보 리스트
+        prev_hud: dict | None = None,  # [TF-4] 직전 HUD (BlockingValidator consistency checks용)
     ) -> tuple[str, dict]:
         """
         Blueprint 통합 검증 (사전검사 + Director 최종 판정)
@@ -227,7 +228,29 @@ class UnifiedBlueprintValidator:
             else:
                 manuscript_with_focus = integrated_scenario
 
-            # Director.audit_manuscript() 호출 (Blueprint 모드 — CONTINUITY 스킵)
+            # [TF-4] validation_context 보강 — encyclopedia.npcs + prev_hud 주입
+            _bp_vc = {"skip_continuity": True, "mode": "BLUEPRINT"}
+            if state_tracker:
+                _enc_npcs = []
+                for _npc_name, _npc_info in getattr(state_tracker, "npc_registry", {}).items():
+                    _enc_npcs.append(
+                        {
+                            "name": _npc_name,
+                            "status": _npc_info.get("status", "alive"),
+                            "death_arc": _npc_info.get("death_arc"),
+                            "aliases": _npc_info.get("aliases", []),
+                        }
+                    )
+                _bp_vc["encyclopedia"] = {"npcs": _enc_npcs}
+
+            # [TF-4] prev_hud 주입 — 호출자(stage3_orchestrator)가 ctx.sys.hud.pro_root에서 추출하여 전달
+            # ContinuityValidator는 skip_continuity=True일 때 최상단에서 PASS 반환하므로 안전
+            # BlockingValidator의 physical_capability/authority_exercise에서 사용
+            if isinstance(prev_hud, dict) and prev_hud:
+                _bp_vc["prev_hud"] = prev_hud
+                _bp_vc["martial_hud"] = prev_hud
+
+            # Director.audit_manuscript() 호출 (Blueprint 모드)
             director_result = director.audit_manuscript(
                 ep_num=working_ep,
                 manuscript=manuscript_with_focus,  # 주의 포인트 포함
@@ -239,8 +262,8 @@ class UnifiedBlueprintValidator:
                 target_len=self.min_chars,  # Blueprint용 짧은 기준
                 retry_count=0,
                 entity_registry=entity_registry,  # [V61] Entity 일관성 검증
-                state_tracker=state_tracker,  # [V61.5] 죽은 NPC 검증 (BUG FIX: 누락되어 있었음)
-                validation_context={"skip_continuity": True},  # Blueprint는 원고 아님 — HUD 연속성 검증 불필요
+                state_tracker=state_tracker,  # [V61.5] 죽은 NPC 검증
+                validation_context=_bp_vc,
             )
 
             # Director 결과 처리

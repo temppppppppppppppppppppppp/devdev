@@ -90,7 +90,7 @@ ENSEMBLE_ARC_PROMPT: |
       "ep_end": {ep_end},
       "title": "Arc 제목",
       "tactical_doc": "[V60.40] 각 화마다 시작/종료 상태 체크포인트 필수. 화당 500자 이상. '제 N화:' 형식으로 화별 명확 구분",
-      "beat_sequence": ["제 N화: 핵심 비트", ...],
+      "beat_sequence": ["제 N화: 구체적 사건 → 행동 → 반응 (제목이 아닌 서사 내용 기술)", ...],
       "hybrid_composition": {{
           "primary": "주 서사 패턴",
           "secondary": ["부 패턴"],

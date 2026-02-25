@@ -42,7 +42,9 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         # 서브 모듈
         self.constraint_compiler = BlueprintConstraintCompiler()
         sub_models = _get_sub_component_models("three_phase_blueprint_generator")
-        self.ensemble = BlueprintEnsembleGenerator(context, client, sub_models.get("ensemble", "gemini-3.1-pro-preview"))
+        self.ensemble = BlueprintEnsembleGenerator(
+            context, client, sub_models.get("ensemble", "gemini-3.1-pro-preview")
+        )
         self.validator = UnifiedBlueprintValidator(context, client, sub_models.get("validator", "gemini-2.5-flash"))
 
         # 통계
@@ -72,6 +74,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         semantic_context: str = "",  # [V63.3] 벡터 시맨틱 검색 결과
         prev_manuscripts_text: str = "",  # [V67] 이전 원고 전문 (모순 방지)
         adversarial_self_play=None,
+        prev_hud: dict | None = None,  # [TF-4] 직전 HUD (BlockingValidator consistency checks용)
     ) -> tuple[dict | None, dict]:
         """
         3단계 Blueprint 생성 (ToT 방식: 3전략 × 3시도 = 최대 9회 생성)
@@ -141,7 +144,10 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
 
         def _build_strategy_feedback() -> str:
             _parts = []
-            if _prev_selection_reason:
+            # [TF-2] Director REJECT 피드백 직접 주입 — 고아 변수 해소
+            if _prev_reject_feedback:
+                _parts.append(f"[Director REJECT 피드백]\n{_prev_reject_feedback}")
+            if _prev_selection_reason and _prev_selection_reason != _prev_reject_feedback:
                 _parts.append(f"[이전 선택/거절 사유]\n{_prev_selection_reason}")
             if isinstance(_prev_score_breakdown, dict) and _prev_score_breakdown:
                 _sb = ", ".join(f"{k}={v}" for k, v in _prev_score_breakdown.items() if isinstance(v, int | float))
@@ -337,6 +343,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 entity_registry=entity_registry,  # [V61] Entity 일관성 검증
                 state_tracker=state_tracker,  # [V60.96] 죽은 NPC 검증
                 all_candidates=all_candidates,  # [V60.85] 전체 후보 리스트
+                prev_hud=prev_hud,  # [TF-4] BlockingValidator consistency checks용
             )
 
             # [V60.85] Director가 선택한 Blueprint로 교체
@@ -481,6 +488,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             patch_template = None
 
         if patch_template:
+
             def _esc(s):
                 return s.replace("{", "{{").replace("}", "}}")
 

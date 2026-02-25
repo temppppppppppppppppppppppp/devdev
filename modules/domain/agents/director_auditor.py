@@ -238,6 +238,13 @@ class DirectorQualityAuditor:
                 "scoring_threshold": 70,  # [TF-I06] 65→70 YAML/코드 일치
                 "use_self_consistency": True,
                 "consistency_votes": 3,
+                # [SSOT] validation.yaml orchestrator 섹션과 동기화
+                "use_pre_llm": True,
+                "catharsis_max_gap": 3,
+                "use_retrospective": True,
+                "use_reflexion": True,
+                "use_adaptive_threshold": True,
+                "max_parallel_workers": 3,
             }
             # [TF7-P2-09] settings.json validation 키를 default_config에 병합
             try:
@@ -256,6 +263,12 @@ class DirectorQualityAuditor:
                         "use_self_consistency",
                         "consistency_votes",
                         "use_retrospective",
+                        # [SSOT] orchestrator 섹션 동기화
+                        "use_pre_llm",
+                        "catharsis_max_gap",
+                        "use_reflexion",
+                        "use_adaptive_threshold",
+                        "max_parallel_workers",
                     }
                     for _k in _SETTINGS_KEYS:
                         if _k in _sj_val:
@@ -707,6 +720,28 @@ class DirectorQualityAuditor:
         # [V70] 파싱 실패 시 안전한 REJECT 반환 (기본 PASS 방지)
         if not isinstance(result, dict) or result.get("parsing_error"):
             return {"decision": "REJECT", "score": 0, "reason": "Director 응답 파싱 실패", "feedback": "재시도 필요"}
+
+        # --- Director Audit 상세 출력 ---
+        _aud_decision = result.get("decision", "?")
+        _aud_score = result.get("score", 0)
+        print(f"\n{'=' * 60}")
+        print(f"  [Stage4 Audit] {audit_mode} {_aud_decision} (점수: {_aud_score})")
+        _aud_sb = result.get("score_breakdown", {})
+        if _aud_sb:
+            _sb_str = ", ".join(f"{k}={v}" for k, v in _aud_sb.items() if isinstance(v, int | float))
+            if _sb_str:
+                print(f"  점수 분해: {_sb_str}")
+        _aud_reason = result.get("reason", "")
+        if _aud_reason:
+            print(f"  사유: {str(_aud_reason)[:200]}")
+        _aud_fb = result.get("feedback", "")
+        if _aud_fb:
+            print(f"  피드백: {str(_aud_fb)[:200]}")
+        _aud_or = result.get("open_review", "")
+        if _aud_or and _aud_or not in ("특이사항 없음", "없음", ""):
+            print(f"  자유 리뷰: {str(_aud_or)[:200]}")
+        print(f"{'=' * 60}\n")
+
         return result
 
     # ═══════════════════════════════════════════════════════════════════════

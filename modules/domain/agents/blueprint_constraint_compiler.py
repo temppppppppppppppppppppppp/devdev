@@ -18,6 +18,8 @@ import json
 import logging
 import re
 
+from modules.core.tactical_utils import _EPISODE_HEADER_PATTERNS, extract_episode_tactical
+
 
 class BlueprintConstraintCompiler:
     """
@@ -170,52 +172,17 @@ class BlueprintConstraintCompiler:
 
         return "\n".join(lines)
 
-    # [S3-I4] 에피소드 헤더 정규식 — 다양한 LLM 출력 형식 대응
-    # 우선순위: [제N화] > ### 제N화 > **제N화** > 제N화: > 제N화)
-    _EPISODE_HEADER_PATTERNS = [
-        # 기존 패턴: [제 N화 ...]
-        r"\[제\s*{ep}\s*화[^\]]*\](.*?)(?=\[제\s*\d+\s*화|\Z)",
-        # ### 제N화, ## 제N화 (마크다운 헤더)
-        r"#{{2,3}}\s*제\s*{ep}\s*화[^\n]*(.*?)(?=#{{2,3}}\s*제\s*\d+\s*화|\Z)",
-        # **제N화** (마크다운 볼드)
-        r"\*\*제\s*{ep}\s*화[^*]*\*\*(.*?)(?=\*\*제\s*\d+\s*화|\Z)",
-        # 제N화: 또는 제N화 - (콜론/대시 구분)
-        r"제\s*{ep}\s*화\s*[:\-–—]\s*(.*?)(?=제\s*\d+\s*화\s*[:\-–—]|\Z)",
-        # 제N화) 또는 (제N화) (괄호 구분)
-        r"[\(]?제\s*{ep}\s*화[\)]\s*(.*?)(?=[\(]?제\s*\d+\s*화[\)]|\Z)",
-    ]
-
     def _extract_episode_focus(self, arc_data: dict, ep_num: int, arc_position: int) -> dict:
-        """이번 화 핵심 내용 추출"""
-        # [TF10-2-1] episode_details 우선 참조 — Arc 압축 손실 보완
-        content = ""
-        _ep_details = arc_data.get("episode_details") or []
-        if isinstance(_ep_details, list):
-            for _item in _ep_details:
-                if isinstance(_item, dict) and _item.get("ep_num") == ep_num:
-                    _details = _item.get("details") or []
-                    if isinstance(_details, list) and _details:
-                        content = "\n".join(f"- {d}" for d in _details if isinstance(d, str))
-                    break
+        """이번 화 핵심 내용 추출 — [TTE] 공유 유틸 위임"""
+        content = extract_episode_tactical(
+            arc_data.get("tactical_doc", ""),
+            ep_num,
+            episode_details=arc_data.get("episode_details"),
+            fallback_full=False,
+        )
 
-        tactical_doc = arc_data.get("tactical_doc", "")
-
-        # 딕셔너리면 문자열로 변환
-        if isinstance(tactical_doc, dict):
-            tactical_doc = json.dumps(tactical_doc, ensure_ascii=False, indent=2)
-
-        # [S3-I4] 다중 정규식 폴백 패턴으로 에피소드 섹션 추출 (episode_details 없을 때)
+        # beat_sequence 폴백 (기존 로직 유지)
         if not content:
-            for pattern_template in self._EPISODE_HEADER_PATTERNS:
-                pattern = pattern_template.format(ep=ep_num)
-                match = re.search(pattern, tactical_doc, re.DOTALL)
-                if match:
-                    content = match.group(1).strip()
-                    if content:
-                        break
-
-        if not content:
-            # 최종 폴백: beat_sequence 사용
             beats = arc_data.get("beat_sequence", [])
             if arc_position - 1 < len(beats):
                 content = beats[arc_position - 1]
@@ -229,16 +196,15 @@ class BlueprintConstraintCompiler:
         # 핵심 이벤트 추출
         key_events = []
         if content:
-            # 줄 단위로 이벤트 추출
             for line in content.split("\n"):
                 line = line.strip()
                 if line.startswith("-") or line.startswith("•"):
                     key_events.append(line.lstrip("-•").strip())
-                elif len(line) > 10 and len(line) < 100:
+                elif 10 < len(line) < 100:
                     key_events.append(line)
 
         return {
-            "content": content[:1000] if content else "이번 화 전술 정보 없음",
+            "content": content if content else "이번 화 전술 정보 없음",
             "key_events": key_events[:5],
             "arc_position": arc_position,
         }
@@ -268,7 +234,7 @@ class BlueprintConstraintCompiler:
 
         # [S3-I4] 다중 정규식 폴백 패턴으로 다음 화 정지선 추출
         if not content:
-            for pattern_template in self._EPISODE_HEADER_PATTERNS:
+            for pattern_template in _EPISODE_HEADER_PATTERNS:
                 pattern = pattern_template.format(ep=next_ep)
                 match = re.search(pattern, tactical_doc, re.DOTALL)
                 if match:

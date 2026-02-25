@@ -12,6 +12,7 @@ import logging
 import re
 
 from modules.core.prompt_loader import SafeDict
+from modules.core.tactical_utils import extract_episode_tactical
 
 # =================================================================
 # [V49 NEW] Arc 수준 연속성 검증 프롬프트
@@ -338,6 +339,7 @@ class ContinuityArcValidator:
                 curr_start.get("internal_energy") != correct_energy
                 or curr_start.get("injuries") != correct_injuries
                 or curr_start.get("location") != correct_location
+                or curr_start.get("equipment") != correct_equipment
             )
 
             if needs_correction:
@@ -528,7 +530,7 @@ class ContinuityArcValidator:
         if not tactical_doc:
             return None
 
-        last_ep_content = self._extract_last_episode_content(tactical_doc, ep_end)
+        last_ep_content = extract_episode_tactical(tactical_doc, ep_end, fallback_full=False)
 
         if not last_ep_content or len(last_ep_content) < 100:
             return original_joint_docs
@@ -567,28 +569,6 @@ class ContinuityArcValidator:
         except Exception as e:
             logging.warning(f"⚠️ [V49.2] Joint Docs 추출 실패: {e}")
             return original_joint_docs
-
-    def _extract_last_episode_content(self, tactical_doc: str, ep_end: int) -> str:
-        """[V49.2] tactical_doc에서 마지막 화 내용만 추출"""
-        patterns = [
-            rf"\[제\s*{ep_end}화\s*전술\s*설계\]",
-            rf"제\s*{ep_end}화[:\s]",
-            rf"\[제{ep_end}화\]",
-            rf"Beat\s*{ep_end}:",
-        ]
-
-        last_ep_start = -1
-        for pattern in patterns:
-            match = re.search(pattern, tactical_doc)
-            if match:
-                last_ep_start = match.start()
-                break
-
-        if last_ep_start < 0:
-            # [Sweep53] 패턴 미매칭 시 빈 문자열 반환 → 호출자가 original_joint_docs 사용
-            return ""
-
-        return tactical_doc[last_ep_start:]
 
     def _arc_python_precheck(self, current_arc: dict, prev_arcs: list[dict]) -> dict:
         """[V49] Arc 수준 Python 기반 사전 검증"""
@@ -925,6 +905,26 @@ class ContinuityArcValidator:
             final_location = arc_end_state.get("location", joint_docs.get("final_location", "미정"))
             final_equipment = arc_end_state.get("equipment", joint_docs.get("physical_inventory", []))
 
+            # [TTE] 에피소드별 지능 추출 — 첫/끝 화 요약 (단순 절삭 제거)
+            _first_ep_tac = extract_episode_tactical(
+                tactical_doc,
+                ep_start if isinstance(ep_start, int) else 1,
+                episode_details=arc.get("episode_details"),
+                fallback_full=False,
+            )
+            _last_ep_tac = extract_episode_tactical(
+                tactical_doc,
+                ep_end if isinstance(ep_end, int) else 1,
+                episode_details=arc.get("episode_details"),
+                fallback_full=False,
+            )
+            if _first_ep_tac and _last_ep_tac and ep_start != ep_end:
+                _tac_summary = f"[{ep_start}화] {_first_ep_tac}\n[{ep_end}화] {_last_ep_tac}"
+            elif _first_ep_tac:
+                _tac_summary = _first_ep_tac
+            else:
+                _tac_summary = tactical_doc if tactical_doc else "없음"
+
             summary = f"""
 ═══ Arc {arc_no} (제 {ep_start}화 ~ 제 {ep_end}화) ═══
 [🔴 정확한 종료 상태 (state_constraints.arc_end_state) - 다음 Arc 시작점]
@@ -946,7 +946,7 @@ class ContinuityArcValidator:
 [수여물] {", ".join(grants) if grants else "없음"}
 
 [핵심 전술 요약]
-{tactical_doc[:1500] if tactical_doc else "없음"}...
+{_tac_summary[:4500]}
 """
             summaries.append(summary)
 
