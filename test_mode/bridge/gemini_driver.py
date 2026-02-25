@@ -1,20 +1,24 @@
 """
-[V63.4] Gemini Web Driver - Selenium 자동화
+[V63.5] Gemini Web Driver - Selenium 자동화
 =============================================
-순수 Selenium만으로 파일 업로드 + 채팅 자동화.
-pyautogui/ctypes/IME 불필요. HTMLInputElement.click() hijack 방식.
+파일 업로드 2가지 방식:
+  [기본] 원시 모드(pyautogui): OS 파일 대화상자에 경로 직접 입력 — Gemini UI 변경 무관
+  [레거시] JS 인터셉터 방식: HTMLInputElement.click() hijack — Gemini UI 업데이트 시 깨질 수 있음
 
 사전 조건:
   chrome.exe --remote-debugging-port=9222 --user-data-dir="C:\\chrome_debug"
 
 의존성:
-  pip install selenium webdriver-manager beautifulsoup4
+  pip install selenium webdriver-manager beautifulsoup4 pyautogui
 """
 
+import ctypes
 import json
 import os
 import re
+import threading
 import time
+from ctypes import wintypes
 from pathlib import Path
 
 from bs4 import BeautifulSoup
@@ -34,6 +38,31 @@ except ImportError:
         from ui_discovery import UIDiscovery
     except ImportError:
         UIDiscovery = None
+
+# pyautogui는 선택적 의존성 — 원시 업로드 모드에서만 필요
+try:
+    import pyautogui as _pyautogui
+    _PYAUTOGUI_AVAILABLE = True
+except ImportError:
+    _pyautogui = None
+    _PYAUTOGUI_AVAILABLE = False
+
+
+def _force_english_ime():
+    """Windows IME를 영문 입력 모드로 강제 전환 (파일 경로 입력 시 한글 방지)."""
+    try:
+        user32 = ctypes.WinDLL("user32", use_last_error=True)
+        imm32 = ctypes.WinDLL("imm32", use_last_error=True)
+        hwnd = user32.GetForegroundWindow()
+        if not hwnd:
+            return
+        himc = imm32.ImmGetContext(hwnd)
+        if not himc:
+            return
+        if imm32.ImmGetOpenStatus(himc):
+            imm32.ImmSetOpenStatus(himc, False)
+    except Exception:
+        pass
 
 
 def _extract_text(html: str) -> str:
@@ -511,8 +540,9 @@ class GeminiDriver:
 
     # ── 파일 업로드 (순수 Selenium) ───────────────────────
 
-    def _click_upload_menu(self) -> bool:
-        """업로드 메뉴 열기 → '파일 업로드' 옵션 클릭. 성공 시 True."""
+    def _click_upload_menu(self, install_intercept: bool = True) -> bool:
+        """업로드 메뉴 열기 → '파일 업로드' 옵션 클릭. 성공 시 True.
+        install_intercept=False: JS file-input 인터셉터 설치 생략 (원시 모드에서 불필요)."""
         # Step A: 업로드 메뉴 버튼 클릭
         # A-0: UIDiscovery 발견 셀렉터 우선 시도
         ui_sel = self._ui.get("upload_menu_btn") if self._ui else None
@@ -614,8 +644,9 @@ class GeminiDriver:
                                     clickable = anc
                             except Exception:
                                 pass
-                            # 클릭 직전 일회용 file-input 인터셉터 설치
-                            self._install_file_input_capture()
+                            # 클릭 직전 일회용 file-input 인터셉터 설치 (JS 인터셉터 모드에서만)
+                            if install_intercept:
+                                self._install_file_input_capture()
                             try:
                                 clickable.click()
                             except Exception:
@@ -628,9 +659,105 @@ class GeminiDriver:
                     continue
         return False
 
-    def upload_file(self, file_path: str):
-        """Gemini 웹에 파일 업로드 — OS 다이얼로그 없이 send_keys 직접 주입"""
+    def _upload_via_pyautogui(self, abs_path: str) -> bool:
+        """[원시 모드] pyautogui로 Windows OS 파일 대화상자에 경로 직접 입력.
+        OS 파일 대화상자는 Gemini UI 변경과 완전히 독립적이므로 깨질 위험 없음.
+
+        흐름: _click_upload_menu(install_intercept=False)
+              → OS 파일 대화상자 열림
+              → pyautogui: Alt+N → IME 영문 전환 → 경로 타이핑 → Enter × 2
+        """
+        if not _PYAUTOGUI_AVAILABLE:
+            self._log("[원시업로드] pyautogui 미설치 → pip install pyautogui")
+            return False
+        if not os.path.isfile(abs_path):
+            self._log(f"[원시업로드] 파일 없음: {abs_path}")
+            return False
+
+        type_ok = [False]  # 스레드 결과 공유
+
+        def _type_path():
+            # OS 파일 대화상자가 뜰 때까지 대기 (메뉴 클릭 후 ~2-4초)
+            time.sleep(3.5)
+            try:
+                _pyautogui.hotkey("alt", "n")  # Windows 파일명 입력창 포커스
+                time.sleep(0.3)
+                _force_english_ime()           # 한글 IME → 영문 전환
+                _pyautogui.write(abs_path, interval=0.008)
+                time.sleep(0.2)
+                _pyautogui.press("enter")      # 경로 확정
+                time.sleep(0.3)
+                _pyautogui.press("enter")      # 열기 확정
+                type_ok[0] = True
+            except Exception as e:
+                self._log(f"[원시업로드] pyautogui 입력 오류: {e}")
+
+        t = threading.Thread(target=_type_path, daemon=True)
+        t.start()
+
+        # 스레드가 대기하는 동안 Selenium으로 메뉴 클릭 → OS 대화상자 유발
+        # JS 인터셉터 불필요 (OS가 직접 파일을 받음)
+        menu_ok = self._click_upload_menu(install_intercept=False)
+        if not menu_ok:
+            self._log("[원시업로드] 업로드 메뉴 클릭 실패")
+            t.join(timeout=5)
+            return False
+
+        t.join(timeout=10)
+        if not type_ok[0]:
+            self._log("[원시업로드] 경로 입력 실패 (타임아웃 또는 예외)")
+            return False
+
+        # 업로드 완료 대기 — 파일명이 Gemini UI에 나타날 때까지 폴링
+        base = os.path.splitext(os.path.basename(abs_path))[0]
+        js_check = f"""
+            const base = "{base}";
+            const sels = [
+                "div[data-test-id='file-name']", "[class*='file']",
+                "[class*='chip']", "[class*='attachment']", "[class*='upload-item']"
+            ];
+            for (const s of sels) {{
+                for (const el of document.querySelectorAll(s)) {{
+                    if (el.textContent.includes(base)) return true;
+                }}
+            }}
+            return false;
+        """
+        deadline = time.time() + 15
+        while time.time() < deadline:
+            try:
+                if self.driver.execute_script(js_check):
+                    self._log(f"[원시업로드] 완료: {os.path.basename(abs_path)}")
+                    time.sleep(1)
+                    return True
+            except Exception:
+                pass
+            time.sleep(1)
+
+        # UI 확인 불가해도 경로 입력은 완료됨 → 경고 후 True 반환
+        self._log(f"[원시업로드] UI 확인 불가 — 계속 진행: {os.path.basename(abs_path)}")
+        time.sleep(2)
+        return True
+
+    def upload_file(self, file_path: str, use_primitive: bool = True):
+        """Gemini 웹에 파일 업로드.
+
+        use_primitive=True (기본): pyautogui 원시 모드 — OS 파일 대화상자 직접 제어.
+            Gemini UI 변경에 무관하게 안정적.
+        use_primitive=False: 레거시 JS 인터셉터 방식 — send_keys 직접 주입.
+            Gemini UI 업데이트 시 깨질 수 있음 (연결 끊어 둠).
+        """
         abs_path = os.path.abspath(file_path)
+
+        # ── [원시 모드] pyautogui로 OS 파일 대화상자 직접 제어 ──────────────
+        # Gemini UI 변경과 완전히 독립적. 기본값.
+        if use_primitive:
+            return self._upload_via_pyautogui(abs_path)
+
+        # ── [LEGACY] JS 인터셉터 방식 ────────────────────────────────────────
+        # Gemini가 UI를 변경할 때마다 깨질 수 있음.
+        # use_primitive=False 로 명시적으로 활성화해야 동작.
+        # ─────────────────────────────────────────────────────────────────────
 
         # interceptor 재설치 (페이지 이동 후 초기화됐을 수 있음)
         self._install_upload_interceptor()
