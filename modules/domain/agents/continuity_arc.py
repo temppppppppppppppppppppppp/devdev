@@ -326,7 +326,7 @@ class ContinuityArcValidator:
                     logging.warning(f"⚠️ [V60.73] internal_energy_loss 파싱 실패: '{loss_str}' → 50% 가정")
                     correct_energy = 50
 
-            correct_injuries = prev_end.get("injuries") or prev_shadow.get("expected_injuries", "없음")
+            correct_injuries = prev_end.get("injuries") or "없음"
             correct_location = prev_end.get("location") or prev_joint.get("final_location", "알 수 없음")
             correct_equipment = prev_end.get("equipment")
             if correct_equipment is None:
@@ -901,7 +901,7 @@ class ContinuityArcValidator:
                 all_grants.append((arc_no, grant))
 
             final_internal_energy = arc_end_state.get("internal_energy", status_shadow.get("internal_energy_loss", "?"))
-            final_injuries = arc_end_state.get("injuries", status_shadow.get("expected_injuries", "없음"))
+            final_injuries = arc_end_state.get("injuries") or "없음"
             final_location = arc_end_state.get("location", joint_docs.get("final_location", "미정"))
             final_equipment = arc_end_state.get("equipment", joint_docs.get("physical_inventory", []))
 

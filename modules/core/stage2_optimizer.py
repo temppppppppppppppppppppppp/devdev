@@ -51,7 +51,7 @@ class StateSnapshotInjector:
             "location": joint_docs.get("final_location") or arc_end.get("location", "알 수 없음"),
             "inventory": joint_docs.get("physical_inventory") or arc_end.get("equipment", []),
             "internal_energy": arc_end.get("internal_energy", 100),
-            "injuries": arc_end.get("injuries") or status_shadow.get("expected_injuries", "없음"),
+            "injuries": arc_end.get("injuries") or "없음",
             "grants_received": state_constraints.get("grants_received", []),
             "items_acquired_total": self._collect_all_items(prev_arc),
         }
@@ -189,6 +189,9 @@ class ArcAutoCorrector:
         # 4. joint_docs 자동 추출/수정
         arc = self._fix_joint_docs(arc)
 
+        # 4-1. arc_end_state.location을 joint_docs.final_location으로 동기화
+        arc = self._sync_final_location(arc)
+
         # 5. 필수 필드 보장
         arc = self._ensure_required_fields(arc)
 
@@ -274,9 +277,8 @@ class ArcAutoCorrector:
         prev_location = None
 
         joint = prev_arc.get("joint_docs", {})
-        if joint.get("final_location"):
-            prev_location = joint["final_location"]
-        else:
+        prev_location = joint.get("final_location")
+        if not prev_location:
             end_state = prev_arc.get("state_constraints", {}).get("arc_end_state", {})
             prev_location = end_state.get("location")
 
@@ -319,7 +321,7 @@ class ArcAutoCorrector:
                 start_state["internal_energy"] = prev_energy
 
         # 부상 계승
-        prev_injuries = prev_end.get("injuries") or prev_shadow.get("expected_injuries")
+        prev_injuries = prev_end.get("injuries")
         if prev_injuries:
             current_injuries = start_state.get("injuries", "")
             if current_injuries != prev_injuries:
@@ -361,6 +363,30 @@ class ArcAutoCorrector:
                     break
 
         arc["joint_docs"] = joint
+        return arc
+
+    def _sync_final_location(self, arc: dict) -> dict:
+        """joint_docs.final_location → arc_end_state.location 동기화
+
+        joint_docs.final_location이 SSOT (LLM이 tactical_doc에서 생성).
+        arc_end_state.location은 Python이 이전 Arc에서 복사하므로 stale 가능.
+        """
+        joint_loc = arc.get("joint_docs", {}).get("final_location", "")
+        if not joint_loc:
+            return arc
+
+        state = arc.get("state_constraints", {})
+        arc_end = state.get("arc_end_state", {})
+        current_loc = arc_end.get("location", "")
+
+        if current_loc != joint_loc:
+            self.corrections_made.append(
+                f"arc_end_state 위치 동기화: '{current_loc}' → '{joint_loc}'"
+            )
+            arc_end["location"] = joint_loc
+            state["arc_end_state"] = arc_end
+            arc["state_constraints"] = state
+
         return arc
 
     def _ensure_required_fields(self, arc: dict) -> dict:
