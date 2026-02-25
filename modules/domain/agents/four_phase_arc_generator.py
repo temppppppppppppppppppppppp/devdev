@@ -438,12 +438,18 @@ class FourPhaseArcGenerator(BaseAgent):
                 pipeline_result["final_verdict"] = "PASS"
                 logging.info(f"✅ [Phase 3] PASS - Arc {arc_no} 생성 완료")
                 _conf = validation_result.get("confidence", 0)
-                _n_issues = len(validation_result.get("issues", []))
+                _all_issues = validation_result.get("issues", [])
+                _n_issues = len(_all_issues)
+                _summary = validation_result.get("summary", "")
+                _major_issues = [i for i in _all_issues if i.get("severity") == "MAJOR"]
                 print(f"\n{'=' * 60}")
                 print(f"  [Stage2 Validator] Arc {arc_no} PASS (confidence={_conf:.2f}, issues={_n_issues})")
-                _pass_fb = validation_result.get("feedback", "")
-                if _pass_fb:
-                    print(f"  피드백: {str(_pass_fb)[:200]}")
+                if _summary:
+                    print(f"  ✅ 검증 요약: {str(_summary)[:300]}")
+                if _major_issues:
+                    print(f"  ⚠️ MAJOR 경고 (통과 — Director에게 위임):")
+                    for _mi in _major_issues[:3]:
+                        print(f"     - {_mi.get('issue', '?')[:120]}")
                 print(f"{'=' * 60}\n")
                 return best_arc, pipeline_result
             else:
@@ -740,7 +746,7 @@ class FourPhaseArcGenerator(BaseAgent):
         if isinstance(raw_energy, (int, float)) and raw_energy < 100:
             logging.info(f"🩹 [V62.2] 내공 자연 회복: {int(raw_energy)}% → 100% (아크 간 휴식)")
 
-        raw_injuries = arc_end.get("injuries") or shadow.get("expected_injuries", "없음")
+        raw_injuries = arc_end.get("injuries") or "없음"
         final_injuries = self._sanitize_injuries(raw_injuries)
         final_location = arc_end.get("location") or joint.get("final_location", "알 수 없음")
         final_equipment = arc_end.get("equipment")

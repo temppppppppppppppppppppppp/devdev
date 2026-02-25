@@ -65,7 +65,7 @@ def generate_prev_arc_summary(
                     final_energy = Stage2Limits.INTERNAL_ENERGY_FALLBACK
 
             if final_injuries is None:
-                final_injuries = shadow.get("expected_injuries", "없음")
+                final_injuries = "없음"
 
             final_location = arc_end.get("location") or joint.get("final_location", "?")
 

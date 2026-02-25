@@ -266,6 +266,17 @@ class Stage2PreflightAnalysis:
                             all_refined_arcs, resolved_plots_summary=_resolved_plots
                         )
                         if _pf_result:
+                            # LLM이 서사에서 추론한 부상은 신뢰 불가.
+                            # arc_end_state.injuries (공식 DB 값)로 강제 덮어씀.
+                            _last_arc = all_refined_arcs[-1]
+                            _actual_injuries = (
+                                _last_arc.get("state_constraints", {})
+                                .get("arc_end_state", {})
+                                .get("injuries") or "없음"
+                            )
+                            _ws = _pf_result.setdefault("world_state", {})
+                            _ps = _ws.setdefault("protagonist_status", {})
+                            _ps["injuries"] = _actual_injuries
                             _pf_injection = self.ctx.agents["preflight"].generate_analyst_injection(_pf_result)
                     except Exception as pf_err:
                         logging.warning(f"⚠️ [Preflight] 스킵: {str(pf_err)[:50]}")
