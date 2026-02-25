@@ -30,6 +30,7 @@ from .catharsis_timer import CatharsisTimer
 from .consistency_validator import ConsistencyValidator
 from .continuity_validator import ContinuityValidator
 from .scoring_validator import ScoringValidator
+from .threshold_helper import _threshold
 
 # [V56] Pre-LLM Validator (Python 기반 사전검증)
 try:
@@ -202,7 +203,7 @@ class ValidationOrchestrator:
         if context and isinstance(context, dict):
             _pov = context.get("pov", "")
         self.pre_llm = PreLLMValidator(genre=genre, pov=_pov) if PRE_LLM_AVAILABLE else None
-        self.use_pre_llm = config.get("use_pre_llm", True)  # 기본 활성화
+        self.use_pre_llm = config.get("use_pre_llm", _threshold("orchestrator.use_pre_llm", True))
 
         # [V47] TIER 0.5: CONTINUITY (에피소드 간 연속성)
         # [C4-P1-2] context는 dict (ProjectContext가 아님).
@@ -225,27 +226,33 @@ class ValidationOrchestrator:
         self.advisory = AdvisoryValidator(client=client, model=advisory_model)
 
         # Self-Consistency 설정
-        self.use_self_consistency = config.get("use_self_consistency", True)
-        self.consistency_votes = config.get("consistency_votes", 3)
+        self.use_self_consistency = config.get(
+            "use_self_consistency", _threshold("orchestrator.use_self_consistency", True)
+        )
+        self.consistency_votes = config.get("consistency_votes", _threshold("orchestrator.consistency_votes", 3))
 
         # [V43] 추가 품질 평가 모듈
-        catharsis_max_gap = config.get("catharsis_max_gap", 3)
+        catharsis_max_gap = config.get("catharsis_max_gap", _threshold("orchestrator.catharsis_max_gap", 3))
         self.catharsis_timer = CatharsisTimer(max_frustration=catharsis_max_gap, genre=genre)
         self.action_evaluator = ActionSceneEvaluator(genre=genre)
 
         # [Phase 3] 장기 일관성 검증 — [TF-C04] 기본 활성화
-        self.use_retrospective = config.get("use_retrospective", True)
+        self.use_retrospective = config.get("use_retrospective", _threshold("orchestrator.use_retrospective", True))
         self.retrospective = None  # Lazy initialization
 
         # [Phase 5.2.2] Reflexion 시스템 (선택적)
-        self.use_reflexion = config.get("use_reflexion", True)  # 기본 활성화
+        self.use_reflexion = config.get("use_reflexion", _threshold("orchestrator.use_reflexion", True))
         self.reflexion = None  # Lazy initialization
 
         # ═══════════════════════════════════════════════════════════════
         # [V59] 병렬 검증 + 적응형 임계값 설정
         # ═══════════════════════════════════════════════════════════════
-        self.use_adaptive_threshold = config.get("use_adaptive_threshold", True)
-        self.max_parallel_workers = config.get("max_parallel_workers", 3)
+        self.use_adaptive_threshold = config.get(
+            "use_adaptive_threshold", _threshold("orchestrator.use_adaptive_threshold", True)
+        )
+        self.max_parallel_workers = config.get(
+            "max_parallel_workers", _threshold("orchestrator.max_parallel_workers", 3)
+        )
 
         # 적응형 임계값 히스토리 추적
         self.validation_history: list[dict] = []  # [{ep_num, score, passed, timestamp}]
@@ -649,8 +656,6 @@ class ValidationOrchestrator:
         logging.info(f"Vote 1: {first_score}점, {first_eval['message']}")
 
         # [I-05] 조건부 판단: 경계값을 validation.yaml에서 로드 + 소프트마진
-        from modules.validation.threshold_helper import _threshold
-
         ambiguous_lower = int(_threshold("adaptive_threshold.ambiguous_lower", 70))
         ambiguous_upper = int(_threshold("adaptive_threshold.ambiguous_upper", 85))
         soft_margin = int(_threshold("adaptive_threshold.soft_margin", 2))
@@ -1377,8 +1382,6 @@ class ValidationOrchestrator:
         final_threshold = base_threshold + episode_adjustment + streak_adjustment + pattern_adjustment + arc_adjustment
 
         # [I-01] 범위 제한 — 바닥값을 validation.yaml에서 로드
-        from modules.validation.threshold_helper import _threshold
-
         floor = int(_threshold("adaptive_threshold.floor", 60))
         final_threshold = max(floor, min(90, final_threshold))
 
@@ -1457,8 +1460,6 @@ class ValidationOrchestrator:
                     adjustment += PATTERN_ADJUSTMENTS["declining_quality"]
                 # 상승 추세 감지 [I-01] cascade cap 적용
                 elif recent_scores[-1] > recent_scores[-3] + 5:
-                    from modules.validation.threshold_helper import _threshold
-
                     cascade_cap = int(_threshold("adaptive_threshold.cascade_cap_passes", 10))
                     if self.consecutive_passes < cascade_cap:
                         adjustment += PATTERN_ADJUSTMENTS["improving_quality"]

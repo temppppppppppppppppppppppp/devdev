@@ -499,6 +499,8 @@ class Stage2Orchestrator:
                     )
                     if _val["action"] == "retry":
                         current_feedback = _val["current_feedback"]
+                        # [FlowGuard→FourPhase] 검증 피드백을 FourPhase 경로에도 전달
+                        director_feedback_for_fourphase = current_feedback
                         attempt += 1
                         continue
                     refined_arc = _val["refined_arc"]

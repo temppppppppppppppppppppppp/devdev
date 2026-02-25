@@ -93,6 +93,17 @@ class ContinuityValidator:
         violations = []
         warnings = []
 
+        # [TF-4] skip_continuity 최상단 체크 — Blueprint 모드에서는 prev_hud 유무와 무관하게 PASS
+        skip = validation_context.get("skip_continuity", False) if isinstance(validation_context, dict) else False
+        if skip:
+            return {
+                "tier": "CONTINUITY",
+                "passed": True,
+                "violations": [],
+                "warnings": [],
+                "message": "skip_continuity=True — 연속성 검증 스킵 (Blueprint 모드)",
+            }
+
         # 1화는 이전 에피소드가 없으므로 스킵
         if current_ep <= 1:
             return {
@@ -109,20 +120,18 @@ class ContinuityValidator:
         if prev_hud is None:
             prev_hud = self._get_prev_hud(current_ep, validation_context)
 
-        # [P3-01] prev_hud 완전 누락 시 DEGRADED 조기 반환
-        # skip_continuity=True (Blueprint 모드)면 PASS, 아니면 fail-closed (TF-15 P0-06)
+        # [P3-01] prev_hud 완전 누락 시 DEGRADED 조기 반환 — fail-closed (TF-15 P0-06)
         if not prev_hud:
-            skip = validation_context.get("skip_continuity", False) if isinstance(validation_context, dict) else False
             logging.warning(
                 "[CONTINUITY] prev_hud 누락 — HUD 의존 연속성 검증 DEGRADED. "
                 "validation_context에 prev_hud를 주입하세요."
             )
             return {
                 "tier": "CONTINUITY",
-                "passed": bool(skip),
-                "score": 1.0 if skip else 0.0,
+                "passed": False,
+                "score": 0.0,
                 "degraded": True,
-                "violations": [] if skip else [
+                "violations": [
                     {
                         "type": "prev_hud_missing",
                         "severity": "BLOCKING",
@@ -130,10 +139,9 @@ class ContinuityValidator:
                         "fix_suggestion": "inject prev_hud into validation_context before continuity validation",
                     }
                 ],
-                "warnings": ["prev_hud 누락으로 연속성 검증 스킵" if skip else "prev_hud 누락으로 연속성 검증 DEGRADED"],
-                "message": "prev_hud missing - continuity validation skipped (blueprint mode)" if skip
-                           else "prev_hud missing - continuity validation failed (degraded)",
-                "violation_count": 0,
+                "warnings": ["prev_hud 누락으로 연속성 검증 DEGRADED"],
+                "message": "prev_hud missing - continuity validation failed (degraded)",
+                "violation_count": 1,
                 "warning_count": 1,
             }
 

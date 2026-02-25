@@ -228,14 +228,13 @@ class TestContinuityArcValidatorIntraArc:
         assert "Arc 1" in result
 
     def test_extract_last_episode_content(self):
-        """마지막 에피소드 내용 추출"""
-        inspector = _make_mock_inspector()
-        validator = ContinuityArcValidator(inspector)
+        """마지막 에피소드 내용 추출 — [TTE] 공유 유틸로 전환"""
+        from modules.core.tactical_utils import extract_episode_tactical
 
         tactical_doc = (
             "[제1화 전술 설계] 시작 내용\n[제2화 전술 설계] 중간 내용\n[제3화 전술 설계] 마지막 내용 여기서 끝난다"
         )
-        result = validator._extract_last_episode_content(tactical_doc, 3)
+        result = extract_episode_tactical(tactical_doc, 3, fallback_full=False)
         assert "마지막 내용" in result
 
     def test_current_inventory_does_not_bypass_duplicate_detection(self):

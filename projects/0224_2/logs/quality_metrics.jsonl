@@ -8,3 +8,5 @@
 {"type": "validation", "timestamp": "2026-02-24T18:11:50.450430", "ep_num": 8, "stage": 3, "decision": "PASS", "score": 95, "violations": [], "warnings": 0}
 {"type": "validation", "timestamp": "2026-02-24T18:14:11.184043", "ep_num": 9, "stage": 3, "decision": "PASS", "score": 95, "violations": [], "warnings": 0}
 {"type": "validation", "timestamp": "2026-02-24T18:16:36.627010", "ep_num": 10, "stage": 3, "decision": "PASS", "score": 95, "violations": [], "warnings": 0}
+{"type": "validation", "timestamp": "2026-02-24T19:39:14.638742", "ep_num": 1, "stage": 4, "decision": "PASS", "score": 0, "violations": [], "warnings": 0}
+{"type": "validation", "timestamp": "2026-02-24T19:43:48.194429", "ep_num": 2, "stage": 4, "decision": "PASS", "score": 0, "violations": [], "warnings": 0}

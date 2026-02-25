@@ -380,7 +380,7 @@ PLAN_ARC_PROMPT_V25 = """
     "ep_end": "ep_start + ep_count - 1 로 계산",
     "title": "에피소드 묶음 제목",
     "beat_sequence": [
-        "제 N화: [패턴/비트] 구체적 실행 액션 및 복선 노출 지점",
+        "제 N화: [패턴] 구체적 사건 → 행동 → 반응 (에피소드 제목이 아닌 서사 내용을 기술할 것)",
         "..."
     ],
     "state_constraints": {{

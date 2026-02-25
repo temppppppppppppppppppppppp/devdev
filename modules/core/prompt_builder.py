@@ -11,6 +11,7 @@ import logging
 import re
 
 from modules.core.constants import ManuscriptLimits
+from modules.core.tactical_utils import extract_episode_tactical
 
 # [V60.10] 수여물 패턴 (main_a.py에서 이관)
 GRANT_PATTERNS_COMPILED = [
@@ -696,7 +697,7 @@ class PromptBuilder:
             f"🏅 [이미 수여받은 권한/패]:\n"
             f"   {grants_str}\n"
             f"══════════════════════════════════════\n"
-            f"[📜 핵심 전술 요약]: {(last_arc.get('tactical_doc') or '')[:600]}...\n"
+            f"[📜 핵심 전술 요약]: {extract_episode_tactical(last_arc.get('tactical_doc'), last_arc.get('ep_end') or last_arc.get('ep_start', 1), episode_details=last_arc.get('episode_details'))[:1800]}\n"
             f"══════════════════════════════════════\n"
             f"🚨 [CONTINUITY LOCK] 위 상태는 절대 무시하거나 리셋할 수 없습니다. "
             f"현재 아크는 위 종료 시점에서 단 1초의 공백 없이 이어져야 합니다."

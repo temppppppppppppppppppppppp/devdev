@@ -152,11 +152,15 @@ class BlockingValidatorConsistencyChecks:
         # HUD에서 권위 관련 데이터 추출
         actual_truth = martial_hud.get("actual_truth", {})
         status_tags = actual_truth.get("status_tags", [])
-        reputation = actual_truth.get("reputation", 0)
-        try:  # [V70] DB TEXT 타입 방어
-            reputation = int(reputation) if not isinstance(reputation, int | float) else reputation
-        except (ValueError, TypeError):
-            reputation = 0
+        reputation = actual_truth.get("reputation")
+        # [TF-3] dict/list/None → "미초기화"로 간주하여 체크 스킵
+        if isinstance(reputation, dict | list) or reputation is None:
+            reputation = -1  # 미초기화 센티널
+        else:
+            try:  # [V70] DB TEXT 타입 방어
+                reputation = int(reputation) if not isinstance(reputation, int | float) else reputation
+            except (ValueError, TypeError):
+                reputation = -1  # 변환 불가 → 미초기화
 
         if not isinstance(status_tags, list):
             status_tags = []
@@ -164,7 +168,8 @@ class BlockingValidatorConsistencyChecks:
         # 낮은 지위 태그
         low_status_tags = ["하인", "노예", "평민", "무명", "낭인", "거지"]
         has_low_status = any(tag in status_tags for tag in low_status_tags)
-        has_low_reputation = reputation < 20
+        # [TF-3] reputation < 0 = 미초기화 → low_reputation 판정 제외
+        has_low_reputation = 0 <= reputation < 20
 
         if not (has_low_status or has_low_reputation):
             return {"check": "authority_exercise", "passed": True}

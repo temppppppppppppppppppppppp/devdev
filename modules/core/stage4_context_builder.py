@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 from modules.core.context_advisor import RetrievalSources
 from modules.core.context_compression import ContextCompressor
+from modules.core.tactical_utils import extract_episode_tactical
 from modules.core.writer_prompt_builders import (
     build_anti_trope_instructions as _build_anti_trope,
 )
@@ -775,7 +776,17 @@ class Stage4ContextBuilder:
                     if _npc_names:
                         _mq_queries.append(" ".join(_npc_names[:5]))
                 if (not _use_advisor_path) and arc_tactical and len(arc_tactical) > 50:
-                    _mq_queries.append(arc_tactical[:600])
+                    # [TTE] 에피소드별 지능 추출 (단순 절삭 제거)
+                    _ep_tac = extract_episode_tactical(
+                        arc_tactical,
+                        next_ep,
+                        episode_details=(arc_data or {}).get("episode_details"),
+                        fallback_full=False,
+                    )
+                    if _ep_tac:
+                        _mq_queries.append(_ep_tac[:1800])
+                    else:
+                        _mq_queries.append(arc_tactical[:1800])
                 _genre_queries = {
                     "hunter": ["던전 클리어 각성 스킬 랭크"],
                     "investment": ["포트폴리오 거래 수익률 투자"],

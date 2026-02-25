@@ -195,9 +195,7 @@ class TestStage3HandleSuccessQualityDashboard:
 
         qd.record_validation.assert_called_once()
         call_kwargs = qd.record_validation.call_args
-        assert call_kwargs.kwargs.get("stage") == 3 or (
-            len(call_kwargs.args) >= 3 and call_kwargs.args[2] == 3
-        )
+        assert call_kwargs.kwargs.get("stage") == 3 or (len(call_kwargs.args) >= 3 and call_kwargs.args[2] == 3)
         result_arg = call_kwargs.kwargs.get("result") or call_kwargs.args[1]
         assert result_arg["decision"] == "PASS"
 
@@ -265,9 +263,7 @@ class TestStage3HandleFailureQualityDashboard:
 
         qd.record_validation.assert_called_once()
         call_kwargs = qd.record_validation.call_args
-        assert call_kwargs.kwargs.get("stage") == 3 or (
-            len(call_kwargs.args) >= 3 and call_kwargs.args[2] == 3
-        )
+        assert call_kwargs.kwargs.get("stage") == 3 or (len(call_kwargs.args) >= 3 and call_kwargs.args[2] == 3)
         result_arg = call_kwargs.kwargs.get("result") or call_kwargs.args[1]
         assert result_arg["decision"] == "REJECT"
 
@@ -354,9 +350,7 @@ class TestValidationOrchestratorFailureLearnerWiring:
         failure_learner.record_failure.assert_called()
 
         # At least one call must have stage=4
-        stage4_calls = [
-            c for c in failure_learner.record_failure.call_args_list if c.kwargs.get("stage") == 4
-        ]
+        stage4_calls = [c for c in failure_learner.record_failure.call_args_list if c.kwargs.get("stage") == 4]
         assert len(stage4_calls) >= 1, (
             f"Expected record_failure(stage=4, ...) but got: {failure_learner.record_failure.call_args_list}"
         )
@@ -542,7 +536,9 @@ class TestInterviewRoundProtagonistNameWiring:
 
         ctx.current_project = MagicMock()
         ctx.current_project.master_bible = {
-            "protagonist_name": protagonist_name,
+            "MasterBible": {
+                "ProjectData": {"CoreIdentity": {"protagonist": protagonist_name}},
+            },
         }
 
         # state_tracker — no NPC registry
@@ -581,9 +577,10 @@ class TestInterviewRoundProtagonistNameWiring:
             {"warnings": [], "warning_count": 0, "metrics": {"length": 600}, "focus_points": []}
         ]
         round_ctx.consistency_validator = MagicMock()
-        round_ctx.consistency_validator.validate.side_effect = (
-            lambda ms, cv: captured_cv_context.update(cv) or {"violations": [], "score_penalty": 0}
-        )
+        round_ctx.consistency_validator.validate.side_effect = lambda ms, cv: captured_cv_context.update(cv) or {
+            "violations": [],
+            "score_penalty": 0,
+        }
         round_ctx.blocking_validator = MagicMock()
         round_ctx.blocking_validator.validate.return_value = {"passed": True, "failures": []}
         round_ctx.continuity_validator = MagicMock()
@@ -638,7 +635,7 @@ class TestInterviewRoundProtagonistNameWiring:
         assert captured_cv_context["protagonist_name"] == prot_name
 
     def test_protagonist_name_from_protagonist_config(self):
-        """protagonist_name also resolves via protagonist_config.name path."""
+        """protagonist_name also resolves via CoreIdentity.protagonist path."""
         from modules.core.stage4_interview_round import Stage4InterviewRound
 
         prot_name = "주인공이름"
@@ -646,10 +643,10 @@ class TestInterviewRoundProtagonistNameWiring:
         ctx.ui = MagicMock()
         ctx.perf_timer = MagicMock()
         ctx.current_project = MagicMock()
-        # Use the protagonist_config sub-path
+        # Use the CoreIdentity.protagonist path (HUDKeys 0순위)
         ctx.current_project.master_bible = {
             "MasterBible": {
-                "protagonist_config": {"name": prot_name},
+                "ProjectData": {"CoreIdentity": {"protagonist": prot_name}},
             }
         }
         ctx.state_tracker = MagicMock()
@@ -671,9 +668,10 @@ class TestInterviewRoundProtagonistNameWiring:
             {"warnings": [], "warning_count": 0, "metrics": {"length": 600}, "focus_points": []}
         ]
         round_ctx.consistency_validator = MagicMock()
-        round_ctx.consistency_validator.validate.side_effect = (
-            lambda ms, cv: captured.update(cv) or {"violations": [], "score_penalty": 0}
-        )
+        round_ctx.consistency_validator.validate.side_effect = lambda ms, cv: captured.update(cv) or {
+            "violations": [],
+            "score_penalty": 0,
+        }
         round_ctx.blocking_validator = MagicMock()
         round_ctx.blocking_validator.validate.return_value = {"passed": True, "failures": []}
         round_ctx.continuity_validator = MagicMock()
@@ -764,9 +762,10 @@ class TestInterviewRoundFailureLearnerWiring:
             {"warnings": [], "warning_count": 0, "metrics": {"length": 600}, "focus_points": []}
         ]
         round_ctx.consistency_validator = MagicMock()
-        round_ctx.consistency_validator.validate.side_effect = (
-            lambda ms, cv: captured.update(cv) or {"violations": [], "score_penalty": 0}
-        )
+        round_ctx.consistency_validator.validate.side_effect = lambda ms, cv: captured.update(cv) or {
+            "violations": [],
+            "score_penalty": 0,
+        }
         round_ctx.blocking_validator = MagicMock()
         round_ctx.blocking_validator.validate.return_value = {"passed": True, "failures": []}
         round_ctx.continuity_validator = MagicMock()
@@ -847,9 +846,10 @@ class TestInterviewRoundFailureLearnerWiring:
             {"warnings": [], "warning_count": 0, "metrics": {"length": 600}, "focus_points": []}
         ]
         round_ctx.consistency_validator = MagicMock()
-        round_ctx.consistency_validator.validate.side_effect = (
-            lambda ms, cv: captured.update(cv) or {"violations": [], "score_penalty": 0}
-        )
+        round_ctx.consistency_validator.validate.side_effect = lambda ms, cv: captured.update(cv) or {
+            "violations": [],
+            "score_penalty": 0,
+        }
         round_ctx.blocking_validator = MagicMock()
         round_ctx.blocking_validator.validate.return_value = {"passed": True, "failures": []}
         round_ctx.continuity_validator = MagicMock()

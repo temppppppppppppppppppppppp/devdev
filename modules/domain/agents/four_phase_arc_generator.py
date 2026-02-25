@@ -238,6 +238,7 @@ class FourPhaseArcGenerator(BaseAgent):
         _prev_rejected_arc = None
         _prev_reject_feedback = ""
         _prev_selected_strategy = ""  # [EnsembleFB] REJECT된 당선 전략 이름
+        _spare_candidates: list[dict] = []  # [SpareCandidate] 앙상블 차순위 재활용 풀
 
         for retry in range(max_internal_retries + 1):
             pipeline_result["retries"] = retry
@@ -326,23 +327,36 @@ class FourPhaseArcGenerator(BaseAgent):
                     best_arc = None
 
             if not best_arc:
-                best_arc, all_candidates = self.ensemble.generate_ensemble(
-                    arc_no=arc_no,
-                    ep_start=ep_start,
-                    vol_strategy=vol_strategy,
-                    curr_block=curr_block,
-                    prev_arc_context=prev_arc_context,
-                    constraint_block=full_constraint_block,
-                    assets=assets,
-                    feedback=feedback,
-                    strategy_specific_feedback=_prev_reject_feedback if retry > 0 else "",  # [EnsembleFB]
-                    rejected_strategy=_prev_selected_strategy if retry > 0 else "",  # [EnsembleFB]
-                    protagonist_name=protagonist_name,
-                    protagonist_config=protagonist_config,  # [V60.88]
-                    entity_registry=entity_registry,  # [V60.92] Entity Registry
-                    ep_count=ep_count,  # [V61.1] 가변 페이싱
-                    retry=retry,  # [V61.5] 재시도 시 thinking 다운그레이드
-                )
+                # [SpareCandidate] 차순위 후보가 남아있으면 재생성 없이 재활용
+                if _spare_candidates:
+                    best_arc = _spare_candidates.pop(0)
+                    all_candidates = [best_arc]
+                    logging.info(f"♻️ [SpareCandidate] 차순위 재활용 (남은 후보: {len(_spare_candidates)}개)")
+                else:
+                    best_arc, all_candidates = self.ensemble.generate_ensemble(
+                        arc_no=arc_no,
+                        ep_start=ep_start,
+                        vol_strategy=vol_strategy,
+                        curr_block=curr_block,
+                        prev_arc_context=prev_arc_context,
+                        constraint_block=full_constraint_block,
+                        assets=assets,
+                        feedback=feedback,
+                        strategy_specific_feedback=_prev_reject_feedback if retry > 0 else "",  # [EnsembleFB]
+                        rejected_strategy=_prev_selected_strategy if retry > 0 else "",  # [EnsembleFB]
+                        protagonist_name=protagonist_name,
+                        protagonist_config=protagonist_config,  # [V60.88]
+                        entity_registry=entity_registry,  # [V60.92] Entity Registry
+                        ep_count=ep_count,  # [V61.1] 가변 페이싱
+                        retry=retry,  # [V61.5] 재시도 시 thinking 다운그레이드
+                    )
+                    # [SpareCandidate] 차순위 후보 보존 (best_arc 제외한 나머지)
+                    if all_candidates and len(all_candidates) > 1:
+                        for _c in all_candidates:
+                            if _c is not best_arc and _c not in _spare_candidates:
+                                _spare_candidates.append(_c)
+                        if _spare_candidates:
+                            logging.info(f"♻️ [SpareCandidate] 차순위 {len(_spare_candidates)}개 보존")
 
             if not best_arc:
                 logging.warning("❌ [Phase 2] Ensemble 생성 실패")
@@ -423,6 +437,14 @@ class FourPhaseArcGenerator(BaseAgent):
                 self.stats["phase3_pass"] += 1
                 pipeline_result["final_verdict"] = "PASS"
                 logging.info(f"✅ [Phase 3] PASS - Arc {arc_no} 생성 완료")
+                _conf = validation_result.get("confidence", 0)
+                _n_issues = len(validation_result.get("issues", []))
+                print(f"\n{'=' * 60}")
+                print(f"  [Stage2 Validator] Arc {arc_no} PASS (confidence={_conf:.2f}, issues={_n_issues})")
+                _pass_fb = validation_result.get("feedback", "")
+                if _pass_fb:
+                    print(f"  피드백: {str(_pass_fb)[:200]}")
+                print(f"{'=' * 60}\n")
                 return best_arc, pipeline_result
             else:
                 self.stats["phase3_reject"] += 1
@@ -439,9 +461,25 @@ class FourPhaseArcGenerator(BaseAgent):
                     _prev_rejected_arc = best_arc
                     _prev_reject_feedback = feedback
                     _prev_selected_strategy = _current_strategy  # [EnsembleFB]
+                    # [SpareCandidate] score가 너무 낮으면 동일 배치 차순위도 품질 부족 → 버림
+                    # confidence는 0.0~1.0 float (UnifiedArcValidator 반환)
+                    _reject_confidence = validation_result.get("confidence", 0)
+                    if _reject_confidence < 0.5:
+                        _spare_candidates.clear()
+                        logging.info(f"[SpareCandidate] confidence={_reject_confidence:.2f} < 0.5 → 차순위 전량 폐기")
 
                 # REJECT 기록
                 issues = validation_result.get("issues", [])
+                print(f"\n{'=' * 60}")
+                print(f"  [Stage2 Validator] Arc {arc_no} REJECT ({retry + 1}/{max_internal_retries + 1})")
+                print(f"  confidence: {validation_result.get('confidence', 0):.2f}")
+                for issue in issues[:5]:
+                    sev = issue.get("severity", "?")
+                    cat = issue.get("category", "?")
+                    text = issue.get("issue", "?")
+                    print(f"  [{sev}][{cat}] {text[:120]}")
+                print(f"  피드백 → 다음 시도: {str(_validator_feedback)[:200]}")
+                print(f"{'=' * 60}\n")
                 if issues:
                     first_issue = issues[0]
                     self.negative_injector.record_rejection(

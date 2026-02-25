@@ -352,6 +352,33 @@ class Stage2Finalizer:
                 _must_not = [ln.strip() for ln in _constraint_lines if "금지" in ln or "MUST NOT" in ln or "절대" in ln]
                 refined_arc["constraint_summary"] = "\n".join(_must_not[:10]) if _must_not else ""
 
+            # [Equipment Sync] arc_start_state.equipment ← 이전 Arc 종료 소지품 강제 동기화
+            if all_refined_arcs:
+                _prev = all_refined_arcs[-1]
+                _prev_end = _prev.get("state_constraints", {}).get("arc_end_state", {})
+                _correct_equip = _prev_end.get("equipment")
+                if _correct_equip is None:
+                    _correct_equip = _prev.get("joint_docs", {}).get("physical_inventory", [])
+                # 타입 정규화
+                if isinstance(_correct_equip, str):
+                    _correct_equip = [_correct_equip] if _correct_equip and _correct_equip != "[]" else []
+                elif isinstance(_correct_equip, dict):
+                    _correct_equip = [_correct_equip] if _correct_equip else []
+                elif not isinstance(_correct_equip, list):
+                    _correct_equip = []
+
+                _curr_sc = refined_arc.get("state_constraints", {})
+                _curr_start = _curr_sc.get("arc_start_state", {})
+                _old_equip = _curr_start.get("equipment", [])
+                if _old_equip != _correct_equip:
+                    _curr_start["equipment"] = _correct_equip
+                    _curr_sc["arc_start_state"] = _curr_start
+                    refined_arc["state_constraints"] = _curr_sc
+                    self.ctx.ui.log(
+                        f"      🔧 [Equipment Sync] Arc {global_arc_no} 시작 소지품 → "
+                        f"이전 Arc 종료 소지품으로 동기화 ({len(_correct_equip)}개 아이템)"
+                    )
+
             # [P0-B3-1] arc_no 보장 — validate_arc 전 주입
             if isinstance(refined_arc, dict) and "arc_no" not in refined_arc:
                 refined_arc["arc_no"] = global_arc_no

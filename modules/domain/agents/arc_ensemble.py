@@ -406,8 +406,7 @@ class ArcEnsembleGenerator(BaseAgent):
                         "모든 항목을 Arc tactical_doc에 반영하세요.\n"
                         "특히 foreshadow는 tactical_doc 씬에 직접 심고, "
                         "callback은 이전 복선이 회수되는 씬을 명시하고, "
-                        "emotional_beat/tension_level은 화별 감정 밀도 설계에 반영하세요:\n"
-                        + "\n".join(_ext_parts)
+                        "emotional_beat/tension_level은 화별 감정 밀도 설계에 반영하세요:\n" + "\n".join(_ext_parts)
                     )
 
             _use_cached_context = bool(cache_name)
@@ -433,7 +432,7 @@ class ArcEnsembleGenerator(BaseAgent):
                 extended_block_guide=self._escape_braces(extended_block_guide),  # [TF-9]
                 vol_strategy=self._escape_braces(vol_strategy[:2000] if vol_strategy else "(없음)"),
                 assets=self._escape_braces(json.dumps(assets, ensure_ascii=False)[:2000] if assets else "{}"),
-                feedback=self._escape_braces(_merged_feedback[:1500] if _merged_feedback else "(없음)"),
+                feedback=self._escape_braces(_merged_feedback[:3000] if _merged_feedback else "(없음)"),
                 entity_registry_section=self._escape_braces(entity_registry_section),  # [V60.92]
                 arc_no=arc_no,
                 ep_start=ep_start,
@@ -457,7 +456,7 @@ class ArcEnsembleGenerator(BaseAgent):
                     extended_block_guide=self._escape_braces(extended_block_guide),  # [TF-9]
                     vol_strategy=self._escape_braces(vol_strategy[:2000] if vol_strategy else "(없음)"),
                     assets=self._escape_braces(json.dumps(assets, ensure_ascii=False)[:2000] if assets else "{}"),
-                    feedback=self._escape_braces(_merged_feedback[:1500] if _merged_feedback else "(없음)"),
+                    feedback=self._escape_braces(_merged_feedback[:3000] if _merged_feedback else "(없음)"),
                     entity_registry_section=self._escape_braces(entity_registry_section),  # [V60.92]
                     arc_no=arc_no,
                     ep_start=ep_start,

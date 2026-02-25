@@ -231,7 +231,66 @@ class Stage2ValidationPipeline:
             self.ctx.ui.log(f"   🚨 [Flow Guard] {flow_guard.get('reason')}")
             if callable(getattr(self.ctx, "audit_event", None)):
                 self.ctx.audit_event("flow_guard", flow_guard.get("reason"), {"arc_no": global_arc_no})
-            current_feedback = flow_guard.get("feedback", "서사 폭주/정체 위험이 감지되었습니다.")
+
+            # 구조적 피드백 조립
+            diag = flow_guard.get("diagnostics", {})
+            diag_type = diag.get("type", "unknown")
+            base_feedback = flow_guard.get("feedback", "서사 폭주/정체 위험이 감지되었습니다.")
+
+            structured_parts = [f"[Flow Guard REJECT — {flow_guard.get('reason', '?')}]"]
+
+            if diag_type == "beat_condensed":
+                structured_parts.append(
+                    f"측정치: 평균 {diag.get('avg_words', '?')}단어/비트 "
+                    f"(최소 기준: {diag.get('min_avg_words', '?')}단어)"
+                )
+                failing = diag.get("failing_beats", [])
+                if failing:
+                    structured_parts.append("문제 비트:")
+                    for fb in failing:
+                        structured_parts.append(
+                            f"  - 비트 {fb['idx']} ({fb['words']}단어): "
+                            f'"{fb["text"]}" ← 최소 {diag.get("min_word_per_beat", 4)}단어 필요'
+                        )
+                structured_parts.append("")
+                structured_parts.append("[수정 지침]")
+                structured_parts.append(
+                    "beat_sequence에는 에피소드 제목이 아닌, 각 비트의 '사건 → 행동 → 반응' 트리플릿을 작성해야 합니다."
+                )
+                structured_parts.append(
+                    '나쁜 예: "제11화: 붉은 파도"  →  '
+                    '좋은 예: "제11화: 유가 폭등 속 공매도 포지션 위기, '
+                    '손절 대신 역베팅 결단, 시장 반전으로 수익 확보"'
+                )
+
+            elif diag_type == "beat_count":
+                structured_parts.append(
+                    f"현재 비트 수: {diag.get('beat_count', '?')}개 / "
+                    f"필요: 최소 {diag.get('min_beats', '?')}개 (에피소드 {diag.get('ep_count', '?')}화분)"
+                )
+                structured_parts.append("[수정 지침] 각 화마다 최소 1개의 독립 비트를 배정하라.")
+
+            elif diag_type == "empty_beats":
+                structured_parts.append(
+                    f"유효 비트: {diag.get('normalized_count', '?')}개 / 전체 비트: {diag.get('total_beats', '?')}개"
+                )
+                structured_parts.append("[수정 지침] 비어 있는 비트에 구체적 사건/행동을 기술하라.")
+
+            else:
+                structured_parts.append(base_feedback)
+
+            # 재시도 가이드 추가
+            if callable(getattr(self.ctx, "get_adaptive_feedback_intensity", None)):
+                adaptive = self.ctx.get_adaptive_feedback_intensity(attempt, stage=2)
+                structured_parts.append(f"\n[재시도 {attempt + 1}회차] {adaptive['guidance']}")
+
+            current_feedback = "\n".join(structured_parts)
+
+            print(f"\n{'=' * 60}")
+            print("  [Stage2 Flow Guard] REJECT")
+            print(f"  사유: {flow_guard.get('reason', '?')}")
+            print(f"  피드백: {current_feedback[:300]}")
+            print(f"{'=' * 60}\n")
             return {"action": "retry", "current_feedback": current_feedback}
 
         # 🛡️ [Duplicate Guard]
@@ -662,6 +721,12 @@ class Stage2ValidationPipeline:
                 "status": "REJECT",
                 "reason": "서사 폭주 위험: 비트 수가 화수보다 부족",
                 "feedback": "각 화마다 고유 사건을 분리해 비트를 늘려라.",
+                "diagnostics": {
+                    "type": "beat_count",
+                    "beat_count": len(beats) if isinstance(beats, list) else 0,
+                    "min_beats": _min_beats,
+                    "ep_count": ep_count,
+                },
             }
 
         # dict 형태 비트도 처리 (LLM이 {"beat": "...", "ep": 1} 반환 시)
@@ -680,16 +745,51 @@ class Stage2ValidationPipeline:
                 "status": "REJECT",
                 "reason": "서사 폭주 위험: 비트 내용이 비어 있음",
                 "feedback": "각 화의 비트를 구체적 사건/행동으로 작성하라.",
+                "diagnostics": {
+                    "type": "empty_beats",
+                    "normalized_count": len(normalized),
+                    "total_beats": len(beats) if isinstance(beats, list) else 0,
+                },
             }
 
-        # 1) 서사 폭주 감지
-        word_counts = [len(t.split()) for t in normalized if t]
+        # 1) 서사 폭주 감지 — "제N화" 접두사 제거 후 실제 서사 내용만 측정
+        _ep_prefix = re.compile(r"^제\s*\d+화\s*")
+        stripped = [_ep_prefix.sub("", t).strip() for t in normalized if t]
+        word_counts = [len(t.split()) for t in stripped if t]
         avg_words = sum(word_counts) / max(1, len(word_counts))
+        # 에피소드 제목만 있는 비트 감지
+        title_only_count = sum(1 for t in stripped if len(t.split()) <= 2)
+        is_title_only = title_only_count > len(stripped) // 2
+
         if avg_words < _min_avg_words or any(c < _min_word_per_beat for c in word_counts):
+            failing_beats = []
+            for i, (wc, text) in enumerate(zip(word_counts, stripped)):
+                if wc < _min_word_per_beat:
+                    failing_beats.append({"idx": i + 1, "words": wc, "text": text[:50]})
+            reason = (
+                "서사 폭주 위험: beat_sequence에 에피소드 제목만 기재됨"
+                if is_title_only
+                else "서사 폭주 위험: 비트가 과도하게 축약됨"
+            )
+            feedback = (
+                "beat_sequence에 에피소드 제목이 아닌 구체적 서사 비트를 작성하라. "
+                "각 비트는 '사건 → 행동 → 반응'을 포함해야 한다."
+                if is_title_only
+                else "각 화마다 사건/행동/반응을 최소 1개씩 명시하라."
+            )
             return {
                 "status": "REJECT",
-                "reason": "서사 폭주 위험: 비트가 과도하게 축약됨",
-                "feedback": "각 화마다 사건/행동/반응을 최소 1개씩 명시하라.",
+                "reason": reason,
+                "feedback": feedback,
+                "diagnostics": {
+                    "type": "beat_condensed",
+                    "avg_words": round(avg_words, 1),
+                    "min_avg_words": _min_avg_words,
+                    "min_word_per_beat": _min_word_per_beat,
+                    "total_beats": len(word_counts),
+                    "failing_beats": failing_beats[:5],
+                    "word_counts": word_counts,
+                },
             }
 
         # 2) [V60.15] 진짜 서사 구조 분석
