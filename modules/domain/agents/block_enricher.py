@@ -364,7 +364,7 @@ class BlockEnricher(BaseAgent):
 
             if validation.get("validation_result") == "FAIL":
                 # 1차 검증 실패 → 원본 보존 패치 모드
-                _original_text = json.dumps(result, ensure_ascii=False, indent=2)[:20000]
+                _original_text = json.dumps(result, ensure_ascii=False, indent=2)[:60000]
                 retry_prompt = (
                     prompt + f"\n\n[🔧 패치 모드: 이전 농축 결과 원본 보존 + 지적사항만 수정]"
                     f"\n## 이전 농축 결과\n{_original_text}"
@@ -399,7 +399,7 @@ class BlockEnricher(BaseAgent):
                 # Director REJECT → 원본 보존 패치 모드
                 feedback = director_audit.get("feedback", "품질 미달")
                 critical_issues = director_audit.get("critical_issues", [])
-                _original_text = json.dumps(result, ensure_ascii=False, indent=2)[:20000]
+                _original_text = json.dumps(result, ensure_ascii=False, indent=2)[:60000]
 
                 retry_prompt = (
                     prompt
@@ -878,13 +878,13 @@ class BlockEnricher(BaseAgent):
 {prev_reward}
 
 ### [📐 품질 기준]
-{json.dumps(reference_block, ensure_ascii=False)[:500]}
+{json.dumps(reference_block, ensure_ascii=False)[:1500]}
 
 ### [🎯 재농축 대상]
 {json.dumps(current_block, ensure_ascii=False, indent=2)}
 
 ### [📚 다음 Block] (미래 오염 금지)
-{json.dumps(next_block, ensure_ascii=False)[:300] if next_block else "없음"}
+{json.dumps(next_block, ensure_ascii=False)[:900] if next_block else "없음"}
 
 ### [🔧 필수 수정사항]
 1. context 시작부에 이전 Block의 결과(획득물, 상태변화)를 자연스럽게 언급

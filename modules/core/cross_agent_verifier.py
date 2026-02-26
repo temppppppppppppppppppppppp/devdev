@@ -302,8 +302,8 @@ JSON 형식으로 응답:
 
         # Phase 2: LLM Deep Check (선택적)
         if use_llm:
-            arc_text = json.dumps(arc_design, ensure_ascii=False, indent=2)[:4000]
-            bp_text = json.dumps(blueprint, ensure_ascii=False, indent=2)[:6000]
+            arc_text = json.dumps(arc_design, ensure_ascii=False, indent=2)[:12000]
+            bp_text = json.dumps(blueprint, ensure_ascii=False, indent=2)[:18000]
 
             # [V70] .format() → .replace() (템플릿 내 JSON 예시 브레이스 충돌 방지)
             prompt = self.ARCHITECT_COMPLIANCE_PROMPT.replace("{arc_design}", arc_text).replace("{blueprint}", bp_text)

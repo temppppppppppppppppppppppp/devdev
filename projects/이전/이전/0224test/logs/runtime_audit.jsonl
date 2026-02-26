@@ -1,0 +1,11 @@
+{"timestamp": "2026-02-24 12:43:31", "type": "flow_guard", "message": "서사 폭주 위험: 비트 수가 화수보다 부족", "data": {"arc_no": 1}}
+{"timestamp": "2026-02-24 12:43:32", "type": "flow_guard", "message": "서사 폭주 위험: 비트 수가 화수보다 부족", "data": {"arc_no": 1}}
+{"timestamp": "2026-02-24 13:02:35", "type": "flow_guard", "message": "서사 폭주 위험: 비트 수가 화수보다 부족", "data": {"arc_no": 1}}
+{"timestamp": "2026-02-24 13:05:06", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-24 13:05:25", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "items_tracked": 4}}
+{"timestamp": "2026-02-24 13:08:57", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["시작 위치 수정: '이전 Arc 종료 위치' → '서울 강남구 테헤란로 이면도로에 위치한 15평형 낡은 오피스텔 (SW인베스트먼트 임시 사무실)'", "시작 내공 수정: None% → 100%", "시작 부상 수정: '' → '없음'"]}}
+{"timestamp": "2026-02-24 13:08:57", "type": "flow_guard", "message": "서사 폭주 위험: 비트 수가 화수보다 부족", "data": {"arc_no": 2}}
+{"timestamp": "2026-02-24 13:13:39", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["시작 위치 수정: '이전 Arc 종료 위치' → '서울 강남구 테헤란로 이면도로에 위치한 15평형 낡은 오피스텔 (SW인베스트먼트 임시 사무실)'", "시작 내공 수정: None% → 100%", "시작 부상 수정: '' → '없음'"]}}
+{"timestamp": "2026-02-24 13:13:39", "type": "flow_guard", "message": "서사 폭주 위험: 비트 수가 화수보다 부족", "data": {"arc_no": 2}}
+{"timestamp": "2026-02-24 13:17:36", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-24 13:17:57", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "items_tracked": 5}}

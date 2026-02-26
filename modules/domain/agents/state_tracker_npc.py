@@ -67,6 +67,76 @@ _RE_PERM_SCAR = [
 ]
 
 
+# ═══════════════════════════════════════════════════════════════
+# NPC 사망 추출 시 제외할 일반 명사 (고유명사 오탐 방지)
+# ═══════════════════════════════════════════════════════════════
+_NPC_DEATH_EXCLUDE_WORDS = frozenset(
+    [
+        # 기존 exclude_words
+        "주인공",
+        "적",
+        "상대",
+        "자신",
+        "목숨",
+        "생명",
+        "원수",
+        "원한",
+        "일격",
+        "공격",
+        "반격",
+        # 관용 표현 오탐 방지 ("세상을 떠나다", "인생이 끝나다" 등)
+        "세상",
+        "세계",
+        "인생",
+        "시간",
+        "사람",
+        "인간",
+        "모든",
+        "누군가",
+        "그녀",
+        "그것",
+        "소문",
+        "소식",
+        "이야기",
+        "사건",
+        "사태",
+        "상황",
+        "현실",
+        "미래",
+        "과거",
+        # 추상 명사 / 비고유명사
+        "조직",
+        "세력",
+        "집단",
+        "단체",
+        "국가",
+        "나라",
+        "도시",
+        "마을",
+        "회사",
+        "기업",
+        "시장",
+        "경제",
+        "투자",
+        "금융",
+        "주식",
+        "자본",
+        "이름",
+        "칭호",
+        "부상",
+        "전투",
+        "데이터",
+        "후원자",
+        "몬스터",
+        "적들",
+        "그들",
+        "아군",
+        "동맹",
+        "원래",
+    ]
+)
+
+
 class StateTrackerNPC:
     """[V64.P3] NPC 관련 메서드 서브모듈"""
 
@@ -578,27 +648,43 @@ class StateTrackerNPC:
         ep_start = arc.get("ep_start", 0)  # 롤백 시 episode_no 기준 삭제를 위해
         dead_npcs = []
 
-        # [V61] 1순위: state_changes 필드 직접 읽기 (정확도 ~98%)
+        # [V61] 1순위: state_changes 필드 직접 읽기
+        # [V70.1] 일반 명사 exclude + LLM 검증 추가 (기존 regex 경로와 동일 수준)
         state_changes = arc.get("state_changes", {})
         if isinstance(state_changes, dict):
             npc_deaths = state_changes.get("npc_deaths", [])
             if isinstance(npc_deaths, list) and npc_deaths:
+                _sc_candidates = []
                 for death in npc_deaths:
                     if isinstance(death, dict):
                         npc_name = death.get("name", "")
-                        episode = death.get("episode", arc_no)
-                        cause = death.get("cause", "state_changes에서 추출")
-                        if npc_name and len(npc_name) >= 2:
-                            self.register_npc_death(
-                                npc_name, arc_no, f"Arc {arc_no} Ep {episode}: {cause}", episode_no=ep_start
-                            )
-                            dead_npcs.append(npc_name)
-                    elif isinstance(death, str) and len(death) >= 2:
-                        # 단순 문자열 형태도 지원
+                    elif isinstance(death, str):
+                        npc_name = death
+                    else:
+                        continue
+                    if npc_name and len(npc_name) >= 2 and npc_name not in _NPC_DEATH_EXCLUDE_WORDS:
+                        _sc_candidates.append((npc_name, death))
+                # LLM 검증 (regex 경로와 동일 수준 적용)
+                if _sc_candidates:
+                    _names_only = [c[0] for c in _sc_candidates]
+                    _tactical = arc.get("tactical_doc", "")
+                    if isinstance(_tactical, dict):
+                        _tactical = "\n".join(str(v) for v in _tactical.values() if v)
+                    _verified = self._verify_npc_names_llm(_names_only, _tactical, arc_no)
+                    for npc_name, death_data in _sc_candidates:
+                        if npc_name not in _verified:
+                            logging.info(f"🔍 [V70.1] NPC 사망 후보 '{npc_name}' LLM 검증 탈락 (state_changes 경로)")
+                            continue
+                        if isinstance(death_data, dict):
+                            episode = death_data.get("episode", arc_no)
+                            cause = death_data.get("cause", "state_changes에서 추출")
+                        else:
+                            episode = arc_no
+                            cause = "state_changes에서 추출"
                         self.register_npc_death(
-                            death, arc_no, f"Arc {arc_no} state_changes에서 추출", episode_no=ep_start
+                            npc_name, arc_no, f"Arc {arc_no} Ep {episode}: {cause}", episode_no=ep_start
                         )
-                        dead_npcs.append(death)
+                        dead_npcs.append(npc_name)
                 if dead_npcs:
                     return list(set(dead_npcs))
 
@@ -614,7 +700,7 @@ class StateTrackerNPC:
             r"([가-힣]{2,10})[을를]\s*(?:끝장|마무리|처리)",
         ]
 
-        exclude_words = ["주인공", "적", "상대", "자신", "목숨", "생명", "원수", "원한", "일격", "공격", "반격"]
+        exclude_words = _NPC_DEATH_EXCLUDE_WORDS
 
         regex_candidates = []
         for pattern in death_patterns:

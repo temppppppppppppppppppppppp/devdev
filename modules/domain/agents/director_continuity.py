@@ -78,7 +78,7 @@ class DirectorContinuityValidator:
 {self._d._escape_braces(registry_str)}
 
 ### 검증 대상 ({content_type})
-{self._d._escape_braces(content[:5000])}
+{self._d._escape_braces(content[:15000])}
 
 ### 검증 기준
 ⚠️ 중요: 이름이 비슷해도 **다른 인물**이면 불일치가 아니다! (예: '김성태'와 '김태민'은 성만 같은 별개 인물)
@@ -228,7 +228,21 @@ class DirectorContinuityValidator:
             scene_keywords = {}
             for scene_key in scene_keys:
                 scene_content = scene_breakdown.get(scene_key, "")
-                if isinstance(scene_content, str):
+                if isinstance(scene_content, dict):
+                    # dict 타입: summary + key_events에서 키워드 추출
+                    text_parts = []
+                    if scene_content.get("summary"):
+                        text_parts.append(str(scene_content["summary"]))
+                    for ev in scene_content.get("key_events") or []:
+                        text_parts.append(str(ev))
+                    combined = " ".join(text_parts)
+                    keywords = re.findall(r"[가-힣]{2,5}", combined)
+                    scene_keywords[scene_key] = {
+                        "type": scene_content.get("type", "Unknown"),
+                        "keywords": keywords[:5] if keywords else [],
+                        "content_sample": combined[:100],
+                    }
+                elif isinstance(scene_content, str):
                     # 씬 타입 추출 ([Core], [Buffer], [Cliffhanger] 등)
                     type_match = re.search(r"\[(Core|Buffer|Cliffhanger|Climax)\]", scene_content, re.IGNORECASE)
                     scene_type = type_match.group(1) if type_match else "Unknown"
@@ -477,7 +491,7 @@ class DirectorContinuityValidator:
 ### 📋 검사 대상: 제{ep_num}화 신규 원고
 
 ### 현재 원고 (제{ep_num}화)
-{self._d._escape_braces(current_manuscript[:12000])}
+{self._d._escape_braces(current_manuscript[:36000])}
 
 ### 🔍 검사 지시
 위 신규 원고가 캐시에 저장된 이전 원고들 (제1화~제{ep_num - 1}화)과 충돌하는지 검사하세요.

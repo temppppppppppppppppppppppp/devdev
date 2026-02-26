@@ -1,9 +1,0 @@
-{
-  "tag": "stage3_complete",
-  "timestamp": "2026-02-05 11:50:21",
-  "total_events": 44,
-  "counts": {
-    "db_commit": 22,
-    "blueprint_success": 22
-  }
-}

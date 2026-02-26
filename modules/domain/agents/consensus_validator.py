@@ -303,7 +303,7 @@ class ConsensusValidator(BaseAgent):
                 perspective_name=perspective["name"],
                 arc_data=self._escape_braces(arc_data),
                 prev_summary=self._escape_braces(prev_summary),
-                constraints=self._escape_braces(constraints[:2000] if constraints else "(없음)"),
+                constraints=self._escape_braces(constraints[:6000] if constraints else "(없음)"),
                 python_advisory=self._escape_braces(python_advisory_text),
             )
         )

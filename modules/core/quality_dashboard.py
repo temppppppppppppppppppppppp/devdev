@@ -618,15 +618,21 @@ class QualityDashboard:
 
             scene_coverage = current_metrics.get("scene_coverage", -1)
             if scene_coverage >= 0:
-                if scene_coverage < 0.3:
+                if scene_coverage < 30:
                     probability -= 30
-                    result["factors"].append({"name": "씬 반영 부족", "impact": f"{scene_coverage:.0%}", "weight": -30})
-                elif scene_coverage < 0.5:
+                    result["factors"].append(
+                        {"name": "씬 반영 부족", "impact": f"{scene_coverage:.0f}%", "weight": -30}
+                    )
+                elif scene_coverage < 50:
                     probability -= 10
-                    result["factors"].append({"name": "씬 반영 경계", "impact": f"{scene_coverage:.0%}", "weight": -10})
-                elif scene_coverage >= 0.7:
+                    result["factors"].append(
+                        {"name": "씬 반영 경계", "impact": f"{scene_coverage:.0f}%", "weight": -10}
+                    )
+                elif scene_coverage >= 70:
                     probability += 10
-                    result["factors"].append({"name": "씬 반영 우수", "impact": f"{scene_coverage:.0%}", "weight": +10})
+                    result["factors"].append(
+                        {"name": "씬 반영 우수", "impact": f"{scene_coverage:.0f}%", "weight": +10}
+                    )
 
             pre_fails = current_metrics.get("pre_checklist_fails", 0)
             pre_warnings = current_metrics.get("pre_checklist_warnings", 0)

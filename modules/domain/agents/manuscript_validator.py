@@ -288,9 +288,21 @@ class ManuscriptValidator:
                 expected_scenes += 1
 
                 # 핵심 키워드 추출 (한글 2-5자 단어)
-                if isinstance(scene_content, str):
+                if isinstance(scene_content, dict):
+                    # dict 타입: summary + key_events에서 키워드 추출
+                    text_parts = []
+                    if scene_content.get("summary"):
+                        text_parts.append(str(scene_content["summary"]))
+                    for ev in scene_content.get("key_events") or []:
+                        text_parts.append(str(ev))
+                    combined = " ".join(text_parts)
+                    keywords = self._SCENE_KEYWORD_PATTERN.findall(combined)
+                    filtered = [
+                        k for k in keywords if k not in ["하다", "되다", "있다", "없다", "이다", "그리고", "하지만"]
+                    ]
+                    scene_keywords[scene_key] = filtered[:5]
+                elif isinstance(scene_content, str):
                     keywords = self._SCENE_KEYWORD_PATTERN.findall(scene_content)
-                    # 빈도 높은 키워드 제외 (조사, 일반어)
                     filtered = [
                         k for k in keywords if k not in ["하다", "되다", "있다", "없다", "이다", "그리고", "하지만"]
                     ]

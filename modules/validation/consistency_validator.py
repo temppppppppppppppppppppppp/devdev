@@ -122,11 +122,28 @@ class ConsistencyValidator:
         # ═══════════════════════════════════════════════════════════════
         # 3. 직위/호칭 일관성 (정당화 불가 - 명확한 오류)
         # ═══════════════════════════════════════════════════════════════
-        character_rank = actual_truth.get("realm", actual_truth.get("rank", ""))
+        # Guard의 hierarchy titles 키와 actual_truth 값을 매칭 (장르 무관)
+        character_rank = ""
+        titles_keys = set()
+        if self.guard and hasattr(self.guard, "get_hierarchy_rules"):
+            hierarchy = self.guard.get_hierarchy_rules()
+            if hierarchy:
+                titles_keys = set(hierarchy.get("titles", {}).keys())
+                for field_val in actual_truth.values():
+                    if isinstance(field_val, str) and field_val in titles_keys:
+                        character_rank = field_val
+                        break
+        if not character_rank:
+            character_rank = actual_truth.get("realm", actual_truth.get("rank", ""))
         hierarchy_check = self._check_hierarchy_consistency(manuscript, character_rank)
         if not hierarchy_check["passed"]:
             for v in hierarchy_check["violations"]:
-                unjustifiable.append({**v, "category": "hierarchy"})
+                if character_rank in titles_keys:
+                    # Python이 등급을 확신 → 정당화 불가
+                    unjustifiable.append({**v, "category": "hierarchy"})
+                else:
+                    # Python이 등급을 모름 → Director 판단에 위임
+                    justifiable.append({**v, "category": "hierarchy"})
                 violations.append({**v, "category": "hierarchy"})
 
         # ═══════════════════════════════════════════════════════════════

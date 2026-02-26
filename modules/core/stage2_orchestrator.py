@@ -395,6 +395,7 @@ class Stage2Orchestrator:
                     grand_obj=grand_obj,
                     global_arc_no=global_arc_no,
                     constraint_db=constraint_db,
+                    genre=_genre_for_tracker,
                 )
                 arc_drive = _setup["arc_drive"]
                 _cached_preflight_injection = _setup["cached_preflight_injection"]
@@ -641,7 +642,7 @@ class Stage2Orchestrator:
                         [
                             "",
                             "[현재 제약 조건]",
-                            str(current_constraints)[:2000] if current_constraints else "없음",
+                            str(current_constraints)[:6000] if current_constraints else "없음",
                             "",
                             "[마지막 생성된 Arc 데이터]",
                         ]

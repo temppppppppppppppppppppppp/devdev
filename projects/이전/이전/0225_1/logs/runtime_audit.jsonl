@@ -1,0 +1,72 @@
+{"timestamp": "2026-02-24 22:26:05", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-24 22:26:25", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "items_tracked": 5}}
+{"timestamp": "2026-02-24 22:28:44", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["시작 위치 수정: '서울 여의도, SW인베스트먼트 임시 사무실' → '서울 성북동 본가, 한시우의 개인 침실 (서재 면담 직후)'"]}}
+{"timestamp": "2026-02-24 22:29:44", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-24 22:30:08", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "items_tracked": 7}}
+{"timestamp": "2026-02-24 22:32:39", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["시작 위치 수정: '서울 여의도, SW인베스트먼트 임시 사무실' → '서울 성북동 자택 개인 서재, 붉은색과 푸른색 호가창이 점멸하는 다중 모니터 앞'"]}}
+{"timestamp": "2026-02-24 22:32:39", "type": "flow_guard", "message": "서사 폭주 위험: 비트가 과도하게 축약됨", "data": {"arc_no": 3}}
+{"timestamp": "2026-02-24 22:34:47", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["시작 위치 수정: '서울 여의도, SW인베스트먼트 임시 사무실' → '서울 성북동 자택 개인 서재, 붉은색과 푸른색 호가창이 점멸하는 다중 모니터 앞'"]}}
+{"timestamp": "2026-02-24 22:34:47", "type": "flow_guard", "message": "서사 폭주 위험: 비트가 과도하게 축약됨", "data": {"arc_no": 3}}
+{"timestamp": "2026-02-24 22:38:50", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["시작 내공 수정: None% → 100%", "시작 부상 수정: '' → '정상'"]}}
+{"timestamp": "2026-02-24 22:38:50", "type": "flow_guard", "message": "서사 폭주 위험: 비트 수가 화수보다 부족", "data": {"arc_no": 3}}
+{"timestamp": "2026-02-24 22:42:47", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["시작 위치 수정: '서울 여의도, SW인베스트먼트 임시 사무실' → '서울 성북동 자택 개인 서재, 붉은색과 푸른색 호가창이 점멸하는 다중 모니터 앞'"]}}
+{"timestamp": "2026-02-24 22:42:47", "type": "flow_guard", "message": "서사 폭주 위험: 비트가 과도하게 축약됨", "data": {"arc_no": 3}}
+{"timestamp": "2026-02-24 22:46:42", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["시작 내공 수정: None% → 100%", "시작 부상 수정: '' → '정상'"]}}
+{"timestamp": "2026-02-24 22:46:42", "type": "flow_guard", "message": "서사 폭주 위험: 비트 수가 화수보다 부족", "data": {"arc_no": 3}}
+{"timestamp": "2026-02-24 22:46:42", "type": "arc_design_failed", "message": "max retries exhausted", "data": {"arc_no": 3, "batch_start": 0, "batch_end": 3}}
+{"timestamp": "2026-02-24 23:36:20", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "items_tracked": 7}}
+{"timestamp": "2026-02-24 23:50:08", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["시작 위치 수정: '서울 여의도, SW인베스트먼트 임시 사무실' → '서울 성북동 자택 개인 서재, 붉은색과 푸른색 호가창이 점멸하는 다중 모니터 앞'"]}}
+{"timestamp": "2026-02-24 23:50:08", "type": "flow_guard", "message": "서사 폭주 위험: 비트가 과도하게 축약됨", "data": {"arc_no": 3}}
+{"timestamp": "2026-02-24 23:55:53", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["시작 위치 수정: '서울 성북동 자택 개인 서재' → '서울 성북동 자택 개인 서재, 붉은색과 푸른색 호가창이 점멸하는 다중 모니터 앞'", "시작 부상 수정: '안압 상승 및 가벼운 편두통' → '정상'"]}}
+{"timestamp": "2026-02-24 23:56:55", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-24 23:57:15", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "items_tracked": 8}}
+{"timestamp": "2026-02-24 23:59:33", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 4, "corrections": ["시작 위치 수정: '서울 강남구 테헤란로, SW인베스트먼트 신규 사무실' → '서울 강남구, SW인베스트먼트 소규모 원룸 오피스 내 한시우의 책상 앞'"]}}
+{"timestamp": "2026-02-24 23:59:33", "type": "flow_guard", "message": "서사 폭주 위험: 비트가 과도하게 축약됨", "data": {"arc_no": 4}}
+{"timestamp": "2026-02-25 00:03:50", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 4, "corrections": ["시작 위치 수정: '서울 강남구 테헤란로, SW인베스트먼트 신규 사무실' → '서울 강남구, SW인베스트먼트 소규모 원룸 오피스 내 한시우의 책상 앞'"]}}
+{"timestamp": "2026-02-25 00:04:44", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 00:05:03", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 4, "items_tracked": 10}}
+{"timestamp": "2026-02-25 00:08:13", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 4, "items_tracked": 10}}
+{"timestamp": "2026-02-25 00:12:41", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 5, "corrections": ["시작 위치 수정: 'SW인베스트먼트 대표실 (연말 결산을 마친 심야의 오피스)' → '서울 강남구, SW인베스트먼트 대표실 내 멀티 모니터 앞'"]}}
+{"timestamp": "2026-02-25 00:13:31", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 00:13:48", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 5, "items_tracked": 5}}
+{"timestamp": "2026-02-25 00:16:25", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 6, "corrections": ["시작 위치 수정: 'SW인베스트먼트 대표실' → 'SW인베스트먼트 대표실 (연말 결산을 마친 심야의 오피스)'"]}}
+{"timestamp": "2026-02-25 00:17:38", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 00:17:56", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 6, "items_tracked": 5}}
+{"timestamp": "2026-02-25 08:05:58", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 08:05:58", "type": "blueprint_success", "message": "ep_1_blueprint_generated", "data": {"ep_num": 1, "arc_no": 1, "strategy": "asp_correction", "score": 97, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-25 08:09:34", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 08:09:34", "type": "blueprint_success", "message": "ep_2_blueprint_generated", "data": {"ep_num": 2, "arc_no": 1, "strategy": "dialogue_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-25 08:10:54", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 08:10:54", "type": "blueprint_success", "message": "ep_3_blueprint_generated", "data": {"ep_num": 3, "arc_no": 1, "strategy": "action_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-25 08:12:12", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 08:12:12", "type": "blueprint_success", "message": "ep_4_blueprint_generated", "data": {"ep_num": 4, "arc_no": 1, "strategy": "dialogue_focused", "score": 98, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-25 08:14:11", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 08:14:11", "type": "blueprint_success", "message": "ep_5_blueprint_generated", "data": {"ep_num": 5, "arc_no": 1, "strategy": "emotion_focused", "score": 99, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-25 12:26:07", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 12:26:07", "type": "blueprint_success", "message": "ep_6_blueprint_generated", "data": {"ep_num": 6, "arc_no": 2, "strategy": "action_focused", "score": 98, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-25 12:28:03", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 12:28:03", "type": "blueprint_success", "message": "ep_7_blueprint_generated", "data": {"ep_num": 7, "arc_no": 2, "strategy": "emotion_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-25 12:30:07", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 12:30:07", "type": "blueprint_success", "message": "ep_8_blueprint_generated", "data": {"ep_num": 8, "arc_no": 2, "strategy": "action_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-25 12:32:07", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 12:32:07", "type": "blueprint_success", "message": "ep_9_blueprint_generated", "data": {"ep_num": 9, "arc_no": 2, "strategy": "emotion_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-25 12:33:56", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 12:33:56", "type": "blueprint_success", "message": "ep_10_blueprint_generated", "data": {"ep_num": 10, "arc_no": 2, "strategy": "action_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-25 12:36:23", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 12:36:23", "type": "blueprint_success", "message": "ep_11_blueprint_generated", "data": {"ep_num": 11, "arc_no": 3, "strategy": "dialogue_focused", "score": 98, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-25 12:37:59", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 12:37:59", "type": "blueprint_success", "message": "ep_12_blueprint_generated", "data": {"ep_num": 12, "arc_no": 3, "strategy": "dialogue_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-25 12:39:35", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 12:39:35", "type": "blueprint_success", "message": "ep_13_blueprint_generated", "data": {"ep_num": 13, "arc_no": 3, "strategy": "action_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-25 12:41:25", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 12:41:25", "type": "blueprint_success", "message": "ep_14_blueprint_generated", "data": {"ep_num": 14, "arc_no": 3, "strategy": "action_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-25 12:43:04", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 12:43:04", "type": "blueprint_success", "message": "ep_15_blueprint_generated", "data": {"ep_num": 15, "arc_no": 3, "strategy": "action_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-25 12:45:52", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 12:45:52", "type": "blueprint_success", "message": "ep_16_blueprint_generated", "data": {"ep_num": 16, "arc_no": 4, "strategy": "dialogue_focused", "score": 95, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-25 12:47:43", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 12:47:43", "type": "blueprint_success", "message": "ep_17_blueprint_generated", "data": {"ep_num": 17, "arc_no": 4, "strategy": "emotion_focused", "score": 98, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-25 12:49:37", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 12:49:37", "type": "blueprint_success", "message": "ep_18_blueprint_generated", "data": {"ep_num": 18, "arc_no": 4, "strategy": "action_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-25 12:51:18", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 12:51:18", "type": "blueprint_success", "message": "ep_19_blueprint_generated", "data": {"ep_num": 19, "arc_no": 4, "strategy": "emotion_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false}}

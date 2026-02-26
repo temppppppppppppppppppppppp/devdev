@@ -37,6 +37,18 @@ _NEI_GENRE_DETECT_MAP: dict[str, str] = {
     "투자": "investment",
     "fantasy": "fantasy",
     "판타지": "fantasy",
+    "cooking": "cooking",
+    "요리": "cooking",
+    "alt_history": "alt_history",
+    "대체역사": "alt_history",
+    "actor": "actor",
+    "배우": "actor",
+    "sports": "sports",
+    "스포츠": "sports",
+    "medical": "medical",
+    "의학": "medical",
+    "composer": "composer",
+    "작곡": "composer",
 }
 
 
@@ -70,6 +82,7 @@ class FourPhaseArcGenerator(BaseAgent):
                         break
         except Exception:
             pass
+        self._genre = _detected_genre
         self.negative_injector = NegativeExampleInjector(_detected_genre)
 
         # 통계
@@ -254,7 +267,7 @@ class FourPhaseArcGenerator(BaseAgent):
                 logging.info(f"📋 [Phase 1] 제약 수집 중... (이전 Arc {len(prev_arcs)}개)")
 
                 preflight_result = self.preflight.analyze(prev_arcs)
-                preflight_injection = self.preflight.generate_analyst_injection(preflight_result)
+                preflight_injection = self.preflight.generate_analyst_injection(preflight_result, genre=self._genre)
                 compiled_constraints = self.compiler.compile(prev_arcs)
                 negative_examples = self.negative_injector.generate_injection()
                 self_check = self.negative_injector.generate_self_check_prompt()
@@ -424,6 +437,7 @@ class FourPhaseArcGenerator(BaseAgent):
                 state_tracker=state_tracker,  # [V60.94] 죽은 NPC 검증용
                 pre_collected_items=_pre_items,  # [V62.5] 중복 스캔 방지
                 pre_collected_grants=_pre_grants,  # [V62.5] 중복 스캔 방지
+                genre=self._genre,
             )
 
             pipeline_result["phases"]["validate"] = {
@@ -447,7 +461,7 @@ class FourPhaseArcGenerator(BaseAgent):
                 if _summary:
                     print(f"  ✅ 검증 요약: {str(_summary)[:300]}")
                 if _major_issues:
-                    print(f"  ⚠️ MAJOR 경고 (통과 — Director에게 위임):")
+                    print("  ⚠️ MAJOR 경고 (통과 — Director에게 위임):")
                     for _mi in _major_issues[:3]:
                         print(f"     - {_mi.get('issue', '?')[:120]}")
                 print(f"{'=' * 60}\n")
@@ -592,7 +606,7 @@ class FourPhaseArcGenerator(BaseAgent):
 
         # 4) Phase 1: Constraint (generate()와 동일)
         preflight_result = self.preflight.analyze(prev_arcs)
-        preflight_injection = self.preflight.generate_analyst_injection(preflight_result)
+        preflight_injection = self.preflight.generate_analyst_injection(preflight_result, genre=self._genre)
         compiled_constraints = self.compiler.compile(prev_arcs)
         negative_examples = self.negative_injector.generate_injection()
         self_check = self.negative_injector.generate_self_check_prompt()
@@ -664,6 +678,7 @@ class FourPhaseArcGenerator(BaseAgent):
             state_tracker=state_tracker,
             pre_collected_items=_pre_items,
             pre_collected_grants=_pre_grants,
+            genre=self._genre,
         )
 
         pipeline_result["phases"]["validate"] = {

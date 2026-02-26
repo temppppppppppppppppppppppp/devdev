@@ -25,6 +25,7 @@ def _make_generator() -> FourPhaseArcGenerator:
     gen.negative_injector.generate_injection.return_value = "neg"
     gen.negative_injector.generate_self_check_prompt.return_value = "self_check"
     gen.negative_injector.record_rejection = MagicMock()
+    gen._genre = "wuxia"
     gen.ensemble = MagicMock()
     gen.ensemble.generate_ensemble.return_value = ({"_ensemble_meta": {"best_strategy": "balanced"}}, [{}])
     gen.validator = MagicMock()

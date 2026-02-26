@@ -1,0 +1,50 @@
+{"timestamp": "2026-02-25 21:56:30", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["arc_end_state 위치 동기화: '한미증권 VIP룸' → '서울 성북동 본가 저택, 한시우의 개인 침실 책상 앞'"]}}
+{"timestamp": "2026-02-25 21:57:07", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 21:57:26", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "items_tracked": 4}}
+{"timestamp": "2026-02-25 21:59:52", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 2, "corrections": ["시작 내공 수정: 100% → 95%", "시작 부상 수정: '없음' → '정상'", "arc_end_state 위치 동기화: '서울 강남구 JNT-Tech 사무실' → 'SW인베스트먼트 임시 사무실(오피스텔) 창가 앞'"]}}
+{"timestamp": "2026-02-25 22:00:40", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 22:00:58", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 2, "items_tracked": 8}}
+{"timestamp": "2026-02-25 22:03:10", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 3, "corrections": ["시작 위치 수정: '서울 강남구 JNT-Tech 사무실' → 'SW인베스트먼트 임시 사무실(오피스텔) 창가 앞'", "arc_end_state 위치 동기화: 'JNT-Tech 사무실 내 '케르베로스' 서버룸' → '서울 강남, SW인베스트먼트 소규모 원룸 오피스 내 다중 모니터 앞'"]}}
+{"timestamp": "2026-02-25 22:03:55", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 22:04:20", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 3, "items_tracked": 8}}
+{"timestamp": "2026-02-25 22:06:42", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 4, "corrections": ["시작 위치 수정: 'JNT-Tech 사무실 내 '케르베로스' 서버룸' → '서울 강남, SW인베스트먼트 소규모 원룸 오피스 내 다중 모니터 앞'", "arc_end_state 위치 동기화: 'JNT-Tech 사무실 내 '케르베로스' 서버룸 보안 회의실' → '서울 강남, SW인베스트먼트 소규모 원룸 오피스 내 한시우의 4모니터 데스크 앞'"]}}
+{"timestamp": "2026-02-25 22:07:34", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 22:07:51", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 4, "items_tracked": 9}}
+{"timestamp": "2026-02-25 22:10:33", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 5, "corrections": ["arc_end_state 위치 동기화: '서울 강남구 JNT-Tech 사무실 내 '케르베로스' 서버룸' → '서울 강남, SW인베스트먼트 대표실 창가 앞 (심야)'"]}}
+{"timestamp": "2026-02-25 22:11:21", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-25 22:11:45", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 5, "items_tracked": 10}}
+{"timestamp": "2026-02-26 07:36:18", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-26 09:28:23", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 5, "items_tracked": 10}}
+{"timestamp": "2026-02-26 09:36:34", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 6, "corrections": ["시작 위치 수정: '서울 강남구 JNT-Tech 사무실 내 '케르베로스' 서버룸' → '서울 강남, SW인베스트먼트 대표실 창가 앞 (심야)'"]}}
+{"timestamp": "2026-02-26 09:37:30", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-26 09:37:44", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 6, "items_tracked": 7}}
+{"timestamp": "2026-02-26 09:40:26", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 7, "corrections": ["arc_end_state 위치 동기화: '홍콩 첵랍콕 국제공항 일등석 라운지' → '홍콩 첵랍콕 국제공항 일등석 라운지 (서울행 귀국편 대기 중)'"]}}
+{"timestamp": "2026-02-26 09:41:21", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-26 09:41:36", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 7, "items_tracked": 8}}
+{"timestamp": "2026-02-26 09:45:25", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-26 09:45:45", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 8, "items_tracked": 7}}
+{"timestamp": "2026-02-26 09:48:28", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 9, "corrections": ["시작 부상 수정: '없음' → '정상'", "arc_end_state 위치 동기화: '서울 강남구 SW인베스트먼트 오피스 내 개인 트레이딩 룸' → 'SW인베스트먼트 오피스 내 한시우의 개인 트레이딩 룸'"]}}
+{"timestamp": "2026-02-26 09:49:36", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-26 09:49:51", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 9, "items_tracked": 8}}
+{"timestamp": "2026-02-26 10:04:11", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-26 10:04:11", "type": "blueprint_success", "message": "ep_15_blueprint_generated", "data": {"ep_num": 15, "arc_no": 4, "strategy": "action_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-26 10:05:41", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-26 10:05:41", "type": "blueprint_success", "message": "ep_16_blueprint_generated", "data": {"ep_num": 16, "arc_no": 4, "strategy": "dialogue_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-26 10:07:45", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-26 10:07:45", "type": "blueprint_success", "message": "ep_17_blueprint_generated", "data": {"ep_num": 17, "arc_no": 5, "strategy": "dialogue_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-26 10:09:18", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-26 10:09:18", "type": "blueprint_success", "message": "ep_18_blueprint_generated", "data": {"ep_num": 18, "arc_no": 5, "strategy": "dialogue_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-26 10:11:19", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-26 10:11:19", "type": "blueprint_success", "message": "ep_19_blueprint_generated", "data": {"ep_num": 19, "arc_no": 5, "strategy": "action_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-26 10:12:57", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-26 10:12:57", "type": "blueprint_success", "message": "ep_20_blueprint_generated", "data": {"ep_num": 20, "arc_no": 5, "strategy": "dialogue_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-26 10:14:39", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-26 10:14:39", "type": "blueprint_success", "message": "ep_21_blueprint_generated", "data": {"ep_num": 21, "arc_no": 5, "strategy": "emotion_focused", "score": 98, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-26 10:16:23", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-26 10:16:23", "type": "blueprint_success", "message": "ep_22_blueprint_generated", "data": {"ep_num": 22, "arc_no": 6, "strategy": "dialogue_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-26 10:18:07", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-26 10:18:07", "type": "blueprint_success", "message": "ep_23_blueprint_generated", "data": {"ep_num": 23, "arc_no": 6, "strategy": "action_focused", "score": 98, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-26 10:19:52", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-26 10:19:52", "type": "blueprint_success", "message": "ep_24_blueprint_generated", "data": {"ep_num": 24, "arc_no": 6, "strategy": "action_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-26 10:21:46", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-26 10:21:46", "type": "blueprint_success", "message": "ep_25_blueprint_generated", "data": {"ep_num": 25, "arc_no": 6, "strategy": "action_focused", "score": 100, "final_verdict": "PASS", "quality_risk": false}}

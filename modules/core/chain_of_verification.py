@@ -165,17 +165,17 @@ JSON 형식으로 응답:
         if "hud" in context:
             hud = context["hud"]
             if isinstance(hud, dict):
-                parts.append(f"[캐릭터 상태 (HUD)]\n{json.dumps(hud, ensure_ascii=False, indent=2)[:5000]}")
+                parts.append(f"[캐릭터 상태 (HUD)]\n{json.dumps(hud, ensure_ascii=False, indent=2)[:15000]}")
 
         if "blueprint" in context:
             bp = context["blueprint"]
             if isinstance(bp, dict):
-                parts.append(f"[Blueprint 설계]\n{json.dumps(bp, ensure_ascii=False, indent=2)[:8000]}")
+                parts.append(f"[Blueprint 설계]\n{json.dumps(bp, ensure_ascii=False, indent=2)[:24000]}")
 
         if "arc_data" in context:
             arc = context["arc_data"]
             if isinstance(arc, dict):
-                parts.append(f"[Arc 설계]\n{json.dumps(arc, ensure_ascii=False, indent=2)[:5000]}")
+                parts.append(f"[Arc 설계]\n{json.dumps(arc, ensure_ascii=False, indent=2)[:15000]}")
 
         if "inventory" in context:
             inv = context["inventory"]
