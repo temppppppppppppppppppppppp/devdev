@@ -492,9 +492,9 @@ class Stage4InterviewRound:
         except Exception as _cv_err:
             self.ctx.ui.log(f"      ⚠️ [V63.2] ConsistencyValidator 실행 실패: {str(_cv_err)[:60]}")
 
-        # [V66.1] BlockingValidator — item_states 기반 파손 아이템 사용 체크
-        # [TF-7-P0-02] passed=False 후보는 warnings 누적 대신 즉시 제외 처리
-        _bv_disqualified: set[int] = set()
+        # [V66.1] BlockingValidator — advisory 경고 수집 (Director 전달용)
+        # [V70.1] 대원칙 준수: Python은 수집만, 판단은 Director(LLM)가.
+        #   기존 TF7-P0-02 즉시 제외 → advisory 경고로 변환, Director에게 전달.
         try:
             for ci, cand in enumerate(candidates):
                 _bv_ms = cand.get("manuscript", "")
@@ -502,51 +502,19 @@ class Stage4InterviewRound:
                     bv_result = blocking_validator.validate(_bv_ms, _cv_context)
                     if not bv_result.get("passed", True):
                         bv_failures = bv_result.get("failures", [])
-                        _bv_disqualified.add(ci)
                         for f in bv_failures:
                             reason = f.get("reason", str(f))
-                            validation_results[ci]["warnings"].append(f"[V66.1] BLOCKING(DISQ): {reason}")
+                            severity = f.get("severity", "HIGH")
+                            validation_results[ci]["warnings"].append(f"[Python검증-{severity}] {reason}")
                         validation_results[ci]["warning_count"] = len(validation_results[ci]["warnings"])
-                        validation_results[ci]["focus_points"].append(f"BLOCKING 위반 {len(bv_failures)}건 — 후보 탈락")
-                        self.ctx.ui.log(f"      ❌ 후보{ci + 1} BLOCKING 위반 {len(bv_failures)}건 — 탈락 처리")
+                        validation_results[ci]["focus_points"].append(
+                            f"Python 검증 경고 {len(bv_failures)}건 (Director 판단 필요)"
+                        )
+                        print(f"      ⚠️ 후보{ci + 1} Python 검증 경고 {len(bv_failures)}건 → Director에 전달")
+                        for f in bv_failures:
+                            print(f"         - [{f.get('severity', '?')}] {f.get('reason', '?')}")
         except Exception as _bv_err:
             self.ctx.ui.log(f"      ⚠️ [V66.1] BlockingValidator 실행 실패: {str(_bv_err)[:60]}")
-
-        # [TF-7-P0-02] 탈락 후보 제거 (모두 탈락 시 REJECT 경로 유지)
-        if _bv_disqualified:
-            _original_count = len(candidates)
-            candidates = [c for i, c in enumerate(candidates) if i not in _bv_disqualified]
-            validation_results = [vr for i, vr in enumerate(validation_results) if i not in _bv_disqualified]
-            self.ctx.ui.log(
-                f"      [TF7-P0-02] BLOCKING 탈락: {len(_bv_disqualified)}/{_original_count}건 제외"
-                f" — 잔여 후보 {len(candidates)}건"
-            )
-            if not candidates:
-                self.ctx.ui.log("      ❌ [TF7-P0-02] 전체 후보 BLOCKING 탈락 → REJECT 처리")
-                director_feedback += "\n[시스템] BLOCKING 위반으로 전체 후보 탈락. 재작성 필요."
-                previous_attempt = {
-                    "strategy": "",
-                    "rejection_reason": "BLOCKING 위반으로 전체 후보 탈락",
-                    "action_items": [],
-                    "score": 0,
-                    "_tot_used": _tot_used,
-                    "_mad_used": _mad_used,
-                }
-                self._record_s4_attempt(
-                    episode=next_ep,
-                    round_num=round_num,
-                    success=False,
-                    score=0,
-                    is_patch=_is_patch,
-                    prev_score=_prev_score,
-                    patch_fallback=_is_patch_fallback,
-                    arc=round_ctx.arc_data.get("arc_no", 0),
-                )
-                return _InterviewRoundResult(
-                    verdict="REJECT",
-                    director_feedback=director_feedback,
-                    previous_attempt=previous_attempt,
-                )
 
         # [V66.1] ContinuityValidator — npc_personalities, time_warnings 라우팅
         try:
@@ -775,6 +743,16 @@ class Stage4InterviewRound:
         # Phase 4: Director 면담
         stage4_spinner.update_detail(f"제{next_ep}화 · {round_num + 1}차 면담 · Director 심사")
         self.ctx.ui.log("   🎬 Director 면담 중...")
+        print(f"\n{'=' * 60}")
+        print(f"   🎬 Director 면담 시작 (제{next_ep}화, {round_num + 1}차)")
+        print(f"   후보 수: {len(candidates)}개")
+        for _pi, _pv in enumerate(validation_results):
+            _pw = _pv.get("warnings", [])
+            _label = ["A", "B", "C"][_pi] if _pi < 3 else str(_pi + 1)
+            print(f"   후보 {_label}: 경고 {len(_pw)}건, 분량 {len(candidates[_pi].get('manuscript', ''))}자")
+            for _pwi in _pw[:5]:
+                print(f"      - {_pwi}")
+        print(f"{'=' * 60}")
         # [V65] PerfTimer: Director 대면 측정
         try:
             self.ctx.perf_timer.start(f"s4_ep{next_ep}_director_r{round_num}")
@@ -844,6 +822,15 @@ class Stage4InterviewRound:
 
         self.ctx.ui.log(f"   📊 Director 판정: {verdict} (점수: {score}, 선택: 후보 {selected})")
         self.ctx.ui.log(f"      └─ 사유: {reason[:80]}...")
+        print("\n   📊 Director 판정 결과:")
+        print(f"      판정: {verdict} | 점수: {score} | 선택: 후보 {selected}")
+        print(f"      사유: {reason[:120]}")
+        _action_items = director_result.get("action_items", [])
+        if _action_items:
+            print("      지시사항:")
+            for _ai in _action_items[:5]:
+                print(f"         - {_ai}")
+        print()
 
         # [D-4] Director 선택 기록 (비차단)
         try:

@@ -55,6 +55,36 @@ class BlockingValidatorEntityChecks:
         "다가오",
     )
 
+    # [V70.1] 일반 명사로 오등록된 NPC 이름 방어 (BlockingValidator 레벨)
+    _COMMON_NOUN_NAMES = frozenset(
+        [
+            "세상",
+            "세계",
+            "인생",
+            "시간",
+            "사람",
+            "인간",
+            "모든",
+            "누군가",
+            "조직",
+            "세력",
+            "집단",
+            "나라",
+            "도시",
+            "마을",
+            "회사",
+            "기업",
+            "시장",
+            "경제",
+            "투자",
+            "금융",
+            "데이터",
+            "소식",
+            "이야기",
+            "사건",
+        ]
+    )
+
     def _check_dead_npc_resurrection(self, manuscript: str, context: dict) -> dict:
         """[Phase 3-5A-2] 사망한 NPC 재등장 체크 — 행동/대사 vs 회상/언급 구분"""
         encyclopedia = context.get("encyclopedia", {})
@@ -67,6 +97,11 @@ class BlockingValidatorEntityChecks:
             aliases = npc.get("aliases", [])
             if not isinstance(aliases, list):
                 aliases = [aliases] if aliases else []
+
+            # [V70.1] 일반 명사 NPC 이름은 검사 스킵 (오탐 방지)
+            if name in self._COMMON_NOUN_NAMES:
+                logging.warning(f"[V70.1] dead NPC '{name}' 스킵 — 일반 명사 오등록 의심")
+                continue
 
             for identifier in [name] + aliases:
                 if not identifier or identifier not in manuscript:

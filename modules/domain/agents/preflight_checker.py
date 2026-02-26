@@ -405,7 +405,7 @@ class PreflightChecker(BaseAgent):
             },
         }
 
-    def generate_analyst_injection(self, preflight_result: dict) -> str:
+    def generate_analyst_injection(self, preflight_result: dict, genre: str = "") -> str:
         """Analyst 프롬프트에 주입할 제약 텍스트 생성"""
         # 절대 금지 사항
         prohibitions = preflight_result.get("absolute_prohibitions", {})
@@ -467,9 +467,12 @@ class PreflightChecker(BaseAgent):
         status = world.get("protagonist_status", {})
         if not isinstance(status, dict):
             status = {}
-        if status.get("injuries") and status["injuries"] != "없음":
-            lines.append(f"💔 부상 상태: {status['injuries']}")
-        lines.append(f"⚡ 내공: {status.get('internal_energy', 100)}%")
+        _is_wuxia = genre in ("wuxia", "무협", "")  # 기본값은 무협 (하위호환)
+        if _is_wuxia:
+            if status.get("injuries") and status["injuries"] != "없음":
+                lines.append(f"💔 부상 상태: {status['injuries']}")
+            lines.append(f"⚡ 내공: {status.get('internal_energy', 100)}%")
+        # 비무협: 내공/부상 라인 생략 (LLM 혼동 방지)
 
         inventory = preflight_result.get("timeline_analysis", {}).get("current_inventory", [])
         if inventory:

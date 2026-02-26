@@ -184,7 +184,7 @@ ARC_STATE_SCHEMA = types.Schema(
     properties={
         "location": types.Schema(type=types.Type.STRING),
         "equipment": types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
-        "injuries": types.Schema(type=types.Type.STRING, enum=["정상", "경상", "중상", "위독"]),
+        "injuries": types.Schema(type=types.Type.STRING, enum=["없음", "정상", "경상", "중상", "위독"]),
         "internal_energy": types.Schema(type=types.Type.INTEGER, minimum=0, maximum=100),
     },
     required=["location", "equipment", "injuries", "internal_energy"],

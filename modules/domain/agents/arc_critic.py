@@ -150,9 +150,9 @@ class ArcCritic(BaseAgent):
 
         prompt = ARC_CRITIQUE_PROMPT.format_map(
             SafeDict(
-                generated_arc=self._escape_braces(json.dumps(generated_arc, ensure_ascii=False, indent=2)[:6000]),
+                generated_arc=self._escape_braces(json.dumps(generated_arc, ensure_ascii=False, indent=2)[:18000]),
                 prev_arc_summary=self._escape_braces(prev_summary),
-                constraints=self._escape_braces(constraints[:3000] if constraints else "(없음)"),
+                constraints=self._escape_braces(constraints[:9000] if constraints else "(없음)"),
             )
         )
 

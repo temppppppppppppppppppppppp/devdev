@@ -152,6 +152,24 @@ class Stage2Finalizer:
         except Exception as e:
             logging.debug(f"[PerfTimer] stop s2 director: {e}")
 
+        # Director 심사 결과 사용자 출력
+        _d_decision = audit.get("decision", "?")
+        _d_score = audit.get("score", "?")
+        _d_reason = audit.get("reason", "")
+        self.ctx.ui.log(f"\n      🎬 [Director] {_d_decision} (score={_d_score})")
+        if _d_reason:
+            for _i in range(0, len(str(_d_reason)), 80):
+                self.ctx.ui.log(f"         {str(_d_reason)[_i : _i + 80]}")
+        _d_contradictions = audit.get("contradictions", [])
+        if _d_contradictions and not isinstance(_d_contradictions, list):
+            _d_contradictions = [_d_contradictions] if _d_contradictions else []
+        if _d_contradictions:
+            self.ctx.ui.log(f"         📌 모순 {len(_d_contradictions)}건:")
+            for _c in _d_contradictions[:5]:
+                self.ctx.ui.log(f"            ▸ {str(_c)[:120]}")
+        if _d_decision == "REJECT" and audit.get("re_slice_instruction"):
+            self.ctx.ui.log(f"         🔧 수정지시: {str(audit['re_slice_instruction'])[:150]}")
+
         # ═══════════════════════════════════════════════════════════════
         # [V60.43] API 할당량 오류 시 폴백 로직
         # ═══════════════════════════════════════════════════════════════

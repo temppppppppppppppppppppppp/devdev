@@ -107,8 +107,8 @@ class DirectorEnsembleSelector:
 - 시간 흐름: {bp.get("time_flow", "?")}
 - 엔딩 훅: {str(bp.get("ending_hook") or "?")[:100]}
 
-[시나리오 요약]
-{integrated[:1500]}...
+[시나리오 전문]
+{integrated}
 """
             candidate_summaries.append(summary)
 
@@ -393,7 +393,7 @@ class DirectorEnsembleSelector:
         prompt = self._prompt_loader.load(
             "director",
             "ENSEMBLE_SELECTION_PROMPT",
-            blueprint=self._d._escape_braces(blueprint_str[:5000]),
+            blueprint=self._d._escape_braces(blueprint_str[:15000]),
             episode_digest=self._d._escape_braces(episode_digest) if episode_digest else "(다이제스트 없음)",
             previous_ending=self._d._escape_braces(previous_ending if previous_ending else ""),
             prev_manuscripts_text=self._d._escape_braces(_prev_ms_for_director),

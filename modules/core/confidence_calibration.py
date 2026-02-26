@@ -251,7 +251,9 @@ class ConfidenceCalibrator:
                 scene_keywords = []
                 for scene_data in scene_breakdown.values():
                     if isinstance(scene_data, dict):
-                        desc = scene_data.get("description", "")
+                        desc = scene_data.get("summary", scene_data.get("description", ""))
+                        for ev in scene_data.get("key_events") or []:
+                            desc += " " + str(ev)
                         scene_keywords.extend(re.findall(r"[\w가-힣]{2,}", desc)[:3])
 
                 matched = sum(1 for kw in scene_keywords if kw in manuscript)

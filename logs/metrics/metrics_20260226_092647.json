@@ -1,0 +1,158 @@
+{
+  "session_id": "20260226_092647",
+  "start_time": "2026-02-26T09:26:47.687043",
+  "end_time": "2026-02-26T10:01:06.205536",
+  "total_calls": 58,
+  "successful_calls": 58,
+  "failed_calls": 0,
+  "total_retries": 0,
+  "total_tokens": 842368,
+  "total_cost_usd": 1.1452,
+  "agent_stats": {
+    "StateExtractor": {
+      "agent_name": "StateExtractor",
+      "total_calls": 9,
+      "successful_calls": 9,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 17930.996974309284,
+        "min_ms": 13852.285385131836,
+        "max_ms": 28430.413007736206,
+        "p50_ms": 16258.612632751465,
+        "p90_ms": 21727.56266593933,
+        "p99_ms": 27760.127973556515
+      }
+    },
+    "Analyst": {
+      "agent_name": "Analyst",
+      "total_calls": 7,
+      "successful_calls": 7,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 38232.61393819536,
+        "min_ms": 31217.812299728394,
+        "max_ms": 49868.39294433594,
+        "p50_ms": 34485.663414001465,
+        "p90_ms": 48205.822467803955,
+        "p99_ms": 49702.13589668274
+      }
+    },
+    "Weaver": {
+      "agent_name": "Weaver",
+      "total_calls": 4,
+      "successful_calls": 4,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 24530.587673187256,
+        "min_ms": 19721.343994140625,
+        "max_ms": 36348.39200973511,
+        "p50_ms": 21026.307344436646,
+        "p90_ms": 31973.198485374454,
+        "p99_ms": 35910.87265729904
+      }
+    },
+    "PreflightChecker": {
+      "agent_name": "PreflightChecker",
+      "total_calls": 9,
+      "successful_calls": 9,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 26503.177801767986,
+        "min_ms": 23152.522087097168,
+        "max_ms": 29413.95592689514,
+        "p50_ms": 26623.868703842163,
+        "p90_ms": 29295.68657875061,
+        "p99_ms": 29402.12899208069
+      }
+    },
+    "ArcEnsembleGenerator": {
+      "agent_name": "ArcEnsembleGenerator",
+      "total_calls": 15,
+      "successful_calls": 15,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 82425.81575711568,
+        "min_ms": 70108.96635055542,
+        "max_ms": 93235.41307449341,
+        "p50_ms": 84079.85973358154,
+        "p90_ms": 90854.32224273682,
+        "p99_ms": 93233.09559822083
+      }
+    },
+    "UnifiedArcValidator": {
+      "agent_name": "UnifiedArcValidator",
+      "total_calls": 6,
+      "successful_calls": 6,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 22138.5950644811,
+        "min_ms": 17616.31941795349,
+        "max_ms": 26147.002935409546,
+        "p50_ms": 23009.462237358093,
+        "p90_ms": 24857.038497924805,
+        "p99_ms": 26018.00649166107
+      }
+    },
+    "Director": {
+      "agent_name": "Director",
+      "total_calls": 8,
+      "successful_calls": 8,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 27009.085446596146,
+        "min_ms": 22058.65216255188,
+        "max_ms": 33360.745906829834,
+        "p50_ms": 27116.863489151,
+        "p90_ms": 31196.194863319397,
+        "p99_ms": 33144.29080247879
+      }
+    }
+  },
+  "model_stats": {
+    "gemini-3-flash-preview": {
+      "input_tokens": 222370,
+      "output_tokens": 30392,
+      "total_tokens": 252762,
+      "cost_usd": 0.172
+    },
+    "gemini-3.1-pro-preview": {
+      "input_tokens": 13886,
+      "output_tokens": 4776,
+      "total_tokens": 18662,
+      "cost_usd": 0.0825
+    },
+    "gemini-2.5-flash": {
+      "input_tokens": 56396,
+      "output_tokens": 10287,
+      "total_tokens": 66683,
+      "cost_usd": 0.0146
+    },
+    "gemini-2.5-pro": {
+      "input_tokens": 438717,
+      "output_tokens": 65544,
+      "total_tokens": 504261,
+      "cost_usd": 0.8761
+    }
+  }
+}

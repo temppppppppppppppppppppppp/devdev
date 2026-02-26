@@ -124,6 +124,7 @@ class UnifiedArcValidator(BaseAgent):
         state_tracker=None,  # [V60.94] StateTracker (죽은 NPC 검증용)
         pre_collected_items: set | None = None,  # [V62.5] ConstraintCompiler에서 수집된 아이템
         pre_collected_grants: set | None = None,  # [V62.5] ConstraintCompiler에서 수집된 수여물
+        genre: str = "",
     ) -> tuple[str, dict]:
         """
         Arc 통합 검증
@@ -155,7 +156,7 @@ class UnifiedArcValidator(BaseAgent):
         # ═══════════════════════════════════════════════════════════════
         logging.warning("🔍 [UnifiedValidator] LLM 검증 중...")
 
-        llm_result = self._llm_validate(arc, prev_arcs, constraints, python_result)
+        llm_result = self._llm_validate(arc, prev_arcs, constraints, python_result, genre=genre)
 
         # 결과 병합
         all_issues = python_result["issues"] + llm_result.get("issues", [])
@@ -514,25 +515,31 @@ class UnifiedArcValidator(BaseAgent):
         if ep_details is None:
             return issues  # 선택 필드 — 없어도 OK
         if not isinstance(ep_details, list):
-            issues.append({
-                "severity": "ADVISORY",
-                "issue": f"episode_details 타입 오류: list 기대, {type(ep_details).__name__} 수신 — downstream 폴백 발동",
-                "detail": str(ep_details)[:100],
-            })
+            issues.append(
+                {
+                    "severity": "ADVISORY",
+                    "issue": f"episode_details 타입 오류: list 기대, {type(ep_details).__name__} 수신 — downstream 폴백 발동",
+                    "detail": str(ep_details)[:100],
+                }
+            )
             return issues
         for i, item in enumerate(ep_details):
             if not isinstance(item, dict):
-                issues.append({
-                    "severity": "ADVISORY",
-                    "issue": f"episode_details[{i}] 타입 오류: dict 기대, {type(item).__name__} 수신",
-                    "detail": str(item)[:80],
-                })
+                issues.append(
+                    {
+                        "severity": "ADVISORY",
+                        "issue": f"episode_details[{i}] 타입 오류: dict 기대, {type(item).__name__} 수신",
+                        "detail": str(item)[:80],
+                    }
+                )
             elif not isinstance(item.get("ep_num"), int):
-                issues.append({
-                    "severity": "ADVISORY",
-                    "issue": f"episode_details[{i}].ep_num 타입 오류: int 기대, {type(item.get('ep_num')).__name__} 수신",
-                    "detail": str(item.get("ep_num"))[:40],
-                })
+                issues.append(
+                    {
+                        "severity": "ADVISORY",
+                        "issue": f"episode_details[{i}].ep_num 타입 오류: int 기대, {type(item.get('ep_num')).__name__} 수신",
+                        "detail": str(item.get("ep_num"))[:40],
+                    }
+                )
         return issues
 
     def _python_validate(
@@ -564,7 +571,9 @@ class UnifiedArcValidator(BaseAgent):
             "critical_summary": "; ".join(critical_items) if critical_items else "",
         }
 
-    def _llm_validate(self, arc: dict, prev_arcs: list[dict], constraints: str, python_result: dict) -> dict:
+    def _llm_validate(
+        self, arc: dict, prev_arcs: list[dict], constraints: str, python_result: dict, *, genre: str = ""
+    ) -> dict:
         """LLM 문맥 검증 (유료, 정확)"""
 
         # 이전 Arc 요약 생성
@@ -576,13 +585,16 @@ class UnifiedArcValidator(BaseAgent):
         # 프롬프트 생성
         prompt = UNIFIED_VALIDATION_PROMPT.format_map(
             SafeDict(
-                arc_data=self._escape_braces(json.dumps(arc, ensure_ascii=False, indent=2)[:6000]),
+                arc_data=self._escape_braces(json.dumps(arc, ensure_ascii=False, indent=2)[:18000]),
                 prev_summary=self._escape_braces(prev_summary),
-                constraints=self._escape_braces(constraints[:3000] if constraints else "(없음)"),
+                constraints=self._escape_braces(constraints[:9000] if constraints else "(없음)"),
                 python_result=self._escape_braces(python_text),
                 min_chars=self.min_chars_per_ep,
             )
         )
+
+        if genre and genre not in ("wuxia", "무협"):
+            prompt += "\n\n⚠️ [장르 안내] 이 작품은 비무협 장르입니다. internal_energy와 injuries 필드의 불일치는 무시하세요. 부상/내공 관련 MAJOR 판정을 내리지 마세요."
 
         try:
             response = self.ask(prompt, temperature=0.1, thinking_level="low")  # [V61.6] Arc 검증
