@@ -230,6 +230,30 @@ class Stage4Orchestrator:
         return self._interview_round
 
     # ═══════════════════════════════════════════════════════════════════════
+    # [LM-A-1] Bible → world_laws 자동 등록 (최초 1회)
+    # ═══════════════════════════════════════════════════════════════════════
+
+    def _register_bible_world_laws(self) -> None:
+        """Bible의 WorldLaws를 WorldState에 CRITICAL 우선순위로 등록."""
+        try:
+            bible = getattr(self.ctx.current_project, "master_bible", None)
+            if not bible or not isinstance(bible, dict):
+                return
+            bible_root = bible.get("MasterBible", bible)
+            if not isinstance(bible_root, dict):
+                return
+            world_laws = bible_root.get("WorldLaws", [])
+            if not world_laws or not isinstance(world_laws, list):
+                return
+            for law in world_laws:
+                if isinstance(law, str) and law.strip():
+                    self.ctx.world_state.add_world_law(law.strip(), ep=0, priority="CRITICAL")
+            if world_laws:
+                _perf_logger.info("[LM-A-1] Bible → world_laws %d건 등록 완료", len(world_laws))
+        except Exception as e:
+            _perf_logger.debug("[LM-A-1] Bible world_laws 등록 실패 (비치명): %s", e)
+
+    # ═══════════════════════════════════════════════════════════════════════
     # [V68] 에피소드 연결고리 (Episode Chain Links)
     # ═══════════════════════════════════════════════════════════════════════
 
@@ -317,6 +341,10 @@ JSON으로 출력:
         from modules.core.reference_anchor import ReferenceAnchor
 
         _anchor_sys = ReferenceAnchor(self.ctx.current_project)
+
+        # [LM-A-1] Bible → world_laws 자동 등록 (최초 1회)
+        if self.ctx.world_state and not self.ctx.world_state.get_world_laws():
+            self._register_bible_world_laws()
 
         # 5. 원고 생산 메인 루프
         while True:
@@ -608,7 +636,9 @@ JSON으로 출력:
                                         final_title = None  # [S4-P1-1] CoVe REJECT 시 title도 리셋
                                         logging.warning(  # [F2] CoVe REJECT 라운드 소모 가시화
                                             "[Stage4] ep=%d round=%d/%d CoVe LLM REJECT → 라운드 소모",
-                                            next_ep, interview_round + 1, _max_rounds,
+                                            next_ep,
+                                            interview_round + 1,
+                                            _max_rounds,
                                         )
                                         continue
                                     # [S4-I5] LLM verify에서 MINOR/MAJOR 경고만 → 통과 (REJECT 안 함)
@@ -632,7 +662,9 @@ JSON으로 출력:
                                     final_title = None
                                     logging.warning(  # [F2] CoVe LLM 런타임 실패 라운드 소모 가시화
                                         "[Stage4] ep=%d round=%d/%d CoVe LLM 런타임 실패 → 라운드 소모",
-                                        next_ep, interview_round + 1, _max_rounds,
+                                        next_ep,
+                                        interview_round + 1,
+                                        _max_rounds,
                                     )
                                     continue
                         except Exception as e:
@@ -651,7 +683,9 @@ JSON으로 출력:
                             final_title = None
                             logging.warning(  # [F2] CoVe Quick 런타임 실패 라운드 소모 가시화
                                 "[Stage4] ep=%d round=%d/%d CoVe Quick 런타임 실패 → 라운드 소모",
-                                next_ep, interview_round + 1, _max_rounds,
+                                next_ep,
+                                interview_round + 1,
+                                _max_rounds,
                             )
                             continue
 
