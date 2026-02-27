@@ -503,6 +503,29 @@ class Stage4ContextBuilder:
         if prev_text and hasattr(chief_writer, "_generate_episode_digest"):
             _episode_digest = chief_writer._generate_episode_digest(prev_text, next_ep - 1)
 
+        # [V74] HUD 자본금 스냅샷 (투자물 전용)
+        try:
+            if hasattr(self.ctx, "sys") and self.ctx.sys and hasattr(self.ctx.sys, "hud") and self.ctx.sys.hud:
+                from modules.core.genre_hud_manager import FinanceHUDManager
+
+                if isinstance(self.ctx.sys.hud, FinanceHUDManager):
+                    _hud_cap = self.ctx.sys.hud.pro_data.get("capital", "")
+                    _hud_total = self.ctx.sys.hud.pro_data.get("total_assets", "")
+                    _hud_parts = []
+                    if _hud_cap:
+                        _hud_parts.append(f"HUD 확정 자본: {_hud_cap}")
+                    if _hud_total:
+                        _hud_parts.append(f"HUD 총자산: {_hud_total}")
+                    if _hud_parts:
+                        _snapshot = "\n".join(f"- {p}" for p in _hud_parts)
+                        _episode_digest = (
+                            (_episode_digest + f"\n{_snapshot}")
+                            if _episode_digest
+                            else f"[HUD 금융 스냅샷]\n{_snapshot}"
+                        )
+        except Exception as _hud_err:
+            logging.warning("[SilentPass:V74] HUD 스냅샷 주입 실패: %s", _hud_err)
+
         # HUD 리포트
         hud_report = self.ctx.sys.hud.get_v20_hud_report() if hasattr(self.ctx.sys, "hud") and self.ctx.sys.hud else ""
 
@@ -667,6 +690,33 @@ class Stage4ContextBuilder:
                     logging.info(f"📋 [V68] 팩트 원장 주입 ({len(_fl_summary)}자)")
             except Exception as _fl_mc_err:
                 logging.warning(f"⚠️ [V68] 팩트 원장 주입 실패 (비치명): {str(_fl_mc_err)[:50]}")
+
+        # [V74] Treatment genre_ext — 아크 장르 특화 목표 주입
+        try:
+            _mb = getattr(self.ctx.current_project, "master_bible", None) or {}
+            _bible_root = _mb.get("MasterBible", _mb)
+            _plot_roadmap = _bible_root.get("plot_roadmap", [])
+            _arc_no = arc_data.get("arc_no", 1) if arc_data else 1
+            _arc_idx = _arc_no - 1  # arc_no 1-based → plot_roadmap 0-based
+            if isinstance(_plot_roadmap, list) and 0 <= _arc_idx < len(_plot_roadmap):
+                _tr_block = _plot_roadmap[_arc_idx]
+                if isinstance(_tr_block, dict):
+                    _genre_ext = _tr_block.get("genre_ext", {})
+                    if isinstance(_genre_ext, dict) and _genre_ext:
+                        _ge_lines = ["### [V74 Treatment] 이번 아크 장르 특화 정보"]
+                        for _gk, _gv in _genre_ext.items():
+                            if isinstance(_gv, dict | list):
+                                _ge_lines.append(f"  {_gk}: {json.dumps(_gv, ensure_ascii=False)}")
+                            else:
+                                _ge_lines.append(f"  {_gk}: {_gv}")
+                        _ge_lines.append(
+                            "⚠️ 원고의 장르 수치(금액, 수익, 레벨, 경지 등)가 "
+                            "위 Treatment 목표와 합리적으로 연결되어야 합니다."
+                        )
+                        _mc_parts.insert(2, "\n".join(_ge_lines))
+                        logging.info("[V74] Treatment genre_ext 주입 (arc_no=%d, %d필드)", _arc_no, len(_genre_ext))
+        except Exception as _ge_err:
+            logging.warning("[SilentPass:V74] Treatment genre_ext 주입 실패: %s", _ge_err)
 
         # [S4-I2] state_tracker 16종 요약을 get_all_summaries()로 일괄 수집
         _st = self.ctx.state_tracker

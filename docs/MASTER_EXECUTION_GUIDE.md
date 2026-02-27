@@ -449,4 +449,111 @@ LLM은 부상/에너지 저하를 매 Arc마다 누적 강화하는 경향 → P
 
 ---
 
+## 12. V75-D 감리 결함 조사 (2026-02-27)
+
+### 12-1. V75-D 구현 — 단계적 에스컬레이션 (Inplace → Full Regen)
+
+**변경 파일**: `modules/core/stage4_orchestrator.py`
+
+기존 V75-B는 LOGIC_ERROR 2연속 시 즉시 전면 재생성(`generate()`) 호출.
+V75-D는 **inplace 패치(LLM 1회) 먼저 시도 → 실패 시 전면 재생성**으로 변경.
+
+```
+Round 1: LOGIC_ERROR → streak=1
+Round 2: LOGIC_ERROR → streak=2 → inplace 패치 시도
+  ├─ 성공 → streak=0, 패치된 BP로 계속
+  └─ 실패 → streak 유지, 기존 BP로 계속
+Round 3: LOGIC_ERROR → streak=3 (또는 1) → 전면 재생성
+```
+
+**플래그**: `_inplace_attempted = False` (1회 제한, `_blueprint_regenerated`와 동일 패턴)
+
+---
+
+### 12-2. 전체 스테이지 결함 조사 — P1 6건 + P2 3건 패치 완료
+
+| # | 파일:위치 | 등급 | 결함 | 수정 내용 | 감리 |
+|---|-----------|------|------|-----------|------|
+| P1-1 | `preset_registry.py:574` | P1 | `_parse_korean_number` — "1천만"=10,010,000 (기대 10,000,000) | `current==0 and sub_total==0` 조건 추가 | CORRECT |
+| P1-2 | `preset_registry.py:724` | P1 | `FieldDefinition(**fd)` — 추가 키 시 TypeError 크래시 | 유효 키만 필터 후 생성 | CORRECT |
+| P1-3 | `stage2_orchestrator.py:229` | P1 | `last_refined_context` UnboundLocalError 가능 | `= ""` 초기화 추가 | CORRECT |
+| P1-4 | `stage2_validation_pipeline.py:465` | P1 | `draft_validator_passed` 절대 True 안 됨 (dead fallback) | DraftValidator 통과 시 `= True` 설정 | CORRECT |
+| P1-5 | `three_phase_bp_generator.py:518` | P1 | `_inplace_patch_blueprint` — `validate_blueprint()` 미호출 | 반환 전 `validate_blueprint(result)` 추가 | CORRECT |
+| P1-6 | `three_phase_bp_generator.py:282` | P1 | ASP `scene_count` — list일 때 0 | `isinstance(..., (dict, list))` 확장 | CORRECT |
+| P2-1 | `stage4_orchestrator.py:802` | P2 | `arc_no` None → TypeError | `(arc_data.get("arc_no") or 1) - 1` | CORRECT |
+| P2-2a | `stage2_finalizer.py:436` | P2 | hasattr 가드 누락 (롤백 불일치) | `if hasattr(_st, _k):` 추가 | CORRECT |
+| P2-2b | `stage2_finalizer.py:606` | P2 | 동일 | 동일 | CORRECT |
+
+**감리 결과**: 9건 전량 CORRECT, 오작업 0건.
+
+---
+
+### 12-3. 미패치 관찰 대기 항목
+
+| # | 파일 | 등급 | 사유 |
+|---|------|------|------|
+| P2-3 | `stage2_validation_pipeline.py:772` | P2 | word_counts/stripped 진단 misalign — REJECT 판정 자체는 정확 |
+| P2-4 | `reverse_expander.py:654` | P2 | ProgressBar batch vs episode 카운트 — 표시 버그 |
+| P2-5 | `state_text_verifier.py:134` | P2 | 숫자 포함 문자열 과잉 필터 — LLM 토큰 소비만 증가 |
+| P2-6 | `story_expander.py:174` | P2 | 반환 타입 힌트 `→ dict` (실제 None 가능) |
+| P2-7 | `chief_writer_quality.py:95,110` | P2 | `_self_critique` 중복 호출 (Python만, LLM 아님) |
+| P2-8 | `config_manager.py:145` | P2 | bool/int 서브클래스 타입 혼동 (현행 YAML에서 미트리거) |
+
+---
+
+### 12-4. [V73] 자본금 역동기화 리스크 — 완전 회피 방안 (미구현, 설계만)
+
+**현재 문제**: `_reconcile_capital` (stage4_post_processor.py:132)이 원고 전문에서 regex로 자본금을 추출해 HUD를 덮어씀.
+- 대사 속 타인 자산 언급이 주인공 HUD capital로 오인될 수 있음 (P1 리스크)
+- Director가 이미 `state_updates`에 capital을 포함했어도 regex 결과로 덮어씀 (Director 주권 침해)
+
+**수정 방안 (2중 방어)**:
+
+#### 방어 1: Director state_updates 우선 (Director 주권 존중)
+
+`_reconcile_capital()` 시그니처에 `final_state_updates: dict | None = None` 추가.
+Director가 이미 capital 관련 키를 state_updates에 포함했으면 → 재조정 스킵.
+
+```python
+# _reconcile_capital 진입부에 추가
+if final_state_updates:
+    _capital_keys = {"capital", "자본", "자본금", "잔고"}
+    if _capital_keys & {k.lower() for k in final_state_updates}:
+        return  # Director가 이미 capital 설정 → 스킵
+```
+
+호출부 (`process_pass_result` L240): `final_state_updates=final_state_updates` 전달.
+
+#### 방어 2: 대사 제거 후 regex 매칭 (타인 자산 오인 차단)
+
+`_extract_capital_from_manuscript`에서 따옴표 내부 텍스트를 제거한 뒤 regex 실행.
+
+```python
+_DIALOGUE_RE = re.compile(r'["\u201c][^"\u201d]*["\u201d]')
+
+# _extract_capital_from_manuscript 진입부
+narration_only = _DIALOGUE_RE.sub("", manuscript)
+# 이후 narration_only에 대해 regex 매칭
+```
+
+이렇게 하면:
+- 1화 신규 프로젝트 (HUD=0, Director가 capital 미설정) → 서술 속 자본금 추출 → 정상 보정
+- Director가 capital 설정한 경우 → 방어 1로 스킵
+- "김사장 자산 300억" 대사 → 방어 2로 제거 → 오인 없음
+
+**구현 시기**: 다음 안정화 패치 시 진행 (현재는 관찰 대기).
+
+---
+
+### 12-5. 테스트 기준선
+
+| 항목 | 값 |
+|------|-----|
+| pytest 통과 기준 | **2,692 passed + 0 xfailed** |
+| 마지막 검증 | 2026-02-27 |
+| Ruff | 0 violations |
+| 신규 테스트 | `test_v75d_graduated_escalation.py` (6개) |
+
+---
+
 **문서 끝**

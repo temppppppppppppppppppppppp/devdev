@@ -5,6 +5,7 @@ Preset Registry - 프리셋 기반 동적 스키마 체계
 """
 
 import copy
+import dataclasses
 import json
 import re
 from dataclasses import asdict, dataclass, field
@@ -570,8 +571,8 @@ class PresetRegistry:
             if char.isdigit():
                 current = current * 10 + int(char)
             elif char in multipliers:
-                if current == 0:
-                    current = 1
+                if current == 0 and sub_total == 0:
+                    current = 1  # "만" → 1만, but "1천만" → sub_total=1000, current=0 → 계수 그대로
                 mult_val = multipliers[char]
                 if mult_val >= 10000:
                     # 대단위(억, 만): sub_total + current를 계수로 사용
@@ -718,7 +719,8 @@ class PresetRegistry:
             active_presets = []
         for preset in active_presets:
             registry.activate_preset(preset)
+        _valid_keys = {f.name for f in dataclasses.fields(FieldDefinition)}
         for name, fd in data.get("discovered_fields", {}).items():
             if isinstance(fd, dict):
-                registry.discovered_fields[name] = FieldDefinition(**fd)
+                registry.discovered_fields[name] = FieldDefinition(**{k: v for k, v in fd.items() if k in _valid_keys})
         return registry

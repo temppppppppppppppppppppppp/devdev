@@ -244,3 +244,40 @@ class TestMandatoryAndHelpers:
         builder = ChiefWriterContextBuilder(_make_host())
         result = builder._build_justification_guidance("현재 상태: 정상", "무협")
         assert result == ""
+
+
+class TestFinancialDigest:
+    """[V73] 금융 상태 다이제스트 추출 테스트"""
+
+    def test_digest_extracts_arabic_capital(self):
+        builder = ChiefWriterContextBuilder(_make_host())
+        manuscript = "가" * 220 + "잔고 131억 원의 잔고 증명서를 꺼내 보였다."
+        digest = builder._generate_episode_digest(manuscript, ep_num=10)
+        assert "확정 자본" in digest
+        assert "131억" in digest
+
+    def test_digest_extracts_multiple_capitals(self):
+        builder = ChiefWriterContextBuilder(_make_host())
+        manuscript = "가" * 220 + "자본금 80억에서 현금 57억으로 줄어들었다."
+        digest = builder._generate_episode_digest(manuscript, ep_num=11)
+        assert "확정 자본" in digest
+
+    def test_digest_no_capital_for_non_financial(self):
+        builder = ChiefWriterContextBuilder(_make_host())
+        manuscript = "가" * 220 + "검을 뽑아들었다. 내공이 폭발했다."
+        digest = builder._generate_episode_digest(manuscript, ep_num=5)
+        assert "확정 자본" not in digest
+
+    def test_digest_capital_with_comma_number(self):
+        builder = ChiefWriterContextBuilder(_make_host())
+        manuscript = "가" * 220 + "예수금 1,500만 원이 남았다."
+        digest = builder._generate_episode_digest(manuscript, ep_num=3)
+        assert "확정 자본" in digest
+        assert "1,500만" in digest
+
+    def test_digest_reverse_pattern(self):
+        """'80억의 자본' 같은 역순 패턴 테스트"""
+        builder = ChiefWriterContextBuilder(_make_host())
+        manuscript = "가" * 220 + "80억의 자본을 투입했다."
+        digest = builder._generate_episode_digest(manuscript, ep_num=7)
+        assert "확정 자본" in digest

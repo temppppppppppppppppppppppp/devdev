@@ -152,6 +152,7 @@ orchestrator:
 # ── 기능 플래그 ──────────────────────────────────────────────
 feature_flags:
   enable_patch_mode: true
+  enable_state_text_verifier: true   # [V75] actual_truth ↔ 원고 교차 검증
 
 # Smart Context Retrieval (SC-0~6)
 smart_retrieval:

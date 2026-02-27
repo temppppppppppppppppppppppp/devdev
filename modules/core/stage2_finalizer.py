@@ -433,7 +433,8 @@ class Stage2Finalizer:
                     try:
                         _st = self.ctx.state_tracker
                         for _k, _v in st_snapshot.items():
-                            setattr(_st, _k, _v)
+                            if hasattr(_st, _k):  # [감리] 다른 롤백 경로와 일관된 hasattr 가드
+                                setattr(_st, _k, _v)
                         logging.warning("🔄 [V70] DB 실패 StateTracker 롤백 완료")
                     except Exception as _rb_err:
                         logging.warning(f"⚠️ [V70] DB 실패 StateTracker 롤백 실패: {_rb_err}")
@@ -602,7 +603,8 @@ class Stage2Finalizer:
                 try:
                     _st = self.ctx.state_tracker
                     for _k, _v in st_snapshot.items():
-                        setattr(_st, _k, _v)
+                        if hasattr(_st, _k):  # [감리] 다른 롤백 경로와 일관된 hasattr 가드
+                            setattr(_st, _k, _v)
                     logging.warning("🔄 [V70] StateTracker 롤백 완료 (Director REJECT)")
                 except Exception as _rb_err:
                     logging.warning(f"⚠️ [V70] StateTracker 롤백 실패 (비차단): {_rb_err}")

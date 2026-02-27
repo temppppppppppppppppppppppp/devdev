@@ -819,6 +819,7 @@ class Stage4InterviewRound:
         except (ValueError, TypeError):
             score = 0
         reason = director_result.get("selection_reason") or ""
+        error_category = director_result.get("error_category", "")  # [V75-B]
 
         self.ctx.ui.log(f"   📊 Director 판정: {verdict} (점수: {score}, 선택: 후보 {selected})")
         self.ctx.ui.log(f"      └─ 사유: {reason[:80]}...")
@@ -857,6 +858,19 @@ class Stage4InterviewRound:
         except Exception as e:
             logging.warning(f"[D-4] Director 선택 기록 실패 (비차단): {e!s:.100}")
 
+        # [V76] 라운드별 생산 로그 (JSONL)
+        self._append_episode_log(
+            ep_num=next_ep,
+            round_num=round_num,
+            director_result=director_result,
+            is_patch=_is_patch,
+            patch_fallback=_is_patch_fallback,
+            tot_used=_tot_used,
+            mad_used=_mad_used,
+            asp_used=bool(_asp_manuscript),
+            validation_warnings=[w for vr in validation_results for w in vr.get("warnings", [])][:10],
+        )
+
         _quality_gate_score = _threshold("scoring.quality_gate_score", 90)
         if verdict == "PASS" and score < _quality_gate_score:
             self.ctx.ui.log(f"   ⚠️ [QualityGate] PASS 판정이나 score={score} < {_quality_gate_score} → 패치 모드")
@@ -892,7 +906,10 @@ class Stage4InterviewRound:
                         _post_select_conflicts.append(f"[Continuity Conflict] {_conflict_msg}")
                         self.ctx.ui.log(f"   [A-3] Post-select continuity conflict: {_conflict_msg[:80]}")
                 except Exception as _cont_err:
-                    logging.warning(f"[SilentPass:SC:PostSelectContinuity] {_cont_err!s:.100}")
+                    logging.warning(f"[FailClosed:SC:PostSelectContinuity] {_cont_err!s:.100}")
+                    _post_select_conflicts.append(
+                        f"[Continuity Check Error] 검증 실패 (fail-closed): {str(_cont_err)[:80]}"
+                    )
 
             # (b) History conflict check for selected candidate only
             if (
@@ -917,7 +934,10 @@ class Stage4InterviewRound:
                             _post_select_conflicts.append(f"[V67] History Conflict: {_conflict_msg}")
                             self.ctx.ui.log(f"   [A-3] Post-select history conflict: {_conflict_msg[:80]}")
                 except Exception as _hist_err:
-                    logging.warning(f"[SilentPass:SC:PostSelectHistory] {_hist_err!s:.100}")
+                    logging.warning(f"[FailClosed:SC:PostSelectHistory] {_hist_err!s:.100}")
+                    _post_select_conflicts.append(
+                        f"[History Check Error] 검증 실패 (fail-closed): {str(_hist_err)[:80]}"
+                    )
 
             # (c) Downgrade PASS to REJECT if post-select validation found conflicts
             if _post_select_conflicts:
@@ -966,6 +986,7 @@ class Stage4InterviewRound:
                     final_manuscript=final_manuscript,
                     final_title=final_title,
                     final_state_updates=final_state_updates,
+                    error_category=error_category,  # [V75-B]
                 )
         if verdict != "PASS":
             # [TF-R2-S4-03] 시스템 감지 라인 보존 (REJECT 시 덮어쓰기 전 추출)
@@ -1133,6 +1154,7 @@ class Stage4InterviewRound:
             verdict="REJECT",
             director_feedback=director_feedback,
             previous_attempt=previous_attempt,
+            error_category=error_category,  # [V75-B]
         )
 
     # ── Stage 4 PassRateMonitor 기록 ──────────────────────────────
@@ -1165,6 +1187,66 @@ class Stage4InterviewRound:
                     logging.warning(f"[SilentPass:InterviewRound] ep{_prev_ep} history load failed: {e!s:.100}")
 
         return _ms_history_for_check
+
+    def _append_episode_log(
+        self,
+        *,
+        ep_num,
+        round_num,
+        director_result,
+        is_patch,
+        patch_fallback,
+        tot_used,
+        mad_used,
+        asp_used,
+        validation_warnings,
+    ):
+        """[V76] 라운드별 생산 로그를 JSONL로 기록."""
+        try:
+            import datetime
+            import json
+            import os
+
+            logs_dir = os.path.join("projects", self.ctx.current_project.name, "logs")
+            os.makedirs(logs_dir, exist_ok=True)
+
+            _sel_candidate = director_result.get("selected_candidate") or {}
+            if not isinstance(_sel_candidate, dict):
+                _sel_candidate = {}
+
+            try:
+                _log_score = int(director_result.get("score", 0))
+            except (ValueError, TypeError):
+                _log_score = 0
+
+            entry = {
+                "ts": datetime.datetime.now().isoformat(timespec="seconds"),
+                "ep": ep_num,
+                "round": round_num,
+                "verdict": director_result.get("verdict", ""),
+                "score": _log_score,
+                "selected": director_result.get("selected", ""),
+                "strategy": _sel_candidate.get("strategy", "") or _sel_candidate.get("strategy_name", ""),
+                "error_category": director_result.get("error_category", ""),
+                "reason": (director_result.get("selection_reason") or "")[:500],
+                "action_items": (director_result.get("action_items") or [])[:5],
+                "score_breakdown": director_result.get("score_breakdown", {}),
+                "open_review": (director_result.get("open_review") or "")[:300],
+                "flags": {
+                    "patch_mode": is_patch,
+                    "patch_fallback": patch_fallback,
+                    "tot": tot_used,
+                    "mad": mad_used,
+                    "asp": asp_used,
+                },
+                "warnings": validation_warnings[:10],
+            }
+
+            log_path = os.path.join(logs_dir, "episode_production.jsonl")
+            with open(log_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        except Exception as e:
+            logging.warning("[V76] episode_production log 실패 (비차단): %s", e)
 
     def _record_s4_attempt(
         self,
