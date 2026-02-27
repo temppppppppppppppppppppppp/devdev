@@ -1,9 +1,10 @@
 # 장기 기억 강화 구현 명세 (코드 기반 감사 결과)
 
-작성일: 2026-02-27
-기준 커밋: `68b6b93`
+작성일: 2026-02-27 (2차 갱신)
+기준 커밋: `68b6b93` → 2차 감사 시점 HEAD
 참조: `long_term_memory_system_250ep_recommendation.md` (고수준 아키텍처)
-방식: Opus × 4 병렬 코드 감사 → 통합 명세
+참조: `long_term_memory_continuity_part5_audit.md` (PART 5 통과 가능성 점검)
+방식: Opus × 4 병렬 코드 감사 → 통합 명세 → 물리 인프라 점검 + PART 5 통합 + 디렉터 주권 재검토
 
 ---
 
@@ -74,6 +75,136 @@ organizations: {status, history[]}
 ### npc_relationship_edges — 최신값 UPSERT만
 
 이력 없음. `(npc1, npc2) UNIQUE` — 항상 현재 관계만 유지.
+
+---
+
+## 0-B. 물리적 인프라 현황 점검 (2026-02-27 2차 감사)
+
+> LM-A~G 각 컴포넌트가 의존하는 **피지컬 경로**(컨텍스트 전달, DB 조회, 캐싱)가
+> 현재 시스템에 실제로 존재하는지 코드 기반으로 검증한 결과.
+
+### 컨텍스트 전달 경로
+
+| 경로 | 현재 값 | 코드 위치 | LM 충분성 |
+|------|---------|-----------|----------|
+| **max_context_chars** | 700,000자 (~1.05M 토큰) | `config/system.yaml:19` | ✅ 모든 LM 컴포넌트의 advisory 프롬프트 수용 가능 |
+| **Stage4 컨텍스트 구조** | Tier1: 30화 full text + Tier2: 30~60화 summary + Tier3: arc summary | `stage4_context_builder.py:420~500` | ✅ LM-C/D/G 포맷팅 결과 삽입 가능 (mandatory_context에 추가) |
+| **Director 프롬프트** | structured_warnings 배열 + 이전 화 참조 30화 상한 | `director.py:57` | ✅ advisory 결과는 structured_warnings로 전달 |
+| **ContinuityInspector** | Arc 전량 비교 (tactical_doc 4500자 절삭) | `stage2_validation_pipeline.py:483` | ✅ LM-D/G 컨텍스트 포함 가능 |
+
+### DB 조회 경로
+
+| 인프라 | 현재 상태 | 코드 위치 | LM 의존 |
+|--------|----------|-----------|---------|
+| **manuscripts 테이블** (원고 전문) | ✅ 저장+조회 | `db_manager.py:820` (get_manuscript), `:2027` (get_recent_manuscripts), `:2050` (get_manuscripts_range) | LM-E: 회상 원본 대조 시 필수 |
+| **episode_meta 테이블** (요약) | ✅ 저장+조회 | `db_manager.py` | LM-E/G: 장기 요약 참조 가능 |
+| **npc_history 테이블** | ✅ append-only, 100/entity | `db_manager.py` | LM-B: NPC 이력 참조 가능 |
+| **FactLedger history** | ✅ 100/entity 상한 | `fact_ledger.py:20` (MAX_HISTORY_PER_ENTITY=100) | LM-C: ⚠️ 150화+ 시 초기 이력 탈락 |
+| **FactLedger summary** | ✅ 50,000자 | `fact_ledger.py:21` (MAX_SUMMARY_CHARS=50,000) | LM-C: ✅ 충분 |
+| **npc_relationship_edges** | ⚠️ UPSERT only, 이력 없음 | `db_manager.py` | LM-D: ❌ 이력 테이블 신규 필요 |
+| **world_laws** | ⚠️ 30개 FIFO, 자동등록 없음 | `world_state.py:659` | LM-A: ❌ CRITICAL 핀 + 자동등록 필요 |
+| **causal_graph** | ⚠️ Write만 존재, Read 미연결 | `db_manager.py:246`/`:1630`, `stage4_post_processor.py:619` | 보조: ❌ 현재 LM 직접 의존 없음. 후순위. |
+
+### 캐싱/검색 인프라
+
+| 인프라 | 현재 상태 | 코드 위치 | LM 충분성 |
+|--------|----------|-----------|----------|
+| **VecMemory** (3072d + FTS5 + RRF) | ✅ 전량 검색 | `vec_memory.py` | LM-E: ✅ 회상 원본 에피소드 검색 |
+| **Gemini Context Caching** | ✅ 50 entries, 1800s TTL | `base_agent.py:1175~1250` | LM-A/B: ✅ advisory LLM 호출 시 활용 가능 |
+| **known_attrs** | ⚠️ `role_at_intro` 1개만 | `world_state.py:695` | LM-B: ❌ age/appearance/physical 등 확장 필요 |
+| **Retrospective lookback** | ⚠️ 5화 고정 | `retrospective_validator.py:23` | LM-B/D: ⚠️ 장기 커버리지 부족 (LM 포맷터가 DB 직접 조회로 우회) |
+| **ContinuityBlueprint window** | ⚠️ 30화 하드코딩 | `stage2_validation_pipeline.py` | LM-A/D: ⚠️ 60화+ 미커버 (LM 포맷터가 전량 조회로 보완) |
+
+### 결론
+
+LM-A~G 구현에 필요한 **핵심 인프라 3종**(manuscripts DB 조회, 700K 컨텍스트 버짓, VecMemory 검색)은 **이미 존재**.
+병목은 인프라 부재가 아니라 **데이터 구조 확장**(known_attrs, npc_relationship_history, world_laws 핀)과
+**포맷팅→프롬프트 주입 배선** 미비임.
+
+FactLedger MAX_HISTORY_PER_ENTITY=100은 150화+ 시 초기 이력이 탈락하므로, LM-C 구현 시
+NumericHistoryFormatter가 **DB manuscripts 원본에서 재추출하는 폴백 경로**를 고려해야 함.
+
+---
+
+## 0-C. PART 5 감사 결과 반영 (`long_term_memory_continuity_part5_audit.md`)
+
+> `docs/2026-02-27/long_term_memory_continuity_part5_audit.md` 코드 정적 감사 결과를
+> 본 명세에 통합한 내용.
+
+### PART 5 판정 vs LM 컴포넌트 매핑
+
+| PART 5 영역 | 현재 판정 | 대응 LM 컴포넌트 | 해소 전략 |
+|-------------|----------|------------------|----------|
+| L1 (NPC 장기 속성) | 부분 통과 | **LM-B** (NpcDriftAdvisor) | known_attrs 확장 + LLM advisory 대조 |
+| L2 (세계관 절대 법칙) | 실패 위험 높음 | **LM-A** (TruthGate 7번째 검사) | Bible→world_laws 자동등록 + CRITICAL 핀 |
+| L3 (관계도 장기 누적) | 부분 통과 | **LM-D** (RelationshipHistoryFormatter) | 이력 테이블 + 타임라인 포맷팅 |
+| L4 (수치 누적 드리프트) | 실패 위험 매우 높음 | **LM-C** (NumericHistoryFormatter) | 전량 이력 포맷팅 + advisory LLM |
+| L5 (회상/플래시백 왜곡) | 실패 위험 높음 | **LM-E** (FlashbackVerifier) | VecMemory 검색 + 원본 대조 |
+| L6 (정보 역설) | 실패 위험 높음 | **LM-F** (KnowledgeLedger) | 정보 획득 원장 + 역방향 검출 |
+| L7 (장기 서사 구조) | 실패 위험 높음 | **LM-G** (NarrativeContextFormatter) | 동기/약속/스케일 포맷팅 |
+
+### PART 5 POC 필수 요건 대응
+
+| POC 요건 (원문) | 대응 | 비고 |
+|----------------|------|------|
+| ①L2/L4/L6/L7 차단 가능 검증기(fail-closed 게이트) | **advisory-only 유지** | 디렉터 주권주의 준수. 대신 Director 프롬프트에 `severity=CRITICAL` 경고 시 최우선 심사 지시를 강화 |
+| ②retrospective lookback 확장 및 60화+ 전용 검증 경로 | **LM 포맷터가 DB 직접 조회로 우회** | Retrospective lookback 5화 제한은 기존 유지. LM-B/C/D 포맷터는 `npc_history`/`FactLedger`/신규 `npc_relationship_history` 테이블에서 **전량 조회** |
+| ③causal_graph read 경로 실연결 | **후순위** | 현재 LM-A~G 어느 컴포넌트도 causal_graph에 직접 의존하지 않음. 향후 인과 추론 강화 시 활용 |
+| ④PART 5 시나리오 pass/fail 로그 재현 | **V76 episode_production.jsonl로 부분 커버** + LM advisory 결과 audit_event 기록 | 시나리오 단위 재현은 별도 테스트 프레임워크 필요 |
+
+### DB 샘플 이슈
+
+Part 5 감사에서 확인된 DB 샘플 문제:
+- `causal_graph`: 5개 프로젝트 모두 row 0건 (write는 실행되나 LLM이 causal_links를 반환 안 할 때 비축적)
+- 일부 DB에 `timeline_entries`, `npc_relationship_edges` 테이블 자체 MISSING
+  - **원인**: 해당 테이블은 특정 버전 이후 추가됨. 이전 프로젝트 DB는 마이그레이션 미적용
+  - **대응**: LM-D 구현 시 `npc_relationship_history` 테이블을 `_create_tables()`에 추가하면 신규 프로젝트에서 자동 생성. 기존 프로젝트는 `_ensure_tables()` 마이그레이션으로 처리
+
+### 디렉터 주권주의 vs fail-closed 긴장 해소
+
+PART 5 감사는 "fail-closed 게이트" 추가를 권고하나, 이는 **디렉터 주권주의(대원칙 3)**와 직접 충돌:
+- 디렉터 주권: Director가 최종 품질 결정권. 검증기가 auto-reject하면 Director 우회.
+- 해결: **advisory 강도를 3단계로 분류** (INFO/MAJOR/CRITICAL) + Director 프롬프트에 "CRITICAL advisory는 반드시 해소해야 PASS" 지시 추가
+
+이 방식은 Python이 차단하지 않고(대원칙 1 준수), Director가 판단하되(대원칙 3 준수),
+CRITICAL 경고를 무시할 경우 Director 자체의 판단 책임으로 귀속시킴.
+
+---
+
+## 0-D. 디렉터 주권주의 재검토 (LM-A~G 전 컴포넌트)
+
+> 대원칙 3: "Director가 최종 품질 결정권. Chief Writer·Analyst 등은 초안 제출만,
+> 합격/불합격/수정 지시는 Director가 내림. Director를 우회하면 안 됨."
+
+### 컴포넌트별 주권 준수 검증
+
+| 컴포넌트 | Python 역할 | LLM 판단 경로 | Director 우회 여부 | 판정 |
+|----------|------------|--------------|-------------------|------|
+| **LM-A** TruthGate world_law | world_laws 목록 수집·포맷팅 | `_check_world_law_violation()` → `structured_warnings` → Director | ❌ 우회 없음 | ✅ |
+| **LM-B** NpcDriftAdvisor | NPC 스냅샷 수집·포맷팅 | flash advisory → `logging.warning` + `audit_event` → Director | ❌ 우회 없음 | ✅ |
+| **LM-C** NumericHistoryFormatter | 수치 이력 표 포맷팅 | advisory LLM → `logging.warning` + `audit_event` → Director | ❌ 우회 없음 | ✅ |
+| **LM-D** RelationshipHistoryFormatter | 관계 타임라인 포맷팅 | ContinuityInspector 컨텍스트 → Director | ❌ 우회 없음 | ✅ |
+| **LM-E** FlashbackVerifier | 회상 마커 감지 + 원본 로드 | flash advisory → warnings → Director | ❌ 우회 없음 | ✅ |
+| **LM-F** KnowledgeLedger | 정보 획득 원장 수집/저장 | InfoParadoxChecker (LLM) → Director | ❌ 우회 없음 | ✅ |
+| **LM-G** NarrativeContextFormatter | 동기/약속/스케일 포맷팅 | ContinuityInspector 컨텍스트 → Director | ❌ 우회 없음 | ✅ |
+
+### 판정 결론
+
+**7개 컴포넌트 모두 디렉터 주권주의 준수.**
+
+- Python은 데이터 수집·포맷팅·전달만 수행
+- "이것이 오류인가?" 판단은 전부 LLM advisory (flash 또는 Director 직접)
+- 어떤 컴포넌트도 auto-reject/auto-block을 수행하지 않음
+- Director가 CRITICAL advisory를 무시하고 PASS 판정할 자유가 보장됨
+
+### 대원칙 전체 준수 체크
+
+| 대원칙 | 준수 | 근거 |
+|--------|------|------|
+| 1. Python은 수집만, 판단은 LLM | ✅ | 모든 Formatter/Advisor: Python이 이력·스냅샷 포맷팅만. 임계값 기반 Python 판단 없음 |
+| 2. 팩트시트 수정 권한은 LLM만 | ✅ | KnowledgeLedger/motivations/promises: LLM 생성 state_changes에서만 갱신 |
+| 3. 디렉터 주권주의 | ✅ | 7개 컴포넌트 모두 advisory-only. Director에 structured_warnings로 전달 |
+| 4. 사망 캐릭터 규칙 | ✅ | 기존 TruthGate 유지 + LM-E FlashbackVerifier가 회상 속 사망 NPC 추가 감지 |
 
 ---
 
@@ -666,16 +797,17 @@ if _nav_context.strip():
 
 ---
 
-## 11. 설계 원칙 준수 체크
+## 11. 설계 원칙 준수 체크 (0-D 재검토 결과 통합)
 
-| 원칙 | 준수 방식 |
-|------|----------|
-| **Python은 수집만, 판단은 LLM** | 모든 컴포넌트: Python은 이력/스냅샷/타임라인 **포맷팅**만. "이게 문제인가?" 판단은 LLM advisory. 임계값(50배, 극성점수, 20화 등) 기반 Python 자체 판단 없음. |
-| 팩트시트 수정 권한은 LLM만 | KnowledgeLedger/WorldState 동기·약속는 LLM 생성 state_changes에서만 갱신. Python이 직접 기입 안 함. |
-| 디렉터 주권주의 | 모든 검사 advisory. Director에 structured_warnings로 전달, PASS/REJECT는 Director. |
-| 사망 캐릭터 규칙 | TruthGate 기존 검사 유지 + FlashbackVerifier가 회상 속 사망 NPC 행동 추가 감지. |
-| SQLite 단일 DB | 신규 테이블 1개(npc_relationship_history). 나머지 anchors/canonical_facts 기존 인프라 재사용. |
-| 대규모 리팩토링 금지 | 각 Stage 기존 코드에 hook 포인트만 추가. |
+| 원칙 | 준수 방식 | 2차 검증 결과 |
+|------|----------|-------------|
+| **Python은 수집만, 판단은 LLM** | 모든 컴포넌트: Python은 이력/스냅샷/타임라인 **포맷팅**만. "이게 문제인가?" 판단은 LLM advisory. 임계값 기반 Python 자체 판단 없음. | ✅ 7/7 컴포넌트 확인 |
+| 팩트시트 수정 권한은 LLM만 | KnowledgeLedger/WorldState 동기·약속는 LLM 생성 state_changes에서만 갱신. Python이 직접 기입 안 함. | ✅ |
+| **디렉터 주권주의** | 모든 검사 advisory. Director에 structured_warnings로 전달, PASS/REJECT는 Director. **PART 5 "fail-closed" 권고는 advisory 강도 3단계(INFO/MAJOR/CRITICAL)로 대체.** | ✅ 0-D 전수 검증 완료 |
+| 사망 캐릭터 규칙 | TruthGate 기존 검사 유지 + FlashbackVerifier가 회상 속 사망 NPC 행동 추가 감지. | ✅ |
+| SQLite 단일 DB | 신규 테이블 1개(npc_relationship_history). 나머지 anchors/canonical_facts 기존 인프라 재사용. | ✅ |
+| 대규모 리팩토링 금지 | 각 Stage 기존 코드에 hook 포인트만 추가. | ✅ |
+| **피지컬 인프라 충분성** | 핵심 3종(manuscripts DB, 700K 컨텍스트, VecMemory)이 이미 존재. 병목은 데이터 구조 확장과 배선 미비. | ✅ 0-B 검증 완료 |
 
 ---
 
@@ -707,7 +839,44 @@ npc_rel_history ──×                               (현재: UPSERT만, 이�
 
 ---
 
-*4개 Opus/Sonnet 병렬 에이전트 코드 감사(2026-02-27) → 통합 작성*
+---
+
+## 12. PART 5 통합 결론
+
+### 현재 시스템 상태
+
+PART 5(L1~L7, 35개 시나리오)를 현재 시스템은 **전부 통과하지 못함**.
+그러나 통과 불가의 원인은 "인프라 부재"가 아닌 **"포맷팅→프롬프트 주입 배선 미비"**:
+
+- **manuscripts DB** 전문 저장·조회: ✅ 존재 (get_manuscript / get_manuscripts_range)
+- **700K 컨텍스트 버짓**: ✅ 존재 (Gemini 1M 토큰)
+- **VecMemory 전량 검색**: ✅ 존재 (3072d + FTS5 + RRF)
+- **FactLedger history 100/entity**: ✅ 존재 (150화+ 시 보완 필요)
+- **Gemini 캐싱 50 entries**: ✅ 존재 (advisory LLM 비용 절감)
+
+### LM-A~G 구현 시 예상 전환
+
+| 영역 | 현재 | LM 구현 후 |
+|------|------|-----------|
+| L1 | 부분 통과 | **통과** (known_attrs 확장 + NpcDriftAdvisor) |
+| L2 | 실패 위험 높음 | **대폭 개선** (TruthGate 7번째 검사 + CRITICAL 핀) |
+| L3 | 부분 통과 | **통과** (npc_relationship_history + 타임라인 포맷팅) |
+| L4 | 실패 위험 매우 높음 | **대폭 개선** (NumericHistoryFormatter + advisory) |
+| L5 | 실패 위험 높음 | **대폭 개선** (FlashbackVerifier + 원본 대조) |
+| L6 | 실패 위험 높음 | **개선** (KnowledgeLedger, 오탐 위험 잔존) |
+| L7 | 실패 위험 높음 | **개선** (NarrativeContextFormatter, 구조적 한계 잔존) |
+
+### 후순위 과제 (LM 완료 후)
+
+1. `causal_graph` read 경로 실연결 — 인과 추론 강화용 (현재 LM 직접 의존 없음)
+2. Retrospective lookback 5→10+ 확장 검토 (LM 포맷터가 DB 직접 조회로 우회하므로 urgent하지 않음)
+3. PART 5 시나리오 단위 자동 재현 테스트 프레임워크 (V76 JSONL로 부분 커버)
+
+---
+
+*1차: 4개 Opus/Sonnet 병렬 에이전트 코드 감사(2026-02-27) → 통합 작성*
+*2차: 물리적 인프라 점검 + PART 5 감사 통합 + 디렉터 주권 재검토(2026-02-27)*
 *참조 파일: vec_memory.py, truth_gate.py, context_advisor.py, db_manager.py,*
 *world_state.py, fact_ledger.py, state_tracker_npc.py, continuity_inspector.py,*
-*pre_llm_validator.py, stage2_validation_pipeline.py, stage4_post_processor.py*
+*pre_llm_validator.py, stage2_validation_pipeline.py, stage4_post_processor.py,*
+*stage4_context_builder.py, base_agent.py, retrospective_validator.py, config/system.yaml*
