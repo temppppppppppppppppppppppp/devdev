@@ -8,9 +8,9 @@ agents:
   block_enricher: "gemini-2.5-flash"
   preflight_checker: "gemini-3-flash-preview"
   state_extractor: "gemini-3-flash-preview"
-  four_phase_arc_generator: "gemini-2.5-pro"
-  continuity_inspector: "gemini-2.5-pro"
-  director: "gemini-2.5-pro"
+  four_phase_arc_generator: "gemini-3.1-pro-preview"  # [Phase2] 2.5-pro→3.1-pro: Arc 방향 결정
+  continuity_inspector: "gemini-3.1-pro-preview"      # [Phase2] 250화 연속성 고도 추론
+  director: "gemini-3.1-pro-preview"                  # [Phase2] 내각제 원칙: 심판관≥CW
   arc_corrector: "gemini-2.5-flash"
   arc_critic: "gemini-2.5-flash"
   consensus_validator: "gemini-2.5-flash"
@@ -29,7 +29,7 @@ fallback_chain:
 sub_components:
   four_phase_arc_generator:
     preflight: "gemini-3-flash-preview"
-    ensemble: "gemini-2.5-pro"
+    ensemble: "gemini-3.1-pro-preview"  # [Phase2] Arc 앙상블 선택 = 스토리 핵심
     validator: "gemini-2.5-flash"
   three_phase_blueprint_generator:
     ensemble: "gemini-3.1-pro-preview"

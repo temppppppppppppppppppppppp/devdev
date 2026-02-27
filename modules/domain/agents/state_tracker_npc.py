@@ -1596,6 +1596,14 @@ class StateTrackerNPC:
         if len(self.tracker.npc_npc_relationships) > 50:
             oldest_key = next(iter(self.tracker.npc_npc_relationships))
             del self.tracker.npc_npc_relationships[oldest_key]
+        # [Graph-Layer] DB 영속화 (메모리 50쌍 한도와 별개로 무제한)
+        _db = getattr(self.tracker, "_db", None)
+        if _db:
+            try:
+                _ep = getattr(self.tracker, "current_ep", 0) or 0
+                _db.upsert_npc_relationship_edge(key[0], key[1], relation, arc_no, _ep)
+            except Exception as _e:
+                logging.debug("[StateTrackerNPC] npc_rel DB sync 실패 (비치명): %s", _e)
 
     def get_npc_npc_relationship_summary(self) -> str:
         """[V66] NPC-NPC 관계 목록 → 프롬프트 주입용 문자열."""

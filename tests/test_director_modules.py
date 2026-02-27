@@ -803,3 +803,175 @@ class TestDirectorCoreMethods:
         """65. Director exposes ENSEMBLE_SELECTION_PROMPT from EnsembleSelector."""
         assert director.ENSEMBLE_SELECTION_PROMPT is not None
         assert len(director.ENSEMBLE_SELECTION_PROMPT) > 100
+
+
+# ═══════════════════════════════════════════════════════════════
+# 6. DirectorEnsembleCaching Tests (TF-5)
+# ═══════════════════════════════════════════════════════════════
+
+
+_LONG_MANUSCRIPT = "가나다라마바사아자차카타파하" * 300  # ~4200자, 분량 통과
+
+
+class TestDirectorEnsembleCaching:
+    """TF-5: Director 캐시 경로 / fallback 경로 / variable_prompt 보존 검증."""
+
+    @pytest.fixture
+    def ensemble(self, mock_context, mock_client):
+        with patch.dict("os.environ", {"GOOGLE_API_KEY": "test-key-123"}):
+            from modules.domain.agents.director import Director
+            from modules.domain.agents.director_ensemble import DirectorEnsembleSelector as DirectorEnsemble
+
+            d = Director(context=mock_context, client=mock_client, model_tier="gemini-2.5-flash")
+            return DirectorEnsemble(director=d)
+
+    def test_cache_hit_uses_cached_context(self, ensemble):
+        """cache_name 있을 때 _ask_with_cached_context 호출, ask() 미호출."""
+        ensemble._d._get_or_create_context_cache = MagicMock(
+            return_value={"cache_name": "cached_name_abc", "cached": True, "content_hash": "abc"}
+        )
+        ensemble._d._ask_with_cached_context = MagicMock(return_value='{"selected":"A","verdict":"PASS","score":80}')
+        ensemble._d.ask = MagicMock()
+        ensemble._d._extract_json_robust = MagicMock(
+            return_value={"selected": "A", "verdict": "PASS", "score": 80, "feedback": {}}
+        )
+        ensemble._prompt_loader = MagicMock()
+        ensemble._prompt_loader.load = MagicMock(return_value="stable_context_text" * 4000)
+
+        candidates = [
+            {"strategy": "A", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+            {"strategy": "B", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+            {"strategy": "C", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+        ]
+        ensemble.select_and_judge_ensemble(
+            ep_num=5, candidates=candidates,
+            validation_results=[], blueprint={}, previous_ending="",
+        )
+
+        ensemble._d._ask_with_cached_context.assert_called_once()
+        ensemble._d.ask.assert_not_called()
+
+    def test_cache_miss_still_uses_cached_name(self, ensemble):
+        """cache_name 있으면 cached=False(신규)여도 _ask_with_cached_context 경로 사용."""
+        ensemble._d._get_or_create_context_cache = MagicMock(
+            return_value={"cache_name": "new_cache_name", "cached": False, "content_hash": "xyz"}
+        )
+        ensemble._d._ask_with_cached_context = MagicMock(return_value='{"selected":"B","verdict":"PASS","score":75}')
+        ensemble._d.ask = MagicMock()
+        ensemble._d._extract_json_robust = MagicMock(
+            return_value={"selected": "B", "verdict": "PASS", "score": 75, "feedback": {}}
+        )
+        ensemble._prompt_loader = MagicMock()
+        ensemble._prompt_loader.load = MagicMock(return_value="stable_context_text" * 4000)
+
+        candidates = [
+            {"strategy": "A", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+            {"strategy": "B", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+            {"strategy": "C", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+        ]
+        ensemble.select_and_judge_ensemble(
+            ep_num=7, candidates=candidates,
+            validation_results=[], blueprint={}, previous_ending="",
+        )
+
+        ensemble._d._ask_with_cached_context.assert_called_once()
+        ensemble._d.ask.assert_not_called()
+
+    def test_cache_exception_falls_back_to_ask(self, ensemble):
+        """_get_or_create_context_cache 예외 → ask(full_fallback) 호출."""
+        ensemble._d._get_or_create_context_cache = MagicMock(side_effect=RuntimeError("cache error"))
+        ensemble._d._ask_with_cached_context = MagicMock()
+        ensemble._d.ask = MagicMock(return_value='{"selected":"A","verdict":"PASS","score":60}')
+        ensemble._d._extract_json_robust = MagicMock(
+            return_value={"selected": "A", "verdict": "PASS", "score": 60, "feedback": {}}
+        )
+        ensemble._prompt_loader = MagicMock()
+        ensemble._prompt_loader.load = MagicMock(return_value="stable_context_text" * 4000)
+
+        candidates = [
+            {"strategy": "A", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+            {"strategy": "B", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+            {"strategy": "C", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+        ]
+        ensemble.select_and_judge_ensemble(
+            ep_num=3, candidates=candidates,
+            validation_results=[], blueprint={}, previous_ending="",
+        )
+
+        ensemble._d._ask_with_cached_context.assert_not_called()
+        ensemble._d.ask.assert_called_once()
+
+    def test_variable_prompt_preserved_in_fallback(self, ensemble):
+        """stable 선제 절삭되어도 variable_prompt 말미 내용이 full_fallback에 보존됨 (핵심)."""
+        stable = "S" * 800_000  # 800K 짜리 stable
+        variable = "VARIABLE_CONTENT_END"
+
+        captured_fallback = {}
+
+        def fake_ask(prompt, **kwargs):
+            captured_fallback["prompt"] = prompt
+            return '{"selected":"A","verdict":"PASS","score":70}'
+
+        ensemble._d._get_or_create_context_cache = MagicMock(
+            return_value={"cache_name": None, "cached": False, "content_hash": "h"}
+        )
+        ensemble._d._ask_with_cached_context = MagicMock()
+        ensemble._d.ask = MagicMock(side_effect=fake_ask)
+        ensemble._d._extract_json_robust = MagicMock(
+            return_value={"selected": "A", "verdict": "PASS", "score": 70, "feedback": {}}
+        )
+        ensemble._prompt_loader = MagicMock()
+        # load() 첫 번째 호출 = stable, 두 번째 = variable
+        ensemble._prompt_loader.load = MagicMock(side_effect=[stable, variable])
+
+        candidates = [
+            {"strategy": "A", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+            {"strategy": "B", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+            {"strategy": "C", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+        ]
+        ensemble.select_and_judge_ensemble(
+            ep_num=9, candidates=candidates,
+            validation_results=[], blueprint={}, previous_ending="",
+        )
+
+        assert "prompt" in captured_fallback
+        full_fb = captured_fallback["prompt"]
+        assert variable in full_fb, "variable_prompt이 full_fallback에 보존되어야 함"
+
+    def test_full_fallback_ends_with_variable(self, ensemble):
+        """full_fallback[-len(variable):] == variable (정확히 말미 보존)."""
+        stable = "X" * 100
+        variable = "TAIL_VARIABLE"
+
+        captured_args = {}
+
+        def fake_ask(prompt, **kwargs):
+            captured_args["prompt"] = prompt
+            return '{"selected":"A","verdict":"PASS","score":65}'
+
+        ensemble._d._get_or_create_context_cache = MagicMock(
+            return_value={"cache_name": None, "cached": False, "content_hash": "h2"}
+        )
+        ensemble._d._ask_with_cached_context = MagicMock()
+        ensemble._d.ask = MagicMock(side_effect=fake_ask)
+        ensemble._d._extract_json_robust = MagicMock(
+            return_value={"selected": "A", "verdict": "PASS", "score": 65, "feedback": {}}
+        )
+        ensemble._prompt_loader = MagicMock()
+        ensemble._prompt_loader.load = MagicMock(side_effect=[stable, variable])
+
+        candidates = [
+            {"strategy": "A", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+            {"strategy": "B", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+            {"strategy": "C", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
+        ]
+        ensemble.select_and_judge_ensemble(
+            ep_num=2, candidates=candidates,
+            validation_results=[], blueprint={}, previous_ending="",
+        )
+
+        full_fb = captured_args["prompt"]
+        assert full_fb.endswith(variable), (
+            f"full_fallback이 variable_prompt로 끝나야 함. "
+            f"actual tail: {full_fb[-len(variable) - 5:]!r}"
+        )

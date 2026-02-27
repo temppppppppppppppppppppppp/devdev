@@ -254,7 +254,7 @@ class StageZeroManager:
     # 역설계 플로우
     # ============================================
 
-    def run_reverse_engineering_flow(self, input_path: str = None) -> tuple[dict, list, StyleGuide]:
+    def run_reverse_engineering_flow(self, input_path: str = None) -> tuple[dict, list, StyleGuide | None]:
         """역설계 플로우"""
         # 입력 경로
         if not input_path:

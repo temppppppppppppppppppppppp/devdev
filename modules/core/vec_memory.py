@@ -70,9 +70,9 @@ class VecMemory:
         self._conn: sqlite3.Connection | None = None
         self._genai_client = None
 
-        # [INF-I2] 임베딩 결과 LRU 캐시 (MD5 해시 키, 최대 128개)
+        # [INF-I2] 임베딩 결과 LRU 캐시 (MD5 해시 키, 최대 512개)
         self._embed_cache: OrderedDict[str, list] = OrderedDict()
-        self._embed_cache_max = 128
+        self._embed_cache_max = 512
         self._embed_cache_lock = threading.Lock()
 
         # [DB-MERGE] 단일모드: shared(프로덕션) vs standalone(테스트)
@@ -1263,7 +1263,11 @@ class VecMemory:
 
     def is_operational(self) -> bool:
         """벡터 검색 가능 여부."""
-        return self.has_valid_memory and self._conn is not None
+        return (
+            self.has_valid_memory
+            and self._conn is not None
+            and self._genai_client is not None  # [F1] API key 없으면 embedding 불가
+        )
 
     def get_status(self) -> dict:
         """메모리 엔진 상태 진단."""
@@ -1287,6 +1291,25 @@ class VecMemory:
     def ui_log(self, msg: str) -> None:
         """외부 호출용 로그 (LongTermMemory 호환)."""
         self._ui_log(msg)
+
+    # ── [Phase2-L2] 원문 발췌 ─────────────────────────────────────────
+
+    def _fetch_manuscript_snippet(self, ep_num: int, max_chars: int = 200) -> str:
+        """manuscripts 테이블에서 원문 첫 N자 발췌 (project_data.db 공유 커넥션).
+
+        sqlite-vec 미설치 환경이나 manuscripts 테이블 미존재 시 빈 문자열 반환.
+        """
+        if not self._conn:
+            return ""
+        try:
+            row = self._conn.execute(
+                "SELECT content FROM manuscripts WHERE ep_num=?", (ep_num,)
+            ).fetchone()
+            if row and row[0]:
+                return str(row[0])[:max_chars]
+        except Exception:
+            pass
+        return ""
 
     # ── 리소스 정리 ─────────────────────────────────────────
 

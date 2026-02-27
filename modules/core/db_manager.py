@@ -531,9 +531,67 @@ class DBManager:
         """)
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_foreshadow_status ON foreshadow(status)")
 
+        # [Phase1-L0] 캐노니컬 팩트 테이블 (NPC 고정 속성 + 수치 팩트 영속화)
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS canonical_facts (
+                fact_key    TEXT PRIMARY KEY,
+                fact_type   TEXT NOT NULL,
+                value_json  TEXT,
+                first_ep    INTEGER,
+                last_ep     INTEGER,
+                confidence  TEXT DEFAULT 'confirmed'
+            )
+        """)
+
+        # [Phase3-Timeline] 타임라인 전용 테이블 (WorldState 20개 제한 제거)
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS timeline_entries (
+                ep_no        INTEGER PRIMARY KEY,
+                story_date   TEXT,
+                elapsed_days INTEGER,
+                time_note    TEXT
+            )
+        """)
+        self.cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_timeline_ep_no ON timeline_entries(ep_no)"
+        )
+
+        # [Graph-Layer] NPC 간 관계 영속화 (메모리 50쌍 한도 우회)
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS npc_relationship_edges (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                npc1        TEXT NOT NULL,
+                npc2        TEXT NOT NULL,
+                relation    TEXT,
+                since_ep    INTEGER,
+                updated_ep  INTEGER,
+                arc_no      INTEGER,
+                UNIQUE(npc1, npc2)
+            )
+        """)
+        self.cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_npc_rel_npc1 ON npc_relationship_edges(npc1)"
+        )
+        self.cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_npc_rel_npc2 ON npc_relationship_edges(npc2)"
+        )
+
+        # [Graph-Layer] Arc 인과 의존성
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS arc_dependencies (
+                from_arc_no  INTEGER NOT NULL,
+                to_arc_no    INTEGER NOT NULL,
+                dep_type     TEXT NOT NULL DEFAULT 'causes',
+                description  TEXT,
+                PRIMARY KEY (from_arc_no, to_arc_no)
+            )
+        """)
+
         self.conn.commit()
         # [DB-MERGE] 기존 vec_memory.db 1회성 마이그레이션
         self._migrate_vec_memory_db()
+        # [Phase3-Timeline] WorldState.timeline 배열 → DB 1회 마이그레이션
+        self._migrate_world_state_timeline_if_needed()
 
     # --- [트랜잭션 제어] ---
     def _migrate_vec_memory_db(self) -> None:
@@ -1253,6 +1311,212 @@ class DBManager:
 
         # --- [Section 4: 설계도 및 로그] ---
 
+    # --- [Phase1-L0] 캐노니컬 팩트 접근자 ---
+
+    def upsert_canonical_fact(self, fact_key: str, fact_type: str, value, first_ep: int, last_ep: int) -> None:
+        """캐노니컬 팩트 생성 또는 갱신."""
+        with self._lock:
+            try:
+                value_json = json.dumps(value, ensure_ascii=False) if value is not None else None
+                cur = self.conn.cursor()
+                cur.execute(
+                    """
+                    INSERT INTO canonical_facts (fact_key, fact_type, value_json, first_ep, last_ep)
+                    VALUES (?, ?, ?, ?, ?)
+                    ON CONFLICT(fact_key) DO UPDATE SET
+                        fact_type  = excluded.fact_type,
+                        value_json = excluded.value_json,
+                        last_ep    = excluded.last_ep
+                    """,
+                    (fact_key, fact_type, value_json, first_ep, last_ep),
+                )
+                self.conn.commit()
+            except Exception as e:
+                logging.warning("[canonical_facts] upsert 실패 (비치명): %s", e)
+
+    def get_canonical_facts(self, fact_type: str | None = None) -> list[dict]:
+        """캐노니컬 팩트 목록 조회. fact_type 지정 시 필터링."""
+        with self._lock:
+            try:
+                cur = self.conn.cursor()
+                if fact_type is not None:
+                    rows = cur.execute(
+                        "SELECT * FROM canonical_facts WHERE fact_type = ? ORDER BY fact_key",
+                        (fact_type,),
+                    ).fetchall()
+                else:
+                    rows = cur.execute(
+                        "SELECT * FROM canonical_facts ORDER BY fact_key"
+                    ).fetchall()
+                result = []
+                for row in rows:
+                    d = dict(row)
+                    try:
+                        d["value"] = json.loads(d["value_json"]) if d.get("value_json") else None
+                    except (json.JSONDecodeError, TypeError):
+                        d["value"] = d.get("value_json")
+                    result.append(d)
+                return result
+            except Exception as e:
+                logging.warning("[canonical_facts] 조회 실패 (비치명): %s", e)
+                return []
+
+    # --- [Phase3-Timeline] 타임라인 접근자 ---
+
+    def upsert_timeline_entry(self, ep_no: int, story_date: str, elapsed_days, time_note: str) -> None:
+        """타임라인 엔트리 생성 또는 갱신."""
+        with self._lock:
+            try:
+                cur = self.conn.cursor()
+                cur.execute(
+                    """
+                    INSERT INTO timeline_entries (ep_no, story_date, elapsed_days, time_note)
+                    VALUES (?, ?, ?, ?)
+                    ON CONFLICT(ep_no) DO UPDATE SET
+                        story_date   = excluded.story_date,
+                        elapsed_days = excluded.elapsed_days,
+                        time_note    = excluded.time_note
+                    """,
+                    (ep_no, story_date or "", elapsed_days, time_note or ""),
+                )
+                self.conn.commit()
+            except Exception as e:
+                logging.warning("[timeline_entries] upsert 실패 (비치명): %s", e)
+
+    def get_timeline_range(self, start_ep: int = 1, end_ep: int = 9999, limit: int = 50) -> list[dict]:
+        """타임라인 엔트리 조회 (ep_no 오름차순)."""
+        with self._lock:
+            try:
+                cur = self.conn.cursor()
+                rows = cur.execute(
+                    "SELECT * FROM timeline_entries WHERE ep_no >= ? AND ep_no <= ? ORDER BY ep_no LIMIT ?",
+                    (start_ep, end_ep, limit),
+                ).fetchall()
+                return [dict(row) for row in rows]
+            except Exception as e:
+                logging.warning("[timeline_entries] 조회 실패 (비치명): %s", e)
+                return []
+
+    # --- [Graph-Layer] NPC 관계 / Arc 의존성 접근자 ---
+
+    def upsert_npc_relationship_edge(
+        self, npc1: str, npc2: str, relation: str, arc_no: int, ep_no: int
+    ) -> None:
+        """NPC 간 관계 upsert. npc1/npc2는 정렬된 순서로 저장."""
+        a, b = sorted([npc1, npc2])
+        with self._lock:
+            try:
+                cur = self.conn.cursor()
+                cur.execute(
+                    """
+                    INSERT INTO npc_relationship_edges (npc1, npc2, relation, since_ep, updated_ep, arc_no)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(npc1, npc2) DO UPDATE SET
+                        relation   = excluded.relation,
+                        updated_ep = excluded.updated_ep,
+                        arc_no     = excluded.arc_no
+                    """,
+                    (a, b, relation, ep_no, ep_no, arc_no),
+                )
+                self.conn.commit()
+            except Exception as e:
+                logging.warning("[npc_relationship_edges] upsert 실패 (비치명): %s", e)
+
+    def get_npc_relationship_edges(self, npc_name: str | None = None) -> list[dict]:
+        """NPC 관계 조회. npc_name 지정 시 해당 NPC 관련만, 없으면 최신 100쌍."""
+        with self._lock:
+            try:
+                cur = self.conn.cursor()
+                if npc_name:
+                    rows = cur.execute(
+                        """
+                        SELECT * FROM npc_relationship_edges
+                        WHERE npc1 = ? OR npc2 = ?
+                        ORDER BY updated_ep DESC
+                        """,
+                        (npc_name, npc_name),
+                    ).fetchall()
+                else:
+                    rows = cur.execute(
+                        """
+                        SELECT * FROM npc_relationship_edges
+                        ORDER BY updated_ep DESC LIMIT 100
+                        """
+                    ).fetchall()
+                return [dict(row) for row in rows]
+            except Exception as e:
+                logging.warning("[npc_relationship_edges] 조회 실패 (비치명): %s", e)
+                return []
+
+    def upsert_arc_dependency(
+        self, from_arc: int, to_arc: int, dep_type: str = "causes", description: str = ""
+    ) -> None:
+        """Arc 인과 의존성 upsert."""
+        with self._lock:
+            try:
+                cur = self.conn.cursor()
+                cur.execute(
+                    """
+                    INSERT INTO arc_dependencies (from_arc_no, to_arc_no, dep_type, description)
+                    VALUES (?, ?, ?, ?)
+                    ON CONFLICT(from_arc_no, to_arc_no) DO UPDATE SET
+                        dep_type    = excluded.dep_type,
+                        description = excluded.description
+                    """,
+                    (from_arc, to_arc, dep_type, description or ""),
+                )
+                self.conn.commit()
+            except Exception as e:
+                logging.warning("[arc_dependencies] upsert 실패 (비치명): %s", e)
+
+    def get_arc_dependencies(self, arc_no: int) -> list[dict]:
+        """arc_no를 from 또는 to로 갖는 의존성 양방향 조회."""
+        with self._lock:
+            try:
+                cur = self.conn.cursor()
+                rows = cur.execute(
+                    """
+                    SELECT * FROM arc_dependencies
+                    WHERE from_arc_no = ? OR to_arc_no = ?
+                    ORDER BY from_arc_no, to_arc_no
+                    """,
+                    (arc_no, arc_no),
+                ).fetchall()
+                return [dict(row) for row in rows]
+            except Exception as e:
+                logging.warning("[arc_dependencies] 조회 실패 (비치명): %s", e)
+                return []
+
+    def _migrate_world_state_timeline_if_needed(self) -> None:
+        """[Phase3] WorldState anchor의 timeline 배열을 timeline_entries 테이블로 1회 이전."""
+        try:
+            with self._lock:
+                cur = self.conn.cursor()
+                count = cur.execute("SELECT COUNT(*) FROM timeline_entries").fetchone()[0]
+                if count > 0:
+                    return  # 이미 마이그레이션 완료
+                ws_data = self.load_anchor("world_state")
+                if not ws_data or not isinstance(ws_data, dict):
+                    return
+                timeline = ws_data.get("timeline") or []
+                migrated = 0
+                for entry in timeline:
+                    if not isinstance(entry, dict):
+                        continue
+                    ep = entry.get("ep")
+                    desc = entry.get("description", "")
+                    if ep and desc:
+                        cur.execute(
+                            "INSERT OR IGNORE INTO timeline_entries (ep_no, story_date, elapsed_days, time_note) VALUES (?, ?, ?, ?)",
+                            (ep, desc, None, desc),
+                        )
+                        migrated += 1
+                if migrated:
+                    self.conn.commit()
+                    logging.info("[DB] timeline_entries 마이그레이션: %d건", migrated)
+        except Exception as e:
+            logging.warning("[timeline_entries] 마이그레이션 실패 (비치명): %s", e)
+
     def save_blueprint(self, ep_num, data_dict) -> None:
         with self._lock:
             nested = self.conn.in_transaction
@@ -1647,6 +1911,17 @@ class DBManager:
                 except Exception:
                     pass  # FTS table may not exist
                 self.cursor.execute("DELETE FROM episode_meta WHERE ep_num >= ?", (target_ep,))
+                # [D-2] vec_episodes / foreshadow 롤백 누락 수정
+                if self._vec_available:
+                    try:
+                        self.cursor.execute("DELETE FROM vec_episodes WHERE rowid >= ?", (target_ep,))
+                    except Exception:
+                        pass  # sqlite-vec 가상 테이블 미지원 환경 허용
+                self.cursor.execute("DELETE FROM foreshadow WHERE planted_ep >= ?", (target_ep,))
+                # [Graph-Layer] NPC 관계 롤백 (updated_ep 기준)
+                self.cursor.execute(
+                    "DELETE FROM npc_relationship_edges WHERE updated_ep >= ?", (target_ep,)
+                )
                 self.conn.commit()
             except Exception as e:
                 self.conn.rollback()

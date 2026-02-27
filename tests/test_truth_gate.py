@@ -66,6 +66,23 @@ class TestDeceasedResurrection:
         assert not result["passed"]
         assert any("독고염" in w for w in result["warnings"])
 
+    def test_deceased_npc_status_dead_detected(self):
+        """StateTracker 실제 구조 {"status": "dead"}로 사망 NPC 감지."""
+        gate = TruthGate()
+        npc_reg = {"독고염": {"status": "dead", "death_arc": 3}}
+        ms = "독고염이 검을 들어올렸다."
+        result = gate.validate(ms, {}, npc_registry=npc_reg)
+        assert not result["passed"]
+        assert any("독고염" in w for w in result["warnings"])
+
+    def test_deceased_npc_status_dead_recall_allowed(self):
+        """status: dead NPC도 회상 문맥에서는 허용."""
+        gate = TruthGate()
+        npc_reg = {"독고염": {"status": "dead", "death_arc": 3}}
+        ms = "진영호는 독고염의 생전 모습을 떠올렸다."
+        result = gate.validate(ms, {}, npc_registry=npc_reg)
+        assert result["passed"]
+
     def test_no_deceased_pass(self):
         """사망 NPC 없으면 통과."""
         gate = TruthGate()
@@ -216,3 +233,70 @@ class TestEdgeCases:
         su = {"karma": -999}
         result = gate.validate("", su)
         assert result["blocking"] is False
+
+
+# ── [Phase4] structured_warnings 테스트 ─────────────────────────────
+
+
+class TestStructuredWarnings:
+    """[Phase4] validate() 반환값의 structured_warnings 구조 검사."""
+
+    def test_structured_warnings_present_in_result(self):
+        """반환값에 structured_warnings 키가 항상 존재해야 함."""
+        gate = TruthGate()
+        result = gate.validate("원고 내용", {})
+        assert "structured_warnings" in result
+        assert isinstance(result["structured_warnings"], list)
+
+    def test_structured_warnings_empty_on_pass(self):
+        """경고 없을 때 structured_warnings는 빈 리스트."""
+        gate = TruthGate()
+        result = gate.validate("", {})
+        assert result["structured_warnings"] == []
+
+    def test_deceased_warning_is_critical(self):
+        """사망 NPC 행동 경고 → severity=CRITICAL."""
+        ws = FakeWorldState(deceased_npcs=["비검마"])
+        gate = TruthGate(world_state=ws)
+        ms = "비검마가 달려 나왔다."
+        result = gate.validate(ms, {})
+        sw = result["structured_warnings"]
+        assert len(sw) > 0
+        assert any(w["severity"] == "CRITICAL" for w in sw)
+        assert any(w["check"] == "deceased_resurrection" for w in sw)
+
+    def test_skill_dup_warning_is_minor(self):
+        """스킬 중복 습득 경고 → severity=MINOR."""
+        ws = FakeWorldState(known_skills=["파천검법"])
+        gate = TruthGate(world_state=ws)
+        su = {"skill_updates": [{"name": "파천검법", "action": "learn"}]}
+        result = gate.validate("", su)
+        sw = result["structured_warnings"]
+        assert any(w["severity"] == "MINOR" for w in sw)
+        assert any(w["check"] == "skill_duplication" for w in sw)
+
+    def test_blocking_always_false(self):
+        """하위 호환: structured_warnings 추가 후에도 blocking=False 유지."""
+        ws = FakeWorldState(deceased_npcs=["영웅"])
+        gate = TruthGate(world_state=ws)
+        ms = "영웅이 공격했다."
+        result = gate.validate(ms, {})
+        assert result["blocking"] is False
+
+    def test_warnings_and_structured_warnings_consistent(self):
+        """warnings(list[str])와 structured_warnings(list[dict])의 건수가 동일해야 함."""
+        gate = TruthGate()
+        su = {"karma": 150}
+        result = gate.validate("", su)
+        assert len(result["warnings"]) == len(result["structured_warnings"])
+
+    def test_structured_warning_has_required_fields(self):
+        """structured_warnings 각 항목에 text, severity, check 키가 있어야 함."""
+        gate = TruthGate()
+        su = {"karma": -10}
+        result = gate.validate("", su)
+        for sw in result["structured_warnings"]:
+            assert "text" in sw
+            assert "severity" in sw
+            assert "check" in sw
+

@@ -326,6 +326,13 @@ class Stage4PostProcessor:
                     for _tg_w in _tg_result["warnings"]:
                         self.ctx.ui.log(f"   ⚠️ [TruthGate] {_tg_w}")
                         logging.warning("[TruthGate] %s", _tg_w)
+                    # [Phase4] structured_warnings severity 로깅
+                    for _sw in _tg_result.get("structured_warnings", []):
+                        logging.warning(
+                            "[TruthGate:POST] [%s] %s",
+                            _sw.get("severity", "?"),
+                            _sw.get("text", ""),
+                        )
             except Exception as _tg_err:
                 logging.debug("[TruthGate] 검증 실패 (비차단): %s", _tg_err)
 
@@ -383,17 +390,23 @@ class Stage4PostProcessor:
             if v50_modules_available and self.ctx.character_voice:
                 try:
                     self.ctx.character_voice.analyze_manuscript(next_ep, final_manuscript)
+                except Exception as e:
+                    logging.warning("[CharacterVoice] analyze_manuscript 실패 (비치명): %s", e)
+                try:
                     self.ctx.character_voice.save_to_db(self.ctx.current_project.db)  # [DB-Eff-P1] JSON->DB
                 except Exception as e:
-                    logging.warning(f"⚠️ [V64.P4-fix] character_voice 분석/저장 실패: {e}")
+                    logging.warning("[CharacterVoice] save_to_db 실패 (비치명): %s", e)
 
             if v50_modules_available and self.ctx.foreshadow_tracker:
                 # [V66] 원고에서 복선 자동 감지
                 try:
                     self.ctx.foreshadow_tracker.auto_detect_from_manuscript(next_ep, final_manuscript)
+                except Exception as e:
+                    logging.warning("[ForeshadowTracker] auto_detect_from_manuscript 실패 (비치명): %s", e)
+                try:
                     self.ctx.foreshadow_tracker.save_to_db(self.ctx.current_project.db)  # [DB-Eff-P1] JSON->DB
                 except Exception as e:
-                    logging.warning(f"⚠️ [V66-fix] foreshadow 감지/저장 실패: {e}")
+                    logging.warning("[ForeshadowTracker] save_to_db 실패 (비치명): %s", e)
 
             # [TF7-P2-06] EmotionArcTracker: 에피소드 감정 기록 + DB 저장
             if v50_modules_available and getattr(self.ctx, "emotion_tracker", None):
@@ -586,6 +599,13 @@ class Stage4PostProcessor:
                 self.ctx.ui.log(
                     f"      ⚠️ Episode Bible DB 저장 실패 (bible_delta 구성은 성공): {str(_bible_save_err)[:50]}"
                 )
+
+            # [Graph-Layer] causal_links → causal_graph dual-write (경로 확보)
+            if causal_links:
+                try:
+                    self.ctx.current_project.db.save_causal_links(causal_links, next_ep)
+                except Exception as _cg_err:
+                    logging.debug("[Stage4] causal_graph dual-write 실패 (비치명): %s", _cg_err)
 
             if actual_truth or state_updates_from_audit:
                 state_log_data = {

@@ -225,7 +225,7 @@ class ArcData(BaseModel):
         return data
 
     @model_validator(mode="after")
-    def _enforce_arc_ssot_contracts(self) -> "ArcData":
+    def _enforce_arc_ssot_contracts(self) -> ArcData:
         """[TF-12 Layer1] arc_end_state SSOT 계약 강제 (ingress 정규화)
 
         규칙:

@@ -302,8 +302,8 @@ JSON 형식으로 응답:
 
         # Phase 2: LLM Deep Check (선택적)
         if use_llm:
-            arc_text = json.dumps(arc_design, ensure_ascii=False, indent=2)[:12000]
-            bp_text = json.dumps(blueprint, ensure_ascii=False, indent=2)[:18000]
+            arc_text = json.dumps(arc_design, ensure_ascii=False, indent=2)[:40000]   # [감리3차] 12K → 40K
+            bp_text = json.dumps(blueprint, ensure_ascii=False, indent=2)[:60000]    # [감리3차] 18K → 60K
 
             # [V70] .format() → .replace() (템플릿 내 JSON 예시 브레이스 충돌 방지)
             prompt = self.ARCHITECT_COMPLIANCE_PROMPT.replace("{arc_design}", arc_text).replace("{blueprint}", bp_text)
@@ -386,7 +386,7 @@ JSON 형식으로 응답:
 
         # Phase 2: LLM Deep Check (선택적)
         if use_llm:
-            bp_text = json.dumps(blueprint, ensure_ascii=False, indent=2)[:4000]
+            bp_text = json.dumps(blueprint, ensure_ascii=False, indent=2)[:15000]  # [T1] 4K→15K: 10+씬 Blueprint 후반 누락 방지
             ms_text = manuscript[:8000]
 
             # [V70] .format() → .replace() (템플릿 내 JSON 예시 브레이스 충돌 방지)

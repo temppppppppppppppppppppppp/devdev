@@ -1012,6 +1012,7 @@ class ContinuityValidator:
         try:
             tags = db.get_recent_satisfaction_tags(before_ep=ep_num, lookback=crit_threshold)
         except Exception:
+            logging.warning("[CV] 좌절-보상 태그 조회 실패", exc_info=True)
             return []
 
         if not tags:

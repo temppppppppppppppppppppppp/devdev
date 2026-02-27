@@ -18,7 +18,7 @@ class FactLedger:
     """[V68] 누적 팩트 원장 — 장기연재 모순 방지의 핵심"""
 
     MAX_HISTORY_PER_ENTITY = 100  # [TF-C05] 10→100 확장 (장기연재 팩트 보존)
-    MAX_SUMMARY_CHARS = 20000  # 프롬프트 주입 시 최대 크기
+    MAX_SUMMARY_CHARS = 50000  # [1M-CTX-P1] 20000 → 50000 (100화 이상 NPC 전량 수용)
 
     # ═══════════════════════════════════════════════════════════════
     # 초기화 / 로드 / 저장
@@ -253,15 +253,29 @@ class FactLedger:
         if key not in nums:
             nums[key] = {"value": value, "unit": unit, "last_ep": ep_num, "history": []}
         entry = nums[key]
+        first_ep = entry.get("established_ep", ep_num)
         old_val = entry.get("value", "")
         entry["value"] = value
         entry["unit"] = unit
         entry["last_ep"] = ep_num
+        entry.setdefault("established_ep", ep_num)
         if note:
             entry["history"].append(f"ep{ep_num}: {note}")
         elif old_val != value:
             entry["history"].append(f"ep{ep_num}: {old_val} -> {value}")
         entry["history"] = entry["history"][-self.MAX_HISTORY_PER_ENTITY :]
+        # [Phase1-L0] DB sync — canonical_facts 테이블에 수치 팩트 동기화
+        if getattr(self, "db", None):
+            try:
+                self.db.upsert_canonical_fact(
+                    fact_key=key,
+                    fact_type="numerical",
+                    value={"value": value, "unit": unit},
+                    first_ep=first_ep,
+                    last_ep=ep_num,
+                )
+            except Exception as _e:
+                _logger.debug("[FactLedger] canonical_facts DB sync 실패 (비치명): %s", _e)
 
     def _extract_numerical_facts(self, ep_num: int, state_changes: dict) -> None:
         """[TF-C07] state_changes에서 수치 팩트 자동 추출 → update_number() 배선."""
@@ -296,6 +310,16 @@ class FactLedger:
         power = state_changes.get("power_level")
         if power is not None and isinstance(power, int | float):
             self.update_number("주인공_전투력", power, "레벨", ep_num, note="power_level 자동 추출")
+
+        # ── numerical_facts (범용 수치: 연봉/나이/인원/거리 등) ──
+        for fact in state_changes.get("numerical_facts") or []:
+            if not isinstance(fact, dict):
+                continue
+            name = fact.get("name", "")
+            val = fact.get("value")
+            unit = str(fact.get("unit", ""))
+            if name and val is not None and isinstance(val, int | float):
+                self.update_number(name, val, unit, ep_num, note="numerical_facts 자동 추출")
 
     # ═══════════════════════════════════════════════════════════════
     # 내부 upsert 메서드
@@ -522,6 +546,30 @@ class FactLedger:
     # ═══════════════════════════════════════════════════════════════
     # 조회 유틸리티
     # ═══════════════════════════════════════════════════════════════
+
+    def get_number(self, key: str) -> dict | None:
+        """특정 수치 팩트 조회."""
+        return self._ledger.get("numbers", {}).get(key)
+
+    def get_numbers(self) -> dict:
+        """전체 수치 팩트 딕셔너리 반환."""
+        return dict(self._ledger.get("numbers", {}))
+
+    def get_canonical_summary(self, max_chars: int = 5000) -> str:
+        """[Phase1-L0] 수치 팩트 압축 요약 — L0 고정 주입용."""
+        nums = self._ledger.get("numbers", {})
+        if not nums:
+            return ""
+        lines = ["[수치 제약 (L0)]"]
+        for k, v in list(nums.items())[:30]:
+            if not isinstance(v, dict):
+                continue
+            val = v.get("value", "?")
+            unit = v.get("unit", "")
+            ep = v.get("last_ep", "?")
+            unit_str = f" {unit}" if unit else ""
+            lines.append(f"- {k}: {val}{unit_str} (EP{ep} 기준)")
+        return "\n".join(lines)[:max_chars]
 
     def get_character(self, name: str) -> dict | None:
         """특정 캐릭터 정보 조회."""

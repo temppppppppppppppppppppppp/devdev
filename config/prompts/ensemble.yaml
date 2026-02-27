@@ -141,6 +141,10 @@ ENSEMBLE_ARC_PROMPT: |
           "npc_npc_relationships": [
               {{"npc1": "NPC_A", "npc2": "NPC_B", "relation": "동맹|적대|사제|부자|연인", "episode": N}}
           ],
+          "npc_introductions": [
+              {{"name": "NPC명", "episode": N, "age": "나이 표현", "job": "직업/역할",
+               "appearance": "외모 특징", "background": "배경/출신", "first_impression": "첫인상 묘사"}}
+          ],
           "time_markers": [
               {{"type": "elapsed_time|season|time_of_day|specific_date", "description": "시간 표현 (예: 3일 경과, 겨울, 새벽)", "episode": N}}
           ],
@@ -156,6 +160,9 @@ ENSEMBLE_ARC_PROMPT: |
           "protagonist_emotion": {{"emotion": "비통", "trigger": "부모 사망", "episode": N}},
           "npc_dialogue_profiles": [
               {{"name": "NPC명", "speech_style": "말투 특징", "catchphrase": "습관적 표현", "episode": N}}
+          ],
+          "numerical_facts": [
+              {{"name": "항목명 (예: 부서 인원, 주인공 나이, 투자금)", "value": 숫자, "unit": "단위 (명/세/억원/km)", "episode": N}}
           ],
           "financial_events": {{
               "exchange_rates": [
@@ -197,6 +204,8 @@ ENSEMBLE_ARC_PROMPT: |
   - [V66] entity_destructions: 조직 괴멸/장소 파괴 해당 시 반드시 기록 (이후 재등장 방지, 빈 배열도 가능)
   - [V66] npc_personality_changes: NPC 성격/동기 변화 해당 시 반드시 기록 (성격 일관성 유지, 빈 배열도 가능)
   - [V66] npc_npc_relationships: NPC 간 관계 해당 시 반드시 기록 (동맹/적대/사제 등, 빈 배열도 가능)
+  - [GAP-1] npc_introductions: 새 NPC 첫 등장 시 나이·직업·외모·배경·첫인상 반드시 기록 (이후 속성 일관성 유지)
+  - [GAP-2] numerical_facts: 연봉·나이·인원·거리 등 스토리 핵심 수치 발생 시 반드시 기록 (수치 팩트 추적용)
   - [V66.1] time_markers: Arc 내 시간 흐름 마커 반드시 기록 (경과 시간, 계절, 시각, 특정 날짜)
   - [V66.1] permanent_injuries: NPC 절단/실명/흉터 등 영구 부상 해당 시 반드시 기록 (이후 묘사 일관성 유지)
   - [V66.1] companion_changes: NPC가 주인공 일행에 합류/이탈할 때 반드시 기록 (동행자 실종 방지)

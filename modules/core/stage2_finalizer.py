@@ -278,7 +278,7 @@ class Stage2Finalizer:
                 curr_inventory = [curr_inventory] if curr_inventory and curr_inventory != "[]" else []
             elif isinstance(curr_inventory, dict):
                 curr_inventory = [curr_inventory] if curr_inventory else []
-            if not curr_inventory or curr_inventory == [] or curr_inventory == "[]":
+            if not curr_inventory:
                 if all_refined_arcs:
                     prev_joint = all_refined_arcs[-1].get("joint_docs", {})
                     prev_inventory = prev_joint.get("physical_inventory", [])
@@ -443,6 +443,26 @@ class Stage2Finalizer:
             st_snapshot = None  # [V70] DB 커밋 성공 후 스냅샷 해제
             self.ctx.cumulative_state_cache = None
             self.ctx.cumulative_state_cache_key = None  # [S-08] 센티넬 (0은 유효한 키일 수 있음)
+
+            # [Graph-Layer] Arc 인과 의존성 자동 기록 (순차 의존: 전화 Arc → 현재 Arc)
+            _arc_no = global_arc_no
+            if _arc_no > 1 and getattr(self.ctx, "current_project", None):
+                try:
+                    _desc = refined_arc.get("theme", "") or refined_arc.get("title", "")
+                    self.ctx.current_project.db.upsert_arc_dependency(
+                        from_arc=_arc_no - 1,
+                        to_arc=_arc_no,
+                        dep_type="causes",
+                        description=str(_desc)[:200],
+                    )
+                    # 명시적 prerequisite_arcs 필드 처리
+                    for _prereq in (refined_arc.get("prerequisite_arcs") or []):
+                        if isinstance(_prereq, int) and _prereq != _arc_no:
+                            self.ctx.current_project.db.upsert_arc_dependency(
+                                _prereq, _arc_no, "requires", ""
+                            )
+                except Exception as _ade:
+                    logging.debug("[Stage2] arc_dependency 저장 실패 (비치명): %s", _ade)
 
             # [B4-P1-1] constraint_db는 DB 커밋 이후 업데이트 — 실패해도 다음 루프에서 복구 가능
             try:

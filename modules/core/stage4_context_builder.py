@@ -165,6 +165,12 @@ class Stage4ContextBuilder:
                         current_ep=plan.episode_num,
                         max_results=max_results,
                     )
+                elif source == "manuscript_db":
+                    ep_range = self._parse_ep_range_from_query(query_text)
+                    if ep_range:
+                        result = self._fetch_manuscript_excerpt(ep_range[0], ep_range[1])
+                    else:
+                        result = ""
                 else:
                     # [Hybrid-P4] retrieval_mode 플래그 기반 경로 분기
                     _retrieval_mode = _threshold("smart_retrieval.retrieval_mode", "dense")
@@ -199,7 +205,7 @@ class Stage4ContextBuilder:
                             current_arc_no=current_arc_no,
                         )
             except Exception as e:
-                self.ctx.ui.log(f"   [SC] retrieval slot failed ({source}/{slot.category}): {str(e)[:80]}")
+                logging.warning(f"[SC:SLOT-FAIL] {source}/{slot.category}: {str(e)[:80]}")
                 continue
 
             if not result:
@@ -213,6 +219,37 @@ class Stage4ContextBuilder:
 
         logging.info(f"[SC] stage4 retrieval: {len(sections)} sections from {len(plan.slots)} slots")
         return sections
+
+    def _fetch_manuscript_excerpt(self, start_ep: int, end_ep: int, max_chars: int = 3000) -> str:
+        """DB manuscripts 테이블에서 실제 원고 발췌 반환 (연속성 참조용)."""
+        db = getattr(self.ctx, "db", None)
+        if not db:
+            logging.debug("[Stage4ContextBuilder] _fetch_manuscript_excerpt 스킵: db 없음")
+            return ""
+        try:
+            manuscripts = db.get_manuscripts_range(start_ep, end_ep + 1)
+        except Exception as e:
+            logging.debug("[Stage4ContextBuilder] 원고 발췌 실패 (비치명): %s", e)
+            return ""
+        if not manuscripts:
+            return ""
+        excerpts = []
+        for row in manuscripts:
+            ep_no = row.get("ep_num", "?")
+            content = str(row.get("content", "") or "")
+            if content:
+                excerpts.append(f"[EP {ep_no} 원고 발췌]\n{content[:800]}")
+        combined = "\n\n".join(excerpts)
+        return combined[:max_chars]
+
+    def _parse_ep_range_from_query(self, query_text: str) -> tuple[int, int] | None:
+        """query_text에서 'ep:N~M' 형식 파싱."""
+        import re as _re
+
+        m = _re.search(r"ep:(\d+)~(\d+)", query_text)
+        if m:
+            return int(m.group(1)), int(m.group(2))
+        return None
 
     def _apply_context_budget(self, sections: list[str], total_budget_chars: int) -> list[str]:
         """Track section-level budget usage and trim large sections when over budget."""
@@ -257,7 +294,9 @@ class Stage4ContextBuilder:
                 continue
 
             trim_target = max(300, int(len(section) * 0.7))
+            orig_len = len(section)
             sections[idx] = compressor._smart_trim(section, trim_target)
+            logging.info(f"[SC:TRIM] section_{idx + 1}: {orig_len:,}→{len(sections[idx]):,}자")
 
             # 총 사용량만 빠르게 체크 (tracker 재생성 대신 합산)
             _used = sum(len(s) for s in sections)
@@ -373,13 +412,13 @@ class Stage4ContextBuilder:
         # 직전 화 원고
         prev_ms_data = self.ctx.current_project.db.get_manuscript(next_ep - 1)
         prev_text = (prev_ms_data.get("content") or "") if prev_ms_data else ""  # [V70] NULL content 방어
-        prev_ending = prev_text[-500:] if prev_text else ""
+        prev_ending = prev_text[-2500:] if prev_text else ""  # [1M-CTX: 500→2500] CW와 동일 수준
 
         _db = self.ctx.current_project.db
         _prev_manuscripts_parts: list[str] = []
 
-        # [Tier4-12] Tier 1: recent 10 episodes full text
-        _tier1_start = max(1, next_ep - 10)
+        # [Tier4-12] Tier 1: recent 30 episodes full text  [1M-CTX: 20→30]
+        _tier1_start = max(1, next_ep - 30)
         _tier1_rows: list[dict] = []
         try:
             if hasattr(_db, "get_manuscripts_range"):
@@ -404,8 +443,8 @@ class Stage4ContextBuilder:
             if _content and len(_content) > 100:
                 _prev_manuscripts_parts.append(f"[EP {_ep_no}]\n{_content}")
 
-        # [Tier4-12] Tier 2: summaries for episodes 11~30 before current
-        _tier2_start = max(1, next_ep - 30)
+        # [Tier4-12] Tier 2: summaries for episodes 21~60 before current  [Phase3-A: 30→60]
+        _tier2_start = max(1, next_ep - 60)
         _tier2_end = _tier1_start
         if _tier2_end > _tier2_start:
             _tier2_parts: list[str] = []
@@ -433,13 +472,13 @@ class Stage4ContextBuilder:
                         _ep_no = int(_row["ep_num"] or 0)
                         _summary = str(_row["summary"] or "")
                     if _summary:
-                        _tier2_parts.append(f"[EP {_ep_no} summary] {_summary[:500]}")
+                        _tier2_parts.append(f"[EP {_ep_no} summary] {_summary[:2000]}")  # [Phase3-A: 800→2000]
             except Exception as e:
                 logging.warning(f"[SilentPass:Tier4-12] tier2 summary load failed: {e!s:.100}")
 
             if _tier2_parts:
                 _prev_manuscripts_parts.insert(
-                    0, "-- Tier2 summaries (11-30 episodes back) --\n" + "\n".join(_tier2_parts)
+                    0, "-- Tier2 summaries (21-60 episodes back) --\n" + "\n".join(_tier2_parts)
                 )
 
         # [Tier4-12] Tier 3: older arc summaries
@@ -480,14 +519,14 @@ class Stage4ContextBuilder:
                     else:
                         _sum_text = str(_arc_sum)
                     if _sum_text:
-                        _tier3_parts.append(f"[Arc {_arc_no} summary] {_sum_text[:1000]}")
+                        _tier3_parts.append(f"[Arc {_arc_no} summary] {_sum_text[:4000]}")  # [Phase3-A: 1.5K→4K]
                 except Exception:
                     continue
 
             if _tier3_parts:
                 _prev_manuscripts_parts.insert(
                     0,
-                    "-- Tier3 arc summaries (older than 30 episodes) --\n" + "\n".join(_tier3_parts),
+                    "-- Tier3 arc summaries (older than 60 episodes) --\n" + "\n".join(_tier3_parts),
                 )
 
         _prev_manuscripts_text = "\n\n---\n\n".join(_prev_manuscripts_parts) if _prev_manuscripts_parts else ""
@@ -497,6 +536,22 @@ class Stage4ContextBuilder:
                 len(_prev_manuscripts_parts),
                 len(_prev_manuscripts_text),
             )
+
+        # [LongTerm] 60화 이상 시 장기 설정 앵커 주입 (세계관 법칙 + NPC origin)
+        if next_ep >= 60:
+            try:
+                _ws = getattr(self.ctx, "world_state", None)
+                if _ws and hasattr(_ws, "get_long_term_anchor"):
+                    _lt_anchor = _ws.get_long_term_anchor(current_ep=next_ep)
+                    if _lt_anchor:
+                        _prev_manuscripts_text = (
+                            _lt_anchor + "\n\n---\n\n" + _prev_manuscripts_text
+                            if _prev_manuscripts_text
+                            else _lt_anchor
+                        )
+                        logging.info("[LongTerm] 장기 설정 앵커 주입 (ep%d, %d자)", next_ep, len(_lt_anchor))
+            except Exception as _lt_err:
+                logging.debug("[LongTerm] 장기 설정 앵커 주입 실패 (비차단): %s", _lt_err)
 
         # [V62.6] 에피소드 상태 다이제스트
         _episode_digest = ""
@@ -561,7 +616,7 @@ class Stage4ContextBuilder:
         _world_state_summary = ""
         if self.ctx.world_state:
             try:
-                _world_state_summary = self.ctx.world_state.get_summary(max_chars=5000)
+                _world_state_summary = self.ctx.world_state.get_summary(max_chars=50000)
             except Exception as e:
                 logging.warning(f"[SilentPass:ContextBuilder] WorldState 요약 로드 실패: {e!s:.100}")
 
@@ -652,12 +707,24 @@ class Stage4ContextBuilder:
 
         if self.ctx.world_state:
             try:
-                _ws_summary = self.ctx.world_state.get_summary(max_chars=5000)
+                _ws_summary = self.ctx.world_state.get_summary(max_chars=50000)
                 if _ws_summary:
                     _mc_parts.insert(0, _ws_summary)
                     logging.info(f"🌍 [V68] 세계 상태 문서 주입 ({len(_ws_summary)}자)")
             except Exception as _ws_err:
                 logging.warning(f"⚠️ [V68] 세계 상태 문서 주입 실패 (비치명): {str(_ws_err)[:50]}")
+
+        # [Phase3-L3] 타임라인 고정 주입 — world_state 요약 앞에 배치
+        try:
+            _timeline_budget = int(_threshold("context.timeline_budget", 3000))
+            _timeline_text = ""
+            if getattr(self.ctx, "world_state", None):
+                _timeline_text = self.ctx.world_state.get_timeline_summary(max_chars=_timeline_budget)
+            if _timeline_text:
+                _mc_parts.insert(0, _timeline_text)
+                logging.info("[Phase3] 타임라인 주입 (%d자)", len(_timeline_text))
+        except Exception as _tl_err:
+            logging.warning("[Phase3] 타임라인 주입 실패 (비치명): %s", str(_tl_err)[:50])
 
         try:
             _series_summary = self.ctx.current_project.load_v20_anchor("series_summary")
@@ -684,12 +751,33 @@ class Stage4ContextBuilder:
 
         if self.ctx.fact_ledger:
             try:
-                _fl_summary = self.ctx.fact_ledger.to_summary(max_chars=15000)
+                _fl_summary = self.ctx.fact_ledger.to_summary(max_chars=25000)
                 if _fl_summary:
                     _mc_parts.insert(0, _fl_summary)
                     logging.info(f"📋 [V68] 팩트 원장 주입 ({len(_fl_summary)}자)")
             except Exception as _fl_mc_err:
                 logging.warning(f"⚠️ [V68] 팩트 원장 주입 실패 (비치명): {str(_fl_mc_err)[:50]}")
+
+        # [Phase1-L0] Canonical Constraints 최상단 고정 주입
+        # 중복 방지: role_at_intro+known_attrs (NPC, get_summary에 없음) + 수치 참조 목록만 담당
+        try:
+            _canonical_budget = int(_threshold("context.canonical_facts_budget", 13000))
+            _l0_npc = ""
+            _l0_num = ""
+            if getattr(self.ctx, "world_state", None):
+                _l0_npc = self.ctx.world_state.get_canonical_constraints(
+                    max_chars=int(_canonical_budget * 0.62)
+                )
+            if getattr(self.ctx, "fact_ledger", None):
+                _l0_num = self.ctx.fact_ledger.get_canonical_summary(
+                    max_chars=int(_canonical_budget * 0.38)
+                )
+            if _l0_npc or _l0_num:
+                _l0_block = "\n\n".join(x for x in [_l0_npc, _l0_num] if x)
+                _mc_parts.insert(0, _l0_block)
+                logging.info("[Phase1-L0] Canonical 고정 주입 (%d자)", len(_l0_block))
+        except Exception as _l0_err:
+            logging.warning("[Phase1-L0] Canonical 주입 실패 (비치명): %s", str(_l0_err)[:50])
 
         # [V74] Treatment genre_ext — 아크 장르 특화 목표 주입
         try:
@@ -769,6 +857,7 @@ class Stage4ContextBuilder:
             self.ctx.ui.log(f"   ⚠️ [V66] Arc 요약 주입 실패 (비치명): {e}")
 
         _retrieval_plan = None
+        _sc_parts: list[str] = []  # [Wave-B] SC Retrieval 결과 별도 수집 (mandatory_context 앞에 배치)
         try:
             if self.ctx.memory and prev_ending:
                 _use_advisor_path = False
@@ -800,7 +889,7 @@ class Stage4ContextBuilder:
                     try:
                         _arc_no_s4 = arc_data.get("arc_no", None) if arc_data else None
                         for _retrieved in self._execute_retrieval_plan(_retrieval_plan, arc_no=_arc_no_s4):
-                            _mc_parts.append(_retrieved)
+                            _sc_parts.append(_retrieved)  # [Wave-B] _mc_parts 대신 _sc_parts에 수집
                     finally:
                         try:
                             self.ctx.perf_timer.stop(_perf_key)
@@ -812,6 +901,8 @@ class Stage4ContextBuilder:
                 if (not _use_advisor_path) and arc_data and arc_data.get("state_changes"):
                     _sc = arc_data["state_changes"]
                     _npc_names = []
+                    if not isinstance(_sc, dict):
+                        _sc = {}
                     for _field in ["npc_deaths", "relationship_changes", "npc_injuries"]:
                         for _entry in _sc.get(_field) or []:
                             # [Sweep54] string 엔트리 대응 (stage4_post_processor가 npc_deaths를 str로 생성)
@@ -906,7 +997,10 @@ class Stage4ContextBuilder:
         if _threshold("smart_retrieval.enabled", False) and _threshold("smart_retrieval.stage4_enabled", False):
             _mc_parts = self._apply_context_budget(_mc_parts, _sc_budget)
 
-        mandatory_context = "\n\n".join(_mc_parts)
+        # [Wave-B] SC Retrieval 결과를 mandatory_context 맨 앞에 배치 (40K 절삭 보호)
+        _sc_header = "\n\n".join(_sc_parts) if _sc_parts else ""
+        _mc_body = "\n\n".join(_mc_parts)
+        mandatory_context = (_sc_header + "\n\n" + _mc_body).strip() if _sc_header else _mc_body
 
         try:
             anti_trope_prompt = _build_anti_trope(genre_name)

@@ -586,6 +586,8 @@ class Stage2Orchestrator:
                     if _fin["action"] == "retry":
                         attempt += 1
                         continue
+                    elif _fin["action"] == "next":
+                        break
 
                     attempt += 1
 
