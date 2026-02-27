@@ -7,6 +7,7 @@
 V68 lazy init: state_tracker, world_state, fact_ledger를 self.app에 할당
 """
 
+import json as _json
 import logging as _logging
 import traceback as _traceback
 
@@ -53,7 +54,7 @@ class Stage3Orchestrator:
     # ─────────────────────────────────────────────────────────────
     # Stage 3 메인 진입점
     # ─────────────────────────────────────────────────────────────
-    def stage_3_batch_blueprinting(self) -> None:
+    def stage_3_batch_blueprinting(self, *, target_ep: int | None = None) -> dict:
         """
         [V60.80] Stage 3 - Three Phase Blueprint Generator
 
@@ -68,7 +69,7 @@ class Stage3Orchestrator:
 
         if not ctx.current_project.arcs:
             ctx.ui.log(f"{Emojis.ERROR} {ErrorMessages.STAGE_PREREQUISITE_MISSING}")
-            return
+            return {"success_count": 0, "fail_count": 0}
 
         # ═══════════════════════════════════════════════════════════════
         # [V60.96] StateTracker 초기화 (Stage 2에서 생성되지 않은 경우)
@@ -118,18 +119,20 @@ class Stage3Orchestrator:
         if production_head >= total_planned_ep:
             ctx.ui.log(f"✅ 이미 {production_head}화까지 완료되어 추가 생성할 범위가 없습니다.")
             ctx.ui.log("   💡 Stage 2에서 Arc를 추가하면 설계 범위가 늘어납니다.")
-            return
+            return {"success_count": 0, "fail_count": 0}
 
-        target_ep = (
-            ctx.get_int_input(
-                f"👉 몇 화까지 설계도를 생성하시겠습니까? (현재 {production_head}화 / 최대 {total_planned_ep}화): ",
-                default=total_planned_ep,
-                min_val=production_head + 1,
-                max_val=total_planned_ep,
+        if target_ep is None:
+            target_ep = (
+                ctx.get_int_input(
+                    f"👉 몇 화까지 설계도를 생성하시겠습니까? (현재 {production_head}화 / 최대 {total_planned_ep}화): ",
+                    default=total_planned_ep,
+                    min_val=production_head + 1,
+                    max_val=total_planned_ep,
+                )
+                if callable(ctx.get_int_input)
+                else total_planned_ep
             )
-            if callable(ctx.get_int_input)
-            else total_planned_ep
-        )
+        # else: [OneStop] caller가 직접 target_ep 지정
 
         # ═══════════════════════════════════════════════════════════════
         # 2. 메인 에피소드 루프
@@ -144,6 +147,11 @@ class Stage3Orchestrator:
             prev_bp = ctx.current_project.get_blueprint(prev_ep)
             if prev_bp:
                 prev_blueprints.append(prev_bp)
+
+        # [감리] target_ep < working_ep 방어 (이미 완료된 범위)
+        if target_ep < working_ep:
+            ctx.ui.log(f"✅ 이미 {target_ep}화까지 완료되어 추가 생성할 범위가 없습니다.")
+            return {"success_count": 0, "fail_count": 0}
 
         ctx.ui.log(f"\n{'═' * 60}")
         ctx.ui.log("🎯 [V60.80] Three Phase Blueprint Generator 시작")
@@ -183,6 +191,8 @@ class Stage3Orchestrator:
                 )
             except Exception as slack_err:
                 ctx.ui.log(f"⚠️ [Slack] 알림 전송 실패: {str(slack_err)[:50]}")
+
+        return {"success_count": success_count, "fail_count": fail_count}
 
     # ─────────────────────────────────────────────────────────────
     # V68 Lazy Init 헬퍼
@@ -538,6 +548,16 @@ class Stage3Orchestrator:
                             for _cf in ("context", "event_villain", "solution"):
                                 if _content.get(_cf):
                                     _block_fields.append(f"  content.{_cf}: {_content[_cf]}")
+                        # [V74] genre_ext 주입 — 장르 특화 정보 (투자물: capital 등)
+                        _genre_ext = _block.get("genre_ext", {})
+                        if isinstance(_genre_ext, dict) and _genre_ext:
+                            _ge_lines = []
+                            for _gk, _gv in _genre_ext.items():
+                                if isinstance(_gv, dict | list):
+                                    _ge_lines.append(f"    {_gk}: {_json.dumps(_gv, ensure_ascii=False)}")
+                                else:
+                                    _ge_lines.append(f"    {_gk}: {_gv}")
+                            _block_fields.append("  genre_ext:\n" + "\n".join(_ge_lines))
                         if _block_fields:
                             _tb_header = (
                                 f"[원본 Treatment Block — 아크 {_ep_start}~{_ep_end}화 전체 참조용]\n"

@@ -484,6 +484,35 @@ class DirectorEnsembleSelector:
             score = 50
             original_verdict = "CONDITIONAL_PASS"
 
+        # ── [V75-C] Contradiction Firewall ──────────────────────────
+        # NOTE: v60_97_swapped 뒤에 배치 — 방화벽이 swap 승격보다 우선
+        _contradiction_check = result.get("contradiction_check", {})
+        if isinstance(_contradiction_check, dict):
+            _found = _contradiction_check.get("found_contradictions", [])
+            if isinstance(_found, list) and _found:
+                _critical_count = sum(
+                    1 for c in _found if isinstance(c, dict) and str(c.get("severity", "")).upper() == "CRITICAL"
+                )
+                _major_count = sum(
+                    1 for c in _found if isinstance(c, dict) and str(c.get("severity", "")).upper() == "MAJOR"
+                )
+                _firewall_triggered = False
+                if _critical_count >= 1:
+                    _firewall_triggered = True
+                    logging.warning(f"🚨 [V75-C] Contradiction Firewall: CRITICAL {_critical_count}건 → REJECT 강제")
+                elif _major_count >= 2:
+                    _firewall_triggered = True
+                    logging.warning(f"🚨 [V75-C] Contradiction Firewall: MAJOR {_major_count}건 → REJECT 강제")
+                if _firewall_triggered:
+                    original_verdict = "REJECT"
+                    score = min(score, 44)  # adaptive floor=45 미만 → 승격 불가
+                    for _c in _found[:5]:
+                        if isinstance(_c, dict):
+                            logging.warning(
+                                f"   ▸ [{_c.get('severity', '?')}] {str(_c.get('type', ''))}: "
+                                f"{str(_c.get('current_violation', ''))[:100]}"
+                            )
+
         adaptive_result = self._d.apply_adaptive_decision(
             score=score,
             original_decision=original_verdict,
@@ -552,6 +581,7 @@ class DirectorEnsembleSelector:
             "other_candidates_notes": result.get("other_candidates_notes", {}),
             "adaptive_threshold": adaptive_result.get("threshold_used", 65),
             "adaptive_reason": adaptive_result.get("reason", ""),
+            "error_category": result.get("error_category", ""),  # [V75-B] LOGIC_ERROR 전파
         }
 
     def quick_judge_single(

@@ -501,6 +501,22 @@ class ChiefWriterContextBuilder:
             if last_sentence and len(last_sentence) > 5:
                 digest_parts.append(f'클리프행어: "{last_sentence[:50]}"')
 
+        # 10. [V73] 금융 상태 (투자물 등 자본금 추적)
+        capital_patterns = [
+            # "잔고 131억", "자본금 80억", "현금 57억" 등
+            r"(?:잔고|자본금?|현금|자산|실탄|예수금)[이가은는:의]?\s*(?:약?\s*)?(\d[\d,.]*)\s*(?:억|만)\s*(?:원)?",
+            # "80억의 자본", "130억 원의 잔고"
+            r"(\d[\d,.]*)\s*(?:억|만)\s*(?:원)?[의이가]?\s*(?:잔고|자본|현금|자산|실탄|예수금)",
+        ]
+        capital_mentions = []
+        for p in capital_patterns:
+            for m in re.finditer(p, manuscript):
+                capital_mentions.append(m.group(0)[:40])
+        if capital_mentions:
+            # 중복 제거 후 최대 3개
+            unique_capitals = list(dict.fromkeys(capital_mentions))[:3]
+            digest_parts.append(f"확정 자본: {', '.join(unique_capitals)} (직전 화 원문 기준)")
+
         if not digest_parts:
             return ""
 

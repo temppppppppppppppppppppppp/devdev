@@ -83,7 +83,7 @@ class Stage2Orchestrator:
     # 메인 파이프라인
     # ═══════════════════════════════════════════════════════════════════════
 
-    async def stage_2_arcs_async_logic(self):
+    async def stage_2_arcs_async_logic(self, *, target_arc_count: int | None = None):
         """
         [V37 S-Grade: 260124 매니페스토]
         0124 욕망 엔진(Desire Engine) 통합 파이프라인 완전판
@@ -201,16 +201,20 @@ class Stage2Orchestrator:
         self.ctx.ui.log(f"📊 현재 설계 완료: {done_count} / {total_count} 아크")
         self.ctx.ui.log("💡 Tip: 인과율 정밀 용접을 위해 1회 10개(2개 배치) 이내 진행을 권장합니다.")
 
-        default_limit = min(done_count + 5, total_count)
-        if callable(getattr(self.ctx, "get_int_input", None)):
-            target_limit = self.ctx.get_int_input(
-                f"👉 몇 번 아크까지 설계하시겠습니까? (현재 {done_count + 1} ~ 최대 {total_count}): ",
-                default=default_limit,
-                min_val=done_count + 1,
-                max_val=total_count,
-            )
+        if target_arc_count is not None:
+            # [OneStop] 프로그래밍 호출: 지정 개수만큼만 생성
+            target_limit = min(done_count + target_arc_count, total_count)
         else:
-            target_limit = default_limit
+            default_limit = min(done_count + 5, total_count)
+            if callable(getattr(self.ctx, "get_int_input", None)):
+                target_limit = self.ctx.get_int_input(
+                    f"👉 몇 번 아크까지 설계하시겠습니까? (현재 {done_count + 1} ~ 최대 {total_count}): ",
+                    default=default_limit,
+                    min_val=done_count + 1,
+                    max_val=total_count,
+                )
+            else:
+                target_limit = default_limit
         target_limit = max(done_count + 1, min(target_limit, total_count))
 
         sem = asyncio.Semaphore(5)
@@ -222,6 +226,7 @@ class Stage2Orchestrator:
         # [V62.5] extract_cumulative_state 배치 캐시
         self.ctx.cumulative_state_cache = None
         self.ctx.cumulative_state_cache_key = None  # [S-08] 센티넬
+        last_refined_context = ""  # [감리] UnboundLocalError 방지 — generate_arc_context_v60 비활성 시 폴백
 
         # 2. 배치(Batch) 처리 루프 시작
         for batch_start in range(done_count, target_limit, 5):
@@ -776,10 +781,11 @@ class Stage2Orchestrator:
         self.ctx.ui.log("✨ [Success] 0124 매니페스토 기반 전술 설계 전 공정 완료.")
         if callable(getattr(self.ctx, "write_audit_summary", None)):
             self.ctx.write_audit_summary("stage2_complete")
-        try:
-            await asyncio.to_thread(input, "\n[Enter] 메뉴로 돌아가기")
-        except (EOFError, KeyboardInterrupt, ValueError):
-            pass
+        if target_arc_count is None:  # [OneStop] 프로그래밍 호출 시 대기 건너뛰기
+            try:
+                await asyncio.to_thread(input, "\n[Enter] 메뉴로 돌아가기")
+            except (EOFError, KeyboardInterrupt, ValueError):
+                pass
 
     # ═══════════════════════════════════════════════════════════════════════
     # Stage 2 헬퍼 메서드

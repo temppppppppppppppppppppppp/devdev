@@ -42,6 +42,7 @@ chroma_data/
 
 # === 테스트 ===
 .hypothesis/
+projects/MagicMock/
 
 # === Gemini 관련 ===
 .gemini/

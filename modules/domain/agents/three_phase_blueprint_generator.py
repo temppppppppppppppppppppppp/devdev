@@ -279,7 +279,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                             _asp_bp["_ensemble_meta"] = {
                                 "strategy": "asp_correction",
                                 "scene_count": len(_asp_bp.get("scene_breakdown", {}))
-                                if isinstance(_asp_bp.get("scene_breakdown"), dict)
+                                if isinstance(_asp_bp.get("scene_breakdown"), dict | list)
                                 else 0,
                                 "length": len(_asp_bp.get("integrated_scenario", "") or ""),
                             }
@@ -515,6 +515,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             for key, val in original_blueprint.items():
                 if key not in result:
                     result[key] = val
+            result = validate_blueprint(result)  # [감리] Pydantic 정규화 (ep_num↔episode_number 동기 등)
             logging.info(f"✅ [InPlace] Blueprint 제{ep_num}화 in-place 수정 완료")
             return result
         except Exception as e:

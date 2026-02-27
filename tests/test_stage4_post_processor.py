@@ -536,6 +536,166 @@ class TestAtomicMetadataSave:
         assert result is True  # 원고 저장은 성공 → True
 
 
+class TestCapitalReconciliation:
+    """[V73] 확정 원고 기준 자본금 역동기화 테스트"""
+
+    def test_extract_capital_basic(self):
+        assert Stage4PostProcessor._extract_capital_from_manuscript("잔고 131억 원") == 131.0
+
+    def test_extract_capital_with_comma(self):
+        assert Stage4PostProcessor._extract_capital_from_manuscript("자본금 1,200억") == 1200.0
+
+    def test_extract_capital_man_unit(self):
+        result = Stage4PostProcessor._extract_capital_from_manuscript("예수금 5000만 원")
+        assert result is not None
+        assert abs(result - 0.5) < 0.01  # 5000만 = 0.5억
+
+    def test_extract_capital_reverse_pattern(self):
+        assert Stage4PostProcessor._extract_capital_from_manuscript("80억의 자본") == 80.0
+
+    def test_extract_capital_returns_last(self):
+        text = "잔고 80억이었으나 실탄 57억으로 줄었다"
+        result = Stage4PostProcessor._extract_capital_from_manuscript(text)
+        assert result == 57.0
+
+    def test_extract_capital_cross_pattern_position_order(self):
+        """[감리P0] 패턴1+2 교차 시 문서 뒤쪽 값 반환"""
+        text = "80억의 실탄을 모아 자본금 56억만 남았다"
+        result = Stage4PostProcessor._extract_capital_from_manuscript(text)
+        assert result == 56.0  # 문서 뒤쪽 "자본금 56억"이 정답
+
+    def test_extract_capital_decimal(self):
+        """[재감리P2] 소수점 자본금 '1.5억' 정확 추출"""
+        assert Stage4PostProcessor._extract_capital_from_manuscript("자본금 1.5억") == 1.5
+
+    def test_extract_capital_none_when_no_match(self):
+        assert Stage4PostProcessor._extract_capital_from_manuscript("검을 뽑았다") is None
+
+    def test_reconcile_advisory_only_on_mismatch(self):
+        """[V73-B] 불일치 시 HUD 수정 없이 advisory 경고만 출력"""
+        from modules.core.genre_hud_manager import FinanceHUDManager
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        hud = MagicMock(spec=FinanceHUDManager)
+        hud.pro_data = {"capital": "80억 원"}
+        hud.update_physical_status = MagicMock()
+        ctx.sys.hud = hud
+
+        pp = Stage4PostProcessor(ctx)
+        pp._reconcile_capital("잔고 57억 원의 실탄이 남았다", ep_num=11)
+
+        # [V73-B] HUD 수정 안 함 — Director state_updates에 위임
+        hud.update_physical_status.assert_not_called()
+        # advisory 메시지는 출력
+        ctx.ui.log.assert_called()
+
+    def test_reconcile_skips_when_within_threshold(self):
+        from modules.core.genre_hud_manager import FinanceHUDManager
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        hud = MagicMock(spec=FinanceHUDManager)
+        hud.pro_data = {"capital": "80억 원"}
+        ctx.sys.hud = hud
+
+        pp = Stage4PostProcessor(ctx)
+        pp._reconcile_capital("잔고 82억 원", ep_num=5)
+
+        hud.update_physical_status.assert_not_called()
+
+    def test_reconcile_skips_when_no_financial_mention(self):
+        from modules.core.genre_hud_manager import FinanceHUDManager
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        hud = MagicMock(spec=FinanceHUDManager)
+        hud.pro_data = {"capital": "80억 원"}
+        ctx.sys.hud = hud
+
+        pp = Stage4PostProcessor(ctx)
+        pp._reconcile_capital("무림맹주가 검을 뽑았다", ep_num=5)
+
+        hud.update_physical_status.assert_not_called()
+
+    def test_reconcile_skips_for_non_finance_genre(self):
+        """[감리P1] 비투자물 장르에서는 실행 안 함"""
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        hud = MagicMock()  # not FinanceHUDManager
+        hud.pro_data = {"wealth": "은자 100냥"}
+        ctx.sys.hud = hud
+
+        pp = Stage4PostProcessor(ctx)
+        pp._reconcile_capital("잔고 80억 원의 현금을 보유", ep_num=5)
+
+        hud.update_physical_status.assert_not_called()
+
+    def test_reconcile_exception_does_not_crash_process(self, tmp_path):
+        """[재감리P1] reconcile 예외가 process_pass_result를 중단시키지 않음"""
+        from modules.core.genre_hud_manager import FinanceHUDManager
+
+        ctx = MagicMock()
+        ctx.ui = MagicMock()
+        hud = MagicMock(spec=FinanceHUDManager)
+        hud.pro_data = {"capital": "80억 원"}
+        hud.update_physical_status.side_effect = RuntimeError("bible save failed")
+        ctx.sys.hud = hud
+
+        director = MagicMock()
+        director.on_approve_workflow.return_value = {}
+        manager = MagicMock()
+        manager.update_state_and_lore_v20.return_value = {}
+        state_ext = MagicMock()
+        state_ext.extract_satisfaction_tag.return_value = None
+        ctx.agents = {"director": director, "manager": manager, "state_extractor": state_ext}
+
+        db = MagicMock()
+        db.conn = MagicMock()
+        db.get_episode_bible.return_value = {}
+        db.load_anchor.return_value = []
+        db.save_manuscript.return_value = True
+
+        project = MagicMock()
+        project.db = db
+        project.name = "test"
+        project.latest_state = {}
+        project.seed_tracker = None
+        project.karma_matrix = {}
+        project.master_bible = {
+            "MasterBible": {"AssetLibrary": {"KeyNPCs": []}, "protagonist_config": {"name": "mc"}},
+            "npc_registry": {},
+        }
+        ctx.current_project = project
+        ctx.memory = None
+        ctx.state_tracker = None
+        ctx.world_state = None
+        ctx.fact_ledger = None
+        ctx.character_voice = None
+        ctx.foreshadow_tracker = None
+        ctx.failure_learner = None
+        ctx.quality_dashboard = None
+        ctx.perf_timer = MagicMock()
+        ctx.flush_audit_buffer = MagicMock()
+        ctx.get_protagonist_name = lambda: "mc"
+        ctx.generate_narrative_summary = MagicMock()
+
+        pp = Stage4PostProcessor(ctx)
+        result = pp.process_pass_result(
+            next_ep=11,
+            final_manuscript="가" * 400 + "잔고 57억 원의 실탄",
+            final_title="테스트",
+            final_state_updates={},
+            blueprint={"scene_breakdown": []},
+            arc_data={"arc_no": 1},
+            output_dir=tmp_path,
+            v50_modules_available=False,
+            extract_chain_link_fn=lambda *_args, **_kwargs: {},
+        )
+
+        assert result is True  # reconcile 실패해도 전체 프로세스는 성공
+
+
 class TestModuleStructure:
     def test_import(self):
         assert Stage4PostProcessor is not None

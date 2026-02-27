@@ -5,6 +5,7 @@
 import json
 import logging
 import os
+import re
 from contextlib import nullcontext as _nullcontext
 
 from modules.core.metrics_collector import get_metrics_collector
@@ -96,6 +97,82 @@ class Stage4PostProcessor:
         entity_names.discard("")
         return {"event_types": event_types, "entity_names": entity_names, "summary_parts": summary_parts}
 
+    # ------------------------------------------------------------------
+    # [V73] 확정 원고 기준 자본금 역동기화
+    # ------------------------------------------------------------------
+    _CAPITAL_PATTERNS = [
+        # "잔고 131억", "자본금 80억", "현금 57억"
+        re.compile(r"(?:잔고|자본금?|현금|자산|실탄|예수금)[이가은는:의]?\s*(?:약?\s*)?(\d[\d,.]*)\s*(억|만)"),
+        # "80억의 자본", "130억 원의 잔고"
+        re.compile(r"(\d[\d,.]*)\s*(억|만)\s*(?:원)?[의이가]?\s*(?:잔고|자본|현금|자산|실탄|예수금)"),
+    ]
+
+    @staticmethod
+    def _extract_capital_from_manuscript(manuscript: str) -> float | None:
+        """확정 원고에서 마지막으로 언급된 자본금(억 단위)을 추출. 없으면 None."""
+        # 모든 패턴의 매치를 (문서 내 위치, 값) 튜플로 수집 후 위치순 정렬
+        candidates: list[tuple[int, float]] = []
+        for pat in Stage4PostProcessor._CAPITAL_PATTERNS:
+            for m in pat.finditer(manuscript):
+                raw = m.group(1).replace(",", "")  # 천 단위 콤마만 제거, 소수점 유지
+                try:
+                    num = float(raw)
+                except (ValueError, TypeError):
+                    continue
+                unit = m.group(2)
+                if unit == "만":
+                    num /= 10000  # 만 → 억 환산
+                candidates.append((m.start(), num))
+        if not candidates:
+            return None
+        # 문서에서 가장 뒤에 나온 값 반환
+        candidates.sort(key=lambda x: x[0])
+        return candidates[-1][1]
+
+    def _reconcile_capital(self, final_manuscript: str, ep_num: int) -> None:
+        """확정 원고의 자본금과 HUD를 비교하여 불일치 시 경고 + 보정. 투자물 전용."""
+        if not hasattr(self.ctx.sys, "hud") or not self.ctx.sys.hud:
+            return
+
+        hud = self.ctx.sys.hud
+        # [V73] 투자물(FinanceHUD)에서만 실행 — 다른 장르는 단위 체계가 달라 오탐 위험
+        from modules.core.genre_hud_manager import FinanceHUDManager
+
+        if not isinstance(hud, FinanceHUDManager):
+            return
+
+        confirmed = self._extract_capital_from_manuscript(final_manuscript)
+        if confirmed is None:
+            return  # 금융 언급 없음 — 스킵
+
+        capital_key = "capital"
+
+        current_raw = hud.pro_data.get(capital_key, "0")
+        # "131억 원", "80억", 숫자 등 파싱
+        digits = re.sub(r"[^\d.]", "", str(current_raw))
+        try:
+            current_value = float(digits) if digits else 0.0
+        except (ValueError, TypeError):
+            current_value = 0.0
+
+        diff = abs(confirmed - current_value)
+        if diff <= 5:  # 5억 이하 차이는 허용
+            return
+
+        logging.warning(
+            "[V73] 자본금 불일치 감지 (ep%d): HUD %s=%s(→%.0f억), 원고=%.0f억 → 원고 기준 보정",
+            ep_num,
+            capital_key,
+            current_raw,
+            current_value,
+            confirmed,
+        )
+        # [V73-B] Advisory — HUD 수정은 Director state_updates에 위임
+        self.ctx.ui.log(
+            f"   ⚠️ [V73] 자본금 불일치 감지: HUD {current_value:.0f}억 vs 원고 {confirmed:.0f}억"
+            " (Director state_updates 반영 대기)"
+        )
+
     def process_pass_result(
         self,
         *,
@@ -160,10 +237,17 @@ class Stage4PostProcessor:
         except Exception as file_err:
             self.ctx.ui.log(f"   ⚠️ 파일 저장 실패: {file_err}")
 
+        # [V73] 확정 원고 기준 자본금 역동기화
+        try:
+            self._reconcile_capital(final_manuscript, next_ep)
+        except Exception as _cap_err:
+            logging.warning("[V73] 자본금 역동기화 실패 (비차단): %s", _cap_err)
+
         # ===== [S4-N-P1-1][S4-I6] Manager LLM 비동기 제출 (먼저 submit → 독립 작업 → result 회수) =====
         bible_delta = None  # [V70] NameError 방지 사전 초기화
         _bible_future = None
         audit = {}
+        actual_truth = {}  # [V75] NameError 방지 사전 초기화
         # 동기 폴백에 필요한 변수 사전 초기화
         current_state = {}
         lore_list = []
@@ -441,6 +525,35 @@ class Stage4PostProcessor:
                         reveal_list.append(seed.get("seed_id", seed.get("description", str(seed))))
                     else:
                         reveal_list.append(str(seed))
+
+            # [V75] State-Text 교차 검증 — actual_truth ↔ 원고 (advisory)
+            try:
+                _stv_enabled = False
+                try:
+                    from modules.validation.threshold_helper import _threshold
+
+                    _stv_enabled = _threshold("feature_flags.enable_state_text_verifier", False)
+                except Exception:
+                    pass
+
+                if _stv_enabled and actual_truth and final_manuscript:
+                    from modules.core.state_text_verifier import StateTextVerifier
+
+                    _stv_agent = self.ctx.agents.get("manager") if self.ctx.agents else None
+                    _stv = StateTextVerifier(agent=_stv_agent)
+                    _stv_result = _stv.verify(final_manuscript, actual_truth)
+                    if not _stv_result["verified"] and _stv_result["corrections"]:
+                        actual_truth = _stv.apply_corrections(actual_truth, _stv_result["corrections"])
+                        self.ctx.ui.log(
+                            f"      🔍 [V75] State-Text 검증: {len(_stv_result['mismatches'])}건 불일치 → "
+                            f"{len(_stv_result['corrections'])}건 수정"
+                        )
+                    elif not _stv_result["verified"]:
+                        self.ctx.ui.log(
+                            f"      ⚠️ [V75] State-Text 검증: {len(_stv_result['mismatches'])}건 불일치 발견 (수정 불가)"
+                        )
+            except Exception as _stv_err:
+                logging.warning("[SilentPass:V75] State-Text 검증 모듈 실패: %s", _stv_err)
 
             all_new_items = list(set(new_items_from_equip + key_item_names + new_martial_arts))
 

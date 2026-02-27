@@ -548,6 +548,9 @@ JSON으로 출력:
         final_state_updates = {}
         director_feedback = ""
         previous_attempt = {}
+        _logic_error_streak = 0  # [V75-B] 연속 LOGIC_ERROR 카운터
+        _inplace_attempted = False  # [V75-D] inplace 패치 1회 제한
+        _blueprint_regenerated = False  # [V75-B] 재생성 1회 제한
 
         with StageSpinner(4, f"제{next_ep}화 · 앙상블 준비") as stage4_spinner:
             try:
@@ -644,7 +647,90 @@ JSON으로 출력:
                 director_feedback = _round_result.director_feedback
                 previous_attempt = _round_result.previous_attempt
 
+                # [V75-B] LOGIC_ERROR 연속 카운터
+                if _round_result.error_category == "LOGIC_ERROR":
+                    _logic_error_streak += 1
+                else:
+                    _logic_error_streak = 0
+
+                # [V75-D] Step 1: 2연속 → inplace 패치 (저비용 LLM 1회)
+                if _logic_error_streak >= 2 and not _inplace_attempted:
+                    _inplace_attempted = True
+                    _v75d_success = False
+                    try:
+                        self.ctx.ui.log(
+                            f"   🔧 [V75-D] LOGIC_ERROR {_logic_error_streak}연속 → 블루프린트 inplace 패치 시도..."
+                        )
+                        _bp_agent = self.ctx.agents.get("three_phase_bp")
+                        if _bp_agent:
+                            _patched_bp = _bp_agent._inplace_patch_blueprint(
+                                original_blueprint=round_ctx.blueprint,
+                                director_feedback=director_feedback,
+                                ep_num=next_ep,
+                                arc_data=round_ctx.arc_data,
+                            )
+                            if _patched_bp:
+                                _v75d_success = True
+                                round_ctx = dataclasses.replace(round_ctx, blueprint=_patched_bp)
+                                _logic_error_streak = 0
+                                director_feedback = (
+                                    "[V75-D 블루프린트 inplace 패치 완료]\n"
+                                    "지적된 논리적 결함만 수정되었습니다. "
+                                    "수정된 블루프린트 기반으로 원고를 작성하세요."
+                                )
+                                previous_attempt = {}
+                                self.ctx.ui.log("   ✅ [V75-D] inplace 패치 성공")
+                            else:
+                                self.ctx.ui.log("   ⚠️ [V75-D] inplace 패치 실패 — 기존 블루프린트 유지")
+                    except Exception as _patch_err:
+                        logging.warning(
+                            "[FailClosed:V75-D] inplace 패치 실패: %s",
+                            _patch_err,
+                        )
+                    # [V76] 에스컬레이션 이벤트 로그
+                    self._log_escalation_event(next_ep, "V75-D_INPLACE", _logic_error_streak, success=_v75d_success)
+
+                # [V75-B] Step 2: inplace 시도 후에도 계속 실패 → 전면 재생성
+                elif _logic_error_streak >= 2 and _inplace_attempted and not _blueprint_regenerated:
+                    _v75b_success = False
+                    try:
+                        self.ctx.ui.log(
+                            f"   🔄 [V75-B] LOGIC_ERROR {_logic_error_streak}연속 → 블루프린트 재생성 시도..."
+                        )
+                        _new_bp = self._regenerate_blueprint(
+                            next_ep,
+                            round_ctx.arc_data,
+                            round_ctx,
+                        )
+                        if _new_bp:
+                            _v75b_success = True
+                            round_ctx = dataclasses.replace(round_ctx, blueprint=_new_bp)
+                            _blueprint_regenerated = True
+                            _logic_error_streak = 0
+                            director_feedback = (
+                                "[V75-B 블루프린트 재생성 완료]\n"
+                                "이전 블루프린트의 논리적 결함으로 재생성되었습니다. "
+                                "새 블루프린트 기반으로 원고를 작성하세요."
+                            )
+                            previous_attempt = {}
+                            self.ctx.ui.log("   ✅ [V75-B] 블루프린트 재생성 성공")
+                        else:
+                            _blueprint_regenerated = True
+                            self.ctx.ui.log("   ⚠️ [V75-B] 블루프린트 재생성 실패 — 기존 블루프린트 유지")
+                    except Exception as _regen_err:
+                        _blueprint_regenerated = True
+                        logging.warning(
+                            "[SilentPass:V75-B] 블루프린트 재생성 실패: %s",
+                            _regen_err,
+                        )
+                    # [V76] 에스컬레이션 이벤트 로그
+                    self._log_escalation_event(next_ep, "V75-B_FULL_REGEN", _logic_error_streak, success=_v75b_success)
+
         # ===== 설정된 라운드 수 모두 실패 =====
+        # [V75-B] B-Full: 블루프린트 재생성까지 했는데도 실패 → Arc 재생성 제안
+        if not final_manuscript and _blueprint_regenerated:
+            self.ctx.ui.log("   🚨 [V75-B] 블루프린트 재생성 후에도 실패. Arc(전술서) 자체에 문제가 있을 수 있습니다.")
+            self.ctx.ui.log("   💡 Stage 2에서 Arc를 재생성하면 해결될 수 있습니다.")
         if not final_manuscript:
             _last_best = previous_attempt.get("best_manuscript", "") if previous_attempt else ""
             _last_score = previous_attempt.get("score", 0) if previous_attempt else 0
@@ -684,7 +770,85 @@ JSON으로 출력:
             should_return=False,
         )
 
-    def _prepare_stage4_session(self, *, limit_mode: bool = False) -> dict | None:
+    def _log_escalation_event(self, ep_num, event_type, streak, *, success):
+        """[V76] 에스컬레이션 이벤트를 episode_production.jsonl에 기록."""
+        try:
+            import datetime
+            import json
+            import os
+
+            logs_dir = os.path.join("projects", self.ctx.current_project.name, "logs")
+            os.makedirs(logs_dir, exist_ok=True)
+            entry = {
+                "ts": datetime.datetime.now().isoformat(timespec="seconds"),
+                "ep": ep_num,
+                "event": event_type,
+                "streak": streak,
+                "success": success,
+            }
+            with open(
+                os.path.join(logs_dir, "episode_production.jsonl"),
+                "a",
+                encoding="utf-8",
+            ) as f:
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        except Exception as e:
+            logging.warning("[V76] escalation log 실패: %s", e)
+
+    def _regenerate_blueprint(
+        self,
+        ep_num: int,
+        arc_data: dict,
+        round_ctx: _RoundContext,
+    ) -> dict | None:
+        """[V75-B] Stage 3 블루프린트 재생성 (단일 에피소드)."""
+        try:
+            bp_agent = self.ctx.agents.get("three_phase_bp")
+            if not bp_agent:
+                return None
+
+            prev_bp = None
+            if ep_num > 1:
+                prev_bp = self.ctx.current_project.get_blueprint(ep_num - 1)
+
+            _bible_root = self.ctx.current_project.master_bible.get(
+                "MasterBible",
+                self.ctx.current_project.master_bible,
+            )
+            _prot_config = _bible_root.get("protagonist_config", {})
+            _prot_name = _prot_config.get("name", "")
+
+            _entity_registry = {}
+            _state_ext = self.ctx.agents.get("state_extractor")
+            if _state_ext and hasattr(_state_ext, "extract_cumulative_state"):
+                try:
+                    _entity_registry = _state_ext.extract_cumulative_state(ep_num - 1) or {}
+                except Exception:
+                    pass
+
+            new_bp, _ = bp_agent.generate(
+                ep_num=ep_num,
+                arc_data=arc_data,
+                arc_idx=(arc_data.get("arc_no") or 1) - 1,
+                prev_blueprint=prev_bp,
+                prev_blueprints=[],
+                entity_registry=_entity_registry,
+                protagonist_name=_prot_name,
+                protagonist_config=_prot_config,
+                director=self.ctx.agents.get("director"),
+                state_tracker=getattr(self.ctx, "state_tracker", None),
+                db=getattr(self.ctx.current_project, "db", None),
+            )
+
+            if new_bp and isinstance(new_bp, dict):
+                self.ctx.current_project.save_episode_blueprint(ep_num, new_bp)
+                return new_bp
+            return None
+        except Exception as e:
+            logging.warning("[V75-B] 블루프린트 재생성 내부 실패: %s", e)
+            return None
+
+    def _prepare_stage4_session(self, *, limit_mode: bool = False, target_ep: int | None = None) -> dict | None:
         """[4-R1-f] Prepare Stage 4 session: agents, context, style guide.
 
         Returns session config dict for _run_interview_loop, or None if data missing.
@@ -764,10 +928,11 @@ JSON으로 출력:
         output_dir = self.ctx.current_project.paths.drafts
         output_dir.mkdir(exist_ok=True)
         total_planned_ep = self.ctx.current_project.db.get_latest_blueprint_number()
-        target_ep = None
 
         # 4. 플랫폼 스타일 선택
-        if limit_mode:
+        if target_ep is not None:
+            pass  # [OneStop] caller가 직접 target_ep 지정
+        elif limit_mode:
             # [TF-CX-BUG-02] 입력 범위 역전 방어: 블루프린트가 0개인 경우
             if total_planned_ep == 0:
                 self.ctx.ui.log("⚠️ 블루프린트가 없습니다. Stage 3에서 먼저 설계도를 생성해주세요.")
@@ -778,6 +943,8 @@ JSON으로 출력:
                 min_val=1,
                 max_val=total_planned_ep,
             )
+        else:
+            target_ep = None
 
         self.ctx.ui.console.clear()
         self.ctx.ui.title("V60.80 CHIEF WRITER", "Director 주권주의 아키텍처")
@@ -859,7 +1026,7 @@ JSON으로 출력:
             total_planned_ep=total_planned_ep,
         )
 
-    def stage_4_v2_chief_writer(self, limit_mode: bool = False) -> None:
+    def stage_4_v2_chief_writer(self, limit_mode: bool = False, *, target_ep: int | None = None) -> None:
         """
         [V60.80] Stage 4 V2 - Chief Writer 주권주의 아키텍처
 
@@ -873,7 +1040,7 @@ JSON으로 출력:
         - 인간 개입: 5번 실패 시 중단
         """
         try:
-            session = self._prepare_stage4_session(limit_mode=limit_mode)
+            session = self._prepare_stage4_session(limit_mode=limit_mode, target_ep=target_ep)
             if session is None:
                 return
             # 5. Episode production loop
