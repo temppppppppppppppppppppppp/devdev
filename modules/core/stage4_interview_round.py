@@ -876,6 +876,118 @@ class Stage4InterviewRound:
             except Exception as _nd_err:
                 logging.warning("[LM-C] NumericDriftAdvisor 실패 (비치명): %s", str(_nd_err)[:80])
 
+        # [LM-E] FlashbackVerifier — 회상/플래시백 오염 advisory
+        try:
+            from modules.core.flashback_verifier import FlashbackVerifier as _FbVerifier
+
+            _fb_verifier = _FbVerifier(llm_ask=self._truth_gate_llm_ask)
+            _fb_all = []
+            for _ci, _cand in enumerate(candidates):
+                _ms = _cand.get("manuscript", "")
+                if not _ms:
+                    continue
+                _flashbacks = _fb_verifier.detect_flashbacks(_ms)
+                if not _flashbacks:
+                    continue
+                # 회상 텍스트로 VecMemory 참조 컨텍스트 검색
+                _mem = getattr(self.ctx, "memory", None)
+                _ref_ctx = ""
+                if _mem and hasattr(_mem, "retrieve_high_res_context"):
+                    _fb_queries = [fb["text"][:200] for fb in _flashbacks[:3]]
+                    _ref_parts = []
+                    for _q in _fb_queries:
+                        _r = _mem.retrieve_high_res_context(_q, next_ep, n_results=2)
+                        if _r:
+                            _ref_parts.append(_r)
+                    _ref_ctx = "\n\n".join(_ref_parts)
+                if not _ref_ctx:
+                    continue
+                _fb_warns = _fb_verifier.check(_ms, ep_num=next_ep, reference_context=_ref_ctx)
+                if _fb_warns:
+                    _fb_all.extend(_fb_warns)
+            if _fb_all:
+                _fb_lines = ["[FlashbackVerifier — 회상 오염 감지, 참고만]"]
+                for _fw in _fb_all[:6]:
+                    _fb_lines.append(f"- [MAJOR] '{_fw.get('marker', '')}': {_fw.get('issue', '')[:60]}")
+                _director_mc_parts.insert(0, "\n".join(_fb_lines))
+                logging.info("[FlashbackVerifier→Director] %d건 회상 오염 감지", len(_fb_all))
+        except Exception as _fb_err:
+            logging.warning("[LM-E] FlashbackVerifier 실패 (비치명): %s", str(_fb_err)[:80])
+
+        # [LM-F] InfoParadoxChecker — 정보 역설 advisory (1인칭 전용)
+        try:
+            _mb = getattr(self.ctx.current_project, "master_bible", None) or {}
+            _mb_root = _mb.get("MasterBible", _mb)
+            _pov = _mb_root.get("protagonist_config", {}).get("pov", "")
+
+            if _pov == "1인칭":
+                from modules.core.constants import HUDKeys
+                from modules.core.info_paradox_checker import InfoParadoxChecker as _IpChecker
+
+                _proto_name = HUDKeys.get_protagonist_name(_mb_root, genre_name)
+                _db = getattr(self.ctx.current_project, "db", None)
+
+                if _db and _proto_name and _proto_name != "주인공":
+                    _knowledge_summary = _IpChecker.build_knowledge_summary(_db, next_ep, _proto_name)
+                    if _knowledge_summary:
+                        _ip_checker = _IpChecker(llm_ask=self._truth_gate_llm_ask)
+                        _ip_all = []
+                        for _ci, _cand in enumerate(candidates):
+                            _ms = _cand.get("manuscript", "")
+                            if not _ms:
+                                continue
+                            _ip_warns = _ip_checker.check(
+                                _ms,
+                                ep_num=next_ep,
+                                pov_character=_proto_name,
+                                knowledge_summary=_knowledge_summary,
+                            )
+                            if _ip_warns:
+                                _ip_all.extend(_ip_warns)
+                        if _ip_all:
+                            _ip_lines = ["[InfoParadoxChecker — 정보 역설 감지, 참고만]"]
+                            for _ip in _ip_all[:6]:
+                                _ip_lines.append(
+                                    f"- [MAJOR] '{_ip.get('info_used', '')[:40]}': {_ip.get('why_paradox', '')[:60]}"
+                                )
+                            _director_mc_parts.insert(0, "\n".join(_ip_lines))
+                            logging.info("[InfoParadoxChecker→Director] %d건 정보 역설 감지", len(_ip_all))
+        except Exception as _ip_err:
+            logging.warning("[LM-F] InfoParadoxChecker 실패 (비치명): %s", str(_ip_err)[:80])
+
+        # [LM-D] RelationshipDriftAdvisor — 관계도 장기 표류 advisory
+        try:
+            if next_ep >= 5:
+                _db = getattr(self.ctx.current_project, "db", None)
+                if _db and hasattr(_db, "get_all_relationship_pairs_with_history"):
+                    from modules.core.relationship_drift_advisor import RelationshipDriftAdvisor as _RdAdvisor
+
+                    _rel_timeline = _RdAdvisor.build_relationship_timeline(_db)
+                    if _rel_timeline:
+                        _rd_advisor = _RdAdvisor(llm_ask=self._truth_gate_llm_ask)
+                        _rd_all = []
+                        for _ci, _cand in enumerate(candidates):
+                            _ms = _cand.get("manuscript", "")
+                            if not _ms:
+                                continue
+                            _rd_warns = _rd_advisor.check(
+                                _ms,
+                                ep_num=next_ep,
+                                relationship_timeline=_rel_timeline,
+                            )
+                            if _rd_warns:
+                                _rd_all.extend(_rd_warns)
+                        if _rd_all:
+                            _rd_lines = ["[RelationshipDriftAdvisor — 관계도 표류 감지, 참고만]"]
+                            for _rd in _rd_all[:6]:
+                                _rd_lines.append(
+                                    f"- [MAJOR] '{_rd.get('npc_pair', '')[:30]}': {_rd.get('why_drift', '')[:60]}"
+                                )
+                            _director_mc_parts.insert(0, "\n".join(_rd_lines))
+                            logging.info("[RelationshipDriftAdvisor→Director] %d건 관계 표류 감지", len(_rd_all))
+        except Exception as _rd_err:
+            logging.warning("[LM-D] RelationshipDriftAdvisor 실패 (비치명): %s", str(_rd_err)[:80])
+
         _vr_warnings_for_director = []
         for _vr_idx, _vr in enumerate(validation_results):
             _vr_warns = _vr.get("warnings", [])

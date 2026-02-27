@@ -468,6 +468,33 @@ class Stage2PreflightAnalysis:
         enhanced_context = last_refined_context
         if _quality_trend_block:
             enhanced_context = _quality_trend_block + enhanced_context
+        # [LM-G] 서사 구조 컨텍스트 주입 (advisory)
+        try:
+            from modules.core.narrative_context_formatter import NarrativeContextFormatter
+
+            _st = self.ctx.state_tracker
+            _npc_motivations = {}
+            if _st and hasattr(_st, "npc_registry"):
+                for _npc_name, _npc_info in list((_st.npc_registry or {}).items())[:20]:
+                    if isinstance(_npc_info, dict):
+                        _mot = _npc_info.get("primary_motivation", "")
+                        if _mot:
+                            _npc_motivations[_npc_name] = _mot
+
+            _narrative_ctx = NarrativeContextFormatter.format_all(
+                active_plots=getattr(_st, "active_plots", None) if _st else None,
+                npc_motivations=_npc_motivations,
+                pending_commitments=getattr(_st, "pending_commitments", None) if _st else None,
+                all_refined_arcs=all_refined_arcs,
+                current_arc_no=global_arc_no,
+            )
+            if _narrative_ctx:
+                enhanced_context = _narrative_ctx + "\n\n" + enhanced_context
+                if attempt == 0:
+                    self.ctx.ui.log("      📖 [LM-G] 서사 구조 컨텍스트 주입 완료")
+        except Exception as _lmg_err:
+            logging.warning("[LM-G] NarrativeContextFormatter 실패 (비치명): %s", str(_lmg_err)[:80])
+
         if constraint_block:
             enhanced_context = constraint_block + "\n" + enhanced_context
         # [Sweep48] Preflight 분석 결과 주입 (LLM이 생성한 분석 텍스트)

@@ -552,9 +552,7 @@ class DBManager:
                 time_note    TEXT
             )
         """)
-        self.cursor.execute(
-            "CREATE INDEX IF NOT EXISTS idx_timeline_ep_no ON timeline_entries(ep_no)"
-        )
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_timeline_ep_no ON timeline_entries(ep_no)")
 
         # [Graph-Layer] NPC 간 관계 영속화 (메모리 50쌍 한도 우회)
         self.cursor.execute("""
@@ -569,11 +567,25 @@ class DBManager:
                 UNIQUE(npc1, npc2)
             )
         """)
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_npc_rel_npc1 ON npc_relationship_edges(npc1)")
+        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_npc_rel_npc2 ON npc_relationship_edges(npc2)")
+
+        # [LM-D] NPC 관계 변경 이력 (append-only)
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS npc_relationship_history (
+                id             INTEGER PRIMARY KEY AUTOINCREMENT,
+                npc1           TEXT NOT NULL,
+                npc2           TEXT NOT NULL,
+                old_relation   TEXT,
+                new_relation   TEXT NOT NULL,
+                change_ep      INTEGER,
+                arc_no         INTEGER,
+                change_reason  TEXT,
+                created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
         self.cursor.execute(
-            "CREATE INDEX IF NOT EXISTS idx_npc_rel_npc1 ON npc_relationship_edges(npc1)"
-        )
-        self.cursor.execute(
-            "CREATE INDEX IF NOT EXISTS idx_npc_rel_npc2 ON npc_relationship_edges(npc2)"
+            "CREATE INDEX IF NOT EXISTS idx_rel_hist_pair ON npc_relationship_history(npc1, npc2, change_ep)"
         )
 
         # [Graph-Layer] Arc 인과 의존성
@@ -871,8 +883,7 @@ class DBManager:
 
             # list/dict 값은 JSON 직렬화 (SQLite는 기본 타입만 허용)
             serialized_values = [
-                json.dumps(v, ensure_ascii=False) if isinstance(v, (list, dict)) else v
-                for v in validated_data.values()
+                json.dumps(v, ensure_ascii=False) if isinstance(v, (list, dict)) else v for v in validated_data.values()
             ]
             cur = self.conn.cursor()
             try:
@@ -1345,9 +1356,7 @@ class DBManager:
                         (fact_type,),
                     ).fetchall()
                 else:
-                    rows = cur.execute(
-                        "SELECT * FROM canonical_facts ORDER BY fact_key"
-                    ).fetchall()
+                    rows = cur.execute("SELECT * FROM canonical_facts ORDER BY fact_key").fetchall()
                 result = []
                 for row in rows:
                     d = dict(row)
@@ -1399,14 +1408,19 @@ class DBManager:
 
     # --- [Graph-Layer] NPC 관계 / Arc 의존성 접근자 ---
 
-    def upsert_npc_relationship_edge(
-        self, npc1: str, npc2: str, relation: str, arc_no: int, ep_no: int
-    ) -> None:
+    def upsert_npc_relationship_edge(self, npc1: str, npc2: str, relation: str, arc_no: int, ep_no: int) -> None:
         """NPC 간 관계 upsert. npc1/npc2는 정렬된 순서로 저장."""
         a, b = sorted([npc1, npc2])
         with self._lock:
             try:
                 cur = self.conn.cursor()
+                # [LM-D] 이력 기록: 기존 관계 조회 → 변경 시 append
+                old_row = cur.execute(
+                    "SELECT relation FROM npc_relationship_edges WHERE npc1 = ? AND npc2 = ?",
+                    (a, b),
+                ).fetchone()
+                old_relation = old_row["relation"] if old_row else None
+
                 cur.execute(
                     """
                     INSERT INTO npc_relationship_edges (npc1, npc2, relation, since_ep, updated_ep, arc_no)
@@ -1418,6 +1432,16 @@ class DBManager:
                     """,
                     (a, b, relation, ep_no, ep_no, arc_no),
                 )
+
+                # [LM-D] 변경 시에만 이력 기록
+                if old_relation is not None and old_relation != relation:
+                    cur.execute(
+                        "INSERT INTO npc_relationship_history "
+                        "(npc1, npc2, old_relation, new_relation, change_ep, arc_no) "
+                        "VALUES (?, ?, ?, ?, ?, ?)",
+                        (a, b, old_relation, relation, ep_no, arc_no),
+                    )
+
                 self.conn.commit()
             except Exception as e:
                 logging.warning("[npc_relationship_edges] upsert 실패 (비치명): %s", e)
@@ -1446,6 +1470,39 @@ class DBManager:
                 return [dict(row) for row in rows]
             except Exception as e:
                 logging.warning("[npc_relationship_edges] 조회 실패 (비치명): %s", e)
+                return []
+
+    def get_relationship_history(self, npc1: str, npc2: str, limit: int = 50) -> list[dict]:
+        """[LM-D] NPC 쌍의 관계 변경 이력 조회 (시간순)."""
+        a, b = sorted([npc1, npc2])
+        with self._lock:
+            try:
+                cur = self.conn.cursor()
+                rows = cur.execute(
+                    "SELECT * FROM npc_relationship_history "
+                    "WHERE npc1 = ? AND npc2 = ? ORDER BY change_ep ASC, id ASC LIMIT ?",
+                    (a, b, limit),
+                ).fetchall()
+                return [dict(row) for row in rows]
+            except Exception as e:
+                logging.warning("[npc_relationship_history] 조회 실패 (비치명): %s", e)
+                return []
+
+    def get_all_relationship_pairs_with_history(self, min_changes: int = 2) -> list[tuple]:
+        """[LM-D] 변경 이력이 min_changes 이상인 NPC 쌍 목록."""
+        with self._lock:
+            try:
+                cur = self.conn.cursor()
+                rows = cur.execute(
+                    "SELECT npc1, npc2, COUNT(*) as cnt "
+                    "FROM npc_relationship_history "
+                    "GROUP BY npc1, npc2 HAVING cnt >= ? "
+                    "ORDER BY cnt DESC",
+                    (min_changes,),
+                ).fetchall()
+                return [(row["npc1"], row["npc2"]) for row in rows]
+            except Exception as e:
+                logging.warning("[npc_relationship_history] 쌍 조회 실패 (비치명): %s", e)
                 return []
 
     def upsert_arc_dependency(
@@ -1919,9 +1976,9 @@ class DBManager:
                         pass  # sqlite-vec 가상 테이블 미지원 환경 허용
                 self.cursor.execute("DELETE FROM foreshadow WHERE planted_ep >= ?", (target_ep,))
                 # [Graph-Layer] NPC 관계 롤백 (updated_ep 기준)
-                self.cursor.execute(
-                    "DELETE FROM npc_relationship_edges WHERE updated_ep >= ?", (target_ep,)
-                )
+                self.cursor.execute("DELETE FROM npc_relationship_edges WHERE updated_ep >= ?", (target_ep,))
+                # [LM-D] 관계 변경 이력 롤백
+                self.cursor.execute("DELETE FROM npc_relationship_history WHERE change_ep >= ?", (target_ep,))
                 self.conn.commit()
             except Exception as e:
                 self.conn.rollback()
@@ -1960,6 +2017,12 @@ class DBManager:
 
             cur = self.cursor.execute("SELECT COUNT(*) as cnt FROM director_selections WHERE ep_num >= ?", (target_ep,))
             impact["director_selections"] = cur.fetchone()["cnt"]
+
+            # [LM-D] 관계 변경 이력 영향도
+            cur = self.cursor.execute(
+                "SELECT COUNT(*) as cnt FROM npc_relationship_history WHERE change_ep >= ?", (target_ep,)
+            )
+            impact["npc_relationship_history"] = cur.fetchone()["cnt"]
 
             return impact
 

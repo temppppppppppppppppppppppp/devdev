@@ -1,0 +1,186 @@
+"""[LM-E] 회상/플래시백 오염 감지기 — 원고 내 회상 장면의 내용 정합성 advisory.
+
+TruthGate recall_patterns(사망 NPC 회상 허용 필터)와 분리된 독립 클래스.
+원고 본문의 회상/플래시백 장면이 과거 에피소드 맥락과 모순되는지를 LLM으로 감지.
+Advisory-only: Director가 최종 판정.
+"""
+
+import json
+import logging
+import re
+
+logger = logging.getLogger(__name__)
+
+MAX_FLASHBACKS = 5
+CONTEXT_WINDOW = 200
+
+
+class FlashbackVerifier:
+    """원고 내 회상/플래시백 장면의 내용 오염을 LLM으로 감지 (advisory only)."""
+
+    FLASHBACK_MARKERS = [
+        "회상",
+        "기억했다",
+        "떠올렸다",
+        "떠올랐다",
+        "눈을 감으면",
+        "그 시절",
+        "예전에",
+        "돌이켜보면",
+        "몇 년 전",
+        "몇 달 전",
+        "그때의",
+        "과거의",
+        "지난날",
+        "옛날에",
+    ]
+
+    def __init__(self, llm_ask=None):
+        """
+        Args:
+            llm_ask: Optional callable(prompt: str) -> str. None이면 검사 스킵.
+        """
+        self._llm_ask = llm_ask
+
+    def check(self, manuscript, *, ep_num=0, reference_context=""):
+        """회상/플래시백 오염 검사.
+
+        Args:
+            manuscript: 원고 텍스트
+            ep_num: 현재 에피소드 번호
+            reference_context: VecMemory에서 검색한 과거 에피소드 맥락
+
+        Returns:
+            list[dict]: [{"marker", "issue", "referenced_context", "severity", "check"}]
+        """
+        if not manuscript:
+            return []
+
+        flashbacks = self.detect_flashbacks(manuscript)
+        if not flashbacks:
+            return []
+
+        if not self._llm_ask or not reference_context:
+            return []
+
+        return self._llm_check(flashbacks, reference_context, ep_num)
+
+    def detect_flashbacks(self, manuscript):
+        """원고에서 회상 구간을 추출 (Python 수집만).
+
+        Returns:
+            list[dict]: [{"marker": str, "text": str, "position": int}]
+        """
+        if not manuscript:
+            return []
+
+        found = []
+        used_ranges = []
+
+        for marker in self.FLASHBACK_MARKERS:
+            for match in re.finditer(re.escape(marker), manuscript):
+                pos = match.start()
+
+                # 기존 구간과 겹치는지 확인
+                overlaps = False
+                for start, end in used_ranges:
+                    if start <= pos <= end:
+                        overlaps = True
+                        break
+                if overlaps:
+                    continue
+
+                # 마커 주변 200자 추출
+                ctx_start = max(0, pos - CONTEXT_WINDOW // 2)
+                ctx_end = min(len(manuscript), pos + len(marker) + CONTEXT_WINDOW // 2)
+                text = manuscript[ctx_start:ctx_end]
+
+                found.append(
+                    {
+                        "marker": marker,
+                        "text": text,
+                        "position": pos,
+                    }
+                )
+                used_ranges.append((ctx_start, ctx_end))
+
+                if len(found) >= MAX_FLASHBACKS:
+                    return found
+
+        # 위치 순 정렬
+        found.sort(key=lambda x: x["position"])
+        return found
+
+    def _format_for_llm(self, flashbacks, reference_context):
+        """회상 구간 + 참조 컨텍스트를 LLM 프롬프트용으로 포맷팅."""
+        fb_lines = []
+        for i, fb in enumerate(flashbacks, 1):
+            fb_lines.append(f"[회상 {i}] 마커: '{fb['marker']}'\n{fb['text']}")
+        fb_text = "\n\n".join(fb_lines)
+
+        return f"[원고 회상 장면]\n{fb_text}\n\n[과거 에피소드 맥락]\n{reference_context}"
+
+    def _llm_check(self, flashbacks, reference_context, ep_num):
+        """LLM에게 회상 오염 판정을 요청."""
+        formatted = self._format_for_llm(flashbacks, reference_context)
+
+        prompt = (
+            "다음 원고의 회상/플래시백 장면이 과거 에피소드 맥락과 모순되는 부분을 찾아주세요.\n"
+            "서사적 의도가 있는 변형(신뢰할 수 없는 화자, 의도적 왜곡 등)은 정상입니다.\n"
+            "사실 관계가 틀린 회상만 지적하세요.\n\n"
+            f"{formatted}\n\n"
+            f"현재 {ep_num}화입니다.\n"
+            "반드시 JSON 배열로만 답하세요. 오염이 없으면 빈 배열 []을 반환하세요.\n"
+            '형식: [{"marker": "해당 마커", "issue": "문제 설명", "referenced_context": "근거가 된 과거 맥락 발췌"}]\n'
+        )
+
+        try:
+            response = self._llm_ask(prompt)
+            if not response:
+                return []
+            return self._parse_llm_response(response, ep_num)
+        except Exception as e:
+            logger.warning("[LM-E] FlashbackVerifier LLM 호출 실패 (비치명): %s", str(e)[:80])
+            return []
+
+    @staticmethod
+    def _parse_llm_response(response, ep_num=0):
+        """LLM 응답에서 JSON 배열 파싱."""
+        if not response:
+            return []
+
+        text = response.strip()
+        # ```json 펜스 처리
+        if "```json" in text:
+            text = text.split("```json")[1].split("```")[0]
+        elif "```" in text:
+            text = text.split("```")[1].split("```")[0]
+        text = text.strip()
+
+        try:
+            parsed = json.loads(text)
+        except (json.JSONDecodeError, ValueError):
+            logger.debug("[LM-E] JSON 파싱 실패: %s", text[:100])
+            return []
+
+        if not isinstance(parsed, list):
+            return []
+
+        results = []
+        for item in parsed:
+            if not isinstance(item, dict):
+                continue
+            marker = item.get("marker", "")
+            if not marker:
+                continue
+            results.append(
+                {
+                    "marker": marker,
+                    "issue": item.get("issue", ""),
+                    "referenced_context": item.get("referenced_context", ""),
+                    "severity": "MAJOR",
+                    "check": "flashback_contamination",
+                }
+            )
+
+        return results

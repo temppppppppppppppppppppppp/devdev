@@ -37,6 +37,8 @@ class WorldStateManager:
         "world_notes": [],  # 자유형 메모 (최대 10개)
         "world_laws": [],  # [{law, established_ep}] — 세계관 절대 법칙 (장기 기억 앵커)
         "timeline": [],  # [{ep, type, description}] — 시간 마커 (경과 시간, 계절, 날짜)
+        "motivations": [],  # [{text, status, since_ep, resolved_ep}] — 주인공 핵심 동기
+        "promises": [],  # [{text, promiser, promisee, since_ep, status}] — 약속/서약
     }
 
     def __init__(self, db) -> None:
@@ -317,6 +319,65 @@ class WorldStateManager:
                         )
                     except Exception as _te:
                         _logger.debug("[WorldState] timeline DB sync 실패 (비치명): %s", _te)
+
+            # 13. 주인공 동기 추적 (protagonist_motivations)
+            for mot in state_changes.get("protagonist_motivations") or []:
+                if not isinstance(mot, dict):
+                    continue
+                text = mot.get("text", "")
+                if not text:
+                    continue
+                motivations = self._state.setdefault("motivations", [])
+                # text 기반 중복 방지 — 기존 항목 status 업데이트
+                existing = next((m for m in motivations if m.get("text") == text), None)
+                if existing:
+                    new_status = mot.get("status", "")
+                    if new_status:
+                        existing["status"] = new_status
+                    if new_status in ("resolved", "완료") and not existing.get("resolved_ep"):
+                        existing["resolved_ep"] = ep_num
+                else:
+                    motivations.append(
+                        {
+                            "text": text,
+                            "status": mot.get("status", "active"),
+                            "since_ep": mot.get("since_ep", ep_num),
+                            "resolved_ep": mot.get("resolved_ep"),
+                        }
+                    )
+                if len(motivations) > 20:
+                    self._state["motivations"] = motivations[-20:]
+
+            # 14. 약속/서약 추적 (commitments / promises)
+            for promise in state_changes.get("commitments") or state_changes.get("promises") or []:
+                if not isinstance(promise, dict):
+                    continue
+                text = promise.get("text", "")
+                if not text:
+                    continue
+                promises = self._state.setdefault("promises", [])
+                # text 기반 중복 방지
+                existing = next((p for p in promises if p.get("text") == text), None)
+                if existing:
+                    new_status = promise.get("status", "")
+                    if new_status:
+                        existing["status"] = new_status
+                else:
+                    promises.append(
+                        {
+                            "text": text,
+                            "promiser": promise.get("promiser", ""),
+                            "promisee": promise.get("promisee", ""),
+                            "since_ep": promise.get("since_ep", ep_num),
+                            "status": promise.get("status", "pending"),
+                        }
+                    )
+                if len(promises) > 30:
+                    # pending 우선 보존
+                    pending = [p for p in promises if p.get("status") == "pending"]
+                    others = [p for p in promises if p.get("status") != "pending"]
+                    max_others = max(0, 30 - len(pending))
+                    self._state["promises"] = pending + others[-max_others:] if max_others else pending[:30]
 
             # 크기 제한: destroyed 최대 50개, world_notes 최대 10개
             if len(self._state["destroyed"]) > 50:
