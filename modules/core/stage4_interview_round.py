@@ -66,6 +66,20 @@ class Stage4InterviewRound:
         if type(mandatory_context) is not str:
             mandatory_context = str(mandatory_context or "")
 
+        # [emotional_beat] arc_data에서 감정 정점 추출
+        emotional_beat_section = ""
+        _arc_data_full = getattr(round_ctx, "arc_data", {}) or {}
+        _eb = _arc_data_full.get("emotional_beat") or {}
+        if isinstance(_eb, dict) and _eb:
+            _eb_type = _eb.get("type", "")
+            _eb_intensity = _eb.get("intensity", "")
+            if _eb_type or _eb_intensity:
+                emotional_beat_section = (
+                    f"### 이 화의 감정 정점\n"
+                    f"유형: {_eb_type}  강도: {_eb_intensity}/10\n"
+                    f"(집필 시 이 감정 정점을 향해 씬을 구성하라)"
+                )
+
         # [TF-T4] 25개 공통 kwargs — 4개 호출부에서 재사용
         _common_writer_kwargs = {
             "ep_num": next_ep,
@@ -92,6 +106,7 @@ class Stage4InterviewRound:
             "prev_manuscripts_text": _prev_manuscripts_text,
             "world_state_summary": _world_state_summary,
             "chain_link_section": _chain_link_section,
+            "emotional_beat_section": emotional_beat_section,
             # episode_digest는 Director 전용 — L713에서 별도 전달
         }
 
@@ -282,7 +297,7 @@ class Stage4InterviewRound:
                 "prev_episode_events": [],
                 "ep_num": next_ep,
                 "blueprint": blueprint if isinstance(blueprint, dict) else {},
-                "blueprint_text": str(blueprint or "")[:3000],
+                "blueprint_text": str(blueprint or "")[:8000],
             }
             # [P1-FIX] prev_hud 주입 — ContinuityValidator 연속성 검증 활성화
             _prev_hud = {}
@@ -366,7 +381,11 @@ class Stage4InterviewRound:
                 if hasattr(self.ctx.state_tracker, "get_npc_change_history") and self.ctx.state_tracker.npc_registry:
                     _npc_history = {}
                     for _hn in self.ctx.state_tracker.npc_registry:
-                        _hh = self.ctx.state_tracker.get_npc_change_history(_hn, limit=10)
+                        try:
+                            _hh = self.ctx.state_tracker.get_npc_change_history(_hn, limit=10)
+                        except Exception as _npc_err:
+                            logging.warning("[InterviewRound] get_npc_change_history 실패 (npc=%s): %s", _hn, _npc_err)
+                            continue
                         if _hh:
                             _npc_history[_hn] = _hh
                     if _npc_history:
@@ -762,6 +781,40 @@ class Stage4InterviewRound:
         # validation_results에서 경고를 추출하여 mandatory_context에 병합
         _mandatory_text = mandatory_context if isinstance(mandatory_context, str) else str(mandatory_context or "")
         _director_mc_parts = [_mandatory_text] if _mandatory_text else []
+
+        # [Phase4-Gate] TruthGate advisory — 후보 원고별 실행, Python blocking 없음
+        try:
+            from modules.core.truth_gate import TruthGate as _TruthGate
+            _tg = _TruthGate(
+                world_state=getattr(self.ctx, "world_state", None),
+                fact_ledger=getattr(self.ctx, "fact_ledger", None),
+            )
+            _npc_reg = getattr(getattr(self.ctx, "state_tracker", None), "npc_registry", {}) or {}
+            _tg_warnings_all: list[dict] = []
+            for _ci, _cand in enumerate(candidates):
+                _ms = _cand.get("manuscript", "")
+                if not _ms:
+                    continue
+                _tg_result = _tg.validate(
+                    manuscript=_ms,
+                    state_updates=_cand.get("state_updates") or {},
+                    npc_registry=_npc_reg,
+                )
+                if _tg_result.get("structured_warnings"):
+                    if _ci < len(validation_results) and isinstance(validation_results[_ci], dict):
+                        validation_results[_ci].setdefault(
+                            "truth_gate_warnings", _tg_result["structured_warnings"]
+                        )
+                    _tg_warnings_all.extend(_tg_result["structured_warnings"])
+            if _tg_warnings_all:
+                _tg_lines = ["[TruthGate Advisory — 참고만, Python 차단 없음]"]
+                for _w in _tg_warnings_all[:10]:
+                    _tg_lines.append(f"- [{_w.get('severity','?')}] {_w.get('text','')}")
+                _director_mc_parts.insert(0, "\n".join(_tg_lines))
+                logging.info("[TruthGate→Director] %d개 경고 전달", len(_tg_warnings_all))
+        except Exception as _tg_err:
+            logging.warning("[Phase4-Gate] TruthGate advisory 실패 (비치명): %s", str(_tg_err)[:80])
+
         _vr_warnings_for_director = []
         for _vr_idx, _vr in enumerate(validation_results):
             _vr_warns = _vr.get("warnings", [])
@@ -1000,6 +1053,42 @@ class Stage4InterviewRound:
                 if director_feedback
                 else []
             )
+            # [Fix-C] 이전 라운드 일반 지시 보존 (시스템 프리픽스·누적 라운드 레이블 제외)
+            _prev_general_lines = (
+                [
+                    line.strip()
+                    for line in director_feedback.split("\n")
+                    if line.strip()
+                    and not any(line.strip().startswith(p) for p in _system_prefixes)
+                    and not line.strip().startswith("[R")
+                ]
+                if director_feedback
+                else []
+            )
+
+            # [Phase3-ROI] Director 거부 시 근거 요약 블록 — CW에게 "증거" 전달, Python blocking 없음
+            _selected_ci = (
+                max(0, ord(selected) - ord("A"))
+                if isinstance(selected, str) and selected.isalpha()
+                else 0
+            )
+            _selected_vr = (
+                validation_results[_selected_ci]
+                if _selected_ci < len(validation_results)
+                else {}
+            )
+            _evidence_lines: list[str] = []
+            for _tw in (_selected_vr.get("truth_gate_warnings") or [])[:3]:
+                if isinstance(_tw, dict):
+                    _evidence_lines.append(f"  [{_tw.get('severity', '?')}] {_tw.get('text', '')}")
+            for _sv in (_selected_vr.get("structured_violations") or [])[:3]:
+                if isinstance(_sv, dict):
+                    _evidence_lines.append(f"  [VIOLATION] {_sv.get('reason', '')}")
+            _evidence_block = (
+                "[근거 요약 — 수정 시 반드시 반영]\n" + "\n".join(_evidence_lines) + "\n"
+                if _evidence_lines
+                else ""
+            )
 
             feedback = director_result.get("feedback") or {}
             action_items = director_result.get("action_items") or []
@@ -1008,8 +1097,15 @@ class Stage4InterviewRound:
             director_feedback = (
                 "\n".join(action_items) if action_items else ("\n".join(str(i) for i in _issues) if _issues else "")
             )
+            # 근거 블록을 director_feedback 앞에 prepend
+            if _evidence_block:
+                director_feedback = _evidence_block + director_feedback
             if _prev_system_lines:  # [TF-R2-S4-03] 시스템 감지 라인 복원
                 director_feedback = "\n".join(_prev_system_lines) + "\n" + director_feedback
+            # [Fix-C] 이전 라운드 일반 지시 누적 (토큰 예산 300자 제한)
+            if _prev_general_lines and round_num > 0:
+                _prev_text = " / ".join(_prev_general_lines)[:500]
+                director_feedback += f"\n[R{round_num - 1} 이전 지시] {_prev_text}"
             _reject_text = f"{director_feedback}\n" + "\n".join(str(a) for a in action_items)
             _reject_lower = _reject_text.lower()
             _reject_bucket = "quality_issue"

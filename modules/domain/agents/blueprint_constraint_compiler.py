@@ -371,14 +371,21 @@ class BlueprintConstraintCompiler:
         # NPC 사망
         deaths = state_changes.get("npc_deaths", [])
         if deaths:
-            names = []
+            death_descs = []
             for d in deaths[:5]:
                 if isinstance(d, dict):
-                    names.append(f"{d.get('name', '?')}(EP{d.get('episode', '?')})")
+                    _name = d.get("name", "?")
+                    _ep = d.get("episode", "?")
+                    _cause = d.get("cause", "")
+                    _desc = f"{_name}(EP{_ep}"
+                    if _cause:
+                        _desc += f", 원인: {_cause}"
+                    _desc += ")"
+                    death_descs.append(_desc)
                 elif isinstance(d, str):
-                    names.append(d)
-            if names:
-                lines.append(f"⚠️ 사망 NPC: {', '.join(names)} → 이후 등장 금지")
+                    death_descs.append(d)
+            if death_descs:
+                lines.append(f"⚠️ 사망 NPC: {', '.join(death_descs)} → 이후 등장 금지")
 
         # 무공/스킬 습득
         skills = state_changes.get("skill_acquisitions", [])

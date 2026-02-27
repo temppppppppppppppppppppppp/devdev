@@ -532,7 +532,7 @@ class Stage2PreflightAnalysis:
                     all_refined_arcs, protagonist_name or "주인공"
                 )
             else:
-                minimal_prev_context = enhanced_context[:2000]
+                minimal_prev_context = enhanced_context[:15000]  # [Phase3-B] 2K→15K: 실패 반복 시 컨텍스트 역설 제거
             enhanced_context = f"{current_feedback}\n\n{minimal_prev_context}"
             context_size = len(enhanced_context)
             self.ctx.ui.log(f"      📢 [V60.21] Focus Mode 활성화 - 컨텍스트 {context_size}자 (최소화)")

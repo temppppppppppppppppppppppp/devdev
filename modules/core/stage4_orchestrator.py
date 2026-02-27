@@ -606,6 +606,10 @@ JSON으로 출력:
                                         }
                                         final_manuscript = None
                                         final_title = None  # [S4-P1-1] CoVe REJECT 시 title도 리셋
+                                        logging.warning(  # [F2] CoVe REJECT 라운드 소모 가시화
+                                            "[Stage4] ep=%d round=%d/%d CoVe LLM REJECT → 라운드 소모",
+                                            next_ep, interview_round + 1, _max_rounds,
+                                        )
                                         continue
                                     # [S4-I5] LLM verify에서 MINOR/MAJOR 경고만 → 통과 (REJECT 안 함)
                                     if _cove_result.issues:
@@ -626,6 +630,10 @@ JSON으로 출력:
                                     }
                                     final_manuscript = None
                                     final_title = None
+                                    logging.warning(  # [F2] CoVe LLM 런타임 실패 라운드 소모 가시화
+                                        "[Stage4] ep=%d round=%d/%d CoVe LLM 런타임 실패 → 라운드 소모",
+                                        next_ep, interview_round + 1, _max_rounds,
+                                    )
                                     continue
                         except Exception as e:
                             logging.warning(f"[FailClosed:CoVe:Quick] {e!s:.100}")
@@ -641,6 +649,10 @@ JSON으로 출력:
                             }
                             final_manuscript = None
                             final_title = None
+                            logging.warning(  # [F2] CoVe Quick 런타임 실패 라운드 소모 가시화
+                                "[Stage4] ep=%d round=%d/%d CoVe Quick 런타임 실패 → 라운드 소모",
+                                next_ep, interview_round + 1, _max_rounds,
+                            )
                             continue
 
                     break

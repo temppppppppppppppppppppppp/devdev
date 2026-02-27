@@ -151,6 +151,8 @@ class ChiefWriter(BaseAgent):
         world_state_summary: str = "",
         # [V68] 에피소드 연결고리 — 직전 화에서 이어받아야 할 것
         chain_link_section: str = "",
+        # [emotional_beat] 감정 정점
+        emotional_beat_section: str = "",
     ) -> list[dict]:
         """
         3개 후보 원고 병렬 생성
@@ -218,6 +220,7 @@ class ChiefWriter(BaseAgent):
             world_state_summary=world_state_summary,
             # [V68] 에피소드 연결고리
             chain_link_section=chain_link_section,
+            emotional_beat_section=emotional_beat_section,
         )
 
         # [V61.7] 컨텍스트 캐싱 시도 (토큰 비용 50-67% 절감)
@@ -584,6 +587,8 @@ class ChiefWriter(BaseAgent):
         world_state_summary: str = "",
         # [V68] 에피소드 연결고리 — 직전 화에서 이어받아야 할 것
         chain_link_section: str = "",
+        # [emotional_beat] 감정 정점
+        emotional_beat_section: str = "",
     ) -> list[dict]:
         """
         Director 피드백 반영 재생성
@@ -677,6 +682,7 @@ class ChiefWriter(BaseAgent):
             world_state_summary=world_state_summary,
             # [V68] 에피소드 연결고리
             chain_link_section=chain_link_section,
+            emotional_beat_section=emotional_beat_section,
         )
 
     # =========================================================================
@@ -714,6 +720,7 @@ class ChiefWriter(BaseAgent):
         prev_manuscripts_text: str = "",
         world_state_summary: str = "",
         chain_link_section: str = "",
+        emotional_beat_section: str = "",
     ) -> list[dict]:
         """[Phase 3-5B] 원본 원고를 보존하며 피드백 지적사항만 수정. 3후보 반환.
 
@@ -801,6 +808,7 @@ class ChiefWriter(BaseAgent):
                 prev_manuscripts_text=prev_manuscripts_text,
                 world_state_summary=world_state_summary,
                 chain_link_section=chain_link_section,
+                emotional_beat_section=emotional_beat_section,
             )
         except Exception as e:
             logging.warning(f"[Phase 3-5B] patch_with_feedback 실패, 빈 리스트 반환: {e}")

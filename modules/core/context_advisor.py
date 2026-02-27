@@ -100,6 +100,7 @@ class RetrievalSources:
 
     VEC_MEMORY = "vec_memory"
     DB_NPC_HISTORY = "db_npc_history"
+    MANUSCRIPT_DB = "manuscript_db"  # [Phase2-L2]
 
 
 @dataclass(slots=True)
@@ -505,6 +506,19 @@ class ContextAdvisor:
         if genre in self._GENRE_HINTS:
             for idx, phrase in enumerate(self._GENRE_HINTS[genre][:2], start=1):
                 slots.append(RetrievalSlot(f"genre_context_{idx}", f"장르 맥락 키워드: {phrase}", priority=3))
+
+        # Slot: Manuscript excerpt (실제 원고 발췌, 연속성 참조용)
+        # [Phase2-L2] 버그수정: "ep_num" 키 없음 → "current_ep" 키 사용
+        ep_num = context_data.get("current_ep", 0)
+        if ep_num and ep_num > 3:
+            slots.append(
+                RetrievalSlot(
+                    "manuscript_excerpt",
+                    f"ep:{ep_num - 3}~{ep_num - 1} 원고 발췌 (연속성 참조용)",
+                    source="manuscript_db",
+                    priority=1,
+                )
+            )
 
         return slots
 

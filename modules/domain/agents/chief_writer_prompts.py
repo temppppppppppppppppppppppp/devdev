@@ -29,12 +29,22 @@ def get_writing_guidelines_section() -> str:
     return _load_prompt("WRITING_GUIDELINES_SECTION", _FALLBACK_EMPTY)
 
 
+def get_writing_guidelines_investment_only() -> str:
+    """[투자물 전용] 수치 집필 규칙 — investment 장르에서만 주입."""
+    return _load_prompt("WRITING_GUIDELINES_INVESTMENT_ONLY", _FALLBACK_EMPTY)
+
+
 def get_primitive_constraint_fallback() -> str:
     return _load_prompt("PRIMITIVE_CONSTRAINT_FALLBACK", _FALLBACK_EMPTY)
 
 
 def get_modern_origin_section() -> str:
     return _load_prompt("MODERN_ORIGIN_SECTION", _FALLBACK_EMPTY)
+
+
+def get_satisfaction_guide_section() -> str:
+    """[D-Step2] 독자 대리만족 필수 요소 가이드 — CW 초안 단계 사전 주입."""
+    return _load_prompt("SATISFACTION_GUIDE_SECTION", _FALLBACK_EMPTY)
 
 
 def build_chief_writer_main_prompt(
@@ -65,6 +75,9 @@ def build_chief_writer_main_prompt(
     prev_manuscripts_section: str = "",  # [V67] 이전 원고 전문
     incarnation_context_section: str = "",  # [V67.1] 환생 유형별 집필 맥락
     chain_link_section: str = "",  # [V68] 직전 화 연결고리
+    ending_hook_section: str = "",  # [ending_hook] 현재 화 마무리 훅
+    emotional_beat_section: str = "",  # [emotional_beat] 감정 정점
+    satisfaction_guide_section: str = "",  # [D-Step2] 독자 대리만족 사전 주입
 ) -> str:
     """[V65] _build_common_context() 메인 프롬프트 템플릿.
 
@@ -87,6 +100,8 @@ def build_chief_writer_main_prompt(
 
 {chain_link_section}
 
+{ending_hook_section}
+
 {dna_instruction}
 
 {purism_section}
@@ -108,6 +123,8 @@ def build_chief_writer_main_prompt(
 아래 Blueprint의 모든 씬을 파악하고, 누락 없이 반영하라.
 
 {scene_breakdown}
+
+{emotional_beat_section}
 
 ### [STEP 2: 연속성 확인]
 {prev_digest}
@@ -145,6 +162,8 @@ def build_chief_writer_main_prompt(
 
 ### [STEP 6: 문체 DNA 가이드 - 위반 시 AI티 판정]
 {style_guide}
+
+{satisfaction_guide_section}
 
 {common_rules}
 {writing_guidelines}

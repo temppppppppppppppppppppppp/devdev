@@ -281,7 +281,7 @@ class ContinuityManuscriptValidator:
                 manuscript_excerpt=self._ci._escape_braces(manuscript_excerpt),
                 prev_count=len(prev_manuscripts),
                 prev_manuscripts_timeline=self._ci._escape_braces(prev_timeline[:50000]),
-                blueprint_scenario=self._ci._escape_braces(blueprint_scenario[:10000]),
+                blueprint_scenario=self._ci._escape_braces(blueprint_scenario[:40000]),  # [감리3차] 10K → 40K
                 entity_registry=self._ci._escape_braces(entity_registry_str),
             )
         )

@@ -1213,6 +1213,7 @@ class BaseAgent:
             cached_info = self._context_caches.get(cache_key)
             if cached_info:
                 if current_time - cached_info["created_at"] < ttl_seconds:
+                    logging.info(f"📦 [CTX-CACHE] HIT: {cache_type} (TTL 내 재사용)")
                     return {"cache_name": cached_info.get("name"), "cached": True, "content_hash": content_hash}
                 else:
                     # 만료된 캐시 삭제 [I-20] KeyError 방지

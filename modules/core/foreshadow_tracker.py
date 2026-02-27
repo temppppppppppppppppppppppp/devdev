@@ -419,6 +419,10 @@ class ForeshadowTracker:
     def save_to_db(self, db) -> None:
         """[DB-Eff-P1] foreshadow 테이블에 저장."""
         if not db or not hasattr(db, "conn") or db.conn is None:
+            logging.warning(
+                "[ForeshadowTracker] save_to_db 스킵: db=%r (conn=%r) — 복선 %d건 미저장",
+                db, getattr(db, "conn", None), len(self.hooks),
+            )
             return
 
         lock = getattr(db, "_lock", None)
@@ -527,6 +531,7 @@ class ForeshadowTracker:
     def load_from_db(self, db) -> int:
         """[DB-Eff-P1] foreshadow 테이블에서 로드. 로드된 수 반환."""
         if not db or not hasattr(db, "conn") or db.conn is None:
+            logging.debug("[ForeshadowTracker] load_from_db 스킵: db=%r — 0건 반환", db)
             return 0
 
         lock = getattr(db, "_lock", None)

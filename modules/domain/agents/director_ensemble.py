@@ -359,7 +359,7 @@ class DirectorEnsembleSelector:
                     "issues": [f"모든 후보 분량 미달: {lengths}자 (최소 {MIN_MANUSCRIPT_LENGTH}자 필요)"],
                     "action_items": ["분량을 5,000자 이상으로 확장하세요", "장면 묘사와 대사를 더 풍부하게"],
                 },
-                "state_updates": {},
+                "state_updates": candidates[best_idx].get("state_updates", {}),
                 "action_items": ["분량 확장 필요 - 최소 5,000자"],
                 "length_violation": True,
             }
@@ -387,43 +387,33 @@ class DirectorEnsembleSelector:
 
         # [V67] 이전 원고 전문 — 30+화 컨텍스트
         _prev_ms_for_director = prev_manuscripts_text if prev_manuscripts_text else "(이전 원고 없음 — 1화)"
-        # Gemini 컨텍스트 윈도우가 크므로 넉넉히 전달 (최대 200K자)
         _prev_ms_for_director = smart_truncate(_prev_ms_for_director)
 
-        prompt = self._prompt_loader.load(
-            "director",
-            "ENSEMBLE_SELECTION_PROMPT",
-            blueprint=self._d._escape_braces(blueprint_str[:15000]),
-            episode_digest=self._d._escape_braces(episode_digest) if episode_digest else "(다이제스트 없음)",
-            previous_ending=self._d._escape_braces(previous_ending if previous_ending else ""),
-            prev_manuscripts_text=self._d._escape_braces(_prev_ms_for_director),
-            story_context=self._d._escape_braces(story_context) if story_context else "(작품 설정 정보 없음)",
-            strategy_a=info_a["strategy"],
-            manuscript_a=self._d._escape_braces(info_a["manuscript"]),
-            warnings_a=self._d._escape_braces(info_a["warnings"]),
-            strategy_b=info_b["strategy"],
-            manuscript_b=self._d._escape_braces(info_b["manuscript"]),
-            warnings_b=self._d._escape_braces(info_b["warnings"]),
-            strategy_c=info_c["strategy"],
-            manuscript_c=self._d._escape_braces(info_c["manuscript"]),
-            warnings_c=self._d._escape_braces(info_c["warnings"]),
-        )
-        if not prompt:
-            logging.warning("[Director] ENSEMBLE_SELECTION_PROMPT not found in prompt loader")
-            return {
-                "selected": "A",
-                "selected_candidate": candidates[0] if candidates else {},
-                "verdict": "REJECT",
-                "score": 50,
-                "feedback": {"issues": ["Prompt loading failed: ENSEMBLE_SELECTION_PROMPT"]},
-                "state_updates": (candidates[0].get("state_updates") or {})
-                if candidates
-                else {},  # [TF-R4] LLM null 방어
-                "action_items": ["프롬프트 로더 설정 확인 필요"],
-                "prompt_error": True,
-            }
+        # [1M-CTX Phase2] stable/variable 분리 — Director 컨텍스트 캐싱
+        _blueprint_esc = self._d._escape_braces(blueprint_str)  # [1M-CTX] 슬라이스 제거 — 전체 게이트(700K) 위임
+        _digest_esc = self._d._escape_braces(episode_digest) if episode_digest else "(다이제스트 없음)"
+        _ending_esc = self._d._escape_braces(previous_ending if previous_ending else "")
+        _prev_ms_esc = self._d._escape_braces(_prev_ms_for_director)
+        _story_esc = self._d._escape_braces(story_context) if story_context else "(작품 설정 정보 없음)"
 
-        # [V67] mandatory_context 확장 — 25,000자 상한 (기존 8,000자)
+        stable_context = self._prompt_loader.load(
+            "director", "ENSEMBLE_STABLE_CONTEXT",
+            blueprint=_blueprint_esc, episode_digest=_digest_esc,
+            previous_ending=_ending_esc, prev_manuscripts_text=_prev_ms_esc,
+            story_context=_story_esc,
+        )
+        variable_prompt = self._prompt_loader.load(
+            "director", "ENSEMBLE_VARIABLE_PROMPT",
+            strategy_a=info_a["strategy"], manuscript_a=self._d._escape_braces(info_a["manuscript"]),
+            warnings_a=self._d._escape_braces(info_a["warnings"]),
+            strategy_b=info_b["strategy"], manuscript_b=self._d._escape_braces(info_b["manuscript"]),
+            warnings_b=self._d._escape_braces(info_b["warnings"]),
+            strategy_c=info_c["strategy"], manuscript_c=self._d._escape_braces(info_c["manuscript"]),
+            warnings_c=self._d._escape_braces(info_c["warnings"]),
+        ) if stable_context else None
+
+        # mandatory_context 블록 생성 (stable/legacy 양쪽 공통)
+        _mc_block = ""
         if mandatory_context:
             _dir_mc_max = _threshold("context.director_mandatory_max", 40000)
             _mc_for_director = mandatory_context[:_dir_mc_max]
@@ -432,7 +422,7 @@ class DirectorEnsembleSelector:
                     _mc_for_director[: _dir_mc_max - 50]
                     + f"\n...(mandatory_context {_dir_mc_max:,}자 초과로 일부 생략)"
                 )
-            prompt += f"""
+            _mc_block = f"""
 
 ### 📌 [V67] 필수 컨텍스트 (Python 감지 + StateTracker 상태)
 아래는 Python 사전 검증 및 StateTracker에서 수집된 세계 상태입니다.
@@ -442,11 +432,80 @@ class DirectorEnsembleSelector:
 {self._d._escape_braces(_mc_for_director)}
 """
 
-        try:
-            response = self._d.ask(prompt, temperature=0.1, thinking_level="high")
-        except Exception as _ask_err:
-            logging.warning("[Director] select_and_judge_ensemble ask() 실패: %s", _ask_err)
-            response = ""
+        if not stable_context or not variable_prompt:
+            # Fallback: split 프롬프트 없음 → legacy 단일 프롬프트 사용
+            prompt = self._prompt_loader.load(
+                "director", "ENSEMBLE_SELECTION_PROMPT",
+                blueprint=_blueprint_esc, episode_digest=_digest_esc,
+                previous_ending=_ending_esc, prev_manuscripts_text=_prev_ms_esc,
+                story_context=_story_esc,
+                strategy_a=info_a["strategy"], manuscript_a=self._d._escape_braces(info_a["manuscript"]),
+                warnings_a=self._d._escape_braces(info_a["warnings"]),
+                strategy_b=info_b["strategy"], manuscript_b=self._d._escape_braces(info_b["manuscript"]),
+                warnings_b=self._d._escape_braces(info_b["warnings"]),
+                strategy_c=info_c["strategy"], manuscript_c=self._d._escape_braces(info_c["manuscript"]),
+                warnings_c=self._d._escape_braces(info_c["warnings"]),
+            )
+            if not prompt:
+                logging.warning("[Director] ENSEMBLE_SELECTION_PROMPT not found in prompt loader")
+                return {
+                    "selected": "A",
+                    "selected_candidate": candidates[0] if candidates else {},
+                    "verdict": "REJECT",
+                    "score": 50,
+                    "feedback": {"issues": ["Prompt loading failed: ENSEMBLE_SELECTION_PROMPT"]},
+                    "state_updates": (candidates[0].get("state_updates") or {})
+                    if candidates
+                    else {},  # [TF-R4] LLM null 방어
+                    "action_items": ["프롬프트 로더 설정 확인 필요"],
+                    "prompt_error": True,
+                }
+            prompt += _mc_block
+            try:
+                response = self._d.ask(prompt, temperature=0.1, thinking_level="high")
+            except Exception as _ask_err:
+                logging.warning("[Director] select_and_judge_ensemble ask() 실패: %s", _ask_err)
+                response = ""
+        else:
+            # [1M-CTX] Caching path — stable context (prev_manuscripts ~180K자) 캐시
+            variable_prompt += _mc_block
+            # [TF-A] full_fallback 선제 절삭 — variable_prompt 보호
+            # _apply_prompt_size_gate()는 단순 head 절삭이므로, 미리 stable_context를 줄여
+            # full_fallback이 게이트 이내가 되도록 보장 (variable이 tail에서 잘리는 것 방지)
+            _gate = int(getattr(self._d, "MAX_CONTEXT_CHARS", None) or 700_000)
+            _stable_budget = max(0, _gate - len(variable_prompt) - 2)
+            _stable_for_fallback = stable_context[:_stable_budget] if len(stable_context) > _stable_budget else stable_context
+            full_fallback = _stable_for_fallback + "\n\n" + variable_prompt
+
+            cache_name = None
+            try:
+                cache_info = self._d._get_or_create_context_cache(
+                    cache_type="director_ensemble", content=stable_context,
+                    ttl_seconds=600, project_name=f"ep{ep_num}",
+                )
+                cache_name = cache_info.get("cache_name")
+                _was_cached = cache_info.get("cached", False)
+                logging.info(
+                    f"📦 [Director-CACHE] {'HIT' if _was_cached else 'MISS(신규)'}: "
+                    f"stable={len(stable_context):,}자, variable={len(variable_prompt):,}자"
+                )
+            except Exception as _cache_err:
+                logging.debug(f"[SILENT] director context caching: {_cache_err}")
+
+            try:
+                if cache_name:
+                    logging.info(f"✅ [Director] 캐시 경로: variable_prompt만 전송 ({len(variable_prompt):,}자)")
+                    response = self._d._ask_with_cached_context(
+                        cache_name=cache_name, prompt=variable_prompt,
+                        temperature=0.1, thinking_level="high",
+                        full_prompt_fallback=full_fallback,
+                    )
+                else:
+                    logging.info(f"⚠️ [Director] fallback 경로: full_fallback 전송 ({len(full_fallback):,}자)")
+                    response = self._d.ask(full_fallback, temperature=0.1, thinking_level="high")
+            except Exception as _ask_err:
+                logging.warning("[Director] select_and_judge_ensemble ask() 실패: %s", _ask_err)
+                response = ""
         result = self._d._extract_json_robust(response)
 
         if not result or result.get("parsing_error"):
@@ -599,7 +658,7 @@ class DirectorEnsembleSelector:
 {self._d._escape_braces(manuscript[:6000])}
 
 ### Blueprint 요약
-{self._d._escape_braces(str(blueprint)[:1500])}
+{self._d._escape_braces(str(blueprint)[:5000])}
 
 ### 판정 기준 (완화됨)
 1. 분량 3,500자 이상: OK

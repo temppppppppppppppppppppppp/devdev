@@ -313,7 +313,7 @@ class ChiefWriterQualityGate:
                         # [Sweep-Codex] re.escape: NPC 이름에 regex 특수문자 방어
                         esc_name = re.escape(name)
                         context_pattern = f"{esc_name}.*{kw}|{kw}.*{esc_name}"
-                        if re.search(context_pattern, content):
+                        if re.search(context_pattern, content, re.DOTALL):
                             issues.append(
                                 {
                                     "type": "npc_relationship_inconsistency",

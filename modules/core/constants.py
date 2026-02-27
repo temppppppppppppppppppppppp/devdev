@@ -129,7 +129,7 @@ class ManuscriptLimits:
 class ContextLimits:
     """컨텍스트 크기 제한 상수."""
 
-    MAX_CONTEXT_CHARS = 800_000  # 800K 문자 (Gemini 1.05M 토큰 입력 기준 안전 마진)
+    MAX_CONTEXT_CHARS = 1_000_000  # [1M-CTX] system.yaml 700K보다 크게 유지 (게이트가 최종 안전망)
 
 
 def smart_truncate(text: str, max_chars: int = ContextLimits.MAX_CONTEXT_CHARS, head_chars: int = 80_000) -> str:

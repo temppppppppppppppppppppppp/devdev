@@ -291,7 +291,7 @@ class TestPrepareEpisodeContext:
             chief_writer,
         )
 
-        assert "-- Tier2 summaries (11-30 episodes back) --" in result["prev_manuscripts_text"]
+        assert "-- Tier2 summaries (21-60 episodes back) --" in result["prev_manuscripts_text"]
         assert "[EP 12 summary] summary tier2" in result["prev_manuscripts_text"]
 
     def test_hybrid_context_tier3_arc_summary(self):
@@ -321,12 +321,12 @@ class TestPrepareEpisodeContext:
 
         cb = Stage4ContextBuilder(ctx)
         result = cb.prepare_episode_context(
-            40,
-            {"ep_start": 1, "ep_count": 50, "tactical_doc": ""},
+            80,
+            {"ep_start": 1, "ep_count": 100, "tactical_doc": ""},
             chief_writer,
         )
 
-        assert "-- Tier3 arc summaries (older than 30 episodes) --" in result["prev_manuscripts_text"]
+        assert "-- Tier3 arc summaries (older than 60 episodes) --" in result["prev_manuscripts_text"]
         assert "[Arc 1 summary] arc one summary" in result["prev_manuscripts_text"]
         assert "[Arc 2 summary]" not in result["prev_manuscripts_text"]
 

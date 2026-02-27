@@ -24,6 +24,8 @@ from .chief_writer_prompts import (
     get_common_rules_section,
     get_modern_origin_section,
     get_primitive_constraint_fallback,
+    get_satisfaction_guide_section,
+    get_writing_guidelines_investment_only,
     get_writing_guidelines_section,
 )
 
@@ -74,6 +76,10 @@ class ChiefWriterContextBuilder:
         world_state_summary: str = "",
         # [V68] 에피소드 연결고리 — 직전 화에서 이어받아야 할 것
         chain_link_section: str = "",
+        # [ending_hook] 현재 화 마무리 훅
+        ending_hook_section: str = "",
+        # [emotional_beat] 감정 정점
+        emotional_beat_section: str = "",
     ) -> str:
         """
         [V60.81] 공통 컨텍스트 구성 (CoT 기반 + Writer 핵심 기능 완전 통합)
@@ -94,6 +100,7 @@ class ChiefWriterContextBuilder:
 
         # Blueprint에서 씬 정보 추출
         scene_breakdown = ""
+        ending_hook = ""
         if isinstance(blueprint, dict):
             scenes = blueprint.get("scene_breakdown", {})
             if isinstance(scenes, dict):
@@ -101,6 +108,9 @@ class ChiefWriterContextBuilder:
             integrated = blueprint.get("integrated_scenario", "")
             if integrated:
                 scene_breakdown += f"\n\n통합 시나리오:\n{integrated}"
+            _eh = blueprint.get("ending_hook", "")
+            if _eh:
+                ending_hook = f"### 이 화의 마무리 훅\n{_eh}"
 
         # 마스터 바이블에서 핵심 정보 추출
         bible_root = master_bible.get("MasterBible", master_bible) if isinstance(master_bible, dict) else {}
@@ -321,6 +331,11 @@ class ChiefWriterContextBuilder:
 {self.host._escape_braces(smart_truncate(prev_manuscripts_text))}
 """
 
+        # [투자물 전용] 수치 규칙은 investment 장르에서만 추가 주입
+        _investment_guidelines = (
+            get_writing_guidelines_investment_only() if genre_code == "investment" else ""
+        )
+
         # [V65] 메인 프롬프트 함수 래핑 호출
         return build_chief_writer_main_prompt(
             ep_num=ep_num,
@@ -345,10 +360,13 @@ class ChiefWriterContextBuilder:
             core_identity_desire=self.host._escape_braces(str(core_identity.get("desire", ""))),
             style_guide=self.host._escape_braces(style_guide) if style_guide else "기본 웹소설 문체",
             common_rules=get_common_rules_section(),
-            writing_guidelines=get_writing_guidelines_section(),
+            writing_guidelines=get_writing_guidelines_section() + _investment_guidelines,
             prev_manuscripts_section=prev_manuscripts_section,  # [V67]
             incarnation_context_section=incarnation_context_section,  # [V67.1]
             chain_link_section=self.host._escape_braces(chain_link_section) if chain_link_section else "",  # [V68]
+            ending_hook_section=self.host._escape_braces(ending_hook) if ending_hook else "",
+            emotional_beat_section=self.host._escape_braces(emotional_beat_section) if emotional_beat_section else "",
+            satisfaction_guide_section=get_satisfaction_guide_section(),  # [D-Step2]
         )
 
     def _generate_episode_digest(self, manuscript: str, ep_num: int = 0) -> str:
@@ -516,6 +534,23 @@ class ChiefWriterContextBuilder:
             # 중복 제거 후 최대 3개
             unique_capitals = list(dict.fromkeys(capital_mentions))[:3]
             digest_parts.append(f"확정 자본: {', '.join(unique_capitals)} (직전 화 원문 기준)")
+
+        # 11. [V-소도구] 의상·소도구 물리 상태 추적 (소도구 연속성 보조)
+        prop_patterns = [
+            r"(수트|재킷|코트|상의|외투)[이가을를은는]?\s*"
+            r"(?:의자|옷장|침대|소파|테이블|등받이|행거)\s*"
+            r"(?:에|위에|등받이에|안에)\s*(?:걸쳐있|놓여있|걸려있|벗어|던져|걸어|놓아)",
+            r"(?:의자|옷장|침대|등받이)\s*(?:에|위에)\s*(?:걸쳐|놓인|걸린|벗어놓은)\s*(수트|재킷|코트|상의|외투)",
+            r"(블룸버그|로이터|HTS|트레이딩\s*단말기)[이가을를]?\s*(?:켜|열어|접속|작동|화면|모니터)",
+        ]
+        props_state = []
+        for p in prop_patterns:
+            for m in re.finditer(p, manuscript):
+                snippet = m.group(0)[:50]
+                if snippet not in props_state:
+                    props_state.append(snippet)
+        if props_state:
+            digest_parts.append(f"소도구/장비 상태: {'; '.join(props_state)}")
 
         if not digest_parts:
             return ""
@@ -756,7 +791,7 @@ class ChiefWriterContextBuilder:
             if not hud_history:
                 return {"has_anomalies": False, "anomalies": [], "warning_text": ""}
 
-            latest = hud_history[-1]["hud"] if hud_history else {}
+            latest = hud_history[-1]["hud"]
 
             # 1. 내공 급변 감지
             if len(hud_history) >= 2:

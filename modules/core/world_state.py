@@ -28,13 +28,15 @@ class WorldStateManager:
             "injuries": "정상",
             "skills": [],
         },
-        "alive_npcs": {},  # name -> {role, relation, personality, location}
+        "alive_npcs": {},  # name -> {role, relation, personality, location, first_seen_ep, role_at_intro, known_attrs}
         "dead_npcs": {},  # name -> {ep, cause}
         "relationships": {},  # npc_name -> relation_str
         "active_items": {},  # item_name -> {ep_acquired, status}
         "destroyed": [],  # [{name, type, ep, cause}]
         "active_plots": [],  # [{plot, status, since_ep}]
         "world_notes": [],  # 자유형 메모 (최대 10개)
+        "world_laws": [],  # [{law, established_ep}] — 세계관 절대 법칙 (장기 기억 앵커)
+        "timeline": [],  # [{ep, type, description}] — 시간 마커 (경과 시간, 계절, 날짜)
     }
 
     def __init__(self, db) -> None:
@@ -142,7 +144,10 @@ class WorldStateManager:
                     # alive_npcs에 없으면 등록
                     if npc not in self._state["dead_npcs"]:
                         if npc not in self._state["alive_npcs"]:
-                            self._state["alive_npcs"][npc] = {}
+                            self._state["alive_npcs"][npc] = {
+                                "first_seen_ep": ep_num,
+                                "role_at_intro": "",
+                            }
                         self._state["alive_npcs"][npc]["relation"] = to_rel
 
             # 4. 주요 아이템
@@ -192,7 +197,10 @@ class WorldStateManager:
                 if not npc or npc in self._state["dead_npcs"]:
                     continue
                 if npc not in self._state["alive_npcs"]:
-                    self._state["alive_npcs"][npc] = {}
+                    self._state["alive_npcs"][npc] = {
+                        "first_seen_ep": ep_num,
+                        "role_at_intro": "",
+                    }
                 # [V70] 스키마 키 호환: LLM은 'traits'/'motivation' 출력, 레거시 'personality_traits'/'primary_motivation' 폴백
                 _traits = personality.get("traits", "") or personality.get("personality_traits", "")
                 if _traits:
@@ -225,12 +233,90 @@ class WorldStateManager:
                     continue
                 if npc not in self._state["dead_npcs"]:
                     if npc not in self._state["alive_npcs"]:
-                        self._state["alive_npcs"][npc] = {}
+                        self._state["alive_npcs"][npc] = {
+                            "first_seen_ep": ep_num,
+                            "role_at_intro": "",
+                        }
                     self._state["alive_npcs"][npc]["companion"] = action in (
                         "join",
                         "joined",
                         "합류",
                     )  # [V70] LLM 출력값 호환
+
+            # 9. NPC 속성 변경 — 의도적 직업/나이 등 변경 기록 (장기 기억 추적)
+            for attr_change in state_changes.get("npc_attribute_changes") or []:
+                if not isinstance(attr_change, dict):
+                    continue
+                _npc = attr_change.get("name", "")
+                _field = attr_change.get("field", "")
+                _new_val = str(attr_change.get("new", ""))
+                _old_val = str(attr_change.get("old", ""))
+                if not _npc or not _field or _npc in self._state["dead_npcs"]:
+                    continue
+                if _npc not in self._state["alive_npcs"]:
+                    self._state["alive_npcs"][_npc] = {"first_seen_ep": ep_num, "role_at_intro": ""}
+                _npc_entry = self._state["alive_npcs"][_npc]
+                if "known_attrs" not in _npc_entry:
+                    _npc_entry["known_attrs"] = {}
+                _npc_entry["known_attrs"][_field] = {
+                    "value": _new_val,
+                    "prev": _old_val,
+                    "changed_ep": ep_num,
+                }
+
+            # 10. NPC 첫 등장 초기 속성 저장 (npc_introductions)
+            for intro in state_changes.get("npc_introductions") or []:
+                if not isinstance(intro, dict):
+                    continue
+                name = intro.get("name", "")
+                if not name:
+                    continue
+                if name not in self._state["alive_npcs"]:
+                    self._state["alive_npcs"][name] = {
+                        "role": intro.get("job", ""),
+                        "relation": "",
+                        "location": "",
+                        "first_seen_ep": intro.get("episode", ep_num),
+                        "role_at_intro": intro.get("job", ""),
+                        "known_attrs": {},
+                    }
+                attrs = {k: v for k, v in intro.items() if k not in ("name", "episode")}
+                self._state["alive_npcs"][name].setdefault("known_attrs", {}).update(attrs)
+
+            # 11. 세계관 법칙 등록
+            for law_entry in state_changes.get("world_law_additions") or []:
+                if isinstance(law_entry, str) and law_entry.strip():
+                    self._add_world_law_internal(law_entry.strip(), ep_num)
+                elif isinstance(law_entry, dict):
+                    _law_text = law_entry.get("law", "")
+                    if _law_text:
+                        self._add_world_law_internal(_law_text, ep_num)
+
+            # 12. 시간 마커 추적 (time_markers)
+            for marker in state_changes.get("time_markers") or []:
+                if not isinstance(marker, dict):
+                    continue
+                timeline = self._state.setdefault("timeline", [])
+                entry = {
+                    "ep": marker.get("episode", ep_num),
+                    "type": marker.get("type", ""),
+                    "description": marker.get("description", ""),
+                }
+                if not any(t["ep"] == entry["ep"] and t["type"] == entry["type"] for t in timeline):
+                    timeline.append(entry)
+                if len(timeline) > 20:
+                    self._state["timeline"] = timeline[-20:]
+                # [Phase3-Timeline] DB 동기화
+                if getattr(self, "db", None) and entry.get("description"):
+                    try:
+                        self.db.upsert_timeline_entry(
+                            ep_no=entry["ep"],
+                            story_date=entry.get("description", ""),
+                            elapsed_days=None,
+                            time_note=entry.get("description", ""),
+                        )
+                    except Exception as _te:
+                        _logger.debug("[WorldState] timeline DB sync 실패 (비치명): %s", _te)
 
             # 크기 제한: destroyed 최대 50개, world_notes 최대 10개
             if len(self._state["destroyed"]) > 50:
@@ -266,7 +352,83 @@ class WorldStateManager:
     # 프롬프트 주입용 요약 생성
     # ═══════════════════════════════════════════════════════════════
 
-    def get_summary(self, max_chars: int = 5000) -> str:
+    def get_canonical_constraints(self, max_chars: int = 8000) -> str:
+        """[Phase1-L0] NPC 고정 속성(role_at_intro + known_attrs) 압축 요약.
+
+        get_summary()에 없는 정보(최초 역할·초기 속성)만 담당.
+        세계관 법칙은 get_summary()에 이미 포함되므로 제외.
+        """
+        try:
+            parts = ["[캐릭터 고정 속성 (L0)]"]
+            alive = self._state.get("alive_npcs", {})
+            for name, data in list(alive.items())[:20]:
+                if not isinstance(data, dict):
+                    continue
+                role_at_intro = data.get("role_at_intro", "")
+                first_ep = data.get("first_seen_ep", "?")
+                known = data.get("known_attrs", {})
+                attr_parts = []
+                for k, v in list((known or {}).items())[:5]:
+                    val = v.get("value", v) if isinstance(v, dict) else v
+                    attr_parts.append(f"{k}={val}")
+                attr_str = ", ".join(attr_parts)
+                line = f"- {name}: {role_at_intro} (EP{first_ep}~)"
+                if attr_str:
+                    line += f" / {attr_str}"
+                parts.append(line)
+            # [Graph-Layer] NPC 간 관계 섹션
+            if getattr(self, "db", None):
+                try:
+                    edges = self.db.get_npc_relationship_edges()[:20]
+                    if edges:
+                        parts.append("\n[NPC 간 관계 (L0-Graph)]")
+                        for e in edges:
+                            parts.append(
+                                f"- {e['npc1']} ↔ {e['npc2']}: {e.get('relation', '?')} (Arc {e.get('arc_no', '?')})"
+                            )
+                except Exception as _ge:
+                    _logger.debug("[WorldState] npc_relationship_edges 조회 실패: %s", _ge)
+            result = "\n".join(parts)
+            if len(result) > max_chars:
+                result = result[:max_chars - 10] + "\n...(절삭)"
+            return result if len(parts) > 1 else ""
+        except Exception as e:
+            _logger.warning("[WorldState] get_canonical_constraints 실패 (비치명): %s", e)
+            return ""
+
+    def get_timeline_summary(self, max_entries: int = 30, max_chars: int = 3000) -> str:
+        """[Phase3-Timeline] DB에서 타임라인 조회 (20개 제한 없음).
+
+        DB 없을 때 in-memory fallback 사용.
+        """
+        try:
+            if getattr(self, "db", None):
+                entries = self.db.get_timeline_range(limit=max_entries)
+                if entries:
+                    lines = ["[작중 타임라인]"]
+                    for e in entries:
+                        note = e.get("time_note") or e.get("story_date") or ""
+                        lines.append(f"- EP{e['ep_no']}: {note}")
+                    result = "\n".join(lines)
+                    return result[:max_chars]
+            # fallback: in-memory timeline
+            timeline = self._state.get("timeline") or []
+            if not timeline:
+                return ""
+            recent = timeline[-max_entries:]
+            lines = ["[작중 타임라인]"]
+            for e in recent:
+                if isinstance(e, dict):
+                    ep = e.get("ep", "?")
+                    desc = e.get("description", "")
+                    lines.append(f"- EP{ep}: {desc}")
+            result = "\n".join(lines)
+            return result[:max_chars] if len(lines) > 1 else ""
+        except Exception as e:
+            _logger.warning("[WorldState] get_timeline_summary 실패 (비치명): %s", e)
+            return ""
+
+    def get_summary(self, max_chars: int = 50000) -> str:  # [1M-CTX-P1: 25K→50K] ep250 NPC 150명 전량 수용
         """
         프롬프트 주입용 요약 텍스트 생성.
         max_chars 이내로 truncation.
@@ -374,6 +536,25 @@ class WorldStateManager:
                 plot_lines = [f"- {p.get('plot', '?')} (제{p.get('since_ep', '?')}화~)" for p in plots[-10:]]
                 parts.append("[진행 중 플롯]\n" + "\n".join(plot_lines))
 
+            # 세계관 절대 법칙
+            world_laws = self._state.get("world_laws", [])
+            if world_laws:
+                law_lines = [
+                    f"- {e.get('law', '')} (제{e.get('established_ep', '?')}화 확립)"
+                    for e in world_laws
+                    if isinstance(e, dict) and e.get("law")
+                ]
+                if law_lines:
+                    parts.append("[세계관 절대 법칙 -- 위반 금지]\n" + "\n".join(law_lines))
+
+            # 시간 흐름 (최근 5개)
+            timeline = self._state.get("timeline") or []
+            if timeline:
+                recent = timeline[-5:]
+                t_lines = [f"- EP{t['ep']}: {t['description']}" for t in recent if t.get("description")]
+                if t_lines:
+                    parts.append("[시간 흐름 (최근)]\n" + "\n".join(t_lines))
+
             result = "\n\n".join(parts)
 
             # max_chars truncation
@@ -395,14 +576,20 @@ class WorldStateManager:
         """마지막 갱신된 에피소드 번호"""
         return self._state.get("last_updated_ep", 0)
 
-    def register_alive_npc(self, name: str, role: str = "", relation: str = "", location: str = ""):
+    def register_alive_npc(self, name: str, role: str = "", relation: str = "", location: str = "", first_ep: int = 0):
         """NPC를 생존 목록에 수동 등록"""
         if name in self._state.get("dead_npcs", {}):
             return  # 이미 죽은 NPC는 등록 불가
         if name not in self._state["alive_npcs"]:
-            self._state["alive_npcs"][name] = {}
+            self._state["alive_npcs"][name] = {
+                "first_seen_ep": first_ep or 0,
+                "role_at_intro": role,  # 최초 등장 역할 — 이후 변경 안 함
+            }
         if role:
             self._state["alive_npcs"][name]["role"] = role
+            # role_at_intro는 최초 1회만 설정
+            if not self._state["alive_npcs"][name].get("role_at_intro"):
+                self._state["alive_npcs"][name]["role_at_intro"] = role
         if relation:
             self._state["alive_npcs"][name]["relation"] = relation
         if location:
@@ -429,6 +616,123 @@ class WorldStateManager:
     def get_state_dict(self) -> dict:
         """내부 상태 dict 반환 (디버깅/대시보드용) — deep copy로 외부 변조 방지"""
         return json.loads(json.dumps(self._state, ensure_ascii=False))
+
+    # ═══════════════════════════════════════════════════════════════
+    # TruthGate 접근자 (D-1) — 4개 검사 활성화
+    # ═══════════════════════════════════════════════════════════════
+
+    def get_deceased_npcs(self) -> list[str]:
+        """사망 NPC 이름 목록 반환 (TruthGate deceased_npc 검사용)"""
+        return list(self._state.get("dead_npcs", {}).keys())
+
+    def get_owned_items(self) -> list[str]:
+        """현재 보유 중인 아이템 이름 목록 반환 (TruthGate item_existence 검사용)"""
+        items = self._state.get("active_items", {})
+        return [
+            name
+            for name, info in items.items()
+            if isinstance(info, dict) and info.get("status", "보유") == "보유"
+        ]
+
+    def get_destroyed_locations(self) -> list[str]:
+        """파괴된 장소/조직 이름 목록 반환 (TruthGate location_existence 검사용)"""
+        return [
+            d.get("name", "")
+            for d in self._state.get("destroyed", [])
+            if isinstance(d, dict) and d.get("name")
+        ]
+
+    def get_known_skills(self) -> list[str]:
+        """주인공이 습득한 스킬/무공 목록 반환 (TruthGate skill_existence 검사용)"""
+        return list(self._state.get("protagonist", {}).get("skills", []))
+
+    # ═══════════════════════════════════════════════════════════════
+    # 장기 기억 앵커 (60화+ 모순 방지)
+    # ═══════════════════════════════════════════════════════════════
+
+    def _add_world_law_internal(self, law: str, ep: int) -> None:
+        """내부용: world_laws에 중복 없이 추가"""
+        laws = self._state.setdefault("world_laws", [])
+        existing = {e.get("law", "") for e in laws if isinstance(e, dict)}
+        if law not in existing:
+            laws.append({"law": law, "established_ep": ep})
+            if len(laws) > 30:
+                laws[:] = laws[-30:]
+
+    def add_world_law(self, law: str, ep: int = 0) -> None:
+        """세계관 절대 법칙 등록 (Stage 0 Bible 파싱 또는 수동 등록용)."""
+        if law and law.strip():
+            self._add_world_law_internal(law.strip(), ep)
+
+    def get_world_laws(self) -> list[str]:
+        """세계관 절대 법칙 텍스트 목록 반환 (TruthGate 검사용)."""
+        return [
+            e.get("law", "")
+            for e in self._state.get("world_laws", [])
+            if isinstance(e, dict) and e.get("law")
+        ]
+
+    def get_npc_role_snapshot(self) -> dict:
+        """NPC 원본 역할 스냅샷 반환 (TruthGate role 일관성 검사용).
+
+        Returns:
+            {npc_name: {"role_at_intro": str, "first_seen_ep": int, "known_attrs": dict}}
+        """
+        result = {}
+        for name, info in self._state.get("alive_npcs", {}).items():
+            if not isinstance(info, dict):
+                continue
+            role_at_intro = info.get("role_at_intro", "")
+            known_attrs = info.get("known_attrs", {})
+            if role_at_intro or known_attrs:
+                result[name] = {
+                    "role_at_intro": role_at_intro,
+                    "first_seen_ep": info.get("first_seen_ep", 0),
+                    "known_attrs": known_attrs,
+                }
+        return result
+
+    def get_long_term_anchor(self, current_ep: int = 0) -> str:
+        """60화+ 장기 기억 앵커 텍스트 생성.
+
+        세계관 법칙 + NPC 원본 역할을 별도 섹션으로 반환.
+        Stage4ContextBuilder에서 prev_manuscripts_text 앞에 주입.
+        """
+        parts = []
+
+        # 세계관 절대 법칙
+        laws = self.get_world_laws()
+        if laws:
+            law_lines = [f"- {law}" for law in laws]
+            parts.append("【세계관 절대 법칙 — 위반 즉시 REJECT】\n" + "\n".join(law_lines))
+
+        # NPC 원본 역할 (role_at_intro가 있는 NPC만)
+        npc_snap = self.get_npc_role_snapshot()
+        if npc_snap:
+            npc_lines = []
+            for name, snap in sorted(npc_snap.items()):
+                role_at_intro = snap.get("role_at_intro", "")
+                first_ep = snap.get("first_seen_ep", 0)
+                known_attrs = snap.get("known_attrs", {})
+                parts_npc = []
+                if role_at_intro:
+                    parts_npc.append(f"최초 역할={role_at_intro}")
+                if first_ep:
+                    parts_npc.append(f"첫 등장={first_ep}화")
+                for field, attr in (known_attrs or {}).items():
+                    val = attr.get("value", "") if isinstance(attr, dict) else str(attr)
+                    chg_ep = attr.get("changed_ep", 0) if isinstance(attr, dict) else 0
+                    if val:
+                        parts_npc.append(f"{field}={val}({chg_ep}화 갱신)")
+                if parts_npc:
+                    npc_lines.append(f"- {name}: {' / '.join(parts_npc)}")
+            if npc_lines:
+                parts.append("【NPC 원본 속성 — 변경 시 작중 이유 필수】\n" + "\n".join(npc_lines))
+
+        if not parts:
+            return ""
+        header = f"=== [장기 설정 앵커: 제{current_ep}화 기준 불변 사실] ==="
+        return header + "\n\n" + "\n\n".join(parts)
 
     def rollback_to(self, target_ep: int) -> None:
         """[D-2] 특정 에피소드 이전 상태로 롤백 (episode_bibles 리플레이).

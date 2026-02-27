@@ -539,6 +539,46 @@ class InvestmentGuard(BaseGuard):
 
         return True, f"[V57] 수익률 현실적: {annualized:.1f}%/년"
 
+    def validate_leverage_return(
+        self,
+        entry_price: float,
+        exit_price: float,
+        leverage: float,
+        stated_return_pct: float,
+        tolerance: float = 3.0,
+    ) -> tuple[bool, str]:
+        """
+        [V-LEVA] 레버리지 수익률 공식 검증
+
+        계좌 수익률(%) = 기초자산 변동폭(%) × 레버리지 배수
+
+        Args:
+            entry_price: 진입가
+            exit_price:  매도가
+            leverage:    레버리지 배수
+            stated_return_pct: 원고에 표기된 계좌 수익률(%)
+            tolerance:   허용 오차 (기본 ±3%)
+
+        Returns:
+            (허용 여부, 사유 메시지)
+        """
+        if entry_price <= 0 or exit_price <= 0 or leverage <= 0:
+            return True, "[V-LEVA] 검증 불가 (진입가/매도가/레버리지 0 이하)"
+
+        base_return_pct = (exit_price - entry_price) / entry_price * 100.0
+        expected_return_pct = base_return_pct * leverage
+        diff = abs(stated_return_pct - expected_return_pct)
+
+        if diff > tolerance:
+            return False, (
+                f"[V-LEVA] 레버리지 수익률 불일치: "
+                f"진입가 {entry_price} → 매도가 {exit_price} "
+                f"(기초자산 {base_return_pct:.1f}%) × {leverage}배 = "
+                f"예상 {expected_return_pct:.1f}%, "
+                f"원고 표기 {stated_return_pct:.1f}% (오차 {diff:.1f}%p)"
+            )
+        return True, f"[V-LEVA] 레버리지 수익률 정합: 예상 {expected_return_pct:.1f}% ~ 표기 {stated_return_pct:.1f}%"
+
     def validate_timeline_event(
         self, event_date: str, regression_date: str = None, current_date: str = None
     ) -> tuple[bool, str]:
@@ -634,6 +674,39 @@ class InvestmentGuard(BaseGuard):
                     valid, msg = self.validate_return_rate("주식", roi, 1.0)  # [G20] 한국어 키 매칭
                     if not valid:
                         result["violations"].append({"type": "return_rate", "severity": "MEDIUM", "message": msg})
+            except (ValueError, TypeError):
+                pass
+
+        # [V-LEVA] 레버리지 수익률 공식 검증
+        # 1) 레버리지 배수 추출
+        lev_match = re.search(r"(\d+(?:\.\d+)?)\s*배\s*레버리지|레버리지\s*(\d+(?:\.\d+)?)\s*배", manuscript)
+        if lev_match:
+            lev_str = lev_match.group(1) or lev_match.group(2)
+            try:
+                leverage_val = float(lev_str)
+                # 2) 수익률 표기 추출 (양수/음수 모두 지원)
+                roi_m = re.search(r"수익률\s*[:\s]*([+-]?\d+(?:\.\d+)?)\s*%", manuscript)
+                if roi_m:
+                    stated_roi = float(roi_m.group(1))
+                    # 3) 진입가·매도가 의미론적 분리 추출 (달러 기준)
+                    entry_m = re.search(
+                        r"(?:진입가|체결\s*단가|진입\s*단가)[^\d]*(\d+(?:\.\d+)?)\s*달러",
+                        manuscript,
+                    )
+                    exit_m = re.search(
+                        r"(?:현재가|매도가|체결가)[^\d]*(\d+(?:\.\d+)?)\s*달러",
+                        manuscript,
+                    )
+                    if entry_m and exit_m:
+                        entry_p = float(entry_m.group(1))
+                        exit_p = float(exit_m.group(1))
+                        valid, msg = self.validate_leverage_return(
+                            entry_p, exit_p, leverage_val, stated_roi
+                        )
+                        if not valid:
+                            result["violations"].append(
+                                {"type": "leverage_return_formula", "severity": "HIGH", "message": msg}
+                            )
             except (ValueError, TypeError):
                 pass
 
