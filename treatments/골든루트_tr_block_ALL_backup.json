@@ -357,9 +357,9 @@
         "in_story_time": "2006년 5월 ~ 8월"
       },
       "genre_ext": {
-        "capital_before": "35억",
+        "capital_before": "30억",
         "capital_after": "45억",
-        "capital_delta": "+10억 (5억 확정 + 5억 미실현)",
+        "capital_delta": "+15억 (5억 확정 + 10억 미실현)",
         "profit_loss": "+5억 (확정)",
         "method": "레버리지 롱, 부분 익절",
         "investment_type": "원자재 선물 (골드)",
