@@ -390,7 +390,7 @@ class WorldStateManager:
                     _logger.debug("[WorldState] npc_relationship_edges 조회 실패: %s", _ge)
             result = "\n".join(parts)
             if len(result) > max_chars:
-                result = result[:max_chars - 10] + "\n...(절삭)"
+                result = result[: max_chars - 10] + "\n...(절삭)"
             return result if len(parts) > 1 else ""
         except Exception as e:
             _logger.warning("[WorldState] get_canonical_constraints 실패 (비치명): %s", e)
@@ -628,19 +628,11 @@ class WorldStateManager:
     def get_owned_items(self) -> list[str]:
         """현재 보유 중인 아이템 이름 목록 반환 (TruthGate item_existence 검사용)"""
         items = self._state.get("active_items", {})
-        return [
-            name
-            for name, info in items.items()
-            if isinstance(info, dict) and info.get("status", "보유") == "보유"
-        ]
+        return [name for name, info in items.items() if isinstance(info, dict) and info.get("status", "보유") == "보유"]
 
     def get_destroyed_locations(self) -> list[str]:
         """파괴된 장소/조직 이름 목록 반환 (TruthGate location_existence 검사용)"""
-        return [
-            d.get("name", "")
-            for d in self._state.get("destroyed", [])
-            if isinstance(d, dict) and d.get("name")
-        ]
+        return [d.get("name", "") for d in self._state.get("destroyed", []) if isinstance(d, dict) and d.get("name")]
 
     def get_known_skills(self) -> list[str]:
         """주인공이 습득한 스킬/무공 목록 반환 (TruthGate skill_existence 검사용)"""
@@ -650,27 +642,27 @@ class WorldStateManager:
     # 장기 기억 앵커 (60화+ 모순 방지)
     # ═══════════════════════════════════════════════════════════════
 
-    def _add_world_law_internal(self, law: str, ep: int) -> None:
+    def _add_world_law_internal(self, law: str, ep: int, priority: str = "NORMAL") -> None:
         """내부용: world_laws에 중복 없이 추가"""
         laws = self._state.setdefault("world_laws", [])
         existing = {e.get("law", "") for e in laws if isinstance(e, dict)}
         if law not in existing:
-            laws.append({"law": law, "established_ep": ep})
+            laws.append({"law": law, "established_ep": ep, "priority": priority})
             if len(laws) > 30:
-                laws[:] = laws[-30:]
+                # [LM-A-3] CRITICAL 핀 보호: CRITICAL 법칙은 FIFO 탈락 대상에서 제외
+                critical = [e for e in laws if e.get("priority") == "CRITICAL"]
+                others = [e for e in laws if e.get("priority") != "CRITICAL"]
+                max_others = max(0, 30 - len(critical))
+                laws[:] = critical + others[-max_others:] if max_others else critical[:30]
 
-    def add_world_law(self, law: str, ep: int = 0) -> None:
+    def add_world_law(self, law: str, ep: int = 0, priority: str = "NORMAL") -> None:
         """세계관 절대 법칙 등록 (Stage 0 Bible 파싱 또는 수동 등록용)."""
         if law and law.strip():
-            self._add_world_law_internal(law.strip(), ep)
+            self._add_world_law_internal(law.strip(), ep, priority)
 
     def get_world_laws(self) -> list[str]:
         """세계관 절대 법칙 텍스트 목록 반환 (TruthGate 검사용)."""
-        return [
-            e.get("law", "")
-            for e in self._state.get("world_laws", [])
-            if isinstance(e, dict) and e.get("law")
-        ]
+        return [e.get("law", "") for e in self._state.get("world_laws", []) if isinstance(e, dict) and e.get("law")]
 
     def get_npc_role_snapshot(self) -> dict:
         """NPC 원본 역할 스냅샷 반환 (TruthGate role 일관성 검사용).

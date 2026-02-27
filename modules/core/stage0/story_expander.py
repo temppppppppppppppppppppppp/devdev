@@ -137,7 +137,8 @@ class StoryExpander:
   }},
   "suggested_genre": "{"/".join(GenreTypes.all())}",
   "themes": ["테마1", "테마2"],
-  "tone": "작품 톤"
+  "tone": "작품 톤",
+  "world_laws": ["이 세계의 절대 법칙1", "절대 법칙2"]
 }}
 ```
 """
@@ -206,6 +207,7 @@ class StoryExpander:
                 },
                 "protagonist_config": protagonist_config or {},
                 "InitialHUD": hud,
+                "WorldLaws": self.extracted.get("world_laws", []),
                 "WorldState": {
                     "CurrentEra": self.extracted.get("timeline", {}).get("start_era", ""),
                 },

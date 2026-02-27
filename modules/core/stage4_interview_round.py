@@ -14,6 +14,16 @@ class Stage4InterviewRound:
         self.ctx = ctx
         self.time_warnings = []
 
+    def _truth_gate_llm_ask(self, prompt: str) -> str:
+        """[LM-A-2] TruthGate 세계관 법칙 검사용 LLM 콜백."""
+        try:
+            director = getattr(self.ctx, "agents", {}).get("director")
+            if director and hasattr(director, "ask"):
+                return director.ask(prompt, temperature=0.1) or ""
+        except Exception as e:
+            logging.debug("[TruthGate] llm_ask 실패 (비치명): %s", e)
+        return ""
+
     def run(
         self,
         *,
@@ -785,9 +795,11 @@ class Stage4InterviewRound:
         # [Phase4-Gate] TruthGate advisory — 후보 원고별 실행, Python blocking 없음
         try:
             from modules.core.truth_gate import TruthGate as _TruthGate
+
             _tg = _TruthGate(
                 world_state=getattr(self.ctx, "world_state", None),
                 fact_ledger=getattr(self.ctx, "fact_ledger", None),
+                llm_ask=self._truth_gate_llm_ask,  # [LM-A-2] 세계관 법칙 위반 검사
             )
             _npc_reg = getattr(getattr(self.ctx, "state_tracker", None), "npc_registry", {}) or {}
             _tg_warnings_all: list[dict] = []
@@ -802,18 +814,67 @@ class Stage4InterviewRound:
                 )
                 if _tg_result.get("structured_warnings"):
                     if _ci < len(validation_results) and isinstance(validation_results[_ci], dict):
-                        validation_results[_ci].setdefault(
-                            "truth_gate_warnings", _tg_result["structured_warnings"]
-                        )
+                        validation_results[_ci].setdefault("truth_gate_warnings", _tg_result["structured_warnings"])
                     _tg_warnings_all.extend(_tg_result["structured_warnings"])
             if _tg_warnings_all:
                 _tg_lines = ["[TruthGate Advisory — 참고만, Python 차단 없음]"]
                 for _w in _tg_warnings_all[:10]:
-                    _tg_lines.append(f"- [{_w.get('severity','?')}] {_w.get('text','')}")
+                    _tg_lines.append(f"- [{_w.get('severity', '?')}] {_w.get('text', '')}")
                 _director_mc_parts.insert(0, "\n".join(_tg_lines))
                 logging.info("[TruthGate→Director] %d개 경고 전달", len(_tg_warnings_all))
         except Exception as _tg_err:
             logging.warning("[Phase4-Gate] TruthGate advisory 실패 (비치명): %s", str(_tg_err)[:80])
+
+        # [LM-B] NpcDriftAdvisor — 원고 내 NPC 속성 표류 advisory
+        try:
+            from modules.core.npc_drift_advisor import NpcDriftAdvisor as _NpcDriftAdvisor
+
+            _ws = getattr(self.ctx, "world_state", None)
+            if _ws and hasattr(_ws, "get_npc_role_snapshot"):
+                _npc_snaps = _ws.get_npc_role_snapshot() or {}
+                if _npc_snaps:
+                    _drift_advisor = _NpcDriftAdvisor(llm_ask=self._truth_gate_llm_ask)
+                    _drift_all = []
+                    for _ci, _cand in enumerate(candidates):
+                        _ms = _cand.get("manuscript", "")
+                        if not _ms:
+                            continue
+                        _drifts = _drift_advisor.check(manuscript=_ms, npc_snapshots=_npc_snaps, ep_num=next_ep)
+                        if _drifts:
+                            _drift_all.extend(_drifts)
+                            if _ci < len(validation_results) and isinstance(validation_results[_ci], dict):
+                                validation_results[_ci].setdefault("npc_drift_warnings", _drifts)
+                    if _drift_all:
+                        _drift_lines = ["[NpcDriftAdvisor — NPC 속성 표류 감지, 참고만]"]
+                        for _d in _drift_all[:8]:
+                            _drift_lines.append(
+                                f"- [MAJOR] NPC '{_d.get('npc', '')}' {_d.get('field', '')}: "
+                                f"기대='{_d.get('expected', '')}' → 원고='{_d.get('found_in_ms', '')[:40]}'"
+                            )
+                        _director_mc_parts.insert(0, "\n".join(_drift_lines))
+                        logging.info("[NpcDriftAdvisor→Director] %d건 표류 감지 전달", len(_drift_all))
+        except Exception as _drift_err:
+            logging.warning("[LM-B] NpcDriftAdvisor 실패 (비치명): %s", str(_drift_err)[:80])
+
+        # [LM-C] NumericDriftAdvisor — 5화 단위 수치 누적 표류 advisory
+        if next_ep % 5 == 0:
+            try:
+                from modules.core.numeric_drift_advisor import NumericDriftAdvisor as _NumDriftAdvisor
+
+                _fl = getattr(self.ctx, "fact_ledger", None)
+                if _fl:
+                    _nums = _fl.get_numbers() or {}
+                    if _nums:
+                        _num_advisor = _NumDriftAdvisor(llm_ask=self._truth_gate_llm_ask)
+                        _num_drifts = _num_advisor.check(numbers=_nums, ep_num=next_ep)
+                        if _num_drifts:
+                            _nd_lines = ["[NumericDriftAdvisor — 수치 누적 표류 감지, 참고만]"]
+                            for _nd in _num_drifts[:6]:
+                                _nd_lines.append(f"- [MAJOR] '{_nd.get('key', '')}': {_nd.get('issue', '')[:60]}")
+                            _director_mc_parts.insert(0, "\n".join(_nd_lines))
+                            logging.info("[NumericDriftAdvisor→Director] %d건 수치 표류 감지", len(_num_drifts))
+            except Exception as _nd_err:
+                logging.warning("[LM-C] NumericDriftAdvisor 실패 (비치명): %s", str(_nd_err)[:80])
 
         _vr_warnings_for_director = []
         for _vr_idx, _vr in enumerate(validation_results):
@@ -1067,16 +1128,8 @@ class Stage4InterviewRound:
             )
 
             # [Phase3-ROI] Director 거부 시 근거 요약 블록 — CW에게 "증거" 전달, Python blocking 없음
-            _selected_ci = (
-                max(0, ord(selected) - ord("A"))
-                if isinstance(selected, str) and selected.isalpha()
-                else 0
-            )
-            _selected_vr = (
-                validation_results[_selected_ci]
-                if _selected_ci < len(validation_results)
-                else {}
-            )
+            _selected_ci = max(0, ord(selected) - ord("A")) if isinstance(selected, str) and selected.isalpha() else 0
+            _selected_vr = validation_results[_selected_ci] if _selected_ci < len(validation_results) else {}
             _evidence_lines: list[str] = []
             for _tw in (_selected_vr.get("truth_gate_warnings") or [])[:3]:
                 if isinstance(_tw, dict):
@@ -1085,9 +1138,7 @@ class Stage4InterviewRound:
                 if isinstance(_sv, dict):
                     _evidence_lines.append(f"  [VIOLATION] {_sv.get('reason', '')}")
             _evidence_block = (
-                "[근거 요약 — 수정 시 반드시 반영]\n" + "\n".join(_evidence_lines) + "\n"
-                if _evidence_lines
-                else ""
+                "[근거 요약 — 수정 시 반드시 반영]\n" + "\n".join(_evidence_lines) + "\n" if _evidence_lines else ""
             )
 
             feedback = director_result.get("feedback") or {}

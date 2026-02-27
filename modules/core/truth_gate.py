@@ -13,9 +13,10 @@ logger = logging.getLogger(__name__)
 class TruthGate:
     """State-update / manuscript 교차 검증기 (advisory only)."""
 
-    def __init__(self, world_state=None, fact_ledger=None):
+    def __init__(self, world_state=None, fact_ledger=None, llm_ask=None):
         self._world_state = world_state
         self._fact_ledger = fact_ledger
+        self._llm_ask = llm_ask  # Optional callable(prompt: str) -> str
 
     def validate(
         self,
@@ -49,6 +50,7 @@ class TruthGate:
         self._check_skill_duplication(su, warnings, structured_warnings)
         self._check_karma_bounds(su, warnings, structured_warnings)
         self._check_npc_role_consistency(su, warnings, structured_warnings)
+        self._check_world_law_violation(ms, warnings, structured_warnings)
 
         return {
             "passed": len(warnings) == 0,
@@ -136,9 +138,11 @@ class TruthGate:
                 for pat in action_patterns:
                     if re.search(pat, line):
                         self._add_warning(
-                            warnings, structured_warnings,
+                            warnings,
+                            structured_warnings,
                             f"사망 NPC '{name}'가 행동/대사로 등장: {line[:60]}...",
-                            "CRITICAL", "deceased_resurrection",
+                            "CRITICAL",
+                            "deceased_resurrection",
                         )
                         _found_action = True
                         break
@@ -155,9 +159,11 @@ class TruthGate:
                         # status 변경이 있고 alive로 바뀌면 경고
                         if "status" in npc_upd and npc_upd["status"] not in ("dead", "deceased"):
                             self._add_warning(
-                                warnings, structured_warnings,
+                                warnings,
+                                structured_warnings,
                                 f"사망 NPC '{name}'의 상태가 갱신됨: {npc_upd}",
-                                "CRITICAL", "deceased_resurrection",
+                                "CRITICAL",
+                                "deceased_resurrection",
                             )
 
     def _check_unowned_items(self, state_updates: dict, warnings: list[str], structured_warnings: list[dict]) -> None:
@@ -187,12 +193,16 @@ class TruthGate:
             # 사용/장착이면서 보유하지 않은 아이템
             if action in ("use", "equip", "consume") and item_name not in owned_items:
                 self._add_warning(
-                    warnings, structured_warnings,
+                    warnings,
+                    structured_warnings,
                     f"미보유 아이템 '{item_name}' {action} 시도",
-                    "MAJOR", "unowned_items",
+                    "MAJOR",
+                    "unowned_items",
                 )
 
-    def _check_destroyed_locations(self, manuscript: str, state_updates: dict, warnings: list[str], structured_warnings: list[dict]) -> None:
+    def _check_destroyed_locations(
+        self, manuscript: str, state_updates: dict, warnings: list[str], structured_warnings: list[dict]
+    ) -> None:
         """파괴된 장소를 방문하는지 검사."""
         if not self._world_state:
             return
@@ -216,9 +226,11 @@ class TruthGate:
             for loc in destroyed_locations:
                 if loc in location_update:
                     self._add_warning(
-                        warnings, structured_warnings,
+                        warnings,
+                        structured_warnings,
                         f"파괴된 장소 '{loc}'로 이동 시도",
-                        "MAJOR", "destroyed_locations",
+                        "MAJOR",
+                        "destroyed_locations",
                     )
 
         # 원고에서 파괴된 장소 방문 묘사 검사
@@ -229,13 +241,17 @@ class TruthGate:
             for line in manuscript.split("\n"):
                 if loc in line and any(vp in line for vp in visit_patterns):
                     self._add_warning(
-                        warnings, structured_warnings,
+                        warnings,
+                        structured_warnings,
                         f"파괴된 장소 '{loc}' 방문 묘사 감지: {line[:60]}...",
-                        "MAJOR", "destroyed_locations",
+                        "MAJOR",
+                        "destroyed_locations",
                     )
                     break
 
-    def _check_skill_duplication(self, state_updates: dict, warnings: list[str], structured_warnings: list[dict]) -> None:
+    def _check_skill_duplication(
+        self, state_updates: dict, warnings: list[str], structured_warnings: list[dict]
+    ) -> None:
         """동일 스킬 중복 습득 검사."""
         if not self._world_state:
             return
@@ -262,9 +278,11 @@ class TruthGate:
             action = skill_entry.get("action", "learn")
             if action == "learn" and skill_name in known_skills:
                 self._add_warning(
-                    warnings, structured_warnings,
+                    warnings,
+                    structured_warnings,
                     f"이미 보유한 스킬 '{skill_name}' 중복 습득 시도",
-                    "MINOR", "skill_duplication",
+                    "MINOR",
+                    "skill_duplication",
                 )
 
     def _check_karma_bounds(self, state_updates: dict, warnings: list[str], structured_warnings: list[dict]) -> None:
@@ -283,20 +301,26 @@ class TruthGate:
             karma_num = float(karma_value)
         except (ValueError, TypeError):
             self._add_warning(
-                warnings, structured_warnings,
+                warnings,
+                structured_warnings,
                 f"카르마 값이 숫자가 아닙니다: {karma_value}",
-                "MINOR", "karma_bounds",
+                "MINOR",
+                "karma_bounds",
             )
             return
 
         if karma_num < 0 or karma_num > 100:
             self._add_warning(
-                warnings, structured_warnings,
+                warnings,
+                structured_warnings,
                 f"카르마 값 범위 초과: {karma_num} (허용: 0-100)",
-                "MINOR", "karma_bounds",
+                "MINOR",
+                "karma_bounds",
             )
 
-    def _check_npc_role_consistency(self, state_updates: dict, warnings: list[str], structured_warnings: list[dict]) -> None:
+    def _check_npc_role_consistency(
+        self, state_updates: dict, warnings: list[str], structured_warnings: list[dict]
+    ) -> None:
         """[장기 기억] NPC 속성 무단 변경 감지.
 
         state_updates에 npc_attribute_changes 없이 NPC의 기존 known_attrs 값이
@@ -314,7 +338,7 @@ class TruthGate:
 
         # state_updates에서 명시적 npc_attribute_changes 목록 수집 (의도적 변경)
         explicit_changes: set[tuple[str, str]] = set()
-        for change in (state_updates.get("npc_attribute_changes") or []):
+        for change in state_updates.get("npc_attribute_changes") or []:
             if isinstance(change, dict):
                 _n = change.get("name", "")
                 _f = change.get("field", "")
@@ -335,13 +359,15 @@ class TruthGate:
             if new_role and original_role and new_role != original_role:
                 if (npc_name, "role") not in explicit_changes:
                     self._add_warning(
-                        warnings, structured_warnings,
+                        warnings,
+                        structured_warnings,
                         (
                             f"[장기 기억] NPC '{npc_name}' 역할 무단 변경 감지: "
                             f"원본='{original_role}' → 변경='{new_role}' "
                             f"(의도적 변경이면 state_changes.npc_attribute_changes 사용)"
                         ),
-                        "MAJOR", "npc_role_consistency",
+                        "MAJOR",
+                        "npc_role_consistency",
                     )
             # known_attrs 필드 무단 변경 체크
             for field, attr_info in (snap.get("known_attrs") or {}).items():
@@ -350,10 +376,64 @@ class TruthGate:
                 if upd_val and known_val and str(upd_val) != str(known_val):
                     if (npc_name, field) not in explicit_changes:
                         self._add_warning(
-                            warnings, structured_warnings,
-                            (
-                                f"[장기 기억] NPC '{npc_name}'.{field} 무단 변경: "
-                                f"기록='{known_val}' → 현재='{upd_val}'"
-                            ),
-                            "MAJOR", "npc_role_consistency",
+                            warnings,
+                            structured_warnings,
+                            (f"[장기 기억] NPC '{npc_name}'.{field} 무단 변경: 기록='{known_val}' → 현재='{upd_val}'"),
+                            "MAJOR",
+                            "npc_role_consistency",
                         )
+
+    def _check_world_law_violation(self, manuscript: str, warnings: list[str], structured_warnings: list[dict]) -> None:
+        """[LM-A-2] 세계관 절대 법칙 위반 검사 (LLM 기반, advisory only).
+
+        llm_ask 콜백이 없거나 world_laws가 비어있으면 skip.
+        """
+        if not self._llm_ask:
+            return
+        if not self._world_state or not hasattr(self._world_state, "get_world_laws"):
+            return
+
+        try:
+            laws = self._world_state.get_world_laws()
+        except Exception as e:
+            logger.debug("[TruthGate] get_world_laws() failed: %s", e)
+            return
+
+        if not laws:
+            return
+
+        try:
+            laws_text = "\n".join(f"- {law}" for law in laws)
+            ms_snippet = manuscript[:3000] if manuscript else ""
+            prompt = (
+                "다음은 이 세계의 절대 법칙입니다:\n"
+                f"{laws_text}\n\n"
+                "다음 원고가 위 법칙을 위반하는지 판단하세요:\n"
+                f"{ms_snippet}\n\n"
+                '반드시 JSON으로만 답하세요: {"violation": true/false, "reason": "위반 사유 또는 빈 문자열"}'
+            )
+            response = self._llm_ask(prompt)
+            if not response:
+                return
+
+            # JSON 파싱
+            import json
+
+            resp_text = response
+            if "```json" in resp_text:
+                resp_text = resp_text.split("```json")[1].split("```")[0]
+            elif "```" in resp_text:
+                resp_text = resp_text.split("```")[1].split("```")[0]
+            parsed = json.loads(resp_text.strip())
+
+            if isinstance(parsed, dict) and parsed.get("violation"):
+                reason = parsed.get("reason", "세계관 법칙 위반 감지")
+                self._add_warning(
+                    warnings,
+                    structured_warnings,
+                    f"[세계관 법칙 위반] {reason}",
+                    "CRITICAL",
+                    "world_law_violation",
+                )
+        except Exception as e:
+            logger.debug("[TruthGate] world_law_violation 검사 실패 (비치명): %s", e)
