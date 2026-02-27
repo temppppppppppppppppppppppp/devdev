@@ -758,7 +758,8 @@ class StateTrackerNPC:
             except (ValueError, AttributeError):
                 _resp_text = None
             if not _resp_text:
-                return candidates
+                logging.warning("[XC-002] NPC LLM 검증 응답 없음 → fail-closed: []")
+                return []
             result = json.loads(_resp_text)
             if isinstance(result, list):
                 verified = [name for name in result if isinstance(name, str) and name in candidates]
@@ -767,9 +768,8 @@ class StateTrackerNPC:
                     logging.info(f"\U0001f50d [V62.5] NPC 오탐 필터링: {filtered} (LLM 검증으로 제외)")
                 return verified
         except Exception as e:
-            logging.warning(f"\u26a0\ufe0f [V62.5] NPC LLM 검증 실패, regex 결과 그대로 사용: {str(e)[:60]}")
-
-        return candidates
+            logging.warning("[XC-002] NPC LLM 검증 예외 → fail-closed: %s", str(e)[:60])
+            return []
 
     def extract_skill_acquisitions_from_arc(self, arc: dict) -> list[str]:
         """

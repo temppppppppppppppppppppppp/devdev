@@ -359,7 +359,7 @@ class Stage4PostProcessor:
                 if val
             )[:500]
             if self.ctx.memory and self.ctx.memory.is_operational():
-                self.ctx.memory.memorize_v20_episode(
+                _mem_saved = self.ctx.memory.memorize_v20_episode(
                     ep_num=next_ep,
                     text=final_manuscript,
                     summary=_rich_summary,
@@ -368,7 +368,11 @@ class Stage4PostProcessor:
                     event_types=list(_mem_event_types),
                     entity_names=list(_mem_entity_names),
                 )
-                self.ctx.ui.log(f"   ✅ 벡터 메모리 저장 (arc={_mem_arc_no}, events={_mem_event_types})")
+                if _mem_saved:
+                    self.ctx.ui.log(f"   ✅ 벡터 메모리 저장 (arc={_mem_arc_no}, events={_mem_event_types})")
+                else:
+                    self.ctx.ui.log(f"   ⚠️ [CO-002] 벡터 메모리 저장 실패 ep={next_ep}")
+                    logging.warning("[CO-002] memorize_v20_episode ep=%d returned False", next_ep)
         except Exception as _mem_err:
             self.ctx.ui.log(f"   ⚠️ [V63.3] 벡터 메모리 저장 실패 (비차단): {str(_mem_err)[:60]}")
 
@@ -423,6 +427,7 @@ class Stage4PostProcessor:
             self.ctx.ui.log(f"   ⚠️ 로그 저장 실패: {log_err}")
 
         # ===== [S4-N-P1-1] Manager LLM Future 회수 (독립 작업 완료 후) =====
+        _manager_failed = False  # [XC-002] Manager 완전 실패 추적 플래그
         try:
             # [S4-I6] Future 회수: 결과를 기다린 후 audit에 반영
             try:
@@ -444,9 +449,12 @@ class Stage4PostProcessor:
                     self.ctx.ui.log("      ✅ Manager 정산 완료")
                 else:
                     self.ctx.ui.log("      ⚠️ Manager 파싱 실패, 기본 추출 사용")
-                    logging.warning(
-                        "[B4-P1-8] Manager LLM 파싱 실패 — bible_delta 미생성으로 FactLedger 갱신 불완전할 수 있음"
+                    logging.error(
+                        "[XC-002] Manager LLM 파싱 실패 — bible_delta 미생성으로 FactLedger 갱신 불완전할 수 있음"
                     )
+                    if callable(getattr(self.ctx, "audit_event", None)):
+                        self.ctx.audit_event("manager_parse_failure", "Manager LLM 파싱 실패", {"ep": next_ep})
+                    _manager_failed = True
             except Exception as mgr_err:
                 # [P0-D2] 타임아웃 시 비동기 future 취소 후 동기 재시도
                 if _bible_future is not None and hasattr(_bible_future, "cancel"):
@@ -466,8 +474,11 @@ class Stage4PostProcessor:
                         audit = raw_audit
                         self.ctx.ui.log("      ✅ Manager 동기 재시도 성공")
                 except Exception as retry_err:
-                    logging.error("[B-1] Manager 동기 재시도도 실패: %s", retry_err)
-                    logging.warning("[B4-P1-8] Manager LLM 완전 실패 — bible_delta=None, FactLedger 갱신 건너뜀")
+                    logging.error("[XC-002] Manager 동기 재시도도 실패: %s", retry_err)
+                    logging.error("[XC-002] Manager LLM 완전 실패 — bible_delta=None, FactLedger 갱신 건너뜀")
+                    if callable(getattr(self.ctx, "audit_event", None)):
+                        self.ctx.audit_event("manager_complete_failure", "Manager LLM 완전 실패", {"ep": next_ep})
+                    _manager_failed = True
 
             new_lore = audit.get("new_lore", {}) if isinstance(audit, dict) else {}
             knowledge_map = audit.get("knowledge_map_updates", {}) if isinstance(audit, dict) else {}
@@ -593,12 +604,17 @@ class Stage4PostProcessor:
             )
 
             # [S4-P1-5] save_episode_bible 실패가 후속 처리(state_log, FactLedger)를 차단하지 않도록 격리
+            _meta_save_failed = False  # [S4-001] 에피소드 메타 저장 실패 추적 플래그
             try:
                 self.ctx.current_project.db.save_episode_bible(next_ep, bible_delta)
             except Exception as _bible_save_err:
                 self.ctx.ui.log(
                     f"      ⚠️ Episode Bible DB 저장 실패 (bible_delta 구성은 성공): {str(_bible_save_err)[:50]}"
                 )
+                logging.error("[S4-001] save_episode_bible 실패 ep=%d: %s", next_ep, _bible_save_err)
+                if callable(getattr(self.ctx, "audit_event", None)):
+                    self.ctx.audit_event("episode_bible_save_failed", "save_episode_bible 실패", {"ep": next_ep})
+                _meta_save_failed = True
 
             # [Graph-Layer] causal_links → causal_graph dual-write (경로 확보)
             if causal_links:
@@ -898,6 +914,12 @@ class Stage4PostProcessor:
             self.ctx.perf_timer.reset()
         except Exception as e:
             logging.debug(f"[PerfTimer] s4 summary/reset: {e}")
+
+        # [S4-001] Episode Bible 저장 실패 시 오케스트레이터에 실패 신호 전달
+        if locals().get("_meta_save_failed", False):
+            logging.error("[S4-001] _meta_save_failed=True → process_pass_result 반환 False")
+            return False
+
         return True
 
     def run_post_episode_tasks(self) -> None:

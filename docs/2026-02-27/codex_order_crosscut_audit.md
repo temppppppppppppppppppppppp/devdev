@@ -392,9 +392,26 @@ modules/protocols/validators.py
 
 ---
 
+## 판정 재정렬 (설계 의도 기준)
+
+### 설계 의도(명시됨)
+- [AG-001] 초기 상태 복원 시 부분 추출 허용 (`실패해도 비차단` 주석 존재)
+- [CO-001] TruthGate advisory-only (`blocking=False` 명시)
+
+### 의도+리스크 (가용성 우선 트레이드오프)
+- [XC-001] 영속화 실패 비차단 처리 반복
+- [XC-002] LLM/파싱 실패 fail-open 전파
+- [S4-001] 에피소드 저장 원자성 분절 (원고 우선 저장 + 메타 비차단)
+
+### 비의도(버그 가능성 높음)
+- [S2-001] ContinuityInspector 예외 전파로 Stage2 루프 중단 가능
+- [CO-002] VecMemory 저장 반환값 계약 미사용
+
+---
+
 ## 크로스컷 이슈 (복수 파일 반복 패턴)
 
-### [XC-001] 영속화 실패 비차단 처리 반복 (ERR, SLT, STA, P1)
+### [XC-001] 영속화 실패 비차단 처리 반복 (ERR, SLT, STA, P1, 판정: 의도+리스크)
 
 **패턴**: DB/상태 저장 실패를 경고 로그만 남기고 계속 진행하여 상위 단계에서 실패를 감지하지 못함  
 **발생 파일**:
@@ -411,7 +428,7 @@ modules/protocols/validators.py
 **영향**: 원고/상태/그래프/원장이 서로 다른 스냅샷으로 고정되어 장기 연속성 오류가 누적됨  
 **수정 방향**: 저장 API를 중요도별(critical/advisory)로 분리하고 critical 경로는 예외 전파 + 트랜잭션 단위 보장
 
-### [XC-002] LLM/파싱 실패 fail-open 전파 (LLM, ERR, SLT, P1)
+### [XC-002] LLM/파싱 실패 fail-open 전파 (LLM, ERR, SLT, P1, 판정: 의도+리스크)
 
 **패턴**: 파싱/검증 실패 시 재시도·차단 대신 원본/기본값으로 진행  
 **발생 파일**:
@@ -429,7 +446,7 @@ modules/protocols/validators.py
 
 ## Stage 2 단일 이슈
 
-### [S2-001] ContinuityInspector 예외 전파로 Stage2 루프 중단 가능 (ERR, P0)
+### [S2-001] ContinuityInspector 예외 전파로 Stage2 루프 중단 가능 (ERR, P0, 판정: 비의도)
 
 **패턴**: 외부 에이전트 호출 예외가 retry 피드백으로 변환되지 않고 상위 루프로 전파됨  
 **발생 파일**:
@@ -456,7 +473,7 @@ modules/protocols/validators.py
 
 ## Stage 4 단일 이슈
 
-### [S4-001] 에피소드 저장 원자성 분절 (TXN, STA, P0)
+### [S4-001] 에피소드 저장 원자성 분절 (TXN, STA, P0, 판정: 의도+리스크)
 
 **패턴**: 동일 에피소드의 핵심/메타 데이터가 서로 다른 트랜잭션 경계에서 저장됨  
 **발생 파일**:
@@ -474,7 +491,7 @@ modules/protocols/validators.py
 
 ## Domain Agents 단일 이슈
 
-### [AG-001] 초기 상태 복원 시 부분 추출 허용으로 레지스트리 편향 가능 (ERR, SLT, P1)
+### [AG-001] 초기 상태 복원 시 부분 추출 허용으로 레지스트리 편향 가능 (ERR, SLT, P1, 판정: 설계 의도)
 
 **패턴**: 다수 추출기 실패를 누적 허용하고 완료로 간주  
 **발생 파일**:
@@ -489,7 +506,7 @@ modules/protocols/validators.py
 
 ## Core 공통 단일 이슈
 
-### [CO-001] TruthGate 경고가 메모리 저장 차단으로 연결되지 않음 (LEK, STA, P1)
+### [CO-001] TruthGate 경고가 메모리 저장 차단으로 연결되지 않음 (LEK, STA, P1, 판정: 설계 의도)
 
 **패턴**: 검증 결과가 CRITICAL이어도 저장 경로는 그대로 진행  
 **발생 파일**:
@@ -501,7 +518,7 @@ modules/protocols/validators.py
 **영향**: 이미 모순으로 판정된 상태 업데이트가 장기 기억에 적재될 수 있음  
 **수정 방향**: TruthGate severity(`CRITICAL`) 기반 저장 차단 또는 재검증 루프 연결
 
-### [CO-002] VecMemory 저장 반환값 계약 미사용 (CTR, SLT, P1)
+### [CO-002] VecMemory 저장 반환값 계약 미사용 (CTR, SLT, P1, 판정: 비의도)
 
 **패턴**: 저장 API가 실패를 bool로 반환해도 호출측이 검사하지 않음  
 **발생 파일**:
@@ -524,3 +541,18 @@ modules/protocols/validators.py
 ## 확인했으나 결함 없음 (조사 완료 확인용)
 
 - 없음 (이번 우선순위 11개 파일에서는 모두 구조적 결함 또는 고위험 리스크 식별)
+
+---
+
+## TF-20 패치 결과 (2026-02-27)
+
+테스트 기준선: **2753 passed** (패치 후 동일)
+Ruff: 0 violations
+
+| TF | 파일 | 수정 내용 | 상태 |
+|----|------|-----------|------|
+| A (S2-001) | `stage2_validation_pipeline.py` L479 | `inspect_arc()` try/except + retry 반환 | ✅ |
+| B (CO-002) | `stage4_post_processor.py` L362 | `memorize` 반환값 캡처 + 조건 로그 | ✅ |
+| C-1 (XC-002) | `state_tracker_npc.py` L760/769 | LLM 실패 시 `[]` 반환 (fail-closed) | ✅ |
+| C-2 (XC-002) | `stage4_post_processor.py` L446/470 | Manager 실패 `audit_event` + error 승격 | ✅ |
+| D (S4-001) | `stage4_post_processor.py` L607/919 | `_meta_save_failed` 플래그 + `return False` | ✅ |

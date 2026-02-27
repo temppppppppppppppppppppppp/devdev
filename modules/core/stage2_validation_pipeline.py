@@ -476,12 +476,22 @@ class Stage2ValidationPipeline:
             refined_arc["joint_docs"] = enriched_block.get("joint_docs", {})
             refined_arc["status_shadow"] = enriched_block.get("status_shadow", {})
 
-            with rich_console.status(f"[bold yellow]🔍 Arc {global_arc_no} 연속성 검증 중...[/]", spinner="dots"):
-                continuity_result = self.ctx.agents["continuity_inspector"].inspect_arc(
-                    current_arc=refined_arc,
-                    prev_arcs=all_refined_arcs,
-                    entity_registry=entity_registry_for_director,
-                )
+            try:  # [S2-001] ContinuityInspector 예외 전파 차단 → retry 변환
+                with rich_console.status(f"[bold yellow]🔍 Arc {global_arc_no} 연속성 검증 중...[/]", spinner="dots"):
+                    continuity_result = self.ctx.agents["continuity_inspector"].inspect_arc(
+                        current_arc=refined_arc,
+                        prev_arcs=all_refined_arcs,
+                        entity_registry=entity_registry_for_director,
+                    )
+            except Exception as _ci_err:
+                logging.warning("[S2-001] ContinuityInspector 예외 → retry 변환: %s", str(_ci_err)[:100])
+                return {
+                    "action": "retry",
+                    "current_feedback": (
+                        current_feedback
+                        + f"\n[연속성 검증 런타임 실패] {type(_ci_err).__name__}: {_ci_err}"
+                    ),
+                }
 
             if continuity_result.get("decision") == "REJECT":
                 severity = continuity_result.get("severity", "UNKNOWN")
