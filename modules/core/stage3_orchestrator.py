@@ -578,7 +578,7 @@ class Stage3Orchestrator:
             except Exception as _tb_err:
                 _logging.warning("[SilentPass:TreatmentBlock] 추출 실패 (비차단): %s", _tb_err)
 
-            with StageSpinner(3, f"제{working_ep}화"):
+            with StageSpinner(3, f"제{working_ep}화") as _s3_spinner:
                 # [V67][S3-I5] 이전 원고 로드 — 단일 쿼리로 최적화 (N+1 → 1)
                 _prev_ms_for_bp = []
                 _recent_manuscripts = ctx.current_project.db.get_recent_manuscripts(before_ep=working_ep, limit=30)
@@ -608,6 +608,7 @@ class Stage3Orchestrator:
                     except Exception:
                         _bp_prev_hud = None
 
+                _s3_spinner.update_detail(f"제{working_ep}화 · Blueprint 생성")
                 blueprint, pipeline_result = ctx.agents["three_phase_bp"].generate(
                     ep_num=working_ep,
                     arc_data=arc_data,
@@ -650,6 +651,23 @@ class Stage3Orchestrator:
         _final_verdict = pipeline_result.get("final_verdict", "PASS")
         _quality_gate_failed = bool(pipeline_result.get("quality_gate_failed", False))
         _quality_risk = bool(pipeline_result.get("quality_risk", False) or _quality_gate_failed)
+
+        # [LOG-1] 판정 경로 세션 로깅
+        _sl = getattr(ctx, "session_logger", None)
+        if _sl:
+            try:
+                _sl.log_decision(
+                    stage="stage3",
+                    ep_num=working_ep,
+                    decision_type="blueprint",
+                    result=_final_verdict,
+                    score=pipeline_result.get("last_score", 0),
+                    arc_no=arc_no,
+                    quality_risk=_quality_risk,
+                )
+            except Exception:
+                pass
+
         if isinstance(blueprint, dict):
             blueprint["_stage3_meta"] = {
                 "final_verdict": _final_verdict,
@@ -739,6 +757,21 @@ class Stage3Orchestrator:
         ctx = self.ctx
 
         ctx.ui.log(f"   ❌ 제{working_ep}화 Blueprint 생성 실패")
+
+        # [LOG-1] 판정 경로 세션 로깅 (REJECT)
+        _sl = getattr(ctx, "session_logger", None)
+        if _sl:
+            try:
+                _sl.log_decision(
+                    stage="stage3",
+                    ep_num=working_ep,
+                    decision_type="blueprint",
+                    result=pipeline_result.get("final_verdict", "REJECT"),
+                    score=pipeline_result.get("last_score", 0),
+                )
+            except Exception:
+                pass
+
         # [S3-N-P1-3] DI 콜백 None 방어
         if callable(ctx.audit_event):
             ctx.audit_event(

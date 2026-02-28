@@ -38,7 +38,7 @@ class Stage01Helpers:
             app.ui.log(f"📌 현재 장르: {app.selected_genre['name']} ({app.selected_genre['type']})")
 
         # [V60.95] Stage 0 서브메뉴
-        from main_a import STAGE0_AVAILABLE
+        from modules.core.spinners import STAGE0_AVAILABLE
 
         app.ui.log("\n" + "=" * 50)
         app.ui.log("  📚 Stage 0 - 프로젝트 설정")
@@ -279,7 +279,7 @@ class Stage01Helpers:
         """[V60.95] Stage 0 확장 기능 — dispatcher + 5 핸들러."""
         app = self.app
 
-        from main_a import STAGE0_AVAILABLE
+        from modules.core.spinners import STAGE0_AVAILABLE
 
         if not STAGE0_AVAILABLE:
             app.ui.log("❌ Stage 0 모듈이 로드되지 않았습니다.")

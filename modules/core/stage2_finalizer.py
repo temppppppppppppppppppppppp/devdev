@@ -184,6 +184,11 @@ class Stage2Finalizer:
                 self.ctx.ui.log(f"            ▸ {str(_c)[:120]}")
         if _d_decision == "REJECT" and audit.get("re_slice_instruction"):
             self.ctx.ui.log(f"         🔧 수정지시: {str(audit['re_slice_instruction'])[:150]}")
+        # [TF-28c] Director thinking 표시 (절삭 없음)
+        _d_thinking = audit.get("_director_thinking", "")
+        if _d_thinking:
+            self.ctx.ui.log("      💭 [Director Thinking]")
+            self.ctx.ui.log(_d_thinking)
 
         # ═══════════════════════════════════════════════════════════════
         # [TF-25-07] V60.43 API 할당량 오류 감지 — 경고만 (대원칙 1+3 준수)
@@ -216,6 +221,24 @@ class Stage2Finalizer:
 
         _td = refined_arc.get("tactical_doc", "")
         _td_len = len(str(_td)) if isinstance(_td, dict) else len(_td or "")
+
+        # [LOG-1] 판정 경로 세션 로깅
+        _sl = getattr(self.ctx, "session_logger", None)
+        if _sl:
+            try:
+                _sl.log_decision(
+                    stage="stage2",
+                    ep_num=global_arc_no,
+                    round_num=attempt,
+                    decision_type="arc",
+                    result=audit.get("decision", "UNKNOWN"),
+                    score=_score,
+                    generation_method=generation_method,
+                    reason=str(audit.get("reason", ""))[:500],
+                )
+            except Exception:
+                pass
+
         if audit.get("decision") == "PASS":  # [TF-R4-S2-01] PASS/REJECT 분리 (short tactical_doc REJECT 방지)
             if _td_len >= 1500 and _score < _quality_gate_score:
                 self.ctx.ui.log(
@@ -226,6 +249,12 @@ class Stage2Finalizer:
                     f"\n[Quality Gate] score {_score}점으로 {_quality_gate_score}점 미달."
                 )
                 audit["re_slice_instruction"] = audit.get("re_slice_instruction") or "품질 개선 후 재제출"
+                # [TF-30-4] QualityGate REJECT 사유를 FourPhase 재시도에 전달
+                director_feedback_for_fourphase = (
+                    f"[QualityGate REJECT] score {_score}점 < {_quality_gate_score}점.\n"
+                    f"{audit.get('reason', '')}\n"
+                    f"[수정 지시] {audit.get('re_slice_instruction', '품질 개선 후 재제출')}"
+                )
                 # [P1-B1] StateTracker 롤백 — FourPhase PASS 후 팬텀 데이터 방지
                 if st_snapshot and generation_method.startswith("four_phase"):
                     _st = self.ctx.state_tracker

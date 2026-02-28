@@ -95,6 +95,8 @@ class Stage2Context:
         "generate_arc_context_v60",
         # [Sweep3-D2] 캐시 키 동기화 콜백
         "sync_cache_key_to_app",
+        # [LOG-1] 세션 로거
+        "session_logger",
     )
 
     def __init__(
@@ -150,6 +152,8 @@ class Stage2Context:
         generate_arc_context_v60=None,
         # [Sweep3-D2]
         sync_cache_key_to_app=None,
+        # [LOG-1]
+        session_logger=None,
     ):
         self.ui = ui
         self.current_project = current_project
@@ -198,6 +202,7 @@ class Stage2Context:
         self.get_adaptive_feedback_intensity = get_adaptive_feedback_intensity
         self.generate_arc_context_v60 = generate_arc_context_v60
         self.sync_cache_key_to_app = sync_cache_key_to_app
+        self.session_logger = session_logger
 
     @classmethod
     def from_app(cls, app):
@@ -250,4 +255,5 @@ class Stage2Context:
             get_adaptive_feedback_intensity=getattr(app, "_get_adaptive_feedback_intensity", None),
             generate_arc_context_v60=getattr(app, "_generate_arc_context_v60", None),
             sync_cache_key_to_app=_make_sync_callback(weakref.ref(app)),
+            session_logger=getattr(app, "_session_logger", None),
         )

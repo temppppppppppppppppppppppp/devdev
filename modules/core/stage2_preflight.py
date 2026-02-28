@@ -736,8 +736,9 @@ class Stage2PreflightAnalysis:
         if "four_phase" in self.ctx.agents:
             try:
                 self.ctx.ui.log(f"      🎯 [V60.77] FourPhase-Director 대면 {attempt + 1}/5")
-                with StageSpinner(2, f"Arc {global_arc_no}"):
+                with StageSpinner(2, f"Arc {global_arc_no}") as _s2_spinner:
                     # [V63.3] Stage 2 벡터 검색
+                    _s2_spinner.update_detail(f"Arc {global_arc_no} · 벡터 검색")
                     _s2_vector_ctx = ""
                     try:
                         if self.ctx.memory and current_ep_start > 1:
@@ -792,22 +793,42 @@ class Stage2PreflightAnalysis:
                         self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_generate")
                     except Exception as e:
                         logging.warning(f"[SilentPass:Preflight] perf_timer start failed: {e!s:.100}")
-                    # [Patch Mode] 점수 기반 분기: 패치 모드 vs 전면 재생성
+                    # [TF-23] 3단계 분기: InPlace → Patch → Rewrite (Director 판단 우선)
                     from modules.core.constants import PatchModeThresholds
 
-                    _use_patch = (
-                        previous_attempt
-                        and previous_attempt.get("score", 0) >= PatchModeThresholds.REWRITE
-                        and previous_attempt.get("best_arc")
+                    _fix_scope = previous_attempt.get("fix_scope", "") if previous_attempt else ""
+                    _prev_score = previous_attempt.get("score", 0) if previous_attempt else 0
+                    _has_best_arc = bool(previous_attempt and previous_attempt.get("best_arc"))
+
+                    # [TF-23] Director 판단 우선, 점수 fallback
+                    _use_inplace = _has_best_arc and (
+                        _fix_scope == "inplace" or (not _fix_scope and _prev_score >= PatchModeThresholds.INPLACE)
+                    )
+                    _use_patch = _has_best_arc and (
+                        _fix_scope in ("inplace", "partial")  # inplace 실패 시 patch 폴백
+                        or (not _fix_scope and _prev_score >= PatchModeThresholds.REWRITE)
                     )
                     _was_patch = bool(_use_patch)
-                    _prev_score = previous_attempt.get("score", 0) if previous_attempt else 0
 
                     four_phase_arc = None
                     pipeline_result = {"final_verdict": None}
 
-                    if _use_patch:
-                        _prev_score = previous_attempt["score"]
+                    # --- InPlace 시도 (LLM 1회) ---
+                    if _use_inplace:
+                        logging.info(f"[TF-23] Arc InPlace 진입 (fix_scope={_fix_scope!r}, score={_prev_score})")
+                        self.ctx.ui.log(f"   🔧 [TF-23] Arc InPlace: fix_scope={_fix_scope!r}, score={_prev_score}")
+                        _inplace_feedback = previous_attempt.get("rejection_reason", "")
+                        four_phase_arc = self.ctx.agents["four_phase"]._inplace_patch_arc(
+                            original_arc=previous_attempt["best_arc"],
+                            director_feedback=_inplace_feedback,
+                            arc_no=global_arc_no,
+                        )
+                        if not four_phase_arc:
+                            logging.warning("[TF-23] Arc InPlace 실패 → Patch 폴백")
+                            self.ctx.ui.log("   ⚠️ [TF-23] Arc InPlace 실패 → Patch 폴백")
+
+                    # --- Patch 시도 (Ensemble) ---
+                    if not four_phase_arc and _use_patch:
                         logging.info(f"[Patch Mode] Arc 패치 모드 진입 (score={_prev_score}, attempt={attempt})")
                         self.ctx.ui.log(f"   🔧 [Patch Mode] Arc 패치: score={_prev_score}, 원본 보존 수정")
                         _patch_feedback = previous_attempt.get("rejection_reason", "")
@@ -826,6 +847,9 @@ class Stage2PreflightAnalysis:
                             _patch_feedback += "\n[검증 경고]\n" + "\n".join(
                                 f"- {w}" for w in _val_warnings[:10] if isinstance(w, str)
                             )
+                        _fsr = previous_attempt.get("fix_scope_reasoning", "")
+                        if _fsr:
+                            _patch_feedback += f"\n[수정 범위 근거]\n{_fsr}"
                         four_phase_arc, pipeline_result = self.ctx.agents["four_phase"].patch_arc_with_feedback(
                             original_arc=previous_attempt["best_arc"],
                             director_feedback=_patch_feedback,
@@ -847,6 +871,8 @@ class Stage2PreflightAnalysis:
                             logging.warning("[Patch Mode] Arc 패치 실패 → 전면 재생성 폴백")
                             self.ctx.ui.log("   ⚠️ [Patch Mode] Arc 패치 실패 → 전면 재생성 폴백")
 
+                    # --- Rewrite (Ensemble 전면 재생성) ---
+                    _s2_spinner.update_detail(f"Arc {global_arc_no} · Arc 생성")
                     if not four_phase_arc:
                         four_phase_arc, pipeline_result = self.ctx.agents["four_phase"].generate(
                             arc_no=global_arc_no,
@@ -855,7 +881,7 @@ class Stage2PreflightAnalysis:
                             curr_block=enriched_block,
                             prev_arcs=all_refined_arcs,
                             assets=bible_root.get("AssetLibrary", {}),
-                            max_internal_retries=4,
+                            max_internal_retries=9,
                             protagonist_name=protagonist_name or "주인공",
                             director_feedback=director_feedback_for_fourphase,
                             entity_registry=entity_registry_for_director,
@@ -868,6 +894,7 @@ class Stage2PreflightAnalysis:
                     except Exception as _e:
                         logging.debug("[Stage2Preflight] perf_timer generate stop 실패 (무시): %s", _e)
 
+                    _s2_spinner.update_detail(f"Arc {global_arc_no} · Director 심사")
                 if four_phase_arc and pipeline_result.get("final_verdict") == "PASS":
                     refined_arc = four_phase_arc
                     generation_method = "four_phase"

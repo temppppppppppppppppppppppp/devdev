@@ -563,7 +563,7 @@ JSON으로 출력:
         return False
 
     def _handle_round_outcome(self, *, round_ctx: _RoundContext) -> _RoundOutcome:
-        """[4-R1-e-3] Run 5-round interview loop.
+        """[4-R1-e-3] Run N-round interview loop (N = retry.director_max_attempts).
 
         Returns _RoundOutcome: final_manuscript, final_title, final_state_updates, should_return
         """
@@ -579,6 +579,8 @@ JSON으로 출력:
         _logic_error_streak = 0  # [V75-B] 연속 LOGIC_ERROR 카운터
         _inplace_attempted = False  # [V75-D] inplace 패치 1회 제한
         _blueprint_regenerated = False  # [V75-B] 재생성 1회 제한
+        _prev_reject_bucket = ""  # [TF-29] reject_bucket 연속 패턴 감지
+        _bucket_streak = 0
 
         with StageSpinner(4, f"제{next_ep}화 · 앙상블 준비") as stage4_spinner:
             try:
@@ -595,7 +597,7 @@ JSON으로 출력:
                     previous_attempt=previous_attempt,
                     round_ctx=round_ctx,
                 )
-                if _round_result.verdict == "PASS":
+                if _round_result.verdict in ("PASS", "PASS_WITH_FIX"):  # [TF-32]
                     final_manuscript = _round_result.final_manuscript
                     final_title = _round_result.final_title
                     final_state_updates = _round_result.final_state_updates
@@ -699,6 +701,33 @@ JSON으로 출력:
                 else:
                     _logic_error_streak = 0
 
+                # [TF-29] reject_bucket 연속 패턴 감지
+                _current_bucket = (_round_result.previous_attempt or {}).get("reject_bucket", "")
+                if _current_bucket and _current_bucket == _prev_reject_bucket:
+                    _bucket_streak += 1
+                else:
+                    _bucket_streak = 1 if _current_bucket else 0
+                _prev_reject_bucket = _current_bucket
+
+                # [TF-29] 동일 reject_bucket 3연속 → 블루프린트/아크 문제 가능성 advisory
+                _tf29_advisory = ""
+                if _bucket_streak >= 3 and not _blueprint_regenerated:
+                    _bucket_label = {
+                        "quality_issue": "품질",
+                        "constraint_violation": "제약 위반",
+                        "structure_error": "구조",
+                    }.get(_prev_reject_bucket, _prev_reject_bucket)
+                    self.ctx.ui.log(
+                        f"   ⚠️ [TF-29] '{_bucket_label}' 유형 REJECT {_bucket_streak}연속"
+                        " — 블루프린트/아크 수준 문제 가능성"
+                    )
+                    _tf29_advisory = (
+                        f"[⚠️ 반복 실패 패턴 감지] '{_bucket_label}' 유형 REJECT가 {_bucket_streak}회 연속입니다. "
+                        f"원고 수준 수정으로 해결되지 않을 가능성이 높습니다. "
+                        f"블루프린트의 해당 영역을 근본적으로 재검토하세요."
+                    )
+                    director_feedback = _tf29_advisory + "\n" + director_feedback
+
                 # [V75-D] Step 1: 2연속 → inplace 패치 (저비용 LLM 1회)
                 if _logic_error_streak >= 2 and not _inplace_attempted:
                     _inplace_attempted = True
@@ -724,6 +753,8 @@ JSON으로 출력:
                                     "지적된 논리적 결함만 수정되었습니다. "
                                     "수정된 블루프린트 기반으로 원고를 작성하세요."
                                 )
+                                if _tf29_advisory:  # [TF-29] advisory 보존
+                                    director_feedback = _tf29_advisory + "\n" + director_feedback
                                 previous_attempt = {}
                                 self.ctx.ui.log("   ✅ [V75-D] inplace 패치 성공")
                             else:
@@ -758,6 +789,8 @@ JSON으로 출력:
                                 "이전 블루프린트의 논리적 결함으로 재생성되었습니다. "
                                 "새 블루프린트 기반으로 원고를 작성하세요."
                             )
+                            if _tf29_advisory:  # [TF-29] advisory 보존
+                                director_feedback = _tf29_advisory + "\n" + director_feedback
                             previous_attempt = {}
                             self.ctx.ui.log("   ✅ [V75-B] 블루프린트 재생성 성공")
                         else:
@@ -1009,6 +1042,12 @@ JSON으로 출력:
                     _bible_root = _bible.get("MasterBible", _bible)
                     _bible_pov = _bible_root.get("protagonist_config", {}).get("pov", "")
                     if _bible_pov:
+                        if loaded_sg.pov and _bible_pov != loaded_sg.pov:  # [TF-31-2]
+                            logging.warning(
+                                "[TF-31-2] StyleGuide POV(%s) ≠ Bible POV(%s) — Bible 우선 적용",
+                                loaded_sg.pov,
+                                _bible_pov,
+                            )
                         loaded_sg.pov = _bible_pov
                 except Exception as e:
                     _perf_logger.warning(f"[SilentPass:Stage4] Bible POV 오버라이드 실패: {e!s:.100}")

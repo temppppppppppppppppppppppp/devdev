@@ -31,8 +31,7 @@ scope:
 
 # ── SCORING 검증 ─────────────────────────────────────────────
 scoring:
-  quality_gate_score: 90              # Stage 2 Arc / Stage 4 원고 QualityGate
-  blueprint_quality_gate_score: 80    # Stage 3 Blueprint 전용 — Director 프롬프트 "80점 미만 REJECT" 기준과 일치
+  quality_gate_score: 90              # [TF-28b] Stage 2/3/4 전 스테이지 통일 QualityGate
   default_pass_threshold: 70
   genre_thresholds:
     wuxia: 70
@@ -177,3 +176,10 @@ smart_retrieval:
   dense_k: 20                    # [1M-CTX-P0] 10 → 20 — KNN 후보 수, recall +15~20%
   sparse_k: 10                   # FTS 후보 수
   rrf_k: 60                      # RRF k 파라미터
+
+# ── 세션 로깅 (LOG-1) ──────────────────────────────────────
+session_logging:
+  enabled: true              # [V73] 활성화 — JSONL 전량 기록
+  max_file_mb: 100           # 파일당 100MB
+  max_rotations: 10          # 최대 10개 = 1GB 상한
+  max_prompt_chars: 200000   # 프롬프트 절삭 상한

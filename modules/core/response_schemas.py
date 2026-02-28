@@ -126,8 +126,17 @@ ADVISORY_RESULT_SCHEMA = types.Schema(
 DIRECTOR_AUDIT_SCHEMA = types.Schema(
     type=types.Type.OBJECT,
     properties={
-        "decision": types.Schema(type=types.Type.STRING, enum=["PASS", "REJECT"]),
+        "decision": types.Schema(type=types.Type.STRING, enum=["PASS", "PASS_WITH_FIX", "REJECT"]),  # [TF-32]
         "score": types.Schema(type=types.Type.INTEGER, minimum=0, maximum=100),
+        "fix_scope": types.Schema(
+            type=types.Type.STRING,
+            enum=["inplace", "partial", "full"],
+            description="REJECT 시 수정 범위: inplace(국소)/partial(부분)/full(전면)",
+        ),  # [TF-23]
+        "fix_scope_reasoning": types.Schema(
+            type=types.Type.STRING,
+            description="fix_scope 판단 근거: 어떤 문제의 조합이 이 수정 범위를 요구하는지 한 문장",
+        ),  # [V73]
         "error_category": types.Schema(type=types.Type.STRING, enum=["QUALITY_ISSUE", "LOGIC_ERROR"]),
         "diagnostic_report": types.Schema(type=types.Type.STRING),
         "current_beat_achieved": types.Schema(type=types.Type.BOOLEAN),
@@ -141,8 +150,17 @@ DIRECTOR_AUDIT_SCHEMA = types.Schema(
 STRATEGIC_AUDIT_SCHEMA = types.Schema(
     type=types.Type.OBJECT,
     properties={
-        "decision": types.Schema(type=types.Type.STRING, enum=["PASS", "REJECT"]),
+        "decision": types.Schema(type=types.Type.STRING, enum=["PASS", "PASS_WITH_FIX", "REJECT"]),  # [TF-32]
         "score": types.Schema(type=types.Type.INTEGER, minimum=0, maximum=100),
+        "fix_scope": types.Schema(
+            type=types.Type.STRING,
+            enum=["inplace", "partial", "full"],
+            description="REJECT 시 수정 범위: inplace(국소)/partial(부분)/full(전면)",
+        ),  # [TF-23]
+        "fix_scope_reasoning": types.Schema(
+            type=types.Type.STRING,
+            description="fix_scope 판단 근거: 어떤 문제의 조합이 이 수정 범위를 요구하는지 한 문장",
+        ),  # [V73]
         "loop_detected": types.Schema(type=types.Type.BOOLEAN),
         "reason": types.Schema(type=types.Type.STRING),
         "re_slice_instruction": types.Schema(type=types.Type.STRING),

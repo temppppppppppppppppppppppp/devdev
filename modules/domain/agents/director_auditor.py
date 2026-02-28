@@ -585,7 +585,8 @@ class DirectorQualityAuditor:
             if validation_context is None:
                 validation_context = {}
             validation_context["pre_llm_critical_warnings"] = (
-                "\n\n[⚠️ Python 사전 검증 경고 — 문맥 확인 후 최종 판단 필요]\n" + "\n---\n".join(_pre_llm_warnings)
+                "\n\n[🚨 Python 사전 검증 경고 — CRITICAL 경고가 포함된 경우 반드시 REJECT]\n"
+                + "\n---\n".join(_pre_llm_warnings)
             )
 
         # [V66.1] prev_full_text 확대를 1회 수행 후 V0128/legacy 경로에서 공용 사용
@@ -710,8 +711,9 @@ class DirectorQualityAuditor:
 
         # [V63.4] Python 사전 경고를 LLM 프롬프트에 주입
         if _pre_llm_warnings:
-            _warning_block = "\n\n[⚠️ Python 사전 검증 경고 — 문맥 확인 후 최종 판단 필요]\n" + "\n---\n".join(
-                _pre_llm_warnings
+            _warning_block = (
+                "\n\n[🚨 Python 사전 검증 경고 — CRITICAL 경고가 포함된 경우 반드시 REJECT]\n"
+                + "\n---\n".join(_pre_llm_warnings)
             )
             prompt += self._d._escape_braces(_warning_block)
 
@@ -892,6 +894,8 @@ class DirectorQualityAuditor:
         # 1차 평가
         response = self._d.ask(prompt, temperature=0.1, thinking_level="medium")  # [V61.6] SC 1차
         first_eval = self._d._extract_json_robust(response)
+        # [TF-28c] 1차 평가 thinking 캡처 (병렬 투표 전)
+        _first_thinking = getattr(self._d, "_last_thinking", "")
 
         if not isinstance(first_eval, dict):
             first_eval = {"decision": "REJECT", "score": 0, "reason": "JSON 파싱 실패"}
@@ -912,6 +916,7 @@ class DirectorQualityAuditor:
             logging.info(f"⚖️ [SC-Skip] Clear REJECT (score={first_score} < ambiguous_lower={self._d.ambiguous_lower})")
             logging.warning(f"└─ 사유: {reject_reason[:80]}{'...' if len(str(reject_reason)) > 80 else ''}")
             first_eval["self_consistency"] = {"votes": 1, "reason": "clear_reject", "pass_votes": 0}
+            first_eval["_director_thinking"] = _first_thinking  # [TF-28c]
             return first_eval
 
         # 명확한 PASS (점수가 높음) → 추가 평가 없이 반환
@@ -921,6 +926,7 @@ class DirectorQualityAuditor:
             logging.info(f"⚖️ [SC-Skip] Clear PASS (score={first_score} > ambiguous_upper={self._d.ambiguous_upper})")
             logging.info(f"└─ 근거: {str(pass_reason)[:80]}{'...' if len(str(pass_reason)) > 80 else ''}")
             first_eval["self_consistency"] = {"votes": 1, "reason": "clear_pass", "pass_votes": 1}
+            first_eval["_director_thinking"] = _first_thinking  # [TF-28c]
             return first_eval
 
         # 애매한 구간 → 추가 평가 진행
@@ -951,6 +957,7 @@ class DirectorQualityAuditor:
                 "reason": "no_extra_votes",
                 "pass_votes": 1 if first_decision == "PASS" else 0,
             }
+            first_eval["_director_thinking"] = _first_thinking  # [TF-28c]
             return first_eval
 
         # [Phase 3-Obs] 에이전트 레벨 ThreadPoolExecutor 계측
@@ -1023,6 +1030,7 @@ class DirectorQualityAuditor:
             f"✅ [V49.3] Self-Consistency 완료: {final_decision} (PASS {pass_votes}/{len(evaluations)}, median={median_score})"
         )
 
+        result["_director_thinking"] = _first_thinking  # [TF-28c]
         return result
 
     # ═══════════════════════════════════════════════════════════════════════

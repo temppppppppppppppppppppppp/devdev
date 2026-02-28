@@ -762,6 +762,20 @@ class DBManager:
             self._ensure_open()
             self.conn.rollback()
 
+    def resolve_pending_transaction(self, commit: bool = True) -> None:
+        """[TF-30-8] 미완료 트랜잭션을 commit 또는 rollback으로 정리.
+
+        ProjectManager 등 외부 코드가 ``self._lock`` 을 직접 참조하지 않도록
+        캡슐화된 공개 API.
+        """
+        with self._lock:
+            self._ensure_open()
+            if self.conn.in_transaction:
+                if commit:
+                    self.conn.commit()
+                else:
+                    self.conn.rollback()
+
     def close(self) -> None:
         """[Phase 4A] DB 연결 안전 종료"""
         with self._lock:
@@ -1151,6 +1165,16 @@ class DBManager:
             # [V44 Fix] 중첩 트랜잭션 안전성 보장
             if not nested:
                 self.commit()
+
+    def delete_orphaned_seeds(self, valid_ids: list) -> None:
+        """[TF-30-8] 유효 ID 목록에 없는 유령 복선 삭제 (lock 보호)."""
+        if not valid_ids:
+            return
+        with self._lock:
+            self._ensure_open()
+            placeholders = ", ".join(["?"] * len(valid_ids))
+            query = f"DELETE FROM seeds WHERE seed_id NOT IN ({placeholders})"
+            self.conn.execute(query, valid_ids)
 
     def sync_seeds(self, seeds_list) -> None:
         """[V24 Precise Mode] 데이터 누락 시 기본값 할당으로 시스템 중단 방지"""

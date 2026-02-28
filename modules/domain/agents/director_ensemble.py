@@ -149,6 +149,11 @@ class DirectorEnsembleSelector:
 
 ⚠️ **핵심 원칙**: 3개 후보 중 상대적으로 가장 낫더라도, **절대 점수 80점 미만이면 REJECT**하세요.
 
+🎯 **[TF-27] 100점 지향 원칙 — 절대 물러서지 마라**
+목표는 항상 **100점(모순 0건)**이다. 경미한 모순이라도 그냥 넘기지 마라.
+경미한 모순만 있는 후보 → **REJECT + fix_scope="inplace"** + feedback에 구체적 수정 지시.
+Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한 불일치라도 전부 잡아내고 교정 기회를 줘라.
+
 ### 평가 기준 (가중치)
 1. **일관성·모순 없음** (40%): 확립된 사실·수치·관계·설정과 모순이 없는가?
 2. **Arc 준수** (35%): 전술서의 이번 화 핵심 사건을 충실히 반영하는가?
@@ -206,6 +211,9 @@ class DirectorEnsembleSelector:
             if reason:
                 logging.info(f"💡 이유: {reason[:100]}{'...' if len(reason) > 100 else ''}")
 
+            logging.info(
+                f"[Stage3 Director] Blueprint {decision} (점수: {score}) 후보{selected_idx + 1} | {reason[:120] if reason else ''}"
+            )
             print(f"\n{'=' * 60}")
             print(f"  [Stage3 Director] Blueprint {decision} (점수: {score})")
             print(f"  선택: 후보 {selected_idx + 1}")
@@ -219,6 +227,10 @@ class DirectorEnsembleSelector:
             _bp_feedback = result.get("feedback", "")
             if decision == "REJECT" and _bp_feedback:
                 print(f"  피드백: {str(_bp_feedback)[:200]}")
+            # [TF-28c] Director thinking 표시 (절삭 없음)
+            _thinking = getattr(self._d, "_last_thinking", "")
+            if _thinking:
+                print(f"  💭 [Director Thinking]\n{_thinking}")
             print(f"{'=' * 60}\n")
 
             return {
@@ -561,6 +573,11 @@ class DirectorEnsembleSelector:
             selected_letter = ["A", "B", "C"][selected_idx]
             v60_97_swapped = True
             logging.warning(f"⚠️ [V60.97] LLM 선택 {old_selection} → {selected_letter}로 교체 (분량 기준)")
+            # swap 후 selection_reason도 교체 사실 반영
+            original_reason = result.get("selection_reason", "")
+            result["selection_reason"] = (
+                f"[V60.97 자동 교체: {old_selection}→{selected_letter} (분량 기준)] {original_reason}"
+            )
 
         selected_candidate = candidates[selected_idx] if selected_idx < len(candidates) else candidates[0]
 
@@ -615,7 +632,7 @@ class DirectorEnsembleSelector:
             if original_verdict == "REJECT":
                 # [TF-22b] 디렉터 주권: Director REJECT는 Python이 뒤집지 않음
                 final_verdict = "REJECT"
-            elif adaptive_result.get("adjusted") and original_verdict == "PASS":
+            elif adaptive_result.get("adjusted") and original_verdict in ("PASS", "PASS_WITH_FIX"):  # [TF-32]
                 # [Sweep59] 적응형 하향 조정 (PASS+저점수→REJECT)
                 final_verdict = "REJECT"
             elif v60_97_swapped:
@@ -636,6 +653,9 @@ class DirectorEnsembleSelector:
                 feedback["issues"] = _existing_issues
 
         # --- Director 판정 상세 출력 ---
+        logging.info(
+            f"[Stage4 Director] 판정: {final_verdict} (점수: {score}) 후보{selected_letter} | 원래: {original_verdict}"
+        )
         print(f"\n{'=' * 60}")
         print(f"  [Stage4 Director] 원고 앙상블 판정: {final_verdict} (점수: {score})")
         print(f"  선택: 후보 {selected_letter} | 원래 판정: {original_verdict}")
@@ -655,6 +675,10 @@ class DirectorEnsembleSelector:
             print(f"  자유 리뷰: {_open_review[:200]}")
         if adaptive_result.get("reason"):
             print(f"  적응형: {adaptive_result['reason']}")
+        # [TF-28c] Director thinking 표시 (절삭 없음)
+        _thinking = getattr(self._d, "_last_thinking", "")
+        if _thinking:
+            print(f"  💭 [Director Thinking]\n{_thinking}")
         print(f"{'=' * 60}\n")
 
         return {

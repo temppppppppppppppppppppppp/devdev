@@ -56,6 +56,7 @@ from modules.core.services.audit_service import AuditService  # [Phase 4B-1]
 from modules.core.services.project_service import ProjectService  # [Phase 4B-3]
 from modules.core.services.state_service import StateService  # [Phase 4B-3]
 from modules.core.services.ui_service import UIService  # [Phase 4B-2]
+from modules.core.session_logger import SessionLogger  # [LOG-1] JSONL 세션 로깅
 from modules.core.stage01_helpers import Stage01Helpers  # [Phase 4C-1b]
 from modules.core.stage2_orchestrator import Stage2Orchestrator  # [V64.P3]
 from modules.core.stage3_orchestrator import Stage3Orchestrator  # [Phase 4C-1a]
@@ -63,6 +64,7 @@ from modules.core.stage4_orchestrator import Stage4Orchestrator  # [V64.P3]
 from modules.core.studio_visualizer import StudioVisualizer
 from modules.core.system import StudioSystem
 from modules.core.vec_memory import VecMemory  # [Phase 4D-2] ChromaDB → sqlite-vec
+from modules.validation.threshold_helper import _threshold as _val_threshold  # [LOG-1]
 
 # [INF-I8] Stage 전용 에이전트 및 V50 모듈은 lazy import로 전환
 # _attach_agents() 진입 시에만 import하여 초기 로드 시간 절감
@@ -234,6 +236,9 @@ class SovereignApp:
     def __init__(self):
         load_dotenv(override=True)
         self.ui = StudioVisualizer()
+        from modules.core.logger import init_logger
+
+        init_logger()  # [TF-26] logs/session_*.log 듀얼 출력 활성화
         self.sys = StudioSystem(api_client=genai.Client(api_key=os.getenv("GOOGLE_API_KEY")))
         self.memory = None
         self.agents = {}
@@ -255,6 +260,18 @@ class SovereignApp:
         self.perf_timer = PerfTimer("Pipeline")  # [V65] 파이프라인 성능 프로파일링
         self.world_state = None  # [V68] WorldStateManager (Stage 4에서 lazy init)
         self.fact_ledger = None  # [V68] FactLedger 누적 팩트 원장 (Stage 4에서 lazy init)
+
+        # [LOG-1] SessionLogger — JSONL 세션 로깅
+        self._session_logger = SessionLogger(
+            log_dir=Path("logs/session"),
+            enabled=bool(_val_threshold("session_logging.enabled", False)),
+            max_file_mb=int(_val_threshold("session_logging.max_file_mb", 100)),
+            max_prompt_chars=int(_val_threshold("session_logging.max_prompt_chars", 200000)),
+            max_rotations=int(_val_threshold("session_logging.max_rotations", 10)),
+        )
+        from modules.domain.agents.base_agent import BaseAgent as _BA
+
+        _BA.set_session_logger(self._session_logger)
 
         # [V66.1] B-1: narrative_summaries 캐시 (99회 DB 조회 → 1회)
         self._narrative_summaries_cache: str | None = None
@@ -957,6 +974,19 @@ class SovereignApp:
         self.sys.boot_v20_project(project_name, genre=_genre_type)
         self.current_project = self.sys.project
 
+        # [LOG-1] 프로젝트별 로그 경로 갱신
+        if hasattr(self.current_project, "paths"):
+            self._session_logger.set_log_dir(self.current_project.paths.root / "logs" / "session")
+            # [TF-26] StudioLogger도 프로젝트별 경로로 이동
+            from modules.core.logger import _studio_logger
+
+            if _studio_logger is not None:
+                _studio_logger.retarget(self.current_project.paths.root / "logs")
+            # [V73] MetricsCollector 프로젝트별 경로 갱신
+            from modules.core.metrics_collector import get_metrics_collector
+
+            get_metrics_collector(self.current_project.paths.root / "logs" / "metrics")
+
         # [Sweep3-D1] 프로젝트 전환 시 PromptLoader 캐시 무효화
         from modules.core.prompt_loader import PromptLoader
 
@@ -1091,7 +1121,6 @@ class SovereignApp:
         # 1. 파일 데이터 로드 및 조립
         # (A) Writer
         writer_rules_path = self.current_project.paths.config / "prompts" / "writer_rules.json"
-        style_seed_path = self.current_project.paths.config / "cash" / "style_seeds_final.txt"
         writer_context = "[SYSTEM: ABSOLUTE WRITER MANIFESTO]\n"
         if writer_rules_path.exists():
             try:
@@ -1099,9 +1128,6 @@ class SovereignApp:
                 writer_context += "\n".join(w_data.get("common_manifesto", [])) + "\n"
             except (json.JSONDecodeError, ValueError) as _wr_err:
                 logging.warning("[P1] writer_rules.json 파싱 실패 (무시): %s", _wr_err)
-        if style_seed_path.exists():
-            writer_context += f"### [STYLE SEEDS]\n{style_seed_path.read_text(encoding='utf-8')}"
-
         # [V65] (B) Architect 캐시 삭제 (레거시 에이전트 제거)
 
         # (C) Analyst

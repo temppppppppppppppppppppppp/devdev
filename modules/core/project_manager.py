@@ -92,30 +92,9 @@ class ProjectContext:
         for plan_path in [self.paths.plans, self.paths.plans_arcs, self.paths.plans_blueprints]:
             plan_path.mkdir(parents=True, exist_ok=True)
 
-        # 2. [V27.6 AUTO-INIT] 스타일 시드(Cash) 폴더 및 파일 자동 생성
+        # [TF-31-4] style_seeds_final.txt 레거시 제거 — StyleExtractor가 대체
         cash_dir = self.paths.config / "cash"
         cash_dir.mkdir(parents=True, exist_ok=True)
-
-        seed_file = cash_dir / "style_seeds_final.txt"
-        self._style_seed_available = True  # [V45] 스타일 시드 가용성 플래그
-        if not seed_file.exists():
-            default_seed = "[참고내용 없음]"
-            max_retries = 3
-            for attempt in range(max_retries):
-                try:
-                    with open(seed_file, "w", encoding="utf-8") as f:
-                        f.write(default_seed)
-                    logging.info(f"✨ [System] 스타일 시드 파일이 생성되었습니다: {seed_file.name}")
-                    break
-                except (OSError, PermissionError) as e:
-                    if attempt < max_retries - 1:
-                        logging.warning(f"⚠️ [System] 스타일 시드 생성 재시도 ({attempt + 1}/{max_retries}): {e}")
-                        import time
-
-                        time.sleep(0.5)
-                    else:
-                        logging.warning(f"🚨 [System] 스타일 시드 생성 최종 실패: {e}")
-                        self._style_seed_available = False  # [V45] 실패 플래그 설정
 
     def close(self):
         """Release DB resources."""
@@ -272,16 +251,11 @@ class ProjectContext:
         result = self.db.save_anchor(stage, data)
         # [V61.6 Fix] 하위 테이블 동기화(sync_seeds, lore_batch)가 암묵적 트랜잭션을 열어
         # save_anchor의 in_transaction 체크에 의해 commit이 스킵되는 버그 수정
-        # [P0-A2] lock 보호 하에 트랜잭션 정리
-        with self.db._lock:
-            if self.db.conn.in_transaction:
-                if result:
-                    self.db.conn.commit()
-                else:
-                    try:
-                        self.db.conn.rollback()
-                    except Exception as rollback_err:
-                        logging.warning(f"[TF-15/P0] save_anchor rollback failed: {rollback_err}")
+        # [TF-30-8] resolve_pending_transaction 공개 API로 전환 (_lock 직접 접근 제거)
+        try:
+            self.db.resolve_pending_transaction(commit=bool(result))
+        except Exception as rollback_err:
+            logging.warning(f"[TF-15/P0] save_anchor resolve_pending failed: {rollback_err}")
         return result
 
     def load_v20_anchor(self, stage, default=None):
@@ -473,20 +447,15 @@ class ProjectContext:
         valid_ids = [s.get("id") for s in bible_seeds if s.get("id")]
 
         # [E5c-P1-1] Atomic DELETE + sync_seeds under single lock scope with rollback
-        with self.db._lock:
-            try:
-                # 2. DB에는 존재하지만 성경에는 없는 '유령 복선' 삭제 (Orphaned Data Cleanup)
-                if valid_ids:
-                    placeholders = ", ".join(["?"] * len(valid_ids))
-                    query = f"DELETE FROM seeds WHERE seed_id NOT IN ({placeholders})"
-                    self.db.conn.execute(query, valid_ids)
-
-                # 3. 성경의 최신 내용을 DB에 강제 동기화 (Upsert)
-                self.db.sync_seeds(bible_seeds)
-                self.db.conn.commit()
-            except Exception:
-                self.db.conn.rollback()
-                raise
+        # [TF-30-8] delete_orphaned_seeds 공개 API 사용 → _lock 직접 접근 제거
+        try:
+            self.db.begin()
+            self.db.delete_orphaned_seeds(valid_ids)
+            self.db.sync_seeds(bible_seeds)
+            self.db.commit()
+        except Exception:
+            self.db.rollback()
+            raise
         logging.info(f"🧹 [Cleanup] 복선 데이터 정화 완료 (유효 ID: {len(valid_ids)}건)")
 
     def commit_full_episode_data(

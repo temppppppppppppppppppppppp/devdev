@@ -390,7 +390,7 @@ class TestStage3ContextDI:
 
     def test_slots_count_20(self):
         """__slots__ 개수 검증"""
-        assert len(Stage3Context.__slots__) == 20
+        assert len(Stage3Context.__slots__) == 21  # [LOG-1] +session_logger
 
     def test_ctx_sync_after_lazy_init(self, app_mock):
         """lazy init 후 state_tracker/world_state/fact_ledger가 ctx에 sync되는지 확인"""

@@ -42,7 +42,7 @@ class TestDeceasedResurrection:
     def test_deceased_npc_action_detected(self):
         """사망 NPC가 행동 주어로 등장하면 경고."""
         gate = TruthGate()
-        npc_reg = {"독고염": {"deceased": True}}
+        npc_reg = {"독고염": {"status": "dead"}}
         ms = "독고염이 검을 들어올렸다."
         result = gate.validate(ms, {}, npc_registry=npc_reg)
         assert not result["passed"]
@@ -52,7 +52,7 @@ class TestDeceasedResurrection:
     def test_deceased_npc_recall_allowed(self):
         """회상 문맥에서는 허용."""
         gate = TruthGate()
-        npc_reg = {"독고염": {"deceased": True}}
+        npc_reg = {"독고염": {"status": "dead"}}
         ms = "진영호는 독고염의 생전 모습을 떠올렸다."
         result = gate.validate(ms, {}, npc_registry=npc_reg)
         assert result["passed"]
@@ -87,7 +87,7 @@ class TestDeceasedResurrection:
         """사망 NPC 없으면 통과."""
         gate = TruthGate()
         ms = "진영호가 수련을 시작했다."
-        result = gate.validate(ms, {}, npc_registry={"진영호": {"deceased": False}})
+        result = gate.validate(ms, {}, npc_registry={"진영호": {"status": "alive"}})
         assert result["passed"]
 
 
@@ -299,4 +299,3 @@ class TestStructuredWarnings:
             assert "text" in sw
             assert "severity" in sw
             assert "check" in sw
-

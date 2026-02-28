@@ -37,6 +37,8 @@ class Stage3Context:
         "validate_arc_data_fields",
         "validate_blueprint_integrity",
         "fix_entity_registry_protagonist",
+        # [LOG-1] 세션 로거
+        "session_logger",
     )
 
     def __init__(
@@ -62,6 +64,7 @@ class Stage3Context:
         validate_arc_data_fields=None,
         validate_blueprint_integrity=None,
         fix_entity_registry_protagonist=None,
+        session_logger=None,
     ):
         self.ui = ui
         self.current_project = current_project
@@ -83,6 +86,7 @@ class Stage3Context:
         self.validate_arc_data_fields = validate_arc_data_fields
         self.validate_blueprint_integrity = validate_blueprint_integrity
         self.fix_entity_registry_protagonist = fix_entity_registry_protagonist
+        self.session_logger = session_logger
 
     @classmethod
     def from_app(cls, app):
@@ -108,4 +112,5 @@ class Stage3Context:
             validate_arc_data_fields=getattr(app, "_validate_arc_data_fields", None),
             validate_blueprint_integrity=getattr(app, "_validate_blueprint_integrity", None),
             fix_entity_registry_protagonist=getattr(app, "_fix_entity_registry_protagonist", None),
+            session_logger=getattr(app, "_session_logger", None),
         )

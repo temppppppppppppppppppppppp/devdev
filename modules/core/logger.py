@@ -12,7 +12,6 @@ Features:
 """
 
 import logging
-import sys
 import threading
 from datetime import datetime
 from pathlib import Path
@@ -72,20 +71,12 @@ class StudioLogger:
         self.session_name = session_name or self.session_start.strftime("%Y%m%d_%H%M%S")
         self.log_file = self.log_dir / f"session_{self.session_name}.log"
 
-        # 루트 로거 설정
+        # "글도비" 명명 로거 — 파일 전용 (콘솔 출력 없음)
         self.root_logger = logging.getLogger("글도비")
-        self.root_logger.setLevel(logging.DEBUG)  # 모든 레벨 수신
-
-        # 기존 핸들러 제거 (중복 방지)
+        self.root_logger.setLevel(logging.DEBUG)
         self.root_logger.handlers.clear()
 
-        # 콘솔 핸들러 (INFO 이상)
-        self.console_handler = logging.StreamHandler(sys.stdout)
-        self.console_handler.setLevel(logging.INFO)
-        self.console_handler.setFormatter(self._get_console_formatter())
-        self.root_logger.addHandler(self.console_handler)
-
-        # 파일 핸들러 (DEBUG 이상)
+        # 파일 핸들러만 (콘솔 핸들러 없음 — print/Rich가 콘솔 담당)
         self.file_handler = logging.FileHandler(self.log_file, encoding="utf-8")
         self.file_handler.setLevel(logging.DEBUG)
         self.file_handler.setFormatter(self._get_file_formatter())
@@ -96,6 +87,22 @@ class StudioLogger:
 
         # 메트릭 추적
         self._metrics = {"debug_count": 0, "info_count": 0, "warning_count": 0, "error_count": 0, "critical_count": 0}
+
+        # [TF-26] root logger — 파일 전용 (콘솔 StreamHandler 제거)
+        _root = logging.getLogger()
+        # basicConfig 자동 생성 StreamHandler 제거 → 콘솔 이중 출력 방지
+        for _h in _root.handlers[:]:
+            if isinstance(_h, logging.StreamHandler) and not isinstance(_h, logging.FileHandler):
+                _root.removeHandler(_h)
+        if not any(isinstance(h, logging.FileHandler) for h in _root.handlers):
+            self._root_file_handler = logging.FileHandler(self.log_file, encoding="utf-8")
+            self._root_file_handler.setLevel(logging.DEBUG)
+            self._root_file_handler.setFormatter(self._get_file_formatter())
+            _root.addHandler(self._root_file_handler)
+        else:
+            self._root_file_handler = next(h for h in _root.handlers if isinstance(h, logging.FileHandler))
+        if _root.level > logging.DEBUG:
+            _root.level = logging.DEBUG
 
     def _get_console_formatter(self) -> logging.Formatter:
         """콘솔용 포맷터 (간결)"""
@@ -174,19 +181,47 @@ class StudioLogger:
             "log_file": str(self.log_file),
         }
 
-    def set_console_level(self, level: int):
-        """콘솔 출력 레벨 변경"""
-        self.console_handler.setLevel(level)
-
     def set_file_level(self, level: int):
         """파일 출력 레벨 변경"""
         self.file_handler.setLevel(level)
+
+    def retarget(self, new_log_dir: Path) -> None:
+        """[TF-26] 프로젝트 선택 후 로그 파일 경로를 projects/{name}/logs/로 이동."""
+        new_log_dir = Path(new_log_dir)
+        new_log_dir.mkdir(parents=True, exist_ok=True)
+        new_log_file = new_log_dir / f"session_{self.session_name}.log"
+
+        # "글도비" 로거 file handler 교체
+        self.root_logger.removeHandler(self.file_handler)
+        self.file_handler.close()
+        self.file_handler = logging.FileHandler(new_log_file, encoding="utf-8")
+        self.file_handler.setLevel(logging.DEBUG)
+        self.file_handler.setFormatter(self._get_file_formatter())
+        self.root_logger.addHandler(self.file_handler)
+
+        # root logger file handler 교체
+        _root = logging.getLogger()
+        if hasattr(self, "_root_file_handler"):
+            _root.removeHandler(self._root_file_handler)
+            self._root_file_handler.close()
+        self._root_file_handler = logging.FileHandler(new_log_file, encoding="utf-8")
+        self._root_file_handler.setLevel(logging.DEBUG)
+        self._root_file_handler.setFormatter(self._get_file_formatter())
+        _root.addHandler(self._root_file_handler)
+
+        self.log_dir = new_log_dir
+        self.log_file = new_log_file
 
     def close(self) -> None:
         """로거 종료 및 리소스 정리"""
         for handler in self.root_logger.handlers[:]:
             handler.close()
             self.root_logger.removeHandler(handler)
+        # [TF-26] root logger file handler도 정리
+        if hasattr(self, "_root_file_handler"):
+            _root = logging.getLogger()
+            _root.removeHandler(self._root_file_handler)
+            self._root_file_handler.close()
 
 
 # 전역 로거 인스턴스

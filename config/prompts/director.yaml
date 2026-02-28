@@ -87,6 +87,14 @@ ENSEMBLE_VARIABLE_PROMPT: |
   - CRITICAL 모순 **1건**: 연속성 점수 최대 15/40으로 상한
   - CRITICAL 모순 **2건 이상**: 해당 후보 연속성 점수 0/40 처리
   - MAJOR 모순: 건당 -10점 감점 (연속성 항목 내에서)
+  - MINOR 모순: 건당 -3점 감점 (연속성 항목 내에서)
+
+  **🎯 [TF-27] 100점 지향 원칙 — 절대 물러서지 마라**
+  목표는 항상 **100점(모순 0건)**이다. MINOR 모순이라도 그냥 넘기지 마라.
+  MINOR만 있는 후보 → **PASS_WITH_FIX + fix_scope="inplace"** + action_items에 구체적 수정 지시.
+  시스템이 inplace 단계에서 즉시 교정한 뒤 저장한다.
+  소소한 어색함·미세한 불일치라도 **전부 잡아내고 PASS_WITH_FIX로 교정 기회를 줘라**.
+  MINOR를 방치하면 누적되어 MAJOR가 된다 — 발견 즉시 교정 지시를 내려라.
 
   ⚠️ 중요: 위 모순 검사 시 아래 작품 설정을 반드시 고려하세요:
   - **회귀자**: 미래의 정보를 알고 있거나 역사를 의도적으로 변경하는 것은 모순이 아닙니다. 회귀자가 "아직 일어나지 않은 사건"을 예측하거나 대비하는 것은 설정상 정상입니다.
@@ -105,7 +113,7 @@ ENSEMBLE_VARIABLE_PROMPT: |
   ---
 
   ### 🎯 [V67] 평가 기준 (가중치)
-  1. **이전 원고 대비 연속성 + 모순 검사 (40%)**: 위 9개 항목 검사 결과. 이전 원고에서 확립된 사실과 모순이 없는가? **위 [I-10] 점진적 감점 규칙을 적용하세요** (CRITICAL 1건→최대 15/40, CRITICAL 2건+→0/40, MAJOR→건당 -10).
+  1. **이전 원고 대비 연속성 + 모순 검사 (40%)**: 위 9개 항목 검사 결과. 이전 원고에서 확립된 사실과 모순이 없는가? **위 [I-10] 점진적 감점 규칙을 적용하세요** (CRITICAL 1건→최대 15/40, CRITICAL 2건+→0/40, MAJOR→건당 -10, MINOR→건당 -3).
   2. **Blueprint 씬 반영률 (20%)**: 설계된 모든 씬이 균등하게 반영되었는가?
   3. **문장 품질 + 몰입도 (20%)**: 독자가 다음 화를 기다리게 만드는가? 문장이 유려하고 긴장감이 있는가?
      전문 직업 캐릭터가 자기 분야의 루틴에 과잉 반응하면 몰입도 감점 요소.
@@ -137,15 +145,21 @@ ENSEMBLE_VARIABLE_PROMPT: |
   - Treatment 장르 목표와 원고 수치의 **설명 불가능한 괴리** (예: 목표 45억인데 원고 100억, 설명 없음)
   - **Python advisory에서 CRITICAL 경고가 1건이라도 있는 경우** (TruthGate 세계법칙 위반, 아이템 소유권 위반, 사망 NPC 부활 등)
 
-  **[TF-25-02] PASS/REJECT 기준**: 총점 90점 이상이면 PASS, 90점 미만이면 반드시 REJECT으로 판정하세요.
+  **[TF-32] verdict 3단계**:
+  - **PASS**: 문제 없음 → 그대로 저장
+  - **PASS_WITH_FIX**: 총점 90점 이상이면서 MINOR 모순·어색함이 남아 있는 경우 → 시스템이 inplace 1회 적용 후 저장. fix_scope는 반드시 "inplace", action_items에 구체적 수정 지시 기입.
+  - **REJECT**: 재작성 필요 → fix_scope에 따라 inplace/partial/full
+
+  **[TF-25-02] PASS/REJECT 기준**: 총점 90점 이상이면 PASS 또는 PASS_WITH_FIX, 90점 미만이면 반드시 REJECT으로 판정하세요.
   이 기준은 Python QualityGate와 동일합니다. 90점 미만인데 PASS를 출력하면 시스템이 강제 REJECT으로 전환합니다.
 
   ### 📌 출력 형식 (Strict JSON)
   {{
       "selected": "A" | "B" | "C",
       "selection_reason": "선택 이유 (어떤 점에서 다른 후보보다 우수한지)",
-      "verdict": "PASS" | "REJECT",
+      "verdict": "PASS" | "PASS_WITH_FIX" | "REJECT",
       "fix_scope": "inplace" | "partial" | "full",
+      "fix_scope_reasoning": "이 수정 범위를 요구하는 문제 조합을 한 문장으로 설명",
       "score": 0-100,
       "score_breakdown": {{
           "continuity_contradiction": 0-40,
@@ -170,7 +184,7 @@ ENSEMBLE_VARIABLE_PROMPT: |
       "feedback": {{
           "strengths": ["강점 1", "강점 2"],
           "issues": ["문제점 1 (있을 경우)"],
-          "action_items": ["REJECT 시 필수 수정 사항 — 구체적으로 어느 화의 무엇이 모순인지 명시"]
+          "action_items": ["REJECT/PASS_WITH_FIX 시 필수 수정 사항 — 구체적으로 어느 화의 무엇이 모순인지 명시"]
       }},
       "state_updates": {{선택된 원고의 state_updates를 기반으로, 아래 규칙을 적용하여 보정:
           - 투자/금융 장르: 원고에서 확정된 주인공의 최종 자본금/잔고를 "capital" 키에 반드시 포함 (예: "capital": "28억 원"). 대화 속 희망/가정이 아닌, 서사적 사실로 확정된 금액만 반영.
@@ -183,11 +197,12 @@ ENSEMBLE_VARIABLE_PROMPT: |
       }}
   }}
 
-  [TF-23] fix_scope 필드 안내 (REJECT 시 반드시 작성):
+  [TF-23] fix_scope 필드 안내 (REJECT/PASS_WITH_FIX 시 반드시 작성):
   - "inplace": 고유명사·수치 오류 등 국소 수정만으로 해결 가능 (LLM 1회 수정)
   - "partial": 구조는 유지하되 일부 씬/문단 재작성 필요 (부분 수정)
   - "full": 원고 전면 폐기 후 재작성 필요 (심각한 구조·설정 문제)
-  PASS 시에도 fix_scope를 "inplace"로 기입하세요.
+  PASS 시에도 fix_scope를 "inplace"로 기입하세요. PASS_WITH_FIX 시 fix_scope는 반드시 "inplace".
+  fix_scope_reasoning도 함께 기입하세요: 어떤 문제의 조합이 이 수정 범위를 요구하는지 한 문장으로 설명.
 
 ENSEMBLE_SELECTION_PROMPT: |
   [Role] 웹소설 1타 편집장 (Chief Director)
@@ -271,6 +286,14 @@ ENSEMBLE_SELECTION_PROMPT: |
   - CRITICAL 모순 **1건**: 연속성 점수 최대 15/40으로 상한
   - CRITICAL 모순 **2건 이상**: 해당 후보 연속성 점수 0/40 처리
   - MAJOR 모순: 건당 -10점 감점 (연속성 항목 내에서)
+  - MINOR 모순: 건당 -3점 감점 (연속성 항목 내에서)
+
+  **🎯 [TF-27] 100점 지향 원칙 — 절대 물러서지 마라**
+  목표는 항상 **100점(모순 0건)**이다. MINOR 모순이라도 그냥 넘기지 마라.
+  MINOR만 있는 후보 → **PASS_WITH_FIX + fix_scope="inplace"** + action_items에 구체적 수정 지시.
+  시스템이 inplace 단계에서 즉시 교정한 뒤 저장한다.
+  소소한 어색함·미세한 불일치라도 **전부 잡아내고 PASS_WITH_FIX로 교정 기회를 줘라**.
+  MINOR를 방치하면 누적되어 MAJOR가 된다 — 발견 즉시 교정 지시를 내려라.
 
   ⚠️ 중요: 위 모순 검사 시 아래 작품 설정을 반드시 고려하세요:
   - **회귀자**: 미래의 정보를 알고 있거나 역사를 의도적으로 변경하는 것은 모순이 아닙니다. 회귀자가 "아직 일어나지 않은 사건"을 예측하거나 대비하는 것은 설정상 정상입니다.
@@ -289,7 +312,7 @@ ENSEMBLE_SELECTION_PROMPT: |
   ---
 
   ### 🎯 [V67] 평가 기준 (가중치)
-  1. **이전 원고 대비 연속성 + 모순 검사 (40%)**: 위 9개 항목 검사 결과. 이전 원고에서 확립된 사실과 모순이 없는가? **위 [I-10] 점진적 감점 규칙을 적용하세요** (CRITICAL 1건→최대 15/40, CRITICAL 2건+→0/40, MAJOR→건당 -10).
+  1. **이전 원고 대비 연속성 + 모순 검사 (40%)**: 위 9개 항목 검사 결과. 이전 원고에서 확립된 사실과 모순이 없는가? **위 [I-10] 점진적 감점 규칙을 적용하세요** (CRITICAL 1건→최대 15/40, CRITICAL 2건+→0/40, MAJOR→건당 -10, MINOR→건당 -3).
   2. **Blueprint 씬 반영률 (20%)**: 설계된 모든 씬이 균등하게 반영되었는가?
   3. **문장 품질 + 몰입도 (20%)**: 독자가 다음 화를 기다리게 만드는가? 문장이 유려하고 긴장감이 있는가?
      전문 직업 캐릭터가 자기 분야의 루틴에 과잉 반응하면 몰입도 감점 요소.
@@ -321,15 +344,21 @@ ENSEMBLE_SELECTION_PROMPT: |
   - Treatment 장르 목표와 원고 수치의 **설명 불가능한 괴리** (예: 목표 45억인데 원고 100억, 설명 없음)
   - **Python advisory에서 CRITICAL 경고가 1건이라도 있는 경우** (TruthGate 세계법칙 위반, 아이템 소유권 위반, 사망 NPC 부활 등)
 
-  **[TF-25-02] PASS/REJECT 기준**: 총점 90점 이상이면 PASS, 90점 미만이면 반드시 REJECT으로 판정하세요.
+  **[TF-32] verdict 3단계**:
+  - **PASS**: 문제 없음 → 그대로 저장
+  - **PASS_WITH_FIX**: 총점 90점 이상이면서 MINOR 모순·어색함이 남아 있는 경우 → 시스템이 inplace 1회 적용 후 저장. fix_scope는 반드시 "inplace", action_items에 구체적 수정 지시 기입.
+  - **REJECT**: 재작성 필요 → fix_scope에 따라 inplace/partial/full
+
+  **[TF-25-02] PASS/REJECT 기준**: 총점 90점 이상이면 PASS 또는 PASS_WITH_FIX, 90점 미만이면 반드시 REJECT으로 판정하세요.
   이 기준은 Python QualityGate와 동일합니다. 90점 미만인데 PASS를 출력하면 시스템이 강제 REJECT으로 전환합니다.
 
   ### 📌 출력 형식 (Strict JSON)
   {{
       "selected": "A" | "B" | "C",
       "selection_reason": "선택 이유 (어떤 점에서 다른 후보보다 우수한지)",
-      "verdict": "PASS" | "REJECT",
+      "verdict": "PASS" | "PASS_WITH_FIX" | "REJECT",
       "fix_scope": "inplace" | "partial" | "full",
+      "fix_scope_reasoning": "이 수정 범위를 요구하는 문제 조합을 한 문장으로 설명",
       "score": 0-100,
       "score_breakdown": {{
           "continuity_contradiction": 0-40,
@@ -354,7 +383,7 @@ ENSEMBLE_SELECTION_PROMPT: |
       "feedback": {{
           "strengths": ["강점 1", "강점 2"],
           "issues": ["문제점 1 (있을 경우)"],
-          "action_items": ["REJECT 시 필수 수정 사항 — 구체적으로 어느 화의 무엇이 모순인지 명시"]
+          "action_items": ["REJECT/PASS_WITH_FIX 시 필수 수정 사항 — 구체적으로 어느 화의 무엇이 모순인지 명시"]
       }},
       "state_updates": {{선택된 원고의 state_updates를 기반으로, 아래 규칙을 적용하여 보정:
           - 투자/금융 장르: 원고에서 확정된 주인공의 최종 자본금/잔고를 "capital" 키에 반드시 포함 (예: "capital": "28억 원"). 대화 속 희망/가정이 아닌, 서사적 사실로 확정된 금액만 반영.
@@ -367,11 +396,12 @@ ENSEMBLE_SELECTION_PROMPT: |
       }}
   }}
 
-  [TF-23] fix_scope 필드 안내 (REJECT 시 반드시 작성):
+  [TF-23] fix_scope 필드 안내 (REJECT/PASS_WITH_FIX 시 반드시 작성):
   - "inplace": 고유명사·수치 오류 등 국소 수정만으로 해결 가능 (LLM 1회 수정)
   - "partial": 구조는 유지하되 일부 씬/문단 재작성 필요 (부분 수정)
   - "full": 원고 전면 폐기 후 재작성 필요 (심각한 구조·설정 문제)
-  PASS 시에도 fix_scope를 "inplace"로 기입하세요.
+  PASS 시에도 fix_scope를 "inplace"로 기입하세요. PASS_WITH_FIX 시 fix_scope는 반드시 "inplace".
+  fix_scope_reasoning도 함께 기입하세요: 어떤 문제의 조합이 이 수정 범위를 요구하는지 한 문장으로 설명.
 
 MANUSCRIPT_HISTORY_CONFLICT_PROMPT: |
   [Role] 원고 연속성 전문가 (Manuscript Continuity Expert)
@@ -481,6 +511,10 @@ STRATEGIC_AUDIT_PROMPT_V30: |
   모순 발견 시 → `contradictions` 배열에 기록 후 REJECT
   모순 없으면 다음 단계 진행
 
+  **🎯 [TF-27] MINOR 모순 처리**: MINOR 수준의 모순(경미한 명칭 오타, 미세한 톤 불일치 등)도
+  그냥 넘기지 마라. **PASS_WITH_FIX + fix_scope="inplace"** + re_slice_instruction에 구체적 수정 지시.
+  시스템이 inplace 단계에서 즉시 교정한다. 목표는 100점 — 모순 0건이 기본이다. 물러서지 마라.
+
   Step 1: Arc 간 상태 연속성 검사 [V70.1 신규]
   - 직전 아크 요약에서 확립된 NPC 생존/사망, 부상, 아이템, 관계, 위치, 능력을 나열하라
   - 현재 아크 전술서의 전제가 위 상태와 모순되는가?
@@ -507,7 +541,12 @@ STRATEGIC_AUDIT_PROMPT_V30: |
   - 단순 묘사로만 채워지지 않았는가?
   → 밀도 미달 시 REJECT, 충족 시 PASS
 
-  **[TF-25-02] PASS/REJECT 기준**: 총점 90점 이상이면 PASS, 90점 미만이면 반드시 REJECT으로 판정하세요.
+  **[TF-32] verdict 3단계**:
+  - **PASS**: 문제 없음 → 그대로 저장
+  - **PASS_WITH_FIX**: 총점 90점 이상이면서 MINOR 모순이 남아 있는 경우 → 시스템이 inplace 1회 적용 후 저장. fix_scope는 반드시 "inplace", re_slice_instruction에 구체적 수정 지시 기입.
+  - **REJECT**: 재설계 필요 → fix_scope에 따라 inplace/partial/full
+
+  **[TF-25-02] PASS/REJECT 기준**: 총점 90점 이상이면 PASS 또는 PASS_WITH_FIX, 90점 미만이면 반드시 REJECT으로 판정하세요.
   이 기준은 Python QualityGate와 동일합니다. 90점 미만인데 PASS를 출력하면 시스템이 강제 REJECT으로 전환합니다.
 
   ### ⚠️ [TF-25-08] Python Pre-Director Advisory
@@ -518,20 +557,22 @@ STRATEGIC_AUDIT_PROMPT_V30: |
 
   [Output Format] JSON Only
   {{
-      "decision": "PASS" 또는 "REJECT",
+      "decision": "PASS" 또는 "PASS_WITH_FIX" 또는 "REJECT",
       "score": 0~100,
       "fix_scope": "inplace" 또는 "partial" 또는 "full",
+      "fix_scope_reasoning": "이 수정 범위를 요구하는 문제 조합을 한 문장으로 설명",
       "loop_detected": true/false,
       "reason": "REJECT 사유를 구체적으로 기술 (어떤 화에서 어떤 문제가 있는지)",
       "re_slice_instruction": "REJECT 시 반드시 구체적 수정 지시 포함. 예: '제N화에서 X 대신 Y를 하라', '아이템 Z를 삭제하고 W로 대체하라' 등 실행 가능한 지시",
       "contradictions": ["발견된 모순 1", "발견된 모순 2"]
   }}
 
-  [TF-23] fix_scope: REJECT 시 수정 범위를 판단하세요.
+  [TF-23] fix_scope: REJECT/PASS_WITH_FIX 시 수정 범위를 판단하세요.
   - "inplace": 전술서 일부 수치/명칭만 수정 (LLM 1회)
   - "partial": 일부 에피소드 재배치 필요 (부분 재설계)
   - "full": Arc 전면 재설계 필요
-  PASS 시에도 fix_scope를 "inplace"로 기입하세요.
+  PASS 시에도 fix_scope를 "inplace"로 기입하세요. PASS_WITH_FIX 시 fix_scope는 반드시 "inplace".
+  fix_scope_reasoning도 함께 기입하세요: 어떤 문제의 조합이 이 수정 범위를 요구하는지 한 문장으로 설명.
 
 DIRECTOR_AUDIT_PROMPT_V30: |
   [Role] 웹소설 유료 연재 시장의 1타 편집장 (Pacing & Volume Specialist)
@@ -556,8 +597,8 @@ DIRECTOR_AUDIT_PROMPT_V30: |
        (B) 전술 설계도에 명시된 핵심 인물 이름 변경 또는 누락.
        (C) 죽은 자가 살아나거나 장소가 순간이동하는 등 '물리적 인과' 붕괴.
      - **[페이싱 및 흐름 관리]**:
-       (A) **속도 우선**: 서사가 다음 화로 넘어가는 추진력이 확보되었다면 세부 미비점은 PASS하라.
-       (B) **흐름 검수**: 사건이 한 장면에서 허무하게 끝나버리는 '서사 폭주'나, 똑같은 상황이 3장면 이상 반복되는 '서사 정체'는 REJECT하라.
+       (A) **흐름 검수**: 사건이 한 장면에서 허무하게 끝나버리는 '서사 폭주'나, 똑같은 상황이 3장면 이상 반복되는 '서사 정체'는 REJECT하라.
+       (B) **모순 0건 우선**: 추진력이 있더라도 세부 미비점(MINOR 모순 포함)이 있으면 PASS_WITH_FIX+inplace로 교정 기회를 줘라.
        (C) **장면 수 체크 (유연한 기준)**:
            - 6개 장면(Scene 1~6)이 목표이나, 재시도 횟수가 2회 이상이면 최소 3개 장면만 있어도 PASS 가능.
            - 재시도 0-1회: 최소 4개 장면 필수, 미만 시 REJECT.
@@ -636,9 +677,14 @@ DIRECTOR_AUDIT_PROMPT_V30: |
   ### [V63 점수 산정 공식 (Score Formula)]
   점수는 아래 6개 항목의 합계로 산정 (총 100점):
 
+  **🎯 [TF-27] 100점 지향 원칙 — 절대 물러서지 마라**
+  목표는 항상 **100점**이다. MINOR 수준의 미비(경미한 표현 어색함, 미세한 톤 불일치 등)라도
+  그냥 넘기지 마라. **PASS_WITH_FIX + fix_scope="inplace"** + feedback에 구체적 수정 포인트를 기록하라.
+  시스템이 inplace 단계에서 즉시 교정한 뒤 저장한다. 소소한 문제라도 전부 잡아내고 교정 지시를 내려라.
+
   1. **설정 일관성 (20점)**:
      - 20점: 설정 완벽 준수 (무공, 인물, 물리적 인과 모두 정상)
-     - 12점: 경미한 설정 미비 (보조 NPC 이름 오타 등)
+     - 12점: 경미한 설정 미비 (보조 NPC 이름 오타 등) — MINOR이므로 REJECT+inplace로 교정 지시
      - 0점: Hard Constraint 위반 (미습득 무공, 죽은 자 부활 등)
 
   2. **장면 구성 (20점)**:
@@ -675,18 +721,25 @@ DIRECTOR_AUDIT_PROMPT_V30: |
 
   **분량 체크**: 4,000자 미만은 자동 REJECT (점수 항목에서 제외, 사전 필터)
 
-  **PASS 기준**: 총점 65점 이상이면 PASS (재시도 2회+ 시 55점) [V60.24 완화]
+  **[TF-32] verdict 3단계**:
+  - **PASS**: 문제 없음 → 그대로 저장
+  - **PASS_WITH_FIX**: 총점 90점 이상이면서 MINOR 미비가 남아 있는 경우 → 시스템이 inplace 1회 적용 후 저장. fix_scope는 반드시 "inplace", feedback에 구체적 수정 지시 기입.
+  - **REJECT**: 재작성 필요 → fix_scope에 따라 inplace/partial/full
+
+  **[TF-25-02] PASS/REJECT 기준**: 총점 90점 이상이면 PASS 또는 PASS_WITH_FIX, 90점 미만이면 반드시 REJECT으로 판정하세요.
+  이 기준은 Python QualityGate와 동일합니다. 90점 미만인데 PASS를 출력하면 시스템이 강제 REJECT으로 전환합니다.
   **자동 REJECT**: 설정 일관성 0점, 장면 구성 0점, 서사 흐름 0점, 분량 4000자 미만 중 하나라도 해당 시
 
   Step 5: 최종 판정
-  - 위 5단계를 종합하여 PASS/REJECT 결정
+  - 위 5단계를 종합하여 PASS/PASS_WITH_FIX/REJECT 결정
   - 에러 카테고리 분류 (QUALITY_ISSUE vs LOGIC_ERROR)
 
   [Output Format] JSON Only
   {{
-      "decision": "PASS" 또는 "REJECT",
+      "decision": "PASS" 또는 "PASS_WITH_FIX" 또는 "REJECT",
       "score": 0~100,
       "fix_scope": "inplace" 또는 "partial" 또는 "full",
+      "fix_scope_reasoning": "이 수정 범위를 요구하는 문제 조합을 한 문장으로 설명",
       "score_breakdown": {{
           "setting_consistency": 0~20,
           "scene_composition": 0~20,
@@ -703,9 +756,10 @@ DIRECTOR_AUDIT_PROMPT_V30: |
       "lowest_score_area": "가장 낮은 점수를 받은 영역 (setting_consistency/scene_composition/narrative_flow/reader_engagement/prose_quality)"
   }}
 
-  [TF-23] fix_scope: REJECT 시 수정 범위를 판단하세요.
+  [TF-23] fix_scope: REJECT/PASS_WITH_FIX 시 수정 범위를 판단하세요.
   - "inplace": 고유명사·수치 등 국소 수정 (LLM 1회)
   - "partial": 구조 유지, 일부 씬 재작성 (부분 수정)
   - "full": 전면 폐기 후 재작성 (심각한 구조·설정 문제)
-  PASS 시에도 fix_scope를 "inplace"로 기입하세요.
+  PASS 시에도 fix_scope를 "inplace"로 기입하세요. PASS_WITH_FIX 시 fix_scope는 반드시 "inplace".
+  fix_scope_reasoning도 함께 기입하세요: 어떤 문제의 조합이 이 수정 범위를 요구하는지 한 문장으로 설명.
 
