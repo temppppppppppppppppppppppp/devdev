@@ -241,7 +241,8 @@ class TestRunFinalize:
 
     @patch("modules.core.stage2_finalizer.validate_arc", side_effect=lambda x: x)
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
-    def test_quota_fallback_override(self, _validate, finalizer, valid_refined_arc):
+    def test_quota_fallback_warning_only(self, _validate, finalizer, valid_refined_arc):
+        """[TF-25-07] V60.43 API 쿼터 실패 패턴 감지 시 REJECT 유지 + 경고만."""
         finalizer.ctx.agents["director"].audit_strategic_plan.return_value = {
             "decision": "REJECT",
             "score": 0,
@@ -251,13 +252,10 @@ class TestRunFinalize:
         kwargs = _make_finalize_kwargs(valid_refined_arc, draft_validator_passed=True, consensus_passed=True)
         result = asyncio.run(finalizer.run_finalize(**kwargs))
 
-        # [Phase 2.5] QualityGate(90) 적용 후 quota fallback PASS(50)는 REJECT→retry로 전환
-        assert result["action"] == "retry"
-        finalizer.ctx.audit_event.assert_any_call(
-            "v60_43_quota_override",
-            "Arc accepted due to quota exhaustion",
-            {"arc_no": 1, "scores": [50, 50], "zero_count": 0},
-        )
+        # [TF-25-07] Director REJECT 유지 — Python이 판정을 변경하지 않음
+        assert result["action"] == "next"  # REJECT → next (오케스트레이터 재시도)
+        audit = finalizer.ctx.agents["director"].audit_strategic_plan.return_value
+        assert audit.get("v60_43_api_warning") is True
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_missing_critical_data_returns_retry(self, finalizer, valid_refined_arc):

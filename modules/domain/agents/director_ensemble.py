@@ -369,7 +369,8 @@ class DirectorEnsembleSelector:
             }
 
         logging.info(
-            f"✅ [V60.97] 분량 통과 후보: {len(qualified_indices)}개 ({[['A', 'B', 'C'][i] for i in qualified_indices]})"
+            f"✅ [V60.97] 분량 통과 후보: {len(qualified_indices)}개 "
+            f"({[chr(65 + i) if i < len(candidates) else f'#{i}' for i in qualified_indices]})"
         )
 
         blueprint_str = (

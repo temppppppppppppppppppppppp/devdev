@@ -92,10 +92,10 @@ class RetryLimits:
     """재시도 횟수 및 제한"""
 
     # 에이전트 재시도
-    DIRECTOR_MAX_ATTEMPTS = 5  # 디렉터 검증 최대 시도 [V62.4]
-    ANALYST_MAX_ATTEMPTS = 5  # Analyst Arc 설계 최대 시도 [V62.4]
-    ARCHITECT_MAX_ATTEMPTS = 5  # 아키텍트 설계 최대 시도
-    WRITER_MAX_ATTEMPTS = 5  # 작가 집필 최대 시도 [V62.4]
+    DIRECTOR_MAX_ATTEMPTS = 10  # 디렉터 검증 최대 시도 [TF-23b]
+    ANALYST_MAX_ATTEMPTS = 10  # Analyst Arc 설계 최대 시도 [TF-23b]
+    ARCHITECT_MAX_ATTEMPTS = 10  # 아키텍트 설계 최대 시도 [TF-23b]
+    WRITER_MAX_ATTEMPTS = 10  # 작가 집필 최대 시도 [TF-23b]
     BLUEPRINT_MAX_ATTEMPTS = 12  # 블루프린트 생성 최대 시도
 
     # 시스템 재시도
@@ -127,9 +127,12 @@ class ManuscriptLimits:
 
 
 class ContextLimits:
-    """컨텍스트 크기 제한 상수."""
+    """컨텍스트 크기 제한 상수.
 
-    MAX_CONTEXT_CHARS = 1_000_000  # [1M-CTX] system.yaml 700K보다 크게 유지 (게이트가 최종 안전망)
+    [TF-25-04] MAX_CONTEXT_CHARS를 validation.yaml SSOT로 이동.
+    """
+
+    MAX_CONTEXT_CHARS = _LazyThreshold("context.max_context_chars", 1_000_000)
 
 
 def smart_truncate(text: str, max_chars: int = ContextLimits.MAX_CONTEXT_CHARS, head_chars: int = 80_000) -> str:
@@ -156,7 +159,7 @@ def smart_truncate(text: str, max_chars: int = ContextLimits.MAX_CONTEXT_CHARS, 
 class WritingLimits:
     """집필 관련 제한"""
 
-    MAX_RETRY_PER_EPISODE = 5  # 에피소드당 최대 재시도 횟수
+    MAX_RETRY_PER_EPISODE = 10  # 에피소드당 최대 재시도 횟수 [TF-23b]
     MIN_EPISODE_LOOP_GUARD = 5  # 최소 에피소드 루프 가드
     MAX_FAILURE_STREAK = 3  # 연속 실패 허용 횟수
 

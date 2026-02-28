@@ -190,6 +190,7 @@ class TestInterviewRoundRun:
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
         round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.inplace_patch.return_value = []  # [TF-23] InPlace 실패 유도
         round_ctx.chief_writer.patch_with_feedback.return_value = []  # 폴백 유도
         round_ctx.chief_writer.regenerate_with_feedback.return_value = [_candidate()]
         round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
@@ -217,6 +218,7 @@ class TestInterviewRoundRun:
         ctx = _make_ctx()
         ir = Stage4InterviewRound(ctx)
         round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.inplace_patch.return_value = []  # [TF-23] InPlace 안 타도록 방어
         round_ctx.chief_writer.regenerate_with_feedback.return_value = [_candidate()]
         round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
         ctx.agents["director"].select_and_judge_ensemble.return_value = {
@@ -639,6 +641,7 @@ class TestRecordS4Attempt:
         ctx.pass_rate_monitor = MagicMock()
         ir = Stage4InterviewRound(ctx)
         round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.inplace_patch.return_value = []  # [TF-23] InPlace 실패 → Patch 폴백
         round_ctx.chief_writer.patch_with_feedback.return_value = [_candidate()]
         round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]
         ctx.agents["director"].select_and_judge_ensemble.return_value = {
@@ -670,6 +673,7 @@ class TestRecordS4Attempt:
         ctx.pass_rate_monitor = MagicMock()
         ir = Stage4InterviewRound(ctx)
         round_ctx = _make_round_ctx()
+        round_ctx.chief_writer.inplace_patch.return_value = []  # [TF-23] InPlace 실패
         round_ctx.chief_writer.patch_with_feedback.return_value = []
         round_ctx.chief_writer.regenerate_with_feedback.return_value = [_candidate()]
         round_ctx.manuscript_validator.validate_all_candidates.return_value = [_validation_result()]

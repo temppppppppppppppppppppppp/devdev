@@ -73,6 +73,7 @@ continuity:
 # [V71] Gemini context usage settings
 # [감리3차] Gemini 3.x Pro = 1M tokens = 한글 약 500K자. 보수적 제약 정상화.
 context:
+  max_context_chars: 1000000         # [TF-25-04] smart_truncate 상한 (SSOT — constants.py _LazyThreshold)
   mandatory_context_max: 400000      # [1M-CTX-P0] 200000 → 400000 (모델 용량 80%)
   director_mandatory_max: 400000     # [1M-CTX-P0] 200000 → 400000 (Writer와 동일; 모델 용량 80%)
   lookback_excerpt_chars: 5000       # [1M-CTX-P0] 2000 → 5000 (화별 요약 2.5배)
@@ -85,8 +86,8 @@ context:
 
 # ── 재시도 제한 ──────────────────────────────────────────────
 retry:
-  director_max_attempts: 5
-  analyst_max_attempts: 5
+  director_max_attempts: 10
+  analyst_max_attempts: 10
   api_timeout_seconds: 300   # 5분
 
 # ── 패치 모드 ────────────────────────────────────────────────
