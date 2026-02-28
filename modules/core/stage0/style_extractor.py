@@ -224,37 +224,44 @@ class StyleExtractor:
         total_chars = len(all_text)
         total_episodes = len(drafts)
 
-        logging.info(f"[V2] 문체 분석 시작: {total_episodes}화, {total_chars:,}자")
+        # 대용량 텍스트 샘플링 (50만자 상한)
+        MAX_ANALYSIS_CHARS = 500_000
+        if total_chars > MAX_ANALYSIS_CHARS:
+            sampled_text = self._sample_text(all_text, MAX_ANALYSIS_CHARS)
+        else:
+            sampled_text = all_text
 
-        # Phase 1: Python 통계 분석 (전체 원고)
-        logging.info("[1/5] 통계 분석...")
-        stats = self._analyze_statistics_v2(drafts)
+        print(f"  [*] 문체 분석 시작: {total_episodes}화, {total_chars:,}자", flush=True)
+
+        # Phase 1: Python 통계 분석
+        print(f"  [1/5] 통계 분석... ({total_chars:,}자 중 {len(sampled_text):,}자 샘플링)", flush=True)
+        stats = self._analyze_statistics_v2(sampled_text)
 
         # Phase 2: 샘플 큐레이션
-        logging.info("[2/5] 샘플 큐레이션...")
-        curated = self._curate_samples(drafts)
+        print("  [2/5] 샘플 큐레이션...", flush=True)
+        curated = self._curate_samples(sampled_text)
 
         # Phase 3: 리듬 분석
-        logging.info("[3/5] 리듬 분석...")
+        print("  [3/5] 리듬 분석...", flush=True)
         rhythm = self._analyze_rhythm(drafts)
 
         # Phase 4: LLM 심층 분석
         qualitative = {}
         if self.client or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY"):
-            logging.info("[4/5] LLM 심층 분석...")
+            print("  [4/5] LLM 심층 분석...", flush=True)
             qualitative = self._deep_llm_analysis(drafts)
             if not isinstance(qualitative, dict):
                 qualitative = {}
 
             # Phase 5: Anti-AI 패턴 생성
-            logging.info("[5/5] Anti-AI 패턴 생성...")
+            print("  [5/5] Anti-AI 패턴 생성...", flush=True)
             anti = self._generate_anti_patterns(drafts, curated.get("exemplary_passages", []))
             if not isinstance(anti, dict):
                 anti = {}
             qualitative.update(anti)
         else:
-            logging.info("[4/5] LLM 없음 - 통계 분석만 사용")
-            logging.info("[5/5] 스킵")
+            print("  [4/5] LLM 없음 - 통계 분석만 사용", flush=True)
+            print("  [5/5] 스킵", flush=True)
 
         # 병합
         merged = {**stats, **curated, **rhythm, **qualitative}
@@ -265,17 +272,16 @@ class StyleExtractor:
             merged["reference_works"] = [reference_name]
 
         guide = StyleGuide(**{k: v for k, v in merged.items() if k in {f.name for f in fields(StyleGuide)}})
-        logging.info(f"[OK] 문체 DNA 추출 완료 (v2, {total_episodes}화 분석)")
+        print(f"  [OK] 문체 DNA 추출 완료 (v2, {total_episodes}화 분석)", flush=True)
         return guide
 
     # ═══════════════════════════════════════════════════════════════
     # Phase 1: 통계 분석 V2
     # ═══════════════════════════════════════════════════════════════
 
-    def _analyze_statistics_v2(self, drafts: list[str]) -> dict[str, Any]:
-        """전체 원고 통계 분석"""
+    def _analyze_statistics_v2(self, all_text: str) -> dict[str, Any]:
+        """전체 원고 통계 분석 (외부에서 텍스트 전달)"""
         result = {}
-        all_text = "\n\n".join(drafts)
 
         # 문장 분리 (한국어 인식)
         sentences = self._split_sentences(all_text)
@@ -327,10 +333,9 @@ class StyleExtractor:
     # Phase 2: 샘플 큐레이션
     # ═══════════════════════════════════════════════════════════════
 
-    def _curate_samples(self, drafts: list[str]) -> dict[str, Any]:
-        """점수 기반 최상위 샘플 선별"""
+    def _curate_samples(self, all_text: str) -> dict[str, Any]:
+        """점수 기반 최상위 샘플 선별 (외부에서 텍스트 전달)"""
         result = {}
-        all_text = "\n\n".join(drafts)
 
         sentences = self._split_sentences(all_text)
         dialogues = re.findall(r'["""]([^"""]+)["""]', all_text)
@@ -675,6 +680,15 @@ JSON만 출력하세요.
         # 한국어 종결어미 + 마침표/느낌표/물음표 기준
         sents = re.split(r"(?<=[다요죠음함임까])[.!?]\s*|\n", text)
         return [s.strip() for s in sents if s.strip() and len(s.strip()) > 3]
+
+    @staticmethod
+    def _sample_text(text: str, max_chars: int) -> str:
+        """대용량 텍스트에서 초반/중반/후반 균등 샘플링"""
+        if len(text) <= max_chars:
+            return text
+        chunk = max_chars // 3
+        mid = len(text) // 2
+        return text[:chunk] + "\n\n" + text[mid - chunk // 2 : mid + chunk // 2] + "\n\n" + text[-chunk:]
 
     def _sample_batches(self, drafts: list[str], batch_size: int = 8000, num_batches: int = 3) -> list[str]:
         """초반/중반/후반에서 균등 샘플링"""
