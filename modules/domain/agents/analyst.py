@@ -19,7 +19,7 @@ import logging
 import os
 import re
 
-from modules.core.constants import GenreTypes, HUDKeys
+from modules.core.constants import GenreTypes, HUDKeys, RetryLimits
 
 # [V65] 프롬프트 외부화
 from .analyst_prompt_api import (
@@ -586,8 +586,7 @@ class Analyst(BaseAgent):
         # [V60.62] 3가지 구조 모두 대응: flatten, nested content, plot_roadmap
         original_guess = 5
         if isinstance(curr_block, dict):
-            content_parts, content_len = self._extract_content_parts(curr_block)
-            " ".join(content_parts)
+            _content_parts, content_len = self._extract_content_parts(curr_block)
 
             # 내용 길이/복잡도에 따라 화수 추정
             # - 500자 미만: 간단한 블록 → 3화
@@ -689,7 +688,7 @@ class Analyst(BaseAgent):
         }
 
         # 5. [V65] 설계 및 자기 비판 루프 — retry_with_feedback 래퍼 적용
-        max_retries = 3
+        max_retries = RetryLimits.ANALYST_MAX_ATTEMPTS
         # [V60.31] 가변 페이싱: 권장값만 제시, LLM이 사건 밀도로 최종 결정
         pacing_guide = (
             f"시스템 권장: {target_ep_count}화 (Blitz:2-3 / Standard:3-4 / Epic:5-6 중 사건 밀도에 맞게 조정 가능)"

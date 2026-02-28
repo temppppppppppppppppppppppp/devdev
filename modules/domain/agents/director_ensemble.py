@@ -159,12 +159,15 @@ class DirectorEnsembleSelector:
 {{
     "selected_index": 0,
     "decision": "PASS" | "REJECT",
+    "fix_scope": "inplace" | "partial" | "full",
     "score": 0-100,
     "contradictions": ["모순 설명 (구체적 — 어떤 사실과 무엇이 충돌하는지)", ...],  // 없으면 빈 배열
     "reason": "선택/판정 이유 (50자 이내)",
     "comparison_notes": "후보별 비교 분석 (각 후보의 장단점)",
     "feedback": "REJECT인 경우 구체적 수정 지침"
 }}
+
+[TF-23] fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부씬재작성, full=전면재설계. PASS 시 "inplace".
 
 반드시 유효한 JSON만 출력하세요.
 """
@@ -227,6 +230,7 @@ class DirectorEnsembleSelector:
                 "reason": result.get("reason", ""),
                 "feedback": result.get("feedback", "") if decision == "REJECT" else "",
                 "comparison_notes": result.get("comparison_notes", ""),
+                "fix_scope": result.get("fix_scope", ""),  # [TF-23] Director 판단 수정 범위
             }
 
         except Exception as e:
@@ -397,20 +401,31 @@ class DirectorEnsembleSelector:
         _story_esc = self._d._escape_braces(story_context) if story_context else "(작품 설정 정보 없음)"
 
         stable_context = self._prompt_loader.load(
-            "director", "ENSEMBLE_STABLE_CONTEXT",
-            blueprint=_blueprint_esc, episode_digest=_digest_esc,
-            previous_ending=_ending_esc, prev_manuscripts_text=_prev_ms_esc,
+            "director",
+            "ENSEMBLE_STABLE_CONTEXT",
+            blueprint=_blueprint_esc,
+            episode_digest=_digest_esc,
+            previous_ending=_ending_esc,
+            prev_manuscripts_text=_prev_ms_esc,
             story_context=_story_esc,
         )
-        variable_prompt = self._prompt_loader.load(
-            "director", "ENSEMBLE_VARIABLE_PROMPT",
-            strategy_a=info_a["strategy"], manuscript_a=self._d._escape_braces(info_a["manuscript"]),
-            warnings_a=self._d._escape_braces(info_a["warnings"]),
-            strategy_b=info_b["strategy"], manuscript_b=self._d._escape_braces(info_b["manuscript"]),
-            warnings_b=self._d._escape_braces(info_b["warnings"]),
-            strategy_c=info_c["strategy"], manuscript_c=self._d._escape_braces(info_c["manuscript"]),
-            warnings_c=self._d._escape_braces(info_c["warnings"]),
-        ) if stable_context else None
+        variable_prompt = (
+            self._prompt_loader.load(
+                "director",
+                "ENSEMBLE_VARIABLE_PROMPT",
+                strategy_a=info_a["strategy"],
+                manuscript_a=self._d._escape_braces(info_a["manuscript"]),
+                warnings_a=self._d._escape_braces(info_a["warnings"]),
+                strategy_b=info_b["strategy"],
+                manuscript_b=self._d._escape_braces(info_b["manuscript"]),
+                warnings_b=self._d._escape_braces(info_b["warnings"]),
+                strategy_c=info_c["strategy"],
+                manuscript_c=self._d._escape_braces(info_c["manuscript"]),
+                warnings_c=self._d._escape_braces(info_c["warnings"]),
+            )
+            if stable_context
+            else None
+        )
 
         # mandatory_context 블록 생성 (stable/legacy 양쪽 공통)
         _mc_block = ""
@@ -435,15 +450,21 @@ class DirectorEnsembleSelector:
         if not stable_context or not variable_prompt:
             # Fallback: split 프롬프트 없음 → legacy 단일 프롬프트 사용
             prompt = self._prompt_loader.load(
-                "director", "ENSEMBLE_SELECTION_PROMPT",
-                blueprint=_blueprint_esc, episode_digest=_digest_esc,
-                previous_ending=_ending_esc, prev_manuscripts_text=_prev_ms_esc,
+                "director",
+                "ENSEMBLE_SELECTION_PROMPT",
+                blueprint=_blueprint_esc,
+                episode_digest=_digest_esc,
+                previous_ending=_ending_esc,
+                prev_manuscripts_text=_prev_ms_esc,
                 story_context=_story_esc,
-                strategy_a=info_a["strategy"], manuscript_a=self._d._escape_braces(info_a["manuscript"]),
+                strategy_a=info_a["strategy"],
+                manuscript_a=self._d._escape_braces(info_a["manuscript"]),
                 warnings_a=self._d._escape_braces(info_a["warnings"]),
-                strategy_b=info_b["strategy"], manuscript_b=self._d._escape_braces(info_b["manuscript"]),
+                strategy_b=info_b["strategy"],
+                manuscript_b=self._d._escape_braces(info_b["manuscript"]),
                 warnings_b=self._d._escape_braces(info_b["warnings"]),
-                strategy_c=info_c["strategy"], manuscript_c=self._d._escape_braces(info_c["manuscript"]),
+                strategy_c=info_c["strategy"],
+                manuscript_c=self._d._escape_braces(info_c["manuscript"]),
                 warnings_c=self._d._escape_braces(info_c["warnings"]),
             )
             if not prompt:
@@ -474,14 +495,18 @@ class DirectorEnsembleSelector:
             # full_fallback이 게이트 이내가 되도록 보장 (variable이 tail에서 잘리는 것 방지)
             _gate = int(getattr(self._d, "MAX_CONTEXT_CHARS", None) or 700_000)
             _stable_budget = max(0, _gate - len(variable_prompt) - 2)
-            _stable_for_fallback = stable_context[:_stable_budget] if len(stable_context) > _stable_budget else stable_context
+            _stable_for_fallback = (
+                stable_context[:_stable_budget] if len(stable_context) > _stable_budget else stable_context
+            )
             full_fallback = _stable_for_fallback + "\n\n" + variable_prompt
 
             cache_name = None
             try:
                 cache_info = self._d._get_or_create_context_cache(
-                    cache_type="director_ensemble", content=stable_context,
-                    ttl_seconds=600, project_name=f"ep{ep_num}",
+                    cache_type="director_ensemble",
+                    content=stable_context,
+                    ttl_seconds=600,
+                    project_name=f"ep{ep_num}",
                 )
                 cache_name = cache_info.get("cache_name")
                 _was_cached = cache_info.get("cached", False)
@@ -496,8 +521,10 @@ class DirectorEnsembleSelector:
                 if cache_name:
                     logging.info(f"✅ [Director] 캐시 경로: variable_prompt만 전송 ({len(variable_prompt):,}자)")
                     response = self._d._ask_with_cached_context(
-                        cache_name=cache_name, prompt=variable_prompt,
-                        temperature=0.1, thinking_level="high",
+                        cache_name=cache_name,
+                        prompt=variable_prompt,
+                        temperature=0.1,
+                        thinking_level="high",
                         full_prompt_fallback=full_fallback,
                     )
                 else:
@@ -538,6 +565,7 @@ class DirectorEnsembleSelector:
 
         original_verdict = result.get("verdict", "REJECT")
         score = _safe_int(result.get("score", 50), 50)
+        _pre_firewall_score = score  # [TF-24] 기본값 초기화 (firewall 미작동 시에도 안전)
 
         if v60_97_swapped:
             score = 50
@@ -564,6 +592,7 @@ class DirectorEnsembleSelector:
                     logging.warning(f"🚨 [V75-C] Contradiction Firewall: MAJOR {_major_count}건 → REJECT 강제")
                 if _firewall_triggered:
                     original_verdict = "REJECT"
+                    _pre_firewall_score = score  # [TF-22b] 패치 모드용 원본 점수 보존
                     score = min(score, 44)  # adaptive floor=45 미만 → 승격 불가
                     for _c in _found[:5]:
                         if isinstance(_c, dict):
@@ -582,8 +611,11 @@ class DirectorEnsembleSelector:
 
         final_verdict = adaptive_result["decision"]
         if final_verdict == "CONDITIONAL_PASS":
-            # [Sweep59] 적응형 하향 조정 (PASS+저점수→REJECT) vs 상향/스왑 (→PASS) 구분
-            if adaptive_result.get("adjusted") and original_verdict == "PASS":
+            if original_verdict == "REJECT":
+                # [TF-22b] 디렉터 주권: Director REJECT는 Python이 뒤집지 않음
+                final_verdict = "REJECT"
+            elif adaptive_result.get("adjusted") and original_verdict == "PASS":
+                # [Sweep59] 적응형 하향 조정 (PASS+저점수→REJECT)
                 final_verdict = "REJECT"
             elif v60_97_swapped:
                 final_verdict = "REJECT"  # 스왑된 후보는 REJECT (적응형이 별도로 승격하지 않는 한)
@@ -630,6 +662,7 @@ class DirectorEnsembleSelector:
             "verdict": final_verdict,
             "original_verdict": original_verdict,
             "score": score,
+            "pre_firewall_score": _pre_firewall_score,  # [TF-22b] 패치 모드용
             "score_breakdown": result.get("score_breakdown", {}),
             "selection_reason": result.get("selection_reason", ""),
             "feedback": feedback,
@@ -641,6 +674,7 @@ class DirectorEnsembleSelector:
             "adaptive_threshold": adaptive_result.get("threshold_used", 65),
             "adaptive_reason": adaptive_result.get("reason", ""),
             "error_category": result.get("error_category", ""),  # [V75-B] LOGIC_ERROR 전파
+            "fix_scope": result.get("fix_scope", ""),  # [TF-23] Director 판단 수정 범위
         }
 
     def quick_judge_single(

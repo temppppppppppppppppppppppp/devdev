@@ -1989,7 +1989,11 @@ class DBManager:
             for k in invalidate_eps:
                 del self._cumulative_bible_cache[k]
             # 로어는 시간 개념이 모호하므로 유지하거나 별도 정책 필요 (여기선 유지)
-            self.cursor.execute("VACUUM")
+        # [TF-24] VACUUM은 lock 밖에서 실행 (장시간 lock 점유 방지)
+        try:
+            self.conn.execute("VACUUM")
+        except Exception as _vac_err:
+            logging.debug("[DBManager] VACUUM 실패 (비치명): %s", _vac_err)
 
     def get_rollback_impact(self, target_ep: int) -> dict:
         """[D-2] 롤백 영향 범위 조회 — 삭제될 데이터 건수 미리보기."""

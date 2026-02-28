@@ -34,6 +34,7 @@ class Stage4InterviewRound:
         round_ctx,
     ):
         """[4-R1-e-1] Single interview round: generation, validation, judgment."""
+        from modules.core.constants import PatchModeThresholds
         from modules.core.stage4_types import _PATCH_REWRITE_THRESHOLD, _InterviewRoundResult
         from modules.validation.threshold_helper import _threshold
 
@@ -151,16 +152,48 @@ class Stage4InterviewRound:
         if round_num == 0:
             candidates = chief_writer.generate_ensemble(**_common_writer_kwargs)
         else:
-            # [Phase 3-5B] 점수 기반 분기: 패치 모드 vs 전면 재작성
+            # [TF-23] 3단계 분기: InPlace → Patch → Rewrite (Director 판단 우선)
             try:
                 _prev_score = int(previous_attempt.get("score", 0)) if previous_attempt else 0
             except (ValueError, TypeError):
                 _prev_score = 0
+            _fix_scope = previous_attempt.get("fix_scope", "") if previous_attempt else ""
             _patch_enabled = bool(_threshold("feature_flags.enable_patch_mode", True))
-            _use_patch = _patch_enabled and _prev_score >= _PATCH_REWRITE_THRESHOLD and _prev_manuscript
-            _is_patch = bool(_use_patch)
 
-            if _use_patch:
+            # [TF-23] Director 판단 우선, 점수 fallback
+            _use_inplace = (
+                _patch_enabled
+                and _prev_manuscript
+                and (_fix_scope == "inplace" or (not _fix_scope and _prev_score >= PatchModeThresholds.INPLACE))
+            )
+            _use_patch = (
+                _patch_enabled
+                and _prev_manuscript
+                and (
+                    _fix_scope in ("inplace", "partial")  # inplace 실패 시 patch 폴백
+                    or (not _fix_scope and _prev_score >= _PATCH_REWRITE_THRESHOLD)
+                )
+            )
+
+            candidates = None  # [TF-23] 분기 전 초기화
+
+            # --- InPlace 시도 (LLM 1회) ---
+            if _use_inplace:
+                logging.info(f"[TF-23] InPlace 진입 (fix_scope={_fix_scope!r}, score={_prev_score})")
+                self.ctx.ui.log(f"   🔧 [TF-23] InPlace: fix_scope={_fix_scope!r}, score={_prev_score}")
+                candidates = chief_writer.inplace_patch(
+                    original_manuscript=_prev_manuscript,
+                    director_feedback=director_feedback,
+                    attempt_number=round_num + 1,
+                )
+                if not candidates:
+                    logging.warning("[TF-23] InPlace 실패 → Patch 폴백")
+                    self.ctx.ui.log("   ⚠️ [TF-23] InPlace 실패 → Patch 폴백")
+                    _use_inplace = False  # 폴백
+
+            # --- Patch 시도 (Ensemble) ---
+            if not candidates and _use_patch:
+                _is_patch = True
                 logging.info(f"[Phase 3-5B] 패치 모드 진입 (score={_prev_score}, round={round_num})")
                 self.ctx.ui.log(f"   🔧 [Phase 3-5B] 패치 모드: score={_prev_score}, 원본 보존 수정")
                 candidates = chief_writer.patch_with_feedback(
@@ -172,7 +205,6 @@ class Stage4InterviewRound:
                 )
                 if not candidates:
                     _is_patch_fallback = True
-                    # [Phase 3-5B] 패치 실패 → full rewrite 폴백
                     logging.warning("[Phase 3-5B] 패치 실패, full rewrite 폴백")
                     self.ctx.ui.log("   ⚠️ [Phase 3-5B] 패치 실패 → 전면 재작성 폴백")
                     candidates = chief_writer.regenerate_with_feedback(
@@ -181,7 +213,9 @@ class Stage4InterviewRound:
                         previous_attempt=previous_attempt,
                         attempt_number=round_num + 1,
                     )
-            else:
+
+            # --- Rewrite (전면 재작성) ---
+            if not candidates:
                 candidates = chief_writer.regenerate_with_feedback(
                     **_common_writer_kwargs,
                     director_feedback=director_feedback,
@@ -441,7 +475,7 @@ class Stage4InterviewRound:
                             # 사망 빌런은 스킵 → 다음 빌런 후보 탐색
                             if self.ctx.state_tracker and hasattr(self.ctx.state_tracker, "npc_registry"):
                                 _v_info = self.ctx.state_tracker.npc_registry.get(_vname, {})
-                                if _v_info.get("status") == "deceased":
+                                if _v_info.get("status") == "dead":
                                     continue
                             _villain_ctx = {
                                 "villain_name": _vname,
@@ -485,7 +519,7 @@ class Stage4InterviewRound:
                             # 사망 상사는 스킵 → 다음 상사 후보 탐색
                             if self.ctx.state_tracker and hasattr(self.ctx.state_tracker, "npc_registry"):
                                 _s_info = self.ctx.state_tracker.npc_registry.get(_sname, {})
-                                if _s_info.get("status") == "deceased":
+                                if _s_info.get("status") == "dead":
                                     continue
                             _auth_ctx = {
                                 "protagonist_position": _mb_root.get("protagonist_config", {}).get("position", ""),
@@ -817,7 +851,7 @@ class Stage4InterviewRound:
                         validation_results[_ci].setdefault("truth_gate_warnings", _tg_result["structured_warnings"])
                     _tg_warnings_all.extend(_tg_result["structured_warnings"])
             if _tg_warnings_all:
-                _tg_lines = ["[TruthGate Advisory — 참고만, Python 차단 없음]"]
+                _tg_lines = ["[TruthGate Advisory — CRITICAL 경고 시 반드시 REJECT]"]
                 for _w in _tg_warnings_all[:10]:
                     _tg_lines.append(f"- [{_w.get('severity', '?')}] {_w.get('text', '')}")
                 _director_mc_parts.insert(0, "\n".join(_tg_lines))
@@ -845,7 +879,7 @@ class Stage4InterviewRound:
                             if _ci < len(validation_results) and isinstance(validation_results[_ci], dict):
                                 validation_results[_ci].setdefault("npc_drift_warnings", _drifts)
                     if _drift_all:
-                        _drift_lines = ["[NpcDriftAdvisor — NPC 속성 표류 감지, 참고만]"]
+                        _drift_lines = ["[NpcDriftAdvisor — NPC 속성 표류 감지, MAJOR 이상은 감점 반영]"]
                         for _d in _drift_all[:8]:
                             _drift_lines.append(
                                 f"- [MAJOR] NPC '{_d.get('npc', '')}' {_d.get('field', '')}: "
@@ -868,7 +902,7 @@ class Stage4InterviewRound:
                         _num_advisor = _NumDriftAdvisor(llm_ask=self._truth_gate_llm_ask)
                         _num_drifts = _num_advisor.check(numbers=_nums, ep_num=next_ep)
                         if _num_drifts:
-                            _nd_lines = ["[NumericDriftAdvisor — 수치 누적 표류 감지, 참고만]"]
+                            _nd_lines = ["[NumericDriftAdvisor — 수치 누적 표류 감지, MAJOR 이상은 감점 반영]"]
                             for _nd in _num_drifts[:6]:
                                 _nd_lines.append(f"- [MAJOR] '{_nd.get('key', '')}': {_nd.get('issue', '')[:60]}")
                             _director_mc_parts.insert(0, "\n".join(_nd_lines))
@@ -906,7 +940,7 @@ class Stage4InterviewRound:
                 if _fb_warns:
                     _fb_all.extend(_fb_warns)
             if _fb_all:
-                _fb_lines = ["[FlashbackVerifier — 회상 오염 감지, 참고만]"]
+                _fb_lines = ["[FlashbackVerifier — 회상 오염 감지, MAJOR 이상은 감점 반영]"]
                 for _fw in _fb_all[:6]:
                     _fb_lines.append(f"- [MAJOR] '{_fw.get('marker', '')}': {_fw.get('issue', '')[:60]}")
                 _director_mc_parts.insert(0, "\n".join(_fb_lines))
@@ -945,7 +979,7 @@ class Stage4InterviewRound:
                             if _ip_warns:
                                 _ip_all.extend(_ip_warns)
                         if _ip_all:
-                            _ip_lines = ["[InfoParadoxChecker — 정보 역설 감지, 참고만]"]
+                            _ip_lines = ["[InfoParadoxChecker — 정보 역설 감지, MAJOR 이상은 감점 반영]"]
                             for _ip in _ip_all[:6]:
                                 _ip_lines.append(
                                     f"- [MAJOR] '{_ip.get('info_used', '')[:40]}': {_ip.get('why_paradox', '')[:60]}"
@@ -978,7 +1012,7 @@ class Stage4InterviewRound:
                             if _rd_warns:
                                 _rd_all.extend(_rd_warns)
                         if _rd_all:
-                            _rd_lines = ["[RelationshipDriftAdvisor — 관계도 표류 감지, 참고만]"]
+                            _rd_lines = ["[RelationshipDriftAdvisor — 관계도 표류 감지, MAJOR 이상은 감점 반영]"]
                             for _rd in _rd_all[:6]:
                                 _rd_lines.append(
                                     f"- [MAJOR] '{_rd.get('npc_pair', '')[:30]}': {_rd.get('why_drift', '')[:60]}"
@@ -1318,7 +1352,7 @@ class Stage4InterviewRound:
                 "selected_strategy_key": _sel_strategy_key,
                 "rejection_reason": director_feedback,
                 "action_items": action_items,
-                "score": score,
+                "score": director_result.get("pre_firewall_score", score),  # [TF-22b] 패치 모드용 원본 점수
                 # [Phase 3-5B] 패치 모드용 원본 원고 보존
                 "best_manuscript": (director_result.get("selected_candidate") or {}).get("manuscript", ""),
                 "score_breakdown": director_result.get("score_breakdown", {}),
@@ -1328,6 +1362,7 @@ class Stage4InterviewRound:
                 "_tot_used": _tot_used,
                 "_mad_used": _mad_used,
                 "state_updates": director_result.get("state_updates", {}),  # [TF-R4-S4-01] 폴백 시 HUD 복구용
+                "fix_scope": director_result.get("fix_scope", ""),  # [TF-23] Director 판단 수정 범위
             }
             try:
                 self.ctx.current_project.db.save_cost_record(

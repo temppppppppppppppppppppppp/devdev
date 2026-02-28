@@ -7,6 +7,7 @@ Advisory-only: Director가 최종 판정. 1인칭 시점 전용.
 
 import json
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -171,11 +172,12 @@ class InfoParadoxChecker:
             return []
 
         text = response.strip()
-        # ```json 펜스 처리
-        if "```json" in text:
-            text = text.split("```json")[1].split("```")[0]
-        elif "```" in text:
-            text = text.split("```")[1].split("```")[0]
+        # ```json 펜스 처리 — 정규식 기반 (다중 펜스 안전)
+        m = re.search(r"```json\s*(.*?)\s*```", text, re.DOTALL)
+        if not m:
+            m = re.search(r"```\s*(.*?)\s*```", text, re.DOTALL)
+        if m:
+            text = m.group(1)
         text = text.strip()
 
         try:
@@ -194,13 +196,16 @@ class InfoParadoxChecker:
             info_used = item.get("info_used", "")
             if not info_used:
                 continue
+            character = item.get("character", "")
+            why = item.get("why_paradox", "")
             results.append(
                 {
-                    "character": item.get("character", ""),
+                    "character": character,
                     "info_used": info_used,
-                    "why_paradox": item.get("why_paradox", ""),
+                    "why_paradox": why,
                     "severity": "MAJOR",
                     "check": "info_paradox",
+                    "text": f"[정보 역설] {character}: {info_used}" if character else f"[정보 역설] {info_used}",
                 }
             )
 

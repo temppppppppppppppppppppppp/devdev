@@ -291,7 +291,7 @@ class TestVillainContext:
             }
         }
         ctx = _make_ctx(master_bible=bible)
-        ctx.state_tracker.npc_registry = {"장현석": {"status": "deceased"}}
+        ctx.state_tracker.npc_registry = {"장현석": {"status": "dead"}}
         round_ctx = _make_round_ctx(next_ep=3)
         cv_context = _run_and_capture_cv_context(ctx, round_ctx)
 
@@ -311,7 +311,7 @@ class TestVillainContext:
             }
         }
         ctx = _make_ctx(master_bible=bible)
-        ctx.state_tracker.npc_registry = {"장현석": {"status": "deceased"}}
+        ctx.state_tracker.npc_registry = {"장현석": {"status": "dead"}}
         round_ctx = _make_round_ctx(next_ep=10)
         cv_context = _run_and_capture_cv_context(ctx, round_ctx)
 
@@ -383,7 +383,7 @@ class TestAuthorityContext:
             }
         }
         ctx = _make_ctx(master_bible=bible)
-        ctx.state_tracker.npc_registry = {"최회장": {"status": "deceased"}}
+        ctx.state_tracker.npc_registry = {"최회장": {"status": "dead"}}
         round_ctx = _make_round_ctx(next_ep=3)
         cv_context = _run_and_capture_cv_context(ctx, round_ctx)
 
@@ -404,7 +404,7 @@ class TestAuthorityContext:
             }
         }
         ctx = _make_ctx(master_bible=bible)
-        ctx.state_tracker.npc_registry = {"최회장": {"status": "deceased"}}
+        ctx.state_tracker.npc_registry = {"최회장": {"status": "dead"}}
         round_ctx = _make_round_ctx(next_ep=10)
         cv_context = _run_and_capture_cv_context(ctx, round_ctx)
 

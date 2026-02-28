@@ -285,8 +285,10 @@ class DirectorContinuityValidator:
                 if keyword in manuscript:
                     matched_keywords += 1
 
-            # 키워드의 50% 이상 매칭되면 반영된 것으로 판단
-            if len(keywords) == 0 or matched_keywords >= len(keywords) * 0.5:
+            # 키워드의 50% 이상 매칭되면 반영된 것으로 판단 (키워드 0개 씬은 판정 불가 → 스킵)
+            if len(keywords) == 0:
+                continue
+            if matched_keywords >= len(keywords) * 0.5:
                 reflected_count += 1
             else:
                 missing_scenes.append(
@@ -435,10 +437,11 @@ class DirectorContinuityValidator:
             decision = result.get("decision", "PASS")
             conflicts = result.get("conflicts", [])
 
-            # CRITICAL 충돌이 있으면 CONFLICT, 아니면 경고만
+            # [TF-22] CRITICAL 또는 MAJOR 충돌이 있으면 CONFLICT 유지
             critical_count = sum(1 for c in conflicts if isinstance(c, dict) and c.get("severity") == "CRITICAL")
+            major_count = sum(1 for c in conflicts if isinstance(c, dict) and c.get("severity") == "MAJOR")
 
-            if decision == "CONFLICT" and critical_count > 0:
+            if decision == "CONFLICT" and (critical_count > 0 or major_count > 0):
                 return {
                     "decision": "CONFLICT",
                     "conflicts": conflicts,
@@ -446,7 +449,7 @@ class DirectorContinuityValidator:
                     "critical_count": critical_count,
                 }
             else:
-                # MAJOR/MINOR는 경고만 (비차단)
+                # MINOR만 있는 경우 경고만 (비차단)
                 return {
                     "decision": "PASS",
                     "conflicts": conflicts,
@@ -546,11 +549,13 @@ class DirectorContinuityValidator:
                     "parsing_error": True,
                 }
 
+            # [TF-22] CRITICAL 또는 MAJOR 충돌이 있으면 CONFLICT 유지
             decision = result.get("decision", "PASS")
             conflicts = result.get("conflicts", [])
             critical_count = sum(1 for c in conflicts if isinstance(c, dict) and c.get("severity") == "CRITICAL")
+            major_count = sum(1 for c in conflicts if isinstance(c, dict) and c.get("severity") == "MAJOR")
 
-            if decision == "CONFLICT" and critical_count > 0:
+            if decision == "CONFLICT" and (critical_count > 0 or major_count > 0):
                 return {
                     "decision": "CONFLICT",
                     "conflicts": conflicts,
@@ -676,8 +681,13 @@ class DirectorContinuityValidator:
             }
 
         except Exception as e:
-            logging.warning(f"⚠️ [C-3] Blueprint 연속성 검증 오류 (UNKNOWN 반환): {str(e)[:50]}")
-            return {"decision": "UNKNOWN", "issues": [], "feedback": "", "error": str(e)}
+            logging.warning(f"⚠️ [C-3] Blueprint 연속성 검증 오류 (fail-closed REJECT): {str(e)[:50]}")
+            return {
+                "decision": "REJECT",
+                "issues": [],
+                "feedback": f"[연속성 검증 오류] {str(e)[:100]}",
+                "error": str(e),
+            }
 
     def check_manuscript_continuity_with_cache(
         self,
@@ -767,12 +777,13 @@ class DirectorContinuityValidator:
                     "parsing_error": True,
                 }
 
-            # [Sweep59] 자매 메서드와 동일한 CRITICAL 필터 적용
+            # [TF-22] CRITICAL 또는 MAJOR 충돌이 있으면 CONFLICT 유지
             decision = result.get("decision", "PASS")
             conflicts = result.get("conflicts", [])
             critical_count = sum(1 for c in conflicts if isinstance(c, dict) and c.get("severity") == "CRITICAL")
+            major_count = sum(1 for c in conflicts if isinstance(c, dict) and c.get("severity") == "MAJOR")
 
-            if decision == "CONFLICT" and critical_count > 0:
+            if decision == "CONFLICT" and (critical_count > 0 or major_count > 0):
                 return {
                     "decision": "CONFLICT",
                     "conflicts": conflicts,
@@ -790,5 +801,10 @@ class DirectorContinuityValidator:
                 }
 
         except Exception as e:
-            logging.warning(f"⚠️ [C-3] Manuscript 연속성 검증 오류 (UNKNOWN 반환): {str(e)[:50]}")
-            return {"decision": "UNKNOWN", "conflicts": [], "summary": "", "error": str(e)}
+            logging.warning(f"⚠️ [C-3] Manuscript 연속성 검증 오류 (fail-closed CONFLICT): {str(e)[:50]}")
+            return {
+                "decision": "CONFLICT",
+                "conflicts": [],
+                "summary": f"[연속성 검증 오류] {str(e)[:100]}",
+                "error": str(e),
+            }
