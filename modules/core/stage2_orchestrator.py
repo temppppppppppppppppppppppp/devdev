@@ -377,7 +377,7 @@ class Stage2Orchestrator:
                 default_vol_strategy = {"vol_no": vol_no, "strategy_doc": ""}
                 current_vol_strategy = next(
                     (v for v in volumes_strategy if v.get("vol_no") == vol_no),
-                    volumes_strategy[0] if volumes_strategy else default_vol_strategy,
+                    default_vol_strategy,
                 )
 
                 ### [0124 핵심 1] Analyst: 결핍 리포트 생성 (순수 Python, 즉시 완료)
@@ -513,6 +513,22 @@ class Stage2Orchestrator:
                     draft_validator_passed = _val["draft_validator_passed"]
                     consensus_passed = _val["consensus_passed"]
                     suspected_duplicates = _val["suspected_duplicates"]
+                    # [TF-25-09] ArcAutoCorrector 수정 내역을 Director advisory로 전달
+                    _corrections = _val.get("corrections_made", [])
+                    if _corrections:
+                        _corr_text = " / ".join(str(c)[:80] for c in _corrections[:5])
+                        constraint_block = (
+                            constraint_block or ""
+                        ) + f"\n[Python 자동 수정 {len(_corrections)}건] {_corr_text}"
+                    # [TF-25-08] Python Pre-Director advisory를 Director에 전달
+                    _advisories = _val.get("python_advisories", [])
+                    if _advisories:
+                        _adv_text = "\n".join(
+                            f"[{a['source']}:{a['severity']}] {a['message'][:200]}" for a in _advisories[:5]
+                        )
+                        constraint_block = (
+                            constraint_block or ""
+                        ) + f"\n\n[Python Pre-Director advisory {len(_advisories)}건]\n{_adv_text}"
 
                     ### [4-R3-e] Director 심사 + 최종 처리
                     _fin = await self.finalizer.run_finalize(
@@ -564,6 +580,7 @@ class Stage2Orchestrator:
                             "score_breakdown": _fin.get("score_breakdown", {}),
                             "selection_reason": _fin.get("selection_reason", ""),
                             "validation_warnings": _fin.get("validation_warnings", []),
+                            "fix_scope": _fin.get("fix_scope", ""),  # [TF-23] Director 판단 수정 범위
                         }
                     else:
                         _previous_attempt = None

@@ -135,12 +135,17 @@ ENSEMBLE_VARIABLE_PROMPT: |
   - 원고 내부에서 앞뒤가 맞지 않는 명백한 모순
   - 수학적 계산 오류 (금액, 수익률, 수량 등)
   - Treatment 장르 목표와 원고 수치의 **설명 불가능한 괴리** (예: 목표 45억인데 원고 100억, 설명 없음)
+  - **Python advisory에서 CRITICAL 경고가 1건이라도 있는 경우** (TruthGate 세계법칙 위반, 아이템 소유권 위반, 사망 NPC 부활 등)
+
+  **[TF-25-02] PASS/REJECT 기준**: 총점 90점 이상이면 PASS, 90점 미만이면 반드시 REJECT으로 판정하세요.
+  이 기준은 Python QualityGate와 동일합니다. 90점 미만인데 PASS를 출력하면 시스템이 강제 REJECT으로 전환합니다.
 
   ### 📌 출력 형식 (Strict JSON)
   {{
       "selected": "A" | "B" | "C",
       "selection_reason": "선택 이유 (어떤 점에서 다른 후보보다 우수한지)",
       "verdict": "PASS" | "REJECT",
+      "fix_scope": "inplace" | "partial" | "full",
       "score": 0-100,
       "score_breakdown": {{
           "continuity_contradiction": 0-40,
@@ -177,6 +182,12 @@ ENSEMBLE_VARIABLE_PROMPT: |
           "C": "후보 C 간단 평가"
       }}
   }}
+
+  [TF-23] fix_scope 필드 안내 (REJECT 시 반드시 작성):
+  - "inplace": 고유명사·수치 오류 등 국소 수정만으로 해결 가능 (LLM 1회 수정)
+  - "partial": 구조는 유지하되 일부 씬/문단 재작성 필요 (부분 수정)
+  - "full": 원고 전면 폐기 후 재작성 필요 (심각한 구조·설정 문제)
+  PASS 시에도 fix_scope를 "inplace"로 기입하세요.
 
 ENSEMBLE_SELECTION_PROMPT: |
   [Role] 웹소설 1타 편집장 (Chief Director)
@@ -308,12 +319,17 @@ ENSEMBLE_SELECTION_PROMPT: |
   - 원고 내부에서 앞뒤가 맞지 않는 명백한 모순
   - 수학적 계산 오류 (금액, 수익률, 수량 등)
   - Treatment 장르 목표와 원고 수치의 **설명 불가능한 괴리** (예: 목표 45억인데 원고 100억, 설명 없음)
+  - **Python advisory에서 CRITICAL 경고가 1건이라도 있는 경우** (TruthGate 세계법칙 위반, 아이템 소유권 위반, 사망 NPC 부활 등)
+
+  **[TF-25-02] PASS/REJECT 기준**: 총점 90점 이상이면 PASS, 90점 미만이면 반드시 REJECT으로 판정하세요.
+  이 기준은 Python QualityGate와 동일합니다. 90점 미만인데 PASS를 출력하면 시스템이 강제 REJECT으로 전환합니다.
 
   ### 📌 출력 형식 (Strict JSON)
   {{
       "selected": "A" | "B" | "C",
       "selection_reason": "선택 이유 (어떤 점에서 다른 후보보다 우수한지)",
       "verdict": "PASS" | "REJECT",
+      "fix_scope": "inplace" | "partial" | "full",
       "score": 0-100,
       "score_breakdown": {{
           "continuity_contradiction": 0-40,
@@ -350,6 +366,12 @@ ENSEMBLE_SELECTION_PROMPT: |
           "C": "후보 C 간단 평가"
       }}
   }}
+
+  [TF-23] fix_scope 필드 안내 (REJECT 시 반드시 작성):
+  - "inplace": 고유명사·수치 오류 등 국소 수정만으로 해결 가능 (LLM 1회 수정)
+  - "partial": 구조는 유지하되 일부 씬/문단 재작성 필요 (부분 수정)
+  - "full": 원고 전면 폐기 후 재작성 필요 (심각한 구조·설정 문제)
+  PASS 시에도 fix_scope를 "inplace"로 기입하세요.
 
 MANUSCRIPT_HISTORY_CONFLICT_PROMPT: |
   [Role] 원고 연속성 전문가 (Manuscript Continuity Expert)
@@ -485,15 +507,31 @@ STRATEGIC_AUDIT_PROMPT_V30: |
   - 단순 묘사로만 채워지지 않았는가?
   → 밀도 미달 시 REJECT, 충족 시 PASS
 
+  **[TF-25-02] PASS/REJECT 기준**: 총점 90점 이상이면 PASS, 90점 미만이면 반드시 REJECT으로 판정하세요.
+  이 기준은 Python QualityGate와 동일합니다. 90점 미만인데 PASS를 출력하면 시스템이 강제 REJECT으로 전환합니다.
+
+  ### ⚠️ [TF-25-08] Python Pre-Director Advisory
+  {story_context} 섹션에 "Python Pre-Director advisory" 경고가 포함된 경우:
+  - Python 사전 검증(Consensus, FlowGuard, DuplicateGuard, DraftValidator, ContinuityInspector)에서 CRITICAL 경고가 발견된 항목입니다.
+  - 해당 항목을 중점적으로 검토하되, 최종 판정(PASS/REJECT)은 당신의 전문적 판단에 따르세요.
+  - Python advisory는 참고 정보이며, 반드시 REJECT해야 하는 것은 아닙니다.
+
   [Output Format] JSON Only
   {{
       "decision": "PASS" 또는 "REJECT",
       "score": 0~100,
+      "fix_scope": "inplace" 또는 "partial" 또는 "full",
       "loop_detected": true/false,
       "reason": "REJECT 사유를 구체적으로 기술 (어떤 화에서 어떤 문제가 있는지)",
       "re_slice_instruction": "REJECT 시 반드시 구체적 수정 지시 포함. 예: '제N화에서 X 대신 Y를 하라', '아이템 Z를 삭제하고 W로 대체하라' 등 실행 가능한 지시",
       "contradictions": ["발견된 모순 1", "발견된 모순 2"]
   }}
+
+  [TF-23] fix_scope: REJECT 시 수정 범위를 판단하세요.
+  - "inplace": 전술서 일부 수치/명칭만 수정 (LLM 1회)
+  - "partial": 일부 에피소드 재배치 필요 (부분 재설계)
+  - "full": Arc 전면 재설계 필요
+  PASS 시에도 fix_scope를 "inplace"로 기입하세요.
 
 DIRECTOR_AUDIT_PROMPT_V30: |
   [Role] 웹소설 유료 연재 시장의 1타 편집장 (Pacing & Volume Specialist)
@@ -648,6 +686,7 @@ DIRECTOR_AUDIT_PROMPT_V30: |
   {{
       "decision": "PASS" 또는 "REJECT",
       "score": 0~100,
+      "fix_scope": "inplace" 또는 "partial" 또는 "full",
       "score_breakdown": {{
           "setting_consistency": 0~20,
           "scene_composition": 0~20,
@@ -663,4 +702,10 @@ DIRECTOR_AUDIT_PROMPT_V30: |
       "open_review": "체크리스트 외에 발견한 어색함/비약/톤 급변 등을 자유롭게 서술. 없으면 '특이사항 없음'",
       "lowest_score_area": "가장 낮은 점수를 받은 영역 (setting_consistency/scene_composition/narrative_flow/reader_engagement/prose_quality)"
   }}
+
+  [TF-23] fix_scope: REJECT 시 수정 범위를 판단하세요.
+  - "inplace": 고유명사·수치 등 국소 수정 (LLM 1회)
+  - "partial": 구조 유지, 일부 씬 재작성 (부분 수정)
+  - "full": 전면 폐기 후 재작성 (심각한 구조·설정 문제)
+  PASS 시에도 fix_scope를 "inplace"로 기입하세요.
 

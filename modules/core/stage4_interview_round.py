@@ -246,8 +246,23 @@ class Stage4InterviewRound:
                         )
             except Exception as e:
                 logging.warning(f"[SilentPass:ASP] {e!s:.200}")
-        if _asp_manuscript:
-            candidates.append({"manuscript": _asp_manuscript, "strategy": "asp_correction"})
+        if _asp_manuscript and candidates:
+            # [TF-25-01] ASP 후보를 4번째로 append하지 않고, 기존 3후보 중 최저 품질을 교체
+            # Director는 3후보(A/B/C) 체제이므로 4번째 후보는 dead path + IndexError 유발
+            if len(candidates) >= 3:
+                _worst_idx = 0
+                _worst_len = len(candidates[0].get("manuscript", ""))
+                for _ci in range(1, len(candidates)):
+                    _ci_len = len(candidates[_ci].get("manuscript", ""))
+                    if _ci_len < _worst_len:
+                        _worst_len = _ci_len
+                        _worst_idx = _ci
+                self.ctx.ui.log(
+                    f"   🔄 [TF-25-01] ASP 교정 후보가 기존 후보 {_worst_idx + 1}번 교체 (분량 최저 {_worst_len}자)"
+                )
+                candidates[_worst_idx] = {"manuscript": _asp_manuscript, "strategy": "asp_correction"}
+            else:
+                candidates.append({"manuscript": _asp_manuscript, "strategy": "asp_correction"})
 
         # [V65] PerfTimer: 원고 생성 종료
         try:
@@ -1172,8 +1187,10 @@ class Stage4InterviewRound:
                     )
 
             # (b) History conflict check for selected candidate only
+            # [TF-25-03] round_num == 0 게이트 — (a)와 동일 패턴. Round 1+는 Director가 이전 피드백 반영 여부를 이미 검증.
             if (
-                _prev_manuscripts_text
+                round_num == 0
+                and _prev_manuscripts_text
                 and final_manuscript
                 and hasattr(self.ctx.agents.get("director", None), "check_manuscript_history_conflicts")
             ):

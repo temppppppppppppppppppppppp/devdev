@@ -534,6 +534,8 @@ class TestPreflightValidationRejectPaths:
         "draft_validator_passed",
         "consensus_passed",
         "suspected_duplicates",
+        "corrections_made",  # [TF-25-09]
+        "python_advisories",  # [TF-25-08]
     }
 
     def _base_kwargs(self, valid_refined_arc):
@@ -561,8 +563,8 @@ class TestPreflightValidationRejectPaths:
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     @patch("modules.core.spinners.rich_console", MagicMock())
-    def test_draft_validator_reject_returns_retry(self, s2_orch, valid_refined_arc):
-        """DraftValidator valid=False + CRITICAL → retry + 피드백에 점수 포함."""
+    def test_draft_validator_reject_becomes_advisory(self, s2_orch, valid_refined_arc):
+        """[TF-25-08] DraftValidator valid=False + CRITICAL → advisory로 전환, Director까지 도달."""
         s2_orch.ctx.arc_draft_validator = MagicMock()
         s2_orch.ctx.arc_draft_validator.validate.return_value = {
             "valid": False,
@@ -580,16 +582,17 @@ class TestPreflightValidationRejectPaths:
         kwargs = self._base_kwargs(valid_refined_arc)
         result = s2_orch._preflight_validation(**kwargs)
 
-        assert result["action"] == "retry"
-        assert "35" in result["current_feedback"]
-        assert "구조 불일치" in result["current_feedback"]
+        assert result["action"] == "proceed"
+        advisories = result.get("python_advisories", [])
+        assert any(a["source"] == "draft_validator" and "35" in a["message"] for a in advisories)
+        assert any("구조 불일치" in a["message"] for a in advisories)
 
     # ── 2) Consensus REJECT ──
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", True)
     @patch("modules.core.spinners.rich_console", MagicMock())
-    def test_consensus_reject_returns_retry(self, s2_orch, valid_refined_arc):
-        """Consensus REJECT → retry + 피드백에 카테고리 포함."""
+    def test_consensus_reject_becomes_advisory(self, s2_orch, valid_refined_arc):
+        """[TF-25-08] Consensus REJECT → advisory로 전환."""
         consensus_mock = MagicMock()
         consensus_mock.validate_with_consensus.return_value = (
             "REJECT",
@@ -610,16 +613,17 @@ class TestPreflightValidationRejectPaths:
         kwargs = self._base_kwargs(valid_refined_arc)
         result = s2_orch._preflight_validation(**kwargs)
 
-        assert result["action"] == "retry"
-        assert "Consensus" in result["current_feedback"]
-        assert "plot_hole" in result["current_feedback"]
+        assert result["action"] == "proceed"
+        advisories = result.get("python_advisories", [])
+        assert any(a["source"] == "consensus" and "Consensus" in a["message"] for a in advisories)
+        assert any("plot_hole" in a["message"] for a in advisories)
 
     # ── 3) Flow Guard REJECT ──
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     @patch("modules.core.spinners.rich_console", None)
-    def test_flow_guard_reject_returns_retry(self, s2_orch, valid_refined_arc):
-        """FlowGuard REJECT → retry + 피드백에 서사 폭주/정체 메시지."""
+    def test_flow_guard_reject_becomes_advisory(self, s2_orch, valid_refined_arc):
+        """[TF-25-08] FlowGuard REJECT → advisory로 전환."""
         s2_orch.validation_pipeline._stage2_flow_guard = MagicMock(
             return_value={
                 "status": "REJECT",
@@ -634,16 +638,16 @@ class TestPreflightValidationRejectPaths:
         kwargs["four_phase_passed"] = True  # skip consensus/draft
         result = s2_orch._preflight_validation(**kwargs)
 
-        assert result["action"] == "retry"
-        assert "서사" in result["current_feedback"]
+        assert result["action"] == "proceed"
+        advisories = result.get("python_advisories", [])
+        assert any(a["source"] == "flow_guard" and "서사" in a["message"] for a in advisories)
 
     # ── 4) Duplicate Guard REJECT ──
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     @patch("modules.core.spinners.rich_console", None)
-    def test_duplicate_guard_returns_retry(self, s2_orch, valid_refined_arc):
-        """직전 arc와 tactical_doc 중복 → retry."""
-        # _is_tactical_doc_duplicate이 True를 반환하도록 mock
+    def test_duplicate_guard_becomes_advisory(self, s2_orch, valid_refined_arc):
+        """[TF-25-08] 직전 arc와 tactical_doc 중복 → advisory로 전환."""
         s2_orch.validation_pipeline._is_tactical_doc_duplicate = MagicMock(return_value=True)
         s2_orch.validation_pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
         s2_orch.ctx.arc_draft_validator = None
@@ -655,15 +659,16 @@ class TestPreflightValidationRejectPaths:
         kwargs["all_refined_arcs"] = [prev_arc]
         result = s2_orch._preflight_validation(**kwargs)
 
-        assert result["action"] == "retry"
-        assert "중복" in result["current_feedback"] or "동일" in result["current_feedback"]
+        assert result["action"] == "proceed"
+        advisories = result.get("python_advisories", [])
+        assert any(a["source"] == "duplicate_guard" for a in advisories)
 
     # ── 5) ContinuityInspector REJECT ──
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     @patch("modules.core.spinners.rich_console", MagicMock())
-    def test_continuity_reject_returns_retry(self, s2_orch, valid_refined_arc):
-        """ContinuityInspector REJECT → retry + current_feedback 유효 문자열."""
+    def test_continuity_reject_becomes_advisory(self, s2_orch, valid_refined_arc):
+        """[TF-25-08] ContinuityInspector REJECT → advisory로 전환."""
         ci_mock = MagicMock()
         ci_mock.inspect_arc.return_value = {
             "decision": "REJECT",
@@ -683,9 +688,9 @@ class TestPreflightValidationRejectPaths:
         kwargs = self._base_kwargs(valid_refined_arc)
         result = s2_orch._preflight_validation(**kwargs)
 
-        assert result["action"] == "retry"
-        assert isinstance(result["current_feedback"], str)
-        assert len(result["current_feedback"]) > 0
+        assert result["action"] == "proceed"
+        advisories = result.get("python_advisories", [])
+        assert any(a["source"] == "continuity_inspector" for a in advisories)
         # ctx 콜백 호출 확인
         s2_orch.ctx.build_strong_kind_feedback.assert_called_once()
         s2_orch.ctx.build_focused_context.assert_called_once()
@@ -733,8 +738,8 @@ class TestPreflightValidationRejectPaths:
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     @patch("modules.core.spinners.rich_console", MagicMock())
-    def test_arc_corrector_correct_fails_returns_retry(self, s2_orch, valid_refined_arc):
-        """can_correct=True이지만 correct() 실패 → retry + 수정 불가 피드백."""
+    def test_arc_corrector_correct_fails_becomes_advisory(self, s2_orch, valid_refined_arc):
+        """[TF-25-08] can_correct=True이지만 correct() 실패 → advisory로 전환."""
         s2_orch.ctx.arc_draft_validator = MagicMock()
         s2_orch.ctx.arc_draft_validator.validate.return_value = {
             "valid": False,
@@ -754,22 +759,20 @@ class TestPreflightValidationRejectPaths:
         kwargs = self._base_kwargs(valid_refined_arc)
         result = s2_orch._preflight_validation(**kwargs)
 
-        assert result["action"] == "retry"
-        assert "수정 불가" in result["current_feedback"] or "V60.42" in result["current_feedback"]
+        assert result["action"] == "proceed"
+        advisories = result.get("python_advisories", [])
+        assert any("수정 불가" in a["message"] or "V60.42" in a["message"] for a in advisories)
 
     # ── [4-R3-i] ArcCorrector 교정 후 revalidation 실패 → retry ──
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     @patch("modules.core.spinners.rich_console", MagicMock())
-    def test_arc_corrector_revalidation_fails_returns_retry(self, s2_orch, valid_refined_arc):
-        """correct() 성공이지만 revalidation 실패 → retry + 수정 후에도 실패 피드백."""
+    def test_arc_corrector_revalidation_fails_becomes_advisory(self, s2_orch, valid_refined_arc):
+        """[TF-25-08] correct() 성공이지만 revalidation 실패 → advisory로 전환."""
         corrected_arc = dict(valid_refined_arc)
         corrected_arc["tactical_doc"] = "수정된 내용 " * 100
 
         validator = MagicMock()
-        # 1st call (L1458 advisory): passes — no interference
-        # 2nd call (L1639 V60.56): fails with MAJOR-only → triggers ArcCorrector
-        # 3rd call (L1707 revalidation): still fails → "수정 후에도 실패" retry
         validator.validate.side_effect = [
             {
                 "valid": True,
@@ -809,8 +812,9 @@ class TestPreflightValidationRejectPaths:
         kwargs = self._base_kwargs(valid_refined_arc)
         result = s2_orch._preflight_validation(**kwargs)
 
-        assert result["action"] == "retry"
-        assert "ArcCorrector" in result["current_feedback"] or "수정 후" in result["current_feedback"]
+        assert result["action"] == "proceed"
+        advisories = result.get("python_advisories", [])
+        assert any("ArcCorrector" in a["message"] or "수정 후" in a["message"] for a in advisories)
 
     # ── [4-R3-i] SelfReflector가 arc를 변경 → 변경 arc로 진행 ──
 

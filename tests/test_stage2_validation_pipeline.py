@@ -171,24 +171,28 @@ class TestRunValidation:
         assert "current_feedback" in result
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
-    def test_flow_guard_reject(self, pipeline, valid_refined_arc):
+    def test_flow_guard_reject_becomes_advisory(self, pipeline, valid_refined_arc):
+        """[TF-25-08] Flow Guard REJECT → advisory로 전환, Director까지 도달."""
         pipeline._stage2_flow_guard = MagicMock(
             return_value={"status": "REJECT", "reason": "stagnation", "feedback": "flow retry"}
         )
         kwargs = self._base_kwargs(valid_refined_arc)
         result = pipeline.run_validation(**kwargs)
-        assert result["action"] == "retry"
-        assert "flow" in result["current_feedback"].lower() or "retry" in result["current_feedback"].lower()
+        assert result["action"] == "proceed"
+        advisories = result.get("python_advisories", [])
+        assert any(a["source"] == "flow_guard" for a in advisories)
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
-    def test_duplicate_guard_reject(self, pipeline, valid_refined_arc):
+    def test_duplicate_guard_reject_becomes_advisory(self, pipeline, valid_refined_arc):
+        """[TF-25-08] Duplicate Guard REJECT → advisory로 전환."""
         pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
         pipeline._is_tactical_doc_duplicate = MagicMock(return_value=True)
         kwargs = self._base_kwargs(valid_refined_arc)
         kwargs["all_refined_arcs"] = [{"arc_no": 0, "tactical_doc": "이전 전술"}]
         result = pipeline.run_validation(**kwargs)
-        assert result["action"] == "retry"
-        assert "current_feedback" in result
+        assert result["action"] == "proceed"
+        advisories = result.get("python_advisories", [])
+        assert any(a["source"] == "duplicate_guard" for a in advisories)
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_happy_path_no_four_phase(self, pipeline, valid_refined_arc):
@@ -199,7 +203,8 @@ class TestRunValidation:
         assert isinstance(result["refined_arc"], dict)
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
-    def test_consensus_reject(self, pipeline, valid_refined_arc):
+    def test_consensus_reject_becomes_advisory(self, pipeline, valid_refined_arc):
+        """[TF-25-08] Consensus REJECT → advisory로 전환."""
         consensus = MagicMock()
         consensus.validate_with_consensus.return_value = (
             "REJECT",
@@ -215,19 +220,30 @@ class TestRunValidation:
         kwargs["four_phase_passed"] = False
         kwargs["consensus_passed"] = False
         result = pipeline.run_validation(**kwargs)
-        assert result["action"] == "retry"
-        assert "Consensus" in result["current_feedback"]
+        assert result["action"] == "proceed"
+        advisories = result.get("python_advisories", [])
+        assert any(a["source"] == "consensus" and "Consensus" in a["message"] for a in advisories)
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
     def test_proceed_contains_required_keys(self, pipeline, valid_refined_arc):
+        """[TF-25-08] proceed 반환에 python_advisories + corrections_made 포함."""
         pipeline._stage2_flow_guard = MagicMock(return_value={"status": "PASS"})
         kwargs = self._base_kwargs(valid_refined_arc)
         result = pipeline.run_validation(**kwargs)
-        required = {"action", "refined_arc", "draft_validator_passed", "consensus_passed", "suspected_duplicates"}
+        required = {
+            "action",
+            "refined_arc",
+            "draft_validator_passed",
+            "consensus_passed",
+            "suspected_duplicates",
+            "corrections_made",
+            "python_advisories",
+        }
         assert required == set(result.keys())
 
     @patch("modules.core.spinners.V50_MODULES_AVAILABLE", False)
-    def test_retry_feedback_includes_structured_feedback(self, pipeline, valid_refined_arc):
+    def test_continuity_reject_becomes_advisory_with_feedback(self, pipeline, valid_refined_arc):
+        """[TF-25-08] ContinuityInspector REJECT → advisory로 전환, 구조화된 피드백 포함."""
         continuity_inspector = MagicMock()
         continuity_inspector.inspect_arc.return_value = {
             "decision": "REJECT",
@@ -246,5 +262,8 @@ class TestRunValidation:
 
         result = pipeline.run_validation(**kwargs)
 
-        assert result["action"] == "retry"
-        assert "[STRUCTURED_FEEDBACK]" in result["current_feedback"]
+        assert result["action"] == "proceed"
+        advisories = result.get("python_advisories", [])
+        ci_advisories = [a for a in advisories if a["source"] == "continuity_inspector"]
+        assert len(ci_advisories) == 1
+        assert "[STRUCTURED_FEEDBACK]" in ci_advisories[0]["message"]

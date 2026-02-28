@@ -49,6 +49,8 @@ class Stage2ValidationPipeline:
         """
         from modules.core.spinners import V50_MODULES_AVAILABLE, rich_console
 
+        _auto_corrections = []  # [TF-25-09] ArcAutoCorrector 수정 내역 추적
+        _python_advisories = []  # [TF-25-08] Pre-Director REJECT → advisory 전환
         ReflectionTarget = None
         if V50_MODULES_AVAILABLE:
             try:
@@ -155,10 +157,15 @@ class Stage2ValidationPipeline:
                         logging.warning(f"🚨 [{ci.get('category', '?')}] {(ci.get('issue', '?') or '?')[:80]}")
 
                     feedback_parts = [f"[{ci.get('category')}] {ci.get('issue')}" for ci in critical_issues[:3]]
-                    current_feedback = "Consensus 검증 실패: " + "; ".join(feedback_parts)
-                    refined_arc = None
-                    logging.info(f"🔄 재시도 피드백: {current_feedback[:100]}...")
-                    return {"action": "retry", "current_feedback": current_feedback}
+                    _advisory_msg = "Consensus 검증 실패: " + "; ".join(feedback_parts)
+                    _python_advisories.append(
+                        {
+                            "source": "consensus",
+                            "severity": "CRITICAL",
+                            "message": _advisory_msg,
+                        }
+                    )
+                    logging.info(f"📋 [TF-25-08] Consensus REJECT → Director advisory: {_advisory_msg[:100]}...")
                 else:
                     logging.info("✅ [Consensus] PASS!")
                     consensus_passed = True
@@ -195,6 +202,7 @@ class Stage2ValidationPipeline:
                     arc=refined_arc, prev_arcs=all_refined_arcs
                 )
                 if corrections:
+                    _auto_corrections = corrections  # [TF-25-09]
                     if callable(getattr(self.ctx, "audit_event", None)):
                         self.ctx.audit_event(
                             "v60_25_auto_correct",
@@ -284,14 +292,16 @@ class Stage2ValidationPipeline:
                 adaptive = self.ctx.get_adaptive_feedback_intensity(attempt, stage=2)
                 structured_parts.append(f"\n[재시도 {attempt + 1}회차] {adaptive['guidance']}")
 
-            current_feedback = "\n".join(structured_parts)
+            _fg_feedback = "\n".join(structured_parts)
 
-            print(f"\n{'=' * 60}")
-            print("  [Stage2 Flow Guard] REJECT")
-            print(f"  사유: {flow_guard.get('reason', '?')}")
-            print(f"  피드백: {current_feedback[:300]}")
-            print(f"{'=' * 60}\n")
-            return {"action": "retry", "current_feedback": current_feedback}
+            logging.warning("[TF-25-08] Flow Guard REJECT → Director advisory 전달")
+            _python_advisories.append(
+                {
+                    "source": "flow_guard",
+                    "severity": "CRITICAL",
+                    "message": _fg_feedback[:2000],
+                }
+            )
 
         # 🛡️ [Duplicate Guard]
         if all_refined_arcs:
@@ -304,9 +314,14 @@ class Stage2ValidationPipeline:
                         "arc tactical_doc duplicated",
                         {"arc_no": global_arc_no, "prev_arc_no": all_refined_arcs[-1].get("arc_no")},
                     )
-                current_feedback = "직전 아크와 동일한 전술 설계입니다. 사건/공간/인과를 완전히 새로 구성하십시오."
-                refined_arc = None
-                return {"action": "retry", "current_feedback": current_feedback}
+                _python_advisories.append(
+                    {
+                        "source": "duplicate_guard",
+                        "severity": "CRITICAL",
+                        "message": "직전 아크와 동일한 전술 설계입니다. 사건/공간/인과를 완전히 새로 구성해야 합니다.",
+                    }
+                )
+                logging.info("[TF-25-08] Duplicate Guard REJECT → Director advisory 전달")
 
         # [안전성 패치] Director 호출 전 필수 데이터 검증
         if not refined_arc or not isinstance(refined_arc, dict):
@@ -420,46 +435,64 @@ class Stage2ValidationPipeline:
                                         f"      ✅ [V60.42] 수정 후 재검증 통과 (점수: {revalidation['score']})"
                                     )
                                 else:
-                                    self.ctx.ui.log("      ⚠️ [V60.42] 수정 후에도 검증 실패 - 재생성 필요")
+                                    self.ctx.ui.log("      ⚠️ [V60.42] 수정 후에도 검증 실패")
                                     issues_str = "\n".join([f"- {i}" for i in revalidation["critical_issues"][:3]])
-                                    current_feedback = f"[ArcCorrector 수정 후에도 실패]\n{issues_str}"
-                                    refined_arc = None
-                                    return {"action": "retry", "current_feedback": current_feedback}
+                                    _python_advisories.append(
+                                        {
+                                            "source": "arc_corrector_revalidation",
+                                            "severity": "CRITICAL",
+                                            "message": f"ArcCorrector 수정 후에도 실패:\n{issues_str}",
+                                        }
+                                    )
                             else:
                                 reason = correction_log.get("reason", "알 수 없음")
                                 self.ctx.ui.log(f"      ⚠️ [V60.42] ArcCorrector 수정 실패: {reason}")
                                 if callable(getattr(self.ctx, "audit_event", None)):
                                     self.ctx.audit_event("arc_corrector_fail", reason, {"arc_no": global_arc_no})
                                 issues_str = "\n".join([f"- {i.get('message', str(i))}" for i in major_only[:3]])
-                                current_feedback = f"[V60.42 수정 불가]\n{issues_str}\n재설계 필요."
-                                refined_arc = None
-                                return {"action": "retry", "current_feedback": current_feedback}
+                                _python_advisories.append(
+                                    {
+                                        "source": "arc_corrector_fail",
+                                        "severity": "CRITICAL",
+                                        "message": f"V60.42 수정 불가:\n{issues_str}",
+                                    }
+                                )
                         else:
                             uncorr_msgs = [(i.get("message", "") or "")[:30] for i in uncorrectable_issues[:2]]
                             self.ctx.ui.log(f"      ⚠️ [V60.42] 수정 불가: {', '.join(uncorr_msgs)}")
                             issues_str = "\n".join([f"- {i.get('message', str(i))}" for i in major_only[:3]])
-                            current_feedback = f"[수정 불가]\n{issues_str}"
-                            refined_arc = None
-                            return {"action": "retry", "current_feedback": current_feedback}
+                            _python_advisories.append(
+                                {
+                                    "source": "arc_corrector_uncorrectable",
+                                    "severity": "CRITICAL",
+                                    "message": f"수정 불가:\n{issues_str}",
+                                }
+                            )
 
                     except Exception as corr_err:
                         self.ctx.ui.log(f"      ⚠️ [V60.42] ArcCorrector 오류: {str(corr_err)[:50]}")
                         if callable(getattr(self.ctx, "audit_event", None)):
                             self.ctx.audit_event("arc_corrector_error", str(corr_err)[:100])
                         issues_str = "\n".join([f"- {i}" for i in draft_result["critical_issues"][:5]])
-                        current_feedback = f"[V60.11 검증 실패 + Corrector 오류]\n{issues_str}"
-                        refined_arc = None
-                        return {"action": "retry", "current_feedback": current_feedback}
+                        _python_advisories.append(
+                            {
+                                "source": "arc_corrector_error",
+                                "severity": "CRITICAL",
+                                "message": f"V60.11 검증 실패 + Corrector 오류:\n{issues_str}",
+                            }
+                        )
                 else:
                     issues_str = "\n".join([f"- {i}" for i in draft_result["critical_issues"][:5]])
-                    current_feedback = (
-                        f"[V60.11 DraftValidator 사전 검증 실패]\n"
-                        f"점수: {draft_result['score']}/100\n"
-                        f"문제점:\n{issues_str}\n\n"
-                        f"위 문제를 해결하고 다시 설계하세요."
+                    _python_advisories.append(
+                        {
+                            "source": "draft_validator",
+                            "severity": "CRITICAL",
+                            "message": (
+                                f"V60.11 DraftValidator 사전 검증 실패 (점수: {draft_result['score']}/100)\n"
+                                f"문제점:\n{issues_str}"
+                            ),
+                        }
                     )
-                    refined_arc = None
-                    return {"action": "retry", "current_feedback": current_feedback}
             else:
                 self.ctx.ui.log(f"      ✅ [V60.11 DraftValidator] 사전 검증 통과 (점수: {draft_result['score']})")
                 draft_validator_passed = True  # [감리] 2차 DraftValidator 통과 시 플래그 설정
@@ -488,8 +521,7 @@ class Stage2ValidationPipeline:
                 return {
                     "action": "retry",
                     "current_feedback": (
-                        current_feedback
-                        + f"\n[연속성 검증 런타임 실패] {type(_ci_err).__name__}: {_ci_err}"
+                        current_feedback + f"\n[연속성 검증 런타임 실패] {type(_ci_err).__name__}: {_ci_err}"
                     ),
                 }
 
@@ -618,16 +650,22 @@ class Stage2ValidationPipeline:
                 else:
                     focused_context = ""
 
-                # 모든 피드백 조합: 핵심 지시 + 컨텍스트 + 금지 아이템 + 직전 상태 + 재시도 가이드
-                current_feedback = (
+                # [TF-25-08] ContinuityInspector REJECT → Director advisory 전환
+                _ci_feedback = (
                     f"{strong_kind_feedback}\n\n"
-                    f"{focused_context}{structured_feedback or ''}{banned_items_warning}{prev_state_reminder}{intensity_guide}"
+                    f"{focused_context}{structured_feedback or ''}{banned_items_warning}{prev_state_reminder}"
                 )
 
-                feedback_size = len(current_feedback)
-                self.ctx.ui.log(f"      📋 [V60.21] 집중 피드백 주입 ({feedback_size}자, 목표: <500자)")
-                refined_arc = None
-                return {"action": "retry", "current_feedback": current_feedback}
+                _python_advisories.append(
+                    {
+                        "source": "continuity_inspector",
+                        "severity": "CRITICAL",
+                        "message": _ci_feedback[:3000],
+                    }
+                )
+                self.ctx.ui.log(
+                    f"      📋 [TF-25-08] ContinuityInspector REJECT → Director advisory ({len(_ci_feedback)}자)"
+                )
             else:
                 corrected_joint_docs = continuity_result.get("corrected_joint_docs")
                 if corrected_joint_docs:
@@ -662,6 +700,8 @@ class Stage2ValidationPipeline:
             "draft_validator_passed": draft_validator_passed,
             "consensus_passed": consensus_passed,
             "suspected_duplicates": suspected_duplicates,
+            "corrections_made": _auto_corrections,  # [TF-25-09]
+            "python_advisories": _python_advisories,  # [TF-25-08]
         }
 
     def _normalize_tactical_text(self, text: str) -> str:

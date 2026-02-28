@@ -96,9 +96,9 @@ class Stage2Finalizer:
                     _prev_arc_docs.append(f"━━━ Arc {_pa_no} (제{_pa_ep_s}화~제{_pa_ep_e}화) ━━━\n{_pa_td}")
             if _prev_arc_docs:
                 _full_arc_history = "\n\n".join(_prev_arc_docs)
-                # 200K자 상한 (Gemini 대용량 컨텍스트 윈도우 활용)
+                # 1M자 상한 (ContextLimits.MAX_CONTEXT_CHARS)
                 if len(_full_arc_history) > ContextLimits.MAX_CONTEXT_CHARS:
-                    _full_arc_history = _full_arc_history[: ContextLimits.MAX_CONTEXT_CHARS] + "\n... (200K자 절삭)"
+                    _full_arc_history = _full_arc_history[: ContextLimits.MAX_CONTEXT_CHARS] + "\n... (1M자 절삭)"
                 _expanded_prev_context = (
                     f"[V67] ═══ 이전 Arc 전술서 전문 ({len(_prev_arc_docs)}개) ═══\n"
                     f"{_full_arc_history}\n\n"
@@ -127,6 +127,21 @@ class Stage2Finalizer:
         except Exception as e:
             logging.warning(f"[SilentPass:Stage2Finalizer] 스토리 컨텍스트 생성 실패: {e!s:.100}")
             _story_context = ""
+
+        # [TF-25-09] ArcAutoCorrector 수정 내역을 Director advisory로 주입
+        if constraint_block and "[Python 자동 수정" in constraint_block:
+            _corr_start = constraint_block.find("[Python 자동 수정")
+            _corr_end = constraint_block.find("\n\n[Python Pre-Director advisory", _corr_start)
+            _corr_advisory = (
+                constraint_block[_corr_start:_corr_end] if _corr_end > 0 else constraint_block[_corr_start:]
+            )
+            _story_context += f"\n\n⚠️ {_corr_advisory}"
+
+        # [TF-25-08] Python Pre-Director advisory를 Director 컨텍스트에 주입
+        if constraint_block and "[Python Pre-Director advisory" in constraint_block:
+            _adv_start = constraint_block.find("[Python Pre-Director advisory")
+            _adv_text = constraint_block[_adv_start:]
+            _story_context += f"\n\n⚠️ {_adv_text}"
 
         # [G7] Director 심사 호출 크래시 방어
         try:
@@ -171,7 +186,8 @@ class Stage2Finalizer:
             self.ctx.ui.log(f"         🔧 수정지시: {str(audit['re_slice_instruction'])[:150]}")
 
         # ═══════════════════════════════════════════════════════════════
-        # [V60.43] API 할당량 오류 시 폴백 로직
+        # [TF-25-07] V60.43 API 할당량 오류 감지 — 경고만 (대원칙 1+3 준수)
+        # Python은 판정을 변경하지 않음. Director REJECT 유지 → 오케스트레이터 재시도 루프가 처리.
         # ═══════════════════════════════════════════════════════════════
         if audit.get("decision") == "REJECT" and draft_validator_passed and consensus_passed:
             self_consistency = audit.get("self_consistency", {})
@@ -182,18 +198,12 @@ class Stage2Finalizer:
             is_quota_failure = all_default_50 or many_zeros
 
             if is_quota_failure:
-                self.ctx.ui.log(f"      ⚠️ [V60.43] API 할당량 오류 감지 (score=0이 {zero_count}/{len(scores)}개)")
-                self.ctx.ui.log("      ✅ [V60.43] DraftValidator + Consensus 통과로 PASS 오버라이드")
-                audit["decision"] = "PASS"
-                audit["v60_43_override"] = True
-                audit["original_decision"] = "REJECT"
-                audit["override_reason"] = "api_quota_exhausted_fallback"
-                if callable(getattr(self.ctx, "audit_event", None)):
-                    self.ctx.audit_event(
-                        "v60_43_quota_override",
-                        "Arc accepted due to quota exhaustion",
-                        {"arc_no": global_arc_no, "scores": scores, "zero_count": zero_count},
-                    )
+                logging.warning(
+                    "[TF-25-07] V60.43 API 쿼터 실패 패턴 감지 — Director REJECT 유지 (score=0이 %d/%d개)",
+                    zero_count,
+                    len(scores),
+                )
+                audit["v60_43_api_warning"] = True
 
         from modules.validation.threshold_helper import _threshold
 
@@ -240,6 +250,7 @@ class Stage2Finalizer:
                     "rejected_arc": refined_arc,
                     "score_breakdown": {},
                     "director_feedback_for_fourphase": director_feedback_for_fourphase,
+                    "fix_scope": audit.get("fix_scope", ""),  # [TF-23] Director 판단 수정 범위
                 }
 
             ### [0124 핵심 3] 욕망 데이터 및 HUD 그림자 물리적 박제
@@ -456,11 +467,9 @@ class Stage2Finalizer:
                         description=str(_desc)[:200],
                     )
                     # 명시적 prerequisite_arcs 필드 처리
-                    for _prereq in (refined_arc.get("prerequisite_arcs") or []):
+                    for _prereq in refined_arc.get("prerequisite_arcs") or []:
                         if isinstance(_prereq, int) and _prereq != _arc_no:
-                            self.ctx.current_project.db.upsert_arc_dependency(
-                                _prereq, _arc_no, "requires", ""
-                            )
+                            self.ctx.current_project.db.upsert_arc_dependency(_prereq, _arc_no, "requires", "")
                 except Exception as _ade:
                     logging.debug("[Stage2] arc_dependency 저장 실패 (비치명): %s", _ade)
 
