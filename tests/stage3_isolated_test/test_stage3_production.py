@@ -102,11 +102,7 @@ class ProductionContext:
             with open(arch_rules_path, encoding="utf-8") as f:
                 self.configs["architect_rules"] = json.load(f)
 
-        # style_seeds (카카오 문체)
-        style_path = self.config_root / "cash" / "style_seeds_final.txt"
-        if style_path.exists():
-            with open(style_path, encoding="utf-8") as f:
-                self.configs["style_seeds"] = f.read()
+        # [TF-31-4] style_seeds_final.txt 레거시 제거 — StyleExtractor가 대체
 
     def get_blueprint(self, ep_num: int) -> dict | None:
         return self._blueprints.get(ep_num)
@@ -166,8 +162,7 @@ def print_context_summary(ctx: ProductionContext):
     print(f"  Encyclopedia: {len(ctx.encyclopedia)}개 항목")
     print(f"  주인공: {ctx.protagonist_name}")
     print(f"  Configs: {list(ctx.configs.keys())}")
-    if "style_seeds" in ctx.configs:
-        print(f"  카카오 문체: {len(ctx.configs['style_seeds']):,} bytes")
+    # [TF-31-4] style_seeds 레거시 제거됨 — StyleExtractor가 대체
     print("-" * 50)
 
 

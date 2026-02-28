@@ -62,7 +62,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         arc_data: dict,
         prev_blueprint: dict | None = None,
         prev_blueprints: list[dict] | None = None,
-        max_retries: int = 2,  # [V60.80] 2 = 총 3번 시도 (0, 1, 2)
+        max_retries: int = 9,  # [TF-23b] 9 = 총 10번 시도 (0~9)
         external_feedback: str = "",
         director=None,  # [V60.80] Director 인스턴스 (최종 판정용)
         arc_idx: int = 0,  # Arc 인덱스
@@ -141,6 +141,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         _prev_score_breakdown = {}
         _prev_selection_reason = ""
         _prev_validation_warnings = []
+        _prev_fix_scope = ""  # [TF-23] Director 판단 수정 범위
 
         def _build_strategy_feedback() -> str:
             _parts = []
@@ -205,10 +206,16 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             # - score < REWRITE(50): 전면 재생성, _previous_best 미보존
             from modules.core.constants import PatchModeThresholds
 
-            _use_inplace = _previous_best is not None and _prev_reject_score >= PatchModeThresholds.INPLACE
+            # [TF-23] Director 판단 우선, 점수 fallback
+            _use_inplace = _previous_best is not None and (
+                _prev_fix_scope == "inplace"
+                or (not _prev_fix_scope and _prev_reject_score >= PatchModeThresholds.INPLACE)
+            )
 
             if _use_inplace:
-                logging.info(f"[InPlace] Blueprint in-place 수정 진입 (score={_prev_reject_score})")
+                logging.info(
+                    f"[InPlace] Blueprint in-place 수정 진입 (fix_scope={_prev_fix_scope!r}, score={_prev_reject_score})"
+                )
                 patched = self._inplace_patch_blueprint(
                     original_blueprint=_previous_best,
                     director_feedback=_prev_reject_feedback,
@@ -321,6 +328,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                     continuity_feedback = continuity_result.get("feedback", "")
                     _prev_reject_feedback = continuity_feedback
                     _prev_reject_score = 0  # [TF-R3-S3-01] 연속성 실패는 품질 점수 아님 → 패치 모드 차단
+                    _prev_fix_scope = ""  # [TF-23] 연속성 실패 → fix_scope 초기화
                     # [TF-R4-S3-01] 전략 피드백 변수 설정 (다음 retry에서 연속성 사유 전달)
                     _prev_selection_reason = continuity_feedback
                     _prev_validation_warnings = [continuity_feedback]
@@ -365,9 +373,8 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 "comparison_notes": validation_result.get("comparison_notes", ""),  # [V60.85] 비교 근거
             }
 
-            # Stage 3 Blueprint 전용 QualityGate — Director 프롬프트의 "80점 미만 REJECT" 기준과 일치
-            # (Stage 2/4는 scoring.quality_gate_score: 90 그대로 유지)
-            _quality_gate_score = _threshold("scoring.blueprint_quality_gate_score", 80)
+            # [TF-28b] Stage 3 QualityGate — Stage 2/4와 동일 90점 통일
+            _quality_gate_score = _threshold("scoring.quality_gate_score", 90)
             _score_raw = validation_result.get("score", 0)
             try:
                 _score = int(_score_raw)
@@ -404,6 +411,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             _prev_reject_score = _score
             _prev_reject_feedback = feedback
             _prev_reject_strategy = _selected_strategy or ""
+            _prev_fix_scope = validation_result.get("fix_scope", "")  # [TF-23]
             _prev_score_breakdown = (
                 validation_result.get("score_breakdown", {})
                 if isinstance(validation_result.get("score_breakdown", {}), dict)

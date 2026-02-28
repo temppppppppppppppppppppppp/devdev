@@ -61,7 +61,7 @@ class _RoundContext:
 class _InterviewRoundResult:
     """[4-R2-e] Result of a single interview round."""
 
-    verdict: str  # "PASS" | "REJECT" | "EMPTY"
+    verdict: str  # "PASS" | "PASS_WITH_FIX" | "REJECT" | "EMPTY"  # [TF-32]
     director_feedback: str
     previous_attempt: dict
     final_manuscript: object = None  # str | None, set only on PASS

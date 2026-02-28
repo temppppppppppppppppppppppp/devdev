@@ -88,10 +88,10 @@ class TruthGate:
         """
         deceased_names: list[str] = []
 
-        # 1) npc_registry에서 deceased 목록 수집
+        # 1) npc_registry에서 사망 NPC 목록 수집 (정식 마커: status="dead")
         if npc_registry:
             for name, info in npc_registry.items():
-                if isinstance(info, dict) and (info.get("status") == "dead" or info.get("deceased")):
+                if isinstance(info, dict) and info.get("status") == "dead":
                     deceased_names.append(name)
 
         # 2) world_state에서 deceased 목록 보충
@@ -155,17 +155,15 @@ class TruthGate:
             if isinstance(npc_updates, dict) and name in npc_updates:
                 npc_upd = npc_updates[name]
                 if isinstance(npc_upd, dict):
-                    # 부활(deceased=False)이 아닌 상태 변경 감지
-                    if npc_upd.get("deceased") is not True:
-                        # status 변경이 있고 alive로 바뀌면 경고
-                        if "status" in npc_upd and npc_upd["status"] not in ("dead", "deceased"):
-                            self._add_warning(
-                                warnings,
-                                structured_warnings,
-                                f"사망 NPC '{name}'의 상태가 갱신됨: {npc_upd}",
-                                "CRITICAL",
-                                "deceased_resurrection",
-                            )
+                    # 부활 시도 감지: status가 "dead" 외의 값으로 변경되면 경고
+                    if npc_upd.get("status") not in ("dead", None):
+                        self._add_warning(
+                            warnings,
+                            structured_warnings,
+                            f"사망 NPC '{name}'의 상태가 갱신됨: {npc_upd}",
+                            "CRITICAL",
+                            "deceased_resurrection",
+                        )
 
     def _check_unowned_items(self, state_updates: dict, warnings: list[str], structured_warnings: list[dict]) -> None:
         """미보유 아이템이 state_update로 사용/장착되는지 검사."""

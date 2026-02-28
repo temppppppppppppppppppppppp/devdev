@@ -133,6 +133,14 @@ class BaseAgent:
     # [V62.1] 2.5-pro가 최종 폴백 (2.5-flash 폴백 제거 - 품질 하한선 보장)
     MODEL_FALLBACK_CHAIN = _get_model_fallback_chain()
 
+    # [LOG-1] SessionLogger 싱글톤 (MetricsCollector와 동일 패턴)
+    _session_logger_global = None
+
+    @classmethod
+    def set_session_logger(cls, logger):
+        """[LOG-1] SessionLogger 주입 (main_a.py에서 1회 호출)."""
+        cls._session_logger_global = logger
+
     # [V60.68] 쿼터 소진 모델 캐싱 (클래스 변수 - 세션 전체 공유)
     _quota_exhausted_models = {}  # {model_name: exhausted_until_timestamp}
     _quota_lock = threading.Lock()  # [I-18] 쿼터 캐시 읽기/쓰기 경쟁 방지
@@ -260,6 +268,7 @@ class BaseAgent:
         self.last_error_type = None
         # [V49.3] 에이전트 이름 (비용 추적용)
         self._agent_name = self.__class__.__name__
+        self._last_thinking = ""  # [TF-28c] 최근 ask() thinking content
 
     @classmethod
     def _build_http_options(cls):
@@ -384,7 +393,7 @@ class BaseAgent:
                 budget = self.THINKING_BUDGET_MAP.get(thinking_level.lower(), 8192)
             else:
                 budget = int(thinking_level)
-            config_params["thinking_config"] = types.ThinkingConfig(thinking_budget=budget)
+            config_params["thinking_config"] = types.ThinkingConfig(thinking_budget=budget, include_thoughts=True)
 
         config = types.GenerateContentConfig(**config_params)
 
@@ -417,6 +426,8 @@ class BaseAgent:
             rate_limit_retry_count = 0  # [V60.97] Rate Limit 전용 재시도 카운터
             MAX_RATE_LIMIT_RETRIES = 3  # [V60.97] Rate Limit 최대 재시도 (같은 모델)
             network_retry_count = 0  # [V61.2] 네트워크 오류 재시도 카운터
+
+            _thinking_text = ""  # [TF-28] LLM thinking content
 
             attempt = 0
             while attempt < MAX_CONTINUATIONS:
@@ -565,7 +576,9 @@ class BaseAgent:
                                     budget = self.THINKING_BUDGET_MAP.get(thinking_level.lower(), 8192)
                                 else:
                                     budget = int(thinking_level)
-                                fallback_config_params["thinking_config"] = types.ThinkingConfig(thinking_budget=budget)
+                                fallback_config_params["thinking_config"] = types.ThinkingConfig(
+                                    thinking_budget=budget, include_thoughts=True
+                                )
                             config = types.GenerateContentConfig(**fallback_config_params)
 
                             # [V60.99] API Rate Limit 예방 딜레이
@@ -585,6 +598,19 @@ class BaseAgent:
                 except (ValueError, AttributeError):
                     chunk = ""
                     logging.warning("[base_agent] response.text 접근 실패 (safety filter?) — 빈 응답 처리")
+
+                # [TF-28] thinking content 추출 (첫 응답에서만)
+                if thinking_level and attempt == 0 and not _thinking_text:
+                    try:
+                        if response.candidates and response.candidates[0].content:
+                            _tparts = []
+                            for _p in response.candidates[0].content.parts:
+                                if getattr(_p, "thought", False) and isinstance(_p.text, str):
+                                    _tparts.append(_p.text)
+                            if _tparts:
+                                _thinking_text = "\n".join(_tparts)
+                    except Exception:
+                        pass
 
                 # 💡 [Sovereign Logic] 지능형 중첩 제거 병합 (Overlap-Aware Merge)
                 if full_response:
@@ -668,9 +694,37 @@ class BaseAgent:
                 current_model,
                 len(full_response),
             )
+
+            # [LOG-1] LLM I/O 세션 로깅 (성공)
+            if BaseAgent._session_logger_global:
+                try:
+                    _elapsed = (time.time() - current_time) * 1000 if current_time else 0
+                    BaseAgent._session_logger_global.log_llm_call(
+                        agent_name=self._agent_name,
+                        model=current_model,
+                        prompt=base_prompt,
+                        response=full_response,
+                        temperature=temperature,
+                        duration_ms=_elapsed,
+                        success=True,
+                        thinking=_thinking_text,  # [TF-28]
+                    )
+                except Exception:
+                    pass
+
+            # [TF-28] thinking 캡처 debug 로그
+            if _thinking_text:
+                logging.debug(
+                    "[TF-28:Thinking] agent=%s thinking_len=%d",
+                    self._agent_name,
+                    len(_thinking_text),
+                )
+
+            self._last_thinking = _thinking_text  # [TF-28c]
             return full_response
 
         except Exception as e:
+            _ask_error = e  # [LOG-1] 내부 except에서 e 삭제 방지용 보존
             # [V44] 에러 타입 분류 및 적절한 복구 전략 선택
             error_type = self._classify_error(e)
             self.last_error_type = error_type
@@ -703,6 +757,24 @@ class BaseAgent:
                     )
                 except Exception as e:  # [V64.P4] OPTIONAL: metrics end (failure)
                     logging.debug(f"[SILENT] metrics end (failure): {e}")
+                    pass
+
+            # [LOG-1] LLM I/O 세션 로깅 (실패)
+            if BaseAgent._session_logger_global:
+                try:
+                    _elapsed = (time.time() - current_time) * 1000 if current_time else 0
+                    BaseAgent._session_logger_global.log_llm_call(
+                        agent_name=self._agent_name,
+                        model=current_model,
+                        prompt=base_prompt,
+                        response=full_response or "",
+                        temperature=temperature,
+                        duration_ms=_elapsed,
+                        success=False,
+                        error=str(_ask_error)[:500],
+                        thinking=_thinking_text,  # [TF-28]
+                    )
+                except Exception:
                     pass
 
             # 부분 응답이 있으면 저장
@@ -1296,7 +1368,9 @@ class BaseAgent:
         """
         if not cache_name:
             fallback_prompt = full_prompt_fallback if full_prompt_fallback else prompt
-            return self.ask(fallback_prompt, temperature=temperature, thinking_level=thinking_level, response_schema=response_schema)
+            return self.ask(
+                fallback_prompt, temperature=temperature, thinking_level=thinking_level, response_schema=response_schema
+            )
 
         try:
             # [V61.7] 전략 프롬프트를 ask()와 동일한 형식으로 래핑
@@ -1324,7 +1398,7 @@ class BaseAgent:
                     budget = self.THINKING_BUDGET_MAP.get(thinking_level.lower(), 8192)
                 else:
                     budget = int(thinking_level)
-                config_params["thinking_config"] = types.ThinkingConfig(thinking_budget=budget)
+                config_params["thinking_config"] = types.ThinkingConfig(thinking_budget=budget, include_thoughts=True)
 
             config = types.GenerateContentConfig(**config_params)
 
@@ -1335,6 +1409,25 @@ class BaseAgent:
                 config=config,
             )
 
+            # [TF-28] thinking content 추출 (캐시 경로)
+            self._last_thinking = ""  # [TF-28c] reset
+            if thinking_level:
+                try:
+                    if response.candidates and response.candidates[0].content:
+                        _tparts = []
+                        for _p in response.candidates[0].content.parts:
+                            if getattr(_p, "thought", False) and isinstance(_p.text, str):
+                                _tparts.append(_p.text)
+                        if _tparts:
+                            logging.debug(
+                                "[TF-28:Thinking] agent=%s cached_path thinking_len=%d",
+                                self._agent_name,
+                                sum(len(t) for t in _tparts),
+                            )
+                            self._last_thinking = "\n".join(_tparts)  # [TF-28c]
+                except Exception:
+                    pass
+
             try:
                 return response.text if response.text else ""
             except (ValueError, AttributeError):
@@ -1344,7 +1437,9 @@ class BaseAgent:
         except Exception as e:
             logging.warning(f"⚠️ [V61.7] 캐시 기반 질의 실패, 일반 질의로 폴백: {str(e)[:80]}")
             fallback_prompt = full_prompt_fallback if full_prompt_fallback else prompt
-            return self.ask(fallback_prompt, temperature=temperature, thinking_level=thinking_level, response_schema=response_schema)
+            return self.ask(
+                fallback_prompt, temperature=temperature, thinking_level=thinking_level, response_schema=response_schema
+            )
 
     def merge_contexts_for_caching(self, items: list, item_type: str = "blueprint") -> str:
         """

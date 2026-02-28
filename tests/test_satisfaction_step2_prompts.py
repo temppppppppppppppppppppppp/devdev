@@ -182,11 +182,11 @@ class TestPromptLengthCap:
     """프롬프트 변경으로 토큰 과다 증가가 없는지 검증"""
 
     def test_ensemble_prompt_length_reasonable(self, loader):
-        """ENSEMBLE_SELECTION_PROMPT 길이가 합리적 범위(< 6500자) [TF-25-02 점수 기준 추가로 상향]"""
+        """ENSEMBLE_SELECTION_PROMPT 길이가 합리적 범위(< 7000자) [TF-32 PASS_WITH_FIX verdict 3단계 추가]"""
         prompt = loader.load("director", "ENSEMBLE_SELECTION_PROMPT")
-        assert len(prompt) < 6500, f"Prompt too long: {len(prompt)} chars"
+        assert len(prompt) < 7000, f"Prompt too long: {len(prompt)} chars"
 
     def test_audit_prompt_length_reasonable(self, loader):
-        """DIRECTOR_AUDIT_PROMPT_V30 길이가 합리적 범위(< 6500자) [TF-23 fix_scope 추가로 상향]"""
+        """DIRECTOR_AUDIT_PROMPT_V30 길이가 합리적 범위(< 7000자) [TF-32 PASS_WITH_FIX verdict 3단계 추가]"""
         prompt = loader.load("director", "DIRECTOR_AUDIT_PROMPT_V30")
-        assert len(prompt) < 6500, f"Prompt too long: {len(prompt)} chars"
+        assert len(prompt) < 7000, f"Prompt too long: {len(prompt)} chars"

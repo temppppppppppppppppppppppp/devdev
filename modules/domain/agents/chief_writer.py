@@ -633,6 +633,10 @@ class ChiefWriter(BaseAgent):
         if isinstance(_vw, list) and _vw:
             enhanced_feedback += "\n[Python 검증 경고]\n" + "\n".join(f"- {w}" for w in _vw[:10])
 
+        _fsr = previous_attempt.get("fix_scope_reasoning", "")
+        if _fsr:
+            enhanced_feedback += f"\n[수정 범위 근거]\n{_fsr}"
+
         # 실패 학습 제약 구성
         failure_constraints = ""
         if previous_attempt.get("action_items"):
@@ -684,6 +688,54 @@ class ChiefWriter(BaseAgent):
             chain_link_section=chain_link_section,
             emotional_beat_section=emotional_beat_section,
         )
+
+    # =========================================================================
+    # [TF-23] InPlace — LLM 1회 호출로 원고 국소 수정
+    # =========================================================================
+
+    def inplace_patch(
+        self,
+        *,
+        original_manuscript: str,
+        director_feedback: str,
+        attempt_number: int,
+    ) -> list[dict]:
+        """[TF-23] LLM 1회 호출로 원고 in-place 수정. 실패 시 빈 리스트 → patch/rewrite 폴백."""
+        from modules.core.constants import smart_truncate
+        from modules.core.prompt_loader import PromptLoader
+
+        try:
+            _patch_template = PromptLoader().load("chief_writer", "PATCH_MODE_PROMPT")
+        except Exception as e:
+            logging.warning(f"[TF-23] PATCH_MODE_PROMPT 로드 실패: {e!s:.100}")
+            _patch_template = None
+
+        def _esc(s):
+            return s.replace("{", "{{").replace("}", "}}")
+
+        if _patch_template:
+            prompt = _patch_template.format(
+                feedback_text=_esc(director_feedback),
+                original_manuscript=_esc(smart_truncate(original_manuscript, max_chars=150000, head_chars=20000)),
+            )
+        else:
+            prompt = (
+                f"[원고 원본 보존 + 지적사항만 수정]\n\n"
+                f"## Director 피드백\n{director_feedback}\n\n"
+                f"## 원본 원고\n{smart_truncate(original_manuscript, max_chars=150000, head_chars=20000)}\n\n"
+                f"전면 재작성하지 마세요. 지적된 부분만 고치세요."
+            )
+
+        try:
+            response = self.ask(prompt, temperature=0.3)
+            if not response or len(response) < 2000:
+                logging.warning(f"[TF-23] InPlace 응답 길이 부족: {len(response or '')}자 < 2000자")
+                return []
+            logging.info(f"✅ [TF-23] 원고 in-place 수정 완료 ({len(response)}자)")
+            return [{"manuscript": response, "strategy": "inplace_patch"}]
+        except Exception as e:
+            logging.warning(f"[TF-23] 원고 in-place 패치 실패: {e!s:.200}")
+            return []
 
     # =========================================================================
     # [Phase 3-5B] 패치 모드 — 원본 보존 + 피드백 지적사항만 수정
@@ -770,6 +822,9 @@ class ChiefWriter(BaseAgent):
         if previous_attempt.get("action_items"):
             items = previous_attempt.get("action_items", [])
             failure_constraints = "이전 REJECT 사유:\n" + "\n".join([f"- {item}" for item in items])
+        _fsr = previous_attempt.get("fix_scope_reasoning", "")
+        if _fsr:
+            failure_constraints += f"\n[수정 범위 근거]\n{_fsr}"
         _rejected_strategy = str(previous_attempt.get("selected_strategy_key", "") or "")
         _strategy_feedback = previous_attempt.get("selection_reason", "")
         if isinstance(_strategy_feedback, dict):

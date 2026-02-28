@@ -855,6 +855,9 @@ class StateTrackerNPC:
                             if npc in self.tracker.npc_registry:
                                 self.tracker.npc_registry[npc]["relation_to_protag"] = to_rel
                                 self.tracker.npc_registry[npc]["last_arc"] = arc_no
+                            self._record_change(
+                                npc, arc_no, "relation_to_protag", from_rel, to_rel, "arc_relationship", episode
+                            )
 
         # [V66.1] F-3: regex 폴백
         if not changes:
@@ -870,8 +873,12 @@ class StateTrackerNPC:
                     npc = rc.get("npc", "")
                     to_rel = rc.get("to", "")
                     if npc and npc in self.tracker.npc_registry and to_rel:
+                        _old_rel = self.tracker.npc_registry[npc].get("relation_to_protag", "")
                         self.tracker.npc_registry[npc]["relation_to_protag"] = to_rel
                         self.tracker.npc_registry[npc]["last_arc"] = arc_no
+                        self._record_change(
+                            npc, arc_no, "relation_to_protag", _old_rel, to_rel, "arc_relationship_regex"
+                        )
 
         return changes
 
@@ -901,9 +908,23 @@ class StateTrackerNPC:
                                 }
                             )
                             # NPC registry 반영
+                            _old_injury = (
+                                self.tracker.npc_registry[npc_name].get("injury", "")
+                                if npc_name in self.tracker.npc_registry
+                                else ""
+                            )
                             if npc_name in self.tracker.npc_registry:
                                 self.tracker.npc_registry[npc_name]["injury"] = state
                                 self.tracker.npc_registry[npc_name]["last_arc"] = arc_no
+                            self._record_change(
+                                npc_name,
+                                arc_no,
+                                "injury",
+                                _old_injury,
+                                state,
+                                "arc_injury",
+                                entry.get("episode", arc_no),
+                            )
 
         # [V66.1] F-3: regex 폴백
         if not injuries:
@@ -918,8 +939,10 @@ class StateTrackerNPC:
                     npc_name = ri.get("name", "")
                     state = ri.get("state", "")
                     if npc_name and npc_name in self.tracker.npc_registry and state:
+                        _old_injury = self.tracker.npc_registry[npc_name].get("injury", "")
                         self.tracker.npc_registry[npc_name]["injury"] = state
                         self.tracker.npc_registry[npc_name]["last_arc"] = arc_no
+                        self._record_change(npc_name, arc_no, "injury", _old_injury, state, "arc_injury_regex")
 
         return injuries
 
@@ -949,9 +972,21 @@ class StateTrackerNPC:
                                 }
                             )
                             # NPC registry 반영
+                            _old_loc = entry.get("from", "")
                             if npc_name in self.tracker.npc_registry:
+                                if not _old_loc:
+                                    _old_loc = self.tracker.npc_registry[npc_name].get("location", "")
                                 self.tracker.npc_registry[npc_name]["location"] = to_loc
                                 self.tracker.npc_registry[npc_name]["last_arc"] = arc_no
+                            self._record_change(
+                                npc_name,
+                                arc_no,
+                                "location",
+                                _old_loc,
+                                to_loc,
+                                "arc_movement",
+                                entry.get("episode", arc_no),
+                            )
 
         # [V66.1] F-3: regex 폴백
         if not movements:
@@ -966,8 +1001,10 @@ class StateTrackerNPC:
                     npc_name = rm.get("name", "")
                     to_loc = rm.get("to", "")
                     if npc_name and npc_name in self.tracker.npc_registry and to_loc:
+                        _old_loc = self.tracker.npc_registry[npc_name].get("location", "")
                         self.tracker.npc_registry[npc_name]["location"] = to_loc
                         self.tracker.npc_registry[npc_name]["last_arc"] = arc_no
+                        self._record_change(npc_name, arc_no, "location", _old_loc, to_loc, "arc_movement_regex")
 
         return movements
 
@@ -1150,6 +1187,7 @@ class StateTrackerNPC:
             }
         )
         npc["last_arc"] = arc_no
+        self._record_change(name, arc_no, "permanent_injuries", "", f"{injury_type}: {description}", "permanent_injury")
         logging.info(f"[V66.1] NPC 영구 부상 등록: {name} - {description} (Arc {arc_no})")
 
     def extract_permanent_injuries_from_arc(self, arc_data: dict) -> list[dict]:

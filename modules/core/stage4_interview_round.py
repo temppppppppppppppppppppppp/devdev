@@ -821,6 +821,7 @@ class Stage4InterviewRound:
         # Phase 4: Director 면담
         stage4_spinner.update_detail(f"제{next_ep}화 · {round_num + 1}차 면담 · Director 심사")
         self.ctx.ui.log("   🎬 Director 면담 중...")
+        logging.info(f"[Director 면담] 제{next_ep}화 {round_num + 1}차, 후보 {len(candidates)}개")
         print(f"\n{'=' * 60}")
         print(f"   🎬 Director 면담 시작 (제{next_ep}화, {round_num + 1}차)")
         print(f"   후보 수: {len(candidates)}개")
@@ -864,6 +865,10 @@ class Stage4InterviewRound:
                 if _tg_result.get("structured_warnings"):
                     if _ci < len(validation_results) and isinstance(validation_results[_ci], dict):
                         validation_results[_ci].setdefault("truth_gate_warnings", _tg_result["structured_warnings"])
+                    # [TF-30-6] 후보 레이블 주입
+                    _cand_label = ["A", "B", "C"][_ci] if _ci < 3 else str(_ci + 1)
+                    for _sw in _tg_result["structured_warnings"]:
+                        _sw["text"] = f"[후보 {_cand_label}] {_sw.get('text', '')}"
                     _tg_warnings_all.extend(_tg_result["structured_warnings"])
             if _tg_warnings_all:
                 _tg_lines = ["[TruthGate Advisory — CRITICAL 경고 시 반드시 REJECT]"]
@@ -890,14 +895,22 @@ class Stage4InterviewRound:
                             continue
                         _drifts = _drift_advisor.check(manuscript=_ms, npc_snapshots=_npc_snaps, ep_num=next_ep)
                         if _drifts:
+                            # [TF-30-6] 후보 인덱스 태깅
+                            for _d in _drifts:
+                                _d["_cand_idx"] = _ci
                             _drift_all.extend(_drifts)
                             if _ci < len(validation_results) and isinstance(validation_results[_ci], dict):
                                 validation_results[_ci].setdefault("npc_drift_warnings", _drifts)
                     if _drift_all:
                         _drift_lines = ["[NpcDriftAdvisor — NPC 속성 표류 감지, MAJOR 이상은 감점 반영]"]
                         for _d in _drift_all[:8]:
+                            _cl = (
+                                ["A", "B", "C"][_d.get("_cand_idx", 0)]
+                                if _d.get("_cand_idx", 0) < 3
+                                else str(_d.get("_cand_idx", 0) + 1)
+                            )
                             _drift_lines.append(
-                                f"- [MAJOR] NPC '{_d.get('npc', '')}' {_d.get('field', '')}: "
+                                f"- [후보 {_cl}][MAJOR] NPC '{_d.get('npc', '')}' {_d.get('field', '')}: "
                                 f"기대='{_d.get('expected', '')}' → 원고='{_d.get('found_in_ms', '')[:40]}'"
                             )
                         _director_mc_parts.insert(0, "\n".join(_drift_lines))
@@ -953,11 +966,19 @@ class Stage4InterviewRound:
                     continue
                 _fb_warns = _fb_verifier.check(_ms, ep_num=next_ep, reference_context=_ref_ctx)
                 if _fb_warns:
+                    # [TF-30-6] 후보 인덱스 태깅
+                    for _fw in _fb_warns:
+                        _fw["_cand_idx"] = _ci
                     _fb_all.extend(_fb_warns)
             if _fb_all:
                 _fb_lines = ["[FlashbackVerifier — 회상 오염 감지, MAJOR 이상은 감점 반영]"]
                 for _fw in _fb_all[:6]:
-                    _fb_lines.append(f"- [MAJOR] '{_fw.get('marker', '')}': {_fw.get('issue', '')[:60]}")
+                    _cl = (
+                        ["A", "B", "C"][_fw.get("_cand_idx", 0)]
+                        if _fw.get("_cand_idx", 0) < 3
+                        else str(_fw.get("_cand_idx", 0) + 1)
+                    )
+                    _fb_lines.append(f"- [후보 {_cl}][MAJOR] '{_fw.get('marker', '')}': {_fw.get('issue', '')[:60]}")
                 _director_mc_parts.insert(0, "\n".join(_fb_lines))
                 logging.info("[FlashbackVerifier→Director] %d건 회상 오염 감지", len(_fb_all))
         except Exception as _fb_err:
@@ -992,12 +1013,20 @@ class Stage4InterviewRound:
                                 knowledge_summary=_knowledge_summary,
                             )
                             if _ip_warns:
+                                # [TF-30-6] 후보 인덱스 태깅
+                                for _ipw in _ip_warns:
+                                    _ipw["_cand_idx"] = _ci
                                 _ip_all.extend(_ip_warns)
                         if _ip_all:
                             _ip_lines = ["[InfoParadoxChecker — 정보 역설 감지, MAJOR 이상은 감점 반영]"]
                             for _ip in _ip_all[:6]:
+                                _cl = (
+                                    ["A", "B", "C"][_ip.get("_cand_idx", 0)]
+                                    if _ip.get("_cand_idx", 0) < 3
+                                    else str(_ip.get("_cand_idx", 0) + 1)
+                                )
                                 _ip_lines.append(
-                                    f"- [MAJOR] '{_ip.get('info_used', '')[:40]}': {_ip.get('why_paradox', '')[:60]}"
+                                    f"- [후보 {_cl}][MAJOR] '{_ip.get('info_used', '')[:40]}': {_ip.get('why_paradox', '')[:60]}"
                                 )
                             _director_mc_parts.insert(0, "\n".join(_ip_lines))
                             logging.info("[InfoParadoxChecker→Director] %d건 정보 역설 감지", len(_ip_all))
@@ -1025,12 +1054,20 @@ class Stage4InterviewRound:
                                 relationship_timeline=_rel_timeline,
                             )
                             if _rd_warns:
+                                # [TF-30-6] 후보 인덱스 태깅
+                                for _rdw in _rd_warns:
+                                    _rdw["_cand_idx"] = _ci
                                 _rd_all.extend(_rd_warns)
                         if _rd_all:
                             _rd_lines = ["[RelationshipDriftAdvisor — 관계도 표류 감지, MAJOR 이상은 감점 반영]"]
                             for _rd in _rd_all[:6]:
+                                _cl = (
+                                    ["A", "B", "C"][_rd.get("_cand_idx", 0)]
+                                    if _rd.get("_cand_idx", 0) < 3
+                                    else str(_rd.get("_cand_idx", 0) + 1)
+                                )
                                 _rd_lines.append(
-                                    f"- [MAJOR] '{_rd.get('npc_pair', '')[:30]}': {_rd.get('why_drift', '')[:60]}"
+                                    f"- [후보 {_cl}][MAJOR] '{_rd.get('npc_pair', '')[:30]}': {_rd.get('why_drift', '')[:60]}"
                                 )
                             _director_mc_parts.insert(0, "\n".join(_rd_lines))
                             logging.info("[RelationshipDriftAdvisor→Director] %d건 관계 표류 감지", len(_rd_all))
@@ -1098,6 +1135,26 @@ class Stage4InterviewRound:
 
         self.ctx.ui.log(f"   📊 Director 판정: {verdict} (점수: {score}, 선택: 후보 {selected})")
         self.ctx.ui.log(f"      └─ 사유: {reason[:80]}...")
+
+        # [LOG-1] 판정 경로 세션 로깅
+        _sl = getattr(self.ctx, "session_logger", None)
+        if _sl:
+            try:
+                _sl.log_decision(
+                    stage="stage4",
+                    ep_num=next_ep,
+                    round_num=round_num,
+                    decision_type="manuscript",
+                    result=verdict,
+                    score=score,
+                    selected=selected,
+                    error_category=error_category,
+                    reason=reason[:500],
+                )
+            except Exception:
+                pass
+
+        logging.info(f"[Director 판정] {verdict} | 점수: {score} | 후보 {selected} | {reason[:120]}")
         print("\n   📊 Director 판정 결과:")
         print(f"      판정: {verdict} | 점수: {score} | 선택: 후보 {selected}")
         print(f"      사유: {reason[:120]}")
@@ -1147,7 +1204,7 @@ class Stage4InterviewRound:
         )
 
         _quality_gate_score = _threshold("scoring.quality_gate_score", 90)
-        if verdict == "PASS" and score < _quality_gate_score:
+        if verdict in ("PASS", "PASS_WITH_FIX") and score < _quality_gate_score:  # [TF-32]
             self.ctx.ui.log(f"   ⚠️ [QualityGate] PASS 판정이나 score={score} < {_quality_gate_score} → 패치 모드")
             verdict = "REJECT"
             director_feedback += (
@@ -1155,7 +1212,7 @@ class Stage4InterviewRound:
                 "품질 개선 후 재제출."
             )
 
-        if verdict == "PASS":
+        if verdict in ("PASS", "PASS_WITH_FIX"):  # [TF-32]
             selected_candidate = director_result.get("selected_candidate") or {}
             final_manuscript = selected_candidate.get("manuscript", "")
             final_title = selected_candidate.get("title", f"\uc81c{next_ep}\ud654")
@@ -1230,7 +1287,29 @@ class Stage4InterviewRound:
                     "score": score,
                 }
 
-            if verdict == "PASS":
+            # [TF-32] PASS_WITH_FIX: inplace 1회 적용 후 저장
+            if verdict == "PASS_WITH_FIX" and final_manuscript:
+                _fix_feedback = self._extract_fix_feedback(director_result)
+                _patched_ms = None
+                if _fix_feedback:
+                    self.ctx.ui.log("   🔧 [TF-32] PASS_WITH_FIX: inplace 수정 중...")
+                    try:
+                        _patched = chief_writer.inplace_patch(
+                            original_manuscript=final_manuscript,
+                            director_feedback=_fix_feedback,
+                            attempt_number=1,
+                        )
+                        if _patched:
+                            _patched_ms = _patched[0].get("manuscript", "")
+                    except Exception as _pwf_err:
+                        logging.warning(f"[TF-32] PASS_WITH_FIX inplace 실패: {_pwf_err!s:.100}")
+                if _patched_ms and len(_patched_ms) >= 2000:
+                    self.ctx.ui.log(f"   ✅ [TF-32] PASS_WITH_FIX 수정 완료 ({len(_patched_ms)}자)")
+                    final_manuscript = _patched_ms
+                else:
+                    self.ctx.ui.log("   ⚠️ [TF-32] inplace 실패 → 원본 유지")
+
+            if verdict in ("PASS", "PASS_WITH_FIX"):  # [TF-32]
                 # [V66.1] F-1: time consistency check -> forward warnings to validator context
                 if self.ctx.state_tracker:
                     try:
@@ -1245,7 +1324,7 @@ class Stage4InterviewRound:
                     except (KeyError, ValueError, TypeError) as _tc_err:
                         logging.warning(f"[V66.1] Time consistency check failed: {_tc_err}")
 
-                self.ctx.ui.log(f"   Round {round_num + 1} PASS!")
+                self.ctx.ui.log(f"   Round {round_num + 1} {verdict}!")
                 self._record_s4_attempt(
                     episode=next_ep,
                     round_num=round_num,
@@ -1257,7 +1336,7 @@ class Stage4InterviewRound:
                     arc=round_ctx.arc_data.get("arc_no", 0),
                 )
                 return _InterviewRoundResult(
-                    verdict="PASS",
+                    verdict=verdict,  # [TF-32] PASS or PASS_WITH_FIX
                     director_feedback=director_feedback,
                     previous_attempt=previous_attempt,
                     final_manuscript=final_manuscript,
@@ -1265,7 +1344,7 @@ class Stage4InterviewRound:
                     final_state_updates=final_state_updates,
                     error_category=error_category,  # [V75-B]
                 )
-        if verdict != "PASS":
+        if verdict not in ("PASS", "PASS_WITH_FIX"):  # [TF-32]
             # [TF-R2-S4-03] 시스템 감지 라인 보존 (REJECT 시 덮어쓰기 전 추출)
             _system_prefixes = ("[연속성 충돌]", "[Continuity Conflict]", "[V67]", "[CoVe]", "[ToT", "[MAD")
             _prev_system_lines = (
@@ -1311,6 +1390,10 @@ class Stage4InterviewRound:
             director_feedback = (
                 "\n".join(action_items) if action_items else ("\n".join(str(i) for i in _issues) if _issues else "")
             )
+            # [TF-29] open_review(자유 관찰) CW 전달 — action_items 존재 시에도 유실 방지
+            _or_items = [str(i) for i in _issues if isinstance(i, str) and "[자유 리뷰]" in i]
+            if _or_items and action_items:
+                director_feedback += "\n" + "\n".join(_or_items)
             # 근거 블록을 director_feedback 앞에 prepend
             if _evidence_block:
                 director_feedback = _evidence_block + director_feedback
@@ -1380,6 +1463,7 @@ class Stage4InterviewRound:
                 "_mad_used": _mad_used,
                 "state_updates": director_result.get("state_updates", {}),  # [TF-R4-S4-01] 폴백 시 HUD 복구용
                 "fix_scope": director_result.get("fix_scope", ""),  # [TF-23] Director 판단 수정 범위
+                "fix_scope_reasoning": director_result.get("fix_scope_reasoning", ""),  # [V73] 수정 범위 근거
             }
             try:
                 self.ctx.current_project.db.save_cost_record(
@@ -1467,6 +1551,20 @@ class Stage4InterviewRound:
             previous_attempt=previous_attempt,
             error_category=error_category,  # [V75-B]
         )
+
+    # ── [TF-32] PASS_WITH_FIX helpers ──────────────────────────────
+
+    def _extract_fix_feedback(self, director_result: dict) -> str:
+        """[TF-32] Director 결과에서 수정 피드백 추출."""
+        action_items = director_result.get("action_items") or []
+        if action_items:
+            return "\n".join(str(a) for a in action_items)
+        feedback = director_result.get("feedback") or {}
+        if isinstance(feedback, dict):
+            issues = feedback.get("issues", [])
+            if issues:
+                return "\n".join(str(i) for i in issues)
+        return ""
 
     # ── Stage 4 PassRateMonitor 기록 ──────────────────────────────
 

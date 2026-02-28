@@ -95,7 +95,14 @@ class StyleGuide:
 - 시간·공간 제약 없이 장면 전환 가능
 - "나는" 등 1인칭 대명사는 대화 속에서만 사용
 - 단, 긴장감을 위해 정보 공개 타이밍을 조절할 것 (모든 것을 미리 알려주지 마라)"""
-        # "혼합"이거나 미지정이면 빈 문자열
+        elif self.pov == "혼합":  # [TF-31-3]
+            return """## 🎯 시점 규칙: 혼합 시점
+- 씬 단위로 시점 전환 허용 (동일 씬 내 시점 혼합 금지)
+- 전환 시 명시적 장면 구분자 사용 (빈 줄 + 시간/장소 전환)
+- 주인공 씬: 1인칭 내면 서술 허용
+- 타 캐릭터 씬: 3인칭 제한적 시점 (해당 인물의 관찰·감정만)
+- 전지적 개입은 장(章) 도입부에서만 허용"""
+        # 미지정이면 빈 문자열
         return ""
 
     def to_prompt(self) -> str:
@@ -712,8 +719,8 @@ JSON만 출력하세요.
             api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
             if api_key:
                 self.client = genai.Client(api_key=api_key)
-        except Exception:
-            pass
+        except Exception as e:  # [TF-31-1] callers 외부에서 호출되므로 방어적 포착
+            logging.debug("[StyleExtractor] LLM init fail (%s): %s", type(e).__name__, e)
 
     def _llm_call(self, prompt: str) -> dict[str, Any]:
         """LLM 호출 + JSON 파싱 (폴백: 3-pro → 2.5-pro → 2.5-flash)"""

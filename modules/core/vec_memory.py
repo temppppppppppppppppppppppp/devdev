@@ -353,6 +353,7 @@ class VecMemory:
         with self._embed_cache_lock:
             if key in self._embed_cache:
                 self._embed_cache.move_to_end(key)
+                self._embed_cache[key] = vec  # [TF-30-3] 기존 키 값 갱신 (모델 전환 시 stale 방지)
             else:
                 self._embed_cache[key] = vec
                 while len(self._embed_cache) > self._embed_cache_max:

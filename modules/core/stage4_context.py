@@ -60,6 +60,8 @@ class Stage4Context:
         "generate_narrative_summary",
         "flush_audit_buffer",
         "safe_commit",
+        # [LOG-1] 세션 로거
+        "session_logger",
     )
 
     def __init__(
@@ -96,6 +98,7 @@ class Stage4Context:
         generate_narrative_summary=None,
         flush_audit_buffer=None,
         safe_commit=None,
+        session_logger=None,
     ):
         self.ui = ui
         self.current_project = current_project
@@ -125,6 +128,7 @@ class Stage4Context:
         self.generate_narrative_summary = generate_narrative_summary
         self.flush_audit_buffer = flush_audit_buffer
         self.safe_commit = safe_commit
+        self.session_logger = session_logger
 
     def get_module(self, name: str):
         """[S-13] 조건부 모듈 조회 헬퍼."""
@@ -169,4 +173,5 @@ class Stage4Context:
             generate_narrative_summary=getattr(app, "_generate_narrative_summary", None),
             flush_audit_buffer=getattr(app, "_flush_audit_buffer", None),
             safe_commit=getattr(app, "_safe_commit", None),
+            session_logger=getattr(app, "_session_logger", None),
         )

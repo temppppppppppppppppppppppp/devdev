@@ -61,7 +61,7 @@ class TestPhase0Recovery:
         with (
             redirect_stdout(StringIO()),
             patch("builtins.input", return_value="0"),
-            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
         ):
             helpers.phase_0_recovery()
         # 취소 시 아무 facade 메서드도 호출하지 않음
@@ -73,7 +73,7 @@ class TestPhase0Recovery:
         with (
             redirect_stdout(StringIO()),
             patch("builtins.input", return_value="2"),
-            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
             patch.object(helpers, "stage_0_extended") as mock_s0,
         ):
             helpers.phase_0_recovery()
@@ -84,7 +84,7 @@ class TestPhase0Recovery:
         with (
             redirect_stdout(StringIO()),
             patch("builtins.input", return_value="3"),
-            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
             patch.object(helpers, "stage_0_extended") as mock_s0,
         ):
             helpers.phase_0_recovery()
@@ -95,7 +95,7 @@ class TestPhase0Recovery:
         with (
             redirect_stdout(StringIO()),
             patch("builtins.input", return_value="4"),
-            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
             patch.object(helpers, "stage_0_extended") as mock_s0,
         ):
             helpers.phase_0_recovery()
@@ -106,7 +106,7 @@ class TestPhase0Recovery:
         with (
             redirect_stdout(StringIO()),
             patch("builtins.input", return_value="5"),
-            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
             patch.object(helpers, "stage_0_extended") as mock_s0,
         ):
             helpers.phase_0_recovery()
@@ -117,7 +117,7 @@ class TestPhase0Recovery:
         with (
             redirect_stdout(StringIO()),
             patch("builtins.input", return_value="6"),
-            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
             patch.object(helpers, "stage_0_extended") as mock_s0,
         ):
             helpers.phase_0_recovery()
@@ -130,7 +130,7 @@ class TestPhase0Recovery:
         with (
             redirect_stdout(StringIO()),
             patch("builtins.input", side_effect=["2", "N", "1", "1", "2", ""]),
-            patch("main_a.STAGE0_AVAILABLE", False),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", False),
         ):
             helpers.phase_0_recovery()
         # _stage_0_extended가 호출되지 않아야 함
@@ -144,7 +144,7 @@ class TestPhase0Recovery:
         with (
             redirect_stdout(StringIO()),
             patch("builtins.input", side_effect=["1", "N", "1", "1", "2", ""]),
-            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
         ):
             helpers.phase_0_recovery()
         app_mock._ui_select_bible.assert_called_once()
@@ -157,7 +157,7 @@ class TestPhase0Recovery:
         with (
             redirect_stdout(StringIO()),
             patch("builtins.input", return_value="1"),
-            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
         ):
             helpers.phase_0_recovery()
         # 중단 시 force_sync 호출 안 함
@@ -169,7 +169,7 @@ class TestPhase0Recovery:
         with (
             redirect_stdout(StringIO()),
             patch("builtins.input", side_effect=["1", "N", "1", "1", "2", ""]),
-            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
         ):
             helpers.phase_0_recovery()
         # _load_from_db가 호출되지 않아야 함 (dna_success=False)
@@ -182,7 +182,7 @@ class TestPhase0Recovery:
         with (
             redirect_stdout(StringIO()),
             patch("builtins.input", side_effect=["1", "N", "1", "1", "2", ""]),
-            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
         ):
             helpers.phase_0_recovery()
         app_mock._audit_event.assert_called()
@@ -194,7 +194,7 @@ class TestPhase0Recovery:
         with (
             redirect_stdout(StringIO()),
             patch("builtins.input", return_value="0"),
-            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
         ):
             helpers.phase_0_recovery()
         logged = " ".join(str(c) for c in app_mock.ui.log.call_args_list)
@@ -207,7 +207,7 @@ class TestPhase0Recovery:
         with (
             redirect_stdout(StringIO()),
             patch("builtins.input", return_value="0"),
-            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
         ):
             helpers.phase_0_recovery()
         # No crash
@@ -284,7 +284,7 @@ class TestExtendBlocks:
 class TestStage0Extended:
     def test_stage0_unavailable_returns_early(self, helpers, app_mock):
         """STAGE0_AVAILABLE=False → 즉시 반환"""
-        with redirect_stdout(StringIO()), patch("main_a.STAGE0_AVAILABLE", False):
+        with redirect_stdout(StringIO()), patch("modules.core.spinners.STAGE0_AVAILABLE", False):
             helpers.stage_0_extended(mode=1)
         # StageZeroManager 초기화 안 함 (아무 project 접근 없음)
         app_mock.current_project.save_v20_anchor.assert_not_called()
@@ -297,7 +297,7 @@ class TestStage0Extended:
         mock_mgr.style_guide = None
         with (
             redirect_stdout(StringIO()),
-            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
             patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr),
             patch("modules.core.stage0.PresetRegistry"),
             patch("builtins.input", return_value=""),
@@ -313,7 +313,7 @@ class TestStage0Extended:
         mock_mgr.style_guide = None
         with (
             redirect_stdout(StringIO()),
-            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
             patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr),
             patch("modules.core.stage0.PresetRegistry"),
             patch("builtins.input", return_value=""),
@@ -326,7 +326,7 @@ class TestStage0Extended:
         mock_mgr = MagicMock()
         with (
             redirect_stdout(StringIO()),
-            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
             patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr),
             patch("modules.core.stage0.PresetRegistry"),
             patch("builtins.input", return_value=""),
@@ -341,7 +341,7 @@ class TestStage0Extended:
         mock_mgr.run_reference_analysis.return_value = None
         with (
             redirect_stdout(StringIO()),
-            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
             patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr),
             patch("modules.core.stage0.PresetRegistry"),
             patch("builtins.input", return_value=""),
@@ -355,7 +355,7 @@ class TestStage0Extended:
         mock_mgr.show_menu.return_value = 99  # 없는 선택
         with (
             redirect_stdout(StringIO()),
-            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
             patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr),
             patch("modules.core.stage0.PresetRegistry"),
         ):
@@ -371,7 +371,7 @@ class TestStage0Extended:
         mock_mgr.style_guide = None
         with (
             redirect_stdout(StringIO()),
-            patch("main_a.STAGE0_AVAILABLE", True),
+            patch("modules.core.spinners.STAGE0_AVAILABLE", True),
             patch("modules.core.stage0.StageZeroManager", return_value=mock_mgr),
             patch("modules.core.stage0.PresetRegistry"),
             patch("builtins.input", return_value=""),

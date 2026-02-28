@@ -19,6 +19,16 @@ class Stage4PostProcessor:
     def __init__(self, ctx) -> None:
         self.ctx = ctx
 
+    def _truth_gate_llm_ask(self, prompt: str) -> str:
+        """[TF-30-1] TruthGate 세계법칙 검사용 LLM 콜백."""
+        try:
+            director = getattr(self.ctx, "agents", {}).get("director")
+            if director and hasattr(director, "ask"):
+                return director.ask(prompt, temperature=0.1) or ""
+        except Exception as e:
+            logging.debug("[TruthGate:POST] llm_ask fail: %s", e)
+        return ""
+
     @staticmethod
     def _extract_state_change_info(state_changes) -> dict:
         """[TF-T5] state_changes에서 event_types, entity_names, summary_parts 추출.
@@ -108,6 +118,38 @@ class Stage4PostProcessor:
     ]
 
     @staticmethod
+    def _parse_hud_capital_to_eok(raw) -> float:
+        """HUD 한국어 복합 금액을 억 단위 float로 변환.
+
+        Examples:
+            "38억 3,154만 200원" → 38.3154
+            "131억 원" → 131.0
+            "5000만원" → 0.5
+            "3831540200" (원 단위 정수) → 38.3154
+        """
+        s = str(raw).replace(",", "").strip()
+        if not s:
+            return 0.0
+
+        eok = 0.0
+        # 억 부분
+        m_eok = re.search(r"(\d+(?:\.\d+)?)\s*억", s)
+        if m_eok:
+            eok += float(m_eok.group(1))
+        # 만 부분
+        m_man = re.search(r"(\d+(?:\.\d+)?)\s*만", s)
+        if m_man:
+            eok += float(m_man.group(1)) / 10000
+        # 억·만 모두 없으면 순수 숫자 → 원 단위로 간주
+        if not m_eok and not m_man:
+            digits = re.sub(r"[^\d.]", "", s)
+            try:
+                eok = float(digits) / 1_0000_0000 if digits else 0.0
+            except (ValueError, TypeError):
+                eok = 0.0
+        return eok
+
+    @staticmethod
     def _extract_capital_from_manuscript(manuscript: str) -> float | None:
         """확정 원고에서 마지막으로 언급된 자본금(억 단위)을 추출. 없으면 None."""
         # 모든 패턴의 매치를 (문서 내 위치, 값) 튜플로 수집 후 위치순 정렬
@@ -148,12 +190,7 @@ class Stage4PostProcessor:
         capital_key = "capital"
 
         current_raw = hud.pro_data.get(capital_key, "0")
-        # "131억 원", "80억", 숫자 등 파싱
-        digits = re.sub(r"[^\d.]", "", str(current_raw))
-        try:
-            current_value = float(digits) if digits else 0.0
-        except (ValueError, TypeError):
-            current_value = 0.0
+        current_value = self._parse_hud_capital_to_eok(current_raw)
 
         diff = abs(confirmed - current_value)
         if diff <= 5:  # 5억 이하 차이는 허용
@@ -313,6 +350,7 @@ class Stage4PostProcessor:
                 _truth_gate = TruthGate(
                     world_state=getattr(self.ctx, "world_state", None),
                     fact_ledger=getattr(self.ctx, "fact_ledger", None),
+                    llm_ask=self._truth_gate_llm_ask,  # [TF-30-1] 세계법칙 검사 활성화
                 )
                 _npc_reg = None
                 if hasattr(self.ctx, "state_tracker") and self.ctx.state_tracker:
@@ -707,6 +745,19 @@ class Stage4PostProcessor:
                     self.ctx.world_state.save()
                     self.ctx.ui.log(f"   🌍 [V68] 세계 상태 갱신 완료 (제{next_ep}화)")
 
+                    # [LOG-1] 상태 변경 세션 로깅 — WorldState
+                    _sl = getattr(self.ctx, "session_logger", None)
+                    if _sl and _ws_sc:
+                        try:
+                            _sl.log_state_change(
+                                ep_num=next_ep,
+                                change_type="world_state",
+                                after=_ws_sc,
+                                source="stage4_post_processor",
+                            )
+                        except Exception:
+                            pass
+
                 # ── FactLedger 갱신 ──
                 if self.ctx.fact_ledger:
                     _fl_sc = final_state_updates or {}
@@ -722,6 +773,19 @@ class Stage4PostProcessor:
                     self.ctx.ui.log(
                         f"   📋 [V68] 팩트 원장 갱신 완료 (인물 {_fl_stats.get('characters', 0)}명, 아이템 {_fl_stats.get('items', 0)}개)"
                     )
+
+                    # [LOG-1] 상태 변경 세션 로깅 — FactLedger
+                    _sl = getattr(self.ctx, "session_logger", None)
+                    if _sl and _fl_sc:
+                        try:
+                            _sl.log_state_change(
+                                ep_num=next_ep,
+                                change_type="fact_ledger",
+                                after=_fl_sc,
+                                source="stage4_post_processor",
+                            )
+                        except Exception:
+                            pass
         except Exception as _meta_err:
             self.ctx.ui.log(f"   ⚠️ [TF-C10] 메타데이터 원자적 저장 실패 (비차단): {str(_meta_err)[:60]}")
 

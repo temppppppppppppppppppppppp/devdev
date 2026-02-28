@@ -561,7 +561,7 @@ class DirectorGradingSystem:
                 new_decision = "CONDITIONAL_PASS"
                 adjusted = True
         else:
-            if original_decision == "PASS":
+            if original_decision in ("PASS", "PASS_WITH_FIX"):  # [TF-32]
                 new_decision = "CONDITIONAL_PASS"
                 adjusted = True
 

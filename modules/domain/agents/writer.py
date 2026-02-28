@@ -245,9 +245,7 @@ class Writer(BaseAgent):
                 manifesto = "\n".join(data.get("common_manifesto", []))
                 ep1 = "\n".join(data.get("special_rule_ep1", []))
                 full_context += f"{manifesto}\n\n{ep1}\n\n"
-            seed_path = self.context.paths.config / "cash" / "style_seeds_final.txt"
-            if seed_path.exists():
-                full_context += f"### [STYLE GENETIC SEEDS]\n{seed_path.read_text(encoding='utf-8')}\n\n"
+            # [TF-31-4] style_seeds_final.txt 레거시 제거 — StyleExtractor가 대체
             return self._sanitize_leakage(self.ask(f"{full_context}\n{dynamic_prompt}", temperature=0.8))
         except Exception:
             return self._sanitize_leakage(self.ask(dynamic_prompt, temperature=0.8))

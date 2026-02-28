@@ -1,3 +1,5 @@
+import logging
+
 from rich import box
 from rich.console import Console
 from rich.layout import Layout
@@ -72,6 +74,7 @@ class StudioVisualizer:
 
     def log(self, text: str) -> None:
         self.console.print(f"   [dim]{text}[/]")
+        logging.getLogger("UI").info(text)  # [TF-26] 파일 듀얼 출력
 
     def spinner(self, text: str):
         """로딩 스피너 컨텍스트 매니저"""

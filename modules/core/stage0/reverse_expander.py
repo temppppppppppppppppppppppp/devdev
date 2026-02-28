@@ -51,8 +51,8 @@ class ReverseExpander:
             api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
             if api_key:
                 self.client = genai.Client(api_key=api_key)
-        except Exception:
-            pass
+        except (ImportError, ValueError, RuntimeError) as e:  # [TF-30-5]
+            logging.debug("[ReverseExpander] LLM init fail: %s", e)
 
     _FALLBACK_MODELS = [AIModels.SUMMARY_MODEL, AIModels.V50_MODULE_MODEL]
 
@@ -138,6 +138,8 @@ class ReverseExpander:
                 logging.warning(f"[!] cp949도 실패, errors='replace'로 최종 폴백: {file_path}")
                 with open(path, encoding="utf-8", errors="replace") as f:
                     text = f.read()
+                if "\ufffd" in text:
+                    logging.warning(f"[!] errors='replace' 폴백으로 깨진 문자(U+FFFD) 포함됨: {file_path}")
 
         # ⓚ 제N화 패턴으로 분리
         pattern = r"ⓚ\s*제(\d+)화[.\s]*([^\n]*)"
@@ -201,6 +203,8 @@ class ReverseExpander:
                     logging.warning(f"[!] cp949도 실패, errors='replace'로 최종 폴백: {f}")
                     with open(f, encoding="utf-8", errors="replace") as fp:
                         content = fp.read()
+                    if "\ufffd" in content:
+                        logging.warning(f"[!] errors='replace' 폴백으로 깨진 문자(U+FFFD) 포함됨: {f}")
             self.raw_drafts.append({"ep_num": ep_num, "title": f"제{ep_num}화", "content": content})
 
         return len(self.raw_drafts)
@@ -278,6 +282,7 @@ class ReverseExpander:
                 },
                 "protagonist_config": protagonist.get("config", {}),
                 "InitialHUD": hud,
+                "WorldLaws": world_state.pop("world_laws", []),  # [TF-30-2] StoryExpander L210 동일 패턴
                 "WorldState": world_state,
                 "AssetLibrary": {
                     "KeyNPCs": npcs,
@@ -342,7 +347,7 @@ JSON:
 
 JSON:
 ```json
-{{"era": "시대", "location": "장소", "setting": "세계관 설명"}}
+{{"era": "시대", "location": "장소", "setting": "세계관 설명", "world_laws": ["이 세계의 절대 법칙1", "절대 법칙2"]}}
 ```
 """
         # [TF-R4-S0-02] list 반환 방어 (_extract_npcs 동일 패턴)
@@ -820,7 +825,7 @@ JSON:
             new_npcs = []
             for npc in new_npcs_raw:
                 if isinstance(npc, dict):
-                    new_npcs.append(npc.get("name", str(npc)))
+                    new_npcs.append(npc.get("name") or npc.get("이름") or "Unknown")
                 else:
                     new_npcs.append(str(npc))
 

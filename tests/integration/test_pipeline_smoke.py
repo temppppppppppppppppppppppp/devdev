@@ -56,9 +56,7 @@ class TestDBInitAndVecMemorySharedMode:
         """[DB-Eff-P1] character_voice 테이블 존재 확인."""
         db = DBManager(tmp_path / "smoke.db")
         try:
-            cursor = db.conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name='character_voice'"
-            )
+            cursor = db.conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='character_voice'")
             row = cursor.fetchone()
             assert row is not None, "character_voice 테이블이 생성되지 않았습니다"
         finally:
@@ -68,9 +66,7 @@ class TestDBInitAndVecMemorySharedMode:
         """[DB-Eff-P1] foreshadow 테이블 존재 확인."""
         db = DBManager(tmp_path / "smoke.db")
         try:
-            cursor = db.conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name='foreshadow'"
-            )
+            cursor = db.conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='foreshadow'")
             row = cursor.fetchone()
             assert row is not None, "foreshadow 테이블이 생성되지 않았습니다"
         finally:
@@ -92,9 +88,7 @@ class TestDBInitAndVecMemorySharedMode:
         """episode_meta 테이블 존재 확인."""
         db = DBManager(tmp_path / "smoke.db")
         try:
-            cursor = db.conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name='episode_meta'"
-            )
+            cursor = db.conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='episode_meta'")
             row = cursor.fetchone()
             assert row is not None, "episode_meta 테이블이 생성되지 않았습니다"
         finally:
@@ -192,9 +186,7 @@ class TestMemorizeAndRetrieve:
             )
 
         assert result is True
-        row = mem._conn.execute(
-            "SELECT summary FROM episode_meta WHERE ep_num = 1"
-        ).fetchone()
+        row = mem._conn.execute("SELECT summary FROM episode_meta WHERE ep_num = 1").fetchone()
         assert row is not None
         assert "이청풍" in row[0]
 
@@ -214,9 +206,7 @@ class TestMemorizeAndRetrieve:
                 entity_names=["흑풍"],
             )
 
-        row = mem._conn.execute(
-            "SELECT summary FROM episode_fts WHERE rowid = 2"
-        ).fetchone()
+        row = mem._conn.execute("SELECT summary FROM episode_fts WHERE rowid = 2").fetchone()
         assert row is not None
         assert "흑풍" in row[0]
 
@@ -235,9 +225,7 @@ class TestMemorizeAndRetrieve:
             )
 
         with patch.object(mem, "_embed_text", return_value=fake_vec):
-            result = mem.retrieve_high_res_context(
-                query="검법 배우기", current_ep=5, n_results=3
-            )
+            result = mem.retrieve_high_res_context(query="검법 배우기", current_ep=5, n_results=3)
 
         assert isinstance(result, str)
 
@@ -258,9 +246,7 @@ class TestMemorizeAndRetrieve:
             )
 
         with patch.object(mem, "_embed_text", return_value=fake_vec):
-            result = mem.retrieve_hybrid_context(
-                query="이청풍 성장", current_ep=6
-            )
+            result = mem.retrieve_hybrid_context(query="이청풍 성장", current_ep=6)
 
         assert isinstance(result, str)
 
@@ -290,9 +276,7 @@ class TestMemorizeAndRetrieve:
         assert deleted >= 1
 
         # episode_fts에서도 삭제 확인
-        row = mem._conn.execute(
-            "SELECT rowid FROM episode_fts WHERE rowid >= 10"
-        ).fetchone()
+        row = mem._conn.execute("SELECT rowid FROM episode_fts WHERE rowid >= 10").fetchone()
         assert row is None, "episode_fts에서 삭제되지 않은 행이 남아 있습니다"
 
     def test_retrieve_high_res_fallback_no_embed(self, mem_in_memory):
@@ -312,9 +296,7 @@ class TestMemorizeAndRetrieve:
 
         # 검색 시 임베딩 실패 → 폴백
         with patch.object(mem, "_embed_text", return_value=None):
-            result = mem.retrieve_high_res_context(
-                query="이청풍 수련", current_ep=10
-            )
+            result = mem.retrieve_high_res_context(query="이청풍 수련", current_ep=10)
 
         assert isinstance(result, str)
 
@@ -351,9 +333,7 @@ class TestCharacterVoiceAndForeshadowDB:
             tracker.save_to_db(db)
 
             # character_voice 테이블 행 수 확인
-            row_count = db.conn.execute(
-                "SELECT COUNT(*) FROM character_voice"
-            ).fetchone()[0]
+            row_count = db.conn.execute("SELECT COUNT(*) FROM character_voice").fetchone()[0]
             assert row_count >= 1, "character_voice 테이블에 저장된 행이 없습니다"
 
             # 새 트래커로 로드
@@ -391,9 +371,7 @@ class TestCharacterVoiceAndForeshadowDB:
             tracker.save_to_db(db)
 
             # foreshadow 테이블 행 수 확인
-            row_count = db.conn.execute(
-                "SELECT COUNT(*) FROM foreshadow"
-            ).fetchone()[0]
+            row_count = db.conn.execute("SELECT COUNT(*) FROM foreshadow").fetchone()[0]
             assert row_count == 2, f"foreshadow 테이블 행 수 불일치: {row_count}"
 
             # 새 트래커로 로드
@@ -588,7 +566,7 @@ class TestStage4ContextDISlots:
     def test_stage4_context_slot_count(self):
         """Stage4Context __slots__ 총 수 == 28."""
         slots = Stage4Context.__slots__
-        assert len(slots) == 28, f"슬롯 수 불일치: {len(slots)}"
+        assert len(slots) == 29, f"슬롯 수 불일치: {len(slots)}"  # [LOG-1] +session_logger
 
     def test_stage4_character_voice_slot_wiring(self, tmp_path):
         """character_voice 슬롯에 CharacterVoiceTracker 주입 후 접근 가능."""
