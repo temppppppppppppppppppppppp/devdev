@@ -7,6 +7,7 @@ Advisory-only: Director가 최종 판정.
 
 import json
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -124,11 +125,12 @@ class RelationshipDriftAdvisor:
             return []
 
         text = response.strip()
-        # ```json 펜스 처리
-        if "```json" in text:
-            text = text.split("```json")[1].split("```")[0]
-        elif "```" in text:
-            text = text.split("```")[1].split("```")[0]
+        # ```json 펜스 처리 — 정규식 기반 (다중 펜스 안전)
+        m = re.search(r"```json\s*(.*?)\s*```", text, re.DOTALL)
+        if not m:
+            m = re.search(r"```\s*(.*?)\s*```", text, re.DOTALL)
+        if m:
+            text = m.group(1)
         text = text.strip()
 
         try:
@@ -147,14 +149,17 @@ class RelationshipDriftAdvisor:
             npc_pair = item.get("npc_pair", "")
             if not npc_pair:
                 continue
+            old_rel = item.get("old_relation", "")
+            new_rel = item.get("new_relation", "")
             results.append(
                 {
                     "npc_pair": npc_pair,
-                    "old_relation": item.get("old_relation", ""),
-                    "new_relation": item.get("new_relation", ""),
+                    "old_relation": old_rel,
+                    "new_relation": new_rel,
                     "why_drift": item.get("why_drift", ""),
                     "severity": "MAJOR",
                     "check": "relationship_drift",
+                    "text": f"[관계 표류] {npc_pair}: {old_rel} → {new_rel}",
                 }
             )
 

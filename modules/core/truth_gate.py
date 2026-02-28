@@ -4,6 +4,7 @@ memorize_v20_episode() 직전에 state_updates + manuscript를 교차 검증하�
 사실 불일치를 감지한다. Advisory 모드이므로 저장을 차단하지 않는다.
 """
 
+import json
 import logging
 import re
 
@@ -396,7 +397,7 @@ class TruthGate:
         try:
             laws = self._world_state.get_world_laws()
         except Exception as e:
-            logger.debug("[TruthGate] get_world_laws() failed: %s", e)
+            logger.warning("[TruthGate] get_world_laws() failed: %s", e)
             return
 
         if not laws:
@@ -416,14 +417,13 @@ class TruthGate:
             if not response:
                 return
 
-            # JSON 파싱
-            import json
-
+            # JSON 파싱 — 정규식 기반 (다중 펜스 안전)
             resp_text = response
-            if "```json" in resp_text:
-                resp_text = resp_text.split("```json")[1].split("```")[0]
-            elif "```" in resp_text:
-                resp_text = resp_text.split("```")[1].split("```")[0]
+            m = re.search(r"```json\s*(.*?)\s*```", resp_text, re.DOTALL)
+            if not m:
+                m = re.search(r"```\s*(.*?)\s*```", resp_text, re.DOTALL)
+            if m:
+                resp_text = m.group(1)
             parsed = json.loads(resp_text.strip())
 
             if isinstance(parsed, dict) and parsed.get("violation"):
@@ -436,4 +436,4 @@ class TruthGate:
                     "world_law_violation",
                 )
         except Exception as e:
-            logger.debug("[TruthGate] world_law_violation 검사 실패 (비치명): %s", e)
+            logger.warning("[TruthGate] world_law_violation 검사 실패 (비치명): %s", e)

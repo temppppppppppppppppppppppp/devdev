@@ -7,6 +7,7 @@ Advisory-only: Director가 최종 판정.
 
 import json
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -127,11 +128,12 @@ class NpcDriftAdvisor:
             return []
 
         text = response.strip()
-        # ```json 펜스 처리
-        if "```json" in text:
-            text = text.split("```json")[1].split("```")[0]
-        elif "```" in text:
-            text = text.split("```")[1].split("```")[0]
+        # ```json 펜스 처리 — 정규식 기반 (다중 펜스 안전)
+        m = re.search(r"```json\s*(.*?)\s*```", text, re.DOTALL)
+        if not m:
+            m = re.search(r"```\s*(.*?)\s*```", text, re.DOTALL)
+        if m:
+            text = m.group(1)
         text = text.strip()
 
         try:
@@ -150,14 +152,17 @@ class NpcDriftAdvisor:
             npc = item.get("npc", "")
             if not npc:
                 continue
+            field = item.get("field", "")
+            found = item.get("found_in_ms", "")
             results.append(
                 {
                     "npc": npc,
-                    "field": item.get("field", ""),
+                    "field": field,
                     "expected": item.get("expected", ""),
-                    "found_in_ms": item.get("found_in_ms", ""),
+                    "found_in_ms": found,
                     "severity": "MAJOR",
                     "check": "npc_drift",
+                    "text": f"[NPC 표류] {npc}: {field} (원고: {found})" if found else f"[NPC 표류] {npc}: {field}",
                 }
             )
 

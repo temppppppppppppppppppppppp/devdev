@@ -349,7 +349,7 @@ class VecMemory:
         return None
 
     def _embed_cache_put(self, key: str, vec: list) -> None:
-        """[INF-I2] 캐시에 임베딩 벡터 저장 (최대 128개, LRU 퇴출)."""
+        """[INF-I2] 캐시에 임베딩 벡터 저장 (최대 512개, LRU 퇴출)."""
         with self._embed_cache_lock:
             if key in self._embed_cache:
                 self._embed_cache.move_to_end(key)
@@ -1302,9 +1302,7 @@ class VecMemory:
         if not self._conn:
             return ""
         try:
-            row = self._conn.execute(
-                "SELECT content FROM manuscripts WHERE ep_num=?", (ep_num,)
-            ).fetchone()
+            row = self._conn.execute("SELECT content FROM manuscripts WHERE ep_num=?", (ep_num,)).fetchone()
             if row and row[0]:
                 return str(row[0])[:max_chars]
         except Exception:

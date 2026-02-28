@@ -35,7 +35,8 @@ class TestDirectorContinuityUnknown:
         assert result["decision"] == "UNKNOWN"
         assert "error" in result
 
-    def test_blueprint_continuity_exception_returns_unknown(self):
+    def test_blueprint_continuity_exception_returns_reject(self):
+        """[TF-24 DC-01] Blueprint 연속성 예외 시 fail-closed REJECT."""
         validator, _ = self._make_validator()
         db = MagicMock()
         db.get_recent_blueprints.side_effect = RuntimeError("DB timeout")
@@ -46,10 +47,11 @@ class TestDirectorContinuityUnknown:
             db=db,
         )
 
-        assert result["decision"] == "UNKNOWN"
+        assert result["decision"] == "REJECT"
         assert "error" in result
 
-    def test_manuscript_continuity_exception_returns_unknown(self):
+    def test_manuscript_continuity_exception_returns_conflict(self):
+        """[TF-24 DC-03] Manuscript 연속성 예외 시 fail-closed CONFLICT."""
         validator, _ = self._make_validator()
         db = MagicMock()
         db.get_recent_manuscripts.side_effect = RuntimeError("DB timeout")
@@ -60,7 +62,7 @@ class TestDirectorContinuityUnknown:
             db=db,
         )
 
-        assert result["decision"] == "UNKNOWN"
+        assert result["decision"] == "CONFLICT"
         assert "error" in result
 
     def test_unknown_is_not_pass(self):
@@ -131,9 +133,15 @@ class TestBlockingValidatorDegraded:
 class TestSourceCodePatterns:
     """Static checks to prevent regression to PASS-on-exception behavior."""
 
-    def test_director_continuity_uses_unknown_in_error_paths(self):
+    def test_director_continuity_uses_fail_closed_in_error_paths(self):
+        """[TF-24] Blueprint→REJECT, Manuscript→CONFLICT, entity→UNKNOWN (fail-closed)."""
         source = inspect.getsource(DirectorContinuityValidator)
-        assert source.count('"decision": "UNKNOWN"') >= 3
+        # DC-01: Blueprint 연속성 예외 → REJECT (호출자가 REJECT만 검사)
+        assert '"decision": "REJECT"' in source
+        # DC-03: Manuscript 연속성 예외 → CONFLICT (호출자가 CONFLICT만 검사)
+        assert '"decision": "CONFLICT"' in source
+        # entity_consistency 예외 → UNKNOWN (기존 유지)
+        assert '"decision": "UNKNOWN"' in source
 
     def test_blocking_validator_has_degraded_flag_in_error_paths(self):
         source = inspect.getsource(BlockingValidator)

@@ -166,7 +166,7 @@ class FourPhaseArcGenerator(BaseAgent):
         curr_block: dict,
         prev_arcs: list[dict],
         assets: dict = None,
-        max_internal_retries: int = 2,
+        max_internal_retries: int = 9,
         protagonist_name: str = "주인공",
         director_feedback: str = "",
         entity_registry: dict = None,  # [V60.92] Entity Registry (NPC 명칭 일관성)
@@ -209,8 +209,6 @@ class FourPhaseArcGenerator(BaseAgent):
         # [V61.1] LLM 기반 가변 페이싱 - ep_count 동적 결정
         ep_count, pacing_reason = self._determine_ep_count(curr_block, arc_no, prev_arcs)
         logging.info(f"📊 [V61.1] 가변 페이싱: {ep_count}화 결정 - {pacing_reason}")
-
-        ep_start + ep_count - 1
 
         pipeline_result = {
             "arc_no": arc_no,
@@ -522,6 +520,65 @@ class FourPhaseArcGenerator(BaseAgent):
         if feedback:
             logging.info(f"마지막 피드백: {feedback[:200]}...")
         return None, pipeline_result
+
+    # =========================================================================
+    # [TF-23] InPlace — LLM 1회 호출로 Arc 국소 수정
+    # =========================================================================
+
+    def _inplace_patch_arc(
+        self,
+        *,
+        original_arc: dict,
+        director_feedback: str,
+        arc_no: int,
+    ) -> dict | None:
+        """[TF-23] LLM 1회 호출로 Arc in-place 수정. 실패 시 None → patch/rewrite 폴백."""
+        from modules.core.prompt_loader import PromptLoader
+        from modules.core.response_schemas import ARC_DESIGN_SCHEMA
+
+        original_json = json.dumps(original_arc, ensure_ascii=False, indent=2)[:30000]
+
+        try:
+            _patch_template = PromptLoader().load("arc_generator", "ARC_PATCH_MODE_PROMPT")
+        except Exception as e:
+            logging.warning(f"[TF-23] ARC_PATCH_MODE_PROMPT 로드 실패: {e!s:.100}")
+            _patch_template = None
+
+        def _esc(s):
+            return s.replace("{", "{{").replace("}", "}}")
+
+        if _patch_template:
+            prompt = _patch_template.format(
+                feedback_text=_esc(director_feedback),
+                original_arc=_esc(original_json),
+            )
+        else:
+            prompt = (
+                f"[Arc 원본 보존 + 지적사항만 수정]\n\n"
+                f"## Director 피드백\n{director_feedback}\n\n"
+                f"## 원본 Arc\n{original_json}\n\n"
+                f"전면 재설계하지 마세요. 지적된 부분만 고치세요."
+            )
+
+        try:
+            response = self.ensemble.ask(prompt, temperature=0.3, response_schema=ARC_DESIGN_SCHEMA)
+            result = self.ensemble._extract_json_robust(response)
+            if not isinstance(result, dict):
+                return None
+            # 원본 필드 병합 (부분 응답 보상)
+            for key, val in original_arc.items():
+                if key not in result:
+                    result[key] = val
+            # arc_end_state 검증
+            _sc = result.get("state_constraints", {})
+            if not isinstance(_sc, dict) or not _sc.get("arc_end_state"):
+                logging.warning("[TF-23] InPlace: arc_end_state 누락 → 실패")
+                return None
+            logging.info(f"✅ [TF-23] Arc {arc_no} in-place 수정 완료")
+            return result
+        except Exception as e:
+            logging.warning(f"[TF-23] Arc in-place 패치 실패: {e!s:.200}")
+            return None
 
     # =========================================================================
     # [Patch Mode] Arc 원본 보존 + Director 피드백 지적사항만 수정

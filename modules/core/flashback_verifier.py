@@ -150,11 +150,12 @@ class FlashbackVerifier:
             return []
 
         text = response.strip()
-        # ```json 펜스 처리
-        if "```json" in text:
-            text = text.split("```json")[1].split("```")[0]
-        elif "```" in text:
-            text = text.split("```")[1].split("```")[0]
+        # ```json 펜스 처리 — 정규식 기반 (다중 펜스 안전)
+        m = re.search(r"```json\s*(.*?)\s*```", text, re.DOTALL)
+        if not m:
+            m = re.search(r"```\s*(.*?)\s*```", text, re.DOTALL)
+        if m:
+            text = m.group(1)
         text = text.strip()
 
         try:
@@ -173,13 +174,15 @@ class FlashbackVerifier:
             marker = item.get("marker", "")
             if not marker:
                 continue
+            issue = item.get("issue", "")
             results.append(
                 {
                     "marker": marker,
-                    "issue": item.get("issue", ""),
+                    "issue": issue,
                     "referenced_context": item.get("referenced_context", ""),
                     "severity": "MAJOR",
                     "check": "flashback_contamination",
+                    "text": f"[회상 오염] '{marker}': {issue}" if issue else f"[회상 오염] '{marker}'",
                 }
             )
 

@@ -613,7 +613,7 @@ class Stage3Orchestrator:
                     arc_data=arc_data,
                     prev_blueprint=prev_blueprint,
                     prev_blueprints=prev_blueprints[-30:] if prev_blueprints else [],
-                    max_retries=4,
+                    max_retries=9,
                     director=ctx.agents["director"],
                     arc_idx=arc_idx,
                     entity_registry=entity_registry,
@@ -790,8 +790,6 @@ class Stage3Orchestrator:
                 _logging.debug("[Stage3] QualityDashboard REJECT 기록 실패 (무시): %s", _e)
         # [TF-S3-02] 실패 에피소드에서 중단 (순차 의존성 보존)
         # 후속 에피소드는 현재 에피소드 Blueprint에 의존하므로 건너뛰기 금지
-        if new_fail_count >= 3:
-            ctx.ui.log(f"🛑 [Safety] 연속 {new_fail_count}회 실패로 공정을 중단합니다.")
         return {
             "next_ep": working_ep,  # [TF-S3-02] 현재 에피소드에 머무름
             "success_count": success_count,

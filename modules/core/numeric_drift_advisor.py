@@ -8,6 +8,7 @@ Advisory-only: Director가 최종 판정.
 
 import json
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -109,11 +110,12 @@ class NumericDriftAdvisor:
             return []
 
         text = response.strip()
-        # ```json 펜스 처리
-        if "```json" in text:
-            text = text.split("```json")[1].split("```")[0]
-        elif "```" in text:
-            text = text.split("```")[1].split("```")[0]
+        # ```json 펜스 처리 — 정규식 기반 (다중 펜스 안전)
+        m = re.search(r"```json\s*(.*?)\s*```", text, re.DOTALL)
+        if not m:
+            m = re.search(r"```\s*(.*?)\s*```", text, re.DOTALL)
+        if m:
+            text = m.group(1)
         text = text.strip()
 
         try:
@@ -132,13 +134,15 @@ class NumericDriftAdvisor:
             key = item.get("key", "")
             if not key:
                 continue
+            issue = item.get("issue", "")
             results.append(
                 {
                     "key": key,
-                    "issue": item.get("issue", ""),
+                    "issue": issue,
                     "history_snippet": item.get("history_snippet", ""),
                     "severity": "MAJOR",
                     "check": "numeric_drift",
+                    "text": f"[수치 표류] {key}: {issue}" if issue else f"[수치 표류] {key}",
                 }
             )
 
