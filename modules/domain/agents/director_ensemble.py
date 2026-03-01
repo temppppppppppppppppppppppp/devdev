@@ -243,6 +243,7 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
                 "feedback": result.get("feedback", "") if decision == "REJECT" else "",
                 "comparison_notes": result.get("comparison_notes", ""),
                 "fix_scope": result.get("fix_scope", ""),  # [TF-23] Director 판단 수정 범위
+                "fix_scope_reasoning": result.get("fix_scope_reasoning", ""),  # [TF-35] 수정 범위 근거 전파
             }
 
         except Exception as e:
@@ -294,7 +295,14 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
                 "feedback": "시나리오가 800자 이상이어야 합니다.",
             }
 
-        return {"decision": "PASS", "score": 75, "reason": "기본 기준 충족", "feedback": ""}
+        # [TF-36] 대원칙 3 경고: Director LLM 없이 Python-only PASS
+        logging.warning("⚠️ [대원칙3] _evaluate_single_blueprint: Python-only PASS (Director LLM 미호출)")
+        return {
+            "decision": "PASS",
+            "score": 75,
+            "reason": "기본 기준 충족 (Python-only, Director LLM 미호출)",
+            "feedback": "",
+        }
 
     def _fallback_first_candidate(
         self, candidates: list, arc_data: dict, ep_num: int, prev_blueprint: dict, entity_registry: dict, state_tracker
@@ -700,6 +708,7 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
             "adaptive_reason": adaptive_result.get("reason", ""),
             "error_category": result.get("error_category", ""),  # [V75-B] LOGIC_ERROR 전파
             "fix_scope": result.get("fix_scope", ""),  # [TF-23] Director 판단 수정 범위
+            "fix_scope_reasoning": result.get("fix_scope_reasoning", ""),  # [TF-35] 수정 범위 근거 전파
         }
 
     def quick_judge_single(

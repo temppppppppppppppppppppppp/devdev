@@ -1038,18 +1038,21 @@ class StateTrackerNPC:
 
         # "NPC와 화해", "NPC에게 배신당"
         # [V66.1] C-2: module-level compiled pattern
+        # [TF-36] 대원칙 2: 기존 관계를 참조하여 from 자동결정 개선
         for match in _RE_REL_RECONCILE.finditer(tactical_doc):
             npc = match.group(1).strip()
             if npc not in exclude_words and len(npc) >= 2 and npc not in seen:
                 seen.add(npc)
-                changes.append({"npc": npc, "from": "적대", "to": "동맹", "episode": 0})
+                _existing = self.tracker.npc_registry.get(npc, {}).get("relation_to_protag", "적대")
+                changes.append({"npc": npc, "from": _existing, "to": "동맹", "episode": 0})
 
         # [V66.1] C-2: module-level compiled pattern
         for match in _RE_REL_BETRAY.finditer(tactical_doc):
             npc = match.group(1).strip()
             if npc not in exclude_words and len(npc) >= 2 and npc not in seen:
                 seen.add(npc)
-                changes.append({"npc": npc, "from": "아군", "to": "적대", "episode": 0})
+                _existing = self.tracker.npc_registry.get(npc, {}).get("relation_to_protag", "아군")
+                changes.append({"npc": npc, "from": _existing, "to": "적대", "episode": 0})
 
         return changes
 
@@ -1347,6 +1350,25 @@ class StateTrackerNPC:
         )
 
         logging.info(f"[V66.1] NPC 사망 취소: '{name}' (사유: {reason}, 이전 사망 Arc: {old_death_arc})")
+
+        # [TF-36] 대원칙 4: WorldState 동기화 — dead_npcs 제거 + alive_npcs 복원
+        _ws = getattr(self.tracker, "_world_state", None)
+        if _ws is None:
+            _ctx = getattr(self.tracker, "ctx", None)
+            if _ctx:
+                _ws = getattr(_ctx, "world_state", None)
+        if _ws is not None and hasattr(_ws, "_state"):
+            _dead = _ws._state.get("dead_npcs", {})
+            if name in _dead:
+                del _dead[name]
+                logging.info(f"[TF-36] WorldState.dead_npcs에서 '{name}' 제거")
+            _alive = _ws._state.get("alive_npcs", {})
+            if name not in _alive:
+                _alive[name] = {"role": npc.get("job", ""), "relation": "", "location": ""}
+                logging.info(f"[TF-36] WorldState.alive_npcs에 '{name}' 복원")
+        else:
+            logging.warning(f"⚠️ [TF-36] WorldState 접근 불가 — '{name}' revive 시 수동 동기화 필요")
+
         return True
 
     # ═══════════════════════════════════════════════════════════════

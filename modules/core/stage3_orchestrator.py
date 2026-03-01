@@ -90,6 +90,9 @@ class Stage3Orchestrator:
         ctx.state_tracker = getattr(self.app, "state_tracker", None)
         ctx.world_state = getattr(self.app, "world_state", None)
         ctx.fact_ledger = getattr(self.app, "fact_ledger", None)
+        # [TF-35b] StateTracker → WorldState re-bind (init 순서 보정)
+        if ctx.state_tracker and ctx.world_state:
+            ctx.state_tracker.bind_world_state(ctx.world_state)
 
         # ═══════════════════════════════════════════════════════════════
         # 1. 목표 범위 설정
@@ -206,6 +209,7 @@ class Stage3Orchestrator:
 
                 app.state_tracker = StateTracker(preset_registry=app.preset_registry, llm_client=app.sys.api_client)
                 app.state_tracker.bind_db(app.current_project.db)  # [NPC-L1] NPC 이력 DB 배선
+                app.state_tracker.bind_world_state(getattr(app, "world_state", None))  # [TF-36] WorldState 배선
                 all_arcs = app.current_project.db.load_anchor("arcs") or []
                 _g = app.selected_genre.get("type", "") if app.selected_genre else ""
                 app.state_tracker.full_extract_from_arcs(all_arcs, genre=_g)

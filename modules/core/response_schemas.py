@@ -131,7 +131,7 @@ DIRECTOR_AUDIT_SCHEMA = types.Schema(
         "fix_scope": types.Schema(
             type=types.Type.STRING,
             enum=["inplace", "partial", "full"],
-            description="REJECT 시 수정 범위: inplace(국소)/partial(부분)/full(전면)",
+            description="REJECT/PASS_WITH_FIX 시 수정 범위: inplace(국소)/partial(부분)/full(전면)",
         ),  # [TF-23]
         "fix_scope_reasoning": types.Schema(
             type=types.Type.STRING,
@@ -155,7 +155,7 @@ STRATEGIC_AUDIT_SCHEMA = types.Schema(
         "fix_scope": types.Schema(
             type=types.Type.STRING,
             enum=["inplace", "partial", "full"],
-            description="REJECT 시 수정 범위: inplace(국소)/partial(부분)/full(전면)",
+            description="REJECT/PASS_WITH_FIX 시 수정 범위: inplace(국소)/partial(부분)/full(전면)",
         ),  # [TF-23]
         "fix_scope_reasoning": types.Schema(
             type=types.Type.STRING,

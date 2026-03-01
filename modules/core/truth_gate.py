@@ -129,7 +129,7 @@ class TruthGate:
                 _lb = r"(?<![가-힣])"  # 한글 선행 문자가 없을 때만 매칭
                 action_patterns = [
                     rf"{_lb}{_esc}[이가은는]\s",  # 주어로 등장
-                    rf'"{_lb}{_esc}',  # 대사 시작
+                    rf'{_lb}"{_esc}',  # 대사 시작 — lookbehind를 " 앞으로 이동
                     rf"{_lb}{_esc}.*말했다",
                     rf"{_lb}{_esc}.*외쳤다",
                     rf"{_lb}{_esc}.*달려",

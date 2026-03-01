@@ -332,8 +332,8 @@ class TestValidationOrchestrator:
         short_text = "짧은 텍스트"
         result = orchestrator.validate(1, short_text, validation_context)
 
+        # [TF-36] 대원칙 1: BLOCKING 실패 → advisory + 감점 → REJECT (점수 기반)
         assert result["final_decision"] == "REJECT"
-        assert result.get("scoring_result") is None or result.get("total_score", 0) == 0
 
     def test_final_decision_mapping(self):
         score_mappings = [

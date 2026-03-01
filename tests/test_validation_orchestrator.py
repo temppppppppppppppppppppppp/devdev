@@ -40,6 +40,7 @@ def test_calculate_adaptive_threshold_is_clamped():
 
 
 def test_validate_short_circuit_on_blocking_failure():
+    """[TF-36] BLOCKING 실패 시 즉시 REJECT 대신 advisory 전달 + 감점."""
     orch = ValidationOrchestrator(config={"use_pre_llm": False}, client=None, genre="wuxia", context={})
     orch.continuity = MagicMock()
     orch.blocking = MagicMock()
@@ -47,8 +48,11 @@ def test_validate_short_circuit_on_blocking_failure():
     orch.blocking.validate.return_value = {"passed": False, "failures": [{"reason": "too short"}]}
 
     result = orch.validate(1, "테스트 원고", _minimal_context())
-    assert result["final_decision"] == "REJECT"
-    assert "BLOCKING" in result["reason"]
+    # [TF-36] 대원칙 1: 즉시 REJECT 대신 advisory + 감점 → Director 판정 위임
+    assert "_blocking_advisory" in result
+    assert result["_blocking_advisory"]["source"] == "BlockingValidator"
+    # 감점이 적용되어 총점이 낮아지고, REJECT 판정은 점수 기반으로 이루어짐
+    assert result["final_decision"] in ("REJECT", "CONDITIONAL_PASS")  # 점수에 따라 결정
 
 
 def test_validate_parallel_sync_falls_back_to_sync_when_parallel_fails():
