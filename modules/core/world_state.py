@@ -93,13 +93,14 @@ class WorldStateManager:
         if not state_changes or not isinstance(state_changes, dict):
             return
 
-        try:
-            if source == "arc":
-                self._state["last_updated_ep"] = ep_num
-                self._state["last_updated_source"] = "arc"
-            else:
-                self._state["last_updated_ep"] = ep_num
+        if source == "arc":
+            self._state["last_updated_ep"] = ep_num
+            self._state["last_updated_source"] = "arc"
+        else:
+            self._state["last_updated_ep"] = ep_num
 
+        # [TF-36] 섹션별 try/except — 1개 섹션 실패 시 나머지 섹션 처리 보장
+        try:
             # 1. NPC 사망 처리
             for death in state_changes.get("npc_deaths") or []:
                 if isinstance(death, dict):
@@ -120,6 +121,10 @@ class WorldStateManager:
                 self._state["alive_npcs"].pop(name, None)
                 # relationships 유지 (죽은 NPC와의 관계도 기록)
 
+        except Exception as e:
+            _logger.error("[WorldState] §1 NPC 사망 처리 실패: %s", e)
+
+        try:
             # 2. 스킬/무공 습득
             for skill in state_changes.get("skill_acquisitions") or []:
                 if isinstance(skill, dict):
@@ -135,6 +140,10 @@ class WorldStateManager:
                     if len(skills_list) > _MAX_SKILLS:
                         skills_list[:] = skills_list[-_MAX_SKILLS:]
 
+        except Exception as e:
+            _logger.error("[WorldState] §2 스킬 습득 처리 실패: %s", e)
+
+        try:
             # 3. 관계 변화
             for rel in state_changes.get("relationship_changes") or []:
                 if not isinstance(rel, dict):
@@ -152,6 +161,10 @@ class WorldStateManager:
                             }
                         self._state["alive_npcs"][npc]["relation"] = to_rel
 
+        except Exception as e:
+            _logger.error("[WorldState] §3 관계 변화 처리 실패: %s", e)
+
+        try:
             # 4. 주요 아이템
             for item in state_changes.get("major_items") or []:
                 if not isinstance(item, dict):
@@ -169,6 +182,10 @@ class WorldStateManager:
                     if item_name in self._state["active_items"]:
                         self._state["active_items"][item_name]["status"] = action
 
+        except Exception as e:
+            _logger.error("[WorldState] §4 아이템 처리 실패: %s", e)
+
+        try:
             # 5. 엔티티 파괴 (조직/장소)
             _existing_destroyed_names = {
                 d.get("name") for d in self._state["destroyed"] if isinstance(d, dict)
@@ -191,6 +208,10 @@ class WorldStateManager:
                 )
                 _existing_destroyed_names.add(_dest_name)
 
+        except Exception as e:
+            _logger.error("[WorldState] §5 엔티티 파괴 처리 실패: %s", e)
+
+        try:
             # 6. NPC 성격 변화
             for personality in state_changes.get("npc_personality_changes") or []:
                 if not isinstance(personality, dict):
@@ -211,6 +232,10 @@ class WorldStateManager:
                 if _motivation:
                     self._state["alive_npcs"][npc]["motivation"] = _motivation
 
+        except Exception as e:
+            _logger.error("[WorldState] §6 NPC 성격 변화 처리 실패: %s", e)
+
+        try:
             # 7. 완결 플롯
             for plot in state_changes.get("resolved_plots") or []:
                 if isinstance(plot, dict):
@@ -225,6 +250,10 @@ class WorldStateManager:
                         p for p in self._state["active_plots"] if p.get("plot", "") != plot_desc
                     ]
 
+        except Exception as e:
+            _logger.error("[WorldState] §7 완결 플롯 처리 실패: %s", e)
+
+        try:
             # 8. 동행자 변화
             for comp in state_changes.get("companion_changes") or []:
                 if not isinstance(comp, dict):
@@ -245,6 +274,10 @@ class WorldStateManager:
                         "합류",
                     )  # [V70] LLM 출력값 호환
 
+        except Exception as e:
+            _logger.error("[WorldState] §8 동행자 변화 처리 실패: %s", e)
+
+        try:
             # 9. NPC 속성 변경 — 의도적 직업/나이 등 변경 기록 (장기 기억 추적)
             for attr_change in state_changes.get("npc_attribute_changes") or []:
                 if not isinstance(attr_change, dict):
@@ -266,6 +299,10 @@ class WorldStateManager:
                     "changed_ep": ep_num,
                 }
 
+        except Exception as e:
+            _logger.error("[WorldState] §9 NPC 속성 변경 처리 실패: %s", e)
+
+        try:
             # 10. NPC 첫 등장 초기 속성 저장 (npc_introductions)
             for intro in state_changes.get("npc_introductions") or []:
                 if not isinstance(intro, dict):
@@ -289,6 +326,10 @@ class WorldStateManager:
                 attrs = {k: v for k, v in intro.items() if k not in ("name", "episode")}
                 self._state["alive_npcs"][name].setdefault("known_attrs", {}).update(attrs)
 
+        except Exception as e:
+            _logger.error("[WorldState] §10 NPC 초기 속성 처리 실패: %s", e)
+
+        try:
             # 11. 세계관 법칙 등록
             for law_entry in state_changes.get("world_law_additions") or []:
                 if isinstance(law_entry, str) and law_entry.strip():
@@ -298,6 +339,10 @@ class WorldStateManager:
                     if _law_text:
                         self._add_world_law_internal(_law_text, ep_num)
 
+        except Exception as e:
+            _logger.error("[WorldState] §11 세계관 법칙 처리 실패: %s", e)
+
+        try:
             # 12. 시간 마커 추적 (time_markers)
             for marker in state_changes.get("time_markers") or []:
                 if not isinstance(marker, dict):
@@ -324,6 +369,10 @@ class WorldStateManager:
                     except Exception as _te:
                         _logger.debug("[WorldState] timeline DB sync 실패 (비치명): %s", _te)
 
+        except Exception as e:
+            _logger.error("[WorldState] §12 시간 마커 처리 실패: %s", e)
+
+        try:
             # 13. 주인공 동기 추적 (protagonist_motivations)
             for mot in state_changes.get("protagonist_motivations") or []:
                 if not isinstance(mot, dict):
@@ -352,6 +401,10 @@ class WorldStateManager:
                 if len(motivations) > 20:
                     self._state["motivations"] = motivations[-20:]
 
+        except Exception as e:
+            _logger.error("[WorldState] §13 주인공 동기 처리 실패: %s", e)
+
+        try:
             # 14. 약속/서약 추적 (commitments / promises)
             for promise in state_changes.get("commitments") or state_changes.get("promises") or []:
                 if not isinstance(promise, dict):
@@ -383,14 +436,17 @@ class WorldStateManager:
                     max_others = max(0, 30 - len(pending))
                     self._state["promises"] = (pending + others[-max_others:]) if max_others else pending[:30]
 
-            # 크기 제한: destroyed 최대 50개, world_notes 최대 10개
+        except Exception as e:
+            _logger.error("[WorldState] §14 약속/서약 처리 실패: %s", e)
+
+        # 크기 제한: destroyed 최대 50개, world_notes 최대 10개 (항상 실행)
+        try:
             if len(self._state["destroyed"]) > 50:
                 self._state["destroyed"] = self._state["destroyed"][-50:]
             if len(self._state.get("world_notes", [])) > 10:
                 self._state["world_notes"] = self._state["world_notes"][-10:]
-
         except Exception as e:
-            _logger.error("[V68] WorldState: update_from_state_changes 실패 (비차단): %s", e)
+            _logger.error("[WorldState] 크기 제한 처리 실패: %s", e)
 
     # ═══════════════════════════════════════════════════════════════
     # 주인공 상태 갱신
