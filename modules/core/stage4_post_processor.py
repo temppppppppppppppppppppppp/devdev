@@ -720,6 +720,17 @@ class Stage4PostProcessor:
         # ===== [TF-C10] WorldState + FactLedger 원자적 갱신 =====
         # 원고(핵심 산출물)는 이미 저장 완료 — 메타데이터만 트랜잭션으로 묶어 반쪽 커밋 방지
         _meta_db = getattr(self.ctx.current_project, "db", None)
+        # [TF-35b] in-memory 상태 스냅샷 — 트랜잭션 실패 시 복원용
+        import copy as _copy
+
+        try:
+            _ws_snap = _copy.deepcopy(self.ctx.world_state._state) if self.ctx.world_state else None
+        except Exception:
+            _ws_snap = None
+        try:
+            _fl_snap = _copy.deepcopy(self.ctx.fact_ledger._ledger) if self.ctx.fact_ledger else None
+        except Exception:
+            _fl_snap = None
         try:
             _txn = _meta_db.transaction() if _meta_db and hasattr(_meta_db, "transaction") else None
             _ctx_mgr = _txn if _txn is not None else _nullcontext()
@@ -787,6 +798,11 @@ class Stage4PostProcessor:
                         except Exception:
                             pass
         except Exception as _meta_err:
+            # [TF-35b] in-memory 상태 복원
+            if _ws_snap is not None and self.ctx.world_state:
+                self.ctx.world_state._state = _ws_snap
+            if _fl_snap is not None and self.ctx.fact_ledger:
+                self.ctx.fact_ledger._ledger = _fl_snap
             self.ctx.ui.log(f"   ⚠️ [TF-C10] 메타데이터 원자적 저장 실패 (비차단): {str(_meta_err)[:60]}")
 
         # ===== [D Step 3] 에피소드 만족도 태깅 (비차단) =====

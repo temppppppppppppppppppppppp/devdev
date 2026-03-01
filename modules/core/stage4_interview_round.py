@@ -406,8 +406,8 @@ class Stage4InterviewRound:
                     _mb = self.ctx.current_project.master_bible or {}
                     _mb_root = _mb.get("MasterBible", _mb)
                     _proto_name = HUDKeys.get_protagonist_name(_mb_root, genre_name)
-                except Exception:
-                    pass
+                except Exception as _e:
+                    logging.debug("[SilentPass:Stage4:ProtoName] %s", _e)
                 if _proto_name and _proto_name != "주인공":
                     _cv_context["protagonist_name"] = _proto_name
                 else:
@@ -1151,8 +1151,8 @@ class Stage4InterviewRound:
                     error_category=error_category,
                     reason=reason[:500],
                 )
-            except Exception:
-                pass
+            except Exception as _e:
+                logging.debug("[SilentPass:Stage4:SessionLog] %s", _e)
 
         logging.info(f"[Director 판정] {verdict} | 점수: {score} | 후보 {selected} | {reason[:120]}")
         print("\n   📊 Director 판정 결과:")
@@ -1287,27 +1287,118 @@ class Stage4InterviewRound:
                     "score": score,
                 }
 
-            # [TF-32] PASS_WITH_FIX: inplace 1회 적용 후 저장
+            # [TF-32-VERIFY] PASS_WITH_FIX → patch + Director 재심사 반복 (최대 3회)
             if verdict == "PASS_WITH_FIX" and final_manuscript:
-                _fix_feedback = self._extract_fix_feedback(director_result)
-                _patched_ms = None
-                if _fix_feedback:
-                    self.ctx.ui.log("   🔧 [TF-32] PASS_WITH_FIX: inplace 수정 중...")
+                _MAX_FIX = 3
+                _current_ms = final_manuscript
+                _current_fb = self._extract_fix_feedback(director_result)
+                _fix_ok = False
+                _director = self.ctx.agents.get("director")
+
+                _current_audit_result = director_result  # [TF-33] 최신 audit 추적
+
+                for _fix_i in range(_MAX_FIX):
+                    if not _current_fb:
+                        break
+                    # [TF-33] Director fix_scope 기반 수정 전략 라우팅
+                    _fix_scope = (
+                        _current_audit_result.get("fix_scope", "inplace")
+                        if isinstance(_current_audit_result, dict)
+                        else "inplace"
+                    )
+                    if _fix_scope in ("partial", "full"):
+                        self.ctx.ui.log(f"   🔀 [TF-33] fix_scope={_fix_scope!r} → inplace 불가, retry 경로 위임")
+                        break  # → REJECT → retry 경로에서 patch/rewrite 처리
+
+                    self.ctx.ui.log(f"   🔧 [TF-32-V] PASS_WITH_FIX patch #{_fix_i + 1}/{_MAX_FIX}")
                     try:
                         _patched = chief_writer.inplace_patch(
-                            original_manuscript=final_manuscript,
-                            director_feedback=_fix_feedback,
-                            attempt_number=1,
+                            original_manuscript=_current_ms,
+                            director_feedback=_current_fb,
+                            attempt_number=_fix_i + 1,
                         )
-                        if _patched:
-                            _patched_ms = _patched[0].get("manuscript", "")
-                    except Exception as _pwf_err:
-                        logging.warning(f"[TF-32] PASS_WITH_FIX inplace 실패: {_pwf_err!s:.100}")
-                if _patched_ms and len(_patched_ms) >= 2000:
-                    self.ctx.ui.log(f"   ✅ [TF-32] PASS_WITH_FIX 수정 완료 ({len(_patched_ms)}자)")
-                    final_manuscript = _patched_ms
+                        _patched_ms = _patched[0].get("manuscript", "") if _patched else ""
+                    except Exception as _e:
+                        logging.warning(f"[TF-32-V] inplace 실패: {_e!s:.100}")
+                        break
+                    if not _patched_ms or len(_patched_ms) < 2000:
+                        logging.warning("[TF-32-V] patch 결과 부족")
+                        break
+
+                    # [TF-35] Director 동일 경로 재심사 — ScoringValidator 대신 Director LLM 직접 채점
+                    try:
+                        _re_candidate = {
+                            "strategy": "inplace_patch",
+                            "strategy_name": "InPlace 수정",
+                            "manuscript": _patched_ms,
+                            "title": f"제{round_ctx.next_ep}화",
+                            "state_updates": {},
+                        }
+                        _re_val_ctx = {
+                            "warnings": [],
+                            "focus_points": [f"[TF-35 재심사] 이전 피드백: {_current_fb[:300]}"],
+                        }
+                        _re_audit = _director.select_and_judge_ensemble(
+                            ep_num=round_ctx.next_ep,
+                            candidates=[_re_candidate],
+                            validation_results=[_re_val_ctx],
+                            blueprint=round_ctx.blueprint,
+                            previous_ending=round_ctx.prev_ending,
+                            arc_pos=round_ctx.arc_pos,
+                            total_eps=round_ctx.total_ep_in_arc,
+                            retry_count=round_num,
+                            episode_digest=round_ctx.episode_digest,
+                            mandatory_context=_director_mandatory_context,
+                            prev_manuscripts_text=round_ctx.prev_manuscripts_text,
+                            story_context=round_ctx.story_context,
+                        )
+                    except Exception:
+                        logging.exception("[TF-35] 재심사 예외")
+                        break
+
+                    _re_d = _re_audit.get("verdict", "REJECT")
+                    _re_s = _re_audit.get("score", 0)
+                    try:
+                        _re_s = int(_re_s)
+                    except (ValueError, TypeError):
+                        _re_s = 0
+                    self.ctx.ui.log(f"   🎬 [TF-35] 재심사 #{_fix_i + 1}: {_re_d} (score={_re_s})")
+
+                    if _re_d == "PASS":
+                        if _re_s < _quality_gate_score:
+                            self.ctx.ui.log(
+                                f"   ⚠️ [TF-35] 재심사 PASS이나 score={_re_s} < {_quality_gate_score} → patch 종료"
+                            )
+                            break
+                        _current_ms = _patched_ms
+                        _fix_ok = True
+                        break
+                    elif _re_d == "PASS_WITH_FIX":
+                        _current_ms = _patched_ms
+                        _current_audit_result = _re_audit  # [TF-33] 다음 반복에서 fix_scope 재확인
+                        _fb_obj = _re_audit.get("feedback", {})
+                        _current_fb = (
+                            "\n".join(str(a) for a in (_fb_obj.get("action_items") or []))
+                            if isinstance(_fb_obj, dict)
+                            else str(_fb_obj)
+                        )
+                    else:  # REJECT
+                        break
+
+                if _fix_ok:
+                    final_manuscript = _current_ms
+                    verdict = "PASS"
+                    self.ctx.ui.log("   ✅ [TF-32-V] 원고 수정 완료 → PASS 확정")
                 else:
-                    self.ctx.ui.log("   ⚠️ [TF-32] inplace 실패 → 원본 유지")
+                    verdict = "REJECT"
+                    # [TF-33] fix_scope 보존 → retry 경로에서 patch/rewrite 라우팅
+                    _last_fs = (
+                        _current_audit_result.get("fix_scope", "") if isinstance(_current_audit_result, dict) else ""
+                    )
+                    if _last_fs:
+                        director_result["fix_scope"] = _last_fs
+                    director_feedback += "\n[TF-32-V] PASS_WITH_FIX 수정 실패 → REJECT"
+                    self.ctx.ui.log("   ❌ [TF-32-V] 원고 수정 실패 → REJECT 전환")
 
             if verdict in ("PASS", "PASS_WITH_FIX"):  # [TF-32]
                 # [V66.1] F-1: time consistency check -> forward warnings to validator context

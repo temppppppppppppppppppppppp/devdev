@@ -273,6 +273,10 @@ class WorldStateManager:
                 name = intro.get("name", "")
                 if not name:
                     continue
+                # [TF-36] 대원칙 4: 사망 NPC가 introductions에 포함된 경우 무시
+                if name in self._state.get("dead_npcs", {}):
+                    logging.warning(f"⚠️ [대원칙4] 사망 NPC '{name}'가 npc_introductions에 포함됨 — 무시")
+                    continue
                 if name not in self._state["alive_npcs"]:
                     self._state["alive_npcs"][name] = {
                         "role": intro.get("job", ""),
@@ -377,7 +381,7 @@ class WorldStateManager:
                     pending = [p for p in promises if p.get("status") == "pending"]
                     others = [p for p in promises if p.get("status") != "pending"]
                     max_others = max(0, 30 - len(pending))
-                    self._state["promises"] = pending + others[-max_others:] if max_others else pending[:30]
+                    self._state["promises"] = (pending + others[-max_others:]) if max_others else pending[:30]
 
             # 크기 제한: destroyed 최대 50개, world_notes 최대 10개
             if len(self._state["destroyed"]) > 50:

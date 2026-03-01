@@ -208,4 +208,17 @@ JSON 형식으로 답하십시오:
                 "severity": "low",
             }
 
+        # [TF-36] 줄 단위 문장 수 체크 (서술 3문장마다 줄바꿈)
+        import re as _re
+
+        _sentence_end = _re.compile(r"[.!?。]")
+        lines = [ln for ln in manuscript.split("\n") if ln.strip()]
+        _overlong = sum(1 for ln in lines if len(_sentence_end.findall(ln)) > 3)
+        if _overlong > len(lines) * 0.3:
+            return {
+                "type": "pacing_advisory",
+                "suggestion": f"줄 {_overlong}개가 4문장 이상입니다. 서술은 3문장마다 줄바꿈, 대사 앞뒤는 빈 줄로 끊어주세요.",
+                "severity": "low",
+            }
+
         return None

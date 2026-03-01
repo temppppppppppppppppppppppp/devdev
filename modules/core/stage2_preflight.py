@@ -865,6 +865,7 @@ class Stage2PreflightAnalysis:
                             state_tracker=self.ctx.state_tracker,
                             vector_context=_s2_vector_ctx,
                             adversarial_self_play=self.ctx.adversarial_self_play,
+                            rejected_strategy=previous_attempt.get("selected_strategy", ""),  # [TF-36]
                         )
                         if not four_phase_arc:
                             _patch_fallback = True
@@ -1023,8 +1024,8 @@ class Stage2PreflightAnalysis:
                     # [V66] NPC 대화 스타일 추출
                     try:
                         self.ctx.state_tracker.extract_npc_dialogue_styles_from_arc(refined_arc)
-                    except Exception:
-                        pass  # [V66] OPTIONAL: 대화 스타일 추출 실패 비차단
+                    except Exception as _e:
+                        logging.debug("[SilentPass:S2:NpcDialogue] %s", _e)
 
                     # [V66.1] F-1: 시간선 마커 추출
                     try:

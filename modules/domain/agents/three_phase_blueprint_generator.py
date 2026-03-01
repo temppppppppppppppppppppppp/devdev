@@ -212,6 +212,9 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 or (not _prev_fix_scope and _prev_reject_score >= PatchModeThresholds.INPLACE)
             )
 
+            # [TF-36] partial: 가장 좋은 후보 1개만 재생성
+            _use_partial = (not _use_inplace) and _previous_best is not None and (_prev_fix_scope == "partial")
+
             if _use_inplace:
                 logging.info(
                     f"[InPlace] Blueprint in-place 수정 진입 (fix_scope={_prev_fix_scope!r}, score={_prev_reject_score})"
@@ -241,6 +244,23 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                         prev_blueprints=prev_blueprints,
                         prev_manuscripts_text=prev_manuscripts_text,
                     )
+            elif _use_partial:
+                logging.info(f"[TF-36] Blueprint 1후보 재생성 (strategy={_prev_reject_strategy!r})")
+                best_blueprint, all_candidates = self.ensemble.generate_ensemble(
+                    ep_num=ep_num,
+                    arc_data=arc_data,
+                    constraint_block=constraint_block,
+                    prev_blueprint=prev_blueprint,
+                    feedback=_attempt_feedback,
+                    strategy_specific_feedback=_strategy_feedback,
+                    rejected_strategy=_prev_reject_strategy,
+                    single_strategy=_prev_reject_strategy,  # [TF-36] 1개 전략만
+                    protagonist_name=protagonist_name,
+                    protagonist_config=protagonist_config,
+                    state_tracker=state_tracker,
+                    prev_blueprints=prev_blueprints,
+                    prev_manuscripts_text=prev_manuscripts_text,
+                )
             else:
                 best_blueprint, all_candidates = self.ensemble.generate_ensemble(
                     ep_num=ep_num,
@@ -400,8 +420,121 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 self.stats["phase3_pass"] += 1
                 pipeline_result["final_verdict"] = verdict  # [TF-32-S3] PASS or PASS_WITH_FIX 보존
                 logging.info(f"✅ [Phase 3] {verdict} - 제{ep_num}화 Blueprint 생성 완료")
+
+                # [TF-32-VERIFY] PASS_WITH_FIX → patch + Director 재심사 반복 (최대 3회)
                 if verdict == "PASS_WITH_FIX":
-                    logging.info("🔧 [TF-32-S3] Blueprint PASS_WITH_FIX → PASS 취급 저장")
+                    _MAX_FIX = 3
+                    _current_bp = best_blueprint
+                    _current_vr = validation_result
+                    _fix_ok = False
+
+                    for _fix_i in range(_MAX_FIX):
+                        # [TF-33] Director fix_scope 기반 수정 전략 라우팅
+                        _fix_scope = _current_vr.get("fix_scope", "inplace")
+                        if _fix_scope in ("partial", "full"):
+                            logging.info(f"🔀 [TF-33] fix_scope={_fix_scope!r} → inplace 불가, generate 루프 위임")
+                            break  # → REJECT → generate 재시도 루프
+
+                        _fix_fb = _current_vr.get("re_slice_instruction", "") or _current_vr.get("feedback", "")
+                        logging.info(f"🔧 [TF-32-V] Blueprint patch #{_fix_i + 1}/{_MAX_FIX}")
+                        try:
+                            _patched_bp = self._inplace_patch_blueprint(
+                                original_blueprint=_current_bp,
+                                director_feedback=_fix_fb,
+                                ep_num=ep_num,
+                                arc_data=arc_data,
+                            )
+                        except Exception:
+                            logging.exception("[TF-32-V] inplace_patch_blueprint 예외")
+                            break
+                        if not _patched_bp:
+                            logging.warning("[TF-32-V] patch 실패")
+                            break
+
+                        # Director 재심사 (단일 후보 경로)
+                        try:
+                            _re_v, _re_vr = self.validator.validate(
+                                blueprint=_patched_bp,
+                                arc_data=arc_data,
+                                constraint_block=constraint_block,
+                                prev_blueprint=prev_blueprint,
+                                director=director,
+                                working_ep=ep_num,
+                                arc_idx=arc_idx,
+                                entity_registry=entity_registry,
+                                state_tracker=state_tracker,
+                                all_candidates=None,
+                                prev_hud=prev_hud,
+                            )
+                        except Exception:
+                            logging.exception("[TF-32-V] 재심사 예외")
+                            break
+
+                        logging.info(f"🎬 [TF-32-V] 재심사 #{_fix_i + 1}: {_re_v} (score={_re_vr.get('score', 0)})")
+                        if _re_v == "PASS":
+                            _re_score = _re_vr.get("score", 0)
+                            try:
+                                _re_score = int(_re_score)
+                            except (ValueError, TypeError):
+                                _re_score = 0
+                            if _re_score < _quality_gate_score:
+                                logging.warning(
+                                    f"⚠️ [TF-35] 재심사 PASS이나 score={_re_score} < {_quality_gate_score} → patch 종료"
+                                )
+                                break
+                            _current_bp = _patched_bp
+                            _fix_ok = True
+                            break
+                        elif _re_v in ("PASS_WITH_FIX", "PASS_WITH_WARNING"):
+                            _current_bp = _patched_bp
+                            _current_vr = _re_vr
+                            if _re_v == "PASS_WITH_WARNING":
+                                _fix_ok = True
+                                break
+                        else:  # REJECT
+                            break
+
+                    if _fix_ok:
+                        best_blueprint = _current_bp
+                        pipeline_result["final_verdict"] = "PASS"
+                        logging.info("✅ [TF-32-V] Blueprint 수정 완료 → PASS 확정")
+                    else:
+                        verdict = "REJECT"
+                        feedback = _initial_feedback + (
+                            f"\n[TF-32-V] PASS_WITH_FIX 수정 {_MAX_FIX}회 내 미해결 → REJECT"
+                        )
+                        logging.warning("❌ [TF-32-V] Blueprint 수정 실패 → REJECT 전환")
+                        # [TF-35] continue 전 패치 상태 갱신 — 정상 REJECT 경로(L531~)와 동일
+                        self.stats["phase3_reject"] += 1
+                        _prev_reject_score = _score
+                        _prev_reject_feedback = feedback
+                        _prev_reject_strategy = _selected_strategy or ""
+                        _prev_fix_scope = _current_vr.get("fix_scope", "")
+                        _prev_score_breakdown = (
+                            _current_vr.get("score_breakdown", {})
+                            if isinstance(_current_vr.get("score_breakdown", {}), dict)
+                            else {}
+                        )
+                        _prev_selection_reason = (
+                            _current_vr.get("summary")
+                            or _current_vr.get("comparison_notes", "")
+                            or str(_current_vr.get("feedback", ""))
+                        )
+                        _vr_issues = _current_vr.get("issues", [])
+                        _prev_validation_warnings = []
+                        if isinstance(_vr_issues, list):
+                            for _iss in _vr_issues[:10]:
+                                if isinstance(_iss, dict):
+                                    _cat = _iss.get("category", "issue")
+                                    _msg = _iss.get("issue", "")
+                                    _prev_validation_warnings.append(f"{_cat}: {_msg}".strip(": "))
+                                elif _iss:
+                                    _prev_validation_warnings.append(str(_iss))
+                        if _score >= PatchModeThresholds.REWRITE and best_blueprint:
+                            _previous_best = best_blueprint
+                        else:
+                            _previous_best = None
+                        continue  # generate 재시도 루프 진입
 
                 # [Step2] Pydantic ingress+egress
                 best_blueprint = validate_blueprint(best_blueprint)

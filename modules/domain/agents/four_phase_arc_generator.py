@@ -602,6 +602,7 @@ class FourPhaseArcGenerator(BaseAgent):
         state_tracker=None,
         vector_context: str = "",
         adversarial_self_play=None,
+        rejected_strategy: str = "",  # [TF-36] partial 시 1개 전략만
     ) -> tuple[dict | None, dict]:
         """[Patch Mode] 원본 Arc를 보존하며 Director 피드백 지적사항만 수정.
 
@@ -699,6 +700,7 @@ class FourPhaseArcGenerator(BaseAgent):
                 entity_registry=entity_registry,
                 ep_count=ep_count,
                 retry=0,
+                single_strategy=rejected_strategy,  # [TF-36] partial 시 1개 전략만
             )
         except Exception as e:
             logging.warning(f"[Patch Mode] Arc ensemble 생성 실패: {e!s:.200}")

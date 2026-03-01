@@ -172,6 +172,7 @@ class StateTracker:
 
         # [Phase 3-5A] NPC 이력 DB (bind_db()로 설정)
         self._db = None
+        self._world_state = None  # [TF-35b] bind_world_state() 전 AttributeError 방지
 
         # [V60.95] PresetRegistry 연동
         self.preset_registry = preset_registry
@@ -1029,6 +1030,10 @@ class StateTracker:
     def bind_db(self, db_manager) -> None:
         """[Phase 3-5A] DB 매니저 바인딩. 호출측(main_a 등)에서 설정."""
         self._db = db_manager
+
+    def bind_world_state(self, world_state_manager) -> None:
+        """[TF-36] WorldState 동기화용 바인딩."""
+        self._world_state = world_state_manager
 
     def get_npc_change_history(self, npc_name: str, limit: int = 50) -> list[dict]:
         """[Phase 3-5A] NPC 변경 이력 조회 (최신순)"""

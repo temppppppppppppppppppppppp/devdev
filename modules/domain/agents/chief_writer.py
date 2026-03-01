@@ -731,11 +731,33 @@ class ChiefWriter(BaseAgent):
             if not response or len(response) < 2000:
                 logging.warning(f"[TF-23] InPlace 응답 길이 부족: {len(response or '')}자 < 2000자")
                 return []
+            # [TF-36] LLM이 JSON으로 감싼 경우 텍스트 추출
+            response = self._unwrap_manuscript_text(response)
             logging.info(f"✅ [TF-23] 원고 in-place 수정 완료 ({len(response)}자)")
             return [{"manuscript": response, "strategy": "inplace_patch"}]
         except Exception as e:
             logging.warning(f"[TF-23] 원고 in-place 패치 실패: {e!s:.200}")
             return []
+
+    def _unwrap_manuscript_text(self, text: str) -> str:
+        """[TF-36] LLM 응답이 JSON 배열/객체로 감싸진 경우 순수 텍스트 추출."""
+        if not text:
+            return text
+        stripped = text.strip()
+        # JSON 배열 ["text"] 또는 객체 {"content": "text"} 감지
+        if (stripped.startswith("[") and stripped.endswith("]")) or (
+            stripped.startswith("{") and stripped.endswith("}")
+        ):
+            try:
+                parsed = json.loads(stripped)
+                if isinstance(parsed, list):
+                    # ["text1", "text2"] → join
+                    return "\n\n".join(str(item) for item in parsed)
+                elif isinstance(parsed, dict):
+                    return parsed.get("content") or parsed.get("text") or parsed.get("manuscript") or text
+            except (json.JSONDecodeError, ValueError):
+                pass
+        return text
 
     # =========================================================================
     # [Phase 3-5B] 패치 모드 — 원본 보존 + 피드백 지적사항만 수정

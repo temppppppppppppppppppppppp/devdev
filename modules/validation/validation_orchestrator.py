@@ -336,18 +336,16 @@ class ValidationOrchestrator:
         results["continuity_result"] = continuity_result
 
         if not continuity_result["passed"]:
-            # 연속성 위반 시 즉시 REJECT
-            logging.warning(f"❌ CONTINUITY 실패: {len(continuity_result['violations'])}개 위반")
-            self._record_failure_to_reflexion(ep_num, "continuity", continuity_result["violations"])
-
-            return {
-                "final_decision": "REJECT",
-                "reason": "CONTINUITY 검증 실패 - 에피소드 간 연속성 위반",
-                "violations": continuity_result["violations"],
-                "continuity_result": continuity_result,
-                "total_score": 0,
+            # [TF-36] 대원칙 1: Python은 수집만, 판단은 LLM — advisory로 전환 (V70.1 패턴)
+            _cont_violations = continuity_result.get("violations", [])
+            logging.warning(f"⚠️ [대원칙1] CONTINUITY {len(_cont_violations)}개 위반 — Director advisory로 전달")
+            self._record_failure_to_reflexion(ep_num, "continuity", _cont_violations)
+            # 즉시 REJECT 대신 결과를 누적하여 후속 SCORING + Director 판정에 위임
+            results["_continuity_advisory"] = {
+                "source": "ContinuityValidator",
+                "violations": _cont_violations,
                 "feedback": self._generate_continuity_feedback(continuity_result),
-                "self_consistency_used": False,
+                "severity": "HIGH",
             }
 
         # 경고만 있는 경우 로그
@@ -365,13 +363,15 @@ class ValidationOrchestrator:
         results["blocking_result"] = blocking_result
 
         if not blocking_result["passed"]:
-            # [Phase 5.2.2] Reflexion: 실패 패턴 기록
-            self._record_failure_to_reflexion(ep_num, "blocking", blocking_result["failures"])
+            # [TF-36] 대원칙 1: Python은 수집만, 판단은 LLM — advisory로 전환 (V70.1 패턴)
+            _blk_failures = blocking_result.get("failures", [])
+            logging.warning(f"⚠️ [대원칙1] BLOCKING {len(_blk_failures)}개 실패 — Director advisory로 전달")
+            self._record_failure_to_reflexion(ep_num, "blocking", _blk_failures)
 
             # [P6-01] FailureLearner 환류 — validation_context에서 주입된 경우에만
             _fl = validation_context.get("_failure_learner") if isinstance(validation_context, dict) else None
             if _fl is not None and hasattr(_fl, "record_failure"):
-                for _f in blocking_result.get("failures") or []:
+                for _f in _blk_failures:
                     try:
                         _fl.record_failure(
                             stage=4,
@@ -383,18 +383,16 @@ class ValidationOrchestrator:
                     except Exception as _e:
                         logging.debug("[ValidationOrchestrator] FailureLearner 기록 실패 (무시): %s", _e)
 
-            return {
-                "final_decision": "REJECT",
-                "reason": "BLOCKING 검증 실패",
-                "failures": blocking_result["failures"],
-                "blocking_result": blocking_result,
-                "continuity_result": continuity_result,
-                "total_score": 0,
+            # 즉시 REJECT 대신 결과를 누적하여 후속 SCORING + Director 판정에 위임
+            results["_blocking_advisory"] = {
+                "source": "BlockingValidator",
+                "failures": _blk_failures,
                 "feedback": self._generate_blocking_feedback(blocking_result),
-                "self_consistency_used": False,
+                "severity": "HIGH",
             }
 
-        logging.info(f"✅ BLOCKING 통과 (0/{blocking_result.get('failure_count', 0)} 실패)")
+        if blocking_result["passed"]:
+            logging.info(f"✅ BLOCKING 통과 (0/{blocking_result.get('failure_count', 0)} 실패)")
 
         # ═══════════════════════════════════════════════════════════════
         # [V46] TIER 1.5: CONSISTENCY (일관성 검증)
@@ -609,6 +607,21 @@ class ValidationOrchestrator:
                     logging.info("✅ RETROSPECTIVE: 장기 일관성 통과")
 
         # ═══════════════════════════════════════════════════════════════
+        # [TF-36] 대원칙 1: CONTINUITY/BLOCKING advisory 점수 반영
+        # ═══════════════════════════════════════════════════════════════
+        _cont_adv = results.get("_continuity_advisory")
+        if _cont_adv:
+            _cont_penalty = min(15, len(_cont_adv.get("violations", [])) * 5)
+            total_score = max(0, total_score - _cont_penalty)
+            logging.warning(f"📊 [대원칙1] CONTINUITY advisory 감점: -{_cont_penalty}점 (새 총점: {total_score})")
+
+        _blk_adv = results.get("_blocking_advisory")
+        if _blk_adv:
+            _blk_penalty = min(20, len(_blk_adv.get("failures", [])) * 5)
+            total_score = max(0, total_score - _blk_penalty)
+            logging.warning(f"📊 [대원칙1] BLOCKING advisory 감점: -{_blk_penalty}점 (새 총점: {total_score})")
+
+        # ═══════════════════════════════════════════════════════════════
         # 최종 판정
         # ═══════════════════════════════════════════════════════════════
         results["total_score"] = total_score
@@ -624,6 +637,15 @@ class ValidationOrchestrator:
         else:
             final_decision = "REJECT"
             feedback = f"품질 미달 ({total_score}점) - 재작성 필요"
+
+        # [TF-36] advisory 피드백 병합
+        _advisory_parts = []
+        if _cont_adv:
+            _advisory_parts.append(f"[CONTINUITY] {_cont_adv['feedback']}")
+        if _blk_adv:
+            _advisory_parts.append(f"[BLOCKING] {_blk_adv['feedback']}")
+        if _advisory_parts:
+            feedback = feedback + " | Director advisory: " + " / ".join(_advisory_parts)
 
         results["final_decision"] = final_decision
         results["feedback"] = feedback
@@ -1098,10 +1120,17 @@ class ValidationOrchestrator:
         results["continuity_result"] = continuity_result
 
         if not continuity_result["passed"]:
-            self._record_failure_to_reflexion(ep_num, "continuity", continuity_result["violations"])
-            return self._build_reject_result_v59(
-                "CONTINUITY", continuity_result, self._generate_continuity_feedback(continuity_result)
+            _cont_violations = continuity_result.get("violations", [])
+            logging.warning(
+                f"⚠️ [대원칙1] CONTINUITY {len(_cont_violations)}개 위반 — Director advisory로 전달 (parallel)"
             )
+            self._record_failure_to_reflexion(ep_num, "continuity", _cont_violations)
+            results["_continuity_advisory"] = {
+                "source": "ContinuityValidator",
+                "violations": _cont_violations,
+                "feedback": self._generate_continuity_feedback(continuity_result),
+                "severity": "HIGH",
+            }
 
         # BLOCKING 검증
         logging.info("[V59-Parallel] TIER 1: BLOCKING 검증 중...")
@@ -1109,12 +1138,14 @@ class ValidationOrchestrator:
         results["blocking_result"] = blocking_result
 
         if not blocking_result["passed"]:
-            self._record_failure_to_reflexion(ep_num, "blocking", blocking_result["failures"])
+            _blk_failures = blocking_result.get("failures", [])
+            logging.warning(f"⚠️ [대원칙1] BLOCKING {len(_blk_failures)}개 실패 — Director advisory로 전달 (parallel)")
+            self._record_failure_to_reflexion(ep_num, "blocking", _blk_failures)
 
             # [P6-01] FailureLearner 환류 (parallel path)
             _fl_p = validation_context.get("_failure_learner") if isinstance(validation_context, dict) else None
             if _fl_p is not None and hasattr(_fl_p, "record_failure"):
-                for _f in blocking_result.get("failures") or []:
+                for _f in _blk_failures:
                     try:
                         _fl_p.record_failure(
                             stage=4,
@@ -1126,9 +1157,12 @@ class ValidationOrchestrator:
                     except Exception as _e:
                         logging.debug("[ValidationOrchestrator] FailureLearner(parallel) 기록 실패 (무시): %s", _e)
 
-            return self._build_reject_result_v59(
-                "BLOCKING", blocking_result, self._generate_blocking_feedback(blocking_result)
-            )
+            results["_blocking_advisory"] = {
+                "source": "BlockingValidator",
+                "failures": _blk_failures,
+                "feedback": self._generate_blocking_feedback(blocking_result),
+                "severity": "HIGH",
+            }
 
         logging.info("✅ Stage 1 통과 (PRE-LLM, CONTINUITY, BLOCKING)")
 
@@ -1267,6 +1301,18 @@ class ValidationOrchestrator:
             logging.info(f"📊 점수 조정: {total_score} → {adjusted_total}")
             total_score = adjusted_total
 
+        # [TF-36] 대원칙 1: CONTINUITY/BLOCKING advisory 점수 반영
+        _cont_adv = results.get("_continuity_advisory")
+        if _cont_adv:
+            _cont_penalty = min(15, len(_cont_adv.get("violations", [])) * 5)
+            total_score = max(0, total_score - _cont_penalty)
+            logging.warning(f"📊 [대원칙1] CONTINUITY advisory 감점: -{_cont_penalty}점 (새 총점: {total_score})")
+        _blk_adv = results.get("_blocking_advisory")
+        if _blk_adv:
+            _blk_penalty = min(20, len(_blk_adv.get("failures", [])) * 5)
+            total_score = max(0, total_score - _blk_penalty)
+            logging.warning(f"📊 [대원칙1] BLOCKING advisory 감점: -{_blk_penalty}점 (새 총점: {total_score})")
+
         # ═══════════════════════════════════════════════════════════════
         # 최종 판정 + 히스토리 기록
         # ═══════════════════════════════════════════════════════════════
@@ -1284,6 +1330,15 @@ class ValidationOrchestrator:
             final_decision = "REJECT"
             feedback = f"품질 미달 ({total_score}점) - 재작성 필요"
             passed = False
+
+        # [TF-36] advisory 피드백 병합
+        _advisory_parts = []
+        if _cont_adv:
+            _advisory_parts.append(f"[CONTINUITY] {_cont_adv['feedback']}")
+        if _blk_adv:
+            _advisory_parts.append(f"[BLOCKING] {_blk_adv['feedback']}")
+        if _advisory_parts:
+            feedback = feedback + " | Director advisory: " + " / ".join(_advisory_parts)
 
         results["final_decision"] = final_decision
         results["feedback"] = feedback

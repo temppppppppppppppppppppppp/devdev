@@ -3266,6 +3266,10 @@ class SovereignApp:
                 self.ui.log(f"      ⚠️ [V69.1] WorldStateManager 초기화 실패 (비차단): {str(_ws_err)[:60]}")
                 self.world_state = None
 
+        # [TF-36] WorldState → StateTracker 바인딩
+        if self.world_state is not None and self.state_tracker is not None:
+            self.state_tracker.bind_world_state(self.world_state)
+
         # [V69.1] FactLedger 초기화
         if not hasattr(self, "fact_ledger") or self.fact_ledger is None:
             try:
@@ -3346,18 +3350,30 @@ class SovereignApp:
             return
 
         all_arcs = self.current_project.db.load_anchor("arcs") or []
-        done_arcs = len(all_arcs)
-        remaining = total_arcs - done_arcs
+        designed_arcs = len(all_arcs)
+
+        # [TF-35d] "완료된 Arc" = 마지막 에피소드 원고까지 존재하는 Arc
+        latest_written = self.current_project.get_latest_episode_number() - 1  # 작성된 최종 ep (0 if none)
+        fully_done_arcs = 0
+        for arc in all_arcs:
+            if latest_written >= arc.get("ep_end", 0):
+                fully_done_arcs += 1
+            else:
+                break  # 순차적이므로 첫 미완성 이후는 전부 미완성
+
+        remaining = total_arcs - fully_done_arcs
 
         if remaining <= 0:
-            self.ui.log(f"✅ 모든 Arc({total_arcs}개) 설계가 이미 완료되었습니다.")
-            # 남은 Blueprint/원고만 처리할 수도 있지만, Arc가 없으면 진행 불가
+            self.ui.log(f"✅ 모든 Arc({total_arcs}개)의 원고가 이미 완료되었습니다.")
             return
 
         # ─── 2. 유저 입력 ───
         self.ui.log(f"\n{'═' * 60}")
         self.ui.log("🔄 [OneStop] Arc-by-Arc 자동 파이프라인")
-        self.ui.log(f"   완료된 Arc: {done_arcs} / 전체: {total_arcs} (남은: {remaining}개)")
+        self.ui.log(f"   완료된 Arc: {fully_done_arcs} / 전체: {total_arcs} (남은: {remaining}개)")
+        if designed_arcs > fully_done_arcs:
+            _incomplete = designed_arcs - fully_done_arcs
+            self.ui.log(f"   ⚠️ 미완성 Arc {_incomplete}개 감지 — 이어쓰기 진행")
         self.ui.log(f"{'═' * 60}\n")
 
         default_count = min(remaining, 3)
@@ -3375,57 +3391,68 @@ class SovereignApp:
 
         # ─── 3. Arc-by-Arc 루프 ───
         for arc_offset in range(target_count):
-            current_arc_no = done_arcs + arc_offset + 1
+            current_arc_no = fully_done_arcs + arc_offset + 1
             self.ui.log(f"\n{'━' * 60}")
             self.ui.log(f"🔄 [OneStop] Arc {current_arc_no}/{total_arcs} 처리 시작 ({arc_offset + 1}/{target_count})")
             self.ui.log(f"{'━' * 60}")
 
-            # ━━━ Stage 2: Arc 1개 생성 ━━━
-            self.ui.log(f"\n   📐 [Stage 2] Arc {current_arc_no} 설계 중...")
-            try:
-                from modules.core.stage2_context import Stage2Context
-
-                self._stage2_orch.ctx = Stage2Context.from_app(self)
-
-                try:
-                    loop = asyncio.get_running_loop()
-                except RuntimeError:
-                    loop = None
-
-                if loop and loop.is_running():
-                    import concurrent.futures
-
-                    with concurrent.futures.ThreadPoolExecutor() as executor:
-                        future = executor.submit(
-                            asyncio.run,
-                            self._stage2_orch.stage_2_arcs_async_logic(target_arc_count=1),
-                        )
-                        future.result(timeout=600)
-                else:
-                    asyncio.run(self._stage2_orch.stage_2_arcs_async_logic(target_arc_count=1))
-
-                # StateTracker 동기화 (기존 _stage_2_arcs 패턴)
-                _s2_ctx = self._stage2_orch.ctx
-                if _s2_ctx is not None and getattr(_s2_ctx, "state_tracker", None) is not None:
-                    self.state_tracker = _s2_ctx.state_tracker
-                self._state_tracker_loaded_arcs = getattr(_s2_ctx, "state_tracker_loaded_arcs", 0)
-
-            except Exception as s2_err:
-                self.ui.log(f"   ❌ [Stage 2] Arc {current_arc_no} 설계 실패: {str(s2_err)[:100]}")
-                self.ui.log("   🛑 Arc 없이 진행 불가 — 파이프라인을 중단합니다.")
-                break
-
-            # Arc 생성 확인
+            # [TF-35d] Arc가 이미 설계되었으면 Stage 2 건너뛰기
             refreshed_arcs = self.current_project.db.load_anchor("arcs") or []
-            if len(refreshed_arcs) <= done_arcs + arc_offset:
-                self.ui.log(f"   ❌ [Stage 2] Arc {current_arc_no} 생성이 확인되지 않습니다.")
-                self.ui.log("   🛑 파이프라인을 중단합니다.")
-                break
+            if current_arc_no <= len(refreshed_arcs):
+                # Arc already designed — skip Stage 2
+                current_arc = refreshed_arcs[current_arc_no - 1]
+                arc_ep_start = current_arc.get("ep_start", 1)
+                arc_ep_end = current_arc.get("ep_end", arc_ep_start + 4)
+                self.ui.log(
+                    f"   ✅ [Stage 2] Arc {current_arc_no} 이미 설계됨 (ep {arc_ep_start}~{arc_ep_end}) — 건너뜀"
+                )
+            else:
+                # New arc — 기존 Stage 2 로직
+                self.ui.log(f"\n   📐 [Stage 2] Arc {current_arc_no} 설계 중...")
+                try:
+                    from modules.core.stage2_context import Stage2Context
 
-            current_arc = refreshed_arcs[-1]
-            arc_ep_start = current_arc.get("ep_start", 1)
-            arc_ep_end = current_arc.get("ep_end", arc_ep_start + 4)
-            self.ui.log(f"   ✅ [Stage 2] Arc {current_arc_no} 완료 (ep {arc_ep_start}~{arc_ep_end})")
+                    self._stage2_orch.ctx = Stage2Context.from_app(self)
+
+                    try:
+                        loop = asyncio.get_running_loop()
+                    except RuntimeError:
+                        loop = None
+
+                    if loop and loop.is_running():
+                        import concurrent.futures
+
+                        with concurrent.futures.ThreadPoolExecutor() as executor:
+                            future = executor.submit(
+                                asyncio.run,
+                                self._stage2_orch.stage_2_arcs_async_logic(target_arc_count=1),
+                            )
+                            future.result(timeout=600)
+                    else:
+                        asyncio.run(self._stage2_orch.stage_2_arcs_async_logic(target_arc_count=1))
+
+                    # StateTracker 동기화 (기존 _stage_2_arcs 패턴)
+                    _s2_ctx = self._stage2_orch.ctx
+                    if _s2_ctx is not None and getattr(_s2_ctx, "state_tracker", None) is not None:
+                        self.state_tracker = _s2_ctx.state_tracker
+                    self._state_tracker_loaded_arcs = getattr(_s2_ctx, "state_tracker_loaded_arcs", 0)
+
+                except Exception as s2_err:
+                    self.ui.log(f"   ❌ [Stage 2] Arc {current_arc_no} 설계 실패: {str(s2_err)[:100]}")
+                    self.ui.log("   🛑 Arc 없이 진행 불가 — 파이프라인을 중단합니다.")
+                    break
+
+                # Arc 생성 확인
+                refreshed_arcs = self.current_project.db.load_anchor("arcs") or []
+                if current_arc_no > len(refreshed_arcs):
+                    self.ui.log(f"   ❌ [Stage 2] Arc {current_arc_no} 생성이 확인되지 않습니다.")
+                    self.ui.log("   🛑 파이프라인을 중단합니다.")
+                    break
+
+                current_arc = refreshed_arcs[current_arc_no - 1]
+                arc_ep_start = current_arc.get("ep_start", 1)
+                arc_ep_end = current_arc.get("ep_end", arc_ep_start + 4)
+                self.ui.log(f"   ✅ [Stage 2] Arc {current_arc_no} 완료 (ep {arc_ep_start}~{arc_ep_end})")
 
             # ━━━ Stage 3: Blueprint (arc 범위) ━━━
             self.ui.log(f"\n   📐 [Stage 3] Blueprint 생성 중 (ep {arc_ep_start}~{arc_ep_end})...")
@@ -3437,7 +3464,8 @@ class SovereignApp:
                 s3_success = s3_result.get("success_count", 0) if s3_result else 0
                 s3_fail = s3_result.get("fail_count", 0) if s3_result else 0
 
-                if s3_success == 0:
+                if s3_success == 0 and s3_fail > 0:
+                    # 실제 실패
                     self.ui.log(f"   ⚠️ [Stage 3] Blueprint 생성 실패 (성공: 0, 실패: {s3_fail})")
                     try:
                         skip_choice = input("   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ").strip()
@@ -3449,6 +3477,9 @@ class SovereignApp:
                     self.ui.log("   ⏭️ Stage 3 건너뛰고 다음 Arc로...")
                     arcs_completed += 1
                     continue
+                elif s3_success == 0 and s3_fail == 0:
+                    # [TF-35d] 모든 Blueprint 이미 존재 — 정상
+                    self.ui.log(f"   ✅ [Stage 3] Blueprint 이미 완료 (ep {arc_ep_start}~{arc_ep_end}) — 건너뜀")
                 else:
                     self.ui.log(f"   ✅ [Stage 3] Blueprint 완료 (성공: {s3_success}, 실패: {s3_fail})")
             except Exception as s3_err:
@@ -3498,7 +3529,9 @@ class SovereignApp:
         self.ui.log(f"\n{'═' * 60}")
         self.ui.log("📊 [OneStop] 파이프라인 완료 보고")
         if arcs_completed > 0:
-            self.ui.log(f"   Arc 처리: {arcs_completed}개 (Arc {done_arcs + 1}~{done_arcs + arcs_completed})")
+            self.ui.log(
+                f"   Arc 처리: {arcs_completed}개 (Arc {fully_done_arcs + 1}~{fully_done_arcs + arcs_completed})"
+            )
         else:
             self.ui.log("   Arc 처리: 0개")
         self.ui.log(f"   전체 Arc: {len(final_arcs)}/{total_arcs}")

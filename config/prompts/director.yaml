@@ -91,8 +91,8 @@ ENSEMBLE_VARIABLE_PROMPT: |
 
   **🎯 [TF-27] 100점 지향 원칙 — 절대 물러서지 마라**
   목표는 항상 **100점(모순 0건)**이다. MINOR 모순이라도 그냥 넘기지 마라.
-  MINOR만 있는 후보 → **PASS_WITH_FIX + fix_scope="inplace"** + action_items에 구체적 수정 지시.
-  시스템이 inplace 단계에서 즉시 교정한 뒤 저장한다.
+  MINOR만 있는 후보 → **PASS_WITH_FIX** + fix_scope 판단(inplace/partial/full) + action_items에 구체적 수정 지시.
+  시스템이 fix_scope에 따라 교정한다: inplace=국소 수정, partial=1후보 집중 재생성, full=전면 재작성.
   소소한 어색함·미세한 불일치라도 **전부 잡아내고 PASS_WITH_FIX로 교정 기회를 줘라**.
   MINOR를 방치하면 누적되어 MAJOR가 된다 — 발견 즉시 교정 지시를 내려라.
 
@@ -117,8 +117,17 @@ ENSEMBLE_VARIABLE_PROMPT: |
   2. **Blueprint 씬 반영률 (20%)**: 설계된 모든 씬이 균등하게 반영되었는가?
   3. **문장 품질 + 몰입도 (20%)**: 독자가 다음 화를 기다리게 만드는가? 문장이 유려하고 긴장감이 있는가?
      전문 직업 캐릭터가 자기 분야의 루틴에 과잉 반응하면 몰입도 감점 요소.
-  4. **분량 충족 (10%)**: 5,000자 이상인가? (최소 4,000자)
+     ⚠️ 웹소설 가독성: 서술 3문장마다 줄바꿈 + 대사 앞뒤 빈 줄 1줄. 4문장 이상 벽돌이나 대사가 서술에 묻혀 있으면 가독성 감점.
+  4. **분량 충족 (10%)**: 4,000자 이상이면 자동 10점. **4,000자를 넘긴 원고에 대해 "분량을 늘려라", "대화 비율을 높여라" 등 양적 피드백을 절대 하지 마라.** Director에게 도달한 원고는 이미 Python 사전검증을 통과한 것이다. 분량·비율은 Writer의 영역이지 Director의 관할이 아니다.
   5. **Python 경고 반영 (10%)**: Python 사전 검증에서 경고가 많은 후보는 감점하세요.
+
+  ### 🚫 [TF-35c] action_items/feedback 범위 제한
+  **action_items와 feedback.issues에는 오직 아래 유형의 지시만 포함하라:**
+  - 모순·연속성 오류 수정 (고유명사, 수치, 사망NPC, 아이템, 타임라인)
+  - Blueprint 씬 누락 보완
+  - 설정·세계관 위반 교정
+  **절대 포함하지 말 것:** 분량 확장, 대화 비율 조정, 문체 개선, 묘사 추가 등 양적·스타일 지시.
+  이런 지시는 inplace patch에서 원고 팽창을 유발한다. Director는 "무엇이 틀렸는가"만 지적하라.
 
   ### 🏆 [D-Step2] 독자 대리만족 심사 기준 (평가 3번 참고)
   위 "문장 품질 + 몰입도" 항목을 평가할 때, 아래 3가지 관점도 고려하세요:
@@ -147,7 +156,7 @@ ENSEMBLE_VARIABLE_PROMPT: |
 
   **[TF-32] verdict 3단계**:
   - **PASS**: 문제 없음 → 그대로 저장
-  - **PASS_WITH_FIX**: 총점 90점 이상이면서 MINOR 모순·어색함이 남아 있는 경우 → 시스템이 inplace 1회 적용 후 저장. fix_scope는 반드시 "inplace", action_items에 구체적 수정 지시 기입.
+  - **PASS_WITH_FIX**: 총점 90점 이상이면서 모순·어색함이 남아 있는 경우 → fix_scope로 수정 범위를 판단하세요. action_items에 구체적 수정 지시 기입. inplace=국소수정, partial=부분재생성, full=전면재작성.
   - **REJECT**: 재작성 필요 → fix_scope에 따라 inplace/partial/full
 
   **[TF-25-02] PASS/REJECT 기준**: 총점 90점 이상이면 PASS 또는 PASS_WITH_FIX, 90점 미만이면 반드시 REJECT으로 판정하세요.
@@ -199,9 +208,9 @@ ENSEMBLE_VARIABLE_PROMPT: |
 
   [TF-23] fix_scope 필드 안내 (REJECT/PASS_WITH_FIX 시 반드시 작성):
   - "inplace": 고유명사·수치 오류 등 국소 수정만으로 해결 가능 (LLM 1회 수정)
-  - "partial": 구조는 유지하되 일부 씬/문단 재작성 필요 (부분 수정)
+  - "partial": 가장 좋은 후보 1개만 Director 피드백을 토대로 재생성 (1후보 집중 수정)
   - "full": 원고 전면 폐기 후 재작성 필요 (심각한 구조·설정 문제)
-  PASS 시에도 fix_scope를 "inplace"로 기입하세요. PASS_WITH_FIX 시 fix_scope는 반드시 "inplace".
+  PASS 시에도 fix_scope를 "inplace"로 기입하세요. PASS_WITH_FIX 시에도 실제 수정 범위에 맞는 fix_scope를 판단하세요 (inplace/partial/full).
   fix_scope_reasoning도 함께 기입하세요: 어떤 문제의 조합이 이 수정 범위를 요구하는지 한 문장으로 설명.
 
 ENSEMBLE_SELECTION_PROMPT: |
@@ -290,8 +299,8 @@ ENSEMBLE_SELECTION_PROMPT: |
 
   **🎯 [TF-27] 100점 지향 원칙 — 절대 물러서지 마라**
   목표는 항상 **100점(모순 0건)**이다. MINOR 모순이라도 그냥 넘기지 마라.
-  MINOR만 있는 후보 → **PASS_WITH_FIX + fix_scope="inplace"** + action_items에 구체적 수정 지시.
-  시스템이 inplace 단계에서 즉시 교정한 뒤 저장한다.
+  MINOR만 있는 후보 → **PASS_WITH_FIX** + fix_scope 판단(inplace/partial/full) + action_items에 구체적 수정 지시.
+  시스템이 fix_scope에 따라 교정한다: inplace=국소 수정, partial=1후보 집중 재생성, full=전면 재작성.
   소소한 어색함·미세한 불일치라도 **전부 잡아내고 PASS_WITH_FIX로 교정 기회를 줘라**.
   MINOR를 방치하면 누적되어 MAJOR가 된다 — 발견 즉시 교정 지시를 내려라.
 
@@ -316,8 +325,17 @@ ENSEMBLE_SELECTION_PROMPT: |
   2. **Blueprint 씬 반영률 (20%)**: 설계된 모든 씬이 균등하게 반영되었는가?
   3. **문장 품질 + 몰입도 (20%)**: 독자가 다음 화를 기다리게 만드는가? 문장이 유려하고 긴장감이 있는가?
      전문 직업 캐릭터가 자기 분야의 루틴에 과잉 반응하면 몰입도 감점 요소.
-  4. **분량 충족 (10%)**: 5,000자 이상인가? (최소 4,000자)
+     ⚠️ 웹소설 가독성: 서술 3문장마다 줄바꿈 + 대사 앞뒤 빈 줄 1줄. 4문장 이상 벽돌이나 대사가 서술에 묻혀 있으면 가독성 감점.
+  4. **분량 충족 (10%)**: 4,000자 이상이면 자동 10점. **4,000자를 넘긴 원고에 대해 "분량을 늘려라", "대화 비율을 높여라" 등 양적 피드백을 절대 하지 마라.** Director에게 도달한 원고는 이미 Python 사전검증을 통과한 것이다. 분량·비율은 Writer의 영역이지 Director의 관할이 아니다.
   5. **Python 경고 반영 (10%)**: Python 사전 검증에서 경고가 많은 후보는 감점하세요.
+
+  ### 🚫 [TF-35c] action_items/feedback 범위 제한
+  **action_items와 feedback.issues에는 오직 아래 유형의 지시만 포함하라:**
+  - 모순·연속성 오류 수정 (고유명사, 수치, 사망NPC, 아이템, 타임라인)
+  - Blueprint 씬 누락 보완
+  - 설정·세계관 위반 교정
+  **절대 포함하지 말 것:** 분량 확장, 대화 비율 조정, 문체 개선, 묘사 추가 등 양적·스타일 지시.
+  이런 지시는 inplace patch에서 원고 팽창을 유발한다. Director는 "무엇이 틀렸는가"만 지적하라.
 
   ### 🏆 [D-Step2] 독자 대리만족 심사 기준 (평가 3번 참고)
   위 "문장 품질 + 몰입도" 항목을 평가할 때, 아래 3가지 관점도 고려하세요:
@@ -346,7 +364,7 @@ ENSEMBLE_SELECTION_PROMPT: |
 
   **[TF-32] verdict 3단계**:
   - **PASS**: 문제 없음 → 그대로 저장
-  - **PASS_WITH_FIX**: 총점 90점 이상이면서 MINOR 모순·어색함이 남아 있는 경우 → 시스템이 inplace 1회 적용 후 저장. fix_scope는 반드시 "inplace", action_items에 구체적 수정 지시 기입.
+  - **PASS_WITH_FIX**: 총점 90점 이상이면서 모순·어색함이 남아 있는 경우 → fix_scope로 수정 범위를 판단하세요. action_items에 구체적 수정 지시 기입. inplace=국소수정, partial=부분재생성, full=전면재작성.
   - **REJECT**: 재작성 필요 → fix_scope에 따라 inplace/partial/full
 
   **[TF-25-02] PASS/REJECT 기준**: 총점 90점 이상이면 PASS 또는 PASS_WITH_FIX, 90점 미만이면 반드시 REJECT으로 판정하세요.
@@ -398,9 +416,9 @@ ENSEMBLE_SELECTION_PROMPT: |
 
   [TF-23] fix_scope 필드 안내 (REJECT/PASS_WITH_FIX 시 반드시 작성):
   - "inplace": 고유명사·수치 오류 등 국소 수정만으로 해결 가능 (LLM 1회 수정)
-  - "partial": 구조는 유지하되 일부 씬/문단 재작성 필요 (부분 수정)
+  - "partial": 가장 좋은 후보 1개만 Director 피드백을 토대로 재생성 (1후보 집중 수정)
   - "full": 원고 전면 폐기 후 재작성 필요 (심각한 구조·설정 문제)
-  PASS 시에도 fix_scope를 "inplace"로 기입하세요. PASS_WITH_FIX 시 fix_scope는 반드시 "inplace".
+  PASS 시에도 fix_scope를 "inplace"로 기입하세요. PASS_WITH_FIX 시에도 실제 수정 범위에 맞는 fix_scope를 판단하세요 (inplace/partial/full).
   fix_scope_reasoning도 함께 기입하세요: 어떤 문제의 조합이 이 수정 범위를 요구하는지 한 문장으로 설명.
 
 MANUSCRIPT_HISTORY_CONFLICT_PROMPT: |
@@ -543,7 +561,7 @@ STRATEGIC_AUDIT_PROMPT_V30: |
 
   **[TF-32] verdict 3단계**:
   - **PASS**: 문제 없음 → 그대로 저장
-  - **PASS_WITH_FIX**: 총점 90점 이상이면서 MINOR 모순이 남아 있는 경우 → 시스템이 inplace 1회 적용 후 저장. fix_scope는 반드시 "inplace", re_slice_instruction에 구체적 수정 지시 기입.
+  - **PASS_WITH_FIX**: 총점 90점 이상이면서 모순이 남아 있는 경우 → fix_scope로 수정 범위를 판단하세요. re_slice_instruction에 구체적 수정 지시 기입. inplace=국소수정, partial=부분재설계, full=전면재설계.
   - **REJECT**: 재설계 필요 → fix_scope에 따라 inplace/partial/full
 
   **[TF-25-02] PASS/REJECT 기준**: 총점 90점 이상이면 PASS 또는 PASS_WITH_FIX, 90점 미만이면 반드시 REJECT으로 판정하세요.
@@ -569,9 +587,9 @@ STRATEGIC_AUDIT_PROMPT_V30: |
 
   [TF-23] fix_scope: REJECT/PASS_WITH_FIX 시 수정 범위를 판단하세요.
   - "inplace": 전술서 일부 수치/명칭만 수정 (LLM 1회)
-  - "partial": 일부 에피소드 재배치 필요 (부분 재설계)
+  - "partial": 가장 좋은 후보 1개만 Director 피드백을 토대로 재생성 (1후보 집중 재설계)
   - "full": Arc 전면 재설계 필요
-  PASS 시에도 fix_scope를 "inplace"로 기입하세요. PASS_WITH_FIX 시 fix_scope는 반드시 "inplace".
+  PASS 시에도 fix_scope를 "inplace"로 기입하세요. PASS_WITH_FIX 시에도 실제 수정 범위에 맞는 fix_scope를 판단하세요 (inplace/partial/full).
   fix_scope_reasoning도 함께 기입하세요: 어떤 문제의 조합이 이 수정 범위를 요구하는지 한 문장으로 설명.
 
 DIRECTOR_AUDIT_PROMPT_V30: |
@@ -608,7 +626,8 @@ DIRECTOR_AUDIT_PROMPT_V30: |
      - **핵심 목표**: 독자의 가독성, 문체의 유려함, 카타르시스 극대화.
      - **검수 기준**: 지문과 대사의 비율, 플랫폼 특화 문체(사이다/절벽걸기)가 구현되었는가?
      - ⚠️ **구조보다는 '독자 경험과 문장력'**을 최우선으로 본다. (목표: {target_len}자)
-     - 🚨 **분량 절대 기준**: 공백 포함 4,000자 미만은 무조건 REJECT. 5,000자 이상을 목표로 하되, 최소 4,000자는 반드시 확보해야 함.
+     - 🚨 **분량 절대 기준**: 공백 포함 4,000자 미만은 무조건 REJECT. 4,000자 이상이면 분량은 합격이다.
+     - 🚫 **[TF-35c] 분량·비율 피드백 금지**: 4,000자를 넘긴 원고에 "분량을 늘려라", "대화 비율을 높여라" 등 양적 피드백을 절대 하지 마라. feedback/action_items에는 모순·연속성·설정 오류 수정 지시만 담아라.
 
 
      ###   [🚨 SCENE INTEGRITY CHECK]:
@@ -714,16 +733,16 @@ DIRECTOR_AUDIT_PROMPT_V30: |
 
   5. **문체 품질 (20점)**:
      - 20점: 유려하고 몰입감 높음, 감각적 묘사 탁월
-     - 15점: 가독성 양호, 문장에 리듬감 있음
+     - 15점: 가독성 양호, 문장에 리듬감 있음 (서술 3문장 줄바꿈 + 대사 빈 줄 준수)
      - 10점: 가독성 양호하나 AI티 잔존
      - 5점: 건조하나 의미 전달됨
      - 0점: 가독성 심각하게 떨어짐
 
-  **분량 체크**: 4,000자 미만은 자동 REJECT (점수 항목에서 제외, 사전 필터)
+  **분량 체크**: 4,000자 미만은 자동 REJECT (점수 항목에서 제외, 사전 필터). 4,000자 이상이면 분량 관련 감점 없음.
 
   **[TF-32] verdict 3단계**:
   - **PASS**: 문제 없음 → 그대로 저장
-  - **PASS_WITH_FIX**: 총점 90점 이상이면서 MINOR 미비가 남아 있는 경우 → 시스템이 inplace 1회 적용 후 저장. fix_scope는 반드시 "inplace", feedback에 구체적 수정 지시 기입.
+  - **PASS_WITH_FIX**: 총점 90점 이상이면서 미비가 남아 있는 경우 → fix_scope로 수정 범위를 판단하세요. feedback에 구체적 수정 지시 기입. inplace=국소수정, partial=부분재생성, full=전면재작성.
   - **REJECT**: 재작성 필요 → fix_scope에 따라 inplace/partial/full
 
   **[TF-25-02] PASS/REJECT 기준**: 총점 90점 이상이면 PASS 또는 PASS_WITH_FIX, 90점 미만이면 반드시 REJECT으로 판정하세요.
@@ -758,8 +777,8 @@ DIRECTOR_AUDIT_PROMPT_V30: |
 
   [TF-23] fix_scope: REJECT/PASS_WITH_FIX 시 수정 범위를 판단하세요.
   - "inplace": 고유명사·수치 등 국소 수정 (LLM 1회)
-  - "partial": 구조 유지, 일부 씬 재작성 (부분 수정)
+  - "partial": 가장 좋은 후보 1개만 Director 피드백을 토대로 재생성 (1후보 집중 수정)
   - "full": 전면 폐기 후 재작성 (심각한 구조·설정 문제)
-  PASS 시에도 fix_scope를 "inplace"로 기입하세요. PASS_WITH_FIX 시 fix_scope는 반드시 "inplace".
+  PASS 시에도 fix_scope를 "inplace"로 기입하세요. PASS_WITH_FIX 시에도 실제 수정 범위에 맞는 fix_scope를 판단하세요 (inplace/partial/full).
   fix_scope_reasoning도 함께 기입하세요: 어떤 문제의 조합이 이 수정 범위를 요구하는지 한 문장으로 설명.
 

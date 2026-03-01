@@ -128,6 +128,7 @@ class ArcEnsembleGenerator(BaseAgent):
         entity_registry: dict = None,  # [V60.92] Entity Registry (NPC 명칭 일관성)
         ep_count: int = None,  # [V61.1] 가변 페이싱 - 상위에서 결정된 ep_count
         retry: int = 0,  # [V61.5] 재시도 횟수 (>0이면 thinking "medium"으로 다운그레이드)
+        single_strategy: str = "",  # [TF-36] partial 시 1개 전략만
     ) -> tuple[dict | None, list[dict]]:
         """
         앙상블 Arc 생성
@@ -178,11 +179,18 @@ class ArcEnsembleGenerator(BaseAgent):
 
         _tp_t0 = time.monotonic()
 
+        # [TF-36] single_strategy 필터링 (partial 시 1개 전략만)
+        _active_strategies = self.strategies
+        if single_strategy:
+            _filtered = [s for s in self.strategies if s.get("name") == single_strategy]
+            if _filtered:
+                _active_strategies = _filtered
+
         # [V61.3] 전체 병렬 처리 블록을 try-except로 감싸서 급사 방지
         try:
             with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
                 futures = {}
-                for strategy in self.strategies:
+                for strategy in _active_strategies:
                     # [EnsembleFB] REJECT된 전략에만 전용 피드백 주입
                     _strategy_fb = (
                         strategy_specific_feedback
@@ -493,7 +501,7 @@ class ArcEnsembleGenerator(BaseAgent):
                     extended_block_guide=self._escape_braces(extended_block_guide),  # [TF-9]
                     vol_strategy=self._escape_braces(vol_strategy[:2000] if vol_strategy else "(없음)"),
                     assets=self._escape_braces(json.dumps(assets, ensure_ascii=False)[:2000] if assets else "{}"),
-                    feedback=self._escape_braces(_merged_feedback[:3000] if _merged_feedback else "(없음)"),
+                    feedback=self._escape_braces(_merged_feedback[:9000] if _merged_feedback else "(없음)"),
                     entity_registry_section=self._escape_braces(entity_registry_section),  # [V60.92]
                     energy_system_block=self._escape_braces(self._get_energy_system_block(genre)),
                     arc_no=arc_no,

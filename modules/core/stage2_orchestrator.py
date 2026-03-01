@@ -153,6 +153,7 @@ class Stage2Orchestrator:
                 preset_registry=self.ctx.preset_registry, llm_client=self.ctx.sys.api_client
             )
             self.ctx.state_tracker.bind_db(self.ctx.current_project.db)  # [NPC-L1] NPC 이력 DB 배선
+            self.ctx.state_tracker.bind_world_state(getattr(self.ctx, "world_state", None))  # [TF-36] WorldState 배선
             existing_tracker_arcs = 0
             # [V63.4 P0] DB에서 금융 레지스트리 복원 (투자물)
             _saved_fin = self.ctx.current_project.load_v20_anchor("financial_registry", default=None)
@@ -581,6 +582,7 @@ class Stage2Orchestrator:
                             "selection_reason": _fin.get("selection_reason", ""),
                             "validation_warnings": _fin.get("validation_warnings", []),
                             "fix_scope": _fin.get("fix_scope", ""),  # [TF-23] Director 판단 수정 범위
+                            "selected_strategy": _rej_arc.get("_ensemble_meta", {}).get("best_strategy", ""),  # [TF-36]
                         }
                     else:
                         _previous_attempt = None

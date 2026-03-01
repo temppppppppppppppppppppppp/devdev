@@ -130,6 +130,8 @@ class UnifiedBlueprintValidator:
                 "selected_blueprint": selected_bp,
                 "comparison_notes": compare_result.get("comparison_notes", ""),
                 "contradictions": _contradictions,
+                "fix_scope": compare_result.get("fix_scope", ""),  # [TF-33] Director 수정 범위 전파
+                "fix_scope_reasoning": compare_result.get("fix_scope_reasoning", ""),  # [TF-33]
             }
 
             status = "✅ PASS" if verdict == "PASS" else "❌ REJECT"
@@ -181,15 +183,15 @@ class UnifiedBlueprintValidator:
         # Phase B: Director 최종 판정 (디렉터주권주의) - 항상 호출
         # ═══════════════════════════════════════════════════════════════
         if director is None:
-            # [V60.80] Director 없으면 PASS 처리 (Python은 REJECT 권한 없음)
-            logging.warning("⚠️ [PreValidator] Director 없음 - 경고 출력 후 PASS 처리")
-            logging.warning("(Python은 REJECT 권한 없음, Director 전달 필수)")
-            return "PASS", {
-                "verdict": "PASS",
+            # [TF-36] 대원칙 3: Director 없으면 REJECT — 디렉터 주권주의 위반 방지
+            logging.error("❌ [대원칙3] Director가 None — Blueprint 판정 불가, REJECT 처리")
+            return "REJECT", {
+                "verdict": "REJECT",
                 "phase": "no_director",
                 "issues": pre_result["issues"],
-                "summary": "Director 없이 통과 (Python 경고만)",
-                "feedback": "",
+                "summary": "Director 에이전트 미주입 — 디렉터 주권주의에 의해 REJECT",
+                "feedback": "Director 없이는 Blueprint를 승인할 수 없습니다.",
+                "score": 0,
             }
 
         logging.warning("🎬 [Director] Blueprint 최종 판정 중...")
@@ -298,12 +300,17 @@ class UnifiedBlueprintValidator:
                     "director_score": director_score,
                     "pre_issues_count": len(pre_result["issues"]),
                 },
-                "feedback": director_feedback if final_verdict == "REJECT" else "",
+                "feedback": director_feedback
+                if final_verdict in ("REJECT", "PASS_WITH_FIX")
+                else "",  # [TF-34] PASS_WITH_FIX 피드백 보존
                 "pre_issues": len(pre_result["issues"]),
                 "confidence": 0.9 if director_score >= 70 else 0.6,
+                "fix_scope": director_result.get("fix_scope", ""),  # [TF-33] Director 수정 범위 전파
+                "fix_scope_reasoning": director_result.get("fix_scope_reasoning", ""),  # [TF-33]
+                "re_slice_instruction": director_result.get("re_slice_instruction", ""),  # [TF-35] 수정 지시 전파
             }
 
-            status = "✅ PASS" if final_verdict == "PASS" else "❌ REJECT"
+            status = "✅ PASS" if final_verdict in ("PASS", "PASS_WITH_FIX") else "❌ REJECT"
             logging.warning(f"{status} [Director] 점수: {director_score}, 사유: {(director_reason or '')[:50]}...")
 
             return final_verdict, result
