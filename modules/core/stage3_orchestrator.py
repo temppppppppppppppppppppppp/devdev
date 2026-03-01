@@ -356,7 +356,11 @@ class Stage3Orchestrator:
         )
 
         # 결과 처리
-        if blueprint and pipeline_result.get("final_verdict") in ("PASS", "PASS_WITH_WARNING"):
+        if blueprint and pipeline_result.get("final_verdict") in (
+            "PASS",
+            "PASS_WITH_FIX",
+            "PASS_WITH_WARNING",
+        ):  # [TF-32-S3]
             return self._handle_success(
                 working_ep, arc_no, blueprint, pipeline_result, prev_blueprints, success_count, fail_count
             )

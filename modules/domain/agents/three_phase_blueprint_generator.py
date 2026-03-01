@@ -390,16 +390,18 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                     logging.warning(f"   ▸ {str(_c)[:150]}")
                 pipeline_result["phases"]["validate"]["contradictions"] = _contradictions
 
-            if verdict == "PASS" and _score < _quality_gate_score:
+            if verdict in ("PASS", "PASS_WITH_FIX") and _score < _quality_gate_score:  # [TF-32-S3]
                 logging.warning(f"[QualityGate] Stage3 PASS이나 score={_score} < {_quality_gate_score} → REJECT 전환")
                 verdict = "REJECT"
                 # [S3-P1-4] += 누적 대신 _initial_feedback 기반 재구성
                 feedback = _initial_feedback + f"\n[Quality Gate] score {_score}점으로 {_quality_gate_score}점 미달."
 
-            if verdict == "PASS":
+            if verdict in ("PASS", "PASS_WITH_FIX"):  # [TF-32-S3]
                 self.stats["phase3_pass"] += 1
-                pipeline_result["final_verdict"] = "PASS"
-                logging.info(f"✅ [Phase 3] PASS - 제{ep_num}화 Blueprint 생성 완료")
+                pipeline_result["final_verdict"] = verdict  # [TF-32-S3] PASS or PASS_WITH_FIX 보존
+                logging.info(f"✅ [Phase 3] {verdict} - 제{ep_num}화 Blueprint 생성 완료")
+                if verdict == "PASS_WITH_FIX":
+                    logging.info("🔧 [TF-32-S3] Blueprint PASS_WITH_FIX → PASS 취급 저장")
 
                 # [Step2] Pydantic ingress+egress
                 best_blueprint = validate_blueprint(best_blueprint)

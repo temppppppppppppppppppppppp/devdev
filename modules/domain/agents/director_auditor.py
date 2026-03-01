@@ -920,7 +920,7 @@ class DirectorQualityAuditor:
             return first_eval
 
         # 명확한 PASS (점수가 높음) → 추가 평가 없이 반환
-        if first_decision == "PASS" and first_score > self._d.ambiguous_upper:
+        if first_decision in ("PASS", "PASS_WITH_FIX") and first_score > self._d.ambiguous_upper:  # [TF-32-S2]
             pass_reason = first_eval.get("reason", first_eval.get("strengths", "판단 근거 미상"))
             logging.info(f"🎬 [Director] PASS (score={first_score})")
             logging.info(f"⚖️ [SC-Skip] Clear PASS (score={first_score} > ambiguous_upper={self._d.ambiguous_upper})")
@@ -955,7 +955,7 @@ class DirectorQualityAuditor:
             first_eval["self_consistency"] = {
                 "votes": 1,
                 "reason": "no_extra_votes",
-                "pass_votes": 1 if first_decision == "PASS" else 0,
+                "pass_votes": 1 if first_decision in ("PASS", "PASS_WITH_FIX") else 0,  # [TF-32-S2]
             }
             first_eval["_director_thinking"] = _first_thinking  # [TF-28c]
             return first_eval
@@ -1008,7 +1008,7 @@ class DirectorQualityAuditor:
         median_score = int(round(statistics.median(scores))) if scores else 50
 
         # PASS/REJECT 다수결
-        pass_votes = sum(1 for e in evaluations if e.get("decision") == "PASS")
+        pass_votes = sum(1 for e in evaluations if e.get("decision") in ("PASS", "PASS_WITH_FIX"))  # [TF-32-S2]
         final_decision = "PASS" if pass_votes > (len(evaluations) // 2) else "REJECT"
 
         # 대표 결과 선택 (중앙값에 가장 가까운 것)

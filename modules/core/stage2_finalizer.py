@@ -239,7 +239,14 @@ class Stage2Finalizer:
             except Exception:
                 pass
 
-        if audit.get("decision") == "PASS":  # [TF-R4-S2-01] PASS/REJECT 분리 (short tactical_doc REJECT 방지)
+        # [TF-32-S2] PASS_WITH_FIX 로깅
+        _d_decision = audit.get("decision", "")
+        if _d_decision == "PASS_WITH_FIX":
+            _fix_instr = audit.get("re_slice_instruction", "")
+            self.ctx.ui.log(f"      🔧 [TF-32-S2] PASS_WITH_FIX → PASS 취급 저장 (fix: {str(_fix_instr)[:100]})")
+            logging.info("[TF-32-S2] Arc PASS_WITH_FIX → PASS 취급. fix_scope=%s", audit.get("fix_scope", ""))
+
+        if _d_decision in ("PASS", "PASS_WITH_FIX"):  # [TF-R4-S2-01] [TF-32-S2] PASS/PASS_WITH_FIX 수용
             if _td_len >= 1500 and _score < _quality_gate_score:
                 self.ctx.ui.log(
                     f"      ⚠️ [QualityGate] PASS 판정이나 score={_score} < {_quality_gate_score} → REJECT 전환"
@@ -635,7 +642,7 @@ class Stage2Finalizer:
                 "st_snapshot": st_snapshot,
             }
         else:
-            # [V60.77] Director REJECT
+            # [V60.77] Director REJECT (PASS_WITH_FIX는 위에서 PASS 경로로 처리됨)
             _rejected_arc = refined_arc  # [Patch Mode] REJECT된 Arc 보존 (패치 모드 판단용)
             base_feedback = audit.get("re_slice_instruction") or "밀도 보강 필요"
             reject_reason = audit.get("reason") or "사유 미상"
