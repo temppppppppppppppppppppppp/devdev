@@ -37,15 +37,15 @@ except ImportError:
 _WUXIA_ENERGY_BLOCK = """\
   ### [V62.2] 🩹 주인공 자연 회복 원칙 (무협 전용)
   - 주인공은 소설 주인공이다. 힐링팩터가 있다. 절대 약해지지 않는다.
-  - 아크 시작: 부상="없음", 내공=100%. 예외 없음.
+  - 아크 시작: 부상="없음", 내공=이전 Arc 종료값 (최소 90%). 자연 회복 적용.
   - 화별 내공 규칙:
     · 한 화 안에서 긴장/전투로 소모 가능 (최저 60%까지만)
     · 다음 화 시작 시 반드시 90% 이상으로 회복
     · 내공이 화를 거듭하며 떨어지기만 하는 것은 절대 금지
     · 주인공은 점점 강해진다. 내공은 우상향이 기본이다.
   - 부상: Arc 내 일시적 피로/타박 허용, 다음 화면 회복됨. 만성화 금지.
-  - arc_end_state: injuries="없음", internal_energy=100
-  - status_shadow: expected_injuries="없음", internal_energy_loss="0%"
+  - arc_end_state: injuries="없음", internal_energy=최소 90 (이전 Arc 종료값 기반)
+  - status_shadow: expected_injuries="없음", internal_energy_loss="자연 회복 적용"
 
   ### [V60.40] 화간 상태 체크포인트 필수
   각 화는 반드시 시작 상태와 종료 상태를 명시하라:

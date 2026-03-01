@@ -270,8 +270,16 @@ class FourPhaseArcGenerator(BaseAgent):
                 negative_examples = self.negative_injector.generate_injection()
                 self_check = self.negative_injector.generate_self_check_prompt()
 
-                full_constraint_block = "\n".join(
-                    [preflight_injection, compiled_constraints, negative_examples, self_check]
+                # [TF-39] P1-4: 제약 블록 섹션 구조화
+                full_constraint_block = "\n\n".join(
+                    part
+                    for part in [
+                        f"### [PREFLIGHT 분석]\n{preflight_injection}" if preflight_injection else "",
+                        f"### [HARD CONSTRAINTS — 절대 금지]\n{compiled_constraints}" if compiled_constraints else "",
+                        f"### [NEGATIVE EXAMPLES]\n{negative_examples}" if negative_examples else "",
+                        f"### [SELF-CHECK]\n{self_check}" if self_check else "",
+                    ]
+                    if part.strip()
                 )
 
                 cached_preflight = preflight_result
@@ -368,6 +376,9 @@ class FourPhaseArcGenerator(BaseAgent):
                                 _spare_candidates.append(_c)
                         if _spare_candidates:
                             logging.info(f"♻️ [SpareCandidate] 차순위 {len(_spare_candidates)}개 보존")
+
+            if best_arc:
+                logging.info(f"✅ [Phase 2] Ensemble 완료 — 선택 전략: {best_arc.get('strategy', '?')}")
 
             if not best_arc:
                 logging.warning("❌ [Phase 2] Ensemble 생성 실패")
@@ -668,7 +679,17 @@ class FourPhaseArcGenerator(BaseAgent):
         compiled_constraints = self.compiler.compile(prev_arcs)
         negative_examples = self.negative_injector.generate_injection()
         self_check = self.negative_injector.generate_self_check_prompt()
-        full_constraint_block = "\n".join([preflight_injection, compiled_constraints, negative_examples, self_check])
+        # [TF-39] P1-4: 제약 블록 섹션 구조화
+        full_constraint_block = "\n\n".join(
+            part
+            for part in [
+                f"### [PREFLIGHT 분석]\n{preflight_injection}" if preflight_injection else "",
+                f"### [HARD CONSTRAINTS — 절대 금지]\n{compiled_constraints}" if compiled_constraints else "",
+                f"### [NEGATIVE EXAMPLES]\n{negative_examples}" if negative_examples else "",
+                f"### [SELF-CHECK]\n{self_check}" if self_check else "",
+            ]
+            if part.strip()
+        )
 
         # 5) Phase 2: Ensemble 생성 (패치 피드백 주입)
         ep_count, _ = self._determine_ep_count(curr_block, arc_no, prev_arcs)
@@ -815,10 +836,10 @@ class FourPhaseArcGenerator(BaseAgent):
             except Exception:
                 raw_energy = Stage2Limits.INTERNAL_ENERGY_FALLBACK
 
-        # [V62.2] 내공 자연 회복: 아크 간 시간 경과로 최소 100%로 회복
-        final_energy = 100
-        if isinstance(raw_energy, (int, float)) and raw_energy < 100:
-            logging.info(f"🩹 [V62.2] 내공 자연 회복: {int(raw_energy)}% → 100% (아크 간 휴식)")
+        # [TF-39] P0-2: 내공 자연 회복 — 최소 90% (100% 강제 리셋 → 자연 회복)
+        final_energy = max(90, int(raw_energy) if isinstance(raw_energy, (int, float)) else 100)
+        if isinstance(raw_energy, (int, float)) and raw_energy < final_energy:
+            logging.info(f"🩹 [V62.2] 내공 자연 회복: {int(raw_energy)}% → {final_energy}% (아크 간 휴식)")
 
         raw_injuries = arc_end.get("injuries") or "없음"
         final_injuries = self._sanitize_injuries(raw_injuries)
@@ -855,6 +876,41 @@ class FourPhaseArcGenerator(BaseAgent):
         if relationships:
             rel_summary = ", ".join([f"{k}: {v.get('current_state', '?')}" for k, v in list(relationships.items())[:5]])
             lines.append(f"주요 관계: {rel_summary}")
+
+        # [TF-39] P0-3: state_changes 핵심 필드 주입
+        _sc = last_arc.get("state_changes", {})
+        if isinstance(_sc, dict):
+            _deaths = _sc.get("npc_deaths", [])
+            if _deaths:
+                _names = [d.get("name", d.get("npc", str(d))) if isinstance(d, dict) else str(d) for d in _deaths[:10]]
+                lines.append(f"\n🚫 사망 NPC (부활 금지): {', '.join(_names)}")
+
+            _skills = _sc.get("skill_acquisitions", [])
+            if _skills:
+                _names = [
+                    s.get("name", s.get("skill", str(s))) if isinstance(s, dict) else str(s) for s in _skills[:10]
+                ]
+                lines.append(f"⚔️ 습득 기술: {', '.join(_names)}")
+
+            _resolved = _sc.get("resolved_plots", [])
+            if _resolved:
+                _names = [
+                    r.get("plot", r.get("description", str(r))) if isinstance(r, dict) else str(r)
+                    for r in _resolved[:10]
+                ]
+                lines.append(f"🚫 완결된 플롯 (재생성 금지): {', '.join(_names)}")
+
+            _perm = _sc.get("permanent_injuries", [])
+            if _perm:
+                _descs = [
+                    str(p)[:50] if not isinstance(p, dict) else p.get("description", str(p))[:50] for p in _perm[:5]
+                ]
+                lines.append(f"🩹 영구 부상: {', '.join(_descs)}")
+
+            _comp = _sc.get("companion_changes", [])
+            if _comp:
+                _descs = [str(c)[:50] if not isinstance(c, dict) else c.get("name", str(c))[:30] for c in _comp[:5]]
+                lines.append(f"👥 동행자 변경: {', '.join(_descs)}")
 
         # ── [V67] 이전 Arc tactical_doc 전문 확장 (최대 30개) ──
         _prev_start = max(0, len(prev_arcs) - 30)

@@ -49,6 +49,7 @@ class Stage2ValidationPipeline:
         """
         from modules.core.spinners import V50_MODULES_AVAILABLE, rich_console
 
+        self.ctx.ui.log("      🔍 [TF-38] Pre-Director 검증 체인 시작")
         _auto_corrections = []  # [TF-25-09] ArcAutoCorrector 수정 내역 추적
         _python_advisories = []  # [TF-25-08] Pre-Director REJECT → advisory 전환
         ReflectionTarget = None
@@ -97,6 +98,7 @@ class Stage2ValidationPipeline:
             and generation_method == "analyst"
             and ReflectionTarget
         ):
+            self.ctx.ui.log("      🪞 [TF-38] SelfReflector 자기 비판 중...")
             try:
                 logging.warning("🪞 [SelfReflector] Analyst 자기 비판 시작...")
                 arc_str = json.dumps(refined_arc, ensure_ascii=False, indent=2)
@@ -132,13 +134,14 @@ class Stage2ValidationPipeline:
         # [V60.36] Consensus 검증
         # ─────────────────────────────────────────────────────────────
         if not four_phase_passed and refined_arc and "consensus" in self.ctx.agents:
+            self.ctx.ui.log("      🗳️ [TF-38] Consensus 3-LLM 합의 검증 중...")
             try:
                 logging.warning("🗳️ [Consensus] 3-LLM 합의 검증 시작...")
                 with rich_console.status("[bold magenta]🗳️ Consensus 3-LLM 검증 중...[/]", spinner="dots"):
                     consensus_verdict, consensus_result = self.ctx.agents["consensus"].validate_with_consensus(
                         arc=refined_arc,
                         prev_arcs=all_refined_arcs,
-                        constraints="",
+                        constraints=constraint_block or "",  # [TF-39] P1-6
                         python_advisory=python_advisory,
                     )
 
@@ -517,12 +520,19 @@ class Stage2ValidationPipeline:
                         entity_registry=entity_registry_for_director,
                     )
             except Exception as _ci_err:
-                logging.warning("[S2-001] ContinuityInspector 예외 → retry 변환: %s", str(_ci_err)[:100])
-                return {
-                    "action": "retry",
-                    "current_feedback": (
-                        current_feedback + f"\n[연속성 검증 런타임 실패] {type(_ci_err).__name__}: {_ci_err}"
-                    ),
+                logging.warning("[TF-39] ContinuityInspector 예외 → advisory 전환: %s", str(_ci_err)[:100])
+                _python_advisories.append(
+                    {
+                        "source": "continuity_inspector_error",
+                        "severity": "MAJOR",
+                        "message": f"연속성 검증 런타임 오류 ({type(_ci_err).__name__}). Director가 직접 연속성 검증 필요.",
+                    }
+                )
+                continuity_result = {
+                    "decision": "PASS",
+                    "severity": "UNKNOWN",
+                    "violations": [],
+                    "warnings": [f"CI runtime error: {_ci_err}"],
                 }
 
             if continuity_result.get("decision") == "REJECT":
@@ -694,6 +704,7 @@ class Stage2ValidationPipeline:
                         logging.debug(f"[SILENT] success example storage: {e}")
                         pass  # Stage2Optimizer example save failure is non-blocking
 
+        self.ctx.ui.log("      ✅ [TF-38] Pre-Director 검증 완료 → Director 심사 대기")
         return {
             "action": "proceed",
             "refined_arc": refined_arc,
@@ -715,7 +726,9 @@ class Stage2ValidationPipeline:
         normalized = re.sub(r"\s+", " ", normalized).strip()
         return normalized
 
-    def _is_tactical_doc_duplicate(self, candidate_text: str, reference_texts: list, threshold: float = 0.98) -> bool:
+    def _is_tactical_doc_duplicate(
+        self, candidate_text: str, reference_texts: list, threshold: float = 0.92
+    ) -> bool:  # [TF-39] P2-1
         """[V64.P3] 전술서 중복 감지"""
 
         candidate = self._normalize_tactical_text(candidate_text)

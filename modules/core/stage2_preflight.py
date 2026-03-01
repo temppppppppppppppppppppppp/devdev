@@ -475,7 +475,7 @@ class Stage2PreflightAnalysis:
             _st = self.ctx.state_tracker
             _npc_motivations = {}
             if _st and hasattr(_st, "npc_registry"):
-                for _npc_name, _npc_info in list((_st.npc_registry or {}).items())[:20]:
+                for _npc_name, _npc_info in list((_st.npc_registry or {}).items())[:50]:  # [TF-39] P2-2
                     if isinstance(_npc_info, dict):
                         _mot = _npc_info.get("primary_motivation", "")
                         if _mot:
@@ -521,7 +521,7 @@ class Stage2PreflightAnalysis:
 
         # [V51] Analyst 지능 향상 주입
         v51_analyst_injection = ""
-        if V50_MODULES_AVAILABLE and not is_retry:
+        if V50_MODULES_AVAILABLE:  # [TF-39] P1-7: retry에도 거버넌스 유지
             try:
                 if self.ctx.quality_amplifier:
                     analyst_constraints = self.ctx.quality_amplifier.generate_analyst_constraints(
@@ -554,15 +554,27 @@ class Stage2PreflightAnalysis:
 
         # [V60.21] Focus Mode: 재시도 시 컨텍스트 대폭 축소
         if is_retry:
+            # [TF-39] P0-1: retry 시에도 제약 블록 보존
+            _preserved_constraints = ""
+            if constraint_block:
+                _preserved_constraints += constraint_block
+            if cached_preflight_injection:
+                _preserved_constraints += (
+                    ("\n\n" + cached_preflight_injection) if _preserved_constraints else cached_preflight_injection
+                )
+
             if callable(getattr(self.ctx, "build_minimal_arc_context", None)):
                 minimal_prev_context = self.ctx.build_minimal_arc_context(
                     all_refined_arcs, protagonist_name or "주인공"
                 )
             else:
                 minimal_prev_context = enhanced_context[:15000]  # [Phase3-B] 2K→15K: 실패 반복 시 컨텍스트 역설 제거
-            enhanced_context = f"{current_feedback}\n\n{minimal_prev_context}"
+            if _preserved_constraints:
+                enhanced_context = f"{current_feedback}\n\n{_preserved_constraints}\n\n{minimal_prev_context}"
+            else:
+                enhanced_context = f"{current_feedback}\n\n{minimal_prev_context}"
             context_size = len(enhanced_context)
-            self.ctx.ui.log(f"      📢 [V60.21] Focus Mode 활성화 - 컨텍스트 {context_size}자 (최소화)")
+            self.ctx.ui.log(f"      📢 [V60.21] Focus Mode 활성화 - 컨텍스트 {context_size:,}자 (제약 보존)")
 
         # [V60.9] Stage 3→2 역방향 피드백 주입
         try:
@@ -788,6 +800,8 @@ class Stage2PreflightAnalysis:
                         _audit_cb = getattr(self.ctx, "audit_event", None)
                         if callable(_audit_cb):
                             _audit_cb("s2_vector_search_failed", str(e)[:100])
+                    if _s2_vector_ctx:
+                        self.ctx.ui.log(f"      🔎 [TF-38] 벡터 검색 완료 ({len(_s2_vector_ctx):,}자)")
                     # [V65] PerfTimer: Arc 생성 측정
                     try:
                         self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_generate")
@@ -893,6 +907,10 @@ class Stage2PreflightAnalysis:
                             vector_context=_s2_vector_ctx,
                             adversarial_self_play=self.ctx.adversarial_self_play,
                         )
+                    if four_phase_arc:
+                        self.ctx.ui.log("      ✅ [TF-38] Arc 생성 완료")
+                    else:
+                        self.ctx.ui.log("      ⚠️ [TF-38] Arc 생성 실패")
                     try:
                         self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_generate")
                     except Exception as _e:

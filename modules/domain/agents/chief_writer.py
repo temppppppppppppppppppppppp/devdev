@@ -699,6 +699,7 @@ class ChiefWriter(BaseAgent):
         original_manuscript: str,
         director_feedback: str,
         attempt_number: int,
+        style_guide: str = "",  # [TF-37] 스타일 클로닝 갭 수정
     ) -> list[dict]:
         """[TF-23] LLM 1회 호출로 원고 in-place 수정. 실패 시 빈 리스트 → patch/rewrite 폴백."""
         from modules.core.constants import smart_truncate
@@ -713,15 +714,19 @@ class ChiefWriter(BaseAgent):
         def _esc(s):
             return s.replace("{", "{{").replace("}", "}}")
 
+        _style_text = _esc(style_guide) if style_guide else "기본 웹소설 문체"  # [TF-37]
+
         if _patch_template:
             prompt = _patch_template.format(
                 feedback_text=_esc(director_feedback),
                 original_manuscript=_esc(smart_truncate(original_manuscript, max_chars=150000, head_chars=20000)),
+                style_guide=_style_text,  # [TF-37]
             )
         else:
             prompt = (
-                f"[원고 원본 보존 + 지적사항만 수정]\n\n"
-                f"## Director 피드백\n{director_feedback}\n\n"
+                "[원고 원본 보존 + 지적사항만 수정]\n\n"
+                + (f"## 문체 가이드\n{style_guide}\n\n" if style_guide else "")
+                + f"## Director 피드백\n{director_feedback}\n\n"
                 f"## 원본 원고\n{smart_truncate(original_manuscript, max_chars=150000, head_chars=20000)}\n\n"
                 f"전면 재작성하지 마세요. 지적된 부분만 고치세요."
             )

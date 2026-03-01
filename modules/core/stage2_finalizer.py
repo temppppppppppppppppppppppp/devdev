@@ -143,6 +143,7 @@ class Stage2Finalizer:
             _adv_text = constraint_block[_adv_start:]
             _story_context += f"\n\n⚠️ {_adv_text}"
 
+        self.ctx.ui.log("      🤔 [TF-38] Director 전략적 무결성 검수 중...")
         # [G7] Director 심사 호출 크래시 방어
         try:
             audit = self.ctx.agents["director"].audit_strategic_plan(
@@ -312,6 +313,7 @@ class Stage2Finalizer:
                         break
 
                     # Director 재심사 (동일 메서드)
+                    self.ctx.ui.log(f"      🔄 [TF-38] Director 재심사 #{_fix_i + 1} 호출 중...")
                     try:
                         _re_audit = self.ctx.agents["director"].audit_strategic_plan(
                             _patched,
