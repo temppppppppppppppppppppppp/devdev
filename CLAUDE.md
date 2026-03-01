@@ -25,18 +25,18 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 
 ---
 
-## 현재 상태 (2026-02-28)
+## 현재 상태 (2026-03-01)
 
 - **작동함**: Stage 0→2→4 정상 동작
-- **완료된 것**: Phase 1~2, 5-A/5-B/5-C, 6-A/6-B/6-C, 4C(DI), 4D(sqlite-vec), 3-5B(패치), 3-5A(NPC이력), **4-R1~R3(몬스터 분할)**, R4-a(NO-GO), **3-QR(품질 회귀 감지)**, **3-5C(NPC 과잉 경고)**, **3-Obs Step 1+2(관측성 계측)**, **3-B(크로스 에피소드 반복 감지)**, **D.대리만족 전체 완료(Step1~5)**, **A-1(writer 유틸 해체)**, **A-3(test xfail)**, **C-1(PlotGuard 폴백)**, **C-2(NPC 체인)**, **C-3(Validator 체인)**, **B-1 전체 완료(stage4 -64%, chief_writer -62%, stage2 -66%)**, **E-2(Ruff 0 violations)**, **A-2(optimizer TODO)**, **R5(2차 분할 전량)**, **WorkGuard(작품별 YAML)**, **Debug Sweep 1차~12차 전량 완료**, **B-3(Protocol 전면 표준화)**, **DB-SSOT(VecMemory merge)**, **Patch Mode(Stage 2/3)**, **Passrate 전략 배선**, **Ensemble Feedback**, **Ops Quality 6대 개선**, **Opus TF 전면 재감사+T1/T2 수정**, **SC-0~6(Smart Context Retrieval) + Post-Audit**, **TF-5 전체 시스템 디버깅 감사 32건 패치**, **TF-6 롤백 원자성·상태 누적·트랜잭션 등 16건 패치**, **TF-7 전체 감사(A~N) + P0/P1/P2 24건 패치**, **TF-7R 1차/3차/6차 17건 + 7차 카오스 테스트 38개**, **PBT(hypothesis) 46개**, **E2E 통합 wiring 16개**, **아키텍처 부채 감사(silent except·DI주석·dead var)**, **Memory ROI P0-1~P0-4(검색품질 4건)**, **D1 Hybrid Retrieval(FTS5+RRF)**, **DB 효율화(chroma_db삭제·file→DB·인덱스보강)**, **D2 Memory Observability(경로별 계측)**, **문서정리(docs 445→70개)**, **E2E Smoke Tests(파이프라인 통합 33개)**, **TF-10~15 전면 감사+P0 패치**, **TF-16(P1 백로그 3건)**, **TF-17(Truth Gate 메모리 오염 방지)**, **TF-18(Hybrid 검색 활성화)**, **TF-19(Memory Benchmark 17개)**, **Opus TF 전수조사(P0 7+P1 17건 패치)**, **2차 전수조사(P0 10건 + P1 34건 전량 패치)**, **3차 전수조사(P0 19+P1 17+P2 2건 패치)**, **4차 전수조사(동시성·복구·계약·설정·크로스컷 51건 — P0 10+P1 18+dead code 1744줄 삭제)**, **메타감리(1~4차 130+패치 검증 — 오작업 0건, 테스트 복원 17개)**, **5차 전수조사(에러전파·입력검증·리소스·LLM파싱·상태일관성 — P0 7+P1 12건 패치)**, **1~3차 재감사(7TF 병렬 — P0 1+P1 11건 패치, 감리 12/12 CORRECT)**, **extended_block_guide(treatment 확장 필드 → Arc LLM generic serialization)**, **Treatment 반응 다양화(골든루트 60블록 — Intensity·캐릭터아크·power_shift 전량)**, **Bible 동기화(골든루트 — 이름 충돌 3건 통일·NPC 2건 추가)**, **TF-20(정확도 우선 5건 — ContinuityInspector 예외→retry·memorize 반환값 체크·NPC LLM fail-closed·Manager audit_event·save_episode_bible→False)**, **LM-A(world_laws 자동등록+TruthGate 7번째 검사+CRITICAL 핀 보호)**, **LM-B(NpcDriftAdvisor — NPC 속성 텍스트 레벨 표류 LLM advisory)**, **LM-C(NumericDriftAdvisor — FactLedger 수치 누적 표류 LLM advisory)**, **LM-D(RelationshipDriftAdvisor — NPC 관계도 장기 표류 LLM advisory)**, **LM-E(FlashbackVerifier — 회상/플래시백 오염 감지 LLM advisory)**, **LM-F(InfoParadoxChecker — 1인칭 시점 정보 역설 LLM advisory)**, **LM-G(NarrativeContextFormatter — 서사 구조 컨텍스트 enrichment)**
-- **현재 단계**: LM-A~G 전량 완료. 장기 기억 강화 L1~L7 중 L1(TruthGate)~L5(InfoParadox) 구현 완료.
-- **테스트 기준선**: **2,875 passed + 0 xfailed** (last verified 2026-02-28, `pytest tests/ -q`)
+- **완료된 것**: Phase 1~2, 5-A/5-B/5-C, 6-A/6-B/6-C, 4C(DI), 4D(sqlite-vec), 3-5B(패치), 3-5A(NPC이력), **4-R1~R3(몬스터 분할)**, R4-a(NO-GO), **3-QR(품질 회귀 감지)**, **3-5C(NPC 과잉 경고)**, **3-Obs Step 1+2(관측성 계측)**, **3-B(크로스 에피소드 반복 감지)**, **D.대리만족 전체 완료(Step1~5)**, **A-1(writer 유틸 해체)**, **A-3(test xfail)**, **C-1(PlotGuard 폴백)**, **C-2(NPC 체인)**, **C-3(Validator 체인)**, **B-1 전체 완료(stage4 -64%, chief_writer -62%, stage2 -66%)**, **E-2(Ruff 0 violations)**, **A-2(optimizer TODO)**, **R5(2차 분할 전량)**, **WorkGuard(작품별 YAML)**, **Debug Sweep 1차~12차 전량 완료**, **B-3(Protocol 전면 표준화)**, **DB-SSOT(VecMemory merge)**, **Patch Mode(Stage 2/3)**, **Passrate 전략 배선**, **Ensemble Feedback**, **Ops Quality 6대 개선**, **Opus TF 전면 재감사+T1/T2 수정**, **SC-0~6(Smart Context Retrieval) + Post-Audit**, **TF-5 전체 시스템 디버깅 감사 32건 패치**, **TF-6 롤백 원자성·상태 누적·트랜잭션 등 16건 패치**, **TF-7 전체 감사(A~N) + P0/P1/P2 24건 패치**, **TF-7R 1차/3차/6차 17건 + 7차 카오스 테스트 38개**, **PBT(hypothesis) 46개**, **E2E 통합 wiring 16개**, **아키텍처 부채 감사(silent except·DI주석·dead var)**, **Memory ROI P0-1~P0-4(검색품질 4건)**, **D1 Hybrid Retrieval(FTS5+RRF)**, **DB 효율화(chroma_db삭제·file→DB·인덱스보강)**, **D2 Memory Observability(경로별 계측)**, **문서정리(docs 445→70개)**, **E2E Smoke Tests(파이프라인 통합 33개)**, **TF-10~15 전면 감사+P0 패치**, **TF-16(P1 백로그 3건)**, **TF-17(Truth Gate 메모리 오염 방지)**, **TF-18(Hybrid 검색 활성화)**, **TF-19(Memory Benchmark 17개)**, **Opus TF 전수조사(P0 7+P1 17건 패치)**, **2차 전수조사(P0 10건 + P1 34건 전량 패치)**, **3차 전수조사(P0 19+P1 17+P2 2건 패치)**, **4차 전수조사(동시성·복구·계약·설정·크로스컷 51건 — P0 10+P1 18+dead code 1744줄 삭제)**, **메타감리(1~4차 130+패치 검증 — 오작업 0건, 테스트 복원 17개)**, **5차 전수조사(에러전파·입력검증·리소스·LLM파싱·상태일관성 — P0 7+P1 12건 패치)**, **1~3차 재감사(7TF 병렬 — P0 1+P1 11건 패치, 감리 12/12 CORRECT)**, **extended_block_guide(treatment 확장 필드 → Arc LLM generic serialization)**, **Treatment 반응 다양화(골든루트 60블록 — Intensity·캐릭터아크·power_shift 전량)**, **Bible 동기화(골든루트 — 이름 충돌 3건 통일·NPC 2건 추가)**, **TF-20(정확도 우선 5건 — ContinuityInspector 예외→retry·memorize 반환값 체크·NPC LLM fail-closed·Manager audit_event·save_episode_bible→False)**, **LM-A(world_laws 자동등록+TruthGate 7번째 검사+CRITICAL 핀 보호)**, **LM-B(NpcDriftAdvisor — NPC 속성 텍스트 레벨 표류 LLM advisory)**, **LM-C(NumericDriftAdvisor — FactLedger 수치 누적 표류 LLM advisory)**, **LM-D(RelationshipDriftAdvisor — NPC 관계도 장기 표류 LLM advisory)**, **LM-E(FlashbackVerifier — 회상/플래시백 오염 감지 LLM advisory)**, **LM-F(InfoParadoxChecker — 1인칭 시점 정보 역설 LLM advisory)**, **LM-G(NarrativeContextFormatter — 서사 구조 컨텍스트 enrichment)**, **TF-27~32(PASS_WITH_FIX verdict 도입 + S2/S3 소비자 코드 패치)**
+- **현재 단계**: LM-A~G 전량 완료. 장기 기억 강화 L1~L7 전량 구현 완료. TF-27~32 PASS_WITH_FIX 인프라 전량 완료.
+- **테스트 기준선**: **2,948 passed + 0 xfailed** (last verified 2026-03-01, `pytest tests/ -q`)
 - **Ruff**: 0 violations, Silent Pass YELLOW 0건 (E-1+E-2 완료)
 - **stage4 orchestrator**: 2,481→883줄 (**-64%**, 분할 완료, 서브모듈 3개)
 - **chief_writer**: 2,255→854줄 (**-62%**, 분할 완료, 서브모듈 2개)
 - **stage2 orchestrator**: 2,639→907줄 (**-66%**, B-1-8 완료, 서브모듈 3개)
 - **DI 전환**: Stage2(44슬롯) + Stage3(19슬롯) + Stage4(24슬롯) 전량 완료
-- **checkpoint**: `71f1a1f`
+- **checkpoint**: `75efa5f`
 - **향후 계획 문서**: `docs/2026-02-27/LM-enhancement-implementation-spec.md` (장기 기억 강화 L1~L7 구현 명세, P0~P2 로드맵)
 - **후순위(관찰 대기)**: `docs/2026-02-23/next_steps_plan.md` — 2차(동적 장르), 4차(캐시), 5차(설정 SSOT)
 
@@ -96,6 +96,7 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 - NPC 관계 변경 이력 — `npc_relationship_history` 테이블 (append-only, sorted key). `upsert_npc_relationship_edge()` 호출 시 변경분 자동 기록. `reset_after()` 롤백 포함 (LM-D).
 - Stage4 advisory 체인 — TruthGate(LM-A) → NpcDriftAdvisor(LM-B) → NumericDriftAdvisor(LM-C) → FlashbackVerifier(LM-E) → InfoParadoxChecker(LM-F, 1인칭 전용) → RelationshipDriftAdvisor(LM-D). 전부 `_director_mc_parts`에 주입, Director 최종 판정.
 - Stage2 advisory — NarrativeContextFormatter(LM-G)가 `stage2_preflight.py`에서 동기/약속/Arc스케일을 `enhanced_context`에 prepend. 순수 Python, LLM/DB 없음.
+- PASS_WITH_FIX verdict — **Stage4만 실제 inplace patch 수행** (`chief_writer.inplace_patch()` → LLM 1회 호출, ≥2000자 검증). Stage2/3은 PASS 취급 저장(로깅만). score < 90이면 전 Stage에서 QualityGate REJECT 전환.
 
 ---
 
@@ -190,6 +191,7 @@ NPC 등록                앙상블 + 검증 체인              합격/불합 �
 | ~~76~~ | ~~LM-E~~ | ~~회상/플래시백 오염 감지 — FlashbackVerifier(14개 마커 + VecMemory 참조 + LLM advisory) + Stage4 배선~~ | ✅ 완료 (`71f1a1f`) |
 | ~~77~~ | ~~LM-F~~ | ~~1인칭 정보 역설 감지 — InfoParadoxChecker(episode_bibles 지식 누적 + LLM advisory, 1인칭 전용) + Stage4 배선~~ | ✅ 완료 (`71f1a1f`) |
 | ~~78~~ | ~~LM-G~~ | ~~서사 구조 컨텍스트 enrichment — NarrativeContextFormatter(동기/약속/Arc스케일 포맷터) + WorldState motivations/promises + Stage2 배선~~ | ✅ 완료 (`71f1a1f`) |
+| ~~79~~ | ~~TF-27~32~~ | ~~PASS_WITH_FIX verdict 도입 — 스키마+프롬프트+Stage4 inplace patch + S2/S3 소비자 코드 패치 + 테스트 17개~~ | ✅ 완료 (`75efa5f`) |
 
 ---
 
