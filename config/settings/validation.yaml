@@ -24,8 +24,8 @@ scope:
   chars_per_scene: 1500      # 장면당 기준 글자수
   overflow_ratio: 1.2        # 초과 비율 임계값
   min_beats_floor: 1         # [TF7-P2-08] 최소 비트 하한
-  min_avg_words: 6           # [TF7-P2-08] 평균 단어 최소 수
-  min_word_per_beat: 4       # [TF7-P2-08] 비트당 최소 단어 수
+  min_avg_words: 4           # [TF-39] was 6
+  min_word_per_beat: 3       # [TF-39] was 4
   min_diversity: 0.6         # [TF7-P2-08] 최소 다양성 점수
   max_stagnation_hits: 3     # [TF7-P2-08] 정체 허용 최대 횟수
 

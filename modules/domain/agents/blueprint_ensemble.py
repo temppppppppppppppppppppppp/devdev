@@ -583,21 +583,97 @@ class BlueprintEnsembleGenerator(BaseAgent):
             lines.append(f"다음 화 내용: {stop_line['content'][:150]}")
             lines.append("→ 위 내용을 이번 화에서 다루면 REJECT")
 
-        # Continuity
+        # Continuity — [TF-40] P1-1: ongoing_conflicts, active_characters, time_context 추가
         continuity = constraint_block.get("continuity", {})
-        if continuity.get("location"):
+        if continuity.get("location") or continuity.get("ongoing_conflicts") or continuity.get("active_characters"):
             lines.append("\n[연속성]")
-            lines.append(f"  이전 화 종료 위치: {continuity['location']}")
-            lines.append("  → 이 위치에서 시작해야 함")
+            if continuity.get("location"):
+                lines.append(f"  이전 화 종료 위치: {continuity['location']}")
+                lines.append("  → 이 위치에서 시작해야 함")
+            if continuity.get("time_context"):
+                lines.append(f"  시간 맥락: {str(continuity['time_context'])[:100]}")
+            _conflicts = continuity.get("ongoing_conflicts", [])
+            if _conflicts:
+                if isinstance(_conflicts, list):
+                    for _c in _conflicts[:5]:
+                        lines.append(f"  - 진행 중인 갈등: {str(_c)[:80]}")
+                else:
+                    lines.append(f"  - 진행 중인 갈등: {str(_conflicts)[:200]}")
+            _active = continuity.get("active_characters", [])
+            if _active:
+                if isinstance(_active, list):
+                    lines.append(f"  등장 캐릭터: {', '.join(str(c)[:20] for c in _active[:10])}")
+                else:
+                    lines.append(f"  등장 캐릭터: {str(_active)[:200]}")
 
-        # Inherited State
+        # Inherited State — [TF-40] P1-2: injuries, internal_energy, mood 추가
         inherited = constraint_block.get("inherited_state", {})
-        if inherited.get("equipment"):
-            equip = inherited["equipment"]
-            if isinstance(equip, list):
-                equip = ", ".join(str(x) if isinstance(x, dict) else x for x in equip[:5])
-            lines.append("\n[소지품]")
-            lines.append(f"  {equip}")
+        _has_inherited = (
+            inherited.get("equipment")
+            or inherited.get("injuries")
+            or inherited.get("internal_energy")
+            or inherited.get("mood")
+        )
+        if _has_inherited:
+            lines.append("\n[계승 상태]")
+            if inherited.get("equipment"):
+                equip = inherited["equipment"]
+                if isinstance(equip, list):
+                    equip = ", ".join(str(x) if isinstance(x, dict) else x for x in equip[:5])
+                lines.append(f"  소지품: {equip}")
+            if inherited.get("injuries"):
+                _inj = inherited["injuries"]
+                if isinstance(_inj, list):
+                    lines.append(f"  부상: {', '.join(str(i)[:40] for i in _inj[:5])}")
+                else:
+                    lines.append(f"  부상: {str(_inj)[:200]}")
+            if inherited.get("internal_energy") is not None:
+                lines.append(f"  내공/에너지: {inherited['internal_energy']}")
+            if inherited.get("mood"):
+                lines.append(f"  심리 상태: {str(inherited['mood'])[:100]}")
+
+        # [TF-40] P0-2: Arc 제약 요약 (Stage 2 제약 전달)
+        arc_summary = constraint_block.get("arc_constraint_summary")
+        if arc_summary:
+            lines.append("\n[Arc 제약 요약]")
+            if isinstance(arc_summary, str):
+                lines.append(f"  {arc_summary[:500]}")
+            elif isinstance(arc_summary, dict):
+                for _k, _v in list(arc_summary.items())[:10]:
+                    lines.append(f"  {_k}: {str(_v)[:100]}")
+
+        # [TF-40] P0-1: state_changes 요약 (사망NPC, 습득스킬, 완결플롯)
+        sc_summary = constraint_block.get("state_changes_summary")
+        if sc_summary:
+            lines.append("\n[상태 변경 요약]")
+            if isinstance(sc_summary, str):
+                lines.append(f"  {sc_summary[:800]}")  # [TF-40] 7필드 전량 수용 보장
+            elif isinstance(sc_summary, dict):
+                _deaths = sc_summary.get("npc_deaths", [])
+                if _deaths:
+                    _names = [
+                        d.get("name", d.get("npc", str(d))) if isinstance(d, dict) else str(d) for d in _deaths[:10]
+                    ]
+                    lines.append(f"  사망 NPC (부활 금지): {', '.join(_names)}")
+                _skills = sc_summary.get("skill_acquisitions", [])
+                if _skills:
+                    _names = [
+                        s.get("name", s.get("skill", str(s))) if isinstance(s, dict) else str(s) for s in _skills[:10]
+                    ]
+                    lines.append(f"  습득 기술: {', '.join(_names)}")
+                _resolved = sc_summary.get("resolved_plots", [])
+                if _resolved:
+                    _names = [
+                        r.get("plot", r.get("description", str(r))) if isinstance(r, dict) else str(r)
+                        for r in _resolved[:10]
+                    ]
+                    lines.append(f"  완결된 플롯 (재생성 금지): {', '.join(_names)}")
+                _perm = sc_summary.get("permanent_injuries", [])
+                if _perm:
+                    _descs = [
+                        str(p)[:50] if not isinstance(p, dict) else p.get("description", str(p))[:50] for p in _perm[:5]
+                    ]
+                    lines.append(f"  영구 부상: {', '.join(_descs)}")
 
         return "\n".join(lines) if lines else "(제약 없음)"
 

@@ -185,6 +185,7 @@ class Stage4InterviewRound:
                     original_manuscript=_prev_manuscript,
                     director_feedback=director_feedback,
                     attempt_number=round_num + 1,
+                    style_guide=style_guide,  # [TF-37]
                 )
                 if not candidates:
                     logging.warning("[TF-23] InPlace 실패 → Patch 폴백")
@@ -1322,6 +1323,7 @@ class Stage4InterviewRound:
                             original_manuscript=_current_ms,
                             director_feedback=_current_fb,
                             attempt_number=_fix_i + 1,
+                            style_guide=style_guide,  # [TF-37]
                         )
                         _patched_ms = _patched[0].get("manuscript", "") if _patched else ""
                     except Exception as _e:
