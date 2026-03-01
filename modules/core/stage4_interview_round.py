@@ -1285,6 +1285,12 @@ class Stage4InterviewRound:
                     "best_manuscript": final_manuscript,
                     "state_updates": final_state_updates,
                     "score": score,
+                    # [TF-36] S4-005: fix_scope/rejection_reason/selected_strategy 보존
+                    "fix_scope": director_result.get("fix_scope", "") if isinstance(director_result, dict) else "",
+                    "rejection_reason": director_feedback,
+                    "selected_strategy": director_result.get("selected_strategy", "")
+                    if isinstance(director_result, dict)
+                    else "",
                 }
 
             # [TF-32-VERIFY] PASS_WITH_FIX → patch + Director 재심사 반복 (최대 3회)
@@ -1371,6 +1377,10 @@ class Stage4InterviewRound:
                             )
                             break
                         _current_ms = _patched_ms
+                        # [TF-36] S4-010: 재심사 결과의 state_updates 반영
+                        _re_su = _re_audit.get("state_updates")
+                        if isinstance(_re_su, dict) and _re_su:
+                            final_state_updates = _re_su
                         _fix_ok = True
                         break
                     elif _re_d == "PASS_WITH_FIX":

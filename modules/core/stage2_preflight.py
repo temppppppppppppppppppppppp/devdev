@@ -826,6 +826,9 @@ class Stage2PreflightAnalysis:
                         if not four_phase_arc:
                             logging.warning("[TF-23] Arc InPlace 실패 → Patch 폴백")
                             self.ctx.ui.log("   ⚠️ [TF-23] Arc InPlace 실패 → Patch 폴백")
+                        else:
+                            # [TF-36] S2-006: InPlace 성공 시 final_verdict 설정
+                            pipeline_result["final_verdict"] = "PASS"
 
                     # --- Patch 시도 (Ensemble) ---
                     if not four_phase_arc and _use_patch:
