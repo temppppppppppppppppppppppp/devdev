@@ -148,3 +148,49 @@ class TestOpenReviewPropagation:
         )
 
         assert result.get("open_review") == ""
+
+    def test_v60_97_swap_prefixes_open_review(self):
+        """V60.97 swap 발생 시 open_review에 교체 사실 접두."""
+        director = _FakeDirector()
+        # LLM이 A를 선택하지만 A는 분량 미달 → B로 swap
+        director._response = _make_ensemble_response(
+            selected="A", verdict="PASS", score=70, open_review="감정선 전환 급격"
+        )
+        selector = DirectorEnsembleSelector(director)
+
+        # 후보 A: 분량 미달 (100자), B/C: 분량 충족 (6000자)
+        candidates = [
+            {
+                "strategy": "s0",
+                "strategy_name": "전략1",
+                "manuscript": "가" * 100,
+                "title": "짧은",
+                "state_updates": {},
+            },
+            {
+                "strategy": "s1",
+                "strategy_name": "전략2",
+                "manuscript": "가" * 6000,
+                "title": "긴B",
+                "state_updates": {},
+            },
+            {
+                "strategy": "s2",
+                "strategy_name": "전략3",
+                "manuscript": "가" * 6000,
+                "title": "긴C",
+                "state_updates": {},
+            },
+        ]
+
+        result = selector.select_and_judge_ensemble(
+            ep_num=10,
+            candidates=candidates,
+            validation_results=[{"warnings": []}] * 3,
+            blueprint={"integrated_scenario": "시나리오"},
+            previous_ending="이전 엔딩",
+        )
+
+        review = result.get("open_review", "")
+        assert review.startswith("[V60.97 교체 전 후보 리뷰]"), f"expected swap prefix, got: {review}"
+        assert "감정선 전환 급격" in review

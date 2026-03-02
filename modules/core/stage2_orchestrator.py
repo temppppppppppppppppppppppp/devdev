@@ -235,7 +235,7 @@ class Stage2Orchestrator:
             batch_start_count = len(all_refined_arcs)
 
             # [V61.2] 배치 전체를 스피너로 감싸기
-            with StageSpinner(2, f"Batch {batch_start + 1}~{batch_end} 준비 및 농축"):
+            with StageSpinner(2, f"Batch {batch_start + 1}~{batch_end} 준비 및 농축") as spinner:
                 self.ctx.ui.log(f"📦 [Batch] {batch_start + 1}~{batch_end}번 구간 욕망 수혈 공정 가동...")
 
                 # [V60.10] 수혈 맥락 준비 - StateExtractor 활용
@@ -262,6 +262,7 @@ class Stage2Orchestrator:
                         )
 
                 enrichment_tasks = [throttled_enrich(i) for i in range(batch_start, batch_end)]
+                spinner.update_detail(f"Batch {batch_start + 1}~{batch_end} LLM 농축 중...")
                 enriched_batch = await asyncio.gather(*enrichment_tasks, return_exceptions=True)
 
             # [안전성 패치] 실패한 항목에 대한 재시도 메커니즘
@@ -371,7 +372,11 @@ class Stage2Orchestrator:
 
             # [V60.45] while 루프로 변경 - "다시 하기" 지원
             idx = 0
+            _design_total = len(enriched_batch)
+            _design_spinner = StageSpinner(2, f"Arc 순차 설계 (총 {_design_total}개)")
+            _design_spinner.__enter__()
             while idx < len(enriched_batch):
+                _design_spinner.update_detail(f"Arc {idx + 1}/{_design_total} 설계 중...")
                 source_arc_idx, enriched_block = enriched_batch[idx]
                 global_arc_no = source_arc_idx + 1
                 vol_no = ((global_arc_no - 1) // VolumeSettings.ARCS_PER_VOLUME) + 1
@@ -568,6 +573,24 @@ class Stage2Orchestrator:
                         "director_feedback_for_fourphase", director_feedback_for_fourphase
                     )
                     _st_snapshot = _fin.get("st_snapshot", _st_snapshot)
+
+                    # [LOG-1] Stage2 판정 경로 세션 로깅
+                    _sl = getattr(self.ctx, "session_logger", None)
+                    if _sl:
+                        try:
+                            _s2_verdict = "PASS" if _fin["action"] == "break" else "REJECT"
+                            _sl.log_decision(
+                                stage="stage2",
+                                ep_num=0,
+                                round_num=attempt,
+                                decision_type="arc_design",
+                                result=_s2_verdict,
+                                score=_fin.get("score", 0),
+                                arc_no=global_arc_no,
+                                fix_scope=_fin.get("fix_scope", ""),
+                            )
+                        except Exception as _e:
+                            logging.debug("[SilentPass:Stage2:SessionLog] %s", _e)
 
                     # [Patch Mode] REJECT 시 previous_attempt 갱신 (패치 모드 판단용)
                     try:
@@ -767,6 +790,7 @@ class Stage2Orchestrator:
                                 current_ep_start += _skip_ep2
                                 break
                             elif manual_input == "quit":
+                                _design_spinner.__exit__(None, None, None)
                                 self.ctx.ui.log("⏹️ 사용자 요청으로 공정을 중단합니다.")
                                 return
                             else:
@@ -777,6 +801,7 @@ class Stage2Orchestrator:
                                 constraint_block = constraint_db.generate_constraint_block(global_arc_no)
                                 break
                         else:
+                            _design_spinner.__exit__(None, None, None)
                             self.ctx.ui.log("⏹️ 사용자 요청으로 공정을 중단합니다.")
                             return
 
@@ -788,6 +813,7 @@ class Stage2Orchestrator:
                 # [V60.45] 다음 Arc로
                 idx += 1
 
+            _design_spinner.__exit__(None, None, None)
             self.ctx.ui.log(f"✅ 배치({batch_start + 1}~{batch_end}) 욕망 엔진 이식 및 용접 완료.")
 
             # [V40] Slack 알림 전송

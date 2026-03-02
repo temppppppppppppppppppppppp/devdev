@@ -618,6 +618,9 @@ class Stage4InterviewRound:
                     selected=selected,
                     error_category=error_category,
                     reason=reason[:500],
+                    fix_scope=director_result.get("fix_scope", ""),
+                    open_review=str(director_result.get("open_review", ""))[:300],
+                    action_items=director_result.get("action_items", []),
                 )
             except Exception as _e:
                 logging.debug("[SilentPass:Stage4:SessionLog] %s", _e)
@@ -1163,6 +1166,8 @@ class Stage4InterviewRound:
                 "fix_scope": director_result.get("fix_scope", ""),  # [TF-23] Director 판단 수정 범위
                 "fix_scope_reasoning": director_result.get("fix_scope_reasoning", ""),  # [V73] 수정 범위 근거
                 "open_review": director_result.get("open_review", ""),  # [TF-29] 자유 리뷰 보존
+                "error_category": director_result.get("error_category", ""),  # [A-4] 에러 카테고리 보존
+                "contradiction_types": director_result.get("contradiction_types", []),  # [A-4] 모순 유형 보존
             }
             try:
                 self.ctx.current_project.db.save_cost_record(

@@ -93,9 +93,9 @@ class TestFormatHistory:
 
     def test_max_items_cap(self):
         advisor = NumericDriftAdvisor()
-        # 25개 항목 생성
+        # 35개 항목 생성 (MAX_ITEMS=30 초과)
         numbers = {}
-        for i in range(25):
+        for i in range(35):
             numbers[f"stat_{i}"] = {
                 "value": str(i * 100),
                 "unit": "",
@@ -103,9 +103,9 @@ class TestFormatHistory:
                 "history": [f"ep{j}: {j} → {j + 1}" for j in range(5)],
             }
         result = advisor._format_history(numbers, min_history=3)
-        # 최대 20개만
+        # 최대 30개만 (A-4: 20→30 확장)
         bracket_count = result.count("[stat_")
-        assert bracket_count <= 20
+        assert bracket_count <= 30
 
     def test_history_value_extraction(self, sample_numbers):
         advisor = NumericDriftAdvisor()
