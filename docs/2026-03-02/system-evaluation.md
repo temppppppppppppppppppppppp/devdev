@@ -83,12 +83,19 @@ except Exception as e:
 - PerfTimer는 ad-hoc — 중앙 대시보드 없음
 - "에피소드당 평균 PASS율", "LLM 호출 평균 지연" 같은 질문에 답 불가
 
-### 5. core→domain 역참조가 DI 무력화
+### 5. ~~core→domain 역참조가 DI 무력화~~ → 의도적 설계 (해결 불필요)
+
+**[TF-26 재검증] 전 5건이 함수 내부 lazy import — 순환 참조 방지 의도적 설계.**
+
 ```
-core/stage4_orchestrator.py → from modules.domain.agents.chief_writer import ChiefWriter
-core/stage2_orchestrator.py → from modules.domain.agents.state_tracker import StateTracker
+core/stage4_orchestrator.py  L977-978  → ChiefWriter, ManuscriptValidator  (순환 참조 해소)
+core/stage2_orchestrator.py  L101      → StateTracker                      (순환 참조 해소)
+core/stage3_orchestrator.py  L208      → StateTracker                      (lazy init, 앱 시작 시 미존재 가능)
+core/reference_anchor.py     L102      → BaseAgent                         (임시 에이전트 생성, 예외적 경로)
 ```
-Protocol 정의해놓고 오케스트레이터가 구체 클래스를 직접 import. DI 컨테이너 조립이 아니라 런타임 직접 참조.
+
+파일 상단 import 시 `core ↔ domain` 순환 발생. 함수 내부 lazy import로 해결된 상태.
+DI 컨테이너로 완전 제거 가능하나 현재 패턴으로 충분히 동작하며 **개선 ROI 없음**.
 
 ---
 
@@ -151,7 +158,7 @@ Protocol 정의해놓고 오케스트레이터가 구체 클래스를 직접 imp
 |---|------|----------|--------|
 | 4 | **broad except 구체화 (advisory 체인)** | advisory 40건 → `except (TimeoutError, json.JSONDecodeError, ConnectionError)`. 버그 은폐 차단 | 중간 |
 | 5 | **print() → logging 전환** | 298건 중 Stage4 경로(~80건)부터. 필터링·레벨 제어 가능 | 중간 |
-| 6 | **core→domain 역참조 제거** | 5건 lazy import → DI 컨테이너 조립으로 전환 | 높음 |
+| ~~6~~ | ~~core→domain 역참조 제거~~ | **의도적 lazy import (순환 참조 방지) — 해결 불필요** | — |
 
 ### Tier 3 — 장기 개선
 
