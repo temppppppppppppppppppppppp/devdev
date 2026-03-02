@@ -882,6 +882,9 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
 
         # [V67.2] 자유 형식 리뷰 → feedback에 병합
         _open_review = result.get("open_review", "")
+        # [V60.97] swap 발생 시 open_review에 교체 사실 접두
+        if v60_97_swapped and _open_review:
+            _open_review = f"[V60.97 교체 전 후보 리뷰] {_open_review}"
         if _open_review and _open_review not in ("특이사항 없음", "없음", ""):
             if isinstance(feedback, dict):
                 _existing_issues = feedback.get("issues", [])
@@ -938,6 +941,15 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             "error_category": result.get("error_category", ""),  # [V75-B] LOGIC_ERROR 전파
             "fix_scope": result.get("fix_scope", ""),  # [TF-23] Director 판단 수정 범위
             "fix_scope_reasoning": result.get("fix_scope_reasoning", ""),  # [TF-35] 수정 범위 근거 전파
+            "contradiction_types": [  # [A-4] 모순 유형 전파
+                c.get("type", "")
+                for c in (
+                    _contradiction_check.get("found_contradictions", [])
+                    if isinstance(_contradiction_check, dict)
+                    else []
+                )
+                if isinstance(c, dict)
+            ],
         }
 
     def quick_judge_single(

@@ -581,6 +581,8 @@ JSON으로 출력:
         _blueprint_regenerated = False  # [V75-B] 재생성 1회 제한
         _prev_reject_bucket = ""  # [TF-29] reject_bucket 연속 패턴 감지
         _bucket_streak = 0
+        _prev_dominant_contradiction = ""  # [A-4] contradiction type 수렴 추적
+        _contradiction_type_streak = 0
 
         with StageSpinner(4, f"제{next_ep}화 · 앙상블 준비") as stage4_spinner:
             try:
@@ -730,6 +732,38 @@ JSON으로 출력:
                         f"블루프린트의 해당 영역을 근본적으로 재검토하세요."
                     )
                     director_feedback = _tf29_advisory + "\n" + director_feedback
+
+                # [A-4] Contradiction type 수렴 추적
+                _curr_ct = (_round_result.previous_attempt or {}).get("contradiction_types", [])
+                _curr_dominant_ct = ""
+                if _curr_ct:
+                    from collections import Counter
+
+                    _ct_counter = Counter(_curr_ct)
+                    _curr_dominant_ct = _ct_counter.most_common(1)[0][0] if _ct_counter else ""
+                if _curr_dominant_ct and _curr_dominant_ct == _prev_dominant_contradiction:
+                    _contradiction_type_streak += 1
+                else:
+                    _contradiction_type_streak = 1 if _curr_dominant_ct else 0
+                _prev_dominant_contradiction = _curr_dominant_ct
+
+                # [A-4] LOGIC_ERROR + 동일 모순 유형 2연속 → Arc 구조 문제 advisory
+                if _contradiction_type_streak >= 2 and _logic_error_streak >= 2 and not _blueprint_regenerated:
+                    _ct_label = {
+                        "타임라인": "시간 순서/연대기",
+                        "수치": "수치/금액 정합성",
+                        "사망": "사망/생존 상태",
+                        "고유명사": "고유명사 일관성",
+                        "아이템": "아이템/장비",
+                        "상태": "캐릭터 상태",
+                    }.get(_curr_dominant_ct, _curr_dominant_ct)
+                    _a4_advisory = (
+                        f"[⚠️ A-4 구조 진단] '{_ct_label}' 모순이 {_contradiction_type_streak}라운드 연속. "
+                        f"이는 Writer 문제가 아닌 Blueprint/Arc 설계의 구조적 결함 가능성이 높습니다. "
+                        f"해당 영역의 Arc를 재검토하세요."
+                    )
+                    director_feedback = _a4_advisory + "\n" + director_feedback
+                    self.ctx.ui.log(f"   ⚠️ [A-4] '{_ct_label}' 모순 {_contradiction_type_streak}연속 — Arc 구조 진단")
 
                 # [V75-D] Step 1: 2연속 → inplace 패치 (저비용 LLM 1회)
                 if _logic_error_streak >= 2 and not _inplace_attempted:

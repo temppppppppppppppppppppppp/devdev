@@ -12,8 +12,8 @@ import re
 
 logger = logging.getLogger(__name__)
 
-MAX_ITEMS = 20
-MAX_HISTORY_POINTS = 15
+MAX_ITEMS = 30  # [A-4] 20→30 (장기연재 수치 팩트 확장)
+MAX_HISTORY_POINTS = 20  # [A-4] 15→20 (이력 표시 범위 확장)
 
 
 class NumericDriftAdvisor:

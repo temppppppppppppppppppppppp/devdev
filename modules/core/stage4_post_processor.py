@@ -117,6 +117,11 @@ class Stage4PostProcessor:
         # "80억의 자본", "130억 원의 잔고"
         re.compile(r"(\d[\d,.]*)\s*(억|만)\s*(?:원)?[의이가]?\s*(?:잔고|자본|현금|자산|실탄|예수금)"),
     ]
+    # [V73-P0] 복합 금액 패턴 (38억 3,154만 200원) — _extract에서 별도 처리
+    _COMPOUND_CAPITAL_RE = re.compile(
+        r"(?:잔고|자본금?|현금|자산|실탄|예수금)[이가은는:의]?\s*(?:약?\s*)?"
+        r"(?:(\d[\d,.]*)\s*억)?\s*(?:(\d[\d,.]*)\s*만)?\s*(?:(\d[\d,.]*)\s*원?)?"
+    )
 
     @staticmethod
     def _parse_hud_capital_to_eok(raw) -> float:
@@ -166,11 +171,29 @@ class Stage4PostProcessor:
                 if unit == "만":
                     num /= 10000  # 만 → 억 환산
                 candidates.append((m.start(), num))
+        # [V73-P0] 복합 금액 매칭 (억+만+원 조합)
+        for m in Stage4PostProcessor._COMPOUND_CAPITAL_RE.finditer(manuscript):
+            eok_part = m.group(1)  # 억
+            man_part = m.group(2)  # 만
+            won_part = m.group(3)  # 원
+            if not eok_part and not man_part:
+                continue  # 최소 억 또는 만 필요
+            total = 0.0
+            if eok_part:
+                total += float(eok_part.replace(",", ""))
+            if man_part:
+                total += float(man_part.replace(",", "")) / 10000
+            if won_part:
+                total += float(won_part.replace(",", "")) / 1_0000_0000
+            candidates.append((m.start(), total))
         if not candidates:
             return None
-        # 문서에서 가장 뒤에 나온 값 반환
-        candidates.sort(key=lambda x: x[0])
-        return candidates[-1][1]
+        # 동일 위치면 복합(정밀) 값 우선, 가장 뒤에 나온 값 반환
+        pos_best: dict[int, float] = {}
+        for pos, val in candidates:
+            if pos not in pos_best or val > pos_best[pos]:
+                pos_best[pos] = val
+        return pos_best[max(pos_best)]
 
     def _reconcile_capital(self, final_manuscript: str, ep_num: int) -> None:
         """확정 원고의 자본금과 HUD를 비교하여 불일치 시 경고 + 보정. 투자물 전용."""
