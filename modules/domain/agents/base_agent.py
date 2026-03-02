@@ -11,6 +11,7 @@ import yaml
 from google import genai
 from google.genai import types
 
+from modules.core.constants import ContextLimits  # [TF-25-04] validation.yaml SSOT
 from modules.validation.threshold_helper import _threshold
 
 # [V44] 에스케이프 유틸리티 임포트
@@ -153,7 +154,7 @@ class BaseAgent:
     API_DELAY = _SYSTEM_CFG.get("api", {}).get("delay", 0.1)
 
     # [TF3-H7] 프롬프트 총량 사전 게이트 (API 호출 전)
-    MAX_CONTEXT_CHARS = _SYSTEM_CFG.get("api", {}).get("max_context_chars", 900000)
+    MAX_CONTEXT_CHARS = ContextLimits.MAX_CONTEXT_CHARS  # [TF-25-04] validation.yaml SSOT
 
     # [V61.5] API 키 순환 (429 방어)
     _api_keys = []
