@@ -424,7 +424,9 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                     logging.warning(f"   ▸ {str(_c)[:150]}")
                 pipeline_result["phases"]["validate"]["contradictions"] = _contradictions
 
-            if verdict in ("PASS", "PASS_WITH_FIX") and _score < _quality_gate_score:  # [TF-32-S3]
+            if (
+                verdict == "PASS" and _score < _quality_gate_score
+            ):  # [TF-46] PASS_WITH_FIX는 Director 주권 존중 — gate 미적용
                 logging.warning(f"[QualityGate] Stage3 PASS이나 score={_score} < {_quality_gate_score} → REJECT 전환")
                 verdict = "REJECT"
                 # [S3-P1-4] += 누적 대신 _initial_feedback 기반 재구성

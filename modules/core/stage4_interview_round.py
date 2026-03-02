@@ -1201,11 +1201,13 @@ class Stage4InterviewRound:
             tot_used=_tot_used,
             mad_used=_mad_used,
             asp_used=bool(_asp_manuscript),
-            validation_warnings=[w for vr in validation_results for w in vr.get("warnings", [])][:10],
+            validation_warnings=[w for vr in validation_results for w in vr.get("warnings", [])][:20],  # [TF-46] 10→20
         )
 
         _quality_gate_score = _threshold("scoring.quality_gate_score", 90)
-        if verdict in ("PASS", "PASS_WITH_FIX") and score < _quality_gate_score:  # [TF-32]
+        if (
+            verdict == "PASS" and score < _quality_gate_score
+        ):  # [TF-46] PASS_WITH_FIX는 Director 주권 존중 — gate 미적용
             self.ctx.ui.log(f"   ⚠️ [QualityGate] PASS 판정이나 score={score} < {_quality_gate_score} → 패치 모드")
             verdict = "REJECT"
             director_feedback += (
@@ -1335,12 +1337,15 @@ class Stage4InterviewRound:
 
                     # [TF-35] Director 동일 경로 재심사 — ScoringValidator 대신 Director LLM 직접 채점
                     try:
+                        # [TF-46] patch가 반환한 state_updates를 merge (stale 방지)
+                        _patch_state = _patched[0].get("state_updates", {}) if _patched else {}
+                        _merged_state = {**final_state_updates, **_patch_state}
                         _re_candidate = {
                             "strategy": "inplace_patch",
                             "strategy_name": "InPlace 수정",
                             "manuscript": _patched_ms,
                             "title": f"제{round_ctx.next_ep}화",
-                            "state_updates": final_state_updates,  # [TF-42] P1: 재심사에 현재 state 전달
+                            "state_updates": _merged_state,  # [TF-46] patch override
                         }
                         _re_val_ctx = {
                             "warnings": [],
@@ -1755,7 +1760,7 @@ class Stage4InterviewRound:
                     "mad": mad_used,
                     "asp": asp_used,
                 },
-                "warnings": validation_warnings[:10],
+                "warnings": validation_warnings[:20],  # [TF-46] 10→20
             }
 
             log_path = os.path.join(logs_dir, "episode_production.jsonl")

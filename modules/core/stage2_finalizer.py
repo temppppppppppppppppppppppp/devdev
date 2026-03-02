@@ -243,137 +243,105 @@ class Stage2Finalizer:
         # [TF-32-VERIFY] PASS_WITH_FIX → patch + Director 재심사 반복 (최대 3회)
         _d_decision = audit.get("decision", "")
         if _d_decision == "PASS_WITH_FIX":
-            # [TF-32-V] QualityGate 선검사: score < 90이면 patch 시도 안 함
-            if _td_len >= 1500 and _score < _quality_gate_score:
+            # [TF-46] PASS_WITH_FIX는 Director 주권 존중 — QualityGate 미적용, 바로 patch loop 진입
+            _MAX_FIX = 3
+            _four_phase = self.ctx.agents.get("four_phase")
+            _current_arc = dict(refined_arc)
+            _current_audit = audit
+            _fix_ok = False
+
+            for _fix_i in range(_MAX_FIX):
+                # [TF-33] Director fix_scope 기반 수정 전략 라우팅
+                _fix_scope = _current_audit.get("fix_scope", "inplace")
+                if _fix_scope in ("partial", "full"):
+                    self.ctx.ui.log(f"      🔀 [TF-33] fix_scope={_fix_scope!r} → inplace 불가, retry 경로 위임")
+                    break  # → REJECT → retry 경로에서 patch/rewrite 처리
+
+                _fix_instr = _current_audit.get("re_slice_instruction", "")
                 self.ctx.ui.log(
-                    f"      ⚠️ [QualityGate] PASS_WITH_FIX이나 score={_score} < {_quality_gate_score} → REJECT 선전환"
+                    f"      🔧 [TF-32-V] PASS_WITH_FIX patch #{_fix_i + 1}/{_MAX_FIX} (fix: {str(_fix_instr)[:80]})"
                 )
-                audit["decision"] = "REJECT"
-                audit["reason"] = (audit.get("reason") or "") + (
-                    f"\n[Quality Gate] score {_score}점으로 {_quality_gate_score}점 미달."
-                )
-                audit["re_slice_instruction"] = audit.get("re_slice_instruction") or "품질 개선 후 재제출"
-                director_feedback_for_fourphase = (
-                    f"[QualityGate REJECT] score {_score}점 < {_quality_gate_score}점.\n"
-                    f"{audit.get('reason', '')}\n"
-                    f"[수정 지시] {audit.get('re_slice_instruction', '품질 개선 후 재제출')}"
-                )
-                self._record_s2_reject_metrics(
-                    global_arc_no=global_arc_no,
-                    attempt=attempt,
-                    generation_method=generation_method,
-                    audit=audit,
-                    is_patch=is_patch,
-                    prev_score=prev_score,
-                    patch_fallback=patch_fallback,
-                )
-                return {
-                    "action": "retry",
-                    "current_feedback": audit["reason"],
-                    "score": _score,
-                    "rejected_arc": refined_arc,
-                    "score_breakdown": {},
-                    "director_feedback_for_fourphase": director_feedback_for_fourphase,
-                    "fix_scope": audit.get("fix_scope", ""),
-                }
+
+                if not (_four_phase and hasattr(_four_phase, "_inplace_patch_arc")):
+                    logging.warning("[TF-32-V] four_phase 에이전트 미등록 → REJECT")
+                    break
+
+                try:
+                    _patched = _four_phase._inplace_patch_arc(
+                        original_arc=_current_arc,
+                        director_feedback=_fix_instr,
+                        arc_no=global_arc_no,
+                    )
+                except Exception:
+                    logging.exception("[TF-32-V] inplace_patch_arc 예외")
+                    break
+                if not _patched:
+                    logging.warning("[TF-32-V] patch 실패 → REJECT")
+                    break
+
+                # Director 재심사 (동일 메서드)
+                self.ctx.ui.log(f"      🔄 [TF-38] Director 재심사 #{_fix_i + 1} 호출 중...")
+                try:
+                    _re_audit = self.ctx.agents["director"].audit_strategic_plan(
+                        _patched,
+                        _expanded_prev_context,
+                        curr_block=enriched_block,
+                        protagonist_name=protagonist_name,
+                        suspected_duplicates=suspected_duplicates,
+                        entity_registry=entity_registry_for_director,
+                        story_context=_story_context,
+                    )
+                except Exception:
+                    logging.exception("[TF-32-V] 재심사 예외")
+                    break
+
+                _re_d = _re_audit.get("decision", "REJECT")
+                _re_s = _re_audit.get("score", 0)
+                try:
+                    _re_s = int(_re_s)
+                except (ValueError, TypeError):
+                    _re_s = 0
+                self.ctx.ui.log(f"      🎬 [TF-32-V] 재심사 #{_fix_i + 1}: {_re_d} (score={_re_s})")
+
+                if _re_d == "PASS":
+                    if _re_s < _quality_gate_score:
+                        self.ctx.ui.log(
+                            f"      ⚠️ [TF-35] 재심사 PASS이나 score={_re_s} < {_quality_gate_score} → patch 종료"
+                        )
+                        break
+                    _current_arc = _patched
+                    _fix_ok = True
+                    break
+                elif _re_d == "PASS_WITH_FIX":
+                    _current_arc = _patched
+                    _current_audit = _re_audit  # 다음 반복
+                else:  # REJECT
+                    break
+
+            if _fix_ok:
+                refined_arc.clear()
+                refined_arc.update(_current_arc)
+                _d_decision = "PASS"
+                _score = _re_s  # [TF-46] 재심사 점수로 갱신 (stale score → QualityGate 오작동 방지)
+                self.ctx.ui.log("      ✅ [TF-32-V] Arc 수정 완료 → PASS 확정")
             else:
-                _MAX_FIX = 3
-                _four_phase = self.ctx.agents.get("four_phase")
-                _current_arc = dict(refined_arc)
-                _current_audit = audit
-                _fix_ok = False
-
-                for _fix_i in range(_MAX_FIX):
-                    # [TF-33] Director fix_scope 기반 수정 전략 라우팅
-                    _fix_scope = _current_audit.get("fix_scope", "inplace")
-                    if _fix_scope in ("partial", "full"):
-                        self.ctx.ui.log(f"      🔀 [TF-33] fix_scope={_fix_scope!r} → inplace 불가, retry 경로 위임")
-                        break  # → REJECT → retry 경로에서 patch/rewrite 처리
-
-                    _fix_instr = _current_audit.get("re_slice_instruction", "")
-                    self.ctx.ui.log(
-                        f"      🔧 [TF-32-V] PASS_WITH_FIX patch #{_fix_i + 1}/{_MAX_FIX} (fix: {str(_fix_instr)[:80]})"
-                    )
-
-                    if not (_four_phase and hasattr(_four_phase, "_inplace_patch_arc")):
-                        logging.warning("[TF-32-V] four_phase 에이전트 미등록 → REJECT")
-                        break
-
-                    try:
-                        _patched = _four_phase._inplace_patch_arc(
-                            original_arc=_current_arc,
-                            director_feedback=_fix_instr,
-                            arc_no=global_arc_no,
-                        )
-                    except Exception:
-                        logging.exception("[TF-32-V] inplace_patch_arc 예외")
-                        break
-                    if not _patched:
-                        logging.warning("[TF-32-V] patch 실패 → REJECT")
-                        break
-
-                    # Director 재심사 (동일 메서드)
-                    self.ctx.ui.log(f"      🔄 [TF-38] Director 재심사 #{_fix_i + 1} 호출 중...")
-                    try:
-                        _re_audit = self.ctx.agents["director"].audit_strategic_plan(
-                            _patched,
-                            _expanded_prev_context,
-                            curr_block=enriched_block,
-                            protagonist_name=protagonist_name,
-                            suspected_duplicates=suspected_duplicates,
-                            entity_registry=entity_registry_for_director,
-                            story_context=_story_context,
-                        )
-                    except Exception:
-                        logging.exception("[TF-32-V] 재심사 예외")
-                        break
-
-                    _re_d = _re_audit.get("decision", "REJECT")
-                    _re_s = _re_audit.get("score", 0)
-                    try:
-                        _re_s = int(_re_s)
-                    except (ValueError, TypeError):
-                        _re_s = 0
-                    self.ctx.ui.log(f"      🎬 [TF-32-V] 재심사 #{_fix_i + 1}: {_re_d} (score={_re_s})")
-
-                    if _re_d == "PASS":
-                        if _re_s < _quality_gate_score:
-                            self.ctx.ui.log(
-                                f"      ⚠️ [TF-35] 재심사 PASS이나 score={_re_s} < {_quality_gate_score} → patch 종료"
-                            )
-                            break
-                        _current_arc = _patched
-                        _fix_ok = True
-                        break
-                    elif _re_d == "PASS_WITH_FIX":
-                        _current_arc = _patched
-                        _current_audit = _re_audit  # 다음 반복
-                    else:  # REJECT
-                        break
-
-                if _fix_ok:
-                    refined_arc.clear()
-                    refined_arc.update(_current_arc)
-                    _d_decision = "PASS"
-                    self.ctx.ui.log("      ✅ [TF-32-V] Arc 수정 완료 → PASS 확정")
-                else:
-                    _d_decision = "REJECT"
-                    audit["decision"] = "REJECT"
-                    # [TF-33] Director fix_scope + reasoning 보존 → retry 경로에서 patch/rewrite 라우팅
-                    _last_fix_scope = _current_audit.get("fix_scope", "")
-                    if _last_fix_scope:
-                        audit["fix_scope"] = _last_fix_scope
-                    _last_fsr = _current_audit.get("fix_scope_reasoning", "")
-                    if _last_fsr:
-                        audit["fix_scope_reasoning"] = _last_fsr
-                    audit["reason"] = (audit.get("reason", "") or "") + (
-                        f"\n[TF-32-V] PASS_WITH_FIX 수정 {_MAX_FIX}회 내 미해결 → REJECT"
-                    )
-                    audit["re_slice_instruction"] = audit.get("re_slice_instruction") or "지적사항 미해결 — 재설계 필요"
-                    self.ctx.ui.log("      ❌ [TF-32-V] 수정 실패 → REJECT 전환")
+                _d_decision = "REJECT"
+                audit["decision"] = "REJECT"
+                # [TF-33] Director fix_scope + reasoning 보존 → retry 경로에서 patch/rewrite 라우팅
+                _last_fix_scope = _current_audit.get("fix_scope", "")
+                if _last_fix_scope:
+                    audit["fix_scope"] = _last_fix_scope
+                _last_fsr = _current_audit.get("fix_scope_reasoning", "")
+                if _last_fsr:
+                    audit["fix_scope_reasoning"] = _last_fsr
+                audit["reason"] = (audit.get("reason", "") or "") + (
+                    f"\n[TF-32-V] PASS_WITH_FIX 수정 {_MAX_FIX}회 내 미해결 → REJECT"
+                )
+                audit["re_slice_instruction"] = audit.get("re_slice_instruction") or "지적사항 미해결 — 재설계 필요"
+                self.ctx.ui.log("      ❌ [TF-32-V] 수정 실패 → REJECT 전환")
 
         if _d_decision in ("PASS", "PASS_WITH_FIX"):  # [TF-R4-S2-01] [TF-32-S2] PASS/PASS_WITH_FIX 수용
-            if _td_len >= 1500 and _score < _quality_gate_score:
+            if _d_decision == "PASS" and _td_len >= 1500 and _score < _quality_gate_score:  # [TF-46] PASS만 gate 적용
                 self.ctx.ui.log(
                     f"      ⚠️ [QualityGate] PASS 판정이나 score={_score} < {_quality_gate_score} → REJECT 전환"
                 )

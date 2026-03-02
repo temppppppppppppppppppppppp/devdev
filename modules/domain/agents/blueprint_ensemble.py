@@ -147,14 +147,14 @@ class BlueprintEnsembleGenerator(BaseAgent):
         # Arc 포커스 추출
         arc_focus = constraint_block.get("must_focus", {}).get("content", "")
         if not arc_focus:
-            # [TTE] 에피소드별 지능 추출 + 안전캡 12000 (기존 4000×3)
+            # [TTE] 에피소드별 지능 추출
             arc_focus = extract_episode_tactical(
                 arc_data.get("tactical_doc", ""),
                 ep_num,
                 episode_details=arc_data.get("episode_details"),
-            )[:12000]
+            )
 
-        # [TF10-2-3] episode_details로 arc_focus 보강 — 현재 화 구조화된 사건 정보 선두 삽입
+        # [TF-46] episode_details enrichment을 절삭 전에 수행 (기존: 절삭 후 prepend → enrichment 유실)
         _ep_details = arc_data.get("episode_details") or []
         if isinstance(_ep_details, list):
             for _item in _ep_details:
@@ -164,6 +164,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
                         _detail_text = "\n".join(f"  - {d}" for d in _details if isinstance(d, str))
                         arc_focus = f"[{ep_num}화 핵심 사건 (Arc 설계 원본)]\n{_detail_text}\n\n{arc_focus}"
                     break
+        # [TF-46] enrichment 후 안전캡 (12K→15K, enrichment 포함 여유)
+        arc_focus = arc_focus[:15000]
 
         # [V61.3] 병렬 실행 전에 genre 미리 로드 (SQLite thread-safety 문제 방지)
         genre = GenreTypes.WUXIA
