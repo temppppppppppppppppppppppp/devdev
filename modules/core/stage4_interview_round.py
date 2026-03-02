@@ -1340,7 +1340,7 @@ class Stage4InterviewRound:
                             "strategy_name": "InPlace 수정",
                             "manuscript": _patched_ms,
                             "title": f"제{round_ctx.next_ep}화",
-                            "state_updates": {},
+                            "state_updates": final_state_updates,  # [TF-42] P1: 재심사에 현재 state 전달
                         }
                         _re_val_ctx = {
                             "warnings": [],
@@ -1388,6 +1388,10 @@ class Stage4InterviewRound:
                     elif _re_d == "PASS_WITH_FIX":
                         _current_ms = _patched_ms
                         _current_audit_result = _re_audit  # [TF-33] 다음 반복에서 fix_scope 재확인
+                        # [TF-42] P1: PASS_WITH_FIX 반복에서도 state_updates 캡처
+                        _re_su = _re_audit.get("state_updates")
+                        if isinstance(_re_su, dict) and _re_su:
+                            final_state_updates = _re_su
                         _fb_obj = _re_audit.get("feedback", {})
                         _current_fb = (
                             "\n".join(str(a) for a in (_fb_obj.get("action_items") or []))

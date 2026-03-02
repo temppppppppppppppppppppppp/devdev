@@ -32,7 +32,12 @@ class BlueprintConstraintCompiler:
         pass
 
     def compile(
-        self, arc_data: dict, ep_num: int, prev_blueprint: dict | None = None, prev_blueprints: list[dict] | None = None
+        self,
+        arc_data: dict,
+        ep_num: int,
+        prev_blueprint: dict | None = None,
+        prev_blueprints: list[dict] | None = None,
+        genre: str = "wuxia",
     ) -> dict:
         """
         Blueprint 제약 조건 컴파일
@@ -64,7 +69,7 @@ class BlueprintConstraintCompiler:
         continuity = self._extract_continuity(prev_blueprint, prev_blueprints)
 
         # 4. 계승 상태 추출
-        inherited_state = self._extract_inherited_state(arc_data, prev_blueprint)
+        inherited_state = self._extract_inherited_state(arc_data, prev_blueprint, genre=genre)
 
         # 5. [V63] Arc에서 전달된 constraint_summary (Stage 2 → Stage 3)
         arc_constraint_summary = arc_data.get("constraint_summary", "")
@@ -302,9 +307,12 @@ class BlueprintConstraintCompiler:
 
         return continuity
 
-    def _extract_inherited_state(self, arc_data: dict, prev_blueprint: dict | None) -> dict:
+    def _extract_inherited_state(self, arc_data: dict, prev_blueprint: dict | None, *, genre: str = "wuxia") -> dict:
         """계승 상태 추출"""
-        inherited = {"equipment": [], "injuries": "없음", "internal_energy": "100%", "companions": [], "mood": "평온"}
+        # [TF-41] P1-1: 비무협 장르는 internal_energy 기본값 제외
+        inherited: dict = {"equipment": [], "injuries": "없음", "companions": [], "mood": "평온"}
+        if genre == "wuxia":
+            inherited["internal_energy"] = "100%"
 
         # Arc의 joint_docs에서 추출
         joint_docs = arc_data.get("joint_docs", {})
@@ -322,13 +330,15 @@ class BlueprintConstraintCompiler:
             if injuries:
                 inherited["injuries"] = injuries
 
-            energy = shadow.get("internal_energy_loss", "0%")
-            if energy:
-                try:
-                    loss = int(re.search(r"(\d+)", str(energy)).group(1))
-                    inherited["internal_energy"] = f"{100 - loss}%"
-                except (ValueError, AttributeError, TypeError):  # [V64.P4] energy parse failure
-                    pass
+            # [TF-41] P1-1: 무협 전용 — 비무협 장르는 내공 상속 스킵
+            if genre == "wuxia":
+                energy = shadow.get("internal_energy_loss", "0%")
+                if energy:
+                    try:
+                        loss = int(re.search(r"(\d+)", str(energy)).group(1))
+                        inherited["internal_energy"] = f"{100 - loss}%"
+                    except (ValueError, AttributeError, TypeError):  # [V64.P4] energy parse failure
+                        pass
 
         # Arc의 state_constraints에서 추출
         state = arc_data.get("state_constraints", {})
@@ -336,7 +346,8 @@ class BlueprintConstraintCompiler:
             arc_start = state.get("arc_start_state", {})
             if arc_start:
                 inherited["injuries"] = arc_start.get("injuries", inherited["injuries"])
-                if arc_start.get("internal_energy"):
+                # [TF-41] P1-1: 무협 전용 — 비무협 장르는 내공 상속 스킵
+                if genre == "wuxia" and arc_start.get("internal_energy"):
                     inherited["internal_energy"] = f"{arc_start['internal_energy']}%"
                 inherited["equipment"] = arc_start.get("equipment", inherited["equipment"])
 
