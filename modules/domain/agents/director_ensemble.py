@@ -9,7 +9,7 @@ Director reference를 통해 BaseAgent 메서드(ask, _extract_json_robust 등) 
 import json
 import logging
 
-from modules.core.constants import ManuscriptLimits, smart_truncate  # [V64.P4]
+from modules.core.constants import ContextLimits, ManuscriptLimits, smart_truncate  # [V64.P4]
 from modules.core.prompt_loader import PromptLoader
 from modules.core.tactical_utils import extract_episode_tactical
 from modules.validation.threshold_helper import _threshold
@@ -742,7 +742,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             # [TF-A] full_fallback 선제 절삭 — variable_prompt 보호
             # _apply_prompt_size_gate()는 단순 head 절삭이므로, 미리 stable_context를 줄여
             # full_fallback이 게이트 이내가 되도록 보장 (variable이 tail에서 잘리는 것 방지)
-            _gate = int(getattr(self._d, "MAX_CONTEXT_CHARS", None) or 700_000)
+            _gate = int(getattr(self._d, "MAX_CONTEXT_CHARS", None) or ContextLimits.MAX_CONTEXT_CHARS)  # [TF-25-04]
             _stable_budget = max(0, _gate - len(variable_prompt) - 2)
             _stable_for_fallback = (
                 stable_context[:_stable_budget] if len(stable_context) > _stable_budget else stable_context

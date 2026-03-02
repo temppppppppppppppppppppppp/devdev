@@ -16,7 +16,7 @@ api:
   delay: 0.1                 # 호출 간 딜레이 (초)
   timeout: 300               # 호출 타임아웃 (초) — thinking 모델 대응, validation.yaml과 통일
   max_output_tokens: 65536   # [TF9] 데이터 절단 방지 — gemini-2.5-pro 최대값
-  max_context_chars: 700000  # [1M-CTX] 700K자×1.5tok≈1.05M. Gemini 1M 토큰 최대 활용.
+  # max_context_chars → validation.yaml context.max_context_chars로 이관 [TF-25-04]
   quota_cache_duration: 3600 # 쿼터 소진 캐시 유효시간 (초, 1시간)
 
 # 네트워크 재시도 설정 (야간 무인 운영 대응)
