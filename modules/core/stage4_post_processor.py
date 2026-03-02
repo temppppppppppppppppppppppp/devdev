@@ -255,11 +255,20 @@ class Stage4PostProcessor:
         # DB 저장 (HUD보다 먼저 — DB 실패 시 HUD 오염 방지) [Sweep56]
         # [P0-D1/D4] lock 보호 + 원자적 트랜잭션으로 부분 저장 방지
         _db = self.ctx.current_project.db
+        # [LM-Tier TF-E] HUD 스냅샷 캡처 (업데이트 전 현재 상태)
+        _hud_snap = None
+        try:
+            if hasattr(self.ctx.sys, "hud") and hasattr(self.ctx.sys.hud, "snapshot"):
+                _hud_snap = self.ctx.sys.hud.snapshot()
+        except Exception:
+            pass
         try:
             with _db._lock:
                 _db.conn.execute("BEGIN")
                 try:
-                    _db.save_manuscript(ep_num=next_ep, title=final_title, content=final_manuscript)
+                    _db.save_manuscript(
+                        ep_num=next_ep, title=final_title, content=final_manuscript, hud_snapshot=_hud_snap
+                    )
                     if final_state_updates:
                         _db.update_martial_tracker(next_ep, final_state_updates)
                         self.ctx.ui.log(f"      📊 제 {next_ep}화 15대 지표 트래커 저장 완료")

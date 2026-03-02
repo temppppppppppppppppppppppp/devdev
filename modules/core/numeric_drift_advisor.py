@@ -6,6 +6,8 @@ FactLedger numbers 이력 전체를 주기적으로 LLM에게 검토시켜
 Advisory-only: Director가 최종 판정.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import re
@@ -41,9 +43,17 @@ class NumericDriftAdvisor:
         if not numbers:
             return []
 
+        # [LM-Tier TF-B] Python 사전 감지: 지수 성장 패턴
+        pre_warnings = self._detect_exponential_growth(numbers)
+
         history_text = self._format_history(numbers, min_history)
         if not history_text:
             return []
+
+        # pre_warnings가 있으면 history_text 앞에 prepend하여 LLM에도 전달
+        if pre_warnings:
+            pre_block = "\n".join(pre_warnings)
+            history_text = f"⚠ Python 사전감지 경고:\n{pre_block}\n\n{history_text}"
 
         if not self._llm_ask:
             return []
@@ -151,3 +161,45 @@ class NumericDriftAdvisor:
             )
 
         return results
+
+    # --- [LM-Tier TF-B] Python 사전 감지 ---
+
+    @staticmethod
+    def _try_parse_float(val) -> float | None:
+        """문자열에서 숫자 추출 시도. '100냥' → 100.0"""
+        if isinstance(val, int | float):
+            return float(val)
+        if isinstance(val, str):
+            m = re.search(r"[-+]?\d[\d,]*\.?\d*", val.replace(",", ""))
+            if m:
+                return float(m.group())
+        return None
+
+    def _detect_exponential_growth(self, numbers) -> list[str]:
+        """Python 사전 감지: 100배+ 급등 or 5연속 50%+ 성장."""
+        warnings: list[str] = []
+        for key, entry in (numbers or {}).items():
+            if not isinstance(entry, dict):
+                continue
+            # (1) established_value 대비 100배+
+            est = entry.get("established_value")
+            cur = entry.get("value")
+            est_f = self._try_parse_float(est)
+            cur_f = self._try_parse_float(cur)
+            if est_f and cur_f and est_f > 0 and cur_f / est_f >= 100:
+                warnings.append(f"[Python 사전감지] {key}: 초기값({est}) 대비 현재({cur}) = {cur_f / est_f:.0f}배 급등")
+            # (2) 5연속 50%+ 성장
+            history = entry.get("history", [])
+            if len(history) >= 6:  # 최소 6개 (5개 구간)
+                streak = 0
+                for i in range(len(history) - 1):
+                    a = self._try_parse_float(history[i])
+                    b = self._try_parse_float(history[i + 1])
+                    if a and b and a > 0 and (b - a) / a >= 0.5:
+                        streak += 1
+                        if streak >= 5:
+                            warnings.append(f"[Python 사전감지] {key}: {streak}연속 50%+ 성장 감지 (지수적 증가 의심)")
+                            break
+                    else:
+                        streak = 0
+        return warnings

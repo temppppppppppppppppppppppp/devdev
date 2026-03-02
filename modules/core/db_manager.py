@@ -269,6 +269,11 @@ class DBManager:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        # [LM-Tier TF-E] hud_snapshot 컬럼 마이그레이션
+        try:
+            self.cursor.execute("ALTER TABLE manuscripts ADD COLUMN hud_snapshot TEXT DEFAULT ''")
+        except Exception:
+            pass  # 이미 존재
 
         # [Phase 5.2.2] 7. Reflexion Memory (과거 실패 패턴 학습)
         self.cursor.execute("""
@@ -402,6 +407,11 @@ class DBManager:
         """)
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_npc_history_name ON npc_history(npc_name)")
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_npc_history_arc ON npc_history(arc_no)")
+        # [LM-Tier TF-D] reason 컬럼 마이그레이션
+        try:
+            self.cursor.execute("ALTER TABLE npc_history ADD COLUMN reason TEXT DEFAULT ''")
+        except Exception:
+            pass  # 이미 존재
 
         # 13. [Phase 3-B] 크로스 에피소드 문장 핑거프린트
         self.cursor.execute("""
@@ -835,14 +845,19 @@ class DBManager:
                 cur.close()
 
     # --- [Section 1: 원고 및 지표] ---
-    def save_manuscript(self, ep_num, title, content) -> None:
+    def save_manuscript(self, ep_num, title, content, hud_snapshot=None) -> None:
         with self._lock:
             nested = self.conn.in_transaction
             cur = self.conn.cursor()
             try:
+                _hud_json = ""
+                if hud_snapshot and isinstance(hud_snapshot, dict):
+                    import json as _json
+
+                    _hud_json = _json.dumps(hud_snapshot, ensure_ascii=False)
                 cur.execute(
-                    "INSERT OR REPLACE INTO manuscripts (ep_num, title, content) VALUES (?, ?, ?)",
-                    (ep_num, title, content),
+                    "INSERT OR REPLACE INTO manuscripts (ep_num, title, content, hud_snapshot) VALUES (?, ?, ?, ?)",
+                    (ep_num, title, content, _hud_json),
                 )
                 if not nested:
                     self.commit()
@@ -855,7 +870,21 @@ class DBManager:
             try:
                 cur.execute("SELECT * FROM manuscripts WHERE ep_num = ?", (ep_num,))
                 row = cur.fetchone()
-                return dict(row) if row else None
+                if not row:
+                    return None
+                result = dict(row)
+                # [LM-Tier TF-E] hud_snapshot JSON 역직렬화
+                _hud_raw = result.get("hud_snapshot", "")
+                if _hud_raw and isinstance(_hud_raw, str):
+                    import json as _json
+
+                    try:
+                        result["hud_snapshot"] = _json.loads(_hud_raw)
+                    except (ValueError, _json.JSONDecodeError):
+                        result["hud_snapshot"] = {}
+                else:
+                    result["hud_snapshot"] = {}
+                return result
             finally:
                 cur.close()
 
@@ -2252,14 +2281,15 @@ class DBManager:
         old_value: str,
         new_value: str,
         change_source: str = "arc_extraction",
+        reason: str = "",
     ) -> None:
         """[Phase 3-5A] NPC 변경 이력 append-only 삽입"""
         with self._lock:
             nested = self.conn.in_transaction
             self.cursor.execute(
-                "INSERT INTO npc_history (npc_name, episode_no, arc_no, field_name, old_value, new_value, change_source) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (npc_name, episode_no, arc_no, field_name, old_value, new_value, change_source),
+                "INSERT INTO npc_history (npc_name, episode_no, arc_no, field_name, old_value, new_value, change_source, reason) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (npc_name, episode_no, arc_no, field_name, old_value, new_value, change_source, reason),
             )
             if not nested:
                 self.commit()
@@ -2269,7 +2299,7 @@ class DBManager:
         with self._lock:
             cur = self.cursor.execute(
                 "SELECT id, npc_name, episode_no, arc_no, field_name, old_value, new_value, "
-                "change_source, created_at FROM npc_history WHERE npc_name = ? ORDER BY id DESC LIMIT ?",
+                "change_source, reason, created_at FROM npc_history WHERE npc_name = ? ORDER BY id DESC LIMIT ?",
                 (npc_name, limit),
             )
             return [dict(row) for row in cur.fetchall()]

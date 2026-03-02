@@ -577,6 +577,21 @@ class Stage4InterviewRound:
                     _director_mc_parts.append("\n".join(_wr_lines))
         except Exception as _wr_err:
             logging.debug(f"[TF7-P1-04] win_rates fetch 실패 (비치명): {_wr_err}")
+        # [LM-Tier TF-C] fix_scope 전략별 합격률을 Director에 주입
+        try:
+            if _db is not None and hasattr(_db, "get_fix_scope_stats"):
+                _fs_stats = _db.get_fix_scope_stats()
+                if _fs_stats and any(r.get("cnt", 0) > 0 for r in _fs_stats):
+                    _fs_lines = ["[A-3] fix_scope 전략별 합격률"]
+                    for _row in _fs_stats:
+                        _scope = _row.get("fix_scope", "?")
+                        _verdict = _row.get("verdict", "?")
+                        _cnt = _row.get("cnt", 0)
+                        if _cnt > 0:
+                            _fs_lines.append(f"  - {_scope} + {_verdict}: {_cnt}건")
+                    _director_mc_parts.append("\n".join(_fs_lines))
+        except Exception as _fs_err:
+            logging.debug(f"[A-3] fix_scope stats fetch 실패 (비치명): {_fs_err}")
         _director_mandatory_context = "\n\n".join(str(x) for x in _director_mc_parts if x is not None)
 
         director_result = self.ctx.agents["director"].select_and_judge_ensemble(

@@ -170,6 +170,7 @@ class StateTrackerNPC:
         new_value: str,
         source: str = "arc_extraction",
         episode_no: int = 0,
+        reason: str = "",
     ) -> None:
         """[Phase 3-5A] DB에 NPC 변경 이력 기록. 실패 시 비차단."""
         try:
@@ -183,6 +184,7 @@ class StateTrackerNPC:
                     str(old_value or ""),
                     str(new_value or ""),
                     source,
+                    reason=reason,
                 )
         except Exception as e:
             logging.warning(f"[Phase 3-5A] NPC 이력 기록 실패 (비차단): {e}")
