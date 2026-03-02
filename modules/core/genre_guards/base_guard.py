@@ -496,8 +496,6 @@ class BaseGuard(ABC):
         if not superior_alive:
             return {"passed": True, "violations": [], "has_justification": False}
 
-        # 위임이 필요한 직위 목록
-        hierarchy.get("delegation_required", [])
         position_titles = hierarchy.get("position_titles", {})
 
         # 주인공이 상위 직위를 자칭하는지 검사
