@@ -153,7 +153,7 @@ class PreflightChecker(BaseAgent):
         )
 
         try:
-            result = self.ask(prompt, temperature=0.2)  # 낮은 온도로 정확성 우선
+            result = self.ask(prompt, temperature=0.2, thinking_level="low")  # 낮은 온도로 정확성 우선
 
             if isinstance(result, str):
                 result = self._extract_json_robust(result)

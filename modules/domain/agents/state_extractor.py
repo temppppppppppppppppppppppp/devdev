@@ -240,7 +240,7 @@ class StateExtractor(BaseAgent):
         )
 
         try:
-            result = self.ask(prompt, temperature=0.2)
+            result = self.ask(prompt, temperature=0.2, thinking_level="low")
 
             if isinstance(result, str):
                 result = self._extract_json_robust(result)  # [V70] bare json.loads → robust 파서
@@ -795,7 +795,7 @@ class StateExtractor(BaseAgent):
         )
 
         try:
-            result = self.ask(prompt, temperature=0.2)
+            result = self.ask(prompt, temperature=0.2, thinking_level="low")
             if isinstance(result, str):
                 result = self._extract_json_robust(result)
             return self._validate_satisfaction_tag(result, ep_num)

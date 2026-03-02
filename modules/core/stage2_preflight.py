@@ -309,6 +309,7 @@ class Stage2PreflightAnalysis:
         _cached_preflight_result = {}
         constraint_block = ""
         _parallel_exec = None
+        self.ctx.ui.log("      ⏳ [Preflight] 병렬 분석 시작 (arc_drive + preflight + constraint)...")
         try:
             _parallel_exec = concurrent.futures.ThreadPoolExecutor(max_workers=3)
             _fut_drive = _parallel_exec.submit(_compute_arc_drive)
@@ -317,16 +318,22 @@ class Stage2PreflightAnalysis:
             # [P1-B3] 개별 try/except — 부분 타임아웃 시에도 다른 결과 수거
             try:
                 arc_drive = _fut_drive.result(timeout=300)
+                self.ctx.ui.log("      ✅ [Preflight] arc_drive 완료")
             except Exception as _drv_err:
                 logging.warning("[Preflight] arc_drive 타임아웃/실패: %s", str(_drv_err)[:80])
+                self.ctx.ui.log("      ⚠️ [Preflight] arc_drive 실패")
             try:
                 _cached_preflight_injection, _cached_preflight_result = _fut_preflight.result(timeout=300)
+                self.ctx.ui.log("      ✅ [Preflight] preflight 완료")
             except Exception as _pf_err2:
                 logging.warning("[Preflight] preflight 타임아웃/실패: %s", str(_pf_err2)[:80])
+                self.ctx.ui.log("      ⚠️ [Preflight] preflight 실패")
             try:
                 constraint_block = _fut_constraint.result(timeout=60)
+                self.ctx.ui.log("      ✅ [Preflight] constraint 완료")
             except Exception as _con_err:
                 logging.warning("[Preflight] constraint 타임아웃/실패: %s", str(_con_err)[:80])
+                self.ctx.ui.log("      ⚠️ [Preflight] constraint 실패")
         except Exception as _pf_err:
             if _parallel_exec is not None:
                 try:
@@ -371,7 +378,9 @@ class Stage2PreflightAnalysis:
                         ):
                             state_result = self.ctx.cumulative_state_cache
                         else:
+                            self.ctx.ui.log("      ⏳ [StateExtractor] 누적 상태 추출 중...")
                             state_result = self.ctx.agents["state_extractor"].extract_cumulative_state(all_refined_arcs)
+                            self.ctx.ui.log("      ✅ [StateExtractor] 누적 상태 추출 완료")
                             self.ctx.cumulative_state_cache = state_result
                             self.ctx.cumulative_state_cache_key = arc_count
                             # [Sweep3-D2][Sweep300-R1] app 캐시 키+객체 동기화
@@ -489,8 +498,8 @@ class Stage2PreflightAnalysis:
                     _ws_anchor = _db.load_anchor("world_state")
                     if _ws_anchor and isinstance(_ws_anchor, dict):
                         _cumulative_elapsed = _ws_anchor.get("cumulative_elapsed")
-            except Exception:
-                pass
+            except Exception as _cum_err:
+                logging.debug("[TF-F] cumulative_elapsed 조회 실패 (비치명): %s", _cum_err)
             _narrative_ctx = NarrativeContextFormatter.format_all(
                 active_plots=getattr(_st, "active_plots", None) if _st else None,
                 npc_motivations=_npc_motivations,
@@ -969,6 +978,37 @@ class Stage2PreflightAnalysis:
 
                     refined_arc["joint_docs"] = enriched_block.get("joint_docs", {})
                     refined_arc["status_shadow"] = enriched_block.get("status_shadow", {})
+
+                    # --- Fix 6: enriched_block → state_changes 매핑 보강 ---
+                    _sc = refined_arc.get("state_changes", {})
+                    # relationship_delta → relationship_changes
+                    _rd = enriched_block.get("relationship_delta", [])
+                    if _rd and not _sc.get("relationship_changes"):
+                        _sc["relationship_changes"] = [
+                            {
+                                "npc": r.get("target", ""),
+                                "from": r.get("before", ""),
+                                "to": r.get("after", ""),
+                                "episode": 0,
+                            }
+                            for r in _rd
+                            if isinstance(r, dict)
+                        ]
+                    # time_span → timeline
+                    _ts = enriched_block.get("time_span", {})
+                    if isinstance(_ts, dict) and _ts and not _sc.get("timeline", {}).get("start"):
+                        _sc["timeline"] = {"start": _ts.get("in_story_time", ""), "end": _ts.get("in_story_time", "")}
+                    refined_arc["state_changes"] = _sc
+
+                    # --- Fix 7: items_acquired 자기모순 해결 ---
+                    _stc = refined_arc.get("state_constraints", {})
+                    if not _stc.get("items_acquired"):
+                        _end_eq = _stc.get("arc_end_state", {}).get("equipment", [])
+                        _start_eq = _stc.get("arc_start_state", {}).get("equipment", [])
+                        if isinstance(_end_eq, list) and isinstance(_start_eq, list):
+                            _new = [i for i in _end_eq if i not in _start_eq]
+                            if _new:
+                                _stc["items_acquired"] = _new
 
                     logging.info(f"✅ [V60.77] FourPhase 성공! (내부 재시도: {pipeline_result.get('retries', 0)}회)")
 

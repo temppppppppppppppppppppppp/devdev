@@ -272,7 +272,7 @@ class DBManager:
         # [LM-Tier TF-E] hud_snapshot 컬럼 마이그레이션
         try:
             self.cursor.execute("ALTER TABLE manuscripts ADD COLUMN hud_snapshot TEXT DEFAULT ''")
-        except Exception:
+        except sqlite3.OperationalError:
             pass  # 이미 존재
 
         # [Phase 5.2.2] 7. Reflexion Memory (과거 실패 패턴 학습)
@@ -410,7 +410,7 @@ class DBManager:
         # [LM-Tier TF-D] reason 컬럼 마이그레이션
         try:
             self.cursor.execute("ALTER TABLE npc_history ADD COLUMN reason TEXT DEFAULT ''")
-        except Exception:
+        except sqlite3.OperationalError:
             pass  # 이미 존재
 
         # 13. [Phase 3-B] 크로스 에피소드 문장 핑거프린트

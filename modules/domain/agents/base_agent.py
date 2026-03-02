@@ -361,13 +361,20 @@ class BaseAgent:
             _thinking_text = ""  # [TF-28] LLM thinking content
 
             attempt = 0
+            _ask_t0 = time.time()
             while attempt < MAX_CONTINUATIONS:
                 try:
                     # [V60.99] API Rate Limit 예방 딜레이
                     time.sleep(self.API_DELAY)
+                    _api_t0 = time.time()
                     response = self.client.models.generate_content(
                         model=current_model, contents=current_prompt, config=config
                     )
+                    _api_elapsed = time.time() - _api_t0
+                    if _api_elapsed > 30:
+                        print(
+                            f"      ⏱️ [API] {self._agent_name} model={current_model} attempt={attempt} → {_api_elapsed:.1f}s"
+                        )
                     # [V60.97] 성공 시 카운터 리셋
                     rate_limit_retry_count = 0
                     network_retry_count = 0  # [V61.2] 네트워크 카운터도 리셋
@@ -376,6 +383,10 @@ class BaseAgent:
                         with BaseAgent._rotation_lock:
                             BaseAgent._rotation_count = 0
                 except Exception as api_error:
+                    # [Diag] API 오류 발생 시 즉시 표시
+                    print(
+                        f"      ⚠️ [API-ERR] {self._agent_name} model={current_model} attempt={attempt} err={type(api_error).__name__}: {str(api_error)[:120]}"
+                    )
                     # [B-1-9:C2] API 오류 처리 — 네트워크/Rate Limit/쿼터 분기
                     _err = self._handle_api_error(
                         api_error=api_error,
@@ -399,11 +410,14 @@ class BaseAgent:
                     quota_retry_count = _err["quota_retry_count"]
 
                     if _err["action"] == "continue":
+                        print(f"      🔄 [API-ERR] {self._agent_name} → continue (retry) model={_err['current_model']}")
                         continue
                     elif _err["action"] == "fallback_response":
                         response = _err["response"]
+                        print(f"      🔄 [API-ERR] {self._agent_name} → fallback model={_err['current_model']}")
                         # fall through to response processing
                     else:  # "raise"
+                        print(f"      ❌ [API-ERR] {self._agent_name} → raise (포기)")
                         raise api_error
 
                 # [B-1-9:C3] 응답 추출 + 병합 + 이어쓰기 판정
@@ -422,11 +436,21 @@ class BaseAgent:
 
                 if _resp["action"] == "continue":
                     current_prompt = _resp["current_prompt"]
+                    _cont_elapsed = time.time() - _ask_t0
+                    print(
+                        f"      🔁 [CONT] {self._agent_name} 이어쓰기 attempt={attempt + 1} (누적 {_cont_elapsed:.1f}s, 현재 응답={len(full_response)}자)"
+                    )
                     time.sleep(1)
                     attempt += 1
                     continue
                 else:  # "break"
                     break
+
+            _total_elapsed = time.time() - _ask_t0
+            if _total_elapsed > 15:
+                print(
+                    f"      📊 [ASK] {self._agent_name} 총 {_total_elapsed:.1f}s (model={current_model}, attempts={attempt + 1}, 응답={len(full_response)}자)"
+                )
 
             # [V49.3] 비용 추적 종료 (성공)
             if METRICS_ENABLED and metric_id:
@@ -598,7 +622,7 @@ class BaseAgent:
             "max_output_tokens": self.MAX_OUTPUT_TOKENS,
             "top_p": 0.95,
             "response_mime_type": "application/json",
-            "http_options": types.HttpOptions(timeout=max(10, int(self.API_TIMEOUT))),
+            "http_options": types.HttpOptions(timeout=max(10_000, int(self.API_TIMEOUT) * 1000)),
         }
         # [V0128] JSON Schema enforcement if provided
         if response_schema:
@@ -697,11 +721,10 @@ class BaseAgent:
                 f"\n      🌐 [{timestamp}] 연결 오류 → {wait_time}초 대기 ({network_retry_count}/{self.MAX_NETWORK_RETRIES}, 누적 {total_waited}초)"
             )
 
-            # 대기 중 — 메인 스레드에서만 print (워커 스레드는 logging만)
-            if threading.current_thread() is threading.main_thread():
-                print(
-                    f"         🌐 네트워크 재시도 {network_retry_count}/{self.MAX_NETWORK_RETRIES} ({wait_time}초 대기)"
-                )
+            # 대기 중 — 콘솔 표시
+            print(
+                f"      🌐 [NET-RETRY] {self._agent_name} 네트워크 재시도 {network_retry_count}/{self.MAX_NETWORK_RETRIES} ({wait_time}초 대기)"
+            )
             time.sleep(wait_time)
 
             # 연결 체크
@@ -740,6 +763,9 @@ class BaseAgent:
             result["rate_limit_retry_count"] = rate_limit_retry_count
             # Linear Backoff: 30초 → 60초 → 90초 (분당 제한 대응)
             wait_time = 30 * rate_limit_retry_count
+            print(
+                f"      ⏳ [RATE-LIMIT] {self._agent_name} {current_model} → {wait_time}초 대기 ({rate_limit_retry_count}/{max_rate_limit_retries})"
+            )
             logging.info(
                 f"⏳ [V60.97 Rate Limit] {current_model} 분당 제한 감지 → {wait_time}초 대기 후 재시도 ({rate_limit_retry_count}/{max_rate_limit_retries})"
             )
@@ -779,6 +805,7 @@ class BaseAgent:
                         BaseAgent._key_rotation_pending = True
 
                 error_type = "Quota 소진" if is_quota_exhausted else "Rate Limit 초과"
+                print(f"      🔄 [QUOTA-FB] {self._agent_name} {old_model} {error_type} → {current_model}로 전환")
                 logging.info(f"🔄 [V60.97 Fallback] {old_model} {error_type} → {current_model}로 전환")
                 # [INF-I5] 폴백 전환 구조화 로그
                 logging.debug(
@@ -946,6 +973,9 @@ class BaseAgent:
         Returns:
             str — 백업 응답 / 병합 응답 / 부분 응답 / 에러 응답
         """
+        print(
+            f"      🆘 [BACKUP] {self._agent_name} 백업 모델 호출 시작 (backup={self.backup_model}, error_type={error_type})"
+        )
         try:
             # [FIX] 백업 모델용 별도 config
             backup_config_params = {
@@ -1552,7 +1582,7 @@ class BaseAgent:
                 "top_p": 0.95,
                 "response_mime_type": "application/json",
                 "cached_content": cache_name,
-                "http_options": types.HttpOptions(timeout=max(10, int(self.API_TIMEOUT))),
+                "http_options": types.HttpOptions(timeout=max(10_000, int(self.API_TIMEOUT) * 1000)),
             }
             # [TF11] response_schema 확대 적용 — API 레벨 타입 강제
             if response_schema:
