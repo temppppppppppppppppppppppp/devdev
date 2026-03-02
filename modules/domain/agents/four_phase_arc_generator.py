@@ -205,8 +205,8 @@ class FourPhaseArcGenerator(BaseAgent):
             if master_bible:
                 bible_root = master_bible.get("MasterBible", master_bible)
                 protagonist_config = bible_root.get("protagonist_config", {})
-        except Exception:
-            pass
+        except Exception as e:
+            logging.debug("[TF-26] master_bible access failed (generate): %s", str(e)[:100])
 
         # [V61.1] LLM 기반 가변 페이싱 - ep_count 동적 결정
         ep_count, pacing_reason = self._determine_ep_count(curr_block, arc_no, prev_arcs)
@@ -773,8 +773,8 @@ class FourPhaseArcGenerator(BaseAgent):
             if master_bible:
                 bible_root = master_bible.get("MasterBible", master_bible)
                 protagonist_config = bible_root.get("protagonist_config", {})
-        except Exception:
-            pass
+        except Exception as e:
+            logging.debug("[TF-26] master_bible access failed (patch): %s", str(e)[:100])
 
         prev_arc_context = self._generate_prev_context(prev_arcs, preflight_result)
         if vector_context:

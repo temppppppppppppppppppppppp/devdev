@@ -23,7 +23,7 @@ from modules.core.genre_schema_builder import build_state_constraints_schema, bu
 from modules.core.prompt_loader import PromptLoader
 from modules.core.response_schemas import ARC_DESIGN_SCHEMA  # [TF11] response_schema 확대
 
-from .base_agent import BaseAgent
+from .base_agent import _SYSTEM_CFG, BaseAgent
 
 # [V60.95] 원시인 모드 금지어 Guard (JSON 기반)
 try:
@@ -100,9 +100,10 @@ class ArcEnsembleGenerator(BaseAgent):
     병렬로 3개 Arc 후보 생성 후 최적 선택
     """
 
-    # [V61.3] 앙상블 타임아웃 설정 (야간 무인 운영 - 무한 대기 방지)
-    ENSEMBLE_TIMEOUT = 300  # 전체 앙상블 타임아웃 (초) - 5분 (thinking 오버헤드 반영)
-    SINGLE_CANDIDATE_TIMEOUT = 240  # 개별 후보 타임아웃 (초) - 4분
+    # [V61.3→TF-26] 앙상블 타임아웃 — system.yaml ensemble_timeouts.arc 참조
+    _TIMEOUTS = _SYSTEM_CFG.get("ensemble_timeouts", {}).get("arc", {})
+    ENSEMBLE_TIMEOUT = _TIMEOUTS.get("ensemble", 300)
+    SINGLE_CANDIDATE_TIMEOUT = _TIMEOUTS.get("single", 240)
 
     def __init__(self, context, client, model_tier: str = "gemini-2.5-pro"):
         # [V62.4] gemini-2.5-pro로 변경 - 3-pro 쿼터 소진 문제 방지
@@ -481,8 +482,8 @@ class ArcEnsembleGenerator(BaseAgent):
                     and self.context.sys.hud
                 ):
                     _ck = self.context.sys.hud.get_critical_keys()
-            except Exception:
-                pass
+            except Exception as e:
+                logging.debug("[TF-26] critical_keys lookup failed: %s", str(e)[:100])
             _sc_genre_field = self._escape_braces(build_state_constraints_schema(genre, _ck))
             _ss_schema = self._escape_braces(build_status_shadow_schema(genre, _ck))
 

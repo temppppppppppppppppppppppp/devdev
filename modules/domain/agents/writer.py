@@ -15,6 +15,7 @@
 """
 
 import json
+import logging
 import re
 
 from modules.core.hud_utils import get_hud_trend_safe as _get_hud_trend_safe_shared  # [V64.P4]
@@ -144,8 +145,8 @@ class Writer(BaseAgent):
                 reference_anchor_prompt = anchor_sys.generate_reference_prompt(
                     relevant_anchors=relevant, critical_anchors=critical
                 )
-        except Exception:
-            pass
+        except Exception as e:
+            logging.warning("[TF-26] anchor system failed: %s", str(e)[:100])
 
         anti_trope = _build_anti_trope_instructions_shared(
             (getattr(self.context, "genre", None) or {}).get("name", "무협")

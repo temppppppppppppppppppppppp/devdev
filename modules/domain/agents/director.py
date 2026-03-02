@@ -1,5 +1,6 @@
 from modules.core.constants import ManuscriptLimits
 from modules.core.hud_utils import build_hud_context as _build_hud_context_shared
+from modules.validation.threshold_helper import _threshold
 
 from .base_agent import BaseAgent
 from .director_auditor import DirectorQualityAuditor
@@ -41,12 +42,12 @@ class Director(BaseAgent):
 
         # [V49.3] Self-Consistency 설정 (Stage 1-3 감사에 적용)
         self.use_self_consistency = True  # Self-Consistency 활성화 여부
-        self.consistency_votes = 3  # 투표 횟수
-        self.ambiguous_lower = 50  # 애매한 점수 하한 (전략 감사는 0-100 스케일이 아님)
-        self.ambiguous_upper = 60  # [V60.24] 애매한 점수 상한 (70→65)
+        self.consistency_votes = _threshold("orchestrator.consistency_votes", 3)
+        self.ambiguous_lower = _threshold("adaptive_threshold.ambiguous_lower", 50)
+        self.ambiguous_upper = _threshold("adaptive_threshold.ambiguous_upper", 60)
 
-        # [V60.24] 적응형 PASS 기준선 기본값 - 살짝 완화
-        self.base_pass_threshold = 60  # 기본 PASS 기준 점수 (65→60)
+        # [V60.24] 적응형 PASS 기준선 기본값 — [TF-26] YAML SSOT 전환
+        self.base_pass_threshold = _threshold("scoring.default_pass_threshold", 60)
         self.adaptive_thresholds_enabled = True
 
         # [V61] Entity 일관성 검증 설정

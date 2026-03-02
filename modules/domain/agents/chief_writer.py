@@ -26,7 +26,7 @@ from modules.core.constants import smart_truncate
 from modules.core.genre_schema_builder import build_state_updates_schema
 from modules.models.manuscript import validate_manuscript_candidate
 
-from .base_agent import BaseAgent
+from .base_agent import _SYSTEM_CFG, BaseAgent
 from .chief_writer_context import ChiefWriterContextBuilder
 from .chief_writer_prompts import (
     get_prompt_template_output,
@@ -58,9 +58,10 @@ class ChiefWriter(BaseAgent):
     - Director 피드백 반영 재생성
     """
 
-    # [V61.3] 앙상블 타임아웃 설정 (야간 무인 운영 - 무한 대기 방지)
-    ENSEMBLE_TIMEOUT = 600  # 전체 앙상블 타임아웃 (초) - 10분 (thinking 오버헤드 반영)
-    SINGLE_CANDIDATE_TIMEOUT = 540  # 개별 후보 타임아웃 (초) - 9분
+    # [V61.3→TF-26] 앙상블 타임아웃 — system.yaml ensemble_timeouts.chief_writer 참조
+    _TIMEOUTS = _SYSTEM_CFG.get("ensemble_timeouts", {}).get("chief_writer", {})
+    ENSEMBLE_TIMEOUT = _TIMEOUTS.get("ensemble", 600)
+    SINGLE_CANDIDATE_TIMEOUT = _TIMEOUTS.get("single", 540)
 
     # 앙상블 전략 정의
     ENSEMBLE_STRATEGIES = {

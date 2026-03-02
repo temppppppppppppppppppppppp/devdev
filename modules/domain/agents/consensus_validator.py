@@ -19,7 +19,7 @@ from concurrent.futures import TimeoutError as FutureTimeoutError
 from modules.core.arc_summary_utils import generate_prev_arc_summary  # [V64.P4]
 from modules.core.prompt_loader import SafeDict
 
-from .base_agent import BaseAgent
+from .base_agent import _SYSTEM_CFG, BaseAgent
 
 # 3가지 검증 관점
 VALIDATION_PERSPECTIVES = [
@@ -150,9 +150,10 @@ class ConsensusValidator(BaseAgent):
     3개 LLM이 서로 다른 관점으로 검증, 합의 도출
     """
 
-    # [V61.3] 앙상블 타임아웃 설정 (야간 무인 운영 - 무한 대기 방지)
-    ENSEMBLE_TIMEOUT = 120  # 전체 합의 타임아웃 (초) - 2분
-    SINGLE_VOTE_TIMEOUT = 90  # 개별 투표 타임아웃 (초) - 1.5분
+    # [V61.3→TF-26] 앙상블 타임아웃 — system.yaml ensemble_timeouts.consensus_vote 참조
+    _TIMEOUTS = _SYSTEM_CFG.get("ensemble_timeouts", {}).get("consensus_vote", {})
+    ENSEMBLE_TIMEOUT = 120  # 전체 합의 타임아웃 (초) — consensus는 ensemble key 미사용
+    SINGLE_VOTE_TIMEOUT = _TIMEOUTS.get("single", 90)
 
     def __init__(self, context, client, model_tier: str = None):
         # [V60.53] Flash로 변경 - 단순 투표 로직, Pro 불필요

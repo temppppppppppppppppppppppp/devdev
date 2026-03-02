@@ -19,6 +19,8 @@ from modules.core.prompt_loader import PromptLoader
 from modules.validation.threshold_helper import _threshold
 from modules.validation.validation_orchestrator import ValidationOrchestrator
 
+from .base_agent import _SYSTEM_CFG
+
 # [V60.95] 원시인 모드 금지어 Guard (JSON 기반)
 try:
     from modules.core.primitive_guard import get_primitive_guard
@@ -77,8 +79,8 @@ class DirectorQualityAuditor:
             if hasattr(self._d, "context") and self._d.context:
                 try:
                     current_state = getattr(self._d.context, "actual_truth", {}) or {}
-                except Exception:
-                    pass
+                except Exception as e:
+                    logging.warning("[TF-26] actual_truth lookup failed: %s", str(e)[:100])
 
             result = self._d.guard.run_deep_validation(manuscript, current_state)
 
@@ -940,9 +942,10 @@ class DirectorQualityAuditor:
         from concurrent.futures import ThreadPoolExecutor, as_completed
         from concurrent.futures import TimeoutError as FutureTimeoutError
 
-        # [V61.3] 타임아웃 상수
-        VOTE_ENSEMBLE_TIMEOUT = 150  # 전체 투표 타임아웃 (초) - thinking 오버헤드 반영
-        SINGLE_VOTE_TIMEOUT = 90  # 개별 투표 타임아웃 (초)
+        # [V61.3→TF-26] 타임아웃 — system.yaml ensemble_timeouts.director_vote 참조
+        _dv_timeouts = _SYSTEM_CFG.get("ensemble_timeouts", {}).get("director_vote", {})
+        VOTE_ENSEMBLE_TIMEOUT = _dv_timeouts.get("ensemble", 150)
+        SINGLE_VOTE_TIMEOUT = _dv_timeouts.get("single", 90)
 
         def _vote_task(vote_idx, temp) -> tuple:
             """단일 투표 작업"""

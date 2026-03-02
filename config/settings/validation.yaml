@@ -32,7 +32,7 @@ scope:
 # ── SCORING 검증 ─────────────────────────────────────────────
 scoring:
   quality_gate_score: 90              # [TF-28b] Stage 2/3/4 전 스테이지 통일 QualityGate
-  default_pass_threshold: 70
+  default_pass_threshold: 60  # [TF-26] Director 실사용값 반영 (70→60)
   genre_thresholds:
     wuxia: 70
     hunter: 68
@@ -120,8 +120,8 @@ adaptive_threshold:
   floor: 60                      # 임계값 하한 (이 아래로 내려가지 않음)
   floor_hit_reset: 3             # 바닥 N회 연속 도달 시 consecutive_passes 리셋
   cascade_cap_passes: 10         # N연속 통과 후 improving_quality 조정 0으로 고정
-  ambiguous_lower: 70            # self-consistency 투표 하한
-  ambiguous_upper: 85            # self-consistency 투표 상한
+  ambiguous_lower: 50            # [TF-26] Director 실사용값 반영 (70→50)
+  ambiguous_upper: 60            # [TF-26] Director 실사용값 반영 (85→60)
   soft_margin: 2                 # 경계 ±N점 소프트 마진 (확률적 멀티보팅)
 
 # ── 클리프행어 설정 ────────────────────────────────────────────
