@@ -160,6 +160,12 @@ class WorldStateManager:
                                 "role_at_intro": "",
                             }
                         self._state["alive_npcs"][npc]["relation"] = to_rel
+                        # [LM-I] known_attrs에도 반영 → NpcDriftAdvisor 검사 대상
+                        self._state["alive_npcs"][npc].setdefault("known_attrs", {})["relation_to_protag"] = {
+                            "value": to_rel,
+                            "prev": rel.get("from", ""),
+                            "changed_ep": ep_num,
+                        }
 
         except Exception as e:
             _logger.error("[WorldState] §3 관계 변화 처리 실패: %s", e)
@@ -438,6 +444,82 @@ class WorldStateManager:
 
         except Exception as e:
             _logger.error("[WorldState] §14 약속/서약 처리 실패: %s", e)
+
+        try:
+            # 15. [LM-I] NPC 부상 상태 → known_attrs 반영 (NpcDriftAdvisor 검사 대상)
+            for entry in state_changes.get("npc_injuries") or []:
+                if not isinstance(entry, dict):
+                    continue
+                npc = entry.get("name", "")
+                state = entry.get("state", "")
+                if npc and state and npc not in self._state.get("dead_npcs", {}):
+                    if npc not in self._state["alive_npcs"]:
+                        self._state["alive_npcs"][npc] = {"first_seen_ep": ep_num, "role_at_intro": ""}
+                    _npc_entry = self._state["alive_npcs"][npc]
+                    _old_injury = ""
+                    _ka = _npc_entry.get("known_attrs", {})
+                    if isinstance(_ka.get("injury"), dict):
+                        _old_injury = _ka["injury"].get("value", "")
+                    _npc_entry.setdefault("known_attrs", {})["injury"] = {
+                        "value": state,
+                        "prev": _old_injury,
+                        "changed_ep": ep_num,
+                    }
+
+        except Exception as e:
+            _logger.error("[WorldState] §15 NPC 부상 known_attrs 반영 실패: %s", e)
+
+        try:
+            # 16. [LM-I] NPC 이동 → known_attrs 반영 (NpcDriftAdvisor 검사 대상)
+            for entry in state_changes.get("npc_movements") or []:
+                if not isinstance(entry, dict):
+                    continue
+                npc = entry.get("name", "")
+                to_loc = entry.get("to", "")
+                if npc and to_loc and npc not in self._state.get("dead_npcs", {}):
+                    if npc not in self._state["alive_npcs"]:
+                        self._state["alive_npcs"][npc] = {"first_seen_ep": ep_num, "role_at_intro": ""}
+                    _npc_entry = self._state["alive_npcs"][npc]
+                    _old_loc = entry.get("from", "")
+                    if not _old_loc:
+                        _ka = _npc_entry.get("known_attrs", {})
+                        if isinstance(_ka.get("location"), dict):
+                            _old_loc = _ka["location"].get("value", "")
+                    _npc_entry.setdefault("known_attrs", {})["location"] = {
+                        "value": to_loc,
+                        "prev": _old_loc,
+                        "changed_ep": ep_num,
+                    }
+
+        except Exception as e:
+            _logger.error("[WorldState] §16 NPC 이동 known_attrs 반영 실패: %s", e)
+
+        try:
+            # 17. [LM-I] NPC 영구 부상 → known_attrs 반영 (NpcDriftAdvisor 검사 대상)
+            for entry in state_changes.get("permanent_injuries") or []:
+                if not isinstance(entry, dict):
+                    continue
+                npc = entry.get("name", "")
+                desc = entry.get("description", "")
+                i_type = entry.get("type", "disfigurement")
+                if npc and desc and npc not in self._state.get("dead_npcs", {}):
+                    if npc not in self._state["alive_npcs"]:
+                        self._state["alive_npcs"][npc] = {"first_seen_ep": ep_num, "role_at_intro": ""}
+                    _npc_entry = self._state["alive_npcs"][npc]
+                    _ka = _npc_entry.setdefault("known_attrs", {})
+                    _existing = _ka.get("permanent_injuries", {})
+                    _old_val = _existing.get("value", "") if isinstance(_existing, dict) else ""
+                    _new_val = f"{i_type}: {desc}" if _old_val else f"{i_type}: {desc}"
+                    if _old_val:
+                        _new_val = f"{_old_val}, {i_type}: {desc}"
+                    _ka["permanent_injuries"] = {
+                        "value": _new_val,
+                        "prev": _old_val,
+                        "changed_ep": ep_num,
+                    }
+
+        except Exception as e:
+            _logger.error("[WorldState] §17 NPC 영구 부상 known_attrs 반영 실패: %s", e)
 
         # 크기 제한: destroyed 최대 50개, world_notes 최대 10개 (항상 실행)
         try:

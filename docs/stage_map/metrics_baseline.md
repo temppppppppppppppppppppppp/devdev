@@ -7,7 +7,7 @@ Purpose:
 
 | Metric | Stage | Baseline | Target | Source | Notes |
 |---|---|---|---|---|---|
-| Test Baseline | Global | 2,583 passed + 0 xfailed (2026-02-24) | TBD | `CLAUDE.md` | 문서 기준선. `FILL_ORDER.md`의 2,618 값과 불일치하여 최신 재검증 필요 |
+| Test Baseline | Global | **3,040 passed + 0 xfailed** (2026-03-02) | 유지 | `CLAUDE.md` | `pytest tests/ -q` 기준. Ruff 0 violations |
 | QualityGate Score | Stage 2 | 90 | 90 | `config/settings/validation.yaml` (`scoring.quality_gate_score`) | Arc 검증 |
 | QualityGate Score | Stage 3 | 80 | 80 | `config/settings/validation.yaml` (`scoring.blueprint_quality_gate_score`) | Blueprint 검증 |
 | QualityGate Score | Stage 4 | 90 | 90 | `config/settings/validation.yaml` (`scoring.quality_gate_score`) | 원고 검증 |
@@ -32,8 +32,8 @@ Purpose:
 - Do not compare mixed datasets.
 
 ## Last Verified
-- Date: 2026-02-25
-- Commit: `f99119d`
+- Date: 2026-03-02
+- Commit: `8476bc2`
 - Code Sync (Yes/No): Yes
-- Verified By: Codex
+- Verified By: Opus
 

@@ -90,7 +90,7 @@ class NpcDriftAdvisor:
             known = snap.get("known_attrs", {})
             if known:
                 attr_strs = []
-                for k, v in list(known.items())[:8]:
+                for k, v in list(known.items())[:12]:
                     val = v.get("value", v) if isinstance(v, dict) else str(v)
                     attr_strs.append(f"{k}={val}")
                 parts.append(f"속성: {', '.join(attr_strs)}")
@@ -104,6 +104,8 @@ class NpcDriftAdvisor:
 
         prompt = (
             "다음 NPC들의 초기 속성과 원고를 비교하여, 설명 없이 속성이 변한 경우만 지적하세요.\n"
+            "검사 대상: 역할, 관계(relation_to_protag), 무장, 실력, 성격, "
+            "부상 상태(injury), 현재 위치(location), 영구 부상(permanent_injuries) 등.\n"
             "서사적 변화(성장·부상·전직 등 작중 이유가 있는 변화)는 표류가 아닙니다.\n"
             "설명 없이 속성이 바뀐 것만 지적하세요.\n\n"
             f"[NPC 초기 속성]\n{snapshot_text}\n\n"
@@ -117,7 +119,7 @@ class NpcDriftAdvisor:
             if not response:
                 return []
             return self._parse_llm_response(response, ep_num)
-        except Exception as e:
+        except (json.JSONDecodeError, ValueError, RuntimeError, OSError) as e:
             logger.warning("[LM-B] NpcDriftAdvisor LLM 호출 실패 (비치명): %s", str(e)[:80])
             return []
 

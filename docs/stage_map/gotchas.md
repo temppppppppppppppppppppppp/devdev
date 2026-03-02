@@ -45,7 +45,31 @@
 **확인 위치**: `modules/domain/agents/director_ensemble.py:129`, `modules/domain/agents/director_ensemble.py:136`, `modules/domain/agents/director_ensemble.py:190`, `modules/domain/agents/three_phase_blueprint_generator.py:349`, `docs/stage_map/ENHANCE_ORDER.md`
 
 ## G-8. Arc는 단일 anchor(`key='arcs'`)로 저장된다
-**현상**: Arc는 화별 row가 아니라 하나의 JSON 리스트로 관리된다.  
-**원인**: `save_v20_anchor("arcs", data)`가 `anchors.key='arcs'`를 덮어쓰는 구조다.  
-**실제 영향**: `DELETE FROM anchors WHERE key='arcs'`는 Stage 2 전체 Arc를 한 번에 지운다(메뉴 88).  
+**현상**: Arc는 화별 row가 아니라 하나의 JSON 리스트로 관리된다.
+**원인**: `save_v20_anchor("arcs", data)`가 `anchors.key='arcs'`를 덮어쓰는 구조다.
+**실제 영향**: `DELETE FROM anchors WHERE key='arcs'`는 Stage 2 전체 Arc를 한 번에 지운다(메뉴 88).
 **확인 위치**: `modules/core/project_manager.py:264`, `modules/core/project_manager.py:272`, `modules/core/db_manager.py:202`, `modules/core/services/project_service.py:65`
+
+## G-9. PASS_WITH_FIX는 QualityGate를 bypass한다 (TF-46)
+**현상**: Director가 PASS_WITH_FIX를 내려도 QualityGate에 걸리지 않는다.
+**원인**: QualityGate score < 90 → REJECT 전환은 **PASS verdict에만** 적용. PASS_WITH_FIX는 Director 주권 존중을 위해 의도적 bypass.
+**실제 영향**: PASS_WITH_FIX + score 60이면 QualityGate를 통과하여 InPlace patch 기회를 받는다. 이것이 설계 의도다.
+**확인 위치**: `modules/core/stage4_interview_round.py` (QualityGate 분기), `modules/core/stage2_finalizer.py`
+
+## G-10. constraint_block은 retry마다 초기화된다 (TF-47)
+**현상**: Stage 2 retry loop에서 advisory 텍스트가 누적되지 않는다.
+**원인**: `_base_constraint_block`으로 매 시도마다 원본 초기화. advisory는 해당 시도에서만 유효.
+**실제 영향**: 이전 시도의 Python 자동수정/Pre-Director advisory가 다음 시도에 중복 누적되지 않는다.
+**확인 위치**: `modules/core/stage2_orchestrator.py:418`, `modules/core/stage2_orchestrator.py:421`
+
+## G-11. patch_state_updates JSON 파싱은 rfind 기반이다 (TF-47)
+**현상**: InPlace patch가 반환하는 `patch_state_updates` JSON 블록을 `rfind` + `json.loads`로 추출한다.
+**원인**: 기존 regex `\{.*?\}`는 non-greedy라 중첩 dict에서 첫 `}`에 멈추는 버그가 있었다.
+**실제 영향**: 중첩 dict(3단계+)도 안전하게 파싱. regex 폴백은 flat dict용 보험으로 유지.
+**확인 위치**: `modules/domain/agents/chief_writer.py:774`
+
+## G-12. state_updates 우선순위는 Director > CW이다
+**현상**: `director_ensemble.py`에서 `result.get("state_updates") or selected_candidate.get("state_updates")`로 Director 보정값 우선.
+**원인**: Director 프롬프트가 CW state_updates를 "기반으로 보정"하여 superset(투자 장르 capital 등) 반환.
+**실제 영향**: CW 우선으로 바꾸면 투자 장르 capital 키 등 보정값이 손실된다. **절대 순서를 바꾸면 안 된다.**
+**확인 위치**: `modules/domain/agents/director_ensemble.py:702`, `config/prompts/director.yaml:198`

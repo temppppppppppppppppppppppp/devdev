@@ -13,6 +13,7 @@
 - 왜 3개 후보 병렬 생성? 전략 다양성(액션/감정/대화)을 확보하고 Director가 상대 비교로 최적안을 고르기 위해서다.
 - 왜 in-place patch? score >= 60 구간은 전면 재생성보다 단일 수정이 빠르고 비용이 낮기 때문이다.
 - 왜 `blueprint_quality_gate_score=80`? Director 비교 프롬프트의 80점 미만 REJECT 기준과 일치시켜 주권주의 역전을 막기 위해서다.
+- 왜 PASS_WITH_FIX? (TF-27~34) Director가 "소수 수정 후 합격" 판정 시 fix_scope 기반 inplace/partial/full 라우팅. QualityGate는 PASS_WITH_FIX를 bypass하여 Director 주권 존중.
 
 ## Entry Points
 - Primary:
@@ -84,11 +85,13 @@
   - ThreePhase retry 루프: `for retry in range(max_retries+1)`; Stage3 호출값 `max_retries=4` -> 최대 5회 시도.
   - 각 시도에서 후보 3개 생성 -> Director 비교/판정.
   - REJECT 피드백(점수/이슈/사유) 누적 후 다음 시도에 반영.
+  - **PASS_WITH_FIX** (TF-27~34): fix_scope="inplace"면 LLM 1회 수정 + `validator.validate(all_candidates=None)` 재심사(최대 3회). partial/full이면 REJECT → retry 경로 위임.
 - Fallback behavior:
   - in-place patch: 직전 REJECT 점수 `>= inplace_below(60)`일 때 단일 LLM 1회 수정.
   - `< 60`이면 전면 재생성, `< rewrite_below(50)`면 `_previous_best` 폐기.
   - 모든 재시도 실패 후에도 last score `>= rewrite_below(50)`이면 `PASS_WITH_WARNING` 허용.
   - Director 부재 시 `UnifiedBlueprintValidator`는 Python 경고만 남기고 PASS 처리.
+  - **CentralSchemaBuilder** (TF-45): 장르별 스키마를 동적 생성하여 비무협 장르에 무협 전용 필드(내공, 무공 등)가 유입되는 프롬프트 오염을 근절.
 
 ## Manual Intervention Points
 - User prompts:
@@ -129,8 +132,8 @@
   - Director가 없으면 PASS로 진행되는 비차단 경로가 있어 운영 설정 오류 시 품질 게이트가 약화될 수 있음.
 
 ## Last Verified
-- Date: 2026-02-25
-- Commit: `f99119d`
+- Date: 2026-03-02
+- Commit: `8476bc2`
 - Code Sync (Yes/No): Yes
-- Verified By: Codex
+- Verified By: Opus
 

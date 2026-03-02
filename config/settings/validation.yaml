@@ -90,11 +90,11 @@ retry:
   api_timeout_seconds: 300   # 5분
 
 # ── 패치 모드 ────────────────────────────────────────────────
-# [xfail-sweep] patch_mode: unused - planned future wiring
+# [E-1] patch_mode: 점수 기반 수정 모드 분기 (fix_scope 우선, 점수 fallback)
 patch_mode:
-  rewrite_below: 50          # < 50: 전면 재작성 (_previous_best 미보존)
-  patch_below: 80            # Stage4 등에서 참조하는 부분수정 임계값
-  inplace_below: 60          # Stage3: 50~59 → 전면 재생성, >= 60 → in-place 단일 수정
+  rewrite_below: 50          # < 50: previous_best 파기 → 전면 재생성
+  # patch_below: 80          # [E-1] 미사용 — fix_scope 기반 라우팅으로 대체됨
+  inplace_below: 60          # >= 60: in-place 단일 LLM 수정 허용
 
 # ── Premium 품질 시스템 ──────────────────────────────────────
 premium:

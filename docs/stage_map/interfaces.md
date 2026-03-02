@@ -19,11 +19,18 @@ Purpose:
   - `world_state` (`WorldStateManager`, anchor key)
   - `fact_ledger` (`FactLedger`, anchor key)
   - `npc_history` (append-only table)
+  - `npc_relationship_history` (append-only, sorted key — LM-D)
   - `episode_meta`/`vec_episodes`/`episode_fts` (VecMemory 검색 인덱스)
 - Invariant 3: JSON 계약 실패는 fail-closed보다 비차단 폴백 우선:
   - `load_anchor()` 실패 시 기본값 반환
   - `get_blueprint()` JSON 파싱 실패 시 `None`
   - Arc/Blueprint Pydantic 검증 실패 시 원본 dict 유지
+- Invariant 5: **Director verdict 3종** — `PASS`, `REJECT`, `PASS_WITH_FIX` (TF-27):
+  - PASS_WITH_FIX는 `fix_scope` 필드(`inplace`/`partial`/`full`)와 `feedback.action_items`를 반드시 동반
+  - QualityGate는 PASS일 때만 score < 90이면 REJECT 전환. **PASS_WITH_FIX는 QualityGate bypass** (TF-46)
+- Invariant 6: **state_updates 전파 우선순위** — Director 보정값 > CW 생성값 > {} (TF-R4):
+  - Director 프롬프트가 CW state_updates를 "기반으로 보정" → superset 반환
+  - InPlace patch 시 `{**final_state_updates, **_patch_state}` merge 후 Director 재심사
 - Invariant 4: `db_manager.py` 부트스트랩 기준 테이블 목록:
   - `sync_status`, `surgery_logs`, `anchors`, `blueprints`, `state_logs`, `causal_graph`, `karma_status`, `manuscripts`, `reflexion_memory`, `martial_tracker`, `seeds`, `encyclopedia`, `episode_bibles`, `npc_history`, `episode_sentence_hashes`, `episode_satisfaction_tags`, `director_selections`, `cost_log`, `episode_meta`, `episode_fts`, `episode_pacing`, `character_voice`, `foreshadow` (+ `vec_episodes` 가상 테이블, sqlite-vec 사용 시)
 
@@ -35,8 +42,8 @@ Purpose:
 - Were fallback paths changed?
 
 ## Last Verified
-- Date: 2026-02-25
-- Commit: `f99119d`
+- Date: 2026-03-02
+- Commit: `8476bc2`
 - Code Sync (Yes/No): Yes
-- Verified By: Codex
+- Verified By: Opus
 

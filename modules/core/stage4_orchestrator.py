@@ -590,6 +590,7 @@ JSON으로 출력:
             _max_rounds = max(1, _max_rounds)
 
             for interview_round in range(_max_rounds):
+                print(f"   🔄 [Round {interview_round + 1}/{_max_rounds}] 원고 생성 시도...")
                 _round_result = self.interview_round.run(
                     round_num=interview_round,
                     stage4_spinner=stage4_spinner,
@@ -598,6 +599,7 @@ JSON으로 출력:
                     round_ctx=round_ctx,
                 )
                 if _round_result.verdict in ("PASS", "PASS_WITH_FIX"):  # [TF-32]
+                    print(f"   ✅ [Round {interview_round + 1}] {_round_result.verdict}")
                     final_manuscript = _round_result.final_manuscript
                     final_title = _round_result.final_title
                     final_state_updates = _round_result.final_state_updates
@@ -694,6 +696,7 @@ JSON으로 출력:
                     break
                 director_feedback = _round_result.director_feedback
                 previous_attempt = _round_result.previous_attempt
+                print(f"   ❌ [Round {interview_round + 1}/{_max_rounds}] REJECT → 다음 라운드")
 
                 # [V75-B] LOGIC_ERROR 연속 카운터
                 if _round_result.error_category == "LOGIC_ERROR":

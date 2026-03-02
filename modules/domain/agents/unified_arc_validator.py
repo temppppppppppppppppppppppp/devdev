@@ -155,6 +155,7 @@ class UnifiedArcValidator(BaseAgent):
         # Phase B: LLM 문맥 검증 (유료)
         # ═══════════════════════════════════════════════════════════════
         logging.warning("🔍 [UnifiedValidator] LLM 검증 중...")
+        print("      🔍 [ArcValidator] LLM 검증 중...")
 
         llm_result = self._llm_validate(arc, prev_arcs, constraints, python_result, genre=genre)
 
@@ -187,6 +188,7 @@ class UnifiedArcValidator(BaseAgent):
 
         status = "✅ PASS" if verdict == "PASS" else "❌ REJECT"
         logging.warning(f"{status} [UnifiedValidator] (CRITICAL:{critical_count}, MAJOR:{major_count})")
+        print(f"      {status} [ArcValidator] CRITICAL:{critical_count}, MAJOR:{major_count}")
 
         return verdict, result
 
@@ -621,10 +623,12 @@ class UnifiedArcValidator(BaseAgent):
             _contradictions = result.get("contradictions", [])
             if isinstance(_contradictions, list) and _contradictions:
                 logging.warning(f"🚨 [ArcValidator] 모순 {len(_contradictions)}건 발견:")
+                print(f"      🚨 [ArcValidator] 모순 {len(_contradictions)}건 발견")
                 for _c in _contradictions[:5]:
                     logging.warning(f"   ▸ {str(_c)[:150]}")
             else:
                 logging.info("✅ [ArcValidator] 모순·일관성 이상 없음")
+                print("      ✅ [ArcValidator] 모순 없음")
 
             return result
 

@@ -85,7 +85,7 @@ class Stage2ValidationPipeline:
                 logging.info("✅ [DraftValidator] 사전 검증 통과!")
                 # [S2-P1-4] draft_validator_passed는 2차 호출(L256)에서만 설정
                 # 1차 호출은 Consensus용 advisory 수집 전용
-            except Exception as dv_err:
+            except (RuntimeError, ValueError, OSError) as dv_err:
                 logging.warning(f"⚠️ [DraftValidator] 스킵: {str(dv_err)[:50]}")
 
         # ─────────────────────────────────────────────────────────────
@@ -100,7 +100,7 @@ class Stage2ValidationPipeline:
         ):
             self.ctx.ui.log("      🪞 [TF-38] SelfReflector 자기 비판 중...")
             try:
-                logging.warning("🪞 [SelfReflector] Analyst 자기 비판 시작...")
+                logging.info("🪞 [SelfReflector] Analyst 자기 비판 시작...")
                 arc_str = json.dumps(refined_arc, ensure_ascii=False, indent=2)
                 context_str = f"Arc {global_arc_no} 설계. 피드백: {current_feedback or '없음'}"
 
@@ -126,8 +126,8 @@ class Stage2ValidationPipeline:
                     except json.JSONDecodeError:
                         logging.warning("⚠️ [SelfReflector] 개선 결과 파싱 실패, 원본 유지")
                 else:
-                    logging.warning("ℹ️ [SelfReflector] 개선 불필요")
-            except Exception as sr_err:
+                    logging.info("ℹ️ [SelfReflector] 개선 불필요")
+            except (RuntimeError, ValueError, OSError, json.JSONDecodeError) as sr_err:
                 logging.warning(f"⚠️ [SelfReflector] 스킵: {str(sr_err)[:50]}")
 
         # ─────────────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ class Stage2ValidationPipeline:
         if not four_phase_passed and refined_arc and "consensus" in self.ctx.agents:
             self.ctx.ui.log("      🗳️ [TF-38] Consensus 3-LLM 합의 검증 중...")
             try:
-                logging.warning("🗳️ [Consensus] 3-LLM 합의 검증 시작...")
+                logging.info("🗳️ [Consensus] 3-LLM 합의 검증 시작...")
                 with rich_console.status("[bold magenta]🗳️ Consensus 3-LLM 검증 중...[/]", spinner="dots"):
                     consensus_verdict, consensus_result = self.ctx.agents["consensus"].validate_with_consensus(
                         arc=refined_arc,
@@ -146,7 +146,7 @@ class Stage2ValidationPipeline:
                     )
 
                 vote_summary = consensus_result.get("vote_summary", {})
-                logging.warning(
+                logging.info(
                     f"- 투표 결과: PASS {vote_summary.get('pass', 0)} / REJECT {vote_summary.get('reject', 0)}"
                 )
 
@@ -175,7 +175,7 @@ class Stage2ValidationPipeline:
                     passed_checks = consensus_result.get("passed_checks", [])
                     if passed_checks:
                         logging.info(f"- 통과 항목: {passed_checks[:3]}")
-            except Exception as cv_err:
+            except (RuntimeError, ValueError, OSError) as cv_err:
                 logging.warning(f"⚠️ [Consensus] 검증 스킵: {str(cv_err)[:50]}")
 
         # [데이터 검증]
@@ -212,7 +212,7 @@ class Stage2ValidationPipeline:
                             "arc auto-corrected",
                             {"arc_no": global_arc_no, "corrections": corrections[:5]},
                         )
-            except Exception as ac_err:
+            except (RuntimeError, ValueError, TypeError) as ac_err:
                 if callable(getattr(self.ctx, "audit_event", None)):
                     self.ctx.audit_event("v60_25_auto_correct_error", str(ac_err)[:100])
 
@@ -353,7 +353,7 @@ class Stage2ValidationPipeline:
                     constraint_block=constraint_block or "",
                     state_tracker=self.ctx.state_tracker,
                 )
-            except Exception as _dv_err:
+            except (RuntimeError, ValueError, OSError) as _dv_err:
                 logging.warning(f"[G6] DraftValidator 호출 실패 — fail-closed: {_dv_err!s:.100}")
                 draft_result = {
                     "valid": False,
@@ -472,7 +472,7 @@ class Stage2ValidationPipeline:
                                 }
                             )
 
-                    except Exception as corr_err:
+                    except (RuntimeError, ValueError) as corr_err:
                         self.ctx.ui.log(f"      ⚠️ [V60.42] ArcCorrector 오류: {str(corr_err)[:50]}")
                         if callable(getattr(self.ctx, "audit_event", None)):
                             self.ctx.audit_event("arc_corrector_error", str(corr_err)[:100])
@@ -519,7 +519,7 @@ class Stage2ValidationPipeline:
                         prev_arcs=all_refined_arcs,
                         entity_registry=entity_registry_for_director,
                     )
-            except Exception as _ci_err:
+            except (RuntimeError, ValueError, OSError) as _ci_err:
                 logging.warning("[TF-39] ContinuityInspector 예외 → advisory 전환: %s", str(_ci_err)[:100])
                 _python_advisories.append(
                     {

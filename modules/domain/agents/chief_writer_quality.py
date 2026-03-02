@@ -112,6 +112,7 @@ class ChiefWriterQualityGate:
             if not critique_result["has_issues"]:
                 if round_num > 1:
                     logging.info(f"[ChiefWriter] Self-Critique R{round_num}: 완료 ({total_issues_fixed}건 수정)")
+                    print(f"      ✅ [Writer] Self-Critique 완료 ({total_issues_fixed}건 수정)")
                 break
 
             if critique_result["severity"] == "low":
@@ -126,6 +127,7 @@ class ChiefWriterQualityGate:
             logging.info(
                 f"[ChiefWriter] Self-Critique R{round_num}/{MAX_CRITIQUE_ROUNDS}: {len(critique_result['issues'])}건..."
             )
+            print(f"      🔧 [Writer] Self-Critique R{round_num}: {len(critique_result['issues'])}건 수정 중...")
             current_manuscript = self._fix_manuscript_issues(current_manuscript, critique_result, hud_report)
             total_issues_fixed += len(critique_result["issues"])
 

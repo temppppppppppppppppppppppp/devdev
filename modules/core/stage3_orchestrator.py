@@ -617,6 +617,7 @@ class Stage3Orchestrator:
                         _bp_prev_hud = None
 
                 _s3_spinner.update_detail(f"제{working_ep}화 · Blueprint 생성")
+                print(f"      ⏳ 제{working_ep}화 Blueprint 생성 시작 (최대 10회 시도)...")
                 blueprint, pipeline_result = ctx.agents["three_phase_bp"].generate(
                     ep_num=working_ep,
                     arc_data=arc_data,
@@ -635,6 +636,12 @@ class Stage3Orchestrator:
                     adversarial_self_play=ctx.adversarial_self_play,
                     prev_hud=_bp_prev_hud,
                 )
+                # [TF-48] Blueprint 생성 결과 요약
+                _verdict = pipeline_result.get("final_verdict", "UNKNOWN")
+                _bp_score = pipeline_result.get(
+                    "last_score", pipeline_result.get("phases", {}).get("generate", {}).get("selected_score", 0)
+                )
+                print(f"      📊 제{working_ep}화 Blueprint 결과: {_verdict} (score={_bp_score})")
 
         except Exception as gen_err:
             _logging.error(f"🚨 [V61.3] 제{working_ep}화 Blueprint 생성 크래시: {str(gen_err)[:100]}")

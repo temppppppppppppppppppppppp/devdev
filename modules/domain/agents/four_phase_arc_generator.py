@@ -173,6 +173,7 @@ class FourPhaseArcGenerator(BaseAgent):
         state_tracker=None,  # [V60.94] StateTracker (죽은 NPC 검증용)
         vector_context: str = "",  # [V63.3] 벡터 검색 결과
         adversarial_self_play=None,
+        director=None,  # [TF-47] Arc 후보 Director 비교 선택
     ) -> tuple[dict | None, dict]:
         """
         3단계 Arc 생성
@@ -190,6 +191,7 @@ class FourPhaseArcGenerator(BaseAgent):
             entity_registry: [V60.92] Entity Registry (NPC 명칭 일관성)
             state_tracker: [V60.94] StateTracker (죽은 NPC 검증용)
             vector_context: [V63.3] 벡터 검색 결과 (과거 유사 맥락)
+            director: [TF-47] Director 인스턴스 (Arc 후보 비교 선택용, None이면 기존 Validator 경로)
 
         Returns:
             (generated_arc, pipeline_result)
@@ -435,7 +437,74 @@ class FourPhaseArcGenerator(BaseAgent):
             best_arc = self._check_arc_end_state(best_arc)
 
             # ═══════════════════════════════════════════════════════════════
-            # PHASE 3: VALIDATE - 통합 검증
+            # PHASE 2.6: DIRECTOR SELECTION — 후보 비교 선택 [TF-47]
+            # ═══════════════════════════════════════════════════════════════
+            if director and len(all_candidates) >= 2:
+                _valid_for_director = [c for c in all_candidates if c.get("tactical_doc")]
+                if len(_valid_for_director) >= 2:
+                    logging.info(f"🎭 [TF-47] Director Arc 비교 선택 ({len(_valid_for_director)}개 후보)")
+                    try:
+                        _dir_result = director.compare_and_select_arc(
+                            candidates=_valid_for_director,
+                            arc_no=arc_no,
+                            curr_block=curr_block,
+                            prev_arc_context=prev_arc_context,
+                            constraint_block=full_constraint_block,
+                        )
+                        _dir_decision = _dir_result.get("decision", "REJECT")
+                        _dir_arc = _dir_result.get("selected_arc")
+
+                        if _dir_decision == "PASS" and _dir_arc:
+                            best_arc = _dir_arc
+                            pipeline_result["phases"]["director_selection"] = {
+                                "status": "pass",
+                                "score": _dir_result.get("score", 0),
+                                "selected_strategy": _dir_arc.get("_strategy", "?"),
+                            }
+                            pipeline_result["final_verdict"] = "PASS"
+                            self.stats["phase3_pass"] += 1
+                            logging.info(f"✅ [TF-47] Director PASS — Arc {arc_no}")
+                            return best_arc, pipeline_result
+
+                        elif _dir_decision == "PASS_WITH_FIX" and _dir_arc:
+                            best_arc = _dir_arc
+                            pipeline_result["phases"]["director_selection"] = {
+                                "status": "pass_with_fix",
+                                "score": _dir_result.get("score", 0),
+                                "feedback": _dir_result.get("feedback", ""),
+                                "fix_scope": _dir_result.get("fix_scope", "inplace"),
+                            }
+                            pipeline_result["final_verdict"] = "PASS"
+                            self.stats["phase3_pass"] += 1
+                            logging.info(f"✅ [TF-47] Director PASS_WITH_FIX — Arc {arc_no}")
+                            return best_arc, pipeline_result
+
+                        else:
+                            # Director REJECT → 피드백으로 retry
+                            best_arc = _dir_arc or best_arc
+                            _dir_feedback = _dir_result.get("feedback", "Director REJECT")
+                            feedback = (
+                                f"{_base_director_feedback}\n[Director 비교 피드백]\n{_dir_feedback}"
+                                if _base_director_feedback
+                                else _dir_feedback
+                            )
+                            pipeline_result["phases"]["director_selection"] = {
+                                "status": "reject",
+                                "score": _dir_result.get("score", 0),
+                            }
+                            logging.warning(f"❌ [TF-47] Director REJECT — Arc {arc_no}, retry")
+
+                            _prev_rejected_arc = best_arc
+                            _prev_reject_feedback = feedback
+                            _prev_selected_strategy = _dir_arc.get("_strategy", "unknown") if _dir_arc else "unknown"
+                            _spare_candidates.clear()
+                            continue  # retry loop
+
+                    except Exception as e:
+                        logging.warning(f"[TF-47] Director 비교 실패, Validator 폴백: {str(e)[:100]}")
+
+            # ═══════════════════════════════════════════════════════════════
+            # PHASE 3: VALIDATE - 통합 검증 (Director 미사용 또는 단일 후보 시)
             # ═══════════════════════════════════════════════════════════════
             logging.info("🔍 [Phase 3] 통합 검증 중...")
 
@@ -465,15 +534,15 @@ class FourPhaseArcGenerator(BaseAgent):
                 _n_issues = len(_all_issues)
                 _summary = validation_result.get("summary", "")
                 _major_issues = [i for i in _all_issues if i.get("severity") == "MAJOR"]
-                print(f"\n{'=' * 60}")
-                print(f"  [Stage2 Validator] Arc {arc_no} PASS (confidence={_conf:.2f}, issues={_n_issues})")
-                if _summary:
-                    print(f"  ✅ 검증 요약: {str(_summary)[:300]}")
-                if _major_issues:
-                    print("  ⚠️ MAJOR 경고 (통과 — Director에게 위임):")
-                    for _mi in _major_issues[:3]:
-                        print(f"     - {_mi.get('issue', '?')[:120]}")
-                print(f"{'=' * 60}\n")
+                logging.debug(
+                    "[Stage2 Validator] Arc %d PASS (confidence=%.2f, issues=%d) summary=%s",
+                    arc_no,
+                    _conf,
+                    _n_issues,
+                    str(_summary)[:300],
+                )
+                for _mi in _major_issues[:3]:
+                    logging.debug("  MAJOR 경고: %s", _mi.get("issue", "?")[:120])
                 return best_arc, pipeline_result
             else:
                 self.stats["phase3_reject"] += 1
@@ -499,16 +568,21 @@ class FourPhaseArcGenerator(BaseAgent):
 
                 # REJECT 기록
                 issues = validation_result.get("issues", [])
-                print(f"\n{'=' * 60}")
-                print(f"  [Stage2 Validator] Arc {arc_no} REJECT ({retry + 1}/{max_internal_retries + 1})")
-                print(f"  confidence: {validation_result.get('confidence', 0):.2f}")
+                logging.debug(
+                    "[Stage2 Validator] Arc %d REJECT (%d/%d) confidence=%.2f",
+                    arc_no,
+                    retry + 1,
+                    max_internal_retries + 1,
+                    validation_result.get("confidence", 0),
+                )
                 for issue in issues[:5]:
-                    sev = issue.get("severity", "?")
-                    cat = issue.get("category", "?")
-                    text = issue.get("issue", "?")
-                    print(f"  [{sev}][{cat}] {text[:120]}")
-                print(f"  피드백 → 다음 시도: {str(_validator_feedback)[:200]}")
-                print(f"{'=' * 60}\n")
+                    logging.debug(
+                        "  [%s][%s] %s",
+                        issue.get("severity", "?"),
+                        issue.get("category", "?"),
+                        issue.get("issue", "?")[:120],
+                    )
+                logging.debug("  피드백: %s", str(_validator_feedback)[:200])
                 if issues:
                     first_issue = issues[0]
                     self.negative_injector.record_rejection(

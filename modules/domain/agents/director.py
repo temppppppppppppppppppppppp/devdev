@@ -140,6 +140,10 @@ class Director(BaseAgent):
             candidates, arc_data, ep_num, prev_blueprint, entity_registry, state_tracker
         )
 
+    def compare_and_select_arc(self, candidates, arc_no, curr_block, prev_arc_context, constraint_block=""):
+        """[TF-47] 위임 → DirectorEnsembleSelector"""
+        return self._ensemble.compare_and_select_arc(candidates, arc_no, curr_block, prev_arc_context, constraint_block)
+
     def audit_manuscript(
         self,
         ep_num,

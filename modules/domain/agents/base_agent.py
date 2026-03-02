@@ -183,7 +183,7 @@ class BaseAgent:
                     keys.append(k)
             cls._api_keys = keys
             if len(keys) > 1:
-                logging.warning(f"🔑 [V61.5] API 키 {len(keys)}개 로드 완료 (자동 순환 활성화)")
+                logging.info(f"🔑 [V61.5] API 키 {len(keys)}개 로드 완료 (자동 순환 활성화)")
 
     @classmethod
     def _try_rotate_key(cls):
@@ -269,17 +269,6 @@ class BaseAgent:
         # [V49.3] 에이전트 이름 (비용 추적용)
         self._agent_name = self.__class__.__name__
         self._last_thinking = ""  # [TF-28c] 최근 ask() thinking content
-
-    @classmethod
-    def _build_http_options(cls):
-        """[TF3-H3] API 타임아웃을 GenerateContentConfig에 주입."""
-        try:
-            timeout = int(cls.API_TIMEOUT)
-            if timeout <= 0:
-                return None
-            return types.HttpOptions(timeout=timeout)
-        except Exception:
-            return None
 
     def _apply_prompt_size_gate(self, prompt: str) -> str:
         """[TF3-H7] 과대 프롬프트를 API 호출 전에 절삭."""
@@ -381,6 +370,7 @@ class BaseAgent:
             "max_output_tokens": self.MAX_OUTPUT_TOKENS,
             "top_p": 0.95,
             "response_mime_type": "application/json",
+            "http_options": types.HttpOptions(timeout=max(10, int(self.API_TIMEOUT))),
         }
         # [V0128] JSON Schema enforcement if provided
         if response_schema:
@@ -468,12 +458,12 @@ class BaseAgent:
                             f"\n      🌐 [{timestamp}] 연결 오류 → {wait_time}초 대기 ({network_retry_count}/{self.MAX_NETWORK_RETRIES}, 누적 {total_waited}초)"
                         )
 
-                        # 대기 중 하트비트 (10초마다 점 출력)
-                        for tick in range(wait_time):
-                            time.sleep(1)
-                            if (tick + 1) % 10 == 0:
-                                print(f"         💓 대기 중... {tick + 1}/{wait_time}초", end="\r")
-                        logging.info("")  # [V64.P4-fix] 인자 없는 호출 수정
+                        # 대기 중 — 메인 스레드에서만 print (워커 스레드는 logging만)
+                        if threading.current_thread() is threading.main_thread():
+                            print(
+                                f"         🌐 네트워크 재시도 {network_retry_count}/{self.MAX_NETWORK_RETRIES} ({wait_time}초 대기)"
+                            )
+                        time.sleep(wait_time)
 
                         # 연결 체크
                         if self._check_connectivity():
@@ -630,7 +620,7 @@ class BaseAgent:
                 # 이어쓰기 중 이스케이프 단절 방지
                 # [V44] 최소 길이 체크 (빈 문자열/단일 백슬래시 방지)
                 if len(full_response) > 1 and full_response.endswith("\\"):
-                    logging.warning("⚠️ [JSON Repair] 후행 이스케이프 감지. 강제 제거")
+                    logging.info("[JSON Repair] 후행 이스케이프 감지 — 강제 제거")
                     full_response = full_response[:-1]
 
                 if not response.candidates:
@@ -780,7 +770,7 @@ class BaseAgent:
             # 부분 응답이 있으면 저장
             if full_response:
                 self.last_partial_response = full_response
-                logging.warning(f"📝 [Recovery] 부분 응답 {len(full_response)}자 보존")
+                logging.info(f"📝 [Recovery] 부분 응답 {len(full_response)}자 보존")
 
             try:
                 # [FIX] 백업 모델용 별도 config
@@ -843,7 +833,7 @@ class BaseAgent:
                         if self.last_partial_response:
                             merged = self._try_merge_responses(self.last_partial_response, backup_text)
                             if merged:
-                                logging.warning("✅ [Recovery] 부분 응답 병합 성공")
+                                logging.info("✅ [Recovery] 부분 응답 병합 성공")
                                 return merged
 
                 # 빈 응답 처리
@@ -1080,7 +1070,7 @@ class BaseAgent:
 
         # [TF-C11] 페이로드 크기 가드 — 500KB 초과 시 절삭 후 처리
         if len(text) > self._MAX_JSON_PAYLOAD:
-            logging.warning("[TF-C11] JSON 페이로드 %d자 → %d자로 절삭", len(text), self._MAX_JSON_PAYLOAD)
+            logging.info("[TF-C11] JSON 페이로드 %d자 → %d자로 절삭", len(text), self._MAX_JSON_PAYLOAD)
             text = text[: self._MAX_JSON_PAYLOAD]
 
         # 1. [Self-Healing] 괄호/따옴표 쌍 검사 및 강제 폐쇄
@@ -1231,7 +1221,7 @@ class BaseAgent:
                         else:
                             result_dict[k] = int(v)
                 if result_dict:
-                    logging.warning(f"→ 정규식으로 {len(result_dict)}개 키-값 추출 성공")
+                    logging.info(f"→ 정규식으로 {len(result_dict)}개 키-값 추출 성공")
                     return result_dict
                 logging.warning("→ 정규식 추출 실패, RAW 반환")
                 return {"content": json_str, "status": "REPAIRED_RAW"}
@@ -1388,6 +1378,7 @@ class BaseAgent:
                 "top_p": 0.95,
                 "response_mime_type": "application/json",
                 "cached_content": cache_name,
+                "http_options": types.HttpOptions(timeout=max(10, int(self.API_TIMEOUT))),
             }
             # [TF11] response_schema 확대 적용 — API 레벨 타입 강제
             if response_schema:

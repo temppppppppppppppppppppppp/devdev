@@ -9,6 +9,9 @@
 - 왜 Blueprint를 DB에서만 읽나? `blueprints` 테이블을 SSOT로 고정해야 재시작/롤백/후처리 경로가 일관되기 때문이다.
 - 왜 Chief Writer와 Director를 분리하나? 생성 책임(Writer)과 판정 책임(Director)을 분리해 품질 게이트의 독립성을 유지하기 위해서다.
 - 왜 PASS 후에도 연속성/히스토리 후검증을 한 번 더 하나? 후보 선택 직후 충돌을 늦게라도 잡아 REJECT로 강등할 안전장치가 필요하기 때문이다.
+- 왜 advisory 체인을 Director 앞에 배치하나? (LM-A~F) TruthGate → NpcDrift → NumericDrift → Flashback → InfoParadox → RelationshipDrift 순으로 advisory를 수집하여 Director에게 근거를 제공하되, 최종 판정은 Director가 내리기 때문이다.
+- 왜 PASS_WITH_FIX에서 QualityGate를 bypass하나? (TF-46) Director가 "수정 후 합격" 의도를 표현했는데 QualityGate가 이를 REJECT로 뒤집으면 Director 주권이 침해되기 때문이다.
+- 왜 state_updates에서 Director 보정값을 CW보다 우선하나? Director 프롬프트가 CW state_updates를 "기반으로 보정"하여 superset(투자 장르 capital 등)을 반환하기 때문이다.
 
 ## Entry Points
 - Primary: `Stage4Orchestrator.stage_4_v2_chief_writer(limit_mode=False)` (`modules/core/stage4_orchestrator.py`)
@@ -54,9 +57,18 @@
   - `ChiefWriter`, `ManuscriptValidator`, `ConsistencyValidator`, `BlockingValidator`, `ContinuityValidator`
   - Director 에이전트의 `select_and_judge_ensemble()`, `check_manuscript_continuity_with_cache()`, `check_manuscript_history_conflicts()`
   - `DirectorContinuityValidator` (`modules/domain/agents/director_continuity.py`)의 캐시 기반 연속성 검사 구현
+  - **Advisory 체인** (LM-A~F, Director 앞단 `_director_mc_parts`에 주입):
+    - `TruthGate` (LM-A): 사망NPC/아이템/장소/스킬/카르마/NPC역할/세계법칙 7개 검사
+    - `NpcDriftAdvisor` (LM-B): 원고 vs 스냅샷 NPC 속성 표류 LLM advisory
+    - `NumericDriftAdvisor` (LM-C): FactLedger 수치 누적 표류 (5화 단위)
+    - `FlashbackVerifier` (LM-E): 회상/플래시백 오염 감지 (14개 마커 + VecMemory)
+    - `InfoParadoxChecker` (LM-F): 1인칭 시점 정보 역설 (1인칭 전용)
+    - `RelationshipDriftAdvisor` (LM-D): NPC 관계도 장기 표류
+  - `CentralSchemaBuilder` (TF-45): 장르별 프롬프트 스키마 동적 생성 (비무협 오염 방지)
 - External services/models:
   - LLM 호출 (`self.ctx.sys.api_client`, Director/Writer `ask()` 계열)
   - VecMemory 임베딩/검색 경로(환경에 따라 `google genai` + `sqlite-vec`)
+  - Hybrid Retrieval (FTS5+RRF): 벡터 검색 + 전문 검색 결합
 
 ## State and Cache
 - Persistent state:
@@ -75,12 +87,18 @@
 - Common failure patterns:
   - Blueprint/Arc 누락 시 집필 루프 중단
   - 후보 원고 전부 실패 시 `EMPTY` 반환 후 다음 라운드 재시도
-  - Director PASS라도 `score < scoring.quality_gate_score(90)`이면 REJECT 강등
+  - Director PASS라도 `score < scoring.quality_gate_score(90)`이면 REJECT 강등 (**단, PASS_WITH_FIX는 QualityGate bypass** — TF-46)
   - DB 저장 실패 시 트랜잭션 롤백 후 해당 회차 집필 중단
 - Recovery flow:
   - 라운드 수는 `retry.director_max_attempts`(기본 5)까지 반복
   - REJECT 시 `previous_attempt` 기반 재생성/패치 경로로 다음 라운드 진행
   - Manager 비동기 정산 실패 시 동기 재시도 폴백
+  - **PASS_WITH_FIX 3-tier 라우팅** (TF-33):
+    - **inplace**: `_previous_best`가 있고 (fix_scope=="inplace" 또는 score >= INPLACE 임계값) → `chief_writer.inplace_patch()` → Director `audit_manuscript()` 재심사 (최대 3회)
+    - **partial**: `_previous_best`가 있고 fix_scope=="partial" → `single_strategy=rejected_strategy`로 해당 전략만 1후보 재생성
+    - **full**: `_previous_best` 없거나 fix_scope=="full" → Ensemble 3후보 전면 재생성
+  - **InPlace patch state_updates** (TF-46): LLM이 `patch_state_updates` JSON 블록 반환 → 기존 state_updates에 merge (`{**final_state_updates, **_patch_state}`)
+  - **patch_state_updates JSON 파싱** (TF-47): `rfind` + `json.loads` 조합으로 중첩 dict 안전 파싱, regex 폴백 유지
 - Fallback behavior:
   - 모든 라운드 실패 + 최선 원고 존재 시 사용자 선택으로 진행/건너뛰기
   - 최선 원고도 없으면 인간 검토 필요 메시지 후 세션 반환
@@ -126,10 +144,11 @@
 ## Open Risks
 - Risk 1: Stage4 패치 진입 조건이 `PatchModeThresholds.REWRITE`(현재 50)로 연결되어 `patch_below`(80) 설정과 동작 불일치 가능성이 있다.
 - Risk 2: 후보 생성/Director 응답 파싱 실패가 누적되면 사용자 개입(진행/스킵) 없이는 자동 복구가 제한된다.
+- Risk 3: Advisory 체인(LM-A~F) 6개가 순차 실행되므로, LLM 호출 지연이 누적될 수 있다. (현재 advisory는 비차단이므로 실패해도 진행)
 
 ## Last Verified
-- Date: 2026-02-25
-- Commit: `f99119d`
+- Date: 2026-03-02
+- Commit: `8476bc2`
 - Code Sync (Yes/No): Yes
-- Verified By: Codex
+- Verified By: Opus
 

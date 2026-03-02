@@ -114,7 +114,7 @@ class RelationshipDriftAdvisor:
             if not response:
                 return []
             return self._parse_llm_response(response, ep_num)
-        except Exception as e:
+        except (json.JSONDecodeError, ValueError, RuntimeError, OSError) as e:
             logger.warning("[LM-D] RelationshipDriftAdvisor LLM 호출 실패 (비치명): %s", str(e)[:80])
             return []
 

@@ -415,8 +415,10 @@ class Stage2Orchestrator:
                 _st_snapshot = _setup["st_snapshot"]
 
                 _previous_attempt = None  # [Patch Mode] Arc 패치 모드를 위한 이전 시도 추적
+                _base_constraint_block = constraint_block  # [TF-47] retry 간 누적 방지
 
                 while attempt < max_attempts:
+                    constraint_block = _base_constraint_block  # [TF-47] retry마다 원본으로 초기화
                     draft_validator_passed = False
                     consensus_passed = False
 

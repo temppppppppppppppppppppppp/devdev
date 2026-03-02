@@ -214,24 +214,24 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
             logging.info(
                 f"[Stage3 Director] Blueprint {decision} (점수: {score}) 후보{selected_idx + 1} | {reason[:120] if reason else ''}"
             )
-            print(f"\n{'=' * 60}")
-            print(f"  [Stage3 Director] Blueprint {decision} (점수: {score})")
-            print(f"  선택: 후보 {selected_idx + 1}")
+            print(f"\n   {'=' * 56}")
+            print(f"      [Stage3 Director] Blueprint {decision} (점수: {score})")
+            print(f"      선택: 후보 {selected_idx + 1}")
             if reason:
-                print(f"  사유: {reason[:200]}")
+                print(f"      사유: {reason[:200]}")
             if comparison_notes:
-                print(f"  비교: {comparison_notes[:200]}")
+                print(f"      비교: {comparison_notes[:200]}")
             if contradictions:
                 for c in contradictions[:3]:
-                    print(f"  모순: {str(c)[:150]}")
+                    print(f"      모순: {str(c)[:150]}")
             _bp_feedback = result.get("feedback", "")
             if decision == "REJECT" and _bp_feedback:
-                print(f"  피드백: {str(_bp_feedback)[:200]}")
+                print(f"      피드백: {str(_bp_feedback)[:200]}")
             # [TF-28c] Director thinking 표시 (절삭 없음)
             _thinking = getattr(self._d, "_last_thinking", "")
             if _thinking:
-                print(f"  💭 [Director Thinking]\n{_thinking}")
-            print(f"{'=' * 60}\n")
+                print(f"      💭 [Director Thinking]\n{_thinking}")
+            print(f"   {'=' * 56}\n")
 
             return {
                 "decision": decision,
@@ -316,6 +316,234 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
         result["selected_blueprint"] = candidates[0]
         result["comparison_notes"] = "폴백 선택 (비교 실패)"
         return result
+
+    # ═══════════════════════════════════════════════════════════════
+    # [TF-47] Arc 후보 비교 선택 — Director LLM 비교로 전환
+    # ═══════════════════════════════════════════════════════════════
+
+    def compare_and_select_arc(
+        self,
+        candidates: list[dict],
+        arc_no: int,
+        curr_block: dict,
+        prev_arc_context: str,
+        constraint_block: str = "",
+    ) -> dict:
+        """[TF-47] Arc 후보 비교 선택 + PASS/REJECT/PASS_WITH_FIX 판정.
+
+        Returns:
+            {
+                "decision": "PASS" | "REJECT" | "PASS_WITH_FIX",
+                "selected_index": int,
+                "selected_arc": dict,
+                "score": int,
+                "contradictions": list,
+                "reason": str,
+                "feedback": str,
+                "comparison_notes": str,
+                "fix_scope": str,
+            }
+        """
+        _empty_result = {
+            "decision": "REJECT",
+            "selected_index": -1,
+            "selected_arc": None,
+            "score": 0,
+            "contradictions": [],
+            "reason": "후보 없음",
+            "feedback": "Arc 후보가 없습니다.",
+            "comparison_notes": "",
+            "fix_scope": "",
+        }
+
+        if not candidates:
+            return _empty_result
+
+        logging.info(
+            f"🎭 [TF-47] Director Arc {'단독 평가' if len(candidates) == 1 else '비교'}: {len(candidates)}개 후보"
+        )
+
+        # 후보별 요약 생성
+        candidate_summaries = []
+        for idx, arc in enumerate(candidates):
+            strategy = arc.get("_strategy", f"후보{idx + 1}")
+            tactical = arc.get("tactical_doc", "")
+            if not isinstance(tactical, str):
+                tactical = str(tactical) if tactical else ""
+            joint = arc.get("joint_docs", {})
+            if isinstance(joint, dict):
+                joint_str = json.dumps(joint, ensure_ascii=False)
+            else:
+                joint_str = str(joint) if joint else ""
+            sc = arc.get("state_constraints", {})
+            if isinstance(sc, dict):
+                sc_str = json.dumps(sc, ensure_ascii=False)
+            else:
+                sc_str = str(sc) if sc else ""
+
+            ep_count = arc.get("ep_count", "?")
+            summary = (
+                f"[후보 {idx + 1}: {strategy}]\n"
+                f"- 화수: {ep_count}\n"
+                f"- tactical_doc 분량: {len(tactical)}자\n"
+                f"- state_constraints: {sc_str[:1000]}\n"
+                f"- joint_docs: {joint_str[:1000]}\n\n"
+                f"[tactical_doc 전문]\n{tactical[:8000]}\n"
+            )
+            candidate_summaries.append(summary)
+
+        # curr_block 요약
+        block_summary = ""
+        if isinstance(curr_block, dict):
+            block_summary = json.dumps(curr_block, ensure_ascii=False)[:4000]
+
+        comparison_prompt = f"""[Arc 후보 비교 선택 + 일관성·모순 판정]
+
+당신은 웹소설 시리즈 Arc 설계 감독입니다.
+Arc {arc_no}번 후보 {len(candidates)}개를 **각각 절대 기준으로 독립 평가**한 뒤, 최적 후보를 선택하고 최종 판정하세요.
+
+### 블록 DNA (이번 Arc 원본 설계)
+{block_summary}
+
+### 이전 Arc 맥락
+{prev_arc_context[:6000] if prev_arc_context else "(첫 Arc)"}
+
+### 제약 조건
+{constraint_block[:4000] if constraint_block else "(없음)"}
+
+### 후보 목록
+{"".join(candidate_summaries)}
+
+### 🔍 일관성·모순 체크 항목 (각 후보를 아래 항목으로 반드시 검사)
+1. **사망 NPC 부활**: 이전 Arc에서 사망한 NPC가 활동하는가?
+2. **수치·사실 모순**: 내공, 레벨, 금액, 소지품 등 확립된 수치와 충돌하는가?
+3. **상태 연속성**: 이전 Arc 종료 상태(위치, 부상, 소지품)에서 자연스럽게 이어지는가?
+4. **tactical_doc 밀도**: 화별 전개가 구체적이고 충분한 분량인가?
+5. **에피소드 배분**: 화수별 사건이 균형 있게 배분되었는가?
+6. **블록 DNA 준수**: treatment 설계의 핵심 사건/복선/감정선이 반영되었는가?
+
+### 🚨 즉시 REJECT 조건 (하나라도 해당 시 해당 후보 탈락)
+- 사망 NPC가 활동으로 등장
+- 이전 Arc 종료 상태와 명백한 모순
+- tactical_doc 분량이 해당 화수 × 500자 미만
+- 블록 DNA 핵심 사건 전혀 미반영
+
+### 📊 점수 기준 (절대 평가)
+- **90~100**: 모순 없음 + 블록 DNA 핵심 전부 반영 + 상태 연속성 완벽 + 충분한 밀도
+- **80~89**: 모순 없음 + 주요 사건 반영 + 연속성 양호 → PASS_WITH_FIX
+- **70~79**: 경미한 모순 의심 1건 또는 사건 일부 누락
+- **70 미만**: 반드시 REJECT
+
+⚠️ **핵심 원칙**: 후보 중 상대적으로 낫더라도, **절대 점수 80점 미만이면 REJECT**하세요.
+
+🎯 **100점 지향 원칙** — 경미한 모순만 있는 후보 → **PASS_WITH_FIX + fix_scope="inplace"** + feedback에 구체적 수정 지시.
+
+### 평가 기준 (가중치)
+1. **일관성·모순 없음** (35%): 확립된 사실·수치·상태와 모순이 없는가?
+2. **블록 DNA 준수** (30%): treatment 핵심 사건·복선·감정선 반영도?
+3. **서사 밀도** (20%): tactical_doc 구체성, 화별 전개 밀도?
+4. **상태 연속성** (15%): 이전 Arc 종료 → 이번 Arc 시작 자연스러움?
+
+### 출력 형식 (JSON)
+{{
+    "selected_index": 0,
+    "decision": "PASS" | "REJECT" | "PASS_WITH_FIX",
+    "fix_scope": "inplace" | "partial" | "full",
+    "score": 0-100,
+    "contradictions": ["모순 설명 (구체적)", ...],
+    "reason": "선택/판정 이유 (50자 이내)",
+    "comparison_notes": "후보별 비교 분석 (각 후보의 장단점)",
+    "feedback": "REJECT/PASS_WITH_FIX인 경우 구체적 수정 지침"
+}}
+
+fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부재설계, full=전면재설계. PASS 시 "inplace".
+
+반드시 유효한 JSON만 출력하세요.
+"""
+
+        try:
+            response = self._d.ask(comparison_prompt, temperature=0.3, thinking_level="high")
+            result = self._d._extract_json_robust(response)
+
+            if not isinstance(result, dict):
+                logging.warning("⚠️ [TF-47] Arc 비교 응답 파싱 실패 → Python 폴백")
+                return self._fallback_arc_selection(candidates)
+
+            selected_idx = _safe_int(result.get("selected_index", 0), 0)
+            if selected_idx < 0 or selected_idx >= len(candidates):
+                selected_idx = 0
+
+            decision = result.get("decision", "REJECT")
+            if decision not in ("PASS", "REJECT", "PASS_WITH_FIX"):
+                decision = "REJECT"
+            score = _safe_int(result.get("score", 70), 70)
+            contradictions = result.get("contradictions", [])
+            if not isinstance(contradictions, list):
+                contradictions = []
+            comparison_notes = str(result.get("comparison_notes", ""))
+            reason = str(result.get("reason", ""))
+
+            logging.info(f"🎯 [TF-47] 후보 {selected_idx + 1} 선택 ({decision}, 점수: {score})")
+            if contradictions:
+                logging.warning(f"🚨 [TF-47] 모순 {len(contradictions)}건 발견:")
+                for c in contradictions[:5]:
+                    logging.warning(f"   ▸ {str(c)[:120]}")
+            else:
+                logging.info("✅ [TF-47] 모순·일관성 이상 없음")
+
+            logging.info(
+                f"[Stage2 Director] Arc {decision} (점수: {score}) 후보{selected_idx + 1} | {reason[:120] if reason else ''}"
+            )
+            print(f"\n   {'=' * 56}")
+            print(f"      [Stage2 Director] Arc 비교 판정: {decision} (점수: {score})")
+            print(f"      선택: 후보 {selected_idx + 1} ({candidates[selected_idx].get('_strategy', '?')})")
+            if reason:
+                print(f"      사유: {reason[:200]}")
+            if comparison_notes:
+                print(f"      비교: {comparison_notes[:200]}")
+            if contradictions:
+                for c in contradictions[:3]:
+                    print(f"      모순: {str(c)[:150]}")
+            _fb = result.get("feedback", "")
+            if decision != "PASS" and _fb:
+                print(f"      피드백: {str(_fb)[:200]}")
+            _thinking = getattr(self._d, "_last_thinking", "")
+            if _thinking:
+                print(f"      💭 [Director Thinking]\n{_thinking}")
+            print(f"   {'=' * 56}\n")
+
+            return {
+                "decision": decision,
+                "selected_index": selected_idx,
+                "selected_arc": candidates[selected_idx],
+                "score": score,
+                "contradictions": contradictions,
+                "reason": reason,
+                "feedback": result.get("feedback", "") if decision != "PASS" else "",
+                "comparison_notes": comparison_notes,
+                "fix_scope": result.get("fix_scope", ""),
+            }
+
+        except Exception as e:
+            logging.warning(f"⚠️ [TF-47] Arc 비교 오류: {str(e)[:80]} → Python 폴백")
+            return self._fallback_arc_selection(candidates)
+
+    @staticmethod
+    def _fallback_arc_selection(candidates: list[dict]) -> dict:
+        """[TF-47] LLM 실패 시 Python 폴백 — 첫 번째 후보 PASS 반환."""
+        logging.warning("⚠️ [TF-47] 폴백 — 첫 번째 후보 선택 (Python)")
+        best = candidates[0] if candidates else None
+        return {
+            "decision": "PASS",
+            "selected_index": 0,
+            "selected_arc": best,
+            "score": 75,
+            "contradictions": [],
+            "reason": "LLM 비교 실패 → Python 폴백 선택",
+            "feedback": "",
+            "comparison_notes": "폴백 선택 (비교 실패)",
+            "fix_scope": "",
+        }
 
     def select_and_judge_ensemble(
         self,
@@ -664,30 +892,30 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
         logging.info(
             f"[Stage4 Director] 판정: {final_verdict} (점수: {score}) 후보{selected_letter} | 원래: {original_verdict}"
         )
-        print(f"\n{'=' * 60}")
-        print(f"  [Stage4 Director] 원고 앙상블 판정: {final_verdict} (점수: {score})")
-        print(f"  선택: 후보 {selected_letter} | 원래 판정: {original_verdict}")
+        print(f"\n   {'=' * 56}")
+        print(f"      [Stage4 Director] 원고 앙상블 판정: {final_verdict} (점수: {score})")
+        print(f"      선택: 후보 {selected_letter} | 원래 판정: {original_verdict}")
         _sel_reason = result.get("selection_reason", "")
         if _sel_reason:
-            print(f"  선택 사유: {str(_sel_reason)[:200]}")
+            print(f"      선택 사유: {str(_sel_reason)[:200]}")
         _sb = result.get("score_breakdown", {})
         if _sb:
             _sb_str = ", ".join(f"{k}={v}" for k, v in _sb.items() if isinstance(v, int | float))
             if _sb_str:
-                print(f"  점수 분해: {_sb_str}")
+                print(f"      점수 분해: {_sb_str}")
         _issues = feedback.get("issues", []) if isinstance(feedback, dict) else []
         if _issues:
             for _iss in _issues[:5]:
-                print(f"  이슈: {str(_iss)[:150]}")
+                print(f"      이슈: {str(_iss)[:150]}")
         if _open_review and _open_review not in ("특이사항 없음", "없음", ""):
-            print(f"  자유 리뷰: {_open_review[:200]}")
+            print(f"      자유 리뷰: {_open_review[:200]}")
         if adaptive_result.get("reason"):
-            print(f"  적응형: {adaptive_result['reason']}")
+            print(f"      적응형: {adaptive_result['reason']}")
         # [TF-28c] Director thinking 표시 (절삭 없음)
         _thinking = getattr(self._d, "_last_thinking", "")
         if _thinking:
-            print(f"  💭 [Director Thinking]\n{_thinking}")
-        print(f"{'=' * 60}\n")
+            print(f"      💭 [Director Thinking]\n{_thinking}")
+        print(f"   {'=' * 56}\n")
 
         return {
             "selected": selected_letter,
@@ -701,7 +929,7 @@ Architect가 inplace 단계에서 즉시 교정하고 재제출한다. 소소한
             "feedback": feedback,
             "state_updates": result.get("state_updates")
             or selected_candidate.get("state_updates")
-            or {},  # [TF-R4] LLM null 방어
+            or {},  # [TF-R4] Director 보정값 우선 (투자 장르 capital 키 등 superset)
             "action_items": feedback.get("action_items", []) if isinstance(feedback, dict) else [],
             "other_candidates_notes": result.get("other_candidates_notes", {}),
             "adaptive_threshold": adaptive_result.get("threshold_used", 65),

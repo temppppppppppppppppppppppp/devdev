@@ -1295,8 +1295,8 @@ class VecMemory:
 
     # ── [Phase2-L2] 원문 발췌 ─────────────────────────────────────────
 
-    def _fetch_manuscript_snippet(self, ep_num: int, max_chars: int = 200) -> str:
-        """manuscripts 테이블에서 원문 첫 N자 발췌 (project_data.db 공유 커넥션).
+    def fetch_manuscript_snippet(self, ep_num: int, max_chars: int = 200) -> str:
+        """[LM-H] manuscripts 테이블에서 원문 첫 N자 발췌 (project_data.db 공유 커넥션).
 
         sqlite-vec 미설치 환경이나 manuscripts 테이블 미존재 시 빈 문자열 반환.
         """

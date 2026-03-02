@@ -1720,17 +1720,34 @@ class Stage4InterviewRound:
                 # 회상 텍스트로 VecMemory 참조 컨텍스트 검색
                 _mem = getattr(self.ctx, "memory", None)
                 _ref_ctx = ""
+                _ms_snippets = ""
                 if _mem and hasattr(_mem, "retrieve_high_res_context"):
                     _fb_queries = [fb["text"][:200] for fb in _flashbacks[:3]]
                     _ref_parts = []
+                    _seen_eps: set[int] = set()
                     for _q in _fb_queries:
                         _r = _mem.retrieve_high_res_context(_q, next_ep, n_results=2)
                         if _r:
                             _ref_parts.append(_r)
+                            # [LM-H] 에피소드 번호 추출 → 원문 발췌
+                            import re as _re_mod
+
+                            for _ep_match in _re_mod.finditer(r"\[(?:제\s*)?(\d+)\s*화", _r):
+                                _seen_eps.add(int(_ep_match.group(1)))
                     _ref_ctx = "\n\n".join(_ref_parts)
+                    # [LM-H] 원고 원문 발췌 (최대 3개 에피소드, 각 500자)
+                    if _seen_eps and hasattr(_mem, "fetch_manuscript_snippet"):
+                        _snip_parts = []
+                        for _ep_n in sorted(_seen_eps)[:3]:
+                            _snip = _mem.fetch_manuscript_snippet(_ep_n, max_chars=500)
+                            if _snip:
+                                _snip_parts.append(f"[제 {_ep_n}화 원문]\n{_snip}")
+                        _ms_snippets = "\n\n".join(_snip_parts)
                 if not _ref_ctx:
                     continue
-                _fb_warns = _fb_verifier.check(_ms, ep_num=next_ep, reference_context=_ref_ctx)
+                _fb_warns = _fb_verifier.check(
+                    _ms, ep_num=next_ep, reference_context=_ref_ctx, manuscript_snippets=_ms_snippets
+                )
                 if _fb_warns:
                     # [TF-30-6] 후보 인덱스 태깅
                     for _fw in _fb_warns:

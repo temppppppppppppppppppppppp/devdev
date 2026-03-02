@@ -235,6 +235,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                         cache_name=cache_name,  # [Tier4-11]
                     )
                     futures[future] = strategy["name"]
+                    print(f"      🎲 [Blueprint] 전략 '{strategy['name']}' 생성 시작")
 
                 # [V61.3] 타임아웃 적용 - 야간 무인 운영 시 무한 대기 방지
                 try:
@@ -247,10 +248,15 @@ class BlueprintEnsembleGenerator(BaseAgent):
                                 result["_strategy"] = strategy_name
                                 candidates.append(result)
                                 logging.info(f"✓ {strategy_name} 생성 완료")
+                                print(
+                                    f"      ✓ [Blueprint] '{strategy_name}' 생성 완료 ({time.monotonic() - _tp_t0:.0f}초)"
+                                )
                         except FutureTimeoutError:
                             logging.warning(f"⏰ [V61.3] {strategy_name} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
+                            print(f"      ✗ [Blueprint] '{strategy_name}' 타임아웃")
                         except Exception as e:
                             logging.warning(f"✗ {strategy_name} 실패: {str(e)[:50]}")
+                            print(f"      ✗ [Blueprint] '{strategy_name}' 실패")
                 except FutureTimeoutError:
                     # 전체 앙상블 타임아웃 - 완료된 후보만 사용
                     logging.warning(
@@ -311,6 +317,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
         # [V60.85] Director가 선택할 수 있도록 후보 목록 반환
         # Python은 선택하지 않음 - Director에게 전체 전달
         logging.info(f"📋 [BPEnsemble] {len(qualified_candidates)}개 후보 → Director 선택 대기")
+        print(f"      📋 [Blueprint] {len(qualified_candidates)}개 후보 통과 → Director 선택 대기")
 
         # 메타데이터 저장 (Director 비교용)
         for idx, candidate in enumerate(qualified_candidates):
@@ -439,6 +446,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 logging.warning("[BPEnsemble] BLUEPRINT_GENERATION_PROMPT not found in prompt loader")
                 return None
 
+            _strategy_name = strategy.get("name", "unknown")
+            print(f"      ⏳ [Blueprint] '{_strategy_name}' LLM 호출 중...")
             response = self._ask_with_cached_context(
                 cache_name=cache_name,
                 prompt=prompt,
@@ -446,6 +455,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
                 thinking_level="medium",
                 full_prompt_fallback=full_prompt_fallback,
             )
+            print(f"      📝 [Blueprint] '{_strategy_name}' 응답 수신 ({len(response):,}자)")
             result = self._extract_json_robust(response)
 
             if not isinstance(result, dict):
