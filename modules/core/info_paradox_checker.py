@@ -11,8 +11,8 @@ import re
 
 logger = logging.getLogger(__name__)
 
-MAX_REVEALS = 200
-MAX_KNOWLEDGE_CHARS = 3000
+MAX_REVEALS = 500  # [P0-1] 200→500 (화당 ~2 reveals 기준 ~250화 안전 커버)
+MAX_KNOWLEDGE_CHARS = 5000  # [P0-1] 3000→5000 (reveals 500건 문자열 수용)
 
 
 class InfoParadoxChecker:

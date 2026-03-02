@@ -77,7 +77,9 @@ class NumericDriftAdvisor:
             if len(history) > MAX_HISTORY_POINTS:
                 history_str += f" … (+{len(history) - MAX_HISTORY_POINTS}건)"
 
-            lines.append(f"[{key}]{unit_suffix} 현재={current}\n  {history_str}")
+            established = entry.get("established_value")
+            est_info = f", 초기값={established}" if established is not None and str(established) != str(current) else ""
+            lines.append(f"[{key}]{unit_suffix} 현재={current}{est_info}\n  {history_str}")
             count += 1
 
         return "\n".join(lines)
@@ -88,6 +90,8 @@ class NumericDriftAdvisor:
             "다음은 웹소설의 수치 팩트 변동 이력입니다.\n"
             "서사적 근거 없이 비정상적으로 변동된 수치 표류를 찾아주세요.\n"
             "점진적 성장이나 작중 이유가 있는 변화는 정상입니다. "
+            "다만, 초기값 대비 100배 이상 누적 변동(예: 100냥→1만냥→100만냥)은 "
+            "각 단계에 서사적 근거가 있더라도 전체 스케일 적절성을 검토하세요.\n"
             "설명 없는 급변만 지적하세요.\n\n"
             f"[수치 이력 — 현재 {ep_num}화]\n{history_text}\n\n"
             "반드시 JSON 배열로만 답하세요. 표류가 없으면 빈 배열 []을 반환하세요.\n"

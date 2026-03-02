@@ -52,7 +52,7 @@ class FactLedger:
         """빈 팩트 원장 스키마"""
         return {
             "characters": {},  # {name: {status, role, relationship, established_ep, last_ep, history[]}}
-            "numbers": {},  # {key: {value, unit, last_ep, history[]}}
+            "numbers": {},  # {key: {value, unit, established_ep, established_value, last_ep, history[]}}
             "items": {},  # {name: {owner, status, established_ep, last_ep, history[]}}
             "locations": {},  # {name: {status, current_owner, last_ep, history[]}}
             "organizations": {},  # {name: {status, leader, last_ep, history[]}}
@@ -259,6 +259,7 @@ class FactLedger:
         entry["unit"] = unit
         entry["last_ep"] = ep_num
         entry.setdefault("established_ep", ep_num)
+        entry.setdefault("established_value", value)  # [P0-2] 초기값 영구 보존
         if note:
             entry["history"].append(f"ep{ep_num}: {note}")
         elif old_val != value:

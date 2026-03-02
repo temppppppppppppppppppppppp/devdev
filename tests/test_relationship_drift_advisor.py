@@ -248,6 +248,18 @@ class TestEdgeCases:
         result = advisor.check("", ep_num=10, relationship_timeline="타임라인...")
         assert result == []
 
+    def test_max_pairs_cap_at_20(self, db):
+        """21쌍 등록 → build_relationship_timeline()에서 최대 20쌍만 포맷."""
+        for i in range(21):
+            a, b = f"NPC_{i:02d}_A", f"NPC_{i:02d}_B"
+            db.upsert_npc_relationship_edge(a, b, "동맹", arc_no=1, ep_no=1)
+            db.upsert_npc_relationship_edge(a, b, "중립", arc_no=1, ep_no=3)
+            db.upsert_npc_relationship_edge(a, b, "원수", arc_no=1, ep_no=7)
+
+        result = RelationshipDriftAdvisor.build_relationship_timeline(db)
+        pair_count = result.count("↔")
+        assert pair_count <= 20
+
 
 # ═══════════════════════════════════════════════════════════════
 # Integration 테스트

@@ -56,7 +56,7 @@ class TestCriticalPinProtection:
     """FIFO 시 CRITICAL 법칙은 탈락하지 않는다."""
 
     def test_critical_laws_survive_fifo(self):
-        """CRITICAL 10 + NORMAL 25 → 30 초과 → CRITICAL 전량 보존."""
+        """CRITICAL 10 + NORMAL 45 → 50 초과 → CRITICAL 전량 보존."""
         db = FakeDB()
         ws = WorldStateManager(db)
 
@@ -64,12 +64,12 @@ class TestCriticalPinProtection:
         for i in range(10):
             ws.add_world_law(f"CRITICAL법칙{i}", ep=0, priority="CRITICAL")
 
-        # NORMAL 25개 추가 → 총 35개 → FIFO 발동
-        for i in range(25):
+        # NORMAL 45개 추가 → 총 55개 → FIFO 발동
+        for i in range(45):
             ws.add_world_law(f"NORMAL법칙{i}", ep=i + 1, priority="NORMAL")
 
         laws = ws._state["world_laws"]
-        assert len(laws) == 30
+        assert len(laws) == 50
 
         # CRITICAL 전량 보존 확인
         critical_laws = [e for e in laws if e.get("priority") == "CRITICAL"]
@@ -78,20 +78,20 @@ class TestCriticalPinProtection:
             assert any(e["law"] == f"CRITICAL법칙{i}" for e in critical_laws)
 
     def test_normal_only_fifo(self):
-        """NORMAL only 35개 → 최근 30개 유지 (기존 동작)."""
+        """NORMAL only 55개 → 최근 50개 유지 (기존 동작)."""
         db = FakeDB()
         ws = WorldStateManager(db)
 
-        for i in range(35):
+        for i in range(55):
             ws.add_world_law(f"법칙{i}", ep=i)
 
         laws = ws._state["world_laws"]
-        assert len(laws) == 30
+        assert len(laws) == 50
 
-        # 최근 30개 유지 확인 (법칙5~법칙34)
+        # 최근 50개 유지 확인 (법칙5~법칙54)
         law_texts = [e["law"] for e in laws]
         assert "법칙5" in law_texts
-        assert "법칙34" in law_texts
+        assert "법칙54" in law_texts
         # 초기 법칙(0~4)은 탈락
         assert "법칙0" not in law_texts
 
