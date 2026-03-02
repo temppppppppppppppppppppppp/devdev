@@ -37,3 +37,11 @@ retry:
 cache:
   context_max_entries: 50    # 캐시 최대 엔트리 수
   min_content_chars: 50000   # 캐시 대상 최소 글자수
+
+# [TF-26] 앙상블 타임아웃 (초) — 컴포넌트별 차등
+ensemble_timeouts:
+  arc: {ensemble: 300, single: 240}
+  blueprint: {ensemble: 300, single: 240}
+  chief_writer: {ensemble: 600, single: 540}
+  director_vote: {ensemble: 150, single: 90}
+  consensus_vote: {single: 90}

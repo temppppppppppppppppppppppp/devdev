@@ -159,3 +159,33 @@ Protocol 정의해놓고 오케스트레이터가 구체 클래스를 직접 imp
 |---|------|----------|--------|
 | 7 | **파라미터 축소** | Stage2Context 48필드 → 도메인별 sub-context 분리 | 높음 |
 | 8 | **중앙 대시보드** | 5종 JSONL 로그 → 에피소드 PASS율/LLM 지연/비용 시각화 | 높음 |
+
+---
+
+## TF-26 종합 감사 결과 (2026-03-02)
+
+### 감사 범위 (6축)
+1. 코드 품질 (TODO/FIXME)
+2. 에러 처리 (bare except / silent swallow)
+3. SSOT / 매직넘버
+4. 테스트 커버리지
+5. Dead code
+6. LLM 파싱
+
+### 수정 완료 항목
+- **작업 1 (Director SSOT)**: `director.py` 4개 상수 → `_threshold()` YAML 참조. `validation.yaml` 3개 값을 코드 실사용값으로 통일 (동작 변경 0).
+- **작업 2 (Dead code)**: `config/rules/loot.json`, `config/paths.json` 삭제. `continuity_validator.py` hud_snapshot DB 조회 dead code 제거.
+- **작업 3 (로깅 강화)**: `except Exception: pass` 9건 → `logging.debug/warning` 전환 (9파일).
+- **작업 4 (타임아웃 YAML)**: `system.yaml` `ensemble_timeouts` 섹션 추가. 5개 클래스 하드코딩 → YAML 참조 + fallback.
+
+### 오탐 확인 — 재감사 불필요
+- dead module 3개: 전부 main_a.py 사용 중 (data_collector, pass_rate_monitor, quality_dashboard)
+- 미사용 함수 26개: 전부 사용 확인
+- PATCH_MODE 프롬프트 3건: YAML 정상 등록 (chief_writer/arc_generator/blueprint_generator.yaml)
+- P0 로직 3건: 의도적 설계 (arc_idx cache, _stage3_meta, blueprint None)
+- 타임아웃 불일치: 의도적 per-component 설정 (Stage4 600s, Director 투표 90-150s)
+
+### 관찰 유지 항목
+- 에러 처리 silent swallow 38건 중 29건: 의도적 패턴 (이차 예외 방지 11건, graceful fallback 13건, 성능 계측 5건)
+- 테스트 커버리지 갭: 대형 오케스트레이션 모듈 7개 부족
+- stage2_optimizer 테스트 1개만 (관찰)

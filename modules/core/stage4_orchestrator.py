@@ -939,8 +939,8 @@ JSON으로 출력:
             if _state_ext and hasattr(_state_ext, "extract_cumulative_state"):
                 try:
                     _entity_registry = _state_ext.extract_cumulative_state(ep_num - 1) or {}
-                except Exception:
-                    pass
+                except Exception as e:
+                    logging.warning("[TF-26] state_extractor cumulative_state failed: %s", str(e)[:100])
 
             new_bp, _ = bp_agent.generate(
                 ep_num=ep_num,

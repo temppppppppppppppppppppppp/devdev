@@ -226,24 +226,8 @@ class ContinuityValidator:
         if prev_hud:
             return prev_hud
 
-        # 2. context를 통해 DB에서 조회
-        # [P0] manuscripts 테이블에 hud_snapshot 컬럼 없음 — 항상 None 반환
-        # 실제 prev_hud는 validation_context["prev_hud"]로 주입해야 함
-        if self.context and hasattr(self.context, "db"):
-            try:
-                prev_ep = current_ep - 1
-                manuscript_data = self.context.db.get_manuscript(prev_ep)
-                if manuscript_data:
-                    hud_snapshot = manuscript_data.get("hud_snapshot")
-                    if hud_snapshot:
-                        if isinstance(hud_snapshot, str):
-                            import json
-
-                            return json.loads(hud_snapshot)
-                        return hud_snapshot
-            except Exception as e:
-                logging.warning(f"⚠️ [CONTINUITY] 직전 HUD 조회 실패: {e}")
-
+        # [TF-26] manuscripts 테이블에 hud_snapshot 컬럼 없음 — DB 조회 dead code 제거
+        # 실제 prev_hud는 validation_context["prev_hud"]로 주입됨
         # [TF-XC-04] 현재 HUD를 이전 HUD로 사용하면 false negative 발생
         logging.info("[CONTINUITY] 이전 HUD 조회 불가 — 연속성 검사 스킵")
 

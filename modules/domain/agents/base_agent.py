@@ -700,8 +700,8 @@ class BaseAgent:
                         success=True,
                         thinking=_thinking_text,  # [TF-28]
                     )
-                except Exception:
-                    pass
+                except Exception as e:
+                    logging.debug("[TF-26] audit_event (success) failed: %s", str(e)[:100])
 
             # [TF-28] thinking 캡처 debug 로그
             if _thinking_text:
@@ -765,8 +765,8 @@ class BaseAgent:
                         error=str(_ask_error)[:500],
                         thinking=_thinking_text,  # [TF-28]
                     )
-                except Exception:
-                    pass
+                except Exception as e:
+                    logging.debug("[TF-26] audit_event (error) failed: %s", str(e)[:100])
 
             # 부분 응답이 있으면 저장
             if full_response:

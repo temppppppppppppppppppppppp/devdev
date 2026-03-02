@@ -797,8 +797,8 @@ class ChiefWriterContextBuilder:
                 _bible = self.context.db.load_anchor("bible")
                 if _bible:
                     _genre = _bible.get("_genre", "wuxia")
-            except Exception:
-                pass
+            except Exception as e:
+                logging.debug("[TF-26] genre load from bible failed: %s", str(e)[:100])
 
             if len(hud_history) >= 2:
                 prev_hud = hud_history[-2]["hud"]

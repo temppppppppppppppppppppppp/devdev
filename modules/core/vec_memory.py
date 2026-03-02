@@ -472,8 +472,8 @@ class VecMemory:
                 # [Sweep4] 명시적 rollback — SQLite 자동 rollback에 의존하지 않음
                 try:
                     self._conn.rollback()
-                except Exception:
-                    pass
+                except Exception as e2:
+                    logging.debug("[TF-26] rollback secondary exception (save): %s", str(e2)[:100])
                 self._ui_log(f"[VecMemory] failed to save episode {ep_num}: {e}")
                 return False
             finally:
@@ -1248,8 +1248,8 @@ class VecMemory:
             except Exception as e:
                 try:
                     self._conn.rollback()
-                except Exception:
-                    pass
+                except Exception as e2:
+                    logging.debug("[TF-26] rollback secondary exception (delete): %s", str(e2)[:100])
                 self._ui_log(f"[VecMemory] delete episodes failed (>={target_ep}): {e}")
                 return 0
             finally:

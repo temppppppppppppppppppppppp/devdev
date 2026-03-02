@@ -784,8 +784,8 @@ class Stage3Orchestrator:
                     result=pipeline_result.get("final_verdict", "REJECT"),
                     score=pipeline_result.get("last_score", 0),
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                _logging.debug("[TF-26] session_logger.log_decision failed: %s", str(e)[:100])
 
         # [S3-N-P1-3] DI 콜백 None 방어
         if callable(ctx.audit_event):
