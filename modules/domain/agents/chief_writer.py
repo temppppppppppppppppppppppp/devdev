@@ -22,6 +22,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FutureTimeoutError
 
 from modules.core.constants import smart_truncate
+from modules.core.genre_schema_builder import build_state_updates_schema
 from modules.models.manuscript import validate_manuscript_candidate
 
 from .base_agent import BaseAgent
@@ -30,6 +31,20 @@ from .chief_writer_prompts import (
     get_prompt_template_output,
 )
 from .chief_writer_quality import ChiefWriterQualityGate
+
+# [TF-45] 한국어 장르명 → 코드 변환 (chief_writer_context.py와 동일)
+_CW_GENRE_CODE_MAP = {
+    "무협": "wuxia",
+    "판타지": "fantasy",
+    "헌터물": "hunter",
+    "투자물": "investment",
+    "스포츠": "sports",
+    "의학": "medical",
+    "배우물": "actor",
+    "요리": "cooking",
+    "작곡가": "composer",
+    "대체역사": "alt_history",
+}
 
 
 class ChiefWriter(BaseAgent):
@@ -99,6 +114,16 @@ class ChiefWriter(BaseAgent):
         self._context_builder = None  # [B-1-4] lazy init
         self._quality_gate = None  # [B-1-5] lazy init
         # [V65] _emotion_skeleton_cache / _emotion_skeleton_blueprint_hash 삭제 (Emotion Skeleton Dead Code 제거)
+
+    def _get_critical_keys_for_genre(self) -> list[str]:
+        """[TF-45] 현재 프로젝트 HUD에서 critical_keys 추출."""
+        try:
+            ctx = getattr(self, "_context", None) or getattr(self, "context", None)
+            if ctx and hasattr(ctx, "sys") and hasattr(ctx.sys, "hud") and ctx.sys.hud:
+                return ctx.sys.hud.get_critical_keys()
+        except Exception:
+            pass
+        return []
 
     @property
     def context_builder(self) -> "ChiefWriterContextBuilder":
@@ -416,19 +441,28 @@ class ChiefWriter(BaseAgent):
                 f"\n[Strategy-Specific Feedback]\n{strategy_feedback}\n" if strategy_feedback else ""
             )
 
+            # [TF-45] 장르별 state_updates 스키마 주입
+            _genre_code = _CW_GENRE_CODE_MAP.get(genre_name, "wuxia")
+            _critical_keys = self._get_critical_keys_for_genre()
+            _su_schema = build_state_updates_schema(_genre_code, _critical_keys)
+            _output_block = self.PROMPT_TEMPLATE_OUTPUT.format(
+                strategy=strategy,
+                state_updates_schema=_su_schema,
+            )
+
             # [V61.7] 캐시 사용 분기
             if cache_name:
                 # 캐시 활성: common_context는 캐시에 있으므로 전략 부분만 전송
                 strategy_prompt = f"""{strategy_config["instruction"]}
 {_strategy_feedback_block}
-{self.PROMPT_TEMPLATE_OUTPUT.format(strategy=strategy)}"""
+{_output_block}"""
 
                 # 폴백용 전체 프롬프트 (캐시 실패 시)
                 full_prompt = f"""{common_context}
 {_strategy_feedback_block}
 {strategy_config["instruction"]}
 
-{self.PROMPT_TEMPLATE_OUTPUT.format(strategy=strategy)}"""
+{_output_block}"""
 
                 response = self._ask_with_cached_context(
                     cache_name=cache_name,
@@ -443,7 +477,7 @@ class ChiefWriter(BaseAgent):
 {_strategy_feedback_block}
 {strategy_config["instruction"]}
 
-{self.PROMPT_TEMPLATE_OUTPUT.format(strategy=strategy)}"""
+{_output_block}"""
 
                 response = self.ask(
                     prompt=full_prompt,

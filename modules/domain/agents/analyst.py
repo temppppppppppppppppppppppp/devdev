@@ -20,6 +20,7 @@ import os
 import re
 
 from modules.core.constants import GenreTypes, HUDKeys, RetryLimits
+from modules.core.genre_schema_builder import build_status_shadow_schema, get_genre_role_title
 
 # [V65] 프롬프트 외부화
 from .analyst_prompt_api import (
@@ -123,6 +124,8 @@ class Analyst(BaseAgent):
         # 2. 프롬프트 데이터 안전화 및 주입
         _guard = getattr(self.context, "guard", None)
         _genre_prompt = _guard.get_v20_purism_prompt() if _guard and hasattr(_guard, "get_v20_purism_prompt") else ""
+        # [TF-45] 장르별 role_title 주입
+        _genre_code = self._get_current_genre()
         prompt = get_plan_volume_prompt_v25(
             vol_no=vol_no,
             genre_prompt=_genre_prompt,
@@ -133,6 +136,7 @@ class Analyst(BaseAgent):
             assets=self._escape_braces(json.dumps(assets, ensure_ascii=False)),
             protagonist_config=self._escape_braces(protagonist_config_text),  # [V60.88]
             protagonist_name=protagonist_name,  # [V60.93]
+            role_title=get_genre_role_title(_genre_code),
         )
         # Guard against prompt-loader contamination returning overly generic text (e.g., "prompt").
         if isinstance(prompt, str) and protagonist_config_text:
@@ -1146,12 +1150,21 @@ class Analyst(BaseAgent):
 
         # 3. 프롬프트 조립
         # ENRICH_BLOCK_PROMPT_V30의 {prev_context} 자리에 effective_prev를 주입합니다.
+        # [TF-45] 장르별 status_shadow 스키마 주입
+        _enrich_genre = self._get_current_genre()
+        _enrich_ck = []
+        try:
+            if hasattr(self.context, "sys") and hasattr(self.context.sys, "hud") and self.context.sys.hud:
+                _enrich_ck = self.context.sys.hud.get_critical_keys()
+        except Exception:
+            pass
         prompt = get_enrich_block_prompt_v30(
             genre_prompt=self.context.guard.get_v20_purism_prompt(),
             curr_block=safe_curr,
             prev_context=effective_prev,  # 👈 safe_prev의 진화형
             next_context=safe_next,
             seeds_context=safe_seeds,
+            status_shadow_schema=self._escape_braces(build_status_shadow_schema(_enrich_genre, _enrich_ck)),
         )
 
         # 4. 실행 루틴

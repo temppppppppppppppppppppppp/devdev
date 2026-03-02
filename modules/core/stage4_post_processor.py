@@ -8,6 +8,7 @@ import os
 import re
 from contextlib import nullcontext as _nullcontext
 
+from modules.core.genre_schema_builder import is_wuxia
 from modules.core.metrics_collector import get_metrics_collector
 
 _PROJECTS_DIR = "projects"
@@ -290,6 +291,17 @@ class Stage4PostProcessor:
         lore_list = []
         active_seeds = []
         causal_history = ""
+        # [TF-45] 장르 정보 1회 추출 — Manager 호출 3곳에 전달
+        _genre_type = (
+            (self.ctx.selected_genre or {}).get("type", "wuxia")
+            if hasattr(self.ctx, "selected_genre") and self.ctx.selected_genre
+            else "wuxia"
+        )
+        _critical_keys = (
+            self.ctx.sys.hud.get_critical_keys()
+            if hasattr(self.ctx, "sys") and hasattr(self.ctx.sys, "hud") and self.ctx.sys.hud
+            else []
+        )
         try:
             self.ctx.ui.log("   📖 [V60.82] Manager 정산 비동기 제출...")
             from concurrent.futures import ThreadPoolExecutor
@@ -325,6 +337,8 @@ class Stage4PostProcessor:
                 lore_list=lore_list,
                 active_seeds=active_seeds,
                 causal_history=causal_history,
+                genre=_genre_type,
+                critical_keys=_critical_keys,
             )
             _bible_executor.shutdown(wait=False, cancel_futures=False)
             self.ctx.ui.log("      ⏳ [S4-I6] Manager 정산 비동기 실행 중...")
@@ -480,6 +494,8 @@ class Stage4PostProcessor:
                         lore_list=lore_list,
                         active_seeds=active_seeds,
                         causal_history=causal_history,
+                        genre=_genre_type,
+                        critical_keys=_critical_keys,
                     )
 
                 if raw_audit and not raw_audit.get("parsing_error"):
@@ -507,6 +523,8 @@ class Stage4PostProcessor:
                         lore_list=lore_list,
                         active_seeds=active_seeds,
                         causal_history=causal_history,
+                        genre=_genre_type,
+                        critical_keys=_critical_keys,
                     )
                     if raw_audit and not raw_audit.get("parsing_error"):
                         audit = raw_audit
@@ -538,12 +556,17 @@ class Stage4PostProcessor:
             curr_equipment = set(
                 actual_truth.get("equipment", []) if isinstance(actual_truth.get("equipment"), list) else []
             )
-            prev_martial = set(
-                prev_actual.get("martial_arts", []) if isinstance(prev_actual.get("martial_arts"), list) else []
-            )
-            curr_martial = set(
-                actual_truth.get("martial_arts", []) if isinstance(actual_truth.get("martial_arts"), list) else []
-            )
+            # [TF-45] martial_arts diff는 무협 전용
+            if is_wuxia(_genre_type):
+                prev_martial = set(
+                    prev_actual.get("martial_arts", []) if isinstance(prev_actual.get("martial_arts"), list) else []
+                )
+                curr_martial = set(
+                    actual_truth.get("martial_arts", []) if isinstance(actual_truth.get("martial_arts"), list) else []
+                )
+            else:
+                prev_martial = set()
+                curr_martial = set()
 
             new_items_from_equip = list(curr_equipment - prev_equipment)
             lost_items_from_equip = list(prev_equipment - curr_equipment)
@@ -602,7 +625,7 @@ class Stage4PostProcessor:
                     from modules.core.state_text_verifier import StateTextVerifier
 
                     _stv_agent = self.ctx.agents.get("manager") if self.ctx.agents else None
-                    _stv = StateTextVerifier(agent=_stv_agent)
+                    _stv = StateTextVerifier(agent=_stv_agent, genre=_genre_type, critical_keys=_critical_keys)
                     _stv_result = _stv.verify(final_manuscript, actual_truth)
                     if not _stv_result["verified"] and _stv_result["corrections"]:
                         actual_truth = _stv.apply_corrections(actual_truth, _stv_result["corrections"])
