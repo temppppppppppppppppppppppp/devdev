@@ -118,4 +118,44 @@ Protocol 정의해놓고 오케스트레이터가 구체 클래스를 직접 imp
 
 1. ~~**거대 함수 2차 분할**: `interview_round.run()` 1,649줄~~ ✅ **B-1-3b 완료** — 686줄로 축소, 5개 메서드 추출 (`_run_advisory_chain`, `_build_cv_context`, `_generate_candidates`, `_process_verdict`, `_handle_reject`). 다음 대상: `process_pass_result()` 814줄, `run_validation()` 694줄.
 2. **broad except 정밀화**: 707건 중 advisory 체인(~40건)부터 구체 예외로 전환. `except (json.JSONDecodeError, TimeoutError, ConnectionError)` 등. *(부분 진행: Debt Audit에서 bare except 22건→debug화, TF-16에서 fail-closed 38건, TF-20에서 NPC fail-closed 등 기존 패치 존재)*
-3. **structured logging**: print() 제거 → logging 레벨 정상화 (WARNING은 실제 경고만). 향후 JSON 로거 또는 대시보드 연결 가능한 기반.
+3. **structured logging**: print() 제거 → logging 레벨 정상화 (WARNING은 실제 경고만). *(부분 진행: E-1 Silent Pass 16건 보강, 3-Obs Step 1+2 PerfTimer 계측, D2 Memory Observability 경로별 계측, V76 episode_production.jsonl + runtime_audit.jsonl + quality_metrics.jsonl + session_logger 구축 완료. 단, print() 298건·logging.warning 710건(INFO 용도 남용)은 미해결)*
+
+---
+
+## 현재 수치 (B-1-3b 이후)
+
+| 지표 | 이전 | 현재 | 변화 |
+|------|------|------|------|
+| `interview_round.run()` | 1,649줄 | 686줄 | **-58%** |
+| print() 호출 | 192건 | 298건 | +106 (기능 추가 영향) |
+| logging 호출 | 1,406건 | 1,411건 | +5 |
+| logging.warning | ~700건 | 710건 | INFO 남용 미해결 |
+| logging.debug | ~100건 | 119건 | Debt Audit 22건 전환 포함 |
+| 구조화 로그 | 0종 | 5종 | episode_production/runtime_audit/quality_metrics/pass_rate_monitor/session JSONL |
+
+---
+
+## 다음 우선순위 제안 (ROI 순)
+
+### Tier 1 — 실전 품질 직결
+
+| # | 작업 | 예상 효과 | 난이도 |
+|---|------|----------|--------|
+| 1 | **실전 테스트 런** | 실제 에피소드 5~10화 생성, 체감 품질 확인 + 새 버그 발견 | 낮음 |
+| 2 | **logging.warning 정상화** | 710건 중 INFO 용도 남용 ~400건 → `logging.info` 전환. 실제 WARNING만 남기면 운영 시 경고 탐지 가능 | 낮음 |
+| 3 | **나머지 거대 함수 분할** | `process_pass_result()` 814줄, `run_validation()` 694줄, `finalizer()` 612줄 — B-1-3b 동일 패턴 적용 | 중간 |
+
+### Tier 2 — 구조 부채 감소
+
+| # | 작업 | 예상 효과 | 난이도 |
+|---|------|----------|--------|
+| 4 | **broad except 구체화 (advisory 체인)** | advisory 40건 → `except (TimeoutError, json.JSONDecodeError, ConnectionError)`. 버그 은폐 차단 | 중간 |
+| 5 | **print() → logging 전환** | 298건 중 Stage4 경로(~80건)부터. 필터링·레벨 제어 가능 | 중간 |
+| 6 | **core→domain 역참조 제거** | 5건 lazy import → DI 컨테이너 조립으로 전환 | 높음 |
+
+### Tier 3 — 장기 개선
+
+| # | 작업 | 예상 효과 | 난이도 |
+|---|------|----------|--------|
+| 7 | **파라미터 축소** | Stage2Context 48필드 → 도메인별 sub-context 분리 | 높음 |
+| 8 | **중앙 대시보드** | 5종 JSONL 로그 → 에피소드 PASS율/LLM 지연/비용 시각화 | 높음 |
