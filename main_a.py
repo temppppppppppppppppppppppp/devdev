@@ -3389,84 +3389,104 @@ class SovereignApp:
         total_manuscripts = 0
         arcs_completed = 0
 
-        # ─── 3. Arc-by-Arc 루프 ───
-        for arc_offset in range(target_count):
-            current_arc_no = fully_done_arcs + arc_offset + 1
-            self.ui.log(f"\n{'━' * 60}")
-            self.ui.log(f"🔄 [OneStop] Arc {current_arc_no}/{total_arcs} 처리 시작 ({arc_offset + 1}/{target_count})")
-            self.ui.log(f"{'━' * 60}")
-
-            # [TF-35d] Arc가 이미 설계되었으면 Stage 2 건너뛰기
-            refreshed_arcs = self.current_project.db.load_anchor("arcs") or []
-            if current_arc_no <= len(refreshed_arcs):
-                # Arc already designed — skip Stage 2
-                current_arc = refreshed_arcs[current_arc_no - 1]
-                arc_ep_start = current_arc.get("ep_start", 1)
-                arc_ep_end = current_arc.get("ep_end", arc_ep_start + 4)
+        # ─── 3. Arc-by-Arc 루프 (배치 반복) ───
+        while True:
+            for arc_offset in range(target_count):
+                current_arc_no = fully_done_arcs + arcs_completed + 1
+                self.ui.log(f"\n{'━' * 60}")
                 self.ui.log(
-                    f"   ✅ [Stage 2] Arc {current_arc_no} 이미 설계됨 (ep {arc_ep_start}~{arc_ep_end}) — 건너뜀"
+                    f"🔄 [OneStop] Arc {current_arc_no}/{total_arcs} 처리 시작 ({arc_offset + 1}/{target_count})"
                 )
-            else:
-                # New arc — 기존 Stage 2 로직
-                self.ui.log(f"\n   📐 [Stage 2] Arc {current_arc_no} 설계 중...")
-                try:
-                    from modules.core.stage2_context import Stage2Context
+                self.ui.log(f"{'━' * 60}")
 
-                    self._stage2_orch.ctx = Stage2Context.from_app(self)
-
-                    try:
-                        loop = asyncio.get_running_loop()
-                    except RuntimeError:
-                        loop = None
-
-                    if loop and loop.is_running():
-                        import concurrent.futures
-
-                        with concurrent.futures.ThreadPoolExecutor() as executor:
-                            future = executor.submit(
-                                asyncio.run,
-                                self._stage2_orch.stage_2_arcs_async_logic(target_arc_count=1),
-                            )
-                            future.result(timeout=600)
-                    else:
-                        asyncio.run(self._stage2_orch.stage_2_arcs_async_logic(target_arc_count=1))
-
-                    # StateTracker 동기화 (기존 _stage_2_arcs 패턴)
-                    _s2_ctx = self._stage2_orch.ctx
-                    if _s2_ctx is not None and getattr(_s2_ctx, "state_tracker", None) is not None:
-                        self.state_tracker = _s2_ctx.state_tracker
-                    self._state_tracker_loaded_arcs = getattr(_s2_ctx, "state_tracker_loaded_arcs", 0)
-
-                except Exception as s2_err:
-                    self.ui.log(f"   ❌ [Stage 2] Arc {current_arc_no} 설계 실패: {str(s2_err)[:100]}")
-                    self.ui.log("   🛑 Arc 없이 진행 불가 — 파이프라인을 중단합니다.")
-                    break
-
-                # Arc 생성 확인
+                # [TF-35d] Arc가 이미 설계되었으면 Stage 2 건너뛰기
                 refreshed_arcs = self.current_project.db.load_anchor("arcs") or []
-                if current_arc_no > len(refreshed_arcs):
-                    self.ui.log(f"   ❌ [Stage 2] Arc {current_arc_no} 생성이 확인되지 않습니다.")
-                    self.ui.log("   🛑 파이프라인을 중단합니다.")
-                    break
+                if current_arc_no <= len(refreshed_arcs):
+                    # Arc already designed — skip Stage 2
+                    current_arc = refreshed_arcs[current_arc_no - 1]
+                    arc_ep_start = current_arc.get("ep_start", 1)
+                    arc_ep_end = current_arc.get("ep_end", arc_ep_start + 4)
+                    self.ui.log(
+                        f"   ✅ [Stage 2] Arc {current_arc_no} 이미 설계됨 (ep {arc_ep_start}~{arc_ep_end}) — 건너뜀"
+                    )
+                else:
+                    # New arc — 기존 Stage 2 로직
+                    self.ui.log(f"\n   📐 [Stage 2] Arc {current_arc_no} 설계 중...")
+                    try:
+                        from modules.core.stage2_context import Stage2Context
 
-                current_arc = refreshed_arcs[current_arc_no - 1]
-                arc_ep_start = current_arc.get("ep_start", 1)
-                arc_ep_end = current_arc.get("ep_end", arc_ep_start + 4)
-                self.ui.log(f"   ✅ [Stage 2] Arc {current_arc_no} 완료 (ep {arc_ep_start}~{arc_ep_end})")
+                        self._stage2_orch.ctx = Stage2Context.from_app(self)
 
-            # ━━━ Stage 3: Blueprint (arc 범위) ━━━
-            self.ui.log(f"\n   📐 [Stage 3] Blueprint 생성 중 (ep {arc_ep_start}~{arc_ep_end})...")
-            try:
-                from modules.core.stage3_context import Stage3Context
+                        try:
+                            loop = asyncio.get_running_loop()
+                        except RuntimeError:
+                            loop = None
 
-                self._stage3_orch.ctx = Stage3Context.from_app(self)
-                s3_result = self._stage3_orch.stage_3_batch_blueprinting(target_ep=arc_ep_end)
-                s3_success = s3_result.get("success_count", 0) if s3_result else 0
-                s3_fail = s3_result.get("fail_count", 0) if s3_result else 0
+                        if loop and loop.is_running():
+                            import concurrent.futures
 
-                if s3_success == 0 and s3_fail > 0:
-                    # 실제 실패
-                    self.ui.log(f"   ⚠️ [Stage 3] Blueprint 생성 실패 (성공: 0, 실패: {s3_fail})")
+                            with concurrent.futures.ThreadPoolExecutor() as executor:
+                                future = executor.submit(
+                                    asyncio.run,
+                                    self._stage2_orch.stage_2_arcs_async_logic(target_arc_count=1),
+                                )
+                                future.result(timeout=600)
+                        else:
+                            asyncio.run(self._stage2_orch.stage_2_arcs_async_logic(target_arc_count=1))
+
+                        # StateTracker 동기화 (기존 _stage_2_arcs 패턴)
+                        _s2_ctx = self._stage2_orch.ctx
+                        if _s2_ctx is not None and getattr(_s2_ctx, "state_tracker", None) is not None:
+                            self.state_tracker = _s2_ctx.state_tracker
+                        self._state_tracker_loaded_arcs = getattr(_s2_ctx, "state_tracker_loaded_arcs", 0)
+
+                    except Exception as s2_err:
+                        self.ui.log(f"   ❌ [Stage 2] Arc {current_arc_no} 설계 실패: {str(s2_err)[:100]}")
+                        self.ui.log("   🛑 Arc 없이 진행 불가 — 파이프라인을 중단합니다.")
+                        break
+
+                    # Arc 생성 확인
+                    refreshed_arcs = self.current_project.db.load_anchor("arcs") or []
+                    if current_arc_no > len(refreshed_arcs):
+                        self.ui.log(f"   ❌ [Stage 2] Arc {current_arc_no} 생성이 확인되지 않습니다.")
+                        self.ui.log("   🛑 파이프라인을 중단합니다.")
+                        break
+
+                    current_arc = refreshed_arcs[current_arc_no - 1]
+                    arc_ep_start = current_arc.get("ep_start", 1)
+                    arc_ep_end = current_arc.get("ep_end", arc_ep_start + 4)
+                    self.ui.log(f"   ✅ [Stage 2] Arc {current_arc_no} 완료 (ep {arc_ep_start}~{arc_ep_end})")
+
+                # ━━━ Stage 3: Blueprint (arc 범위) ━━━
+                self.ui.log(f"\n   📐 [Stage 3] Blueprint 생성 중 (ep {arc_ep_start}~{arc_ep_end})...")
+                try:
+                    from modules.core.stage3_context import Stage3Context
+
+                    self._stage3_orch.ctx = Stage3Context.from_app(self)
+                    s3_result = self._stage3_orch.stage_3_batch_blueprinting(target_ep=arc_ep_end)
+                    s3_success = s3_result.get("success_count", 0) if s3_result else 0
+                    s3_fail = s3_result.get("fail_count", 0) if s3_result else 0
+
+                    if s3_success == 0 and s3_fail > 0:
+                        # 실제 실패
+                        self.ui.log(f"   ⚠️ [Stage 3] Blueprint 생성 실패 (성공: 0, 실패: {s3_fail})")
+                        try:
+                            skip_choice = input("   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ").strip()
+                        except (EOFError, KeyboardInterrupt):
+                            skip_choice = "2"
+                        if skip_choice != "1":
+                            self.ui.log("   🛑 사용자 요청으로 파이프라인을 중단합니다.")
+                            break
+                        self.ui.log("   ⏭️ Stage 3 건너뛰고 다음 Arc로...")
+                        arcs_completed += 1
+                        continue
+                    elif s3_success == 0 and s3_fail == 0:
+                        # [TF-35d] 모든 Blueprint 이미 존재 — 정상
+                        self.ui.log(f"   ✅ [Stage 3] Blueprint 이미 완료 (ep {arc_ep_start}~{arc_ep_end}) — 건너뜀")
+                    else:
+                        self.ui.log(f"   ✅ [Stage 3] Blueprint 완료 (성공: {s3_success}, 실패: {s3_fail})")
+                except Exception as s3_err:
+                    self.ui.log(f"   ❌ [Stage 3] Blueprint 생성 오류: {str(s3_err)[:100]}")
                     try:
                         skip_choice = input("   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ").strip()
                     except (EOFError, KeyboardInterrupt):
@@ -3474,55 +3494,60 @@ class SovereignApp:
                     if skip_choice != "1":
                         self.ui.log("   🛑 사용자 요청으로 파이프라인을 중단합니다.")
                         break
-                    self.ui.log("   ⏭️ Stage 3 건너뛰고 다음 Arc로...")
                     arcs_completed += 1
                     continue
-                elif s3_success == 0 and s3_fail == 0:
-                    # [TF-35d] 모든 Blueprint 이미 존재 — 정상
-                    self.ui.log(f"   ✅ [Stage 3] Blueprint 이미 완료 (ep {arc_ep_start}~{arc_ep_end}) — 건너뜀")
-                else:
-                    self.ui.log(f"   ✅ [Stage 3] Blueprint 완료 (성공: {s3_success}, 실패: {s3_fail})")
-            except Exception as s3_err:
-                self.ui.log(f"   ❌ [Stage 3] Blueprint 생성 오류: {str(s3_err)[:100]}")
+
+                # ━━━ Stage 4: 원고 (arc 범위) ━━━
+                self.ui.log(f"\n   🚀 [Stage 4] 원고 집필 중 (ep {arc_ep_start}~{arc_ep_end})...")
+                ms_max_before = self._get_max_episode_from_manuscripts()  # [감리] pre-baseline
                 try:
-                    skip_choice = input("   건너뛰고 다음 Arc로? (1=건너뛰기 / 2=중단, 기본: 2): ").strip()
-                except (EOFError, KeyboardInterrupt):
-                    skip_choice = "2"
-                if skip_choice != "1":
-                    self.ui.log("   🛑 사용자 요청으로 파이프라인을 중단합니다.")
+                    self._stage_4_v2_chief_writer(target_ep=arc_ep_end)
+                    # 생산된 원고 수 확인 (delta 방식 — 과다 집계 방지)
+                    ms_max_after = self._get_max_episode_from_manuscripts()
+                    arc_manuscripts = max(0, ms_max_after - ms_max_before)
+                    total_manuscripts += arc_manuscripts
+                    self.ui.log(f"   ✅ [Stage 4] 원고 완료 ({arc_manuscripts}화 생산)")
+                except KeyboardInterrupt:
+                    self.ui.log("\n   ⚠️ 사용자 중단 요청.")
                     break
+                except Exception as s4_err:
+                    self.ui.log(f"   ❌ [Stage 4] 원고 집필 오류: {str(s4_err)[:100]}")
+                    self.ui.log("   (기존 에러 핸들링에 따라 최선 결과 수용)")
+
                 arcs_completed += 1
-                continue
+            else:
+                # for 루프 정상 완료 (break 없이) — 배치 완료
+                self.ui.log(f"\n   ✅ 요청한 {target_count}개 Arc 전부 완료!")
 
-            # ━━━ Stage 4: 원고 (arc 범위) ━━━
-            self.ui.log(f"\n   🚀 [Stage 4] 원고 집필 중 (ep {arc_ep_start}~{arc_ep_end})...")
-            ms_max_before = self._get_max_episode_from_manuscripts()  # [감리] pre-baseline
-            try:
-                self._stage_4_v2_chief_writer(target_ep=arc_ep_end)
-                # 생산된 원고 수 확인 (delta 방식 — 과다 집계 방지)
-                ms_max_after = self._get_max_episode_from_manuscripts()
-                arc_manuscripts = max(0, ms_max_after - ms_max_before)
-                total_manuscripts += arc_manuscripts
-                self.ui.log(f"   ✅ [Stage 4] 원고 완료 ({arc_manuscripts}화 생산)")
-            except KeyboardInterrupt:
-                self.ui.log("\n   ⚠️ 사용자 중단 요청.")
-                break
-            except Exception as s4_err:
-                self.ui.log(f"   ❌ [Stage 4] 원고 집필 오류: {str(s4_err)[:100]}")
-                self.ui.log("   (기존 에러 핸들링에 따라 최선 결과 수용)")
+                # 남은 Arc 확인
+                remaining = total_arcs - (fully_done_arcs + arcs_completed)
+                if remaining <= 0:
+                    self.ui.log("   🎉 모든 Arc 처리 완료!")
+                    break
 
-            arcs_completed += 1
-
-            # ━━━ 다음 Arc 계속 여부 ━━━
-            if arc_offset < target_count - 1:
-                self.ui.log(f"\n   ✅ Arc {current_arc_no} 전체 완료!")
                 try:
-                    cont_choice = input("   다음 Arc로 계속할까요? (1=계속 / 2=중단, 기본: 1): ").strip()
+                    cont_choice = input(
+                        f"   계속할까요? (남은 Arc: {remaining}개) (1=계속 / 2=중단, 기본: 1): "
+                    ).strip()
                 except (EOFError, KeyboardInterrupt):
                     cont_choice = "2"
                 if cont_choice == "2":
                     self.ui.log("   🛑 사용자 요청으로 파이프라인을 중단합니다.")
                     break
+
+                # 다음 배치 크기 입력
+                default_next = min(remaining, 3)
+                target_count = self._get_int_input(
+                    f"   👉 추가로 몇 개 Arc? (1~{remaining}, 기본: {default_next}): ",
+                    default=default_next,
+                    min_val=1,
+                    max_val=remaining,
+                )
+                if target_count is None:
+                    target_count = default_next
+                continue  # while 루프 다음 배치
+            # for 루프가 break로 종료됨 — 전체 중단
+            break
 
         # ─── 4. 최종 보고 ───
         final_arcs = self.current_project.db.load_anchor("arcs") or []

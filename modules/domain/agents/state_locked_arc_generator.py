@@ -389,7 +389,7 @@ class StateLockedArcGenerator(BaseAgent):
                 try:  # [V70] try/finally로 모델 복원 보장
                     self.primary_model = self.draft_model
 
-                    draft_response = self.ask(prompt, temperature=0.8)
+                    draft_response = self.ask(prompt, temperature=0.8, thinking_level="low")
 
                     if isinstance(draft_response, dict):
                         draft = draft_response.get("text", str(draft_response))
@@ -452,7 +452,7 @@ class StateLockedArcGenerator(BaseAgent):
             old_model = self.primary_model
             try:  # [V70] 예외 시 primary_model 복원 보장
                 self.primary_model = self.extraction_model
-                response = self.ask(prompt, temperature=0.1)
+                response = self.ask(prompt, temperature=0.1, thinking_level="low")
             finally:
                 self.primary_model = old_model
 

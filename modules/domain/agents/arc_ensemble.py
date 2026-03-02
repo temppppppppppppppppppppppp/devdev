@@ -54,20 +54,25 @@ _WUXIA_ENERGY_BLOCK = """\
   - 종료 상태: 위치, 내공%, 부상, 획득/소모 아이템
   - ⚠️ 내공이 화를 넘기며 계속 떨어지는 패턴은 REJECT 사유임"""
 
-_NON_WUXIA_ENERGY_BLOCK = """\
+
+def _build_non_wuxia_energy_block(genre: str, critical_keys: list[str] | None = None) -> str:
+    """비무협 장르용 에너지 시스템 블록 동적 생성."""
+    _ck = critical_keys or []
+    _sc_field = build_state_constraints_schema(genre, _ck)
+    # 장르 핵심 수치 라벨 추출 (예: "capital"→"자본금")
+    _key_label = _sc_field.split(":")[0].strip().strip('"') if ":" in _sc_field else "핵심 수치"
+    _desc = _sc_field.split(":", 1)[1].strip().strip('"') if ":" in _sc_field else "현재 상태"
+    return f"""\
   ### [V62.2] 🩹 주인공 자연 회복 원칙
   - 주인공은 소설 주인공이다. 절대 약해지지 않는다.
   - 아크 시작: 부상="없음". 예외 없음.
-  - 부상: Arc 내 일시적 피로/타박 허용, 다음 화면 회복됨. 만성화 금지.
-  - ⚠️ 이 장르는 내공/기력 시스템이 없음. tactical_doc에 "내공 소모" 표현 절대 금지.
-  - arc_end_state: injuries="없음", internal_energy=0 (해당없음)
-  - status_shadow: expected_injuries="없음", internal_energy_loss="해당없음"
+  - ⚠️ 이 장르는 내공/기력 시스템이 없음. "내공" 표현 절대 금지.
 
   ### [V60.40] 화간 상태 체크포인트 필수
   각 화는 반드시 시작 상태와 종료 상태를 명시하라:
-  - 시작 상태: 위치, 부상, 소지품 (이전 화 종료 상태 기반)
-  - 종료 상태: 위치, 부상, 획득/소모 아이템
-  - ⚠️ internal_energy 필드: 0으로 고정 (이 장르 해당없음)"""
+  - 시작 상태: 위치, {_key_label}({_desc}), 부상, 소지품
+  - 종료 상태: 위치, {_key_label}({_desc}), 부상, 획득/소모 아이템
+  - ⚠️ "내공", "기력", "내력" 등 무협 용어 사용 시 REJECT"""
 
 
 # 다양한 생성 전략
@@ -509,7 +514,7 @@ class ArcEnsembleGenerator(BaseAgent):
                 assets=self._escape_braces(json.dumps(assets, ensure_ascii=False)[:6000] if assets else "{}"),
                 feedback=self._escape_braces(_merged_feedback[:9000] if _merged_feedback else "(없음)"),
                 entity_registry_section=self._escape_braces(entity_registry_section),  # [V60.92]
-                energy_system_block=self._escape_braces(self._get_energy_system_block(genre)),
+                energy_system_block=self._escape_braces(self._get_energy_system_block(genre, _ck)),
                 state_constraints_genre_field=_sc_genre_field,
                 status_shadow_schema=_ss_schema,
                 arc_no=arc_no,
@@ -540,7 +545,7 @@ class ArcEnsembleGenerator(BaseAgent):
                     ),  # [TF-46] 2K→4K
                     feedback=self._escape_braces(_merged_feedback[:9000] if _merged_feedback else "(없음)"),
                     entity_registry_section=self._escape_braces(entity_registry_section),  # [V60.92]
-                    energy_system_block=self._escape_braces(self._get_energy_system_block(genre)),
+                    energy_system_block=self._escape_braces(self._get_energy_system_block(genre, _ck)),
                     state_constraints_genre_field=_sc_genre_field,
                     status_shadow_schema=_ss_schema,
                     arc_no=arc_no,
@@ -710,10 +715,14 @@ class ArcEnsembleGenerator(BaseAgent):
 
         if "status_shadow" not in result:
             result["status_shadow"] = {
-                "internal_energy_loss": "0%",
+                "key_stat_change": "변동 없음",
                 "expected_injuries": "없음",
                 "item_consumption": [],
             }
+        # backward-compat: 기존 소비자가 internal_energy_loss를 읽으므로 key_stat_change에서 복사
+        _ss = result["status_shadow"]
+        if "key_stat_change" in _ss and "internal_energy_loss" not in _ss:
+            _ss["internal_energy_loss"] = _ss["key_stat_change"]
 
         # [V61] state_changes 필드 보장
         if "state_changes" not in result:
@@ -825,11 +834,11 @@ class ArcEnsembleGenerator(BaseAgent):
     # [V61.5] _escape_braces 오버라이드 제거 → BaseAgent의 이중 이스케이프 방지 로직 사용
 
     @staticmethod
-    def _get_energy_system_block(genre: str) -> str:
+    def _get_energy_system_block(genre: str, critical_keys: list[str] | None = None) -> str:
         """장르별 에너지(내공) 시스템 규칙 블록. 무협만 내공 규칙 포함."""
         if genre in ("wuxia", "무협"):
             return _WUXIA_ENERGY_BLOCK
-        return _NON_WUXIA_ENERGY_BLOCK
+        return _build_non_wuxia_energy_block(genre, critical_keys)
 
     def _format_entity_registry(self, entity_registry: dict) -> str:
         """

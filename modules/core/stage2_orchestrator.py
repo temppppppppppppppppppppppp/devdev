@@ -245,10 +245,16 @@ class Stage2Orchestrator:
                     self.ctx.ui.log(f"      🧠 [V60.10] StateExtractor: {len(all_refined_arcs)}개 Arc 상태 추출 완료")
 
                 # A. [병렬 농축 단계]
+                _enrich_done = 0
+                _enrich_total = batch_end - batch_start
+
                 async def throttled_enrich(idx):
+                    nonlocal _enrich_done
                     async with sem:
                         prev_b = arcs_source[idx - 1] if idx > 0 else None
                         curr_b = arcs_source[idx]
+                        _bid = curr_b.get("block_id", f"Block {idx + 1}")
+                        self.ctx.ui.log(f"      🔄 [Enrich] {_bid} 농축 시작...")
                         next_b_safe = (
                             {
                                 "block_id": arcs_source[idx + 1].get("block_id", f"Block {idx + 2}"),
@@ -257,13 +263,26 @@ class Stage2Orchestrator:
                             if idx < total_count - 1
                             else {"title": "최종 블록"}
                         )
-                        return await self.ctx.agents["analyst"].enrich_raw_block_async(
+                        _result = await self.ctx.agents["analyst"].enrich_raw_block_async(
                             curr_b, prev_b, next_b_safe, [], transfused_history=last_refined_context
                         )
+                        _enrich_done += 1
+                        spinner.update_detail(
+                            f"Batch {batch_start + 1}~{batch_end} LLM 농축 ({_enrich_done}/{_enrich_total})"
+                        )
+                        self.ctx.ui.log(f"      ✅ [Enrich] {_bid} 농축 완료 ({_enrich_done}/{_enrich_total})")
+                        return _result
 
                 enrichment_tasks = [throttled_enrich(i) for i in range(batch_start, batch_end)]
-                spinner.update_detail(f"Batch {batch_start + 1}~{batch_end} LLM 농축 중...")
+                spinner.update_detail(f"Batch {batch_start + 1}~{batch_end} LLM 농축 중 (0/{_enrich_total})...")
+                import time as _time_mod
+
+                _enrich_phase_t0 = _time_mod.time()
                 enriched_batch = await asyncio.gather(*enrichment_tasks, return_exceptions=True)
+                _enrich_phase_elapsed = _time_mod.time() - _enrich_phase_t0
+                self.ctx.ui.log(
+                    f"      📊 [Enrich Phase] Batch {batch_start + 1}~{batch_end} 전체 농축 완료: {_enrich_phase_elapsed:.1f}s ({_enrich_total}건)"
+                )
 
             # [안전성 패치] 실패한 항목에 대한 재시도 메커니즘
             indexed_batch = []

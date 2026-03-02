@@ -20,7 +20,13 @@ import os
 import re
 
 from modules.core.constants import GenreTypes, HUDKeys, RetryLimits
-from modules.core.genre_schema_builder import build_status_shadow_schema, get_genre_role_title
+from modules.core.genre_schema_builder import (
+    build_state_constraints_schema,
+    build_status_shadow_schema,
+    get_genre_label,
+    get_genre_role_title,
+    is_wuxia,
+)
 
 # [V65] 프롬프트 외부화
 from .analyst_prompt_api import (
@@ -143,7 +149,7 @@ class Analyst(BaseAgent):
             if world_origin not in prompt and incarnation_type not in prompt:
                 prompt = f"{prompt}\n\n[PROTAGONIST_CONFIG]\n{protagonist_config_text}"
 
-        response = self.ask(prompt, temperature=0.7)
+        response = self.ask(prompt, temperature=0.7, thinking_level="low")
         # [V60.2] DEBUG → 조건부 로깅 (프로덕션에서는 비활성화)
         if os.getenv("DEBUG_MODE", "").lower() == "true":
             logging.warning(f"\n--- [Vol {vol_no} AI Raw Response] ---\n{response[:500]}...\n")
@@ -671,6 +677,14 @@ class Analyst(BaseAgent):
                 hud_context = f"(HUD 로드 오류: {str(e)[:50]})"
 
         # 4. 공통 데이터셋 조립 (데이터 이스케이프 적용)
+        # 장르별 에너지/상태 플레이스홀더 생성
+        _ck_analyst: list[str] = []
+        try:
+            if hasattr(self.context, "sys") and hasattr(self.context.sys, "hud") and self.context.sys.hud:
+                _ck_analyst = self.context.sys.hud.get_critical_keys()
+        except Exception:
+            pass
+        _genre_placeholders = self._build_genre_placeholders(current_genre, _ck_analyst)
         safe_data = {
             "genre_prompt": self.context.guard.get_v20_purism_prompt(),
             "protagonist_name": protagonist_name,  # V42 LOCK
@@ -689,6 +703,7 @@ class Analyst(BaseAgent):
             "assets": self._escape_braces(json.dumps(assets, ensure_ascii=False)) if assets else "{}",
             "full_roadmap": self._escape_braces(full_roadmap),
             "protagonist_hud_state": self._escape_braces(hud_context) if hud_context else "",  # [V60.95] 고밀도 HUD
+            **_genre_placeholders,
         }
 
         # 5. [V65] 설계 및 자기 비판 루프 — retry_with_feedback 래퍼 적용
@@ -771,7 +786,9 @@ class Analyst(BaseAgent):
                 # [V49.7] 온도 점진적 상향: 0.5 → 0.6 → 0.7 (재시도 시 창의적 접근 유도)
                 schema = ARC_DESIGN_SCHEMA if SCHEMA_ENABLED else None
                 temp = 0.5 if attempt == 0 else (0.6 if attempt == 1 else 0.7)
-                draft_result = self._extract_json_robust(self.ask(prompt, temperature=temp, response_schema=schema))
+                draft_result = self._extract_json_robust(
+                    self.ask(prompt, temperature=temp, response_schema=schema, thinking_level="medium")
+                )
 
             # 7. [V60.31] 가변 페이싱: LLM이 결정한 ep_count 존중 (3~7 범위 내)
             llm_ep_count = draft_result.get("ep_count")
@@ -841,7 +858,7 @@ class Analyst(BaseAgent):
             critic_input = (
                 f"{get_analyst_self_critic_prompt()}\n[Draft to Review]: {json.dumps(draft_result, ensure_ascii=False)}"
             )
-            audit_result = self._extract_json_robust(self.ask(critic_input, temperature=0.2))
+            audit_result = self._extract_json_robust(self.ask(critic_input, temperature=0.2, thinking_level="low"))
             return audit_result
 
         def _arc_on_success(audit_result) -> bool:
@@ -1091,7 +1108,7 @@ class Analyst(BaseAgent):
             draft_data=self._escape_braces(compact_draft), treatment_data=self._escape_braces(treatment_content[:50000])
         )
 
-        response = self.ask(prompt, temperature=0.3)
+        response = self.ask(prompt, temperature=0.3, thinking_level="low")
         return self._extract_json_robust(response)
 
     # endregion
@@ -1108,7 +1125,7 @@ class Analyst(BaseAgent):
             roadmap_info=self._escape_braces(json.dumps(roadmap_data, ensure_ascii=False)),
         )
 
-        response = self.ask(prompt, temperature=0.5)
+        response = self.ask(prompt, temperature=0.5, thinking_level="low")
         return self._extract_json_robust(response)
 
     def plan_batch_arcs_v25(self, batch_no, vol_strategy, blueprint_str, prev_context, assets):
@@ -1169,21 +1186,76 @@ class Analyst(BaseAgent):
 
         # 4. 실행 루틴
         loop = asyncio.get_running_loop()
+        _block_id = raw_block.get("block_id", "?")
+        # [Diag] 프롬프트 구성요소 크기 분해
+        print(
+            f"      📐 [Enrich] Block {_block_id} 프롬프트 구성: curr={len(safe_curr)}자 prev={len(effective_prev)}자 next={len(safe_next)}자 seeds={len(safe_seeds)}자 total_prompt={len(prompt)}자"
+        )
         try:
+            import time as _time
+
+            _t0 = _time.time()
+            print(f"      ⏳ [Enrich] Block {_block_id} LLM 호출 (model={self.primary_model}, prompt={len(prompt)}자)")
+            logging.info(
+                "[Enrich] Block %s 농축 시작 (model=%s, prompt=%d자)", _block_id, self.primary_model, len(prompt)
+            )
             raw_res = await loop.run_in_executor(None, lambda: self.ask(prompt, temperature=0.3))
+            _elapsed = _time.time() - _t0
+            print(
+                f"      ✅ [Enrich] Block {_block_id} 완료 ({_elapsed:.1f}s, model={self.primary_model}, 응답={len(raw_res or '')}자)"
+            )
+            logging.info(
+                "[Enrich] Block %s 농축 완료 (model=%s, %.1fs, 응답=%d자)",
+                _block_id,
+                self.primary_model,
+                _elapsed,
+                len(raw_res or ""),
+            )
             enriched_result = self._extract_json_robust(raw_res)
 
-            # 메타데이터 보존 가드
-            if "block_id" not in enriched_result:
-                enriched_result["block_id"] = raw_block.get("block_id")
-            if "title" not in enriched_result:
-                enriched_result["title"] = raw_block.get("title")
+            # [Obs-Fix] 원본 보존 — LLM 출력에서 신규 필드(joint_docs, status_shadow 등)만 추가
+            merged = dict(raw_block)
+            for k, v in enriched_result.items():
+                if k not in merged:
+                    merged[k] = v
 
-            return enriched_result
+            # [Obs] 농축 결과 파일 로그
+            self._dump_enrich_log(_block_id, self.primary_model, _elapsed, raw_block, merged)
+
+            return merged
 
         except Exception as e:
             logging.warning(f"🚨 [Enrich Critical Error] {e}")
             return raw_block  # 실패 시 원본 DNA 반환
+
+    @staticmethod
+    def _dump_enrich_log(block_id, model, elapsed, raw_input, enriched_output):
+        """[Obs] 농축 전후 결과를 logs/enrich/ 에 JSON 덤프."""
+        try:
+            import datetime
+            from pathlib import Path
+
+            log_dir = Path(__file__).resolve().parents[3] / "logs" / "enrich"
+            log_dir.mkdir(parents=True, exist_ok=True)
+            ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            safe_id = str(block_id).replace("/", "_").replace("\\", "_")[:30]
+            log_path = log_dir / f"enrich_{safe_id}_{ts}.json"
+            log_path.write_text(
+                json.dumps(
+                    {
+                        "block_id": block_id,
+                        "model": model,
+                        "elapsed_s": round(elapsed, 1),
+                        "input": raw_input,
+                        "output": enriched_output,
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+        except Exception as _e:
+            logging.debug("[Enrich] 로그 덤프 실패 (비치명): %s", _e)
 
     def analyze_context(self, mode="GENERAL", **kwargs) -> dict:
         """
@@ -1226,7 +1298,7 @@ class Analyst(BaseAgent):
                 feedback=feedback,
             )
             # 3-pro급 모델 호출 (안정적인 수술을 위해 온도를 낮춤)
-            raw_response = self.ask(surgery_prompt, temperature=0.3)
+            raw_response = self.ask(surgery_prompt, temperature=0.3, thinking_level="medium")
 
             # BaseAgent의 강건한 파싱 엔진 활용
             reconstructed_arc = self._extract_json_robust(raw_response)
@@ -1307,7 +1379,7 @@ class Analyst(BaseAgent):
             current_hud_json=json.dumps(current_hud, ensure_ascii=False),
             arc_tactical=arc_tactical,
         )
-        res = self.ask(calibration_prompt, temperature=0.3)
+        res = self.ask(calibration_prompt, temperature=0.3, thinking_level="low")
         return self._extract_json_robust(res)
 
     def stitch_joints(self, joint_a, joint_b, context_b):
@@ -1318,7 +1390,7 @@ class Analyst(BaseAgent):
         )
 
         # 용접은 정밀도가 중요하므로 온도를 0.1로 고정
-        raw_res = self.ask(prompt, temperature=0.1)
+        raw_res = self.ask(prompt, temperature=0.1, thinking_level="low")
         return self._extract_json_robust(raw_res)
 
     def get_lack_report(self, martial_hud) -> dict:
@@ -1416,6 +1488,54 @@ class Analyst(BaseAgent):
         except Exception as e:
             logging.warning(f"⚠️ [Analyst] 장르 감지 실패: {e}")
         return GenreTypes.WUXIA
+
+    @staticmethod
+    def _build_genre_placeholders(genre: str, critical_keys: list[str]) -> dict[str, str]:
+        """장르별 프롬프트 플레이스홀더 생성 — 무협은 기존 텍스트, 비무협은 동적 생성."""
+        if is_wuxia(genre):
+            return {
+                "energy_tracking_rules": (
+                    "### 🔢 2-2. 내공 상태 누적 계산 규칙 (V49.6 NEW)\n"
+                    "**내공은 Arc를 넘어 누적된다. 다음 공식을 반드시 준수하라:**\n\n"
+                    "- Arc N 시작 내공 = Arc N-1 종료 내공\n"
+                    "- Arc N 종료 내공 = Arc N 시작 내공 - (이번 Arc에서 소모한 내공)\n\n"
+                    "**예시 계산:**\n"
+                    "- Arc 1: 시작 100% → 소모 30% → 종료 70%\n"
+                    "- Arc 2: 시작 70% (Arc 1 종료값 그대로!) → 소모 20% → 종료 50%\n"
+                    "- Arc 3: 시작 50% → 회복 +30% (치료/운기조식) → 종료 80%\n\n"
+                    "**🚨 CRITICAL 위반 사례:**\n"
+                    "❌ Arc 1 종료 내공 70%인데 → Arc 2 시작을 100%로 설정 (리셋 금지)\n"
+                    '❌ Arc 2에서 "내공 20% 소모"라고 했는데 → 종료 내공을 "50%"가 아닌 다른 값으로 기록\n'
+                    '❌ Arc 2 시작 내공 70%인데 → "80% 소모"하여 음수 내공 발생\n\n'
+                    "**회복 가능 조건 (명시적 서사 근거 필수):**\n"
+                    "- 운기조식 장면 (최소 반나절~하루 필요, 최대 +20~30%)\n"
+                    "- 영약/단약 복용 (아이템 소모 필수 기록)\n"
+                    "- 비급/심법 수련 (최소 며칠~일주일 필요)"
+                ),
+                "state_constraints_genre_field": '"internal_energy": "내공 상태 (%)"',
+                "episode_state_label": "내공",
+                "energy_stat_name": "내공/기력",
+                "npc_energy_field": '"internal_energy": "내공 수치",',
+            }
+        # 비무협 장르
+        _label = get_genre_label(genre)
+        _sc_field = build_state_constraints_schema(genre, critical_keys)
+        return {
+            "energy_tracking_rules": (
+                f"### 🔢 2-2. 핵심 수치 누적 추적 규칙\n"
+                f"**핵심 수치는 Arc를 넘어 누적된다. 다음 원칙을 반드시 준수하라:**\n\n"
+                f"- Arc N 시작 수치 = Arc N-1 종료 수치\n"
+                f"- Arc N 종료 수치 = Arc N 시작 수치 ± (이번 Arc에서의 변동)\n\n"
+                f"**🚨 CRITICAL 위반 사례:**\n"
+                f"❌ 이전 Arc 종료 수치를 무시하고 리셋하는 것\n"
+                f"❌ 변동량 계산이 산술적으로 맞지 않는 것\n\n"
+                f"⚠️ 이 장르({_label})는 내공/기력 시스템이 없음. '내공' 표현 절대 금지."
+            ),
+            "state_constraints_genre_field": _sc_field,
+            "episode_state_label": _label + " 핵심 수치",
+            "energy_stat_name": _label + " 핵심 수치",
+            "npc_energy_field": f'"{_sc_field.split(":")[0].strip().strip(chr(34))}": "{_label} 핵심 수치",',
+        }
 
     def _get_genre_library_path(self, genre: str):
         """

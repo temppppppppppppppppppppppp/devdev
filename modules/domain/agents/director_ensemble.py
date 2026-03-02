@@ -983,7 +983,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
 }}
 """
 
-        response = self._d.ask(prompt, temperature=0.1)
+        response = self._d.ask(prompt, temperature=0.1, thinking_level="low")
         result = self._d._extract_json_robust(response)
 
         if not result or result.get("parsing_error"):

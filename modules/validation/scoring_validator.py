@@ -256,7 +256,9 @@ Step 6: Article 7 (독자 대리만족) 분석
             config = types.GenerateContentConfig(
                 temperature=0.3,
                 response_mime_type="application/json",
-                http_options=types.HttpOptions(timeout=max(10, timeout_seconds)),  # [TF-1] Gemini 최소 10초
+                http_options=types.HttpOptions(
+                    timeout=max(10_000, timeout_seconds * 1000)
+                ),  # [TF-1] ms 단위, Gemini 최소 10초
             )
 
             response = self.client.models.generate_content(model=self.model, contents=prompt, config=config)

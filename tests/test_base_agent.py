@@ -514,7 +514,7 @@ class TestTimeoutAndPromptGate:
         _ = agent.ask("짧은 프롬프트")
         config = agent.client.models.generate_content.call_args.kwargs["config"]
         assert config.http_options is not None
-        assert config.http_options.timeout == int(agent.API_TIMEOUT)
+        assert config.http_options.timeout == int(agent.API_TIMEOUT) * 1000
 
     def test_cached_context_call_injects_http_options_timeout(self, agent, monkeypatch):
         # [TF-44] Gemini API 무한 hang 방지 — cached context http_options timeout 주입 검증
@@ -526,7 +526,7 @@ class TestTimeoutAndPromptGate:
         _ = agent._ask_with_cached_context(cache_name="cached/ctx", prompt="테스트")
         config = agent.client.models.generate_content.call_args.kwargs["config"]
         assert config.http_options is not None
-        assert config.http_options.timeout == int(agent.API_TIMEOUT)
+        assert config.http_options.timeout == int(agent.API_TIMEOUT) * 1000
 
     def test_prompt_size_gate_truncates(self, agent):
         agent.MAX_CONTEXT_CHARS = 140

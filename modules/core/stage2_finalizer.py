@@ -158,6 +158,7 @@ class Stage2Finalizer:
             )
         except (RuntimeError, OSError, ValueError) as _dir_err:
             logging.warning(f"[G7] Director 심사 호출 실패: {_dir_err!s:.100}")
+            self.ctx.ui.log("      ⚠️ [Director] 심사 호출 실패 — 폴백 REJECT")
             audit = {
                 "decision": "REJECT",
                 "score": 50,

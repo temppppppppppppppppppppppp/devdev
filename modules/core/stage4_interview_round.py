@@ -349,6 +349,7 @@ class Stage4InterviewRound:
             logging.warning(f"⚠️ [V66.2] 파괴 엔티티 검사 오류: {_de_err}")
 
         # [SC-5] Director 벡터 메모리 컨텍스트 조립 (후보 공통 1회)
+        print("      ⏳ [SC-5] Director 벡터 메모리 수집 중...")
         _director_memory_context = ""
         _sc5_perf_key = f"sc_director_ep{next_ep}_retrieval"
         try:
@@ -448,6 +449,7 @@ class Stage4InterviewRound:
                     if _budget > 0 and len(_director_memory_context) > _budget:
                         _director_memory_context = _director_memory_context[:_budget]
                     logging.info(f"[SC-5] Director 벡터 메모리 {len(_mem_parts)}건, {len(_director_memory_context)}자")
+                    print(f"      ✅ [SC-5] {len(_mem_parts)}건 수집 완료")
                     _use_advisor_path = True
             if not _use_advisor_path:
                 _director_memory_context = ""
@@ -1638,6 +1640,7 @@ class Stage4InterviewRound:
 
         logging.debug("Advisory 검증 시작 (TruthGate, NPC, 수치, 회상, 관계)")
         # [Phase4-Gate] TruthGate advisory — 후보 원고별 실행, Python blocking 없음
+        print("      ⏳ [TruthGate] 사실 검증 중...")
         try:
             from modules.core.truth_gate import TruthGate as _TruthGate
 
@@ -1676,6 +1679,7 @@ class Stage4InterviewRound:
             logging.warning("[Phase4-Gate] TruthGate advisory 실패 (비치명): %s", str(_tg_err)[:80])
 
         # [LM-B] NpcDriftAdvisor — 원고 내 NPC 속성 표류 advisory
+        print("      ⏳ [NpcDrift] NPC 표류 검사 중...")
         try:
             from modules.core.npc_drift_advisor import NpcDriftAdvisor as _NpcDriftAdvisor
 
@@ -1716,6 +1720,7 @@ class Stage4InterviewRound:
             logging.warning("[LM-B] NpcDriftAdvisor 실패 (비치명): %s", str(_drift_err)[:80])
 
         # [LM-C] NumericDriftAdvisor — 5화 단위 수치 누적 표류 advisory
+        print("      ⏳ [NumericDrift] 수치 표류 검사 중...")
         if next_ep % 5 == 0:
             try:
                 from modules.core.numeric_drift_advisor import NumericDriftAdvisor as _NumDriftAdvisor
@@ -1737,6 +1742,7 @@ class Stage4InterviewRound:
                 logging.warning("[LM-C] NumericDriftAdvisor 실패 (비치명): %s", str(_nd_err)[:80])
 
         # [LM-E] FlashbackVerifier — 회상/플래시백 오염 advisory
+        print("      ⏳ [Flashback] 회상 오염 검사 중...")
         try:
             from modules.core.flashback_verifier import FlashbackVerifier as _FbVerifier
 
@@ -1755,6 +1761,8 @@ class Stage4InterviewRound:
                 _ms_snippets = ""
                 if _mem and hasattr(_mem, "retrieve_high_res_context"):
                     _fb_queries = [fb["text"][:200] for fb in _flashbacks[:3]]
+                    _cand_label = ["A", "B", "C"][_ci] if _ci < 3 else str(_ci + 1)
+                    print(f"      🔍 [Flashback] 후보 {_cand_label} 회상 검증 ({len(_fb_queries)}건)...")
                     _ref_parts = []
                     _seen_eps: set[int] = set()
                     for _q in _fb_queries:
@@ -1801,6 +1809,7 @@ class Stage4InterviewRound:
             logging.warning("[LM-E] FlashbackVerifier 실패 (비치명): %s", str(_fb_err)[:80])
 
         # [LM-F] InfoParadoxChecker — 정보 역설 advisory (1인칭 전용)
+        print("      ⏳ [InfoParadox] 정보 역설 검사 중...")
         try:
             _mb = getattr(self.ctx.current_project, "master_bible", None) or {}
             _mb_root = _mb.get("MasterBible", _mb)
@@ -1851,6 +1860,7 @@ class Stage4InterviewRound:
             logging.warning("[LM-F] InfoParadoxChecker 실패 (비치명): %s", str(_ip_err)[:80])
 
         # [LM-D] RelationshipDriftAdvisor — 관계도 장기 표류 advisory
+        print("      ⏳ [RelDrift] 관계 표류 검사 중...")
         try:
             if next_ep >= 5:
                 _db = getattr(self.ctx.current_project, "db", None)
@@ -1893,6 +1903,7 @@ class Stage4InterviewRound:
             logging.warning("[LM-D] RelationshipDriftAdvisor 실패 (비치명): %s", str(_rd_err)[:80])
 
         # [P1-5] LongTermRepetitionAdvisor — 20화 이상에서 장기 반복 패턴 감지
+        print("      ⏳ [LongTermRep] 장기 반복 검사 중...")
         try:
             if next_ep >= 20:
                 from modules.core.long_term_repetition_advisor import LongTermRepetitionAdvisor as _LtrAdvisor

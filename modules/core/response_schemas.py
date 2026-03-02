@@ -307,9 +307,62 @@ ARC_DESIGN_SCHEMA = types.Schema(
         "status_shadow": types.Schema(
             type=types.Type.OBJECT,
             properties={
-                "internal_energy_loss": types.Schema(type=types.Type.STRING),
+                "key_stat_change": types.Schema(type=types.Type.STRING, description="핵심 수치 변동"),
                 "expected_injuries": types.Schema(type=types.Type.STRING),
                 "item_consumption": types.Schema(type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)),
+            },
+        ),
+        # state_changes — 선택 필드 (LLM이 반환 안 하면 Python fallback)
+        "state_changes": types.Schema(
+            type=types.Type.OBJECT,
+            properties={
+                "timeline": types.Schema(
+                    type=types.Type.OBJECT,
+                    properties={
+                        "start": types.Schema(type=types.Type.STRING, description="Arc 시작 시점"),
+                        "end": types.Schema(type=types.Type.STRING, description="Arc 종료 시점"),
+                    },
+                ),
+                "relationship_changes": types.Schema(
+                    type=types.Type.ARRAY,
+                    items=types.Schema(
+                        type=types.Type.OBJECT,
+                        properties={
+                            "npc": types.Schema(type=types.Type.STRING),
+                            "from": types.Schema(type=types.Type.STRING),
+                            "to": types.Schema(type=types.Type.STRING),
+                            "episode": types.Schema(type=types.Type.INTEGER),
+                        },
+                        required=["npc", "from", "to"],
+                    ),
+                ),
+                "major_items": types.Schema(
+                    type=types.Type.ARRAY,
+                    items=types.Schema(
+                        type=types.Type.OBJECT,
+                        properties={
+                            "name": types.Schema(type=types.Type.STRING),
+                            "episode": types.Schema(type=types.Type.INTEGER),
+                            "action": types.Schema(type=types.Type.STRING),
+                        },
+                        required=["name", "action"],
+                    ),
+                ),
+                "npc_deaths": types.Schema(
+                    type=types.Type.ARRAY,
+                    items=types.Schema(type=types.Type.STRING),
+                ),
+                "npc_introductions": types.Schema(
+                    type=types.Type.ARRAY,
+                    items=types.Schema(
+                        type=types.Type.OBJECT,
+                        properties={
+                            "name": types.Schema(type=types.Type.STRING),
+                            "episode": types.Schema(type=types.Type.INTEGER),
+                        },
+                        required=["name"],
+                    ),
+                ),
             },
         ),
         # [TF10-1-2] 화별 사건 인덱스 (선택 필드 — required에 추가하지 않음)

@@ -1015,4 +1015,7 @@ class WorldStateManager:
 
     def get_cumulative_elapsed(self) -> dict:
         """누적 경과 시간 조회. {"total_days": int, "history": [{"ep", "days", "desc"}]}"""
-        return self._state.get("cumulative_elapsed", {"total_days": 0, "history": []})
+        import copy
+
+        _raw = self._state.get("cumulative_elapsed", {"total_days": 0, "history": []})
+        return copy.deepcopy(_raw)

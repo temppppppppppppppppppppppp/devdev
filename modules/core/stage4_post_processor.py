@@ -264,6 +264,9 @@ class Stage4PostProcessor:
             pass
         try:
             with _db._lock:
+                # 이전 경로(InPlace 등)에서 열린 암시적 트랜잭션 정리
+                if _db.conn.in_transaction:
+                    _db.conn.commit()
                 _db.conn.execute("BEGIN")
                 try:
                     _db.save_manuscript(

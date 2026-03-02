@@ -678,7 +678,9 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             )
 
         try:
-            response = self.ensemble.ask(prompt, temperature=0.3, response_schema=BLUEPRINT_SCHEMA)
+            response = self.ensemble.ask(
+                prompt, temperature=0.3, response_schema=BLUEPRINT_SCHEMA, thinking_level="medium"
+            )
             result = self.ensemble._extract_json_robust(response)
             if not isinstance(result, dict):
                 return None

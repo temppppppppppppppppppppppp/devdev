@@ -801,7 +801,7 @@ class ChiefWriter(BaseAgent):
             )
 
         try:
-            response = self.ask(prompt, temperature=0.3)
+            response = self.ask(prompt, temperature=0.3, thinking_level="medium")
             if not response or len(response) < 2000:
                 logging.warning(f"[TF-23] InPlace 응답 길이 부족: {len(response or '')}자 < 2000자")
                 return []
