@@ -84,13 +84,13 @@ ENSEMBLE_ARC_PROMPT: |
               "location": "시작 위치 (이전 Arc 종료 위치와 동일해야 함)",
               "equipment": ["소지품 (이전 Arc 종료 시 소지품과 동일)"],
               "injuries": "부상 상태 (이전 Arc 부상 계승)",
-              "internal_energy": 내공_퍼센트
+              {state_constraints_genre_field}
           }},
           "arc_end_state": {{
               "location": "종료 위치",
               "equipment": ["종료 시 소지품"],
               "injuries": "종료 시 부상",
-              "internal_energy": 내공_퍼센트
+              {state_constraints_genre_field}
           }},
           "items_acquired": ["새로 획득 아이템 (이전에 없던 것만)"],
           "items_consumed": ["소모 아이템"],
@@ -101,11 +101,7 @@ ENSEMBLE_ARC_PROMPT: |
           "physical_inventory": ["종료 시 소지품 전체 목록"],
           "world_joint": "다음 Arc가 계승할 세계 변화"
       }},
-      "status_shadow": {{
-          "internal_energy_loss": "N%",
-          "expected_injuries": "부상 상태",
-          "item_consumption": ["소모된 아이템"]
-      }},
+  {status_shadow_schema},
       "state_changes": {{
           "timeline": {{
               "start": {{"표현": "Arc 시작 시점 (예: year, month, period 등 장르별)"}},

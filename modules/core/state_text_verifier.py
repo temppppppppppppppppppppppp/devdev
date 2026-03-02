@@ -71,12 +71,16 @@ _MANUSCRIPT_LIMIT = 8000
 class StateTextVerifier:
     """actual_truth ↔ manuscript 교차 검증기 (advisory + LLM)."""
 
-    def __init__(self, agent=None):
+    def __init__(self, agent=None, genre: str = "wuxia", critical_keys: list | None = None):
         """
         Args:
             agent: BaseAgent 인스턴스 (ask() 메서드 사용). None이면 LLM 검증 스킵.
+            genre: 장르 코드 (TF-45).
+            critical_keys: 장르별 필수 추적 키 (TF-45).
         """
         self._agent = agent
+        self._genre = genre
+        self._critical_keys = critical_keys or []
 
     def verify(self, manuscript: str, actual_truth: dict) -> dict:
         """actual_truth를 원고와 교차 검증.
@@ -92,7 +96,7 @@ class StateTextVerifier:
         if not manuscript or not actual_truth or not self._agent:
             return {"verified": True, "mismatches": [], "corrections": {}, "blocking": False}
 
-        _target = self._filter_verifiable_fields(actual_truth)
+        _target = self._filter_verifiable_fields_genre(actual_truth)
         if not _target:
             return {"verified": True, "mismatches": [], "corrections": {}, "blocking": False}
 
@@ -139,9 +143,24 @@ class StateTextVerifier:
             logger.warning("[SilentPass:V75] State-Text 검증 실패: %s", e)
             return {"verified": True, "mismatches": [], "corrections": {}, "blocking": False}
 
+    def _filter_verifiable_fields_genre(self, actual_truth: dict) -> dict:
+        """[TF-45] 장르별 검증 가능 필드 추출."""
+        # 공통 필드 + 장르별 critical_keys 합집합
+        _common = frozenset({"level", "rank", "health", "reputation", "wealth", "fame", "equipment"})
+        _effective = _common | frozenset(self._critical_keys) | _VERIFIABLE_FIELDS
+        result = {}
+        for k, v in actual_truth.items():
+            if k in _effective and v is not None:
+                result[k] = v
+            elif isinstance(v, int | float):
+                result[k] = v
+            elif isinstance(v, str) and any(c.isdigit() for c in v):
+                result[k] = v
+        return result
+
     @staticmethod
     def _filter_verifiable_fields(actual_truth: dict) -> dict:
-        """검증 가능한 필드만 추출 (수치, 상태, 장비 등)."""
+        """검증 가능한 필드만 추출 (수치, 상태, 장비 등). 하위 호환용."""
         result = {}
         for k, v in actual_truth.items():
             if k in _VERIFIABLE_FIELDS and v is not None:

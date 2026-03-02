@@ -19,6 +19,8 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
+from modules.core.genre_schema_builder import is_wuxia
+
 # [V49.4] Semantic Item Registry 통합
 try:
     from modules.core.semantic_item_registry import SemanticItemRegistry, create_item_registry
@@ -51,12 +53,14 @@ class ConstraintDB:
     중복 획득, 상태 불연속 등의 오류를 사전에 방지합니다.
     """
 
-    def __init__(self, project_context=None) -> None:
+    def __init__(self, project_context=None, genre: str = "wuxia") -> None:
         """
         Args:
             project_context: ProjectContext 객체 (DB 접근용)
+            genre: 장르 코드 (TF-45). 비무협이면 internal_energy 파싱 스킵.
         """
         self.context = project_context
+        self._genre = genre
         self.arc_states: dict[int, ArcState] = {}
 
         # [V49.4] Semantic Item Registry 초기화
@@ -157,8 +161,10 @@ class ConstraintDB:
         # 수여물 추출 (tactical_doc에서 패턴 매칭)
         grants = self._extract_grants_from_tactical(tactical_doc)
 
-        # 내공 파싱
-        internal_energy = self._parse_internal_energy(arc_end_state.get("internal_energy", 100))
+        # [TF-45] 내공 파싱 — 무협 전용
+        internal_energy = (
+            self._parse_internal_energy(arc_end_state.get("internal_energy", 100)) if is_wuxia(self._genre) else 0
+        )
 
         state = ArcState(
             arc_no=arc_no,
@@ -471,7 +477,8 @@ class ConstraintDB:
             lines.append("|  [>] 직전 Arc 종료 상태 - 이 상태에서 시작해야 함:            |")
             lines.append(f"|      위치: {prev_state.location[:49]:<49} |")
             lines.append(f"|      부상: {prev_state.injuries:<49} |")
-            lines.append(f"|      내공: {prev_state.internal_energy}%{' ':<47} |")
+            if is_wuxia(self._genre):
+                lines.append(f"|      내공: {prev_state.internal_energy}%{' ':<47} |")
 
         lines.append("+================================================================+")
         lines.append("")
@@ -580,6 +587,6 @@ class ConstraintDB:
         return {"valid": len(violations) == 0, "violations": violations, "warnings": warnings}
 
 
-def create_constraint_db(project_context) -> ConstraintDB:
+def create_constraint_db(project_context, genre: str = "wuxia") -> ConstraintDB:
     """ConstraintDB 인스턴스 생성 헬퍼"""
-    return ConstraintDB(project_context)
+    return ConstraintDB(project_context, genre=genre)

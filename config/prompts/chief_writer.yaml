@@ -5,16 +5,7 @@ PROMPT_TEMPLATE_OUTPUT: |
   {{
       "title": "에피소드 제목 (한글만)",
       "content": "5,000자 이상의 소설 본문 (줄바꿈은 \\n)",
-      "state_updates": {{
-          "internal_energy": "현재 내공 % (0-100)",
-          "realm": "경지명 또는 현상 유지",
-          "causal_injuries": "부상 상태",
-          "wealth": "현재 총 자산",
-          "misunderstanding": 0-100,
-          "obsession": 0-100,
-          "equipment": ["소지품 목록"],
-          "martial_arts": ["무공 목록"]
-      }},
+  {state_updates_schema},
       "writing_strategy": "{strategy}",
       "key_scenes_covered": ["반영한 씬 목록"]
   }}

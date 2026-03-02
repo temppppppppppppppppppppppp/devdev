@@ -1,6 +1,13 @@
 import json
 import logging
 
+from modules.core.genre_schema_builder import (
+    build_actual_truth_schema,
+    build_manager_genre_instructions,
+    build_npc_hud_schema,
+    is_wuxia,
+)
+
 from .base_agent import BaseAgent
 
 # =================================================================
@@ -112,6 +119,89 @@ UPDATE_STATE_PROMPT_V25 = """
 """
 
 
+def _build_genre_manager_prompt(
+    genre: str,
+    critical_keys: list[str],
+    ep_num: int,
+    manuscript: str,
+    current_state_json: str,
+    lore_list_json: str,
+    active_seeds_json: str,
+    causal_history: str,
+) -> str:
+    """비무협 장르용 Manager 정산 프롬프트 생성."""
+    genre_instructions = build_manager_genre_instructions(genre, critical_keys)
+    actual_truth_schema = build_actual_truth_schema(genre, critical_keys)
+    npc_hud_schema = build_npc_hud_schema(genre)
+
+    return f"""[SYSTEM CRITICAL: S-GRADE DATA ADMINISTRATOR]
+당신은 단순한 요약가가 아니라 '데이터 무결성 관리자'다.
+원고를 분석하여 다음 영역을 정밀하게 정산하라.
+
+{genre_instructions}
+
+[V45 장비(equipment) 정산 강령 - 주인공 & NPC 공통]
+1. **equipment는 현재 소지 목록 전체를 배열로 출력하라** (증분이 아님)
+2. 장비를 획득했으면: 기존 목록 + 새 장비 = 전체 목록 출력
+3. 장비를 잃어버리거나 버렸으면: 해당 장비를 제외한 나머지 목록 출력
+4. 장비를 교체했으면: 새 장비만 목록에 포함
+5. 장비에 변화가 없으면: 기존 목록 그대로 출력 (생략 금지!)
+6. 모든 장비를 잃어버렸으면: 빈 배열 [] 출력
+
+[V27.5 NPC 실시간 정산 강령]
+1. 이번 화에서 조연(NPC)에게 주요 변화가 있었는가?
+2. 만약 그렇다면 'new_lore' -> 'Key_NPCs' 리스트 내부에 해당 NPC의 이름과 HUD 객체를 포함하라.
+3. NPC가 새로운 장비를 획득하거나 잃어버렸다면 'equipment' 필드에 현재 소지 장비 목록을 기록하라.
+
+### V25 정산 핵심 지침
+1. **이중 HUD 정산 (Dual-Layer HUD)**: actual_truth(진실)와 public_reputation(인식)을 분리하라.
+2. **인식 지도(Knowledge Map) 동기화**: 진실을 아는 자와 오해하는 자를 구분하라.
+3. **자산 라이브러리 확장**: 신규 NPC와 아이템 정보를 추출하라.
+4. **복선(Seeds) 상태 관리**: 활성화된 복선의 회수 여부를 판별하라.
+
+### 출력 형식 (JSON Only - 규격 미준수 시 시스템 파기)
+{{{{
+  "context_audit": {{{{
+    "integrity_score": 0~100,
+    "summary": "핵심 사건 요약",
+    "evidence_check": "변화 근거"
+  }}}},
+  "state_updates": {{{{
+    "location": "현재 위치",
+{actual_truth_schema},
+    "public_reputation": {{{{"identity": "호칭", "perceived_power": "인식 수준"}}}},
+    "karma_matrix": [
+      {{{{"target": "NPC명", "value": 0, "obsession": 0}}}}
+    ]
+  }}}},
+  "knowledge_map_updates": {{{{"new_witnesses": [], "new_misled": []}}}},
+  "new_lore": {{{{
+    "Key_NPCs": [
+      {{{{
+        "name": "조연이름",
+        "role": "역할",
+        "desc": "성격/특징 보강",
+{npc_hud_schema}
+      }}}}
+    ],
+    "Key_Items": []
+  }}}},
+  "recovered_seeds": [
+    {{{{"seed_id": "ID", "description": "회수 근거"}}}}
+  ],
+  "causal_links": []
+}}}}
+
+### 정산 대상 데이터 (Input Data)
+- 현재 회차: 제 {ep_num}화
+- 집필된 원고 전문: {manuscript}
+- 현재 HUD 상태 (JSON): {current_state_json}
+- 활성화된 복선 목록: {active_seeds_json}
+- 관련 로어 데이터: {lore_list_json}
+- 최근 서사 요약: {causal_history}
+"""
+
+
 class Manager(BaseAgent):
     def update_state_and_lore_v20(
         self,
@@ -121,6 +211,8 @@ class Manager(BaseAgent):
         lore_list: list,
         active_seeds: list,
         causal_history: str = "",
+        genre: str = "wuxia",
+        critical_keys: list | None = None,
     ) -> dict:
         """
         [V35.9 S-Grade] 정산 데이터 파싱 및 안전 전달 엔진
@@ -135,16 +227,30 @@ class Manager(BaseAgent):
         safe_seeds = json.dumps(active_seeds, ensure_ascii=False)
         safe_history = causal_history if causal_history else "기록 없음"
 
-        # 2. 템플릿의 중괄호 충돌을 피하기 위해 직접 치환 방식 사용
-        # [CrosscutR41] {manuscript}를 맨 마지막에 치환 — 원고 내 플레이스홀더 리터럴 이중 치환 방지
-        full_prompt = (
-            UPDATE_STATE_PROMPT_V25.replace("{ep_num}", str(ep_num))
-            .replace("{current_state_json}", safe_state)
-            .replace("{active_seeds_json}", safe_seeds)
-            .replace("{lore_list_json}", safe_lore)
-            .replace("{causal_history}", safe_history)
-            .replace("{manuscript}", safe_ms)
-        )
+        # 2. [TF-45] 장르 분기: 무협은 기존 경로 100% 보존, 비무협은 새 스키마
+        if is_wuxia(genre):
+            # 기존 경로 — UPDATE_STATE_PROMPT_V25 상수 그대로 사용
+            # [CrosscutR41] {manuscript}를 맨 마지막에 치환 — 원고 내 플레이스홀더 리터럴 이중 치환 방지
+            full_prompt = (
+                UPDATE_STATE_PROMPT_V25.replace("{ep_num}", str(ep_num))
+                .replace("{current_state_json}", safe_state)
+                .replace("{active_seeds_json}", safe_seeds)
+                .replace("{lore_list_json}", safe_lore)
+                .replace("{causal_history}", safe_history)
+                .replace("{manuscript}", safe_ms)
+            )
+        else:
+            # [TF-45] 비무협 경로 — 장르별 동적 프롬프트 생성
+            full_prompt = _build_genre_manager_prompt(
+                genre=genre,
+                critical_keys=critical_keys or [],
+                ep_num=ep_num,
+                manuscript=safe_ms,
+                current_state_json=safe_state,
+                lore_list_json=safe_lore,
+                active_seeds_json=safe_seeds,
+                causal_history=safe_history,
+            )
 
         # 3. 낮은 온도로 정밀 정산 요청
         response = self.ask(full_prompt, temperature=0.1)

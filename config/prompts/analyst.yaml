@@ -102,15 +102,11 @@ ENRICH_BLOCK_PROMPT_V30: |
           "physical_inventory": "현재 손에 쥐거나 몸에 지닌 핵심 물품",
           "world_joint": "다음 아크가 즉시 계승해야 할 환경적 변화"
       }},
-      "status_shadow": {{
-          "internal_energy_loss": "예상 소모량(%)",
-          "expected_injuries": "부상 예상 부위 및 정도",
-          "item_consumption": ["사용한 소모성 아이템 목록"]
-      }}
+  {status_shadow_schema}
   }}
 
 PLAN_VOLUME_PROMPT_V25: |
-  [Role] 무협 대서사 전략가 (High-Resolution Sovereign Strategist)
+  [Role] {role_title} (High-Resolution Sovereign Strategist)
   [Task] 제 {vol_no}권(25화 분량)의 전략 보고서를 2,500자 이상의 고밀도로 설계하라.
 
   {genre_prompt}

@@ -115,7 +115,7 @@ class StateTracker:
         issues = tracker.validate_timeline()
     """
 
-    def __init__(self, preset_registry=None, llm_client=None) -> None:
+    def __init__(self, preset_registry=None, llm_client=None, genre: str = "wuxia") -> None:
         self.states: dict[int, EpisodeState] = {}  # ep_num -> state
         self.transitions: list[StateTransition] = []
         self.global_items: set[str] = set()  # 전체 소지 아이템 추적
@@ -176,6 +176,7 @@ class StateTracker:
 
         # [V60.95] PresetRegistry 연동
         self.preset_registry = preset_registry
+        self._genre = genre  # [TF-45]
         self._init_tracking_fields()
 
         # [V64.P3] 서브모듈 초기화
@@ -265,14 +266,17 @@ class StateTracker:
             self.npc_tracking_fields = {name: copy.deepcopy(fd.default) for name, fd in npc_field_defs.items()}
         else:
             # 기본 필드 (하위 호환성)
-            self.tracking_fields = {
+            _fallback = {
                 "location": "",
                 "weapons": [],
                 "items": [],
                 "injuries": "정상",
-                "internal_energy": 100,
                 "relationships": {},
             }
+            # [TF-45] internal_energy는 무협 전용
+            if self._genre in ("wuxia", "무협", ""):
+                _fallback["internal_energy"] = 100
+            self.tracking_fields = _fallback
             self.npc_tracking_fields = {
                 "status": "alive",
                 "weapon": "",

@@ -19,6 +19,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FutureTimeoutError
 
 from modules.core.constants import GenreTypes, Stage2Limits
+from modules.core.genre_schema_builder import build_state_constraints_schema, build_status_shadow_schema
 from modules.core.prompt_loader import PromptLoader
 from modules.core.response_schemas import ARC_DESIGN_SCHEMA  # [TF11] response_schema 확대
 
@@ -456,6 +457,21 @@ class ArcEnsembleGenerator(BaseAgent):
             _use_cached_context = bool(cache_name)
             _cached_context_stub = "[context cached: refer to cached_content]"
 
+            # [TF-45] 장르별 스키마 필드 주입
+            _ck = []
+            try:
+                if (
+                    hasattr(self, "context")
+                    and hasattr(self.context, "sys")
+                    and hasattr(self.context.sys, "hud")
+                    and self.context.sys.hud
+                ):
+                    _ck = self.context.sys.hud.get_critical_keys()
+            except Exception:
+                pass
+            _sc_genre_field = self._escape_braces(build_state_constraints_schema(genre, _ck))
+            _ss_schema = self._escape_braces(build_status_shadow_schema(genre, _ck))
+
             prompt = self._prompt_loader.load(
                 "ensemble",
                 "ENSEMBLE_ARC_PROMPT",
@@ -479,6 +495,8 @@ class ArcEnsembleGenerator(BaseAgent):
                 feedback=self._escape_braces(_merged_feedback[:9000] if _merged_feedback else "(없음)"),
                 entity_registry_section=self._escape_braces(entity_registry_section),  # [V60.92]
                 energy_system_block=self._escape_braces(self._get_energy_system_block(genre)),
+                state_constraints_genre_field=_sc_genre_field,
+                status_shadow_schema=_ss_schema,
                 arc_no=arc_no,
                 ep_start=ep_start,
                 ep_end=ep_end,
@@ -504,6 +522,8 @@ class ArcEnsembleGenerator(BaseAgent):
                     feedback=self._escape_braces(_merged_feedback[:9000] if _merged_feedback else "(없음)"),
                     entity_registry_section=self._escape_braces(entity_registry_section),  # [V60.92]
                     energy_system_block=self._escape_braces(self._get_energy_system_block(genre)),
+                    state_constraints_genre_field=_sc_genre_field,
+                    status_shadow_schema=_ss_schema,
                     arc_no=arc_no,
                     ep_start=ep_start,
                     ep_end=ep_end,
