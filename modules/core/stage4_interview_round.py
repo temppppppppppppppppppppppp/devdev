@@ -34,8 +34,7 @@ class Stage4InterviewRound:
         round_ctx,
     ):
         """[4-R1-e-1] Single interview round: generation, validation, judgment."""
-        from modules.core.constants import PatchModeThresholds
-        from modules.core.stage4_types import _PATCH_REWRITE_THRESHOLD, _InterviewRoundResult
+        from modules.core.stage4_types import _InterviewRoundResult
         from modules.validation.threshold_helper import _threshold
 
         # [4-R2-b] Unpack round context
@@ -123,6 +122,7 @@ class Stage4InterviewRound:
 
         stage4_spinner.update_detail(f"제{next_ep}화 · {round_num + 1}차 면담 · 앙상블 생성")
         self.ctx.ui.log(f"\n🎬 [{round_num + 1}차 면담] Chief Writer 앙상블 생성 중...")
+        print(f"   🎬 [{round_num + 1}차 면담] 원고 앙상블 생성 중...")
 
         # Phase 2: Chief Writer 앙상블 생성
         # [V65] PerfTimer: 원고 생성 측정
@@ -149,121 +149,16 @@ class Stage4InterviewRound:
                 (_weighted_injection + "\n\n" + director_feedback) if director_feedback else _weighted_injection
             )
 
-        if round_num == 0:
-            candidates = chief_writer.generate_ensemble(**_common_writer_kwargs)
-        else:
-            # [TF-23] 3단계 분기: InPlace → Patch → Rewrite (Director 판단 우선)
-            try:
-                _prev_score = int(previous_attempt.get("score", 0)) if previous_attempt else 0
-            except (ValueError, TypeError):
-                _prev_score = 0
-            _fix_scope = previous_attempt.get("fix_scope", "") if previous_attempt else ""
-            _patch_enabled = bool(_threshold("feature_flags.enable_patch_mode", True))
-
-            # [TF-23] Director 판단 우선, 점수 fallback
-            _use_inplace = (
-                _patch_enabled
-                and _prev_manuscript
-                and (_fix_scope == "inplace" or (not _fix_scope and _prev_score >= PatchModeThresholds.INPLACE))
-            )
-            _use_patch = (
-                _patch_enabled
-                and _prev_manuscript
-                and (
-                    _fix_scope in ("inplace", "partial")  # inplace 실패 시 patch 폴백
-                    or (not _fix_scope and _prev_score >= _PATCH_REWRITE_THRESHOLD)
-                )
-            )
-
-            candidates = None  # [TF-23] 분기 전 초기화
-
-            # --- InPlace 시도 (LLM 1회) ---
-            if _use_inplace:
-                logging.info(f"[TF-23] InPlace 진입 (fix_scope={_fix_scope!r}, score={_prev_score})")
-                self.ctx.ui.log(f"   🔧 [TF-23] InPlace: fix_scope={_fix_scope!r}, score={_prev_score}")
-                candidates = chief_writer.inplace_patch(
-                    original_manuscript=_prev_manuscript,
-                    director_feedback=director_feedback,
-                    attempt_number=round_num + 1,
-                    style_guide=style_guide,  # [TF-37]
-                )
-                if not candidates:
-                    logging.warning("[TF-23] InPlace 실패 → Patch 폴백")
-                    self.ctx.ui.log("   ⚠️ [TF-23] InPlace 실패 → Patch 폴백")
-                    _use_inplace = False  # 폴백
-
-            # --- Patch 시도 (Ensemble) ---
-            if not candidates and _use_patch:
-                _is_patch = True
-                logging.info(f"[Phase 3-5B] 패치 모드 진입 (score={_prev_score}, round={round_num})")
-                self.ctx.ui.log(f"   🔧 [Phase 3-5B] 패치 모드: score={_prev_score}, 원본 보존 수정")
-                candidates = chief_writer.patch_with_feedback(
-                    **_common_writer_kwargs,
-                    original_manuscript=_prev_manuscript,
-                    director_feedback=director_feedback,
-                    previous_attempt=previous_attempt,
-                    attempt_number=round_num + 1,
-                )
-                if not candidates:
-                    _is_patch_fallback = True
-                    logging.warning("[Phase 3-5B] 패치 실패, full rewrite 폴백")
-                    self.ctx.ui.log("   ⚠️ [Phase 3-5B] 패치 실패 → 전면 재작성 폴백")
-                    candidates = chief_writer.regenerate_with_feedback(
-                        **_common_writer_kwargs,
-                        director_feedback=director_feedback,
-                        previous_attempt=previous_attempt,
-                        attempt_number=round_num + 1,
-                    )
-
-            # --- Rewrite (전면 재작성) ---
-            if not candidates:
-                candidates = chief_writer.regenerate_with_feedback(
-                    **_common_writer_kwargs,
-                    director_feedback=director_feedback,
-                    previous_attempt=previous_attempt,
-                    attempt_number=round_num + 1,
-                )
-
-        _asp_manuscript = None
-        _asp = self.ctx.get_module("adversarial_self_play")
-        if round_num >= 2 and _asp and previous_attempt:
-            try:
-                if _prev_manuscript:
-                    self.ctx.ui.log(f"   🔥 [ASP] 레드팀 교정 발동 (재시도 {round_num + 1}회차)")
-                    _asp_ctx = {}
-                    if blueprint:
-                        _asp_ctx["blueprint"] = blueprint
-                    if director_feedback:
-                        _asp_ctx["director_feedback"] = director_feedback
-                    _asp_result = _asp.generate_with_adversary(
-                        initial_content=_prev_manuscript,
-                        content_type="manuscript",
-                        context=_asp_ctx,
-                    )
-                    if _asp_result and hasattr(_asp_result, "final_output") and _asp_result.final_output:
-                        _asp_manuscript = _asp_result.final_output
-                        self.ctx.ui.log(
-                            f"   ✅ [ASP] 교정 완료 (delta: +{getattr(_asp_result, 'improvement_delta', '?')})"
-                        )
-            except Exception as e:
-                logging.warning(f"[SilentPass:ASP] {e!s:.200}")
-        if _asp_manuscript and candidates:
-            # [TF-25-01] ASP 후보를 4번째로 append하지 않고, 기존 3후보 중 최저 품질을 교체
-            # Director는 3후보(A/B/C) 체제이므로 4번째 후보는 dead path + IndexError 유발
-            if len(candidates) >= 3:
-                _worst_idx = 0
-                _worst_len = len(candidates[0].get("manuscript", ""))
-                for _ci in range(1, len(candidates)):
-                    _ci_len = len(candidates[_ci].get("manuscript", ""))
-                    if _ci_len < _worst_len:
-                        _worst_len = _ci_len
-                        _worst_idx = _ci
-                self.ctx.ui.log(
-                    f"   🔄 [TF-25-01] ASP 교정 후보가 기존 후보 {_worst_idx + 1}번 교체 (분량 최저 {_worst_len}자)"
-                )
-                candidates[_worst_idx] = {"manuscript": _asp_manuscript, "strategy": "asp_correction"}
-            else:
-                candidates.append({"manuscript": _asp_manuscript, "strategy": "asp_correction"})
+        candidates, _is_patch, _is_patch_fallback, _prev_score, _asp_manuscript = self._generate_candidates(
+            round_num=round_num,
+            chief_writer=chief_writer,
+            director_feedback=director_feedback,
+            previous_attempt=previous_attempt,
+            prev_manuscript=_prev_manuscript,
+            style_guide=style_guide,
+            blueprint=blueprint,
+            common_writer_kwargs=_common_writer_kwargs,
+        )
 
         # [V65] PerfTimer: 원고 생성 종료
         try:
@@ -347,207 +242,7 @@ class Stage4InterviewRound:
 
         # [V63.2] ConsistencyValidator
         try:
-            _cv_context = {
-                "mode": "MANUSCRIPT",
-                "genre": genre_name,
-                "martial_hud": {},
-                "karma_matrix": {},
-                "asset_library": {},
-                "npc_profiles": {},
-                "prev_episode_events": [],
-                "ep_num": next_ep,
-                "blueprint": blueprint if isinstance(blueprint, dict) else {},
-                "blueprint_text": str(blueprint or "")[:8000],
-            }
-            # [P1-FIX] prev_hud 주입 — ContinuityValidator 연속성 검증 활성화
-            _prev_hud = {}
-            if next_ep > 1:
-                try:
-                    if hasattr(self.ctx.sys, "hud") and self.ctx.sys.hud:
-                        _prev_hud = self.ctx.sys.hud.pro_root
-                        if not isinstance(_prev_hud, dict):
-                            _prev_hud = {}
-                except Exception as _hud_err:
-                    logging.warning(f"[SilentPass:InterviewRound] prev_hud 로드 실패: {_hud_err!s:.100}")
-            _cv_context["prev_hud"] = _prev_hud
-            # martial_hud도 동일 소스 (하위 호환)
-            if _prev_hud:
-                _cv_context["martial_hud"] = _prev_hud
-            # [V67.1] incarnation_type 주입 — Validator 오탐 방지
-            _incarnation_type = ""
-            try:
-                _bible_root = self.ctx.current_project.master_bible.get(
-                    "MasterBible", self.ctx.current_project.master_bible
-                )
-                _incarnation_type = _bible_root.get("protagonist_config", {}).get("incarnation_type", "")
-            except Exception as e:
-                logging.warning(f"[SilentPass:InterviewRound] incarnation_type 로드 실패: {e!s:.100}")
-            _cv_context["incarnation_type"] = _incarnation_type
-            # [V66.2] C-1: BlockingValidator dead NPC 감지 활성화
-            _encyclopedia_npcs = []
-            if self.ctx.state_tracker:
-                for _npc_name, _npc_info in getattr(self.ctx.state_tracker, "npc_registry", {}).items():
-                    _encyclopedia_npcs.append(
-                        {
-                            "name": _npc_name,
-                            "status": _npc_info.get("status", "alive"),
-                            "death_arc": _npc_info.get("death_arc"),
-                            "aliases": _npc_info.get("aliases", []),
-                        }
-                    )
-            _cv_context["encyclopedia"] = {"npcs": _encyclopedia_npcs}
-            # [V66.1] 시간선 경고를 검증 컨텍스트에 주입
-            _cv_context["time_warnings"] = self.time_warnings
-            # [P3-02] protagonist_name 항상 주입 — POV 검사 민감도 보장
-            if "protagonist_name" not in _cv_context:
-                _proto_name = ""
-                try:
-                    from modules.core.constants import HUDKeys
-
-                    _mb = self.ctx.current_project.master_bible or {}
-                    _mb_root = _mb.get("MasterBible", _mb)
-                    _proto_name = HUDKeys.get_protagonist_name(_mb_root, genre_name)
-                except Exception as _e:
-                    logging.debug("[SilentPass:Stage4:ProtoName] %s", _e)
-                if _proto_name and _proto_name != "주인공":
-                    _cv_context["protagonist_name"] = _proto_name
-                else:
-                    logging.warning("[Stage4] protagonist_name 주입 실패 — POV 검사 민감도 저하 가능")
-            # [P6-01] FailureLearner 주입 — ValidationOrchestrator가 BLOCKING 실패 시 환류할 수 있도록
-            _cv_context["_failure_learner"] = getattr(self.ctx, "failure_learner", None)
-            # [V66.1] BlockingValidator/ContinuityValidator에 추적 데이터 전달
-            if self.ctx.state_tracker:
-                _cv_context["item_states"] = (
-                    {
-                        name: info.get("condition", "정상")
-                        for name, info in self.ctx.state_tracker.item_state_registry.items()
-                    }
-                    if hasattr(self.ctx.state_tracker, "item_state_registry")
-                    else {}
-                )
-                _cv_context["npc_personalities"] = (
-                    {
-                        name: {
-                            "traits": info.get("personality_traits", ""),
-                            "motivation": info.get("primary_motivation", ""),
-                        }
-                        for name, info in self.ctx.state_tracker.npc_registry.items()
-                        if info.get("personality_traits")
-                    }
-                    if hasattr(self.ctx.state_tracker, "npc_registry")
-                    else {}
-                )
-                # [Phase 3-5A-2] NPC 이력 데이터 검증 컨텍스트 주입
-                if hasattr(self.ctx.state_tracker, "get_npc_change_history") and self.ctx.state_tracker.npc_registry:
-                    _npc_history = {}
-                    for _hn in self.ctx.state_tracker.npc_registry:
-                        try:
-                            _hh = self.ctx.state_tracker.get_npc_change_history(_hn, limit=10)
-                        except Exception as _npc_err:
-                            logging.warning("[InterviewRound] get_npc_change_history 실패 (npc=%s): %s", _hn, _npc_err)
-                            continue
-                        if _hh:
-                            _npc_history[_hn] = _hh
-                    if _npc_history:
-                        _cv_context["npc_history"] = _npc_history
-            # [P2-FIX] karma_matrix 조립 — ConsistencyValidator unresolved_conflict 활성화
-            _karma_dict = {}
-            try:
-                if next_ep > 1:
-                    _prev_bible = self.ctx.current_project.db.get_episode_bible(next_ep - 1)
-                    _raw_karma = _prev_bible.get("karma_matrix", []) if _prev_bible else []
-                    if isinstance(_raw_karma, list):
-                        for _k in _raw_karma:
-                            if isinstance(_k, dict) and _k.get("target"):
-                                _tgt = _k["target"]
-                                if _tgt not in _karma_dict:
-                                    _karma_dict[_tgt] = {"relation_type": _k.get("relation", ""), "events": []}
-                                _karma_dict[_tgt]["events"].append(
-                                    {
-                                        "type": _k.get("type", ""),
-                                        "description": _k.get("description", ""),
-                                    }
-                                )
-            except Exception as _km_err:
-                logging.warning(f"[SilentPass:InterviewRound] karma_matrix 조립 실패: {_km_err!s:.100}")
-            if _karma_dict:
-                _cv_context["karma_matrix"] = _karma_dict
-            # [P2-FIX] villain_context 조립 — ConsistencyValidator villain_response 활성화
-            _villain_ctx = {}
-            try:
-                _mb = self.ctx.current_project.master_bible or {}
-                _mb_root = _mb.get("MasterBible", _mb)
-                _key_npcs = _mb_root.get("AssetLibrary", {}).get("KeyNPCs", [])
-                if not _key_npcs:
-                    _key_npcs = _mb_root.get("AssetLibrary", {}).get("Key_NPCs", [])
-                _VILLAIN_KEYWORDS = ("빌런", "적대", "악역", "antagonist", "주적", "숙적", "원수")
-                for _npc in _key_npcs or []:
-                    if not isinstance(_npc, dict):
-                        continue
-                    _role = str(_npc.get("role", ""))
-                    if any(kw in _role for kw in _VILLAIN_KEYWORDS):
-                        _vname = _npc.get("name", "")
-                        if _vname:
-                            # 사망 빌런은 스킵 → 다음 빌런 후보 탐색
-                            if self.ctx.state_tracker and hasattr(self.ctx.state_tracker, "npc_registry"):
-                                _v_info = self.ctx.state_tracker.npc_registry.get(_vname, {})
-                                if _v_info.get("status") == "dead":
-                                    continue
-                            _villain_ctx = {
-                                "villain_name": _vname,
-                                "villain_role": _role,
-                                "is_aware": True,
-                            }
-                            break
-            except Exception as _vc_err:
-                logging.warning(f"[SilentPass:InterviewRound] villain_context 조립 실패: {_vc_err!s:.100}")
-            if _villain_ctx:
-                _cv_context["villain_context"] = _villain_ctx
-            # [P2-FIX] authority_context 조립 — ConsistencyValidator authority_delegation 활성화
-            _auth_ctx = {}
-            try:
-                _mb = self.ctx.current_project.master_bible or {}
-                _mb_root = _mb.get("MasterBible", _mb)
-                _key_npcs = _mb_root.get("AssetLibrary", {}).get("KeyNPCs", [])
-                if not _key_npcs:
-                    _key_npcs = _mb_root.get("AssetLibrary", {}).get("Key_NPCs", [])
-                _SUPERIOR_KEYWORDS = (
-                    "상사",
-                    "상관",
-                    "사부",
-                    "스승",
-                    "사형",
-                    "문주",
-                    "장문인",
-                    "회장",
-                    "대표",
-                    "사장",
-                    "원장",
-                    "교수",
-                )
-                for _npc in _key_npcs or []:
-                    if not isinstance(_npc, dict):
-                        continue
-                    _role = str(_npc.get("role", ""))
-                    if any(kw in _role for kw in _SUPERIOR_KEYWORDS):
-                        _sname = _npc.get("name", "")
-                        if _sname:
-                            # 사망 상사는 스킵 → 다음 상사 후보 탐색
-                            if self.ctx.state_tracker and hasattr(self.ctx.state_tracker, "npc_registry"):
-                                _s_info = self.ctx.state_tracker.npc_registry.get(_sname, {})
-                                if _s_info.get("status") == "dead":
-                                    continue
-                            _auth_ctx = {
-                                "protagonist_position": _mb_root.get("protagonist_config", {}).get("position", ""),
-                                "superior_alive": True,
-                                "superior_name": _sname,
-                                "superior_position": _npc.get("position", _role),
-                            }
-                            break
-            except Exception as _ac_err:
-                logging.warning(f"[SilentPass:InterviewRound] authority_context 조립 실패: {_ac_err!s:.100}")
-            if _auth_ctx:
-                _cv_context["authority_context"] = _auth_ctx
+            _cv_context = self._build_cv_context(next_ep, genre_name, blueprint)
             for ci, cand in enumerate(candidates):
                 _cv_ms = cand.get("manuscript", "")
                 if _cv_ms and ci < len(validation_results):
@@ -823,7 +518,7 @@ class Stage4InterviewRound:
         stage4_spinner.update_detail(f"제{next_ep}화 · {round_num + 1}차 면담 · Director 심사")
         self.ctx.ui.log("   🎬 Director 면담 중...")
         logging.info(f"[Director 면담] 제{next_ep}화 {round_num + 1}차, 후보 {len(candidates)}개")
-        print(f"\n{'=' * 60}")
+        print(f"\n   {'=' * 56}")
         print(f"   🎬 Director 면담 시작 (제{next_ep}화, {round_num + 1}차)")
         print(f"   후보 수: {len(candidates)}개")
         for _pi, _pv in enumerate(validation_results):
@@ -832,7 +527,7 @@ class Stage4InterviewRound:
             print(f"   후보 {_label}: 경고 {len(_pw)}건, 분량 {len(candidates[_pi].get('manuscript', ''))}자")
             for _pwi in _pw[:5]:
                 print(f"      - {_pwi}")
-        print(f"{'=' * 60}")
+        print(f"   {'=' * 56}")
         # [V65] PerfTimer: Director 대면 측정
         try:
             self.ctx.perf_timer.start(f"s4_ep{next_ep}_director_r{round_num}")
@@ -843,237 +538,9 @@ class Stage4InterviewRound:
         _mandatory_text = mandatory_context if isinstance(mandatory_context, str) else str(mandatory_context or "")
         _director_mc_parts = [_mandatory_text] if _mandatory_text else []
 
-        # [Phase4-Gate] TruthGate advisory — 후보 원고별 실행, Python blocking 없음
-        try:
-            from modules.core.truth_gate import TruthGate as _TruthGate
-
-            _tg = _TruthGate(
-                world_state=getattr(self.ctx, "world_state", None),
-                fact_ledger=getattr(self.ctx, "fact_ledger", None),
-                llm_ask=self._truth_gate_llm_ask,  # [LM-A-2] 세계관 법칙 위반 검사
-            )
-            _npc_reg = getattr(getattr(self.ctx, "state_tracker", None), "npc_registry", {}) or {}
-            _tg_warnings_all: list[dict] = []
-            for _ci, _cand in enumerate(candidates):
-                _ms = _cand.get("manuscript", "")
-                if not _ms:
-                    continue
-                _tg_result = _tg.validate(
-                    manuscript=_ms,
-                    state_updates=_cand.get("state_updates") or {},
-                    npc_registry=_npc_reg,
-                )
-                if _tg_result.get("structured_warnings"):
-                    if _ci < len(validation_results) and isinstance(validation_results[_ci], dict):
-                        validation_results[_ci].setdefault("truth_gate_warnings", _tg_result["structured_warnings"])
-                    # [TF-30-6] 후보 레이블 주입
-                    _cand_label = ["A", "B", "C"][_ci] if _ci < 3 else str(_ci + 1)
-                    for _sw in _tg_result["structured_warnings"]:
-                        _sw["text"] = f"[후보 {_cand_label}] {_sw.get('text', '')}"
-                    _tg_warnings_all.extend(_tg_result["structured_warnings"])
-            if _tg_warnings_all:
-                _tg_lines = ["[TruthGate Advisory — CRITICAL 경고 시 반드시 REJECT]"]
-                for _w in _tg_warnings_all[:10]:
-                    _tg_lines.append(f"- [{_w.get('severity', '?')}] {_w.get('text', '')}")
-                _director_mc_parts.insert(0, "\n".join(_tg_lines))
-                logging.info("[TruthGate→Director] %d개 경고 전달", len(_tg_warnings_all))
-        except Exception as _tg_err:
-            logging.warning("[Phase4-Gate] TruthGate advisory 실패 (비치명): %s", str(_tg_err)[:80])
-
-        # [LM-B] NpcDriftAdvisor — 원고 내 NPC 속성 표류 advisory
-        try:
-            from modules.core.npc_drift_advisor import NpcDriftAdvisor as _NpcDriftAdvisor
-
-            _ws = getattr(self.ctx, "world_state", None)
-            if _ws and hasattr(_ws, "get_npc_role_snapshot"):
-                _npc_snaps = _ws.get_npc_role_snapshot() or {}
-                if _npc_snaps:
-                    _drift_advisor = _NpcDriftAdvisor(llm_ask=self._truth_gate_llm_ask)
-                    _drift_all = []
-                    for _ci, _cand in enumerate(candidates):
-                        _ms = _cand.get("manuscript", "")
-                        if not _ms:
-                            continue
-                        _drifts = _drift_advisor.check(manuscript=_ms, npc_snapshots=_npc_snaps, ep_num=next_ep)
-                        if _drifts:
-                            # [TF-30-6] 후보 인덱스 태깅
-                            for _d in _drifts:
-                                _d["_cand_idx"] = _ci
-                            _drift_all.extend(_drifts)
-                            if _ci < len(validation_results) and isinstance(validation_results[_ci], dict):
-                                validation_results[_ci].setdefault("npc_drift_warnings", _drifts)
-                    if _drift_all:
-                        _drift_lines = ["[NpcDriftAdvisor — NPC 속성 표류 감지, MAJOR 이상은 감점 반영]"]
-                        for _d in _drift_all[:8]:
-                            _cl = (
-                                ["A", "B", "C"][_d.get("_cand_idx", 0)]
-                                if _d.get("_cand_idx", 0) < 3
-                                else str(_d.get("_cand_idx", 0) + 1)
-                            )
-                            _drift_lines.append(
-                                f"- [후보 {_cl}][MAJOR] NPC '{_d.get('npc', '')}' {_d.get('field', '')}: "
-                                f"기대='{_d.get('expected', '')}' → 원고='{_d.get('found_in_ms', '')[:40]}'"
-                            )
-                        _director_mc_parts.insert(0, "\n".join(_drift_lines))
-                        logging.info("[NpcDriftAdvisor→Director] %d건 표류 감지 전달", len(_drift_all))
-        except Exception as _drift_err:
-            logging.warning("[LM-B] NpcDriftAdvisor 실패 (비치명): %s", str(_drift_err)[:80])
-
-        # [LM-C] NumericDriftAdvisor — 5화 단위 수치 누적 표류 advisory
-        if next_ep % 5 == 0:
-            try:
-                from modules.core.numeric_drift_advisor import NumericDriftAdvisor as _NumDriftAdvisor
-
-                _fl = getattr(self.ctx, "fact_ledger", None)
-                if _fl:
-                    _nums = _fl.get_numbers() or {}
-                    if _nums:
-                        _num_advisor = _NumDriftAdvisor(llm_ask=self._truth_gate_llm_ask)
-                        _num_drifts = _num_advisor.check(numbers=_nums, ep_num=next_ep)
-                        if _num_drifts:
-                            _nd_lines = ["[NumericDriftAdvisor — 수치 누적 표류 감지, MAJOR 이상은 감점 반영]"]
-                            for _nd in _num_drifts[:6]:
-                                _nd_lines.append(f"- [MAJOR] '{_nd.get('key', '')}': {_nd.get('issue', '')[:60]}")
-                            _director_mc_parts.insert(0, "\n".join(_nd_lines))
-                            logging.info("[NumericDriftAdvisor→Director] %d건 수치 표류 감지", len(_num_drifts))
-            except Exception as _nd_err:
-                logging.warning("[LM-C] NumericDriftAdvisor 실패 (비치명): %s", str(_nd_err)[:80])
-
-        # [LM-E] FlashbackVerifier — 회상/플래시백 오염 advisory
-        try:
-            from modules.core.flashback_verifier import FlashbackVerifier as _FbVerifier
-
-            _fb_verifier = _FbVerifier(llm_ask=self._truth_gate_llm_ask)
-            _fb_all = []
-            for _ci, _cand in enumerate(candidates):
-                _ms = _cand.get("manuscript", "")
-                if not _ms:
-                    continue
-                _flashbacks = _fb_verifier.detect_flashbacks(_ms)
-                if not _flashbacks:
-                    continue
-                # 회상 텍스트로 VecMemory 참조 컨텍스트 검색
-                _mem = getattr(self.ctx, "memory", None)
-                _ref_ctx = ""
-                if _mem and hasattr(_mem, "retrieve_high_res_context"):
-                    _fb_queries = [fb["text"][:200] for fb in _flashbacks[:3]]
-                    _ref_parts = []
-                    for _q in _fb_queries:
-                        _r = _mem.retrieve_high_res_context(_q, next_ep, n_results=2)
-                        if _r:
-                            _ref_parts.append(_r)
-                    _ref_ctx = "\n\n".join(_ref_parts)
-                if not _ref_ctx:
-                    continue
-                _fb_warns = _fb_verifier.check(_ms, ep_num=next_ep, reference_context=_ref_ctx)
-                if _fb_warns:
-                    # [TF-30-6] 후보 인덱스 태깅
-                    for _fw in _fb_warns:
-                        _fw["_cand_idx"] = _ci
-                    _fb_all.extend(_fb_warns)
-            if _fb_all:
-                _fb_lines = ["[FlashbackVerifier — 회상 오염 감지, MAJOR 이상은 감점 반영]"]
-                for _fw in _fb_all[:6]:
-                    _cl = (
-                        ["A", "B", "C"][_fw.get("_cand_idx", 0)]
-                        if _fw.get("_cand_idx", 0) < 3
-                        else str(_fw.get("_cand_idx", 0) + 1)
-                    )
-                    _fb_lines.append(f"- [후보 {_cl}][MAJOR] '{_fw.get('marker', '')}': {_fw.get('issue', '')[:60]}")
-                _director_mc_parts.insert(0, "\n".join(_fb_lines))
-                logging.info("[FlashbackVerifier→Director] %d건 회상 오염 감지", len(_fb_all))
-        except Exception as _fb_err:
-            logging.warning("[LM-E] FlashbackVerifier 실패 (비치명): %s", str(_fb_err)[:80])
-
-        # [LM-F] InfoParadoxChecker — 정보 역설 advisory (1인칭 전용)
-        try:
-            _mb = getattr(self.ctx.current_project, "master_bible", None) or {}
-            _mb_root = _mb.get("MasterBible", _mb)
-            _pov = _mb_root.get("protagonist_config", {}).get("pov", "")
-
-            if _pov == "1인칭":
-                from modules.core.constants import HUDKeys
-                from modules.core.info_paradox_checker import InfoParadoxChecker as _IpChecker
-
-                _proto_name = HUDKeys.get_protagonist_name(_mb_root, genre_name)
-                _db = getattr(self.ctx.current_project, "db", None)
-
-                if _db and _proto_name and _proto_name != "주인공":
-                    _knowledge_summary = _IpChecker.build_knowledge_summary(_db, next_ep, _proto_name)
-                    if _knowledge_summary:
-                        _ip_checker = _IpChecker(llm_ask=self._truth_gate_llm_ask)
-                        _ip_all = []
-                        for _ci, _cand in enumerate(candidates):
-                            _ms = _cand.get("manuscript", "")
-                            if not _ms:
-                                continue
-                            _ip_warns = _ip_checker.check(
-                                _ms,
-                                ep_num=next_ep,
-                                pov_character=_proto_name,
-                                knowledge_summary=_knowledge_summary,
-                            )
-                            if _ip_warns:
-                                # [TF-30-6] 후보 인덱스 태깅
-                                for _ipw in _ip_warns:
-                                    _ipw["_cand_idx"] = _ci
-                                _ip_all.extend(_ip_warns)
-                        if _ip_all:
-                            _ip_lines = ["[InfoParadoxChecker — 정보 역설 감지, MAJOR 이상은 감점 반영]"]
-                            for _ip in _ip_all[:6]:
-                                _cl = (
-                                    ["A", "B", "C"][_ip.get("_cand_idx", 0)]
-                                    if _ip.get("_cand_idx", 0) < 3
-                                    else str(_ip.get("_cand_idx", 0) + 1)
-                                )
-                                _ip_lines.append(
-                                    f"- [후보 {_cl}][MAJOR] '{_ip.get('info_used', '')[:40]}': {_ip.get('why_paradox', '')[:60]}"
-                                )
-                            _director_mc_parts.insert(0, "\n".join(_ip_lines))
-                            logging.info("[InfoParadoxChecker→Director] %d건 정보 역설 감지", len(_ip_all))
-        except Exception as _ip_err:
-            logging.warning("[LM-F] InfoParadoxChecker 실패 (비치명): %s", str(_ip_err)[:80])
-
-        # [LM-D] RelationshipDriftAdvisor — 관계도 장기 표류 advisory
-        try:
-            if next_ep >= 5:
-                _db = getattr(self.ctx.current_project, "db", None)
-                if _db and hasattr(_db, "get_all_relationship_pairs_with_history"):
-                    from modules.core.relationship_drift_advisor import RelationshipDriftAdvisor as _RdAdvisor
-
-                    _rel_timeline = _RdAdvisor.build_relationship_timeline(_db)
-                    if _rel_timeline:
-                        _rd_advisor = _RdAdvisor(llm_ask=self._truth_gate_llm_ask)
-                        _rd_all = []
-                        for _ci, _cand in enumerate(candidates):
-                            _ms = _cand.get("manuscript", "")
-                            if not _ms:
-                                continue
-                            _rd_warns = _rd_advisor.check(
-                                _ms,
-                                ep_num=next_ep,
-                                relationship_timeline=_rel_timeline,
-                            )
-                            if _rd_warns:
-                                # [TF-30-6] 후보 인덱스 태깅
-                                for _rdw in _rd_warns:
-                                    _rdw["_cand_idx"] = _ci
-                                _rd_all.extend(_rd_warns)
-                        if _rd_all:
-                            _rd_lines = ["[RelationshipDriftAdvisor — 관계도 표류 감지, MAJOR 이상은 감점 반영]"]
-                            for _rd in _rd_all[:6]:
-                                _cl = (
-                                    ["A", "B", "C"][_rd.get("_cand_idx", 0)]
-                                    if _rd.get("_cand_idx", 0) < 3
-                                    else str(_rd.get("_cand_idx", 0) + 1)
-                                )
-                                _rd_lines.append(
-                                    f"- [후보 {_cl}][MAJOR] '{_rd.get('npc_pair', '')[:30]}': {_rd.get('why_drift', '')[:60]}"
-                                )
-                            _director_mc_parts.insert(0, "\n".join(_rd_lines))
-                            logging.info("[RelationshipDriftAdvisor→Director] %d건 관계 표류 감지", len(_rd_all))
-        except Exception as _rd_err:
-            logging.warning("[LM-D] RelationshipDriftAdvisor 실패 (비치명): %s", str(_rd_err)[:80])
+        # [B-1-3b] Advisory chain (TruthGate, NpcDrift, NumericDrift, Flashback, InfoParadox, RelDrift)
+        _advisory_parts = self._run_advisory_chain(candidates, validation_results, next_ep, genre_name)
+        _director_mc_parts = _advisory_parts + _director_mc_parts
 
         _vr_warnings_for_director = []
         for _vr_idx, _vr in enumerate(validation_results):
@@ -1203,6 +670,79 @@ class Stage4InterviewRound:
             asp_used=bool(_asp_manuscript),
             validation_warnings=[w for vr in validation_results for w in vr.get("warnings", [])][:20],  # [TF-46] 10→20
         )
+
+        # [B-1-3b] PASS/PASS_WITH_FIX 처리 → 위임
+        _pass_result, director_feedback, previous_attempt = self._process_verdict(
+            director_result=director_result,
+            director_feedback=director_feedback,
+            verdict=verdict,
+            score=score,
+            round_ctx=round_ctx,
+            round_num=round_num,
+            previous_attempt=previous_attempt,
+            is_patch=_is_patch,
+            is_patch_fallback=_is_patch_fallback,
+            prev_score=_prev_score,
+            stage4_spinner=stage4_spinner,
+            director_mandatory_context=_director_mandatory_context,
+            director_memory_context=_director_memory_context,
+            error_category=error_category,
+        )
+        if _pass_result is not None:
+            return _pass_result
+        # [B-1-3b] REJECT 처리 → 위임
+        return self._handle_reject(
+            director_result=director_result,
+            director_feedback=director_feedback,
+            candidates=candidates,
+            validation_results=validation_results,
+            round_ctx=round_ctx,
+            round_num=round_num,
+            previous_attempt=previous_attempt,
+            is_patch=_is_patch,
+            is_patch_fallback=_is_patch_fallback,
+            prev_score=_prev_score,
+            prev_manuscript=_prev_manuscript,
+            asp_manuscript=_asp_manuscript,
+            tot_used=_tot_used,
+            mad_used=_mad_used,
+            selected=selected,
+            score=score,
+            error_category=error_category,
+        )
+
+    def _process_verdict(
+        self,
+        *,
+        director_result: dict,
+        director_feedback: str,
+        verdict: str,
+        score: int,
+        round_ctx,
+        round_num: int,
+        previous_attempt: dict | None,
+        is_patch: bool,
+        is_patch_fallback: bool,
+        prev_score: int,
+        stage4_spinner,
+        director_mandatory_context: str,
+        director_memory_context: str,
+        error_category: str,
+    ):
+        """[B-1-3b] PASS/PASS_WITH_FIX 처리. Returns (result|None, director_feedback, previous_attempt)."""
+        from modules.core.stage4_types import _InterviewRoundResult
+        from modules.validation.threshold_helper import _threshold
+
+        next_ep = round_ctx.next_ep
+        chief_writer = round_ctx.chief_writer
+        style_guide = round_ctx.style_guide
+        story_context = round_ctx.story_context
+        _prev_manuscripts_text = round_ctx.prev_manuscripts_text
+        _director_memory_context = director_memory_context
+        _director_mandatory_context = director_mandatory_context
+        _is_patch = is_patch
+        _is_patch_fallback = is_patch_fallback
+        _prev_score = prev_score
 
         _quality_gate_score = _threshold("scoring.quality_gate_score", 90)
         if (
@@ -1447,15 +987,58 @@ class Stage4InterviewRound:
                     patch_fallback=_is_patch_fallback,
                     arc=round_ctx.arc_data.get("arc_no", 0),
                 )
-                return _InterviewRoundResult(
-                    verdict=verdict,  # [TF-32] PASS or PASS_WITH_FIX
-                    director_feedback=director_feedback,
-                    previous_attempt=previous_attempt,
-                    final_manuscript=final_manuscript,
-                    final_title=final_title,
-                    final_state_updates=final_state_updates,
-                    error_category=error_category,  # [V75-B]
+                return (
+                    _InterviewRoundResult(
+                        verdict=verdict,  # [TF-32] PASS or PASS_WITH_FIX
+                        director_feedback=director_feedback,
+                        previous_attempt=previous_attempt,
+                        final_manuscript=final_manuscript,
+                        final_title=final_title,
+                        final_state_updates=final_state_updates,
+                        error_category=error_category,  # [V75-B]
+                    ),
+                    director_feedback,
+                    previous_attempt,
                 )
+
+        # REJECT fallthrough
+        return (None, director_feedback, previous_attempt)
+
+    def _handle_reject(
+        self,
+        *,
+        director_result: dict,
+        director_feedback: str,
+        candidates: list[dict],
+        validation_results: list[dict],
+        round_ctx,
+        round_num: int,
+        previous_attempt: dict | None,
+        is_patch: bool,
+        is_patch_fallback: bool,
+        prev_score: int,
+        prev_manuscript: str,
+        asp_manuscript: str | None,
+        tot_used: bool,
+        mad_used: bool,
+        selected: str,
+        score: int,
+        error_category: str,
+    ):
+        """[B-1-3b] REJECT 처리 — 피드백 조립 + 메트릭 + 결과 반환."""
+        from modules.core.stage4_types import _InterviewRoundResult
+
+        next_ep = round_ctx.next_ep
+        blueprint = round_ctx.blueprint
+        verdict = "REJECT"
+        _asp_manuscript = asp_manuscript
+        _tot_used = tot_used
+        _mad_used = mad_used
+        _prev_manuscript = prev_manuscript
+        _prev_score = prev_score
+        _is_patch = is_patch
+        _is_patch_fallback = is_patch_fallback
+
         if verdict not in ("PASS", "PASS_WITH_FIX"):  # [TF-32]
             # [TF-R2-S4-03] 시스템 감지 라인 보존 (REJECT 시 덮어쓰기 전 추출)
             _system_prefixes = ("[연속성 충돌]", "[Continuity Conflict]", "[V67]", "[CoVe]", "[ToT", "[MAD")
@@ -1663,6 +1246,604 @@ class Stage4InterviewRound:
             previous_attempt=previous_attempt,
             error_category=error_category,  # [V75-B]
         )
+
+    def _generate_candidates(
+        self,
+        *,
+        round_num: int,
+        chief_writer,
+        director_feedback: str,
+        previous_attempt: dict | None,
+        prev_manuscript: str,
+        style_guide,
+        blueprint,
+        common_writer_kwargs: dict,
+    ) -> tuple[list[dict], bool, bool, int]:
+        """[B-1-3b] 3-branch 후보 생성. Returns (candidates, is_patch, is_patch_fallback, prev_score)."""
+        from modules.core.constants import PatchModeThresholds
+        from modules.core.stage4_types import _PATCH_REWRITE_THRESHOLD
+        from modules.validation.threshold_helper import _threshold
+
+        _is_patch = False
+        _is_patch_fallback = False
+        _prev_score = 0
+        _common_writer_kwargs = common_writer_kwargs
+        _prev_manuscript = prev_manuscript
+
+        if round_num == 0:
+            candidates = chief_writer.generate_ensemble(**_common_writer_kwargs)
+        else:
+            # [TF-23] 3단계 분기: InPlace → Patch → Rewrite (Director 판단 우선)
+            try:
+                _prev_score = int(previous_attempt.get("score", 0)) if previous_attempt else 0
+            except (ValueError, TypeError):
+                _prev_score = 0
+            _fix_scope = previous_attempt.get("fix_scope", "") if previous_attempt else ""
+            _patch_enabled = bool(_threshold("feature_flags.enable_patch_mode", True))
+
+            # [TF-23] Director 판단 우선, 점수 fallback
+            _use_inplace = (
+                _patch_enabled
+                and _prev_manuscript
+                and (_fix_scope == "inplace" or (not _fix_scope and _prev_score >= PatchModeThresholds.INPLACE))
+            )
+            _use_patch = (
+                _patch_enabled
+                and _prev_manuscript
+                and (
+                    _fix_scope in ("inplace", "partial")  # inplace 실패 시 patch 폴백
+                    or (not _fix_scope and _prev_score >= _PATCH_REWRITE_THRESHOLD)
+                )
+            )
+
+            candidates = None  # [TF-23] 분기 전 초기화
+
+            # --- InPlace 시도 (LLM 1회) ---
+            if _use_inplace:
+                logging.info(f"[TF-23] InPlace 진입 (fix_scope={_fix_scope!r}, score={_prev_score})")
+                self.ctx.ui.log(f"   🔧 [TF-23] InPlace: fix_scope={_fix_scope!r}, score={_prev_score}")
+                candidates = chief_writer.inplace_patch(
+                    original_manuscript=_prev_manuscript,
+                    director_feedback=director_feedback,
+                    attempt_number=round_num + 1,
+                    style_guide=style_guide,  # [TF-37]
+                )
+                if not candidates:
+                    logging.warning("[TF-23] InPlace 실패 → Patch 폴백")
+                    self.ctx.ui.log("   ⚠️ [TF-23] InPlace 실패 → Patch 폴백")
+                    _use_inplace = False  # 폴백
+
+            # --- Patch 시도 (Ensemble) ---
+            if not candidates and _use_patch:
+                _is_patch = True
+                logging.info(f"[Phase 3-5B] 패치 모드 진입 (score={_prev_score}, round={round_num})")
+                self.ctx.ui.log(f"   🔧 [Phase 3-5B] 패치 모드: score={_prev_score}, 원본 보존 수정")
+                candidates = chief_writer.patch_with_feedback(
+                    **_common_writer_kwargs,
+                    original_manuscript=_prev_manuscript,
+                    director_feedback=director_feedback,
+                    previous_attempt=previous_attempt,
+                    attempt_number=round_num + 1,
+                )
+                if not candidates:
+                    _is_patch_fallback = True
+                    logging.warning("[Phase 3-5B] 패치 실패, full rewrite 폴백")
+                    self.ctx.ui.log("   ⚠️ [Phase 3-5B] 패치 실패 → 전면 재작성 폴백")
+                    candidates = chief_writer.regenerate_with_feedback(
+                        **_common_writer_kwargs,
+                        director_feedback=director_feedback,
+                        previous_attempt=previous_attempt,
+                        attempt_number=round_num + 1,
+                    )
+
+            # --- Rewrite (전면 재작성) ---
+            if not candidates:
+                candidates = chief_writer.regenerate_with_feedback(
+                    **_common_writer_kwargs,
+                    director_feedback=director_feedback,
+                    previous_attempt=previous_attempt,
+                    attempt_number=round_num + 1,
+                )
+
+        _asp_manuscript = None
+        _asp = self.ctx.get_module("adversarial_self_play")
+        if round_num >= 2 and _asp and previous_attempt:
+            try:
+                if _prev_manuscript:
+                    self.ctx.ui.log(f"   🔥 [ASP] 레드팀 교정 발동 (재시도 {round_num + 1}회차)")
+                    _asp_ctx = {}
+                    if blueprint:
+                        _asp_ctx["blueprint"] = blueprint
+                    if director_feedback:
+                        _asp_ctx["director_feedback"] = director_feedback
+                    _asp_result = _asp.generate_with_adversary(
+                        initial_content=_prev_manuscript,
+                        content_type="manuscript",
+                        context=_asp_ctx,
+                    )
+                    if _asp_result and hasattr(_asp_result, "final_output") and _asp_result.final_output:
+                        _asp_manuscript = _asp_result.final_output
+                        self.ctx.ui.log(
+                            f"   ✅ [ASP] 교정 완료 (delta: +{getattr(_asp_result, 'improvement_delta', '?')})"
+                        )
+            except Exception as e:
+                logging.warning(f"[SilentPass:ASP] {e!s:.200}")
+        if _asp_manuscript and candidates:
+            # [TF-25-01] ASP 후보를 4번째로 append하지 않고, 기존 3후보 중 최저 품질을 교체
+            # Director는 3후보(A/B/C) 체제이므로 4번째 후보는 dead path + IndexError 유발
+            if len(candidates) >= 3:
+                _worst_idx = 0
+                _worst_len = len(candidates[0].get("manuscript", ""))
+                for _ci in range(1, len(candidates)):
+                    _ci_len = len(candidates[_ci].get("manuscript", ""))
+                    if _ci_len < _worst_len:
+                        _worst_len = _ci_len
+                        _worst_idx = _ci
+                self.ctx.ui.log(
+                    f"   🔄 [TF-25-01] ASP 교정 후보가 기존 후보 {_worst_idx + 1}번 교체 (분량 최저 {_worst_len}자)"
+                )
+                candidates[_worst_idx] = {"manuscript": _asp_manuscript, "strategy": "asp_correction"}
+            else:
+                candidates.append({"manuscript": _asp_manuscript, "strategy": "asp_correction"})
+
+        return candidates, _is_patch, _is_patch_fallback, _prev_score, _asp_manuscript
+
+    def _build_cv_context(self, next_ep: int, genre_name: str, blueprint) -> dict:
+        """[B-1-3b] ConsistencyValidator 컨텍스트 조립."""
+        _cv_context = {
+            "mode": "MANUSCRIPT",
+            "genre": genre_name,
+            "martial_hud": {},
+            "karma_matrix": {},
+            "asset_library": {},
+            "npc_profiles": {},
+            "prev_episode_events": [],
+            "ep_num": next_ep,
+            "blueprint": blueprint if isinstance(blueprint, dict) else {},
+            "blueprint_text": str(blueprint or "")[:8000],
+        }
+        # [P1-FIX] prev_hud 주입 — ContinuityValidator 연속성 검증 활성화
+        _prev_hud = {}
+        if next_ep > 1:
+            try:
+                if hasattr(self.ctx.sys, "hud") and self.ctx.sys.hud:
+                    _prev_hud = self.ctx.sys.hud.pro_root
+                    if not isinstance(_prev_hud, dict):
+                        _prev_hud = {}
+            except Exception as _hud_err:
+                logging.warning(f"[SilentPass:InterviewRound] prev_hud 로드 실패: {_hud_err!s:.100}")
+        _cv_context["prev_hud"] = _prev_hud
+        # martial_hud도 동일 소스 (하위 호환)
+        if _prev_hud:
+            _cv_context["martial_hud"] = _prev_hud
+        # [V67.1] incarnation_type 주입 — Validator 오탐 방지
+        _incarnation_type = ""
+        try:
+            _bible_root = self.ctx.current_project.master_bible.get(
+                "MasterBible", self.ctx.current_project.master_bible
+            )
+            _incarnation_type = _bible_root.get("protagonist_config", {}).get("incarnation_type", "")
+        except Exception as e:
+            logging.warning(f"[SilentPass:InterviewRound] incarnation_type 로드 실패: {e!s:.100}")
+        _cv_context["incarnation_type"] = _incarnation_type
+        # [V66.2] C-1: BlockingValidator dead NPC 감지 활성화
+        _encyclopedia_npcs = []
+        if self.ctx.state_tracker:
+            for _npc_name, _npc_info in getattr(self.ctx.state_tracker, "npc_registry", {}).items():
+                _encyclopedia_npcs.append(
+                    {
+                        "name": _npc_name,
+                        "status": _npc_info.get("status", "alive"),
+                        "death_arc": _npc_info.get("death_arc"),
+                        "aliases": _npc_info.get("aliases", []),
+                    }
+                )
+        _cv_context["encyclopedia"] = {"npcs": _encyclopedia_npcs}
+        # [V66.1] 시간선 경고를 검증 컨텍스트에 주입
+        _cv_context["time_warnings"] = self.time_warnings
+        # [P3-02] protagonist_name 항상 주입 — POV 검사 민감도 보장
+        if "protagonist_name" not in _cv_context:
+            _proto_name = ""
+            try:
+                from modules.core.constants import HUDKeys
+
+                _mb = self.ctx.current_project.master_bible or {}
+                _mb_root = _mb.get("MasterBible", _mb)
+                _proto_name = HUDKeys.get_protagonist_name(_mb_root, genre_name)
+            except Exception as _e:
+                logging.debug("[SilentPass:Stage4:ProtoName] %s", _e)
+            if _proto_name and _proto_name != "주인공":
+                _cv_context["protagonist_name"] = _proto_name
+            else:
+                logging.warning("[Stage4] protagonist_name 주입 실패 — POV 검사 민감도 저하 가능")
+        # [P6-01] FailureLearner 주입 — ValidationOrchestrator가 BLOCKING 실패 시 환류할 수 있도록
+        _cv_context["_failure_learner"] = getattr(self.ctx, "failure_learner", None)
+        # [V66.1] BlockingValidator/ContinuityValidator에 추적 데이터 전달
+        if self.ctx.state_tracker:
+            _cv_context["item_states"] = (
+                {
+                    name: info.get("condition", "정상")
+                    for name, info in self.ctx.state_tracker.item_state_registry.items()
+                }
+                if hasattr(self.ctx.state_tracker, "item_state_registry")
+                else {}
+            )
+            _cv_context["npc_personalities"] = (
+                {
+                    name: {
+                        "traits": info.get("personality_traits", ""),
+                        "motivation": info.get("primary_motivation", ""),
+                    }
+                    for name, info in self.ctx.state_tracker.npc_registry.items()
+                    if info.get("personality_traits")
+                }
+                if hasattr(self.ctx.state_tracker, "npc_registry")
+                else {}
+            )
+            # [Phase 3-5A-2] NPC 이력 데이터 검증 컨텍스트 주입
+            if hasattr(self.ctx.state_tracker, "get_npc_change_history") and self.ctx.state_tracker.npc_registry:
+                _npc_history = {}
+                for _hn in self.ctx.state_tracker.npc_registry:
+                    try:
+                        _hh = self.ctx.state_tracker.get_npc_change_history(_hn, limit=10)
+                    except Exception as _npc_err:
+                        logging.warning("[InterviewRound] get_npc_change_history 실패 (npc=%s): %s", _hn, _npc_err)
+                        continue
+                    if _hh:
+                        _npc_history[_hn] = _hh
+                if _npc_history:
+                    _cv_context["npc_history"] = _npc_history
+        # [P2-FIX] karma_matrix 조립 — ConsistencyValidator unresolved_conflict 활성화
+        _karma_dict = {}
+        try:
+            if next_ep > 1:
+                _prev_bible = self.ctx.current_project.db.get_episode_bible(next_ep - 1)
+                _raw_karma = _prev_bible.get("karma_matrix", []) if _prev_bible else []
+                if isinstance(_raw_karma, list):
+                    for _k in _raw_karma:
+                        if isinstance(_k, dict) and _k.get("target"):
+                            _tgt = _k["target"]
+                            if _tgt not in _karma_dict:
+                                _karma_dict[_tgt] = {"relation_type": _k.get("relation", ""), "events": []}
+                            _karma_dict[_tgt]["events"].append(
+                                {
+                                    "type": _k.get("type", ""),
+                                    "description": _k.get("description", ""),
+                                }
+                            )
+        except Exception as _km_err:
+            logging.warning(f"[SilentPass:InterviewRound] karma_matrix 조립 실패: {_km_err!s:.100}")
+        if _karma_dict:
+            _cv_context["karma_matrix"] = _karma_dict
+        # [P2-FIX] villain_context 조립 — ConsistencyValidator villain_response 활성화
+        _villain_ctx = {}
+        try:
+            _mb = self.ctx.current_project.master_bible or {}
+            _mb_root = _mb.get("MasterBible", _mb)
+            _key_npcs = _mb_root.get("AssetLibrary", {}).get("KeyNPCs", [])
+            if not _key_npcs:
+                _key_npcs = _mb_root.get("AssetLibrary", {}).get("Key_NPCs", [])
+            _VILLAIN_KEYWORDS = ("빌런", "적대", "악역", "antagonist", "주적", "숙적", "원수")
+            for _npc in _key_npcs or []:
+                if not isinstance(_npc, dict):
+                    continue
+                _role = str(_npc.get("role", ""))
+                if any(kw in _role for kw in _VILLAIN_KEYWORDS):
+                    _vname = _npc.get("name", "")
+                    if _vname:
+                        # 사망 빌런은 스킵 → 다음 빌런 후보 탐색
+                        if self.ctx.state_tracker and hasattr(self.ctx.state_tracker, "npc_registry"):
+                            _v_info = self.ctx.state_tracker.npc_registry.get(_vname, {})
+                            if _v_info.get("status") == "dead":
+                                continue
+                        _villain_ctx = {
+                            "villain_name": _vname,
+                            "villain_role": _role,
+                            "is_aware": True,
+                        }
+                        break
+        except Exception as _vc_err:
+            logging.warning(f"[SilentPass:InterviewRound] villain_context 조립 실패: {_vc_err!s:.100}")
+        if _villain_ctx:
+            _cv_context["villain_context"] = _villain_ctx
+        # [P2-FIX] authority_context 조립 — ConsistencyValidator authority_delegation 활성화
+        _auth_ctx = {}
+        try:
+            _mb = self.ctx.current_project.master_bible or {}
+            _mb_root = _mb.get("MasterBible", _mb)
+            _key_npcs = _mb_root.get("AssetLibrary", {}).get("KeyNPCs", [])
+            if not _key_npcs:
+                _key_npcs = _mb_root.get("AssetLibrary", {}).get("Key_NPCs", [])
+            _SUPERIOR_KEYWORDS = (
+                "상사",
+                "상관",
+                "사부",
+                "스승",
+                "사형",
+                "문주",
+                "장문인",
+                "회장",
+                "대표",
+                "사장",
+                "원장",
+                "교수",
+            )
+            for _npc in _key_npcs or []:
+                if not isinstance(_npc, dict):
+                    continue
+                _role = str(_npc.get("role", ""))
+                if any(kw in _role for kw in _SUPERIOR_KEYWORDS):
+                    _sname = _npc.get("name", "")
+                    if _sname:
+                        # 사망 상사는 스킵 → 다음 상사 후보 탐색
+                        if self.ctx.state_tracker and hasattr(self.ctx.state_tracker, "npc_registry"):
+                            _s_info = self.ctx.state_tracker.npc_registry.get(_sname, {})
+                            if _s_info.get("status") == "dead":
+                                continue
+                        _auth_ctx = {
+                            "protagonist_position": _mb_root.get("protagonist_config", {}).get("position", ""),
+                            "superior_alive": True,
+                            "superior_name": _sname,
+                            "superior_position": _npc.get("position", _role),
+                        }
+                        break
+        except Exception as _ac_err:
+            logging.warning(f"[SilentPass:InterviewRound] authority_context 조립 실패: {_ac_err!s:.100}")
+        if _auth_ctx:
+            _cv_context["authority_context"] = _auth_ctx
+
+        return _cv_context
+
+    def _run_advisory_chain(
+        self,
+        candidates: list[dict],
+        validation_results: list[dict],
+        next_ep: int,
+        genre_name: str,
+    ) -> list[str]:
+        """[B-1-3b] Advisory chain 실행, Director mandatory_context 파트 반환."""
+        _advisory_parts: list[str] = []
+
+        logging.debug("Advisory 검증 시작 (TruthGate, NPC, 수치, 회상, 관계)")
+        # [Phase4-Gate] TruthGate advisory — 후보 원고별 실행, Python blocking 없음
+        try:
+            from modules.core.truth_gate import TruthGate as _TruthGate
+
+            _tg = _TruthGate(
+                world_state=getattr(self.ctx, "world_state", None),
+                fact_ledger=getattr(self.ctx, "fact_ledger", None),
+                llm_ask=self._truth_gate_llm_ask,  # [LM-A-2] 세계관 법칙 위반 검사
+            )
+            _npc_reg = getattr(getattr(self.ctx, "state_tracker", None), "npc_registry", {}) or {}
+            _tg_warnings_all: list[dict] = []
+            for _ci, _cand in enumerate(candidates):
+                _ms = _cand.get("manuscript", "")
+                if not _ms:
+                    continue
+                _tg_result = _tg.validate(
+                    manuscript=_ms,
+                    state_updates=_cand.get("state_updates") or {},
+                    npc_registry=_npc_reg,
+                )
+                if _tg_result.get("structured_warnings"):
+                    if _ci < len(validation_results) and isinstance(validation_results[_ci], dict):
+                        validation_results[_ci].setdefault("truth_gate_warnings", _tg_result["structured_warnings"])
+                    # [TF-30-6] 후보 레이블 주입
+                    _cand_label = ["A", "B", "C"][_ci] if _ci < 3 else str(_ci + 1)
+                    for _sw in _tg_result["structured_warnings"]:
+                        _sw["text"] = f"[후보 {_cand_label}] {_sw.get('text', '')}"
+                    _tg_warnings_all.extend(_tg_result["structured_warnings"])
+            if _tg_warnings_all:
+                _tg_lines = ["[TruthGate Advisory — CRITICAL 경고 시 반드시 REJECT]"]
+                for _w in _tg_warnings_all[:10]:
+                    _tg_lines.append(f"- [{_w.get('severity', '?')}] {_w.get('text', '')}")
+                _advisory_parts.insert(0, "\n".join(_tg_lines))
+                logging.info("[TruthGate→Director] %d개 경고 전달", len(_tg_warnings_all))
+                print(f"      🛡️ [TruthGate] {len(_tg_warnings_all)}개 경고 → Director")
+        except (AttributeError, TypeError, ValueError, RuntimeError) as _tg_err:
+            logging.warning("[Phase4-Gate] TruthGate advisory 실패 (비치명): %s", str(_tg_err)[:80])
+
+        # [LM-B] NpcDriftAdvisor — 원고 내 NPC 속성 표류 advisory
+        try:
+            from modules.core.npc_drift_advisor import NpcDriftAdvisor as _NpcDriftAdvisor
+
+            _ws = getattr(self.ctx, "world_state", None)
+            if _ws and hasattr(_ws, "get_npc_role_snapshot"):
+                _npc_snaps = _ws.get_npc_role_snapshot() or {}
+                if _npc_snaps:
+                    _drift_advisor = _NpcDriftAdvisor(llm_ask=self._truth_gate_llm_ask)
+                    _drift_all = []
+                    for _ci, _cand in enumerate(candidates):
+                        _ms = _cand.get("manuscript", "")
+                        if not _ms:
+                            continue
+                        _drifts = _drift_advisor.check(manuscript=_ms, npc_snapshots=_npc_snaps, ep_num=next_ep)
+                        if _drifts:
+                            # [TF-30-6] 후보 인덱스 태깅
+                            for _d in _drifts:
+                                _d["_cand_idx"] = _ci
+                            _drift_all.extend(_drifts)
+                            if _ci < len(validation_results) and isinstance(validation_results[_ci], dict):
+                                validation_results[_ci].setdefault("npc_drift_warnings", _drifts)
+                    if _drift_all:
+                        _drift_lines = ["[NpcDriftAdvisor — NPC 속성 표류 감지, MAJOR 이상은 감점 반영]"]
+                        for _d in _drift_all[:8]:
+                            _cl = (
+                                ["A", "B", "C"][_d.get("_cand_idx", 0)]
+                                if _d.get("_cand_idx", 0) < 3
+                                else str(_d.get("_cand_idx", 0) + 1)
+                            )
+                            _drift_lines.append(
+                                f"- [후보 {_cl}][MAJOR] NPC '{_d.get('npc', '')}' {_d.get('field', '')}: "
+                                f"기대='{_d.get('expected', '')}' → 원고='{_d.get('found_in_ms', '')[:40]}'"
+                            )
+                        _advisory_parts.insert(0, "\n".join(_drift_lines))
+                        logging.info("[NpcDriftAdvisor→Director] %d건 표류 감지 전달", len(_drift_all))
+                        print(f"      👤 [NpcDrift] {len(_drift_all)}건 표류 감지")
+        except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as _drift_err:
+            logging.warning("[LM-B] NpcDriftAdvisor 실패 (비치명): %s", str(_drift_err)[:80])
+
+        # [LM-C] NumericDriftAdvisor — 5화 단위 수치 누적 표류 advisory
+        if next_ep % 5 == 0:
+            try:
+                from modules.core.numeric_drift_advisor import NumericDriftAdvisor as _NumDriftAdvisor
+
+                _fl = getattr(self.ctx, "fact_ledger", None)
+                if _fl:
+                    _nums = _fl.get_numbers() or {}
+                    if _nums:
+                        _num_advisor = _NumDriftAdvisor(llm_ask=self._truth_gate_llm_ask)
+                        _num_drifts = _num_advisor.check(numbers=_nums, ep_num=next_ep)
+                        if _num_drifts:
+                            _nd_lines = ["[NumericDriftAdvisor — 수치 누적 표류 감지, MAJOR 이상은 감점 반영]"]
+                            for _nd in _num_drifts[:6]:
+                                _nd_lines.append(f"- [MAJOR] '{_nd.get('key', '')}': {_nd.get('issue', '')[:60]}")
+                            _advisory_parts.insert(0, "\n".join(_nd_lines))
+                            logging.info("[NumericDriftAdvisor→Director] %d건 수치 표류 감지", len(_num_drifts))
+                            print(f"      🔢 [NumericDrift] {len(_num_drifts)}건 수치 표류")
+            except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as _nd_err:
+                logging.warning("[LM-C] NumericDriftAdvisor 실패 (비치명): %s", str(_nd_err)[:80])
+
+        # [LM-E] FlashbackVerifier — 회상/플래시백 오염 advisory
+        try:
+            from modules.core.flashback_verifier import FlashbackVerifier as _FbVerifier
+
+            _fb_verifier = _FbVerifier(llm_ask=self._truth_gate_llm_ask)
+            _fb_all = []
+            for _ci, _cand in enumerate(candidates):
+                _ms = _cand.get("manuscript", "")
+                if not _ms:
+                    continue
+                _flashbacks = _fb_verifier.detect_flashbacks(_ms)
+                if not _flashbacks:
+                    continue
+                # 회상 텍스트로 VecMemory 참조 컨텍스트 검색
+                _mem = getattr(self.ctx, "memory", None)
+                _ref_ctx = ""
+                if _mem and hasattr(_mem, "retrieve_high_res_context"):
+                    _fb_queries = [fb["text"][:200] for fb in _flashbacks[:3]]
+                    _ref_parts = []
+                    for _q in _fb_queries:
+                        _r = _mem.retrieve_high_res_context(_q, next_ep, n_results=2)
+                        if _r:
+                            _ref_parts.append(_r)
+                    _ref_ctx = "\n\n".join(_ref_parts)
+                if not _ref_ctx:
+                    continue
+                _fb_warns = _fb_verifier.check(_ms, ep_num=next_ep, reference_context=_ref_ctx)
+                if _fb_warns:
+                    # [TF-30-6] 후보 인덱스 태깅
+                    for _fw in _fb_warns:
+                        _fw["_cand_idx"] = _ci
+                    _fb_all.extend(_fb_warns)
+            if _fb_all:
+                _fb_lines = ["[FlashbackVerifier — 회상 오염 감지, MAJOR 이상은 감점 반영]"]
+                for _fw in _fb_all[:6]:
+                    _cl = (
+                        ["A", "B", "C"][_fw.get("_cand_idx", 0)]
+                        if _fw.get("_cand_idx", 0) < 3
+                        else str(_fw.get("_cand_idx", 0) + 1)
+                    )
+                    _fb_lines.append(f"- [후보 {_cl}][MAJOR] '{_fw.get('marker', '')}': {_fw.get('issue', '')[:60]}")
+                _advisory_parts.insert(0, "\n".join(_fb_lines))
+                logging.info("[FlashbackVerifier→Director] %d건 회상 오염 감지", len(_fb_all))
+                print(f"      📖 [Flashback] {len(_fb_all)}건 회상 오염")
+        except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as _fb_err:
+            logging.warning("[LM-E] FlashbackVerifier 실패 (비치명): %s", str(_fb_err)[:80])
+
+        # [LM-F] InfoParadoxChecker — 정보 역설 advisory (1인칭 전용)
+        try:
+            _mb = getattr(self.ctx.current_project, "master_bible", None) or {}
+            _mb_root = _mb.get("MasterBible", _mb)
+            _pov = _mb_root.get("protagonist_config", {}).get("pov", "")
+
+            if _pov == "1인칭":
+                from modules.core.constants import HUDKeys
+                from modules.core.info_paradox_checker import InfoParadoxChecker as _IpChecker
+
+                _proto_name = HUDKeys.get_protagonist_name(_mb_root, genre_name)
+                _db = getattr(self.ctx.current_project, "db", None)
+
+                if _db and _proto_name and _proto_name != "주인공":
+                    _knowledge_summary = _IpChecker.build_knowledge_summary(_db, next_ep, _proto_name)
+                    if _knowledge_summary:
+                        _ip_checker = _IpChecker(llm_ask=self._truth_gate_llm_ask)
+                        _ip_all = []
+                        for _ci, _cand in enumerate(candidates):
+                            _ms = _cand.get("manuscript", "")
+                            if not _ms:
+                                continue
+                            _ip_warns = _ip_checker.check(
+                                _ms,
+                                ep_num=next_ep,
+                                pov_character=_proto_name,
+                                knowledge_summary=_knowledge_summary,
+                            )
+                            if _ip_warns:
+                                # [TF-30-6] 후보 인덱스 태깅
+                                for _ipw in _ip_warns:
+                                    _ipw["_cand_idx"] = _ci
+                                _ip_all.extend(_ip_warns)
+                        if _ip_all:
+                            _ip_lines = ["[InfoParadoxChecker — 정보 역설 감지, MAJOR 이상은 감점 반영]"]
+                            for _ip in _ip_all[:6]:
+                                _cl = (
+                                    ["A", "B", "C"][_ip.get("_cand_idx", 0)]
+                                    if _ip.get("_cand_idx", 0) < 3
+                                    else str(_ip.get("_cand_idx", 0) + 1)
+                                )
+                                _ip_lines.append(
+                                    f"- [후보 {_cl}][MAJOR] '{_ip.get('info_used', '')[:40]}': {_ip.get('why_paradox', '')[:60]}"
+                                )
+                            _advisory_parts.insert(0, "\n".join(_ip_lines))
+                            logging.info("[InfoParadoxChecker→Director] %d건 정보 역설 감지", len(_ip_all))
+                            print(f"      🔮 [InfoParadox] {len(_ip_all)}건 정보 역설")
+        except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as _ip_err:
+            logging.warning("[LM-F] InfoParadoxChecker 실패 (비치명): %s", str(_ip_err)[:80])
+
+        # [LM-D] RelationshipDriftAdvisor — 관계도 장기 표류 advisory
+        try:
+            if next_ep >= 5:
+                _db = getattr(self.ctx.current_project, "db", None)
+                if _db and hasattr(_db, "get_all_relationship_pairs_with_history"):
+                    from modules.core.relationship_drift_advisor import RelationshipDriftAdvisor as _RdAdvisor
+
+                    _rel_timeline = _RdAdvisor.build_relationship_timeline(_db)
+                    if _rel_timeline:
+                        _rd_advisor = _RdAdvisor(llm_ask=self._truth_gate_llm_ask)
+                        _rd_all = []
+                        for _ci, _cand in enumerate(candidates):
+                            _ms = _cand.get("manuscript", "")
+                            if not _ms:
+                                continue
+                            _rd_warns = _rd_advisor.check(
+                                _ms,
+                                ep_num=next_ep,
+                                relationship_timeline=_rel_timeline,
+                            )
+                            if _rd_warns:
+                                # [TF-30-6] 후보 인덱스 태깅
+                                for _rdw in _rd_warns:
+                                    _rdw["_cand_idx"] = _ci
+                                _rd_all.extend(_rd_warns)
+                        if _rd_all:
+                            _rd_lines = ["[RelationshipDriftAdvisor — 관계도 표류 감지, MAJOR 이상은 감점 반영]"]
+                            for _rd in _rd_all[:6]:
+                                _cl = (
+                                    ["A", "B", "C"][_rd.get("_cand_idx", 0)]
+                                    if _rd.get("_cand_idx", 0) < 3
+                                    else str(_rd.get("_cand_idx", 0) + 1)
+                                )
+                                _rd_lines.append(
+                                    f"- [후보 {_cl}][MAJOR] '{_rd.get('npc_pair', '')[:30]}': {_rd.get('why_drift', '')[:60]}"
+                                )
+                            _advisory_parts.insert(0, "\n".join(_rd_lines))
+                            logging.info("[RelationshipDriftAdvisor→Director] %d건 관계 표류 감지", len(_rd_all))
+                            print(f"      💞 [RelDrift] {len(_rd_all)}건 관계 표류")
+        except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as _rd_err:
+            logging.warning("[LM-D] RelationshipDriftAdvisor 실패 (비치명): %s", str(_rd_err)[:80])
+
+        return _advisory_parts
 
     # ── [TF-32] PASS_WITH_FIX helpers ──────────────────────────────
 

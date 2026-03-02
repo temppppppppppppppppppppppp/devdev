@@ -79,13 +79,14 @@ class TestT3GenreConstant:
 # ──────────────────────────────────────────────
 class TestT4KwargsHelper:
     def test_stage4_interview_uses_common_kwargs(self):
-        """stage4_interview_round.run() 에서 _common_writer_kwargs 사용"""
+        """stage4_interview_round 클래스에서 _common_writer_kwargs 사용 (B-1-3b: run→_generate_candidates 위임)"""
         from modules.core.stage4_interview_round import Stage4InterviewRound
 
-        src = inspect.getsource(Stage4InterviewRound.run)
-        assert "_common_writer_kwargs" in src, "run()에 _common_writer_kwargs 미사용"
-        # **_common_writer_kwargs 언팩이 최소 3회 사용되어야 함
-        unpack_count = src.count("**_common_writer_kwargs")
+        # [B-1-3b] _common_writer_kwargs 사용이 run()에서 _generate_candidates()로 위임됨
+        cls_src = inspect.getsource(Stage4InterviewRound)
+        assert "_common_writer_kwargs" in cls_src, "클래스에 _common_writer_kwargs 미사용"
+        # **_common_writer_kwargs 언팩이 최소 3회 사용되어야 함 (run + _generate_candidates 합산)
+        unpack_count = cls_src.count("**_common_writer_kwargs")
         assert unpack_count >= 3, f"_common_writer_kwargs 언팩이 {unpack_count}회만 사용 (최소 3회 필요)"
 
 
