@@ -157,6 +157,41 @@ class NarrativeContextFormatter:
             return ""
         return "[Arc 스케일 진행]\n" + "\n".join(lines)
 
+    @staticmethod
+    def format_cumulative_time(cumulative_elapsed: dict | None) -> str:
+        """[LM-Tier TF-F] 누적 경과 시간 요약 → 포맷 문자열.
+
+        Args:
+            cumulative_elapsed: {"total_days": int, "history": [{"ep", "days", "desc"}]}
+
+        Returns:
+            포맷된 문자열 (데이터 없거나 0일이면 빈 문자열)
+        """
+        if not cumulative_elapsed or not isinstance(cumulative_elapsed, dict):
+            return ""
+        total = cumulative_elapsed.get("total_days", 0)
+        if total <= 0:
+            return ""
+        # 총 일수 → 읽기 좋은 표현
+        if total >= 365:
+            years = total // 365
+            remainder = total % 365
+            if remainder >= 30:
+                months = remainder // 30
+                time_str = f"약 {years}년 {months}개월 ({total}일)"
+            else:
+                time_str = f"약 {years}년 ({total}일)"
+        elif total >= 30:
+            months = total // 30
+            days = total % 30
+            if days > 0:
+                time_str = f"약 {months}개월 {days}일 ({total}일)"
+            else:
+                time_str = f"약 {months}개월 ({total}일)"
+        else:
+            time_str = f"{total}일"
+        return f"[누적 경과 시간] 작중 총 {time_str} 경과"
+
     @classmethod
     def format_all(
         cls,
@@ -166,9 +201,10 @@ class NarrativeContextFormatter:
         pending_commitments: list | None,
         all_refined_arcs: list | None,
         current_arc_no: int,
+        cumulative_elapsed: dict | None = None,
         max_chars: int = 3000,
     ) -> str:
-        """3개 섹션 통합 → advisory 헤더 포함 컨텍스트 문자열.
+        """4개 섹션 통합 → advisory 헤더 포함 컨텍스트 문자열.
 
         Returns:
             포맷된 문자열 (모든 섹션 빈 경우 빈 문자열)
@@ -186,6 +222,10 @@ class NarrativeContextFormatter:
         scales = cls.format_arc_scales(all_refined_arcs)
         if scales:
             sections.append(scales)
+
+        time_summary = cls.format_cumulative_time(cumulative_elapsed)
+        if time_summary:
+            sections.append(time_summary)
 
         if not sections:
             return ""

@@ -1044,7 +1044,7 @@ class ChiefWriter(BaseAgent):
                     past_ms = self.context.db.get_manuscript(i)
                     if past_ms:
                         content = past_ms.get("content", "") if isinstance(past_ms, dict) else str(past_ms)
-                        # [V70] NOTE: manuscripts 테이블에 hud_snapshot 컬럼 없음 — 항상 {} 반환 (dead code)
+                        # [LM-Tier TF-E] manuscripts 테이블에 hud_snapshot 컬럼 활성화 — JSON dict 반환
                         hud_snapshot = past_ms.get("hud_snapshot", {}) if isinstance(past_ms, dict) else {}
                         self._manuscript_cache[i] = {"content": content, "hud_snapshot": hud_snapshot}
                 except (KeyError, TypeError, AttributeError):  # [V64.P4] individual ms load failure

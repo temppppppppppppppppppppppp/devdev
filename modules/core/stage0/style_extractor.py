@@ -719,7 +719,7 @@ JSON만 출력하세요.
             api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
             if api_key:
                 self.client = genai.Client(api_key=api_key)
-        except Exception as e:  # [TF-31-1] callers 외부에서 호출되므로 방어적 포착
+        except (ImportError, ValueError, RuntimeError) as e:  # [LM-Tier TF-A] 치명 예외(MemoryError 등) 전파
             logging.debug("[StyleExtractor] LLM init fail (%s): %s", type(e).__name__, e)
 
     def _llm_call(self, prompt: str) -> dict[str, Any]:

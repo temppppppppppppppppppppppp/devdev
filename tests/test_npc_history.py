@@ -340,3 +340,35 @@ class TestPersonalitySuddenChange:
         result = cv._check_personality_continuity(manuscript, ctx)
         sudden = [v for v in result["violations"] if v["type"] == "personality_sudden_change"]
         assert len(sudden) == 0
+
+
+# ══════════════════════════════════════════════════════════════
+# TestNPCHistoryReason — [LM-Tier TF-D] reason 컬럼
+# ══════════════════════════════════════════════════════════════
+
+
+class TestNPCHistoryReason:
+    """[LM-Tier TF-D] npc_history reason 컬럼 round-trip 테스트."""
+
+    def test_reason_roundtrip(self, tmp_db):
+        """reason 값이 DB에 저장되고 조회됨."""
+        tmp_db.insert_npc_change(
+            "장무기",
+            5,
+            2,
+            "weapon",
+            "없음",
+            "의천검",
+            change_source="arc_extraction",
+            reason="전투 승리 보상",
+        )
+        history = tmp_db.get_npc_history("장무기")
+        assert len(history) == 1
+        assert history[0]["reason"] == "전투 승리 보상"
+
+    def test_reason_default_empty(self, tmp_db):
+        """reason 미전달 시 빈 문자열."""
+        tmp_db.insert_npc_change("조민", 3, 1, "status", "alive", "dead")
+        history = tmp_db.get_npc_history("조민")
+        assert len(history) == 1
+        assert history[0]["reason"] == ""

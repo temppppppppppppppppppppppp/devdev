@@ -10,6 +10,7 @@ LLM 호출 없이 Python만으로 state_changes 기반 자동 갱신.
 
 import json
 import logging
+import re
 
 _logger = logging.getLogger(__name__)
 
@@ -39,6 +40,7 @@ class WorldStateManager:
         "timeline": [],  # [{ep, type, description}] — 시간 마커 (경과 시간, 계절, 날짜)
         "motivations": [],  # [{text, status, since_ep, resolved_ep}] — 주인공 핵심 동기
         "promises": [],  # [{text, promiser, promisee, since_ep, status}] — 약속/서약
+        "cumulative_elapsed": {"total_days": 0, "history": []},  # [LM-Tier TF-F] 누적 경과 시간
     }
 
     def __init__(self, db) -> None:
@@ -363,13 +365,27 @@ class WorldStateManager:
                     timeline.append(entry)
                 if len(timeline) > 20:
                     self._state["timeline"] = timeline[-20:]
+
+                # [LM-Tier TF-F] 누적 경과 시간 갱신
+                _desc = entry.get("description", "")
+                _parsed_days = self._parse_elapsed_days(_desc)
+                if _parsed_days and _parsed_days > 0:
+                    _elapsed = self._state.setdefault("cumulative_elapsed", {"total_days": 0, "history": []})
+                    _elapsed["total_days"] = _elapsed.get("total_days", 0) + _parsed_days
+                    _elapsed.setdefault("history", []).append({"ep": ep_num, "days": _parsed_days, "desc": _desc[:60]})
+                    if len(_elapsed["history"]) > 20:
+                        _elapsed["history"] = _elapsed["history"][-20:]
+                    _db_elapsed = _parsed_days
+                else:
+                    _db_elapsed = None
+
                 # [Phase3-Timeline] DB 동기화
                 if getattr(self, "db", None) and entry.get("description"):
                     try:
                         self.db.upsert_timeline_entry(
                             ep_no=entry["ep"],
                             story_date=entry.get("description", ""),
-                            elapsed_days=None,
+                            elapsed_days=_db_elapsed,
                             time_note=entry.get("description", ""),
                         )
                     except Exception as _te:
@@ -971,3 +987,32 @@ class WorldStateManager:
                 except Exception as e:
                     _logger.warning("[D-2] WorldState 리플레이 실패 ep %d: %s", ep, e)
         self.save()
+
+    # --- [LM-Tier TF-F] 누적 경과 시간 ---
+
+    @staticmethod
+    def _parse_elapsed_days(text: str) -> int | None:
+        """한국어 시간 표현 → 일수 변환. 실패 시 None."""
+        if not text:
+            return None
+        text = text.strip()
+        # 숫자+단위: "3일", "2주", "3개월"
+        m = re.search(r"(\d+)\s*(일|주|개월|달|년)", text)
+        if m:
+            n, unit = int(m.group(1)), m.group(2)
+            return {"일": 1, "주": 7, "개월": 30, "달": 30, "년": 365}.get(unit, 1) * n
+        # 한국어 수사
+        korean_nums = {"하루": 1, "이틀": 2, "사흘": 3, "나흘": 4, "닷새": 5, "엿새": 6, "이레": 7}
+        for k, v in korean_nums.items():
+            if k in text:
+                return v
+        # 복합 표현
+        compounds = {"일주일": 7, "보름": 15, "한 달": 30, "한달": 30, "반년": 180}
+        for k, v in compounds.items():
+            if k in text:
+                return v
+        return None
+
+    def get_cumulative_elapsed(self) -> dict:
+        """누적 경과 시간 조회. {"total_days": int, "history": [{"ep", "days", "desc"}]}"""
+        return self._state.get("cumulative_elapsed", {"total_days": 0, "history": []})

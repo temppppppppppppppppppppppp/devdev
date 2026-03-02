@@ -94,6 +94,42 @@ class TestFixScopeTracking:
         stats = db.get_fix_scope_stats()
         assert len(stats) == 0
 
+    def test_fix_scope_stats_format_for_director(self, db):
+        """[LM-Tier TF-C] 집계 결과 Director 주입 포맷 검증."""
+        db.save_director_selection(
+            ep_num=1,
+            round_num=1,
+            selected_label="A",
+            selected_strategy="s1",
+            verdict="PASS",
+            fix_scope="inplace",
+        )
+        db.save_director_selection(
+            ep_num=2,
+            round_num=1,
+            selected_label="B",
+            selected_strategy="s2",
+            verdict="REJECT",
+            fix_scope="full",
+        )
+        stats = db.get_fix_scope_stats(lookback=100)
+        # Director 주입 포맷 시뮬레이션
+        lines = ["[A-3] fix_scope 전략별 합격률"]
+        for row in stats:
+            scope = row.get("fix_scope", "?")
+            verdict = row.get("verdict", "?")
+            cnt = row.get("cnt", 0)
+            if cnt > 0:
+                lines.append(f"  - {scope} + {verdict}: {cnt}건")
+        result = "\n".join(lines)
+        assert "inplace + PASS: 1건" in result
+        assert "full + REJECT: 1건" in result
+
+    def test_fix_scope_stats_empty_safe(self, db):
+        """[LM-Tier TF-C] 빈 데이터 안전성."""
+        stats = db.get_fix_scope_stats()
+        assert stats == []
+
     def test_migration_idempotent(self, db):
         """ALTER TABLE 마이그레이션 중복 실행 안전."""
         # 이미 init에서 실행됨. 두 번째 init으로 확인

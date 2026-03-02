@@ -481,12 +481,23 @@ class Stage2PreflightAnalysis:
                         if _mot:
                             _npc_motivations[_npc_name] = _mot
 
+            # [LM-Tier TF-F] 누적 경과 시간 조회
+            _cumulative_elapsed = None
+            try:
+                _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+                if _db:
+                    _ws_anchor = _db.load_anchor("world_state")
+                    if _ws_anchor and isinstance(_ws_anchor, dict):
+                        _cumulative_elapsed = _ws_anchor.get("cumulative_elapsed")
+            except Exception:
+                pass
             _narrative_ctx = NarrativeContextFormatter.format_all(
                 active_plots=getattr(_st, "active_plots", None) if _st else None,
                 npc_motivations=_npc_motivations,
                 pending_commitments=getattr(_st, "pending_commitments", None) if _st else None,
                 all_refined_arcs=all_refined_arcs,
                 current_arc_no=global_arc_no,
+                cumulative_elapsed=_cumulative_elapsed,
             )
             if _narrative_ctx:
                 enhanced_context = _narrative_ctx + "\n\n" + enhanced_context
