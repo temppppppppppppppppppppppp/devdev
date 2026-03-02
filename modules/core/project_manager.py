@@ -66,7 +66,7 @@ class ProjectContext:
 
         # 1. DB 엔진 기동
         self.db = DBManager(self.paths.db_file)
-        logging.warning(f"🗄️ [Sovereign DB] SQLite S-Grade 엔진 가동: {self.db_path.name}")
+        logging.info(f"🗄️ [Sovereign DB] SQLite S-Grade 엔진 가동: {self.db_path.name}")
 
         self.master_bible = {}
         self.volumes = []
@@ -232,7 +232,7 @@ class ProjectContext:
                 latest_ep = self.db.get_latest_episode_number() - 1
                 if latest_ep > 0:
                     self.record_martial_stats(latest_ep, actual_data)
-                    logging.warning(f"🛡️ [Sync] 성경 저장과 동시에 HUD 테이블 동기화 완료 (ep {latest_ep}).")
+                    logging.info(f"🛡️ [Sync] 성경 저장과 동시에 HUD 테이블 동기화 완료 (ep {latest_ep}).")
                 else:
                     # 에피소드가 없으면 ep_num=0으로 초기 상태 저장
                     self.record_martial_stats(0, actual_data)
@@ -409,7 +409,7 @@ class ProjectContext:
                 lines.append(f"{data['expected_ending']}")
 
             filepath.write_text("\n".join(lines), encoding="utf-8")
-            logging.warning(f"📁 [Plans] Blueprint {ep_num}화 txt 저장 완료")
+            logging.info(f"📁 [Plans] Blueprint {ep_num}화 txt 저장 완료")
         except Exception as e:
             logging.warning(f"⚠️ [Plans] Blueprint txt 저장 실패: {e}")
 
@@ -430,7 +430,7 @@ class ProjectContext:
                 continue
             clean_vid = re.sub(r"[^a-zA-Z0-9]", "", vid).upper()
             if clean_raw == clean_vid:
-                logging.warning(f"🔧 [Normalized] Seed ID 교정: {raw_id} -> {vid}")
+                logging.info(f"🔧 [Normalized] Seed ID 교정: {raw_id} -> {vid}")
                 return vid
 
         return raw_id  # 매칭 실패 시 원본 유지(데이터 보존)
@@ -688,7 +688,7 @@ class ProjectContext:
         # 규격에 맞는 데이터만 필터링 (누락 시 None 처리하여 DB 에러 방지)
         sanitized_data = {k: stats_data.get(k) for k in valid_keys}
         self.db.update_martial_tracker(ep_num, sanitized_data)
-        logging.warning(f"📊 [DB] 제 {ep_num}화 15대 지표 트래커 박제 완료.")
+        logging.info(f"📊 [DB] 제 {ep_num}화 15대 지표 트래커 박제 완료.")
 
     # modules/core/project_manager.py 파일 내부 ProjectContext 클래스에 추가
 
@@ -736,7 +736,7 @@ class ProjectContext:
 
                 # 검증 결과 출력
                 logging.info("📋 [V49.3] Phase 0 파일 검증 결과:")
-                logging.warning(f"Bible: {'✅ 유효' if report['bible']['valid'] else '❌ 오류'}")
+                logging.info(f"Bible: {'✅ 유효' if report['bible']['valid'] else '❌ 오류'}")
                 if report["bible"]["errors"]:
                     for err in report["bible"]["errors"]:
                         logging.warning(f"❌ {err}")
@@ -744,7 +744,7 @@ class ProjectContext:
                     for warn in report["bible"]["warnings"]:
                         logging.warning(f"⚠️ {warn}")
 
-                logging.warning(
+                logging.info(
                     f"Treatment: {'✅ 유효' if report['treatment']['valid'] else '❌ 오류'} ({report['treatment']['block_count']}개 블록)"
                 )
                 if report["treatment"]["errors"]:
@@ -783,7 +783,7 @@ class ProjectContext:
             success = self.save_v20_anchor("bible", self.master_bible)
 
             if success:
-                logging.warning(
+                logging.info(
                     f"✅ [S-Grade Success] {len(refined_roadmap)}개 블록이 포함된 '완전한 성경'이 DB에 안착되었습니다."
                 )
                 logging.info(f"📊 로드맵 크기: {len(self.master_bible['MasterBible']['plot_roadmap'])} blocks")
@@ -857,7 +857,7 @@ class ProjectContext:
 
             # 3. 동기화 상태 갱신
             self.db.update_sync_status(ep_num, 1)
-            logging.warning(f"⚓ 제 {ep_num}화 역사 박제 완료.")
+            logging.info(f"⚓ 제 {ep_num}화 역사 박제 완료.")
 
         # [V60.60 Fix] 반환값 추가 - 동기화 성공 표시
         return True

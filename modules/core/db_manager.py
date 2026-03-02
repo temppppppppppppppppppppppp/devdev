@@ -1172,9 +1172,12 @@ class DBManager:
             return
         with self._lock:
             self._ensure_open()
+            nested = self.conn.in_transaction  # [TF-47] commit 누락 수정
             placeholders = ", ".join(["?"] * len(valid_ids))
             query = f"DELETE FROM seeds WHERE seed_id NOT IN ({placeholders})"
             self.conn.execute(query, valid_ids)
+            if not nested:
+                self.commit()
 
     def sync_seeds(self, seeds_list) -> None:
         """[V24 Precise Mode] 데이터 누락 시 기본값 할당으로 시스템 중단 방지"""

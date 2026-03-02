@@ -844,8 +844,11 @@ class TestDirectorEnsembleCaching:
             {"strategy": "C", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
         ]
         ensemble.select_and_judge_ensemble(
-            ep_num=5, candidates=candidates,
-            validation_results=[], blueprint={}, previous_ending="",
+            ep_num=5,
+            candidates=candidates,
+            validation_results=[],
+            blueprint={},
+            previous_ending="",
         )
 
         ensemble._d._ask_with_cached_context.assert_called_once()
@@ -870,8 +873,11 @@ class TestDirectorEnsembleCaching:
             {"strategy": "C", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
         ]
         ensemble.select_and_judge_ensemble(
-            ep_num=7, candidates=candidates,
-            validation_results=[], blueprint={}, previous_ending="",
+            ep_num=7,
+            candidates=candidates,
+            validation_results=[],
+            blueprint={},
+            previous_ending="",
         )
 
         ensemble._d._ask_with_cached_context.assert_called_once()
@@ -894,8 +900,11 @@ class TestDirectorEnsembleCaching:
             {"strategy": "C", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
         ]
         ensemble.select_and_judge_ensemble(
-            ep_num=3, candidates=candidates,
-            validation_results=[], blueprint={}, previous_ending="",
+            ep_num=3,
+            candidates=candidates,
+            validation_results=[],
+            blueprint={},
+            previous_ending="",
         )
 
         ensemble._d._ask_with_cached_context.assert_not_called()
@@ -930,8 +939,11 @@ class TestDirectorEnsembleCaching:
             {"strategy": "C", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
         ]
         ensemble.select_and_judge_ensemble(
-            ep_num=9, candidates=candidates,
-            validation_results=[], blueprint={}, previous_ending="",
+            ep_num=9,
+            candidates=candidates,
+            validation_results=[],
+            blueprint={},
+            previous_ending="",
         )
 
         assert "prompt" in captured_fallback
@@ -966,12 +978,215 @@ class TestDirectorEnsembleCaching:
             {"strategy": "C", "manuscript": _LONG_MANUSCRIPT, "warnings": "", "state_updates": {}},
         ]
         ensemble.select_and_judge_ensemble(
-            ep_num=2, candidates=candidates,
-            validation_results=[], blueprint={}, previous_ending="",
+            ep_num=2,
+            candidates=candidates,
+            validation_results=[],
+            blueprint={},
+            previous_ending="",
         )
 
         full_fb = captured_args["prompt"]
         assert full_fb.endswith(variable), (
-            f"full_fallback이 variable_prompt로 끝나야 함. "
-            f"actual tail: {full_fb[-len(variable) - 5:]!r}"
+            f"full_fallback이 variable_prompt로 끝나야 함. actual tail: {full_fb[-len(variable) - 5 :]!r}"
         )
+
+
+# ═══════════════════════════════════════════════════════════════
+# [TF-47] Arc 후보 Director 비교 선택 테스트
+# ═══════════════════════════════════════════════════════════════
+
+
+class TestDirectorArcComparison:
+    """[TF-47] compare_and_select_arc 테스트."""
+
+    @pytest.fixture
+    def director(self, mock_context, mock_client):
+        with patch.dict("os.environ", {"GOOGLE_API_KEY": "test-key-123"}):
+            from modules.domain.agents.director import Director
+
+            d = Director(context=mock_context, client=mock_client, model_tier="gemini-2.5-flash")
+            return d
+
+    def test_compare_and_select_arc_empty(self, director):
+        """빈 후보 → REJECT 반환."""
+        result = director.compare_and_select_arc(candidates=[], arc_no=1, curr_block={}, prev_arc_context="")
+        assert result["decision"] == "REJECT"
+        assert result["selected_index"] == -1
+        assert result["selected_arc"] is None
+
+    def test_compare_and_select_arc_single_fallback(self, director):
+        """단일 후보 + LLM 파싱 실패 → Python 폴백 PASS."""
+        director.ask = MagicMock(return_value="invalid json response")
+        director._extract_json_robust = MagicMock(return_value=None)
+
+        arc = {"tactical_doc": "A" * 3000, "arc_no": 1, "ep_count": 5, "_strategy": "balanced"}
+        result = director.compare_and_select_arc(candidates=[arc], arc_no=1, curr_block={}, prev_arc_context="")
+        # 단일 후보도 compare_and_select_arc 내부 호출됨 → LLM 실패 시 폴백
+        assert result["decision"] == "PASS"
+        assert result["selected_index"] == 0
+        assert result["selected_arc"] is arc
+
+    def test_compare_and_select_arc_multi_pass(self, director):
+        """다중 후보 + LLM PASS → 올바른 선택 반환."""
+        director.ask = MagicMock(return_value='{"selected_index":1,"decision":"PASS","score":92}')
+        director._extract_json_robust = MagicMock(
+            return_value={
+                "selected_index": 1,
+                "decision": "PASS",
+                "score": 92,
+                "contradictions": [],
+                "reason": "balanced 전략이 더 밀도 높음",
+                "comparison_notes": "conservative vs balanced 비교",
+                "feedback": "",
+                "fix_scope": "inplace",
+            }
+        )
+        director._escape_braces = MagicMock(side_effect=lambda x: x)
+
+        arcs = [
+            {
+                "tactical_doc": "A" * 3000,
+                "arc_no": 1,
+                "ep_count": 5,
+                "_strategy": "conservative",
+                "joint_docs": {},
+                "state_constraints": {},
+            },
+            {
+                "tactical_doc": "B" * 4000,
+                "arc_no": 1,
+                "ep_count": 5,
+                "_strategy": "balanced",
+                "joint_docs": {},
+                "state_constraints": {},
+            },
+        ]
+        result = director.compare_and_select_arc(
+            candidates=arcs, arc_no=1, curr_block={"title": "test"}, prev_arc_context="이전 Arc 정보"
+        )
+        assert result["decision"] == "PASS"
+        assert result["selected_index"] == 1
+        assert result["selected_arc"] is arcs[1]
+        assert result["score"] == 92
+
+    def test_compare_and_select_arc_multi_reject(self, director):
+        """다중 후보 + LLM REJECT → feedback 포함."""
+        director.ask = MagicMock(return_value="json")
+        director._extract_json_robust = MagicMock(
+            return_value={
+                "selected_index": 0,
+                "decision": "REJECT",
+                "score": 55,
+                "contradictions": ["사망 NPC 등장"],
+                "reason": "모순 발견",
+                "comparison_notes": "둘 다 문제 있음",
+                "feedback": "사망한 NPC '김철수'를 제거하세요",
+                "fix_scope": "partial",
+            }
+        )
+        director._escape_braces = MagicMock(side_effect=lambda x: x)
+
+        arcs = [
+            {"tactical_doc": "A" * 3000, "_strategy": "conservative", "joint_docs": {}, "state_constraints": {}},
+            {"tactical_doc": "B" * 3000, "_strategy": "creative", "joint_docs": {}, "state_constraints": {}},
+        ]
+        result = director.compare_and_select_arc(candidates=arcs, arc_no=2, curr_block={}, prev_arc_context="")
+        assert result["decision"] == "REJECT"
+        assert result["score"] == 55
+        assert len(result["contradictions"]) == 1
+        assert "사망" in result["contradictions"][0]
+        assert result["feedback"] != ""
+        assert result["fix_scope"] == "partial"
+
+    def test_fourphase_director_none_uses_validator(self, mock_context, mock_client):
+        """director=None → 기존 Validator 경로 사용 확인 (하위 호환)."""
+        with patch.dict("os.environ", {"GOOGLE_API_KEY": "test-key-123"}):
+            from modules.domain.agents.four_phase_arc_generator import FourPhaseArcGenerator
+
+            gen = FourPhaseArcGenerator(context=mock_context, client=mock_client)
+            # generate() 시그니처에 director=None 기본값이 있는지 확인
+            import inspect
+
+            sig = inspect.signature(gen.generate)
+            assert "director" in sig.parameters
+            assert sig.parameters["director"].default is None
+
+    def test_fourphase_patch_arc_with_feedback_no_director_param(self, mock_context, mock_client):
+        """patch_arc_with_feedback에는 director 파라미터가 없음 (패치 모드는 단일 후보)."""
+        with patch.dict("os.environ", {"GOOGLE_API_KEY": "test-key-123"}):
+            from modules.domain.agents.four_phase_arc_generator import FourPhaseArcGenerator
+
+            gen = FourPhaseArcGenerator(context=mock_context, client=mock_client)
+            import inspect
+
+            sig = inspect.signature(gen.patch_arc_with_feedback)
+            assert "director" not in sig.parameters
+
+    def test_compare_and_select_arc_multi_pass_with_fix(self, director):
+        """다중 후보 + LLM PASS_WITH_FIX → fix_scope/feedback 포함."""
+        director.ask = MagicMock(return_value="json")
+        director._extract_json_robust = MagicMock(
+            return_value={
+                "selected_index": 0,
+                "decision": "PASS_WITH_FIX",
+                "score": 85,
+                "contradictions": [],
+                "reason": "경미한 수치 오류",
+                "comparison_notes": "conservative가 안정적",
+                "feedback": "arc_end_state 내공 수치를 95로 수정하세요",
+                "fix_scope": "inplace",
+            }
+        )
+        director._escape_braces = MagicMock(side_effect=lambda x: x)
+
+        arcs = [
+            {"tactical_doc": "A" * 3000, "_strategy": "conservative", "joint_docs": {}, "state_constraints": {}},
+            {"tactical_doc": "B" * 3000, "_strategy": "balanced", "joint_docs": {}, "state_constraints": {}},
+        ]
+        result = director.compare_and_select_arc(candidates=arcs, arc_no=1, curr_block={}, prev_arc_context="")
+        assert result["decision"] == "PASS_WITH_FIX"
+        assert result["score"] == 85
+        assert result["fix_scope"] == "inplace"
+        assert "내공" in result["feedback"]
+        assert result["selected_arc"] is arcs[0]
+
+    def test_compare_and_select_arc_ask_exception_fallback(self, director):
+        """LLM ask() 예외 → _fallback_arc_selection으로 PASS 폴백."""
+        director.ask = MagicMock(side_effect=RuntimeError("API 장애"))
+        director._escape_braces = MagicMock(side_effect=lambda x: x)
+
+        arcs = [
+            {"tactical_doc": "A" * 3000, "_strategy": "conservative", "joint_docs": {}, "state_constraints": {}},
+            {"tactical_doc": "B" * 3000, "_strategy": "creative", "joint_docs": {}, "state_constraints": {}},
+        ]
+        result = director.compare_and_select_arc(candidates=arcs, arc_no=1, curr_block={}, prev_arc_context="")
+        # 예외 시 Python 폴백 → PASS, 첫 번째 후보 선택
+        assert result["decision"] == "PASS"
+        assert result["selected_index"] == 0
+        assert result["selected_arc"] is arcs[0]
+        assert "폴백" in result["comparison_notes"]
+
+    def test_compare_and_select_arc_index_clamping(self, director):
+        """LLM이 selected_index 범위 초과 → 0으로 클램프."""
+        director.ask = MagicMock(return_value="json")
+        director._extract_json_robust = MagicMock(
+            return_value={
+                "selected_index": 99,
+                "decision": "PASS",
+                "score": 90,
+                "contradictions": [],
+                "reason": "OK",
+                "comparison_notes": "",
+                "feedback": "",
+                "fix_scope": "inplace",
+            }
+        )
+        director._escape_braces = MagicMock(side_effect=lambda x: x)
+
+        arcs = [
+            {"tactical_doc": "A" * 3000, "_strategy": "conservative", "joint_docs": {}, "state_constraints": {}},
+            {"tactical_doc": "B" * 3000, "_strategy": "balanced", "joint_docs": {}, "state_constraints": {}},
+        ]
+        result = director.compare_and_select_arc(candidates=arcs, arc_no=1, curr_block={}, prev_arc_context="")
+        assert result["selected_index"] == 0  # 99 → 0으로 클램프
+        assert result["selected_arc"] is arcs[0]

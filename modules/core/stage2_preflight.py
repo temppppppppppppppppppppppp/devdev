@@ -906,6 +906,7 @@ class Stage2PreflightAnalysis:
                             state_tracker=self.ctx.state_tracker,
                             vector_context=_s2_vector_ctx,
                             adversarial_self_play=self.ctx.adversarial_self_play,
+                            director=self.ctx.agents.get("director"),  # [TF-47]
                         )
                     if four_phase_arc:
                         self.ctx.ui.log("      ✅ [TF-38] Arc 생성 완료")

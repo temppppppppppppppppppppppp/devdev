@@ -503,8 +503,8 @@ class TestContextCacheEviction:
 
 
 class TestTimeoutAndPromptGate:
-    def test_ask_does_not_inject_http_options(self, agent, monkeypatch):
-        # [Fix] http_options를 GenerateContentConfig에 넣으면 ReadTimeout 발생 — 제거됨
+    def test_ask_injects_http_options_timeout(self, agent, monkeypatch):
+        # [TF-44] Gemini API 무한 hang 방지 — http_options timeout 주입 검증
         monkeypatch.setattr(agent, "API_DELAY", 0)
         response = MagicMock()
         response.text = json.dumps({"content": "ok"})
@@ -513,10 +513,11 @@ class TestTimeoutAndPromptGate:
 
         _ = agent.ask("짧은 프롬프트")
         config = agent.client.models.generate_content.call_args.kwargs["config"]
-        assert getattr(config, "http_options", None) is None
+        assert config.http_options is not None
+        assert config.http_options.timeout == int(agent.API_TIMEOUT)
 
-    def test_cached_context_call_does_not_inject_http_options(self, agent, monkeypatch):
-        # [Fix] http_options를 GenerateContentConfig에 넣으면 ReadTimeout 발생 — 제거됨
+    def test_cached_context_call_injects_http_options_timeout(self, agent, monkeypatch):
+        # [TF-44] Gemini API 무한 hang 방지 — cached context http_options timeout 주입 검증
         monkeypatch.setattr(agent, "API_DELAY", 0)
         response = MagicMock()
         response.text = json.dumps({"content": "cached"})
@@ -524,7 +525,8 @@ class TestTimeoutAndPromptGate:
 
         _ = agent._ask_with_cached_context(cache_name="cached/ctx", prompt="테스트")
         config = agent.client.models.generate_content.call_args.kwargs["config"]
-        assert getattr(config, "http_options", None) is None
+        assert config.http_options is not None
+        assert config.http_options.timeout == int(agent.API_TIMEOUT)
 
     def test_prompt_size_gate_truncates(self, agent):
         agent.MAX_CONTEXT_CHARS = 140

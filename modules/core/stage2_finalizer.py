@@ -70,13 +70,13 @@ class Stage2Finalizer:
                         current_feedback = f"{current_feedback}\n{spg_text}"
                     else:
                         current_feedback = spg_text
-            except Exception as e:
+            except (AttributeError, TypeError, RuntimeError) as e:
                 logging.warning(f"⚠️ [V64.P4-fix] 플롯 중복 감지 실패: {e}")
 
         # [V65] PerfTimer: Director 대면 측정
         try:
             self.ctx.perf_timer.start(f"s2_arc_{global_arc_no}_director")
-        except Exception as e:
+        except (AttributeError, TypeError) as e:
             logging.debug(f"[PerfTimer] start s2 director: {e}")
 
         # [V67] Director 컨텍스트 확장: 이전 30개 Arc tactical_doc 전문 전달
@@ -104,7 +104,7 @@ class Stage2Finalizer:
                     f"{_full_arc_history}\n\n"
                     f"═══ 상태 요약 ═══\n{last_refined_context}"
                 )
-                logging.warning(
+                logging.info(
                     f"📚 [V67] Director 컨텍스트 확장: {len(_prev_arc_docs)}개 Arc ({len(_expanded_prev_context)}자)"
                 )
 
@@ -124,7 +124,7 @@ class Stage2Finalizer:
                 elif _incarnation == "환생자":
                     _sc_parts.append("→ 환생자: 전생 기억 보유.")
             _story_context = "\n".join(_sc_parts)
-        except Exception as e:
+        except (KeyError, TypeError, AttributeError) as e:
             logging.warning(f"[SilentPass:Stage2Finalizer] 스토리 컨텍스트 생성 실패: {e!s:.100}")
             _story_context = ""
 
@@ -144,6 +144,7 @@ class Stage2Finalizer:
             _story_context += f"\n\n⚠️ {_adv_text}"
 
         self.ctx.ui.log("      🤔 [TF-38] Director 전략적 무결성 검수 중...")
+        print("      🤔 [Director] 전략적 무결성 검수 중 (LLM 호출, 1~3분 소요)...")
         # [G7] Director 심사 호출 크래시 방어
         try:
             audit = self.ctx.agents["director"].audit_strategic_plan(
@@ -155,7 +156,7 @@ class Stage2Finalizer:
                 entity_registry=entity_registry_for_director,
                 story_context=_story_context,  # [V67.1]
             )
-        except Exception as _dir_err:
+        except (RuntimeError, OSError, ValueError) as _dir_err:
             logging.warning(f"[G7] Director 심사 호출 실패: {_dir_err!s:.100}")
             audit = {
                 "decision": "REJECT",
@@ -165,13 +166,15 @@ class Stage2Finalizer:
             }
         try:
             self.ctx.perf_timer.stop(f"s2_arc_{global_arc_no}_director")
-        except Exception as e:
+        except (AttributeError, TypeError) as e:
             logging.debug(f"[PerfTimer] stop s2 director: {e}")
 
         # Director 심사 결과 사용자 출력
         _d_decision = audit.get("decision", "?")
         _d_score = audit.get("score", "?")
         _d_reason = audit.get("reason", "")
+        _d_status = "✅" if _d_decision in ("PASS", "PASS_WITH_FIX") else "❌"
+        print(f"      {_d_status} [Director] {_d_decision} (score={_d_score})")
         self.ctx.ui.log(f"\n      🎬 [Director] {_d_decision} (score={_d_score})")
         if _d_reason:
             for _i in range(0, len(str(_d_reason)), 80):
@@ -237,7 +240,7 @@ class Stage2Finalizer:
                     generation_method=generation_method,
                     reason=str(audit.get("reason", ""))[:500],
                 )
-            except Exception as _e:
+            except (AttributeError, TypeError) as _e:
                 logging.debug("[SilentPass:S2:SessionLog] %s", _e)
 
         # [TF-32-VERIFY] PASS_WITH_FIX → patch + Director 재심사 반복 (최대 3회)
@@ -272,7 +275,7 @@ class Stage2Finalizer:
                         director_feedback=_fix_instr,
                         arc_no=global_arc_no,
                     )
-                except Exception:
+                except (RuntimeError, ValueError, OSError):
                     logging.exception("[TF-32-V] inplace_patch_arc 예외")
                     break
                 if not _patched:
@@ -291,7 +294,7 @@ class Stage2Finalizer:
                         entity_registry=entity_registry_for_director,
                         story_context=_story_context,
                     )
-                except Exception:
+                except (RuntimeError, ValueError, OSError):
                     logging.exception("[TF-32-V] 재심사 예외")
                     break
 
@@ -552,13 +555,13 @@ class Stage2Finalizer:
                     _commit_ok = await self.ctx.safe_commit_async()
                     if not _commit_ok:
                         raise RuntimeError("safe_commit_async returned False")
-            except Exception as commit_err:
+            except (OSError, RuntimeError) as commit_err:
                 # [TF-C09] DB 트랜잭션 롤백 — 반쪽 커밋 방지
                 try:
                     _conn = self.ctx.current_project.db.conn
                     if _conn.in_transaction:
                         _conn.rollback()
-                        logging.warning("🔄 [TF-C09] DB rollback 완료 (Arc %d)", global_arc_no)
+                        logging.info("🔄 [TF-C09] DB rollback 완료 (Arc %d)", global_arc_no)
                 except Exception as _rb:
                     logging.warning("⚠️ [TF-C09] DB rollback 실패: %s", _rb)
                 self.ctx.ui.log(f"🚨 [DB] Arc {global_arc_no} 저장 실패: {commit_err}")
@@ -576,7 +579,7 @@ class Stage2Finalizer:
                         for _k, _v in st_snapshot.items():
                             if hasattr(_st, _k):  # [감리] 다른 롤백 경로와 일관된 hasattr 가드
                                 setattr(_st, _k, _v)
-                        logging.warning("🔄 [V70] DB 실패 StateTracker 롤백 완료")
+                        logging.info("🔄 [V70] DB 실패 StateTracker 롤백 완료")
                     except Exception as _rb_err:
                         logging.warning(f"⚠️ [V70] DB 실패 StateTracker 롤백 실패: {_rb_err}")
                 return {"action": "retry", "current_feedback": current_feedback}
@@ -600,7 +603,7 @@ class Stage2Finalizer:
                     for _prereq in refined_arc.get("prerequisite_arcs") or []:
                         if isinstance(_prereq, int) and _prereq != _arc_no:
                             self.ctx.current_project.db.upsert_arc_dependency(_prereq, _arc_no, "requires", "")
-                except Exception as _ade:
+                except (AttributeError, TypeError) as _ade:
                     logging.debug("[Stage2] arc_dependency 저장 실패 (비치명): %s", _ade)
 
             # [B4-P1-1] constraint_db는 DB 커밋 이후 업데이트 — 실패해도 다음 루프에서 복구 가능
@@ -609,7 +612,7 @@ class Stage2Finalizer:
                 self.ctx.ui.log(
                     f"      🔒 [V49.4] ConstraintDB 업데이트 완료 (총 {len(constraint_db.arc_states)}개 Arc)"
                 )
-            except Exception as _cdb_err:
+            except (AttributeError, TypeError, RuntimeError) as _cdb_err:
                 logging.warning("[B4-P1-1] constraint_db.update_arc_state 실패 (비치명적): %s", _cdb_err)
 
             if callable(getattr(self.ctx, "generate_arc_context_v60", None)):
@@ -646,7 +649,7 @@ class Stage2Finalizer:
                             total_cost_usd=scope.get("total_cost_usd", 0.0),
                             model_breakdown=scope.get("model_breakdown", "{}"),
                         )
-            except Exception as cost_err:
+            except (OSError, RuntimeError, TypeError) as cost_err:
                 logging.warning("[Phase 6] Arc 비용 기록 실패 (비차단): %s", cost_err)
 
             # [V68] 계층적 요약 피라미드 — 볼륨 요약 (10 Arc마다)
@@ -764,7 +767,7 @@ class Stage2Finalizer:
                     for _k, _v in st_snapshot.items():
                         if hasattr(_st, _k):  # [감리] 다른 롤백 경로와 일관된 hasattr 가드
                             setattr(_st, _k, _v)
-                    logging.warning("🔄 [V70] StateTracker 롤백 완료 (Director REJECT)")
+                    logging.info("🔄 [V70] StateTracker 롤백 완료 (Director REJECT)")
                 except Exception as _rb_err:
                     logging.warning(f"⚠️ [V70] StateTracker 롤백 실패 (비차단): {_rb_err}")
                 st_snapshot = None
@@ -920,7 +923,7 @@ class Stage2Finalizer:
                     "patch_fallback": patch_fallback,
                 },
             )
-        except Exception as e:
+        except (OSError, RuntimeError, TypeError) as e:
             logging.warning(f"[SilentPass:Stage2RejectMetric] {e!s:.120}")
 
         if V50_MODULES_AVAILABLE and self.ctx.quality_dashboard:

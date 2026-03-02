@@ -44,7 +44,7 @@ class InfoParadoxChecker:
 
         try:
             all_bibles = db.get_all_episode_bibles()
-        except Exception as e:
+        except (AttributeError, TypeError, RuntimeError) as e:
             logger.warning("[LM-F] episode_bibles 조회 실패: %s", str(e)[:80])
             return ""
 
@@ -161,7 +161,7 @@ class InfoParadoxChecker:
             if not response:
                 return []
             return self._parse_llm_response(response, ep_num)
-        except Exception as e:
+        except (json.JSONDecodeError, ValueError, RuntimeError, OSError) as e:
             logger.warning("[LM-F] InfoParadoxChecker LLM 호출 실패 (비치명): %s", str(e)[:80])
             return []
 

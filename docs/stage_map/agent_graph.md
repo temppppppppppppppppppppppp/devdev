@@ -59,12 +59,33 @@ stage4_orchestrator.stage_4_v2_chief_writer()
       │       ├─ consistency_validator.validate()
       │       ├─ blocking_validator.validate()
       │       ├─ continuity_validator.validate()
+      │       ├─ [Advisory 체인] _director_mc_parts 수집 (LM-A~F)
+      │       │   ├─ TruthGate.validate()           # LM-A: 7개 팩트 검사
+      │       │   ├─ NpcDriftAdvisor.check()         # LM-B: NPC 속성 표류
+      │       │   ├─ NumericDriftAdvisor.check()      # LM-C: 수치 누적 표류
+      │       │   ├─ FlashbackVerifier.verify()       # LM-E: 회상 오염 감지
+      │       │   ├─ InfoParadoxChecker.check()       # LM-F: 1인칭 정보 역설
+      │       │   └─ RelationshipDriftAdvisor.check() # LM-D: 관계도 표류
       │       └─ agents["director"].select_and_judge_ensemble()
       │           └─ DirectorEnsembleSelector.select_and_judge_ensemble()
+      ├─ [PASS_WITH_FIX 경로] (TF-27~34)
+      │   ├─ fix_scope="inplace" → chief_writer.inplace_patch()
+      │   │   └─ patch_state_updates JSON 추출 (TF-47: rfind+json.loads)
+      │   │   └─ state_updates merge: {**final, **patch}
+      │   │   └─ Director audit_manuscript() 재심사 (최대 3회)
+      │   ├─ fix_scope="partial" → single_strategy 1후보 재생성
+      │   └─ fix_scope="full" → Ensemble 3후보 전면 재생성
       ├─ post-select checks
       │   ├─ agents["director"].check_manuscript_continuity_with_cache()
       │   └─ agents["director"].check_manuscript_history_conflicts()
       └─ post_processor.process_pass_result()
+```
+
+## Stage 2 Advisory (LM-G)
+```text
+stage2_preflight._preflight_arc_analysis()
+  └─ NarrativeContextFormatter.format()  # LM-G: 동기/약속/Arc스케일 enrichment
+      → enhanced_context에 prepend (순수 Python, LLM/DB 없음)
 ```
 
 ## 확인 메모
@@ -72,6 +93,9 @@ stage4_orchestrator.stage_4_v2_chief_writer()
 - `UnifiedBlueprintValidator`의 다후보 경로는 `director.compare_and_select_blueprint()` 호출이 핵심이며, 별도 다른 에이전트 fan-out은 없다.
 - Stage 4의 Director는 `main_a.py`에서 등록되는 `agents["director"] = Director(...)`이다.
 - 즉 Stage 4는 `director_continuity.py` 단독 에이전트를 직접 쓰는 구조가 아니라, `Director` 파사드 내부 위임(`DirectorEnsembleSelector`, `DirectorContinuityValidator`, `DirectorQualityAuditor`) 구조다.
+- Stage 4 Advisory 체인(LM-A~F)은 `_director_mc_parts`에 주입되어 Director 최종 판정의 근거 자료로 사용된다. 모두 비차단(실패 시 빈 결과).
+- Context Caching: 6개 사이트 캐싱 적용 완료 — ChiefWriter/ArcEnsemble/BlueprintEnsemble fan-out, DirectorEnsemble stable/variable, DirectorContinuity Blueprint/Manuscript.
+- Smart Context Retrieval (SC-0~6): `ContextAdvisor`가 RetrievalPlan 기반 multi-query 실행. Stage 2/3/4 공통.
 
 ## 확인 위치
 - `modules/core/stage2_orchestrator.py:430`

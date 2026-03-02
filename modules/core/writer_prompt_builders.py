@@ -64,7 +64,6 @@ def build_justification_guidance(hud_report: str, genre_name: str) -> str:
     if any(constraint in hud_report for constraint in physical_constraints):
         active_constraints.append("weak_body_strong_action")
 
-    hud_report.lower()
     low_status_keywords = ["하인", "노예", "평민", "무명", "낭인", "거지", "천민"]
     _is_low_status = any(keyword in hud_report for keyword in low_status_keywords)
     rep_match = re.search(r"reputation[:\s]+(\d+)", hud_report, re.IGNORECASE)

@@ -109,11 +109,11 @@ class TestPatchModeThresholds:
     def test_rewrite_threshold(self):
         assert PatchModeThresholds.REWRITE == 50
 
-    def test_patch_threshold(self):
-        assert PatchModeThresholds.PATCH == 80
+    def test_inplace_threshold(self):
+        assert PatchModeThresholds.INPLACE == 60
 
-    def test_rewrite_less_than_patch(self):
-        assert PatchModeThresholds.REWRITE < PatchModeThresholds.PATCH
+    def test_rewrite_less_than_inplace(self):
+        assert PatchModeThresholds.REWRITE < PatchModeThresholds.INPLACE
 
 
 class TestRoundContextAnnotations:

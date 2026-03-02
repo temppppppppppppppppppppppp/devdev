@@ -102,7 +102,7 @@ class TruthGate:
                     for n in ws_deceased:
                         if n not in deceased_names:
                             deceased_names.append(n)
-            except Exception as e:
+            except (AttributeError, TypeError, RuntimeError) as e:
                 logger.warning("[TruthGate] world_state.get_deceased_npcs() failed: %s", e)
 
         if not deceased_names:
@@ -181,7 +181,7 @@ class TruthGate:
                 owned = self._world_state.get_owned_items()
                 if owned:
                     owned_items = set(owned)
-            except Exception as e:
+            except (AttributeError, TypeError, RuntimeError) as e:
                 logger.warning("[TruthGate] world_state.get_owned_items() failed: %s", e)
                 return  # 조회 실패 시 검사 스킵
 
@@ -212,7 +212,7 @@ class TruthGate:
                 dl = self._world_state.get_destroyed_locations()
                 if dl:
                     destroyed_locations = list(dl)
-            except Exception as e:
+            except (AttributeError, TypeError, RuntimeError) as e:
                 logger.warning("[TruthGate] world_state.get_destroyed_locations() failed: %s", e)
                 return
 
@@ -266,7 +266,7 @@ class TruthGate:
                 ks = self._world_state.get_known_skills()
                 if ks:
                     known_skills = set(ks)
-            except Exception as e:
+            except (AttributeError, TypeError, RuntimeError) as e:
                 logger.warning("[TruthGate] world_state.get_known_skills() failed: %s", e)
                 return
 
@@ -329,7 +329,7 @@ class TruthGate:
             return
         try:
             npc_snapshot = self._world_state.get_npc_role_snapshot() or {}
-        except Exception as e:
+        except (AttributeError, TypeError, RuntimeError) as e:
             logger.warning("[TruthGate] get_npc_role_snapshot() failed: %s", e)
             return
         if not npc_snapshot:
@@ -394,7 +394,7 @@ class TruthGate:
 
         try:
             laws = self._world_state.get_world_laws()
-        except Exception as e:
+        except (AttributeError, TypeError, RuntimeError) as e:
             logger.warning("[TruthGate] get_world_laws() failed: %s", e)
             return
 
@@ -433,5 +433,5 @@ class TruthGate:
                     "CRITICAL",
                     "world_law_violation",
                 )
-        except Exception as e:
+        except (json.JSONDecodeError, ValueError, RuntimeError) as e:
             logger.warning("[TruthGate] world_law_violation 검사 실패 (비치명): %s", e)

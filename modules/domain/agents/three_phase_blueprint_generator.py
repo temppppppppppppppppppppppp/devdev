@@ -174,6 +174,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         _initial_feedback = feedback  # [TF-S3-04] 초기 피드백 보존 (retry간 누적 방지)
 
         for retry in range(max_retries + 1):  # max_retries=2 → 3번 시도
+            print(f"   🔄 [Retry {retry + 1}/{max_retries + 1}] Blueprint 생성 시도...")
             pipeline_result["retries"] = retry
             _attempt_feedback = _initial_feedback  # [TF-S3-04] 매 retry마다 초기값에서 시작
             _strategy_feedback = _build_strategy_feedback()
@@ -187,9 +188,11 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             # ═══════════════════════════════════════════════════════════════
             if cached_constraint_block and retry > 0:
                 logging.info("📋 [Phase 1] 제약 캐시 사용")
+                print("   📋 [Phase 1] 제약 캐시 사용")
                 constraint_block = cached_constraint_block
             else:
                 logging.info("📋 [Phase 1] 제약 수집 중...")
+                print("   📋 [Phase 1] 제약 수집 중...")
 
                 constraint_block = self.constraint_compiler.compile(
                     arc_data=arc_data,
@@ -213,6 +216,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             # PHASE 2: GENERATE - Ensemble 생성
             # ═══════════════════════════════════════════════════════════════
             logging.info("🎲 [Phase 2] Ensemble 생성 중 (3개 후보)...")
+            print("   🎲 [Phase 2] Ensemble 3개 후보 병렬 생성 중...")
 
             # [Patch Mode] 점수 기반 분기: in-place 수정 vs 전면 재생성
             # - score >= INPLACE(60): 단일 ask() 1회 in-place 수정
@@ -334,6 +338,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
 
             if not best_blueprint:
                 logging.warning("❌ [Phase 2] Ensemble 생성 실패")
+                print("   ❌ [Phase 2] Ensemble 생성 실패")
                 pipeline_result["phases"]["generate"] = {"status": "failed"}
                 feedback = "Blueprint 생성 실패. 다시 시도하세요."
                 continue
@@ -345,11 +350,13 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 "selection_by": "director",  # [V60.85] Director가 선택
             }
             self.stats["phase2_complete"] += 1
+            print(f"   ✅ [Phase 2] {len(all_candidates)}개 후보 생성 완료")
 
             # ═══════════════════════════════════════════════════════════════
             # PHASE 3: VALIDATE - Director 비교 선택 + 최종 판정
             # ═══════════════════════════════════════════════════════════════
             logging.info("🔍 [Phase 3] Director 비교 선택 + 판정 중...")
+            print("   🔍 [Phase 3] Director 비교 선택 + 판정 중...")
 
             # [V61.5] 캐시 기반 연속성 검사 (ep_num 바뀔 때만 캐시 갱신)
             continuity_feedback = ""
@@ -393,6 +400,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 best_blueprint = validation_result["selected_blueprint"]
                 selected_idx = validation_result.get("selected_index", 0)
                 logging.info(f"🎯 [V60.85] Director 선택: 후보 {selected_idx + 1}")
+                print(f"   🎯 [Phase 3] Director 선택: 후보 {selected_idx + 1}")
 
             _selected_meta = best_blueprint.get("_ensemble_meta", {}) if isinstance(best_blueprint, dict) else {}
             _selected_strategy = _selected_meta.get("strategy", "")
@@ -436,6 +444,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 self.stats["phase3_pass"] += 1
                 pipeline_result["final_verdict"] = verdict  # [TF-32-S3] PASS or PASS_WITH_FIX 보존
                 logging.info(f"✅ [Phase 3] {verdict} - 제{ep_num}화 Blueprint 생성 완료")
+                print(f"   ✅ [Phase 3] {verdict} (score={_score})")
 
                 # [TF-32-VERIFY] PASS_WITH_FIX → patch + Director 재심사 반복 (최대 3회)
                 if verdict == "PASS_WITH_FIX":
@@ -453,6 +462,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
 
                         _fix_fb = _current_vr.get("re_slice_instruction", "") or _current_vr.get("feedback", "")
                         logging.info(f"🔧 [TF-32-V] Blueprint patch #{_fix_i + 1}/{_MAX_FIX}")
+                        print(f"   🔧 [TF-32-V] Blueprint patch #{_fix_i + 1}/{_MAX_FIX}")
                         try:
                             _patched_bp = self._inplace_patch_blueprint(
                                 original_blueprint=_current_bp,
@@ -487,6 +497,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                             break
 
                         logging.info(f"🎬 [TF-32-V] 재심사 #{_fix_i + 1}: {_re_v} (score={_re_vr.get('score', 0)})")
+                        print(f"   🎬 [TF-32-V] 재심사 #{_fix_i + 1}: {_re_v} (score={_re_vr.get('score', 0)})")
                         if _re_v == "PASS":
                             _re_score = _re_vr.get("score", 0)
                             try:
@@ -599,6 +610,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                     logging.info(f"[{sev}][{cat}] {text}")
 
             logging.warning(f"❌ [Phase 3] REJECT - 재시도 {retry + 1}/{max_retries + 1}")
+            print(f"   ❌ [Phase 3] REJECT (score={_score}) — 재시도 {retry + 1}/{max_retries + 1}")
 
         # 모든 재시도 실패
         # [TF-R4-S3-02] _prev_reject_score 사용 (validation_result는 stale 가능, 연속성 REJECT 시 갱신 안 됨)

@@ -567,11 +567,15 @@ class PatchModeThresholds:
     """[Phase 3-5B] 점수 기반 수정 모드 분기 임계값
 
     [INF-P2-7] 지연 평가: YAML I/O는 최초 접근 시 1회만 수행.
+
+    실제 라우팅 (fix_scope 우선, 점수 fallback):
+      - score >= INPLACE(60): in-place 단일 LLM 수정 허용
+      - score >= REWRITE(50): previous_best 보존 + patch/rewrite 분기
+      - score < REWRITE(50): previous_best 파기 → 전면 재생성
     """
 
-    REWRITE = _LazyThreshold("patch_mode.rewrite_below", 50)  # 미만: 전면 재작성
-    PATCH = _LazyThreshold("patch_mode.patch_below", 80)  # 50~80: 부분 수정 (패치 모드)
-    INPLACE = _LazyThreshold("patch_mode.inplace_below", 60)  # 60 이상: in-place 단일 수정
+    REWRITE = _LazyThreshold("patch_mode.rewrite_below", 50)  # 미만: 전면 재작성 (previous_best 파기)
+    INPLACE = _LazyThreshold("patch_mode.inplace_below", 60)  # 이상: in-place 단일 수정 허용
 
 
 # ============================================================================

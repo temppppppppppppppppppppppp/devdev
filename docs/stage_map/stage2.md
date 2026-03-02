@@ -9,6 +9,8 @@
 - 왜 FourPhase인가? 초안-자기검증-패치 분기를 한 파이프라인으로 묶어 Stage2 초기 통과율을 높이기 위해서다.
 - 왜 앙상블/다중 검증인가? 단일 생성기 편향을 줄이고 DraftValidator·Consensus·ContinuityInspector로 실패 유형을 분해하기 위해서다.
 - 왜 Director audit을 분리했나? Python 사전검증은 빠른 필터 역할만 하고, 최종 전략/서사 판정은 Director가 맡는 주권주의를 지키기 위해서다.
+- 왜 PASS_WITH_FIX가 있나? (TF-27~34) Director가 "거의 합격이나 소수 수정 필요"를 표현할 수 있도록. fix_scope 기반 3-tier 라우팅(inplace/partial/full)으로 수정 전략을 분기한다.
+- 왜 constraint_block을 매 시도마다 초기화하나? (TF-47) retry loop 내에서 advisory 텍스트가 `+=`로 누적되면 3회 시도 시 3배 중복이 되기 때문이다.
 
 ## Entry Points
 - Primary: `Stage2Orchestrator.stage_2_arcs_async_logic()` (`modules/core/stage2_orchestrator.py`)
@@ -48,9 +50,12 @@
   - `FourPhaseArcGenerator`, `ArcEnsembleGenerator`, `UnifiedArcValidator`
   - `DirectorQualityAuditor.audit_strategic_plan()`
   - `ConstraintDB`, `StateTracker`, `ConstraintCompiler`, `SemanticPlotGuard`
+  - `NarrativeContextFormatter` (LM-G): 동기/약속/Arc스케일을 `enhanced_context`에 prepend (순수 Python, LLM/DB 없음)
+  - `CentralSchemaBuilder` (TF-45): 장르별 프롬프트 스키마 생성 (비무협 장르 오염 방지)
 - External services/models:
   - Analyst/Weaver/FourPhase/Director LLM 호출 경로
   - VecMemory 검색 경로(`retrieve_high_res_context` 또는 advisor plan 기반 multi-query)
+  - Smart Context Retrieval (SC-0~6): `ContextAdvisor`가 RetrievalPlan 기반 multi-query 실행
 
 ## State and Cache
 - Persistent state:
@@ -77,10 +82,12 @@
   - FourPhase 내부 재시도: `generate(..., max_internal_retries=4)`
   - REJECT 점수 `>= PatchModeThresholds.REWRITE(50)`이면 다음 시도에서 패치 모드 후보 활성화
   - 커밋 실패 시 DB rollback + `all_refined_arcs.pop()` + StateTracker 롤백 후 retry
+  - **PASS_WITH_FIX** (TF-27~34): Director가 fix_scope 지정 → inplace면 LLM 1회 국소 수정 + 재심사(최대 3회), partial/full이면 REJECT → retry 경로 위임
 - Fallback behavior:
   - 패치 실패 시 전면 재생성 폴백
   - 배치 Arc 최종 실패 시 사용자 선택(건너뛰기/중단/자동 재시도/수동 개입) 지원
   - API quota 패턴 감지 시(Draft+Consensus PASS) Director REJECT를 PASS override
+- **constraint_block 초기화** (TF-47): while loop 진입 전 `_base_constraint_block` 저장, 매 시도마다 원본으로 초기화하여 advisory 누적 방지
 
 ## Manual Intervention Points
 - User prompts:
@@ -124,8 +131,8 @@
 - Risk 2: 실패 처리 구간의 `input()` 기반 분기(수동 선택)는 비대화형/자동화 실행에서 운영 중단 지점이 될 수 있다.
 
 ## Last Verified
-- Date: 2026-02-25
-- Commit: `f99119d`
+- Date: 2026-03-02
+- Commit: `8476bc2`
 - Code Sync (Yes/No): Yes
-- Verified By: Codex
+- Verified By: Opus
 

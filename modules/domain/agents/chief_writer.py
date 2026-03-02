@@ -299,6 +299,8 @@ class ChiefWriter(BaseAgent):
                     )
                     futures[future] = strategy
 
+                _strat_names = ", ".join(futures.values())
+                print(f"      🎲 [Writer] {len(futures)}개 전략 병렬 생성 중 ({_strat_names})...")
                 # [V61.3] 타임아웃 적용 - 야간 무인 운영 시 무한 대기 방지
                 # [Sweep300-R41] 알려진 제한: as_completed(timeout=T)는 soft bound.
                 # Python ThreadPoolExecutor는 실행 중인 스레드를 강제 중단할 수 없으므로,
@@ -315,8 +317,12 @@ class ChiefWriter(BaseAgent):
                                 logging.info(
                                     f"✅ [ChiefWriter] 후보 {strategy} 생성 완료 ({len(result.get('manuscript', ''))}자)"
                                 )
+                                print(
+                                    f"      ✓ [Writer] '{strategy}' 완료 ({len(result.get('manuscript', ''))}자, {time.monotonic() - _tp_t0:.0f}초)"
+                                )
                         except FutureTimeoutError:
                             logging.warning(f"⏰ [V61.3] 후보 {strategy} 타임아웃 ({self.SINGLE_CANDIDATE_TIMEOUT}초)")
+                            print(f"      ✗ [Writer] '{strategy}' 타임아웃")
                             candidates.append(
                                 {
                                     "strategy": strategy,
@@ -329,6 +335,7 @@ class ChiefWriter(BaseAgent):
                             )
                         except Exception as e:
                             logging.warning(f"⚠️ [ChiefWriter] 후보 {strategy} 생성 실패: {str(e)[:50]}")
+                            print(f"      ✗ [Writer] '{strategy}' 실패")
                             # 실패한 전략은 빈 결과로 대체
                             candidates.append(
                                 {
@@ -370,6 +377,7 @@ class ChiefWriter(BaseAgent):
         valid_candidates = [c for c in candidates if not c.get("error")]
         if not valid_candidates:
             logging.warning("🚨 [ChiefWriter] 모든 후보 생성 실패 - 단일 재시도")
+            print("      ⚠️ [Writer] 전원 실패 → 단일 폴백 시도")
             _fallback_strategy = strategies[0] if strategies else "balanced"
             fallback = self._generate_single_candidate(
                 ep_num=ep_num,
@@ -771,16 +779,29 @@ class ChiefWriter(BaseAgent):
             if not response or len(response) < 2000:
                 logging.warning(f"[TF-23] InPlace 응답 길이 부족: {len(response or '')}자 < 2000자")
                 return []
-            # [TF-46] patch_state_updates JSON 블록 추출
+            # [TF-47] patch_state_updates JSON 블록 추출 — 중첩 dict 안전
             _state_updates = {}
-            _su_match = re.search(r'\{"patch_state_updates"\s*:\s*(\{.*?\})\}', response, re.DOTALL)
-            if _su_match:
-                try:
-                    _state_updates = json.loads(_su_match.group(1))
-                except (json.JSONDecodeError, ValueError):
-                    pass
-                # JSON 블록을 원고에서 제거
-                response = response[: _su_match.start()].rstrip()
+            _su_marker = '"patch_state_updates"'
+            _su_idx = response.rfind(_su_marker)
+            if _su_idx >= 0:
+                _outer_start = response.rfind("{", 0, _su_idx)
+                if _outer_start >= 0:
+                    _tail = response[_outer_start:]
+                    try:
+                        _outer = json.loads(_tail)
+                        _state_updates = _outer.get("patch_state_updates", {})
+                        if not isinstance(_state_updates, dict):
+                            _state_updates = {}
+                        response = response[:_outer_start].rstrip()
+                    except (json.JSONDecodeError, ValueError):
+                        # 폴백: 기존 regex (flat dict에서는 작동)
+                        _su_match = re.search(r'\{"patch_state_updates"\s*:\s*(\{.*?\})\}', response, re.DOTALL)
+                        if _su_match:
+                            try:
+                                _state_updates = json.loads(_su_match.group(1))
+                            except (json.JSONDecodeError, ValueError):
+                                pass
+                            response = response[: _su_match.start()].rstrip()
             # [TF-36] LLM이 JSON으로 감싼 경우 텍스트 추출
             response = self._unwrap_manuscript_text(response)
             logging.info(f"✅ [TF-23] 원고 in-place 수정 완료 ({len(response)}자)")

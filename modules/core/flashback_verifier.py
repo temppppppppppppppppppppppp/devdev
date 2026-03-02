@@ -42,13 +42,14 @@ class FlashbackVerifier:
         """
         self._llm_ask = llm_ask
 
-    def check(self, manuscript, *, ep_num=0, reference_context=""):
+    def check(self, manuscript, *, ep_num=0, reference_context="", manuscript_snippets=""):
         """회상/플래시백 오염 검사.
 
         Args:
             manuscript: 원고 텍스트
             ep_num: 현재 에피소드 번호
-            reference_context: VecMemory에서 검색한 과거 에피소드 맥락
+            reference_context: VecMemory에서 검색한 과거 에피소드 맥락 (요약)
+            manuscript_snippets: [LM-H] 과거 에피소드 원고 발췌 (원문 대조용)
 
         Returns:
             list[dict]: [{"marker", "issue", "referenced_context", "severity", "check"}]
@@ -63,7 +64,7 @@ class FlashbackVerifier:
         if not self._llm_ask or not reference_context:
             return []
 
-        return self._llm_check(flashbacks, reference_context, ep_num)
+        return self._llm_check(flashbacks, reference_context, ep_num, manuscript_snippets)
 
     def detect_flashbacks(self, manuscript):
         """원고에서 회상 구간을 추출 (Python 수집만).
@@ -111,21 +112,29 @@ class FlashbackVerifier:
         found.sort(key=lambda x: x["position"])
         return found
 
-    def _format_for_llm(self, flashbacks, reference_context):
+    def _format_for_llm(self, flashbacks, reference_context, manuscript_snippets=""):
         """회상 구간 + 참조 컨텍스트를 LLM 프롬프트용으로 포맷팅."""
         fb_lines = []
         for i, fb in enumerate(flashbacks, 1):
             fb_lines.append(f"[회상 {i}] 마커: '{fb['marker']}'\n{fb['text']}")
         fb_text = "\n\n".join(fb_lines)
 
-        return f"[원고 회상 장면]\n{fb_text}\n\n[과거 에피소드 맥락]\n{reference_context}"
+        parts = [f"[원고 회상 장면]\n{fb_text}", f"[과거 에피소드 요약]\n{reference_context}"]
+        if manuscript_snippets:
+            parts.append(f"[과거 원고 원문 발췌]\n{manuscript_snippets}")
+        return "\n\n".join(parts)
 
-    def _llm_check(self, flashbacks, reference_context, ep_num):
+    def _llm_check(self, flashbacks, reference_context, ep_num, manuscript_snippets=""):
         """LLM에게 회상 오염 판정을 요청."""
-        formatted = self._format_for_llm(flashbacks, reference_context)
+        formatted = self._format_for_llm(flashbacks, reference_context, manuscript_snippets)
+
+        ms_note = ""
+        if manuscript_snippets:
+            ms_note = "원문 발췌가 제공된 경우, 요약보다 원문을 우선 참조하여 사실 관계를 대조하세요.\n"
 
         prompt = (
             "다음 원고의 회상/플래시백 장면이 과거 에피소드 맥락과 모순되는 부분을 찾아주세요.\n"
+            f"{ms_note}"
             "서사적 의도가 있는 변형(신뢰할 수 없는 화자, 의도적 왜곡 등)은 정상입니다.\n"
             "사실 관계가 틀린 회상만 지적하세요.\n\n"
             f"{formatted}\n\n"
@@ -139,7 +148,7 @@ class FlashbackVerifier:
             if not response:
                 return []
             return self._parse_llm_response(response, ep_num)
-        except Exception as e:
+        except (json.JSONDecodeError, ValueError, RuntimeError, OSError) as e:
             logger.warning("[LM-E] FlashbackVerifier LLM 호출 실패 (비치명): %s", str(e)[:80])
             return []
 
