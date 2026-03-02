@@ -179,6 +179,9 @@ class ChiefWriter(BaseAgent):
         chain_link_section: str = "",
         # [emotional_beat] 감정 정점
         emotional_beat_section: str = "",
+        # [B-4] 주인공 동기/약속
+        motivations: list = None,
+        promises: list = None,
     ) -> list[dict]:
         """
         3개 후보 원고 병렬 생성
@@ -296,6 +299,8 @@ class ChiefWriter(BaseAgent):
                         genre_name=genre_name,
                         cache_name=cache_name,
                         strategy_feedback=_feedback,
+                        motivations=motivations,
+                        promises=promises,
                     )
                     futures[future] = strategy
 
@@ -387,6 +392,8 @@ class ChiefWriter(BaseAgent):
                 master_bible=master_bible,
                 genre_name=genre_name,
                 cache_name=cache_name,
+                motivations=motivations,
+                promises=promises,
                 strategy_feedback=(
                     strategy_specific_feedback
                     if (_fallback_strategy == rejected_strategy and strategy_specific_feedback)
@@ -429,6 +436,8 @@ class ChiefWriter(BaseAgent):
         genre_name: str = "무협",
         cache_name: str = None,
         strategy_feedback: str = "",
+        motivations: list = None,
+        promises: list = None,
     ) -> dict | None:
         """
         [V60.81] 단일 후보 생성 + Self-Critique + Leakage 방지
@@ -526,7 +535,13 @@ class ChiefWriter(BaseAgent):
                 npcs = assets.get("KeyNPCs", []) or assets.get("Key_NPCs", [])
 
             critiqued_manuscript = self.quality_gate.apply_self_critique(
-                manuscript=manuscript_json, hud_report=hud_report, npcs=npcs, genre_name=genre_name, ep_num=ep_num
+                manuscript=manuscript_json,
+                hud_report=hud_report,
+                npcs=npcs,
+                genre_name=genre_name,
+                ep_num=ep_num,
+                motivations=motivations,
+                promises=promises,  # [B-4]
             )
 
             # Self-Critique 결과에서 content 재추출
@@ -632,6 +647,9 @@ class ChiefWriter(BaseAgent):
         chain_link_section: str = "",
         # [emotional_beat] 감정 정점
         emotional_beat_section: str = "",
+        # [B-4] 주인공 동기/약속
+        motivations: list = None,
+        promises: list = None,
     ) -> list[dict]:
         """
         Director 피드백 반영 재생성
@@ -679,6 +697,11 @@ class ChiefWriter(BaseAgent):
         _fsr = previous_attempt.get("fix_scope_reasoning", "")
         if _fsr:
             enhanced_feedback += f"\n[수정 범위 근거]\n{_fsr}"
+
+        # [A-2] Director 서사 관찰 명시 전달
+        _open_review = previous_attempt.get("open_review", "")
+        if _open_review and _open_review not in ("특이사항 없음", "없음", ""):
+            enhanced_feedback += f"\n\n[Director 서사 관찰 — 반드시 개선할 것]\n{_open_review}"
 
         # 실패 학습 제약 구성
         failure_constraints = ""
@@ -730,6 +753,8 @@ class ChiefWriter(BaseAgent):
             # [V68] 에피소드 연결고리
             chain_link_section=chain_link_section,
             emotional_beat_section=emotional_beat_section,
+            motivations=motivations,  # [B-4]
+            promises=promises,  # [B-4]
         )
 
     # =========================================================================

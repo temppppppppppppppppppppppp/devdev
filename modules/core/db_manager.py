@@ -441,10 +441,16 @@ class DBManager:
                 score INTEGER DEFAULT 0,
                 selection_reason TEXT,
                 candidate_count INTEGER DEFAULT 3,
+                fix_scope TEXT DEFAULT '',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_director_selections_ep ON director_selections(ep_num)")
+        # [A-3] fix_scope 컬럼 마이그레이션 (기존 DB 호환)
+        try:
+            self.cursor.execute("ALTER TABLE director_selections ADD COLUMN fix_scope TEXT DEFAULT ''")
+        except sqlite3.OperationalError:
+            pass  # 이미 존재
 
         # 16. [Phase 6] 비용 추적 로그
         self.cursor.execute("""
@@ -2292,6 +2298,7 @@ class DBManager:
         score: int = 0,
         selection_reason: str = "",
         candidate_count: int = 3,
+        fix_scope: str = "",
     ) -> None:
         """[D-4] Director의 앙상블 선택 결과를 기록."""
         with self._lock:
@@ -2299,8 +2306,8 @@ class DBManager:
             self.cursor.execute(
                 "INSERT INTO director_selections "
                 "(ep_num, round_num, selected_label, selected_strategy, verdict, score, "
-                "selection_reason, candidate_count) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                "selection_reason, candidate_count, fix_scope) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     ep_num,
                     round_num,
@@ -2310,10 +2317,23 @@ class DBManager:
                     score,
                     selection_reason[:200] if selection_reason else "",
                     candidate_count,
+                    fix_scope or "",
                 ),
             )
             if not nested:
                 self.commit()
+
+    def get_fix_scope_stats(self, lookback: int = 200) -> list[dict]:
+        """[A-3] fix_scope × verdict 교차 집계."""
+        with self._lock:
+            cur = self.cursor.execute(
+                "SELECT fix_scope, verdict, COUNT(*) AS cnt "
+                "FROM (SELECT fix_scope, verdict FROM director_selections "
+                "      WHERE fix_scope != '' ORDER BY id DESC LIMIT ?) "
+                "GROUP BY fix_scope, verdict",
+                (max(lookback, 1),),
+            )
+            return [dict(row) for row in cur.fetchall()]
 
     def get_strategy_win_rates(self, lookback: int = 20) -> dict:
         """[D-4] 최근 N건의 PASS 선택에서 전략별 승률 조회."""
@@ -2411,7 +2431,7 @@ class DBManager:
         """[D-4] 최근 선택 이력 조회 (최신순)."""
         with self._lock:
             cur = self.cursor.execute(
-                "SELECT ep_num, round_num, selected_label, selected_strategy, verdict, score, selection_reason "
+                "SELECT ep_num, round_num, selected_label, selected_strategy, verdict, score, selection_reason, fix_scope "
                 "FROM director_selections "
                 "WHERE ep_num < ? "
                 "ORDER BY id DESC LIMIT ?",

@@ -90,6 +90,11 @@ class Stage4InterviewRound:
                     f"(집필 시 이 감정 정점을 향해 씬을 구성하라)"
                 )
 
+        # [B-4] WorldState 동기/약속 전달
+        _ws = getattr(self.ctx, "world_state", None)
+        _motivations = _ws._state.get("motivations", []) if _ws and hasattr(_ws, "_state") else []
+        _promises = _ws._state.get("promises", []) if _ws and hasattr(_ws, "_state") else []
+
         # [TF-T4] 25개 공통 kwargs — 4개 호출부에서 재사용
         _common_writer_kwargs = {
             "ep_num": next_ep,
@@ -117,6 +122,8 @@ class Stage4InterviewRound:
             "world_state_summary": _world_state_summary,
             "chain_link_section": _chain_link_section,
             "emotional_beat_section": emotional_beat_section,
+            "motivations": _motivations,  # [B-4]
+            "promises": _promises,  # [B-4]
             # episode_digest는 Director 전용 — L713에서 별도 전달
         }
 
@@ -657,6 +664,7 @@ class Stage4InterviewRound:
                 score=score,
                 selection_reason=_selection_reason,
                 candidate_count=len(candidates) if candidates else 0,
+                fix_scope=director_result.get("fix_scope", ""),  # [A-3]
             )
         except Exception as e:
             logging.warning(f"[D-4] Director 선택 기록 실패 (비차단): {e!s:.100}")

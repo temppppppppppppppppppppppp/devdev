@@ -65,7 +65,14 @@ class ChiefWriterQualityGate:
         return text
 
     def apply_self_critique(
-        self, manuscript: str, hud_report: str, npcs: list, genre_name: str, ep_num: int = None
+        self,
+        manuscript: str,
+        hud_report: str,
+        npcs: list,
+        genre_name: str,
+        ep_num: int = None,
+        motivations: list = None,
+        promises: list = None,
     ) -> str:
         """
         [V60.81] Self-Critique 다중 라운드 적용
@@ -92,7 +99,9 @@ class ChiefWriterQualityGate:
         rubric_score = self._evaluate_with_rubric(current_manuscript, genre_name)
         if rubric_score >= 3.5:
             # [TF-I08] 구조적 적신호 확인 — rubric 높아도 구조 문제 있으면 스킵 금지
-            _structural = self._self_critique(current_manuscript, hud_report, encyclopedia, genre_name, ep_num)
+            _structural = self._self_critique(
+                current_manuscript, hud_report, encyclopedia, genre_name, ep_num, motivations, promises
+            )
             _medium_plus = [
                 i
                 for i in _structural.get("issues", [])
@@ -107,7 +116,9 @@ class ChiefWriterQualityGate:
             )
 
         for round_num in range(1, MAX_CRITIQUE_ROUNDS + 1):
-            critique_result = self._self_critique(current_manuscript, hud_report, encyclopedia, genre_name, ep_num)
+            critique_result = self._self_critique(
+                current_manuscript, hud_report, encyclopedia, genre_name, ep_num, motivations, promises
+            )
 
             if not critique_result["has_issues"]:
                 if round_num > 1:
@@ -134,7 +145,14 @@ class ChiefWriterQualityGate:
         return current_manuscript
 
     def _self_critique(
-        self, manuscript: str, hud_report: str, encyclopedia: dict, genre_name: str, ep_num: int = None
+        self,
+        manuscript: str,
+        hud_report: str,
+        encyclopedia: dict,
+        genre_name: str,
+        ep_num: int = None,
+        motivations: list = None,
+        promises: list = None,
     ) -> dict:
         """
         [V60.81] Writer Self-Critic - 원고 자체 검토
@@ -170,6 +188,11 @@ class ChiefWriterQualityGate:
         # 4. NPC 관계 일관성 체크
         npc_issues = self._check_npc_relationship(content, encyclopedia)
         issues.extend(npc_issues)
+
+        # 5. [B-4] 주인공 동기/약속 방치 체크
+        if motivations or promises:
+            motivation_issues = self._check_motivation_consistency(content, motivations or [], promises or [])
+            issues.extend(motivation_issues)
 
         # [Sweep46] 심각도 판단 — 1~2건은 "low" (self-critique 스킵 의도 복원)
         severity = "low"
@@ -326,6 +349,51 @@ class ChiefWriterQualityGate:
                             )
                             break
 
+        return issues
+
+    def _check_motivation_consistency(self, content: str, motivations: list, promises: list) -> list:
+        """[B-4] 주인공 동기/약속 방치 감지 — 키워드 레벨 체크."""
+        issues = []
+        if not content:
+            return issues
+
+        # 활성 동기 키워드 체크
+        active_mots = [
+            m
+            for m in (motivations or [])
+            if isinstance(m, dict) and m.get("status") not in ("resolved", "완료") and m.get("text")
+        ]
+        for mot in active_mots[:5]:
+            _kws = [w for w in mot["text"].split()[:4] if len(w) >= 2]
+            if _kws and not any(kw in content for kw in _kws):
+                issues.append(
+                    {
+                        "type": "motivation_abandoned",
+                        "description": f"동기 '{mot['text'][:30]}' 키워드 미등장 (방치 의심)",
+                        "severity": "low",
+                    }
+                )
+                break  # 1건만 보고
+
+        # 미이행 약속 당사자 등장 시 약속 미언급
+        pending = [
+            p
+            for p in (promises or [])
+            if isinstance(p, dict) and p.get("status") in ("pending", None, "") and p.get("text")
+        ]
+        for p in pending[:3]:
+            involved = [n for n in [p.get("promiser", ""), p.get("promisee", "")] if n and len(n) >= 2]
+            if involved and any(n in content for n in involved):
+                _pkws = [w for w in p["text"].split()[:3] if len(w) >= 2]
+                if _pkws and not any(kw in content for kw in _pkws):
+                    issues.append(
+                        {
+                            "type": "promise_unacknowledged",
+                            "description": f"미이행 약속 당사자 등장 중 약속 미언급: '{p['text'][:30]}'",
+                            "severity": "low",
+                        }
+                    )
+                    break
         return issues
 
     def _fix_manuscript_issues(self, manuscript: str, critique_result: dict, hud_report: str) -> str:
