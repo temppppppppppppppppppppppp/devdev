@@ -806,7 +806,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
         if selected_idx not in qualified_indices and qualified_indices:
             old_selection = selected_letter
             selected_idx = max(qualified_indices, key=lambda i: len(candidates[i].get("manuscript", "")))
-            selected_letter = ["A", "B", "C"][selected_idx]
+            selected_letter = ["A", "B", "C"][min(selected_idx, 2)]  # [TF-25-01] IndexError 방어
             v60_97_swapped = True
             logging.warning(f"⚠️ [V60.97] LLM 선택 {old_selection} → {selected_letter}로 교체 (분량 기준)")
             # swap 후 selection_reason도 교체 사실 반영
