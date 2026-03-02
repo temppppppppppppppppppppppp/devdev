@@ -333,78 +333,18 @@ class BaseAgent:
             if new_client:
                 self.client = new_client
 
-        # [V60.66] 429 폴백용 모델 스택 (primary → fallbacks)
-        model_stack = [self.primary_model]
-        if self.backup_model and self.backup_model != self.primary_model:
-            model_stack.append(self.backup_model)
-        # 추가 폴백 체인 확장
-        next_fallback = self.MODEL_FALLBACK_CHAIN.get(self.backup_model)
-        if next_fallback and next_fallback not in model_stack:
-            model_stack.append(next_fallback)
-
-        # [V60.68] 쿼터 소진 모델 필터링 (세션 캐싱) [I-18] Lock 보호
-        current_time = time.time()
-        available_models = []
-        with BaseAgent._quota_lock:
-            quota_snapshot = dict(BaseAgent._quota_exhausted_models)
-        for model in model_stack:
-            exhausted_until = quota_snapshot.get(model, 0)
-            if current_time >= exhausted_until:
-                available_models.append(model)
-            else:
-                remaining = int(exhausted_until - current_time)
-                # 첫 번째 모델(primary)이 스킵되는 경우에만 로그 출력
-                if model == self.primary_model:
-                    logging.info(f"⏭️ [V60.68] {model} 쿼터 캐시 히트 - {remaining}초 남음, 스킵")
-
-        # [V60.68] 사용 가능한 모델이 있으면 그것으로 시작, 없으면 원래 스택 사용
-        if available_models:
-            model_stack = available_models
-            current_model = available_models[0]
-        else:
-            current_model = self.primary_model  # fallback: 원래대로
-
-        # [V60.66] 현재 사용 중인 모델 추적 (V60.68에서 업데이트됨)
-
-        config_params = {
-            "temperature": temperature,
-            "max_output_tokens": self.MAX_OUTPUT_TOKENS,
-            "top_p": 0.95,
-            "response_mime_type": "application/json",
-            "http_options": types.HttpOptions(timeout=max(10, int(self.API_TIMEOUT))),
-        }
-        # [V0128] JSON Schema enforcement if provided
-        if response_schema:
-            config_params["response_schema"] = response_schema
-
-        # [V61.6] Thinking Budget 지원 (모든 모델 공통 - gemini-3, 2.5-pro, 2.5-flash)
-        if thinking_level:
-            # 문자열이면 정수로 변환, 이미 정수면 그대로 사용
-            if isinstance(thinking_level, str):
-                budget = self.THINKING_BUDGET_MAP.get(thinking_level.lower(), 8192)
-            else:
-                budget = int(thinking_level)
-            config_params["thinking_config"] = types.ThinkingConfig(thinking_budget=budget, include_thoughts=True)
-
-        config = types.GenerateContentConfig(**config_params)
-
-        # [INF-I5] API 호출 시작 구조화 로그
-        logging.debug(
-            "[SilentPass:Agent] call_start agent=%s model=%s prompt_len=%d",
-            self._agent_name,
-            current_model,
-            len(base_prompt),
+        # [B-1-9:C1] 모델 스택 구성 + config 조립 + 메트릭 시작
+        _stack = self._build_model_stack(
+            temperature=temperature,
+            response_schema=response_schema,
+            thinking_level=thinking_level,
+            base_prompt=base_prompt,
         )
-
-        # [V49.3] 비용 추적 시작
-        metric_id = None
-        if METRICS_ENABLED:
-            try:
-                collector = get_metrics_collector()
-                metric_id = collector.start_call(self.agent_name, current_model)
-            except Exception as e:  # [V64.P4] OPTIONAL: metrics startup
-                logging.debug(f"[SILENT] metrics startup: {e}")
-                pass  # 메트릭 실패가 본 작업에 영향 주지 않음
+        model_stack = _stack["model_stack"]
+        current_model = _stack["current_model"]
+        config = _stack["config"]
+        metric_id = _stack["metric_id"]
+        current_time = time.time()  # [LOG-1] elapsed 계산용
 
         try:
             # 🔒 Circuit Breaker: 최대 5회 시도 (API 비용 폭증 방지)
@@ -436,235 +376,56 @@ class BaseAgent:
                         with BaseAgent._rotation_lock:
                             BaseAgent._rotation_count = 0
                 except Exception as api_error:
-                    # ═══════════════════════════════════════════════════════════════
-                    # [V61.2] Case 0: 네트워크/타임아웃 오류 → 백오프 + 연결 체크 후 재시도
-                    # 야간 무인 운영 시 3-5분 인터넷 끊김에도 작업 유지
-                    # ═══════════════════════════════════════════════════════════════
-                    if self._is_network_error(api_error) and network_retry_count < self.MAX_NETWORK_RETRIES:
-                        network_retry_count += 1
-                        # 백오프: 10초 → 15초 → 20초 → ... → 최대 30초
-                        wait_time = min(
-                            self.NETWORK_RETRY_DELAY_BASE + (network_retry_count - 1) * 5, self.NETWORK_RETRY_DELAY_MAX
-                        )
-                        total_waited = sum(
-                            min(self.NETWORK_RETRY_DELAY_BASE + i * 5, self.NETWORK_RETRY_DELAY_MAX)
-                            for i in range(network_retry_count)
-                        )
-
-                        # [V61.2] 타임스탬프 포함 출력 (하트비트 역할)
-                        from datetime import datetime
-
-                        timestamp = datetime.now().strftime("%H:%M:%S")
-                        logging.warning(
-                            f"\n      🌐 [{timestamp}] 연결 오류 → {wait_time}초 대기 ({network_retry_count}/{self.MAX_NETWORK_RETRIES}, 누적 {total_waited}초)"
-                        )
-
-                        # 대기 중 — 메인 스레드에서만 print (워커 스레드는 logging만)
-                        if threading.current_thread() is threading.main_thread():
-                            print(
-                                f"         🌐 네트워크 재시도 {network_retry_count}/{self.MAX_NETWORK_RETRIES} ({wait_time}초 대기)"
-                            )
-                        time.sleep(wait_time)
-
-                        # 연결 체크
-                        if self._check_connectivity():
-                            logging.info(f"✅ [{datetime.now().strftime('%H:%M:%S')}] 연결 복구! 재시도...")
-                            continue  # 루프 처음으로
-                        else:
-                            # 연결 안 됨 - 다음 재시도로 (루프 계속)
-                            logging.info(f"⏳ [{datetime.now().strftime('%H:%M:%S')}] 연결 대기 중...")
-                            continue
-
-                    # [V60.97] Rate Limit vs Quota Exhausted 구분
-                    error_str = str(api_error).lower()
-
-                    # Rate Limit: 429 + (rate 또는 limit) - 분당 요청 제한
-                    is_rate_limit = "429" in error_str and ("rate" in error_str or "limit" in error_str)
-                    # Quota Exhausted: resource_exhausted 또는 quota - 일일/월간 할당량 초과
-                    is_quota_exhausted = "resource_exhausted" in error_str or (
-                        "quota" in error_str and "429" not in error_str
+                    # [B-1-9:C2] API 오류 처리 — 네트워크/Rate Limit/쿼터 분기
+                    _err = self._handle_api_error(
+                        api_error=api_error,
+                        current_model=current_model,
+                        model_stack=model_stack,
+                        config=config,
+                        current_prompt=current_prompt,
+                        temperature=temperature,
+                        response_schema=response_schema,
+                        thinking_level=thinking_level,
+                        network_retry_count=network_retry_count,
+                        rate_limit_retry_count=rate_limit_retry_count,
+                        quota_retry_count=quota_retry_count,
+                        max_rate_limit_retries=MAX_RATE_LIMIT_RETRIES,
+                        max_quota_retries=MAX_QUOTA_RETRIES,
                     )
-                    # 애매한 경우 (429만 있음) - Rate Limit으로 간주
-                    is_ambiguous_429 = "429" in error_str and not is_rate_limit and not is_quota_exhausted
+                    current_model = _err["current_model"]
+                    config = _err.get("config", config)
+                    network_retry_count = _err["network_retry_count"]
+                    rate_limit_retry_count = _err["rate_limit_retry_count"]
+                    quota_retry_count = _err["quota_retry_count"]
 
-                    # ═══════════════════════════════════════════════════════════════
-                    # [V60.98] gemini-3-pro는 할당량이 적으므로 Rate Limit 시 즉시 폴백
-                    # ═══════════════════════════════════════════════════════════════
-                    is_gemini3_rate_limit = (is_rate_limit or is_ambiguous_429) and "gemini-3-pro" in current_model
-
-                    # ═══════════════════════════════════════════════════════════════
-                    # [V60.97] Case A: Rate Limit (gemini-3-pro 제외) → Backoff 후 재시도
-                    # ═══════════════════════════════════════════════════════════════
-                    if (
-                        (is_rate_limit or is_ambiguous_429)
-                        and not is_gemini3_rate_limit
-                        and rate_limit_retry_count < MAX_RATE_LIMIT_RETRIES
-                    ):
-                        rate_limit_retry_count += 1
-                        # Linear Backoff: 30초 → 60초 → 90초 (분당 제한 대응)
-                        wait_time = 30 * rate_limit_retry_count
-                        logging.info(
-                            f"⏳ [V60.97 Rate Limit] {current_model} 분당 제한 감지 → {wait_time}초 대기 후 재시도 ({rate_limit_retry_count}/{MAX_RATE_LIMIT_RETRIES})"
-                        )
-                        time.sleep(wait_time)
-                        # 루프 처음으로 돌아가서 try/except 안에서 재시도
+                    if _err["action"] == "continue":
                         continue
-
-                    # ═══════════════════════════════════════════════════════════════
-                    # [V60.97] Case B: Quota/Rate Limit 초과 또는 gemini-3-pro Rate Limit → 즉시 폴백
-                    # ═══════════════════════════════════════════════════════════════
-                    elif (
-                        is_quota_exhausted
-                        or is_gemini3_rate_limit
-                        or (is_rate_limit and rate_limit_retry_count >= MAX_RATE_LIMIT_RETRIES)
-                    ):
-                        if is_gemini3_rate_limit:
-                            logging.info(f"⚡ [V60.98] {current_model} Rate Limit → 즉시 폴백 (할당량 부족 모델)")
-                        if quota_retry_count < MAX_QUOTA_RETRIES - 1:
-                            quota_retry_count += 1
-                            rate_limit_retry_count = 0  # 폴백 시 Rate Limit 카운터 리셋
-
-                            old_model = current_model
-                            current_model = (
-                                model_stack[quota_retry_count]
-                                if quota_retry_count < len(model_stack)
-                                else model_stack[-1]
-                            )
-
-                            # [V60.68] 쿼터 소진 모델 캐시 등록 [I-18] Lock 보호
-                            # [V62.3] 3-pro는 시간 단위 차단 — Rate Limit도 길게 캐싱
-                            cache_duration = BaseAgent._QUOTA_CACHE_DURATION
-                            with BaseAgent._quota_lock:
-                                BaseAgent._quota_exhausted_models[old_model] = time.time() + cache_duration
-
-                            # [V62.3] 전체 키 시도 전까지만 순환 예약
-                            with BaseAgent._rotation_lock:
-                                if BaseAgent._rotation_count < len(BaseAgent._api_keys) - 1:
-                                    BaseAgent._key_rotation_pending = True
-
-                            error_type = "Quota 소진" if is_quota_exhausted else "Rate Limit 초과"
-                            logging.info(f"🔄 [V60.97 Fallback] {old_model} {error_type} → {current_model}로 전환")
-                            # [INF-I5] 폴백 전환 구조화 로그
-                            logging.debug(
-                                "[SilentPass:Agent] fallback agent=%s from=%s to=%s reason=%s",
-                                self._agent_name,
-                                old_model,
-                                current_model,
-                                error_type,
-                            )
-
-                            # 폴백 모델용 config 재생성
-                            fallback_config_params = {
-                                "temperature": temperature,
-                                "max_output_tokens": self.MAX_OUTPUT_TOKENS,
-                                "top_p": 0.95,
-                                "response_mime_type": "application/json",
-                            }
-                            if response_schema:
-                                fallback_config_params["response_schema"] = response_schema
-                            if thinking_level:
-                                if isinstance(thinking_level, str):
-                                    budget = self.THINKING_BUDGET_MAP.get(thinking_level.lower(), 8192)
-                                else:
-                                    budget = int(thinking_level)
-                                fallback_config_params["thinking_config"] = types.ThinkingConfig(
-                                    thinking_budget=budget, include_thoughts=True
-                                )
-                            config = types.GenerateContentConfig(**fallback_config_params)
-
-                            # [V60.99] API Rate Limit 예방 딜레이
-                            time.sleep(self.API_DELAY)
-                            response = self.client.models.generate_content(
-                                model=current_model, contents=current_prompt, config=config
-                            )
-                        else:
-                            # 모든 폴백 소진
-                            raise api_error
-                    else:
-                        # 기타 에러 - 예외 재발생
+                    elif _err["action"] == "fallback_response":
+                        response = _err["response"]
+                        # fall through to response processing
+                    else:  # "raise"
                         raise api_error
 
-                try:
-                    chunk = response.text if response.text else ""
-                except (ValueError, AttributeError):
-                    chunk = ""
-                    logging.warning("[base_agent] response.text 접근 실패 (safety filter?) — 빈 응답 처리")
+                # [B-1-9:C3] 응답 추출 + 병합 + 이어쓰기 판정
+                _resp = self._extract_and_merge_response(
+                    response=response,
+                    full_response=full_response,
+                    attempt=attempt,
+                    thinking_level=thinking_level,
+                    _thinking_text=_thinking_text,
+                    base_prompt=base_prompt,
+                    max_continuations=MAX_CONTINUATIONS,
+                    warn_threshold=WARN_THRESHOLD,
+                )
+                full_response = _resp["full_response"]
+                _thinking_text = _resp["_thinking_text"]
 
-                # [TF-28] thinking content 추출 (첫 응답에서만)
-                if thinking_level and attempt == 0 and not _thinking_text:
-                    try:
-                        if response.candidates and response.candidates[0].content:
-                            _tparts = []
-                            for _p in response.candidates[0].content.parts:
-                                if getattr(_p, "thought", False) and isinstance(_p.text, str):
-                                    _tparts.append(_p.text)
-                            if _tparts:
-                                _thinking_text = "\n".join(_tparts)
-                    except Exception:
-                        pass
-
-                # 💡 [Sovereign Logic] 지능형 중첩 제거 병합 (Overlap-Aware Merge)
-                if full_response:
-                    # 앞 응답의 끝부분과 뒤 응답의 시작부분이 겹치는지 최대 100자 대조
-                    max_overlap = min(len(full_response), len(chunk), 100)
-                    overlap_found = 0
-                    for i in range(max_overlap, 0, -1):
-                        if full_response.endswith(chunk[:i]):
-                            overlap_found = i
-                            break
-
-                    # 중복된 부분은 제외하고 순수 데이터만 정밀하게 접합
-                    full_response += chunk[overlap_found:]
-                else:
-                    full_response = chunk
-
-                # 이어쓰기 중 이스케이프 단절 방지
-                # [V44] 최소 길이 체크 (빈 문자열/단일 백슬래시 방지)
-                if len(full_response) > 1 and full_response.endswith("\\"):
-                    logging.info("[JSON Repair] 후행 이스케이프 감지 — 강제 제거")
-                    full_response = full_response[:-1]
-
-                if not response.candidates:
-                    break
-                candidate = response.candidates[0]
-
-                # 토큰 제한(MAX_TOKENS) 발생 시 '비트 3' 유실 방지를 위한 이어쓰기 시퀀스
-                if hasattr(candidate, "finish_reason") and candidate.finish_reason in ["MAX_TOKENS", "LENGTH"]:
-                    # 🔒 Circuit Breaker 경고
-                    if attempt >= WARN_THRESHOLD:
-                        logging.warning(
-                            f"⚠️ [Circuit Breaker] 과도한 continuation 감지 ({attempt + 1}/{MAX_CONTINUATIONS}회)"
-                        )
-                        logging.warning(
-                            f"⚠️ [Cost Warning] API 비용 증가 중 - 누적 응답 길이: {len(full_response)} chars"
-                        )
-
-                    # 🔒 Circuit Breaker 트립 (최대 시도 횟수 도달)
-                    if attempt >= MAX_CONTINUATIONS - 1:
-                        logging.warning(
-                            f"🚨 [Circuit Breaker TRIP] 최대 continuation 횟수 도달 ({MAX_CONTINUATIONS}회)"
-                        )
-                        logging.warning("🚨 [WARNING] 응답 불완전 가능 - 수동 검토 필요")
-                        break
-
-                    # 마지막 50자를 앵커로 사용하여 다음 응답의 시작점을 강제 고정
-                    overlap_anchor = full_response[-50:].strip()
-                    # [FIX] 중괄호 이스케이프 적용 (f-string 오류 방지)
-                    safe_anchor = self._escape_braces(overlap_anchor)
-                    logging.warning(
-                        f"🔄 [System] 데이터 절단 감지. '{overlap_anchor[:20]}...' 지점부터 인과율 용접 시도 ({attempt + 1}/{MAX_CONTINUATIONS})"
-                    )
-
-                    current_prompt = (
-                        f"--- [SYSTEM: CONTINUATION MISSION] ---\n"
-                        f"Your previous response was cut off exactly at: '...{safe_anchor}'\n"
-                        f"CONTINUE the JSON structure IMMEDIATELY from the next character.\n"
-                        f"Do not summarize. Do not skip any bits (especially 'Beat 3')."
-                    )
+                if _resp["action"] == "continue":
+                    current_prompt = _resp["current_prompt"]
                     time.sleep(1)
                     attempt += 1
                     continue
-                else:
+                else:  # "break"
                     break
 
             # [V49.3] 비용 추적 종료 (성공)
@@ -773,92 +534,504 @@ class BaseAgent:
                 self.last_partial_response = full_response
                 logging.info(f"📝 [Recovery] 부분 응답 {len(full_response)}자 보존")
 
+            # [B-1-9:C4] 백업 모델 호출 + 부분 응답 복구
+            return self._attempt_backup_recovery(
+                base_prompt=base_prompt,
+                temperature=temperature,
+                response_schema=response_schema,
+                full_response=full_response,
+                error_type=error_type,
+            )
+
+    # ──────────────────────────────────────────────────────────────────
+    # [B-1-9] ask() 서브루틴 — keyword-only, dict 반환, 동작 변경 없음
+    # ──────────────────────────────────────────────────────────────────
+
+    def _build_model_stack(
+        self,
+        *,
+        temperature: float,
+        response_schema,
+        thinking_level,
+        base_prompt: str,
+    ) -> dict:
+        """[B-1-9:C1] 모델 스택 구성 + 쿼터 필터 + config 조립 + 메트릭 시작.
+
+        Returns:
+            dict with keys: model_stack, current_model, config, metric_id
+        """
+        # [V60.66] 429 폴백용 모델 스택 (primary → fallbacks)
+        model_stack = [self.primary_model]
+        if self.backup_model and self.backup_model != self.primary_model:
+            model_stack.append(self.backup_model)
+        # 추가 폴백 체인 확장
+        next_fallback = self.MODEL_FALLBACK_CHAIN.get(self.backup_model)
+        if next_fallback and next_fallback not in model_stack:
+            model_stack.append(next_fallback)
+
+        # [V60.68] 쿼터 소진 모델 필터링 (세션 캐싱) [I-18] Lock 보호
+        current_time = time.time()
+        available_models = []
+        with BaseAgent._quota_lock:
+            quota_snapshot = dict(BaseAgent._quota_exhausted_models)
+        for model in model_stack:
+            exhausted_until = quota_snapshot.get(model, 0)
+            if current_time >= exhausted_until:
+                available_models.append(model)
+            else:
+                remaining = int(exhausted_until - current_time)
+                # 첫 번째 모델(primary)이 스킵되는 경우에만 로그 출력
+                if model == self.primary_model:
+                    logging.info(f"⏭️ [V60.68] {model} 쿼터 캐시 히트 - {remaining}초 남음, 스킵")
+
+        # [V60.68] 사용 가능한 모델이 있으면 그것으로 시작, 없으면 원래 스택 사용
+        if available_models:
+            model_stack = available_models
+            current_model = available_models[0]
+        else:
+            current_model = self.primary_model  # fallback: 원래대로
+
+        # [V60.66] 현재 사용 중인 모델 추적 (V60.68에서 업데이트됨)
+
+        config_params = {
+            "temperature": temperature,
+            "max_output_tokens": self.MAX_OUTPUT_TOKENS,
+            "top_p": 0.95,
+            "response_mime_type": "application/json",
+            "http_options": types.HttpOptions(timeout=max(10, int(self.API_TIMEOUT))),
+        }
+        # [V0128] JSON Schema enforcement if provided
+        if response_schema:
+            config_params["response_schema"] = response_schema
+
+        # [V61.6] Thinking Budget 지원 (모든 모델 공통 - gemini-3, 2.5-pro, 2.5-flash)
+        if thinking_level:
+            # 문자열이면 정수로 변환, 이미 정수면 그대로 사용
+            if isinstance(thinking_level, str):
+                budget = self.THINKING_BUDGET_MAP.get(thinking_level.lower(), 8192)
+            else:
+                budget = int(thinking_level)
+            config_params["thinking_config"] = types.ThinkingConfig(thinking_budget=budget, include_thoughts=True)
+
+        config = types.GenerateContentConfig(**config_params)
+
+        # [INF-I5] API 호출 시작 구조화 로그
+        logging.debug(
+            "[SilentPass:Agent] call_start agent=%s model=%s prompt_len=%d",
+            self._agent_name,
+            current_model,
+            len(base_prompt),
+        )
+
+        # [V49.3] 비용 추적 시작
+        metric_id = None
+        if METRICS_ENABLED:
             try:
-                # [FIX] 백업 모델용 별도 config
-                backup_config_params = {
+                collector = get_metrics_collector()
+                metric_id = collector.start_call(self.agent_name, current_model)
+            except Exception as e:  # [V64.P4] OPTIONAL: metrics startup
+                logging.debug(f"[SILENT] metrics startup: {e}")
+                pass  # 메트릭 실패가 본 작업에 영향 주지 않음
+
+        return {
+            "model_stack": model_stack,
+            "current_model": current_model,
+            "config": config,
+            "metric_id": metric_id,
+        }
+
+    def _handle_api_error(
+        self,
+        *,
+        api_error: Exception,
+        current_model: str,
+        model_stack: list,
+        config,
+        current_prompt: str,
+        temperature: float,
+        response_schema,
+        thinking_level,
+        network_retry_count: int,
+        rate_limit_retry_count: int,
+        quota_retry_count: int,
+        max_rate_limit_retries: int,
+        max_quota_retries: int,
+    ) -> dict:
+        """[B-1-9:C2] API 오류 처리 — 네트워크 재시도 / Rate Limit 백오프 / 쿼터 폴백.
+
+        Returns:
+            dict with keys:
+                action: "continue" | "fallback_response" | "raise"
+                current_model, config, network_retry_count,
+                rate_limit_retry_count, quota_retry_count
+                response (only when action == "fallback_response")
+        """
+        result = {
+            "action": "raise",
+            "current_model": current_model,
+            "config": config,
+            "network_retry_count": network_retry_count,
+            "rate_limit_retry_count": rate_limit_retry_count,
+            "quota_retry_count": quota_retry_count,
+        }
+
+        # ═══════════════════════════════════════════════════════════════
+        # [V61.2] Case 0: 네트워크/타임아웃 오류 → 백오프 + 연결 체크 후 재시도
+        # 야간 무인 운영 시 3-5분 인터넷 끊김에도 작업 유지
+        # ═══════════════════════════════════════════════════════════════
+        if self._is_network_error(api_error) and network_retry_count < self.MAX_NETWORK_RETRIES:
+            network_retry_count += 1
+            result["network_retry_count"] = network_retry_count
+            # 백오프: 10초 → 15초 → 20초 → ... → 최대 30초
+            wait_time = min(self.NETWORK_RETRY_DELAY_BASE + (network_retry_count - 1) * 5, self.NETWORK_RETRY_DELAY_MAX)
+            total_waited = sum(
+                min(self.NETWORK_RETRY_DELAY_BASE + i * 5, self.NETWORK_RETRY_DELAY_MAX)
+                for i in range(network_retry_count)
+            )
+
+            # [V61.2] 타임스탬프 포함 출력 (하트비트 역할)
+            from datetime import datetime
+
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            logging.warning(
+                f"\n      🌐 [{timestamp}] 연결 오류 → {wait_time}초 대기 ({network_retry_count}/{self.MAX_NETWORK_RETRIES}, 누적 {total_waited}초)"
+            )
+
+            # 대기 중 — 메인 스레드에서만 print (워커 스레드는 logging만)
+            if threading.current_thread() is threading.main_thread():
+                print(
+                    f"         🌐 네트워크 재시도 {network_retry_count}/{self.MAX_NETWORK_RETRIES} ({wait_time}초 대기)"
+                )
+            time.sleep(wait_time)
+
+            # 연결 체크
+            if self._check_connectivity():
+                logging.info(f"✅ [{datetime.now().strftime('%H:%M:%S')}] 연결 복구! 재시도...")
+            else:
+                # 연결 안 됨 - 다음 재시도로 (루프 계속)
+                logging.info(f"⏳ [{datetime.now().strftime('%H:%M:%S')}] 연결 대기 중...")
+            result["action"] = "continue"
+            return result
+
+        # [V60.97] Rate Limit vs Quota Exhausted 구분
+        error_str = str(api_error).lower()
+
+        # Rate Limit: 429 + (rate 또는 limit) - 분당 요청 제한
+        is_rate_limit = "429" in error_str and ("rate" in error_str or "limit" in error_str)
+        # Quota Exhausted: resource_exhausted 또는 quota - 일일/월간 할당량 초과
+        is_quota_exhausted = "resource_exhausted" in error_str or ("quota" in error_str and "429" not in error_str)
+        # 애매한 경우 (429만 있음) - Rate Limit으로 간주
+        is_ambiguous_429 = "429" in error_str and not is_rate_limit and not is_quota_exhausted
+
+        # ═══════════════════════════════════════════════════════════════
+        # [V60.98] gemini-3-pro는 할당량이 적으므로 Rate Limit 시 즉시 폴백
+        # ═══════════════════════════════════════════════════════════════
+        is_gemini3_rate_limit = (is_rate_limit or is_ambiguous_429) and "gemini-3-pro" in current_model
+
+        # ═══════════════════════════════════════════════════════════════
+        # [V60.97] Case A: Rate Limit (gemini-3-pro 제외) → Backoff 후 재시도
+        # ═══════════════════════════════════════════════════════════════
+        if (
+            (is_rate_limit or is_ambiguous_429)
+            and not is_gemini3_rate_limit
+            and rate_limit_retry_count < max_rate_limit_retries
+        ):
+            rate_limit_retry_count += 1
+            result["rate_limit_retry_count"] = rate_limit_retry_count
+            # Linear Backoff: 30초 → 60초 → 90초 (분당 제한 대응)
+            wait_time = 30 * rate_limit_retry_count
+            logging.info(
+                f"⏳ [V60.97 Rate Limit] {current_model} 분당 제한 감지 → {wait_time}초 대기 후 재시도 ({rate_limit_retry_count}/{max_rate_limit_retries})"
+            )
+            time.sleep(wait_time)
+            # 루프 처음으로 돌아가서 try/except 안에서 재시도
+            result["action"] = "continue"
+            return result
+
+        # ═══════════════════════════════════════════════════════════════
+        # [V60.97] Case B: Quota/Rate Limit 초과 또는 gemini-3-pro Rate Limit → 즉시 폴백
+        # ═══════════════════════════════════════════════════════════════
+        if (
+            is_quota_exhausted
+            or is_gemini3_rate_limit
+            or (is_rate_limit and rate_limit_retry_count >= max_rate_limit_retries)
+        ):
+            if is_gemini3_rate_limit:
+                logging.info(f"⚡ [V60.98] {current_model} Rate Limit → 즉시 폴백 (할당량 부족 모델)")
+            if quota_retry_count < max_quota_retries - 1:
+                quota_retry_count += 1
+                rate_limit_retry_count = 0  # 폴백 시 Rate Limit 카운터 리셋
+
+                old_model = current_model
+                current_model = (
+                    model_stack[quota_retry_count] if quota_retry_count < len(model_stack) else model_stack[-1]
+                )
+
+                # [V60.68] 쿼터 소진 모델 캐시 등록 [I-18] Lock 보호
+                # [V62.3] 3-pro는 시간 단위 차단 — Rate Limit도 길게 캐싱
+                cache_duration = BaseAgent._QUOTA_CACHE_DURATION
+                with BaseAgent._quota_lock:
+                    BaseAgent._quota_exhausted_models[old_model] = time.time() + cache_duration
+
+                # [V62.3] 전체 키 시도 전까지만 순환 예약
+                with BaseAgent._rotation_lock:
+                    if BaseAgent._rotation_count < len(BaseAgent._api_keys) - 1:
+                        BaseAgent._key_rotation_pending = True
+
+                error_type = "Quota 소진" if is_quota_exhausted else "Rate Limit 초과"
+                logging.info(f"🔄 [V60.97 Fallback] {old_model} {error_type} → {current_model}로 전환")
+                # [INF-I5] 폴백 전환 구조화 로그
+                logging.debug(
+                    "[SilentPass:Agent] fallback agent=%s from=%s to=%s reason=%s",
+                    self._agent_name,
+                    old_model,
+                    current_model,
+                    error_type,
+                )
+
+                # 폴백 모델용 config 재생성
+                fallback_config_params = {
                     "temperature": temperature,
                     "max_output_tokens": self.MAX_OUTPUT_TOKENS,
                     "top_p": 0.95,
                     "response_mime_type": "application/json",
                 }
                 if response_schema:
-                    backup_config_params["response_schema"] = response_schema
-                backup_config = types.GenerateContentConfig(**backup_config_params)
-
-                # [V49.3] 백업 모델 비용 추적 시작
-                backup_metric_id = None
-                if METRICS_ENABLED:
-                    try:
-                        collector = get_metrics_collector()
-                        backup_metric_id = collector.start_call(f"{self.agent_name}_Backup", self.backup_model)
-                    except Exception as e:  # [V64.P4] OPTIONAL: backup metrics startup
-                        logging.debug(f"[SILENT] backup metrics startup: {e}")
-                        pass
+                    fallback_config_params["response_schema"] = response_schema
+                if thinking_level:
+                    if isinstance(thinking_level, str):
+                        budget = self.THINKING_BUDGET_MAP.get(thinking_level.lower(), 8192)
+                    else:
+                        budget = int(thinking_level)
+                    fallback_config_params["thinking_config"] = types.ThinkingConfig(
+                        thinking_budget=budget, include_thoughts=True
+                    )
+                new_config = types.GenerateContentConfig(**fallback_config_params)
 
                 # [V60.99] API Rate Limit 예방 딜레이
                 time.sleep(self.API_DELAY)
-                res = self.client.models.generate_content(
-                    model=self.backup_model, contents=base_prompt, config=backup_config
+                response = self.client.models.generate_content(
+                    model=current_model, contents=current_prompt, config=new_config
                 )
+
+                result["action"] = "fallback_response"
+                result["current_model"] = current_model
+                result["config"] = new_config
+                result["rate_limit_retry_count"] = rate_limit_retry_count
+                result["quota_retry_count"] = quota_retry_count
+                result["response"] = response
+                return result
+            else:
+                # 모든 폴백 소진
+                result["action"] = "raise"
+                return result
+
+        # 기타 에러 - 예외 재발생
+        result["action"] = "raise"
+        return result
+
+    def _extract_and_merge_response(
+        self,
+        *,
+        response,
+        full_response: str,
+        attempt: int,
+        thinking_level,
+        _thinking_text: str,
+        base_prompt: str,
+        max_continuations: int,
+        warn_threshold: int,
+    ) -> dict:
+        """[B-1-9:C3] 응답 텍스트 추출 + thinking 캡처 + 오버랩 병합 + 이어쓰기 판정.
+
+        Returns:
+            dict with keys:
+                full_response, _thinking_text, action ("continue"|"break"),
+                current_prompt (only when action == "continue")
+        """
+        try:
+            chunk = response.text if response.text else ""
+        except (ValueError, AttributeError):
+            chunk = ""
+            logging.warning("[base_agent] response.text 접근 실패 (safety filter?) — 빈 응답 처리")
+
+        # [TF-28] thinking content 추출 (첫 응답에서만)
+        if thinking_level and attempt == 0 and not _thinking_text:
+            try:
+                if response.candidates and response.candidates[0].content:
+                    _tparts = []
+                    for _p in response.candidates[0].content.parts:
+                        if getattr(_p, "thought", False) and isinstance(_p.text, str):
+                            _tparts.append(_p.text)
+                    if _tparts:
+                        _thinking_text = "\n".join(_tparts)
+            except Exception:
+                pass
+
+        # 💡 [Sovereign Logic] 지능형 중첩 제거 병합 (Overlap-Aware Merge)
+        if full_response:
+            # 앞 응답의 끝부분과 뒤 응답의 시작부분이 겹치는지 최대 100자 대조
+            max_overlap = min(len(full_response), len(chunk), 100)
+            overlap_found = 0
+            for i in range(max_overlap, 0, -1):
+                if full_response.endswith(chunk[:i]):
+                    overlap_found = i
+                    break
+
+            # 중복된 부분은 제외하고 순수 데이터만 정밀하게 접합
+            full_response += chunk[overlap_found:]
+        else:
+            full_response = chunk
+
+        # 이어쓰기 중 이스케이프 단절 방지
+        # [V44] 최소 길이 체크 (빈 문자열/단일 백슬래시 방지)
+        if len(full_response) > 1 and full_response.endswith("\\"):
+            logging.info("[JSON Repair] 후행 이스케이프 감지 — 강제 제거")
+            full_response = full_response[:-1]
+
+        result = {
+            "full_response": full_response,
+            "_thinking_text": _thinking_text,
+            "action": "break",
+        }
+
+        if not response.candidates:
+            return result
+        candidate = response.candidates[0]
+
+        # 토큰 제한(MAX_TOKENS) 발생 시 '비트 3' 유실 방지를 위한 이어쓰기 시퀀스
+        if hasattr(candidate, "finish_reason") and candidate.finish_reason in ["MAX_TOKENS", "LENGTH"]:
+            # 🔒 Circuit Breaker 경고
+            if attempt >= warn_threshold:
+                logging.warning(f"⚠️ [Circuit Breaker] 과도한 continuation 감지 ({attempt + 1}/{max_continuations}회)")
+                logging.warning(f"⚠️ [Cost Warning] API 비용 증가 중 - 누적 응답 길이: {len(full_response)} chars")
+
+            # 🔒 Circuit Breaker 트립 (최대 시도 횟수 도달)
+            if attempt >= max_continuations - 1:
+                logging.warning(f"🚨 [Circuit Breaker TRIP] 최대 continuation 횟수 도달 ({max_continuations}회)")
+                logging.warning("🚨 [WARNING] 응답 불완전 가능 - 수동 검토 필요")
+                return result
+
+            # 마지막 50자를 앵커로 사용하여 다음 응답의 시작점을 강제 고정
+            overlap_anchor = full_response[-50:].strip()
+            # [FIX] 중괄호 이스케이프 적용 (f-string 오류 방지)
+            safe_anchor = self._escape_braces(overlap_anchor)
+            logging.warning(
+                f"🔄 [System] 데이터 절단 감지. '{overlap_anchor[:20]}...' 지점부터 인과율 용접 시도 ({attempt + 1}/{max_continuations})"
+            )
+
+            current_prompt = (
+                f"--- [SYSTEM: CONTINUATION MISSION] ---\n"
+                f"Your previous response was cut off exactly at: '...{safe_anchor}'\n"
+                f"CONTINUE the JSON structure IMMEDIATELY from the next character.\n"
+                f"Do not summarize. Do not skip any bits (especially 'Beat 3')."
+            )
+            result["action"] = "continue"
+            result["current_prompt"] = current_prompt
+            return result
+
+        return result
+
+    def _attempt_backup_recovery(
+        self,
+        *,
+        base_prompt: str,
+        temperature: float,
+        response_schema,
+        full_response: str,
+        error_type: str,
+    ) -> str:
+        """[B-1-9:C4] 백업 모델 호출 + 부분 응답 복구 + 최종 에러 응답.
+
+        Returns:
+            str — 백업 응답 / 병합 응답 / 부분 응답 / 에러 응답
+        """
+        try:
+            # [FIX] 백업 모델용 별도 config
+            backup_config_params = {
+                "temperature": temperature,
+                "max_output_tokens": self.MAX_OUTPUT_TOKENS,
+                "top_p": 0.95,
+                "response_mime_type": "application/json",
+            }
+            if response_schema:
+                backup_config_params["response_schema"] = response_schema
+            backup_config = types.GenerateContentConfig(**backup_config_params)
+
+            # [V49.3] 백업 모델 비용 추적 시작
+            backup_metric_id = None
+            if METRICS_ENABLED:
                 try:
-                    backup_text = res.text if res.text else ""
-                except (ValueError, AttributeError):
-                    backup_text = ""
-                    logging.warning("[base_agent] backup response.text 접근 실패 (safety filter?) — 빈 응답 처리")
+                    collector = get_metrics_collector()
+                    backup_metric_id = collector.start_call(f"{self.agent_name}_Backup", self.backup_model)
+                except Exception as e:  # [V64.P4] OPTIONAL: backup metrics startup
+                    logging.debug(f"[SILENT] backup metrics startup: {e}")
+                    pass
 
-                # [V49.3] 백업 모델 비용 추적 종료
-                if METRICS_ENABLED and backup_metric_id:
-                    try:
-                        collector = get_metrics_collector()
-                        input_tokens = collector.estimate_tokens(base_prompt, is_input=True)
-                        output_tokens = collector.estimate_tokens(backup_text, is_input=False)
-                        collector.end_call(
-                            backup_metric_id,
-                            success=bool(backup_text),
-                            input_tokens=input_tokens,
-                            output_tokens=output_tokens,
-                        )
-                    except Exception as e:  # [V64.P4] OPTIONAL: backup metrics end
-                        logging.debug(f"[SILENT] backup metrics end: {e}")
-                        pass
+            # [V60.99] API Rate Limit 예방 딜레이
+            time.sleep(self.API_DELAY)
+            res = self.client.models.generate_content(
+                model=self.backup_model, contents=base_prompt, config=backup_config
+            )
+            try:
+                backup_text = res.text if res.text else ""
+            except (ValueError, AttributeError):
+                backup_text = ""
+                logging.warning("[base_agent] backup response.text 접근 실패 (safety filter?) — 빈 응답 처리")
 
-                # [V44] 응답 검증
-                if backup_text:
-                    validation = self._validate_response(backup_text)
-                    if validation["valid"]:
-                        self.requires_human_intervention = False
-                        return backup_text
-                    else:
-                        logging.warning(f"⚠️ [Validation] 백업 응답 검증 실패: {validation['reason']}")
-                        # 부분 응답 병합 시도
-                        if self.last_partial_response:
-                            merged = self._try_merge_responses(self.last_partial_response, backup_text)
-                            if merged:
-                                logging.info("✅ [Recovery] 부분 응답 병합 성공")
-                                return merged
+            # [V49.3] 백업 모델 비용 추적 종료
+            if METRICS_ENABLED and backup_metric_id:
+                try:
+                    collector = get_metrics_collector()
+                    input_tokens = collector.estimate_tokens(base_prompt, is_input=True)
+                    output_tokens = collector.estimate_tokens(backup_text, is_input=False)
+                    collector.end_call(
+                        backup_metric_id,
+                        success=bool(backup_text),
+                        input_tokens=input_tokens,
+                        output_tokens=output_tokens,
+                    )
+                except Exception as e:  # [V64.P4] OPTIONAL: backup metrics end
+                    logging.debug(f"[SILENT] backup metrics end: {e}")
+                    pass
 
-                # 빈 응답 처리
-                if self.last_partial_response:
-                    logging.info(f"📝 [Fallback] 부분 응답 반환 ({len(self.last_partial_response)}자)")
-                    # [V44] 부분 응답은 검증되지 않음 - 플래그 설정
-                    self.requires_human_intervention = True
-                    return self.last_partial_response
+            # [V44] 응답 검증
+            if backup_text:
+                validation = self._validate_response(backup_text)
+                if validation["valid"]:
+                    self.requires_human_intervention = False
+                    return backup_text
+                else:
+                    logging.warning(f"⚠️ [Validation] 백업 응답 검증 실패: {validation['reason']}")
+                    # 부분 응답 병합 시도
+                    if self.last_partial_response:
+                        merged = self._try_merge_responses(self.last_partial_response, backup_text)
+                        if merged:
+                            logging.info("✅ [Recovery] 부분 응답 병합 성공")
+                            return merged
 
-                return self._create_error_response(error_type, "백업 모델 빈 응답")
-
-            except Exception as e_inner:
-                inner_error_type = self._classify_error(e_inner)
-                logging.warning(f"🚨 [Critical] 백업 실패 ({inner_error_type}): {str(e_inner)[:50]}")
-
-                # [V44] 최후의 복구 시도
-                if self.last_partial_response:
-                    logging.info(f"📝 [Last Resort] 부분 응답 반환 ({len(self.last_partial_response)}자)")
-                    self.requires_human_intervention = True
-                    return self.last_partial_response
-
-                # 빈 JSON 대신 구조화된 에러 응답 반환
+            # 빈 응답 처리
+            if self.last_partial_response:
+                logging.info(f"📝 [Fallback] 부분 응답 반환 ({len(self.last_partial_response)}자)")
+                # [V44] 부분 응답은 검증되지 않음 - 플래그 설정
                 self.requires_human_intervention = True
-                return self._create_error_response(inner_error_type, str(e_inner)[:100])
+                return self.last_partial_response
+
+            return self._create_error_response(error_type, "백업 모델 빈 응답")
+
+        except Exception as e_inner:
+            inner_error_type = self._classify_error(e_inner)
+            logging.warning(f"🚨 [Critical] 백업 실패 ({inner_error_type}): {str(e_inner)[:50]}")
+
+            # [V44] 최후의 복구 시도
+            if self.last_partial_response:
+                logging.info(f"📝 [Last Resort] 부분 응답 반환 ({len(self.last_partial_response)}자)")
+                self.requires_human_intervention = True
+                return self.last_partial_response
+
+            # 빈 JSON 대신 구조화된 에러 응답 반환
+            self.requires_human_intervention = True
+            return self._create_error_response(inner_error_type, str(e_inner)[:100])
 
     def _escape_braces(self, text, force=False) -> str:
         """
