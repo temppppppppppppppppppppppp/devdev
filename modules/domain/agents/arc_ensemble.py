@@ -517,8 +517,12 @@ class ArcEnsembleGenerator(BaseAgent):
                     curr_block=self._escape_braces(json.dumps(curr_block, ensure_ascii=False) if curr_block else "{}"),
                     genre_ext_guide=self._escape_braces(genre_ext_guide),
                     extended_block_guide=self._escape_braces(extended_block_guide),  # [TF-9]
-                    vol_strategy=self._escape_braces(vol_strategy[:2000] if vol_strategy else "(없음)"),
-                    assets=self._escape_braces(json.dumps(assets, ensure_ascii=False)[:2000] if assets else "{}"),
+                    vol_strategy=self._escape_braces(
+                        vol_strategy[:4000] if vol_strategy else "(없음)"
+                    ),  # [TF-46] 2K→4K
+                    assets=self._escape_braces(
+                        json.dumps(assets, ensure_ascii=False)[:4000] if assets else "{}"
+                    ),  # [TF-46] 2K→4K
                     feedback=self._escape_braces(_merged_feedback[:9000] if _merged_feedback else "(없음)"),
                     entity_registry_section=self._escape_braces(entity_registry_section),  # [V60.92]
                     energy_system_block=self._escape_braces(self._get_energy_system_block(genre)),

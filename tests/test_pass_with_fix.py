@@ -711,8 +711,8 @@ class TestStage2PassWithFix:
         assert four_phase._inplace_patch_arc.call_count == 2
         assert ctx.agents["director"].audit_strategic_plan.call_count == 3
 
-    def test_finalizer_quality_gate_rejects_low_score_pass_with_fix(self):
-        """PASS_WITH_FIX + score < 90 + long tactical_doc → QualityGate REJECT (action=retry)."""
+    def test_finalizer_pass_with_fix_bypasses_quality_gate(self):
+        """[TF-46] PASS_WITH_FIX + score < 90 → QualityGate 미적용, patch loop 진입 (Director 주권 존중)."""
         from modules.core.stage2_finalizer import Stage2Finalizer
 
         audit = {
@@ -722,6 +722,7 @@ class TestStage2PassWithFix:
             "re_slice_instruction": "품질 개선",
             "fix_scope": "inplace",
         }
+        # patch_arc_return=None → patch loop 실패 → REJECT → "next"
         ctx = self._make_s2_ctx(audit)
         host = MagicMock()
         host.ctx = ctx
@@ -731,8 +732,8 @@ class TestStage2PassWithFix:
         with patch("modules.core.spinners.V50_MODULES_AVAILABLE", False):
             result = asyncio.run(finalizer.run_finalize(**kwargs))
 
-        assert result["action"] == "retry"
-        assert result["score"] == 80
+        # [TF-46] QualityGate가 아닌 patch loop 경로로 진행됨
+        assert result["action"] == "next"  # patch 실패 → 정상 REJECT 경로
 
 
 # ── Stage 3 PASS_WITH_FIX Tests ──────────────────────────────────

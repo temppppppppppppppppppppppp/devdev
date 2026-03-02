@@ -17,6 +17,7 @@ Stage 4 "Director 주권주의" 아키텍처의 핵심 생성 에이전트.
 
 import json
 import logging
+import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import TimeoutError as FutureTimeoutError
@@ -770,10 +771,20 @@ class ChiefWriter(BaseAgent):
             if not response or len(response) < 2000:
                 logging.warning(f"[TF-23] InPlace 응답 길이 부족: {len(response or '')}자 < 2000자")
                 return []
+            # [TF-46] patch_state_updates JSON 블록 추출
+            _state_updates = {}
+            _su_match = re.search(r'\{"patch_state_updates"\s*:\s*(\{.*?\})\}', response, re.DOTALL)
+            if _su_match:
+                try:
+                    _state_updates = json.loads(_su_match.group(1))
+                except (json.JSONDecodeError, ValueError):
+                    pass
+                # JSON 블록을 원고에서 제거
+                response = response[: _su_match.start()].rstrip()
             # [TF-36] LLM이 JSON으로 감싼 경우 텍스트 추출
             response = self._unwrap_manuscript_text(response)
             logging.info(f"✅ [TF-23] 원고 in-place 수정 완료 ({len(response)}자)")
-            return [{"manuscript": response, "strategy": "inplace_patch"}]
+            return [{"manuscript": response, "strategy": "inplace_patch", "state_updates": _state_updates}]
         except Exception as e:
             logging.warning(f"[TF-23] 원고 in-place 패치 실패: {e!s:.200}")
             return []
