@@ -61,6 +61,118 @@ class Stage2ValidationPipeline:
             except ImportError:
                 pass
 
+        # [B-1-9b-B1] Pre-validation checks (DraftValidator 1st + SelfReflector + Consensus + Mapping + AutoCorrector)
+        b1_result = self._run_pre_validation_checks(
+            refined_arc=refined_arc,
+            four_phase_passed=four_phase_passed,
+            all_refined_arcs=all_refined_arcs,
+            global_arc_no=global_arc_no,
+            current_ep_start=current_ep_start,
+            current_feedback=current_feedback,
+            generation_method=generation_method,
+            constraint_block=constraint_block,
+            enriched_block=enriched_block,
+            consensus_passed=consensus_passed,
+            attempt=attempt,
+            constraint_db=constraint_db,
+            V50_MODULES_AVAILABLE=V50_MODULES_AVAILABLE,
+            ReflectionTarget=ReflectionTarget,
+            rich_console=rich_console,
+            _python_advisories=_python_advisories,
+            _auto_corrections=_auto_corrections,
+        )
+        refined_arc = b1_result["refined_arc"]
+        consensus_passed = b1_result["consensus_passed"]
+        current_feedback = b1_result["current_feedback"]
+        suspected_duplicates = b1_result["suspected_duplicates"]
+        if b1_result["early_return"] is not None:
+            return b1_result["early_return"]
+
+        # [B-1-9b-B2] Flow Guard + Duplicate Guard + data validation
+        b2_result = self._run_flow_and_duplicate_guards(
+            refined_arc=refined_arc,
+            all_refined_arcs=all_refined_arcs,
+            global_arc_no=global_arc_no,
+            enriched_block=enriched_block,
+            attempt=attempt,
+            _python_advisories=_python_advisories,
+        )
+        if b2_result["early_return"] is not None:
+            return b2_result["early_return"]
+
+        # [B-1-9b-B3] Full DraftValidator + ArcCorrector
+        b3_result = self._run_draft_validator_full(
+            refined_arc=refined_arc,
+            four_phase_passed=four_phase_passed,
+            all_refined_arcs=all_refined_arcs,
+            constraint_block=constraint_block,
+            global_arc_no=global_arc_no,
+            draft_validator_passed=draft_validator_passed,
+            _python_advisories=_python_advisories,
+        )
+        refined_arc = b3_result["refined_arc"]
+        draft_validator_passed = b3_result["draft_validator_passed"]
+
+        # [B-1-9b-B4] ContinuityInspector + feedback assembly
+        b4_result = self._run_continuity_inspection(
+            refined_arc=refined_arc,
+            four_phase_passed=four_phase_passed,
+            all_refined_arcs=all_refined_arcs,
+            entity_registry_for_director=entity_registry_for_director,
+            enriched_block=enriched_block,
+            global_arc_no=global_arc_no,
+            current_ep_start=current_ep_start,
+            generation_method=generation_method,
+            attempt=attempt,
+            protagonist_name=protagonist_name,
+            V50_MODULES_AVAILABLE=V50_MODULES_AVAILABLE,
+            rich_console=rich_console,
+            _python_advisories=_python_advisories,
+        )
+        refined_arc = b4_result["refined_arc"]
+
+        self.ctx.ui.log("      ✅ [TF-38] Pre-Director 검증 완료 → Director 심사 대기")
+        return {
+            "action": "proceed",
+            "refined_arc": refined_arc,
+            "draft_validator_passed": draft_validator_passed,
+            "consensus_passed": consensus_passed,
+            "suspected_duplicates": suspected_duplicates,
+            "corrections_made": _auto_corrections,  # [TF-25-09]
+            "python_advisories": _python_advisories,  # [TF-25-08]
+        }
+
+    # ─────────────────────────────────────────────────────────────
+    # [B-1-9b] Extracted private methods from run_validation()
+    # ─────────────────────────────────────────────────────────────
+
+    def _run_pre_validation_checks(
+        self,
+        *,
+        refined_arc,
+        four_phase_passed: bool,
+        all_refined_arcs: list,
+        global_arc_no: int,
+        current_ep_start: int,
+        current_feedback: str,
+        generation_method: str,
+        constraint_block: str,
+        enriched_block: dict,
+        consensus_passed: bool,
+        attempt: int,
+        constraint_db,
+        V50_MODULES_AVAILABLE: bool,
+        ReflectionTarget,
+        rich_console,
+        _python_advisories: list,
+        _auto_corrections: list,
+    ) -> dict:
+        """[B-1-9b-B1] DraftValidator 1st + SelfReflector + Consensus + Arc Mapping + AutoCorrector + Pre-Validation.
+
+        Mutates ``_python_advisories`` and ``_auto_corrections`` in-place.
+        Returns dict with refined_arc, consensus_passed, current_feedback,
+        suspected_duplicates, and optional early_return.
+        """
         # ─────────────────────────────────────────────────────────────
         # [무기 #3] DraftValidator - 정보 수집용
         # ─────────────────────────────────────────────────────────────
@@ -188,7 +300,13 @@ class Stage2ValidationPipeline:
                     {"arc_no": global_arc_no, "type": str(type(refined_arc))},
                 )
             current_feedback = "Analyst가 유효한 딕셔너리를 반환하지 않았습니다. JSON 규격을 확인하라."
-            return {"action": "retry", "current_feedback": current_feedback}
+            return {
+                "refined_arc": refined_arc,
+                "consensus_passed": consensus_passed,
+                "current_feedback": current_feedback,
+                "suspected_duplicates": [],
+                "early_return": {"action": "retry", "current_feedback": current_feedback},
+            }
 
         # 🧭 [Mapping Validation]
         _pre_mapping_arc = refined_arc
@@ -205,7 +323,7 @@ class Stage2ValidationPipeline:
                     arc=refined_arc, prev_arcs=all_refined_arcs
                 )
                 if corrections:
-                    _auto_corrections = corrections  # [TF-25-09]
+                    _auto_corrections.extend(corrections)  # [TF-25-09]
                     if callable(getattr(self.ctx, "audit_event", None)):
                         self.ctx.audit_event(
                             "v60_25_auto_correct",
@@ -236,6 +354,29 @@ class Stage2ValidationPipeline:
                 for w in pre_validation["warnings"][:2]:
                     self.ctx.ui.log(f"      ⚠️ [V49.4 Warning] {w}")
 
+        return {
+            "refined_arc": refined_arc,
+            "consensus_passed": consensus_passed,
+            "current_feedback": current_feedback,
+            "suspected_duplicates": suspected_duplicates,
+            "early_return": None,
+        }
+
+    def _run_flow_and_duplicate_guards(
+        self,
+        *,
+        refined_arc,
+        all_refined_arcs: list,
+        global_arc_no: int,
+        enriched_block: dict,
+        attempt: int,
+        _python_advisories: list,
+    ) -> dict:
+        """[B-1-9b-B2] FlowGuard + DuplicateGuard + 2nd data validation.
+
+        Mutates ``_python_advisories`` in-place.
+        Returns dict with optional early_return (action='retry' or None).
+        """
         # 🚨 [Stage2 Flow Guard]
         flow_guard = self._stage2_flow_guard(refined_arc)
         if flow_guard.get("status") == "REJECT":
@@ -332,18 +473,33 @@ class Stage2ValidationPipeline:
             if callable(getattr(self.ctx, "audit_event", None)):
                 self.ctx.audit_event("data_validation_error", "refined_arc invalid", {"arc_no": global_arc_no})
             current_feedback = "설계 데이터 구조 오류. 전술 설계를 완전한 JSON으로 재작성하라."
-            return {"action": "retry", "current_feedback": current_feedback}
+            return {"early_return": {"action": "retry", "current_feedback": current_feedback}}
 
         if not enriched_block or not isinstance(enriched_block, dict):
             self.ctx.ui.log("🚨 [Data Error] enriched_block이 유효하지 않습니다")
             if callable(getattr(self.ctx, "audit_event", None)):
                 self.ctx.audit_event("data_validation_error", "enriched_block invalid", {"arc_no": global_arc_no})
             current_feedback = "농축 데이터 누락. 블록 정보를 포함하여 재설계하라."
-            return {"action": "retry", "current_feedback": current_feedback}
+            return {"early_return": {"action": "retry", "current_feedback": current_feedback}}
 
-        # ═══════════════════════════════════════════════════════════════
-        # [V60.56] Arc Draft 정보 수집
-        # ═══════════════════════════════════════════════════════════════
+        return {"early_return": None}
+
+    def _run_draft_validator_full(
+        self,
+        *,
+        refined_arc,
+        four_phase_passed: bool,
+        all_refined_arcs: list,
+        constraint_block: str,
+        global_arc_no: int,
+        draft_validator_passed: bool,
+        _python_advisories: list,
+    ) -> dict:
+        """[B-1-9b-B3] Full DraftValidator + ArcCorrector integration.
+
+        Mutates ``_python_advisories`` in-place.
+        Returns dict with refined_arc, draft_validator_passed.
+        """
         if not four_phase_passed and self.ctx.arc_draft_validator:
             # [G6] DraftValidator 호출 크래시 방어
             try:
@@ -503,9 +659,33 @@ class Stage2ValidationPipeline:
                     for w in draft_result["warnings"][:2]:
                         self.ctx.ui.log(f"         ⚠️ {w}")
 
-        # ═══════════════════════════════════════════════════════════════
-        # [V49 NEW] Arc 수준 연속성 검증
-        # ═══════════════════════════════════════════════════════════════
+        return {
+            "refined_arc": refined_arc,
+            "draft_validator_passed": draft_validator_passed,
+        }
+
+    def _run_continuity_inspection(
+        self,
+        *,
+        refined_arc,
+        four_phase_passed: bool,
+        all_refined_arcs: list,
+        entity_registry_for_director,
+        enriched_block: dict,
+        global_arc_no: int,
+        current_ep_start: int,
+        generation_method: str,
+        attempt: int,
+        protagonist_name: str,
+        V50_MODULES_AVAILABLE: bool,
+        rich_console,
+        _python_advisories: list,
+    ) -> dict:
+        """[B-1-9b-B4] ContinuityInspector + feedback assembly + failure recording.
+
+        Mutates ``_python_advisories`` in-place.
+        Returns dict with refined_arc.
+        """
         if not four_phase_passed and "continuity_inspector" in self.ctx.agents:
             self.ctx.ui.log(f"      🔍 [V49] Arc {global_arc_no} 연속성 검증 중...")
 
@@ -704,16 +884,7 @@ class Stage2ValidationPipeline:
                         logging.debug(f"[SILENT] success example storage: {e}")
                         pass  # Stage2Optimizer example save failure is non-blocking
 
-        self.ctx.ui.log("      ✅ [TF-38] Pre-Director 검증 완료 → Director 심사 대기")
-        return {
-            "action": "proceed",
-            "refined_arc": refined_arc,
-            "draft_validator_passed": draft_validator_passed,
-            "consensus_passed": consensus_passed,
-            "suspected_duplicates": suspected_duplicates,
-            "corrections_made": _auto_corrections,  # [TF-25-09]
-            "python_advisories": _python_advisories,  # [TF-25-08]
-        }
+        return {"refined_arc": refined_arc}
 
     def _normalize_tactical_text(self, text: str) -> str:
         """[V64.P3] 전술서 텍스트 정규화"""

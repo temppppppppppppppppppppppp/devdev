@@ -304,16 +304,10 @@ class Stage4PostProcessor:
         except Exception as _cap_err:
             logging.warning("[V73] 자본금 역동기화 실패 (비차단): %s", _cap_err)
 
-        # ===== [S4-N-P1-1][S4-I6] Manager LLM 비동기 제출 (먼저 submit → 독립 작업 → result 회수) =====
+        # ===== [B-1-9a] Manager LLM 비동기 제출 + VecMemory + TruthGate =====
         bible_delta = None  # [V70] NameError 방지 사전 초기화
-        _bible_future = None
-        audit = {}
         actual_truth = {}  # [V75] NameError 방지 사전 초기화
-        # 동기 폴백에 필요한 변수 사전 초기화
-        current_state = {}
-        lore_list = []
-        active_seeds = []
-        causal_history = ""
+        _meta_save_failed = False  # [S4-001] 에피소드 메타 저장 실패 추적
         # [TF-45] 장르 정보 1회 추출 — Manager 호출 3곳에 전달
         _genre_type = (
             (self.ctx.selected_genre or {}).get("type", "wuxia")
@@ -325,6 +319,186 @@ class Stage4PostProcessor:
             if hasattr(self.ctx, "sys") and hasattr(self.ctx.sys, "hud") and self.ctx.sys.hud
             else []
         )
+        # [B-1-9a:A1] Manager LLM 비동기 제출
+        _mgr = self._submit_manager_async(
+            next_ep=next_ep,
+            final_manuscript=final_manuscript,
+            genre_type=_genre_type,
+            critical_keys=_critical_keys,
+        )
+
+        # [B-1-9a:A2] VecMemory 저장 + TruthGate advisory 검증
+        self._memorize_and_validate(
+            next_ep=next_ep,
+            final_manuscript=final_manuscript,
+            final_title=final_title,
+            final_state_updates=final_state_updates,
+            arc_data=arc_data,
+            blueprint=blueprint,
+        )
+
+        # [V66] 5화 단위 내러티브 요약 생성 (V63.2 10→5 단축)
+        if next_ep % 5 == 0:
+            try:
+                self.ctx.generate_narrative_summary(next_ep)
+            except Exception as _ns_err:
+                self.ctx.ui.log(f"   ⚠️ [V63.2] 내러티브 요약 생성 실패: {str(_ns_err)[:60]}")
+
+        # [V60.87 C] 로그 파일 저장
+        try:
+            logs_dir = os.path.join(_PROJECTS_DIR, self.ctx.current_project.name, "logs")
+            os.makedirs(logs_dir, exist_ok=True)
+
+            # [DB-Eff-P2] failure_learner: 세션 종료 시 main_a.py가 reflexion_memory DB에 저장.
+            # 매 화 중간 저장 불필요 — 누적 학습 이력은 세션 내 메모리 유지로 충분.
+
+            if v50_modules_available and self.ctx.character_voice:
+                try:
+                    self.ctx.character_voice.analyze_manuscript(next_ep, final_manuscript)
+                except Exception as e:
+                    logging.warning("[CharacterVoice] analyze_manuscript 실패 (비치명): %s", e)
+                try:
+                    self.ctx.character_voice.save_to_db(self.ctx.current_project.db)  # [DB-Eff-P1] JSON->DB
+                except Exception as e:
+                    logging.warning("[CharacterVoice] save_to_db 실패 (비치명): %s", e)
+
+            if v50_modules_available and self.ctx.foreshadow_tracker:
+                # [V66] 원고에서 복선 자동 감지
+                try:
+                    self.ctx.foreshadow_tracker.auto_detect_from_manuscript(next_ep, final_manuscript)
+                except Exception as e:
+                    logging.warning("[ForeshadowTracker] auto_detect_from_manuscript 실패 (비치명): %s", e)
+                try:
+                    self.ctx.foreshadow_tracker.save_to_db(self.ctx.current_project.db)  # [DB-Eff-P1] JSON->DB
+                except Exception as e:
+                    logging.warning("[ForeshadowTracker] save_to_db 실패 (비치명): %s", e)
+
+            # [TF7-P2-06] EmotionArcTracker: 에피소드 감정 기록 + DB 저장
+            if v50_modules_available and getattr(self.ctx, "emotion_tracker", None):
+                try:
+                    _et = self.ctx.emotion_tracker
+                    _et.add_episode_emotion(next_ep, "neutral", 0.5)
+                    if hasattr(self.ctx, "current_project") and hasattr(self.ctx.current_project, "db"):
+                        _et.save_to_db(self.ctx.current_project.db)
+                except Exception as _et_err:
+                    logging.warning(f"⚠️ [TF7-P2-06] emotion_tracker 저장 실패: {_et_err}")
+
+            self.ctx.ui.log("   💾 [V60.87] 로그 파일 저장 완료")
+        except Exception as log_err:
+            self.ctx.ui.log(f"   ⚠️ 로그 저장 실패: {log_err}")
+
+        # ===== [B-1-9a:A3] Manager Future 회수 + Bible Delta 조립 =====
+        _delta = self._collect_manager_and_build_delta(
+            next_ep=next_ep,
+            final_manuscript=final_manuscript,
+            bible_future=_mgr["bible_future"],
+            current_state=_mgr["current_state"],
+            lore_list=_mgr["lore_list"],
+            active_seeds=_mgr["active_seeds"],
+            causal_history=_mgr["causal_history"],
+            genre_type=_genre_type,
+            critical_keys=_critical_keys,
+            final_state_updates=final_state_updates,
+        )
+        bible_delta = _delta["bible_delta"]
+        actual_truth = _delta["actual_truth"]
+        _meta_save_failed = _delta["meta_save_failed"]
+
+        # ===== [V68] 에피소드 연결고리 추출 및 저장 =====
+        try:
+            _chain_link = {}
+            if extract_chain_link_fn:
+                _chain_link = extract_chain_link_fn(next_ep, final_manuscript, blueprint)
+            if _chain_link:
+                self.ctx.current_project.db.save_anchor(f"chain_link_{next_ep}", _chain_link)
+                _cl_cliff = _chain_link.get("cliffhanger", "")
+                self.ctx.ui.log(
+                    f"   [V68] 연결고리 저장 완료 (cliffhanger: {_cl_cliff[:50]}{'...' if len(_cl_cliff) > 50 else ''})"
+                )
+            else:
+                self.ctx.ui.log("   [V68] 연결고리 추출 결과 없음 (비차단)")
+        except Exception as _cl_err:
+            self.ctx.ui.log(f"   [V68] 연결고리 저장 실패 (비차단): {str(_cl_err)[:50]}")
+
+        # ===== [B-1-9a:A4] WorldState + FactLedger 원자적 갱신 =====
+        self._save_world_state_atomic(
+            next_ep=next_ep,
+            final_state_updates=final_state_updates,
+            bible_delta=bible_delta,
+        )
+
+        # ===== [B-1-9a:A5] Post-pass advisories (만족도 + 호흡 + 회귀 + NPC과잉 + 반복) =====
+        self._run_post_pass_advisories(
+            next_ep=next_ep,
+            final_manuscript=final_manuscript,
+            final_state_updates=final_state_updates,
+            detect_npc_overexposure_fn=detect_npc_overexposure_fn,
+            detect_cross_episode_repetition_fn=detect_cross_episode_repetition_fn,
+            v50_modules_available=v50_modules_available,
+        )
+
+        # [Phase 6] Episode 단위 비용 스냅샷 저장 (비차단)
+        try:
+            collector = get_metrics_collector()
+            _db = getattr(self.ctx.current_project, "db", None)
+            if collector and _db and hasattr(_db, "save_cost_record"):
+                scope = collector.snapshot_and_reset_scope()
+                if (
+                    scope.get("total_calls", 0) > 0
+                    or scope.get("total_tokens", 0) > 0
+                    or scope.get("total_cost_usd", 0.0) > 0
+                ):
+                    _db.save_cost_record(
+                        session_id=collector.session_id,
+                        scope_type="episode",
+                        scope_id=next_ep,
+                        total_calls=scope.get("total_calls", 0),
+                        total_tokens=scope.get("total_tokens", 0),
+                        total_cost_usd=scope.get("total_cost_usd", 0.0),
+                        model_breakdown=scope.get("model_breakdown", "{}"),
+                    )
+                    self.ctx.ui.log(
+                        f"   💰 [Cost] Episode {next_ep} 비용: ${scope.get('total_cost_usd', 0.0):.4f} "
+                        f"({scope.get('total_tokens', 0):,} tokens)"
+                    )
+        except Exception as _cost_err:
+            logging.warning("[Phase 6] Episode 비용 기록 실패 (비차단): %s", _cost_err)
+
+        self.ctx.ui.log(f"\n✅ 제{next_ep}화 '{final_title}' 생산 완료! ({len(final_manuscript)}자)")
+
+        # [V66.1] B-3: 에피소드 완료 시 audit 버퍼 flush
+        if callable(getattr(self.ctx, "flush_audit_buffer", None)):
+            self.ctx.flush_audit_buffer()
+
+        # [V65] PerfTimer: 에피소드 완료 시 요약 로그
+        try:
+            self.ctx.perf_timer.log_summary()
+            self.ctx.perf_timer.reset()
+        except Exception as e:
+            logging.debug(f"[PerfTimer] s4 summary/reset: {e}")
+
+        # [S4-001] Episode Bible 저장 실패 시 오케스트레이터에 실패 신호 전달
+        if _meta_save_failed:
+            logging.error("[S4-001] _meta_save_failed=True → process_pass_result 반환 False")
+            return False
+
+        return True
+
+    # ═══════════════════════════════════════════════════════════════
+    # [B-1-9a] process_pass_result 분할 — 5개 private 메서드
+    # ═══════════════════════════════════════════════════════════════
+
+    def _submit_manager_async(self, *, next_ep, final_manuscript, genre_type, critical_keys):
+        """[B-1-9a:A1] Manager LLM 비동기 제출 (ThreadPoolExecutor setup).
+
+        Returns dict with bible_future, current_state, lore_list, active_seeds, causal_history.
+        """
+        current_state = {}
+        lore_list = []
+        active_seeds = []
+        causal_history = ""
+        bible_future = None
+
         try:
             self.ctx.ui.log("   📖 [V60.82] Manager 정산 비동기 제출...")
             from concurrent.futures import ThreadPoolExecutor
@@ -352,7 +526,7 @@ class Stage4PostProcessor:
 
             _manager_agent = self.ctx.agents["manager"]
             _bible_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="bible_settle")
-            _bible_future = _bible_executor.submit(
+            bible_future = _bible_executor.submit(
                 _manager_agent.update_state_and_lore_v20,
                 ep_num=next_ep,
                 manuscript=final_manuscript,
@@ -360,18 +534,27 @@ class Stage4PostProcessor:
                 lore_list=lore_list,
                 active_seeds=active_seeds,
                 causal_history=causal_history,
-                genre=_genre_type,
-                critical_keys=_critical_keys,
+                genre=genre_type,
+                critical_keys=critical_keys,
             )
             _bible_executor.shutdown(wait=False, cancel_futures=False)
             self.ctx.ui.log("      ⏳ [S4-I6] Manager 정산 비동기 실행 중...")
         except Exception as _submit_err:
             logging.warning("[S4-I6] 비동기 제출 실패, 동기 폴백 예정: %s", _submit_err)
-            _bible_future = None
+            bible_future = None
 
-        # ===== [S4-N-P1-1] Bible LLM 실행 중 독립 작업 병렬 수행 =====
+        return {
+            "bible_future": bible_future,
+            "current_state": current_state,
+            "lore_list": lore_list,
+            "active_seeds": active_seeds,
+            "causal_history": causal_history,
+        }
 
-        # [V63.3] 벡터 메모리 즉시 저장
+    def _memorize_and_validate(
+        self, *, next_ep, final_manuscript, final_title, final_state_updates, arc_data, blueprint
+    ):
+        """[B-1-9a:A2] VecMemory 저장 + TruthGate advisory 검증."""
         try:
             _mem_arc_no = arc_data.get("arc_no") if arc_data else None
             # [TF-T5] state_changes 단일 패스 추출
@@ -451,63 +634,34 @@ class Stage4PostProcessor:
         except Exception as _mem_err:
             self.ctx.ui.log(f"   ⚠️ [V63.3] 벡터 메모리 저장 실패 (비차단): {str(_mem_err)[:60]}")
 
-        # [V66] 5화 단위 내러티브 요약 생성 (V63.2 10→5 단축)
-        if next_ep % 5 == 0:
-            try:
-                self.ctx.generate_narrative_summary(next_ep)
-            except Exception as _ns_err:
-                self.ctx.ui.log(f"   ⚠️ [V63.2] 내러티브 요약 생성 실패: {str(_ns_err)[:60]}")
+    def _collect_manager_and_build_delta(
+        self,
+        *,
+        next_ep,
+        final_manuscript,
+        bible_future,
+        current_state,
+        lore_list,
+        active_seeds,
+        causal_history,
+        genre_type,
+        critical_keys,
+        final_state_updates,
+    ):
+        """[B-1-9a:A3] Manager Future 회수 + bible_delta 조립 + state_log 저장.
 
-        # [V60.87 C] 로그 파일 저장
-        try:
-            logs_dir = os.path.join(_PROJECTS_DIR, self.ctx.current_project.name, "logs")
-            os.makedirs(logs_dir, exist_ok=True)
+        Returns dict with bible_delta, actual_truth, meta_save_failed.
+        """
+        bible_delta = None
+        actual_truth = {}
+        audit = {}
+        _meta_save_failed = False
 
-            # [DB-Eff-P2] failure_learner: 세션 종료 시 main_a.py가 reflexion_memory DB에 저장.
-            # 매 화 중간 저장 불필요 — 누적 학습 이력은 세션 내 메모리 유지로 충분.
-
-            if v50_modules_available and self.ctx.character_voice:
-                try:
-                    self.ctx.character_voice.analyze_manuscript(next_ep, final_manuscript)
-                except Exception as e:
-                    logging.warning("[CharacterVoice] analyze_manuscript 실패 (비치명): %s", e)
-                try:
-                    self.ctx.character_voice.save_to_db(self.ctx.current_project.db)  # [DB-Eff-P1] JSON->DB
-                except Exception as e:
-                    logging.warning("[CharacterVoice] save_to_db 실패 (비치명): %s", e)
-
-            if v50_modules_available and self.ctx.foreshadow_tracker:
-                # [V66] 원고에서 복선 자동 감지
-                try:
-                    self.ctx.foreshadow_tracker.auto_detect_from_manuscript(next_ep, final_manuscript)
-                except Exception as e:
-                    logging.warning("[ForeshadowTracker] auto_detect_from_manuscript 실패 (비치명): %s", e)
-                try:
-                    self.ctx.foreshadow_tracker.save_to_db(self.ctx.current_project.db)  # [DB-Eff-P1] JSON->DB
-                except Exception as e:
-                    logging.warning("[ForeshadowTracker] save_to_db 실패 (비치명): %s", e)
-
-            # [TF7-P2-06] EmotionArcTracker: 에피소드 감정 기록 + DB 저장
-            if v50_modules_available and getattr(self.ctx, "emotion_tracker", None):
-                try:
-                    _et = self.ctx.emotion_tracker
-                    _et.add_episode_emotion(next_ep, "neutral", 0.5)
-                    if hasattr(self.ctx, "current_project") and hasattr(self.ctx.current_project, "db"):
-                        _et.save_to_db(self.ctx.current_project.db)
-                except Exception as _et_err:
-                    logging.warning(f"⚠️ [TF7-P2-06] emotion_tracker 저장 실패: {_et_err}")
-
-            self.ctx.ui.log("   💾 [V60.87] 로그 파일 저장 완료")
-        except Exception as log_err:
-            self.ctx.ui.log(f"   ⚠️ 로그 저장 실패: {log_err}")
-
-        # ===== [S4-N-P1-1] Manager LLM Future 회수 (독립 작업 완료 후) =====
-        _manager_failed = False  # [XC-002] Manager 완전 실패 추적 플래그
         try:
             # [S4-I6] Future 회수: 결과를 기다린 후 audit에 반영
             try:
-                if _bible_future is not None:
-                    raw_audit = _bible_future.result(timeout=120)  # 최대 2분 대기
+                if bible_future is not None:
+                    raw_audit = bible_future.result(timeout=120)  # 최대 2분 대기
                 else:
                     # 동기 폴백
                     raw_audit = self.ctx.agents["manager"].update_state_and_lore_v20(
@@ -517,8 +671,8 @@ class Stage4PostProcessor:
                         lore_list=lore_list,
                         active_seeds=active_seeds,
                         causal_history=causal_history,
-                        genre=_genre_type,
-                        critical_keys=_critical_keys,
+                        genre=genre_type,
+                        critical_keys=critical_keys,
                     )
 
                 if raw_audit and not raw_audit.get("parsing_error"):
@@ -531,11 +685,10 @@ class Stage4PostProcessor:
                     )
                     if callable(getattr(self.ctx, "audit_event", None)):
                         self.ctx.audit_event("manager_parse_failure", "Manager LLM 파싱 실패", {"ep": next_ep})
-                    _manager_failed = True
             except Exception as mgr_err:
                 # [P0-D2] 타임아웃 시 비동기 future 취소 후 동기 재시도
-                if _bible_future is not None and hasattr(_bible_future, "cancel"):
-                    _bible_future.cancel()
+                if bible_future is not None and hasattr(bible_future, "cancel"):
+                    bible_future.cancel()
                 self.ctx.ui.log(f"      ⚠️ Manager 호출 실패: {str(mgr_err)[:50]}")
                 logging.warning("[B-1] Manager 정산 실패 — 동기 재시도: %s", mgr_err)
                 try:
@@ -546,8 +699,8 @@ class Stage4PostProcessor:
                         lore_list=lore_list,
                         active_seeds=active_seeds,
                         causal_history=causal_history,
-                        genre=_genre_type,
-                        critical_keys=_critical_keys,
+                        genre=genre_type,
+                        critical_keys=critical_keys,
                     )
                     if raw_audit and not raw_audit.get("parsing_error"):
                         audit = raw_audit
@@ -557,7 +710,6 @@ class Stage4PostProcessor:
                     logging.error("[XC-002] Manager LLM 완전 실패 — bible_delta=None, FactLedger 갱신 건너뜀")
                     if callable(getattr(self.ctx, "audit_event", None)):
                         self.ctx.audit_event("manager_complete_failure", "Manager LLM 완전 실패", {"ep": next_ep})
-                    _manager_failed = True
 
             new_lore = audit.get("new_lore", {}) if isinstance(audit, dict) else {}
             knowledge_map = audit.get("knowledge_map_updates", {}) if isinstance(audit, dict) else {}
@@ -580,7 +732,7 @@ class Stage4PostProcessor:
                 actual_truth.get("equipment", []) if isinstance(actual_truth.get("equipment"), list) else []
             )
             # [TF-45] martial_arts diff는 무협 전용
-            if is_wuxia(_genre_type):
+            if is_wuxia(genre_type):
                 prev_martial = set(
                     prev_actual.get("martial_arts", []) if isinstance(prev_actual.get("martial_arts"), list) else []
                 )
@@ -648,7 +800,7 @@ class Stage4PostProcessor:
                     from modules.core.state_text_verifier import StateTextVerifier
 
                     _stv_agent = self.ctx.agents.get("manager") if self.ctx.agents else None
-                    _stv = StateTextVerifier(agent=_stv_agent, genre=_genre_type, critical_keys=_critical_keys)
+                    _stv = StateTextVerifier(agent=_stv_agent, genre=genre_type, critical_keys=critical_keys)
                     _stv_result = _stv.verify(final_manuscript, actual_truth)
                     if not _stv_result["verified"] and _stv_result["corrections"]:
                         actual_truth = _stv.apply_corrections(actual_truth, _stv_result["corrections"])
@@ -688,7 +840,6 @@ class Stage4PostProcessor:
             )
 
             # [S4-P1-5] save_episode_bible 실패가 후속 처리(state_log, FactLedger)를 차단하지 않도록 격리
-            _meta_save_failed = False  # [S4-001] 에피소드 메타 저장 실패 추적 플래그
             try:
                 self.ctx.current_project.db.save_episode_bible(next_ep, bible_delta)
             except Exception as _bible_save_err:
@@ -747,26 +898,15 @@ class Stage4PostProcessor:
 
             traceback.print_exc()
 
-        # ===== [V68] 에피소드 연결고리 추출 및 저장 =====
-        try:
-            _chain_link = {}
-            if extract_chain_link_fn:
-                _chain_link = extract_chain_link_fn(next_ep, final_manuscript, blueprint)
-            if _chain_link:
-                self.ctx.current_project.db.save_anchor(f"chain_link_{next_ep}", _chain_link)
-                _cl_cliff = _chain_link.get("cliffhanger", "")
-                self.ctx.ui.log(
-                    f"   [V68] 연결고리 저장 완료 (cliffhanger: {_cl_cliff[:50]}{'...' if len(_cl_cliff) > 50 else ''})"
-                )
-            else:
-                self.ctx.ui.log("   [V68] 연결고리 추출 결과 없음 (비차단)")
-        except Exception as _cl_err:
-            self.ctx.ui.log(f"   [V68] 연결고리 저장 실패 (비차단): {str(_cl_err)[:50]}")
+        return {
+            "bible_delta": bible_delta,
+            "actual_truth": actual_truth,
+            "meta_save_failed": _meta_save_failed,
+        }
 
-        # ===== [TF-C10] WorldState + FactLedger 원자적 갱신 =====
-        # 원고(핵심 산출물)는 이미 저장 완료 — 메타데이터만 트랜잭션으로 묶어 반쪽 커밋 방지
+    def _save_world_state_atomic(self, *, next_ep, final_state_updates, bible_delta):
+        """[B-1-9a:A4] WorldState + FactLedger 원자적 갱신 + 롤백."""
         _meta_db = getattr(self.ctx.current_project, "db", None)
-        # [TF-35b] in-memory 상태 스냅샷 — 트랜잭션 실패 시 복원용
         import copy as _copy
 
         try:
@@ -851,6 +991,17 @@ class Stage4PostProcessor:
                 self.ctx.fact_ledger._ledger = _fl_snap
             self.ctx.ui.log(f"   ⚠️ [TF-C10] 메타데이터 원자적 저장 실패 (비차단): {str(_meta_err)[:60]}")
 
+    def _run_post_pass_advisories(
+        self,
+        *,
+        next_ep,
+        final_manuscript,
+        final_state_updates,
+        detect_npc_overexposure_fn,
+        detect_cross_episode_repetition_fn,
+        v50_modules_available,
+    ):
+        """[B-1-9a:A5] 만족도 태깅 + 호흡 분석 + 품질 회귀 + NPC 과잉 + 크로스 에피소드 반복."""
         # ===== [D Step 3] 에피소드 만족도 태깅 (비차단) =====
         try:
             _sat_db = getattr(self.ctx.current_project, "db", None)
@@ -1000,53 +1151,6 @@ class Stage4PostProcessor:
                     _db.store_sentence_hashes(next_ep, _fps)
         except Exception as _cr_err:
             logging.warning("[Phase 3-B] 크로스 에피소드 반복 감지 실패 (비차단): %s", _cr_err)
-
-        # [Phase 6] Episode 단위 비용 스냅샷 저장 (비차단)
-        try:
-            collector = get_metrics_collector()
-            _db = getattr(self.ctx.current_project, "db", None)
-            if collector and _db and hasattr(_db, "save_cost_record"):
-                scope = collector.snapshot_and_reset_scope()
-                if (
-                    scope.get("total_calls", 0) > 0
-                    or scope.get("total_tokens", 0) > 0
-                    or scope.get("total_cost_usd", 0.0) > 0
-                ):
-                    _db.save_cost_record(
-                        session_id=collector.session_id,
-                        scope_type="episode",
-                        scope_id=next_ep,
-                        total_calls=scope.get("total_calls", 0),
-                        total_tokens=scope.get("total_tokens", 0),
-                        total_cost_usd=scope.get("total_cost_usd", 0.0),
-                        model_breakdown=scope.get("model_breakdown", "{}"),
-                    )
-                    self.ctx.ui.log(
-                        f"   💰 [Cost] Episode {next_ep} 비용: ${scope.get('total_cost_usd', 0.0):.4f} "
-                        f"({scope.get('total_tokens', 0):,} tokens)"
-                    )
-        except Exception as _cost_err:
-            logging.warning("[Phase 6] Episode 비용 기록 실패 (비차단): %s", _cost_err)
-
-        self.ctx.ui.log(f"\n✅ 제{next_ep}화 '{final_title}' 생산 완료! ({len(final_manuscript)}자)")
-
-        # [V66.1] B-3: 에피소드 완료 시 audit 버퍼 flush
-        if callable(getattr(self.ctx, "flush_audit_buffer", None)):
-            self.ctx.flush_audit_buffer()
-
-        # [V65] PerfTimer: 에피소드 완료 시 요약 로그
-        try:
-            self.ctx.perf_timer.log_summary()
-            self.ctx.perf_timer.reset()
-        except Exception as e:
-            logging.debug(f"[PerfTimer] s4 summary/reset: {e}")
-
-        # [S4-001] Episode Bible 저장 실패 시 오케스트레이터에 실패 신호 전달
-        if locals().get("_meta_save_failed", False):
-            logging.error("[S4-001] _meta_save_failed=True → process_pass_result 반환 False")
-            return False
-
-        return True
 
     def run_post_episode_tasks(self) -> None:
         """[4-R1-d] Session wrap-up: logs, vector sync."""
