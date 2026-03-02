@@ -1892,6 +1892,41 @@ class Stage4InterviewRound:
         except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as _rd_err:
             logging.warning("[LM-D] RelationshipDriftAdvisor 실패 (비치명): %s", str(_rd_err)[:80])
 
+        # [P1-5] LongTermRepetitionAdvisor — 20화 이상에서 장기 반복 패턴 감지
+        try:
+            if next_ep >= 20:
+                from modules.core.long_term_repetition_advisor import LongTermRepetitionAdvisor as _LtrAdvisor
+
+                _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+                if _db is not None:
+                    _pattern_summary = _LtrAdvisor.build_pattern_summary(_db, next_ep, lookback=20)
+                    if _pattern_summary:
+                        _ltr_advisor = _LtrAdvisor(llm_ask=self._truth_gate_llm_ask)
+                        _ltr_all: list[dict] = []
+                        for _ci, _cand in enumerate(candidates):
+                            _ms = _cand.get("manuscript", "") if isinstance(_cand, dict) else str(_cand)
+                            if _ms:
+                                _ltr_results = _ltr_advisor.check(_ms, ep_num=next_ep, pattern_summary=_pattern_summary)
+                                for _lr in _ltr_results:
+                                    _lr["_cand_idx"] = _ci
+                                _ltr_all.extend(_ltr_results)
+                        if _ltr_all:
+                            _ltr_lines = [f"[P1-5 장기 반복 감지 — {len(_ltr_all)}건, MAJOR 이상은 감점 반영]"]
+                            for _lr in _ltr_all[:6]:
+                                _cl = (
+                                    ["A", "B", "C"][_lr.get("_cand_idx", 0)]
+                                    if _lr.get("_cand_idx", 0) < 3
+                                    else str(_lr.get("_cand_idx", 0) + 1)
+                                )
+                                _ltr_lines.append(
+                                    f"- [후보 {_cl}][MAJOR] '{_lr.get('pattern', '')[:30]}': {_lr.get('issue', '')[:60]}"
+                                )
+                            _advisory_parts.insert(0, "\n".join(_ltr_lines))
+                            logging.info("[LongTermRepetitionAdvisor→Director] %d건 장기 반복 감지", len(_ltr_all))
+                            print(f"      🔄 [LongTermRep] {len(_ltr_all)}건 장기 반복")
+        except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as _ltr_err:
+            logging.warning("[P1-5] LongTermRepetitionAdvisor 실패 (비치명): %s", str(_ltr_err)[:80])
+
         return _advisory_parts
 
     # ── [TF-32] PASS_WITH_FIX helpers ──────────────────────────────
