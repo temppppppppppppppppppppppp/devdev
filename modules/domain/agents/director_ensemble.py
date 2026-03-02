@@ -932,6 +932,7 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
             or {},  # [TF-R4] Director 보정값 우선 (투자 장르 capital 키 등 superset)
             "action_items": feedback.get("action_items", []) if isinstance(feedback, dict) else [],
             "other_candidates_notes": result.get("other_candidates_notes", {}),
+            "open_review": _open_review,  # [TF-29] 자유 리뷰 전파
             "adaptive_threshold": adaptive_result.get("threshold_used", 65),
             "adaptive_reason": adaptive_result.get("reason", ""),
             "error_category": result.get("error_category", ""),  # [V75-B] LOGIC_ERROR 전파

@@ -521,10 +521,10 @@ class WorldStateManager:
         except Exception as e:
             _logger.error("[WorldState] §17 NPC 영구 부상 known_attrs 반영 실패: %s", e)
 
-        # 크기 제한: destroyed 최대 50개, world_notes 최대 10개 (항상 실행)
+        # 크기 제한: destroyed 최대 100개, world_notes 최대 10개 (항상 실행)
         try:
-            if len(self._state["destroyed"]) > 50:
-                self._state["destroyed"] = self._state["destroyed"][-50:]
+            if len(self._state["destroyed"]) > 100:
+                self._state["destroyed"] = self._state["destroyed"][-100:]
             if len(self._state.get("world_notes", [])) > 10:
                 self._state["world_notes"] = self._state["world_notes"][-10:]
         except Exception as e:
@@ -851,12 +851,12 @@ class WorldStateManager:
         existing = {e.get("law", "") for e in laws if isinstance(e, dict)}
         if law not in existing:
             laws.append({"law": law, "established_ep": ep, "priority": priority})
-            if len(laws) > 30:
+            if len(laws) > 50:
                 # [LM-A-3] CRITICAL 핀 보호: CRITICAL 법칙은 FIFO 탈락 대상에서 제외
                 critical = [e for e in laws if e.get("priority") == "CRITICAL"]
                 others = [e for e in laws if e.get("priority") != "CRITICAL"]
-                max_others = max(0, 30 - len(critical))
-                laws[:] = critical + others[-max_others:] if max_others else critical[:30]
+                max_others = max(0, 50 - len(critical))
+                laws[:] = critical + others[-max_others:] if max_others else critical[:50]
 
     def add_world_law(self, law: str, ep: int = 0, priority: str = "NORMAL") -> None:
         """세계관 절대 법칙 등록 (Stage 0 Bible 파싱 또는 수동 등록용)."""

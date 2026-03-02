@@ -11,8 +11,8 @@ import re
 
 logger = logging.getLogger(__name__)
 
-MAX_PAIRS = 10
-MAX_TIMELINE_CHARS = 3000
+MAX_PAIRS = 20
+MAX_TIMELINE_CHARS = 5000
 
 
 class RelationshipDriftAdvisor:

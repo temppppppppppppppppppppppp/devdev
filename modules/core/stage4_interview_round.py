@@ -834,6 +834,9 @@ class Stage4InterviewRound:
                     "selected_strategy": director_result.get("selected_strategy", "")
                     if isinstance(director_result, dict)
                     else "",
+                    "open_review": director_result.get("open_review", "")
+                    if isinstance(director_result, dict)
+                    else "",  # [TF-29]
                 }
 
             # [TF-32-VERIFY] PASS_WITH_FIX → patch + Director 재심사 반복 (최대 3회)
@@ -1159,6 +1162,7 @@ class Stage4InterviewRound:
                 "state_updates": director_result.get("state_updates", {}),  # [TF-R4-S4-01] 폴백 시 HUD 복구용
                 "fix_scope": director_result.get("fix_scope", ""),  # [TF-23] Director 판단 수정 범위
                 "fix_scope_reasoning": director_result.get("fix_scope_reasoning", ""),  # [V73] 수정 범위 근거
+                "open_review": director_result.get("open_review", ""),  # [TF-29] 자유 리뷰 보존
             }
             try:
                 self.ctx.current_project.db.save_cost_record(

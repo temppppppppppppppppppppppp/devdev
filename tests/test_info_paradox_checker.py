@@ -334,3 +334,29 @@ class TestIntegration:
             knowledge_summary=summary,
         )
         assert result == []
+
+
+# ===========================================================================
+# [P0-1] MAX_REVEALS 확장 테스트
+# ===========================================================================
+
+
+class TestMaxRevealsExpansion:
+    """200→500 확장 후 FIFO 트림 동작 검증."""
+
+    def test_fifo_trim_at_500_reveals(self):
+        """600 reveals → 최근 500건만 유지 (FIFO). 초기 reveals 탈락 확인."""
+        bibles = [_make_bible(ep, reveals=[f"ep{ep}_A", f"ep{ep}_B"]) for ep in range(1, 301)]
+        db = FakeDB(bibles)
+        result = InfoParadoxChecker.build_knowledge_summary(db, 301, "진우")
+        # 600 reveals 중 최근 500건만 (ep51~ep300)
+        assert "ep1_A" not in result  # ep1은 FIFO 탈락
+        assert "ep50_B" not in result  # ep50도 탈락
+        assert "ep51_A" in result  # ep51부터 포함 (FIFO 경계)
+
+    def test_knowledge_chars_cap_5000(self):
+        """요약이 5000자 상한 + 이하 생략 여유."""
+        bibles = [_make_bible(ep, reveals=[f"ep{ep}_{'가' * 50}"]) for ep in range(1, 201)]
+        db = FakeDB(bibles)
+        result = InfoParadoxChecker.build_knowledge_summary(db, 201, "수현")
+        assert len(result) <= 5100  # 5000 + "이하 생략" 여유

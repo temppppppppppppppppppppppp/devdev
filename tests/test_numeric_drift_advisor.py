@@ -196,6 +196,25 @@ class TestEdgeCases:
         result = advisor.check(numbers=short_history_numbers, ep_num=10)
         assert result == []
 
+    def test_format_history_shows_established_value(self):
+        """established_value가 현재값과 다를 때 초기값 표시."""
+        numbers = {
+            "자산": {
+                "value": "300억",
+                "unit": "원",
+                "last_ep": 67,
+                "established_value": "100만원",
+                "history": [
+                    "ep4: 100만원 → 500만원",
+                    "ep11: 500만원 → 3000만원",
+                    "ep25: 3000만원 → 2억",
+                ],
+            }
+        }
+        advisor = NumericDriftAdvisor()
+        result = advisor._format_history(numbers, min_history=3)
+        assert "초기값=100만원" in result
+
 
 # ═══════════════════════════════════════════════════════════════
 # Integration 테스트
