@@ -165,15 +165,6 @@ class BlueprintEnsembleGenerator(BaseAgent):
                         arc_focus = f"[{ep_num}화 핵심 사건 (Arc 설계 원본)]\n{_detail_text}\n\n{arc_focus}"
                     break
 
-        # 제약 조건 문자열
-        constraints_str = self._format_constraints(constraint_block)
-
-        # [V67] 이전 화 정보 확장 (이전 Blueprint 전문 + 이전 원고 전문)
-        prev_info = self._format_prev_info_expanded(prev_blueprint, prev_blueprints, prev_manuscripts_text)
-
-        # [V60.95] 고밀도 HUD 컨텍스트 구축
-        hud_context = self._build_hud_context(state_tracker, ep_num)
-
         # [V61.3] 병렬 실행 전에 genre 미리 로드 (SQLite thread-safety 문제 방지)
         genre = GenreTypes.WUXIA
         try:
@@ -183,6 +174,15 @@ class BlueprintEnsembleGenerator(BaseAgent):
                     genre = bible.get("_genre", GenreTypes.WUXIA)
         except Exception as e:
             logging.warning(f"⚠️ [V61.3] genre 사전 로드 실패: {str(e)[:50]}")
+
+        # [TF-41] P1-2: genre를 _format_constraints에 전달 (내공 필터링용)
+        constraints_str = self._format_constraints(constraint_block, genre=genre)
+
+        # [V67] 이전 화 정보 확장 (이전 Blueprint 전문 + 이전 원고 전문)
+        prev_info = self._format_prev_info_expanded(prev_blueprint, prev_blueprints, prev_manuscripts_text)
+
+        # [V60.95] 고밀도 HUD 컨텍스트 구축
+        hud_context = self._build_hud_context(state_tracker, ep_num)
 
         # 병렬 생성
         logging.warning(f"🎲 [BPEnsemble] 3개 후보 병렬 생성 중... (주인공: {protagonist_name})")
@@ -565,7 +565,7 @@ class BlueprintEnsembleGenerator(BaseAgent):
 
         return "\n".join(parts) if parts else ""
 
-    def _format_constraints(self, constraint_block: dict) -> str:
+    def _format_constraints(self, constraint_block: dict, *, genre: str = "wuxia") -> str:
         """제약 조건 포맷팅"""
         lines = []
 
@@ -627,7 +627,8 @@ class BlueprintEnsembleGenerator(BaseAgent):
                     lines.append(f"  부상: {', '.join(str(i)[:40] for i in _inj[:5])}")
                 else:
                     lines.append(f"  부상: {str(_inj)[:200]}")
-            if inherited.get("internal_energy") is not None:
+            # [TF-41] P1-2: 무협 전용 — 비무협 장르는 내공 표시 스킵
+            if genre == "wuxia" and inherited.get("internal_energy") is not None:
                 lines.append(f"  내공/에너지: {inherited['internal_energy']}")
             if inherited.get("mood"):
                 lines.append(f"  심리 상태: {str(inherited['mood'])[:100]}")

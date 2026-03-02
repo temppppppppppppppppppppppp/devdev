@@ -592,11 +592,14 @@ class DirectorGradingSystem:
         warnings = []
 
         LIMITS = {
-            "internal_energy": {"max_increase": 200, "max_decrease": -500},
             "misunderstanding": {"max_change": 30},
             "obsession": {"max_change": 30},
             "wealth": {"max_change": 10000},
         }
+        # [TF-41] P1-3: 무협 전용 — 비무협 장르는 내공 변동 검증 스킵
+        _genre = self._d.genre if self._d else "wuxia"
+        if _genre == "wuxia":
+            LIMITS["internal_energy"] = {"max_increase": 200, "max_decrease": -500}
 
         for key, value in state_updates.items():
             if value in ["현상 유지", "유지", "변화 없음", None, ""]:

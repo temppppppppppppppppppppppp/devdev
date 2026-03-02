@@ -104,6 +104,16 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         """
         self.stats["total_attempts"] += 1
 
+        # [TF-41] P1-5: genre 로드 (compile에 전달하여 비무협 내공 오염 방지)
+        _genre = "wuxia"
+        try:
+            if hasattr(self, "context") and hasattr(self.context, "db"):
+                _bible = self.context.db.load_anchor("bible")
+                if _bible:
+                    _genre = _bible.get("_genre", "wuxia")
+        except Exception:
+            pass
+
         # [V60.90] protagonist_config 추출 (context에서 직접 로드, 파라미터 우선)
         if not protagonist_config:
             try:
@@ -182,7 +192,11 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 logging.info("📋 [Phase 1] 제약 수집 중...")
 
                 constraint_block = self.constraint_compiler.compile(
-                    arc_data=arc_data, ep_num=ep_num, prev_blueprint=prev_blueprint, prev_blueprints=prev_blueprints
+                    arc_data=arc_data,
+                    ep_num=ep_num,
+                    prev_blueprint=prev_blueprint,
+                    prev_blueprints=prev_blueprints,
+                    genre=_genre,
                 )
 
                 cached_constraint_block = constraint_block

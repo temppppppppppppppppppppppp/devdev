@@ -12,6 +12,7 @@ def _make_host():
     host.context.db = MagicMock()
     host.context.db.get_manuscript.return_value = None
     host.context.db.load_state_log.return_value = None
+    host.context.db.load_anchor.return_value = {"_genre": "wuxia"}
     host.context.master_bible = {
         "MasterBible": {
             "ProjectData": {"CoreIdentity": {"desire": "천하제일"}},

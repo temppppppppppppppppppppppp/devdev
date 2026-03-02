@@ -826,6 +826,7 @@ class ChiefWriter(BaseAgent):
             _patch_section = _patch_template.format(
                 feedback_text=_esc(director_feedback),
                 original_manuscript=_esc(smart_truncate(original_manuscript, max_chars=150000, head_chars=20000)),
+                style_guide=_esc(style_guide or ""),
             )
         else:
             # YAML 로드 실패 시 인라인 폴백

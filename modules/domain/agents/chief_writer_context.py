@@ -332,9 +332,7 @@ class ChiefWriterContextBuilder:
 """
 
         # [투자물 전용] 수치 규칙은 investment 장르에서만 추가 주입
-        _investment_guidelines = (
-            get_writing_guidelines_investment_only() if genre_code == "investment" else ""
-        )
+        _investment_guidelines = get_writing_guidelines_investment_only() if genre_code == "investment" else ""
 
         # [V65] 메인 프롬프트 함수 래핑 호출
         return build_chief_writer_main_prompt(
@@ -793,56 +791,67 @@ class ChiefWriterContextBuilder:
 
             latest = hud_history[-1]["hud"]
 
-            # 1. 내공 급변 감지
+            # [TF-41] P1-4: genre 로드 (내공/경지 감지는 무협 전용)
+            _genre = "wuxia"
+            try:
+                _bible = self.context.db.load_anchor("bible")
+                if _bible:
+                    _genre = _bible.get("_genre", "wuxia")
+            except Exception:
+                pass
+
             if len(hud_history) >= 2:
                 prev_hud = hud_history[-2]["hud"]
 
-                curr_energy = self._extract_numeric_value(latest.get("internal_energy", 0))
-                prev_energy = self._extract_numeric_value(prev_hud.get("internal_energy", 0))
+                # 1. 내공 급변 감지 — [TF-41] 무협 전용
+                if _genre == "wuxia":
+                    curr_energy = self._extract_numeric_value(latest.get("internal_energy", 0))
+                    prev_energy = self._extract_numeric_value(prev_hud.get("internal_energy", 0))
 
-                if curr_energy - prev_energy > 500:
-                    anomalies.append(
-                        {
-                            "type": "내공 급상승",
-                            "description": f"직전 화 대비 내공 +{curr_energy - prev_energy} 증가",
-                            "recommendation": "점진적 성장 또는 특별한 기연으로 정당화 필요",
-                            "severity": "high",
-                        }
-                    )
-                elif curr_energy - prev_energy > 200:
-                    anomalies.append(
-                        {
-                            "type": "내공 빠른 성장",
-                            "description": f"직전 화 대비 내공 +{curr_energy - prev_energy} 증가",
-                            "recommendation": "수련/깨달음 장면으로 정당화 권장",
-                            "severity": "medium",
-                        }
-                    )
+                    if curr_energy - prev_energy > 500:
+                        anomalies.append(
+                            {
+                                "type": "내공 급상승",
+                                "description": f"직전 화 대비 내공 +{curr_energy - prev_energy} 증가",
+                                "recommendation": "점진적 성장 또는 특별한 기연으로 정당화 필요",
+                                "severity": "high",
+                            }
+                        )
+                    elif curr_energy - prev_energy > 200:
+                        anomalies.append(
+                            {
+                                "type": "내공 빠른 성장",
+                                "description": f"직전 화 대비 내공 +{curr_energy - prev_energy} 증가",
+                                "recommendation": "수련/깨달음 장면으로 정당화 권장",
+                                "severity": "medium",
+                            }
+                        )
 
-                # 2. 경지 급변 감지
-                curr_realm = latest.get("realm", "")
-                prev_realm = prev_hud.get("realm", "")
+                # 2. 경지 급변 감지 — [TF-41] 무협 전용 (경지 체계가 무협 전용)
+                if _genre == "wuxia":
+                    curr_realm = latest.get("realm", "")
+                    prev_realm = prev_hud.get("realm", "")
 
-                realm_tiers = ["하수", "삼류", "이류", "일류", "초일류", "절정", "화경", "현경", "귀환"]
+                    realm_tiers = ["하수", "삼류", "이류", "일류", "초일류", "절정", "화경", "현경", "귀환"]
 
-                if curr_realm and prev_realm and curr_realm != prev_realm:
-                    try:
-                        curr_tier = realm_tiers.index(curr_realm) if curr_realm in realm_tiers else -1
-                        prev_tier = realm_tiers.index(prev_realm) if prev_realm in realm_tiers else -1
+                    if curr_realm and prev_realm and curr_realm != prev_realm:
+                        try:
+                            curr_tier = realm_tiers.index(curr_realm) if curr_realm in realm_tiers else -1
+                            prev_tier = realm_tiers.index(prev_realm) if prev_realm in realm_tiers else -1
 
-                        if curr_tier - prev_tier >= 2:
-                            anomalies.append(
-                                {
-                                    "type": "경지 급상승",
-                                    "description": f"직전 화 대비 경지 2단계 이상 상승 ({prev_realm} → {curr_realm})",
-                                    "recommendation": "연속 돌파 장면 또는 특수 기연으로 정당화 필수",
-                                    "severity": "critical",
-                                }
-                            )
-                    except ValueError:
-                        pass
+                            if curr_tier - prev_tier >= 2:
+                                anomalies.append(
+                                    {
+                                        "type": "경지 급상승",
+                                        "description": f"직전 화 대비 경지 2단계 이상 상승 ({prev_realm} → {curr_realm})",
+                                        "recommendation": "연속 돌파 장면 또는 특수 기연으로 정당화 필수",
+                                        "severity": "critical",
+                                    }
+                                )
+                        except ValueError:
+                            pass
 
-                # 3. 부상 상태 급변 감지
+                # 3. 부상 상태 급변 감지 — 전 장르 공통
                 curr_injury = str(latest.get("causal_injuries", "")).lower()
                 prev_injury = str(prev_hud.get("causal_injuries", "")).lower()
 

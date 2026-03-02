@@ -837,9 +837,13 @@ class FourPhaseArcGenerator(BaseAgent):
                 raw_energy = Stage2Limits.INTERNAL_ENERGY_FALLBACK
 
         # [TF-39] P0-2: 내공 자연 회복 — 최소 90% (100% 강제 리셋 → 자연 회복)
-        final_energy = max(90, int(raw_energy) if isinstance(raw_energy, (int, float)) else 100)
-        if isinstance(raw_energy, (int, float)) and raw_energy < final_energy:
-            logging.info(f"🩹 [V62.2] 내공 자연 회복: {int(raw_energy)}% → {final_energy}% (아크 간 휴식)")
+        # [TF-41] P0-1: 비무협 장르는 내공 라인 자체를 출력하지 않음
+        if self._genre == "wuxia":
+            final_energy = max(90, int(raw_energy) if isinstance(raw_energy, (int, float)) else 100)
+            if isinstance(raw_energy, (int, float)) and raw_energy < final_energy:
+                logging.info(f"🩹 [V62.2] 내공 자연 회복: {int(raw_energy)}% → {final_energy}% (아크 간 휴식)")
+        else:
+            final_energy = None
 
         raw_injuries = arc_end.get("injuries") or "없음"
         final_injuries = self._sanitize_injuries(raw_injuries)
@@ -854,7 +858,8 @@ class FourPhaseArcGenerator(BaseAgent):
         lines.append("=" * 50)
         lines.append(f"🔴 [Arc {last_arc_no} 종료 상태 → 다음 Arc 필수 시작 조건]")
         lines.append("=" * 50)
-        lines.append(f"✅ 내공: {final_energy}%")
+        if final_energy is not None:
+            lines.append(f"✅ 내공: {final_energy}%")
         lines.append(f"✅ 부상: {final_injuries}")
         lines.append(f"✅ 위치: {final_location}")
         lines.append(f"✅ 소지품: {final_equipment}")
