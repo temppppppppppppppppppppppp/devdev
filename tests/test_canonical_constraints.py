@@ -6,26 +6,23 @@
 - 예산 준수 확인
 """
 
-import json
-import sqlite3
-import tempfile
-from pathlib import Path
-
-import pytest
-
 
 # ── 헬퍼: 최소 DBManager 인스턴스 생성 ──────────────────────────────
 
+
 def _make_db(tmp_path):
     from modules.core.db_manager import DBManager
+
     return DBManager(tmp_path / "test.db")
 
 
 # ── 1. FactLedger.get_canonical_summary() 안전성 ─────────────────────
 
+
 def test_get_canonical_summary_empty_safe(tmp_path):
     """numbers 없을 때 빈 문자열 반환."""
     from modules.core.fact_ledger import FactLedger
+
     db = _make_db(tmp_path)
     fl = FactLedger(db)
     result = fl.get_canonical_summary()
@@ -35,6 +32,7 @@ def test_get_canonical_summary_empty_safe(tmp_path):
 def test_get_canonical_summary_with_numbers(tmp_path):
     """numbers 있으면 수치 요약 반환."""
     from modules.core.fact_ledger import FactLedger
+
     db = _make_db(tmp_path)
     fl = FactLedger(db)
     fl.update_number("주인공_전투력", 9000, "레벨", 10)
@@ -47,6 +45,7 @@ def test_get_canonical_summary_with_numbers(tmp_path):
 def test_get_canonical_summary_max_chars(tmp_path):
     """max_chars 준수 확인."""
     from modules.core.fact_ledger import FactLedger
+
     db = _make_db(tmp_path)
     fl = FactLedger(db)
     for i in range(50):
@@ -57,9 +56,11 @@ def test_get_canonical_summary_max_chars(tmp_path):
 
 # ── 2. WorldState.get_canonical_constraints() 안전성 ─────────────────
 
+
 def test_get_canonical_constraints_empty_safe(tmp_path):
     """alive_npcs 없을 때 빈 문자열 반환."""
     from modules.core.world_state import WorldStateManager
+
     db = _make_db(tmp_path)
     ws = WorldStateManager(db)
     result = ws.get_canonical_constraints()
@@ -69,6 +70,7 @@ def test_get_canonical_constraints_empty_safe(tmp_path):
 def test_get_canonical_constraints_no_world_laws(tmp_path):
     """world_laws 없어도 NPC만 반환, 크래시 없음."""
     from modules.core.world_state import WorldStateManager
+
     db = _make_db(tmp_path)
     ws = WorldStateManager(db)
     ws._state["alive_npcs"]["테스트NPC"] = {
@@ -85,6 +87,7 @@ def test_get_canonical_constraints_no_world_laws(tmp_path):
 def test_canonical_budget_respected(tmp_path):
     """get_canonical_constraints max_chars 준수."""
     from modules.core.world_state import WorldStateManager
+
     db = _make_db(tmp_path)
     ws = WorldStateManager(db)
     for i in range(30):
@@ -98,6 +101,7 @@ def test_canonical_budget_respected(tmp_path):
 
 
 # ── 3. DB round-trip ─────────────────────────────────────────────────
+
 
 def test_upsert_and_get_canonical_facts(tmp_path):
     """canonical_facts DB round-trip."""
@@ -131,6 +135,7 @@ def test_get_canonical_facts_filter_by_type(tmp_path):
 def test_update_number_syncs_to_db(tmp_path):
     """update_number() 호출 시 canonical_facts DB에 sync됨."""
     from modules.core.fact_ledger import FactLedger
+
     db = _make_db(tmp_path)
     fl = FactLedger(db)
     fl.update_number("수익률", 15.5, "%", 7)

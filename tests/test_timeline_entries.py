@@ -6,16 +6,15 @@
 - update_from_state_changes → DB sync
 """
 
-import pytest
-from pathlib import Path
-
 
 def _make_db(tmp_path):
     from modules.core.db_manager import DBManager
+
     return DBManager(tmp_path / "test.db")
 
 
 # ── 1. DB round-trip ─────────────────────────────────────────────────
+
 
 def test_upsert_and_get_timeline(tmp_path):
     """upsert_timeline_entry → get_timeline_range round-trip."""
@@ -50,9 +49,11 @@ def test_get_timeline_range_limit(tmp_path):
 
 # ── 2. in-memory fallback ─────────────────────────────────────────────
 
+
 def test_get_timeline_summary_fallback_when_no_db(tmp_path):
     """DB 없을 때 in-memory timeline fallback."""
     from modules.core.world_state import WorldStateManager
+
     db = _make_db(tmp_path)
     ws = WorldStateManager(db)
     # db를 None으로 교체하여 fallback 경로 강제
@@ -70,6 +71,7 @@ def test_get_timeline_summary_fallback_when_no_db(tmp_path):
 def test_get_timeline_summary_empty_when_no_data(tmp_path):
     """timeline 데이터 없으면 빈 문자열."""
     from modules.core.world_state import WorldStateManager
+
     db = _make_db(tmp_path)
     ws = WorldStateManager(db)
     result = ws.get_timeline_summary()
@@ -78,12 +80,14 @@ def test_get_timeline_summary_empty_when_no_data(tmp_path):
 
 # ── 3. max_chars 준수 ─────────────────────────────────────────────────
 
+
 def test_timeline_summary_max_chars(tmp_path):
     """max_chars 준수 확인."""
     db = _make_db(tmp_path)
     for i in range(1, 51):
         db.upsert_timeline_entry(i, f"날짜_{i:02d}", None, f"이것은 긴 메모입니다 에피소드 {i}")
     from modules.core.world_state import WorldStateManager
+
     ws = WorldStateManager(db)
     result = ws.get_timeline_summary(max_chars=200)
     assert len(result) <= 200
@@ -91,9 +95,11 @@ def test_timeline_summary_max_chars(tmp_path):
 
 # ── 4. update_from_state_changes → DB sync ───────────────────────────
 
+
 def test_world_state_syncs_time_markers_to_db(tmp_path):
     """update_from_state_changes의 time_markers가 DB에 sync됨."""
     from modules.core.world_state import WorldStateManager
+
     db = _make_db(tmp_path)
     ws = WorldStateManager(db)
     state_changes = {
@@ -111,9 +117,9 @@ def test_world_state_syncs_time_markers_to_db(tmp_path):
 
 # ── 5. 마이그레이션 ───────────────────────────────────────────────────
 
+
 def test_migrate_world_state_timeline(tmp_path):
     """WorldState anchor의 timeline 배열을 DB로 1회 마이그레이션."""
-    import json
     from modules.core.db_manager import DBManager
 
     db_path = tmp_path / "migrate_test.db"

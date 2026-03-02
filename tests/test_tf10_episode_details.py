@@ -7,16 +7,15 @@ Coverage:
   - UnifiedArcValidator ADVISORY 체크
   - BlueprintConstraintCompiler _extract_episode_focus / _extract_stop_line 우선 참조
 """
-from unittest.mock import MagicMock
 
-from modules.models.arc import ArcData
-from modules.domain.agents.unified_arc_validator import UnifiedArcValidator
 from modules.domain.agents.blueprint_constraint_compiler import BlueprintConstraintCompiler
-
+from modules.domain.agents.unified_arc_validator import UnifiedArcValidator
+from modules.models.arc import ArcData
 
 # ─────────────────────────────────────────────
 # 1. ArcData Pydantic 기본값
 # ─────────────────────────────────────────────
+
 
 def test_arc_data_episode_details_default():
     """episode_details 선택 필드 — 누락 시 빈 리스트"""
@@ -52,16 +51,21 @@ def test_arc_data_episode_details_none_becomes_empty():
 # 2. ASP 경로 episode_details 복원
 # ─────────────────────────────────────────────
 
+
 def test_asp_preserves_episode_details_when_missing_in_asp_result():
     """ASP 결과에 episode_details 없으면 원본에서 복원"""
     orig_details = [{"ep_num": 3, "details": ["원본 사건"]}]
     original_arc = {
-        "arc_no": 1, "ep_start": 1, "ep_end": 5,
+        "arc_no": 1,
+        "ep_start": 1,
+        "ep_end": 5,
         "tactical_doc": "원본 tactical",
         "episode_details": orig_details,
     }
     asp_arc = {
-        "arc_no": 1, "ep_start": 1, "ep_end": 5,
+        "arc_no": 1,
+        "ep_start": 1,
+        "ep_end": 5,
         "tactical_doc": "ASP 개선된 tactical",
         # episode_details 없음
     }
@@ -80,12 +84,16 @@ def test_asp_does_not_overwrite_existing_episode_details():
     orig_details = [{"ep_num": 3, "details": ["원본 사건"]}]
     asp_details = [{"ep_num": 3, "details": ["ASP 사건"]}]
     original_arc = {
-        "arc_no": 1, "ep_start": 1, "ep_end": 5,
+        "arc_no": 1,
+        "ep_start": 1,
+        "ep_end": 5,
         "tactical_doc": "원본",
         "episode_details": orig_details,
     }
     asp_arc = {
-        "arc_no": 1, "ep_start": 1, "ep_end": 5,
+        "arc_no": 1,
+        "ep_start": 1,
+        "ep_end": 5,
         "tactical_doc": "ASP tactical",
         "episode_details": asp_details,
     }
@@ -102,10 +110,13 @@ def test_asp_does_not_overwrite_existing_episode_details():
 # 3. ArcCorrector tactical_doc 수정 시 해당 화 항목 삭제
 # ─────────────────────────────────────────────
 
+
 def test_arc_corrector_removes_target_ep_from_episode_details():
     """tactical_doc 수정 성공 시 해당 화 episode_details 항목 삭제"""
     arc = {
-        "arc_no": 1, "ep_start": 1, "ep_end": 5,
+        "arc_no": 1,
+        "ep_start": 1,
+        "ep_end": 5,
         "tactical_doc": "원본",
         "episode_details": [
             {"ep_num": 2, "details": ["수정 전 사건"]},
@@ -146,6 +157,7 @@ def test_arc_corrector_preserves_other_eps_episode_details():
 # 4. UnifiedArcValidator ADVISORY 체크
 # ─────────────────────────────────────────────
 
+
 def _make_validator():
     v = UnifiedArcValidator.__new__(UnifiedArcValidator)
     v.min_chars_per_ep = 300
@@ -178,7 +190,9 @@ def test_validator_advisory_when_item_not_dict():
 def test_validator_advisory_when_ep_num_not_int():
     """episode_details 아이템의 ep_num이 str이면 ADVISORY"""
     arc = {
-        "arc_no": 1, "ep_start": 1, "ep_end": 5,
+        "arc_no": 1,
+        "ep_start": 1,
+        "ep_end": 5,
         "episode_details": [{"ep_num": "4", "details": ["사건"]}],
     }
     issues = _make_validator()._check_episode_details_type(arc)
@@ -189,7 +203,9 @@ def test_validator_advisory_when_ep_num_not_int():
 def test_validator_no_advisory_for_valid_episode_details():
     """올바른 episode_details는 ADVISORY 없음"""
     arc = {
-        "arc_no": 1, "ep_start": 1, "ep_end": 5,
+        "arc_no": 1,
+        "ep_start": 1,
+        "ep_end": 5,
         "episode_details": [
             {"ep_num": 1, "details": ["사건1"]},
             {"ep_num": 2, "details": ["사건2", "사건3"]},
@@ -202,6 +218,7 @@ def test_validator_no_advisory_for_valid_episode_details():
 # ─────────────────────────────────────────────
 # 5. BlueprintConstraintCompiler 우선 참조
 # ─────────────────────────────────────────────
+
 
 def _make_compiler():
     compiler = BlueprintConstraintCompiler.__new__(BlueprintConstraintCompiler)
