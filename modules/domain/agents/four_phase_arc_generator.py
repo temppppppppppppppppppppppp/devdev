@@ -67,7 +67,7 @@ class FourPhaseArcGenerator(BaseAgent):
 
         # 서브 모듈
         sub_models = _get_sub_component_models("four_phase_arc_generator")
-        self.preflight = PreflightChecker(context, client, sub_models.get("preflight", "gemini-3-flash-preview"))
+        self.preflight = PreflightChecker(context, client, sub_models.get("preflight", "gemini-2.5-flash"))
         self.ensemble = ArcEnsembleGenerator(context, client, sub_models.get("ensemble", "gemini-2.5-pro"))
         self.validator = UnifiedArcValidator(context, client, sub_models.get("validator", "gemini-2.5-flash"))
         self.compiler = ConstraintCompiler()

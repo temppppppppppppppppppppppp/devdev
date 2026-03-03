@@ -42,44 +42,12 @@ class BlockingValidatorSceneChecks:
         return {"check": "minimum_length", "passed": True}
 
     def _check_required_scenes(self, manuscript: str, context: dict) -> dict:
-        """필수 씬 포함 체크 (MANUSCRIPT 모드만)"""
-        # [TF-7-P0-05] blueprint=None/비정규 입력 fail-safe
-        blueprint = context.get("blueprint")
-        if not isinstance(blueprint, dict):
-            blueprint = {}
-        scene_breakdown = blueprint.get("scene_breakdown", {})
+        """필수 씬 포함 체크 — 비활성화됨.
 
-        if not scene_breakdown or not isinstance(scene_breakdown, dict):
-            # Blueprint 없으면 체크 불가 → 통과 처리
-            return {"check": "required_scenes", "passed": True}
-
-        # 최소 4개 장면이 원고에 반영되었는지 체크
-        scene_count = len(scene_breakdown)
-        min_required = min(4, scene_count)
-
-        # 각 Scene의 키워드가 원고에 있는지 체크
-        scenes_found = 0
-        for scene_name, scene_desc in scene_breakdown.items():
-            # Scene 설명에서 핵심 키워드 추출 (간단한 휴리스틱)
-            # 예: "주인공이 객잔에 도착" → ["객잔", "도착"]
-            if isinstance(scene_desc, dict):  # [V70] dict 타입 방어
-                scene_desc = scene_desc.get("description", scene_desc.get("content", str(scene_desc)))
-            keywords = self.host.consistency_checks._extract_keywords(str(scene_desc))
-
-            # 키워드 중 하나라도 원고에 있으면 Scene 반영됨
-            if any(kw in manuscript for kw in keywords if kw):
-                scenes_found += 1
-
-        if scenes_found < min_required:
-            return {
-                "check": "required_scenes",
-                "passed": False,
-                "reason": f"필수 씬 누락: {scenes_found}/{scene_count} 반영 (최소 {min_required}개)",
-                "severity": "HIGH",
-                "scenes_found": scenes_found,
-                "total_scenes": scene_count,
-            }
-
+        Python 키워드 매칭 기반이라 오탐(false negative)이 과다.
+        CW가 동일 장면을 다른 표현으로 쓰면 미반영으로 오판함.
+        씬 반영률 판단은 Director(LLM)가 Blueprint 원문 대조로 수행.
+        """
         return {"check": "required_scenes", "passed": True}
 
     def _check_scope_overflow(self, manuscript: str, context: dict) -> dict:

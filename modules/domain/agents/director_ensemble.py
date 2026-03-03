@@ -688,10 +688,11 @@ fix_scope: REJECT 시 수정 범위 판단. inplace=국소수정, partial=일부
                 )
             _mc_block = f"""
 
-### 📌 [V67] 필수 컨텍스트 (Python 감지 + StateTracker 상태)
-아래는 Python 사전 검증 및 StateTracker에서 수집된 세계 상태입니다.
-죽은 NPC, 파괴된 장소/아이템, 시간선, 관계 변화 등이 포함되어 있으므로
-원고가 이 사실들과 모순되면 반드시 REJECT하세요.
+### 📌 [V67] 참고 컨텍스트 (Python 수집 + StateTracker 상태)
+아래는 Python이 수집한 세계 상태와 advisory 분석 결과입니다.
+이 정보는 참고자료이며, 최종 판정은 당신(Director)의 전문적 판단에 따릅니다.
+사실 관계 모순(사망 NPC 부활, 미습득 아이템 사용 등)만 확인하고,
+스타일·시점·표현 방식에 대한 advisory 의견은 자율적으로 취사선택하세요.
 
 {self._d._escape_braces(_mc_for_director)}
 """

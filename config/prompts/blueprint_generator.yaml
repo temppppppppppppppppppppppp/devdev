@@ -18,3 +18,45 @@ BLUEPRINT_PATCH_MODE_PROMPT: |
   {original_blueprint}
 
   전면 재설계하지 마세요. 지적된 부분만 고치세요.
+
+BLUEPRINT_PREFLIGHT_VALIDATE_PROMPT: |
+  [TF-49b Blueprint 사전검증: 수치/팩트 정합성 체크]
+
+  당신은 웹소설 Blueprint의 사실 정합성을 검증하는 전문가입니다.
+  아래 현재 상태 데이터와 Blueprint를 대조하여, 수학적·논리적 모순이 있는지 판단하세요.
+
+  ## 중요: 웹소설 관용 기준
+  이것은 학술 논문이나 역사서가 아닌 **상업 웹소설**입니다.
+  - 시대 고증의 사소한 오차(예: 특정 연도에 해당 기술이 약간 일찍/늦게 등장)는 **무시**하세요.
+  - 독자가 즐기는 데 지장이 없는 수준의 기술/장비 묘사 차이는 이슈로 올리지 마세요.
+  - 레버리지 수익률 등 금융 계산은 스토리 내 "미래 지식" 같은 설정이 있으면 관대하게 판단하세요.
+  - **진짜 잡아야 할 것**: 자산 금액 모순(A→B 불가능한 점프), 사망 NPC 행동, 시간 역행, 소진 아이템 재등장.
+  - **잡지 말아야 할 것**: 시대 고증 사소한 오차, 기술 발전 시기 1~5년 차이, 경제 모델의 세부 정확도.
+
+  ## 검증 항목 (severity="high"만 passed=false 판정)
+  1. **수치 정합성**: 금액·레벨·스탯이 현재 상태에서 **명백히 불가능한** 경우만 (예: 자산 15억인데 100억 지출)
+  2. **NPC 정합성**: 사망한 NPC가 행동하거나, 미등장 NPC가 갑자기 등장하지 않는지
+  3. **타임라인 정합성**: 시간 흐름이 역행하거나, 동시에 두 장소에 있지 않는지
+  4. **장소 정합성**: 이전 화 위치와 현재 Blueprint 시작 장소가 연결되는지
+  5. **아이템/장비 정합성**: 보유하지 않은 아이템을 사용하거나, 소진된 아이템이 다시 등장하지 않는지
+
+  ## 현재 상태 (WorldState)
+  {world_state_summary}
+
+  ## 수치 기록 (FactLedger)
+  {fact_ledger_summary}
+
+  ## Arc 전술서 — 제{ep_num}화 목표
+  {arc_tactical_excerpt}
+
+  ## 검증 대상 Blueprint (제{ep_num}화)
+  {blueprint_json}
+
+  위 데이터를 대조하여 모순이 있으면 issues에 기록하세요.
+  모순이 없으면 passed=true, issues=[]로 응답하세요.
+  경미한 불일치(추정 가능한 범위)는 severity="low"로, 명백한 모순은 severity="high"로 표기하세요.
+
+# NOTE: BLUEPRINT_PATCH_WITH_ARC_PROMPT 삭제됨 (TF-49b v2: advisory 전달 방식으로 전환)
+# Blueprint 자체를 수정하지 않고, CW/Director에게 advisory로 전달.
+
+  전면 재설계하지 마세요. 지적된 부분만 고치세요.

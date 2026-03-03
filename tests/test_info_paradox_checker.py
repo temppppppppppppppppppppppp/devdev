@@ -360,3 +360,68 @@ class TestMaxRevealsExpansion:
         db = FakeDB(bibles)
         result = InfoParadoxChecker.build_knowledge_summary(db, 201, "수현")
         assert len(result) <= 5100  # 5000 + "이하 생략" 여유
+
+
+# ===========================================================================
+# [TF-51] 회귀자/투자 장르 예외 프롬프트 테스트
+# ===========================================================================
+
+
+class TestIncarnationGenreExclusion:
+    """[TF-51] incarnation_type/genre_name에 따른 예외 프롬프트 주입."""
+
+    def test_regressor_exclusion_prompt(self):
+        """회귀자 → 프롬프트에 '회귀자' 전생 기억 예외 포함."""
+        captured = {}
+
+        def capture_llm(prompt):
+            captured["prompt"] = prompt
+            return "[]"
+
+        checker = InfoParadoxChecker(llm_ask=capture_llm)
+        checker.check(
+            "원고 텍스트",
+            ep_num=5,
+            pov_character="진우",
+            knowledge_summary="지식 요약",
+            incarnation_type="회귀자",
+        )
+        assert "회귀자" in captured["prompt"]
+        assert "전생" in captured["prompt"]
+
+    def test_investment_genre_exclusion_prompt(self):
+        """투자 장르 → 프롬프트에 시장 분석 예외 포함."""
+        captured = {}
+
+        def capture_llm(prompt):
+            captured["prompt"] = prompt
+            return "[]"
+
+        checker = InfoParadoxChecker(llm_ask=capture_llm)
+        checker.check(
+            "원고 텍스트",
+            ep_num=5,
+            pov_character="민수",
+            knowledge_summary="지식 요약",
+            genre_name="투자",
+        )
+        assert "시장 분석" in captured["prompt"]
+        assert "투자" in captured["prompt"]
+
+    def test_default_no_extra_exclusion(self):
+        """기본값 → 추가 예외 없음 (회귀자/투자 키워드 미포함)."""
+        captured = {}
+
+        def capture_llm(prompt):
+            captured["prompt"] = prompt
+            return "[]"
+
+        checker = InfoParadoxChecker(llm_ask=capture_llm)
+        checker.check(
+            "원고 텍스트",
+            ep_num=5,
+            pov_character="수현",
+            knowledge_summary="지식 요약",
+        )
+        assert "회귀자" not in captured["prompt"]
+        assert "시장 분석" not in captured["prompt"]

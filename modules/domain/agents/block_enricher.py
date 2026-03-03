@@ -473,7 +473,7 @@ class BlockEnricher(BaseAgent):
             # [V60.24] Flash (빠른 검증용)
             original_model = self.primary_model
             try:  # [V70] 예외 시 primary_model 복원 보장 (레이스 컨디션 방지)
-                self.primary_model = "gemini-3-flash-preview"
+                self.primary_model = "gemini-2.5-flash"
                 result = self.ask(prompt, temperature=0.3)
             finally:
                 self.primary_model = original_model
@@ -517,7 +517,7 @@ class BlockEnricher(BaseAgent):
             # [V60.24] Flash (빠른 심사용)
             original_model = self.primary_model
             try:  # [V70] 예외 시 primary_model 복원 보장
-                self.primary_model = "gemini-3-flash-preview"
+                self.primary_model = "gemini-2.5-flash"
                 result = self.ask(prompt, temperature=0.3)
             finally:
                 self.primary_model = original_model
@@ -827,7 +827,7 @@ class BlockEnricher(BaseAgent):
             # [V60.24] Flash (빠른 검증용)
             original_model = self.primary_model
             try:  # [V70] 예외 시 primary_model 복원 보장
-                self.primary_model = "gemini-3-flash-preview"
+                self.primary_model = "gemini-2.5-flash"
                 result = self.ask(prompt, temperature=0.2)
             finally:
                 self.primary_model = original_model

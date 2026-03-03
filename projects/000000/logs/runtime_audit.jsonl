@@ -69,3 +69,5 @@
 {"timestamp": "2026-03-03 14:59:04", "type": "blueprint_success", "message": "ep_28_blueprint_generated", "data": {"ep_num": 28, "arc_no": 6, "strategy": "dialogue_focused", "score": 98, "final_verdict": "PASS", "quality_risk": false}}
 {"timestamp": "2026-03-03 15:01:06", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
 {"timestamp": "2026-03-03 15:14:42", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-03 18:30:08", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-03-03 21:17:04", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}

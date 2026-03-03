@@ -108,6 +108,7 @@ def _make_round_ctx(chief_writer=None):
         mandatory_context="",
         justification_prompt="",
         reflexion_prompt="",
+        preflight_advisory="",
     )
 
 

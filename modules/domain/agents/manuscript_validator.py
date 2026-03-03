@@ -266,75 +266,18 @@ class ManuscriptValidator:
         return {"length": length, "warnings": warnings}
 
     def _check_scene_coverage(self, manuscript: str, blueprint: dict) -> dict:
-        """씬 반영률 체크"""
-        if not blueprint or not isinstance(blueprint, dict):
-            return {"coverage": 100.0, "expected": 0, "reflected": 0, "missing_scenes": [], "warnings": []}
+        """씬 반영률 체크 — 비활성화됨.
 
-        warnings = []
-        missing_scenes = []
-
-        # Blueprint에서 씬 정보 추출
-        scene_breakdown = blueprint.get("scene_breakdown", {})
-        integrated_scenario = blueprint.get("integrated_scenario", "")
-
-        # 씬 키워드 추출
-        scene_keywords = {}
-        expected_scenes = 0
-
-        if isinstance(scene_breakdown, dict):
-            for scene_key, scene_content in scene_breakdown.items():
-                if not scene_key.lower().startswith("scene"):
-                    continue
-                expected_scenes += 1
-
-                # 핵심 키워드 추출 (한글 2-5자 단어)
-                if isinstance(scene_content, dict):
-                    # dict 타입: summary + key_events에서 키워드 추출
-                    text_parts = []
-                    if scene_content.get("summary"):
-                        text_parts.append(str(scene_content["summary"]))
-                    for ev in scene_content.get("key_events") or []:
-                        text_parts.append(str(ev))
-                    combined = " ".join(text_parts)
-                    keywords = self._SCENE_KEYWORD_PATTERN.findall(combined)
-                    filtered = [
-                        k for k in keywords if k not in ["하다", "되다", "있다", "없다", "이다", "그리고", "하지만"]
-                    ]
-                    scene_keywords[scene_key] = filtered[:5]
-                elif isinstance(scene_content, str):
-                    keywords = self._SCENE_KEYWORD_PATTERN.findall(scene_content)
-                    filtered = [
-                        k for k in keywords if k not in ["하다", "되다", "있다", "없다", "이다", "그리고", "하지만"]
-                    ]
-                    scene_keywords[scene_key] = filtered[:5]
-
-        if expected_scenes == 0:
-            # scene_breakdown이 없으면 integrated_scenario에서 추정
-            scene_markers = self._SCENE_MARKER_PATTERN.findall(integrated_scenario)
-            expected_scenes = len(scene_markers) if scene_markers else 6
-
-        # 반영률 계산
-        reflected = 0
-        for scene_key, keywords in scene_keywords.items():
-            matched = sum(1 for k in keywords if k in manuscript)
-            if len(keywords) == 0 or matched >= len(keywords) * 0.4:
-                reflected += 1
-            else:
-                missing_scenes.append(scene_key)
-
-        coverage = (reflected / expected_scenes * 100) if expected_scenes > 0 else 100.0
-
-        if coverage < 70:
-            warnings.append(f"⚠️ 씬 반영률 부족: {reflected}/{expected_scenes} ({coverage:.1f}%)")
-        elif coverage < 85:
-            warnings.append(f"⚠️ 씬 반영률 주의: {reflected}/{expected_scenes} ({coverage:.1f}%)")
-
+        Python 키워드 매칭 기반이라 오탐(false negative)이 과다.
+        CW가 동일 장면을 다른 표현으로 쓰면 미반영으로 오판함.
+        씬 반영률 판단은 Director(LLM)가 Blueprint 원문 대조로 수행.
+        """
         return {
-            "coverage": round(coverage, 1),
-            "expected": expected_scenes,
-            "reflected": reflected,
-            "missing_scenes": missing_scenes,
-            "warnings": warnings,
+            "coverage": 100.0,
+            "expected": 0,
+            "reflected": 0,
+            "missing_scenes": [],
+            "warnings": [],
         }
 
     def _check_basic_continuity(self, manuscript: str, prev_manuscript: str, hud_report: str) -> dict:

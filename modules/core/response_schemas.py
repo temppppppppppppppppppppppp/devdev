@@ -386,6 +386,32 @@ ARC_DESIGN_SCHEMA = types.Schema(
 # Writer & Architect Schemas
 # =================================================================
 
+# =================================================================
+# [TF-49b] Blueprint Preflight Validation Schema
+# =================================================================
+
+BLUEPRINT_PREFLIGHT_SCHEMA = types.Schema(
+    type=types.Type.OBJECT,
+    properties={
+        "passed": types.Schema(type=types.Type.BOOLEAN),
+        "issues": types.Schema(
+            type=types.Type.ARRAY,
+            items=types.Schema(
+                type=types.Type.OBJECT,
+                properties={
+                    "category": types.Schema(type=types.Type.STRING),
+                    "description": types.Schema(type=types.Type.STRING),
+                    "severity": types.Schema(type=types.Type.STRING),
+                },
+                required=["category", "description", "severity"],
+            ),
+        ),
+        "summary": types.Schema(type=types.Type.STRING),
+    },
+    required=["passed", "issues", "summary"],
+)
+
+
 BLUEPRINT_SCHEMA = types.Schema(
     type=types.Type.OBJECT,
     properties={
@@ -454,6 +480,7 @@ def get_schema_for_task(task_type: str) -> types.Schema:
         "BLUEPRINT": BLUEPRINT_SCHEMA,
         "MANUSCRIPT": MANUSCRIPT_SCHEMA,
         "ARC_DESIGN": ARC_DESIGN_SCHEMA,  # [V49.4] Arc 설계 스키마
+        "BLUEPRINT_PREFLIGHT": BLUEPRINT_PREFLIGHT_SCHEMA,  # [TF-49b] Blueprint 사전검증
     }
 
     return schemas.get(task_type)
