@@ -1,0 +1,12 @@
+{
+  "tag": "stage3_complete",
+  "timestamp": "2026-02-28 14:13:26",
+  "total_events": 16,
+  "counts": {
+    "v60_25_auto_correct": 1,
+    "data_missing": 1,
+    "db_commit": 7,
+    "v60_10_state_extracted": 1,
+    "blueprint_success": 6
+  }
+}
