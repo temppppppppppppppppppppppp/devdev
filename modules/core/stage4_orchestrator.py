@@ -254,6 +254,196 @@ class Stage4Orchestrator:
             _perf_logger.debug("[LM-A-1] Bible world_laws 등록 실패 (비치명): %s", e)
 
     # ═══════════════════════════════════════════════════════════════════════
+    # [TF-49b] Blueprint 사전검증 — 원고 생성 전 수치/팩트 정합성 LLM 체크
+    # ═══════════════════════════════════════════════════════════════════════
+
+    def _preflight_validate_blueprint(self, *, blueprint, arc_data, ep_num) -> dict:
+        """[TF-49b] Blueprint 사전검증 — 수치/팩트 정합성 LLM 체크.
+
+        Fail-open: 모든 예외 → pass 반환 (A-3이 백업).
+        Returns: {"passed": bool, "issues": list, "summary": str, "patched_blueprint": dict|None}
+        """
+        import json
+
+        _pass_result = {"passed": True, "issues": [], "summary": "", "patched_blueprint": None}
+
+        # Feature flag 체크
+        try:
+            _enabled = _threshold("blueprint_preflight.enabled", True)
+            _min_ep = _threshold("blueprint_preflight.min_episode", 2)
+        except Exception:
+            return _pass_result
+
+        if not _enabled or ep_num < _min_ep:
+            return _pass_result
+
+        try:
+            from modules.core.constants import AIModels
+            from modules.core.prompt_loader import PromptLoader
+            from modules.core.response_schemas import BLUEPRINT_PREFLIGHT_SCHEMA
+            from modules.core.tactical_utils import extract_episode_tactical
+
+            # 1. 데이터 수집
+            _ws_summary = ""
+            if self.ctx.world_state:
+                try:
+                    _ws_summary = self.ctx.world_state.get_summary(max_chars=8000)
+                except Exception:
+                    pass
+
+            _fl_summary = ""
+            if self.ctx.fact_ledger:
+                try:
+                    _fl_summary = self.ctx.fact_ledger.get_canonical_summary(max_chars=5000)
+                except Exception:
+                    pass
+
+            _arc_tactical = ""
+            if arc_data:
+                try:
+                    _arc_tactical = extract_episode_tactical(
+                        arc_data.get("tactical_doc", ""),
+                        ep_num,
+                        episode_details=arc_data.get("episode_details"),
+                    )[:3000]
+                except Exception:
+                    pass
+
+            _bp_json = json.dumps(blueprint, ensure_ascii=False, indent=2)[:15000]
+
+            # 2. 프롬프트 로드 + 포맷
+            try:
+                _template = PromptLoader().load("blueprint_generator", "BLUEPRINT_PREFLIGHT_VALIDATE_PROMPT")
+            except Exception as e:
+                _perf_logger.debug("[TF-49b] Preflight 프롬프트 로드 실패 (비치명): %s", e)
+                return _pass_result
+
+            def _esc(s):
+                return s.replace("{", "{{").replace("}", "}}")
+
+            _prompt = _template.format(
+                world_state_summary=_esc(_ws_summary) if _ws_summary else "(상태 정보 없음)",
+                fact_ledger_summary=_esc(_fl_summary) if _fl_summary else "(수치 기록 없음)",
+                arc_tactical_excerpt=_esc(_arc_tactical) if _arc_tactical else "(전술서 없음)",
+                ep_num=ep_num,
+                blueprint_json=_esc(_bp_json),
+            )
+
+            # 3. Flash 모델 직접 호출
+            from google.genai import types
+
+            _response = self.ctx.sys.api_client.models.generate_content(
+                model=AIModels.FLASH_ANALYSIS_MODEL,
+                contents=_prompt,
+                config=types.GenerateContentConfig(
+                    temperature=0.1,
+                    response_mime_type="application/json",
+                    response_schema=BLUEPRINT_PREFLIGHT_SCHEMA,
+                ),
+            )
+            _result = json.loads(_response.text)
+
+            _issues = _result.get("issues", [])
+            _summary = _result.get("summary", "")
+
+            # [TF-49b] 웹소설 관용 기준: 2단계 severity 필터
+            # 1단계: 가짜양성 패턴 → 무조건 low (WorldState 불완전성 등)
+            # 2단계: 1단계 비해당 + CRITICAL 패턴 미매칭 → low
+            _FALSE_POSITIVE_PATTERNS = (
+                "출처 불분명",
+                "출처가 불분명",  # WorldState에 이전 자금 미기재
+                "획득 경로",
+                "획득 경위",  # Stage 0 아이템 미추적
+                "보유 근거",
+                "기록되지 않",  # WorldState 누락
+                "갑작스러운 등장",
+                "갑자기 등장",  # 이전 화에서 확립된 것
+                "고증",
+                "시대",
+                "연도",  # 웹소설 관용
+                "해상도",
+                "모니터",
+                "컴퓨터",  # 기술 고증
+            )
+            _CRITICAL_PATTERNS = (
+                "사망",
+                "deceased",  # 사망 NPC 행동
+                "시간 역행",
+                "역행",  # 타임라인 역행
+                "소진",
+                "소모된",  # 소진 아이템 재등장
+                "불가능",
+                "도달 불가",  # 수학적 불가능
+                "모순",  # 명시적 모순 언급
+            )
+            for _iss in _issues:
+                if _iss.get("severity") != "high":
+                    continue
+                _combined = f"{_iss.get('category', '')} {_iss.get('description', '')}"
+                # 1단계: 가짜양성이면 무조건 low
+                if any(fp in _combined for fp in _FALSE_POSITIVE_PATTERNS):
+                    _iss["severity"] = "low"
+                # 2단계: CRITICAL 패턴 미매칭이면 low
+                elif not any(cp in _combined for cp in _CRITICAL_PATTERNS):
+                    _iss["severity"] = "low"
+
+            # severity="high"인 이슈만 실패 판정
+            _high_issues = [i for i in _issues if i.get("severity") == "high"]
+            _truly_failed = not _result.get("passed", True) and len(_high_issues) > 0
+
+            if not _truly_failed:
+                _level = "PASS" if _result.get("passed", True) else "PASS (low/medium only)"
+                _perf_logger.info("[TF-49b] Preflight %s — 제%d화 Blueprint 정합성 확인", _level, ep_num)
+                if _issues and not _result.get("passed", True):
+                    self.ctx.ui.log(f"   ℹ️ [TF-49b] Preflight: {len(_issues)}건 참고 사항 (경미, 패치 불필요)")
+                return {
+                    "passed": True,
+                    "issues": _issues,
+                    "summary": _summary,
+                    "patched_blueprint": None,
+                }
+
+            # 4. 실패 → advisory 텍스트 생성 (Blueprint 패치 대신 CW/Director에 전달)
+            _high_count = len(_high_issues)
+            _log_level = "⚠️" if _high_count > 0 else "ℹ️"
+            self.ctx.ui.log(
+                f"   {_log_level} [TF-49b] Preflight: {len(_issues)}건 발견 (high={_high_count}) → CW/Director advisory 전달"
+            )
+            for _iss in _issues[:5]:
+                self.ctx.ui.log(
+                    f"      [{_iss.get('severity', '?')}] {_iss.get('category', '?')}: "
+                    f"{_iss.get('description', '')[:80]}"
+                )
+
+            # Advisory 텍스트 포맷
+            _advisory_lines = [f"[TF-49b Preflight 발견 사항 — 제{ep_num}화]"]
+            for _iss in _issues[:10]:
+                _sev = _iss.get("severity", "?")
+                _cat = _iss.get("category", "?")
+                _desc = _iss.get("description", "")
+                _advisory_lines.append(f"  - [{_sev}] {_cat}: {_desc}")
+            _advisory_lines.append("위 사항에 주의하여 원고 작성/심사에 반영하세요.")
+            _advisory_text = "\n".join(_advisory_lines)
+
+            # 에스컬레이션 로그
+            self._log_escalation_event(ep_num, "TF49b_PREFLIGHT", len(_issues), success=True)
+
+            return {
+                "passed": True,  # advisory 전달이므로 항상 pass (블루프린트 미수정)
+                "issues": _issues,
+                "summary": _summary,
+                "patched_blueprint": None,
+                "advisory": _advisory_text,
+            }
+
+        except Exception as e:
+            _perf_logger.debug("[TF-49b] Preflight 전체 실패 (fail-open): %s", e)
+            return _pass_result
+
+    # NOTE: _preflight_patch_blueprint 삭제됨 (TF-49b v2: advisory 전달 방식으로 전환)
+    # Blueprint 자체를 수정하지 않고, CW/Director에게 advisory로 전달.
+
+    # ═══════════════════════════════════════════════════════════════════════
     # [V68] 에피소드 연결고리 (Episode Chain Links)
     # ═══════════════════════════════════════════════════════════════════════
 
@@ -377,6 +567,14 @@ JSON으로 출력:
             if not arc_data:
                 self.ctx.ui.log(f"⚠️ 제{next_ep}화 Arc 데이터 없음.")
                 break
+
+            # [TF-49b] Blueprint 사전검증 — 원고 생성 전 수치/팩트 정합성 체크
+            _preflight = self._preflight_validate_blueprint(
+                blueprint=blueprint,
+                arc_data=arc_data,
+                ep_num=next_ep,
+            )
+            _preflight_advisory = _preflight.get("advisory", "")
 
             # [4-R1-a] 에피소드 컨텍스트 수집 (Extract Method)
             _ep_ctx = self.context_builder.prepare_episode_context(next_ep, arc_data, chief_writer)
@@ -517,6 +715,7 @@ JSON으로 출력:
                 story_context=story_context,
                 style_guide=style_guide,
                 mandatory_context=mandatory_context,
+                preflight_advisory=_preflight_advisory,
             )
             # ===== Phase 4: Director 면담 (5회) =====
             _outcome = self._handle_round_outcome(round_ctx=_round_ctx)

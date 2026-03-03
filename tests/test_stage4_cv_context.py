@@ -91,6 +91,7 @@ def _make_round_ctx(*, next_ep=3, genre_name="투자"):
         mandatory_context="",
         justification_prompt="",
         reflexion_prompt="",
+        preflight_advisory="",
     )
 
 

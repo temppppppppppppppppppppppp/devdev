@@ -42,7 +42,7 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         # 서브 모듈
         self.constraint_compiler = BlueprintConstraintCompiler()
         sub_models = _get_sub_component_models("three_phase_blueprint_generator")
-        self.ensemble = BlueprintEnsembleGenerator(context, client, sub_models.get("ensemble", "gemini-3-pro-preview"))
+        self.ensemble = BlueprintEnsembleGenerator(context, client, sub_models.get("ensemble", "gemini-2.5-pro"))
         self.validator = UnifiedBlueprintValidator(context, client, sub_models.get("validator", "gemini-2.5-flash"))
 
         # 통계
@@ -652,6 +652,21 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
 
         original_json = json.dumps(original_blueprint, ensure_ascii=False, indent=2)[:30000]
 
+        # [TF-49b] Arc tactical excerpt 추출 → 프롬프트에 prepend
+        _arc_tactical_prefix = ""
+        try:
+            from modules.core.tactical_utils import extract_episode_tactical
+
+            _arc_tactical = extract_episode_tactical(
+                arc_data.get("tactical_doc", ""),
+                ep_num,
+                episode_details=arc_data.get("episode_details"),
+            )[:3000]
+            if _arc_tactical:
+                _arc_tactical_prefix = f"## Arc 전술서 — 제{ep_num}화 목표\n{_arc_tactical}\n\n"
+        except Exception:
+            pass
+
         try:
             patch_template = PromptLoader().load("blueprint_generator", "BLUEPRINT_PATCH_MODE_PROMPT")
         except Exception as e:
@@ -675,6 +690,10 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
                 f"전면 재설계하지 마세요. 지적된 부분만 고치세요."
             )
 
+        # [TF-49b] Arc 컨텍스트를 프롬프트 앞에 추가
+        if _arc_tactical_prefix:
+            prompt = _arc_tactical_prefix + prompt
+
         try:
             response = self.ensemble.ask(
                 prompt, temperature=0.3, response_schema=BLUEPRINT_SCHEMA, thinking_level="medium"
@@ -683,9 +702,18 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
             if not isinstance(result, dict):
                 return None
             result.setdefault("episode_number", ep_num)
+            # [TF-49b] 원본 필드 보존 + scene_breakdown 씬 키 복원
+            _orig_sb = original_blueprint.get("scene_breakdown", {})
+            _result_sb = result.get("scene_breakdown")
             for key, val in original_blueprint.items():
                 if key not in result:
                     result[key] = val
+            if isinstance(_orig_sb, dict) and isinstance(_result_sb, dict):
+                _lost = set(_orig_sb) - set(_result_sb)
+                if _lost:
+                    logging.info("[InPlace] LLM이 씬 %d개 누락 → 원본에서 복원: %s", len(_lost), _lost)
+                    for sk in _lost:
+                        _result_sb[sk] = _orig_sb[sk]
             result = validate_blueprint(result)  # [감리] Pydantic 정규화 (ep_num↔episode_number 동기 등)
             logging.info(f"✅ [InPlace] Blueprint 제{ep_num}화 in-place 수정 완료")
             return result
@@ -713,6 +741,6 @@ class ThreePhaseBlueprintGenerator(BaseAgent):
         logging.info(f"최종 통과율: {stats.get('pass_rate', 'N/A')}")
 
 
-def create_three_phase_blueprint_generator(context, client, model_tier: str = "gemini-3-pro-preview"):
+def create_three_phase_blueprint_generator(context, client, model_tier: str = "gemini-2.5-pro"):
     """ThreePhaseBlueprintGenerator 생성 헬퍼"""
     return ThreePhaseBlueprintGenerator(context, client, model_tier)

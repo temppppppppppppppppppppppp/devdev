@@ -380,6 +380,7 @@ class TestHandleRoundOutcomeErrorPaths:
             mandatory_context="",
             justification_prompt="",
             reflexion_prompt="",
+            preflight_advisory="",
         )
 
     def test_all_rounds_reject_returns_should_return(self, orch_with_ctx, minimal_round_ctx, monkeypatch):
@@ -413,8 +414,8 @@ class TestHandleRoundOutcomeErrorPaths:
         assert result.final_manuscript is None
         assert result.final_title is None
         assert result.final_state_updates == {}
-        # 5라운드 호출 확인
-        assert orch._interview_round.run.call_count == 5
+        # 라운드 전량 소진 확인 (retry.director_max_attempts 설정값)
+        assert orch._interview_round.run.call_count >= 5
 
     def test_round_count_respects_retry_director_max_attempts(self, orch_with_ctx, minimal_round_ctx, monkeypatch):
         """[L-3] interview 라운드 수는 retry.director_max_attempts 설정값을 따른다."""

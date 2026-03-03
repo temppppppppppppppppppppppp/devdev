@@ -116,7 +116,9 @@ class InfoParadoxChecker:
 
         return summary
 
-    def check(self, manuscript, *, ep_num=0, pov_character="", knowledge_summary=""):
+    def check(
+        self, manuscript, *, ep_num=0, pov_character="", knowledge_summary="", incarnation_type="", genre_name=""
+    ):
         """정보 역설 검사.
 
         Args:
@@ -124,6 +126,8 @@ class InfoParadoxChecker:
             pov_character: 1인칭 화자(주인공) 이름
             knowledge_summary: build_knowledge_summary() 반환값
             ep_num: 현재 에피소드 번호
+            incarnation_type: 주인공 유형 (예: "회귀자") — 회귀자면 전생 기억 예외
+            genre_name: 장르명 (예: "투자") — 투자면 시장 분석 예외
 
         Returns:
             list[dict]: [{"character", "info_used", "why_paradox", "severity", "check"}]
@@ -132,11 +136,27 @@ class InfoParadoxChecker:
             return []
         if not self._llm_ask:
             return []
-        return self._llm_check(manuscript, pov_character, knowledge_summary, ep_num)
+        return self._llm_check(
+            manuscript,
+            pov_character,
+            knowledge_summary,
+            ep_num,
+            incarnation_type=incarnation_type,
+            genre_name=genre_name,
+        )
 
-    def _llm_check(self, manuscript, pov_character, knowledge_summary, ep_num):
+    def _llm_check(self, manuscript, pov_character, knowledge_summary, ep_num, *, incarnation_type="", genre_name=""):
         """LLM에게 정보 역설 판정을 요청."""
         ms_snippet = manuscript[:4000]
+
+        # [TF-51] 회귀자/장르별 예외 프롬프트
+        _extra_exclusions = ""
+        if incarnation_type == "회귀자":
+            _extra_exclusions += "- 화자는 회귀자입니다. 전생(이전 시간선) 기억에 기반한 미래 사건·인물·장소 지식은 정보 역설이 아닙니다\n"
+        if genre_name == "투자":
+            _extra_exclusions += (
+                "- 투자 전문가의 시장 분석, 기업 분석, 공개 정보 기반 추론, 경제 지표 해석은 정보 역설이 아닙니다\n"
+            )
 
         prompt = (
             f"다음은 1인칭 시점 웹소설의 {ep_num}화 원고입니다. "
@@ -146,7 +166,8 @@ class InfoParadoxChecker:
             "- 상식이나 일반적 추론으로 알 수 있는 정보\n"
             "- 감각 묘사 (보이는 것, 들리는 것, 느끼는 것)\n"
             "- 화자가 직접 경험하거나 관찰한 것\n"
-            "- 이전 화에서 습득했을 법한 일상적 지식\n\n"
+            "- 이전 화에서 습득했을 법한 일상적 지식\n"
+            f"{_extra_exclusions}\n"
             "진짜 역설만 지적하세요: 참석하지 않은 비밀 회의 내용, "
             "아직 공개되지 않은 비밀, 물리적으로 알 수 없는 타인의 내면 등.\n\n"
             f"[{pov_character}이(가) 알고 있는 정보]\n{knowledge_summary}\n\n"

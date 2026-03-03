@@ -181,24 +181,26 @@ class PreDirectorManuscriptChecker:
             other_weak = [s for s in weak_scenes if s not in high_impact_scenes]
 
             if high_impact_weak:
+                # [TF-51] FAIL→WARNING: Python 키워드 매칭 오탐 과다, Director LLM 판단 위임
                 result["check_items"].append(
                     CheckItem(
                         category=CheckCategory.BLUEPRINT_MATCH,
                         name="High Impact Zone 미반영",
-                        passed=False,
-                        severity=CheckSeverity.FAIL,
-                        message=f"클라이맥스 씬 미반영: {', '.join(high_impact_weak)} (반영률 30% 미만)",
+                        passed=True,
+                        severity=CheckSeverity.WARNING,
+                        message=f"클라이맥스 씬 미반영: {', '.join(high_impact_weak)} (반영률 30% 미만) (Director 판단 위임)",
                     )
                 )
 
             if len(other_weak) >= 2:
+                # [TF-51] FAIL→WARNING: Python 키워드 매칭 오탐 과다, Director LLM 판단 위임
                 result["check_items"].append(
                     CheckItem(
                         category=CheckCategory.BLUEPRINT_MATCH,
                         name="다수 씬 미반영",
-                        passed=False,
-                        severity=CheckSeverity.FAIL,
-                        message=f"다수 씬 미반영: {', '.join(other_weak[:3])} (반영률 30% 미만)",
+                        passed=True,
+                        severity=CheckSeverity.WARNING,
+                        message=f"다수 씬 미반영: {', '.join(other_weak[:3])} (반영률 30% 미만) (Director 판단 위임)",
                     )
                 )
             elif other_weak:

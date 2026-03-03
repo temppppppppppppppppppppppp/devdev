@@ -83,6 +83,7 @@ def _make_round_ctx():
         mandatory_context="",
         justification_prompt="",
         reflexion_prompt="",
+        preflight_advisory="",
     )
 
 

@@ -423,9 +423,7 @@ class Stage4ContextBuilder:
                 if bp:
                     scenario = str(bp.get("integrated_scenario", ""))[:200]
                     core = str(bp.get("core_tension", ""))[:80]
-                    remaining.append(
-                        f"  제{ep}화: {scenario}" + (f" / 긴장: {core}" if core else "")
-                    )
+                    remaining.append(f"  제{ep}화: {scenario}" + (f" / 긴장: {core}" if core else ""))
 
             if remaining:
                 lines.append("[현재 Arc 남은 화 Blueprint]")
@@ -829,13 +827,9 @@ class Stage4ContextBuilder:
             _l0_npc = ""
             _l0_num = ""
             if getattr(self.ctx, "world_state", None):
-                _l0_npc = self.ctx.world_state.get_canonical_constraints(
-                    max_chars=int(_canonical_budget * 0.62)
-                )
+                _l0_npc = self.ctx.world_state.get_canonical_constraints(max_chars=int(_canonical_budget * 0.62))
             if getattr(self.ctx, "fact_ledger", None):
-                _l0_num = self.ctx.fact_ledger.get_canonical_summary(
-                    max_chars=int(_canonical_budget * 0.38)
-                )
+                _l0_num = self.ctx.fact_ledger.get_canonical_summary(max_chars=int(_canonical_budget * 0.38))
             if _l0_npc or _l0_num:
                 _l0_block = "\n\n".join(x for x in [_l0_npc, _l0_num] if x)
                 _mc_parts.insert(0, _l0_block)
@@ -1119,6 +1113,7 @@ class Stage4ContextBuilder:
         story_context: str,
         style_guide: str,
         mandatory_context: str,
+        preflight_advisory: str = "",
     ):
         """[4-R1-e-2] Build round context dict from episode context and prompts."""
         from modules.core.stage4_types import _RoundContext
@@ -1157,4 +1152,5 @@ class Stage4ContextBuilder:
             mandatory_context=mandatory_context,
             justification_prompt=ctx_prompts["justification_prompt"],
             reflexion_prompt=ctx_prompts["reflexion_prompt"],
+            preflight_advisory=preflight_advisory,
         )

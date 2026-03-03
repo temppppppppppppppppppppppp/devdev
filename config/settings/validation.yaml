@@ -183,3 +183,10 @@ session_logging:
   max_file_mb: 100           # 파일당 100MB
   max_rotations: 10          # 최대 10개 = 1GB 상한
   max_prompt_chars: 200000   # 프롬프트 절삭 상한
+
+# ── Blueprint 사전검증 (TF-49b) ──────────────────────────────────
+blueprint_preflight:
+  enabled: true
+  min_episode: 2              # 1화는 상태 없으므로 skip
+  auto_patch_on_fail: true
+  save_patched_to_db: true

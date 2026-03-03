@@ -55,6 +55,7 @@ class _RoundContext:
     mandatory_context: str
     justification_prompt: str
     reflexion_prompt: str
+    preflight_advisory: str  # [TF-49b] Preflight 발견 사항 advisory (CW/Director용)
 
 
 @dataclasses.dataclass(slots=True)

@@ -5,8 +5,8 @@
   },
   "validation": {
     "use_v0128": true,
-    "scoring_model": "gemini-3-pro-preview",
-    "advisory_model": "gemini-3-pro-preview",
+    "scoring_model": "gemini-2.5-pro",
+    "advisory_model": "gemini-2.5-pro",
     "scoring_threshold": 70,
     "use_self_consistency": true,
     "consistency_votes": 3,

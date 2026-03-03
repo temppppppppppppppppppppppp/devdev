@@ -309,13 +309,15 @@ class PreDirectorChecklist:
                 # 전체 반영률 기반 판정
                 overall_ratio = scene_metrics["overall_ratio"]
                 if overall_ratio < 0.3:
+                    # [TF-51] FAIL→WARNING 다운그레이드: Python 키워드 매칭 오탐 과다,
+                    # Director(LLM)가 Blueprint 원문 대조로 씬 커버리지 판단
                     items.append(
                         CheckItem(
                             category=CheckCategory.BLUEPRINT_MATCH,
                             name="씬 반영",
-                            passed=False,
-                            severity=CheckSeverity.FAIL,
-                            message=f"Blueprint 씬 반영 부족: {overall_ratio:.0%} (최소 30%)",
+                            passed=True,
+                            severity=CheckSeverity.WARNING,
+                            message=f"Blueprint 씬 반영 부족: {overall_ratio:.0%} (최소 30%) (Director 판단 위임)",
                         )
                     )
                 elif overall_ratio < 0.5:

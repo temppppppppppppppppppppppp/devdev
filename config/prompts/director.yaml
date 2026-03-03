@@ -154,6 +154,13 @@ ENSEMBLE_VARIABLE_PROMPT: |
   - Treatment 장르 목표와 원고 수치의 **설명 불가능한 괴리** (예: 목표 45억인데 원고 100억, 설명 없음)
   - **Python advisory에서 CRITICAL 경고가 1건이라도 있는 경우** (TruthGate 세계법칙 위반, 아이템 소유권 위반, 사망 NPC 부활 등)
 
+  ### ⚖️ [TF-52] Director 주권 원칙
+  - Advisory(NpcDrift, NumericDrift, Flashback, InfoParadox, RelationshipDrift, LongTermRepetition)는 **참고자료**입니다.
+  - Advisory가 MAJOR를 보고해도, 당신이 직접 원고를 읽고 문제가 아니라고 판단하면 무시하세요.
+  - 특히 1인칭 시점에서 '관찰 기반 추론'(~인 듯했다, ~하려는 것 같았다, ~하고 있었다)은 시점 위반이 아닙니다.
+  - CRITICAL(TruthGate: 사망 NPC 부활, 세계법칙 위반)만 자동 REJECT 사유입니다.
+  - 나머지는 모두 당신의 전문적 판단에 따릅니다.
+
   **[TF-32] verdict 3단계**:
   - **PASS**: 문제 없음 → 그대로 저장
   - **PASS_WITH_FIX**: 총점 90점 이상이면서 모순·어색함이 남아 있는 경우 → fix_scope로 수정 범위를 판단하세요. action_items에 구체적 수정 지시 기입. inplace=국소수정, partial=부분재생성, full=전면재작성.
@@ -362,6 +369,13 @@ ENSEMBLE_SELECTION_PROMPT: |
   - Treatment 장르 목표와 원고 수치의 **설명 불가능한 괴리** (예: 목표 45억인데 원고 100억, 설명 없음)
   - **Python advisory에서 CRITICAL 경고가 1건이라도 있는 경우** (TruthGate 세계법칙 위반, 아이템 소유권 위반, 사망 NPC 부활 등)
 
+  ### ⚖️ [TF-52] Director 주권 원칙
+  - Advisory(NpcDrift, NumericDrift, Flashback, InfoParadox, RelationshipDrift, LongTermRepetition)는 **참고자료**입니다.
+  - Advisory가 MAJOR를 보고해도, 당신이 직접 원고를 읽고 문제가 아니라고 판단하면 무시하세요.
+  - 특히 1인칭 시점에서 '관찰 기반 추론'(~인 듯했다, ~하려는 것 같았다, ~하고 있었다)은 시점 위반이 아닙니다.
+  - CRITICAL(TruthGate: 사망 NPC 부활, 세계법칙 위반)만 자동 REJECT 사유입니다.
+  - 나머지는 모두 당신의 전문적 판단에 따릅니다.
+
   **[TF-32] verdict 3단계**:
   - **PASS**: 문제 없음 → 그대로 저장
   - **PASS_WITH_FIX**: 총점 90점 이상이면서 모순·어색함이 남아 있는 경우 → fix_scope로 수정 범위를 판단하세요. action_items에 구체적 수정 지시 기입. inplace=국소수정, partial=부분재생성, full=전면재작성.
@@ -559,6 +573,13 @@ STRATEGIC_AUDIT_PROMPT_V30: |
   - 단순 묘사로만 채워지지 않았는가?
   → 밀도 미달 시 REJECT, 충족 시 PASS
 
+  ### ⚖️ [TF-52] Director 주권 원칙
+  - Advisory(NpcDrift, NumericDrift, Flashback, InfoParadox, RelationshipDrift, LongTermRepetition)는 **참고자료**입니다.
+  - Advisory가 MAJOR를 보고해도, 당신이 직접 원고를 읽고 문제가 아니라고 판단하면 무시하세요.
+  - 특히 1인칭 시점에서 '관찰 기반 추론'(~인 듯했다, ~하려는 것 같았다, ~하고 있었다)은 시점 위반이 아닙니다.
+  - CRITICAL(TruthGate: 사망 NPC 부활, 세계법칙 위반)만 자동 REJECT 사유입니다.
+  - 나머지는 모두 당신의 전문적 판단에 따릅니다.
+
   **[TF-32] verdict 3단계**:
   - **PASS**: 문제 없음 → 그대로 저장
   - **PASS_WITH_FIX**: 총점 90점 이상이면서 모순이 남아 있는 경우 → fix_scope로 수정 범위를 판단하세요. re_slice_instruction에 구체적 수정 지시 기입. inplace=국소수정, partial=부분재설계, full=전면재설계.
@@ -739,6 +760,13 @@ DIRECTOR_AUDIT_PROMPT_V30: |
      - 0점: 가독성 심각하게 떨어짐
 
   **분량 체크**: 4,000자 미만은 자동 REJECT (점수 항목에서 제외, 사전 필터). 4,000자 이상이면 분량 관련 감점 없음.
+
+  ### ⚖️ [TF-52] Director 주권 원칙
+  - Advisory(NpcDrift, NumericDrift, Flashback, InfoParadox, RelationshipDrift, LongTermRepetition)는 **참고자료**입니다.
+  - Advisory가 MAJOR를 보고해도, 당신이 직접 원고를 읽고 문제가 아니라고 판단하면 무시하세요.
+  - 특히 1인칭 시점에서 '관찰 기반 추론'(~인 듯했다, ~하려는 것 같았다, ~하고 있었다)은 시점 위반이 아닙니다.
+  - CRITICAL(TruthGate: 사망 NPC 부활, 세계법칙 위반)만 자동 REJECT 사유입니다.
+  - 나머지는 모두 당신의 전문적 판단에 따릅니다.
 
   **[TF-32] verdict 3단계**:
   - **PASS**: 문제 없음 → 그대로 저장

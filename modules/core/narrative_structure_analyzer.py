@@ -65,7 +65,7 @@ class NarrativeStructureAnalyzer:
     - "싸움→도주→협상" = 정상 (다른 행위, 비슷한 문체는 OK)
     """
 
-    def __init__(self, client, model: str = "gemini-3-pro-preview"):
+    def __init__(self, client, model: str = "gemini-2.5-pro"):
         # [V60.24] Gemini 3로 변경
         self.client = client
         self.model = model
@@ -300,6 +300,6 @@ class NarrativeStructureAnalyzer:
         return recommendations.get(stagnation_type, "서사 요소에 변화를 주세요.")
 
 
-def create_narrative_analyzer(client, model: str = "gemini-3-pro-preview"):
+def create_narrative_analyzer(client, model: str = "gemini-2.5-pro"):
     """[V60.24] NarrativeStructureAnalyzer 생성 헬퍼 - Gemini 3 사용"""
     return NarrativeStructureAnalyzer(client, model)

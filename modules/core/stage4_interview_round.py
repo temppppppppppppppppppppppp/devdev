@@ -70,11 +70,16 @@ class Stage4InterviewRound:
         mandatory_context = round_ctx.mandatory_context
         justification_prompt = round_ctx.justification_prompt
         reflexion_prompt = round_ctx.reflexion_prompt
+        _preflight_advisory = round_ctx.preflight_advisory
 
         if type(director_feedback) is not str:
             director_feedback = str(director_feedback or "")
         if type(mandatory_context) is not str:
             mandatory_context = str(mandatory_context or "")
+
+        # [TF-49b] Preflight advisory → CW mandatory_context에 prepend
+        if _preflight_advisory:
+            mandatory_context = f"{_preflight_advisory}\n\n{mandatory_context}"
 
         # [emotional_beat] arc_data에서 감정 정점 추출
         emotional_beat_section = ""
@@ -562,6 +567,10 @@ class Stage4InterviewRound:
         _advisory_parts = self._run_advisory_chain(candidates, validation_results, next_ep, genre_name)
         _director_mc_parts = _advisory_parts + _director_mc_parts
 
+        # [TF-49b] Preflight advisory → Director에도 전달
+        if _preflight_advisory:
+            _director_mc_parts.append(f"🔍 {_preflight_advisory}")
+
         _vr_warnings_for_director = []
         for _vr_idx, _vr in enumerate(validation_results):
             _vr_warns = _vr.get("warnings", [])
@@ -574,9 +583,7 @@ class Stage4InterviewRound:
             )
         # [V69.1] V67 원고 역사 충돌 + 연속성 충돌 경고를 Director에 전달
         if director_feedback and director_feedback.strip():
-            _director_mc_parts.append(
-                "🚨 [V69.1] Python 감지된 원고 충돌 경고 (반드시 반영하세요)\n" + director_feedback.strip()
-            )
+            _director_mc_parts.append("🚨 [V69.1] Python 감지된 원고 충돌 경고 (참고용)\n" + director_feedback.strip())
         # [TF7-P1-04] 전략별 최근 통과율을 Director 선택 프롬프트에 주입
         try:
             _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
@@ -800,60 +807,79 @@ class Stage4InterviewRound:
             final_title = selected_candidate.get("title", f"\uc81c{next_ep}\ud654")
             final_state_updates = director_result.get("state_updates", {})
 
-            # [Phase A-3] Post-select validation: run LLM checks on selected candidate only
+            # [Phase A-3][TF-50] Post-select validation: 두 LLM 검사 병렬 실행
             _post_select_conflicts = []
 
-            # (a) Continuity check for selected candidate only
-            if round_num == 0 and next_ep > 1 and final_manuscript:
-                stage4_spinner.update_detail(f"Ep {next_ep} · post-select continuity check")
-                try:
-                    continuity_check = self.ctx.agents["director"].check_manuscript_continuity_with_cache(
-                        new_manuscript=final_manuscript,
-                        ep_num=next_ep,
-                        db=self.ctx.current_project.db,
-                        limit=10,
-                        story_context=story_context,
-                        memory_context=_director_memory_context,
-                    )
-                    if continuity_check.get("decision") == "CONFLICT":
-                        _conflict_msg = continuity_check.get("summary", "Continuity conflict detected")
-                        _post_select_conflicts.append(f"[Continuity Conflict] {_conflict_msg}")
-                        self.ctx.ui.log(f"   [A-3] Post-select continuity conflict: {_conflict_msg[:80]}")
-                except Exception as _cont_err:
-                    logging.warning(f"[FailClosed:SC:PostSelectContinuity] {_cont_err!s:.100}")
-                    _post_select_conflicts.append(
-                        f"[Continuity Check Error] 검증 실패 (fail-closed): {str(_cont_err)[:80]}"
-                    )
-
-            # (b) History conflict check for selected candidate only
-            # [TF-25-03] round_num == 0 게이트 — (a)와 동일 패턴. Round 1+는 Director가 이전 피드백 반영 여부를 이미 검증.
-            if (
+            _run_continuity = round_num == 0 and next_ep > 1 and final_manuscript
+            _run_history = (
                 round_num == 0
                 and _prev_manuscripts_text
                 and final_manuscript
                 and hasattr(self.ctx.agents.get("director", None), "check_manuscript_history_conflicts")
-            ):
-                stage4_spinner.update_detail(f"Ep {next_ep} · post-select history conflict check")
-                try:
-                    _ms_history_for_check = self._build_manuscript_history_for_check(_prev_manuscripts_text, next_ep)
-                    if _ms_history_for_check:
-                        _conflict_result = self.ctx.agents["director"].check_manuscript_history_conflicts(
+            )
+
+            if _run_continuity or _run_history:
+                from concurrent.futures import ThreadPoolExecutor
+
+                stage4_spinner.update_detail(f"Ep {next_ep} · post-select checks (parallel)")
+
+                with ThreadPoolExecutor(max_workers=2, thread_name_prefix="postselect") as _ps_exec:
+                    _fut_cont = None
+                    _fut_hist = None
+
+                    if _run_continuity:
+                        _fut_cont = _ps_exec.submit(
+                            self.ctx.agents["director"].check_manuscript_continuity_with_cache,
+                            new_manuscript=final_manuscript,
                             ep_num=next_ep,
-                            current_manuscript=final_manuscript,
-                            manuscript_history=_ms_history_for_check,
-                            use_summary=False,
+                            db=self.ctx.current_project.db,
+                            limit=10,
                             story_context=story_context,
                             memory_context=_director_memory_context,
                         )
-                        if _conflict_result.get("decision") == "CONFLICT":
-                            _conflict_msg = _conflict_result.get("summary", "History conflict detected")
-                            _post_select_conflicts.append(f"[V67] History Conflict: {_conflict_msg}")
-                            self.ctx.ui.log(f"   [A-3] Post-select history conflict: {_conflict_msg[:80]}")
-                except Exception as _hist_err:
-                    logging.warning(f"[FailClosed:SC:PostSelectHistory] {_hist_err!s:.100}")
-                    _post_select_conflicts.append(
-                        f"[History Check Error] 검증 실패 (fail-closed): {str(_hist_err)[:80]}"
-                    )
+
+                    if _run_history:
+                        _ms_history_for_check = self._build_manuscript_history_for_check(
+                            _prev_manuscripts_text, next_ep
+                        )
+                        if _ms_history_for_check:
+                            _fut_hist = _ps_exec.submit(
+                                self.ctx.agents["director"].check_manuscript_history_conflicts,
+                                ep_num=next_ep,
+                                current_manuscript=final_manuscript,
+                                manuscript_history=_ms_history_for_check,
+                                use_summary=False,
+                                story_context=story_context,
+                                memory_context=_director_memory_context,
+                            )
+
+                    # (a) Continuity check result
+                    if _fut_cont is not None:
+                        try:
+                            continuity_check = _fut_cont.result(timeout=120)
+                            if continuity_check.get("decision") == "CONFLICT":
+                                _conflict_msg = continuity_check.get("summary", "Continuity conflict detected")
+                                _post_select_conflicts.append(f"[Continuity Conflict] {_conflict_msg}")
+                                self.ctx.ui.log(f"   [A-3] Post-select continuity conflict: {_conflict_msg[:80]}")
+                        except Exception as _cont_err:
+                            logging.warning(f"[FailClosed:SC:PostSelectContinuity] {_cont_err!s:.100}")
+                            _post_select_conflicts.append(
+                                f"[Continuity Check Error] 검증 실패 (fail-closed): {str(_cont_err)[:80]}"
+                            )
+
+                    # (b) History conflict check result
+                    if _fut_hist is not None:
+                        try:
+                            _conflict_result = _fut_hist.result(timeout=120)
+                            if _conflict_result.get("decision") == "CONFLICT":
+                                _conflict_msg = _conflict_result.get("summary", "History conflict detected")
+                                _post_select_conflicts.append(f"[V67] History Conflict: {_conflict_msg}")
+                                self.ctx.ui.log(f"   [A-3] Post-select history conflict: {_conflict_msg[:80]}")
+                        except Exception as _hist_err:
+                            logging.warning(f"[FailClosed:SC:PostSelectHistory] {_hist_err!s:.100}")
+                            _post_select_conflicts.append(
+                                f"[History Check Error] 검증 실패 (fail-closed): {str(_hist_err)[:80]}"
+                            )
 
             # (c) Downgrade PASS to REJECT if post-select validation found conflicts
             if _post_select_conflicts:
@@ -861,6 +887,9 @@ class Stage4InterviewRound:
                     f"   [A-3] {len(_post_select_conflicts)} post-select conflicts detected -> downgrade to REJECT"
                 )
                 verdict = "REJECT"
+                # [TF-49] A-3 다운그레이드 시 error_category를 LOGIC_ERROR로 설정
+                # → V75-D/V75-B 에스컬레이션 체인 트리거 (Blueprint 자동 수정)
+                error_category = "LOGIC_ERROR"
                 director_feedback += "\n" + "\n".join(_post_select_conflicts)
                 # [P0-D3] 다운그레이드 시 previous_attempt 갱신 — 다음 라운드 패치 모드용
                 previous_attempt = {
@@ -930,7 +959,11 @@ class Stage4InterviewRound:
                             "state_updates": _merged_state,  # [TF-46] patch override
                         }
                         _re_val_ctx = {
-                            "warnings": [],
+                            "warnings": [
+                                f"[TF-35 재심사] InPlace 패치 수정본입니다. 원본 점수: {score}점.",
+                                "[TF-35 재심사] 수정 범위: inplace (국소 수정). 전면 재평가가 아닌 수정 부분 중심으로 평가하세요.",
+                                f"[TF-35 재심사] 이전 피드백: {_current_fb[:500]}",
+                            ],
                             "focus_points": [f"[TF-35 재심사] 이전 피드백: {_current_fb[:300]}"],
                         }
                         _re_audit = _director.select_and_judge_ensemble(
@@ -1648,19 +1681,50 @@ class Stage4InterviewRound:
         next_ep: int,
         genre_name: str,
     ) -> list[str]:
-        """[B-1-3b] Advisory chain 실행, Director mandatory_context 파트 반환."""
-        _advisory_parts: list[str] = []
+        """[B-1-3b][TF-50] Advisory chain 병렬 실행, Director mandatory_context 파트 반환."""
+        from concurrent.futures import ThreadPoolExecutor, as_completed
 
-        logging.debug("Advisory 검증 시작 (TruthGate, NPC, 수치, 회상, 관계)")
-        # [Phase4-Gate] TruthGate advisory — 후보 원고별 실행, Python blocking 없음
-        print("      ⏳ [TruthGate] 사실 검증 중...")
+        logging.debug("Advisory 검증 시작 — 7개 병렬 실행 (TruthGate, NPC, 수치, 회상, 정보역설, 관계, 장기반복)")
+        print("      \u23f3 Advisory 체인 7개 병렬 실행 중...")
+
+        futures = {}
+        with ThreadPoolExecutor(max_workers=7, thread_name_prefix="advisory") as executor:
+            futures[executor.submit(self._advisory_truth_gate, candidates, validation_results, next_ep)] = "TruthGate"
+            futures[executor.submit(self._advisory_npc_drift, candidates, validation_results, next_ep)] = "NpcDrift"
+            futures[executor.submit(self._advisory_numeric_drift, next_ep)] = "NumericDrift"
+            futures[executor.submit(self._advisory_flashback, candidates, next_ep)] = "Flashback"
+            futures[executor.submit(self._advisory_info_paradox, candidates, next_ep, genre_name)] = "InfoParadox"
+            futures[executor.submit(self._advisory_rel_drift, candidates, next_ep)] = "RelDrift"
+            futures[executor.submit(self._advisory_long_term_rep, candidates, next_ep)] = "LongTermRep"
+
+            _advisory_parts: list[str] = []
+            for future in as_completed(futures, timeout=300):
+                _name = futures[future]
+                try:
+                    result = future.result(timeout=60)
+                    if result:
+                        _advisory_parts.extend(result)
+                        logging.debug("[Advisory] %s 완료 (%d건)", _name, len(result))
+                except Exception as e:
+                    logging.debug("[Advisory] %s 실패 (비치명): %s", _name, e)
+
+        if _advisory_parts:
+            print(f"      \u2705 Advisory 체인 완료 — {len(_advisory_parts)}건 경고")
+        else:
+            print("      \u2705 Advisory 체인 완료 — 경고 없음")
+        return _advisory_parts
+
+    # ── [TF-50] Advisory private methods ──────────────────────────────
+
+    def _advisory_truth_gate(self, candidates: list[dict], validation_results: list[dict], next_ep: int) -> list[str]:
+        """[TF-50] TruthGate advisory — 후보 원고별 사실 검증."""
         try:
             from modules.core.truth_gate import TruthGate as _TruthGate
 
             _tg = _TruthGate(
                 world_state=getattr(self.ctx, "world_state", None),
                 fact_ledger=getattr(self.ctx, "fact_ledger", None),
-                llm_ask=self._truth_gate_llm_ask,  # [LM-A-2] 세계관 법칙 위반 검사
+                llm_ask=self._truth_gate_llm_ask,
             )
             _npc_reg = getattr(getattr(self.ctx, "state_tracker", None), "npc_registry", {}) or {}
             _tg_warnings_all: list[dict] = []
@@ -1676,23 +1740,22 @@ class Stage4InterviewRound:
                 if _tg_result.get("structured_warnings"):
                     if _ci < len(validation_results) and isinstance(validation_results[_ci], dict):
                         validation_results[_ci].setdefault("truth_gate_warnings", _tg_result["structured_warnings"])
-                    # [TF-30-6] 후보 레이블 주입
                     _cand_label = ["A", "B", "C"][_ci] if _ci < 3 else str(_ci + 1)
                     for _sw in _tg_result["structured_warnings"]:
-                        _sw["text"] = f"[후보 {_cand_label}] {_sw.get('text', '')}"
+                        _sw["text"] = f"[\ud6c4\ubcf4 {_cand_label}] {_sw.get('text', '')}"
                     _tg_warnings_all.extend(_tg_result["structured_warnings"])
             if _tg_warnings_all:
-                _tg_lines = ["[TruthGate Advisory — CRITICAL 경고 시 반드시 REJECT]"]
+                _tg_lines = ["[TruthGate Advisory \u2014 CRITICAL \uacbd\uace0 \uc2dc \ubc18\ub4dc\uc2dc REJECT]"]
                 for _w in _tg_warnings_all[:10]:
                     _tg_lines.append(f"- [{_w.get('severity', '?')}] {_w.get('text', '')}")
-                _advisory_parts.insert(0, "\n".join(_tg_lines))
-                logging.info("[TruthGate→Director] %d개 경고 전달", len(_tg_warnings_all))
-                print(f"      🛡️ [TruthGate] {len(_tg_warnings_all)}개 경고 → Director")
+                logging.info("[TruthGate\u2192Director] %d\uac1c \uacbd\uace0 \uc804\ub2ec", len(_tg_warnings_all))
+                return ["\n".join(_tg_lines)]
         except (AttributeError, TypeError, ValueError, RuntimeError) as _tg_err:
-            logging.warning("[Phase4-Gate] TruthGate advisory 실패 (비치명): %s", str(_tg_err)[:80])
+            logging.warning("[Phase4-Gate] TruthGate advisory \uc2e4\ud328 (\ube44\uce58\uba85): %s", str(_tg_err)[:80])
+        return []
 
-        # [LM-B] NpcDriftAdvisor — 원고 내 NPC 속성 표류 advisory
-        print("      ⏳ [NpcDrift] NPC 표류 검사 중...")
+    def _advisory_npc_drift(self, candidates: list[dict], validation_results: list[dict], next_ep: int) -> list[str]:
+        """[TF-50] NpcDriftAdvisor — 원고 내 NPC 속성 표류 advisory."""
         try:
             from modules.core.npc_drift_advisor import NpcDriftAdvisor as _NpcDriftAdvisor
 
@@ -1708,14 +1771,15 @@ class Stage4InterviewRound:
                             continue
                         _drifts = _drift_advisor.check(manuscript=_ms, npc_snapshots=_npc_snaps, ep_num=next_ep)
                         if _drifts:
-                            # [TF-30-6] 후보 인덱스 태깅
                             for _d in _drifts:
                                 _d["_cand_idx"] = _ci
                             _drift_all.extend(_drifts)
                             if _ci < len(validation_results) and isinstance(validation_results[_ci], dict):
                                 validation_results[_ci].setdefault("npc_drift_warnings", _drifts)
                     if _drift_all:
-                        _drift_lines = ["[NpcDriftAdvisor — NPC 속성 표류 감지, MAJOR 이상은 감점 반영]"]
+                        _drift_lines = [
+                            "[NpcDriftAdvisor \u2014 NPC \uc18d\uc131 \ud45c\ub958 \uac10\uc9c0, \ucc38\uace0\uc6a9 advisory \u2014 \ucd5c\uc885 \ud310\ub2e8\uc740 Director]"
+                        ]
                         for _d in _drift_all[:8]:
                             _cl = (
                                 ["A", "B", "C"][_d.get("_cand_idx", 0)]
@@ -1723,40 +1787,51 @@ class Stage4InterviewRound:
                                 else str(_d.get("_cand_idx", 0) + 1)
                             )
                             _drift_lines.append(
-                                f"- [후보 {_cl}][MAJOR] NPC '{_d.get('npc', '')}' {_d.get('field', '')}: "
-                                f"기대='{_d.get('expected', '')}' → 원고='{_d.get('found_in_ms', '')[:40]}'"
+                                f"- [\ud6c4\ubcf4 {_cl}][MAJOR] NPC '{_d.get('npc', '')}' {_d.get('field', '')}: "
+                                f"\uae30\ub300='{_d.get('expected', '')}' \u2192 \uc6d0\uace0='{_d.get('found_in_ms', '')[:40]}'"
                             )
-                        _advisory_parts.insert(0, "\n".join(_drift_lines))
-                        logging.info("[NpcDriftAdvisor→Director] %d건 표류 감지 전달", len(_drift_all))
-                        print(f"      👤 [NpcDrift] {len(_drift_all)}건 표류 감지")
+                        logging.info(
+                            "[NpcDriftAdvisor\u2192Director] %d\uac74 \ud45c\ub958 \uac10\uc9c0 \uc804\ub2ec",
+                            len(_drift_all),
+                        )
+                        return ["\n".join(_drift_lines)]
         except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as _drift_err:
-            logging.warning("[LM-B] NpcDriftAdvisor 실패 (비치명): %s", str(_drift_err)[:80])
+            logging.warning("[LM-B] NpcDriftAdvisor \uc2e4\ud328 (\ube44\uce58\uba85): %s", str(_drift_err)[:80])
+        return []
 
-        # [LM-C] NumericDriftAdvisor — 5화 단위 수치 누적 표류 advisory
-        print("      ⏳ [NumericDrift] 수치 표류 검사 중...")
-        if next_ep % 5 == 0:
-            try:
-                from modules.core.numeric_drift_advisor import NumericDriftAdvisor as _NumDriftAdvisor
-
-                _fl = getattr(self.ctx, "fact_ledger", None)
-                if _fl:
-                    _nums = _fl.get_numbers() or {}
-                    if _nums:
-                        _num_advisor = _NumDriftAdvisor(llm_ask=self._truth_gate_llm_ask)
-                        _num_drifts = _num_advisor.check(numbers=_nums, ep_num=next_ep)
-                        if _num_drifts:
-                            _nd_lines = ["[NumericDriftAdvisor — 수치 누적 표류 감지, MAJOR 이상은 감점 반영]"]
-                            for _nd in _num_drifts[:6]:
-                                _nd_lines.append(f"- [MAJOR] '{_nd.get('key', '')}': {_nd.get('issue', '')[:60]}")
-                            _advisory_parts.insert(0, "\n".join(_nd_lines))
-                            logging.info("[NumericDriftAdvisor→Director] %d건 수치 표류 감지", len(_num_drifts))
-                            print(f"      🔢 [NumericDrift] {len(_num_drifts)}건 수치 표류")
-            except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as _nd_err:
-                logging.warning("[LM-C] NumericDriftAdvisor 실패 (비치명): %s", str(_nd_err)[:80])
-
-        # [LM-E] FlashbackVerifier — 회상/플래시백 오염 advisory
-        print("      ⏳ [Flashback] 회상 오염 검사 중...")
+    def _advisory_numeric_drift(self, next_ep: int) -> list[str]:
+        """[TF-50] NumericDriftAdvisor — 5화 단위 수치 누적 표류 advisory."""
+        if next_ep % 5 != 0:
+            return []
         try:
+            from modules.core.numeric_drift_advisor import NumericDriftAdvisor as _NumDriftAdvisor
+
+            _fl = getattr(self.ctx, "fact_ledger", None)
+            if _fl:
+                _nums = _fl.get_numbers() or {}
+                if _nums:
+                    _num_advisor = _NumDriftAdvisor(llm_ask=self._truth_gate_llm_ask)
+                    _num_drifts = _num_advisor.check(numbers=_nums, ep_num=next_ep)
+                    if _num_drifts:
+                        _nd_lines = [
+                            "[NumericDriftAdvisor \u2014 \uc218\uce58 \ub204\uc801 \ud45c\ub958 \uac10\uc9c0, \ucc38\uace0\uc6a9 advisory \u2014 \ucd5c\uc885 \ud310\ub2e8\uc740 Director]"
+                        ]
+                        for _nd in _num_drifts[:6]:
+                            _nd_lines.append(f"- [MAJOR] '{_nd.get('key', '')}': {_nd.get('issue', '')[:60]}")
+                        logging.info(
+                            "[NumericDriftAdvisor\u2192Director] %d\uac74 \uc218\uce58 \ud45c\ub958 \uac10\uc9c0",
+                            len(_num_drifts),
+                        )
+                        return ["\n".join(_nd_lines)]
+        except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as _nd_err:
+            logging.warning("[LM-C] NumericDriftAdvisor \uc2e4\ud328 (\ube44\uce58\uba85): %s", str(_nd_err)[:80])
+        return []
+
+    def _advisory_flashback(self, candidates: list[dict], next_ep: int) -> list[str]:
+        """[TF-50] FlashbackVerifier — 회상/플래시백 오염 advisory."""
+        try:
+            import re as _re_mod
+
             from modules.core.flashback_verifier import FlashbackVerifier as _FbVerifier
 
             _fb_verifier = _FbVerifier(llm_ask=self._truth_gate_llm_ask)
@@ -1768,33 +1843,26 @@ class Stage4InterviewRound:
                 _flashbacks = _fb_verifier.detect_flashbacks(_ms)
                 if not _flashbacks:
                     continue
-                # 회상 텍스트로 VecMemory 참조 컨텍스트 검색
                 _mem = getattr(self.ctx, "memory", None)
                 _ref_ctx = ""
                 _ms_snippets = ""
                 if _mem and hasattr(_mem, "retrieve_high_res_context"):
                     _fb_queries = [fb["text"][:200] for fb in _flashbacks[:3]]
-                    _cand_label = ["A", "B", "C"][_ci] if _ci < 3 else str(_ci + 1)
-                    print(f"      🔍 [Flashback] 후보 {_cand_label} 회상 검증 ({len(_fb_queries)}건)...")
                     _ref_parts = []
                     _seen_eps: set[int] = set()
                     for _q in _fb_queries:
                         _r = _mem.retrieve_high_res_context(_q, next_ep, n_results=2)
                         if _r:
                             _ref_parts.append(_r)
-                            # [LM-H] 에피소드 번호 추출 → 원문 발췌
-                            import re as _re_mod
-
-                            for _ep_match in _re_mod.finditer(r"\[(?:제\s*)?(\d+)\s*화", _r):
+                            for _ep_match in _re_mod.finditer(r"\[(?:\uc81c\s*)?(\d+)\s*\ud654", _r):
                                 _seen_eps.add(int(_ep_match.group(1)))
                     _ref_ctx = "\n\n".join(_ref_parts)
-                    # [LM-H] 원고 원문 발췌 (최대 3개 에피소드, 각 500자)
                     if _seen_eps and hasattr(_mem, "fetch_manuscript_snippet"):
                         _snip_parts = []
                         for _ep_n in sorted(_seen_eps)[:3]:
                             _snip = _mem.fetch_manuscript_snippet(_ep_n, max_chars=500)
                             if _snip:
-                                _snip_parts.append(f"[제 {_ep_n}화 원문]\n{_snip}")
+                                _snip_parts.append(f"[\uc81c {_ep_n}\ud654 \uc6d0\ubb38]\n{_snip}")
                         _ms_snippets = "\n\n".join(_snip_parts)
                 if not _ref_ctx:
                     continue
@@ -1802,40 +1870,47 @@ class Stage4InterviewRound:
                     _ms, ep_num=next_ep, reference_context=_ref_ctx, manuscript_snippets=_ms_snippets
                 )
                 if _fb_warns:
-                    # [TF-30-6] 후보 인덱스 태깅
                     for _fw in _fb_warns:
                         _fw["_cand_idx"] = _ci
                     _fb_all.extend(_fb_warns)
             if _fb_all:
-                _fb_lines = ["[FlashbackVerifier — 회상 오염 감지, MAJOR 이상은 감점 반영]"]
+                _fb_lines = [
+                    "[FlashbackVerifier \u2014 \ud68c\uc0c1 \uc624\uc5fc \uac10\uc9c0, \ucc38\uace0\uc6a9 advisory \u2014 \ucd5c\uc885 \ud310\ub2e8\uc740 Director]"
+                ]
                 for _fw in _fb_all[:6]:
                     _cl = (
                         ["A", "B", "C"][_fw.get("_cand_idx", 0)]
                         if _fw.get("_cand_idx", 0) < 3
                         else str(_fw.get("_cand_idx", 0) + 1)
                     )
-                    _fb_lines.append(f"- [후보 {_cl}][MAJOR] '{_fw.get('marker', '')}': {_fw.get('issue', '')[:60]}")
-                _advisory_parts.insert(0, "\n".join(_fb_lines))
-                logging.info("[FlashbackVerifier→Director] %d건 회상 오염 감지", len(_fb_all))
-                print(f"      📖 [Flashback] {len(_fb_all)}건 회상 오염")
+                    _fb_lines.append(
+                        f"- [\ud6c4\ubcf4 {_cl}][MAJOR] '{_fw.get('marker', '')}': {_fw.get('issue', '')[:60]}"
+                    )
+                logging.info(
+                    "[FlashbackVerifier\u2192Director] %d\uac74 \ud68c\uc0c1 \uc624\uc5fc \uac10\uc9c0", len(_fb_all)
+                )
+                return ["\n".join(_fb_lines)]
         except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as _fb_err:
-            logging.warning("[LM-E] FlashbackVerifier 실패 (비치명): %s", str(_fb_err)[:80])
+            logging.warning("[LM-E] FlashbackVerifier \uc2e4\ud328 (\ube44\uce58\uba85): %s", str(_fb_err)[:80])
+        return []
 
-        # [LM-F] InfoParadoxChecker — 정보 역설 advisory (1인칭 전용)
-        print("      ⏳ [InfoParadox] 정보 역설 검사 중...")
+    def _advisory_info_paradox(self, candidates: list[dict], next_ep: int, genre_name: str) -> list[str]:
+        """[TF-50] InfoParadoxChecker — 정보 역설 advisory (1인칭 전용)."""
         try:
             _mb = getattr(self.ctx.current_project, "master_bible", None) or {}
             _mb_root = _mb.get("MasterBible", _mb)
             _pov = _mb_root.get("protagonist_config", {}).get("pov", "")
 
-            if _pov == "1인칭":
+            if _pov == "1\uc778\uce6d":
                 from modules.core.constants import HUDKeys
                 from modules.core.info_paradox_checker import InfoParadoxChecker as _IpChecker
 
                 _proto_name = HUDKeys.get_protagonist_name(_mb_root, genre_name)
                 _db = getattr(self.ctx.current_project, "db", None)
 
-                if _db and _proto_name and _proto_name != "주인공":
+                # [TF-51] 회귀자/장르 예외 전달
+                _incarnation_type = _mb_root.get("protagonist_config", {}).get("incarnation_type", "")
+                if _db and _proto_name and _proto_name != "\uc8fc\uc778\uacf5":
                     _knowledge_summary = _IpChecker.build_knowledge_summary(_db, next_ep, _proto_name)
                     if _knowledge_summary:
                         _ip_checker = _IpChecker(llm_ask=self._truth_gate_llm_ask)
@@ -1849,14 +1924,17 @@ class Stage4InterviewRound:
                                 ep_num=next_ep,
                                 pov_character=_proto_name,
                                 knowledge_summary=_knowledge_summary,
+                                incarnation_type=_incarnation_type,
+                                genre_name=genre_name,
                             )
                             if _ip_warns:
-                                # [TF-30-6] 후보 인덱스 태깅
                                 for _ipw in _ip_warns:
                                     _ipw["_cand_idx"] = _ci
                                 _ip_all.extend(_ip_warns)
                         if _ip_all:
-                            _ip_lines = ["[InfoParadoxChecker — 정보 역설 감지, MAJOR 이상은 감점 반영]"]
+                            _ip_lines = [
+                                "[InfoParadoxChecker \u2014 \uc815\ubcf4 \uc5ed\uc124 \uac10\uc9c0, \ucc38\uace0\uc6a9 advisory \u2014 \ucd5c\uc885 \ud310\ub2e8\uc740 Director]"
+                            ]
                             for _ip in _ip_all[:6]:
                                 _cl = (
                                     ["A", "B", "C"][_ip.get("_cand_idx", 0)]
@@ -1864,94 +1942,108 @@ class Stage4InterviewRound:
                                     else str(_ip.get("_cand_idx", 0) + 1)
                                 )
                                 _ip_lines.append(
-                                    f"- [후보 {_cl}][MAJOR] '{_ip.get('info_used', '')[:40]}': {_ip.get('why_paradox', '')[:60]}"
+                                    f"- [\ud6c4\ubcf4 {_cl}][MAJOR] '{_ip.get('info_used', '')[:40]}': {_ip.get('why_paradox', '')[:60]}"
                                 )
-                            _advisory_parts.insert(0, "\n".join(_ip_lines))
-                            logging.info("[InfoParadoxChecker→Director] %d건 정보 역설 감지", len(_ip_all))
-                            print(f"      🔮 [InfoParadox] {len(_ip_all)}건 정보 역설")
-        except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as _ip_err:
-            logging.warning("[LM-F] InfoParadoxChecker 실패 (비치명): %s", str(_ip_err)[:80])
-
-        # [LM-D] RelationshipDriftAdvisor — 관계도 장기 표류 advisory
-        print("      ⏳ [RelDrift] 관계 표류 검사 중...")
-        try:
-            if next_ep >= 5:
-                _db = getattr(self.ctx.current_project, "db", None)
-                if _db and hasattr(_db, "get_all_relationship_pairs_with_history"):
-                    from modules.core.relationship_drift_advisor import RelationshipDriftAdvisor as _RdAdvisor
-
-                    _rel_timeline = _RdAdvisor.build_relationship_timeline(_db)
-                    if _rel_timeline:
-                        _rd_advisor = _RdAdvisor(llm_ask=self._truth_gate_llm_ask)
-                        _rd_all = []
-                        for _ci, _cand in enumerate(candidates):
-                            _ms = _cand.get("manuscript", "")
-                            if not _ms:
-                                continue
-                            _rd_warns = _rd_advisor.check(
-                                _ms,
-                                ep_num=next_ep,
-                                relationship_timeline=_rel_timeline,
+                            logging.info(
+                                "[InfoParadoxChecker\u2192Director] %d\uac74 \uc815\ubcf4 \uc5ed\uc124 \uac10\uc9c0",
+                                len(_ip_all),
                             )
-                            if _rd_warns:
-                                # [TF-30-6] 후보 인덱스 태깅
-                                for _rdw in _rd_warns:
-                                    _rdw["_cand_idx"] = _ci
-                                _rd_all.extend(_rd_warns)
-                        if _rd_all:
-                            _rd_lines = ["[RelationshipDriftAdvisor — 관계도 표류 감지, MAJOR 이상은 감점 반영]"]
-                            for _rd in _rd_all[:6]:
-                                _cl = (
-                                    ["A", "B", "C"][_rd.get("_cand_idx", 0)]
-                                    if _rd.get("_cand_idx", 0) < 3
-                                    else str(_rd.get("_cand_idx", 0) + 1)
-                                )
-                                _rd_lines.append(
-                                    f"- [후보 {_cl}][MAJOR] '{_rd.get('npc_pair', '')[:30]}': {_rd.get('why_drift', '')[:60]}"
-                                )
-                            _advisory_parts.insert(0, "\n".join(_rd_lines))
-                            logging.info("[RelationshipDriftAdvisor→Director] %d건 관계 표류 감지", len(_rd_all))
-                            print(f"      💞 [RelDrift] {len(_rd_all)}건 관계 표류")
-        except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as _rd_err:
-            logging.warning("[LM-D] RelationshipDriftAdvisor 실패 (비치명): %s", str(_rd_err)[:80])
+                            return ["\n".join(_ip_lines)]
+        except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as _ip_err:
+            logging.warning("[LM-F] InfoParadoxChecker \uc2e4\ud328 (\ube44\uce58\uba85): %s", str(_ip_err)[:80])
+        return []
 
-        # [P1-5] LongTermRepetitionAdvisor — 20화 이상에서 장기 반복 패턴 감지
-        print("      ⏳ [LongTermRep] 장기 반복 검사 중...")
+    def _advisory_rel_drift(self, candidates: list[dict], next_ep: int) -> list[str]:
+        """[TF-50] RelationshipDriftAdvisor — 관계도 장기 표류 advisory."""
+        if next_ep < 5:
+            return []
         try:
-            if next_ep >= 20:
-                from modules.core.long_term_repetition_advisor import LongTermRepetitionAdvisor as _LtrAdvisor
+            _db = getattr(self.ctx.current_project, "db", None)
+            if _db and hasattr(_db, "get_all_relationship_pairs_with_history"):
+                from modules.core.relationship_drift_advisor import RelationshipDriftAdvisor as _RdAdvisor
 
-                _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
-                if _db is not None:
-                    _pattern_summary = _LtrAdvisor.build_pattern_summary(_db, next_ep, lookback=20)
-                    if _pattern_summary:
-                        _ltr_advisor = _LtrAdvisor(llm_ask=self._truth_gate_llm_ask)
-                        _ltr_all: list[dict] = []
-                        for _ci, _cand in enumerate(candidates):
-                            _ms = _cand.get("manuscript", "") if isinstance(_cand, dict) else str(_cand)
-                            if _ms:
-                                _ltr_results = _ltr_advisor.check(_ms, ep_num=next_ep, pattern_summary=_pattern_summary)
-                                for _lr in _ltr_results:
-                                    _lr["_cand_idx"] = _ci
-                                _ltr_all.extend(_ltr_results)
-                        if _ltr_all:
-                            _ltr_lines = [f"[P1-5 장기 반복 감지 — {len(_ltr_all)}건, MAJOR 이상은 감점 반영]"]
-                            for _lr in _ltr_all[:6]:
-                                _cl = (
-                                    ["A", "B", "C"][_lr.get("_cand_idx", 0)]
-                                    if _lr.get("_cand_idx", 0) < 3
-                                    else str(_lr.get("_cand_idx", 0) + 1)
-                                )
-                                _ltr_lines.append(
-                                    f"- [후보 {_cl}][MAJOR] '{_lr.get('pattern', '')[:30]}': {_lr.get('issue', '')[:60]}"
-                                )
-                            _advisory_parts.insert(0, "\n".join(_ltr_lines))
-                            logging.info("[LongTermRepetitionAdvisor→Director] %d건 장기 반복 감지", len(_ltr_all))
-                            print(f"      🔄 [LongTermRep] {len(_ltr_all)}건 장기 반복")
+                _rel_timeline = _RdAdvisor.build_relationship_timeline(_db)
+                if _rel_timeline:
+                    _rd_advisor = _RdAdvisor(llm_ask=self._truth_gate_llm_ask)
+                    _rd_all = []
+                    for _ci, _cand in enumerate(candidates):
+                        _ms = _cand.get("manuscript", "")
+                        if not _ms:
+                            continue
+                        _rd_warns = _rd_advisor.check(
+                            _ms,
+                            ep_num=next_ep,
+                            relationship_timeline=_rel_timeline,
+                        )
+                        if _rd_warns:
+                            for _rdw in _rd_warns:
+                                _rdw["_cand_idx"] = _ci
+                            _rd_all.extend(_rd_warns)
+                    if _rd_all:
+                        _rd_lines = [
+                            "[RelationshipDriftAdvisor \u2014 \uad00\uacc4\ub3c4 \ud45c\ub958 \uac10\uc9c0, \ucc38\uace0\uc6a9 advisory \u2014 \ucd5c\uc885 \ud310\ub2e8\uc740 Director]"
+                        ]
+                        for _rd in _rd_all[:6]:
+                            _cl = (
+                                ["A", "B", "C"][_rd.get("_cand_idx", 0)]
+                                if _rd.get("_cand_idx", 0) < 3
+                                else str(_rd.get("_cand_idx", 0) + 1)
+                            )
+                            _rd_lines.append(
+                                f"- [\ud6c4\ubcf4 {_cl}][MAJOR] '{_rd.get('npc_pair', '')[:30]}': {_rd.get('why_drift', '')[:60]}"
+                            )
+                        logging.info(
+                            "[RelationshipDriftAdvisor\u2192Director] %d\uac74 \uad00\uacc4 \ud45c\ub958 \uac10\uc9c0",
+                            len(_rd_all),
+                        )
+                        return ["\n".join(_rd_lines)]
+        except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as _rd_err:
+            logging.warning("[LM-D] RelationshipDriftAdvisor \uc2e4\ud328 (\ube44\uce58\uba85): %s", str(_rd_err)[:80])
+        return []
+
+    def _advisory_long_term_rep(self, candidates: list[dict], next_ep: int) -> list[str]:
+        """[TF-50] LongTermRepetitionAdvisor — 20화 이상 장기 반복 패턴 감지."""
+        if next_ep < 20:
+            return []
+        try:
+            from modules.core.long_term_repetition_advisor import LongTermRepetitionAdvisor as _LtrAdvisor
+
+            _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+            if _db is not None:
+                _pattern_summary = _LtrAdvisor.build_pattern_summary(_db, next_ep, lookback=20)
+                if _pattern_summary:
+                    _ltr_advisor = _LtrAdvisor(llm_ask=self._truth_gate_llm_ask)
+                    _ltr_all: list[dict] = []
+                    for _ci, _cand in enumerate(candidates):
+                        _ms = _cand.get("manuscript", "") if isinstance(_cand, dict) else str(_cand)
+                        if _ms:
+                            _ltr_results = _ltr_advisor.check(_ms, ep_num=next_ep, pattern_summary=_pattern_summary)
+                            for _lr in _ltr_results:
+                                _lr["_cand_idx"] = _ci
+                            _ltr_all.extend(_ltr_results)
+                    if _ltr_all:
+                        _ltr_lines = [
+                            f"[P1-5 \uc7a5\uae30 \ubc18\ubcf5 \uac10\uc9c0 \u2014 {len(_ltr_all)}\uac74, \ucc38\uace0\uc6a9 advisory \u2014 \ucd5c\uc885 \ud310\ub2e8\uc740 Director]"
+                        ]
+                        for _lr in _ltr_all[:6]:
+                            _cl = (
+                                ["A", "B", "C"][_lr.get("_cand_idx", 0)]
+                                if _lr.get("_cand_idx", 0) < 3
+                                else str(_lr.get("_cand_idx", 0) + 1)
+                            )
+                            _ltr_lines.append(
+                                f"- [\ud6c4\ubcf4 {_cl}][MAJOR] '{_lr.get('pattern', '')[:30]}': {_lr.get('issue', '')[:60]}"
+                            )
+                        logging.info(
+                            "[LongTermRepetitionAdvisor\u2192Director] %d\uac74 \uc7a5\uae30 \ubc18\ubcf5 \uac10\uc9c0",
+                            len(_ltr_all),
+                        )
+                        return ["\n".join(_ltr_lines)]
         except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as _ltr_err:
-            logging.warning("[P1-5] LongTermRepetitionAdvisor 실패 (비치명): %s", str(_ltr_err)[:80])
-
-        return _advisory_parts
+            logging.warning(
+                "[P1-5] LongTermRepetitionAdvisor \uc2e4\ud328 (\ube44\uce58\uba85): %s", str(_ltr_err)[:80]
+            )
+        return []
 
     # ── [TF-32] PASS_WITH_FIX helpers ──────────────────────────────
 

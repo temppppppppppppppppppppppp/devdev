@@ -148,7 +148,7 @@ JSON 형식으로:
 }}
 ```"""
 
-    def __init__(self, api_client, model: str = "gemini-3-pro-preview"):
+    def __init__(self, api_client, model: str = "gemini-2.5-pro"):
         """
         [V60.24] Gemini 3로 변경
         Args:
