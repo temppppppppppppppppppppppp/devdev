@@ -1,0 +1,366 @@
+{
+  "_schema_version": "2.0",
+  "_schema_description": "작곡가물(Composer) 장르 Bible 샘플 - 범용 템플릿",
+  "_last_updated": "2026-02-07",
+
+  "MasterBible": {
+    "ProjectData": {
+      "MetaInfo": {
+        "title": "작곡가물 샘플 프로젝트",
+        "grand_objective": "미래의 히트곡 지식과 전생의 프로듀싱 경험으로 K-POP 음악계 정상에 오르는 것",
+        "genre_archetype": "composer + 회귀물 + 성장극",
+        "logline": "2025년 전설적 프로듀서로 군림하던 주인공이 교통사고로 사망, 2010년 무명 작곡가 시절로 회귀한다. 15년치 히트곡 레시피와 음악 산업의 흥망을 알고 있는 그가 다시 한 번 정상을 향해 올라간다.",
+        "total_episodes": 200,
+        "episodes_per_arc": 5,
+        "arcs_per_volume": 5
+      },
+      "CoreIdentity": {
+        "protagonist": "한시윤",
+        "protagonist_faction": "무소속 (초기) → 시윤뮤직 (중기) → SY엔터테인먼트 (후기)",
+        "edge": "2025년까지의 음악 트렌드 지식 + 전생에서 쌓은 프로듀싱/작곡 경험 + 절대음감과 편곡 센스",
+        "desire": "순수한 음악으로 인정받기 - 전생에서 상업성에 타협했던 자신을 넘어서는 것",
+        "crisis": "회귀 시점에 무명 작곡가, 작업실도 없이 고시원에서 데모 제작"
+      },
+      "CommercialCode": {
+        "cider_point": "미래의 히트곡 멜로디를 떠올려 모두를 압도하는 순간 + 자신을 무시한 기획사 임원들이 러브콜을 보내는 장면",
+        "success_device": "차트 1위 달성, 대형 시상식 수상, 라이벌의 인정",
+        "attitude": "능동적 크리에이터 - 트렌드를 따라가지 않고 직접 만든다"
+      }
+    },
+
+    "protagonist_config": {
+      "world_origin": "현대인",
+      "incarnation_type": "회귀자",
+      "regression_point": {
+        "death_year": 2025,
+        "death_cause": "교통사고 (과로 운전 중 졸음운전)",
+        "return_year": 2010,
+        "return_month": "2010년 3월"
+      }
+    },
+
+    "ComposerHUD": {
+      "_description": "작곡가물 전용 HUD - 음악 능력/평판/디스코그래피 상태 추적",
+      "Protagonist": {
+        "actual_truth": {
+          "name": "한시윤",
+          "alias": "없음 (초기) → '멜로디 장인' (중기) → '히트메이커' (후기)",
+          "age": 24,
+          "rank": "무명 작곡가 (초기) → 프리랜서 작곡가 → 프로듀서 → 엔터 대표",
+
+          "music_skill": {
+            "composition": 92,
+            "arrangement": 88,
+            "production": 85,
+            "instrument": ["피아노", "기타", "드럼머신"],
+            "vocal_range": "테너 (A2-C5)"
+          },
+
+          "reputation": {
+            "public": 5,
+            "industry": 3,
+            "critic": 0
+          },
+
+          "discography": [],
+
+          "awards": [],
+
+          "contracts": {},
+
+          "wealth": "180만원 (고시원 보증금 포함)",
+
+          "network": {
+            "artists": [],
+            "producers": [],
+            "executives": []
+          },
+
+          "mental_state": "결연한 의지 + 전생의 후회 (상업성에만 집착했던 과거)",
+          "creative_block": "없음 (회귀 직후 영감 폭발 상태)",
+          "genre_mastery": [
+            {"genre": "K-POP 발라드", "level": 95},
+            {"genre": "K-POP 댄스", "level": 90},
+            {"genre": "R&B/소울", "level": 80},
+            {"genre": "힙합 비트", "level": 75},
+            {"genre": "EDM", "level": 70}
+          ],
+
+          "current_objective": "첫 번째 데모를 완성하여 기획사에 납품하기",
+          "mid_term_goal": "3년 내 차트 1위 곡 프로듀싱",
+          "final_goal": "자신의 레이블을 세우고 K-POP의 역사를 다시 쓰기",
+
+          "causal_injuries": "전생의 트라우마 (과로사, 음악에 대한 회의감), 무명 시절의 자존감 저하"
+        },
+
+        "public_reputation": {
+          "identity": "아무도 모르는 고시원 작곡가 지망생",
+          "wealth_level": "빈곤층",
+          "perceived_influence": "없음",
+          "credit_rating": "일반"
+        }
+      }
+    },
+
+    "WorldState": {
+      "CurrentEra": "2010년 3월",
+      "CurrentLocation": "서울 마포구 고시원",
+      "economic_context": {
+        "music_market_size": "약 3조원 (한국 음악시장)",
+        "streaming_platform": "멜론 독점 시대, 스포티파이 미진출",
+        "kpop_global_status": "K-POP 해외 진출 초기 (소녀시대, 빅뱅 중심)",
+        "upcoming_events": [
+          {"year": 2012, "event": "싸이 강남스타일 글로벌 히트", "impact": "K-POP 세계화 가속"},
+          {"year": 2013, "event": "음원사재기 논란 본격화", "impact": "차트 시스템 개편"},
+          {"year": 2016, "event": "스트리밍 중심 시장 전환", "impact": "음원 수익 구조 변화"},
+          {"year": 2018, "event": "BTS 빌보드 1위", "impact": "K-POP 글로벌 최전성기"},
+          {"year": 2020, "event": "코로나 팬데믹", "impact": "온라인 콘서트/팬덤 디지털화"}
+        ]
+      },
+      "KarmaMatrix": {
+        "차민혁": {
+          "relation_score": -80,
+          "status": "적대",
+          "note": "전생에 주인공의 곡을 도용해 성공한 프로듀서, 현재는 무명"
+        },
+        "윤서아": {
+          "relation_score": 20,
+          "status": "중립",
+          "note": "전생에서 주인공이 프로듀싱한 가수, 현재는 연습생"
+        },
+        "강태준": {
+          "relation_score": 40,
+          "status": "우호",
+          "note": "고시원 이웃, 인디밴드 기타리스트. 주인공의 첫 번째 협업 파트너 후보"
+        },
+        "정회장 (노바엔터)": {
+          "relation_score": -30,
+          "status": "경계",
+          "note": "대형 기획사 대표. 전생에서 주인공을 착취한 인물"
+        },
+        "이PD (멜로디FM)": {
+          "relation_score": 0,
+          "status": "중립",
+          "note": "라디오 PD. 무명 작곡가에게 기회를 줄 수 있는 인물"
+        }
+      }
+    },
+
+    "AssetLibrary": {
+      "KeyNPCs": [
+        {
+          "name": "차민혁",
+          "role": "메인 빌런",
+          "desc": "전생에서 주인공의 미공개 데모를 훔쳐 자기 이름으로 발표하고 히트 프로듀서가 된 인물. 현재 시점에서는 아직 무명이지만 야심이 크고, 주인공에게 접근해 올 가능성이 높다.",
+          "NPC_Musician_HUD": {
+            "role_in_industry": "무명 작곡가/프로듀서 지망생",
+            "musical_style": "트렌디한 K-POP 댄스곡",
+            "company": "프리랜서",
+            "influence": 5,
+            "reputation": "업계 무명",
+            "current_status": "활동중"
+          }
+        },
+        {
+          "name": "윤서아",
+          "role": "히로인/뮤즈",
+          "desc": "전생에서 주인공이 프로듀싱하여 국민 가수로 만든 여성 보컬리스트. 현재는 노바엔터 연습생으로 데뷔 기회를 기다리고 있다. 뛰어난 가창력의 소유자.",
+          "NPC_Musician_HUD": {
+            "role_in_industry": "노바엔터 연습생",
+            "musical_style": "발라드, R&B",
+            "company": "노바엔터테인먼트",
+            "influence": 0,
+            "reputation": "연습생 (무명)",
+            "current_status": "활동중"
+          }
+        },
+        {
+          "name": "강태준",
+          "role": "조력자",
+          "desc": "고시원 이웃으로 인디밴드 기타리스트. 실력은 좋지만 상업적 감각이 부족하다. 주인공의 편곡에 기타 세션으로 참여하며 첫 번째 동료가 된다.",
+          "NPC_Musician_HUD": {
+            "role_in_industry": "인디밴드 기타리스트",
+            "musical_style": "록, 얼터너티브",
+            "company": "없음 (인디)",
+            "influence": 2,
+            "reputation": "홍대 인디씬 소규모 팬덤",
+            "current_status": "활동중"
+          }
+        },
+        {
+          "name": "정회장",
+          "role": "중립→적대",
+          "desc": "노바엔터테인먼트 대표. 업계 최대 기획사를 이끄는 실력자. 전생에서 주인공을 작곡 공장처럼 부려먹고 정당한 크레딧을 주지 않았다. 지금은 주인공의 존재조차 모른다.",
+          "NPC_Musician_HUD": {
+            "role_in_industry": "노바엔터테인먼트 CEO",
+            "musical_style": "상업적 K-POP 전문",
+            "company": "노바엔터테인먼트",
+            "influence": 95,
+            "reputation": "업계 최고 파워",
+            "current_status": "활동중"
+          }
+        },
+        {
+          "name": "이PD",
+          "role": "조력자 후보",
+          "desc": "멜로디FM 라디오 PD. 음악에 대한 순수한 열정을 가진 인물. 무명 아티스트를 발굴하는 안목이 있으며, 주인공의 재능을 처음으로 알아볼 인물.",
+          "NPC_Musician_HUD": {
+            "role_in_industry": "라디오 PD",
+            "musical_style": "장르 불문 (좋은 음악 우선)",
+            "company": "멜로디FM",
+            "influence": 30,
+            "reputation": "업계 내 신뢰받는 귀",
+            "current_status": "활동중"
+          }
+        }
+      ],
+
+      "KeyItems": [
+        {
+          "item": "낡은 노트북 (FL Studio 설치)",
+          "desc": "전생에서도 쓰던 작업용 노트북. 성능이 떨어지지만 주인공의 유일한 작업 도구. 미래의 히트곡 멜로디를 이 노트북으로 재현한다."
+        },
+        {
+          "item": "멜로디 수첩",
+          "desc": "회귀 직후 전생의 히트곡 멜로디와 코드 진행을 기억나는 대로 적어놓은 수첩. 주인공의 가장 중요한 자산이자 비밀."
+        },
+        {
+          "item": "어머니의 카세트테이프",
+          "desc": "돌아가신 어머니가 좋아하던 노래가 녹음된 테이프. 음악을 시작한 계기이자 정신적 지주."
+        }
+      ],
+
+      "KeyLocations": [
+        {
+          "name": "마포구 고시원 (작업실 겸용)",
+          "desc": "주인공의 현재 거주지. 3평 남짓한 공간에서 헤드폰과 노트북으로 작업한다."
+        },
+        {
+          "name": "홍대 라이브 클럽",
+          "desc": "인디 뮤지션들의 성지. 강태준의 밴드가 공연하는 곳이자 주인공이 처음 자신의 곡을 선보이는 무대."
+        },
+        {
+          "name": "노바엔터테인먼트 사옥",
+          "desc": "업계 최대 기획사. 윤서아가 연습생으로 있으며, 정회장이 군림하는 곳. 정복해야 할 성."
+        },
+        {
+          "name": "여의도 음악방송 스튜디오",
+          "desc": "KBS, MBC 음악 프로그램 녹화장. 차트 1위의 상징적 장소."
+        }
+      ],
+
+      "Persona": "천재적 감각을 숨긴 무명 작곡가. 겉으로는 조용하지만 음악 앞에서는 누구보다 열정적이고 완벽주의적.",
+      "SpeechStyle": {
+        "tone": "차분하고 절제된 어투, 음악 이야기할 때만 열정적",
+        "vocabulary": "음악 전문 용어 + 현대 구어체",
+        "inner_monologue": "전생 회상 + 히트곡 분석 + 음악적 영감의 순간"
+      }
+    },
+
+    "Seeds": [
+      {
+        "id": "S-001",
+        "category": "인물",
+        "description": "윤서아의 숨겨진 재능 - 연습생 중 유독 감정 표현이 뛰어나다는 언급",
+        "status": "active",
+        "planted_ep": 1,
+        "target_harvest_ep": 25,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-002",
+        "category": "사건",
+        "description": "2012년 강남스타일 글로벌 히트 - 주인공이 K-POP 세계화를 준비하고 있다는 암시",
+        "status": "active",
+        "planted_ep": 3,
+        "target_harvest_ep": 60,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-003",
+        "category": "인물",
+        "description": "차민혁의 접근 - 주인공의 데모를 우연히 듣고 관심을 보이는 복선",
+        "status": "active",
+        "planted_ep": 5,
+        "target_harvest_ep": 20,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-004",
+        "category": "아이템",
+        "description": "멜로디 수첩의 비밀 - 누군가 수첩을 보게 될 위기",
+        "status": "active",
+        "planted_ep": 2,
+        "target_harvest_ep": 40,
+        "echo_count": 0,
+        "harvested_ep": null
+      }
+    ],
+
+    "HistoricalEvents": {
+      "_description": "작곡가물에서 활용 가능한 실제 음악산업 이벤트 DB",
+      "events": [
+        {
+          "month": "2010-06",
+          "event": "아이돌 전성시대 본격화 (2PM, 소녀시대 전성기)",
+          "impact": "아이돌 작곡 수요 급증"
+        },
+        {
+          "month": "2011-03",
+          "event": "K-POP 일본 시장 확대",
+          "impact": "일본어 버전 작곡/편곡 수요"
+        },
+        {
+          "month": "2012-07",
+          "event": "싸이 강남스타일 빌보드 진입",
+          "impact": "K-POP 글로벌화 전환점"
+        },
+        {
+          "month": "2013-10",
+          "event": "음원사재기 논란 폭발",
+          "impact": "차트 시스템 개편, 실력파 작곡가 부각"
+        },
+        {
+          "month": "2016-01",
+          "event": "스트리밍 중심 음원시장 재편",
+          "impact": "음원 수익 배분 구조 변화"
+        },
+        {
+          "month": "2018-05",
+          "event": "BTS 빌보드 앨범차트 1위",
+          "impact": "K-POP 글로벌 최전성기"
+        },
+        {
+          "month": "2020-03",
+          "event": "코로나19 팬데믹",
+          "impact": "온라인 콘서트, 팬덤 디지털 전환"
+        }
+      ]
+    },
+
+    "GenreRules": {
+      "_description": "작곡가물 장르 규칙 및 제약",
+      "must_include": [
+        "음악 창작 과정이 구체적으로 묘사되어야 함 (멜로디, 가사, 편곡 등)",
+        "차트 성적은 개연성 있어야 함 (무명이 갑자기 1위 X, 단계적 상승)",
+        "음악 업계 생태계(기획사, 매니지먼트, 저작권, 음원 수익)가 현실적이어야 함",
+        "히트곡에는 감정적 맥락이 있어야 함 (단순 표절이 아닌 재해석)"
+      ],
+      "forbidden": [
+        "비현실적 차트 역전 (발매 즉시 올킬 등 남발)",
+        "저작권/표절 이슈 무시 (미래 곡 사용 시 합리화 필요)",
+        "음악적 디테일 없는 '그냥 히트' 처리"
+      ],
+      "tension_devices": [
+        "곡 납품 마감 위기",
+        "미래 곡과 유사한 곡이 먼저 나올 뻔한 순간",
+        "라이벌 프로듀서와의 경합",
+        "히트곡 원작자 논란 / 표절 시비",
+        "크리에이티브 블록 (영감 고갈)"
+      ]
+    }
+  }
+}

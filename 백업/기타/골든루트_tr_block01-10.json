@@ -1,0 +1,1204 @@
+{
+  "_schema_version": "2.0",
+  "_project_codename": "골든루트",
+  "_last_updated": "2026-02-06",
+  "_bible_ref": "new_investment_bi.json",
+
+  "work_name": "골든 루트 (가제)",
+  "genre": "investment",
+  "block_range": "1-10",
+  "total_blocks": 60,
+
+  "treatments": [
+    {
+      "block_id": "Block 1",
+      "title": "회귀, 그리고 선언",
+
+      "content": {
+        "context": "2024년 어느 겨울밤, 한시우는 원룸에서 쓸쓸히 숨을 거둔다. 재벌가 막내로 태어나 귀여움만 받으며 승마 국가대표까지 올랐지만, 형들의 후계 싸움에 그룹이 공중분해되자 찬밥 신세로 전락했다. 이혼, 사업 실패, 채무. 마지막 순간 그의 뇌리를 스친 건 후회뿐이었다. '한 번도 내 인생을 산 적이 없었다.' 눈을 떠보니 2006년 1월. 승마 국가대표 은퇴 직후, 스물여섯의 자신이다. 몸은 젊고, 머릿속엔 18년 치 미래가 또렷하다.",
+        "event_villain": "아버지 한정호 회장이 서재로 부른다. '막내야, 이제 뭐 할 거냐?' 형들 한태준, 한태민은 이미 그룹 핵심 계열사를 꿰차고 후계 경쟁에 돌입했다. 아버지의 눈에 막내는 '귀여운 애완견' 정도다. 기대도, 경계도 없다. 전생에서 한시우는 '천천히 생각해볼게요'라며 얼버무렸다. 그 대답이 한량 인생의 시작이었다.",
+        "solution": "이번엔 다르다. 한시우는 아버지의 눈을 똑바로 본다. '사업 하겠습니다. 투자사 차릴 겁니다.' 아버지가 의아해한다. '투자? 네가?' 한시우는 담담하게 답한다. '원자재 트레이딩으로 시작하려고요. 자본금은 제 돈으로 합니다. 그룹 돈 한 푼 안 받겠습니다.' 한정호는 처음 보는 막내의 눈빛에 당황하지만, 반대하지 않는다. 어차피 기대도 없으니까. 오히려 '재롱 한번 피워보려나' 정도로 치부한다.",
+        "reward": "한시우는 개인 자산을 정리한다. 할아버지 용돈, 승마 스폰서 수익, 어머니 명의 신탁 일부. 합쳐서 20억. 해외 선물 거래가 가능한 투자 법인 'SW인베스트먼트' 설립에 착수한다. 가족 누구도 진지하게 받아들이지 않는다. 그게 좋다. 레이더 밖에서 움직이는 게 유리하니까."
+      },
+
+      "stakes": "20억 전액 손실 위험. 하지만 진짜 리스크는 실패했을 때 '역시 막내는 한량'이라는 낙인이 찍혀 다시는 진지하게 받아들여지지 않는 것이다. 기회는 이번 한 번뿐이다.",
+
+      "power_shift": {
+        "protagonist": "수동적 한량 → 능동적 선언. 첫 발을 뗐다. 아직 증명한 건 없지만, 적어도 '하겠다'고 말했다.",
+        "antagonist": "가족 전원 무관심. 형들은 막내 따위 안중에도 없다. 오히려 방해 요소 하나가 줄었다고 생각한다."
+      },
+
+      "relationship_delta": [
+        {
+          "target": "한정호 (아버지)",
+          "before": "귀여운 막내, 기대 제로",
+          "after": "의외라는 시선, 약간의 관심. 하지만 여전히 '재롱' 수준으로 치부"
+        },
+        {
+          "target": "한태준 (큰형)",
+          "before": "무관심",
+          "after": "무관심 유지. 막내가 뭘 하든 후계 경쟁에 영향 없다고 판단"
+        },
+        {
+          "target": "한태민 (둘째형)",
+          "before": "무관심",
+          "after": "무관심 유지. 오히려 막내가 알아서 빠져줘서 다행이라고 생각"
+        }
+      ],
+
+      "foreshadow": [
+        "저녁 뉴스에서 '유가 상승세, 이란 핵 문제 재점화' 보도 - Block 2 원유 투자 복선",
+        "아버지가 '그룹 일은 형들이 알아서 할 거다' - 훗날 형들 싸움으로 그룹 분열 복선",
+        "한시우가 '그룹 돈 안 받겠다'고 선언 - 나중에 그룹이 망해도 본인 자산은 무사한 이유의 복선",
+        "어머니가 '애가 갑자기 왜 저러지?' 걱정 - 회귀 정체 의심 복선의 첫 단추"
+      ],
+
+      "callback": [],
+
+      "emotional_beat": {
+        "type": "rebirth",
+        "intensity": 9
+      },
+
+      "tension_level": 6,
+
+      "pov_character": "한시우",
+
+      "location": {
+        "place": "서울 성북동, 재벌가 본가 저택 / 아버지 서재",
+        "type": "실내"
+      },
+
+      "time_span": {
+        "duration": "3일",
+        "in_story_time": "2006년 1월 초"
+      },
+
+      "genre_ext": {
+        "capital_before": "0 (정리 전)",
+        "capital_after": "20억 (정리 후)",
+        "capital_delta": "+20억 (자산 정리)",
+        "profit_loss": "해당 없음",
+        "method": "자산 정리 및 법인 설립",
+        "investment_type": "준비 단계",
+        "deal_type": "해당 없음",
+        "leverage_used": [
+          "회귀 지식 (향후 18년 경제사)",
+          "가족의 무관심 (레이더 밖에서 활동 가능)"
+        ],
+        "opponent": {
+          "name": "없음 (가족은 방관)",
+          "type": "해당 없음",
+          "weakness_exploited": "해당 없음"
+        },
+        "historical_event": null,
+        "time_pressure": "법인 설립에 최소 2~3주 소요. 이란 핵 이슈가 본격화되기 전에 포지션 진입 준비 완료해야 함.",
+        "knowledge_used": "2006년 원유 60달러 → 80달러 상승, 이란 핵 위기, 나이지리아 MEND 공격 예정",
+        "risk_level": "저위험 (아직 투자 전)",
+        "business_sector": "투자/금융"
+      },
+
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": {
+          "info_used": "2006년부터 2024년까지 주요 경제 이벤트 전체. 특히 2006년 원자재 랠리, 2008년 리먼 쇼크, 비트코인 등",
+          "accuracy": "정확 (직접 경험)",
+          "source": "전생 기억"
+        },
+        "butterfly_effect": {
+          "original_event": "원래 한시우는 '천천히 생각해볼게요'라고 답하고 한량으로 살았다",
+          "changed_event": "사업 선언으로 완전히 다른 인생 경로 시작",
+          "ripple_effect": "가족들이 미묘하게 다르게 반응. 아버지가 '의외다'라고 느낀 것이 훗날 관계에 영향을 줄 수 있음"
+        },
+        "death_flag": {
+          "avoided": "고독사 (2024년)",
+          "method": "회귀 자체로 회피"
+        },
+        "regression_hint": {
+          "slip_up": "어머니가 '갑자기 눈빛이 달라졌다'고 느낌. 아직 의심까지는 아님.",
+          "suspicion_from": "어머니 (미미한 수준)"
+        },
+        "future_prep": {
+          "action": "법인 설립, 해외 선물 계좌 개설, 원유 시장 분석",
+          "target_event": "2006년 2월 이란 핵 위기 본격화 전 WTI 롱 포지션 진입"
+        }
+      }
+    },
+
+    {
+      "block_id": "Block 2",
+      "title": "검은 황금",
+
+      "content": {
+        "context": "2006년 2월. SW인베스트먼트 법인 설립 완료. 해외 선물 거래 계좌 개설. 한시우의 첫 타깃은 원유다. WTI는 현재 60달러대. 이란 핵 위기, 나이지리아 정세 불안으로 7월에 78달러, 연내 80달러까지 간다는 걸 안다. 한시우는 증권사 VIP룸에서 담당 PB 박성호를 만난다.",
+        "event_villain": "박성호 PB는 한시우를 '재벌가 도련님의 취미 투자' 정도로 깔본다. '고객님, 원유 선물은 변동성이 커서요... 제가 추천드리는 안정적인 채권형 펀드가...' 한시우가 말을 끊는다. '3배 레버리지. WTI 6월물. 15억 넣어.' 박성호의 얼굴이 굳는다. '고, 고객님, 그건 너무...' 한시우가 싸늘하게 말한다. '내 돈이야. 틀리면 내가 책임지고. 맞으면 수수료 두 배 줄게. 처리해.'",
+        "solution": "돈 앞에서 PB는 입을 다문다. 15억 원어치 WTI 6월물 3배 레버리지 롱 포지션 진입 완료. 나머지 5억은 추가 매수 및 비상금으로 대기. 한시우는 차트나 뉴스를 보지 않는다. 이미 결과를 알고 있으니까.",
+        "reward": "2월 말, 이란이 핵 농축 재개를 선언한다. 유가 상승 시작. 60달러 → 65달러. 한시우의 포지션 수익 전환. 레버리지 효과로 15억이 18억이 된다. 박성호 PB가 전화한다. '고, 고객님, 대단하십니다...' 한시우는 전화를 끊는다. 아직 시작도 안 했다."
+      },
+
+      "stakes": "15억 전액. 레버리지 3배면 5% 역행 시 손절 라인. 잘못되면 20억 중 15억을 날리고 첫 베팅에서 박살난다. 가족들에게 '역시 막내는 안 돼'라는 조롱거리가 된다.",
+
+      "power_shift": {
+        "protagonist": "선언에서 실행으로. 첫 포지션 진입. 말뿐이 아니라 실제로 돈을 걸었다.",
+        "antagonist": "박성호 PB: 무시 → 긴장. '혹시 큰 손인가?' 재평가 시작."
+      },
+
+      "relationship_delta": [
+        {
+          "target": "박성호 (담당 PB)",
+          "before": "재벌가 도련님의 취미 투자, 얕봄",
+          "after": "의외로 과감한 베팅에 당혹. 큰 손일 수도 있다는 재평가"
+        }
+      ],
+
+      "foreshadow": [
+        "뉴스: '이란, 핵 농축 재개 선언' - 유가 상승 촉매 (이미 실현 중)",
+        "한시우 독백: '금도 간다' - Block 4 금 투자 복선",
+        "한시우가 '나이지리아'라는 단어를 중얼거림 - Block 3 MEND 공격 복선"
+      ],
+
+      "callback": [
+        "Block 1에서 '원자재 트레이딩으로 시작'이라고 선언한 것의 실행"
+      ],
+
+      "emotional_beat": {
+        "type": "tension",
+        "intensity": 8
+      },
+
+      "tension_level": 8,
+
+      "pov_character": "한시우",
+
+      "location": {
+        "place": "서울 여의도, 한미증권 VIP룸",
+        "type": "실내"
+      },
+
+      "time_span": {
+        "duration": "2주",
+        "in_story_time": "2006년 2월"
+      },
+
+      "genre_ext": {
+        "capital_before": "20억",
+        "capital_after": "23억 (미실현 수익 포함)",
+        "capital_delta": "+3억 (미실현)",
+        "profit_loss": "+3억 (미실현)",
+        "method": "레버리지 선물 거래",
+        "investment_type": "원자재 선물 (WTI 원유)",
+        "deal_type": "시장 진입",
+        "leverage_used": [
+          "회귀 지식 (이란 핵 위기 예측)",
+          "3배 레버리지",
+          "PB의 탐욕 (수수료 두 배 제안)"
+        ],
+        "opponent": {
+          "name": "박성호 PB",
+          "type": "게이트키퍼",
+          "weakness_exploited": "돈 앞에서 원칙을 꺾는 탐욕"
+        },
+        "historical_event": {
+          "name": "2006년 이란 핵 위기",
+          "year": 2006,
+          "month": "2월",
+          "how_exploited": "이란의 핵 농축 재개 선언으로 유가 상승 예측, 레버리지 롱 진입"
+        },
+        "time_pressure": "이란 핵 뉴스 터지기 전에 포지션 진입 완료해야 함",
+        "knowledge_used": "2006년 WTI 60달러 → 78달러 상승 경로",
+        "risk_level": "고위험",
+        "business_sector": "원자재/에너지"
+      },
+
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": {
+          "info_used": "2006년 이란 핵 위기로 유가 상승, 나이지리아 MEND 공격으로 추가 상승",
+          "accuracy": "정확",
+          "source": "전생 기억"
+        },
+        "butterfly_effect": {
+          "original_event": "한시우는 존재하지 않았거나 투자하지 않았음",
+          "changed_event": "15억 규모 포지션 진입",
+          "ripple_effect": "미미함. 글로벌 원유 시장에서 15억은 티끌"
+        },
+        "death_flag": {
+          "avoided": null,
+          "method": null
+        },
+        "regression_hint": {
+          "slip_up": "'나이지리아'를 중얼거린 것. 아직 뉴스에 나오지 않은 이름.",
+          "suspicion_from": "없음 (혼잣말)"
+        },
+        "future_prep": {
+          "action": "원유 포지션 홀딩, 금 시장 분석 시작",
+          "target_event": "4월 나이지리아 MEND 공격 시 추가 상승"
+        }
+      }
+    },
+
+    {
+      "block_id": "Block 3",
+      "title": "중동의 불씨",
+
+      "content": {
+        "context": "2006년 3~4월. 이란 핵 위기 격화. UN 안보리 제재 논의. 유가 65달러에서 70달러 돌파. 한시우의 포지션은 이미 수익권이지만, 그는 움직이지 않는다. 진짜 촉매는 아직 안 터졌다.",
+        "event_villain": "유가가 72달러에서 횡보한다. 언론은 '고점 아니냐', '조정 온다'는 분석을 쏟아낸다. 박성호 PB가 전화한다. '고객님, 익절하시죠? 이미 40% 수익입니다. 충분히 버셨잖아요.' 회사 리스크 관리팀도 압박한다. '이 정도면 성공입니다. 욕심부리지 마세요.'",
+        "solution": "한시우는 거절한다. '아직이야. 나이지리아가 터진다.' PB가 멍해진다. '나이지리아요?' 4월 19일, 나이지리아 무장단체 MEND가 쉐브론 송유관을 폭파한다. 유가 급등. 75달러 돌파. 한시우는 이 타이밍에 포지션 절반을 익절한다. 7.5억 투입분에서 5억 수익 확정. 나머지 7.5억은 홀딩.",
+        "reward": "첫 수익 확정. 15억 → 20억 (5억 순익). 박성호 PB가 완전히 태도를 바꾼다. '고객님, 어떻게 아셨습니까...' 한시우는 대답하지 않는다. 담담하게 차트를 본다. 감흥 없다. 이건 시작일 뿐이다."
+      },
+
+      "stakes": "익절 타이밍 판단. 너무 빨리 팔면 수익 축소. 너무 늦게 팔면 되돌림에 물린다. 지금 팔면 5억 확정이지만, 틀리면 0이 될 수도 있다.",
+
+      "power_shift": {
+        "protagonist": "첫 수익 확정. '찍었다'는 소문이 퍼지기 시작. 박성호를 통해 증권가에 '재벌가 막내가 원유로 돈 벌었다'는 말이 돈다.",
+        "antagonist": "박성호 PB: 완전 굴복. 이제 한시우의 모든 지시에 '예'만 한다."
+      },
+
+      "relationship_delta": [
+        {
+          "target": "박성호 (담당 PB)",
+          "before": "당혹, 반신반의",
+          "after": "경외. '이 사람은 뭔가 다르다'고 확신"
+        },
+        {
+          "target": "증권사 리스크관리팀",
+          "before": "경고, 압박",
+          "after": "입 다묾. 결과로 증명됐으니"
+        }
+      ],
+
+      "foreshadow": [
+        "한시우가 '80까지 간다'고 말함 - Block 4 추가 상승 복선",
+        "뉴스: '금 가격 상승세' - Block 4 금 진입 타이밍 복선",
+        "한시우 독백: '이란은 끝나지 않았어' - 추가 상승 복선"
+      ],
+
+      "callback": [
+        "Block 2에서 '나이지리아'를 중얼거린 것의 회수"
+      ],
+
+      "emotional_beat": {
+        "type": "triumph",
+        "intensity": 7
+      },
+
+      "tension_level": 7,
+
+      "pov_character": "한시우",
+
+      "location": {
+        "place": "서울 강남, SW인베스트먼트 오피스 (소규모 원룸 오피스)",
+        "type": "실내"
+      },
+
+      "time_span": {
+        "duration": "6주",
+        "in_story_time": "2006년 3월 ~ 4월"
+      },
+
+      "genre_ext": {
+        "capital_before": "23억 (미실현 포함)",
+        "capital_after": "30억",
+        "capital_delta": "+7억 (5억 실현 + 2억 미실현)",
+        "profit_loss": "+5억 (확정)",
+        "method": "부분 익절",
+        "investment_type": "원자재 선물 (WTI 원유)",
+        "deal_type": "시장 청산 (절반)",
+        "leverage_used": [
+          "회귀 지식 (MEND 공격 예측)",
+          "홀딩 배짱",
+          "시장의 공포 역이용"
+        ],
+        "opponent": {
+          "name": "시장 여론 / 박성호 PB",
+          "type": "심리전",
+          "weakness_exploited": "단기 이익에 급급한 조급함"
+        },
+        "historical_event": {
+          "name": "나이지리아 MEND 송유관 공격",
+          "year": 2006,
+          "month": "4월",
+          "how_exploited": "공격 직후 급등 타이밍에 절반 익절"
+        },
+        "time_pressure": "MEND 공격 뉴스 직후가 단기 고점. 타이밍 놓치면 되돌림",
+        "knowledge_used": "MEND 공격 시기, 유가 75달러 돌파 후 횡보 패턴",
+        "risk_level": "중위험",
+        "business_sector": "원자재/에너지"
+      },
+
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": {
+          "info_used": "2006년 4월 MEND 공격, 유가 75달러 돌파",
+          "accuracy": "정확",
+          "source": "전생 기억"
+        },
+        "butterfly_effect": {
+          "original_event": "MEND 공격은 역사 그대로 발생",
+          "changed_event": "한시우가 정확히 그 타이밍에 익절",
+          "ripple_effect": "미미함"
+        },
+        "death_flag": {
+          "avoided": null,
+          "method": null
+        },
+        "regression_hint": {
+          "slip_up": "'나이지리아가 터진다'고 예언처럼 말한 것. 박성호가 '어떻게 아셨냐'고 물음.",
+          "suspicion_from": "박성호 PB (호기심 수준)"
+        },
+        "future_prep": {
+          "action": "나머지 원유 포지션 홀딩, 금 시장 분석 본격화",
+          "target_event": "5~6월 유가 78달러 도달 시 전량 익절, 금 진입"
+        }
+      }
+    },
+
+    {
+      "block_id": "Block 4",
+      "title": "금의 귀환",
+
+      "content": {
+        "context": "2006년 5~6월. 유가 계속 상승. 78달러 터치. 한시우는 나머지 원유 포지션을 전량 정리한다. 수익 10억 추가. 총 35억. 다음 타깃은 금이다. 현재 온스당 620달러. 달러 약세와 인플레 우려로 700달러까지 간다는 걸 안다.",
+        "event_villain": "금 시장은 원유보다 느리다. 620달러에서 진입했지만, 두 달간 횡보. 오히려 소폭 하락해 600달러대로 내려간다. 업계에서 '금은 죽은 자산'이라는 말이 들린다. 박성호가 조심스럽게 말한다. '고객님, 금은 좀... 옛날 자산 아닙니까? 요즘은 주식이나 부동산이...'",
+        "solution": "한시우는 무시한다. '기다려.' 두 달을 버틴다. 8월, 연준이 금리 인상 중단을 시사한다. 달러 약세 시작. 금 620달러 → 680달러. 한시우는 680달러에서 절반 익절. 15억 투입분에서 5억 수익.",
+        "reward": "금 포지션으로 첫 수확. 5억 확정. 나머지는 700달러까지 홀딩. 총 자산 40억. 4개월 만에 2배. 한시우는 담담하다. 이건 워밍업이다."
+      },
+
+      "stakes": "15억을 금에 묶어두는 기회비용. 금이 안 오르면 다른 곳에 투자했을 수익을 날린다. 또한 두 달 횡보 동안 '틀렸나?' 하는 심리적 압박.",
+
+      "power_shift": {
+        "protagonist": "원유에 이어 금까지 성공. 원자재 트레이더로 입지 확보. 증권가에 '재벌가 막내가 귀신같이 찍는다'는 소문.",
+        "antagonist": "가족은 여전히 무관심. 형들은 후계 경쟁에 바쁘다."
+      },
+
+      "relationship_delta": [
+        {
+          "target": "박성호 (담당 PB)",
+          "before": "경외하지만 반신반의 (금은 의문)",
+          "after": "완전한 신뢰. '이 사람 말은 무조건 따른다'"
+        }
+      ],
+
+      "foreshadow": [
+        "뉴스: '미국 서브프라임 모기지 연체율 상승' - 먼 미래 복선",
+        "한시우 독백: '냄새가 나는데...' - Block 7~10 서브프라임 숏 복선",
+        "한시우가 '미국 부동산'이라는 단어에 눈을 가늘게 뜸 - 리먼 쇼크 암시"
+      ],
+
+      "callback": [
+        "Block 2에서 '금도 간다'고 중얼거린 것의 회수"
+      ],
+
+      "emotional_beat": {
+        "type": "steady_growth",
+        "intensity": 6
+      },
+
+      "tension_level": 5,
+
+      "pov_character": "한시우",
+
+      "location": {
+        "place": "서울 강남, SW인베스트먼트 오피스",
+        "type": "실내"
+      },
+
+      "time_span": {
+        "duration": "4개월",
+        "in_story_time": "2006년 5월 ~ 8월"
+      },
+
+      "genre_ext": {
+        "capital_before": "35억",
+        "capital_after": "45억",
+        "capital_delta": "+10억 (5억 확정 + 5억 미실현)",
+        "profit_loss": "+5억 (확정)",
+        "method": "레버리지 롱, 부분 익절",
+        "investment_type": "원자재 선물 (골드)",
+        "deal_type": "시장 진입 → 부분 청산",
+        "leverage_used": [
+          "회귀 지식 (연준 금리 정책)",
+          "시장의 무관심 역이용",
+          "인내심"
+        ],
+        "opponent": {
+          "name": "시장 컨센서스 ('금은 죽은 자산')",
+          "type": "시장 심리",
+          "weakness_exploited": "단기 성과에 집착하는 근시안"
+        },
+        "historical_event": {
+          "name": "연준 금리 인상 중단 시사",
+          "year": 2006,
+          "month": "8월",
+          "how_exploited": "달러 약세 → 금 강세 예측"
+        },
+        "time_pressure": "두 달 횡보 기간 동안의 심리적 압박. 틀렸다는 의심.",
+        "knowledge_used": "2006년 하반기 금 620→700달러 상승",
+        "risk_level": "중위험",
+        "business_sector": "원자재/귀금속"
+      },
+
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": {
+          "info_used": "2006년 연준 금리 정책, 금 가격 추이",
+          "accuracy": "정확",
+          "source": "전생 기억"
+        },
+        "butterfly_effect": {
+          "original_event": "금 시장은 정상적으로 움직임",
+          "changed_event": "한시우의 포지션은 시장에 영향 없음",
+          "ripple_effect": "없음"
+        },
+        "death_flag": {
+          "avoided": null,
+          "method": null
+        },
+        "regression_hint": {
+          "slip_up": "'서브프라임'이라는 단어를 흘린 것. 아직 대중에게 익숙하지 않은 용어.",
+          "suspicion_from": "없음 (혼잣말)"
+        },
+        "future_prep": {
+          "action": "금 나머지 포지션 홀딩, 미국 부동산 시장 분석 시작",
+          "target_event": "2007년 서브프라임 위기 대비"
+        }
+      }
+    },
+
+    {
+      "block_id": "Block 5",
+      "title": "첫 번째 졸업",
+
+      "content": {
+        "context": "2006년 9~12월. 금 포지션 나머지 정리. 700달러 터치 후 익절. 추가 5억. 연말 기준 총 자산 50억. 20억에서 시작해 1년 만에 2.5배. 첫 해 졸업.",
+        "event_villain": "연말 가족 모임. 한시우는 본가에 간다. 형들은 여전히 후계 경쟁 중. 큰형 한태준이 와인잔을 들며 빈정거린다. '막내, 사업 한다며? 뭐 하는 건데, 도박이야?' 테이블을 사이에 두고 시선이 날카롭다. 둘째형 한태민이 술에 취해 거든다. '형들 싸우는 거 보기 싫으면 가만히 있어. 네가 벌어봐야 얼마나 벌겠어.' 아버지는 '그래, 용돈 벌이는 되냐?' 정도. 저녁 후, 시우가 화장실에 가려고 복도를 지나는데 형들 대화가 들린다. 한태준의 목소리: '막내 저거 언제 돈 다 날리고 울면서 올까.' 한태민이 낮은 목소리로 답한다: '그때 아버지 땅 좀 뜯어내자.' 한시우는 멈춰 서서 주먹을 쥔다. 이를 악문다. 그리고 돌아선다. 화내지 않는다. 이미 답은 숫자로 증명하기로 했으니까.",
+        "solution": "한시우는 웃으며 '그럭저럭요'라고만 답한다. 구체적인 숫자는 말하지 않는다. 굳이 관심 끌 필요 없다. 형들이 싸우는 동안 조용히 자산을 불리면 된다. 레이더 밖에 있는 게 유리하다.",
+        "reward": "연말 결산. 홀로 오피스에서 숫자를 본다. 50억. 감흥 없다. '이건 시작도 아니야.' 그의 머릿속엔 2008년 리먼 쇼크가 있다. 그때 진짜 돈을 번다. 2007년 계획을 세운다: 1) 한국 주식 단기 롱으로 수익 추가, 2) 미국 서브프라임 분석 본격화, 3) 숏 포지션 구축 루트 확보."
+      },
+
+      "stakes": "없음. 정리와 준비의 블록. 다만 가족 모임에서 정체를 들키면 안 된다.",
+
+      "power_shift": {
+        "protagonist": "50억 자산가. 1년 만에 2.5배. 하지만 가족에게는 여전히 '귀여운 막내'.",
+        "antagonist": "가족 전원 무관심 유지. 이게 한시우에게는 최선이다."
+      },
+
+      "relationship_delta": [
+        {
+          "target": "한정호 (아버지)",
+          "before": "재롱 수준",
+          "after": "형식적 관심. 여전히 기대 없음"
+        },
+        {
+          "target": "한태준 (큰형)",
+          "before": "무관심",
+          "after": "약간의 빈정거림. 하지만 여전히 무시"
+        },
+        {
+          "target": "한태민 (둘째형)",
+          "before": "무관심",
+          "after": "코웃음. 막내는 안중에도 없음"
+        },
+        {
+          "target": "형들 (한태준, 한태민)",
+          "before": "무관심, 약간의 빈정거림",
+          "after": "적극적 경멸. 막내의 실패를 기다림. 한태준은 감시 시작."
+        }
+      ],
+
+      "foreshadow": [
+        "형들 대화: '그룹 지분 구조 바꿔야 해' - 훗날 그룹 내분 복선",
+        "한시우 독백: '2007년 코스피 2000... 그리고 2008년' - 다음 블록 복선",
+        "뉴스: '미국 주택 가격 상승세 둔화' - 서브프라임 복선",
+        "한태준이 비서에게 '막내가 뭘 하는지 좀 알아봐'라고 지시하는 장면 - 감시 복선"
+      ],
+
+      "callback": [
+        "Block 1에서 '그룹 돈 안 받겠다'고 한 것의 의미. 독립 자산이니 형들 싸움에 휘말리지 않는다."
+      ],
+
+      "emotional_beat": {
+        "type": "calm_before_storm",
+        "intensity": 4
+      },
+
+      "tension_level": 3,
+
+      "pov_character": "한시우",
+
+      "location": {
+        "place": "SW인베스트먼트 오피스 / 성북동 본가 저택",
+        "type": "실내"
+      },
+
+      "time_span": {
+        "duration": "4개월",
+        "in_story_time": "2006년 9월 ~ 12월"
+      },
+
+      "genre_ext": {
+        "capital_before": "45억",
+        "capital_after": "50억",
+        "capital_delta": "+5억",
+        "profit_loss": "+5억 (확정)",
+        "method": "포지션 정리, 현금화",
+        "investment_type": "원자재 선물 (골드) 익절",
+        "deal_type": "전량 청산",
+        "leverage_used": [],
+        "opponent": {
+          "name": "없음",
+          "type": "해당 없음",
+          "weakness_exploited": "해당 없음"
+        },
+        "historical_event": null,
+        "time_pressure": "없음. 정리 단계.",
+        "knowledge_used": "2007년 코스피 2000 돌파 예정, 2008년 리먼 쇼크 예정",
+        "risk_level": "저위험",
+        "business_sector": "정리/준비",
+        "yearly_summary": {
+          "start_capital": "20억",
+          "end_capital": "50억",
+          "return_rate": "+150%",
+          "key_trades": ["WTI 원유 롱", "골드 롱"]
+        }
+      },
+
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": {
+          "info_used": "2007년 코스피 2000, 2008년 리먼 쇼크",
+          "accuracy": "정확",
+          "source": "전생 기억"
+        },
+        "butterfly_effect": {
+          "original_event": "한시우는 한량으로 가족 모임에 참석",
+          "changed_event": "사업가로 참석. 하지만 정체는 숨김",
+          "ripple_effect": "가족의 미묘한 반응 변화. 아직 큰 영향 없음"
+        },
+        "death_flag": {
+          "avoided": null,
+          "method": null
+        },
+        "regression_hint": {
+          "slip_up": "어머니가 '애가 눈빛이 달라졌다'고 재차 언급",
+          "suspicion_from": "어머니 (걱정 수준)"
+        },
+        "future_prep": {
+          "action": "2007년 한국 주식 단기 롱 준비, CDS 거래 루트 확보 시작",
+          "target_event": "2007년 코스피 2000, 2008년 리먼 쇼크"
+        }
+      }
+    },
+
+    {
+      "block_id": "Block 6",
+      "title": "코스피의 봄",
+
+      "content": {
+        "context": "2007년 1월. 새해가 밝았다. 코스피 1400대. 외국인 자금 유입, 조선/철강/건설 호황. 한시우는 안다. 10월에 코스피 2000을 찍는다. 그리고 2008년에 박살난다. 지금은 마지막 불꽃을 태울 시간이다.",
+        "event_villain": "한시우가 조선주와 철강주에 집중 매수를 지시하자, 박성호가 난색을 표한다. '고객님, 조선주는 이미 많이 올랐습니다. PER이...' 한시우가 말을 끊는다. '분석 됐어. 현대중공업, 포스코, 대우조선 30억 넣어.' 박성호는 더 이상 반박하지 않는다. 이 사람 말은 맞으니까.",
+        "solution": "3월까지 30억 투입 완료. 현대중공업 15억, 포스코 10억, 대우조선 5억. 코스피 1700 돌파. 조선주 급등. 현대중공업 +40%. 포트폴리오 70억 돌파.",
+        "reward": "주변에서 '더 간다'고 한다. 언론은 '코스피 3000 간다' 기사를 쏟아낸다. 한시우는 고개를 젓는다. '1800에서 나간다. 고점 근처야.' 박성호가 묻는다. '정말요? 다들 더 간다는데...' 한시우는 대답하지 않는다."
+      },
+
+      "stakes": "30억 투입. 잘못되면 절반 날린다. 하지만 한시우는 고점 타이밍까지 안다. 진짜 리스크는 '너무 일찍 팔아서' 수익을 놓치는 것.",
+
+      "power_shift": {
+        "protagonist": "원자재에서 한국 주식으로 영역 확장. 멀티 플레이어로 진화.",
+        "antagonist": "시장 여론. 모두가 '더 간다'고 할 때 빠지는 건 쉽지 않다."
+      },
+
+      "relationship_delta": [
+        {
+          "target": "박성호 (담당 PB)",
+          "before": "절대 신뢰",
+          "after": "맹목적 추종. 이제 한시우가 뭘 해도 따른다"
+        }
+      ],
+
+      "foreshadow": [
+        "뉴스: '서브프라임 모기지 부실 우려' - 본격 복선",
+        "한시우 독백: '뉴센추리... 4월에 터지지' - Block 7 복선",
+        "한시우가 골드만삭스 아시아 데스크 연락처를 확보하기 시작 - CDS 루트 복선"
+      ],
+
+      "callback": [
+        "Block 5에서 '2007년 코스피 2000'을 언급한 것의 실행"
+      ],
+
+      "emotional_beat": {
+        "type": "build_up",
+        "intensity": 7
+      },
+
+      "tension_level": 6,
+
+      "pov_character": "한시우",
+
+      "location": {
+        "place": "서울 여의도 / SW인베스트먼트 오피스",
+        "type": "실내"
+      },
+
+      "time_span": {
+        "duration": "3개월",
+        "in_story_time": "2007년 1월 ~ 3월"
+      },
+
+      "genre_ext": {
+        "capital_before": "50억",
+        "capital_after": "70억",
+        "capital_delta": "+20억",
+        "profit_loss": "+20억 (미실현)",
+        "method": "단기 롱",
+        "investment_type": "한국 주식",
+        "stocks": ["현대중공업 15억", "포스코 10억", "대우조선 5억"],
+        "deal_type": "시장 매수",
+        "leverage_used": [
+          "회귀 지식 (코스피 2000)",
+          "섹터 집중 (조선/철강)"
+        ],
+        "opponent": {
+          "name": "시장 컨센서스",
+          "type": "동조 압박",
+          "weakness_exploited": "모두가 '더 간다'고 할 때의 광기"
+        },
+        "historical_event": {
+          "name": "2007년 코스피 랠리",
+          "year": 2007,
+          "month": "1~3월",
+          "how_exploited": "조선/철강 호황기에 섹터 집중 롱"
+        },
+        "time_pressure": "1800선 도달 전에 매수 완료해야 함",
+        "knowledge_used": "코스피 2000 고점, 이후 폭락",
+        "risk_level": "중위험",
+        "business_sector": "조선/철강"
+      },
+
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": {
+          "info_used": "2007년 코스피 2000 → 2008년 폭락",
+          "accuracy": "정확",
+          "source": "전생 기억"
+        },
+        "butterfly_effect": {
+          "original_event": "코스피 랠리는 정상 진행",
+          "changed_event": "한시우의 30억은 시장에 영향 없음",
+          "ripple_effect": "없음"
+        },
+        "death_flag": {
+          "avoided": null,
+          "method": null
+        },
+        "regression_hint": {
+          "slip_up": "'뉴센추리'라는 회사명을 흘림. 한국에서는 알려지지 않은 미국 서브프라임 업체.",
+          "suspicion_from": "없음 (혼잣말)"
+        },
+        "future_prep": {
+          "action": "주식 홀딩, CDS 거래 루트 확보, 미국 파생상품 시장 연구",
+          "target_event": "4월 뉴센추리 파산, 서브프라임 첫 신호"
+        }
+      }
+    },
+
+    {
+      "block_id": "Block 7",
+      "title": "미국의 그림자",
+
+      "content": {
+        "context": "2007년 4월. 뉴센추리 파이낸셜 파산. 미국 서브프라임 모기지 전문 대출업체. 시장은 '개별 이슈'로 치부한다. '대마불사'라며 무시한다. 한시우는 안다. 이게 시작이다. 한시우가 직접 홍콩으로 날아간다. 첫 해외 출장. IFC 빌딩의 56층, 빅토리아 하버가 내려다보이는 미팅룸. 창 밖으로 페리가 지나가고, 구룡반도의 스카이라인이 펼쳐진다. 서울과는 다른 공기. 돈의 냄새가 더 진하다.",
+        "event_villain": "한시우가 골드만삭스 아시아 데스크를 직접 찾아간다. 미팅룸 문이 열리고 마이클 첸이 나타난다. 30대 초반의 홍콩계 미국인. 스탠퍼드 MBA 출신. 깔끔한 슬림핏 슈트에 비웃는 눈빛. 악수를 건네며 말한다. '한국에서 온 분이 직접 오셨네? 보통은 전화로 하는데.' 그의 책상 뒤에 '2006 Top 10 Asian Derivative Desk' 상패가 놓여 있다. 한시우가 본론을 꺼낸다. '리먼, 베어스턴스, 메릴린치 CDS 거래 가능해?' 마이클이 웃는다. '파산에 베팅하시려고요?' 비웃음이 묻어난다.",
+        "solution": "한시우는 담담하게 답한다. '거래 가능한지만 대답해. 돈은 충분해.' 마이클이 진지해진다. '가능합니다. 다만 프리미엄이...' 한시우는 말을 끊는다. '조건 보내. 검토하고 연락하지.' 아직 진입은 안 한다. 타이밍을 저울질한다. 너무 빠르면 프리미엄만 날린다. 미팅 후, 마이클이 엘리베이터까지 배웅한다. '왜 하필 CDS야? 시장이 미쳤다고 보는 거야?' 한시우가 답한다. '미친 건 시장이야. 나는 정상이고.' 마이클이 피식 웃는다. '재밌는 사람이군.'",
+        "reward": "CDS 거래 루트 확보. 이제 미국 금융 시스템 붕괴에 베팅할 준비가 됐다. 한편 한국 주식 포지션은 계속 상승 중. 코스피 1800 돌파. 한시우는 조선주 전량 익절. 30억 → 50억. 순익 20억 확정."
+      },
+
+      "stakes": "아직 CDS에 돈을 넣지 않았으므로 직접 리스크 없음. 다만 타이밍 판단 실패 시 프리미엄 낭비 위험. 한국 주식 익절 타이밍도 중요.",
+
+      "power_shift": {
+        "protagonist": "한국에서 미국으로 시야 확장. 글로벌 매크로 플레이어로 진화 중.",
+        "antagonist": "월가 딜러들. 아시아에서 온 '애송이'를 깔본다."
+      },
+
+      "relationship_delta": [
+        {
+          "target": "골드만삭스 아시아 딜러 (마이클 첸)",
+          "before": "비웃음. '한국인이 뭘 알아'",
+          "after": "약간의 관심. '돈은 있는 모양이군'"
+        }
+      ],
+
+      "foreshadow": [
+        "한시우 독백: '7월에 베어스턴스 헤지펀드가 터져' - Block 8 복선",
+        "뉴스: '서브프라임, 시장 전체에 영향 없을 것' - 아이러니 복선",
+        "마이클 첸이 '당신 같은 사람 처음 봐'라고 말함 - 나중에 한시우에게 굽실거릴 복선"
+      ],
+
+      "callback": [
+        "Block 5에서 '미국 부동산'에 눈을 가늘게 뜬 것의 회수",
+        "Block 6에서 '뉴센추리 4월에 터지지'라고 한 것의 실현"
+      ],
+
+      "emotional_beat": {
+        "type": "anticipation",
+        "intensity": 8
+      },
+
+      "tension_level": 7,
+
+      "pov_character": "한시우",
+
+      "location": {
+        "place": "홍콩 센트럴, 골드만삭스 아시아 본사 / IFC 빌딩 56층 미팅룸",
+        "type": "실내"
+      },
+
+      "time_span": {
+        "duration": "3개월",
+        "in_story_time": "2007년 4월 ~ 6월"
+      },
+
+      "genre_ext": {
+        "capital_before": "70억",
+        "capital_after": "90억",
+        "capital_delta": "+20억 (주식 익절)",
+        "profit_loss": "+20억 (확정)",
+        "method": "주식 익절 + CDS 루트 확보",
+        "investment_type": "한국 주식 정리 / CDS 준비",
+        "deal_type": "전량 청산 (주식) / 루트 확보 (CDS)",
+        "leverage_used": [
+          "회귀 지식 (서브프라임 위기)",
+          "재벌가 네트워크 (해외 딜러 접근)"
+        ],
+        "opponent": {
+          "name": "마이클 첸 (골드만 딜러)",
+          "type": "게이트키퍼",
+          "weakness_exploited": "아시아인에 대한 편견, 하지만 돈 앞에서 열림"
+        },
+        "historical_event": {
+          "name": "뉴센추리 파이낸셜 파산",
+          "year": 2007,
+          "month": "4월",
+          "how_exploited": "서브프라임 위기 시작 신호로 인식, CDS 루트 확보"
+        },
+        "time_pressure": "너무 빨리 CDS 진입하면 프리미엄 낭비",
+        "knowledge_used": "뉴센추리 파산, 베어스턴스 헤지펀드 위기, 리먼 파산",
+        "risk_level": "저위험 (아직 진입 전)",
+        "business_sector": "금융/파생상품",
+        "instruments_studied": ["CDS", "ABX 지수", "풋옵션"]
+      },
+
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": {
+          "info_used": "뉴센추리 파산 → 베어스턴스 헤지펀드 → 리먼 파산 경로",
+          "accuracy": "정확",
+          "source": "전생 기억"
+        },
+        "butterfly_effect": {
+          "original_event": "서브프라임 위기는 정상 진행",
+          "changed_event": "한시우가 CDS 루트 확보",
+          "ripple_effect": "마이클 첸이 '특이한 한국인'으로 기억"
+        },
+        "death_flag": {
+          "avoided": null,
+          "method": null
+        },
+        "regression_hint": {
+          "slip_up": "'베어스턴스 헤지펀드'를 언급. 아직 문제가 터지기 전인데 구체적 이름을 앎.",
+          "suspicion_from": "마이클 첸 (호기심)"
+        },
+        "future_prep": {
+          "action": "CDS 조건 분석, 진입 타이밍 저울질",
+          "target_event": "7월 베어스턴스 헤지펀드 파산"
+        }
+      }
+    },
+
+    {
+      "block_id": "Block 8",
+      "title": "역배팅",
+
+      "content": {
+        "context": "2007년 7월. 베어스턴스 산하 헤지펀드 2개가 파산한다. 서브프라임 모기지 투자로 전액 손실. 시장은 여전히 낙관한다. '개별 펀드 문제다', '대마불사' 믿음. 한시우는 안다. 이제 진입할 때다.",
+        "event_villain": "한시우가 마이클 첸에게 전화한다. '리먼, 베어스턴스, 메릴린치 CDS 30억 어치. S&P500 풋옵션 20억 어치. 처리해.' 마이클이 웃음을 터뜨린다. '한국에서 온 애송이가 미국 금융 시스템이 망한다고 베팅해? 마이클 버리라는 미친 의사 출신 헤지펀드 매니저가 비슷한 짓을 하고 있긴 한데, 월가 전체가 그놈을 비웃고 있어. 역사상 이런 베팅이 성공한 적은 없어.'",
+        "solution": "한시우는 무표정하게 답한다. '버리? 그 친구 똑똑하네.' 마이클이 의아해한다. '아는 사이야?' '아니. 그냥 처리해. 수수료는 네가 원하는 대로 줄게.' 돈 앞에서 마이클은 입을 다문다. 2주 후, CDS 30억 + 풋옵션 20억 포지션 구축 완료. 한시우의 전 재산 90억 중 50억을 미국 금융 시스템 붕괴에 걸었다. 마이클 버리, 존 폴슨, 그리고 한시우. 같은 방향에 선 세 남자. 하지만 한시우만이 결말을 알고 있다. 거래 체결 후, 마이클이 말한다. '한잔 사야겠는데. 미친 짓을 하는 사람한테는 술을 사는 게 예의니까.' 란콰이퐁 루프탑 바. 홍콩의 야경 아래에서 두 남자가 위스키를 마신다. 마이클이 묻는다. '솔직히, 미국 금융 시스템이 무너진다는 거야? 내가 일하는 회사도?' 한시우가 답한다. '골드만은 살아남아. 걱정 마.' 마이클의 눈이 커진다. '골드만만 살아남는다고?' 한시우가 고개를 돌린다. 말실수다.",
+        "reward": "포지션 진입 완료. 이제 기다린다. 8월에 첫 번째 파도가 온다. BNP 파리바 쇼크. 유럽까지 전염. 그때 첫 수익이 찍힌다."
+      },
+
+      "stakes": "50억. 전 재산의 55%. 틀리면 반토막. 맞으면... 역사에 남을 베팅이 된다.",
+
+      "power_shift": {
+        "protagonist": "전 세계 금융 시스템에 숏 베팅. 포식자의 발톱을 드러냈다.",
+        "antagonist": "마이클 첸과 월가 딜러들. 비웃지만, 곧 무릎 꿇게 된다."
+      },
+
+      "relationship_delta": [
+        {
+          "target": "마이클 첸 (골드만 딜러)",
+          "before": "'돈은 있는 모양이군'",
+          "after": "'미친놈이지만... 흥미로운 남자야. 위스키 취향도 좋고.' 란콰이퐁에서 함께 마신 밤이 관계를 바꿨다."
+        }
+      ],
+
+      "foreshadow": [
+        "마이클의 비웃음 - 나중에 굽신거릴 복선",
+        "한시우 독백: 'BNP 파리바... 8월 9일' - Block 9 복선",
+        "한시우가 '리먼은 구제 안 해줘'라고 중얼거림 - Block 13 리먼 파산 복선"
+      ],
+
+      "callback": [
+        "Block 7에서 CDS 루트를 확보한 것의 실행"
+      ],
+
+      "emotional_beat": {
+        "type": "commitment",
+        "intensity": 9
+      },
+
+      "tension_level": 9,
+
+      "pov_character": "한시우",
+
+      "location": {
+        "place": "홍콩 란콰이퐁, 루프탑 바 / 골드만삭스 아시아 데스크",
+        "type": "실외/실내"
+      },
+
+      "time_span": {
+        "duration": "1개월",
+        "in_story_time": "2007년 7월"
+      },
+
+      "genre_ext": {
+        "capital_before": "90억",
+        "capital_after": "90억 (50억 투입)",
+        "capital_delta": "0 (포지션 구축)",
+        "profit_loss": "0 (미실현)",
+        "method": "파생상품 숏 포지션",
+        "investment_type": "CDS + 풋옵션",
+        "instruments": ["리먼 CDS 10억", "베어스턴스 CDS 10억", "메릴린치 CDS 10억", "S&P500 풋옵션 20억"],
+        "deal_type": "OTC 거래",
+        "leverage_used": [
+          "회귀 지식 (리먼 파산)",
+          "월가의 오만함 역이용",
+          "충분한 자본"
+        ],
+        "opponent": {
+          "name": "마이클 첸 / 월가 컨센서스",
+          "type": "거래 상대방",
+          "weakness_exploited": "대마불사 신앙, 아시아인에 대한 편견"
+        },
+        "historical_event": {
+          "name": "베어스턴스 헤지펀드 파산",
+          "year": 2007,
+          "month": "7월",
+          "how_exploited": "서브프라임 위기 본격화 신호로 판단, 숏 포지션 구축"
+        },
+        "time_pressure": "8월 BNP 파리바 쇼크 전에 포지션 완료해야 함",
+        "knowledge_used": "2007년 8월 BNP 파리바, 2008년 3월 베어스턴스, 9월 리먼 파산",
+        "risk_level": "초고위험",
+        "business_sector": "금융/파생상품"
+      },
+
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": {
+          "info_used": "BNP 파리바 → 베어스턴스 → 리먼 파산 경로",
+          "accuracy": "정확",
+          "source": "전생 기억"
+        },
+        "butterfly_effect": {
+          "original_event": "마이클 빅버리 등 소수만 숏 베팅",
+          "changed_event": "한시우 추가. 50억 규모는 시장에 영향 없음",
+          "ripple_effect": "마이클 첸이 '미친 한국인'으로 기억"
+        },
+        "death_flag": {
+          "avoided": null,
+          "method": null
+        },
+        "regression_hint": {
+          "slip_up": "'BNP 파리바 8월 9일'이라고 정확한 날짜를 말함. 또한 '골드만은 살아남아'라고 구체적으로 언급. 마이클이 기록.",
+          "suspicion_from": "마이클 첸 (기록해둠, 심화)"
+        },
+        "future_prep": {
+          "action": "포지션 홀딩, 시장 모니터링",
+          "target_event": "8월 9일 BNP 파리바 쇼크"
+        }
+      }
+    },
+
+    {
+      "block_id": "Block 9",
+      "title": "BNP 파리바",
+
+      "content": {
+        "context": "2007년 8월 9일. BNP 파리바가 산하 펀드 3개의 환매를 중단한다. 이유: '서브프라임 자산 가치 산정 불가.' 유럽까지 전염됐다. 글로벌 신용시장이 얼어붙는다. 연준이 긴급 유동성을 공급한다. VIX가 급등한다.",
+        "event_villain": "시장이 패닉에 빠진다. 글로벌 증시 급락. 코스피도 5% 폭락. 마이클 첸이 전화한다. 목소리가 떨린다. '한... 미스터 한, 당신 어떻게 알았어? 포지션 지금 엄청난 수익이야...'",
+        "solution": "한시우의 CDS 스프레드가 폭등한다. 베어스턴스 CDS 가치 2배. 풋옵션 가치 3배. 미실현 수익 30억. 마이클이 묻는다. '익절해? 지금 청산하면 30억 순익이야.' 한시우는 거절한다. '이건 리허설이야. 본공연은 내년이지.'",
+        "reward": "미실현 수익 30억 포함 총 자산 120억. 하지만 한시우는 홀딩한다. 이건 시작일 뿐이다. 2008년 리먼 쇼크가 진짜다."
+      },
+
+      "stakes": "익절하면 30억 확정. 홀딩하면... 더 크게 벌거나, 되돌림에 물릴 수 있다. 한시우는 후자를 선택한다.",
+
+      "power_shift": {
+        "protagonist": "예언이 현실이 됐다. 마이클 첸이 경외하기 시작.",
+        "antagonist": "월가의 오만함이 균열을 보인다. '대마불사'가 흔들린다."
+      },
+
+      "relationship_delta": [
+        {
+          "target": "마이클 첸 (골드만 딜러)",
+          "before": "'미친놈이군'",
+          "after": "'이 사람은 뭔가 다르다. 어떻게 알았지?'"
+        }
+      ],
+
+      "foreshadow": [
+        "한시우 발언: '리허설' - 리먼 쇼크가 본게임임을 암시",
+        "뉴스: '연준 긴급 유동성 공급' - 시스템 위기 전조",
+        "마이클: '어떻게 알았어?' - 회귀 의심의 씨앗"
+      ],
+
+      "callback": [
+        "Block 8에서 'BNP 파리바 8월 9일'이라고 한 것의 실현"
+      ],
+
+      "emotional_beat": {
+        "type": "vindication",
+        "intensity": 8
+      },
+
+      "tension_level": 9,
+
+      "pov_character": "한시우",
+
+      "location": {
+        "place": "SW인베스트먼트 오피스",
+        "type": "실내"
+      },
+
+      "time_span": {
+        "duration": "1주",
+        "in_story_time": "2007년 8월"
+      },
+
+      "genre_ext": {
+        "capital_before": "90억",
+        "capital_after": "120억 (미실현 포함)",
+        "capital_delta": "+30억 (미실현)",
+        "profit_loss": "+30억 (미실현)",
+        "method": "홀딩",
+        "investment_type": "CDS + 풋옵션",
+        "deal_type": "홀딩 (익절 거부)",
+        "leverage_used": [
+          "회귀 지식 (이건 리허설)",
+          "홀딩 배짱"
+        ],
+        "opponent": {
+          "name": "시장 패닉",
+          "type": "시장 심리",
+          "weakness_exploited": "패닉 속에서 냉정함 유지"
+        },
+        "historical_event": {
+          "name": "BNP 파리바 쇼크",
+          "year": 2007,
+          "month": "8월 9일",
+          "how_exploited": "CDS 스프레드 폭등 수혜"
+        },
+        "time_pressure": "없음. 홀딩 결정.",
+        "knowledge_used": "이건 시작. 2008년 리먼이 본게임",
+        "risk_level": "고위험 (홀딩 리스크)",
+        "business_sector": "금융/파생상품"
+      },
+
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": {
+          "info_used": "BNP 파리바는 시작, 리먼 파산이 클라이맥스",
+          "accuracy": "정확",
+          "source": "전생 기억"
+        },
+        "butterfly_effect": {
+          "original_event": "BNP 파리바 쇼크는 정상 발생",
+          "changed_event": "한시우가 수혜",
+          "ripple_effect": "마이클 첸이 한시우를 특별하게 인식"
+        },
+        "death_flag": {
+          "avoided": null,
+          "method": null
+        },
+        "regression_hint": {
+          "slip_up": "'리허설'이라는 표현. 미래를 아는 자만이 할 수 있는 발언.",
+          "suspicion_from": "마이클 첸 (심화)"
+        },
+        "future_prep": {
+          "action": "포지션 홀딩, 2008년 대비",
+          "target_event": "2008년 3월 베어스턴스 붕괴"
+        }
+      }
+    },
+
+    {
+      "block_id": "Block 10",
+      "title": "카운트다운",
+
+      "content": {
+        "context": "2007년 9~12월. 연준이 금리 인하를 시작한다. 시장은 '위기 끝났다'며 환호한다. 코스피 2000 돌파. 다우 사상 최고가. 모두가 안도한다. '연준이 구해줄 거야.' 파티는 계속된다.",
+        "event_villain": "주변에서 조언한다. '한 대표, 이제 숏 정리하고 롱으로 가야 하는 거 아니야? 시장 돌아섰잖아.' 마이클 첸도 전화한다. '위기는 지나간 것 같아. 지금 익절하면 30억 확정이야.' 한편, 한태준의 비서가 보고한다. '막내가 해외에서 뭔가 큰 거래를 하고 있습니다. 홍콩 골드만삭스와 OTC 거래를...' 한태준이 눈을 가늘게 뜬다. '금액이?' '확인 중입니다만, 수십억 규모로...' 한태준이 와인잔을 내려놓는다. '그 돈이 어디서 나왔지? 혹시 아버지 돈...?'",
+        "solution": "한시우는 웃는다. '바보들.' 오히려 추가 베팅한다. 풋옵션 20억 추가 매수. VIX 콜옵션 10억 진입. 총 30억 추가 투입. 이제 80억이 숏 포지션에 묶여 있다.",
+        "reward": "2007년 종료. 미실현 수익 포함 150억. 2008년이 온다. 진짜 게임이 시작된다. 한시우는 연말 본가에 들르지 않는다. 바쁘니까. 어머니가 전화한다. '명절에 왜 안 와?' 한시우는 짧게 답한다. '일이 많아요. 내년에 뵐게요.' 내년... 2008년. 세계가 불타는 해."
+      },
+
+      "stakes": "80억이 숏 포지션. 틀리면 전 재산의 대부분을 날린다. 하지만 한시우는 안다. 2008년 3월, 베어스턴스가 먼저 쓰러진다. 그리고 9월 15일, 리먼이 파산한다.",
+
+      "power_shift": {
+        "protagonist": "역배팅 심화. 전 세계가 파티를 즐길 때 혼자 종말을 준비한다.",
+        "antagonist": "시장 전체가 낙관론에 빠져 있다. 이들이 한시우의 수익원이 된다."
+      },
+
+      "relationship_delta": [
+        {
+          "target": "마이클 첸 (골드만 딜러)",
+          "before": "'어떻게 알았지?'",
+          "after": "'이 사람 진짜 미쳤나... 아니면 뭔가 알고 있나'"
+        },
+        {
+          "target": "어머니",
+          "before": "걱정",
+          "after": "서운함. 명절에도 안 온다"
+        },
+        {
+          "target": "한태준 (큰형)",
+          "before": "무관심, 약간의 경멸",
+          "after": "경계. 막내가 뭔가 큰 짓을 하고 있다는 걸 감지. 비서를 시켜 조사 착수."
+        }
+      ],
+
+      "foreshadow": [
+        "한시우 독백: '베어스턴스, 3월' - Block 11 복선",
+        "한시우: '리먼은 구제 안 해. 절대' - Block 13 복선",
+        "뉴스: '2008년 경제 전망 밝아' - 아이러니 복선",
+        "한태준의 비서가 시우의 투자 내역을 조사 중 - Block 15 사설탐정 복선"
+      ],
+
+      "callback": [
+        "Block 9에서 '리허설'이라고 한 것. 본공연을 준비 중."
+      ],
+
+      "emotional_beat": {
+        "type": "calm_before_storm",
+        "intensity": 7
+      },
+
+      "tension_level": 8,
+
+      "pov_character": "한시우",
+
+      "location": {
+        "place": "SW인베스트먼트 오피스",
+        "type": "실내"
+      },
+
+      "time_span": {
+        "duration": "4개월",
+        "in_story_time": "2007년 9월 ~ 12월"
+      },
+
+      "genre_ext": {
+        "capital_before": "120억 (미실현 포함)",
+        "capital_after": "150억 (미실현 포함)",
+        "capital_delta": "+30억",
+        "profit_loss": "+30억 (미실현)",
+        "method": "추가 숏 포지션",
+        "investment_type": "풋옵션 + VIX 콜옵션",
+        "instruments": ["S&P500 풋옵션 추가 20억", "VIX 콜옵션 10억"],
+        "deal_type": "시장 매수",
+        "leverage_used": [
+          "회귀 지식 (2008년 폭락)",
+          "시장의 낙관론 역이용"
+        ],
+        "opponent": {
+          "name": "시장 컨센서스 (낙관론)",
+          "type": "시장 심리",
+          "weakness_exploited": "연준 맹신, 대마불사 신앙"
+        },
+        "historical_event": {
+          "name": "연준 금리 인하, 시장 안도 랠리",
+          "year": 2007,
+          "month": "9~12월",
+          "how_exploited": "모두가 안도할 때 추가 숏 베팅"
+        },
+        "time_pressure": "2008년 전에 포지션 구축 완료",
+        "knowledge_used": "2008년 3월 베어스턴스, 9월 리먼 파산",
+        "risk_level": "초고위험",
+        "business_sector": "금융/파생상품",
+        "yearly_summary": {
+          "start_capital": "50억",
+          "end_capital": "150억 (미실현)",
+          "return_rate": "+200%",
+          "key_trades": ["조선주 롱→익절", "금융주 CDS", "S&P500 풋옵션", "VIX 콜옵션"]
+        }
+      },
+
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": {
+          "info_used": "2008년 3월 베어스턴스, 9월 리먼 파산 확정",
+          "accuracy": "정확",
+          "source": "전생 기억"
+        },
+        "butterfly_effect": {
+          "original_event": "2008년 금융위기는 정상 발생",
+          "changed_event": "한시우가 대규모 숏 포지션 구축",
+          "ripple_effect": "마이클 첸이 한시우를 예의주시"
+        },
+        "death_flag": {
+          "avoided": null,
+          "method": null
+        },
+        "regression_hint": {
+          "slip_up": "'리먼은 구제 안 해. 절대'라고 단언. 아직 리먼이 문제가 아닌데.",
+          "suspicion_from": "마이클 첸 (심각하게 기록)"
+        },
+        "future_prep": {
+          "action": "포지션 홀딩, 2008년 대기",
+          "target_event": "2008년 3월 베어스턴스 붕괴"
+        }
+      }
+    }
+  ],
+
+  "block_summary": {
+    "period": "2006년 1월 ~ 2007년 12월 (2년)",
+    "assets_growth": "20억 → 150억 (7.5배, 미실현 포함)",
+    "key_investments": [
+      "WTI 원유 선물 롱 (이란 핵, MEND 공격)",
+      "골드 선물 롱 (달러 약세)",
+      "한국 조선/철강주 롱→익절 (코스피 2000)",
+      "금융주 CDS (리먼, 베어스턴스, 메릴린치)",
+      "S&P500 풋옵션",
+      "VIX 콜옵션"
+    ],
+    "historical_events_used": [
+      "이란 핵 위기 (2006.02)",
+      "나이지리아 MEND 공격 (2006.04)",
+      "연준 금리 정책 (2006.08)",
+      "뉴센추리 파산 (2007.04)",
+      "베어스턴스 헤지펀드 파산 (2007.07)",
+      "BNP 파리바 쇼크 (2007.08.09)"
+    ],
+    "protagonist_arc": "귀여운 막내 → 독립 투자자 → 글로벌 매크로 플레이어. 2008년 대재앙에 역베팅 완료."
+  }
+}

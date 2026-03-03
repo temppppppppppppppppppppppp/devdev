@@ -1,0 +1,344 @@
+{
+  "_schema_version": "2.0",
+  "_schema_description": "요리물(Cooking) 장르 Bible 샘플 - 범용 템플릿",
+  "_last_updated": "2026-02-07",
+
+  "MasterBible": {
+    "ProjectData": {
+      "MetaInfo": {
+        "title": "요리물 샘플 프로젝트",
+        "grand_objective": "미래의 레시피 지식과 전생의 요리 경험으로 미슐랭 3스타를 되찾고 요식업계 정상에 서는 것",
+        "genre_archetype": "cooking + 회귀물 + 성장극",
+        "logline": "2025년 미슐랭 3스타 셰프였던 주인공이 화재 사고로 미각을 잃고 사망, 2008년 수습생 시절로 회귀한다. 17년치 레시피와 요식업 트렌드를 알고 있는 그가 작은 식당에서부터 다시 정상을 향해 올라간다.",
+        "total_episodes": 200,
+        "episodes_per_arc": 5,
+        "arcs_per_volume": 5
+      },
+      "CoreIdentity": {
+        "protagonist": "백도현",
+        "protagonist_faction": "수습 요리사 (초기) → 도현식당 (중기) → DH다이닝그룹 (후기)",
+        "edge": "2025년까지의 미식 트렌드 지식 + 전생에서 완성한 요리 기법 + 절대미각과 식재료 이해력",
+        "desire": "진정한 요리의 가치 - 전생에서 별점에만 집착했던 자신을 넘어 사람을 감동시키는 요리",
+        "crisis": "회귀 시점에 호텔 주방 수습생, 월급 120만원으로 선배들에게 시달리는 처지"
+      },
+      "CommercialCode": {
+        "cider_point": "미래의 레시피로 심사위원/손님을 압도하는 순간 + 자신을 무시한 셰프들이 경악하는 장면",
+        "success_device": "요리 대회 우승, 미슐랭 별 획득, 라이벌의 인정",
+        "attitude": "능동적 창조자 - 기존 관행을 깨고 새로운 미식의 길을 연다"
+      }
+    },
+
+    "protagonist_config": {
+      "world_origin": "현대인",
+      "incarnation_type": "회귀자",
+      "regression_point": {
+        "death_year": 2025,
+        "death_cause": "레스토랑 화재 사고 (미각 상실 후 화재로 사망)",
+        "return_year": 2008,
+        "return_month": "2008년 6월"
+      }
+    },
+
+    "CookingHUD": {
+      "_description": "요리물 전용 HUD - 요리 실력/레스토랑/평판 상태 추적",
+      "Protagonist": {
+        "actual_truth": {
+          "name": "백도현",
+          "alias": "없음 (초기) → '미각의 귀재' (중기) → '맛의 마에스트로' (후기)",
+          "age": 22,
+          "rank": "수습생 (초기) → 라인 쿡 → 수셰프 → 헤드 셰프 → 오너 셰프",
+
+          "chef_rank": "수습생",
+          "signature_dish": "없음 (초기) → 개발 예정",
+
+          "culinary_techniques": [
+            "기본 칼질 (수습 수준으로 위장)",
+            "프랑스 정통 기법 (전생 지식, 숨기는 중)",
+            "한식 퓨전 (전생에서 미슐랭 받은 장르)"
+          ],
+
+          "recipe_vault": [],
+
+          "food_philosophy": "식재료 본연의 맛을 극대화하되, 먹는 사람의 기억과 감정을 자극하는 요리",
+
+          "restaurant_name": "없음 (호텔 주방 소속)",
+          "restaurant_tier": "해당 없음 (수습생)",
+
+          "reputation_score": 0,
+          "monthly_revenue": "없음 (월급 120만원)",
+          "capital": "85만원 (통장 잔고)",
+          "customer_loyalty": 0,
+
+          "current_objective": "수습생 기간을 빠르게 끝내고 라인 쿡으로 승격",
+          "mid_term_goal": "3년 내 자기 식당 오픈",
+          "final_goal": "미슐랭 3스타 레스토랑 + 요식업 그룹 구축",
+
+          "causal_injuries": "전생의 트라우마 (미각 상실의 공포, 화재 악몽), 별점에만 매달렸던 후회"
+        },
+
+        "public_reputation": {
+          "identity": "호텔 주방의 신입 수습생",
+          "wealth_level": "빈곤층",
+          "perceived_influence": "없음",
+          "credit_rating": "일반"
+        }
+      }
+    },
+
+    "WorldState": {
+      "CurrentEra": "2008년 6월",
+      "CurrentLocation": "서울 강남구 그랜드호텔 주방",
+      "economic_context": {
+        "restaurant_market": "약 80조원 (한국 외식시장)",
+        "michelin_status": "미슐랭 가이드 한국 미진출 (2016년 진출 예정)",
+        "food_trend": "웰빙 열풍, 한식 세계화 초기",
+        "upcoming_events": [
+          {"year": 2009, "event": "한식 세계화 사업 본격화", "impact": "한식 셰프 수요 증가"},
+          {"year": 2012, "event": "쿡방 열풍 시작 (냉장고를 부탁해 등)", "impact": "셰프 = 연예인화"},
+          {"year": 2015, "event": "혼밥 트렌드 확산", "impact": "1인 레스토랑 시장 성장"},
+          {"year": 2016, "event": "미슐랭 가이드 서울판 발간", "impact": "파인다이닝 시장 폭발"},
+          {"year": 2020, "event": "코로나 팬데믹", "impact": "배달/밀키트 시장 급성장"}
+        ]
+      },
+      "KarmaMatrix": {
+        "유진호": {
+          "relation_score": -90,
+          "status": "적대",
+          "note": "전생에서 주인공의 레시피를 훔쳐 자기 레스토랑으로 미슐랭을 받은 셰프. 현재는 호텔 선임 쿡"
+        },
+        "소은비": {
+          "relation_score": 10,
+          "status": "중립",
+          "note": "전생에서 주인공 레스토랑의 파티시에. 현재는 제과제빵 학원생"
+        },
+        "오철수": {
+          "relation_score": 50,
+          "status": "우호",
+          "note": "호텔 주방 동기 수습생. 솔직하고 의리 있는 성격. 주인공의 첫 동료 후보"
+        },
+        "강총주방장 (그랜드호텔)": {
+          "relation_score": -20,
+          "status": "경계",
+          "note": "호텔 총주방장. 엄격한 위계질서를 중시하며 수습생을 인간 이하로 취급"
+        },
+        "박기자 (미식 칼럼니스트)": {
+          "relation_score": 0,
+          "status": "중립",
+          "note": "미식 전문 칼럼니스트. 무명 셰프를 발굴하는 안목이 있는 인물"
+        }
+      }
+    },
+
+    "AssetLibrary": {
+      "KeyNPCs": [
+        {
+          "name": "유진호",
+          "role": "메인 빌런",
+          "desc": "전생에서 주인공의 시그니처 레시피를 훔쳐 자기 이름으로 발표하고 미슐랭 2스타를 받은 인물. 현재 시점에서는 호텔 선임 쿡으로, 실력은 있지만 창의성이 부족하여 남의 아이디어를 탐내는 성격.",
+          "NPC_Chef_HUD": {
+            "chef_rank": "선임 라인 쿡",
+            "restaurant": "그랜드호텔 양식당",
+            "culinary_style": "프랑스 정통 요리",
+            "role_in_kitchen": "소스 파트 담당",
+            "current_status": "활동중"
+          }
+        },
+        {
+          "name": "소은비",
+          "role": "히로인/동료",
+          "desc": "전생에서 주인공의 레스토랑 디저트를 담당했던 천재 파티시에. 현재는 제과제빵 학원생으로 자신의 재능을 아직 모르고 있다. 주인공이 다시 만나 키워야 할 인재.",
+          "NPC_Chef_HUD": {
+            "chef_rank": "학원생 (비전문)",
+            "restaurant": "없음",
+            "culinary_style": "디저트, 제과제빵",
+            "role_in_kitchen": "해당 없음",
+            "current_status": "활동중"
+          }
+        },
+        {
+          "name": "오철수",
+          "role": "조력자",
+          "desc": "호텔 주방 동기 수습생. 요리에 대한 열정은 넘치지만 기본기가 부족하다. 의리가 있고 솔직해서 주인공의 든든한 동료가 된다.",
+          "NPC_Chef_HUD": {
+            "chef_rank": "수습생",
+            "restaurant": "그랜드호텔 양식당",
+            "culinary_style": "한식 기반 (아직 미숙)",
+            "role_in_kitchen": "잡일/재료 손질",
+            "current_status": "활동중"
+          }
+        },
+        {
+          "name": "강총주방장",
+          "role": "중립→적대",
+          "desc": "그랜드호텔 총주방장. 30년 경력의 베테랑으로 엄격한 위계질서를 신봉한다. 수습생이 자기보다 뛰어난 실력을 보이면 위협으로 느끼는 인물. 전생에서도 주인공의 성장을 방해했다.",
+          "NPC_Chef_HUD": {
+            "chef_rank": "총주방장 (Executive Chef)",
+            "restaurant": "그랜드호텔",
+            "culinary_style": "프랑스 정통 + 호텔 연회 요리",
+            "role_in_kitchen": "주방 총괄",
+            "current_status": "활동중"
+          }
+        },
+        {
+          "name": "박기자",
+          "role": "조력자 후보",
+          "desc": "미식 전문 칼럼니스트. '서울의 맛'이라는 인기 블로그를 운영하며 무명 셰프를 발굴하는 안목이 있다. 주인공의 요리를 처음으로 세상에 알릴 인물.",
+          "NPC_Chef_HUD": {
+            "chef_rank": "해당 없음 (비요리인)",
+            "restaurant": "해당 없음",
+            "culinary_style": "미식 평론 전문",
+            "role_in_kitchen": "해당 없음",
+            "current_status": "활동중"
+          }
+        }
+      ],
+
+      "KeyItems": [
+        {
+          "item": "할머니의 레시피 수첩",
+          "desc": "돌아가신 할머니가 남긴 한식 레시피 수첩. 여기에 전생의 미래 레시피를 추가로 기록한다. 주인공의 가장 중요한 자산이자 비밀."
+        },
+        {
+          "item": "칼 세트 (글로벌 입문용)",
+          "desc": "수습생 시절 월급 모아 산 저렴한 칼 세트. 나중에 장인의 칼로 업그레이드될 때 성장의 상징."
+        },
+        {
+          "item": "아버지의 포장마차 간판",
+          "desc": "아버지가 운영하다 실패한 포장마차의 간판. 요리를 시작한 원점이자, 다시 일어서겠다는 의지의 상징."
+        }
+      ],
+
+      "KeyLocations": [
+        {
+          "name": "그랜드호텔 주방",
+          "desc": "주인공의 현재 직장. 엄격한 위계질서 속에서 수습생으로 시작하는 곳."
+        },
+        {
+          "name": "노량진 수산시장",
+          "desc": "최고의 해산물을 구할 수 있는 곳. 주인공이 새벽마다 식재료를 공부하러 가는 장소."
+        },
+        {
+          "name": "을지로 골목 (도현식당 예정지)",
+          "desc": "주인공이 자기 식당을 열게 될 장소. 현재는 비어 있는 작은 가게."
+        },
+        {
+          "name": "신라호텔 다이닝룸",
+          "desc": "대회와 행사가 열리는 요식업계의 성지. 미슐랭 셰프들이 모이는 곳."
+        }
+      ],
+
+      "Persona": "겸손한 수습생의 껍데기 속에 미슐랭 3스타 셰프의 영혼을 숨긴 요리인. 식재료 앞에서만 진지해지는 과묵한 성격.",
+      "SpeechStyle": {
+        "tone": "과묵하고 절제된 어투, 요리와 식재료 이야기할 때만 눈빛이 변함",
+        "vocabulary": "요리 전문 용어 + 식재료 지식 + 현대 구어체",
+        "inner_monologue": "전생 회상 + 레시피 분석 + 미각적 묘사 (맛의 조합, 식감, 향)"
+      }
+    },
+
+    "Seeds": [
+      {
+        "id": "S-001",
+        "category": "인물",
+        "description": "소은비의 숨겨진 재능 - 학원 과제에서 독창적인 디저트를 만들었다는 언급",
+        "status": "active",
+        "planted_ep": 1,
+        "target_harvest_ep": 30,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-002",
+        "category": "사건",
+        "description": "2016년 미슐랭 가이드 서울판 - 주인공이 그때를 대비하고 있다는 암시",
+        "status": "active",
+        "planted_ep": 5,
+        "target_harvest_ep": 100,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-003",
+        "category": "인물",
+        "description": "유진호의 접근 - 주인공의 요리를 보고 관심을 보이는 복선",
+        "status": "active",
+        "planted_ep": 3,
+        "target_harvest_ep": 15,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-004",
+        "category": "아이템",
+        "description": "할머니의 레시피 수첩의 비밀 - 누군가 수첩을 보게 될 위기",
+        "status": "active",
+        "planted_ep": 2,
+        "target_harvest_ep": 45,
+        "echo_count": 0,
+        "harvested_ep": null
+      }
+    ],
+
+    "HistoricalEvents": {
+      "_description": "요리물에서 활용 가능한 실제 요식업 이벤트 DB",
+      "events": [
+        {
+          "month": "2008-09",
+          "event": "글로벌 금융위기로 외식시장 위축",
+          "impact": "고급 레스토랑 타격, 소규모 식당 기회"
+        },
+        {
+          "month": "2009-05",
+          "event": "한식 세계화 사업 출범",
+          "impact": "한식 셰프 해외 파견, 한식 퓨전 트렌드"
+        },
+        {
+          "month": "2012-01",
+          "event": "쿡방(요리 예능) 시대 시작",
+          "impact": "셰프의 연예인화, 셰프 브랜드 가치 상승"
+        },
+        {
+          "month": "2014-06",
+          "event": "혼밥 트렌드 확산",
+          "impact": "1인 외식 시장 급성장"
+        },
+        {
+          "month": "2016-11",
+          "event": "미슐랭 가이드 서울판 첫 발간",
+          "impact": "파인다이닝 시장 폭발, 별 경쟁 시작"
+        },
+        {
+          "month": "2020-03",
+          "event": "코로나19 팬데믹",
+          "impact": "배달/밀키트 시장 급성장, 오프라인 외식 위축"
+        },
+        {
+          "month": "2022-06",
+          "event": "식재료 원가 폭등",
+          "impact": "외식 물가 상승, 경영난 심화"
+        }
+      ]
+    },
+
+    "GenreRules": {
+      "_description": "요리물 장르 규칙 및 제약",
+      "must_include": [
+        "요리 과정이 구체적으로 묘사되어야 함 (식재료, 기법, 맛의 변화)",
+        "식재료와 요리 기법은 현실적이어야 함 (판타지 재료 X)",
+        "레스토랑 경영(매출, 원가, 인건비)이 현실적으로 다뤄져야 함",
+        "요리 대결에는 명확한 판정 기준이 있어야 함"
+      ],
+      "forbidden": [
+        "비현실적 요리 묘사 (먹으면 빛이 나는 등 과도한 연출)",
+        "식재료/위생 상식에 어긋나는 전개",
+        "경영 수치가 비현실적 (포장마차가 월 수억 매출 등)"
+      ],
+      "tension_devices": [
+        "요리 대결 패배 위기",
+        "미래 레시피와 유사한 요리가 먼저 나올 뻔한 순간",
+        "식재료 수급 위기 (핵심 재료 품절/가격 폭등)",
+        "레시피 도용/표절 시비",
+        "미각 이상 징후 (전생 트라우마 재발)"
+      ]
+    }
+  }
+}

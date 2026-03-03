@@ -1,0 +1,282 @@
+{
+  "_schema_version": "2.0",
+  "_project_codename": "골든루트",
+  "_last_updated": "2026-02-06",
+
+  "work_name": "골든 루트 (가제)",
+  "genre": "investment",
+  "block_range": "1-10",
+
+  "treatments": [
+    {
+      "block_id": "Block 1",
+      "title": "회귀, 그리고 선언",
+      "period": "2006년 1월",
+      "assets_start": "0",
+      "assets_end": "20억",
+
+      "content": {
+        "context": "2024년, 비참하게 죽었다. 재벌가 막내로 태어나 귀여움만 받으며 한량으로 살았다. 형들이 싸우다 그룹이 망했고, 귀염받던 막내는 찬밥이 됐다. 이혼, 사업 실패, 고독사. 눈을 떠보니 2006년. 승마 국가대표 은퇴 직후, 26살의 자신이다.",
+        "event_trigger": "아버지가 서재로 부른다. '막내야, 이제 뭐 할 거냐?' 전생에서는 '천천히 생각해볼게요'라고 얼버무렸다.",
+        "turning_point": "이번엔 다르다. '사업 하겠습니다. 투자사 차릴 겁니다.' 아버지가 의아해하지만 반대하지 않는다. 어차피 기대도 없으니까.",
+        "setup": "개인 자산 정리. 할아버지 용돈, 스폰서 수익, 신탁 일부. 합쳐서 20억. 법인 설립 준비."
+      },
+
+      "genre_ext": {
+        "capital_before": "0",
+        "capital_after": "20억",
+        "investment_type": "준비 단계"
+      },
+
+      "foreshadow": ["유가 상승세 뉴스 - Block 2 복선", "형들 후계 경쟁 - 그룹 붕괴 원거리 복선"]
+    },
+
+    {
+      "block_id": "Block 2",
+      "title": "검은 황금",
+      "period": "2006년 2월",
+      "assets_start": "20억",
+      "assets_end": "20억 (투입)",
+
+      "content": {
+        "context": "법인 설립 완료. 해외 선물 계좌 개설. 첫 타겟은 원유. 2006년 WTI 60달러대. 이란 핵 위기로 80달러까지 간다.",
+        "event_villain": "증권사 PB가 '원유 선물은 변동성이...'라며 말린다. 주인공을 만만하게 본다.",
+        "solution": "'3배 레버리지. WTI 6월물. 15억 넣어.' 돈 앞에서 PB는 입을 다문다.",
+        "reward": "2월 말, 이란 핵 뉴스 터지며 유가 상승 시작."
+      },
+
+      "genre_ext": {
+        "capital_before": "20억",
+        "capital_after": "20억 (15억 투입)",
+        "investment_type": "WTI 원유 선물",
+        "method": "3배 레버리지 롱",
+        "historical_event": "이란 핵 위기"
+      },
+
+      "foreshadow": ["이란 핵 농축 재개 - 유가 상승 촉매"]
+    },
+
+    {
+      "block_id": "Block 3",
+      "title": "중동의 불씨",
+      "period": "2006년 3월~4월",
+      "assets_start": "20억",
+      "assets_end": "30억",
+
+      "content": {
+        "context": "이란 핵 위기 격화. 나이지리아 MEND의 송유관 공격. 유가 70달러 돌파.",
+        "event_tension": "유가 72달러에서 횡보. PB가 '익절하시죠?' 주인공은 거절. '아직이야.'",
+        "climax": "4월, 나이지리아 추가 공격. 유가 75달러 돌파. 절반 익절. 5억 수익 확정.",
+        "aftermath": "나머지 홀딩. '80까지 간다.' 첫 수익이지만 감흥 없다."
+      },
+
+      "genre_ext": {
+        "capital_before": "20억",
+        "capital_after": "30억",
+        "capital_delta": "+10억",
+        "investment_type": "WTI 원유 선물",
+        "method": "부분 익절",
+        "historical_event": "나이지리아 MEND 공격"
+      },
+
+      "foreshadow": ["금 가격 상승세 - Block 4 복선"]
+    },
+
+    {
+      "block_id": "Block 4",
+      "title": "금의 귀환",
+      "period": "2006년 5월~8월",
+      "assets_start": "35억",
+      "assets_end": "45억",
+
+      "content": {
+        "context": "원유 나머지 78달러 정리. 총 35억. 다음 타겟 금. 온스당 600달러대 → 700달러 예측.",
+        "event_villain": "금 시장은 느리다. 두 달 횡보. '금은 죽은 자산' 소리. 주인공은 무시.",
+        "solution": "8월, 연준 금리 인상 중단 시사. 달러 약세. 금 620→680달러. 절반 익절.",
+        "reward": "금 포지션으로 10억 추가. 총 45억."
+      },
+
+      "genre_ext": {
+        "capital_before": "35억",
+        "capital_after": "45억",
+        "capital_delta": "+10억",
+        "investment_type": "골드 선물",
+        "historical_event": "연준 금리 인상 중단"
+      },
+
+      "foreshadow": ["미국 서브프라임 연체율 상승 뉴스 - 장기 복선"]
+    },
+
+    {
+      "block_id": "Block 5",
+      "title": "첫 번째 졸업",
+      "period": "2006년 9월~12월",
+      "assets_start": "45억",
+      "assets_end": "50억",
+
+      "content": {
+        "context": "금 나머지 700달러 정리. 연말 총 50억. 1년 만에 2.5배.",
+        "event_reflection": "연말 결산. 감흥 없다. '50억... 이건 시작도 아니야.' 머릿속엔 2008년 리먼.",
+        "setup_next": "2007년 계획: 한국 주식 단기 롱, 미국 서브프라임 분석, 숏 포지션 루트 확보.",
+        "family_scene": "연말 가족 모임. 형들 후계 경쟁 중. '사업 잘 되냐?' '그럭저럭요.' 구체적 숫자는 안 말함."
+      },
+
+      "genre_ext": {
+        "capital_before": "45억",
+        "capital_after": "50억",
+        "yearly_return": "+150%",
+        "investment_type": "포지션 정리"
+      },
+
+      "foreshadow": ["형들 '그룹 지분 구조 바꿔야 해' - 그룹 붕괴 복선", "2007년 코스피 2000 언급"]
+    },
+
+    {
+      "block_id": "Block 6",
+      "title": "코스피의 봄",
+      "period": "2007년 1월~3월",
+      "assets_start": "50억",
+      "assets_end": "70억",
+
+      "content": {
+        "context": "2007년 시작. 코스피 1400대. 외국인 자금 유입, 조선/철강 호황. 2000까지 간다는 걸 안다.",
+        "event_setup": "단기 롱 전략. 현대중공업, 포스코 집중 매수. 30억 투입.",
+        "climax": "코스피 1700 돌파. 조선주 급등. 현대중공업 +40%.",
+        "exit": "1800선에서 전량 매도. '고점 근처다.' 주변은 '더 간다'며 비웃음."
+      },
+
+      "genre_ext": {
+        "capital_before": "50억",
+        "capital_after": "70억",
+        "capital_delta": "+20억",
+        "investment_type": "한국 주식",
+        "stocks": ["현대중공업", "포스코"],
+        "method": "단기 롱 → 고점 탈출"
+      },
+
+      "foreshadow": ["뉴스: '서브프라임 모기지 부실 우려' - 본격 복선"]
+    },
+
+    {
+      "block_id": "Block 7",
+      "title": "미국의 그림자",
+      "period": "2007년 4월~6월",
+      "assets_start": "70억",
+      "assets_end": "70억",
+
+      "content": {
+        "context": "4월, 뉴센추리 파이낸셜 파산. 서브프라임 모기지 전문 업체. 시장은 '개별 이슈'로 치부. 주인공은 안다. 이게 시작이다.",
+        "research": "미국 부동산 시장 분석. MBS, CDO, CDS 구조 파악. ABX 지수 추적.",
+        "setup": "골드만삭스 아시아 데스크 접촉. CDS 매수 루트 확보. '리먼, 베어스턴스, 메릴린치 CDS 살 수 있어?'",
+        "preparation": "아직 진입 안 함. 타이밍 저울질. 너무 빠르면 프리미엄만 날린다."
+      },
+
+      "genre_ext": {
+        "capital_before": "70억",
+        "capital_after": "70억",
+        "capital_delta": "0 (준비 단계)",
+        "investment_type": "리서치/루트 확보",
+        "instruments_studied": ["CDS", "ABX 지수", "풋옵션"]
+      },
+
+      "foreshadow": ["뉴센추리 파산 - 서브프라임 첫 신호"]
+    },
+
+    {
+      "block_id": "Block 8",
+      "title": "역배팅",
+      "period": "2007년 7월",
+      "assets_start": "70억",
+      "assets_end": "70억 (50억 투입)",
+
+      "content": {
+        "context": "7월, 베어스턴스 산하 헤지펀드 2개 파산. 시장은 여전히 낙관. '대마불사' 믿음.",
+        "decision": "주인공은 진입을 결정한다. 리먼, 베어스턴스, 메릴린치 CDS 30억 매수. S&P500 풋옵션 20억.",
+        "reaction": "월가 딜러가 웃는다. '한국에서 온 애송이가 미국 금융 망한다고 베팅?' 주인공은 무표정. '그냥 처리해.'",
+        "holding": "포지션 진입 완료. 이제 기다린다."
+      },
+
+      "genre_ext": {
+        "capital_before": "70억",
+        "capital_after": "70억 (50억 투입)",
+        "investment_type": "파생상품",
+        "instruments": ["금융주 CDS 30억", "S&P500 풋옵션 20억"],
+        "method": "숏 포지션 구축"
+      },
+
+      "foreshadow": ["딜러의 비웃음 - 나중에 굽신거릴 복선"]
+    },
+
+    {
+      "block_id": "Block 9",
+      "title": "BNP 파리바",
+      "period": "2007년 8월",
+      "assets_start": "70억",
+      "assets_end": "100억",
+
+      "content": {
+        "context": "8월 9일, BNP 파리바 산하 펀드 3개 환매 중단. '서브프라임 자산 가치 산정 불가.' 유럽까지 전염.",
+        "market_reaction": "글로벌 증시 급락. 연준 긴급 유동성 공급. VIX 급등.",
+        "profit": "주인공의 CDS 스프레드 확대. 풋옵션 가치 상승. 미실현 수익 +30억.",
+        "decision": "익절? 아니다. '이건 리허설이야. 본공연은 내년이지.' 홀딩."
+      },
+
+      "genre_ext": {
+        "capital_before": "70억",
+        "capital_after": "100억 (미실현 포함)",
+        "capital_delta": "+30억 (미실현)",
+        "investment_type": "CDS, 풋옵션",
+        "historical_event": "BNP 파리바 쇼크"
+      },
+
+      "foreshadow": ["연준 긴급 유동성 - 시스템 위기 전조"]
+    },
+
+    {
+      "block_id": "Block 10",
+      "title": "카운트다운",
+      "period": "2007년 9월~12월",
+      "assets_start": "100억",
+      "assets_end": "150억",
+
+      "content": {
+        "context": "9월, 연준 금리 인하 시작. 시장은 '위기 끝났다' 환호. 코스피 2000 돌파.",
+        "market_mood": "모두가 안도한다. '연준이 구해줄 거야.' 파티는 계속된다.",
+        "protagonist_action": "주인공은 웃는다. '바보들.' 추가 풋옵션 매수. VIX 콜옵션 진입. 30억 추가 투입.",
+        "year_end": "2007년 종료. 미실현 수익 포함 150억. 2008년이 온다. 진짜 게임이 시작된다."
+      },
+
+      "genre_ext": {
+        "capital_before": "100억",
+        "capital_after": "150억",
+        "capital_delta": "+50억",
+        "investment_type": "추가 숏 포지션",
+        "instruments": ["추가 풋옵션", "VIX 콜옵션"],
+        "method": "위기 전 마지막 베팅"
+      },
+
+      "foreshadow": ["2008년 1월 - 베어스턴스 위기설 복선"]
+    }
+  ],
+
+  "block_summary": {
+    "period": "2006년 1월 ~ 2007년 12월 (2년)",
+    "assets_growth": "20억 → 150억 (7.5배)",
+    "key_investments": [
+      "WTI 원유 선물 (이란 핵 위기)",
+      "골드 선물 (달러 약세)",
+      "한국 주식 (코스피 버블)",
+      "금융주 CDS (서브프라임 숏)",
+      "S&P500 풋옵션",
+      "VIX 콜옵션"
+    ],
+    "historical_events_used": [
+      "이란 핵 위기 (2006)",
+      "나이지리아 MEND 공격 (2006)",
+      "연준 금리 정책 (2006-2007)",
+      "뉴센추리 파산 (2007.04)",
+      "베어스턴스 헤지펀드 파산 (2007.07)",
+      "BNP 파리바 쇼크 (2007.08)"
+    ]
+  }
+}

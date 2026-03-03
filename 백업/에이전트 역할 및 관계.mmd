@@ -1,0 +1,18 @@
+flowchart LR
+      subgraph 에이전트팀["🎬 AI 에이전트 팀"]
+          AN["👔 Analyst<br/><b>기획 팀장</b><br/>전체 스토리 구조 설계"]
+          AR["📐 Architect<br/><b>장면 감독</b><br/>에피소드별 장면 배치"]
+          WR["✍️ Writer<br/><b>작가</b><br/>실제 소설 집필"]
+          DR["👨‍⚖️ Director<br/><b>편집장</b><br/>품질 검수 및 승인"]
+      end
+
+      AN -->|전략 전달| AR
+      AR -->|장면 설계도| WR
+      WR -->|원고 제출| DR
+      DR -->|피드백| WR
+      DR -->|심각한 오류시<br/>아크 수정 요청| AN
+
+      style AN fill:#4fc3f7,color:#000
+      style AR fill:#81c784,color:#000
+      style WR fill:#ffb74d,color:#000
+      style DR fill:#f06292,color:#000

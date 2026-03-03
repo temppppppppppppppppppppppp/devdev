@@ -1,0 +1,298 @@
+{
+  "work_name": "재벌물 (가제)",
+  "genre": "investment",
+  "author": "Claude Opus 4.5",
+  "created_at": "2026-02-05",
+  "block_range": "51-55",
+  "description": "AI 시대 & 엔딩편 - ChatGPT부터 모히토까지",
+  "treatments": [
+    {
+      "block_id": "Block 51",
+      "title": "ChatGPT",
+      "content": {
+        "context": "2023년 초. 세상이 뒤집어졌다. OpenAI의 ChatGPT가 공개 두 달 만에 1억 명 사용자를 돌파했다. AI가 시를 쓰고, 코드를 짜고, 논문을 요약한다. '인간의 일자리가 사라진다', 'AI가 인류를 멸망시킨다'는 공포와 열광이 동시에 퍼진다. 한시우는 7년 전 알파고 때를 떠올린다. '드디어 왔군.'",
+        "event_villain": "AI 골드러시가 시작됐다. 모든 기업이 'AI'를 외친다. 주가가 출렁인다. 하지만 진짜 수혜자가 누군지 아는 사람은 드물다. 대부분은 OpenAI, 마이크로소프트에만 주목한다. 한시우는 다른 곳을 본다.",
+        "solution": "한시우는 AI의 '곡괭이'에 집중한다. 엔비디아 추가 대량 매입. 2016년 알파고 때 $30대에 산 주식이 이제 $200을 넘어 $500을 향해 간다. 동시에 AI 인프라(데이터센터, 전력, 냉각)에 투자. 젠슨 황을 직접 만나 '당신이 AI 시대의 왕입니다'라고 말한다.",
+        "reward": "엔비디아가 2024년 $900을 돌파하며 시총 2조 달러 돌파. 한시우의 엔비디아 지분 가치만 수백억 달러. AI 인프라 투자도 폭발적 성장. 7년 전 알파고 베팅이 역사적 결실을 맺는다."
+      },
+      "stakes": "AI 버블이 꺼지면 엔비디아도 폭락. 하지만 한시우는 AI가 진짜라는 것을 안다.",
+      "power_shift": {
+        "protagonist": "AI 시대의 최대 수혜자 중 하나. '미래를 산 남자'의 완성형.",
+        "antagonist": "AI에 뒤처진 기업들, 구세대 기술주."
+      },
+      "relationship_delta": [
+        { "target": "젠슨 황", "before": "대형 주주", "after": "직접 만나 파트너십 구축. 'AI 시대의 동반자'." }
+      ],
+      "foreshadow": [
+        "한시우가 'AI가 10년 안에 의사, 변호사, 작가의 일을 대체합니다.'라고 예언.",
+        "젠슨 황에게 '송경그룹도 AI 전환해야 합니다. 도와주세요.'라고 협력 제안."
+      ],
+      "callback": [
+        "Block 33에서 알파고 때 엔비디아에 투자한 것이 7년 만에 폭발.",
+        "Block 50에서 AI 스타트업에 투자한 것이 ChatGPT 붐으로 연결."
+      ],
+      "emotional_beat": { "type": "triumph", "intensity": 8 },
+      "tension_level": "5",
+      "pov_character": "한시우",
+      "location": { "place": "미국 캘리포니아, 엔비디아 본사", "type": "실내" },
+      "time_span": { "duration": "약 3개월", "in_story_time": "2023년 1월 ~ 4월" },
+      "genre_ext": {
+        "type": "investment",
+        "capital_before": "엔비디아 기존 지분 + 글로벌 포트폴리오",
+        "capital_after": "엔비디아 추가 매입 + AI 인프라",
+        "profit_loss": "엔비디아만 2016년 대비 30배+ (미실현)",
+        "method": "추가 매입 + 섹터 집중",
+        "investment_type": "상장 주식 + 인프라",
+        "deal_type": "시장 거래 + 직접 투자",
+        "leverage_used": ["미래 정보 (AI 붐)", "알파고 때부터의 장기 투자", "인프라 집중"],
+        "opponent": { "name": "AI 회의론자들", "type": "시장", "weakness_exploited": "AI 혁명 과소평가" },
+        "historical_event": { "name": "ChatGPT 출시 및 AI 붐 (2022-2023)", "year": 2023, "how_exploited": "엔비디아/AI 인프라 집중 투자" },
+        "time_pressure": "AI 붐 초기가 투자 적기.",
+        "knowledge_used": "ChatGPT가 AI 붐을 촉발하고, 엔비디아가 최대 수혜자가 된다는 미래 정보",
+        "risk_level": "중위험",
+        "business_sector": "AI/반도체",
+        "special_ability": { "has_ability": false }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "ChatGPT 출시, AI 붐, 엔비디아 시총 2조 달러.", "accuracy": "정확", "source": "직접경험" },
+        "butterfly_effect": { "original_event": "원래 역사에서 ChatGPT는 2022년 11월 출시되었다.", "changed_event": "한시우의 존재가 AI 발전을 바꾸지는 않음.", "ripple_effect": "한시우가 AI에 대규모 투자함으로써 일부 기업 성장에 기여." },
+        "death_flag": { "avoided": null, "method": null },
+        "regression_hint": { "slip_up": "한시우가 '엔비디아 2조 달러'라는 아직 도달하지 않은 숫자 언급.", "suspicion_from": "젠슨 황" },
+        "future_prep": { "action": "AI 포지션 구축 후, 비트코인 ETF 대비.", "target_event": "비트코인 ETF 승인 (2024.01)" }
+      }
+    },
+    {
+      "block_id": "Block 52",
+      "title": "비트코인 ETF",
+      "content": {
+        "context": "2024년 1월 10일. 미국 SEC가 역사적 결정을 내린다. 비트코인 현물 ETF 승인. 15년간 거부당했던 암호화폐가 드디어 월가의 품에 안긴다. 블랙록, 피델리티, 인베스코가 ETF를 출시한다. 비트코인이 $45,000을 돌파하며 급등한다.",
+        "event_villain": "없다. 이 블록은 한시우의 15년 비트코인 여정이 공식적으로 인정받는 순간이다. 2009년 사토시의 백서를 읽고, 10만 BTC를 채굴하고, 두 번의 정점에서 팔고, 암호화폐 겨울을 버텨낸. 그 모든 것이 '정당한 자산'으로 인정받았다.",
+        "solution": "한시우는 남겨둔 2천 BTC를 그대로 유지한다. ETF 승인으로 기관 자금이 유입되면 가격은 더 오른다. 동시에 블랙록의 비트코인 ETF(IBIT)를 송경그룹 자산으로 편입한다. '이제 비트코인은 금과 같습니다. 송경그룹도 가져야 합니다.'",
+        "reward": "2천 BTC가 $70,000 이상에서 1.4억 달러 이상의 가치. Block 21에서 거의 0원에 채굴한 것이 15년 만에 천문학적 가치로. 송경그룹의 비트코인 ETF 편입으로 한국 재벌 최초의 암호화폐 투자자가 됨."
+      },
+      "stakes": "비트코인이 다시 폭락하면 송경그룹 자산 손실. 하지만 ETF 승인 이후 기관 수요는 구조적이다.",
+      "power_shift": {
+        "protagonist": "15년간의 비트코인 여정이 공식적 승리로. '암호화폐의 선구자'.",
+        "antagonist": "비트코인을 무시했던 전통 금융계. 그들도 이제 뛰어들고 있다."
+      },
+      "relationship_delta": [
+        { "target": "블랙록/피델리티", "before": "경쟁자", "after": "비트코인 ETF를 통한 간접적 협력 관계." }
+      ],
+      "foreshadow": [
+        "한시우가 '비트코인은 $100,000 갑니다.'라고 확신에 찬 발언.",
+        "측근에게 '내 비트코인 일부는 나중에 좋은 일에 쓸 겁니다.'라고 언급."
+      ],
+      "callback": [
+        "Block 21에서 시작된 비트코인 채굴이 15년 만에 제도권 인정.",
+        "Block 36, 45에서 정점 매도한 판단이 장기적으로 옳았음 확인."
+      ],
+      "emotional_beat": { "type": "triumph", "intensity": 8 },
+      "tension_level": "4",
+      "pov_character": "한시우",
+      "location": { "place": "대한민국 서울, 송경그룹 본사", "type": "실내" },
+      "time_span": { "duration": "약 2주", "in_story_time": "2024년 1월" },
+      "genre_ext": {
+        "type": "investment",
+        "capital_before": "비트코인 2천 BTC + 글로벌 포트폴리오",
+        "capital_after": "비트코인 2천 BTC + 송경그룹 ETF 편입",
+        "profit_loss": "2천 BTC = 약 1.4억 달러+ (미실현)",
+        "method": "보유 유지 + ETF 편입",
+        "investment_type": "암호화폐 + ETF",
+        "deal_type": "보유 유지",
+        "leverage_used": ["미래 정보 (ETF 승인)", "15년 장기 투자", "제도권 편입"],
+        "opponent": { "name": "없음", "type": "없음", "weakness_exploited": "없음" },
+        "historical_event": { "name": "비트코인 현물 ETF 승인 (2024.01.10)", "year": 2024, "how_exploited": "15년 보유로 역사적 순간 함께" },
+        "time_pressure": "없음. 장기 보유.",
+        "knowledge_used": "2024년 1월 비트코인 ETF 승인이라는 미래 정보",
+        "risk_level": "저위험 (제도권 편입)",
+        "business_sector": "암호화폐/금융",
+        "special_ability": { "has_ability": false }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "2024년 1월 비트코인 ETF 승인.", "accuracy": "정확", "source": "직접경험" },
+        "butterfly_effect": { "original_event": "원래 역사에서 비트코인 ETF는 2024년 1월 승인되었다.", "changed_event": "한시우의 존재가 ETF 승인을 바꾸지는 않음.", "ripple_effect": "송경그룹의 ETF 편입이 한국 재계에 신호가 될 수 있다." },
+        "death_flag": { "avoided": null, "method": null },
+        "regression_hint": { "slip_up": "한시우가 '$100,000' 숫자를 너무 확신 있게 말함.", "suspicion_from": "측근들" },
+        "future_prep": { "action": "비트코인 정리 후, 새로운 도전 준비.", "target_event": "AI 스타트업 시작" }
+      }
+    },
+    {
+      "block_id": "Block 53",
+      "title": "새로운 도전",
+      "content": {
+        "context": "2024년 봄. 한시우는 60세가 됐다. 회귀 후 28년. 1996년 빈손으로 시작해 세계 최고의 투자자 중 하나가 됐다. 애플, 구글, 테슬라, 엔비디아, 비트코인... 모든 거대한 파도를 탔다. 이제 더 이상 증명할 것이 없다. 하지만 한시우는 여전히 심장이 뛴다.",
+        "event_villain": "없다. 이제 적은 없다. 숙부 한영민은 5년 전 경영권 싸움에서 완전히 패배했고, 은둔 중이다. 경쟁자들도 한시우를 인정한다. 남은 건 '다음 챕터'뿐이다.",
+        "solution": "한시우는 새로운 도전을 결심한다. AI 스타트업 액셀러레이터 설립. 이름은 '새벽 벤처스'. '내가 1996년에 받았던 기회를 다음 세대에게 주고 싶습니다.' 젊은 창업자들에게 자금, 네트워크, 그리고 무엇보다 '경험'을 나눈다.",
+        "reward": "새벽 벤처스 1기 배치에서 10개 AI 스타트업 선발. 한시우가 직접 멘토링. '돈은 도구입니다. 세상을 바꾸는 건 아이디어와 실행력입니다.' 젊은 창업자들이 한시우를 '전설의 투자자'가 아니라 '멘토'로 부르기 시작한다."
+      },
+      "stakes": "낮다. 이건 수익을 위한 투자가 아니라 레거시를 위한 투자다.",
+      "power_shift": {
+        "protagonist": "투자자에서 멘토로. 축적에서 전수로.",
+        "antagonist": "없음."
+      },
+      "relationship_delta": [
+        { "target": "젊은 창업자들", "before": "알 수 없는 전설", "after": "직접 만나 멘토링 받는 스승." }
+      ],
+      "foreshadow": [
+        "한시우가 '내 인생 최고의 투자는 애플도 테슬라도 아닙니다. 사람입니다.'라고 연설.",
+        "측근 댄 킴에게 '나도 이제 좀 쉬어야겠어. 열심히 달려왔잖아.'라고 말함."
+      ],
+      "callback": [
+        "Block 1에서 빈손으로 시작했던 것이 이제 다음 세대에게 기회를 주는 것으로.",
+        "Block 6에서 잡스에게 배웠던 '기업가 정신'을 전수하는 입장이 됨."
+      ],
+      "emotional_beat": { "type": "fulfillment", "intensity": 7 },
+      "tension_level": "2",
+      "pov_character": "한시우",
+      "location": { "place": "대한민국 서울, 새벽 벤처스 오피스", "type": "실내" },
+      "time_span": { "duration": "약 6개월", "in_story_time": "2024년 3월 ~ 9월" },
+      "genre_ext": {
+        "type": "investment",
+        "capital_before": "글로벌 포트폴리오",
+        "capital_after": "새벽 벤처스 펀드 설립",
+        "profit_loss": "해당 없음 (레거시 투자)",
+        "method": "벤처 액셀러레이터",
+        "investment_type": "초기 스타트업",
+        "deal_type": "시드 투자 + 멘토링",
+        "leverage_used": ["30년 경험", "글로벌 네트워크", "자금력"],
+        "opponent": { "name": "없음", "type": "없음", "weakness_exploited": "없음" },
+        "historical_event": { "name": "AI 스타트업 붐 (2024)", "year": 2024, "how_exploited": "새 세대에 기회 제공" },
+        "time_pressure": "없음.",
+        "knowledge_used": "AI 산업의 미래 방향",
+        "risk_level": "저위험",
+        "business_sector": "AI/벤처캐피탈",
+        "special_ability": { "has_ability": false }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "AI 산업의 장기 발전 방향.", "accuracy": "정확", "source": "직접경험" },
+        "butterfly_effect": { "original_event": "1회차에서 한시우는 이 시점까지 살지 못했다.", "changed_event": "2회차에서 새로운 역할을 찾음.", "ripple_effect": "새벽 벤처스가 한국 AI 생태계에 기여." },
+        "death_flag": { "avoided": null, "method": null },
+        "regression_hint": { "slip_up": "한시우가 '2030년에는 AI가 인간의 90%를 대체합니다'라는 아직 증명 안 된 예측.", "suspicion_from": "젊은 창업자들" },
+        "future_prep": { "action": "멘토링 정착 후, 사회 환원 준비.", "target_event": "재단 설립" }
+      }
+    },
+    {
+      "block_id": "Block 54",
+      "title": "한시우 재단",
+      "content": {
+        "context": "2025년 초. 한시우는 오랫동안 생각해온 것을 실행에 옮긴다. '한시우 재단' 설립. 자산의 상당 부분을 기부한다. '돈을 벌 때는 최선을 다했습니다. 이제 돈을 쓸 때도 최선을 다하겠습니다.'",
+        "event_villain": "없다.",
+        "solution": "한시우 재단은 세 가지에 집중한다. 첫째, 교육. 저소득층 학생들에게 장학금과 교육 기회를 제공한다. '나도 가난했습니다. 기회가 있었기에 여기까지 왔습니다.' 둘째, 의료. 소아 암 환자들을 위한 치료비 지원과 병원 건립. 셋째, 기후변화 대응. '다음 세대가 살 세상을 지켜야 합니다.'",
+        "reward": "한시우 재단이 첫 해에만 수천 명의 학생에게 장학금 지급, 소아 병동 3개 건립, 재생에너지 스타트업 10개 지원. 언론이 '한시우, 투자의 전설에서 나눔의 전설로'라고 보도."
+      },
+      "stakes": "없다. 이건 받는 것이 아니라 주는 것이다.",
+      "power_shift": {
+        "protagonist": "부의 축적자에서 부의 환원자로. 레거시의 완성.",
+        "antagonist": "없음."
+      },
+      "relationship_delta": [
+        { "target": "세상", "before": "전설적 투자자", "after": "위대한 자선가로 재평가." },
+        { "target": "아이들", "before": "알 수 없는 부자 아저씨", "after": "장학금을 주고 병원을 지어준 은인." }
+      ],
+      "foreshadow": [
+        "한시우가 '내가 진짜 부자가 된 건 돈 때문이 아닙니다. 나눌 수 있게 됐기 때문입니다.'라고 연설.",
+        "장학금 받은 학생이 '저도 나중에 한시우 선생님처럼 될게요.'라고 말하자 한시우가 눈물을 글썽임."
+      ],
+      "callback": [
+        "Block 1에서 아버지의 죽음으로 시작해, 이제 다른 아이들의 삶을 살리는 것으로.",
+        "Block 10에서 IMF로 많은 사람이 고통받았던 것을 보상하듯 사회에 환원."
+      ],
+      "emotional_beat": { "type": "heartwarming", "intensity": 9 },
+      "tension_level": "1",
+      "pov_character": "한시우",
+      "location": { "place": "대한민국 서울, 한시우 재단 본부 및 수혜 현장", "type": "실내/실외" },
+      "time_span": { "duration": "약 6개월", "in_story_time": "2025년 1월 ~ 6월" },
+      "genre_ext": {
+        "type": "investment",
+        "capital_before": "총 자산",
+        "capital_after": "재단 기부",
+        "profit_loss": "기부 (수익이 아닌 환원)",
+        "method": "재단 설립 + 프로그램 운영",
+        "investment_type": "사회 환원",
+        "deal_type": "기부/자선",
+        "leverage_used": [],
+        "opponent": { "name": "없음", "type": "없음", "weakness_exploited": "없음" },
+        "historical_event": { "name": "해당 없음 (픽션)", "year": 2025, "how_exploited": "해당 없음" },
+        "time_pressure": "없음.",
+        "knowledge_used": "없음",
+        "risk_level": "없음",
+        "business_sector": "자선/사회공헌",
+        "special_ability": { "has_ability": false }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "없음. 이건 한시우의 선택.", "accuracy": "해당 없음", "source": "해당 없음" },
+        "butterfly_effect": { "original_event": "1회차에서 한시우는 아무것도 남기지 못하고 죽었다.", "changed_event": "2회차에서 수많은 생명에 영향을 미치는 유산을 남김.", "ripple_effect": "한시우 재단이 미래 세대에 지속적으로 영향을 미침." },
+        "death_flag": { "avoided": null, "method": null },
+        "regression_hint": { "slip_up": "없음.", "suspicion_from": "없음" },
+        "future_prep": { "action": "사회 환원 후, 휴식.", "target_event": "모히토 (엔딩)" }
+      }
+    },
+    {
+      "block_id": "Block 55",
+      "title": "모히토",
+      "content": {
+        "context": "2025년 여름. 한시우는 동남아 어딘가의 해변에 있다. 하얀 모래사장, 에메랄드빛 바다, 파란 하늘. 손에는 차가운 모히토 한 잔. 옆에는 30년 동료 댄 킴. 멀리서 파도 소리가 들린다. 아무것도 하지 않아도 되는 시간. 한시우는 선글라스 너머로 수평선을 바라본다.",
+        "event_villain": "없다. 이제 정말로 적이 없다. 싸움도 없다. 증명해야 할 것도 없다.",
+        "solution": "댄 킴이 묻는다. '보스, 후회하는 거 있어요? 30년 동안.' 한시우는 모히토를 한 모금 마시고 대답한다. '없어. 하나도.' 잠시 침묵. '아니, 하나 있긴 해. 이 모히토를 좀 더 일찍 마실 걸.' 둘이 웃는다.",
+        "reward": "평화. 성취. 만족. 한시우는 1996년 아버지 장례식장에서 '다시 한 번'을 빌었다. 그리고 다시 한 번을 살았다. 후회 없이. 잘."
+      },
+      "stakes": "없다. 이건 스테이크가 아니라 해방이다.",
+      "power_shift": {
+        "protagonist": "전설의 투자자, 멘토, 자선가. 그리고 이제, 그냥 한 사람. 해변에서 모히토를 마시는 60대 남자.",
+        "antagonist": "없음."
+      },
+      "relationship_delta": [
+        { "target": "댄 킴", "before": "30년 동료, 파트너", "after": "함께 해변에서 쉬는 친구. 말 안 해도 통하는 사이." }
+      ],
+      "foreshadow": [],
+      "callback": [
+        "Block 1에서 아버지 장례식장에서 시작된 이야기가 해변의 평화로 끝남.",
+        "Block 6에서 잡스가 '인생은 짧아. 좋아하는 일을 해.'라고 했던 조언을 드디어 실천."
+      ],
+      "emotional_beat": { "type": "peaceful_resolution", "intensity": 10 },
+      "tension_level": "0",
+      "pov_character": "한시우",
+      "location": { "place": "동남아 해변 (발리 또는 푸켓)", "type": "실외" },
+      "time_span": { "duration": "하루", "in_story_time": "2025년 7월" },
+      "genre_ext": {
+        "type": "investment",
+        "capital_before": "해당 없음",
+        "capital_after": "해당 없음",
+        "profit_loss": "해당 없음",
+        "method": "해당 없음",
+        "investment_type": "해당 없음",
+        "deal_type": "해당 없음",
+        "leverage_used": [],
+        "opponent": { "name": "없음", "type": "없음", "weakness_exploited": "없음" },
+        "historical_event": { "name": "해당 없음", "year": 2025, "how_exploited": "해당 없음" },
+        "time_pressure": "없음. 시간은 충분하다.",
+        "knowledge_used": "없음. 더 이상 필요 없다.",
+        "risk_level": "없음",
+        "business_sector": "해당 없음",
+        "special_ability": { "has_ability": false }
+      },
+      "regression_ext": {
+        "is_regressor": true,
+        "regression_type": "회귀",
+        "timeline_knowledge": { "info_used": "더 이상 사용할 필요가 없다.", "accuracy": "해당 없음", "source": "해당 없음" },
+        "butterfly_effect": { "original_event": "1회차에서 한시우는 젊은 나이에 불행하게 죽었다.", "changed_event": "2회차에서 60세에 모든 것을 이루고 평화롭게 쉬고 있다.", "ripple_effect": "한시우의 이야기는 끝났지만, 그가 만든 영향은 계속된다." },
+        "death_flag": { "avoided": "1회차의 불행한 죽음", "method": "2회차에서 후회 없는 삶을 살고, 편안한 휴식" },
+        "regression_hint": { "slip_up": "없음. 더 이상 숨길 것도 없다.", "suspicion_from": "없음" },
+        "future_prep": { "action": "없음. 미래는 이미 왔다.", "target_event": "없음. 이것이 끝이다." }
+      },
+      "ending_note": {
+        "type": "해피 엔딩 (Happy Ending)",
+        "summary": "한시우는 1996년에 두 번째 기회를 받았다. 30년 동안 후회 없이 살았다. 돈을 벌었고, 나눴고, 사람들을 도왔다. 이제 해변에서 모히토를 마시며 쉬고 있다. 더 이상 바랄 것이 없다.",
+        "final_line": "'이 모히토를 좀 더 일찍 마실 걸.' - 한시우, 2025년 여름"
+      }
+    }
+  ]
+}
