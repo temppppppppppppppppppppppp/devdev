@@ -1,16 +1,16 @@
 agents:
-  analyst: "gemini-3.1-pro-preview"
+  analyst: "gemini-2.5-pro"
   manager: "gemini-2.5-flash"
-  chief_writer: "gemini-3.1-pro-preview"
-  blueprint_ensemble: "gemini-3.1-pro-preview"
-  three_phase_blueprint_generator: "gemini-3.1-pro-preview"
-  state_locked_arc_generator: "gemini-3.1-pro-preview"
+  chief_writer: "gemini-2.5-pro"
+  blueprint_ensemble: "gemini-2.5-pro"
+  three_phase_blueprint_generator: "gemini-2.5-pro"
+  state_locked_arc_generator: "gemini-2.5-pro"
   block_enricher: "gemini-2.5-flash"
-  preflight_checker: "gemini-3-flash-preview"
-  state_extractor: "gemini-3-flash-preview"
-  four_phase_arc_generator: "gemini-3.1-pro-preview"  # [Phase2] 2.5-pro→3.1-pro: Arc 방향 결정
-  continuity_inspector: "gemini-3.1-pro-preview"      # [Phase2] 250화 연속성 고도 추론
-  director: "gemini-3.1-pro-preview"                  # [Phase2] 내각제 원칙: 심판관≥CW
+  preflight_checker: "gemini-2.5-flash"
+  state_extractor: "gemini-2.5-flash"
+  four_phase_arc_generator: "gemini-2.5-pro"  # [TEMP] Gemini 3 계열 전면 장애로 2.5-pro 전환
+  continuity_inspector: "gemini-2.5-pro"      # [TEMP] Gemini 3 계열 전면 장애로 2.5-pro 전환
+  director: "gemini-2.5-pro"                  # [TEMP] Gemini 3 계열 전면 장애로 2.5-pro 전환
   arc_corrector: "gemini-2.5-flash"
   arc_critic: "gemini-2.5-flash"
   consensus_validator: "gemini-2.5-flash"
@@ -24,13 +24,14 @@ fallback_chain:
   "gemini-3.1-pro-preview": "gemini-3-pro-preview"
   "gemini-3-pro-preview": "gemini-2.5-pro"
   "gemini-3-flash-preview": "gemini-2.5-flash"
+  "gemini-2.5-pro": "gemini-2.5-flash"
   "gemini-2.5-flash": "gemini-2.5-flash"
 
 sub_components:
   four_phase_arc_generator:
-    preflight: "gemini-3-flash-preview"
-    ensemble: "gemini-3.1-pro-preview"  # [Phase2] Arc 앙상블 선택 = 스토리 핵심
+    preflight: "gemini-2.5-flash"
+    ensemble: "gemini-2.5-pro"  # [TEMP] Gemini 3 계열 전면 장애로 2.5-pro 전환
     validator: "gemini-2.5-flash"
   three_phase_blueprint_generator:
-    ensemble: "gemini-3.1-pro-preview"
+    ensemble: "gemini-2.5-pro"  # [TEMP] Gemini 3 계열 전면 장애로 2.5-pro 전환
     validator: "gemini-2.5-flash"

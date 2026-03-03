@@ -1,15 +1,15 @@
 # 글도비: AI 웹소설 자동 생산 시스템의 필요성과 현황
 
 **문서 유형**: 내부 기술 검토 보고서 (POC 단계)
-**작성일**: 2026-02-25
-**기준 커밋**: `13a531b` (2026-02-24)
+**작성일**: 2026-02-25 (2차 갱신: 2026-03-03)
+**기준 커밋**: `00bcef5` (2026-03-03)
 **검토 대상**: 본 시스템 도입의 구조적 타당성
 
 ---
 
 ## 초록
 
-본 보고서는 상용 LLM 서비스 직접 사용 대비, 전용 자동화 생산 시스템 구축의 구조적 타당성을 검토한다. 비교는 처리량, 연속성 유지, 품질 일관성, 확장 비용 구조 4개 축을 기준으로 한다. 본 시스템은 현재 2,583개 테스트 케이스를 통과한 POC 상태이며, Stage 0→2→3→4의 4단계 파이프라인으로 구성된다. 본 보고서는 시스템의 실제 구현 코드를 근거로 주장을 기술하고, 예상 반론에 대한 재반론을 포함하며, 프로덕션 전환을 위한 미해결 과제를 명시한다. 본 보고서가 입증하지 못하는 것—실제 독자 반응 및 매출 기여—도 명시적으로 한계로 기재한다.
+본 보고서는 상용 LLM 서비스 직접 사용 대비, 전용 자동화 생산 시스템 구축의 구조적 타당성을 검토한다. 비교는 처리량, 연속성 유지, 품질 일관성, 확장 비용 구조 4개 축을 기준으로 한다. 본 시스템은 현재 **3,170개** 테스트 케이스를 통과한 POC 상태이며, Stage 0→2→3→4의 4단계 파이프라인으로 구성된다. 본 보고서는 시스템의 실제 구현 코드를 근거로 주장을 기술하고, 예상 반론에 대한 재반론을 포함하며, 프로덕션 전환을 위한 미해결 과제를 명시한다. 본 보고서가 입증하지 못하는 것—실제 독자 반응 및 매출 기여—도 명시적으로 한계로 기재한다.
 
 ---
 
@@ -110,7 +110,7 @@ Stage 0 (세계관 설계)
 Stage 2 (Arc 전술 설계)
   ├── Analyst → Arc DNA 생성
   ├── 앙상블: 3개 전략 병렬 생성 (ThreadPoolExecutor)
-  └── Director → 합격/불합격/수정 지시 (자기일관성 투표 3회)
+  └── Director → 합격/불합격/수정/PASS_WITH_FIX (자기일관성 투표 3회)
 
 Stage 3 (Episode Blueprint 설계)
   ├── 제약 컴파일: Arc 섹션 → 에피소드 제약 추출
@@ -121,6 +121,8 @@ Stage 4 (원고 생산)
   ├── Smart Context Retrieval → 관련 컨텍스트 자동 선별
   ├── Chief Writer → 초안 작성 (StyleGuide 자동 주입)
   ├── Director → 품질 심사 (기준: 60점, 재시도 최대 4회)
+  ├── PASS_WITH_FIX → 3-tier 자동 수정 (inplace/partial/full, 재심사 최대 3회)
+  ├── 7-Stage Advisory Chain → TruthGate·NPC표류·수치표류·회상·정보역설·관계표류·장기반복
   └── 통과 → DB 저장 + WorldState·FactLedger 갱신
 ```
 
@@ -132,10 +134,20 @@ Stage 4 (원고 생산)
 **FactLedger** (`modules/core/fact_ledger.py`):
 인물, 아이템, 장소, 조직의 팩트를 에피소드별로 이력 보존한다. `MAX_HISTORY_PER_ENTITY = 100`으로 200화 이상 장기 연재 대응. LLM 호출 없음.
 
-**TruthGate** (`modules/core/truth_gate.py`):
-원고 생성 후 5개 규칙을 자동 검사한다: 사망 NPC 부활, 미보유 아이템 사용, 파괴된 장소 방문, 스킬 중복 습득, 카르마 범위 이탈. 결과는 Advisory(차단이 아닌 경고) 형태다.
+**TruthGate** (`modules/core/truth_gate.py`, 437줄):
+원고 생성 후 **7개 규칙**을 자동 검사한다: 사망 NPC 부활, 미보유 아이템 사용, 파괴된 장소 방문, 스킬 중복 습득, 카르마 범위 이탈, **NPC 역할 위반**, **세계 법칙 위반**. 결과는 Advisory(차단이 아닌 경고) 형태다.
 
-이 세 모듈은 A'에서 구현하려면 별도로 설계해야 하는 요소다. 구현이 불가능한 것이 아니라, 구현 비용이 존재한다는 것이 요점이다.
+**7-Stage Advisory Chain** (2026-03-03 기준):
+TruthGate 이후 6개의 전문 Advisory가 순차적으로 원고를 검증한다. 전부 Director에게 경고로 주입되며, Director가 최종 판정한다.
+
+1. **NpcDriftAdvisor** — 원고 텍스트 vs NPC 스냅샷의 속성(성격·외모·부상·위치) 표류 LLM 감지
+2. **NumericDriftAdvisor** — FactLedger 수치 이력 5화 단위 누적 표류·지수 성장 LLM 감지
+3. **FlashbackVerifier** — 회상/플래시백 장면의 원본 일치도 LLM 검증 (VecMemory 원문 대조)
+4. **InfoParadoxChecker** — 1인칭 시점 원고에서 주인공 미보유 정보 노출 LLM 감지
+5. **RelationshipDriftAdvisor** — NPC 관계도(적→아군 등) 장기 표류 LLM 감지
+6. **LongTermRepetitionAdvisor** — 20화+ 윈도우 씬 패턴 2-gram 반복 LLM 감지
+
+이 세 모듈(WorldState, FactLedger, TruthGate)과 7-Stage Advisory Chain은 A'에서 구현하려면 별도로 설계해야 하는 요소다. 구현이 불가능한 것이 아니라, 구현 비용이 존재한다는 것이 요점이다.
 
 ### 3.3 품질 기준의 코드화
 
@@ -147,6 +159,16 @@ Director 에이전트(`modules/domain/agents/director.py`)가 원고 품질 평�
 - **원칙 위반 검사(V0128)**: 사망 NPC 행동 등 구조적 위반은 점수와 무관하게 별도 처리
 
 평가 기준이 코드로 명시되어 있으므로, 작품 수·회차 수에 무관하게 동일하게 적용된다. 이것이 인간 편집자의 판단보다 우수하다는 주장은 하지 않는다. 다만 **일관성**에 한해서는 코드화된 기준이 사람보다 편차가 낮다.
+
+**PASS_WITH_FIX 자동 수정 루프** (2026-03-03 추가):
+
+Director가 원고에 대해 PASS/REJECT 외에 **PASS_WITH_FIX** 판정을 내릴 수 있다. 이 판정은 "대체로 합격이나 특정 부분 수정 필요"를 의미하며, fix_scope(inplace/partial/full) 기반 3-tier 수정 전략으로 라우팅된다.
+
+- **inplace**: LLM이 원고를 국소 수정(문장 단위), 1회 호출로 완료
+- **partial**: 가장 좋은 후보 1개를 Director 피드백 기반으로 재생성
+- **full**: Ensemble 3후보 전면 재생성
+
+수정 후 Director가 동일 기준으로 재심사하며, 최대 3회 반복한다. 이 루프는 Stage 2/3/4 전체에 적용된다.
 
 ### 3.4 문체 관리
 
@@ -213,7 +235,7 @@ ContextAdvisor(`modules/core/context_advisor.py`, 677줄)가 LLM 호출 시 관�
 
 ---
 
-**반론 4. "2,583개 테스트 통과가 원고 품질을 보장하는가?"**
+**반론 4. "3,170개 테스트 통과가 원고 품질을 보장하는가?"**
 
 재반론: 보장하지 않는다. 테스트는 코드 레벨의 동작 검증이다: 모듈이 입력을 받아 올바른 형식의 출력을 반환하는지, 예외 처리가 의도대로 동작하는지, 상태 전이가 정확한지를 검증한다. 원고의 서사적 완성도, 독자 몰입도, AI 특유 패턴의 부재는 테스트로 검증되지 않는다. 이것은 본 시스템의 한계이며, 섹션 6에서 별도로 다룬다.
 
@@ -253,7 +275,9 @@ A'와의 비교에 한정한다. A(웹 UI 직접 사용)는 비교 대상에서 
 | 장기 연속성 자동 유지 | 별도 구현 필요 | WorldState + FactLedger | B가 구조적으로 우위 |
 | 품질 기준 코드화 | 프롬프트 내 자연어 | Director 에이전트 (설정값) | B가 일관성 측면 우위 |
 | 문체 관리 | 매 호출 수동 첨부 | StyleGuide DB 캐싱 + 자동 주입 | B가 구조적으로 우위 |
-| 장르별 제약 관리 | 프롬프트 수동 조정 | Guard + HUD 시스템 (10종) | B 우위, 단 8종 미검증 |
+| 장르별 제약 관리 | 프롬프트 수동 조정 | Guard + HUD + Genre Schema Builder (10종) | B 우위, 단 8종 미검증 |
+| 자동 수정 루프 | 없음 (전면 재생성) | PASS_WITH_FIX 3-tier (inplace/partial/full) | B 우위 |
+| 장기 연재 감지 | 없음 | 7-Stage Advisory Chain (표류·반복·역설 감지) | B 우위 |
 | API 비용 | 낮음 (호출 수 적음) | 높음 (에피소드당 6+ 호출) | A' 우위 |
 | 구축/유지보수 비용 | 낮음 | 높음 | A' 우위 |
 | 독자 반응 품질 | 미측정 | 미측정 | 비교 불가 |
@@ -264,10 +288,13 @@ A'와의 비교에 한정한다. A(웹 UI 직접 사용)는 비교 대상에서 
 
 ### 6.1 검증 현황
 
-- **테스트**: 2,583개 케이스 통과 (2026-02-24, `pytest tests/ -q`)
-- **테스트 유형**: 단위 테스트, 통합(33개), E2E Smoke, 카오스(38개), Property-Based(hypothesis 46개)
+- **테스트**: **3,170개** 케이스 통과 (2026-03-03, `pytest tests/ -q`)
+- **테스트 유형**: 단위 테스트, 통합(33개), E2E Smoke, 카오스(38개), Property-Based(hypothesis 46개), Memory Benchmark(17개)
 - **코드 품질**: Ruff violations 0건, Silent Pass YELLOW 0건
-- **주요 모듈**: Stage 2(907줄), Stage 3(781줄), Stage 4(883줄), Chief Writer(854줄)
+- **코드 규모**: **139,570 LOC** (소스) + **50,387 LOC** (테스트) = 약 190K LOC
+- **LLM 에이전트**: **47개** (분석·설계·집필·심사·검증 전문화)
+- **장르 지원**: **10개** (무협·헌터·투자·판타지·작곡가·요리·대체역사·배우물·스포츠·의학)
+- **주요 모듈**: Stage 2(913줄), Stage 3(846줄), Stage 4(1,186줄), Chief Writer(854줄)
 
 테스트는 코드 동작의 검증이며 원고 품질의 검증이 아님을 재강조한다.
 
@@ -286,19 +313,22 @@ A'와의 비교에 한정한다. A(웹 UI 직접 사용)는 비교 대상에서 
 | 항목 | 실증 상태 |
 |------|----------|
 | Stage 0→2→3→4 파이프라인 정상 실행 | ✅ 실증 (투자물, 무협) |
-| 연속성 오류 자동 감지 (TruthGate) | ✅ 코드 레벨 검증 |
+| 연속성 오류 자동 감지 (TruthGate 7개 검사) | ✅ 코드 레벨 검증 + 실 생산 로그 확인 |
 | Blueprint 앙상블 생성 + Director 선택 | ✅ 실증 (출력 로그 확인) |
 | StyleGuide 생성 및 주입 | ✅ 기술 구현 완료 |
+| PASS_WITH_FIX 자동 수정 루프 | ✅ 실증 (InPlace 패치 → 재심사 → PASS 확인) |
+| 7-Stage Advisory Chain | ✅ 기술 구현 완료 + Stage 4 배선 확인 |
+| 비무협 장르 오염 근절 | ✅ 실증 (투자물 Arc 1에서 "내공" 출력 0건) |
+| FailureLearner 내부 피드백 환류 | ✅ 실패 패턴 DB 저장 → 재시도 시 제약 자동 주입 |
 | Anti-AI 패턴의 실제 효과 | ❌ 미측정 |
 | Director 평가와 독자 반응의 상관관계 | ❌ 미측정 |
 | 나머지 8종 장르 실 생산 품질 | ❌ 미검증 |
 | API 비용 대 구독 비용 손익분기 | ❌ 미산정 |
 | 에피소드당 실제 API 비용 | ❌ 미산정 (기록 구조는 존재) |
-| 외부 피드백 환류 구조 | ❌ 미구현 |
+| 외부 피드백 환류 구조 (독자 반응 → 시스템) | ❌ 미구현 |
 | 벤더 락인 대응 수단 | ❌ 없음 |
 | AI 생성 원고 저작권 귀속 | ❌ 법적 미검토 |
 | 문체 클로닝 시 IP 리스크 | ❌ 법적 미검토 |
-| 내용적 환각 감지 구조 | ❌ 없음 |
 | 출력 재현성 | ❌ 구조적 불가 (seed 없음) |
 
 ---
@@ -335,11 +365,11 @@ A'와의 비교에 한정한다. A(웹 UI 직접 사용)는 비교 대상에서 
 
 `db_manager.py`에 `save_cost_record()` 및 `get_cost_summary()`가 구현되어 있어 비용 기록 구조는 존재한다. 그러나 실제 운용을 통해 에피소드 1개 생산 시 평균 API 비용이 얼마인지 산정된 수치가 없다. 섹션 4 반론 3에서 비용 손익분기점을 "범위 밖"으로 처리했지만, 이것은 프로덕션 도입 결정 전 반드시 해소되어야 할 항목이다. 기록 구조가 있으므로 실 운용 후 수치 산정은 가능하다.
 
-### 7.7 피드백 환류 구조 부재
+### 7.7 외부 피드백 환류 구조 부재
 
-`FailureLearner`(`modules/core/failure_learning.py`)는 실패 패턴을 DB에 저장하고 `get_learned_constraints()`로 조회하는 구조를 갖추고 있다. 그러나 저장된 실패 패턴이 다음 생성 시 프롬프트를 자동으로 수정하는 폐쇄 루프는 구현되어 있지 않다.
+**내부 피드백 환류는 구현 완료.** `FailureLearner`(`modules/core/failure_learning.py`)는 실패 패턴을 DB에 저장하고, 동일 유형 재시도 시 `get_learned_constraints()`를 통해 프롬프트에 자동 주입한다. 또한 A-4 공통 실패 패턴 감지 — `contradiction_types` 2연속 수렴 시 Arc 구조 진단 advisory 생성 — 도 작동한다.
 
-더 근본적으로, 독자 반응(조회수, 이탈률, 구매 전환) → 원고 특성 분석 → 시스템 파라미터 개선이라는 외부 피드백 환류가 구조적으로 없다. 현재 시스템은 생산 이후의 결과를 내부에 반영하지 못한다.
+**외부 피드백 환류는 미구현.** 독자 반응(조회수, 이탈률, 구매 전환) → 원고 특성 분석 → 시스템 파라미터 개선이라는 외부 피드백 환류가 구조적으로 없다. 현재 시스템은 생산 이후 외부 결과를 내부에 반영하지 못한다.
 
 ### 7.8 저작권 및 IP 리스크 미해결
 
@@ -349,11 +379,11 @@ A'와의 비교에 한정한다. A(웹 UI 직접 사용)는 비교 대상에서 
 
 둘째, **문체 클로닝 시 레퍼런스 원고의 저작권**이다. StyleExtractor는 기존 원고를 분석하여 문체 패턴을 추출한다. 레퍼런스로 사용하는 원고가 타인의 저작물일 경우, 추출된 문체 패턴 및 Anti-AI 패턴이 해당 저작물의 창작적 표현을 포함하는지 여부가 불명확하다. 법적 선례가 확립되어 있지 않은 영역이다.
 
-### 7.9 내용적 환각 무방비
+### 7.9 내용적 환각 부분 대응
 
-TruthGate의 5개 검사는 **구조적 오류** — 사망 NPC 부활, 미보유 아이템 사용 등 — 를 감지한다. 그러나 LLM이 생성하는 **내용적 환각**, 즉 실제로 틀린 사실 정보의 서술은 감지하지 못한다.
+TruthGate의 7개 검사와 7-Stage Advisory Chain은 **구조적 오류**(사망 NPC 부활, 미보유 아이템 사용, 세계 법칙 위반 등)와 **서사적 표류**(NPC 속성 변질, 수치 누적 오류, 정보 역설)를 감지한다. 특히 NumericDriftAdvisor가 수치의 지수 성장을 Python 사전 감지하고, FlashbackVerifier가 회상 장면을 VecMemory 원문과 대조하는 구조가 추가되었다.
 
-투자물 장르에서 실재하지 않는 금융 상품, 잘못된 세율, 불가능한 수익률이 원고에 포함될 수 있다. 의학 장르에서는 잘못된 시술 방법이나 약물 용량이 서술될 수 있다. 이러한 오류는 서사적 일관성 검증으로는 감지되지 않으며, 독자가 해당 정보를 사실로 수용할 경우 별도의 문제가 된다. 현재 이 유형의 오류에 대한 전용 검증 구조가 없다.
+그러나 LLM이 생성하는 **내용적 환각** — 실재하지 않는 금융 상품, 잘못된 세율, 불가능한 수익률, 잘못된 시술 방법 등 — 에 대한 전용 감지 구조는 여전히 없다. 이 유형의 오류는 서사적 일관성 검증으로 감지되지 않으며, 장르 Guard(MedicalGuard, InvestmentGuard 등)가 부분적으로 용어 수준의 필터링을 제공하나 사실 정보 검증은 범위 밖이다.
 
 ### 7.10 출력 재현성 부재
 
@@ -380,13 +410,14 @@ TruthGate의 5개 검사는 **구조적 오류** — 사망 NPC 부활, 미보�
 본 시스템은 위 조건들에 대응하는 핵심 파이프라인을 구현한 POC다. 실증된 것과 실증되지 않은 것을 구분하면:
 
 - **구조적으로 구현된 것**: 공정 분리, 연속성 추적, 품질 기준 코드화, 문체 관리
-- **검증된 것**: 코드 동작(2,583 테스트), 투자물·무협 파이프라인 실행
+- **검증된 것**: 코드 동작(3,170 테스트), 투자물·무협 파이프라인 실행, PASS_WITH_FIX 자동 수정 루프, 7-Stage Advisory Chain, 비무협 장르 오염 근절
 - **미검증인 것**: 독자 반응 품질, 비용 손익분기, 나머지 8종 장르
 
-프로덕션 전환을 위해서는 섹션 7의 10개 과제가 해소되어야 한다. 우선순위 기준으로 분류하면 다음과 같다.
+프로덕션 전환을 위해서는 섹션 7의 과제가 해소되어야 한다. 초회 보고 대비 일부 진전이 있다.
 
-- **실운용 전 해소 필요**: 7.1(기술 부채), 7.8(저작권·IP), 7.9(내용적 환각)
-- **실운용 병행 해소**: 7.6(비용 산정), 7.7(피드백 환류) — 데이터가 없으면 해소 불가
+- **부분 해소**: 7.7(피드백 환류 — 내부 루프 구현, 외부 미구현), 7.9(환각 — Advisory Chain 구조적 오류 감지 강화, 사실 정보 환각은 미해결)
+- **실운용 전 해소 필요**: 7.1(기술 부채), 7.8(저작권·IP)
+- **실운용 병행 해소**: 7.6(비용 산정), 7.7 외부 환류 — 데이터가 없으면 해소 불가
 - **중장기 과제**: 7.2(품질 지표), 7.3(장르 검증), 7.4(전후 공정), 7.5(벤더 락인)
 - **구조적 수용**: 7.10(재현성) — LLM 특성상 완전 해소 불가. 영향 범위를 명확히 하는 것이 현실적 대응이다.
 
@@ -430,23 +461,38 @@ B' — 현재 B의 미해결 과제들이 해소되고, 피드백 환류와 품�
 
 ---
 
-## 부록: 주요 모듈 현황
+## 부록: 주요 모듈 현황 (2026-03-03 기준)
 
 | 모듈 | 경로 | 규모 | 상태 |
 |------|------|------|------|
-| Stage 2 Orchestrator | `modules/core/stage2_orchestrator.py` | 907줄 | 운용 중 |
-| Stage 3 Orchestrator | `modules/core/stage3_orchestrator.py` | 781줄 | 운용 중 |
-| Stage 4 Orchestrator | `modules/core/stage4_orchestrator.py` | 883줄 | 운용 중 |
-| DB Manager | `modules/core/db_manager.py` | 2,241줄 | 운용 중, 분할 미완 |
-| Style Extractor | `modules/core/stage0/style_extractor.py` | 777줄 | 구현 완료 |
-| Context Advisor | `modules/core/context_advisor.py` | 677줄 | 운용 중 (SC-0~6) |
-| Truth Gate | `modules/core/truth_gate.py` | 244줄 | 운용 중 (5개 검사) |
-| WorldStateManager | `modules/core/world_state.py` | — | 운용 중 |
-| FactLedger | `modules/core/fact_ledger.py` | — | 운용 중 |
-| Director | `modules/domain/agents/director.py` + 서브모듈 4개 | — | 운용 중 |
-| Self Reflection | `modules/core/self_reflection.py` | 250줄+ | 운용 중 (V52.1) |
+| Stage 2 Orchestrator | `modules/core/stage2_orchestrator.py` | 913줄 | 운용 중 |
+| Stage 2 Preflight | `modules/core/stage2_preflight.py` | 1,223줄 | 운용 중 (B-1-8) |
+| Stage 2 Validation | `modules/core/stage2_validation_pipeline.py` | 1,104줄 | 운용 중 (B-1-6) |
+| Stage 2 Finalizer | `modules/core/stage2_finalizer.py` | 968줄 | 운용 중 (B-1-7) |
+| Stage 3 Orchestrator | `modules/core/stage3_orchestrator.py` | 846줄 | 운용 중 |
+| Stage 4 Orchestrator | `modules/core/stage4_orchestrator.py` | 1,186줄 | 운용 중 |
+| Stage 4 Post-Processor | `modules/core/stage4_post_processor.py` | 1,191줄 | 운용 중 (B-1-1) |
+| Stage 4 Context Builder | `modules/core/stage4_context_builder.py` | 1,091줄 | 운용 중 (B-1-2) |
+| Stage 4 Interview Round | `modules/core/stage4_interview_round.py` | 2,079줄 | 운용 중 (B-1-3b) |
+| DB Manager | `modules/core/db_manager.py` | 2,660줄 | 운용 중 |
+| Style Extractor | `modules/core/stage0/style_extractor.py` | 797줄 | 구현 완료 |
+| Context Advisor | `modules/core/context_advisor.py` | 690줄 | 운용 중 (SC-0~6) |
+| Truth Gate | `modules/core/truth_gate.py` | 437줄 | 운용 중 (7개 검사) |
+| WorldStateManager | `modules/core/world_state.py` | 1,021줄 | 운용 중 |
+| FactLedger | `modules/core/fact_ledger.py` | 650줄 | 운용 중 |
+| Arc Ensemble | `modules/domain/agents/arc_ensemble.py` | 892줄 | 운용 중 |
+| Director | `modules/domain/agents/director.py` + 서브모듈 4개 | 362줄+ | 운용 중 |
+| Genre Schema Builder | `modules/core/genre_schema_builder.py` | 341줄 | 운용 중 (TF-45) |
+| Self Reflection | `modules/core/self_reflection.py` | 328줄 | 운용 중 |
+| NpcDriftAdvisor | `modules/core/npc_drift_advisor.py` | 171줄 | 운용 중 (LM-B) |
+| NumericDriftAdvisor | `modules/core/numeric_drift_advisor.py` | 205줄 | 운용 중 (LM-C) |
+| RelationshipDriftAdvisor | `modules/core/relationship_drift_advisor.py` | 166줄 | 운용 중 (LM-D) |
+| FlashbackVerifier | `modules/core/flashback_verifier.py` | 198줄 | 운용 중 (LM-E) |
+| InfoParadoxChecker | `modules/core/info_paradox_checker.py` | 212줄 | 운용 중 (LM-F) |
+| LongTermRepetitionAdvisor | `modules/core/long_term_repetition_advisor.py` | 230줄 | 운용 중 (P1-5) |
+| NarrativeContextFormatter | `modules/core/narrative_context_formatter.py` | 239줄 | 운용 중 (LM-G) |
 | Genre Guards | `modules/core/genre_guards/` | 10종 | 구현 완료, 8종 미검증 |
 
 ---
 
-*본 문서의 모든 기술적 수치는 2026-02-24 기준 커밋(`13a531b`) 실제 코드를 근거로 한다. 실증되지 않은 항목은 해당 절에서 명시적으로 구분하였다.*
+*본 문서의 기술적 수치는 2026-03-03 기준 커밋(`00bcef5`) 실제 코드를 근거로 한다. 2026-02-25 초회 보고(`13a531b`) 이후 테스트 2,583→3,170개, TruthGate 5→7개, Advisory Chain 0→7단계, PASS_WITH_FIX 미구현→3-tier 완료, 장르 오염 근절 완료. 실증되지 않은 항목은 해당 절에서 명시적으로 구분하였다.*

@@ -366,7 +366,7 @@ class Stage3Orchestrator:
             "PASS_WITH_WARNING",
         ):  # [TF-32-S3]
             return self._handle_success(
-                working_ep, arc_no, blueprint, pipeline_result, prev_blueprints, success_count, fail_count
+                working_ep, arc_no, arc_data, blueprint, pipeline_result, prev_blueprints, success_count, fail_count
             )
         else:
             return self._handle_failure(working_ep, pipeline_result, success_count, fail_count)
@@ -659,7 +659,7 @@ class Stage3Orchestrator:
     # 결과 처리
     # ─────────────────────────────────────────────────────────────
     def _handle_success(
-        self, working_ep, arc_no, blueprint, pipeline_result, prev_blueprints, success_count, fail_count
+        self, working_ep, arc_no, arc_data, blueprint, pipeline_result, prev_blueprints, success_count, fail_count
     ) -> dict:
         """Blueprint 생성 성공 시 저장 + 메트릭 기록"""
         ctx = self.ctx
@@ -691,6 +691,13 @@ class Stage3Orchestrator:
                 "last_score": pipeline_result.get("last_score", 0),
             }
             # [P0] _stage3_meta에 통합 — 최상위 중복 키 제거
+
+        # [TF-49] Blueprint 소지품 갭 어노테이션
+        if isinstance(blueprint, dict) and working_ep > 1:  # Ep 1 스킵 (초기 소지품 미확정)
+            _inv_gaps = self._detect_inventory_gaps(blueprint, arc_data)
+            if _inv_gaps:
+                blueprint["_inventory_gaps"] = _inv_gaps
+                ctx.ui.log(f"   ⚠️ [TF-49] 소지품 갭 {len(_inv_gaps)}건: {', '.join(g['item'] for g in _inv_gaps)}")
 
         # 무결성 검증 후 저장
         # [S3-N-P1-3] DI 콜백 None 방어
@@ -765,6 +772,71 @@ class Stage3Orchestrator:
             except Exception as _e:
                 _logging.debug("[Stage3] QualityDashboard PASS 기록 실패 (무시): %s", _e)
         return {"next_ep": working_ep + 1, "success_count": success_count + 1, "fail_count": 0}
+
+    def _detect_inventory_gaps(self, blueprint: dict, arc_data: dict) -> list[dict]:
+        """[TF-49] Blueprint 참조 아이템 중 현재 미보유 항목 탐지."""
+        ctx = self.ctx
+
+        # 1. 현재 소지품
+        owned = set()
+        if ctx.world_state:
+            try:
+                owned = set(ctx.world_state.get_owned_items())
+            except Exception:
+                pass
+        if not owned:
+            _cdb = getattr(self.app, "constraint_db", None)
+            if _cdb:
+                try:
+                    owned = set(_cdb.get_current_inventory(arc_data.get("arc_no", 1) - 1))
+                except Exception:
+                    pass
+
+        # 2. Arc 계획된 신규 아이템 (미보유 중 이번 Arc에서 획득 예정)
+        _sc = arc_data.get("state_constraints", {}) if isinstance(arc_data, dict) else {}
+        planned = set()
+        for item in _sc.get("items_acquired") or []:
+            if item:
+                planned.add(str(item))
+        _end_eq = set(_sc.get("arc_end_state", {}).get("equipment", []))
+        _start_eq = set(_sc.get("arc_start_state", {}).get("equipment", []))
+        planned |= _end_eq - _start_eq
+
+        # 3. Blueprint 참조 아이템 (구조화 필드 우선)
+        referenced = {}  # item → source
+        _ps = blueprint.get("protagonist_state", {})
+        if isinstance(_ps, dict):
+            for item in _ps.get("equipment") or []:
+                if item:
+                    referenced[str(item)] = "protagonist_state"
+
+        # planned 아이템이 씬 텍스트에 언급되는지 확인
+        scenes = blueprint.get("scene_breakdown") or blueprint.get("scenes") or {}
+        if isinstance(scenes, dict):
+            scenes = list(scenes.values())
+        if isinstance(scenes, list):
+            for i, scene in enumerate(scenes):
+                scene_text = ""
+                if isinstance(scene, dict):
+                    scene_text = " ".join(str(v) for v in scene.values() if isinstance(v, str))
+                elif isinstance(scene, str):
+                    scene_text = scene
+                for item in planned:
+                    if item and item in scene_text and item not in referenced:
+                        referenced[item] = f"scene_{i + 1}"
+
+        integrated = blueprint.get("integrated_scenario", "")
+        if isinstance(integrated, str):
+            for item in planned:
+                if item and item in integrated and item not in referenced:
+                    referenced[item] = "integrated_scenario"
+
+        # 4. 갭 = 참조됨 + 미보유
+        return [
+            {"item": item, "source": src, "note": "현재 미보유 — 획득 장면 필요"}
+            for item, src in referenced.items()
+            if item not in owned
+        ]
 
     def _handle_failure(self, working_ep, pipeline_result, success_count, fail_count) -> dict:
         """Blueprint 생성 실패 시 처리. 항상 break=True를 반환하여 루프를 종료한다

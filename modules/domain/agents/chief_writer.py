@@ -183,6 +183,8 @@ class ChiefWriter(BaseAgent):
         # [B-4] 주인공 동기/약속
         motivations: list = None,
         promises: list = None,
+        # [TF-49b] Arc 계획 아이템 사전 정당화
+        upcoming_arc_items: list[str] = None,
     ) -> list[dict]:
         """
         3개 후보 원고 병렬 생성
@@ -251,6 +253,8 @@ class ChiefWriter(BaseAgent):
             # [V68] 에피소드 연결고리
             chain_link_section=chain_link_section,
             emotional_beat_section=emotional_beat_section,
+            # [TF-49b] Arc 계획 아이템 사전 정당화
+            upcoming_arc_items=upcoming_arc_items,
         )
 
         # [V61.7] 컨텍스트 캐싱 시도 (토큰 비용 50-67% 절감)
@@ -651,6 +655,8 @@ class ChiefWriter(BaseAgent):
         # [B-4] 주인공 동기/약속
         motivations: list = None,
         promises: list = None,
+        # [TF-49b] Arc 계획 아이템 사전 정당화
+        upcoming_arc_items: list[str] = None,
     ) -> list[dict]:
         """
         Director 피드백 반영 재생성
@@ -756,6 +762,7 @@ class ChiefWriter(BaseAgent):
             emotional_beat_section=emotional_beat_section,
             motivations=motivations,  # [B-4]
             promises=promises,  # [B-4]
+            upcoming_arc_items=upcoming_arc_items,  # [TF-49b]
         )
 
     # =========================================================================
@@ -922,6 +929,8 @@ class ChiefWriter(BaseAgent):
         # [B-4] 주인공 동기/약속
         motivations: list = None,
         promises: list = None,
+        # [TF-49b] Arc 계획 아이템 사전 정당화
+        upcoming_arc_items: list[str] = None,
     ) -> list[dict]:
         """[Phase 3-5B] 원본 원고를 보존하며 피드백 지적사항만 수정. 3후보 반환.
 
@@ -1016,6 +1025,7 @@ class ChiefWriter(BaseAgent):
                 emotional_beat_section=emotional_beat_section,
                 motivations=motivations,
                 promises=promises,
+                upcoming_arc_items=upcoming_arc_items,  # [TF-49b]
             )
         except Exception as e:
             logging.warning(f"[Phase 3-5B] patch_with_feedback 실패, 빈 리스트 반환: {e}")

@@ -16,6 +16,7 @@ from modules.core.stage3_orchestrator import Stage3Orchestrator
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_ctx(*, ui=None, project=None) -> MagicMock:
     """Build a minimal Stage3Context mock."""
     ctx = MagicMock()
@@ -62,6 +63,7 @@ def _fail_pipeline_result() -> dict:
 # Test 1: _handle_success() calls record_validation(stage=3, decision="PASS")
 # ---------------------------------------------------------------------------
 
+
 def test_handle_success_calls_record_validation_pass():
     qd = MagicMock()
     orch = _make_orch(quality_dashboard=qd)
@@ -73,6 +75,7 @@ def test_handle_success_calls_record_validation_pass():
     orch._handle_success(
         working_ep=3,
         arc_no=1,
+        arc_data={},
         blueprint=blueprint,
         pipeline_result=pipeline_result,
         prev_blueprints=prev_blueprints,
@@ -80,14 +83,12 @@ def test_handle_success_calls_record_validation_pass():
         fail_count=0,
     )
 
-    assert qd.record_validation.called, (
-        "quality_dashboard.record_validation must be called on PASS"
-    )
+    assert qd.record_validation.called, "quality_dashboard.record_validation must be called on PASS"
     call_args, call_kwargs = qd.record_validation.call_args
     # Check keyword arguments
-    assert call_kwargs.get("stage") == 3 or (
-        len(call_args) >= 3 and call_args[2] == 3
-    ), "record_validation must be called with stage=3"
+    assert call_kwargs.get("stage") == 3 or (len(call_args) >= 3 and call_args[2] == 3), (
+        "record_validation must be called with stage=3"
+    )
     result_arg = call_kwargs.get("result") or (call_args[1] if len(call_args) > 1 else None)
     assert result_arg is not None
     assert result_arg.get("decision") == "PASS"
@@ -96,6 +97,7 @@ def test_handle_success_calls_record_validation_pass():
 # ---------------------------------------------------------------------------
 # Test 2: _handle_failure() calls record_validation(stage=3, decision="REJECT")
 # ---------------------------------------------------------------------------
+
 
 def test_handle_failure_calls_record_validation_reject():
     qd = MagicMock()
@@ -110,13 +112,11 @@ def test_handle_failure_calls_record_validation_reject():
         fail_count=0,
     )
 
-    assert qd.record_validation.called, (
-        "quality_dashboard.record_validation must be called on REJECT"
-    )
+    assert qd.record_validation.called, "quality_dashboard.record_validation must be called on REJECT"
     call_args, call_kwargs = qd.record_validation.call_args
-    assert call_kwargs.get("stage") == 3 or (
-        len(call_args) >= 3 and call_args[2] == 3
-    ), "record_validation must be called with stage=3"
+    assert call_kwargs.get("stage") == 3 or (len(call_args) >= 3 and call_args[2] == 3), (
+        "record_validation must be called with stage=3"
+    )
     result_arg = call_kwargs.get("result") or (call_args[1] if len(call_args) > 1 else None)
     assert result_arg is not None
     assert result_arg.get("decision") == "REJECT"
@@ -125,6 +125,7 @@ def test_handle_failure_calls_record_validation_reject():
 # ---------------------------------------------------------------------------
 # Test 3: quality_dashboard=None — _handle_success() does not crash
 # ---------------------------------------------------------------------------
+
 
 def test_handle_success_none_quality_dashboard_does_not_crash():
     orch = _make_orch(quality_dashboard=None)
@@ -135,6 +136,7 @@ def test_handle_success_none_quality_dashboard_does_not_crash():
     result = orch._handle_success(
         working_ep=5,
         arc_no=2,
+        arc_data={},
         blueprint=blueprint,
         pipeline_result=_pass_pipeline_result(),
         prev_blueprints=prev_blueprints,
@@ -148,6 +150,7 @@ def test_handle_success_none_quality_dashboard_does_not_crash():
 # ---------------------------------------------------------------------------
 # Test 4: quality_dashboard=None — _handle_failure() does not crash
 # ---------------------------------------------------------------------------
+
 
 def test_handle_failure_none_quality_dashboard_does_not_crash():
     orch = _make_orch(quality_dashboard=None)

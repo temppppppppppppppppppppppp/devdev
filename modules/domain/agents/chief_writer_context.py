@@ -80,6 +80,8 @@ class ChiefWriterContextBuilder:
         ending_hook_section: str = "",
         # [emotional_beat] 감정 정점
         emotional_beat_section: str = "",
+        # [TF-49b] Arc 계획 아이템 사전 정당화
+        upcoming_arc_items: list[str] = None,
     ) -> str:
         """
         [V60.81] 공통 컨텍스트 구성 (CoT 기반 + Writer 핵심 기능 완전 통합)
@@ -204,6 +206,39 @@ class ChiefWriterContextBuilder:
             dead_npcs=dead_npcs,
             item_acquisition_timeline=item_acquisition_timeline,
         )
+
+        # [TF-49] Blueprint 소지품 갭 — 획득 장면 지시 (future_guard_section에 append)
+        if isinstance(blueprint, dict):
+            _gaps = blueprint.get("_inventory_gaps", [])
+            if isinstance(_gaps, list) and _gaps:
+                _gap_items = [g["item"] for g in _gaps if isinstance(g, dict) and g.get("item")]
+                if _gap_items:
+                    _gap_lines = "\n".join(
+                        f"  - {item}: 현재 미보유 → 초반에 자연스러운 획득 경위 삽입" for item in _gap_items
+                    )
+                    future_guard_section += f"""
+### ⚠️ [TF-49] Blueprint 소지품 갭 — 획득 장면 필요
+Blueprint가 다음 아이템의 사용을 설계했으나, 주인공이 현재 보유하지 않습니다:
+{_gap_lines}
+
+🔴 에피소드 초반에 자연스러운 획득 경위를 반드시 포함하세요.
+🔴 획득 경위 없이 갑자기 사용하면 REJECT됩니다.
+🔴 예: "맡겨둔 짐을 찾았다", "사무실 비치 장비를 빌렸다" 등
+"""
+
+        # [TF-49b] Arc 계획 아이템 사전 정당화 — 향후 에피소드에서 쓰일 아이템 존재 정당화
+        if upcoming_arc_items:
+            _upcoming = [str(i) for i in upcoming_arc_items if i]
+            if _upcoming:
+                _items_list = "\n".join(f"  - {item}" for item in _upcoming)
+                future_guard_section += f"""
+### [TF-49b] 이 아크에서 향후 사용 예정 아이템
+{_items_list}
+
+위 아이템들이 향후 에피소드에서 등장할 수 있습니다.
+서사 흐름에 자연스럽게 녹아들 수 있다면, 주인공이 해당 아이템에 접근/보유 가능한 상태를 간접적으로 설정해 주세요.
+(필수가 아닌 권장 — 서사 흐름이 항상 우선합니다)
+"""
 
         # [V60.81] 과거 침범 방지 섹션
         past_guard_section = self._build_past_guard_section(

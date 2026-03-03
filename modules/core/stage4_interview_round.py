@@ -95,6 +95,16 @@ class Stage4InterviewRound:
         _motivations = _ws._state.get("motivations", []) if _ws and hasattr(_ws, "_state") else []
         _promises = _ws._state.get("promises", []) if _ws and hasattr(_ws, "_state") else []
 
+        # [TF-49b] Arc 계획 아이템 중 현재 미보유 항목 추출
+        _upcoming_arc_items: list[str] = []
+        if _arc_data_full:
+            _sc = _arc_data_full.get("state_constraints", {})
+            if isinstance(_sc, dict):
+                _planned = _sc.get("protagonist_items") or _sc.get("items_acquired") or []
+                if isinstance(_planned, list):
+                    _owned_set = set(current_inventory or [])
+                    _upcoming_arc_items = [str(i) for i in _planned if i and str(i) not in _owned_set]
+
         # [TF-T4] 25개 공통 kwargs — 4개 호출부에서 재사용
         _common_writer_kwargs = {
             "ep_num": next_ep,
@@ -124,6 +134,7 @@ class Stage4InterviewRound:
             "emotional_beat_section": emotional_beat_section,
             "motivations": _motivations,  # [B-4]
             "promises": _promises,  # [B-4]
+            "upcoming_arc_items": _upcoming_arc_items,  # [TF-49b]
             # episode_digest는 Director 전용 — L713에서 별도 전달
         }
 
