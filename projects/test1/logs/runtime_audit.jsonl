@@ -1,0 +1,15 @@
+{"timestamp": "2026-02-28 17:54:16", "type": "v60_25_auto_correct", "message": "arc auto-corrected", "data": {"arc_no": 1, "corrections": ["arc_end_state 위치 동기화: '알 수 없음' → '서울 성북동 저택 2층, 한시우의 개인 서재 책상 앞'"]}}
+{"timestamp": "2026-02-28 17:54:46", "type": "data_missing", "message": "hybrid_composition missing", "data": {"arc_no": 1}}
+{"timestamp": "2026-02-28 17:54:46", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-28 17:55:01", "type": "v60_10_state_extracted", "message": "StateExtractor generated context", "data": {"arc_count": 1, "items_tracked": 4}}
+{"timestamp": "2026-02-28 17:57:01", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-28 17:57:01", "type": "blueprint_success", "message": "ep_1_blueprint_generated", "data": {"ep_num": 1, "arc_no": 1, "strategy": "action_focused", "score": 95, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-28 17:59:04", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-28 17:59:04", "type": "blueprint_success", "message": "ep_2_blueprint_generated", "data": {"ep_num": 2, "arc_no": 1, "strategy": "emotion_focused", "score": 95, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-28 18:00:54", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-28 18:00:54", "type": "blueprint_success", "message": "ep_3_blueprint_generated", "data": {"ep_num": 3, "arc_no": 1, "strategy": "dialogue_focused", "score": 95, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-28 18:03:08", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-28 18:03:08", "type": "blueprint_success", "message": "ep_4_blueprint_generated", "data": {"ep_num": 4, "arc_no": 1, "strategy": "emotion_focused", "score": 95, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-28 18:05:31", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
+{"timestamp": "2026-02-28 18:05:31", "type": "blueprint_success", "message": "ep_5_blueprint_generated", "data": {"ep_num": 5, "arc_no": 1, "strategy": "emotion_focused", "score": 95, "final_verdict": "PASS", "quality_risk": false}}
+{"timestamp": "2026-02-28 18:35:54", "type": "db_commit", "message": "데이터베이스 저장 완료", "data": {}}
