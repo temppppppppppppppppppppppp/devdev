@@ -885,6 +885,61 @@ class FourPhaseArcGenerator(BaseAgent):
         pipeline_result["final_verdict"] = "FAILED"
         return None, pipeline_result
 
+    def _load_execution_state(self, last_arc: dict) -> dict:
+        """[TF-48] 실제 에피소드 실행 결과 로드 — Arc 계획 상태와 실행 상태 간 차이 보정.
+
+        WorldState + FactLedger + episode_bibles에서 실제 데이터를 가져와
+        Arc 생성 시 정확한 상태를 전달한다.
+        """
+        result = {}
+        try:
+            _db = getattr(getattr(self.context, "current_project", None), "db", None)
+            if not _db:
+                return result
+
+            # 1) WorldState — 주인공 자산, 활성 아이템, 위치
+            _ws = _db.load_anchor("world_state")
+            if _ws and isinstance(_ws, dict):
+                _protag = _ws.get("protagonist", {})
+                if isinstance(_protag, dict):
+                    result["protagonist_assets"] = _protag.get("assets", {})
+                    result["protagonist_location"] = _protag.get("location", "")
+                    result["protagonist_status"] = _protag.get("status", {})
+                _active = _ws.get("active_items", {})
+                if isinstance(_active, dict) and _active:
+                    result["active_items"] = {k: v for k, v in list(_active.items())[:30]}
+
+            # 2) FactLedger — 핵심 수치 (인물, 아이템, 자산)
+            _fl = _db.load_anchor("fact_ledger")
+            if _fl and isinstance(_fl, dict):
+                _facts = _fl.get("facts", {})
+                if isinstance(_facts, dict):
+                    _key_facts = {}
+                    for _fk, _fv in list(_facts.items())[:30]:
+                        if isinstance(_fv, dict):
+                            _key_facts[_fk] = {
+                                "value": _fv.get("value"),
+                                "last_ep": _fv.get("last_ep"),
+                            }
+                    if _key_facts:
+                        result["fact_ledger"] = _key_facts
+
+            # 3) 최신 episode_bible — 마지막 화의 상태 변화
+            _ep_end = last_arc.get("ep_end", 0)
+            if _ep_end > 0:
+                _eb = _db.get_episode_bible(_ep_end)
+                if _eb and isinstance(_eb, dict):
+                    result["last_episode_state"] = {
+                        "ep_num": _eb.get("ep_num"),
+                        "capital": _eb.get("capital"),
+                        "total_assets": _eb.get("total_assets"),
+                        "new_items": _eb.get("new_items", []),
+                        "location": _eb.get("location", ""),
+                    }
+        except Exception as _ex:
+            logging.debug("[TF-48] execution_state 로드 실패 (비치명): %s", str(_ex)[:100])
+        return result
+
     def _generate_prev_context(self, prev_arcs: list[dict], preflight_result: dict) -> str:
         """[V67] 이전 Arc 컨텍스트 생성 - 전문 확장 (Gemini 대용량 컨텍스트 활용)"""
         if not prev_arcs:
@@ -941,6 +996,52 @@ class FourPhaseArcGenerator(BaseAgent):
         lines.append(f"✅ 소지품: {final_equipment}")
         lines.append("=" * 50)
         lines.append("")
+
+        # [TF-48] 실제 에피소드 실행 결과 주입 — Arc 계획과 실행 간 차이 보정
+        _exec = self._load_execution_state(last_arc)
+        if _exec:
+            lines.append("=" * 50)
+            lines.append("⚠️ [TF-48] 실제 에피소드 실행 결과 (Arc 계획보다 우선)")
+            lines.append("다음 Arc 설계 시 아래 실행 결과를 반드시 참조하라.")
+            lines.append("=" * 50)
+            # 주인공 자산
+            _assets = _exec.get("protagonist_assets", {})
+            if _assets:
+                for _ak, _av in _assets.items():
+                    lines.append(f"  💰 {_ak}: {_av}")
+            _status = _exec.get("protagonist_status", {})
+            if _status:
+                for _sk, _sv in _status.items():
+                    lines.append(f"  📊 {_sk}: {_sv}")
+            _loc = _exec.get("protagonist_location")
+            if _loc:
+                lines.append(f"  📍 실제 위치: {_loc}")
+            # 최신 에피소드 재무 상태
+            _les = _exec.get("last_episode_state", {})
+            if _les:
+                _cap = _les.get("capital")
+                _total = _les.get("total_assets")
+                _ep = _les.get("ep_num")
+                if _cap is not None or _total is not None:
+                    lines.append(f"  📋 제{_ep}화 종료 기준: 자본금={_cap}, 총자산={_total}")
+                _new_items = _les.get("new_items", [])
+                if _new_items:
+                    lines.append(f"  🆕 제{_ep}화 신규 아이템: {_new_items}")
+            # FactLedger 핵심 수치
+            _fl = _exec.get("fact_ledger", {})
+            if _fl:
+                _fl_lines = []
+                for _fk, _fv in list(_fl.items())[:15]:
+                    _fl_lines.append(f"{_fk}={_fv.get('value')} (ep{_fv.get('last_ep')})")
+                if _fl_lines:
+                    lines.append(f"  📖 팩트원장: {'; '.join(_fl_lines)}")
+            # 활성 아이템
+            _ai = _exec.get("active_items", {})
+            if _ai:
+                _ai_names = list(_ai.keys())[:20]
+                lines.append(f"  🎒 활성 아이템: {', '.join(_ai_names)}")
+            lines.append("=" * 50)
+            lines.append("")
 
         # 보조 정보
         world = preflight_result.get("world_state", {})
