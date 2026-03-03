@@ -101,3 +101,26 @@
 | ❌ FAIL | 치명적 플롯 모순, NPC 부활, 자산 역행 등 |
 
 **POC 목표**: PASS 또는 CONDITIONAL
+
+---
+
+## 7. 자동 검증 커버리지 (시스템 내장)
+
+> 위 1~6 항목 중 시스템이 자동으로 검증하는 범위. 2026-03-03 기준.
+
+| 체크리스트 항목 | 자동 검증 모듈 | 커버 수준 |
+|----------------|---------------|-----------|
+| 사망 캐릭터 부활 | TruthGate `_check_deceased_npc` | 완전 (행동/대사 등장 감지) |
+| NPC 성격/말투 변질 | NpcDriftAdvisor (LLM 대조) | 경고 수준 (Advisory) |
+| NPC 관계 변화 유지 | RelationshipDriftAdvisor (이력 대조) | 경고 수준 (Advisory) |
+| 자산/수치 누적 논리 | NumericDriftAdvisor (5화 단위 이력) | 경고 수준 (Advisory) |
+| 미보유 아이템 사용 | TruthGate `_check_item_usage` | 완전 |
+| 세계 법칙 위반 | TruthGate `_check_world_law_violation` | 완전 (Bible world_laws 대조) |
+| 1인칭 정보 역설 | InfoParadoxChecker | 경고 수준 (1인칭 전용) |
+| 회상 장면 오염 | FlashbackVerifier (원문 대조) | 경고 수준 (VecMemory 참조) |
+| 반복 장면 감지 | LongTermRepetitionAdvisor (20화+) | 경고 수준 (씬 2-gram) |
+| 플롯 모순 감지 | Director 자기일관성 투표 3회 | 간접 (다수결 기반) |
+| 기업명/기관명 일관성 | FactLedger 이력 + Director | 간접 |
+| 금융 수치 모순 | NumericDriftAdvisor + Director | 경고 수준 |
+
+**미커버**: 이름 오타, 시대 배경 정확성, 투자 규칙 현실성, 감정선 자연스러움, 대리만족 적절성

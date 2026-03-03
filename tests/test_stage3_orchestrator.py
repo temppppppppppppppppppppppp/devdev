@@ -268,7 +268,7 @@ class TestHandleSuccess:
         bp = {"integrated_scenario": "text", "scene_breakdown": {"s1": "scene"}}
         pr = {"phases": {"generate": {"selected_strategy": "A", "selected_score": 85}}}
         prev_bps = []
-        result = orch._handle_success(3, 1, bp, pr, prev_bps, 2, 1)
+        result = orch._handle_success(3, 1, {}, bp, pr, prev_bps, 2, 1)
         assert result["next_ep"] == 4
         assert result["success_count"] == 3
         assert result["fail_count"] == 0
@@ -279,7 +279,7 @@ class TestHandleSuccess:
         app_mock._validate_blueprint_integrity.return_value = False
         bp = {"bad": True}
         pr = {}
-        result = orch._handle_success(3, 1, bp, pr, [], 2, 0)
+        result = orch._handle_success(3, 1, {}, bp, pr, [], 2, 0)
         assert result["fail_count"] == 1
         app_mock.current_project.save_episode_blueprint.assert_not_called()
 

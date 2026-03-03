@@ -186,6 +186,7 @@ class TestStage3HandleSuccessQualityDashboard:
         orch._handle_success(
             working_ep=1,
             arc_no=1,
+            arc_data={},
             blueprint=blueprint,
             pipeline_result=pipeline_result,
             prev_blueprints=prev_blueprints,
@@ -207,6 +208,7 @@ class TestStage3HandleSuccessQualityDashboard:
         orch._handle_success(
             working_ep=42,
             arc_no=3,
+            arc_data={},
             blueprint={"ep_num": 42},
             pipeline_result=pipeline_result,
             prev_blueprints=[],
