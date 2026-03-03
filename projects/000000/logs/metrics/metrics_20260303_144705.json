@@ -1,0 +1,78 @@
+{
+  "session_id": "20260303_144705",
+  "start_time": "2026-03-03T14:47:05.307915",
+  "end_time": "2026-03-03T14:49:39.130771",
+  "total_calls": 8,
+  "successful_calls": 8,
+  "failed_calls": 0,
+  "total_retries": 0,
+  "total_tokens": 38956,
+  "total_cost_usd": 0.0809,
+  "agent_stats": {
+    "StateExtractor": {
+      "agent_name": "StateExtractor",
+      "total_calls": 1,
+      "successful_calls": 1,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 19543.75386238098,
+        "min_ms": 19543.75386238098,
+        "max_ms": 19543.75386238098,
+        "p50_ms": 19543.75386238098,
+        "p90_ms": 19543.75386238098,
+        "p99_ms": 19543.75386238098
+      }
+    },
+    "BlueprintEnsembleGenerator": {
+      "agent_name": "BlueprintEnsembleGenerator",
+      "total_calls": 6,
+      "successful_calls": 6,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 42314.43544228872,
+        "min_ms": 38273.31328392029,
+        "max_ms": 49700.12068748474,
+        "p50_ms": 40773.63312244415,
+        "p90_ms": 47227.12588310242,
+        "p99_ms": 49452.82120704651
+      }
+    },
+    "Director": {
+      "agent_name": "Director",
+      "total_calls": 1,
+      "successful_calls": 1,
+      "failed_calls": 0,
+      "success_rate": 100.0,
+      "total_retries": 0,
+      "avg_retries_per_call": 0.0,
+      "duration_stats": {
+        "avg_ms": 32186.680555343628,
+        "min_ms": 32186.680555343628,
+        "max_ms": 32186.680555343628,
+        "p50_ms": 32186.680555343628,
+        "p90_ms": 32186.680555343628,
+        "p99_ms": 32186.680555343628
+      }
+    }
+  },
+  "model_stats": {
+    "gemini-3-flash-preview": {
+      "input_tokens": 3913,
+      "output_tokens": 1432,
+      "total_tokens": 5345,
+      "cost_usd": 0.0048
+    },
+    "gemini-2.5-pro": {
+      "input_tokens": 24533,
+      "output_tokens": 9078,
+      "total_tokens": 33611,
+      "cost_usd": 0.0761
+    }
+  }
+}

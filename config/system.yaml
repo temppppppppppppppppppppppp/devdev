@@ -23,7 +23,7 @@ api:
 network_retry:
   delay_base: 10             # 기본 대기 (초)
   delay_max: 30              # 최대 대기 (초, 백오프 상한)
-  max_retries: 22            # 최대 재시도 (22회 ≈ ~10분)
+  max_retries: 3             # 최대 재시도 (3회 → 빠른 폴백)
 
 # API 키 순환 설정
 key_rotation:

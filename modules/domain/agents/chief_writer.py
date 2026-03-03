@@ -570,6 +570,11 @@ class ChiefWriter(BaseAgent):
                 final_title = data.get("title", f"제{ep_num}화")
                 final_state = data.get("state_updates", {})
 
+            # patch_state_updates JSON이 원고 끝에 누출된 경우 제거
+            final_content = re.sub(
+                r'\s*\{"patch_state_updates"\s*:.*?\}\s*$', "", final_content, flags=re.DOTALL
+            ).rstrip()
+
             return {
                 "strategy": strategy,
                 "strategy_name": strategy_config["name"],
@@ -829,7 +834,8 @@ class ChiefWriter(BaseAgent):
                             _state_updates = {}
                         # 원고 텍스트 추출 (여러 키 이름 시도)
                         _manuscript = (
-                            _parsed.get("content")
+                            _parsed.get("patched_text")
+                            or _parsed.get("content")
                             or _parsed.get("text")
                             or _parsed.get("manuscript")
                             or _parsed.get("patched_manuscript")
@@ -885,7 +891,7 @@ class ChiefWriter(BaseAgent):
                     # ["text1", "text2"] → join
                     return "\n\n".join(str(item) for item in parsed)
                 elif isinstance(parsed, dict):
-                    return parsed.get("content") or parsed.get("text") or parsed.get("manuscript") or text
+                    return parsed.get("patched_text") or parsed.get("content") or parsed.get("text") or parsed.get("manuscript") or text
             except (json.JSONDecodeError, ValueError):
                 pass
         return text

@@ -332,7 +332,6 @@ class ProjectService:
             ALLOWED_TABLES = frozenset(
                 [
                     "manuscripts",
-                    "blueprints",
                     "state_logs",
                     "martial_tracker",
                     "causal_graph",
@@ -342,7 +341,6 @@ class ProjectService:
             )
             production_tables = [
                 "manuscripts",
-                "blueprints",
                 "state_logs",
                 "martial_tracker",
                 "causal_graph",
