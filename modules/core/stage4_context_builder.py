@@ -400,6 +400,70 @@ class Stage4ContextBuilder:
             logging.warning(f"[SilentPass:ContextBuilder] 확장 lookback 다이제스트 실패: {e!s:.100}")
             return ""
 
+    def _build_future_arc_context(self, current_ep: int, arc_data: dict) -> str:
+        """
+        [미래 서사 방향 힌트] 현재 Arc 남은 Blueprint + 다음 Arc 요약 → 포맷된 텍스트 반환.
+        mandatory_context에 append되어 CW·Director 양쪽에 주입됨.
+        """
+        try:
+            lines = [
+                "[미래 Arc/Blueprint 참고]\n"
+                "▸ CW: 아래 향후 계획에 없는 새 갈등·사건·인물관계를 임의로 추가하지 마세요.\n"
+                "▸ Director: Blueprint에 없는 서사 요소가 아래 미래 계획과 무관하면 점수 차감 사유입니다."
+            ]
+
+            # 1. 현재 Arc 내 남은 Blueprint (ep+1 ~ arc_end)
+            arc_end = arc_data.get("ep_end", current_ep) if arc_data else current_ep
+            remaining = []
+            for ep in range(current_ep + 1, arc_end + 1):
+                try:
+                    bp = self.ctx.current_project.get_blueprint(ep)
+                except Exception:
+                    bp = None
+                if bp:
+                    scenario = str(bp.get("integrated_scenario", ""))[:200]
+                    core = str(bp.get("core_tension", ""))[:80]
+                    remaining.append(
+                        f"  제{ep}화: {scenario}" + (f" / 긴장: {core}" if core else "")
+                    )
+
+            if remaining:
+                lines.append("[현재 Arc 남은 화 Blueprint]")
+                lines.extend(remaining)
+
+            # 2. 다음 Arc 1개 — beat_sequence + tactical_doc 앞 500자
+            current_arc_no = arc_data.get("arc_no", 1) if arc_data else 1
+            _db = getattr(self.ctx.current_project, "db", None)
+            all_arcs: list[dict] = []
+            try:
+                all_arcs = (_db.load_anchor("arcs") if _db else []) or []
+            except Exception:
+                all_arcs = []
+            future_arcs = sorted(
+                [a for a in all_arcs if isinstance(a, dict) and a.get("arc_no", 0) > current_arc_no],
+                key=lambda a: a.get("arc_no", 0),
+            )
+            if future_arcs:
+                arc = future_arcs[0]
+                beats = " → ".join(str(b) for b in arc.get("beat_sequence", [])[:6])
+                snippet = str(arc.get("tactical_doc", ""))[:500]
+                lines.append(
+                    f"[다음 Arc {arc.get('arc_no')} '{arc.get('title', '')}' "
+                    f"({arc.get('ep_start')}~{arc.get('ep_end')}화)]"
+                )
+                if beats:
+                    lines.append(f"  비트: {beats}")
+                if snippet:
+                    lines.append(f"  방향: {snippet}")
+
+            if len(lines) == 1:
+                return ""
+
+            return "\n".join(lines)
+        except Exception as _fut_err:
+            logging.warning("[SilentPass:FutureArcCtx] 미래 Arc 컨텍스트 생성 실패: %s", str(_fut_err)[:80])
+            return ""
+
     def prepare_episode_context(self, next_ep: int, arc_data: dict, chief_writer) -> dict:
         """에피소드별 컨텍스트 데이터 수집 (Arc 메타 + 이전 원고 + HUD + 연결고리)."""
         arc_pos = next_ep - arc_data.get("ep_start", next_ep) + 1
@@ -991,6 +1055,11 @@ class Stage4ContextBuilder:
                 _mc_parts.append(_narrative_summaries)
         except Exception as e:
             self.ctx.ui.log(f"   ⚠️ [V64.P4] 내러티브 요약 로드 실패 (비치명): {str(e)[:60]}")
+
+        # [미래 Arc/Blueprint 주입] — CW·Director 공통 참조용
+        _future_ctx = self._build_future_arc_context(next_ep, arc_data)
+        if _future_ctx:
+            _mc_parts.append(_future_ctx)
 
         _sc_budget = int(getattr(_retrieval_plan, "total_budget_chars", 0) or 0)
         # [TF7-P1-03] SC 비활성 시 비-SC 필수 문맥이 절삭되지 않도록 양쪽 플래그 모두 확인
