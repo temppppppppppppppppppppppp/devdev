@@ -805,33 +805,60 @@ class ChiefWriter(BaseAgent):
             if not response or len(response) < 2000:
                 logging.warning(f"[TF-23] InPlace 응답 길이 부족: {len(response or '')}자 < 2000자")
                 return []
-            # [TF-47] patch_state_updates JSON 블록 추출 — 중첩 dict 안전
+            # [TF-47] patch_state_updates + manuscript 추출
+            # ask()가 response_mime_type="application/json"을 강제하므로
+            # LLM이 {"content":"원고...", "patch_state_updates":{...}} 형태로 반환할 수 있음
             _state_updates = {}
-            _su_marker = '"patch_state_updates"'
-            _su_idx = response.rfind(_su_marker)
-            if _su_idx >= 0:
-                _outer_start = response.rfind("{", 0, _su_idx)
-                if _outer_start >= 0:
-                    _tail = response[_outer_start:]
-                    try:
-                        _outer = json.loads(_tail)
-                        _state_updates = _outer.get("patch_state_updates", {})
+            _manuscript = ""
+
+            # 1단계: 전체 JSON 파싱 시도 (ask()가 JSON 강제하는 경우)
+            _stripped = response.strip()
+            if _stripped.startswith("{") and _stripped.endswith("}"):
+                try:
+                    _parsed = json.loads(_stripped)
+                    if isinstance(_parsed, dict):
+                        _state_updates = _parsed.get("patch_state_updates", {})
                         if not isinstance(_state_updates, dict):
                             _state_updates = {}
-                        response = response[:_outer_start].rstrip()
-                    except (json.JSONDecodeError, ValueError):
-                        # 폴백: 기존 regex (flat dict에서는 작동)
-                        _su_match = re.search(r'\{"patch_state_updates"\s*:\s*(\{.*?\})\}', response, re.DOTALL)
-                        if _su_match:
-                            try:
-                                _state_updates = json.loads(_su_match.group(1))
-                            except (json.JSONDecodeError, ValueError):
-                                pass
-                            response = response[: _su_match.start()].rstrip()
-            # [TF-36] LLM이 JSON으로 감싼 경우 텍스트 추출
-            response = self._unwrap_manuscript_text(response)
-            logging.info(f"✅ [TF-23] 원고 in-place 수정 완료 ({len(response)}자)")
-            return [{"manuscript": response, "strategy": "inplace_patch", "state_updates": _state_updates}]
+                        # 원고 텍스트 추출 (여러 키 이름 시도)
+                        _manuscript = (
+                            _parsed.get("content")
+                            or _parsed.get("text")
+                            or _parsed.get("manuscript")
+                            or _parsed.get("patched_manuscript")
+                            or ""
+                        )
+                except (json.JSONDecodeError, ValueError):
+                    pass  # JSON 파싱 실패 → 2단계로
+
+            # 2단계: JSON 파싱 실패 또는 원고가 빈 경우 → 기존 마커 방식 폴백
+            if not _manuscript:
+                _su_marker = '"patch_state_updates"'
+                _su_idx = response.rfind(_su_marker)
+                if _su_idx >= 0:
+                    # patch_state_updates 직전의 { 를 찾되, position 0이면 스킵 (전체 JSON wrapper)
+                    _outer_start = response.rfind("{", 0, _su_idx)
+                    if _outer_start > 0:
+                        _tail = response[_outer_start:]
+                        try:
+                            _outer = json.loads(_tail)
+                            _state_updates = _outer.get("patch_state_updates", {})
+                            if not isinstance(_state_updates, dict):
+                                _state_updates = {}
+                            response = response[:_outer_start].rstrip()
+                        except (json.JSONDecodeError, ValueError):
+                            _su_match = re.search(r'\{"patch_state_updates"\s*:\s*(\{.*?\})\}', response, re.DOTALL)
+                            if _su_match:
+                                try:
+                                    _state_updates = json.loads(_su_match.group(1))
+                                except (json.JSONDecodeError, ValueError):
+                                    pass
+                                response = response[: _su_match.start()].rstrip()
+                # [TF-36] LLM이 JSON으로 감싼 경우 텍스트 추출
+                _manuscript = self._unwrap_manuscript_text(response)
+
+            logging.info(f"✅ [TF-23] 원고 in-place 수정 완료 ({len(_manuscript)}자)")
+            return [{"manuscript": _manuscript, "strategy": "inplace_patch", "state_updates": _state_updates}]
         except Exception as e:
             logging.warning(f"[TF-23] 원고 in-place 패치 실패: {e!s:.200}")
             return []
@@ -892,6 +919,9 @@ class ChiefWriter(BaseAgent):
         world_state_summary: str = "",
         chain_link_section: str = "",
         emotional_beat_section: str = "",
+        # [B-4] 주인공 동기/약속
+        motivations: list = None,
+        promises: list = None,
     ) -> list[dict]:
         """[Phase 3-5B] 원본 원고를 보존하며 피드백 지적사항만 수정. 3후보 반환.
 
@@ -984,6 +1014,8 @@ class ChiefWriter(BaseAgent):
                 world_state_summary=world_state_summary,
                 chain_link_section=chain_link_section,
                 emotional_beat_section=emotional_beat_section,
+                motivations=motivations,
+                promises=promises,
             )
         except Exception as e:
             logging.warning(f"[Phase 3-5B] patch_with_feedback 실패, 빈 리스트 반환: {e}")

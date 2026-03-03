@@ -1342,9 +1342,11 @@ class Stage4InterviewRound:
                     attempt_number=round_num + 1,
                     style_guide=style_guide,  # [TF-37]
                 )
-                if not candidates:
+                # [TF-47] 빈 manuscript 후보도 실패로 간주
+                if not candidates or not any(c.get("manuscript", "").strip() for c in candidates):
                     logging.warning("[TF-23] InPlace 실패 → Patch 폴백")
                     self.ctx.ui.log("   ⚠️ [TF-23] InPlace 실패 → Patch 폴백")
+                    candidates = None  # 폴백 트리거
                     _use_inplace = False  # 폴백
 
             # --- Patch 시도 (Ensemble) ---
