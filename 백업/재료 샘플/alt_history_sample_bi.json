@@ -1,0 +1,362 @@
+{
+  "_schema_version": "2.0",
+  "_schema_description": "대체역사물(Alt_History) 장르 Bible 샘플 - 범용 템플릿",
+  "_last_updated": "2026-02-07",
+
+  "MasterBible": {
+    "ProjectData": {
+      "MetaInfo": {
+        "title": "대체역사물 샘플 프로젝트",
+        "grand_objective": "영조 시대 당쟁의 소용돌이 속에서 조선의 운명을 바꾸는 개혁을 이끌어내는 것",
+        "genre_archetype": "alt_history + 빙의물 + 개혁물",
+        "logline": "2024년 역사학자가 교통사고로 죽은 뒤 1760년 조선 영조 시대 몰락 양반 '이도겸'에 빙의한다. 현대 역사 지식으로 당쟁의 흐름을 꿰뚫고, 사도세자의 비극을 막으며, 조선의 개혁을 이끌어 새로운 역사를 쓴다.",
+        "total_episodes": 200,
+        "episodes_per_arc": 5,
+        "arcs_per_volume": 5
+      },
+      "CoreIdentity": {
+        "protagonist": "이도겸 (빙의체) / 한재현 (원래 인격)",
+        "protagonist_faction": "무당파 (초기) → 탕평파 (중기) → 신개혁파 (후기)",
+        "edge": "2024년까지의 조선사·세계사 지식 + 근대 과학·경제 개념 + 역사학자의 분석력",
+        "desire": "사도세자의 비극을 막고, 조선이 근대화의 기회를 놓치지 않게 만드는 것",
+        "crisis": "몰락 양반의 신분으로 궁궐 근처에도 가기 어려운 처지. 양반이나 미관말직도 없음"
+      },
+      "CommercialCode": {
+        "cider_point": "현대 지식으로 역사의 흐름을 뒤집는 통쾌함 + 당쟁에서 상대를 논리로 압도하는 장면",
+        "success_device": "과거 급제, 왕의 신임 획득, 정적들의 몰락, 역사 변경의 나비효과",
+        "attitude": "능동적 개혁가 - 역사를 아는 자가 역사를 바꾼다"
+      }
+    },
+
+    "protagonist_config": {
+      "world_origin": "현대인",
+      "incarnation_type": "빙의자",
+      "possession_point": {
+        "death_year": 2024,
+        "death_cause": "교통사고",
+        "arrival_year": 1760,
+        "arrival_month": "영조 삼십육년 정월",
+        "host_body": "이도겸 - 몰락 양반가 차남, 스물여섯 세"
+      }
+    },
+
+    "JoseonHUD": {
+      "_description": "대체역사물 전용 HUD - 조선시대 신분/관직/당파/정치적 영향력 추적",
+      "Protagonist": {
+        "actual_truth": {
+          "name": "이도겸",
+          "alias": "한재현 (현대 인격)",
+          "age": 26,
+          "social_class": "양반 (몰락)",
+          "court_rank": "무품",
+          "position": "무관직 (백수 선비)",
+          "faction": "무당파 (어느 당파에도 속하지 않음)",
+
+          "political_influence": 0,
+          "wealth": "빈한",
+
+          "knowledge": [
+            "조선 후기 역사 전공 (영조·정조 시대 전문)",
+            "사도세자 비극의 전말",
+            "세계 근대사 (산업혁명, 프랑스혁명 등)",
+            "근대 과학 기초 (물리학, 화학, 의학)",
+            "근대 경제학 기초 (중상주의, 무역론)",
+            "조선 법전 및 제도 (경국대전, 속대전)"
+          ],
+
+          "connections": {
+            "royal": 0,
+            "nobility": 5,
+            "commoner": 10,
+            "foreign": 0
+          },
+
+          "public_trust": 5,
+          "karma": 0,
+
+          "current_objective": "과거 시험에 급제하여 관직을 얻는 것",
+          "mid_term_goal": "영조의 신임을 얻어 탕평책의 핵심 인물이 되는 것",
+          "final_goal": "사도세자의 비극을 막고 조선의 개혁을 이끄는 것",
+
+          "causal_injuries": "몰락 양반이라 사방에서 무시당함. 원래 이도겸의 나태한 평판이 남아 있음"
+        },
+
+        "public_reputation": {
+          "identity": "한양 변두리의 몰락 양반 자제",
+          "wealth_level": "빈한",
+          "perceived_influence": "없음",
+          "scholarly_reputation": "돌연 학문에 눈 뜬 괴짜 선비"
+        }
+      }
+    },
+
+    "WorldState": {
+      "CurrentEra": "영조 삼십육년 (1760년) 정월",
+      "CurrentLocation": "한양 외곽 낡은 기와집",
+      "political_context": {
+        "king": "영조 (이금, 재위 36년차)",
+        "crown_prince": "사도세자 (이선, 25세)",
+        "faction_balance": {
+          "노론": "집권세력, 사도세자 견제",
+          "소론": "약세, 세자 옹호 일부",
+          "남인": "재야 세력, 실학 주도",
+          "북인": "거의 소멸"
+        },
+        "key_tension": "영조와 사도세자의 갈등 심화 중. 노론 벽파가 세자를 제거하려 획책",
+        "upcoming_events": [
+          {"year": 1762, "event": "임오화변 (사도세자 뒤주 사건)", "impact": "세자 사망, 정치 지형 격변"},
+          {"year": 1776, "event": "영조 승하, 정조 즉위", "impact": "개혁 정치 시작"},
+          {"year": 1791, "event": "신해통공", "impact": "시전 독점 폐지, 상업 자유화"},
+          {"year": 1796, "event": "수원 화성 완공", "impact": "정조의 왕권 강화 상징"}
+        ]
+      },
+      "KarmaMatrix": {
+        "김상로": {
+          "relation_score": -80,
+          "status": "적대",
+          "note": "노론 벽파의 핵심. 사도세자 제거를 주도하는 실세"
+        },
+        "채제공": {
+          "relation_score": 30,
+          "status": "호의",
+          "note": "남인 실학파 관료. 이도겸의 학식에 관심"
+        },
+        "홍봉한": {
+          "relation_score": -20,
+          "status": "경계",
+          "note": "혜경궁의 아버지. 세자를 보호하려 하지만 노론에 휘둘림"
+        },
+        "박문수": {
+          "relation_score": 50,
+          "status": "우호",
+          "note": "암행어사 출신 원로. 이도겸의 백부와 교분이 있었음"
+        },
+        "서명균": {
+          "relation_score": -60,
+          "status": "적대",
+          "note": "이도겸 가문을 몰락시킨 장본인. 토지를 빼앗음"
+        }
+      }
+    },
+
+    "AssetLibrary": {
+      "KeyNPCs": [
+        {
+          "name": "김상로",
+          "role": "메인 빌런",
+          "desc": "노론 벽파의 수장격 인물. 영조의 총애를 받으며 사도세자를 몰아세우는 핵심 세력. 교활하고 치밀하며, 당쟁을 자기 권력 확대에 이용한다.",
+          "NPC_Court_HUD": {
+            "social_class": "양반",
+            "court_rank": "정이품",
+            "faction": "노론 벽파",
+            "position": "좌의정",
+            "loyalty_to_king": 85,
+            "status": "활동중",
+            "influence": 90
+          }
+        },
+        {
+          "name": "채제공",
+          "role": "잠재적 조력자/멘토",
+          "desc": "남인 계열 실학자이자 관료. 실용적 학문을 중시하며, 이도겸의 독특한 지식에 흥미를 느낀다. 향후 정조 시대 우의정까지 오를 인물.",
+          "NPC_Court_HUD": {
+            "social_class": "양반",
+            "court_rank": "정삼품",
+            "faction": "남인",
+            "position": "승지",
+            "loyalty_to_king": 90,
+            "status": "활동중",
+            "influence": 45
+          }
+        },
+        {
+          "name": "홍봉한",
+          "role": "회색 인물 (적도 아군도 아닌)",
+          "desc": "혜경궁 홍씨의 아버지이자 사도세자의 장인. 세자를 보호하려 하지만 노론의 압박에 흔들린다. 줄타기의 달인이나 결정적 순간에 무력해진다.",
+          "NPC_Court_HUD": {
+            "social_class": "양반",
+            "court_rank": "정일품",
+            "faction": "노론 시파(온건파)",
+            "position": "영의정",
+            "loyalty_to_king": 75,
+            "status": "활동중",
+            "influence": 80
+          }
+        },
+        {
+          "name": "박문수",
+          "role": "초반 조력자",
+          "desc": "암행어사로 이름을 날린 원로 관료. 은퇴했지만 여전히 영향력이 있다. 이도겸 가문의 옛 교분으로 그를 도와줄 인물.",
+          "NPC_Court_HUD": {
+            "social_class": "양반",
+            "court_rank": "종이품 (은퇴)",
+            "faction": "탕평파",
+            "position": "은퇴",
+            "loyalty_to_king": 95,
+            "status": "은퇴/은거",
+            "influence": 40
+          }
+        },
+        {
+          "name": "서명균",
+          "role": "초반 빌런",
+          "desc": "이도겸 가문의 토지를 부정하게 빼앗아 몰락시킨 탐관오리. 현재 한양 인근 고을의 수령으로 횡포를 부리고 있다. 김상로에게 뇌물을 바치며 비호를 받는다.",
+          "NPC_Court_HUD": {
+            "social_class": "양반",
+            "court_rank": "종오품",
+            "faction": "노론",
+            "position": "군수",
+            "loyalty_to_king": 20,
+            "status": "활동중",
+            "influence": 25
+          }
+        }
+      ],
+
+      "KeyItems": [
+        {
+          "item": "이도겸의 일기장",
+          "desc": "빙의 전 원래 이도겸이 쓴 일기. 가문 몰락의 전말과 서명균의 부정이 기록되어 있다. 복권의 단서."
+        },
+        {
+          "item": "현대 지식 비망록",
+          "desc": "한재현이 빙의 후 기억나는 현대 지식을 조선식 문체로 정리한 비밀 서책. 발각되면 요서(妖書)로 몰릴 위험."
+        },
+        {
+          "item": "가문의 옥패",
+          "desc": "이도겸 가문이 양반임을 증명하는 유일한 증거. 몰락해도 신분은 양반이라는 마지막 보루."
+        }
+      ],
+
+      "KeyLocations": [
+        {
+          "name": "창덕궁",
+          "desc": "영조가 거처하는 궁궐. 모든 정치적 결정이 이루어지는 권력의 핵심."
+        },
+        {
+          "name": "성균관",
+          "desc": "유생들의 교육 기관이자 여론의 발원지. 과거 준비와 정치적 입지를 다지는 곳."
+        },
+        {
+          "name": "한양 시전",
+          "desc": "상업의 중심지. 경제 개혁의 무대가 될 곳."
+        }
+      ],
+
+      "Persona": "냉철한 분석력의 역사학자이되, 조선인으로서의 정체성을 점차 체화해가는 이중 인격. 현대적 합리성과 유교적 대의 사이에서 균형을 찾는다.",
+      "SpeechStyle": {
+        "tone": "유교적 격식체를 기본으로 하되, 내면 독백은 현대적",
+        "vocabulary": "한문 고어 + 역사학 용어(내면) + 조선 구어체",
+        "inner_monologue": "현대 역사학자의 시선으로 상황 분석 + 역사적 사건 예측 + 자조적 독백"
+      }
+    },
+
+    "Seeds": [
+      {
+        "id": "S-001",
+        "category": "인물",
+        "description": "채제공의 실학적 관심 - 이도겸의 '기묘한 학문'에 흥미를 보이며 교류 시작",
+        "status": "active",
+        "planted_ep": 3,
+        "target_harvest_ep": 25,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-002",
+        "category": "사건",
+        "description": "임오화변 (1762년) - 사도세자가 뒤주에 갇혀 죽는 비극을 막아야 한다는 암시",
+        "status": "active",
+        "planted_ep": 1,
+        "target_harvest_ep": 100,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-003",
+        "category": "인물",
+        "description": "서명균의 비리 장부 - 가문 몰락의 진실이 담긴 증거가 어딘가에 있다는 복선",
+        "status": "active",
+        "planted_ep": 5,
+        "target_harvest_ep": 30,
+        "echo_count": 0,
+        "harvested_ep": null
+      },
+      {
+        "id": "S-004",
+        "category": "아이템",
+        "description": "현대 지식 비망록의 위험 - 누군가 비밀 서책을 발견할 뻔하는 위기",
+        "status": "active",
+        "planted_ep": 8,
+        "target_harvest_ep": 45,
+        "echo_count": 0,
+        "harvested_ep": null
+      }
+    ],
+
+    "HistoricalEvents": {
+      "_description": "대체역사물에서 활용 가능한 실제 역사적 이벤트 DB",
+      "events": [
+        {
+          "month": "1760-01",
+          "event": "영조의 탕평책 강화",
+          "impact": "당파 갈등 속 기회의 창"
+        },
+        {
+          "month": "1761-05",
+          "event": "사도세자의 평양 행차",
+          "impact": "세자의 일탈 행동 시작, 왕과의 갈등 심화"
+        },
+        {
+          "month": "1762-윤05",
+          "event": "임오화변 (뒤주 사건)",
+          "impact": "사도세자 사망, 조선 정치사 최대 비극"
+        },
+        {
+          "month": "1763-01",
+          "event": "세손(정조) 책봉 강화",
+          "impact": "영조가 세손의 지위를 공고히 함"
+        },
+        {
+          "month": "1776-03",
+          "event": "영조 승하, 정조 즉위",
+          "impact": "개혁 정치의 시작"
+        },
+        {
+          "month": "1785-01",
+          "event": "대전통편 편찬",
+          "impact": "법제 정비"
+        },
+        {
+          "month": "1791-01",
+          "event": "신해통공",
+          "impact": "시전 독점 폐지, 상업 자유화"
+        }
+      ]
+    },
+
+    "GenreRules": {
+      "_description": "대체역사물 장르 규칙 및 제약",
+      "must_include": [
+        "유교 세계관이 기본 - 인물의 사고방식과 행동이 유교적 규범 안에서 이루어져야 함",
+        "신분 제약이 현실적이어야 함 - 양반/중인/상민/천민의 벽은 쉽게 넘을 수 없음",
+        "현대 지식의 적용은 단계적이고 개연성 있어야 함 - 갑자기 총을 만들 수 없음",
+        "당파 정치의 복잡성 반영 - 단순 선악 구도가 아닌 이해관계의 충돌",
+        "역사적 사건의 인과관계가 논리적이어야 함"
+      ],
+      "forbidden": [
+        "근현대 문물의 즉각적 도입 (전기, 총기 등의 갑작스러운 등장)",
+        "아라비아 숫자 직접 사용 (조선 맥락에 맞지 않음)",
+        "현대 구어체의 대사 남용 (내면 독백 외)",
+        "왕에 대한 불경 묘사 (조선 세계관 위반)",
+        "신분제를 무시한 전개 (천민이 갑자기 고관대작)"
+      ],
+      "tension_devices": [
+        "역사 변경의 나비효과 - 하나를 바꾸면 다른 것이 틀어짐",
+        "정체 노출 위기 - 현대 지식이 '요술'로 오해받을 위험",
+        "당쟁의 소용돌이 - 어느 편에 서든 적을 만듦",
+        "시간 압박 - 임오화변까지 불과 2년"
+      ]
+    }
+  }
+}
