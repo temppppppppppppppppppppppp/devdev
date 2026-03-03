@@ -1,0 +1,1 @@
+{"ts": "2026-02-27T17:12:50", "ep": 1, "round": 0, "verdict": "REJECT", "score": 40, "selected": "A", "strategy": "", "error_category": "", "reason": "부족", "action_items": ["수정1"], "score_breakdown": {}, "open_review": "", "flags": {"patch_mode": false, "patch_fallback": false, "tot": false, "mad": false, "asp": false}, "warnings": []}

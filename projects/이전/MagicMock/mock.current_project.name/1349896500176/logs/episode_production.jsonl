@@ -1,0 +1,1 @@
+{"ts": "2026-02-27T15:56:01", "ep": 3, "round": 0, "verdict": "REJECT", "score": 40, "selected": "A", "strategy": "", "error_category": "", "reason": "reject", "action_items": ["fix"], "score_breakdown": {}, "open_review": "", "flags": {"patch_mode": false, "patch_fallback": false, "tot": false, "mad": false, "asp": false}, "warnings": []}
