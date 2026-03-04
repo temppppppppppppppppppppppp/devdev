@@ -101,6 +101,8 @@ class RetrievalSources:
     VEC_MEMORY = "vec_memory"
     DB_NPC_HISTORY = "db_npc_history"
     MANUSCRIPT_DB = "manuscript_db"  # [Phase2-L2]
+    STATIC = "static"  # [TF-55b] query 문자열 자체를 결과로 반환
+    DB_NPC_RELATIONSHIP = "db_npc_relationship"  # [TF-55b] npc_relationship_history 테이블 직접 조회
 
 
 @dataclass(slots=True)
@@ -483,11 +485,18 @@ class ContextAdvisor:
 
         tactical = str(arc_data.get("tactical_doc", "") or arc_data.get("arc_tactical", "")).strip()
         if tactical:
-            slots.append(RetrievalSlot("arc_tactical", f"아크 전술 연속성: {tactical[:320]}", priority=2))
+            slots.append(
+                RetrievalSlot(
+                    "arc_tactical",
+                    f"아크 전술 연속성: {tactical[:320]}",
+                    source=RetrievalSources.STATIC,
+                    priority=2,
+                )
+            )
 
         scene_query = self._build_scene_query(blueprint)
         if scene_query:
-            slots.append(RetrievalSlot("scene_context", scene_query, priority=2))
+            slots.append(RetrievalSlot("scene_context", scene_query, source=RetrievalSources.STATIC, priority=2))
 
         plot_suspension = arc_data.get("plot_suspension", []) or []
         if plot_suspension:
@@ -501,11 +510,25 @@ class ContextAdvisor:
 
         rel_query = self._build_relationship_query(state_changes)
         if rel_query:
-            slots.append(RetrievalSlot("relationship_history", rel_query, priority=2))
+            slots.append(
+                RetrievalSlot(
+                    "relationship_history",
+                    rel_query,
+                    source=RetrievalSources.DB_NPC_RELATIONSHIP,
+                    priority=2,
+                )
+            )
 
         if genre in self._GENRE_HINTS:
             for idx, phrase in enumerate(self._GENRE_HINTS[genre][:2], start=1):
-                slots.append(RetrievalSlot(f"genre_context_{idx}", f"장르 맥락 키워드: {phrase}", priority=3))
+                slots.append(
+                    RetrievalSlot(
+                        f"genre_context_{idx}",
+                        f"장르 맥락 키워드: {phrase}",
+                        source=RetrievalSources.STATIC,
+                        priority=3,
+                    )
+                )
 
         # Slot: Manuscript excerpt (실제 원고 발췌, 연속성 참조용)
         # [Phase2-L2] 버그수정: "ep_num" 키 없음 → "current_ep" 키 사용
