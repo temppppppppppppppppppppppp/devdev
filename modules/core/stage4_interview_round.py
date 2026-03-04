@@ -3,6 +3,7 @@
 """
 
 import logging
+import time
 
 from modules.core.context_advisor import RetrievalSources
 
@@ -190,6 +191,8 @@ class Stage4InterviewRound:
         """[4-R1-e-1] Single interview round: generation, validation, judgment."""
         from modules.core.stage4_types import _InterviewRoundResult
 
+        self._round_start_ts = time.monotonic()
+
         # [4-R2-b] Unpack round context
         chief_writer = round_ctx.chief_writer
         manuscript_validator = round_ctx.manuscript_validator
@@ -314,6 +317,9 @@ class Stage4InterviewRound:
                 prev_score=_prev_score,
                 patch_fallback=_is_patch_fallback,
                 arc=round_ctx.arc_data.get("arc_no", 0),
+                verdict="ERROR",
+                reject_reason="empty_candidates",
+                model=getattr(chief_writer, "model_tier", None),
             )
             # [TF-7-P0-04] EMPTY → QualityDashboard 집계
             if getattr(self.ctx, "quality_dashboard", None):
@@ -392,6 +398,24 @@ class Stage4InterviewRound:
 
         # [B-1-3b] Advisory chain (TruthGate, NpcDrift, NumericDrift, Flashback, InfoParadox, RelDrift)
         _advisory_parts = self._run_advisory_chain(candidates, validation_results, next_ep, genre_name)
+        _advisory_summary = {}
+        for _part in (_advisory_parts or []):
+            _part_s = str(_part)
+            if "[TruthGate]" in _part_s:
+                _advisory_summary["truth_gate"] = 1
+            if "[LM-B]" in _part_s or "NpcDrift" in _part_s:
+                _advisory_summary["npc_drift"] = 1
+            if "[LM-C]" in _part_s or "NumericDrift" in _part_s:
+                _advisory_summary["numeric_drift"] = 1
+            if "[LM-D]" in _part_s or "RelDrift" in _part_s:
+                _advisory_summary["rel_drift"] = 1
+            if "[LM-E]" in _part_s or "Flashback" in _part_s:
+                _advisory_summary["flashback"] = 1
+            if "[LM-F]" in _part_s or "InfoParadox" in _part_s:
+                _advisory_summary["info_paradox"] = 1
+            if "[LM-P1]" in _part_s or "LongTerm" in _part_s:
+                _advisory_summary["long_term_rep"] = 1
+        self._last_advisory_summary = dict(_advisory_summary)
         _director_mc_parts = _advisory_parts + _director_mc_parts
 
         # [TF-49b] Preflight advisory → Director에도 전달
@@ -527,6 +551,7 @@ class Stage4InterviewRound:
                 selection_reason=_selection_reason,
                 candidate_count=len(candidates) if candidates else 0,
                 fix_scope=director_result.get("fix_scope", ""),  # [A-3]
+                advisory_warnings=_advisory_summary or None,
             )
         except Exception as e:
             logging.warning(f"[D-4] Director 선택 기록 실패 (비차단): {e!s:.100}")
@@ -541,6 +566,7 @@ class Stage4InterviewRound:
             tot_used=_tot_used,
             mad_used=_mad_used,
             asp_used=bool(_asp_manuscript),
+            model=getattr(chief_writer, "model_tier", None),
             validation_warnings=[w for vr in validation_results for w in vr.get("warnings", [])][:20],  # [TF-46] 10→20
         )
 
@@ -1281,6 +1307,10 @@ class Stage4InterviewRound:
                     prev_score=_prev_score,
                     patch_fallback=_is_patch_fallback,
                     arc=round_ctx.arc_data.get("arc_no", 0),
+                    verdict=verdict,
+                    fix_scope=director_result.get("fix_scope", "") if isinstance(director_result, dict) else None,
+                    advisory_flags=getattr(self, "_last_advisory_summary", None),
+                    model=getattr(getattr(round_ctx, "chief_writer", None), "model_tier", None),
                 )
                 return (
                     _InterviewRoundResult(
@@ -1470,6 +1500,7 @@ class Stage4InterviewRound:
                         "bucket": _reject_bucket,
                         "score": score,
                         "round": round_num,
+                        "ep_attempt_total": round_num + 1,
                         "strategy": selected,
                         "intelligence_used": {
                             "asp": bool(_asp_manuscript),
@@ -1490,6 +1521,11 @@ class Stage4InterviewRound:
             prev_score=_prev_score,
             patch_fallback=_is_patch_fallback,
             arc=round_ctx.arc_data.get("arc_no", 0),
+            verdict="REJECT",
+            reject_reason=director_feedback,
+            fix_scope=director_result.get("fix_scope", "") if isinstance(director_result, dict) else None,
+            advisory_flags=getattr(self, "_last_advisory_summary", None),
+            model=getattr(getattr(round_ctx, "chief_writer", None), "model_tier", None),
         )
         # [TF7-P1-06] FailureLearner Stage4 REJECT 기록 (Stage2 stage2_validation_pipeline.py:425~433 동일 패턴)
         try:
@@ -2320,6 +2356,7 @@ class Stage4InterviewRound:
         tot_used,
         mad_used,
         asp_used,
+        model,
         validation_warnings,
     ):
         """[V76] 라운드별 생산 로그를 JSONL로 기록."""
@@ -2340,14 +2377,24 @@ class Stage4InterviewRound:
             except (ValueError, TypeError):
                 _log_score = 0
 
+            _duration_ms = None
+            if hasattr(self, "_round_start_ts"):
+                try:
+                    _duration_ms = int((time.monotonic() - self._round_start_ts) * 1000)
+                except Exception:
+                    _duration_ms = None
+
             entry = {
                 "ts": datetime.datetime.now().isoformat(timespec="seconds"),
                 "ep": ep_num,
                 "round": round_num,
+                "ep_attempt_total": round_num + 1,
                 "verdict": director_result.get("verdict", ""),
                 "score": _log_score,
                 "selected": director_result.get("selected", ""),
                 "strategy": _sel_candidate.get("strategy", "") or _sel_candidate.get("strategy_name", ""),
+                "model": model,
+                "duration_ms": _duration_ms,
                 "error_category": director_result.get("error_category", ""),
                 "reason": (director_result.get("selection_reason") or "")[:500],
                 "action_items": (director_result.get("action_items") or [])[:5],
@@ -2380,22 +2427,61 @@ class Stage4InterviewRound:
         prev_score: float = 0,
         patch_fallback: bool = False,
         arc: int = 0,
+        verdict: str | None = None,
+        reject_reason: str = "",
+        fix_scope: str | None = None,
+        advisory_flags: dict | None = None,
+        model: str | None = None,
+        duration_ms: int | None = None,
     ) -> None:
-        """Stage 4 시도 결과를 PassRateMonitor에 기록 (비차단)."""
-        if not getattr(self.ctx, "pass_rate_monitor", None):
-            return
+        """Stage 4 ?? ??? ???? DB? ??? ??."""
+        if duration_ms is None and hasattr(self, "_round_start_ts"):
+            try:
+                duration_ms = int((time.monotonic() - self._round_start_ts) * 1000)
+            except Exception:
+                duration_ms = None
+
+        if getattr(self.ctx, "pass_rate_monitor", None):
+            try:
+                self.ctx.pass_rate_monitor.record_attempt(
+                    stage=4,
+                    episode=episode,
+                    arc=arc,
+                    attempt_num=round_num + 1,
+                    success=success,
+                    reject_reason="" if success else f"score={score}",
+                    generation_method="patch" if is_patch and not patch_fallback else "ensemble",
+                    is_patch=is_patch,
+                    prev_score=prev_score,
+                    patch_fallback=patch_fallback,
+                )
+            except Exception as _e:
+                logging.debug("[InterviewRound] PassRateMonitor ?? ?? (??): %s", _e)
+
         try:
-            self.ctx.pass_rate_monitor.record_attempt(
-                stage=4,
-                episode=episode,
-                arc=arc,
-                attempt_num=round_num + 1,
-                success=success,
-                reject_reason="" if success else f"score={score}",
-                generation_method="patch" if is_patch and not patch_fallback else "ensemble",
-                is_patch=is_patch,
-                prev_score=prev_score,
-                patch_fallback=patch_fallback,
-            )
-        except Exception as _e:
-            logging.debug("[InterviewRound] PassRateMonitor 기록 실패 (무시): %s", _e)
+            _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+            if _db and hasattr(_db, "save_stage_attempt"):
+                _verdict = verdict or ("PASS" if success else "REJECT")
+                _adv = advisory_flags if advisory_flags is not None else getattr(self, "_last_advisory_summary", None)
+                if not _adv:
+                    _adv = None
+                _model = model
+                if not _model:
+                    _director = getattr(getattr(self.ctx, "agents", {}), "get", lambda *_: None)("director")
+                    _model = getattr(_director, "primary_model", None) if _director else None
+                _db.save_stage_attempt(
+                    stage=4,
+                    verdict=_verdict,
+                    attempt_num=round_num + 1,
+                    ep_num=episode,
+                    arc_num=arc,
+                    score=score,
+                    reject_reason=("" if success else (reject_reason or f"score={score}")),
+                    fix_scope=fix_scope,
+                    model=str(_model) if _model else None,
+                    duration_ms=duration_ms,
+                    advisory_flags=_adv,
+                )
+        except Exception as _sa_err:
+            logging.debug("[stage_attempts] Stage4 record failed (non-blocking): %s", _sa_err)
+

@@ -683,6 +683,29 @@ class Stage3Orchestrator:
             except Exception:
                 pass
 
+        try:
+            _db = getattr(getattr(ctx, "current_project", None), "db", None)
+            if _db and hasattr(_db, "save_stage_attempt"):
+                _director = getattr(getattr(ctx, "agents", {}), "get", lambda *_: None)("director")
+                _model = getattr(_director, "primary_model", None) if _director else None
+                _score = pipeline_result.get("last_score", 0)
+                if not isinstance(_score, int):
+                    try:
+                        _score = int(_score)
+                    except (ValueError, TypeError):
+                        _score = 0
+                _db.save_stage_attempt(
+                    stage=3,
+                    verdict=str(_final_verdict),
+                    attempt_num=1,
+                    ep_num=working_ep,
+                    arc_num=arc_no,
+                    score=_score,
+                    model=str(_model) if _model else None,
+                )
+        except Exception as _sa_err:
+            _logging.debug("[stage_attempts] Stage3 PASS 기록 실패 (비차단): %s", _sa_err)
+
         if isinstance(blueprint, dict):
             blueprint["_stage3_meta"] = {
                 "final_verdict": _final_verdict,
@@ -858,6 +881,30 @@ class Stage3Orchestrator:
                 )
             except Exception as e:
                 _logging.debug("[TF-26] session_logger.log_decision failed: %s", str(e)[:100])
+
+        try:
+            _db = getattr(getattr(ctx, "current_project", None), "db", None)
+            if _db and hasattr(_db, "save_stage_attempt"):
+                _director = getattr(getattr(ctx, "agents", {}), "get", lambda *_: None)("director")
+                _model = getattr(_director, "primary_model", None) if _director else None
+                _score = pipeline_result.get("last_score", 0)
+                if not isinstance(_score, int):
+                    try:
+                        _score = int(_score)
+                    except (ValueError, TypeError):
+                        _score = 0
+                _db.save_stage_attempt(
+                    stage=3,
+                    verdict=str(pipeline_result.get("final_verdict", "REJECT")),
+                    attempt_num=1,
+                    ep_num=working_ep,
+                    arc_num=None,
+                    score=_score,
+                    reject_reason=str(pipeline_result.get("error", ""))[:500],
+                    model=str(_model) if _model else None,
+                )
+        except Exception as _sa_err:
+            _logging.debug("[stage_attempts] Stage3 REJECT 기록 실패 (비차단): %s", _sa_err)
 
         # [S3-N-P1-3] DI 콜백 None 방어
         if callable(ctx.audit_event):

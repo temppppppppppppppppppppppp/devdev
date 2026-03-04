@@ -301,6 +301,101 @@ class BaseAgent:
 
     # 📂 modules/domain/agents/base_agent.py
 
+    def _resolve_logging_db(self):
+        """Return project DB if available."""
+        return getattr(getattr(self.context, "current_project", None), "db", None)
+
+    def _resolve_stage_number(self):
+        """Best-effort stage extraction for telemetry."""
+        stage = getattr(self, "_current_stage", None)
+        if stage is None:
+            stage = getattr(self.context, "current_stage", None)
+        if isinstance(stage, int):
+            return stage
+        if isinstance(stage, str):
+            digits = "".join(ch for ch in stage if ch.isdigit())
+            if digits:
+                try:
+                    return int(digits)
+                except ValueError:
+                    return None
+        return None
+
+    def _resolve_episode_number(self):
+        """Best-effort episode number extraction for telemetry."""
+        for key in ("_current_ep_num", "current_ep", "next_ep", "episode_num"):
+            value = getattr(self, key, None)
+            if value is None:
+                value = getattr(self.context, key, None)
+            if isinstance(value, int):
+                return value
+        return None
+
+    @staticmethod
+    def _extract_verdict_from_response(response_text: str) -> str | None:
+        """Extract verdict-like field from JSON response text."""
+        if not response_text:
+            return None
+        try:
+            parsed = json.loads(response_text)
+        except (json.JSONDecodeError, TypeError, ValueError):
+            return None
+
+        if not isinstance(parsed, dict):
+            return None
+        for key in ("verdict", "decision", "final_verdict"):
+            value = parsed.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()[:40]
+        return None
+
+    def _log_llm_call_to_db(
+        self,
+        *,
+        model: str,
+        prompt_text: str,
+        response_text: str,
+        duration_ms: int,
+        success: bool,
+        error: Exception | None = None,
+        context_tag: str | None = None,
+        stage: int | None = None,
+        ep_num: int | None = None,
+    ) -> None:
+        """Non-blocking DB write for LLM call telemetry."""
+        try:
+            _db = self._resolve_logging_db()
+            if not (_db and hasattr(_db, "save_llm_call")):
+                return
+
+            if stage is None:
+                stage = self._resolve_stage_number()
+            if ep_num is None:
+                ep_num = self._resolve_episode_number()
+            if context_tag is None:
+                context_tag = getattr(self, "_current_context_tag", None)
+
+            _prompt_chars = len(str(prompt_text)) if prompt_text else 0
+            _resp_chars = len(str(response_text)) if response_text else 0
+            _verdict = self._extract_verdict_from_response(response_text) if success else None
+
+            _db.save_llm_call(
+                agent_name=_to_snake_case(self.__class__.__name__),
+                model=model or "",
+                prompt_chars=_prompt_chars,
+                response_chars=_resp_chars,
+                duration_ms=max(0, int(duration_ms)),
+                success=success,
+                error_type=type(error).__name__ if error else None,
+                error_msg=(str(error)[:80] if error else None),
+                stage=stage,
+                ep_num=ep_num,
+                verdict=_verdict,
+                context_tag=context_tag,
+            )
+        except Exception:
+            pass
+
     def ask(self, prompt, temperature=0.5, response_schema=None, thinking_level=None):
         """
         LLM에 질의
@@ -488,6 +583,18 @@ class BaseAgent:
                 except Exception as e:
                     logging.debug("[TF-26] audit_event (success) failed: %s", str(e)[:100])
 
+            try:
+                _elapsed_ms = int((time.time() - current_time) * 1000) if current_time else 0
+                self._log_llm_call_to_db(
+                    model=current_model,
+                    prompt_text=base_prompt,
+                    response_text=full_response,
+                    duration_ms=_elapsed_ms,
+                    success=True,
+                )
+            except Exception:
+                pass
+
             # [TF-28] thinking 캡처 debug 로그
             if _thinking_text:
                 logging.debug(
@@ -552,6 +659,19 @@ class BaseAgent:
                     )
                 except Exception as e:
                     logging.debug("[TF-26] audit_event (error) failed: %s", str(e)[:100])
+
+            try:
+                _elapsed_ms = int((time.time() - current_time) * 1000) if current_time else 0
+                self._log_llm_call_to_db(
+                    model=current_model,
+                    prompt_text=base_prompt,
+                    response_text=full_response or "",
+                    duration_ms=_elapsed_ms,
+                    success=False,
+                    error=_ask_error,
+                )
+            except Exception:
+                pass
 
             # 부분 응답이 있으면 저장
             if full_response:
@@ -976,6 +1096,7 @@ class BaseAgent:
         print(
             f"      🆘 [BACKUP] {self._agent_name} 백업 모델 호출 시작 (backup={self.backup_model}, error_type={error_type})"
         )
+        _backup_t0 = time.monotonic()
         try:
             # [FIX] 백업 모델용 별도 config
             backup_config_params = {
@@ -1010,6 +1131,18 @@ class BaseAgent:
                 logging.warning("[base_agent] backup response.text 접근 실패 (safety filter?) — 빈 응답 처리")
 
             # [V49.3] 백업 모델 비용 추적 종료
+            try:
+                self._log_llm_call_to_db(
+                    model=self.backup_model,
+                    prompt_text=base_prompt,
+                    response_text=backup_text,
+                    duration_ms=int((time.monotonic() - _backup_t0) * 1000),
+                    success=True,
+                    context_tag="backup_recovery",
+                )
+            except Exception:
+                pass
+
             if METRICS_ENABLED and backup_metric_id:
                 try:
                     collector = get_metrics_collector()
@@ -1052,6 +1185,19 @@ class BaseAgent:
         except Exception as e_inner:
             inner_error_type = self._classify_error(e_inner)
             logging.warning(f"🚨 [Critical] 백업 실패 ({inner_error_type}): {str(e_inner)[:50]}")
+
+            try:
+                self._log_llm_call_to_db(
+                    model=self.backup_model,
+                    prompt_text=base_prompt,
+                    response_text="",
+                    duration_ms=int((time.monotonic() - _backup_t0) * 1000),
+                    success=False,
+                    error=e_inner,
+                    context_tag="backup_recovery",
+                )
+            except Exception:
+                pass
 
             # [V44] 최후의 복구 시도
             if self.last_partial_response:
@@ -1597,6 +1743,7 @@ class BaseAgent:
 
             config = types.GenerateContentConfig(**config_params)
 
+            _cached_t0 = time.monotonic()
             time.sleep(self.API_DELAY)
             response = self.client.models.generate_content(
                 model=self.primary_model,
@@ -1624,13 +1771,38 @@ class BaseAgent:
                     pass
 
             try:
-                return response.text if response.text else ""
+                _cached_text = response.text if response.text else ""
             except (ValueError, AttributeError):
-                logging.warning("[V61.7] 캐시 응답 response.text 접근 실패 — 빈 문자열 반환")
-                return ""
+                logging.warning("[V61.7] cached-context response.text unavailable; treating as empty response")
+                _cached_text = ""
+
+            try:
+                self._log_llm_call_to_db(
+                    model=self.primary_model,
+                    prompt_text=wrapped_prompt,
+                    response_text=_cached_text,
+                    duration_ms=int((time.monotonic() - _cached_t0) * 1000),
+                    success=True,
+                    context_tag="cached_context",
+                )
+            except Exception:
+                pass
+            return _cached_text
 
         except Exception as e:
-            logging.warning(f"⚠️ [V61.7] 캐시 기반 질의 실패, 일반 질의로 폴백: {str(e)[:80]}")
+            try:
+                self._log_llm_call_to_db(
+                    model=self.primary_model,
+                    prompt_text=wrapped_prompt if "wrapped_prompt" in locals() else str(prompt or ""),
+                    response_text="",
+                    duration_ms=0,
+                    success=False,
+                    error=e,
+                    context_tag="cached_context",
+                )
+            except Exception:
+                pass
+            logging.warning(f"[V61.7] cached-context path failed; falling back to direct ask(): {str(e)[:80]}")
             fallback_prompt = full_prompt_fallback if full_prompt_fallback else prompt
             return self.ask(
                 fallback_prompt, temperature=temperature, thinking_level=thinking_level, response_schema=response_schema
