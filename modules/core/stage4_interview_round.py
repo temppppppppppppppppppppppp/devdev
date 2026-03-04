@@ -34,7 +34,9 @@ class Stage4InterviewRound:
         round_ctx,
     ):
         """[4-R1-e-1] Single interview round: generation, validation, judgment."""
-        from modules.core.stage4_types import _InterviewRoundResult
+        from modules.core.pattern_tracker import PatternTracker
+        from modules.core.stage4_types import WritingDirective, _InterviewRoundResult
+        from modules.core.writing_directive_generator import WritingDirectiveGenerator
         from modules.validation.threshold_helper import _threshold
 
         # [4-R2-b] Unpack round context
@@ -71,6 +73,45 @@ class Stage4InterviewRound:
         justification_prompt = round_ctx.justification_prompt
         reflexion_prompt = round_ctx.reflexion_prompt
         _preflight_advisory = round_ctx.preflight_advisory
+
+        # [TF-54a+b] PatternTracker + WritingDirectiveGenerator
+        _writing_directive: WritingDirective = WritingDirective()
+        _wd_expression_freq: dict[str, int] = {}
+        try:
+            _pt_enabled = bool(_threshold("pattern_tracker.enable", True))
+            if _pt_enabled:
+                _lookback = int(_threshold("pattern_tracker.lookback_episodes", 5))
+                _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+                _pt = PatternTracker()
+                _pt_report = _pt.build_report(db=_db, ep_num=next_ep, lookback=_lookback)
+                if _pt_report:
+                    _wd_expression_freq = dict(getattr(_pt_report, "expression_freq", {}) or {})
+                    _wdg = WritingDirectiveGenerator()
+                    _writing_directive = _wdg.generate(
+                        pattern_report=_pt_report,
+                        blueprint=blueprint if isinstance(blueprint, dict) else {},
+                        genre=genre_name,
+                        ep_num=next_ep,
+                        llm_callback=self._truth_gate_llm_ask,
+                        lookback=_lookback,
+                    )
+                    if not _writing_directive.is_empty():
+                        logging.info(
+                            "[TF-54] WritingDirective 생성 완료: ending=%s, ban=%d개",
+                            _writing_directive.ending_style[:30],
+                            len(_writing_directive.expression_ban),
+                        )
+        except Exception as _wd_e:
+            logging.warning("[TF-54] WritingDirective 생성 실패 (비치명): %s", str(_wd_e)[:100])
+            _writing_directive = WritingDirective()
+            _wd_expression_freq = {}
+
+        # [TF-54c/e] ChiefWriter 컨텍스트 + Self-Critique 주입용 공유 상태
+        try:
+            setattr(chief_writer, "_tf54_writing_directive", _writing_directive)
+            setattr(chief_writer, "_tf54_expression_freq", _wd_expression_freq)
+        except Exception as _tf54_ctx_e:
+            logging.debug("[TF-54] ChiefWriter 공유 상태 주입 실패 (비치명): %s", str(_tf54_ctx_e)[:80])
 
         if type(director_feedback) is not str:
             director_feedback = str(director_feedback or "")
@@ -562,6 +603,15 @@ class Stage4InterviewRound:
         # validation_results에서 경고를 추출하여 mandatory_context에 병합
         _mandatory_text = mandatory_context if isinstance(mandatory_context, str) else str(mandatory_context or "")
         _director_mc_parts = [_mandatory_text] if _mandatory_text else []
+        if not _writing_directive.is_empty():
+            _wd_lines = ["[WritingDirective]"]
+            if _writing_directive.ending_style:
+                _wd_lines.append(f"- ending_style: {_writing_directive.ending_style}")
+            if _writing_directive.expression_ban:
+                _wd_lines.append(f"- expression_ban: {', '.join(_writing_directive.expression_ban)}")
+            if _writing_directive.emotion_required:
+                _wd_lines.append(f"- emotion_required: {_writing_directive.emotion_required}")
+            _director_mc_parts.insert(0, "\n".join(_wd_lines))
 
         # [B-1-3b] Advisory chain (TruthGate, NpcDrift, NumericDrift, Flashback, InfoParadox, RelDrift)
         _advisory_parts = self._run_advisory_chain(candidates, validation_results, next_ep, genre_name)

@@ -82,6 +82,8 @@ class ChiefWriterContextBuilder:
         emotional_beat_section: str = "",
         # [TF-49b] Arc 계획 아이템 사전 정당화
         upcoming_arc_items: list[str] = None,
+        # [TF-54c] 동적 집필 지시
+        writing_directive=None,
     ) -> str:
         """
         [V60.81] 공통 컨텍스트 구성 (CoT 기반 + Writer 핵심 기능 완전 통합)
@@ -254,6 +256,43 @@ Blueprint가 다음 아이템의 사용을 설계했으나, 주인공이 현재 
 ⚠️ 위 세계 상태와 모순되는 묘사/대화/사건은 절대 금지.
 """
 
+        # [TF-54c] WritingDirective 섹션 주입
+        if writing_directive is None:
+            writing_directive = getattr(self.host, "_tf54_writing_directive", None)
+        writing_directive_section = ""
+        if writing_directive and hasattr(writing_directive, "is_empty") and not writing_directive.is_empty():
+            _wd_lines = [
+                "### 이번 화 집필 지시 (WritingDirective)",
+                "**반드시 준수하세요. Director가 이 지시의 준수 여부를 평가합니다.**",
+                "",
+            ]
+            if getattr(writing_directive, "ending_style", ""):
+                _wd_lines.append(
+                    f"- 마무리 방식: {self.host._escape_braces(str(getattr(writing_directive, 'ending_style', '')))}"
+                )
+            _exp_ban = list(getattr(writing_directive, "expression_ban", []) or [])
+            if _exp_ban:
+                _wd_lines.append(f"- 금지 표현: {self.host._escape_braces(', '.join(str(x) for x in _exp_ban))}")
+            _meta_avoid = list(getattr(writing_directive, "metaphor_avoid", []) or [])
+            if _meta_avoid:
+                _wd_lines.append(f"- 피할 은유: {self.host._escape_braces(', '.join(str(x) for x in _meta_avoid))}")
+            _meta_suggest = list(getattr(writing_directive, "metaphor_suggest", []) or [])
+            if _meta_suggest:
+                _wd_lines.append(f"- 추천 은유: {self.host._escape_braces(', '.join(str(x) for x in _meta_suggest))}")
+            if getattr(writing_directive, "emotion_required", ""):
+                _wd_lines.append(
+                    f"- 감정 요구: {self.host._escape_braces(str(getattr(writing_directive, 'emotion_required', '')))}"
+                )
+            _npc_directives = getattr(writing_directive, "npc_directives", {}) or {}
+            if isinstance(_npc_directives, dict) and _npc_directives:
+                _npc_pairs = ", ".join(f"{k}: {v}" for k, v in _npc_directives.items())
+                _wd_lines.append(f"- NPC 지시: {self.host._escape_braces(_npc_pairs)}")
+            if getattr(writing_directive, "intensity_note", ""):
+                _wd_lines.append(
+                    f"- 강도 가이드: {self.host._escape_braces(str(getattr(writing_directive, 'intensity_note', '')))}"
+                )
+            writing_directive_section = "\n".join(_wd_lines)
+
         # [I-25] 캐릭터 보이스 섹션 주입
         character_voice_section = ""
         _cv = getattr(self.host, "context", None)
@@ -282,6 +321,8 @@ Blueprint가 다음 아이템의 사용을 설계했으나, 주인공이 현재 
             writer_core_section += character_voice_section
         if world_state_section:
             writer_core_section += f"\n{world_state_section}\n"
+        if writing_directive_section:
+            writer_core_section += f"\n{writing_directive_section}\n"
         if reference_anchor_prompt:
             writer_core_section += f"\n{reference_anchor_prompt}\n"
         if mandatory_context:

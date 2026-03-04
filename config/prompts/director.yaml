@@ -126,8 +126,13 @@ ENSEMBLE_VARIABLE_PROMPT: |
   - 모순·연속성 오류 수정 (고유명사, 수치, 사망NPC, 아이템, 타임라인)
   - Blueprint 씬 누락 보완
   - 설정·세계관 위반 교정
-  **절대 포함하지 말 것:** 분량 확장, 대화 비율 조정, 문체 개선, 묘사 추가 등 양적·스타일 지시.
-  이런 지시는 inplace patch에서 원고 팽창을 유발한다. Director는 "무엇이 틀렸는가"만 지적하라.
+  **절대 포함 금지:** 분량 확장, 대화 비율 조정, 묘사 추가 같은 양적 지시.
+  단, WritingDirective 계약 위반은 반드시 feedback에 포함:
+  - expression_ban 사용
+  - ending_style 불일치
+  - emotion_required 미충족
+  이는 스타일 개선이 아니라 계약 위반 지적이다.
+  quality_engagement 채점에 WritingDirective 준수 여부를 반영하라.
 
   ### 🏆 [D-Step2] 독자 대리만족 심사 기준 (평가 3번 참고)
   위 "문장 품질 + 몰입도" 항목을 평가할 때, 아래 3가지 관점도 고려하세요:
@@ -341,8 +346,13 @@ ENSEMBLE_SELECTION_PROMPT: |
   - 모순·연속성 오류 수정 (고유명사, 수치, 사망NPC, 아이템, 타임라인)
   - Blueprint 씬 누락 보완
   - 설정·세계관 위반 교정
-  **절대 포함하지 말 것:** 분량 확장, 대화 비율 조정, 문체 개선, 묘사 추가 등 양적·스타일 지시.
-  이런 지시는 inplace patch에서 원고 팽창을 유발한다. Director는 "무엇이 틀렸는가"만 지적하라.
+  **절대 포함 금지:** 분량 확장, 대화 비율 조정, 묘사 추가 같은 양적 지시.
+  단, WritingDirective 계약 위반은 반드시 feedback에 포함:
+  - expression_ban 사용
+  - ending_style 불일치
+  - emotion_required 미충족
+  이는 스타일 개선이 아니라 계약 위반 지적이다.
+  quality_engagement 채점에 WritingDirective 준수 여부를 반영하라.
 
   ### 🏆 [D-Step2] 독자 대리만족 심사 기준 (평가 3번 참고)
   위 "문장 품질 + 몰입도" 항목을 평가할 때, 아래 3가지 관점도 고려하세요:
@@ -648,7 +658,7 @@ DIRECTOR_AUDIT_PROMPT_V30: |
      - **검수 기준**: 지문과 대사의 비율, 플랫폼 특화 문체(사이다/절벽걸기)가 구현되었는가?
      - ⚠️ **구조보다는 '독자 경험과 문장력'**을 최우선으로 본다. (목표: {target_len}자)
      - 🚨 **분량 절대 기준**: 공백 포함 4,000자 미만은 무조건 REJECT. 4,000자 이상이면 분량은 합격이다.
-     - 🚫 **[TF-35c] 분량·비율 피드백 금지**: 4,000자를 넘긴 원고에 "분량을 늘려라", "대화 비율을 높여라" 등 양적 피드백을 절대 하지 마라. feedback/action_items에는 모순·연속성·설정 오류 수정 지시만 담아라.
+      - 🚫 **[TF-35c] 분량·비율 피드백 금지**: 4,000자를 넘긴 원고에 "분량을 늘려라", "대화 비율을 높여라" 등 양적 피드백을 절대 하지 마라. feedback/action_items에는 모순·연속성·설정 오류 수정 지시 + WritingDirective 계약 위반 지시만 담아라.
 
 
      ###   [🚨 SCENE INTEGRITY CHECK]:

@@ -190,3 +190,8 @@ blueprint_preflight:
   min_episode: 2              # 1화는 상태 없으므로 skip
   auto_patch_on_fail: true
   save_patched_to_db: true
+
+pattern_tracker:
+  lookback_episodes: 5          # 직전 몇 화 원고를 분석할지
+  min_expression_freq: 2        # expression_ban 포함 최소 빈도
+  enable: true                  # false 시 PatternTracker 전체 스킵

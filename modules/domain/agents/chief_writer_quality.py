@@ -73,6 +73,8 @@ class ChiefWriterQualityGate:
         ep_num: int = None,
         motivations: list = None,
         promises: list = None,
+        directive=None,
+        expression_freq: dict | None = None,
     ) -> str:
         """
         [V60.81] Self-Critique 다중 라운드 적용
@@ -91,6 +93,12 @@ class ChiefWriterQualityGate:
         """
         encyclopedia = {"npcs": npcs}
         MAX_CRITIQUE_ROUNDS = 3
+        if directive is None:
+            directive = getattr(self.host, "_tf54_writing_directive", None)
+        if expression_freq is None:
+            expression_freq = getattr(self.host, "_tf54_expression_freq", None)
+        if not isinstance(expression_freq, dict):
+            expression_freq = {}
 
         current_manuscript = manuscript
         total_issues_fixed = 0
@@ -100,7 +108,15 @@ class ChiefWriterQualityGate:
         if rubric_score >= 3.5:
             # [TF-I08] 구조적 적신호 확인 — rubric 높아도 구조 문제 있으면 스킵 금지
             _structural = self._self_critique(
-                current_manuscript, hud_report, encyclopedia, genre_name, ep_num, motivations, promises
+                current_manuscript,
+                hud_report,
+                encyclopedia,
+                genre_name,
+                ep_num,
+                motivations,
+                promises,
+                directive,
+                expression_freq,
             )
             _medium_plus = [
                 i
@@ -117,7 +133,15 @@ class ChiefWriterQualityGate:
 
         for round_num in range(1, MAX_CRITIQUE_ROUNDS + 1):
             critique_result = self._self_critique(
-                current_manuscript, hud_report, encyclopedia, genre_name, ep_num, motivations, promises
+                current_manuscript,
+                hud_report,
+                encyclopedia,
+                genre_name,
+                ep_num,
+                motivations,
+                promises,
+                directive,
+                expression_freq,
             )
 
             if not critique_result["has_issues"]:
@@ -153,6 +177,8 @@ class ChiefWriterQualityGate:
         ep_num: int = None,
         motivations: list = None,
         promises: list = None,
+        directive=None,
+        expression_freq: dict | None = None,
     ) -> dict:
         """
         [V60.81] Writer Self-Critic - 원고 자체 검토
@@ -193,6 +219,12 @@ class ChiefWriterQualityGate:
         if motivations or promises:
             motivation_issues = self._check_motivation_consistency(content, motivations or [], promises or [])
             issues.extend(motivation_issues)
+
+        # 6. [TF-54e] WritingDirective 준수 체크
+        issues.extend(self._check_writing_directive(content, directive))
+
+        # 7. [TF-54e] 표현 신선도 체크
+        issues.extend(self._check_expression_freshness(content, expression_freq or {}))
 
         # [Sweep46] 심각도 판단 — 1~2건은 "low" (self-critique 스킵 의도 복원)
         severity = "low"
@@ -394,6 +426,43 @@ class ChiefWriterQualityGate:
                         }
                     )
                     break
+        return issues
+
+    def _check_writing_directive(self, manuscript: str, directive) -> list:
+        """[TF-54e] WritingDirective 위반 여부 점검."""
+        if directive is None:
+            return []
+        if hasattr(directive, "is_empty") and directive.is_empty():
+            return []
+
+        issues = []
+        expression_ban = list(getattr(directive, "expression_ban", []) or [])
+        for expr in expression_ban:
+            if expr and expr in manuscript:
+                issues.append(f"금지 표현 '{expr}' 사용됨")
+
+        tail = manuscript[-200:] if len(manuscript) > 200 else manuscript
+        ending_style = str(getattr(directive, "ending_style", "") or "")
+        if "조용한여운" in ending_style and any(
+            kw in tail for kw in ["시작이었다", "서막이 올랐다", "전쟁이 시작", "사냥이 시작"]
+        ):
+            issues.append("ending_style '조용한여운' 지시인데 선언문으로 종결")
+
+        return issues
+
+    def _check_expression_freshness(self, manuscript: str, expression_freq: dict) -> list:
+        """[TF-54e] 고빈도 표현의 재등장 여부 점검."""
+        if not isinstance(expression_freq, dict) or not expression_freq:
+            return []
+
+        issues = []
+        for expr, freq in expression_freq.items():
+            try:
+                _freq = int(freq)
+            except (ValueError, TypeError):
+                _freq = 0
+            if _freq >= 3 and expr and str(expr) in manuscript:
+                issues.append(f"반복 표현 '{str(expr)[:20]}' 이번 화에도 사용 (직전 {_freq}회)")
         return issues
 
     def _fix_manuscript_issues(self, manuscript: str, critique_result: dict, hud_report: str) -> str:
