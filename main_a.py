@@ -1425,6 +1425,440 @@ class SovereignApp:
             self._audit_event("block_enrichment_error", "treatment enrichment failed", {"error": str(e)[:200]})
             return treatment_file
 
+    def _init_core_agents(self, _agents: dict, _v50: dict | None, models: dict, default_model: str) -> None:
+        """[God-2] self.agents dict 구성 + arc_corrector/stage2_optimizer 초기화.
+
+        Args:
+            _agents: _lazy_load_agents() 반환값
+            _v50: _lazy_load_v50_modules() 반환값 (None 허용)
+            models: _get_agent_model_map() 반환값
+            default_model: 기본 모델 tier 문자열
+        """
+        Analyst = _agents["Analyst"]
+        ArcCorrector = _agents["ArcCorrector"]
+        ArcCritic = _agents["ArcCritic"]
+        ArcDraftValidator = _agents["ArcDraftValidator"]
+        ArcEnsembleGenerator = _agents["ArcEnsembleGenerator"]
+        ConsensusValidator = _agents["ConsensusValidator"]
+        ConstraintCompiler = _agents["ConstraintCompiler"]
+        ContinuityInspector = _agents["ContinuityInspector"]
+        Critic = _agents["Critic"]
+        Director = _agents["Director"]
+        FourPhaseArcGenerator = _agents["FourPhaseArcGenerator"]
+        Manager = _agents["Manager"]
+        PreflightChecker = _agents["PreflightChecker"]
+        StateExtractor = _agents["StateExtractor"]
+        StateLockedArcGenerator = _agents["StateLockedArcGenerator"]
+        ThreePhaseBlueprintGenerator = _agents["ThreePhaseBlueprintGenerator"]
+        Weaver = _agents["Weaver"]
+        Writer = _agents["Writer"]
+
+        self.agents = {
+            "analyst": Analyst(self.current_project, self.sys.api_client, model_tier=models.get("analyst", default_model)),
+            # [V65] Architect 삭제 (ThreePhaseBlueprintGenerator로 완전 대체)
+            "writer": Writer(self.current_project, self.sys.api_client, model_tier=models.get("writer", default_model)),
+            "director": Director(
+                self.current_project, self.sys.api_client, model_tier=models.get("director", default_model)
+            ),
+            "manager": Manager(self.current_project, self.sys.api_client, model_tier=models.get("manager", default_model)),
+            # [V45 Fix] weaver는 manager가 아닌 weaver 모델 사용 (fallback: manager)
+            "weaver": Weaver(
+                self.current_project,
+                self.sys.api_client,
+                model_tier=models.get("weaver", models.get("manager", default_model)),
+            ),
+            # [V48.1] ContinuityInspector - Director 산하 연속성 검증 에이전트
+            "continuity_inspector": ContinuityInspector(
+                self.current_project, self.sys.api_client, model_tier=AIModels.STAGE2_MAIN_MODEL
+            ),
+            # [V52.2] Critic - 원고 비평 에이전트
+            # [V60.78] 2.5-flash로 변경 (2.0 이하 미사용 정책)
+            "critic": Critic(self.current_project, self.sys.api_client, model_tier=_SUMMARY_MODEL),
+            # [V60.10] StateExtractor - 상태 추출 에이전트 (빠른 모델로 구조화된 상태 추출)
+            "state_extractor": StateExtractor(
+                self.current_project, self.sys.api_client, model_tier=_FLASH_ANALYSIS_MODEL
+            ),
+            # [V60.11] ArcEnsembleGenerator - Arc 앙상블 생성기 (3개 후보 병렬 생성)
+            "arc_ensemble": ArcEnsembleGenerator(
+                self.current_project, self.sys.api_client, model_tier=AIModels.STAGE2_MAIN_MODEL
+            ),
+            # [V60.12] FourPhaseArcGenerator - 4단계 Arc 생성 파이프라인 (초기 통과율 극대화)
+            "four_phase": FourPhaseArcGenerator(
+                self.current_project, self.sys.api_client, model_tier=AIModels.STAGE2_MAIN_MODEL
+            ),
+            # [V60.14] StateLockedArcGenerator - 상태 잠금 Arc 생성기 (구조적 모순 불가)
+            "state_locked": StateLockedArcGenerator(
+                self.current_project, self.sys.api_client, model_tier=AIModels.STAGE2_MAIN_MODEL
+            ),
+            # [V60.12] PreflightChecker - 생성 전 완벽 분석
+            "preflight": PreflightChecker(
+                self.current_project, self.sys.api_client, model_tier=_FLASH_ANALYSIS_MODEL
+            ),
+            # [V60.12] ArcCritic - Arc 즉시 비평
+            "arc_critic": ArcCritic(self.current_project, self.sys.api_client, model_tier=AIModels.STAGE2_MAIN_MODEL),
+            # [V60.12] ConsensusValidator - 3-LLM 합의 검증
+            "consensus": ConsensusValidator(
+                self.current_project, self.sys.api_client, model_tier=AIModels.STAGE2_MAIN_MODEL
+            ),
+            # [V60.80] ThreePhaseBlueprintGenerator - 3단계 Blueprint 파이프라인
+            "three_phase_bp": ThreePhaseBlueprintGenerator(
+                self.current_project, self.sys.api_client, model_tier=AIModels.STAGE2_MAIN_MODEL
+            ),
+        }
+
+        # [V60.11] Python 기반 헬퍼 초기화 (LLM 미사용)
+        self.arc_draft_validator = ArcDraftValidator()
+        self.constraint_compiler = ConstraintCompiler()
+        # [V60.42] Arc Corrector - MAJOR 이슈 부분 수정 (ON/OFF 토글 가능)
+        self.arc_corrector = ArcCorrector(
+            context=self.current_project,
+            client=self.sys.api_client,
+            model_tier=_FLASH_ANALYSIS_MODEL,  # [V65] 경량 모델 상수
+        )
+        self.use_arc_corrector = True  # [V60.42] 기본 활성화 (False로 설정하면 비활성화)
+        # [V60.25] Stage 2 Optimizer - 통과율 최적화
+        create_stage2_optimizer = _v50["create_stage2_optimizer"] if _v50 else None
+        self.stage2_optimizer = create_stage2_optimizer() if create_stage2_optimizer else None
+        self.ui.log("   🔧 [V60.11] Stage 2 고도화 모듈 초기화 (Ensemble + DraftValidator + ConstraintCompiler)")
+        self.ui.log(
+            "   🚀 [V60.12] Stage 2 초기통과율 극대화 모듈 초기화 (FourPhase + Preflight + Critic + Consensus)"
+        )
+        self.ui.log(
+            f"   🔧 [V60.42] Arc Corrector 초기화 (MAJOR 이슈 부분 수정: {'활성화' if self.use_arc_corrector else '비활성화'})"
+        )
+        if self.stage2_optimizer:
+            self.ui.log("   ⚡ [V60.25] Stage 2 Optimizer 활성화 (StateSnapshot + AutoCorrector + ConstraintAmplifier)")
+
+    def _init_v50_modules(self, _v50: dict | None) -> None:
+        """[God-2] V50 서사 품질 향상 모듈 전체 초기화.
+
+        Args:
+            _v50: _lazy_load_v50_modules() 반환값 (None이면 기본 모드)
+        """
+        if V50_MODULES_AVAILABLE and _v50:
+            try:
+                genre_type = self.selected_genre.get("type", "wuxia") if self.selected_genre else "wuxia"
+
+                # [V65] V50.1~V51.1 초기화 삭제 (Dead Code 정리)
+
+                # [V65] V51.1 호흡 분석기 재연결
+                self.pacing_analyzer = _v50["PacingAnalyzer"]()
+
+                # V51.2 품질 증폭기
+                self.quality_amplifier = _v50["QualityAmplifier"]()
+
+                # V51.3 에이전트 지능 향상
+                self.agent_intelligence = _v50["AgentIntelligence"](genre=genre_type)
+
+                # V51.4 실패 학습 시스템
+                self.failure_learner = _v50["FailureLearner"]()
+                # [DB-Eff-P2] DB 우선 로드, 폴백: JSON 1회 마이그레이션
+                _fl_loaded = False
+                try:
+                    _fl_row = self.current_project.db.conn.execute(
+                        "SELECT description FROM reflexion_memory WHERE pattern_type = ?",
+                        ("failure_learner_snapshot",),
+                    ).fetchone()
+                    if _fl_row and _fl_row[0]:
+                        from collections import defaultdict as _defaultdict
+
+                        from modules.core.failure_learning import (
+                            FailureCategory as _FailureCategory,
+                        )
+                        from modules.core.failure_learning import (
+                            FailureRecord as _FailureRecord,
+                        )
+
+                        _snapshot = json.loads(_fl_row[0])
+                        self.failure_learner.records = []
+                        self.failure_learner.category_counts = _defaultdict(int)
+                        self.failure_learner.stage_counts = {
+                            2: _defaultdict(int),
+                            3: _defaultdict(int),
+                            4: _defaultdict(int),
+                        }
+                        self.failure_learner.recent_failures = {2: [], 3: [], 4: []}
+
+                        for _r in _snapshot.get("records", []):
+                            try:
+                                _category = _FailureCategory(_r.get("category", "unknown"))
+                            except ValueError:
+                                _category = _FailureCategory.UNKNOWN
+
+                            _stage = int(_r.get("stage", 4))
+                            _record = _FailureRecord(
+                                category=_category,
+                                stage=_stage,
+                                episode=int(_r.get("episode", 0)),
+                                arc=int(_r.get("arc", 0)),
+                                reason=str(_r.get("reason", "")),
+                                details=_r.get("details", {}),
+                                timestamp=str(_r.get("timestamp", "")),
+                            )
+                            self.failure_learner.records.append(_record)
+                            self.failure_learner.category_counts[_category] += 1
+                            self.failure_learner.stage_counts.setdefault(_stage, _defaultdict(int))[_category] += 1
+                            self.failure_learner.recent_failures.setdefault(_stage, []).append(_record)
+                            if len(self.failure_learner.recent_failures[_stage]) > 10:
+                                self.failure_learner.recent_failures[_stage].pop(0)
+                        _fl_loaded = bool(self.failure_learner.records)
+                except Exception as _fl_db_err:
+                    logging.debug("[DB-Eff] failure_learner DB load 실패: %s", _fl_db_err)
+
+                if _fl_loaded:
+                    self.ui.log(f"   📚 [V51.4] 실패 기록 {len(self.failure_learner.records)}건 로드(DB)")
+                else:
+                    failure_log_path = os.path.join(
+                        self._PROJECTS_DIR, self.current_project.name, "logs", "failure_learning.json"
+                    )
+                    if os.path.exists(failure_log_path):
+                        self.failure_learner.load_from_json(failure_log_path)
+                        if self.failure_learner.records:
+                            _snapshot = {
+                                "records": [
+                                    {
+                                        "category": r.category.value,
+                                        "stage": r.stage,
+                                        "episode": r.episode,
+                                        "arc": r.arc,
+                                        "reason": r.reason,
+                                        "details": r.details,
+                                        "timestamp": r.timestamp,
+                                    }
+                                    for r in self.failure_learner.records
+                                ],
+                                "stats": self.failure_learner.get_failure_stats(),
+                            }
+                            _ts = time.strftime("%Y-%m-%d %H:%M:%S")
+                            _first_ep = min((int(r.episode) for r in self.failure_learner.records), default=0)
+                            _last_ep = max((int(r.episode) for r in self.failure_learner.records), default=0)
+                            self.current_project.db.conn.execute(
+                                """INSERT INTO reflexion_memory
+                                   (pattern_type, description, frequency, solution, first_seen, last_seen, first_ep, last_ep)
+                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                                   ON CONFLICT(pattern_type) DO UPDATE SET
+                                     description=excluded.description,
+                                     frequency=excluded.frequency,
+                                     solution=excluded.solution,
+                                     last_seen=excluded.last_seen,
+                                     first_ep=excluded.first_ep,
+                                     last_ep=excluded.last_ep""",
+                                (
+                                    "failure_learner_snapshot",
+                                    json.dumps(_snapshot, ensure_ascii=False),
+                                    len(self.failure_learner.records),
+                                    "failure_learner_json_migrated",
+                                    _ts,
+                                    _ts,
+                                    _first_ep,
+                                    _last_ep,
+                                ),
+                            )
+                            self.current_project.db.conn.commit()
+                            self.ui.log("   📚 [DB-Eff] failure_learning JSON→DB 마이그레이션 완료")
+
+                # V51.5 캐릭터 음성 추적
+                self.character_voice = _v50["CharacterVoiceTracker"]()
+                # [DB-Eff-P1] DB 우선 로드, 폴백: 파일
+                _cv_db_count = self.character_voice.load_from_db(self.current_project.db)
+                if _cv_db_count == 0:
+                    voice_log_path = os.path.join(
+                        self._PROJECTS_DIR, self.current_project.name, "logs", "character_voice.json"
+                    )
+                    if os.path.exists(voice_log_path):
+                        self.character_voice.load_from_json(voice_log_path)
+                        self.character_voice.save_to_db(self.current_project.db)
+                        self.ui.log("   🎭 [DB-Eff] character_voice JSON→DB 마이그레이션 완료")
+                else:
+                    self.ui.log(f"   🎭 [V51.5] 캐릭터 음성 {len(self.character_voice.profiles)}명 로드(DB)")
+
+                # V51.6 복선 추적
+                self.foreshadow_tracker = _v50["ForeshadowTracker"]()
+                # [DB-Eff-P1] DB 우선 로드, 폴백: 파일
+                _ft_db_count = self.foreshadow_tracker.load_from_db(self.current_project.db)
+                if _ft_db_count == 0:
+                    foreshadow_log_path = os.path.join(self._PROJECTS_DIR, self.current_project.name, "logs", "foreshadow.json")
+                    if os.path.exists(foreshadow_log_path):
+                        self.foreshadow_tracker.load_from_json(foreshadow_log_path)
+                        self.foreshadow_tracker.save_to_db(self.current_project.db)
+                        self.ui.log("   🔮 [DB-Eff] foreshadow JSON→DB 마이그레이션 완료")
+                else:
+                    stats = self.foreshadow_tracker.get_stats()
+                    self.ui.log(
+                        f"   🔮 [V51.6] 복선 {stats['total']}개 로드(DB) "
+                        f"(활성: {stats['active']}, 회수율: {stats['payoff_rate']}%)"
+                    )
+
+                # [V66] SemanticPlotGuard 활성화
+                try:
+                    from modules.core.semantic_plot_guard import SemanticPlotGuard
+
+                    self.semantic_plot_guard = SemanticPlotGuard(api_key=os.getenv("GOOGLE_API_KEY", ""))
+                    if self.semantic_plot_guard._client:
+                        self.ui.log("   📊 [V66] SemanticPlotGuard 초기화 완료 (임베딩 모드)")
+                    else:
+                        self.ui.log("   📊 [V66] SemanticPlotGuard 초기화 완료 (키워드 폴백 모드)")
+                except Exception as e:
+                    self.ui.log(f"   ⚠️ [V66] SemanticPlotGuard 초기화 실패: {str(e)[:80]}")
+                    self.semantic_plot_guard = None
+
+                # ============================================================
+                # [V60.26] 품질 향상 모듈 (미사용 → 활성화)
+                # ============================================================
+
+                # V60.26-1 감정선 추적
+                self.emotion_tracker = _v50["EmotionArcTracker"](self.current_project)
+                # [V70] JSON 파일이 아닌 DB anchor에서 직접 로드 (emotion_arc.json은 미생성)
+                try:
+                    self.emotion_tracker.load_from_db(self.current_project.db)
+                    if self.emotion_tracker.history:
+                        self.ui.log(f"   💓 [V60.26] 감정선 추적기 로드 ({len(self.emotion_tracker.history)}개 기록)")
+                    else:
+                        self.ui.log("   💓 [V60.26] 감정선 추적기 활성화")
+                except Exception:  # [V70] DB 오류 시 비차단
+                    self.ui.log("   💓 [V60.26] 감정선 추적기 활성화")
+
+                # V60.26-2 파워 스케일링 추적
+                self.power_scaling = _v50["PowerScalingTracker"]()
+                self.ui.log("   ⚡ [V60.26] 파워 스케일링 추적기 활성화")
+
+                # V60.26-3 상태 변화 추적
+                self.state_delta_tracker = _v50["StateDeltaTracker"]()
+                self.ui.log("   📊 [V60.26] 상태 변화 추적기 활성화")
+
+                # V60.26-4 의미적 아이템 레지스트리
+                self.semantic_item_registry = _v50["SemanticItemRegistry"]()
+                self.ui.log("   📦 [V60.26] 의미적 아이템 레지스트리 활성화")
+
+                # V60.26-5 캐릭터 음성 프로파일러 (V58, 기존 V51.5보다 고급)
+                self.voice_profiler = _v50["CharacterVoiceProfiler"]()
+                voice_profiler_path = os.path.join(self._PROJECTS_DIR, self.current_project.name, "logs", "voice_profiles.json")
+                if os.path.exists(voice_profiler_path):
+                    try:
+                        with open(voice_profiler_path, encoding="utf-8") as f:
+                            profiles_data = json.load(f)
+                            for name_key, profile_data in profiles_data.items():
+                                self.voice_profiler.add_profile(name_key, profile_data)
+                        self.ui.log(f"   🎭 [V60.26] 캐릭터 음성 프로파일러 로드 ({len(self.voice_profiler.profiles)}명)")
+                    except (
+                        json.JSONDecodeError,
+                        KeyError,
+                        TypeError,
+                        OSError,
+                    ) as e:  # [V64.P4] OPTIONAL: voice profiler load
+                        self.ui.log(f"   🎭 [V60.26] 캐릭터 음성 프로파일러 활성화 (로드 실패: {str(e)[:40]})")
+                else:
+                    self.ui.log("   🎭 [V60.26] 캐릭터 음성 프로파일러 활성화")
+
+                # V52.1 자기 성찰 체인
+                self.self_reflector = _v50["SelfReflector"](
+                    api_client=self.sys.api_client,
+                    model=_V50_MODULE_MODEL,  # [V65] 중앙 상수
+                )
+                self.ui.log("   🔄 [V52.1] Self-Reflection Chain 활성화")
+
+                # V52.3 전문가 혼합
+                self.expert_mixture = _v50["ExpertMixture"](genre=genre_type)
+                self.ui.log(f"   🎯 [V52.3] Expert Mixture 활성화 ({genre_type})")
+
+                # V52.4 교차 에이전트 검증
+                self.cross_verifier = _v50["CrossAgentVerifier"](
+                    api_client=self.sys.api_client,
+                    model=_V50_MODULE_MODEL,  # [V65] 중앙 상수
+                )
+                self.ui.log("   🔗 [V52.4] Cross-Agent Verifier 활성화")
+
+                # V53.1 동적 프롬프트 가중치
+                self.prompt_weighter = _v50["DynamicPromptWeighter"](failure_learner=self.failure_learner)
+                self.ui.log("   ⚖️ [V53.1] Dynamic Prompt Weighter 활성화")
+
+                # V53.2 사실 검증 체인
+                self.chain_of_verification = _v50["ChainOfVerification"](
+                    api_client=self.sys.api_client,
+                    model=_V50_MODULE_MODEL,  # [V65] 중앙 상수
+                )
+                self.ui.log("   🔍 [V53.2] Chain-of-Verification 활성화")
+
+                # V53.3 신뢰도 보정
+                self.confidence_calibrator = _v50["ConfidenceCalibrator"](
+                    api_client=self.sys.api_client,
+                    use_llm=False,  # Python 휴리스틱만 (비용 0)
+                )
+                self.ui.log("   📊 [V53.3] Confidence Calibrator 활성화")
+
+                # V53.4 사전 체크리스트
+                self.pre_director_checklist = _v50["PreDirectorChecklist"]()
+                self.ui.log("   ✅ [V53.4] Pre-Director Checklist 활성화")
+
+                # V53.5 Tree of Thoughts
+                self.tree_of_thoughts = _v50["TreeOfThoughts"](
+                    api_client=self.sys.api_client,
+                    model=AIModels.STAGE2_MAIN_MODEL,  # [V65] 중앙 상수
+                )
+                self.ui.log("   🌳 [V53.5] Tree of Thoughts 활성화 (Gemini 3)")
+
+                # V53.6 적대적 자기 대결
+                self.adversarial_self_play = _v50["AdversarialSelfPlay"](
+                    api_client=self.sys.api_client,
+                    model=_V50_MODULE_MODEL,  # [V65] 중앙 상수
+                )
+                self.ui.log("   ⚔️ [V53.6] Adversarial Self-Play 활성화")
+
+                # V53.7 다중 에이전트 토론
+                self.multi_agent_deliberation = _v50["MultiAgentDeliberation"](
+                    api_client=self.sys.api_client,
+                    model=_V50_MODULE_MODEL,  # [V65] 중앙 상수
+                )
+                self.ui.log("   🗣️ [V53.7] Multi-Agent Deliberation 활성화")
+
+                # ============================================================
+                # [V54] 비용 절감 + 품질 향상 모듈
+                # ============================================================
+
+                # V54.3 적응형 재시도 관리자
+                self.adaptive_manager = _v50["get_adaptive_manager"]()
+                # [V54.3.1] FailureLearner 연동
+                if self.failure_learner:
+                    self.adaptive_manager.connect_failure_learner(self.failure_learner)
+                    self.ui.log("   🔄 [V54.3] Adaptive Retry Manager 활성화 (FailureLearner 연동)")
+                else:
+                    self.ui.log("   🔄 [V54.3] Adaptive Retry Manager 활성화")
+
+                # [V65] TwoPhaseGenerator 삭제 (two_phase_ms/bp/arc — Dead Code)
+
+                # [Phase 4D-4] SuccessPatternMemory 삭제 (ChromaDB 레거시 제거)
+
+                # V55.2 헌법적 자기검증
+                self.constitutional_checker = _v50["ConstitutionalChecker"](genre=genre_type)
+                self.ui.log("   📜 [V55.2] Constitutional Checker 활성화")
+
+                # V55.3 원고 템플릿
+                self.writer_template = _v50["WriterTemplate"](genre=genre_type)
+                self.ui.log("   📝 [V55.3] Writer Template 활성화")
+
+                # V55.3 통과율 모니터
+                project_path = str(self.current_project.paths.root) if self.current_project else "."
+                self.pass_rate_monitor = _v50["PassRateMonitor"](project_path)
+                self.ui.log("   📊 [V55.3] Pass Rate Monitor 활성화")
+
+                # V60 품질 대시보드
+                self.quality_dashboard = _v50["QualityDashboard"](Path(project_path))
+                self.ui.log("   📊 [V60] Quality Dashboard 활성화")
+
+                # [SC] Smart Context Retrieval
+                self.context_advisor = _v50["ContextAdvisor"]()
+                self.ui.log("   🧭 [SC] Context Advisor 활성화")
+
+                self.ui.log(f"   📊 [V50~V60] 서사 품질 모듈 초기화 완료 (장르: {genre_type})")
+
+                # 기존 에피소드에서 데이터 로드
+                self._load_v50_history()
+
+            except Exception as v50_err:
+                self.ui.log(f"   ⚠️ [V50] 모듈 초기화 실패 (비치명적): {v50_err}")
+        else:
+            self.ui.log("   ⚠️ [V50] 모듈 미설치 - 기본 모드")
+
     def _attach_agents(self) -> bool:
         """
         [V38 패치] 방어적 에이전트 초기화
@@ -1440,24 +1874,6 @@ class SovereignApp:
             # [INF-I8] Stage 전용 에이전트 lazy import
             global V50_MODULES_AVAILABLE, STAGE0_AVAILABLE
             _agents = _lazy_load_agents()
-            Analyst = _agents["Analyst"]
-            ArcCorrector = _agents["ArcCorrector"]
-            ArcCritic = _agents["ArcCritic"]
-            ArcDraftValidator = _agents["ArcDraftValidator"]
-            ArcEnsembleGenerator = _agents["ArcEnsembleGenerator"]
-            ConsensusValidator = _agents["ConsensusValidator"]
-            ConstraintCompiler = _agents["ConstraintCompiler"]
-            ContinuityInspector = _agents["ContinuityInspector"]
-            Critic = _agents["Critic"]
-            Director = _agents["Director"]
-            FourPhaseArcGenerator = _agents["FourPhaseArcGenerator"]
-            Manager = _agents["Manager"]
-            PreflightChecker = _agents["PreflightChecker"]
-            StateExtractor = _agents["StateExtractor"]
-            StateLockedArcGenerator = _agents["StateLockedArcGenerator"]
-            ThreePhaseBlueprintGenerator = _agents["ThreePhaseBlueprintGenerator"]
-            Weaver = _agents["Weaver"]
-            Writer = _agents["Writer"]
 
             # [INF-I8] V50 모듈 lazy import
             _v50 = _lazy_load_v50_modules()
@@ -1476,92 +1892,7 @@ class SovereignApp:
                 return False
 
             default_model = AIModels.STAGE2_MAIN_MODEL  # [V65] 중앙 상수 참조
-
-            self.agents = {
-                "analyst": Analyst(
-                    self.current_project, self.sys.api_client, model_tier=models.get("analyst", default_model)
-                ),
-                # [V65] Architect 삭제 (ThreePhaseBlueprintGenerator로 완전 대체)
-                "writer": Writer(
-                    self.current_project, self.sys.api_client, model_tier=models.get("writer", default_model)
-                ),
-                "director": Director(
-                    self.current_project, self.sys.api_client, model_tier=models.get("director", default_model)
-                ),
-                "manager": Manager(
-                    self.current_project, self.sys.api_client, model_tier=models.get("manager", default_model)
-                ),
-                # [V45 Fix] weaver는 manager가 아닌 weaver 모델 사용 (fallback: manager)
-                "weaver": Weaver(
-                    self.current_project,
-                    self.sys.api_client,
-                    model_tier=models.get("weaver", models.get("manager", default_model)),
-                ),
-                # [V48.1] ContinuityInspector - Director 산하 연속성 검증 에이전트
-                "continuity_inspector": ContinuityInspector(
-                    self.current_project, self.sys.api_client, model_tier=AIModels.STAGE2_MAIN_MODEL
-                ),
-                # [V52.2] Critic - 원고 비평 에이전트
-                # [V60.78] 2.5-flash로 변경 (2.0 이하 미사용 정책)
-                "critic": Critic(self.current_project, self.sys.api_client, model_tier=_SUMMARY_MODEL),
-                # [V60.10] StateExtractor - 상태 추출 에이전트 (빠른 모델로 구조화된 상태 추출)
-                "state_extractor": StateExtractor(
-                    self.current_project, self.sys.api_client, model_tier=_FLASH_ANALYSIS_MODEL
-                ),
-                # [V60.11] ArcEnsembleGenerator - Arc 앙상블 생성기 (3개 후보 병렬 생성)
-                "arc_ensemble": ArcEnsembleGenerator(
-                    self.current_project, self.sys.api_client, model_tier=AIModels.STAGE2_MAIN_MODEL
-                ),
-                # [V60.12] FourPhaseArcGenerator - 4단계 Arc 생성 파이프라인 (초기 통과율 극대화)
-                "four_phase": FourPhaseArcGenerator(
-                    self.current_project, self.sys.api_client, model_tier=AIModels.STAGE2_MAIN_MODEL
-                ),
-                # [V60.14] StateLockedArcGenerator - 상태 잠금 Arc 생성기 (구조적 모순 불가)
-                "state_locked": StateLockedArcGenerator(
-                    self.current_project, self.sys.api_client, model_tier=AIModels.STAGE2_MAIN_MODEL
-                ),
-                # [V60.12] PreflightChecker - 생성 전 완벽 분석
-                "preflight": PreflightChecker(
-                    self.current_project, self.sys.api_client, model_tier=_FLASH_ANALYSIS_MODEL
-                ),
-                # [V60.12] ArcCritic - Arc 즉시 비평
-                "arc_critic": ArcCritic(
-                    self.current_project, self.sys.api_client, model_tier=AIModels.STAGE2_MAIN_MODEL
-                ),
-                # [V60.12] ConsensusValidator - 3-LLM 합의 검증
-                "consensus": ConsensusValidator(
-                    self.current_project, self.sys.api_client, model_tier=AIModels.STAGE2_MAIN_MODEL
-                ),
-                # [V60.80] ThreePhaseBlueprintGenerator - 3단계 Blueprint 파이프라인
-                "three_phase_bp": ThreePhaseBlueprintGenerator(
-                    self.current_project, self.sys.api_client, model_tier=AIModels.STAGE2_MAIN_MODEL
-                ),
-            }
-
-            # [V60.11] Python 기반 헬퍼 초기화 (LLM 미사용)
-            self.arc_draft_validator = ArcDraftValidator()
-            self.constraint_compiler = ConstraintCompiler()
-            # [V60.42] Arc Corrector - MAJOR 이슈 부분 수정 (ON/OFF 토글 가능)
-            self.arc_corrector = ArcCorrector(
-                context=self.current_project,
-                client=self.sys.api_client,
-                model_tier=_FLASH_ANALYSIS_MODEL,  # [V65] 경량 모델 상수
-            )
-            self.use_arc_corrector = True  # [V60.42] 기본 활성화 (False로 설정하면 비활성화)
-            # [V60.25] Stage 2 Optimizer - 통과율 최적화
-            create_stage2_optimizer = _v50["create_stage2_optimizer"] if _v50 else None
-            self.stage2_optimizer = create_stage2_optimizer() if create_stage2_optimizer else None
-            self.ui.log("   🔧 [V60.11] Stage 2 고도화 모듈 초기화 (Ensemble + DraftValidator + ConstraintCompiler)")
-            self.ui.log(
-                "   🚀 [V60.12] Stage 2 초기통과율 극대화 모듈 초기화 (FourPhase + Preflight + Critic + Consensus)"
-            )
-            self.ui.log(
-                f"   🔧 [V60.42] Arc Corrector 초기화 (MAJOR 이슈 부분 수정: {'활성화' if self.use_arc_corrector else '비활성화'})"
-            )
-            if self.stage2_optimizer:
-                self.ui.log(
-                    "   ⚡ [V60.25] Stage 2 Optimizer 활성화 (StateSnapshot + AutoCorrector + ConstraintAmplifier)"
-                )
+            self._init_core_agents(_agents=_agents, _v50=_v50, models=models, default_model=default_model)
 
             # 초기화 검증
             for name, agent in self.agents.items():
@@ -1655,337 +1986,7 @@ class SovereignApp:
             # ═══════════════════════════════════════════════════════════════
             # [V50] 서사 품질 향상 모듈 초기화
             # ═══════════════════════════════════════════════════════════════
-            if V50_MODULES_AVAILABLE and _v50:
-                try:
-                    genre_type = self.selected_genre.get("type", "wuxia") if self.selected_genre else "wuxia"
-
-                    # [V65] V50.1~V51.1 초기화 삭제 (Dead Code 정리)
-
-                    # [V65] V51.1 호흡 분석기 재연결
-                    self.pacing_analyzer = _v50["PacingAnalyzer"]()
-
-                    # V51.2 품질 증폭기
-                    self.quality_amplifier = _v50["QualityAmplifier"]()
-
-                    # V51.3 에이전트 지능 향상
-                    self.agent_intelligence = _v50["AgentIntelligence"](genre=genre_type)
-
-                    # V51.4 실패 학습 시스템
-                    self.failure_learner = _v50["FailureLearner"]()
-                    # [DB-Eff-P2] DB 우선 로드, 폴백: JSON 1회 마이그레이션
-                    _fl_loaded = False
-                    try:
-                        _fl_row = self.current_project.db.conn.execute(
-                            "SELECT description FROM reflexion_memory WHERE pattern_type = ?",
-                            ("failure_learner_snapshot",),
-                        ).fetchone()
-                        if _fl_row and _fl_row[0]:
-                            from collections import defaultdict as _defaultdict
-
-                            from modules.core.failure_learning import (
-                                FailureCategory as _FailureCategory,
-                            )
-                            from modules.core.failure_learning import (
-                                FailureRecord as _FailureRecord,
-                            )
-
-                            _snapshot = json.loads(_fl_row[0])
-                            self.failure_learner.records = []
-                            self.failure_learner.category_counts = _defaultdict(int)
-                            self.failure_learner.stage_counts = {
-                                2: _defaultdict(int),
-                                3: _defaultdict(int),
-                                4: _defaultdict(int),
-                            }
-                            self.failure_learner.recent_failures = {2: [], 3: [], 4: []}
-
-                            for _r in _snapshot.get("records", []):
-                                try:
-                                    _category = _FailureCategory(_r.get("category", "unknown"))
-                                except ValueError:
-                                    _category = _FailureCategory.UNKNOWN
-
-                                _stage = int(_r.get("stage", 4))
-                                _record = _FailureRecord(
-                                    category=_category,
-                                    stage=_stage,
-                                    episode=int(_r.get("episode", 0)),
-                                    arc=int(_r.get("arc", 0)),
-                                    reason=str(_r.get("reason", "")),
-                                    details=_r.get("details", {}),
-                                    timestamp=str(_r.get("timestamp", "")),
-                                )
-                                self.failure_learner.records.append(_record)
-                                self.failure_learner.category_counts[_category] += 1
-                                self.failure_learner.stage_counts.setdefault(_stage, _defaultdict(int))[_category] += 1
-                                self.failure_learner.recent_failures.setdefault(_stage, []).append(_record)
-                                if len(self.failure_learner.recent_failures[_stage]) > 10:
-                                    self.failure_learner.recent_failures[_stage].pop(0)
-                            _fl_loaded = bool(self.failure_learner.records)
-                    except Exception as _fl_db_err:
-                        logging.debug("[DB-Eff] failure_learner DB load 실패: %s", _fl_db_err)
-
-                    if _fl_loaded:
-                        self.ui.log(f"   📚 [V51.4] 실패 기록 {len(self.failure_learner.records)}건 로드(DB)")
-                    else:
-                        failure_log_path = os.path.join(
-                            self._PROJECTS_DIR, self.current_project.name, "logs", "failure_learning.json"
-                        )
-                        if os.path.exists(failure_log_path):
-                            self.failure_learner.load_from_json(failure_log_path)
-                            if self.failure_learner.records:
-                                _snapshot = {
-                                    "records": [
-                                        {
-                                            "category": r.category.value,
-                                            "stage": r.stage,
-                                            "episode": r.episode,
-                                            "arc": r.arc,
-                                            "reason": r.reason,
-                                            "details": r.details,
-                                            "timestamp": r.timestamp,
-                                        }
-                                        for r in self.failure_learner.records
-                                    ],
-                                    "stats": self.failure_learner.get_failure_stats(),
-                                }
-                                _ts = time.strftime("%Y-%m-%d %H:%M:%S")
-                                _first_ep = min((int(r.episode) for r in self.failure_learner.records), default=0)
-                                _last_ep = max((int(r.episode) for r in self.failure_learner.records), default=0)
-                                self.current_project.db.conn.execute(
-                                    """INSERT INTO reflexion_memory
-                                       (pattern_type, description, frequency, solution, first_seen, last_seen, first_ep, last_ep)
-                                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                                       ON CONFLICT(pattern_type) DO UPDATE SET
-                                         description=excluded.description,
-                                         frequency=excluded.frequency,
-                                         solution=excluded.solution,
-                                         last_seen=excluded.last_seen,
-                                         first_ep=excluded.first_ep,
-                                         last_ep=excluded.last_ep""",
-                                    (
-                                        "failure_learner_snapshot",
-                                        json.dumps(_snapshot, ensure_ascii=False),
-                                        len(self.failure_learner.records),
-                                        "failure_learner_json_migrated",
-                                        _ts,
-                                        _ts,
-                                        _first_ep,
-                                        _last_ep,
-                                    ),
-                                )
-                                self.current_project.db.conn.commit()
-                                self.ui.log("   📚 [DB-Eff] failure_learning JSON→DB 마이그레이션 완료")
-
-                    # V51.5 캐릭터 음성 추적
-                    self.character_voice = _v50["CharacterVoiceTracker"]()
-                    # [DB-Eff-P1] DB 우선 로드, 폴백: 파일
-                    _cv_db_count = self.character_voice.load_from_db(self.current_project.db)
-                    if _cv_db_count == 0:
-                        voice_log_path = os.path.join(
-                            self._PROJECTS_DIR, self.current_project.name, "logs", "character_voice.json"
-                        )
-                        if os.path.exists(voice_log_path):
-                            self.character_voice.load_from_json(voice_log_path)
-                            self.character_voice.save_to_db(self.current_project.db)
-                            self.ui.log("   🎭 [DB-Eff] character_voice JSON→DB 마이그레이션 완료")
-                    else:
-                        self.ui.log(f"   🎭 [V51.5] 캐릭터 음성 {len(self.character_voice.profiles)}명 로드(DB)")
-
-                    # V51.6 복선 추적
-                    self.foreshadow_tracker = _v50["ForeshadowTracker"]()
-                    # [DB-Eff-P1] DB 우선 로드, 폴백: 파일
-                    _ft_db_count = self.foreshadow_tracker.load_from_db(self.current_project.db)
-                    if _ft_db_count == 0:
-                        foreshadow_log_path = os.path.join(
-                            self._PROJECTS_DIR, self.current_project.name, "logs", "foreshadow.json"
-                        )
-                        if os.path.exists(foreshadow_log_path):
-                            self.foreshadow_tracker.load_from_json(foreshadow_log_path)
-                            self.foreshadow_tracker.save_to_db(self.current_project.db)
-                            self.ui.log("   🔮 [DB-Eff] foreshadow JSON→DB 마이그레이션 완료")
-                    else:
-                        stats = self.foreshadow_tracker.get_stats()
-                        self.ui.log(
-                            f"   🔮 [V51.6] 복선 {stats['total']}개 로드(DB) "
-                            f"(활성: {stats['active']}, 회수율: {stats['payoff_rate']}%)"
-                        )
-
-                    # [V66] SemanticPlotGuard 활성화
-                    try:
-                        from modules.core.semantic_plot_guard import SemanticPlotGuard
-
-                        self.semantic_plot_guard = SemanticPlotGuard(api_key=os.getenv("GOOGLE_API_KEY", ""))
-                        if self.semantic_plot_guard._client:
-                            self.ui.log("   📊 [V66] SemanticPlotGuard 초기화 완료 (임베딩 모드)")
-                        else:
-                            self.ui.log("   📊 [V66] SemanticPlotGuard 초기화 완료 (키워드 폴백 모드)")
-                    except Exception as e:
-                        self.ui.log(f"   ⚠️ [V66] SemanticPlotGuard 초기화 실패: {str(e)[:80]}")
-                        self.semantic_plot_guard = None
-
-                    # ============================================================
-                    # [V60.26] 품질 향상 모듈 (미사용 → 활성화)
-                    # ============================================================
-
-                    # V60.26-1 감정선 추적
-                    self.emotion_tracker = _v50["EmotionArcTracker"](self.current_project)
-                    # [V70] JSON 파일이 아닌 DB anchor에서 직접 로드 (emotion_arc.json은 미생성)
-                    try:
-                        self.emotion_tracker.load_from_db(self.current_project.db)
-                        if self.emotion_tracker.history:
-                            self.ui.log(
-                                f"   💓 [V60.26] 감정선 추적기 로드 ({len(self.emotion_tracker.history)}개 기록)"
-                            )
-                        else:
-                            self.ui.log("   💓 [V60.26] 감정선 추적기 활성화")
-                    except Exception:  # [V70] DB 오류 시 비차단
-                        self.ui.log("   💓 [V60.26] 감정선 추적기 활성화")
-
-                    # V60.26-2 파워 스케일링 추적
-                    self.power_scaling = _v50["PowerScalingTracker"]()
-                    self.ui.log("   ⚡ [V60.26] 파워 스케일링 추적기 활성화")
-
-                    # V60.26-3 상태 변화 추적
-                    self.state_delta_tracker = _v50["StateDeltaTracker"]()
-                    self.ui.log("   📊 [V60.26] 상태 변화 추적기 활성화")
-
-                    # V60.26-4 의미적 아이템 레지스트리
-                    self.semantic_item_registry = _v50["SemanticItemRegistry"]()
-                    self.ui.log("   📦 [V60.26] 의미적 아이템 레지스트리 활성화")
-
-                    # V60.26-5 캐릭터 음성 프로파일러 (V58, 기존 V51.5보다 고급)
-                    self.voice_profiler = _v50["CharacterVoiceProfiler"]()
-                    voice_profiler_path = os.path.join(
-                        self._PROJECTS_DIR, self.current_project.name, "logs", "voice_profiles.json"
-                    )
-                    if os.path.exists(voice_profiler_path):
-                        try:
-                            with open(voice_profiler_path, encoding="utf-8") as f:
-                                profiles_data = json.load(f)
-                                for name_key, profile_data in profiles_data.items():
-                                    self.voice_profiler.add_profile(name_key, profile_data)
-                            self.ui.log(
-                                f"   🎭 [V60.26] 캐릭터 음성 프로파일러 로드 ({len(self.voice_profiler.profiles)}명)"
-                            )
-                        except (
-                            json.JSONDecodeError,
-                            KeyError,
-                            TypeError,
-                            OSError,
-                        ) as e:  # [V64.P4] OPTIONAL: voice profiler load
-                            self.ui.log(f"   🎭 [V60.26] 캐릭터 음성 프로파일러 활성화 (로드 실패: {str(e)[:40]})")
-                    else:
-                        self.ui.log("   🎭 [V60.26] 캐릭터 음성 프로파일러 활성화")
-
-                    # V52.1 자기 성찰 체인
-                    self.self_reflector = _v50["SelfReflector"](
-                        api_client=self.sys.api_client,
-                        model=_V50_MODULE_MODEL,  # [V65] 중앙 상수
-                    )
-                    self.ui.log("   🔄 [V52.1] Self-Reflection Chain 활성화")
-
-                    # V52.3 전문가 혼합
-                    self.expert_mixture = _v50["ExpertMixture"](genre=genre_type)
-                    self.ui.log(f"   🎯 [V52.3] Expert Mixture 활성화 ({genre_type})")
-
-                    # V52.4 교차 에이전트 검증
-                    self.cross_verifier = _v50["CrossAgentVerifier"](
-                        api_client=self.sys.api_client,
-                        model=_V50_MODULE_MODEL,  # [V65] 중앙 상수
-                    )
-                    self.ui.log("   🔗 [V52.4] Cross-Agent Verifier 활성화")
-
-                    # V53.1 동적 프롬프트 가중치
-                    self.prompt_weighter = _v50["DynamicPromptWeighter"](failure_learner=self.failure_learner)
-                    self.ui.log("   ⚖️ [V53.1] Dynamic Prompt Weighter 활성화")
-
-                    # V53.2 사실 검증 체인
-                    self.chain_of_verification = _v50["ChainOfVerification"](
-                        api_client=self.sys.api_client,
-                        model=_V50_MODULE_MODEL,  # [V65] 중앙 상수
-                    )
-                    self.ui.log("   🔍 [V53.2] Chain-of-Verification 활성화")
-
-                    # V53.3 신뢰도 보정
-                    self.confidence_calibrator = _v50["ConfidenceCalibrator"](
-                        api_client=self.sys.api_client,
-                        use_llm=False,  # Python 휴리스틱만 (비용 0)
-                    )
-                    self.ui.log("   📊 [V53.3] Confidence Calibrator 활성화")
-
-                    # V53.4 사전 체크리스트
-                    self.pre_director_checklist = _v50["PreDirectorChecklist"]()
-                    self.ui.log("   ✅ [V53.4] Pre-Director Checklist 활성화")
-
-                    # V53.5 Tree of Thoughts
-                    self.tree_of_thoughts = _v50["TreeOfThoughts"](
-                        api_client=self.sys.api_client,
-                        model=AIModels.STAGE2_MAIN_MODEL,  # [V65] 중앙 상수
-                    )
-                    self.ui.log("   🌳 [V53.5] Tree of Thoughts 활성화 (Gemini 3)")
-
-                    # V53.6 적대적 자기 대결
-                    self.adversarial_self_play = _v50["AdversarialSelfPlay"](
-                        api_client=self.sys.api_client,
-                        model=_V50_MODULE_MODEL,  # [V65] 중앙 상수
-                    )
-                    self.ui.log("   ⚔️ [V53.6] Adversarial Self-Play 활성화")
-
-                    # V53.7 다중 에이전트 토론
-                    self.multi_agent_deliberation = _v50["MultiAgentDeliberation"](
-                        api_client=self.sys.api_client,
-                        model=_V50_MODULE_MODEL,  # [V65] 중앙 상수
-                    )
-                    self.ui.log("   🗣️ [V53.7] Multi-Agent Deliberation 활성화")
-
-                    # ============================================================
-                    # [V54] 비용 절감 + 품질 향상 모듈
-                    # ============================================================
-
-                    # V54.3 적응형 재시도 관리자
-                    self.adaptive_manager = _v50["get_adaptive_manager"]()
-                    # [V54.3.1] FailureLearner 연동
-                    if self.failure_learner:
-                        self.adaptive_manager.connect_failure_learner(self.failure_learner)
-                        self.ui.log("   🔄 [V54.3] Adaptive Retry Manager 활성화 (FailureLearner 연동)")
-                    else:
-                        self.ui.log("   🔄 [V54.3] Adaptive Retry Manager 활성화")
-
-                    # [V65] TwoPhaseGenerator 삭제 (two_phase_ms/bp/arc — Dead Code)
-
-                    # [Phase 4D-4] SuccessPatternMemory 삭제 (ChromaDB 레거시 제거)
-
-                    # V55.2 헌법적 자기검증
-                    self.constitutional_checker = _v50["ConstitutionalChecker"](genre=genre_type)
-                    self.ui.log("   📜 [V55.2] Constitutional Checker 활성화")
-
-                    # V55.3 원고 템플릿
-                    self.writer_template = _v50["WriterTemplate"](genre=genre_type)
-                    self.ui.log("   📝 [V55.3] Writer Template 활성화")
-
-                    # V55.3 통과율 모니터
-                    project_path = str(self.current_project.paths.root) if self.current_project else "."
-                    self.pass_rate_monitor = _v50["PassRateMonitor"](project_path)
-                    self.ui.log("   📊 [V55.3] Pass Rate Monitor 활성화")
-
-                    # V60 품질 대시보드
-                    self.quality_dashboard = _v50["QualityDashboard"](Path(project_path))
-                    self.ui.log("   📊 [V60] Quality Dashboard 활성화")
-
-                    # [SC] Smart Context Retrieval
-                    self.context_advisor = _v50["ContextAdvisor"]()
-                    self.ui.log("   🧭 [SC] Context Advisor 활성화")
-
-                    self.ui.log(f"   📊 [V50~V60] 서사 품질 모듈 초기화 완료 (장르: {genre_type})")
-
-                    # 기존 에피소드에서 데이터 로드
-                    self._load_v50_history()
-
-                except Exception as v50_err:
-                    self.ui.log(f"   ⚠️ [V50] 모듈 초기화 실패 (비치명적): {v50_err}")
-            else:
-                self.ui.log("   ⚠️ [V50] 모듈 미설치 - 기본 모드")
+            self._init_v50_modules(_v50=_v50)
 
             self.ui.log("✅ [System] 모든 에이전트 안전하게 초기화 완료")
             return True
