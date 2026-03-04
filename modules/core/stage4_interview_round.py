@@ -24,6 +24,160 @@ class Stage4InterviewRound:
             logging.debug("[TruthGate] llm_ask 실패 (비치명): %s", e)
         return ""
 
+    def _setup_writing_directive(
+        self,
+        chief_writer,
+        blueprint: dict,
+        genre_name: str,
+        next_ep: int,
+    ) -> tuple:
+        """[God-1] PatternTracker + WritingDirective 초기화.
+
+        Returns:
+            (WritingDirective, dict): (_writing_directive, _wd_expression_freq)
+        """
+        from modules.core.pattern_tracker import PatternTracker
+        from modules.core.stage4_types import WritingDirective
+        from modules.core.writing_directive_generator import WritingDirectiveGenerator
+        from modules.validation.threshold_helper import _threshold
+
+        _writing_directive: WritingDirective = WritingDirective()
+        _wd_expression_freq: dict[str, int] = {}
+        try:
+            _pt_enabled = bool(_threshold("pattern_tracker.enable", True))
+            if _pt_enabled:
+                _lookback = int(_threshold("pattern_tracker.lookback_episodes", 5))
+                _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+                _pt = PatternTracker()
+                _pt_report = _pt.build_report(db=_db, ep_num=next_ep, lookback=_lookback)
+                if _pt_report:
+                    _wd_expression_freq = dict(getattr(_pt_report, "expression_freq", {}) or {})
+                    _wdg = WritingDirectiveGenerator()
+                    _writing_directive = _wdg.generate(
+                        pattern_report=_pt_report,
+                        blueprint=blueprint if isinstance(blueprint, dict) else {},
+                        genre=genre_name,
+                        ep_num=next_ep,
+                        llm_callback=self._truth_gate_llm_ask,
+                        lookback=_lookback,
+                    )
+                    if not _writing_directive.is_empty():
+                        logging.info(
+                            "[TF-54] WritingDirective 생성 완료: ending=%s, ban=%d개",
+                            _writing_directive.ending_style[:30],
+                            len(_writing_directive.expression_ban),
+                        )
+        except Exception as _wd_e:
+            logging.warning("[TF-54] WritingDirective 생성 실패 (비치명): %s", str(_wd_e)[:100])
+            _writing_directive = WritingDirective()
+            _wd_expression_freq = {}
+
+        try:
+            setattr(chief_writer, "_current_blueprint", blueprint if isinstance(blueprint, dict) else {})
+            setattr(chief_writer, "_tf54_writing_directive", _writing_directive)
+            setattr(chief_writer, "_tf54_expression_freq", _wd_expression_freq)
+        except Exception as _tf54_ctx_e:
+            logging.debug("[TF-54] ChiefWriter 공유 상태 주입 실패 (비치명): %s", str(_tf54_ctx_e)[:80])
+
+        return _writing_directive, _wd_expression_freq
+
+    def _build_common_writer_kwargs(
+        self,
+        round_ctx,
+        next_ep: int,
+        mandatory_context: str,
+    ) -> tuple:
+        """[God-1] mandatory_context 정규화 + common_writer_kwargs dict 조립.
+
+        Returns:
+            (str, dict): (mandatory_context_str, common_writer_kwargs)
+        """
+        blueprint = round_ctx.blueprint
+        prev_text = round_ctx.prev_text
+        _prev_manuscripts_text = round_ctx.prev_manuscripts_text
+        hud_report = round_ctx.hud_report
+        current_inventory = round_ctx.current_inventory
+        current_martial_arts = round_ctx.current_martial_arts
+        dead_npcs = round_ctx.dead_npcs
+        item_acquisition_timeline = round_ctx.item_acquisition_timeline
+        _chain_link_section = round_ctx.chain_link_section
+        _world_state_summary = round_ctx.world_state_summary
+        purism_prompt = round_ctx.purism_prompt
+        genre_name = round_ctx.genre_name
+        npc_equipment_summary = round_ctx.npc_equipment_summary
+        _effective_anti_trope = round_ctx.effective_anti_trope
+        intro_dna = round_ctx.intro_dna
+        style_guide = round_ctx.style_guide
+        reference_anchor_prompt = round_ctx.reference_anchor_prompt
+        justification_prompt = round_ctx.justification_prompt
+        reflexion_prompt = round_ctx.reflexion_prompt
+        _preflight_advisory = round_ctx.preflight_advisory
+
+        if type(mandatory_context) is not str:
+            mandatory_context = str(mandatory_context or "")
+
+        if _preflight_advisory:
+            mandatory_context = f"{_preflight_advisory}\n\n{mandatory_context}"
+
+        emotional_beat_section = ""
+        _arc_data_full = getattr(round_ctx, "arc_data", {}) or {}
+        _eb = _arc_data_full.get("emotional_beat") or {}
+        if isinstance(_eb, dict) and _eb:
+            _eb_type = _eb.get("type", "")
+            _eb_intensity = _eb.get("intensity", "")
+            if _eb_type or _eb_intensity:
+                emotional_beat_section = (
+                    f"### 이 화의 감정 정점\n"
+                    f"유형: {_eb_type}  강도: {_eb_intensity}/10\n"
+                    f"(집필 시 이 감정 정점을 향해 씬을 구성하라)"
+                )
+
+        _ws = getattr(self.ctx, "world_state", None)
+        _motivations = _ws._state.get("motivations", []) if _ws and hasattr(_ws, "_state") else []
+        _promises = _ws._state.get("promises", []) if _ws and hasattr(_ws, "_state") else []
+
+        _upcoming_arc_items: list[str] = []
+        if _arc_data_full:
+            _sc = _arc_data_full.get("state_constraints", {})
+            if isinstance(_sc, dict):
+                _planned = _sc.get("protagonist_items") or _sc.get("items_acquired") or []
+                if isinstance(_planned, list):
+                    _owned_set = set(current_inventory or [])
+                    _upcoming_arc_items = [str(i) for i in _planned if i and str(i) not in _owned_set]
+
+        _common_writer_kwargs = {
+            "ep_num": next_ep,
+            "blueprint": blueprint,
+            "prev_manuscript": prev_text,
+            "hud_report": hud_report,
+            "arc_doc": round_ctx.arc_tactical,
+            "master_bible": self.ctx.current_project.master_bible,
+            "style_guide": style_guide,
+            "current_inventory": current_inventory,
+            "current_martial_arts": current_martial_arts,
+            "dead_npcs": dead_npcs,
+            "item_acquisition_timeline": item_acquisition_timeline,
+            "reference_anchor_prompt": reference_anchor_prompt,
+            "mandatory_context": mandatory_context,
+            "anti_trope_prompt": _effective_anti_trope,
+            "justification_prompt": justification_prompt,
+            "reflexion_prompt": reflexion_prompt,
+            "genre_name": genre_name,
+            "npc_equipment_summary": npc_equipment_summary,
+            "intro_dna": intro_dna,
+            "purism_prompt": purism_prompt,
+            "state_tracker": self.ctx.state_tracker,
+            "prev_manuscripts_text": _prev_manuscripts_text,
+            "world_state_summary": _world_state_summary,
+            "chain_link_section": _chain_link_section,
+            "emotional_beat_section": emotional_beat_section,
+            "motivations": _motivations,  # [B-4]
+            "promises": _promises,  # [B-4]
+            "upcoming_arc_items": _upcoming_arc_items,  # [TF-49b]
+            # episode_digest는 Director 전용 — L713에서 별도 전달
+        }
+        return mandatory_context, _common_writer_kwargs
+
     def run(
         self,
         *,
@@ -34,10 +188,7 @@ class Stage4InterviewRound:
         round_ctx,
     ):
         """[4-R1-e-1] Single interview round: generation, validation, judgment."""
-        from modules.core.pattern_tracker import PatternTracker
-        from modules.core.stage4_types import WritingDirective, _InterviewRoundResult
-        from modules.core.writing_directive_generator import WritingDirectiveGenerator
-        from modules.validation.threshold_helper import _threshold
+        from modules.core.stage4_types import _InterviewRoundResult
 
         # [4-R2-b] Unpack round context
         chief_writer = round_ctx.chief_writer
@@ -74,116 +225,21 @@ class Stage4InterviewRound:
         reflexion_prompt = round_ctx.reflexion_prompt
         _preflight_advisory = round_ctx.preflight_advisory
 
-        # [TF-54a+b] PatternTracker + WritingDirectiveGenerator
-        _writing_directive: WritingDirective = WritingDirective()
-        _wd_expression_freq: dict[str, int] = {}
-        try:
-            _pt_enabled = bool(_threshold("pattern_tracker.enable", True))
-            if _pt_enabled:
-                _lookback = int(_threshold("pattern_tracker.lookback_episodes", 5))
-                _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
-                _pt = PatternTracker()
-                _pt_report = _pt.build_report(db=_db, ep_num=next_ep, lookback=_lookback)
-                if _pt_report:
-                    _wd_expression_freq = dict(getattr(_pt_report, "expression_freq", {}) or {})
-                    _wdg = WritingDirectiveGenerator()
-                    _writing_directive = _wdg.generate(
-                        pattern_report=_pt_report,
-                        blueprint=blueprint if isinstance(blueprint, dict) else {},
-                        genre=genre_name,
-                        ep_num=next_ep,
-                        llm_callback=self._truth_gate_llm_ask,
-                        lookback=_lookback,
-                    )
-                    if not _writing_directive.is_empty():
-                        logging.info(
-                            "[TF-54] WritingDirective 생성 완료: ending=%s, ban=%d개",
-                            _writing_directive.ending_style[:30],
-                            len(_writing_directive.expression_ban),
-                        )
-        except Exception as _wd_e:
-            logging.warning("[TF-54] WritingDirective 생성 실패 (비치명): %s", str(_wd_e)[:100])
-            _writing_directive = WritingDirective()
-            _wd_expression_freq = {}
-
-        # [TF-54c/e] ChiefWriter 컨텍스트 + Self-Critique 주입용 공유 상태
-        try:
-            setattr(chief_writer, "_current_blueprint", blueprint if isinstance(blueprint, dict) else {})
-            setattr(chief_writer, "_tf54_writing_directive", _writing_directive)
-            setattr(chief_writer, "_tf54_expression_freq", _wd_expression_freq)
-        except Exception as _tf54_ctx_e:
-            logging.debug("[TF-54] ChiefWriter 공유 상태 주입 실패 (비치명): %s", str(_tf54_ctx_e)[:80])
+        _writing_directive, _ = self._setup_writing_directive(
+            chief_writer=chief_writer,
+            blueprint=blueprint,
+            genre_name=genre_name,
+            next_ep=next_ep,
+        )
 
         if type(director_feedback) is not str:
             director_feedback = str(director_feedback or "")
-        if type(mandatory_context) is not str:
-            mandatory_context = str(mandatory_context or "")
 
-        # [TF-49b] Preflight advisory → CW mandatory_context에 prepend
-        if _preflight_advisory:
-            mandatory_context = f"{_preflight_advisory}\n\n{mandatory_context}"
-
-        # [emotional_beat] arc_data에서 감정 정점 추출
-        emotional_beat_section = ""
-        _arc_data_full = getattr(round_ctx, "arc_data", {}) or {}
-        _eb = _arc_data_full.get("emotional_beat") or {}
-        if isinstance(_eb, dict) and _eb:
-            _eb_type = _eb.get("type", "")
-            _eb_intensity = _eb.get("intensity", "")
-            if _eb_type or _eb_intensity:
-                emotional_beat_section = (
-                    f"### 이 화의 감정 정점\n"
-                    f"유형: {_eb_type}  강도: {_eb_intensity}/10\n"
-                    f"(집필 시 이 감정 정점을 향해 씬을 구성하라)"
-                )
-
-        # [B-4] WorldState 동기/약속 전달
-        _ws = getattr(self.ctx, "world_state", None)
-        _motivations = _ws._state.get("motivations", []) if _ws and hasattr(_ws, "_state") else []
-        _promises = _ws._state.get("promises", []) if _ws and hasattr(_ws, "_state") else []
-
-        # [TF-49b] Arc 계획 아이템 중 현재 미보유 항목 추출
-        _upcoming_arc_items: list[str] = []
-        if _arc_data_full:
-            _sc = _arc_data_full.get("state_constraints", {})
-            if isinstance(_sc, dict):
-                _planned = _sc.get("protagonist_items") or _sc.get("items_acquired") or []
-                if isinstance(_planned, list):
-                    _owned_set = set(current_inventory or [])
-                    _upcoming_arc_items = [str(i) for i in _planned if i and str(i) not in _owned_set]
-
-        # [TF-T4] 25개 공통 kwargs — 4개 호출부에서 재사용
-        _common_writer_kwargs = {
-            "ep_num": next_ep,
-            "blueprint": blueprint,
-            "prev_manuscript": prev_text,
-            "hud_report": hud_report,
-            "arc_doc": arc_tactical,
-            "master_bible": self.ctx.current_project.master_bible,
-            "style_guide": style_guide,
-            "current_inventory": current_inventory,
-            "current_martial_arts": current_martial_arts,
-            "dead_npcs": dead_npcs,
-            "item_acquisition_timeline": item_acquisition_timeline,
-            "reference_anchor_prompt": reference_anchor_prompt,
-            "mandatory_context": mandatory_context,
-            "anti_trope_prompt": _effective_anti_trope,
-            "justification_prompt": justification_prompt,
-            "reflexion_prompt": reflexion_prompt,
-            "genre_name": genre_name,
-            "npc_equipment_summary": npc_equipment_summary,
-            "intro_dna": intro_dna,
-            "purism_prompt": purism_prompt,
-            "state_tracker": self.ctx.state_tracker,
-            "prev_manuscripts_text": _prev_manuscripts_text,
-            "world_state_summary": _world_state_summary,
-            "chain_link_section": _chain_link_section,
-            "emotional_beat_section": emotional_beat_section,
-            "motivations": _motivations,  # [B-4]
-            "promises": _promises,  # [B-4]
-            "upcoming_arc_items": _upcoming_arc_items,  # [TF-49b]
-            # episode_digest는 Director 전용 — L713에서 별도 전달
-        }
+        mandatory_context, _common_writer_kwargs = self._build_common_writer_kwargs(
+            round_ctx=round_ctx,
+            next_ep=next_ep,
+            mandatory_context=mandatory_context,
+        )
 
         stage4_spinner.update_detail(f"제{next_ep}화 · {round_num + 1}차 면담 · 앙상블 생성")
         self.ctx.ui.log(f"\n🎬 [{round_num + 1}차 면담] Chief Writer 앙상블 생성 중...")
@@ -281,7 +337,281 @@ class Stage4InterviewRound:
             )
 
         # Phase 3: Python 사전 검증
-        stage4_spinner.update_detail(f"제{next_ep}화 · {round_num + 1}차 면담 · Python 검증")
+        self._god1_stage4_spinner = stage4_spinner
+        self._god1_round_num = round_num
+        self._god1_arc_pos = arc_pos
+        self._god1_total_ep_in_arc = total_ep_in_arc
+        self._god1_prev_manuscript = _prev_manuscript
+        self._god1_director_memory_context = ""
+        validation_results = self._run_pre_director_validation(
+            candidates=candidates,
+            next_ep=next_ep,
+            blueprint=blueprint,
+            prev_text=prev_text,
+            hud_report=hud_report,
+            genre_name=genre_name,
+            manuscript_validator=manuscript_validator,
+            consistency_validator=consistency_validator,
+            blocking_validator=blocking_validator,
+            continuity_validator=continuity_validator,
+        )
+        _director_memory_context = getattr(self, "_god1_director_memory_context", "")
+
+        # Phase 4: Director 면담
+        stage4_spinner.update_detail(f"제{next_ep}화 · {round_num + 1}차 면담 · Director 심사")
+        self.ctx.ui.log("   🎬 Director 면담 중...")
+        logging.info(f"[Director 면담] 제{next_ep}화 {round_num + 1}차, 후보 {len(candidates)}개")
+        print(f"\n   {'=' * 56}")
+        print(f"   🎬 Director 면담 시작 (제{next_ep}화, {round_num + 1}차)")
+        print(f"   후보 수: {len(candidates)}개")
+        for _pi, _pv in enumerate(validation_results):
+            _pw = _pv.get("warnings", [])
+            _label = ["A", "B", "C"][_pi] if _pi < 3 else str(_pi + 1)
+            print(f"   후보 {_label}: 경고 {len(_pw)}건, 분량 {len(candidates[_pi].get('manuscript', ''))}자")
+            for _pwi in _pw[:5]:
+                print(f"      - {_pwi}")
+        print(f"   {'=' * 56}")
+        # [V65] PerfTimer: Director 대면 측정
+        try:
+            self.ctx.perf_timer.start(f"s4_ep{next_ep}_director_r{round_num}")
+        except Exception as e:
+            logging.debug(f"[PerfTimer] start director: {e}")
+        # [V66.3] C-1: mandatory_context + Python 검증 경고를 Director에 전달
+        # validation_results에서 경고를 추출하여 mandatory_context에 병합
+        _mandatory_text = mandatory_context if isinstance(mandatory_context, str) else str(mandatory_context or "")
+        _director_mc_parts = [_mandatory_text] if _mandatory_text else []
+        if not _writing_directive.is_empty():
+            _wd_lines = ["[WritingDirective]"]
+            if _writing_directive.ending_style:
+                _wd_lines.append(f"- ending_style: {_writing_directive.ending_style}")
+            if _writing_directive.expression_ban:
+                _wd_lines.append(f"- expression_ban: {', '.join(_writing_directive.expression_ban)}")
+            if _writing_directive.emotion_required:
+                _wd_lines.append(f"- emotion_required: {_writing_directive.emotion_required}")
+            _director_mc_parts.insert(0, "\n".join(_wd_lines))
+
+        # [B-1-3b] Advisory chain (TruthGate, NpcDrift, NumericDrift, Flashback, InfoParadox, RelDrift)
+        _advisory_parts = self._run_advisory_chain(candidates, validation_results, next_ep, genre_name)
+        _director_mc_parts = _advisory_parts + _director_mc_parts
+
+        # [TF-49b] Preflight advisory → Director에도 전달
+        if _preflight_advisory:
+            _director_mc_parts.append(f"🔍 {_preflight_advisory}")
+
+        _vr_warnings_for_director = []
+        for _vr_idx, _vr in enumerate(validation_results):
+            _vr_warns = _vr.get("warnings", [])
+            if _vr_warns:
+                _label = ["A", "B", "C"][_vr_idx] if _vr_idx < 3 else f"{_vr_idx + 1}"
+                _vr_warnings_for_director.append(f"[후보 {_label} Python 감지 경고]\n" + "\n".join(_vr_warns[:30]))
+        if _vr_warnings_for_director:
+            _director_mc_parts.append(
+                "[V66.3] Python 사전 검증 결과 (Director 참고용)\n" + "\n\n".join(_vr_warnings_for_director)
+            )
+        # [V69.1] V67 원고 역사 충돌 + 연속성 충돌 경고를 Director에 전달
+        if director_feedback and director_feedback.strip():
+            _director_mc_parts.append("🚨 [V69.1] Python 감지된 원고 충돌 경고 (참고용)\n" + director_feedback.strip())
+        # [TF7-P1-04] 전략별 최근 통과율을 Director 선택 프롬프트에 주입
+        try:
+            _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
+            if _db is not None and hasattr(_db, "get_strategy_win_rates"):
+                _win_rates = _db.get_strategy_win_rates()
+                if _win_rates and _win_rates.get("total", 0) > 0:
+                    _wr_lines = [f"[TF7-P1-04] 전략별 최근 통과율 (최근 {_win_rates['total']}건 기준)"]
+                    for _k, _v in _win_rates.items():
+                        if _k != "total":
+                            _wr_lines.append(f"  - {_k}: {int(_v * 100)}%")
+                    _director_mc_parts.append("\n".join(_wr_lines))
+        except Exception as _wr_err:
+            logging.debug(f"[TF7-P1-04] win_rates fetch 실패 (비치명): {_wr_err}")
+        # [LM-Tier TF-C] fix_scope 전략별 합격률을 Director에 주입
+        try:
+            if _db is not None and hasattr(_db, "get_fix_scope_stats"):
+                _fs_stats = _db.get_fix_scope_stats()
+                if _fs_stats and any(r.get("cnt", 0) > 0 for r in _fs_stats):
+                    _fs_lines = ["[A-3] fix_scope 전략별 합격률"]
+                    for _row in _fs_stats:
+                        _scope = _row.get("fix_scope", "?")
+                        _verdict = _row.get("verdict", "?")
+                        _cnt = _row.get("cnt", 0)
+                        if _cnt > 0:
+                            _fs_lines.append(f"  - {_scope} + {_verdict}: {_cnt}건")
+                    _director_mc_parts.append("\n".join(_fs_lines))
+        except Exception as _fs_err:
+            logging.debug(f"[A-3] fix_scope stats fetch 실패 (비치명): {_fs_err}")
+        _director_mandatory_context = "\n\n".join(str(x) for x in _director_mc_parts if x is not None)
+
+        director_result = self.ctx.agents["director"].select_and_judge_ensemble(
+            ep_num=next_ep,
+            candidates=candidates,
+            validation_results=validation_results,
+            blueprint=blueprint,
+            previous_ending=prev_ending,
+            arc_pos=arc_pos,
+            total_eps=total_ep_in_arc,
+            retry_count=round_num,
+            episode_digest=_episode_digest,
+            mandatory_context=_director_mandatory_context,
+            prev_manuscripts_text=_prev_manuscripts_text,  # [V67]
+            story_context=story_context,  # [V67.1]
+        )
+        try:
+            self.ctx.perf_timer.stop(f"s4_ep{next_ep}_director_r{round_num}")
+        except Exception as e:
+            logging.debug(f"[PerfTimer] stop director: {e}")
+
+        selected = director_result.get("selected", "A")
+        verdict = director_result.get("verdict", "REJECT")
+        score = director_result.get("score", 0)
+        try:
+            score = int(score)
+        except (ValueError, TypeError):
+            score = 0
+        reason = director_result.get("selection_reason") or ""
+        error_category = director_result.get("error_category", "")  # [V75-B]
+
+        self.ctx.ui.log(f"   📊 Director 판정: {verdict} (점수: {score}, 선택: 후보 {selected})")
+        self.ctx.ui.log(f"      └─ 사유: {reason[:80]}...")
+
+        # [LOG-1] 판정 경로 세션 로깅
+        _sl = getattr(self.ctx, "session_logger", None)
+        if _sl:
+            try:
+                _sl.log_decision(
+                    stage="stage4",
+                    ep_num=next_ep,
+                    round_num=round_num,
+                    decision_type="manuscript",
+                    result=verdict,
+                    score=score,
+                    selected=selected,
+                    error_category=error_category,
+                    reason=reason[:500],
+                    fix_scope=director_result.get("fix_scope", ""),
+                    open_review=str(director_result.get("open_review", ""))[:300],
+                    action_items=director_result.get("action_items", []),
+                )
+            except Exception as _e:
+                logging.debug("[SilentPass:Stage4:SessionLog] %s", _e)
+
+        logging.info(f"[Director 판정] {verdict} | 점수: {score} | 후보 {selected} | {reason[:120]}")
+        print("\n   📊 Director 판정 결과:")
+        print(f"      판정: {verdict} | 점수: {score} | 선택: 후보 {selected}")
+        print(f"      사유: {reason[:120]}")
+        _action_items = director_result.get("action_items", [])
+        if _action_items:
+            print("      지시사항:")
+            for _ai in _action_items[:5]:
+                print(f"         - {_ai}")
+        print()
+
+        # [D-4] Director 선택 기록 (비차단)
+        try:
+            _selection_reason = reason
+            if _is_patch:
+                _tag = "patch-fallback" if _is_patch_fallback else "patch"
+                _selection_reason = (
+                    f"[{_tag}|score={_prev_score}] {reason}" if reason else f"[{_tag}|score={_prev_score}]"
+                )
+            _sel_candidate = director_result.get("selected_candidate", {})
+            if not isinstance(_sel_candidate, dict):
+                _sel_candidate = {}
+            _sel_strategy = _sel_candidate.get("strategy_name", "") or _sel_candidate.get("strategy", "")
+            self.ctx.current_project.db.save_director_selection(
+                ep_num=next_ep,
+                round_num=round_num,
+                selected_label=selected,
+                selected_strategy=_sel_strategy,
+                verdict=verdict,
+                score=score,
+                selection_reason=_selection_reason,
+                candidate_count=len(candidates) if candidates else 0,
+                fix_scope=director_result.get("fix_scope", ""),  # [A-3]
+            )
+        except Exception as e:
+            logging.warning(f"[D-4] Director 선택 기록 실패 (비차단): {e!s:.100}")
+
+        # [V76] 라운드별 생산 로그 (JSONL)
+        self._append_episode_log(
+            ep_num=next_ep,
+            round_num=round_num,
+            director_result=director_result,
+            is_patch=_is_patch,
+            patch_fallback=_is_patch_fallback,
+            tot_used=_tot_used,
+            mad_used=_mad_used,
+            asp_used=bool(_asp_manuscript),
+            validation_warnings=[w for vr in validation_results for w in vr.get("warnings", [])][:20],  # [TF-46] 10→20
+        )
+
+        # [B-1-3b] PASS/PASS_WITH_FIX 처리 → 위임
+        _pass_result, director_feedback, previous_attempt = self._process_verdict(
+            director_result=director_result,
+            director_feedback=director_feedback,
+            verdict=verdict,
+            score=score,
+            round_ctx=round_ctx,
+            round_num=round_num,
+            previous_attempt=previous_attempt,
+            is_patch=_is_patch,
+            is_patch_fallback=_is_patch_fallback,
+            prev_score=_prev_score,
+            stage4_spinner=stage4_spinner,
+            director_mandatory_context=_director_mandatory_context,
+            director_memory_context=_director_memory_context,
+            error_category=error_category,
+        )
+        if _pass_result is not None:
+            return _pass_result
+        # [B-1-3b] REJECT 처리 → 위임
+        return self._handle_reject(
+            director_result=director_result,
+            director_feedback=director_feedback,
+            candidates=candidates,
+            validation_results=validation_results,
+            round_ctx=round_ctx,
+            round_num=round_num,
+            previous_attempt=previous_attempt,
+            is_patch=_is_patch,
+            is_patch_fallback=_is_patch_fallback,
+            prev_score=_prev_score,
+            prev_manuscript=_prev_manuscript,
+            asp_manuscript=_asp_manuscript,
+            tot_used=_tot_used,
+            mad_used=_mad_used,
+            selected=selected,
+            score=score,
+            error_category=error_category,
+        )
+
+    def _run_pre_director_validation(
+        self,
+        candidates: list,
+        next_ep: int,
+        blueprint: dict,
+        prev_text: str,
+        hud_report,
+        genre_name: str,
+        manuscript_validator,
+        consistency_validator,
+        blocking_validator,
+        continuity_validator,
+    ) -> list[dict]:
+        """[God-1] Python 사전 검증 6종 실행 (manuscript/consistency/blocking/continuity/V66.2/Pre-check/CC/CV).
+
+        Returns:
+            list[dict]: validation_results (각 후보별 경고 목록 포함)
+        """
+        from modules.validation.threshold_helper import _threshold
+
+        stage4_spinner = getattr(self, "_god1_stage4_spinner", None)
+        round_num = getattr(self, "_god1_round_num", 0)
+        arc_pos = getattr(self, "_god1_arc_pos", 0)
+        total_ep_in_arc = getattr(self, "_god1_total_ep_in_arc", 0)
+        _prev_manuscript = getattr(self, "_god1_prev_manuscript", "")
+
+        if stage4_spinner is not None and hasattr(stage4_spinner, "update_detail"):
+            stage4_spinner.update_detail(f"제{next_ep}화 · {round_num + 1}차 면담 · Python 검증")
         self.ctx.ui.log("   🔍 Python 사전 검증 중...")
         _recent_ms = []
         try:
@@ -581,232 +911,8 @@ class Stage4InterviewRound:
             except Exception as e:
                 logging.warning(f"[SilentPass:CrossAgentVerifier] {e!s:.100}")
 
-        # Phase 4: Director 면담
-        stage4_spinner.update_detail(f"제{next_ep}화 · {round_num + 1}차 면담 · Director 심사")
-        self.ctx.ui.log("   🎬 Director 면담 중...")
-        logging.info(f"[Director 면담] 제{next_ep}화 {round_num + 1}차, 후보 {len(candidates)}개")
-        print(f"\n   {'=' * 56}")
-        print(f"   🎬 Director 면담 시작 (제{next_ep}화, {round_num + 1}차)")
-        print(f"   후보 수: {len(candidates)}개")
-        for _pi, _pv in enumerate(validation_results):
-            _pw = _pv.get("warnings", [])
-            _label = ["A", "B", "C"][_pi] if _pi < 3 else str(_pi + 1)
-            print(f"   후보 {_label}: 경고 {len(_pw)}건, 분량 {len(candidates[_pi].get('manuscript', ''))}자")
-            for _pwi in _pw[:5]:
-                print(f"      - {_pwi}")
-        print(f"   {'=' * 56}")
-        # [V65] PerfTimer: Director 대면 측정
-        try:
-            self.ctx.perf_timer.start(f"s4_ep{next_ep}_director_r{round_num}")
-        except Exception as e:
-            logging.debug(f"[PerfTimer] start director: {e}")
-        # [V66.3] C-1: mandatory_context + Python 검증 경고를 Director에 전달
-        # validation_results에서 경고를 추출하여 mandatory_context에 병합
-        _mandatory_text = mandatory_context if isinstance(mandatory_context, str) else str(mandatory_context or "")
-        _director_mc_parts = [_mandatory_text] if _mandatory_text else []
-        if not _writing_directive.is_empty():
-            _wd_lines = ["[WritingDirective]"]
-            if _writing_directive.ending_style:
-                _wd_lines.append(f"- ending_style: {_writing_directive.ending_style}")
-            if _writing_directive.expression_ban:
-                _wd_lines.append(f"- expression_ban: {', '.join(_writing_directive.expression_ban)}")
-            if _writing_directive.emotion_required:
-                _wd_lines.append(f"- emotion_required: {_writing_directive.emotion_required}")
-            _director_mc_parts.insert(0, "\n".join(_wd_lines))
-
-        # [B-1-3b] Advisory chain (TruthGate, NpcDrift, NumericDrift, Flashback, InfoParadox, RelDrift)
-        _advisory_parts = self._run_advisory_chain(candidates, validation_results, next_ep, genre_name)
-        _director_mc_parts = _advisory_parts + _director_mc_parts
-
-        # [TF-49b] Preflight advisory → Director에도 전달
-        if _preflight_advisory:
-            _director_mc_parts.append(f"🔍 {_preflight_advisory}")
-
-        _vr_warnings_for_director = []
-        for _vr_idx, _vr in enumerate(validation_results):
-            _vr_warns = _vr.get("warnings", [])
-            if _vr_warns:
-                _label = ["A", "B", "C"][_vr_idx] if _vr_idx < 3 else f"{_vr_idx + 1}"
-                _vr_warnings_for_director.append(f"[후보 {_label} Python 감지 경고]\n" + "\n".join(_vr_warns[:30]))
-        if _vr_warnings_for_director:
-            _director_mc_parts.append(
-                "[V66.3] Python 사전 검증 결과 (Director 참고용)\n" + "\n\n".join(_vr_warnings_for_director)
-            )
-        # [V69.1] V67 원고 역사 충돌 + 연속성 충돌 경고를 Director에 전달
-        if director_feedback and director_feedback.strip():
-            _director_mc_parts.append("🚨 [V69.1] Python 감지된 원고 충돌 경고 (참고용)\n" + director_feedback.strip())
-        # [TF7-P1-04] 전략별 최근 통과율을 Director 선택 프롬프트에 주입
-        try:
-            _db = getattr(getattr(self.ctx, "current_project", None), "db", None)
-            if _db is not None and hasattr(_db, "get_strategy_win_rates"):
-                _win_rates = _db.get_strategy_win_rates()
-                if _win_rates and _win_rates.get("total", 0) > 0:
-                    _wr_lines = [f"[TF7-P1-04] 전략별 최근 통과율 (최근 {_win_rates['total']}건 기준)"]
-                    for _k, _v in _win_rates.items():
-                        if _k != "total":
-                            _wr_lines.append(f"  - {_k}: {int(_v * 100)}%")
-                    _director_mc_parts.append("\n".join(_wr_lines))
-        except Exception as _wr_err:
-            logging.debug(f"[TF7-P1-04] win_rates fetch 실패 (비치명): {_wr_err}")
-        # [LM-Tier TF-C] fix_scope 전략별 합격률을 Director에 주입
-        try:
-            if _db is not None and hasattr(_db, "get_fix_scope_stats"):
-                _fs_stats = _db.get_fix_scope_stats()
-                if _fs_stats and any(r.get("cnt", 0) > 0 for r in _fs_stats):
-                    _fs_lines = ["[A-3] fix_scope 전략별 합격률"]
-                    for _row in _fs_stats:
-                        _scope = _row.get("fix_scope", "?")
-                        _verdict = _row.get("verdict", "?")
-                        _cnt = _row.get("cnt", 0)
-                        if _cnt > 0:
-                            _fs_lines.append(f"  - {_scope} + {_verdict}: {_cnt}건")
-                    _director_mc_parts.append("\n".join(_fs_lines))
-        except Exception as _fs_err:
-            logging.debug(f"[A-3] fix_scope stats fetch 실패 (비치명): {_fs_err}")
-        _director_mandatory_context = "\n\n".join(str(x) for x in _director_mc_parts if x is not None)
-
-        director_result = self.ctx.agents["director"].select_and_judge_ensemble(
-            ep_num=next_ep,
-            candidates=candidates,
-            validation_results=validation_results,
-            blueprint=blueprint,
-            previous_ending=prev_ending,
-            arc_pos=arc_pos,
-            total_eps=total_ep_in_arc,
-            retry_count=round_num,
-            episode_digest=_episode_digest,
-            mandatory_context=_director_mandatory_context,
-            prev_manuscripts_text=_prev_manuscripts_text,  # [V67]
-            story_context=story_context,  # [V67.1]
-        )
-        try:
-            self.ctx.perf_timer.stop(f"s4_ep{next_ep}_director_r{round_num}")
-        except Exception as e:
-            logging.debug(f"[PerfTimer] stop director: {e}")
-
-        selected = director_result.get("selected", "A")
-        verdict = director_result.get("verdict", "REJECT")
-        score = director_result.get("score", 0)
-        try:
-            score = int(score)
-        except (ValueError, TypeError):
-            score = 0
-        reason = director_result.get("selection_reason") or ""
-        error_category = director_result.get("error_category", "")  # [V75-B]
-
-        self.ctx.ui.log(f"   📊 Director 판정: {verdict} (점수: {score}, 선택: 후보 {selected})")
-        self.ctx.ui.log(f"      └─ 사유: {reason[:80]}...")
-
-        # [LOG-1] 판정 경로 세션 로깅
-        _sl = getattr(self.ctx, "session_logger", None)
-        if _sl:
-            try:
-                _sl.log_decision(
-                    stage="stage4",
-                    ep_num=next_ep,
-                    round_num=round_num,
-                    decision_type="manuscript",
-                    result=verdict,
-                    score=score,
-                    selected=selected,
-                    error_category=error_category,
-                    reason=reason[:500],
-                    fix_scope=director_result.get("fix_scope", ""),
-                    open_review=str(director_result.get("open_review", ""))[:300],
-                    action_items=director_result.get("action_items", []),
-                )
-            except Exception as _e:
-                logging.debug("[SilentPass:Stage4:SessionLog] %s", _e)
-
-        logging.info(f"[Director 판정] {verdict} | 점수: {score} | 후보 {selected} | {reason[:120]}")
-        print("\n   📊 Director 판정 결과:")
-        print(f"      판정: {verdict} | 점수: {score} | 선택: 후보 {selected}")
-        print(f"      사유: {reason[:120]}")
-        _action_items = director_result.get("action_items", [])
-        if _action_items:
-            print("      지시사항:")
-            for _ai in _action_items[:5]:
-                print(f"         - {_ai}")
-        print()
-
-        # [D-4] Director 선택 기록 (비차단)
-        try:
-            _selection_reason = reason
-            if _is_patch:
-                _tag = "patch-fallback" if _is_patch_fallback else "patch"
-                _selection_reason = (
-                    f"[{_tag}|score={_prev_score}] {reason}" if reason else f"[{_tag}|score={_prev_score}]"
-                )
-            _sel_candidate = director_result.get("selected_candidate", {})
-            if not isinstance(_sel_candidate, dict):
-                _sel_candidate = {}
-            _sel_strategy = _sel_candidate.get("strategy_name", "") or _sel_candidate.get("strategy", "")
-            self.ctx.current_project.db.save_director_selection(
-                ep_num=next_ep,
-                round_num=round_num,
-                selected_label=selected,
-                selected_strategy=_sel_strategy,
-                verdict=verdict,
-                score=score,
-                selection_reason=_selection_reason,
-                candidate_count=len(candidates) if candidates else 0,
-                fix_scope=director_result.get("fix_scope", ""),  # [A-3]
-            )
-        except Exception as e:
-            logging.warning(f"[D-4] Director 선택 기록 실패 (비차단): {e!s:.100}")
-
-        # [V76] 라운드별 생산 로그 (JSONL)
-        self._append_episode_log(
-            ep_num=next_ep,
-            round_num=round_num,
-            director_result=director_result,
-            is_patch=_is_patch,
-            patch_fallback=_is_patch_fallback,
-            tot_used=_tot_used,
-            mad_used=_mad_used,
-            asp_used=bool(_asp_manuscript),
-            validation_warnings=[w for vr in validation_results for w in vr.get("warnings", [])][:20],  # [TF-46] 10→20
-        )
-
-        # [B-1-3b] PASS/PASS_WITH_FIX 처리 → 위임
-        _pass_result, director_feedback, previous_attempt = self._process_verdict(
-            director_result=director_result,
-            director_feedback=director_feedback,
-            verdict=verdict,
-            score=score,
-            round_ctx=round_ctx,
-            round_num=round_num,
-            previous_attempt=previous_attempt,
-            is_patch=_is_patch,
-            is_patch_fallback=_is_patch_fallback,
-            prev_score=_prev_score,
-            stage4_spinner=stage4_spinner,
-            director_mandatory_context=_director_mandatory_context,
-            director_memory_context=_director_memory_context,
-            error_category=error_category,
-        )
-        if _pass_result is not None:
-            return _pass_result
-        # [B-1-3b] REJECT 처리 → 위임
-        return self._handle_reject(
-            director_result=director_result,
-            director_feedback=director_feedback,
-            candidates=candidates,
-            validation_results=validation_results,
-            round_ctx=round_ctx,
-            round_num=round_num,
-            previous_attempt=previous_attempt,
-            is_patch=_is_patch,
-            is_patch_fallback=_is_patch_fallback,
-            prev_score=_prev_score,
-            prev_manuscript=_prev_manuscript,
-            asp_manuscript=_asp_manuscript,
-            tot_used=_tot_used,
-            mad_used=_mad_used,
-            selected=selected,
-            score=score,
-            error_category=error_category,
-        )
+        self._god1_director_memory_context = _director_memory_context
+        return validation_results
 
     def _process_verdict(
         self,
