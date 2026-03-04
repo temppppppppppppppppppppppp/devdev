@@ -1,4 +1,4 @@
-﻿"""[Log-4] Failure pattern post-analysis utility."""
+"""[Log-4] Failure pattern post-analysis utility."""
 
 from __future__ import annotations
 
@@ -22,6 +22,7 @@ class FailureAnalyzer:
             result["top_failure_categories"] = self.top_failure_categories(top_n=5)
             result["advisory_correlations"] = self.advisory_reject_correlation()
             result["avg_attempts_by_stage"] = self.avg_attempts_by_stage()
+            result["failure_prompt_patterns"] = self.failure_prompt_patterns(top_n=5)
         except Exception as _e:
             logging.debug("[FailureAnalyzer] summary failed: %s", _e)
         return result
@@ -133,6 +134,57 @@ class FailureAnalyzer:
         except Exception as _e:
             logging.debug("[FailureAnalyzer] agent_error_types: %s", _e)
             return {}
+
+    def failed_call_snippets(self, agent_name: str | None = None, top_n: int = 20) -> list[dict]:
+        """Recent failed-call prompt/response snippets for root-cause tracing."""
+        try:
+            if agent_name:
+                rows = self.db.conn.execute(
+                    """SELECT ts, agent_name, model, ep_num, stage,
+                              error_type, error_msg,
+                              prompt_snippet, response_snippet,
+                              prompt_chars, response_chars, duration_ms
+                       FROM llm_calls
+                       WHERE success=0 AND prompt_snippet IS NOT NULL
+                         AND agent_name=?
+                       ORDER BY ts DESC LIMIT ?""",
+                    (agent_name, top_n),
+                ).fetchall()
+            else:
+                rows = self.db.conn.execute(
+                    """SELECT ts, agent_name, model, ep_num, stage,
+                              error_type, error_msg,
+                              prompt_snippet, response_snippet,
+                              prompt_chars, response_chars, duration_ms
+                       FROM llm_calls
+                       WHERE success=0 AND prompt_snippet IS NOT NULL
+                       ORDER BY ts DESC LIMIT ?""",
+                    (top_n,),
+                ).fetchall()
+            return [dict(r) for r in rows]
+        except Exception as _e:
+            logging.debug("[FailureAnalyzer] failed_call_snippets: %s", _e)
+            return []
+
+    def failure_prompt_patterns(self, top_n: int = 10) -> list[dict]:
+        """Failure prompt-size/response-size distribution by agent."""
+        try:
+            rows = self.db.conn.execute(
+                """SELECT agent_name,
+                          COUNT(*) as fail_count,
+                          AVG(prompt_chars) as avg_prompt_chars,
+                          MAX(prompt_chars) as max_prompt_chars,
+                          AVG(response_chars) as avg_resp_chars
+                   FROM llm_calls
+                   WHERE success=0
+                   GROUP BY agent_name
+                   ORDER BY fail_count DESC LIMIT ?""",
+                (top_n,),
+            ).fetchall()
+            return [dict(r) for r in rows]
+        except Exception as _e:
+            logging.debug("[FailureAnalyzer] failure_prompt_patterns: %s", _e)
+            return []
 
     def top_failure_categories(self, top_n: int = 10, stage: int | None = None) -> list[dict]:
         """Top reject categories from stage attempts."""

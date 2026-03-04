@@ -378,6 +378,8 @@ class BaseAgent:
             _prompt_chars = len(str(prompt_text)) if prompt_text else 0
             _resp_chars = len(str(response_text)) if response_text else 0
             _verdict = self._extract_verdict_from_response(response_text) if success else None
+            _prompt_snippet = str(prompt_text)[:3000] if (not success and prompt_text) else None
+            _response_snippet = str(response_text) if (not success and response_text) else None
 
             _db.save_llm_call(
                 agent_name=_to_snake_case(self.__class__.__name__),
@@ -392,6 +394,8 @@ class BaseAgent:
                 ep_num=ep_num,
                 verdict=_verdict,
                 context_tag=context_tag,
+                prompt_snippet=_prompt_snippet,
+                response_snippet=_response_snippet,
             )
         except Exception:
             pass

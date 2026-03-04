@@ -487,13 +487,22 @@ class DBManager:
                 error_type TEXT,
                 error_msg TEXT,
                 verdict TEXT,
-                context_tag TEXT
+                context_tag TEXT,
+                prompt_snippet TEXT,
+                response_snippet TEXT
             )
             """
         )
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_calls_agent ON llm_calls(agent_name)")
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_calls_ep ON llm_calls(ep_num)")
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_llm_calls_ts ON llm_calls(ts)")
+        # [Log-Phase2] Existing DB compatibility migration
+        for _col in ("prompt_snippet", "response_snippet"):
+            try:
+                self.cursor.execute(f"ALTER TABLE llm_calls ADD COLUMN {_col} TEXT")
+                self.conn.commit()
+            except Exception:
+                pass  # already exists / migration race
 
         # [Log-2] Stage-level attempt telemetry
         self.cursor.execute(
@@ -519,7 +528,9 @@ class DBManager:
         )
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_stage_attempts_stage_ep ON stage_attempts(stage, ep_num)")
         self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_stage_attempts_verdict ON stage_attempts(verdict)")
-        self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_stage_attempts_category ON stage_attempts(failure_category)")
+        self.cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_stage_attempts_category ON stage_attempts(failure_category)"
+        )
 
         # 16. [Phase 6] 비용 추적 로그
         self.cursor.execute("""
@@ -2464,17 +2475,23 @@ class DBManager:
         verdict: str | None = None,
         context_tag: str | None = None,
         session_id: str | None = None,
+        prompt_snippet: str | None = None,
+        response_snippet: str | None = None,
     ) -> None:
         """[Log-1] Save one LLM call record in non-blocking mode."""
         try:
             ts = datetime.now().isoformat(timespec="seconds")
+            # [Log-Phase2] Keep DB size bounded: snippets only for failed calls.
+            _prompt_snip = str(prompt_snippet)[:3000] if (not success and prompt_snippet) else None
+            _response_snip = str(response_snippet) if (not success and response_snippet) else None
             with self._lock:
                 self.cursor.execute(
                     """INSERT INTO llm_calls
                        (session_id, ts, stage, ep_num, agent_name, model,
                         prompt_chars, response_chars, duration_ms,
-                        success, error_type, error_msg, verdict, context_tag)
-                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                        success, error_type, error_msg, verdict, context_tag,
+                        prompt_snippet, response_snippet)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (
                         session_id,
                         ts,
@@ -2490,6 +2507,8 @@ class DBManager:
                         (error_msg or "")[:80],
                         verdict,
                         context_tag,
+                        _prompt_snip,
+                        _response_snip,
                     ),
                 )
                 self.conn.commit()
